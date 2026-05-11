@@ -10,7 +10,7 @@ import * as renderUtils from './render-into-canvas'; // Import the module to moc
 import colorGenerator from '../../../../utils/color-generator';
 
 // Mock the renderIntoCanvas function
-jest.mock('./render-into-canvas');
+vi.mock('./render-into-canvas');
 
 describe('<CanvasSpanGraph />', () => {
   const items = [{ valueWidth: 1, valueOffset: 1, serviceName: 'service-name-0' }];

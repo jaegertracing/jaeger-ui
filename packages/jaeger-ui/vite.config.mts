@@ -3,7 +3,6 @@
 
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import legacy from '@vitejs/plugin-legacy';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -212,9 +211,6 @@ export default defineConfig({
       babel: {
         babelrc: true,
       },
-    }),
-    legacy({
-      targets: ['>0.5%', 'not dead', 'not ie <= 11', 'not op_mini all'],
     }),
   ],
   css: {

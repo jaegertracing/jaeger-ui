@@ -9,13 +9,11 @@ import CohortTable from './CohortTable';
 import { fetchedState } from '../../../constants';
 import * as dateUtils from '../../../utils/date';
 
-jest.mock('./TraceTimelineLink', () => ({
-  __esModule: true,
+vi.mock('./TraceTimelineLink', () => ({
   default: props => <div data-testid="trace-timeline-link" data-trace-id={props.traceID} />,
 }));
 
-jest.mock('../../common/RelativeDate', () => ({
-  __esModule: true,
+vi.mock('../../common/RelativeDate', () => ({
   default: props => (
     <div
       data-testid="relative-date"
@@ -26,8 +24,7 @@ jest.mock('../../common/RelativeDate', () => ({
   ),
 }));
 
-jest.mock('../../common/TraceName', () => ({
-  __esModule: true,
+vi.mock('../../common/TraceName', () => ({
   default: props => (
     <div
       data-testid="trace-name"
@@ -91,7 +88,7 @@ describe('CohortTable', () => {
   let formatDurationSpy;
 
   beforeAll(() => {
-    formatDurationSpy = jest.spyOn(dateUtils, 'formatDuration');
+    formatDurationSpy = jest.spyOn(dateUtils, 'formatDurationCompact');
     formatDurationSpy.mockImplementation(value => `${value}ms`);
   });
 

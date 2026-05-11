@@ -1,10 +1,8 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// For jest
-declare const global: {
-  location: Location;
-};
+// Test helper — defined in test/vitest-setup.ts, available in all test files.
+declare function mockDefault<T>(mod: T): { default: T };
 
 declare interface Window {
   // For setting the site-prefix

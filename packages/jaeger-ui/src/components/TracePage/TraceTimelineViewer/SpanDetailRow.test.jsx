@@ -11,14 +11,12 @@ import DetailState from './SpanDetail/DetailState';
 import SpanTreeOffset from './SpanTreeOffset';
 
 const MockSpanDetail = jest.fn(() => <div data-testid="mocked-span-detail" />);
-jest.mock('./SpanDetail', () => ({
-  __esModule: true,
+vi.mock('./SpanDetail', () => ({
   default: props => MockSpanDetail(props),
 }));
 
 const MockSpanTreeOffset = jest.fn(() => <div data-testid="mocked-span-tree-offset" />);
-jest.mock('./SpanTreeOffset', () => ({
-  __esModule: true,
+vi.mock('./SpanTreeOffset', () => ({
   default: props => MockSpanTreeOffset(props),
 }));
 
@@ -39,7 +37,7 @@ describe('<SpanDetailRow>', () => {
     warnings: null,
   };
   const props = {
-    color: 'some-color',
+    color: '#aabbcc',
     nameColumnWidth: 0.5,
     timelineBarsVisible: true,
     detailState: new DetailState(),

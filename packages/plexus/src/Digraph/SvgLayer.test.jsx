@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { render } from '@testing-library/react';
+import { zoomIdentity } from 'd3-zoom';
 import SvgLayer from './SvgLayer';
 
 // Mock SvgDefEntry component
@@ -18,12 +19,12 @@ vi.mock('./SvgDefEntry', () => {
 vi.mock('../zoom/ZoomManager', () => ({
   default: {
     getZoomAttr: transform =>
-      transform ? `translate(${transform.x.toFixed()},${transform.y.toFixed()}) scale(${transform.k})` : null,
+      `translate(${transform.x.toFixed()},${transform.y.toFixed()}) scale(${transform.k})`,
   },
 }));
 
 describe('SvgLayer', () => {
-  const createGraphState = (zoomTransform = null) => ({
+  const createGraphState = (zoomTransform = zoomIdentity) => ({
     vertices: [],
     layoutVertices: null,
     layoutEdges: null,

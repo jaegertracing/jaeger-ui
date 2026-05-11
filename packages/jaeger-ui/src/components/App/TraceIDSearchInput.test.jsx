@@ -10,9 +10,10 @@ import { MemoryRouter } from 'react-router-dom';
 import TraceIDSearchInput from './TraceIDSearchInput';
 
 const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => {
+vi.mock('react-router-dom', async () => {
+  const { MemoryRouter: ActualMemoryRouter } = await vi.importActual('react-router-dom');
   return {
-    ...jest.requireActual('react-router-dom'),
+    MemoryRouter: ActualMemoryRouter,
     useNavigate: () => mockNavigate,
   };
 });

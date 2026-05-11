@@ -4,7 +4,6 @@
 import _flatten from 'lodash/flatten';
 import _uniq from 'lodash/uniq';
 import { IOtelTrace } from '../../../types/otel';
-import { ITableSpan } from './types';
 
 import { getServiceName, getOperationName } from './tableValues';
 

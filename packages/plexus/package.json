@@ -15,19 +15,19 @@
     "@types/d3-zoom": "3.0.8",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
-    "@vitest/coverage-v8": "4.1.2",
+    "@vitest/coverage-v8": "4.1.4",
     "antd": "6.3.1",
     "identity-obj-proxy": "3.0.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "vitest": "4.1.2"
+    "vitest": "4.1.4"
   },
   "peerDependencies": {
     "react": "19.2.0",
     "react-dom": "19.2.0"
   },
   "dependencies": {
-    "@viz-js/viz": "3.25.0",
+    "@viz-js/viz": "3.26.0",
     "d3-selection": "3.0.0",
     "d3-zoom": "3.0.0",
     "memoize-one": "6.0.0",

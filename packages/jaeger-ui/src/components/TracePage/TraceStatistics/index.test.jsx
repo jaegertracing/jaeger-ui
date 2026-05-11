@@ -137,6 +137,70 @@ describe('<TraceTagOverview>', () => {
     expect(cells.length).toBeGreaterThan(0);
   });
 
+  it('groups detail rows under their matching parent rows', async () => {
+    let componentRef;
+    const TestWrapper = () => {
+      const ref = React.useRef();
+      componentRef = ref;
+      return <TraceStatistics ref={ref} {...defaultProps} />;
+    };
+
+    const { container } = render(<TestWrapper />);
+
+    const makeRow = (name, isDetail, parentElement, overrides = {}) => ({
+      name,
+      hasSubgroupValue: !isDetail,
+      searchColor: 'transparent',
+      color: '#000',
+      key: name,
+      isDetail,
+      parentElement,
+      count: 1,
+      total: 100,
+      avg: 50,
+      min: 10,
+      max: 90,
+      selfTotal: 80,
+      selfAvg: 40,
+      selfMin: 5,
+      selfMax: 75,
+      percent: 80,
+      colorToPercent: '#fff',
+      traceID: name,
+      ...overrides,
+    });
+
+    await waitFor(() => {
+      if (componentRef.current) {
+        componentRef.current.setState({
+          ...componentRef.current.state,
+          tableValue: [
+            makeRow('parent-a', false, 'none'),
+            makeRow('detail-a1', true, 'parent-a', { hasSubgroupValue: false }),
+            makeRow('detail-a2', true, 'parent-a', { hasSubgroupValue: false }),
+            makeRow('parent-b', false, 'none'),
+            makeRow('detail-b1', true, 'parent-b', { hasSubgroupValue: false }),
+          ],
+        });
+      }
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('parent-a')).toBeInTheDocument();
+      expect(screen.getByText('parent-b')).toBeInTheDocument();
+      expect(screen.getByText('detail-a1')).toBeInTheDocument();
+      expect(screen.getByText('detail-a2')).toBeInTheDocument();
+      expect(screen.getByText('detail-b1')).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      const parentRows = container.querySelectorAll('tbody tr.ant-table-row-level-0');
+      const childRows = container.querySelectorAll('tbody tr.ant-table-row-level-1');
+      expect(parentRows).toHaveLength(2);
+      expect(childRows).toHaveLength(3);
+    });
+  });
+
   it('check togglePopup', async () => {
     let componentRef;
     const TestWrapper = () => {

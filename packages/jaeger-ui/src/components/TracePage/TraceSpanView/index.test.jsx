@@ -11,11 +11,9 @@ import testTrace from '../TraceStatistics/tableValuesTestTrace/testTrace.json';
 
 const trace = transformTraceData(testTrace).asOtelTrace();
 
-jest.mock('../../common/SearchableSelect', () => {
-  const mockReact = jest.requireActual('react');
-
-  return ({ 'data-testid': testId, onChange, value, children }) => {
-    const options = mockReact.Children.toArray(children).map(child => ({
+vi.mock('../../common/SearchableSelect', () => {
+  return mockDefault(({ 'data-testid': testId, onChange, value, children }) => {
+    const options = React.Children.toArray(children).map(child => ({
       value: child.props.value,
       label: child.props.children[0],
     }));
@@ -36,7 +34,7 @@ jest.mock('../../common/SearchableSelect', () => {
         ))}
       </select>
     );
-  };
+  });
 });
 
 describe('<TraceSpanView>', () => {

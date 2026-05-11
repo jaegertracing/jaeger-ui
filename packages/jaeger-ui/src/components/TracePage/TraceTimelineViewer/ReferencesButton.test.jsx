@@ -9,7 +9,7 @@ import ReferencesButton from './ReferencesButton';
 import transformTraceData from '../../../model/transform-trace-data';
 import traceGenerator from '../../../demo/trace-generators';
 
-jest.mock('../url/ReferenceLink', () => {
+vi.mock('../url/ReferenceLink', () => {
   const MockReferenceLink = ({ children, className, link, focusSpan }) => (
     <a
       className={className}
@@ -23,10 +23,10 @@ jest.mock('../url/ReferenceLink', () => {
     </a>
   );
   MockReferenceLink.displayName = 'ReferenceLink';
-  return MockReferenceLink;
+  return mockDefault(MockReferenceLink);
 });
 
-jest.mock('../../common/NewWindowIcon', () => () => <span data-testid="new-window-icon">↗</span>);
+vi.mock('../../common/NewWindowIcon', () => mockDefault(() => <span data-testid="new-window-icon">↗</span>));
 
 describe('<ReferencesButton>', () => {
   const trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 }));

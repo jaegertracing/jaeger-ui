@@ -34,86 +34,133 @@ import ScrollManager from './ScrollManager';
 let capturedHeaderProps = {};
 let capturedArchiveNotifierProps = {};
 
-jest.mock('./TraceTimelineViewer', () => {
-  return function MockTraceTimelineViewer() {
+vi.mock('./TraceTimelineViewer', async () => {
+  return mockDefault(function MockTraceTimelineViewer() {
     return <div data-testid="mock-timeline-viewer">TraceTimelineViewer</div>;
-  };
-});
-
-jest.mock('./TraceGraph/TraceGraph', () => {
-  return function MockTraceGraph() {
-    return <div data-testid="mock-trace-graph">TraceGraph</div>;
-  };
-});
-
-jest.mock('./TraceStatistics/index', () => {
-  return function MockTraceStatistics() {
-    return <div data-testid="mock-trace-statistics">TraceStatistics</div>;
-  };
-});
-
-jest.mock('./TraceSpanView/index', () => {
-  return function MockTraceSpanView() {
-    return <div data-testid="mock-trace-span-view">TraceSpanView</div>;
-  };
-});
-
-jest.mock('./TraceFlamegraph/index', () => {
-  return function MockTraceFlamegraph() {
-    return <div data-testid="mock-trace-flamegraph">TraceFlamegraph</div>;
-  };
-});
-
-jest.mock('./TraceLogsView/index', () => {
-  return function MockTraceLogsView() {
-    return <div data-testid="mock-trace-logs-view">TraceLogsView</div>;
-  };
-});
-
-jest.mock('./ScrollManager', () => {
-  return jest.fn().mockImplementation(function () {
-    return {
-      scrollToNextVisibleSpan: jest.fn(),
-      scrollToPrevVisibleSpan: jest.fn(),
-      setTrace: jest.fn(),
-      destroy: jest.fn(),
-      setAccessors: jest.fn(),
-      scrollToFirstVisibleSpan: jest.fn(),
-    };
   });
 });
 
-jest.mock('./index.track');
-jest.mock('./keyboard-shortcuts');
-jest.mock('./scroll-page');
-jest.mock('../../utils/filter-spans');
-jest.mock('../../utils/update-ui-find');
-jest.mock('react-router-dom', () => {
-  const navigate = jest.fn();
-  return {
-    ...jest.requireActual('react-router-dom'),
-    useNavigate: () => navigate,
-  };
-});
-jest.mock('./TracePageHeader/SpanGraph', () => () => <div data-testid="span-graph">SpanGraph</div>);
-jest.mock('./TracePageHeader/TracePageHeader.track');
-jest.mock('./TracePageHeader/TracePageSearchBar', () => () => <div data-testid="search-bar">SearchBar</div>);
-jest.mock('./CriticalPath/index');
-jest.mock('./TraceGraph/calculateTraceDagEV', () => ({
-  __esModule: true,
-  default: jest.fn(() => ({})),
-}));
-jest.mock('../common/ErrorMessage', () => () => <div data-testid="error-message">Error</div>);
-jest.mock('../common/LoadingIndicator', () => () => <div data-testid="loading-indicator">Loading</div>);
-jest.mock('./ArchiveNotifier', () => props => {
-  capturedArchiveNotifierProps = props;
-  return <div data-testid="archive-notifier">ArchiveNotifier</div>;
+vi.mock('./TraceGraph/TraceGraph', async () => {
+  return mockDefault(function MockTraceGraph() {
+    return <div data-testid="mock-trace-graph">TraceGraph</div>;
+  });
 });
 
-jest.mock('./TracePageHeader', () => {
+vi.mock('./TraceStatistics/index', async () => {
+  return mockDefault(function MockTraceStatistics() {
+    return <div data-testid="mock-trace-statistics">TraceStatistics</div>;
+  });
+});
+
+vi.mock('./TraceSpanView/index', async () => {
+  return mockDefault(function MockTraceSpanView() {
+    return <div data-testid="mock-trace-span-view">TraceSpanView</div>;
+  });
+});
+
+vi.mock('./TraceFlamegraph/index', async () => {
+  return mockDefault(function MockTraceFlamegraph() {
+    return <div data-testid="mock-trace-flamegraph">TraceFlamegraph</div>;
+  });
+});
+
+vi.mock('./TraceLogsView/index', async () => {
+  return mockDefault(function MockTraceLogsView() {
+    return <div data-testid="mock-trace-logs-view">TraceLogsView</div>;
+  });
+});
+
+vi.mock('./ScrollManager', async () => {
+  return mockDefault(
+    jest.fn().mockImplementation(function () {
+      return {
+        scrollToNextVisibleSpan: jest.fn(),
+        scrollToPrevVisibleSpan: jest.fn(),
+        setTrace: jest.fn(),
+        destroy: jest.fn(),
+        setAccessors: jest.fn(),
+        scrollToFirstVisibleSpan: jest.fn(),
+      };
+    })
+  );
+});
+
+vi.mock('./index.track');
+vi.mock('./keyboard-shortcuts');
+vi.mock('./scroll-page');
+vi.mock('../../utils/filter-spans');
+vi.mock('../../utils/update-ui-find');
+vi.mock('./TracePageHeader/SpanGraph', async () =>
+  mockDefault(() => <div data-testid="span-graph">SpanGraph</div>)
+);
+vi.mock('./TracePageHeader/TracePageHeader.track');
+vi.mock('./TracePageHeader/TracePageSearchBar', async () =>
+  mockDefault(() => <div data-testid="search-bar">SearchBar</div>)
+);
+vi.mock('./CriticalPath/index');
+vi.mock('./TraceGraph/calculateTraceDagEV', async () => ({
+  default: jest.fn(() => ({})),
+}));
+vi.mock('../common/ErrorMessage', async () =>
+  mockDefault(() => <div data-testid="error-message">Error</div>)
+);
+vi.mock('../common/LoadingIndicator', async () =>
+  mockDefault(() => <div data-testid="loading-indicator">Loading</div>)
+);
+vi.mock('./ArchiveNotifier', async () =>
+  mockDefault(props => {
+    capturedArchiveNotifierProps = props;
+    return <div data-testid="archive-notifier">ArchiveNotifier</div>;
+  })
+);
+
+const {
+  mockSubmitTraceToArchive,
+  mockAcknowledge,
+  mockSetDetailPanelMode,
+  mockLayoutPrefsStore,
+  mockTraceTimelineStore,
+  useEmbeddedStateMock,
+} = vi.hoisted(() => ({
+  mockSubmitTraceToArchive: jest.fn(),
+  mockAcknowledge: jest.fn(),
+  mockSetDetailPanelMode: jest.fn(),
+  mockLayoutPrefsStore: {
+    detailPanelMode: 'inline',
+    timelineBarsVisible: true,
+    setTimelineBarsVisible: jest.fn(),
+  },
+  mockTraceTimelineStore: {
+    focusUiFindMatches: jest.fn(),
+    prunedServices: new Set(),
+  },
+  useEmbeddedStateMock: jest.fn().mockReturnValue(null),
+}));
+
+vi.mock('../../stores/archive-store', () => ({
+  useArchiveStore: jest.fn(selector =>
+    selector({ archives: {}, submitTraceToArchive: mockSubmitTraceToArchive, acknowledge: mockAcknowledge })
+  ),
+}));
+
+vi.mock('../../stores/embedded-store', () => ({
+  useEmbeddedState: (...args) => useEmbeddedStateMock(...args),
+}));
+
+vi.mock('./TraceTimelineViewer/store', () => ({
+  useLayoutPrefsStore: jest.fn(selector => selector(mockLayoutPrefsStore)),
+  useTraceTimelineStore: jest.fn(selector => selector(mockTraceTimelineStore)),
+  setDetailPanelMode: (...args) => mockSetDetailPanelMode(...args),
+  SPAN_NAME_COLUMN_WIDTH_MIN: 0.15,
+  SPAN_NAME_COLUMN_WIDTH_MAX: 0.85,
+  SIDE_PANEL_WIDTH_MIN: 0.2,
+  SIDE_PANEL_WIDTH_MAX: 0.7,
+  MIN_TIMELINE_COLUMN_WIDTH: 0.05,
+}));
+
+vi.mock('./TracePageHeader', async () => {
   const { forwardRef } = require('react');
   return {
-    __esModule: true,
     default: forwardRef(function MockTracePageHeader(props, ref) {
       capturedHeaderProps = { ...props, ref };
       return (
@@ -123,6 +170,15 @@ jest.mock('./TracePageHeader', () => {
         </div>
       );
     }),
+  };
+});
+
+const mockNavigate = jest.fn();
+vi.mock('react-router-dom', async () => {
+  const { MemoryRouter: ActualMemoryRouter } = await vi.importActual('react-router-dom');
+  return {
+    MemoryRouter: ActualMemoryRouter,
+    useNavigate: () => mockNavigate,
   };
 });
 
@@ -156,9 +212,6 @@ describe('makeShortcutCallbacks()', () => {
 describe('<TracePage>', () => {
   const trace = transformTraceData(traceGenerator.trace({}));
   const defaultProps = {
-    acknowledgeArchive: jest.fn(),
-    archiveTrace: jest.fn(),
-    detailPanelMode: 'inline',
     enableSidePanel: false,
     fetchTrace: jest.fn(),
     focusUiFindMatches: jest.fn(),
@@ -169,7 +222,6 @@ describe('<TracePage>', () => {
     },
     setDetailPanelMode: jest.fn(),
     setTimelineBarsVisible: jest.fn(),
-    timelineBarsVisible: true,
     trace: { data: trace, state: fetchedState.DONE },
   };
   const notDefaultPropsId = `not ${defaultProps.id}`;
@@ -180,12 +232,12 @@ describe('<TracePage>', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    useEmbeddedStateMock.mockReturnValue(null);
     ScrollManager.mockClear();
     capturedHeaderProps = {};
     capturedArchiveNotifierProps = {};
-    defaultProps.acknowledgeArchive.mockClear();
-    defaultProps.archiveTrace.mockClear();
     defaultProps.focusUiFindMatches.mockClear();
+    mockTraceTimelineStore.focusUiFindMatches.mockClear();
   });
 
   describe('clearSearch', () => {
@@ -232,11 +284,15 @@ describe('<TracePage>', () => {
         trackFocusSpy.mockReset();
       });
 
-      it('calls props.focusUiFindMatches with props.trace.data and uiFind when props.trace.data is present', () => {
+      it('dual-writes to Redux + Zustand when props.trace.data is present', () => {
         const uiFind = 'test ui find';
         render(<TracePage {...defaultProps} uiFind={uiFind} />);
         capturedHeaderProps.focusUiFindMatches();
         expect(defaultProps.focusUiFindMatches).toHaveBeenCalledWith(
+          defaultProps.trace.data.asOtelTrace(),
+          uiFind
+        );
+        expect(mockTraceTimelineStore.focusUiFindMatches).toHaveBeenCalledWith(
           defaultProps.trace.data.asOtelTrace(),
           uiFind
         );
@@ -246,6 +302,7 @@ describe('<TracePage>', () => {
       it('handles when props.trace.data is absent', () => {
         render(<TracePage {...defaultProps} trace={{}} />);
         expect(defaultProps.focusUiFindMatches).not.toHaveBeenCalled();
+        expect(mockTraceTimelineStore.focusUiFindMatches).not.toHaveBeenCalled();
         expect(trackFocusSpy).not.toHaveBeenCalled();
       });
     });
@@ -553,7 +610,12 @@ describe('<TracePage>', () => {
       });
 
       it('is true if embedded indicates it should be', () => {
-        renderWithRouter(<TracePage {...defaultProps} embedded={{ timeline: { hideMinimap: true } }} />);
+        useEmbeddedStateMock.mockReturnValue({
+          version: 'v0',
+          searchHideGraph: false,
+          timeline: { collapseTitle: false, hideMinimap: true, hideSummary: false },
+        });
+        renderWithRouter(<TracePage {...defaultProps} />);
 
         const spanGraph = screen.queryByTestId('span-graph');
         expect(spanGraph).not.toBeInTheDocument();
@@ -569,7 +631,12 @@ describe('<TracePage>', () => {
       });
 
       it('hides summary if embedded indicates it should be', () => {
-        renderWithRouter(<TracePage {...defaultProps} embedded={{ timeline: { hideSummary: true } }} />);
+        useEmbeddedStateMock.mockReturnValue({
+          version: 'v0',
+          searchHideGraph: false,
+          timeline: { collapseTitle: false, hideMinimap: false, hideSummary: true },
+        });
+        renderWithRouter(<TracePage {...defaultProps} />);
 
         expect(capturedHeaderProps.hideSummary).toBe(true);
       });
@@ -762,7 +829,7 @@ describe('<TracePage>', () => {
 
     cases.forEach(testCase => {
       const { message, timeViewRange, change, result } = testCase;
-      it(message, () => {
+      it(`${message}`, () => {
         const [start, end] = computeAdjustedRange(timeViewRange[0], timeViewRange[1], change[0], change[1]);
         expect([start, end]).toEqual(result);
       });
@@ -780,41 +847,56 @@ describe('<TracePage>', () => {
       expect(screen.queryByTestId('archive-notifier')).not.toBeInTheDocument();
     });
 
-    it('calls props.acknowledgeArchive when ArchiveNotifier acknowledges', () => {
+    it('calls store.acknowledge when ArchiveNotifier acknowledges', () => {
       render(<TracePage {...defaultProps} archiveEnabled />);
       capturedArchiveNotifierProps.acknowledge();
-      expect(defaultProps.acknowledgeArchive).toHaveBeenCalledWith(defaultProps.id);
+      expect(mockAcknowledge).toHaveBeenCalledWith(defaultProps.id);
     });
 
-    it('calls props.archiveTrace when archiveTrace is called', () => {
+    it('calls store.submitTraceToArchive when archiveTrace is called', () => {
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onArchiveClicked();
-      expect(defaultProps.archiveTrace).toHaveBeenCalledWith(defaultProps.id);
+      expect(mockSubmitTraceToArchive).toHaveBeenCalledWith(defaultProps.id);
     });
   });
 
   describe('layout toggle handlers', () => {
-    it('calls setDetailPanelMode with sidepanel when detailPanelMode is inline', () => {
-      render(<TracePage {...defaultProps} detailPanelMode="inline" />);
+    beforeEach(() => {
+      defaultProps.setDetailPanelMode.mockClear();
+      defaultProps.setTimelineBarsVisible.mockClear();
+      mockSetDetailPanelMode.mockClear();
+      mockLayoutPrefsStore.setTimelineBarsVisible.mockClear();
+    });
+
+    it('calls setDetailPanelMode (Zustand + Redux) with sidepanel when detailPanelMode is inline', () => {
+      mockLayoutPrefsStore.detailPanelMode = 'inline';
+      render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onDetailPanelModeToggle();
+      expect(mockSetDetailPanelMode).toHaveBeenCalledWith('sidepanel');
       expect(defaultProps.setDetailPanelMode).toHaveBeenCalledWith('sidepanel');
     });
 
-    it('calls setDetailPanelMode with inline when detailPanelMode is sidepanel', () => {
-      render(<TracePage {...defaultProps} detailPanelMode="sidepanel" />);
+    it('calls setDetailPanelMode (Zustand + Redux) with inline when detailPanelMode is sidepanel', () => {
+      mockLayoutPrefsStore.detailPanelMode = 'sidepanel';
+      render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onDetailPanelModeToggle();
+      expect(mockSetDetailPanelMode).toHaveBeenCalledWith('inline');
       expect(defaultProps.setDetailPanelMode).toHaveBeenCalledWith('inline');
     });
 
-    it('calls setTimelineBarsVisible with false when timelineBarsVisible is true', () => {
-      render(<TracePage {...defaultProps} timelineBarsVisible={true} />);
+    it('calls setTimelineBarsVisible (Zustand + Redux) with false when timelineBarsVisible is true', () => {
+      mockLayoutPrefsStore.timelineBarsVisible = true;
+      render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onTimelineToggle();
+      expect(mockLayoutPrefsStore.setTimelineBarsVisible).toHaveBeenCalledWith(false);
       expect(defaultProps.setTimelineBarsVisible).toHaveBeenCalledWith(false);
     });
 
-    it('calls setTimelineBarsVisible with true when timelineBarsVisible is false', () => {
-      render(<TracePage {...defaultProps} timelineBarsVisible={false} />);
+    it('calls setTimelineBarsVisible (Zustand + Redux) with true when timelineBarsVisible is false', () => {
+      mockLayoutPrefsStore.timelineBarsVisible = false;
+      render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onTimelineToggle();
+      expect(mockLayoutPrefsStore.setTimelineBarsVisible).toHaveBeenCalledWith(true);
       expect(defaultProps.setTimelineBarsVisible).toHaveBeenCalledWith(true);
     });
   });
@@ -840,7 +922,12 @@ describe('<TracePage>', () => {
       expect(capturedHeaderProps.slimView).toBe(false);
       unmount();
 
-      render(<TracePage {...defaultProps} embedded={{ timeline: { collapseTitle: true } }} />);
+      useEmbeddedStateMock.mockReturnValue({
+        version: 'v0',
+        searchHideGraph: false,
+        timeline: { collapseTitle: true, hideMinimap: false, hideSummary: false },
+      });
+      render(<TracePage {...defaultProps} />);
       expect(capturedHeaderProps.slimView).toBe(true);
     });
 
@@ -983,8 +1070,6 @@ describe('<TracePage>', () => {
 describe('mapDispatchToProps()', () => {
   it('creates the actions correctly', () => {
     expect(mapDispatchToProps(() => {})).toEqual({
-      acknowledgeArchive: expect.any(Function),
-      archiveTrace: expect.any(Function),
       fetchTrace: expect.any(Function),
       focusUiFindMatches: expect.any(Function),
       setDetailPanelMode: expect.any(Function),
@@ -996,14 +1081,12 @@ describe('mapDispatchToProps()', () => {
 describe('mapStateToProps()', () => {
   const traceID = 'trace-id';
   const trace = {};
-  const embedded = 'a-faux-embedded-config';
   const ownProps = {
     params: { id: traceID },
   };
   let state;
   beforeEach(() => {
     state = {
-      embedded,
       trace: {
         traces: {
           [traceID]: { data: trace, state: fetchedState.DONE },
@@ -1015,24 +1098,13 @@ describe('mapStateToProps()', () => {
           state: null,
         },
       },
-      config: {
-        archiveEnabled: false,
-      },
-      archive: {},
-      traceTimeline: {
-        detailPanelMode: 'inline',
-        timelineBarsVisible: true,
-      },
+      traceTimeline: {},
     };
   });
   it('maps state to props correctly', () => {
     const props = mapStateToProps(state, ownProps);
     expect(props).toEqual({
       id: traceID,
-      detailPanelMode: 'inline',
-      embedded,
-      archiveTraceState: undefined,
-      timelineBarsVisible: true,
       trace: { data: {}, state: fetchedState.DONE },
     });
   });
@@ -1045,23 +1117,16 @@ describe('mapStateToProps()', () => {
     });
     expect(props).toEqual(
       expect.objectContaining({
-        archiveTraceState: null,
         id: '',
         trace: null,
       })
     );
   });
 
-  it('propagates layoutManagerMemory correctly', () => {
-    const fakeMemory = 123;
-    state.config.traceGraph = { layoutManagerMemory: fakeMemory };
+  it('returns the correct props shape', () => {
     const props = mapStateToProps(state, ownProps);
     expect(props).toEqual({
       id: traceID,
-      detailPanelMode: 'inline',
-      embedded,
-      archiveTraceState: undefined,
-      timelineBarsVisible: true,
       uiFind: undefined,
       trace: { data: {}, state: fetchedState.DONE },
     });

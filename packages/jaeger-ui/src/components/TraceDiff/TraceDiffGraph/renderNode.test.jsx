@@ -68,8 +68,8 @@ describe('drawNode', () => {
     const key = 'vertex-key';
     const vertex = {
       data: {
-        a: new Array(lenA),
-        b: new Array(lenB),
+        a: Array.from({ length: lenA }),
+        b: Array.from({ length: lenB }),
         operation,
         service,
       },

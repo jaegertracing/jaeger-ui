@@ -9,7 +9,7 @@ import memoizeOne from 'memoize-one';
 import queryString from 'query-string';
 import { connect } from 'react-redux';
 
-import { DeepDependencyGraphPageImpl, TReduxProps } from '.';
+import { DeepDependencyGraphPageImpl, TReduxProps, useDdgViewModifierBridgeProps } from '.';
 import { getUrlState, sanitizeUrlState } from './url';
 import { ROUTE_PATH } from '../SearchTracePage/url';
 import GraphModel, { makeGraph } from '../../model/ddg/GraphModel';
@@ -51,7 +51,6 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
     graphState = {
       model: transformDdgData(payload, svcOp(service, operation)),
       state: fetchedState.DONE,
-      viewModifiers: new Map(),
     };
     graph = makeGraph(graphState.model, showOp, density);
   }
@@ -75,6 +74,7 @@ type TracesDdgImplProps = TOwnProps & TReduxProps;
 export const TracesDdgImpl: React.FC<TracesDdgImplProps> = React.memo(props => {
   const { location } = props;
   const navigate = useNavigate();
+  const viewModifierProps = useDdgViewModifierBridgeProps();
   const urlArgs = queryString.parse(location.search);
   const { end, start, limit, lookback, maxDuration, minDuration, view } = urlArgs;
   const extraArgs = { end, start, limit, lookback, maxDuration, minDuration, view };
@@ -89,6 +89,7 @@ export const TracesDdgImpl: React.FC<TracesDdgImplProps> = React.memo(props => {
       navigate={navigate}
       services={[]}
       serverOps={[]}
+      {...viewModifierProps}
       {...props}
     />
   );

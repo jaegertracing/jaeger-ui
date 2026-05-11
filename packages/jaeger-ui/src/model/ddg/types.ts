@@ -52,7 +52,7 @@ export type TDdgPayload = {
   dependencies: TDdgPayloadPath[];
 };
 
-export type TDdgService = {
+type TDdgService = {
   name: string;
   operations: Map<string, TDdgOperation>;
 };
@@ -117,11 +117,11 @@ export type TDdgAddViewModifierPayload = TDdgModelParams & {
   visibilityIndices: number[];
 };
 
-export type TDdgClearViewModifiersFromIndicesPayload = TDdgAddViewModifierPayload & { viewModifier?: void };
+type TDdgClearViewModifiersFromIndicesPayload = TDdgAddViewModifierPayload & { viewModifier?: void };
 
 export type TDdgRemoveViewModifierFromIndicesPayload = TDdgAddViewModifierPayload;
 
-export type TDdgRemoveViewModifierPayload = TDdgAddViewModifierPayload & { visibilityIndices?: void };
+type TDdgRemoveViewModifierPayload = TDdgAddViewModifierPayload & { visibilityIndices?: void };
 
 export type TDdgViewModifierRemovalPayload =
   | TDdgClearViewModifiersFromIndicesPayload

@@ -11,7 +11,7 @@ describe('ChevronDown', () => {
   it('renders with provided className and style', () => {
     const className = 'testClassName';
     const style = {
-      border: 'black solid 1px',
+      opacity: '0.5',
     };
     const { container } = render(<ChevronDown className={className} style={style} />);
 

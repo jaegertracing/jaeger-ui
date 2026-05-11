@@ -3,8 +3,6 @@
 
 import { createStore, combineReducers, applyMiddleware, compose, Store, StoreEnhancer } from 'redux';
 
-import traceDiff from '../components/TraceDiff/duck';
-import archive from '../components/TracePage/ArchiveNotifier/duck';
 import traceTimeline from '../components/TracePage/TraceTimelineViewer/duck';
 import jaegerReducers from '../reducers';
 import * as jaegerMiddlewares from '../middlewares';
@@ -17,11 +15,9 @@ declare global {
 }
 
 export default function configureStore(): Store<any> {
-  const middlewares = [
-    ...Object.keys(jaegerMiddlewares)
-      .map(key => (jaegerMiddlewares as any)[key])
-      .filter(Boolean),
-  ];
+  const middlewares = Object.keys(jaegerMiddlewares)
+    .map(key => (jaegerMiddlewares as any)[key])
+    .filter(Boolean);
 
   let enhancer: StoreEnhancer = applyMiddleware(...middlewares);
 
@@ -32,8 +28,6 @@ export default function configureStore(): Store<any> {
   return createStore(
     combineReducers({
       ...jaegerReducers,
-      archive,
-      traceDiff,
       traceTimeline,
     }) as any,
     enhancer

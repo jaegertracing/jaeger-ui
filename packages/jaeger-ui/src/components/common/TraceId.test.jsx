@@ -4,13 +4,10 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { TraceId } from './TraceId';
+import TraceId from './TraceId';
 import getConfig from '../../utils/config/get-config';
 
-jest.mock('../../utils/config/get-config', () => ({
-  __esModule: true,
-  default: jest.fn(),
-}));
+vi.mock('../../utils/config/get-config');
 
 describe('TraceIdDisplayLength', () => {
   const DEFAULT_LENGTH = 7;

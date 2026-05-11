@@ -1,13 +1,15 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-jest.mock('isomorphic-fetch', () =>
-  jest.fn(() =>
-    Promise.resolve({
-      status: 200,
-      data: () => Promise.resolve({ data: null }),
-      json: () => Promise.resolve({ data: null }),
-    })
+vi.mock('isomorphic-fetch', () =>
+  mockDefault(
+    vi.fn(() =>
+      Promise.resolve({
+        status: 200,
+        data: () => Promise.resolve({ data: null }),
+        json: () => Promise.resolve({ data: null }),
+      })
+    )
   )
 );
 
@@ -130,7 +132,7 @@ describe('fetchTrace', () => {
     expect(resp.data).toBe(generatedTraces);
   });
 
-  it('fetchTrace() throws an error on a >= 400 status code', done => {
+  it('fetchTrace() throws an error on a >= 400 status code', async () => {
     const status = 400;
     const statusText = 'some-status';
     const msg = 'some-message';
@@ -143,15 +145,13 @@ describe('fetchTrace', () => {
         text: () => Promise.resolve(JSON.stringify(errorData)),
       })
     );
-    JaegerAPI.fetchTrace('trace-id').catch(err => {
-      expect(err.message).toMatch(msg);
-      expect(err.httpStatus).toBe(status);
-      expect(err.httpStatusText).toBe(statusText);
-      done();
-    });
+    const err = await JaegerAPI.fetchTrace('trace-id').catch(e => e);
+    expect(err.message).toMatch(msg);
+    expect(err.httpStatus).toBe(status);
+    expect(err.httpStatusText).toBe(statusText);
   });
 
-  it('fetchTrace() throws an useful error derived from a text payload', done => {
+  it('fetchTrace() throws an useful error derived from a text payload', async () => {
     const status = 400;
     const statusText = 'some-status';
     const errorData = 'this is some error message';
@@ -163,12 +163,10 @@ describe('fetchTrace', () => {
         text: () => Promise.resolve(errorData),
       })
     );
-    JaegerAPI.fetchTrace('trace-id').catch(err => {
-      expect(err.message).toMatch(errorData);
-      expect(err.httpStatus).toBe(status);
-      expect(err.httpStatusText).toBe(statusText);
-      done();
-    });
+    const err = await JaegerAPI.fetchTrace('trace-id').catch(e => e);
+    expect(err.message).toMatch(errorData);
+    expect(err.httpStatus).toBe(status);
+    expect(err.httpStatusText).toBe(statusText);
   });
 });
 

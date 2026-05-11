@@ -10,7 +10,7 @@ import AccordionEvents from './AccordionEvents';
 import AccordionLinks from './AccordionLinks';
 import AccordionText from './AccordionText';
 import DetailState from './DetailState';
-import { formatDuration } from '../utils';
+import { formatDuration, formatDurationCompact } from '../utils';
 import CopyIcon from '../../../common/CopyIcon';
 import LabeledList from '../../../common/LabeledList';
 
@@ -66,7 +66,6 @@ export default function SpanDetail(props: SpanDetailProps) {
   // Display labels based on terminology flag
   const attributesLabel = useOtelTerms ? 'Attributes' : 'Tags';
   const resourceLabel = useOtelTerms ? 'Resource' : 'Process';
-  const eventsLabel = useOtelTerms ? 'Events' : 'Logs';
 
   const overviewItems = [
     {
@@ -77,7 +76,7 @@ export default function SpanDetail(props: SpanDetailProps) {
     {
       key: 'duration',
       label: 'Duration:',
-      value: formatDuration(span.duration),
+      value: formatDurationCompact(span.duration),
     },
     {
       key: 'start',

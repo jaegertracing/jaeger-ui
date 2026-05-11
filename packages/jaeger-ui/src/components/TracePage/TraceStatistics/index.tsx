@@ -465,19 +465,44 @@ const TraceStatistics = forwardRef<TraceStatisticsHandle, Props>(function TraceS
 
   /**
    * Pre-process the table data into groups and sub-groups.
-   * Memoized to avoid recalculation on every render.
+   * Memoized to avoid recalculation on every render. Detail rows are
+   * pre-grouped into a Map keyed by parent name so the per-parent lookup
+   * stays O(1) instead of re-scanning the full list (see PR #3718).
    */
   const groupedAndSubgroupedSpanData = useMemo((): ITableSpan[] => {
-    const withDetail: ITableSpan[] = tableValue.filter((val: ITableSpan) => val.isDetail);
-    const withoutDetail: ITableSpan[] = tableValue.filter((val: ITableSpan) => !val.isDetail);
+    const withDetail: ITableSpan[] = [];
+    const withoutDetail: ITableSpan[] = [];
+    for (let i = 0; i < tableValue.length; i++) {
+      const val = tableValue[i];
+      if (val.isDetail) {
+        withDetail.push(val);
+      } else {
+        withoutDetail.push(val);
+      }
+    }
+
+    const withDetailByParent = new Map<string, ITableSpan[]>();
+    for (let i = 0; i < withDetail.length; i++) {
+      const val = withDetail[i];
+      const { parentElement } = val;
+      let list = withDetailByParent.get(parentElement);
+      if (!list) {
+        list = [];
+        withDetailByParent.set(parentElement, list);
+      }
+      list.push(val);
+    }
+
     for (let i = 0; i < withoutDetail.length; i++) {
-      let newArr = withDetail.filter(value => value.parentElement === withoutDetail[i].name);
-      newArr = newArr.map((value, index) => {
-        return { ...value, key: `${i}-${index}` };
-      });
+      const parentName = withoutDetail[i].name;
+      const matchingDetails = withDetailByParent.get(parentName) || [];
+      const children = matchingDetails.map((value, index) => ({
+        ...value,
+        key: `${i}-${index}`,
+      }));
       const child = {
         key: i.toString(),
-        children: newArr,
+        children,
       };
       withoutDetail[i] = { ...withoutDetail[i], ...child };
     }

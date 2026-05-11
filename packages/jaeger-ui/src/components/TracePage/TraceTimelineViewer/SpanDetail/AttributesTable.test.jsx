@@ -7,8 +7,8 @@ import '@testing-library/jest-dom';
 
 import AttributesTable, { LinkValue } from './AttributesTable';
 
-jest.mock('../../../common/CopyIcon', () => {
-  return function CopyIcon({ copyText, tooltipTitle, buttonText, icon, className }) {
+vi.mock('../../../common/CopyIcon', () => {
+  return mockDefault(function CopyIcon({ copyText, tooltipTitle, buttonText, icon, className }) {
     return (
       <button
         type="button"
@@ -22,7 +22,7 @@ jest.mock('../../../common/CopyIcon', () => {
         {buttonText || 'Copy'}
       </button>
     );
-  };
+  });
 });
 
 describe('LinkValue', () => {

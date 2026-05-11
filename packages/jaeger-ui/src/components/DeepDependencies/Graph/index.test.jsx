@@ -9,7 +9,7 @@ import { Digraph, LayoutManager } from '@jaegertracing/plexus';
 import Graph, { setOnEdgesContainer, setOnVectorBorderContainerWithViewModifiers } from './index';
 import { EViewModifier } from '../../../model/ddg/types';
 
-jest.mock('@jaegertracing/plexus', () => ({
+vi.mock('@jaegertracing/plexus', () => ({
   Digraph: Object.assign(
     jest.fn(() => <div data-testid="digraph" />),
     {
@@ -23,23 +23,25 @@ jest.mock('@jaegertracing/plexus', () => ({
   }),
 }));
 
-jest.mock('./DdgNodeContent', () => ({
+vi.mock('./DdgNodeContent', () => ({
   getNodeRenderer: jest.fn(() => jest.fn()),
   measureNode: jest.fn(),
 }));
 
-jest.mock('./getNodeRenderers', () =>
-  jest.fn(() => ({
-    vectorFindColorBand: jest.fn(),
-    htmlEmphasis: jest.fn(),
-    vectorBorder: jest.fn(),
-  }))
+vi.mock('./getNodeRenderers', () =>
+  mockDefault(
+    jest.fn(() => ({
+      vectorFindColorBand: jest.fn(),
+      htmlEmphasis: jest.fn(),
+      vectorBorder: jest.fn(),
+    }))
+  )
 );
 
-jest.mock('./getSetOnEdge', () => jest.fn(() => jest.fn()));
+vi.mock('./getSetOnEdge', () => mockDefault(jest.fn(() => jest.fn())));
 
 describe('<Graph />', () => {
-  const vertices = new Array(10).fill().map((_, i) => ({ key: `key${i}` }));
+  const vertices = Array.from({ length: 10 }, (_, i) => ({ key: `key${i}` }));
   const edges = [
     {
       from: vertices[0].key,
@@ -120,7 +122,9 @@ describe('<Graph />', () => {
         stopAndRelease: mockStopAndRelease,
       };
 
-      LayoutManager.mockImplementation(() => mockLayoutManager);
+      LayoutManager.mockImplementation(function () {
+        return mockLayoutManager;
+      });
 
       const { unmount } = render(<Graph {...props} />);
       unmount();

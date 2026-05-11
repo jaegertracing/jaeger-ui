@@ -5,7 +5,6 @@ import React from 'react';
 import { Dropdown, Menu, MenuProps } from 'antd';
 import { IoChevronDown } from 'react-icons/io5';
 import _has from 'lodash/has';
-import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
 
 import TraceIDSearchInput from './TraceIDSearchInput';
@@ -17,15 +16,18 @@ import * as qualityMetrics from '../QualityMetrics/url';
 import * as searchUrl from '../SearchTracePage/url';
 import * as diffUrl from '../TraceDiff/url';
 import * as monitorATMUrl from '../Monitor/url';
-import { ReduxState } from '../../types';
+import TTraceDiffState from '../../types/TTraceDiffState';
+import { useTraceDiffStore } from '../../stores/trace-diff-store';
+import { useShallow } from 'zustand/react/shallow';
 import { ConfigMenuItem, ConfigMenuGroup } from '../../types/config';
 import getConfig from '../../utils/config/get-config';
-import prefixUrl from '../../utils/prefix-url';
+import { useConfig } from '../../hooks/useConfig';
 
 import './TopNav.css';
 import withRouteProps, { IWithRouteProps } from '../../utils/withRouteProps';
 
-type Props = ReduxState & IWithRouteProps;
+type Props = IWithRouteProps;
+type PropsWithTraceDiff = Props & { traceDiff: TTraceDiffState };
 
 const NAV_LINKS = [
   {
@@ -34,7 +36,7 @@ const NAV_LINKS = [
     text: 'Search',
   },
   {
-    to: (props: Props) => diffUrl.getUrl(props.traceDiff),
+    to: (props: PropsWithTraceDiff) => diffUrl.getUrl(props.traceDiff),
     matches: diffUrl.matches,
     text: 'Compare',
   },
@@ -106,7 +108,16 @@ const itemsGlobalLeft: MenuProps['items'] = [
 ];
 
 export function TopNavImpl(props: Props) {
-  const { config, pathname } = props;
+  const { pathname } = props;
+  const config = useConfig();
+  const traceDiff = useTraceDiffStore(
+    useShallow(s => ({
+      a: s.a,
+      b: s.b,
+      cohort: s.cohort,
+    }))
+  );
+  const propsWithDiff: PropsWithTraceDiff = { ...props, traceDiff };
   const menuItems = Array.isArray(config.menu) ? config.menu : [];
 
   const itemsGlobalRight: MenuProps['items'] = [
@@ -114,13 +125,13 @@ export function TopNavImpl(props: Props) {
       label: <TraceIDSearchInput />,
       key: 'TraceIDSearchInput',
     },
-    ...menuItems.map(m => {
+    ...menuItems.map((m: ConfigMenuItem | ConfigMenuGroup) => {
       if (isItem(m)) {
         return { label: getItem(m).label, key: getItem(m).key };
       }
       return { label: <CustomNavDropdown key={m.label} {...m} />, key: m.label };
     }),
-    ...(getConfig().themes?.enabled
+    ...(config.themes?.enabled
       ? [
           {
             label: <ThemeToggleButton />,
@@ -136,7 +147,7 @@ export function TopNavImpl(props: Props) {
         theme="dark"
         items={itemsGlobalLeft?.concat(
           NAV_LINKS.map(({ matches, to, text }) => {
-            const url = typeof to === 'string' ? to : to(props);
+            const url = typeof to === 'string' ? to : to(propsWithDiff);
             const key = matches(pathname) ? pathname : url;
             return {
               key,
@@ -170,9 +181,4 @@ export function TopNavImpl(props: Props) {
 
 TopNavImpl.CustomNavDropdown = CustomNavDropdown;
 
-// export for tests
-export function mapStateToProps(state: ReduxState) {
-  return state;
-}
-
-export default connect(mapStateToProps)(withRouteProps(TopNavImpl));
+export default withRouteProps(TopNavImpl);

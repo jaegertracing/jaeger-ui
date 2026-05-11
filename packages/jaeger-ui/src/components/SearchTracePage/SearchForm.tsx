@@ -3,14 +3,13 @@
 
 import React, { useState, useCallback, useMemo, ComponentProps } from 'react';
 import { Input, Button, Tooltip, Select, Row, Col, Form, Switch } from 'antd';
-import _get from 'lodash/get';
 import logfmtParser from 'logfmt/lib/logfmt_parser';
 import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
 import dayjs from 'dayjs';
 import memoizeOne from 'memoize-one';
 import queryString from 'query-string';
 import { IoHelp } from 'react-icons/io5';
-import { connect, ConnectedProps } from 'react-redux';
+import { connect } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getUrl as getSearchUrl } from './url';
 import { bindActionCreators, Dispatch } from 'redux';
@@ -21,7 +20,6 @@ import { trackFormInput } from './SearchForm.track';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { formatDate, formatTime } from '../../utils/date';
 import { DEFAULT_OPERATION, DEFAULT_LIMIT, DEFAULT_LOOKBACK } from '../../constants/search-form';
-import getConfig from '../../utils/config/get-config';
 import SearchableSelect from '../common/SearchableSelect';
 import './SearchForm.css';
 import ValidatedFormField from '../../utils/ValidatedFormField';
@@ -188,7 +186,7 @@ export function traceIDsToQuery(traceIDs: string | null | undefined): string[] |
   return traceIDs.split(',');
 }
 
-export const placeholderDurationFields = 'e.g. 1.2s, 100ms, 500us';
+const placeholderDurationFields = 'e.g. 1.2s, 100ms, 500us';
 
 interface ValidationError {
   content: string;
@@ -331,8 +329,6 @@ export function submitForm(
 interface ISearchFormImplProps {
   invalid?: boolean;
   submitting?: boolean;
-  searchMaxLookback?: ILookbackOption;
-  searchAdjustEndTime?: string;
   initialValues?: Partial<ISearchFormFields> & { traceIDs?: string | null };
   searchTraces: SearchTracesFunction;
   submitFormHandler: (
@@ -345,13 +341,13 @@ interface ISearchFormImplProps {
 export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   invalid = false,
   submitting = false,
-  searchMaxLookback,
-  searchAdjustEndTime,
   initialValues,
   submitFormHandler,
 }) => {
   const navigate = useNavigate();
-  const { useOpenTelemetryTerms: useOtelTerms } = useConfig();
+  const { useOpenTelemetryTerms: useOtelTerms, search } = useConfig();
+  const searchMaxLookback: ILookbackOption | undefined = search?.maxLookback;
+  const searchAdjustEndTime: string | undefined = search?.adjustEndTime;
   const [formData, setFormData] = useState<Partial<ISearchFormFields>>(() => ({
     service: initialValues?.service,
     operation: initialValues?.operation,
@@ -704,7 +700,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           placeholder="Limit Results"
           type="number"
           min={1}
-          max={getConfig().search?.maxLimit}
+          max={search?.maxLimit}
           onChange={e => handleChange({ resultsLimit: e.target.value })}
         />
       </FormItem>
@@ -791,7 +787,7 @@ export function mapStateToProps(state: ReduxState, ownProps: { search?: string }
     if (data) {
       try {
         tags = logfmtStringify(data);
-      } catch (_) {
+      } catch {
         tags = 'Parse Error';
       }
     } else {
@@ -803,7 +799,7 @@ export function mapStateToProps(state: ReduxState, ownProps: { search?: string }
     try {
       data = JSON.parse(logfmtTags as string);
       tags = logfmtStringify(data);
-    } catch (_) {
+    } catch {
       tags = 'Parse Error';
     }
   }
@@ -828,8 +824,6 @@ export function mapStateToProps(state: ReduxState, ownProps: { search?: string }
       maxDuration: (maxDuration as string | undefined) || undefined,
       traceIDs: traceIDs || null,
     },
-    searchMaxLookback: _get(state, 'config.search.maxLookback'),
-    searchAdjustEndTime: _get(state, 'config.search.adjustEndTime'),
     submitting: state.trace?.search?.state === fetchedState.LOADING,
   };
 }
@@ -847,7 +841,6 @@ export function mapDispatchToProps(dispatch: Dispatch) {
 }
 
 const connector = connect(mapStateToProps, mapDispatchToProps);
-type PropsFromRedux = ConnectedProps<typeof connector>;
 
 const ConnectedSearchForm = connector(SearchFormImpl);
 

@@ -54,7 +54,7 @@ describe('highlightMatches(query, text)', () => {
   ];
 
   tests.forEach(({ message, query, text, expectedCount = 1 }) => {
-    it(message, () => {
+    it(`${message}`, () => {
       const { container } = render(<span>{highlightMatches(query, text)}</span>);
 
       const markElements = container.querySelectorAll('mark');

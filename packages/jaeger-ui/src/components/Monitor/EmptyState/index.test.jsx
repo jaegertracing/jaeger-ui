@@ -7,10 +7,7 @@ import '@testing-library/jest-dom';
 import MonitorATMEmptyState from '.';
 import getConfig from '../../../utils/config/get-config';
 
-jest.mock('../../../utils/config/get-config', () => ({
-  __esModule: true,
-  default: jest.fn(),
-}));
+vi.mock('../../../utils/config/get-config');
 
 describe('<MonitorATMEmptyState>', () => {
   const mockClickHandler = jest.fn();

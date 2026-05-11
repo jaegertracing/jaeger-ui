@@ -9,7 +9,7 @@ import _debounce from 'lodash/debounce';
 import _isString from 'lodash/isString';
 
 import updateUiFind from '../../utils/update-ui-find';
-import { TNil, ReduxState } from '../../types/index';
+import { TNil } from '../../types/index';
 import parseQuery from '../../utils/parseQuery';
 
 type TOwnProps = {

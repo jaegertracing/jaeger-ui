@@ -12,7 +12,7 @@ export type KeyValuePair<ValueType = string> = {
   value: ValueType;
 };
 
-export type Log = {
+type Log = {
   timestamp: number;
   fields: ReadonlyArray<KeyValuePair>;
 };

@@ -72,16 +72,14 @@ export default function AltViewOptions(props: Props) {
     onTraceViewChange(item);
   };
 
-  const dropdownItems = [
-    ...MENU_ITEMS.filter(item => item.viewType !== viewType).map(item => ({
-      key: item.viewType as ETraceViewType | string,
-      label: (
-        <a onClick={() => handleSelectView(item.viewType)} role="button">
-          {item.label}
-        </a>
-      ),
-    })),
-  ];
+  const dropdownItems = MENU_ITEMS.filter(item => item.viewType !== viewType).map(item => ({
+    key: item.viewType as ETraceViewType | string,
+    label: (
+      <a onClick={() => handleSelectView(item.viewType)} role="button">
+        {item.label}
+      </a>
+    ),
+  }));
   if (!disableJsonView) {
     dropdownItems.push(
       {

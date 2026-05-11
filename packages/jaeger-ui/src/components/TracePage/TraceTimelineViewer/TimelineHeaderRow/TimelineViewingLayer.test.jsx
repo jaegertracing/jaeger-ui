@@ -122,9 +122,9 @@ describe('<TimelineViewingLayer>', () => {
     });
 
     it('resets draggable bounds on boundsInvalidator update', () => {
-      const { rerender } = render(<TimelineViewingLayer {...props} />);
+      const { rerender, container } = render(<TimelineViewingLayer {...props} />);
       rerender(<TimelineViewingLayer {...props} boundsInvalidator={Math.random()} />);
-      // no crash = pass
+      expect(container.firstChild).toBeInTheDocument();
     });
   });
 

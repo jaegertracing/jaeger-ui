@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-jest.mock('./process-deprecation');
+vi.mock('./process-deprecation');
 
 import getConfig from './get-config';
 import processDeprecation from './process-deprecation';

@@ -9,11 +9,10 @@ import ArchiveNotifier from './index';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import { Details, Message } from '../../common/ErrorMessage';
 
-jest.mock('antd', () => {
-  const originalModule = jest.requireActual('antd');
+vi.mock('antd', async () => {
+  const originalModule = await vi.importActual('antd');
 
   return {
-    __esModule: true, // Use it when dealing with esModules
     ...originalModule,
     notification: {
       destroy: jest.fn(),
@@ -93,8 +92,8 @@ describe('<ArchiveNotifier>', () => {
     expect(notification.warning).not.toHaveBeenCalled();
   });
 
-  it('calls notification.info when isLoading is true', () => {
-    const props = { ...defaultProps, archivedState: { isLoading: true } };
+  it('calls notification.info when isArchiving is true', () => {
+    const props = { ...defaultProps, archivedState: { isArchiving: true } };
     render(<ArchiveNotifier {...props} />);
     expect(notification.info).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -125,7 +124,7 @@ describe('<ArchiveNotifier>', () => {
 
   it('updates notification state and destroys previous notification', () => {
     const { rerender } = render(<ArchiveNotifier {...defaultProps} />);
-    const newProps = { ...defaultProps, archivedState: { isLoading: true } };
+    const newProps = { ...defaultProps, archivedState: { isArchiving: true } };
     rerender(<ArchiveNotifier {...newProps} />);
     expect(notification.destroy).toHaveBeenCalledWith('ENotifiedState.Outcome');
   });

@@ -26,8 +26,7 @@ global.ResizeObserver = jest.fn().mockImplementation(function () {
   return { observe: jest.fn(), unobserve: jest.fn(), disconnect: jest.fn() };
 });
 
-jest.mock('../../../utils/config/get-config', () => ({
-  __esModule: true,
+vi.mock('../../../utils/config/get-config', async () => ({
   default: jest.fn(() => ({
     monitor: {
       docsLink: 'https://www.jaegertracing.io/docs/latest/spm/',
@@ -38,8 +37,7 @@ jest.mock('../../../utils/config/get-config', () => ({
   })),
 }));
 
-jest.mock('../../../utils/storage', () => ({
-  __esModule: true,
+vi.mock('../../../utils/storage', async () => ({
   default: {
     getString: jest.fn(),
     getNumber: jest.fn(),
@@ -49,42 +47,42 @@ jest.mock('../../../utils/storage', () => ({
   },
 }));
 
-jest.mock('../../../hooks/useTraceDiscovery', () => ({
+vi.mock('../../../hooks/useTraceDiscovery', async () => ({
   useServices: jest.fn(() => ({ data: ['service1', 'service2'], isLoading: false })),
 }));
 
 // Store the default mock implementation for reset in afterEach
 const defaultUseServicesImpl = () => ({ data: ['service1', 'service2'], isLoading: false });
 
-jest.mock('lodash/debounce', () => fn => fn);
+vi.mock('lodash/debounce', async () => mockDefault(fn => fn));
 
-jest.mock('../../common/LoadingIndicator', () => {
-  return function LoadingIndicator() {
+vi.mock('../../common/LoadingIndicator', async () => {
+  return mockDefault(function LoadingIndicator() {
     return <div data-testid="loading-indicator">Loading...</div>;
-  };
+  });
 });
 
-jest.mock('../EmptyState', () => {
-  return function MonitorATMEmptyState() {
+vi.mock('../EmptyState', async () => {
+  return mockDefault(function MonitorATMEmptyState() {
     return <div data-testid="empty-state">ATM not configured</div>;
-  };
+  });
 });
 
-jest.mock('./serviceGraph', () => {
-  return function ServiceGraph({ yAxisTickFormat, name, error }) {
+vi.mock('./serviceGraph', async () => {
+  return mockDefault(function ServiceGraph({ yAxisTickFormat, name, error, width }) {
     const testValue = yAxisTickFormat ? yAxisTickFormat(1000) : null;
     return (
-      <div data-testid={`service-graph-${name?.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
+      <div data-testid={`service-graph-${name?.toLowerCase().replace(/[^a-z0-9]/g, '-')}`} data-width={width}>
         Service Graph: {name}
         {testValue && <span data-testid="tick-format-result">{testValue}</span>}
         {error && <span data-testid="graph-error">Error occurred</span>}
       </div>
     );
-  };
+  });
 });
 
-jest.mock('./operationDetailsTable', () => {
-  return function OperationTableDetails({ loading, error, data }) {
+vi.mock('./operationDetailsTable', async () => {
+  return mockDefault(function OperationTableDetails({ loading, error, data }) {
     return (
       <div data-testid="operation-table">
         {loading && <span data-testid="table-loading">Loading operations...</span>}
@@ -92,11 +90,18 @@ jest.mock('./operationDetailsTable', () => {
         {data && <span data-testid="table-data">Operations data loaded</span>}
       </div>
     );
-  };
+  });
 });
 
-jest.mock('../../common/SearchableSelect', () => {
-  return function SearchableSelect({ children, value, onChange, placeholder, disabled, className }) {
+vi.mock('../../common/SearchableSelect', async () => {
+  return mockDefault(function SearchableSelect({
+    children,
+    value,
+    onChange,
+    placeholder,
+    disabled,
+    className,
+  }) {
     return (
       <select
         data-testid={className}
@@ -114,11 +119,11 @@ jest.mock('../../common/SearchableSelect', () => {
         {children}
       </select>
     );
-  };
+  });
 });
 
-jest.mock('antd', () => {
-  const actualAntd = jest.requireActual('antd');
+vi.mock('antd', async () => {
+  const actualAntd = await vi.importActual('antd');
   return {
     ...actualAntd,
     Input: {
@@ -214,6 +219,41 @@ describe('<MonitorATMServicesView>', () => {
     renderWithRouter(<MonitorATMServicesView {...loadedProps} />);
     expect(screen.queryByTestId('loading-indicator')).not.toBeInTheDocument();
     expect(screen.getByText('Service')).toBeInTheDocument();
+  });
+
+  it('recalculates graph width when services finish loading (#3539)', async () => {
+    cleanup();
+    // jsdom always reports offsetWidth as 0; spy so the stub is safely restored
+    // even if the test throws, preventing order-dependent failures in later tests.
+    const offsetWidthSpy = vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(800);
+
+    try {
+      useServices.mockReturnValue({ data: [], isLoading: true });
+      const loadingProps = {
+        ...props,
+        metrics: { ...originInitialState, serviceMetrics, serviceOpsMetrics, loading: false },
+        fetchAllServiceMetrics: mockFetchAllServiceMetrics,
+        fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
+      };
+      const { rerender } = renderWithRouter(<MonitorATMServicesView {...loadingProps} />);
+      expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
+
+      useServices.mockReturnValue({ data: ['apple'], isLoading: false });
+      rerender(
+        <MemoryRouter>
+          <MonitorATMServicesView {...loadingProps} />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        // graphWidth = offsetWidth - 24 = 800 - 24 = 776; the fallback is 300
+        const graphs = screen.getAllByTestId(/^service-graph-/);
+        expect(graphs.length).toBeGreaterThan(0);
+        expect(Number(graphs[0].getAttribute('data-width'))).toBeGreaterThan(300);
+      });
+    } finally {
+      offsetWidthSpy.mockRestore();
+    }
   });
 
   it('renders with one service latency', () => {

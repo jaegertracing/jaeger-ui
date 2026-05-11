@@ -7,7 +7,7 @@ import '@testing-library/jest-dom';
 import ViewingLayer, { dragTypes } from './ViewingLayer';
 import { EUpdateTypes } from '../../../../utils/DraggableManager';
 
-jest.mock('./Scrubber', () => props => <div data-testid="scrubber" {...props} />);
+vi.mock('./Scrubber', () => mockDefault(props => <div data-testid="scrubber" {...props} />));
 
 function getViewRange(viewStart, viewEnd) {
   return { time: { current: [viewStart, viewEnd] } };
@@ -40,7 +40,7 @@ describe('<SpanGraph>', () => {
 
     it('throws if _root is not set', () => {
       ref.current._root = null;
-      expect(() => ref.current._getDraggingBounds(dragTypes.REFRAME)).toThrow();
+      expect(() => ref.current._getDraggingBounds(dragTypes.REFRAME)).toThrow('invalid state');
     });
 
     it('returns the correct bounds for reframe', () => {

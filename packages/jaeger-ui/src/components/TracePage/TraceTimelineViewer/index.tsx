@@ -5,16 +5,19 @@ import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
+import { actions } from './duck';
 import {
-  actions,
   getSelectedSpanID,
   MIN_TIMELINE_COLUMN_WIDTH,
   SIDE_PANEL_WIDTH_MAX,
   SIDE_PANEL_WIDTH_MIN,
   SPAN_NAME_COLUMN_WIDTH_MAX,
-} from './duck';
+  useLayoutPrefsStore,
+  useTraceTimelineStore,
+} from './store';
 import SpanDetailSidePanel from './SpanDetailSidePanel';
 import TimelineHeaderRow from './TimelineHeaderRow';
+import { useServiceFilter } from './useServiceFilter';
 import VirtualizedTraceView from './VirtualizedTraceView';
 import VerticalResizer from '../../common/VerticalResizer';
 import { merge as mergeShortcuts } from '../keyboard-shortcuts';
@@ -27,6 +30,7 @@ import { CriticalPathSection } from '../../../types/critical_path';
 import './index.css';
 
 type TDispatchProps = {
+  // These Redux dispatchers are kept for the tracking middleware only.
   setSpanNameColumnWidth: (width: number) => void;
   setSidePanelWidth: (width: number) => void;
   collapseAll: (spans: ReadonlyArray<IOtelSpan>) => void;
@@ -39,11 +43,6 @@ type TProps = TDispatchProps & {
   registerAccessors: (accessors: Accessors) => void;
   findMatchesIDs: Set<string> | TNil;
   scrollToFirstVisibleSpan: () => void;
-  detailPanelMode: 'inline' | 'sidepanel';
-  sidePanelWidth: number;
-  spanNameColumnWidth: number;
-  timelineBarsVisible: boolean;
-  selectedSpanID: string | null;
   trace: IOtelTrace;
   criticalPath: CriticalPathSection[];
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
@@ -67,39 +66,69 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     collapseOne: collapseOneAction,
     expandAll: expandAllAction,
     expandOne: expandOneAction,
-    setSpanNameColumnWidth,
-    setSidePanelWidth,
+    setSpanNameColumnWidth: reduxSetSpanNameColumnWidth,
+    setSidePanelWidth: reduxSetSidePanelWidth,
     updateNextViewRangeTime,
     updateViewRangeTime,
     viewRange,
     trace,
-    detailPanelMode,
-    sidePanelWidth,
-    spanNameColumnWidth,
-    timelineBarsVisible,
-    selectedSpanID,
     useOtelTerms,
     ...rest
   } = props;
+
+  // Layout preferences are owned by Zustand; Redux setters are also called for the tracking middleware.
+  const detailPanelMode = useLayoutPrefsStore(s => s.detailPanelMode);
+  const sidePanelWidth = useLayoutPrefsStore(s => s.sidePanelWidth);
+  const spanNameColumnWidth = useLayoutPrefsStore(s => s.spanNameColumnWidth);
+  const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
+  const zustandSetSpanNameColumnWidth = useLayoutPrefsStore(s => s.setSpanNameColumnWidth);
+  const zustandSetSidePanelWidth = useLayoutPrefsStore(s => s.setSidePanelWidth);
+
+  const detailStates = useTraceTimelineStore(s => s.detailStates);
+  const selectedSpanID = detailPanelMode === 'sidepanel' ? getSelectedSpanID(detailStates) : null;
+  const zustandCollapseAll = useTraceTimelineStore(s => s.collapseAll);
+  const zustandCollapseOne = useTraceTimelineStore(s => s.collapseOne);
+  const zustandExpandAll = useTraceTimelineStore(s => s.expandAll);
+  const zustandExpandOne = useTraceTimelineStore(s => s.expandOne);
+
+  const setSpanNameColumnWidth = useCallback(
+    (width: number) => {
+      zustandSetSpanNameColumnWidth(width);
+      reduxSetSpanNameColumnWidth(width);
+    },
+    [zustandSetSpanNameColumnWidth, reduxSetSpanNameColumnWidth]
+  );
+
+  const setSidePanelWidth = useCallback(
+    (width: number) => {
+      zustandSetSidePanelWidth(width);
+      reduxSetSidePanelWidth(width);
+    },
+    [zustandSetSidePanelWidth, reduxSetSidePanelWidth]
+  );
 
   // Side panel is permanently visible whenever side panel mode is active.
   const sidePanelActive = detailPanelMode === 'sidepanel';
 
   const collapseAll = useCallback(() => {
     collapseAllAction(trace.spans);
-  }, [collapseAllAction, trace.spans]);
+    zustandCollapseAll(trace.spans);
+  }, [collapseAllAction, trace.spans, zustandCollapseAll]);
 
   const collapseOne = useCallback(() => {
     collapseOneAction(trace.spans);
-  }, [collapseOneAction, trace.spans]);
+    zustandCollapseOne(trace.spans);
+  }, [collapseOneAction, trace.spans, zustandCollapseOne]);
 
   const expandAll = useCallback(() => {
     expandAllAction();
-  }, [expandAllAction]);
+    zustandExpandAll();
+  }, [expandAllAction, zustandExpandAll]);
 
   const expandOne = useCallback(() => {
     expandOneAction(trace.spans);
-  }, [expandOneAction, trace.spans]);
+    zustandExpandOne(trace.spans);
+  }, [expandOneAction, trace.spans, zustandExpandOne]);
 
   useEffect(() => {
     mergeShortcuts({
@@ -109,6 +138,8 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       expandOne,
     });
   }, [collapseAll, expandAll, collapseOne, expandOne]);
+
+  const { serviceFilterNode } = useServiceFilter(trace, detailPanelMode);
 
   // When timeline bars are hidden with the side panel active, the side panel expands to absorb
   // the timeline column so the Service/Operation column keeps its pixel width unchanged.
@@ -180,6 +211,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       onExpandAll={expandAll}
       onExpandOne={expandOne}
       resizerMax={resizerMax}
+      serviceFilterNode={serviceFilterNode}
       sidePanelVisible={sidePanelActive}
       sidePanelWidth={effectiveSidePanelWidth}
       sidePanelLabel={sidePanelLabel}
@@ -245,16 +277,9 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   );
 };
 
-function mapStateToProps(state: ReduxState) {
-  const {
-    detailPanelMode,
-    sidePanelWidth,
-    spanNameColumnWidth,
-    timelineBarsVisible,
-    detailStates = new Map(),
-  } = state.traceTimeline;
-  const selectedSpanID = getSelectedSpanID(detailStates);
-  return { detailPanelMode, sidePanelWidth, spanNameColumnWidth, timelineBarsVisible, selectedSpanID };
+// selectedSpanID is now computed inside TraceTimelineViewerImpl from the Zustand store.
+function mapStateToProps(_state: ReduxState) {
+  return {};
 }
 
 function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {

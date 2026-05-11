@@ -6,10 +6,11 @@ import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
-import { mapStateToProps, TopNavImpl as TopNav } from './TopNav';
+import { TopNavImpl as TopNav } from './TopNav';
+import { useTraceDiffStore } from '../../stores/trace-diff-store';
 
-jest.mock('antd', () => {
-  const actual = jest.requireActual('antd');
+vi.mock('antd', async () => {
+  const actual = await vi.importActual('antd');
 
   const Menu = ({ items = [], selectedKeys = [] }) => (
     <nav data-testid="mock-menu" data-selectedkeys={JSON.stringify(selectedKeys)}>
@@ -37,9 +38,16 @@ jest.mock('antd', () => {
   return { ...actual, Menu, Dropdown };
 });
 
-jest.mock('../../utils/config/get-config', () => {
+const { useConfigMock } = vi.hoisted(() => ({
+  useConfigMock: jest.fn(),
+}));
+
+vi.mock('../../hooks/useConfig', () => ({
+  useConfig: (...args) => useConfigMock(...args),
+}));
+
+vi.mock('../../utils/config/get-config', async () => {
   return {
-    __esModule: true,
     default: jest.fn(() => ({
       dependencies: { menuEnabled: true },
       deepDependencies: { menuEnabled: true },
@@ -81,6 +89,7 @@ describe('<TopNav>', () => {
 
   const defaultProps = {
     config: {
+      themes: { enabled: true },
       menu: [
         {
           label: labelGitHub,
@@ -102,8 +111,13 @@ describe('<TopNav>', () => {
       location: { pathname: '/search' },
     },
     pathname: '/search',
-    traceDiff: {},
   };
+
+  beforeEach(() => {
+    useTraceDiffStore.setState({ a: null, b: null, cohort: [] });
+    useConfigMock.mockReset();
+    useConfigMock.mockReturnValue(defaultProps.config);
+  });
 
   describe('renders the default menu options', () => {
     let component;
@@ -120,7 +134,7 @@ describe('<TopNav>', () => {
     });
 
     it('renders the "Jaeger" link', () => {
-      const items = screen.getByRole('link', { name: /jaeger logo jaeger/i });
+      const items = screen.getByRole('link', { name: /jaeger logo ?jaeger/i });
       expect(items).toBeInTheDocument();
     });
 
@@ -217,14 +231,14 @@ describe('<TopNav>', () => {
   });
 
   it('builds the Compare link using the trace diff cohort state', () => {
+    useTraceDiffStore.setState({
+      a: 'trace-a',
+      b: 'trace-b',
+      cohort: ['trace-a', 'trace-b'],
+    });
     render(
       <BrowserRouter>
-        <TopNav
-          {...{
-            ...defaultProps,
-            traceDiff: { cohort: ['trace-a', 'trace-b'] },
-          }}
-        />
+        <TopNav {...defaultProps} />
       </BrowserRouter>
     );
 
@@ -252,12 +266,5 @@ describe('<TopNav>', () => {
     );
 
     expect(screen.getByTestId('TraceIDSearchInput--form')).toBeInTheDocument();
-  });
-});
-
-describe('mapStateToProps', () => {
-  it('returns entire state', () => {
-    const testState = {};
-    expect(mapStateToProps(testState)).toBe(testState);
   });
 });

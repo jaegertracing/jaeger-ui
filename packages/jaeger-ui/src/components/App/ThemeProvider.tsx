@@ -118,10 +118,7 @@ export default function AppThemeProvider({ children }: ThemeProviderProps) {
   }, []);
 
   useEffect(() => {
-    if (typeof document !== 'undefined') {
-      document.body.dataset.theme = mode;
-    }
-
+    document.body.dataset.theme = mode;
     writeStoredTheme(mode);
   }, [mode]);
 

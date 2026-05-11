@@ -2,23 +2,24 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { JaegerClient, jaegerClient } from './client';
+import { ZodError } from 'zod';
 
 describe('JaegerClient', () => {
   let client: JaegerClient;
-  let mockFetch: jest.Mock;
+  let mockFetch: ReturnType<typeof vi.fn>;
   let originalFetch: typeof globalThis.fetch;
 
   beforeEach(() => {
     client = new JaegerClient();
     originalFetch = globalThis.fetch;
-    mockFetch = jest.fn();
+    mockFetch = vi.fn();
     (global as any).fetch = mockFetch;
-    jest.useFakeTimers();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
     (global as any).fetch = originalFetch;
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   describe('fetchServices', () => {
@@ -30,7 +31,7 @@ describe('JaegerClient', () => {
       });
 
       const promise = client.fetchServices();
-      jest.runAllTimers();
+      vi.runAllTimers();
       const result = await promise;
 
       expect(result).toEqual(mockServices);
@@ -47,7 +48,7 @@ describe('JaegerClient', () => {
       });
 
       const promise = client.fetchServices();
-      jest.runAllTimers();
+      vi.runAllTimers();
       const result = await promise;
 
       expect(result).toEqual([]);
@@ -60,9 +61,9 @@ describe('JaegerClient', () => {
       });
 
       const promise = client.fetchServices();
-      jest.runAllTimers();
+      vi.runAllTimers();
 
-      await expect(promise).rejects.toThrow(); // ZodError
+      await expect(promise).rejects.toBeInstanceOf(ZodError);
     });
 
     it('throws error when response is not OK', async () => {
@@ -74,7 +75,7 @@ describe('JaegerClient', () => {
       });
 
       const promise = client.fetchServices();
-      jest.runAllTimers();
+      vi.runAllTimers();
 
       await expect(promise).rejects.toThrow('Failed to fetch services: 500 Internal Server Error');
     });
@@ -88,7 +89,7 @@ describe('JaegerClient', () => {
       });
 
       const promise = client.fetchServices();
-      jest.runAllTimers();
+      vi.runAllTimers();
 
       await expect(promise).rejects.toThrow('Failed to fetch services: 404 Not Found');
     });
@@ -106,7 +107,7 @@ describe('JaegerClient', () => {
       });
 
       const promise = client.fetchSpanNames('test-service');
-      jest.runAllTimers();
+      vi.runAllTimers();
       const result = await promise;
 
       expect(result).toEqual(mockOperations);
@@ -123,7 +124,7 @@ describe('JaegerClient', () => {
       });
 
       const promise = client.fetchSpanNames('service with spaces & special=chars');
-      jest.runAllTimers();
+      vi.runAllTimers();
       await promise;
 
       expect(mockFetch).toHaveBeenCalledWith(
@@ -139,7 +140,7 @@ describe('JaegerClient', () => {
       });
 
       const promise = client.fetchSpanNames('empty-service');
-      jest.runAllTimers();
+      vi.runAllTimers();
       const result = await promise;
 
       expect(result).toEqual([]);
@@ -152,9 +153,9 @@ describe('JaegerClient', () => {
       });
 
       const promise = client.fetchSpanNames('test-service');
-      jest.runAllTimers();
+      vi.runAllTimers();
 
-      await expect(promise).rejects.toThrow(); // ZodError
+      await expect(promise).rejects.toBeInstanceOf(ZodError);
     });
 
     it('throws error when response is not OK with service name in message', async () => {
@@ -166,7 +167,7 @@ describe('JaegerClient', () => {
       });
 
       const promise = client.fetchSpanNames('my-service');
-      jest.runAllTimers();
+      vi.runAllTimers();
 
       await expect(promise).rejects.toThrow(
         'Failed to fetch span names for service "my-service": 500 Internal Server Error'
@@ -180,7 +181,7 @@ describe('JaegerClient', () => {
       mockFetch.mockResolvedValue(mockResponse);
 
       const promise = client.fetchServices();
-      jest.runAllTimers();
+      vi.runAllTimers();
       const result = await promise;
 
       expect(result).toEqual([]);
@@ -193,13 +194,12 @@ describe('JaegerClient', () => {
       });
 
       const promise = client.fetchServices();
-      jest.runAllTimers();
+      vi.runAllTimers();
 
-      await expect(promise).rejects.toThrow(); // ZodError
+      await expect(promise).rejects.toBeInstanceOf(ZodError);
     });
 
     it('aborts and throws timeout error after default timeout (10s)', async () => {
-      let abortController: AbortController | null = null;
       mockFetch.mockImplementation((url: string, options?: { signal?: AbortSignal }) => {
         return new Promise((resolve, reject) => {
           if (options?.signal) {
@@ -213,20 +213,20 @@ describe('JaegerClient', () => {
       });
 
       const promise = client.fetchServices();
-      jest.advanceTimersByTime(10000);
+      vi.advanceTimersByTime(10000);
 
       await expect(promise).rejects.toThrow('Request timeout after 10000ms');
     });
 
     it('clears timeout after successful request', async () => {
-      const clearTimeoutSpy = jest.spyOn(globalThis, 'clearTimeout');
+      const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout');
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({ services: [] }),
       });
 
       const promise = client.fetchServices();
-      jest.runAllTimers();
+      vi.runAllTimers();
       await promise;
 
       expect(clearTimeoutSpy).toHaveBeenCalled();
@@ -238,17 +238,17 @@ describe('JaegerClient', () => {
       mockFetch.mockRejectedValue(networkError);
 
       const promise = client.fetchServices();
-      jest.runAllTimers();
+      vi.runAllTimers();
 
       await expect(promise).rejects.toThrow('Network connection failed');
     });
 
     it('clears timeout even when request fails', async () => {
-      const clearTimeoutSpy = jest.spyOn(globalThis, 'clearTimeout');
+      const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout');
       mockFetch.mockRejectedValue(new Error('Network error'));
 
       const promise = client.fetchServices();
-      jest.runAllTimers();
+      vi.runAllTimers();
 
       await expect(promise).rejects.toThrow('Network error');
       expect(clearTimeoutSpy).toHaveBeenCalled();
@@ -269,12 +269,12 @@ describe('JaegerClient', () => {
 });
 
 describe('JaegerClient with non-default base path', () => {
-  let mockFetch: jest.Mock;
+  let mockFetch: ReturnType<typeof vi.fn>;
   let originalFetch: typeof globalThis.fetch;
 
   beforeEach(() => {
     originalFetch = globalThis.fetch;
-    mockFetch = jest.fn();
+    mockFetch = vi.fn();
     (global as any).fetch = mockFetch;
   });
 
@@ -288,15 +288,13 @@ describe('JaegerClient with non-default base path', () => {
       json: async () => ({ services: ['svc-a'] }),
     });
 
-    let Client: any;
-    jest.isolateModules(() => {
-      // Simulate deployment at /jaeger/ by providing a matching site prefix.
-      jest.mock('../../site-prefix', () => `${global.location.origin}/jaeger/`);
+    // Simulate deployment at /jaeger/ by providing a matching site prefix.
+    vi.resetModules();
+    vi.doMock('../../site-prefix', () => ({ default: `${global.location.origin}/jaeger/` }));
+    const { JaegerClient: IsolatedClient } = await import('./client');
 
-      Client = require('./client').JaegerClient;
-    });
-
-    await new Client().fetchServices();
+    await new IsolatedClient().fetchServices();
+    vi.restoreAllMocks();
 
     expect(mockFetch).toHaveBeenCalledWith(
       '/jaeger/api/v3/services',

@@ -50,12 +50,12 @@ export const getHelpTable = (useOtelTerms: boolean) => (
   </table>
 );
 
-export function round2(percent: number) {
+function round2(percent: number) {
   return Math.round(percent * 100) / 100;
 }
 
 const OpNode = React.memo<Props>(
-  ({ count, errors, time, percent, selfTime, percentSelfTime, operation, service, mode, useOtelTerms }) => {
+  ({ count, errors, time, percent, selfTime, percentSelfTime, operation, service, mode }) => {
     // Spans over 20 % time are full red - we have probably to reconsider better approach
     let backgroundColor;
     if (mode === MODE_TIME) {

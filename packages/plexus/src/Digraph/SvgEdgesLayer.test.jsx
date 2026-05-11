@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { render } from '@testing-library/react';
+import { zoomIdentity } from 'd3-zoom';
 import SvgEdgesLayer from './SvgEdgesLayer';
 import SvgEdges from './SvgEdges';
 import SvgLayer from './SvgLayer';
@@ -49,6 +50,7 @@ describe('SvgEdgesLayer', () => {
     },
     vertices: [],
     layoutVertices: null,
+    zoomTransform: zoomIdentity,
   });
 
   const defaultProps = {

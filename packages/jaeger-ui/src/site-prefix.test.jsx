@@ -3,53 +3,55 @@
 
 describe('site-prefix', () => {
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
-  function requireSitePrefix() {
-    return require('./site-prefix').default;
+  async function importSitePrefix() {
+    const mod = await import('./site-prefix');
+    return mod.default;
   }
 
-  it('throws if no base element and not test', () => {
-    jest.doMock('./utils/constants', () => ({
+  it('throws if no base element and not test', async () => {
+    vi.doMock('./utils/constants', () => ({
       getAppEnvironment: () => 'production',
     }));
-    jest.spyOn(document, 'querySelector').mockReturnValue(null);
-    expect(() => requireSitePrefix()).toThrow('<base> element not found');
+    vi.spyOn(document, 'querySelector').mockReturnValue(null);
+    await expect(importSitePrefix()).rejects.toThrow('<base> element not found');
   });
 
-  it('uses base href if present', () => {
-    jest.doMock('./utils/constants', () => ({
+  it('uses base href if present', async () => {
+    vi.doMock('./utils/constants', () => ({
       getAppEnvironment: () => 'production',
     }));
     const href = 'http://example.com/base/';
-    jest.spyOn(document, 'querySelector').mockReturnValue({ href });
+    vi.spyOn(document, 'querySelector').mockReturnValue({ href });
 
-    const prefix = requireSitePrefix();
+    const prefix = await importSitePrefix();
     expect(prefix).toBe(href);
   });
 
-  it('falls back to global.location if no base and test', () => {
-    jest.doMock('./utils/constants', () => ({
+  it('falls back to global.location if no base and test', async () => {
+    vi.doMock('./utils/constants', () => ({
       getAppEnvironment: () => 'test',
     }));
-    jest.spyOn(document, 'querySelector').mockReturnValue(null);
+    vi.spyOn(document, 'querySelector').mockReturnValue(null);
     // Global location is used in JSDOM
-    expect(requireSitePrefix()).toBe(`${global.location.origin}/`);
+    const prefix = await importSitePrefix();
+    expect(prefix).toBe(`${global.location.origin}/`);
   });
 
-  it('sets webpack_public_path if window exists', () => {
-    jest.doMock('./utils/constants', () => ({
+  it('sets webpack_public_path if window exists', async () => {
+    vi.doMock('./utils/constants', () => ({
       getAppEnvironment: () => 'production',
     }));
     const href = 'http://base/';
-    jest.spyOn(document, 'querySelector').mockReturnValue({ href });
+    vi.spyOn(document, 'querySelector').mockReturnValue({ href });
 
-    requireSitePrefix();
+    await importSitePrefix();
     expect(window.__webpack_public_path__).toBe(href);
   });
 });
