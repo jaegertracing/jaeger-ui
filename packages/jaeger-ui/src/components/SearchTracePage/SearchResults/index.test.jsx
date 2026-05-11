@@ -64,6 +64,8 @@ vi.mock('../../DeepDependencies/traces', () => mockDefault(jest.fn(() => <div da
 
 vi.mock('../../common/LoadingIndicator', () => mockDefault(jest.fn(() => <div data-testid="loading" />)));
 
+vi.mock('./TraceTable', () => mockDefault(jest.fn(() => <div data-testid="trace-table" />)));
+
 vi.mock('../../common/NewWindowIcon', () =>
   mockDefault(jest.fn(() => <span data-testid="new-window-icon" />))
 );
@@ -541,6 +543,29 @@ describe('<SearchResults>', () => {
       renderWithRouter(<SearchResults {...baseProps} showStandaloneLink={false} />);
       expect(screen.queryByRole('link')).not.toBeInTheDocument();
       expect(screen.queryByTestId('new-window-icon')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('view mode toggle', () => {
+    it('defaults to list view', () => {
+      renderWithRouter(<SearchResults {...baseProps} />);
+      expect(screen.getByTestId('result-a')).toBeInTheDocument();
+      expect(screen.queryByTestId('trace-table')).not.toBeInTheDocument();
+    });
+
+    it('switches to table view when Table button is clicked', () => {
+      renderWithRouter(<SearchResults {...baseProps} />);
+      fireEvent.click(screen.getByText('Table'));
+      expect(screen.getByTestId('trace-table')).toBeInTheDocument();
+      expect(screen.queryByTestId('result-a')).not.toBeInTheDocument();
+    });
+
+    it('switches back to list view when List button is clicked', () => {
+      renderWithRouter(<SearchResults {...baseProps} />);
+      fireEvent.click(screen.getByText('Table'));
+      fireEvent.click(screen.getByText('List'));
+      expect(screen.getByTestId('result-a')).toBeInTheDocument();
+      expect(screen.queryByTestId('trace-table')).not.toBeInTheDocument();
     });
   });
 });

@@ -2,17 +2,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import TraceTable, { toOrderBy, fromOrderBy } from './TraceTable';
 import * as orderBy from '../../../model/order-by';
 
+const FIXED_START_TIME = 1700000000000000;
+
 const makeTrace = (id: string, errorCount = 0) => ({
   traceID: id,
   traceName: `Trace ${id}`,
   duration: 1000,
-  startTime: Date.now() * 1000,
+  startTime: FIXED_START_TIME,
   spans: [
     ...Array(3).fill({ status: { code: 'OK' } }),
     ...Array(errorCount).fill({ status: { code: 'ERROR' } }),
@@ -25,7 +27,6 @@ const mockTraces = [makeTrace('a'), makeTrace('b'), makeTrace('c'), makeTrace('d
 
 const defaultProps = {
   traces: mockTraces as any,
-  maxTraceDuration: 5000,
   onRowClick: vi.fn(),
   sortBy: 'MOST_RECENT',
   handleSortChange: vi.fn(),
@@ -47,12 +48,17 @@ describe('TraceTable', () => {
   });
 
   it('shows correct error count for traces with errored spans', () => {
-    render(
+    const { container } = render(
       <MemoryRouter>
         <TraceTable {...defaultProps} />
       </MemoryRouter>
     );
-    expect(screen.getByText('2')).toBeInTheDocument();
+    const rows = container.querySelectorAll('tbody tr');
+    const traceD = Array.from(rows).find(r => r.textContent?.includes('Trace d'));
+    expect(traceD).toBeTruthy();
+    const cells = traceD!.querySelectorAll('td');
+    const errorsCell = cells[3];
+    expect(within(errorsCell as HTMLElement).getByText('2')).toBeInTheDocument();
   });
 
   it('calls onRowClick when a row is clicked', () => {
@@ -86,6 +92,11 @@ describe('toOrderBy', () => {
 
   it('defaults to MOST_RECENT for unknown column', () => {
     expect(toOrderBy('startTime', 'descend')).toBe(orderBy.MOST_RECENT);
+  });
+
+  it('returns MOST_RECENT when order is cleared (3rd click)', () => {
+    expect(toOrderBy('spans', undefined)).toBe(orderBy.MOST_RECENT);
+    expect(toOrderBy('duration', undefined)).toBe(orderBy.MOST_RECENT);
     expect(toOrderBy(undefined, undefined)).toBe(orderBy.MOST_RECENT);
   });
 });

@@ -5,20 +5,19 @@ import * as React from 'react';
 import { Table } from 'antd';
 import type { ColumnsType, TableProps } from 'antd/es/table';
 import type { SorterResult } from 'antd/es/table/interface';
-import { IOtelTrace } from '../../../types/otel';
-import { StatusCode } from '../../../types/otel';
+import { IOtelTrace, StatusCode } from '../../../types/otel';
 import { formatDuration, formatDatetime } from '../../../utils/date';
 import * as orderBy from '../../../model/order-by';
 
 type TraceTableProps = {
   traces: IOtelTrace[];
-  maxTraceDuration: number;
   onRowClick: (traceID: string) => void;
   sortBy: string;
   handleSortChange: (sortBy: string) => void;
 };
 
 function toOrderBy(columnKey: string | undefined, order: string | undefined): string {
+  if (order == null) return orderBy.MOST_RECENT;
   if (columnKey === 'spans') {
     return order === 'ascend' ? orderBy.LEAST_SPANS : orderBy.MOST_SPANS;
   }
@@ -71,8 +70,13 @@ export default function TraceTable({ traces, onRowClick, sortBy, handleSortChang
     {
       title: 'Errors',
       key: 'errors',
-      render: (_: unknown, trace: IOtelTrace) =>
-        trace.spans.filter(s => s.status?.code === StatusCode.ERROR).length,
+      render: (_: unknown, trace: IOtelTrace) => {
+        let count = 0;
+        for (const s of trace.spans) {
+          if (s.status?.code === StatusCode.ERROR) count++;
+        }
+        return count;
+      },
     },
     {
       title: 'Duration',
@@ -87,6 +91,7 @@ export default function TraceTable({ traces, onRowClick, sortBy, handleSortChang
       render: (_: unknown, trace: IOtelTrace) => formatDatetime(trace.startTime),
       sorter: true,
       sortOrder: sortKey === 'startTime' ? sortOrder : undefined,
+      sortDirections: ['descend'],
     },
   ];
 

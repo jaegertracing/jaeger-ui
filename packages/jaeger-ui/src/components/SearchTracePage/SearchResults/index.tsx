@@ -274,7 +274,6 @@ export function UnconnectedSearchResults({
       {traceResultsView && viewMode === 'table' && (
         <TraceTable
           traces={traces}
-          maxTraceDuration={maxTraceDuration}
           onRowClick={goToTrace}
           sortBy={sortBy}
           handleSortChange={handleSortChange}
