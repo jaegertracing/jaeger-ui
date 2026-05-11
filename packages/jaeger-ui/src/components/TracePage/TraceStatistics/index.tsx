@@ -39,7 +39,7 @@ type State = {
 };
 
 // Interface for imperative handle methods exposed via ref
-export interface TraceStatisticsHandle {
+interface TraceStatisticsHandle {
   state: State;
   setState: (newState: Partial<State> | ((prev: State) => Partial<State>)) => void;
   handler: (
