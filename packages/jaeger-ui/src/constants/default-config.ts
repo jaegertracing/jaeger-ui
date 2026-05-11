@@ -79,37 +79,62 @@ const defaultConfig: Config = {
   linkPatterns: [],
   spanDecorations: [
     {
-      entries: [{ key: 'db.system', value: '.*' }],
+      attributes: [{ key: '^(?:db\\.system|peer\\.service|service\\.name)$', value: 'redis.*' }],
+      icon: 'di.Redis',
+      tooltip: 'Redis',
+    },
+    {
+      attributes: [{ key: '^(?:db\\.system|peer\\.service|service\\.name)$', value: 'postgresql|postgres' }],
+      icon: 'si.Postgresql',
+      tooltip: 'PostgreSQL',
+    },
+    {
+      attributes: [{ key: '^(?:db\\.system|peer\\.service|service\\.name)$', value: 'mysql|mariadb' }],
+      icon: 'si.Mysql',
+      tooltip: 'MySQL',
+    },
+    {
+      attributes: [{ key: '^(?:db\\.system|peer\\.service|service\\.name)$', value: 'mongodb' }],
+      icon: 'si.Mongodb',
+      tooltip: 'MongoDB',
+    },
+    {
+      attributes: [{ key: '^(?:db\\.system)$', value: '.*' }],
       icon: 'io.Database',
       tooltip: 'Database Call',
     },
     {
-      entries: [{ key: 'db.type', value: '.*' }],
+      attributes: [{ key: '^(?:db\\.type)$', value: '.*' }],
       icon: 'io.Database',
       tooltip: 'Database Call',
     },
     {
-      entries: [{ key: 'otel.scope.name', value: 'mysql|redis|mongodb|postgres|sql' }],
-      icon: 'io.Database',
-      tooltip: 'Database Call',
-    },
-    {
-      entries: [{ key: 'http.method|http.request.method', value: '.*' }],
+      attributes: [{ key: '^(?:http\\.method|http\\.request\\.method)$', value: '.*' }],
       icon: 'io.Globe',
       tooltip: 'HTTP Request',
     },
     {
-      entries: [{ key: 'messaging.system', value: '.*' }],
+      attributes: [{ key: '^(?:messaging\\.system)$', value: 'kafka' }],
+      icon: 'si.Apachekafka',
+      tooltip: 'Apache Kafka',
+    },
+    {
+      attributes: [{ key: '^(?:messaging\\.system)$', value: 'rabbitmq' }],
+      icon: 'si.Rabbitmq',
+      tooltip: 'RabbitMQ',
+    },
+    {
+      attributes: [{ key: '^(?:messaging\\.system)$', value: '.*' }],
       icon: 'io.PaperPlane',
       tooltip: 'Messaging',
     },
     {
-      entries: [{ key: 'rpc.system|rpc.system.name', value: '.*' }],
+      attributes: [{ key: '^(?:rpc\\.system|rpc\\.system\\.name)$', value: '.*' }],
       icon: 'io.Swap',
       tooltip: 'RPC Call',
     },
     {
-      entries: [{ key: 'gen_ai.system', value: '.*' }],
+      attributes: [{ key: '^(?:gen_ai\\.system)$', value: '.*' }],
       icon: 'io.HardwareChip',
       tooltip: 'AI/ML Operation',
     },

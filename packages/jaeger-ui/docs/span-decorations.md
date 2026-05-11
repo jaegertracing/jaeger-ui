@@ -6,21 +6,36 @@ Span decorations allow visual icons to be displayed next to spans in the trace t
 
 Span decorations are configured via the `spanDecorations` property in the Jaeger UI configuration.
 
+### Where to define the configuration
+
+The exact location of your configuration depends on how you are running the Jaeger UI:
+
+- **Production (Jaeger Backend):** When running the Jaeger Query or Jaeger All-in-One binaries, you can provide a UI configuration file using the `--query.ui-config` command-line flag. This file must be valid JSON.
+  ```bash
+  jaeger-all-in-one --query.ui-config=/path/to/jaeger-ui.config.json
+  ```
+
+- **Local Development (Vite):** If you are running the UI standalone for frontend development (e.g., using `npm start`), the Vite dev server automatically reads from a `jaeger-ui.config.json` file located in the `packages/jaeger-ui/` directory. You can copy the provided `jaeger-ui.config.example.json` to create your own configuration.
+
+### Configuration Schema
+
+Once you have located or created your configuration file, you can add or modify the `spanDecorations` array at the top level:
+
 ```json
 {
   "spanDecorations": [
     {
-      "entries": [
-        { "key": "db.system", "value": ".*" }
+      "attributes": [
+        { "key": "^(?:db\\.system)$", "value": ".*" }
       ],
       "icon": "io.Database",
       "tooltip": "Database Call"
     },
     {
-      "entries": [
-        { "key": "http.method", "value": "GET|POST" }
+      "attributes": [
+        { "key": "^(?:http\\.method)$", "value": "GET|POST" }
       ],
-      "icon": "https://example.com/icons/http.svg",
+      "icon": "https://example.com/icons/http.png",
       "tooltip": "HTTP Request"
     }
   ]
@@ -31,32 +46,23 @@ Span decorations are configured via the `spanDecorations` property in the Jaeger
 
 The span decoration engine follows these rules:
 
-1.  **Order of Evaluation:** Rules are evaluated in the order they appear in the `spanDecorations` array.
-2.  **First Match Wins:** The first rule that matches a span is used, and subsequent rules are ignored.
-3.  **All Criteria Must Match (AND):** A rule matches a span only if **all** of its `entries` match.
-4.  **Regex Matching:** Both the `key` and `value` in an entry are treated as regular expressions.
+1.  **Order of Evaluation:** Rules are evaluated in the order they appear in the `spanDecorations` array. User-defined config rules are evaluated *before* the built-in default rules.
+2.  **First Match Wins:** The first rule that matches a span is used, and subsequent rules are ignored. This allows you to easily override a built-in default icon.
+3.  **All Criteria Must Match (AND):** A rule matches a span only if **all** of its `attributes` match.
+4.  **Regex Matching:** Both the `key` and `value` in an attribute definition are treated as regular expressions.
 5.  **Attribute Search:** The engine searches for matches in both span attributes and resource attributes.
 
 ### Icons
 
 The `icon` property can be one of:
 
-1.  **Built-in Tokens:** Pre-defined icons bundled with Jaeger UI (e.g., `io.Database`, `io.Server`, `io.Cloud`).
-2.  **External URLs:** A full URL starting with `http://` or `https://` pointing to an image (SVG, PNG, etc.).
+1.  **Built-in Tokens:** Pre-defined icons bundled with Jaeger UI (e.g., `io.Database`, `io.Server`, `si.Redis`).
+2.  **External URLs:** A full URL starting with `http://` or `https://` pointing to an image (e.g., SVG, PNG).
 3.  **Local Paths:** A path starting with `/` pointing to an asset served by the Jaeger UI server.
 
 #### Supported Built-in Tokens
 
-- `io.Server`: General server operation.
-- `io.Database`: Database operations.
-- `io.Cloud`: Cloud/External services.
-- `io.Globe`: Web/HTTP requests.
-- `io.PaperPlane`: Messaging/PubSub.
-- `io.Swap`: RPC/Inter-service communication.
-- `io.HardwareChip`: AI/Compute intensive tasks.
-- `io.Shield`: Security/Auth operations.
-- `io.Terminal`: CLI/System commands.
-- `io.Settings`: Configuration/Internal tasks.
+The complete list of built-in tokens is available in the [`IconProvider` source code](https://github.com/jaegertracing/jaeger-ui/blob/main/packages/jaeger-ui/src/components/common/IconProvider.tsx) under the `ICON_MAP` dictionary.
 
 ## Extensibility
 

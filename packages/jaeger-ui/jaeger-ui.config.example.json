@@ -18,13 +18,13 @@
   ],
   "spanDecorations": [
     {
-      "entries": [
+      "attributes": [
         {
           "key": "db.system",
           "value": ".*"
         }
       ],
-      "icon": "IoServer"
+      "icon": "io.Database"
     }
   ],
   "storageCapabilities": {

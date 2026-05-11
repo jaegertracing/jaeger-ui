@@ -1,10 +1,10 @@
-// Copyright (c) 2024 The Jaeger Authors.
+// Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 import getConfig from '../utils/config/get-config';
-import { IOtelSpan } from '../types/otel';
+import { IOtelSpan, IAttribute } from '../types/otel';
 
-export type SpanDecoration = {
+type SpanDecoration = {
   icon: string;
   tooltip?: string;
 };
@@ -15,12 +15,19 @@ type ProcessedEntry = {
 };
 
 type ProcessedRule = {
-  entries: ProcessedEntry[];
+  attributes: ProcessedEntry[];
   icon: string;
   tooltip?: string;
 };
 
 let processedRules: ProcessedRule[] | null = null;
+let decorationCache = new WeakMap<IOtelSpan, SpanDecoration | null>();
+
+/** @internal */
+export function _clearCache() {
+  processedRules = null;
+  decorationCache = new WeakMap<IOtelSpan, SpanDecoration | null>();
+}
 
 function getProcessedRules(): ProcessedRule[] {
   if (processedRules) return processedRules;
@@ -35,14 +42,25 @@ function getProcessedRules(): ProcessedRule[] {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (spanDecorations as any[]).forEach(rule => {
     try {
+      if (typeof rule.icon !== 'string' || !rule.icon) {
+        return;
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const parsedAttributes = (rule.attributes || [])
+        .filter((attr: any) => typeof attr.key === 'string' && attr.key.trim().length > 0)
+        .map((attr: any) => ({
+          keyRegex: new RegExp(attr.key),
+          valueRegex: attr.value ? new RegExp(attr.value) : null,
+        }));
+
+      if (parsedAttributes.length === 0) {
+        return;
+      }
+
       rules.push({
         icon: rule.icon,
         tooltip: rule.tooltip,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        entries: rule.entries.map((entry: any) => ({
-          keyRegex: entry.key ? new RegExp(entry.key) : null,
-          valueRegex: entry.value ? new RegExp(entry.value) : null,
-        })),
+        attributes: parsedAttributes,
       });
     } catch (e) {
       // eslint-disable-next-line no-console
@@ -55,30 +73,46 @@ function getProcessedRules(): ProcessedRule[] {
 }
 
 export function getSpanDecoration(span: IOtelSpan): SpanDecoration | null {
+  if (decorationCache.has(span)) return decorationCache.get(span)!;
+
   const rules = getProcessedRules();
-  if (rules.length === 0) return null;
+  if (rules.length === 0) {
+    decorationCache.set(span, null);
+    return null;
+  }
 
   // Search in both span attributes and resource attributes
-  const allAttributes = [...(span.attributes || []), ...(span.resource?.attributes || [])];
+  const allAttributes: IAttribute[] = [...(span.attributes || []), ...(span.resource?.attributes || [])];
+
+  if (span.resource?.serviceName) {
+    allAttributes.push({ key: 'service.name', value: span.resource.serviceName });
+  }
+
+  if (span.name) {
+    allAttributes.push({ key: 'span.name', value: span.name });
+  }
 
   for (const rule of rules) {
-    const allMatched = rule.entries.every(entry => {
-      if (!entry.keyRegex) return true;
-      return allAttributes.some(attr => {
-        const keyMatches = entry.keyRegex?.test(attr.key);
+    const allMatched = rule.attributes.every(attr => {
+      if (!attr.keyRegex) return true;
+      return allAttributes.some(spanAttr => {
+        const keyMatches = attr.keyRegex?.test(spanAttr.key);
         if (!keyMatches) return false;
-        if (!entry.valueRegex) return true;
-        return entry.valueRegex.test(String(attr.value));
+        if (!attr.valueRegex) return true;
+        return attr.valueRegex.test(String(spanAttr.value));
       });
     });
 
     if (allMatched) {
-      return {
+      const result = {
         icon: rule.icon,
         tooltip: rule.tooltip,
       };
+      decorationCache.set(span, result);
+      return result;
     }
   }
 
+  decorationCache.set(span, null);
   return null;
 }

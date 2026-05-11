@@ -81,9 +81,9 @@ export type StorageCapabilities = {
 };
 
 export type SpanDecorationConfig = {
-  // A set of tag key/value regular expressions. A span matches if all entries match.
+  // A set of tag key/value regular expressions. A span matches if all attributes match.
   // Both 'key' and 'value' are treated as regular expressions.
-  entries: readonly { key: string; value: string }[];
+  attributes: readonly { key: string; value: string }[];
   // Name of the icon to render. This can be a built-in token (e.g. 'io.Server')
   // or a full URL to an external image.
   icon: string;
@@ -91,7 +91,7 @@ export type SpanDecorationConfig = {
   tooltip?: string;
 };
 
-// Default values are provided in packages/jaeger-ui/src/constants/default-config.tsx
+// Default values are provided in packages/jaeger-ui/src/constants/default-config.ts
 export type Config = {
   //
   // archiveEnabled enables the Archive Trace button in the trace view.
