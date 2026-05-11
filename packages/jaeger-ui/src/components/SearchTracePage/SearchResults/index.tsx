@@ -157,14 +157,22 @@ export function UnconnectedSearchResults({
   );
 
   const goToTrace = useCallback(
-    (traceID: string) => {
+    (traceID: string, spanLink?: string) => {
       const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
-      const locationObj = getTracePageLink(traceID, { fromSearch: searchUrl });
+      const locationObj = getTracePageLink(traceID, { fromSearch: searchUrl }, spanLink);
       navigate(locationObj.pathname + (locationObj.search ? `?${locationObj.search}` : ''), {
         state: locationObj.state,
       });
     },
     [queryOfResults, navigate]
+  );
+
+  const goToTraceFromTable = useCallback(
+    (traceID: string) => {
+      const spanLink = spanLinks && (spanLinks[traceID] || spanLinks[traceID.replace(/^0*/, '')]);
+      goToTrace(traceID, spanLink);
+    },
+    [goToTrace, spanLinks]
   );
 
   const onDdgViewClicked = useCallback(() => {
@@ -274,7 +282,7 @@ export function UnconnectedSearchResults({
       {traceResultsView && viewMode === 'table' && (
         <TraceTable
           traces={traces}
-          onRowClick={goToTrace}
+          onRowClick={goToTraceFromTable}
           sortBy={sortBy}
           handleSortChange={handleSortChange}
         />

@@ -71,6 +71,54 @@ describe('TraceTable', () => {
     fireEvent.click(screen.getByText('Trace a'));
     expect(onRowClick).toHaveBeenCalledWith('a');
   });
+
+  it('calls onRowClick on Enter key for keyboard navigation', () => {
+    const onRowClick = vi.fn();
+    const { container } = render(
+      <MemoryRouter>
+        <TraceTable {...defaultProps} onRowClick={onRowClick} />
+      </MemoryRouter>
+    );
+    const firstRow = container.querySelector('tbody tr');
+    fireEvent.keyDown(firstRow!, { key: 'Enter' });
+    expect(onRowClick).toHaveBeenCalledWith('a');
+  });
+
+  it('calls onRowClick on Space key for keyboard navigation', () => {
+    const onRowClick = vi.fn();
+    const { container } = render(
+      <MemoryRouter>
+        <TraceTable {...defaultProps} onRowClick={onRowClick} />
+      </MemoryRouter>
+    );
+    const firstRow = container.querySelector('tbody tr');
+    fireEvent.keyDown(firstRow!, { key: ' ' });
+    expect(onRowClick).toHaveBeenCalledWith('a');
+  });
+});
+
+describe('sort onChange wiring', () => {
+  it('calls handleSortChange when a sortable column header is clicked', () => {
+    const handleSortChange = vi.fn();
+    render(
+      <MemoryRouter>
+        <TraceTable {...defaultProps} handleSortChange={handleSortChange} />
+      </MemoryRouter>
+    );
+    fireEvent.click(screen.getByText('Spans'));
+    expect(handleSortChange).toHaveBeenCalledWith(orderBy.LEAST_SPANS);
+  });
+
+  it('calls handleSortChange with MOST_RECENT when sort is cleared', () => {
+    const handleSortChange = vi.fn();
+    render(
+      <MemoryRouter>
+        <TraceTable {...defaultProps} sortBy={orderBy.MOST_SPANS} handleSortChange={handleSortChange} />
+      </MemoryRouter>
+    );
+    fireEvent.click(screen.getByText('Spans'));
+    expect(handleSortChange).toHaveBeenCalledWith(orderBy.MOST_RECENT);
+  });
 });
 
 describe('toOrderBy', () => {

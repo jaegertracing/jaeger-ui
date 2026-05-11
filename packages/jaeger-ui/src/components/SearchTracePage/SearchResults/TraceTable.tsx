@@ -110,6 +110,10 @@ export default function TraceTable({ traces, onRowClick, sortBy, handleSortChang
       onChange={onChange}
       onRow={(trace: IOtelTrace) => ({
         onClick: () => onRowClick(trace.traceID),
+        onKeyDown: (e: React.KeyboardEvent) => {
+          if (e.key === 'Enter' || e.key === ' ') onRowClick(trace.traceID);
+        },
+        tabIndex: 0,
         style: { cursor: 'pointer' },
       })}
     />
