@@ -14,6 +14,7 @@ import { TNil } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan } from '../../../types/otel';
 import { GenAISpanIcon } from './GenAISpanIcon';
+import { GenAITokenBadge } from './GenAITokenBadge';
 
 import './SpanBarRow.css';
 
@@ -176,6 +177,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
               )}
             </span>
             <small className="endpoint-name">{rpc ? rpc.operationName : operationName}</small>
+            <GenAITokenBadge span={span} />
           </a>
           {hasLinks && (
             <ReferencesButton
