@@ -3,7 +3,7 @@
 
 import * as ReactRouterDom from 'react-router-dom';
 
-import { ROUTE_PATH, matches, getUrl } from './url';
+import { ROUTE_PATH, matches, getUrl, getDiffIds } from './url';
 
 vi.mock('react-router-dom', () => ({
   matchPath: vi.fn(),
@@ -55,6 +55,28 @@ describe('TraceDiff/url', () => {
       cohort.forEach(cohortEntry => {
         expect(result).toMatch(`cohort=${cohortEntry}`);
       });
+    });
+  });
+
+  describe('getDiffIds', () => {
+    it('returns empty object when id is undefined', () => {
+      expect(getDiffIds(undefined)).toEqual({});
+    });
+
+    it('returns empty object when id does not contain "..."', () => {
+      expect(getDiffIds('abc')).toEqual({});
+    });
+
+    it('splits a...b into a and b', () => {
+      expect(getDiffIds('a...b')).toEqual({ a: 'a', b: 'b' });
+    });
+
+    it('splits a... into a and undefined', () => {
+      expect(getDiffIds('a...')).toEqual({ a: 'a', b: undefined });
+    });
+
+    it('splits ...b into undefined and b', () => {
+      expect(getDiffIds('...b')).toEqual({ a: undefined, b: 'b' });
     });
   });
 });
