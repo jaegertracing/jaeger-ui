@@ -120,6 +120,33 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     };
   }
 
+  static getDerivedStateFromProps(nextProps: TDigraphProps<any, any>, prevState: TDigraphState<any, any>) {
+    const { edges, vertices } = nextProps;
+    if (edges !== prevState.edges || vertices !== prevState.vertices) {
+      if (Array.isArray(edges) && edges.length && Array.isArray(vertices) && vertices.length) {
+        return {
+          edges,
+          vertices,
+          layoutEdges: null,
+          layoutGraph: null,
+          layoutPhase: ELayoutPhase.CalcSizes,
+          layoutVertices: null,
+          sizeVertices: null,
+        };
+      }
+      return {
+        edges,
+        vertices,
+        layoutEdges: null,
+        layoutGraph: null,
+        layoutPhase: ELayoutPhase.NoData,
+        layoutVertices: null,
+        sizeVertices: null,
+      };
+    }
+    return null;
+  }
+
   componentDidMount() {
     const { current } = this.rootRef;
     if (current && this.zoomManager) {
