@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { TVertex } from '@jaegertracing/plexus/lib/types';
+import { IAttribute } from '../../types/otel';
 
 import PathElem from './PathElem';
 
@@ -41,11 +42,7 @@ export type TDdgPayloadEntry = {
 
 export type TDdgPayloadPath = {
   path: TDdgPayloadEntry[];
-  // TODO: Everett Tech Debt: Fix KeyValuePair types
-  attributes: {
-    key: 'exemplar_trace_id';
-    value: string;
-  }[];
+  attributes: IAttribute[];
 };
 
 export type TDdgPayload = {
