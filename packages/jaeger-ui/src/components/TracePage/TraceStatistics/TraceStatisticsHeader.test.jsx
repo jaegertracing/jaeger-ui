@@ -12,10 +12,6 @@ vi.mock('./tableValues', () => ({
   getColumnValuesSecondDropdown: vi.fn((rows, n1, n2) => [{ name: `sub-${n1}-${n2}-from-${rows.length}` }]),
 }));
 
-vi.mock('./generateColor', () => ({
-  default: vi.fn(rows => rows),
-}));
-
 vi.mock('./generateDropdownValue', () => ({
   generateDropdownValue: vi.fn(() => ['service.name', 'operation', 'kind']),
   generateSecondDropdownValue: vi.fn(() => ['operation', 'kind']),
@@ -23,7 +19,6 @@ vi.mock('./generateDropdownValue', () => ({
 
 import TraceStatisticsHeader from './TraceStatisticsHeader';
 import { getColumnValues, getColumnValuesSecondDropdown } from './tableValues';
-import generateColor from './generateColor';
 
 const baseProps = () => ({
   trace: { traceID: 't', spans: [] },
@@ -51,9 +46,10 @@ describe('<TraceStatisticsHeader>', () => {
     const props = baseProps();
     render(<TraceStatisticsHeader {...props} />);
     expect(props.handler).toHaveBeenCalledTimes(1);
-    const [tableArg, wholeArg, name1, name2] = props.handler.mock.calls[0];
+    const [tableArg, wholeArg, name1, name2, colorBy] = props.handler.mock.calls[0];
     expect(name1).toBe('service.name');
     expect(name2).toBeNull();
+    expect(colorBy).toBe('count');
     expect(tableArg).toEqual([{ name: 'cols-for-service.name' }]);
     expect(wholeArg).toEqual([{ name: 'cols-for-service.name' }]);
   });
@@ -79,7 +75,8 @@ describe('<TraceStatisticsHeader>', () => {
       [{ name: 'cols-for-operation' }],
       [{ name: 'cols-for-operation' }],
       'operation',
-      null
+      null,
+      'count'
     );
     expect(getColumnValues).toHaveBeenCalledWith('operation', props.trace, props.useOtelTerms);
   });
@@ -97,7 +94,8 @@ describe('<TraceStatisticsHeader>', () => {
       expect.any(Array),
       expect.any(Array),
       'service.name',
-      'kind'
+      'kind',
+      'count'
     );
     expect(getColumnValuesSecondDropdown).toHaveBeenCalledWith(
       props.tableValue,
@@ -112,19 +110,17 @@ describe('<TraceStatisticsHeader>', () => {
     const props = baseProps();
     render(<TraceStatisticsHeader {...props} />);
     props.handler.mockClear();
-    generateColor.mockClear();
 
     const colorBy = screen.getAllByRole('combobox')[2];
     await userEvent.click(colorBy);
     fireEvent.click(await screen.findByText('ST in Duration'));
 
-    expect(generateColor).toHaveBeenCalledWith(props.tableValue, 'percent', false);
-    expect(generateColor).toHaveBeenCalledWith(props.wholeTable, 'percent', false);
     expect(props.handler).toHaveBeenLastCalledWith(
       expect.any(Array),
       expect.any(Array),
       'service.name',
-      null
+      null,
+      'percent'
     );
   });
 
@@ -141,7 +137,8 @@ describe('<TraceStatisticsHeader>', () => {
       expect.any(Array),
       expect.any(Array),
       'service.name',
-      null
+      null,
+      ''
     );
   });
 
@@ -162,7 +159,13 @@ describe('<TraceStatisticsHeader>', () => {
     fireEvent.click(clearIcons[0]);
 
     expect(props.handler).toHaveBeenCalledTimes(1);
-    expect(props.handler).toHaveBeenCalledWith(expect.any(Array), expect.any(Array), 'service.name', null);
+    expect(props.handler).toHaveBeenCalledWith(
+      expect.any(Array),
+      expect.any(Array),
+      'service.name',
+      null,
+      'count'
+    );
     const subGroupArgs = props.handler.mock.calls.map(call => call[3]);
     expect(subGroupArgs).not.toContain(undefined);
     expect(getColumnValues).toHaveBeenCalledWith('service.name', props.trace, props.useOtelTerms);
