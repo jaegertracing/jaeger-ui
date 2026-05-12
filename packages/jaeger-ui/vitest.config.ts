@@ -26,7 +26,7 @@ export default defineConfig({
     globals: true,
     globalSetup: path.resolve(__dirname, 'test/vitest-global-setup.ts'),
     setupFiles: [path.resolve(__dirname, 'test/vitest-setup.ts')],
-    include: ['src/**/*.{test,spec}.{js,jsx,ts,tsx}'],
+    include: ['src/**/*.{test,spec}.{js,jsx,ts,tsx}', '*.test.ts'],
     coverage: {
       provider: 'v8',
       include: ['src/**/*.{js,jsx,ts,tsx}'],
