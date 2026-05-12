@@ -16,7 +16,7 @@ import {
 } from 'recharts';
 
 import { FALLBACK_TRACE_NAME } from '../../../constants';
-import { ONE_MILLISECOND, formatDuration } from '../../../utils/date';
+import { ONE_MILLISECOND, formatDurationCompact } from '../../../utils/date';
 
 import './ScatterPlot.css';
 
@@ -164,7 +164,7 @@ export default function ScatterPlot({
               type="number"
               dataKey="y"
               name="Duration"
-              tickFormatter={t => formatDuration(t)}
+              tickFormatter={t => formatDurationCompact(t)}
               tick={{ fontSize: 11, dx: -5 }}
               axisLine={{ stroke: '#e6e6e9', strokeWidth: 2 }}
               tickLine={{ stroke: '#e6e6e9', strokeWidth: 1 }}

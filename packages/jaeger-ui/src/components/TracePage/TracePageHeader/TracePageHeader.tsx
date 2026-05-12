@@ -19,7 +19,7 @@ import NewWindowIcon from '../../common/NewWindowIcon';
 import TraceName from '../../common/TraceName';
 import { TNil } from '../../../types';
 import { IOtelTrace } from '../../../types/otel';
-import { formatDatetime, formatDuration } from '../../../utils/date';
+import { formatDatetime, formatDurationCompact } from '../../../utils/date';
 import { getTraceLinks } from '../../../model/link-patterns';
 import { getIncompleteTraceTooltip } from '../../../model/trace-viewer';
 
@@ -81,7 +81,7 @@ export const HEADER_ITEMS = [
   {
     key: 'duration',
     label: 'Duration',
-    renderer: (trace: IOtelTrace) => formatDuration(trace.duration),
+    renderer: (trace: IOtelTrace) => formatDurationCompact(trace.duration),
   },
   {
     key: 'service-count',
