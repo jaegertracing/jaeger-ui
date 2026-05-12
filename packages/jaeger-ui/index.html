@@ -32,7 +32,11 @@
         }
         var prefix = bestIdx !== -1 ? path.slice(0, bestIdx + 1) || '/' : path;
         if (prefix[prefix.length - 1] !== '/') prefix += '/';
-        var safe = prefix.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        var safe = prefix
+          .replace(/&/g, '&amp;')
+          .replace(/"/g, '&quot;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
         document.currentScript.insertAdjacentHTML(
           'afterend',
           '<base href="' + safe + '" data-inject-target="BASE_URL" />'
