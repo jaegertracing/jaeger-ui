@@ -74,6 +74,11 @@ export default function SpanDetail(props: SpanDetailProps) {
       value: span.resource.serviceName,
     },
     {
+      key: 'kind',
+      label: 'Kind:',
+      value: <span className="SpanDetail--kindBadge">{span.kind.toLowerCase()}</span>,
+    },
+    {
       key: 'duration',
       label: 'Duration:',
       value: formatDurationCompact(span.duration),
