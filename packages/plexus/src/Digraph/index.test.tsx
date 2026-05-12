@@ -11,6 +11,7 @@ describe('Digraph.getDerivedStateFromProps', () => {
     edges,
     vertices,
     layoutPhase: ELayoutPhase.Done,
+    layoutVersion: 1,
   };
 
   it('returns null if edges and vertices are unchanged', () => {
@@ -26,6 +27,7 @@ describe('Digraph.getDerivedStateFromProps', () => {
       layoutPhase: ELayoutPhase.NoData,
       layoutEdges: null,
       layoutVertices: null,
+      layoutVersion: 2,
     });
   });
 
@@ -38,6 +40,7 @@ describe('Digraph.getDerivedStateFromProps', () => {
       layoutPhase: ELayoutPhase.CalcSizes,
       layoutEdges: null,
       layoutVertices: null,
+      layoutVersion: 2,
     });
   });
 
@@ -50,6 +53,7 @@ describe('Digraph.getDerivedStateFromProps', () => {
       layoutPhase: ELayoutPhase.CalcSizes,
       layoutEdges: null,
       layoutVertices: null,
+      layoutVersion: 2,
     });
   });
 });

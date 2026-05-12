@@ -158,6 +158,14 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     }
   }
 
+  componentDidUpdate(_prevProps: TDigraphProps<T, U>, prevState: TDigraphState<T, U>) {
+    if (this.state.layoutPhase === ELayoutPhase.NoData && prevState.layoutPhase !== ELayoutPhase.NoData) {
+      if (this.zoomManager) {
+        this.zoomManager.resetZoom();
+      }
+    }
+  }
+
   getGlobalId = (name: string) => `${this.baseId}--${name}`;
 
   getZoomTransform = () => this.state.zoomTransform;
@@ -165,7 +173,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
   private setSizeVertices = (senderKey: string, sizeVertices: TSizeVertex<T>[]) => {
     const { edges, layoutManager, measurableNodesKey: expectedKey } = this.props;
     if (senderKey !== expectedKey) {
-      const values = `expected ${JSON.stringify(expectedKey)}, recieved ${JSON.stringify(senderKey)}`;
+      const values = `expected ${JSON.stringify(expectedKey)}, received ${JSON.stringify(senderKey)}`;
       throw new Error(`Key mismatch for measuring nodes; ${values}`);
     }
     this.setState({ sizeVertices });
