@@ -10,9 +10,54 @@
     <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
     <meta http-equiv="pragma" content="no-cache" />
 
-    <!-- NOTE: The document MUST have a <base> element. package.json#homepage is set to "." as part of resolving https://github.com/jaegertracing/jaeger-ui/issues/42 and therefore static assets are linked via relative URLs. This will break on many document URLs, e.g. /trace/abc, unless a valid base URL is provided. The base href defaults to "/" but the query-service can inject an override. -->
-    <base href="/" data-inject-target="BASE_URL" />
-    <link rel="shortcut icon" href="/favicon.ico" />
+    <!-- NOTE: The document MUST have a <base> element. package.json#homepage is set to "." as part
+         of resolving https://github.com/jaegertracing/jaeger-ui/issues/42 and therefore static
+         assets are linked via relative URLs. This will break on many document URLs, e.g. /trace/abc,
+         unless a valid base URL is provided.
+
+         The base href is set dynamically by the inline script below, which detects the mount-point
+         prefix from window.location at page-load time. This allows a single Jaeger backend to serve
+         the UI correctly under any URL prefix without requiring --query.base-path to match the
+         external prefix, and also works behind URL-rewriting reverse proxies where the external
+         prefix differs from the internal one (see ADR-009). -->
+    <script>
+      // Detect the URL prefix (mount point) from the current page URL and write a <base href>
+      // element into the document BEFORE the browser's preload scanner encounters any relative-URL
+      // asset references (favicon, scripts). This script must remain the first child of <head>.
+      //
+      // The backend serves index.html for every SPA route under the prefix, so
+      // window.location.pathname may be e.g. "/jaeger/trace/abc123". We strip the known SPA
+      // sub-path suffixes to isolate the mount prefix ("/jaeger/").
+      (function () {
+        var knownSubPaths = [
+          '/deep-dependencies',
+          '/dependencies',
+          '/quality-metrics',
+          '/plexus-demo',
+          '/monitor',
+          '/search',
+          '/trace/',
+        ];
+        var path = window.location.pathname;
+        var prefix = path;
+        for (var i = 0; i < knownSubPaths.length; i++) {
+          var idx = path.indexOf(knownSubPaths[i]);
+          if (idx !== -1) {
+            prefix = path.slice(0, idx + 1); // keep trailing slash
+            break;
+          }
+        }
+        // Ensure trailing slash — required for <base href> to resolve relative URLs correctly.
+        if (prefix[prefix.length - 1] !== '/') {
+          prefix += '/';
+        }
+        document.currentScript.insertAdjacentHTML(
+          'afterend',
+          '<base href="' + prefix + '" data-inject-target="BASE_URL" />'
+        );
+      })();
+    </script>
+    <link rel="shortcut icon" href="favicon.ico" />
     <title>Jaeger UI</title>
     <script>
       // Jaeger UI config data is embedded by the query-service via search-replace.
