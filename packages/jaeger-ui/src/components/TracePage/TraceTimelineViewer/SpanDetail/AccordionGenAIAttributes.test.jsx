@@ -21,6 +21,7 @@ describe('GENAI_RICH_ATTRIBUTE_KEYS', () => {
     expect(GENAI_RICH_ATTRIBUTE_KEYS.has('gen_ai.tool.call.result')).toBe(true);
     expect(GENAI_RICH_ATTRIBUTE_KEYS.has('gen_ai.retrieval.documents')).toBe(true);
     expect(GENAI_RICH_ATTRIBUTE_KEYS.has('gen_ai.tool.definitions')).toBe(true);
+    expect(GENAI_RICH_ATTRIBUTE_KEYS.has('gen_ai.system_instructions')).toBe(true);
   });
 
   it('does not contain regular attribute keys', () => {
