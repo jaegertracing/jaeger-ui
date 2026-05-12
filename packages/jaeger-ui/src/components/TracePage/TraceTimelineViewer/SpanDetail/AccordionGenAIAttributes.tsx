@@ -7,6 +7,7 @@ import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
 import 'react-json-view-lite/dist/index.css';
 
 import { IAttribute } from '../../../../types/otel';
+import { RICH_MEDIA_ATTRIBUTE_KEYS } from '../../../../utils/genai/detect';
 
 import './AccordionGenAIAttributes.css';
 
@@ -16,14 +17,7 @@ import './AccordionGenAIAttributes.css';
  *
  * @see https://opentelemetry.io/docs/specs/semconv/gen-ai/
  */
-export const GENAI_RICH_ATTRIBUTE_KEYS = new Set([
-  'gen_ai.input.messages',
-  'gen_ai.output.messages',
-  'gen_ai.tool.call.arguments',
-  'gen_ai.tool.call.result',
-  'gen_ai.retrieval.documents',
-  'gen_ai.tool.definitions',
-]);
+export const GENAI_RICH_ATTRIBUTE_KEYS = new Set(Object.keys(RICH_MEDIA_ATTRIBUTE_KEYS));
 
 type SingleAttributeRowProps = {
   attribute: IAttribute;
