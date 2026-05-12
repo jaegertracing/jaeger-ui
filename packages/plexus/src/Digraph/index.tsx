@@ -28,6 +28,7 @@ import ZoomManager, { zoomIdentity, ZoomTransform } from '../zoom/ZoomManager';
 
 type TDigraphState<T = {}, U = {}> = Omit<TExposedGraphState<T, U>, 'renderUtils'> & {
   sizeVertices: TSizeVertex<T>[] | null;
+  layoutVersion: number;
 };
 
 type TDigraphProps<T = unknown, U = unknown> = {
@@ -91,6 +92,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     sizeVertices: null,
     vertices: [],
     zoomTransform: zoomIdentity,
+    layoutVersion: 0,
   };
 
   baseId = `plexus--Digraph--${idCounter++}`;
@@ -132,6 +134,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
           layoutPhase: ELayoutPhase.CalcSizes,
           layoutVertices: null,
           sizeVertices: null,
+          layoutVersion: prevState.layoutVersion + 1,
         };
       }
       return {
@@ -142,6 +145,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
         layoutPhase: ELayoutPhase.NoData,
         layoutVertices: null,
         sizeVertices: null,
+        layoutVersion: prevState.layoutVersion + 1,
       };
     }
     return null;
@@ -165,8 +169,9 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
       throw new Error(`Key mismatch for measuring nodes; ${values}`);
     }
     this.setState({ sizeVertices });
+    const version = this.state.layoutVersion;
     const { layout } = layoutManager.getLayout(edges, sizeVertices);
-    layout.then(this.onLayoutDone);
+    layout.then(result => this.onLayoutDone(result, version));
     this.setState({ sizeVertices, layoutPhase: ELayoutPhase.CalcPositions });
     // We can add support for drawing nodes in the correct position before we have edges
     // via the following (instead of the above)
@@ -272,8 +277,8 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     this.setState({ zoomTransform });
   };
 
-  private onLayoutDone = (result: TCancelled | TLayoutDone<T, U>) => {
-    if (result.isCancelled) {
+  private onLayoutDone = (result: TCancelled | TLayoutDone<T, U>, version: number) => {
+    if (result.isCancelled || version !== this.state.layoutVersion) {
       return;
     }
     const { edges: layoutEdges, graph: layoutGraph, vertices: layoutVertices } = result;
