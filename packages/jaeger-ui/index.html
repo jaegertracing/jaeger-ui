@@ -10,11 +10,8 @@
     <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
     <meta http-equiv="pragma" content="no-cache" />
 
-    <!-- The document MUST have a <base> element, see jaeger/docs/adr/ADR-009 -->
+    <!-- The document MUST have a <base> element, see jaeger/docs/adr/ADR-009. -->
     <script>
-      // Sets <base href> from window.location BEFORE the preload scanner sees any relative-URL
-      // asset tags. Must remain the first child of <head>. Keep knownSubPaths in sync with
-      // detect-base-path.ts and each component's url.ts (enforced by unit tests).
       (function () {
         var knownSubPaths = [
           '/deep-dependencies',
@@ -26,8 +23,6 @@
           '/trace/',
         ];
         var path = window.location.pathname || '/';
-        // Use the rightmost match so a prefix that contains a known sub-path is handled correctly
-        // (e.g. mount at /a/search/ with deep link /a/search/trace/abc → prefix is /a/search/).
         var bestIdx = -1;
         for (var i = 0; i < knownSubPaths.length; i++) {
           var idx = path.lastIndexOf(knownSubPaths[i]);
@@ -35,7 +30,6 @@
         }
         var prefix = bestIdx !== -1 ? path.slice(0, bestIdx + 1) || '/' : path;
         if (prefix[prefix.length - 1] !== '/') prefix += '/';
-        // HTML-encode to prevent injection if the path somehow contains special characters.
         var safe = prefix.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         document.currentScript.insertAdjacentHTML(
           'afterend',
@@ -46,13 +40,13 @@
     <link rel="shortcut icon" href="favicon.ico" />
     <title>Jaeger UI</title>
     <script>
-      // Jaeger UI config data is embedded by the query-service via search-replace.
+      // Jaeger UI config data is embedded by jaeger backend via search-replace.
       // Please see ./README.md#configuration for details.
 
       // TODO the JSON/JS bifurcation below could be avoided by using a single template function like:
       // function getJaegerUiConfig() { return null; }
 
-      // Important! Do not alter the following line; query-service looks for that exact pattern.
+      // Important! Do not alter the following line; Jaeger looks for that exact pattern.
       // JAEGER_CONFIG_JS
 
       function getJaegerUiConfig() {
@@ -60,7 +54,7 @@
           return UIConfig();
         }
         const DEFAULT_CONFIG = null;
-        // Important! Do not alter the following line; query-service looks for that exact pattern.
+        // Important! Do not alter the following line; Jaeger looks for that exact pattern.
         const JAEGER_CONFIG = DEFAULT_CONFIG;
         return JAEGER_CONFIG;
       }
@@ -70,10 +64,10 @@
         const JAEGER_STORAGE_CAPABILITIES = DEFAULT_STORAGE_CAPABILITIES;
         return JAEGER_STORAGE_CAPABILITIES;
       }
-      // Jaeger version data is embedded by the query-service via search/replace.
+      // Jaeger version data is embedded by the Jaeger via search/replace.
       function getJaegerVersion() {
         const DEFAULT_VERSION = { gitCommit: '', gitVersion: '', buildDate: '' };
-        // Important! Do not alter the following line; query-service looks for that exact pattern.
+        // Important! Do not alter the following line; Jaeger looks for that exact pattern.
         const JAEGER_VERSION = DEFAULT_VERSION;
         return JAEGER_VERSION;
       }
