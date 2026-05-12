@@ -16,7 +16,7 @@ type TimelineViewingLayerProps = {
    * bounds for dragging need to be recalculated. In practice, the name column
    * width serves fine for this.
    */
-  boundsInvalidator: unknown;
+  boundsInvalidator?: unknown;
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
   viewRangeTime: IViewRangeTime;
@@ -162,6 +162,8 @@ function TimelineViewingLayer(props: TimelineViewingLayerProps) {
   );
 
   const draggerReframeRef = React.useRef<DraggableManager | null>(null);
+  // DraggableManager is intentionally created once; its callbacks read from
+  // propsRef so drag events use the latest props after rerenders.
   if (!draggerReframeRef.current) {
     draggerReframeRef.current = new DraggableManager({
       getBounds: getDraggingBounds,
@@ -172,14 +174,16 @@ function TimelineViewingLayer(props: TimelineViewingLayerProps) {
       onMouseMove: handleReframeMouseMove,
     });
   }
+  const draggerReframe = draggerReframeRef.current;
 
-  const previousBoundsInvalidatorRef = React.useRef(boundsInvalidator);
+  const hasMountedRef = React.useRef(false);
   React.useEffect(() => {
-    if (previousBoundsInvalidatorRef.current !== boundsInvalidator) {
-      draggerReframeRef.current?.resetBounds();
-      previousBoundsInvalidatorRef.current = boundsInvalidator;
+    if (hasMountedRef.current) {
+      draggerReframe.resetBounds();
+    } else {
+      hasMountedRef.current = true;
     }
-  }, [boundsInvalidator]);
+  }, [boundsInvalidator, draggerReframe]);
 
   React.useEffect(() => {
     return () => {
@@ -200,9 +204,9 @@ function TimelineViewingLayer(props: TimelineViewingLayerProps) {
       aria-hidden
       className="TimelineViewingLayer"
       ref={rootRef}
-      onMouseDown={draggerReframeRef.current.handleMouseDown}
-      onMouseLeave={draggerReframeRef.current.handleMouseLeave}
-      onMouseMove={draggerReframeRef.current.handleMouseMove}
+      onMouseDown={draggerReframe.handleMouseDown}
+      onMouseLeave={draggerReframe.handleMouseLeave}
+      onMouseMove={draggerReframe.handleMouseMove}
     >
       {cursorPosition != null && (
         <div className="TimelineViewingLayer--cursorGuide" style={{ left: cursorPosition }} />

@@ -58,7 +58,7 @@ describe('<TimelineViewingLayer>', () => {
       },
     };
 
-    Element.prototype.getBoundingClientRect = vi.fn(() => ({
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(() => ({
       left: 10,
       width: 100,
       top: 0,
