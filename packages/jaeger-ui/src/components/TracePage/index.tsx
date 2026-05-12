@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { InputRef } from 'antd';
+import { Alert, Button, InputRef } from 'antd';
 import { useNormalizeTraceId } from './useNormalizeTraceId';
 import { useNavigate } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
@@ -193,6 +193,7 @@ export function TracePageImpl(props: TProps) {
   const [slimView, setSlimView] = useState(() => Boolean(embedded?.timeline?.collapseTitle));
   const [viewType, setViewType] = useState<ETraceViewType>(ETraceViewType.TraceTimelineViewer);
   const [viewRange, setViewRange] = useState<IViewRange>({ time: { current: [0, 1] } });
+  const [genAiBannerDismissed, setGenAiBannerDismissed] = useState(false);
 
   const traceDagEV = useMemo(
     () =>
@@ -371,6 +372,10 @@ export function TracePageImpl(props: TProps) {
     return <ErrorMessage className="ub-m3" error={trace.error || 'Unknown error'} />;
   }
 
+  const traceIsGenAI = data
+    .asOtelTrace()
+    .spans.some(s => s.attributes.some(a => a.key.startsWith('gen_ai.')));
+
   let findCount = 0;
   let graphFindMatches: Set<string> | null | undefined;
   let spanFindMatches: Set<string> | null | undefined;
@@ -403,7 +408,8 @@ export function TracePageImpl(props: TProps) {
     detailPanelMode,
     enableSidePanel,
     hideMap: Boolean(
-      viewType !== ETraceViewType.TraceTimelineViewer || Boolean(embedded?.timeline?.hideMinimap)
+      (viewType !== ETraceViewType.TraceTimelineViewer && viewType !== ETraceViewType.GenAITimelineViewer) ||
+      Boolean(embedded?.timeline?.hideMinimap)
     ),
     hideSummary: Boolean(embedded?.timeline?.hideSummary),
     linkToStandalone: getUrl(id),
@@ -479,6 +485,20 @@ export function TracePageImpl(props: TProps) {
     view = <TraceFlamegraph trace={trace} />;
   } else if (ETraceViewType.TraceLogs === viewType && headerHeight) {
     view = <TraceLogsView trace={data.asOtelTrace()} useOtelTerms={useOtelTerms} />;
+  } else if (ETraceViewType.GenAITimelineViewer === viewType && headerHeight) {
+    view = (
+      <TraceTimelineViewer
+        registerAccessors={sm.setAccessors}
+        scrollToFirstVisibleSpan={sm.scrollToFirstVisibleSpan}
+        findMatchesIDs={spanFindMatches}
+        trace={data.asOtelTrace()}
+        criticalPath={criticalPath}
+        updateNextViewRangeTime={updateNextViewRangeTime}
+        updateViewRangeTime={updateViewRangeTime}
+        viewRange={viewRange}
+        useOtelTerms={useOtelTerms}
+      />
+    );
   }
 
   return (
@@ -488,6 +508,20 @@ export function TracePageImpl(props: TProps) {
       )}
       <div className="Tracepage--headerSection" ref={headerRefCallback}>
         <TracePageHeader {...headerProps} />
+        {traceIsGenAI && !genAiBannerDismissed && viewType !== ETraceViewType.GenAITimelineViewer && (
+          <Alert
+            message="GenAI trace detected"
+            description="Switch to GenAI View to see agentic hierarchy and rich attribute rendering."
+            type="info"
+            closable
+            onClose={() => setGenAiBannerDismissed(true)}
+            action={
+              <Button size="small" onClick={() => setTraceView(ETraceViewType.GenAITimelineViewer)}>
+                Switch to GenAI View
+              </Button>
+            }
+          />
+        )}
       </div>
       {headerHeight ? <section style={{ paddingTop: headerHeight }}>{view}</section> : null}
     </div>

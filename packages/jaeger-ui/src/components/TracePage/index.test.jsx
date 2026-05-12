@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 
@@ -1063,6 +1063,74 @@ describe('<TracePage>', () => {
       expect(screen.queryByTestId('mock-trace-statistics')).not.toBeInTheDocument();
       expect(screen.queryByTestId('mock-trace-span-view')).not.toBeInTheDocument();
       expect(screen.queryByTestId('mock-trace-flamegraph')).not.toBeInTheDocument();
+    });
+
+    it('renders TraceTimelineViewer when viewType is GenAITimelineViewer and headerHeight exists', () => {
+      render(<TracePage {...defaultProps} />);
+      act(() => {
+        capturedHeaderProps.onTraceViewChange(ETraceViewType.GenAITimelineViewer);
+      });
+      expect(screen.getByTestId('mock-timeline-viewer')).toBeInTheDocument();
+    });
+  });
+
+  describe('GenAI detection banner', () => {
+    let clientHeightSpy;
+    let genAiTraceData;
+    let genAiProps;
+
+    beforeAll(() => {
+      const raw = traceGenerator.trace({});
+      raw.spans[0].tags.push({ key: 'gen_ai.operation.name', type: 'string', value: 'chat' });
+      genAiTraceData = transformTraceData(raw);
+      genAiProps = {
+        ...defaultProps,
+        id: genAiTraceData.traceID,
+        trace: { data: genAiTraceData, state: fetchedState.DONE },
+      };
+    });
+
+    beforeEach(() => {
+      clientHeightSpy = jest.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(100);
+    });
+
+    afterEach(() => {
+      clientHeightSpy.mockRestore();
+    });
+
+    it('shows banner when trace has gen_ai.* attributes', () => {
+      render(<TracePage {...genAiProps} />);
+      expect(screen.getByText('GenAI trace detected')).toBeInTheDocument();
+    });
+
+    it('does not show banner for a plain trace', () => {
+      render(<TracePage {...defaultProps} />);
+      expect(screen.queryByText('GenAI trace detected')).not.toBeInTheDocument();
+    });
+
+    it('hides banner after dismissal', () => {
+      render(<TracePage {...genAiProps} />);
+      expect(screen.getByText('GenAI trace detected')).toBeInTheDocument();
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: /close/i }));
+      });
+      expect(screen.queryByText('GenAI trace detected')).not.toBeInTheDocument();
+    });
+
+    it('switches to GenAITimelineViewer when clicking the action button', () => {
+      render(<TracePage {...genAiProps} />);
+      act(() => {
+        fireEvent.click(screen.getByText('Switch to GenAI View'));
+      });
+      expect(capturedHeaderProps.viewType).toBe(ETraceViewType.GenAITimelineViewer);
+    });
+
+    it('does not show banner when already in GenAI view', () => {
+      render(<TracePage {...genAiProps} />);
+      act(() => {
+        capturedHeaderProps.onTraceViewChange(ETraceViewType.GenAITimelineViewer);
+      });
+      expect(screen.queryByText('GenAI trace detected')).not.toBeInTheDocument();
     });
   });
 });

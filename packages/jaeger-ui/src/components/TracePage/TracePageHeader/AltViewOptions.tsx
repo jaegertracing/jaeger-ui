@@ -52,6 +52,10 @@ const MENU_ITEMS = [
     viewType: ETraceViewType.TraceLogs,
     label: 'Trace Logs',
   },
+  {
+    viewType: ETraceViewType.GenAITimelineViewer,
+    label: 'GenAI View',
+  },
 ];
 
 export default function AltViewOptions(props: Props) {

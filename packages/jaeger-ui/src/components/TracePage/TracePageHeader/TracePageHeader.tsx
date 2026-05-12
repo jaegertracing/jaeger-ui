@@ -205,7 +205,9 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           ref={forwardedRef}
           resultCount={resultCount}
           textFilter={textFilter}
-          navigable={viewType === ETraceViewType.TraceTimelineViewer}
+          navigable={
+            viewType === ETraceViewType.TraceTimelineViewer || viewType === ETraceViewType.GenAITimelineViewer
+          }
           useOtelTerms={useOtelTerms}
         />
         <TraceViewSettings
