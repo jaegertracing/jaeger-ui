@@ -42,7 +42,7 @@ processScripts();
 // to tree-shake the dynamic import and exclude the demo files from the prod bundle.
 const PlexusDemoPage = import.meta.env.DEV ? React.lazy(() => import('../PlexusDemo')) : null;
 
-// The route table is exported so that detect-base-path.test.ts can verify that
+// The route table is exported so that index.test.ts can verify that
 // KNOWN_SUB_PATHS covers every path registered here. The <Routes> below is rendered
 // directly from this array, so the two cannot diverge.
 export const ROUTES: { path: string; element: React.ReactNode }[] = [

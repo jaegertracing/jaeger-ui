@@ -12,6 +12,7 @@
 
     <!-- The document MUST have a <base> element, see jaeger/docs/adr/ADR-009. -->
     <script>
+      /* BASE_PATH_DETECT */
       (function () {
         var knownSubPaths = [
           '/deep-dependencies',
@@ -21,6 +22,7 @@
           '/monitor',
           '/search',
           '/trace/',
+          '/trace',
         ];
         var path = window.location.pathname || '/';
         var bestIdx = -1;
