@@ -4,8 +4,6 @@
 import memoizeOne from 'memoize-one';
 import objectHash from 'object-hash';
 
-import type { KeyValuePair } from '../../types/trace';
-
 import {
   PathElem,
   TDdgModel,
@@ -18,8 +16,8 @@ import {
 
 const stringifyEntry = ({ service, operation }: TDdgPayloadEntry) => `${service}\v${operation}`;
 
-function group(arg: KeyValuePair[]): Record<string, any[]> {
-  const result: Record<string, any[]> = {};
+function group<T extends { key: string; value: any }>(arg: T[]): Record<string, T['value'][]> {
+  const result: Record<string, T['value'][]> = {};
   arg.forEach(({ key, value }) => {
     if (!result[key]) result[key] = [];
     result[key].push(value);
@@ -56,7 +54,8 @@ function transformDdgData(
       // Default value necessary as sort is not called if there is only one path
       hashArg.push(pathCompareValues.get(payloadPath) || payloadPath.map(stringifyEntry).join());
 
-      const { exemplar_trace_id: traceIDs } = group(attributes);
+      const groupedAttrs = group(attributes);
+      const traceIDs = (groupedAttrs.exemplar_trace_id || []) as string[];
 
       // Path with stand-in values is necessary for assigning PathElem.memberOf
       const path: TDdgPath = { focalIdx: -1, members: [], traceIDs };
