@@ -1,12 +1,6 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// TODO_PHASE2_COMPACT_TABLE: Add a "Compact" / "Detailed" view toggle to the
-// search results header. In compact mode, render a Table (antd) instead of the
-// current ResultsCard list. Each row: traceID, root span name, duration,
-// gen_ai.request.model (if present), estimated token count (sum across spans).
-// Toggle state: useLayoutPrefsStore(s => s.searchResultsMode) ('list' | 'compact')
-
 import * as React from 'react';
 import { useCallback } from 'react';
 import { Select } from 'antd';

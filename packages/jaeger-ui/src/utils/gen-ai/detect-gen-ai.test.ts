@@ -55,32 +55,26 @@ function makeTrace(spans: IOtelSpan[]): IOtelTrace {
 }
 
 describe('detectGenAISpan', () => {
-  // Case 1: tool wins over llm when both attributes are present
   it('returns "tool" when gen_ai.tool.name and gen_ai.operation.name are both present', () => {
     const span = makeSpan({ 'gen_ai.tool.name': 'get_weather', 'gen_ai.operation.name': 'chat' });
     expect(detectGenAISpan(span)).toBe('tool');
   });
 
-  // Case 2: db.system=vector is detected by span attributes alone (no ancestor traversal)
   it('returns "retrieval" for db.system=vector regardless of parent span type', () => {
     const span = makeSpan({ 'db.system': 'vector' });
     expect(detectGenAISpan(span)).toBe('retrieval');
-    // (the false-positive guard is at the trace level via isGenAITrace, not the span level)
   });
 
-  // Case 3: gen_ai.tool.call.id without gen_ai.tool.name returns null (malformed instrumentation)
   it('returns null for gen_ai.tool.call.id without gen_ai.tool.name', () => {
     const span = makeSpan({ 'gen_ai.tool.call.id': 'abc-123' });
     expect(detectGenAISpan(span)).toBeNull();
   });
 
-  // Case 4: non-standard gen_ai.* prefix falls through to 'llm' via prefix match
   it('returns "llm" for a non-standard gen_ai.* key with no operation.name', () => {
     const span = makeSpan({ 'gen_ai.custom_field': 'foo' });
     expect(detectGenAISpan(span)).toBe('llm');
   });
 
-  // Case 5: no gen_ai.* attributes returns null
   it('returns null for spans with no gen_ai.* attributes', () => {
     const span = makeSpan({ 'http.method': 'GET', 'http.status_code': 200 });
     expect(detectGenAISpan(span)).toBeNull();
@@ -118,7 +112,6 @@ describe('isGenAITrace', () => {
   });
 
   it('returns false when only gen_ai.tool.call.id is present (detectGenAISpan returns null)', () => {
-    // gen_ai.tool.call.id alone does not identify a renderable span; isGenAITrace must agree.
     const spans = [makeSpan({ 'gen_ai.tool.call.id': 'abc-123' })];
     expect(isGenAITrace(makeTrace(spans))).toBe(false);
   });

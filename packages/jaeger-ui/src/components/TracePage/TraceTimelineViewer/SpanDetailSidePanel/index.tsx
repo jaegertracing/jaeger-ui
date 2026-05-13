@@ -45,7 +45,6 @@ export function SpanDetailSidePanelImpl(props: TProps) {
   const zustandDetailWarningsToggle = useTraceTimelineStore(s => s.detailWarningsToggle);
   const zustandFocusUiFindMatches = useTraceTimelineStore(s => s.focusUiFindMatches);
 
-  // dual-write handlers (Redux first for tracking middleware, Zustand second)
   const detailLogItemToggle = useCallback(
     (spanID: string, logItem: IEvent) => {
       dispatch(actions.detailLogItemToggle(spanID, logItem));
@@ -110,15 +109,10 @@ export function SpanDetailSidePanelImpl(props: TProps) {
     [location, navigate, trace, focusUiFindMatches]
   );
 
-  // Hooks must all be called before any early return (Rules of Hooks).
   const genAIModeActive = useLayoutPrefsStore(s => s.genAIModeActive);
   const autoDetectedGenAI = useLayoutPrefsStore(s => s.autoDetectedGenAI);
 
-  // Show the explicitly selected span, falling back to the root span when nothing is selected.
-  // When the user first interacts with an accordion in fallback mode, the reducer creates a
-  // detailStates entry for the root span (since detailSubsectionToggle auto-initialises). This
-  // is intentional: the root span then becomes explicitly selected and gains selection highlight,
-  // while the panel label stays "Trace Root" because selectedSpanID === rootSpanID.
+  // Fall back to root span until the user explicitly selects one.
   const spanID = getSelectedSpanID(detailStates) ?? trace.rootSpans?.[0]?.spanID;
   const span = spanID ? trace.spanMap.get(spanID) : undefined;
   const genAIKind = useMemo(() => (span ? detectGenAISpan(span) : null), [span]);

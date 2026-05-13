@@ -290,11 +290,6 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
 
   getRowStates(): RowState[] {
     const { childrenHiddenIDs, detailStates, detailPanelMode, prunedServices, trace } = this.props;
-    // TODO_PHASE2_LOGICAL_VIEW: Add `logicalViewActive: boolean` parameter to
-    // generateRowStates() here. When true, filter out spans where
-    // detectGenAISpan(span) === null AND the span has no GenAI ancestors.
-    // State field: useLayoutPrefsStore(s => s.logicalViewActive)
-    // TraceViewSettings menu item: "Logical View" (checked = active)
     return memoizedGenerateRowStates(trace, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices);
   }
 
