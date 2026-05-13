@@ -34,9 +34,17 @@ const Status = z
   .object({ code: z.number().int(), message: z.string(), details: z.array(GoogleProtobufAny) })
   .passthrough();
 const GetServicesResponse = z.object({ services: z.array(z.string()) }).passthrough();
-const ArrayValue: z.ZodType<ArrayValue> = z.lazy(() => z.object({ values: z.array(AnyValue) }).passthrough());
+const ArrayValue: z.ZodType<ArrayValue> = z.lazy(() =>
+  z
+    .object({ values: z.array(AnyValue) })
+    .partial()
+    .passthrough()
+);
 const KeyValueList: z.ZodType<KeyValueList> = z.lazy(() =>
-  z.object({ values: z.array(KeyValue) }).passthrough()
+  z
+    .object({ values: z.array(KeyValue) })
+    .partial()
+    .passthrough()
 );
 const AnyValue: z.ZodType<AnyValue> = z.lazy(() =>
   z
@@ -49,10 +57,11 @@ const AnyValue: z.ZodType<AnyValue> = z.lazy(() =>
       kvlistValue: KeyValueList,
       bytesValue: z.string(),
     })
+    .partial()
     .passthrough()
 );
 const KeyValue: z.ZodType<KeyValue> = z.lazy(() =>
-  z.object({ key: z.string(), value: AnyValue }).passthrough()
+  z.object({ key: z.string(), value: AnyValue }).partial().passthrough()
 );
 const Resource = z
   .object({ attributes: z.array(KeyValue), droppedAttributesCount: z.number().int() })
@@ -267,3 +276,18 @@ export function createApiClient(baseUrl: string, options?: ZodiosOptions) {
 export { GetServicesResponse as ServicesResponseSchema };
 export { GetOperationsResponse as OperationsResponseSchema };
 export { Operation as OperationSchema };
+// OTLP trace/span wire types. Renamed from proto nested-message style
+// (Span_Event, Span_Link) to OpenTelemetry-conventional names.
+export { TracesData as TracesDataSchema };
+export { ResourceSpans as ResourceSpansSchema };
+export { ScopeSpans as ScopeSpansSchema };
+export { Span as SpanSchema };
+export { Span_Event as SpanEventSchema };
+export { Span_Link as SpanLinkSchema };
+export { Resource as ResourceSchema };
+export { InstrumentationScope as InstrumentationScopeSchema };
+export { KeyValue as KeyValueSchema };
+export { AnyValue as AnyValueSchema };
+export { ArrayValue as ArrayValueSchema };
+export { KeyValueList as KeyValueListSchema };
+export { Status as StatusSchema };

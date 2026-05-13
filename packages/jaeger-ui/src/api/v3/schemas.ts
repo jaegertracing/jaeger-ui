@@ -9,7 +9,27 @@
  */
 
 // Import auto-generated schemas (post-processed for strict validation)
-export { ServicesResponseSchema, OperationsResponseSchema, OperationSchema } from './generated-client';
+export {
+  ServicesResponseSchema,
+  OperationsResponseSchema,
+  OperationSchema,
+  // OTLP trace/span wire types. Names mirror the OpenTelemetry semantic
+  // conventions; the generator emits Span_Event and Span_Link from the
+  // proto nested message types, which we rename for ergonomic consumption.
+  TracesDataSchema,
+  ResourceSpansSchema,
+  ScopeSpansSchema,
+  SpanSchema,
+  SpanEventSchema,
+  SpanLinkSchema,
+  ResourceSchema,
+  InstrumentationScopeSchema,
+  KeyValueSchema,
+  AnyValueSchema,
+  ArrayValueSchema,
+  KeyValueListSchema,
+  StatusSchema,
+} from './generated-client';
 
 /**
  * Helper validators for trace and span IDs in hex format
