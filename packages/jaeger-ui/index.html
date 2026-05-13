@@ -34,11 +34,7 @@
             ? path.slice(0, bestIdx + 1) || '/'
             : path.slice(0, path.lastIndexOf('/') + 1) || '/';
         if (prefix[prefix.length - 1] !== '/') prefix += '/';
-        var safe = prefix
-          .replace(/&/g, '&amp;')
-          .replace(/"/g, '&quot;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;');
+        var safe = prefix.replace(/[&"<>]/g, '');
         document.currentScript.insertAdjacentHTML(
           'afterend',
           '<base href="' + safe + '" data-inject-target="BASE_URL" />'
