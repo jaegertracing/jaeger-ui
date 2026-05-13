@@ -13,5 +13,5 @@
       "@jaegertracing/plexus/lib/*": ["../plexus/src/*"]
     }
   },
-  "include": ["src/**/*.tsx", "src/**/*.ts", "src/**/*.json", "typings", "*.ts"]
+  "include": ["src/**/*.tsx", "src/**/*.ts", "src/**/*.json", "typings", "index.test.ts"]
 }
