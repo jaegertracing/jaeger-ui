@@ -1,5 +1,16 @@
 # Jaeger UI
 
+## Entry point — index.html
+
+[index.html](./index.html) is the single HTML page that bootstraps the application. It does three things before any JavaScript bundle loads:
+
+1. **Base-path detection** — an inline `<script>` inspects `window.location.pathname` and injects a `<base href="…">` element so that relative asset URLs resolve correctly regardless of the URL prefix under which Jaeger is served. This makes the UI work behind a reverse proxy that exposes it at an arbitrary path (e.g. `/jaeger/`) without any backend configuration. See [ADR-009](https://github.com/jaegertracing/jaeger/blob/main/docs/adr/009-ui-base-path-auto-detection.md) for the design rationale.
+
+2. **Runtime configuration** — three JavaScript functions (`getJaegerUiConfig`, `getJaegerStorageCapabilities`, `getJaegerVersion`) are defined with stub return values. The Jaeger backend replaces those stubs with real data via search-and-replace before serving the file, injecting deployment-specific configuration without a separate API round-trip.
+
+3. **SPA mount fallback** — if the React application fails to mount (e.g. due to an unresolvable asset path or an invalid URL), a plain-text error message is shown in `#jaeger-ui-root` instead of a blank page.
+
+
 ## Configuration
 
 The UI supports customization via custom configuration as either JSON or Javascript file. Refer to [documentation](https://www.jaegertracing.io/docs/latest/deployment/frontend-ui/) for the full syntax.

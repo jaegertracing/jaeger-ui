@@ -30,6 +30,8 @@ function detectBasePath(pathname: string): string {
         insertedHtml = html;
       },
     },
+    addEventListener: () => {},
+    getElementById: () => null,
   };
   scriptFn(mockDoc, { location: { pathname } });
   const m = insertedHtml.match(/href="([^"]*)"/);
