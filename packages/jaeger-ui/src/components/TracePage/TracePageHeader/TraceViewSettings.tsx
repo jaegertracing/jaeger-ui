@@ -61,7 +61,7 @@ export default function TraceViewSettings(props: Props) {
     });
   }
 
-  if (enableGenAIMode && autoDetectedGenAI) {
+  if (enableGenAIMode && (autoDetectedGenAI || genAIModeActive)) {
     items.push({
       key: 'genai-mode',
       icon: genAIModeActive ? <IoCheckmark style={CHECK_STYLE} /> : CHECK_PLACEHOLDER,
