@@ -83,6 +83,13 @@ describe('inline base-path detection script', () => {
       expect(detectBasePath('/a/b/c/trace/deadbeef')).toBe('/a/b/c/'));
   });
 
+  describe('unknown route: no known sub-path present', () => {
+    it('/unknown → /', () => expect(detectBasePath('/unknown')).toBe('/'));
+    it('/jaeger/unknown-page → /jaeger/', () =>
+      expect(detectBasePath('/jaeger/unknown-page')).toBe('/jaeger/'));
+    it('/a/b/unknown → /a/b/', () => expect(detectBasePath('/a/b/unknown')).toBe('/a/b/'));
+  });
+
   describe('rightmost match: prefix containing a known sub-path segment', () => {
     it('/a/search/trace/abc → /a/search/', () =>
       expect(detectBasePath('/a/search/trace/abc')).toBe('/a/search/'));

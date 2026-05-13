@@ -29,7 +29,13 @@
           var idx = path.lastIndexOf(knownSubPaths[i]);
           if (idx !== -1 && idx > bestIdx) bestIdx = idx;
         }
-        var prefix = bestIdx !== -1 ? path.slice(0, bestIdx + 1) || '/' : path;
+        // When no known sub-path matches (e.g. an unknown/404 route), derive the
+        // prefix by stripping the last path segment, which gives the "directory"
+        // of the current URL — the same result a known route would have produced.
+        var prefix =
+          bestIdx !== -1
+            ? path.slice(0, bestIdx + 1) || '/'
+            : path.slice(0, path.lastIndexOf('/') + 1) || '/';
         if (prefix[prefix.length - 1] !== '/') prefix += '/';
         var safe = prefix
           .replace(/&/g, '&amp;')
@@ -45,7 +51,7 @@
     <link rel="shortcut icon" href="favicon.ico" />
     <title>Jaeger UI</title>
     <script>
-      // Jaeger UI config data is embedded by jaeger backend via search-replace.
+      // Jaeger UI config data is embedded by Jaeger backend via search-replace.
       // Please see ./README.md#configuration for details.
 
       // TODO the JSON/JS bifurcation below could be avoided by using a single template function like:
@@ -69,7 +75,7 @@
         const JAEGER_STORAGE_CAPABILITIES = DEFAULT_STORAGE_CAPABILITIES;
         return JAEGER_STORAGE_CAPABILITIES;
       }
-      // Jaeger version data is embedded by the Jaeger via search/replace.
+      // Jaeger version data is embedded by Jaeger backend via search/replace.
       function getJaegerVersion() {
         const DEFAULT_VERSION = { gitCommit: '', gitVersion: '', buildDate: '' };
         // Important! Do not alter the following line; Jaeger looks for that exact pattern.
