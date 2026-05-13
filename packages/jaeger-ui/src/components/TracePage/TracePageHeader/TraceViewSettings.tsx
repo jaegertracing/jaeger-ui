@@ -69,18 +69,7 @@ export default function TraceViewSettings(props: Props) {
         <span>
           GenAI Mode{' '}
           {autoDetectedGenAI && !genAIModeActive && (
-            <span
-              style={{
-                fontSize: 10,
-                background: '#1890ff',
-                color: '#fff',
-                borderRadius: 4,
-                padding: '1px 5px',
-                marginLeft: 4,
-              }}
-            >
-              AUTO
-            </span>
+            <span className="TraceViewSettings--autoBadge">AUTO</span>
           )}
         </span>
       ),

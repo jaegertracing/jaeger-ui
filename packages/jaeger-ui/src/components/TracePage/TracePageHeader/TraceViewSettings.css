@@ -13,3 +13,12 @@ SPDX-License-Identifier: Apache-2.0
 .TraceViewSettings--icon {
   font-size: 1.2rem;
 }
+
+.TraceViewSettings--autoBadge {
+  font-size: 10px;
+  background: var(--interactive-primary);
+  color: var(--text-inverse);
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-left: 4px;
+}
