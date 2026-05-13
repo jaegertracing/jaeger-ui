@@ -57,3 +57,46 @@ describe('Digraph.getDerivedStateFromProps', () => {
     });
   });
 });
+
+describe('Digraph.onLayoutDone', () => {
+  it('ignores stale layout results', () => {
+    const instance = new Digraph({} as any);
+    instance.state = { layoutVersion: 2, layoutPhase: ELayoutPhase.CalcPositions } as any;
+
+    // Simulate a layout result for an older version
+    const staleResult = { isCancelled: false, edges: [], vertices: [], graph: {} };
+    (instance as any).onLayoutDone(staleResult, 1);
+
+    // State should not change
+    expect(instance.state.layoutPhase).toBe(ELayoutPhase.CalcPositions);
+  });
+
+  it('processes current layout results', () => {
+    const instance = new Digraph({} as any);
+    instance.state = { layoutVersion: 2, layoutPhase: ELayoutPhase.CalcPositions } as any;
+
+    let contentSizeCalled = false;
+    (instance as any).zoomManager = {
+      setContentSize: () => {
+        contentSizeCalled = true;
+      },
+    };
+
+    // We mock setState because it's a React component
+    let setStateCalledWith = null;
+    instance.setState = newState => {
+      setStateCalledWith = newState;
+    };
+
+    const currentResult = { isCancelled: false, edges: [], vertices: [], graph: {} };
+    (instance as any).onLayoutDone(currentResult, 2);
+
+    expect(setStateCalledWith).toMatchObject({
+      layoutPhase: ELayoutPhase.Done,
+      layoutEdges: [],
+      layoutVertices: [],
+      layoutGraph: {},
+    });
+    expect(contentSizeCalled).toBe(true);
+  });
+});
