@@ -13,10 +13,12 @@ import { ROUTES } from './src/components/App';
 // Extract and compile the base-path detection script from index.html once
 // to test the base path determination logic.
 const indexHtml = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'index.html'), 'utf-8');
-// Extract the base-path detection script identified by the BASE_PATH_DETECT marker.
-// Using a marker (rather than first-script heuristic) survives attribute additions or reordering.
-const scriptMatch = indexHtml.match(/\/\* BASE_PATH_DETECT \*\/([\s\S]*?)<\/script>/i);
-if (!scriptMatch) throw new Error('No BASE_PATH_DETECT script found in index.html');
+// Locate the script that injects <base data-inject-target="BASE_URL"> — that attribute
+// is unique to this script and survives tag-attribute additions or script reordering.
+const scriptMatch = indexHtml.match(
+  /<script[^>]*>([\s\S]*?data-inject-target="BASE_URL"[\s\S]*?)<\/script>/i
+);
+if (!scriptMatch) throw new Error('No base-path detection script found in index.html');
 // eslint-disable-next-line no-new-func
 const scriptFn = new Function('document', 'window', scriptMatch[1]);
 
