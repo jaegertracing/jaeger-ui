@@ -61,9 +61,9 @@ function GenAISpanIcon({ span }: { span: IOtelSpan }) {
   const kind = useMemo(() => detectGenAISpan(span), [span]);
   if (!kind) return null;
   const style = { fontSize: '0.85rem', marginRight: 4, verticalAlign: 'middle' };
-  if (kind === 'llm') return <BulbOutlined style={style} />;
-  if (kind === 'tool') return <ToolOutlined style={style} />;
-  if (kind === 'retrieval') return <DatabaseOutlined style={style} />;
+  if (kind === 'llm') return <BulbOutlined style={style} aria-label="LLM span" role="img" />;
+  if (kind === 'tool') return <ToolOutlined style={style} aria-label="Tool call span" role="img" />;
+  if (kind === 'retrieval') return <DatabaseOutlined style={style} aria-label="Retrieval span" role="img" />;
   return null;
 }
 
