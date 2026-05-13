@@ -9,6 +9,80 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v2.18.0 (2026-05-13)
+
+#### ⛔ Breaking Changes
+
+* Chore: drop legacy browser support ([@ghosthouse7](https://github.com/ghosthouse7) in [#3712](https://github.com/jaegertracing/jaeger-ui/pull/3712))
+
+#### ✨ New Features
+
+* Feat(ui): auto-detect url prefix from window.location at page load ([@yurishkuro](https://github.com/yurishkuro) in [#3874](https://github.com/jaegertracing/jaeger-ui/pull/3874))
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Fix monitor page chart widths on initial load ([@gulshank0](https://github.com/gulshank0) in [#3555](https://github.com/jaegertracing/jaeger-ui/pull/3555))
+* Fix: use compact duration format consistently across ui ([@yurishkuro](https://github.com/yurishkuro) in [#3846](https://github.com/jaegertracing/jaeger-ui/pull/3846))
+* Fix(search): restore time picker options broken by #3781 ([@yurishkuro](https://github.com/yurishkuro) in [#3845](https://github.com/jaegertracing/jaeger-ui/pull/3845))
+* Fix(search): use compact duration format in search results ([@Copilot](https://github.com/apps/copilot-swe-agent) in [#3844](https://github.com/jaegertracing/jaeger-ui/pull/3844))
+* Fix: add keyboard accessibility to span name and child expander in trace timeline ([@swetalin-10](https://github.com/swetalin-10) in [#3807](https://github.com/jaegertracing/jaeger-ui/pull/3807))
+* Restore trace timeline column resizing in embedded mode (`uiembed=v0`) ([@Copilot](https://github.com/apps/copilot-swe-agent) in [#3823](https://github.com/jaegertracing/jaeger-ui/pull/3823))
+* Fix: include backend error in otlp conversion error message ([@yurishkuro](https://github.com/yurishkuro) in [#3827](https://github.com/jaegertracing/jaeger-ui/pull/3827))
+* Fix: stop click propagation in clicktocopy to prevent header collapse ([@Copilot](https://github.com/apps/copilot-swe-agent) in [#3818](https://github.com/jaegertracing/jaeger-ui/pull/3818))
+* Fix(trace): restore "back to search" link broken by react router v6 migration ([@yurishkuro](https://github.com/yurishkuro) in [#3785](https://github.com/jaegertracing/jaeger-ui/pull/3785))
+* Feat(trace): add service filter to prune spans by service in timeline ([@yurishkuro](https://github.com/yurishkuro) in [#3765](https://github.com/jaegertracing/jaeger-ui/pull/3765))
+* Fix: prevent timeline tick labels from overlapping when column is narrow ([@aabhinavvvvvvv](https://github.com/aabhinavvvvvvv) in [#3768](https://github.com/jaegertracing/jaeger-ui/pull/3768))
+* Fix(ui): sort services alphabetically ([@bender316](https://github.com/bender316) in [#3734](https://github.com/jaegertracing/jaeger-ui/pull/3734))
+* 🔒 fix command injection in prepare-release.py ([@jkowall](https://github.com/jkowall) in [#3717](https://github.com/jaegertracing/jaeger-ui/pull/3717))
+* Perf: optimize tracestatistics grouping ([@jkowall](https://github.com/jkowall) in [#3718](https://github.com/jaegertracing/jaeger-ui/pull/3718))
+* Add environment checks to prepare-release target ([@jkowall](https://github.com/jkowall) in [#3512](https://github.com/jaegertracing/jaeger-ui/pull/3512))
+* Fix: prevent infinite loop on tracediff with empty trace ids ([@parshipcy](https://github.com/parshipcy) in [#3714](https://github.com/jaegertracing/jaeger-ui/pull/3714))
+* Adjust search results for smaller screens ([@lpmi-13](https://github.com/lpmi-13) in [#3697](https://github.com/jaegertracing/jaeger-ui/pull/3697))
+
+#### 👷 CI Improvements
+
+* Delete .github/workflows/s390x-build.yaml ([@yurishkuro](https://github.com/yurishkuro) in [#3851](https://github.com/jaegertracing/jaeger-ui/pull/3851))
+* Fix(lint): resolve eslint-plugin-jest(require-to-throw-message) warnings ([@JeevaRamanathan](https://github.com/JeevaRamanathan) in [#3759](https://github.com/jaegertracing/jaeger-ui/pull/3759))
+* Fix(lint): disable jest/no-conditional-expect ([@vibhor-5](https://github.com/vibhor-5) in [#3756](https://github.com/jaegertracing/jaeger-ui/pull/3756))
+* Fix(lint): disable eslint(no-shadow) warnings ([@vibhor-5](https://github.com/vibhor-5) in [#3757](https://github.com/jaegertracing/jaeger-ui/pull/3757))
+* Chore: add knip; remove 4 unused devdependencies ([@yurishkuro](https://github.com/yurishkuro) in [#3742](https://github.com/jaegertracing/jaeger-ui/pull/3742))
+
+#### ⚙️ Refactoring
+
+* Refactor(spanview): extract relativebar component from tracespanview ([@yurishkuro](https://github.com/yurishkuro) in [#3855](https://github.com/jaegertracing/jaeger-ui/pull/3855))
+* Refactor(stats): migrate tracestatisticsheader to functional component ([@WasThatRudy](https://github.com/WasThatRudy) in [#3842](https://github.com/jaegertracing/jaeger-ui/pull/3842))
+* Part of phase 1 (1f): remove config redux slice; use getconfig via useconfig ([@parshipcy](https://github.com/parshipcy) in [#3781](https://github.com/jaegertracing/jaeger-ui/pull/3781))
+* Part of phase 1 (1e): migrate embed flags off redux ([@parshipcy](https://github.com/parshipcy) in [#3761](https://github.com/jaegertracing/jaeger-ui/pull/3761))
+* Part of phase 1 (1d): move ddg view modifiers from redux to zustand ([@parshipcy](https://github.com/parshipcy) in [#3750](https://github.com/jaegertracing/jaeger-ui/pull/3750))
+* Fix(lint): replace new array(n) with array.from, promote no-new-array to error ([@mateenali66](https://github.com/mateenali66) in [#3754](https://github.com/jaegertracing/jaeger-ui/pull/3754))
+* Fix(lint): clear unused vars/imports, promote no-unused-vars to error in ts ([@mateenali66](https://github.com/mateenali66) in [#3753](https://github.com/jaegertracing/jaeger-ui/pull/3753))
+* Fix(lint): fix jest expects to have matcher calls, promote valid-expect to error ([@Pasta-coder](https://github.com/Pasta-coder) in [#3752](https://github.com/jaegertracing/jaeger-ui/pull/3752))
+* Fix(lint): drop useless array spread, promote no-useless-spread to error ([@mateenali66](https://github.com/mateenali66) in [#3749](https://github.com/jaegertracing/jaeger-ui/pull/3749))
+* Chore(lint): move oxlint config into vite.config.ts ([@yurishkuro](https://github.com/yurishkuro) in [#3748](https://github.com/jaegertracing/jaeger-ui/pull/3748))
+* Fix(lint): pass children as arg, promote no-children-prop to error ([@yurishkuro](https://github.com/yurishkuro) in [#3747](https://github.com/jaegertracing/jaeger-ui/pull/3747))
+* Chore: fix all knip unused-export warnings; enable failure mode ([@yurishkuro](https://github.com/yurishkuro) in [#3745](https://github.com/jaegertracing/jaeger-ui/pull/3745))
+* Chore: unexport 32 types not imported outside their own file ([@yurishkuro](https://github.com/yurishkuro) in [#3744](https://github.com/jaegertracing/jaeger-ui/pull/3744))
+* Chore: fix knip dead-code warnings ([@yurishkuro](https://github.com/yurishkuro) in [#3743](https://github.com/jaegertracing/jaeger-ui/pull/3743))
+* Part of phase1 (sub-2-1c): migrate collapse/expand and detail state to zustand ([@parshipcy](https://github.com/parshipcy) in [#3721](https://github.com/jaegertracing/jaeger-ui/pull/3721))
+* Convert measurablenode to functional component ([@thc1006](https://github.com/thc1006) in [#3407](https://github.com/jaegertracing/jaeger-ui/pull/3407))
+* Migrate tracespanview to functional component ([@whiplashvin](https://github.com/whiplashvin) in [#3470](https://github.com/jaegertracing/jaeger-ui/pull/3470))
+* Part of phase 1 (sub-1c): move trace timeline layout prefs to zustand ([@parshipcy](https://github.com/parshipcy) in [#3719](https://github.com/jaegertracing/jaeger-ui/pull/3719))
+* Part of phase 1 (1b): archive notifier migrated from redux to zustand ([@parshipcy](https://github.com/parshipcy) in [#3715](https://github.com/jaegertracing/jaeger-ui/pull/3715))
+* Part of phase 1: refactor: migrate trace diff state from redux to zustand ([@parshipcy](https://github.com/parshipcy) in [#3702](https://github.com/jaegertracing/jaeger-ui/pull/3702))
+* Refactor: convert spangraph to functional component ([@tmchow](https://github.com/tmchow) in [#3705](https://github.com/jaegertracing/jaeger-ui/pull/3705))
+* Test(jaeger-ui): migrate tests from jest to vitest ([@yurishkuro](https://github.com/yurishkuro) in [#3695](https://github.com/jaegertracing/jaeger-ui/pull/3695))
+* Test: add mockdefault helper for default-export mocks ([@yurishkuro](https://github.com/yurishkuro) in [#3694](https://github.com/jaegertracing/jaeger-ui/pull/3694))
+* Test: replace arrow ctor mocks with regular functions ([@yurishkuro](https://github.com/yurishkuro) in [#3693](https://github.com/jaegertracing/jaeger-ui/pull/3693))
+* Chore(jaeger-ui): replace require() in test bodies with static imports ([@yurishkuro](https://github.com/yurishkuro) in [#3692](https://github.com/jaegertracing/jaeger-ui/pull/3692))
+* Chore(jaeger-ui): rename jsx test files from .js to .jsx ([@yurishkuro](https://github.com/yurishkuro) in [#3691](https://github.com/jaegertracing/jaeger-ui/pull/3691))
+* [adr/007] migrate packages/plexus tests from jest to vitest ([@yurishkuro](https://github.com/yurishkuro) in [#3690](https://github.com/jaegertracing/jaeger-ui/pull/3690))
+* [adr/007] consolidate jaeger-ui tsconfigs (step e) ([@yurishkuro](https://github.com/yurishkuro) in [#3689](https://github.com/jaegertracing/jaeger-ui/pull/3689))
+
+### 💩💩💩 The following commits cannot be categorized (missing "changelog:*" labels):
+* Renovate: enable vulnerability alerts for security prs ([@Copilot](https://github.com/apps/copilot-swe-agent) in [#3732](https://github.com/jaegertracing/jaeger-ui/pull/3732))
+### 💩💩💩 Please attach labels to these ^^^ PRs and rerun the script.
+### 💩💩💩 Do not include this section in the changelog.
+
 ## v2.17.0 (2026-03-30)
 
 #### ✨ New Features
