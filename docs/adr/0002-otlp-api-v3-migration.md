@@ -477,7 +477,7 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 - [x] Setup `QueryClient` and `QueryClientProvider` (`src/query/app-query-client.tsx`).
 - [x] Create `useServices()` and `useSpanNames(service)` hooks (`src/hooks/useTraceDiscovery.ts`).
 - [x] Update `SearchForm` to use these hooks instead of Redux/JaegerAPI.
-- [ ] Wire `app-query-client` into the root `App` component so all pages benefit.
+- [x] Wire `app-query-client` into the root `App` component so all pages benefit.
 - **Verification**: Search page dropdowns are populated from `/api/v3/`.
 
 #### Milestone 3.2: Single Trace Loading

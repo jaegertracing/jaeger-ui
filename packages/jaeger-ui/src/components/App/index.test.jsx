@@ -38,6 +38,10 @@ vi.mock('../../api/jaeger', () => ({
 vi.mock('../../utils/config/process-scripts');
 vi.mock('../../utils/prefix-url', () => mockDefault(jest.fn(() => '/prefix')));
 
+vi.mock('../../query/app-query-client', () => ({
+  AppQueryClientProvider: ({ children }) => <div data-testid="app-query-client-provider">{children}</div>,
+}));
+
 const createMockHistory = (pathname = '/') => ({
   length: 1,
   action: 'POP',
@@ -102,6 +106,11 @@ describe('JaegerUIApp', () => {
   it('should render Page wrapper', () => {
     const { getByTestId } = renderWithPath('/search');
     expect(getByTestId('page')).toBeInTheDocument();
+  });
+
+  it('should render AppQueryClientProvider wrapper', () => {
+    const { getByTestId } = renderWithPath('/search');
+    expect(getByTestId('app-query-client-provider')).toBeInTheDocument();
   });
 
   it('should render without throwing errors', () => {
