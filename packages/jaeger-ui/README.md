@@ -10,7 +10,6 @@
 
 3. **SPA mount fallback** — if the React application fails to mount (e.g. due to an unresolvable asset path or an invalid URL), a plain-text error message is shown in `#jaeger-ui-root` instead of a blank page.
 
-
 ## Configuration
 
 The UI supports customization via custom configuration as either JSON or Javascript file. Refer to [documentation](https://www.jaegertracing.io/docs/latest/deployment/frontend-ui/) for the full syntax.
