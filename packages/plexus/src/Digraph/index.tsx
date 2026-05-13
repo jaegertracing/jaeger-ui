@@ -122,6 +122,11 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     };
   }
 
+  /**
+   * Note: Digraph relies on referential equality to detect data changes.
+   * Callers MUST NOT mutate `edges` or `vertices` in place. They must pass
+   * new array references when the graph data changes to trigger a layout reset.
+   */
   static getDerivedStateFromProps(nextProps: TDigraphProps<any, any>, prevState: TDigraphState<any, any>) {
     const { edges, vertices } = nextProps;
     if (edges !== prevState.edges || vertices !== prevState.vertices) {
@@ -176,7 +181,6 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
       const values = `expected ${JSON.stringify(expectedKey)}, received ${JSON.stringify(senderKey)}`;
       throw new Error(`Key mismatch for measuring nodes; ${values}`);
     }
-    this.setState({ sizeVertices });
     const version = this.state.layoutVersion;
     const { layout } = layoutManager.getLayout(edges, sizeVertices);
     layout.then(result => this.onLayoutDone(result, version));
