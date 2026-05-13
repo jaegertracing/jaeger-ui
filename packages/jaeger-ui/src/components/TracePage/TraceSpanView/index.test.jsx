@@ -119,4 +119,20 @@ describe('<TraceSpanView>', () => {
       expect.arrayContaining(['op1', 'op2', 'op3', 'op4', 'op6', 'op7'])
     );
   });
+
+  it('renders only rows matching the selected service filter', () => {
+    // testTrace has 3 spans on service2; selecting service2 should leave
+    // exactly those 3 rows. Pins the Set-based lookup behaves the same as
+    // the previous Array.includes path.
+    const { container } = render(<TraceSpanView {...defaultProps} />);
+
+    fireEvent.change(screen.getByTestId('select-service'), { target: { value: 'service2' } });
+
+    const filteredRows = container.querySelectorAll('.ant-table-row');
+    expect(filteredRows.length).toBe(3);
+    filteredRows.forEach(row => {
+      expect(row.textContent).toContain('service2');
+      expect(row.textContent).not.toContain('service1');
+    });
+  });
 });
