@@ -11,7 +11,7 @@
 .GenAISpanDetail--header {
   margin-bottom: 12px;
   padding-bottom: 10px;
-  border-bottom: 1px solid var(--color-border, #e8e8e8);
+  border-bottom: 1px solid var(--border-default);
 }
 
 .GenAISpanDetail--title {
@@ -21,7 +21,7 @@
 }
 
 .GenAISpanDetail--meta {
-  color: var(--color-text-secondary, #888);
+  color: var(--text-secondary);
   font-size: 12px;
 }
 
@@ -34,13 +34,13 @@
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--color-text-secondary, #888);
+  color: var(--text-secondary);
   margin-bottom: 4px;
 }
 
 .GenAISpanDetail--pre {
-  background: var(--color-bg-secondary, #f5f5f5);
-  border: 1px solid var(--color-border, #e8e8e8);
+  background: var(--surface-component-background);
+  border: 1px solid var(--border-default);
   border-radius: 4px;
   padding: 8px 10px;
   margin: 0;
@@ -58,7 +58,7 @@
   margin-top: 4px;
   font-size: 12px;
   cursor: pointer;
-  color: var(--color-primary, #1890ff);
+  color: var(--interactive-primary);
   background: none;
   border: none;
   padding: 0;
@@ -82,7 +82,7 @@
 
 .GenAISpanDetail--tokenLabel {
   font-size: 11px;
-  color: var(--color-text-secondary, #888);
+  color: var(--text-secondary);
   text-transform: uppercase;
 }
 
@@ -92,10 +92,38 @@
   margin-top: 4px;
 }
 
+.GenAISpanDetail--mediaGate {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.GenAISpanDetail--mediaUrl {
+  font-size: 11px;
+  color: var(--text-secondary);
+  word-break: break-all;
+}
+
+.GenAISpanDetail--loadMedia {
+  align-self: flex-start;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--interactive-primary);
+  background: none;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  padding: 2px 8px;
+}
+
+.GenAISpanDetail--loadMedia:disabled {
+  color: var(--text-secondary);
+  cursor: not-allowed;
+}
+
 .GenAISpanDetail--scoreBadge {
   display: inline-block;
-  background: var(--color-primary, #1890ff);
-  color: #fff;
+  background: var(--interactive-primary);
+  color: var(--text-inverse);
   border-radius: 12px;
   padding: 1px 10px;
   font-size: 13px;
@@ -111,12 +139,12 @@
 .GenAISpanDetail--attrTable td {
   padding: 3px 6px;
   vertical-align: top;
-  border-bottom: 1px solid var(--color-border, #e8e8e8);
+  border-bottom: 1px solid var(--border-default);
 }
 
 .GenAISpanDetail--attrTable td:first-child {
   font-weight: 500;
-  color: var(--color-text-secondary, #888);
+  color: var(--text-secondary);
   white-space: nowrap;
   width: 40%;
 }

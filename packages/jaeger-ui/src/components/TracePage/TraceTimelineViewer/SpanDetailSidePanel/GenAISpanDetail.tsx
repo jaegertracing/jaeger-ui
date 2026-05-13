@@ -32,16 +32,41 @@ type GenAISpanDetailProps = {
   useOtelTerms: boolean;
 };
 
+function isSafeMediaUrl(value: string): boolean {
+  try {
+    return new URL(value).protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 function TextBlock({ text }: { text: string }) {
   const [expanded, setExpanded] = useState(false);
+  const [mediaLoaded, setMediaLoaded] = useState(false);
   const truncated = !expanded && text.length > DISPLAY_LIMIT;
   const displayed = truncated ? text.slice(0, DISPLAY_LIMIT) : text;
 
-  const media = isMediaUrl(text);
-  if (media === 'image') {
+  const mediaKind = isMediaUrl(text);
+  if (mediaKind && !mediaLoaded) {
+    const safe = isSafeMediaUrl(text);
+    return (
+      <div className="GenAISpanDetail--mediaGate">
+        <code className="GenAISpanDetail--mediaUrl">{text}</code>
+        <button
+          type="button"
+          className="GenAISpanDetail--loadMedia"
+          onClick={() => safe && setMediaLoaded(true)}
+          disabled={!safe}
+        >
+          {safe ? `Load ${mediaKind}` : 'Blocked — only https:// URLs can be loaded'}
+        </button>
+      </div>
+    );
+  }
+  if (mediaKind === 'image' && mediaLoaded) {
     return <img src={text} alt="span media" className="GenAISpanDetail--media" />;
   }
-  if (media === 'audio') {
+  if (mediaKind === 'audio' && mediaLoaded) {
     // eslint-disable-next-line jsx-a11y/media-has-caption
     return <audio controls src={text} className="GenAISpanDetail--media" />;
   }
