@@ -14,6 +14,9 @@ SPDX-License-Identifier: Apache-2.0
 
 .SpanDetail--headerTitle {
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .SpanDetail--debugInfo {
