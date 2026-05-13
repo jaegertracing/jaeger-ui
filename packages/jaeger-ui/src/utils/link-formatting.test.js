@@ -41,10 +41,12 @@ describe('getParameterAndFormatter()', () => {
       expect(result.formatFunction('12345')).toEqual('12345');
       expect(errorSpy).toHaveBeenCalledWith(
         'pad_start() needs a desired length as second argument, ignoring formatting',
-        expect.objectContaining({ value: '12345', desiredLength: 'invalid', padCharacter: '0' })
+        expect.objectContaining({
+          value: '12345',
+          desiredLength: 'invalid',
+          padCharacter: '0',
+        })
       );
-      // padStart must not be invoked once desired length is invalid; calling it with NaN
-      // happens to return the string unchanged today, but relying on that masks the early return.
       expect(padStartSpy).not.toHaveBeenCalled();
       padStartSpy.mockRestore();
       errorSpy.mockRestore();
