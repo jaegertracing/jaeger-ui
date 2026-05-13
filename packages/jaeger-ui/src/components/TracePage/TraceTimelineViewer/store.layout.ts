@@ -90,9 +90,9 @@ export function getInitialLayoutState(): Pick<
     }
   }
 
-  // 'on'/'off' honour an explicit user choice; absent = auto (detection runs at trace load)
+  // config flag is authoritative — if ops disabled it, ignore any stored user preference
   const storedGenAIMode = localStorage.getItem('genAIMode');
-  const genAIModeActive = storedGenAIMode === 'on';
+  const genAIModeActive = traceTimeline?.enableGenAIMode === true && storedGenAIMode === 'on';
 
   return { spanNameColumnWidth, sidePanelWidth, detailPanelMode, timelineBarsVisible, genAIModeActive };
 }

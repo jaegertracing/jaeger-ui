@@ -20,18 +20,10 @@ export { useTraceTimelineStore } from './store.timeline';
 
 export { calculateFocusedFindRowStates, getSelectedSpanID } from './timeline-utils';
 
-/**
- * Activates or deactivates GenAI Mode.
- * When activating, also switches to sidepanel so the rich renderer is visible.
- * TODO: confirm with mentor — should setGenAIMode(true) override a user-set
- * detailPanelMode='inline', or only flip to sidepanel when localStorage key is absent?
- * Conservative alternative: only call applyDetailPanelModeToLayout when
- * localStorage.getItem('detailPanelMode') === null.
- */
 export function setGenAIMode(active: boolean): void {
   useLayoutPrefsStore.getState().setGenAIModeActive(active);
   if (active) {
-    useLayoutPrefsStore.getState().applyDetailPanelModeToLayout('sidepanel');
+    setDetailPanelMode('sidepanel');
   }
 }
 
