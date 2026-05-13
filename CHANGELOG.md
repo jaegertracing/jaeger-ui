@@ -78,11 +78,6 @@ Run `make changelog` to generate content.
 * [adr/007] migrate packages/plexus tests from jest to vitest ([@yurishkuro](https://github.com/yurishkuro) in [#3690](https://github.com/jaegertracing/jaeger-ui/pull/3690))
 * [adr/007] consolidate jaeger-ui tsconfigs (step e) ([@yurishkuro](https://github.com/yurishkuro) in [#3689](https://github.com/jaegertracing/jaeger-ui/pull/3689))
 
-### 💩💩💩 The following commits cannot be categorized (missing "changelog:*" labels):
-* Renovate: enable vulnerability alerts for security prs ([@Copilot](https://github.com/apps/copilot-swe-agent) in [#3732](https://github.com/jaegertracing/jaeger-ui/pull/3732))
-### 💩💩💩 Please attach labels to these ^^^ PRs and rerun the script.
-### 💩💩💩 Do not include this section in the changelog.
-
 ## v2.17.0 (2026-03-30)
 
 #### ✨ New Features
