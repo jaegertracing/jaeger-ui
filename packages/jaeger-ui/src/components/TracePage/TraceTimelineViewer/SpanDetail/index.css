@@ -7,6 +7,15 @@ SPDX-License-Identifier: Apache-2.0
   background: var(--border-default);
 }
 
+.SpanDetail--header {
+  flex-wrap: wrap;
+  gap: 0.125rem 0.5rem;
+}
+
+.SpanDetail--headerTitle {
+  min-width: 0;
+}
+
 .SpanDetail--debugInfo {
   display: block;
   letter-spacing: 0.25px;

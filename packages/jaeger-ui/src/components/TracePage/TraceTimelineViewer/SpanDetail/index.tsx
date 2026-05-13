@@ -88,8 +88,8 @@ export default function SpanDetail(props: SpanDetailProps) {
 
   return (
     <div>
-      <div className="ub-flex ub-items-center">
-        <h2 className="ub-flex-auto ub-m0">{span.name}</h2>
+      <div className="ub-flex ub-items-center SpanDetail--header">
+        <h2 className="ub-flex-auto ub-m0 SpanDetail--headerTitle">{span.name}</h2>
         <LabeledList
           className="ub-tx-right-align"
           dividerClassName="SpanDetail--divider"
