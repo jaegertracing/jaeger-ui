@@ -128,7 +128,7 @@ describe('<TraceSpanView>', () => {
 
     fireEvent.change(screen.getByTestId('select-service'), { target: { value: 'service2' } });
 
-    const filteredRows = container.querySelectorAll('.ant-table-row');
+    const filteredRows = container.querySelectorAll('.ant-table-tbody .ant-table-row');
     expect(filteredRows.length).toBe(3);
     filteredRows.forEach(row => {
       expect(row.textContent).toContain('service2');

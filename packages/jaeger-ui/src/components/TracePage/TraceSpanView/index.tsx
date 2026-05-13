@@ -78,7 +78,7 @@ export default function TraceSpanView(props: Props) {
 
     // Build lookup Sets once per filter change so per-span checks are O(1)
     // instead of Array.includes which is O(M) and pushes the whole filter to
-    // O(N × M) on traces with many spans.
+    // O(N × (M_service + M_operation)) on traces with many spans.
     const serviceSet = new Set(filters.serviceName);
     const operationSet = new Set(filters.operationName);
 
