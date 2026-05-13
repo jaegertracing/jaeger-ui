@@ -28,8 +28,6 @@ export type GenAISpanKind = 'llm' | 'tool' | 'retrieval' | 'agent';
  *   'llm'       — gen_ai.operation.name is present OR any key has gen_ai. prefix
  *
  * Note: gen_ai.tool.call.id alone (without gen_ai.tool.name) returns null.
- * Note: false-positive retrieval spans in non-GenAI traces are guarded by isGenAITrace
- *       at the trace level; do not add ancestor traversal here.
  *
  * O(k) where k = number of attributes on the span. Safe to call in render cycles
  * when memoized per span.
