@@ -112,6 +112,7 @@ export function SpanDetailSidePanelImpl(props: TProps) {
 
   // Hooks must all be called before any early return (Rules of Hooks).
   const genAIModeActive = useLayoutPrefsStore(s => s.genAIModeActive);
+  const autoDetectedGenAI = useLayoutPrefsStore(s => s.autoDetectedGenAI);
 
   // Show the explicitly selected span, falling back to the root span when nothing is selected.
   // When the user first interacts with an accordion in fallback mode, the reducer creates a
@@ -130,7 +131,7 @@ export function SpanDetailSidePanelImpl(props: TProps) {
   const linksGetter = (attributes: ReadonlyArray<IAttribute>, index: number) =>
     getLinks(span, attributes, index, trace);
 
-  if (genAIModeActive && genAIKind != null) {
+  if (genAIModeActive && autoDetectedGenAI && genAIKind != null) {
     return (
       <div className="SpanDetailSidePanel">
         <div className="SpanDetailSidePanel--body">

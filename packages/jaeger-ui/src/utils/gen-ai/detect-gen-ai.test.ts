@@ -103,7 +103,7 @@ describe('detectGenAISpan', () => {
 });
 
 describe('isGenAITrace', () => {
-  it('returns true when at least one span has a gen_ai.* attribute', () => {
+  it('returns true when at least one span is recognised by detectGenAISpan', () => {
     const spans = [makeSpan({ 'http.method': 'GET' }), makeSpan({ 'gen_ai.operation.name': 'chat' })];
     expect(isGenAITrace(makeTrace(spans))).toBe(true);
   });
@@ -115,5 +115,16 @@ describe('isGenAITrace', () => {
 
   it('returns false for an empty trace', () => {
     expect(isGenAITrace(makeTrace([]))).toBe(false);
+  });
+
+  it('returns false when only gen_ai.tool.call.id is present (detectGenAISpan returns null)', () => {
+    // gen_ai.tool.call.id alone does not identify a renderable span; isGenAITrace must agree.
+    const spans = [makeSpan({ 'gen_ai.tool.call.id': 'abc-123' })];
+    expect(isGenAITrace(makeTrace(spans))).toBe(false);
+  });
+
+  it('returns true for a db.system=vector span (retrieval) inside an otherwise plain trace', () => {
+    const spans = [makeSpan({ 'http.method': 'GET' }), makeSpan({ 'db.system': 'vector' })];
+    expect(isGenAITrace(makeTrace(spans))).toBe(true);
   });
 });

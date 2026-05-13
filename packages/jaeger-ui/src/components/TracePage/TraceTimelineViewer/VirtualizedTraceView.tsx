@@ -700,6 +700,7 @@ function VirtualizedTraceViewWrapper(
   const detailPanelMode = useLayoutPrefsStore(s => s.detailPanelMode);
   const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
   const genAIModeActive = useLayoutPrefsStore(s => s.genAIModeActive);
+  const autoDetectedGenAI = useLayoutPrefsStore(s => s.autoDetectedGenAI);
   const traceID = useTraceTimelineStore(s => s.traceID);
   const childrenHiddenIDs = useTraceTimelineStore(s => s.childrenHiddenIDs);
   const detailStates = useTraceTimelineStore(s => s.detailStates);
@@ -821,7 +822,7 @@ function VirtualizedTraceViewWrapper(
     sidePanelWidth,
     detailPanelMode,
     timelineBarsVisible,
-    genAIModeActive,
+    genAIModeActive: genAIModeActive && autoDetectedGenAI,
     traceID,
     childrenHiddenIDs,
     detailStates,

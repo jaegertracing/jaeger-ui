@@ -47,12 +47,12 @@ export function detectGenAISpan(span: IOtelSpan): GenAISpanKind | null {
 }
 
 /**
- * Returns true if any span in the trace has any attribute starting with "gen_ai.".
- * Used once per trace load to decide whether to offer the GenAI Mode toggle.
+ * Returns true if any span in the trace is recognised by detectGenAISpan.
+ * Delegates to detectGenAISpan so the two predicates can never diverge.
  *
  * O(n·k) where n = span count, k = avg attributes per span.
  * Call only in a trace-load effect, not in render paths.
  */
 export function isGenAITrace(trace: IOtelTrace): boolean {
-  return trace.spans.some(span => span.attributes.some(a => a.key.startsWith(GEN_AI_PREFIX)));
+  return trace.spans.some(span => detectGenAISpan(span) !== null);
 }
