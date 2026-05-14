@@ -39,7 +39,7 @@ const copyrightHeader = `// Copyright (c) 2026 The Jaeger Authors.
 
 if (!content.includes("Copyright (c)")) {
   content = copyrightHeader + "\n" + content;
-  console.log("✅ Added copyright header");
+  console.log("Added copyright header");
 }
 
 // 2. Remove .partial() calls
@@ -54,10 +54,10 @@ for (const name of UNION_TYPES) {
   content = content.replace(re, "$1.partial()$2");
   if (content === before) {
     console.warn(
-      `⚠️ Could not restore .partial() on ${name} — schema shape may have changed`,
+      `Could not restore .partial() on ${name} — schema shape may have changed`,
     );
   } else {
-    console.log(`✅ Restored .partial() on ${name}`);
+    console.log(`Restored .partial() on ${name}`);
   }
 }
 const afterCountPartial = (content.match(/\.partial\(\)/g) || []).length;
@@ -70,7 +70,7 @@ if (zodiosImportRegex.test(content)) {
     zodiosImportRegex,
     "// import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';",
   );
-  console.log("✅ Commented out Zodios imports");
+  console.log("Commented out Zodios imports");
 }
 
 // 4. Comment out Zodios usage
@@ -113,12 +113,12 @@ if (
   !content.includes("export { GetServicesResponse as ServicesResponseSchema }")
 ) {
   content += extraExports;
-  console.log("✅ Added convenience exports");
+  console.log("Added convenience exports");
 }
 
 fs.writeFileSync(filePath, content, "utf8");
 
 console.log(
-  `✅ Removed ${beforeCountPartial - afterCountPartial} .partial() calls`,
+  `Removed ${beforeCountPartial - afterCountPartial} .partial() calls`,
 );
-console.log("✅ Zodios dependencies disabled (use schemas only)");
+console.log("Zodios dependencies disabled (use schemas only)");
