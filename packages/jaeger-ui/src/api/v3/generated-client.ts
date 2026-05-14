@@ -31,7 +31,11 @@ const Operation = z.object({ name: z.string(), spanKind: z.string() }).passthrou
 const GetOperationsResponse = z.object({ operations: z.array(Operation) }).passthrough();
 const GoogleProtobufAny = z.object({ '@type': z.string() }).passthrough();
 const Status = z
-  .object({ code: z.number().int(), message: z.string(), details: z.array(GoogleProtobufAny) })
+  .object({
+    code: z.number().int(),
+    message: z.string(),
+    details: z.array(GoogleProtobufAny),
+  })
   .passthrough();
 const GetServicesResponse = z.object({ services: z.array(z.string()) }).passthrough();
 const ArrayValue: z.ZodType<ArrayValue> = z.lazy(() =>
@@ -64,7 +68,10 @@ const KeyValue: z.ZodType<KeyValue> = z.lazy(() =>
   z.object({ key: z.string(), value: AnyValue }).partial().passthrough()
 );
 const Resource = z
-  .object({ attributes: z.array(KeyValue), droppedAttributesCount: z.number().int() })
+  .object({
+    attributes: z.array(KeyValue),
+    droppedAttributesCount: z.number().int(),
+  })
   .passthrough();
 const InstrumentationScope = z
   .object({
@@ -113,10 +120,18 @@ const Span = z
   })
   .passthrough();
 const ScopeSpans = z
-  .object({ scope: InstrumentationScope, spans: z.array(Span), schemaUrl: z.string() })
+  .object({
+    scope: InstrumentationScope,
+    spans: z.array(Span),
+    schemaUrl: z.string(),
+  })
   .passthrough();
 const ResourceSpans = z
-  .object({ resource: Resource, scopeSpans: z.array(ScopeSpans), schemaUrl: z.string() })
+  .object({
+    resource: Resource,
+    scopeSpans: z.array(ScopeSpans),
+    schemaUrl: z.string(),
+  })
   .passthrough();
 const TracesData = z.object({ resourceSpans: z.array(ResourceSpans) }).passthrough();
 
@@ -276,8 +291,6 @@ export function createApiClient(baseUrl: string, options?: ZodiosOptions) {
 export { GetServicesResponse as ServicesResponseSchema };
 export { GetOperationsResponse as OperationsResponseSchema };
 export { Operation as OperationSchema };
-// OTLP trace/span wire types. Renamed from proto nested-message style
-// (Span_Event, Span_Link) to OpenTelemetry-conventional names.
 export { TracesData as TracesDataSchema };
 export { ResourceSpans as ResourceSpansSchema };
 export { ScopeSpans as ScopeSpansSchema };

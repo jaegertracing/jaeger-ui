@@ -13,9 +13,6 @@ export {
   ServicesResponseSchema,
   OperationsResponseSchema,
   OperationSchema,
-  // OTLP trace/span wire types. Names mirror the OpenTelemetry semantic
-  // conventions; the generator emits Span_Event and Span_Link from the
-  // proto nested message types, which we rename for ergonomic consumption.
   TracesDataSchema,
   ResourceSpansSchema,
   ScopeSpansSchema,
