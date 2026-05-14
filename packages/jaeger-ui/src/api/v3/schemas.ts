@@ -21,6 +21,33 @@
  * bundle key is the stable one.
  */
 
+<<<<<<< HEAD
+=======
+// Import auto-generated schemas (post-processed for strict validation)
+export {
+  ServicesResponseSchema,
+  OperationsResponseSchema,
+  OperationSchema,
+  TracesDataSchema,
+  ResourceSpansSchema,
+  ScopeSpansSchema,
+  SpanSchema,
+  SpanEventSchema,
+  SpanLinkSchema,
+  ResourceSchema,
+  InstrumentationScopeSchema,
+  KeyValueSchema,
+  AnyValueSchema,
+  ArrayValueSchema,
+  KeyValueListSchema,
+  StatusSchema,
+} from './generated-client';
+
+/**
+ * Helper validators for trace and span IDs in hex format
+ * These are custom additions not present in the OpenAPI spec
+ */
+>>>>>>> e493ec99 (feat(api/v3): Expose Zod schemas for OTLP trace/span types)
 import { z } from 'zod';
 import { schemas } from './generated-client';
 
