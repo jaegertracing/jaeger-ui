@@ -380,6 +380,14 @@ describe('KeyValueSchema', () => {
     };
     expect(KeyValueSchema.parse(kv)).toEqual(kv);
   });
+
+  it('rejects a KeyValue with a missing key', () => {
+    expect(() => KeyValueSchema.parse({ value: { stringValue: 'x' } })).toThrow(z.ZodError);
+  });
+
+  it('rejects a KeyValue with a missing value', () => {
+    expect(() => KeyValueSchema.parse({ key: 'service.name' })).toThrow(z.ZodError);
+  });
 });
 
 describe('ArrayValueSchema', () => {

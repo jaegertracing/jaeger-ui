@@ -65,7 +65,7 @@ const AnyValue: z.ZodType<AnyValue> = z.lazy(() =>
     .passthrough()
 );
 const KeyValue: z.ZodType<KeyValue> = z.lazy(() =>
-  z.object({ key: z.string(), value: AnyValue }).partial().passthrough()
+  z.object({ key: z.string(), value: AnyValue }).passthrough()
 );
 const Resource = z
   .object({
@@ -287,7 +287,7 @@ export function createApiClient(baseUrl: string, options?: ZodiosOptions) {
 }
 */
 
-// Export commonly used schemas individually for convenience
+// --- BEGIN postprocess convenience exports ---
 export { GetServicesResponse as ServicesResponseSchema };
 export { GetOperationsResponse as OperationsResponseSchema };
 export { Operation as OperationSchema };
@@ -304,3 +304,4 @@ export { AnyValue as AnyValueSchema };
 export { ArrayValue as ArrayValueSchema };
 export { KeyValueList as KeyValueListSchema };
 export { Status as StatusSchema };
+// --- END postprocess convenience exports ---
