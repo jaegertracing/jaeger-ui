@@ -119,7 +119,7 @@ const getStripCircular = () => {
   };
 };
 
-export function getSpanLinkForTrace(
+function getSpanLinkForTrace(
   spanLinks: Record<string, string> | undefined,
   traceID: string
 ): string | undefined {
