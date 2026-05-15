@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward } from 'react-icons/io5';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
@@ -111,7 +111,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
     name: operationName,
     resource: { serviceName },
   } = span;
-  const SpanTypeIcon = getSpanTypeIcon(span);
+  const SpanTypeIcon = useMemo(() => getSpanTypeIcon(span), [span]);
   const label = formatDurationCompact(duration);
   const viewBounds = getViewedBounds(span.startTime, span.endTime);
   const viewStart = viewBounds.start;
@@ -167,7 +167,9 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
               {!hasOwnError && hasChildError && (
                 <IoAlert className="SpanBarRow--errorIcon SpanBarRow--errorIcon--hollow" />
               )}
-              {SpanTypeIcon && <SpanTypeIcon className="SpanBarRow--spanTypeIcon" />}
+              {SpanTypeIcon && (
+                <SpanTypeIcon className="SpanBarRow--spanTypeIcon" aria-hidden="true" focusable={false} />
+              )}
               {serviceName}{' '}
               {rpc && (
                 <span>
