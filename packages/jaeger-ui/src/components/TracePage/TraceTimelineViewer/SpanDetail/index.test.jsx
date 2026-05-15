@@ -65,6 +65,12 @@ vi.mock('./AccordionText', () => {
   });
 });
 
+vi.mock('./LazyAttributeSection', () => {
+  return mockDefault(function MockLazyAttributeSection({ attribute }) {
+    return <div data-testid="lazy-attribute" data-key={attribute.key} />;
+  });
+});
+
 vi.mock('../../../common/LabeledList', () => {
   return mockDefault(function MockLabeledList({ items }) {
     return (
@@ -284,5 +290,32 @@ describe('<SpanDetail>', () => {
 
     expect(copyIcon).toBeInTheDocument();
     expect(copyText).toContain(`?uiFind=${props.span.spanID}`);
+  });
+
+  it('splits attributes by size and renders LazyAttributeSection for large ones', () => {
+    const largeValue = 'a'.repeat(10241); // > 10 KB
+    const smallValue = 'small';
+    const attributes = [
+      { key: 'large_attr', value: largeValue },
+      { key: 'small_attr', value: smallValue },
+    ];
+
+    const originalAttributes = props.span.attributes;
+    Object.defineProperty(props.span, 'attributes', {
+      get: () => attributes,
+      configurable: true,
+    });
+
+    render(<SpanDetail {...props} />);
+
+    const lazyAttrs = screen.getAllByTestId('lazy-attribute');
+    expect(lazyAttrs.length).toBe(1);
+    expect(lazyAttrs[0]).toHaveAttribute('data-key', 'large_attr');
+
+    // Restore original attributes
+    Object.defineProperty(props.span, 'attributes', {
+      get: () => originalAttributes,
+      configurable: true,
+    });
   });
 });

@@ -9,6 +9,7 @@ import AccordionAttributes from './AccordionAttributes';
 import AccordionEvents from './AccordionEvents';
 import AccordionLinks from './AccordionLinks';
 import AccordionText from './AccordionText';
+import LazyAttributeSection from './LazyAttributeSection';
 import DetailState from './DetailState';
 import { formatDuration, formatDurationCompact } from '../utils';
 import CopyIcon from '../../../common/CopyIcon';
@@ -38,6 +39,8 @@ type SpanDetailProps = {
   eventsInitialVisibleCount?: number;
 };
 
+const LARGE_ATTR_THRESHOLD_BYTES = 10240; // 10 KB
+
 export default function SpanDetail(props: SpanDetailProps) {
   const {
     detailState,
@@ -59,6 +62,14 @@ export default function SpanDetail(props: SpanDetailProps) {
 
   const { isAttributesOpen, isResourceOpen, events: eventsState, isWarningsOpen, isLinksOpen } = detailState;
   const warnings = span.warnings;
+
+  const attributes = span.attributes || [];
+  const largeAttrs = attributes.filter(
+    a => typeof a.value === 'string' && a.value.length >= LARGE_ATTR_THRESHOLD_BYTES
+  );
+  const standardAttrs = attributes.filter(
+    a => !(typeof a.value === 'string' && a.value.length >= LARGE_ATTR_THRESHOLD_BYTES)
+  );
 
   // Get links for display in AccordionLinks
   const links = span.links || [];
@@ -100,12 +111,15 @@ export default function SpanDetail(props: SpanDetailProps) {
       <div>
         <div>
           <AccordionAttributes
-            data={span.attributes}
+            data={standardAttrs}
             label={attributesLabel}
             linksGetter={linksGetter}
             isOpen={isAttributesOpen}
             onToggle={() => attributesToggle(span.spanID)}
           />
+          {largeAttrs.map((attr, i) => (
+            <LazyAttributeSection key={`${attr.key}-${i}`} attribute={attr} />
+          ))}
           {span.resource.attributes && span.resource.attributes.length > 0 && (
             <AccordionAttributes
               className="ub-mb1"
