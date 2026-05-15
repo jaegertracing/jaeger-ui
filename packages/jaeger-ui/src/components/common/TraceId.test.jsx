@@ -82,15 +82,14 @@ describe('TraceIdDisplayLength', () => {
 
     it('adds a length-based class depending on the configuration', () => {
       getConfig.mockReturnValue({ traceIdDisplayLength: DEFAULT_LENGTH });
-      renderComponent();
+      const { unmount } = render(<TraceId traceId={MOCK_TRACE_ID} />);
       expect(screen.getByText(MOCK_TRACE_ID.slice(0, DEFAULT_LENGTH))).toHaveClass('TraceIDLength--short');
+      unmount();
 
       const longLength = MOCK_TRACE_ID.length;
       getConfig.mockReturnValue({ traceIdDisplayLength: longLength });
-      renderComponent();
-
-      const all = screen.getAllByText(MOCK_TRACE_ID.slice(0, 7));
-      expect(all[all.length - 1]).toHaveClass('TraceIDLength--short');
+      render(<TraceId traceId={MOCK_TRACE_ID} />);
+      expect(screen.getByText(MOCK_TRACE_ID)).toHaveClass('TraceIDLength--full');
     });
   });
 });
