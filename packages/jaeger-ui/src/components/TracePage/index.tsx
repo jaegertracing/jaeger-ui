@@ -193,7 +193,9 @@ export function TracePageImpl(props: TProps) {
   const [slimView, setSlimView] = useState(() => Boolean(embedded?.timeline?.collapseTitle));
   const [viewType, setViewType] = useState<ETraceViewType>(ETraceViewType.TraceTimelineViewer);
   const [viewRange, setViewRange] = useState<IViewRange>({ time: { current: [0, 1] } });
-  const [genAiBannerDismissed, setGenAiBannerDismissed] = useState(false);
+  const [genAiBannerDismissed, setGenAiBannerDismissed] = useState(
+    () => sessionStorage.getItem('genai-banner-dismissed') === 'true'
+  );
 
   const traceDagEV = useMemo(
     () =>
@@ -201,6 +203,14 @@ export function TracePageImpl(props: TProps) {
         ? calculateTraceDagEV(trace.data.asOtelTrace())
         : null,
     [trace, viewType]
+  );
+
+  const traceIsGenAI = useMemo(
+    () =>
+      trace?.data
+        ? trace.data.asOtelTrace().spans.some(s => s.attributes.some(a => a.key.startsWith('gen_ai.')))
+        : false,
+    [trace]
   );
 
   const searchBarRef = useRef<InputRef>(null);
@@ -372,10 +382,6 @@ export function TracePageImpl(props: TProps) {
     return <ErrorMessage className="ub-m3" error={trace.error || 'Unknown error'} />;
   }
 
-  const traceIsGenAI = data
-    .asOtelTrace()
-    .spans.some(s => s.attributes.some(a => a.key.startsWith('gen_ai.')));
-
   let findCount = 0;
   let graphFindMatches: Set<string> | null | undefined;
   let spanFindMatches: Set<string> | null | undefined;
@@ -437,7 +443,10 @@ export function TracePageImpl(props: TProps) {
   const sm = scrollManagerRef.current;
   let view;
   const criticalPath = criticalPathEnabled ? memoizedTraceCriticalPath(data.asOtelTrace()) : [];
-  if (ETraceViewType.TraceTimelineViewer === viewType && headerHeight) {
+  if (
+    (ETraceViewType.TraceTimelineViewer === viewType || ETraceViewType.GenAITimelineViewer === viewType) &&
+    headerHeight
+  ) {
     view = (
       <TraceTimelineViewer
         registerAccessors={sm.setAccessors}
@@ -485,20 +494,6 @@ export function TracePageImpl(props: TProps) {
     view = <TraceFlamegraph trace={trace} />;
   } else if (ETraceViewType.TraceLogs === viewType && headerHeight) {
     view = <TraceLogsView trace={data.asOtelTrace()} useOtelTerms={useOtelTerms} />;
-  } else if (ETraceViewType.GenAITimelineViewer === viewType && headerHeight) {
-    view = (
-      <TraceTimelineViewer
-        registerAccessors={sm.setAccessors}
-        scrollToFirstVisibleSpan={sm.scrollToFirstVisibleSpan}
-        findMatchesIDs={spanFindMatches}
-        trace={data.asOtelTrace()}
-        criticalPath={criticalPath}
-        updateNextViewRangeTime={updateNextViewRangeTime}
-        updateViewRangeTime={updateViewRangeTime}
-        viewRange={viewRange}
-        useOtelTerms={useOtelTerms}
-      />
-    );
   }
 
   return (
@@ -514,7 +509,10 @@ export function TracePageImpl(props: TProps) {
             description="Switch to GenAI View to see agentic hierarchy and rich attribute rendering."
             type="info"
             closable
-            onClose={() => setGenAiBannerDismissed(true)}
+            onClose={() => {
+              sessionStorage.setItem('genai-banner-dismissed', 'true');
+              setGenAiBannerDismissed(true);
+            }}
             action={
               <Button size="small" onClick={() => setTraceView(ETraceViewType.GenAITimelineViewer)}>
                 Switch to GenAI View

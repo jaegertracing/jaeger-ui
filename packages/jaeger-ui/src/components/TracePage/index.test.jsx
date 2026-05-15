@@ -1091,6 +1091,7 @@ describe('<TracePage>', () => {
     });
 
     beforeEach(() => {
+      sessionStorage.clear();
       clientHeightSpy = jest.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(100);
     });
 
