@@ -114,7 +114,17 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   const viewStart = viewBounds.start;
   const viewEnd = viewBounds.end;
 
-  const labelDetail = `${serviceName}::${operationName}`;
+  const genAiModel = span.attributes.find(a => a.key === 'gen_ai.request.model')?.value;
+  const endpointLabel = rpc
+    ? rpc.operationName
+    : typeof genAiModel === 'string' && genAiModel
+      ? `${operationName} · ${genAiModel}`
+      : operationName;
+
+  const labelDetail =
+    typeof genAiModel === 'string' && genAiModel
+      ? `${serviceName}::${operationName} (${genAiModel})`
+      : `${serviceName}::${operationName}`;
   let longLabel;
   let hintSide;
   if (viewStart > 1 - viewEnd) {
@@ -183,7 +193,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
                 </span>
               )}
             </span>
-            <small className="endpoint-name">{rpc ? rpc.operationName : operationName}</small>
+            <small className="endpoint-name">{endpointLabel}</small>
           </a>
           {hasLinks && (
             <ReferencesButton
