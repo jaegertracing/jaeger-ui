@@ -3,6 +3,7 @@
 
 import DetailState from './SpanDetail/DetailState';
 import type { SpanDetailPanelMode } from '../../../types/config';
+import getConfig from '../../../utils/config/get-config';
 import { useLayoutPrefsStore } from './store.layout';
 import { useTraceTimelineStore } from './store.timeline';
 
@@ -20,13 +21,6 @@ export { useTraceTimelineStore } from './store.timeline';
 
 export { calculateFocusedFindRowStates, getSelectedSpanID } from './timeline-utils';
 
-export function setGenAIMode(active: boolean): void {
-  useLayoutPrefsStore.getState().setGenAIModeActive(active);
-  if (active) {
-    setDetailPanelMode('sidepanel');
-  }
-}
-
 export function setDetailPanelMode(mode: SpanDetailPanelMode): void {
   if (mode === 'sidepanel') {
     const { detailStates } = useTraceTimelineStore.getState();
@@ -38,4 +32,12 @@ export function setDetailPanelMode(mode: SpanDetailPanelMode): void {
     }
   }
   useLayoutPrefsStore.getState().applyDetailPanelModeToLayout(mode);
+}
+
+export function setGenAIMode(active: boolean): void {
+  if (active && !getConfig().traceTimeline?.enableSidePanel) return;
+  useLayoutPrefsStore.getState().setGenAIModeActive(active);
+  if (active) {
+    setDetailPanelMode('sidepanel');
+  }
 }

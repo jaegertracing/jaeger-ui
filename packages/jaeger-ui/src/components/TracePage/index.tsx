@@ -305,7 +305,7 @@ export function TracePageImpl(props: TProps) {
 
   // Auto-detect GenAI spans on trace load; activate mode when no stored preference exists.
   useEffect(() => {
-    if (!enableGenAIMode || !trace?.data) return;
+    if (!enableGenAIMode || !enableSidePanel || !trace?.data) return;
     const otelTrace = trace.data.asOtelTrace?.();
     if (!otelTrace) return;
     const detected = isGenAITrace(otelTrace);
@@ -313,7 +313,7 @@ export function TracePageImpl(props: TProps) {
     if (detected && localStorage.getItem('genAIMode') === null) {
       setGenAIMode(true);
     }
-  }, [enableGenAIMode, trace, setAutoDetectedGenAI]);
+  }, [enableGenAIMode, enableSidePanel, trace, setAutoDetectedGenAI]);
 
   const headerResizeObserverRef = useRef<ResizeObserver | TNil>(null);
 
