@@ -136,6 +136,9 @@ const JaegerAPI = {
       query: `${servicesName}&${queryString.stringify(query)}`,
     }).then((d: any) => ({ ...d, quantile: query.quantile }));
   },
+  fetchMetricDimensions(): Promise<any> {
+    return getJSON(`${this.apiRoot}metrics/dimensions`);
+  },
 };
 
 export default JaegerAPI;
