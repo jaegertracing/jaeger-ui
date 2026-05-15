@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import AttributesTable, { LinkValue } from './AttributesTable';
@@ -200,6 +200,96 @@ describe('<AttributesTable>', () => {
 
     const valueCell = screen.getByText('{"complete": "test"');
     expect(valueCell).toBeInTheDocument();
+  });
+
+  describe('attribute filter', () => {
+    const manyAttrs = Array.from({ length: 12 }, (_, i) => ({
+      key: `key.${i}`,
+      value: `value-${i}`,
+    }));
+
+    it('does not render filter input when data has 10 or fewer attributes', () => {
+      const fewAttrs = manyAttrs.slice(0, 10);
+      render(<AttributesTable data={fewAttrs} />);
+      expect(screen.queryByRole('textbox', { name: /filter span attributes/i })).not.toBeInTheDocument();
+    });
+
+    it('renders filter input when data has more than 10 attributes', () => {
+      render(<AttributesTable data={manyAttrs} />);
+      expect(screen.getByRole('textbox', { name: /filter span attributes/i })).toBeInTheDocument();
+    });
+
+    it('filters rows by key when query matches', () => {
+      render(<AttributesTable data={manyAttrs} />);
+      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
+
+      fireEvent.change(input, { target: { value: 'key.1' } });
+
+      // key.1, key.10, key.11 match
+      const rows = screen.getAllByRole('row');
+      expect(rows.length).toBe(3);
+    });
+
+    it('filters rows by value when query matches', () => {
+      render(<AttributesTable data={manyAttrs} />);
+      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
+
+      fireEvent.change(input, { target: { value: 'value-0' } });
+
+      const rows = screen.getAllByRole('row');
+      expect(rows.length).toBe(1);
+      expect(screen.getByText('key.0')).toBeInTheDocument();
+    });
+
+    it('shows N of M count label when filter is active', () => {
+      render(<AttributesTable data={manyAttrs} />);
+      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
+
+      fireEvent.change(input, { target: { value: 'key.1' } });
+
+      expect(screen.getByText('3 of 12')).toBeInTheDocument();
+    });
+
+    it('hides count label when filter is empty', () => {
+      render(<AttributesTable data={manyAttrs} />);
+
+      expect(screen.queryByText(/of 12/)).not.toBeInTheDocument();
+    });
+
+    it('shows all rows when filter is cleared', () => {
+      render(<AttributesTable data={manyAttrs} />);
+      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
+
+      fireEvent.change(input, { target: { value: 'key.0' } });
+      fireEvent.change(input, { target: { value: '' } });
+
+      const rows = screen.getAllByRole('row');
+      expect(rows.length).toBe(manyAttrs.length);
+    });
+
+    it('passes the original data index to linksGetter when rows are filtered', () => {
+      const linksGetter = vi.fn().mockReturnValue([]);
+      render(<AttributesTable data={manyAttrs} linksGetter={linksGetter} />);
+      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
+
+      linksGetter.mockClear();
+      fireEvent.change(input, { target: { value: 'key.5' } });
+
+      // 'key.5' matches only index 5 in the 12-item list (key.0..key.11)
+      const calls = linksGetter.mock.calls;
+      expect(calls).toHaveLength(1);
+      expect(calls[0][1]).toBe(5);
+    });
+
+    it('is case-insensitive', () => {
+      render(<AttributesTable data={manyAttrs} />);
+      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
+
+      fireEvent.change(input, { target: { value: 'KEY.0' } });
+
+      const rows = screen.getAllByRole('row');
+      expect(rows.length).toBe(1);
+    });
   });
 
   it('renders CopyIcon components with correct copyText properties for each data element', () => {

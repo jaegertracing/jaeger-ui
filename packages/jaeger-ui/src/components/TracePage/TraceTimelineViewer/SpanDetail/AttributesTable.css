@@ -52,3 +52,36 @@ SPDX-License-Identifier: Apache-2.0
   vertical-align: middle;
   font-weight: bold;
 }
+
+.KeyValueTable--filterRow {
+  align-items: center;
+  background: var(--surface-primary);
+  border-bottom: 1px solid var(--border-default);
+  display: flex;
+  gap: 8px;
+  padding: 4px 8px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.KeyValueTable--filter {
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 3px;
+  color: var(--text-primary);
+  flex: 1;
+  font-size: 0.85em;
+  outline: none;
+  padding: 3px 6px;
+}
+
+.KeyValueTable--filter:focus {
+  border-color: var(--color-primary);
+}
+
+.KeyValueTable--filterCount {
+  color: var(--text-secondary);
+  font-size: 0.8em;
+  white-space: nowrap;
+}
