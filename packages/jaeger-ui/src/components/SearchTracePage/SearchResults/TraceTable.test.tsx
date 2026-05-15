@@ -6,7 +6,8 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
 import { TraceTable } from './TraceTable';
-import { SpanKind, StatusCode, IOtelTrace, IOtelSpan } from '../../../types/otel';
+import { SpanKind, StatusCode } from '../../../types/otel';
+import type { IOtelTrace, IOtelSpan } from '../../../types/otel';
 
 function makeSpan(id: string, traceID: string, serviceName: string, opName: string): IOtelSpan {
   return {

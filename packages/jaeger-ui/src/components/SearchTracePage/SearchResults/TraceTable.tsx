@@ -7,7 +7,7 @@ import type { ColumnProps } from 'antd/es/table';
 import { Link } from 'react-router-dom';
 
 import { getTracePageLink } from '../../TracePage/url';
-import { formatDuration, formatRelativeDate } from '../../../utils/date';
+import { formatDurationCompact, formatDatetime } from '../../../utils/date';
 import getConfig from '../../../utils/config/get-config';
 
 import { IOtelTrace } from '../../../types/otel';
@@ -53,7 +53,7 @@ function buildColumns(searchUrl: string): ColumnProps<IOtelTrace>[] {
       title: 'Duration',
       key: 'duration',
       sorter: (a: IOtelTrace, b: IOtelTrace) => a.duration - b.duration,
-      render: (_: unknown, trace: IOtelTrace) => formatDuration(trace.duration),
+      render: (_: unknown, trace: IOtelTrace) => formatDurationCompact(trace.duration),
     },
     {
       title: 'Spans',
@@ -65,7 +65,7 @@ function buildColumns(searchUrl: string): ColumnProps<IOtelTrace>[] {
       title: 'Timestamp',
       key: 'timestamp',
       sorter: (a: IOtelTrace, b: IOtelTrace) => a.startTime - b.startTime,
-      render: (_: unknown, trace: IOtelTrace) => formatRelativeDate(trace.startTime / 1000),
+      render: (_: unknown, trace: IOtelTrace) => formatDatetime(trace.startTime / 1000),
     },
   ];
 }

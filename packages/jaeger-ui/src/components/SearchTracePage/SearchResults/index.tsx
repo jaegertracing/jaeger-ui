@@ -248,7 +248,12 @@ export function UnconnectedSearchResults({
           {traceResultsView && <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />}
           {traceResultsView && <DownloadResults onDownloadResultsClicked={onDownloadResultsClicked} />}
           {traceResultsView && (
-            <Radio.Group value={resultView} onChange={onResultViewChange} size="small">
+            <Radio.Group
+              value={resultView}
+              onChange={onResultViewChange}
+              size="small"
+              aria-label="Result view"
+            >
               <Radio.Button value="cards">Cards</Radio.Button>
               <Radio.Button value="table">Table</Radio.Button>
             </Radio.Group>
