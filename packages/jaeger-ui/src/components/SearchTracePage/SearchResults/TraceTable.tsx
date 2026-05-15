@@ -25,6 +25,7 @@ function toOrderBy(columnKey: string | undefined, order: string | undefined): st
   if (columnKey === 'duration') {
     return order === 'ascend' ? orderBy.SHORTEST_FIRST : orderBy.LONGEST_FIRST;
   }
+  // startTime descend === MOST_RECENT (default sort); ascending is not supported
   return orderBy.MOST_RECENT;
 }
 
@@ -47,6 +48,18 @@ export { toOrderBy, fromOrderBy };
 
 export default function TraceTable({ traces, onRowClick, sortBy, handleSortChange }: TraceTableProps) {
   const { key: sortKey, order: sortOrder } = fromOrderBy(sortBy);
+
+  const errorCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const trace of traces) {
+      let count = 0;
+      for (const s of trace.spans) {
+        if (s.status?.code === StatusCode.ERROR) count++;
+      }
+      map.set(trace.traceID, count);
+    }
+    return map;
+  }, [traces]);
 
   const columns: ColumnsType<IOtelTrace> = useMemo(
     () => [
@@ -72,13 +85,7 @@ export default function TraceTable({ traces, onRowClick, sortBy, handleSortChang
       {
         title: 'Errors',
         key: 'errors',
-        render: (_: unknown, trace: IOtelTrace) => {
-          let count = 0;
-          for (const s of trace.spans) {
-            if (s.status?.code === StatusCode.ERROR) count++;
-          }
-          return count;
-        },
+        render: (_: unknown, trace: IOtelTrace) => errorCounts.get(trace.traceID) ?? 0,
       },
       {
         title: 'Duration',
@@ -96,7 +103,7 @@ export default function TraceTable({ traces, onRowClick, sortBy, handleSortChang
         sortDirections: ['descend'],
       },
     ],
-    [sortKey, sortOrder]
+    [sortKey, sortOrder, errorCounts]
   );
 
   const onChange: TableProps<IOtelTrace>['onChange'] = (_pagination, _filters, sorter) => {

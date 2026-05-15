@@ -124,8 +124,9 @@ function getSpanLinkForTrace(
   traceID: string
 ): string | undefined {
   if (!spanLinks) return undefined;
+  if (spanLinks[traceID]) return spanLinks[traceID];
   const stripped = traceID.replace(/^0+/, '');
-  return spanLinks[traceID] || (stripped ? spanLinks[stripped] : undefined);
+  return stripped !== traceID ? spanLinks[stripped] : undefined;
 }
 
 export function createBlob(rawTraces: any[]) {
