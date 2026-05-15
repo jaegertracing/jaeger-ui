@@ -290,6 +290,21 @@ describe('<AttributesTable>', () => {
       const rows = screen.getAllByRole('row');
       expect(rows.length).toBe(1);
     });
+
+    it('shows all rows when data shrinks below threshold while a query is active', () => {
+      const { rerender } = render(<AttributesTable data={manyAttrs} />);
+      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
+
+      fireEvent.change(input, { target: { value: 'key.0' } });
+      expect(screen.getAllByRole('row')).toHaveLength(1);
+
+      // shrink data below threshold — filter input disappears, stale query must not hide rows
+      const fewAttrs = manyAttrs.slice(0, 5);
+      rerender(<AttributesTable data={fewAttrs} />);
+
+      expect(screen.queryByRole('textbox', { name: /filter span attributes/i })).not.toBeInTheDocument();
+      expect(screen.getAllByRole('row')).toHaveLength(fewAttrs.length);
+    });
   });
 
   it('renders CopyIcon components with correct copyText properties for each data element', () => {
