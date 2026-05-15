@@ -39,7 +39,7 @@ type SpanDetailProps = {
   eventsInitialVisibleCount?: number;
 };
 
-const LARGE_ATTR_THRESHOLD_BYTES = 10240; // 10 KB
+const LARGE_ATTR_THRESHOLD_CHARS = 10240; // ~10 KB of UTF-16 code units
 
 export default function SpanDetail(props: SpanDetailProps) {
   const {
@@ -63,13 +63,20 @@ export default function SpanDetail(props: SpanDetailProps) {
   const { isAttributesOpen, isResourceOpen, events: eventsState, isWarningsOpen, isLinksOpen } = detailState;
   const warnings = span.warnings;
 
-  const attributes = span.attributes || [];
-  const largeAttrs = attributes.filter(
-    a => typeof a.value === 'string' && a.value.length >= LARGE_ATTR_THRESHOLD_BYTES
-  );
-  const standardAttrs = attributes.filter(
-    a => !(typeof a.value === 'string' && a.value.length >= LARGE_ATTR_THRESHOLD_BYTES)
-  );
+  const { largeAttrs, standardAttrs } = React.useMemo(() => {
+    const attributes = span.attributes || [];
+    return attributes.reduce<{ largeAttrs: IAttribute[]; standardAttrs: IAttribute[] }>(
+      (acc, attr) => {
+        if (typeof attr.value === 'string' && attr.value.length >= LARGE_ATTR_THRESHOLD_CHARS) {
+          acc.largeAttrs.push(attr);
+        } else {
+          acc.standardAttrs.push(attr);
+        }
+        return acc;
+      },
+      { largeAttrs: [], standardAttrs: [] }
+    );
+  }, [span.attributes]);
 
   // Get links for display in AccordionLinks
   const links = span.links || [];
@@ -117,8 +124,11 @@ export default function SpanDetail(props: SpanDetailProps) {
             isOpen={isAttributesOpen}
             onToggle={() => attributesToggle(span.spanID)}
           />
-          {largeAttrs.map((attr, i) => (
-            <LazyAttributeSection key={`${attr.key}-${i}`} attribute={attr} />
+          {largeAttrs.map(attr => (
+            <LazyAttributeSection
+              key={`${attr.key}-${typeof attr.value === 'string' ? attr.value.length : 'v'}`}
+              attribute={attr}
+            />
           ))}
           {span.resource.attributes && span.resource.attributes.length > 0 && (
             <AccordionAttributes

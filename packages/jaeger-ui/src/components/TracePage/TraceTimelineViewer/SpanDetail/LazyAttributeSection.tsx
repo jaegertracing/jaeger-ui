@@ -12,37 +12,52 @@ type Props = {
   attribute: IAttribute;
 };
 
+const DEFER_RENDER_THRESHOLD_BYTES = 100 * 1024; // 100 KB
+
 function formatSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   return `${(bytes / 1024).toFixed(1)} KB`;
 }
 
+/**
+ * LazyAttributeSection is a disclosure component for large attributes.
+ * It gates the rendering of large GenAI payloads to prevent main-thread stalls.
+ */
 export default function LazyAttributeSection({ attribute }: Props) {
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [isDeferredLoaded, setIsDeferredLoaded] = React.useState(false);
 
-  const valueLength = typeof attribute.value === 'string' ? attribute.value.length : 0;
-  const isLarge = valueLength > 102400; // 100 KB threshold for async deferral
-
+  // Reset state when the attribute changes to avoid state leakage
   React.useEffect(() => {
-    if (isExpanded && !isDeferredLoaded) {
-      if (isLarge) {
-        // Yield to main thread for very large attributes
-        const timeout = setTimeout(() => setIsDeferredLoaded(true), 50);
-        return () => clearTimeout(timeout);
-      }
-      setIsDeferredLoaded(true);
+    setIsExpanded(false);
+    setIsDeferredLoaded(false);
+  }, [attribute.key, attribute.value]);
+
+  const valueLength = typeof attribute.value === 'string' ? attribute.value.length : 0;
+  const isVeryLarge = valueLength > DEFER_RENDER_THRESHOLD_BYTES;
+
+  const onToggle = () => {
+    const nextExpanded = !isExpanded;
+    setIsExpanded(nextExpanded);
+
+    if (nextExpanded && isVeryLarge && !isDeferredLoaded) {
+      // Small delay to ensure the disclosure animation starts before heavy rendering
+      const timeout = setTimeout(() => {
+        setIsDeferredLoaded(true);
+      }, 50);
+      return () => clearTimeout(timeout);
     }
     return undefined;
-  }, [isExpanded, isDeferredLoaded, isLarge]);
+  };
 
   return (
     <div className="LazyAttributeSection">
-      <div
+      <button
+        type="button"
         className="LazyAttributeSection--header"
-        role="switch"
-        aria-checked={isExpanded}
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={onToggle}
+        aria-expanded={isExpanded}
+        aria-controls={`lazy-attr-content-${attribute.key}`}
       >
         {isExpanded ? (
           <IoChevronDown className="u-align-icon" />
@@ -51,13 +66,14 @@ export default function LazyAttributeSection({ attribute }: Props) {
         )}
         <strong className="LazyAttributeSection--key">{attribute.key}</strong>
         <span className="LazyAttributeSection--sizeBadge">{formatSize(valueLength)}</span>
-      </div>
+      </button>
+
       {isExpanded && (
-        <div className="LazyAttributeSection--content">
-          {isDeferredLoaded ? (
-            <GenAIAttributeRenderer attribute={attribute} />
-          ) : (
+        <div className="LazyAttributeSection--content" id={`lazy-attr-content-${attribute.key}`}>
+          {isVeryLarge && !isDeferredLoaded ? (
             <div className="LazyAttributeSection--loading">Parsing large payload...</div>
+          ) : (
+            <GenAIAttributeRenderer attribute={attribute} />
           )}
         </div>
       )}

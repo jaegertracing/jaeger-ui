@@ -295,27 +295,23 @@ describe('<SpanDetail>', () => {
   it('splits attributes by size and renders LazyAttributeSection for large ones', () => {
     const largeValue = 'a'.repeat(10241); // > 10 KB
     const smallValue = 'small';
-    const attributes = [
-      { key: 'large_attr', value: largeValue },
-      { key: 'small_attr', value: smallValue },
-    ];
 
-    const originalAttributes = props.span.attributes;
-    Object.defineProperty(props.span, 'attributes', {
-      get: () => attributes,
-      configurable: true,
-    });
+    const localProps = {
+      ...props,
+      span: {
+        ...props.span,
+        resource: { serviceName: 'test-service' },
+        attributes: [
+          { key: 'large_attr', value: largeValue },
+          { key: 'small_attr', value: smallValue },
+        ],
+      },
+    };
 
-    render(<SpanDetail {...props} />);
+    render(<SpanDetail {...localProps} />);
 
     const lazyAttrs = screen.getAllByTestId('lazy-attribute');
     expect(lazyAttrs.length).toBe(1);
     expect(lazyAttrs[0]).toHaveAttribute('data-key', 'large_attr');
-
-    // Restore original attributes
-    Object.defineProperty(props.span, 'attributes', {
-      get: () => originalAttributes,
-      configurable: true,
-    });
   });
 });

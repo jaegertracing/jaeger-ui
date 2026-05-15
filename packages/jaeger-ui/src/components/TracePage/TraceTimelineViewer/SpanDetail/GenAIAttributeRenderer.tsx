@@ -5,7 +5,7 @@ import * as React from 'react';
 import { JsonView, allExpanded, collapseAllNested, defaultStyles } from 'react-json-view-lite';
 import { IAttribute } from '../../../../types/otel';
 
-const jsonObjectOrArrayStartRegex = /^(\[|\{)/;
+const jsonObjectOrArrayStartRegex = /^\s*[[{]/;
 
 function tryParseJson(value: string) {
   try {
@@ -36,7 +36,7 @@ export default function GenAIAttributeRenderer({ attribute }: Props) {
     // Expand the tree if it's relatively small
     const shouldJsonTreeExpand = Object.keys(parsed).length <= 10;
     return (
-      <div className="GenAIAttributeRenderer--json">
+      <div className="GenAIAttributeRenderer--json" data-testid="gen-ai-renderer">
         <JsonView
           data={parsed}
           shouldExpandNode={shouldJsonTreeExpand ? allExpanded : collapseAllNested}
