@@ -250,6 +250,45 @@ describe('<SpanBarRow>', () => {
     });
   });
 
+  it('shows gen_ai.request.model in the endpoint label when present', () => {
+    const props = {
+      ...defaultProps,
+      rpc: null,
+      span: {
+        ...defaultProps.span,
+        attributes: [{ key: 'gen_ai.request.model', value: 'gpt-4o' }],
+      },
+    };
+    render(<SpanBarRow {...props} />);
+    expect(screen.getByText('op-name · gpt-4o')).toBeInTheDocument();
+  });
+
+  it('does not append model to endpoint label when gen_ai.request.model is absent', () => {
+    const props = { ...defaultProps, rpc: null };
+    render(<SpanBarRow {...props} />);
+    expect(screen.getByText('op-name')).toBeInTheDocument();
+  });
+
+  it('includes gen_ai.request.model in longLabel for the span bar tooltip', () => {
+    const getViewedBounds = jest.fn().mockReturnValue({ start: 0.2, end: 0.3 });
+    const props = {
+      ...defaultProps,
+      rpc: null,
+      getViewedBounds,
+      span: {
+        ...defaultProps.span,
+        attributes: [{ key: 'gen_ai.request.model', value: 'claude-3-haiku' }],
+      },
+    };
+    render(<SpanBarRow {...props} />);
+    expect(SpanBar).toHaveBeenCalledWith(
+      expect.objectContaining({
+        longLabel: 'formatted-100 | service-name::op-name (claude-3-haiku)',
+      }),
+      undefined
+    );
+  });
+
   it('sets longLabel and hintSide to right when viewStart <= 1 - viewEnd', () => {
     const getViewedBounds = jest.fn().mockReturnValue({ start: 0.2, end: 0.3 });
     const props = {
