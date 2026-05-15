@@ -24,7 +24,9 @@ import {
   ServiceOpsMetrics,
   spanKinds,
   FetchAggregatedServiceMetricsResponse,
+  MetricDimension,
 } from '../../../types/metrics';
+import JaegerAPI from '../../../api/jaeger';
 import prefixUrl from '../../../utils/prefix-url';
 import { convertToTimeUnit, convertTimeUnitToShortTerm, getSuitableTimeUnit } from '../../../utils/date';
 
@@ -143,6 +145,13 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   const [selectedTimeFrame, setSelectedTimeFrame] = useState<number>(
     store.getNumber('lastAtmSearchTimeframe', oneHourInMilliSeconds)
   );
+  const [dimensions, setDimensions] = useState<MetricDimension[]>([]);
+  const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>(() => {
+    const stored = store.getJSON('lastAtmSearchFilters');
+    return stored && typeof stored === 'object' && !Array.isArray(stored)
+      ? (stored as Record<string, string>)
+      : {};
+  });
 
   const calcGraphXDomain = useCallback(() => {
     const currentTime = Date.now();
@@ -176,6 +185,19 @@ export function MonitorATMServicesViewImpl(props: TProps) {
     trackSelectTimeframe(label);
   }, []);
 
+  const handleFilterChange = useCallback((dimensionName: string, value: string) => {
+    setSelectedFilters(prev => {
+      const next = { ...prev };
+      // Empty value = "All" = no filter on this dimension.
+      if (value === '') {
+        delete next[dimensionName];
+      } else {
+        next[dimensionName] = value;
+      }
+      return next;
+    });
+  }, []);
+
   const fetchMetrics = useCallback(() => {
     const currentService = selectedService || services[0];
 
@@ -185,14 +207,24 @@ export function MonitorATMServicesViewImpl(props: TProps) {
       store.set('lastAtmSearchSpanKind', selectedSpanKind);
       store.set('lastAtmSearchTimeframe', selectedTimeFrame);
       store.set('lastAtmSearchService', currentService);
+      store.set('lastAtmSearchFilters', selectedFilters);
 
-      const metricQueryPayload = {
+      // Build the repeated `filter=key:value` list. We only send filters for
+      // dimensions still advertised by the backend, so stale localStorage
+      // entries from removed dimensions are silently ignored.
+      const advertised = new Set(dimensions.map(d => d.name));
+      const filter = Object.entries(selectedFilters)
+        .filter(([k, v]) => v && advertised.has(k))
+        .map(([k, v]) => `${k}:${v}`);
+
+      const metricQueryPayload: MetricsAPIQueryParams = {
         quantile: 0.95,
         endTs: newEndTime,
         lookback: selectedTimeFrame,
         step: 60 * 1000,
         ratePer: 10 * 60 * 1000,
         spanKind: selectedSpanKind,
+        ...(filter.length > 0 ? { filter } : {}),
       };
 
       fetchAllServiceMetrics(currentService, metricQueryPayload);
@@ -208,6 +240,8 @@ export function MonitorATMServicesViewImpl(props: TProps) {
     selectedService,
     selectedSpanKind,
     selectedTimeFrame,
+    selectedFilters,
+    dimensions,
   ]);
 
   // componentDidMount equivalent
@@ -219,6 +253,28 @@ export function MonitorATMServicesViewImpl(props: TProps) {
       window.removeEventListener('resize', updateDimensions);
     };
   }, [updateDimensions, calcGraphXDomain]);
+
+  // Fetch the operator-configured filterable dimensions on mount. A backend
+  // without dimension support (or older Jaeger) returns [] or 5xx; in both
+  // cases we just render no dropdowns and the rest of the page is unaffected.
+  useEffect(() => {
+    let cancelled = false;
+    JaegerAPI.fetchMetricDimensions()
+      .then((response: unknown) => {
+        if (cancelled) return;
+        if (Array.isArray(response)) {
+          setDimensions(response as MetricDimension[]);
+        } else {
+          setDimensions([]);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setDimensions([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Measure the graph container width after every servicesLoading → false
   // transition. useLayoutEffect ensures the measurement happens before paint,
@@ -287,7 +343,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
               ))}
             </SearchableSelect>
           </Col>
-          <Col span={6}>
+          <Col span={4}>
             <h2 className="span-kind-selector-header">Span Kind</h2>
             <SearchableSelect
               value={selectedSpanKind}
@@ -304,6 +360,29 @@ export function MonitorATMServicesViewImpl(props: TProps) {
               ))}
             </SearchableSelect>
           </Col>
+          {dimensions
+            .filter(dim => dim.values && dim.values.length > 0)
+            .map(dim => (
+              <Col span={4} key={dim.name}>
+                <h2 className="dimension-selector-header">{dim.displayName || dim.name}</h2>
+                <SearchableSelect
+                  value={selectedFilters[dim.name] || ''}
+                  onChange={(value: string) => handleFilterChange(dim.name, value)}
+                  placeholder="All"
+                  className="dimension-selector"
+                  data-testid={`dimension-selector-${dim.name}`}
+                  disabled={metrics.operationMetricsLoading}
+                  loading={metrics.operationMetricsLoading}
+                >
+                  <Option value="">All</Option>
+                  {dim.values!.map(value => (
+                    <Option key={value} value={value}>
+                      {value}
+                    </Option>
+                  ))}
+                </SearchableSelect>
+              </Col>
+            ))}
         </Row>
         <Row align="middle">
           <Col span={16}>
