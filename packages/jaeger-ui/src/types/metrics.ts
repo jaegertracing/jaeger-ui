@@ -19,6 +19,20 @@ export type MetricsAPIQueryParams = {
   step: number;
   ratePer: number;
   spanKind: spanKinds;
+  // filter is a list of pre-configured `dimension:value` strings, one per
+  // user-selected dropdown on the Monitor page (e.g. `deployment.environment:prod`).
+  // The available dimensions are advertised by the backend via
+  // GET /api/metrics/dimensions and configured per-deployment by the operator.
+  filter?: string[];
+};
+
+// MetricDimension describes one pre-configured filterable dimension advertised
+// by the backend (see jaegertracing/jaeger#5438). Backends that do not support
+// dimension filtering return an empty list.
+export type MetricDimension = {
+  name: string;
+  displayName?: string;
+  values?: string[];
 };
 
 type LableObject = {
