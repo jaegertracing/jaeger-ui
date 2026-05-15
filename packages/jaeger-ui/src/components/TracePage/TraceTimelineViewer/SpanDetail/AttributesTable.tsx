@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { useState, useMemo } from 'react';
 import { Dropdown, Tooltip } from 'antd';
 import { IoOpenOutline, IoList, IoCopyOutline, IoInformationCircleOutline } from 'react-icons/io5';
 import { JsonView, allExpanded, collapseAllNested, defaultStyles } from 'react-json-view-lite';
@@ -129,10 +128,10 @@ type AttributesTableProps = {
 // Example: https://github.com/jaegertracing/jaeger-ui/assets/94157520/b518cad9-cb37-4775-a3d6-b667a1235f89
 export default function AttributesTable(props: AttributesTableProps) {
   const { data, linksGetter } = props;
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = React.useState('');
 
-  const visibleRows = useMemo(() => {
-    if (!query) return data.map((attr, i) => ({ attr, originalIndex: i }));
+  const visibleRows = React.useMemo(() => {
+    if (!query || data.length <= FILTER_THRESHOLD) return data.map((attr, i) => ({ attr, originalIndex: i }));
     const lower = query.toLowerCase();
     return data.reduce<{ attr: IAttribute; originalIndex: number }[]>((acc, attr, i) => {
       if (attr.key.toLowerCase().includes(lower) || String(attr.value).toLowerCase().includes(lower)) {
