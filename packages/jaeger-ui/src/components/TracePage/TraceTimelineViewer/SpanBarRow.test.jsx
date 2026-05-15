@@ -33,10 +33,13 @@ vi.mock('./SpanBar', () => ({
   default: jest.fn(() => <div data-testid="span-bar">SpanBar</div>),
 }));
 
-vi.mock('./utils', () => ({
-  formatDurationCompact: jest.fn(d => `formatted-${d}`),
-  ViewedBoundsFunctionType: {},
-}));
+vi.mock('./utils', async importOriginal => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    formatDurationCompact: jest.fn(d => `formatted-${d}`),
+  };
+});
 
 describe('<SpanBarRow>', () => {
   const spanID = 'some-id';
@@ -248,6 +251,16 @@ describe('<SpanBarRow>', () => {
       expect(nameCell).toHaveStyle('flex-basis: 100%');
       expect(nameCell).toHaveStyle('max-width: 100%');
     });
+  });
+
+  it('renders without throwing when span.attributes is undefined', () => {
+    const props = {
+      ...defaultProps,
+      rpc: null,
+      span: { ...defaultProps.span, attributes: undefined },
+    };
+    render(<SpanBarRow {...props} />);
+    expect(screen.getByText('op-name')).toBeInTheDocument();
   });
 
   it('shows gen_ai.request.model in the endpoint label when present', () => {
