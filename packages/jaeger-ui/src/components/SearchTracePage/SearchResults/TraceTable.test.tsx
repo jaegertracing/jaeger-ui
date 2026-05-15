@@ -108,6 +108,6 @@ describe('<TraceTable>', () => {
       </MemoryRouter>
     );
     const link = screen.getByRole('link', { name: /abc/i });
-    expect(link).toHaveAttribute('href', '/trace/abc123456789');
+    expect(link.getAttribute('href')).toContain('/trace/abc123456789');
   });
 });

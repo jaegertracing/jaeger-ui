@@ -148,7 +148,8 @@ export function UnconnectedSearchResults({
   const [resultView, setResultView] = React.useState<'cards' | 'table'>('cards');
 
   const onResultViewChange = useCallback((e: RadioChangeEvent) => {
-    setResultView(e.target.value);
+    const v = e.target.value;
+    if (v === 'cards' || v === 'table') setResultView(v);
   }, []);
 
   const toggleComparison = useCallback(
