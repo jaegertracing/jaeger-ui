@@ -331,6 +331,7 @@ describe('<SpanDetail>', () => {
     });
   });
 
+
   it('passes all attributes (including large ones) to AccordionAttributes as a single list', () => {
     const largeValue = 'a'.repeat(10241); // above threshold
     const localProps = {
