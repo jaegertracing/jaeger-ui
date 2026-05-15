@@ -119,6 +119,15 @@ const getStripCircular = () => {
   };
 };
 
+export function getSpanLinkForTrace(
+  spanLinks: Record<string, string> | undefined,
+  traceID: string
+): string | undefined {
+  if (!spanLinks) return undefined;
+  const stripped = traceID.replace(/^0+/, '');
+  return spanLinks[traceID] || (stripped ? spanLinks[stripped] : undefined);
+}
+
 export function createBlob(rawTraces: any[]) {
   const stringified = JSON.stringify(rawTraces, getStripCircular());
   return new Blob([`{"data":${stringified}}`], { type: 'application/json' });
@@ -169,7 +178,7 @@ export function UnconnectedSearchResults({
 
   const goToTraceFromTable = useCallback(
     (traceID: string) => {
-      const spanLink = spanLinks && (spanLinks[traceID] || spanLinks[traceID.replace(/^0*/, '')]);
+      const spanLink = getSpanLinkForTrace(spanLinks, traceID);
       goToTrace(traceID, spanLink);
     },
     [goToTrace, spanLinks]
@@ -297,7 +306,7 @@ export function UnconnectedSearchResults({
                 linkTo={getTracePageLink(
                   trace.traceID,
                   { fromSearch: searchUrl },
-                  spanLinks && (spanLinks[trace.traceID] || spanLinks[trace.traceID.replace(/^0*/, '')])
+                  getSpanLinkForTrace(spanLinks, trace.traceID)
                 )}
                 toggleComparison={toggleComparison}
                 trace={trace}

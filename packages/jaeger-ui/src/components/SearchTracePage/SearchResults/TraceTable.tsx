@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
+import { useMemo } from 'react';
 import { Table } from 'antd';
 import type { ColumnsType, TableProps } from 'antd/es/table';
 import type { SorterResult } from 'antd/es/table/interface';
@@ -47,53 +48,56 @@ export { toOrderBy, fromOrderBy };
 export default function TraceTable({ traces, onRowClick, sortBy, handleSortChange }: TraceTableProps) {
   const { key: sortKey, order: sortOrder } = fromOrderBy(sortBy);
 
-  const columns: ColumnsType<IOtelTrace> = [
-    {
-      title: 'Trace Name',
-      dataIndex: 'traceName',
-      key: 'traceName',
-      render: (name: string, trace: IOtelTrace) => name || trace.traceID,
-    },
-    {
-      title: 'Services',
-      key: 'services',
-      render: (_: unknown, trace: IOtelTrace) =>
-        trace.services ? trace.services.map(s => s.name).join(', ') : '-',
-    },
-    {
-      title: 'Spans',
-      key: 'spans',
-      render: (_: unknown, trace: IOtelTrace) => trace.spans.length,
-      sorter: true,
-      sortOrder: sortKey === 'spans' ? sortOrder : undefined,
-    },
-    {
-      title: 'Errors',
-      key: 'errors',
-      render: (_: unknown, trace: IOtelTrace) => {
-        let count = 0;
-        for (const s of trace.spans) {
-          if (s.status?.code === StatusCode.ERROR) count++;
-        }
-        return count;
+  const columns: ColumnsType<IOtelTrace> = useMemo(
+    () => [
+      {
+        title: 'Trace Name',
+        dataIndex: 'traceName',
+        key: 'traceName',
+        render: (name: string, trace: IOtelTrace) => name || trace.traceID,
       },
-    },
-    {
-      title: 'Duration',
-      key: 'duration',
-      render: (_: unknown, trace: IOtelTrace) => formatDuration(trace.duration),
-      sorter: true,
-      sortOrder: sortKey === 'duration' ? sortOrder : undefined,
-    },
-    {
-      title: 'Start Time',
-      key: 'startTime',
-      render: (_: unknown, trace: IOtelTrace) => formatDatetime(trace.startTime),
-      sorter: true,
-      sortOrder: sortKey === 'startTime' ? sortOrder : undefined,
-      sortDirections: ['descend'],
-    },
-  ];
+      {
+        title: 'Services',
+        key: 'services',
+        render: (_: unknown, trace: IOtelTrace) =>
+          trace.services ? trace.services.map(s => s.name).join(', ') : '-',
+      },
+      {
+        title: 'Spans',
+        key: 'spans',
+        render: (_: unknown, trace: IOtelTrace) => trace.spans.length,
+        sorter: true,
+        sortOrder: sortKey === 'spans' ? sortOrder : undefined,
+      },
+      {
+        title: 'Errors',
+        key: 'errors',
+        render: (_: unknown, trace: IOtelTrace) => {
+          let count = 0;
+          for (const s of trace.spans) {
+            if (s.status?.code === StatusCode.ERROR) count++;
+          }
+          return count;
+        },
+      },
+      {
+        title: 'Duration',
+        key: 'duration',
+        render: (_: unknown, trace: IOtelTrace) => formatDuration(trace.duration),
+        sorter: true,
+        sortOrder: sortKey === 'duration' ? sortOrder : undefined,
+      },
+      {
+        title: 'Start Time',
+        key: 'startTime',
+        render: (_: unknown, trace: IOtelTrace) => formatDatetime(trace.startTime),
+        sorter: true,
+        sortOrder: sortKey === 'startTime' ? sortOrder : undefined,
+        sortDirections: ['descend'],
+      },
+    ],
+    [sortKey, sortOrder]
+  );
 
   const onChange: TableProps<IOtelTrace>['onChange'] = (_pagination, _filters, sorter) => {
     const s = Array.isArray(sorter) ? sorter[0] : (sorter as SorterResult<IOtelTrace>);

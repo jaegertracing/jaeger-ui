@@ -7,6 +7,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import TraceTable, { toOrderBy, fromOrderBy } from './TraceTable';
 import * as orderBy from '../../../model/order-by';
+import { StatusCode } from '../../../types/otel';
 
 const FIXED_START_TIME = 1700000000000000;
 
@@ -16,8 +17,8 @@ const makeTrace = (id: string, errorCount = 0) => ({
   duration: 1000,
   startTime: FIXED_START_TIME,
   spans: [
-    ...Array(3).fill({ status: { code: 'OK' } }),
-    ...Array(errorCount).fill({ status: { code: 'ERROR' } }),
+    ...Array(3).fill({ status: { code: StatusCode.OK } }),
+    ...Array(errorCount).fill({ status: { code: StatusCode.ERROR } }),
   ],
   services: [{ name: 'service-a' }],
   hasErrors: () => errorCount > 0,
