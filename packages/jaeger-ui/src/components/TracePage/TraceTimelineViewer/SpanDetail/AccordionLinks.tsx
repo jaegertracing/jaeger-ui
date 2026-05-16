@@ -68,7 +68,7 @@ function AccordionLinks({
   useOtelTerms,
 }: AccordionLinksProps) {
   const isEmpty = !Array.isArray(data) || !data.length;
-  const iconCls = cx('u-align-icon', { 'AccordianKReferences--emptyIcon': isEmpty });
+  const iconCls = cx('u-align-icon', { 'AccordionLinks--emptyIcon': isEmpty });
 
   let arrow: React.ReactNode | null = null;
   let headerProps: object | null = null;
