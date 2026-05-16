@@ -64,7 +64,8 @@ export class JaegerClient {
       return parseOtlpTrace(raw);
     } catch (err) {
       throw new Error(
-        `Failed to parse trace "${traceId}": ${err instanceof Error ? err.message : String(err)}`
+        `Failed to parse trace "${traceId}": ${err instanceof Error ? err.message : String(err)}`,
+        { cause: err }
       );
     }
   }
