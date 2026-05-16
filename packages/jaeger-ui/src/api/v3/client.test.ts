@@ -3,6 +3,11 @@
 
 import { JaegerClient, jaegerClient } from './client';
 import { ZodError } from 'zod';
+import { parseOtlpTrace } from './parser';
+
+vi.mock('./parser', () => ({
+  parseOtlpTrace: vi.fn(),
+}));
 
 describe('JaegerClient', () => {
   let client: JaegerClient;
@@ -256,6 +261,61 @@ describe('JaegerClient', () => {
     });
   });
 
+  describe('getTrace', () => {
+    const mockTrace = { traceID: 'trace-abc', spans: [] } as any;
+
+    it('successfully fetches and parses a trace', async () => {
+      const mockData = { resourceSpans: [] };
+      mockFetch.mockResolvedValue({ ok: true, json: async () => mockData });
+      (parseOtlpTrace as ReturnType<typeof vi.fn>).mockReturnValue(mockTrace);
+
+      const promise = client.getTrace('trace-abc');
+      vi.runAllTimers();
+      const result = await promise;
+
+      expect(result).toBe(mockTrace);
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/v3/traces/trace-abc',
+        expect.objectContaining({ signal: expect.any(AbortSignal) })
+      );
+      expect(parseOtlpTrace).toHaveBeenCalledWith(mockData);
+    });
+
+    it('URL-encodes the traceId', async () => {
+      mockFetch.mockResolvedValue({ ok: true, json: async () => ({}) });
+      (parseOtlpTrace as ReturnType<typeof vi.fn>).mockReturnValue(mockTrace);
+
+      const promise = client.getTrace('id with spaces');
+      vi.runAllTimers();
+      await promise;
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/v3/traces/id%20with%20spaces',
+        expect.anything()
+      );
+    });
+
+    it('throws with traceId in message when response is not OK', async () => {
+      mockFetch.mockResolvedValue({ ok: false, status: 404, statusText: 'Not Found' });
+
+      const promise = client.getTrace('missing-trace');
+      vi.runAllTimers();
+
+      await expect(promise).rejects.toThrow('Failed to fetch trace "missing-trace": 404 Not Found');
+    });
+
+    it('throws on 500 errors', async () => {
+      mockFetch.mockResolvedValue({ ok: false, status: 500, statusText: 'Internal Server Error' });
+
+      const promise = client.getTrace('some-trace');
+      vi.runAllTimers();
+
+      await expect(promise).rejects.toThrow(
+        'Failed to fetch trace "some-trace": 500 Internal Server Error'
+      );
+    });
+  });
+
   describe('singleton instance', () => {
     it('exports a singleton jaegerClient instance', () => {
       expect(jaegerClient).toBeInstanceOf(JaegerClient);
@@ -264,6 +324,7 @@ describe('JaegerClient', () => {
     it('singleton instance has all expected methods', () => {
       expect(jaegerClient.fetchServices).toBeInstanceOf(Function);
       expect(jaegerClient.fetchSpanNames).toBeInstanceOf(Function);
+      expect(jaegerClient.getTrace).toBeInstanceOf(Function);
     });
   });
 });
