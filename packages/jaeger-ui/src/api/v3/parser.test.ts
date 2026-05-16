@@ -57,7 +57,7 @@ describe('parseOtlpTrace', () => {
     it('converts nanosecond timestamps to microseconds', () => {
       const trace = parseOtlpTrace(makeTrace([makeSpan()]));
       const span = trace.spans[0];
-      expect(span.startTime).toBe(1_000_000); // 1e12ns / 1000 = 1e6µs
+      expect(span.startTime).toBe(1_000_000); // 1e9ns / 1000 = 1e6µs
       expect(span.endTime).toBe(2_000_000);
       expect(span.duration).toBe(1_000_000);
     });
@@ -259,6 +259,16 @@ describe('parseOtlpTrace', () => {
       });
       const trace = parseOtlpTrace(makeTrace([linker]));
       expect(trace.spans[0].inboundLinks).toHaveLength(0);
+    });
+
+    it('does not add inbound link when traceId differs even if spanId matches a local span', () => {
+      const local = makeSpan({ spanId: 'local' });
+      const linker = makeSpan({
+        spanId: 'linker',
+        links: [{ traceId: 'OTHER-TRACE', spanId: 'local' }],
+      });
+      const trace = parseOtlpTrace(makeTrace([local, linker]));
+      expect(trace.spanMap.get('local')!.inboundLinks).toHaveLength(0);
     });
   });
 

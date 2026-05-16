@@ -69,8 +69,9 @@ export type OtlpTracesData = {
 };
 
 // Internal mutable type used during tree construction
-type MutableSpan = Omit<IOtelSpan, 'childSpans' | 'inboundLinks' | 'warnings'> & {
-  childSpans: IOtelSpan[];
+type MutableSpan = Omit<IOtelSpan, 'parentSpan' | 'childSpans' | 'inboundLinks' | 'warnings'> & {
+  parentSpan?: MutableSpan;
+  childSpans: MutableSpan[];
   inboundLinks: ILink[];
   warnings: string[] | null;
 };
@@ -98,7 +99,10 @@ function parseAttrValue(v: OtlpAnyValue): AttributeValue {
   if (v.stringValue !== undefined) return v.stringValue;
   if (v.boolValue !== undefined) return v.boolValue;
   if (v.doubleValue !== undefined) return v.doubleValue;
-  if (v.intValue !== undefined) return Number(v.intValue);
+  if (v.intValue !== undefined) {
+    const n = Number(v.intValue);
+    return Number.isSafeInteger(n) ? n : String(v.intValue);
+  }
   if (v.arrayValue !== undefined) {
     return (v.arrayValue.values ?? []).map(parseAttrValue);
   }
@@ -138,10 +142,14 @@ function parseScope(scope?: { name?: string; version?: string; attributes?: Otlp
   };
 }
 
-function assignDepths(span: MutableSpan, depth: number) {
-  span.depth = depth;
-  for (const child of span.childSpans) {
-    assignDepths(child as MutableSpan, depth + 1);
+function assignDepths(roots: MutableSpan[]) {
+  const stack: { span: MutableSpan; depth: number }[] = roots.map(s => ({ span: s, depth: 0 }));
+  while (stack.length > 0) {
+    const { span, depth } = stack.pop()!;
+    span.depth = depth;
+    for (const child of span.childSpans) {
+      stack.push({ span: child, depth: depth + 1 });
+    }
   }
 }
 
@@ -195,7 +203,7 @@ export function parseOtlpTrace(data: OtlpTracesData): IOtelTrace {
       instrumentationScope: scope,
       depth: 0,
       hasChildren: false,
-      childSpans: [],
+      childSpans: [] as MutableSpan[],
       relativeStartTime: 0 as Microseconds,
       inboundLinks: [],
       warnings: null,
@@ -213,8 +221,8 @@ export function parseOtlpTrace(data: OtlpTracesData): IOtelTrace {
     if (ms.parentSpanID) {
       const parent = spanMap.get(ms.parentSpanID);
       if (parent) {
-        (ms as any).parentSpan = parent;
-        parent.childSpans.push(ms as IOtelSpan);
+        ms.parentSpan = parent;
+        parent.childSpans.push(ms);
         parent.hasChildren = true;
       } else {
         orphanSpanCount++;
@@ -225,15 +233,17 @@ export function parseOtlpTrace(data: OtlpTracesData): IOtelTrace {
     }
   }
 
-  // Assign depths from roots
-  for (const root of rootSpans) {
-    assignDepths(root, 0);
-  }
+  assignDepths(rootSpans);
+
+  const traceID = mutableSpans[0].traceID;
 
   // Build inboundLinks — for each outbound link that points to a span in this trace,
   // add an inbound link on the target so the UI can surface "referenced by" relationships.
+  // Only match links whose traceID matches the current trace to avoid false positives when
+  // an external trace happens to share a spanID with a local span.
   for (const ms of mutableSpans) {
     for (const link of ms.links) {
+      if (link.traceID !== traceID) continue;
       const target = spanMap.get(link.spanID);
       if (target) {
         target.inboundLinks.push({
@@ -278,7 +288,6 @@ export function parseOtlpTrace(data: OtlpTracesData): IOtelTrace {
     rootSpans[0]
   );
   const traceName = `${primaryRoot.resource.serviceName}: ${primaryRoot.name}`;
-  const traceID = mutableSpans[0].traceID;
 
   return {
     traceID,

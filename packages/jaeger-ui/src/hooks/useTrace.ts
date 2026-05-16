@@ -8,7 +8,7 @@ import { IOtelTrace } from '../types/otel';
 export function useTrace(traceId: string | null): UseQueryResult<IOtelTrace> {
   return useQuery({
     queryKey: ['trace', traceId],
-    queryFn: () => jaegerClient.getTrace(traceId!),
+    queryFn: ({ queryKey }) => jaegerClient.getTrace(queryKey[1] as string),
     enabled: !!traceId,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
