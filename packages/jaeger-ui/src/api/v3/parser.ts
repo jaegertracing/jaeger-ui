@@ -115,7 +115,7 @@ function parseAttrValue(v: OtlpAnyValue): AttributeValue {
     return obj;
   }
   if (v.bytesValue !== undefined) {
-    const binary = atob(v.bytesValue);
+    const binary = globalThis.atob(v.bytesValue);
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
     return bytes;
@@ -283,11 +283,9 @@ export function parseOtlpTrace(data: OtlpTracesData): IOtelTrace {
     numberOfSpans,
   }));
 
-  // traceName from the earliest root span
-  const primaryRoot = rootSpans.reduce(
-    (earliest, s) => (s.startTime < earliest.startTime ? s : earliest),
-    rootSpans[0]
-  );
+  // traceName from the earliest root span; fall back to all spans if rootSpans is empty (cycle in trace)
+  const candidates = rootSpans.length > 0 ? rootSpans : mutableSpans;
+  const primaryRoot = candidates.reduce((earliest, s) => (s.startTime < earliest.startTime ? s : earliest));
   const traceName = `${primaryRoot.resource.serviceName}: ${primaryRoot.name}`;
 
   return {

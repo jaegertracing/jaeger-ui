@@ -309,6 +309,27 @@ describe('JaegerClient', () => {
 
       await expect(promise).rejects.toThrow('Failed to fetch trace "some-trace": 500 Internal Server Error');
     });
+
+    it('wraps parser errors with traceId context', async () => {
+      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ resourceSpans: [] }) });
+      (parseOtlpTrace as ReturnType<typeof vi.fn>).mockImplementation(() => {
+        throw new Error('No spans found in trace data');
+      });
+
+      const promise = client.getTrace('broken-trace');
+      vi.runAllTimers();
+
+      await expect(promise).rejects.toThrow('Failed to parse trace "broken-trace"');
+    });
+
+    it('throws ZodError when response lacks expected envelope shape', async () => {
+      mockFetch.mockResolvedValue({ ok: true, json: async () => 'not-an-object' });
+
+      const promise = client.getTrace('bad-trace');
+      vi.runAllTimers();
+
+      await expect(promise).rejects.toBeInstanceOf(ZodError);
+    });
   });
 
   describe('singleton instance', () => {
