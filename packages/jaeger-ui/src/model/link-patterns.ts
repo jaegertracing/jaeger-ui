@@ -237,7 +237,7 @@ export function computeLinks(
         let entry;
 
         if (parameterName.startsWith('trace.')) {
-          entry = getParameterInTrace(parameterName.split('trace.')[1], trace);
+          entry = getParameterInTrace(parameterName.slice('trace.'.length), trace);
         } else {
           entry = getParameterInArray(parameterName, items);
 
@@ -254,7 +254,7 @@ export function computeLinks(
         }
 
         console.warn(
-          `Skipping link pattern, missing parameter ${parameterName} for key ${item.key} in ${type}.`,
+          `Skipping link pattern, missing parameter ${parameter} for key ${item.key} in ${type}.`,
           pattern.object
         );
         return false;
