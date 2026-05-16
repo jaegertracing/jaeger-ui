@@ -207,6 +207,13 @@ describe('parseOtlpTrace', () => {
     it('returns empty string for unknown value type', () => {
       expect(attrTrace({}).spans[0].attributes[0].value).toBe('');
     });
+
+    it('parses bytesValue into a Uint8Array', () => {
+      // base64 'aGk=' decodes to 'hi' (bytes 104, 105)
+      const value = attrTrace({ bytesValue: 'aGk=' }).spans[0].attributes[0].value;
+      expect(value).toBeInstanceOf(Uint8Array);
+      expect(Array.from(value as Uint8Array)).toEqual([104, 105]);
+    });
   });
 
   describe('parent-child tree', () => {

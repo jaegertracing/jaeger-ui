@@ -10,7 +10,7 @@
 
 import prefixUrl from '../../utils/prefix-url';
 import { ServicesResponseSchema, OperationsResponseSchema, OtlpEnvelopeSchema } from './schemas';
-import { parseOtlpTrace } from './parser';
+import { parseOtlpTrace, OtlpTracesData } from './parser';
 import { IOtelTrace } from '../../types/otel';
 
 export class JaegerClient {
@@ -59,9 +59,9 @@ export class JaegerClient {
       throw new Error(`Failed to fetch trace "${traceId}": ${response.status} ${response.statusText}`);
     }
     const raw = await response.json();
-    OtlpEnvelopeSchema.parse(raw);
+    const validated = OtlpEnvelopeSchema.parse(raw);
     try {
-      return parseOtlpTrace(raw);
+      return parseOtlpTrace(validated as unknown as OtlpTracesData);
     } catch (err) {
       throw new Error(
         `Failed to parse trace "${traceId}": ${err instanceof Error ? err.message : String(err)}`,
