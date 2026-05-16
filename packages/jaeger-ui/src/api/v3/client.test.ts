@@ -289,10 +289,7 @@ describe('JaegerClient', () => {
       vi.runAllTimers();
       await promise;
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        '/api/v3/traces/id%20with%20spaces',
-        expect.anything()
-      );
+      expect(mockFetch).toHaveBeenCalledWith('/api/v3/traces/id%20with%20spaces', expect.anything());
     });
 
     it('throws with traceId in message when response is not OK', async () => {
@@ -310,9 +307,7 @@ describe('JaegerClient', () => {
       const promise = client.getTrace('some-trace');
       vi.runAllTimers();
 
-      await expect(promise).rejects.toThrow(
-        'Failed to fetch trace "some-trace": 500 Internal Server Error'
-      );
+      await expect(promise).rejects.toThrow('Failed to fetch trace "some-trace": 500 Internal Server Error');
     });
   });
 

@@ -7,19 +7,29 @@ import { SpanKind, StatusCode } from '../../types/otel';
 const BASE_NANO = '1000000000'; // 1e9 ns = 1e6 µs
 const BASE_NANO_END = '2000000000'; // 2e9 ns = 2e6 µs
 
-function makeSpan(overrides: Partial<{
-  traceId: string;
-  spanId: string;
-  parentSpanId: string;
-  name: string;
-  kind: number;
-  startTimeUnixNano: string;
-  endTimeUnixNano: string;
-  status: { code?: number; message?: string };
-  attributes: { key: string; value: Record<string, unknown> }[];
-  events: { timeUnixNano: string; name: string; attributes?: { key: string; value: Record<string, unknown> }[] }[];
-  links: { traceId: string; spanId: string; attributes?: { key: string; value: Record<string, unknown> }[] }[];
-}> = {}) {
+function makeSpan(
+  overrides: Partial<{
+    traceId: string;
+    spanId: string;
+    parentSpanId: string;
+    name: string;
+    kind: number;
+    startTimeUnixNano: string;
+    endTimeUnixNano: string;
+    status: { code?: number; message?: string };
+    attributes: { key: string; value: Record<string, unknown> }[];
+    events: {
+      timeUnixNano: string;
+      name: string;
+      attributes?: { key: string; value: Record<string, unknown> }[];
+    }[];
+    links: {
+      traceId: string;
+      spanId: string;
+      attributes?: { key: string; value: Record<string, unknown> }[];
+    }[];
+  }> = {}
+) {
   return {
     traceId: 'trace-abc',
     spanId: 'span-001',
@@ -157,9 +167,7 @@ describe('parseOtlpTrace', () => {
 
   describe('attribute value parsing', () => {
     function attrTrace(value: Record<string, unknown>) {
-      return parseOtlpTrace(
-        makeTrace([makeSpan({ attributes: [{ key: 'test.key', value }] })])
-      );
+      return parseOtlpTrace(makeTrace([makeSpan({ attributes: [{ key: 'test.key', value }] })]));
     }
 
     it('parses stringValue', () => {
@@ -275,7 +283,9 @@ describe('parseOtlpTrace', () => {
   describe('events and links', () => {
     it('parses events', () => {
       const span = makeSpan({
-        events: [{ timeUnixNano: BASE_NANO, name: 'evt', attributes: [{ key: 'k', value: { stringValue: 'v' } }] }],
+        events: [
+          { timeUnixNano: BASE_NANO, name: 'evt', attributes: [{ key: 'k', value: { stringValue: 'v' } }] },
+        ],
       });
       const trace = parseOtlpTrace(makeTrace([span]));
       const evt = trace.spans[0].events[0];
@@ -286,7 +296,9 @@ describe('parseOtlpTrace', () => {
 
     it('parses outbound links', () => {
       const span = makeSpan({
-        links: [{ traceId: 'other', spanId: 'other-span', attributes: [{ key: 'k', value: { intValue: 1 } }] }],
+        links: [
+          { traceId: 'other', spanId: 'other-span', attributes: [{ key: 'k', value: { intValue: 1 } }] },
+        ],
       });
       const trace = parseOtlpTrace(makeTrace([span]));
       const link = trace.spans[0].links[0];
@@ -374,8 +386,16 @@ describe('parseOtlpTrace', () => {
     });
 
     it('sorts spans by startTime', () => {
-      const late = makeSpan({ spanId: 'late', startTimeUnixNano: '2000000000', endTimeUnixNano: '3000000000' });
-      const early = makeSpan({ spanId: 'early', startTimeUnixNano: '1000000000', endTimeUnixNano: '1500000000' });
+      const late = makeSpan({
+        spanId: 'late',
+        startTimeUnixNano: '2000000000',
+        endTimeUnixNano: '3000000000',
+      });
+      const early = makeSpan({
+        spanId: 'early',
+        startTimeUnixNano: '1000000000',
+        endTimeUnixNano: '1500000000',
+      });
       const trace = parseOtlpTrace(makeTrace([late, early]));
       expect(trace.spans[0].spanID).toBe('early');
       expect(trace.spans[1].spanID).toBe('late');

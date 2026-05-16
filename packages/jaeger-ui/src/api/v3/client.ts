@@ -54,13 +54,9 @@ export class JaegerClient {
   }
 
   async getTrace(traceId: string): Promise<IOtelTrace> {
-    const response = await this.fetchWithTimeout(
-      `${this.apiRoot}/traces/${encodeURIComponent(traceId)}`
-    );
+    const response = await this.fetchWithTimeout(`${this.apiRoot}/traces/${encodeURIComponent(traceId)}`);
     if (!response.ok) {
-      throw new Error(
-        `Failed to fetch trace "${traceId}": ${response.status} ${response.statusText}`
-      );
+      throw new Error(`Failed to fetch trace "${traceId}": ${response.status} ${response.statusText}`);
     }
     const data = await response.json();
     return parseOtlpTrace(data);
