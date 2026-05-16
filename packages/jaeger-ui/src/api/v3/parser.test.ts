@@ -190,6 +190,13 @@ describe('parseOtlpTrace', () => {
       expect(attrTrace({ intValue: 7 }).spans[0].attributes[0].value).toBe(7);
     });
 
+    it('keeps large intValue as string when it exceeds safe integer range', () => {
+      // 9007199254740993 = MAX_SAFE_INTEGER + 2; converting to Number loses precision
+      expect(attrTrace({ intValue: '9007199254740993' }).spans[0].attributes[0].value).toBe(
+        '9007199254740993'
+      );
+    });
+
     it('parses arrayValue', () => {
       const value = attrTrace({
         arrayValue: { values: [{ stringValue: 'a' }, { stringValue: 'b' }] },

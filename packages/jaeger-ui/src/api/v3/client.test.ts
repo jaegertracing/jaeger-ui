@@ -278,7 +278,7 @@ describe('JaegerClient', () => {
         '/api/v3/traces/trace-abc',
         expect.objectContaining({ signal: expect.any(AbortSignal) })
       );
-      expect(parseOtlpTrace).toHaveBeenCalledWith(mockData);
+      expect(parseOtlpTrace).toHaveBeenCalledWith(expect.objectContaining({ resourceSpans: [] }));
     });
 
     it('URL-encodes the traceId', async () => {

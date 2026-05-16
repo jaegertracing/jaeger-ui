@@ -102,7 +102,7 @@ function parseAttrValue(v: OtlpAnyValue): AttributeValue {
   if (v.doubleValue !== undefined) return v.doubleValue;
   if (v.intValue !== undefined) {
     const n = Number(v.intValue);
-    return Number.isSafeInteger(n) ? n : String(v.intValue);
+    return Number.isSafeInteger(n) && String(n) === String(v.intValue) ? n : String(v.intValue);
   }
   if (v.arrayValue !== undefined) {
     return (v.arrayValue.values ?? []).map(parseAttrValue);
@@ -115,6 +115,7 @@ function parseAttrValue(v: OtlpAnyValue): AttributeValue {
     return obj;
   }
   if (v.bytesValue !== undefined) {
+    if (typeof globalThis.atob !== 'function') return new Uint8Array(0);
     const binary = globalThis.atob(v.bytesValue);
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
@@ -154,7 +155,8 @@ function assignDepths(roots: MutableSpan[]) {
   }
 }
 
-export function parseOtlpTrace(data: OtlpTracesData): IOtelTrace {
+export function parseOtlpTrace(input: unknown): IOtelTrace {
+  const data = input as OtlpTracesData;
   const flatSpans: { s: OtlpSpan; resource: IResource; scope: IScope }[] = [];
 
   for (const rs of data.resourceSpans ?? []) {
@@ -180,9 +182,9 @@ export function parseOtlpTrace(data: OtlpTracesData): IOtelTrace {
     const statusCode = STATUS_MAP[s.status?.code ?? 0] ?? StatusCode.UNSET;
 
     const ms: MutableSpan = {
-      traceID: s.traceId,
-      spanID: s.spanId,
-      parentSpanID: s.parentSpanId || undefined,
+      traceID: s.traceId.toLowerCase(),
+      spanID: s.spanId.toLowerCase(),
+      parentSpanID: s.parentSpanId ? s.parentSpanId.toLowerCase() : undefined,
       name: s.name,
       kind: KIND_MAP[s.kind ?? 0] ?? SpanKind.INTERNAL,
       startTime,
@@ -195,8 +197,8 @@ export function parseOtlpTrace(data: OtlpTracesData): IOtelTrace {
         attributes: parseAttrs(e.attributes),
       })),
       links: (s.links ?? []).map(l => ({
-        traceID: l.traceId,
-        spanID: l.spanId,
+        traceID: l.traceId.toLowerCase(),
+        spanID: l.spanId.toLowerCase(),
         attributes: parseAttrs(l.attributes),
       })),
       status: { code: statusCode, message: s.status?.message },
