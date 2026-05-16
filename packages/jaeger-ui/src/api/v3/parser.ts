@@ -92,7 +92,8 @@ const STATUS_MAP: { [k: number]: StatusCode } = {
 };
 
 function nanoToMicro(nanoStr: string): Microseconds {
-  return Number(BigInt(nanoStr) / 1000n) as Microseconds;
+  // Slice off the last 3 digits to divide by 1000 without BigInt (avoids precision loss via float64).
+  return Number(nanoStr.length > 3 ? nanoStr.slice(0, -3) : '0') as Microseconds;
 }
 
 function parseAttrValue(v: OtlpAnyValue): AttributeValue {
