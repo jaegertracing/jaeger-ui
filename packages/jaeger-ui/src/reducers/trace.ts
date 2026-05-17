@@ -66,7 +66,8 @@ function fetchMultipleTracesStarted(state: TraceState, { meta }: any): TraceStat
 function fetchMultipleTracesDone(state: TraceState, { payload }: any): TraceState {
   const traces = { ...state.traces };
   payload.data.forEach((raw: any) => {
-    const data = transformTraceData(raw)!;
+    const data = transformTraceData(raw);
+    if (!data) return;
     traces[data.traceID] = { data, id: data.traceID, state: fetchedState.DONE };
   });
   if (payload.errors) {
@@ -109,6 +110,7 @@ function searchDone(state: TraceState, { meta, payload }: any): TraceState {
   const results: string[] = [];
   for (let i = 0; i < processed.length; i++) {
     const data = processed[i];
+    if (!data) continue;
     const id = data.traceID;
     resultTraces[id] = { data, id, state: fetchedState.DONE };
     results.push(id);
@@ -138,6 +140,7 @@ function loadJsonDone(state: TraceState, { payload }: any): TraceState {
     const results = new Set(state.search.results);
     for (let i = 0; i < processed.length; i++) {
       const data = processed[i];
+      if (!data) continue;
       const id = data.traceID;
       resultTraces[id] = { data, id, state: fetchedState.DONE };
       results.add(id);
