@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { InputRef } from 'antd';
+import { Alert, InputRef } from 'antd';
 import { useNormalizeTraceId } from './useNormalizeTraceId';
 import { useNavigate } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
@@ -193,6 +193,7 @@ export function TracePageImpl(props: TProps) {
   const [slimView, setSlimView] = useState(() => Boolean(embedded?.timeline?.collapseTitle));
   const [viewType, setViewType] = useState<ETraceViewType>(ETraceViewType.TraceTimelineViewer);
   const [viewRange, setViewRange] = useState<IViewRange>({ time: { current: [0, 1] } });
+  const [criticalPathErrorDismissed, setCriticalPathErrorDismissed] = useState(false);
 
   const traceDagEV = useMemo(
     () =>
@@ -430,7 +431,10 @@ export function TracePageImpl(props: TProps) {
 
   const sm = scrollManagerRef.current;
   let view;
-  const criticalPath = criticalPathEnabled ? memoizedTraceCriticalPath(data.asOtelTrace()) : [];
+  const cpResult = criticalPathEnabled
+    ? memoizedTraceCriticalPath(data.asOtelTrace())
+    : { sections: [], failed: false };
+  const criticalPath = cpResult.sections;
   if (ETraceViewType.TraceTimelineViewer === viewType && headerHeight) {
     view = (
       <TraceTimelineViewer
@@ -485,6 +489,16 @@ export function TracePageImpl(props: TProps) {
     <div>
       {archiveEnabled && (
         <ArchiveNotifier acknowledge={acknowledgeArchive} archivedState={archiveTraceState} />
+      )}
+      {cpResult.failed && !criticalPathErrorDismissed && (
+        <Alert
+          type="warning"
+          closable
+          onClose={() => setCriticalPathErrorDismissed(true)}
+          message="Critical path could not be computed for this trace."
+          description="One or more spans may have clock skew, timestamps outside their parent's bounds, or other instrumentation issues. The critical path overlay may be incomplete or missing. Check the browser console for details."
+          style={{ margin: '8px 16px' }}
+        />
       )}
       <div className="Tracepage--headerSection" ref={headerRefCallback}>
         <TracePageHeader {...headerProps} />
