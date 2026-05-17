@@ -13,6 +13,7 @@ import DetailState from './DetailState';
 import GenAITab from './GenAITab';
 import { formatDuration, formatDurationCompact } from '../utils';
 import CopyIcon from '../../../common/CopyIcon';
+import ExportSpanButton from './ExportSpanButton';
 import LabeledList from '../../../common/LabeledList';
 import { isGenAISpan } from '../../../../utils/genai';
 
@@ -155,6 +156,7 @@ export default function SpanDetail(props: SpanDetailProps) {
           tooltipTitle="Copy deep link to this span"
           buttonText="Copy"
         />
+        <ExportSpanButton span={span} />
       </small>
     </div>
   );
