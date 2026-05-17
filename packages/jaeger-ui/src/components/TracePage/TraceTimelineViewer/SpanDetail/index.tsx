@@ -12,6 +12,7 @@ import AccordionText from './AccordionText';
 import DetailState from './DetailState';
 import { formatDuration } from '../utils';
 import CopyIcon from '../../../common/CopyIcon';
+import ExportSpanButton from './ExportSpanButton';
 import LabeledList from '../../../common/LabeledList';
 
 import { TNil } from '../../../../types';
@@ -161,6 +162,7 @@ export default function SpanDetail(props: SpanDetailProps) {
             tooltipTitle="Copy deep link to this span"
             buttonText="Copy"
           />
+          <ExportSpanButton span={span} />
         </small>
       </div>
     </div>
