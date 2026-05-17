@@ -85,3 +85,24 @@ SPDX-License-Identifier: Apache-2.0
   font-size: 0.8em;
   white-space: nowrap;
 }
+
+.KeyValueTable--clearButton {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 1em;
+  line-height: 1;
+  padding: 0 2px;
+}
+
+.KeyValueTable--clearButton:hover {
+  color: var(--text-primary);
+}
+
+.KeyValueTable--emptyState {
+  color: var(--text-secondary);
+  font-style: italic;
+  padding: 0.5rem;
+  text-align: center;
+}
