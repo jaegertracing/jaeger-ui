@@ -16,8 +16,9 @@ describe.each([[test1], [test2], [test3], [test4], [test5], [test6], [test7], [t
   'Happy Path',
   testProps => {
     it('should find criticalPathSections correctly', () => {
-      const criticalPath = TraceCriticalPath(testProps.trace);
-      expect(criticalPath).toStrictEqual(testProps.criticalPathSections);
+      const { sections, failed } = TraceCriticalPath(testProps.trace);
+      expect(sections).toStrictEqual(testProps.criticalPathSections);
+      expect(failed).toBe(false);
     });
   }
 );
@@ -31,10 +32,8 @@ describe('criticalPathForTrace immutability', () => {
       name: span.name,
     }));
 
-    // Run the critical path algorithm
     TraceCriticalPath(test2.trace);
 
-    // Verify the trace spans' primitive properties were not modified
     test2.trace.spans.forEach((span, i) => {
       const original = originalSpans[i];
       expect(span.spanID).toBe(original.spanID);
@@ -45,51 +44,65 @@ describe('criticalPathForTrace immutability', () => {
   });
 
   it('should not modify span childSpans arrays', () => {
-    // Store original childSpans arrays (and their references)
     const originalChildSpans = test2.trace.spans.map(span => ({
       array: span.childSpans,
       length: span.childSpans.length,
     }));
 
-    // Run the critical path algorithm
     TraceCriticalPath(test2.trace);
 
-    // Verify childSpans were not modified (same reference and length)
     test2.trace.spans.forEach((span, index) => {
-      expect(span.childSpans).toBe(originalChildSpans[index].array); // Same reference
-      expect(span.childSpans.length).toBe(originalChildSpans[index].length); // Same length
+      expect(span.childSpans).toBe(originalChildSpans[index].array);
+      expect(span.childSpans.length).toBe(originalChildSpans[index].length);
     });
   });
 
   it('should not modify span links arrays', () => {
-    // Store original links (and their references)
     const originalLinks = test2.trace.spans.map(span => ({
       array: span.links,
       length: span.links.length,
     }));
 
-    // Run the critical path algorithm
     TraceCriticalPath(test2.trace);
 
-    // Verify links were not modified (same reference and length)
     test2.trace.spans.forEach((span, index) => {
-      expect(span.links).toBe(originalLinks[index].array); // Same reference
+      expect(span.links).toBe(originalLinks[index].array);
       expect(span.links.length).toBe(originalLinks[index].length);
     });
   });
 
   it('should not modify non-blocking spans parent childSpans', () => {
-    // Store original childSpans of the parent in test5
-    // test5 has a producer/consumer pair where the consumer is non-blocking
     const parentSpan = test5.trace.spans[0];
     const originalChildSpans = [...parentSpan.childSpans];
     const originalLength = originalChildSpans.length;
 
-    // Run the critical path algorithm
     TraceCriticalPath(test5.trace);
 
-    // Verify parent's childSpans was not modified
     expect(parentSpan.childSpans.length).toBe(originalLength);
     expect(parentSpan.childSpans).toEqual(originalChildSpans);
+  });
+});
+
+// A root span with null childSpans will cause createCPSpanMap to throw naturally.
+const badRootSpan = { spanID: 'bad-root', childSpans: null };
+
+describe('criticalPathForTrace error handling', () => {
+  it('should return failed:true and empty sections when the only root span throws', () => {
+    const { sections, failed } = TraceCriticalPath({ rootSpans: [badRootSpan] });
+
+    expect(failed).toBe(true);
+    expect(sections).toEqual([]);
+  });
+
+  it('should return failed:true and partial sections when one of two root spans throws', () => {
+    // First root span is invalid (throws), second is a valid root from test1 (succeeds).
+    const twoRootTrace = {
+      rootSpans: [badRootSpan, ...test1.trace.rootSpans],
+    };
+
+    const { sections, failed } = TraceCriticalPath(twoRootTrace);
+
+    expect(failed).toBe(true);
+    expect(sections.length).toBeGreaterThan(0);
   });
 });
