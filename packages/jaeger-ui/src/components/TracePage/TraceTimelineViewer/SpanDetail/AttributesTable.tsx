@@ -151,17 +151,35 @@ export default function AttributesTable(props: AttributesTableProps) {
             placeholder="Filter attributes…"
             value={query}
             onChange={e => setQuery(e.target.value)}
+            onKeyDown={e => e.key === 'Escape' && setQuery('')}
             aria-label="Filter span attributes"
           />
           {query && (
-            <span className="KeyValueTable--filterCount">
-              {visibleRows.length} of {data.length}
-            </span>
+            <>
+              <span className="KeyValueTable--filterCount" aria-live="polite">
+                {visibleRows.length} of {data.length}
+              </span>
+              <button
+                type="button"
+                className="KeyValueTable--clearButton"
+                aria-label="Clear filter"
+                onClick={() => setQuery('')}
+              >
+                ×
+              </button>
+            </>
           )}
         </div>
       )}
       <table className="u-width-100">
         <tbody className="KeyValueTable--body">
+          {visibleRows.length === 0 && query && (
+            <tr className="KeyValueTable--row">
+              <td className="KeyValueTable--emptyState" colSpan={2}>
+                No attributes match &ldquo;{query}&rdquo;
+              </td>
+            </tr>
+          )}
           {visibleRows.map(({ attr: row, originalIndex }) => {
             const i = originalIndex;
             const jsonTable = formatValue(row.key, row.value);

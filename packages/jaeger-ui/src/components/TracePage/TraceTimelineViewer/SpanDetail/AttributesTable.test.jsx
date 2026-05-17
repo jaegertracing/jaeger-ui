@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, cleanup } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
 import AttributesTable, { LinkValue } from './AttributesTable';
@@ -208,6 +209,16 @@ describe('<AttributesTable>', () => {
       value: `value-${i}`,
     }));
 
+    let user;
+
+    beforeEach(() => {
+      user = userEvent.setup();
+    });
+
+    afterEach(() => {
+      cleanup();
+    });
+
     it('does not render filter input when data has 10 or fewer attributes', () => {
       const fewAttrs = manyAttrs.slice(0, 10);
       render(<AttributesTable data={fewAttrs} />);
@@ -219,83 +230,108 @@ describe('<AttributesTable>', () => {
       expect(screen.getByRole('textbox', { name: /filter span attributes/i })).toBeInTheDocument();
     });
 
-    it('filters rows by key when query matches', () => {
+    it('filters rows by key when query matches', async () => {
       render(<AttributesTable data={manyAttrs} />);
       const input = screen.getByRole('textbox', { name: /filter span attributes/i });
 
-      fireEvent.change(input, { target: { value: 'key.1' } });
+      await user.type(input, 'key.1');
 
       // key.1, key.10, key.11 match
       const rows = screen.getAllByRole('row');
       expect(rows.length).toBe(3);
     });
 
-    it('filters rows by value when query matches', () => {
+    it('filters rows by value when query matches', async () => {
       render(<AttributesTable data={manyAttrs} />);
       const input = screen.getByRole('textbox', { name: /filter span attributes/i });
 
-      fireEvent.change(input, { target: { value: 'value-0' } });
+      await user.type(input, 'value-0');
 
       const rows = screen.getAllByRole('row');
       expect(rows.length).toBe(1);
       expect(screen.getByText('key.0')).toBeInTheDocument();
     });
 
-    it('shows N of M count label when filter is active', () => {
+    it('shows N of M count label when filter is active', async () => {
       render(<AttributesTable data={manyAttrs} />);
       const input = screen.getByRole('textbox', { name: /filter span attributes/i });
 
-      fireEvent.change(input, { target: { value: 'key.1' } });
+      await user.type(input, 'key.1');
 
       expect(screen.getByText('3 of 12')).toBeInTheDocument();
     });
 
     it('hides count label when filter is empty', () => {
       render(<AttributesTable data={manyAttrs} />);
-
       expect(screen.queryByText(/of 12/)).not.toBeInTheDocument();
     });
 
-    it('shows all rows when filter is cleared', () => {
+    it('shows all rows when filter is cleared via the × button', async () => {
       render(<AttributesTable data={manyAttrs} />);
       const input = screen.getByRole('textbox', { name: /filter span attributes/i });
 
-      fireEvent.change(input, { target: { value: 'key.0' } });
-      fireEvent.change(input, { target: { value: '' } });
+      await user.type(input, 'key.0');
+      expect(screen.getAllByRole('row')).toHaveLength(1);
 
-      const rows = screen.getAllByRole('row');
-      expect(rows.length).toBe(manyAttrs.length);
+      await user.click(screen.getByRole('button', { name: /clear filter/i }));
+
+      expect(screen.getAllByRole('row')).toHaveLength(manyAttrs.length);
+      expect(input).toHaveValue('');
     });
 
-    it('passes the original data index to linksGetter when rows are filtered', () => {
+    it('shows all rows when filter is cleared via the Escape key', async () => {
+      render(<AttributesTable data={manyAttrs} />);
+      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
+
+      await user.type(input, 'key.0');
+      expect(screen.getAllByRole('row')).toHaveLength(1);
+
+      await user.keyboard('{Escape}');
+
+      expect(screen.getAllByRole('row')).toHaveLength(manyAttrs.length);
+      expect(input).toHaveValue('');
+    });
+
+    it('renders an empty-state message when no attributes match the query', async () => {
+      render(<AttributesTable data={manyAttrs} />);
+      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
+
+      await user.type(input, 'zzz');
+
+      expect(screen.queryAllByRole('row')).toHaveLength(1);
+      expect(screen.getByText(/no attributes match/i)).toBeInTheDocument();
+      expect(screen.getByText(/zzz/)).toBeInTheDocument();
+    });
+
+    it('passes the original data index to linksGetter when rows are filtered', async () => {
       const linksGetter = vi.fn().mockReturnValue([]);
       render(<AttributesTable data={manyAttrs} linksGetter={linksGetter} />);
       const input = screen.getByRole('textbox', { name: /filter span attributes/i });
 
-      linksGetter.mockClear();
-      fireEvent.change(input, { target: { value: 'key.5' } });
+      await user.type(input, 'value-5');
 
-      // 'key.5' matches only index 5 in the 12-item list (key.0..key.11)
-      const calls = linksGetter.mock.calls;
-      expect(calls).toHaveLength(1);
-      expect(calls[0][1]).toBe(5);
+      // After typing 'value-5', exactly one row is visible
+      expect(screen.getAllByRole('row')).toHaveLength(1);
+      // The final render's linksGetter call must pass originalIndex 5, not the filtered position
+      const lastCall = linksGetter.mock.calls.at(-1);
+      expect(lastCall[1]).toBe(5);
     });
 
-    it('is case-insensitive', () => {
+    it('is case-insensitive', async () => {
       render(<AttributesTable data={manyAttrs} />);
       const input = screen.getByRole('textbox', { name: /filter span attributes/i });
 
-      fireEvent.change(input, { target: { value: 'KEY.0' } });
+      await user.type(input, 'KEY.0');
 
       const rows = screen.getAllByRole('row');
       expect(rows.length).toBe(1);
     });
 
-    it('shows all rows when data shrinks below threshold while a query is active', () => {
+    it('shows all rows when data shrinks below threshold while a query is active', async () => {
       const { rerender } = render(<AttributesTable data={manyAttrs} />);
       const input = screen.getByRole('textbox', { name: /filter span attributes/i });
 
-      fireEvent.change(input, { target: { value: 'key.0' } });
+      await user.type(input, 'key.0');
       expect(screen.getAllByRole('row')).toHaveLength(1);
 
       // shrink data below threshold — filter input disappears, stale query must not hide rows
