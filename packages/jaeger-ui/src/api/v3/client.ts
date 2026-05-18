@@ -9,7 +9,9 @@
  */
 
 import prefixUrl from '../../utils/prefix-url';
-import { ServicesResponseSchema, OperationsResponseSchema } from './schemas';
+import { ServicesResponseSchema, OperationsResponseSchema, OtlpEnvelopeSchema } from './schemas';
+import { parseOtlpTrace } from './parser';
+import { IOtelTrace } from '../../types/otel';
 
 export class JaegerClient {
   private apiRoot = prefixUrl('/api/v3');
@@ -49,6 +51,23 @@ export class JaegerClient {
     // Runtime validation with Zod
     const validated = OperationsResponseSchema.parse(data);
     return validated.operations;
+  }
+
+  async getTrace(traceId: string): Promise<IOtelTrace> {
+    const response = await this.fetchWithTimeout(`${this.apiRoot}/traces/${encodeURIComponent(traceId)}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch trace "${traceId}": ${response.status} ${response.statusText}`);
+    }
+    const raw = await response.json();
+    const validated = OtlpEnvelopeSchema.parse(raw);
+    try {
+      return parseOtlpTrace(validated);
+    } catch (err) {
+      throw new Error(
+        `Failed to parse trace "${traceId}": ${err instanceof Error ? err.message : String(err)}`,
+        { cause: err }
+      );
+    }
   }
 
   /**
