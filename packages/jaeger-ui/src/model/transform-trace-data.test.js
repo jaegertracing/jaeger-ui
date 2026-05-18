@@ -451,5 +451,35 @@ describe('transformTraceData()', () => {
       const ids = result.spans.map(s => s.spanID);
       expect(ids).toEqual(['root', 'child1', 'grandChild1', 'child2']);
     });
+
+    it('processes a deep parent-child chain without exhausting the JS call stack', () => {
+      const depth = 12000;
+      const spans = [];
+      for (let i = 0; i < depth; i++) {
+        spans.push({
+          traceID: 'deep',
+          spanID: `s${i}`,
+          operationName: `op${i}`,
+          startTime: i + 1,
+          duration: 1,
+          processID: 'p',
+          references: i === 0 ? [] : [{ refType: 'CHILD_OF', spanID: `s${i - 1}`, traceID: 'deep' }],
+          tags: [],
+          logs: [],
+        });
+      }
+      const trace = {
+        traceID: 'deep',
+        spans,
+        processes: { p: { serviceName: 'svc', tags: [] } },
+      };
+
+      const result = transformTraceData(trace);
+      expect(result).not.toBeNull();
+      expect(result.spans).toHaveLength(depth);
+      expect(result.spanMap.get(`s${depth - 1}`).depth).toBe(depth - 1);
+      expect(result.spans[0].spanID).toBe('s0');
+      expect(result.spans[depth - 1].spanID).toBe(`s${depth - 1}`);
+    });
   });
 });
