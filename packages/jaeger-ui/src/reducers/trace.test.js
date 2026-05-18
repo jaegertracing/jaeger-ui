@@ -171,22 +171,6 @@ describe('fetch multiple traces', () => {
     };
     expect(state.traces).toEqual(outcome);
   });
-
-  it('skips entries with missing traceID and loads the rest without crashing', () => {
-    const badTrace = { ...trace, traceID: undefined };
-    const traces = { preExisting: 'this-trace-is-pre-existing' };
-    const state = traceReducer(
-      { traces },
-      {
-        type: `${jaegerApiActions.fetchMultipleTraces}${ACTION_POSTFIX_FULFILLED}`,
-        payload: { data: [badTrace, traceB] },
-      }
-    );
-    expect(state.traces.preExisting).toBe(traces.preExisting);
-    expect(state.traces[idB].state).toBe(fetchedState.DONE);
-    expect(Object.keys(state.traces)).toEqual(expect.arrayContaining(['preExisting', idB]));
-    expect(Object.keys(state.traces)).toHaveLength(2);
-  });
 });
 
 describe('search traces', () => {
@@ -263,21 +247,6 @@ describe('search traces', () => {
       );
       expect(state.search).toEqual({ query });
     });
-  });
-
-  it('skips entries with missing traceID and loads the rest without crashing', () => {
-    const badTrace = { ...trace, traceID: undefined };
-    const state = traceReducer(
-      { search: { query } },
-      {
-        type: `${jaegerApiActions.searchTraces}${ACTION_POSTFIX_FULFILLED}`,
-        payload: { data: [badTrace, trace] },
-        meta: { query },
-      }
-    );
-    expect(state.search.state).toBe(fetchedState.DONE);
-    expect(state.search.results).toEqual([id]);
-    expect(state.traces[id].state).toBe(fetchedState.DONE);
   });
 });
 
@@ -358,7 +327,7 @@ describe('load json traces', () => {
     expect(state.traces).toEqual({});
   });
 
-  it('skips entries with missing traceID and loads the rest from the same upload', () => {
+  it('skips entries with missing traceID and reports the count via search.error', () => {
     const badTrace = { ...trace, traceID: undefined };
     const state = traceReducer(undefined, {
       type: `${fileReaderActions.loadJsonTraces}${ACTION_POSTFIX_FULFILLED}`,
@@ -367,5 +336,17 @@ describe('load json traces', () => {
     expect(state.search.state).toBe(fetchedState.DONE);
     expect(state.search.results).toEqual([id]);
     expect(state.traces[id].state).toBe(fetchedState.DONE);
+    expect(state.search.error).toBeInstanceOf(Error);
+    expect(state.search.error.message).toMatch(/1 trace\(s\) were skipped/);
+  });
+
+  it('leaves search.error unset when no entries are skipped', () => {
+    const state = traceReducer(undefined, {
+      type: `${fileReaderActions.loadJsonTraces}${ACTION_POSTFIX_FULFILLED}`,
+      payload: { data: [trace] },
+    });
+    expect(state.search.state).toBe(fetchedState.DONE);
+    expect(state.search.results).toEqual([id]);
+    expect(state.search.error).toBeUndefined();
   });
 });

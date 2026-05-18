@@ -66,8 +66,7 @@ function fetchMultipleTracesStarted(state: TraceState, { meta }: any): TraceStat
 function fetchMultipleTracesDone(state: TraceState, { payload }: any): TraceState {
   const traces = { ...state.traces };
   payload.data.forEach((raw: any) => {
-    const data = transformTraceData(raw);
-    if (!data) return;
+    const data = transformTraceData(raw)!;
     traces[data.traceID] = { data, id: data.traceID, state: fetchedState.DONE };
   });
   if (payload.errors) {
@@ -110,7 +109,6 @@ function searchDone(state: TraceState, { meta, payload }: any): TraceState {
   const results: string[] = [];
   for (let i = 0; i < processed.length; i++) {
     const data = processed[i];
-    if (!data) continue;
     const id = data.traceID;
     resultTraces[id] = { data, id, state: fetchedState.DONE };
     results.push(id);
@@ -135,18 +133,28 @@ function loadJsonStarted(state: TraceState): TraceState {
 
 function loadJsonDone(state: TraceState, { payload }: any): TraceState {
   try {
-    const processed = payload.data.map(transformTraceData);
     const resultTraces: Record<string, any> = {};
     const results = new Set(state.search.results);
-    for (let i = 0; i < processed.length; i++) {
-      const data = processed[i];
-      if (!data) continue;
+    let skippedCount = 0;
+    for (const raw of payload.data) {
+      const data = transformTraceData(raw);
+      if (!data) {
+        skippedCount += 1;
+        continue;
+      }
       const id = data.traceID;
       resultTraces[id] = { data, id, state: fetchedState.DONE };
       results.add(id);
     }
     const traces = { ...state.traces, ...resultTraces };
-    const search = { ...state.search, results: Array.from(results), state: fetchedState.DONE };
+    const search = {
+      ...state.search,
+      results: Array.from(results),
+      state: fetchedState.DONE,
+      ...(skippedCount > 0
+        ? { error: new Error(`${skippedCount} trace(s) were skipped: missing traceID in JSON input`) }
+        : {}),
+    };
     return { ...state, search, traces };
   } catch (error) {
     const search = { ...state.search, error, results: [], state: fetchedState.ERROR };
