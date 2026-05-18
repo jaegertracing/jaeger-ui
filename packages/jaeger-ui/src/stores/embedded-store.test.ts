@@ -1,36 +1,119 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { getEmbeddedState } from '../utils/embedded-url';
-import { resetEmbeddedFromUrlCacheForTests, useEmbeddedState } from './embedded-store';
+import {
+  getEmbeddedState,
+  resetEmbeddedFromUrlCacheForTests,
+  stripEmbeddedState,
+  useEmbeddedState,
+} from './embedded-store';
 
-vi.mock('../utils/embedded-url', () => ({
-  getEmbeddedState: vi.fn(),
-}));
+describe('getEmbeddedState()', () => {
+  it('returns null if uiEmbed is not v0', () => {
+    const search = 'uiEmbed=v1&uiSearchHideGraph=1';
+    expect(getEmbeddedState(search)).toBeNull();
+  });
 
-const mockGetEmbeddedState = vi.mocked(getEmbeddedState);
+  it('parses full v0 state correctly', () => {
+    const search =
+      'uiEmbed=v0&uiSearchHideGraph=1&uiTimelineCollapseTitle=1&uiTimelineHideMinimap=1&uiTimelineHideSummary=1';
+    expect(getEmbeddedState(search)).toEqual({
+      version: 'v0',
+      searchHideGraph: true,
+      timeline: {
+        collapseTitle: true,
+        hideMinimap: true,
+        hideSummary: true,
+      },
+    });
+  });
+
+  it('returns false for missing flags', () => {
+    const search = 'uiEmbed=v0';
+    expect(getEmbeddedState(search)).toEqual({
+      version: 'v0',
+      searchHideGraph: false,
+      timeline: {
+        collapseTitle: false,
+        hideMinimap: false,
+        hideSummary: false,
+      },
+    });
+  });
+
+  it('handles mixed values correctly', () => {
+    const search = 'uiEmbed=v0&uiSearchHideGraph=1&uiTimelineHideSummary=1';
+    expect(getEmbeddedState(search)).toEqual({
+      version: 'v0',
+      searchHideGraph: true,
+      timeline: {
+        collapseTitle: false,
+        hideMinimap: false,
+        hideSummary: true,
+      },
+    });
+  });
+});
+
+describe('stripEmbeddedState()', () => {
+  it('removes v0 embedded keys', () => {
+    const input = {
+      uiEmbed: 'v0',
+      uiSearchHideGraph: '1',
+      uiTimelineCollapseTitle: '1',
+      uiTimelineHideMinimap: '1',
+      uiTimelineHideSummary: '1',
+      unrelatedKey: 'hello',
+    };
+
+    expect(stripEmbeddedState(input)).toEqual({
+      unrelatedKey: 'hello',
+    });
+  });
+
+  it('does not strip anything except uiEmbed when version is not v0', () => {
+    const input = {
+      uiEmbed: 'v1',
+      uiSearchHideGraph: '1',
+      uiTimelineCollapseTitle: '1',
+    };
+
+    expect(stripEmbeddedState(input)).toEqual({
+      uiSearchHideGraph: '1',
+      uiTimelineCollapseTitle: '1',
+    });
+  });
+
+  it('works when uiEmbed is undefined', () => {
+    const input = {
+      uiSearchHideGraph: '1',
+      uiTimelineHideSummary: '1',
+    };
+
+    expect(stripEmbeddedState(input)).toEqual({
+      uiSearchHideGraph: '1',
+      uiTimelineHideSummary: '1',
+    });
+  });
+});
 
 describe('useEmbeddedState', () => {
   beforeEach(() => {
     resetEmbeddedFromUrlCacheForTests();
-    mockGetEmbeddedState.mockReset();
   });
 
   it('returns the same reference when called twice (cached)', () => {
     window.history.replaceState({}, '', '/?uiEmbed=v0');
     resetEmbeddedFromUrlCacheForTests();
-    mockGetEmbeddedState.mockReturnValue(null);
     const a = useEmbeddedState();
     const b = useEmbeddedState();
     expect(a).toBe(b);
-    expect(mockGetEmbeddedState).toHaveBeenCalledTimes(1);
   });
 
   it('returns null when window.location.search is empty', () => {
     window.history.replaceState({}, '', '/');
     resetEmbeddedFromUrlCacheForTests();
     expect(useEmbeddedState()).toBeNull();
-    expect(mockGetEmbeddedState).not.toHaveBeenCalled();
   });
 
   it('parses search via getEmbeddedState when search is non-empty', () => {
@@ -43,11 +126,10 @@ describe('useEmbeddedState', () => {
         hideSummary: false,
       },
     };
-    mockGetEmbeddedState.mockReturnValue(embeddedState);
     window.history.replaceState({}, '', '/?uiEmbed=v0');
     resetEmbeddedFromUrlCacheForTests();
-    expect(useEmbeddedState()).toBe(embeddedState);
-    expect(mockGetEmbeddedState).toHaveBeenCalledWith('?uiEmbed=v0');
+    const result = useEmbeddedState();
+    expect(result).toEqual(embeddedState);
   });
 
   it('returns null when window is undefined (SSR)', () => {
@@ -56,7 +138,6 @@ describe('useEmbeddedState', () => {
     try {
       expect(useEmbeddedState()).toBeNull();
       expect(useEmbeddedState()).toBeNull();
-      expect(mockGetEmbeddedState).not.toHaveBeenCalled();
     } finally {
       vi.unstubAllGlobals();
       resetEmbeddedFromUrlCacheForTests();
