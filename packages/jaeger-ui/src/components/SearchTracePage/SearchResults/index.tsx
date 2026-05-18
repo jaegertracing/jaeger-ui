@@ -14,6 +14,7 @@ import DiffSelection from './DiffSelection';
 import * as markers from './index.markers';
 import { EAltViewActions, trackAltView } from './index.track';
 import ResultItem from './ResultItem';
+import ResultItemError from './ResultItemError';
 import ScatterPlot from './ScatterPlot';
 import { getUrl } from '../url';
 import LoadingIndicator from '../../common/LoadingIndicator';
@@ -47,6 +48,7 @@ type SearchResultsProps = {
   skipMessage?: boolean;
   spanLinks?: Record<string, string> | undefined;
   traces: IOtelTrace[];
+  traceErrors?: FetchedTrace[];
   rawTraces: any[];
   sortBy: string;
   handleSortChange: (sortBy: string) => void;
@@ -135,12 +137,29 @@ export function UnconnectedSearchResults({
   skipMessage = false,
   spanLinks,
   traces,
+  traceErrors,
   rawTraces,
   sortBy,
   handleSortChange,
   cohortAddTrace,
   cohortRemoveTrace,
 }: SearchResultsProps) {
+  const errorList = traceErrors ?? [];
+  const hasErrors = errorList.length > 0;
+  const errorMessage = (entry: FetchedTrace): string | undefined => {
+    const { error } = entry;
+    if (!error) return undefined;
+    return typeof error === 'string' ? error : error.message;
+  };
+  const errorRows = hasErrors ? (
+    <ul className="ub-list-reset">
+      {errorList.map(err => (
+        <li className="ub-my3" key={err.id}>
+          <ResultItemError traceID={err.id} message={errorMessage(err)} />
+        </li>
+      ))}
+    </ul>
+  ) : null;
   const navigate = useNavigate();
 
   const toggleComparison = useCallback(
@@ -197,6 +216,14 @@ export function UnconnectedSearchResults({
     );
   }
   if (!Array.isArray(traces) || !traces.length) {
+    if (hasErrors) {
+      return (
+        <React.Fragment key="errors-only">
+          {diffCohort.length > 0 && diffSelection}
+          {errorRows}
+        </React.Fragment>
+      );
+    }
     return (
       <React.Fragment key="no-results">
         {diffCohort.length > 0 && diffSelection}
@@ -236,6 +263,7 @@ export function UnconnectedSearchResults({
         <div className="SearchResults--headerOverview">
           <h2 className="ub-m0 u-flex-1">
             {traces.length} Trace{traces.length > 1 && 's'}
+            {hasErrors && ` (${errorList.length} failed)`}
           </h2>
           {traceResultsView && <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />}
           {traceResultsView && <DownloadResults onDownloadResultsClicked={onDownloadResultsClicked} />}
@@ -252,6 +280,7 @@ export function UnconnectedSearchResults({
           )}
         </div>
       </div>
+      {errorRows}
       {!traceResultsView && (
         <div className="SearchResults--ddg-container">
           <SearchResultsDDG location={location as any} />

@@ -235,6 +235,106 @@ describe('search traces', () => {
     expect(state.search).toEqual(outcome);
   });
 
+  it('preserves per-trace errors from the response', () => {
+    const erroredID = 'missing-trace-id';
+    const msg = 'trace not found';
+    const state = traceReducer(
+      { search: { query } },
+      {
+        type: `${jaegerApiActions.searchTraces}${ACTION_POSTFIX_FULFILLED}`,
+        payload: { data: [trace], errors: [{ msg, traceID: erroredID }] },
+        meta: { query },
+      }
+    );
+
+    expect(state.search.results).toEqual([id, erroredID]);
+    expect(state.traces[id].state).toBe(fetchedState.DONE);
+    expect(state.traces[erroredID]).toEqual({
+      id: erroredID,
+      error: { message: msg },
+      state: fetchedState.ERROR,
+    });
+    expect(state.rawTraces).toEqual([trace]);
+  });
+
+  it('skips error entries that have no traceID', () => {
+    const validID = 'valid-id';
+    const state = traceReducer(
+      { search: { query } },
+      {
+        type: `${jaegerApiActions.searchTraces}${ACTION_POSTFIX_FULFILLED}`,
+        payload: {
+          data: [],
+          errors: [
+            { msg: 'orphaned error', traceID: '' },
+            { msg: 'no id at all' },
+            null,
+            { msg: 'real failure', traceID: validID },
+          ],
+        },
+        meta: { query },
+      }
+    );
+
+    expect(state.search.results).toEqual([validID]);
+    expect(state.traces[validID]).toEqual({
+      id: validID,
+      error: { message: 'real failure' },
+      state: fetchedState.ERROR,
+    });
+    expect(Object.keys(state.traces)).toEqual([validID]);
+  });
+
+  it('falls back to a default message when the error entry has no msg', () => {
+    const erroredID = 'err-no-msg';
+    const state = traceReducer(
+      { search: { query } },
+      {
+        type: `${jaegerApiActions.searchTraces}${ACTION_POSTFIX_FULFILLED}`,
+        payload: { data: [], errors: [{ traceID: erroredID }] },
+        meta: { query },
+      }
+    );
+
+    expect(state.traces[erroredID].error.message).toBe('unknown error');
+  });
+
+  it('does not overwrite a DONE entry when an error appears for the same traceID', () => {
+    const state = traceReducer(
+      { search: { query } },
+      {
+        type: `${jaegerApiActions.searchTraces}${ACTION_POSTFIX_FULFILLED}`,
+        payload: { data: [trace], errors: [{ msg: 'should be ignored', traceID: id }] },
+        meta: { query },
+      }
+    );
+
+    expect(state.search.results).toEqual([id]);
+    expect(state.traces[id].state).toBe(fetchedState.DONE);
+    expect(state.traces[id].error).toBeUndefined();
+  });
+
+  it('deduplicates repeated error entries for the same traceID', () => {
+    const erroredID = 'dup-error';
+    const state = traceReducer(
+      { search: { query } },
+      {
+        type: `${jaegerApiActions.searchTraces}${ACTION_POSTFIX_FULFILLED}`,
+        payload: {
+          data: [],
+          errors: [
+            { msg: 'first', traceID: erroredID },
+            { msg: 'second', traceID: erroredID },
+          ],
+        },
+        meta: { query },
+      }
+    );
+
+    expect(state.search.results).toEqual([erroredID]);
+    expect(state.traces[erroredID].error).toEqual({ message: 'first' });
+  });
+
   it('ignores the results with the wrong query', () => {
     const otherQuery = 'some-other-query';
     [ACTION_POSTFIX_FULFILLED, ACTION_POSTFIX_REJECTED].forEach(postfix => {

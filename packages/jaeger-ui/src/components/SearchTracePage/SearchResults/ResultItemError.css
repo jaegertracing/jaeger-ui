@@ -1,0 +1,28 @@
+/*
+Copyright (c) 2026 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.ResultItemError {
+  border: 1px solid var(--feedback-error);
+  background: color-mix(in srgb, var(--feedback-error) 6%, var(--surface-primary));
+  padding: 0.75rem 1rem;
+}
+
+.ResultItemError--label {
+  color: var(--feedback-error);
+  font-weight: 600;
+  margin-right: 0.4rem;
+}
+
+.ResultItemError--traceID {
+  color: var(--text-primary);
+  font-family: monospace;
+  word-break: break-all;
+}
+
+.ResultItemError--message {
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+  font-size: 0.9em;
+}

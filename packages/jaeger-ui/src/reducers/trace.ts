@@ -110,8 +110,21 @@ function searchDone(state: TraceState, { meta, payload }: any): TraceState {
   for (let i = 0; i < processed.length; i++) {
     const data = processed[i];
     const id = data.traceID;
+    if (resultTraces[id]) continue;
     resultTraces[id] = { data, id, state: fetchedState.DONE };
     results.push(id);
+  }
+  if (payload.errors) {
+    payload.errors.forEach((err: any) => {
+      const { msg, traceID } = err || {};
+      if (typeof traceID !== 'string' || !traceID) return;
+      // Skip if this traceID already has an entry from `data` or an earlier
+      // error, so we never overwrite a DONE entry or push a duplicate ID.
+      if (resultTraces[traceID]) return;
+      const error = { message: typeof msg === 'string' && msg ? msg : 'unknown error' };
+      resultTraces[traceID] = { error, id: traceID, state: fetchedState.ERROR };
+      results.push(traceID);
+    });
   }
   const traces = { ...state.traces, ...resultTraces };
   const search = { ...state.search, results, state: fetchedState.DONE };
