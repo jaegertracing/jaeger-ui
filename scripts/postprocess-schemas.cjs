@@ -36,13 +36,29 @@ const copyrightHeader = `// Copyright (c) 2026 The Jaeger Authors.
 
 if (!content.includes('Copyright (c)')) {
   content = copyrightHeader + '\n' + content;
-  console.log('✅ Added copyright header');
+  console.log('Added copyright header');
 }
 
 // 2. Remove .partial() calls
 const beforeCountPartial = (content.match(/\.partial\(\)/g) || []).length;
 content = content.replace(/\.partial\(\)\s*/g, '');
-const afterCountPartial = (content.match(/\.partial\(\)/g) || []).length;
+const afterStripCountPartial = (content.match(/\.partial\(\)/g) || []).length;
+const removedCountPartial = beforeCountPartial - afterStripCountPartial;
+const UNION_TYPES = ['AnyValue', 'ArrayValue', 'KeyValueList'];
+let restoredCountPartial = 0;
+for (const name of UNION_TYPES) {
+  const re = new RegExp(
+    `(const ${name}: z\\.ZodType<${name}>[\\s\\S]+?\\.object\\([\\s\\S]+?\\}\\)\\s*)(\\.passthrough\\(\\))`
+  );
+  const before = content;
+  content = content.replace(re, '$1.partial()$2');
+  if (content === before) {
+    console.warn(`Could not restore .partial() on ${name} — schema shape may have changed`);
+  } else {
+    restoredCountPartial += 1;
+    console.log(`Restored .partial() on ${name}`);
+  }
+}
 
 // 3. Comment out Zodios imports
 const zodiosImportRegex = /import\s+\{\s*makeApi,\s*Zodios.*?\} from '@zodios\/core';/g;
@@ -51,7 +67,7 @@ if (zodiosImportRegex.test(content)) {
     zodiosImportRegex,
     "// import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';"
   );
-  console.log('✅ Commented out Zodios imports');
+  console.log('Commented out Zodios imports');
 }
 
 // 4. Comment out Zodios usage
@@ -63,20 +79,48 @@ content = content.replace(
   '/*\n$1\n*/'
 );
 
-// 5. Append convenience exports
-const extraExports = `
-// Export commonly used schemas individually for convenience
-export { GetServicesResponse as ServicesResponseSchema };
-export { GetOperationsResponse as OperationsResponseSchema };
-export { Operation as OperationSchema };
-`;
+// 5. Convenience exports
+const SENTINEL_BEGIN = '// --- BEGIN postprocess convenience exports ---';
+const SENTINEL_END = '// --- END postprocess convenience exports ---';
 
-if (!content.includes('export { GetServicesResponse as ServicesResponseSchema }')) {
-  content += extraExports;
-  console.log('✅ Added convenience exports');
+const exportLines = [
+  'export { GetServicesResponse as ServicesResponseSchema };',
+  'export { GetOperationsResponse as OperationsResponseSchema };',
+  'export { Operation as OperationSchema };',
+  'export { TracesData as TracesDataSchema };',
+  'export { ResourceSpans as ResourceSpansSchema };',
+  'export { ScopeSpans as ScopeSpansSchema };',
+  'export { Span as SpanSchema };',
+  'export { Span_Event as SpanEventSchema };',
+  'export { Span_Link as SpanLinkSchema };',
+  'export { Resource as ResourceSchema };',
+  'export { InstrumentationScope as InstrumentationScopeSchema };',
+  'export { KeyValue as KeyValueSchema };',
+  'export { AnyValue as AnyValueSchema };',
+  'export { ArrayValue as ArrayValueSchema };',
+  'export { KeyValueList as KeyValueListSchema };',
+  'export { Status as StatusSchema };',
+];
+
+const exportsBlock = [SENTINEL_BEGIN, ...exportLines, SENTINEL_END, ''].join('\n');
+
+function escapeForRegex(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+const sentinelRegex = new RegExp(
+  `${escapeForRegex(SENTINEL_BEGIN)}[\\s\\S]*?${escapeForRegex(SENTINEL_END)}\\r?\\n?`
+);
+
+if (sentinelRegex.test(content)) {
+  content = content.replace(sentinelRegex, exportsBlock);
+  console.log('Refreshed convenience exports block');
+} else {
+  content += '\n' + exportsBlock;
+  console.log('Added convenience exports block');
 }
 
 fs.writeFileSync(filePath, content, 'utf8');
 
-console.log(`✅ Removed ${beforeCountPartial - afterCountPartial} .partial() calls`);
-console.log('✅ Zodios dependencies disabled (use schemas only)');
+console.log(`Removed ${removedCountPartial} .partial() calls, restored ${restoredCountPartial}`);
+console.log('Zodios dependencies disabled (use schemas only)');

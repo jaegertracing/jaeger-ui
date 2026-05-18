@@ -31,12 +31,24 @@ const Operation = z.object({ name: z.string(), spanKind: z.string() }).passthrou
 const GetOperationsResponse = z.object({ operations: z.array(Operation) }).passthrough();
 const GoogleProtobufAny = z.object({ '@type': z.string() }).passthrough();
 const Status = z
-  .object({ code: z.number().int(), message: z.string(), details: z.array(GoogleProtobufAny) })
+  .object({
+    code: z.number().int(),
+    message: z.string(),
+    details: z.array(GoogleProtobufAny),
+  })
   .passthrough();
 const GetServicesResponse = z.object({ services: z.array(z.string()) }).passthrough();
-const ArrayValue: z.ZodType<ArrayValue> = z.lazy(() => z.object({ values: z.array(AnyValue) }).passthrough());
+const ArrayValue: z.ZodType<ArrayValue> = z.lazy(() =>
+  z
+    .object({ values: z.array(AnyValue) })
+    .partial()
+    .passthrough()
+);
 const KeyValueList: z.ZodType<KeyValueList> = z.lazy(() =>
-  z.object({ values: z.array(KeyValue) }).passthrough()
+  z
+    .object({ values: z.array(KeyValue) })
+    .partial()
+    .passthrough()
 );
 const AnyValue: z.ZodType<AnyValue> = z.lazy(() =>
   z
@@ -49,13 +61,17 @@ const AnyValue: z.ZodType<AnyValue> = z.lazy(() =>
       kvlistValue: KeyValueList,
       bytesValue: z.string(),
     })
+    .partial()
     .passthrough()
 );
 const KeyValue: z.ZodType<KeyValue> = z.lazy(() =>
   z.object({ key: z.string(), value: AnyValue }).passthrough()
 );
 const Resource = z
-  .object({ attributes: z.array(KeyValue), droppedAttributesCount: z.number().int() })
+  .object({
+    attributes: z.array(KeyValue),
+    droppedAttributesCount: z.number().int(),
+  })
   .passthrough();
 const InstrumentationScope = z
   .object({
@@ -104,10 +120,18 @@ const Span = z
   })
   .passthrough();
 const ScopeSpans = z
-  .object({ scope: InstrumentationScope, spans: z.array(Span), schemaUrl: z.string() })
+  .object({
+    scope: InstrumentationScope,
+    spans: z.array(Span),
+    schemaUrl: z.string(),
+  })
   .passthrough();
 const ResourceSpans = z
-  .object({ resource: Resource, scopeSpans: z.array(ScopeSpans), schemaUrl: z.string() })
+  .object({
+    resource: Resource,
+    scopeSpans: z.array(ScopeSpans),
+    schemaUrl: z.string(),
+  })
   .passthrough();
 const TracesData = z.object({ resourceSpans: z.array(ResourceSpans) }).passthrough();
 
@@ -263,7 +287,21 @@ export function createApiClient(baseUrl: string, options?: ZodiosOptions) {
 }
 */
 
-// Export commonly used schemas individually for convenience
+// --- BEGIN postprocess convenience exports ---
 export { GetServicesResponse as ServicesResponseSchema };
 export { GetOperationsResponse as OperationsResponseSchema };
 export { Operation as OperationSchema };
+export { TracesData as TracesDataSchema };
+export { ResourceSpans as ResourceSpansSchema };
+export { ScopeSpans as ScopeSpansSchema };
+export { Span as SpanSchema };
+export { Span_Event as SpanEventSchema };
+export { Span_Link as SpanLinkSchema };
+export { Resource as ResourceSchema };
+export { InstrumentationScope as InstrumentationScopeSchema };
+export { KeyValue as KeyValueSchema };
+export { AnyValue as AnyValueSchema };
+export { ArrayValue as ArrayValueSchema };
+export { KeyValueList as KeyValueListSchema };
+export { Status as StatusSchema };
+// --- END postprocess convenience exports ---
