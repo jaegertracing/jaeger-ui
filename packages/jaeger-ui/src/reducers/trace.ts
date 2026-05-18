@@ -16,6 +16,7 @@ type TraceState = {
     results: string[];
     state?: string;
     error?: any;
+    skippedTraceCount?: number;
   };
   rawTraces?: any[];
 };
@@ -151,9 +152,7 @@ function loadJsonDone(state: TraceState, { payload }: any): TraceState {
       ...state.search,
       results: Array.from(results),
       state: fetchedState.DONE,
-      ...(skippedCount > 0
-        ? { error: new Error(`${skippedCount} trace(s) were skipped: missing traceID in JSON input`) }
-        : {}),
+      skippedTraceCount: skippedCount,
     };
     return { ...state, search, traces };
   } catch (error) {

@@ -276,6 +276,7 @@ describe('load json traces', () => {
       query: null,
       state: fetchedState.DONE,
       results: [id],
+      skippedTraceCount: 0,
     });
 
     // Check trace state
@@ -327,7 +328,7 @@ describe('load json traces', () => {
     expect(state.traces).toEqual({});
   });
 
-  it('skips entries with missing traceID and reports the count via search.error', () => {
+  it('skips entries with missing traceID and reports the count via skippedTraceCount', () => {
     const badTrace = { ...trace, traceID: undefined };
     const state = traceReducer(undefined, {
       type: `${fileReaderActions.loadJsonTraces}${ACTION_POSTFIX_FULFILLED}`,
@@ -336,17 +337,18 @@ describe('load json traces', () => {
     expect(state.search.state).toBe(fetchedState.DONE);
     expect(state.search.results).toEqual([id]);
     expect(state.traces[id].state).toBe(fetchedState.DONE);
-    expect(state.search.error).toBeInstanceOf(Error);
-    expect(state.search.error.message).toMatch(/1 trace\(s\) were skipped/);
+    expect(state.search.skippedTraceCount).toBe(1);
+    expect(state.search.error).toBeUndefined();
   });
 
-  it('leaves search.error unset when no entries are skipped', () => {
+  it('reports skippedTraceCount of 0 when no entries are skipped', () => {
     const state = traceReducer(undefined, {
       type: `${fileReaderActions.loadJsonTraces}${ACTION_POSTFIX_FULFILLED}`,
       payload: { data: [trace] },
     });
     expect(state.search.state).toBe(fetchedState.DONE);
     expect(state.search.results).toEqual([id]);
+    expect(state.search.skippedTraceCount).toBe(0);
     expect(state.search.error).toBeUndefined();
   });
 });
