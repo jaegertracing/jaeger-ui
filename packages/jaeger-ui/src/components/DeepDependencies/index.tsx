@@ -315,8 +315,8 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
       ) {
         content = (
           <>
-            <h1 className="Ddg--center">There is nothing visible to show</h1>
-            <p className="Ddg--center">Select at least one hop to view</p>
+            <h1 className='Ddg--center'>There is nothing visible to show</h1>
+            <p className='Ddg--center'>Select at least one hop to view</p>
           </>
         );
       } else {
@@ -330,37 +330,47 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
         });
         content = (
           <>
-            <h1 className="Ddg--center">There are no dependencies</h1>
-            <p className="Ddg--center">
+            <h1 className='Ddg--center'>There are no dependencies</h1>
+            <p className='Ddg--center'>
               No traces were found that contain {service}
               {operation && `:${operation}`} and any other service where span.kind is &lsquo;server&rsquo;.
             </p>
-            <p className="Ddg--center">
+            <p className='Ddg--center'>
               <a href={checkLink}>Confirm by searching</a>
             </p>
           </>
         );
       }
     } else if (graphState.state === fetchedState.LOADING) {
-      content = <LoadingIndicator centered className="u-mt-vast" />;
+      content = <LoadingIndicator centered className='u-mt-vast' message='Loading dependency graph...' />;
     } else if (graphState.state === fetchedState.ERROR) {
       content = (
-        <>
-          <ErrorMessage error={(graphState as IErrorState).error} className="ub-m4" />
-          <p className="Ddg--center">If you are using an adblocker, whitelist Jaeger and retry.</p>
-        </>
+        <div className='ub-m4'>
+          <ErrorMessage
+            error={(graphState as IErrorState).error}
+            title='Failed to load dependency graph'
+            onRetry={() => {
+              const { service, operation } = urlState;
+              const { fetchDeepDependencyGraph } = this.props;
+              if (fetchDeepDependencyGraph && service) {
+                fetchDeepDependencyGraph({ service, operation, start: 0, end: 0 });
+              }
+            }}
+          />
+          <p className='Ddg--center ub-mt2'>If you are using an adblocker, whitelist Jaeger and retry.</p>
+        </div>
       );
     } else {
       content = (
         <>
-          <h1 className="Ddg--center">Unknown graphState:</h1>
-          <p className="Ddg--center">{JSON.stringify(graphState, null, 2)}</p>
+          <h1 className='Ddg--center'>Unknown graphState:</h1>
+          <p className='Ddg--center'>{JSON.stringify(graphState, null, 2)}</p>
         </>
       );
     }
 
     return (
-      <div className="Ddg">
+      <div className='Ddg'>
         <div>
           <Header
             clearOperation={this.clearOperation}

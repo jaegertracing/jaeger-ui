@@ -157,22 +157,22 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
   }
 
   return (
-    <Row className="SearchTracePage--row">
+    <Row className='SearchTracePage--row'>
       {!embedded && (
-        <Col xs={24} sm={6} className="SearchTracePage--column">
-          <div className="SearchTracePage--find">
-            <Tabs size="large" items={tabItems} />
+        <Col xs={24} sm={6} className='SearchTracePage--column'>
+          <div className='SearchTracePage--find'>
+            <Tabs size='large' items={tabItems} />
           </div>
         </Col>
       )}
-      <Col xs={24} sm={!embedded ? 18 : 24} className="SearchTracePage--column">
+      <Col xs={24} sm={!embedded ? 18 : 24} className='SearchTracePage--column'>
         {showErrors && (
-          <div className="js-test-error-message">
-            <h2>There was an error loading traces: </h2>
-            {errors.map(err => (
-              <ErrorMessage key={err.message} error={err} />
-            ))}
-          </div>
+          <ErrorMessage
+            className='ub-m3 js-test-error-message'
+            error={errors[0]}
+            title='There was an error loading traces'
+            onRetry={urlQueryParams ? () => searchTraces(urlQueryParams) : undefined}
+          />
         )}
         {!showErrors && (
           <SearchResults
@@ -197,10 +197,10 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
         )}
         {showLogo && (
           <img
-            className="SearchTracePage--logo js-test-logo"
-            alt="presentation"
+            className='SearchTracePage--logo js-test-logo'
+            alt='presentation'
             src={JaegerLogo}
-            width="400"
+            width='400'
           />
         )}
       </Col>
