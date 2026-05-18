@@ -219,6 +219,29 @@ describe('fetchMetrics', () => {
     );
   });
 
+  it('GETs metrics query with repeated filter params', () => {
+    fetchMock.mockReset();
+    const metricsType = 'calls';
+    const serviceName = ['serviceName'];
+    const query = {
+      quantile: 95,
+      filter: ['deployment.environment:prod', 'k8s.cluster:us-west-1'],
+    };
+    fetchMock.mockReturnValue(
+      Promise.resolve({
+        status: 200,
+        json: () => Promise.resolve({ someObj: {} }),
+      })
+    );
+
+    JaegerAPI.fetchMetrics(metricsType, serviceName, query);
+    const url = fetchMock.mock.calls[fetchMock.mock.calls.length - 1][0];
+    // Each filter must be its own query-string entry so the Go backend's
+    // r.URL.Query()[filterParam] returns both values.
+    expect(url).toContain('filter=deployment.environment%3Aprod');
+    expect(url).toContain('filter=k8s.cluster%3Aus-west-1');
+  });
+
   it('fetchMetrics() should add quantile to response', async () => {
     const metricsType = 'latencies';
     const serviceName = ['serviceName'];
@@ -235,5 +258,20 @@ describe('fetchMetrics', () => {
 
     const resp = await JaegerAPI.fetchMetrics(metricsType, serviceName, query);
     expect(resp.quantile).toBe(query.quantile);
+  });
+});
+
+describe('fetchMetricDimensions', () => {
+  it('GETs /api/metrics/dimensions', () => {
+    fetchMock.mockReset();
+    fetchMock.mockReturnValue(
+      Promise.resolve({
+        status: 200,
+        json: () => Promise.resolve([]),
+      })
+    );
+
+    JaegerAPI.fetchMetricDimensions();
+    expect(fetchMock).toHaveBeenLastCalledWith(`${DEFAULT_API_ROOT}metrics/dimensions`, defaultOptions);
   });
 });

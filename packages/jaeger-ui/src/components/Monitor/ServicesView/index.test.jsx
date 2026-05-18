@@ -13,6 +13,8 @@ import {
   getLoopbackInterval,
   yAxisTickFormat,
 } from '.';
+import JaegerAPI from '../../../api/jaeger';
+import store from '../../../utils/storage';
 import { useServices } from '../../../hooks/useTraceDiscovery';
 import {
   originInitialState,
@@ -121,6 +123,12 @@ vi.mock('../../common/SearchableSelect', async () => {
     );
   });
 });
+
+vi.mock('../../../api/jaeger', async () => ({
+  default: {
+    fetchMetricDimensions: jest.fn(() => Promise.resolve([])),
+  },
+}));
 
 vi.mock('antd', async () => {
   const actualAntd = await vi.importActual('antd');
@@ -777,6 +785,138 @@ describe('<MonitorATMServicesView> on page switch', () => {
   it('metrics fetch invocation check on page load', () => {
     expect(mockFetchAllServiceMetrics).toHaveBeenCalled();
     expect(mockFetchAggregatedServiceMetrics).toHaveBeenCalled();
+  });
+});
+
+describe('Dimension filters', () => {
+  const mockFetchAllServiceMetrics = jest.fn();
+  const mockFetchAggregatedServiceMetrics = jest.fn();
+
+  const renderWithDimensions = (dimensions, extraProps = {}) => {
+    JaegerAPI.fetchMetricDimensions.mockResolvedValueOnce(dimensions);
+    const defaultProps = {
+      ...props,
+      fetchAllServiceMetrics: mockFetchAllServiceMetrics,
+      fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
+      ...extraProps,
+    };
+    return renderWithRouter(<MonitorATMServicesView {...defaultProps} />);
+  };
+
+  afterEach(() => {
+    cleanup();
+    jest.clearAllMocks();
+  });
+
+  it('renders no dropdown when the backend reports an empty dimensions list', async () => {
+    renderWithDimensions([]);
+    // Wait for the fetchMetricDimensions promise to resolve and React to flush.
+    await waitFor(() => expect(JaegerAPI.fetchMetricDimensions).toHaveBeenCalled());
+    expect(screen.queryByTestId('dimension-selector')).not.toBeInTheDocument();
+  });
+
+  it('renders a dropdown for each dimension that has a non-empty values list', async () => {
+    renderWithDimensions([
+      { name: 'deployment.environment', displayName: 'Environment', values: ['prod', 'staging'] },
+      { name: 'k8s.cluster', values: ['us-west-1'] },
+    ]);
+    await waitFor(() => expect(screen.getByText('Environment')).toBeInTheDocument());
+    expect(screen.getByText('Environment')).toBeInTheDocument();
+    // Falls back to name when displayName is absent.
+    expect(screen.getByText('k8s.cluster')).toBeInTheDocument();
+  });
+
+  it('skips free-text dimensions (empty values list) in this v1 UI', async () => {
+    renderWithDimensions([
+      { name: 'free.text.dim' }, // no values: hidden by the dropdown UI for now
+      { name: 'deployment.environment', displayName: 'Environment', values: ['prod'] },
+    ]);
+    await waitFor(() => expect(screen.getByText('Environment')).toBeInTheDocument());
+    expect(screen.queryByText('free.text.dim')).not.toBeInTheDocument();
+  });
+
+  it('selecting a value triggers a refetch with the filter param included', async () => {
+    renderWithDimensions([
+      { name: 'deployment.environment', displayName: 'Environment', values: ['prod', 'staging'] },
+    ]);
+    await waitFor(() => expect(screen.getByText('Environment')).toBeInTheDocument());
+
+    mockFetchAllServiceMetrics.mockClear();
+    const select = screen.getByTestId('dimension-selector');
+    await userEvent.selectOptions(select, 'prod');
+
+    await waitFor(() => {
+      expect(mockFetchAllServiceMetrics).toHaveBeenCalled();
+    });
+    const lastCall = mockFetchAllServiceMetrics.mock.calls[mockFetchAllServiceMetrics.mock.calls.length - 1];
+    const queryPayload = lastCall[1];
+    expect(queryPayload.filter).toEqual(['deployment.environment:prod']);
+  });
+
+  it('selecting "All" removes the filter for that dimension', async () => {
+    renderWithDimensions([
+      { name: 'deployment.environment', displayName: 'Environment', values: ['prod', 'staging'] },
+    ]);
+    await waitFor(() => expect(screen.getByText('Environment')).toBeInTheDocument());
+
+    const select = screen.getByTestId('dimension-selector');
+    await userEvent.selectOptions(select, 'prod');
+    await waitFor(() => {
+      const calls = mockFetchAllServiceMetrics.mock.calls;
+      expect(calls[calls.length - 1][1].filter).toEqual(['deployment.environment:prod']);
+    });
+
+    await userEvent.selectOptions(select, ''); // "All"
+    await waitFor(() => {
+      const calls = mockFetchAllServiceMetrics.mock.calls;
+      // filter is omitted entirely when no dimensions are selected.
+      expect(calls[calls.length - 1][1]).not.toHaveProperty('filter');
+    });
+  });
+
+  it('persists selected filters via storage.set', async () => {
+    renderWithDimensions([{ name: 'deployment.environment', values: ['prod'] }]);
+    await waitFor(() => expect(screen.getByText('deployment.environment')).toBeInTheDocument());
+
+    store.set.mockClear();
+    const select = screen.getByTestId('dimension-selector');
+    await userEvent.selectOptions(select, 'prod');
+
+    await waitFor(() => {
+      expect(store.set).toHaveBeenCalledWith('lastAtmSearchFilters', {
+        'deployment.environment': 'prod',
+      });
+    });
+  });
+
+  it('restores selected filters from storage on mount and ignores keys for unadvertised dimensions', async () => {
+    // localStorage carries a stale "removed.dimension" entry; the UI must drop it
+    // so unfiltered requests don't accidentally inherit a stale selection.
+    store.getJSON.mockReturnValueOnce({
+      'deployment.environment': 'prod',
+      'removed.dimension': 'old-value',
+    });
+    renderWithDimensions([{ name: 'deployment.environment', values: ['prod', 'staging'] }]);
+
+    // The initial fetch fires before dimensions resolve (filter is empty
+    // because `advertised` is still empty). After fetchMetricDimensions
+    // resolves, fetchMetrics re-runs with the now-known dimension list.
+    await waitFor(() => {
+      const calls = mockFetchAllServiceMetrics.mock.calls;
+      expect(calls.length).toBeGreaterThan(0);
+      expect(calls[calls.length - 1][1].filter).toEqual(['deployment.environment:prod']);
+    });
+  });
+
+  it('does not crash when fetchMetricDimensions rejects', async () => {
+    JaegerAPI.fetchMetricDimensions.mockReset();
+    JaegerAPI.fetchMetricDimensions.mockRejectedValueOnce(new Error('501 Not Implemented'));
+    renderWithDimensions([]); // queues a second resolved value, but the rejected one fires first
+    await waitFor(() => expect(JaegerAPI.fetchMetricDimensions).toHaveBeenCalled());
+    expect(screen.queryByTestId('dimension-selector')).not.toBeInTheDocument();
+    // Page still renders the rest of the Monitor UI.
+    expect(screen.getByText('Service')).toBeInTheDocument();
+    expect(screen.getByText('Span Kind')).toBeInTheDocument();
   });
 });
 
