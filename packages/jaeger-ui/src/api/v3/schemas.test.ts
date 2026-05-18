@@ -258,9 +258,12 @@ describe('SpanEventSchema', () => {
   });
 
   it('rejects missing timeUnixNano', () => {
-    expect(() => SpanEventSchema.parse({ name: 'x', attributes: [], droppedAttributesCount: 0 })).toThrow(
-      z.ZodError
-    );
+    const eventWithoutTime = {
+      name: 'x',
+      attributes: [],
+      droppedAttributesCount: 0,
+    };
+    expect(() => SpanEventSchema.parse(eventWithoutTime)).toThrow(z.ZodError);
   });
 });
 

@@ -5,10 +5,13 @@
  * Zod schemas for Jaeger v3 API responses
  *
  * These are imported from generated-client.ts which is auto-generated from OpenAPI spec
- * and post-processed to remove .partial() for strict validation.
+ * and post-processed for forward-compatible validation: required-by-Proto3 fields are
+ * enforced as required, the tagged-union types (AnyValue, ArrayValue, KeyValueList)
+ * keep .partial() so any one variant satisfies them, and every object uses .passthrough()
+ * so unknown future fields are preserved rather than rejected.
  */
 
-// Import auto-generated schemas (post-processed for strict validation)
+// Import auto-generated schemas (post-processed for forward-compatible validation)
 export {
   ServicesResponseSchema,
   OperationsResponseSchema,

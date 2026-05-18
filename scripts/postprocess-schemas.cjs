@@ -42,7 +42,10 @@ if (!content.includes('Copyright (c)')) {
 // 2. Remove .partial() calls
 const beforeCountPartial = (content.match(/\.partial\(\)/g) || []).length;
 content = content.replace(/\.partial\(\)\s*/g, '');
+const afterStripCountPartial = (content.match(/\.partial\(\)/g) || []).length;
+const removedCountPartial = beforeCountPartial - afterStripCountPartial;
 const UNION_TYPES = ['AnyValue', 'ArrayValue', 'KeyValueList'];
+let restoredCountPartial = 0;
 for (const name of UNION_TYPES) {
   const re = new RegExp(
     `(const ${name}: z\\.ZodType<${name}>[\\s\\S]+?\\.object\\([\\s\\S]+?\\}\\)\\s*)(\\.passthrough\\(\\))`
@@ -52,10 +55,10 @@ for (const name of UNION_TYPES) {
   if (content === before) {
     console.warn(`Could not restore .partial() on ${name} — schema shape may have changed`);
   } else {
+    restoredCountPartial += 1;
     console.log(`Restored .partial() on ${name}`);
   }
 }
-const afterCountPartial = (content.match(/\.partial\(\)/g) || []).length;
 
 // 3. Comment out Zodios imports
 const zodiosImportRegex = /import\s+\{\s*makeApi,\s*Zodios.*?\} from '@zodios\/core';/g;
@@ -106,7 +109,7 @@ function escapeForRegex(s) {
 }
 
 const sentinelRegex = new RegExp(
-  `${escapeForRegex(SENTINEL_BEGIN)}[\\s\\S]*?${escapeForRegex(SENTINEL_END)}\\n?`
+  `${escapeForRegex(SENTINEL_BEGIN)}[\\s\\S]*?${escapeForRegex(SENTINEL_END)}\\r?\\n?`
 );
 
 if (sentinelRegex.test(content)) {
@@ -119,5 +122,5 @@ if (sentinelRegex.test(content)) {
 
 fs.writeFileSync(filePath, content, 'utf8');
 
-console.log(`Removed ${beforeCountPartial - afterCountPartial} .partial() calls`);
+console.log(`Removed ${removedCountPartial} .partial() calls, restored ${restoredCountPartial}`);
 console.log('Zodios dependencies disabled (use schemas only)');
