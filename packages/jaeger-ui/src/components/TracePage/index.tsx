@@ -40,7 +40,8 @@ import TraceTimelineViewer from './TraceTimelineViewer';
 import { filterPrunedSpanIDs } from './TraceTimelineViewer/generateRowStates';
 import { actions as timelineActions } from './TraceTimelineViewer/duck';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, ETraceViewType } from './types';
-import { getUrl } from './url';
+import { getUrl, stripSettingParam } from './url';
+import { useLayoutSettings } from './useLayoutSettings';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { extractUiFindFromState } from '../common/UiFindInput';
@@ -161,29 +162,43 @@ export function TracePageImpl(props: TProps) {
   } = props;
 
   // Layout preferences are owned by Zustand; Redux setters are also called for the tracking middleware.
-  const detailPanelMode = useLayoutPrefsStore(s => s.detailPanelMode);
-  const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
   const zustandSetTimelineBarsVisible = useLayoutPrefsStore(s => s.setTimelineBarsVisible);
   const zustandFocusUiFindMatches = useTraceTimelineStore(s => s.focusUiFindMatches);
   const prunedServices = useTraceTimelineStore(s => s.prunedServices);
 
+  const {
+    timelineBarsVisible: resolvedTimeline,
+    detailPanelMode: resolvedDetailPanel,
+    saveAsDefault,
+  } = useLayoutSettings(location.search);
+
+  const navigate = useNavigate();
+
   const setDetailPanelMode = useCallback(
     (mode: SpanDetailPanelMode) => {
-      setDetailPanelModeZustand(mode);
+      setDetailPanelModeZustand(mode, false);
       reduxSetDetailPanelMode(mode);
+
+      const nextSearch = stripSettingParam(location.search, 'detailPanelMode');
+      if (nextSearch !== location.search) {
+        navigate({ pathname: location.pathname, search: nextSearch }, { replace: true });
+      }
     },
-    [reduxSetDetailPanelMode]
+    [reduxSetDetailPanelMode, location.search, location.pathname, navigate]
   );
 
   const setTimelineBarsVisible = useCallback(
     (visible: boolean) => {
-      zustandSetTimelineBarsVisible(visible);
+      zustandSetTimelineBarsVisible(visible, false);
       reduxSetTimelineBarsVisible(visible);
-    },
-    [zustandSetTimelineBarsVisible, reduxSetTimelineBarsVisible]
-  );
 
-  const navigate = useNavigate();
+      const nextSearch = stripSettingParam(location.search, 'timelineBarsVisible');
+      if (nextSearch !== location.search) {
+        navigate({ pathname: location.pathname, search: nextSearch }, { replace: true });
+      }
+    },
+    [zustandSetTimelineBarsVisible, reduxSetTimelineBarsVisible, location.search, location.pathname, navigate]
+  );
 
   const archiveTraceState = useArchiveStore(s => (id ? (s.archives[id] ?? null) : null));
   const submitTraceToArchiveFn = useArchiveStore(s => s.submitTraceToArchive);
@@ -356,12 +371,12 @@ export function TracePageImpl(props: TProps) {
   }, []);
 
   const onDetailPanelModeToggle = useCallback(() => {
-    setDetailPanelMode(detailPanelMode === 'inline' ? 'sidepanel' : 'inline');
-  }, [detailPanelMode, setDetailPanelMode]);
+    setDetailPanelMode(resolvedDetailPanel.value === 'inline' ? 'sidepanel' : 'inline');
+  }, [resolvedDetailPanel.value, setDetailPanelMode]);
 
   const onTimelineToggle = useCallback(() => {
-    setTimelineBarsVisible(!timelineBarsVisible);
-  }, [setTimelineBarsVisible, timelineBarsVisible]);
+    setTimelineBarsVisible(!resolvedTimeline.value);
+  }, [setTimelineBarsVisible, resolvedTimeline.value]);
 
   if (!trace || trace.state === fetchedState.LOADING) {
     return <LoadingIndicator className="u-mt-vast" centered />;
@@ -400,7 +415,7 @@ export function TracePageImpl(props: TProps) {
     viewRange,
     canCollapse: !embedded || !embedded.timeline?.hideSummary || !embedded.timeline?.hideMinimap,
     clearSearch,
-    detailPanelMode,
+    detailPanelMode: resolvedDetailPanel.value,
     enableSidePanel,
     hideMap: Boolean(
       viewType !== ETraceViewType.TraceTimelineViewer || Boolean(embedded?.timeline?.hideMinimap)
@@ -420,12 +435,17 @@ export function TracePageImpl(props: TProps) {
     showArchiveButton: !isEmbedded && archiveEnabled && hasArchiveStorage,
     showStandaloneLink: isEmbedded,
     showViewOptions: !isEmbedded,
-    timelineBarsVisible,
+    timelineBarsVisible: resolvedTimeline.value,
     toSearch: (locationState && locationState.fromSearch) || null,
     trace: data.asOtelTrace(),
     updateNextViewRangeTime,
     updateViewRangeTime,
     useOtelTerms,
+    settingSources: {
+      timelineBarsVisible: resolvedTimeline,
+      detailPanelMode: resolvedDetailPanel,
+    },
+    saveSettingAsDefault: saveAsDefault,
   };
 
   const sm = scrollManagerRef.current;
