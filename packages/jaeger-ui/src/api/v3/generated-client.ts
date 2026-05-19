@@ -31,83 +31,93 @@ const Operation = z.object({ name: z.string(), spanKind: z.string() }).passthrou
 const GetOperationsResponse = z.object({ operations: z.array(Operation) }).passthrough();
 const GoogleProtobufAny = z.object({ '@type': z.string() }).passthrough();
 const Status = z
-  .object({ code: z.number().int(), message: z.string(), details: z.array(GoogleProtobufAny) })
+  .object({
+    code: z.number().int().optional(),
+    message: z.string().optional(),
+    details: z.array(GoogleProtobufAny).optional(),
+  })
   .passthrough();
 const GetServicesResponse = z.object({ services: z.array(z.string()) }).passthrough();
-const ArrayValue: z.ZodType<ArrayValue> = z.lazy(() => z.object({ values: z.array(AnyValue) }).passthrough());
+const ArrayValue: z.ZodType<ArrayValue> = z.lazy(() =>
+  z.object({ values: z.array(AnyValue).optional() }).passthrough()
+);
 const KeyValueList: z.ZodType<KeyValueList> = z.lazy(() =>
-  z.object({ values: z.array(KeyValue) }).passthrough()
+  z.object({ values: z.array(KeyValue).optional() }).passthrough()
 );
 const AnyValue: z.ZodType<AnyValue> = z.lazy(() =>
   z
     .object({
-      stringValue: z.string(),
-      boolValue: z.boolean(),
-      intValue: z.string(),
-      doubleValue: z.number(),
-      arrayValue: ArrayValue,
-      kvlistValue: KeyValueList,
-      bytesValue: z.string(),
+      stringValue: z.string().optional(),
+      boolValue: z.boolean().optional(),
+      intValue: z.string().optional(),
+      doubleValue: z.number().optional(),
+      arrayValue: ArrayValue.optional(),
+      kvlistValue: KeyValueList.optional(),
+      bytesValue: z.string().optional(),
     })
     .passthrough()
 );
 const KeyValue: z.ZodType<KeyValue> = z.lazy(() =>
-  z.object({ key: z.string(), value: AnyValue }).passthrough()
+  z.object({ key: z.string().optional(), value: AnyValue.optional() }).passthrough()
 );
 const Resource = z
-  .object({ attributes: z.array(KeyValue), droppedAttributesCount: z.number().int() })
+  .object({ attributes: z.array(KeyValue).optional(), droppedAttributesCount: z.number().int().optional() })
   .passthrough();
 const InstrumentationScope = z
   .object({
-    name: z.string(),
-    version: z.string(),
-    attributes: z.array(KeyValue),
-    droppedAttributesCount: z.number().int(),
+    name: z.string().optional(),
+    version: z.string().optional(),
+    attributes: z.array(KeyValue).optional(),
+    droppedAttributesCount: z.number().int().optional(),
   })
   .passthrough();
 const Span_Event = z
   .object({
-    timeUnixNano: z.string(),
-    name: z.string(),
-    attributes: z.array(KeyValue),
-    droppedAttributesCount: z.number().int(),
+    timeUnixNano: z.string().optional(),
+    name: z.string().optional(),
+    attributes: z.array(KeyValue).optional(),
+    droppedAttributesCount: z.number().int().optional(),
   })
   .passthrough();
 const Span_Link = z
   .object({
-    traceId: z.string(),
-    spanId: z.string(),
-    traceState: z.string(),
-    attributes: z.array(KeyValue),
-    droppedAttributesCount: z.number().int(),
-    flags: z.number().int(),
+    traceId: z.string().optional(),
+    spanId: z.string().optional(),
+    traceState: z.string().optional(),
+    attributes: z.array(KeyValue).optional(),
+    droppedAttributesCount: z.number().int().optional(),
+    flags: z.number().int().optional(),
   })
   .passthrough();
 const Span = z
   .object({
     traceId: z.string(),
     spanId: z.string(),
-    traceState: z.string(),
-    parentSpanId: z.string(),
-    flags: z.number().int(),
+    traceState: z.string().optional(),
+    parentSpanId: z.string().optional(),
+    flags: z.number().int().optional(),
     name: z.string(),
     kind: z.number().int(),
     startTimeUnixNano: z.string(),
     endTimeUnixNano: z.string(),
-    attributes: z.array(KeyValue),
-    droppedAttributesCount: z.number().int(),
-    events: z.array(Span_Event),
-    droppedEventsCount: z.number().int(),
-    links: z.array(Span_Link),
-    droppedLinksCount: z.number().int(),
+    attributes: z.array(KeyValue).optional(),
+    droppedAttributesCount: z.number().int().optional(),
+    events: z.array(Span_Event).optional(),
+    droppedEventsCount: z.number().int().optional(),
+    links: z.array(Span_Link).optional(),
+    droppedLinksCount: z.number().int().optional(),
     status: Status,
   })
   .passthrough();
 const ScopeSpans = z
-  .object({ scope: InstrumentationScope, spans: z.array(Span), schemaUrl: z.string() })
+  .object({ scope: InstrumentationScope.optional(), spans: z.array(Span), schemaUrl: z.string().optional() })
   .passthrough();
 const ResourceSpans = z
-  .object({ resource: Resource, scopeSpans: z.array(ScopeSpans), schemaUrl: z.string() })
+  .object({
+    resource: Resource.optional(),
+    scopeSpans: z.array(ScopeSpans),
+    schemaUrl: z.string().optional(),
+  })
   .passthrough();
 const TracesData = z.object({ resourceSpans: z.array(ResourceSpans) }).passthrough();
 

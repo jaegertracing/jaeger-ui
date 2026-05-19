@@ -9,6 +9,8 @@ import {
   traceIdHex,
   spanIdHex,
 } from './schemas';
+import { schemas } from './generated-client';
+import otlpFixture from '../../utils/fixtures/otlp2jaeger-in.json';
 
 describe('ServicesResponseSchema', () => {
   it('validates correct structure', () => {
@@ -163,5 +165,36 @@ describe('ID Validators', () => {
     it('rejects empty string', () => {
       expect(() => spanIdHex.parse('')).toThrow('must be 16-char hex string');
     });
+  });
+});
+
+describe('OTLP wire-format schemas', () => {
+  it('accepts a real trace fixture with omitted proto3 default fields', () => {
+    expect('droppedAttributesCount' in otlpFixture.resourceSpans[0].resource).toBe(false);
+    expect('version' in otlpFixture.resourceSpans[0].scopeSpans[0].scope).toBe(false);
+    expect('traceState' in otlpFixture.resourceSpans[0].scopeSpans[0].spans[0]).toBe(false);
+    expect('code' in otlpFixture.resourceSpans[0].scopeSpans[0].spans[0].status).toBe(false);
+
+    const result = schemas.TracesData.safeParse(otlpFixture);
+
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects spans missing required identity fields', () => {
+    const trace = JSON.parse(JSON.stringify(otlpFixture));
+    delete trace.resourceSpans[0].scopeSpans[0].spans[0].traceId;
+
+    const result = schemas.TracesData.safeParse(trace);
+
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects spans missing required status', () => {
+    const trace = JSON.parse(JSON.stringify(otlpFixture));
+    delete trace.resourceSpans[0].scopeSpans[0].spans[0].status;
+
+    const result = schemas.TracesData.safeParse(trace);
+
+    expect(result.success).toBe(false);
   });
 });
