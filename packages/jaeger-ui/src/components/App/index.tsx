@@ -43,6 +43,30 @@ processScripts();
 // to tree-shake the dynamic import and exclude the demo files from the prod bundle.
 const PlexusDemoPage = import.meta.env.DEV ? React.lazy(() => import('../PlexusDemo')) : null;
 
+// The route table is exported so that index.test.ts can verify that
+// KNOWN_SUB_PATHS covers every path registered here. The <Routes> below is rendered
+// directly from this array, so the two cannot diverge.
+export const ROUTES: { path: string; element: React.ReactNode }[] = [
+  { path: searchPath, element: <SearchTracePage /> },
+  { path: tracePath, element: <TraceRouter /> },
+  { path: dependenciesPath, element: <DependencyGraph /> },
+  { path: deepDependenciesPath, element: <DeepDependencies /> },
+  { path: qualityMetricsPath, element: <QualityMetrics /> },
+  { path: monitorATMPath, element: <MonitorATMPage /> },
+  ...(PlexusDemoPage
+    ? [
+        {
+          path: plexusDemoPath,
+          element: (
+            <React.Suspense fallback={null}>
+              <PlexusDemoPage />
+            </React.Suspense>
+          ),
+        },
+      ]
+    : []),
+];
+
 export default function JaegerUIApp() {
   return (
     <AppQueryClientProvider>
@@ -51,23 +75,9 @@ export default function JaegerUIApp() {
           <JaegerAssistantProvider>
             <Page>
               <Routes>
-                <Route path={searchPath} element={<SearchTracePage />} />
-                <Route path={tracePath} element={<TraceRouter />} />
-                <Route path={dependenciesPath} element={<DependencyGraph />} />
-                <Route path={deepDependenciesPath} element={<DeepDependencies />} />
-                <Route path={qualityMetricsPath} element={<QualityMetrics />} />
-                <Route path={monitorATMPath} element={<MonitorATMPage />} />
-                {PlexusDemoPage && (
-                  <Route
-                    path={plexusDemoPath}
-                    element={
-                      <React.Suspense fallback={null}>
-                        <PlexusDemoPage />
-                      </React.Suspense>
-                    }
-                  />
-                )}
-
+                {ROUTES.map(({ path, element }) => (
+                  <Route key={path} path={path} element={element} />
+                ))}
                 <Route path="/" element={<Navigate to={searchPath} replace />} />
                 <Route path={prefixUrl()} element={<Navigate to={searchPath} replace />} />
                 <Route path={prefixUrl('/')} element={<Navigate to={searchPath} replace />} />

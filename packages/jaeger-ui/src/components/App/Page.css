@@ -13,6 +13,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .Page--content {
+  --page-nav-offset: 0px;
   display: flex;
   flex-direction: column;
   left: 0;
@@ -45,6 +46,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .Page--content--no-embedded {
+  --page-nav-offset: var(--nav-height);
   top: var(--nav-height);
 }
 
