@@ -19,9 +19,6 @@ npm-debug.log
 .idea
 .eslintcache
 .envrc
-# Vite local env (per-developer URLs, never commit)
-.env.local
-.env.*.local
 .vscode
 
 # scripts
