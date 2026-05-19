@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import cx from 'classnames';
 import { useDispatch, useSelector } from 'react-redux';
 import _isEqual from 'lodash/isEqual';
@@ -30,6 +30,7 @@ import { Accessors } from '../ScrollManager';
 import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../../common/UiFindInput';
 import getLinks from '../../../model/link-patterns';
 import colorGenerator from '../../../utils/color-generator';
+import filterSpans from '../../../utils/filter-spans';
 import { TNil, ReduxState } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan, IOtelTrace, IAttribute, IEvent } from '../../../types/otel';
@@ -44,6 +45,7 @@ import withRouteProps from '../../../utils/withRouteProps';
 type TVirtualizedTraceViewOwnProps = {
   currentViewRangeTime: [number, number];
   findMatchesIDs: Set<string> | TNil;
+  tagHighlightedSpanIds: Set<string> | TNil;
   nameColumnWidth: number;
   scrollToFirstVisibleSpan: () => void;
   registerAccessors: (accesors: Accessors) => void;
@@ -515,6 +517,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       detailStates,
       detailToggle,
       findMatchesIDs,
+      tagHighlightedSpanIds,
       nameColumnWidth,
       prunedServices,
       selectedSpanID,
@@ -534,6 +537,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const isCollapsed = childrenHiddenIDs.has(spanID);
     const isDetailExpanded = detailStates.has(spanID);
     const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
+    const isTagHighlighted = tagHighlightedSpanIds ? tagHighlightedSpanIds.has(spanID) : false;
     const isSelected = selectedSpanID === spanID;
     const hasOwnError = isErrorSpan(span);
     const hasChildError = isCollapsed && spanContainsErredSpan(spans, spanIndex);
@@ -583,6 +587,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           isChildrenExpanded={!isCollapsed}
           isDetailExpanded={isDetailExpanded}
           isMatchingFilter={isMatchingFilter}
+          isTagHighlighted={isTagHighlighted}
           isSelected={isSelected}
           timelineBarsVisible={timelineBarsVisible}
           numTicks={NUM_TICKS}
@@ -696,7 +701,14 @@ function VirtualizedTraceViewWrapper(
   const detailStates = useTraceTimelineStore(s => s.detailStates);
   const shouldScrollToFirstUiFindMatch = useTraceTimelineStore(s => s.shouldScrollToFirstUiFindMatch);
   const prunedServices = useTraceTimelineStore(s => s.prunedServices);
+  const tagHighlight = useTraceTimelineStore(s => s.tagHighlight);
   const selectedSpanID = detailPanelMode === 'sidepanel' ? getSelectedSpanID(detailStates) : null;
+
+  const tagHighlightedSpanIds = useMemo(() => {
+    if (!tagHighlight || !ownProps.trace) return null;
+    const matchedIds = filterSpans(tagHighlight, ownProps.trace.spans);
+    return matchedIds;
+  }, [tagHighlight, ownProps.trace]);
 
   const zustandSetTrace = useTraceTimelineStore(s => s.setTrace);
   const zustandChildrenToggle = useTraceTimelineStore(s => s.childrenToggle);
@@ -818,6 +830,7 @@ function VirtualizedTraceViewWrapper(
     shouldScrollToFirstUiFindMatch,
     prunedServices,
     selectedSpanID,
+    tagHighlightedSpanIds,
     setTrace,
     childrenToggle,
     detailToggle,
