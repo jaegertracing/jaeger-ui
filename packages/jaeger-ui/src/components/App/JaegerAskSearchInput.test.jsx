@@ -6,7 +6,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 
-import JaegerAskSearchInput from './JaegerAskSearchInput';
+import JaegerAskSearchInput, { JaegerAssistantToggle } from './JaegerAskSearchInput';
 import { JaegerAssistantProvider } from './JaegerAssistantContext';
 
 const mockNavigate = jest.fn();
@@ -141,5 +141,67 @@ describe('<JaegerAskSearchInput />', () => {
     fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: true });
     expect(mockNavigate).not.toHaveBeenCalled();
     expect(screen.getByTestId('JaegerAskSearchInput--textarea')).toBeInTheDocument();
+  });
+
+  it('closes floating textarea on mousedown outside trigger and float', () => {
+    render(
+      <MemoryRouter>
+        <JaegerAskSearchInput />
+      </MemoryRouter>
+    );
+    openTextarea();
+    expect(screen.getByTestId('JaegerAskSearchInput--textarea')).toBeInTheDocument();
+    const outside = document.createElement('div');
+    document.body.appendChild(outside);
+    fireEvent.mouseDown(outside);
+    document.body.removeChild(outside);
+    expect(screen.queryByTestId('JaegerAskSearchInput--textarea')).not.toBeInTheDocument();
+  });
+});
+
+describe('<JaegerAssistantToggle />', () => {
+  beforeEach(() => {
+    agUiMock.configured = false;
+  });
+
+  it('renders nothing when assistant is not configured', () => {
+    render(
+      <MemoryRouter>
+        <JaegerAssistantProvider>
+          <JaegerAssistantToggle />
+        </JaegerAssistantProvider>
+      </MemoryRouter>
+    );
+    expect(screen.queryByTestId('JaegerAssistantToggle--btn')).not.toBeInTheDocument();
+  });
+
+  it('renders nothing outside JaegerAssistantProvider', () => {
+    agUiMock.configured = true;
+    render(
+      <MemoryRouter>
+        <JaegerAssistantToggle />
+      </MemoryRouter>
+    );
+    expect(screen.queryByTestId('JaegerAssistantToggle--btn')).not.toBeInTheDocument();
+  });
+
+  it('toggles panel open state when configured with provider', () => {
+    agUiMock.configured = true;
+    render(
+      <MemoryRouter>
+        <JaegerAssistantProvider>
+          <JaegerAssistantToggle />
+        </JaegerAssistantProvider>
+      </MemoryRouter>
+    );
+    const btn = screen.getByTestId('JaegerAssistantToggle--btn');
+    expect(btn).toHaveAttribute('aria-pressed', 'false');
+    expect(btn).toHaveAttribute('aria-label', 'Open assistant panel');
+    fireEvent.click(btn);
+    expect(btn).toHaveAttribute('aria-pressed', 'true');
+    expect(btn).toHaveAttribute('aria-label', 'Close assistant panel');
+    expect(btn.className).toContain('JaegerAssistantToggle--btn--active');
+    fireEvent.click(btn);
+    expect(btn).toHaveAttribute('aria-pressed', 'false');
   });
 });
