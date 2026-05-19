@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import TimelineHeaderRow from './TimelineHeaderRow';
@@ -22,8 +22,15 @@ vi.mock('../TimelineRow', () => {
 });
 
 vi.mock('../../../common/VerticalResizer', () => ({
-  default: ({ position, min, max }) => (
-    <div data-testid="vertical-resizer" data-position={position} data-min={min} data-max={max} />
+  default: ({ position, min, max, onChange }) => (
+    <button
+      type="button"
+      data-testid="vertical-resizer"
+      data-position={position}
+      data-min={min}
+      data-max={max}
+      onClick={() => onChange(position)}
+    />
   ),
 }));
 
@@ -62,9 +69,12 @@ describe('<TimelineHeaderRow>', () => {
     onCollapseAll: jest.fn(),
     onCollapseOne: jest.fn(),
     onColummWidthChange: jest.fn(),
+    onSidePanelWidthChange: jest.fn(),
     onExpandAll: jest.fn(),
     onExpandOne: jest.fn(),
     resizerMax: 0.85,
+    sidePanelResizerMin: 0.3,
+    sidePanelResizerMax: 0.8,
     timelineBarsVisible: true,
     updateNextViewRangeTime: jest.fn(),
     updateViewRangeTime: jest.fn(),
@@ -135,6 +145,8 @@ describe('<TimelineHeaderRow>', () => {
       sidePanelWidth,
       sidePanelLabel: 'Span Details',
       resizerMax: 1 - sidePanelWidth,
+      sidePanelResizerMin: 0.35,
+      sidePanelResizerMax: 0.8,
     };
 
     it('renders the side panel header cell', () => {
@@ -149,8 +161,29 @@ describe('<TimelineHeaderRow>', () => {
 
     it('sets resizer max to 1 - sidePanelWidth', () => {
       render(<TimelineHeaderRow {...sidePanelProps} />);
-      const resizer = screen.getByTestId('vertical-resizer');
-      expect(resizer).toHaveAttribute('data-max', String(1 - sidePanelWidth));
+      const [nameColumnResizer] = screen.getAllByTestId('vertical-resizer');
+
+      expect(nameColumnResizer).toHaveAttribute('data-max', String(1 - sidePanelWidth));
+    });
+
+    it('renders a side panel resizer aligned with the side panel boundary', () => {
+      render(<TimelineHeaderRow {...sidePanelProps} />);
+      const [, sidePanelResizer] = screen.getAllByTestId('vertical-resizer');
+
+      expect(sidePanelResizer).toHaveAttribute('data-position', String(1 - sidePanelWidth));
+      expect(sidePanelResizer).toHaveAttribute('data-min', '0.35');
+      expect(sidePanelResizer).toHaveAttribute('data-max', '0.8');
+    });
+
+    it('calls the side panel width handler from the side panel resizer', () => {
+      const onSidePanelWidthChange = jest.fn();
+      render(<TimelineHeaderRow {...sidePanelProps} onSidePanelWidthChange={onSidePanelWidthChange} />);
+      const [, sidePanelResizer] = screen.getAllByTestId('vertical-resizer');
+
+      fireEvent.click(sidePanelResizer);
+
+      expect(onSidePanelWidthChange).toHaveBeenCalledTimes(1);
+      expect(onSidePanelWidthChange).toHaveBeenCalledWith(1 - sidePanelWidth);
     });
   });
 

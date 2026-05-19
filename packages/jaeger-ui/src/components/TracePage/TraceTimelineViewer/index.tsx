@@ -19,7 +19,6 @@ import SpanDetailSidePanel from './SpanDetailSidePanel';
 import TimelineHeaderRow from './TimelineHeaderRow';
 import { useServiceFilter } from './useServiceFilter';
 import VirtualizedTraceView from './VirtualizedTraceView';
-import VerticalResizer from '../../common/VerticalResizer';
 import { merge as mergeShortcuts } from '../keyboard-shortcuts';
 import { Accessors } from '../ScrollManager';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '../types';
@@ -52,6 +51,7 @@ type TProps = TDispatchProps & {
 };
 
 const NUM_TICKS = 5;
+const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
 
 /**
  * `TraceTimelineViewer` now renders the header row because it is sensitive to
@@ -157,6 +157,12 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   // When bars are hidden with no side panel, the name column spans the full page.
   const headerNameWidth = nameColumnWidth * mainFraction;
   const resizerMax = sidePanelActive ? mainFraction - MIN_TIMELINE_COLUMN_WIDTH : SPAN_NAME_COLUMN_WIDTH_MAX;
+  const sidePanelResizerMax = clamp01(1 - SIDE_PANEL_WIDTH_MIN);
+  const sidePanelAvailableSpace = clamp01(1 - spanNameColumnWidth - MIN_TIMELINE_COLUMN_WIDTH);
+  const sidePanelResizerMin = Math.min(
+    clamp01(1 - Math.min(SIDE_PANEL_WIDTH_MAX, sidePanelAvailableSpace)),
+    sidePanelResizerMax
+  );
 
   // Column header label: "Trace Root" when showing the root span (explicit or fallback),
   // "Span Details" for any other selected span.
@@ -215,6 +221,9 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       sidePanelVisible={sidePanelActive}
       sidePanelWidth={effectiveSidePanelWidth}
       sidePanelLabel={sidePanelLabel}
+      sidePanelResizerMin={sidePanelResizerMin}
+      sidePanelResizerMax={sidePanelResizerMax}
+      onSidePanelWidthChange={newPosition => setSidePanelWidth(1 - newPosition)}
       timelineBarsVisible={timelineBarsVisible}
       viewRangeTime={viewRange.time}
       updateNextViewRangeTime={updateNextViewRangeTime}
@@ -249,14 +258,6 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
           <div className="TraceTimelineViewer--main" style={{ width: `${mainWidth}%` }}>
             {virtualizedView}
           </div>
-          {timelineBarsVisible && (
-            <VerticalResizer
-              position={1 - sidePanelWidth}
-              min={1 - Math.min(SIDE_PANEL_WIDTH_MAX, 1 - spanNameColumnWidth - MIN_TIMELINE_COLUMN_WIDTH)}
-              max={1 - SIDE_PANEL_WIDTH_MIN}
-              onChange={newPosition => setSidePanelWidth(1 - newPosition)}
-            />
-          )}
           <div className="TraceTimelineViewer--sidePanel" style={sidePanelStyle}>
             <SpanDetailSidePanel
               trace={trace}
