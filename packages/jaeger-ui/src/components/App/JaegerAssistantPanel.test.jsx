@@ -2,11 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 
-import { JaegerAssistantDock } from './JaegerAssistantPanel';
+import {
+  JaegerAssistantDock,
+  JaegerThreadMessageBody,
+  threadMessageComponents,
+} from './JaegerAssistantPanel';
 import { JaegerAssistantProvider, useJaegerAssistantOptional } from './JaegerAssistantContext';
 
 const mockAppend = vi.fn();
@@ -43,13 +47,23 @@ vi.mock('@assistant-ui/react', () => {
       Send: ({ children }) => <button type="button">{children}</button>,
     },
     MessagePartPrimitive: {
-      Text: () => <div data-testid="message-part-text" />,
+      Text: ({ className, component: Comp = 'div' }) =>
+        React.createElement(Comp, { 'data-testid': 'message-part-text', className }),
     },
     MessagePrimitive: {
-      Root: ({ children, className }) => <div className={className}>{children}</div>,
+      Root: ({ children, className }) => (
+        <div data-testid="message-primitive-root" className={className}>
+          {children}
+        </div>
+      ),
       Parts: ({ children }) => {
         if (typeof children === 'function') {
-          return <>{children({ part: { type: 'text' } })}</>;
+          return (
+            <>
+              {children({ part: { type: 'text' } })}
+              {children({ part: { type: 'reasoning' } })}
+            </>
+          );
         }
         return children;
       },
@@ -72,6 +86,15 @@ function OpenPanelButton() {
   return (
     <button type="button" onClick={() => a?.setPanelOpen(true)}>
       open panel
+    </button>
+  );
+}
+
+function AskBootstrapButton({ text }) {
+  const a = useJaegerAssistantOptional();
+  return (
+    <button type="button" onClick={() => a?.requestAskJaeger(text)}>
+      ask-bootstrap-{text}
     </button>
   );
 }
@@ -138,5 +161,54 @@ describe('JaegerAssistantDock', () => {
     expect(aside).toHaveAttribute('aria-hidden', 'false');
     fireEvent.click(screen.getByRole('button', { name: 'Close assistant panel' }));
     expect(aside).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('bootstrap effect clears bootstrap and appends to thread (lines 26–28)', async () => {
+    agUiMock.configured = true;
+    render(
+      <MemoryRouter>
+        <JaegerAssistantProvider>
+          <JaegerAssistantDock />
+          <AskBootstrapButton text="hi" />
+        </JaegerAssistantProvider>
+      </MemoryRouter>
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'ask-bootstrap-hi' }));
+    await waitFor(() => expect(mockAppend).toHaveBeenCalledWith('hi'));
+  });
+});
+
+describe('JaegerThreadMessageBody', () => {
+  it('renders text parts with MessagePartPrimitive.Text (lines 34–47)', () => {
+    const { container } = render(<JaegerThreadMessageBody variant="user" />);
+    const root = screen.getByTestId('message-primitive-root');
+    expect(root).toHaveClass('JaegerAssistantPanel-message', 'JaegerAssistantPanel-message--user');
+    expect(container.querySelectorAll('[data-testid="message-part-text"]')).toHaveLength(1);
+    expect(screen.getByTestId('message-part-text')).toHaveClass('JaegerAssistantPanel-messageText');
+  });
+
+  it('renders assistant variant classes', () => {
+    render(<JaegerThreadMessageBody variant="assistant" />);
+    expect(screen.getByTestId('message-primitive-root')).toHaveClass(
+      'JaegerAssistantPanel-message--assistant'
+    );
+  });
+});
+
+describe('threadMessageComponents', () => {
+  it('UserMessage wraps user variant (line 56)', () => {
+    const { UserMessage } = threadMessageComponents;
+    const { container } = render(<UserMessage />);
+    expect(container.querySelector('.JaegerAssistantPanel-row--user')).toBeInTheDocument();
+    expect(screen.getByTestId('message-primitive-root')).toHaveClass('JaegerAssistantPanel-message--user');
+  });
+
+  it('AssistantMessage wraps assistant variant (line 63)', () => {
+    const { AssistantMessage } = threadMessageComponents;
+    const { container } = render(<AssistantMessage />);
+    expect(container.querySelector('.JaegerAssistantPanel-row--assistant')).toBeInTheDocument();
+    expect(screen.getByTestId('message-primitive-root')).toHaveClass(
+      'JaegerAssistantPanel-message--assistant'
+    );
   });
 });

@@ -68,6 +68,8 @@ const threadMessageComponents = {
   },
 };
 
+export { JaegerThreadMessageBody, threadMessageComponents };
+
 function JaegerAssistantThreadView() {
   const viewportRef = useThreadViewportAutoScroll({});
 

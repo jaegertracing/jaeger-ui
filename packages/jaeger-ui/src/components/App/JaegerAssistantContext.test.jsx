@@ -16,6 +16,8 @@ const agUiMock = vi.hoisted(() => ({
   url: 'http://localhost/ag-ui',
 }));
 
+const capturedAgUiOnError = vi.hoisted(() => ({ fn: /** @type {null | ((e: unknown) => void)} */ (null) }));
+
 vi.mock('./jaegerAgUi', () => ({
   getJaegerAgUiUrl: () => agUiMock.url,
   isJaegerAssistantConfigured: () => agUiMock.configured,
@@ -26,7 +28,10 @@ vi.mock('@ag-ui/client', () => ({
 }));
 
 vi.mock('@assistant-ui/react-ag-ui', () => ({
-  useAgUiRuntime: () => ({ mockRuntime: true }),
+  useAgUiRuntime: opts => {
+    capturedAgUiOnError.fn = opts?.onError ?? null;
+    return { mockRuntime: true };
+  },
 }));
 
 vi.mock('@assistant-ui/react', () => ({
@@ -62,6 +67,7 @@ function FullConsumer() {
 describe('JaegerAssistantContext', () => {
   beforeEach(() => {
     agUiMock.configured = false;
+    capturedAgUiOnError.fn = null;
     vi.clearAllMocks();
   });
 
@@ -125,5 +131,20 @@ describe('JaegerAssistantContext', () => {
     expect(screen.getByTestId('bootstrap')).toHaveTextContent('hello');
     fireEvent.click(screen.getByRole('button', { name: 'clear' }));
     expect(screen.getByTestId('bootstrap')).toHaveTextContent('none');
+  });
+
+  it('useAgUiRuntime onError logs AG-UI errors (lines 29–30)', () => {
+    agUiMock.configured = true;
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    render(
+      <JaegerAssistantProvider>
+        <span data-testid="child" />
+      </JaegerAssistantProvider>
+    );
+    expect(capturedAgUiOnError.fn).toEqual(expect.any(Function));
+    const err = new Error('ag-ui-failure');
+    capturedAgUiOnError.fn(err);
+    expect(spy).toHaveBeenCalledWith('[jaeger-assistant] AG-UI error', err);
+    spy.mockRestore();
   });
 });
