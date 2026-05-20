@@ -31,21 +31,69 @@ function JaegerAssistantBootstrap() {
   return null;
 }
 
+function JaegerToolCallPart({
+  part,
+}: {
+  part: { type: 'tool-call'; toolName: string; state: string; result?: unknown };
+}) {
+  const result = part.result as { ok?: boolean; error?: string; matchCount?: number } | undefined;
+  if (part.state !== 'result' || result == null) {
+    return (
+      <div className="JaegerAssistantPanel-toolCall" data-testid="toolcall-pending">
+        <span className="JaegerAssistantPanel-toolCall-spinner" aria-hidden="true" />
+        Locating span&hellip;
+      </div>
+    );
+  }
+  if (!result.ok) {
+    return (
+      <div
+        className="JaegerAssistantPanel-toolCall JaegerAssistantPanel-toolCall--error"
+        data-testid="toolcall-error"
+      >
+        {result.error ?? 'Could not locate span.'}
+      </div>
+    );
+  }
+  const label =
+    result.matchCount != null
+      ? `Highlighted ${result.matchCount} span${result.matchCount !== 1 ? 's' : ''}`
+      : 'Navigated to trace';
+  return (
+    <div
+      className="JaegerAssistantPanel-toolCall JaegerAssistantPanel-toolCall--ok"
+      data-testid="toolcall-ok"
+    >
+      {label}
+    </div>
+  );
+}
+
 function JaegerThreadMessageBody({ variant }: { variant: 'user' | 'assistant' }) {
   return (
     <MessagePrimitive.Root
       className={`JaegerAssistantPanel-message JaegerAssistantPanel-message--${variant}`}
     >
       <MessagePrimitive.Parts>
-        {({ part }) =>
-          part.type === 'text' ? (
-            <MessagePartPrimitive.Text
-              component="div"
-              className="JaegerAssistantPanel-messageText"
-              smooth={false}
-            />
-          ) : null
-        }
+        {({ part }: { part: { type: string; [key: string]: unknown } }) => {
+          if (part.type === 'text') {
+            return (
+              <MessagePartPrimitive.Text
+                component="div"
+                className="JaegerAssistantPanel-messageText"
+                smooth={false}
+              />
+            );
+          }
+          if (part.type === 'tool-call') {
+            return (
+              <JaegerToolCallPart
+                part={part as { type: 'tool-call'; toolName: string; state: string; result?: unknown }}
+              />
+            );
+          }
+          return null;
+        }}
       </MessagePrimitive.Parts>
     </MessagePrimitive.Root>
   );
@@ -68,7 +116,7 @@ const threadMessageComponents = {
   },
 };
 
-export { JaegerThreadMessageBody, threadMessageComponents };
+export { JaegerToolCallPart, JaegerThreadMessageBody, threadMessageComponents };
 
 function JaegerAssistantThreadView() {
   const viewportRef = useThreadViewportAutoScroll({});

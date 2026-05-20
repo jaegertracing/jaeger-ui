@@ -15,12 +15,13 @@
 set -euo pipefail
 
 # Extract simple (string-valued) overrides from package.json.
-# jq outputs "name version" pairs, one per line.
-overrides=$(jq -r '
-  .overrides // {} | to_entries[]
-  | select(.value | type == "string")
-  | "\(.key) \(.value)"
-' package.json)
+# Prints "name version" pairs, one per line (Node avoids a jq dependency).
+overrides=$(node -e "
+const pkg = require('./package.json');
+for (const [key, value] of Object.entries(pkg.overrides || {})) {
+  if (typeof value === 'string') console.log(\`\${key} \${value}\`);
+}
+")
 
 if [ -z "$overrides" ]; then
   echo "No simple overrides found in package.json."
