@@ -246,7 +246,9 @@ export function UnconnectedSearchResults({
           <h2 className="ub-m0 u-flex-1">
             {traces.length} Trace{traces.length > 1 && 's'}
           </h2>
-          {traceResultsView && <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />}
+          {traceResultsView && resultView === 'cards' && (
+            <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />
+          )}
           {traceResultsView && <DownloadResults onDownloadResultsClicked={onDownloadResultsClicked} />}
           {traceResultsView && (
             <Radio.Group
