@@ -17,6 +17,7 @@ import { bindActionCreators, Dispatch } from 'redux';
 import ArchiveNotifier from './ArchiveNotifier';
 import { useArchiveStore } from '../../stores/archive-store';
 import { useEmbeddedState } from '../../stores/embedded-store';
+import { useShallow } from 'zustand/react/shallow';
 import {
   setDetailPanelMode as setDetailPanelModeZustand,
   setGenAIMode,
@@ -167,8 +168,9 @@ export function TracePageImpl(props: TProps) {
   // Layout preferences are owned by Zustand; Redux setters are also called for the tracking middleware.
   const detailPanelMode = useLayoutPrefsStore(s => s.detailPanelMode);
   const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
-  const genAIModeActive = useLayoutPrefsStore(s => s.genAIModeActive);
-  const autoDetectedGenAI = useLayoutPrefsStore(s => s.autoDetectedGenAI);
+  const { genAIModeActive, autoDetectedGenAI } = useLayoutPrefsStore(
+    useShallow(s => ({ genAIModeActive: s.genAIModeActive, autoDetectedGenAI: s.autoDetectedGenAI }))
+  );
   const setAutoDetectedGenAI = useLayoutPrefsStore(s => s.setAutoDetectedGenAI);
   const zustandSetTimelineBarsVisible = useLayoutPrefsStore(s => s.setTimelineBarsVisible);
   const zustandFocusUiFindMatches = useTraceTimelineStore(s => s.focusUiFindMatches);

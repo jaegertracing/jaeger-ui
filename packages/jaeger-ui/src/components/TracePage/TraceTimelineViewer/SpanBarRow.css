@@ -208,3 +208,9 @@ SPDX-License-Identifier: Apache-2.0
 .SpanBarRow--arrowForwardIcon {
   vertical-align: middle;
 }
+
+.SpanBarRow--genAIIcon {
+  font-size: 0.85rem;
+  margin-right: 4px;
+  vertical-align: middle;
+}

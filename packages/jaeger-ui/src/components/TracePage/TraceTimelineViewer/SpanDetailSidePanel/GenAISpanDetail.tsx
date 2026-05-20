@@ -29,7 +29,6 @@ const DISPLAY_LIMIT = 4096;
 type GenAISpanDetailProps = {
   span: IOtelSpan;
   kind: GenAISpanKind;
-  useOtelTerms: boolean;
 };
 
 function isSafeMediaUrl(value: string): boolean {
@@ -64,7 +63,15 @@ function TextBlock({ text }: { text: string }) {
     );
   }
   if (mediaKind === 'image' && mediaLoaded) {
-    return <img src={text} alt="span media" className="GenAISpanDetail--media" />;
+    return (
+      <img
+        src={text}
+        alt="span media"
+        className="GenAISpanDetail--media"
+        loading="lazy"
+        referrerPolicy="no-referrer"
+      />
+    );
   }
   if (mediaKind === 'audio' && mediaLoaded) {
     // eslint-disable-next-line jsx-a11y/media-has-caption

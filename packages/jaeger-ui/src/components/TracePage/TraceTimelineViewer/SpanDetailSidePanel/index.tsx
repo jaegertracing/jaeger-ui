@@ -129,7 +129,7 @@ export function SpanDetailSidePanelImpl(props: TProps) {
     return (
       <div className="SpanDetailSidePanel">
         <div className="SpanDetailSidePanel--body">
-          <GenAISpanDetail span={span} kind={genAIKind} useOtelTerms={useOtelTerms} />
+          <GenAISpanDetail span={span} kind={genAIKind} />
         </div>
       </div>
     );

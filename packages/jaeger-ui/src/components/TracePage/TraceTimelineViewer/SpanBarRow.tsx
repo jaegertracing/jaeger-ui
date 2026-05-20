@@ -60,10 +60,12 @@ type SpanBarRowProps = {
 function GenAISpanIcon({ span }: { span: IOtelSpan }) {
   const kind = useMemo(() => detectGenAISpan(span), [span]);
   if (!kind) return null;
-  const style = { fontSize: '0.85rem', marginRight: 4, verticalAlign: 'middle' };
-  if (kind === 'llm') return <BulbOutlined style={style} aria-label="LLM span" role="img" />;
-  if (kind === 'tool') return <ToolOutlined style={style} aria-label="Tool call span" role="img" />;
-  if (kind === 'retrieval') return <DatabaseOutlined style={style} aria-label="Retrieval span" role="img" />;
+  if (kind === 'llm')
+    return <BulbOutlined className="SpanBarRow--genAIIcon" aria-label="LLM span" role="img" />;
+  if (kind === 'tool')
+    return <ToolOutlined className="SpanBarRow--genAIIcon" aria-label="Tool call span" role="img" />;
+  if (kind === 'retrieval')
+    return <DatabaseOutlined className="SpanBarRow--genAIIcon" aria-label="Retrieval span" role="img" />;
   return null;
 }
 
