@@ -195,7 +195,7 @@ interface ValidationError {
 
 export function validateDurationFields(value: string | null | undefined): ValidationError | undefined {
   if (!value) return undefined;
-  return /\d[\d.]*( us|ms|s|m|h)$/.test(value)
+  return /\d[\d.]*\s*(us|ms|s|m|h)$/.test(value)
     ? undefined
     : {
         content: `Please enter a number followed by a duration unit, ${placeholderDurationFields}`,
