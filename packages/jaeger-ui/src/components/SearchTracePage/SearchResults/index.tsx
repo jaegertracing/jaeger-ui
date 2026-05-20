@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { useCallback } from 'react';
 import { Radio, Select } from 'antd';
-import type { RadioChangeEvent } from 'antd/es/radio';
+import type { RadioChangeEvent } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
 import queryString from 'query-string';
