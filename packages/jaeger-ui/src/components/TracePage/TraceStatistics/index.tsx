@@ -156,7 +156,7 @@ export default class TraceStatistics extends Component<Props, State> {
 
   changeTableValueSearch() {
     this.setState(prevState => ({
-      tableValue: this.searchInTable(this.props.uiFindVertexKeys!, prevState.tableValue, this.props.uiFind),
+      tableValue: this.searchInTable(this.props.uiFindVertexKeys, prevState.tableValue, this.props.uiFind),
     }));
   }
 
@@ -174,7 +174,7 @@ export default class TraceStatistics extends Component<Props, State> {
     this.setState(prevState => {
       return {
         ...prevState,
-        tableValue: this.searchInTable(this.props.uiFindVertexKeys!, tableValue, this.props.uiFind),
+        tableValue: this.searchInTable(this.props.uiFindVertexKeys, tableValue, this.props.uiFind),
         sortIndex: 1,
         sortAsc: false,
         valueNameSelector1,
@@ -206,7 +206,7 @@ export default class TraceStatistics extends Component<Props, State> {
    * @param allTableSpans entries that are shown
    */
   searchInTable = (
-    uiFindVertexKeys: Set<string>,
+    uiFindVertexKeys: Set<string> | TNil,
     allTableSpans: ITableSpan[],
     uiFind: string | null | undefined
   ): ITableSpan[] => {
@@ -217,8 +217,8 @@ export default class TraceStatistics extends Component<Props, State> {
       return hasDetails && !row.isDetail && row.hasSubgroupValue;
     };
 
-    if (typeof uiFindVertexKeys !== 'undefined') {
-      uiFindVertexKeys!.forEach(function calc(value) {
+    if (uiFindVertexKeys) {
+      uiFindVertexKeys.forEach(function calc(value) {
         const uiFindVertexKeysSplit = value.split('\u000b');
 
         for (let i = 0; i < allTableSpansChange.length; i++) {
@@ -363,17 +363,27 @@ export default class TraceStatistics extends Component<Props, State> {
     /**
      * Pre-process the table data into groups and sub-groups
      */
+    const detailsMap = new Map<string, ITableSpan[]>();
+    this.state.tableValue.forEach(s => {
+      if (s.isDetail && s.parentElement) {
+        const list = detailsMap.get(s.parentElement);
+        if (list) {
+          list.push(s);
+        } else {
+          detailsMap.set(s.parentElement, [s]);
+        }
+      }
+    });
+
     const groupedAndSubgroupedSpanData: ITableSpan[] = this.state.tableValue
       .filter(s => !s.isDetail)
       .map((parent, i) => ({
         ...parent,
         key: i.toString(),
-        children: this.state.tableValue
-          .filter(s => s.isDetail && s.parentElement === parent.name)
-          .map((child, j) => ({
-            ...child,
-            key: `${i}-${j}`,
-          })),
+        children: (detailsMap.get(parent.name) || []).map((child, j) => ({
+          ...child,
+          key: `${i}-${j}`,
+        })),
       }));
     const defaultExpandedRowKeys = groupedAndSubgroupedSpanData
       .filter(row => row.hasSubgroupValue && row.children && row.children.length > 0)
@@ -399,9 +409,10 @@ export default class TraceStatistics extends Component<Props, State> {
           columns={columns}
           dataSource={groupedAndSubgroupedSpanData}
           rowKey="key"
-          key={`${this.state.valueNameSelector1}-${this.state.valueNameSelector2}-${this.props.uiFind}-${JSON.stringify(
-            groupedAndSubgroupedSpanData.map(r => r.name)
-          )}`}
+          key={`${this.props.trace.traceID}-${this.state.valueNameSelector1}-${this.state.valueNameSelector2}-${this.props.uiFind || ''}-${groupedAndSubgroupedSpanData
+            .map(r => r.name)
+            .sort()
+            .join(',')}`}
           pagination={{
             pageSizeOptions: ['10', '20', '50', '100'],
             showSizeChanger: true,
