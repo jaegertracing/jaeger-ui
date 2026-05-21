@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { useMemo } from 'react';
 import { Table } from 'antd';
-import type { ColumnProps } from 'antd/es/table';
+import type { TableProps } from 'antd';
 import { Link } from 'react-router-dom';
 
 import { getTracePageLink } from '../../TracePage/url';
@@ -16,9 +16,9 @@ import { IOtelTrace } from '../../../types/otel';
 type Props = { traces: IOtelTrace[]; searchUrl: string };
 
 export function TraceTable({ traces, searchUrl }: Props) {
-  const displayLen = getConfig().traceIdDisplayLength || 7;
+  const displayLen = getConfig().traceIdDisplayLength ?? 7;
 
-  const columns: ColumnProps<IOtelTrace>[] = useMemo(
+  const columns: TableProps<IOtelTrace>['columns'] = useMemo(
     () => [
       {
         title: 'Trace ID',
@@ -26,7 +26,7 @@ export function TraceTable({ traces, searchUrl }: Props) {
         render: (_: unknown, trace: IOtelTrace) => {
           const link = getTracePageLink(trace.traceID, { fromSearch: searchUrl });
           return (
-            <Link to={{ pathname: link.pathname, search: link.search }} state={link.state}>
+            <Link to={`${link.pathname}${link.search || ''}`} state={link.state}>
               {trace.traceID.slice(0, displayLen)}
             </Link>
           );

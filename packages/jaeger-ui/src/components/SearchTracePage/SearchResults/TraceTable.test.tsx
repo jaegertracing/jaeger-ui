@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
 import { TraceTable } from './TraceTable';
@@ -87,7 +87,8 @@ describe('<TraceTable>', () => {
         <TraceTable traces={traces} searchUrl="/search" />
       </MemoryRouter>
     );
-    expect(screen.getByText('7')).toBeInTheDocument();
+    const row = screen.getByRole('row', { name: /bbb222333444/i });
+    expect(within(row).getByText('7')).toBeInTheDocument();
   });
 
   it('renders empty state when no traces provided', () => {
