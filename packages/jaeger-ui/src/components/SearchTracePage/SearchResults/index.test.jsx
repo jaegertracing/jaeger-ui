@@ -545,22 +545,31 @@ describe('<SearchResults>', () => {
   });
 
   describe('resultView toggle', () => {
-    it('hides SelectSort when table view is selected', () => {
+    it('switches between cards and table view and hides SelectSort in table view', () => {
       renderWithRouter(<SearchResults {...baseProps} />);
-      // Initially in cards view, sort dropdown should be visible
+      // Initially in cards view, sort dropdown and result cards should be visible
       expect(screen.getByTestId('searchable-select')).toBeInTheDocument();
+      expect(screen.getByTestId('result-a')).toBeInTheDocument();
+      expect(screen.getByTestId('result-b')).toBeInTheDocument();
+      expect(screen.queryByRole('table')).not.toBeInTheDocument();
 
       // Switch to table view
       fireEvent.click(screen.getByText('Table'));
 
-      // Sort dropdown should now be hidden
+      // Sort dropdown and cards should now be hidden, and table should be visible
       expect(screen.queryByTestId('searchable-select')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('result-a')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('result-b')).not.toBeInTheDocument();
+      expect(screen.getByRole('table')).toBeInTheDocument();
 
       // Switch back to cards view
       fireEvent.click(screen.getByText('Cards'));
 
-      // Sort dropdown should be visible again
+      // Sort dropdown and cards should be visible again, and table should be hidden
       expect(screen.getByTestId('searchable-select')).toBeInTheDocument();
+      expect(screen.getByTestId('result-a')).toBeInTheDocument();
+      expect(screen.getByTestId('result-b')).toBeInTheDocument();
+      expect(screen.queryByRole('table')).not.toBeInTheDocument();
     });
   });
 });

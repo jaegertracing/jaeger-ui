@@ -26,7 +26,10 @@ export function TraceTable({ traces, searchUrl }: Props) {
         render: (_: unknown, trace: IOtelTrace) => {
           const link = getTracePageLink(trace.traceID, { fromSearch: searchUrl });
           return (
-            <Link to={{ pathname: link.pathname, search: link.search }} state={link.state}>
+            <Link
+              to={`${link.pathname}${link.search ? `?${link.search}` : ''}`}
+              state={link.state}
+            >
               {trace.traceID.slice(0, displayLen)}
             </Link>
           );

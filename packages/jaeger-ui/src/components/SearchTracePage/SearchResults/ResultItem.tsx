@@ -81,7 +81,7 @@ export default function ResultItem({
         traceName={traceName}
         disableComparision={disableComparision}
       />
-      <Link to={{ pathname: linkTo.pathname, search: linkTo.search }} state={linkTo.state}>
+      <Link to={`${linkTo.pathname}${linkTo.search ? `?${linkTo.search}` : ''}`} state={linkTo.state}>
         <Row>
           <Col xs={24} sm={4} className="ub-p2">
             <Tag className="ub-m1" data-testid={markers.NUM_SPANS} variant="outlined">
