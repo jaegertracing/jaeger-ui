@@ -19,8 +19,8 @@
     "@noble/hashes": "2.2.0",
     "@testing-library/dom": "^10.4.1",
     "depcheck": "1.4.7",
-    "knip": "6.12.2",
-    "eslint-plugin-react-x": "5.7.1",
+    "knip": "6.14.1",
+    "eslint-plugin-react-x": "5.8.0",
     "husky": "9.1.0",
     "jsdom": "29.1.1",
     "lint-staged": "17.0.4",
@@ -34,7 +34,7 @@
   "overrides": {
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "yaml": "2.8.3",
+    "yaml": "2.9.0",
     "@exodus/bytes": {
       "@noble/hashes": "$@noble/hashes"
     }
