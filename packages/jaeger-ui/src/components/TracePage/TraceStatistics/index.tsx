@@ -13,6 +13,7 @@ import PopupSQL from './PopupSql';
 import { getServiceName } from './tableValues';
 import RelativeBar from '../../common/RelativeBar';
 import { formatDurationCompact, ONE_MILLISECOND } from '../../../utils/date';
+import { Microseconds } from '../../../types/units';
 
 type Props = {
   trace: IOtelTrace;
@@ -209,7 +210,13 @@ export default class TraceStatistics extends Component<Props, State> {
     allTableSpans: ITableSpan[],
     uiFind: string | null | undefined
   ): ITableSpan[] => {
+    const hasDetails = allTableSpans.some(s => s.isDetail);
     const allTableSpansChange = allTableSpans.map(s => ({ ...s, searchMatch: false }));
+
+    const isParentWithSubgroup = (row: ITableSpan) => {
+      return hasDetails && !row.isDetail && row.hasSubgroupValue;
+    };
+
     if (typeof uiFindVertexKeys !== 'undefined') {
       uiFindVertexKeys!.forEach(function calc(value) {
         const uiFindVertexKeysSplit = value.split('\u000b');
@@ -245,21 +252,12 @@ export default class TraceStatistics extends Component<Props, State> {
           if (allTableSpansChange[i].isDetail) {
             for (let j = 0; j < allTableSpansChange.length; j++) {
               if (allTableSpansChange[i].parentElement === allTableSpansChange[j].name) {
-                allTableSpansChange[j].searchMatch = true;
+                if (!isParentWithSubgroup(allTableSpansChange[j])) {
+                  allTableSpansChange[j].searchMatch = true;
+                }
               }
             }
           }
-        }
-      }
-    }
-
-    // Parent rows with subgroups should never be highlighted (they are transparent in logic)
-    // We only apply this if there are actually detail rows (subgroups) in the table.
-    const hasDetails = allTableSpansChange.some(s => s.isDetail);
-    if (hasDetails) {
-      for (let i = 0; i < allTableSpansChange.length; i++) {
-        if (!allTableSpansChange[i].isDetail && allTableSpansChange[i].hasSubgroupValue) {
-          allTableSpansChange[i].searchMatch = false;
         }
       }
     }
@@ -331,7 +329,7 @@ export default class TraceStatistics extends Component<Props, State> {
         let displayValue: React.ReactNode = cell;
 
         if (val.valueType === 'time') {
-          const microseconds = (cell as number) * ONE_MILLISECOND;
+          const microseconds = ((cell as number) * ONE_MILLISECOND) as Microseconds;
           const compactValue = formatDurationCompact(microseconds);
           const preciseValue = `${cell}${val.suffix}`;
           displayValue = <Tooltip title={preciseValue}>{compactValue}</Tooltip>;
@@ -342,7 +340,7 @@ export default class TraceStatistics extends Component<Props, State> {
         if (includeBars) {
           return (
             <div className="TraceStatistics--valueContainer">
-              <RelativeBar value={cell as number} maxValue={activeMax} />
+              <RelativeBar value={cell as number} maxValue={val.attribute === 'percent' ? 100 : activeMax} />
               <div className="TraceStatistics--valueDisplay">{displayValue}</div>
             </div>
           );
@@ -401,8 +399,15 @@ export default class TraceStatistics extends Component<Props, State> {
           columns={columns}
           dataSource={groupedAndSubgroupedSpanData}
           rowKey="key"
-          key={groupedAndSubgroupedSpanData.map(r => r.name).join(',')}
-          pagination={false}
+          key={`${this.state.valueNameSelector1}-${this.state.valueNameSelector2}-${this.props.uiFind}-${JSON.stringify(
+            groupedAndSubgroupedSpanData.map(r => r.name)
+          )}`}
+          pagination={{
+            pageSizeOptions: ['10', '20', '50', '100'],
+            showSizeChanger: true,
+            showQuickJumper: true,
+            defaultPageSize: 10,
+          }}
           rowClassName={row =>
             !row.hasSubgroupValue ? 'undefClass--TraceStatistics' : 'MainTableData--TraceStatistics'
           }

@@ -35,14 +35,26 @@ SPDX-License-Identifier: Apache-2.0
   background-color: var(--surface-primary);
 }
 
-/* Ensure hover state works correctly even when Ant Design tries to apply its own background to cells */
-.span-view-table .ant-table-tbody > tr:hover > td {
-  background-color: var(--surface-component-background-hover) !important;
+/* Override Ant Design cells on hover without using !important */
+.span-view-table.ant-table-wrapper .ant-table-tbody > tr.ant-table-row-hover > td,
+.span-view-table.ant-table-wrapper .ant-table-tbody > tr:hover > td {
+  background-color: var(--surface-component-background-hover);
+  color: var(--text-primary);
 }
 
-.TraceStatistics--searchMatch {
-  background: var(--trace-emphasis-highlight) !important;
-  border-color: var(--trace-emphasis-highlight) !important;
+/* Search highlight cell formatting with an inset border highlight */
+.span-view-table.ant-table-wrapper .ant-table-tbody > tr > td.TraceStatistics--searchMatch {
+  background-color: var(--trace-emphasis-highlight);
+  box-shadow: inset 0 0 0 1px var(--trace-emphasis-highlight);
+}
+
+/* Ensure highlighted cells retain their highlight color on hover */
+.span-view-table.ant-table-wrapper
+  .ant-table-tbody
+  > tr.ant-table-row-hover
+  > td.TraceStatistics--searchMatch,
+.span-view-table.ant-table-wrapper .ant-table-tbody > tr:hover > td.TraceStatistics--searchMatch {
+  background-color: var(--trace-emphasis-highlight);
 }
 
 .TraceStatistics--valueContainer {

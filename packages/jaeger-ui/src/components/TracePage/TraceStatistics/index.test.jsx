@@ -512,6 +512,44 @@ describe('<TraceTagOverview>', () => {
     });
   });
 
+  it('highlights parent row directly when parent row own name matches search query', async () => {
+    let componentRef;
+    const TestWrapper = () => {
+      const ref = React.useRef();
+      componentRef = ref;
+      return <TraceStatistics ref={ref} {...defaultProps} />;
+    };
+
+    render(<TestWrapper />);
+
+    const mockTableData = [
+      {
+        name: 'parentitem',
+        isDetail: false,
+        hasSubgroupValue: true,
+        parentElement: 'none',
+        searchMatch: false,
+        key: '0',
+      },
+      {
+        name: 'childitem',
+        isDetail: true,
+        hasSubgroupValue: false,
+        parentElement: 'parentitem',
+        searchMatch: false,
+        key: '1',
+      },
+    ];
+
+    await waitFor(() => {
+      if (componentRef.current) {
+        const result = componentRef.current.searchInTable(undefined, mockTableData, 'parentitem');
+        const parent = result.find(item => item.name === 'parentitem');
+        expect(parent.searchMatch).toBe(true);
+      }
+    });
+  });
+
   it('should test searchInTable with items that have subgroup values but are details', async () => {
     let componentRef;
     const TestWrapper = () => {
@@ -547,6 +585,112 @@ describe('<TraceTagOverview>', () => {
         expect(result[0].searchMatch).toBe(false);
         expect(result[1].searchMatch).toBe(false);
       }
+    });
+  });
+
+  it('renders RelativeBar inside the active column and scales them correctly', async () => {
+    let componentRef;
+    const TestWrapper = () => {
+      const ref = React.useRef();
+      componentRef = ref;
+      return <TraceStatistics ref={ref} {...defaultProps} />;
+    };
+
+    const { container } = render(<TestWrapper />);
+
+    await act(async () => {
+      if (componentRef.current) {
+        componentRef.current.setState({
+          ...componentRef.current.state,
+          colorByAttribute: 'count',
+          tableValue: [
+            {
+              name: 'item-a',
+              isDetail: false,
+              hasSubgroupValue: true,
+              parentElement: 'none',
+              searchMatch: false,
+              key: '0',
+              count: 5,
+              total: 100,
+              percent: 80,
+            },
+            {
+              name: 'item-b',
+              isDetail: false,
+              hasSubgroupValue: true,
+              parentElement: 'none',
+              searchMatch: false,
+              key: '1',
+              count: 10,
+              total: 200,
+              percent: 40,
+            },
+          ],
+        });
+      }
+    });
+
+    await waitFor(() => {
+      const bars = container.querySelectorAll('.RelativeBar--fill');
+      expect(bars).toHaveLength(2);
+
+      const widths = Array.from(bars).map(b => b.style.width);
+      expect(widths).toContain('50%');
+      expect(widths).toContain('100%');
+    });
+  });
+
+  it('scales percent column relative to 100 rather than activeMax', async () => {
+    let componentRef;
+    const TestWrapper = () => {
+      const ref = React.useRef();
+      componentRef = ref;
+      return <TraceStatistics ref={ref} {...defaultProps} />;
+    };
+
+    const { container } = render(<TestWrapper />);
+
+    await act(async () => {
+      if (componentRef.current) {
+        componentRef.current.setState({
+          ...componentRef.current.state,
+          colorByAttribute: 'percent',
+          tableValue: [
+            {
+              name: 'item-a',
+              isDetail: false,
+              hasSubgroupValue: true,
+              parentElement: 'none',
+              searchMatch: false,
+              key: '0',
+              count: 5,
+              total: 100,
+              percent: 80,
+            },
+            {
+              name: 'item-b',
+              isDetail: false,
+              hasSubgroupValue: true,
+              parentElement: 'none',
+              searchMatch: false,
+              key: '1',
+              count: 10,
+              total: 200,
+              percent: 40,
+            },
+          ],
+        });
+      }
+    });
+
+    await waitFor(() => {
+      const bars = container.querySelectorAll('.RelativeBar--fill');
+      expect(bars).toHaveLength(2);
+
+      const widths = Array.from(bars).map(b => b.style.width);
+      expect(widths).toContain('80%');
+      expect(widths).toContain('40%');
     });
   });
 });
