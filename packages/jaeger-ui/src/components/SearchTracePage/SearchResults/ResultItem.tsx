@@ -18,7 +18,7 @@ import colorGenerator from '../../../utils/color-generator';
 import { formatRelativeDate } from '../../../utils/date';
 import { getIncompleteTraceTooltip } from '../../../model/trace-viewer';
 
-import { IOtelTrace, StatusCode } from '../../../types/otel';
+import type { TraceSummary } from '../../../types/trace-summary';
 import type { TracePageLink } from '../../TracePage/url';
 
 import './ResultItem.css';
@@ -30,7 +30,7 @@ type Props = {
   isInDiffCohort: boolean;
   linkTo: TracePageLink;
   toggleComparison: (traceID: string) => void;
-  trace: IOtelTrace;
+  traceSummary: TraceSummary;
   disableComparision: boolean;
 };
 
@@ -41,33 +41,23 @@ export default function ResultItem({
   isInDiffCohort,
   linkTo,
   toggleComparison,
-  trace,
+  traceSummary,
   disableComparision,
 }: Props) {
-  const { duration, services = [], startTime, traceName, traceID, spans, orphanSpanCount } = trace;
+  const {
+    duration,
+    services = [],
+    startTime,
+    traceName,
+    traceID,
+    spanCount,
+    errorSpanCount,
+    orphanSpanCount,
+  } = traceSummary;
 
-  // Initialize state values
-  const [erroredServices, setErroredServices] = React.useState<Set<string>>(new Set());
-  const [numSpans] = React.useState(spans.length);
-  const [numErredSpans, setNumErredSpans] = React.useState(0);
-  const [timeStr, setTimeStr] = React.useState('');
-  const [fromNow, setFromNow] = React.useState<string | boolean>('');
-
-  React.useEffect(() => {
-    const startTimeDayjs = dayjs(startTime / 1000);
-    setTimeStr(startTimeDayjs.format('h:mm:ss a'));
-    setFromNow(startTimeDayjs.fromNow());
-
-    const errored = new Set<string>();
-    const erredCount = spans.filter(sp => {
-      const hasError = sp.status.code === StatusCode.ERROR;
-      if (hasError) errored.add(sp.resource.serviceName);
-      return hasError;
-    }).length;
-
-    setErroredServices(errored);
-    setNumErredSpans(erredCount);
-  }, [startTime, spans]);
+  const startTimeDayjs = dayjs(startTime / 1000);
+  const timeStr = startTimeDayjs.format('h:mm:ss a');
+  const fromNow = startTimeDayjs.fromNow();
 
   return (
     <div className="ResultItem" onClick={trackTraceConversions} role="button">
@@ -85,11 +75,11 @@ export default function ResultItem({
         <Row>
           <Col xs={24} sm={4} className="ub-p2">
             <Tag className="ub-m1" data-testid={markers.NUM_SPANS} variant="outlined">
-              {numSpans} Span{numSpans > 1 && 's'}
+              {spanCount} Span{spanCount > 1 && 's'}
             </Tag>
-            {Boolean(numErredSpans) && (
+            {Boolean(errorSpanCount) && (
               <Tag className="ub-m1" color="red" variant="outlined">
-                {numErredSpans} Error{numErredSpans > 1 && 's'}
+                {errorSpanCount} Error{errorSpanCount > 1 && 's'}
               </Tag>
             )}
             {orphanSpanCount > 0 && (
@@ -103,21 +93,18 @@ export default function ResultItem({
           </Col>
           <Col xs={24} sm={16} className="ub-p2">
             <ul className="ub-list-reset" data-testid={markers.SERVICE_TAGS}>
-              {_sortBy(services, s => s.name).map(service => {
-                const { name, numberOfSpans: count } = service;
-                return (
-                  <li key={name} className="ub-inline-block ub-m1">
-                    <Tag
-                      className="ResultItem--serviceTag"
-                      style={{ borderLeftColor: colorGenerator.getColorByKey(name) }}
-                      variant="outlined"
-                    >
-                      {erroredServices.has(name) && <IoAlert className="ResultItem--errorIcon" />}
-                      {name} ({count})
-                    </Tag>
-                  </li>
-                );
-              })}
+              {_sortBy(services, s => s.name).map(service => (
+                <li key={service.name} className="ub-inline-block ub-m1">
+                  <Tag
+                    className="ResultItem--serviceTag"
+                    style={{ borderLeftColor: colorGenerator.getColorByKey(service.name) }}
+                    variant="outlined"
+                  >
+                    {service.errorSpanCount > 0 && <IoAlert className="ResultItem--errorIcon" />}
+                    {service.name} ({service.spanCount})
+                  </Tag>
+                </li>
+              ))}
             </ul>
           </Col>
           <Col xs={24} sm={4} className="ub-p3 ub-tx-right-align">
