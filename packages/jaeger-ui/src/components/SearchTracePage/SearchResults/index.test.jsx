@@ -260,7 +260,7 @@ describe('<SearchResults>', () => {
       />
     );
     const data = ScatterPlot.mock.calls[0][0].data[0];
-    expect(data.services).toEqual([]);
+    expect(data.serviceCount).toBe(0);
   });
 
   it('handles trace with empty services list', () => {
@@ -284,7 +284,7 @@ describe('<SearchResults>', () => {
       />
     );
     const data = ScatterPlot.mock.calls[0][0].data[0];
-    expect(data.services).toEqual([]);
+    expect(data.serviceCount).toBe(0);
   });
 
   describe('search finished with results', () => {
