@@ -12,14 +12,14 @@ import { formatDurationCompact } from '../../../utils/date';
 
 import { FetchedState, TNil } from '../../../types';
 import { ApiError } from '../../../types/api-error';
-import { Microseconds } from '../../../types/units';
+import type { TraceSummary } from '../../../types/trace-summary';
 import type { TracePageLink } from '../../TracePage/url';
 
 import './ResultItemTitle.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 
 type Props = {
-  duration?: Microseconds;
+  duration?: TraceSummary['duration'];
   durationPercent?: number;
   error?: ApiError;
   isInDiffCohort: boolean;

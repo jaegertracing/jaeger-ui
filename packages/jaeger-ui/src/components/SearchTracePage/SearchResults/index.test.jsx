@@ -44,7 +44,7 @@ vi.mock('./DiffSelection', () =>
 );
 
 vi.mock('./ResultItem', () =>
-  mockDefault(jest.fn(({ trace }) => <div data-testid={`result-${trace.traceID}`} />))
+  mockDefault(jest.fn(({ traceSummary }) => <div data-testid={`result-${traceSummary.traceID}`} />))
 );
 
 vi.mock('./ScatterPlot', () => mockDefault(jest.fn(props => <div data-testid="scatterplot" {...props} />)));
@@ -137,7 +137,7 @@ const baseProps = {
   showStandaloneLink: false,
   skipMessage: false,
   spanLinks: undefined,
-  traces: baseTraces,
+  traceSummaries: baseTraces,
   rawTraces: baseRawTraces,
   sortBy: orderBy.MOST_RECENT,
   handleSortChange: jest.fn(),
@@ -153,13 +153,13 @@ const renderWithRouter = (ui, options = {}) => {
 
 describe('<SearchResults>', () => {
   it('shows the "no results" message when the search result is empty', () => {
-    renderWithRouter(<SearchResults {...baseProps} traces={[]} />);
+    renderWithRouter(<SearchResults {...baseProps} traceSummaries={[]} />);
     expect(screen.getByText(/No trace results\. Try another query\./i)).toBeInTheDocument();
   });
 
   it('uses default skipMessage value when not provided', () => {
     const { skipMessage, ...propsWithoutSkipMessage } = baseProps;
-    renderWithRouter(<SearchResults {...propsWithoutSkipMessage} traces={[]} />);
+    renderWithRouter(<SearchResults {...propsWithoutSkipMessage} traceSummaries={[]} />);
     expect(screen.getByText(/No trace results\. Try another query\./i)).toBeInTheDocument();
   });
 
@@ -220,7 +220,7 @@ describe('<SearchResults>', () => {
         services: [{ name: 'svc-A', spanCount: 1, errorSpanCount: 1 }],
       },
     ];
-    renderWithRouter(<SearchResults {...baseProps} traces={errorTrace} />);
+    renderWithRouter(<SearchResults {...baseProps} traceSummaries={errorTrace} />);
     const scatterProps = ScatterPlot.mock.calls[0][0];
     expect(scatterProps.data[0].color).toBe('red');
   });
@@ -243,7 +243,7 @@ describe('<SearchResults>', () => {
     renderWithRouter(
       <SearchResults
         {...baseProps}
-        traces={[
+        traceSummaries={[
           {
             traceID: 'no-spans',
             traceName: 'Empty Trace',
@@ -267,7 +267,7 @@ describe('<SearchResults>', () => {
     renderWithRouter(
       <SearchResults
         {...baseProps}
-        traces={[
+        traceSummaries={[
           {
             traceID: 'no-services',
             traceName: 'No Services',
@@ -341,7 +341,7 @@ describe('<SearchResults>', () => {
           services: [],
         },
       ];
-      renderWithRouter(<SearchResults {...baseProps} traces={zeroIDTraces} spanLinks={spanLinks} />);
+      renderWithRouter(<SearchResults {...baseProps} traceSummaries={zeroIDTraces} spanLinks={spanLinks} />);
       const calls = ResultItem.mock.calls;
       expect(calls[0][0].linkTo.search).toBe(`uiFind=${uiFind0}`);
       expect(calls[1][0].linkTo.search).toBe(`uiFind=${uiFind1}`);

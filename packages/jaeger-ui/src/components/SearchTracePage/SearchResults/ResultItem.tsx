@@ -18,7 +18,7 @@ import colorGenerator from '../../../utils/color-generator';
 import { formatRelativeDate } from '../../../utils/date';
 import { getIncompleteTraceTooltip } from '../../../model/trace-viewer';
 
-import { TraceSummary } from '../../../types/trace-summary';
+import type { TraceSummary } from '../../../types/trace-summary';
 import type { TracePageLink } from '../../TracePage/url';
 
 import './ResultItem.css';
@@ -30,7 +30,7 @@ type Props = {
   isInDiffCohort: boolean;
   linkTo: TracePageLink;
   toggleComparison: (traceID: string) => void;
-  trace: TraceSummary;
+  traceSummary: TraceSummary;
   disableComparision: boolean;
 };
 
@@ -41,7 +41,7 @@ export default function ResultItem({
   isInDiffCohort,
   linkTo,
   toggleComparison,
-  trace,
+  traceSummary,
   disableComparision,
 }: Props) {
   const {
@@ -53,7 +53,7 @@ export default function ResultItem({
     spanCount,
     errorSpanCount,
     orphanSpanCount,
-  } = trace;
+  } = traceSummary;
 
   const startTimeDayjs = dayjs(startTime / 1000);
   const timeStr = startTimeDayjs.format('h:mm:ss a');
@@ -93,21 +93,18 @@ export default function ResultItem({
           </Col>
           <Col xs={24} sm={16} className="ub-p2">
             <ul className="ub-list-reset" data-testid={markers.SERVICE_TAGS}>
-              {_sortBy(services, s => s.name).map(service => {
-                const { name, spanCount: count, errorSpanCount: errorCount } = service;
-                return (
-                  <li key={name} className="ub-inline-block ub-m1">
-                    <Tag
-                      className="ResultItem--serviceTag"
-                      style={{ borderLeftColor: colorGenerator.getColorByKey(name) }}
-                      variant="outlined"
-                    >
-                      {errorCount > 0 && <IoAlert className="ResultItem--errorIcon" />}
-                      {name} ({count})
-                    </Tag>
-                  </li>
-                );
-              })}
+              {_sortBy(services, s => s.name).map(service => (
+                <li key={service.name} className="ub-inline-block ub-m1">
+                  <Tag
+                    className="ResultItem--serviceTag"
+                    style={{ borderLeftColor: colorGenerator.getColorByKey(service.name) }}
+                    variant="outlined"
+                  >
+                    {service.errorSpanCount > 0 && <IoAlert className="ResultItem--errorIcon" />}
+                    {service.name} ({service.spanCount})
+                  </Tag>
+                </li>
+              ))}
             </ul>
           </Col>
           <Col xs={24} sm={4} className="ub-p3 ub-tx-right-align">

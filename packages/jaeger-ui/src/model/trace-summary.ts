@@ -1,8 +1,9 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { StatusCode, IOtelTrace } from '../types/otel';
-import { ServiceSummary, TraceSummary } from '../types/trace-summary';
+import { StatusCode } from '../types/otel';
+import type { IOtelTrace } from '../types/otel';
+import type { ServiceSummary, TraceSummary } from '../types/trace-summary';
 
 export function traceToTraceSummary(trace: IOtelTrace): TraceSummary {
   const rootSpan = trace.rootSpans[0];

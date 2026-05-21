@@ -189,7 +189,7 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
               showStandaloneLink: Boolean(embedded),
               skipMessage: isHomepage,
               spanLinks: urlQueryParams && urlQueryParams.spanLinks,
-              traces: traceResults,
+              traceSummaries: traceResults,
               rawTraces: traceResultsToDownload,
               sortBy,
               handleSortChange,

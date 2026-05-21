@@ -4,8 +4,9 @@
 import { traceToTraceSummary } from './trace-summary';
 import transformTraceData from './transform-trace-data';
 import traceGenerator from '../demo/trace-generators';
-import { StatusCode, IOtelTrace, IOtelSpan, IResource, SpanKind } from '../types/otel';
-import { Microseconds } from '../types/units';
+import { StatusCode, SpanKind } from '../types/otel';
+import type { IOtelTrace, IOtelSpan, IResource } from '../types/otel';
+import type { Microseconds } from '../types/units';
 
 const us = (n: number) => n as Microseconds;
 
@@ -28,11 +29,7 @@ function makeMinimalTrace(overrides: Partial<IOtelTrace> = {}): IOtelTrace {
   };
 }
 
-function makeSpan(
-  serviceName: string,
-  statusCode: StatusCode = StatusCode.OK,
-  spanID = Math.random().toString(16).slice(2)
-): IOtelSpan {
+function makeSpan(serviceName: string, spanID: string, statusCode: StatusCode = StatusCode.OK): IOtelSpan {
   const resource: IResource = { serviceName, attributes: [] };
   return {
     traceID: 'abc123',
@@ -75,7 +72,7 @@ describe('traceToTraceSummary', () => {
   });
 
   it('extracts root service and operation from the first root span', () => {
-    const rootSpan = makeSpan('frontend', StatusCode.OK, 'root1');
+    const rootSpan = makeSpan('frontend', 'root1');
     rootSpan.name = 'GET /home';
     const trace = makeMinimalTrace({ rootSpans: [rootSpan] });
     const summary = traceToTraceSummary(trace);
@@ -85,9 +82,9 @@ describe('traceToTraceSummary', () => {
   });
 
   it('counts total and per-service error spans', () => {
-    const s1 = makeSpan('svc-a', StatusCode.ERROR, 's1');
-    const s2 = makeSpan('svc-a', StatusCode.OK, 's2');
-    const s3 = makeSpan('svc-b', StatusCode.ERROR, 's3');
+    const s1 = makeSpan('svc-a', 's1', StatusCode.ERROR);
+    const s2 = makeSpan('svc-a', 's2');
+    const s3 = makeSpan('svc-b', 's3', StatusCode.ERROR);
     const trace = makeMinimalTrace({
       spans: [s1, s2, s3],
       services: [
@@ -110,8 +107,8 @@ describe('traceToTraceSummary', () => {
   });
 
   it('reports zero errors when no spans have error status', () => {
-    const s1 = makeSpan('svc-a', StatusCode.OK, 's1');
-    const s2 = makeSpan('svc-a', StatusCode.UNSET, 's2');
+    const s1 = makeSpan('svc-a', 's1');
+    const s2 = makeSpan('svc-a', 's2', StatusCode.UNSET);
     const trace = makeMinimalTrace({
       spans: [s1, s2],
       services: [{ name: 'svc-a', numberOfSpans: 2 }],

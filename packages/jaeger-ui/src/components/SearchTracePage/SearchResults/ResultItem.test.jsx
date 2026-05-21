@@ -33,7 +33,7 @@ beforeEach(() => {
 it('<ResultItem /> should render base case correctly', () => {
   renderWithRouter(
     <ResultItem
-      trace={traceSummary}
+      traceSummary={traceSummary}
       durationPercent={50}
       linkTo={{ pathname: '/' }}
       toggleComparison={() => {}}
@@ -50,7 +50,7 @@ it('<ResultItem /> should render base case correctly', () => {
 it('<ResultItem /> should not render any ServiceTags when there are no services', () => {
   renderWithRouter(
     <ResultItem
-      trace={{ ...traceSummary, services: [] }}
+      traceSummary={{ ...traceSummary, services: [] }}
       durationPercent={50}
       linkTo={{ pathname: '/' }}
       toggleComparison={() => {}}
@@ -77,7 +77,7 @@ it('<ResultItem /> should render error icon on ServiceTags that have an error sp
 
   renderWithRouter(
     <ResultItem
-      trace={summaryWithError}
+      traceSummary={summaryWithError}
       durationPercent={50}
       linkTo={{ pathname: '/' }}
       toggleComparison={() => {}}
@@ -107,7 +107,7 @@ it('passes router state to destination route when linkTo is a TracePageLink', as
         path: '/',
         element: (
           <ResultItem
-            trace={traceSummary}
+            traceSummary={traceSummary}
             durationPercent={50}
             linkTo={{ pathname: '/trace/abc', state: { fromSearch: '/search?service=foo' } }}
             toggleComparison={() => {}}
@@ -136,7 +136,7 @@ it('calls trackConversions on click', () => {
   const spy = jest.spyOn(tracking, 'trackConversions');
   renderWithRouter(
     <ResultItem
-      trace={traceSummary}
+      traceSummary={traceSummary}
       durationPercent={50}
       linkTo={{ pathname: '/' }}
       toggleComparison={() => {}}
