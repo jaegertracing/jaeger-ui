@@ -14,7 +14,6 @@ import { getUrl } from '../url';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';
 import DiffSelection from './DiffSelection';
-import { StatusCode } from '../../../types/otel';
 
 const mockNavigate = jest.fn();
 vi.mock('react-router-dom', async () => {
@@ -96,31 +95,35 @@ afterEach(() => {
 const baseTraces = [
   {
     traceID: 'a',
-    spans: [],
-    durationMicros: 1000,
-    startTimeUnixMicros: 0,
-    endTimeUnixMicros: 1000,
     traceName: 'trace-a',
-    services: [],
-    spanMap: new Map(),
-    rootSpans: [],
+    rootServiceName: 'svc-a',
+    rootOperationName: 'op-a',
+    startTime: 0,
+    duration: 1000,
+    spanCount: 0,
+    errorSpanCount: 0,
     orphanSpanCount: 0,
-    hasErrors: () => false,
+    services: [],
   },
   {
     traceID: 'b',
-    spans: [],
-    durationMicros: 1000,
-    startTimeUnixMicros: 0,
-    endTimeUnixMicros: 1000,
     traceName: 'trace-b',
-    services: [],
-    spanMap: new Map(),
-    rootSpans: [],
+    rootServiceName: 'svc-b',
+    rootOperationName: 'op-b',
+    startTime: 0,
+    duration: 1000,
+    spanCount: 0,
+    errorSpanCount: 0,
     orphanSpanCount: 0,
-    hasErrors: () => false,
+    services: [],
   },
 ];
+
+const baseRawTraces = [
+  { traceID: 'a', spans: [], durationMicros: 1000, startTimeUnixMicros: 0, endTimeUnixMicros: 1000 },
+  { traceID: 'b', spans: [], durationMicros: 1000, startTimeUnixMicros: 0, endTimeUnixMicros: 1000 },
+];
+
 const baseProps = {
   cohortAddTrace: jest.fn(),
   cohortRemoveTrace: jest.fn(),
@@ -135,7 +138,7 @@ const baseProps = {
   skipMessage: false,
   spanLinks: undefined,
   traces: baseTraces,
-  rawTraces: baseTraces,
+  rawTraces: baseRawTraces,
   sortBy: orderBy.MOST_RECENT,
   handleSortChange: jest.fn(),
 };
@@ -202,29 +205,19 @@ describe('<SearchResults>', () => {
     expect(remove).toHaveBeenCalledWith('id-2');
   });
 
-  it('sets trace color to red if error tag is present', () => {
+  it('sets trace color to red if errorSpanCount > 0', () => {
     const errorTrace = [
       {
         traceID: 'err',
         traceName: 'T',
-        startTimeUnixMicros: 0,
-        endTimeUnixMicros: 1000,
-        durationMicros: 1,
-        services: [],
-        spanMap: new Map(),
-        rootSpans: [],
+        rootServiceName: 'svc-A',
+        rootOperationName: 'op-A',
+        startTime: 0,
+        duration: 1,
+        spanCount: 1,
+        errorSpanCount: 1,
         orphanSpanCount: 0,
-        hasErrors: () => true,
-        spans: [
-          {
-            status: { code: StatusCode.ERROR },
-            resource: { serviceName: 'svc-A', attributes: [] },
-            name: 'op-A',
-            spanID: 's1',
-            traceID: 'err',
-            attributes: [],
-          },
-        ],
+        services: [{ name: 'svc-A', spanCount: 1, errorSpanCount: 1 }],
       },
     ];
     renderWithRouter(<SearchResults {...baseProps} traces={errorTrace} />);
@@ -246,7 +239,7 @@ describe('<SearchResults>', () => {
     expect(navigateCall[0]).toContain('/trace/a');
   });
 
-  it('handles trace with no spans', () => {
+  it('handles trace with zero spans', () => {
     renderWithRouter(
       <SearchResults
         {...baseProps}
@@ -254,15 +247,14 @@ describe('<SearchResults>', () => {
           {
             traceID: 'no-spans',
             traceName: 'Empty Trace',
-            startTimeUnixMicros: 0,
-            endTimeUnixMicros: 1000,
-            durationMicros: 1,
-            services: [],
-            spanMap: new Map(),
-            rootSpans: [],
-            spans: [],
+            rootServiceName: '',
+            rootOperationName: '',
+            startTime: 0,
+            duration: 1,
+            spanCount: 0,
+            errorSpanCount: 0,
             orphanSpanCount: 0,
-            hasErrors: () => false,
+            services: [],
           },
         ]}
       />
@@ -271,7 +263,7 @@ describe('<SearchResults>', () => {
     expect(data.services).toEqual([]);
   });
 
-  it('handles trace with no services property', () => {
+  it('handles trace with empty services list', () => {
     renderWithRouter(
       <SearchResults
         {...baseProps}
@@ -279,24 +271,14 @@ describe('<SearchResults>', () => {
           {
             traceID: 'no-services',
             traceName: 'No Services',
-            startTimeUnixMicros: 0,
-            endTimeUnixMicros: 1000,
-            durationMicros: 1,
-            services: [],
-            spanMap: new Map(),
-            rootSpans: [],
+            rootServiceName: 'test-service',
+            rootOperationName: 'test-operation',
+            startTime: 0,
+            duration: 1,
+            spanCount: 1,
+            errorSpanCount: 0,
             orphanSpanCount: 0,
-            hasErrors: () => false,
-            spans: [
-              {
-                resource: { serviceName: 'test-service', attributes: [] },
-                name: 'test-operation',
-                spanID: 's1',
-                traceID: 'no-services',
-                attributes: [],
-                status: { code: 'OK' },
-              },
-            ],
+            services: [],
           },
         ]}
       />
@@ -336,29 +318,27 @@ describe('<SearchResults>', () => {
       const zeroIDTraces = [
         {
           traceID: traceID0,
-          spans: [],
-          durationMicros: 1000,
-          startTimeUnixMicros: 0,
-          endTimeUnixMicros: 1000,
           traceName: traceID0,
-          services: [],
-          spanMap: new Map(),
-          rootSpans: [],
+          rootServiceName: '',
+          rootOperationName: '',
+          startTime: 0,
+          duration: 1000,
+          spanCount: 0,
+          errorSpanCount: 0,
           orphanSpanCount: 0,
-          hasErrors: () => false,
+          services: [],
         },
         {
           traceID: `000${traceID1}`,
-          spans: [],
-          durationMicros: 1000,
-          startTimeUnixMicros: 0,
-          endTimeUnixMicros: 1000,
           traceName: `000${traceID1}`,
-          services: [],
-          spanMap: new Map(),
-          rootSpans: [],
+          rootServiceName: '',
+          rootOperationName: '',
+          startTime: 0,
+          duration: 1000,
+          spanCount: 0,
+          errorSpanCount: 0,
           orphanSpanCount: 0,
-          hasErrors: () => false,
+          services: [],
         },
       ];
       renderWithRouter(<SearchResults {...baseProps} traces={zeroIDTraces} spanLinks={spanLinks} />);
@@ -460,39 +440,17 @@ describe('<SearchResults>', () => {
         expect(URL.createObjectURL).toHaveBeenCalledTimes(1);
         const blobArg = URL.createObjectURL.mock.calls[0][0];
 
-        // Construct expected output by keeping only non-derived fields
-        const expectedTraces = baseProps.rawTraces.map(
-          ({ traceID, spans, durationMicros, startTimeUnixMicros, endTimeUnixMicros }) => ({
-            traceID,
-            spans,
-            durationMicros,
-            startTimeUnixMicros,
-            endTimeUnixMicros,
-          })
-        );
-
-        expect(blobArg.text).toEqual([`{"data":${JSON.stringify(expectedTraces)}}`]);
+        expect(blobArg.text).toEqual([`{"data":${JSON.stringify(baseRawTraces)}}`]);
         expect(URL.revokeObjectURL).toHaveBeenCalledTimes(1);
 
         global.Blob = orig;
       });
 
       it('when create a download file then it can be read back', async () => {
-        // Construct expected output by keeping only non-derived fields
-        const expectedTraces = baseProps.rawTraces.map(
-          ({ traceID, spans, durationMicros, startTimeUnixMicros, endTimeUnixMicros }) => ({
-            traceID,
-            spans,
-            durationMicros,
-            startTimeUnixMicros,
-            endTimeUnixMicros,
-          })
-        );
-
-        const content = `{"data":${JSON.stringify(expectedTraces)}}`;
+        const content = `{"data":${JSON.stringify(baseRawTraces)}}`;
         // Pass the blob content (string) directly to File to avoid JSDOM Blob-in-File issues if any
         // createBlob returns a Blob. getting text from it.
-        const blob = createBlob(baseProps.rawTraces);
+        const blob = createBlob(baseRawTraces);
         // In JSDOM/Node, blob parts are stored. We can extract string.
         // But here we rely on standard APIs.
         // If createBlob returns a real JSDOM Blob, new File([blob]) should work.

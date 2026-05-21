@@ -11,15 +11,15 @@ import { fetchedState } from '../../../constants';
 import { formatDurationCompact } from '../../../utils/date';
 
 import { FetchedState, TNil } from '../../../types';
-import { IOtelTrace } from '../../../types/otel';
 import { ApiError } from '../../../types/api-error';
+import { Microseconds } from '../../../types/units';
 import type { TracePageLink } from '../../TracePage/url';
 
 import './ResultItemTitle.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 
 type Props = {
-  duration?: IOtelTrace['duration'];
+  duration?: Microseconds;
   durationPercent?: number;
   error?: ApiError;
   isInDiffCohort: boolean;

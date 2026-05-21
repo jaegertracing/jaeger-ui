@@ -26,7 +26,7 @@ import { stripEmbeddedState } from '../../../utils/embedded-url';
 
 import { FetchedTrace } from '../../../types';
 import { SearchQuery } from '../../../types/search';
-import { IOtelTrace } from '../../../types/otel';
+import { TraceSummary } from '../../../types/trace-summary';
 
 import './index.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
@@ -46,7 +46,7 @@ type SearchResultsProps = {
   showStandaloneLink: boolean;
   skipMessage?: boolean;
   spanLinks?: Record<string, string> | undefined;
-  traces: IOtelTrace[];
+  traces: TraceSummary[];
   rawTraces: any[];
   sortBy: string;
   handleSortChange: (sortBy: string) => void;
@@ -221,13 +221,13 @@ export function UnconnectedSearchResults({
                   x: t.startTime,
                   y: t.duration,
                   traceID: t.traceID,
-                  size: t.spans.length,
+                  size: t.spanCount,
                   name: t.traceName,
-                  color: t.hasErrors() ? 'red' : '#12939A',
-                  services: t.services || [],
+                  color: t.errorSpanCount > 0 ? 'red' : '#12939A',
+                  services: t.services.map(s => ({ name: s.name, numberOfSpans: s.spanCount })),
                 };
               })}
-              onValueClick={(t: IOtelTrace) => {
+              onValueClick={(t: TraceSummary) => {
                 goToTrace(t.traceID);
               }}
             />
