@@ -31,7 +31,8 @@ import { useShallow } from 'zustand/react/shallow';
 import { ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
 import { Trace } from '../../types/trace';
-import { IOtelTrace } from '../../types/otel';
+import { TraceSummary } from '../../types/trace-summary';
+import { traceToTraceSummary } from '../../model/trace-summary';
 import type { TUrlState } from './url';
 
 interface IQueryOfResults extends Partial<SearchQuery> {
@@ -53,7 +54,7 @@ interface IStateProps {
   traceResultsToDownload: unknown[];
   errors: Array<{ message: string }> | null;
   maxTraceDuration: number;
-  sortedTracesXformer: (traces: Trace[], sortBy: string) => IOtelTrace[];
+  sortedTracesXformer: (traces: Trace[], sortBy: string) => TraceSummary[];
   urlQueryParams: TUrlState | null;
 }
 
@@ -188,7 +189,7 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
               showStandaloneLink: Boolean(embedded),
               skipMessage: isHomepage,
               spanLinks: urlQueryParams && urlQueryParams.spanLinks,
-              traces: traceResults,
+              traceSummaries: traceResults,
               rawTraces: traceResultsToDownload,
               sortBy,
               handleSortChange,
@@ -235,8 +236,7 @@ export const stateTraceDiffXformer = memoizeOne(
 const sortedTracesXformer = memoizeOne((traces: Trace[], sortBy: string) => {
   const traceResults = traces.slice();
   sortTraces(traceResults, sortBy);
-  // Convert to OTEL traces
-  return traceResults.map(t => t.asOtelTrace());
+  return traceResults.map(t => traceToTraceSummary(t.asOtelTrace()));
 });
 
 export function mapStateToProps(
