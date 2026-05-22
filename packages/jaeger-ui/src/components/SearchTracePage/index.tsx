@@ -110,14 +110,14 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
   const { disableFileUploadControl } = config;
   const [sortBy, setSortBy] = useState(orderBy.MOST_RECENT);
 
-  const traceResults = sortedTracesXformer(traces, sortBy);
+  const traceSummaries = sortedTracesXformer(traces, sortBy);
   const diffCohort = useMemo(() => {
-    const summaryMap = new Map(traceResults.map(s => [s.traceID, s]));
+    const summaryMap = new Map(traceSummaries.map(s => [s.traceID, s]));
     return cohort.flatMap(id => {
       const s = summaryMap.get(id);
       return s ? [s] : [];
     });
-  }, [cohort, traceResults]);
+  }, [cohort, traceSummaries]);
 
   // componentDidMount logic - intentionally runs only on mount
   useEffect(() => {
@@ -138,7 +138,7 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
     trackSortByChange(newSortBy);
   }, []);
 
-  const hasTraceResults = traceResults && traceResults.length > 0;
+  const hasTraceResults = traceSummaries && traceSummaries.length > 0;
   const showErrors = errors && !loadingTraces;
   const showLogo = isHomepage && !hasTraceResults && !loadingTraces && !errors;
 
@@ -189,7 +189,7 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
               showStandaloneLink: Boolean(embedded),
               skipMessage: isHomepage,
               spanLinks: urlQueryParams && urlQueryParams.spanLinks,
-              traceSummaries: traceResults,
+              traceSummaries,
               rawTraces: traceResultsToDownload,
               sortBy,
               handleSortChange,
