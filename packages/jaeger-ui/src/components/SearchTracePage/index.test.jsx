@@ -4,7 +4,7 @@
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-const { useEmbeddedStateMock, getConfigMock } = vi.hoisted(() => ({
+const { useEmbeddedStateMock, getConfigMock, useSearchTracesMock } = vi.hoisted(() => ({
   useEmbeddedStateMock: jest.fn().mockReturnValue(null),
   getConfigMock: jest.fn(() => ({
     disableFileUploadControl: false,
@@ -14,6 +14,7 @@ const { useEmbeddedStateMock, getConfigMock } = vi.hoisted(() => ({
       customWebAnalytics: null,
     },
   })),
+  useSearchTracesMock: jest.fn(() => ({ data: [], isLoading: false, error: null })),
 }));
 
 vi.mock('../../stores/embedded-store', () => ({
@@ -34,6 +35,7 @@ vi.mock('../../api/v3/client', () => ({
 vi.mock('../../hooks/useTraceDiscovery', () => ({
   useServices: jest.fn(() => ({ data: [], isLoading: false })),
   useSpanNames: jest.fn(() => ({ data: [], isLoading: false })),
+  useSearchTraces: (...args) => useSearchTracesMock(...args),
 }));
 
 import React from 'react';
@@ -43,7 +45,6 @@ import { Provider } from 'react-redux';
 import { SearchTracePageImpl as SearchTracePage, mapStateToProps } from './index';
 import { fetchedState } from '../../constants';
 import traceGenerator from '../../demo/trace-generators';
-import { MOST_RECENT, MOST_SPANS } from '../../model/order-by';
 import transformTraceData from '../../model/transform-trace-data';
 import { store as globalStore } from '../../utils/configure-store';
 import { useServices } from '../../hooks/useTraceDiscovery';
@@ -66,40 +67,20 @@ const AllProvider = ({ children }) => (
 );
 
 describe('<SearchTracePage>', () => {
-  let traces;
-  let traceResultsToDownload;
   let props;
 
-  const getDefaultProps = () => {
-    const traces = [
-      { traceID: 'a', spans: [], processes: {} },
-      { traceID: 'b', spans: [], processes: {} },
-    ];
-    const traceResultsToDownload = [
-      { traceID: 'a', spans: [], processes: {} },
-      { traceID: 'b', spans: [], processes: {} },
-    ];
-    return {
-      queryOfResults: null, // null on initial page load
-      traces,
-      traceResultsToDownload,
-      tracesInRedux: { search: { results: [], query: null } },
-      isHomepage: false,
-      maxTraceDuration: 100,
-      numberOfTraceResults: traces.length,
-      sortedTracesXformer: jest.fn().mockReturnValue([]),
-      urlQueryParams: { service: 'svc-a' },
-      searchTraces: jest.fn(),
-      fetchMultipleTraces: jest.fn(),
-      loadJsonTraces: jest.fn(),
-    };
-  };
+  const getDefaultProps = () => ({
+    traceResultsToDownload: [],
+    isHomepage: false,
+    loadJsonTraces: jest.fn(),
+    urlQueryParams: { service: 'svc-a' },
+  });
 
   beforeEach(() => {
     props = getDefaultProps();
-    traces = props.traces;
-    traceResultsToDownload = props.traceResultsToDownload;
     useEmbeddedStateMock.mockReturnValue(null);
+    useSearchTracesMock.mockClear();
+    useSearchTracesMock.mockReturnValue({ data: [], isLoading: false, error: null });
     getConfigMock.mockReset();
     getConfigMock.mockReturnValue({
       disableFileUploadControl: false,
@@ -111,48 +92,7 @@ describe('<SearchTracePage>', () => {
     });
   });
 
-  it('searches for traces if `service` or `traceID` are in the query string', () => {
-    render(
-      <AllProvider>
-        <SearchTracePage {...props} />
-      </AllProvider>
-    );
-    expect(props.searchTraces).toHaveBeenCalledTimes(1);
-  });
-
-  it('searches for traces on initial page load when URL has search params (no previous results)', () => {
-    const testProps = {
-      ...props,
-      queryOfResults: null, // No previous search results
-      urlQueryParams: { service: 'test-service', limit: 20 },
-      searchTraces: jest.fn(),
-    };
-    render(
-      <AllProvider>
-        <SearchTracePage {...testProps} />
-      </AllProvider>
-    );
-    expect(testProps.searchTraces).toHaveBeenCalledTimes(1);
-    expect(testProps.searchTraces).toHaveBeenCalledWith({ service: 'test-service', limit: 20 });
-  });
-
-  it('does not search again if URL params match existing queryOfResults', () => {
-    const query = { service: 'svc-a', limit: 20 };
-    const testProps = {
-      ...props,
-      queryOfResults: query, // Already have results for this query
-      urlQueryParams: query, // Same query in URL
-      searchTraces: jest.fn(),
-    };
-    render(
-      <AllProvider>
-        <SearchTracePage {...testProps} />
-      </AllProvider>
-    );
-    expect(testProps.searchTraces).not.toHaveBeenCalled();
-  });
-
-  it('uses React Query hooks to fetch services', () => {
+  it('uses React Query to fetch services', () => {
     render(
       <AllProvider>
         <SearchTracePage {...props} />
@@ -161,8 +101,31 @@ describe('<SearchTracePage>', () => {
     expect(useServices).toHaveBeenCalled();
   });
 
-  it('shows a loading indicator when services are being fetched', async () => {
-    useServices.mockReturnValue({ data: [], isLoading: true, error: null });
+  it('calls useSearchTraces with query derived from URL params', () => {
+    render(
+      <AllProvider>
+        <SearchTracePage {...props} />
+      </AllProvider>
+    );
+    expect(useSearchTracesMock).toHaveBeenCalled();
+    const [query] = useSearchTracesMock.mock.calls[0];
+    expect(query).not.toBeNull();
+    expect(query.service).toBe('svc-a');
+  });
+
+  it('passes null query to useSearchTraces when no service is in URL params', () => {
+    const testProps = { ...props, urlQueryParams: null };
+    render(
+      <AllProvider>
+        <SearchTracePage {...testProps} />
+      </AllProvider>
+    );
+    const [query] = useSearchTracesMock.mock.calls[0];
+    expect(query).toBeNull();
+  });
+
+  it('shows a loading indicator when traces are loading', () => {
+    useSearchTracesMock.mockReturnValue({ data: [], isLoading: true, error: null });
     const { container } = render(
       <AllProvider>
         <SearchTracePage {...props} />
@@ -171,52 +134,27 @@ describe('<SearchTracePage>', () => {
     expect(container.querySelector('.LoadingIndicator')).toBeInTheDocument();
   });
 
-  it('calls sortedTracesXformer with correct arguments', () => {
-    const sortBy = MOST_RECENT;
-    const testProps = { ...props, sortedTracesXformer: jest.fn().mockReturnValue([]) };
-    render(
-      <AllProvider>
-        <SearchTracePage {...testProps} />
-      </AllProvider>
-    );
-    expect(testProps.sortedTracesXformer).toHaveBeenCalledWith(traces, sortBy);
-  });
-
-  it('handles sort change correctly', () => {
-    // For functional components, we verify behavior via props passed to child
-    const testProps = { ...props, sortedTracesXformer: jest.fn().mockReturnValue([]) };
-    render(
-      <AllProvider>
-        <SearchTracePage {...testProps} />
-      </AllProvider>
-    );
-    // Initially sorted by MOST_RECENT
-    expect(testProps.sortedTracesXformer).toHaveBeenCalledWith(traces, MOST_RECENT);
-  });
-
   it('shows a search form', () => {
-    const services = [{ name: 'svc-a', operations: ['op-a'] }];
-    const testProps = { ...props, services };
     const { container } = render(
       <AllProvider>
-        <SearchTracePage {...testProps} />
+        <SearchTracePage {...props} />
       </AllProvider>
     );
     expect(container.querySelector('[data-node-key="searchForm"]')).toBeInTheDocument();
   });
 
-  it('shows an error message if there is an error message', () => {
-    const testProps = { ...props, errors: [{ message: 'big-error' }] };
+  it('shows an error message if the search query returns an error', () => {
+    useSearchTracesMock.mockReturnValue({ data: [], isLoading: false, error: new Error('big-error') });
     const { container } = render(
       <AllProvider>
-        <SearchTracePage {...testProps} />
+        <SearchTracePage {...props} />
       </AllProvider>
     );
     expect(container.querySelector('.js-test-error-message')).toBeInTheDocument();
   });
 
   it('shows the logo prior to searching', () => {
-    const testProps = { ...props, isHomepage: true, traces: [] };
+    const testProps = { ...props, isHomepage: true, urlQueryParams: null };
     const { container } = render(
       <AllProvider>
         <SearchTracePage {...testProps} />
@@ -287,7 +225,6 @@ describe('mapStateToProps()', () => {
 
   it('converts state to the necessary props', () => {
     const trace = transformTraceData(traceGenerator.trace({}));
-    // rawTraces holds the untransformed API payload; results holds IDs.
     const rawTracePayload = { traceID: trace.traceID, spans: trace.spans, processes: trace.processes };
     const stateTrace = {
       search: {
@@ -296,35 +233,27 @@ describe('mapStateToProps()', () => {
       },
       rawTraces: [rawTracePayload],
     };
-    const stateServices = {
-      loading: false,
-      services: ['svc-a'],
-      operationsForService: {},
-      error: null,
-    };
     const state = {
       trace: stateTrace,
-      services: stateServices,
-      config: {
-        disableFileUploadControl: false,
-      },
+      config: { disableFileUploadControl: false },
     };
 
-    const { maxTraceDuration, traceResultsToDownload, traces, ...rest } = mapStateToProps(state, {
+    const { traceResultsToDownload, isHomepage, urlQueryParams } = mapStateToProps(state, {
       search: '',
     });
-    expect(traces).toHaveLength(stateTrace.search.results.length);
-    expect(traces[0].traceID).toBe(trace.traceID);
+    expect(isHomepage).toBe(true);
+    expect(urlQueryParams).toBeNull();
     expect(traceResultsToDownload[0].traceID).toBe(rawTracePayload.traceID);
-    expect(maxTraceDuration).toBe(trace.duration);
+  });
 
-    expect(rest).toEqual({
-      queryOfResults: undefined,
-      isHomepage: true,
-      sortedTracesXformer: expect.any(Function),
-      urlQueryParams: null,
-      loadingTraces: false,
-      errors: null,
-    });
+  it('sets isHomepage to false when URL has search params', () => {
+    const state = {
+      trace: { search: { results: [], state: fetchedState.DONE }, rawTraces: [] },
+      config: {},
+    };
+    const { isHomepage, urlQueryParams } = mapStateToProps(state, { search: '?service=svc-a' });
+    expect(isHomepage).toBe(false);
+    expect(urlQueryParams).not.toBeNull();
+    expect(urlQueryParams.service).toBe('svc-a');
   });
 });
