@@ -1,6 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+import { useMemo } from 'react';
 import { useQuery, useQueries, UseQueryResult } from '@tanstack/react-query';
 import JaegerAPI from '../api/jaeger';
 import { fetchedState } from '../constants';
@@ -59,19 +60,24 @@ export function useTraces(ids: string[]): Map<string, FetchedTrace> {
     })),
   });
 
-  return new Map(
-    ids.map((id, i) => {
-      const r = results[i];
-      if (!r || r.isPending) {
-        return [id, { id, state: fetchedState.LOADING }] as [string, FetchedTrace];
-      }
-      if (r.isError) {
-        return [id, { id, state: fetchedState.ERROR, error: r.error as any }] as [string, FetchedTrace];
-      }
-      if (r.data) {
-        return [id, { id, data: r.data, state: fetchedState.DONE }] as [string, FetchedTrace];
-      }
-      return [id, { id }] as [string, FetchedTrace];
-    })
+  return useMemo(
+    () =>
+      new Map(
+        ids.map((id, i) => {
+          const r = results[i];
+          if (!r || r.isPending) {
+            return [id, { id, state: fetchedState.LOADING }] as [string, FetchedTrace];
+          }
+          if (r.isError) {
+            return [id, { id, state: fetchedState.ERROR, error: r.error as any }] as [string, FetchedTrace];
+          }
+          if (r.data) {
+            return [id, { id, data: r.data, state: fetchedState.DONE }] as [string, FetchedTrace];
+          }
+          return [id, { id }] as [string, FetchedTrace];
+        })
+      ),
+    // eslint-disable-next-line react-x/exhaustive-deps
+    [results]
   );
 }
