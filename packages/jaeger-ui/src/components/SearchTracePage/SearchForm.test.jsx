@@ -420,10 +420,8 @@ describe('submitForm()', () => {
     it('omits values when they are falsy', () => {
       fields.minDuration = undefined;
       fields.maxDuration = undefined;
-      submitForm(fields, searchTraces);
-      const { calls } = searchTraces.mock;
-      expect(calls.length).toBe(1);
-      const { minDuration, maxDuration } = calls[0][0];
+      const url = submitForm(fields);
+      const { minDuration, maxDuration } = getUrlParams(url);
       expect(minDuration).toBe(undefined);
       expect(maxDuration).toBe(undefined);
     });
