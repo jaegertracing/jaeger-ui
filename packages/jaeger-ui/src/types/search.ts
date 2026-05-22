@@ -7,8 +7,8 @@ export type SearchQuery = {
   end: number | string;
   limit: number | string;
   lookback: string;
-  maxDuration: null | string;
-  minDuration: null | string;
+  maxDuration: string | undefined;
+  minDuration: string | undefined;
   operation: string | TNil;
   service: string;
   start: number | string;

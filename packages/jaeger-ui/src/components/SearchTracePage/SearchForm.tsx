@@ -319,8 +319,8 @@ export function submitForm(
     start: String(start),
     end: String(end),
     tags: convTagsLogfmt(tags) || undefined,
-    minDuration: minDuration || null,
-    maxDuration: maxDuration || null,
+    minDuration: minDuration || undefined,
+    maxDuration: maxDuration || undefined,
   };
   searchTraces(query);
   return getSearchUrl(query as Parameters<typeof getSearchUrl>[0]);

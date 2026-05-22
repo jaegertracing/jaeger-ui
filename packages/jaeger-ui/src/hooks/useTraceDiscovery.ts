@@ -1,9 +1,11 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useQuery, UseQueryResult } from '@tanstack/react-query';
+import { useQuery, skipToken, UseQueryResult } from '@tanstack/react-query';
 import { jaegerClient } from '../api/v3/client';
 import { localeStringComparator } from '../utils/sort';
+import type { SearchQuery } from '../types/search';
+import type { TraceSummary } from '../types/trace-summary';
 
 /**
  * React Query hook to fetch the list of services from the Jaeger API.
@@ -20,6 +22,19 @@ export function useServices(): UseQueryResult<string[]> {
 }
 
 /**
+ * React Query hook to search for traces by query parameters.
+ * Calls /api/v3/trace-summaries and returns TraceSummary[].
+ * Pass null to suppress the fetch (e.g. on the homepage before the user submits a search).
+ */
+export function useSearchTraces(query: SearchQuery | null): UseQueryResult<TraceSummary[]> {
+  return useQuery({
+    queryKey: ['traceSummaries', query],
+    queryFn: query ? () => jaegerClient.fetchTraceSummaries(query) : skipToken,
+    staleTime: 30 * 1000, // 30 seconds
+  });
+}
+
+/**
  * React Query hook to fetch the list of span names (operations) for a given service.
  * @param service - The service name
  * @param spanKind - Optional span kind to filter by (e.g. 'server')
@@ -31,8 +46,7 @@ export function useSpanNames(
 ): UseQueryResult<{ name: string; spanKind: string }[]> {
   return useQuery({
     queryKey: ['spanNames', service],
-    queryFn: () => jaegerClient.fetchSpanNames(service!),
-    enabled: !!service, // Only fetch when service is selected
+    queryFn: service ? () => jaegerClient.fetchSpanNames(service) : skipToken,
     staleTime: 60 * 1000, // 1 minute
     refetchOnWindowFocus: true,
     select: data => {
