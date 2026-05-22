@@ -33,9 +33,12 @@ const ServiceSummarySchema = z.object({
 });
 
 const ApiTraceSummarySchema = z.object({
-  traceID: z.string(),
+  traceID: traceIdHex,
   rootServiceName: z.string(),
   rootOperationName: z.string(),
+  // Nanosecond timestamps arrive as JSON numbers from the current backend.
+  // Precision loss is unavoidable at this level since JSON.parse rounds int64 values;
+  // microsecond-level results remain within Number.MAX_SAFE_INTEGER.
   minStartTimeUnixNano: z.number(),
   maxEndTimeUnixNano: z.number(),
   spanCount: z.number().int().nonnegative(),

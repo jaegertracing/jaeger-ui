@@ -77,12 +77,14 @@ export class JaegerClient {
     const data = await response.json();
     const validated = TraceSummariesResponseSchema.parse(data);
 
+    // Nanoseconds from the backend are JSON numbers (precision already limited by JSON.parse
+    // for large int64 values). Dividing by 1000 gives microseconds that fit safely in a float.
+    // Conforms to TraceSummary: startTime and duration are Microseconds (number).
     return validated.summaries.map(s => ({
       traceID: s.traceID,
       traceName: `${s.rootServiceName}: ${s.rootOperationName}`,
       rootServiceName: s.rootServiceName,
       rootOperationName: s.rootOperationName,
-      // API returns nanoseconds; TraceSummary uses microseconds
       startTime: (s.minStartTimeUnixNano / 1000) as Microseconds,
       duration: ((s.maxEndTimeUnixNano - s.minStartTimeUnixNano) / 1000) as Microseconds,
       spanCount: s.spanCount,

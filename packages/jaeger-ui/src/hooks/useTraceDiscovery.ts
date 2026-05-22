@@ -22,12 +22,6 @@ export function useServices(): UseQueryResult<string[]> {
 }
 
 /**
- * React Query hook to fetch the list of span names (operations) for a given service.
- * @param service - The service name
- * @param spanKind - Optional span kind to filter by (e.g. 'server')
- * @returns Query result with array of span name / span kind pairs. Span kinds are lowercase.
- */
-/**
  * React Query hook to search for traces by query parameters.
  * Calls /api/v3/trace-summaries and returns TraceSummary[].
  * Pass null to suppress the fetch (e.g. on the homepage before the user submits a search).
@@ -41,6 +35,12 @@ export function useSearchTraces(query: SearchQuery | null): UseQueryResult<Trace
   });
 }
 
+/**
+ * React Query hook to fetch the list of span names (operations) for a given service.
+ * @param service - The service name
+ * @param spanKind - Optional span kind to filter by (e.g. 'server')
+ * @returns Query result with array of span name / span kind pairs. Span kinds are lowercase.
+ */
 export function useSpanNames(
   service: string | null,
   spanKind?: string
