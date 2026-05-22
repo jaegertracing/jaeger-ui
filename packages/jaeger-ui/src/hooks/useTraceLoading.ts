@@ -44,6 +44,9 @@ export function useTrace(traceId: string): UseQueryResult<IOtelTrace> {
   });
 }
 
+// TODO: useTraces returns Map<string, FetchedTrace> (legacy shape) while useTrace returns
+// UseQueryResult<IOtelTrace>. Callers (TraceDiff, DDG) still expect FetchedTrace, so align
+// both hooks to return UseQueryResult<IOtelTrace> once those callers are migrated.
 export function useTraces(ids: string[]): Map<string, FetchedTrace> {
   const results = useQueries({
     queries: ids.map(id => ({
