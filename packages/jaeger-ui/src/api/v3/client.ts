@@ -60,19 +60,19 @@ export class JaegerClient {
    */
   async fetchTraceSummaries(query: SearchQuery): Promise<TraceSummary[]> {
     const params = new URLSearchParams();
-    if (query.service) params.set('query.serviceName', query.service);
-    if (query.operation) params.set('query.operationName', String(query.operation));
+    if (query.service) params.set('query.service_name', query.service);
+    if (query.operation) params.set('query.operation_name', String(query.operation));
     // start/end are microsecond epoch strings from the URL; convert to ISO for the v3 API.
     // Guard with Number.isFinite to drop malformed URL params gracefully.
     const startUs = Number(query.start);
     const endUs = Number(query.end);
     if (Number.isFinite(startUs) && startUs > 0)
-      params.set('query.startTimeMin', new Date(startUs / 1000).toISOString());
+      params.set('query.start_time_min', new Date(startUs / 1000).toISOString());
     if (Number.isFinite(endUs) && endUs > 0)
-      params.set('query.startTimeMax', new Date(endUs / 1000).toISOString());
-    if (query.limit) params.set('query.searchDepth', String(query.limit));
-    if (query.minDuration) params.set('query.durationMin', query.minDuration);
-    if (query.maxDuration) params.set('query.durationMax', query.maxDuration);
+      params.set('query.start_time_max', new Date(endUs / 1000).toISOString());
+    if (query.limit) params.set('query.search_depth', String(query.limit));
+    if (query.minDuration) params.set('query.duration_min', query.minDuration);
+    if (query.maxDuration) params.set('query.duration_max', query.maxDuration);
     if (query.tags) params.set('query.attributes', query.tags);
 
     const url = `${this.apiRoot}/trace-summaries?${params.toString()}`;
