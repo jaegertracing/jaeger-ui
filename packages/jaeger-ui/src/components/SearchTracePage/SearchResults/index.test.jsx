@@ -501,4 +501,24 @@ describe('<SearchResults>', () => {
       expect(screen.queryByTestId('new-window-icon')).not.toBeInTheDocument();
     });
   });
+
+  describe('resultView toggle', () => {
+    it('hides SelectSort when table view is selected', () => {
+      renderWithRouter(<SearchResults {...baseProps} />);
+      // Initially in cards view, sort dropdown should be visible
+      expect(screen.getByTestId('searchable-select')).toBeInTheDocument();
+
+      // Switch to table view
+      fireEvent.click(screen.getByText('Table'));
+
+      // Sort dropdown should now be hidden
+      expect(screen.queryByTestId('searchable-select')).not.toBeInTheDocument();
+
+      // Switch back to cards view
+      fireEvent.click(screen.getByText('Cards'));
+
+      // Sort dropdown should be visible again
+      expect(screen.getByTestId('searchable-select')).toBeInTheDocument();
+    });
+  });
 });

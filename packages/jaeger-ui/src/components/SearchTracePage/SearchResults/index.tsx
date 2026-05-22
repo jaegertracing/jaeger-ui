@@ -3,7 +3,8 @@
 
 import * as React from 'react';
 import { useCallback } from 'react';
-import { Select } from 'antd';
+import { Radio, Select } from 'antd';
+import type { RadioChangeEvent } from 'antd/es/radio';
 import { Link, useNavigate } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
 import queryString from 'query-string';
@@ -11,6 +12,7 @@ import queryString from 'query-string';
 import AltViewOptions from './AltViewOptions';
 import DownloadResults from './DownloadResults';
 import DiffSelection from './DiffSelection';
+import { TraceTable } from './TraceTable';
 import * as markers from './index.markers';
 import { EAltViewActions, trackAltView } from './index.track';
 import ResultItem from './ResultItem';
@@ -143,6 +145,13 @@ export function UnconnectedSearchResults({
 }: SearchResultsProps) {
   const navigate = useNavigate();
 
+  const [resultView, setResultView] = React.useState<'cards' | 'table'>('cards');
+
+  const onResultViewChange = useCallback((e: RadioChangeEvent) => {
+    const v = e.target.value;
+    if (v === 'cards' || v === 'table') setResultView(v);
+  }, []);
+
   const toggleComparison = useCallback(
     (traceID: string, remove?: boolean) => {
       if (remove) {
@@ -237,8 +246,21 @@ export function UnconnectedSearchResults({
           <h2 className="ub-m0 u-flex-1">
             {traceSummaries.length} Trace{traceSummaries.length > 1 && 's'}
           </h2>
-          {traceResultsView && <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />}
+          {traceResultsView && resultView === 'cards' && (
+            <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />
+          )}
           {traceResultsView && <DownloadResults onDownloadResultsClicked={onDownloadResultsClicked} />}
+          {traceResultsView && (
+            <Radio.Group
+              value={resultView}
+              onChange={onResultViewChange}
+              size="small"
+              aria-label="Result view"
+            >
+              <Radio.Button value="cards">Cards</Radio.Button>
+              <Radio.Button value="table">Table</Radio.Button>
+            </Radio.Group>
+          )}
           <AltViewOptions traceResultsView={traceResultsView} onDdgViewClicked={onDdgViewClicked} />
           {showStandaloneLink && (
             <Link
@@ -257,8 +279,8 @@ export function UnconnectedSearchResults({
           <SearchResultsDDG location={location as any} />
         </div>
       )}
-      {traceResultsView && diffSelection}
-      {traceResultsView && (
+      {traceResultsView && resultView === 'cards' && diffSelection}
+      {traceResultsView && resultView === 'cards' && (
         <ul className="ub-list-reset">
           {traceSummaries.map(traceSummary => (
             <li className="ub-my3" key={traceSummary.traceID}>
@@ -279,6 +301,7 @@ export function UnconnectedSearchResults({
           ))}
         </ul>
       )}
+      {traceResultsView && resultView === 'table' && <TraceTable traces={traces} searchUrl={searchUrl} />}
     </div>
   );
 }
