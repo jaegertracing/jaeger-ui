@@ -23,6 +23,11 @@ export function populateTraceCache(trace: IOtelTrace): void {
   queryClient.setQueryData(TRACE_QUERY_KEY(trace.traceID), trace);
 }
 
+// TODO: staleTime: Infinity is incorrect — Jaeger returns partial traces if spans are still arriving
+// (availability over consistency). Instead, poll every 60s for up to 5 minutes after first load,
+// then stop. Use meta.firstFetchedAt (stamped at query creation, not updated on refetch) to track
+// elapsed time: refetchInterval: q => Date.now() - (q.meta.firstFetchedAt as number) < 5*60*1000 ? 60_000 : false
+// gcTime controls eviction from memory once no component is using the trace.
 export function useTrace(traceId: string): UseQueryResult<IOtelTrace> {
   return useQuery({
     queryKey: TRACE_QUERY_KEY(traceId),
