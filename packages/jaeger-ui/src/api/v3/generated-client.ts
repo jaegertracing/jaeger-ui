@@ -185,9 +185,6 @@ export const schemas = {
   jaeger_api_v3_FindTracesRequest,
 };
 
-/*
- */
-
 // Export commonly used schemas individually for convenience
 export { jaeger_api_v3_GetServicesResponse as ServicesResponseSchema };
 export { jaeger_api_v3_GetOperationsResponse as OperationsResponseSchema };

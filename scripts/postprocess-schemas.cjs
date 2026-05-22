@@ -45,20 +45,18 @@ content = content.replace(/\.partial\(\)\s*/g, '');
 const afterCountPartial = (content.match(/\.partial\(\)/g) || []).length;
 
 // 3. Remove Zodios import (unused — we only use the Zod schemas, not the Zodios client)
-const zodiosImportRegex = /import\s+\{\s*makeApi,\s*Zodios.*?\} from '@zodios\/core';\n?/g;
+const zodiosImportRegex = /import\s+\{\s*makeApi,\s*Zodios.*?\} from ['"]@zodios\/core['"];\n?/g;
 const beforeZodios = content;
 content = content.replace(zodiosImportRegex, '');
 if (content !== beforeZodios) console.log('✅ Removed Zodios import');
 
-// 4. Comment out Zodios usage
-content = content.replace(/(const endpoints = makeApi\(\[[\s\S]*?\]\);)/, '/*\n$1\n*/');
-
+// 4. Remove Zodios client code (unused — we only use the Zod schemas)
+content = content.replace(/\nconst endpoints = makeApi\(\[[\s\S]*?\]\);\n?/, '\n');
 content = content.replace(/\nexport const api = new Zodios\(endpoints\);\n?/, '\n');
 content = content.replace(
   /\nexport function createApiClient\(baseUrl: string, options\?: ZodiosOptions\) \{[\s\S]*?\}\n?/,
   '\n'
 );
-content = content.replace(/\nconst endpoints = makeApi\(\[[\s\S]*?\]\);\n?/, '\n');
 
 // 5. Append convenience exports
 // The generator prefixes schema names with the package path (e.g. jaeger_api_v3_),
