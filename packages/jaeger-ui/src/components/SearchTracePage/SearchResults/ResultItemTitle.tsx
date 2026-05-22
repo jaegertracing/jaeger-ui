@@ -82,7 +82,7 @@ export default function ResultItemTitle({
       {!disableComparision && <Checkbox {...checkboxProps} />}
       {linkTo ? (
         <Link
-          to={{ pathname: linkTo.pathname, search: linkTo.search }}
+          to={`${linkTo.pathname}${linkTo.search ? `?${linkTo.search}` : ''}`}
           state={linkTo.state}
           className={wrapperClassName}
           target={targetBlank ? getTargetEmptyOrBlank() : undefined}
