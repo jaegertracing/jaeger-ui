@@ -24,7 +24,6 @@ import * as orderBy from '../../../model/order-by';
 import { getPercentageOfDuration } from '../../../utils/date';
 import { stripEmbeddedState } from '../../../utils/embedded-url';
 
-import { FetchedTrace } from '../../../types';
 import { SearchQuery } from '../../../types/search';
 import { TraceSummary } from '../../../types/trace-summary';
 
@@ -36,7 +35,7 @@ import SearchableSelect from '../../common/SearchableSelect';
 type SearchResultsProps = {
   cohortAddTrace: (traceId: string) => void;
   cohortRemoveTrace: (traceId: string) => void;
-  diffCohort: FetchedTrace[];
+  diffCohort: TraceSummary[];
   disableComparisons: boolean;
   hideGraph: boolean;
   loading: boolean;
@@ -208,7 +207,7 @@ export function UnconnectedSearchResults({
       </React.Fragment>
     );
   }
-  const cohortIds = new Set(diffCohort.map(datum => datum.id));
+  const cohortIds = new Set(diffCohort.map(datum => datum.traceID));
   const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
   return (
     <div className="SearchResults">

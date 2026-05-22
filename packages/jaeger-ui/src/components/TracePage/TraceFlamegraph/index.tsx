@@ -6,6 +6,7 @@ import { FlamegraphRenderer, convertJaegerTraceToProfile } from '@pyroscope/flam
 import _cloneDeep from 'lodash/cloneDeep';
 
 import { useThemeMode } from '../../App/ThemeProvider';
+import OtelTraceFacade from '../../../model/OtelTraceFacade';
 
 import '@pyroscope/flamegraph/dist/index.css';
 import './index.css';
@@ -13,9 +14,12 @@ import './index.css';
 const TraceFlamegraph = ({ trace }: any) => {
   const { mode } = useThemeMode();
 
+  // convertJaegerTraceToProfile expects the legacy Jaeger Trace shape (operationName, process, etc.).
+  // IOtelTrace is backed by OtelTraceFacade, so use toLegacyTrace() to get the compatible shape.
   // Cloned b/c convertJaegerTraceToProfile or FlamegraphRenderer can possibly mutate the trace
   // https://github.com/jaegertracing/jaeger-ui/issues/2483
-  const convertedProfile = trace && trace.data ? convertJaegerTraceToProfile(_cloneDeep(trace.data)) : null;
+  const legacyTrace = trace instanceof OtelTraceFacade ? trace.toLegacyTrace() : null;
+  const convertedProfile = legacyTrace ? convertJaegerTraceToProfile(_cloneDeep(legacyTrace)) : null;
 
   return (
     <div className="Flamegraph-wrapper" data-testid="flamegraph-wrapper">

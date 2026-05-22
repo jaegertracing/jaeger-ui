@@ -40,7 +40,7 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Provider } from 'react-redux';
-import { SearchTracePageImpl as SearchTracePage, mapStateToProps, stateTraceDiffXformer } from './index';
+import { SearchTracePageImpl as SearchTracePage, mapStateToProps } from './index';
 import { fetchedState } from '../../constants';
 import traceGenerator from '../../demo/trace-generators';
 import { MOST_RECENT, MOST_SPANS } from '../../model/order-by';
@@ -83,11 +83,11 @@ describe('<SearchTracePage>', () => {
       queryOfResults: null, // null on initial page load
       traces,
       traceResultsToDownload,
-      tracesInRedux: { traces: {}, search: { results: [], query: null } },
+      tracesInRedux: { search: { results: [], query: null } },
       isHomepage: false,
       maxTraceDuration: 100,
       numberOfTraceResults: traces.length,
-      sortedTracesXformer: jest.fn(),
+      sortedTracesXformer: jest.fn().mockReturnValue([]),
       urlQueryParams: { service: 'svc-a' },
       searchTraces: jest.fn(),
       fetchMultipleTraces: jest.fn(),
@@ -173,7 +173,7 @@ describe('<SearchTracePage>', () => {
 
   it('calls sortedTracesXformer with correct arguments', () => {
     const sortBy = MOST_RECENT;
-    const testProps = { ...props, sortedTracesXformer: jest.fn() };
+    const testProps = { ...props, sortedTracesXformer: jest.fn().mockReturnValue([]) };
     render(
       <AllProvider>
         <SearchTracePage {...testProps} />
@@ -184,8 +184,7 @@ describe('<SearchTracePage>', () => {
 
   it('handles sort change correctly', () => {
     // For functional components, we verify behavior via props passed to child
-    const sortBy = MOST_SPANS;
-    const testProps = { ...props, sortedTracesXformer: jest.fn() };
+    const testProps = { ...props, sortedTracesXformer: jest.fn().mockReturnValue([]) };
     render(
       <AllProvider>
         <SearchTracePage {...testProps} />
@@ -288,15 +287,14 @@ describe('mapStateToProps()', () => {
 
   it('converts state to the necessary props', () => {
     const trace = transformTraceData(traceGenerator.trace({}));
+    // rawTraces holds the untransformed API payload; results holds IDs.
+    const rawTracePayload = { traceID: trace.traceID, spans: trace.spans, processes: trace.processes };
     const stateTrace = {
       search: {
         results: [trace.traceID],
         state: fetchedState.DONE,
       },
-      traces: {
-        [trace.traceID]: { id: trace.traceID, data: trace, state: fetchedState.DONE },
-      },
-      rawTraces: [trace],
+      rawTraces: [rawTracePayload],
     };
     const stateServices = {
       loading: false,
@@ -312,23 +310,13 @@ describe('mapStateToProps()', () => {
       },
     };
 
-    useTraceDiffStore.setState({ cohort: [trace.traceID], a: null, b: null });
-
-    const { maxTraceDuration, traceResultsToDownload, tracesInRedux, traces, ...rest } = mapStateToProps(
-      state,
-      {
-        search: '',
-      }
-    );
+    const { maxTraceDuration, traceResultsToDownload, traces, ...rest } = mapStateToProps(state, {
+      search: '',
+    });
     expect(traces).toHaveLength(stateTrace.search.results.length);
     expect(traces[0].traceID).toBe(trace.traceID);
-    expect(traceResultsToDownload[0].traceID).toBe(trace.traceID);
+    expect(traceResultsToDownload[0].traceID).toBe(rawTracePayload.traceID);
     expect(maxTraceDuration).toBe(trace.duration);
-    expect(tracesInRedux).toEqual(stateTrace);
-    const diffCohort = stateTraceDiffXformer(stateTrace, { cohort: useTraceDiffStore.getState().cohort });
-    expect(diffCohort).toHaveLength(1);
-    expect(diffCohort[0].id).toBe(trace.traceID);
-    expect(diffCohort[0].data.traceID).toBe(trace.traceID);
 
     expect(rest).toEqual({
       queryOfResults: undefined,

@@ -43,11 +43,10 @@ import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, ETraceVi
 import { getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
-import { extractUiFindFromState } from '../common/UiFindInput';
-import * as jaegerApiActions from '../../actions/jaeger-api';
+import { parseUiFind } from '../common/UiFindInput';
 import { getUiFindVertexKeys } from '../TraceDiff/TraceDiffGraph/traceDiffGraphUtils';
-import { fetchedState } from '../../constants';
-import { FetchedTrace, LocationState, ReduxState, TNil } from '../../types';
+import { LocationState, ReduxState, TNil } from '../../types';
+import { useTrace } from '../../hooks/useTraceLoading';
 import { IOtelTrace } from '../../types/otel';
 import filterSpans from '../../utils/filter-spans';
 import updateUiFind from '../../utils/update-ui-find';
@@ -62,7 +61,6 @@ import memoizedTraceCriticalPath from './CriticalPath/index';
 import withRouteProps from '../../utils/withRouteProps';
 
 type TDispatchProps = {
-  fetchTrace: (id: string) => void;
   focusUiFindMatches: (trace: IOtelTrace, uiFind: string | TNil) => void;
   setDetailPanelMode: (mode: SpanDetailPanelMode) => void;
   setTimelineBarsVisible: (visible: boolean) => void;
@@ -81,8 +79,6 @@ type TOwnProps = {
 };
 
 type TReduxProps = {
-  id: string;
-  trace: FetchedTrace | TNil;
   uiFind: string | TNil;
 };
 
@@ -147,18 +143,24 @@ export function TracePageImpl(props: TProps) {
     criticalPathEnabled,
     disableJsonView,
     enableSidePanel,
-    fetchTrace,
     focusUiFindMatches: focusUiFindMatchesProp,
-    id,
     location,
+    params,
     setDetailPanelMode: reduxSetDetailPanelMode,
     setTimelineBarsVisible: reduxSetTimelineBarsVisible,
     storageCapabilities,
-    trace,
     traceGraphConfig,
     uiFind,
     useOtelTerms,
   } = props;
+
+  const id = params.id;
+  const {
+    data: traceData,
+    isPending: traceLoading,
+    isError: traceError,
+    error: traceQueryError,
+  } = useTrace(id);
 
   // Layout preferences are owned by Zustand; Redux setters are also called for the tracking middleware.
   const detailPanelMode = useLayoutPrefsStore(s => s.detailPanelMode);
@@ -195,11 +197,8 @@ export function TracePageImpl(props: TProps) {
   const [viewRange, setViewRange] = useState<IViewRange>({ time: { current: [0, 1] } });
 
   const traceDagEV = useMemo(
-    () =>
-      viewType === ETraceViewType.TraceGraph && trace?.data
-        ? calculateTraceDagEV(trace.data.asOtelTrace())
-        : null,
-    [trace, viewType]
+    () => (viewType === ETraceViewType.TraceGraph && traceData ? calculateTraceDagEV(traceData) : null),
+    [traceData, viewType]
   );
 
   const searchBarRef = useRef<InputRef>(null);
@@ -214,9 +213,7 @@ export function TracePageImpl(props: TProps) {
     _memoize(filterSpans, (textFilter: string) => `${textFilter} ${idRef.current}`)
   ).current;
 
-  const scrollManagerRef = useRef<ScrollManager>(
-    new ScrollManager(trace && trace.data ? trace.data.asOtelTrace() : undefined, { scrollBy, scrollTo })
-  );
+  const scrollManagerRef = useRef<ScrollManager>(new ScrollManager(traceData, { scrollBy, scrollTo }));
 
   const updateViewRangeTime: TUpdateViewRangeTimeFunction = useCallback(
     (start: number, end: number, trackSrc?: string) => {
@@ -279,22 +276,16 @@ export function TracePageImpl(props: TProps) {
   }, [adjustViewRange]);
 
   useEffect(() => {
-    scrollManagerRef.current.setTrace(trace?.data?.asOtelTrace());
-  }, [trace]);
+    scrollManagerRef.current.setTrace(traceData);
+  }, [traceData]);
 
   useEffect(() => {
     if (prevIdRef.current !== id) {
       prevIdRef.current = id;
-      if (!trace) {
-        fetchTrace(id);
-      }
       updateViewRangeTime(0, 1);
       clearSearch();
-    } else if (!trace) {
-      fetchTrace(id);
-      updateViewRangeTime(0, 1);
     }
-  }, [id, trace, fetchTrace, updateViewRangeTime, clearSearch]);
+  }, [id, updateViewRangeTime, clearSearch]);
 
   const headerResizeObserverRef = useRef<ResizeObserver | TNil>(null);
 
@@ -338,12 +329,12 @@ export function TracePageImpl(props: TProps) {
   }, [acknowledgeArchiveFn, id]);
 
   const focusUiFindMatches = useCallback(() => {
-    if (trace && trace.data) {
+    if (traceData) {
       trackFocusMatches();
-      focusUiFindMatchesProp(trace.data.asOtelTrace(), uiFind);
-      zustandFocusUiFindMatches(trace.data.asOtelTrace(), uiFind);
+      focusUiFindMatchesProp(traceData, uiFind);
+      zustandFocusUiFindMatches(traceData, uiFind);
     }
-  }, [focusUiFindMatchesProp, zustandFocusUiFindMatches, trace, uiFind]);
+  }, [focusUiFindMatchesProp, zustandFocusUiFindMatches, traceData, uiFind]);
 
   const nextResult = useCallback(() => {
     trackNextMatch();
@@ -363,12 +354,11 @@ export function TracePageImpl(props: TProps) {
     setTimelineBarsVisible(!timelineBarsVisible);
   }, [setTimelineBarsVisible, timelineBarsVisible]);
 
-  if (!trace || trace.state === fetchedState.LOADING) {
-    return <LoadingIndicator className="u-mt-vast" centered />;
+  if (traceError) {
+    return <ErrorMessage className="ub-m3" error={traceQueryError || 'Unknown error'} />;
   }
-  const { data } = trace;
-  if (trace.state === fetchedState.ERROR || !data) {
-    return <ErrorMessage className="ub-m3" error={trace.error || 'Unknown error'} />;
+  if (traceLoading || !traceData) {
+    return <LoadingIndicator className="u-mt-vast" centered />;
   }
 
   let findCount = 0;
@@ -379,8 +369,8 @@ export function TracePageImpl(props: TProps) {
       graphFindMatches = getUiFindVertexKeys(uiFind, _get(traceDagEV, 'vertices', []));
       findCount = graphFindMatches ? graphFindMatches.size : 0;
     } else {
-      const allMatches = filterSpansMemo(uiFind, _get(trace, 'data.spans'));
-      const otelTrace = trace?.data?.asOtelTrace?.();
+      const allMatches = filterSpansMemo(uiFind, _get(traceData, 'spans'));
+      const otelTrace = traceData;
       spanFindMatches =
         otelTrace && prunedServices.size > 0
           ? filterPrunedSpanIDs(allMatches, otelTrace.spanMap, prunedServices)
@@ -422,7 +412,7 @@ export function TracePageImpl(props: TProps) {
     showViewOptions: !isEmbedded,
     timelineBarsVisible,
     toSearch: (locationState && locationState.fromSearch) || null,
-    trace: data.asOtelTrace(),
+    trace: traceData,
     updateNextViewRangeTime,
     updateViewRangeTime,
     useOtelTerms,
@@ -430,14 +420,14 @@ export function TracePageImpl(props: TProps) {
 
   const sm = scrollManagerRef.current;
   let view;
-  const criticalPath = criticalPathEnabled ? memoizedTraceCriticalPath(data.asOtelTrace()) : [];
+  const criticalPath = criticalPathEnabled ? memoizedTraceCriticalPath(traceData) : [];
   if (ETraceViewType.TraceTimelineViewer === viewType && headerHeight) {
     view = (
       <TraceTimelineViewer
         registerAccessors={sm.setAccessors}
         scrollToFirstVisibleSpan={sm.scrollToFirstVisibleSpan}
         findMatchesIDs={spanFindMatches}
-        trace={data.asOtelTrace()}
+        trace={traceData}
         criticalPath={criticalPath}
         updateNextViewRangeTime={updateNextViewRangeTime}
         updateViewRangeTime={updateViewRangeTime}
@@ -459,7 +449,7 @@ export function TracePageImpl(props: TProps) {
   } else if (ETraceViewType.TraceStatistics === viewType && headerHeight) {
     view = (
       <TraceStatistics
-        trace={data.asOtelTrace()}
+        trace={traceData}
         uiFindVertexKeys={spanFindMatches}
         uiFind={uiFind}
         useOtelTerms={useOtelTerms}
@@ -468,17 +458,17 @@ export function TracePageImpl(props: TProps) {
   } else if (ETraceViewType.TraceSpansView === viewType && headerHeight) {
     view = (
       <TraceSpanView
-        key={data.asOtelTrace().traceID}
-        trace={data.asOtelTrace()}
+        key={traceData.traceID}
+        trace={traceData}
         uiFindVertexKeys={spanFindMatches}
         uiFind={uiFind}
         useOtelTerms={useOtelTerms}
       />
     );
   } else if (ETraceViewType.TraceFlamegraph === viewType && headerHeight) {
-    view = <TraceFlamegraph trace={trace} />;
+    view = <TraceFlamegraph trace={traceData} />;
   } else if (ETraceViewType.TraceLogs === viewType && headerHeight) {
-    view = <TraceLogsView trace={data.asOtelTrace()} useOtelTerms={useOtelTerms} />;
+    view = <TraceLogsView trace={traceData} useOtelTerms={useOtelTerms} />;
   }
 
   return (
@@ -495,27 +485,21 @@ export function TracePageImpl(props: TProps) {
 }
 
 // export for tests
-export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
-  const { id } = ownProps.params;
-  const { traces } = state.trace;
-  const trace = id ? traces[id] : null;
-
+export function mapStateToProps(_state: ReduxState, ownProps: { search?: string }): TReduxProps {
+  // uiFind must come from the router search string, not window.location: connect() only re-runs a
+  // one-argument mapStateToProps when Redux state changes, so URL-only updates would leave uiFind stale.
   return {
-    ...extractUiFindFromState(state),
-    id,
-    trace,
+    uiFind: parseUiFind(ownProps.search ?? ''),
   };
 }
 
 // export for tests
 export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  const { fetchTrace } = bindActionCreators(jaegerApiActions, dispatch);
   const { focusUiFindMatches, setDetailPanelMode, setTimelineBarsVisible } = bindActionCreators(
     timelineActions,
     dispatch
   );
   return {
-    fetchTrace,
     focusUiFindMatches,
     setDetailPanelMode,
     setTimelineBarsVisible,
