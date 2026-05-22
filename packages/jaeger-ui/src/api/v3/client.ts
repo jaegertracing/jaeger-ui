@@ -70,7 +70,7 @@ export class JaegerClient {
       params.set('query.start_time_min', new Date(startUs / 1000).toISOString());
     if (Number.isFinite(endUs) && endUs > 0)
       params.set('query.start_time_max', new Date(endUs / 1000).toISOString());
-    if (query.limit) params.set('query.num_traces', String(query.limit));
+    if (query.limit) params.set('query.search_depth', String(query.limit));
     if (query.minDuration) params.set('query.duration_min', query.minDuration);
     if (query.maxDuration) params.set('query.duration_max', query.maxDuration);
     if (query.tags) params.set('query.attributes', query.tags);
