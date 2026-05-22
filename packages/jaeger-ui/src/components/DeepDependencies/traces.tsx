@@ -20,32 +20,34 @@ import transformTracesToPaths from '../../model/ddg/transformTracesToPaths';
 
 import { TDdgStateEntry } from '../../types/TDdgState';
 import { FetchedTrace, FetchedState, ReduxState } from '../../types';
-import { IOtelTrace } from '../../types/otel';
-import { queryClient } from '../../query/app-query-client';
+import { getCachedTrace } from '../../hooks/useTraceLoading';
 
 // Required for proper memoization of subsequent function calls
 const svcOp = memoizeOne((service, operation) => ({ service, operation }));
 
 // export for tests
-export function mapStateToProps(_state: ReduxState, ownProps: TOwnProps): TReduxProps {
+export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
   const urlState = getUrlState(ownProps.location.search);
   const { density, operation, service, showOp: urlStateShowOp } = urlState;
   const showOp = urlStateShowOp !== undefined ? urlStateShowOp : operation !== undefined;
   let graphState: TDdgStateEntry | undefined;
   let graph: GraphModel | undefined;
   if (service) {
-    // Build a traces map from the React Query cache (traces are keyed by ['trace', id]).
-    const tracesFromCache: Record<string, FetchedTrace<IOtelTrace>> = {};
-    queryClient.getQueriesData<IOtelTrace>({ queryKey: ['trace'] }).forEach(([_key, traceData]) => {
+    // Build from current search results only — not from the full React Query cache,
+    // which accumulates traces across the SPA lifetime and would bleed across searches.
+    const searchResultIds = state.trace.search.results;
+    const tracesFromSearch: Record<string, FetchedTrace> = {};
+    searchResultIds.forEach(id => {
+      const traceData = getCachedTrace(id);
       if (traceData) {
-        tracesFromCache[traceData.traceID] = {
+        tracesFromSearch[traceData.traceID] = {
           id: traceData.traceID,
           data: traceData,
           state: fetchedState.DONE as FetchedState,
         };
       }
     });
-    const payload = transformTracesToPaths(tracesFromCache, service, operation);
+    const payload = transformTracesToPaths(tracesFromSearch, service, operation);
     graphState = {
       model: transformDdgData(payload, svcOp(service, operation)),
       state: fetchedState.DONE,
