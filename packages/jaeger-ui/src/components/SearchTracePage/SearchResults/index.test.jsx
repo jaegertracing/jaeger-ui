@@ -177,12 +177,21 @@ describe('<SearchResults>', () => {
   });
 
   it('hide DiffSelection when disableComparisons = true', () => {
+    const cohortTrace = {
+      traceID: 'a',
+      traceName: 'T',
+      duration: 1,
+      services: [],
+      startTime: 0,
+      spanCount: 1,
+      errorSpanCount: 0,
+    };
     const { rerender } = renderWithRouter(
-      <SearchResults {...baseProps} disableComparisons={false} diffCohort={[{ id: 'a' }]} />
+      <SearchResults {...baseProps} disableComparisons={false} diffCohort={[cohortTrace]} />
     );
     expect(screen.getByTestId('diffselection')).toBeInTheDocument();
 
-    rerender(<SearchResults {...baseProps} disableComparisons diffCohort={[{ id: 'a' }]} />);
+    rerender(<SearchResults {...baseProps} disableComparisons diffCohort={[cohortTrace]} />);
     expect(screen.queryByTestId('diffselection')).not.toBeInTheDocument();
   });
 
@@ -194,7 +203,17 @@ describe('<SearchResults>', () => {
         {...baseProps}
         cohortAddTrace={add}
         cohortRemoveTrace={remove}
-        diffCohort={[{ id: 'existing' }]}
+        diffCohort={[
+          {
+            traceID: 'existing',
+            traceName: 'T',
+            duration: 1,
+            services: [],
+            startTime: 0,
+            spanCount: 1,
+            errorSpanCount: 0,
+          },
+        ]}
       />
     );
     const diffSelectionProps = DiffSelection.mock.calls[0][0];
@@ -226,7 +245,22 @@ describe('<SearchResults>', () => {
   });
 
   it('renders DiffSelection when diffCohort is provided', () => {
-    renderWithRouter(<SearchResults {...baseProps} diffCohort={[{ id: 'id-1' }]} />);
+    renderWithRouter(
+      <SearchResults
+        {...baseProps}
+        diffCohort={[
+          {
+            traceID: 'id-1',
+            traceName: 'T',
+            duration: 1,
+            services: [],
+            startTime: 0,
+            spanCount: 1,
+            errorSpanCount: 0,
+          },
+        ]}
+      />
+    );
     expect(screen.getByTestId('diffselection')).toBeInTheDocument();
   });
 
