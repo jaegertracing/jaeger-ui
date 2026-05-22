@@ -2,10 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /**
- * Zod schemas for Jaeger v3 API responses
+ * Zod schemas for Jaeger v3 API responses.
  *
- * These are imported from generated-client.ts which is auto-generated from OpenAPI spec
- * and post-processed to remove .partial() for strict validation.
+ * Some schemas are re-exported from generated-client.ts (auto-generated from OpenAPI spec,
+ * post-processed to remove .partial() for strict validation). Others are hand-written where
+ * the IDL has not yet been finalized or where the generated output diverges from the actual
+ * server wire format.
  */
 
 // Import auto-generated schemas (post-processed for strict validation)
