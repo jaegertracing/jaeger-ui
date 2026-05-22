@@ -8,12 +8,11 @@ import transformTraceData from '../model/transform-trace-data';
 import { FetchedTrace } from '../types';
 import { Trace } from '../types/trace';
 
-// For loading a SINGLE trace (used by TracePage)
-export function useTraceQuery(traceId: string | undefined): UseQueryResult<Trace> {
+export function useTrace(traceId: string): UseQueryResult<Trace> {
   return useQuery({
     queryKey: ['trace', traceId],
     queryFn: async () => {
-      const response = await JaegerAPI.fetchTrace(traceId!);
+      const response = await JaegerAPI.fetchTrace(traceId);
       const data = transformTraceData(response.data[0]);
       if (!data) {
         throw new Error('Invalid trace data received.');
@@ -21,12 +20,10 @@ export function useTraceQuery(traceId: string | undefined): UseQueryResult<Trace
       return data;
     },
     staleTime: Infinity,
-    enabled: Boolean(traceId),
   });
 }
 
-// for loading multiple traces at once (used by TraceDiff)
-export function useMultipleTracesQuery(ids: string[]): Map<string, FetchedTrace> {
+export function useTraces(ids: string[]): Map<string, FetchedTrace> {
   const results = useQueries({
     queries: ids.map(id => ({
       queryKey: ['trace', id],
@@ -39,7 +36,6 @@ export function useMultipleTracesQuery(ids: string[]): Map<string, FetchedTrace>
         return data;
       },
       staleTime: Infinity,
-      enabled: Boolean(id),
     })),
   });
 

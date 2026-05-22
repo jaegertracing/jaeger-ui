@@ -23,12 +23,12 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-const { useMultipleTracesQueryMock } = vi.hoisted(() => ({
-  useMultipleTracesQueryMock: jest.fn(),
+const { useTracesMock } = vi.hoisted(() => ({
+  useTracesMock: jest.fn(),
 }));
 
-vi.mock('../../hooks/useTraceQuery', () => ({
-  useMultipleTracesQuery: (...args) => useMultipleTracesQueryMock(...args),
+vi.mock('../../hooks/useTraceLoading', () => ({
+  useTraces: (...args) => useTracesMock(...args),
 }));
 
 vi.mock('./TraceDiffHeader', async () => {
@@ -84,9 +84,7 @@ describe('TraceDiff', () => {
   });
 
   beforeEach(() => {
-    useMultipleTracesQueryMock.mockReturnValue(
-      new Map(defaultCohort.map(id => [id, { id, state: fetchedState.DONE }]))
-    );
+    useTracesMock.mockReturnValue(new Map(defaultCohort.map(id => [id, { id, state: fetchedState.DONE }])));
     getUrlSpy.mockClear();
     mockNavigate.mockClear();
     useTraceDiffStore.setState({
@@ -146,9 +144,9 @@ describe('TraceDiff', () => {
     });
   });
 
-  it('calls useMultipleTracesQuery with the full cohort', () => {
+  it('calls useTraces with the full cohort', () => {
     renderWithRouter(<TraceDiffImpl {...defaultProps} />);
-    expect(useMultipleTracesQueryMock).toHaveBeenCalledWith(defaultCohort);
+    expect(useTracesMock).toHaveBeenCalledWith(defaultCohort);
   });
 
   it('updates url when TraceDiffHeader sets a or b', async () => {
@@ -195,7 +193,7 @@ describe('TraceDiff', () => {
     });
 
     it('handles a and b not in tracesData returned by the query', () => {
-      useMultipleTracesQueryMock.mockReturnValue(new Map());
+      useTracesMock.mockReturnValue(new Map());
       renderWithRouter(<TraceDiffImpl {...defaultProps} />);
 
       expect(screen.getByTestId('trace-diff-header')).toBeInTheDocument();

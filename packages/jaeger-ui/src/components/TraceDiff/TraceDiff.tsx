@@ -13,7 +13,7 @@ import { TOP_NAV_HEIGHT } from '../../constants';
 import { FetchedTrace, TNil, ReduxState } from '../../types';
 import TTraceDiffState from '../../types/TTraceDiffState';
 import pluckTruthy from '../../utils/ts/pluckTruthy';
-import { useMultipleTracesQuery } from '../../hooks/useTraceQuery';
+import { useTraces } from '../../hooks/useTraceLoading';
 
 import './TraceDiff.css';
 import parseQuery from '../../utils/parseQuery';
@@ -55,7 +55,7 @@ function syncStates(
 }
 
 export function TraceDiffImpl({ a, b, cohort }: TStateProps & TOwnProps) {
-  const tracesData = useMultipleTracesQuery(cohort);
+  const tracesData = useTraces(cohort);
   const traceDiffState = useTraceDiffStore(
     useShallow(s => ({
       a: s.a,

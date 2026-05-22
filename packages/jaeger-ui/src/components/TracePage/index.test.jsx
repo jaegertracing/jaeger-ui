@@ -121,7 +121,7 @@ const {
   mockLayoutPrefsStore,
   mockTraceTimelineStore,
   useEmbeddedStateMock,
-  useTraceQueryMock,
+  useTraceMock,
 } = vi.hoisted(() => ({
   mockSubmitTraceToArchive: jest.fn(),
   mockAcknowledge: jest.fn(),
@@ -136,7 +136,7 @@ const {
     prunedServices: new Set(),
   },
   useEmbeddedStateMock: jest.fn().mockReturnValue(null),
-  useTraceQueryMock: jest.fn(),
+  useTraceMock: jest.fn(),
 }));
 
 vi.mock('../../stores/archive-store', () => ({
@@ -149,8 +149,8 @@ vi.mock('../../stores/embedded-store', () => ({
   useEmbeddedState: (...args) => useEmbeddedStateMock(...args),
 }));
 
-vi.mock('../../hooks/useTraceQuery', () => ({
-  useTraceQuery: (...args) => useTraceQueryMock(...args),
+vi.mock('../../hooks/useTraceLoading', () => ({
+  useTrace: (...args) => useTraceMock(...args),
 }));
 
 vi.mock('./TraceTimelineViewer/store', () => ({
@@ -237,7 +237,7 @@ describe('<TracePage>', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     useEmbeddedStateMock.mockReturnValue(null);
-    useTraceQueryMock.mockReturnValue({ data: trace, isPending: false, isError: false, error: null });
+    useTraceMock.mockReturnValue({ data: trace, isPending: false, isError: false, error: null });
     ScrollManager.mockClear();
     capturedHeaderProps = {};
     capturedArchiveNotifierProps = {};
@@ -299,7 +299,7 @@ describe('<TracePage>', () => {
       });
 
       it('handles when trace data is absent', () => {
-        useTraceQueryMock.mockReturnValue({ data: undefined, isPending: false, isError: false, error: null });
+        useTraceMock.mockReturnValue({ data: undefined, isPending: false, isError: false, error: null });
         render(<TracePage {...defaultProps} />);
         expect(defaultProps.focusUiFindMatches).not.toHaveBeenCalled();
         expect(mockTraceTimelineStore.focusUiFindMatches).not.toHaveBeenCalled();
@@ -349,7 +349,7 @@ describe('<TracePage>', () => {
   it('uses uiFind and params.id to compute memo cache key for filterSpans', () => {
     const uiFind = 'uiFind';
     const localTrace = transformTraceData(traceGenerator.trace({}));
-    useTraceQueryMock.mockReturnValue({ data: localTrace, isPending: false, isError: false, error: null });
+    useTraceMock.mockReturnValue({ data: localTrace, isPending: false, isError: false, error: null });
 
     filterSpansSpy.mockClear();
     filterSpansSpy.mockImplementation(() => new Set());
@@ -364,20 +364,20 @@ describe('<TracePage>', () => {
 
     // Changing the trace id invalidates the cache
     const otherTrace = transformTraceData(traceGenerator.trace({}));
-    useTraceQueryMock.mockReturnValue({ data: otherTrace, isPending: false, isError: false, error: null });
+    useTraceMock.mockReturnValue({ data: otherTrace, isPending: false, isError: false, error: null });
     rerender(<TracePage {...defaultProps} params={{ id: 'different-trace-id' }} uiFind={uiFind} />);
     expect(filterSpansSpy).toHaveBeenCalledTimes(2);
     expect(filterSpansSpy).toHaveBeenLastCalledWith(uiFind, otherTrace.spans);
   });
 
   it('renders a loading indicator when trace is not loaded', () => {
-    useTraceQueryMock.mockReturnValue({ data: undefined, isPending: true, isError: false, error: null });
+    useTraceMock.mockReturnValue({ data: undefined, isPending: true, isError: false, error: null });
     render(<TracePage {...defaultProps} />);
     expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
   });
 
   it('renders an error message when given an error', () => {
-    useTraceQueryMock.mockReturnValue({
+    useTraceMock.mockReturnValue({
       data: undefined,
       isPending: false,
       isError: true,
@@ -388,7 +388,7 @@ describe('<TracePage>', () => {
   });
 
   it('renders a loading indicator when loading', () => {
-    useTraceQueryMock.mockReturnValue({ data: undefined, isPending: true, isError: false, error: null });
+    useTraceMock.mockReturnValue({ data: undefined, isPending: true, isError: false, error: null });
     render(<TracePage {...defaultProps} />);
     expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
   });
@@ -421,13 +421,13 @@ describe('<TracePage>', () => {
   });
 
   it('shows loading indicator when trace is loading', () => {
-    useTraceQueryMock.mockReturnValue({ data: undefined, isPending: true, isError: false, error: null });
+    useTraceMock.mockReturnValue({ data: undefined, isPending: true, isError: false, error: null });
     render(<TracePage {...defaultProps} />);
     expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
   });
 
   it('shows error message when trace fails to load', () => {
-    useTraceQueryMock.mockReturnValue({
+    useTraceMock.mockReturnValue({
       data: undefined,
       isPending: false,
       isError: true,
@@ -447,7 +447,7 @@ describe('<TracePage>', () => {
     });
     expect(capturedHeaderProps.viewRange.time.current).toEqual([0.25, 0.75]);
 
-    useTraceQueryMock.mockReturnValue({ data: altTrace, isPending: false, isError: false, error: null });
+    useTraceMock.mockReturnValue({ data: altTrace, isPending: false, isError: false, error: null });
     rerender(<TracePage {...defaultProps} params={{ id: altTrace.traceID }} />);
 
     expect(capturedHeaderProps.viewRange.time.current).toEqual([0, 1]);
@@ -467,9 +467,9 @@ describe('<TracePage>', () => {
       };
     });
 
-    useTraceQueryMock.mockReturnValue({ data: undefined, isPending: true, isError: false, error: null });
+    useTraceMock.mockReturnValue({ data: undefined, isPending: true, isError: false, error: null });
     const { rerender } = render(<TracePage {...defaultProps} />);
-    useTraceQueryMock.mockReturnValue({ data: trace, isPending: false, isError: false, error: null });
+    useTraceMock.mockReturnValue({ data: trace, isPending: false, isError: false, error: null });
     rerender(<TracePage {...defaultProps} />);
 
     expect(setTraceMock).toHaveBeenCalledWith(trace.asOtelTrace());

@@ -46,7 +46,7 @@ import LoadingIndicator from '../common/LoadingIndicator';
 import { parseUiFind } from '../common/UiFindInput';
 import { getUiFindVertexKeys } from '../TraceDiff/TraceDiffGraph/traceDiffGraphUtils';
 import { LocationState, ReduxState, TNil } from '../../types';
-import { useTraceQuery } from '../../hooks/useTraceQuery';
+import { useTrace } from '../../hooks/useTraceLoading';
 import { IOtelTrace } from '../../types/otel';
 import filterSpans from '../../utils/filter-spans';
 import updateUiFind from '../../utils/update-ui-find';
@@ -160,7 +160,7 @@ export function TracePageImpl(props: TProps) {
     isPending: traceLoading,
     isError: traceError,
     error: traceQueryError,
-  } = useTraceQuery(id);
+  } = useTrace(id);
 
   // Layout preferences are owned by Zustand; Redux setters are also called for the tracking middleware.
   const detailPanelMode = useLayoutPrefsStore(s => s.detailPanelMode);
