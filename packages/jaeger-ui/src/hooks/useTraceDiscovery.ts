@@ -28,8 +28,8 @@ export function useServices(): UseQueryResult<string[]> {
  */
 export function useSearchTraces(query: SearchQuery | null): UseQueryResult<TraceSummary[]> {
   return useQuery({
-    queryKey: ['traceSummaries', query],
-    queryFn: () => jaegerClient.fetchTraceSummaries(query!),
+    queryKey: ['traceSummaries', query] as ['traceSummaries', SearchQuery | null],
+    queryFn: ({ queryKey: [, q] }) => jaegerClient.fetchTraceSummaries(q as SearchQuery),
     enabled: query !== null,
     staleTime: 30 * 1000, // 30 seconds
   });
