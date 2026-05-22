@@ -7,7 +7,6 @@ import { handleActions } from 'redux-actions';
 import { searchTraces } from '../actions/jaeger-api';
 import { loadJsonTraces } from '../actions/file-reader-api';
 import { fetchedState } from '../constants';
-import transformTraceData from '../model/transform-trace-data';
 
 type TraceState = {
   search: {
@@ -40,13 +39,8 @@ function searchDone(state: TraceState, { meta, payload }: any): TraceState {
   if (!_isEqual(state.search.query, meta.query)) {
     return state;
   }
-  const payloadData = payload.data;
-  const processed = payloadData.map(transformTraceData);
-  const results: string[] = [];
-  for (let i = 0; i < processed.length; i++) {
-    const data = processed[i];
-    results.push(data.traceID);
-  }
+  const payloadData: any[] = payload.data;
+  const results: string[] = payloadData.map(t => t.traceID).filter(Boolean);
   const search = { ...state.search, results, state: fetchedState.DONE };
   return { ...state, search, rawTraces: payloadData };
 }
@@ -66,14 +60,17 @@ function loadJsonStarted(state: TraceState): TraceState {
 
 function loadJsonDone(state: TraceState, { payload }: any): TraceState {
   try {
-    const processed = payload.data.map(transformTraceData);
-    const results = new Set(state.search.results);
-    for (let i = 0; i < processed.length; i++) {
-      const data = processed[i];
-      results.add(data.traceID);
+    const payloadData: any[] = payload.data;
+    if (!Array.isArray(payloadData) || payloadData.some(t => !Array.isArray(t.spans))) {
+      throw new Error('Invalid trace data: missing or invalid spans');
     }
+    const results = new Set(state.search.results);
+    payloadData
+      .map(t => t.traceID)
+      .filter(Boolean)
+      .forEach((id: string) => results.add(id));
     const search = { ...state.search, results: Array.from(results), state: fetchedState.DONE };
-    return { ...state, search, rawTraces: payload.data };
+    return { ...state, search, rawTraces: payloadData };
   } catch (error) {
     const search = { ...state.search, error, results: [], state: fetchedState.ERROR };
     return { ...state, search };
