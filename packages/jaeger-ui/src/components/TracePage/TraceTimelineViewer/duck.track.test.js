@@ -9,7 +9,6 @@ import _cloneDeep from 'lodash/cloneDeep';
 import DetailState from './SpanDetail/DetailState';
 import * as track from './duck.track';
 import { actionTypes as types } from './duck';
-import { fetchedState } from '../../../constants';
 import { trackEvent } from '../../../utils/tracking';
 import { queryClient } from '../../../query/app-query-client';
 
