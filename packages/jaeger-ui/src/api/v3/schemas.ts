@@ -9,7 +9,14 @@
  */
 
 // Import auto-generated schemas (post-processed for strict validation)
-export { ServicesResponseSchema, OperationsResponseSchema, OperationSchema } from './generated-client';
+export { ServicesResponseSchema } from './generated-client';
+
+// NOTE: The OpenAPI spec incorrectly lists Operation.spanKind as "span_kind" (snake_case).
+// The server uses jsonpb.Marshaler which follows proto3 JSON encoding and emits camelCase.
+// We override OperationSchema and OperationsResponseSchema here to match actual server output.
+// Track the spec bug at jaegertracing/jaeger-idl.
+export const OperationSchema = z.object({ name: z.string(), spanKind: z.string() }).passthrough();
+export const OperationsResponseSchema = z.object({ operations: z.array(OperationSchema) }).passthrough();
 
 /**
  * Helper validators for trace and span IDs in hex format
