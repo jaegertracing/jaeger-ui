@@ -42,13 +42,10 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Provider } from 'react-redux';
-import { SearchTracePageImpl as SearchTracePage, mapStateToProps } from './index';
-import { fetchedState } from '../../constants';
-import traceGenerator from '../../demo/trace-generators';
-import transformTraceData from '../../model/transform-trace-data';
-import { store as globalStore } from '../../utils/configure-store';
+import { SearchTracePageImpl as SearchTracePage } from './index';
 import { useServices } from '../../hooks/useTraceDiscovery';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
+import { store as globalStore } from '../../utils/configure-store';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -58,9 +55,9 @@ const queryClient = new QueryClient({
   },
 });
 
-const AllProvider = ({ children }) => (
+const AllProvider = ({ children, initialEntries = ['/search'] }) => (
   <QueryClientProvider client={queryClient}>
-    <MemoryRouter>
+    <MemoryRouter initialEntries={initialEntries}>
       <Provider store={globalStore}>{children}</Provider>
     </MemoryRouter>
   </QueryClientProvider>
@@ -70,10 +67,7 @@ describe('<SearchTracePage>', () => {
   let props;
 
   const getDefaultProps = () => ({
-    traceResultsToDownload: [],
     isHomepage: false,
-    loadJsonTraces: jest.fn(),
-    urlQueryParams: { service: 'svc-a' },
   });
 
   beforeEach(() => {
@@ -103,7 +97,7 @@ describe('<SearchTracePage>', () => {
 
   it('calls useSearchTraces with query derived from URL params', () => {
     render(
-      <AllProvider>
+      <AllProvider initialEntries={['/search?service=svc-a']}>
         <SearchTracePage {...props} />
       </AllProvider>
     );
@@ -114,10 +108,9 @@ describe('<SearchTracePage>', () => {
   });
 
   it('passes null query to useSearchTraces when no service is in URL params', () => {
-    const testProps = { ...props, urlQueryParams: null };
     render(
       <AllProvider>
-        <SearchTracePage {...testProps} />
+        <SearchTracePage {...props} />
       </AllProvider>
     );
     const [query] = useSearchTracesMock.mock.calls[0];
@@ -127,7 +120,7 @@ describe('<SearchTracePage>', () => {
   it('shows a loading indicator when traces are loading', () => {
     useSearchTracesMock.mockReturnValue({ data: [], isLoading: true, error: null });
     const { container } = render(
-      <AllProvider>
+      <AllProvider initialEntries={['/search?service=svc-a']}>
         <SearchTracePage {...props} />
       </AllProvider>
     );
@@ -146,7 +139,7 @@ describe('<SearchTracePage>', () => {
   it('shows an error message if the search query returns an error', () => {
     useSearchTracesMock.mockReturnValue({ data: [], isLoading: false, error: new Error('big-error') });
     const { container } = render(
-      <AllProvider>
+      <AllProvider initialEntries={['/search?service=svc-a']}>
         <SearchTracePage {...props} />
       </AllProvider>
     );
@@ -154,7 +147,7 @@ describe('<SearchTracePage>', () => {
   });
 
   it('shows the logo prior to searching', () => {
-    const testProps = { ...props, isHomepage: true, urlQueryParams: null };
+    const testProps = { ...props, isHomepage: true };
     const { container } = render(
       <AllProvider>
         <SearchTracePage {...testProps} />
@@ -218,42 +211,12 @@ describe('<SearchTracePage>', () => {
   });
 });
 
-describe('mapStateToProps()', () => {
+describe('useTraceDiffStore', () => {
   beforeEach(() => {
     useTraceDiffStore.setState({ cohort: [], a: null, b: null });
   });
 
-  it('converts state to the necessary props', () => {
-    const trace = transformTraceData(traceGenerator.trace({}));
-    const rawTracePayload = { traceID: trace.traceID, spans: trace.spans, processes: trace.processes };
-    const stateTrace = {
-      search: {
-        results: [trace.traceID],
-        state: fetchedState.DONE,
-      },
-      rawTraces: [rawTracePayload],
-    };
-    const state = {
-      trace: stateTrace,
-      config: { disableFileUploadControl: false },
-    };
-
-    const { traceResultsToDownload, isHomepage, urlQueryParams } = mapStateToProps(state, {
-      search: '',
-    });
-    expect(isHomepage).toBe(true);
-    expect(urlQueryParams).toBeNull();
-    expect(traceResultsToDownload[0].traceID).toBe(rawTracePayload.traceID);
-  });
-
-  it('sets isHomepage to false when URL has search params', () => {
-    const state = {
-      trace: { search: { results: [], state: fetchedState.DONE }, rawTraces: [] },
-      config: {},
-    };
-    const { isHomepage, urlQueryParams } = mapStateToProps(state, { search: '?service=svc-a' });
-    expect(isHomepage).toBe(false);
-    expect(urlQueryParams).not.toBeNull();
-    expect(urlQueryParams.service).toBe('svc-a');
+  it('cohort is initially empty', () => {
+    expect(useTraceDiffStore.getState().cohort).toEqual([]);
   });
 });

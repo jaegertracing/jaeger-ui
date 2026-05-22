@@ -4,15 +4,13 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { Col, Row, Tabs } from 'antd';
-import { connect } from 'react-redux';
-import { bindActionCreators, Dispatch } from 'redux';
+import { useLocation } from 'react-router-dom';
 
 import { useConfig } from '../../hooks/useConfig';
 
 import SearchForm from './SearchForm';
 import SearchResults from './SearchResults';
 import { getUrlState } from './url';
-import * as fileReaderActions from '../../actions/file-reader-api';
 import * as orderBy from '../../model/order-by';
 import ErrorMessage from '../common/ErrorMessage';
 import { sortTraceSummaries } from '../../model/search';
@@ -25,32 +23,24 @@ import { trackSortByChange } from './SearchForm.track';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { useEmbeddedState } from '../../stores/embedded-store';
 import { useShallow } from 'zustand/react/shallow';
-import { ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
 import { useSearchTraces } from '../../hooks/useTraceDiscovery';
-import type { TUrlState } from './url';
+import type { TraceSummary } from '../../types/trace-summary';
 
-interface ISearchTracePageImplOwnProps {
+interface ISearchTracePageProps {
   isHomepage?: boolean;
 }
 
-// Props from mapStateToProps
-interface IStateProps {
-  traceResultsToDownload: unknown[];
-  urlQueryParams: TUrlState | null;
-}
-
-// Props from mapDispatchToProps
-interface IDispatchProps {
-  loadJsonTraces: (fileList: { file: File }) => void;
-}
-
-type SearchTracePageImplProps = ISearchTracePageImplOwnProps & IStateProps & IDispatchProps;
-
 // export for tests
-export function SearchTracePageImpl(props: SearchTracePageImplProps) {
+export function SearchTracePageImpl(props: ISearchTracePageProps) {
   const embedded = useEmbeddedState();
-  const { isHomepage, traceResultsToDownload, loadJsonTraces, urlQueryParams } = props;
+  const { isHomepage } = props;
+
+  const location = useLocation();
+  const urlQueryParams = useMemo(() => {
+    const query = getUrlState(location.search);
+    return Object.keys(query).length > 0 ? query : null;
+  }, [location.search]);
 
   // Derive SearchQuery from URL params; null when no service is present (disables the fetch).
   const searchQuery = useMemo((): SearchQuery | null => {
@@ -70,10 +60,23 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
   }, [urlQueryParams]);
 
   const {
-    data: traceSummaries = [],
+    data: apiTraceSummaries = [],
     isLoading: loadingTraces,
     error: searchError,
   } = useSearchTraces(searchQuery);
+
+  const [uploadedSummaries, setUploadedSummaries] = useState<TraceSummary[]>([]);
+  const [uploadedRawTraces, setUploadedRawTraces] = useState<unknown[]>([]);
+
+  const handleTracesLoaded = useCallback((summaries: TraceSummary[], rawTraces: unknown[]) => {
+    setUploadedSummaries(prev => [...prev, ...summaries]);
+    setUploadedRawTraces(prev => [...prev, ...rawTraces]);
+  }, []);
+
+  const traceSummaries = useMemo(
+    () => [...apiTraceSummaries, ...uploadedSummaries],
+    [apiTraceSummaries, uploadedSummaries]
+  );
 
   const [sortBy, setSortBy] = useState(orderBy.MOST_RECENT);
 
@@ -145,7 +148,7 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
     tabItems.push({
       label: 'Upload',
       key: 'fileLoader',
-      children: <FileLoader loadJsonTraces={loadJsonTraces} />,
+      children: <FileLoader onTracesLoaded={handleTracesLoaded} />,
     });
   }
 
@@ -183,7 +186,7 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
               skipMessage: isHomepage,
               spanLinks: urlQueryParams?.spanLinks,
               traceSummaries: sortedTraceSummaries,
-              rawTraces: traceResultsToDownload,
+              rawTraces: uploadedRawTraces,
               sortBy,
               handleSortChange,
             } as any)}
@@ -202,27 +205,4 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
   );
 }
 
-export function mapStateToProps(
-  state: ReduxState,
-  ownProps: { search?: string }
-): IStateProps & { isHomepage: boolean } {
-  const query = getUrlState(ownProps.search || '');
-  const isHomepage = !Object.keys(query).length;
-  // rawTraces is populated by the trace reducer when JSON traces are loaded from file.
-  // The field exists at runtime but is not in the generated ReduxState type.
-  const rawTraces: unknown[] = (state.trace as Record<string, unknown>).rawTraces as unknown[] ?? [];
-  return {
-    isHomepage,
-    traceResultsToDownload: rawTraces,
-    urlQueryParams: Object.keys(query).length > 0 ? query : null,
-  };
-}
-
-function mapDispatchToProps(dispatch: Dispatch): IDispatchProps {
-  const { loadJsonTraces } = bindActionCreators(fileReaderActions, dispatch);
-  return { loadJsonTraces };
-}
-
-const connector = connect(mapStateToProps, mapDispatchToProps);
-
-export default withRouteProps(connector(SearchTracePageImpl));
+export default withRouteProps(SearchTracePageImpl);

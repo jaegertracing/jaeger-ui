@@ -1044,23 +1044,27 @@ export function useTraceQuery(traceId: string) {
 
 **Components to rewire**: `TracePage`, `TraceDiff` (both `a` and `b` traces).
 
-#### ⬜ 2b. Search + multi-trace fetch
+#### ✅ 2b. Search + file upload
 
-**Redux removed**: `trace.search`, `trace.rawTraces`.
+**Redux removed**: `trace.search`, `trace.rawTraces`, `connect`/`mapStateToProps`/`mapDispatchToProps` from `SearchTracePage`.
 
-**New hook**:
+Search now calls `/api/v3/trace-summaries` via:
 ```typescript
-export function useSearchTracesQuery(params: SearchQuery) {
+export function useSearchTraces(query: SearchQuery | null): UseQueryResult<TraceSummary[]> {
   return useQuery({
-    queryKey: ['search', params],   // cached per unique query
-    queryFn: () => jaegerClient.searchTraces(params),
+    queryKey: ['traceSummaries', query],
+    queryFn: () => jaegerClient.fetchTraceSummaries(query!),
+    enabled: query !== null,
+    staleTime: 30 * 1000,
   });
 }
 ```
 
-Handle **JSON file upload** as a separate path: insert synthetic data into the QueryClient cache rather than an HTTP fetch.
+`SearchTracePage` derives URL query params from `useLocation()` directly (no Redux `mapStateToProps`).
 
-**Components to rewire**: `SearchTracePage`, `ResultsTable`.
+**JSON file upload** handled inline in `FileLoader.tsx`: each file is parsed via `readJsonFile`, converted with `transformTraceData().asOtelTrace()`, inserted into the Query cache via `populateTraceCache()`, and summarized with `traceToTraceSummary()`. The summaries accumulate in local `useState` in `SearchTracePage` and are merged with API results for display.
+
+**Components rewired**: `SearchTracePage` (fully disconnected from Redux), `FileLoader` (accepts `onTracesLoaded` callback instead of Redux action).
 
 #### ⬜ 2c. Services and operations discovery
 
