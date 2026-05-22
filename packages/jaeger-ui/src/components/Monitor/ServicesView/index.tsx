@@ -27,7 +27,7 @@ import {
 } from '../../../types/metrics';
 import prefixUrl from '../../../utils/prefix-url';
 import { convertTimeUnitToShortTerm, getSuitableTimeUnit } from '../../../utils/date';
-import { timeFrameOptions, getLoopbackInterval, yAxisTickFormat, ONE_HOUR_MS } from './timeFrameUtils';
+import { ONE_HOUR_MS, timeFrameOptions, getLoopbackInterval, yAxisTickFormat } from './timeFrameUtils';
 
 import './index.css';
 import getConfig from '../../../utils/config/get-config';

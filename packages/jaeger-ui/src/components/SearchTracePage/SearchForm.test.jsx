@@ -420,9 +420,12 @@ describe('submitForm()', () => {
     it('omits values when they are falsy', () => {
       fields.minDuration = undefined;
       fields.maxDuration = undefined;
-      const url = submitForm(fields);
-      expect(url).not.toContain('minDuration');
-      expect(url).not.toContain('maxDuration');
+      submitForm(fields, searchTraces);
+      const { calls } = searchTraces.mock;
+      expect(calls.length).toBe(1);
+      const { minDuration, maxDuration } = calls[0][0];
+      expect(minDuration).toBe(undefined);
+      expect(maxDuration).toBe(undefined);
     });
   });
 });

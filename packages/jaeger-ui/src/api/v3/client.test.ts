@@ -351,7 +351,7 @@ describe('JaegerClient', () => {
 
       const calledUrl = mockFetch.mock.calls[0][0] as string;
       expect(calledUrl).toContain('query.service_name=my-svc');
-      expect(calledUrl).toContain('query.span_name=GET+%2Fapi');
+      expect(calledUrl).toContain('query.operation_name=GET+%2Fapi');
       expect(calledUrl).toContain('query.attributes=http.status%3D200');
       expect(calledUrl).toContain('query.search_depth=20');
     });

@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useQuery, UseQueryResult } from '@tanstack/react-query';
+import { useQuery, skipToken, UseQueryResult } from '@tanstack/react-query';
 import { jaegerClient } from '../api/v3/client';
 import { localeStringComparator } from '../utils/sort';
 import type { SearchQuery } from '../types/search';
@@ -29,8 +29,7 @@ export function useServices(): UseQueryResult<string[]> {
 export function useSearchTraces(query: SearchQuery | null): UseQueryResult<TraceSummary[]> {
   return useQuery({
     queryKey: ['traceSummaries', query],
-    queryFn: () => jaegerClient.fetchTraceSummaries(query!),
-    enabled: query !== null,
+    queryFn: query ? () => jaegerClient.fetchTraceSummaries(query) : skipToken,
     staleTime: 30 * 1000, // 30 seconds
   });
 }
@@ -47,8 +46,7 @@ export function useSpanNames(
 ): UseQueryResult<{ name: string; spanKind: string }[]> {
   return useQuery({
     queryKey: ['spanNames', service],
-    queryFn: () => jaegerClient.fetchSpanNames(service!),
-    enabled: !!service, // Only fetch when service is selected
+    queryFn: service ? () => jaegerClient.fetchSpanNames(service) : skipToken,
     staleTime: 60 * 1000, // 1 minute
     refetchOnWindowFocus: true,
     select: data => {

@@ -28,11 +28,11 @@ export function sortTraces(traces: ISortableTrace[], sortBy: string) {
 }
 
 const summaryComparators: Record<string, (a: TraceSummary, b: TraceSummary) => number> = {
-  [MOST_RECENT]: (a, b) => b.startTime - a.startTime,
-  [SHORTEST_FIRST]: (a, b) => a.duration - b.duration,
-  [LONGEST_FIRST]: (a, b) => b.duration - a.duration,
-  [MOST_SPANS]: (a, b) => b.spanCount - a.spanCount,
-  [LEAST_SPANS]: (a, b) => a.spanCount - b.spanCount,
+  [MOST_RECENT]: (a, b) => +(b.startTime > a.startTime) || +(a.startTime === b.startTime) - 1,
+  [SHORTEST_FIRST]: (a, b) => +(a.duration > b.duration) || +(a.duration === b.duration) - 1,
+  [LONGEST_FIRST]: (a, b) => +(b.duration > a.duration) || +(a.duration === b.duration) - 1,
+  [MOST_SPANS]: (a, b) => +(b.spanCount > a.spanCount) || +(a.spanCount === b.spanCount) - 1,
+  [LEAST_SPANS]: (a, b) => +(a.spanCount > b.spanCount) || +(a.spanCount === b.spanCount) - 1,
 };
 
 /**

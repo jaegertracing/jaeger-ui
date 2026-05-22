@@ -12,10 +12,13 @@ import { ROUTE_PATH as qualityMetricsPath } from '../QualityMetrics/url';
 import { ROUTE_PATH as monitorATMPath } from '../Monitor/url';
 import { ROUTE_PATH as plexusDemoPath } from '../PlexusDemo/url';
 
-// Route components are lazy-loaded so each page's module graph is only fetched
-// when the user navigates to that route, not on initial app load.
-const SearchTracePage = React.lazy(() => import('../SearchTracePage'));
-const TraceRouter = React.lazy(() => import('./TraceRouter'));
+// SearchTracePage and TraceRouter are the two most-used pages (landing page and
+// primary navigation target), so they are imported eagerly.
+import SearchTracePage from '../SearchTracePage';
+import TraceRouter from './TraceRouter';
+
+// Secondary pages are lazy-loaded so their module graphs are only fetched when
+// the user first navigates to them, keeping the initial bundle small.
 const DependencyGraph = React.lazy(() => import('../DependencyGraph'));
 const DeepDependencies = React.lazy(() => import('../DeepDependencies'));
 const QualityMetrics = React.lazy(() => import('../QualityMetrics'));
@@ -34,19 +37,11 @@ const Fallback = <div />;
 export const ROUTES: { path: string; element: React.ReactNode }[] = [
   {
     path: searchPath,
-    element: (
-      <React.Suspense fallback={Fallback}>
-        <SearchTracePage />
-      </React.Suspense>
-    ),
+    element: <SearchTracePage />,
   },
   {
     path: tracePath,
-    element: (
-      <React.Suspense fallback={Fallback}>
-        <TraceRouter />
-      </React.Suspense>
-    ),
+    element: <TraceRouter />,
   },
   {
     path: dependenciesPath,
