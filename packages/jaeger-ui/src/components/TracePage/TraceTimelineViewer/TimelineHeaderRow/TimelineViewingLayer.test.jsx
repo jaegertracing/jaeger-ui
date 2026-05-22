@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { render, fireEvent, cleanup } from '@testing-library/react';
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 
 const { draggerInstances } = vi.hoisted(() => {
   const draggerInstances = [];
@@ -17,12 +17,23 @@ vi.mock('../../../../utils/DraggableManager', async () => {
     constructor(opts) {
       this._opts = opts;
       this.getBounds = opts.getBounds;
-      this.handleMouseDown = vi.fn();
-      this.handleMouseLeave = vi.fn();
-      this.handleMouseMove = vi.fn();
+      this.handleMouseDown = vi.fn(event => {
+        opts.onDragStart?.({ manager: this, value: this._getValue(event) });
+      });
+      this.handleMouseLeave = vi.fn(() => {
+        opts.onMouseLeave?.({ manager: this });
+      });
+      this.handleMouseMove = vi.fn(event => {
+        opts.onMouseMove?.({ manager: this, value: this._getValue(event) });
+      });
       this.resetBounds = vi.fn();
       this.dispose = vi.fn();
       draggerInstances.push(this);
+    }
+
+    _getValue(event) {
+      const { clientXLeft, width } = this.getBounds();
+      return (event.clientX - clientXLeft) / width;
     }
   }
 
@@ -39,7 +50,18 @@ function mapFromSubRange(viewStart, viewEnd, value) {
 }
 
 function getDragger() {
+  if (draggerInstances.length !== 1) {
+    throw new Error(
+      `Expected exactly one MockDraggableManager instance, but found ${draggerInstances.length}.`
+    );
+  }
   return draggerInstances[0];
+}
+
+function getTimelineLayer(container) {
+  const timelineLayer = container.querySelector('.TimelineViewingLayer');
+  expect(timelineLayer).toBeInTheDocument();
+  return timelineLayer;
 }
 
 describe('<TimelineViewingLayer>', () => {
@@ -80,12 +102,12 @@ describe('<TimelineViewingLayer>', () => {
 
   it('wires DOM mouse events to the DraggableManager handlers', () => {
     const { container } = render(<TimelineViewingLayer {...props} />);
-    const timelineLayer = container.querySelector('.TimelineViewingLayer');
+    const timelineLayer = getTimelineLayer(container);
     const dragger = getDragger();
 
-    fireEvent.mouseDown(timelineLayer);
+    fireEvent.mouseDown(timelineLayer, { clientX: 60 });
     fireEvent.mouseLeave(timelineLayer);
-    fireEvent.mouseMove(timelineLayer);
+    fireEvent.mouseMove(timelineLayer, { clientX: 60 });
 
     expect(dragger.handleMouseDown).toHaveBeenCalled();
     expect(dragger.handleMouseLeave).toHaveBeenCalled();
@@ -110,22 +132,22 @@ describe('<TimelineViewingLayer>', () => {
     });
 
     it('updates viewRangeTime.cursor on mouse move', () => {
-      render(<TimelineViewingLayer {...props} />);
-      getDragger()._opts.onMouseMove({ value: 0.5 });
+      const { container } = render(<TimelineViewingLayer {...props} />);
+      fireEvent.mouseMove(getTimelineLayer(container), { clientX: 60 });
       expect(props.updateNextViewRangeTime).toHaveBeenCalledWith({
         cursor: mapFromSubRange(viewStart, viewEnd, 0.5),
       });
     });
 
     it('clears viewRangeTime.cursor on mouse leave', () => {
-      render(<TimelineViewingLayer {...props} />);
-      getDragger()._opts.onMouseLeave();
+      const { container } = render(<TimelineViewingLayer {...props} />);
+      fireEvent.mouseLeave(getTimelineLayer(container));
       expect(props.updateNextViewRangeTime).toHaveBeenCalledWith({ cursor: undefined });
     });
 
     it('handles drag start without an existing anchor', () => {
-      render(<TimelineViewingLayer {...props} />);
-      getDragger()._opts.onDragStart({ value: 0.5 });
+      const { container } = render(<TimelineViewingLayer {...props} />);
+      fireEvent.mouseDown(getTimelineLayer(container), { clientX: 60 });
       const shift = mapFromSubRange(viewStart, viewEnd, 0.5);
 
       expect(props.updateNextViewRangeTime).toHaveBeenCalledWith({

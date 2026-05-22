@@ -12,11 +12,11 @@ import './TimelineViewingLayer.css';
 
 type TimelineViewingLayerProps = {
   /**
-   * `boundsInvalidator` is an arbitrary prop that lets the component know the
+   * `boundsInvalidator` is an arbitrary value that lets the component know the
    * bounds for dragging need to be recalculated. In practice, the name column
    * width serves fine for this.
    */
-  boundsInvalidator?: unknown;
+  boundsInvalidator: unknown;
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
   viewRangeTime: IViewRangeTime;
@@ -162,10 +162,8 @@ function TimelineViewingLayer(props: TimelineViewingLayerProps) {
   );
 
   const draggerReframeRef = React.useRef<DraggableManager | null>(null);
-  // DraggableManager is intentionally created once; its callbacks read from
-  // propsRef so drag events use the latest props after rerenders.
-  if (!draggerReframeRef.current) {
-    draggerReframeRef.current = new DraggableManager({
+  React.useEffect(() => {
+    const manager = new DraggableManager({
       getBounds: getDraggingBounds,
       onDragEnd: handleReframeDragEnd,
       onDragMove: handleReframeDragUpdate,
@@ -173,23 +171,45 @@ function TimelineViewingLayer(props: TimelineViewingLayerProps) {
       onMouseLeave: handleReframeMouseLeave,
       onMouseMove: handleReframeMouseMove,
     });
-  }
-  const draggerReframe = draggerReframeRef.current;
+    draggerReframeRef.current = manager;
+    return () => {
+      if (draggerReframeRef.current === manager) {
+        draggerReframeRef.current = null;
+      }
+      manager.dispose();
+    };
+  }, [
+    getDraggingBounds,
+    handleReframeDragEnd,
+    handleReframeDragUpdate,
+    handleReframeMouseLeave,
+    handleReframeMouseMove,
+  ]);
+
+  const handleMouseDown = React.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    draggerReframeRef.current?.handleMouseDown(event);
+  }, []);
+
+  const handleMouseLeave = React.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    draggerReframeRef.current?.handleMouseLeave(event);
+  }, []);
+
+  const handleMouseMove = React.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    draggerReframeRef.current?.handleMouseMove(event);
+  }, []);
 
   const hasMountedRef = React.useRef(false);
   React.useEffect(() => {
+    const manager = draggerReframeRef.current;
+    if (!manager) {
+      return;
+    }
     if (hasMountedRef.current) {
-      draggerReframe.resetBounds();
+      manager.resetBounds();
     } else {
       hasMountedRef.current = true;
     }
-  }, [boundsInvalidator, draggerReframe]);
-
-  React.useEffect(() => {
-    return () => {
-      draggerReframeRef.current?.dispose();
-    };
-  }, []);
+  }, [boundsInvalidator]);
 
   const { current, cursor, reframe, shiftEnd, shiftStart } = viewRangeTime;
   const [viewStart, viewEnd] = current;
@@ -204,9 +224,9 @@ function TimelineViewingLayer(props: TimelineViewingLayerProps) {
       aria-hidden
       className="TimelineViewingLayer"
       ref={rootRef}
-      onMouseDown={draggerReframe.handleMouseDown}
-      onMouseLeave={draggerReframe.handleMouseLeave}
-      onMouseMove={draggerReframe.handleMouseMove}
+      onMouseDown={handleMouseDown}
+      onMouseLeave={handleMouseLeave}
+      onMouseMove={handleMouseMove}
     >
       {cursorPosition != null && (
         <div className="TimelineViewingLayer--cursorGuide" style={{ left: cursorPosition }} />
