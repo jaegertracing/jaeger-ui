@@ -61,7 +61,10 @@ function loadJsonStarted(state: TraceState): TraceState {
 function loadJsonDone(state: TraceState, { payload }: any): TraceState {
   try {
     const payloadData: any[] = payload.data;
-    if (!Array.isArray(payloadData) || payloadData.some(t => !Array.isArray(t.spans))) {
+    if (
+      !Array.isArray(payloadData) ||
+      payloadData.some(t => !t || typeof t !== 'object' || !Array.isArray(t.spans))
+    ) {
       throw new Error('Invalid trace data: missing or invalid spans');
     }
     const results = new Set(state.search.results);
