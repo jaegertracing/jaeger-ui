@@ -1027,7 +1027,7 @@ Keep `useConfig()` as the stable **public API** throughout - only the backing im
 
 **Goal**: Replace "dispatch → promise middleware → reducer → selector" with query hooks and a cache key. Coordinate with [ADR 0002](./0002-otlp-api-v3-migration.md) / `api/v3` where applicable.
 
-#### ⬜ 2a. Single trace load
+#### ✅ 2a. Single trace load
 
 **Redux removed**: `trace` reducer fields: `traces` map, per-trace loading/error state.
 

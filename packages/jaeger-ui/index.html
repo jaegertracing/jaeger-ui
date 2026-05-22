@@ -39,11 +39,16 @@
           'afterend',
           '<base href="' + safe + '" data-inject-target="BASE_URL" />'
         );
+        // Delay the check: React 18 createRoot().render() is async (concurrent mode),
+        // so the root is empty at DOMContentLoaded even when the app loaded successfully.
+        // Only show the error if the root is still empty after a generous timeout.
         document.addEventListener('DOMContentLoaded', function () {
-          var root = document.getElementById('jaeger-ui-root');
-          if (root && !root.hasChildNodes()) {
-            root.textContent = 'Jaeger UI did not load. Unknown or invalid path: ' + path;
-          }
+          setTimeout(function () {
+            var root = document.getElementById('jaeger-ui-root');
+            if (root && !root.hasChildNodes()) {
+              root.textContent = 'Jaeger UI did not load. Unknown or invalid path: ' + path;
+            }
+          }, 3000);
         });
       })();
     </script>

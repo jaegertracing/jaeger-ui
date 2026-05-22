@@ -24,9 +24,8 @@ import * as orderBy from '../../../model/order-by';
 import { getPercentageOfDuration } from '../../../utils/date';
 import { stripEmbeddedState } from '../../../utils/embedded-url';
 
-import { FetchedTrace } from '../../../types';
 import { SearchQuery } from '../../../types/search';
-import { IOtelTrace } from '../../../types/otel';
+import { TraceSummary } from '../../../types/trace-summary';
 
 import './index.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
@@ -36,7 +35,7 @@ import SearchableSelect from '../../common/SearchableSelect';
 type SearchResultsProps = {
   cohortAddTrace: (traceId: string) => void;
   cohortRemoveTrace: (traceId: string) => void;
-  diffCohort: FetchedTrace[];
+  diffCohort: TraceSummary[];
   disableComparisons: boolean;
   hideGraph: boolean;
   loading: boolean;
@@ -46,7 +45,7 @@ type SearchResultsProps = {
   showStandaloneLink: boolean;
   skipMessage?: boolean;
   spanLinks?: Record<string, string> | undefined;
-  traces: IOtelTrace[];
+  traceSummaries: TraceSummary[];
   rawTraces: any[];
   sortBy: string;
   handleSortChange: (sortBy: string) => void;
@@ -134,7 +133,7 @@ export function UnconnectedSearchResults({
   showStandaloneLink,
   skipMessage = false,
   spanLinks,
-  traces,
+  traceSummaries,
   rawTraces,
   sortBy,
   handleSortChange,
@@ -196,7 +195,7 @@ export function UnconnectedSearchResults({
       </React.Fragment>
     );
   }
-  if (!Array.isArray(traces) || !traces.length) {
+  if (!Array.isArray(traceSummaries) || !traceSummaries.length) {
     return (
       <React.Fragment key="no-results">
         {diffCohort.length > 0 && diffSelection}
@@ -208,7 +207,7 @@ export function UnconnectedSearchResults({
       </React.Fragment>
     );
   }
-  const cohortIds = new Set(diffCohort.map(datum => datum.id));
+  const cohortIds = new Set(diffCohort.map(datum => datum.traceID));
   const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
   return (
     <div className="SearchResults">
@@ -216,18 +215,18 @@ export function UnconnectedSearchResults({
         {!hideGraph && traceResultsView && (
           <div className="ub-p3 SearchResults--headerScatterPlot">
             <ScatterPlot
-              data={traces.map(t => {
+              data={traceSummaries.map(t => {
                 return {
                   x: t.startTime,
                   y: t.duration,
                   traceID: t.traceID,
-                  size: t.spans.length,
+                  spanCount: t.spanCount,
+                  serviceCount: t.services.length,
                   name: t.traceName,
-                  color: t.hasErrors() ? 'red' : '#12939A',
-                  services: t.services || [],
+                  color: t.errorSpanCount > 0 ? 'red' : '#12939A',
                 };
               })}
-              onValueClick={(t: IOtelTrace) => {
+              onValueClick={(t: { traceID: string }) => {
                 goToTrace(t.traceID);
               }}
             />
@@ -235,7 +234,7 @@ export function UnconnectedSearchResults({
         )}
         <div className="SearchResults--headerOverview">
           <h2 className="ub-m0 u-flex-1">
-            {traces.length} Trace{traces.length > 1 && 's'}
+            {traceSummaries.length} Trace{traceSummaries.length > 1 && 's'}
           </h2>
           {traceResultsView && <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />}
           {traceResultsView && <DownloadResults onDownloadResultsClicked={onDownloadResultsClicked} />}
@@ -260,18 +259,19 @@ export function UnconnectedSearchResults({
       {traceResultsView && diffSelection}
       {traceResultsView && (
         <ul className="ub-list-reset">
-          {traces.map(trace => (
-            <li className="ub-my3" key={trace.traceID}>
+          {traceSummaries.map(traceSummary => (
+            <li className="ub-my3" key={traceSummary.traceID}>
               <ResultItem
-                durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}
-                isInDiffCohort={cohortIds.has(trace.traceID)}
+                durationPercent={getPercentageOfDuration(traceSummary.duration, maxTraceDuration)}
+                isInDiffCohort={cohortIds.has(traceSummary.traceID)}
                 linkTo={getTracePageLink(
-                  trace.traceID,
+                  traceSummary.traceID,
                   { fromSearch: searchUrl },
-                  spanLinks && (spanLinks[trace.traceID] || spanLinks[trace.traceID.replace(/^0*/, '')])
+                  spanLinks &&
+                    (spanLinks[traceSummary.traceID] || spanLinks[traceSummary.traceID.replace(/^0*/, '')])
                 )}
                 toggleComparison={toggleComparison}
-                trace={trace}
+                traceSummary={traceSummary}
                 disableComparision={disableComparisons}
               />
             </li>
