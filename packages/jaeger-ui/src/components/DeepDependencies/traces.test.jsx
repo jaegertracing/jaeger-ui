@@ -19,7 +19,7 @@ vi.mock('../../hooks/useTraceLoading', () => ({
 }));
 
 import { DeepDependencyGraphPageImpl } from '.';
-import { TracesDdgImpl } from './traces';
+import TracesDdgImpl from './traces';
 import { ROUTE_PATH } from '../SearchTracePage/url';
 import * as url from './url';
 import * as GraphModel from '../../model/ddg/GraphModel';

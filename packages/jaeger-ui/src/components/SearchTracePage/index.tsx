@@ -28,10 +28,10 @@ import { trackSortByChange } from './SearchForm.track';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { useEmbeddedState } from '../../stores/embedded-store';
 import { useShallow } from 'zustand/react/shallow';
-import { FetchedTrace, ReduxState } from '../../types';
+import { ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
 import transformTraceData from '../../model/transform-trace-data';
-import { getCachedTrace, populateTraceCache } from '../../hooks/useTraceLoading';
+import { populateTraceCache } from '../../hooks/useTraceLoading';
 import type { IOtelTrace } from '../../types/otel';
 import { TraceSummary } from '../../types/trace-summary';
 import { traceToTraceSummary } from '../../model/trace-summary';
@@ -49,8 +49,6 @@ interface ISearchTracePageImplOwnProps {
 // Props from mapStateToProps
 interface IStateProps {
   queryOfResults: IQueryOfResults | null;
-  // passed as-is from Redux; cohort lookup happens in the component where Zustand is accessible
-  tracesInRedux: ReduxState['trace'];
   loadingTraces: boolean;
   traces: IOtelTrace[];
   traceResultsToDownload: unknown[];
@@ -62,7 +60,6 @@ interface IStateProps {
 
 // Props from mapDispatchToProps
 interface IDispatchProps {
-  fetchMultipleTraces: (traceIds: string[]) => void;
   searchTraces: (query: TUrlState) => void;
   loadJsonTraces: (fileList: { file: File }) => void;
 }
@@ -73,9 +70,7 @@ type SearchTracePageImplProps = ISearchTracePageImplOwnProps & IStateProps & IDi
 export function SearchTracePageImpl(props: SearchTracePageImplProps) {
   const embedded = useEmbeddedState();
   const {
-    tracesInRedux,
     errors,
-    fetchMultipleTraces,
     isHomepage,
     loadingTraces,
     maxTraceDuration,
@@ -110,11 +105,19 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
     }))
   );
   const cohort = useTraceDiffStore(s => s.cohort);
-  const diffCohort = useMemo(() => stateTraceDiffXformer(tracesInRedux, { cohort }), [tracesInRedux, cohort]);
 
   const config = useConfig();
   const { disableFileUploadControl } = config;
   const [sortBy, setSortBy] = useState(orderBy.MOST_RECENT);
+
+  const traceResults = sortedTracesXformer(traces, sortBy);
+  const diffCohort = useMemo(() => {
+    const summaryMap = new Map(traceResults.map(s => [s.traceID, s]));
+    return cohort.flatMap(id => {
+      const s = summaryMap.get(id);
+      return s ? [s] : [];
+    });
+  }, [cohort, traceResults]);
 
   // componentDidMount logic - intentionally runs only on mount
   useEffect(() => {
@@ -125,12 +128,8 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
     ) {
       searchTraces(urlQueryParams);
     }
-    const needForDiffs = diffCohort.filter(ft => ft.state == null).map(ft => ft.id);
-    if (needForDiffs.length) {
-      fetchMultipleTraces(needForDiffs);
-    }
     // Intentionally run only on mount, we only want to trigger the initial search
-    // and fetch diff traces once when the component loads, not on every state change.
+    // once when the component loads, not on every state change.
     // eslint-disable-next-line react-x/exhaustive-deps
   }, []);
 
@@ -139,7 +138,6 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
     trackSortByChange(newSortBy);
   }, []);
 
-  const traceResults = sortedTracesXformer(traces, sortBy);
   const hasTraceResults = traceResults && traceResults.length > 0;
   const showErrors = errors && !loadingTraces;
   const showLogo = isHomepage && !hasTraceResults && !loadingTraces && !errors;
@@ -211,10 +209,6 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
   );
 }
 
-interface IStateTraceDiff {
-  cohort: string[];
-}
-
 const stateTraceXformer = memoizeOne((stateTrace: ReduxState['trace']) => {
   const { search } = stateTrace;
   const { query, results, state, error: traceError } = search;
@@ -230,19 +224,6 @@ const stateTraceXformer = memoizeOne((stateTrace: ReduxState['trace']) => {
   const maxDuration = Math.max(0, ...traces.map(t => t.duration || 0));
   return { traces, rawTraces, maxDuration, traceError, loadingTraces, query, results };
 });
-
-export const stateTraceDiffXformer = memoizeOne(
-  (stateTrace: ReduxState['trace'], stateTraceDiff: IStateTraceDiff) => {
-    const { cohort } = stateTraceDiff;
-    return cohort.map(id => {
-      // Search results were already written into the React Query cache by stateTraceXformer.
-      // Fall back covers traces added via TraceIdInput on the compare page.
-      const data = getCachedTrace(id);
-      if (data) return { id, data, state: fetchedState.DONE } as FetchedTrace;
-      return { id } as FetchedTrace;
-    });
-  }
-);
 
 const sortedTracesXformer = memoizeOne((traces: IOtelTrace[], sortBy: string) => {
   const traceResults = traces.slice();
@@ -272,7 +253,6 @@ export function mapStateToProps(
   // as we no longer use Redux for services (PR 3329).
   return {
     queryOfResults: queryOfResults as IQueryOfResults | null,
-    tracesInRedux: state.trace,
     isHomepage,
     loadingTraces,
     traces,
@@ -285,10 +265,9 @@ export function mapStateToProps(
 }
 
 function mapDispatchToProps(dispatch: Dispatch): IDispatchProps {
-  const { fetchMultipleTraces, searchTraces } = bindActionCreators(jaegerApiActions, dispatch);
+  const { searchTraces } = bindActionCreators(jaegerApiActions, dispatch);
   const { loadJsonTraces } = bindActionCreators(fileReaderActions, dispatch);
   return {
-    fetchMultipleTraces,
     searchTraces,
     loadJsonTraces,
   };

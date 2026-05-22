@@ -30,8 +30,7 @@ type TOwnProps = {
   location: Location;
 };
 
-// export for tests
-export const TracesDdgImpl: React.FC<TOwnProps> = React.memo(props => {
+const TracesDdgImpl: React.FC<TOwnProps> = React.memo(props => {
   const { location } = props;
   const navigate = useNavigate();
   const viewModifierProps = useDdgViewModifierBridgeProps();
