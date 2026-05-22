@@ -27,14 +27,9 @@ import { SearchQuery } from '../../types/search';
 import { useSearchTraces } from '../../hooks/useTraceDiscovery';
 import type { TraceSummary } from '../../types/trace-summary';
 
-interface ISearchTracePageProps {
-  isHomepage?: boolean;
-}
-
 // export for tests
-export function SearchTracePageImpl(props: ISearchTracePageProps) {
+export function SearchTracePageImpl() {
   const embedded = useEmbeddedState();
-  const { isHomepage } = props;
 
   const location = useLocation();
   const urlQueryParams = useMemo(() => {
@@ -42,7 +37,13 @@ export function SearchTracePageImpl(props: ISearchTracePageProps) {
     return Object.keys(query).length > 0 ? query : null;
   }, [location.search]);
 
+  const isHomepage = urlQueryParams === null;
+
   // Derive SearchQuery from URL params; null when no service is present (disables the fetch).
+  // Note: SearchForm always resolves lookback to explicit start/end before pushing to the URL,
+  // so start/end are expected to be present for any real search. The lookback field is kept in
+  // the query for compatibility with the SearchForm but is not forwarded to fetchTraceSummaries
+  // (the v3 endpoint requires explicit start_time_min / start_time_max).
   const searchQuery = useMemo((): SearchQuery | null => {
     const q = urlQueryParams;
     if (!q?.service) return null;
@@ -135,7 +136,7 @@ export function SearchTracePageImpl(props: ISearchTracePageProps) {
 
   const hasTraceResults = sortedTraceSummaries.length > 0;
   const showErrors = errors.length > 0 && !loadingTraces;
-  const showLogo = isHomepage && !hasTraceResults && !loadingTraces && !errors.length;
+  const showLogo = isHomepage && !hasTraceResults && !loadingTraces && !errors.length && !embedded;
 
   const tabItems = [];
   // Always show the search form, loading is handled by SearchForm

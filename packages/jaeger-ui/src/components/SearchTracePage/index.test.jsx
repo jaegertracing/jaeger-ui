@@ -64,14 +64,7 @@ const AllProvider = ({ children, initialEntries = ['/search'] }) => (
 );
 
 describe('<SearchTracePage>', () => {
-  let props;
-
-  const getDefaultProps = () => ({
-    isHomepage: false,
-  });
-
   beforeEach(() => {
-    props = getDefaultProps();
     useEmbeddedStateMock.mockReturnValue(null);
     useSearchTracesMock.mockClear();
     useSearchTracesMock.mockReturnValue({ data: [], isLoading: false, error: null });
@@ -89,7 +82,7 @@ describe('<SearchTracePage>', () => {
   it('uses React Query to fetch services', () => {
     render(
       <AllProvider>
-        <SearchTracePage {...props} />
+        <SearchTracePage />
       </AllProvider>
     );
     expect(useServices).toHaveBeenCalled();
@@ -98,7 +91,7 @@ describe('<SearchTracePage>', () => {
   it('calls useSearchTraces with query derived from URL params', () => {
     render(
       <AllProvider initialEntries={['/search?service=svc-a']}>
-        <SearchTracePage {...props} />
+        <SearchTracePage />
       </AllProvider>
     );
     expect(useSearchTracesMock).toHaveBeenCalled();
@@ -110,7 +103,7 @@ describe('<SearchTracePage>', () => {
   it('passes null query to useSearchTraces when no service is in URL params', () => {
     render(
       <AllProvider>
-        <SearchTracePage {...props} />
+        <SearchTracePage />
       </AllProvider>
     );
     const [query] = useSearchTracesMock.mock.calls[0];
@@ -121,7 +114,7 @@ describe('<SearchTracePage>', () => {
     useSearchTracesMock.mockReturnValue({ data: [], isLoading: true, error: null });
     const { container } = render(
       <AllProvider initialEntries={['/search?service=svc-a']}>
-        <SearchTracePage {...props} />
+        <SearchTracePage />
       </AllProvider>
     );
     expect(container.querySelector('.LoadingIndicator')).toBeInTheDocument();
@@ -130,7 +123,7 @@ describe('<SearchTracePage>', () => {
   it('shows a search form', () => {
     const { container } = render(
       <AllProvider>
-        <SearchTracePage {...props} />
+        <SearchTracePage />
       </AllProvider>
     );
     expect(container.querySelector('[data-node-key="searchForm"]')).toBeInTheDocument();
@@ -140,20 +133,28 @@ describe('<SearchTracePage>', () => {
     useSearchTracesMock.mockReturnValue({ data: [], isLoading: false, error: new Error('big-error') });
     const { container } = render(
       <AllProvider initialEntries={['/search?service=svc-a']}>
-        <SearchTracePage {...props} />
+        <SearchTracePage />
       </AllProvider>
     );
     expect(container.querySelector('.js-test-error-message')).toBeInTheDocument();
   });
 
-  it('shows the logo prior to searching', () => {
-    const testProps = { ...props, isHomepage: true };
+  it('shows the logo on homepage (no URL params)', () => {
     const { container } = render(
       <AllProvider>
-        <SearchTracePage {...testProps} />
+        <SearchTracePage />
       </AllProvider>
     );
     expect(container.querySelector('.js-test-logo')).toBeInTheDocument();
+  });
+
+  it('hides the logo when there are URL search params', () => {
+    const { container } = render(
+      <AllProvider initialEntries={['/search?service=svc-a']}>
+        <SearchTracePage />
+      </AllProvider>
+    );
+    expect(container.querySelector('.js-test-logo')).not.toBeInTheDocument();
   });
 
   it('hides SearchForm if is embed', () => {
@@ -164,7 +165,7 @@ describe('<SearchTracePage>', () => {
     });
     const { container } = render(
       <AllProvider>
-        <SearchTracePage {...props} />
+        <SearchTracePage />
       </AllProvider>
     );
     expect(container.querySelector('[data-node-key="searchForm"]')).not.toBeInTheDocument();
@@ -178,7 +179,7 @@ describe('<SearchTracePage>', () => {
     });
     const { container } = render(
       <AllProvider>
-        <SearchTracePage {...props} />
+        <SearchTracePage />
       </AllProvider>
     );
     expect(container.querySelector('.js-test-logo')).not.toBeInTheDocument();
@@ -187,7 +188,7 @@ describe('<SearchTracePage>', () => {
   it('shows Upload tab by default', () => {
     const { container } = render(
       <AllProvider>
-        <SearchTracePage {...props} />
+        <SearchTracePage />
       </AllProvider>
     );
     expect(container.querySelector('[data-node-key="fileLoader"]')).toBeInTheDocument();
@@ -204,7 +205,7 @@ describe('<SearchTracePage>', () => {
     });
     const { container } = render(
       <AllProvider>
-        <SearchTracePage {...props} />
+        <SearchTracePage />
       </AllProvider>
     );
     expect(container.querySelector('[data-node-key="fileLoader"]')).not.toBeInTheDocument();

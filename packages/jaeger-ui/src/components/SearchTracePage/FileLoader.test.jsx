@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 vi.mock('../../utils/readJsonFile', () => ({
@@ -91,10 +91,9 @@ describe('<FileLoader />', () => {
     const beforeUpload = global.mockBeforeUpload;
 
     const file = new File(['{}'], 'trace.json', { type: 'application/json' });
-    beforeUpload(file, [file]);
-
-    // Wait for async processing
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await act(async () => {
+      beforeUpload(file, [file]);
+    });
 
     expect(readJsonFile).toHaveBeenCalledWith({ file });
     expect(transformTraceData).toHaveBeenCalledWith(rawTrace);
@@ -112,36 +111,62 @@ describe('<FileLoader />', () => {
     const beforeUpload = global.mockBeforeUpload;
 
     const file = new File(['{}'], 'trace.json', { type: 'application/json' });
-    beforeUpload(file, [file]);
-
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await act(async () => {
+      beforeUpload(file, [file]);
+    });
 
     expect(mockOnTracesLoaded).toHaveBeenCalledWith([], []);
   });
 
-  it('handles multiple files being uploaded at once', async () => {
-    const rawTrace1 = { traceID: 'a', spans: [] };
-    const rawTrace2 = { traceID: 'b', spans: [] };
-    const otelTrace1 = { traceID: 'a' };
-    const otelTrace2 = { traceID: 'b' };
-    const summary1 = { traceID: 'a', traceName: 's1: op1' };
-    const summary2 = { traceID: 'b', traceName: 's2: op2' };
+  it('normalizes parsed.data single object into an array', async () => {
+    const rawTrace = { traceID: 'abc', spans: [] };
+    const otelTrace = { traceID: 'abc' };
+    const summary = { traceID: 'abc', traceName: 'svc: op' };
 
-    readJsonFile.mockResolvedValueOnce({ data: [rawTrace1] }).mockResolvedValueOnce({ data: [rawTrace2] });
-    transformTraceData.mockImplementation(raw => ({
-      asOtelTrace: () => (raw.traceID === 'a' ? otelTrace1 : otelTrace2),
-    }));
-    traceToTraceSummary.mockImplementation(otel => (otel.traceID === 'a' ? summary1 : summary2));
+    // parsed.data is a single object, not an array
+    readJsonFile.mockResolvedValue({ data: rawTrace });
+    transformTraceData.mockReturnValue({ asOtelTrace: () => otelTrace });
+    traceToTraceSummary.mockReturnValue(summary);
+
+    render(<FileLoader onTracesLoaded={mockOnTracesLoaded} />);
+    const beforeUpload = global.mockBeforeUpload;
+
+    const file = new File(['{}'], 'trace.json', { type: 'application/json' });
+    await act(async () => {
+      beforeUpload(file, [file]);
+    });
+
+    expect(transformTraceData).toHaveBeenCalledWith(rawTrace);
+    expect(mockOnTracesLoaded).toHaveBeenCalledWith([summary], [rawTrace]);
+  });
+
+  it('processes each file independently (no N×N duplication)', async () => {
+    const rawTrace1 = { traceID: 'a', spans: [] };
+    const otelTrace1 = { traceID: 'a' };
+    const summary1 = { traceID: 'a', traceName: 's1: op1' };
+
+    readJsonFile.mockResolvedValue({ data: [rawTrace1] });
+    transformTraceData.mockReturnValue({ asOtelTrace: () => otelTrace1 });
+    traceToTraceSummary.mockReturnValue(summary1);
 
     render(<FileLoader onTracesLoaded={mockOnTracesLoaded} />);
     const beforeUpload = global.mockBeforeUpload;
 
     const file1 = new File(['{}'], 'trace1.json', { type: 'application/json' });
     const file2 = new File(['{}'], 'trace2.json', { type: 'application/json' });
-    beforeUpload(file1, [file1, file2]);
 
-    await new Promise(resolve => setTimeout(resolve, 0));
+    // Simulate Ant Design calling beforeUpload once per file
+    await act(async () => {
+      beforeUpload(file1, [file1, file2]);
+    });
+    await act(async () => {
+      beforeUpload(file2, [file1, file2]);
+    });
 
+    // Each call processes only its own file
+    expect(readJsonFile).toHaveBeenCalledTimes(2);
+    expect(readJsonFile).toHaveBeenNthCalledWith(1, { file: file1 });
+    expect(readJsonFile).toHaveBeenNthCalledWith(2, { file: file2 });
     expect(mockOnTracesLoaded).toHaveBeenCalledTimes(2);
   });
 });

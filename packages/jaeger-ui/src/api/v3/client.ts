@@ -62,8 +62,14 @@ export class JaegerClient {
     const params = new URLSearchParams();
     if (query.service) params.set('query.service_name', query.service);
     if (query.operation) params.set('query.span_name', String(query.operation));
-    if (query.start) params.set('query.start_time_min', new Date(Number(query.start) / 1000).toISOString());
-    if (query.end) params.set('query.start_time_max', new Date(Number(query.end) / 1000).toISOString());
+    // start/end are microsecond epoch strings from the URL; convert to ISO for the v3 API.
+    // Guard with Number.isFinite to drop malformed URL params gracefully.
+    const startUs = Number(query.start);
+    const endUs = Number(query.end);
+    if (Number.isFinite(startUs) && startUs > 0)
+      params.set('query.start_time_min', new Date(startUs / 1000).toISOString());
+    if (Number.isFinite(endUs) && endUs > 0)
+      params.set('query.start_time_max', new Date(endUs / 1000).toISOString());
     if (query.limit) params.set('query.num_traces', String(query.limit));
     if (query.minDuration) params.set('query.duration_min', query.minDuration);
     if (query.maxDuration) params.set('query.duration_max', query.maxDuration);
@@ -78,21 +84,24 @@ export class JaegerClient {
     const validated = TraceSummariesResponseSchema.parse(data);
 
     // Timestamps are decimal ns strings (proto3 JSON encoding for int64).
-    // Chop the last 3 digits to convert ns→µs in string space, then parse as Number.
-    // µs-epoch values (~1.7e15) are well within Number.MAX_SAFE_INTEGER (9e15).
-    const nsToMicros = (ns: string): Microseconds => Number(ns.slice(0, -3)) as Microseconds;
-    return validated.summaries.map(s => ({
-      traceID: s.traceID,
-      traceName: `${s.rootServiceName}: ${s.rootOperationName}`,
-      rootServiceName: s.rootServiceName,
-      rootOperationName: s.rootOperationName,
-      startTime: nsToMicros(s.minStartTimeUnixNano),
-      duration: (nsToMicros(s.maxEndTimeUnixNano) - nsToMicros(s.minStartTimeUnixNano)) as Microseconds,
-      spanCount: s.spanCount,
-      errorSpanCount: s.errorSpanCount,
-      orphanSpanCount: s.orphanSpanCount,
-      services: s.services,
-    }));
+    // Use BigInt arithmetic to avoid precision loss; µs-epoch values (~1.7e15)
+    // fit safely in Number after dividing by 1000.
+    return validated.summaries.map(s => {
+      const startNs = BigInt(s.minStartTimeUnixNano);
+      const endNs = BigInt(s.maxEndTimeUnixNano);
+      return {
+        traceID: s.traceID,
+        traceName: `${s.rootServiceName}: ${s.rootOperationName}`,
+        rootServiceName: s.rootServiceName,
+        rootOperationName: s.rootOperationName,
+        startTime: Number(startNs / 1000n) as Microseconds,
+        duration: Number((endNs - startNs) / 1000n) as Microseconds,
+        spanCount: s.spanCount,
+        errorSpanCount: s.errorSpanCount,
+        orphanSpanCount: s.orphanSpanCount,
+        services: s.services,
+      };
+    });
   }
 
   /**

@@ -9,6 +9,7 @@ import readJsonFile from '../../utils/readJsonFile';
 import transformTraceData from '../../model/transform-trace-data';
 import { traceToTraceSummary } from '../../model/trace-summary';
 import { populateTraceCache } from '../../hooks/useTraceLoading';
+import type { SpanData, TraceData } from '../../types/trace';
 import type { TraceSummary } from '../../types/trace-summary';
 
 import './FileLoader.css';
@@ -23,28 +24,38 @@ export default function FileLoader(props: FileLoaderProps) {
   return (
     <Dragger
       accept=".json,.jsonl"
-      beforeUpload={(file, fileList) => {
-        fileList.forEach(fileFromList => {
-          readJsonFile({ file: fileFromList })
-            .then((parsed: any) => {
-              const traces = Array.isArray(parsed) ? parsed : (parsed?.data ?? [parsed]);
-              const summaries: TraceSummary[] = [];
-              const rawTraces: unknown[] = [];
-              for (const raw of traces) {
-                const traceData = transformTraceData(raw);
-                if (!traceData) continue;
-                const otel = traceData.asOtelTrace();
-                populateTraceCache(otel);
-                summaries.push(traceToTraceSummary(otel));
-                rawTraces.push(raw);
-              }
-              props.onTracesLoaded(summaries, rawTraces);
-            })
-            .catch((err: unknown) => {
-              // eslint-disable-next-line no-console
-              console.error('Failed to load trace file', err);
-            });
-        });
+      beforeUpload={file => {
+        // Ant Design calls beforeUpload once per file even when multiple files are selected,
+        // so we process only the `file` argument to avoid N×N processing.
+        readJsonFile({ file })
+          .then((parsed: any) => {
+            // Normalize to array: handle { data: [...] }, { data: {} }, [...], or a single object.
+            let traces: unknown[];
+            if (Array.isArray(parsed)) {
+              traces = parsed;
+            } else if (Array.isArray(parsed?.data)) {
+              traces = parsed.data;
+            } else if (parsed?.data != null) {
+              traces = [parsed.data];
+            } else {
+              traces = [parsed];
+            }
+            const summaries: TraceSummary[] = [];
+            const rawTraces: unknown[] = [];
+            for (const raw of traces) {
+              const traceData = transformTraceData(raw as TraceData & { spans: SpanData[] });
+              if (!traceData) continue;
+              const otel = traceData.asOtelTrace();
+              populateTraceCache(otel);
+              summaries.push(traceToTraceSummary(otel));
+              rawTraces.push(raw);
+            }
+            props.onTracesLoaded(summaries, rawTraces);
+          })
+          .catch((err: unknown) => {
+            // eslint-disable-next-line no-console
+            console.error('Failed to load trace file', err);
+          });
         return false;
       }}
       multiple
