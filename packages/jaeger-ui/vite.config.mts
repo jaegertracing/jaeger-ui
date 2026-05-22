@@ -229,6 +229,11 @@ export default defineConfig({
       '/serviceedges': proxyConfig,
       '/qualitymetrics-v2': proxyConfig,
     },
+    warmup: {
+      // Pre-transform the heaviest secondary route in the background on startup
+      // so the first navigation to the trace page doesn't block on cold transforms.
+      clientFiles: ['./src/components/TracePage/index.tsx'],
+    },
   },
   base: './',
   build: {
