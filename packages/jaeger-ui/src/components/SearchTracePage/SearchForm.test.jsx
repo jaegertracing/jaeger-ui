@@ -433,14 +433,14 @@ describe('submitForm()', () => {
     });
 
     it('omits values when they are falsy', () => {
-      fields.minDuation = undefined;
-      fields.maxDuation = undefined;
+      fields.minDuration = undefined;
+      fields.maxDuration = undefined;
       submitForm(fields, searchTraces);
       const { calls } = searchTraces.mock;
       expect(calls.length).toBe(1);
       const { minDuration, maxDuration } = calls[0][0];
-      expect(minDuration).toBe(null);
-      expect(maxDuration).toBe(null);
+      expect(minDuration).toBe(undefined);
+      expect(maxDuration).toBe(undefined);
     });
   });
 });
