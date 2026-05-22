@@ -20,25 +20,11 @@ import transformTracesToPaths from '../../model/ddg/transformTracesToPaths';
 
 import { TDdgStateEntry } from '../../types/TDdgState';
 import { FetchedTrace, FetchedState, ReduxState } from '../../types';
-import { Trace } from '../../types/trace';
 import { IOtelTrace } from '../../types/otel';
 import { queryClient } from '../../query/app-query-client';
 
 // Required for proper memoization of subsequent function calls
 const svcOp = memoizeOne((service, operation) => ({ service, operation }));
-
-const mapTracesToOtel = memoizeOne(
-  (traces: Record<string, FetchedTrace<Trace>>): Record<string, FetchedTrace<IOtelTrace>> => {
-    const result: Record<string, FetchedTrace<IOtelTrace>> = {};
-    Object.entries(traces).forEach(([id, trace]) => {
-      result[id] = {
-        ...trace,
-        data: trace.data?.asOtelTrace(),
-      };
-    });
-    return result;
-  }
-);
 
 // export for tests
 export function mapStateToProps(_state: ReduxState, ownProps: TOwnProps): TReduxProps {
@@ -49,8 +35,8 @@ export function mapStateToProps(_state: ReduxState, ownProps: TOwnProps): TRedux
   let graph: GraphModel | undefined;
   if (service) {
     // Build a traces map from the React Query cache (traces are keyed by ['trace', id]).
-    const tracesFromCache: Record<string, FetchedTrace<Trace>> = {};
-    queryClient.getQueriesData<Trace>({ queryKey: ['trace'] }).forEach(([_key, traceData]) => {
+    const tracesFromCache: Record<string, FetchedTrace<IOtelTrace>> = {};
+    queryClient.getQueriesData<IOtelTrace>({ queryKey: ['trace'] }).forEach(([_key, traceData]) => {
       if (traceData) {
         tracesFromCache[traceData.traceID] = {
           id: traceData.traceID,
@@ -59,7 +45,7 @@ export function mapStateToProps(_state: ReduxState, ownProps: TOwnProps): TRedux
         };
       }
     });
-    const payload = transformTracesToPaths(mapTracesToOtel(tracesFromCache), service, operation);
+    const payload = transformTracesToPaths(tracesFromCache, service, operation);
     graphState = {
       model: transformDdgData(payload, svcOp(service, operation)),
       state: fetchedState.DONE,
