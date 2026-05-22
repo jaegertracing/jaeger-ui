@@ -4,6 +4,8 @@
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
 import { jaegerClient } from '../api/v3/client';
 import { localeStringComparator } from '../utils/sort';
+import type { SearchQuery } from '../types/search';
+import type { TraceSummary } from '../types/trace-summary';
 
 /**
  * React Query hook to fetch the list of services from the Jaeger API.
@@ -16,6 +18,20 @@ export function useServices(): UseQueryResult<string[]> {
     staleTime: 60 * 1000, // 1 minute
     refetchOnWindowFocus: true,
     select: data => [...data].sort(localeStringComparator),
+  });
+}
+
+/**
+ * React Query hook to search for traces by query parameters.
+ * Calls /api/v3/trace-summaries and returns TraceSummary[].
+ * Pass null to suppress the fetch (e.g. on the homepage before the user submits a search).
+ */
+export function useSearchTraces(query: SearchQuery | null): UseQueryResult<TraceSummary[]> {
+  return useQuery({
+    queryKey: ['traceSummaries', query],
+    queryFn: () => jaegerClient.fetchTraceSummaries(query!),
+    enabled: query !== null,
+    staleTime: 30 * 1000, // 30 seconds
   });
 }
 

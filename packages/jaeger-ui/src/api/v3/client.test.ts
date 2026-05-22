@@ -256,6 +256,107 @@ describe('JaegerClient', () => {
     });
   });
 
+  describe('fetchTraceSummaries', () => {
+    const query = {
+      service: 'my-svc',
+      operation: null,
+      start: '1700000000000000',
+      end: '1700000060000000',
+      limit: 20,
+      lookback: '1h',
+      minDuration: undefined,
+      maxDuration: undefined,
+      tags: null,
+    };
+
+    const mockApiSummary = {
+      traceID: 'aaaabbbbccccdddd0000111122223333',
+      rootServiceName: 'my-svc',
+      rootOperationName: 'GET /api',
+      // Decimal strings — proto3 JSON encoding for int64
+      minStartTimeUnixNano: '1700000001000000000',
+      maxEndTimeUnixNano: '1700000001000500000',
+      spanCount: 5,
+      errorSpanCount: 1,
+      orphanSpanCount: 0,
+      services: [{ name: 'my-svc', spanCount: 5, errorSpanCount: 1 }],
+    };
+
+    it('maps string nanosecond timestamps to microseconds without precision loss', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ summaries: [mockApiSummary] }),
+      });
+
+      const promise = client.fetchTraceSummaries(query);
+      vi.runAllTimers();
+      const result = await promise;
+
+      expect(result).toHaveLength(1);
+      // 1700000001000000000 ns / 1000 = 1700000001000000 µs
+      expect(result[0].startTime).toBe(1700000001000000);
+      // (1700000001000500000 - 1700000001000000000) / 1000 = 500 µs
+      expect(result[0].duration).toBe(500);
+    });
+
+    it('builds traceName from rootServiceName and rootOperationName', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ summaries: [mockApiSummary] }),
+      });
+
+      const promise = client.fetchTraceSummaries(query);
+      vi.runAllTimers();
+      const [summary] = await promise;
+
+      expect(summary.traceName).toBe('my-svc: GET /api');
+      expect(summary.traceID).toBe(mockApiSummary.traceID);
+      expect(summary.spanCount).toBe(5);
+      expect(summary.errorSpanCount).toBe(1);
+      expect(summary.orphanSpanCount).toBe(0);
+      expect(summary.services).toEqual(mockApiSummary.services);
+    });
+
+    it('throws on non-ok HTTP response', async () => {
+      mockFetch.mockResolvedValue({ ok: false, status: 500, statusText: 'Internal Server Error' });
+
+      const promise = client.fetchTraceSummaries(query);
+      vi.runAllTimers();
+
+      await expect(promise).rejects.toThrow('Failed to fetch trace summaries: 500 Internal Server Error');
+    });
+
+    it('throws ZodError when response fails schema validation', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ summaries: [{ ...mockApiSummary, minStartTimeUnixNano: 12345 }] }),
+      });
+
+      const promise = client.fetchTraceSummaries(query);
+      vi.runAllTimers();
+
+      await expect(promise).rejects.toThrow(ZodError);
+    });
+
+    it('only sets URL params for non-null query fields', async () => {
+      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ summaries: [] }) });
+
+      const promise = client.fetchTraceSummaries({
+        ...query,
+        operation: 'GET /api',
+        tags: 'http.status=200',
+      });
+      vi.runAllTimers();
+      await promise;
+
+      const calledUrl = mockFetch.mock.calls[0][0] as string;
+      expect(calledUrl).toContain('query.service_name=my-svc');
+      expect(calledUrl).toContain('query.span_name=GET+%2Fapi');
+      expect(calledUrl).toContain('query.attributes=http.status%3D200');
+      expect(calledUrl).toContain('query.search_depth=20');
+    });
+  });
+
   describe('singleton instance', () => {
     it('exports a singleton jaegerClient instance', () => {
       expect(jaegerClient).toBeInstanceOf(JaegerClient);
@@ -264,6 +365,7 @@ describe('JaegerClient', () => {
     it('singleton instance has all expected methods', () => {
       expect(jaegerClient.fetchServices).toBeInstanceOf(Function);
       expect(jaegerClient.fetchSpanNames).toBeInstanceOf(Function);
+      expect(jaegerClient.fetchTraceSummaries).toBeInstanceOf(Function);
     });
   });
 });

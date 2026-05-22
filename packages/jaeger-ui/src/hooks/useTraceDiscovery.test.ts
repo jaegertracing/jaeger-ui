@@ -4,13 +4,15 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
-import { useServices, useSpanNames } from './useTraceDiscovery';
+import { useServices, useSpanNames, useSearchTraces } from './useTraceDiscovery';
 import { jaegerClient } from '../api/v3/client';
+import type { SearchQuery } from '../types/search';
 
 vi.mock('../api/v3/client', () => ({
   jaegerClient: {
     fetchServices: vi.fn(),
     fetchSpanNames: vi.fn(),
+    fetchTraceSummaries: vi.fn(),
   },
 }));
 
@@ -312,6 +314,89 @@ describe('useTraceDiscovery', () => {
       });
 
       expect(result.current.data).toEqual(mockOps);
+    });
+  });
+
+  describe('useSearchTraces', () => {
+    const query: SearchQuery = {
+      service: 'my-svc',
+      operation: null,
+      start: '0',
+      end: '0',
+      limit: 20,
+      lookback: '1h',
+      minDuration: undefined,
+      maxDuration: undefined,
+      tags: null,
+    };
+
+    it('is disabled when query is null', () => {
+      const { result } = renderHook(() => useSearchTraces(null), {
+        wrapper: createWrapper(),
+      });
+
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.fetchStatus).toBe('idle');
+      expect(jaegerClient.fetchTraceSummaries).not.toHaveBeenCalled();
+    });
+
+    it('calls fetchTraceSummaries with the provided query', async () => {
+      const mockSummaries = [
+        {
+          traceID: 'aaaabbbbccccdddd0000111122223333',
+          traceName: 'my-svc: op',
+          rootServiceName: 'my-svc',
+          rootOperationName: 'op',
+          startTime: 1000,
+          duration: 500,
+          spanCount: 3,
+          errorSpanCount: 0,
+          orphanSpanCount: 0,
+          services: [],
+        },
+      ];
+      (jaegerClient.fetchTraceSummaries as ReturnType<typeof vi.fn>).mockResolvedValue(mockSummaries);
+
+      const { result } = renderHook(() => useSearchTraces(query), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      expect(jaegerClient.fetchTraceSummaries).toHaveBeenCalledWith(query);
+      expect(result.current.data).toEqual(mockSummaries);
+    });
+
+    it('uses queryKey that includes the query object', async () => {
+      (jaegerClient.fetchTraceSummaries as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+
+      const { result } = renderHook(() => useSearchTraces(query), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      const queries = queryClient.getQueryCache().findAll({ queryKey: ['traceSummaries', query] });
+      expect(queries).toHaveLength(1);
+    });
+
+    it('handles errors from fetchTraceSummaries', async () => {
+      const mockError = new Error('Search failed');
+      (jaegerClient.fetchTraceSummaries as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
+
+      const { result } = renderHook(() => useSearchTraces(query), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true);
+      });
+
+      expect(result.current.error).toEqual(mockError);
     });
   });
 });
