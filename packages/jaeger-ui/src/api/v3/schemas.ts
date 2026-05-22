@@ -20,3 +20,30 @@ import { z } from 'zod';
 export const traceIdHex = z.string().regex(/^[0-9a-f]{32}$/i, 'Invalid trace ID: must be 32-char hex string');
 
 export const spanIdHex = z.string().regex(/^[0-9a-f]{16}$/i, 'Invalid span ID: must be 16-char hex string');
+
+// TODO: The schemas below are HAND-WRITTEN because the IDL for the /api/v3/trace-summaries
+// endpoint (ADR-010) has not been finalized yet. Once the Jaeger protobuf/OpenAPI IDL is
+// published, regenerate generated-client.ts (npm run generate:api-types), move these schemas
+// there, and re-export them from this file like ServicesResponseSchema above.
+
+const ServiceSummarySchema = z.object({
+  name: z.string(),
+  spanCount: z.number().int().nonnegative(),
+  errorSpanCount: z.number().int().nonnegative(),
+});
+
+const ApiTraceSummarySchema = z.object({
+  traceID: z.string(),
+  rootServiceName: z.string(),
+  rootOperationName: z.string(),
+  minStartTimeUnixNano: z.number(),
+  maxEndTimeUnixNano: z.number(),
+  spanCount: z.number().int().nonnegative(),
+  errorSpanCount: z.number().int().nonnegative(),
+  orphanSpanCount: z.number().int().nonnegative(),
+  services: z.array(ServiceSummarySchema),
+});
+
+export const TraceSummariesResponseSchema = z.object({
+  summaries: z.array(ApiTraceSummarySchema),
+});

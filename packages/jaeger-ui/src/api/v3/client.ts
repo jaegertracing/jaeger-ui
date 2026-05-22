@@ -9,7 +9,10 @@
  */
 
 import prefixUrl from '../../utils/prefix-url';
-import { ServicesResponseSchema, OperationsResponseSchema } from './schemas';
+import { ServicesResponseSchema, OperationsResponseSchema, TraceSummariesResponseSchema } from './schemas';
+import type { SearchQuery } from '../../types/search';
+import type { TraceSummary } from '../../types/trace-summary';
+import type { Microseconds } from '../../types/units';
 
 export class JaegerClient {
   private apiRoot = prefixUrl('/api/v3');
@@ -49,6 +52,44 @@ export class JaegerClient {
     // Runtime validation with Zod
     const validated = OperationsResponseSchema.parse(data);
     return validated.operations;
+  }
+
+  /**
+   * Search for traces by query parameters.
+   * Calls /api/v3/trace-summaries and maps the response to TraceSummary[].
+   */
+  async fetchTraceSummaries(query: SearchQuery): Promise<TraceSummary[]> {
+    const params = new URLSearchParams();
+    if (query.service) params.set('query.service_name', query.service);
+    if (query.operation) params.set('query.span_name', String(query.operation));
+    if (query.start) params.set('query.start_time_min', new Date(Number(query.start) / 1000).toISOString());
+    if (query.end) params.set('query.start_time_max', new Date(Number(query.end) / 1000).toISOString());
+    if (query.limit) params.set('query.num_traces', String(query.limit));
+    if (query.minDuration) params.set('query.duration_min', query.minDuration);
+    if (query.maxDuration) params.set('query.duration_max', query.maxDuration);
+    if (query.tags) params.set('query.attributes', query.tags);
+
+    const url = `${this.apiRoot}/trace-summaries?${params.toString()}`;
+    const response = await this.fetchWithTimeout(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch trace summaries: ${response.status} ${response.statusText}`);
+    }
+    const data = await response.json();
+    const validated = TraceSummariesResponseSchema.parse(data);
+
+    return validated.summaries.map(s => ({
+      traceID: s.traceID,
+      traceName: `${s.rootServiceName}: ${s.rootOperationName}`,
+      rootServiceName: s.rootServiceName,
+      rootOperationName: s.rootOperationName,
+      // API returns nanoseconds; TraceSummary uses microseconds
+      startTime: (s.minStartTimeUnixNano / 1000) as Microseconds,
+      duration: ((s.maxEndTimeUnixNano - s.minStartTimeUnixNano) / 1000) as Microseconds,
+      spanCount: s.spanCount,
+      errorSpanCount: s.errorSpanCount,
+      orphanSpanCount: s.orphanSpanCount,
+      services: s.services,
+    }));
   }
 
   /**
