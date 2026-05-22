@@ -230,9 +230,13 @@ export default defineConfig({
       '/qualitymetrics-v2': proxyConfig,
     },
     warmup: {
-      // Pre-transform TracePage in the background on startup so the first
-      // navigation to a trace doesn't block on cold Vite transforms.
-      clientFiles: ['./src/components/TracePage/index.tsx'],
+      // Pre-transform the two most-visited pages in the background on startup
+      // so cold Vite transforms don't block the first hard refresh.
+      clientFiles: [
+        './src/index.tsx',
+        './src/components/SearchTracePage/index.tsx',
+        './src/components/TracePage/index.tsx',
+      ],
     },
   },
   base: './',
