@@ -237,7 +237,9 @@ export function UnconnectedSearchResults({
             {traceSummaries.length} Trace{traceSummaries.length > 1 && 's'}
           </h2>
           {traceResultsView && <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />}
-          {traceResultsView && <DownloadResults onDownloadResultsClicked={onDownloadResultsClicked} />}
+          {traceResultsView && rawTraces.length > 0 && (
+            <DownloadResults onDownloadResultsClicked={onDownloadResultsClicked} />
+          )}
           <AltViewOptions traceResultsView={traceResultsView} onDdgViewClicked={onDdgViewClicked} />
           {showStandaloneLink && (
             <Link
