@@ -197,10 +197,7 @@ export function TracePageImpl(props: TProps) {
   const [viewRange, setViewRange] = useState<IViewRange>({ time: { current: [0, 1] } });
 
   const traceDagEV = useMemo(
-    () =>
-      viewType === ETraceViewType.TraceGraph && traceData
-        ? calculateTraceDagEV(traceData.asOtelTrace())
-        : null,
+    () => (viewType === ETraceViewType.TraceGraph && traceData ? calculateTraceDagEV(traceData) : null),
     [traceData, viewType]
   );
 
@@ -216,9 +213,7 @@ export function TracePageImpl(props: TProps) {
     _memoize(filterSpans, (textFilter: string) => `${textFilter} ${idRef.current}`)
   ).current;
 
-  const scrollManagerRef = useRef<ScrollManager>(
-    new ScrollManager(traceData ? traceData.asOtelTrace() : undefined, { scrollBy, scrollTo })
-  );
+  const scrollManagerRef = useRef<ScrollManager>(new ScrollManager(traceData, { scrollBy, scrollTo }));
 
   const updateViewRangeTime: TUpdateViewRangeTimeFunction = useCallback(
     (start: number, end: number, trackSrc?: string) => {
@@ -281,7 +276,7 @@ export function TracePageImpl(props: TProps) {
   }, [adjustViewRange]);
 
   useEffect(() => {
-    scrollManagerRef.current.setTrace(traceData?.asOtelTrace());
+    scrollManagerRef.current.setTrace(traceData);
   }, [traceData]);
 
   useEffect(() => {
@@ -336,8 +331,8 @@ export function TracePageImpl(props: TProps) {
   const focusUiFindMatches = useCallback(() => {
     if (traceData) {
       trackFocusMatches();
-      focusUiFindMatchesProp(traceData.asOtelTrace(), uiFind);
-      zustandFocusUiFindMatches(traceData.asOtelTrace(), uiFind);
+      focusUiFindMatchesProp(traceData, uiFind);
+      zustandFocusUiFindMatches(traceData, uiFind);
     }
   }, [focusUiFindMatchesProp, zustandFocusUiFindMatches, traceData, uiFind]);
 
@@ -375,7 +370,7 @@ export function TracePageImpl(props: TProps) {
       findCount = graphFindMatches ? graphFindMatches.size : 0;
     } else {
       const allMatches = filterSpansMemo(uiFind, _get(traceData, 'spans'));
-      const otelTrace = traceData?.asOtelTrace?.();
+      const otelTrace = traceData;
       spanFindMatches =
         otelTrace && prunedServices.size > 0
           ? filterPrunedSpanIDs(allMatches, otelTrace.spanMap, prunedServices)
@@ -417,7 +412,7 @@ export function TracePageImpl(props: TProps) {
     showViewOptions: !isEmbedded,
     timelineBarsVisible,
     toSearch: (locationState && locationState.fromSearch) || null,
-    trace: traceData.asOtelTrace(),
+    trace: traceData,
     updateNextViewRangeTime,
     updateViewRangeTime,
     useOtelTerms,
@@ -425,14 +420,14 @@ export function TracePageImpl(props: TProps) {
 
   const sm = scrollManagerRef.current;
   let view;
-  const criticalPath = criticalPathEnabled ? memoizedTraceCriticalPath(traceData.asOtelTrace()) : [];
+  const criticalPath = criticalPathEnabled ? memoizedTraceCriticalPath(traceData) : [];
   if (ETraceViewType.TraceTimelineViewer === viewType && headerHeight) {
     view = (
       <TraceTimelineViewer
         registerAccessors={sm.setAccessors}
         scrollToFirstVisibleSpan={sm.scrollToFirstVisibleSpan}
         findMatchesIDs={spanFindMatches}
-        trace={traceData.asOtelTrace()}
+        trace={traceData}
         criticalPath={criticalPath}
         updateNextViewRangeTime={updateNextViewRangeTime}
         updateViewRangeTime={updateViewRangeTime}
@@ -454,7 +449,7 @@ export function TracePageImpl(props: TProps) {
   } else if (ETraceViewType.TraceStatistics === viewType && headerHeight) {
     view = (
       <TraceStatistics
-        trace={traceData.asOtelTrace()}
+        trace={traceData}
         uiFindVertexKeys={spanFindMatches}
         uiFind={uiFind}
         useOtelTerms={useOtelTerms}
@@ -463,8 +458,8 @@ export function TracePageImpl(props: TProps) {
   } else if (ETraceViewType.TraceSpansView === viewType && headerHeight) {
     view = (
       <TraceSpanView
-        key={traceData.asOtelTrace().traceID}
-        trace={traceData.asOtelTrace()}
+        key={traceData.traceID}
+        trace={traceData}
         uiFindVertexKeys={spanFindMatches}
         uiFind={uiFind}
         useOtelTerms={useOtelTerms}
@@ -473,7 +468,7 @@ export function TracePageImpl(props: TProps) {
   } else if (ETraceViewType.TraceFlamegraph === viewType && headerHeight) {
     view = <TraceFlamegraph trace={traceData} />;
   } else if (ETraceViewType.TraceLogs === viewType && headerHeight) {
-    view = <TraceLogsView trace={traceData.asOtelTrace()} useOtelTerms={useOtelTerms} />;
+    view = <TraceLogsView trace={traceData} useOtelTerms={useOtelTerms} />;
   }
 
   return (

@@ -32,7 +32,8 @@ import { FetchedTrace, ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
 import { SpanData, Trace, TraceData } from '../../types/trace';
 import transformTraceData from '../../model/transform-trace-data';
-import { queryClient } from '../../query/app-query-client';
+import { getCachedTrace } from '../../hooks/useTraceLoading';
+import type { IOtelTrace } from '../../types/otel';
 import { TraceSummary } from '../../types/trace-summary';
 import { traceToTraceSummary } from '../../model/trace-summary';
 import type { TUrlState } from './url';
@@ -232,16 +233,16 @@ export const stateTraceDiffXformer = memoizeOne(
   (stateTrace: ReduxState['trace'], stateTraceDiff: IStateTraceDiff) => {
     const { cohort } = stateTraceDiff;
     const rawTraces = stateTrace.rawTraces || [];
-    const searchTraceMap = new Map<string, Trace>(
+    const searchTraceMap = new Map<string, IOtelTrace>(
       rawTraces
         .map((raw: unknown) => transformTraceData(raw as TraceData & { spans: SpanData[] }))
         .filter((t): t is Trace => t != null)
-        .map(t => [t.traceID, t])
+        .map(t => [t.traceID, t.asOtelTrace()])
     );
     return cohort.map(id => {
       // Prefer search-result data, then fall back to the React Query cache
       // (covers traces added via the TraceIdInput on the compare page).
-      const data = searchTraceMap.get(id) ?? queryClient.getQueryData<Trace>(['trace', id]);
+      const data = searchTraceMap.get(id) ?? getCachedTrace(id);
       if (data) return { id, data, state: fetchedState.DONE } as FetchedTrace;
       return { id } as FetchedTrace;
     });

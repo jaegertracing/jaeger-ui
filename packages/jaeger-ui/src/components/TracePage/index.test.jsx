@@ -216,7 +216,7 @@ describe('makeShortcutCallbacks()', () => {
 });
 
 describe('<TracePage>', () => {
-  const trace = transformTraceData(traceGenerator.trace({}));
+  const trace = transformTraceData(traceGenerator.trace({})).asOtelTrace();
   const defaultProps = {
     enableSidePanel: false,
     focusUiFindMatches: jest.fn(),
@@ -293,8 +293,8 @@ describe('<TracePage>', () => {
         const uiFind = 'test ui find';
         render(<TracePage {...defaultProps} uiFind={uiFind} />);
         capturedHeaderProps.focusUiFindMatches();
-        expect(defaultProps.focusUiFindMatches).toHaveBeenCalledWith(trace.asOtelTrace(), uiFind);
-        expect(mockTraceTimelineStore.focusUiFindMatches).toHaveBeenCalledWith(trace.asOtelTrace(), uiFind);
+        expect(defaultProps.focusUiFindMatches).toHaveBeenCalledWith(trace, uiFind);
+        expect(mockTraceTimelineStore.focusUiFindMatches).toHaveBeenCalledWith(trace, uiFind);
         expect(trackFocusSpy).toHaveBeenCalledTimes(1);
       });
 
@@ -348,7 +348,7 @@ describe('<TracePage>', () => {
 
   it('uses uiFind and params.id to compute memo cache key for filterSpans', () => {
     const uiFind = 'uiFind';
-    const localTrace = transformTraceData(traceGenerator.trace({}));
+    const localTrace = transformTraceData(traceGenerator.trace({})).asOtelTrace();
     useTraceMock.mockReturnValue({ data: localTrace, isPending: false, isError: false, error: null });
 
     filterSpansSpy.mockClear();
@@ -363,7 +363,7 @@ describe('<TracePage>', () => {
     expect(filterSpansSpy).toHaveBeenLastCalledWith(uiFind, localTrace.spans);
 
     // Changing the trace id invalidates the cache
-    const otherTrace = transformTraceData(traceGenerator.trace({}));
+    const otherTrace = transformTraceData(traceGenerator.trace({})).asOtelTrace();
     useTraceMock.mockReturnValue({ data: otherTrace, isPending: false, isError: false, error: null });
     rerender(<TracePage {...defaultProps} params={{ id: 'different-trace-id' }} uiFind={uiFind} />);
     expect(filterSpansSpy).toHaveBeenCalledTimes(2);
@@ -472,7 +472,7 @@ describe('<TracePage>', () => {
     useTraceMock.mockReturnValue({ data: trace, isPending: false, isError: false, error: null });
     rerender(<TracePage {...defaultProps} />);
 
-    expect(setTraceMock).toHaveBeenCalledWith(trace.asOtelTrace());
+    expect(setTraceMock).toHaveBeenCalledWith(trace);
   });
 
   it('calls resetShortcuts, cancelScroll, and scrollManager.destroy on unmount', () => {
@@ -942,7 +942,7 @@ describe('<TracePage>', () => {
         capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceGraph);
       });
       expect(capturedHeaderProps.viewType).toBe(ETraceViewType.TraceGraph);
-      expect(calculateTraceDagEV.default).toHaveBeenCalledWith(trace.asOtelTrace());
+      expect(calculateTraceDagEV.default).toHaveBeenCalledWith(trace);
 
       act(() => {
         capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceSpansView);
