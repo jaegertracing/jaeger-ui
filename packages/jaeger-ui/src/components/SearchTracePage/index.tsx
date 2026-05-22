@@ -30,9 +30,8 @@ import { useEmbeddedState } from '../../stores/embedded-store';
 import { useShallow } from 'zustand/react/shallow';
 import { FetchedTrace, ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
-import { SpanData, Trace, TraceData } from '../../types/trace';
 import transformTraceData from '../../model/transform-trace-data';
-import { getCachedTrace } from '../../hooks/useTraceLoading';
+import { getCachedTrace, populateTraceCache } from '../../hooks/useTraceLoading';
 import type { IOtelTrace } from '../../types/otel';
 import { TraceSummary } from '../../types/trace-summary';
 import { traceToTraceSummary } from '../../model/trace-summary';
@@ -53,11 +52,11 @@ interface IStateProps {
   // passed as-is from Redux; cohort lookup happens in the component where Zustand is accessible
   tracesInRedux: ReduxState['trace'];
   loadingTraces: boolean;
-  traces: Trace[];
+  traces: IOtelTrace[];
   traceResultsToDownload: unknown[];
   errors: Array<{ message: string }> | null;
   maxTraceDuration: number;
-  sortedTracesXformer: (traces: Trace[], sortBy: string) => TraceSummary[];
+  sortedTracesXformer: (traces: IOtelTrace[], sortBy: string) => TraceSummary[];
   urlQueryParams: TUrlState | null;
 }
 
@@ -221,38 +220,34 @@ const stateTraceXformer = memoizeOne((stateTrace: ReduxState['trace']) => {
   const { query, results, state, error: traceError } = search;
 
   const loadingTraces = state === fetchedState.LOADING;
-  // rawTraces holds the untransformed API payload stored by the reducer on search completion.
   const rawTraces = stateTrace.rawTraces || [];
-  // Re-transform for display (memoized, so only runs when rawTraces reference changes).
-  const traces = rawTraces.map((raw: any) => transformTraceData(raw)).filter((t): t is Trace => t != null);
-  const maxDuration = Math.max(0, ...traces.map((tr: Trace) => tr.duration || 0));
+  // Transform once and populate the React Query cache so TracePage and diff views
+  // can reuse these results without a second network fetch.
+  const traces = rawTraces
+    .map((raw: any) => transformTraceData(raw)?.asOtelTrace())
+    .filter((t): t is IOtelTrace => t != null);
+  traces.forEach(populateTraceCache);
+  const maxDuration = Math.max(0, ...traces.map(t => t.duration || 0));
   return { traces, rawTraces, maxDuration, traceError, loadingTraces, query, results };
 });
 
 export const stateTraceDiffXformer = memoizeOne(
   (stateTrace: ReduxState['trace'], stateTraceDiff: IStateTraceDiff) => {
     const { cohort } = stateTraceDiff;
-    const rawTraces = stateTrace.rawTraces || [];
-    const searchTraceMap = new Map<string, IOtelTrace>(
-      rawTraces
-        .map((raw: unknown) => transformTraceData(raw as TraceData & { spans: SpanData[] }))
-        .filter((t): t is Trace => t != null)
-        .map(t => [t.traceID, t.asOtelTrace()])
-    );
     return cohort.map(id => {
-      // Prefer search-result data, then fall back to the React Query cache
-      // (covers traces added via the TraceIdInput on the compare page).
-      const data = searchTraceMap.get(id) ?? getCachedTrace(id);
+      // Search results were already written into the React Query cache by stateTraceXformer.
+      // Fall back covers traces added via TraceIdInput on the compare page.
+      const data = getCachedTrace(id);
       if (data) return { id, data, state: fetchedState.DONE } as FetchedTrace;
       return { id } as FetchedTrace;
     });
   }
 );
 
-const sortedTracesXformer = memoizeOne((traces: Trace[], sortBy: string) => {
+const sortedTracesXformer = memoizeOne((traces: IOtelTrace[], sortBy: string) => {
   const traceResults = traces.slice();
   sortTraces(traceResults, sortBy);
-  return traceResults.map(t => traceToTraceSummary(t.asOtelTrace()));
+  return traceResults.map(traceToTraceSummary);
 });
 
 export function mapStateToProps(

@@ -19,6 +19,10 @@ export function getCachedTrace(id: string): IOtelTrace | undefined {
   );
 }
 
+export function populateTraceCache(trace: IOtelTrace): void {
+  queryClient.setQueryData(TRACE_QUERY_KEY(trace.traceID), trace);
+}
+
 export function useTrace(traceId: string): UseQueryResult<IOtelTrace> {
   return useQuery({
     queryKey: TRACE_QUERY_KEY(traceId),
