@@ -30,7 +30,10 @@ export function useSearchTraces(query: SearchQuery | null): UseQueryResult<Trace
   return useQuery({
     queryKey: ['traceSummaries', query],
     queryFn: query ? () => jaegerClient.fetchTraceSummaries(query) : skipToken,
-    staleTime: 30 * 1000, // 30 seconds
+    // staleTime: Infinity — each search embeds an explicit end timestamp in its query
+    // key, so "same key" always means "same time window". The Back button reuses the
+    // same key and should hit the cache; a new search gets a new key and fetches fresh.
+    staleTime: Infinity,
   });
 }
 

@@ -2,7 +2,8 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useQuery, useQueryClient, skipToken } from '@tanstack/react-query';
 import { Col, Row, Tabs } from 'antd';
 import { useLocation } from 'react-router-dom';
 
@@ -66,13 +67,39 @@ export function SearchTracePageImpl() {
     error: searchError,
   } = useSearchTraces(searchQuery);
 
-  const [uploadedSummaries, setUploadedSummaries] = useState<TraceSummary[]>([]);
-  const [uploadedRawTraces, setUploadedRawTraces] = useState<unknown[]>([]);
+  const queryClient = useQueryClient();
 
-  const handleTracesLoaded = useCallback((summaries: TraceSummary[], rawTraces: unknown[]) => {
-    setUploadedSummaries(prev => [...prev, ...summaries]);
-    setUploadedRawTraces(prev => [...prev, ...rawTraces]);
-  }, []);
+  // Uploaded summaries and raw traces survive navigation via the Query cache.
+  // skipToken means no fetch is triggered; the hook just subscribes to cache updates
+  // so the component re-renders when setQueryData is called after file upload.
+  // When a new API search runs (searchQuery changes), uploaded results are cleared
+  // so the list reflects the current search context.
+  const { data: uploadedSummaries = [] } = useQuery<TraceSummary[]>({
+    queryKey: ['uploadedSummaries'],
+    queryFn: skipToken,
+    staleTime: Infinity,
+  });
+  const { data: uploadedRawTraces = [] } = useQuery<unknown[]>({
+    queryKey: ['uploadedRawTraces'],
+    queryFn: skipToken,
+    staleTime: Infinity,
+  });
+
+  useEffect(() => {
+    queryClient.setQueryData(['uploadedSummaries'], []);
+    queryClient.setQueryData(['uploadedRawTraces'], []);
+  }, [queryClient, searchQuery]);
+
+  const handleTracesLoaded = useCallback(
+    (summaries: TraceSummary[], rawTraces: unknown[]) => {
+      queryClient.setQueryData<TraceSummary[]>(['uploadedSummaries'], prev => [
+        ...(prev ?? []),
+        ...summaries,
+      ]);
+      queryClient.setQueryData<unknown[]>(['uploadedRawTraces'], prev => [...(prev ?? []), ...rawTraces]);
+    },
+    [queryClient]
+  );
 
   const traceSummaries = useMemo(
     () => [...apiTraceSummaries, ...uploadedSummaries],
