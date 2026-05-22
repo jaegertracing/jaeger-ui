@@ -264,8 +264,8 @@ describe('JaegerClient', () => {
       end: '1700000060000000',
       limit: 20,
       lookback: '1h',
-      minDuration: null,
-      maxDuration: null,
+      minDuration: undefined,
+      maxDuration: undefined,
       tags: null,
     };
 

@@ -47,7 +47,6 @@ import { act } from 'react';
 import '@testing-library/jest-dom';
 import dayjs from 'dayjs';
 import queryString from 'query-string';
-import * as jaegerApiActions from '../../actions/jaeger-api';
 import SearchableSelect from '../common/SearchableSelect';
 
 import {
@@ -314,11 +313,13 @@ describe('lookback utils', () => {
 describe('submitForm()', () => {
   const LOOKBACK_VALUE = 2;
   const LOOKBACK_UNIT = 's';
-  let searchTraces;
   let fields;
 
+  function getUrlParams(url) {
+    return queryString.parse(url.slice(url.indexOf('?') + 1));
+  }
+
   beforeEach(() => {
-    searchTraces = jest.fn();
     fields = {
       lookback: `${LOOKBACK_VALUE}${LOOKBACK_UNIT}`,
       operation: 'op-a',
@@ -329,49 +330,41 @@ describe('submitForm()', () => {
 
   it('ignores `fields.operation` when it is "all"', () => {
     fields.operation = 'all';
-    submitForm(fields, searchTraces);
-    const { calls } = searchTraces.mock;
-    expect(calls.length).toBe(1);
-    const { operation } = calls[0][0];
+    const url = submitForm(fields);
+    const { operation } = getUrlParams(url);
     expect(operation).toBe(undefined);
   });
 
   it('expects operation to be value defined in beforeEach', () => {
-    submitForm(fields, searchTraces);
-    const { calls } = searchTraces.mock;
-    expect(calls.length).toBe(1);
-    const { operation } = calls[0][0];
+    const url = submitForm(fields);
+    const { operation } = getUrlParams(url);
     expect(operation).toBe('op-a');
   });
 
   it('expects operation to be value assigned before call is made', () => {
     fields.operation = 'test';
-    submitForm(fields, searchTraces);
-    const { calls } = searchTraces.mock;
-    expect(calls.length).toBe(1);
-    const { operation } = calls[0][0];
+    const url = submitForm(fields);
+    const { operation } = getUrlParams(url);
     expect(operation).toBe('test');
   });
 
   describe('`fields.lookback`', () => {
-    function getCalledDuration(mock) {
-      const { start, end } = mock.calls[0][0];
+    function getUrlDuration(url) {
+      const { start, end } = getUrlParams(url);
       const diffMs = (Number(end) - Number(start)) / 1000;
       return dayjs.duration(diffMs);
     }
 
     it('subtracts `lookback` from `fields.end`', () => {
-      submitForm(fields, searchTraces);
-      expect(searchTraces).toHaveBeenCalledTimes(1);
-      expect(getCalledDuration(searchTraces.mock).asSeconds()).toBe(LOOKBACK_VALUE);
+      const url = submitForm(fields);
+      expect(getUrlDuration(url).asSeconds()).toBe(LOOKBACK_VALUE);
     });
 
     it('parses `lookback` double digit options', () => {
       const lookbackDoubleDigitValue = 12;
       fields.lookback = `${lookbackDoubleDigitValue}h`;
-      submitForm(fields, searchTraces);
-      expect(searchTraces).toHaveBeenCalledTimes(1);
-      expect(getCalledDuration(searchTraces.mock).asHours()).toBe(lookbackDoubleDigitValue);
+      const url = submitForm(fields);
+      expect(getUrlDuration(url).asHours()).toBe(lookbackDoubleDigitValue);
     });
 
     it('processes form dates when `lookback` is "custom"', () => {
@@ -385,10 +378,8 @@ describe('submitForm()', () => {
         endDateTime,
         lookback: 'custom',
       };
-      submitForm(fields, searchTraces);
-      const { calls } = searchTraces.mock;
-      expect(calls.length).toBe(1);
-      const { start, end } = calls[0][0];
+      const url = submitForm(fields);
+      const { start, end } = getUrlParams(url);
       expect(start).toBe(`${startSrc.valueOf()}000`);
       expect(end).toBe(`${endSrc.valueOf()}000`);
     });
@@ -397,10 +388,8 @@ describe('submitForm()', () => {
   describe('`fields.tags`', () => {
     it('is ignored when `fields.tags` is falsy', () => {
       fields.tags = undefined;
-      submitForm(fields, searchTraces);
-      const { calls } = searchTraces.mock;
-      expect(calls.length).toBe(1);
-      const { tag } = calls[0][0];
+      const url = submitForm(fields);
+      const { tag } = getUrlParams(url);
       expect(tag).toBe(undefined);
     });
 
@@ -412,10 +401,8 @@ describe('submitForm()', () => {
         key: 'with a long value',
       });
       fields.tags = input;
-      submitForm(fields, searchTraces);
-      const { calls } = searchTraces.mock;
-      expect(calls.length).toBe(1);
-      const { tags } = calls[0][0];
+      const url = submitForm(fields);
+      const { tags } = getUrlParams(url);
       expect(tags).toEqual(target);
     });
   });
@@ -424,23 +411,18 @@ describe('submitForm()', () => {
     it('retains values as-is when they are truthy', () => {
       fields.minDuration = 'some-min';
       fields.maxDuration = 'some-max';
-      submitForm(fields, searchTraces);
-      const { calls } = searchTraces.mock;
-      expect(calls.length).toBe(1);
-      const { minDuration, maxDuration } = calls[0][0];
+      const url = submitForm(fields);
+      const { minDuration, maxDuration } = getUrlParams(url);
       expect(minDuration).toBe(fields.minDuration);
       expect(maxDuration).toBe(fields.maxDuration);
     });
 
     it('omits values when they are falsy', () => {
-      fields.minDuation = undefined;
-      fields.maxDuation = undefined;
-      submitForm(fields, searchTraces);
-      const { calls } = searchTraces.mock;
-      expect(calls.length).toBe(1);
-      const { minDuration, maxDuration } = calls[0][0];
-      expect(minDuration).toBe(null);
-      expect(maxDuration).toBe(null);
+      fields.minDuration = undefined;
+      fields.maxDuration = undefined;
+      const url = submitForm(fields);
+      expect(url).not.toContain('minDuration');
+      expect(url).not.toContain('maxDuration');
     });
   });
 });
@@ -954,47 +936,33 @@ describe('mapStateToProps()', () => {
 });
 
 describe('submitForm() adjustEndTime toggle', () => {
+  const fields = {
+    lookback: '1h',
+    operation: 'all',
+    resultsLimit: 20,
+    service: 'svcA',
+  };
+
+  function getEnd(url) {
+    return Number(queryString.parse(url.slice(url.indexOf('?') + 1)).end);
+  }
+
   it('should apply adjustEndTime when adjustTimeEnabled is true', () => {
-    const searchTraces = jest.fn();
-    const fields = {
-      lookback: '1h',
-      operation: 'all',
-      resultsLimit: 20,
-      service: 'svcA',
-    };
-
-    submitForm(fields, searchTraces, '1m', true);
-
-    expect(searchTraces).toHaveBeenCalledWith(
-      expect.objectContaining({
-        service: 'svcA',
-      })
-    );
+    const urlWithout = submitForm(fields, '1m', false);
+    const urlWith = submitForm(fields, '1m', true);
+    // adjusting by 1m shifts end back, so end should be smaller
+    expect(getEnd(urlWith)).toBeLessThan(getEnd(urlWithout));
   });
 
   it('should not apply adjustEndTime when adjustTimeEnabled is false', () => {
-    const searchTraces = jest.fn();
-    const fields = {
-      lookback: '1h',
-      operation: 'all',
-      resultsLimit: 20,
-      service: 'svcA',
-    };
-
-    submitForm(fields, searchTraces, '1m', false);
-
-    expect(searchTraces).toHaveBeenCalledWith(
-      expect.objectContaining({
-        service: 'svcA',
-      })
-    );
+    const url = submitForm(fields, '1m', false);
+    expect(queryString.parse(url.slice(url.indexOf('?') + 1)).service).toBe('svcA');
   });
 });
 
 describe('mapDispatchToProps()', () => {
   it('creates the actions correctly', () => {
     expect(mapDispatchToProps(() => {})).toEqual({
-      searchTraces: expect.any(Function),
       submitFormHandler: expect.any(Function),
     });
   });

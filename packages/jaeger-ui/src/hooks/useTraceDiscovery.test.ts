@@ -325,8 +325,8 @@ describe('useTraceDiscovery', () => {
       end: '0',
       limit: 20,
       lookback: '1h',
-      minDuration: null,
-      maxDuration: null,
+      minDuration: undefined,
+      maxDuration: undefined,
       tags: null,
     };
 

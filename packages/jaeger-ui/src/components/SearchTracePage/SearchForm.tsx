@@ -12,12 +12,11 @@ import { IoHelp } from 'react-icons/io5';
 import { connect } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getUrl as getSearchUrl } from './url';
-import { bindActionCreators, Dispatch } from 'redux';
+import { Dispatch } from 'redux';
 import store from '../../utils/storage';
 
 import * as markers from './SearchForm.markers';
 import { trackFormInput } from './SearchForm.track';
-import * as jaegerApiActions from '../../actions/jaeger-api';
 import { formatDate, formatTime } from '../../utils/date';
 import { DEFAULT_OPERATION, DEFAULT_LIMIT, DEFAULT_LOOKBACK } from '../../constants/search-form';
 import SearchableSelect from '../common/SearchableSelect';
@@ -263,11 +262,8 @@ interface ISearchFormFields {
   lookback: string;
 }
 
-type SearchTracesFunction = typeof jaegerApiActions.searchTraces;
-
 export function submitForm(
   fields: ISearchFormFields,
-  searchTraces: SearchTracesFunction,
   adjustTime: string | null | undefined,
   adjustTimeEnabled: boolean
 ): string {
@@ -319,10 +315,9 @@ export function submitForm(
     start: String(start),
     end: String(end),
     tags: convTagsLogfmt(tags) || undefined,
-    minDuration: minDuration || null,
-    maxDuration: maxDuration || null,
+    minDuration: minDuration || undefined,
+    maxDuration: maxDuration || undefined,
   };
-  searchTraces(query);
   return getSearchUrl(query as Parameters<typeof getSearchUrl>[0]);
 }
 
@@ -330,7 +325,6 @@ interface ISearchFormImplProps {
   invalid?: boolean;
   submitting?: boolean;
   initialValues?: Partial<ISearchFormFields> & { traceIDs?: string | null };
-  searchTraces: SearchTracesFunction;
   submitFormHandler: (
     fields: ISearchFormFields,
     adjustEndTime: string | null | undefined,
@@ -828,15 +822,13 @@ export function mapStateToProps(state: ReduxState, ownProps: { search?: string }
   };
 }
 
-export function mapDispatchToProps(dispatch: Dispatch) {
-  const { searchTraces } = bindActionCreators(jaegerApiActions, dispatch);
+export function mapDispatchToProps(_dispatch: Dispatch) {
   return {
-    searchTraces,
     submitFormHandler: (
       fields: ISearchFormFields,
       adjustEndTime: string | null | undefined,
       adjustTimeEnabled: boolean
-    ) => submitForm(fields, searchTraces, adjustEndTime || null, adjustTimeEnabled) as string,
+    ) => submitForm(fields, adjustEndTime || null, adjustTimeEnabled) as string,
   };
 }
 

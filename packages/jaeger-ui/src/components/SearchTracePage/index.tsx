@@ -54,8 +54,8 @@ export function SearchTracePageImpl() {
       end: String(q.end ?? ''),
       limit: q.limit !== undefined ? Number(q.limit) : 20,
       lookback: String(q.lookback ?? '1h'),
-      minDuration: typeof q.minDuration === 'string' ? q.minDuration : null,
-      maxDuration: typeof q.maxDuration === 'string' ? q.maxDuration : null,
+      minDuration: typeof q.minDuration === 'string' ? q.minDuration : undefined,
+      maxDuration: typeof q.maxDuration === 'string' ? q.maxDuration : undefined,
       tags: typeof q.tags === 'string' ? q.tags : null,
     };
   }, [urlQueryParams]);
