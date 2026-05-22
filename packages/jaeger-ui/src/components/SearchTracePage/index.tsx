@@ -31,7 +31,6 @@ import { useShallow } from 'zustand/react/shallow';
 import { FetchedTrace, ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
 import { SpanData, Trace, TraceData } from '../../types/trace';
-import { IOtelTrace } from '../../types/otel';
 import transformTraceData from '../../model/transform-trace-data';
 import { queryClient } from '../../query/app-query-client';
 import { TraceSummary } from '../../types/trace-summary';
