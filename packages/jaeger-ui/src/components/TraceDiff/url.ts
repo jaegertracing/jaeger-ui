@@ -29,3 +29,13 @@ export function getUrl(state: TTraceDiffState) {
   const search = queryString.stringify({ cohort });
   return prefixUrl(`/trace/${a || ''}...${b || ''}${search ? '?' : ''}${search}`);
 }
+export function getDiffIds(id: string | undefined): TDiffRouteParams {
+  if (id && id.includes('...')) {
+    const parts = id.split('...');
+    return {
+      a: parts[0] || undefined,
+      b: parts[1] || undefined,
+    };
+  }
+  return {};
+}
