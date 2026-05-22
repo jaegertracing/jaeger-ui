@@ -60,6 +60,11 @@ export function useTraces(ids: string[]): Map<string, FetchedTrace> {
     })),
   });
 
+  // useQueries returns a new array reference every render. Key the memo on the stable
+  // signals for each result: the data object reference (stable when unchanged), the
+  // error reference, and the status string. This avoids rebuilding the Map on renders
+  // where no query result actually changed.
+  // eslint-disable-next-line react-x/exhaustive-deps
   return useMemo(
     () =>
       new Map(
@@ -78,6 +83,6 @@ export function useTraces(ids: string[]): Map<string, FetchedTrace> {
         })
       ),
     // eslint-disable-next-line react-x/exhaustive-deps
-    [results]
+    [...ids, ...results.map(r => r.status), ...results.map(r => r.data), ...results.map(r => r.error)]
   );
 }
