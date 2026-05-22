@@ -64,16 +64,31 @@ content = content.replace(
 );
 
 // 5. Append convenience exports
+// The generator prefixes schema names with the package path (e.g. jaeger_api_v3_),
+// so we detect the actual names rather than hardcoding them.
+const servicesMatch = content.match(/const (\w*GetServicesResponse\w*) = /);
+const operationsMatch = content.match(/const (\w*GetOperationsResponse\w*) = /);
+const operationMatch = content.match(/const (\w*Operation\b) = z[\s\S]*?\.object\(\{[\s]*name:/);
+
+if (!servicesMatch || !operationsMatch || !operationMatch) {
+  console.error('❌ Could not find expected schema variable names in generated file');
+  process.exit(1);
+}
+
+const servicesVar = servicesMatch[1];
+const operationsVar = operationsMatch[1];
+const operationVar = operationMatch[1];
+
 const extraExports = `
 // Export commonly used schemas individually for convenience
-export { GetServicesResponse as ServicesResponseSchema };
-export { GetOperationsResponse as OperationsResponseSchema };
-export { Operation as OperationSchema };
+export { ${servicesVar} as ServicesResponseSchema };
+export { ${operationsVar} as OperationsResponseSchema };
+export { ${operationVar} as OperationSchema };
 `;
 
-if (!content.includes('export { GetServicesResponse as ServicesResponseSchema }')) {
+if (!content.includes('as ServicesResponseSchema')) {
   content += extraExports;
-  console.log('✅ Added convenience exports');
+  console.log(`✅ Added convenience exports (${servicesVar}, ${operationsVar}, ${operationVar})`);
 }
 
 fs.writeFileSync(filePath, content, 'utf8');

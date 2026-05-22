@@ -51,7 +51,8 @@ export class JaegerClient {
 
     // Runtime validation with Zod
     const validated = OperationsResponseSchema.parse(data);
-    return validated.operations;
+    // Map wire-format snake_case to camelCase for the rest of the app
+    return validated.operations.map(op => ({ name: op.name, spanKind: op.span_kind }));
   }
 
   /**

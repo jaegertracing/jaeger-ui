@@ -41,18 +41,18 @@ describe('ServicesResponseSchema', () => {
 
 describe('OperationSchema', () => {
   it('validates correct operation structure', () => {
-    const data = { name: 'GET /api/users', spanKind: 'SPAN_KIND_CLIENT' };
+    const data = { name: 'GET /api/users', span_kind: 'SPAN_KIND_CLIENT' };
     const result = OperationSchema.parse(data);
     expect(result.name).toBe('GET /api/users');
-    expect(result.spanKind).toBe('SPAN_KIND_CLIENT');
+    expect(result.span_kind).toBe('SPAN_KIND_CLIENT');
   });
 
   it('rejects missing name field', () => {
-    const data = { spanKind: 'SPAN_KIND_CLIENT' };
+    const data = { span_kind: 'SPAN_KIND_CLIENT' };
     expect(() => OperationSchema.parse(data)).toThrow(z.ZodError);
   });
 
-  it('rejects missing spanKind field', () => {
+  it('rejects missing span_kind field', () => {
     const data = { name: 'GET /api/users' };
     expect(() => OperationSchema.parse(data)).toThrow(z.ZodError);
   });
@@ -62,8 +62,8 @@ describe('OperationsResponseSchema', () => {
   it('validates correct structure', () => {
     const data = {
       operations: [
-        { name: 'GET /api/users', spanKind: 'SPAN_KIND_CLIENT' },
-        { name: 'POST /api/users', spanKind: 'SPAN_KIND_SERVER' },
+        { name: 'GET /api/users', span_kind: 'SPAN_KIND_CLIENT' },
+        { name: 'POST /api/users', span_kind: 'SPAN_KIND_SERVER' },
       ],
     };
     const result = OperationsResponseSchema.parse(data);
@@ -89,7 +89,7 @@ describe('OperationsResponseSchema', () => {
 
   it('rejects invalid operation objects', () => {
     const data = {
-      operations: [{ name: 'valid', spanKind: 'valid' }, { name: 'invalid' }],
+      operations: [{ name: 'valid', span_kind: 'valid' }, { name: 'invalid' }],
     };
     expect(() => OperationsResponseSchema.parse(data)).toThrow(z.ZodError);
   });

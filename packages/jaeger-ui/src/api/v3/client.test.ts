@@ -98,8 +98,8 @@ describe('JaegerClient', () => {
   describe('fetchSpanNames', () => {
     it('successfully fetches span names for a given service', async () => {
       const mockOperations = [
-        { name: 'GET /api/users', spanKind: 'server' },
-        { name: 'POST /api/users', spanKind: 'server' },
+        { name: 'GET /api/users', span_kind: 'server' },
+        { name: 'POST /api/users', span_kind: 'server' },
       ];
       mockFetch.mockResolvedValue({
         ok: true,
@@ -110,7 +110,11 @@ describe('JaegerClient', () => {
       vi.runAllTimers();
       const result = await promise;
 
-      expect(result).toEqual(mockOperations);
+      // fetchSpanNames maps wire-format span_kind to camelCase spanKind
+      expect(result).toEqual([
+        { name: 'GET /api/users', spanKind: 'server' },
+        { name: 'POST /api/users', spanKind: 'server' },
+      ]);
       expect(mockFetch).toHaveBeenCalledWith(
         '/api/v3/operations?service=test-service',
         expect.objectContaining({ signal: expect.any(AbortSignal) })
