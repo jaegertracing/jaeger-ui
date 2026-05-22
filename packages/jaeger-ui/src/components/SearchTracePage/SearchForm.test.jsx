@@ -389,8 +389,8 @@ describe('submitForm()', () => {
     it('is ignored when `fields.tags` is falsy', () => {
       fields.tags = undefined;
       const url = submitForm(fields);
-      const { tag } = getUrlParams(url);
-      expect(tag).toBe(undefined);
+      const { tags } = getUrlParams(url);
+      expect(tags).toBe(undefined);
     });
 
     it('is parsed when `fields.tags` is truthy', () => {

@@ -43,7 +43,7 @@ export function SearchTracePageImpl() {
   // Note: SearchForm always resolves lookback to explicit start/end before pushing to the URL,
   // so start/end are expected to be present for any real search. The lookback field is kept in
   // the query for compatibility with the SearchForm but is not forwarded to fetchTraceSummaries
-  // (the v3 endpoint requires explicit start_time_min / start_time_max).
+  // (fetchTraceSummaries omits start_time_min/max when start/end are absent).
   const searchQuery = useMemo((): SearchQuery | null => {
     const q = urlQueryParams;
     if (!q?.service) return null;

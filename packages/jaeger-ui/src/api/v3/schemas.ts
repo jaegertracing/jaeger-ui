@@ -38,8 +38,10 @@ const ApiTraceSummarySchema = z.object({
   rootOperationName: z.string(),
   // int64 nanosecond timestamps are encoded as decimal strings per proto3 JSON encoding
   // rules, to avoid precision loss when parsed by JavaScript's 53-bit float Number.
-  minStartTimeUnixNano: z.string(),
-  maxEndTimeUnixNano: z.string(),
+  // Restrict to decimal digits so non-decimal values fail Zod validation rather than
+  // throwing a runtime SyntaxError in BigInt().
+  minStartTimeUnixNano: z.string().regex(/^\d+$/, 'Expected decimal int64 string'),
+  maxEndTimeUnixNano: z.string().regex(/^\d+$/, 'Expected decimal int64 string'),
   spanCount: z.number().int().nonnegative(),
   errorSpanCount: z.number().int().nonnegative(),
   orphanSpanCount: z.number().int().nonnegative(),
