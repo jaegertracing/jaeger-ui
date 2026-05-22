@@ -119,6 +119,12 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
     });
   }, [cohort, traceSummaries]);
 
+  // Populate React Query cache so TracePage and diff views can reuse these results
+  // without a second network fetch. Done in an effect to avoid side effects during render.
+  useEffect(() => {
+    traces.forEach(populateTraceCache);
+  }, [traces]);
+
   // componentDidMount logic - intentionally runs only on mount
   useEffect(() => {
     if (
@@ -215,12 +221,9 @@ const stateTraceXformer = memoizeOne((stateTrace: ReduxState['trace']) => {
 
   const loadingTraces = state === fetchedState.LOADING;
   const rawTraces = stateTrace.rawTraces || [];
-  // Transform once and populate the React Query cache so TracePage and diff views
-  // can reuse these results without a second network fetch.
   const traces = rawTraces
     .map((raw: any) => transformTraceData(raw)?.asOtelTrace())
     .filter((t): t is IOtelTrace => t != null);
-  traces.forEach(populateTraceCache);
   const maxDuration = Math.max(0, ...traces.map(t => t.duration || 0));
   return { traces, rawTraces, maxDuration, traceError, loadingTraces, query, results };
 });
