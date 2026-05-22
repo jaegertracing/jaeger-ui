@@ -77,25 +77,22 @@ export class JaegerClient {
     const data = await response.json();
     const validated = TraceSummariesResponseSchema.parse(data);
 
-    // Timestamps arrive as decimal strings (proto3 JSON encoding for int64).
-    // Parse via BigInt to avoid precision loss, then divide to microseconds —
-    // µs-epoch values fit within Number.MAX_SAFE_INTEGER so the final cast is safe.
-    return validated.summaries.map(s => {
-      const startNs = BigInt(s.minStartTimeUnixNano);
-      const endNs = BigInt(s.maxEndTimeUnixNano);
-      return {
-        traceID: s.traceID,
-        traceName: `${s.rootServiceName}: ${s.rootOperationName}`,
-        rootServiceName: s.rootServiceName,
-        rootOperationName: s.rootOperationName,
-        startTime: Number(startNs / 1000n) as Microseconds,
-        duration: Number((endNs - startNs) / 1000n) as Microseconds,
-        spanCount: s.spanCount,
-        errorSpanCount: s.errorSpanCount,
-        orphanSpanCount: s.orphanSpanCount,
-        services: s.services,
-      };
-    });
+    // Timestamps are decimal ns strings (proto3 JSON encoding for int64).
+    // Chop the last 3 digits to convert ns→µs in string space, then parse as Number.
+    // µs-epoch values (~1.7e15) are well within Number.MAX_SAFE_INTEGER (9e15).
+    const nsToMicros = (ns: string): Microseconds => Number(ns.slice(0, -3)) as Microseconds;
+    return validated.summaries.map(s => ({
+      traceID: s.traceID,
+      traceName: `${s.rootServiceName}: ${s.rootOperationName}`,
+      rootServiceName: s.rootServiceName,
+      rootOperationName: s.rootOperationName,
+      startTime: nsToMicros(s.minStartTimeUnixNano),
+      duration: (nsToMicros(s.maxEndTimeUnixNano) - nsToMicros(s.minStartTimeUnixNano)) as Microseconds,
+      spanCount: s.spanCount,
+      errorSpanCount: s.errorSpanCount,
+      orphanSpanCount: s.orphanSpanCount,
+      services: s.services,
+    }));
   }
 
   /**
