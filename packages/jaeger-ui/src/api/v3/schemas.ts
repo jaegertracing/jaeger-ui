@@ -36,11 +36,10 @@ const ApiTraceSummarySchema = z.object({
   traceID: traceIdHex,
   rootServiceName: z.string(),
   rootOperationName: z.string(),
-  // Nanosecond timestamps arrive as JSON numbers from the current backend.
-  // Precision loss is unavoidable at this level since JSON.parse rounds int64 values;
-  // microsecond-level results remain within Number.MAX_SAFE_INTEGER.
-  minStartTimeUnixNano: z.number(),
-  maxEndTimeUnixNano: z.number(),
+  // int64 nanosecond timestamps are encoded as decimal strings per proto3 JSON encoding
+  // rules, to avoid precision loss when parsed by JavaScript's 53-bit float Number.
+  minStartTimeUnixNano: z.string(),
+  maxEndTimeUnixNano: z.string(),
   spanCount: z.number().int().nonnegative(),
   errorSpanCount: z.number().int().nonnegative(),
   orphanSpanCount: z.number().int().nonnegative(),

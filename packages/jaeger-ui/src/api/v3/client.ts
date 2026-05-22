@@ -77,21 +77,25 @@ export class JaegerClient {
     const data = await response.json();
     const validated = TraceSummariesResponseSchema.parse(data);
 
-    // Nanoseconds from the backend are JSON numbers (precision already limited by JSON.parse
-    // for large int64 values). Dividing by 1000 gives microseconds that fit safely in a float.
-    // Conforms to TraceSummary: startTime and duration are Microseconds (number).
-    return validated.summaries.map(s => ({
-      traceID: s.traceID,
-      traceName: `${s.rootServiceName}: ${s.rootOperationName}`,
-      rootServiceName: s.rootServiceName,
-      rootOperationName: s.rootOperationName,
-      startTime: (s.minStartTimeUnixNano / 1000) as Microseconds,
-      duration: ((s.maxEndTimeUnixNano - s.minStartTimeUnixNano) / 1000) as Microseconds,
-      spanCount: s.spanCount,
-      errorSpanCount: s.errorSpanCount,
-      orphanSpanCount: s.orphanSpanCount,
-      services: s.services,
-    }));
+    // Timestamps arrive as decimal strings (proto3 JSON encoding for int64).
+    // Parse via BigInt to avoid precision loss, then divide to microseconds —
+    // µs-epoch values fit within Number.MAX_SAFE_INTEGER so the final cast is safe.
+    return validated.summaries.map(s => {
+      const startNs = BigInt(s.minStartTimeUnixNano);
+      const endNs = BigInt(s.maxEndTimeUnixNano);
+      return {
+        traceID: s.traceID,
+        traceName: `${s.rootServiceName}: ${s.rootOperationName}`,
+        rootServiceName: s.rootServiceName,
+        rootOperationName: s.rootOperationName,
+        startTime: Number(startNs / 1000n) as Microseconds,
+        duration: Number((endNs - startNs) / 1000n) as Microseconds,
+        spanCount: s.spanCount,
+        errorSpanCount: s.errorSpanCount,
+        orphanSpanCount: s.orphanSpanCount,
+        services: s.services,
+      };
+    });
   }
 
   /**
