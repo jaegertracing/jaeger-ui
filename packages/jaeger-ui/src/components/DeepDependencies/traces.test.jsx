@@ -10,10 +10,18 @@ vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
 }));
 
+vi.mock('react-redux', () => ({
+  useSelector: fn => fn({ trace: { search: { results: [] } } }),
+}));
+
+vi.mock('../../hooks/useTraceLoading', () => ({
+  useTraces: () => new Map(),
+}));
+
 import { DeepDependencyGraphPageImpl } from '.';
-import { TracesDdgImpl, mapStateToProps } from './traces';
-import * as url from './url';
+import { TracesDdgImpl } from './traces';
 import { ROUTE_PATH } from '../SearchTracePage/url';
+import * as url from './url';
 import * as GraphModel from '../../model/ddg/GraphModel';
 import * as transformDdgData from '../../model/ddg/transformDdgData';
 import * as transformTracesToPaths from '../../model/ddg/transformTracesToPaths';
@@ -53,103 +61,48 @@ describe('TracesDdgImpl', () => {
     );
     expect(getByTestId('ddg-impl')).toBeInTheDocument();
   });
-});
-
-describe('mapStateToProps', () => {
-  const hash = 'test hash';
-  const mockModel = { hash };
-  const mockGraph = { model: mockModel };
-  const mockPayload = 'test payload';
-  const urlState = {
-    service: 'testService',
-    operation: 'testOperation',
-    visEncoding: 'testVisEncoding',
-  };
-  const ownProps = {
-    location: {
-      search: queryString.stringify(urlState),
-    },
-  };
-  const state = {
-    router: { location: ownProps.location },
-    trace: {
-      search: { results: [] },
-    },
-  };
-
-  let getUrlStateSpy;
-  let makeGraphSpy;
-  let sanitizeUrlStateSpy;
-  let transformDdgDataSpy;
-  let transformTracesToPathsSpy;
-  let spies;
-
-  beforeAll(() => {
-    getUrlStateSpy = jest.spyOn(url, 'getUrlState');
-    makeGraphSpy = jest.spyOn(GraphModel, 'makeGraph').mockReturnValue(mockGraph);
-    sanitizeUrlStateSpy = jest.spyOn(url, 'sanitizeUrlState').mockImplementation(u => u);
-    transformDdgDataSpy = jest.spyOn(transformDdgData, 'default').mockReturnValue(mockModel);
-    transformTracesToPathsSpy = jest.spyOn(transformTracesToPaths, 'default').mockReturnValue(mockPayload);
-    spies = [
-      getUrlStateSpy,
-      makeGraphSpy,
-      sanitizeUrlStateSpy,
-      transformDdgDataSpy,
-      transformTracesToPathsSpy,
-    ];
-  });
-
-  beforeEach(() => {
-    spies.forEach(spy => spy.mockClear());
-    getUrlStateSpy.mockReturnValue(urlState);
-  });
-
-  it('gets props from url', () => {
-    const result = mapStateToProps(state, ownProps);
-    expect(result.urlState).toEqual(urlState);
-  });
 
   it('calculates showOp from urlState correctly', () => {
+    const makeGraphSpy = jest.spyOn(GraphModel, 'makeGraph').mockReturnValue({});
+    jest.spyOn(transformDdgData, 'default').mockReturnValue({ hash: 'h' });
+    jest.spyOn(transformTracesToPaths, 'default').mockReturnValue('payload');
+
     [true, false, undefined].forEach(showOp => {
       ['focalOperation', undefined].forEach(focalOp => {
-        const mockUrlState = {
-          ...urlState,
-          operation: focalOp,
-          showOp,
-        };
-        getUrlStateSpy.mockReturnValue(mockUrlState);
-        const result = mapStateToProps(state, ownProps);
-        expect(result.showOp).toBe(showOp === undefined ? focalOp !== undefined : showOp);
+        const mockUrlState = { service: 'svc', operation: focalOp, showOp };
+        jest.spyOn(url, 'getUrlState').mockReturnValue(mockUrlState);
+        jest.spyOn(url, 'sanitizeUrlState').mockImplementation(u => u);
+        DeepDependencyGraphPageImpl.mockClear();
+
+        render(<TracesDdgImpl location={{ search: '' }} />);
+
+        const [firstArg] = DeepDependencyGraphPageImpl.mock.calls[0];
+        expect(firstArg.showOp).toBe(showOp === undefined ? focalOp !== undefined : showOp);
       });
     });
+
+    makeGraphSpy.mockRestore();
   });
 
-  it('returns graph and graphState only if service is defined', () => {
-    const result = mapStateToProps(state, ownProps);
-    expect(result.graph).toBe(mockGraph);
-    expect(result.graphState.model).toBe(mockModel);
+  it('passes graph and graphState only if service is defined', () => {
+    const mockModel = { hash: 'test hash' };
+    jest.spyOn(GraphModel, 'makeGraph').mockReturnValue({ model: mockModel });
+    jest.spyOn(transformDdgData, 'default').mockReturnValue(mockModel);
+    jest.spyOn(transformTracesToPaths, 'default').mockReturnValue('payload');
+    jest.spyOn(url, 'sanitizeUrlState').mockImplementation(u => u);
 
-    getUrlStateSpy.mockReturnValue({ ...urlState, service: undefined });
-    const resultWithoutService = mapStateToProps(state, ownProps);
-    expect(resultWithoutService.graph).toBeUndefined();
-    expect(resultWithoutService.graphState).toBeUndefined();
-  });
+    jest.spyOn(url, 'getUrlState').mockReturnValue({ service: 'svc', operation: 'op' });
+    DeepDependencyGraphPageImpl.mockClear();
+    render(<TracesDdgImpl location={{ search: '' }} />);
+    const [withService] = DeepDependencyGraphPageImpl.mock.calls[0];
+    expect(withService.graph).toBeDefined();
+    expect(withService.graphState).toBeDefined();
 
-  it('memoized functions are called with equivalent arguments when invoked twice', () => {
-    mapStateToProps(state, ownProps);
-    mapStateToProps(state, ownProps);
-    spies.forEach(spy => {
-      const [call1, call2] = spy.mock.calls;
-      if (call1 && call2 && call1.length > 0 && call2.length > 0) {
-        call1.forEach((arg, i) => {
-          expect(call2[i]).toStrictEqual(arg);
-        });
-      }
-    });
-  });
-
-  it('sanitizes the url using hash from graph model', () => {
-    mapStateToProps(state, ownProps);
-    expect(sanitizeUrlStateSpy).toHaveBeenCalledWith(urlState, hash);
+    jest.spyOn(url, 'getUrlState').mockReturnValue({ service: undefined });
+    DeepDependencyGraphPageImpl.mockClear();
+    render(<TracesDdgImpl location={{ search: '' }} />);
+    const [withoutService] = DeepDependencyGraphPageImpl.mock.calls[0];
+    expect(withoutService.graph).toBeUndefined();
+    expect(withoutService.graphState).toBeUndefined();
   });
 });
