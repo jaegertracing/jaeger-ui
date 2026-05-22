@@ -108,21 +108,33 @@ describe('JaegerUIApp', () => {
     expect(() => renderWithPath('/search')).not.toThrow();
   });
 
-  const routes = [
+  // SearchTracePage and TraceRouter are eagerly imported — synchronous render.
+  const eagerRoutes = [
     ['/search', 'search-trace'],
     // TraceDiff is now routed under /trace/:id - when id contains "...", TraceRouter renders TraceDiff
     ['/trace/abc...def', 'trace-diff'],
     ['/trace/123', 'trace-page'],
+  ];
+
+  eagerRoutes.forEach(([path, testId]) => {
+    it(`should render correct component for ${path}`, () => {
+      const { getByTestId } = renderWithPath(path);
+      expect(getByTestId(testId)).toBeInTheDocument();
+    });
+  });
+
+  // Secondary pages are lazy-loaded — must wait for Suspense to resolve.
+  const lazyRoutes = [
     ['/dependencies', 'dependency-graph'],
     ['/deep-dependencies', 'deep-dependencies'],
     ['/quality-metrics', 'quality-metrics'],
     ['/monitor', 'monitor'],
   ];
 
-  routes.forEach(([path, testId]) => {
-    it(`should render correct component for ${path}`, () => {
-      const { getByTestId } = renderWithPath(path);
-      expect(getByTestId(testId)).toBeInTheDocument();
+  lazyRoutes.forEach(([path, testId]) => {
+    it(`should render correct component for ${path}`, async () => {
+      const { findByTestId } = renderWithPath(path);
+      expect(await findByTestId(testId)).toBeInTheDocument();
     });
   });
 
