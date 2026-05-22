@@ -26,7 +26,8 @@ import {
   FetchAggregatedServiceMetricsResponse,
 } from '../../../types/metrics';
 import prefixUrl from '../../../utils/prefix-url';
-import { convertToTimeUnit, convertTimeUnitToShortTerm, getSuitableTimeUnit } from '../../../utils/date';
+import { convertTimeUnitToShortTerm, getSuitableTimeUnit } from '../../../utils/date';
+import { timeFrameOptions, getLoopbackInterval, yAxisTickFormat, ONE_HOUR_MS } from './timeFrameUtils';
 
 import './index.css';
 import getConfig from '../../../utils/config/get-config';
@@ -58,19 +59,6 @@ const trackSearchOperationDebounced = _debounce(searchQuery => trackSearchOperat
 const Search = Input.Search;
 const Option = Select.Option;
 
-const oneHourInMilliSeconds = 3600000;
-const oneMinuteInMilliSeconds = 60000;
-const timeFrameOptions = [
-  { label: 'Last 5 minutes', value: 5 * oneMinuteInMilliSeconds },
-  { label: 'Last 15 minutes', value: 15 * oneMinuteInMilliSeconds },
-  { label: 'Last 30 minutes', value: 30 * oneMinuteInMilliSeconds },
-  { label: 'Last Hour', value: oneHourInMilliSeconds },
-  { label: 'Last 2 hours', value: 2 * oneHourInMilliSeconds },
-  { label: 'Last 6 hours', value: 6 * oneHourInMilliSeconds },
-  { label: 'Last 12 hours', value: 12 * oneHourInMilliSeconds },
-  { label: 'Last 24 hours', value: 24 * oneHourInMilliSeconds },
-  { label: 'Last 2 days', value: 48 * oneHourInMilliSeconds },
-];
 const spanKindOptions = [
   { label: 'Client', value: 'client' },
   { label: 'Server', value: 'server' },
@@ -78,17 +66,6 @@ const spanKindOptions = [
   { label: 'Producer', value: 'producer' },
   { label: 'Consumer', value: 'consumer' },
 ];
-
-// export for tests
-export const getLoopbackInterval = (interval: number) => {
-  if (interval === undefined) return '';
-
-  const timeFrameObj = timeFrameOptions.find(t => t.value === interval);
-
-  if (timeFrameObj === undefined) return '';
-
-  return timeFrameObj.label.toLowerCase();
-};
 
 const calcDisplayTimeUnit = (serviceLatencies: ServiceMetricsObject | ServiceMetricsObject[] | null) => {
   let maxValue = 0;
@@ -102,10 +79,6 @@ const calcDisplayTimeUnit = (serviceLatencies: ServiceMetricsObject | ServiceMet
 
   return getSuitableTimeUnit(maxValue * 1000);
 };
-
-// export for tests
-export const yAxisTickFormat = (timeInMS: number, displayTimeUnit: string) =>
-  convertToTimeUnit(timeInMS * 1000, displayTimeUnit);
 
 const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMetricsObject) => {
   if (!serviceErrorRate) return null;
@@ -141,7 +114,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
     return spanKindOptions.some(opt => opt.value === stored) ? (stored as spanKinds) : 'server';
   });
   const [selectedTimeFrame, setSelectedTimeFrame] = useState<number>(
-    store.getNumber('lastAtmSearchTimeframe', oneHourInMilliSeconds)
+    store.getNumber('lastAtmSearchTimeframe', ONE_HOUR_MS)
   );
 
   const calcGraphXDomain = useCallback(() => {
