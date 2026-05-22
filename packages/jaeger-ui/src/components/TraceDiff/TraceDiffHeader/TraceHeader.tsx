@@ -8,7 +8,7 @@ import TraceTimelineLink from './TraceTimelineLink';
 import RelativeDate from '../../common/RelativeDate';
 import TraceName from '../../common/TraceName';
 import { fetchedState } from '../../../constants';
-import { formatDuration } from '../../../utils/date';
+import { formatDurationCompact } from '../../../utils/date';
 
 import { FetchedState, TNil } from '../../../types';
 import { IOtelTrace } from '../../../types/otel';
@@ -48,7 +48,7 @@ export function Attrs({
       <li className="TraceDiffHeader--traceAttr" data-testid="TraceDiffHeader--traceAttr">
         <span className="u-tx-muted">Duration: </span>
         <strong data-testid="TraceDiffHeader--traceAttr--duration">
-          {formatDuration((duration || 0) as IOtelTrace['duration'])}
+          {formatDurationCompact((duration || 0) as IOtelTrace['duration'])}
         </strong>
       </li>
       <li className="TraceDiffHeader--traceAttr" data-testid="TraceDiffHeader--traceAttr">

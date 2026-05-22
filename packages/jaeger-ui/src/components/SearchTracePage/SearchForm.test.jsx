@@ -18,6 +18,11 @@ vi.mock('../common/SearchableSelect', () => {
 vi.mock('../../hooks/useConfig', () => ({
   useConfig: () => ({
     useOpenTelemetryTerms: false,
+    search: {
+      maxLookback: { label: '2 Days', value: '2d' },
+      adjustEndTime: '1m',
+      maxLimit: 1500,
+    },
   }),
 }));
 vi.mock('../../hooks/useTraceDiscovery', () => ({
@@ -83,10 +88,6 @@ function makeDateParams(dateOffset = 0) {
 const defaultProps = {
   dataCenters: ['dc1'],
   handleSubmit: () => {},
-  searchMaxLookback: {
-    label: '2 Days',
-    value: '2d',
-  },
   submitFormHandler: jest.fn().mockReturnValue('/search'),
 };
 
@@ -532,22 +533,9 @@ describe('<SearchForm>', () => {
   });
 
   it('uses config.search.maxLimit', () => {
-    const maxLimit = 6789;
-    const config = {
-      search: {
-        maxLimit,
-      },
-    };
-
-    const originalGetConfig = window.getJaegerUiConfig;
-    window.getJaegerUiConfig = jest.fn(() => config);
-
     const { container } = renderForm(<SearchForm {...defaultProps} />);
-
     const limitInput = container.querySelector('input[name="resultsLimit"]');
-    expect(limitInput).toHaveAttribute('max');
-
-    window.getJaegerUiConfig = originalGetConfig;
+    expect(limitInput).toHaveAttribute('max', '1500');
   });
 
   it('updates state when tags input changes', () => {
@@ -560,9 +548,7 @@ describe('<SearchForm>', () => {
   });
 
   it('prevents default form submission behavior', async () => {
-    const { container } = renderForm(
-      <SearchForm {...defaultProps} searchAdjustEndTime="1m" initialValues={{ service: 'svcA' }} />
-    );
+    const { container } = renderForm(<SearchForm {...defaultProps} initialValues={{ service: 'svcA' }} />);
     const form = container.querySelector('form');
 
     await waitFor(() =>

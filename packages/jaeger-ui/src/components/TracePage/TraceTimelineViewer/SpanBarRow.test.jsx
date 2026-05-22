@@ -34,7 +34,7 @@ vi.mock('./SpanBar', () => ({
 }));
 
 vi.mock('./utils', () => ({
-  formatDuration: jest.fn(d => `formatted-${d}`),
+  formatDurationCompact: jest.fn(d => `formatted-${d}`),
   ViewedBoundsFunctionType: {},
 }));
 
@@ -106,6 +106,29 @@ describe('<SpanBarRow>', () => {
     fireEvent.click(spanView);
     expect(defaultProps.onDetailToggled).toHaveBeenCalledTimes(1);
     expect(defaultProps.onDetailToggled).toHaveBeenCalledWith(spanID);
+  });
+
+  it('triggers onDetailToggled when Enter is pressed on span name', () => {
+    render(<SpanBarRow {...defaultProps} />);
+    const spanName = screen.getByRole('switch');
+    fireEvent.keyDown(spanName, { key: 'Enter' });
+    expect(defaultProps.onDetailToggled).toHaveBeenCalledTimes(1);
+    expect(defaultProps.onDetailToggled).toHaveBeenCalledWith(spanID);
+  });
+
+  it('triggers onDetailToggled when Space is pressed on span name', () => {
+    render(<SpanBarRow {...defaultProps} />);
+    const spanName = screen.getByRole('switch');
+    fireEvent.keyDown(spanName, { key: ' ' });
+    expect(defaultProps.onDetailToggled).toHaveBeenCalledTimes(1);
+    expect(defaultProps.onDetailToggled).toHaveBeenCalledWith(spanID);
+  });
+
+  it('does not trigger onDetailToggled for other keys on span name', () => {
+    render(<SpanBarRow {...defaultProps} />);
+    const spanName = screen.getByRole('switch');
+    fireEvent.keyDown(spanName, { key: 'Tab' });
+    expect(defaultProps.onDetailToggled).not.toHaveBeenCalled();
   });
 
   it('triggers onChildrenToggled when SpanTreeOffset is clicked', () => {
