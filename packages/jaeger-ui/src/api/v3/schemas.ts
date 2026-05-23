@@ -13,14 +13,7 @@
 import { z } from 'zod';
 
 // Import auto-generated schemas (post-processed for strict validation)
-export { ServicesResponseSchema } from './generated-client';
-
-// NOTE: The OpenAPI spec incorrectly lists Operation.spanKind as "span_kind" (snake_case).
-// The server uses jsonpb.Marshaler which follows proto3 JSON encoding and emits camelCase.
-// We override OperationSchema and OperationsResponseSchema here to match actual server output.
-// See https://github.com/jaegertracing/jaeger/issues/8619
-export const OperationSchema = z.object({ name: z.string(), spanKind: z.string() }).passthrough();
-export const OperationsResponseSchema = z.object({ operations: z.array(OperationSchema) }).passthrough();
+export { ServicesResponseSchema, OperationSchema, OperationsResponseSchema } from './generated-client';
 
 /**
  * Helper validators for trace and span IDs in hex format
@@ -31,10 +24,9 @@ export const traceIdHex = z.string().regex(/^[0-9a-f]{32}$/i, 'Invalid trace ID:
 
 export const spanIdHex = z.string().regex(/^[0-9a-f]{16}$/i, 'Invalid span ID: must be 16-char hex string');
 
-// TODO: The schemas below are HAND-WRITTEN because the IDL for the /api/v3/trace-summaries
-// endpoint (ADR-010) has not been finalized yet. Once the Jaeger protobuf/OpenAPI IDL is
-// published, regenerate generated-client.ts (npm run generate:api-types), move these schemas
-// there, and re-export them from this file like ServicesResponseSchema above.
+// TODO: The schemas below are HAND-WRITTEN because the generated TraceSummary schema from
+// the IDL uses generic z.string() for timestamps (no decimal-digit constraint) and lacks
+// nonnegative() on counts. Replace once the generated schemas are tightened to match.
 
 const ServiceSummarySchema = z.object({
   name: z.string(),
