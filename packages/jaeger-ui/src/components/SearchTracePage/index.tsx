@@ -129,9 +129,15 @@ export function SearchTracePageImpl() {
   // Merge API and uploaded summaries, deduplicating by traceID (API results take precedence).
   // Duplicates arise when the same file is uploaded twice or an uploaded trace also appears
   // in API results; without dedup the list gets duplicate React keys and may render incorrectly.
+  // `seen` is updated as each uploaded entry is accepted so duplicates within uploads are
+  // also removed (not just duplicates between uploads and API results).
   const traceSummaries = useMemo(() => {
     const seen = new Set(apiTraceSummaries.map(s => s.traceID));
-    const uniqueUploaded = uploadedSummaries.filter(s => !seen.has(s.traceID));
+    const uniqueUploaded = uploadedSummaries.filter(s => {
+      if (seen.has(s.traceID)) return false;
+      seen.add(s.traceID);
+      return true;
+    });
     return [...apiTraceSummaries, ...uniqueUploaded];
   }, [apiTraceSummaries, uploadedSummaries]);
 
