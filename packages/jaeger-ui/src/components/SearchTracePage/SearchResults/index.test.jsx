@@ -268,6 +268,10 @@ describe('<SearchResults>', () => {
   });
 
   it('uses location.pathname+search as Back URL when queryOfResults is null (upload-only context)', () => {
+    // When traces come from a file upload (no API search), queryOfResults is null and
+    // getUrl() cannot reconstruct a meaningful search URL. The Back link on the trace
+    // page must use the current URL so the user returns to the upload results, not an
+    // empty or incorrect search page.
     renderWithRouter(
       <SearchResults {...baseProps} queryOfResults={null} location={{ pathname: '/search', search: '' }} />
     );
