@@ -71,6 +71,12 @@ export default function DownloadResults({ traceSummaries, rawTraces }: Props) {
       }
     }
     traces = traceSummaries.map(s => rawByID.get(s.traceID)).filter(Boolean);
+    const missingCount = traceSummaries.length - traces.length;
+    if (missingCount > 0) {
+      message.warning(
+        `${missingCount} trace${missingCount > 1 ? 's' : ''} could not be retrieved and will be omitted from the download.`
+      );
+    }
     const file = createBlob(traces);
     const element = document.createElement('a');
     element.href = URL.createObjectURL(file);
