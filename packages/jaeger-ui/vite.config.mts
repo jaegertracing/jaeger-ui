@@ -230,7 +230,7 @@ export default defineConfig({
       '/qualitymetrics-v2': proxyConfig,
     },
     warmup: {
-      // Pre-transform the two most-visited pages in the background on startup
+      // Pre-transform the most-visited pages in the background on startup
       // so cold Vite transforms don't block the first hard refresh.
       clientFiles: [
         './src/index.tsx',
