@@ -53,7 +53,7 @@ describe('DownloadResults', () => {
     expect(screen.getByRole('button', { name: /Download Results/i })).toBeInTheDocument();
   });
 
-  it('downloads blob from rawTraces when they are present', () => {
+  it('downloads blob from rawTraces when all are present locally', () => {
     const orig = global.Blob;
     global.Blob = class {
       constructor(text, options) {
@@ -91,6 +91,23 @@ describe('DownloadResults', () => {
     expect(mockFetchTrace).toHaveBeenCalledWith('b');
   });
 
+  it('fetches only the missing trace when one raw is already present', async () => {
+    mockFetchTrace.mockResolvedValue({ data: [{ traceID: 'b', spans: [] }] });
+    URL.createObjectURL = jest.fn(() => 'blob://url');
+    URL.revokeObjectURL = jest.fn();
+
+    // rawTraces only has 'a'; 'b' must be fetched
+    render(<DownloadResults traceSummaries={baseTraces} rawTraces={[baseRawTraces[0]]} />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Download Results/i }));
+    });
+
+    await waitFor(() => expect(URL.createObjectURL).toHaveBeenCalledTimes(1));
+    expect(mockFetchTrace).not.toHaveBeenCalledWith('a');
+    expect(mockFetchTrace).toHaveBeenCalledWith('b');
+  });
+
   it('shows "Retrieving traces…" and disables button while fetching', async () => {
     let resolveA;
     mockFetchTrace.mockImplementationOnce(() => new Promise(r => (resolveA = r)));
@@ -107,6 +124,54 @@ describe('DownloadResults', () => {
       resolveA({ data: [{}] });
     });
     await waitFor(() => expect(screen.getByRole('button', { name: /Download Results/i })).not.toBeDisabled());
+  });
+
+  it('renders progressbar with ARIA attributes while fetching', async () => {
+    let resolveA;
+    mockFetchTrace.mockImplementationOnce(() => new Promise(r => (resolveA = r)));
+    mockFetchTrace.mockResolvedValue({ data: [{}] });
+    URL.createObjectURL = jest.fn(() => 'blob://url');
+    URL.revokeObjectURL = jest.fn();
+
+    render(<DownloadResults traceSummaries={baseTraces} rawTraces={[]} />);
+    fireEvent.click(screen.getByRole('button', { name: /Download Results/i }));
+
+    await waitFor(() => expect(screen.getByRole('progressbar')).toBeInTheDocument());
+    const bar = screen.getByRole('progressbar');
+    expect(bar).toHaveAttribute('aria-valuemin', '0');
+    expect(bar).toHaveAttribute('aria-valuemax', '100');
+
+    await act(async () => {
+      resolveA({ data: [{}] });
+    });
+    await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
+  });
+
+  it('does not call setProgress after fetch errors (cancelled flag)', async () => {
+    // First fetch throws; the second is slow. After the error the cancelled flag
+    // must prevent the slow worker from updating progress state.
+    let resolveB;
+    mockFetchTrace.mockRejectedValueOnce(new Error('network error'));
+    mockFetchTrace.mockImplementationOnce(() => new Promise(r => (resolveB = r)));
+    URL.createObjectURL = jest.fn(() => 'blob://url');
+    URL.revokeObjectURL = jest.fn();
+
+    render(<DownloadResults traceSummaries={baseTraces} rawTraces={[]} />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Download Results/i }));
+    });
+
+    // After the error the button should be back to idle (not "Retrieving traces…")
+    await waitFor(() => expect(screen.getByRole('button', { name: /Download Results/i })).not.toBeDisabled());
+
+    // Resolve the late fetch — should not crash or update state
+    await act(async () => {
+      resolveB({ data: [{}] });
+    });
+
+    // Button remains idle; no progressbar visible
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
   });
 
   it('blob can be read back as JSON', async () => {
