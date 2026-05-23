@@ -12,6 +12,7 @@ export async function pooledMap<T, R>(
   concurrency: number,
   onProgress?: (done: number, total: number) => void
 ): Promise<R[]> {
+  if (concurrency < 1) throw new RangeError(`pooledMap: concurrency must be >= 1, got ${concurrency}`);
   const results: R[] = Array.from({ length: items.length }) as R[];
   let done = 0;
   // Shared iterator: each worker pulls the next (index, item) pair atomically via

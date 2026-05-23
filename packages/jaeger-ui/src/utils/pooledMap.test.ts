@@ -45,4 +45,9 @@ describe('pooledMap', () => {
     const result = await pooledMap([1, 2], async x => x * 3, 100);
     expect(result).toEqual([3, 6]);
   });
+
+  it('throws RangeError when concurrency is less than 1', async () => {
+    await expect(pooledMap([1, 2], async x => x, 0)).rejects.toThrow(RangeError);
+    await expect(pooledMap([1, 2], async x => x, -1)).rejects.toThrow(RangeError);
+  });
 });
