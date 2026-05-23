@@ -54,6 +54,7 @@ export default function DownloadResults({ traceSummaries, rawTraces }: Props) {
         );
         fetched.forEach((raw, i) => rawByID.set(missing[i].traceID, raw));
       } catch (err) {
+        cancelled.current = true;
         message.error(`Failed to retrieve traces: ${err instanceof Error ? err.message : String(err)}`);
         return;
       } finally {
