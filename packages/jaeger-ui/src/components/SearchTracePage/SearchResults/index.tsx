@@ -155,13 +155,15 @@ export function UnconnectedSearchResults({
 
   const goToTrace = useCallback(
     (traceID: string) => {
-      const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
+      const searchUrl = queryOfResults
+        ? getUrl(stripEmbeddedState(queryOfResults))
+        : location.pathname + location.search || getUrl();
       const locationObj = getTracePageLink(traceID, { fromSearch: searchUrl });
       navigate(locationObj.pathname + (locationObj.search ? `?${locationObj.search}` : ''), {
         state: locationObj.state,
       });
     },
-    [queryOfResults, navigate]
+    [queryOfResults, location, navigate]
   );
 
   const onDdgViewClicked = useCallback(() => {
@@ -208,7 +210,11 @@ export function UnconnectedSearchResults({
     );
   }
   const cohortIds = new Set(diffCohort.map(datum => datum.traceID));
-  const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
+  // When there are no API search params (upload-only), use the current URL as the back
+  // target so the Back button on the trace page returns here rather than the empty homepage.
+  const searchUrl = queryOfResults
+    ? getUrl(stripEmbeddedState(queryOfResults))
+    : location.pathname + location.search || getUrl();
   return (
     <div className="SearchResults">
       <div className="SearchResults--header">

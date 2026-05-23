@@ -2,7 +2,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient, skipToken } from '@tanstack/react-query';
 import { Col, Row, Tabs } from 'antd';
 import { useLocation } from 'react-router-dom';
@@ -85,10 +85,18 @@ export function SearchTracePageImpl() {
     staleTime: Infinity,
   });
 
+  // Clear uploaded results when a new API search is submitted (searchQuery becomes non-null
+  // and changes). Do NOT clear when searchQuery becomes null (e.g. Back from a trace with
+  // no active search) — that would wipe upload-only results.
+  const prevSearchQueryRef = React.useRef(searchQuery);
   useEffect(() => {
-    queryClient.setQueryData(['uploadedSummaries'], []);
-    queryClient.setQueryData(['uploadedRawTraces'], []);
-  }, [queryClient, searchQuery]);
+    const prev = prevSearchQueryRef.current;
+    prevSearchQueryRef.current = searchQuery;
+    if (searchQuery !== null && prev !== searchQuery) {
+      queryClient.setQueryData(['uploadedSummaries'], []);
+      queryClient.setQueryData(['uploadedRawTraces'], []);
+    }
+  });
 
   const handleTracesLoaded = useCallback(
     (summaries: TraceSummary[], rawTraces: unknown[]) => {
