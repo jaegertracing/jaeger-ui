@@ -96,7 +96,7 @@ export function searchQueryFromUrl(search: string): SearchQuery | null {
     start: String(q.start ?? ''),
     end: String(q.end ?? ''),
     limit: (() => {
-      const n = Number(Array.isArray(q.limit) ? q.limit[0] : q.limit);
+      const n = Number(q.limit);
       return Number.isFinite(n) && n > 0 ? n : 20;
     })(),
     lookback: String(q.lookback ?? '1h'),

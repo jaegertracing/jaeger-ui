@@ -6,6 +6,7 @@ import { jaegerClient } from '../api/v3/client';
 import { localeStringComparator } from '../utils/sort';
 import type { SearchQuery } from '../types/search';
 import type { TraceSummary } from '../types/trace-summary';
+import { QUERY_KEY_TRACE_SUMMARIES } from '../components/SearchTracePage/queryKeys';
 
 /**
  * React Query hook to fetch the list of services from the Jaeger API.
@@ -33,7 +34,7 @@ export function useServices(): UseQueryResult<string[]> {
  * not a different one. A parameterized key would accumulate a separate cache entry for
  * every distinct search submitted during a session, which causes unbounded memory growth.
  *
- * New searches are triggered by calling `queryClient.invalidateQueries({ queryKey: ['traceSummaries'] })`
+ * New searches are triggered by calling `queryClient.invalidateQueries({ queryKey: QUERY_KEY_TRACE_SUMMARIES })`
  * in `SearchTracePage` when the URL search parameters change. This marks the single entry
  * stale and causes React Query to call the current `queryFn` (which closes over the latest
  * `query` argument) to fetch fresh results.
@@ -47,7 +48,7 @@ export function useServices(): UseQueryResult<string[]> {
  */
 export function useSearchTraces(query: SearchQuery | null): UseQueryResult<TraceSummary[]> {
   return useQuery({
-    queryKey: ['traceSummaries'],
+    queryKey: QUERY_KEY_TRACE_SUMMARIES,
     queryFn: query ? () => jaegerClient.fetchTraceSummaries(query) : skipToken,
     staleTime: Infinity,
     gcTime: Infinity,

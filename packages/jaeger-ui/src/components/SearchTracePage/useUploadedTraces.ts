@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient, skipToken } from '@tanstack/react-query';
 import type { TraceSummary } from '../../types/trace-summary';
+import { QUERY_KEY_UPLOADED_SUMMARIES, QUERY_KEY_UPLOADED_RAW_TRACES } from './queryKeys';
 
 type UploadedTraces = {
   uploadedSummaries: TraceSummary[];
@@ -16,7 +17,7 @@ type UploadedTraces = {
  *
  * Both keys use skipToken (subscribe-only, no fetch) and gcTime: Infinity so the
  * data survives navigation away from the search page and is restored on Back.
- * gcTime: Infinity is safe here for the same reason as ['traceSummaries']: there
+ * gcTime: Infinity is safe here for the same reason as QUERY_KEY_TRACE_SUMMARIES: there
  * is exactly one cache entry per key, not one per upload.
  *
  * When searchQueryKey changes to a new non-null value (i.e. the user submits a new
@@ -27,14 +28,14 @@ export function useUploadedTraces(searchQueryKey: string | null): UploadedTraces
   const queryClient = useQueryClient();
 
   const { data: uploadedSummaries = [] } = useQuery<TraceSummary[]>({
-    queryKey: ['uploadedSummaries'],
+    queryKey: QUERY_KEY_UPLOADED_SUMMARIES,
     queryFn: skipToken,
     staleTime: Infinity,
     gcTime: Infinity,
   });
 
   const { data: uploadedRawTraces = [] } = useQuery<unknown[]>({
-    queryKey: ['uploadedRawTraces'],
+    queryKey: QUERY_KEY_UPLOADED_RAW_TRACES,
     queryFn: skipToken,
     staleTime: Infinity,
     gcTime: Infinity,
@@ -52,18 +53,21 @@ export function useUploadedTraces(searchQueryKey: string | null): UploadedTraces
       return;
     }
     if (searchQueryKey !== null) {
-      queryClient.setQueryData(['uploadedSummaries'], []);
-      queryClient.setQueryData(['uploadedRawTraces'], []);
+      queryClient.setQueryData(QUERY_KEY_UPLOADED_SUMMARIES, []);
+      queryClient.setQueryData(QUERY_KEY_UPLOADED_RAW_TRACES, []);
     }
   }, [searchQueryKey, queryClient]);
 
   const handleTracesLoaded = useCallback(
     (summaries: TraceSummary[], rawTraces: unknown[]) => {
-      queryClient.setQueryData<TraceSummary[]>(['uploadedSummaries'], prev => [
+      queryClient.setQueryData<TraceSummary[]>(QUERY_KEY_UPLOADED_SUMMARIES, prev => [
         ...(prev ?? []),
         ...summaries,
       ]);
-      queryClient.setQueryData<unknown[]>(['uploadedRawTraces'], prev => [...(prev ?? []), ...rawTraces]);
+      queryClient.setQueryData<unknown[]>(QUERY_KEY_UPLOADED_RAW_TRACES, prev => [
+        ...(prev ?? []),
+        ...rawTraces,
+      ]);
     },
     [queryClient]
   );

@@ -28,6 +28,7 @@ import { useConfig } from '../../hooks/useConfig';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 import { ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
+import { QUERY_KEY_TRACE_SUMMARIES } from './queryKeys';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
@@ -336,7 +337,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   initialValues,
   submitFormHandler,
 }) => {
-  const submitting = useIsFetching({ queryKey: ['traceSummaries'] }) > 0;
+  const submitting = useIsFetching({ queryKey: QUERY_KEY_TRACE_SUMMARIES }) > 0;
   const navigate = useNavigate();
   const { useOpenTelemetryTerms: useOtelTerms, search } = useConfig();
   const searchMaxLookback: ILookbackOption | undefined = search?.maxLookback;
