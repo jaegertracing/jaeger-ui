@@ -1053,16 +1053,15 @@ Search now calls `/api/v3/trace-summaries` via:
 export function useSearchTraces(query: SearchQuery | null): UseQueryResult<TraceSummary[]> {
   return useQuery({
     queryKey: ['traceSummaries', query],
-    queryFn: () => jaegerClient.fetchTraceSummaries(query!),
-    enabled: query !== null,
-    staleTime: 30 * 1000,
+    queryFn: query ? () => jaegerClient.fetchTraceSummaries(query) : skipToken,
+    staleTime: Infinity, // query key embeds explicit end timestamp; same key = same time window
   });
 }
 ```
 
 `SearchTracePage` derives URL query params from `useLocation()` directly (no Redux `mapStateToProps`).
 
-**JSON file upload** handled inline in `FileLoader.tsx`: each file is parsed via `readJsonFile`, converted with `transformTraceData().asOtelTrace()`, inserted into the Query cache via `populateTraceCache()`, and summarized with `traceToTraceSummary()`. The summaries accumulate in local `useState` in `SearchTracePage` and are merged with API results for display.
+**JSON file upload** handled inline in `FileLoader.tsx`: each file is parsed via `readJsonFile`, converted with `transformTraceData().asOtelTrace()`, inserted into the Query cache via `populateTraceCache()`, and summarized with `traceToTraceSummary()`. The upload summaries are stored in the React Query cache (keys `uploadedSummaries` / `uploadedRawTraces`) via `skipToken` subscriptions so they survive navigation (component unmount/remount). They are cleared when a new API search is submitted, and merged with API results for display.
 
 **Components rewired**: `SearchTracePage` (fully disconnected from Redux), `FileLoader` (accepts `onTracesLoaded` callback instead of Redux action).
 

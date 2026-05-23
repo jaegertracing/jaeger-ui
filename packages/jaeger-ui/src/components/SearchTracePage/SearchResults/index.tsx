@@ -157,7 +157,7 @@ export function UnconnectedSearchResults({
     (traceID: string) => {
       const searchUrl = queryOfResults
         ? getUrl(stripEmbeddedState(queryOfResults))
-        : location.pathname + location.search || getUrl();
+        : location.pathname + location.search;
       const locationObj = getTracePageLink(traceID, { fromSearch: searchUrl });
       navigate(locationObj.pathname + (locationObj.search ? `?${locationObj.search}` : ''), {
         state: locationObj.state,
@@ -214,7 +214,7 @@ export function UnconnectedSearchResults({
   // target so the Back button on the trace page returns here rather than the empty homepage.
   const searchUrl = queryOfResults
     ? getUrl(stripEmbeddedState(queryOfResults))
-    : location.pathname + location.search || getUrl();
+    : location.pathname + location.search;
   return (
     <div className="SearchResults">
       <div className="SearchResults--header">

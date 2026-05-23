@@ -39,6 +39,11 @@ vi.mock('antd', async () => {
       ...Upload,
       Dragger: MockedDragger,
     },
+    message: {
+      error: jest.fn(),
+      warning: jest.fn(),
+      success: jest.fn(),
+    },
   };
 });
 
@@ -66,7 +71,7 @@ describe('<FileLoader />', () => {
     expect(screen.getByText('JSON files containing one or more traces are supported.')).toBeInTheDocument();
   });
 
-  it('beforeUpload returns false to prevent default upload', () => {
+  it('beforeUpload returns false to prevent default upload', async () => {
     render(<FileLoader onTracesLoaded={mockOnTracesLoaded} />);
     const beforeUpload = global.mockBeforeUpload;
     expect(beforeUpload).toBeDefined();
@@ -74,7 +79,10 @@ describe('<FileLoader />', () => {
     readJsonFile.mockResolvedValue({ data: [] });
 
     const file = new File(['{}'], 'trace.json', { type: 'application/json' });
-    const result = beforeUpload(file, [file]);
+    let result;
+    await act(async () => {
+      result = beforeUpload(file, [file]);
+    });
     expect(result).toBe(false);
   });
 

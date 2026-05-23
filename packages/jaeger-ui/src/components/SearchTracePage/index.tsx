@@ -50,7 +50,7 @@ export function SearchTracePageImpl() {
     if (!q?.service) return null;
     return {
       service: String(q.service ?? ''),
-      operation: typeof q.operation === 'string' ? q.operation : null,
+      operation: typeof q.operation === 'string' ? q.operation : undefined,
       start: String(q.start ?? ''),
       end: String(q.end ?? ''),
       limit: (() => {
@@ -60,7 +60,7 @@ export function SearchTracePageImpl() {
       lookback: String(q.lookback ?? '1h'),
       minDuration: typeof q.minDuration === 'string' ? q.minDuration : undefined,
       maxDuration: typeof q.maxDuration === 'string' ? q.maxDuration : undefined,
-      tags: typeof q.tags === 'string' ? q.tags : null,
+      tags: typeof q.tags === 'string' ? q.tags : undefined,
     };
   }, [urlQueryParams]);
 
@@ -91,6 +91,12 @@ export function SearchTracePageImpl() {
   // Clear uploaded results when a new API search is submitted (searchQuery becomes non-null
   // and changes). Do NOT clear when searchQuery becomes null (e.g. Back from a trace with
   // no active search) — that would wipe upload-only results.
+  //
+  // The effect intentionally has no dependency array (runs every render) because it uses
+  // prevSearchQueryRef to detect reference changes between renders. A dependency array on
+  // [searchQuery] alone cannot distinguish "first render with non-null query" from "same
+  // non-null query on re-render", so the ref-based prev/current pattern requires the
+  // unconditional post-render check.
   const prevSearchQueryRef = React.useRef(searchQuery);
   useEffect(() => {
     const prev = prevSearchQueryRef.current;
