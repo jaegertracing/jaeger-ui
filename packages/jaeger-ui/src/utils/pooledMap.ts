@@ -15,8 +15,8 @@ export async function pooledMap<T, R>(
   if (concurrency < 1) throw new RangeError(`pooledMap: concurrency must be >= 1, got ${concurrency}`);
   const results: R[] = Array.from({ length: items.length }) as R[];
   let done = 0;
-  // Shared iterator: each worker pulls the next (index, item) pair atomically via
-  // the JS engine's native iterator protocol, so no two workers can take the same item.
+  // The shared iterator acts as a work queue: each worker pulls the next item when ready.
+  // Iterator.next() is synchronous, so no two workers can dequeue the same item.
   const entries = items.entries();
   const worker = async () => {
     for (const [index, item] of entries) {
