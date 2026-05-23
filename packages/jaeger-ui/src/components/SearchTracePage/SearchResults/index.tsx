@@ -15,7 +15,7 @@ import * as markers from './index.markers';
 import { EAltViewActions, trackAltView } from './index.track';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';
-import { getUrl } from '../url';
+import { getUrl, type TUrlState } from '../url';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import NewWindowIcon from '../../common/NewWindowIcon';
 import SearchResultsDDG from '../../DeepDependencies/traces';
@@ -110,7 +110,9 @@ export function UnconnectedSearchResults({
 
   const goToTrace = useCallback(
     (traceID: string) => {
-      const searchUrl = currentSearchQuery ? getUrl(currentSearchQuery) : location.pathname + location.search;
+      const searchUrl = currentSearchQuery
+        ? getUrl(currentSearchQuery as TUrlState)
+        : location.pathname + location.search;
       const locationObj = getTracePageLink(traceID, { fromSearch: searchUrl });
       navigate(locationObj.pathname + (locationObj.search ? `?${locationObj.search}` : ''), {
         state: locationObj.state,
@@ -154,7 +156,9 @@ export function UnconnectedSearchResults({
   const cohortIds = new Set(diffCohort.map(datum => datum.traceID));
   // When there are no API search params (upload-only), use the current URL as the back
   // target so the Back button on the trace page returns here rather than the empty homepage.
-  const searchUrl = currentSearchQuery ? getUrl(currentSearchQuery) : location.pathname + location.search;
+  const searchUrl = currentSearchQuery
+    ? getUrl(currentSearchQuery as TUrlState)
+    : location.pathname + location.search;
   return (
     <div className="SearchResults">
       <div className="SearchResults--header">
