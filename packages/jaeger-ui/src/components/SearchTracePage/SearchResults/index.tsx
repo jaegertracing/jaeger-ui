@@ -26,6 +26,21 @@ import { getPercentageOfDuration } from '../../../utils/date';
 import { SearchQuery } from '../../../types/search';
 import { TraceSummary } from '../../../types/trace-summary';
 
+function searchQueryToUrl(q: SearchQuery): string {
+  const urlState: TUrlState = {
+    service: q.service,
+    operation: q.operation ?? undefined,
+    start: String(q.start),
+    end: String(q.end),
+    limit: String(q.limit),
+    lookback: q.lookback,
+    minDuration: q.minDuration,
+    maxDuration: q.maxDuration,
+    tags: q.tags ?? undefined,
+  };
+  return getUrl(urlState);
+}
+
 import './index.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import withRouteProps from '../../../utils/withRouteProps';
@@ -111,7 +126,7 @@ export function UnconnectedSearchResults({
   const goToTrace = useCallback(
     (traceID: string) => {
       const searchUrl = currentSearchQuery
-        ? getUrl(currentSearchQuery as TUrlState)
+        ? searchQueryToUrl(currentSearchQuery)
         : location.pathname + location.search;
       const locationObj = getTracePageLink(traceID, { fromSearch: searchUrl });
       navigate(locationObj.pathname + (locationObj.search ? `?${locationObj.search}` : ''), {
@@ -157,7 +172,7 @@ export function UnconnectedSearchResults({
   // When there are no API search params (upload-only), use the current URL as the back
   // target so the Back button on the trace page returns here rather than the empty homepage.
   const searchUrl = currentSearchQuery
-    ? getUrl(currentSearchQuery as TUrlState)
+    ? searchQueryToUrl(currentSearchQuery)
     : location.pathname + location.search;
   return (
     <div className="SearchResults">
