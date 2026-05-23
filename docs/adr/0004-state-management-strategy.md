@@ -1065,6 +1065,8 @@ export function useSearchTraces(query: SearchQuery | null): UseQueryResult<Trace
 
 **Components rewired**: `SearchTracePage` (fully disconnected from Redux), `FileLoader` (accepts `onTracesLoaded` callback instead of Redux action).
 
+> **Note**: `SearchForm` still uses the legacy `connect(mapStateToProps, mapDispatchToProps)` pattern. Removing it is deferred to a phase 4 follow-up.
+
 #### ⬜ 2c. Services and operations discovery
 
 **Redux removed**: `services` reducer.
