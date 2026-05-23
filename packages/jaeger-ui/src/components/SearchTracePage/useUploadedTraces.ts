@@ -43,15 +43,19 @@ export function useUploadedTraces(searchQueryKey: string | null): UploadedTraces
   // Clear uploaded results when the API search changes. Do NOT clear when
   // searchQueryKey becomes null (e.g. Back from a trace with no active search)
   // — that would wipe upload-only results on the homepage.
-  const prevKeyRef = useRef(searchQueryKey);
+  // Skip on the initial mount: uploads from a prior session are still valid
+  // when the user returns to the same search via Back.
+  const isMountRef = useRef(true);
   useEffect(() => {
-    const prev = prevKeyRef.current;
-    prevKeyRef.current = searchQueryKey;
-    if (searchQueryKey !== null && prev !== searchQueryKey) {
+    if (isMountRef.current) {
+      isMountRef.current = false;
+      return;
+    }
+    if (searchQueryKey !== null) {
       queryClient.setQueryData(['uploadedSummaries'], []);
       queryClient.setQueryData(['uploadedRawTraces'], []);
     }
-  });
+  }, [searchQueryKey, queryClient]);
 
   const handleTracesLoaded = useCallback(
     (summaries: TraceSummary[], rawTraces: unknown[]) => {

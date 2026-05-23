@@ -2,7 +2,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Col, Row, Tabs } from 'antd';
 import { useLocation } from 'react-router-dom';
@@ -56,16 +56,16 @@ export function SearchTracePageImpl() {
     ? `${searchQuery.service}|${searchQuery.operation ?? ''}|${searchQuery.start}|${searchQuery.end}|${searchQuery.limit}|${searchQuery.minDuration ?? ''}|${searchQuery.maxDuration ?? ''}|${searchQuery.tags ?? ''}`
     : null;
 
-  // When the search inputs change, invalidate the cached results so React Query
-  // re-runs the fetch with the new query.
-  const prevSearchQueryKeyRef = useRef(searchQueryKey);
+  // Invalidate the cached results whenever the search key changes or the component mounts
+  // with a non-null key. Running on mount ensures that if the cache holds results from a
+  // previous search (e.g. user navigates directly to /search?service=svc-b after having
+  // searched svc-a), stale data is not shown for the new URL. The cache still provides an
+  // immediate render while the background refetch completes.
   useEffect(() => {
-    const prev = prevSearchQueryKeyRef.current;
-    prevSearchQueryKeyRef.current = searchQueryKey;
-    if (searchQueryKey !== null && prev !== searchQueryKey) {
+    if (searchQueryKey !== null) {
       queryClient.invalidateQueries({ queryKey: ['traceSummaries'] });
     }
-  });
+  }, [searchQueryKey, queryClient]);
 
   const { uploadedSummaries, uploadedRawTraces, handleTracesLoaded } = useUploadedTraces(searchQueryKey);
 
