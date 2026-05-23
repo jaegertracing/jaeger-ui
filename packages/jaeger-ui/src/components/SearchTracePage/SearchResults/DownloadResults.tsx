@@ -1,7 +1,6 @@
 // Copyright (c) 2023 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import * as React from 'react';
 import { useState, useCallback } from 'react';
 import { Button, message } from 'antd';
 
