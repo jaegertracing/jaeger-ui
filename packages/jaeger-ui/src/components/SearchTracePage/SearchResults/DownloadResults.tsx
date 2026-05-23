@@ -61,7 +61,7 @@ export default function DownloadResults({ traceSummaries, rawTraces }: Props) {
         setProgress(undefined);
       }
     }
-    traces = traceSummaries.map(s => rawByID.get(s.traceID));
+    traces = traceSummaries.map(s => rawByID.get(s.traceID)).filter(Boolean);
     const file = createBlob(traces);
     const element = document.createElement('a');
     element.href = URL.createObjectURL(file);
