@@ -126,7 +126,7 @@ const baseProps = {
   loading: false,
   location: { search: '' },
   maxTraceDuration: 1,
-  queryOfResults: {},
+  currentSearchQuery: {},
   showStandaloneLink: false,
   skipMessage: false,
   spanLinks: undefined,
@@ -267,13 +267,17 @@ describe('<SearchResults>', () => {
     expect(navigateCall[0]).toContain('/trace/a');
   });
 
-  it('uses location.pathname+search as Back URL when queryOfResults is null (upload-only context)', () => {
-    // When traces come from a file upload (no API search), queryOfResults is null and
+  it('uses location.pathname+search as Back URL when currentSearchQuery is null (upload-only context)', () => {
+    // When traces come from a file upload (no API search), currentSearchQuery is null and
     // getUrl() cannot reconstruct a meaningful search URL. The Back link on the trace
     // page must use the current URL so the user returns to the upload results, not an
     // empty or incorrect search page.
     renderWithRouter(
-      <SearchResults {...baseProps} queryOfResults={null} location={{ pathname: '/search', search: '' }} />
+      <SearchResults
+        {...baseProps}
+        currentSearchQuery={null}
+        location={{ pathname: '/search', search: '' }}
+      />
     );
     const scatterProps = ScatterPlot.mock.calls[0][0];
     scatterProps.onValueClick({ traceID: 'a' });

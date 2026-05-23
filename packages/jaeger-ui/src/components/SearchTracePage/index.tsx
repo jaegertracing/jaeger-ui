@@ -66,7 +66,7 @@ export function SearchTracePageImpl() {
 
   const {
     data: apiTraceSummaries = [],
-    isLoading: loadingTraces,
+    isFetching: loadingTraces,
     error: searchError,
   } = useSearchTraces(searchQuery);
 
@@ -251,7 +251,7 @@ export function SearchTracePageImpl() {
               hideGraph: Boolean(embedded?.searchHideGraph),
               loading: loadingTraces,
               maxTraceDuration,
-              queryOfResults: searchQuery,
+              currentSearchQuery: searchQuery,
               showStandaloneLink: Boolean(embedded),
               skipMessage: isHomepage,
               spanLinks: urlQueryParams?.spanLinks,
