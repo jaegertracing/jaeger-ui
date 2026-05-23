@@ -20,48 +20,64 @@ type FileLoaderProps = {
   onTracesLoaded: (summaries: TraceSummary[], rawTraces: unknown[]) => void;
 };
 
+export type LoadResult = {
+  summaries: TraceSummary[];
+  rawTraces: unknown[];
+  errorCount: number;
+};
+
+export async function loadTracesFromFile(file: File): Promise<LoadResult> {
+  const parsed: unknown = await readJsonFile({ file });
+
+  // Normalize to array: handle { data: [...] }, { data: {} }, [...], or a single object.
+  let traces: unknown[];
+  if (Array.isArray(parsed)) {
+    traces = parsed;
+  } else if (Array.isArray((parsed as any)?.data)) {
+    traces = (parsed as any).data;
+  } else if ((parsed as any)?.data != null) {
+    traces = [(parsed as any).data];
+  } else {
+    traces = [parsed];
+  }
+
+  const summaries: TraceSummary[] = [];
+  const rawTraces: unknown[] = [];
+  let errorCount = 0;
+
+  for (const raw of traces) {
+    try {
+      // Clone before transforming: transformTraceData mutates the input in place
+      // (adds childSpans, ref.span backlinks, etc.), so we must preserve a clean copy
+      // for download serialization.
+      const rawClone = structuredClone(raw);
+      const traceData = transformTraceData(raw as TraceData & { spans: SpanData[] });
+      if (!traceData) {
+        errorCount++;
+        continue;
+      }
+      const otel = traceData.asOtelTrace();
+      populateTraceCache(otel);
+      summaries.push(traceToTraceSummary(otel));
+      rawTraces.push(rawClone);
+    } catch {
+      errorCount++;
+    }
+  }
+
+  return { summaries, rawTraces, errorCount };
+}
+
 export default function FileLoader(props: FileLoaderProps) {
   return (
     <Dragger
       accept=".json,.jsonl"
       beforeUpload={file => {
-        // Ant Design calls beforeUpload once per file even when multiple files are selected,
-        // so we process only the `file` argument to avoid N×N processing.
-        readJsonFile({ file })
-          .then((parsed: any) => {
-            // Normalize to array: handle { data: [...] }, { data: {} }, [...], or a single object.
-            let traces: unknown[];
-            if (Array.isArray(parsed)) {
-              traces = parsed;
-            } else if (Array.isArray(parsed?.data)) {
-              traces = parsed.data;
-            } else if (parsed?.data != null) {
-              traces = [parsed.data];
-            } else {
-              traces = [parsed];
-            }
-            const summaries: TraceSummary[] = [];
-            const rawTraces: unknown[] = [];
-            let errorCount = 0;
-            for (const raw of traces) {
-              try {
-                // Clone before transforming: transformTraceData mutates the input in place
-                // (adds childSpans, ref.span backlinks, etc.), so we must preserve a clean copy
-                // for download serialization.
-                const rawClone = structuredClone(raw);
-                const traceData = transformTraceData(raw as TraceData & { spans: SpanData[] });
-                if (!traceData) {
-                  errorCount++;
-                  continue;
-                }
-                const otel = traceData.asOtelTrace();
-                populateTraceCache(otel);
-                summaries.push(traceToTraceSummary(otel));
-                rawTraces.push(rawClone);
-              } catch {
-                errorCount++;
-              }
-            }
+        // beforeUpload(file, fileList) is called once per selected file. Each invocation
+        // receives the full fileList, so iterating fileList here would process N files
+        // N times (N²). We process only the current `file` argument to avoid that.
+        loadTracesFromFile(file)
+          .then(({ summaries, rawTraces, errorCount }) => {
             if (errorCount > 0) {
               message.error(
                 `${errorCount} trace${errorCount > 1 ? 's' : ''} could not be loaded from ${file.name}.`
