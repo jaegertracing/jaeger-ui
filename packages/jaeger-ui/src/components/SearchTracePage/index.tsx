@@ -94,21 +94,24 @@ export function SearchTracePageImpl() {
     gcTime: Infinity,
   });
 
-  // When the search parameters change, invalidate the cached results so React Query
+  // Stable string key derived from the search fields that determine the result set.
+  // URL params like `view=ddg` change location.search but are not search inputs — using
+  // a reference comparison on searchQuery would treat them as new searches because
+  // useMemo always returns a new object when urlQueryParams changes.
+  const searchQueryKey = searchQuery
+    ? `${searchQuery.service}|${searchQuery.operation ?? ''}|${searchQuery.start}|${searchQuery.end}|${searchQuery.limit}|${searchQuery.minDuration ?? ''}|${searchQuery.maxDuration ?? ''}|${searchQuery.tags ?? ''}`
+    : null;
+
+  // When the search inputs change, invalidate the cached results so React Query
   // re-runs the fetch with the new query, and clear uploaded traces so the result list
   // reflects only the current search context.
-  // Do NOT clear when searchQuery becomes null (e.g. Back from a trace with no active
+  // Do NOT clear when searchQueryKey becomes null (e.g. Back from a trace with no active
   // search) — that would wipe upload-only results on the homepage.
-  //
-  // The effect has no dependency array so it runs on every render and uses a ref to
-  // compare the previous and current searchQuery by reference. A [searchQuery] dependency
-  // array cannot distinguish "first render with a non-null query" from "same query on
-  // re-render", which would cause spurious invalidations.
-  const prevSearchQueryRef = React.useRef(searchQuery);
+  const prevSearchQueryKeyRef = React.useRef(searchQueryKey);
   useEffect(() => {
-    const prev = prevSearchQueryRef.current;
-    prevSearchQueryRef.current = searchQuery;
-    if (searchQuery !== null && prev !== searchQuery) {
+    const prev = prevSearchQueryKeyRef.current;
+    prevSearchQueryKeyRef.current = searchQueryKey;
+    if (searchQueryKey !== null && prev !== searchQueryKey) {
       queryClient.invalidateQueries({ queryKey: ['traceSummaries'] });
       queryClient.setQueryData(['uploadedSummaries'], []);
       queryClient.setQueryData(['uploadedRawTraces'], []);
