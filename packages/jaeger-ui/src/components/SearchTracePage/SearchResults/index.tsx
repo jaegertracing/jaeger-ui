@@ -41,7 +41,7 @@ type SearchResultsProps = {
   loading: boolean;
   location: Location;
   maxTraceDuration: number;
-  queryOfResults?: SearchQuery;
+  queryOfResults?: SearchQuery | null;
   showStandaloneLink: boolean;
   skipMessage?: boolean;
   spanLinks?: Record<string, string> | undefined;
