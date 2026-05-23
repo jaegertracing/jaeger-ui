@@ -37,8 +37,8 @@ export function SearchTracePageImpl() {
     return Object.keys(query).length > 0 ? query : null;
   }, [location.search]);
 
-  const isHomepage = urlQueryParams === null;
   const searchQuery = useMemo(() => searchQueryFromUrl(location.search), [location.search]);
+  const isHomepage = searchQuery === null;
 
   const {
     data: apiTraceSummaries = [],

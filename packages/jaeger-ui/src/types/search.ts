@@ -10,7 +10,7 @@ export type SearchQuery = {
   maxDuration: string | undefined;
   minDuration: string | undefined;
   operation: string | TNil;
-  service: string;
+  service?: string;
   start: number | string;
   tags: string | TNil;
 };

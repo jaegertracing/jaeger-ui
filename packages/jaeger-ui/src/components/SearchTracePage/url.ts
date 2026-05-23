@@ -78,15 +78,6 @@ export const getUrlState: (search: string) => TUrlState = memoizeOne(function ge
   return rv;
 });
 
-/**
- * Parse the URL search string into a typed SearchQuery, or null when no service
- * param is present (which disables the fetch).
- *
- * SearchForm always writes concrete start/end epoch values to the URL (converted
- * from the lookback selector) so that shared links reproduce the same time window.
- * lookback is kept in the URL so SearchForm can restore the selector label on the
- * next visit.
- */
 // Returns the first element when the URL param was repeated (e.g. ?service=a&service=b),
 // otherwise returns the value as-is (string or undefined).
 function firstOf(v: string | string[] | undefined | Record<string, string>): string | undefined {
@@ -95,12 +86,20 @@ function firstOf(v: string | string[] | undefined | Record<string, string>): str
   return undefined;
 }
 
+/**
+ * Parse the URL search string into a typed SearchQuery, or null when no search
+ * params are present (homepage / no query submitted yet).
+ *
+ * SearchForm always writes concrete start/end epoch values to the URL (converted
+ * from the lookback selector) so that shared links reproduce the same time window.
+ * lookback is kept in the URL so SearchForm can restore the selector label on the
+ * next visit.
+ */
 export function searchQueryFromUrl(search: string): SearchQuery | null {
   const q = getUrlState(search);
-  const service = firstOf(q?.service);
-  if (!service) return null;
+  if (Object.keys(q).length === 0) return null;
   return {
-    service,
+    service: firstOf(q?.service),
     operation: typeof q.operation === 'string' ? q.operation : undefined,
     start: firstOf(q.start) ?? '',
     end: firstOf(q.end) ?? '',
