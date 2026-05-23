@@ -33,7 +33,7 @@ export function useServices(): UseQueryResult<string[]> {
  * not a different one. A parameterized key would accumulate a separate cache entry for
  * every distinct search submitted during a session, which causes unbounded memory growth.
  *
- * New searches are triggered by calling `queryClient.invalidateQueries(['traceSummaries'])`
+ * New searches are triggered by calling `queryClient.invalidateQueries({ queryKey: ['traceSummaries'] })`
  * in `SearchTracePage` when the URL search parameters change. This marks the single entry
  * stale and causes React Query to call the current `queryFn` (which closes over the latest
  * `query` argument) to fetch fresh results.
