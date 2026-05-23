@@ -5,13 +5,14 @@ import * as React from 'react';
 import { Button } from 'antd';
 
 type Props = {
+  loading?: boolean;
   onDownloadResultsClicked: () => void;
 };
 
 export default function DownloadResults(props: Props) {
-  const { onDownloadResultsClicked } = props;
+  const { loading, onDownloadResultsClicked } = props;
   return (
-    <Button className="ub-ml2" htmlType="button" onClick={onDownloadResultsClicked}>
+    <Button className="ub-ml2" htmlType="button" loading={loading} onClick={onDownloadResultsClicked}>
       Download Results
     </Button>
   );

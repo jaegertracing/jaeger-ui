@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { Select } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
 import queryString from 'query-string';
 
+import JaegerAPI from '../../../api/jaeger';
 import AltViewOptions from './AltViewOptions';
 import DownloadResults from './DownloadResults';
 import DiffSelection from './DiffSelection';
@@ -173,8 +174,21 @@ export function UnconnectedSearchResults({
     navigate(getUrl({ ...urlState, view }));
   }, [location, navigate]);
 
-  const onDownloadResultsClicked = useCallback(() => {
-    const file = createBlob(rawTraces);
+  const [downloading, setDownloading] = useState(false);
+
+  const onDownloadResultsClicked = useCallback(async () => {
+    let traces = rawTraces;
+    if (traces.length === 0 && traceSummaries.length > 0) {
+      // API-only results: fetch full traces from backend on demand.
+      setDownloading(true);
+      try {
+        const responses = await Promise.all(traceSummaries.map(s => JaegerAPI.fetchTrace(s.traceID)));
+        traces = responses.map(r => r?.data?.[0] ?? r);
+      } finally {
+        setDownloading(false);
+      }
+    }
+    const file = createBlob(traces);
     const element = document.createElement('a');
     element.href = URL.createObjectURL(file);
     element.download = `traces-${Date.now()}.json`;
@@ -182,7 +196,7 @@ export function UnconnectedSearchResults({
     element.click();
     URL.revokeObjectURL(element.href);
     element.remove();
-  }, [rawTraces]);
+  }, [rawTraces, traceSummaries]);
 
   const traceResultsView = queryString.parse(location.search).view !== 'ddg';
 
@@ -243,8 +257,8 @@ export function UnconnectedSearchResults({
             {traceSummaries.length} Trace{traceSummaries.length > 1 && 's'}
           </h2>
           {traceResultsView && <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />}
-          {traceResultsView && rawTraces.length > 0 && (
-            <DownloadResults onDownloadResultsClicked={onDownloadResultsClicked} />
+          {traceResultsView && (
+            <DownloadResults loading={downloading} onDownloadResultsClicked={onDownloadResultsClicked} />
           )}
           <AltViewOptions traceResultsView={traceResultsView} onDdgViewClicked={onDdgViewClicked} />
           {showStandaloneLink && (

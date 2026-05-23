@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, act, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
@@ -49,10 +49,13 @@ vi.mock('./ResultItem', () =>
 
 vi.mock('./ScatterPlot', () => mockDefault(jest.fn(props => <div data-testid="scatterplot" {...props} />)));
 
+const mockFetchTrace = jest.fn();
+vi.mock('../../../api/jaeger', () => ({ default: { fetchTrace: (...args) => mockFetchTrace(...args) } }));
+
 vi.mock('./DownloadResults', () =>
   mockDefault(
-    jest.fn(({ onDownloadResultsClicked }) => (
-      <button type="button" data-testid="download" onClick={onDownloadResultsClicked}>
+    jest.fn(({ loading, onDownloadResultsClicked }) => (
+      <button type="button" data-testid="download" data-loading={loading} onClick={onDownloadResultsClicked}>
         download
       </button>
     ))
@@ -459,6 +462,13 @@ describe('<SearchResults>', () => {
         expect(screen.getByTestId('download')).toBeInTheDocument();
       });
 
+      it('shows DownloadResults even when rawTraces is empty (API-only results)', () => {
+        renderWithRouter(
+          <SearchResults {...baseProps} rawTraces={[]} location={{ search: '?view=traces' }} />
+        );
+        expect(screen.getByTestId('download')).toBeInTheDocument();
+      });
+
       it('does not show DownloadResults when view is ddg', () => {
         const { rerender } = renderWithRouter(
           <SearchResults {...baseProps} location={{ search: '?view=traces' }} />
@@ -490,6 +500,26 @@ describe('<SearchResults>', () => {
         expect(URL.revokeObjectURL).toHaveBeenCalledTimes(1);
 
         global.Blob = orig;
+      });
+
+      it('fetches full traces from backend when rawTraces is empty', async () => {
+        const rawTrace = { traceID: 'a', spans: [] };
+        mockFetchTrace.mockResolvedValue({ data: [rawTrace] });
+
+        URL.createObjectURL = jest.fn(() => 'blob://url');
+        URL.revokeObjectURL = jest.fn();
+
+        renderWithRouter(
+          <SearchResults {...baseProps} rawTraces={[]} location={{ search: '?view=traces' }} />
+        );
+
+        await act(async () => {
+          fireEvent.click(screen.getByTestId('download'));
+        });
+
+        await waitFor(() => expect(URL.createObjectURL).toHaveBeenCalledTimes(1));
+        expect(mockFetchTrace).toHaveBeenCalledWith('a');
+        expect(mockFetchTrace).toHaveBeenCalledWith('b');
       });
 
       it('when create a download file then it can be read back', async () => {
