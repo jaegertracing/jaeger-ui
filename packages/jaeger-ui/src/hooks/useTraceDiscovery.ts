@@ -25,16 +25,30 @@ export function useServices(): UseQueryResult<string[]> {
  * React Query hook to search for traces by query parameters.
  * Calls /api/v3/trace-summaries and returns TraceSummary[].
  * Pass null to suppress the fetch (e.g. on the homepage before the user submits a search).
+ *
+ * **Singleton cache design**: the query key is fixed (`['traceSummaries']`) rather than
+ * parameterized by the search arguments. This reflects the actual usage pattern: there is
+ * only ever one "current search result" in the application — the user does not navigate
+ * between multiple saved searches, and the Back button should restore the same result set,
+ * not a different one. A parameterized key would accumulate a separate cache entry for
+ * every distinct search submitted during a session, which causes unbounded memory growth.
+ *
+ * New searches are triggered by calling `queryClient.invalidateQueries(['traceSummaries'])`
+ * in `SearchTracePage` when the URL search parameters change. This marks the single entry
+ * stale and causes React Query to call the current `queryFn` (which closes over the latest
+ * `query` argument) to fetch fresh results.
+ *
+ * staleTime: Infinity — data is never considered stale on its own; staleness is driven
+ * entirely by the explicit invalidation on submit, not by elapsed time.
+ *
+ * gcTime: Infinity — justified here (unlike the parameterized-key case) because there is
+ * exactly one cache entry, not one per search. Keeping it alive indefinitely ensures the
+ * Back button restores results after any amount of time spent on the trace page.
  */
 export function useSearchTraces(query: SearchQuery | null): UseQueryResult<TraceSummary[]> {
   return useQuery({
-    queryKey: ['traceSummaries', query],
+    queryKey: ['traceSummaries'],
     queryFn: query ? () => jaegerClient.fetchTraceSummaries(query) : skipToken,
-    // staleTime: Infinity — each search embeds an explicit end timestamp in its query
-    // key, so "same key" always means "same time window". The Back button reuses the
-    // same key and should hit the cache; a new search gets a new key and fetches fresh.
-    // gcTime: Infinity — prevents eviction while on the trace page (no active observer),
-    // so the Back button reliably returns cached results rather than refetching.
     staleTime: Infinity,
     gcTime: Infinity,
   });

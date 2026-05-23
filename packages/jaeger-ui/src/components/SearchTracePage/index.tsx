@@ -72,13 +72,15 @@ export function SearchTracePageImpl() {
 
   const queryClient = useQueryClient();
 
-  // Uploaded summaries and raw traces survive navigation via the Query cache.
-  // skipToken means no fetch is triggered; the hook just subscribes to cache updates
-  // so the component re-renders when setQueryData is called after file upload.
-  // gcTime: Infinity prevents eviction when SearchTracePage is unmounted (e.g. while
-  // viewing a trace), so the Back button always returns to the uploaded results.
-  // When a new API search runs (searchQuery changes), uploaded results are cleared
-  // so the list reflects the current search context.
+  // Uploaded summaries and raw traces are singleton caches — there is only one set of
+  // uploaded results at any time, not one per uploaded file. skipToken means no fetch
+  // is triggered; the hooks just subscribe to cache updates so the component re-renders
+  // when setQueryData is called after file upload.
+  // gcTime: Infinity is justified (same reasoning as ['traceSummaries']): exactly one
+  // entry exists, so keeping it alive indefinitely does not cause memory growth, and it
+  // ensures the Back button always returns to uploaded results regardless of how long
+  // the user spent on the trace page.
+  // Uploaded results are cleared when a new API search is submitted (see effect below).
   const { data: uploadedSummaries = [] } = useQuery<TraceSummary[]>({
     queryKey: ['uploadedSummaries'],
     queryFn: skipToken,
@@ -92,20 +94,22 @@ export function SearchTracePageImpl() {
     gcTime: Infinity,
   });
 
-  // Clear uploaded results when a new API search is submitted (searchQuery becomes non-null
-  // and changes). Do NOT clear when searchQuery becomes null (e.g. Back from a trace with
-  // no active search) — that would wipe upload-only results.
+  // When the search parameters change, invalidate the cached results so React Query
+  // re-runs the fetch with the new query, and clear uploaded traces so the result list
+  // reflects only the current search context.
+  // Do NOT clear when searchQuery becomes null (e.g. Back from a trace with no active
+  // search) — that would wipe upload-only results on the homepage.
   //
-  // The effect intentionally has no dependency array (runs every render) because it uses
-  // prevSearchQueryRef to detect reference changes between renders. A dependency array on
-  // [searchQuery] alone cannot distinguish "first render with non-null query" from "same
-  // non-null query on re-render", so the ref-based prev/current pattern requires the
-  // unconditional post-render check.
+  // The effect has no dependency array so it runs on every render and uses a ref to
+  // compare the previous and current searchQuery by reference. A [searchQuery] dependency
+  // array cannot distinguish "first render with a non-null query" from "same query on
+  // re-render", which would cause spurious invalidations.
   const prevSearchQueryRef = React.useRef(searchQuery);
   useEffect(() => {
     const prev = prevSearchQueryRef.current;
     prevSearchQueryRef.current = searchQuery;
     if (searchQuery !== null && prev !== searchQuery) {
+      queryClient.invalidateQueries({ queryKey: ['traceSummaries'] });
       queryClient.setQueryData(['uploadedSummaries'], []);
       queryClient.setQueryData(['uploadedRawTraces'], []);
     }

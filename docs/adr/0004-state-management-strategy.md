@@ -699,11 +699,15 @@ function useTrace(traceId: string) {
   });
 }
 
-function useSearchTraces(query: SearchQuery) {
+function useSearchTraces(query: SearchQuery | null) {
+  // Fixed key: only one "current search result" exists at a time. New searches
+  // are triggered via invalidateQueries rather than a new key, to avoid
+  // accumulating one cache entry per distinct query (unbounded memory growth).
   return useQuery({
-    queryKey: ['traces', 'search', query],
-    queryFn: () => searchTraces(query),
-    enabled: !!query.serviceName, // Only run if query is set
+    queryKey: ['traceSummaries'],
+    queryFn: query ? () => searchTraces(query) : skipToken,
+    staleTime: Infinity,
+    gcTime: Infinity,
   });
 }
 
@@ -1052,12 +1056,15 @@ Search now calls `/api/v3/trace-summaries` via:
 ```typescript
 export function useSearchTraces(query: SearchQuery | null): UseQueryResult<TraceSummary[]> {
   return useQuery({
-    queryKey: ['traceSummaries', query],
+    queryKey: ['traceSummaries'], // fixed key — singleton cache, see note below
     queryFn: query ? () => jaegerClient.fetchTraceSummaries(query) : skipToken,
-    staleTime: Infinity, // query key embeds explicit end timestamp; same key = same time window
+    staleTime: Infinity,
+    gcTime: Infinity,
   });
 }
 ```
+
+**Singleton cache pattern**: search results use a *fixed* query key `['traceSummaries']` rather than a parameterized key like `['traceSummaries', query]`. This is intentional: there is only ever one "current search result" in the application. A parameterized key would accumulate a separate cache entry for every distinct query submitted during a session — one per unique combination of service, time range, tags, etc. — causing unbounded memory growth. The fixed key ensures exactly one entry exists at all times, making `gcTime: Infinity` safe (one slot, not accumulating). New searches are triggered by `queryClient.invalidateQueries(['traceSummaries'])` on URL parameter change, which marks the single entry stale and causes React Query to re-fetch with the current query arguments. Similarly, `uploadedSummaries` and `uploadedRawTraces` follow the same singleton pattern.
 
 `SearchTracePage` derives URL query params from `useLocation()` directly (no Redux `mapStateToProps`).
 
