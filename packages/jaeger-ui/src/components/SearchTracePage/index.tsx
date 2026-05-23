@@ -2,8 +2,8 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useQuery, useQueryClient, skipToken } from '@tanstack/react-query';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Col, Row, Tabs } from 'antd';
 import { useLocation } from 'react-router-dom';
 
@@ -11,11 +11,12 @@ import { useConfig } from '../../hooks/useConfig';
 
 import SearchForm from './SearchForm';
 import SearchResults from './SearchResults';
-import { getUrlState } from './url';
+import { getUrlState, searchQueryFromUrl } from './url';
 import * as orderBy from '../../model/order-by';
 import ErrorMessage from '../common/ErrorMessage';
 import { sortTraceSummaries } from '../../model/search';
 import FileLoader from './FileLoader';
+import { useUploadedTraces } from './useUploadedTraces';
 
 import './index.css';
 import JaegerLogo from '../../img/jaeger-logo.svg';
@@ -24,9 +25,7 @@ import { trackSortByChange } from './SearchForm.track';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { useEmbeddedState } from '../../stores/embedded-store';
 import { useShallow } from 'zustand/react/shallow';
-import { SearchQuery } from '../../types/search';
 import { useSearchTraces } from '../../hooks/useTraceDiscovery';
-import type { TraceSummary } from '../../types/trace-summary';
 
 // export for tests
 export function SearchTracePageImpl() {
@@ -39,30 +38,7 @@ export function SearchTracePageImpl() {
   }, [location.search]);
 
   const isHomepage = urlQueryParams === null;
-
-  // Derive SearchQuery from URL params; null when no service is present (disables the fetch).
-  // Note: SearchForm always resolves lookback to explicit start/end before pushing to the URL,
-  // so start/end are expected to be present for any real search. The lookback field is kept in
-  // the query for compatibility with the SearchForm but is not forwarded to fetchTraceSummaries
-  // (fetchTraceSummaries omits start_time_min/max when start/end are absent).
-  const searchQuery = useMemo((): SearchQuery | null => {
-    const q = urlQueryParams;
-    if (!q?.service) return null;
-    return {
-      service: String(q.service ?? ''),
-      operation: typeof q.operation === 'string' ? q.operation : undefined,
-      start: String(q.start ?? ''),
-      end: String(q.end ?? ''),
-      limit: (() => {
-        const n = Number(Array.isArray(q.limit) ? q.limit[0] : q.limit);
-        return Number.isFinite(n) && n > 0 ? n : 20;
-      })(),
-      lookback: String(q.lookback ?? '1h'),
-      minDuration: typeof q.minDuration === 'string' ? q.minDuration : undefined,
-      maxDuration: typeof q.maxDuration === 'string' ? q.maxDuration : undefined,
-      tags: typeof q.tags === 'string' ? q.tags : undefined,
-    };
-  }, [urlQueryParams]);
+  const searchQuery = useMemo(() => searchQueryFromUrl(location.search), [location.search]);
 
   const {
     data: apiTraceSummaries = [],
@@ -71,28 +47,6 @@ export function SearchTracePageImpl() {
   } = useSearchTraces(searchQuery);
 
   const queryClient = useQueryClient();
-
-  // Uploaded summaries and raw traces are singleton caches — there is only one set of
-  // uploaded results at any time, not one per uploaded file. skipToken means no fetch
-  // is triggered; the hooks just subscribe to cache updates so the component re-renders
-  // when setQueryData is called after file upload.
-  // gcTime: Infinity is justified (same reasoning as ['traceSummaries']): exactly one
-  // entry exists, so keeping it alive indefinitely does not cause memory growth, and it
-  // ensures the Back button always returns to uploaded results regardless of how long
-  // the user spent on the trace page.
-  // Uploaded results are cleared when a new API search is submitted (see effect below).
-  const { data: uploadedSummaries = [] } = useQuery<TraceSummary[]>({
-    queryKey: ['uploadedSummaries'],
-    queryFn: skipToken,
-    staleTime: Infinity,
-    gcTime: Infinity,
-  });
-  const { data: uploadedRawTraces = [] } = useQuery<unknown[]>({
-    queryKey: ['uploadedRawTraces'],
-    queryFn: skipToken,
-    staleTime: Infinity,
-    gcTime: Infinity,
-  });
 
   // Stable string key derived from the search fields that determine the result set.
   // URL params like `view=ddg` change location.search but are not search inputs — using
@@ -103,31 +57,17 @@ export function SearchTracePageImpl() {
     : null;
 
   // When the search inputs change, invalidate the cached results so React Query
-  // re-runs the fetch with the new query, and clear uploaded traces so the result list
-  // reflects only the current search context.
-  // Do NOT clear when searchQueryKey becomes null (e.g. Back from a trace with no active
-  // search) — that would wipe upload-only results on the homepage.
-  const prevSearchQueryKeyRef = React.useRef(searchQueryKey);
+  // re-runs the fetch with the new query.
+  const prevSearchQueryKeyRef = useRef(searchQueryKey);
   useEffect(() => {
     const prev = prevSearchQueryKeyRef.current;
     prevSearchQueryKeyRef.current = searchQueryKey;
     if (searchQueryKey !== null && prev !== searchQueryKey) {
       queryClient.invalidateQueries({ queryKey: ['traceSummaries'] });
-      queryClient.setQueryData(['uploadedSummaries'], []);
-      queryClient.setQueryData(['uploadedRawTraces'], []);
     }
   });
 
-  const handleTracesLoaded = useCallback(
-    (summaries: TraceSummary[], rawTraces: unknown[]) => {
-      queryClient.setQueryData<TraceSummary[]>(['uploadedSummaries'], prev => [
-        ...(prev ?? []),
-        ...summaries,
-      ]);
-      queryClient.setQueryData<unknown[]>(['uploadedRawTraces'], prev => [...(prev ?? []), ...rawTraces]);
-    },
-    [queryClient]
-  );
+  const { uploadedSummaries, uploadedRawTraces, handleTracesLoaded } = useUploadedTraces(searchQueryKey);
 
   // Merge API and uploaded summaries, deduplicating by traceID (API results take precedence).
   // Duplicates arise when the same file is uploaded twice or an uploaded trace also appears

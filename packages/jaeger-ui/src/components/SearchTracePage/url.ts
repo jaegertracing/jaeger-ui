@@ -78,6 +78,34 @@ export const getUrlState: (search: string) => TUrlState = memoizeOne(function ge
   return rv;
 });
 
+/**
+ * Parse the URL search string into a typed SearchQuery, or null when no service
+ * param is present (which disables the fetch).
+ *
+ * SearchForm always writes concrete start/end epoch values to the URL (converted
+ * from the lookback selector) so that shared links reproduce the same time window.
+ * lookback is kept in the URL so SearchForm can restore the selector label on the
+ * next visit.
+ */
+export function searchQueryFromUrl(search: string): SearchQuery | null {
+  const q = getUrlState(search);
+  if (!q?.service) return null;
+  return {
+    service: String(q.service ?? ''),
+    operation: typeof q.operation === 'string' ? q.operation : undefined,
+    start: String(q.start ?? ''),
+    end: String(q.end ?? ''),
+    limit: (() => {
+      const n = Number(Array.isArray(q.limit) ? q.limit[0] : q.limit);
+      return Number.isFinite(n) && n > 0 ? n : 20;
+    })(),
+    lookback: String(q.lookback ?? '1h'),
+    minDuration: typeof q.minDuration === 'string' ? q.minDuration : undefined,
+    maxDuration: typeof q.maxDuration === 'string' ? q.maxDuration : undefined,
+    tags: typeof q.tags === 'string' ? q.tags : undefined,
+  };
+}
+
 export function isSameQuery(a: SearchQuery, b: SearchQuery) {
   if (Boolean(a) !== Boolean(b)) {
     return false;
