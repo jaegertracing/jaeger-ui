@@ -75,17 +75,21 @@ export function SearchTracePageImpl() {
   // Uploaded summaries and raw traces survive navigation via the Query cache.
   // skipToken means no fetch is triggered; the hook just subscribes to cache updates
   // so the component re-renders when setQueryData is called after file upload.
+  // gcTime: Infinity prevents eviction when SearchTracePage is unmounted (e.g. while
+  // viewing a trace), so the Back button always returns to the uploaded results.
   // When a new API search runs (searchQuery changes), uploaded results are cleared
   // so the list reflects the current search context.
   const { data: uploadedSummaries = [] } = useQuery<TraceSummary[]>({
     queryKey: ['uploadedSummaries'],
     queryFn: skipToken,
     staleTime: Infinity,
+    gcTime: Infinity,
   });
   const { data: uploadedRawTraces = [] } = useQuery<unknown[]>({
     queryKey: ['uploadedRawTraces'],
     queryFn: skipToken,
     staleTime: Infinity,
+    gcTime: Infinity,
   });
 
   // Clear uploaded results when a new API search is submitted (searchQuery becomes non-null
@@ -118,10 +122,14 @@ export function SearchTracePageImpl() {
     [queryClient]
   );
 
-  const traceSummaries = useMemo(
-    () => [...apiTraceSummaries, ...uploadedSummaries],
-    [apiTraceSummaries, uploadedSummaries]
-  );
+  // Merge API and uploaded summaries, deduplicating by traceID (API results take precedence).
+  // Duplicates arise when the same file is uploaded twice or an uploaded trace also appears
+  // in API results; without dedup the list gets duplicate React keys and may render incorrectly.
+  const traceSummaries = useMemo(() => {
+    const seen = new Set(apiTraceSummaries.map(s => s.traceID));
+    const uniqueUploaded = uploadedSummaries.filter(s => !seen.has(s.traceID));
+    return [...apiTraceSummaries, ...uniqueUploaded];
+  }, [apiTraceSummaries, uploadedSummaries]);
 
   const [sortBy, setSortBy] = useState(orderBy.MOST_RECENT);
 

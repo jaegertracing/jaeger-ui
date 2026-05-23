@@ -33,7 +33,10 @@ export function useSearchTraces(query: SearchQuery | null): UseQueryResult<Trace
     // staleTime: Infinity — each search embeds an explicit end timestamp in its query
     // key, so "same key" always means "same time window". The Back button reuses the
     // same key and should hit the cache; a new search gets a new key and fetches fresh.
+    // gcTime: Infinity — prevents eviction while on the trace page (no active observer),
+    // so the Back button reliably returns cached results rather than refetching.
     staleTime: Infinity,
+    gcTime: Infinity,
   });
 }
 
