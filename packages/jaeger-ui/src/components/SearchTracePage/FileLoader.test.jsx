@@ -115,7 +115,7 @@ describe('<FileLoader />', () => {
       beforeUpload(file, [file]);
     });
 
-    expect(mockOnTracesLoaded).toHaveBeenCalledWith([], []);
+    expect(mockOnTracesLoaded).not.toHaveBeenCalled();
   });
 
   it('normalizes parsed.data single object into an array', async () => {

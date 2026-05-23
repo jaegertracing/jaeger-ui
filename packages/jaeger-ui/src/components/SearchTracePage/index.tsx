@@ -53,7 +53,10 @@ export function SearchTracePageImpl() {
       operation: typeof q.operation === 'string' ? q.operation : null,
       start: String(q.start ?? ''),
       end: String(q.end ?? ''),
-      limit: q.limit !== undefined ? Number(q.limit) : 20,
+      limit: (() => {
+        const n = Number(Array.isArray(q.limit) ? q.limit[0] : q.limit);
+        return Number.isFinite(n) && n > 0 ? n : 20;
+      })(),
       lookback: String(q.lookback ?? '1h'),
       minDuration: typeof q.minDuration === 'string' ? q.minDuration : undefined,
       maxDuration: typeof q.maxDuration === 'string' ? q.maxDuration : undefined,

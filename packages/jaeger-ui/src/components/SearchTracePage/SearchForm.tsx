@@ -12,7 +12,8 @@ import { IoHelp } from 'react-icons/io5';
 import { connect } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getUrl as getSearchUrl } from './url';
-import { Dispatch } from 'redux';
+import type { Dispatch } from 'redux';
+import { useIsFetching } from '@tanstack/react-query';
 import store from '../../utils/storage';
 
 import * as markers from './SearchForm.markers';
@@ -27,7 +28,6 @@ import { useConfig } from '../../hooks/useConfig';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 import { ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
-import { fetchedState } from '../../constants';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
@@ -323,7 +323,6 @@ export function submitForm(
 
 interface ISearchFormImplProps {
   invalid?: boolean;
-  submitting?: boolean;
   initialValues?: Partial<ISearchFormFields> & { traceIDs?: string | null };
   submitFormHandler: (
     fields: ISearchFormFields,
@@ -334,10 +333,10 @@ interface ISearchFormImplProps {
 
 export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   invalid = false,
-  submitting = false,
   initialValues,
   submitFormHandler,
 }) => {
+  const submitting = useIsFetching({ queryKey: ['traceSummaries'] }) > 0;
   const navigate = useNavigate();
   const { useOpenTelemetryTerms: useOtelTerms, search } = useConfig();
   const searchMaxLookback: ILookbackOption | undefined = search?.maxLookback;
@@ -818,7 +817,6 @@ export function mapStateToProps(state: ReduxState, ownProps: { search?: string }
       maxDuration: (maxDuration as string | undefined) || undefined,
       traceIDs: traceIDs || null,
     },
-    submitting: state.trace?.search?.state === fetchedState.LOADING,
   };
 }
 

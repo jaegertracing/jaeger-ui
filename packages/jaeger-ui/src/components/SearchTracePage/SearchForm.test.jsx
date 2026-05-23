@@ -66,6 +66,7 @@ import {
 import * as markers from './SearchForm.markers';
 import { CHANGE_SERVICE_ACTION_TYPE } from '../../constants/search-form';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
+import { AppQueryClientProvider } from '../../query/app-query-client';
 
 function makeDateParams(dateOffset = 0) {
   const date = new Date();
@@ -429,7 +430,11 @@ describe('submitForm()', () => {
 });
 
 function renderForm(ui) {
-  return render(<MemoryRouter>{ui}</MemoryRouter>);
+  return render(
+    <AppQueryClientProvider>
+      <MemoryRouter>{ui}</MemoryRouter>
+    </AppQueryClientProvider>
+  );
 }
 
 describe('<SearchForm>', () => {

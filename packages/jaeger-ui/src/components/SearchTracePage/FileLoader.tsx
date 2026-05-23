@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { Upload } from 'antd';
+import { Upload, message } from 'antd';
 import { IoDocumentAttachOutline } from 'react-icons/io5';
 
 import readJsonFile from '../../utils/readJsonFile';
@@ -42,19 +42,34 @@ export default function FileLoader(props: FileLoaderProps) {
             }
             const summaries: TraceSummary[] = [];
             const rawTraces: unknown[] = [];
+            let errorCount = 0;
             for (const raw of traces) {
-              const traceData = transformTraceData(raw as TraceData & { spans: SpanData[] });
-              if (!traceData) continue;
-              const otel = traceData.asOtelTrace();
-              populateTraceCache(otel);
-              summaries.push(traceToTraceSummary(otel));
-              rawTraces.push(raw);
+              try {
+                const traceData = transformTraceData(raw as TraceData & { spans: SpanData[] });
+                if (!traceData) continue;
+                const otel = traceData.asOtelTrace();
+                populateTraceCache(otel);
+                summaries.push(traceToTraceSummary(otel));
+                rawTraces.push(raw);
+              } catch {
+                errorCount++;
+              }
             }
-            props.onTracesLoaded(summaries, rawTraces);
+            if (errorCount > 0) {
+              message.error(
+                `${errorCount} trace${errorCount > 1 ? 's' : ''} could not be loaded from ${file.name}.`
+              );
+            }
+            if (summaries.length > 0) {
+              props.onTracesLoaded(summaries, rawTraces);
+            } else if (errorCount === 0) {
+              message.warning(`No traces found in ${file.name}.`);
+            }
           })
           .catch((err: unknown) => {
-            // eslint-disable-next-line no-console
-            console.error('Failed to load trace file', err);
+            message.error(
+              `Failed to parse ${file.name}: ${err instanceof Error ? err.message : String(err)}`
+            );
           });
         return false;
       }}
