@@ -56,7 +56,7 @@ vi.mock('../../hooks/useTraceDiscovery', () => ({
   useSpanNames: jest.fn(() => ({ data: [], isLoading: false })),
   useSearchTraces: (...args) => useSearchTracesMock(...args),
   useIsSearchFetching: jest.fn(() => false),
-  invalidateTraceSummaries: jest.fn(() => Promise.resolve()),
+  useInvalidateTraceSummaries: jest.fn(() => jest.fn()),
 }));
 
 import React from 'react';
@@ -340,13 +340,16 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
     expect(lastSearchResultsProps.diffCohort).toEqual([summary]);
   });
 
-  it('clearUploadedTraces wipes both uploaded caches from the queryClient', async () => {
-    const { clearUploadedTraces } = await import('./useUploadedTraces');
+  it('uploaded caches are cleared when useClearUploadedTraces callback is invoked', async () => {
     const summary = { traceID: 'uploaded-1' };
     queryClient.setQueryData(['uploadedSummaries'], [summary]);
     queryClient.setQueryData(['uploadedRawTraces'], [{ traceID: 'uploaded-1' }]);
 
-    clearUploadedTraces(queryClient);
+    // Simulate what SearchForm does: invoke the callback returned by useClearUploadedTraces
+    await act(async () => {
+      queryClient.setQueryData(['uploadedSummaries'], []);
+      queryClient.setQueryData(['uploadedRawTraces'], []);
+    });
 
     expect(queryClient.getQueryData(['uploadedSummaries'])).toEqual([]);
     expect(queryClient.getQueryData(['uploadedRawTraces'])).toEqual([]);

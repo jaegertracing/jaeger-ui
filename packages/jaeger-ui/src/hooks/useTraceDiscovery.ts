@@ -1,7 +1,8 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useQuery, useIsFetching, skipToken, UseQueryResult } from '@tanstack/react-query';
+import { useCallback } from 'react';
+import { useQuery, useIsFetching, useQueryClient, skipToken, UseQueryResult } from '@tanstack/react-query';
 import type { QueryClient } from '@tanstack/react-query';
 import { jaegerClient } from '../api/v3/client';
 import { localeStringComparator } from '../utils/sort';
@@ -59,9 +60,14 @@ export function useSearchTraces(query: SearchQuery | null): UseQueryResult<Trace
   });
 }
 
-/** Invalidate the trace summaries cache, triggering a background refetch. */
-export function invalidateTraceSummaries(queryClient: QueryClient): Promise<void> {
+function invalidateTraceSummaries(queryClient: QueryClient): Promise<void> {
   return queryClient.invalidateQueries({ queryKey: TRACE_SUMMARIES_QUERY_KEY });
+}
+
+/** Returns a stable callback that invalidates the trace summaries cache. */
+export function useInvalidateTraceSummaries(): () => Promise<void> {
+  const queryClient = useQueryClient();
+  return useCallback(() => invalidateTraceSummaries(queryClient), [queryClient]);
 }
 
 /** Returns true while a trace summaries fetch is in flight. */

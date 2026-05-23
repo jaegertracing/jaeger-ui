@@ -4,6 +4,7 @@
 import { useCallback } from 'react';
 import { useQuery, useQueryClient, skipToken } from '@tanstack/react-query';
 import type { QueryClient } from '@tanstack/react-query';
+
 import type { TraceSummary } from '../../types/trace-summary';
 
 const UPLOADED_SUMMARIES_QUERY_KEY = ['uploadedSummaries'] as const;
@@ -15,13 +16,15 @@ type UploadedTraces = {
   handleTracesLoaded: (summaries: TraceSummary[], rawTraces: unknown[]) => void;
 };
 
-/**
- * Clears the uploaded traces cache. Call this when a new API search is submitted
- * so that uploads from a prior session are not mixed with new results.
- */
-export function clearUploadedTraces(queryClient: QueryClient): void {
+function clearUploadedTraces(queryClient: QueryClient): void {
   queryClient.setQueryData(UPLOADED_SUMMARIES_QUERY_KEY, []);
   queryClient.setQueryData(UPLOADED_RAW_TRACES_QUERY_KEY, []);
+}
+
+/** Returns a stable callback that clears the uploaded traces cache. */
+export function useClearUploadedTraces(): () => void {
+  const queryClient = useQueryClient();
+  return useCallback(() => clearUploadedTraces(queryClient), [queryClient]);
 }
 
 /**

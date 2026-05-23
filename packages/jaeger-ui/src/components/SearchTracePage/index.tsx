@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 
 import { Col, Row, Tabs } from 'antd';
 import { useLocation } from 'react-router-dom';
@@ -26,7 +25,7 @@ import { trackSortByChange } from './SearchForm.track';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { useEmbeddedState } from '../../stores/embedded-store';
 import { useShallow } from 'zustand/react/shallow';
-import { useSearchTraces, invalidateTraceSummaries } from '../../hooks/useTraceDiscovery';
+import { useSearchTraces, useInvalidateTraceSummaries } from '../../hooks/useTraceDiscovery';
 
 // export for tests
 export function SearchTracePageImpl() {
@@ -41,22 +40,22 @@ export function SearchTracePageImpl() {
   const isHomepage = urlQueryParams === null;
   const searchQuery = useMemo(() => searchQueryFromUrl(location.search), [location.search]);
 
-  const queryClient = useQueryClient();
-
   const {
     data: apiTraceSummaries = [],
     isFetching: loadingTraces,
     error: searchError,
   } = useSearchTraces(searchQuery);
 
+  const invalidateTraceSummaries = useInvalidateTraceSummaries();
+
   // Invalidate on mount so that navigating directly to a search URL (e.g. a bookmark)
   // always triggers a fresh fetch rather than showing a prior search's cached results.
   // SearchForm calls invalidateTraceSummaries() explicitly on every submit, so this
   // effect only needs to handle the direct-navigation case.
   const searchQueryRef = React.useRef(searchQuery);
-  const queryClientRef = React.useRef(queryClient);
+  const invalidateRef = React.useRef(invalidateTraceSummaries);
   useEffect(() => {
-    if (searchQueryRef.current !== null) invalidateTraceSummaries(queryClientRef.current);
+    if (searchQueryRef.current !== null) invalidateRef.current();
   }, []); // intentionally empty — run once on mount only
 
   const { uploadedSummaries, uploadedRawTraces, handleTracesLoaded } = useUploadedTraces();
