@@ -2,8 +2,8 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import React, { useState, useCallback, useMemo } from 'react';
+
 import { Col, Row, Tabs } from 'antd';
 import { useLocation } from 'react-router-dom';
 
@@ -25,7 +25,7 @@ import { trackSortByChange } from './SearchForm.track';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { useEmbeddedState } from '../../stores/embedded-store';
 import { useShallow } from 'zustand/react/shallow';
-import { useSearchTraces, invalidateTraceSummaries } from '../../hooks/useTraceDiscovery';
+import { useSearchTraces, useInvalidateTracesOnChange } from '../../hooks/useTraceDiscovery';
 
 // export for tests
 export function SearchTracePageImpl() {
@@ -46,8 +46,6 @@ export function SearchTracePageImpl() {
     error: searchError,
   } = useSearchTraces(searchQuery);
 
-  const queryClient = useQueryClient();
-
   // Stable string key derived from the search fields that determine the result set.
   // URL params like `view=ddg` change location.search but are not search inputs — using
   // a reference comparison on searchQuery would treat them as new searches because
@@ -56,16 +54,7 @@ export function SearchTracePageImpl() {
     ? `${searchQuery.service}|${searchQuery.operation ?? ''}|${searchQuery.start}|${searchQuery.end}|${searchQuery.limit}|${searchQuery.minDuration ?? ''}|${searchQuery.maxDuration ?? ''}|${searchQuery.tags ?? ''}`
     : null;
 
-  // Invalidate the cached results whenever the search key changes or the component mounts
-  // with a non-null key. Running on mount ensures that if the cache holds results from a
-  // previous search (e.g. user navigates directly to /search?service=svc-b after having
-  // searched svc-a), stale data is not shown for the new URL. The cache still provides an
-  // immediate render while the background refetch completes.
-  useEffect(() => {
-    if (searchQueryKey !== null) {
-      invalidateTraceSummaries(queryClient);
-    }
-  }, [searchQueryKey, queryClient]);
+  useInvalidateTracesOnChange(searchQueryKey);
 
   const { uploadedSummaries, uploadedRawTraces, handleTracesLoaded } = useUploadedTraces(searchQueryKey);
 

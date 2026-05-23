@@ -1,7 +1,8 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useQuery, useIsFetching, skipToken, UseQueryResult } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { useQuery, useIsFetching, useQueryClient, skipToken, UseQueryResult } from '@tanstack/react-query';
 import type { QueryClient } from '@tanstack/react-query';
 import { jaegerClient } from '../api/v3/client';
 import { localeStringComparator } from '../utils/sort';
@@ -38,10 +39,10 @@ const TRACE_SUMMARIES_QUERY_KEY = ['traceSummaries'] as const;
  * not a different one. A parameterized key would accumulate a separate cache entry for
  * every distinct search submitted during a session, causing unbounded memory growth.
  *
- * New searches are triggered by calling `invalidateTraceSummaries(queryClient)`
- * when the URL search parameters change. This marks the single entry stale and causes
- * React Query to call the current `queryFn` (which closes over the latest `query`
- * argument) to fetch fresh results.
+ * New searches are triggered by `useInvalidateTracesOnChange` when the URL search
+ * parameters change. This marks the single entry stale and causes React Query to call
+ * the current `queryFn` (which closes over the latest `query` argument) to fetch fresh
+ * results.
  *
  * staleTime: Infinity — data is never considered stale on its own; staleness is driven
  * entirely by the explicit invalidation on submit, not by elapsed time.
@@ -59,14 +60,27 @@ export function useSearchTraces(query: SearchQuery | null): UseQueryResult<Trace
   });
 }
 
-/** Invalidate the trace summaries cache, triggering a background refetch. */
-export function invalidateTraceSummaries(queryClient: QueryClient): Promise<void> {
+function invalidateTraceSummaries(queryClient: QueryClient): Promise<void> {
   return queryClient.invalidateQueries({ queryKey: TRACE_SUMMARIES_QUERY_KEY });
 }
 
 /** Returns true while a trace summaries fetch is in flight. */
 export function useIsSearchFetching(): boolean {
   return useIsFetching({ queryKey: TRACE_SUMMARIES_QUERY_KEY }) > 0;
+}
+
+/**
+ * Invalidates the trace summaries cache whenever searchQueryKey changes (and on mount
+ * when non-null). This ensures stale results from a prior search are never shown for a
+ * new URL, while still allowing Back-navigation to restore cached results.
+ */
+export function useInvalidateTracesOnChange(searchQueryKey: string | null): void {
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    if (searchQueryKey !== null) {
+      invalidateTraceSummaries(queryClient);
+    }
+  }, [searchQueryKey, queryClient]);
 }
 
 /**

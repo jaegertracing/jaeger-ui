@@ -7,6 +7,9 @@ import type { TraceSummary } from '../../types/trace-summary';
 
 const UPLOADED_SUMMARIES_QUERY_KEY = ['uploadedSummaries'] as const;
 const UPLOADED_RAW_TRACES_QUERY_KEY = ['uploadedRawTraces'] as const;
+// Tracks which searchQueryKey the current uploads belong to so stale uploads
+// from a prior search are cleared when the user navigates directly to a new search.
+const UPLOADED_SEARCH_KEY_QUERY_KEY = ['uploadedSearchKey'] as const;
 
 type UploadedTraces = {
   uploadedSummaries: TraceSummary[];
@@ -43,35 +46,48 @@ export function useUploadedTraces(searchQueryKey: string | null): UploadedTraces
     gcTime: Infinity,
   });
 
-  // Clear uploaded results when the API search changes. Do NOT clear when
-  // searchQueryKey becomes null (e.g. Back from a trace with no active search)
-  // — that would wipe upload-only results on the homepage.
-  // Skip on the initial mount: uploads from a prior session are still valid
-  // when the user returns to the same search via Back.
+  const { data: storedSearchKey = null } = useQuery<string | null>({
+    queryKey: UPLOADED_SEARCH_KEY_QUERY_KEY,
+    queryFn: skipToken,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+
+  // Clear uploaded results when the search key changes. On mount, also clear when the
+  // stored key differs from the current key — this handles the case where the user
+  // navigates directly to a new search URL (bypassing Back) while uploads from a prior
+  // search are still cached. Do NOT clear when searchQueryKey is null (e.g. navigating
+  // to the homepage) — that would wipe upload-only results.
   const isMountRef = useRef(true);
   useEffect(() => {
-    if (isMountRef.current) {
-      isMountRef.current = false;
-      return;
-    }
-    if (searchQueryKey !== null) {
-      queryClient.setQueryData(UPLOADED_SUMMARIES_QUERY_KEY, []);
-      queryClient.setQueryData(UPLOADED_RAW_TRACES_QUERY_KEY, []);
-    }
-  }, [searchQueryKey, queryClient]);
+    const isMount = isMountRef.current;
+    isMountRef.current = false;
+
+    if (searchQueryKey === null) return;
+    if (isMount && storedSearchKey === searchQueryKey) return;
+
+    queryClient.setQueryData(UPLOADED_SUMMARIES_QUERY_KEY, []);
+    queryClient.setQueryData(UPLOADED_RAW_TRACES_QUERY_KEY, []);
+    queryClient.setQueryData(UPLOADED_SEARCH_KEY_QUERY_KEY, searchQueryKey);
+  }, [searchQueryKey, storedSearchKey, queryClient]);
 
   const handleTracesLoaded = useCallback(
     (summaries: TraceSummary[], rawTraces: unknown[]) => {
-      queryClient.setQueryData<TraceSummary[]>(UPLOADED_SUMMARIES_QUERY_KEY, prev => [
-        ...(prev ?? []),
-        ...summaries,
-      ]);
-      queryClient.setQueryData<unknown[]>(UPLOADED_RAW_TRACES_QUERY_KEY, prev => [
-        ...(prev ?? []),
-        ...rawTraces,
-      ]);
+      queryClient.setQueryData<TraceSummary[]>(UPLOADED_SUMMARIES_QUERY_KEY, prev => {
+        const existing = prev ?? [];
+        const existingIDs = new Set(existing.map(s => s.traceID));
+        return [...existing, ...summaries.filter(s => !existingIDs.has(s.traceID))];
+      });
+      queryClient.setQueryData<unknown[]>(UPLOADED_RAW_TRACES_QUERY_KEY, prev => {
+        const existing = prev ?? [];
+        const traceIDOf = (r: unknown) =>
+          r != null && typeof r === 'object' ? String((r as Record<string, unknown>).traceID) : '';
+        const existingIDs = new Set(existing.map(traceIDOf));
+        return [...existing, ...rawTraces.filter(r => !existingIDs.has(traceIDOf(r)))];
+      });
+      queryClient.setQueryData(UPLOADED_SEARCH_KEY_QUERY_KEY, searchQueryKey);
     },
-    [queryClient]
+    [queryClient, searchQueryKey]
   );
 
   return { uploadedSummaries, uploadedRawTraces, handleTracesLoaded };

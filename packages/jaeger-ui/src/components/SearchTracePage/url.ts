@@ -87,19 +87,28 @@ export const getUrlState: (search: string) => TUrlState = memoizeOne(function ge
  * lookback is kept in the URL so SearchForm can restore the selector label on the
  * next visit.
  */
+// Returns the first element when the URL param was repeated (e.g. ?service=a&service=b),
+// otherwise returns the value as-is (string or undefined).
+function firstOf(v: string | string[] | undefined | Record<string, string>): string | undefined {
+  if (Array.isArray(v)) return v[0];
+  if (typeof v === 'string') return v;
+  return undefined;
+}
+
 export function searchQueryFromUrl(search: string): SearchQuery | null {
   const q = getUrlState(search);
-  if (!q?.service) return null;
+  const service = firstOf(q?.service);
+  if (!service) return null;
   return {
-    service: String(q.service ?? ''),
+    service,
     operation: typeof q.operation === 'string' ? q.operation : undefined,
-    start: String(q.start ?? ''),
-    end: String(q.end ?? ''),
+    start: firstOf(q.start) ?? '',
+    end: firstOf(q.end) ?? '',
     limit: (() => {
-      const n = Number(q.limit);
+      const n = Number(firstOf(q.limit));
       return Number.isFinite(n) && n > 0 ? n : 20;
     })(),
-    lookback: String(q.lookback ?? '1h'),
+    lookback: firstOf(q.lookback) ?? '1h',
     minDuration: typeof q.minDuration === 'string' ? q.minDuration : undefined,
     maxDuration: typeof q.maxDuration === 'string' ? q.maxDuration : undefined,
     tags: typeof q.tags === 'string' ? q.tags : undefined,
