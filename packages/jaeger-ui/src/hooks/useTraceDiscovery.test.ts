@@ -320,14 +320,14 @@ describe('useTraceDiscovery', () => {
   describe('useSearchTraces', () => {
     const query: SearchQuery = {
       service: 'my-svc',
-      operation: null,
+      operation: undefined,
       start: '0',
       end: '0',
       limit: 20,
       lookback: '1h',
       minDuration: undefined,
       maxDuration: undefined,
-      tags: null,
+      tags: undefined,
     };
 
     it('is disabled when query is null', () => {

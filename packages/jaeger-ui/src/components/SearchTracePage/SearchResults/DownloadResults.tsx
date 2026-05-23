@@ -57,7 +57,7 @@ export default function DownloadResults({ traceSummaries, rawTraces }: Props) {
           6,
           done => {
             if (!cancelled.current && isMountedRef.current)
-              setProgress((rawByID.size + done) / traceSummaries.length);
+              setProgress((traceSummaries.length - missing.length + done) / traceSummaries.length);
           }
         );
         fetched.forEach((raw, i) => rawByID.set(missing[i].traceID, raw));

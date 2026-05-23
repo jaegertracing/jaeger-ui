@@ -1,16 +1,18 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { TNil } from '.';
-
 export type SearchQuery = {
-  end: number | string;
-  limit: number | string;
-  lookback: string;
-  maxDuration: string | undefined;
-  minDuration: string | undefined;
-  operation: string | TNil;
+  // Target
   service?: string;
+  operation?: string;
+  // Time window
   start: number | string;
-  tags: string | TNil;
+  end: number | string;
+  lookback: string;
+  // Filters
+  minDuration?: string;
+  maxDuration?: string;
+  tags?: string;
+  // Pagination
+  limit: number | string;
 };

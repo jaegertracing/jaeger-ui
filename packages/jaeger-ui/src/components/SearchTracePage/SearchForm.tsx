@@ -400,9 +400,9 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
     (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       const url = submitFormHandler(formData as ISearchFormFields, searchAdjustEndTime, adjustTimeEnabled);
+      navigate(url);
       invalidateTraceSummaries();
       clearUploadedTraces();
-      navigate(url);
     },
     [
       formData,
