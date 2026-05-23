@@ -45,12 +45,16 @@ export default function FileLoader(props: FileLoaderProps) {
             let errorCount = 0;
             for (const raw of traces) {
               try {
+                // Clone before transforming: transformTraceData mutates the input in place
+                // (adds childSpans, ref.span backlinks, etc.), so we must preserve a clean copy
+                // for download serialization.
+                const rawClone = structuredClone(raw);
                 const traceData = transformTraceData(raw as TraceData & { spans: SpanData[] });
                 if (!traceData) continue;
                 const otel = traceData.asOtelTrace();
                 populateTraceCache(otel);
                 summaries.push(traceToTraceSummary(otel));
-                rawTraces.push(raw);
+                rawTraces.push(rawClone);
               } catch {
                 errorCount++;
               }
