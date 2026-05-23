@@ -50,8 +50,6 @@ describe('pooledMap', () => {
     await expect(pooledMap([1, 2], async x => x, 0)).rejects.toThrow(RangeError);
     await expect(pooledMap([1, 2], async x => x, -1)).rejects.toThrow(RangeError);
   });
-<<<<<<< search-trace-summary-type
-=======
 
   it('throws RangeError for non-integer concurrency', async () => {
     await expect(pooledMap([1, 2], async x => x, 1.5)).rejects.toThrow(RangeError);
@@ -74,5 +72,4 @@ describe('pooledMap', () => {
     // Item 1 throws, setting aborted=true. Items 2+ are never dequeued.
     expect(started).toEqual([0, 1]);
   });
->>>>>>> main
 });
