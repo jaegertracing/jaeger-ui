@@ -3,10 +3,12 @@
 
 import { useCallback } from 'react';
 import { useQuery, useQueryClient, skipToken } from '@tanstack/react-query';
-import type { QueryClient } from '@tanstack/react-query';
-
 import type { TraceSummary } from '../../types/trace-summary';
 
+/**
+ * Similar to useSearchTraces() from hooks/useTraceDiscovery.ts,
+ * uploaded traces also use a **singleton cache design**.
+ */
 const UPLOADED_SUMMARIES_QUERY_KEY = ['uploadedSummaries'] as const;
 const UPLOADED_RAW_TRACES_QUERY_KEY = ['uploadedRawTraces'] as const;
 
@@ -16,15 +18,13 @@ type UploadedTraces = {
   handleTracesLoaded: (summaries: TraceSummary[], rawTraces: unknown[]) => void;
 };
 
-function clearUploadedTraces(queryClient: QueryClient): void {
-  queryClient.setQueryData(UPLOADED_SUMMARIES_QUERY_KEY, []);
-  queryClient.setQueryData(UPLOADED_RAW_TRACES_QUERY_KEY, []);
-}
-
 /** Returns a stable callback that clears the uploaded traces cache. */
 export function useClearUploadedTraces(): () => void {
   const queryClient = useQueryClient();
-  return useCallback(() => clearUploadedTraces(queryClient), [queryClient]);
+  return useCallback(() => {
+    queryClient.setQueryData(UPLOADED_SUMMARIES_QUERY_KEY, []);
+    queryClient.setQueryData(UPLOADED_RAW_TRACES_QUERY_KEY, []);
+  }, [queryClient]);
 }
 
 /**
@@ -32,7 +32,7 @@ export function useClearUploadedTraces(): () => void {
  *
  * Both keys use skipToken (subscribe-only, no fetch) and gcTime: Infinity so the
  * data survives navigation away from the search page and is restored on Back.
- * Clearing is an explicit action driven by SearchForm on submit via clearUploadedTraces().
+ * Clearing is an explicit action driven by SearchForm on submit via useClearUploadedTraces()().
  */
 export function useUploadedTraces(): UploadedTraces {
   const queryClient = useQueryClient();
