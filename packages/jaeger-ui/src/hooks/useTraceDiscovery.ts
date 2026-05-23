@@ -1,8 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect } from 'react';
-import { useQuery, useIsFetching, useQueryClient, skipToken, UseQueryResult } from '@tanstack/react-query';
+import { useQuery, useIsFetching, skipToken, UseQueryResult } from '@tanstack/react-query';
 import type { QueryClient } from '@tanstack/react-query';
 import { jaegerClient } from '../api/v3/client';
 import { localeStringComparator } from '../utils/sort';
@@ -39,8 +38,8 @@ const TRACE_SUMMARIES_QUERY_KEY = ['traceSummaries'] as const;
  * not a different one. A parameterized key would accumulate a separate cache entry for
  * every distinct search submitted during a session, causing unbounded memory growth.
  *
- * New searches are triggered by `useInvalidateTracesOnChange` when the URL search
- * parameters change. This marks the single entry stale and causes React Query to call
+ * New searches are triggered by calling `invalidateTraceSummaries(queryClient)` from
+ * SearchForm on submit. This marks the single entry stale and causes React Query to call
  * the current `queryFn` (which closes over the latest `query` argument) to fetch fresh
  * results.
  *
@@ -60,28 +59,14 @@ export function useSearchTraces(query: SearchQuery | null): UseQueryResult<Trace
   });
 }
 
-function invalidateTraceSummaries(queryClient: QueryClient): Promise<void> {
+/** Invalidate the trace summaries cache, triggering a background refetch. */
+export function invalidateTraceSummaries(queryClient: QueryClient): Promise<void> {
   return queryClient.invalidateQueries({ queryKey: TRACE_SUMMARIES_QUERY_KEY });
 }
 
 /** Returns true while a trace summaries fetch is in flight. */
 export function useIsSearchFetching(): boolean {
   return useIsFetching({ queryKey: TRACE_SUMMARIES_QUERY_KEY }) > 0;
-}
-
-/**
- * Invalidates the trace summaries cache whenever searchQueryKey changes (and on mount
- * when non-null), triggering a background refetch. Because invalidation happens in a
- * useEffect (after paint), the previous cached results may be visible for one render
- * before the refetch completes; React Query will show isFetching=true during that window.
- */
-export function useInvalidateTracesOnChange(searchQueryKey: string | null): void {
-  const queryClient = useQueryClient();
-  useEffect(() => {
-    if (searchQueryKey !== null) {
-      invalidateTraceSummaries(queryClient);
-    }
-  }, [searchQueryKey, queryClient]);
 }
 
 /**

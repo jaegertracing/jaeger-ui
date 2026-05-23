@@ -56,7 +56,7 @@ vi.mock('../../hooks/useTraceDiscovery', () => ({
   useSpanNames: jest.fn(() => ({ data: [], isLoading: false })),
   useSearchTraces: (...args) => useSearchTracesMock(...args),
   useIsSearchFetching: jest.fn(() => false),
-  useInvalidateTracesOnChange: jest.fn(),
+  invalidateTraceSummaries: jest.fn(() => Promise.resolve()),
 }));
 
 import React from 'react';
@@ -340,46 +340,16 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
     expect(lastSearchResultsProps.diffCohort).toEqual([summary]);
   });
 
-  it('clears uploaded summaries when a new API search is submitted', async () => {
-    const summary = {
-      traceID: 'uploaded-1',
-      traceName: 'svc: op',
-      rootServiceName: 'svc',
-      rootOperationName: 'op',
-      startTime: 0,
-      duration: 100,
-      spanCount: 1,
-      errorSpanCount: 0,
-      orphanSpanCount: 0,
-      services: [],
-    };
-
-    // Pre-populate uploaded summaries
+  it('clearUploadedTraces wipes both uploaded caches from the queryClient', async () => {
+    const { clearUploadedTraces } = await import('./useUploadedTraces');
+    const summary = { traceID: 'uploaded-1' };
     queryClient.setQueryData(['uploadedSummaries'], [summary]);
     queryClient.setQueryData(['uploadedRawTraces'], [{ traceID: 'uploaded-1' }]);
 
-    let doNavigate;
-    render(
-      <AllProviderWithNav
-        initialEntries={['/search?service=svc-a']}
-        onNavigate={nav => {
-          doNavigate = nav;
-        }}
-      >
-        <SearchTracePage />
-      </AllProviderWithNav>
-    );
+    clearUploadedTraces(queryClient);
 
-    // Confirm uploaded summaries are initially present
-    expect(lastSearchResultsProps.traceSummaries).toContainEqual(summary);
-
-    // Navigate to a different search (new searchQuery reference)
-    await act(async () => {
-      doNavigate('/search?service=svc-b');
-    });
-
-    // Uploaded summaries should now be cleared
-    expect(lastSearchResultsProps.traceSummaries).not.toContainEqual(summary);
+    expect(queryClient.getQueryData(['uploadedSummaries'])).toEqual([]);
+    expect(queryClient.getQueryData(['uploadedRawTraces'])).toEqual([]);
   });
 
   it('handleSortChange updates sortBy passed to SearchResults', async () => {

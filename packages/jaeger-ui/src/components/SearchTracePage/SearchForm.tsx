@@ -13,7 +13,9 @@ import { connect } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getUrl as getSearchUrl } from './url';
 import type { Dispatch } from 'redux';
-import { useIsSearchFetching } from '../../hooks/useTraceDiscovery';
+import { useQueryClient } from '@tanstack/react-query';
+import { useIsSearchFetching, invalidateTraceSummaries } from '../../hooks/useTraceDiscovery';
+import { clearUploadedTraces } from './useUploadedTraces';
 import store from '../../utils/storage';
 
 import * as markers from './SearchForm.markers';
@@ -338,6 +340,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
 }) => {
   const submitting = useIsSearchFetching();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { useOpenTelemetryTerms: useOtelTerms, search } = useConfig();
   const searchMaxLookback: ILookbackOption | undefined = search?.maxLookback;
   const searchAdjustEndTime: string | undefined = search?.adjustEndTime;
@@ -397,9 +400,11 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
     (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       const url = submitFormHandler(formData as ISearchFormFields, searchAdjustEndTime, adjustTimeEnabled);
+      invalidateTraceSummaries(queryClient);
+      clearUploadedTraces(queryClient);
       navigate(url);
     },
-    [formData, searchAdjustEndTime, adjustTimeEnabled, submitFormHandler, navigate]
+    [formData, searchAdjustEndTime, adjustTimeEnabled, submitFormHandler, navigate, queryClient]
   );
 
   const { service: selectedService, lookback: selectedLookback } = formData;

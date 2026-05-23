@@ -2,7 +2,8 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { Col, Row, Tabs } from 'antd';
 import { useLocation } from 'react-router-dom';
@@ -25,7 +26,7 @@ import { trackSortByChange } from './SearchForm.track';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { useEmbeddedState } from '../../stores/embedded-store';
 import { useShallow } from 'zustand/react/shallow';
-import { useSearchTraces, useInvalidateTracesOnChange } from '../../hooks/useTraceDiscovery';
+import { useSearchTraces, invalidateTraceSummaries } from '../../hooks/useTraceDiscovery';
 
 // export for tests
 export function SearchTracePageImpl() {
@@ -40,23 +41,25 @@ export function SearchTracePageImpl() {
   const isHomepage = urlQueryParams === null;
   const searchQuery = useMemo(() => searchQueryFromUrl(location.search), [location.search]);
 
+  const queryClient = useQueryClient();
+
   const {
     data: apiTraceSummaries = [],
     isFetching: loadingTraces,
     error: searchError,
   } = useSearchTraces(searchQuery);
 
-  // Stable string key derived from the search fields that determine the result set.
-  // URL params like `view=ddg` change location.search but are not search inputs — using
-  // a reference comparison on searchQuery would treat them as new searches because
-  // useMemo always returns a new object when urlQueryParams changes.
-  const searchQueryKey = searchQuery
-    ? `${searchQuery.service}|${searchQuery.operation ?? ''}|${searchQuery.start}|${searchQuery.end}|${searchQuery.limit}|${searchQuery.minDuration ?? ''}|${searchQuery.maxDuration ?? ''}|${searchQuery.tags ?? ''}`
-    : null;
+  // Invalidate on mount so that navigating directly to a search URL (e.g. a bookmark)
+  // always triggers a fresh fetch rather than showing a prior search's cached results.
+  // SearchForm calls invalidateTraceSummaries() explicitly on every submit, so this
+  // effect only needs to handle the direct-navigation case.
+  const searchQueryRef = React.useRef(searchQuery);
+  const queryClientRef = React.useRef(queryClient);
+  useEffect(() => {
+    if (searchQueryRef.current !== null) invalidateTraceSummaries(queryClientRef.current);
+  }, []); // intentionally empty — run once on mount only
 
-  useInvalidateTracesOnChange(searchQueryKey);
-
-  const { uploadedSummaries, uploadedRawTraces, handleTracesLoaded } = useUploadedTraces(searchQueryKey);
+  const { uploadedSummaries, uploadedRawTraces, handleTracesLoaded } = useUploadedTraces();
 
   // Merge API and uploaded summaries, deduplicating by traceID (API results take precedence).
   // Duplicates arise when the same file is uploaded twice or an uploaded trace also appears

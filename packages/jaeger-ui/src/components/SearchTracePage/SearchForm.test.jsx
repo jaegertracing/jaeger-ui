@@ -43,6 +43,10 @@ vi.mock('../../hooks/useTraceDiscovery', () => ({
     isLoading: false,
   })),
   useIsSearchFetching: mockUseIsSearchFetching,
+  invalidateTraceSummaries: jest.fn(() => Promise.resolve()),
+}));
+vi.mock('./useUploadedTraces', () => ({
+  clearUploadedTraces: jest.fn(),
 }));
 
 import React from 'react';
