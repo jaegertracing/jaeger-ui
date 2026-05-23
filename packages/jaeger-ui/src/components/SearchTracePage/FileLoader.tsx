@@ -50,7 +50,10 @@ export default function FileLoader(props: FileLoaderProps) {
                 // for download serialization.
                 const rawClone = structuredClone(raw);
                 const traceData = transformTraceData(raw as TraceData & { spans: SpanData[] });
-                if (!traceData) continue;
+                if (!traceData) {
+                  errorCount++;
+                  continue;
+                }
                 const otel = traceData.asOtelTrace();
                 populateTraceCache(otel);
                 summaries.push(traceToTraceSummary(otel));
