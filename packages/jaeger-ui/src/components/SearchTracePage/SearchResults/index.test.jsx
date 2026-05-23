@@ -273,6 +273,18 @@ describe('<SearchResults>', () => {
     expect(navigateCall[0]).toContain('/trace/a');
   });
 
+  it('uses location.pathname+search as Back URL when queryOfResults is null (upload-only context)', () => {
+    renderWithRouter(
+      <SearchResults {...baseProps} queryOfResults={null} location={{ pathname: '/search', search: '' }} />
+    );
+    const scatterProps = ScatterPlot.mock.calls[0][0];
+    scatterProps.onValueClick({ traceID: 'a' });
+    expect(mockNavigate).toHaveBeenCalled();
+    // fromSearch state should be based on current location, not getUrl()
+    const navigateState = mockNavigate.mock.calls[0][1]?.state;
+    expect(navigateState?.fromSearch).toBe('/search');
+  });
+
   it('handles trace with zero spans', () => {
     renderWithRouter(
       <SearchResults

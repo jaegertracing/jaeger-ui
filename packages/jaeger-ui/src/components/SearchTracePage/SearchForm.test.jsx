@@ -1,6 +1,18 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+const { mockUseIsFetching } = vi.hoisted(() => ({
+  mockUseIsFetching: jest.fn().mockReturnValue(0),
+}));
+
+vi.mock('@tanstack/react-query', async () => {
+  const actual = await vi.importActual('@tanstack/react-query');
+  return {
+    ...actual,
+    useIsFetching: mockUseIsFetching,
+  };
+});
+
 vi.mock('../common/SearchableSelect', () => {
   const MockSearchableSelect = ({ onChange, 'data-testid': testId, disabled, value, ...props }) => {
     if (onChange && testId) {
@@ -559,6 +571,19 @@ describe('<SearchForm>', () => {
       jest.clearAllMocks();
     });
 
+    it('shows loading indicator while services are loading and list is empty', () => {
+      useServices.mockReturnValue({
+        data: [],
+        isLoading: true,
+        error: null,
+      });
+
+      const { container } = renderForm(<SearchForm {...defaultProps} />);
+
+      expect(container.querySelector('.LoadingIndicator')).toBeInTheDocument();
+      expect(container.querySelector('form')).not.toBeInTheDocument();
+    });
+
     it('displays error message when services fetch fails', () => {
       useServices.mockReturnValue({
         data: undefined,
@@ -733,6 +758,43 @@ describe('SearchForm onChange handlers', () => {
       fireEvent.change(maxDurationInput, { target: { value: '5s' } });
     });
     await waitFor(() => expect(maxDurationInput.value).toBe('5s'));
+  });
+});
+
+describe('submitting state from useIsFetching', () => {
+  afterEach(() => {
+    cleanup();
+    mockUseIsFetching.mockReturnValue(0);
+  });
+
+  it('disables submit button while traceSummaries query is in flight', async () => {
+    mockUseIsFetching.mockReturnValue(1);
+
+    const { container } = renderForm(<SearchForm {...defaultProps} initialValues={{ service: 'svcA' }} />);
+
+    const submitBtn = container.querySelector(`[data-test="${markers.SUBMIT_BTN}"]`);
+    expect(submitBtn).toBeDisabled();
+  });
+});
+
+describe('handleAdjustTimeToggle', () => {
+  afterEach(cleanup);
+
+  it('toggles adjustTimeEnabled state when the adjust-time switch is changed', async () => {
+    const { container } = renderForm(<SearchForm {...defaultProps} />);
+    // The switch is rendered because the mock config has adjustEndTime: '1m'
+    const switchEl = container.querySelector('.ant-switch');
+    expect(switchEl).toBeInTheDocument();
+
+    const initialChecked = switchEl.classList.contains('ant-switch-checked');
+
+    await act(async () => {
+      fireEvent.click(switchEl);
+    });
+
+    // State should have toggled — switch checked state flips
+    const newChecked = container.querySelector('.ant-switch').classList.contains('ant-switch-checked');
+    expect(newChecked).not.toBe(initialChecked);
   });
 });
 
@@ -971,5 +1033,25 @@ describe('mapDispatchToProps()', () => {
     expect(mapDispatchToProps(() => {})).toEqual({
       submitFormHandler: expect.any(Function),
     });
+  });
+
+  it('submitFormHandler delegates to submitForm', () => {
+    const { submitFormHandler } = mapDispatchToProps(() => {});
+    // submitForm returns a URL string; just verify it returns something truthy
+    const fields = {
+      service: 'svc',
+      operation: 'op',
+      resultsLimit: '20',
+      lookback: '1h',
+      startDate: '2020-01-01',
+      startDateTime: '00:00',
+      endDate: '2020-01-01',
+      endDateTime: '01:00',
+      tags: '',
+      minDuration: '',
+      maxDuration: '',
+    };
+    const result = submitFormHandler(fields, null, false);
+    expect(typeof result).toBe('string');
   });
 });

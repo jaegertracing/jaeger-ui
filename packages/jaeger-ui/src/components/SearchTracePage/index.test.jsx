@@ -17,6 +17,25 @@ const { useEmbeddedStateMock, getConfigMock, useSearchTracesMock } = vi.hoisted(
   useSearchTracesMock: jest.fn(() => ({ data: [], isLoading: false, error: null })),
 }));
 
+// Capture last props passed to SearchResults and FileLoader so tests can inspect/invoke them.
+let lastSearchResultsProps = null;
+let lastFileLoaderProps = null;
+
+vi.mock('./SearchResults', () => ({
+  default: jest.fn(props => {
+    lastSearchResultsProps = props;
+    // Render a loading indicator so existing tests that check for it still work.
+    return props.loading ? React.createElement('div', { className: 'LoadingIndicator' }) : null;
+  }),
+}));
+
+vi.mock('./FileLoader', () => ({
+  default: jest.fn(props => {
+    lastFileLoaderProps = props;
+    return null;
+  }),
+}));
+
 vi.mock('../../stores/embedded-store', () => ({
   useEmbeddedState: (...args) => useEmbeddedStateMock(...args),
 }));
@@ -39,7 +58,7 @@ vi.mock('../../hooks/useTraceDiscovery', () => ({
 }));
 
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, act, fireEvent, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Provider } from 'react-redux';
 import { SearchTracePageImpl as SearchTracePage } from './index';
@@ -62,6 +81,29 @@ const AllProvider = ({ children, initialEntries = ['/search'] }) => (
     </MemoryRouter>
   </QueryClientProvider>
 );
+
+// Helper that exposes the MemoryRouter's navigate function via a callback ref.
+function NavigateSpy({ onNavigate }) {
+  const { useNavigate: useNav } = require('react-router-dom');
+  const navigate = useNav();
+  React.useEffect(() => {
+    onNavigate(navigate);
+  }, [navigate, onNavigate]);
+  return null;
+}
+
+function AllProviderWithNav({ children, initialEntries = ['/search'], onNavigate }) {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={initialEntries}>
+        <Provider store={globalStore}>
+          {children}
+          <NavigateSpy onNavigate={onNavigate} />
+        </Provider>
+      </MemoryRouter>
+    </QueryClientProvider>
+  );
+}
 
 describe('<SearchTracePage>', () => {
   beforeEach(() => {
@@ -219,5 +261,139 @@ describe('useTraceDiffStore', () => {
 
   it('cohort is initially empty', () => {
     expect(useTraceDiffStore.getState().cohort).toEqual([]);
+  });
+});
+
+describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
+  beforeEach(() => {
+    lastSearchResultsProps = null;
+    lastFileLoaderProps = null;
+    queryClient.clear();
+    useSearchTracesMock.mockReturnValue({ data: [], isLoading: false, error: null });
+    getConfigMock.mockReturnValue({
+      disableFileUploadControl: false,
+      tracking: { gaID: null, trackErrors: false, customWebAnalytics: null },
+    });
+    useTraceDiffStore.setState({ cohort: [], a: null, b: null });
+  });
+
+  it('merges uploaded summaries into traceSummaries when FileLoader calls onTracesLoaded', async () => {
+    const summary = {
+      traceID: 'uploaded-1',
+      traceName: 'svc: op',
+      rootServiceName: 'svc',
+      rootOperationName: 'op',
+      startTime: 0,
+      duration: 100,
+      spanCount: 1,
+      errorSpanCount: 0,
+      orphanSpanCount: 0,
+      services: [],
+    };
+
+    render(
+      <AllProvider>
+        <SearchTracePage />
+      </AllProvider>
+    );
+
+    // Click the Upload tab to render FileLoader
+    const uploadTab = screen.getByText('Upload');
+    await act(async () => {
+      fireEvent.click(uploadTab);
+    });
+
+    expect(lastFileLoaderProps).not.toBeNull();
+    await act(async () => {
+      lastFileLoaderProps.onTracesLoaded([summary], [{ traceID: 'uploaded-1' }]);
+    });
+
+    expect(lastSearchResultsProps.traceSummaries).toContainEqual(summary);
+    expect(lastSearchResultsProps.rawTraces).toContainEqual({ traceID: 'uploaded-1' });
+  });
+
+  it('filters diffCohort to only summaries present in current results', async () => {
+    const summary = {
+      traceID: 'trace-in-results',
+      traceName: 'svc: op',
+      rootServiceName: 'svc',
+      rootOperationName: 'op',
+      startTime: 0,
+      duration: 100,
+      spanCount: 1,
+      errorSpanCount: 0,
+      orphanSpanCount: 0,
+      services: [],
+    };
+    useSearchTracesMock.mockReturnValue({ data: [summary], isLoading: false, error: null });
+    // Add one known trace and one unknown to the cohort
+    useTraceDiffStore.setState({ cohort: ['trace-in-results', 'trace-not-in-results'] });
+
+    render(
+      <AllProvider initialEntries={['/search?service=svc']}>
+        <SearchTracePage />
+      </AllProvider>
+    );
+
+    expect(lastSearchResultsProps.diffCohort).toEqual([summary]);
+  });
+
+  it('clears uploaded summaries when a new API search is submitted', async () => {
+    const summary = {
+      traceID: 'uploaded-1',
+      traceName: 'svc: op',
+      rootServiceName: 'svc',
+      rootOperationName: 'op',
+      startTime: 0,
+      duration: 100,
+      spanCount: 1,
+      errorSpanCount: 0,
+      orphanSpanCount: 0,
+      services: [],
+    };
+
+    // Pre-populate uploaded summaries
+    queryClient.setQueryData(['uploadedSummaries'], [summary]);
+    queryClient.setQueryData(['uploadedRawTraces'], [{ traceID: 'uploaded-1' }]);
+
+    let doNavigate;
+    render(
+      <AllProviderWithNav
+        initialEntries={['/search?service=svc-a']}
+        onNavigate={nav => {
+          doNavigate = nav;
+        }}
+      >
+        <SearchTracePage />
+      </AllProviderWithNav>
+    );
+
+    // Confirm uploaded summaries are initially present
+    expect(lastSearchResultsProps.traceSummaries).toContainEqual(summary);
+
+    // Navigate to a different search (new searchQuery reference)
+    await act(async () => {
+      doNavigate('/search?service=svc-b');
+    });
+
+    // Uploaded summaries should now be cleared
+    expect(lastSearchResultsProps.traceSummaries).not.toContainEqual(summary);
+  });
+
+  it('handleSortChange updates sortBy passed to SearchResults', async () => {
+    render(
+      <AllProvider>
+        <SearchTracePage />
+      </AllProvider>
+    );
+    expect(lastSearchResultsProps).not.toBeNull();
+    const initialSortBy = lastSearchResultsProps.sortBy;
+
+    await act(async () => {
+      lastSearchResultsProps.handleSortChange('SHORTEST_FIRST');
+    });
+
+    expect(lastSearchResultsProps.sortBy).toBe('SHORTEST_FIRST');
+    expect(lastSearchResultsProps.sortBy).not.toBe(initialSortBy);
   });
 });
