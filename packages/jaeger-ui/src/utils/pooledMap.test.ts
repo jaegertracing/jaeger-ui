@@ -50,4 +50,24 @@ describe('pooledMap', () => {
     await expect(pooledMap([1, 2], async x => x, 0)).rejects.toThrow(RangeError);
     await expect(pooledMap([1, 2], async x => x, -1)).rejects.toThrow(RangeError);
   });
+
+  it('throws RangeError for non-integer concurrency', async () => {
+    await expect(pooledMap([1, 2], async x => x, 1.5)).rejects.toThrow(RangeError);
+    await expect(pooledMap([1, 2], async x => x, NaN)).rejects.toThrow(RangeError);
+    await expect(pooledMap([1, 2], async x => x, Infinity)).rejects.toThrow(RangeError);
+  });
+
+  it('rejects when fn throws and does not start further items', async () => {
+    const started: number[] = [];
+    const err = new Error('boom');
+    const fn = async (x: number) => {
+      started.push(x);
+      if (x === 2) throw err;
+      await new Promise(r => setTimeout(r, 10));
+      return x;
+    };
+    await expect(pooledMap([1, 2, 3, 4, 5], fn, 1)).rejects.toThrow('boom');
+    // With concurrency=1, items are processed sequentially: 1, 2 (throws), 3+ never started
+    expect(started).toEqual([1, 2]);
+  });
 });
