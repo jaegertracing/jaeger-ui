@@ -59,15 +59,17 @@ describe('pooledMap', () => {
 
   it('rejects when fn throws and does not start further items', async () => {
     const started: number[] = [];
-    const err = new Error('boom');
+    // Item 1 fails immediately; items 2+ are queued but not yet started.
+    // Item 0 is already in-flight (concurrency=2) and runs to completion.
     const fn = async (x: number) => {
       started.push(x);
-      if (x === 2) throw err;
+      if (x === 1) throw new Error('boom');
       await new Promise(r => setTimeout(r, 10));
       return x;
     };
-    await expect(pooledMap([1, 2, 3, 4, 5], fn, 1)).rejects.toThrow('boom');
-    // With concurrency=1, items are processed sequentially: 1, 2 (throws), 3+ never started
-    expect(started).toEqual([1, 2]);
+    await expect(pooledMap([0, 1, 2, 3, 4], fn, 2)).rejects.toThrow('boom');
+    // Items 0 and 1 are dequeued immediately (concurrency=2).
+    // Item 1 throws, setting aborted=true. Items 2+ are never dequeued.
+    expect(started).toEqual([0, 1]);
   });
 });

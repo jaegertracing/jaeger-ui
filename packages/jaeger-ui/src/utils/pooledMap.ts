@@ -5,7 +5,8 @@
  * Maps `items` through an async `fn` with at most `concurrency` in-flight at once.
  * Results are returned in input order. `onProgress` is called after each item completes
  * with the number of items completed so far and the total count.
- * If `fn` rejects, the rejection propagates and no further items are started.
+ * If `fn` rejects, the rejection propagates. Already in-flight items run to completion,
+ * but no further items are dequeued.
  */
 export async function pooledMap<T, R>(
   items: readonly T[],
@@ -24,15 +25,15 @@ export async function pooledMap<T, R>(
   const worker = async () => {
     for (const [index, item] of entries) {
       if (aborted) return;
-      results[index] = await fn(item, index);
-      onProgress?.(++done, items.length);
+      try {
+        results[index] = await fn(item, index);
+        onProgress?.(++done, items.length);
+      } catch (err) {
+        aborted = true;
+        throw err;
+      }
     }
   };
-  try {
-    await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, worker));
-  } catch (err) {
-    aborted = true;
-    throw err;
-  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, worker));
   return results;
 }
