@@ -35,6 +35,14 @@ vi.mock('../../../../utils/DraggableManager', async () => {
       const { clientXLeft, width } = this.getBounds();
       return (event.clientX - clientXLeft) / width;
     }
+
+    triggerDragMove(value) {
+      this._opts.onDragMove?.({ manager: this, value });
+    }
+
+    triggerDragEnd(value, manager = this) {
+      this._opts.onDragEnd?.({ manager, value });
+    }
   }
 
   return {
@@ -161,7 +169,7 @@ describe('<TimelineViewingLayer>', () => {
       const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor, shift: 0.5 } };
 
       rerender(<TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />);
-      getDragger()._opts.onDragMove({ value: 0.5 });
+      getDragger().triggerDragMove(0.5);
 
       expect(props.updateNextViewRangeTime).toHaveBeenCalledWith({
         reframe: { anchor, shift: mapFromSubRange(viewStart, viewEnd, 0.5) },
@@ -174,7 +182,7 @@ describe('<TimelineViewingLayer>', () => {
       const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor, shift: 0.5 } };
 
       render(<TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />);
-      getDragger()._opts.onDragEnd({ manager, value: 0.25 });
+      getDragger().triggerDragEnd(0.25, manager);
 
       expect(manager.resetBounds).toHaveBeenCalled();
       expect(props.updateViewRangeTime).toHaveBeenCalledWith(
