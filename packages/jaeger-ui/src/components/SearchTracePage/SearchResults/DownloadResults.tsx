@@ -1,7 +1,7 @@
 // Copyright (c) 2023 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Button, message } from 'antd';
 
 import JaegerAPI from '../../../api/jaeger';
@@ -22,6 +22,14 @@ export function createBlob(traces: unknown[]) {
 export default function DownloadResults({ traceSummaries, rawTraces }: Props) {
   // undefined = idle; 0–1 = fraction of traces fetched from backend
   const [progress, setProgress] = useState<number | undefined>(undefined);
+
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const onClick = useCallback(async () => {
     // Build a lookup from traceID → raw trace for any locally held data (uploaded traces).
@@ -48,7 +56,8 @@ export default function DownloadResults({ traceSummaries, rawTraces }: Props) {
           },
           6,
           done => {
-            if (!cancelled.current) setProgress((rawByID.size + done) / traceSummaries.length);
+            if (!cancelled.current && isMountedRef.current)
+              setProgress((rawByID.size + done) / traceSummaries.length);
           }
         );
         fetched.forEach((raw, i) => rawByID.set(missing[i].traceID, raw));
@@ -58,7 +67,7 @@ export default function DownloadResults({ traceSummaries, rawTraces }: Props) {
         return;
       } finally {
         cancelled.current = true;
-        setProgress(undefined);
+        if (isMountedRef.current) setProgress(undefined);
       }
     }
     traces = traceSummaries.map(s => rawByID.get(s.traceID)).filter(Boolean);
