@@ -47,6 +47,7 @@ type SearchResultsProps = {
   skipMessage?: boolean;
   spanLinks?: Record<string, string> | undefined;
   traceSummaries: TraceSummary[];
+  uploadedTraceIDs: ReadonlySet<string>;
   rawTraces: any[];
   sortBy: string;
   handleSortChange: (sortBy: string) => void;
@@ -135,6 +136,7 @@ export function UnconnectedSearchResults({
   skipMessage = false,
   spanLinks,
   traceSummaries,
+  uploadedTraceIDs,
   rawTraces,
   sortBy,
   handleSortChange,
@@ -174,18 +176,24 @@ export function UnconnectedSearchResults({
     navigate(getUrl({ ...urlState, view }));
   }, [location, navigate]);
 
-  const [downloading, setDownloading] = useState(false);
+  // undefined = not downloading; 0–1 = fraction of traces fetched so far
+  const [downloadProgress, setDownloadProgress] = useState<number | undefined>(undefined);
 
   const onDownloadResultsClicked = useCallback(async () => {
     let traces = rawTraces;
     if (traces.length === 0 && traceSummaries.length > 0) {
-      // API-only results: fetch full traces from backend on demand.
-      setDownloading(true);
+      // API-only results: fetch full traces sequentially so we can report progress.
+      setDownloadProgress(0);
       try {
-        const responses = await Promise.all(traceSummaries.map(s => JaegerAPI.fetchTrace(s.traceID)));
-        traces = responses.map(r => r?.data?.[0] ?? r);
+        const fetched: any[] = [];
+        for (let i = 0; i < traceSummaries.length; i++) {
+          const r = await JaegerAPI.fetchTrace(traceSummaries[i].traceID);
+          fetched.push(r?.data?.[0] ?? r);
+          setDownloadProgress((i + 1) / traceSummaries.length);
+        }
+        traces = fetched;
       } finally {
-        setDownloading(false);
+        setDownloadProgress(undefined);
       }
     }
     const file = createBlob(traces);
@@ -258,7 +266,10 @@ export function UnconnectedSearchResults({
           </h2>
           {traceResultsView && <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />}
           {traceResultsView && (
-            <DownloadResults loading={downloading} onDownloadResultsClicked={onDownloadResultsClicked} />
+            <DownloadResults
+              progress={downloadProgress}
+              onDownloadResultsClicked={onDownloadResultsClicked}
+            />
           )}
           <AltViewOptions traceResultsView={traceResultsView} onDdgViewClicked={onDdgViewClicked} />
           {showStandaloneLink && (
@@ -286,6 +297,7 @@ export function UnconnectedSearchResults({
               <ResultItem
                 durationPercent={getPercentageOfDuration(traceSummary.duration, maxTraceDuration)}
                 isInDiffCohort={cohortIds.has(traceSummary.traceID)}
+                isUploaded={uploadedTraceIDs.has(traceSummary.traceID)}
                 linkTo={getTracePageLink(
                   traceSummary.traceID,
                   { fromSearch: searchUrl },

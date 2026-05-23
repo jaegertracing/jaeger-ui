@@ -131,6 +131,9 @@ export function SearchTracePageImpl() {
     return [...apiTraceSummaries, ...uniqueUploaded];
   }, [apiTraceSummaries, uploadedSummaries]);
 
+  // Track which traceIDs came from file uploads so ResultItem can badge them.
+  const uploadedTraceIDs = useMemo(() => new Set(uploadedSummaries.map(s => s.traceID)), [uploadedSummaries]);
+
   const [sortBy, setSortBy] = useState(orderBy.MOST_RECENT);
 
   const sortedTraceSummaries = useMemo(
@@ -239,6 +242,7 @@ export function SearchTracePageImpl() {
               skipMessage: isHomepage,
               spanLinks: urlQueryParams?.spanLinks,
               traceSummaries: sortedTraceSummaries,
+              uploadedTraceIDs,
               rawTraces: uploadedRawTraces,
               sortBy,
               handleSortChange,

@@ -54,8 +54,13 @@ vi.mock('../../../api/jaeger', () => ({ default: { fetchTrace: (...args) => mock
 
 vi.mock('./DownloadResults', () =>
   mockDefault(
-    jest.fn(({ loading, onDownloadResultsClicked }) => (
-      <button type="button" data-testid="download" data-loading={loading} onClick={onDownloadResultsClicked}>
+    jest.fn(({ progress, onDownloadResultsClicked }) => (
+      <button
+        type="button"
+        data-testid="download"
+        data-progress={progress}
+        onClick={onDownloadResultsClicked}
+      >
         download
       </button>
     ))
@@ -141,6 +146,7 @@ const baseProps = {
   skipMessage: false,
   spanLinks: undefined,
   traceSummaries: baseTraces,
+  uploadedTraceIDs: new Set(),
   rawTraces: baseRawTraces,
   sortBy: orderBy.MOST_RECENT,
   handleSortChange: jest.fn(),
@@ -345,6 +351,13 @@ describe('<SearchResults>', () => {
     it('shows a result entry for each trace', () => {
       renderWithRouter(<SearchResults {...baseProps} />);
       expect(ResultItem.mock.calls).toHaveLength(baseTraces.length);
+    });
+
+    it('passes isUploaded=true only for IDs in uploadedTraceIDs', () => {
+      renderWithRouter(<SearchResults {...baseProps} uploadedTraceIDs={new Set(['a'])} />);
+      const [first, second] = ResultItem.mock.calls;
+      expect(first[0].isUploaded).toBe(true);
+      expect(second[0].isUploaded).toBe(false);
     });
 
     it('deep links traces', () => {
