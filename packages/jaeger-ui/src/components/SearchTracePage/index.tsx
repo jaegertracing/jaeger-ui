@@ -183,7 +183,6 @@ export function SearchTracePageImpl() {
               hideGraph: Boolean(embedded?.searchHideGraph),
               loading: loadingTraces,
               maxTraceDuration,
-              currentSearchQuery: searchQuery,
               showStandaloneLink: Boolean(embedded),
               skipMessage: isHomepage,
               spanLinks: urlQueryParams?.spanLinks,

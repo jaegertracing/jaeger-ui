@@ -100,6 +100,7 @@ export default function DownloadResults({ traceSummaries, rawTraces }: Props) {
         <span
           className="DownloadResults--bar"
           role="progressbar"
+          aria-label="Trace download progress"
           aria-valuenow={Math.round(progress! * 100)}
           aria-valuemin={0}
           aria-valuemax={100}

@@ -71,8 +71,9 @@ export function useIsSearchFetching(): boolean {
 
 /**
  * Invalidates the trace summaries cache whenever searchQueryKey changes (and on mount
- * when non-null). This ensures stale results from a prior search are never shown for a
- * new URL, while still allowing Back-navigation to restore cached results.
+ * when non-null), triggering a background refetch. Because invalidation happens in a
+ * useEffect (after paint), the previous cached results may be visible for one render
+ * before the refetch completes; React Query will show isFetching=true during that window.
  */
 export function useInvalidateTracesOnChange(searchQueryKey: string | null): void {
   const queryClient = useQueryClient();

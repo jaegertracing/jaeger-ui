@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useQuery, useQueryClient, skipToken } from '@tanstack/react-query';
 import type { TraceSummary } from '../../types/trace-summary';
 
@@ -53,18 +53,14 @@ export function useUploadedTraces(searchQueryKey: string | null): UploadedTraces
     gcTime: Infinity,
   });
 
-  // Clear uploaded results when the search key changes. On mount, also clear when the
-  // stored key differs from the current key — this handles the case where the user
-  // navigates directly to a new search URL (bypassing Back) while uploads from a prior
-  // search are still cached. Do NOT clear when searchQueryKey is null (e.g. navigating
+  // Clear uploaded results whenever the search context changes. Guarding on
+  // storedSearchKey === searchQueryKey prevents a double-clear: writing the new
+  // key at the end of this effect changes storedSearchKey and would re-trigger
+  // without the guard. Do NOT clear when searchQueryKey is null (e.g. navigating
   // to the homepage) — that would wipe upload-only results.
-  const isMountRef = useRef(true);
   useEffect(() => {
-    const isMount = isMountRef.current;
-    isMountRef.current = false;
-
     if (searchQueryKey === null) return;
-    if (isMount && storedSearchKey === searchQueryKey) return;
+    if (storedSearchKey === searchQueryKey) return;
 
     queryClient.setQueryData(UPLOADED_SUMMARIES_QUERY_KEY, []);
     queryClient.setQueryData(UPLOADED_RAW_TRACES_QUERY_KEY, []);

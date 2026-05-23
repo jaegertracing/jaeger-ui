@@ -15,7 +15,7 @@ import * as markers from './index.markers';
 import { EAltViewActions, trackAltView } from './index.track';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';
-import { getUrl, type TUrlState } from '../url';
+import { getUrl } from '../url';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import NewWindowIcon from '../../common/NewWindowIcon';
 import SearchResultsDDG from '../../DeepDependencies/traces';
@@ -23,23 +23,7 @@ import { getTracePageLink } from '../../TracePage/url';
 import * as orderBy from '../../../model/order-by';
 import { getPercentageOfDuration } from '../../../utils/date';
 
-import { SearchQuery } from '../../../types/search';
 import { TraceSummary } from '../../../types/trace-summary';
-
-function searchQueryToUrl(q: SearchQuery): string {
-  const urlState: TUrlState = {
-    service: q.service,
-    operation: q.operation ?? undefined,
-    start: String(q.start),
-    end: String(q.end),
-    limit: String(q.limit),
-    lookback: q.lookback,
-    minDuration: q.minDuration,
-    maxDuration: q.maxDuration,
-    tags: q.tags ?? undefined,
-  };
-  return getUrl(urlState);
-}
 
 import './index.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
@@ -55,7 +39,6 @@ type SearchResultsProps = {
   loading: boolean;
   location: Location;
   maxTraceDuration: number;
-  currentSearchQuery: SearchQuery | null;
   showStandaloneLink: boolean;
   skipMessage?: boolean;
   spanLinks?: Record<string, string> | undefined;
@@ -98,7 +81,6 @@ export function UnconnectedSearchResults({
   loading,
   location,
   maxTraceDuration,
-  currentSearchQuery,
   showStandaloneLink,
   skipMessage = false,
   spanLinks,
@@ -125,15 +107,13 @@ export function UnconnectedSearchResults({
 
   const goToTrace = useCallback(
     (traceID: string) => {
-      const searchUrl = currentSearchQuery
-        ? searchQueryToUrl(currentSearchQuery)
-        : location.pathname + location.search;
+      const searchUrl = location.pathname + location.search;
       const locationObj = getTracePageLink(traceID, { fromSearch: searchUrl });
       navigate(locationObj.pathname + (locationObj.search ? `?${locationObj.search}` : ''), {
         state: locationObj.state,
       });
     },
-    [currentSearchQuery, location, navigate]
+    [location, navigate]
   );
 
   const onDdgViewClicked = useCallback(() => {
@@ -169,11 +149,7 @@ export function UnconnectedSearchResults({
     );
   }
   const cohortIds = new Set(diffCohort.map(datum => datum.traceID));
-  // When there are no API search params (upload-only), use the current URL as the back
-  // target so the Back button on the trace page returns here rather than the empty homepage.
-  const searchUrl = currentSearchQuery
-    ? searchQueryToUrl(currentSearchQuery)
-    : location.pathname + location.search;
+  const searchUrl = location.pathname + location.search;
   return (
     <div className="SearchResults">
       <div className="SearchResults--header">
