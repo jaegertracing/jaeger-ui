@@ -13,12 +13,13 @@ export async function pooledMap<T, R>(
   onProgress?: (done: number, total: number) => void
 ): Promise<R[]> {
   const results: R[] = Array.from({ length: items.length }) as R[];
-  let next = 0;
   let done = 0;
+  // Shared iterator: each worker pulls the next (index, item) pair atomically via
+  // the JS engine's native iterator protocol, so no two workers can take the same item.
+  const entries = items.entries();
   const worker = async () => {
-    while (next < items.length) {
-      const i = next++;
-      results[i] = await fn(items[i], i);
+    for (const [index, item] of entries) {
+      results[index] = await fn(item, index);
       onProgress?.(++done, items.length);
     }
   };

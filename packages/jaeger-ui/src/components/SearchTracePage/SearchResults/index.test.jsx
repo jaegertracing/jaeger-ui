@@ -2,14 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, fireEvent, cleanup, act, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
-import { createBlob, UnconnectedSearchResults as SearchResults, SelectSort } from '.';
+import { UnconnectedSearchResults as SearchResults, SelectSort } from '.';
 import * as track from './index.track';
 import * as orderBy from '../../../model/order-by';
-import readJsonFile from '../../../utils/readJsonFile';
 import { getUrl } from '../url';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';
@@ -49,22 +48,8 @@ vi.mock('./ResultItem', () =>
 
 vi.mock('./ScatterPlot', () => mockDefault(jest.fn(props => <div data-testid="scatterplot" {...props} />)));
 
-const mockFetchTrace = jest.fn();
-vi.mock('../../../api/jaeger', () => ({ default: { fetchTrace: (...args) => mockFetchTrace(...args) } }));
-
 vi.mock('./DownloadResults', () =>
-  mockDefault(
-    jest.fn(({ progress, onDownloadResultsClicked }) => (
-      <button
-        type="button"
-        data-testid="download"
-        data-progress={progress}
-        onClick={onDownloadResultsClicked}
-      >
-        download
-      </button>
-    ))
-  )
+  mockDefault(jest.fn(() => <button type="button" data-testid="download" />))
 );
 
 vi.mock('../../DeepDependencies/traces', () => mockDefault(jest.fn(() => <div data-testid="ddg" />)));
@@ -490,71 +475,6 @@ describe('<SearchResults>', () => {
 
         rerender(withRouter(<SearchResults {...baseProps} location={{ search: '?view=ddg' }} />));
         expect(screen.queryByTestId('download')).not.toBeInTheDocument();
-      });
-
-      it('when click on DownloadResults then call download function', () => {
-        const orig = global.Blob;
-        global.Blob = class {
-          constructor(text, options) {
-            this.text = text;
-            this.options = options;
-          }
-        };
-        URL.createObjectURL = jest.fn(() => 'blob://url');
-        URL.revokeObjectURL = jest.fn();
-
-        renderWithRouter(<SearchResults {...baseProps} location={{ search: '?view=traces' }} />);
-        fireEvent.click(screen.getByTestId('download'));
-
-        expect(URL.createObjectURL).toHaveBeenCalledTimes(1);
-        const blobArg = URL.createObjectURL.mock.calls[0][0];
-
-        expect(blobArg.text).toEqual([`{"data":${JSON.stringify(baseRawTraces)}}`]);
-        expect(URL.revokeObjectURL).toHaveBeenCalledTimes(1);
-
-        global.Blob = orig;
-      });
-
-      it('fetches full traces from backend when rawTraces is empty', async () => {
-        const rawTrace = { traceID: 'a', spans: [] };
-        mockFetchTrace.mockResolvedValue({ data: [rawTrace] });
-
-        URL.createObjectURL = jest.fn(() => 'blob://url');
-        URL.revokeObjectURL = jest.fn();
-
-        renderWithRouter(
-          <SearchResults {...baseProps} rawTraces={[]} location={{ search: '?view=traces' }} />
-        );
-
-        await act(async () => {
-          fireEvent.click(screen.getByTestId('download'));
-        });
-
-        await waitFor(() => expect(URL.createObjectURL).toHaveBeenCalledTimes(1));
-        expect(mockFetchTrace).toHaveBeenCalledWith('a');
-        expect(mockFetchTrace).toHaveBeenCalledWith('b');
-      });
-
-      it('when create a download file then it can be read back', async () => {
-        const content = `{"data":${JSON.stringify(baseRawTraces)}}`;
-        // Pass the blob content (string) directly to File to avoid JSDOM Blob-in-File issues if any
-        // createBlob returns a Blob. getting text from it.
-        const blob = createBlob(baseRawTraces);
-        // In JSDOM/Node, blob parts are stored. We can extract string.
-        // But here we rely on standard APIs.
-        // If createBlob returns a real JSDOM Blob, new File([blob]) should work.
-        // If it fails with [object Object], it might be that JSDOM File doesn't unwrap Blob parts recursively or correctly.
-        // Let's try to get text first.
-        const blobText = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = () => reject(reader.error);
-          reader.readAsText(blob);
-        });
-        const file = new File([blobText], 'test.json');
-
-        const contentFile = await readJsonFile({ file });
-        expect(JSON.stringify(contentFile)).toBe(content);
       });
     });
   });

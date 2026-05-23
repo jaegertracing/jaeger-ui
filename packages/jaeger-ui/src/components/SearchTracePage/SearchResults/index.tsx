@@ -2,14 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { Select } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
 import queryString from 'query-string';
 
-import JaegerAPI from '../../../api/jaeger';
-import { pooledMap } from '../../../utils/pooledMap';
 import AltViewOptions from './AltViewOptions';
 import DownloadResults from './DownloadResults';
 import DiffSelection from './DiffSelection';
@@ -79,52 +77,6 @@ export function SelectSort({ sortBy, handleSortChange }: SelectSortProps) {
   );
 }
 
-const getStripCircular = () => {
-  const cache = new Set();
-  return function (this: any, key: string, value: any) {
-    if (
-      key === 'childSpans' ||
-      key === 'process' ||
-      key === 'span' ||
-      key === 'subsidiarilyReferencedBy' ||
-      key === '_otelFacade' ||
-      key === 'traceName' ||
-      key === 'tracePageTitle' ||
-      key === 'traceEmoji' ||
-      key === 'services' ||
-      key === 'spanMap' ||
-      key === 'rootSpans' ||
-      key === 'orphanSpanCount' ||
-      key === 'endTime' ||
-      key === 'depth' ||
-      key === 'hasChildren' ||
-      key === 'relativeStartTime'
-    ) {
-      return;
-    }
-    // We need to strip duration and startTime from TraceData but not from SpanData.
-    // The TraceData object can be recognized by the presence of 'processes' field.
-    if ((key === 'duration' || key === 'startTime') && this.processes) {
-      return;
-    }
-
-    if (typeof value === 'object' && value !== null) {
-      if (cache.has(value)) {
-        // Circular reference found, discard key
-        return;
-      }
-      // Store value in our collection
-      cache.add(value);
-    }
-    return value;
-  };
-};
-
-export function createBlob(rawTraces: any[]) {
-  const stringified = JSON.stringify(rawTraces, getStripCircular());
-  return new Blob([`{"data":${stringified}}`], { type: 'application/json' });
-}
-
 export function UnconnectedSearchResults({
   diffCohort,
   disableComparisons,
@@ -176,40 +128,6 @@ export function UnconnectedSearchResults({
     trackAltView(view);
     navigate(getUrl({ ...urlState, view }));
   }, [location, navigate]);
-
-  // undefined = not downloading; 0–1 = fraction of traces fetched so far
-  const [downloadProgress, setDownloadProgress] = useState<number | undefined>(undefined);
-
-  const onDownloadResultsClicked = useCallback(async () => {
-    let traces = rawTraces;
-    if (traces.length === 0 && traceSummaries.length > 0) {
-      // API-only results: fetch with bounded concurrency so we report progress as responses
-      // arrive without overwhelming the backend. Cap at 6 — the HTTP/1.1 per-host limit,
-      // and a safe fanout for any Jaeger deployment regardless of HTTP version.
-      setDownloadProgress(0);
-      try {
-        traces = await pooledMap(
-          traceSummaries,
-          async s => {
-            const r = await JaegerAPI.fetchTrace(s.traceID);
-            return r?.data?.[0] ?? r;
-          },
-          6,
-          (done, total) => setDownloadProgress(done / total)
-        );
-      } finally {
-        setDownloadProgress(undefined);
-      }
-    }
-    const file = createBlob(traces);
-    const element = document.createElement('a');
-    element.href = URL.createObjectURL(file);
-    element.download = `traces-${Date.now()}.json`;
-    document.body.appendChild(element);
-    element.click();
-    URL.revokeObjectURL(element.href);
-    element.remove();
-  }, [rawTraces, traceSummaries]);
 
   const traceResultsView = queryString.parse(location.search).view !== 'ddg';
 
@@ -270,12 +188,7 @@ export function UnconnectedSearchResults({
             {traceSummaries.length} Trace{traceSummaries.length > 1 && 's'}
           </h2>
           {traceResultsView && <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />}
-          {traceResultsView && (
-            <DownloadResults
-              progress={downloadProgress}
-              onDownloadResultsClicked={onDownloadResultsClicked}
-            />
-          )}
+          {traceResultsView && <DownloadResults traceSummaries={traceSummaries} rawTraces={rawTraces} />}
           <AltViewOptions traceResultsView={traceResultsView} onDdgViewClicked={onDdgViewClicked} />
           {showStandaloneLink && (
             <Link
