@@ -131,18 +131,22 @@ export function SearchTracePageImpl() {
   // in API results; without dedup the list gets duplicate React keys and may render incorrectly.
   // `seen` is updated as each uploaded entry is accepted so duplicates within uploads are
   // also removed (not just duplicates between uploads and API results).
-  const traceSummaries = useMemo(() => {
+  //
+  // uploadedTraceIDs is derived from uniqueUploaded (not all uploadedSummaries) so that
+  // traces present in both API results and uploads are not incorrectly badged as "Uploaded"
+  // — the API result takes precedence and the badge should not appear on it.
+  const { traceSummaries, uploadedTraceIDs } = useMemo(() => {
     const seen = new Set(apiTraceSummaries.map(s => s.traceID));
     const uniqueUploaded = uploadedSummaries.filter(s => {
       if (seen.has(s.traceID)) return false;
       seen.add(s.traceID);
       return true;
     });
-    return [...apiTraceSummaries, ...uniqueUploaded];
+    return {
+      traceSummaries: [...apiTraceSummaries, ...uniqueUploaded],
+      uploadedTraceIDs: new Set(uniqueUploaded.map(s => s.traceID)),
+    };
   }, [apiTraceSummaries, uploadedSummaries]);
-
-  // Track which traceIDs came from file uploads so ResultItem can badge them.
-  const uploadedTraceIDs = useMemo(() => new Set(uploadedSummaries.map(s => s.traceID)), [uploadedSummaries]);
 
   const [sortBy, setSortBy] = useState(orderBy.MOST_RECENT);
 
