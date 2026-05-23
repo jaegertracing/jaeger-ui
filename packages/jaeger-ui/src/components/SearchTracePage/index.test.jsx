@@ -55,6 +55,8 @@ vi.mock('../../hooks/useTraceDiscovery', () => ({
   useServices: jest.fn(() => ({ data: [], isLoading: false })),
   useSpanNames: jest.fn(() => ({ data: [], isLoading: false })),
   useSearchTraces: (...args) => useSearchTracesMock(...args),
+  useIsSearchFetching: jest.fn(() => false),
+  invalidateTraceSummaries: jest.fn(() => Promise.resolve()),
 }));
 
 import React from 'react';

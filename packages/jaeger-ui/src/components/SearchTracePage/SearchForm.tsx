@@ -13,7 +13,7 @@ import { connect } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getUrl as getSearchUrl } from './url';
 import type { Dispatch } from 'redux';
-import { useIsFetching } from '@tanstack/react-query';
+import { useIsSearchFetching } from '../../hooks/useTraceDiscovery';
 import store from '../../utils/storage';
 
 import * as markers from './SearchForm.markers';
@@ -28,7 +28,6 @@ import { useConfig } from '../../hooks/useConfig';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 import { ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
-import { QUERY_KEY_TRACE_SUMMARIES } from './queryKeys';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
@@ -337,7 +336,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   initialValues,
   submitFormHandler,
 }) => {
-  const submitting = useIsFetching({ queryKey: QUERY_KEY_TRACE_SUMMARIES }) > 0;
+  const submitting = useIsSearchFetching();
   const navigate = useNavigate();
   const { useOpenTelemetryTerms: useOtelTerms, search } = useConfig();
   const searchMaxLookback: ILookbackOption | undefined = search?.maxLookback;

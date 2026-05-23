@@ -4,7 +4,9 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient, skipToken } from '@tanstack/react-query';
 import type { TraceSummary } from '../../types/trace-summary';
-import { QUERY_KEY_UPLOADED_SUMMARIES, QUERY_KEY_UPLOADED_RAW_TRACES } from './queryKeys';
+
+const UPLOADED_SUMMARIES_QUERY_KEY = ['uploadedSummaries'] as const;
+const UPLOADED_RAW_TRACES_QUERY_KEY = ['uploadedRawTraces'] as const;
 
 type UploadedTraces = {
   uploadedSummaries: TraceSummary[];
@@ -17,7 +19,7 @@ type UploadedTraces = {
  *
  * Both keys use skipToken (subscribe-only, no fetch) and gcTime: Infinity so the
  * data survives navigation away from the search page and is restored on Back.
- * gcTime: Infinity is safe here for the same reason as QUERY_KEY_TRACE_SUMMARIES: there
+ * gcTime: Infinity is safe here for the same reason as the trace summaries cache: there
  * is exactly one cache entry per key, not one per upload.
  *
  * When searchQueryKey changes to a new non-null value (i.e. the user submits a new
@@ -28,14 +30,14 @@ export function useUploadedTraces(searchQueryKey: string | null): UploadedTraces
   const queryClient = useQueryClient();
 
   const { data: uploadedSummaries = [] } = useQuery<TraceSummary[]>({
-    queryKey: QUERY_KEY_UPLOADED_SUMMARIES,
+    queryKey: UPLOADED_SUMMARIES_QUERY_KEY,
     queryFn: skipToken,
     staleTime: Infinity,
     gcTime: Infinity,
   });
 
   const { data: uploadedRawTraces = [] } = useQuery<unknown[]>({
-    queryKey: QUERY_KEY_UPLOADED_RAW_TRACES,
+    queryKey: UPLOADED_RAW_TRACES_QUERY_KEY,
     queryFn: skipToken,
     staleTime: Infinity,
     gcTime: Infinity,
@@ -53,18 +55,18 @@ export function useUploadedTraces(searchQueryKey: string | null): UploadedTraces
       return;
     }
     if (searchQueryKey !== null) {
-      queryClient.setQueryData(QUERY_KEY_UPLOADED_SUMMARIES, []);
-      queryClient.setQueryData(QUERY_KEY_UPLOADED_RAW_TRACES, []);
+      queryClient.setQueryData(UPLOADED_SUMMARIES_QUERY_KEY, []);
+      queryClient.setQueryData(UPLOADED_RAW_TRACES_QUERY_KEY, []);
     }
   }, [searchQueryKey, queryClient]);
 
   const handleTracesLoaded = useCallback(
     (summaries: TraceSummary[], rawTraces: unknown[]) => {
-      queryClient.setQueryData<TraceSummary[]>(QUERY_KEY_UPLOADED_SUMMARIES, prev => [
+      queryClient.setQueryData<TraceSummary[]>(UPLOADED_SUMMARIES_QUERY_KEY, prev => [
         ...(prev ?? []),
         ...summaries,
       ]);
-      queryClient.setQueryData<unknown[]>(QUERY_KEY_UPLOADED_RAW_TRACES, prev => [
+      queryClient.setQueryData<unknown[]>(UPLOADED_RAW_TRACES_QUERY_KEY, prev => [
         ...(prev ?? []),
         ...rawTraces,
       ]);

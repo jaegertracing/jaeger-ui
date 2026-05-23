@@ -17,7 +17,6 @@ import ErrorMessage from '../common/ErrorMessage';
 import { sortTraceSummaries } from '../../model/search';
 import FileLoader from './FileLoader';
 import { useUploadedTraces } from './useUploadedTraces';
-import { QUERY_KEY_TRACE_SUMMARIES } from './queryKeys';
 
 import './index.css';
 import JaegerLogo from '../../img/jaeger-logo.svg';
@@ -26,7 +25,7 @@ import { trackSortByChange } from './SearchForm.track';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { useEmbeddedState } from '../../stores/embedded-store';
 import { useShallow } from 'zustand/react/shallow';
-import { useSearchTraces } from '../../hooks/useTraceDiscovery';
+import { useSearchTraces, invalidateTraceSummaries } from '../../hooks/useTraceDiscovery';
 
 // export for tests
 export function SearchTracePageImpl() {
@@ -64,7 +63,7 @@ export function SearchTracePageImpl() {
   // immediate render while the background refetch completes.
   useEffect(() => {
     if (searchQueryKey !== null) {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY_TRACE_SUMMARIES });
+      invalidateTraceSummaries(queryClient);
     }
   }, [searchQueryKey, queryClient]);
 

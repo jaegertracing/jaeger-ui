@@ -1,17 +1,9 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-const { mockUseIsFetching } = vi.hoisted(() => ({
-  mockUseIsFetching: jest.fn().mockReturnValue(0),
+const { mockUseIsSearchFetching } = vi.hoisted(() => ({
+  mockUseIsSearchFetching: jest.fn().mockReturnValue(false),
 }));
-
-vi.mock('@tanstack/react-query', async () => {
-  const actual = await vi.importActual('@tanstack/react-query');
-  return {
-    ...actual,
-    useIsFetching: mockUseIsFetching,
-  };
-});
 
 vi.mock('../common/SearchableSelect', () => {
   const MockSearchableSelect = ({ onChange, 'data-testid': testId, disabled, value, ...props }) => {
@@ -50,6 +42,7 @@ vi.mock('../../hooks/useTraceDiscovery', () => ({
     ],
     isLoading: false,
   })),
+  useIsSearchFetching: mockUseIsSearchFetching,
 }));
 
 import React from 'react';
@@ -761,14 +754,14 @@ describe('SearchForm onChange handlers', () => {
   });
 });
 
-describe('submitting state from useIsFetching', () => {
+describe('submitting state from useIsSearchFetching', () => {
   afterEach(() => {
     cleanup();
-    mockUseIsFetching.mockReturnValue(0);
+    mockUseIsSearchFetching.mockReturnValue(false);
   });
 
   it('disables submit button while traceSummaries query is in flight', async () => {
-    mockUseIsFetching.mockReturnValue(1);
+    mockUseIsSearchFetching.mockReturnValue(true);
 
     const { container } = renderForm(<SearchForm {...defaultProps} initialValues={{ service: 'svcA' }} />);
 
