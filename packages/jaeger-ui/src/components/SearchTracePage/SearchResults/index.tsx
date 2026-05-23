@@ -182,15 +182,27 @@ export function UnconnectedSearchResults({
   const onDownloadResultsClicked = useCallback(async () => {
     let traces = rawTraces;
     if (traces.length === 0 && traceSummaries.length > 0) {
-      // API-only results: fetch full traces sequentially so we can report progress.
+      // API-only results: fetch with bounded concurrency so we report progress as responses
+      // arrive without overwhelming the backend. Cap at 6 — the HTTP/1.1 per-host limit,
+      // and a safe fanout for any Jaeger deployment regardless of HTTP version.
+      const CONCURRENCY = 6;
       setDownloadProgress(0);
       try {
-        const fetched: any[] = [];
-        for (let i = 0; i < traceSummaries.length; i++) {
-          const r = await JaegerAPI.fetchTrace(traceSummaries[i].traceID);
-          fetched.push(r?.data?.[0] ?? r);
-          setDownloadProgress((i + 1) / traceSummaries.length);
-        }
+        const fetched: unknown[] = Array.from({ length: traceSummaries.length });
+        let done = 0;
+        // Run tasks in windows of CONCURRENCY; each slot refills as soon as it finishes.
+        const queue = traceSummaries.map((s, i) => async () => {
+          const r = await JaegerAPI.fetchTrace(s.traceID);
+          fetched[i] = r?.data?.[0] ?? r;
+          setDownloadProgress(++done / traceSummaries.length);
+        });
+        let next = 0;
+        const worker = async () => {
+          while (next < queue.length) {
+            await queue[next++]();
+          }
+        };
+        await Promise.all(Array.from({ length: Math.min(CONCURRENCY, queue.length) }, worker));
         traces = fetched;
       } finally {
         setDownloadProgress(undefined);
