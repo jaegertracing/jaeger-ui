@@ -172,7 +172,7 @@ describe('<SearchTracePage>', () => {
   });
 
   it('shows an error message if the search query returns an error', () => {
-    useSearchTracesMock.mockReturnValue({ data: [], isLoading: false, error: new Error('big-error') });
+    useSearchTracesMock.mockReturnValue({ data: [], isFetching: false, error: new Error('big-error') });
     const { container } = render(
       <AllProvider initialEntries={['/search?service=svc-a']}>
         <SearchTracePage />
