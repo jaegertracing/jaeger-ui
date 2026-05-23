@@ -16,45 +16,8 @@ type Props = {
   rawTraces: unknown[];
 };
 
-const getStripCircular = () => {
-  const cache = new Set();
-  return function (this: unknown, key: string, value: unknown) {
-    if (
-      key === 'childSpans' ||
-      key === 'process' ||
-      key === 'span' ||
-      key === 'subsidiarilyReferencedBy' ||
-      key === '_otelFacade' ||
-      key === 'traceName' ||
-      key === 'tracePageTitle' ||
-      key === 'traceEmoji' ||
-      key === 'services' ||
-      key === 'spanMap' ||
-      key === 'rootSpans' ||
-      key === 'orphanSpanCount' ||
-      key === 'endTime' ||
-      key === 'depth' ||
-      key === 'hasChildren' ||
-      key === 'relativeStartTime'
-    ) {
-      return undefined;
-    }
-    // Strip duration and startTime from TraceData (recognisable by the 'processes' field)
-    // but not from SpanData.
-    if ((key === 'duration' || key === 'startTime') && (this as Record<string, unknown>).processes) {
-      return undefined;
-    }
-    if (typeof value === 'object' && value !== null) {
-      if (cache.has(value)) return undefined;
-      cache.add(value);
-    }
-    return value;
-  };
-};
-
 export function createBlob(traces: unknown[]) {
-  const stringified = JSON.stringify(traces, getStripCircular());
-  return new Blob([`{"data":${stringified}}`], { type: 'application/json' });
+  return new Blob([`{"data":${JSON.stringify(traces)}}`], { type: 'application/json' });
 }
 
 export default function DownloadResults({ traceSummaries, rawTraces }: Props) {
