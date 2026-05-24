@@ -130,7 +130,7 @@ export function SearchTracePageImpl() {
   const showLogo = isHomepage && !hasTraceResults && !loadingTraces && !errors.length && !embedded;
 
   const tabItems = [];
-  // Always show the search form, loading is handled by SearchForm
+  // Search tab is always shown; trace-result loading is shown in SearchResults
   tabItems.push({
     label: 'Search',
     key: 'searchForm',
