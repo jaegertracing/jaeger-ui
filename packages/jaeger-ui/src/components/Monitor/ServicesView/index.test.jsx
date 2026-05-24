@@ -7,7 +7,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 import { MonitorATMServicesViewImpl as MonitorATMServicesView, mapStateToProps, mapDispatchToProps } from '.';
-import { getLoopbackInterval, yAxisTickFormat } from './timeFrameUtils';
+import { getLoopbackInterval, timeFrameOptions, yAxisTickFormat } from './timeFrameUtils';
 import { useServices } from '../../../hooks/useTraceDiscovery';
 import {
   originInitialState,
@@ -803,6 +803,23 @@ describe('getLoopbackInterval()', () => {
 
   it('timeframe exists', () => {
     expect(getLoopbackInterval(48 * 3600000)).toBe('last 2 days');
+  });
+});
+
+describe('timeFrameOptions', () => {
+  it('includes shared search time ranges through 2 days', () => {
+    expect(timeFrameOptions.map(({ value }) => value)).toEqual([
+      5 * 60_000,
+      15 * 60_000,
+      30 * 60_000,
+      3600000,
+      2 * 3600000,
+      3 * 3600000,
+      6 * 3600000,
+      12 * 3600000,
+      24 * 3600000,
+      48 * 3600000,
+    ]);
   });
 });
 
