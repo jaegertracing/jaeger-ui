@@ -1079,9 +1079,7 @@ export function useSearchTraces(query: SearchQuery | null): UseQueryResult<Trace
 
 1. ✅ *URL is not preserved across navigation* — **fixed**. The cached value is now `{ results: TraceSummary[], query: SearchQuery }` rather than `TraceSummary[]` alone. When `SearchTracePage` mounts with a bare `/search` URL but finds a cached query, it restores the URL client-side via `navigate(getUrl(cachedQuery), { replace: true })` — no reload, no refetch, no flicker.
 
-2. *Back button does not match URL after multiple searches.* If the user submits three searches in a row, the browser history contains three different `/search?...` URLs. Hitting Back navigates to the previous URL but the singleton cache still holds the most recent results — the URL and the displayed results are out of sync.
-
-   Proposed fix: switch to a parameterized query key `['traceSummaries', query]` combined with an effect that purges all sibling cache entries whenever the active query changes. This makes each search a distinct cache entry while enforcing the singleton invariant, so Back navigates to the right URL and refetches the matching results if they were purged. The stored `query` from fix 1 above can also be used to detect when a bare-URL return should restore vs. refetch.
+2. ✅ *Back button does not match URL after multiple searches* — **fixed**. When `SearchTracePage` mounts with a URL-derived query that differs from the cached query (detected via `isSameQuery`), it calls `useExecuteSearch` to refetch with the URL's query. This ensures the displayed results always match the URL, at the cost of a network request when navigating Back to a previous search.
 
 `SearchTracePage` derives URL query params from `useLocation()` directly (no Redux `mapStateToProps`).
 

@@ -11,7 +11,7 @@ import { useConfig } from '../../hooks/useConfig';
 
 import SearchForm from './SearchForm';
 import SearchResults from './SearchResults';
-import { getUrlState, searchQueryFromUrl, getUrl } from './url';
+import { getUrlState, searchQueryFromUrl, getUrl, isSameQuery } from './url';
 import * as orderBy from '../../model/order-by';
 import ErrorMessage from '../common/ErrorMessage';
 import { sortTraceSummaries } from '../../model/search';
@@ -25,7 +25,7 @@ import { trackSortByChange } from './SearchForm.track';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { useEmbeddedState } from '../../stores/embedded-store';
 import { useShallow } from 'zustand/react/shallow';
-import { useSearchTraces } from '../../hooks/useTraceDiscovery';
+import { useSearchTraces, useExecuteSearch } from '../../hooks/useTraceDiscovery';
 
 // export for tests
 export function SearchTracePageImpl() {
@@ -43,6 +43,7 @@ export function SearchTracePageImpl() {
   const navigate = useNavigate();
 
   const { data: searchData, isFetching: loadingTraces, error: searchError } = useSearchTraces(searchQuery);
+  const executeSearch = useExecuteSearch();
 
   // When the user returns to /search via TopNav (URL loses query params), restore the URL
   // from the cached query so the address bar remains shareable and bookmarkable.
@@ -52,6 +53,14 @@ export function SearchTracePageImpl() {
       navigate(getUrl(searchData.query as Parameters<typeof getUrl>[0]), { replace: true });
     }
   }, [searchQuery, searchData?.query, navigate]);
+
+  // When the URL query differs from the cached query (e.g. Back button after multiple
+  // searches), refetch so the displayed results match the URL.
+  useEffect(() => {
+    if (searchQuery && searchData?.query && !isSameQuery(searchQuery, searchData.query)) {
+      executeSearch(searchQuery).catch(() => {});
+    }
+  }, [searchQuery, searchData?.query, executeSearch]);
 
   const { uploadedSummaries, uploadedRawTraces, handleTracesLoaded } = useUploadedTraces();
 
