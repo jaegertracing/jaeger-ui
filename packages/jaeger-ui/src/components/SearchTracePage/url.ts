@@ -100,7 +100,7 @@ export function searchQueryFromUrl(search: string): SearchQuery | null {
   if (!q.service && !q.start && !q.end && !q.traceID) return null;
   return {
     service: firstOf(q?.service),
-    operation: typeof q.operation === 'string' ? q.operation : undefined,
+    operation: firstOf(q.operation),
     start: firstOf(q.start) ?? '',
     end: firstOf(q.end) ?? '',
     limit: (() => {
