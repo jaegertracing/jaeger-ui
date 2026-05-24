@@ -44,8 +44,9 @@ const TRACE_SUMMARIES_QUERY_KEY = ['traceSummaries'] as const;
  * - Form submit: `useExecuteSearch` calls `queryClient.fetchQuery()` with the query built
  *   from form state, passing `staleTime: 0` to force a fetch regardless of cache state.
  *   This bypasses the `queryFn` closure here (which still holds the previous query until
- *   the next render) and is safe to call synchronously in the event handler before React
- *   has processed the `navigate()` call. `staleTime: 0` only governs the fetch decision;
+ *   the next render). Because the query is passed as an argument at call time, render
+ *   timing is irrelevant — the correct query is used regardless of when React processes
+ *   the `navigate()` call. `staleTime: 0` only governs the fetch decision;
  *   once the result is written to the cache, this hook's `staleTime: Infinity` takes over
  *   for all subsequent reads.
  *
