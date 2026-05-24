@@ -203,6 +203,14 @@ describe('lookback utils', () => {
         }
       });
     });
+
+    it('falls back to default lookback for unsupported units', () => {
+      expect(nowInMicroseconds - lookbackToTimestamp('99x', now)).toBe(hourInMicroseconds);
+    });
+
+    it('falls back to default lookback for invalid amounts', () => {
+      expect(nowInMicroseconds - lookbackToTimestamp('xh', now)).toBe(hourInMicroseconds);
+    });
   });
 
   describe('applyAdjustTime', () => {

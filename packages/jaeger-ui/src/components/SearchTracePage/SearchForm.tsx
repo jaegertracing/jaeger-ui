@@ -42,6 +42,8 @@ const LOOKBACK_UNIT_BY_SUFFIX: Record<string, ManipulateType> = {
   d: 'day',
   w: 'week',
 };
+const DEFAULT_LOOKBACK_VALUE = parseInt(DEFAULT_LOOKBACK, 10);
+const DEFAULT_LOOKBACK_UNIT = LOOKBACK_UNIT_BY_SUFFIX[DEFAULT_LOOKBACK.slice(-1)] ?? 'hour';
 
 interface TimeStampParams {
   startDate: string;
@@ -86,11 +88,11 @@ export function convTagsLogfmt(tags: string | null | undefined): string | null {
 }
 
 export function lookbackToTimestamp(lookback: string, from: Date | number): number {
-  const unit = LOOKBACK_UNIT_BY_SUFFIX[lookback.slice(-1)];
-  if (!unit) {
-    throw new Error(`Unsupported lookback unit: ${lookback}`);
-  }
-  return dayjs(from).subtract(parseInt(lookback, 10), unit).valueOf() * 1000;
+  const parsedValue = parseInt(lookback, 10);
+  const parsedUnit = LOOKBACK_UNIT_BY_SUFFIX[lookback.slice(-1)];
+  const value = parsedUnit && !Number.isNaN(parsedValue) ? parsedValue : DEFAULT_LOOKBACK_VALUE;
+  const unit = parsedUnit ?? DEFAULT_LOOKBACK_UNIT;
+  return dayjs(from).subtract(value, unit).valueOf() * 1000;
 }
 
 interface ILookbackOption {
