@@ -97,7 +97,7 @@ function firstOf(v: string | string[] | undefined | Record<string, string>): str
  */
 export function searchQueryFromUrl(search: string): SearchQuery | null {
   const q = getUrlState(search);
-  if (Object.keys(q).length === 0) return null;
+  if (!q.service && !q.start && !q.end && !q.traceID) return null;
   return {
     service: firstOf(q?.service),
     operation: typeof q.operation === 'string' ? q.operation : undefined,
