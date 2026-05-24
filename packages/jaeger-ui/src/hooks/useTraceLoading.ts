@@ -24,23 +24,6 @@ export function populateTraceCache(trace: IOtelTrace): void {
   queryClient.setQueryData(TRACE_QUERY_KEY(trace.traceID), trace);
 }
 
-/**
- * Reads traces directly from the React Query cache for the given IDs.
- * Returns a Map in the same FetchedTrace shape as useTraces(), but without
- * going through the fetch lifecycle — no isPending flash, no refetch.
- * IDs not present in cache are omitted from the Map.
- */
-export function useCachedTraces(ids: string[]): Map<string, FetchedTrace> {
-  return useMemo(() => {
-    const map = new Map<string, FetchedTrace>();
-    for (const id of ids) {
-      const data = getCachedTrace(id);
-      if (data) map.set(id, { id, data, state: fetchedState.DONE });
-    }
-    return map;
-  }, [ids]);
-}
-
 // TODO: staleTime: Infinity is incorrect — Jaeger returns partial traces if spans are still arriving
 // (availability over consistency). Instead, poll every 60s for up to 5 minutes after first load,
 // then stop. Use meta.firstFetchedAt (stamped at query creation, not updated on refetch) to track

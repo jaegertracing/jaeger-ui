@@ -59,15 +59,6 @@ export function useSearchTraces(query: SearchQuery | null): UseQueryResult<Trace
   });
 }
 
-/** Returns a stable callback that invalidates the trace summaries cache. */
-export function useInvalidateTraceSummaries(): () => Promise<void> {
-  const queryClient = useQueryClient();
-  return useCallback(
-    () => queryClient.invalidateQueries({ queryKey: TRACE_SUMMARIES_QUERY_KEY }),
-    [queryClient]
-  );
-}
-
 /**
  * Returns a stable callback that immediately fetches trace summaries for the
  * given query and writes the result into the singleton cache slot.
