@@ -1068,7 +1068,7 @@ export function useSearchTraces(query: SearchQuery | null): UseQueryResult<Trace
 
 **Keyed cache with single-slot invariant**: the query key is `['traceSummaries', query]`, which is standard React Query — a new key on form submit means a cache miss, so a fresh fetch fires with the correct query, with no closure race condition. A `useEffect` inside `useSearchTraces` evicts all cache entries whose key differs from the current query after each render, keeping at most one live entry at all times and bounding memory growth to a single slot regardless of how many distinct searches are submitted in a session. Similarly, `uploadedSummaries` and `uploadedRawTraces` use singleton cache keys.
 
-**Fetch model**: `SearchForm.handleSubmit` calls `navigate(url)`. The URL change causes `SearchTracePage` to re-render with a new `searchQuery` derived from `useLocation()`, which produces a new cache key in `useSearchTraces` — a miss — and React Query fires the fetch automatically. No imperative `fetchQuery` call is needed.
+**Fetch model**: `SearchForm.handleSubmit` calls `navigate(url)`. The URL change causes `SearchTracePage` to re-render with a new `searchQuery` derived from `useLocation()`, which produces a new cache key in `useSearchTraces` — a miss — and React Query fires the fetch automatically.
 
 **`staleTime` and `gcTime` semantics**:
 - `staleTime: Infinity` — data is never considered stale on its own; a new form submission produces a new key (cache miss), which is the only trigger for a re-fetch.
