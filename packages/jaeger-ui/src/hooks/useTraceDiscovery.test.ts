@@ -369,7 +369,7 @@ describe('useTraceDiscovery', () => {
       expect(result.current.data).toEqual({ results: mockSummaries, query });
     });
 
-    it('uses a fixed singleton queryKey', async () => {
+    it('uses a queryKey parameterized by the query', async () => {
       (jaegerClient.fetchTraceSummaries as ReturnType<typeof vi.fn>).mockResolvedValue([]);
 
       const { result } = renderHook(() => useSearchTraces(query), {
@@ -382,6 +382,7 @@ describe('useTraceDiscovery', () => {
 
       const queries = queryClient.getQueryCache().findAll({ queryKey: ['traceSummaries'] });
       expect(queries).toHaveLength(1);
+      expect(queries[0].queryKey).toEqual(['traceSummaries', query]);
     });
 
     it('handles errors from fetchTraceSummaries', async () => {

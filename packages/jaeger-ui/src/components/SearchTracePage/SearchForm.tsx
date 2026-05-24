@@ -13,7 +13,7 @@ import { connect } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getUrl as getSearchUrl } from './url';
 import type { Dispatch } from 'redux';
-import { useIsSearchFetching, useExecuteSearch } from '../../hooks/useTraceDiscovery';
+import { useIsSearchFetching } from '../../hooks/useTraceDiscovery';
 import { useClearUploadedTraces } from './useUploadedTraces';
 import store from '../../utils/storage';
 
@@ -353,7 +353,6 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
 }) => {
   const submitting = useIsSearchFetching();
   const navigate = useNavigate();
-  const executeSearch = useExecuteSearch();
   const clearUploadedTraces = useClearUploadedTraces();
   const { useOpenTelemetryTerms: useOtelTerms, search } = useConfig();
   const searchMaxLookback: ILookbackOption | undefined = search?.maxLookback;
@@ -415,21 +414,10 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
       e.preventDefault();
       const fields = formData as ISearchFormFields;
       const url = submitFormHandler(fields, searchAdjustEndTime, adjustTimeEnabled);
-      const query = buildSearchQuery(fields, searchAdjustEndTime, adjustTimeEnabled);
       clearUploadedTraces();
       navigate(url);
-      // Errors surface via useSearchTraces().error; suppress the unhandled rejection.
-      executeSearch(query).catch(() => {});
     },
-    [
-      formData,
-      searchAdjustEndTime,
-      adjustTimeEnabled,
-      submitFormHandler,
-      navigate,
-      clearUploadedTraces,
-      executeSearch,
-    ]
+    [formData, searchAdjustEndTime, adjustTimeEnabled, submitFormHandler, navigate, clearUploadedTraces]
   );
 
   const { service: selectedService, lookback: selectedLookback } = formData;

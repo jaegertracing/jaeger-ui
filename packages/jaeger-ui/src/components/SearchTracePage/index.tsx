@@ -25,7 +25,7 @@ import { trackSortByChange } from './SearchForm.track';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { useEmbeddedState } from '../../stores/embedded-store';
 import { useShallow } from 'zustand/react/shallow';
-import { useSearchTraces, useExecuteSearch } from '../../hooks/useTraceDiscovery';
+import { useSearchTraces } from '../../hooks/useTraceDiscovery';
 
 // export for tests
 export function SearchTracePageImpl() {
@@ -43,7 +43,6 @@ export function SearchTracePageImpl() {
   const navigate = useNavigate();
 
   const { data: searchData, isFetching: loadingTraces, error: searchError } = useSearchTraces(searchQuery);
-  const executeSearch = useExecuteSearch();
 
   // When the user returns to /search via TopNav (URL loses query params), restore the URL
   // from the cached query so the address bar remains shareable and bookmarkable.
@@ -53,14 +52,6 @@ export function SearchTracePageImpl() {
       navigate(getUrl(searchData.query as Parameters<typeof getUrl>[0]), { replace: true });
     }
   }, [searchQuery, searchData?.query, navigate]);
-
-  // When the URL query differs from the cached query (e.g. Back button after multiple
-  // searches), refetch so the displayed results match the URL.
-  useEffect(() => {
-    if (searchQuery && searchData?.query && !isSameQuery(searchQuery, searchData.query)) {
-      executeSearch(searchQuery).catch(() => {});
-    }
-  }, [searchQuery, searchData?.query, executeSearch]);
 
   const { uploadedSummaries, uploadedRawTraces, handleTracesLoaded } = useUploadedTraces();
 
@@ -139,9 +130,9 @@ export function SearchTracePageImpl() {
   }, []);
 
   // Computed synchronously so the loading indicator shows on the first render
-  // after Back navigation, before the useEffect fires and the fetch starts.
+  // after Back navigation, before the keyed cache fetch completes.
   // Without this, one render would flash the stale (wrong) results.
-  const isStale = !!(searchQuery && searchData?.query && !isSameQuery(searchQuery, searchData.query));
+  const isStale = searchQuery && searchData?.query && !isSameQuery(searchQuery, searchData.query);
 
   const errors: Array<{ message: string }> = searchError
     ? [{ message: searchError instanceof Error ? searchError.message : String(searchError) }]

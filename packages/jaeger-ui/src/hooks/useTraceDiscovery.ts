@@ -1,12 +1,15 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useCallback } from 'react';
+import { useEffect } from 'react';
 import { useQuery, useIsFetching, useQueryClient, skipToken, UseQueryResult } from '@tanstack/react-query';
 import { jaegerClient } from '../api/v3/client';
 import { localeStringComparator } from '../utils/sort';
+import { isSameQuery } from '../components/SearchTracePage/url';
 import type { SearchQuery } from '../types/search';
 import type { TraceSummary } from '../types/trace-summary';
+
+const TRACE_SUMMARIES_QUERY_KEY = 'traceSummaries';
 
 /**
  * React Query hook to fetch the list of services from the Jaeger API.
@@ -20,94 +23,6 @@ export function useServices(): UseQueryResult<string[]> {
     refetchOnWindowFocus: true,
     select: data => [...data].sort(localeStringComparator),
   });
-}
-
-// Private singleton key. All callers interact through the exported functions below
-// rather than referencing the key directly, so it can be changed in one place.
-const TRACE_SUMMARIES_QUERY_KEY = ['traceSummaries'] as const;
-
-/**
- * React Query hook to search for traces by query parameters.
- * Calls /api/v3/trace-summaries and returns TraceSummary[].
- * Pass null to suppress the fetch (e.g. on the homepage before the user submits a search).
- *
- * **Singleton cache design**: the query key is fixed rather than parameterized by the
- * search arguments. This reflects the actual usage pattern: there is only ever one
- * "current search result" in the application — the user does not navigate between
- * multiple saved searches, and the Back button should restore the same result set,
- * not a different one. A parameterized key would accumulate a separate cache entry for
- * every distinct search submitted during a session, causing unbounded memory growth.
- *
- * **Two-path fetch model**:
- * - Cold start (fresh tab, shared URL): `useSearchTraces` derives the query from the URL
- *   via `searchQueryFromUrl`, finds the cache empty, and fires the `queryFn` directly.
- * - Form submit: `useExecuteSearch` calls `queryClient.fetchQuery()` with the query built
- *   from form state, passing `staleTime: 0` to force a fetch regardless of cache state.
- *   This bypasses the `queryFn` closure here (which still holds the previous query until
- *   the next render). Because the query is passed as an argument at call time, render
- *   timing is irrelevant — the correct query is used regardless of when React processes
- *   the `navigate()` call. `staleTime: 0` only governs the fetch decision;
- *   once the result is written to the cache, this hook's `staleTime: Infinity` takes over
- *   for all subsequent reads.
- *
- * **staleTime: Infinity** — data is never considered stale on its own; staleness is driven
- * entirely by explicit form submission, not elapsed time. This also ensures the URL-sharing
- * case (new tab) does not trigger an unnecessary background refetch after initial load.
- *
- * **gcTime: Infinity** — React Query starts the eviction countdown when the last observer
- * unsubscribes (i.e. SearchTracePage unmounts on navigation). With the default gcTime of
- * 5 minutes, a user spending more than 5 minutes on a trace page would lose the cached
- * results and see a fresh fetch on Back. `gcTime: Infinity` prevents that. Safe here
- * because there is exactly one cache entry — not one per query — so memory growth is bounded.
- * Note: `fetchQuery` is not an observer and does not affect gcTime; the protection relies
- * on this hook being mounted in SearchTracePage whenever the user can navigate Back.
- */
-export type TraceSummariesResult = {
-  results: TraceSummary[];
-  query: SearchQuery;
-};
-
-export function useSearchTraces(query: SearchQuery | null): UseQueryResult<TraceSummariesResult> {
-  return useQuery({
-    queryKey: TRACE_SUMMARIES_QUERY_KEY,
-    queryFn: query
-      ? async () => ({ results: await jaegerClient.fetchTraceSummaries(query), query })
-      : skipToken,
-    staleTime: Infinity,
-    gcTime: Infinity,
-  });
-}
-
-/**
- * Returns a stable callback that immediately fetches trace summaries for the
- * given query and writes the result into the singleton cache slot.
- *
- * Called from SearchForm.handleSubmit with the query derived directly from form
- * state (not from the URL). This avoids a race condition where invalidateQueries
- * would trigger a refetch via the queryFn closure in useSearchTraces — which still
- * holds the previous query until React processes the navigate() call.
- *
- * staleTime: 0 forces a fetch regardless of what is currently cached. It only
- * affects the fetch decision; once the result is written, useSearchTraces takes
- * over with staleTime: Infinity for all subsequent reads.
- */
-export function useExecuteSearch(): (query: SearchQuery) => Promise<void> {
-  const queryClient = useQueryClient();
-  return useCallback(
-    async (query: SearchQuery) => {
-      await queryClient.fetchQuery({
-        queryKey: TRACE_SUMMARIES_QUERY_KEY,
-        queryFn: async () => ({ results: await jaegerClient.fetchTraceSummaries(query), query }),
-        staleTime: 0,
-      });
-    },
-    [queryClient]
-  );
-}
-
-/** Returns true while a trace summaries fetch is in flight. */
-export function useIsSearchFetching(): boolean {
-  return useIsFetching({ queryKey: TRACE_SUMMARIES_QUERY_KEY }) > 0;
 }
 
 /**
@@ -134,4 +49,83 @@ export function useSpanNames(
       return [...filtered].sort((a, b) => localeStringComparator(a.name, b.name));
     },
   });
+}
+
+export type TraceSummariesResult = {
+  results: TraceSummary[];
+  query: SearchQuery;
+};
+
+/**
+ * React Query hook to search for traces by query parameters.
+ * Calls /api/v3/trace-summaries and returns TraceSummary[].
+ * Pass null to suppress the fetch (e.g. on the homepage before the user submits a search).
+ *
+ * **Keyed cache design**: the query key is `[TRACE_SUMMARIES_QUERY_KEY, query]` so each distinct
+ * search gets its own cache entry. This is standard React Query — a new key means a cache
+ * miss, so navigating to a new URL triggers a fresh fetch.
+ *
+ * **Single-slot invariant**: on every render where `query` is non-null, a `useEffect`
+ * evicts all cache entries whose key differs from the current query. This keeps at most one
+ * live entry in the cache at any time — no unbounded memory growth across a session.
+ *
+ * **query === null (bare /search)**: the hook finds the most-recently-updated cache entry
+ * (by `dataUpdatedAt`), extracts its query as `effectiveQuery`, and subscribes `useQuery`
+ * to that key — so the caller sees the cached results and can restore the URL from `data.query`.
+ *
+ * **staleTime: Infinity** — data is never considered stale on its own; staleness is driven
+ * entirely by explicit form submission (navigate to new URL → new key → cache miss).
+ *
+ * **gcTime: Infinity** — prevents eviction while SearchTracePage is unmounted (e.g. user is
+ * on a trace detail page). Safe because the single-slot invariant bounds memory to one entry.
+ */
+export function useSearchTraces(query: SearchQuery | null): UseQueryResult<TraceSummariesResult> {
+  const queryClient = useQueryClient();
+
+  // When query is null (bare /search after TopNav click), find the most recently updated
+  // cache entry and subscribe to it so the component can restore the URL from data.query.
+  // Read before the eviction effect so we don't race against our own cleanup.
+  const effectiveQuery =
+    query ??
+    (() => {
+      const entries = queryClient
+        .getQueryCache()
+        .findAll({ queryKey: [TRACE_SUMMARIES_QUERY_KEY], exact: false });
+      if (entries.length === 0) return null;
+      const mostRecent = entries.reduce((latest, current) =>
+        current.state.dataUpdatedAt > latest.state.dataUpdatedAt ? current : latest
+      );
+      return (mostRecent.state.data as TraceSummariesResult | undefined)?.query ?? null;
+    })();
+
+  // Keep at most one cache entry: evict entries that don't match the effective query.
+  useEffect(() => {
+    if (!effectiveQuery) return;
+    queryClient
+      .getQueryCache()
+      .findAll({ queryKey: [TRACE_SUMMARIES_QUERY_KEY], exact: false })
+      .forEach(entry => {
+        if (!isSameQuery(entry.queryKey[1] as SearchQuery, effectiveQuery)) {
+          queryClient.removeQueries({ queryKey: entry.queryKey, exact: true });
+        }
+      });
+  }, [effectiveQuery, queryClient]);
+
+  return useQuery({
+    queryKey: [TRACE_SUMMARIES_QUERY_KEY, effectiveQuery],
+    queryFn: effectiveQuery
+      ? async () =>
+          ({
+            results: await jaegerClient.fetchTraceSummaries(effectiveQuery),
+            query: effectiveQuery,
+          }) satisfies TraceSummariesResult
+      : skipToken,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+}
+
+/** Returns true while a trace summaries fetch is in flight. */
+export function useIsSearchFetching(): boolean {
+  return useIsFetching({ queryKey: [TRACE_SUMMARIES_QUERY_KEY] }) > 0;
 }
