@@ -28,6 +28,7 @@ dayjs.extend(relativeTime);
 type Props = {
   durationPercent: number;
   isInDiffCohort: boolean;
+  isUploaded?: boolean;
   linkTo: TracePageLink;
   toggleComparison: (traceID: string) => void;
   traceSummary: TraceSummary;
@@ -39,6 +40,7 @@ const trackTraceConversions = () => trackConversions(EAltViewActions.Traces);
 export default function ResultItem({
   durationPercent,
   isInDiffCohort,
+  isUploaded,
   linkTo,
   toggleComparison,
   traceSummary,
@@ -89,6 +91,11 @@ export default function ResultItem({
                   Incomplete
                 </Tag>
               </Tooltip>
+            )}
+            {isUploaded && (
+              <Tag className="ub-m1" color="blue" variant="outlined">
+                Uploaded
+              </Tag>
             )}
           </Col>
           <Col xs={24} sm={16} className="ub-p2">

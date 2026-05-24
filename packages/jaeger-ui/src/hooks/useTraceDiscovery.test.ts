@@ -320,14 +320,14 @@ describe('useTraceDiscovery', () => {
   describe('useSearchTraces', () => {
     const query: SearchQuery = {
       service: 'my-svc',
-      operation: null,
+      operation: undefined,
       start: '0',
       end: '0',
       limit: 20,
       lookback: '1h',
       minDuration: undefined,
       maxDuration: undefined,
-      tags: null,
+      tags: undefined,
     };
 
     it('is disabled when query is null', () => {
@@ -369,7 +369,7 @@ describe('useTraceDiscovery', () => {
       expect(result.current.data).toEqual(mockSummaries);
     });
 
-    it('uses queryKey that includes the query object', async () => {
+    it('uses a fixed singleton queryKey', async () => {
       (jaegerClient.fetchTraceSummaries as ReturnType<typeof vi.fn>).mockResolvedValue([]);
 
       const { result } = renderHook(() => useSearchTraces(query), {
@@ -380,7 +380,7 @@ describe('useTraceDiscovery', () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      const queries = queryClient.getQueryCache().findAll({ queryKey: ['traceSummaries', query] });
+      const queries = queryClient.getQueryCache().findAll({ queryKey: ['traceSummaries'] });
       expect(queries).toHaveLength(1);
     });
 

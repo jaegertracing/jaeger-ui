@@ -259,14 +259,14 @@ describe('JaegerClient', () => {
   describe('fetchTraceSummaries', () => {
     const query = {
       service: 'my-svc',
-      operation: null,
+      operation: undefined,
       start: '1700000000000000',
       end: '1700000060000000',
       limit: 20,
       lookback: '1h',
       minDuration: undefined,
       maxDuration: undefined,
-      tags: null,
+      tags: undefined,
     };
 
     const mockApiSummary = {
