@@ -10,10 +10,6 @@ vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
 }));
 
-vi.mock('react-redux', () => ({
-  useSelector: fn => fn({ trace: { search: { results: [] } } }),
-}));
-
 vi.mock('../../hooks/useTraceLoading', () => ({
   useTraces: () => new Map(),
 }));
@@ -45,7 +41,7 @@ describe('TracesDdgImpl', () => {
     const location = { search };
 
     const { getByTestId } = render(
-      <TracesDdgImpl location={location} propName0="propValue0" propName1="propValue1" />
+      <TracesDdgImpl location={location} traceIDs={[]} propName0="propValue0" propName1="propValue1" />
     );
 
     const [firstArg] = DeepDependencyGraphPageImpl.mock.calls[0];
@@ -74,7 +70,7 @@ describe('TracesDdgImpl', () => {
         jest.spyOn(url, 'sanitizeUrlState').mockImplementation(u => u);
         DeepDependencyGraphPageImpl.mockClear();
 
-        render(<TracesDdgImpl location={{ search: '' }} />);
+        render(<TracesDdgImpl location={{ search: '' }} traceIDs={[]} />);
 
         const [firstArg] = DeepDependencyGraphPageImpl.mock.calls[0];
         expect(firstArg.showOp).toBe(showOp === undefined ? focalOp !== undefined : showOp);
@@ -93,14 +89,14 @@ describe('TracesDdgImpl', () => {
 
     jest.spyOn(url, 'getUrlState').mockReturnValue({ service: 'svc', operation: 'op' });
     DeepDependencyGraphPageImpl.mockClear();
-    render(<TracesDdgImpl location={{ search: '' }} />);
+    render(<TracesDdgImpl location={{ search: '' }} traceIDs={[]} />);
     const [withService] = DeepDependencyGraphPageImpl.mock.calls[0];
     expect(withService.graph).toBeDefined();
     expect(withService.graphState).toBeDefined();
 
     jest.spyOn(url, 'getUrlState').mockReturnValue({ service: undefined });
     DeepDependencyGraphPageImpl.mockClear();
-    render(<TracesDdgImpl location={{ search: '' }} />);
+    render(<TracesDdgImpl location={{ search: '' }} traceIDs={[]} />);
     const [withoutService] = DeepDependencyGraphPageImpl.mock.calls[0];
     expect(withoutService.graph).toBeUndefined();
     expect(withoutService.graphState).toBeUndefined();

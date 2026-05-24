@@ -132,6 +132,36 @@ it('passes router state to destination route when linkTo is a TracePageLink', as
   );
 });
 
+it('renders Uploaded tag when isUploaded is true', () => {
+  renderWithRouter(
+    <ResultItem
+      traceSummary={traceSummary}
+      durationPercent={50}
+      linkTo={{ pathname: '/' }}
+      toggleComparison={() => {}}
+      isInDiffCohort={false}
+      disableComparision={false}
+      isUploaded
+    />
+  );
+  expect(screen.getByText('Uploaded')).toBeInTheDocument();
+});
+
+it('does not render Uploaded tag when isUploaded is false', () => {
+  renderWithRouter(
+    <ResultItem
+      traceSummary={traceSummary}
+      durationPercent={50}
+      linkTo={{ pathname: '/' }}
+      toggleComparison={() => {}}
+      isInDiffCohort={false}
+      disableComparision={false}
+      isUploaded={false}
+    />
+  );
+  expect(screen.queryByText('Uploaded')).not.toBeInTheDocument();
+});
+
 it('calls trackConversions on click', () => {
   const spy = jest.spyOn(tracking, 'trackConversions');
   renderWithRouter(
