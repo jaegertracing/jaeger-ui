@@ -54,8 +54,8 @@ export function SearchTracePageImpl() {
   // where invalidation triggers a fetch with the previous query's closure.
   // isHomepage guard: skip invalidation when there is no search query (homepage).
   useEffect(() => {
-    if (!isHomepage) invalidateTraceSummaries();
-  }, [location.search, invalidateTraceSummaries, isHomepage]);
+    invalidateTraceSummaries();
+  }, [location.search, invalidateTraceSummaries]);
 
   const { uploadedSummaries, uploadedRawTraces, handleTracesLoaded } = useUploadedTraces();
 
