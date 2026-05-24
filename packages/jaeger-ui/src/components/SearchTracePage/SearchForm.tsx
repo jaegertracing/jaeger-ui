@@ -263,7 +263,7 @@ interface ISearchFormFields {
   lookback: string;
 }
 
-export function buildSearchQuery(
+function buildSearchQuery(
   fields: ISearchFormFields,
   adjustTime: string | null | undefined,
   adjustTimeEnabled: boolean
@@ -418,7 +418,8 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
       const query = buildSearchQuery(fields, searchAdjustEndTime, adjustTimeEnabled);
       clearUploadedTraces();
       navigate(url);
-      executeSearch(query);
+      // Errors surface via useSearchTraces().error; suppress the unhandled rejection.
+      executeSearch(query).catch(() => {});
     },
     [
       formData,
