@@ -55,15 +55,26 @@ export function useUploadedTraces(): UploadedTraces {
     (summaries: TraceSummary[], rawTraces: unknown[]) => {
       queryClient.setQueryData<TraceSummary[]>(UPLOADED_SUMMARIES_QUERY_KEY, prev => {
         const existing = prev ?? [];
-        const existingIDs = new Set(existing.map(s => s.traceID));
-        return [...existing, ...summaries.filter(s => !existingIDs.has(s.traceID))];
+        const seen = new Set(existing.map(s => s.traceID));
+        const incoming = summaries.filter(s => {
+          if (seen.has(s.traceID)) return false;
+          seen.add(s.traceID);
+          return true;
+        });
+        return [...existing, ...incoming];
       });
       queryClient.setQueryData<unknown[]>(UPLOADED_RAW_TRACES_QUERY_KEY, prev => {
         const existing = prev ?? [];
         const traceIDOf = (r: unknown) =>
           r != null && typeof r === 'object' ? String((r as Record<string, unknown>).traceID) : '';
-        const existingIDs = new Set(existing.map(traceIDOf));
-        return [...existing, ...rawTraces.filter(r => !existingIDs.has(traceIDOf(r)))];
+        const seen = new Set(existing.map(traceIDOf));
+        const incoming = rawTraces.filter(r => {
+          const id = traceIDOf(r);
+          if (seen.has(id)) return false;
+          seen.add(id);
+          return true;
+        });
+        return [...existing, ...incoming];
       });
     },
     [queryClient]
