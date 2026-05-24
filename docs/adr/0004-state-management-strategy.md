@@ -1075,11 +1075,13 @@ export function useSearchTraces(query: SearchQuery | null): UseQueryResult<Trace
 - `staleTime: 0` in `useExecuteSearch` — forces a fetch on every form submit regardless of what is currently cached. This only governs the *fetch decision*; once the result is written to the cache, `useSearchTraces`'s `staleTime: Infinity` takes over for all subsequent reads.
 - `gcTime: Infinity` on `useSearchTraces` — React Query starts the eviction countdown when the last observer unsubscribes (i.e. `SearchTracePage` unmounts on navigation). With the default `gcTime` of 5 minutes, a user spending more than 5 minutes on a trace page would lose the cached results and see a fresh fetch on Back. `gcTime: Infinity` prevents that. Note that `fetchQuery` is *not* an observer and does not contribute to `gcTime`; the protection relies on `useSearchTraces` being mounted in `SearchTracePage` whenever the user can navigate Back. Safe here because there is exactly one cache entry — not one per query — so memory growth is bounded.
 
-**Known limitations of the current implementation** (follow-up improvements, not blocking):
+**URL and cache consistency**:
 
-1. ✅ *URL is not preserved across navigation* — **fixed**. The cached value is now `{ results: TraceSummary[], query: SearchQuery }` rather than `TraceSummary[]` alone. When `SearchTracePage` mounts with a bare `/search` URL but finds a cached query, it restores the URL client-side via `navigate(getUrl(cachedQuery), { replace: true })` — no reload, no refetch, no flicker.
+The cached value is `{ results: TraceSummary[], query: SearchQuery }`, storing the query that produced the results alongside the results themselves. `SearchTracePage` uses this in two ways:
 
-2. ✅ *Back button does not match URL after multiple searches* — **fixed**. When `SearchTracePage` mounts with a URL-derived query that differs from the cached query (detected via `isSameQuery`), it calls `useExecuteSearch` to refetch with the URL's query. This ensures the displayed results always match the URL, at the cost of a network request when navigating Back to a previous search.
+1. *Bare URL after TopNav navigation*: when the component mounts with no search params (`/search`) but finds a cached query, it restores the full URL via `navigate(getUrl(cachedQuery), { replace: true })` — no reload, no refetch, no flicker.
+
+2. *Back button after multiple searches*: when the URL-derived query differs from the cached query (detected via `isSameQuery`), `SearchTracePage` calls `useExecuteSearch` to refetch with the URL's query, ensuring the displayed results always match the URL.
 
 `SearchTracePage` derives URL query params from `useLocation()` directly (no Redux `mapStateToProps`).
 
