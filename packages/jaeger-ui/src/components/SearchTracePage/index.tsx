@@ -2,7 +2,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 
 import { Col, Row, Tabs } from 'antd';
 import { useLocation } from 'react-router-dom';
@@ -48,15 +48,14 @@ export function SearchTracePageImpl() {
 
   const invalidateTraceSummaries = useInvalidateTraceSummaries();
 
-  // Invalidate on mount so that navigating directly to a search URL (e.g. a bookmark)
-  // always triggers a fresh fetch rather than showing a prior search's cached results.
-  // SearchForm calls invalidateTraceSummaries() explicitly on every submit, so this
-  // effect only needs to handle the direct-navigation case.
-  const searchQueryRef = React.useRef(searchQuery);
-  const invalidateRef = React.useRef(invalidateTraceSummaries);
+  // Invalidate after every URL change (form submit, bookmark, manual edit, Back/Forward to
+  // a different query). Running post-render guarantees that useSearchTraces already holds
+  // the new queryFn closure before React Query fires the refetch, which prevents the race
+  // where invalidation triggers a fetch with the previous query's closure.
+  // isHomepage guard: skip invalidation when there is no search query (homepage).
   useEffect(() => {
-    if (searchQueryRef.current !== null) invalidateRef.current();
-  }, []); // intentionally empty — run once on mount only
+    if (!isHomepage) invalidateTraceSummaries();
+  }, [location.search, invalidateTraceSummaries, isHomepage]);
 
   const { uploadedSummaries, uploadedRawTraces, handleTracesLoaded } = useUploadedTraces();
 
