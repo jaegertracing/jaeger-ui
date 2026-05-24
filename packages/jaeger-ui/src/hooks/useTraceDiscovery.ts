@@ -38,10 +38,10 @@ const TRACE_SUMMARIES_QUERY_KEY = ['traceSummaries'] as const;
  * not a different one. A parameterized key would accumulate a separate cache entry for
  * every distinct search submitted during a session, causing unbounded memory growth.
  *
- * New searches are triggered by calling `invalidateTraceSummaries(queryClient)` from
- * SearchForm on submit. This marks the single entry stale and causes React Query to call
- * the current `queryFn` (which closes over the latest `query` argument) to fetch fresh
- * results.
+ * New searches are triggered by calling `useExecuteSearch()` from SearchForm on submit.
+ * That hook calls `queryClient.fetchQuery()` with the query passed explicitly, bypassing
+ * the queryFn closure and ensuring the correct query is used even when called synchronously
+ * in an event handler before the next render cycle.
  *
  * staleTime: Infinity — data is never considered stale on its own; staleness is driven
  * entirely by the explicit invalidation on submit, not by elapsed time.
