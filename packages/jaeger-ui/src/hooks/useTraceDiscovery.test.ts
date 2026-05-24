@@ -366,7 +366,7 @@ describe('useTraceDiscovery', () => {
       });
 
       expect(jaegerClient.fetchTraceSummaries).toHaveBeenCalledWith(query);
-      expect(result.current.data).toEqual(mockSummaries);
+      expect(result.current.data).toEqual({ results: mockSummaries, query });
     });
 
     it('uses a fixed singleton queryKey', async () => {

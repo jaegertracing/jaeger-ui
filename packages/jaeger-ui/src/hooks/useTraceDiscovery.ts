@@ -62,10 +62,17 @@ const TRACE_SUMMARIES_QUERY_KEY = ['traceSummaries'] as const;
  * Note: `fetchQuery` is not an observer and does not affect gcTime; the protection relies
  * on this hook being mounted in SearchTracePage whenever the user can navigate Back.
  */
-export function useSearchTraces(query: SearchQuery | null): UseQueryResult<TraceSummary[]> {
+export type TraceSummariesResult = {
+  results: TraceSummary[];
+  query: SearchQuery;
+};
+
+export function useSearchTraces(query: SearchQuery | null): UseQueryResult<TraceSummariesResult> {
   return useQuery({
     queryKey: TRACE_SUMMARIES_QUERY_KEY,
-    queryFn: query ? () => jaegerClient.fetchTraceSummaries(query) : skipToken,
+    queryFn: query
+      ? async () => ({ results: await jaegerClient.fetchTraceSummaries(query), query })
+      : skipToken,
     staleTime: Infinity,
     gcTime: Infinity,
   });
@@ -90,7 +97,7 @@ export function useExecuteSearch(): (query: SearchQuery) => Promise<void> {
     async (query: SearchQuery) => {
       await queryClient.fetchQuery({
         queryKey: TRACE_SUMMARIES_QUERY_KEY,
-        queryFn: () => jaegerClient.fetchTraceSummaries(query),
+        queryFn: async () => ({ results: await jaegerClient.fetchTraceSummaries(query), query }),
         staleTime: 0,
       });
     },

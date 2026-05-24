@@ -2,16 +2,16 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 
 import { Col, Row, Tabs } from 'antd';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useConfig } from '../../hooks/useConfig';
 
 import SearchForm from './SearchForm';
 import SearchResults from './SearchResults';
-import { getUrlState, searchQueryFromUrl } from './url';
+import { getUrlState, searchQueryFromUrl, getUrl } from './url';
 import * as orderBy from '../../model/order-by';
 import ErrorMessage from '../common/ErrorMessage';
 import { sortTraceSummaries } from '../../model/search';
@@ -40,11 +40,18 @@ export function SearchTracePageImpl() {
   const searchQuery = useMemo(() => searchQueryFromUrl(location.search), [location.search]);
   const isHomepage = searchQuery === null;
 
-  const {
-    data: apiTraceSummaries = [],
-    isFetching: loadingTraces,
-    error: searchError,
-  } = useSearchTraces(searchQuery);
+  const navigate = useNavigate();
+
+  const { data: searchData, isFetching: loadingTraces, error: searchError } = useSearchTraces(searchQuery);
+
+  // When the user returns to /search via TopNav (URL loses query params), restore the URL
+  // from the cached query so the address bar remains shareable and bookmarkable.
+  // replace:true avoids adding a spurious history entry.
+  useEffect(() => {
+    if (!searchQuery && searchData?.query) {
+      navigate(getUrl(searchData.query as Parameters<typeof getUrl>[0]), { replace: true });
+    }
+  }, [searchQuery, searchData?.query, navigate]);
 
   const { uploadedSummaries, uploadedRawTraces, handleTracesLoaded } = useUploadedTraces();
 
@@ -58,6 +65,7 @@ export function SearchTracePageImpl() {
   // traces present in both API results and uploads are not incorrectly badged as "Uploaded"
   // — the API result takes precedence and the badge should not appear on it.
   const { traceSummaries, uploadedTraceIDs } = useMemo(() => {
+    const apiTraceSummaries = searchData?.results ?? [];
     const seen = new Set(apiTraceSummaries.map(s => s.traceID));
     const uniqueUploaded = uploadedSummaries.filter(s => {
       if (seen.has(s.traceID)) return false;
@@ -68,7 +76,7 @@ export function SearchTracePageImpl() {
       traceSummaries: [...apiTraceSummaries, ...uniqueUploaded],
       uploadedTraceIDs: new Set(uniqueUploaded.map(s => s.traceID)),
     };
-  }, [apiTraceSummaries, uploadedSummaries]);
+  }, [searchData, uploadedSummaries]);
 
   const [sortBy, setSortBy] = useState(orderBy.MOST_RECENT);
 

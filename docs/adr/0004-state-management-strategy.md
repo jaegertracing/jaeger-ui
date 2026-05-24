@@ -1077,9 +1077,7 @@ export function useSearchTraces(query: SearchQuery | null): UseQueryResult<Trace
 
 **Known limitations of the current implementation** (follow-up improvements, not blocking):
 
-1. *URL is not preserved across navigation.* When the user navigates away from the Search page (e.g. clicks a trace, opens the Dependencies page) and then returns via the top nav, the URL reverts to bare `/search` — the search query params are gone. The cached results are still shown (that part works correctly) but the URL is no longer shareable or bookmarkable.
-
-   Proposed fix: store the `SearchQuery` alongside the results in the cache (i.e. cached value becomes `{ results: TraceSummary[], query: SearchQuery }`). When `SearchTracePage` mounts with a bare URL but finds a `cachedQuery`, it restores the URL client-side with `navigate(getSearchUrl(cachedQuery), { replace: true })` — no reload, no refetch, no flicker.
+1. ✅ *URL is not preserved across navigation* — **fixed**. The cached value is now `{ results: TraceSummary[], query: SearchQuery }` rather than `TraceSummary[]` alone. When `SearchTracePage` mounts with a bare `/search` URL but finds a cached query, it restores the URL client-side via `navigate(getUrl(cachedQuery), { replace: true })` — no reload, no refetch, no flicker.
 
 2. *Back button does not match URL after multiple searches.* If the user submits three searches in a row, the browser history contains three different `/search?...` URLs. Hitting Back navigates to the previous URL but the singleton cache still holds the most recent results — the URL and the displayed results are out of sync.
 

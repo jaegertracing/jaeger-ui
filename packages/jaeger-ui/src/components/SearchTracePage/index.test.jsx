@@ -14,7 +14,7 @@ const { useEmbeddedStateMock, getConfigMock, useSearchTracesMock } = vi.hoisted(
       customWebAnalytics: null,
     },
   })),
-  useSearchTracesMock: jest.fn(() => ({ data: [], isFetching: false, error: null })),
+  useSearchTracesMock: jest.fn(() => ({ data: undefined, isFetching: false, error: null })),
 }));
 
 // Capture last props passed to SearchResults and FileLoader so tests can inspect/invoke them.
@@ -111,7 +111,7 @@ describe('<SearchTracePage>', () => {
   beforeEach(() => {
     useEmbeddedStateMock.mockReturnValue(null);
     useSearchTracesMock.mockClear();
-    useSearchTracesMock.mockReturnValue({ data: [], isFetching: false, error: null });
+    useSearchTracesMock.mockReturnValue({ data: undefined, isFetching: false, error: null });
     getConfigMock.mockReset();
     getConfigMock.mockReturnValue({
       disableFileUploadControl: false,
@@ -155,7 +155,7 @@ describe('<SearchTracePage>', () => {
   });
 
   it('shows a loading indicator when traces are loading', () => {
-    useSearchTracesMock.mockReturnValue({ data: [], isFetching: true, error: null });
+    useSearchTracesMock.mockReturnValue({ data: undefined, isFetching: true, error: null });
     const { container } = render(
       <AllProvider initialEntries={['/search?service=svc-a']}>
         <SearchTracePage />
@@ -174,7 +174,11 @@ describe('<SearchTracePage>', () => {
   });
 
   it('shows an error message if the search query returns an error', () => {
-    useSearchTracesMock.mockReturnValue({ data: [], isFetching: false, error: new Error('big-error') });
+    useSearchTracesMock.mockReturnValue({
+      data: undefined,
+      isFetching: false,
+      error: new Error('big-error'),
+    });
     const { container } = render(
       <AllProvider initialEntries={['/search?service=svc-a']}>
         <SearchTracePage />
@@ -271,7 +275,7 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
     lastSearchResultsProps = null;
     lastFileLoaderProps = null;
     queryClient.clear();
-    useSearchTracesMock.mockReturnValue({ data: [], isFetching: false, error: null });
+    useSearchTracesMock.mockReturnValue({ data: undefined, isFetching: false, error: null });
     getConfigMock.mockReturnValue({
       disableFileUploadControl: false,
       tracking: { gaID: null, trackErrors: false, customWebAnalytics: null },
@@ -327,7 +331,11 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
       orphanSpanCount: 0,
       services: [],
     };
-    useSearchTracesMock.mockReturnValue({ data: [summary], isFetching: false, error: null });
+    useSearchTracesMock.mockReturnValue({
+      data: { results: [summary], query: { service: 'svc', start: '', end: '', limit: 20, lookback: '1h' } },
+      isFetching: false,
+      error: null,
+    });
     // Add one known trace and one unknown to the cohort
     useTraceDiffStore.setState({ cohort: ['trace-in-results', 'trace-not-in-results'] });
 
