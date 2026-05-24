@@ -420,7 +420,7 @@ describe('<SearchResults>', () => {
 
         fireEvent.click(screen.getByTestId('alt-toggle'));
         expect(mockNavigate).toHaveBeenLastCalledWith(
-          getUrl({ [otherParam]: otherValue, [searchParam]: 'ddg' })
+          getUrl({ [otherParam]: otherValue, service: 'svc-a', [searchParam]: 'ddg' })
         );
         expect(spy).toHaveBeenLastCalledWith('ddg');
 
@@ -431,7 +431,7 @@ describe('<SearchResults>', () => {
         );
         fireEvent.click(screen.getByTestId('alt-toggle'));
         expect(mockNavigate).toHaveBeenLastCalledWith(
-          getUrl({ [otherParam]: otherValue, [searchParam]: 'traces' })
+          getUrl({ [otherParam]: otherValue, service: 'svc-a', [searchParam]: 'traces' })
         );
         expect(spy).toHaveBeenLastCalledWith('traces');
 
@@ -443,7 +443,7 @@ describe('<SearchResults>', () => {
         );
         fireEvent.click(screen.getByTestId('alt-toggle'));
         expect(mockNavigate).toHaveBeenLastCalledWith(
-          getUrl({ [otherParam]: otherValue, [searchParam]: 'ddg' })
+          getUrl({ [otherParam]: otherValue, service: 'svc-a', [searchParam]: 'ddg' })
         );
         expect(spy).toHaveBeenLastCalledWith('ddg');
       });

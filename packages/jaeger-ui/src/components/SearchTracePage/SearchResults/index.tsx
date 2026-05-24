@@ -120,8 +120,11 @@ export function UnconnectedSearchResults({
     const urlState = queryString.parse(location.search);
     const view = urlState.view && urlState.view === 'ddg' ? EAltViewActions.Traces : EAltViewActions.Ddg;
     trackAltView(view);
-    navigate(getUrl({ ...urlState, view }));
-  }, [location, navigate]);
+    // When URL has lost search params (e.g. after TopNav navigation to bare /search),
+    // fall back to the root service of the first result so DDG can build the graph.
+    const service = urlState.service ?? traceSummaries[0]?.rootServiceName;
+    navigate(getUrl({ ...urlState, service, view }));
+  }, [location, navigate, traceSummaries]);
 
   const traceResultsView = queryString.parse(location.search).view !== 'ddg';
 
@@ -194,7 +197,7 @@ export function UnconnectedSearchResults({
       </div>
       {!traceResultsView && (
         <div className="SearchResults--ddg-container">
-          <SearchResultsDDG location={location as any} />
+          <SearchResultsDDG location={location as any} traceIDs={traceSummaries.map(s => s.traceID)} />
         </div>
       )}
       {traceResultsView && diffSelection}
