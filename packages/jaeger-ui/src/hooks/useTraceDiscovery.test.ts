@@ -399,5 +399,113 @@ describe('useTraceDiscovery', () => {
 
       expect(result.current.error).toEqual(mockError);
     });
+
+    it('evicts stale cache entries when a new query is provided', async () => {
+      const query2: SearchQuery = { ...query, service: 'other-svc' };
+      (jaegerClient.fetchTraceSummaries as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+
+      // Prime the cache with query1
+      const { rerender } = renderHook(({ q }) => useSearchTraces(q), {
+        wrapper: createWrapper(),
+        initialProps: { q: query as SearchQuery | null },
+      });
+      await waitFor(() => {
+        expect(queryClient.getQueryCache().findAll({ queryKey: ['traceSummaries'] })).toHaveLength(1);
+      });
+
+      // Switch to query2 — the eviction effect should remove the query1 entry
+      rerender({ q: query2 });
+      await waitFor(() => {
+        const entries = queryClient.getQueryCache().findAll({ queryKey: ['traceSummaries'] });
+        expect(entries).toHaveLength(1);
+        expect(entries[0].queryKey).toEqual(['traceSummaries', query2]);
+      });
+    });
+
+    it('returns cached data when called with null after a successful fetch', async () => {
+      const mockSummaries = [
+        {
+          traceID: 'aaaabbbbccccdddd0000111122223333',
+          traceName: 'my-svc: op',
+          rootServiceName: 'my-svc',
+          rootOperationName: 'op',
+          startTime: 1000,
+          duration: 500,
+          spanCount: 3,
+          errorSpanCount: 0,
+          orphanSpanCount: 0,
+          services: [],
+        },
+      ];
+      (jaegerClient.fetchTraceSummaries as ReturnType<typeof vi.fn>).mockResolvedValue(mockSummaries);
+
+      // Fetch with a real query
+      const { rerender, result } = renderHook(({ q }) => useSearchTraces(q), {
+        wrapper: createWrapper(),
+        initialProps: { q: query as SearchQuery | null },
+      });
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+      expect(result.current.data).toEqual({ results: mockSummaries, query });
+
+      // Switch to null (simulates TopNav navigation to bare /search)
+      rerender({ q: null });
+
+      // Should surface the cached result via effectiveQuery derived from dataUpdatedAt
+      expect(result.current.data).toEqual({ results: mockSummaries, query });
+      expect(jaegerClient.fetchTraceSummaries).toHaveBeenCalledTimes(1);
+    });
+
+    it('picks the most recently updated entry when null is passed with multiple entries', async () => {
+      const query2: SearchQuery = { ...query, service: 'other-svc' };
+      const summaries1 = [
+        {
+          traceID: 'trace1',
+          traceName: 'svc1: op',
+          rootServiceName: 'my-svc',
+          rootOperationName: 'op',
+          startTime: 1000,
+          duration: 100,
+          spanCount: 1,
+          errorSpanCount: 0,
+          orphanSpanCount: 0,
+          services: [],
+        },
+      ];
+      const summaries2 = [
+        {
+          traceID: 'trace2',
+          traceName: 'svc2: op',
+          rootServiceName: 'other-svc',
+          rootOperationName: 'op',
+          startTime: 2000,
+          duration: 200,
+          spanCount: 2,
+          errorSpanCount: 0,
+          orphanSpanCount: 0,
+          services: [],
+        },
+      ];
+      (jaegerClient.fetchTraceSummaries as ReturnType<typeof vi.fn>)
+        .mockResolvedValueOnce(summaries1)
+        .mockResolvedValueOnce(summaries2);
+
+      const wrapper = createWrapper();
+
+      // Seed two entries directly into the cache with distinct timestamps.
+      // Must be done after createWrapper() since it creates a new queryClient.
+      queryClient.setQueryData(['traceSummaries', query], { results: summaries1, query });
+      // Small delay to ensure different dataUpdatedAt values
+      await new Promise(r => setTimeout(r, 10));
+      queryClient.setQueryData(['traceSummaries', query2], { results: summaries2, query: query2 });
+
+      const { result } = renderHook(() => useSearchTraces(null), {
+        wrapper,
+      });
+
+      // Should return the more recently updated entry (query2)
+      expect(result.current.data).toEqual({ results: summaries2, query: query2 });
+    });
   });
 });
