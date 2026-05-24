@@ -38,17 +38,28 @@ const TRACE_SUMMARIES_QUERY_KEY = ['traceSummaries'] as const;
  * not a different one. A parameterized key would accumulate a separate cache entry for
  * every distinct search submitted during a session, causing unbounded memory growth.
  *
- * New searches are triggered by calling `useExecuteSearch()` from SearchForm on submit.
- * That hook calls `queryClient.fetchQuery()` with the query passed explicitly, bypassing
- * the queryFn closure and ensuring the correct query is used even when called synchronously
- * in an event handler before the next render cycle.
+ * **Two-path fetch model**:
+ * - Cold start (fresh tab, shared URL): `useSearchTraces` derives the query from the URL
+ *   via `searchQueryFromUrl`, finds the cache empty, and fires the `queryFn` directly.
+ * - Form submit: `useExecuteSearch` calls `queryClient.fetchQuery()` with the query built
+ *   from form state, passing `staleTime: 0` to force a fetch regardless of cache state.
+ *   This bypasses the `queryFn` closure here (which still holds the previous query until
+ *   the next render) and is safe to call synchronously in the event handler before React
+ *   has processed the `navigate()` call. `staleTime: 0` only governs the fetch decision;
+ *   once the result is written to the cache, this hook's `staleTime: Infinity` takes over
+ *   for all subsequent reads.
  *
- * staleTime: Infinity — data is never considered stale on its own; staleness is driven
- * entirely by the explicit invalidation on submit, not by elapsed time.
+ * **staleTime: Infinity** — data is never considered stale on its own; staleness is driven
+ * entirely by explicit form submission, not elapsed time. This also ensures the URL-sharing
+ * case (new tab) does not trigger an unnecessary background refetch after initial load.
  *
- * gcTime: Infinity — justified here (unlike the parameterized-key case) because there is
- * exactly one cache entry, not one per search. Keeping it alive indefinitely ensures the
- * Back button restores results after any amount of time spent on the trace page.
+ * **gcTime: Infinity** — React Query starts the eviction countdown when the last observer
+ * unsubscribes (i.e. SearchTracePage unmounts on navigation). With the default gcTime of
+ * 5 minutes, a user spending more than 5 minutes on a trace page would lose the cached
+ * results and see a fresh fetch on Back. `gcTime: Infinity` prevents that. Safe here
+ * because there is exactly one cache entry — not one per query — so memory growth is bounded.
+ * Note: `fetchQuery` is not an observer and does not affect gcTime; the protection relies
+ * on this hook being mounted in SearchTracePage whenever the user can navigate Back.
  */
 export function useSearchTraces(query: SearchQuery | null): UseQueryResult<TraceSummary[]> {
   return useQuery({
@@ -63,10 +74,14 @@ export function useSearchTraces(query: SearchQuery | null): UseQueryResult<Trace
  * Returns a stable callback that immediately fetches trace summaries for the
  * given query and writes the result into the singleton cache slot.
  *
- * Unlike invalidation (which relies on the queryFn closure registered by the
- * current render of useSearchTraces), this passes the query explicitly to
- * fetchQuery, so it is safe to call synchronously in an event handler before
- * the next render cycle.
+ * Called from SearchForm.handleSubmit with the query derived directly from form
+ * state (not from the URL). This avoids a race condition where invalidateQueries
+ * would trigger a refetch via the queryFn closure in useSearchTraces — which still
+ * holds the previous query until React processes the navigate() call.
+ *
+ * staleTime: 0 forces a fetch regardless of what is currently cached. It only
+ * affects the fetch decision; once the result is written, useSearchTraces takes
+ * over with staleTime: Infinity for all subsequent reads.
  */
 export function useExecuteSearch(): (query: SearchQuery) => Promise<void> {
   const queryClient = useQueryClient();
