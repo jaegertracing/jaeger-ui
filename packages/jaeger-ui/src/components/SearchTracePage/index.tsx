@@ -138,6 +138,11 @@ export function SearchTracePageImpl() {
     trackSortByChange(newSortBy);
   }, []);
 
+  // Computed synchronously so the loading indicator shows on the first render
+  // after Back navigation, before the useEffect fires and the fetch starts.
+  // Without this, one render would flash the stale (wrong) results.
+  const isStale = !!(searchQuery && searchData?.query && !isSameQuery(searchQuery, searchData.query));
+
   const errors: Array<{ message: string }> = searchError
     ? [{ message: searchError instanceof Error ? searchError.message : String(searchError) }]
     : [];
@@ -188,7 +193,7 @@ export function SearchTracePageImpl() {
               diffCohort,
               disableComparisons: !!embedded,
               hideGraph: Boolean(embedded?.searchHideGraph),
-              loading: loadingTraces,
+              loading: loadingTraces || isStale,
               maxTraceDuration,
               showStandaloneLink: Boolean(embedded),
               skipMessage: isHomepage,
