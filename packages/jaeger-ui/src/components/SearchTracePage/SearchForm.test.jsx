@@ -44,6 +44,7 @@ vi.mock('../../hooks/useTraceDiscovery', () => ({
   })),
   useIsSearchFetching: mockUseIsSearchFetching,
   useInvalidateTraceSummaries: jest.fn(() => jest.fn()),
+  useExecuteSearch: jest.fn(() => jest.fn()),
 }));
 vi.mock('./useUploadedTraces', () => ({
   useClearUploadedTraces: jest.fn(() => jest.fn()),

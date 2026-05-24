@@ -2,7 +2,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 import { Col, Row, Tabs } from 'antd';
 import { useLocation } from 'react-router-dom';
@@ -25,7 +25,7 @@ import { trackSortByChange } from './SearchForm.track';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { useEmbeddedState } from '../../stores/embedded-store';
 import { useShallow } from 'zustand/react/shallow';
-import { useSearchTraces, useInvalidateTraceSummaries } from '../../hooks/useTraceDiscovery';
+import { useSearchTraces } from '../../hooks/useTraceDiscovery';
 
 // export for tests
 export function SearchTracePageImpl() {
@@ -45,17 +45,6 @@ export function SearchTracePageImpl() {
     isFetching: loadingTraces,
     error: searchError,
   } = useSearchTraces(searchQuery);
-
-  const invalidateTraceSummaries = useInvalidateTraceSummaries();
-
-  // Invalidate after every URL change (form submit, bookmark, manual edit, Back/Forward to
-  // a different query). Running post-render guarantees that useSearchTraces already holds
-  // the new queryFn closure before React Query fires the refetch, which prevents the race
-  // where invalidation triggers a fetch with the previous query's closure.
-  // isHomepage guard: skip invalidation when there is no search query (homepage).
-  useEffect(() => {
-    invalidateTraceSummaries();
-  }, [location.search, invalidateTraceSummaries]);
 
   const { uploadedSummaries, uploadedRawTraces, handleTracesLoaded } = useUploadedTraces();
 

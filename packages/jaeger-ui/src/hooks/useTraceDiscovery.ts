@@ -68,6 +68,29 @@ export function useInvalidateTraceSummaries(): () => Promise<void> {
   );
 }
 
+/**
+ * Returns a stable callback that immediately fetches trace summaries for the
+ * given query and writes the result into the singleton cache slot.
+ *
+ * Unlike invalidation (which relies on the queryFn closure registered by the
+ * current render of useSearchTraces), this passes the query explicitly to
+ * fetchQuery, so it is safe to call synchronously in an event handler before
+ * the next render cycle.
+ */
+export function useExecuteSearch(): (query: SearchQuery) => Promise<void> {
+  const queryClient = useQueryClient();
+  return useCallback(
+    async (query: SearchQuery) => {
+      await queryClient.fetchQuery({
+        queryKey: TRACE_SUMMARIES_QUERY_KEY,
+        queryFn: () => jaegerClient.fetchTraceSummaries(query),
+        staleTime: 0,
+      });
+    },
+    [queryClient]
+  );
+}
+
 /** Returns true while a trace summaries fetch is in flight. */
 export function useIsSearchFetching(): boolean {
   return useIsFetching({ queryKey: TRACE_SUMMARIES_QUERY_KEY }) > 0;
