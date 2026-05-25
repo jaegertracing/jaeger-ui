@@ -7,8 +7,8 @@ function eqEq(a: string | number | null | undefined, b: string | number | null |
   return (a == null && b == null) || String(a) === String(b);
 }
 
-export function isSameQuery(a: SearchQuery, b: SearchQuery | null | undefined): boolean {
-  if (!b) return false;
+export function isSameQuery(a: SearchQuery | null | undefined, b: SearchQuery | null | undefined): boolean {
+  if (!a || !b) return a === b;
   return (
     eqEq(a.end, b.end) &&
     eqEq(a.limit, b.limit) &&
@@ -20,4 +20,9 @@ export function isSameQuery(a: SearchQuery, b: SearchQuery | null | undefined): 
     eqEq(a.start, b.start) &&
     eqEq(a.tags, b.tags)
   );
+}
+
+/** Returns true when none of the meaningful search fields are set. */
+export function isQueryEmpty(q: SearchQuery): boolean {
+  return !q.service && !q.start && !q.end;
 }

@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useQuery, useIsFetching, useQueryClient, skipToken, UseQueryResult } from '@tanstack/react-query';
 import { jaegerClient } from '../api/v3/client';
 import { localeStringComparator } from '../utils/sort';
@@ -84,21 +84,21 @@ export function useSearchTraces(query: SearchQuery | null): UseQueryResult<Trace
 
   // When query is null (bare /search after TopNav click), find the most recently updated
   // cache entry and subscribe to it so the component can restore the URL from data.query.
-  // Read before the eviction effect so we don't race against our own cleanup.
-  const effectiveQuery =
-    query ??
-    (() => {
-      const entries = queryClient
-        .getQueryCache()
-        .findAll({ queryKey: [TRACE_SUMMARIES_QUERY_KEY], exact: false });
-      if (entries.length === 0) return null;
-      const mostRecent = entries.reduce((latest, current) =>
-        current.state.dataUpdatedAt > latest.state.dataUpdatedAt ? current : latest
-      );
-      // Prefer queryKey[1] over state.data?.query so the entry is found even while
-      // still fetching (data is undefined until the first successful response).
-      return (mostRecent.queryKey[1] as SearchQuery | undefined) ?? null;
-    })();
+  // useMemo is used for idiomatic derived-cache reads; queryClient is stable across renders.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const effectiveQuery = useMemo(() => {
+    if (query) return query;
+    const entries = queryClient
+      .getQueryCache()
+      .findAll({ queryKey: [TRACE_SUMMARIES_QUERY_KEY], exact: false });
+    if (entries.length === 0) return null;
+    const mostRecent = entries.reduce((latest, current) =>
+      current.state.dataUpdatedAt > latest.state.dataUpdatedAt ? current : latest
+    );
+    // Prefer queryKey[1] over state.data?.query so the entry is found even while
+    // still fetching (data is undefined until the first successful response).
+    return (mostRecent.queryKey[1] as SearchQuery | undefined) ?? null;
+  }, [query, queryClient]);
 
   // Keep at most one cache entry: evict entries that don't match the effective query.
   useEffect(() => {

@@ -11,7 +11,14 @@ import { useConfig } from '../../hooks/useConfig';
 
 import SearchForm from './SearchForm';
 import SearchResults from './SearchResults';
-import { getUrlState, searchQueryFromUrl, getUrl, isSameQuery } from './url';
+import {
+  getUrlState,
+  searchQueryFromUrl,
+  searchQueryToUrlState,
+  getUrl,
+  isSameQuery,
+  isQueryEmpty,
+} from './url';
 import * as orderBy from '../../model/order-by';
 import ErrorMessage from '../common/ErrorMessage';
 import { sortTraceSummaries } from '../../model/search';
@@ -47,9 +54,11 @@ export function SearchTracePageImpl() {
   // When the user returns to /search via TopNav (URL loses query params), restore the URL
   // from the cached query so the address bar remains shareable and bookmarkable.
   // replace:true avoids adding a spurious history entry.
+  // isQueryEmpty guards against navigating to a URL that would still parse as null,
+  // which would re-trigger this effect on the next render.
   useEffect(() => {
-    if (!searchQuery && searchData?.query) {
-      navigate(getUrl(searchData.query as Parameters<typeof getUrl>[0]), { replace: true });
+    if (!searchQuery && searchData?.query && !isQueryEmpty(searchData.query)) {
+      navigate(getUrl(searchQueryToUrlState(searchData.query)), { replace: true });
     }
   }, [searchQuery, searchData?.query, navigate]);
 
@@ -129,9 +138,8 @@ export function SearchTracePageImpl() {
     trackSortByChange(newSortBy);
   }, []);
 
-  // Computed synchronously so the loading indicator shows on the first render
-  // after Back navigation, before the keyed cache fetch completes.
-  // Without this, one render would flash the stale (wrong) results.
+  // Computed synchronously so the loading indicator shows on the first render after Back
+  // navigation, before the new keyed-cache fetch completes and searchData is updated.
   const isStale = Boolean(searchQuery && searchData?.query && !isSameQuery(searchQuery, searchData.query));
 
   const errors: Array<{ message: string }> = searchError

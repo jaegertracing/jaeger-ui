@@ -11,7 +11,7 @@ import { MAX_LENGTH } from '../DeepDependencies/Graph/DdgNodeContent/constants';
 import { SearchQuery } from '../../types/search';
 import parseQuery from '../../utils/parseQuery';
 
-export { isSameQuery } from '../../utils/search-query';
+export { isSameQuery, isQueryEmpty } from '../../utils/search-query';
 
 export const ROUTE_PATH = prefixUrl('/search');
 
@@ -82,6 +82,22 @@ function firstOf(v: string | string[] | undefined | Record<string, string>): str
   if (Array.isArray(v)) return v[0];
   if (typeof v === 'string') return v;
   return undefined;
+}
+
+/** Inverse of searchQueryFromUrl: convert a SearchQuery back into a TUrlState for getUrl(). */
+export function searchQueryToUrlState(q: SearchQuery): TUrlState {
+  const state: TUrlState = {
+    service: q.service,
+    operation: q.operation,
+    start: String(q.start),
+    end: String(q.end),
+    limit: String(q.limit),
+    lookback: q.lookback,
+  };
+  if (q.minDuration) state.minDuration = q.minDuration;
+  if (q.maxDuration) state.maxDuration = q.maxDuration;
+  if (q.tags) state.tags = q.tags;
+  return state;
 }
 
 /**
