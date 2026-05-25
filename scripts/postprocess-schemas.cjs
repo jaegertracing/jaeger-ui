@@ -6,8 +6,12 @@
 /**
  * Post-process generated OpenAPI client to:
  * 1. Prepend copyright header
- * 2. Remove .partial() calls for strict validation (Proto3/OpenAPI optionality mismatch)
- * 3. Comment out Zodios imports/usage (avoid runtime dependency until needed)
+ * 2. Remove .partial() calls — openapi-zod-client emits .partial() for schemas
+ *    that have no `required:` array in the OpenAPI spec. Proto3 fields without
+ *    field_behavior = REQUIRED annotations fall into this category. Stripping
+ *    .partial() leaves individual fields non-optional; schemas.ts then selectively
+ *    re-applies .optional() where needed.
+ * 3. Remove Zodios imports/client code (unused — we only use the Zod schemas)
  * 4. Add convenience exports for schemas
  */
 
