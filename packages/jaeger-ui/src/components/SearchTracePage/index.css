@@ -33,5 +33,7 @@ SPDX-License-Identifier: Apache-2.0
 
 .SearchTracePage--logo {
   display: block;
+  height: auto;
   margin: 13rem auto 0 auto;
+  max-width: 100%;
 }

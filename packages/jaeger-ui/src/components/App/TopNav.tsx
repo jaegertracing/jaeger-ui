@@ -142,7 +142,7 @@ export function TopNavImpl(props: Props) {
   ];
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+    <div className="TopNav">
       <Menu
         theme="dark"
         items={itemsGlobalLeft?.concat(
@@ -159,21 +159,19 @@ export function TopNavImpl(props: Props) {
             };
           })
         )}
-        className="Menu--item"
+        className="Menu--item Menu--item--left"
         mode="horizontal"
         selectable={false}
         selectedKeys={[pathname]}
-        style={{ flex: '1 1 0', minWidth: '3rem' }}
       />
       <Menu
         theme="dark"
         items={itemsGlobalRight}
-        className="Menu--item"
+        className="Menu--item Menu--item--right"
         mode="horizontal"
         selectable={false}
         disabledOverflow
         selectedKeys={[pathname]}
-        style={{ flex: '0 1 auto', minWidth: 0 }}
       />
     </div>
   );
