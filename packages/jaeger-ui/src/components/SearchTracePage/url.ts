@@ -94,9 +94,9 @@ export function searchQueryToUrlState(q: SearchQuery): TUrlState {
     limit: String(q.limit),
     lookback: q.lookback,
   };
-  if (q.minDuration) state.minDuration = q.minDuration;
-  if (q.maxDuration) state.maxDuration = q.maxDuration;
-  if (q.tags) state.tags = q.tags;
+  if (q.minDuration !== undefined) state.minDuration = q.minDuration;
+  if (q.maxDuration !== undefined) state.maxDuration = q.maxDuration;
+  if (q.tags !== undefined) state.tags = q.tags;
   return state;
 }
 
