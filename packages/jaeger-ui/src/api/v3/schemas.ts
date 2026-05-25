@@ -32,13 +32,25 @@ export const spanIdHex = z.string().regex(/^[0-9a-f]{16}$/i, 'Invalid span ID: m
 // The decimal-digit constraint on the timestamp fields is kept as an
 // optional refinement (applied only when the field is present) to prevent a
 // runtime SyntaxError in BigInt() if a non-decimal string slips through.
+// Normalize the trace ID field name before validation.
+// The spec says `traceId` but the current server sends `traceID` (uppercase D).
+// Accept either form and coerce to `traceId` so the rest of the schema is stable.
+const normalizeTraceId = z.preprocess(
+  (raw: unknown) => {
+    if (raw && typeof raw === 'object' && !('traceId' in raw) && 'traceID' in raw) {
+      const { traceID, ...rest } = raw as Record<string, unknown>;
+      return { traceId: traceID, ...rest };
+    }
+    return raw;
+  },
+  ApiTraceSummarySchema.partial().extend({
+    traceId: traceIdHex,
+    // Restrict to decimal digits when present — BigInt() throws SyntaxError on non-decimal strings.
+    minStartTimeUnixNano: z.string().regex(/^\d+$/, 'Expected decimal int64 string').optional(),
+    maxEndTimeUnixNano: z.string().regex(/^\d+$/, 'Expected decimal int64 string').optional(),
+  })
+);
+
 export const TraceSummariesResponseSchema = FindTraceSummariesResponseSchema.extend({
-  summaries: z.array(
-    ApiTraceSummarySchema.partial().extend({
-      traceId: traceIdHex,
-      // Restrict to decimal digits when present — BigInt() throws SyntaxError on non-decimal strings.
-      minStartTimeUnixNano: z.string().regex(/^\d+$/, 'Expected decimal int64 string').optional(),
-      maxEndTimeUnixNano: z.string().regex(/^\d+$/, 'Expected decimal int64 string').optional(),
-    })
-  ),
+  summaries: z.array(normalizeTraceId),
 });

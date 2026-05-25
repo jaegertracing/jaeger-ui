@@ -109,10 +109,17 @@ describe('TraceSummariesResponseSchema', () => {
     services: [{ name: 'svc', spanCount: 5, errorSpanCount: 1 }],
   };
 
-  it('accepts a fully-populated summary', () => {
+  it('accepts a fully-populated summary with traceId (spec field name)', () => {
     const result = TraceSummariesResponseSchema.parse({ summaries: [fullSummary] });
     expect(result.summaries).toHaveLength(1);
     expect(result.summaries[0].traceId).toBe(fullSummary.traceId);
+  });
+
+  it('accepts traceID (uppercase D) and normalizes it to traceId', () => {
+    const { traceId, ...rest } = fullSummary;
+    const withUpperD = { traceID: traceId, ...rest };
+    const result = TraceSummariesResponseSchema.parse({ summaries: [withUpperD] });
+    expect(result.summaries[0].traceId).toBe(traceId);
   });
 
   it('accepts a minimal summary with only traceId', () => {
