@@ -20,6 +20,11 @@ bundle-stats:
 	BUNDLE_STATS=1 npm run build
 	@echo "Bundle stats written to packages/jaeger-ui/build/bundle-stats.csv"
 
+.PHONY: reinstall
+reinstall:
+	rm -rf node_modules packages/jaeger-ui/node_modules packages/plexus/node_modules
+	npm ci
+
 .PHONY: fmt
 fmt:
 	npm run fmt

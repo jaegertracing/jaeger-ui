@@ -16,7 +16,7 @@ const TRACE_QUERY_KEY = (id: string) => ['trace', id] as const;
 export function getCachedTrace(id: string): IOtelTrace | undefined {
   return (
     queryClient.getQueryData<IOtelTrace>(TRACE_QUERY_KEY(id)) ||
-    queryClient.getQueryData<IOtelTrace>(TRACE_QUERY_KEY(id.replace(/^0*/, '')))
+    queryClient.getQueryData<IOtelTrace>(TRACE_QUERY_KEY(id.replace(/^0+/, '')))
   );
 }
 
