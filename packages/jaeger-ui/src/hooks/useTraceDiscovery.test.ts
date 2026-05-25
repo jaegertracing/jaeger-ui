@@ -493,12 +493,14 @@ describe('useTraceDiscovery', () => {
 
       const wrapper = createWrapper();
 
-      // Seed two entries directly into the cache with distinct timestamps.
+      // Seed two entries directly into the cache with deterministic timestamps.
       // Must be done after createWrapper() since it creates a new queryClient.
+      vi.useFakeTimers();
+      vi.setSystemTime(1000);
       queryClient.setQueryData(['traceSummaries', query], { results: summaries1, query });
-      // Small delay to ensure different dataUpdatedAt values
-      await new Promise(r => setTimeout(r, 10));
+      vi.setSystemTime(2000);
       queryClient.setQueryData(['traceSummaries', query2], { results: summaries2, query: query2 });
+      vi.useRealTimers();
 
       const { result } = renderHook(() => useSearchTraces(null), {
         wrapper,

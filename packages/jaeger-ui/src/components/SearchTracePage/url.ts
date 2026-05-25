@@ -11,9 +11,7 @@ import { MAX_LENGTH } from '../DeepDependencies/Graph/DdgNodeContent/constants';
 import { SearchQuery } from '../../types/search';
 import parseQuery from '../../utils/parseQuery';
 
-function eqEq(a: string | number | null | undefined, b: string | number | null | undefined) {
-  return (a == null && b == null) || String(a) === String(b);
-}
+export { isSameQuery } from '../../utils/search-query';
 
 export const ROUTE_PATH = prefixUrl('/search');
 
@@ -112,21 +110,4 @@ export function searchQueryFromUrl(search: string): SearchQuery | null {
     maxDuration: typeof q.maxDuration === 'string' ? q.maxDuration : undefined,
     tags: typeof q.tags === 'string' ? q.tags : undefined,
   };
-}
-
-export function isSameQuery(a: SearchQuery, b: SearchQuery) {
-  if (Boolean(a) !== Boolean(b)) {
-    return false;
-  }
-  return (
-    eqEq(a.end, b.end) &&
-    eqEq(a.limit, b.limit) &&
-    eqEq(a.lookback, b.lookback) &&
-    eqEq(a.maxDuration, b.maxDuration) &&
-    eqEq(a.minDuration, b.minDuration) &&
-    eqEq(a.operation, b.operation) &&
-    eqEq(a.service, b.service) &&
-    eqEq(a.start, b.start) &&
-    eqEq(a.tags, b.tags)
-  );
 }

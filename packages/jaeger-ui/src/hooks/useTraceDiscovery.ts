@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import { useQuery, useIsFetching, useQueryClient, skipToken, UseQueryResult } from '@tanstack/react-query';
 import { jaegerClient } from '../api/v3/client';
 import { localeStringComparator } from '../utils/sort';
-import { isSameQuery } from '../components/SearchTracePage/url';
+import { isSameQuery } from '../utils/search-query';
 import type { SearchQuery } from '../types/search';
 import type { TraceSummary } from '../types/trace-summary';
 
@@ -95,7 +95,9 @@ export function useSearchTraces(query: SearchQuery | null): UseQueryResult<Trace
       const mostRecent = entries.reduce((latest, current) =>
         current.state.dataUpdatedAt > latest.state.dataUpdatedAt ? current : latest
       );
-      return (mostRecent.state.data as TraceSummariesResult | undefined)?.query ?? null;
+      // Prefer queryKey[1] over state.data?.query so the entry is found even while
+      // still fetching (data is undefined until the first successful response).
+      return (mostRecent.queryKey[1] as SearchQuery | undefined) ?? null;
     })();
 
   // Keep at most one cache entry: evict entries that don't match the effective query.
