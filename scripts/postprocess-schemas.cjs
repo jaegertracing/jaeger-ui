@@ -6,11 +6,13 @@
 /**
  * Post-process generated OpenAPI client to:
  * 1. Prepend copyright header
- * 2. Remove .partial() calls — openapi-zod-client emits .partial() for schemas
- *    that have no `required:` array in the OpenAPI spec. Proto3 fields without
- *    field_behavior = REQUIRED annotations fall into this category. Stripping
- *    .partial() leaves individual fields non-optional; schemas.ts then selectively
- *    re-applies .optional() where needed.
+ * 2. Remove .partial() calls — openapi-zod-client emits .partial() for every
+ *    schema that has no `required:` array in the OpenAPI spec. Most proto3 messages
+ *    (OTLP types, request wrappers, etc.) have no field_behavior annotations so they
+ *    land here. Stripping .partial() makes fields non-optional at the generated layer;
+ *    schemas.ts then adds .optional() selectively for the handful of types the UI
+ *    actually consumes (TraceSummary fields are already handled correctly by the IDL
+ *    field_behavior annotations, so schemas.ts needs no .partial() override there).
  * 3. Remove Zodios imports/client code (unused — we only use the Zod schemas)
  * 4. Add convenience exports for schemas
  */
