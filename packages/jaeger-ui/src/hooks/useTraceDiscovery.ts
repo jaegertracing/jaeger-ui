@@ -58,7 +58,7 @@ export type TraceSummariesResult = {
 
 /**
  * React Query hook to search for traces by query parameters.
- * Calls /api/v3/trace-summaries and returns TraceSummary[].
+ * Calls /api/v3/trace-summaries and returns `UseQueryResult<TraceSummariesResult>` (results + query).
  * Pass null to suppress the fetch (e.g. on the homepage before the user submits a search).
  *
  * **Keyed cache design**: the query key is `[TRACE_SUMMARIES_QUERY_KEY, query]` so each distinct

@@ -59,7 +59,7 @@ vi.mock('../../hooks/useTraceDiscovery', () => ({
 }));
 
 import React from 'react';
-import { render, act, fireEvent, screen } from '@testing-library/react';
+import { render, act, fireEvent, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Provider } from 'react-redux';
 import { SearchTracePageImpl as SearchTracePage } from './index';
@@ -239,6 +239,45 @@ describe('<SearchTracePage>', () => {
       </AllProvider>
     );
     expect(container.querySelector('[data-node-key="fileLoader"]')).toBeInTheDocument();
+  });
+
+  it('restores the URL from cached query when mounted at bare /search', async () => {
+    const cachedQuery = { service: 'svc-a', start: '100', end: '200', limit: 20, lookback: '1h' };
+    useSearchTracesMock.mockReturnValue({
+      data: { results: [], query: cachedQuery },
+      isFetching: false,
+      error: null,
+    });
+
+    // Track location changes inside the MemoryRouter so we can assert the URL was restored.
+    let capturedSearch = null;
+    function LocationCapture() {
+      const { useLocation: useLoc } = require('react-router-dom');
+      const loc = useLoc();
+      capturedSearch = loc.search;
+      return null;
+    }
+
+    await act(async () => {
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={['/search']}>
+            <Provider store={globalStore}>
+              <SearchTracePage />
+              <LocationCapture />
+            </Provider>
+          </MemoryRouter>
+        </QueryClientProvider>
+      );
+    });
+
+    // useSearchTraces is called with null because bare /search has no service/start/end
+    expect(useSearchTracesMock.mock.calls[0][0]).toBeNull();
+
+    // After the useEffect fires, navigate({ replace: true }) should have updated the location
+    await waitFor(() => {
+      expect(capturedSearch).toContain('service=svc-a');
+    });
   });
 
   it('hides Upload tab if it is disabled via config', () => {
