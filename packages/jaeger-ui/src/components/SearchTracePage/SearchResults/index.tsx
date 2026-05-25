@@ -31,7 +31,7 @@ import withRouteProps from '../../../utils/withRouteProps';
 import SearchableSelect from '../../common/SearchableSelect';
 
 type SearchResultsProps = {
-  cohortAddTrace: (traceId: string) => void;
+  cohortAddTrace: (traceId: string, summary?: TraceSummary) => void;
   cohortRemoveTrace: (traceId: string) => void;
   diffCohort: TraceSummary[];
   disableComparisons: boolean;
@@ -99,10 +99,11 @@ export function UnconnectedSearchResults({
       if (remove) {
         cohortRemoveTrace(traceID);
       } else {
-        cohortAddTrace(traceID);
+        const summary = traceSummaries.find(t => t.traceID === traceID);
+        cohortAddTrace(traceID, summary);
       }
     },
-    [cohortAddTrace, cohortRemoveTrace]
+    [cohortAddTrace, cohortRemoveTrace, traceSummaries]
   );
 
   const goToTrace = useCallback(

@@ -213,7 +213,7 @@ describe('<SearchResults>', () => {
     const toggleComparison = diffSelectionProps.toggleComparison;
     toggleComparison('id-1');
     toggleComparison('id-2', true);
-    expect(add).toHaveBeenCalledWith('id-1');
+    expect(add).toHaveBeenCalledWith('id-1', undefined);
     expect(remove).toHaveBeenCalledWith('id-2');
   });
 

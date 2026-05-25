@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { newInitialState, useTraceDiffStore } from './trace-diff-store';
+import type { TraceSummary } from '../types/trace-summary';
 
 describe('trace-diff-store', () => {
   const initialCohort = ['trace-id-0', 'trace-id-1', 'trace-id-2'];
@@ -12,6 +13,7 @@ describe('trace-diff-store', () => {
       a: initialCohort[0],
       b: initialCohort[1],
       cohort: [...initialCohort],
+      cohortSummaries: {},
     });
   });
 
@@ -42,6 +44,23 @@ describe('trace-diff-store', () => {
       const cohort = useTraceDiffStore.getState().cohort;
       expect(cohort).toEqual(initialCohort);
     });
+
+    it('stores summary when provided', () => {
+      const summary = {
+        traceID: newTraceId,
+        traceName: 'svc: op',
+        rootServiceName: 'svc',
+        rootOperationName: 'op',
+        startTime: 0,
+        duration: 100,
+        spanCount: 1,
+        errorSpanCount: 0,
+        orphanSpanCount: 0,
+        services: [],
+      } as unknown as TraceSummary;
+      useTraceDiffStore.getState().cohortAddTrace(newTraceId, summary);
+      expect(useTraceDiffStore.getState().cohortSummaries[newTraceId]).toEqual(summary);
+    });
   });
 
   describe('cohortRemoveTrace', () => {
@@ -52,6 +71,7 @@ describe('trace-diff-store', () => {
       expect(newCohort).not.toBe(oldCohort);
       expect(newCohort.includes(initialCohort[2])).toBe(false);
       expect(newCohort).toEqual(oldCohort.slice(0, 2));
+      expect(useTraceDiffStore.getState().cohortSummaries[initialCohort[2]]).toBeUndefined();
     });
 
     it('removes state.a', () => {
@@ -106,6 +126,7 @@ describe('trace-diff-store', () => {
       expect(useTraceDiffStore.getState().a).toBe(null);
       expect(useTraceDiffStore.getState().b).toBe(null);
       expect(useTraceDiffStore.getState().cohort).toEqual([]);
+      expect(useTraceDiffStore.getState().cohortSummaries).toEqual({});
     });
   });
 });

@@ -104,14 +104,15 @@ export function SearchTracePageImpl() {
     }))
   );
   const cohort = useTraceDiffStore(s => s.cohort);
+  const cohortSummaries = useTraceDiffStore(s => s.cohortSummaries);
 
   const diffCohort = useMemo(() => {
     const summaryMap = new Map(sortedTraceSummaries.map(s => [s.traceID, s]));
     return cohort.flatMap(id => {
-      const s = summaryMap.get(id);
+      const s = summaryMap.get(id) ?? cohortSummaries[id];
       return s ? [s] : [];
     });
-  }, [cohort, sortedTraceSummaries]);
+  }, [cohort, cohortSummaries, sortedTraceSummaries]);
 
   const config = useConfig();
   const { disableFileUploadControl } = config;

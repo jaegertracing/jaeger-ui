@@ -258,7 +258,7 @@ describe('<SearchTracePage>', () => {
 
 describe('useTraceDiffStore', () => {
   beforeEach(() => {
-    useTraceDiffStore.setState({ cohort: [], a: null, b: null });
+    useTraceDiffStore.setState({ cohort: [], a: null, b: null, cohortSummaries: {} });
   });
 
   it('cohort is initially empty', () => {
@@ -276,7 +276,7 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
       disableFileUploadControl: false,
       tracking: { gaID: null, trackErrors: false, customWebAnalytics: null },
     });
-    useTraceDiffStore.setState({ cohort: [], a: null, b: null });
+    useTraceDiffStore.setState({ cohort: [], a: null, b: null, cohortSummaries: {} });
   });
 
   it('merges uploaded summaries into traceSummaries when FileLoader calls onTracesLoaded', async () => {
@@ -314,8 +314,8 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
     expect(lastSearchResultsProps.rawTraces).toContainEqual({ traceID: 'uploaded-1' });
   });
 
-  it('filters diffCohort to only summaries present in current results', async () => {
-    const summary = {
+  it('keeps diffCohort traces from prior searches via cached summaries', async () => {
+    const summaryInResults = {
       traceID: 'trace-in-results',
       traceName: 'svc: op',
       rootServiceName: 'svc',
@@ -327,9 +327,23 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
       orphanSpanCount: 0,
       services: [],
     };
-    useSearchTracesMock.mockReturnValue({ data: [summary], isFetching: false, error: null });
-    // Add one known trace and one unknown to the cohort
-    useTraceDiffStore.setState({ cohort: ['trace-in-results', 'trace-not-in-results'] });
+    const summaryFromPriorSearch = {
+      traceID: 'trace-not-in-results',
+      traceName: 'other: op',
+      rootServiceName: 'other',
+      rootOperationName: 'op',
+      startTime: 0,
+      duration: 200,
+      spanCount: 2,
+      errorSpanCount: 0,
+      orphanSpanCount: 0,
+      services: [],
+    };
+    useSearchTracesMock.mockReturnValue({ data: [summaryInResults], isFetching: false, error: null });
+    useTraceDiffStore.setState({
+      cohort: ['trace-in-results', 'trace-not-in-results'],
+      cohortSummaries: { 'trace-not-in-results': summaryFromPriorSearch },
+    });
 
     render(
       <AllProvider initialEntries={['/search?service=svc']}>
@@ -337,7 +351,7 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
       </AllProvider>
     );
 
-    expect(lastSearchResultsProps.diffCohort).toEqual([summary]);
+    expect(lastSearchResultsProps.diffCohort).toEqual([summaryInResults, summaryFromPriorSearch]);
   });
 
   it('uploaded caches are cleared when useClearUploadedTraces callback is invoked', async () => {
