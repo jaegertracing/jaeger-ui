@@ -94,7 +94,7 @@ export class JaegerClient {
     // Use BigInt arithmetic to avoid precision loss; µs-epoch values (~1.7e15)
     // fit safely in Number after dividing by 1000.
     // Fall back to 0 when timestamps are absent (partial backend implementation).
-    return validated.summaries.map(s => {
+    return (validated.summaries ?? []).map(s => {
       // If only one timestamp is present, clamp the missing one to the present one
       // so duration is 0 rather than an astronomically large value from epoch.
       const startNsRaw = s.minStartTimeUnixNano ? BigInt(s.minStartTimeUnixNano) : null;

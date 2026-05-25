@@ -6,15 +6,8 @@
 /**
  * Post-process generated OpenAPI client to:
  * 1. Prepend copyright header
- * 2. Remove .partial() calls — openapi-zod-client emits .partial() for every
- *    schema that has no `required:` array in the OpenAPI spec. Most proto3 messages
- *    (OTLP types, request wrappers, etc.) have no field_behavior annotations so they
- *    land here. Stripping .partial() makes fields non-optional at the generated layer;
- *    schemas.ts then adds .optional() selectively for the handful of types the UI
- *    actually consumes (TraceSummary fields are already handled correctly by the IDL
- *    field_behavior annotations, so schemas.ts needs no .partial() override there).
- * 3. Remove Zodios imports/client code (unused — we only use the Zod schemas)
- * 4. Add convenience exports for schemas
+ * 2. Remove Zodios imports/client code (unused — we only use the Zod schemas)
+ * 3. Add convenience exports for schemas
  */
 
 const fs = require('fs');
@@ -45,18 +38,13 @@ if (!content.includes('Copyright (c)')) {
   console.log('✅ Added copyright header');
 }
 
-// 2. Remove .partial() calls
-const beforeCountPartial = (content.match(/\.partial\(\)/g) || []).length;
-content = content.replace(/\.partial\(\)\s*/g, '');
-const afterCountPartial = (content.match(/\.partial\(\)/g) || []).length;
-
-// 3. Remove Zodios import (unused — we only use the Zod schemas, not the Zodios client)
+// 2. Remove Zodios import (unused — we only use the Zod schemas, not the Zodios client)
 const zodiosImportRegex = /import\s+\{\s*makeApi,\s*Zodios.*?\} from ['"]@zodios\/core['"];\n?/g;
 const beforeZodios = content;
 content = content.replace(zodiosImportRegex, '');
 if (content !== beforeZodios) console.log('✅ Removed Zodios import');
 
-// 4. Remove Zodios client code (unused — we only use the Zod schemas)
+// 3. Remove Zodios client code (unused — we only use the Zod schemas)
 content = content.replace(/\nconst endpoints = makeApi\(\[[\s\S]*?\]\);\n?/, '\n');
 content = content.replace(/\nexport const api = new Zodios\(endpoints\);\n?/, '\n');
 content = content.replace(
@@ -64,7 +52,7 @@ content = content.replace(
   '\n'
 );
 
-// 5. Append convenience exports
+// 4. Append convenience exports
 // The generator prefixes schema names with the package path (e.g. jaeger_api_v3_),
 // so we detect the actual names rather than hardcoding them.
 const servicesMatch = content.match(/const (\w*GetServicesResponse\w*) = /);
@@ -110,5 +98,4 @@ if (!content.includes('as ApiTraceSummarySchema')) {
 
 fs.writeFileSync(filePath, content, 'utf8');
 
-console.log(`✅ Removed ${beforeCountPartial - afterCountPartial} .partial() calls`);
 console.log('✅ Zodios dependencies disabled (use schemas only)');
