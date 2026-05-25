@@ -111,23 +111,23 @@ describe('TraceSummariesResponseSchema', () => {
 
   it('accepts a fully-populated summary with traceId (spec field name)', () => {
     const result = TraceSummariesResponseSchema.parse({ summaries: [fullSummary] });
-    expect(result.summaries).toHaveLength(1);
-    expect(result.summaries[0].traceId).toBe(fullSummary.traceId);
+    expect(result.summaries!).toHaveLength(1);
+    expect(result.summaries![0].traceId).toBe(fullSummary.traceId);
   });
 
   it('accepts traceID (uppercase D) and normalizes it to traceId', () => {
     const { traceId, ...rest } = fullSummary;
     const withUpperD = { traceID: traceId, ...rest };
     const result = TraceSummariesResponseSchema.parse({ summaries: [withUpperD] });
-    expect(result.summaries[0].traceId).toBe(traceId);
+    expect(result.summaries![0].traceId).toBe(traceId);
   });
 
   it('accepts a minimal summary with only traceId', () => {
     const minimal = { traceId: 'aaaabbbbccccdddd0000111122223333' };
     const result = TraceSummariesResponseSchema.parse({ summaries: [minimal] });
-    expect(result.summaries[0].traceId).toBe(minimal.traceId);
-    expect(result.summaries[0].spanCount).toBeUndefined();
-    expect(result.summaries[0].minStartTimeUnixNano).toBeUndefined();
+    expect(result.summaries![0].traceId).toBe(minimal.traceId);
+    expect(result.summaries![0].spanCount).toBeUndefined();
+    expect(result.summaries![0].minStartTimeUnixNano).toBeUndefined();
   });
 
   it('accepts a summary with timestamps present', () => {
@@ -137,7 +137,7 @@ describe('TraceSummariesResponseSchema', () => {
       maxEndTimeUnixNano: '2000000',
     };
     const result = TraceSummariesResponseSchema.parse({ summaries: [withTimestamps] });
-    expect(result.summaries[0].minStartTimeUnixNano).toBe('1000000');
+    expect(result.summaries![0].minStartTimeUnixNano).toBe('1000000');
   });
 
   it('rejects a summary missing traceId', () => {
