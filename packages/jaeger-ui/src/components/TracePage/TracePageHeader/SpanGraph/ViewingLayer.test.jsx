@@ -175,7 +175,7 @@ describe('<SpanGraph>', () => {
         expect(container.querySelector('.ViewingLayer--cursorGuide')).not.toBeInTheDocument();
       });
 
-      it('prevents the cursor from being drawn on scrubber mouseleave', async () => {
+      it('restores the cursor guide on scrubber mouseleave', async () => {
         fireEvent.mouseLeave(container.querySelectorAll('[data-testid="scrubber"]')[0]);
         await waitFor(() =>
           expect(container.querySelector('.ViewingLayer--cursorGuide')).toBeInTheDocument()
