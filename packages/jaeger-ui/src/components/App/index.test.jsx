@@ -99,55 +99,66 @@ describe('JaegerUIApp', () => {
     expect(processScripts).toHaveBeenCalledTimes(1);
   });
 
-  it('should render Page wrapper', () => {
-    const { getByTestId } = renderWithPath('/search');
-    expect(getByTestId('page')).toBeInTheDocument();
+  it('should render Page wrapper', async () => {
+    const { findByTestId } = renderWithPath('/search');
+    expect(await findByTestId('page')).toBeInTheDocument();
   });
 
   it('should render without throwing errors', () => {
     expect(() => renderWithPath('/search')).not.toThrow();
   });
 
-  const routes = [
+  // SearchTracePage and TraceRouter are eagerly imported — synchronous render.
+  const eagerRoutes = [
     ['/search', 'search-trace'],
     // TraceDiff is now routed under /trace/:id - when id contains "...", TraceRouter renders TraceDiff
     ['/trace/abc...def', 'trace-diff'],
     ['/trace/123', 'trace-page'],
-    ['/dependencies', 'dependency-graph'],
-    ['/deep-dependencies', 'deep-dependencies'],
-    ['/quality-metrics', 'quality-metrics'],
-    ['/monitor', 'monitor'],
   ];
 
-  routes.forEach(([path, testId]) => {
+  eagerRoutes.forEach(([path, testId]) => {
     it(`should render correct component for ${path}`, () => {
       const { getByTestId } = renderWithPath(path);
       expect(getByTestId(testId)).toBeInTheDocument();
     });
   });
 
-  it('should render NotFound for unknown routes', () => {
-    const { getByTestId } = renderWithPath('/unknown');
-    expect(getByTestId('not-found')).toBeInTheDocument();
+  // Secondary pages are lazy-loaded — must wait for Suspense to resolve.
+  const lazyRoutes = [
+    ['/dependencies', 'dependency-graph'],
+    ['/deep-dependencies', 'deep-dependencies'],
+    ['/quality-metrics', 'quality-metrics'],
+    ['/monitor', 'monitor'],
+  ];
+
+  lazyRoutes.forEach(([path, testId]) => {
+    it(`should render correct component for ${path}`, async () => {
+      const { findByTestId } = renderWithPath(path);
+      expect(await findByTestId(testId)).toBeInTheDocument();
+    });
   });
 
-  it('should handle root path redirect', () => {
-    // Test that when accessing root path, the SearchTracePage component is rendered
-    // This verifies that the Navigate component is working correctly
-    const { getByTestId } = renderWithPath('/');
-    expect(getByTestId('search-trace')).toBeInTheDocument();
+  it('should render NotFound for unknown routes', async () => {
+    const { findByTestId } = renderWithPath('/unknown');
+    expect(await findByTestId('not-found')).toBeInTheDocument();
   });
 
-  it('should have complete render method coverage', () => {
-    const { container } = renderWithPath('/search');
+  it('should handle root path redirect', async () => {
+    const { findByTestId } = renderWithPath('/');
+    expect(await findByTestId('search-trace')).toBeInTheDocument();
+  });
+
+  it('should have complete render method coverage', async () => {
+    const { container, findByTestId } = renderWithPath('/search');
 
     expect(container.firstChild).toBeDefined();
-    expect(container.querySelector('[data-testid="page"]')).toBeInTheDocument();
-    expect(container.querySelector('[data-testid="search-trace"]')).toBeInTheDocument();
+    expect(await findByTestId('page')).toBeInTheDocument();
+    expect(await findByTestId('search-trace')).toBeInTheDocument();
   });
 
-  it('should not re-initialize on component re-renders (module-level init is one-time)', () => {
-    const { rerender } = renderWithPath('/search');
+  it('should not re-initialize on component re-renders (module-level init is one-time)', async () => {
+    const { rerender, findByTestId } = renderWithPath('/search');
+    await findByTestId('search-trace');
     rerender(
       <MemoryRouter initialEntries={['/trace/abc...def']}>
         <JaegerUIApp />

@@ -44,36 +44,46 @@ const beforeCountPartial = (content.match(/\.partial\(\)/g) || []).length;
 content = content.replace(/\.partial\(\)\s*/g, '');
 const afterCountPartial = (content.match(/\.partial\(\)/g) || []).length;
 
-// 3. Comment out Zodios imports
-const zodiosImportRegex = /import\s+\{\s*makeApi,\s*Zodios.*?\} from '@zodios\/core';/g;
-if (zodiosImportRegex.test(content)) {
-  content = content.replace(
-    zodiosImportRegex,
-    "// import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';"
-  );
-  console.log('✅ Commented out Zodios imports');
-}
+// 3. Remove Zodios import (unused — we only use the Zod schemas, not the Zodios client)
+const zodiosImportRegex = /import\s+\{\s*makeApi,\s*Zodios.*?\} from ['"]@zodios\/core['"];\n?/g;
+const beforeZodios = content;
+content = content.replace(zodiosImportRegex, '');
+if (content !== beforeZodios) console.log('✅ Removed Zodios import');
 
-// 4. Comment out Zodios usage
-content = content.replace(/(const endpoints = makeApi\(\[[\s\S]*?\]\);)/, '/*\n$1\n*/');
-
-content = content.replace(/(export const api = new Zodios\(endpoints\);)/, '// $1');
+// 4. Remove Zodios client code (unused — we only use the Zod schemas)
+content = content.replace(/\nconst endpoints = makeApi\(\[[\s\S]*?\]\);\n?/, '\n');
+content = content.replace(/\nexport const api = new Zodios\(endpoints\);\n?/, '\n');
 content = content.replace(
-  /(export function createApiClient\(baseUrl: string, options\?: ZodiosOptions\) \{[\s\S]*?\})/,
-  '/*\n$1\n*/'
+  /\nexport function createApiClient\(baseUrl: string, options\?: ZodiosOptions\) \{[\s\S]*?\}\n?/,
+  '\n'
 );
 
 // 5. Append convenience exports
+// The generator prefixes schema names with the package path (e.g. jaeger_api_v3_),
+// so we detect the actual names rather than hardcoding them.
+const servicesMatch = content.match(/const (\w*GetServicesResponse\w*) = /);
+const operationsMatch = content.match(/const (\w*GetOperationsResponse\w*) = /);
+const operationMatch = content.match(/const (\w*Operation\b) = z[\s\S]*?\.object\(\{[\s]*name:/);
+
+if (!servicesMatch || !operationsMatch || !operationMatch) {
+  console.error('❌ Could not find expected schema variable names in generated file');
+  process.exit(1);
+}
+
+const servicesVar = servicesMatch[1];
+const operationsVar = operationsMatch[1];
+const operationVar = operationMatch[1];
+
 const extraExports = `
 // Export commonly used schemas individually for convenience
-export { GetServicesResponse as ServicesResponseSchema };
-export { GetOperationsResponse as OperationsResponseSchema };
-export { Operation as OperationSchema };
+export { ${servicesVar} as ServicesResponseSchema };
+export { ${operationsVar} as OperationsResponseSchema };
+export { ${operationVar} as OperationSchema };
 `;
 
-if (!content.includes('export { GetServicesResponse as ServicesResponseSchema }')) {
+if (!content.includes('as ServicesResponseSchema')) {
   content += extraExports;
-  console.log('✅ Added convenience exports');
+  console.log(`✅ Added convenience exports (${servicesVar}, ${operationsVar}, ${operationVar})`);
 }
 
 fs.writeFileSync(filePath, content, 'utf8');

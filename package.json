@@ -19,12 +19,12 @@
     "@noble/hashes": "2.2.0",
     "@testing-library/dom": "^10.4.1",
     "depcheck": "1.4.7",
-    "knip": "6.12.2",
-    "eslint-plugin-react-x": "5.7.1",
+    "knip": "6.14.1",
+    "eslint-plugin-react-x": "5.8.0",
     "husky": "9.1.0",
     "jsdom": "29.1.1",
     "lint-staged": "17.0.4",
-    "npm-run-all2": "8.0.1",
+    "npm-run-all2": "9.0.1",
     "openapi-zod-client": "1.18.3",
     "typescript": "6.0.2",
     "vite-plus": "0.1.17",
@@ -34,7 +34,7 @@
   "overrides": {
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "yaml": "2.8.3",
+    "yaml": "2.9.0",
     "@exodus/bytes": {
       "@noble/hashes": "$@noble/hashes"
     }
@@ -66,7 +66,7 @@
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,mts}": [
-      "vp lint --fix",
+      "vp lint --fix --no-error-on-unmatched-pattern",
       "vp fmt"
     ],
     "*.{json,css}": [

@@ -78,6 +78,42 @@ export const getUrlState: (search: string) => TUrlState = memoizeOne(function ge
   return rv;
 });
 
+// Returns the first element when the URL param was repeated (e.g. ?service=a&service=b),
+// otherwise returns the value as-is (string or undefined).
+function firstOf(v: string | string[] | undefined | Record<string, string>): string | undefined {
+  if (Array.isArray(v)) return v[0];
+  if (typeof v === 'string') return v;
+  return undefined;
+}
+
+/**
+ * Parse the URL search string into a typed SearchQuery, or null when no search
+ * params are present (homepage / no query submitted yet).
+ *
+ * SearchForm always writes concrete start/end epoch values to the URL (converted
+ * from the lookback selector) so that shared links reproduce the same time window.
+ * lookback is kept in the URL so SearchForm can restore the selector label on the
+ * next visit.
+ */
+export function searchQueryFromUrl(search: string): SearchQuery | null {
+  const q = getUrlState(search);
+  if (!q.service && !q.start && !q.end) return null;
+  return {
+    service: firstOf(q?.service),
+    operation: firstOf(q.operation),
+    start: firstOf(q.start) ?? '',
+    end: firstOf(q.end) ?? '',
+    limit: (() => {
+      const n = Number(firstOf(q.limit));
+      return Number.isFinite(n) && n > 0 ? n : 20;
+    })(),
+    lookback: firstOf(q.lookback) ?? '1h',
+    minDuration: typeof q.minDuration === 'string' ? q.minDuration : undefined,
+    maxDuration: typeof q.maxDuration === 'string' ? q.maxDuration : undefined,
+    tags: typeof q.tags === 'string' ? q.tags : undefined,
+  };
+}
+
 export function isSameQuery(a: SearchQuery, b: SearchQuery) {
   if (Boolean(a) !== Boolean(b)) {
     return false;

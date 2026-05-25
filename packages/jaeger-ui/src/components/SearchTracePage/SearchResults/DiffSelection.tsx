@@ -8,23 +8,20 @@ import { Link } from 'react-router-dom';
 import ResultItemTitle from './ResultItemTitle';
 import { getUrl } from '../../TraceDiff/url';
 import { getTracePageLink } from '../../TracePage/url';
-import { fetchedState } from '../../../constants';
 
-import { FetchedTrace } from '../../../types';
-import { IOtelTrace } from '../../../types/otel';
+import { TraceSummary } from '../../../types/trace-summary';
 
 import './DiffSelection.css';
 
 type Props = {
   toggleComparison: (traceID: string, isInDiffCohort: boolean) => void;
-  traces: FetchedTrace[];
+  traces: TraceSummary[];
 };
 
 const CTA_MESSAGE = <h2 className="ub-m0">Compare traces by selecting result items</h2>;
 
 export default function DiffSelection({ toggleComparison, traces }: Props) {
-  const cohort = traces.filter(ft => ft.state !== fetchedState.ERROR).map(ft => ft.id);
-
+  const cohort = traces.map(t => t.traceID);
   const compareHref = cohort.length > 1 ? getUrl({ cohort }) : null;
 
   const compareBtn = (
@@ -37,23 +34,20 @@ export default function DiffSelection({ toggleComparison, traces }: Props) {
     <div className={`DiffSelection ${traces.length ? 'is-non-empty' : ''} ub-mb3`}>
       {traces.length > 0 && (
         <div className="DiffSelection--selectedItems">
-          {traces.map(fetchedTrace => {
-            const { data, error, id, state } = fetchedTrace;
-            return (
-              <ResultItemTitle
-                key={id}
-                duration={data && (data.duration as IOtelTrace['duration'])}
-                error={error}
-                isInDiffCohort
-                linkTo={getTracePageLink(id)}
-                state={state}
-                targetBlank
-                toggleComparison={toggleComparison}
-                traceID={id}
-                traceName={data && data.traceName}
-              />
-            );
-          })}
+          {traces.map(summary => (
+            <ResultItemTitle
+              key={summary.traceID}
+              duration={summary.duration}
+              error={undefined}
+              isInDiffCohort
+              linkTo={getTracePageLink(summary.traceID)}
+              state={undefined}
+              targetBlank
+              toggleComparison={toggleComparison}
+              traceID={summary.traceID}
+              traceName={summary.traceName}
+            />
+          ))}
         </div>
       )}
       <div className="DiffSelection--message">
