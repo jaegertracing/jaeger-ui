@@ -10,12 +10,14 @@ import { queryClient } from '../query/app-query-client';
 import { FetchedTrace } from '../types';
 import type { IOtelTrace } from '../types/otel';
 
-const normalizeTraceId = (id: string) => id.replace(/^0+/, '') || id;
-const TRACE_QUERY_KEY = (id: string) => ['trace', normalizeTraceId(id)] as const;
+const TRACE_QUERY_KEY = (id: string) => ['trace', id] as const;
 
 // TODO: remove once callers (duck.track.ts, TraceDiff) are migrated off Redux/non-hook paths
 export function getCachedTrace(id: string): IOtelTrace | undefined {
-  return queryClient.getQueryData<IOtelTrace>(TRACE_QUERY_KEY(id));
+  return (
+    queryClient.getQueryData<IOtelTrace>(TRACE_QUERY_KEY(id)) ||
+    queryClient.getQueryData<IOtelTrace>(TRACE_QUERY_KEY(id.replace(/^0+/, '')))
+  );
 }
 
 export function populateTraceCache(trace: IOtelTrace): void {
