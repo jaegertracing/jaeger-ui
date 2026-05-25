@@ -16,9 +16,19 @@
  */
 
 import { z } from 'zod';
-import { ApiTraceSummarySchema, FindTraceSummariesResponseSchema } from './generated-client';
+import { schemas } from './generated-client';
 
-export { ServicesResponseSchema, OperationsResponseSchema, OperationSchema } from './generated-client';
+const {
+  jaeger_api_v3_GetServicesResponse,
+  jaeger_api_v3_GetOperationsResponse,
+  jaeger_api_v3_Operation,
+  jaeger_api_v3_TraceSummary,
+  jaeger_api_v3_FindTraceSummariesResponse,
+} = schemas;
+
+export const ServicesResponseSchema = jaeger_api_v3_GetServicesResponse;
+export const OperationsResponseSchema = jaeger_api_v3_GetOperationsResponse;
+export const OperationSchema = jaeger_api_v3_Operation;
 
 export const traceIdHex = z.string().regex(/^[0-9a-f]{32}$/i, 'Invalid trace ID: must be 32-char hex string');
 
@@ -46,7 +56,7 @@ const normalizeTraceId = z.preprocess(
     }
     return raw;
   },
-  ApiTraceSummarySchema.extend({
+  jaeger_api_v3_TraceSummary.extend({
     traceId: traceIdHex,
     // Restrict to decimal digits when present — BigInt() throws SyntaxError on non-decimal strings.
     minStartTimeUnixNano: z.string().regex(/^\d+$/, 'Expected decimal int64 string').optional(),
@@ -55,6 +65,6 @@ const normalizeTraceId = z.preprocess(
   })
 );
 
-export const TraceSummariesResponseSchema = FindTraceSummariesResponseSchema.extend({
+export const TraceSummariesResponseSchema = jaeger_api_v3_FindTraceSummariesResponse.extend({
   summaries: z.array(normalizeTraceId),
 });

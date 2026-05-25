@@ -7,7 +7,6 @@
  * Post-process generated OpenAPI client to:
  * 1. Prepend copyright header
  * 2. Remove Zodios imports/client code (unused — we only use the Zod schemas)
- * 3. Add convenience exports for schemas
  */
 
 const fs = require('fs');
@@ -51,50 +50,6 @@ content = content.replace(
   /\nexport function createApiClient\(baseUrl: string, options\?: ZodiosOptions\) \{[\s\S]*?\}\n?/,
   '\n'
 );
-
-// 4. Append convenience exports
-// The generator prefixes schema names with the package path (e.g. jaeger_api_v3_),
-// so we detect the actual names rather than hardcoding them.
-const servicesMatch = content.match(/const (\w*GetServicesResponse\w*) = /);
-const operationsMatch = content.match(/const (\w*GetOperationsResponse\w*) = /);
-const operationMatch = content.match(/const (\w*Operation\b) = z[\s\S]*?\.object\(\{[\s]*name:/);
-const traceSummaryMatch = content.match(/const (\w*TraceSummary\b) = /);
-const findTraceSummariesResponseMatch = content.match(/const (\w*FindTraceSummariesResponse\w*) = /);
-
-if (
-  !servicesMatch ||
-  !operationsMatch ||
-  !operationMatch ||
-  !traceSummaryMatch ||
-  !findTraceSummariesResponseMatch
-) {
-  console.error('❌ Could not find expected schema variable names in generated file');
-  process.exit(1);
-}
-
-const servicesVar = servicesMatch[1];
-const operationsVar = operationsMatch[1];
-const operationVar = operationMatch[1];
-const traceSummaryVar = traceSummaryMatch[1];
-const findTraceSummariesResponseVar = findTraceSummariesResponseMatch[1];
-
-const extraExports = `
-// Export commonly used schemas individually for convenience
-export { ${servicesVar} as ServicesResponseSchema };
-export { ${operationsVar} as OperationsResponseSchema };
-export { ${operationVar} as OperationSchema };
-export { ${traceSummaryVar} as ApiTraceSummarySchema };
-export { ${findTraceSummariesResponseVar} as FindTraceSummariesResponseSchema };
-`;
-
-if (!content.includes('as ApiTraceSummarySchema')) {
-  // Remove any previous (partial) export block before appending the full one.
-  content = content.replace(/\n\/\/ Export commonly used schemas individually[\s\S]*$/, '');
-  content += extraExports;
-  console.log(
-    `✅ Added convenience exports (${servicesVar}, ${operationsVar}, ${operationVar}, ${traceSummaryVar}, ${findTraceSummariesResponseVar})`
-  );
-}
 
 fs.writeFileSync(filePath, content, 'utf8');
 
