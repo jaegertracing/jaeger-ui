@@ -44,9 +44,11 @@ describe('getCachedTrace', () => {
   });
 
   it('strips leading zeros when looking up by padded ID', () => {
-    populateTraceCache(otelTrace);
-    const paddedId = `000${otelTrace.traceID}`;
-    expect(getCachedTrace(paddedId)).toBe(otelTrace);
+    const fixedId = 'abc123';
+    const paddedId = `000${fixedId}`;
+    const fakeTrace = { ...otelTrace, traceID: fixedId };
+    populateTraceCache(fakeTrace);
+    expect(getCachedTrace(paddedId)).toBe(fakeTrace);
   });
 });
 
