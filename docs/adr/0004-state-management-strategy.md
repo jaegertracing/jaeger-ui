@@ -1080,21 +1080,35 @@ Search now calls `/api/v3/trace-summaries` via `useSearchTraces(query)` in `src/
 
 **Redux removed**: `services` reducer (no longer in `src/reducers/index.ts`; discovery never writes to Redux).
 
-**Hooks** (`src/hooks/useTraceDiscovery.ts`):
+**Query keys** are centralised as module-private constants and accessors in `src/hooks/useTraceDiscovery.ts` (same module as Phase 2b `useSearchTraces`; not exported):
+
+```typescript
+const SERVICES_QUERY_KEY = ['services'] as const;
+const TRACE_SUMMARIES_QUERY_KEY = 'traceSummaries'; // Phase 2b; string prefix for cache scans / useIsFetching
+
+function spanNamesQueryKey(service: string | null): readonly ['spanNames', string | null] {
+  return ['spanNames', service] as const;
+}
+```
+
+Parameterised discovery keys use an accessor (`spanNamesQueryKey`) so new hooks in this file do not reintroduce divergent inline key literals.
+
+**Hooks**:
 
 ```typescript
 export function useServices(): UseQueryResult<string[]> {
   return useQuery({
-    queryKey: ['services'],
+    queryKey: SERVICES_QUERY_KEY,
     queryFn: () => jaegerClient.fetchServices(),
     staleTime: 60 * 1000,
     refetchOnWindowFocus: true,
+    select: data => [...data].sort(localeStringComparator),
   });
 }
 
 export function useSpanNames(service: string | null, spanKind?: string): UseQueryResult<...> {
   return useQuery({
-    queryKey: ['spanNames', service],
+    queryKey: spanNamesQueryKey(service),
     queryFn: service ? () => jaegerClient.fetchSpanNames(service) : skipToken,
     staleTime: 60 * 1000,
     refetchOnWindowFocus: true,
@@ -1103,7 +1117,7 @@ export function useSpanNames(service: string | null, spanKind?: string): UseQuer
 }
 ```
 
-**Query keys** are module-private in `useTraceDiscovery.ts` (not exported). Callers use `useServices`, `useSpanNames`, `useSearchTraces`, `useExecuteSearch`, and `useIsSearchFetching()` rather than depending on cache key literals.
+**Callers** use `useServices`, `useSpanNames`, `useSearchTraces`, and `useIsSearchFetching()` — not cache key literals or a separate keys module.
 
 **Components using hooks** (no Redux service/ops fetch): `SearchForm`, `DeepDependencies` (Header graph), `Monitor/ServicesView`, `QualityMetrics`.
 
