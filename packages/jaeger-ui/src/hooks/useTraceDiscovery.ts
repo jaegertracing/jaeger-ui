@@ -107,7 +107,8 @@ export function useSearchTraces(query: SearchQuery | null): UseQueryResult<Trace
       .getQueryCache()
       .findAll({ queryKey: [TRACE_SUMMARIES_QUERY_KEY], exact: false })
       .forEach(entry => {
-        if (!isSameQuery(entry.queryKey[1] as SearchQuery, effectiveQuery)) {
+        const entryQuery = entry.queryKey[1] as SearchQuery | null | undefined;
+        if (!entryQuery || !isSameQuery(entryQuery, effectiveQuery)) {
           queryClient.removeQueries({ queryKey: entry.queryKey, exact: true });
         }
       });

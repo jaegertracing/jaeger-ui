@@ -7,10 +7,8 @@ function eqEq(a: string | number | null | undefined, b: string | number | null |
   return (a == null && b == null) || String(a) === String(b);
 }
 
-export function isSameQuery(a: SearchQuery, b: SearchQuery) {
-  if (Boolean(a) !== Boolean(b)) {
-    return false;
-  }
+export function isSameQuery(a: SearchQuery, b: SearchQuery | null | undefined): boolean {
+  if (!b) return false;
   return (
     eqEq(a.end, b.end) &&
     eqEq(a.limit, b.limit) &&
