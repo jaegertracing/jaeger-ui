@@ -169,6 +169,31 @@ describe('TraceSummariesResponseSchema', () => {
     const result = TraceSummariesResponseSchema.parse({ summaries: [] });
     expect(result.summaries).toEqual([]);
   });
+
+  it('accepts response with no summaries field (treats as absent)', () => {
+    const result = TraceSummariesResponseSchema.parse({});
+    expect(result.summaries).toBeUndefined();
+  });
+
+  it('prefers traceId over traceID when both are present', () => {
+    const both = { ...fullSummary, traceID: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' };
+    const result = TraceSummariesResponseSchema.parse({ summaries: [both] });
+    expect(result.summaries![0].traceId).toBe(fullSummary.traceId);
+  });
+
+  it('rejects negative spanCount', () => {
+    expect(() =>
+      TraceSummariesResponseSchema.parse({ summaries: [{ ...fullSummary, spanCount: -1 }] })
+    ).toThrow(z.ZodError);
+  });
+
+  it('rejects negative errorSpanCount in services', () => {
+    expect(() =>
+      TraceSummariesResponseSchema.parse({
+        summaries: [{ ...fullSummary, services: [{ name: 'svc', errorSpanCount: -1 }] }],
+      })
+    ).toThrow(z.ZodError);
+  });
 });
 
 describe('ID Validators', () => {
