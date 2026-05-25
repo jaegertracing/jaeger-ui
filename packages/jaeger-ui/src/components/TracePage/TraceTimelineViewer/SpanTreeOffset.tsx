@@ -87,7 +87,25 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
   };
 
   const { hasChildren, spanID, childSpans } = span;
-  const wrapperProps = hasChildren ? { onClick, role: 'switch', 'aria-checked': childrenVisible } : null;
+  const _childrenToggleKeyDown = (e: React.KeyboardEvent) => {
+    if ((e.key === 'Enter' || e.key === ' ') && onClick) {
+      e.preventDefault();
+      onClick();
+    }
+  };
+
+  const wrapperProps = hasChildren
+    ? {
+        onClick,
+        ...(onClick && {
+          onKeyDown: _childrenToggleKeyDown,
+          tabIndex: 0,
+        }),
+        role: 'switch',
+        'aria-checked': childrenVisible,
+        'aria-label': 'Expand or collapse child spans',
+      }
+    : null;
 
   // Get parent color for horizontal line
   const parentSpan = span.parentSpan;

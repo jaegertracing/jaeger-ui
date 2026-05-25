@@ -4,86 +4,148 @@
 // This file is AUTO-GENERATED from the Jaeger OpenAPI spec.
 // Do not edit manually. Regenerate using: npm run generate:api-types
 
-// import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
 import { z } from 'zod';
 
-type AnyValue = Partial<{
+type opentelemetry_proto_common_v1_AnyValue = Partial<{
   stringValue: string;
   boolValue: boolean;
   intValue: string;
   doubleValue: number;
-  arrayValue: ArrayValue;
-  kvlistValue: KeyValueList;
+  arrayValue: opentelemetry_proto_common_v1_ArrayValue;
+  kvlistValue: opentelemetry_proto_common_v1_KeyValueList;
   bytesValue: string;
 }>;
-type ArrayValue = Partial<{
-  values: Array<AnyValue>;
+type opentelemetry_proto_common_v1_ArrayValue = Partial<{
+  values: Array<opentelemetry_proto_common_v1_AnyValue>;
 }>;
-type KeyValue = Partial<{
+type opentelemetry_proto_common_v1_KeyValue = Partial<{
   key: string;
-  value: AnyValue;
+  value: opentelemetry_proto_common_v1_AnyValue;
 }>;
-type KeyValueList = Partial<{
-  values: Array<KeyValue>;
+type opentelemetry_proto_common_v1_KeyValueList = Partial<{
+  values: Array<opentelemetry_proto_common_v1_KeyValue>;
 }>;
 
-const Operation = z.object({ name: z.string(), spanKind: z.string() }).passthrough();
-const GetOperationsResponse = z.object({ operations: z.array(Operation) }).passthrough();
-const GoogleProtobufAny = z.object({ '@type': z.string() }).passthrough();
-const Status = z
-  .object({ code: z.number().int(), message: z.string(), details: z.array(GoogleProtobufAny) })
+const jaeger_api_v3_Dependency = z
+  .object({ parent: z.string(), child: z.string(), callCount: z.string() })
   .passthrough();
-const GetServicesResponse = z.object({ services: z.array(z.string()) }).passthrough();
-const ArrayValue: z.ZodType<ArrayValue> = z.lazy(() => z.object({ values: z.array(AnyValue) }).passthrough());
-const KeyValueList: z.ZodType<KeyValueList> = z.lazy(() =>
-  z.object({ values: z.array(KeyValue) }).passthrough()
+const jaeger_api_v3_DependenciesResponse = z
+  .object({ dependencies: z.array(jaeger_api_v3_Dependency) })
+  .passthrough();
+const google_protobuf_Any = z.object({ '@type': z.string() }).passthrough();
+const google_rpc_Status = z
+  .object({
+    code: z.number().int(),
+    message: z.string(),
+    details: z.array(google_protobuf_Any),
+  })
+  .passthrough();
+const jaeger_api_v3_Operation = z.object({ name: z.string(), spanKind: z.string() }).passthrough();
+const jaeger_api_v3_GetOperationsResponse = z
+  .object({ operations: z.array(jaeger_api_v3_Operation) })
+  .passthrough();
+const jaeger_api_v3_GetServicesResponse = z.object({ services: z.array(z.string()) }).passthrough();
+const jaeger_api_v3_ServiceSummary = z
+  .object({
+    name: z.string(),
+    spanCount: z.number().int(),
+    errorSpanCount: z.number().int(),
+  })
+  .passthrough();
+const jaeger_api_v3_TraceSummary = z
+  .object({
+    traceId: z.string(),
+    rootServiceName: z.string(),
+    rootOperationName: z.string(),
+    minStartTimeUnixNano: z.string(),
+    maxEndTimeUnixNano: z.string(),
+    spanCount: z.number().int(),
+    errorSpanCount: z.number().int(),
+    orphanSpanCount: z.number().int(),
+    services: z.array(jaeger_api_v3_ServiceSummary),
+  })
+  .passthrough();
+const jaeger_api_v3_FindTraceSummariesResponse = z
+  .object({ summaries: z.array(jaeger_api_v3_TraceSummary) })
+  .passthrough();
+const jaeger_api_v3_TraceQueryParameters = z
+  .object({
+    serviceName: z.string(),
+    operationName: z.string(),
+    attributes: z.string(),
+    startTimeMin: z.string().datetime({ offset: true }),
+    startTimeMax: z.string().datetime({ offset: true }),
+    durationMin: z.string().regex(/^-?(?:0|[1-9][0-9]{0,11})(?:\.[0-9]{1,9})?s$/),
+    durationMax: z.string().regex(/^-?(?:0|[1-9][0-9]{0,11})(?:\.[0-9]{1,9})?s$/),
+    searchDepth: z.number().int(),
+    rawTraces: z.boolean(),
+  })
+  .passthrough();
+const jaeger_api_v3_FindTraceSummariesRequest = z
+  .object({ query: jaeger_api_v3_TraceQueryParameters })
+  .passthrough();
+const opentelemetry_proto_common_v1_ArrayValue: z.ZodType<opentelemetry_proto_common_v1_ArrayValue> = z.lazy(
+  () => z.object({ values: z.array(opentelemetry_proto_common_v1_AnyValue) }).passthrough()
 );
-const AnyValue: z.ZodType<AnyValue> = z.lazy(() =>
+const opentelemetry_proto_common_v1_KeyValueList: z.ZodType<opentelemetry_proto_common_v1_KeyValueList> =
+  z.lazy(() => z.object({ values: z.array(opentelemetry_proto_common_v1_KeyValue) }).passthrough());
+const opentelemetry_proto_common_v1_AnyValue: z.ZodType<opentelemetry_proto_common_v1_AnyValue> = z.lazy(() =>
   z
     .object({
       stringValue: z.string(),
       boolValue: z.boolean(),
       intValue: z.string(),
       doubleValue: z.number(),
-      arrayValue: ArrayValue,
-      kvlistValue: KeyValueList,
+      arrayValue: opentelemetry_proto_common_v1_ArrayValue,
+      kvlistValue: opentelemetry_proto_common_v1_KeyValueList,
       bytesValue: z.string(),
     })
     .passthrough()
 );
-const KeyValue: z.ZodType<KeyValue> = z.lazy(() =>
-  z.object({ key: z.string(), value: AnyValue }).passthrough()
+const opentelemetry_proto_common_v1_KeyValue: z.ZodType<opentelemetry_proto_common_v1_KeyValue> = z.lazy(() =>
+  z
+    .object({
+      key: z.string(),
+      value: opentelemetry_proto_common_v1_AnyValue,
+    })
+    .passthrough()
 );
-const Resource = z
-  .object({ attributes: z.array(KeyValue), droppedAttributesCount: z.number().int() })
+const opentelemetry_proto_resource_v1_Resource = z
+  .object({
+    attributes: z.array(opentelemetry_proto_common_v1_KeyValue),
+    droppedAttributesCount: z.number().int(),
+  })
   .passthrough();
-const InstrumentationScope = z
+const opentelemetry_proto_common_v1_InstrumentationScope = z
   .object({
     name: z.string(),
     version: z.string(),
-    attributes: z.array(KeyValue),
+    attributes: z.array(opentelemetry_proto_common_v1_KeyValue),
     droppedAttributesCount: z.number().int(),
   })
   .passthrough();
-const Span_Event = z
+const opentelemetry_proto_trace_v1_Span_Event = z
   .object({
     timeUnixNano: z.string(),
     name: z.string(),
-    attributes: z.array(KeyValue),
+    attributes: z.array(opentelemetry_proto_common_v1_KeyValue),
     droppedAttributesCount: z.number().int(),
   })
   .passthrough();
-const Span_Link = z
+const opentelemetry_proto_trace_v1_Span_Link = z
   .object({
     traceId: z.string(),
     spanId: z.string(),
     traceState: z.string(),
-    attributes: z.array(KeyValue),
+    attributes: z.array(opentelemetry_proto_common_v1_KeyValue),
     droppedAttributesCount: z.number().int(),
     flags: z.number().int(),
   })
   .passthrough();
-const Span = z
+const opentelemetry_proto_trace_v1_Status = z
+  .object({ message: z.string(), code: z.number().int() })
+  .passthrough();
+const opentelemetry_proto_trace_v1_Span = z
   .object({
     traceId: z.string(),
     spanId: z.string(),
@@ -94,176 +156,66 @@ const Span = z
     kind: z.number().int(),
     startTimeUnixNano: z.string(),
     endTimeUnixNano: z.string(),
-    attributes: z.array(KeyValue),
+    attributes: z.array(opentelemetry_proto_common_v1_KeyValue),
     droppedAttributesCount: z.number().int(),
-    events: z.array(Span_Event),
+    events: z.array(opentelemetry_proto_trace_v1_Span_Event),
     droppedEventsCount: z.number().int(),
-    links: z.array(Span_Link),
+    links: z.array(opentelemetry_proto_trace_v1_Span_Link),
     droppedLinksCount: z.number().int(),
-    status: Status,
+    status: opentelemetry_proto_trace_v1_Status,
   })
   .passthrough();
-const ScopeSpans = z
-  .object({ scope: InstrumentationScope, spans: z.array(Span), schemaUrl: z.string() })
+const opentelemetry_proto_trace_v1_ScopeSpans = z
+  .object({
+    scope: opentelemetry_proto_common_v1_InstrumentationScope,
+    spans: z.array(opentelemetry_proto_trace_v1_Span),
+    schemaUrl: z.string(),
+  })
   .passthrough();
-const ResourceSpans = z
-  .object({ resource: Resource, scopeSpans: z.array(ScopeSpans), schemaUrl: z.string() })
+const opentelemetry_proto_trace_v1_ResourceSpans = z
+  .object({
+    resource: opentelemetry_proto_resource_v1_Resource,
+    scopeSpans: z.array(opentelemetry_proto_trace_v1_ScopeSpans),
+    schemaUrl: z.string(),
+  })
   .passthrough();
-const TracesData = z.object({ resourceSpans: z.array(ResourceSpans) }).passthrough();
+const opentelemetry_proto_trace_v1_TracesData = z
+  .object({
+    resourceSpans: z.array(opentelemetry_proto_trace_v1_ResourceSpans),
+  })
+  .passthrough();
+const jaeger_api_v3_FindTracesRequest = z.object({ query: jaeger_api_v3_TraceQueryParameters }).passthrough();
 
 export const schemas = {
-  Operation,
-  GetOperationsResponse,
-  GoogleProtobufAny,
-  Status,
-  GetServicesResponse,
-  ArrayValue,
-  KeyValueList,
-  AnyValue,
-  KeyValue,
-  Resource,
-  InstrumentationScope,
-  Span_Event,
-  Span_Link,
-  Span,
-  ScopeSpans,
-  ResourceSpans,
-  TracesData,
+  jaeger_api_v3_Dependency,
+  jaeger_api_v3_DependenciesResponse,
+  google_protobuf_Any,
+  google_rpc_Status,
+  jaeger_api_v3_Operation,
+  jaeger_api_v3_GetOperationsResponse,
+  jaeger_api_v3_GetServicesResponse,
+  jaeger_api_v3_ServiceSummary,
+  jaeger_api_v3_TraceSummary,
+  jaeger_api_v3_FindTraceSummariesResponse,
+  jaeger_api_v3_TraceQueryParameters,
+  jaeger_api_v3_FindTraceSummariesRequest,
+  opentelemetry_proto_common_v1_ArrayValue,
+  opentelemetry_proto_common_v1_KeyValueList,
+  opentelemetry_proto_common_v1_AnyValue,
+  opentelemetry_proto_common_v1_KeyValue,
+  opentelemetry_proto_resource_v1_Resource,
+  opentelemetry_proto_common_v1_InstrumentationScope,
+  opentelemetry_proto_trace_v1_Span_Event,
+  opentelemetry_proto_trace_v1_Span_Link,
+  opentelemetry_proto_trace_v1_Status,
+  opentelemetry_proto_trace_v1_Span,
+  opentelemetry_proto_trace_v1_ScopeSpans,
+  opentelemetry_proto_trace_v1_ResourceSpans,
+  opentelemetry_proto_trace_v1_TracesData,
+  jaeger_api_v3_FindTracesRequest,
 };
 
-/*
-const endpoints = makeApi([
-  {
-    method: 'get',
-    path: '/api/v3/operations',
-    alias: 'QueryService_GetOperations',
-    description: `GetOperations returns operation names.`,
-    requestFormat: 'json',
-    parameters: [
-      {
-        name: 'service',
-        type: 'Query',
-        schema: z.string().optional(),
-      },
-      {
-        name: 'spanKind',
-        type: 'Query',
-        schema: z.string().optional(),
-      },
-    ],
-    response: GetOperationsResponse,
-  },
-  {
-    method: 'get',
-    path: '/api/v3/services',
-    alias: 'QueryService_GetServices',
-    description: `GetServices returns service names.`,
-    requestFormat: 'json',
-    response: GetServicesResponse,
-  },
-  {
-    method: 'get',
-    path: '/api/v3/traces',
-    alias: 'QueryService_FindTraces',
-    description: `FindTraces searches for traces.
- See GetTrace for JSON unmarshalling.`,
-    requestFormat: 'json',
-    parameters: [
-      {
-        name: 'query.serviceName',
-        type: 'Query',
-        schema: z.string().optional(),
-      },
-      {
-        name: 'query.operationName',
-        type: 'Query',
-        schema: z.string().optional(),
-      },
-      {
-        name: 'query.startTimeMin',
-        type: 'Query',
-        schema: z.string().datetime({ offset: true }).optional(),
-      },
-      {
-        name: 'query.startTimeMax',
-        type: 'Query',
-        schema: z.string().datetime({ offset: true }).optional(),
-      },
-      {
-        name: 'query.durationMin',
-        type: 'Query',
-        schema: z
-          .string()
-          .regex(/^-?(?:0|[1-9][0-9]{0,11})(?:\.[0-9]{1,9})?s$/)
-          .optional(),
-      },
-      {
-        name: 'query.durationMax',
-        type: 'Query',
-        schema: z
-          .string()
-          .regex(/^-?(?:0|[1-9][0-9]{0,11})(?:\.[0-9]{1,9})?s$/)
-          .optional(),
-      },
-      {
-        name: 'query.searchDepth',
-        type: 'Query',
-        schema: z.number().int().optional(),
-      },
-      {
-        name: 'query.rawTraces',
-        type: 'Query',
-        schema: z.boolean().optional(),
-      },
-    ],
-    response: TracesData,
-  },
-  {
-    method: 'get',
-    path: '/api/v3/traces/:traceId',
-    alias: 'QueryService_GetTrace',
-    description: `GetTrace returns a single trace.
- Note that the JSON response over HTTP is wrapped into result envelope &quot;{&quot;result&quot;: ...}&quot;
- It means that the JSON response cannot be directly unmarshalled using JSONPb.
- This can be fixed by first parsing into user-defined envelope with standard JSON library
- or string manipulation to remove the envelope. Alternatively generate objects using OpenAPI.`,
-    requestFormat: 'json',
-    parameters: [
-      {
-        name: 'traceId',
-        type: 'Path',
-        schema: z.string(),
-      },
-      {
-        name: 'startTime',
-        type: 'Query',
-        schema: z.string().datetime({ offset: true }).optional(),
-      },
-      {
-        name: 'endTime',
-        type: 'Query',
-        schema: z.string().datetime({ offset: true }).optional(),
-      },
-      {
-        name: 'rawTraces',
-        type: 'Query',
-        schema: z.boolean().optional(),
-      },
-    ],
-    response: TracesData,
-  },
-]);
-*/
-
-// export const api = new Zodios(endpoints);
-
-/*
-export function createApiClient(baseUrl: string, options?: ZodiosOptions) {
-  return new Zodios(baseUrl, endpoints, options);
-}
-*/
-
 // Export commonly used schemas individually for convenience
-export { GetServicesResponse as ServicesResponseSchema };
-export { GetOperationsResponse as OperationsResponseSchema };
-export { Operation as OperationSchema };
+export { jaeger_api_v3_GetServicesResponse as ServicesResponseSchema };
+export { jaeger_api_v3_GetOperationsResponse as OperationsResponseSchema };
+export { jaeger_api_v3_Operation as OperationSchema };

@@ -3,7 +3,6 @@
 
 import React, { useState, useCallback, useMemo, ComponentProps } from 'react';
 import { Input, Button, Tooltip, Select, Row, Col, Form, Switch } from 'antd';
-import _get from 'lodash/get';
 import logfmtParser from 'logfmt/lib/logfmt_parser';
 import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
 import dayjs from 'dayjs';
@@ -13,15 +12,15 @@ import { IoHelp } from 'react-icons/io5';
 import { connect } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getUrl as getSearchUrl } from './url';
-import { bindActionCreators, Dispatch } from 'redux';
+import type { Dispatch } from 'redux';
+import { useIsSearchFetching, useExecuteSearch } from '../../hooks/useTraceDiscovery';
+import { useClearUploadedTraces } from './useUploadedTraces';
 import store from '../../utils/storage';
 
 import * as markers from './SearchForm.markers';
 import { trackFormInput } from './SearchForm.track';
-import * as jaegerApiActions from '../../actions/jaeger-api';
 import { formatDate, formatTime } from '../../utils/date';
 import { DEFAULT_OPERATION, DEFAULT_LIMIT, DEFAULT_LOOKBACK } from '../../constants/search-form';
-import getConfig from '../../utils/config/get-config';
 import SearchableSelect from '../common/SearchableSelect';
 import './SearchForm.css';
 import ValidatedFormField from '../../utils/ValidatedFormField';
@@ -30,7 +29,6 @@ import { useConfig } from '../../hooks/useConfig';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 import { ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
-import { fetchedState } from '../../constants';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
@@ -265,14 +263,11 @@ interface ISearchFormFields {
   lookback: string;
 }
 
-type SearchTracesFunction = typeof jaegerApiActions.searchTraces;
-
-export function submitForm(
+function buildSearchQuery(
   fields: ISearchFormFields,
-  searchTraces: SearchTracesFunction,
   adjustTime: string | null | undefined,
   adjustTimeEnabled: boolean
-): string {
+): SearchQuery {
   const {
     resultsLimit,
     service,
@@ -284,10 +279,8 @@ export function submitForm(
     tags,
     minDuration,
     maxDuration,
-    lookback,
+    lookback = DEFAULT_LOOKBACK,
   } = fields;
-  // Note: traceID is ignored when the form is submitted
-  store.set('lastSearch', { service, operation });
 
   let start: string | number;
   let end: number;
@@ -306,14 +299,11 @@ export function submitForm(
     end = parseInt(times.end, 10);
   }
 
-  // Apply time adjustment to exclude very recent traces that may be incomplete
   if (adjustTimeEnabled) {
     end = applyAdjustTime(end, adjustTime);
   }
 
-  trackFormInput(resultsLimit, operation, tags || '', minDuration, maxDuration, lookback, service);
-
-  const query: SearchQuery = {
+  return {
     service,
     operation: operation !== DEFAULT_OPERATION ? operation : undefined,
     limit: resultsLimit,
@@ -321,20 +311,34 @@ export function submitForm(
     start: String(start),
     end: String(end),
     tags: convTagsLogfmt(tags) || undefined,
-    minDuration: minDuration || null,
-    maxDuration: maxDuration || null,
+    minDuration: minDuration || undefined,
+    maxDuration: maxDuration || undefined,
   };
-  searchTraces(query);
+}
+
+export function submitForm(
+  fields: ISearchFormFields,
+  adjustTime: string | null | undefined,
+  adjustTimeEnabled: boolean
+): string {
+  // Note: traceID is ignored when the form is submitted
+  store.set('lastSearch', { service: fields.service, operation: fields.operation });
+  const query = buildSearchQuery(fields, adjustTime, adjustTimeEnabled);
+  trackFormInput(
+    fields.resultsLimit,
+    fields.operation,
+    fields.tags || '',
+    fields.minDuration,
+    fields.maxDuration,
+    fields.lookback,
+    fields.service
+  );
   return getSearchUrl(query as Parameters<typeof getSearchUrl>[0]);
 }
 
 interface ISearchFormImplProps {
   invalid?: boolean;
-  submitting?: boolean;
-  searchMaxLookback?: ILookbackOption;
-  searchAdjustEndTime?: string;
   initialValues?: Partial<ISearchFormFields> & { traceIDs?: string | null };
-  searchTraces: SearchTracesFunction;
   submitFormHandler: (
     fields: ISearchFormFields,
     adjustEndTime: string | null | undefined,
@@ -344,14 +348,16 @@ interface ISearchFormImplProps {
 
 export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   invalid = false,
-  submitting = false,
-  searchMaxLookback,
-  searchAdjustEndTime,
   initialValues,
   submitFormHandler,
 }) => {
+  const submitting = useIsSearchFetching();
   const navigate = useNavigate();
-  const { useOpenTelemetryTerms: useOtelTerms } = useConfig();
+  const executeSearch = useExecuteSearch();
+  const clearUploadedTraces = useClearUploadedTraces();
+  const { useOpenTelemetryTerms: useOtelTerms, search } = useConfig();
+  const searchMaxLookback: ILookbackOption | undefined = search?.maxLookback;
+  const searchAdjustEndTime: string | undefined = search?.adjustEndTime;
   const [formData, setFormData] = useState<Partial<ISearchFormFields>>(() => ({
     service: initialValues?.service,
     operation: initialValues?.operation,
@@ -407,10 +413,23 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   const handleSubmit = useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      const url = submitFormHandler(formData as ISearchFormFields, searchAdjustEndTime, adjustTimeEnabled);
+      const fields = formData as ISearchFormFields;
+      const url = submitFormHandler(fields, searchAdjustEndTime, adjustTimeEnabled);
+      const query = buildSearchQuery(fields, searchAdjustEndTime, adjustTimeEnabled);
+      clearUploadedTraces();
       navigate(url);
+      // Errors surface via useSearchTraces().error; suppress the unhandled rejection.
+      executeSearch(query).catch(() => {});
     },
-    [formData, searchAdjustEndTime, adjustTimeEnabled, submitFormHandler, navigate]
+    [
+      formData,
+      searchAdjustEndTime,
+      adjustTimeEnabled,
+      submitFormHandler,
+      navigate,
+      clearUploadedTraces,
+      executeSearch,
+    ]
   );
 
   const { service: selectedService, lookback: selectedLookback } = formData;
@@ -704,7 +723,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           placeholder="Limit Results"
           type="number"
           min={1}
-          max={getConfig().search?.maxLimit}
+          max={search?.maxLimit}
           onChange={e => handleChange({ resultsLimit: e.target.value })}
         />
       </FormItem>
@@ -828,21 +847,16 @@ export function mapStateToProps(state: ReduxState, ownProps: { search?: string }
       maxDuration: (maxDuration as string | undefined) || undefined,
       traceIDs: traceIDs || null,
     },
-    searchMaxLookback: _get(state, 'config.search.maxLookback'),
-    searchAdjustEndTime: _get(state, 'config.search.adjustEndTime'),
-    submitting: state.trace?.search?.state === fetchedState.LOADING,
   };
 }
 
-export function mapDispatchToProps(dispatch: Dispatch) {
-  const { searchTraces } = bindActionCreators(jaegerApiActions, dispatch);
+export function mapDispatchToProps(_dispatch: Dispatch) {
   return {
-    searchTraces,
     submitFormHandler: (
       fields: ISearchFormFields,
       adjustEndTime: string | null | undefined,
       adjustTimeEnabled: boolean
-    ) => submitForm(fields, searchTraces, adjustEndTime || null, adjustTimeEnabled) as string,
+    ) => submitForm(fields, adjustEndTime || null, adjustTimeEnabled) as string,
   };
 }
 

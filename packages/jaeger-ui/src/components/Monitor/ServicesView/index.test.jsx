@@ -6,13 +6,8 @@ import { render, screen, cleanup, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
-import {
-  MonitorATMServicesViewImpl as MonitorATMServicesView,
-  mapStateToProps,
-  mapDispatchToProps,
-  getLoopbackInterval,
-  yAxisTickFormat,
-} from '.';
+import { MonitorATMServicesViewImpl as MonitorATMServicesView, mapStateToProps, mapDispatchToProps } from '.';
+import { getLoopbackInterval, yAxisTickFormat } from './timeFrameUtils';
 import { useServices } from '../../../hooks/useTraceDiscovery';
 import {
   originInitialState,
@@ -69,10 +64,10 @@ vi.mock('../EmptyState', async () => {
 });
 
 vi.mock('./serviceGraph', async () => {
-  return mockDefault(function ServiceGraph({ yAxisTickFormat, name, error }) {
+  return mockDefault(function ServiceGraph({ yAxisTickFormat, name, error, width }) {
     const testValue = yAxisTickFormat ? yAxisTickFormat(1000) : null;
     return (
-      <div data-testid={`service-graph-${name?.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
+      <div data-testid={`service-graph-${name?.toLowerCase().replace(/[^a-z0-9]/g, '-')}`} data-width={width}>
         Service Graph: {name}
         {testValue && <span data-testid="tick-format-result">{testValue}</span>}
         {error && <span data-testid="graph-error">Error occurred</span>}
@@ -219,6 +214,41 @@ describe('<MonitorATMServicesView>', () => {
     renderWithRouter(<MonitorATMServicesView {...loadedProps} />);
     expect(screen.queryByTestId('loading-indicator')).not.toBeInTheDocument();
     expect(screen.getByText('Service')).toBeInTheDocument();
+  });
+
+  it('recalculates graph width when services finish loading (#3539)', async () => {
+    cleanup();
+    // jsdom always reports offsetWidth as 0; spy so the stub is safely restored
+    // even if the test throws, preventing order-dependent failures in later tests.
+    const offsetWidthSpy = vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(800);
+
+    try {
+      useServices.mockReturnValue({ data: [], isLoading: true });
+      const loadingProps = {
+        ...props,
+        metrics: { ...originInitialState, serviceMetrics, serviceOpsMetrics, loading: false },
+        fetchAllServiceMetrics: mockFetchAllServiceMetrics,
+        fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
+      };
+      const { rerender } = renderWithRouter(<MonitorATMServicesView {...loadingProps} />);
+      expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
+
+      useServices.mockReturnValue({ data: ['apple'], isLoading: false });
+      rerender(
+        <MemoryRouter>
+          <MonitorATMServicesView {...loadingProps} />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        // graphWidth = offsetWidth - 24 = 800 - 24 = 776; the fallback is 300
+        const graphs = screen.getAllByTestId(/^service-graph-/);
+        expect(graphs.length).toBeGreaterThan(0);
+        expect(Number(graphs[0].getAttribute('data-width'))).toBeGreaterThan(300);
+      });
+    } finally {
+      offsetWidthSpy.mockRestore();
+    }
   });
 
   it('renders with one service latency', () => {
