@@ -1052,19 +1052,7 @@ export function useTraceQuery(traceId: string) {
 
 **Redux removed**: `trace.search`, `trace.rawTraces`, `connect`/`mapStateToProps`/`mapDispatchToProps` from `SearchTracePage`.
 
-Search now calls `/api/v3/trace-summaries` via:
-```typescript
-export function useSearchTraces(query: SearchQuery | null): UseQueryResult<TraceSummariesResult> {
-  return useQuery({
-    queryKey: ['traceSummaries', effectiveQuery], // keyed by query — one entry per distinct search
-    queryFn: effectiveQuery
-      ? async () => { return { results: await jaegerClient.fetchTraceSummaries(effectiveQuery), query: effectiveQuery } satisfies TraceSummariesResult; }
-      : skipToken,
-    staleTime: Infinity,
-    gcTime: Infinity,
-  });
-}
-```
+Search now calls `/api/v3/trace-summaries` via `useSearchTraces(query)` in `src/hooks/useTraceDiscovery.ts`. The hook uses a keyed query key `['traceSummaries', query]` and returns `{ results: TraceSummary[], query: SearchQuery }`, storing the query alongside the results. When called with `null`, the hook resolves the key from the most-recently-updated cache entry so the component can restore the URL without an additional fetch.
 
 **Keyed cache with single-slot invariant**: the query key is `['traceSummaries', query]`, which is standard React Query — a new key on form submit means a cache miss, so a fresh fetch fires with the correct query, with no closure race condition. A `useEffect` inside `useSearchTraces` evicts all cache entries whose key differs from the current query after each render, keeping at most one live entry at all times and bounding memory growth to a single slot regardless of how many distinct searches are submitted in a session. Similarly, `uploadedSummaries` and `uploadedRawTraces` use singleton cache keys.
 
