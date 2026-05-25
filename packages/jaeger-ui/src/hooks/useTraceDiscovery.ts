@@ -9,7 +9,13 @@ import { isSameQuery } from '../utils/search-query';
 import type { SearchQuery } from '../types/search';
 import type { TraceSummary } from '../types/trace-summary';
 
+// Module-private query keys — not exported; other code should use the hooks/accessors below.
+const SERVICES_QUERY_KEY = ['services'] as const;
 const TRACE_SUMMARIES_QUERY_KEY = 'traceSummaries';
+
+function spanNamesQueryKey(service: string | null): readonly ['spanNames', string | null] {
+  return ['spanNames', service] as const;
+}
 
 /**
  * React Query hook to fetch the list of services from the Jaeger API.
@@ -17,7 +23,7 @@ const TRACE_SUMMARIES_QUERY_KEY = 'traceSummaries';
  */
 export function useServices(): UseQueryResult<string[]> {
   return useQuery({
-    queryKey: ['services'],
+    queryKey: SERVICES_QUERY_KEY,
     queryFn: () => jaegerClient.fetchServices(),
     staleTime: 60 * 1000, // 1 minute
     refetchOnWindowFocus: true,
@@ -36,7 +42,7 @@ export function useSpanNames(
   spanKind?: string
 ): UseQueryResult<{ name: string; spanKind: string }[]> {
   return useQuery({
-    queryKey: ['spanNames', service],
+    queryKey: spanNamesQueryKey(service),
     queryFn: service ? () => jaegerClient.fetchSpanNames(service) : skipToken,
     staleTime: 60 * 1000, // 1 minute
     refetchOnWindowFocus: true,
