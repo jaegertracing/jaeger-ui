@@ -194,6 +194,13 @@ SPDX-License-Identifier: Apache-2.0
   /* Adjust padding since border adds 1.5px */
 }
 
+.SpanBarRow--spanTypeIcon {
+  color: var(--text-secondary);
+  font-size: 0.95em;
+  margin-right: 0.25rem;
+  vertical-align: -0.125em;
+}
+
 .SpanBarRow--rpcColorMarker {
   border-radius: 6.5px;
   display: inline-block;
