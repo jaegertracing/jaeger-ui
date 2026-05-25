@@ -48,21 +48,21 @@ const jaeger_api_v3_GetServicesResponse = z.object({ services: z.array(z.string(
 const jaeger_api_v3_ServiceSummary = z
   .object({
     name: z.string(),
-    spanCount: z.number().int(),
-    errorSpanCount: z.number().int(),
+    spanCount: z.number().int().optional(),
+    errorSpanCount: z.number().int().optional(),
   })
   .passthrough();
 const jaeger_api_v3_TraceSummary = z
   .object({
     traceId: z.string(),
-    rootServiceName: z.string(),
-    rootOperationName: z.string(),
-    minStartTimeUnixNano: z.string(),
-    maxEndTimeUnixNano: z.string(),
-    spanCount: z.number().int(),
-    errorSpanCount: z.number().int(),
-    orphanSpanCount: z.number().int(),
-    services: z.array(jaeger_api_v3_ServiceSummary),
+    rootServiceName: z.string().optional(),
+    rootOperationName: z.string().optional(),
+    minStartTimeUnixNano: z.string().optional(),
+    maxEndTimeUnixNano: z.string().optional(),
+    spanCount: z.number().int().optional(),
+    errorSpanCount: z.number().int().optional(),
+    orphanSpanCount: z.number().int().optional(),
+    services: z.array(jaeger_api_v3_ServiceSummary).optional(),
   })
   .passthrough();
 const jaeger_api_v3_FindTraceSummariesResponse = z
