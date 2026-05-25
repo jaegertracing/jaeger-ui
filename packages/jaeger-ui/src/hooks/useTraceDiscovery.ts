@@ -7,6 +7,7 @@ import { jaegerClient } from '../api/v3/client';
 import { localeStringComparator } from '../utils/sort';
 import type { SearchQuery } from '../types/search';
 import type { TraceSummary } from '../types/trace-summary';
+import { SERVICES_QUERY_KEY, spanNamesQueryKey, TRACE_SUMMARIES_QUERY_KEY } from './traceDiscoveryQueryKeys';
 
 /**
  * React Query hook to fetch the list of services from the Jaeger API.
@@ -14,17 +15,13 @@ import type { TraceSummary } from '../types/trace-summary';
  */
 export function useServices(): UseQueryResult<string[]> {
   return useQuery({
-    queryKey: ['services'],
+    queryKey: SERVICES_QUERY_KEY,
     queryFn: () => jaegerClient.fetchServices(),
     staleTime: 60 * 1000, // 1 minute
     refetchOnWindowFocus: true,
     select: data => [...data].sort(localeStringComparator),
   });
 }
-
-// Private singleton key. All callers interact through the exported functions below
-// rather than referencing the key directly, so it can be changed in one place.
-const TRACE_SUMMARIES_QUERY_KEY = ['traceSummaries'] as const;
 
 /**
  * React Query hook to search for traces by query parameters.
@@ -114,7 +111,7 @@ export function useSpanNames(
   spanKind?: string
 ): UseQueryResult<{ name: string; spanKind: string }[]> {
   return useQuery({
-    queryKey: ['spanNames', service],
+    queryKey: spanNamesQueryKey(service),
     queryFn: service ? () => jaegerClient.fetchSpanNames(service) : skipToken,
     staleTime: 60 * 1000, // 1 minute
     refetchOnWindowFocus: true,

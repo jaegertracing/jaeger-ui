@@ -37,7 +37,7 @@ These should be migrated to **React Query**:
 | State Slice | Description | Primary Consumers |
 |-------------|-------------|-------------------|
 | `trace` | Map of `FetchedTrace` and `search` results | `TracePage`, `SearchPage` |
-| `services` | Lists of services and operations | `SearchPage`, `MonitorPage` |
+| ~~`services`~~ (removed) | ~~Lists of services and operations~~ → React Query (`useServices` / `useSpanNames`, Phase 2c) | `SearchPage`, `MonitorPage`, `DeepDependencies` |
 | `dependencies`| Service dependency graph data | `DependenciesPage` |
 | `metrics` | Sytem performance metrics (latencies, errors) | `MonitorPage` |
 | `ddg` | Deep Dependency Graph data | `DeepDependenciesPage` |
@@ -897,7 +897,7 @@ The **target architecture** (layers, data flow, and where each kind of state sho
 - Implement `src/query/app-query-client.tsx`: `createAppQueryClient()`, a singleton `QueryClient`, and `AppQueryClientProvider`.
 - Wire `AppQueryClientProvider` around the app shell in `components/App/index.tsx`.
 - Shared defaults: `staleTime` and `retry`. Traces use `staleTime: Infinity` (immutable once loaded).
-- **Follow-up (optional)**: centralise query key constants to avoid key divergence between hooks. Discovery hooks currently use inline arrays in `src/hooks/useTraceDiscovery.ts` (`['services']`, `['spanNames', service]`).
+- Query keys for discovery hooks live in `src/hooks/traceDiscoveryQueryKeys.ts` (Phase 2c).
 
 #### ✅ 0b. Zustand + class-component bridge
 
@@ -1093,11 +1093,38 @@ export function useSearchTraces(query: SearchQuery | null): UseQueryResult<Trace
 
 > **Note**: `SearchForm` still uses the legacy `connect(mapStateToProps, mapDispatchToProps)` pattern. Removing it is deferred to a phase 4 follow-up.
 
-#### ⬜ 2c. Services and operations discovery
+#### ✅ 2c. Services and operations discovery
 
-**Redux removed**: `services` reducer.
+**Redux removed**: `services` reducer (no longer in `src/reducers/index.ts`; discovery never writes to Redux).
 
-Discovery hooks are **partially present** in `src/hooks/useTraceDiscovery.ts` (`['services']`, `['spanNames', service]`). Centralise query key constants to avoid divergence when new hooks are added.
+**Hooks** (`src/hooks/useTraceDiscovery.ts`):
+
+```typescript
+export function useServices(): UseQueryResult<string[]> {
+  return useQuery({
+    queryKey: SERVICES_QUERY_KEY,
+    queryFn: () => jaegerClient.fetchServices(),
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
+}
+
+export function useSpanNames(service: string | null, spanKind?: string): UseQueryResult<...> {
+  return useQuery({
+    queryKey: spanNamesQueryKey(service),
+    queryFn: service ? () => jaegerClient.fetchSpanNames(service) : skipToken,
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: true,
+    select: data => { /* optional spanKind filter + sort */ },
+  });
+}
+```
+
+**Query keys** (`src/hooks/traceDiscoveryQueryKeys.ts`): `SERVICES_QUERY_KEY`, `spanNamesQueryKey(service)`, and `TRACE_SUMMARIES_QUERY_KEY` (search summaries, Phase 2b) — single source of truth for cache keys and invalidation.
+
+**Components using hooks** (no Redux service/ops fetch): `SearchForm`, `DeepDependencies` (Header graph), `Monitor/ServicesView`, `QualityMetrics`.
+
+> **Note**: Legacy `JaegerAPI.fetchServices` / `fetchServiceOperations` remain in `api/jaeger.ts` for non-v3 callers; UI discovery paths use v3 via `jaegerClient`.
 
 #### ⬜ 2d. Dependencies page
 

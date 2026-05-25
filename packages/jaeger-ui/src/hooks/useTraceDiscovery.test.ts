@@ -5,6 +5,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import { useServices, useSpanNames, useSearchTraces } from './useTraceDiscovery';
+import { SERVICES_QUERY_KEY, spanNamesQueryKey, TRACE_SUMMARIES_QUERY_KEY } from './traceDiscoveryQueryKeys';
 import { jaegerClient } from '../api/v3/client';
 import type { SearchQuery } from '../types/search';
 
@@ -86,7 +87,7 @@ describe('useTraceDiscovery', () => {
       });
 
       const queryCache = queryClient.getQueryCache();
-      const queries = queryCache.findAll({ queryKey: ['services'] });
+      const queries = queryCache.findAll({ queryKey: SERVICES_QUERY_KEY });
       expect(queries).toHaveLength(1);
     });
 
@@ -171,7 +172,7 @@ describe('useTraceDiscovery', () => {
       });
 
       const queryCache = queryClient.getQueryCache();
-      const queries = queryCache.findAll({ queryKey: ['spanNames', 'test-service'] });
+      const queries = queryCache.findAll({ queryKey: spanNamesQueryKey('test-service') });
       expect(queries).toHaveLength(1);
     });
 
@@ -380,7 +381,7 @@ describe('useTraceDiscovery', () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      const queries = queryClient.getQueryCache().findAll({ queryKey: ['traceSummaries'] });
+      const queries = queryClient.getQueryCache().findAll({ queryKey: TRACE_SUMMARIES_QUERY_KEY });
       expect(queries).toHaveLength(1);
     });
 
