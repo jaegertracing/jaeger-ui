@@ -95,8 +95,12 @@ export class JaegerClient {
     // fit safely in Number after dividing by 1000.
     // Fall back to 0 when timestamps are absent (partial backend implementation).
     return validated.summaries.map(s => {
-      const startNs = s.minStartTimeUnixNano ? BigInt(s.minStartTimeUnixNano) : 0n;
-      const endNs = s.maxEndTimeUnixNano ? BigInt(s.maxEndTimeUnixNano) : startNs;
+      // If only one timestamp is present, clamp the missing one to the present one
+      // so duration is 0 rather than an astronomically large value from epoch.
+      const startNsRaw = s.minStartTimeUnixNano ? BigInt(s.minStartTimeUnixNano) : null;
+      const endNsRaw = s.maxEndTimeUnixNano ? BigInt(s.maxEndTimeUnixNano) : null;
+      const startNs = startNsRaw ?? endNsRaw ?? 0n;
+      const endNs = endNsRaw ?? startNsRaw ?? 0n;
       const rootServiceName = s.rootServiceName ?? '';
       const rootOperationName = s.rootOperationName ?? '';
       // Wire field is `traceId` (proto3 camelCase of `trace_id`).
@@ -108,7 +112,10 @@ export class JaegerClient {
       }));
       return {
         traceID: s.traceId,
-        traceName: rootServiceName || rootOperationName ? `${rootServiceName}: ${rootOperationName}` : '',
+        traceName:
+          rootServiceName && rootOperationName
+            ? `${rootServiceName}: ${rootOperationName}`
+            : rootServiceName || rootOperationName,
         rootServiceName,
         rootOperationName,
         startTime: Number(startNs / 1000n) as Microseconds,

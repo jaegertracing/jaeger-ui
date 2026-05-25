@@ -340,6 +340,54 @@ describe('JaegerClient', () => {
       expect(summary.services).toEqual([]);
     });
 
+    it('clamps duration to 0 when only minStartTimeUnixNano is present', async () => {
+      const oneSided = { ...mockApiSummary, maxEndTimeUnixNano: undefined };
+      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ summaries: [oneSided] }) });
+      const promise = client.fetchTraceSummaries(query);
+      vi.runAllTimers();
+      const [summary] = await promise;
+      expect(summary.startTime).toBe(1700000001000000);
+      expect(summary.duration).toBe(0);
+    });
+
+    it('clamps startTime to endTime when only maxEndTimeUnixNano is present', async () => {
+      const oneSided = { ...mockApiSummary, minStartTimeUnixNano: undefined };
+      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ summaries: [oneSided] }) });
+      const promise = client.fetchTraceSummaries(query);
+      vi.runAllTimers();
+      const [summary] = await promise;
+      // startTime is derived from endNs when start is absent
+      expect(summary.startTime).toBe(1700000001000500);
+      expect(summary.duration).toBe(0);
+    });
+
+    it('builds traceName from rootServiceName only when rootOperationName is absent', async () => {
+      const partial = { ...mockApiSummary, rootOperationName: undefined };
+      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ summaries: [partial] }) });
+      const promise = client.fetchTraceSummaries(query);
+      vi.runAllTimers();
+      const [summary] = await promise;
+      expect(summary.traceName).toBe('my-svc');
+    });
+
+    it('builds traceName from rootOperationName only when rootServiceName is absent', async () => {
+      const partial = { ...mockApiSummary, rootServiceName: undefined };
+      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ summaries: [partial] }) });
+      const promise = client.fetchTraceSummaries(query);
+      vi.runAllTimers();
+      const [summary] = await promise;
+      expect(summary.traceName).toBe('GET /api');
+    });
+
+    it('accepts partial ServiceSummary entries with missing fields', async () => {
+      const withPartialService = { ...mockApiSummary, services: [{ name: 'partial-svc' }] };
+      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ summaries: [withPartialService] }) });
+      const promise = client.fetchTraceSummaries(query);
+      vi.runAllTimers();
+      const [summary] = await promise;
+      expect(summary.services).toEqual([{ name: 'partial-svc', spanCount: 0, errorSpanCount: 0 }]);
+    });
+
     it('throws ZodError when traceId is missing', async () => {
       const { traceId: _omit, ...noTraceId } = mockApiSummary;
       mockFetch.mockResolvedValue({ ok: true, json: async () => ({ summaries: [noTraceId] }) });

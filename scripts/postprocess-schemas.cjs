@@ -93,7 +93,9 @@ export { ${traceSummaryVar} as ApiTraceSummarySchema };
 export { ${findTraceSummariesResponseVar} as FindTraceSummariesResponseSchema };
 `;
 
-if (!content.includes('as ServicesResponseSchema')) {
+if (!content.includes('as ApiTraceSummarySchema')) {
+  // Remove any previous (partial) export block before appending the full one.
+  content = content.replace(/\n\/\/ Export commonly used schemas individually[\s\S]*$/, '');
   content += extraExports;
   console.log(
     `✅ Added convenience exports (${servicesVar}, ${operationsVar}, ${operationVar}, ${traceSummaryVar}, ${findTraceSummariesResponseVar})`
