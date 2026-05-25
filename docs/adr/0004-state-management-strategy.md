@@ -897,7 +897,7 @@ The **target architecture** (layers, data flow, and where each kind of state sho
 - Implement `src/query/app-query-client.tsx`: `createAppQueryClient()`, a singleton `QueryClient`, and `AppQueryClientProvider`.
 - Wire `AppQueryClientProvider` around the app shell in `components/App/index.tsx`.
 - Shared defaults: `staleTime` and `retry`. Traces use `staleTime: Infinity` (immutable once loaded).
-- Query keys for discovery hooks live in `src/hooks/traceDiscoveryQueryKeys.ts` (Phase 2c).
+- Discovery query keys are private to `src/hooks/useTraceDiscovery.ts`; consumers use hooks and accessors such as `useIsSearchFetching()` (Phase 2c).
 
 #### ✅ 0b. Zustand + class-component bridge
 
@@ -1102,7 +1102,7 @@ export function useSearchTraces(query: SearchQuery | null): UseQueryResult<Trace
 ```typescript
 export function useServices(): UseQueryResult<string[]> {
   return useQuery({
-    queryKey: SERVICES_QUERY_KEY,
+    queryKey: ['services'],
     queryFn: () => jaegerClient.fetchServices(),
     staleTime: 60 * 1000,
     refetchOnWindowFocus: true,
@@ -1111,7 +1111,7 @@ export function useServices(): UseQueryResult<string[]> {
 
 export function useSpanNames(service: string | null, spanKind?: string): UseQueryResult<...> {
   return useQuery({
-    queryKey: spanNamesQueryKey(service),
+    queryKey: ['spanNames', service],
     queryFn: service ? () => jaegerClient.fetchSpanNames(service) : skipToken,
     staleTime: 60 * 1000,
     refetchOnWindowFocus: true,
@@ -1120,7 +1120,7 @@ export function useSpanNames(service: string | null, spanKind?: string): UseQuer
 }
 ```
 
-**Query keys** (`src/hooks/traceDiscoveryQueryKeys.ts`): `SERVICES_QUERY_KEY`, `spanNamesQueryKey(service)`, and `TRACE_SUMMARIES_QUERY_KEY` (search summaries, Phase 2b) — single source of truth for cache keys and invalidation.
+**Query keys** are module-private in `useTraceDiscovery.ts` (not exported). Callers use `useServices`, `useSpanNames`, `useSearchTraces`, `useExecuteSearch`, and `useIsSearchFetching()` rather than depending on cache key literals.
 
 **Components using hooks** (no Redux service/ops fetch): `SearchForm`, `DeepDependencies` (Header graph), `Monitor/ServicesView`, `QualityMetrics`.
 

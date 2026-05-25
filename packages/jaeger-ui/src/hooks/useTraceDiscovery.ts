@@ -7,7 +7,14 @@ import { jaegerClient } from '../api/v3/client';
 import { localeStringComparator } from '../utils/sort';
 import type { SearchQuery } from '../types/search';
 import type { TraceSummary } from '../types/trace-summary';
-import { SERVICES_QUERY_KEY, spanNamesQueryKey, TRACE_SUMMARIES_QUERY_KEY } from './traceDiscoveryQueryKeys';
+
+// Module-private query keys — not exported; other code should use the hooks/accessors below.
+const SERVICES_QUERY_KEY = ['services'] as const;
+const TRACE_SUMMARIES_QUERY_KEY = ['traceSummaries'] as const;
+
+function spanNamesQueryKey(service: string | null): readonly ['spanNames', string | null] {
+  return ['spanNames', service] as const;
+}
 
 /**
  * React Query hook to fetch the list of services from the Jaeger API.
