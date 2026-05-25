@@ -132,7 +132,7 @@ export function SearchTracePageImpl() {
   // Computed synchronously so the loading indicator shows on the first render
   // after Back navigation, before the keyed cache fetch completes.
   // Without this, one render would flash the stale (wrong) results.
-  const isStale = searchQuery && searchData?.query && !isSameQuery(searchQuery, searchData.query);
+  const isStale = Boolean(searchQuery && searchData?.query && !isSameQuery(searchQuery, searchData.query));
 
   const errors: Array<{ message: string }> = searchError
     ? [{ message: searchError instanceof Error ? searchError.message : String(searchError) }]
