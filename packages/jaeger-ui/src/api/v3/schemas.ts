@@ -4,52 +4,41 @@
 /**
  * Zod schemas for Jaeger v3 API responses.
  *
- * Some schemas are re-exported from generated-client.ts (auto-generated from OpenAPI spec,
- * post-processed to remove .partial() for strict validation). Others are hand-written where
- * the IDL has not yet been finalized or where the generated output diverges from the actual
- * server wire format.
+ * Schemas for services/operations are re-exported from generated-client.ts as-is
+ * (strict validation — required fields enforced).
+ *
+ * TraceSummary uses a permissive schema: all fields are optional except traceId,
+ * minStartTimeUnixNano, and maxEndTimeUnixNano which are required to render a trace
+ * entry at all. This follows the OpenAPI spec (no `required` fields on TraceSummary)
+ * and makes the client resilient to partial responses from incomplete backend
+ * implementations.
  */
 
 import { z } from 'zod';
+import { ApiTraceSummarySchema, FindTraceSummariesResponseSchema } from './generated-client';
 
-// Import auto-generated schemas (post-processed for strict validation)
-export { ServicesResponseSchema, OperationSchema, OperationsResponseSchema } from './generated-client';
-
-/**
- * Helper validators for trace and span IDs in hex format
- * These are custom additions not present in the OpenAPI spec
- */
+export { ServicesResponseSchema, OperationsResponseSchema, OperationSchema } from './generated-client';
 
 export const traceIdHex = z.string().regex(/^[0-9a-f]{32}$/i, 'Invalid trace ID: must be 32-char hex string');
 
 export const spanIdHex = z.string().regex(/^[0-9a-f]{16}$/i, 'Invalid span ID: must be 16-char hex string');
 
-// TODO: The schemas below are HAND-WRITTEN because the generated TraceSummary schema from
-// the IDL uses generic z.string() for timestamps (no decimal-digit constraint) and lacks
-// nonnegative() on counts. Replace once the generated schemas are tightened to match.
-
-const ServiceSummarySchema = z.object({
-  name: z.string(),
-  spanCount: z.number().int().nonnegative(),
-  errorSpanCount: z.number().int().nonnegative(),
-});
-
-const ApiTraceSummarySchema = z.object({
-  traceID: traceIdHex,
-  rootServiceName: z.string(),
-  rootOperationName: z.string(),
-  // int64 nanosecond timestamps are encoded as decimal strings per proto3 JSON encoding
-  // rules, to avoid precision loss when parsed by JavaScript's 53-bit float Number.
-  // Restrict to decimal digits so non-decimal values fail Zod validation rather than
-  // throwing a runtime SyntaxError in BigInt().
-  minStartTimeUnixNano: z.string().regex(/^\d+$/, 'Expected decimal int64 string'),
-  maxEndTimeUnixNano: z.string().regex(/^\d+$/, 'Expected decimal int64 string'),
-  spanCount: z.number().int().nonnegative(),
-  errorSpanCount: z.number().int().nonnegative(),
-  orphanSpanCount: z.number().int().nonnegative(),
-  services: z.array(ServiceSummarySchema),
-});
-
-export const TraceSummariesResponseSchema = z.object({
-  summaries: z.array(ApiTraceSummarySchema),
+// Permissive TraceSummary schema: all fields optional except traceId, which is
+// the unique identifier — without it we cannot link to the trace or use it as a
+// React key. All other fields have sensible fallbacks in the client mapping:
+//   startTime / duration fall back to 0 when timestamps are absent,
+//   counts fall back to 0, services falls back to [].
+//
+// The decimal-digit constraint on the timestamp fields is kept as an
+// optional refinement (applied only when the field is present) to prevent a
+// runtime SyntaxError in BigInt() if a non-decimal string slips through.
+export const TraceSummariesResponseSchema = FindTraceSummariesResponseSchema.extend({
+  summaries: z.array(
+    ApiTraceSummarySchema.partial().extend({
+      traceId: traceIdHex,
+      // Restrict to decimal digits when present — BigInt() throws SyntaxError on non-decimal strings.
+      minStartTimeUnixNano: z.string().regex(/^\d+$/, 'Expected decimal int64 string').optional(),
+      maxEndTimeUnixNano: z.string().regex(/^\d+$/, 'Expected decimal int64 string').optional(),
+    })
+  ),
 });

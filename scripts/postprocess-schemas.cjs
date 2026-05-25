@@ -64,8 +64,16 @@ content = content.replace(
 const servicesMatch = content.match(/const (\w*GetServicesResponse\w*) = /);
 const operationsMatch = content.match(/const (\w*GetOperationsResponse\w*) = /);
 const operationMatch = content.match(/const (\w*Operation\b) = z[\s\S]*?\.object\(\{[\s]*name:/);
+const traceSummaryMatch = content.match(/const (\w*TraceSummary\b) = /);
+const findTraceSummariesResponseMatch = content.match(/const (\w*FindTraceSummariesResponse\w*) = /);
 
-if (!servicesMatch || !operationsMatch || !operationMatch) {
+if (
+  !servicesMatch ||
+  !operationsMatch ||
+  !operationMatch ||
+  !traceSummaryMatch ||
+  !findTraceSummariesResponseMatch
+) {
   console.error('❌ Could not find expected schema variable names in generated file');
   process.exit(1);
 }
@@ -73,17 +81,23 @@ if (!servicesMatch || !operationsMatch || !operationMatch) {
 const servicesVar = servicesMatch[1];
 const operationsVar = operationsMatch[1];
 const operationVar = operationMatch[1];
+const traceSummaryVar = traceSummaryMatch[1];
+const findTraceSummariesResponseVar = findTraceSummariesResponseMatch[1];
 
 const extraExports = `
 // Export commonly used schemas individually for convenience
 export { ${servicesVar} as ServicesResponseSchema };
 export { ${operationsVar} as OperationsResponseSchema };
 export { ${operationVar} as OperationSchema };
+export { ${traceSummaryVar} as ApiTraceSummarySchema };
+export { ${findTraceSummariesResponseVar} as FindTraceSummariesResponseSchema };
 `;
 
 if (!content.includes('as ServicesResponseSchema')) {
   content += extraExports;
-  console.log(`✅ Added convenience exports (${servicesVar}, ${operationsVar}, ${operationVar})`);
+  console.log(
+    `✅ Added convenience exports (${servicesVar}, ${operationsVar}, ${operationVar}, ${traceSummaryVar}, ${findTraceSummariesResponseVar})`
+  );
 }
 
 fs.writeFileSync(filePath, content, 'utf8');

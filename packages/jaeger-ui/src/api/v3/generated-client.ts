@@ -219,3 +219,5 @@ export const schemas = {
 export { jaeger_api_v3_GetServicesResponse as ServicesResponseSchema };
 export { jaeger_api_v3_GetOperationsResponse as OperationsResponseSchema };
 export { jaeger_api_v3_Operation as OperationSchema };
+export { jaeger_api_v3_TraceSummary as ApiTraceSummarySchema };
+export { jaeger_api_v3_FindTraceSummariesResponse as FindTraceSummariesResponseSchema };

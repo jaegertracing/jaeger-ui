@@ -6,6 +6,7 @@ import {
   ServicesResponseSchema,
   OperationsResponseSchema,
   OperationSchema,
+  TraceSummariesResponseSchema,
   traceIdHex,
   spanIdHex,
 } from './schemas';
@@ -92,6 +93,74 @@ describe('OperationsResponseSchema', () => {
       operations: [{ name: 'valid', spanKind: 'valid' }, { name: 'invalid' }],
     };
     expect(() => OperationsResponseSchema.parse(data)).toThrow(z.ZodError);
+  });
+});
+
+describe('TraceSummariesResponseSchema', () => {
+  const fullSummary = {
+    traceId: 'aaaabbbbccccdddd0000111122223333',
+    rootServiceName: 'svc',
+    rootOperationName: 'op',
+    minStartTimeUnixNano: '1700000001000000000',
+    maxEndTimeUnixNano: '1700000001000500000',
+    spanCount: 5,
+    errorSpanCount: 1,
+    orphanSpanCount: 0,
+    services: [{ name: 'svc', spanCount: 5, errorSpanCount: 1 }],
+  };
+
+  it('accepts a fully-populated summary', () => {
+    const result = TraceSummariesResponseSchema.parse({ summaries: [fullSummary] });
+    expect(result.summaries).toHaveLength(1);
+    expect(result.summaries[0].traceId).toBe(fullSummary.traceId);
+  });
+
+  it('accepts a minimal summary with only traceId', () => {
+    const minimal = { traceId: 'aaaabbbbccccdddd0000111122223333' };
+    const result = TraceSummariesResponseSchema.parse({ summaries: [minimal] });
+    expect(result.summaries[0].traceId).toBe(minimal.traceId);
+    expect(result.summaries[0].spanCount).toBeUndefined();
+    expect(result.summaries[0].minStartTimeUnixNano).toBeUndefined();
+  });
+
+  it('accepts a summary with timestamps present', () => {
+    const withTimestamps = {
+      traceId: 'aaaabbbbccccdddd0000111122223333',
+      minStartTimeUnixNano: '1000000',
+      maxEndTimeUnixNano: '2000000',
+    };
+    const result = TraceSummariesResponseSchema.parse({ summaries: [withTimestamps] });
+    expect(result.summaries[0].minStartTimeUnixNano).toBe('1000000');
+  });
+
+  it('rejects a summary missing traceId', () => {
+    const { traceId: _omit, ...noTraceId } = fullSummary;
+    expect(() => TraceSummariesResponseSchema.parse({ summaries: [noTraceId] })).toThrow(z.ZodError);
+  });
+
+  it('rejects a traceId that is not a 32-char hex string', () => {
+    expect(() =>
+      TraceSummariesResponseSchema.parse({ summaries: [{ ...fullSummary, traceId: 'not-hex' }] })
+    ).toThrow(z.ZodError);
+  });
+
+  it('rejects a non-decimal minStartTimeUnixNano when present', () => {
+    expect(() =>
+      TraceSummariesResponseSchema.parse({
+        summaries: [{ ...fullSummary, minStartTimeUnixNano: 'not-a-number' }],
+      })
+    ).toThrow(z.ZodError);
+  });
+
+  it('rejects a numeric (non-string) minStartTimeUnixNano', () => {
+    expect(() =>
+      TraceSummariesResponseSchema.parse({ summaries: [{ ...fullSummary, minStartTimeUnixNano: 12345 }] })
+    ).toThrow(z.ZodError);
+  });
+
+  it('accepts an empty summaries array', () => {
+    const result = TraceSummariesResponseSchema.parse({ summaries: [] });
+    expect(result.summaries).toEqual([]);
   });
 });
 

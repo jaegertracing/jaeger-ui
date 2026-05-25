@@ -11,7 +11,7 @@
 import prefixUrl from '../../utils/prefix-url';
 import { ServicesResponseSchema, OperationsResponseSchema, TraceSummariesResponseSchema } from './schemas';
 import type { SearchQuery } from '../../types/search';
-import type { TraceSummary } from '../../types/trace-summary';
+import type { TraceSummary, ServiceSummary } from '../../types/trace-summary';
 import type { Microseconds } from '../../types/units';
 
 export class JaegerClient {
@@ -93,20 +93,30 @@ export class JaegerClient {
     // Timestamps are decimal ns strings (proto3 JSON encoding for int64).
     // Use BigInt arithmetic to avoid precision loss; µs-epoch values (~1.7e15)
     // fit safely in Number after dividing by 1000.
+    // Fall back to 0 when timestamps are absent (partial backend implementation).
     return validated.summaries.map(s => {
-      const startNs = BigInt(s.minStartTimeUnixNano);
-      const endNs = BigInt(s.maxEndTimeUnixNano);
+      const startNs = s.minStartTimeUnixNano ? BigInt(s.minStartTimeUnixNano) : 0n;
+      const endNs = s.maxEndTimeUnixNano ? BigInt(s.maxEndTimeUnixNano) : startNs;
+      const rootServiceName = s.rootServiceName ?? '';
+      const rootOperationName = s.rootOperationName ?? '';
+      // Wire field is `traceId` (proto3 camelCase of `trace_id`).
+      // Internal TraceSummary uses `traceID` (Jaeger convention) to match legacy code.
+      const services: ServiceSummary[] = (s.services ?? []).map(svc => ({
+        name: svc.name ?? '',
+        spanCount: svc.spanCount ?? 0,
+        errorSpanCount: svc.errorSpanCount ?? 0,
+      }));
       return {
-        traceID: s.traceID,
-        traceName: `${s.rootServiceName}: ${s.rootOperationName}`,
-        rootServiceName: s.rootServiceName,
-        rootOperationName: s.rootOperationName,
+        traceID: s.traceId,
+        traceName: rootServiceName || rootOperationName ? `${rootServiceName}: ${rootOperationName}` : '',
+        rootServiceName,
+        rootOperationName,
         startTime: Number(startNs / 1000n) as Microseconds,
         duration: Number((endNs - startNs) / 1000n) as Microseconds,
-        spanCount: s.spanCount,
-        errorSpanCount: s.errorSpanCount,
-        orphanSpanCount: s.orphanSpanCount,
-        services: s.services,
+        spanCount: s.spanCount ?? 0,
+        errorSpanCount: s.errorSpanCount ?? 0,
+        orphanSpanCount: s.orphanSpanCount ?? 0,
+        services,
       };
     });
   }
