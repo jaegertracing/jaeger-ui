@@ -1052,38 +1052,21 @@ export function useTraceQuery(traceId: string) {
 
 **Redux removed**: `trace.search`, `trace.rawTraces`, `connect`/`mapStateToProps`/`mapDispatchToProps` from `SearchTracePage`.
 
-Search now calls `/api/v3/trace-summaries` via:
-```typescript
-export function useSearchTraces(query: SearchQuery | null): UseQueryResult<TraceSummary[]> {
-  return useQuery({
-    queryKey: ['traceSummaries'], // fixed key — singleton cache, see note below
-    queryFn: query ? () => jaegerClient.fetchTraceSummaries(query) : skipToken,
-    staleTime: Infinity,
-    gcTime: Infinity,
-  });
-}
-```
+Search now calls `/api/v3/trace-summaries` via `useSearchTraces(query)` in `src/hooks/useTraceDiscovery.ts`. The hook uses a keyed query key `['traceSummaries', query]` and returns `{ results: TraceSummary[], query: SearchQuery }`, storing the query alongside the results. When called with `null`, the hook resolves the key from the most-recently-updated cache entry so the component can restore the URL without an additional fetch.
 
-**Singleton cache pattern**: search results use a *fixed* query key `['traceSummaries']` rather than a parameterized key like `['traceSummaries', query]`. This is intentional: there is only ever one "current search result" in the application. A parameterized key would accumulate a separate cache entry for every distinct query submitted during a session — one per unique combination of service, time range, tags, etc. — causing unbounded memory growth. The fixed key ensures exactly one entry exists at all times. Similarly, `uploadedSummaries` and `uploadedRawTraces` follow the same singleton pattern.
+**Keyed cache with single-slot invariant**: the query key is `['traceSummaries', query]`, which is standard React Query — a new key on form submit means a cache miss, so a fresh fetch fires with the correct query, with no closure race condition. A `useEffect` inside `useSearchTraces` evicts all cache entries whose key differs from the current query after each render, keeping at most one live entry at all times and bounding memory growth to a single slot regardless of how many distinct searches are submitted in a session. Similarly, `uploadedSummaries` and `uploadedRawTraces` use singleton cache keys.
 
-**Two-path fetch model**: searches reach the cache via two paths depending on the trigger:
-- *Cold start* (fresh tab, shared URL): `useSearchTraces` derives the query from the URL via `searchQueryFromUrl`, finds the cache empty, and the `queryFn` fires automatically.
-- *Form submit*: `SearchForm.handleSubmit` calls `useExecuteSearch()`, which calls `queryClient.fetchQuery()` with the query built directly from form state (not from the URL). This is necessary because `invalidateQueries` would race against React's render cycle — it would trigger a refetch via the `queryFn` closure in `useSearchTraces`, which still holds the *previous* query until React processes the `navigate()` call. By passing the query explicitly to `fetchQuery`, the correct data is always fetched regardless of render timing.
+**Fetch model**: `SearchForm.handleSubmit` calls `navigate(url)`. The URL change causes `SearchTracePage` to re-render with a new `searchQuery` derived from `useLocation()`, which produces a new cache key in `useSearchTraces` — a miss — and React Query fires the fetch automatically.
 
 **`staleTime` and `gcTime` semantics**:
-- `staleTime: Infinity` on `useSearchTraces` — data is never considered stale on its own; staleness is driven entirely by explicit form submission. Also prevents an unnecessary background refetch after the cold-start initial load.
-- `staleTime: 0` in `useExecuteSearch` — forces a fetch on every form submit regardless of what is currently cached. This only governs the *fetch decision*; once the result is written to the cache, `useSearchTraces`'s `staleTime: Infinity` takes over for all subsequent reads.
-- `gcTime: Infinity` on `useSearchTraces` — React Query starts the eviction countdown when the last observer unsubscribes (i.e. `SearchTracePage` unmounts on navigation). With the default `gcTime` of 5 minutes, a user spending more than 5 minutes on a trace page would lose the cached results and see a fresh fetch on Back. `gcTime: Infinity` prevents that. Note that `fetchQuery` is *not* an observer and does not contribute to `gcTime`; the protection relies on `useSearchTraces` being mounted in `SearchTracePage` whenever the user can navigate Back. Safe here because there is exactly one cache entry — not one per query — so memory growth is bounded.
+- `staleTime: Infinity` — data is never considered stale on its own; a new form submission produces a new key (cache miss), which is the only trigger for a re-fetch.
+- `gcTime: Infinity` — prevents eviction while `SearchTracePage` is unmounted (e.g. user is viewing a trace page). With the default `gcTime` of 5 minutes, a user spending more than 5 minutes on a trace page would lose the cached results and see a fresh fetch on Back. Safe here because the single-slot invariant bounds memory to one entry regardless.
 
-**Known limitations of the current implementation** (follow-up improvements, not blocking):
+**URL and cache consistency**: the cached value is `{ results: TraceSummary[], query: SearchQuery }`, storing the query alongside the results.
 
-1. *URL is not preserved across navigation.* When the user navigates away from the Search page (e.g. clicks a trace, opens the Dependencies page) and then returns via the top nav, the URL reverts to bare `/search` — the search query params are gone. The cached results are still shown (that part works correctly) but the URL is no longer shareable or bookmarkable.
+- *Bare URL after TopNav navigation*: when `useSearchTraces` is called with `null` (no search params in the URL), it finds the most-recently-updated cache entry by `dataUpdatedAt`, extracts its query as `effectiveQuery`, and subscribes `useQuery` to that key — so `SearchTracePage` sees the cached results and restores the full URL via `navigate(getUrl(cachedQuery), { replace: true })` with no reload or refetch.
 
-   Proposed fix: store the `SearchQuery` alongside the results in the cache (i.e. cached value becomes `{ results: TraceSummary[], query: SearchQuery }`). When `SearchTracePage` mounts with a bare URL but finds a `cachedQuery`, it restores the URL client-side with `navigate(getSearchUrl(cachedQuery), { replace: true })` — no reload, no refetch, no flicker.
-
-2. *Back button does not match URL after multiple searches.* If the user submits three searches in a row, the browser history contains three different `/search?...` URLs. Hitting Back navigates to the previous URL but the singleton cache still holds the most recent results — the URL and the displayed results are out of sync.
-
-   Proposed fix: switch to a parameterized query key `['traceSummaries', query]` combined with an effect that purges all sibling cache entries whenever the active query changes. This makes each search a distinct cache entry while enforcing the singleton invariant, so Back navigates to the right URL and refetches the matching results if they were purged. The stored `query` from fix 1 above can also be used to detect when a bare-URL return should restore vs. refetch.
+- *Back button after multiple searches*: the URL reverts to the previous query, producing a different cache key. If that entry was evicted (by the single-slot invariant after a subsequent search), it is a cache miss and React Query fetches fresh results. If it is somehow still present, it is returned immediately. Either way, the displayed results match the URL. `SearchTracePage` also computes `isStale` synchronously during render — true when the URL query differs from the cached query — and passes `loading: loadingTraces || isStale` to `SearchResults`, so the loading indicator appears immediately on the first render after Back navigation rather than after the `useEffect` fires.
 
 `SearchTracePage` derives URL query params from `useLocation()` directly (no Redux `mapStateToProps`).
 

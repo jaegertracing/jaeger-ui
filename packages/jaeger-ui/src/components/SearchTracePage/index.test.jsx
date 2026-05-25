@@ -14,7 +14,7 @@ const { useEmbeddedStateMock, getConfigMock, useSearchTracesMock } = vi.hoisted(
       customWebAnalytics: null,
     },
   })),
-  useSearchTracesMock: jest.fn(() => ({ data: [], isFetching: false, error: null })),
+  useSearchTracesMock: jest.fn(() => ({ data: undefined, isFetching: false, error: null })),
 }));
 
 // Capture last props passed to SearchResults and FileLoader so tests can inspect/invoke them.
@@ -56,11 +56,10 @@ vi.mock('../../hooks/useTraceDiscovery', () => ({
   useSpanNames: jest.fn(() => ({ data: [], isLoading: false })),
   useSearchTraces: (...args) => useSearchTracesMock(...args),
   useIsSearchFetching: jest.fn(() => false),
-  useExecuteSearch: jest.fn(() => jest.fn(() => Promise.resolve())),
 }));
 
 import React from 'react';
-import { render, act, fireEvent, screen } from '@testing-library/react';
+import { render, act, fireEvent, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Provider } from 'react-redux';
 import { SearchTracePageImpl as SearchTracePage } from './index';
@@ -111,7 +110,7 @@ describe('<SearchTracePage>', () => {
   beforeEach(() => {
     useEmbeddedStateMock.mockReturnValue(null);
     useSearchTracesMock.mockClear();
-    useSearchTracesMock.mockReturnValue({ data: [], isFetching: false, error: null });
+    useSearchTracesMock.mockReturnValue({ data: undefined, isFetching: false, error: null });
     getConfigMock.mockReset();
     getConfigMock.mockReturnValue({
       disableFileUploadControl: false,
@@ -155,7 +154,7 @@ describe('<SearchTracePage>', () => {
   });
 
   it('shows a loading indicator when traces are loading', () => {
-    useSearchTracesMock.mockReturnValue({ data: [], isFetching: true, error: null });
+    useSearchTracesMock.mockReturnValue({ data: undefined, isFetching: true, error: null });
     const { container } = render(
       <AllProvider initialEntries={['/search?service=svc-a']}>
         <SearchTracePage />
@@ -174,7 +173,11 @@ describe('<SearchTracePage>', () => {
   });
 
   it('shows an error message if the search query returns an error', () => {
-    useSearchTracesMock.mockReturnValue({ data: [], isFetching: false, error: new Error('big-error') });
+    useSearchTracesMock.mockReturnValue({
+      data: undefined,
+      isFetching: false,
+      error: new Error('big-error'),
+    });
     const { container } = render(
       <AllProvider initialEntries={['/search?service=svc-a']}>
         <SearchTracePage />
@@ -238,6 +241,45 @@ describe('<SearchTracePage>', () => {
     expect(container.querySelector('[data-node-key="fileLoader"]')).toBeInTheDocument();
   });
 
+  it('restores the URL from cached query when mounted at bare /search', async () => {
+    const cachedQuery = { service: 'svc-a', start: '100', end: '200', limit: 20, lookback: '1h' };
+    useSearchTracesMock.mockReturnValue({
+      data: { results: [], query: cachedQuery },
+      isFetching: false,
+      error: null,
+    });
+
+    // Track location changes inside the MemoryRouter so we can assert the URL was restored.
+    let capturedSearch = null;
+    function LocationCapture() {
+      const { useLocation: useLoc } = require('react-router-dom');
+      const loc = useLoc();
+      capturedSearch = loc.search;
+      return null;
+    }
+
+    await act(async () => {
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={['/search']}>
+            <Provider store={globalStore}>
+              <SearchTracePage />
+              <LocationCapture />
+            </Provider>
+          </MemoryRouter>
+        </QueryClientProvider>
+      );
+    });
+
+    // useSearchTraces is called with null because bare /search has no service/start/end
+    expect(useSearchTracesMock.mock.calls[0][0]).toBeNull();
+
+    // After the useEffect fires, navigate({ replace: true }) should have updated the location
+    await waitFor(() => {
+      expect(capturedSearch).toContain('service=svc-a');
+    });
+  });
+
   it('hides Upload tab if it is disabled via config', () => {
     getConfigMock.mockReturnValue({
       disableFileUploadControl: true,
@@ -271,7 +313,7 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
     lastSearchResultsProps = null;
     lastFileLoaderProps = null;
     queryClient.clear();
-    useSearchTracesMock.mockReturnValue({ data: [], isFetching: false, error: null });
+    useSearchTracesMock.mockReturnValue({ data: undefined, isFetching: false, error: null });
     getConfigMock.mockReturnValue({
       disableFileUploadControl: false,
       tracking: { gaID: null, trackErrors: false, customWebAnalytics: null },
@@ -327,7 +369,11 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
       orphanSpanCount: 0,
       services: [],
     };
-    useSearchTracesMock.mockReturnValue({ data: [summary], isFetching: false, error: null });
+    useSearchTracesMock.mockReturnValue({
+      data: { results: [summary], query: { service: 'svc', start: '', end: '', limit: 20, lookback: '1h' } },
+      isFetching: false,
+      error: null,
+    });
     // Add one known trace and one unknown to the cohort
     useTraceDiffStore.setState({ cohort: ['trace-in-results', 'trace-not-in-results'] });
 
