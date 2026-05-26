@@ -9,8 +9,8 @@ import _cloneDeep from 'lodash/cloneDeep';
 import DetailState from './SpanDetail/DetailState';
 import * as track from './duck.track';
 import { actionTypes as types } from './duck';
-import { fetchedState } from '../../../constants';
 import { trackEvent } from '../../../utils/tracking';
+import { queryClient } from '../../../query/app-query-client';
 
 describe('middlewareHooks', () => {
   const traceID = 'ABC';
@@ -18,16 +18,8 @@ describe('middlewareHooks', () => {
   const spanDepth = 123;
   const columnWidth = { real: 0.15, tracked: 150 };
   const payload = { spanID };
+  const traceData = { spans: [{ spanID, depth: spanDepth }] };
   const state = {
-    trace: {
-      traces: {
-        [traceID]: {
-          id: traceID,
-          data: { spans: [{ spanID, depth: spanDepth }] },
-          state: fetchedState.DONE,
-        },
-      },
-    },
     traceTimeline: {
       traceID,
       childrenHiddenIDs: new Map(),
@@ -44,6 +36,14 @@ describe('middlewareHooks', () => {
   beforeEach(() => {
     trackEvent.mockClear();
     stateClone = _cloneDeep(state);
+    // Seed the React Query cache so trackParent can find the trace by ID.
+    // Also seed the leading-zero key for the leading-0s test case.
+    queryClient.setQueryData(['trace', traceID], traceData);
+    queryClient.setQueryData(['trace', `00${traceID}`], undefined);
+  });
+
+  afterEach(() => {
+    queryClient.removeQueries({ queryKey: ['trace'] });
   });
 
   const cases = [
