@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useRef, useReducer, useEffect, useCallback, useImperativeHandle, forwardRef, memo } from 'react';
+import React, { useRef, useReducer, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 import Positions from './Positions';
 import { TNil } from '../../../../types';
@@ -127,7 +127,7 @@ const ListView = forwardRef<ListViewRef, TListViewProps>((props, ref) => {
       }
       return props.itemHeightGetter(i, key);
     },
-    [props]
+    [props.getKeyFromIndex, props.itemHeightGetter]
   );
 
   const getBottomVisibleIndex = useCallback(() => {
@@ -281,6 +281,9 @@ const ListView = forwardRef<ListViewRef, TListViewProps>((props, ref) => {
     return undefined;
   }, [props.windowScroller, _onScroll]);
 
+  // We intentionally omit the dependency array here to run after every render, 
+  // mirroring the old class component's componentDidUpdate. 
+  // _scanItemHeights is optimized to bail out early if item heights haven't changed.
   useEffect(() => {
     if (itemHolderElm.current) {
       _scanItemHeights();
@@ -377,4 +380,4 @@ const ListView = forwardRef<ListViewRef, TListViewProps>((props, ref) => {
   );
 });
 
-export default memo(ListView);
+export default ListView;

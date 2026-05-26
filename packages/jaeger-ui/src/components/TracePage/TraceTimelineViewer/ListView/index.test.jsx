@@ -7,31 +7,53 @@ import '@testing-library/jest-dom';
 import ListView from './index';
 import { polyfill as polyfillAnimationFrame } from '../../../../utils/test/requestAnimationFrame';
 
-Object.defineProperty(HTMLElement.prototype, 'clientHeight', {
-  configurable: true,
-  get() {
-    // Wrapper / scroller get a viewport height
-    if (this.style && this.style.overflowY === 'auto') {
+let originalClientHeight;
+let originalScrollTop;
+
+beforeAll(() => {
+  originalClientHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
+  originalScrollTop = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'scrollTop');
+
+  Object.defineProperty(HTMLElement.prototype, 'clientHeight', {
+    configurable: true,
+    get() {
+      // Wrapper / scroller get a viewport height
+      if (this.style && this.style.overflowY === 'auto') {
+        return 300;
+      }
+
+      // Items: derive height from data-item-key if present
+      const key = this.getAttribute && this.getAttribute('data-item-key');
+      if (key != null) {
+        const index = Number(key);
+        return index * 2 + 2; // same as getHeight()
+      }
+
+      // Fallback non-zero height
       return 300;
-    }
+    },
+  });
 
-    // Items: derive height from data-item-key if present
-    const key = this.getAttribute && this.getAttribute('data-item-key');
-    if (key != null) {
-      const index = Number(key);
-      return index * 2 + 2; // same as getHeight()
-    }
-
-    // Fallback non-zero height
-    return 300;
-  },
+  // 2) Default scrollTop so calculations are stable
+  Object.defineProperty(HTMLElement.prototype, 'scrollTop', {
+    configurable: true,
+    writable: true,
+    value: 0,
+  });
 });
 
-// 2) Default scrollTop so calculations are stable
-Object.defineProperty(HTMLElement.prototype, 'scrollTop', {
-  configurable: true,
-  writable: true,
-  value: 0,
+afterAll(() => {
+  if (originalClientHeight) {
+    Object.defineProperty(HTMLElement.prototype, 'clientHeight', originalClientHeight);
+  } else {
+    delete HTMLElement.prototype.clientHeight;
+  }
+
+  if (originalScrollTop) {
+    Object.defineProperty(HTMLElement.prototype, 'scrollTop', originalScrollTop);
+  } else {
+    delete HTMLElement.prototype.scrollTop;
+  }
 });
 
 describe('<ListView /> functional', () => {
@@ -487,6 +509,7 @@ describe('<ListView /> functional', () => {
 
     // Component should still render
     expect(container.firstChild).toBeInTheDocument();
+    expect(consoleWarnSpy).toHaveBeenCalledWith('itemKey not found');
 
     consoleWarnSpy.mockRestore();
   });
