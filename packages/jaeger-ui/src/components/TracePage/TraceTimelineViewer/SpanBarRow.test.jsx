@@ -7,6 +7,7 @@ import '@testing-library/jest-dom';
 
 import SpanBarRow from './SpanBarRow';
 import SpanBar from './SpanBar';
+import { SpanKind } from '../../../types/otel';
 
 vi.mock('./SpanTreeOffset', () => ({
   default: jest.fn(({ span, childrenVisible, onClick }) => (
@@ -215,7 +216,7 @@ describe('<SpanBarRow>', () => {
     const span = {
       ...defaultProps.span,
       attributes: [],
-      kind: 'INTERNAL',
+      kind: SpanKind.INTERNAL,
     };
 
     render(<SpanBarRow {...defaultProps} span={span} />);

@@ -12,6 +12,7 @@ import {
   IoChatbubbleEllipsesOutline,
   IoGlobeOutline,
 } from 'react-icons/io5';
+import { IconType } from 'react-icons';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
 import { formatDurationCompact, ViewedBoundsFunctionType } from './utils';
@@ -64,7 +65,7 @@ type SpanBarRowProps = {
   useOtelTerms: boolean;
 };
 
-function getSpanTypeIcon(classification: ISpanClassification) {
+function getSpanTypeIcon(classification: ISpanClassification): IconType | null {
   switch (classification.type) {
     case SpanType.Database:
       return IoServerOutline;
@@ -197,6 +198,8 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
                 <SpanTypeIcon
                   aria-label={`Span type: ${spanClassification.label}`}
                   className="SpanBarRow--spanTypeIcon"
+                  focusable="false"
+                  role="img"
                   title={`Span type: ${spanClassification.label}`}
                 />
               )}

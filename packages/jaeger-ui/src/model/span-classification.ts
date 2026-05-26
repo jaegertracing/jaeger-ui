@@ -35,41 +35,50 @@ export function hasAttributePrefix(span: IOtelSpan, prefix: string): boolean {
   return span.attributes.some(attribute => attribute.key.startsWith(prefix));
 }
 
-function hasAnyAttribute(span: IOtelSpan, keys: ReadonlySet<string>): boolean {
-  return span.attributes.some(attribute => keys.has(attribute.key));
-}
-
 function hasMcpOperationName(span: IOtelSpan): boolean {
   const operationName = span.name.toLowerCase();
   return operationName.includes('mcp') && operationName.includes('tool');
 }
 
 export function classifySpan(span: IOtelSpan): ISpanClassification | null {
-  if (hasAnyAttribute(span, MCP_ATTRIBUTE_KEYS) || hasMcpOperationName(span)) {
+  let hasDatabaseAttribute = false;
+  let hasMcpAttribute = false;
+  let hasGenAIAttribute = false;
+  let hasMessagingAttribute = false;
+  let hasHttpAttribute = false;
+  let hasRpcAttribute = false;
+
+  for (const attribute of span.attributes) {
+    const { key } = attribute;
+    hasDatabaseAttribute ||= DATABASE_ATTRIBUTE_KEYS.has(key);
+    hasMcpAttribute ||= MCP_ATTRIBUTE_KEYS.has(key);
+    hasGenAIAttribute ||= key.startsWith('gen_ai.') || key.startsWith('llm.');
+    hasMessagingAttribute ||= MESSAGING_ATTRIBUTE_KEYS.has(key);
+    hasHttpAttribute ||= HTTP_ATTRIBUTE_KEYS.has(key);
+    hasRpcAttribute ||= RPC_ATTRIBUTE_KEYS.has(key);
+  }
+
+  if (hasMcpAttribute || hasMcpOperationName(span)) {
     return { type: SpanType.MCP, label: 'MCP tool call' };
   }
 
-  if (hasAttributePrefix(span, 'gen_ai.') || hasAttributePrefix(span, 'llm.')) {
+  if (hasGenAIAttribute) {
     return { type: SpanType.GenAI, label: 'GenAI step' };
   }
 
-  if (hasAnyAttribute(span, DATABASE_ATTRIBUTE_KEYS)) {
+  if (hasDatabaseAttribute) {
     return { type: SpanType.Database, label: 'Database call' };
   }
 
-  if (hasAnyAttribute(span, MESSAGING_ATTRIBUTE_KEYS)) {
+  if (hasMessagingAttribute) {
     return { type: SpanType.Messaging, label: 'Messaging span' };
   }
 
-  if (hasAnyAttribute(span, HTTP_ATTRIBUTE_KEYS)) {
+  if (hasHttpAttribute) {
     return { type: SpanType.HTTP, label: 'HTTP span' };
   }
 
-  if (
-    hasAnyAttribute(span, RPC_ATTRIBUTE_KEYS) ||
-    span.kind === SpanKind.CLIENT ||
-    span.kind === SpanKind.SERVER
-  ) {
+  if (hasRpcAttribute || span.kind === SpanKind.CLIENT || span.kind === SpanKind.SERVER) {
     return { type: SpanType.RPC, label: 'RPC span' };
   }
 
