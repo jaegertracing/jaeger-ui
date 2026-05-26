@@ -2,24 +2,28 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+
 import { Col, Row, Tabs } from 'antd';
-import { connect } from 'react-redux';
-import { bindActionCreators, Dispatch } from 'redux';
-import memoizeOne from 'memoize-one';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useConfig } from '../../hooks/useConfig';
 
 import SearchForm from './SearchForm';
 import SearchResults from './SearchResults';
-import { isSameQuery, getUrlState } from './url';
-import * as jaegerApiActions from '../../actions/jaeger-api';
-import * as fileReaderActions from '../../actions/file-reader-api';
+import {
+  getUrlState,
+  searchQueryFromUrl,
+  searchQueryToUrlState,
+  getUrl,
+  isSameQuery,
+  isQueryEmpty,
+} from './url';
 import * as orderBy from '../../model/order-by';
 import ErrorMessage from '../common/ErrorMessage';
-import { fetchedState } from '../../constants';
-import { sortTraces } from '../../model/search';
+import { sortTraceSummaries } from '../../model/search';
 import FileLoader from './FileLoader';
+import { useUploadedTraces } from './useUploadedTraces';
 
 import './index.css';
 import JaegerLogo from '../../img/jaeger-logo.svg';
@@ -28,64 +32,74 @@ import { trackSortByChange } from './SearchForm.track';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { useEmbeddedState } from '../../stores/embedded-store';
 import { useShallow } from 'zustand/react/shallow';
-import { ReduxState } from '../../types';
-import { SearchQuery } from '../../types/search';
-import { Trace } from '../../types/trace';
-import { IOtelTrace } from '../../types/otel';
-import type { TUrlState } from './url';
-
-interface IQueryOfResults extends Partial<SearchQuery> {
-  service?: string;
-  limit?: string | number;
-}
-
-interface ISearchTracePageImplOwnProps {
-  isHomepage?: boolean;
-}
-
-// Props from mapStateToProps
-interface IStateProps {
-  queryOfResults: IQueryOfResults | null;
-  // passed as-is from Redux; cohort lookup happens in the component where Zustand is accessible
-  tracesInRedux: ReduxState['trace'];
-  loadingTraces: boolean;
-  traces: Trace[];
-  traceResultsToDownload: unknown[];
-  errors: Array<{ message: string }> | null;
-  maxTraceDuration: number;
-  sortedTracesXformer: (traces: Trace[], sortBy: string) => IOtelTrace[];
-  urlQueryParams: TUrlState | null;
-}
-
-// Props from mapDispatchToProps
-interface IDispatchProps {
-  fetchMultipleTraces: (traceIds: string[]) => void;
-  searchTraces: (query: TUrlState) => void;
-  loadJsonTraces: (fileList: { file: File }) => void;
-}
-
-type SearchTracePageImplProps = ISearchTracePageImplOwnProps & IStateProps & IDispatchProps;
+import { useSearchTraces } from '../../hooks/useTraceDiscovery';
 
 // export for tests
-export function SearchTracePageImpl(props: SearchTracePageImplProps) {
+export function SearchTracePageImpl() {
   const embedded = useEmbeddedState();
-  const {
-    tracesInRedux,
-    errors,
-    fetchMultipleTraces,
-    isHomepage,
-    loadingTraces,
-    maxTraceDuration,
-    traceResultsToDownload,
-    queryOfResults,
-    loadJsonTraces,
-    searchTraces,
-    urlQueryParams,
-    sortedTracesXformer,
-    traces,
-  } = props;
 
-  // On Search: when we click “add to compare” / remove, we write that list
+  const location = useLocation();
+  const urlQueryParams = useMemo(() => {
+    const query = getUrlState(location.search);
+    return Object.keys(query).length > 0 ? query : null;
+  }, [location.search]);
+
+  const searchQuery = useMemo(() => searchQueryFromUrl(location.search), [location.search]);
+  const isHomepage = searchQuery === null;
+
+  const navigate = useNavigate();
+
+  const { data: searchData, isFetching: loadingTraces, error: searchError } = useSearchTraces(searchQuery);
+
+  // When the user returns to /search via TopNav (URL loses query params), restore the URL
+  // from the cached query so the address bar remains shareable and bookmarkable.
+  // replace:true avoids adding a spurious history entry.
+  // isQueryEmpty guards against navigating to a URL that would still parse as null,
+  // which would re-trigger this effect on the next render.
+  useEffect(() => {
+    if (!searchQuery && searchData?.query && !isQueryEmpty(searchData.query)) {
+      navigate(getUrl(searchQueryToUrlState(searchData.query)), { replace: true });
+    }
+  }, [searchQuery, searchData?.query, navigate]);
+
+  const { uploadedSummaries, uploadedRawTraces, handleTracesLoaded } = useUploadedTraces();
+
+  // Merge API and uploaded summaries, deduplicating by traceID (API results take precedence).
+  // Duplicates arise when the same file is uploaded twice or an uploaded trace also appears
+  // in API results; without dedup the list gets duplicate React keys and may render incorrectly.
+  // `seen` is updated as each uploaded entry is accepted so duplicates within uploads are
+  // also removed (not just duplicates between uploads and API results).
+  //
+  // uploadedTraceIDs is derived from uniqueUploaded (not all uploadedSummaries) so that
+  // traces present in both API results and uploads are not incorrectly badged as "Uploaded"
+  // — the API result takes precedence and the badge should not appear on it.
+  const { traceSummaries, uploadedTraceIDs } = useMemo(() => {
+    const apiTraceSummaries = searchData?.results ?? [];
+    const seen = new Set(apiTraceSummaries.map(s => s.traceID));
+    const uniqueUploaded = uploadedSummaries.filter(s => {
+      if (seen.has(s.traceID)) return false;
+      seen.add(s.traceID);
+      return true;
+    });
+    return {
+      traceSummaries: [...apiTraceSummaries, ...uniqueUploaded],
+      uploadedTraceIDs: new Set(uniqueUploaded.map(s => s.traceID)),
+    };
+  }, [searchData, uploadedSummaries]);
+
+  const [sortBy, setSortBy] = useState(orderBy.MOST_RECENT);
+
+  const sortedTraceSummaries = useMemo(
+    () => sortTraceSummaries(traceSummaries, sortBy),
+    [traceSummaries, sortBy]
+  );
+
+  const maxTraceDuration = useMemo(
+    () => Math.max(0, ...traceSummaries.map(t => t.duration)),
+    [traceSummaries]
+  );
+
+  // On Search: when we click "add to compare" / remove, we write that list
   // straight into the store. So the list is not only updated when the
   // tracediff is open - search updates it itself.
   //
@@ -107,42 +121,37 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
     }))
   );
   const cohort = useTraceDiffStore(s => s.cohort);
-  const diffCohort = useMemo(() => stateTraceDiffXformer(tracesInRedux, { cohort }), [tracesInRedux, cohort]);
+
+  const diffCohort = useMemo(() => {
+    const summaryMap = new Map(sortedTraceSummaries.map(s => [s.traceID, s]));
+    return cohort.flatMap(id => {
+      const s = summaryMap.get(id);
+      return s ? [s] : [];
+    });
+  }, [cohort, sortedTraceSummaries]);
 
   const config = useConfig();
   const { disableFileUploadControl } = config;
-  const [sortBy, setSortBy] = useState(orderBy.MOST_RECENT);
-
-  // componentDidMount logic - intentionally runs only on mount
-  useEffect(() => {
-    if (
-      !isHomepage &&
-      urlQueryParams &&
-      (!queryOfResults || !isSameQuery(urlQueryParams as any, queryOfResults as any))
-    ) {
-      searchTraces(urlQueryParams);
-    }
-    const needForDiffs = diffCohort.filter(ft => ft.state == null).map(ft => ft.id);
-    if (needForDiffs.length) {
-      fetchMultipleTraces(needForDiffs);
-    }
-    // Intentionally run only on mount, we only want to trigger the initial search
-    // and fetch diff traces once when the component loads, not on every state change.
-    // eslint-disable-next-line react-x/exhaustive-deps
-  }, []);
 
   const handleSortChange = useCallback((newSortBy: string) => {
     setSortBy(newSortBy);
     trackSortByChange(newSortBy);
   }, []);
 
-  const traceResults = sortedTracesXformer(traces, sortBy);
-  const hasTraceResults = traceResults && traceResults.length > 0;
-  const showErrors = errors && !loadingTraces;
-  const showLogo = isHomepage && !hasTraceResults && !loadingTraces && !errors;
+  // Computed synchronously so the loading indicator shows on the first render after Back
+  // navigation, before the new keyed-cache fetch completes and searchData is updated.
+  const isStale = Boolean(searchQuery && searchData?.query && !isSameQuery(searchQuery, searchData.query));
+
+  const errors: Array<{ message: string }> = searchError
+    ? [{ message: searchError instanceof Error ? searchError.message : String(searchError) }]
+    : [];
+
+  const hasTraceResults = sortedTraceSummaries.length > 0;
+  const showErrors = errors.length > 0 && !loadingTraces;
+  const showLogo = isHomepage && !hasTraceResults && !loadingTraces && !errors.length && !embedded;
 
   const tabItems = [];
-  // Always show the search form, loading is handled by SearchForm
+  // Search tab is always shown; trace-result loading is shown in SearchResults
   tabItems.push({
     label: 'Search',
     key: 'searchForm',
@@ -152,7 +161,7 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
     tabItems.push({
       label: 'Upload',
       key: 'fileLoader',
-      children: <FileLoader loadJsonTraces={loadJsonTraces} />,
+      children: <FileLoader onTracesLoaded={handleTracesLoaded} />,
     });
   }
 
@@ -175,6 +184,7 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
           </div>
         )}
         {!showErrors && (
+          // SearchResults is wrapped with withRouteProps, so its prop types aren't visible to TS.
           <SearchResults
             {...({
               cohortAddTrace,
@@ -182,14 +192,14 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
               diffCohort,
               disableComparisons: !!embedded,
               hideGraph: Boolean(embedded?.searchHideGraph),
-              loading: loadingTraces,
+              loading: loadingTraces || isStale,
               maxTraceDuration,
-              queryOfResults,
               showStandaloneLink: Boolean(embedded),
               skipMessage: isHomepage,
-              spanLinks: urlQueryParams && urlQueryParams.spanLinks,
-              traces: traceResults,
-              rawTraces: traceResultsToDownload,
+              spanLinks: urlQueryParams?.spanLinks,
+              traceSummaries: sortedTraceSummaries,
+              uploadedTraceIDs,
+              rawTraces: uploadedRawTraces,
               sortBy,
               handleSortChange,
             } as any)}
@@ -208,81 +218,4 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
   );
 }
 
-interface IStateTraceDiff {
-  cohort: string[];
-}
-
-const stateTraceXformer = memoizeOne((stateTrace: ReduxState['trace']) => {
-  const { traces: traceMap, search } = stateTrace;
-  const { query, results, state, error: traceError } = search;
-
-  const loadingTraces = state === fetchedState.LOADING;
-  const traces = results.map(id => traceMap[id].data).filter((t): t is Trace => t !== undefined);
-  // rawTraces is populated by the trace reducer when search results are returned
-  const rawTraces = (stateTrace as any).rawTraces || [];
-  const maxDuration = Math.max(0, ...traces.map(tr => tr.duration || 0));
-  return { traces, rawTraces, maxDuration, traceError, loadingTraces, query };
-});
-
-export const stateTraceDiffXformer = memoizeOne(
-  (stateTrace: ReduxState['trace'], stateTraceDiff: IStateTraceDiff) => {
-    const { traces } = stateTrace;
-    const { cohort } = stateTraceDiff;
-    return cohort.map(id => traces[id] || { id, state: null });
-  }
-);
-
-const sortedTracesXformer = memoizeOne((traces: Trace[], sortBy: string) => {
-  const traceResults = traces.slice();
-  sortTraces(traceResults, sortBy);
-  // Convert to OTEL traces
-  return traceResults.map(t => t.asOtelTrace());
-});
-
-export function mapStateToProps(
-  state: ReduxState,
-  ownProps: { search?: string }
-): IStateProps & { isHomepage: boolean } {
-  const query = getUrlState(ownProps.search || '');
-  const isHomepage = !Object.keys(query).length;
-  const {
-    query: queryOfResults,
-    traces,
-    rawTraces,
-    maxDuration,
-    traceError,
-    loadingTraces,
-  } = stateTraceXformer(state.trace);
-  const errors: Array<{ message: string }> = [];
-  if (traceError && typeof traceError === 'object' && 'message' in traceError) {
-    errors.push({ message: traceError.message });
-  }
-  // Note: Removed serviceError, loadingServices and disableFileUploadControl
-  // as we no longer use Redux for services (PR 3329).
-  return {
-    queryOfResults: queryOfResults as IQueryOfResults | null,
-    tracesInRedux: state.trace,
-    isHomepage,
-    loadingTraces,
-    traces,
-    traceResultsToDownload: rawTraces,
-    errors: errors.length ? errors : null,
-    maxTraceDuration: maxDuration,
-    sortedTracesXformer,
-    urlQueryParams: Object.keys(query).length > 0 ? query : null,
-  };
-}
-
-function mapDispatchToProps(dispatch: Dispatch): IDispatchProps {
-  const { fetchMultipleTraces, searchTraces } = bindActionCreators(jaegerApiActions, dispatch);
-  const { loadJsonTraces } = bindActionCreators(fileReaderActions, dispatch);
-  return {
-    fetchMultipleTraces,
-    searchTraces,
-    loadJsonTraces,
-  };
-}
-
-const connector = connect(mapStateToProps, mapDispatchToProps);
-
-export default withRouteProps(connector(SearchTracePageImpl));
+export default withRouteProps(SearchTracePageImpl);
