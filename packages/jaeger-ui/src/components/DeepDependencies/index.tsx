@@ -110,7 +110,7 @@ export function DeepDependencyGraphPageImpl({
   viewModifiers,
 }: TProps) {
   const [selectedVertex, setSelectedVertex] = useState<TDdgVertex | undefined>(undefined);
-  const { service, operation } = urlState;
+  const { service, operation, visEncoding, density } = urlState;
 
   useEffect(() => {
     if (!graphState && service && fetchDeepDependencyGraph) {
@@ -135,7 +135,7 @@ export function DeepDependencyGraphPageImpl({
 
   const focusPathsThroughVertex = useCallback(
     (vertexKey: string) => {
-      const elems = graph ? graph.getVertexVisiblePathElems(vertexKey, urlState.visEncoding) : undefined;
+      const elems = graph ? graph.getVertexVisiblePathElems(vertexKey, visEncoding) : undefined;
       if (!elems) return;
 
       trackFocusPaths();
@@ -144,40 +144,40 @@ export function DeepDependencyGraphPageImpl({
       );
       updateUrlState({ visEncoding: encode(indices) });
     },
-    [graph, updateUrlState, urlState.visEncoding]
+    [graph, updateUrlState, visEncoding]
   );
 
   const getGenerationVisibility = useCallback(
     (vertexKey: string, direction: EDirection): ECheckedStatus | null => {
       if (graph) {
-        return graph.getGenerationVisibility(vertexKey, direction, urlState.visEncoding);
+        return graph.getGenerationVisibility(vertexKey, direction, visEncoding);
       }
       return null;
     },
-    [graph, urlState.visEncoding]
+    [graph, visEncoding]
   );
 
   const getVisiblePathElems = useCallback(
     (key: string) => {
       if (graph) {
-        return graph.getVertexVisiblePathElems(key, urlState.visEncoding);
+        return graph.getVertexVisiblePathElems(key, visEncoding);
       }
       return undefined;
     },
-    [graph, urlState.visEncoding]
+    [graph, visEncoding]
   );
 
   const hideVertex = useCallback(
     (vertexKey: string) => {
       if (!graph) return;
 
-      const visEncoding = graph.getVisWithoutVertex(vertexKey, urlState.visEncoding);
-      if (!visEncoding) return;
+      const newVisEncoding = graph.getVisWithoutVertex(vertexKey, visEncoding);
+      if (!newVisEncoding) return;
 
       trackHide();
-      updateUrlState({ visEncoding });
+      updateUrlState({ visEncoding: newVisEncoding });
     },
-    [graph, updateUrlState, urlState.visEncoding]
+    [graph, updateUrlState, visEncoding]
   );
 
   const setDecoration = useCallback(
@@ -189,8 +189,6 @@ export function DeepDependencyGraphPageImpl({
 
   const setDistance = useCallback(
     (distance: number, direction: EDirection) => {
-      const { visEncoding } = urlState;
-
       if (graphState && graphState.state === fetchedState.DONE) {
         const { model: ddgModel } = graphState as IDoneState;
 
@@ -204,7 +202,7 @@ export function DeepDependencyGraphPageImpl({
         });
       }
     },
-    [graphState, updateUrlState, urlState]
+    [graphState, updateUrlState, visEncoding]
   );
 
   const setOperation = useCallback(
@@ -225,7 +223,6 @@ export function DeepDependencyGraphPageImpl({
   const setViewModifier = useCallback(
     (visibilityIndices: number[], viewModifier: EViewModifier, enable: boolean) => {
       const fn = enable ? addViewModifier : removeViewModifierFromIndices;
-      const { service, operation } = urlState;
       if (!fn || !graph || !service) return;
       fn({
         operation,
@@ -236,7 +233,7 @@ export function DeepDependencyGraphPageImpl({
         start: 0,
       });
     },
-    [addViewModifier, graph, removeViewModifierFromIndices, urlState]
+    [addViewModifier, graph, removeViewModifierFromIndices, operation, service]
   );
 
   const selectVertex = useCallback((newSelectedVertex?: TDdgVertex) => {
@@ -245,11 +242,10 @@ export function DeepDependencyGraphPageImpl({
 
   const showVertices = useCallback(
     (vertexKeys: string[]) => {
-      const { visEncoding } = urlState;
       if (!graph) return;
       updateUrlState({ visEncoding: graph.getVisWithVertices(vertexKeys, visEncoding) });
     },
-    [graph, updateUrlState, urlState]
+    [graph, updateUrlState, visEncoding]
   );
 
   const toggleShowOperations = useCallback(
@@ -259,7 +255,6 @@ export function DeepDependencyGraphPageImpl({
 
   const updateGenerationVisibility = useCallback(
     (vertexKey: string, direction: EDirection) => {
-      const { visEncoding } = urlState;
       if (!graph) return;
 
       const result = graph.getVisWithUpdatedGeneration(vertexKey, direction, visEncoding);
@@ -270,10 +265,9 @@ export function DeepDependencyGraphPageImpl({
       else trackShow(direction);
       updateUrlState({ visEncoding: newVisEncoding });
     },
-    [graph, updateUrlState, urlState]
+    [graph, updateUrlState, visEncoding]
   );
 
-  const { density, visEncoding } = urlState;
   const distanceToPathElems =
     graphState && graphState.state === fetchedState.DONE
       ? (graphState as IDoneState).model.distanceToPathElems

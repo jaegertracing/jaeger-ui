@@ -164,11 +164,13 @@ describe('DeepDependencyGraphPage', () => {
      * by name. Call the returned getter *after* render so the mocks have run.
      */
     function renderAndGetCallbacks(renderProps) {
-      render(<DeepDependencyGraphPageImpl {...renderProps} />);
+      const { rerender, unmount } = render(<DeepDependencyGraphPageImpl {...renderProps} />);
       return {
         header: latestHeaderProps,
         graph: latestGraphProps,
         sidePanel: latestSidePanelProps,
+        rerender: newProps => rerender(<DeepDependencyGraphPageImpl {...newProps} />),
+        unmount,
       };
     }
 
@@ -389,14 +391,14 @@ describe('DeepDependencyGraphPage', () => {
 
           // Without graphState - should not call encodeDistance
           const { graphState: _, ...graphStatelessProps } = props;
-          renderAndGetCallbacks(graphStatelessProps);
+          const utils = renderAndGetCallbacks(graphStatelessProps);
           latestHeaderProps.setDistance(distance, direction);
           expect(encodeDistanceSpy).not.toHaveBeenCalled();
           expect(getUrlSpy).not.toHaveBeenCalled();
           expect(props.navigate).not.toHaveBeenCalled();
 
           // With LOADING graphState - should not call
-          renderAndGetCallbacks({
+          utils.rerender({
             ...graphStatelessProps,
             graphState: { state: fetchedState.LOADING },
           });
@@ -406,7 +408,7 @@ describe('DeepDependencyGraphPage', () => {
           expect(props.navigate).not.toHaveBeenCalled();
 
           // With DONE graphState - should call
-          renderAndGetCallbacks(props);
+          utils.rerender(props);
           latestHeaderProps.setDistance(distance, direction);
           expect(encodeDistanceSpy).toHaveBeenLastCalledWith({
             ddgModel: props.graphState.model,
@@ -414,6 +416,10 @@ describe('DeepDependencyGraphPage', () => {
             distance,
             prevVisEncoding,
           });
+          expect(getUrlSpy).toHaveBeenLastCalledWith(
+            Object.assign({}, props.urlState, { visEncoding: 'test vis encoding' }),
+            url.ROUTE_PATH
+          );
           expect(props.navigate).toHaveBeenCalledTimes(1);
         });
       });
