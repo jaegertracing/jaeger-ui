@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
 import _get from 'lodash/get';
@@ -91,302 +91,315 @@ type TExternalProps = Partial<Omit<TOwnProps, 'navigate' | 'location'>>;
 
 type TProps = TDispatchProps & TReduxProps & TOwnProps & THookProps & TDdgViewModifierProps;
 
-type TState = {
-  selectedVertex?: TDdgVertex;
-};
-
 // export for tests
-export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TState> {
-  static defaultProps = {
-    showSvcOpsHeader: true,
-    baseUrl: ROUTE_PATH,
-  };
+export function DeepDependencyGraphPageImpl({
+  addViewModifier,
+  baseUrl = ROUTE_PATH,
+  extraUrlArgs,
+  fetchDeepDependencyGraph,
+  graph,
+  graphState,
+  navigate,
+  removeViewModifierFromIndices,
+  serverOps,
+  services,
+  showOp,
+  showSvcOpsHeader = true,
+  uiFind,
+  urlState,
+  viewModifiers,
+}: TProps) {
+  const [selectedVertex, setSelectedVertex] = useState<TDdgVertex | undefined>(undefined);
+  const { service, operation } = urlState;
 
-  static fetchModelIfStale(props: TProps) {
-    const { fetchDeepDependencyGraph, graphState = null, urlState } = props;
-    const { service, operation } = urlState;
+  useEffect(() => {
     if (!graphState && service && fetchDeepDependencyGraph) {
       fetchDeepDependencyGraph({ service, operation, start: 0, end: 0 });
     }
-  }
+  }, [fetchDeepDependencyGraph, graphState, service, operation]);
 
-  state: TState = {};
+  const graphHash = _get(graphState, 'model.hash');
+  const updateUrlState = useCallback(
+    (newValues: Partial<TDdgSparseUrlState>) => {
+      const getUrlArg = { uiFind, ...urlState, ...newValues, ...extraUrlArgs };
+      if (graphHash) getUrlArg.hash = graphHash;
+      navigate(getUrl(getUrlArg, baseUrl));
+    },
+    [baseUrl, extraUrlArgs, graphHash, navigate, uiFind, urlState]
+  );
 
-  constructor(props: TProps) {
-    super(props);
-    DeepDependencyGraphPageImpl.fetchModelIfStale(props);
-  }
-
-  componentDidUpdate() {
-    DeepDependencyGraphPageImpl.fetchModelIfStale(this.props);
-  }
-
-  clearOperation = () => {
+  const clearOperation = useCallback(() => {
     trackClearOperation();
-    this.updateUrlState({ operation: undefined });
-  };
+    updateUrlState({ operation: undefined });
+  }, [updateUrlState]);
 
-  focusPathsThroughVertex = (vertexKey: string) => {
-    const elems = this.getVisiblePathElems(vertexKey);
-    if (!elems) return;
+  const focusPathsThroughVertex = useCallback(
+    (vertexKey: string) => {
+      const elems = graph ? graph.getVertexVisiblePathElems(vertexKey, urlState.visEncoding) : undefined;
+      if (!elems) return;
 
-    trackFocusPaths();
-    const indices = ([] as number[]).concat(
-      ...elems.map(({ memberOf }) => memberOf.members.map(({ visibilityIdx }) => visibilityIdx))
-    );
-    this.updateUrlState({ visEncoding: encode(indices) });
-  };
-
-  getGenerationVisibility = (vertexKey: string, direction: EDirection): ECheckedStatus | null => {
-    const { graph, urlState } = this.props;
-    if (graph) {
-      return graph.getGenerationVisibility(vertexKey, direction, urlState.visEncoding);
-    }
-    return null;
-  };
-
-  getVisiblePathElems = (key: string) => {
-    const { graph, urlState } = this.props;
-    if (graph) {
-      return graph.getVertexVisiblePathElems(key, urlState.visEncoding);
-    }
-    return undefined;
-  };
-
-  hideVertex = (vertexKey: string) => {
-    const { graph, urlState } = this.props;
-    if (!graph) return;
-
-    const visEncoding = graph.getVisWithoutVertex(vertexKey, urlState.visEncoding);
-    if (!visEncoding) return;
-
-    trackHide();
-    this.updateUrlState({ visEncoding });
-  };
-
-  setDecoration = (decoration: string | undefined) => this.updateUrlState({ decoration });
-
-  setDensity = (density: EDdgDensity) => this.updateUrlState({ density });
-
-  setDistance = (distance: number, direction: EDirection) => {
-    const { graphState } = this.props;
-    const { visEncoding } = this.props.urlState;
-
-    if (graphState && graphState.state === fetchedState.DONE) {
-      const { model: ddgModel } = graphState as IDoneState;
-
-      this.updateUrlState({
-        visEncoding: encodeDistance({
-          ddgModel,
-          direction,
-          distance,
-          prevVisEncoding: visEncoding,
-        }),
-      });
-    }
-  };
-
-  setOperation = (operation: string) => {
-    this.updateUrlState({ operation, visEncoding: undefined });
-  };
-
-  setService = (service: string) => {
-    this.updateUrlState({ operation: undefined, service, visEncoding: undefined });
-    trackSetService();
-  };
-
-  setViewModifier = (visibilityIndices: number[], viewModifier: EViewModifier, enable: boolean) => {
-    const { addViewModifier, graph, removeViewModifierFromIndices, urlState } = this.props;
-    const fn = enable ? addViewModifier : removeViewModifierFromIndices;
-    const { service, operation } = urlState;
-    if (!fn || !graph || !service) return;
-    fn({
-      operation,
-      service,
-      viewModifier,
-      visibilityIndices,
-      end: 0,
-      start: 0,
-    });
-  };
-
-  selectVertex = (selectedVertex?: TDdgVertex) => {
-    this.setState({ selectedVertex });
-  };
-
-  showVertices = (vertexKeys: string[]) => {
-    const { graph, urlState } = this.props;
-    const { visEncoding } = urlState;
-    if (!graph) return;
-    this.updateUrlState({ visEncoding: graph.getVisWithVertices(vertexKeys, visEncoding) });
-  };
-
-  toggleShowOperations = (enable: boolean) => this.updateUrlState({ showOp: enable });
-
-  updateGenerationVisibility = (vertexKey: string, direction: EDirection) => {
-    const { graph, urlState } = this.props;
-    if (!graph) return;
-
-    const result = graph.getVisWithUpdatedGeneration(vertexKey, direction, urlState.visEncoding);
-    if (!result) return;
-
-    const { visEncoding, update } = result;
-    if (update === ECheckedStatus.Empty) trackHide(direction);
-    else trackShow(direction);
-    this.updateUrlState({ visEncoding });
-  };
-
-  updateUrlState = (newValues: Partial<TDdgSparseUrlState>) => {
-    const { baseUrl, extraUrlArgs, graphState, navigate, uiFind, urlState } = this.props;
-    const getUrlArg = { uiFind, ...urlState, ...newValues, ...extraUrlArgs };
-    const hash = _get(graphState, 'model.hash');
-    if (hash) getUrlArg.hash = hash;
-    navigate(getUrl(getUrlArg, baseUrl));
-  };
-
-  render() {
-    const { selectedVertex } = this.state;
-    const {
-      baseUrl,
-      extraUrlArgs,
-      graph,
-      graphState,
-      serverOps,
-      services,
-      showOp,
-      uiFind,
-      urlState,
-      showSvcOpsHeader,
-    } = this.props;
-    const { density, operation, service, visEncoding } = urlState;
-    const distanceToPathElems =
-      graphState && graphState.state === fetchedState.DONE
-        ? (graphState as IDoneState).model.distanceToPathElems
-        : undefined;
-    const uiFindMatches = graph && graph.getVisibleUiFindMatches(uiFind, visEncoding);
-    const hiddenUiFindMatches = graph && graph.getHiddenUiFindMatches(uiFind, visEncoding);
-
-    let content: React.ReactElement | null;
-    let wrapperClassName = '';
-    if (!graphState) {
-      content = <h1>Enter query above</h1>;
-    } else if (graphState.state === fetchedState.DONE && graph) {
-      const { edges, vertices } = graph.getVisible(visEncoding);
-      const { viewModifiers } = this.props;
-      const { edges: edgesViewModifiers, vertices: verticesViewModifiers } = graph.getDerivedViewModifiers(
-        visEncoding,
-        viewModifiers
+      trackFocusPaths();
+      const indices = ([] as number[]).concat(
+        ...elems.map(({ memberOf }) => memberOf.members.map(({ visibilityIdx }) => visibilityIdx))
       );
-      if (vertices.length > 1) {
-        wrapperClassName = 'is-horizontal';
-        // TODO: using `key` here is a hack, debug digraph to fix the underlying issue
-        content = (
-          <>
-            <Graph
-              key={JSON.stringify({ density, showOp, service, operation, visEncoding })}
-              baseUrl={baseUrl}
-              density={density}
-              edges={edges}
-              edgesViewModifiers={edgesViewModifiers}
-              extraUrlArgs={extraUrlArgs}
-              focusPathsThroughVertex={this.focusPathsThroughVertex}
-              getGenerationVisibility={this.getGenerationVisibility}
-              getVisiblePathElems={this.getVisiblePathElems}
-              hideVertex={this.hideVertex}
-              selectVertex={this.selectVertex}
-              setOperation={this.setOperation}
-              setViewModifier={this.setViewModifier}
-              uiFindMatches={uiFindMatches}
-              updateGenerationVisibility={this.updateGenerationVisibility}
-              vertices={vertices}
-              verticesViewModifiers={verticesViewModifiers}
-            />
-            <SidePanel
-              clearSelected={this.selectVertex}
-              selectDecoration={this.setDecoration}
-              selectedDecoration={urlState.decoration}
-              selectedVertex={selectedVertex}
-            />
-          </>
-        );
-      } else if (
-        (graphState as IDoneState).model.distanceToPathElems.has(-1) ||
-        (graphState as IDoneState).model.distanceToPathElems.has(1)
-      ) {
-        content = (
-          <>
-            <h1 className="Ddg--center">There is nothing visible to show</h1>
-            <p className="Ddg--center">Select at least one hop to view</p>
-          </>
-        );
-      } else {
-        const lookback = getConfig().search?.maxLookback?.value;
-        const checkLink = getSearchUrl({
-          lookback,
-          minDuration: '0ms',
-          operation,
-          service,
-          tags: '{"span.kind":"server"}',
-        });
-        content = (
-          <>
-            <h1 className="Ddg--center">There are no dependencies</h1>
-            <p className="Ddg--center">
-              No traces were found that contain {service}
-              {operation && `:${operation}`} and any other service where span.kind is &lsquo;server&rsquo;.
-            </p>
-            <p className="Ddg--center">
-              <a href={checkLink}>Confirm by searching</a>
-            </p>
-          </>
-        );
+      updateUrlState({ visEncoding: encode(indices) });
+    },
+    [graph, updateUrlState, urlState.visEncoding]
+  );
+
+  const getGenerationVisibility = useCallback(
+    (vertexKey: string, direction: EDirection): ECheckedStatus | null => {
+      if (graph) {
+        return graph.getGenerationVisibility(vertexKey, direction, urlState.visEncoding);
       }
-    } else if (graphState.state === fetchedState.LOADING) {
-      content = <LoadingIndicator centered className="u-mt-vast" />;
-    } else if (graphState.state === fetchedState.ERROR) {
+      return null;
+    },
+    [graph, urlState.visEncoding]
+  );
+
+  const getVisiblePathElems = useCallback(
+    (key: string) => {
+      if (graph) {
+        return graph.getVertexVisiblePathElems(key, urlState.visEncoding);
+      }
+      return undefined;
+    },
+    [graph, urlState.visEncoding]
+  );
+
+  const hideVertex = useCallback(
+    (vertexKey: string) => {
+      if (!graph) return;
+
+      const visEncoding = graph.getVisWithoutVertex(vertexKey, urlState.visEncoding);
+      if (!visEncoding) return;
+
+      trackHide();
+      updateUrlState({ visEncoding });
+    },
+    [graph, updateUrlState, urlState.visEncoding]
+  );
+
+  const setDecoration = useCallback(
+    (decoration: string | undefined) => updateUrlState({ decoration }),
+    [updateUrlState]
+  );
+
+  const setDensity = useCallback((density: EDdgDensity) => updateUrlState({ density }), [updateUrlState]);
+
+  const setDistance = useCallback(
+    (distance: number, direction: EDirection) => {
+      const { visEncoding } = urlState;
+
+      if (graphState && graphState.state === fetchedState.DONE) {
+        const { model: ddgModel } = graphState as IDoneState;
+
+        updateUrlState({
+          visEncoding: encodeDistance({
+            ddgModel,
+            direction,
+            distance,
+            prevVisEncoding: visEncoding,
+          }),
+        });
+      }
+    },
+    [graphState, updateUrlState, urlState]
+  );
+
+  const setOperation = useCallback(
+    (operation: string) => {
+      updateUrlState({ operation, visEncoding: undefined });
+    },
+    [updateUrlState]
+  );
+
+  const setService = useCallback(
+    (service: string) => {
+      updateUrlState({ operation: undefined, service, visEncoding: undefined });
+      trackSetService();
+    },
+    [updateUrlState]
+  );
+
+  const setViewModifier = useCallback(
+    (visibilityIndices: number[], viewModifier: EViewModifier, enable: boolean) => {
+      const fn = enable ? addViewModifier : removeViewModifierFromIndices;
+      const { service, operation } = urlState;
+      if (!fn || !graph || !service) return;
+      fn({
+        operation,
+        service,
+        viewModifier,
+        visibilityIndices,
+        end: 0,
+        start: 0,
+      });
+    },
+    [addViewModifier, graph, removeViewModifierFromIndices, urlState]
+  );
+
+  const selectVertex = useCallback((newSelectedVertex?: TDdgVertex) => {
+    setSelectedVertex(newSelectedVertex);
+  }, []);
+
+  const showVertices = useCallback(
+    (vertexKeys: string[]) => {
+      const { visEncoding } = urlState;
+      if (!graph) return;
+      updateUrlState({ visEncoding: graph.getVisWithVertices(vertexKeys, visEncoding) });
+    },
+    [graph, updateUrlState, urlState]
+  );
+
+  const toggleShowOperations = useCallback(
+    (enable: boolean) => updateUrlState({ showOp: enable }),
+    [updateUrlState]
+  );
+
+  const updateGenerationVisibility = useCallback(
+    (vertexKey: string, direction: EDirection) => {
+      const { visEncoding } = urlState;
+      if (!graph) return;
+
+      const result = graph.getVisWithUpdatedGeneration(vertexKey, direction, visEncoding);
+      if (!result) return;
+
+      const { visEncoding: newVisEncoding, update } = result;
+      if (update === ECheckedStatus.Empty) trackHide(direction);
+      else trackShow(direction);
+      updateUrlState({ visEncoding: newVisEncoding });
+    },
+    [graph, updateUrlState, urlState]
+  );
+
+  const { density, visEncoding } = urlState;
+  const distanceToPathElems =
+    graphState && graphState.state === fetchedState.DONE
+      ? (graphState as IDoneState).model.distanceToPathElems
+      : undefined;
+  const uiFindMatches = graph && graph.getVisibleUiFindMatches(uiFind, visEncoding);
+  const hiddenUiFindMatches = graph && graph.getHiddenUiFindMatches(uiFind, visEncoding);
+
+  let content: React.ReactElement | null = null;
+  let wrapperClassName = '';
+  if (!graphState) {
+    content = <h1>Enter query above</h1>;
+  } else if (graphState.state === fetchedState.DONE && graph) {
+    const { edges, vertices } = graph.getVisible(visEncoding);
+    const { edges: edgesViewModifiers, vertices: verticesViewModifiers } = graph.getDerivedViewModifiers(
+      visEncoding,
+      viewModifiers
+    );
+    if (vertices.length > 1) {
+      wrapperClassName = 'is-horizontal';
+      // TODO: using `key` here is a hack, debug digraph to fix the underlying issue
       content = (
         <>
-          <ErrorMessage error={(graphState as IErrorState).error} className="ub-m4" />
-          <p className="Ddg--center">If you are using an adblocker, whitelist Jaeger and retry.</p>
+          <Graph
+            key={JSON.stringify({ density, showOp, service, operation, visEncoding })}
+            baseUrl={baseUrl}
+            density={density}
+            edges={edges}
+            edgesViewModifiers={edgesViewModifiers}
+            extraUrlArgs={extraUrlArgs}
+            focusPathsThroughVertex={focusPathsThroughVertex}
+            getGenerationVisibility={getGenerationVisibility}
+            getVisiblePathElems={getVisiblePathElems}
+            hideVertex={hideVertex}
+            selectVertex={selectVertex}
+            setOperation={setOperation}
+            setViewModifier={setViewModifier}
+            uiFindMatches={uiFindMatches}
+            updateGenerationVisibility={updateGenerationVisibility}
+            vertices={vertices}
+            verticesViewModifiers={verticesViewModifiers}
+          />
+          <SidePanel
+            clearSelected={selectVertex}
+            selectDecoration={setDecoration}
+            selectedDecoration={urlState.decoration}
+            selectedVertex={selectedVertex}
+          />
+        </>
+      );
+    } else if (
+      (graphState as IDoneState).model.distanceToPathElems.has(-1) ||
+      (graphState as IDoneState).model.distanceToPathElems.has(1)
+    ) {
+      content = (
+        <>
+          <h1 className="Ddg--center">There is nothing visible to show</h1>
+          <p className="Ddg--center">Select at least one hop to view</p>
         </>
       );
     } else {
+      const lookback = getConfig().search?.maxLookback?.value;
+      const checkLink = getSearchUrl({
+        lookback,
+        minDuration: '0ms',
+        operation,
+        service,
+        tags: '{"span.kind":"server"}',
+      });
       content = (
         <>
-          <h1 className="Ddg--center">Unknown graphState:</h1>
-          <p className="Ddg--center">{JSON.stringify(graphState, null, 2)}</p>
+          <h1 className="Ddg--center">There are no dependencies</h1>
+          <p className="Ddg--center">
+            No traces were found that contain {service}
+            {operation && `:${operation}`} and any other service where span.kind is &lsquo;server&rsquo;.
+          </p>
+          <p className="Ddg--center">
+            <a href={checkLink}>Confirm by searching</a>
+          </p>
         </>
       );
     }
-
-    return (
-      <div className="Ddg">
-        <div>
-          <Header
-            clearOperation={this.clearOperation}
-            density={density}
-            distanceToPathElems={distanceToPathElems}
-            hiddenUiFindMatches={hiddenUiFindMatches}
-            operation={operation}
-            operations={serverOps}
-            service={service}
-            services={services}
-            setDensity={this.setDensity}
-            setDistance={this.setDistance}
-            setOperation={this.setOperation}
-            setService={this.setService}
-            showOperations={showOp}
-            showParameters={showSvcOpsHeader}
-            showVertices={this.showVertices}
-            toggleShowOperations={this.toggleShowOperations}
-            uiFindCount={uiFind ? uiFindMatches && uiFindMatches.size : undefined}
-            visEncoding={visEncoding}
-          />
-        </div>
-        <div className={`Ddg--graphWrapper ${wrapperClassName}`}>{content}</div>
-      </div>
+  } else if (graphState.state === fetchedState.LOADING) {
+    content = <LoadingIndicator centered className="u-mt-vast" />;
+  } else if (graphState.state === fetchedState.ERROR) {
+    content = (
+      <>
+        <ErrorMessage error={(graphState as IErrorState).error} className="ub-m4" />
+        <p className="Ddg--center">If you are using an adblocker, whitelist Jaeger and retry.</p>
+      </>
+    );
+  } else {
+    content = (
+      <>
+        <h1 className="Ddg--center">Unknown graphState:</h1>
+        <p className="Ddg--center">{JSON.stringify(graphState, null, 2)}</p>
+      </>
     );
   }
+
+  return (
+    <div className="Ddg">
+      <div>
+        <Header
+          clearOperation={clearOperation}
+          density={density}
+          distanceToPathElems={distanceToPathElems}
+          hiddenUiFindMatches={hiddenUiFindMatches}
+          operation={operation}
+          operations={serverOps}
+          service={service}
+          services={services}
+          setDensity={setDensity}
+          setDistance={setDistance}
+          setOperation={setOperation}
+          setService={setService}
+          showOperations={showOp}
+          showParameters={showSvcOpsHeader}
+          showVertices={showVertices}
+          toggleShowOperations={toggleShowOperations}
+          uiFindCount={uiFind ? uiFindMatches && uiFindMatches.size : undefined}
+          visEncoding={visEncoding}
+        />
+      </div>
+      <div className={`Ddg--graphWrapper ${wrapperClassName}`}>{content}</div>
+    </div>
+  );
 }
 
 // export for tests
@@ -422,8 +435,10 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   };
 }
 
+const MemoizedDeepDependencyGraphPageImpl = React.memo(DeepDependencyGraphPageImpl);
+
 const ConnectedDeepDependencyGraphPageImpl = withRouteProps(
-  connect(mapStateToProps, mapDispatchToProps)(DeepDependencyGraphPageImpl)
+  connect(mapStateToProps, mapDispatchToProps)(MemoizedDeepDependencyGraphPageImpl)
 ) as React.ComponentType<Omit<TOwnProps, 'location' | 'navigate'> & THookProps & TDdgViewModifierProps>;
 
 // Bridges Zustand-based view modifier state into the TDdgViewModifierProps shape expected by the
