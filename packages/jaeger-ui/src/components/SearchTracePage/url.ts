@@ -102,6 +102,29 @@ export function searchQueryToUrlState(q: SearchQuery): TUrlState {
 }
 
 /**
+ * Derive the lookback from an already-parsed URL state.
+ * Returns the explicit lookback param when present, reconstructs it from
+ * start/end timestamps when absent, or returns '' when neither is available.
+ */
+function lookbackFromUrlState(q: TUrlState): string {
+  const lookback = firstOf(q.lookback);
+  if (lookback) return lookback;
+  const startUs = Number(firstOf(q.start));
+  const endUs = Number(firstOf(q.end));
+  if (startUs > 0 && endUs > startUs) return lookbackFromDuration((endUs - startUs) / 1000);
+  return '';
+}
+
+/**
+ * Derive the lookback value from the URL search string.
+ * Returns the explicit lookback param when present, reconstructs it from
+ * start/end timestamps when absent, or returns '' when neither is available.
+ */
+export function lookbackFromUrl(search: string): string {
+  return lookbackFromUrlState(getUrlState(search));
+}
+
+/**
  * Parse the URL search string into a typed SearchQuery, or null when no search
  * params are present (homepage / no query submitted yet).
  *
@@ -116,21 +139,6 @@ export function searchQueryToUrlState(q: SearchQuery): TUrlState {
  * 'custom' when the range exceeds all standard options. This keeps the form's
  * dropdown in sync with the actual time range that was searched.
  */
-/**
- * Derive the lookback value from the URL search string.
- * Returns the explicit lookback param if present and valid, reconstructs it from
- * start/end timestamps when lookback is absent, or returns '' when neither is available.
- */
-export function lookbackFromUrl(search: string): string {
-  const q = getUrlState(search);
-  const lookback = firstOf(q.lookback);
-  if (lookback) return lookback;
-  const startUs = Number(firstOf(q.start));
-  const endUs = Number(firstOf(q.end));
-  if (startUs > 0 && endUs > startUs) return lookbackFromDuration((endUs - startUs) / 1000);
-  return '';
-}
-
 export function searchQueryFromUrl(search: string): SearchQuery | null {
   const q = getUrlState(search);
   if (!q.service && !q.start && !q.end) return null;
@@ -138,7 +146,7 @@ export function searchQueryFromUrl(search: string): SearchQuery | null {
   const startStr = firstOf(q.start) ?? '';
   const endStr = firstOf(q.end) ?? '';
 
-  const lookback = lookbackFromUrl(search);
+  const lookback = lookbackFromUrlState(q);
 
   return {
     service: firstOf(q?.service),
