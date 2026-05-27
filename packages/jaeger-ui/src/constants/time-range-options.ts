@@ -14,82 +14,82 @@ export interface ITimeRangeOption {
 
 export const TIME_RANGE_OPTIONS: readonly ITimeRangeOption[] = Object.freeze([
   {
-    label: '5 Minutes',
+    label: '5 minutes',
     lookback: '5m',
     valueMs: 5 * ONE_MINUTE_MS,
   },
   {
-    label: '15 Minutes',
+    label: '15 minutes',
     lookback: '15m',
     valueMs: 15 * ONE_MINUTE_MS,
   },
   {
-    label: '30 Minutes',
+    label: '30 minutes',
     lookback: '30m',
     valueMs: 30 * ONE_MINUTE_MS,
   },
   {
-    label: 'Hour',
+    label: '1 hour',
     lookback: '1h',
     valueMs: ONE_HOUR_MS,
   },
   {
-    label: '2 Hours',
+    label: '2 hours',
     lookback: '2h',
     valueMs: 2 * ONE_HOUR_MS,
   },
   {
-    label: '3 Hours',
+    label: '3 hours',
     lookback: '3h',
     valueMs: 3 * ONE_HOUR_MS,
   },
   {
-    label: '6 Hours',
+    label: '6 hours',
     lookback: '6h',
     valueMs: 6 * ONE_HOUR_MS,
   },
   {
-    label: '12 Hours',
+    label: '12 hours',
     lookback: '12h',
     valueMs: 12 * ONE_HOUR_MS,
   },
   {
-    label: '24 Hours',
+    label: '24 hours',
     lookback: '24h',
     valueMs: 24 * ONE_HOUR_MS,
   },
   {
-    label: '2 Days',
+    label: '2 days',
     lookback: '2d',
     valueMs: 2 * ONE_DAY_MS,
   },
   {
-    label: '3 Days',
+    label: '3 days',
     lookback: '3d',
     valueMs: 3 * ONE_DAY_MS,
   },
   {
-    label: '5 Days',
+    label: '5 days',
     lookback: '5d',
     valueMs: 5 * ONE_DAY_MS,
   },
   {
-    label: '7 Days',
+    label: '7 days',
     lookback: '7d',
     valueMs: 7 * ONE_DAY_MS,
   },
   {
-    label: '2 Weeks',
+    label: '2 weeks',
     lookback: '2w',
     valueMs: 2 * ONE_WEEK_MS,
   },
   {
-    label: '3 Weeks',
+    label: '3 weeks',
     lookback: '3w',
     valueMs: 3 * ONE_WEEK_MS,
   },
   {
-    label: '4 Weeks',
+    label: '4 weeks',
     lookback: '4w',
     valueMs: 4 * ONE_WEEK_MS,
   },

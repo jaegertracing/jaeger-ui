@@ -543,7 +543,7 @@ describe('<MonitorATMServicesView>', () => {
       await user.selectOptions(timeframeSelect, String(2 * 3600000));
 
       await waitFor(() => {
-        expect(trackSelectTimeframeSpy).toHaveBeenCalledWith('2 Hours');
+        expect(trackSelectTimeframeSpy).toHaveBeenCalledWith('2 hours');
       });
 
       expect(mockFetchAllServiceMetrics).toHaveBeenCalled();
