@@ -543,7 +543,7 @@ describe('<MonitorATMServicesView>', () => {
       await user.selectOptions(timeframeSelect, String(2 * 3600000));
 
       await waitFor(() => {
-        expect(trackSelectTimeframeSpy).toHaveBeenCalledWith('Last 2 hours');
+        expect(trackSelectTimeframeSpy).toHaveBeenCalledWith('2 Hours');
       });
 
       expect(mockFetchAllServiceMetrics).toHaveBeenCalled();
@@ -803,7 +803,7 @@ describe('getLoopbackInterval()', () => {
   });
 
   it('timeframe exists', () => {
-    expect(getLoopbackInterval(48 * 3600000)).toBe('last 2 days');
+    expect(getLoopbackInterval(48 * 3600000)).toBe('2 days');
   });
 });
 
