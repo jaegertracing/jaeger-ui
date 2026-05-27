@@ -6,13 +6,8 @@ import { render, screen, cleanup, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
-import {
-  MonitorATMServicesViewImpl as MonitorATMServicesView,
-  mapStateToProps,
-  mapDispatchToProps,
-  getLoopbackInterval,
-  yAxisTickFormat,
-} from '.';
+import { MonitorATMServicesViewImpl as MonitorATMServicesView, mapStateToProps, mapDispatchToProps } from '.';
+import { getLoopbackInterval, yAxisTickFormat } from './timeFrameUtils';
 import { useServices } from '../../../hooks/useTraceDiscovery';
 import {
   originInitialState,

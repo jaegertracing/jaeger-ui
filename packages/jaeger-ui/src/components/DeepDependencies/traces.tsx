@@ -8,8 +8,6 @@ import type { Location } from 'react-router-dom';
 import _get from 'lodash/get';
 import memoizeOne from 'memoize-one';
 import queryString from 'query-string';
-import { useSelector } from 'react-redux';
-
 import { DeepDependencyGraphPageImpl, TReduxProps, useDdgViewModifierBridgeProps } from '.';
 import { getUrlState, sanitizeUrlState } from './url';
 import { ROUTE_PATH } from '../SearchTracePage/url';
@@ -20,7 +18,7 @@ import transformDdgData from '../../model/ddg/transformDdgData';
 import transformTracesToPaths from '../../model/ddg/transformTracesToPaths';
 
 import { TDdgStateEntry } from '../../types/TDdgState';
-import { FetchedTrace, ReduxState } from '../../types';
+import { FetchedTrace } from '../../types';
 import { useTraces } from '../../hooks/useTraceLoading';
 
 // Required for proper memoization of subsequent function calls
@@ -28,10 +26,11 @@ const svcOp = memoizeOne((service, operation) => ({ service, operation }));
 
 type TOwnProps = {
   location: Location;
+  traceIDs: string[];
 };
 
 const TracesDdgImpl: React.FC<TOwnProps> = React.memo(props => {
-  const { location } = props;
+  const { location, traceIDs } = props;
   const navigate = useNavigate();
   const viewModifierProps = useDdgViewModifierBridgeProps();
   const urlArgs = queryString.parse(location.search);
@@ -42,10 +41,7 @@ const TracesDdgImpl: React.FC<TOwnProps> = React.memo(props => {
   const { density, operation, service, showOp: urlStateShowOp } = urlState;
   const showOp = urlStateShowOp !== undefined ? urlStateShowOp : operation !== undefined;
 
-  // Scoped to the current search results — not the full React Query cache, which
-  // accumulates traces across the SPA lifetime and would bleed across searches.
-  const searchResultIds = useSelector((state: ReduxState) => state.trace.search.results);
-  const tracesData = useTraces(searchResultIds);
+  const tracesData = useTraces(traceIDs);
 
   const { graphState, graph } = useMemo(() => {
     if (!service) return { graphState: undefined, graph: undefined };

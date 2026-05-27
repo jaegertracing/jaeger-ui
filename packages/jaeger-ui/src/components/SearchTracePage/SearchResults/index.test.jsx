@@ -6,10 +6,9 @@ import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
-import { createBlob, UnconnectedSearchResults as SearchResults, SelectSort } from '.';
+import { UnconnectedSearchResults as SearchResults, SelectSort } from '.';
 import * as track from './index.track';
 import * as orderBy from '../../../model/order-by';
-import readJsonFile from '../../../utils/readJsonFile';
 import { getUrl } from '../url';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';
@@ -50,13 +49,7 @@ vi.mock('./ResultItem', () =>
 vi.mock('./ScatterPlot', () => mockDefault(jest.fn(props => <div data-testid="scatterplot" {...props} />)));
 
 vi.mock('./DownloadResults', () =>
-  mockDefault(
-    jest.fn(({ onDownloadResultsClicked }) => (
-      <button type="button" data-testid="download" onClick={onDownloadResultsClicked}>
-        download
-      </button>
-    ))
-  )
+  mockDefault(jest.fn(() => <button type="button" data-testid="download" />))
 );
 
 vi.mock('../../DeepDependencies/traces', () => mockDefault(jest.fn(() => <div data-testid="ddg" />)));
@@ -133,11 +126,11 @@ const baseProps = {
   loading: false,
   location: { search: '' },
   maxTraceDuration: 1,
-  queryOfResults: {},
   showStandaloneLink: false,
   skipMessage: false,
   spanLinks: undefined,
   traceSummaries: baseTraces,
+  uploadedTraceIDs: new Set(),
   rawTraces: baseRawTraces,
   sortBy: orderBy.MOST_RECENT,
   handleSortChange: jest.fn(),
@@ -273,6 +266,19 @@ describe('<SearchResults>', () => {
     expect(navigateCall[0]).toContain('/trace/a');
   });
 
+  it('uses location.pathname+search as Back URL (upload-only context, no search params)', () => {
+    // When traces come from a file upload (no API search), location.search is empty and
+    // the Back link on the trace page must use the current URL so the user returns to
+    // the upload results, not an empty or incorrect search page.
+    renderWithRouter(<SearchResults {...baseProps} location={{ pathname: '/search', search: '' }} />);
+    const scatterProps = ScatterPlot.mock.calls[0][0];
+    scatterProps.onValueClick({ traceID: 'a' });
+    expect(mockNavigate).toHaveBeenCalled();
+    // fromSearch state should be based on current location, not getUrl()
+    const navigateState = mockNavigate.mock.calls[0][1]?.state;
+    expect(navigateState?.fromSearch).toBe('/search');
+  });
+
   it('handles trace with zero spans', () => {
     renderWithRouter(
       <SearchResults
@@ -330,6 +336,13 @@ describe('<SearchResults>', () => {
     it('shows a result entry for each trace', () => {
       renderWithRouter(<SearchResults {...baseProps} />);
       expect(ResultItem.mock.calls).toHaveLength(baseTraces.length);
+    });
+
+    it('passes isUploaded=true only for IDs in uploadedTraceIDs', () => {
+      renderWithRouter(<SearchResults {...baseProps} uploadedTraceIDs={new Set(['a'])} />);
+      const [first, second] = ResultItem.mock.calls;
+      expect(first[0].isUploaded).toBe(true);
+      expect(second[0].isUploaded).toBe(false);
     });
 
     it('deep links traces', () => {
@@ -399,7 +412,7 @@ describe('<SearchResults>', () => {
 
         fireEvent.click(screen.getByTestId('alt-toggle'));
         expect(mockNavigate).toHaveBeenLastCalledWith(
-          getUrl({ [otherParam]: otherValue, [searchParam]: 'ddg' })
+          getUrl({ [otherParam]: otherValue, service: 'svc-a', [searchParam]: 'ddg' })
         );
         expect(spy).toHaveBeenLastCalledWith('ddg');
 
@@ -410,7 +423,7 @@ describe('<SearchResults>', () => {
         );
         fireEvent.click(screen.getByTestId('alt-toggle'));
         expect(mockNavigate).toHaveBeenLastCalledWith(
-          getUrl({ [otherParam]: otherValue, [searchParam]: 'traces' })
+          getUrl({ [otherParam]: otherValue, service: 'svc-a', [searchParam]: 'traces' })
         );
         expect(spy).toHaveBeenLastCalledWith('traces');
 
@@ -422,7 +435,7 @@ describe('<SearchResults>', () => {
         );
         fireEvent.click(screen.getByTestId('alt-toggle'));
         expect(mockNavigate).toHaveBeenLastCalledWith(
-          getUrl({ [otherParam]: otherValue, [searchParam]: 'ddg' })
+          getUrl({ [otherParam]: otherValue, service: 'svc-a', [searchParam]: 'ddg' })
         );
         expect(spy).toHaveBeenLastCalledWith('ddg');
       });
@@ -447,6 +460,13 @@ describe('<SearchResults>', () => {
         expect(screen.getByTestId('download')).toBeInTheDocument();
       });
 
+      it('shows DownloadResults even when rawTraces is empty (API-only results)', () => {
+        renderWithRouter(
+          <SearchResults {...baseProps} rawTraces={[]} location={{ search: '?view=traces' }} />
+        );
+        expect(screen.getByTestId('download')).toBeInTheDocument();
+      });
+
       it('does not show DownloadResults when view is ddg', () => {
         const { rerender } = renderWithRouter(
           <SearchResults {...baseProps} location={{ search: '?view=traces' }} />
@@ -455,51 +475,6 @@ describe('<SearchResults>', () => {
 
         rerender(withRouter(<SearchResults {...baseProps} location={{ search: '?view=ddg' }} />));
         expect(screen.queryByTestId('download')).not.toBeInTheDocument();
-      });
-
-      it('when click on DownloadResults then call download function', () => {
-        const orig = global.Blob;
-        global.Blob = class {
-          constructor(text, options) {
-            this.text = text;
-            this.options = options;
-          }
-        };
-        URL.createObjectURL = jest.fn(() => 'blob://url');
-        URL.revokeObjectURL = jest.fn();
-
-        renderWithRouter(<SearchResults {...baseProps} location={{ search: '?view=traces' }} />);
-        fireEvent.click(screen.getByTestId('download'));
-
-        expect(URL.createObjectURL).toHaveBeenCalledTimes(1);
-        const blobArg = URL.createObjectURL.mock.calls[0][0];
-
-        expect(blobArg.text).toEqual([`{"data":${JSON.stringify(baseRawTraces)}}`]);
-        expect(URL.revokeObjectURL).toHaveBeenCalledTimes(1);
-
-        global.Blob = orig;
-      });
-
-      it('when create a download file then it can be read back', async () => {
-        const content = `{"data":${JSON.stringify(baseRawTraces)}}`;
-        // Pass the blob content (string) directly to File to avoid JSDOM Blob-in-File issues if any
-        // createBlob returns a Blob. getting text from it.
-        const blob = createBlob(baseRawTraces);
-        // In JSDOM/Node, blob parts are stored. We can extract string.
-        // But here we rely on standard APIs.
-        // If createBlob returns a real JSDOM Blob, new File([blob]) should work.
-        // If it fails with [object Object], it might be that JSDOM File doesn't unwrap Blob parts recursively or correctly.
-        // Let's try to get text first.
-        const blobText = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = () => reject(reader.error);
-          reader.readAsText(blob);
-        });
-        const file = new File([blobText], 'test.json');
-
-        const contentFile = await readJsonFile({ file });
-        expect(JSON.stringify(contentFile)).toBe(content);
       });
     });
   });
