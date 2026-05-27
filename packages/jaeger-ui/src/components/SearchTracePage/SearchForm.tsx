@@ -313,10 +313,10 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   const submitting = useIsSearchFetching();
   const navigate = useNavigate();
   const clearUploadedTraces = useClearUploadedTraces();
-  const { useOpenTelemetryTerms: useOtelTerms, search } = useConfig();
-  const searchMaxLookback: ILookbackOption | undefined = search?.maxLookback;
-  const searchAdjustEndTime: string | undefined = search?.adjustEndTime;
-  const configuredDefault = search?.defaultLookback;
+  const { useOpenTelemetryTerms: useOtelTerms, search: searchConfig } = useConfig();
+  const searchMaxLookback: ILookbackOption | undefined = searchConfig?.maxLookback;
+  const searchAdjustEndTime: string | undefined = searchConfig?.adjustEndTime;
+  const configuredDefault = searchConfig?.defaultLookback;
   const defaultLookback: string =
     configuredDefault && isValidLookback(configuredDefault) ? configuredDefault : DEFAULT_LOOKBACK;
   const [formData, setFormData] = useState<Partial<ISearchFormFields>>(() => ({
@@ -673,7 +673,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           placeholder="Limit Results"
           type="number"
           min={1}
-          max={search?.maxLimit}
+          max={searchConfig?.maxLimit}
           onChange={e => handleChange({ resultsLimit: e.target.value })}
         />
       </FormItem>
