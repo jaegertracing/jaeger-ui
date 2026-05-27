@@ -15,7 +15,7 @@ export function newInitialState(): TTraceDiffState {
 
 type TCohortSummaries = Record<string, TraceSummary>;
 
-function cohortSummariesForCohort(summaries: TCohortSummaries, cohort: string[]): TCohortSummaries {
+function cohortSummariesForCohort(summaries: TCohortSummaries, cohortIDs: string[]): TCohortSummaries {
   const next: TCohortSummaries = {};
   cohort.forEach(id => {
     if (summaries[id]) {
