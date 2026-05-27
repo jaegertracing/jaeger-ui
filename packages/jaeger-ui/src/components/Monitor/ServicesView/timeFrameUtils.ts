@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { ONE_HOUR_MS, TIME_RANGE_OPTIONS } from '../../../constants/time-range-options';
+import { ONE_HOUR_MS, TIME_RANGE_OPTIONS } from '../../../utils/time-range-options';
 import { convertToTimeUnit } from '../../../utils/date';
 
 export { ONE_HOUR_MS };

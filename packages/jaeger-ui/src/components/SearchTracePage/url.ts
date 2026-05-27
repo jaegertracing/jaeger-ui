@@ -10,7 +10,7 @@ import { MAX_LENGTH } from '../DeepDependencies/Graph/DdgNodeContent/constants';
 
 import { SearchQuery } from '../../types/search';
 import parseQuery from '../../utils/parseQuery';
-import { lookbackFromDuration } from '../../constants/time-range-options';
+import { lookbackFromDuration } from '../../utils/time-range-options';
 
 export { isSameQuery, isQueryEmpty } from '../../utils/search-query';
 
