@@ -9,7 +9,12 @@
  */
 
 import prefixUrl from '../../utils/prefix-url';
-import { ServicesResponseSchema, OperationsResponseSchema } from './schemas';
+import {
+  ServicesResponseSchema,
+  OperationsResponseSchema,
+  TracesDataSchema,
+  type ITracesData,
+} from './schemas';
 
 export class JaegerClient {
   private apiRoot = prefixUrl('/api/v3');
@@ -49,6 +54,28 @@ export class JaegerClient {
     // Runtime validation with Zod
     const validated = OperationsResponseSchema.parse(data);
     return validated.operations;
+  }
+
+  /**
+   * Fetch a single trace by ID and validate its structure against OTLP Zod schemas.
+   * @param traceId - The trace ID in hex format
+   * @returns Promise<ITracesData>
+   */
+  async fetchTrace(traceId: string): Promise<ITracesData> {
+    const response = await this.fetchWithTimeout(`${this.apiRoot}/traces/${traceId}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch trace "${traceId}": ${response.status} ${response.statusText}`);
+    }
+    const data = await response.json();
+
+    // Runtime validation with Zod (safeParse for resilience)
+    const result = TracesDataSchema.safeParse(data);
+    if (!result.success) {
+      // Graceful degradation: log error for observability but return data to avoid blank screens
+      console.error(`[OTLP Validation] Error for trace ${traceId}:`, result.error.format());
+      return data as ITracesData;
+    }
+    return result.data;
   }
 
   /**
