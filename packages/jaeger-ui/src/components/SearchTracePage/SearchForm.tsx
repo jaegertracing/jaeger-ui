@@ -90,8 +90,9 @@ export function convTagsLogfmt(tags: string | null | undefined): string | null {
 export function lookbackToTimestamp(lookback: string, from: Date | number): number {
   const parsedValue = parseInt(lookback, 10);
   const parsedUnit = LOOKBACK_UNIT_BY_SUFFIX[lookback.slice(-1)];
-  const value = parsedUnit && !Number.isNaN(parsedValue) ? parsedValue : DEFAULT_LOOKBACK_VALUE;
-  const unit = parsedUnit ?? DEFAULT_LOOKBACK_UNIT;
+  const valid = parsedUnit !== undefined && !Number.isNaN(parsedValue);
+  const value = valid ? parsedValue : DEFAULT_LOOKBACK_VALUE;
+  const unit = valid ? parsedUnit : DEFAULT_LOOKBACK_UNIT;
   return dayjs(from).subtract(value, unit).valueOf() * 1000;
 }
 
