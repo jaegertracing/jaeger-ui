@@ -308,7 +308,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
             >
               {timeFrameOptions.map(option => (
                 <Option key={option.value} value={option.value}>
-                  {option.label}
+                  {`Last ${option.label}`}
                 </Option>
               ))}
             </SearchableSelect>
