@@ -7,27 +7,26 @@ import { MemoryRouter } from 'react-router-dom';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import TraceTable, { toOrderBy, fromOrderBy } from './TraceTable';
 import * as orderBy from '../../../model/order-by';
-import { StatusCode } from '../../../types/otel';
 
 const FIXED_START_TIME = 1700000000000000;
 
-const makeTrace = (id: string, errorCount = 0) => ({
+const makeTrace = (id: string, errorSpanCount = 0) => ({
   traceID: id,
   traceName: `Trace ${id}`,
-  duration: 1000,
+  rootServiceName: 'service-a',
+  rootOperationName: 'op-a',
   startTime: FIXED_START_TIME,
-  spans: [
-    ...Array(3).fill({ status: { code: StatusCode.OK } }),
-    ...Array(errorCount).fill({ status: { code: StatusCode.ERROR } }),
-  ],
-  services: [{ name: 'service-a' }],
-  hasErrors: () => errorCount > 0,
+  duration: 1000,
+  spanCount: 3,
+  errorSpanCount,
+  orphanSpanCount: 0,
+  services: [{ name: 'service-a', spanCount: 3, errorSpanCount }],
 });
 
 const mockTraces = [makeTrace('a'), makeTrace('b'), makeTrace('c'), makeTrace('d', 2), makeTrace('e')];
 
 const defaultProps = {
-  traces: mockTraces as any,
+  traceSummaries: mockTraces,
   onRowClick: vi.fn(),
   sortBy: orderBy.MOST_RECENT,
   handleSortChange: vi.fn(),

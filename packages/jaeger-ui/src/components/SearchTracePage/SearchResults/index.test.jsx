@@ -6,15 +6,13 @@ import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
-import { createBlob, UnconnectedSearchResults as SearchResults, SelectSort } from '.';
+import { UnconnectedSearchResults as SearchResults, SelectSort } from '.';
 import * as track from './index.track';
 import * as orderBy from '../../../model/order-by';
-import readJsonFile from '../../../utils/readJsonFile';
 import { getUrl } from '../url';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';
 import DiffSelection from './DiffSelection';
-import { StatusCode } from '../../../types/otel';
 
 const mockNavigate = jest.fn();
 vi.mock('react-router-dom', async () => {
@@ -45,19 +43,13 @@ vi.mock('./DiffSelection', () =>
 );
 
 vi.mock('./ResultItem', () =>
-  mockDefault(jest.fn(({ trace }) => <div data-testid={`result-${trace.traceID}`} />))
+  mockDefault(jest.fn(({ traceSummary }) => <div data-testid={`result-${traceSummary.traceID}`} />))
 );
 
 vi.mock('./ScatterPlot', () => mockDefault(jest.fn(props => <div data-testid="scatterplot" {...props} />)));
 
 vi.mock('./DownloadResults', () =>
-  mockDefault(
-    jest.fn(({ onDownloadResultsClicked }) => (
-      <button type="button" data-testid="download" onClick={onDownloadResultsClicked}>
-        download
-      </button>
-    ))
-  )
+  mockDefault(jest.fn(() => <button type="button" data-testid="download" />))
 );
 
 vi.mock('../../DeepDependencies/traces', () => mockDefault(jest.fn(() => <div data-testid="ddg" />)));
@@ -98,31 +90,35 @@ afterEach(() => {
 const baseTraces = [
   {
     traceID: 'a',
-    spans: [],
-    durationMicros: 1000,
-    startTimeUnixMicros: 0,
-    endTimeUnixMicros: 1000,
     traceName: 'trace-a',
-    services: [],
-    spanMap: new Map(),
-    rootSpans: [],
+    rootServiceName: 'svc-a',
+    rootOperationName: 'op-a',
+    startTime: 0,
+    duration: 1000,
+    spanCount: 0,
+    errorSpanCount: 0,
     orphanSpanCount: 0,
-    hasErrors: () => false,
+    services: [],
   },
   {
     traceID: 'b',
-    spans: [],
-    durationMicros: 1000,
-    startTimeUnixMicros: 0,
-    endTimeUnixMicros: 1000,
     traceName: 'trace-b',
-    services: [],
-    spanMap: new Map(),
-    rootSpans: [],
+    rootServiceName: 'svc-b',
+    rootOperationName: 'op-b',
+    startTime: 0,
+    duration: 1000,
+    spanCount: 0,
+    errorSpanCount: 0,
     orphanSpanCount: 0,
-    hasErrors: () => false,
+    services: [],
   },
 ];
+
+const baseRawTraces = [
+  { traceID: 'a', spans: [], durationMicros: 1000, startTimeUnixMicros: 0, endTimeUnixMicros: 1000 },
+  { traceID: 'b', spans: [], durationMicros: 1000, startTimeUnixMicros: 0, endTimeUnixMicros: 1000 },
+];
+
 const baseProps = {
   cohortAddTrace: jest.fn(),
   cohortRemoveTrace: jest.fn(),
@@ -132,12 +128,12 @@ const baseProps = {
   loading: false,
   location: { search: '' },
   maxTraceDuration: 1,
-  queryOfResults: {},
   showStandaloneLink: false,
   skipMessage: false,
   spanLinks: undefined,
-  traces: baseTraces,
-  rawTraces: baseTraces,
+  traceSummaries: baseTraces,
+  uploadedTraceIDs: new Set(),
+  rawTraces: baseRawTraces,
   sortBy: orderBy.MOST_RECENT,
   handleSortChange: jest.fn(),
 };
@@ -152,13 +148,13 @@ const renderWithRouter = (ui, options = {}) => {
 
 describe('<SearchResults>', () => {
   it('shows the "no results" message when the search result is empty', () => {
-    renderWithRouter(<SearchResults {...baseProps} traces={[]} />);
+    renderWithRouter(<SearchResults {...baseProps} traceSummaries={[]} />);
     expect(screen.getByText(/No trace results\. Try another query\./i)).toBeInTheDocument();
   });
 
   it('uses default skipMessage value when not provided', () => {
     const { skipMessage, ...propsWithoutSkipMessage } = baseProps;
-    renderWithRouter(<SearchResults {...propsWithoutSkipMessage} traces={[]} />);
+    renderWithRouter(<SearchResults {...propsWithoutSkipMessage} traceSummaries={[]} />);
     expect(screen.getByText(/No trace results\. Try another query\./i)).toBeInTheDocument();
   });
 
@@ -176,12 +172,21 @@ describe('<SearchResults>', () => {
   });
 
   it('hide DiffSelection when disableComparisons = true', () => {
+    const cohortTrace = {
+      traceID: 'a',
+      traceName: 'T',
+      duration: 1,
+      services: [],
+      startTime: 0,
+      spanCount: 1,
+      errorSpanCount: 0,
+    };
     const { rerender } = renderWithRouter(
-      <SearchResults {...baseProps} disableComparisons={false} diffCohort={[{ id: 'a' }]} />
+      <SearchResults {...baseProps} disableComparisons={false} diffCohort={[cohortTrace]} />
     );
     expect(screen.getByTestId('diffselection')).toBeInTheDocument();
 
-    rerender(<SearchResults {...baseProps} disableComparisons diffCohort={[{ id: 'a' }]} />);
+    rerender(<SearchResults {...baseProps} disableComparisons diffCohort={[cohortTrace]} />);
     expect(screen.queryByTestId('diffselection')).not.toBeInTheDocument();
   });
 
@@ -193,7 +198,17 @@ describe('<SearchResults>', () => {
         {...baseProps}
         cohortAddTrace={add}
         cohortRemoveTrace={remove}
-        diffCohort={[{ id: 'existing' }]}
+        diffCohort={[
+          {
+            traceID: 'existing',
+            traceName: 'T',
+            duration: 1,
+            services: [],
+            startTime: 0,
+            spanCount: 1,
+            errorSpanCount: 0,
+          },
+        ]}
       />
     );
     const diffSelectionProps = DiffSelection.mock.calls[0][0];
@@ -204,38 +219,43 @@ describe('<SearchResults>', () => {
     expect(remove).toHaveBeenCalledWith('id-2');
   });
 
-  it('sets trace color to red if error tag is present', () => {
+  it('sets trace color to red if errorSpanCount > 0', () => {
     const errorTrace = [
       {
         traceID: 'err',
         traceName: 'T',
-        startTimeUnixMicros: 0,
-        endTimeUnixMicros: 1000,
-        durationMicros: 1,
-        services: [],
-        spanMap: new Map(),
-        rootSpans: [],
+        rootServiceName: 'svc-A',
+        rootOperationName: 'op-A',
+        startTime: 0,
+        duration: 1,
+        spanCount: 1,
+        errorSpanCount: 1,
         orphanSpanCount: 0,
-        hasErrors: () => true,
-        spans: [
-          {
-            status: { code: StatusCode.ERROR },
-            resource: { serviceName: 'svc-A', attributes: [] },
-            name: 'op-A',
-            spanID: 's1',
-            traceID: 'err',
-            attributes: [],
-          },
-        ],
+        services: [{ name: 'svc-A', spanCount: 1, errorSpanCount: 1 }],
       },
     ];
-    renderWithRouter(<SearchResults {...baseProps} traces={errorTrace} />);
+    renderWithRouter(<SearchResults {...baseProps} traceSummaries={errorTrace} />);
     const scatterProps = ScatterPlot.mock.calls[0][0];
     expect(scatterProps.data[0].color).toBe('red');
   });
 
   it('renders DiffSelection when diffCohort is provided', () => {
-    renderWithRouter(<SearchResults {...baseProps} diffCohort={[{ id: 'id-1' }]} />);
+    renderWithRouter(
+      <SearchResults
+        {...baseProps}
+        diffCohort={[
+          {
+            traceID: 'id-1',
+            traceName: 'T',
+            duration: 1,
+            services: [],
+            startTime: 0,
+            spanCount: 1,
+            errorSpanCount: 0,
+          },
+        ]}
+      />
+    );
     expect(screen.getByTestId('diffselection')).toBeInTheDocument();
   });
 
@@ -248,63 +268,65 @@ describe('<SearchResults>', () => {
     expect(navigateCall[0]).toContain('/trace/a');
   });
 
-  it('handles trace with no spans', () => {
+  it('uses location.pathname+search as Back URL (upload-only context, no search params)', () => {
+    // When traces come from a file upload (no API search), location.search is empty and
+    // the Back link on the trace page must use the current URL so the user returns to
+    // the upload results, not an empty or incorrect search page.
+    renderWithRouter(<SearchResults {...baseProps} location={{ pathname: '/search', search: '' }} />);
+    const scatterProps = ScatterPlot.mock.calls[0][0];
+    scatterProps.onValueClick({ traceID: 'a' });
+    expect(mockNavigate).toHaveBeenCalled();
+    // fromSearch state should be based on current location, not getUrl()
+    const navigateState = mockNavigate.mock.calls[0][1]?.state;
+    expect(navigateState?.fromSearch).toBe('/search');
+  });
+
+  it('handles trace with zero spans', () => {
     renderWithRouter(
       <SearchResults
         {...baseProps}
-        traces={[
+        traceSummaries={[
           {
             traceID: 'no-spans',
             traceName: 'Empty Trace',
-            startTimeUnixMicros: 0,
-            endTimeUnixMicros: 1000,
-            durationMicros: 1,
-            services: [],
-            spanMap: new Map(),
-            rootSpans: [],
-            spans: [],
+            rootServiceName: '',
+            rootOperationName: '',
+            startTime: 0,
+            duration: 1,
+            spanCount: 0,
+            errorSpanCount: 0,
             orphanSpanCount: 0,
-            hasErrors: () => false,
+            services: [],
           },
         ]}
       />
     );
     const data = ScatterPlot.mock.calls[0][0].data[0];
-    expect(data.services).toEqual([]);
+    expect(data.serviceCount).toBe(0);
   });
 
-  it('handles trace with no services property', () => {
+  it('handles trace with empty services list', () => {
     renderWithRouter(
       <SearchResults
         {...baseProps}
-        traces={[
+        traceSummaries={[
           {
             traceID: 'no-services',
             traceName: 'No Services',
-            startTimeUnixMicros: 0,
-            endTimeUnixMicros: 1000,
-            durationMicros: 1,
-            services: [],
-            spanMap: new Map(),
-            rootSpans: [],
+            rootServiceName: 'test-service',
+            rootOperationName: 'test-operation',
+            startTime: 0,
+            duration: 1,
+            spanCount: 1,
+            errorSpanCount: 0,
             orphanSpanCount: 0,
-            hasErrors: () => false,
-            spans: [
-              {
-                resource: { serviceName: 'test-service', attributes: [] },
-                name: 'test-operation',
-                spanID: 's1',
-                traceID: 'no-services',
-                attributes: [],
-                status: { code: 'OK' },
-              },
-            ],
+            services: [],
           },
         ]}
       />
     );
     const data = ScatterPlot.mock.calls[0][0].data[0];
-    expect(data.services).toEqual([]);
+    expect(data.serviceCount).toBe(0);
   });
 
   describe('search finished with results', () => {
@@ -316,6 +338,13 @@ describe('<SearchResults>', () => {
     it('shows a result entry for each trace', () => {
       renderWithRouter(<SearchResults {...baseProps} />);
       expect(ResultItem.mock.calls).toHaveLength(baseTraces.length);
+    });
+
+    it('passes isUploaded=true only for IDs in uploadedTraceIDs', () => {
+      renderWithRouter(<SearchResults {...baseProps} uploadedTraceIDs={new Set(['a'])} />);
+      const [first, second] = ResultItem.mock.calls;
+      expect(first[0].isUploaded).toBe(true);
+      expect(second[0].isUploaded).toBe(false);
     });
 
     it('deep links traces', () => {
@@ -338,32 +367,30 @@ describe('<SearchResults>', () => {
       const zeroIDTraces = [
         {
           traceID: traceID0,
-          spans: [],
-          durationMicros: 1000,
-          startTimeUnixMicros: 0,
-          endTimeUnixMicros: 1000,
           traceName: traceID0,
-          services: [],
-          spanMap: new Map(),
-          rootSpans: [],
+          rootServiceName: '',
+          rootOperationName: '',
+          startTime: 0,
+          duration: 1000,
+          spanCount: 0,
+          errorSpanCount: 0,
           orphanSpanCount: 0,
-          hasErrors: () => false,
+          services: [],
         },
         {
           traceID: `000${traceID1}`,
-          spans: [],
-          durationMicros: 1000,
-          startTimeUnixMicros: 0,
-          endTimeUnixMicros: 1000,
           traceName: `000${traceID1}`,
-          services: [],
-          spanMap: new Map(),
-          rootSpans: [],
+          rootServiceName: '',
+          rootOperationName: '',
+          startTime: 0,
+          duration: 1000,
+          spanCount: 0,
+          errorSpanCount: 0,
           orphanSpanCount: 0,
-          hasErrors: () => false,
+          services: [],
         },
       ];
-      renderWithRouter(<SearchResults {...baseProps} traces={zeroIDTraces} spanLinks={spanLinks} />);
+      renderWithRouter(<SearchResults {...baseProps} traceSummaries={zeroIDTraces} spanLinks={spanLinks} />);
       const calls = ResultItem.mock.calls;
       expect(calls[0][0].linkTo.search).toBe(`uiFind=${uiFind0}`);
       expect(calls[1][0].linkTo.search).toBe(`uiFind=${uiFind1}`);
@@ -387,7 +414,7 @@ describe('<SearchResults>', () => {
 
         fireEvent.click(screen.getByTestId('alt-toggle'));
         expect(mockNavigate).toHaveBeenLastCalledWith(
-          getUrl({ [otherParam]: otherValue, [searchParam]: 'ddg' })
+          getUrl({ [otherParam]: otherValue, service: 'svc-a', [searchParam]: 'ddg' })
         );
         expect(spy).toHaveBeenLastCalledWith('ddg');
 
@@ -398,7 +425,7 @@ describe('<SearchResults>', () => {
         );
         fireEvent.click(screen.getByTestId('alt-toggle'));
         expect(mockNavigate).toHaveBeenLastCalledWith(
-          getUrl({ [otherParam]: otherValue, [searchParam]: 'traces' })
+          getUrl({ [otherParam]: otherValue, service: 'svc-a', [searchParam]: 'traces' })
         );
         expect(spy).toHaveBeenLastCalledWith('traces');
 
@@ -410,7 +437,7 @@ describe('<SearchResults>', () => {
         );
         fireEvent.click(screen.getByTestId('alt-toggle'));
         expect(mockNavigate).toHaveBeenLastCalledWith(
-          getUrl({ [otherParam]: otherValue, [searchParam]: 'ddg' })
+          getUrl({ [otherParam]: otherValue, service: 'svc-a', [searchParam]: 'ddg' })
         );
         expect(spy).toHaveBeenLastCalledWith('ddg');
       });
@@ -435,6 +462,13 @@ describe('<SearchResults>', () => {
         expect(screen.getByTestId('download')).toBeInTheDocument();
       });
 
+      it('shows DownloadResults even when rawTraces is empty (API-only results)', () => {
+        renderWithRouter(
+          <SearchResults {...baseProps} rawTraces={[]} location={{ search: '?view=traces' }} />
+        );
+        expect(screen.getByTestId('download')).toBeInTheDocument();
+      });
+
       it('does not show DownloadResults when view is ddg', () => {
         const { rerender } = renderWithRouter(
           <SearchResults {...baseProps} location={{ search: '?view=traces' }} />
@@ -443,73 +477,6 @@ describe('<SearchResults>', () => {
 
         rerender(withRouter(<SearchResults {...baseProps} location={{ search: '?view=ddg' }} />));
         expect(screen.queryByTestId('download')).not.toBeInTheDocument();
-      });
-
-      it('when click on DownloadResults then call download function', () => {
-        const orig = global.Blob;
-        global.Blob = class {
-          constructor(text, options) {
-            this.text = text;
-            this.options = options;
-          }
-        };
-        URL.createObjectURL = jest.fn(() => 'blob://url');
-        URL.revokeObjectURL = jest.fn();
-
-        renderWithRouter(<SearchResults {...baseProps} location={{ search: '?view=traces' }} />);
-        fireEvent.click(screen.getByTestId('download'));
-
-        expect(URL.createObjectURL).toHaveBeenCalledTimes(1);
-        const blobArg = URL.createObjectURL.mock.calls[0][0];
-
-        // Construct expected output by keeping only non-derived fields
-        const expectedTraces = baseProps.rawTraces.map(
-          ({ traceID, spans, durationMicros, startTimeUnixMicros, endTimeUnixMicros }) => ({
-            traceID,
-            spans,
-            durationMicros,
-            startTimeUnixMicros,
-            endTimeUnixMicros,
-          })
-        );
-
-        expect(blobArg.text).toEqual([`{"data":${JSON.stringify(expectedTraces)}}`]);
-        expect(URL.revokeObjectURL).toHaveBeenCalledTimes(1);
-
-        global.Blob = orig;
-      });
-
-      it('when create a download file then it can be read back', async () => {
-        // Construct expected output by keeping only non-derived fields
-        const expectedTraces = baseProps.rawTraces.map(
-          ({ traceID, spans, durationMicros, startTimeUnixMicros, endTimeUnixMicros }) => ({
-            traceID,
-            spans,
-            durationMicros,
-            startTimeUnixMicros,
-            endTimeUnixMicros,
-          })
-        );
-
-        const content = `{"data":${JSON.stringify(expectedTraces)}}`;
-        // Pass the blob content (string) directly to File to avoid JSDOM Blob-in-File issues if any
-        // createBlob returns a Blob. getting text from it.
-        const blob = createBlob(baseProps.rawTraces);
-        // In JSDOM/Node, blob parts are stored. We can extract string.
-        // But here we rely on standard APIs.
-        // If createBlob returns a real JSDOM Blob, new File([blob]) should work.
-        // If it fails with [object Object], it might be that JSDOM File doesn't unwrap Blob parts recursively or correctly.
-        // Let's try to get text first.
-        const blobText = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = () => reject(reader.error);
-          reader.readAsText(blob);
-        });
-        const file = new File([blobText], 'test.json');
-
-        const contentFile = await readJsonFile({ file });
-        expect(JSON.stringify(contentFile)).toBe(content);
       });
     });
   });

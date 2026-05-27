@@ -6,14 +6,10 @@ import { render, screen, cleanup, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
-import {
-  MonitorATMServicesViewImpl as MonitorATMServicesView,
-  mapStateToProps,
-  mapDispatchToProps,
-  getLoopbackInterval,
-  yAxisTickFormat,
-} from '.';
+import { MonitorATMServicesViewImpl as MonitorATMServicesView, mapStateToProps, mapDispatchToProps } from '.';
+import { getLoopbackInterval, timeFrameOptions, yAxisTickFormat } from './timeFrameUtils';
 import { useServices } from '../../../hooks/useTraceDiscovery';
+import { ONE_HOUR_MS, TIME_RANGE_OPTIONS } from '../../../constants/time-range-options';
 import {
   originInitialState,
   serviceMetrics,
@@ -547,7 +543,7 @@ describe('<MonitorATMServicesView>', () => {
       await user.selectOptions(timeframeSelect, String(2 * 3600000));
 
       await waitFor(() => {
-        expect(trackSelectTimeframeSpy).toHaveBeenCalledWith('Last 2 hours');
+        expect(trackSelectTimeframeSpy).toHaveBeenCalledWith('2 hours');
       });
 
       expect(mockFetchAllServiceMetrics).toHaveBeenCalled();
@@ -807,7 +803,18 @@ describe('getLoopbackInterval()', () => {
   });
 
   it('timeframe exists', () => {
-    expect(getLoopbackInterval(48 * 3600000)).toBe('last 2 days');
+    expect(getLoopbackInterval(48 * 3600000)).toBe('2 days');
+  });
+});
+
+describe('timeFrameOptions', () => {
+  it('includes shared search time ranges through 2 days', () => {
+    const maxMonitorTimeframe = 48 * ONE_HOUR_MS;
+    const expectedValues = TIME_RANGE_OPTIONS.filter(({ valueMs }) => valueMs <= maxMonitorTimeframe).map(
+      ({ valueMs }) => valueMs
+    );
+
+    expect(timeFrameOptions.map(({ value }) => value)).toEqual(expectedValues);
   });
 });
 

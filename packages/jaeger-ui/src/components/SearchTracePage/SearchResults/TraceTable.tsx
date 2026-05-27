@@ -6,12 +6,12 @@ import { useMemo } from 'react';
 import { Table } from 'antd';
 import type { ColumnsType, TableProps } from 'antd/es/table';
 import type { SorterResult } from 'antd/es/table/interface';
-import { IOtelTrace, StatusCode } from '../../../types/otel';
+import { TraceSummary } from '../../../types/trace-summary';
 import { formatDuration, formatDatetime } from '../../../utils/date';
 import * as orderBy from '../../../model/order-by';
 
 type TraceTableProps = {
-  traces: IOtelTrace[];
+  traceSummaries: TraceSummary[];
   onRowClick: (traceID: string) => void;
   sortBy: string;
   handleSortChange: (sortBy: string) => void;
@@ -46,81 +46,69 @@ function fromOrderBy(sort: string): { key: string; order: 'ascend' | 'descend' }
 
 export { toOrderBy, fromOrderBy };
 
-export default function TraceTable({ traces, onRowClick, sortBy, handleSortChange }: TraceTableProps) {
+export default function TraceTable({ traceSummaries, onRowClick, sortBy, handleSortChange }: TraceTableProps) {
   const { key: sortKey, order: sortOrder } = fromOrderBy(sortBy);
 
-  const errorCounts = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const trace of traces) {
-      let count = 0;
-      for (const s of trace.spans) {
-        if (s.status?.code === StatusCode.ERROR) count++;
-      }
-      map.set(trace.traceID, count);
-    }
-    return map;
-  }, [traces]);
-
-  const columns: ColumnsType<IOtelTrace> = useMemo(
+  const columns: ColumnsType<TraceSummary> = useMemo(
     () => [
       {
         title: 'Trace Name',
         dataIndex: 'traceName',
         key: 'traceName',
-        render: (name: string, trace: IOtelTrace) => name || trace.traceID,
+        render: (name: string, trace: TraceSummary) => name || trace.traceID,
       },
       {
         title: 'Services',
         key: 'services',
-        render: (_: unknown, trace: IOtelTrace) =>
-          trace.services ? trace.services.map(s => s.name).join(', ') : '-',
+        render: (_: unknown, trace: TraceSummary) =>
+          trace.services.length > 0 ? trace.services.map(s => s.name).join(', ') : '-',
       },
       {
         title: 'Spans',
         key: 'spans',
-        render: (_: unknown, trace: IOtelTrace) => trace.spans.length,
+        render: (_: unknown, trace: TraceSummary) => trace.spanCount,
         sorter: true,
         sortOrder: sortKey === 'spans' ? sortOrder : undefined,
       },
       {
         title: 'Errors',
         key: 'errors',
-        render: (_: unknown, trace: IOtelTrace) => errorCounts.get(trace.traceID) ?? 0,
+        render: (_: unknown, trace: TraceSummary) => trace.errorSpanCount,
       },
       {
         title: 'Duration',
         key: 'duration',
-        render: (_: unknown, trace: IOtelTrace) => formatDuration(trace.duration),
+        render: (_: unknown, trace: TraceSummary) => formatDuration(trace.duration),
         sorter: true,
         sortOrder: sortKey === 'duration' ? sortOrder : undefined,
       },
       {
         title: 'Start Time',
         key: 'startTime',
-        render: (_: unknown, trace: IOtelTrace) => formatDatetime(trace.startTime),
+        render: (_: unknown, trace: TraceSummary) => formatDatetime(trace.startTime),
         sorter: true,
         // startTime descend maps to MOST_RECENT (the default); always show the sort indicator
         sortOrder: sortKey === 'startTime' ? 'descend' : undefined,
         sortDirections: ['descend'],
       },
     ],
-    [sortKey, sortOrder, errorCounts]
+    [sortKey, sortOrder]
   );
 
-  const onChange: TableProps<IOtelTrace>['onChange'] = (_pagination, _filters, sorter) => {
-    const s = Array.isArray(sorter) ? sorter[0] : (sorter as SorterResult<IOtelTrace>);
+  const onChange: TableProps<TraceSummary>['onChange'] = (_pagination, _filters, sorter) => {
+    const s = Array.isArray(sorter) ? sorter[0] : (sorter as SorterResult<TraceSummary>);
     handleSortChange(toOrderBy(s.columnKey as string | undefined, s.order ?? undefined));
   };
 
   return (
-    <Table<IOtelTrace>
+    <Table<TraceSummary>
       columns={columns}
-      dataSource={traces}
+      dataSource={traceSummaries}
       rowKey="traceID"
       size="small"
       pagination={false}
       onChange={onChange}
-      onRow={(trace: IOtelTrace) => ({
+      onRow={(trace: TraceSummary) => ({
         onClick: () => onRowClick(trace.traceID),
         onKeyDown: (e: React.KeyboardEvent) => {
           if (e.key === 'Enter' || e.key === ' ') {
