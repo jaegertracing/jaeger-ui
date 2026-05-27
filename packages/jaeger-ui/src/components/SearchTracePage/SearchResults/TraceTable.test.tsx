@@ -7,8 +7,9 @@ import { MemoryRouter } from 'react-router-dom';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import TraceTable, { toOrderBy, fromOrderBy } from './TraceTable';
 import * as orderBy from '../../../model/order-by';
+import type { Microseconds } from '../../../types/units';
 
-const FIXED_START_TIME = 1700000000000000;
+const FIXED_START_TIME = 1700000000000000 as Microseconds;
 
 const makeTrace = (id: string, errorSpanCount = 0) => ({
   traceID: id,
@@ -16,7 +17,7 @@ const makeTrace = (id: string, errorSpanCount = 0) => ({
   rootServiceName: 'service-a',
   rootOperationName: 'op-a',
   startTime: FIXED_START_TIME,
-  duration: 1000,
+  duration: 1000 as Microseconds,
   spanCount: 3,
   errorSpanCount,
   orphanSpanCount: 0,
