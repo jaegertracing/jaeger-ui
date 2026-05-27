@@ -120,7 +120,7 @@ export function SearchTracePageImpl() {
       cohortRemoveTrace: s.cohortRemoveTrace,
     }))
   );
-  const cohort = useTraceDiffStore(s => s.cohort);
+  const cohortIDs = useTraceDiffStore(s => s.cohort);
   const cohortSummaries = useTraceDiffStore(s => s.cohortSummaries);
 
   const diffCohort = useMemo(() => {
