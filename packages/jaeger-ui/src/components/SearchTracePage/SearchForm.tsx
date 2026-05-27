@@ -783,7 +783,8 @@ export function mapStateToProps(_state: ReduxState, ownProps: { search?: string 
       service: (service as string | undefined) || lastSearchService || '-',
       resultsLimit: (limit as string | undefined) || String(DEFAULT_LIMIT),
       lookback: (() => {
-        if (lookback) return lookback as string;
+        const urlLookback = asValidLookback(lookback as string | undefined);
+        if (urlLookback) return urlLookback;
         const startUs = Number(start);
         const endUs = Number(end);
         if (startUs > 0 && endUs > startUs) return lookbackFromDuration((endUs - startUs) / 1000);

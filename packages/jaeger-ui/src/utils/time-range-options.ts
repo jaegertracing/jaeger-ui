@@ -95,9 +95,9 @@ export const TIME_RANGE_OPTIONS: readonly ITimeRangeOption[] = Object.freeze([
   },
 ]);
 
-/** Returns value when it is a known lookback string in TIME_RANGE_OPTIONS, otherwise undefined. */
+/** Returns value when it is a known lookback string in TIME_RANGE_OPTIONS or 'custom', otherwise undefined. */
 export function asValidLookback(value: string | undefined): string | undefined {
-  return TIME_RANGE_OPTIONS.some(o => o.lookback === value) ? value : undefined;
+  return value === 'custom' || TIME_RANGE_OPTIONS.some(o => o.lookback === value) ? value : undefined;
 }
 
 /**
