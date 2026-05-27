@@ -316,9 +316,10 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   const { useOpenTelemetryTerms: useOtelTerms, search: searchConfig } = useConfig();
   const searchMaxLookback: ILookbackOption | undefined = searchConfig?.maxLookback;
   const searchAdjustEndTime: string | undefined = searchConfig?.adjustEndTime;
-  const configuredDefault = searchConfig?.defaultLookback;
   const defaultLookback: string =
-    configuredDefault && isValidLookback(configuredDefault) ? configuredDefault : DEFAULT_LOOKBACK;
+    searchConfig?.defaultLookback && isValidLookback(searchConfig.defaultLookback)
+      ? searchConfig.defaultLookback
+      : DEFAULT_LOOKBACK;
   const [formData, setFormData] = useState<Partial<ISearchFormFields>>(() => ({
     service: initialValues?.service,
     operation: initialValues?.operation,
