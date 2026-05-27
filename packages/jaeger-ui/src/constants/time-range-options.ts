@@ -94,3 +94,15 @@ export const TIME_RANGE_OPTIONS: readonly ITimeRangeOption[] = Object.freeze([
     valueMs: 4 * ONE_WEEK_MS,
   },
 ]);
+
+/**
+ * Given a duration in milliseconds, return the lookback string of the smallest
+ * TIME_RANGE_OPTIONS entry whose window is >= durationMs.
+ * Returns 'custom' if durationMs exceeds the largest option.
+ */
+export function lookbackFromDuration(durationMs: number): string {
+  for (const option of TIME_RANGE_OPTIONS) {
+    if (option.valueMs >= durationMs) return option.lookback;
+  }
+  return 'custom';
+}

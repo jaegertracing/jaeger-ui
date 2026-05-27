@@ -10,6 +10,7 @@ import { MAX_LENGTH } from '../DeepDependencies/Graph/DdgNodeContent/constants';
 
 import { SearchQuery } from '../../types/search';
 import parseQuery from '../../utils/parseQuery';
+import { lookbackFromDuration } from '../../constants/time-range-options';
 
 export { isSameQuery, isQueryEmpty } from '../../utils/search-query';
 
@@ -108,23 +109,42 @@ export function searchQueryToUrlState(q: SearchQuery): TUrlState {
  * from the lookback selector) so that shared links reproduce the same time window.
  * lookback is kept in the URL so SearchForm can restore the selector label on the
  * next visit.
+ *
+ * When lookback is absent but start/end are present (manually crafted or external
+ * link), the lookback value is reconstructed from the time-range duration by
+ * snapping up to the nearest standard option. This keeps the form's dropdown
+ * in sync with the actual time range that was searched.
  */
 export function searchQueryFromUrl(search: string): SearchQuery | null {
   const q = getUrlState(search);
   if (!q.service && !q.start && !q.end) return null;
+
+  const startStr = firstOf(q.start) ?? '';
+  const endStr = firstOf(q.end) ?? '';
+
+  let lookback = firstOf(q.lookback);
+  if (!lookback) {
+    const startUs = Number(startStr);
+    const endUs = Number(endStr);
+    if (startUs > 0 && endUs > 0) {
+      // Timestamps in the URL are microseconds; convert to ms for lookbackFromDuration.
+      lookback = lookbackFromDuration((endUs - startUs) / 1000);
+    } else {
+      // No timestamps — leave empty; SearchForm will apply the configured default.
+      lookback = '';
+    }
+  }
+
   return {
     service: firstOf(q?.service),
     operation: firstOf(q.operation),
-    start: firstOf(q.start) ?? '',
-    end: firstOf(q.end) ?? '',
+    start: startStr,
+    end: endStr,
     limit: (() => {
       const n = Number(firstOf(q.limit));
       return Number.isFinite(n) && n > 0 ? n : 20;
     })(),
-    // '1h' is the hard-coded fallback for manually crafted URLs that omit lookback.
-    // SearchForm always writes lookback to the URL on submit, so this path is rarely hit.
-    // The configurable default (search.defaultLookback) is applied in SearchForm instead.
-    lookback: firstOf(q.lookback) ?? '1h',
+    lookback,
     minDuration: typeof q.minDuration === 'string' ? q.minDuration : undefined,
     maxDuration: typeof q.maxDuration === 'string' ? q.maxDuration : undefined,
     tags: typeof q.tags === 'string' ? q.tags : undefined,
