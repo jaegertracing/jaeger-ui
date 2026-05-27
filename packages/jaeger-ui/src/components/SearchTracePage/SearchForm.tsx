@@ -87,12 +87,17 @@ export function convTagsLogfmt(tags: string | null | undefined): string | null {
   return JSON.stringify(data);
 }
 
+function parseLookback(s: string): { value: number; unit: ManipulateType } | null {
+  const value = parseInt(s, 10);
+  const unit = LOOKBACK_UNIT_BY_SUFFIX[s.slice(-1)];
+  return unit !== undefined && !Number.isNaN(value) ? { value, unit } : null;
+}
+
 export function lookbackToTimestamp(lookback: string, from: Date | number): number {
-  const parsedValue = parseInt(lookback, 10);
-  const parsedUnit = LOOKBACK_UNIT_BY_SUFFIX[lookback.slice(-1)];
-  const valid = parsedUnit !== undefined && !Number.isNaN(parsedValue);
-  const value = valid ? parsedValue : DEFAULT_LOOKBACK_VALUE;
-  const unit = valid ? parsedUnit : DEFAULT_LOOKBACK_UNIT;
+  const { value, unit } = parseLookback(lookback) ?? {
+    value: DEFAULT_LOOKBACK_VALUE,
+    unit: DEFAULT_LOOKBACK_UNIT,
+  };
   return dayjs(from).subtract(value, unit).valueOf() * 1000;
 }
 
