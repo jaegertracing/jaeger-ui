@@ -23,7 +23,7 @@ vi.mock('../../hooks/useConfig', () => ({
   useConfig: () => ({
     useOpenTelemetryTerms: false,
     search: {
-      maxLookback: { label: '2 Days', value: '2d' },
+      maxLookback: { label: '2 days', value: '2d' },
       adjustEndTime: '1m',
       maxLimit: 1500,
     },
@@ -203,6 +203,14 @@ describe('lookback utils', () => {
         }
       });
     });
+
+    it('falls back to default lookback for unsupported units', () => {
+      expect(nowInMicroseconds - lookbackToTimestamp('99x', now)).toBe(hourInMicroseconds);
+    });
+
+    it('falls back to default lookback for invalid amounts', () => {
+      expect(nowInMicroseconds - lookbackToTimestamp('xh', now)).toBe(hourInMicroseconds);
+    });
   });
 
   describe('applyAdjustTime', () => {
@@ -242,27 +250,27 @@ describe('lookback utils', () => {
   describe('optionsWithinMaxLookback', () => {
     const threeHoursOfExpectedOptions = [
       {
-        label: '5 Minutes',
+        label: '5 minutes',
         value: '5m',
       },
       {
-        label: '15 Minutes',
+        label: '15 minutes',
         value: '15m',
       },
       {
-        label: '30 Minutes',
+        label: '30 minutes',
         value: '30m',
       },
       {
-        label: 'Hour',
+        label: '1 hour',
         value: '1h',
       },
       {
-        label: '2 Hours',
+        label: '2 hours',
         value: '2h',
       },
       {
-        label: '3 Hours',
+        label: '3 hours',
         value: '3h',
       },
     ];
