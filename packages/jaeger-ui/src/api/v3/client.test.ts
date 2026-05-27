@@ -264,6 +264,78 @@ describe('JaegerClient', () => {
     it('singleton instance has all expected methods', () => {
       expect(jaegerClient.fetchServices).toBeInstanceOf(Function);
       expect(jaegerClient.fetchSpanNames).toBeInstanceOf(Function);
+      expect(jaegerClient.fetchTrace).toBeInstanceOf(Function);
+    });
+  });
+
+  describe('fetchTrace', () => {
+    const traceId = '0102030405060708090a0b0c0d0e0f10';
+    const mockTraceData = {
+      resourceSpans: [
+        {
+          resource: { attributes: [] },
+          scopeSpans: [
+            {
+              spans: [
+                {
+                  traceId,
+                  spanId: '0102030405060708',
+                  name: 'test-span',
+                  kind: 1,
+                  startTimeUnixNano: '1234567890',
+                  endTimeUnixNano: '1234567891',
+                  attributes: [],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    it('successfully fetches and validates trace data', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => mockTraceData,
+      });
+
+      const result = await client.fetchTrace(traceId);
+
+      expect(result).toEqual(mockTraceData);
+      expect(mockFetch).toHaveBeenCalledWith(
+        `/api/v3/traces/${traceId}`,
+        expect.objectContaining({ signal: expect.any(AbortSignal) })
+      );
+    });
+
+    it('logs error and returns raw data when validation fails (safeParse resilience)', async () => {
+      const malformedData = { resourceSpans: 'invalid' };
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => malformedData,
+      });
+
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      const result = await client.fetchTrace(traceId);
+
+      expect(result).toEqual(malformedData);
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining(`[OTLP Validation] Error for trace ${traceId}:`),
+        expect.anything()
+      );
+
+      consoleSpy.mockRestore();
+    });
+
+    it('throws error when response is not OK', async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+      });
+
+      await expect(client.fetchTrace(traceId)).rejects.toThrow(`Failed to fetch trace "${traceId}": 404 Not Found`);
     });
   });
 });
