@@ -30,7 +30,7 @@ import { useConfig } from '../../hooks/useConfig';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 import { ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
-import { TIME_RANGE_OPTIONS, isValidLookback } from '../../constants/time-range-options';
+import { TIME_RANGE_OPTIONS, asValidLookback } from '../../utils/time-range-options';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
@@ -316,10 +316,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   const { useOpenTelemetryTerms: useOtelTerms, search: searchConfig } = useConfig();
   const searchMaxLookback: ILookbackOption | undefined = searchConfig?.maxLookback;
   const searchAdjustEndTime: string | undefined = searchConfig?.adjustEndTime;
-  const defaultLookback: string =
-    searchConfig?.defaultLookback && isValidLookback(searchConfig.defaultLookback)
-      ? searchConfig.defaultLookback
-      : DEFAULT_LOOKBACK;
+  const defaultLookback: string = asValidLookback(searchConfig?.defaultLookback) ?? DEFAULT_LOOKBACK;
   const [formData, setFormData] = useState<Partial<ISearchFormFields>>(() => ({
     service: initialValues?.service,
     operation: initialValues?.operation,
@@ -787,11 +784,10 @@ export function mapStateToProps(state: ReduxState, ownProps: { search?: string }
     initialValues: {
       service: (service as string | undefined) || lastSearchService || '-',
       resultsLimit: (limit as string | undefined) || String(DEFAULT_LIMIT),
-      lookback: (() => {
-        if (lookback) return lookback as string;
-        const cfgDefault = getConfig().search?.defaultLookback;
-        return cfgDefault && isValidLookback(cfgDefault) ? cfgDefault : DEFAULT_LOOKBACK;
-      })(),
+      lookback:
+        (lookback as string | undefined) ||
+        asValidLookback(getConfig().search?.defaultLookback) ||
+        DEFAULT_LOOKBACK,
       startDate: queryStartDate || today,
       startDateTime: queryStartDateTime || '00:00',
       endDate: queryEndDate || today,
