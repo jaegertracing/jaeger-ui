@@ -112,8 +112,9 @@ export function searchQueryToUrlState(q: SearchQuery): TUrlState {
  *
  * When lookback is absent but start/end are present (manually crafted or external
  * link), the lookback value is reconstructed from the time-range duration by
- * snapping up to the nearest standard option. This keeps the form's dropdown
- * in sync with the actual time range that was searched.
+ * rounding up to the smallest standard option that covers the full range, or
+ * 'custom' when the range exceeds all standard options. This keeps the form's
+ * dropdown in sync with the actual time range that was searched.
  */
 export function searchQueryFromUrl(search: string): SearchQuery | null {
   const q = getUrlState(search);
