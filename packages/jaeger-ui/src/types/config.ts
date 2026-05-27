@@ -107,6 +107,12 @@ export type Config = {
 
   // search section controls some aspects of the Search panel.
   search?: {
+    // defaultLookback sets the pre-selected value in the Lookback dropdown when
+    // no lookback is present in the URL. Must be one of the values in the dropdown
+    // (e.g. "5m", "15m", "30m", "1h", "2h", "3h", "6h", "12h", "24h", "2d",
+    // "3d", "5d", "7d", "2w", "3w", "4w"). Defaults to "1h" when not set.
+    defaultLookback?: string;
+
     // maxLookback controls how far back in time the search may apply.
     // By default the Lookback dropdown contains values from "Last 5 minutes"
     // to "Last 2 days". Setting maxLookback to a shorter time range,
@@ -130,12 +136,6 @@ export type Config = {
     // Examples: "1m" for 1 minute, "30s" for 30 seconds.
     // Default is undefined (no adjustment).
     adjustEndTime?: string;
-
-    // defaultLookback sets the pre-selected value in the Lookback dropdown when
-    // no lookback is present in the URL. Must be one of the values in the dropdown
-    // (e.g. "5m", "15m", "30m", "1h", "2h", "3h", "6h", "12h", "24h", "2d",
-    // "3d", "5d", "7d", "2w", "3w", "4w"). Defaults to "1h" when not set.
-    defaultLookback?: string;
   };
 
   // scripts is an array of URLs of additional JavaScript files to be loaded.
