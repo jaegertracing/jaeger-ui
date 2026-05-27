@@ -256,187 +256,6 @@ describe('JaegerClient', () => {
     });
   });
 
-  describe('fetchTraceSummaries', () => {
-    const query = {
-      service: 'my-svc',
-      operation: undefined,
-      start: '1700000000000000',
-      end: '1700000060000000',
-      limit: 20,
-      lookback: '1h',
-      minDuration: undefined,
-      maxDuration: undefined,
-      tags: undefined,
-    };
-
-    // Wire field is `traceId` (proto3 camelCase), not `traceID`.
-    const mockApiSummary = {
-      traceId: 'aaaabbbbccccdddd0000111122223333',
-      rootServiceName: 'my-svc',
-      rootOperationName: 'GET /api',
-      // Decimal strings — proto3 JSON encoding for int64
-      minStartTimeUnixNano: '1700000001000000000',
-      maxEndTimeUnixNano: '1700000001000500000',
-      spanCount: 5,
-      errorSpanCount: 1,
-      orphanSpanCount: 0,
-      services: [{ name: 'my-svc', spanCount: 5, errorSpanCount: 1 }],
-    };
-
-    it('maps string nanosecond timestamps to microseconds without precision loss', async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({ summaries: [mockApiSummary] }),
-      });
-
-      const promise = client.fetchTraceSummaries(query);
-      vi.runAllTimers();
-      const result = await promise;
-
-      expect(result).toHaveLength(1);
-      // 1700000001000000000 ns / 1000 = 1700000001000000 µs
-      expect(result[0].startTime).toBe(1700000001000000);
-      // (1700000001000500000 - 1700000001000000000) / 1000 = 500 µs
-      expect(result[0].duration).toBe(500);
-    });
-
-    it('builds traceName from rootServiceName and rootOperationName', async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({ summaries: [mockApiSummary] }),
-      });
-
-      const promise = client.fetchTraceSummaries(query);
-      vi.runAllTimers();
-      const [summary] = await promise;
-
-      expect(summary.traceName).toBe('my-svc: GET /api');
-      // traceId (wire) is mapped to traceID (internal Jaeger convention)
-      expect(summary.traceID).toBe(mockApiSummary.traceId);
-      expect(summary.spanCount).toBe(5);
-      expect(summary.errorSpanCount).toBe(1);
-      expect(summary.orphanSpanCount).toBe(0);
-      expect(summary.services).toEqual(mockApiSummary.services);
-    });
-
-    it('falls back to defaults for all optional fields when absent', async () => {
-      // Only traceId is required; everything else including timestamps is optional.
-      const minimal = { traceId: 'aaaabbbbccccdddd0000111122223333' };
-      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ summaries: [minimal] }) });
-
-      const promise = client.fetchTraceSummaries(query);
-      vi.runAllTimers();
-      const [summary] = await promise;
-
-      expect(summary.traceID).toBe(minimal.traceId);
-      expect(summary.traceName).toBe('');
-      expect(summary.rootServiceName).toBe('');
-      expect(summary.rootOperationName).toBe('');
-      expect(summary.startTime).toBe(0);
-      expect(summary.duration).toBe(0);
-      expect(summary.spanCount).toBe(0);
-      expect(summary.errorSpanCount).toBe(0);
-      expect(summary.orphanSpanCount).toBe(0);
-      expect(summary.services).toEqual([]);
-    });
-
-    it('clamps duration to 0 when only minStartTimeUnixNano is present', async () => {
-      const oneSided = { ...mockApiSummary, maxEndTimeUnixNano: undefined };
-      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ summaries: [oneSided] }) });
-      const promise = client.fetchTraceSummaries(query);
-      vi.runAllTimers();
-      const [summary] = await promise;
-      expect(summary.startTime).toBe(1700000001000000);
-      expect(summary.duration).toBe(0);
-    });
-
-    it('clamps startTime to endTime when only maxEndTimeUnixNano is present', async () => {
-      const oneSided = { ...mockApiSummary, minStartTimeUnixNano: undefined };
-      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ summaries: [oneSided] }) });
-      const promise = client.fetchTraceSummaries(query);
-      vi.runAllTimers();
-      const [summary] = await promise;
-      // startTime is derived from endNs when start is absent
-      expect(summary.startTime).toBe(1700000001000500);
-      expect(summary.duration).toBe(0);
-    });
-
-    it('builds traceName from rootServiceName only when rootOperationName is absent', async () => {
-      const partial = { ...mockApiSummary, rootOperationName: undefined };
-      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ summaries: [partial] }) });
-      const promise = client.fetchTraceSummaries(query);
-      vi.runAllTimers();
-      const [summary] = await promise;
-      expect(summary.traceName).toBe('my-svc');
-    });
-
-    it('builds traceName from rootOperationName only when rootServiceName is absent', async () => {
-      const partial = { ...mockApiSummary, rootServiceName: undefined };
-      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ summaries: [partial] }) });
-      const promise = client.fetchTraceSummaries(query);
-      vi.runAllTimers();
-      const [summary] = await promise;
-      expect(summary.traceName).toBe('GET /api');
-    });
-
-    it('accepts partial ServiceSummary entries with missing fields', async () => {
-      const withPartialService = { ...mockApiSummary, services: [{ name: 'partial-svc' }] };
-      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ summaries: [withPartialService] }) });
-      const promise = client.fetchTraceSummaries(query);
-      vi.runAllTimers();
-      const [summary] = await promise;
-      expect(summary.services).toEqual([{ name: 'partial-svc', spanCount: 0, errorSpanCount: 0 }]);
-    });
-
-    it('throws ZodError when traceId is missing', async () => {
-      const { traceId: _omit, ...noTraceId } = mockApiSummary;
-      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ summaries: [noTraceId] }) });
-
-      const promise = client.fetchTraceSummaries(query);
-      vi.runAllTimers();
-      await expect(promise).rejects.toThrow(ZodError);
-    });
-
-    it('throws on non-ok HTTP response', async () => {
-      mockFetch.mockResolvedValue({ ok: false, status: 500, statusText: 'Internal Server Error' });
-
-      const promise = client.fetchTraceSummaries(query);
-      vi.runAllTimers();
-
-      await expect(promise).rejects.toThrow('Failed to fetch trace summaries: 500 Internal Server Error');
-    });
-
-    it('throws ZodError when minStartTimeUnixNano is not a decimal string', async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({ summaries: [{ ...mockApiSummary, minStartTimeUnixNano: 12345 }] }),
-      });
-
-      const promise = client.fetchTraceSummaries(query);
-      vi.runAllTimers();
-
-      await expect(promise).rejects.toThrow(ZodError);
-    });
-
-    it('only sets URL params for non-null query fields', async () => {
-      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ summaries: [] }) });
-
-      const promise = client.fetchTraceSummaries({
-        ...query,
-        operation: 'GET /api',
-        tags: 'http.status=200',
-      });
-      vi.runAllTimers();
-      await promise;
-
-      const calledUrl = mockFetch.mock.calls[0][0] as string;
-      expect(calledUrl).toContain('query.serviceName=my-svc');
-      expect(calledUrl).toContain('query.operationName=GET+%2Fapi');
-      expect(calledUrl).toContain('query.attributes=http.status%3D200');
-      expect(calledUrl).toContain('query.searchDepth=20');
-    });
-  });
-
   describe('singleton instance', () => {
     it('exports a singleton jaegerClient instance', () => {
       expect(jaegerClient).toBeInstanceOf(JaegerClient);
@@ -445,7 +264,78 @@ describe('JaegerClient', () => {
     it('singleton instance has all expected methods', () => {
       expect(jaegerClient.fetchServices).toBeInstanceOf(Function);
       expect(jaegerClient.fetchSpanNames).toBeInstanceOf(Function);
-      expect(jaegerClient.fetchTraceSummaries).toBeInstanceOf(Function);
+      expect(jaegerClient.fetchTrace).toBeInstanceOf(Function);
+    });
+  });
+
+  describe('fetchTrace', () => {
+    const traceId = '0102030405060708090a0b0c0d0e0f10';
+    const mockTraceData = {
+      resourceSpans: [
+        {
+          resource: { attributes: [] },
+          scopeSpans: [
+            {
+              spans: [
+                {
+                  traceId,
+                  spanId: '0102030405060708',
+                  name: 'test-span',
+                  kind: 1,
+                  startTimeUnixNano: '1234567890',
+                  endTimeUnixNano: '1234567891',
+                  attributes: [],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    it('successfully fetches and validates trace data', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => mockTraceData,
+      });
+
+      const result = await client.fetchTrace(traceId);
+
+      expect(result).toEqual(mockTraceData);
+      expect(mockFetch).toHaveBeenCalledWith(
+        `/api/v3/traces/${traceId}`,
+        expect.objectContaining({ signal: expect.any(AbortSignal) })
+      );
+    });
+
+    it('logs error and returns raw data when validation fails (safeParse resilience)', async () => {
+      const malformedData = { resourceSpans: 'invalid' };
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => malformedData,
+      });
+
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      const result = await client.fetchTrace(traceId);
+
+      expect(result).toEqual(malformedData);
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining(`[OTLP Validation] Error for trace ${traceId}:`),
+        expect.anything()
+      );
+
+      consoleSpy.mockRestore();
+    });
+
+    it('throws error when response is not OK', async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+      });
+
+      await expect(client.fetchTrace(traceId)).rejects.toThrow(`Failed to fetch trace "${traceId}": 404 Not Found`);
     });
   });
 });
