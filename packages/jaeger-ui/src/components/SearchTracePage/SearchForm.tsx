@@ -35,7 +35,7 @@ const FormItem = Form.Item;
 const Option = Select.Option;
 
 const ADJUST_TIME_ENABLED_KEY = 'jaeger-ui/search-adjust-time-enabled';
-const LOOKBACK_UNIT_BY_SUFFIX: Record<string, ManipulateType> = {
+const LOOKBACK_UNIT_BY_SUFFIX: Partial<Record<string, ManipulateType>> = {
   s: 'second',
   m: 'minute',
   h: 'hour',
