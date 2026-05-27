@@ -94,3 +94,36 @@ export const TIME_RANGE_OPTIONS: readonly ITimeRangeOption[] = Object.freeze([
     valueMs: 4 * ONE_WEEK_MS,
   },
 ]);
+
+/**
+ * Returns value when it is a valid lookback for the Lookback dropdown:
+ * one of the TIME_RANGE_OPTIONS lookback strings, or 'custom'.
+ * Use for URL params where 'custom' is a legitimate user selection.
+ * For config validation use asValidConfigLookback instead.
+ */
+export function asValidLookback(value: string | undefined): string | undefined {
+  if (value === 'custom' || TIME_RANGE_OPTIONS.some(o => o.lookback === value)) return value;
+  return undefined;
+}
+
+/**
+ * Returns value when it is a recognized TIME_RANGE_OPTIONS lookback string.
+ * Stricter than asValidLookback: rejects 'custom' since a config default
+ * of 'custom' would leave the form in an ambiguous state on load.
+ */
+export function asValidConfigLookback(value: string | undefined): string | undefined {
+  if (TIME_RANGE_OPTIONS.some(o => o.lookback === value)) return value;
+  return undefined;
+}
+
+/**
+ * Given a duration in milliseconds, return the lookback string of the smallest
+ * TIME_RANGE_OPTIONS entry whose window is >= durationMs.
+ * Returns 'custom' if durationMs exceeds the largest option.
+ */
+export function lookbackFromDuration(durationMs: number): string {
+  for (const option of TIME_RANGE_OPTIONS) {
+    if (option.valueMs >= durationMs) return option.lookback;
+  }
+  return 'custom';
+}

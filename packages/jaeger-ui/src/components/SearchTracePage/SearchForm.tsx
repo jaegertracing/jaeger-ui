@@ -11,11 +11,12 @@ import queryString from 'query-string';
 import { IoHelp } from 'react-icons/io5';
 import { connect } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getUrl as getSearchUrl } from './url';
+import { getUrl as getSearchUrl, lookbackFromUrl } from './url';
 import type { Dispatch } from 'redux';
 import { useIsSearchFetching } from '../../hooks/useTraceDiscovery';
 import { useClearUploadedTraces } from './useUploadedTraces';
 import store from '../../utils/storage';
+import getConfig from '../../utils/config/get-config';
 
 import * as markers from './SearchForm.markers';
 import { trackFormInput } from './SearchForm.track';
@@ -29,7 +30,7 @@ import { useConfig } from '../../hooks/useConfig';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 import { ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
-import { TIME_RANGE_OPTIONS } from '../../constants/time-range-options';
+import { TIME_RANGE_OPTIONS, asValidConfigLookback } from '../../utils/time-range-options';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
@@ -312,9 +313,9 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   const submitting = useIsSearchFetching();
   const navigate = useNavigate();
   const clearUploadedTraces = useClearUploadedTraces();
-  const { useOpenTelemetryTerms: useOtelTerms, search } = useConfig();
-  const searchMaxLookback: ILookbackOption | undefined = search?.maxLookback;
-  const searchAdjustEndTime: string | undefined = search?.adjustEndTime;
+  const { useOpenTelemetryTerms: useOtelTerms, search: searchConfig } = useConfig();
+  const searchMaxLookback: ILookbackOption | undefined = searchConfig?.maxLookback;
+  const searchAdjustEndTime: string | undefined = searchConfig?.adjustEndTime;
   const [formData, setFormData] = useState<Partial<ISearchFormFields>>(() => ({
     service: initialValues?.service,
     operation: initialValues?.operation,
@@ -549,7 +550,6 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           data-testid="lookback"
           value={formData.lookback}
           disabled={submitting}
-          defaultValue={DEFAULT_LOOKBACK}
           onChange={(value: string) => handleChange({ lookback: value })}
         >
           {searchMaxLookback && optionsWithinMaxLookback(searchMaxLookback)}
@@ -669,7 +669,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           placeholder="Limit Results"
           type="number"
           min={1}
-          max={search?.maxLimit}
+          max={searchConfig?.maxLimit}
           onChange={e => handleChange({ resultsLimit: e.target.value })}
         />
       </FormItem>
@@ -686,7 +686,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   );
 };
 
-export function mapStateToProps(state: ReduxState, ownProps: { search?: string }) {
+export function mapStateToProps(_state: ReduxState, ownProps: { search?: string }) {
   const {
     service,
     limit,
@@ -697,7 +697,6 @@ export function mapStateToProps(state: ReduxState, ownProps: { search?: string }
     tags: logfmtTags,
     maxDuration,
     minDuration,
-    lookback,
     traceID: traceIDParams,
   } = queryString.parse(ownProps.search || '');
 
@@ -782,7 +781,10 @@ export function mapStateToProps(state: ReduxState, ownProps: { search?: string }
     initialValues: {
       service: (service as string | undefined) || lastSearchService || '-',
       resultsLimit: (limit as string | undefined) || String(DEFAULT_LIMIT),
-      lookback: (lookback as string | undefined) || DEFAULT_LOOKBACK,
+      lookback:
+        lookbackFromUrl(ownProps.search || '') ||
+        asValidConfigLookback(getConfig().search?.defaultLookback) ||
+        DEFAULT_LOOKBACK,
       startDate: queryStartDate || today,
       startDateTime: queryStartDateTime || '00:00',
       endDate: queryEndDate || today,
