@@ -316,7 +316,6 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   const { useOpenTelemetryTerms: useOtelTerms, search: searchConfig } = useConfig();
   const searchMaxLookback: ILookbackOption | undefined = searchConfig?.maxLookback;
   const searchAdjustEndTime: string | undefined = searchConfig?.adjustEndTime;
-  const defaultLookback: string = asValidLookback(searchConfig?.defaultLookback) ?? DEFAULT_LOOKBACK;
   const [formData, setFormData] = useState<Partial<ISearchFormFields>>(() => ({
     service: initialValues?.service,
     operation: initialValues?.operation,
@@ -551,7 +550,6 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           data-testid="lookback"
           value={formData.lookback}
           disabled={submitting}
-          defaultValue={defaultLookback}
           onChange={(value: string) => handleChange({ lookback: value })}
         >
           {searchMaxLookback && optionsWithinMaxLookback(searchMaxLookback)}
