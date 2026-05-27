@@ -1,17 +1,17 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+import { z } from 'zod';
+import { schemas as generatedSchemas } from './generated-client';
+
 /**
  * Zod schemas for Jaeger v3 API responses
  *
- * These are imported from generated-client.ts which is auto-generated from OpenAPI spec
- * and post-processed to remove .partial() for strict validation.
+ * This implementation builds on top of the OpenAPI-generated schemas
+ * from generated-client.ts, adding refinements for IDs, timestamps,
+ * and internal structure validation while preserving the primary
+ * source of truth.
  */
-
-// Import auto-generated schemas (post-processed for strict validation)
-export { ServicesResponseSchema, OperationsResponseSchema, OperationSchema } from './generated-client';
-
-import { z } from 'zod';
 
 // --- Primitives ---
 
@@ -30,147 +30,95 @@ export const SpanIdSchema = z.string().regex(/^[0-9a-f]{16}$/i, 'Invalid span ID
  */
 export const TimestampSchema = z.string().regex(/^\d+$/, 'Invalid timestamp: must be a numeric string');
 
-// --- OTLP Core Structures (Recursive & Nested) ---
+// --- OTLP Refinements ---
 
 /**
- * AnyValue represents a value of any type.
- * It is a recursive structure used for attributes.
+ * AnyValue remains the base generated version as it is a complex recursive structure.
  */
-export const AnyValueSchema: z.ZodType<any> = z.lazy(() =>
-  z
-    .object({
-      stringValue: z.string().optional(),
-      boolValue: z.boolean().optional(),
-      intValue: z.string().optional(),
-      doubleValue: z.number().optional(),
-      arrayValue: z.object({ values: z.array(AnyValueSchema) }).optional(),
-      kvlistValue: z.object({ values: z.array(z.lazy(() => KeyValueSchema)) }).optional(),
-      bytesValue: z.string().optional(),
-    })
-    .passthrough()
+export const AnyValueSchema = generatedSchemas.opentelemetry_proto_common_v1_AnyValue;
+
+/**
+ * KeyValue refined with required key.
+ */
+export const KeyValueSchema = generatedSchemas.opentelemetry_proto_common_v1_KeyValue.and(
+  z.object({
+    key: z.string(),
+  })
 );
 
 /**
- * KeyValue is a key-value pair that is used to store attributes.
+ * Resource remains the base generated version.
  */
-export const KeyValueSchema = z
-  .object({
-    key: z.string(),
-    value: AnyValueSchema,
-  })
-  .passthrough();
+export const ResourceSchema = generatedSchemas.opentelemetry_proto_resource_v1_Resource;
 
 /**
- * Resource information.
+ * InstrumentationScope remains the base generated version.
  */
-export const ResourceSchema = z
-  .object({
-    attributes: z.array(KeyValueSchema),
-    droppedAttributesCount: z.number().int().optional(),
-  })
-  .passthrough();
+export const InstrumentationScopeSchema = generatedSchemas.opentelemetry_proto_common_v1_InstrumentationScope;
 
 /**
- * InstrumentationScope information.
+ * Status remains the base generated version.
  */
-export const InstrumentationScopeSchema = z
-  .object({
-    name: z.string(),
-    version: z.string().optional(),
-    attributes: z.array(KeyValueSchema).optional(),
-    droppedAttributesCount: z.number().int().optional(),
-  })
-  .passthrough();
+export const StatusSchema = generatedSchemas.opentelemetry_proto_trace_v1_Status;
 
 /**
- * Status of a span.
+ * SpanEvent refined with numeric timestamp validation.
  */
-export const StatusSchema = z
-  .object({
-    code: z.number().int(),
-    message: z.string().optional(),
-  })
-  .passthrough();
+export const SpanEventSchema = generatedSchemas.opentelemetry_proto_trace_v1_Span_Event.extend({
+  timeUnixNano: TimestampSchema,
+});
 
 /**
- * Event recorded during a span's duration.
+ * SpanLink refined with hex ID validation.
  */
-export const SpanEventSchema = z
-  .object({
-    timeUnixNano: TimestampSchema,
-    name: z.string(),
-    attributes: z.array(KeyValueSchema),
-    droppedAttributesCount: z.number().int().optional(),
-  })
-  .passthrough();
+export const SpanLinkSchema = generatedSchemas.opentelemetry_proto_trace_v1_Span_Link.extend({
+  traceId: TraceIdSchema,
+  spanId: SpanIdSchema,
+});
 
 /**
- * Link to another span.
+ * A Span refined with hex ID and numeric timestamp validation.
  */
-export const SpanLinkSchema = z
-  .object({
-    traceId: TraceIdSchema,
-    spanId: SpanIdSchema,
-    traceState: z.string().optional(),
-    attributes: z.array(KeyValueSchema),
-    droppedAttributesCount: z.number().int().optional(),
-    flags: z.number().int().optional(),
-  })
-  .passthrough();
-
-/**
- * A Span represents a single operation within a trace.
- */
-export const SpanSchema = z
-  .object({
-    traceId: TraceIdSchema,
-    spanId: SpanIdSchema,
-    traceState: z.string().optional(),
-    parentSpanId: SpanIdSchema.or(z.string().length(0)).optional(),
-    name: z.string(),
-    kind: z.number().int(),
-    startTimeUnixNano: TimestampSchema,
-    endTimeUnixNano: TimestampSchema,
-    attributes: z.array(KeyValueSchema),
-    droppedAttributesCount: z.number().int().optional(),
-    events: z.array(SpanEventSchema).optional(),
-    droppedEventsCount: z.number().int().optional(),
-    links: z.array(SpanLinkSchema).optional(),
-    droppedLinksCount: z.number().int().optional(),
-    status: StatusSchema.optional(),
-  })
-  .passthrough();
+export const SpanSchema = generatedSchemas.opentelemetry_proto_trace_v1_Span.extend({
+  traceId: TraceIdSchema,
+  spanId: SpanIdSchema,
+  parentSpanId: SpanIdSchema.or(z.string().length(0)).optional(),
+  startTimeUnixNano: TimestampSchema,
+  endTimeUnixNano: TimestampSchema,
+});
 
 /**
  * A collection of Spans produced by an InstrumentationScope.
  */
-export const ScopeSpansSchema = z
-  .object({
-    scope: InstrumentationScopeSchema.optional(),
-    spans: z.array(SpanSchema),
-    schemaUrl: z.string().optional(),
-  })
-  .passthrough();
+export const ScopeSpansSchema = generatedSchemas.opentelemetry_proto_trace_v1_ScopeSpans.extend({
+  spans: z.array(SpanSchema),
+});
 
 /**
  * A collection of ScopeSpans produced by a Resource.
  */
-export const ResourceSpansSchema = z
-  .object({
-    resource: ResourceSchema.optional(),
-    scopeSpans: z.array(ScopeSpansSchema),
-    schemaUrl: z.string().optional(),
-  })
-  .passthrough();
+export const ResourceSpansSchema = generatedSchemas.opentelemetry_proto_trace_v1_ResourceSpans.extend({
+  scopeSpans: z.array(ScopeSpansSchema),
+});
 
 /**
  * Root structure for OTLP trace data.
  */
-export const TracesDataSchema = z
-  .object({
-    resourceSpans: z.array(ResourceSpansSchema),
-  })
-  .passthrough();
+export const TracesDataSchema = generatedSchemas.opentelemetry_proto_trace_v1_TracesData.extend({
+  resourceSpans: z.array(ResourceSpansSchema),
+});
+
+// --- API Response Schemas ---
+
+export const ServicesResponseSchema = generatedSchemas.jaeger_api_v3_GetServicesResponse.extend({
+  services: z.array(z.string()),
+});
+export const OperationsResponseSchema = generatedSchemas.jaeger_api_v3_GetOperationsResponse.extend({
+  operations: z.array(generatedSchemas.jaeger_api_v3_Operation),
+});
+export const OperationSchema = generatedSchemas.jaeger_api_v3_Operation.extend({
+  name: z.string(),
+});
 
 // Type inference for internal logic and testing
 export type IAnyValue = z.infer<typeof AnyValueSchema>;
