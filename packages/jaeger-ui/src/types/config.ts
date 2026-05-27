@@ -108,8 +108,8 @@ export type Config = {
   // search section controls some aspects of the Search panel.
   search?: {
     // maxLookback controls how far back in time the search may apply.
-    // By default the Lookback dropdown contains values from "last 1 hour"
-    // to "last 2 days". Setting maxLookback to a shorter time range,
+    // By default the Lookback dropdown contains values from "Last 5 minutes"
+    // to "Last 2 days". Setting maxLookback to a shorter time range,
     // such as "6h" disables the longer ranges.
     maxLookback: {
       // Bare duration label shown in the search form dropdown. The UI prepends "Last "
