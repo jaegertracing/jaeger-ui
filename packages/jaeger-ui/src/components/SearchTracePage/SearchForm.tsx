@@ -30,7 +30,7 @@ import { useConfig } from '../../hooks/useConfig';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 import { ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
-import { TIME_RANGE_OPTIONS, asValidLookback } from '../../utils/time-range-options';
+import { TIME_RANGE_OPTIONS, asValidConfigLookback } from '../../utils/time-range-options';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
@@ -783,7 +783,7 @@ export function mapStateToProps(_state: ReduxState, ownProps: { search?: string 
       resultsLimit: (limit as string | undefined) || String(DEFAULT_LIMIT),
       lookback:
         lookbackFromUrl(ownProps.search || '') ||
-        asValidLookback(getConfig().search?.defaultLookback) ||
+        asValidConfigLookback(getConfig().search?.defaultLookback) ||
         DEFAULT_LOOKBACK,
       startDate: queryStartDate || today,
       startDateTime: queryStartDateTime || '00:00',

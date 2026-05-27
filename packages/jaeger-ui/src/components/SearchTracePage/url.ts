@@ -115,11 +115,7 @@ function lookbackFromUrlState(q: TUrlState): string {
   return '';
 }
 
-/**
- * Derive the lookback value from the URL search string.
- * Returns the explicit lookback param when present, reconstructs it from
- * start/end timestamps when absent, or returns '' when neither is available.
- */
+/** Derives the lookback from a URL search string; see lookbackFromUrlState for semantics. */
 export function lookbackFromUrl(search: string): string {
   return lookbackFromUrlState(getUrlState(search));
 }
@@ -133,11 +129,10 @@ export function lookbackFromUrl(search: string): string {
  * lookback is kept in the URL so SearchForm can restore the selector label on the
  * next visit.
  *
- * When lookback is absent but start/end are present (manually crafted or external
- * link), the lookback value is reconstructed from the time-range duration by
- * rounding up to the smallest standard option that covers the full range, or
- * 'custom' when the range exceeds all standard options. This keeps the form's
- * dropdown in sync with the actual time range that was searched.
+ * When lookback is absent or invalid, the lookback value is reconstructed from the
+ * time-range duration by rounding up to the smallest standard option that covers the
+ * full range, or 'custom' when the range exceeds all standard options. This keeps
+ * the form's dropdown in sync with the actual time range that was searched.
  */
 export function searchQueryFromUrl(search: string): SearchQuery | null {
   const q = getUrlState(search);
