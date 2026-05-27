@@ -10,6 +10,7 @@ import { MAX_LENGTH } from '../DeepDependencies/Graph/DdgNodeContent/constants';
 
 import { SearchQuery } from '../../types/search';
 import parseQuery from '../../utils/parseQuery';
+import { asValidLookback, lookbackFromDuration } from '../../utils/time-range-options';
 
 export { isSameQuery, isQueryEmpty } from '../../utils/search-query';
 
@@ -101,6 +102,25 @@ export function searchQueryToUrlState(q: SearchQuery): TUrlState {
 }
 
 /**
+ * Derive the lookback from an already-parsed URL state.
+ * Returns the explicit lookback param when present, reconstructs it from
+ * start/end timestamps when absent, or returns '' when neither is available.
+ */
+function lookbackFromUrlState(q: TUrlState): string {
+  const lookback = asValidLookback(firstOf(q.lookback));
+  if (lookback) return lookback;
+  const startUs = Number(firstOf(q.start));
+  const endUs = Number(firstOf(q.end));
+  if (startUs > 0 && endUs > startUs) return lookbackFromDuration((endUs - startUs) / 1000);
+  return '';
+}
+
+/** Derives the lookback from a URL search string; see lookbackFromUrlState for semantics. */
+export function lookbackFromUrl(search: string): string {
+  return lookbackFromUrlState(getUrlState(search));
+}
+
+/**
  * Parse the URL search string into a typed SearchQuery, or null when no search
  * params are present (homepage / no query submitted yet).
  *
@@ -108,20 +128,31 @@ export function searchQueryToUrlState(q: SearchQuery): TUrlState {
  * from the lookback selector) so that shared links reproduce the same time window.
  * lookback is kept in the URL so SearchForm can restore the selector label on the
  * next visit.
+ *
+ * When lookback is absent or invalid, the lookback value is reconstructed from the
+ * time-range duration by rounding up to the smallest standard option that covers the
+ * full range, or 'custom' when the range exceeds all standard options. This keeps
+ * the form's dropdown in sync with the actual time range that was searched.
  */
 export function searchQueryFromUrl(search: string): SearchQuery | null {
   const q = getUrlState(search);
   if (!q.service && !q.start && !q.end) return null;
+
+  const startStr = firstOf(q.start) ?? '';
+  const endStr = firstOf(q.end) ?? '';
+
+  const lookback = lookbackFromUrlState(q);
+
   return {
     service: firstOf(q?.service),
     operation: firstOf(q.operation),
-    start: firstOf(q.start) ?? '',
-    end: firstOf(q.end) ?? '',
+    start: startStr,
+    end: endStr,
     limit: (() => {
       const n = Number(firstOf(q.limit));
       return Number.isFinite(n) && n > 0 ? n : 20;
     })(),
-    lookback: firstOf(q.lookback) ?? '1h',
+    lookback,
     minDuration: typeof q.minDuration === 'string' ? q.minDuration : undefined,
     maxDuration: typeof q.maxDuration === 'string' ? q.maxDuration : undefined,
     tags: typeof q.tags === 'string' ? q.tags : undefined,
