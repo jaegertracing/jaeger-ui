@@ -10,7 +10,7 @@ import { MAX_LENGTH } from '../DeepDependencies/Graph/DdgNodeContent/constants';
 
 import { SearchQuery } from '../../types/search';
 import parseQuery from '../../utils/parseQuery';
-import { lookbackFromDuration } from '../../utils/time-range-options';
+import { asValidLookback, lookbackFromDuration } from '../../utils/time-range-options';
 
 export { isSameQuery, isQueryEmpty } from '../../utils/search-query';
 
@@ -107,7 +107,7 @@ export function searchQueryToUrlState(q: SearchQuery): TUrlState {
  * start/end timestamps when absent, or returns '' when neither is available.
  */
 function lookbackFromUrlState(q: TUrlState): string {
-  const lookback = firstOf(q.lookback);
+  const lookback = asValidLookback(firstOf(q.lookback));
   if (lookback) return lookback;
   const startUs = Number(firstOf(q.start));
   const endUs = Number(firstOf(q.end));
