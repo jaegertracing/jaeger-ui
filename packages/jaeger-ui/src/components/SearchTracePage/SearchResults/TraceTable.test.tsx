@@ -29,6 +29,7 @@ const mockTraces = [makeTrace('a'), makeTrace('b'), makeTrace('c'), makeTrace('d
 const defaultProps = {
   traceSummaries: mockTraces,
   onRowClick: vi.fn(),
+  getTraceLinkTo: (traceID: string) => ({ pathname: `/trace/${traceID}` }),
   sortBy: orderBy.MOST_RECENT,
   handleSortChange: vi.fn(),
 };
@@ -62,14 +63,16 @@ describe('TraceTable', () => {
     expect(within(errorsCell as HTMLElement).getByText('2')).toBeInTheDocument();
   });
 
-  it('calls onRowClick when a row is clicked', () => {
+  it('calls onRowClick when a non-link cell is clicked', () => {
     const onRowClick = vi.fn();
-    render(
+    const { container } = render(
       <MemoryRouter>
         <TraceTable {...defaultProps} onRowClick={onRowClick} />
       </MemoryRouter>
     );
-    fireEvent.click(screen.getByText('Trace a'));
+    const firstRow = container.querySelector('tbody tr')!;
+    // Click the Services cell (index 1), not the Trace Name link (index 0)
+    fireEvent.click(firstRow.querySelectorAll('td')[1]);
     expect(onRowClick).toHaveBeenCalledWith('a');
   });
 
@@ -139,8 +142,9 @@ describe('toOrderBy', () => {
     expect(toOrderBy('duration', 'ascend')).toBe(orderBy.SHORTEST_FIRST);
   });
 
-  it('defaults to MOST_RECENT for unknown column', () => {
+  it('maps startTime+descend to MOST_RECENT (default branch)', () => {
     expect(toOrderBy('startTime', 'descend')).toBe(orderBy.MOST_RECENT);
+    expect(toOrderBy('unknown-col', 'descend')).toBe(orderBy.MOST_RECENT);
   });
 
   it('returns MOST_RECENT when order is cleared (3rd click)', () => {

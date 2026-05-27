@@ -119,12 +119,29 @@ export function UnconnectedSearchResults({
     [location, navigate]
   );
 
+  const resolveSpanLink = useCallback(
+    (traceID: string): string | undefined => {
+      if (!spanLinks) return undefined;
+      if (spanLinks[traceID]) return spanLinks[traceID];
+      const stripped = traceID.replace(/^0+/, '');
+      return stripped && stripped !== traceID ? spanLinks[stripped] : undefined;
+    },
+    [spanLinks]
+  );
+
   const goToTraceFromTable = useCallback(
     (traceID: string) => {
-      const spanLink = spanLinks && (spanLinks[traceID] || spanLinks[traceID.replace(/^0*/, '')]);
-      goToTrace(traceID, spanLink);
+      goToTrace(traceID, resolveSpanLink(traceID));
     },
-    [goToTrace, spanLinks]
+    [goToTrace, resolveSpanLink]
+  );
+
+  const getTraceLinkTo = useCallback(
+    (traceID: string) => {
+      const searchUrl = location.pathname + location.search;
+      return getTracePageLink(traceID, { fromSearch: searchUrl }, resolveSpanLink(traceID));
+    },
+    [location, resolveSpanLink]
   );
 
   const onDdgViewClicked = useCallback(() => {
@@ -195,6 +212,7 @@ export function UnconnectedSearchResults({
           {traceResultsView && <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />}
           {traceResultsView && (
             <Radio.Group
+              aria-label="Results view mode"
               className="ub-ml2"
               value={viewMode}
               onChange={e => setViewMode(e.target.value as 'list' | 'table')}
@@ -228,6 +246,7 @@ export function UnconnectedSearchResults({
         <TraceTable
           traceSummaries={traceSummaries}
           onRowClick={goToTraceFromTable}
+          getTraceLinkTo={getTraceLinkTo}
           sortBy={sortBy}
           handleSortChange={handleSortChange}
         />

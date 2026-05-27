@@ -3,16 +3,19 @@
 
 import * as React from 'react';
 import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { Table } from 'antd';
 import type { ColumnsType, TableProps } from 'antd/es/table';
 import type { SorterResult } from 'antd/es/table/interface';
 import { TraceSummary } from '../../../types/trace-summary';
 import { formatDuration, formatDatetime } from '../../../utils/date';
 import * as orderBy from '../../../model/order-by';
+import type { TracePageLink } from '../../TracePage/url';
 
 type TraceTableProps = {
   traceSummaries: TraceSummary[];
   onRowClick: (traceID: string) => void;
+  getTraceLinkTo: (traceID: string) => TracePageLink;
   sortBy: string;
   handleSortChange: (sortBy: string) => void;
 };
@@ -49,6 +52,7 @@ export { toOrderBy, fromOrderBy };
 export default function TraceTable({
   traceSummaries,
   onRowClick,
+  getTraceLinkTo,
   sortBy,
   handleSortChange,
 }: TraceTableProps) {
@@ -60,7 +64,18 @@ export default function TraceTable({
         title: 'Trace Name',
         dataIndex: 'traceName',
         key: 'traceName',
-        render: (name: string, trace: TraceSummary) => name || trace.traceID,
+        render: (name: string, trace: TraceSummary) => {
+          const link = getTraceLinkTo(trace.traceID);
+          return (
+            <Link
+              to={link.pathname + (link.search ? `?${link.search}` : '')}
+              state={link.state}
+              onClick={e => e.stopPropagation()}
+            >
+              {name || trace.traceID}
+            </Link>
+          );
+        },
       },
       {
         title: 'Services',
@@ -74,6 +89,7 @@ export default function TraceTable({
         render: (_: unknown, trace: TraceSummary) => trace.spanCount,
         sorter: true,
         sortOrder: sortKey === 'spans' ? sortOrder : undefined,
+        sortDirections: ['ascend', 'descend'],
       },
       {
         title: 'Errors',
@@ -86,6 +102,7 @@ export default function TraceTable({
         render: (_: unknown, trace: TraceSummary) => formatDuration(trace.duration),
         sorter: true,
         sortOrder: sortKey === 'duration' ? sortOrder : undefined,
+        sortDirections: ['ascend', 'descend'],
       },
       {
         title: 'Start Time',
@@ -97,7 +114,7 @@ export default function TraceTable({
         sortDirections: ['descend'],
       },
     ],
-    [sortKey, sortOrder]
+    [sortKey, sortOrder, getTraceLinkTo]
   );
 
   const onChange: TableProps<TraceSummary>['onChange'] = (_pagination, _filters, sorter) => {
