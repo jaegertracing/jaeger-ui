@@ -88,9 +88,10 @@ export function convTagsLogfmt(tags: string | null | undefined): string | null {
 }
 
 function parseLookback(s: string): { value: number; unit: ManipulateType } | null {
-  const value = parseInt(s, 10);
-  const unit = LOOKBACK_UNIT_BY_SUFFIX[s.slice(-1)];
-  return unit !== undefined && !Number.isNaN(value) ? { value, unit } : null;
+  const match = s.match(/^(\d+)([smhdw])$/);
+  if (!match) return null;
+  const unit = LOOKBACK_UNIT_BY_SUFFIX[match[2]];
+  return unit !== undefined ? { value: Number(match[1]), unit } : null;
 }
 
 export function lookbackToTimestamp(lookback: string, from: Date | number): number {
