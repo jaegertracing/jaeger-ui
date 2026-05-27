@@ -11,7 +11,7 @@ import queryString from 'query-string';
 import { IoHelp } from 'react-icons/io5';
 import { connect } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getUrl as getSearchUrl } from './url';
+import { getUrl as getSearchUrl, lookbackFromUrl } from './url';
 import type { Dispatch } from 'redux';
 import { useIsSearchFetching } from '../../hooks/useTraceDiscovery';
 import { useClearUploadedTraces } from './useUploadedTraces';
@@ -30,7 +30,7 @@ import { useConfig } from '../../hooks/useConfig';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 import { ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
-import { TIME_RANGE_OPTIONS, asValidLookback, lookbackFromDuration } from '../../utils/time-range-options';
+import { TIME_RANGE_OPTIONS, asValidLookback } from '../../utils/time-range-options';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
@@ -697,7 +697,6 @@ export function mapStateToProps(_state: ReduxState, ownProps: { search?: string 
     tags: logfmtTags,
     maxDuration,
     minDuration,
-    lookback,
     traceID: traceIDParams,
   } = queryString.parse(ownProps.search || '');
 
@@ -782,14 +781,10 @@ export function mapStateToProps(_state: ReduxState, ownProps: { search?: string 
     initialValues: {
       service: (service as string | undefined) || lastSearchService || '-',
       resultsLimit: (limit as string | undefined) || String(DEFAULT_LIMIT),
-      lookback: (() => {
-        const urlLookback = asValidLookback(lookback as string | undefined);
-        if (urlLookback) return urlLookback;
-        const startUs = Number(start);
-        const endUs = Number(end);
-        if (startUs > 0 && endUs > startUs) return lookbackFromDuration((endUs - startUs) / 1000);
-        return asValidLookback(getConfig().search?.defaultLookback) ?? DEFAULT_LOOKBACK;
-      })(),
+      lookback:
+        lookbackFromUrl(ownProps.search || '') ||
+        asValidLookback(getConfig().search?.defaultLookback) ||
+        DEFAULT_LOOKBACK,
       startDate: queryStartDate || today,
       startDateTime: queryStartDateTime || '00:00',
       endDate: queryEndDate || today,
