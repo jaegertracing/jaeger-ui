@@ -126,7 +126,7 @@ export function searchQueryFromUrl(search: string): SearchQuery | null {
   if (!lookback) {
     const startUs = Number(startStr);
     const endUs = Number(endStr);
-    if (startUs > 0 && endUs > 0) {
+    if (startUs > 0 && endUs > startUs) {
       // Timestamps in the URL are microseconds; convert to ms for lookbackFromDuration.
       lookback = lookbackFromDuration((endUs - startUs) / 1000);
     } else {

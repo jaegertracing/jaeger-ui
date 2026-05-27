@@ -95,6 +95,11 @@ export const TIME_RANGE_OPTIONS: readonly ITimeRangeOption[] = Object.freeze([
   },
 ]);
 
+/** Returns true when value is a known lookback string in TIME_RANGE_OPTIONS. */
+export function isValidLookback(value: string): boolean {
+  return TIME_RANGE_OPTIONS.some(o => o.lookback === value);
+}
+
 /**
  * Given a duration in milliseconds, return the lookback string of the smallest
  * TIME_RANGE_OPTIONS entry whose window is >= durationMs.
