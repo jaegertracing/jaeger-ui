@@ -46,7 +46,12 @@ function fromOrderBy(sort: string): { key: string; order: 'ascend' | 'descend' }
 
 export { toOrderBy, fromOrderBy };
 
-export default function TraceTable({ traceSummaries, onRowClick, sortBy, handleSortChange }: TraceTableProps) {
+export default function TraceTable({
+  traceSummaries,
+  onRowClick,
+  sortBy,
+  handleSortChange,
+}: TraceTableProps) {
   const { key: sortKey, order: sortOrder } = fromOrderBy(sortBy);
 
   const columns: ColumnsType<TraceSummary> = useMemo(
