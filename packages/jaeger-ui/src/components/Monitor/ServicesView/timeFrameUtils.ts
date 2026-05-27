@@ -1,10 +1,10 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { ONE_HOUR_MS as SHARED_ONE_HOUR_MS, TIME_RANGE_OPTIONS } from '../../../constants/time-range-options';
+import { ONE_HOUR_MS, TIME_RANGE_OPTIONS } from '../../../constants/time-range-options';
 import { convertToTimeUnit } from '../../../utils/date';
 
-export const ONE_HOUR_MS = SHARED_ONE_HOUR_MS;
+export { ONE_HOUR_MS };
 const MAX_MONITOR_TIMEFRAME = 48 * ONE_HOUR_MS;
 
 const formatMonitorLabel = (label: string, valueMs: number) =>
