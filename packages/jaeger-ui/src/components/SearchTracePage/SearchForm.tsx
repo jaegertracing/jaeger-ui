@@ -16,6 +16,7 @@ import type { Dispatch } from 'redux';
 import { useIsSearchFetching } from '../../hooks/useTraceDiscovery';
 import { useClearUploadedTraces } from './useUploadedTraces';
 import store from '../../utils/storage';
+import getConfig from '../../utils/config/get-config';
 
 import * as markers from './SearchForm.markers';
 import { trackFormInput } from './SearchForm.track';
@@ -315,6 +316,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   const { useOpenTelemetryTerms: useOtelTerms, search } = useConfig();
   const searchMaxLookback: ILookbackOption | undefined = search?.maxLookback;
   const searchAdjustEndTime: string | undefined = search?.adjustEndTime;
+  const defaultLookback: string = search?.defaultLookback ?? DEFAULT_LOOKBACK;
   const [formData, setFormData] = useState<Partial<ISearchFormFields>>(() => ({
     service: initialValues?.service,
     operation: initialValues?.operation,
@@ -549,7 +551,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           data-testid="lookback"
           value={formData.lookback}
           disabled={submitting}
-          defaultValue={DEFAULT_LOOKBACK}
+          defaultValue={defaultLookback}
           onChange={(value: string) => handleChange({ lookback: value })}
         >
           {searchMaxLookback && optionsWithinMaxLookback(searchMaxLookback)}
@@ -782,7 +784,7 @@ export function mapStateToProps(state: ReduxState, ownProps: { search?: string }
     initialValues: {
       service: (service as string | undefined) || lastSearchService || '-',
       resultsLimit: (limit as string | undefined) || String(DEFAULT_LIMIT),
-      lookback: (lookback as string | undefined) || DEFAULT_LOOKBACK,
+      lookback: (lookback as string | undefined) || getConfig().search?.defaultLookback || DEFAULT_LOOKBACK,
       startDate: queryStartDate || today,
       startDateTime: queryStartDateTime || '00:00',
       endDate: queryEndDate || today,

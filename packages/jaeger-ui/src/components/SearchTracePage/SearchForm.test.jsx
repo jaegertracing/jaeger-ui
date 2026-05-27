@@ -47,6 +47,9 @@ vi.mock('../../hooks/useTraceDiscovery', () => ({
 vi.mock('./useUploadedTraces', () => ({
   useClearUploadedTraces: jest.fn(() => jest.fn()),
 }));
+vi.mock('../../utils/config/get-config', () => ({
+  default: jest.fn(() => ({ search: {} })),
+}));
 
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
@@ -75,6 +78,7 @@ import * as markers from './SearchForm.markers';
 import { CHANGE_SERVICE_ACTION_TYPE } from '../../constants/search-form';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 import { AppQueryClientProvider } from '../../query/app-query-client';
+import getConfig from '../../utils/config/get-config';
 
 function makeDateParams(dateOffset = 0) {
   const date = new Date();
@@ -1004,6 +1008,18 @@ describe('mapStateToProps()', () => {
     // within 60 seconds (CI tests run slowly)
     expect(msDiff(dateParams.dateStr, '00:00', startDate, startDateTime)).toBeLessThan(60 * 1000);
     expect(msDiff(dateParams.dateStr, dateParams.dateTimeStr, endDate, endDateTime)).toBeLessThan(60 * 1000);
+  });
+
+  it('uses search.defaultLookback from config when no lookback is in the URL', () => {
+    vi.mocked(getConfig).mockReturnValue({ search: { defaultLookback: '15m' } });
+    const { lookback } = callMapStateToProps('').initialValues;
+    expect(lookback).toBe('15m');
+  });
+
+  it('URL lookback takes precedence over search.defaultLookback', () => {
+    vi.mocked(getConfig).mockReturnValue({ search: { defaultLookback: '15m' } });
+    const { lookback } = callMapStateToProps('lookback=2h').initialValues;
+    expect(lookback).toBe('2h');
   });
 });
 

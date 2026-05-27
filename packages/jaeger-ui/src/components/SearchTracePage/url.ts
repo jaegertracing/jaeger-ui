@@ -121,6 +121,9 @@ export function searchQueryFromUrl(search: string): SearchQuery | null {
       const n = Number(firstOf(q.limit));
       return Number.isFinite(n) && n > 0 ? n : 20;
     })(),
+    // '1h' is the hard-coded fallback for manually crafted URLs that omit lookback.
+    // SearchForm always writes lookback to the URL on submit, so this path is rarely hit.
+    // The configurable default (search.defaultLookback) is applied in SearchForm instead.
     lookback: firstOf(q.lookback) ?? '1h',
     minDuration: typeof q.minDuration === 'string' ? q.minDuration : undefined,
     maxDuration: typeof q.maxDuration === 'string' ? q.maxDuration : undefined,
