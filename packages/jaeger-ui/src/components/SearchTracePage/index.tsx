@@ -125,11 +125,11 @@ export function SearchTracePageImpl() {
 
   const diffCohort = useMemo(() => {
     const summaryMap = new Map(sortedTraceSummaries.map(s => [s.traceID, s]));
-    return cohort.flatMap(id => {
-      const s = summaryMap.get(id) ?? cohortSummaries[id];
+    return cohortIDs.flatMap(id => {
+      const s = summaryMap.get(id) ?? cohortSummaries.get(id);
       return s ? [s] : [];
     });
-  }, [cohort, cohortSummaries, sortedTraceSummaries]);
+  }, [cohortIDs, cohortSummaries, sortedTraceSummaries]);
 
   const config = useConfig();
   const { disableFileUploadControl } = config;

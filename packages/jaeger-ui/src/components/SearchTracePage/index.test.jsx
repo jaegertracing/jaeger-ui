@@ -300,7 +300,7 @@ describe('<SearchTracePage>', () => {
 
 describe('useTraceDiffStore', () => {
   beforeEach(() => {
-    useTraceDiffStore.setState({ cohort: [], a: null, b: null, cohortSummaries: {} });
+    useTraceDiffStore.setState({ cohort: [], a: null, b: null, cohortSummaries: new Map() });
   });
 
   it('cohort is initially empty', () => {
@@ -318,7 +318,7 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
       disableFileUploadControl: false,
       tracking: { gaID: null, trackErrors: false, customWebAnalytics: null },
     });
-    useTraceDiffStore.setState({ cohort: [], a: null, b: null, cohortSummaries: {} });
+    useTraceDiffStore.setState({ cohort: [], a: null, b: null, cohortSummaries: new Map() });
   });
 
   it('merges uploaded summaries into traceSummaries when FileLoader calls onTracesLoaded', async () => {
@@ -381,18 +381,19 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
       orphanSpanCount: 0,
       services: [],
     };
-    
-    useTraceDiffStore.setState({
-      cohort: ['trace-in-results', 'trace-not-in-results'],
-      cohortSummaries: { 'trace-not-in-results': summaryFromPriorSearch },
-    });
+
     useSearchTracesMock.mockReturnValue({
-      data: { results: [summary], query: { service: 'svc', start: '', end: '', limit: 20, lookback: '1h' } },
+      data: {
+        results: [summaryInResults],
+        query: { service: 'svc', start: '', end: '', limit: 20, lookback: '1h' },
+      },
       isFetching: false,
       error: null,
     });
-    // Add one known trace and one unknown to the cohort
-    useTraceDiffStore.setState({ cohort: ['trace-in-results', 'trace-not-in-results'] });
+    useTraceDiffStore.setState({
+      cohort: ['trace-in-results', 'trace-not-in-results'],
+      cohortSummaries: new Map([['trace-not-in-results', summaryFromPriorSearch]]),
+    });
 
     render(
       <AllProvider initialEntries={['/search?service=svc']}>

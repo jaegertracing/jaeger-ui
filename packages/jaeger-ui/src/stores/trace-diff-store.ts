@@ -13,24 +13,34 @@ export function newInitialState(): TTraceDiffState {
   };
 }
 
-type TCohortSummaries = Record<string, TraceSummary>;
+type TTraceDiffStateWithSummaries = TTraceDiffState & {
+  cohortSummaries: Map<string, TraceSummary>;
+};
 
-function cohortSummariesForCohort(summaries: TCohortSummaries, cohortIDs: string[]): TCohortSummaries {
-  const next: TCohortSummaries = {};
-  cohort.forEach(id => {
-    if (summaries[id]) {
-      next[id] = summaries[id];
+function cohortSummariesForCohort(
+  summaries: Map<string, TraceSummary>,
+  cohortIDs: string[]
+): Map<string, TraceSummary> {
+  const next = new Map<string, TraceSummary>();
+  cohortIDs.forEach(id => {
+    const summary = summaries.get(id);
+    if (summary) {
+      next.set(id, summary);
     }
   });
   return next;
 }
 
 function cohortAddTraceState(
-  state: TTraceDiffState & { cohortSummaries: TCohortSummaries },
+  state: TTraceDiffStateWithSummaries,
   traceID: string,
   summary?: TraceSummary
-): TTraceDiffState & { cohortSummaries: TCohortSummaries } {
-  const cohortSummaries = summary ? { ...state.cohortSummaries, [traceID]: summary } : state.cohortSummaries;
+): TTraceDiffStateWithSummaries {
+  let cohortSummaries = state.cohortSummaries;
+  if (summary) {
+    cohortSummaries = new Map(state.cohortSummaries);
+    cohortSummaries.set(traceID, summary);
+  }
   if (state.cohort.indexOf(traceID) >= 0) {
     return summary ? { ...state, cohortSummaries } : state;
   }
@@ -40,9 +50,9 @@ function cohortAddTraceState(
 }
 
 function cohortRemoveTraceState(
-  state: TTraceDiffState & { cohortSummaries: TCohortSummaries },
+  state: TTraceDiffStateWithSummaries,
   traceID: string
-): TTraceDiffState & { cohortSummaries: TCohortSummaries } {
+): TTraceDiffStateWithSummaries {
   const i = state.cohort.indexOf(traceID);
   if (i < 0) {
     return state;
@@ -51,7 +61,8 @@ function cohortRemoveTraceState(
   cohort.splice(i, 1);
   const a = state.a === traceID ? null : state.a;
   const b = state.b === traceID ? null : state.b;
-  const { [traceID]: _removed, ...cohortSummaries } = state.cohortSummaries;
+  const cohortSummaries = new Map(state.cohortSummaries);
+  cohortSummaries.delete(traceID);
   return { ...state, a, b, cohort, cohortSummaries };
 }
 
@@ -63,8 +74,7 @@ function diffSetBState(state: TTraceDiffState, traceID: string): TTraceDiffState
   return { ...state, b: traceID };
 }
 
-type TraceDiffStore = TTraceDiffState & {
-  cohortSummaries: TCohortSummaries;
+type TraceDiffStore = TTraceDiffStateWithSummaries & {
   cohortAddTrace: (traceID: string, summary?: TraceSummary) => void;
   cohortRemoveTrace: (traceID: string) => void;
   diffSetA: (traceID: string) => void;
@@ -72,13 +82,13 @@ type TraceDiffStore = TTraceDiffState & {
   forceState: (newState: TTraceDiffState) => void;
 };
 
-function sliceOnly(s: TraceDiffStore): TTraceDiffState & { cohortSummaries: TCohortSummaries } {
+function sliceOnly(s: TraceDiffStore): TTraceDiffStateWithSummaries {
   return { a: s.a, b: s.b, cohort: s.cohort, cohortSummaries: s.cohortSummaries };
 }
 
 export const useTraceDiffStore = create<TraceDiffStore>((set, _get) => ({
   ...newInitialState(),
-  cohortSummaries: {},
+  cohortSummaries: new Map(),
   cohortAddTrace: (traceID, summary) => set(s => cohortAddTraceState(sliceOnly(s), traceID, summary)),
   cohortRemoveTrace: traceID => set(s => cohortRemoveTraceState(sliceOnly(s), traceID)),
   diffSetA: traceID => set(s => diffSetAState(sliceOnly(s), traceID)),

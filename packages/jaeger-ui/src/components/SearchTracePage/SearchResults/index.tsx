@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Select } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
@@ -94,16 +94,20 @@ export function UnconnectedSearchResults({
 }: SearchResultsProps) {
   const navigate = useNavigate();
 
+  const traceSummaryById = useMemo(
+    () => new Map(traceSummaries.map(summary => [summary.traceID, summary])),
+    [traceSummaries]
+  );
+
   const toggleComparison = useCallback(
     (traceID: string, remove?: boolean) => {
       if (remove) {
         cohortRemoveTrace(traceID);
       } else {
-        const summary = traceSummaries.find(t => t.traceID === traceID);
-        cohortAddTrace(traceID, summary);
+        cohortAddTrace(traceID, traceSummaryById.get(traceID));
       }
     },
-    [cohortAddTrace, cohortRemoveTrace, traceSummaries]
+    [cohortAddTrace, cohortRemoveTrace, traceSummaryById]
   );
 
   const goToTrace = useCallback(
