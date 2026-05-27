@@ -153,6 +153,7 @@ export function UnconnectedSearchResults({
   cohortRemoveTrace,
 }: SearchResultsProps) {
   const navigate = useNavigate();
+  // Intentionally local state: view mode resets on remount, matching the ephemeral nature of search results.
   const [viewMode, setViewMode] = React.useState<'list' | 'table'>('list');
 
   const toggleComparison = useCallback(

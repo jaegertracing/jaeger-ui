@@ -99,7 +99,8 @@ export default function TraceTable({ traces, onRowClick, sortBy, handleSortChang
         key: 'startTime',
         render: (_: unknown, trace: IOtelTrace) => formatDatetime(trace.startTime),
         sorter: true,
-        sortOrder: sortKey === 'startTime' ? sortOrder : undefined,
+        // startTime descend maps to MOST_RECENT (the default); always show the sort indicator
+        sortOrder: sortKey === 'startTime' ? 'descend' : undefined,
         sortDirections: ['descend'],
       },
     ],
@@ -122,9 +123,14 @@ export default function TraceTable({ traces, onRowClick, sortBy, handleSortChang
       onRow={(trace: IOtelTrace) => ({
         onClick: () => onRowClick(trace.traceID),
         onKeyDown: (e: React.KeyboardEvent) => {
-          if (e.key === 'Enter' || e.key === ' ') onRowClick(trace.traceID);
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onRowClick(trace.traceID);
+          }
         },
         tabIndex: 0,
+        role: 'button',
+        'aria-label': `Navigate to trace ${trace.traceName || trace.traceID}`,
         style: { cursor: 'pointer' },
       })}
     />

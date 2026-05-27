@@ -29,7 +29,7 @@ const mockTraces = [makeTrace('a'), makeTrace('b'), makeTrace('c'), makeTrace('d
 const defaultProps = {
   traces: mockTraces as any,
   onRowClick: vi.fn(),
-  sortBy: 'MOST_RECENT',
+  sortBy: orderBy.MOST_RECENT,
   handleSortChange: vi.fn(),
 };
 
