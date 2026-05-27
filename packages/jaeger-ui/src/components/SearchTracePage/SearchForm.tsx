@@ -30,7 +30,7 @@ import { useConfig } from '../../hooks/useConfig';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 import { ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
-import { TIME_RANGE_OPTIONS, asValidLookback } from '../../utils/time-range-options';
+import { TIME_RANGE_OPTIONS, asValidLookback, lookbackFromDuration } from '../../utils/time-range-options';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
@@ -686,7 +686,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   );
 };
 
-export function mapStateToProps(state: ReduxState, ownProps: { search?: string }) {
+export function mapStateToProps(_state: ReduxState, ownProps: { search?: string }) {
   const {
     service,
     limit,
@@ -782,10 +782,13 @@ export function mapStateToProps(state: ReduxState, ownProps: { search?: string }
     initialValues: {
       service: (service as string | undefined) || lastSearchService || '-',
       resultsLimit: (limit as string | undefined) || String(DEFAULT_LIMIT),
-      lookback:
-        (lookback as string | undefined) ||
-        asValidLookback(getConfig().search?.defaultLookback) ||
-        DEFAULT_LOOKBACK,
+      lookback: (() => {
+        if (lookback) return lookback as string;
+        const startUs = Number(start);
+        const endUs = Number(end);
+        if (startUs > 0 && endUs > startUs) return lookbackFromDuration((endUs - startUs) / 1000);
+        return asValidLookback(getConfig().search?.defaultLookback) ?? DEFAULT_LOOKBACK;
+      })(),
       startDate: queryStartDate || today,
       startDateTime: queryStartDateTime || '00:00',
       endDate: queryEndDate || today,
