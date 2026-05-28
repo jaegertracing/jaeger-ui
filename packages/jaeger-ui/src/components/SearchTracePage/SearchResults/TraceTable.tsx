@@ -219,6 +219,8 @@ export default function TraceTable({
         onCell: (trace: TraceSummary) => ({
           onClick: (e: React.MouseEvent) => {
             e.stopPropagation();
+            // If the click landed on the checkbox input itself, onChange already handles it
+            if ((e.target as HTMLElement).tagName === 'INPUT') return;
             toggleComparison(trace.traceID, cohortIds.has(trace.traceID));
           },
           style: { cursor: 'pointer' },
@@ -226,7 +228,7 @@ export default function TraceTable({
         render: (_: unknown, trace: TraceSummary) => (
           <Checkbox
             checked={cohortIds.has(trace.traceID)}
-            onChange={() => {}} // handled by onCell
+            onChange={() => toggleComparison(trace.traceID, cohortIds.has(trace.traceID))}
             onClick={e => e.stopPropagation()}
           />
         ),
