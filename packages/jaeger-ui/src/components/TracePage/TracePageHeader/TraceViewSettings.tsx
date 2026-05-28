@@ -62,9 +62,10 @@ export default function TraceViewSettings(props: Props) {
   }
 
   if (enableGenAIMode && enableSidePanel && (autoDetectedGenAI || genAIModeActive)) {
+    const effectiveGenAIModeActive = genAIModeActive && autoDetectedGenAI;
     items.push({
       key: 'genai-mode',
-      icon: genAIModeActive ? <IoCheckmark style={CHECK_STYLE} /> : CHECK_PLACEHOLDER,
+      icon: effectiveGenAIModeActive ? <IoCheckmark style={CHECK_STYLE} /> : CHECK_PLACEHOLDER,
       label: (
         <span>
           GenAI Mode{' '}
