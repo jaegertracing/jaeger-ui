@@ -157,7 +157,14 @@ export default function TraceTable({
         align: 'center',
         render: (_: unknown, trace: TraceSummary) =>
           trace.errorSpanCount > 0 ? (
-            <Tag color="red" variant="outlined" style={{ margin: 0 }}>
+            <Tag
+              variant="outlined"
+              style={{
+                margin: 0,
+                color: 'var(--feedback-error)',
+                borderColor: 'var(--feedback-error)',
+              }}
+            >
               {trace.errorSpanCount}
             </Tag>
           ) : (
