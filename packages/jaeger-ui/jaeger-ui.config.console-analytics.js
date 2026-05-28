@@ -9,7 +9,7 @@
 //
 //   jaeger_query:
 //     ui:
-//       config_file: ./cmd/jaeger/config-ui.json
+//       config_file: /etc/jaeger/config-ui.json
 
 function consoleAnalytics(config, versionShort) {
   function log(method, label, data) {
