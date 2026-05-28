@@ -24,7 +24,6 @@ export const useSearchResultsStore = create<SearchResultsStore>()(
     }),
     {
       name: 'jaeger.search-results.mode',
-      // Validate persisted sortBy on rehydration in case the stored value is stale.
       merge: (persisted, current) => {
         const p = persisted as Partial<SearchResultsStore>;
         return {
