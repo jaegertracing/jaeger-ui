@@ -55,13 +55,11 @@ export default function DiffSelection({ toggleComparison, traces, hideSelectedIt
       )}
       <div className="DiffSelection--message">
         {traces.length > 0 ? (
-          <React.Fragment>
-            <h2 className="ub-m0 DiffSelection--heading">{cohort.length} Selected for comparison</h2>
-            {compareHref ? <Link to={compareHref}>{compareBtn}</Link> : compareBtn}
-          </React.Fragment>
+          <h2 className="ub-m0 DiffSelection--heading">{cohort.length} Selected for comparison</h2>
         ) : (
           CTA_MESSAGE
         )}
+        {compareHref ? <Link to={compareHref}>{compareBtn}</Link> : compareBtn}
       </div>
     </div>
   );
