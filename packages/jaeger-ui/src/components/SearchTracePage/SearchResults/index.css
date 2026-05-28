@@ -22,7 +22,7 @@ SPDX-License-Identifier: Apache-2.0
   flex-wrap: wrap;
   gap: 0.5rem;
   justify-content: flex-end;
-  padding: 1rem;
+  padding: 0.5rem 1rem;
 }
 
 .SearchResults--headerScatterPlot {
