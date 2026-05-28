@@ -141,7 +141,7 @@ export default function TraceTable({
         render: (_: unknown, trace: TraceSummary) =>
           trace.errorSpanCount > 0 ? (
             <Tag color="red" variant="outlined" style={{ margin: 0 }}>
-              {trace.errorSpanCount} Error{trace.errorSpanCount > 1 && 's'}
+              {trace.errorSpanCount}
             </Tag>
           ) : (
             0

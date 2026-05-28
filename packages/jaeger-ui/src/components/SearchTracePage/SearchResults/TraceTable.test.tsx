@@ -62,7 +62,7 @@ describe('TraceTable', () => {
     expect(traceD).toBeTruthy();
     const cells = traceD!.querySelectorAll('td');
     const errorsCell = cells[3];
-    expect(within(errorsCell as HTMLElement).getByText('2 Errors')).toBeInTheDocument();
+    expect(within(errorsCell as HTMLElement).getByText('2')).toBeInTheDocument();
   });
 
   it('rows are keyboard-accessible with role=button and tabIndex', () => {
