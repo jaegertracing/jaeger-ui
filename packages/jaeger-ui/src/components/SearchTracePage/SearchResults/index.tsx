@@ -215,7 +215,8 @@ export function UnconnectedSearchResults({
       </div>
       {!traceResultsView && (
         <div className="SearchResults--ddg-container">
-          <SearchResultsDDG location={location as unknown} traceIDs={traceSummaries.map(s => s.traceID)} />
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <SearchResultsDDG location={location as any} traceIDs={traceSummaries.map(s => s.traceID)} />
         </div>
       )}
       {traceResultsView && diffSelection}

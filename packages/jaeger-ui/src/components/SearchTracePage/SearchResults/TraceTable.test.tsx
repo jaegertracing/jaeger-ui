@@ -28,6 +28,7 @@ const mockTraces = [makeTrace('a'), makeTrace('b'), makeTrace('c'), makeTrace('d
 
 const defaultProps = {
   traceSummaries: mockTraces,
+  maxTraceDuration: 1000 as Microseconds,
   getLink: (traceID: string) => ({ pathname: `/trace/${traceID}` }),
   sortBy: orderBy.MOST_RECENT,
   handleSortChange: vi.fn(),
