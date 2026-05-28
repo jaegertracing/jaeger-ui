@@ -7,6 +7,7 @@ import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
 import { UnconnectedSearchResults as SearchResults, SelectSort } from '.';
+import { useSearchResultsStore } from '../store.search-results';
 import * as track from './index.track';
 import * as orderBy from '../../../model/order-by';
 import { getUrl } from '../url';
@@ -514,6 +515,11 @@ describe('<SearchResults>', () => {
   });
 
   describe('view mode toggle', () => {
+    beforeEach(() => {
+      useSearchResultsStore.setState({ viewMode: 'list' });
+      localStorage.clear();
+    });
+
     it('defaults to list view', () => {
       renderWithRouter(<SearchResults {...baseProps} />);
       expect(screen.getByTestId('result-a')).toBeInTheDocument();
