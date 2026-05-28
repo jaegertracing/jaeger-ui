@@ -147,6 +147,7 @@ export default function TraceTable({
       {
         title: 'Spans',
         key: 'spans',
+        width: 80,
         align: 'center',
         render: (_: unknown, trace: TraceSummary) => trace.spanCount,
         sorter: true,
@@ -156,6 +157,7 @@ export default function TraceTable({
       {
         title: 'Errors',
         key: 'errors',
+        width: 80,
         align: 'center',
         render: (_: unknown, trace: TraceSummary) =>
           trace.errorSpanCount > 0 ? (
