@@ -13,7 +13,7 @@
 //     ui:
 //       config_file: /etc/jaeger/config-ui.json
 
-function consoleAnalytics(config, versionShort) {
+function consoleAnalytics(config, versionShort, versionLong) {
   function log(method, label, data) {
     console[method]('[analytics]', label, data !== undefined ? data : '');
   }
