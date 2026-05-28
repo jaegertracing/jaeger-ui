@@ -75,7 +75,7 @@ function TextBlock({ text }: { text: string }) {
   }
   if (mediaKind === 'audio' && mediaLoaded) {
     // eslint-disable-next-line jsx-a11y/media-has-caption
-    return <audio controls src={text} className="GenAISpanDetail--media" />;
+    return <audio controls preload="none" src={text} className="GenAISpanDetail--media" />;
   }
 
   return (
