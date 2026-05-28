@@ -22,7 +22,7 @@ When the config file has `.json` extension, Jaeger looks for the statement `JAEG
 
 ### Configuration as Javascript
 
-When the config file has `.js` extension, the Jaeger backend looks for the comment `// JAEGER_CONFIG_JS` and replaces it with a function `UIConfig()` whose body is the content of the loaded file, which must contain a valid Javascript code that returns a Config object. This allows more complex integrations by actually executing some custom code. For example, `tracking.customWebAnalytics` allows to hook up a different implementation of the tracking component.
+When the config file has `.js` extension, the `jaeger` binary looks for the comment `// JAEGER_CONFIG_JS` and replaces it with the verbatim content of the loaded file. The file **must define a top-level `UIConfig()` function** that returns a `Config` object. This allows more complex integrations by actually executing some custom code. For example, `tracking.customWebAnalytics` allows to hook up a different implementation of the tracking component.
 
 ### Configuration for Local Development
 
@@ -41,26 +41,32 @@ When running the UI in development mode via `npm start`, you can provide custom 
    }
    ```
 
-2. **`jaeger-ui.config.js`** - A JavaScript file that returns a config object (supports more complex configurations):
+2. **`jaeger-ui.config.js`** - A JavaScript file that defines a `UIConfig()` function (supports more complex configurations):
 
    ```javascript
-   return {
-     dependencies: {
-       menuEnabled: true,
-     },
-     tracking: {
-       customWebAnalytics: function (config) {
-         // Custom analytics implementation
-         return {
-           init: function () {},
-           trackPageView: function (pathname, search) {},
-           trackError: function (description) {},
-           trackEvent: function (category, action, labelOrValue, value) {},
-         };
+   function UIConfig() {
+     return {
+       dependencies: {
+         menuEnabled: true,
        },
-     },
-   };
+       tracking: {
+         customWebAnalytics: function (config, versionShort, versionLong) {
+           // Custom analytics implementation
+           return {
+             init: function () {},
+             isEnabled: function () { return true; },
+             context: null,
+             trackPageView: function (pathname, search) {},
+             trackError: function (description) {},
+             trackEvent: function (category, action, labelOrValue, value) {},
+           };
+         },
+       },
+     };
+   }
    ```
+
+   A working example that logs all events to the browser console is provided at [jaeger-ui.config.console-analytics.js](./jaeger-ui.config.console-analytics.js).
 
 **Note:** If both files exist, `jaeger-ui.config.js` takes priority (same behavior as `query-service`).
 
