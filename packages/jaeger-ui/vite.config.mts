@@ -188,7 +188,7 @@ function jaegerUiConfigPlugin() {
 export default defineConfig({
   define: {
     __REACT_APP_GA_DEBUG__: JSON.stringify(process.env.REACT_APP_GA_DEBUG || ''),
-    __REACT_APP_VSN_STATE__: JSON.stringify(process.env.REACT_APP_VSN_STATE || ''),
+    __REACT_APP_VSN_STATE__: JSON.stringify(process.env.REACT_APP_VSN_STATE || 'dev'),
     __APP_ENVIRONMENT__: JSON.stringify(process.env.NODE_ENV || 'development'),
   },
   plugins: [
