@@ -10,18 +10,58 @@
     <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
     <meta http-equiv="pragma" content="no-cache" />
 
-    <!-- NOTE: The document MUST have a <base> element. package.json#homepage is set to "." as part of resolving https://github.com/jaegertracing/jaeger-ui/issues/42 and therefore static assets are linked via relative URLs. This will break on many document URLs, e.g. /trace/abc, unless a valid base URL is provided. The base href defaults to "/" but the query-service can inject an override. -->
-    <base href="/" data-inject-target="BASE_URL" />
-    <link rel="shortcut icon" href="/favicon.ico" />
+    <!-- The document MUST have a <base> element, see ./README.md -->
+    <script>
+      (function () {
+        var knownSubPaths = [
+          '/deep-dependencies',
+          '/dependencies',
+          '/quality-metrics',
+          '/plexus-demo',
+          '/monitor',
+          '/search',
+          '/trace/',
+          '/trace',
+        ];
+        var path = window.location.pathname || '/';
+        var bestIdx = -1;
+        for (var i = 0; i < knownSubPaths.length; i++) {
+          var idx = path.lastIndexOf(knownSubPaths[i]);
+          if (idx !== -1 && idx > bestIdx) bestIdx = idx;
+        }
+        var prefix =
+          bestIdx !== -1
+            ? path.slice(0, bestIdx + 1) || '/'
+            : path.slice(0, path.lastIndexOf('/') + 1) || '/';
+        if (prefix[prefix.length - 1] !== '/') prefix += '/';
+        var safe = prefix.replace(/[&"<>]/g, '');
+        document.currentScript.insertAdjacentHTML(
+          'afterend',
+          '<base href="' + safe + '" data-inject-target="BASE_URL" />'
+        );
+        // Delay the check: React 18 createRoot().render() is async (concurrent mode),
+        // so the root is empty at DOMContentLoaded even when the app loaded successfully.
+        // Only show the error if the root is still empty after a generous timeout.
+        document.addEventListener('DOMContentLoaded', function () {
+          setTimeout(function () {
+            var root = document.getElementById('jaeger-ui-root');
+            if (root && !root.hasChildNodes()) {
+              root.textContent = 'Jaeger UI did not load. Unknown or invalid path: ' + path;
+            }
+          }, 3000);
+        });
+      })();
+    </script>
+    <link rel="shortcut icon" href="favicon.ico" />
     <title>Jaeger UI</title>
     <script>
-      // Jaeger UI config data is embedded by the query-service via search-replace.
+      // Jaeger UI config data is embedded by Jaeger backend via search-replace.
       // Please see ./README.md#configuration for details.
 
       // TODO the JSON/JS bifurcation below could be avoided by using a single template function like:
       // function getJaegerUiConfig() { return null; }
 
-      // Important! Do not alter the following line; query-service looks for that exact pattern.
+      // Important! Do not alter the following line; Jaeger looks for that exact pattern.
       // JAEGER_CONFIG_JS
 
       function getJaegerUiConfig() {
@@ -29,7 +69,7 @@
           return UIConfig();
         }
         const DEFAULT_CONFIG = null;
-        // Important! Do not alter the following line; query-service looks for that exact pattern.
+        // Important! Do not alter the following line; Jaeger looks for that exact pattern.
         const JAEGER_CONFIG = DEFAULT_CONFIG;
         return JAEGER_CONFIG;
       }
@@ -39,10 +79,10 @@
         const JAEGER_STORAGE_CAPABILITIES = DEFAULT_STORAGE_CAPABILITIES;
         return JAEGER_STORAGE_CAPABILITIES;
       }
-      // Jaeger version data is embedded by the query-service via search/replace.
+      // Jaeger version data is embedded by Jaeger backend via search/replace.
       function getJaegerVersion() {
         const DEFAULT_VERSION = { gitCommit: '', gitVersion: '', buildDate: '' };
-        // Important! Do not alter the following line; query-service looks for that exact pattern.
+        // Important! Do not alter the following line; Jaeger looks for that exact pattern.
         const JAEGER_VERSION = DEFAULT_VERSION;
         return JAEGER_VERSION;
       }
@@ -53,11 +93,6 @@
   </head>
   <body>
     <div id="jaeger-ui-root"></div>
-    <!--
-      This file is the main entry point for the Jaeger UI application.
-      See https://vitejs.dev/guide/#index-html-and-project-root for more information
-      on how asset references are managed by the build system.
-    -->
     <script type="module" src="/src/index.jsx"></script>
   </body>
 </html>

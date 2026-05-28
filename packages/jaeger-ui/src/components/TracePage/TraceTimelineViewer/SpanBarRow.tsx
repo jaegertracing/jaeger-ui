@@ -7,7 +7,7 @@ import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward } from 'rea
 import type { GenAISpanKind } from '../../../utils/gen-ai';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
-import { formatDuration, ViewedBoundsFunctionType } from './utils';
+import { formatDurationCompact, ViewedBoundsFunctionType } from './utils';
 import SpanTreeOffset from './SpanTreeOffset';
 import SpanBar from './SpanBar';
 import Ticks from './Ticks';
@@ -110,13 +110,22 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
     onChildrenToggled(span.spanID);
   }, [onChildrenToggled, span.spanID]);
 
+  const _detailToggleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onDetailToggled(span.spanID);
+      }
+    },
+    [onDetailToggled, span.spanID]
+  );
   const {
     duration,
     hasChildren: isParent,
     name: operationName,
     resource: { serviceName },
   } = span;
-  const label = formatDuration(duration);
+  const label = formatDurationCompact(duration);
   const viewBounds = getViewedBounds(span.startTime, span.endTime);
   const viewStart = viewBounds.start;
   const viewEnd = viewBounds.end;
@@ -159,6 +168,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
             className={`span-name ${isDetailExpanded ? 'is-detail-expanded' : ''}`}
             aria-checked={isDetailExpanded}
             onClick={_detailToggle}
+            onKeyDown={_detailToggleKeyDown}
             role="switch"
             style={{ borderColor: color }}
             tabIndex={0}
