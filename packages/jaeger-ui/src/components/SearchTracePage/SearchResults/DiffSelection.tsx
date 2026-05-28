@@ -17,13 +17,19 @@ type Props = {
   toggleComparison: (traceID: string, isInDiffCohort: boolean) => void;
   traces: TraceSummary[];
   hideSelectedItems?: boolean;
+  onClearAll?: () => void;
 };
 
 const CTA_MESSAGE = (
   <h2 className="ub-m0 DiffSelection--heading">Compare traces by selecting result items</h2>
 );
 
-export default function DiffSelection({ toggleComparison, traces, hideSelectedItems = false }: Props) {
+export default function DiffSelection({
+  toggleComparison,
+  traces,
+  hideSelectedItems = false,
+  onClearAll,
+}: Props) {
   const cohort = traces.map(t => t.traceID);
   const compareHref = cohort.length > 1 ? getUrl({ cohort }) : null;
 
@@ -59,7 +65,14 @@ export default function DiffSelection({ toggleComparison, traces, hideSelectedIt
         ) : (
           CTA_MESSAGE
         )}
-        {compareHref ? <Link to={compareHref}>{compareBtn}</Link> : compareBtn}
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          {traces.length > 0 && (
+            <Button htmlType="button" onClick={onClearAll}>
+              Deselect All
+            </Button>
+          )}
+          {compareHref ? <Link to={compareHref}>{compareBtn}</Link> : compareBtn}
+        </div>
       </div>
     </div>
   );

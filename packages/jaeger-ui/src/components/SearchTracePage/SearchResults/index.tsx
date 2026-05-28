@@ -109,6 +109,10 @@ export function UnconnectedSearchResults({
     [cohortAddTrace, cohortRemoveTrace]
   );
 
+  const clearAllComparisons = useCallback(() => {
+    diffCohort.forEach(t => cohortRemoveTrace(t.traceID));
+  }, [diffCohort, cohortRemoveTrace]);
+
   const getLink = useCallback(
     (traceID: string) =>
       getTracePageLink(
@@ -148,6 +152,7 @@ export function UnconnectedSearchResults({
       toggleComparison={toggleComparison}
       traces={diffCohort}
       hideSelectedItems={viewMode === 'table'}
+      onClearAll={clearAllComparisons}
     />
   );
   if (loading) {
