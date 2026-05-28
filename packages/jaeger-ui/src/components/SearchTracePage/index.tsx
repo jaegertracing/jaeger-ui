@@ -2,7 +2,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useCallback, useMemo, useEffect } from 'react';
 
 import { Col, Row, Tabs } from 'antd';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -19,7 +19,6 @@ import {
   isSameQuery,
   isQueryEmpty,
 } from './url';
-import * as orderBy from '../../model/order-by';
 import ErrorMessage from '../common/ErrorMessage';
 import { sortTraceSummaries } from '../../model/search';
 import FileLoader from './FileLoader';
@@ -33,6 +32,7 @@ import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { useEmbeddedState } from '../../stores/embedded-store';
 import { useShallow } from 'zustand/react/shallow';
 import { useSearchTraces } from '../../hooks/useTraceDiscovery';
+import { useSearchResultsStore } from './store.search-results';
 
 // export for tests
 export function SearchTracePageImpl() {
@@ -87,7 +87,8 @@ export function SearchTracePageImpl() {
     };
   }, [searchData, uploadedSummaries]);
 
-  const [sortBy, setSortBy] = useState(orderBy.MOST_RECENT);
+  const sortBy = useSearchResultsStore(s => s.sortBy);
+  const setSortBy = useSearchResultsStore(s => s.setSortBy);
 
   const sortedTraceSummaries = useMemo(
     () => sortTraceSummaries(traceSummaries, sortBy),
@@ -133,10 +134,13 @@ export function SearchTracePageImpl() {
   const config = useConfig();
   const { disableFileUploadControl } = config;
 
-  const handleSortChange = useCallback((newSortBy: string) => {
-    setSortBy(newSortBy);
-    trackSortByChange(newSortBy);
-  }, []);
+  const handleSortChange = useCallback(
+    (newSortBy: string) => {
+      setSortBy(newSortBy);
+      trackSortByChange(newSortBy);
+    },
+    [setSortBy]
+  );
 
   // Computed synchronously so the loading indicator shows on the first render after Back
   // navigation, before the new keyed-cache fetch completes and searchData is updated.
