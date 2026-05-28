@@ -66,9 +66,11 @@ function UIConfig() {
         text: 'Information about Jaeger SDK release #{jaeger.version}',
       },
     ],
-    storageCapabilities: {
-      archiveStorage: false,
-      metricsStorage: true,
-    },
+    // NOTE: storageCapabilities is intentionally omitted from JS config files.
+    // Any value set here is silently overridden by getJaegerStorageCapabilities(),
+    // which is always authoritative (set by the backend, not the UI config).
+    // To override storageCapabilities in dev mode, use a JSON config file instead —
+    // the Vite dev server has special handling to inject it into the separate
+    // JAEGER_STORAGE_CAPABILITIES placeholder that feeds getJaegerStorageCapabilities().
   };
 }
