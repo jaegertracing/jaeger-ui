@@ -2,11 +2,11 @@
 
 App analytics (page views and errors) are supported in Jaeger UI through integration with Google Analytics or via customized plugins. The `tracking` section of the UI config must be provided. See the [documentation](https://www.jaegertracing.io/docs/latest/frontend-ui/) for details on the UI config.
 
-The page-view tracking is pretty basic, so details aren't provided. The GA tracking is configured with [App Tracking](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#apptracking) data. These fields, described [below](#app-tracking), can be used as a secondary dimension when viewing event data in GA. The error tracking is described, [below](#error-tracking).
+The GA tracking is configured with [App Tracking](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#apptracking) data. These fields, described [below](#app-tracking), can be used as a secondary dimension when viewing event data in GA. The error tracking is described [below](#error-tracking).
 
 To enable a custom plugin, use the JavaScript version of the configuration file (not JSON, since a function reference is required) and set `customWebAnalytics` instead of `gaID` — the two are mutually exclusive. A working example that logs all events to the browser console is provided in [`jaeger-ui.config.console-analytics.js`](../../../jaeger-ui.config.console-analytics.js).
 
-The config file must define a top-level `UIConfig()` function — this is enforced by the `jaeger` binary and matched by the Vite dev server.
+The config file must define a top-level `UIConfig()` function.
 
 The `customWebAnalytics` value is a factory function that receives three arguments:
 
