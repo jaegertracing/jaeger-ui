@@ -2,11 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // Example Jaeger UI config using the customWebAnalytics API to log all
-// tracking events to the browser console.
+// tracking events to the browser console. JavaScript config (not JSON) is required because customWebAnalytics is a function reference.
 //
 // Usage: copy/rename to jaeger-ui.config.js and point the `jaeger` binary to it
-// via the query.ui-config setting in jaeger's YAML configuration file.
-// JavaScript (not JSON) is required because customWebAnalytics is a function reference.
+// via the jaeger_query extension in Jaeger's YAML configuration file:
+//
+//   jaeger_query:
+//     ui:
+//       config_file: ./cmd/jaeger/config-ui.json
+//
+// Note: this file is injected as the *body* of a UIConfig() function by both
+// the `jaeger` binary and the Vite dev server. Do not wrap it in UIConfig() yourself.
 
 function consoleAnalytics(config, versionShort) {
   function log(method, label, data) {
@@ -41,29 +47,27 @@ function consoleAnalytics(config, versionShort) {
   };
 }
 
-function UIConfig() {
-  return {
-    dependencies: {
-      menuEnabled: true,
+return {
+  dependencies: {
+    menuEnabled: true,
+  },
+  monitor: {
+    menuEnabled: true,
+  },
+  tracking: {
+    // customWebAnalytics takes priority over gaID; both should not be set.
+    customWebAnalytics: consoleAnalytics,
+  },
+  linkPatterns: [
+    {
+      type: 'process',
+      key: 'jaeger.version',
+      url: 'https://github.com/jaegertracing/jaeger-client-java/releases/tag/#{jaeger.version}',
+      text: 'Information about Jaeger SDK release #{jaeger.version}',
     },
-    monitor: {
-      menuEnabled: true,
-    },
-    tracking: {
-      // customWebAnalytics takes priority over gaID; both should not be set.
-      customWebAnalytics: consoleAnalytics,
-    },
-    linkPatterns: [
-      {
-        type: 'process',
-        key: 'jaeger.version',
-        url: 'https://github.com/jaegertracing/jaeger-client-java/releases/tag/#{jaeger.version}',
-        text: 'Information about Jaeger SDK release #{jaeger.version}',
-      },
-    ],
-    storageCapabilities: {
-      archiveStorage: false,
-      metricsStorage: true,
-    },
-  };
-}
+  ],
+  storageCapabilities: {
+    archiveStorage: false,
+    metricsStorage: true,
+  },
+};
