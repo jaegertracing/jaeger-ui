@@ -1,2 +1,5 @@
 #!/usr/bin/env sh
+# Allow contributors to add personal pre-commit logic (e.g. branch guards)
+# without modifying this file. The personal hook is never committed to the repo.
+[ -x "${HOME}/.config/git/hooks/pre-commit" ] && "${HOME}/.config/git/hooks/pre-commit"
 npx lint-staged
