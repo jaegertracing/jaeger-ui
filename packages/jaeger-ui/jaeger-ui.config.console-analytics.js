@@ -11,7 +11,7 @@
 // extensions:
 //   jaeger_query:
 //     ui:
-//       config_file: /etc/jaeger/config-ui.json
+//       config_file: /etc/jaeger/config-ui.js
 
 function consoleAnalytics(config, versionShort, versionLong) {
   function log(method, label, data) {
