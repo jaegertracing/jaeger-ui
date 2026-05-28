@@ -5,16 +5,15 @@ import * as React from 'react';
 import { Col, Divider, Row, Tag, Tooltip } from 'antd';
 import { Link } from 'react-router-dom';
 
-import _sortBy from 'lodash/sortBy';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
-import { IoAlert, IoWarning } from 'react-icons/io5';
+import { IoWarning } from 'react-icons/io5';
 
 import { trackConversions, EAltViewActions } from './index.track';
 import * as markers from './ResultItem.markers';
 import ResultItemTitle from './ResultItemTitle';
-import colorGenerator from '../../../utils/color-generator';
+import ServicePills from './ServicePills';
 import { formatRelativeDate } from '../../../utils/date';
 import { getIncompleteTraceTooltip } from '../../../model/trace-viewer';
 
@@ -99,20 +98,9 @@ export default function ResultItem({
             )}
           </Col>
           <Col xs={24} sm={16} className="ub-p2">
-            <ul className="ub-list-reset" data-testid={markers.SERVICE_TAGS}>
-              {_sortBy(services, s => s.name).map(service => (
-                <li key={service.name} className="ub-inline-block ub-m1">
-                  <Tag
-                    className="ResultItem--serviceTag"
-                    style={{ borderLeftColor: colorGenerator.getColorByKey(service.name) }}
-                    variant="outlined"
-                  >
-                    {service.errorSpanCount > 0 && <IoAlert className="ResultItem--errorIcon" />}
-                    {service.name} ({service.spanCount})
-                  </Tag>
-                </li>
-              ))}
-            </ul>
+            <div data-testid={markers.SERVICE_TAGS}>
+              <ServicePills services={services} />
+            </div>
           </Col>
           <Col xs={24} sm={4} className="ub-p3 ub-tx-right-align">
             {formatRelativeDate(startTime / 1000)}
