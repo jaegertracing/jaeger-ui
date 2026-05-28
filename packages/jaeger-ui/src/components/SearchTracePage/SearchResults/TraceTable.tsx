@@ -140,6 +140,7 @@ export default function TraceTable({
       {
         title: 'Services',
         key: 'services',
+        width: '35%',
         render: (_: unknown, trace: TraceSummary) =>
           trace.services.length > 0 ? <ServicePills services={trace.services} /> : '-',
       },
@@ -230,6 +231,7 @@ export default function TraceTable({
       dataSource={traceSummaries}
       rowKey="traceID"
       size="small"
+      tableLayout="fixed"
       pagination={false}
       showSorterTooltip={false}
       onChange={onChange}
