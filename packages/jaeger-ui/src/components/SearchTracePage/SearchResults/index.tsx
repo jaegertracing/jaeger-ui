@@ -45,7 +45,7 @@ type SearchResultsProps = {
   spanLinks?: Record<string, string> | undefined;
   traceSummaries: TraceSummary[];
   uploadedTraceIDs: ReadonlySet<string>;
-  rawTraces: any[];
+  rawTraces: unknown[];
   sortBy: string;
   handleSortChange: (sortBy: string) => void;
 };
@@ -109,39 +109,14 @@ export function UnconnectedSearchResults({
   );
 
   const goToTrace = useCallback(
-    (traceID: string, spanLink?: string) => {
+    (traceID: string) => {
       const searchUrl = location.pathname + location.search;
-      const locationObj = getTracePageLink(traceID, { fromSearch: searchUrl }, spanLink);
+      const locationObj = getTracePageLink(traceID, { fromSearch: searchUrl });
       navigate(locationObj.pathname + (locationObj.search ? `?${locationObj.search}` : ''), {
         state: locationObj.state,
       });
     },
     [location, navigate]
-  );
-
-  const resolveSpanLink = useCallback(
-    (traceID: string): string | undefined => {
-      if (!spanLinks) return undefined;
-      if (spanLinks[traceID]) return spanLinks[traceID];
-      const stripped = traceID.replace(/^0+/, '');
-      return stripped && stripped !== traceID ? spanLinks[stripped] : undefined;
-    },
-    [spanLinks]
-  );
-
-  const goToTraceFromTable = useCallback(
-    (traceID: string) => {
-      goToTrace(traceID, resolveSpanLink(traceID));
-    },
-    [goToTrace, resolveSpanLink]
-  );
-
-  const getTraceLinkTo = useCallback(
-    (traceID: string) => {
-      const searchUrl = location.pathname + location.search;
-      return getTracePageLink(traceID, { fromSearch: searchUrl }, resolveSpanLink(traceID));
-    },
-    [location, resolveSpanLink]
   );
 
   const onDdgViewClicked = useCallback(() => {
@@ -206,14 +181,17 @@ export function UnconnectedSearchResults({
           </div>
         )}
         <div className="SearchResults--headerOverview">
-          <h2 className="ub-m0 u-flex-1">
+          <h2 className="ub-m0 u-flex-1" style={{ fontSize: '1rem' }}>
             {traceSummaries.length} Trace{traceSummaries.length > 1 && 's'}
           </h2>
-          {traceResultsView && <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />}
+          {traceResultsView && viewMode === 'list' && (
+            <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />
+          )}
+          {traceResultsView && <DownloadResults traceSummaries={traceSummaries} rawTraces={rawTraces} />}
+          <AltViewOptions traceResultsView={traceResultsView} onDdgViewClicked={onDdgViewClicked} />
           {traceResultsView && (
             <Radio.Group
               aria-label="Results view mode"
-              className="ub-ml2"
               value={viewMode}
               onChange={e => setViewMode(e.target.value as 'list' | 'table')}
               size="small"
@@ -222,8 +200,6 @@ export function UnconnectedSearchResults({
               <Radio.Button value="table">Table</Radio.Button>
             </Radio.Group>
           )}
-          {traceResultsView && <DownloadResults traceSummaries={traceSummaries} rawTraces={rawTraces} />}
-          <AltViewOptions traceResultsView={traceResultsView} onDdgViewClicked={onDdgViewClicked} />
           {showStandaloneLink && (
             <Link
               className="u-tx-inherit ub-nowrap ub-ml3"
@@ -238,17 +214,26 @@ export function UnconnectedSearchResults({
       </div>
       {!traceResultsView && (
         <div className="SearchResults--ddg-container">
-          <SearchResultsDDG location={location as any} traceIDs={traceSummaries.map(s => s.traceID)} />
+          <SearchResultsDDG location={location as unknown} traceIDs={traceSummaries.map(s => s.traceID)} />
         </div>
       )}
       {traceResultsView && diffSelection}
       {traceResultsView && viewMode === 'table' && (
         <TraceTable
           traceSummaries={traceSummaries}
-          onRowClick={goToTraceFromTable}
-          getTraceLinkTo={getTraceLinkTo}
+          maxTraceDuration={maxTraceDuration}
+          getLink={(traceID: string) =>
+            getTracePageLink(
+              traceID,
+              { fromSearch: searchUrl },
+              spanLinks && (spanLinks[traceID] || spanLinks[traceID.replace(/^0*/, '')])
+            )
+          }
           sortBy={sortBy}
           handleSortChange={handleSortChange}
+          disableComparisons={disableComparisons}
+          cohortIds={cohortIds}
+          toggleComparison={toggleComparison}
         />
       )}
       {traceResultsView && viewMode === 'list' && (

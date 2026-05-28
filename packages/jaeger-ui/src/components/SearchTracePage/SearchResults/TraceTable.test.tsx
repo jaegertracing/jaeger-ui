@@ -28,10 +28,12 @@ const mockTraces = [makeTrace('a'), makeTrace('b'), makeTrace('c'), makeTrace('d
 
 const defaultProps = {
   traceSummaries: mockTraces,
-  onRowClick: vi.fn(),
-  getTraceLinkTo: (traceID: string) => ({ pathname: `/trace/${traceID}` }),
+  getLink: (traceID: string) => ({ pathname: `/trace/${traceID}` }),
   sortBy: orderBy.MOST_RECENT,
   handleSortChange: vi.fn(),
+  disableComparisons: true,
+  cohortIds: new Set<string>(),
+  toggleComparison: vi.fn(),
 };
 
 describe('TraceTable', () => {
@@ -63,41 +65,40 @@ describe('TraceTable', () => {
     expect(within(errorsCell as HTMLElement).getByText('2')).toBeInTheDocument();
   });
 
-  it('calls onRowClick when a non-link cell is clicked', () => {
-    const onRowClick = vi.fn();
+  it('rows are keyboard-accessible with role=button and tabIndex', () => {
     const { container } = render(
       <MemoryRouter>
-        <TraceTable {...defaultProps} onRowClick={onRowClick} />
+        <TraceTable {...defaultProps} />
       </MemoryRouter>
     );
     const firstRow = container.querySelector('tbody tr')!;
-    // Click the Services cell (index 1), not the Trace Name link (index 0)
+    expect(firstRow.getAttribute('role')).toBe('button');
+    expect(firstRow.getAttribute('tabindex')).toBe('0');
+    // Click and keydown should not throw
     fireEvent.click(firstRow.querySelectorAll('td')[1]);
-    expect(onRowClick).toHaveBeenCalledWith('a');
+    fireEvent.keyDown(firstRow, { key: 'Enter' });
+    fireEvent.keyDown(firstRow, { key: ' ' });
   });
 
-  it('calls onRowClick on Enter key for keyboard navigation', () => {
-    const onRowClick = vi.fn();
+  it('renders comparison checkboxes when comparisons are enabled', () => {
+    const toggleComparison = vi.fn();
     const { container } = render(
       <MemoryRouter>
-        <TraceTable {...defaultProps} onRowClick={onRowClick} />
+        <TraceTable {...defaultProps} disableComparisons={false} toggleComparison={toggleComparison} />
       </MemoryRouter>
     );
-    const firstRow = container.querySelector('tbody tr');
-    fireEvent.keyDown(firstRow!, { key: 'Enter' });
-    expect(onRowClick).toHaveBeenCalledWith('a');
+    const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+    expect(checkboxes).toHaveLength(mockTraces.length);
   });
 
-  it('calls onRowClick on Space key for keyboard navigation', () => {
-    const onRowClick = vi.fn();
+  it('does not render comparison checkboxes when comparisons are disabled', () => {
     const { container } = render(
       <MemoryRouter>
-        <TraceTable {...defaultProps} onRowClick={onRowClick} />
+        <TraceTable {...defaultProps} disableComparisons={true} />
       </MemoryRouter>
     );
-    const firstRow = container.querySelector('tbody tr');
-    fireEvent.keyDown(firstRow!, { key: ' ' });
-    expect(onRowClick).toHaveBeenCalledWith('a');
+    const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+    expect(checkboxes).toHaveLength(0);
   });
 });
 
