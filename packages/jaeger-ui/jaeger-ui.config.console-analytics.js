@@ -4,9 +4,9 @@
 // Example Jaeger UI config using the customWebAnalytics API to log all
 // tracking events to the browser console.
 //
-// Usage: copy/rename to jaeger-ui.config.js and pass to the Jaeger binary via
-// --query.ui-config flag. JavaScript (not JSON) is required because
-// customWebAnalytics is a function reference.
+// Usage: copy/rename to jaeger-ui.config.js and point the `jaeger` binary to it
+// via the query.ui-config setting in jaeger's YAML configuration file.
+// JavaScript (not JSON) is required because customWebAnalytics is a function reference.
 
 function consoleAnalytics(config, versionShort) {
   function log(method, label, data) {
