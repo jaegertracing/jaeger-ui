@@ -216,10 +216,17 @@ export default function TraceTable({
       cols.unshift({
         key: 'compare',
         width: 40,
+        onCell: (trace: TraceSummary) => ({
+          onClick: (e: React.MouseEvent) => {
+            e.stopPropagation();
+            toggleComparison(trace.traceID, cohortIds.has(trace.traceID));
+          },
+          style: { cursor: 'pointer' },
+        }),
         render: (_: unknown, trace: TraceSummary) => (
           <Checkbox
             checked={cohortIds.has(trace.traceID)}
-            onChange={() => toggleComparison(trace.traceID, cohortIds.has(trace.traceID))}
+            onChange={() => {}} // handled by onCell
             onClick={e => e.stopPropagation()}
           />
         ),

@@ -101,15 +101,16 @@ describe('TraceTable', () => {
     expect(checkboxes).toHaveLength(0);
   });
 
-  it('toggles comparison on checkbox change', () => {
+  it('toggles comparison when the compare cell is clicked', () => {
     const toggleComparison = vi.fn();
     const { container } = render(
       <MemoryRouter>
         <TraceTable {...defaultProps} disableComparisons={false} toggleComparison={toggleComparison} />
       </MemoryRouter>
     );
-    const firstCheckbox = container.querySelector('input[type="checkbox"]')!;
-    fireEvent.click(firstCheckbox);
+    // Click the <td> — the whole cell triggers the toggle, not just the checkbox input
+    const firstCell = container.querySelector('tbody tr td')!;
+    fireEvent.click(firstCell);
     expect(toggleComparison).toHaveBeenCalled();
   });
 
