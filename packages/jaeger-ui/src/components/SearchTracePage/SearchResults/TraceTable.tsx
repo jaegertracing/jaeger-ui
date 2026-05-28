@@ -130,6 +130,7 @@ export default function TraceTable({
       {
         title: 'Spans',
         key: 'spans',
+        align: 'center',
         render: (_: unknown, trace: TraceSummary) => trace.spanCount,
         sorter: true,
         sortOrder: sortKey === 'spans' ? sortOrder : undefined,
@@ -138,6 +139,7 @@ export default function TraceTable({
       {
         title: 'Errors',
         key: 'errors',
+        align: 'center',
         render: (_: unknown, trace: TraceSummary) =>
           trace.errorSpanCount > 0 ? (
             <Tag color="red" variant="outlined" style={{ margin: 0 }}>
