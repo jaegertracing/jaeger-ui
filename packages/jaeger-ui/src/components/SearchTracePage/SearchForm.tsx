@@ -5,17 +5,18 @@ import React, { useState, useCallback, useMemo, ComponentProps } from 'react';
 import { Input, Button, Tooltip, Select, Row, Col, Form, Switch } from 'antd';
 import logfmtParser from 'logfmt/lib/logfmt_parser';
 import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
-import dayjs from 'dayjs';
+import dayjs, { ManipulateType } from 'dayjs';
 import memoizeOne from 'memoize-one';
 import queryString from 'query-string';
 import { IoHelp } from 'react-icons/io5';
 import { connect } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getUrl as getSearchUrl } from './url';
+import { getUrl as getSearchUrl, lookbackFromUrl } from './url';
 import type { Dispatch } from 'redux';
 import { useIsSearchFetching } from '../../hooks/useTraceDiscovery';
 import { useClearUploadedTraces } from './useUploadedTraces';
 import store from '../../utils/storage';
+import getConfig from '../../utils/config/get-config';
 
 import * as markers from './SearchForm.markers';
 import { trackFormInput } from './SearchForm.track';
@@ -29,11 +30,21 @@ import { useConfig } from '../../hooks/useConfig';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 import { ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
+import { TIME_RANGE_OPTIONS, asValidConfigLookback } from '../../utils/time-range-options';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
 
 const ADJUST_TIME_ENABLED_KEY = 'jaeger-ui/search-adjust-time-enabled';
+const LOOKBACK_UNIT_BY_SUFFIX: Partial<Record<string, ManipulateType>> = {
+  s: 'second',
+  m: 'minute',
+  h: 'hour',
+  d: 'day',
+  w: 'week',
+};
+const DEFAULT_LOOKBACK_VALUE = parseInt(DEFAULT_LOOKBACK, 10);
+const DEFAULT_LOOKBACK_UNIT = LOOKBACK_UNIT_BY_SUFFIX[DEFAULT_LOOKBACK.slice(-1)] ?? 'hour';
 
 interface TimeStampParams {
   startDate: string;
@@ -77,9 +88,19 @@ export function convTagsLogfmt(tags: string | null | undefined): string | null {
   return JSON.stringify(data);
 }
 
+function parseLookback(s: string): { value: number; unit: ManipulateType } | null {
+  const match = s.match(/^(\d+)([smhdw])$/);
+  if (!match) return null;
+  const unit = LOOKBACK_UNIT_BY_SUFFIX[match[2]];
+  return unit !== undefined ? { value: Number(match[1]), unit } : null;
+}
+
 export function lookbackToTimestamp(lookback: string, from: Date | number): number {
-  const unit = lookback.substr(-1) as any; // dayjs ManipulateType
-  return dayjs(from).subtract(parseInt(lookback, 10), unit).valueOf() * 1000;
+  const { value, unit } = parseLookback(lookback) ?? {
+    value: DEFAULT_LOOKBACK_VALUE,
+    unit: DEFAULT_LOOKBACK_UNIT,
+  };
+  return dayjs(from).subtract(value, unit).valueOf() * 1000;
 }
 
 interface ILookbackOption {
@@ -87,72 +108,10 @@ interface ILookbackOption {
   value: string;
 }
 
-const lookbackOptions: ILookbackOption[] = [
-  {
-    label: '5 Minutes',
-    value: '5m',
-  },
-  {
-    label: '15 Minutes',
-    value: '15m',
-  },
-  {
-    label: '30 Minutes',
-    value: '30m',
-  },
-  {
-    label: 'Hour',
-    value: '1h',
-  },
-  {
-    label: '2 Hours',
-    value: '2h',
-  },
-  {
-    label: '3 Hours',
-    value: '3h',
-  },
-  {
-    label: '6 Hours',
-    value: '6h',
-  },
-  {
-    label: '12 Hours',
-    value: '12h',
-  },
-  {
-    label: '24 Hours',
-    value: '24h',
-  },
-  {
-    label: '2 Days',
-    value: '2d',
-  },
-  {
-    label: '3 Days',
-    value: '3d',
-  },
-  {
-    label: '5 Days',
-    value: '5d',
-  },
-  {
-    label: '7 Days',
-    value: '7d',
-  },
-  {
-    label: '2 Weeks',
-    value: '2w',
-  },
-  {
-    label: '3 Weeks',
-    value: '3w',
-  },
-  {
-    label: '4 Weeks',
-    value: '4w',
-  },
-];
+const lookbackOptions: ILookbackOption[] = TIME_RANGE_OPTIONS.map(({ label, lookback }) => ({
+  label,
+  value: lookback,
+}));
 
 export const optionsWithinMaxLookback = memoizeOne((maxLookback: ILookbackOption) => {
   const now = new Date();
@@ -354,9 +313,9 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   const submitting = useIsSearchFetching();
   const navigate = useNavigate();
   const clearUploadedTraces = useClearUploadedTraces();
-  const { useOpenTelemetryTerms: useOtelTerms, search } = useConfig();
-  const searchMaxLookback: ILookbackOption | undefined = search?.maxLookback;
-  const searchAdjustEndTime: string | undefined = search?.adjustEndTime;
+  const { useOpenTelemetryTerms: useOtelTerms, search: searchConfig } = useConfig();
+  const searchMaxLookback: ILookbackOption | undefined = searchConfig?.maxLookback;
+  const searchAdjustEndTime: string | undefined = searchConfig?.adjustEndTime;
   const [formData, setFormData] = useState<Partial<ISearchFormFields>>(() => ({
     service: initialValues?.service,
     operation: initialValues?.operation,
@@ -591,7 +550,6 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           data-testid="lookback"
           value={formData.lookback}
           disabled={submitting}
-          defaultValue={DEFAULT_LOOKBACK}
           onChange={(value: string) => handleChange({ lookback: value })}
         >
           {searchMaxLookback && optionsWithinMaxLookback(searchMaxLookback)}
@@ -711,7 +669,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           placeholder="Limit Results"
           type="number"
           min={1}
-          max={search?.maxLimit}
+          max={searchConfig?.maxLimit}
           onChange={e => handleChange({ resultsLimit: e.target.value })}
         />
       </FormItem>
@@ -728,7 +686,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   );
 };
 
-export function mapStateToProps(state: ReduxState, ownProps: { search?: string }) {
+export function mapStateToProps(_state: ReduxState, ownProps: { search?: string }) {
   const {
     service,
     limit,
@@ -739,7 +697,6 @@ export function mapStateToProps(state: ReduxState, ownProps: { search?: string }
     tags: logfmtTags,
     maxDuration,
     minDuration,
-    lookback,
     traceID: traceIDParams,
   } = queryString.parse(ownProps.search || '');
 
@@ -824,7 +781,10 @@ export function mapStateToProps(state: ReduxState, ownProps: { search?: string }
     initialValues: {
       service: (service as string | undefined) || lastSearchService || '-',
       resultsLimit: (limit as string | undefined) || String(DEFAULT_LIMIT),
-      lookback: (lookback as string | undefined) || DEFAULT_LOOKBACK,
+      lookback:
+        lookbackFromUrl(ownProps.search || '') ||
+        asValidConfigLookback(getConfig().search?.defaultLookback) ||
+        DEFAULT_LOOKBACK,
       startDate: queryStartDate || today,
       startDateTime: queryStartDateTime || '00:00',
       endDate: queryEndDate || today,
