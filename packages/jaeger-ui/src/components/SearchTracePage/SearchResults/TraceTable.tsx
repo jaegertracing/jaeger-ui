@@ -70,7 +70,9 @@ function ServicePill({ service }: { service: ServiceEntry }) {
         margin: 0,
       }}
     >
-      {service.errorSpanCount > 0 && <IoAlert style={{ color: 'var(--feedback-error)', marginRight: 2 }} />}
+      {service.errorSpanCount > 0 && (
+        <IoAlert style={{ color: 'var(--feedback-error-text)', marginRight: 2 }} />
+      )}
       {service.name} ({service.spanCount})
     </Tag>
   );
@@ -161,8 +163,8 @@ export default function TraceTable({
               variant="outlined"
               style={{
                 margin: 0,
-                color: 'var(--feedback-error)',
-                borderColor: 'var(--feedback-error)',
+                color: 'var(--feedback-error-text)',
+                borderColor: 'var(--feedback-error-text)',
               }}
             >
               {trace.errorSpanCount}
@@ -218,10 +220,9 @@ export default function TraceTable({
 
   const onChange: TableProps<TraceSummary>['onChange'] = (_pagination, _filters, sorter) => {
     const s = Array.isArray(sorter) ? sorter[0] : (sorter as SorterResult<TraceSummary>);
-    // When Ant Design's 3rd-click "cancel" fires (order === undefined), treat it as a toggle
-    // back to the opposite direction rather than removing the sort.
-    const order = s.order ?? (sortOrder === 'ascend' ? 'descend' : 'ascend');
-    handleSortChange(toOrderBy(s.columnKey as string | undefined, order));
+    // When Ant Design's 3rd-click "cancel" fires, columnKey is undefined and order is undefined.
+    // toOrderBy(undefined, undefined) returns MOST_RECENT, which is the correct fallback.
+    handleSortChange(toOrderBy(s.columnKey as string | undefined, s.order ?? undefined));
   };
 
   return (
@@ -246,8 +247,6 @@ export default function TraceTable({
             }
           },
           tabIndex: 0,
-          role: 'button',
-          'aria-label': `Navigate to trace ${trace.traceName || trace.traceID}`,
           style: { cursor: 'pointer' },
         };
       }}

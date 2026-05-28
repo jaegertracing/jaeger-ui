@@ -66,14 +66,13 @@ describe('TraceTable', () => {
     expect(within(errorsCell as HTMLElement).getByText('2')).toBeInTheDocument();
   });
 
-  it('rows are keyboard-accessible with role=button and tabIndex', () => {
+  it('rows are keyboard-accessible with tabIndex and respond to Enter/Space', () => {
     const { container } = render(
       <MemoryRouter>
         <TraceTable {...defaultProps} />
       </MemoryRouter>
     );
     const firstRow = container.querySelector('tbody tr')!;
-    expect(firstRow.getAttribute('role')).toBe('button');
     expect(firstRow.getAttribute('tabindex')).toBe('0');
     // Click and keydown should not throw
     fireEvent.click(firstRow.querySelectorAll('td')[1]);
