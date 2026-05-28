@@ -2,11 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // Example Jaeger UI config using the customWebAnalytics API to log all
-// tracking events to the browser console. JavaScript config (not JSON) is required because customWebAnalytics is a function reference.
+// tracking events to the browser console. JavaScript config (not JSON)
+// is required because customWebAnalytics is a function reference.
 //
 // Usage: copy/rename to jaeger-ui.config.js and point the `jaeger` binary to it
 // via the jaeger_query extension in Jaeger's YAML configuration file:
 //
+// extensions:
 //   jaeger_query:
 //     ui:
 //       config_file: /etc/jaeger/config-ui.json
