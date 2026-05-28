@@ -3,6 +3,7 @@
 
 import DetailState from './SpanDetail/DetailState';
 import type { SpanDetailPanelMode } from '../../../types/config';
+import type { GenAISpanKind } from '../../../utils/gen-ai';
 import getConfig from '../../../utils/config/get-config';
 import { useLayoutPrefsStore } from './store.layout';
 import { useTraceTimelineStore } from './store.timeline';
@@ -16,6 +17,10 @@ export {
 } from './store.constants';
 
 export { getInitialLayoutState, useLayoutPrefsStore } from './store.layout';
+
+export function setSpanGenAIKinds(kinds: Map<string, GenAISpanKind>): void {
+  useLayoutPrefsStore.getState().setSpanGenAIKinds(kinds);
+}
 
 export { useTraceTimelineStore } from './store.timeline';
 

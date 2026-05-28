@@ -21,10 +21,11 @@ import { useShallow } from 'zustand/react/shallow';
 import {
   setDetailPanelMode as setDetailPanelModeZustand,
   setGenAIMode,
+  setSpanGenAIKinds,
   useLayoutPrefsStore,
   useTraceTimelineStore,
 } from './TraceTimelineViewer/store';
-import { isGenAITrace } from '../../utils/gen-ai';
+import { detectGenAISpan, isGenAITrace, type GenAISpanKind } from '../../utils/gen-ai';
 import { trackFilter, trackFocusMatches, trackNextMatch, trackPrevMatch, trackRange } from './index.track';
 import {
   CombokeysHandler,
@@ -315,6 +316,13 @@ export function TracePageImpl(props: TProps) {
     if (detected && localStorage.getItem('genAIMode') === null) {
       setGenAIMode(true);
     }
+    // Precompute per-span GenAI kinds once so row renders read from a Map.
+    const kinds = new Map<string, GenAISpanKind>();
+    for (const span of otelTrace.spans) {
+      const kind = detectGenAISpan(span);
+      if (kind) kinds.set(span.spanID, kind);
+    }
+    setSpanGenAIKinds(kinds);
   }, [enableGenAIMode, enableSidePanel, trace, setAutoDetectedGenAI]);
 
   const headerResizeObserverRef = useRef<ResizeObserver | TNil>(null);

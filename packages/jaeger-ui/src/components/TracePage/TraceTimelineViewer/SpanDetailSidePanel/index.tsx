@@ -1,13 +1,12 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import type { Location, NavigateFunction } from 'react-router-dom';
 
 import { actions, getSelectedSpanID } from '../duck';
 import GenAISpanDetail from './GenAISpanDetail';
-import { detectGenAISpan } from '../../../../utils/gen-ai';
 import { useLayoutPrefsStore } from '../store.layout';
 import SpanDetail from '../SpanDetail';
 import DetailState from '../SpanDetail/DetailState';
@@ -111,11 +110,12 @@ export function SpanDetailSidePanelImpl(props: TProps) {
 
   const genAIModeActive = useLayoutPrefsStore(s => s.genAIModeActive);
   const autoDetectedGenAI = useLayoutPrefsStore(s => s.autoDetectedGenAI);
+  const spanGenAIKinds = useLayoutPrefsStore(s => s.spanGenAIKinds);
 
   // Fall back to root span until the user explicitly selects one.
   const spanID = getSelectedSpanID(detailStates) ?? trace.rootSpans?.[0]?.spanID;
   const span = spanID ? trace.spanMap.get(spanID) : undefined;
-  const genAIKind = useMemo(() => (span ? detectGenAISpan(span) : null), [span]);
+  const genAIKind = spanID ? (spanGenAIKinds.get(spanID) ?? null) : null;
 
   if (!spanID) return null;
 

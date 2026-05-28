@@ -3,6 +3,7 @@
 
 import { create } from 'zustand';
 import type { SpanDetailPanelMode } from '../../../types/config';
+import type { GenAISpanKind } from '../../../utils/gen-ai';
 import getConfig from '../../../utils/config/get-config';
 import {
   MIN_TIMELINE_COLUMN_WIDTH,
@@ -19,6 +20,7 @@ type TraceTimelineLayoutPrefsStore = {
   timelineBarsVisible: boolean;
   genAIModeActive: boolean;
   autoDetectedGenAI: boolean;
+  spanGenAIKinds: Map<string, GenAISpanKind>;
   setSpanNameColumnWidth: (width: number) => void;
   setSidePanelWidth: (width: number) => void;
   // Updates layout fields only; use `setDetailPanelMode` from `./store` to also sync detail panel state.
@@ -26,6 +28,7 @@ type TraceTimelineLayoutPrefsStore = {
   setTimelineBarsVisible: (visible: boolean) => void;
   setGenAIModeActive: (active: boolean) => void;
   setAutoDetectedGenAI: (detected: boolean) => void;
+  setSpanGenAIKinds: (kinds: Map<string, GenAISpanKind>) => void;
 };
 
 // Reads user layout preferences from localStorage and merges them with config-driven defaults.
@@ -149,5 +152,11 @@ export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()((set,
 
   setAutoDetectedGenAI: (detected: boolean) => {
     set({ autoDetectedGenAI: detected });
+  },
+
+  spanGenAIKinds: new Map(),
+
+  setSpanGenAIKinds: (kinds: Map<string, GenAISpanKind>) => {
+    set({ spanGenAIKinds: kinds });
   },
 }));

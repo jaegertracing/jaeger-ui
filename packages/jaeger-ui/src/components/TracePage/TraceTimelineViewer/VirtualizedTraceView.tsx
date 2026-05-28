@@ -76,6 +76,7 @@ type TDerivedStateProps = {
   selectedSpanID: string | null;
   prunedServices: Set<string>;
   genAIModeActive: boolean;
+  spanGenAIKinds?: Map<string, import('../../../utils/gen-ai').GenAISpanKind>;
 };
 
 type VirtualizedTraceViewProps = TVirtualizedTraceViewOwnProps &
@@ -517,6 +518,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       detailToggle,
       findMatchesIDs,
       genAIModeActive,
+      spanGenAIKinds,
       nameColumnWidth,
       prunedServices,
       selectedSpanID,
@@ -601,6 +603,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           traceDuration={trace.duration}
           useOtelTerms={useOtelTerms}
           genAIModeActive={genAIModeActive}
+          genAIKind={spanGenAIKinds?.get(span.spanID)}
         />
       </div>
     );
@@ -696,6 +699,7 @@ function VirtualizedTraceViewWrapper(
   const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
   const genAIModeActive = useLayoutPrefsStore(s => s.genAIModeActive);
   const autoDetectedGenAI = useLayoutPrefsStore(s => s.autoDetectedGenAI);
+  const spanGenAIKinds = useLayoutPrefsStore(s => s.spanGenAIKinds);
   const traceID = useTraceTimelineStore(s => s.traceID);
   const childrenHiddenIDs = useTraceTimelineStore(s => s.childrenHiddenIDs);
   const detailStates = useTraceTimelineStore(s => s.detailStates);
@@ -818,6 +822,7 @@ function VirtualizedTraceViewWrapper(
     detailPanelMode,
     timelineBarsVisible,
     genAIModeActive: genAIModeActive && autoDetectedGenAI,
+    spanGenAIKinds,
     traceID,
     childrenHiddenIDs,
     detailStates,

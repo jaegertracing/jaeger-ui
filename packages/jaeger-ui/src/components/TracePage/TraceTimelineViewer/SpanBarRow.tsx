@@ -1,10 +1,10 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 import { BulbOutlined, DatabaseOutlined, ToolOutlined } from '@ant-design/icons';
 import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward } from 'react-icons/io5';
-import { detectGenAISpan } from '../../../utils/gen-ai';
+import type { GenAISpanKind } from '../../../utils/gen-ai';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
 import { formatDuration, ViewedBoundsFunctionType } from './utils';
@@ -55,11 +55,10 @@ type SpanBarRowProps = {
   traceDuration: number;
   useOtelTerms: boolean;
   genAIModeActive?: boolean;
+  genAIKind?: GenAISpanKind | null;
 };
 
-function GenAISpanIcon({ span }: { span: IOtelSpan }) {
-  const kind = useMemo(() => detectGenAISpan(span), [span]);
-  if (!kind) return null;
+function GenAISpanIcon({ kind }: { kind: GenAISpanKind }) {
   if (kind === 'llm')
     return <BulbOutlined className="SpanBarRow--genAIIcon" aria-label="LLM span" role="img" />;
   if (kind === 'tool')
@@ -101,6 +100,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   onChildrenToggled,
   useOtelTerms,
   genAIModeActive = false,
+  genAIKind = null,
 }) => {
   const _detailToggle = useCallback(() => {
     onDetailToggled(span.spanID);
@@ -170,7 +170,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
               {!hasOwnError && hasChildError && (
                 <IoAlert className="SpanBarRow--errorIcon SpanBarRow--errorIcon--hollow" />
               )}
-              {genAIModeActive && <GenAISpanIcon span={span} />}
+              {genAIModeActive && genAIKind && <GenAISpanIcon kind={genAIKind} />}
               {serviceName}{' '}
               {rpc && (
                 <span>
