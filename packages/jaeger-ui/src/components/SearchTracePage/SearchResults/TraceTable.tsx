@@ -79,7 +79,26 @@ function ServicePills({ services }: { services: TraceSummary['services'] }) {
         </Tag>
       ))}
       {hidden.length > 0 && (
-        <Tooltip title={hidden.map(s => s.name).join(', ')}>
+        <Tooltip
+          title={
+            <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 4 }}>
+              {hidden.map(service => (
+                <Tag
+                  key={service.name}
+                  variant="outlined"
+                  style={{
+                    borderLeftColor: colorGenerator.getColorByKey(service.name),
+                    borderLeftWidth: 6,
+                    margin: 0,
+                  }}
+                >
+                  {service.errorSpanCount > 0 && <IoAlert style={{ color: 'red', marginRight: 2 }} />}
+                  {service.name} ({service.spanCount})
+                </Tag>
+              ))}
+            </span>
+          }
+        >
           <Tag variant="outlined" style={{ margin: 0 }}>
             +{hidden.length}
           </Tag>
