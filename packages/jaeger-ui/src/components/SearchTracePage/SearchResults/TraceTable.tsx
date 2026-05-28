@@ -58,6 +58,24 @@ export { toOrderBy, fromOrderBy };
 
 const MAX_VISIBLE_SERVICES = 4;
 
+type ServiceEntry = TraceSummary['services'][number];
+
+function ServicePill({ service }: { service: ServiceEntry }) {
+  return (
+    <Tag
+      variant="outlined"
+      style={{
+        borderLeftColor: colorGenerator.getColorByKey(service.name),
+        borderLeftWidth: 6,
+        margin: 0,
+      }}
+    >
+      {service.errorSpanCount > 0 && <IoAlert style={{ color: 'var(--feedback-error)', marginRight: 2 }} />}
+      {service.name} ({service.spanCount})
+    </Tag>
+  );
+}
+
 function ServicePills({ services }: { services: TraceSummary['services'] }) {
   const sorted = _sortBy(services, s => s.name);
   const visible = sorted.slice(0, MAX_VISIBLE_SERVICES);
@@ -65,36 +83,14 @@ function ServicePills({ services }: { services: TraceSummary['services'] }) {
   return (
     <span style={{ display: 'inline-flex', flexWrap: 'nowrap', gap: 4 }}>
       {visible.map(service => (
-        <Tag
-          key={service.name}
-          variant="outlined"
-          style={{
-            borderLeftColor: colorGenerator.getColorByKey(service.name),
-            borderLeftWidth: 6,
-            margin: 0,
-          }}
-        >
-          {service.errorSpanCount > 0 && <IoAlert style={{ color: 'red', marginRight: 2 }} />}
-          {service.name} ({service.spanCount})
-        </Tag>
+        <ServicePill key={service.name} service={service} />
       ))}
       {hidden.length > 0 && (
         <Tooltip
           title={
             <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 4 }}>
               {hidden.map(service => (
-                <Tag
-                  key={service.name}
-                  variant="outlined"
-                  style={{
-                    borderLeftColor: colorGenerator.getColorByKey(service.name),
-                    borderLeftWidth: 6,
-                    margin: 0,
-                  }}
-                >
-                  {service.errorSpanCount > 0 && <IoAlert style={{ color: 'red', marginRight: 2 }} />}
-                  {service.name} ({service.spanCount})
-                </Tag>
+                <ServicePill key={service.name} service={service} />
               ))}
             </span>
           }

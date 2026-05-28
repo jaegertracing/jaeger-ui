@@ -109,6 +109,16 @@ export function UnconnectedSearchResults({
     [cohortAddTrace, cohortRemoveTrace]
   );
 
+  const getLink = useCallback(
+    (traceID: string) =>
+      getTracePageLink(
+        traceID,
+        { fromSearch: location.pathname + location.search },
+        spanLinks && (spanLinks[traceID] || spanLinks[traceID.replace(/^0*/, '')])
+      ),
+    [location, spanLinks]
+  );
+
   const goToTrace = useCallback(
     (traceID: string) => {
       const searchUrl = location.pathname + location.search;
@@ -182,7 +192,7 @@ export function UnconnectedSearchResults({
           </div>
         )}
         <div className="SearchResults--headerOverview">
-          <h2 className="ub-m0 u-flex-1" style={{ fontSize: '1rem' }}>
+          <h2 className="ub-m0 u-flex-1 SearchResults--resultCount">
             {traceSummaries.length} Trace{traceSummaries.length > 1 && 's'}
           </h2>
           {traceResultsView && viewMode === 'list' && (
@@ -195,7 +205,6 @@ export function UnconnectedSearchResults({
               aria-label="Results view mode"
               value={viewMode}
               onChange={e => setViewMode(e.target.value as 'list' | 'table')}
-              size="small"
             >
               <Radio.Button value="list">List</Radio.Button>
               <Radio.Button value="table">Table</Radio.Button>
@@ -223,13 +232,7 @@ export function UnconnectedSearchResults({
         <TraceTable
           traceSummaries={traceSummaries}
           maxTraceDuration={maxTraceDuration}
-          getLink={(traceID: string) =>
-            getTracePageLink(
-              traceID,
-              { fromSearch: searchUrl },
-              spanLinks && (spanLinks[traceID] || spanLinks[traceID.replace(/^0*/, '')])
-            )
-          }
+          getLink={getLink}
           sortBy={sortBy}
           handleSortChange={handleSortChange}
           disableComparisons={disableComparisons}
@@ -245,12 +248,7 @@ export function UnconnectedSearchResults({
                 durationPercent={getPercentageOfDuration(traceSummary.duration, maxTraceDuration)}
                 isInDiffCohort={cohortIds.has(traceSummary.traceID)}
                 isUploaded={uploadedTraceIDs.has(traceSummary.traceID)}
-                linkTo={getTracePageLink(
-                  traceSummary.traceID,
-                  { fromSearch: searchUrl },
-                  spanLinks &&
-                    (spanLinks[traceSummary.traceID] || spanLinks[traceSummary.traceID.replace(/^0*/, '')])
-                )}
+                linkTo={getLink(traceSummary.traceID)}
                 toggleComparison={toggleComparison}
                 traceSummary={traceSummary}
                 disableComparision={disableComparisons}

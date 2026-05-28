@@ -101,6 +101,38 @@ describe('TraceTable', () => {
     const checkboxes = container.querySelectorAll('input[type="checkbox"]');
     expect(checkboxes).toHaveLength(0);
   });
+
+  it('toggles comparison on checkbox change', () => {
+    const toggleComparison = vi.fn();
+    const { container } = render(
+      <MemoryRouter>
+        <TraceTable {...defaultProps} disableComparisons={false} toggleComparison={toggleComparison} />
+      </MemoryRouter>
+    );
+    const firstCheckbox = container.querySelector('input[type="checkbox"]')!;
+    fireEvent.click(firstCheckbox);
+    expect(toggleComparison).toHaveBeenCalled();
+  });
+
+  it('falls back to traceID when traceName is empty', () => {
+    const traces = [{ ...mockTraces[0], traceName: '' }];
+    render(
+      <MemoryRouter>
+        <TraceTable {...defaultProps} traceSummaries={traces} />
+      </MemoryRouter>
+    );
+    expect(screen.getByText(mockTraces[0].traceID)).toBeInTheDocument();
+  });
+
+  it('shows error icon in service pill when service has error spans', () => {
+    const traces = [makeTrace('x', 3)];
+    const { container } = render(
+      <MemoryRouter>
+        <TraceTable {...defaultProps} traceSummaries={traces} />
+      </MemoryRouter>
+    );
+    expect(container.querySelector('svg')).toBeInTheDocument();
+  });
 });
 
 describe('sort onChange wiring', () => {
@@ -115,13 +147,16 @@ describe('sort onChange wiring', () => {
     expect(handleSortChange).toHaveBeenCalledWith(orderBy.LEAST_SPANS);
   });
 
-  it('calls handleSortChange with MOST_RECENT when sort is cleared', () => {
+  it('calls handleSortChange with MOST_RECENT when Ant Design cancel event fires', () => {
     const handleSortChange = vi.fn();
     render(
       <MemoryRouter>
         <TraceTable {...defaultProps} sortBy={orderBy.MOST_SPANS} handleSortChange={handleSortChange} />
       </MemoryRouter>
     );
+    // Ant Design fires the cancel event (order=undefined, columnKey=undefined) when clicking
+    // an already-descend-sorted column. Our toggle computes order='ascend', but since
+    // columnKey is undefined, toOrderBy falls through to MOST_RECENT.
     fireEvent.click(screen.getByText('Spans'));
     expect(handleSortChange).toHaveBeenCalledWith(orderBy.MOST_RECENT);
   });

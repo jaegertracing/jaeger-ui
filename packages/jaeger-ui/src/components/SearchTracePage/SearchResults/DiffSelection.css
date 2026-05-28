@@ -17,6 +17,10 @@ SPDX-License-Identifier: Apache-2.0
   padding: 1rem;
 }
 
+.DiffSelection--heading {
+  font-size: 1rem;
+}
+
 .DiffSelection--selectedItems {
   border: 1px solid var(--border-strong);
   border-bottom: none;

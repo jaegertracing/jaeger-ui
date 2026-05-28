@@ -19,9 +19,7 @@ type Props = {
 };
 
 const CTA_MESSAGE = (
-  <h2 className="ub-m0" style={{ fontSize: '1rem' }}>
-    Compare traces by selecting result items
-  </h2>
+  <h2 className="ub-m0 DiffSelection--heading">Compare traces by selecting result items</h2>
 );
 
 export default function DiffSelection({ toggleComparison, traces }: Props) {
@@ -58,9 +56,7 @@ export default function DiffSelection({ toggleComparison, traces }: Props) {
         {traces.length > 0 ? (
           <React.Fragment>
             {compareHref ? <Link to={compareHref}>{compareBtn}</Link> : compareBtn}
-            <h2 className="ub-m0" style={{ fontSize: '1rem' }}>
-              {cohort.length} Selected for comparison
-            </h2>
+            <h2 className="ub-m0 DiffSelection--heading">{cohort.length} Selected for comparison</h2>
           </React.Fragment>
         ) : (
           CTA_MESSAGE
