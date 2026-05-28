@@ -44,6 +44,13 @@ function computeLabelCoord(pathPoints: [number, number][], label?: string | unde
   const labelX = (startX + endX) / 2 - xOffset;
   const labelY = (startY + endY) / 2;
 
+  if (startX === endX && startY === endY) {
+    return {
+      labelX: labelX + xOffset + 12,
+      labelY: labelY - 12,
+    };
+  }
+
   return { labelX, labelY };
 }
 
