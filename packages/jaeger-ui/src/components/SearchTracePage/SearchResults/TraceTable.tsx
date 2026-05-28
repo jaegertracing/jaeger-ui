@@ -196,7 +196,11 @@ export default function TraceTable({
       {
         title: 'Start Time',
         key: 'startTime',
-        render: (_: unknown, trace: TraceSummary) => formatDatetime(trace.startTime),
+        render: (_: unknown, trace: TraceSummary) => (
+          <span style={{ fontFamily: 'monospace', fontSize: '12px', whiteSpace: 'nowrap' }}>
+            {formatDatetime(trace.startTime)}
+          </span>
+        ),
         sorter: true,
         // startTime descend maps to MOST_RECENT (the default); always show the sort indicator
         sortOrder: sortKey === 'startTime' ? 'descend' : undefined,
