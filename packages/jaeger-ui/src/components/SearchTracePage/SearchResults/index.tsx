@@ -30,7 +30,7 @@ import './index.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import withRouteProps from '../../../utils/withRouteProps';
 import SearchableSelect from '../../common/SearchableSelect';
-import { useSearchResultsStore } from '../../../stores/search-results-store';
+import { useSearchResultsStore } from '../store.search-results';
 
 type SearchResultsProps = {
   cohortAddTrace: (traceId: string) => void;
