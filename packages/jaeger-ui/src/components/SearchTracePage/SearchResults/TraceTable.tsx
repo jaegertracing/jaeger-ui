@@ -124,16 +124,26 @@ export default function TraceTable({
         title: 'Trace Name',
         dataIndex: 'traceName',
         key: 'traceName',
+        onCell: () => ({ style: { overflow: 'hidden' } }),
         render: (name: string, trace: TraceSummary) => {
           const link = getLink(trace.traceID);
+          const label = name || trace.traceID;
           return (
-            <Link
-              to={link.pathname + (link.search ? `?${link.search}` : '')}
-              state={link.state}
-              onClick={e => e.stopPropagation()}
-            >
-              {name || trace.traceID}
-            </Link>
+            <Tooltip title={label}>
+              <Link
+                to={link.pathname + (link.search ? `?${link.search}` : '')}
+                state={link.state}
+                onClick={e => e.stopPropagation()}
+                style={{
+                  display: 'block',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {label}
+              </Link>
+            </Tooltip>
           );
         },
       },
@@ -196,11 +206,26 @@ export default function TraceTable({
       {
         title: 'Start Time',
         key: 'startTime',
-        render: (_: unknown, trace: TraceSummary) => (
-          <span style={{ fontFamily: 'monospace', fontSize: '12px', whiteSpace: 'nowrap' }}>
-            {formatDatetime(trace.startTime)}
-          </span>
-        ),
+        onCell: () => ({ style: { overflow: 'hidden' } }),
+        render: (_: unknown, trace: TraceSummary) => {
+          const formatted = formatDatetime(trace.startTime);
+          return (
+            <Tooltip title={formatted}>
+              <span
+                style={{
+                  fontFamily: 'monospace',
+                  fontSize: '12px',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  display: 'block',
+                }}
+              >
+                {formatted}
+              </span>
+            </Tooltip>
+          );
+        },
         sorter: true,
         // startTime descend maps to MOST_RECENT (the default); always show the sort indicator
         sortOrder: sortKey === 'startTime' ? 'descend' : undefined,
