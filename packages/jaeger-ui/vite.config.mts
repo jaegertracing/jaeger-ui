@@ -5,6 +5,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import fs from 'fs';
+import vm from 'vm';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -140,6 +141,26 @@ function jaegerUiConfigPlugin() {
             // Inject the file verbatim — it must define UIConfig() itself,
             // matching the contract enforced by the jaeger binary.
             html = html.replace('// JAEGER_CONFIG_JS', jsContent);
+
+            // Extract storageCapabilities from the JS config by executing it in a sandbox
+            // and calling UIConfig(), mirroring the JSON config path's special treatment.
+            try {
+              const sandbox: { UIConfig?: () => { storageCapabilities?: Record<string, unknown> } } = {};
+              vm.runInNewContext(jsContent, sandbox);
+              const storageCapabilities = sandbox.UIConfig?.()?.storageCapabilities;
+              if (storageCapabilities) {
+                html = html.replace(
+                  'const JAEGER_STORAGE_CAPABILITIES = DEFAULT_STORAGE_CAPABILITIES;',
+                  `const JAEGER_STORAGE_CAPABILITIES = { ...DEFAULT_STORAGE_CAPABILITIES, ...${JSON.stringify(storageCapabilities)} };`
+                );
+              }
+            } catch (evalErr) {
+              console.warn(
+                '[jaeger-ui-config] Could not evaluate JS config for storageCapabilities:',
+                evalErr
+              );
+            }
+
             console.log('[jaeger-ui-config] Loaded config from jaeger-ui.config.js');
             return html;
           } catch (err) {

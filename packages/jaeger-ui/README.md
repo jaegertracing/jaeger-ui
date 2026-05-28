@@ -54,7 +54,9 @@ When running the UI in development mode via `npm start`, you can provide custom 
            // Custom analytics implementation
            return {
              init: function () {},
-             isEnabled: function () { return true; },
+             isEnabled: function () {
+               return true;
+             },
              context: null,
              trackPageView: function (pathname, search) {},
              trackError: function (description) {},
