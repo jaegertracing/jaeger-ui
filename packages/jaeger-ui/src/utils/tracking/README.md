@@ -4,25 +4,45 @@ App analytics (page views and errors) are supported in Jaeger UI through integra
 
 The page-view tracking is pretty basic, so details aren't provided. The GA tracking is configured with [App Tracking](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#apptracking) data. These fields, described [below](#app-tracking), can be used as a secondary dimension when viewing event data in GA. The error tracking is described, [below](#error-tracking).
 
-To enable custom plugin, one must use Javascript-version of the configuration and replace the `gaID` field with `customWebAnalytics`, e.g. in `UIconfig.js`:
+To enable a custom plugin, use the JavaScript version of the configuration file (not JSON, since a function reference is required) and set `customWebAnalytics` instead of `gaID` — the two are mutually exclusive. A working example that logs all events to the browser console is provided in [`jaeger-ui.config.console-analytics.js`](../../../../../packages/jaeger-ui/jaeger-ui.config.console-analytics.js) at the root of the `jaeger-ui` package.
+
+The factory function receives three arguments:
+
+| Argument | Type | Description |
+|---|---|---|
+| `config` | `Config` | Full Jaeger UI config object |
+| `versionShort` | `string` | Short version string, e.g. `"0.0.1 \| git status"` |
+| `versionLong` | `string` | Long version string (truncated to 99 chars) |
+
+The returned object must implement the `IWebAnalytics` interface:
+
+| Field | Type | Description |
+|---|---|---|
+| `init` | `() => void` | Called once on app start |
+| `isEnabled` | `() => boolean` | Return `true` to activate the Redux tracking middleware |
+| `context` | `boolean \| null` | `true` enables error breadcrumb capture; `null` disables it |
+| `trackPageView` | `(pathname, search) => void` | Called on route changes |
+| `trackError` | `(description) => void` | Called when an error is captured |
+| `trackEvent` | `(category, action, labelOrValue?, value?) => void` | Called for UI interaction events |
+
+Minimal skeleton, e.g. in `jaeger-ui.config.js`:
 
 ```javascript
 function UIConfig() {
   return {
-     ...other properties
-     tracking: {
-       customWebAnalytics: function () {
-         return {
-           init: () => { /* initialization actions */ },
-           trackPageView: (pathname, search) => {},
-           trackError: (description) => {},
-           trackEvent: (category, action, labelOrValue, value) => {},
-           context: null,
-           isEnabled: () => false,
-         }
-       }
-     }
-  }
+    tracking: {
+      customWebAnalytics: function (config, versionShort, versionLong) {
+        return {
+          init: function () {},
+          isEnabled: function () { return true; },
+          context: null,
+          trackPageView: function (pathname, search) {},
+          trackError: function (description) {},
+          trackEvent: function (category, action, labelOrValue, value) {},
+        };
+      },
+    },
+  };
 }
 ```
 
