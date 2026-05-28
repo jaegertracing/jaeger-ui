@@ -20,8 +20,7 @@ function consoleAnalytics(config, versionShort, versionLong) {
 
   return {
     init: function () {
-      // versionShort/versionLong are 'unknown' when REACT_APP_VSN_STATE is not set (e.g. plain npm start)
-      log('log', 'init — version:', versionLong);
+      log('log', 'init — version:', versionShort + ' / ' + versionLong);
     },
 
     // Return true to activate the Redux tracking middleware.
