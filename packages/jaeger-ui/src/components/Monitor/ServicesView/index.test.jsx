@@ -9,7 +9,7 @@ import '@testing-library/jest-dom';
 import { MonitorATMServicesViewImpl as MonitorATMServicesView, mapStateToProps, mapDispatchToProps } from '.';
 import { getLoopbackInterval, timeFrameOptions, yAxisTickFormat } from './timeFrameUtils';
 import { useServices } from '../../../hooks/useTraceDiscovery';
-import { ONE_HOUR_MS, TIME_RANGE_OPTIONS } from '../../../constants/time-range-options';
+import { ONE_HOUR_MS, TIME_RANGE_OPTIONS } from '../../../utils/time-range-options';
 import {
   originInitialState,
   serviceMetrics,
