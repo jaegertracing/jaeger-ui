@@ -32,7 +32,14 @@ describe('getCriticalPathSections', () => {
   it('returns [] when criticalPath is falsy and span is collapsed', () => {
     const span = makeSpan('s1', 'svc-a');
     const trace = makeTrace([span]);
-    const result = getCriticalPathSections(span, true, false, trace, undefined, new Set());
+    const result = getCriticalPathSections(
+      span,
+      true,
+      false,
+      trace,
+      undefined as unknown as CriticalPathSection[],
+      new Set()
+    );
     expect(result).toEqual([]);
   });
 

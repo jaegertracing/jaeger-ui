@@ -280,8 +280,8 @@ describe('<VirtualizedTraceViewImpl>', () => {
       instance = createTestInstance(props);
       expect(instance.mapSpanIndexToRowIndex(0)).toBe(0);
       expect(instance.mapSpanIndexToRowIndex(1)).toBe(1);
-      expect(() => instance.mapSpanIndexToRowIndex(2)).toThrow();
-      expect(() => instance.mapSpanIndexToRowIndex(3)).toThrow();
+      expect(() => instance.mapSpanIndexToRowIndex(2)).toThrow(/unable to find row for span index/);
+      expect(() => instance.mapSpanIndexToRowIndex(3)).toThrow(/unable to find row for span index/);
       expect(instance.mapSpanIndexToRowIndex(4)).toBe(2);
     });
   });
