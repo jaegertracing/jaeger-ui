@@ -8,7 +8,7 @@ import type { Location, NavigateFunction } from 'react-router-dom';
 import { actions, getSelectedSpanID } from '../duck';
 import GenAISpanDetail from './GenAISpanDetail';
 import { detectGenAISpan } from '../../../../utils/gen-ai';
-import { useLayoutPrefsStore } from '../store';
+import { useLayoutPrefsStore } from '../store.layout';
 import SpanDetail from '../SpanDetail';
 import DetailState from '../SpanDetail/DetailState';
 import getLinks from '../../../../model/link-patterns';
