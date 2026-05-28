@@ -100,7 +100,7 @@ function ServicePills({ services }: { services: TraceSummary['services'] }) {
           </Tag>
         </Tooltip>
       )}
-      style={{ display: 'flex', flexWrap: 'nowrap', gap: 4, overflow: 'hidden' }}
+      style={{ display: 'flex', flexWrap: 'nowrap', gap: 4, overflow: 'hidden', width: '100%' }}
     />
   );
 }
