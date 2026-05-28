@@ -20,7 +20,7 @@ function consoleAnalytics(config, versionShort, versionLong) {
 
   return {
     init: function () {
-      log('log', 'init — version:', versionShort);
+      log('log', 'init — version:', versionShort + ' / ' + versionLong);
     },
 
     // Return true to activate the Redux tracking middleware.
