@@ -27,7 +27,7 @@ export default function DiffSelection({ toggleComparison, traces }: Props) {
   const compareHref = cohort.length > 1 ? getUrl({ cohort }) : null;
 
   const compareBtn = (
-    <Button className="ub-right" disabled={cohort.length < 2} htmlType="button" type="primary">
+    <Button disabled={cohort.length < 2} htmlType="button" type="primary">
       Compare Traces
     </Button>
   );
@@ -55,8 +55,8 @@ export default function DiffSelection({ toggleComparison, traces }: Props) {
       <div className="DiffSelection--message">
         {traces.length > 0 ? (
           <React.Fragment>
-            {compareHref ? <Link to={compareHref}>{compareBtn}</Link> : compareBtn}
             <h2 className="ub-m0 DiffSelection--heading">{cohort.length} Selected for comparison</h2>
+            {compareHref ? <Link to={compareHref}>{compareBtn}</Link> : compareBtn}
           </React.Fragment>
         ) : (
           CTA_MESSAGE
