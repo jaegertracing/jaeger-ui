@@ -141,6 +141,7 @@ export default function TraceTable({
         title: 'Services',
         key: 'services',
         width: '35%',
+        onCell: () => ({ style: { overflow: 'hidden' } }),
         render: (_: unknown, trace: TraceSummary) =>
           trace.services.length > 0 ? <ServicePills services={trace.services} /> : '-',
       },
