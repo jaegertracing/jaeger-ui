@@ -144,7 +144,11 @@ export function UnconnectedSearchResults({
   const traceResultsView = queryString.parse(location.search).view !== 'ddg';
 
   const diffSelection = !disableComparisons && (
-    <DiffSelection toggleComparison={toggleComparison} traces={diffCohort} />
+    <DiffSelection
+      toggleComparison={toggleComparison}
+      traces={diffCohort}
+      hideSelectedItems={viewMode === 'table'}
+    />
   );
   if (loading) {
     return (
