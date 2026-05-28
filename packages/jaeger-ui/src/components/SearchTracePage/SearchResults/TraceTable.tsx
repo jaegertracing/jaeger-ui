@@ -138,7 +138,14 @@ export default function TraceTable({
       {
         title: 'Errors',
         key: 'errors',
-        render: (_: unknown, trace: TraceSummary) => trace.errorSpanCount,
+        render: (_: unknown, trace: TraceSummary) =>
+          trace.errorSpanCount > 0 ? (
+            <Tag color="red" variant="outlined" style={{ margin: 0 }}>
+              {trace.errorSpanCount} Error{trace.errorSpanCount > 1 && 's'}
+            </Tag>
+          ) : (
+            0
+          ),
       },
       {
         title: 'Duration',
