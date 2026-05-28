@@ -9,13 +9,12 @@ import type { ColumnsType, TableProps } from 'antd/es/table';
 import type { SorterResult } from 'antd/es/table/interface';
 import Overflow from '@rc-component/overflow';
 import _sortBy from 'lodash/sortBy';
-import { IoAlert } from 'react-icons/io5';
 import { TraceSummary } from '../../../types/trace-summary';
 import { formatDuration, formatDurationCompact, formatDatetime } from '../../../utils/date';
-import colorGenerator from '../../../utils/color-generator';
 import RelativeBar from '../../common/RelativeBar';
 import * as orderBy from '../../../model/order-by';
 import type { TracePageLink } from '../../TracePage/url';
+import { ServicePill, type ServiceEntry } from './ServicePills';
 
 type TraceTableProps = {
   traceSummaries: TraceSummary[];
@@ -56,26 +55,6 @@ function fromOrderBy(sort: string): { key: string; order: 'ascend' | 'descend' }
 }
 
 export { toOrderBy, fromOrderBy };
-
-type ServiceEntry = TraceSummary['services'][number];
-
-function ServicePill({ service }: { service: ServiceEntry }) {
-  return (
-    <Tag
-      variant="outlined"
-      style={{
-        borderLeftColor: colorGenerator.getColorByKey(service.name),
-        borderLeftWidth: 6,
-        margin: 0,
-      }}
-    >
-      {service.errorSpanCount > 0 && (
-        <IoAlert style={{ color: 'var(--feedback-error-text)', marginRight: 2 }} />
-      )}
-      {service.name} ({service.spanCount})
-    </Tag>
-  );
-}
 
 function ServicePills({ services }: { services: TraceSummary['services'] }) {
   const sorted = _sortBy(services, s => s.name);
