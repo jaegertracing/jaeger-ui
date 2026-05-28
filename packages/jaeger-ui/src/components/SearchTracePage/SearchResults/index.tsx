@@ -30,6 +30,7 @@ import './index.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import withRouteProps from '../../../utils/withRouteProps';
 import SearchableSelect from '../../common/SearchableSelect';
+import { useSearchResultsStore } from '../../../stores/search-results-store';
 
 type SearchResultsProps = {
   cohortAddTrace: (traceId: string) => void;
@@ -94,8 +95,8 @@ export function UnconnectedSearchResults({
   cohortRemoveTrace,
 }: SearchResultsProps) {
   const navigate = useNavigate();
-  // Intentionally local state: view mode resets on remount, matching the ephemeral nature of search results.
-  const [viewMode, setViewMode] = React.useState<'list' | 'table'>('list');
+  const viewMode = useSearchResultsStore(s => s.viewMode);
+  const setViewMode = useSearchResultsStore(s => s.setViewMode);
 
   const toggleComparison = useCallback(
     (traceID: string, remove?: boolean) => {
