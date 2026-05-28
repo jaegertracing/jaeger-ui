@@ -35,10 +35,8 @@ export function setDetailPanelMode(mode: SpanDetailPanelMode): void {
 }
 
 export function setGenAIMode(active: boolean): void {
-  if (active) {
-    const tt = getConfig().traceTimeline;
-    if (!tt?.enableGenAIMode || !tt?.enableSidePanel) return;
-  }
+  const cfg = getConfig().traceTimeline;
+  if (active && (!cfg?.enableGenAIMode || !cfg?.enableSidePanel)) return;
   useLayoutPrefsStore.getState().setGenAIModeActive(active);
   if (active) {
     setDetailPanelMode('sidepanel');

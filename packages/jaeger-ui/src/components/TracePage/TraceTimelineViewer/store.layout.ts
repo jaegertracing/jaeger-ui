@@ -90,9 +90,12 @@ export function getInitialLayoutState(): Pick<
     }
   }
 
-  // config flag is authoritative — if ops disabled it, ignore any stored user preference
   const storedGenAIMode = localStorage.getItem('genAIMode');
   const genAIModeActive = traceTimeline?.enableGenAIMode === true && storedGenAIMode === 'on';
+  // Clear stale preference when the feature is disabled at the config level.
+  if (!traceTimeline?.enableGenAIMode && storedGenAIMode !== null) {
+    localStorage.removeItem('genAIMode');
+  }
 
   return { spanNameColumnWidth, sidePanelWidth, detailPanelMode, timelineBarsVisible, genAIModeActive };
 }
