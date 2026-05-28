@@ -7,6 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Checkbox, Table, Tag, Tooltip } from 'antd';
 import type { ColumnsType, TableProps } from 'antd/es/table';
 import type { SorterResult } from 'antd/es/table/interface';
+import Overflow from '@rc-component/overflow';
 import _sortBy from 'lodash/sortBy';
 import { IoAlert } from 'react-icons/io5';
 import { TraceSummary } from '../../../types/trace-summary';
@@ -56,8 +57,6 @@ function fromOrderBy(sort: string): { key: string; order: 'ascend' | 'descend' }
 
 export { toOrderBy, fromOrderBy };
 
-const MAX_VISIBLE_SERVICES = 4;
-
 type ServiceEntry = TraceSummary['services'][number];
 
 function ServicePill({ service }: { service: ServiceEntry }) {
@@ -80,29 +79,29 @@ function ServicePill({ service }: { service: ServiceEntry }) {
 
 function ServicePills({ services }: { services: TraceSummary['services'] }) {
   const sorted = _sortBy(services, s => s.name);
-  const visible = sorted.slice(0, MAX_VISIBLE_SERVICES);
-  const hidden = sorted.slice(MAX_VISIBLE_SERVICES);
   return (
-    <span style={{ display: 'inline-flex', flexWrap: 'nowrap', gap: 4 }}>
-      {visible.map(service => (
-        <ServicePill key={service.name} service={service} />
-      ))}
-      {hidden.length > 0 && (
+    <Overflow<ServiceEntry>
+      data={sorted}
+      itemKey="name"
+      maxCount={Overflow.RESPONSIVE}
+      renderItem={service => <ServicePill service={service} />}
+      renderRest={omitted => (
         <Tooltip
           title={
             <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 4 }}>
-              {hidden.map(service => (
+              {omitted.map(service => (
                 <ServicePill key={service.name} service={service} />
               ))}
             </span>
           }
         >
           <Tag variant="outlined" style={{ margin: 0 }}>
-            +{hidden.length}
+            +{omitted.length}
           </Tag>
         </Tooltip>
       )}
-    </span>
+      style={{ display: 'flex', flexWrap: 'nowrap', gap: 4, overflow: 'hidden' }}
+    />
   );
 }
 
