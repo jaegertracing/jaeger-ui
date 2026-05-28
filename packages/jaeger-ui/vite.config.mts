@@ -137,10 +137,9 @@ function jaegerUiConfigPlugin() {
         if (fs.existsSync(jsConfigPath)) {
           try {
             const jsContent = fs.readFileSync(jsConfigPath, 'utf-8');
-            // Replace the JAEGER_CONFIG_JS comment with UIConfig function
-            // This mimics the Go server behavior for .js config files
-            const uiConfigFn = `function UIConfig() { ${jsContent} }`;
-            html = html.replace('// JAEGER_CONFIG_JS', uiConfigFn);
+            // Inject the file verbatim — it must define UIConfig() itself,
+            // matching the contract enforced by the jaeger binary.
+            html = html.replace('// JAEGER_CONFIG_JS', jsContent);
             console.log('[jaeger-ui-config] Loaded config from jaeger-ui.config.js');
             return html;
           } catch (err) {

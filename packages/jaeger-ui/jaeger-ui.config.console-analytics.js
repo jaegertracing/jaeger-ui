@@ -10,9 +10,6 @@
 //   jaeger_query:
 //     ui:
 //       config_file: ./cmd/jaeger/config-ui.json
-//
-// Note: this file is injected as the *body* of a UIConfig() function by both
-// the `jaeger` binary and the Vite dev server. Do not wrap it in UIConfig() yourself.
 
 function consoleAnalytics(config, versionShort) {
   function log(method, label, data) {
@@ -47,27 +44,29 @@ function consoleAnalytics(config, versionShort) {
   };
 }
 
-return {
-  dependencies: {
-    menuEnabled: true,
-  },
-  monitor: {
-    menuEnabled: true,
-  },
-  tracking: {
-    // customWebAnalytics takes priority over gaID; both should not be set.
-    customWebAnalytics: consoleAnalytics,
-  },
-  linkPatterns: [
-    {
-      type: 'process',
-      key: 'jaeger.version',
-      url: 'https://github.com/jaegertracing/jaeger-client-java/releases/tag/#{jaeger.version}',
-      text: 'Information about Jaeger SDK release #{jaeger.version}',
+function UIConfig() {
+  return {
+    dependencies: {
+      menuEnabled: true,
     },
-  ],
-  storageCapabilities: {
-    archiveStorage: false,
-    metricsStorage: true,
-  },
-};
+    monitor: {
+      menuEnabled: true,
+    },
+    tracking: {
+      // customWebAnalytics takes priority over gaID; both should not be set.
+      customWebAnalytics: consoleAnalytics,
+    },
+    linkPatterns: [
+      {
+        type: 'process',
+        key: 'jaeger.version',
+        url: 'https://github.com/jaegertracing/jaeger-client-java/releases/tag/#{jaeger.version}',
+        text: 'Information about Jaeger SDK release #{jaeger.version}',
+      },
+    ],
+    storageCapabilities: {
+      archiveStorage: false,
+      metricsStorage: true,
+    },
+  };
+}
