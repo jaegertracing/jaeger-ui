@@ -15,6 +15,6 @@ export const useSearchResultsStore = create<SearchResultsStore>()(
       viewMode: 'list',
       setViewMode: mode => set({ viewMode: mode }),
     }),
-    { name: 'jaeger.search-results' }
+    { name: 'jaeger.search-results.mode' }
   )
 );
