@@ -10,16 +10,16 @@ The config file must define a top-level `UIConfig()` function.
 
 The `customWebAnalytics` value is a factory function that receives three arguments:
 
-| Argument | Type | Description |
-|---|---|---|
-| `config` | `Config` | Full Jaeger UI config object |
+| Argument       | Type     | Description                                        |
+| -------------- | -------- | -------------------------------------------------- |
+| `config`       | `Config` | Full Jaeger UI config object                       |
 | `versionShort` | `string` | Short version string, e.g. `"0.0.1 \| git status"` |
-| `versionLong` | `string` | Long version string (truncated to 99 chars) |
+| `versionLong`  | `string` | Long version string (truncated to 99 chars)        |
 
 The factory must return an object implementing the `IWebAnalytics` interface:
 
 | Field | Type | Description |
-|---|---|---|
+| --- | --- | --- |
 | `init` | `() => void` | Called once on app start |
 | `isEnabled` | `() => boolean` | Return `true` to enable tracking; `false` to disable all calls |
 | `context` | `boolean \| null` | `true` enables automatic error breadcrumb capture; `null`/`false` disables it |
@@ -36,7 +36,9 @@ function UIConfig() {
       customWebAnalytics: function (config, versionShort, versionLong) {
         return {
           init: function () {},
-          isEnabled: function () { return true; },
+          isEnabled: function () {
+            return true;
+          },
           context: true,
           trackPageView: function (pathname, search) {},
           trackError: function (description) {},
