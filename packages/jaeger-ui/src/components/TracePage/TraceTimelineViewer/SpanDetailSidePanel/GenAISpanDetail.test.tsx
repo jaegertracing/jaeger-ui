@@ -1,7 +1,6 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import GenAISpanDetail from './GenAISpanDetail';
@@ -50,18 +49,18 @@ describe('GenAISpanDetail — LLMDetail', () => {
   });
 
   it('renders model name as title', () => {
-    render(<GenAISpanDetail span={span} kind="llm" useOtelTerms={false} />);
+    render(<GenAISpanDetail span={span} kind="llm" />);
     expect(screen.getByText('gpt-4o')).toBeInTheDocument();
   });
 
   it('renders system and operation metadata', () => {
-    render(<GenAISpanDetail span={span} kind="llm" useOtelTerms={false} />);
+    render(<GenAISpanDetail span={span} kind="llm" />);
     expect(screen.getByText('openai')).toBeInTheDocument();
     expect(screen.getByText('chat')).toBeInTheDocument();
   });
 
   it('renders token usage counts', () => {
-    render(<GenAISpanDetail span={span} kind="llm" useOtelTerms={false} />);
+    render(<GenAISpanDetail span={span} kind="llm" />);
     expect(screen.getByText('100')).toBeInTheDocument();
     expect(screen.getByText('50')).toBeInTheDocument();
     expect(screen.getByText('input')).toBeInTheDocument();
@@ -69,7 +68,7 @@ describe('GenAISpanDetail — LLMDetail', () => {
   });
 
   it('renders prompt and completion text', () => {
-    render(<GenAISpanDetail span={span} kind="llm" useOtelTerms={false} />);
+    render(<GenAISpanDetail span={span} kind="llm" />);
     expect(screen.getByText('What is the capital of France?')).toBeInTheDocument();
     expect(screen.getByText('Paris.')).toBeInTheDocument();
   });
@@ -77,7 +76,7 @@ describe('GenAISpanDetail — LLMDetail', () => {
   it('shows Show more button and expands when completion exceeds 4096 chars', () => {
     const longText = 'x'.repeat(5000);
     const longSpan = makeSpan({ 'gen_ai.completion': longText });
-    render(<GenAISpanDetail span={longSpan} kind="llm" useOtelTerms={false} />);
+    render(<GenAISpanDetail span={longSpan} kind="llm" />);
     const btn = screen.getByRole('button', { name: /show more/i });
     expect(btn).toBeInTheDocument();
     fireEvent.click(btn);
@@ -86,7 +85,7 @@ describe('GenAISpanDetail — LLMDetail', () => {
 
   it('falls back to span.name when model attribute is absent', () => {
     const noModel = makeSpan({ 'gen_ai.system': 'openai' });
-    render(<GenAISpanDetail span={noModel} kind="llm" useOtelTerms={false} />);
+    render(<GenAISpanDetail span={noModel} kind="llm" />);
     expect(screen.getByText('test-span')).toBeInTheDocument();
   });
 });
@@ -100,29 +99,29 @@ describe('GenAISpanDetail — ToolDetail', () => {
   });
 
   it('renders tool name as title', () => {
-    render(<GenAISpanDetail span={span} kind="tool" useOtelTerms={false} />);
+    render(<GenAISpanDetail span={span} kind="tool" />);
     expect(screen.getByText('get_weather')).toBeInTheDocument();
   });
 
   it('renders call id', () => {
-    render(<GenAISpanDetail span={span} kind="tool" useOtelTerms={false} />);
+    render(<GenAISpanDetail span={span} kind="tool" />);
     expect(screen.getByText(/call-abc123/)).toBeInTheDocument();
   });
 
   it('pretty-prints JSON input', () => {
-    render(<GenAISpanDetail span={span} kind="tool" useOtelTerms={false} />);
+    render(<GenAISpanDetail span={span} kind="tool" />);
     expect(screen.getByText(/"city"/)).toBeInTheDocument();
     expect(screen.getByText(/"Paris"/)).toBeInTheDocument();
   });
 
   it('pretty-prints JSON output', () => {
-    render(<GenAISpanDetail span={span} kind="tool" useOtelTerms={false} />);
+    render(<GenAISpanDetail span={span} kind="tool" />);
     expect(screen.getByText(/"temp"/)).toBeInTheDocument();
   });
 
   it('falls back to span.name when tool.name is absent', () => {
     const noName = makeSpan({ 'gen_ai.tool.input': '{}' });
-    render(<GenAISpanDetail span={noName} kind="tool" useOtelTerms={false} />);
+    render(<GenAISpanDetail span={noName} kind="tool" />);
     expect(screen.getByText('test-span')).toBeInTheDocument();
   });
 });
@@ -135,23 +134,23 @@ describe('GenAISpanDetail — RetrievalDetail', () => {
   });
 
   it('renders collection name as title', () => {
-    render(<GenAISpanDetail span={span} kind="retrieval" useOtelTerms={false} />);
+    render(<GenAISpanDetail span={span} kind="retrieval" />);
     expect(screen.getByText('product_docs')).toBeInTheDocument();
   });
 
   it('renders query as metadata', () => {
-    render(<GenAISpanDetail span={span} kind="retrieval" useOtelTerms={false} />);
+    render(<GenAISpanDetail span={span} kind="retrieval" />);
     expect(screen.getByText('return policy')).toBeInTheDocument();
   });
 
   it('renders result count', () => {
-    render(<GenAISpanDetail span={span} kind="retrieval" useOtelTerms={false} />);
+    render(<GenAISpanDetail span={span} kind="retrieval" />);
     expect(screen.getByText('7')).toBeInTheDocument();
   });
 
   it('falls back to span.name when collection name is absent', () => {
     const noCollection = makeSpan({ 'rag.query': 'test' });
-    render(<GenAISpanDetail span={noCollection} kind="retrieval" useOtelTerms={false} />);
+    render(<GenAISpanDetail span={noCollection} kind="retrieval" />);
     expect(screen.getByText('test-span')).toBeInTheDocument();
   });
 });
@@ -165,29 +164,61 @@ describe('GenAISpanDetail — AgentDetail', () => {
   });
 
   it('renders episode_id as title', () => {
-    render(<GenAISpanDetail span={span} kind="agent" useOtelTerms={false} />);
+    render(<GenAISpanDetail span={span} kind="agent" />);
     expect(screen.getByText('ep-001')).toBeInTheDocument();
   });
 
   it('renders step number', () => {
-    render(<GenAISpanDetail span={span} kind="agent" useOtelTerms={false} />);
+    render(<GenAISpanDetail span={span} kind="agent" />);
     expect(screen.getByText(/step 3/)).toBeInTheDocument();
   });
 
   it('renders reasoning score as badge', () => {
-    render(<GenAISpanDetail span={span} kind="agent" useOtelTerms={false} />);
+    render(<GenAISpanDetail span={span} kind="agent" />);
     expect(screen.getByText('0.87')).toBeInTheDocument();
   });
 
   it('renders extra agent attributes in a table', () => {
-    render(<GenAISpanDetail span={span} kind="agent" useOtelTerms={false} />);
+    render(<GenAISpanDetail span={span} kind="agent" />);
     expect(screen.getByText('agent.custom_field')).toBeInTheDocument();
     expect(screen.getByText('some-value')).toBeInTheDocument();
   });
 
   it('falls back to span.name when episode_id is absent', () => {
     const noEpisode = makeSpan({ 'agent.step': 1 });
-    render(<GenAISpanDetail span={noEpisode} kind="agent" useOtelTerms={false} />);
+    render(<GenAISpanDetail span={noEpisode} kind="agent" />);
     expect(screen.getByText('test-span')).toBeInTheDocument();
+  });
+});
+
+describe('GenAISpanDetail — media gating', () => {
+  it('shows blocked button and disabled state for http:// image URL', () => {
+    const span = makeSpan({ 'gen_ai.prompt': 'http://example.com/img.png' });
+    render(<GenAISpanDetail span={span} kind="llm" />);
+    const btn = screen.getByRole('button', { name: /blocked/i });
+    expect(btn).toBeDisabled();
+  });
+
+  it('shows enabled load button for https:// image URL', () => {
+    const span = makeSpan({ 'gen_ai.prompt': 'https://example.com/img.png' });
+    render(<GenAISpanDetail span={span} kind="llm" />);
+    const btn = screen.getByRole('button', { name: /load image/i });
+    expect(btn).not.toBeDisabled();
+  });
+
+  it('renders <img> after clicking load for https:// image URL', () => {
+    const span = makeSpan({ 'gen_ai.prompt': 'https://example.com/img.png' });
+    render(<GenAISpanDetail span={span} kind="llm" />);
+    fireEvent.click(screen.getByRole('button', { name: /load image/i }));
+    expect(screen.getByRole('img', { name: 'span media' })).toBeInTheDocument();
+  });
+
+  it('renders <audio> after clicking load for https:// audio URL', () => {
+    const span = makeSpan({ 'gen_ai.prompt': 'https://example.com/clip.mp3' });
+    render(<GenAISpanDetail span={span} kind="llm" />);
+    fireEvent.click(screen.getByRole('button', { name: /load audio/i }));
+    const audio = document.querySelector('audio');
+    expect(audio).not.toBeNull();
+    expect(audio?.src).toContain('clip.mp3');
   });
 });
