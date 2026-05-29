@@ -195,7 +195,7 @@ export default class TraceStatistics extends Component<Props, State> {
     allTableSpans: ITableSpan[],
     uiFind: string | null | undefined
   ) => {
-const allTableSpansChange = allTableSpans;
+    const allTableSpansChange = allTableSpans;
     const yellowSearchColor = 'rgb(255,243,215)';
     const defaultGrayColor = 'rgb(248,248,248)';
     for (let i = 0; i < allTableSpansChange.length; i++) {
