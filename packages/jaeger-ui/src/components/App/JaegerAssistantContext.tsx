@@ -7,7 +7,6 @@ import { useAgUiRuntime } from '@assistant-ui/react-ag-ui';
 import { AssistantRuntimeProvider } from '@assistant-ui/react';
 
 import { getJaegerAgUiUrl, isJaegerAssistantConfigured } from './jaegerAgUi';
-import JaegerAssistantToolsRegistrar from './JaegerAssistantToolsRegistrar';
 
 interface IJaegerAssistantContextValue {
   panelOpen: boolean;
@@ -27,17 +26,12 @@ function JaegerAssistantRuntimeProvider({ children }: { children: React.ReactNod
   const runtime = useAgUiRuntime({
     agent,
     showThinking: true,
-    onError: (e: unknown) => {
+    onError: e => {
       console.error('[jaeger-assistant] AG-UI error', e);
     },
   });
 
-  return (
-    <AssistantRuntimeProvider runtime={runtime}>
-      <JaegerAssistantToolsRegistrar />
-      {children}
-    </AssistantRuntimeProvider>
-  );
+  return <AssistantRuntimeProvider runtime={runtime}>{children}</AssistantRuntimeProvider>;
 }
 
 export function JaegerAssistantProvider({ children }: { children: React.ReactNode }) {

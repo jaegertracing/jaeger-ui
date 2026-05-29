@@ -38,8 +38,6 @@ vi.mock('@assistant-ui/react', () => ({
   AssistantRuntimeProvider: ({ children }) => <div data-testid="AssistantRuntimeProvider">{children}</div>,
 }));
 
-vi.mock('./JaegerAssistantToolsRegistrar', () => ({ default: () => null }));
-
 function BadConsumer() {
   useJaegerAssistant();
   return null;

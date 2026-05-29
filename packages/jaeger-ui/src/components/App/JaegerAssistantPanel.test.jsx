@@ -9,7 +9,6 @@ import { MemoryRouter } from 'react-router-dom';
 import {
   JaegerAssistantDock,
   JaegerThreadMessageBody,
-  JaegerToolCallPart,
   threadMessageComponents,
 } from './JaegerAssistantPanel';
 import { JaegerAssistantProvider, useJaegerAssistantOptional } from './JaegerAssistantContext';
@@ -34,8 +33,6 @@ vi.mock('@assistant-ui/react-ag-ui', () => ({
   useAgUiRuntime: () => ({ mockRuntime: true }),
 }));
 
-vi.mock('./JaegerAssistantToolsRegistrar', () => ({ default: () => null }));
-
 vi.mock('@assistant-ui/react', () => {
   const React = require('react');
   return {
@@ -43,7 +40,6 @@ vi.mock('@assistant-ui/react', () => {
     useAui: () => ({
       thread: () => ({ append: mockAppend }),
     }),
-    Tools: vi.fn(() => ({})),
     useThreadViewportAutoScroll: () => ({ current: null }),
     ComposerPrimitive: {
       Root: ({ children }) => <div data-testid="composer-root">{children}</div>,
@@ -66,14 +62,6 @@ vi.mock('@assistant-ui/react', () => {
             <>
               {children({ part: { type: 'text' } })}
               {children({ part: { type: 'reasoning' } })}
-              {children({
-                part: {
-                  type: 'tool-call',
-                  toolName: 'highlight_span',
-                  state: 'result',
-                  result: { ok: true, matchCount: 3 },
-                },
-              })}
             </>
           );
         }
@@ -222,58 +210,5 @@ describe('threadMessageComponents', () => {
     expect(screen.getByTestId('message-primitive-root')).toHaveClass(
       'JaegerAssistantPanel-message--assistant'
     );
-  });
-});
-
-describe('JaegerToolCallPart', () => {
-  function makePart(overrides = {}) {
-    return {
-      type: 'tool-call',
-      toolName: 'highlight_span',
-      state: 'result',
-      result: { ok: true, matchCount: 2 },
-      ...overrides,
-    };
-  }
-
-  it('shows pending state when tool call is in-flight', () => {
-    render(<JaegerToolCallPart part={makePart({ state: 'call', result: undefined })} />);
-    expect(screen.getByTestId('toolcall-pending')).toBeInTheDocument();
-    expect(screen.getByTestId('toolcall-pending')).toHaveTextContent('Locating span');
-  });
-
-  it('shows pending state when result is null', () => {
-    render(<JaegerToolCallPart part={makePart({ state: 'result', result: null })} />);
-    expect(screen.getByTestId('toolcall-pending')).toBeInTheDocument();
-  });
-
-  it('shows ok state with match count', () => {
-    render(<JaegerToolCallPart part={makePart()} />);
-    expect(screen.getByTestId('toolcall-ok')).toHaveTextContent('Highlighted 2 spans');
-  });
-
-  it('uses singular "span" for matchCount=1', () => {
-    render(<JaegerToolCallPart part={makePart({ result: { ok: true, matchCount: 1 } })} />);
-    expect(screen.getByTestId('toolcall-ok')).toHaveTextContent('Highlighted 1 span');
-  });
-
-  it('shows "Navigated to trace" when matchCount is not provided', () => {
-    render(<JaegerToolCallPart part={makePart({ result: { ok: true } })} />);
-    expect(screen.getByTestId('toolcall-ok')).toHaveTextContent('Navigated to trace');
-  });
-
-  it('shows error message when ok=false', () => {
-    render(<JaegerToolCallPart part={makePart({ result: { ok: false, error: 'No spans match "foo".' } })} />);
-    expect(screen.getByTestId('toolcall-error')).toHaveTextContent('No spans match "foo".');
-  });
-
-  it('falls back to generic error when error is missing', () => {
-    render(<JaegerToolCallPart part={makePart({ result: { ok: false } })} />);
-    expect(screen.getByTestId('toolcall-error')).toHaveTextContent('Could not locate span.');
-  });
-
-  it('JaegerThreadMessageBody renders tool-call parts', () => {
-    render(<JaegerThreadMessageBody variant="assistant" />);
-    expect(screen.getByTestId('toolcall-ok')).toBeInTheDocument();
   });
 });
