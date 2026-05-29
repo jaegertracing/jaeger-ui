@@ -138,6 +138,7 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
   const hoveredIndices = React.useRef<Set<number>>(new Set());
   const nodeRef = React.useRef<HTMLDivElement | null>(null);
   const prevDecorationID = React.useRef<string | undefined>(undefined);
+  const setViewModifierRef = React.useRef<TProps['setViewModifier']>(() => {});
 
   const {
     decorationID,
@@ -162,6 +163,11 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
   } = props;
 
   React.useEffect(() => {
+    setViewModifierRef.current = setViewModifier;
+  }, [setViewModifier]);
+
+  React.useEffect(() => {
+    // Match the former componentDidUpdate behavior: refresh only when decorationID changes.
     if (decorationID && prevDecorationID.current !== decorationID) {
       getDecoration(decorationID, service, typeof operation === 'string' ? operation : undefined);
     }
@@ -171,11 +177,11 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
   React.useEffect(
     () => () => {
       if (hoveredIndices.current.size) {
-        setViewModifier(Array.from(hoveredIndices.current), EViewModifier.Hovered, false);
+        setViewModifierRef.current(Array.from(hoveredIndices.current), EViewModifier.Hovered, false);
         hoveredIndices.current.clear();
       }
     },
-    [setViewModifier]
+    []
   );
 
   const checkTooltipPosition = React.useCallback(() => {

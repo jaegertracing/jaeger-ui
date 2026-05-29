@@ -395,18 +395,6 @@ describe('<DdgNodeContent>', () => {
       expect(mockQuerySelector).not.toHaveBeenCalled();
     });
 
-    it('does not recheck position when tooltip position has not changed', () => {
-      const { container } = render(<DdgNodeContent {...props} />);
-      const nodeContent = container.querySelector('.DdgNodeContent');
-      expect(nodeContent).toBeInTheDocument();
-
-      fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
-      mockQuerySelector.mockClear();
-      fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
-
-      expect(mockQuerySelector).not.toHaveBeenCalled();
-    });
-
     it('does not check position when already determined on subsequent hovers', () => {
       const { container } = render(<DdgNodeContent {...props} />);
       const nodeContent = container.querySelector('.DdgNodeContent');
