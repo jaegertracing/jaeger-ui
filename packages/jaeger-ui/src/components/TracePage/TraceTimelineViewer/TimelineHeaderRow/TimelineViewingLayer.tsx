@@ -113,7 +113,9 @@ function TimelineViewingLayer(props: TimelineViewingLayerProps) {
   const { boundsInvalidator, viewRangeTime } = props;
   const rootRef = React.useRef<HTMLDivElement>(null);
   const propsRef = React.useRef(props);
-  propsRef.current = props;
+  React.useLayoutEffect(() => {
+    propsRef.current = props;
+  });
 
   const getDraggingBounds = React.useCallback((): DraggableBounds => {
     const current = rootRef.current;
@@ -162,7 +164,7 @@ function TimelineViewingLayer(props: TimelineViewingLayerProps) {
   );
 
   const draggerReframeRef = React.useRef<DraggableManager | null>(null);
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     const manager = new DraggableManager({
       getBounds: getDraggingBounds,
       onDragEnd: handleReframeDragEnd,
@@ -198,16 +200,16 @@ function TimelineViewingLayer(props: TimelineViewingLayerProps) {
     draggerReframeRef.current?.handleMouseMove(event);
   }, []);
 
-  const hasMountedRef = React.useRef(false);
-  React.useEffect(() => {
+  const previousBoundsInvalidatorRef = React.useRef(boundsInvalidator);
+  React.useLayoutEffect(() => {
     const manager = draggerReframeRef.current;
     if (!manager) {
+      previousBoundsInvalidatorRef.current = boundsInvalidator;
       return;
     }
-    if (hasMountedRef.current) {
+    if (previousBoundsInvalidatorRef.current !== boundsInvalidator) {
       manager.resetBounds();
-    } else {
-      hasMountedRef.current = true;
+      previousBoundsInvalidatorRef.current = boundsInvalidator;
     }
   }, [boundsInvalidator]);
 
