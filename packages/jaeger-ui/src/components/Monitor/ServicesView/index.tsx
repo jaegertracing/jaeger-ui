@@ -308,7 +308,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
             >
               {timeFrameOptions.map(option => (
                 <Option key={option.value} value={option.value}>
-                  {option.label}
+                  {`Last ${option.label}`}
                 </Option>
               ))}
             </SearchableSelect>
@@ -367,7 +367,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
         <Row className="operation-table-block">
           <Col span={16}>
             <h2 className="table-header">Operations metrics under {getSelectedService()}</h2>{' '}
-            <span className="over-the-last">Over the {getLoopbackInterval(selectedTimeFrame)}</span>
+            <span className="over-the-last">Last {getLoopbackInterval(selectedTimeFrame)}</span>
           </Col>
           <Col span={8} className="select-operation-column">
             <Search

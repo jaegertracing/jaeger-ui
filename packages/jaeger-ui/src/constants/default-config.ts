@@ -61,7 +61,7 @@ const defaultConfig: Config = {
   ],
   search: {
     maxLookback: {
-      label: '2 Days',
+      label: '2 days',
       value: '2d',
     },
     maxLimit: 1500,
