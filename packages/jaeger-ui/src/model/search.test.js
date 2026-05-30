@@ -40,26 +40,44 @@ describe('sortTraces()', () => {
 });
 
 describe('sortTraceSummaries()', () => {
-  const { MOST_SPANS, LEAST_SPANS, LONGEST_FIRST, SHORTEST_FIRST, MOST_RECENT } = orderBy;
+  const {
+    MOST_SPANS,
+    LEAST_SPANS,
+    LONGEST_FIRST,
+    SHORTEST_FIRST,
+    MOST_RECENT,
+    OLDEST_FIRST,
+    TRACE_NAME_ASC,
+    TRACE_NAME_DESC,
+    MOST_ERRORS,
+    LEAST_ERRORS,
+  } = orderBy;
 
-  const makeSummary = (traceID, startTime, duration, spanCount) => ({
+  const makeSummary = (
     traceID,
-    traceName: `svc: op`,
+    startTime,
+    duration,
+    spanCount,
+    traceName = 'svc: op',
+    errorSpanCount = 0
+  ) => ({
+    traceID,
+    traceName,
     rootServiceName: 'svc',
     rootOperationName: 'op',
     startTime,
     duration,
     spanCount,
-    errorSpanCount: 0,
+    errorSpanCount,
     orphanSpanCount: 0,
     services: [],
   });
 
   const summaries = [
-    makeSummary('a', 100, 300, 10),
-    makeSummary('b', 400, 100, 50),
-    makeSummary('c', 200, 500, 5),
-    makeSummary('d', 300, 200, 1),
+    makeSummary('a', 100, 300, 10, 'beta', 3),
+    makeSummary('b', 400, 100, 50, 'alpha', 0),
+    makeSummary('c', 200, 500, 5, 'delta', 7),
+    makeSummary('d', 300, 200, 1, 'gamma', 1),
   ];
 
   it('returns a sorted copy without mutating the original array', () => {
@@ -71,6 +89,11 @@ describe('sortTraceSummaries()', () => {
   it(`sorts by ${MOST_RECENT}`, () => {
     const result = sortTraceSummaries(summaries, MOST_RECENT);
     expect(result[0].traceID).toBe('b'); // startTime 400
+  });
+
+  it(`sorts by ${OLDEST_FIRST}`, () => {
+    const result = sortTraceSummaries(summaries, OLDEST_FIRST);
+    expect(result[0].traceID).toBe('a'); // startTime 100
   });
 
   it(`sorts by ${LONGEST_FIRST}`, () => {
@@ -91,6 +114,26 @@ describe('sortTraceSummaries()', () => {
   it(`sorts by ${LEAST_SPANS}`, () => {
     const result = sortTraceSummaries(summaries, LEAST_SPANS);
     expect(result[0].traceID).toBe('d'); // spanCount 1
+  });
+
+  it(`sorts by ${TRACE_NAME_ASC}`, () => {
+    const result = sortTraceSummaries(summaries, TRACE_NAME_ASC);
+    expect(result[0].traceID).toBe('b'); // traceName 'alpha'
+  });
+
+  it(`sorts by ${TRACE_NAME_DESC}`, () => {
+    const result = sortTraceSummaries(summaries, TRACE_NAME_DESC);
+    expect(result[0].traceID).toBe('d'); // traceName 'gamma'
+  });
+
+  it(`sorts by ${MOST_ERRORS}`, () => {
+    const result = sortTraceSummaries(summaries, MOST_ERRORS);
+    expect(result[0].traceID).toBe('c'); // errorSpanCount 7
+  });
+
+  it(`sorts by ${LEAST_ERRORS}`, () => {
+    const result = sortTraceSummaries(summaries, LEAST_ERRORS);
+    expect(result[0].traceID).toBe('b'); // errorSpanCount 0
   });
 
   it('falls back to LONGEST_FIRST for unknown sort key', () => {
