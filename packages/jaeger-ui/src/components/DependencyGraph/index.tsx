@@ -14,14 +14,11 @@ import LoadingIndicator from '../common/LoadingIndicator';
 import { FALLBACK_DAG_MAX_NUM_SERVICES } from '../../constants';
 import getConfig from '../../utils/config/get-config';
 import { parseUiFind } from '../common/UiFindInput';
-import { useDependenciesQuery } from '../../hooks/useDependenciesQuery';
-import type { IServiceDependency } from '../../hooks/useDependenciesQuery';
+import { useDependenciesQuery, DATA_SOURCES } from '../../hooks/useDependenciesQuery';
+import type { IServiceDependency, DataSource } from '../../hooks/useDependenciesQuery';
 
 import './index.css';
-import { getAppEnvironment } from '../../utils/constants';
 import { ApiError } from '../../types/api-error';
-
-const sampleDatasetTypes = ['Backend', 'Small Graph', 'Large Graph'];
 
 const dagMaxNumServices = getConfig().dependencies?.dagMaxNumServices ?? FALLBACK_DAG_MAX_NUM_SERVICES;
 
@@ -29,26 +26,8 @@ export type TProps = {
   dependencies: IServiceDependency[];
   loading: boolean;
   error: ApiError | null | undefined;
-  onSampleDataLoaded?: () => void;
-  refetchDependencies?: () => void;
-};
-
-const createSampleDataManager = () => {
-  let sampleDAGDataset: IServiceDependency[] = [];
-  return {
-    getSampleData: () => sampleDAGDataset,
-    loadSampleData: async (type: string) => {
-      let module = {};
-      const isDev = getAppEnvironment() === 'development';
-      if (isDev && type === 'Small Graph') {
-        module = await import('./sample_data/small.json');
-      } else if (isDev && type === 'Large Graph') {
-        module = await import('./sample_data/large.json');
-      }
-      sampleDAGDataset = (module as { default: IServiceDependency[] }).default ?? [];
-      return sampleDAGDataset;
-    },
-  };
+  selectedDataSource: DataSource;
+  onDataSourceChange: (source: DataSource) => void;
 };
 
 const findConnectedServices = (
@@ -132,35 +111,15 @@ const formatServiceCalls = (
   };
 };
 
-const { getSampleData, loadSampleData } = createSampleDataManager();
-export { loadSampleData };
-
-function useEffectiveDependencies(apiDependencies: IServiceDependency[] | undefined, sampleRevision: number) {
-  return useMemo(() => {
-    // `void sampleRevision;` is load-bearing: the sample dataset lives in a
-    // module-level store that React cannot observe directly. We bump
-    // `sampleRevision` after every `loadSampleData()` to invalidate this memo
-    // (it appears in the dep array below). Without a syntactic reference in
-    // the body, `react-hooks/exhaustive-deps` flags the dependency as
-    // unnecessary and would have us remove it from the array, which would
-    // break the change-detection. Replace this hack with
-    // `useSyncExternalStore` if the sample store ever exposes subscribe.
-    void sampleRevision;
-    const sample = getSampleData();
-    return sample.length > 0 ? sample : (apiDependencies ?? []);
-  }, [apiDependencies, sampleRevision]);
-}
-
 // export for tests
 export function DependencyGraphPageImpl(props: TProps) {
-  const { dependencies, error, loading, onSampleDataLoaded, refetchDependencies } = props;
+  const { dependencies, error, loading, selectedDataSource, onDataSourceChange } = props;
   const { search } = useLocation();
   const uiFind = parseUiFind(search);
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [selectedLayout, setSelectedLayout] = useState<string | null>(null);
   const [selectedDepth, setSelectedDepth] = useState<number | null>(5);
   const [debouncedDepth, setDebouncedDepth] = useState<number | null>(5);
-  const [selectedSampleDatasetType, setSelectedSampleDatasetType] = useState<string>('Backend');
 
   const getMemoizedGraphData = useMemo(
     () =>
@@ -189,10 +148,7 @@ export function DependencyGraphPageImpl(props: TProps) {
   const selectedLayoutRef = useRef(selectedLayout);
   selectedLayoutRef.current = selectedLayout;
 
-  const dependenciesRef = useRef(dependencies);
-  const updateLayout = useCallback(() => {
-    const dataset: IServiceDependency[] =
-      getSampleData().length > 0 ? getSampleData() : dependenciesRef.current;
+  const updateLayout = useCallback((dataset: IServiceDependency[]) => {
     const layout: 'dot' | 'sfdp' = dataset.length > dagMaxNumServices ? 'sfdp' : 'dot';
     if (layout !== selectedLayoutRef.current) {
       setSelectedLayout(layout);
@@ -203,21 +159,14 @@ export function DependencyGraphPageImpl(props: TProps) {
   }, []);
 
   useEffect(() => {
-    updateLayout();
-  }, [updateLayout]);
+    updateLayout(dependencies);
+  }, [dependencies, updateLayout]);
 
   useEffect(() => {
     return () => {
       debouncedDepthChange.cancel();
     };
   }, [debouncedDepthChange]);
-
-  useEffect(() => {
-    if (dependenciesRef.current !== dependencies) {
-      dependenciesRef.current = dependencies;
-      updateLayout();
-    }
-  }, [dependencies, updateLayout]);
 
   const handleServiceSelect = (service: string | null) => setSelectedService(service);
   const handleLayoutSelect = (layout: string) => setSelectedLayout(layout);
@@ -233,14 +182,6 @@ export function DependencyGraphPageImpl(props: TProps) {
       setSelectedDepth(0);
       setDebouncedDepth(0);
     }
-  };
-
-  const handleSampleDatasetTypeChange = (type: string) => {
-    setSelectedSampleDatasetType(type);
-    loadSampleData(type).then(() => {
-      onSampleDataLoaded?.();
-      refetchDependencies?.();
-    });
   };
 
   const handleReset = () => {
@@ -289,9 +230,9 @@ export function DependencyGraphPageImpl(props: TProps) {
           selectedDepth={selectedDepth ?? undefined}
           onReset={handleReset}
           isHierarchicalDisabled={isHierarchicalDisabled}
-          selectedSampleDatasetType={selectedSampleDatasetType}
-          onSampleDatasetTypeChange={handleSampleDatasetTypeChange}
-          sampleDatasetTypes={sampleDatasetTypes}
+          selectedDataSource={selectedDataSource}
+          onDataSourceChange={onDataSourceChange}
+          dataSources={DATA_SOURCES}
           uiFind={uiFind}
           matchCount={matchCount}
         />
@@ -311,20 +252,16 @@ export function DependencyGraphPageImpl(props: TProps) {
 }
 
 export default function DependencyGraphPage() {
-  const { data, isLoading, error, refetch } = useDependenciesQuery();
-  const [sampleRevision, setSampleRevision] = useState(0);
-  const dependencies = useEffectiveDependencies(data, sampleRevision);
-  const usingSampleData = getSampleData().length > 0;
+  const [selectedDataSource, setSelectedDataSource] = useState<DataSource>('Backend');
+  const { data, isLoading, error } = useDependenciesQuery(selectedDataSource);
 
   return (
     <DependencyGraphPageImpl
-      dependencies={dependencies}
-      loading={usingSampleData ? false : isLoading}
-      error={usingSampleData ? null : (error as ApiError | null)}
-      onSampleDataLoaded={() => setSampleRevision(r => r + 1)}
-      refetchDependencies={() => {
-        refetch();
-      }}
+      dependencies={data ?? []}
+      loading={isLoading}
+      error={error as ApiError | null}
+      selectedDataSource={selectedDataSource}
+      onDataSourceChange={setSelectedDataSource}
     />
   );
 }

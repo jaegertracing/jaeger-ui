@@ -1,10 +1,10 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useRef } from 'react';
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
 import JaegerAPI, { DEFAULT_DEPENDENCY_LOOKBACK } from '../api/jaeger';
 import type { ApiError } from '../types/api-error';
+import { getAppEnvironment } from '../utils/constants';
 
 export type IServiceDependency = {
   parent: string;
@@ -12,16 +12,14 @@ export type IServiceDependency = {
   callCount: number;
 };
 
+export type DataSource = 'Backend' | 'Small Graph' | 'Large Graph';
+export const DEV_DATA_SOURCES: DataSource[] = ['Small Graph', 'Large Graph'];
+export const DATA_SOURCES: DataSource[] = ['Backend', ...DEV_DATA_SOURCES];
+
 export type IDependenciesQueryParams = {
   endTs?: number;
   lookback?: number;
 };
-
-function dependenciesQueryKey(
-  params: IDependenciesQueryParams
-): readonly ['dependencies', IDependenciesQueryParams] {
-  return ['dependencies', params] as const;
-}
 
 function normalizeDependenciesResponse(response: unknown): IServiceDependency[] {
   if (Array.isArray(response)) {
@@ -35,24 +33,36 @@ function normalizeDependenciesResponse(response: unknown): IServiceDependency[] 
 }
 
 // React Query hook for the service dependency graph (`GET /api/dependencies`).
-// Query key is parameterised by `endTs` and `lookback` (defaults match legacy Redux fetch).
+// `source` selects between the real backend and the dev-only canned datasets
+// shipped under `components/DependencyGraph/sample_data/`. The dev sources are
+// guarded by `getAppEnvironment() === 'development'`, which Vite constant-folds
+// at build time so the JSON imports tree-shake out of production bundles.
+// `endTs` is resolved inside `queryFn` so refetches (incl. window-focus) walk
+// the time window forward instead of pinning it at mount time.
 export function useDependenciesQuery(
+  source: DataSource = 'Backend',
   params: IDependenciesQueryParams = {}
 ): UseQueryResult<IServiceDependency[], ApiError> {
-  const defaultEndTsRef = useRef<number | undefined>(undefined);
-  if (defaultEndTsRef.current === undefined && params.endTs === undefined) {
-    defaultEndTsRef.current = Date.now();
-  }
-
-  const endTs = params.endTs ?? defaultEndTsRef.current!;
   const lookback = params.lookback ?? DEFAULT_DEPENDENCY_LOOKBACK;
-  const queryParams = { endTs, lookback };
+  // When `endTs` is omitted, leave it out of the query key entirely so cache
+  // entries are shared across mounts. When an explicit `endTs` is passed, it
+  // varies the key as expected.
+  const keyEndTs = params.endTs ?? null;
+  const isDev = getAppEnvironment() === 'development';
 
   return useQuery({
-    queryKey: dependenciesQueryKey(queryParams),
+    queryKey: ['dependencies', source, keyEndTs, lookback],
     queryFn: async () => {
-      const response = await JaegerAPI.fetchDependencies(endTs, lookback);
-      return normalizeDependenciesResponse(response);
+      if (isDev && source === 'Small Graph') {
+        const mod = await import('../components/DependencyGraph/sample_data/small.json');
+        return mod.default as IServiceDependency[];
+      }
+      if (isDev && source === 'Large Graph') {
+        const mod = await import('../components/DependencyGraph/sample_data/large.json');
+        return mod.default as IServiceDependency[];
+      }
+      const endTs = params.endTs ?? Date.now();
+      return normalizeDependenciesResponse(await JaegerAPI.fetchDependencies(endTs, lookback));
     },
     staleTime: 60 * 1000,
     refetchOnWindowFocus: true,

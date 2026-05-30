@@ -29,9 +29,9 @@ const defaultProps = {
   selectedDepth: 5,
   onReset: jest.fn(),
   isHierarchicalDisabled: false,
-  selectedSampleDatasetType: null,
-  onSampleDatasetTypeChange: jest.fn(),
-  sampleDatasetTypes: ['Small Graph', 'Large Graph'],
+  selectedDataSource: null,
+  onDataSourceChange: jest.fn(),
+  dataSources: ['Small Graph', 'Large Graph'],
   uiFind: 'test',
   matchCount: 3,
 };
@@ -307,52 +307,52 @@ describe('DAGOptions', () => {
     expect(screen.getByDisplayValue('0')).toBeInTheDocument();
   });
 
-  it('renders sample dataset type selector in development mode', () => {
+  it('renders data source selector in development mode', () => {
     jest.spyOn(constants, 'getAppEnvironment').mockReturnValue('development');
     render(<DAGOptions {...defaultProps} />);
 
-    expect(screen.getByTestId('sample-dataset-type-select')).toBeInTheDocument();
+    expect(screen.getByTestId('data-source-select')).toBeInTheDocument();
   });
 
-  it('does not render sample dataset type selector in production mode', () => {
+  it('does not render data source selector in production mode', () => {
     jest.spyOn(constants, 'getAppEnvironment').mockReturnValue('production');
     render(<DAGOptions {...defaultProps} />);
 
-    expect(screen.queryByTestId('sample-dataset-type-select')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('data-source-select')).not.toBeInTheDocument();
   });
 
-  it('handles sample dataset type selection', () => {
+  it('handles data source selection', () => {
     jest.spyOn(constants, 'getAppEnvironment').mockReturnValue('development');
     render(<DAGOptions {...defaultProps} />);
-    const sampleDatasetTypeSelect = screen.getByTestId('sample-dataset-type-select');
+    const dataSourceSelect = screen.getByTestId('data-source-select');
 
-    const selectElement = within(sampleDatasetTypeSelect).getByRole('combobox');
+    const selectElement = within(dataSourceSelect).getByRole('combobox');
     fireEvent.mouseDown(selectElement);
 
-    const sampleDatasetTypeOption = screen.getByTestId('sample-dataset-type-option-Small Graph');
-    expect(sampleDatasetTypeOption).toHaveClass('ant-select-item ant-select-item-option');
-    const optionContent = sampleDatasetTypeOption.querySelector('.ant-select-item-option-content');
+    const dataSourceOption = screen.getByTestId('data-source-option-Small Graph');
+    expect(dataSourceOption).toHaveClass('ant-select-item ant-select-item-option');
+    const optionContent = dataSourceOption.querySelector('.ant-select-item-option-content');
     expect(optionContent).toHaveTextContent('Small Graph');
 
-    fireEvent.click(sampleDatasetTypeOption);
-    expect(defaultProps.onSampleDatasetTypeChange).toHaveBeenCalledWith(
+    fireEvent.click(dataSourceOption);
+    expect(defaultProps.onDataSourceChange).toHaveBeenCalledWith(
       'Small Graph',
       expect.objectContaining({
         value: 'Small Graph',
         children: 'Small Graph',
-        'data-testid': 'sample-dataset-type-option-Small Graph',
+        'data-testid': 'data-source-option-Small Graph',
       })
     );
   });
 
-  it('maintains selected sample dataset type value correctly', () => {
+  it('maintains selected data source value correctly', () => {
     jest.spyOn(constants, 'getAppEnvironment').mockReturnValue('development');
-    render(<DAGOptions {...defaultProps} selectedSampleDatasetType="Small Graph" />);
+    render(<DAGOptions {...defaultProps} selectedDataSource="Small Graph" />);
 
-    const sampleDatasetTypeSelect = screen.getByTestId('sample-dataset-type-select');
-    const sampleDatasetTypeValue = within(sampleDatasetTypeSelect).getByRole('combobox');
-    expect(sampleDatasetTypeValue).toHaveAttribute('aria-expanded', 'false');
-    expect(within(sampleDatasetTypeSelect).getByText('Small Graph')).toBeInTheDocument();
+    const dataSourceSelect = screen.getByTestId('data-source-select');
+    const dataSourceValue = within(dataSourceSelect).getByRole('combobox');
+    expect(dataSourceValue).toHaveAttribute('aria-expanded', 'false');
+    expect(within(dataSourceSelect).getByText('Small Graph')).toBeInTheDocument();
   });
 
   it('renders search input with match count when uiFind is provided', () => {

@@ -5,6 +5,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import JaegerAPI, { DEFAULT_DEPENDENCY_LOOKBACK } from '../api/jaeger';
+import * as constants from '../utils/constants';
 import { useDependenciesQuery } from './useDependenciesQuery';
 
 describe('useDependenciesQuery', () => {
@@ -32,13 +33,14 @@ describe('useDependenciesQuery', () => {
 
   afterEach(() => {
     queryClient?.clear();
+    vi.restoreAllMocks();
   });
 
-  it('fetches dependencies and returns the data array', async () => {
+  it('fetches dependencies and returns the data array for the Backend source', async () => {
     const deps = [{ parent: 'a', child: 'b', callCount: 1 }];
     (JaegerAPI.fetchDependencies as ReturnType<typeof vi.fn>).mockResolvedValue({ data: deps });
 
-    const { result } = renderHook(() => useDependenciesQuery(), {
+    const { result } = renderHook(() => useDependenciesQuery('Backend'), {
       wrapper: createWrapper(),
     });
 
@@ -47,13 +49,27 @@ describe('useDependenciesQuery', () => {
     expect(JaegerAPI.fetchDependencies).toHaveBeenCalledWith(expect.any(Number), DEFAULT_DEPENDENCY_LOOKBACK);
   });
 
-  it('uses explicit endTs and lookback in the query key', async () => {
-    (JaegerAPI.fetchDependencies as ReturnType<typeof vi.fn>).mockResolvedValue({ data: [] });
+  it('defaults to the Backend source when called without arguments', async () => {
+    const deps = [{ parent: 'a', child: 'b', callCount: 1 }];
+    (JaegerAPI.fetchDependencies as ReturnType<typeof vi.fn>).mockResolvedValue({ data: deps });
 
-    const params = { endTs: 12345, lookback: 3600000 };
-    const { result } = renderHook(() => useDependenciesQuery(params), {
+    const { result } = renderHook(() => useDependenciesQuery(), {
       wrapper: createWrapper(),
     });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(JaegerAPI.fetchDependencies).toHaveBeenCalled();
+  });
+
+  it('passes explicit endTs and lookback through to the API call', async () => {
+    (JaegerAPI.fetchDependencies as ReturnType<typeof vi.fn>).mockResolvedValue({ data: [] });
+
+    const { result } = renderHook(
+      () => useDependenciesQuery('Backend', { endTs: 12345, lookback: 3600000 }),
+      {
+        wrapper: createWrapper(),
+      }
+    );
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(JaegerAPI.fetchDependencies).toHaveBeenCalledWith(12345, 3600000);
@@ -63,7 +79,7 @@ describe('useDependenciesQuery', () => {
     const deps = [{ parent: 'svc-a', child: 'svc-b', callCount: 7 }];
     (JaegerAPI.fetchDependencies as ReturnType<typeof vi.fn>).mockResolvedValue(deps);
 
-    const { result } = renderHook(() => useDependenciesQuery(), {
+    const { result } = renderHook(() => useDependenciesQuery('Backend'), {
       wrapper: createWrapper(),
     });
 
@@ -74,7 +90,7 @@ describe('useDependenciesQuery', () => {
   it('returns [] when response.data is not an array', async () => {
     (JaegerAPI.fetchDependencies as ReturnType<typeof vi.fn>).mockResolvedValue({ data: 'unexpected' });
 
-    const { result } = renderHook(() => useDependenciesQuery(), {
+    const { result } = renderHook(() => useDependenciesQuery('Backend'), {
       wrapper: createWrapper(),
     });
 
@@ -85,11 +101,64 @@ describe('useDependenciesQuery', () => {
   it('returns [] for an unrecognised response shape (neither array nor `data` envelope)', async () => {
     (JaegerAPI.fetchDependencies as ReturnType<typeof vi.fn>).mockResolvedValue(null);
 
-    const { result } = renderHook(() => useDependenciesQuery(), {
+    const { result } = renderHook(() => useDependenciesQuery('Backend'), {
       wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual([]);
+  });
+
+  it('resolves endTs lazily so refetches advance the time window', async () => {
+    (JaegerAPI.fetchDependencies as ReturnType<typeof vi.fn>).mockResolvedValue({ data: [] });
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(1000);
+
+    const { result } = renderHook(() => useDependenciesQuery('Backend'), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(JaegerAPI.fetchDependencies).toHaveBeenNthCalledWith(1, 1000, DEFAULT_DEPENDENCY_LOOKBACK);
+
+    nowSpy.mockReturnValue(2000);
+    await result.current.refetch();
+
+    expect(JaegerAPI.fetchDependencies).toHaveBeenLastCalledWith(2000, DEFAULT_DEPENDENCY_LOOKBACK);
+  });
+
+  it('loads the small graph sample in development mode without hitting the API', async () => {
+    vi.spyOn(constants, 'getAppEnvironment').mockReturnValue('development');
+
+    const { result } = renderHook(() => useDependenciesQuery('Small Graph'), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(JaegerAPI.fetchDependencies).not.toHaveBeenCalled();
+    expect(Array.isArray(result.current.data)).toBe(true);
+  });
+
+  it('loads the large graph sample in development mode without hitting the API', async () => {
+    vi.spyOn(constants, 'getAppEnvironment').mockReturnValue('development');
+
+    const { result } = renderHook(() => useDependenciesQuery('Large Graph'), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(JaegerAPI.fetchDependencies).not.toHaveBeenCalled();
+    expect(Array.isArray(result.current.data)).toBe(true);
+  });
+
+  it('falls back to the backend fetch for dev sources when not in development mode', async () => {
+    vi.spyOn(constants, 'getAppEnvironment').mockReturnValue('production');
+    (JaegerAPI.fetchDependencies as ReturnType<typeof vi.fn>).mockResolvedValue({ data: [] });
+
+    const { result } = renderHook(() => useDependenciesQuery('Small Graph'), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(JaegerAPI.fetchDependencies).toHaveBeenCalled();
   });
 });

@@ -1,15 +1,16 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen, act, cleanup, waitFor } from '@testing-library/react';
+import { render, screen, act, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 import * as constants from '../../utils/constants';
 
-import DependencyGraphPage, { DependencyGraphPageImpl as DependencyGraph, loadSampleData } from './index';
+import DependencyGraphPage, { DependencyGraphPageImpl as DependencyGraph } from './index';
 import { useDependenciesQuery } from '../../hooks/useDependenciesQuery';
 
-vi.mock('../../hooks/useDependenciesQuery', () => ({
+vi.mock('../../hooks/useDependenciesQuery', async actual => ({
+  ...(await actual()),
   useDependenciesQuery: vi.fn(),
 }));
 
@@ -56,6 +57,8 @@ const defaultProps = {
   dependencies,
   error: null,
   loading: false,
+  selectedDataSource: 'Backend',
+  onDataSourceChange: () => {},
 };
 
 const renderComponent = (extraProps = {}) =>
@@ -108,15 +111,6 @@ describe('<DependencyGraph>', () => {
     beforeEach(() => {
       jest.resetAllMocks();
       jest.spyOn(constants, 'getAppEnvironment').mockReturnValue('development');
-    });
-
-    afterEach(async () => {
-      // Reset the module-level sampleDAGDataset closure. loadSampleData() with a
-      // non-matching type runs synchronously and sets the dataset to []. This is
-      // needed because loadSampleData('Small Graph') uses a dynamic import that
-      // resolves asynchronously and can overwrite a prior null-reset, leaving
-      // stale data visible to later tests (e.g. mapStateToProps).
-      await loadSampleData('');
     });
 
     it('initializes with default values', () => {
@@ -282,23 +276,13 @@ describe('<DependencyGraph>', () => {
       });
     });
 
-    it('handles sample dataset type change', async () => {
-      const selectedSampleDatasetType = 'Small Graph';
-      await act(async () => {
-        await lastDAGOptionsProps.onSampleDatasetTypeChange(selectedSampleDatasetType);
+    it('propagates data source change via the onDataSourceChange prop', () => {
+      const onDataSourceChange = jest.fn();
+      renderComponent({ onDataSourceChange });
+      act(() => {
+        lastDAGOptionsProps.onDataSourceChange('Small Graph');
       });
-
-      expect(lastDAGOptionsProps.selectedSampleDatasetType).toBe(selectedSampleDatasetType);
-      expect(lastDAGOptionsProps.selectedLayout).toBe('dot');
-
-      await act(async () => {
-        await lastDAGOptionsProps.onSampleDatasetTypeChange(null);
-      });
-      expect(lastDAGOptionsProps.selectedSampleDatasetType).toBe(null);
-
-      await act(async () => {
-        await lastDAGOptionsProps.onSampleDatasetTypeChange(null);
-      });
+      expect(onDataSourceChange).toHaveBeenCalledWith('Small Graph');
     });
 
     it('passes computed match count to DAGOptions based on uiFind from URL and dependencies', () => {
@@ -461,26 +445,25 @@ describe('DependencyGraphPage (default export wired to useDependenciesQuery)', (
     vi.mocked(useDependenciesQuery).mockReset();
   });
 
-  it('passes API data through useEffectiveDependencies into DAGOptions.dependencies', () => {
-    const apiDeps = [{ parent: 'svc-a', child: 'svc-b', callCount: 4 }];
+  it('starts with the Backend data source and passes it to the query hook', () => {
     vi.mocked(useDependenciesQuery).mockReturnValue({
-      data: apiDeps,
+      data: [{ parent: 'svc-a', child: 'svc-b', callCount: 4 }],
       isLoading: false,
       error: null,
-      refetch: vi.fn(),
     });
 
     renderDefault();
 
-    expect(lastDAGOptionsProps.dependencies).toEqual(apiDeps);
+    expect(useDependenciesQuery).toHaveBeenCalledWith('Backend');
+    expect(lastDAGOptionsProps.selectedDataSource).toBe('Backend');
+    expect(lastDAGOptionsProps.dependencies).toEqual([{ parent: 'svc-a', child: 'svc-b', callCount: 4 }]);
   });
 
-  it('renders LoadingIndicator when the query is loading and no sample is active', () => {
+  it('renders LoadingIndicator while the query is loading', () => {
     vi.mocked(useDependenciesQuery).mockReturnValue({
       data: undefined,
       isLoading: true,
       error: null,
-      refetch: vi.fn(),
     });
 
     renderDefault();
@@ -488,12 +471,11 @@ describe('DependencyGraphPage (default export wired to useDependenciesQuery)', (
     expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
   });
 
-  it('renders ErrorMessage when the query errors and no sample is active', () => {
+  it('renders ErrorMessage when the query errors', () => {
     vi.mocked(useDependenciesQuery).mockReturnValue({
       data: undefined,
       isLoading: false,
       error: new Error('boom'),
-      refetch: vi.fn(),
     });
 
     renderDefault();
@@ -501,41 +483,33 @@ describe('DependencyGraphPage (default export wired to useDependenciesQuery)', (
     expect(screen.getByTestId('error-message')).toBeInTheDocument();
   });
 
-  it('treats undefined data as empty deps via useEffectiveDependencies', () => {
+  it('treats undefined data as empty deps and shows the empty state', () => {
     vi.mocked(useDependenciesQuery).mockReturnValue({
       data: undefined,
       isLoading: false,
       error: null,
-      refetch: vi.fn(),
     });
 
     renderDefault();
 
-    // Impl short-circuits to the empty-state message when dependencies.length === 0.
     expect(screen.getByText(/no.*?found/i)).toBeInTheDocument();
   });
 
-  it('switching dataset source via DAGOptions triggers refetch and re-evaluates useEffectiveDependencies', async () => {
-    const refetch = vi.fn();
+  it('changing the data source re-invokes useDependenciesQuery with the new source', () => {
     vi.mocked(useDependenciesQuery).mockReturnValue({
-      data: [{ parent: 'api-a', child: 'api-b', callCount: 1 }],
+      data: [{ parent: 'a', child: 'b', callCount: 1 }],
       isLoading: false,
       error: null,
-      refetch,
     });
 
     renderDefault();
-    expect(lastDAGOptionsProps.dependencies).toEqual([{ parent: 'api-a', child: 'api-b', callCount: 1 }]);
+    expect(useDependenciesQuery).toHaveBeenLastCalledWith('Backend');
 
-    // This path invokes loadSampleData() then onSampleDataLoaded() + refetchDependencies()
-    // inside the impl's handler. loadSampleData('Backend') is the prod-safe branch (no
-    // dynamic import) which clears the sample store, so useEffectiveDependencies will
-    // re-evaluate and continue to show the API data.
-    await act(async () => {
-      await lastDAGOptionsProps.onSampleDatasetTypeChange('Backend');
+    act(() => {
+      lastDAGOptionsProps.onDataSourceChange('Small Graph');
     });
 
-    expect(refetch).toHaveBeenCalled();
-    expect(lastDAGOptionsProps.dependencies).toEqual([{ parent: 'api-a', child: 'api-b', callCount: 1 }]);
+    expect(useDependenciesQuery).toHaveBeenLastCalledWith('Small Graph');
+    expect(lastDAGOptionsProps.selectedDataSource).toBe('Small Graph');
   });
 });
