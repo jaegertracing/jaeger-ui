@@ -1,12 +1,17 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen, act, cleanup } from '@testing-library/react';
+import { render, screen, act, cleanup, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 import * as constants from '../../utils/constants';
 
-import { DependencyGraphPageImpl as DependencyGraph, loadSampleData } from './index';
+import DependencyGraphPage, { DependencyGraphPageImpl as DependencyGraph, loadSampleData } from './index';
+import { useDependenciesQuery } from '../../hooks/useDependenciesQuery';
+
+vi.mock('../../hooks/useDependenciesQuery', () => ({
+  useDependenciesQuery: vi.fn(),
+}));
 
 let lastDAGOptionsProps = {};
 let lastDAGProps = {};
@@ -439,5 +444,98 @@ describe('<DependencyGraph>', () => {
       expect(lastDAGProps.data.nodes).toEqual(expect.arrayContaining([{ key: 'A' }, { key: 'B' }]));
       expect(lastDAGProps.data.edges).toHaveLength(1);
     });
+  });
+});
+
+describe('DependencyGraphPage (default export wired to useDependenciesQuery)', () => {
+  const renderDefault = () =>
+    render(
+      <MemoryRouter>
+        <DependencyGraphPage />
+      </MemoryRouter>
+    );
+
+  beforeEach(() => {
+    lastDAGOptionsProps = {};
+    lastDAGProps = {};
+    vi.mocked(useDependenciesQuery).mockReset();
+  });
+
+  it('passes API data through useEffectiveDependencies into DAGOptions.dependencies', () => {
+    const apiDeps = [{ parent: 'svc-a', child: 'svc-b', callCount: 4 }];
+    vi.mocked(useDependenciesQuery).mockReturnValue({
+      data: apiDeps,
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    renderDefault();
+
+    expect(lastDAGOptionsProps.dependencies).toEqual(apiDeps);
+  });
+
+  it('renders LoadingIndicator when the query is loading and no sample is active', () => {
+    vi.mocked(useDependenciesQuery).mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    renderDefault();
+
+    expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
+  });
+
+  it('renders ErrorMessage when the query errors and no sample is active', () => {
+    vi.mocked(useDependenciesQuery).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: new Error('boom'),
+      refetch: vi.fn(),
+    });
+
+    renderDefault();
+
+    expect(screen.getByTestId('error-message')).toBeInTheDocument();
+  });
+
+  it('treats undefined data as empty deps via useEffectiveDependencies', () => {
+    vi.mocked(useDependenciesQuery).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    renderDefault();
+
+    // Impl short-circuits to the empty-state message when dependencies.length === 0.
+    expect(screen.getByText(/no.*?found/i)).toBeInTheDocument();
+  });
+
+  it('switching dataset source via DAGOptions triggers refetch and re-evaluates useEffectiveDependencies', async () => {
+    const refetch = vi.fn();
+    vi.mocked(useDependenciesQuery).mockReturnValue({
+      data: [{ parent: 'api-a', child: 'api-b', callCount: 1 }],
+      isLoading: false,
+      error: null,
+      refetch,
+    });
+
+    renderDefault();
+    expect(lastDAGOptionsProps.dependencies).toEqual([{ parent: 'api-a', child: 'api-b', callCount: 1 }]);
+
+    // This path invokes loadSampleData() then onSampleDataLoaded() + refetchDependencies()
+    // inside the impl's handler. loadSampleData('Backend') is the prod-safe branch (no
+    // dynamic import) which clears the sample store, so useEffectiveDependencies will
+    // re-evaluate and continue to show the API data.
+    await act(async () => {
+      await lastDAGOptionsProps.onSampleDatasetTypeChange('Backend');
+    });
+
+    expect(refetch).toHaveBeenCalled();
+    expect(lastDAGOptionsProps.dependencies).toEqual([{ parent: 'api-a', child: 'api-b', callCount: 1 }]);
   });
 });

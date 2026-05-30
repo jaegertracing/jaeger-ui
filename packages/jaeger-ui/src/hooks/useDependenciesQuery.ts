@@ -35,7 +35,7 @@ function normalizeDependenciesResponse(response: unknown): IServiceDependency[] 
 }
 
 // React Query hook for the service dependency graph (`GET /api/dependencies`).
-//Query key is parameterised by `endTs` and `lookback` (defaults match legacy Redux fetch).
+// Query key is parameterised by `endTs` and `lookback` (defaults match legacy Redux fetch).
 export function useDependenciesQuery(
   params: IDependenciesQueryParams = {}
 ): UseQueryResult<IServiceDependency[], ApiError> {

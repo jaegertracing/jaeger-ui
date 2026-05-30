@@ -58,4 +58,38 @@ describe('useDependenciesQuery', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(JaegerAPI.fetchDependencies).toHaveBeenCalledWith(12345, 3600000);
   });
+
+  it('returns a raw array response unchanged (no `data` envelope)', async () => {
+    const deps = [{ parent: 'svc-a', child: 'svc-b', callCount: 7 }];
+    (JaegerAPI.fetchDependencies as ReturnType<typeof vi.fn>).mockResolvedValue(deps);
+
+    const { result } = renderHook(() => useDependenciesQuery(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toEqual(deps);
+  });
+
+  it('returns [] when response.data is not an array', async () => {
+    (JaegerAPI.fetchDependencies as ReturnType<typeof vi.fn>).mockResolvedValue({ data: 'unexpected' });
+
+    const { result } = renderHook(() => useDependenciesQuery(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toEqual([]);
+  });
+
+  it('returns [] for an unrecognised response shape (neither array nor `data` envelope)', async () => {
+    (JaegerAPI.fetchDependencies as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+
+    const { result } = renderHook(() => useDependenciesQuery(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toEqual([]);
+  });
 });

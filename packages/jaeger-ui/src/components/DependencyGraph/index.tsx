@@ -137,7 +137,14 @@ export { loadSampleData };
 
 function useEffectiveDependencies(apiDependencies: IServiceDependency[] | undefined, sampleRevision: number) {
   return useMemo(() => {
-    // sampleRevision bumps when loadSampleData completes (module-level sample store)
+    // `void sampleRevision;` is load-bearing: the sample dataset lives in a
+    // module-level store that React cannot observe directly. We bump
+    // `sampleRevision` after every `loadSampleData()` to invalidate this memo
+    // (it appears in the dep array below). Without a syntactic reference in
+    // the body, `react-hooks/exhaustive-deps` flags the dependency as
+    // unnecessary and would have us remove it from the array, which would
+    // break the change-detection. Replace this hack with
+    // `useSyncExternalStore` if the sample store ever exposes subscribe.
     void sampleRevision;
     const sample = getSampleData();
     return sample.length > 0 ? sample : (apiDependencies ?? []);
