@@ -13,10 +13,9 @@ export type IServiceDependency = {
 };
 
 export type DataSource = 'Backend' | 'Small Graph' | 'Large Graph';
-export const DEV_DATA_SOURCES: DataSource[] = ['Small Graph', 'Large Graph'];
-export const DATA_SOURCES: DataSource[] = ['Backend', ...DEV_DATA_SOURCES];
+export const DATA_SOURCES: DataSource[] = ['Backend', 'Small Graph', 'Large Graph'];
 
-export type IDependenciesQueryParams = {
+type DependenciesQueryParams = {
   endTs?: number;
   lookback?: number;
 };
@@ -41,7 +40,7 @@ function normalizeDependenciesResponse(response: unknown): IServiceDependency[] 
 // the time window forward instead of pinning it at mount time.
 export function useDependenciesQuery(
   source: DataSource = 'Backend',
-  params: IDependenciesQueryParams = {}
+  params: DependenciesQueryParams = {}
 ): UseQueryResult<IServiceDependency[], ApiError> {
   const lookback = params.lookback ?? DEFAULT_DEPENDENCY_LOOKBACK;
   // When `endTs` is omitted, leave it out of the query key entirely so cache
