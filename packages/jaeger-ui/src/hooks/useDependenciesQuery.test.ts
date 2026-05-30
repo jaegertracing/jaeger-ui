@@ -5,7 +5,6 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import JaegerAPI, { DEFAULT_DEPENDENCY_LOOKBACK } from '../api/jaeger';
-import * as constants from '../utils/constants';
 import { useDependenciesQuery } from './useDependenciesQuery';
 
 describe('useDependenciesQuery', () => {
@@ -126,9 +125,12 @@ describe('useDependenciesQuery', () => {
     expect(JaegerAPI.fetchDependencies).toHaveBeenLastCalledWith(2000, DEFAULT_DEPENDENCY_LOOKBACK);
   });
 
-  it('loads the small graph sample in development mode without hitting the API', async () => {
-    vi.spyOn(constants, 'getAppEnvironment').mockReturnValue('development');
-
+  // Vitest sets `import.meta.env.DEV` to `true`, so these tests exercise the
+  // dev branches that Vite constant-folds away in production builds. The
+  // "production" path (dev sources falling back to the backend) is verified by
+  // the build itself — `small-*.js` / `large-*.js` chunks must not exist in
+  // the production output — and isn't reproducible at test runtime.
+  it('loads the small graph sample without hitting the API', async () => {
     const { result } = renderHook(() => useDependenciesQuery('Small Graph'), {
       wrapper: createWrapper(),
     });
@@ -138,9 +140,7 @@ describe('useDependenciesQuery', () => {
     expect(Array.isArray(result.current.data)).toBe(true);
   });
 
-  it('loads the large graph sample in development mode without hitting the API', async () => {
-    vi.spyOn(constants, 'getAppEnvironment').mockReturnValue('development');
-
+  it('loads the large graph sample without hitting the API', async () => {
     const { result } = renderHook(() => useDependenciesQuery('Large Graph'), {
       wrapper: createWrapper(),
     });
@@ -148,17 +148,5 @@ describe('useDependenciesQuery', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(JaegerAPI.fetchDependencies).not.toHaveBeenCalled();
     expect(Array.isArray(result.current.data)).toBe(true);
-  });
-
-  it('falls back to the backend fetch for dev sources when not in development mode', async () => {
-    vi.spyOn(constants, 'getAppEnvironment').mockReturnValue('production');
-    (JaegerAPI.fetchDependencies as ReturnType<typeof vi.fn>).mockResolvedValue({ data: [] });
-
-    const { result } = renderHook(() => useDependenciesQuery('Small Graph'), {
-      wrapper: createWrapper(),
-    });
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(JaegerAPI.fetchDependencies).toHaveBeenCalled();
   });
 });
