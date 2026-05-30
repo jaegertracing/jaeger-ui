@@ -1,17 +1,17 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen, act, cleanup } from '@testing-library/react';
+import { render, screen, act, cleanup, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 import * as constants from '../../utils/constants';
 
-import {
-  DependencyGraphPageImpl as DependencyGraph,
-  mapDispatchToProps,
-  mapStateToProps,
-  loadSampleData,
-} from './index';
+import DependencyGraphPage, { DependencyGraphPageImpl as DependencyGraph, loadSampleData } from './index';
+import { useDependenciesQuery } from '../../hooks/useDependenciesQuery';
+
+vi.mock('../../hooks/useDependenciesQuery', () => ({
+  useDependenciesQuery: vi.fn(),
+}));
 
 let lastDAGOptionsProps = {};
 let lastDAGProps = {};
@@ -52,20 +52,16 @@ const dependencies = [
     parent: parentId,
   },
 ];
-const state = {
-  dependencies: {
-    dependencies,
-    error: null,
-    loading: false,
-  },
+const defaultProps = {
+  dependencies,
+  error: null,
+  loading: false,
 };
-
-const props = mapStateToProps(state);
 
 const renderComponent = (extraProps = {}) =>
   render(
     <MemoryRouter>
-      <DependencyGraph {...props} fetchDependencies={() => {}} {...extraProps} />
+      <DependencyGraph {...defaultProps} {...extraProps} />
     </MemoryRouter>
   );
 
@@ -84,7 +80,7 @@ describe('<DependencyGraph>', () => {
 
     rerender(
       <MemoryRouter>
-        <DependencyGraph {...props} fetchDependencies={() => {}} loading />
+        <DependencyGraph {...defaultProps} loading />
       </MemoryRouter>
     );
     expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
@@ -97,14 +93,14 @@ describe('<DependencyGraph>', () => {
 
     rerender(
       <MemoryRouter>
-        <DependencyGraph {...props} fetchDependencies={() => {}} error={error} />
+        <DependencyGraph {...defaultProps} error={error} />
       </MemoryRouter>
     );
     expect(screen.getByTestId('error-message')).toBeInTheDocument();
   });
 
   it('shows a message where there is nothing to visualize', () => {
-    renderComponent({ links: null, nodes: null });
+    renderComponent({ dependencies: [] });
     expect(screen.getByText(/no.*?found/i)).toBeInTheDocument();
   });
 
@@ -156,7 +152,7 @@ describe('<DependencyGraph>', () => {
       act(() => {
         rerender(
           <MemoryRouter>
-            <DependencyGraph {...props} fetchDependencies={() => {}} dependencies={manyDependencies} />
+            <DependencyGraph {...defaultProps} dependencies={manyDependencies} />
           </MemoryRouter>
         );
       });
@@ -191,7 +187,7 @@ describe('<DependencyGraph>', () => {
       act(() => {
         rerender(
           <MemoryRouter>
-            <DependencyGraph {...props} fetchDependencies={() => {}} dependencies={dependencies} />
+            <DependencyGraph {...defaultProps} dependencies={dependencies} />
           </MemoryRouter>
         );
       });
@@ -314,7 +310,7 @@ describe('<DependencyGraph>', () => {
 
       render(
         <MemoryRouter initialEntries={['/?uiFind=service']}>
-          <DependencyGraph {...props} fetchDependencies={() => {}} dependencies={sampleDependencies} />
+          <DependencyGraph {...defaultProps} dependencies={sampleDependencies} />
         </MemoryRouter>
       );
       expect(lastDAGOptionsProps.matchCount).toBe(3);
@@ -323,7 +319,7 @@ describe('<DependencyGraph>', () => {
 
       render(
         <MemoryRouter initialEntries={['/?uiFind=another']}>
-          <DependencyGraph {...props} fetchDependencies={() => {}} dependencies={sampleDependencies} />
+          <DependencyGraph {...defaultProps} dependencies={sampleDependencies} />
         </MemoryRouter>
       );
       expect(lastDAGOptionsProps.matchCount).toBe(1);
@@ -332,7 +328,7 @@ describe('<DependencyGraph>', () => {
 
       render(
         <MemoryRouter initialEntries={['/']}>
-          <DependencyGraph {...props} fetchDependencies={() => {}} dependencies={sampleDependencies} />
+          <DependencyGraph {...defaultProps} dependencies={sampleDependencies} />
         </MemoryRouter>
       );
       expect(lastDAGOptionsProps.matchCount).toBe(0);
@@ -341,9 +337,6 @@ describe('<DependencyGraph>', () => {
 
   describe('<DependencyGraph> filtering logic (findConnectedServices)', () => {
     const baseProps = {
-      fetchDependencies: jest.fn(),
-      nodes: [{ key: 'dummyNode' }],
-      links: [{ from: 'dummyNode', to: 'dummyNode', label: '1' }],
       loading: false,
       error: null,
       dependencies: [],
@@ -454,21 +447,95 @@ describe('<DependencyGraph>', () => {
   });
 });
 
-describe('mapStateToProps()', () => {
-  it('refines state to generate the props', () => {
-    expect(mapStateToProps(state)).toEqual({
-      ...state.dependencies,
-      nodes: [
-        expect.objectContaining({ callCount, orphan: false, id: parentId, radius: 3 }),
-        expect.objectContaining({ callCount, orphan: false, id: childId, radius: 3 }),
-      ],
-      links: [{ callCount, source: parentId, target: childId, value: 1, target_node_size: 3 }],
-    });
-  });
-});
+describe('DependencyGraphPage (default export wired to useDependenciesQuery)', () => {
+  const renderDefault = () =>
+    render(
+      <MemoryRouter>
+        <DependencyGraphPage />
+      </MemoryRouter>
+    );
 
-describe('mapDispatchToProps()', () => {
-  it('providers the `fetchDependencies` prop', () => {
-    expect(mapDispatchToProps({})).toEqual({ fetchDependencies: expect.any(Function) });
+  beforeEach(() => {
+    lastDAGOptionsProps = {};
+    lastDAGProps = {};
+    vi.mocked(useDependenciesQuery).mockReset();
+  });
+
+  it('passes API data through useEffectiveDependencies into DAGOptions.dependencies', () => {
+    const apiDeps = [{ parent: 'svc-a', child: 'svc-b', callCount: 4 }];
+    vi.mocked(useDependenciesQuery).mockReturnValue({
+      data: apiDeps,
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    renderDefault();
+
+    expect(lastDAGOptionsProps.dependencies).toEqual(apiDeps);
+  });
+
+  it('renders LoadingIndicator when the query is loading and no sample is active', () => {
+    vi.mocked(useDependenciesQuery).mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    renderDefault();
+
+    expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
+  });
+
+  it('renders ErrorMessage when the query errors and no sample is active', () => {
+    vi.mocked(useDependenciesQuery).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: new Error('boom'),
+      refetch: vi.fn(),
+    });
+
+    renderDefault();
+
+    expect(screen.getByTestId('error-message')).toBeInTheDocument();
+  });
+
+  it('treats undefined data as empty deps via useEffectiveDependencies', () => {
+    vi.mocked(useDependenciesQuery).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    renderDefault();
+
+    // Impl short-circuits to the empty-state message when dependencies.length === 0.
+    expect(screen.getByText(/no.*?found/i)).toBeInTheDocument();
+  });
+
+  it('switching dataset source via DAGOptions triggers refetch and re-evaluates useEffectiveDependencies', async () => {
+    const refetch = vi.fn();
+    vi.mocked(useDependenciesQuery).mockReturnValue({
+      data: [{ parent: 'api-a', child: 'api-b', callCount: 1 }],
+      isLoading: false,
+      error: null,
+      refetch,
+    });
+
+    renderDefault();
+    expect(lastDAGOptionsProps.dependencies).toEqual([{ parent: 'api-a', child: 'api-b', callCount: 1 }]);
+
+    // This path invokes loadSampleData() then onSampleDataLoaded() + refetchDependencies()
+    // inside the impl's handler. loadSampleData('Backend') is the prod-safe branch (no
+    // dynamic import) which clears the sample store, so useEffectiveDependencies will
+    // re-evaluate and continue to show the API data.
+    await act(async () => {
+      await lastDAGOptionsProps.onSampleDatasetTypeChange('Backend');
+    });
+
+    expect(refetch).toHaveBeenCalled();
+    expect(lastDAGOptionsProps.dependencies).toEqual([{ parent: 'api-a', child: 'api-b', callCount: 1 }]);
   });
 });
