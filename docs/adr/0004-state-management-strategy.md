@@ -38,7 +38,7 @@ These should be migrated to **React Query**:
 |-------------|-------------|-------------------|
 | `trace` | Map of `FetchedTrace` and `search` results | `TracePage`, `SearchPage` |
 | ~~`services`~~ (removed) | ~~Lists of services and operations~~ → React Query (`useServices` / `useSpanNames`, Phase 2c) | `SearchPage`, `MonitorPage`, `DeepDependencies` |
-| `dependencies`| Service dependency graph data | `DependenciesPage` |
+| ~~`dependencies`~~ (removed) | ~~Service dependency graph data~~ → React Query (`useDependenciesQuery`, Phase 2d) | `DependencyGraph` |
 | `metrics` | Sytem performance metrics (latencies, errors) | `MonitorPage` |
 | `ddg` | Deep Dependency Graph data | `DeepDependenciesPage` |
 | `archive` | Status of archived traces | `TracePage` |
@@ -1123,14 +1123,18 @@ export function useSpanNames(service: string | null, spanKind?: string): UseQuer
 
 > **Note**: Legacy `JaegerAPI.fetchServices` / `fetchServiceOperations` remain in `api/jaeger.ts` for non-v3 callers; UI discovery paths use v3 via `jaegerClient`.
 
-#### ⬜ 2d. Dependencies page
+#### ✅ 2d. Dependencies page
 
 **Redux removed**: `src/reducers/dependencies.ts`.
 
 **New hook** (`src/hooks/useDependenciesQuery.ts`):
 ```typescript
-queryKey: ['dependencies', { start, end, lookback }]
+queryKey: ['dependencies', { endTs, lookback }]
 ```
+
+**Callers** use `useDependenciesQuery()` — not cache key literals. `DependencyGraph` merges API data with dev sample datasets (module-level store unchanged).
+
+**Components using hook**: `DependencyGraph` (default export).
 
 #### ⬜ 2e. Deep Dependencies graph fetch
 
