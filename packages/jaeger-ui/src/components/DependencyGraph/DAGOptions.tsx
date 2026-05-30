@@ -138,7 +138,7 @@ const DAGOptions: React.FC<IDAGOptionsProps> = ({
           ))}
         </SearchableSelect>
       </div>
-      <div className="selector-container">
+      <div className="selector-container depth-column">
         <div className="selector-label-container">
           <span className="selector-label">Depth</span>
           <Popover
@@ -158,28 +158,29 @@ const DAGOptions: React.FC<IDAGOptionsProps> = ({
             <IoHelp className="hint-trigger" data-testid="depth-help-icon" />
           </Popover>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <InputNumber
-            className="number-input"
-            value={selectedDepth}
-            onChange={onDepthChange}
-            min={0}
-            placeholder="Enter number"
-            disabled={!selectedService}
-            data-testid="depth-input"
-          />
-          <Button
-            onClick={onReset}
-            data-testid="reset-button"
-            type="default"
-            className="reset-button"
-            size="small"
-          >
-            Reset
-          </Button>
-        </div>
+        <InputNumber
+          className="number-input"
+          value={selectedDepth}
+          onChange={onDepthChange}
+          min={0}
+          placeholder="Enter number"
+          disabled={!selectedService}
+          data-testid="depth-input"
+        />
       </div>
-      <div className="selector-container">
+      <div className="selector-container reset-column">
+        <Button
+          onClick={onReset}
+          data-testid="reset-button"
+          type="default"
+          className="reset-button"
+          size="small"
+          disabled={!selectedService}
+        >
+          Reset
+        </Button>
+      </div>
+      <div className="selector-container search-column">
         <div className="selector-label-container">
           <span className="selector-label">Search</span>
           <Popover
@@ -211,12 +212,12 @@ const DAGOptions: React.FC<IDAGOptionsProps> = ({
       {getAppEnvironment() === 'development' && (
         <div className="selector-container data-selector">
           <div className="selector-label-container">
-            <span className="selector-label">Sample Dataset</span>
+            <span className="selector-label">Dataset Source</span>
           </div>
           <SearchableSelect
             value={selectedSampleDatasetType}
             onChange={onSampleDatasetTypeChange}
-            placeholder="Select Sample Dataset Type"
+            placeholder="Select dataset source"
             className="select-sample-dataset-type-input"
             data-testid="sample-dataset-type-select"
           >
