@@ -13,8 +13,52 @@ import {
   ServicesResponseSchema,
   OperationsResponseSchema,
   TracesDataSchema,
+  FindTraceSummariesResponseSchema,
   type ITracesData,
+  type ITraceSummaryResponse,
 } from './schemas';
+import type { TraceSummary } from '../../types/trace-summary';
+import type { SearchQuery } from '../../types/search';
+
+/** Nanoseconds → microseconds (Jaeger UI works in µs). */
+function nanosToMicros(ns: string | undefined): number {
+  if (!ns) return 0;
+  // ns is a decimal integer string; divide by 1000 and truncate
+  const n = BigInt(ns);
+  return Number(n / 1000n);
+}
+
+/**
+ * Convert a UI SearchQuery into the query-string parameters accepted by
+ * /api/v3/trace-summaries. The field mapping follows the generated
+ * jaeger_api_v3_TraceQueryParameters schema.
+ */
+function buildTraceSummariesParams(query: SearchQuery): Record<string, string> {
+  const params: Record<string, string> = {};
+
+  if (query.service) params['query.serviceName'] = query.service;
+  if (query.operation) params['query.operationName'] = query.operation;
+  if (query.tags) params['query.attributes'] = query.tags;
+  if (query.minDuration) {
+    params['query.durationMin'] = query.minDuration.endsWith('s') ? query.minDuration : `${query.minDuration}s`;
+  }
+  if (query.maxDuration) {
+    params['query.durationMax'] = query.maxDuration.endsWith('s') ? query.maxDuration : `${query.maxDuration}s`;
+  }
+  if (query.limit) params['query.searchDepth'] = String(query.limit);
+
+  // start / end are unix microseconds from the UI; convert to ISO-8601 for the v3 API
+  if (query.start) {
+    const startMs = Number(query.start) / 1000;
+    params['query.startTimeMin'] = new Date(startMs).toISOString();
+  }
+  if (query.end) {
+    const endMs = Number(query.end) / 1000;
+    params['query.startTimeMax'] = new Date(endMs).toISOString();
+  }
+
+  return params;
+}
 
 export class JaegerClient {
   private apiRoot = prefixUrl('/api/v3');
@@ -54,6 +98,61 @@ export class JaegerClient {
     // Runtime validation with Zod
     const validated = OperationsResponseSchema.parse(data);
     return validated.operations;
+  }
+
+  /**
+   * Search for traces matching the given query and return UI-shaped TraceSummary objects.
+   * Calls /api/v3/trace-summaries.
+   * @param query - The search parameters
+   * @returns Promise<TraceSummary[]>
+   */
+  async fetchTraceSummaries(query: SearchQuery): Promise<TraceSummary[]> {
+    const params = buildTraceSummariesParams(query);
+    const qs = new URLSearchParams(params).toString();
+    const url = qs ? `${this.apiRoot}/trace-summaries?${qs}` : `${this.apiRoot}/trace-summaries`;
+
+    const response = await this.fetchWithTimeout(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch trace summaries: ${response.status} ${response.statusText}`);
+    }
+    const data = await response.json();
+
+    // Runtime validation with Zod (safeParse for resilience)
+    const result = FindTraceSummariesResponseSchema.safeParse(data);
+    const summaries: ITraceSummaryResponse[] = result.success
+      ? result.data.summaries ?? []
+      : (data?.summaries ?? []);
+
+    if (!result.success) {
+      console.error('[OTLP Validation] Error for trace-summaries response:', result.error.format());
+    }
+
+    // Map API TraceSummary → UI TraceSummary
+    return summaries.map((s: ITraceSummaryResponse) => {
+      const startNs = s.minStartTimeUnixNano;
+      const endNs = s.maxEndTimeUnixNano;
+      const startUs = nanosToMicros(startNs);
+      const endUs = nanosToMicros(endNs);
+
+      return {
+        traceID: s.traceId,
+        traceName: s.rootOperationName
+          ? `${s.rootServiceName ?? ''}: ${s.rootOperationName}`
+          : (s.rootServiceName ?? s.traceId),
+        rootServiceName: s.rootServiceName ?? '',
+        rootOperationName: s.rootOperationName ?? '',
+        startTime: startUs,
+        duration: endUs > startUs ? endUs - startUs : 0,
+        spanCount: s.spanCount ?? 0,
+        errorSpanCount: s.errorSpanCount ?? 0,
+        orphanSpanCount: s.orphanSpanCount ?? 0,
+        services: (s.services ?? []).map(svc => ({
+          name: svc.name ?? '',
+          spanCount: svc.spanCount ?? 0,
+          errorSpanCount: svc.errorSpanCount ?? 0,
+        })),
+      } as TraceSummary;
+    });
   }
 
   /**

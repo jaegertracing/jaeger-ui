@@ -264,9 +264,106 @@ describe('JaegerClient', () => {
     it('singleton instance has all expected methods', () => {
       expect(jaegerClient.fetchServices).toBeInstanceOf(Function);
       expect(jaegerClient.fetchSpanNames).toBeInstanceOf(Function);
+      expect(jaegerClient.fetchTraceSummaries).toBeInstanceOf(Function);
       expect(jaegerClient.fetchTrace).toBeInstanceOf(Function);
     });
   });
+
+  describe('fetchTraceSummaries', () => {
+    it('successfully fetches and maps trace summaries', async () => {
+      const mockApiSummaries = [
+        {
+          traceId: 'trace-1',
+          rootServiceName: 'svc-1',
+          rootOperationName: 'op-1',
+          minStartTimeUnixNano: '1700000000000000000',
+          maxEndTimeUnixNano: '1700000000500000000',
+          spanCount: 10,
+          errorSpanCount: 1,
+          orphanSpanCount: 0,
+          services: [{ name: 'svc-1', spanCount: 10, errorSpanCount: 1 }],
+        },
+      ];
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ summaries: mockApiSummaries }),
+      });
+
+      const query = {
+        service: 'svc-1',
+        operation: 'op-1',
+        start: 1700000000000000,
+        end: 1700000000500000,
+        limit: 20,
+        lookback: '1h',
+      };
+
+      const result = await client.fetchTraceSummaries(query as any);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        traceID: 'trace-1',
+        traceName: 'svc-1: op-1',
+        rootServiceName: 'svc-1',
+        rootOperationName: 'op-1',
+        startTime: 1700000000000000,
+        duration: 500000,
+        spanCount: 10,
+        errorSpanCount: 1,
+        orphanSpanCount: 0,
+        services: [{ name: 'svc-1', spanCount: 10, errorSpanCount: 1 }],
+      });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/v3/trace-summaries?'),
+        expect.anything()
+      );
+    });
+
+    it('handles missing optional fields in API response', async () => {
+      const mockApiSummaries = [
+        {
+          traceId: 'trace-2',
+        },
+      ];
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ summaries: mockApiSummaries }),
+      });
+
+      const result = await client.fetchTraceSummaries({} as any);
+
+      expect(result[0]).toEqual(
+        expect.objectContaining({
+          traceID: 'trace-2',
+          traceName: 'trace-2',
+          spanCount: 0,
+        })
+      );
+    });
+
+    it('logs error and returns raw transformation when validation fails', async () => {
+      const malformedData = { summaries: [{ not_a_trace_id: 'foo' }] };
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => malformedData,
+      });
+
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await client.fetchTraceSummaries({} as any);
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[OTLP Validation] Error for trace-summaries response:'),
+        expect.anything()
+      );
+
+      consoleSpy.mockRestore();
+    });
+  });
+
 
   describe('fetchTrace', () => {
     const traceId = '0102030405060708090a0b0c0d0e0f10';

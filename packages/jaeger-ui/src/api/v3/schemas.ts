@@ -120,6 +120,21 @@ export const OperationSchema = generatedSchemas.jaeger_api_v3_Operation.extend({
   name: z.string(),
 });
 
+/**
+ * A single trace summary returned by /api/v3/trace-summaries.
+ * traceId is required; all other fields are optional as the backend may omit them.
+ */
+export const TraceSummaryResponseSchema = generatedSchemas.jaeger_api_v3_TraceSummary.extend({
+  traceId: TraceIdSchema,
+});
+
+/**
+ * Root response for /api/v3/trace-summaries.
+ */
+export const FindTraceSummariesResponseSchema = generatedSchemas.jaeger_api_v3_FindTraceSummariesResponse.extend({
+  summaries: z.array(TraceSummaryResponseSchema).optional(),
+});
+
 // Type inference for internal logic and testing
 export type IAnyValue = z.infer<typeof AnyValueSchema>;
 export type IKeyValue = z.infer<typeof KeyValueSchema>;
@@ -127,3 +142,4 @@ export type IResource = z.infer<typeof ResourceSchema>;
 export type IInstrumentationScope = z.infer<typeof InstrumentationScopeSchema>;
 export type ISpan = z.infer<typeof SpanSchema>;
 export type ITracesData = z.infer<typeof TracesDataSchema>;
+export type ITraceSummaryResponse = z.infer<typeof TraceSummaryResponseSchema>;
