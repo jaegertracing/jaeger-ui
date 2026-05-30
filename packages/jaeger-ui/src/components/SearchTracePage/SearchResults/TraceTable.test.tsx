@@ -147,15 +147,17 @@ describe('sort onChange wiring', () => {
     expect(handleSortChange).toHaveBeenCalledWith(orderBy.LEAST_SPANS);
   });
 
-  it('toggles to opposite direction instead of cancelling on 3rd click', () => {
+  it('flips sort direction instead of deactivating when AntD fires cancel', () => {
     const handleSortChange = vi.fn();
-    // Start with descend on spans
+    // Start with descend on spans (MOST_SPANS).
+    // Clicking the active column triggers AntD's cancel event (order=undefined,
+    // columnKey=undefined). Our onChange handler intercepts this and flips
+    // descend→ascend, producing LEAST_SPANS instead of falling back to MOST_RECENT.
     render(
       <MemoryRouter>
         <TraceTable {...defaultProps} sortBy={orderBy.MOST_SPANS} handleSortChange={handleSortChange} />
       </MemoryRouter>
     );
-    // Clicking Spans when it's already descend: Ant Design would fire ascend
     fireEvent.click(screen.getByText('Spans'));
     expect(handleSortChange).toHaveBeenCalledWith(orderBy.LEAST_SPANS);
   });
