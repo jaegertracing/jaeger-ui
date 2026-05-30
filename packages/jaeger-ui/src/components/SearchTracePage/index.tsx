@@ -37,6 +37,7 @@ import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { useEmbeddedState } from '../../stores/embedded-store';
 import { useShallow } from 'zustand/react/shallow';
 import { useSearchTraces } from '../../hooks/useTraceDiscovery';
+import { OrderBy } from '../../model/order-by';
 
 // export for tests
 export function SearchTracePageImpl() {
@@ -102,7 +103,7 @@ export function SearchTracePageImpl() {
     };
   }, [searchData, uploadedSummaries]);
 
-  const [sortBy, setSortBy] = useState(orderBy.MOST_RECENT);
+  const [sortBy, setSortBy] = useState<OrderBy>(orderBy.MOST_RECENT);
   const [activeTab, setActiveTab] = useState<'searchForm' | 'fileLoader'>('searchForm');
 
   const { panelWidth, collapsed, setPanelWidth, setCollapsed } = useSearchPanelStore(
@@ -159,7 +160,7 @@ export function SearchTracePageImpl() {
   const config = useConfig();
   const { disableFileUploadControl } = config;
 
-  const handleSortChange = useCallback((newSortBy: string) => {
+  const handleSortChange = useCallback((newSortBy: OrderBy) => {
     setSortBy(newSortBy);
     trackSortByChange(newSortBy);
   }, []);
