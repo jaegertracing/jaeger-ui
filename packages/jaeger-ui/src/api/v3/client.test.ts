@@ -271,9 +271,10 @@ describe('JaegerClient', () => {
 
   describe('fetchTraceSummaries', () => {
     it('successfully fetches and maps trace summaries', async () => {
+      const traceID = '0102030405060708090a0b0c0d0e0f11';
       const mockApiSummaries = [
         {
-          traceId: 'trace-1',
+          traceId: traceID,
           rootServiceName: 'svc-1',
           rootOperationName: 'op-1',
           minStartTimeUnixNano: '1700000000000000000',
@@ -303,7 +304,7 @@ describe('JaegerClient', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({
-        traceID: 'trace-1',
+        traceID: traceID,
         traceName: 'svc-1: op-1',
         rootServiceName: 'svc-1',
         rootOperationName: 'op-1',
@@ -322,9 +323,10 @@ describe('JaegerClient', () => {
     });
 
     it('handles missing optional fields in API response', async () => {
+      const traceID = '0102030405060708090a0b0c0d0e0f22';
       const mockApiSummaries = [
         {
-          traceId: 'trace-2',
+          traceId: traceID,
         },
       ];
 
@@ -337,8 +339,8 @@ describe('JaegerClient', () => {
 
       expect(result[0]).toEqual(
         expect.objectContaining({
-          traceID: 'trace-2',
-          traceName: 'trace-2',
+          traceID: traceID,
+          traceName: traceID,
           spanCount: 0,
         })
       );

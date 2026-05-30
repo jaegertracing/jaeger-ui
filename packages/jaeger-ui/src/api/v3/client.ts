@@ -22,10 +22,14 @@ import type { SearchQuery } from '../../types/search';
 
 /** Nanoseconds → microseconds (Jaeger UI works in µs). */
 function nanosToMicros(ns: string | undefined): number {
-  if (!ns) return 0;
-  // ns is a decimal integer string; divide by 1000 and truncate
-  const n = BigInt(ns);
-  return Number(n / 1000n);
+  if (!ns || typeof ns !== 'string' || !/^\d+$/.test(ns)) return 0;
+  try {
+    // ns is a decimal integer string; divide by 1000 and truncate
+    const n = BigInt(ns);
+    return Number(n / 1000n);
+  } catch {
+    return 0;
+  }
 }
 
 /**
@@ -40,21 +44,29 @@ function buildTraceSummariesParams(query: SearchQuery): Record<string, string> {
   if (query.operation) params['query.operationName'] = query.operation;
   if (query.tags) params['query.attributes'] = query.tags;
   if (query.minDuration) {
-    params['query.durationMin'] = query.minDuration.endsWith('s') ? query.minDuration : `${query.minDuration}s`;
+    params['query.durationMin'] = /^\d+(?:\.\d+)?$/.test(query.minDuration)
+      ? `${query.minDuration}s`
+      : query.minDuration;
   }
   if (query.maxDuration) {
-    params['query.durationMax'] = query.maxDuration.endsWith('s') ? query.maxDuration : `${query.maxDuration}s`;
+    params['query.durationMax'] = /^\d+(?:\.\d+)?$/.test(query.maxDuration)
+      ? `${query.maxDuration}s`
+      : query.maxDuration;
   }
   if (query.limit) params['query.searchDepth'] = String(query.limit);
 
   // start / end are unix microseconds from the UI; convert to ISO-8601 for the v3 API
   if (query.start) {
     const startMs = Number(query.start) / 1000;
-    params['query.startTimeMin'] = new Date(startMs).toISOString();
+    if (Number.isFinite(startMs) && startMs > 0) {
+      params['query.startTimeMin'] = new Date(startMs).toISOString();
+    }
   }
   if (query.end) {
     const endMs = Number(query.end) / 1000;
-    params['query.startTimeMax'] = new Date(endMs).toISOString();
+    if (Number.isFinite(endMs) && endMs > 0) {
+      params['query.startTimeMax'] = new Date(endMs).toISOString();
+    }
   }
 
   return params;
@@ -129,16 +141,17 @@ export class JaegerClient {
 
     // Map API TraceSummary → UI TraceSummary
     return summaries.map((s: ITraceSummaryResponse) => {
+      const traceID = s.traceId || (s as any).traceID;
       const startNs = s.minStartTimeUnixNano;
       const endNs = s.maxEndTimeUnixNano;
       const startUs = nanosToMicros(startNs);
       const endUs = nanosToMicros(endNs);
 
       return {
-        traceID: s.traceId,
+        traceID,
         traceName: s.rootOperationName
           ? `${s.rootServiceName ?? ''}: ${s.rootOperationName}`
-          : (s.rootServiceName ?? s.traceId),
+          : (s.rootServiceName ?? traceID),
         rootServiceName: s.rootServiceName ?? '',
         rootOperationName: s.rootOperationName ?? '',
         startTime: startUs,
