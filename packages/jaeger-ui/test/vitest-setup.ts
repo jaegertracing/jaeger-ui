@@ -95,3 +95,24 @@ window.matchMedia = vi.fn().mockImplementation((query: string) => ({
 //
 // See docs/adr/0007-vite-plus-migration.md §9 (PR H2c / H3) for details.
 (global as any).mockDefault = (mod: unknown) => ({ default: mod });
+
+const localStorageMock = (function () {
+  let store: Record<string, string> = {};
+  return {
+    getItem(key: string) {
+      return store[key] || null;
+    },
+    setItem(key: string, value: string) {
+      store[key] = value.toString();
+    },
+    removeItem(key: string) {
+      delete store[key];
+    },
+    clear() {
+      store = {};
+    },
+  };
+})();
+Object.defineProperty(window, 'localStorage', { value: localStorageMock, writable: true });
+Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock, writable: true });
+Object.defineProperty(global, 'localStorage', { value: localStorageMock, writable: true });

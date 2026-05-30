@@ -5,7 +5,7 @@ import _maxBy from 'lodash/maxBy';
 import _minBy from 'lodash/minBy';
 
 import * as orderBy from './order-by';
-import { sortTraces, sortTraceSummaries } from './search';
+import { sortTraces, sortTraceSummaries, toOrderBy, fromOrderBy } from './search';
 import traceGenerator from '../demo/trace-generators';
 import transformTraceData from './transform-trace-data';
 
@@ -19,10 +19,11 @@ describe('sortTraces()', () => {
     { ...transformTraceData(traceGenerator.trace({ numberOfSpans: 1 })), traceID: idMinSpans },
   ];
 
-  const { MOST_SPANS, LEAST_SPANS, LONGEST_FIRST, SHORTEST_FIRST, MOST_RECENT } = orderBy;
+  const { MOST_SPANS, LEAST_SPANS, LONGEST_FIRST, SHORTEST_FIRST, MOST_RECENT, OLDEST_FIRST } = orderBy;
 
   const expecations = {
     [MOST_RECENT]: _maxBy(traces, trace => trace.startTime).traceID,
+    [OLDEST_FIRST]: _minBy(traces, trace => trace.startTime).traceID,
     [LONGEST_FIRST]: _maxBy(traces, trace => trace.duration).traceID,
     [SHORTEST_FIRST]: _minBy(traces, trace => trace.duration).traceID,
     [MOST_SPANS]: idMaxSpans,
