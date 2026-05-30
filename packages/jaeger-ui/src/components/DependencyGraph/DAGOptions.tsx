@@ -8,6 +8,7 @@ import SearchableSelect from '../common/SearchableSelect';
 import UiFindInput from '../common/UiFindInput';
 import './DAGOptions.css';
 import { getAppEnvironment } from '../../utils/constants';
+import type { DataSource } from '../../hooks/useDependenciesQuery';
 
 const { Option } = Select;
 
@@ -27,9 +28,9 @@ interface IDAGOptionsProps {
   selectedDepth?: number;
   onReset: () => void;
   isHierarchicalDisabled: boolean;
-  selectedSampleDatasetType: string;
-  onSampleDatasetTypeChange: (type: string) => void;
-  sampleDatasetTypes: string[];
+  selectedDataSource: DataSource;
+  onDataSourceChange: (source: DataSource) => void;
+  dataSources: readonly DataSource[];
   uiFind?: string;
   matchCount?: number;
 }
@@ -49,9 +50,9 @@ const DAGOptions: React.FC<IDAGOptionsProps> = ({
   selectedDepth = 0,
   onReset,
   isHierarchicalDisabled,
-  selectedSampleDatasetType,
-  onSampleDatasetTypeChange,
-  sampleDatasetTypes,
+  selectedDataSource,
+  onDataSourceChange,
+  dataSources,
   uiFind,
   matchCount,
 }) => {
@@ -215,15 +216,15 @@ const DAGOptions: React.FC<IDAGOptionsProps> = ({
             <span className="selector-label">Dataset Source</span>
           </div>
           <SearchableSelect
-            value={selectedSampleDatasetType}
-            onChange={onSampleDatasetTypeChange}
+            value={selectedDataSource}
+            onChange={onDataSourceChange}
             placeholder="Select dataset source"
-            className="select-sample-dataset-type-input"
-            data-testid="sample-dataset-type-select"
+            className="select-data-source-input"
+            data-testid="data-source-select"
           >
-            {sampleDatasetTypes.map(type => (
-              <Option key={type} value={type} data-testid={`sample-dataset-type-option-${type}`}>
-                {type}
+            {dataSources.map(source => (
+              <Option key={source} value={source} data-testid={`data-source-option-${source}`}>
+                {source}
               </Option>
             ))}
           </SearchableSelect>
