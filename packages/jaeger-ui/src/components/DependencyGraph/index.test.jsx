@@ -6,7 +6,7 @@ import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 import * as constants from '../../utils/constants';
 
-import DependencyGraphPage, { DependencyGraphPageImpl as DependencyGraph } from './index';
+import DependencyGraphPage from './index';
 import { useDependenciesQuery } from '../../hooks/useDependenciesQuery';
 
 vi.mock('../../hooks/useDependenciesQuery', async actual => ({
@@ -46,80 +46,96 @@ vi.mock('../common/ErrorMessage', () => {
 const childId = 'boomya';
 const parentId = 'elder-one';
 const callCount = 1;
-const dependencies = [
-  {
-    callCount,
-    child: childId,
-    parent: parentId,
-  },
-];
-const defaultProps = {
-  dependencies,
-  error: null,
-  loading: false,
-  selectedDataSource: 'Backend',
-  onDataSourceChange: () => {},
-};
+const defaultDeps = [{ callCount, child: childId, parent: parentId }];
 
-const renderComponent = (extraProps = {}) =>
+// Default to a single-edge non-empty response so the page renders DAGOptions/DAG.
+// Tests can override the mock per test with `mockHook({ ... })`. Uses `in` to
+// distinguish "explicitly undefined" (a valid React Query pre-fetch state)
+// from "omitted, use the default".
+function mockHook(overrides = {}) {
+  const next = { data: defaultDeps, isLoading: false, error: null };
+  if ('data' in overrides) next.data = overrides.data;
+  if ('isLoading' in overrides) next.isLoading = overrides.isLoading;
+  if ('error' in overrides) next.error = overrides.error;
+  vi.mocked(useDependenciesQuery).mockReturnValue(next);
+}
+
+const renderPage = (initialEntries = ['/']) =>
   render(
-    <MemoryRouter>
-      <DependencyGraph {...defaultProps} {...extraProps} />
+    <MemoryRouter initialEntries={initialEntries}>
+      <DependencyGraphPage />
     </MemoryRouter>
   );
 
-describe('<DependencyGraph>', () => {
+describe('<DependencyGraphPage>', () => {
   beforeEach(() => {
-    renderComponent();
+    lastDAGOptionsProps = {};
+    lastDAGProps = {};
+    vi.mocked(useDependenciesQuery).mockReset();
+    mockHook();
   });
 
   it('does not explode', () => {
+    renderPage();
     expect(screen.getByTestId('dag-options')).toBeInTheDocument();
   });
 
-  it('shows a loading indicator when loading data', () => {
-    const { rerender } = renderComponent();
-    expect(screen.queryByTestId('loading-indicator')).not.toBeInTheDocument();
-
-    rerender(
-      <MemoryRouter>
-        <DependencyGraph {...defaultProps} loading />
-      </MemoryRouter>
-    );
+  it('shows a loading indicator while the query is loading', () => {
+    mockHook({ data: undefined, isLoading: true });
+    renderPage();
     expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
   });
 
-  it('shows an error message when passed error information', () => {
-    const error = {};
-    const { rerender } = renderComponent();
-    expect(screen.queryByTestId('error-message')).not.toBeInTheDocument();
-
-    rerender(
-      <MemoryRouter>
-        <DependencyGraph {...defaultProps} error={error} />
-      </MemoryRouter>
-    );
+  it('shows an error message when the query errors', () => {
+    mockHook({ data: undefined, error: new Error('boom') });
+    renderPage();
     expect(screen.getByTestId('error-message')).toBeInTheDocument();
   });
 
   it('shows a message where there is nothing to visualize', () => {
-    renderComponent({ dependencies: [] });
+    mockHook({ data: [] });
+    renderPage();
     expect(screen.getByText(/no.*?found/i)).toBeInTheDocument();
+  });
+
+  it('treats undefined data as empty deps', () => {
+    mockHook({ data: undefined });
+    renderPage();
+    expect(screen.getByText(/no.*?found/i)).toBeInTheDocument();
+  });
+
+  it('starts with the Backend data source and passes it to the query hook', () => {
+    renderPage();
+    expect(useDependenciesQuery).toHaveBeenCalledWith('Backend');
+    expect(lastDAGOptionsProps.selectedDataSource).toBe('Backend');
+  });
+
+  it('changing the data source re-invokes useDependenciesQuery with the new source', () => {
+    renderPage();
+    expect(useDependenciesQuery).toHaveBeenLastCalledWith('Backend');
+
+    act(() => {
+      lastDAGOptionsProps.onDataSourceChange('Small Graph');
+    });
+
+    expect(useDependenciesQuery).toHaveBeenLastCalledWith('Small Graph');
+    expect(lastDAGOptionsProps.selectedDataSource).toBe('Small Graph');
   });
 
   describe('DAG options', () => {
     beforeEach(() => {
-      jest.resetAllMocks();
       jest.spyOn(constants, 'getAppEnvironment').mockReturnValue('development');
     });
 
     it('initializes with default values', () => {
+      renderPage();
       expect(lastDAGOptionsProps.selectedService).toBeUndefined();
       expect(lastDAGOptionsProps.selectedLayout).toBe('dot');
       expect(lastDAGOptionsProps.selectedDepth).toBe(5);
     });
 
     it('handles service selection', () => {
+      renderPage();
       const service = 'test-service';
       act(() => {
         lastDAGOptionsProps.onServiceSelect(service);
@@ -128,6 +144,7 @@ describe('<DependencyGraph>', () => {
     });
 
     it('handles layout selection', () => {
+      renderPage();
       const layout = 'sfdp';
       act(() => {
         lastDAGOptionsProps.onLayoutSelect(layout);
@@ -135,18 +152,19 @@ describe('<DependencyGraph>', () => {
       expect(lastDAGOptionsProps.selectedLayout).toBe(layout);
     });
 
-    it('calls updateLayout when dependencies prop changes', () => {
+    it('updates layout when the dependencies data swaps to a large dataset', () => {
       const manyDependencies = Array(1001)
         .fill()
         .map((_, i) => ({ callCount: 1, child: `child-${i}`, parent: 'parent' }));
 
-      const { rerender } = renderComponent();
+      const { rerender } = renderPage();
       expect(lastDAGOptionsProps.selectedLayout).toBe('dot');
 
+      mockHook({ data: manyDependencies });
       act(() => {
         rerender(
           <MemoryRouter>
-            <DependencyGraph {...defaultProps} dependencies={manyDependencies} />
+            <DependencyGraphPage />
           </MemoryRouter>
         );
       });
@@ -154,41 +172,17 @@ describe('<DependencyGraph>', () => {
       expect(lastDAGOptionsProps.selectedLayout).toBe('sfdp');
     });
 
-    it('updates layout based on dependencies size', () => {
-      renderComponent({ dependencies });
-      expect(lastDAGOptionsProps.selectedLayout).toBe('dot');
-
+    it('uses sfdp layout for large dependency graphs on initial render', () => {
       const manyDependencies = Array(1001)
         .fill()
-        .map((_, i) => ({
-          callCount: 1,
-          child: `child-${i}`,
-          parent: 'parent',
-        }));
-      renderComponent({ dependencies: manyDependencies });
+        .map((_, i) => ({ callCount: 1, child: `child-${i}`, parent: 'parent' }));
+      mockHook({ data: manyDependencies });
+      renderPage();
       expect(lastDAGOptionsProps.selectedLayout).toBe('sfdp');
-    });
-
-    it('updates layout based on dependencies size with state tracking', () => {
-      renderComponent({ dependencies });
-      expect(lastDAGOptionsProps.selectedLayout).toBe('dot');
-      act(() => {
-        lastDAGOptionsProps.onLayoutSelect('sfdp');
-      });
-      expect(lastDAGOptionsProps.selectedLayout).toBe('sfdp');
-
-      const { rerender } = renderComponent({ dependencies });
-      act(() => {
-        rerender(
-          <MemoryRouter>
-            <DependencyGraph {...defaultProps} dependencies={dependencies} />
-          </MemoryRouter>
-        );
-      });
-      expect(lastDAGOptionsProps.selectedLayout).toBe('dot');
     });
 
     it('handles depth change with numeric value', () => {
+      renderPage();
       const depth = 3;
       act(() => {
         lastDAGOptionsProps.onDepthChange(depth);
@@ -197,14 +191,15 @@ describe('<DependencyGraph>', () => {
     });
 
     it('handles depth change with negative value', () => {
-      const depth = -1;
+      renderPage();
       act(() => {
-        lastDAGOptionsProps.onDepthChange(depth);
+        lastDAGOptionsProps.onDepthChange(-1);
       });
       expect(lastDAGOptionsProps.selectedDepth).toBe(0);
     });
 
     it('handles depth change with null value', () => {
+      renderPage();
       act(() => {
         lastDAGOptionsProps.onDepthChange(null);
       });
@@ -213,6 +208,7 @@ describe('<DependencyGraph>', () => {
     });
 
     it('handles depth change with undefined value', () => {
+      renderPage();
       act(() => {
         lastDAGOptionsProps.onDepthChange(undefined);
       });
@@ -220,6 +216,7 @@ describe('<DependencyGraph>', () => {
     });
 
     it('handles reset', () => {
+      renderPage();
       act(() => {
         lastDAGOptionsProps.onServiceSelect('test-service');
         lastDAGOptionsProps.onDepthChange(3);
@@ -234,33 +231,18 @@ describe('<DependencyGraph>', () => {
       expect(lastDAGOptionsProps.selectedDepth).toBe(5);
     });
 
-    it('uses sfdp layout for large dependency graphs', () => {
-      const manyDependencies = Array(1001)
-        .fill()
-        .map((_, i) => ({
-          callCount: 1,
-          child: `child-${i}`,
-          parent: 'parent',
-        }));
-
-      renderComponent({ dependencies: manyDependencies });
-      expect(lastDAGOptionsProps.selectedLayout).toBe('sfdp');
-    });
-
     describe('timer-dependent behaviors', () => {
       beforeEach(() => {
-        cleanup();
         jest.useFakeTimers();
-        renderComponent();
       });
 
       afterEach(() => {
-        // Clean up and restore real timers
         jest.runOnlyPendingTimers();
         jest.useRealTimers();
       });
 
       it('debounces depth changes', () => {
+        renderPage();
         const depth = 3;
         act(() => {
           lastDAGOptionsProps.onDepthChange(depth);
@@ -276,56 +258,32 @@ describe('<DependencyGraph>', () => {
       });
     });
 
-    it('propagates data source change via the onDataSourceChange prop', () => {
-      const onDataSourceChange = jest.fn();
-      renderComponent({ onDataSourceChange });
-      act(() => {
-        lastDAGOptionsProps.onDataSourceChange('Small Graph');
-      });
-      expect(onDataSourceChange).toHaveBeenCalledWith('Small Graph');
-    });
-
     it('passes computed match count to DAGOptions based on uiFind from URL and dependencies', () => {
       const sampleDependencies = [
         { parent: 'serviceA', child: 'serviceB', callCount: 10 },
         { parent: 'serviceB', child: 'anotherService', callCount: 5 },
         { parent: 'serviceA', child: 'anotherService', callCount: 2 },
       ];
+      mockHook({ data: sampleDependencies });
 
-      render(
-        <MemoryRouter initialEntries={['/?uiFind=service']}>
-          <DependencyGraph {...defaultProps} dependencies={sampleDependencies} />
-        </MemoryRouter>
-      );
+      renderPage(['/?uiFind=service']);
       expect(lastDAGOptionsProps.matchCount).toBe(3);
 
       cleanup();
 
-      render(
-        <MemoryRouter initialEntries={['/?uiFind=another']}>
-          <DependencyGraph {...defaultProps} dependencies={sampleDependencies} />
-        </MemoryRouter>
-      );
+      mockHook({ data: sampleDependencies });
+      renderPage(['/?uiFind=another']);
       expect(lastDAGOptionsProps.matchCount).toBe(1);
 
       cleanup();
 
-      render(
-        <MemoryRouter initialEntries={['/']}>
-          <DependencyGraph {...defaultProps} dependencies={sampleDependencies} />
-        </MemoryRouter>
-      );
+      mockHook({ data: sampleDependencies });
+      renderPage(['/']);
       expect(lastDAGOptionsProps.matchCount).toBe(0);
     });
   });
 
-  describe('<DependencyGraph> filtering logic (findConnectedServices)', () => {
-    const baseProps = {
-      loading: false,
-      error: null,
-      dependencies: [],
-    };
-
+  describe('filtering logic (findConnectedServices)', () => {
     // Select a service and depth then advance the debounce so DAG receives the updated graph data.
     const selectServiceAndDepth = (service, depth) => {
       act(() => {
@@ -346,13 +304,8 @@ describe('<DependencyGraph>', () => {
     });
 
     it('should include direct children when parent is selected', () => {
-      const testDependencies = [{ parent: 'A', child: 'B', callCount: 1 }];
-
-      render(
-        <MemoryRouter>
-          <DependencyGraph {...baseProps} dependencies={testDependencies} />
-        </MemoryRouter>
-      );
+      mockHook({ data: [{ parent: 'A', child: 'B', callCount: 1 }] });
+      renderPage();
       selectServiceAndDepth('A', 1);
 
       expect(lastDAGProps.data.nodes).toEqual(expect.arrayContaining([{ key: 'A' }, { key: 'B' }]));
@@ -360,13 +313,8 @@ describe('<DependencyGraph>', () => {
     });
 
     it('should include direct parents when child is selected', () => {
-      const testDependencies = [{ parent: 'A', child: 'B', callCount: 1 }];
-
-      render(
-        <MemoryRouter>
-          <DependencyGraph {...baseProps} dependencies={testDependencies} />
-        </MemoryRouter>
-      );
+      mockHook({ data: [{ parent: 'A', child: 'B', callCount: 1 }] });
+      renderPage();
       selectServiceAndDepth('B', 1);
 
       expect(lastDAGProps.data.nodes).toEqual(expect.arrayContaining([{ key: 'A' }, { key: 'B' }]));
@@ -374,16 +322,13 @@ describe('<DependencyGraph>', () => {
     });
 
     it('should not re-add already visited nodes (outgoing)', () => {
-      const testDependencies = [
-        { parent: 'A', child: 'B', callCount: 1 },
-        { parent: 'B', child: 'A', callCount: 1 },
-      ];
-
-      render(
-        <MemoryRouter>
-          <DependencyGraph {...baseProps} dependencies={testDependencies} />
-        </MemoryRouter>
-      );
+      mockHook({
+        data: [
+          { parent: 'A', child: 'B', callCount: 1 },
+          { parent: 'B', child: 'A', callCount: 1 },
+        ],
+      });
+      renderPage();
       selectServiceAndDepth('A', 2);
 
       expect(lastDAGProps.data.nodes).toHaveLength(2);
@@ -393,16 +338,13 @@ describe('<DependencyGraph>', () => {
     });
 
     it('should not re-add already visited nodes (incoming)', () => {
-      const testDependencies = [
-        { parent: 'A', child: 'B', callCount: 1 },
-        { parent: 'B', child: 'A', callCount: 1 },
-      ];
-
-      render(
-        <MemoryRouter>
-          <DependencyGraph {...baseProps} dependencies={testDependencies} />
-        </MemoryRouter>
-      );
+      mockHook({
+        data: [
+          { parent: 'A', child: 'B', callCount: 1 },
+          { parent: 'B', child: 'A', callCount: 1 },
+        ],
+      });
+      renderPage();
       selectServiceAndDepth('B', 2);
 
       expect(lastDAGProps.data.nodes).toHaveLength(2);
@@ -412,104 +354,18 @@ describe('<DependencyGraph>', () => {
     });
 
     it('should ignore calls not connected to the selected service', () => {
-      const testDependencies = [
-        { parent: 'A', child: 'B', callCount: 1 },
-        { parent: 'C', child: 'D', callCount: 1 },
-      ];
-
-      render(
-        <MemoryRouter>
-          <DependencyGraph {...baseProps} dependencies={testDependencies} />
-        </MemoryRouter>
-      );
+      mockHook({
+        data: [
+          { parent: 'A', child: 'B', callCount: 1 },
+          { parent: 'C', child: 'D', callCount: 1 },
+        ],
+      });
+      renderPage();
       selectServiceAndDepth('A', 1);
 
       expect(lastDAGProps.data.nodes).toHaveLength(2);
       expect(lastDAGProps.data.nodes).toEqual(expect.arrayContaining([{ key: 'A' }, { key: 'B' }]));
       expect(lastDAGProps.data.edges).toHaveLength(1);
     });
-  });
-});
-
-describe('DependencyGraphPage (default export wired to useDependenciesQuery)', () => {
-  const renderDefault = () =>
-    render(
-      <MemoryRouter>
-        <DependencyGraphPage />
-      </MemoryRouter>
-    );
-
-  beforeEach(() => {
-    lastDAGOptionsProps = {};
-    lastDAGProps = {};
-    vi.mocked(useDependenciesQuery).mockReset();
-  });
-
-  it('starts with the Backend data source and passes it to the query hook', () => {
-    vi.mocked(useDependenciesQuery).mockReturnValue({
-      data: [{ parent: 'svc-a', child: 'svc-b', callCount: 4 }],
-      isLoading: false,
-      error: null,
-    });
-
-    renderDefault();
-
-    expect(useDependenciesQuery).toHaveBeenCalledWith('Backend');
-    expect(lastDAGOptionsProps.selectedDataSource).toBe('Backend');
-    expect(lastDAGOptionsProps.dependencies).toEqual([{ parent: 'svc-a', child: 'svc-b', callCount: 4 }]);
-  });
-
-  it('renders LoadingIndicator while the query is loading', () => {
-    vi.mocked(useDependenciesQuery).mockReturnValue({
-      data: undefined,
-      isLoading: true,
-      error: null,
-    });
-
-    renderDefault();
-
-    expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
-  });
-
-  it('renders ErrorMessage when the query errors', () => {
-    vi.mocked(useDependenciesQuery).mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      error: new Error('boom'),
-    });
-
-    renderDefault();
-
-    expect(screen.getByTestId('error-message')).toBeInTheDocument();
-  });
-
-  it('treats undefined data as empty deps and shows the empty state', () => {
-    vi.mocked(useDependenciesQuery).mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      error: null,
-    });
-
-    renderDefault();
-
-    expect(screen.getByText(/no.*?found/i)).toBeInTheDocument();
-  });
-
-  it('changing the data source re-invokes useDependenciesQuery with the new source', () => {
-    vi.mocked(useDependenciesQuery).mockReturnValue({
-      data: [{ parent: 'a', child: 'b', callCount: 1 }],
-      isLoading: false,
-      error: null,
-    });
-
-    renderDefault();
-    expect(useDependenciesQuery).toHaveBeenLastCalledWith('Backend');
-
-    act(() => {
-      lastDAGOptionsProps.onDataSourceChange('Small Graph');
-    });
-
-    expect(useDependenciesQuery).toHaveBeenLastCalledWith('Small Graph');
-    expect(lastDAGOptionsProps.selectedDataSource).toBe('Small Graph');
   });
 });

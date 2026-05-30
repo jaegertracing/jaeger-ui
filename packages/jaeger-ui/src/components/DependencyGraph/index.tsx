@@ -22,14 +22,6 @@ import { ApiError } from '../../types/api-error';
 
 const dagMaxNumServices = getConfig().dependencies?.dagMaxNumServices ?? FALLBACK_DAG_MAX_NUM_SERVICES;
 
-export type TProps = {
-  dependencies: IServiceDependency[];
-  loading: boolean;
-  error: ApiError | null | undefined;
-  selectedDataSource: DataSource;
-  onDataSourceChange: (source: DataSource) => void;
-};
-
 const findConnectedServices = (
   serviceCalls: IServiceDependency[],
   startService: string,
@@ -111,9 +103,12 @@ const formatServiceCalls = (
   };
 };
 
-// export for tests
-export function DependencyGraphPageImpl(props: TProps) {
-  const { dependencies, error, loading, selectedDataSource, onDataSourceChange } = props;
+export default function DependencyGraphPage() {
+  const [selectedDataSource, setSelectedDataSource] = useState<DataSource>('Backend');
+  const { data, isLoading, error } = useDependenciesQuery(selectedDataSource);
+  // Stabilise so the `data ?? []` fresh-array doesn't make the updateLayout
+  // effect below re-fire every render when there's no data yet.
+  const dependencies = useMemo(() => data ?? [], [data]);
   const { search } = useLocation();
   const uiFind = parseUiFind(search);
   const [selectedService, setSelectedService] = useState<string | null>(null);
@@ -190,11 +185,11 @@ export function DependencyGraphPageImpl(props: TProps) {
     setDebouncedDepth(5);
   };
 
-  if (loading) {
+  if (isLoading) {
     return <LoadingIndicator className="u-mt-vast" centered />;
   }
   if (error) {
-    return <ErrorMessage className="ub-m3" error={error} />;
+    return <ErrorMessage className="ub-m3" error={error as ApiError} />;
   }
 
   if (dependencies.length === 0) {
@@ -231,7 +226,7 @@ export function DependencyGraphPageImpl(props: TProps) {
           onReset={handleReset}
           isHierarchicalDisabled={isHierarchicalDisabled}
           selectedDataSource={selectedDataSource}
-          onDataSourceChange={onDataSourceChange}
+          onDataSourceChange={setSelectedDataSource}
           dataSources={DATA_SOURCES}
           uiFind={uiFind}
           matchCount={matchCount}
@@ -248,20 +243,5 @@ export function DependencyGraphPageImpl(props: TProps) {
         />
       </div>
     </div>
-  );
-}
-
-export default function DependencyGraphPage() {
-  const [selectedDataSource, setSelectedDataSource] = useState<DataSource>('Backend');
-  const { data, isLoading, error } = useDependenciesQuery(selectedDataSource);
-
-  return (
-    <DependencyGraphPageImpl
-      dependencies={data ?? []}
-      loading={isLoading}
-      error={error as ApiError | null}
-      selectedDataSource={selectedDataSource}
-      onDataSourceChange={setSelectedDataSource}
-    />
   );
 }
