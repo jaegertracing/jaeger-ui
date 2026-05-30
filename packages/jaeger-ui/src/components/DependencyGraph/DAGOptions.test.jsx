@@ -147,12 +147,19 @@ describe('DAGOptions', () => {
   });
 
   it('handles reset button click', () => {
-    render(<DAGOptions {...defaultProps} />);
+    render(<DAGOptions {...defaultProps} selectedService="service-1" />);
 
     const resetButton = screen.getByTestId('reset-button');
     fireEvent.click(resetButton);
 
     expect(defaultProps.onReset).toHaveBeenCalled();
+  });
+
+  it('disables reset button when no service is selected', () => {
+    render(<DAGOptions {...defaultProps} selectedService={null} />);
+
+    const resetButton = screen.getByTestId('reset-button');
+    expect(resetButton).toBeDisabled();
   });
 
   it('disables depth input when no service is selected', () => {
