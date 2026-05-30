@@ -95,7 +95,7 @@ function sortableTitle(
   return (
     <span>
       {label}
-      <Icon className="TraceTable--sortIcon" />
+      <Icon className="TraceTable--sortIcon" aria-hidden />
     </span>
   );
 }
