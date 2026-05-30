@@ -27,7 +27,7 @@ import { sortTraceSummaries } from '../../model/search';
 import FileLoader from './FileLoader';
 import { useUploadedTraces } from './useUploadedTraces';
 import VerticalResizer from '../common/VerticalResizer';
-import { useSearchPanelStore, PANEL_WIDTH_MIN, PANEL_WIDTH_MAX } from '../../stores/search-panel-store';
+import { useSearchPanelStore, PANEL_WIDTH_MIN, PANEL_WIDTH_MAX } from './search-panel-store';
 
 import './index.css';
 import JaegerLogo from '../../img/jaeger-logo.svg';

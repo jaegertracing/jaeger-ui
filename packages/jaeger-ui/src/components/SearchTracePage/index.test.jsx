@@ -65,7 +65,7 @@ import { Provider } from 'react-redux';
 import { SearchTracePageImpl as SearchTracePage } from './index';
 import { useServices } from '../../hooks/useTraceDiscovery';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
-import { useSearchPanelStore, LS_WIDTH_KEY, LS_COLLAPSED_KEY } from '../../stores/search-panel-store';
+import { useSearchPanelStore, LS_WIDTH_KEY, LS_COLLAPSED_KEY } from './search-panel-store';
 import { store as globalStore } from '../../utils/configure-store';
 
 const queryClient = new QueryClient({
