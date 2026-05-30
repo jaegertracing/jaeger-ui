@@ -65,6 +65,7 @@ import { Provider } from 'react-redux';
 import { SearchTracePageImpl as SearchTracePage } from './index';
 import { useServices } from '../../hooks/useTraceDiscovery';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
+import { useSearchPanelStore, LS_WIDTH_KEY, LS_COLLAPSED_KEY } from '../../stores/search-panel-store';
 import { store as globalStore } from '../../utils/configure-store';
 
 const queryClient = new QueryClient({
@@ -120,6 +121,10 @@ describe('<SearchTracePage>', () => {
         customWebAnalytics: null,
       },
     });
+    useSearchPanelStore.setState({ panelWidth: 0.25, collapsed: false });
+    localStorage.removeItem(LS_WIDTH_KEY);
+    localStorage.removeItem(LS_COLLAPSED_KEY);
+    queryClient.clear();
   });
 
   it('uses React Query to fetch services', () => {
@@ -296,6 +301,87 @@ describe('<SearchTracePage>', () => {
     );
     expect(container.querySelector('[data-node-key="fileLoader"]')).not.toBeInTheDocument();
   });
+
+  it('shows collapse button when panel is expanded', () => {
+    render(
+      <AllProvider>
+        <SearchTracePage />
+      </AllProvider>
+    );
+    expect(screen.getByLabelText('Collapse search panel')).toBeInTheDocument();
+  });
+
+  it('hides search panel and shows icon buttons when collapsed', async () => {
+    const { container } = render(
+      <AllProvider>
+        <SearchTracePage />
+      </AllProvider>
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('Collapse search panel'));
+    });
+    expect(container.querySelector('[data-node-key="searchForm"]')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Open search panel')).toBeInTheDocument();
+    expect(screen.getByLabelText('Open upload panel')).toBeInTheDocument();
+  });
+
+  it('clicking Search icon button re-opens panel to Search tab', async () => {
+    const { container } = render(
+      <AllProvider>
+        <SearchTracePage />
+      </AllProvider>
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('Collapse search panel'));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('Open search panel'));
+    });
+    expect(container.querySelector('[data-node-key="searchForm"]')).toBeInTheDocument();
+  });
+
+  it('clicking Upload icon button re-opens panel to Upload tab', async () => {
+    const { container } = render(
+      <AllProvider>
+        <SearchTracePage />
+      </AllProvider>
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('Collapse search panel'));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('Open upload panel'));
+    });
+    expect(container.querySelector('[data-node-key="fileLoader"]')).toBeInTheDocument();
+  });
+
+  it('hides Upload icon button in collapsed state when upload is disabled', async () => {
+    getConfigMock.mockReturnValue({
+      disableFileUploadControl: true,
+      tracking: { gaID: null, trackErrors: false, customWebAnalytics: null },
+    });
+    render(
+      <AllProvider>
+        <SearchTracePage />
+      </AllProvider>
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('Collapse search panel'));
+    });
+    expect(screen.queryByLabelText('Open upload panel')).not.toBeInTheDocument();
+  });
+
+  it('panel collapse state persists via store', async () => {
+    render(
+      <AllProvider>
+        <SearchTracePage />
+      </AllProvider>
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('Collapse search panel'));
+    });
+    expect(useSearchPanelStore.getState().collapsed).toBe(true);
+  });
 });
 
 describe('useTraceDiffStore', () => {
@@ -319,6 +405,7 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
       tracking: { gaID: null, trackErrors: false, customWebAnalytics: null },
     });
     useTraceDiffStore.setState({ cohort: [], a: null, b: null });
+    useSearchPanelStore.setState({ panelWidth: 0.25, collapsed: false });
   });
 
   it('merges uploaded summaries into traceSummaries when FileLoader calls onTracesLoaded', async () => {
@@ -352,8 +439,12 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
       lastFileLoaderProps.onTracesLoaded([summary], [{ traceID: 'uploaded-1' }]);
     });
 
-    expect(lastSearchResultsProps.traceSummaries).toContainEqual(summary);
-    expect(lastSearchResultsProps.rawTraces).toContainEqual({ traceID: 'uploaded-1' });
+    // With controlled tabs, the tab switch causes a component re-render before onTracesLoaded
+    // is called; the React Query cache update may settle in a subsequent render cycle.
+    await waitFor(() => {
+      expect(lastSearchResultsProps.traceSummaries).toContainEqual(summary);
+      expect(lastSearchResultsProps.rawTraces).toContainEqual({ traceID: 'uploaded-1' });
+    });
   });
 
   it('filters diffCohort to only summaries present in current results', async () => {
