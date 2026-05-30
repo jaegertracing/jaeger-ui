@@ -72,6 +72,10 @@ export function SelectSort({ sortBy, handleSortChange }: SelectSortProps) {
         <Option value={orderBy.SHORTEST_FIRST}>Shortest First</Option>
         <Option value={orderBy.MOST_SPANS}>Most Spans</Option>
         <Option value={orderBy.LEAST_SPANS}>Least Spans</Option>
+        <Option value={orderBy.MOST_ERRORS}>Most Errors</Option>
+        <Option value={orderBy.LEAST_ERRORS}>Least Errors</Option>
+        <Option value={orderBy.TRACE_NAME_ASC}>Trace Name A-Z</Option>
+        <Option value={orderBy.TRACE_NAME_DESC}>Trace Name Z-A</Option>
       </SearchableSelect>
     </label>
   );

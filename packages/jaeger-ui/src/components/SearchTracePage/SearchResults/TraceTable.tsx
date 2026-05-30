@@ -9,12 +9,15 @@ import type { ColumnsType, TableProps } from 'antd/es/table';
 import type { SorterResult } from 'antd/es/table/interface';
 import Overflow from '@rc-component/overflow';
 import _sortBy from 'lodash/sortBy';
+import { IoArrowUp, IoArrowDown } from 'react-icons/io5';
 import { TraceSummary } from '../../../types/trace-summary';
 import { formatDuration, formatDurationCompact, formatDatetime } from '../../../utils/date';
 import RelativeBar from '../../common/RelativeBar';
 import * as orderBy from '../../../model/order-by';
 import type { TracePageLink } from '../../TracePage/url';
 import { ServicePill, type ServiceEntry } from './ServicePills';
+
+import './TraceTable.css';
 
 type TraceTableProps = {
   traceSummaries: TraceSummary[];
@@ -29,8 +32,14 @@ type TraceTableProps = {
 
 function toOrderBy(columnKey: string | undefined, order: string | undefined): string {
   if (order == null) return orderBy.MOST_RECENT;
+  if (columnKey === 'traceName') {
+    return order === 'ascend' ? orderBy.TRACE_NAME_ASC : orderBy.TRACE_NAME_DESC;
+  }
   if (columnKey === 'spans') {
     return order === 'ascend' ? orderBy.LEAST_SPANS : orderBy.MOST_SPANS;
+  }
+  if (columnKey === 'errors') {
+    return order === 'ascend' ? orderBy.LEAST_ERRORS : orderBy.MOST_ERRORS;
   }
   if (columnKey === 'duration') {
     return order === 'ascend' ? orderBy.SHORTEST_FIRST : orderBy.LONGEST_FIRST;
@@ -44,10 +53,18 @@ function toOrderBy(columnKey: string | undefined, order: string | undefined): st
 
 function fromOrderBy(sort: string): { key: string; order: 'ascend' | 'descend' } {
   switch (sort) {
+    case orderBy.TRACE_NAME_ASC:
+      return { key: 'traceName', order: 'ascend' };
+    case orderBy.TRACE_NAME_DESC:
+      return { key: 'traceName', order: 'descend' };
     case orderBy.MOST_SPANS:
       return { key: 'spans', order: 'descend' };
     case orderBy.LEAST_SPANS:
       return { key: 'spans', order: 'ascend' };
+    case orderBy.MOST_ERRORS:
+      return { key: 'errors', order: 'descend' };
+    case orderBy.LEAST_ERRORS:
+      return { key: 'errors', order: 'ascend' };
     case orderBy.LONGEST_FIRST:
       return { key: 'duration', order: 'descend' };
     case orderBy.SHORTEST_FIRST:
@@ -62,6 +79,26 @@ function fromOrderBy(sort: string): { key: string; order: 'ascend' | 'descend' }
 }
 
 export { toOrderBy, fromOrderBy };
+
+/**
+ * Renders an IoArrowUp or IoArrowDown icon next to the column title when that column is the
+ * active sort column. Returns plain text otherwise.
+ */
+function sortableTitle(
+  label: string,
+  columnKey: string,
+  activeSortKey: string,
+  activeSortOrder: 'ascend' | 'descend'
+) {
+  if (columnKey !== activeSortKey) return label;
+  const Icon = activeSortOrder === 'ascend' ? IoArrowUp : IoArrowDown;
+  return (
+    <span>
+      {label}
+      <Icon className="TraceTable--sortIcon" />
+    </span>
+  );
+}
 
 function ServicePills({ services }: { services: TraceSummary['services'] }) {
   const sorted = _sortBy(services, s => s.name);
@@ -113,7 +150,7 @@ export default function TraceTable({
   const columns: ColumnsType<TraceSummary> = useMemo(() => {
     const cols: ColumnsType<TraceSummary> = [
       {
-        title: 'Trace Name',
+        title: sortableTitle('Trace Name', 'traceName', sortKey, sortOrder),
         dataIndex: 'traceName',
         key: 'traceName',
         onCell: () => ({ style: { overflow: 'hidden' } }),
@@ -138,6 +175,9 @@ export default function TraceTable({
             </Tooltip>
           );
         },
+        sorter: true,
+        sortOrder: sortKey === 'traceName' ? sortOrder : undefined,
+        sortDirections: ['ascend', 'descend'],
       },
       ...(showServicesColumn
         ? [
@@ -152,7 +192,7 @@ export default function TraceTable({
           ]
         : []),
       {
-        title: 'Spans',
+        title: sortableTitle('Spans', 'spans', sortKey, sortOrder),
         key: 'spans',
         width: '5rem',
         align: 'center',
@@ -164,7 +204,7 @@ export default function TraceTable({
       ...(showErrorsColumn
         ? [
             {
-              title: 'Errors',
+              title: sortableTitle('Errors', 'errors', sortKey, sortOrder),
               key: 'errors',
               width: '5rem',
               align: 'center' as const,
@@ -185,11 +225,14 @@ export default function TraceTable({
                 ) : (
                   0
                 ),
-            },
+              sorter: true,
+        sortOrder: sortKey === 'errors' ? sortOrder : undefined,
+        sortDirections: ['ascend', 'descend'],
+      },
           ]
         : []),
       {
-        title: 'Duration',
+        title: sortableTitle('Duration', 'duration', sortKey, sortOrder),
         key: 'duration',
         render: (_: unknown, trace: TraceSummary) => (
           <Tooltip title={formatDuration(trace.duration)}>
@@ -206,7 +249,7 @@ export default function TraceTable({
         sortDirections: ['ascend', 'descend'],
       },
       {
-        title: 'Start Time',
+        title: sortableTitle('Start Time', 'startTime', sortKey, sortOrder),
         key: 'startTime',
         onCell: () => ({ style: { overflow: 'hidden' } }),
         render: (_: unknown, trace: TraceSummary) => {
@@ -273,13 +316,21 @@ export default function TraceTable({
 
   const onChange: TableProps<TraceSummary>['onChange'] = (_pagination, _filters, sorter) => {
     const s = Array.isArray(sorter) ? sorter[0] : (sorter as SorterResult<TraceSummary>);
-    // When Ant Design's 3rd-click "cancel" fires, columnKey is undefined and order is undefined.
-    // toOrderBy(undefined, undefined) returns MOST_RECENT, which is the correct fallback.
-    handleSortChange(toOrderBy(s.columnKey as string | undefined, s.order ?? undefined));
+    const columnKey = s.columnKey as string | undefined;
+    const order = s.order ?? undefined;
+    // When Ant Design's 3rd click fires a "cancel" (order === undefined, columnKey === undefined),
+    // flip the current sort direction instead of deactivating sorting.
+    if (order == null) {
+      const flipped = sortOrder === 'descend' ? 'ascend' : 'descend';
+      handleSortChange(toOrderBy(sortKey, flipped));
+      return;
+    }
+    handleSortChange(toOrderBy(columnKey, order));
   };
 
   return (
     <Table<TraceSummary>
+      className="TraceTable"
       columns={columns}
       dataSource={traceSummaries}
       rowKey="traceID"
