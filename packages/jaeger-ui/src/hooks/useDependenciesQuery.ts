@@ -33,11 +33,18 @@ function normalizeDependenciesResponse(response: unknown): IServiceDependency[] 
 // React Query hook for the service dependency graph (`GET /api/dependencies`).
 // `source` selects between the real backend and the dev-only canned datasets
 // shipped under `components/DependencyGraph/sample_data/`. The dev branches
-// are guarded by `import.meta.env.DEV`, which Vite replaces with a literal
-// `false` in production builds — so Rollup constant-folds the branches away
-// and the JSON imports never enter the prod bundle. `endTs` is resolved
-// inside `queryFn` so refetches (incl. window-focus) walk the time window
-// forward instead of pinning it at mount time.
+// are guarded by `import.meta.env.DEV` (not a function call) so Vite can
+// constant-fold them out of production builds — keeping the sample JSON
+// chunks from being shipped to end users.
+//
+// `endTs` is resolved lazily inside `queryFn` rather than captured at mount
+// because the dep-graph page has no user-facing time-window UI: the implicit
+// semantic is "show me up to now". On each refetch (incl. window-focus) the
+// window should advance with wall-clock time, not stay pinned to the value
+// that happened to be current when the component mounted. Contrast with
+// `useSearchTraces`, where `endTs` is part of the URL/SearchQuery and
+// resolved eagerly — there the user owns the window and results must be
+// reproducible from the URL.
 export function useDependenciesQuery(
   source: DataSource = 'Backend',
   params: DependenciesQueryParams = {}
