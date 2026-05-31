@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Radio, Select } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
@@ -33,8 +33,8 @@ import SearchableSelect from '../../common/SearchableSelect';
 import { useSearchResultsStore } from '../store.search-results';
 
 type SearchResultsProps = {
-  cohortAddTrace: (traceId: string) => void;
-  cohortRemoveTrace: (traceId: string) => void;
+  addTraceToCohort: (summary: TraceSummary) => void;
+  removeTraceFromCohort: (traceId: string) => void;
   diffCohort: TraceSummary[];
   disableComparisons: boolean;
   hideGraph: boolean;
@@ -91,27 +91,36 @@ export function UnconnectedSearchResults({
   rawTraces,
   sortBy,
   handleSortChange,
-  cohortAddTrace,
-  cohortRemoveTrace,
+  addTraceToCohort,
+  removeTraceFromCohort,
 }: SearchResultsProps) {
   const navigate = useNavigate();
   const viewMode = useSearchResultsStore(s => s.viewMode);
   const setViewMode = useSearchResultsStore(s => s.setViewMode);
 
+  const traceSummaryById = useMemo(
+    () => new Map(traceSummaries.map(summary => [summary.traceID, summary])),
+    [traceSummaries]
+  );
+
   const toggleComparison = useCallback(
     (traceID: string, remove?: boolean) => {
       if (remove) {
-        cohortRemoveTrace(traceID);
-      } else {
-        cohortAddTrace(traceID);
+        removeTraceFromCohort(traceID);
+        return;
       }
+      const summary = traceSummaryById.get(traceID);
+      // Defensive: every rendered row's traceID is a key in traceSummaryById,
+      // so this lookup cannot miss in normal UI flow.
+      if (!summary) return;
+      addTraceToCohort(summary);
     },
-    [cohortAddTrace, cohortRemoveTrace]
+    [addTraceToCohort, removeTraceFromCohort, traceSummaryById]
   );
 
   const clearAllComparisons = useCallback(() => {
-    diffCohort.forEach(t => cohortRemoveTrace(t.traceID));
-  }, [diffCohort, cohortRemoveTrace]);
+    diffCohort.forEach(t => removeTraceFromCohort(t.traceID));
+  }, [diffCohort, removeTraceFromCohort]);
 
   const getLink = useCallback(
     (traceID: string) =>

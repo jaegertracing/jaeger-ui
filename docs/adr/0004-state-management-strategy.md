@@ -1,7 +1,7 @@
 # ADR 0004: State Management Strategy for Jaeger UI
 
 **Status**: Proposed  
-**Last Updated**: 2026-04-17 
+**Last Updated**: 2026-05-30 
 **Reviewed**: Pending
 
 ---
@@ -38,7 +38,7 @@ These should be migrated to **React Query**:
 |-------------|-------------|-------------------|
 | `trace` | Map of `FetchedTrace` and `search` results | `TracePage`, `SearchPage` |
 | ~~`services`~~ (removed) | ~~Lists of services and operations~~ → React Query (`useServices` / `useSpanNames`, Phase 2c) | `SearchPage`, `MonitorPage`, `DeepDependencies` |
-| `dependencies`| Service dependency graph data | `DependenciesPage` |
+| ~~`dependencies`~~ (removed) | ~~Service dependency graph data~~ → React Query (`useDependenciesQuery`, Phase 2d) | `DependencyGraph` |
 | `metrics` | Sytem performance metrics (latencies, errors) | `MonitorPage` |
 | `ddg` | Deep Dependency Graph data | `DeepDependenciesPage` |
 | `archive` | Status of archived traces | `TracePage` |
@@ -1123,14 +1123,23 @@ export function useSpanNames(service: string | null, spanKind?: string): UseQuer
 
 > **Note**: Legacy `JaegerAPI.fetchServices` / `fetchServiceOperations` remain in `api/jaeger.ts` for non-v3 callers; UI discovery paths use v3 via `jaegerClient`.
 
-#### ⬜ 2d. Dependencies page
+#### ✅ 2d. Dependencies page
 
 **Redux removed**: `src/reducers/dependencies.ts`.
 
 **New hook** (`src/hooks/useDependenciesQuery.ts`):
 ```typescript
-queryKey: ['dependencies', { start, end, lookback }]
+queryKey: ['dependencies', source, keyEndTs, lookback]
 ```
+
+**Hook signature**: `useDependenciesQuery(source: DataSource = 'Backend', { endTs?, lookback? } = {})`.
+
+- `source` selects between the real backend (`'Backend'`) and the dev-only canned datasets (`'Small Graph'`, `'Large Graph'`); the dev branches dynamic-import `./sample_data/*.json` under `import.meta.env.DEV` so Vite tree-shakes them out of production bundles. The previous module-level `createSampleDataManager` / `getSampleData` / `useEffectiveDependencies` / `sampleRevision` indirection that bridged a side cache back into React is gone — the dev sources are just alternative React Query entries keyed by `source`.
+- `endTs` is resolved lazily inside `queryFn` (`params.endTs ?? Date.now()`) rather than captured at mount, because the dep-graph page has no user-facing time-window UI. The implicit semantic is "show me up to now", so refetches (incl. `refetchOnWindowFocus`) advance with wall-clock time. Contrast with `useSearchTraces`, where `endTs` is part of the URL/SearchQuery and resolved eagerly because the user owns the window. `keyEndTs` is `params.endTs ?? null` so an unspecified `endTs` is shared across mounts.
+
+**Callers** use `useDependenciesQuery(source)` — not cache key literals.
+
+**Components using hook**: `DependencyGraph` (default export, which is also the single page component after the Redux-era `DependencyGraphPageImpl` / wrapper split was collapsed).
 
 #### ⬜ 2e. Deep Dependencies graph fetch
 

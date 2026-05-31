@@ -62,9 +62,21 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .select-a-service-input,
-.layout-selector-input,
-.number-input {
+.layout-selector-input {
   min-width: 200px;
+}
+
+.number-input {
+  min-width: 50px;
+}
+
+.depth-column {
+  width: 60px;
+}
+
+.depth-column .number-input {
+  min-width: 0;
+  width: 100%;
 }
 
 .number-input .ant-input-number-handler-wrap {
@@ -128,12 +140,21 @@ SPDX-License-Identifier: Apache-2.0
 .data-selector {
   margin-left: auto;
   align-self: flex-end;
-  min-width: 200px;
+  min-width: 120px;
+}
+
+.reset-column {
+  /* Reserve the label row height + gap so the button aligns with the
+     input row of the labeled columns. */
+  padding-top: 20px;
+}
+
+.search-column {
+  /* Extra left margin separates the Search group from the Reset button. */
+  margin-left: 24px;
 }
 
 .reset-button {
-  margin-left: 8px;
-  margin-right: 30px;
   height: 32px;
   background-color: var(--surface-secondary);
   border: 1px solid var(--border-default);
@@ -143,7 +164,7 @@ SPDX-License-Identifier: Apache-2.0
   transition: all 0.3s;
 }
 
-.reset-button:hover {
+.reset-button:hover:not(:disabled) {
   background-color: var(--surface-component-background-hover);
   border-color: var(--border-default);
   color: var(--text-primary);
