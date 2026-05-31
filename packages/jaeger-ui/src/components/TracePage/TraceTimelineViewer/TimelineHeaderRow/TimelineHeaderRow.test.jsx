@@ -22,16 +22,20 @@ vi.mock('../TimelineRow', () => {
 });
 
 vi.mock('../../../common/VerticalResizer', () => ({
-  default: ({ position, min, max, onChange }) => (
-    <button
-      type="button"
-      data-testid="vertical-resizer"
-      data-position={position}
-      data-min={min}
-      data-max={max}
-      onClick={() => onChange(position)}
-    />
-  ),
+  default: ({ position, min, max, onChange }) => {
+    const nextPosition = position - 0.05;
+    return (
+      <button
+        type="button"
+        data-testid="vertical-resizer"
+        data-position={position}
+        data-next-position={nextPosition}
+        data-min={min}
+        data-max={max}
+        onClick={() => onChange(nextPosition)}
+      />
+    );
+  },
 }));
 
 vi.mock('./TimelineViewingLayer', () => ({
@@ -171,8 +175,17 @@ describe('<TimelineHeaderRow>', () => {
       const [, sidePanelResizer] = screen.getAllByTestId('vertical-resizer');
 
       expect(sidePanelResizer).toHaveAttribute('data-position', String(1 - sidePanelWidth));
+      expect(sidePanelResizer).toHaveAttribute('data-next-position', String(1 - sidePanelWidth - 0.05));
       expect(sidePanelResizer).toHaveAttribute('data-min', '0.35');
       expect(sidePanelResizer).toHaveAttribute('data-max', '0.8');
+    });
+
+    it('does not render the side panel resizer when its config is omitted', () => {
+      const { onSidePanelWidthChange, sidePanelResizerMin, sidePanelResizerMax, ...propsWithoutResizer } =
+        sidePanelProps;
+      render(<TimelineHeaderRow {...propsWithoutResizer} />);
+
+      expect(screen.getAllByTestId('vertical-resizer')).toHaveLength(1);
     });
 
     it('calls the side panel width handler from the side panel resizer', () => {
@@ -183,7 +196,7 @@ describe('<TimelineHeaderRow>', () => {
       fireEvent.click(sidePanelResizer);
 
       expect(onSidePanelWidthChange).toHaveBeenCalledTimes(1);
-      expect(onSidePanelWidthChange.mock.calls[0][0]).toBeCloseTo(sidePanelWidth);
+      expect(onSidePanelWidthChange.mock.calls[0][0]).toBeCloseTo(sidePanelWidth + 0.05);
     });
   });
 

@@ -148,6 +148,16 @@ describe('<TraceTimelineViewer>', () => {
     };
   }
 
+  function withLayoutPrefs(updates, callback) {
+    const previous = Object.fromEntries(Object.keys(updates).map(key => [key, mockLayoutPrefsStore[key]]));
+    Object.assign(mockLayoutPrefsStore, updates);
+    try {
+      return callback();
+    } finally {
+      Object.assign(mockLayoutPrefsStore, previous);
+    }
+  }
+
   beforeEach(() => {
     props.expandAll.mockClear();
     props.collapseAll.mockClear();
@@ -310,23 +320,23 @@ describe('<TraceTimelineViewer>', () => {
     });
 
     it('computes side panel resizer bounds from the effective header name width', () => {
-      mockLayoutPrefsStore.spanNameColumnWidth = 0.7;
-      mockLayoutPrefsStore.sidePanelWidth = 0.4;
-      render(<TraceTimelineViewerImpl {...props} />);
-      const header = screen.getByTestId('timeline-header-row-mock');
-      const mainFraction = 1 - mockLayoutPrefsStore.sidePanelWidth;
-      const effectiveHeaderNameWidth =
-        Math.min(mockLayoutPrefsStore.spanNameColumnWidth / mainFraction, 1) * mainFraction;
-      const expectedMin = Math.min(
-        1 -
-          Math.min(
-            layoutConstants.SIDE_PANEL_WIDTH_MAX,
-            1 - effectiveHeaderNameWidth - layoutConstants.MIN_TIMELINE_COLUMN_WIDTH
-          ),
-        1 - layoutConstants.SIDE_PANEL_WIDTH_MIN
-      );
+      withLayoutPrefs({ spanNameColumnWidth: 0.7, sidePanelWidth: 0.4 }, () => {
+        render(<TraceTimelineViewerImpl {...props} />);
+        const header = screen.getByTestId('timeline-header-row-mock');
+        const mainFraction = 1 - mockLayoutPrefsStore.sidePanelWidth;
+        const effectiveHeaderNameWidth =
+          Math.min(mockLayoutPrefsStore.spanNameColumnWidth / mainFraction, 1) * mainFraction;
+        const expectedMin = Math.min(
+          1 -
+            Math.min(
+              layoutConstants.SIDE_PANEL_WIDTH_MAX,
+              1 - effectiveHeaderNameWidth - layoutConstants.MIN_TIMELINE_COLUMN_WIDTH
+            ),
+          1 - layoutConstants.SIDE_PANEL_WIDTH_MIN
+        );
 
-      expect(Number(header.dataset.sidePanelResizerMin)).toBeCloseTo(expectedMin);
+        expect(Number(header.dataset.sidePanelResizerMin)).toBeCloseTo(expectedMin);
+      });
     });
 
     it('does not render a VerticalResizer when timeline bars are hidden', () => {
