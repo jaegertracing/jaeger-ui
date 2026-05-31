@@ -24,7 +24,7 @@ type TimelineHeaderRowProps = {
   onCollapseAll: () => void;
   onCollapseOne: () => void;
   onColummWidthChange: (width: number) => void;
-  onSidePanelWidthChange: (position: number) => void;
+  onSidePanelWidthChange: (width: number) => void;
   onExpandAll: () => void;
   onExpandOne: () => void;
   resizerMax: number;
@@ -109,7 +109,7 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
       {sidePanelVisible && timelineBarsVisible && (
         <VerticalResizer
           position={1 - sidePanelWidth}
-          onChange={onSidePanelWidthChange}
+          onChange={position => onSidePanelWidthChange(1 - position)}
           min={sidePanelResizerMin}
           max={sidePanelResizerMax}
         />

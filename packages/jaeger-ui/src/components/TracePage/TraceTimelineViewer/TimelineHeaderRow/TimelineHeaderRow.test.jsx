@@ -183,7 +183,7 @@ describe('<TimelineHeaderRow>', () => {
       fireEvent.click(sidePanelResizer);
 
       expect(onSidePanelWidthChange).toHaveBeenCalledTimes(1);
-      expect(onSidePanelWidthChange).toHaveBeenCalledWith(1 - sidePanelWidth);
+      expect(onSidePanelWidthChange.mock.calls[0][0]).toBeCloseTo(sidePanelWidth);
     });
   });
 

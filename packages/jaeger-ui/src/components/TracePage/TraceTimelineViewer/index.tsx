@@ -158,7 +158,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   const headerNameWidth = nameColumnWidth * mainFraction;
   const resizerMax = sidePanelActive ? mainFraction - MIN_TIMELINE_COLUMN_WIDTH : SPAN_NAME_COLUMN_WIDTH_MAX;
   const sidePanelResizerMax = clamp01(1 - SIDE_PANEL_WIDTH_MIN);
-  const sidePanelAvailableSpace = clamp01(1 - spanNameColumnWidth - MIN_TIMELINE_COLUMN_WIDTH);
+  const sidePanelAvailableSpace = clamp01(1 - headerNameWidth - MIN_TIMELINE_COLUMN_WIDTH);
   const sidePanelResizerMin = Math.min(
     clamp01(1 - Math.min(SIDE_PANEL_WIDTH_MAX, sidePanelAvailableSpace)),
     sidePanelResizerMax
@@ -223,7 +223,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       sidePanelLabel={sidePanelLabel}
       sidePanelResizerMin={sidePanelResizerMin}
       sidePanelResizerMax={sidePanelResizerMax}
-      onSidePanelWidthChange={newPosition => setSidePanelWidth(1 - newPosition)}
+      onSidePanelWidthChange={setSidePanelWidth}
       timelineBarsVisible={timelineBarsVisible}
       viewRangeTime={viewRange.time}
       updateNextViewRangeTime={updateNextViewRangeTime}

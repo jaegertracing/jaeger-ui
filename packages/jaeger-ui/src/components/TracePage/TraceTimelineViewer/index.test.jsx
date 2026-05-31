@@ -11,48 +11,63 @@ import * as KeyboardShortcuts from '../keyboard-shortcuts';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
 
-const { mockLayoutPrefsStore, mockTraceTimelineStore, mockUseTraceTimelineStore } = vi.hoisted(() => {
-  const mockTraceTimelineStore = {
-    detailStates: new Map(),
-    prunedServices: new Set(),
-    setPrunedServices: vi.fn(),
-    collapseAll: vi.fn(),
-    collapseOne: vi.fn(),
-    expandAll: vi.fn(),
-    expandOne: vi.fn(),
-  };
-  const mockUseTraceTimelineStore = Object.assign(
-    vi.fn(selector => selector(mockTraceTimelineStore)),
-    {
-      getState: () => mockTraceTimelineStore,
-      setState: vi.fn(partial => Object.assign(mockTraceTimelineStore, partial)),
-    }
-  );
-  return {
-    mockLayoutPrefsStore: {
-      spanNameColumnWidth: 0.25,
-      sidePanelWidth: 0.375,
-      detailPanelMode: 'inline',
-      timelineBarsVisible: true,
-      setSpanNameColumnWidth: vi.fn(),
-      setSidePanelWidth: vi.fn(),
-      setTimelineBarsVisible: vi.fn(),
-    },
-    mockTraceTimelineStore,
-    mockUseTraceTimelineStore,
-  };
-});
+const { layoutConstants, mockLayoutPrefsStore, mockTraceTimelineStore, mockUseTraceTimelineStore } =
+  vi.hoisted(() => {
+    const layoutConstants = {
+      SPAN_NAME_COLUMN_WIDTH_MIN: 0.15,
+      SPAN_NAME_COLUMN_WIDTH_MAX: 0.85,
+      SIDE_PANEL_WIDTH_MIN: 0.2,
+      SIDE_PANEL_WIDTH_MAX: 0.7,
+      MIN_TIMELINE_COLUMN_WIDTH: 0.05,
+    };
+    const mockTraceTimelineStore = {
+      detailStates: new Map(),
+      prunedServices: new Set(),
+      setPrunedServices: vi.fn(),
+      collapseAll: vi.fn(),
+      collapseOne: vi.fn(),
+      expandAll: vi.fn(),
+      expandOne: vi.fn(),
+    };
+    const mockUseTraceTimelineStore = Object.assign(
+      vi.fn(selector => selector(mockTraceTimelineStore)),
+      {
+        getState: () => mockTraceTimelineStore,
+        setState: vi.fn(partial => Object.assign(mockTraceTimelineStore, partial)),
+      }
+    );
+    return {
+      layoutConstants,
+      mockLayoutPrefsStore: {
+        spanNameColumnWidth: 0.25,
+        sidePanelWidth: 0.375,
+        detailPanelMode: 'inline',
+        timelineBarsVisible: true,
+        setSpanNameColumnWidth: vi.fn(),
+        setSidePanelWidth: vi.fn(),
+        setTimelineBarsVisible: vi.fn(),
+      },
+      mockTraceTimelineStore,
+      mockUseTraceTimelineStore,
+    };
+  });
 
 vi.mock('./store', () => ({
   useLayoutPrefsStore: vi.fn(selector => selector(mockLayoutPrefsStore)),
   useTraceTimelineStore: mockUseTraceTimelineStore,
   getSelectedSpanID: detailStatesArg =>
     detailStatesArg.size > 0 ? detailStatesArg.keys().next().value : null,
-  SPAN_NAME_COLUMN_WIDTH_MIN: 0.15,
-  SPAN_NAME_COLUMN_WIDTH_MAX: 0.85,
-  SIDE_PANEL_WIDTH_MIN: 0.2,
-  SIDE_PANEL_WIDTH_MAX: 0.7,
-  MIN_TIMELINE_COLUMN_WIDTH: 0.05,
+  ...layoutConstants,
+}));
+vi.mock('./duck', () => ({
+  actions: {
+    setSpanNameColumnWidth: width => ({ type: 'setSpanNameColumnWidth', width }),
+    setSidePanelWidth: width => ({ type: 'setSidePanelWidth', width }),
+    expandAll: () => ({ type: 'expandAll' }),
+    expandOne: spans => ({ type: 'expandOne', spans }),
+    collapseAll: spans => ({ type: 'collapseAll', spans }),
+    collapseOne: spans => ({ type: 'collapseOne', spans }),
+  },
 }));
 
 const mockUseServiceFilter = vi.hoisted(() => ({
@@ -95,7 +110,7 @@ vi.mock('./TimelineHeaderRow', () =>
       <button
         data-testid="side-panel-resizer-change"
         type="button"
-        onClick={() => props.onSidePanelWidthChange && props.onSidePanelWidthChange(0.7)}
+        onClick={() => props.onSidePanelWidthChange && props.onSidePanelWidthChange(0.3)}
       />
     </div>
   ))
@@ -277,9 +292,41 @@ describe('<TraceTimelineViewer>', () => {
     it('passes side panel resizer bounds to the header row', () => {
       render(<TraceTimelineViewerImpl {...props} />);
       const header = screen.getByTestId('timeline-header-row-mock');
+      const resizerMin = Number(header.dataset.sidePanelResizerMin);
+      const resizerMax = Number(header.dataset.sidePanelResizerMax);
+      const expectedMax = 1 - layoutConstants.SIDE_PANEL_WIDTH_MIN;
+      const expectedMin = Math.min(
+        1 -
+          Math.min(
+            layoutConstants.SIDE_PANEL_WIDTH_MAX,
+            1 - mockLayoutPrefsStore.spanNameColumnWidth - layoutConstants.MIN_TIMELINE_COLUMN_WIDTH
+          ),
+        expectedMax
+      );
 
-      expect(Number(header.dataset.sidePanelResizerMin)).toBeCloseTo(0.3);
-      expect(Number(header.dataset.sidePanelResizerMax)).toBeCloseTo(0.8);
+      expect(resizerMin).toBeCloseTo(expectedMin);
+      expect(resizerMax).toBeCloseTo(expectedMax);
+      expect(resizerMin).toBeLessThanOrEqual(resizerMax);
+    });
+
+    it('computes side panel resizer bounds from the effective header name width', () => {
+      mockLayoutPrefsStore.spanNameColumnWidth = 0.7;
+      mockLayoutPrefsStore.sidePanelWidth = 0.4;
+      render(<TraceTimelineViewerImpl {...props} />);
+      const header = screen.getByTestId('timeline-header-row-mock');
+      const mainFraction = 1 - mockLayoutPrefsStore.sidePanelWidth;
+      const effectiveHeaderNameWidth =
+        Math.min(mockLayoutPrefsStore.spanNameColumnWidth / mainFraction, 1) * mainFraction;
+      const expectedMin = Math.min(
+        1 -
+          Math.min(
+            layoutConstants.SIDE_PANEL_WIDTH_MAX,
+            1 - effectiveHeaderNameWidth - layoutConstants.MIN_TIMELINE_COLUMN_WIDTH
+          ),
+        1 - layoutConstants.SIDE_PANEL_WIDTH_MIN
+      );
+
+      expect(Number(header.dataset.sidePanelResizerMin)).toBeCloseTo(expectedMin);
     });
 
     it('does not render a VerticalResizer when timeline bars are hidden', () => {
@@ -291,7 +338,7 @@ describe('<TraceTimelineViewer>', () => {
     it('calls setSidePanelWidth (Zustand + Redux) when the header side panel resizer onChange fires', () => {
       render(<TraceTimelineViewerImpl {...props} />);
       fireEvent.click(screen.getByTestId('side-panel-resizer-change'));
-      // onChange receives newPosition=0.7 → setSidePanelWidth(1 - 0.7 ≈ 0.3)
+      // TimelineHeaderRow converts the resizer position to a side-panel width before calling back.
       expect(mockLayoutPrefsStore.setSidePanelWidth).toHaveBeenCalledTimes(1);
       expect(mockLayoutPrefsStore.setSidePanelWidth.mock.calls[0][0]).toBeCloseTo(0.3);
       expect(props.setSidePanelWidth).toHaveBeenCalledTimes(1);
