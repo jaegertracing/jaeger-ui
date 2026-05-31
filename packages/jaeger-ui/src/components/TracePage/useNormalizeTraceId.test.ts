@@ -62,4 +62,30 @@ describe('useNormalizeTraceId', () => {
     expect(result.current).toBe(lowercaseTraceId);
     expect(mockNavigate).not.toHaveBeenCalled();
   });
+
+  it('strips leading zeros from the URL', () => {
+    const paddedId = '000abc123def456';
+    const normalizedId = 'abc123def456';
+
+    const { result } = renderHook(() => useNormalizeTraceId(paddedId));
+
+    expect(result.current).toBe(normalizedId);
+    expect(mockNavigate).toHaveBeenCalledWith(`/trace/${normalizedId}`, {
+      replace: true,
+      state: null,
+    });
+  });
+
+  it('strips leading zeros and lowercases in one redirect', () => {
+    const paddedUpperId = '000ABC123';
+    const normalizedId = 'abc123';
+
+    const { result } = renderHook(() => useNormalizeTraceId(paddedUpperId));
+
+    expect(result.current).toBe(normalizedId);
+    expect(mockNavigate).toHaveBeenCalledWith(`/trace/${normalizedId}`, {
+      replace: true,
+      state: null,
+    });
+  });
 });

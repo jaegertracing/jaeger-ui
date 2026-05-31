@@ -68,7 +68,7 @@ export default function filterSpans(textFilter: string, spans: ReadonlyArray<Spa
       isTextInKeyValues(span.attributes) ||
       (Array.isArray(span.events) && span.events.some(event => isTextInKeyValues(event.attributes))) ||
       isTextInKeyValues(span.resource.attributes) ||
-      includeFilters.some(filter => filter.replace(/^0*/, '') === span.spanID.replace(/^0*/, ''))
+      includeFilters.some(filter => filter.replace(/^0+/, '') === span.spanID)
     );
   };
 
