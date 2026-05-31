@@ -3,7 +3,6 @@
 
 import * as React from 'react';
 import { useCallback, useMemo } from 'react';
-import { normalizeId } from '../../../model/transform-trace-data';
 import { Radio, Select } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
@@ -104,13 +103,14 @@ export function UnconnectedSearchResults({
     [traceSummaries]
   );
 
-  // spanLinks come from user config and may use padded or mixed-case keys.
-  // Normalize once so getLink can do a simple direct lookup with the canonical traceID.
+  // spanLinks come from user config and may use abbreviated or mixed-case keys.
+  // Pad each key to the standard 32-char OTEL trace ID length so lookups match
+  // regardless of how many leading zeros the user omitted when writing the config.
   const normalizedSpanLinks = useMemo(() => {
     if (!spanLinks) return undefined;
     const result: Record<string, string> = {};
     for (const [key, value] of Object.entries(spanLinks)) {
-      result[normalizeId(key)] = value;
+      result[key.toLowerCase().padStart(32, '0')] = value;
     }
     return result;
   }, [spanLinks]);
@@ -139,7 +139,7 @@ export function UnconnectedSearchResults({
       getTracePageLink(
         traceID,
         { fromSearch: location.pathname + location.search },
-        normalizedSpanLinks && normalizedSpanLinks[traceID]
+        normalizedSpanLinks && normalizedSpanLinks[traceID.padStart(32, '0')]
       ),
     [location, normalizedSpanLinks]
   );

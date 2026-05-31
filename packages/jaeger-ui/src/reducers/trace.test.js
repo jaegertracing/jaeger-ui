@@ -47,7 +47,7 @@ describe('search traces', () => {
       results: [id],
     });
     expect(state.rawTraces).toEqual([trace]);
-    // transformTraceData normalizes IDs to canonical form (lowercase, no leading zeros)
+    // transformTraceData normalizes IDs to lowercase (leading zeros are preserved)
     expect(transformTraceData(state.rawTraces[0]).traceID).toBe(normalizeId(id));
   });
 

@@ -23,7 +23,7 @@ const traceStart = 100;
 
 const criticalPathSections = [
   {
-    spanID: '6c3cf93508f205',
+    spanID: '006c3cf93508f205',
     sectionStart: traceStart,
     sectionEnd: traceStart + 40,
   },

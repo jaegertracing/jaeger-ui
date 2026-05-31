@@ -364,10 +364,10 @@ describe('<SearchResults>', () => {
       expect(second[0].linkTo.search).toBeUndefined();
     });
 
-    it('normalizes spanLinks keys so padded config keys match canonical traceIDs', () => {
-      // Trace IDs from the API are canonical (lowercase, no leading zeros).
-      // spanLinks come from user config and may use padded or mixed-case keys.
-      // The component normalizes spanLinks keys so lookups always work.
+    it('normalizes spanLinks keys so abbreviated config keys match backend traceIDs', () => {
+      // Trace IDs from the API are lowercase (leading zeros are preserved as opaque data).
+      // spanLinks come from user config and may use abbreviated or mixed-case keys.
+      // The component pads spanLinks keys to 32 chars so lookups always work.
       const uiFind0 = 'ui-find-0';
       const uiFind1 = 'ui-find-1';
       const canonicalID0 = 'traceid0';
