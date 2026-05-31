@@ -33,11 +33,9 @@ export type ReduxState = {
   trace: {
     search: {
       error?: ApiError;
-      results: string[];
       state?: FetchedState;
       query?: SearchQuery;
     };
-    rawTraces?: unknown[];
   };
   traceTimeline: TTraceTimeline;
   metrics: MetricsReduxState;
