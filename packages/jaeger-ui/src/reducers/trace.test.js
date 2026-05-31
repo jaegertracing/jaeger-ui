@@ -27,6 +27,10 @@ describe('load json traces', () => {
       payload: { data: [trace] },
     });
     expect(state.search.state).toBe(fetchedState.DONE);
+    // Loaded traces are not stored in Redux — they live in the React Query
+    // cache managed by useUploadedTraces. The reducer only tracks load status.
+    expect(state).not.toHaveProperty('rawTraces');
+    expect(state.search).not.toHaveProperty('results');
   });
 
   it('handles a failed load json request', () => {
