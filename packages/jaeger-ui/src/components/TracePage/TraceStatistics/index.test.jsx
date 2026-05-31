@@ -252,19 +252,11 @@ describe('<TraceTagOverview>', () => {
       });
     });
 
-    const nameButtons = screen.getAllByRole('button');
-    const nameButton = nameButtons.find(
-      button => button.textContent.includes('SELECT') || button.style.borderLeft || button.style.padding
-    );
+    const nameButton = screen.getAllByRole('button').find(b => b.textContent.includes('SELECT'));
+    expect(nameButton).toBeDefined();
+    fireEvent.click(nameButton);
 
-    if (nameButton) {
-      fireEvent.click(nameButton);
-    }
-
-    const textarea = screen.queryByRole('textbox');
-    if (textarea) {
-      expect(textarea).toBeInTheDocument();
-    }
+    expect(screen.getByRole('textbox')).toBeInTheDocument();
   });
 
   it('should handle onClickOption when hasSubgroupValue is false', async () => {
@@ -306,14 +298,9 @@ describe('<TraceTagOverview>', () => {
       });
     });
 
-    const nameButtons = screen.getAllByRole('button');
-    const nameButton = nameButtons.find(
-      button => button.textContent.includes('test-name') || button.style.borderLeft || button.style.padding
-    );
-
-    if (nameButton) {
-      fireEvent.click(nameButton);
-    }
+    const nameButton = screen.getAllByRole('button').find(b => b.textContent.includes('test-name'));
+    expect(nameButton).toBeDefined();
+    fireEvent.click(nameButton);
 
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   });
@@ -321,13 +308,10 @@ describe('<TraceTagOverview>', () => {
   it('should test sorter function with string comparison', () => {
     render(<TraceStatistics {...defaultProps} />);
 
-    const columnHeaders = screen.getAllByRole('columnheader');
-    const groupColumn = columnHeaders.find(header => header.textContent.includes('Group'));
-
-    if (groupColumn) {
-      fireEvent.click(groupColumn);
-      expect(screen.getByRole('table')).toBeInTheDocument();
-    }
+    const groupColumn = screen.getAllByRole('columnheader').find(h => h.textContent.includes('Group'));
+    expect(groupColumn).toBeDefined();
+    fireEvent.click(groupColumn);
+    expect(screen.getByRole('table')).toBeInTheDocument();
   });
 
   it('should test sorter function with items that have no hasSubgroupValue', () => {
@@ -375,13 +359,9 @@ describe('<TraceTagOverview>', () => {
       });
     });
 
-    const columnHeaders = screen.getAllByRole('columnheader');
-    const countColumn = columnHeaders.find(header => header.textContent.includes('Count'));
-
-    if (countColumn) {
-      fireEvent.click(countColumn);
-    }
-
+    const countColumn = screen.getAllByRole('columnheader').find(h => h.textContent.includes('Count'));
+    expect(countColumn).toBeDefined();
+    fireEvent.click(countColumn);
     expect(screen.getByRole('table')).toBeInTheDocument();
   });
 
