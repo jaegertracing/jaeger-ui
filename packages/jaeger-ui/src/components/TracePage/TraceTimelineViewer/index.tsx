@@ -151,12 +151,16 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   // stored pixel width. When timeline bars are hidden the name column fills everything (= 1).
   const panelFraction = sidePanelActive ? effectiveSidePanelWidth : 0;
   const mainFraction = 1 - panelFraction;
-  const nameColumnWidth = timelineBarsVisible ? Math.min(spanNameColumnWidth / mainFraction, 1) : 1;
+  const rawNameColumnWidth = timelineBarsVisible ? Math.min(spanNameColumnWidth / mainFraction, 1) : 1;
+  const resizerMax = sidePanelActive
+    ? clamp01(mainFraction - MIN_TIMELINE_COLUMN_WIDTH)
+    : SPAN_NAME_COLUMN_WIDTH_MAX;
   // Page-fraction width of the name column header cell and resizer position.
   // Equals spanNameColumnWidth when bars are visible (the round-trip through mainFraction cancels).
   // When bars are hidden with no side panel, the name column spans the full page.
-  const headerNameWidth = nameColumnWidth * mainFraction;
-  const resizerMax = sidePanelActive ? mainFraction - MIN_TIMELINE_COLUMN_WIDTH : SPAN_NAME_COLUMN_WIDTH_MAX;
+  const rawHeaderNameWidth = rawNameColumnWidth * mainFraction;
+  const headerNameWidth = timelineBarsVisible ? Math.min(rawHeaderNameWidth, resizerMax) : rawHeaderNameWidth;
+  const nameColumnWidth = timelineBarsVisible && mainFraction > 0 ? headerNameWidth / mainFraction : 1;
   const sidePanelResizerMax = clamp01(1 - SIDE_PANEL_WIDTH_MIN);
   const sidePanelAvailableSpace = clamp01(1 - headerNameWidth - MIN_TIMELINE_COLUMN_WIDTH);
   const sidePanelResizerMin = Math.min(

@@ -85,6 +85,8 @@ vi.mock('./TimelineHeaderRow', () =>
   mockDefault(props => (
     <div
       data-testid="timeline-header-row-mock"
+      data-name-column-width={props.nameColumnWidth}
+      data-resizer-max={props.resizerMax}
       data-side-panel-label={props.sidePanelLabel}
       data-side-panel-resizer-min={props.sidePanelResizerMin}
       data-side-panel-resizer-max={props.sidePanelResizerMax}
@@ -319,14 +321,34 @@ describe('<TraceTimelineViewer>', () => {
         render(<TraceTimelineViewerImpl {...props} />);
         const header = screen.getByTestId('timeline-header-row-mock');
         const mainFraction = 1 - mockLayoutPrefsStore.sidePanelWidth;
-        const effectiveHeaderNameWidth =
-          Math.min(mockLayoutPrefsStore.spanNameColumnWidth / mainFraction, 1) * mainFraction;
+        const resizerMax = mainFraction - MIN_TIMELINE_COLUMN_WIDTH;
+        const effectiveHeaderNameWidth = Math.min(
+          Math.min(mockLayoutPrefsStore.spanNameColumnWidth / mainFraction, 1) * mainFraction,
+          resizerMax
+        );
         const expectedMin = Math.min(
           1 - Math.min(SIDE_PANEL_WIDTH_MAX, 1 - effectiveHeaderNameWidth - MIN_TIMELINE_COLUMN_WIDTH),
           1 - SIDE_PANEL_WIDTH_MIN
         );
 
+        expect(Number(header.dataset.nameColumnWidth)).toBeCloseTo(effectiveHeaderNameWidth);
+        expect(Number(header.dataset.nameColumnWidth)).toBeLessThanOrEqual(Number(header.dataset.resizerMax));
         expect(Number(header.dataset.sidePanelResizerMin)).toBeCloseTo(expectedMin);
+      });
+    });
+
+    it('keeps header resizer positions ordered when the stored name column would consume the main area', () => {
+      withLayoutPrefs({ spanNameColumnWidth: 0.95, sidePanelWidth: 0.7 }, () => {
+        render(<TraceTimelineViewerImpl {...props} />);
+        const header = screen.getByTestId('timeline-header-row-mock');
+        const nameColumnWidth = Number(header.dataset.nameColumnWidth);
+        const resizerMax = Number(header.dataset.resizerMax);
+        const sidePanelResizerMin = Number(header.dataset.sidePanelResizerMin);
+        const sidePanelResizerMax = Number(header.dataset.sidePanelResizerMax);
+
+        expect(nameColumnWidth).toBeCloseTo(resizerMax);
+        expect(nameColumnWidth).toBeLessThanOrEqual(resizerMax);
+        expect(sidePanelResizerMin).toBeLessThanOrEqual(sidePanelResizerMax);
       });
     });
 
