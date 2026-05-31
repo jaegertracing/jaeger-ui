@@ -5,12 +5,15 @@ import { useMemo } from 'react';
 import { useQuery, useQueries, UseQueryResult } from '@tanstack/react-query';
 import JaegerAPI from '../api/jaeger';
 import { fetchedState } from '../constants';
-import transformTraceData, { normalizeId } from '../model/transform-trace-data';
+import transformTraceData from '../model/transform-trace-data';
 import { queryClient } from '../query/app-query-client';
 import { FetchedTrace } from '../types';
 import type { IOtelTrace } from '../types/otel';
 
-const TRACE_QUERY_KEY = (id: string) => ['trace', normalizeId(id)] as const;
+// Pad to the canonical 128-bit (32 hex char) representation so that a user
+// supplying a short ID (e.g. 'abc') resolves to the same cache entry as the
+// full backend ID ('000...0abc').
+const TRACE_QUERY_KEY = (id: string) => ['trace', id.toLowerCase().padStart(32, '0')] as const;
 
 // TODO: remove once callers (duck.track.ts, TraceDiff) are migrated off Redux/non-hook paths
 export function getCachedTrace(id: string): IOtelTrace | undefined {
