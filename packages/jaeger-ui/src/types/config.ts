@@ -82,6 +82,17 @@ export type StorageCapabilities = {
 
 // Default values are provided in packages/jaeger-ui/src/constants/default-config.tsx
 export type Config = {
+  // ai gates AI-assisted UI features (e.g. the in-app assistant).
+  // The UI does not enable these features unless the operator opts in via
+  // `ai.enabled: true`, because the Query Service does not yet ship a
+  // matching backend. Defaults to disabled.
+  ai?: {
+    // enabled turns on AI-assisted features in the UI. When false (the
+    // default), all AI surfaces are hidden regardless of whether the
+    // backend supports them.
+    enabled?: boolean;
+  };
+
   //
   // archiveEnabled enables the Archive Trace button in the trace view.
   // Requires Query Service to be configured with "archive" storage backend.
