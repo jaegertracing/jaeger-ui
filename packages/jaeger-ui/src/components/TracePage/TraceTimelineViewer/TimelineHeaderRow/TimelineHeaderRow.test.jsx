@@ -6,6 +6,11 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import TimelineHeaderRow from './TimelineHeaderRow';
+import { SIDE_PANEL_WIDTH_MAX, SIDE_PANEL_WIDTH_MIN } from '../store.constants';
+
+const { RESIZER_DRAG_DELTA } = vi.hoisted(() => ({
+  RESIZER_DRAG_DELTA: 0.05,
+}));
 
 vi.mock('../TimelineRow', () => {
   const TimelineRowMock = ({ children, className }) => (
@@ -23,7 +28,7 @@ vi.mock('../TimelineRow', () => {
 
 vi.mock('../../../common/VerticalResizer', () => ({
   default: ({ position, min, max, onChange }) => {
-    const nextPosition = position - 0.05;
+    const nextPosition = position - RESIZER_DRAG_DELTA;
     return (
       <button
         type="button"
@@ -142,15 +147,17 @@ describe('<TimelineHeaderRow>', () => {
   });
 
   describe('side panel visible', () => {
-    const sidePanelWidth = 0.3;
+    const sidePanelWidth = 1 - SIDE_PANEL_WIDTH_MAX;
+    const sidePanelResizerMin = 1 - SIDE_PANEL_WIDTH_MAX;
+    const sidePanelResizerMax = 1 - SIDE_PANEL_WIDTH_MIN;
     const sidePanelProps = {
       ...props,
       sidePanelVisible: true,
       sidePanelWidth,
       sidePanelLabel: 'Span Details',
       resizerMax: 1 - sidePanelWidth,
-      sidePanelResizerMin: 0.35,
-      sidePanelResizerMax: 0.8,
+      sidePanelResizerMin,
+      sidePanelResizerMax,
     };
 
     it('renders the side panel header cell', () => {
@@ -175,9 +182,12 @@ describe('<TimelineHeaderRow>', () => {
       const [, sidePanelResizer] = screen.getAllByTestId('vertical-resizer');
 
       expect(sidePanelResizer).toHaveAttribute('data-position', String(1 - sidePanelWidth));
-      expect(sidePanelResizer).toHaveAttribute('data-next-position', String(1 - sidePanelWidth - 0.05));
-      expect(sidePanelResizer).toHaveAttribute('data-min', '0.35');
-      expect(sidePanelResizer).toHaveAttribute('data-max', '0.8');
+      expect(sidePanelResizer).toHaveAttribute(
+        'data-next-position',
+        String(1 - sidePanelWidth - RESIZER_DRAG_DELTA)
+      );
+      expect(sidePanelResizer).toHaveAttribute('data-min', String(sidePanelResizerMin));
+      expect(sidePanelResizer).toHaveAttribute('data-max', String(sidePanelResizerMax));
     });
 
     it('does not render the side panel resizer when its config is omitted', () => {
@@ -196,7 +206,7 @@ describe('<TimelineHeaderRow>', () => {
       fireEvent.click(sidePanelResizer);
 
       expect(onSidePanelWidthChange).toHaveBeenCalledTimes(1);
-      expect(onSidePanelWidthChange.mock.calls[0][0]).toBeCloseTo(sidePanelWidth + 0.05);
+      expect(onSidePanelWidthChange.mock.calls[0][0]).toBeCloseTo(sidePanelWidth + RESIZER_DRAG_DELTA);
     });
   });
 
