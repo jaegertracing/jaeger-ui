@@ -139,6 +139,19 @@ describe('filterSpans', () => {
     expect(filterSpans(spanID2WithLeading0s, spans)).toEqual(new Set([spanID2]));
   });
 
+  it('should match an IOtelSpan whose spanID is typed with leading zeros in the filter', () => {
+    const otelSpanID = 'abc123def456';
+    const otelSpan = {
+      spanID: otelSpanID,
+      name: 'otelOperation',
+      resource: { serviceName: 'otelService', attributes: [] },
+      attributes: [],
+      events: [],
+    };
+    expect(filterSpans(`00${otelSpanID}`, [otelSpan])).toEqual(new Set([otelSpanID]));
+    expect(filterSpans(otelSpanID, [otelSpan])).toEqual(new Set([otelSpanID]));
+  });
+
   it('should return spans whose operationName match a filter', () => {
     expect(filterSpans('operationName', spans)).toEqual(new Set([spanID0, spanID2]));
     expect(filterSpans('operationName0', spans)).toEqual(new Set([spanID0]));
