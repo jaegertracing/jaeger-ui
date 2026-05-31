@@ -7,9 +7,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { getUrl } from './url';
 import { normalizeId } from '../../model/transform-trace-data';
 
-// Normalizes the trace ID in the URL to match the canonical form used throughout the app
-// (lower-case, no leading zeros). Redirects if the URL carries a non-canonical form so
-// that shared/bookmarked URLs always show the normalized ID.
+// Normalizes the trace ID in the URL to lowercase. Redirects if the URL carries an
+// uppercase form so that shared/bookmarked URLs resolve consistently.
 export function useNormalizeTraceId(traceID: string): string {
   const normalizedTraceID = normalizeId(traceID);
   const navigate = useNavigate();

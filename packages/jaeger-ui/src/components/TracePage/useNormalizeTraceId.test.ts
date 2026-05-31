@@ -63,22 +63,18 @@ describe('useNormalizeTraceId', () => {
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it('strips leading zeros from the URL', () => {
-    const paddedId = '000abc123def456';
-    const normalizedId = 'abc123def456';
+  it('does not redirect when trace ID is already lowercase with leading zeros', () => {
+    const idWithLeadingZeros = '000abc123def456';
 
-    const { result } = renderHook(() => useNormalizeTraceId(paddedId));
+    const { result } = renderHook(() => useNormalizeTraceId(idWithLeadingZeros));
 
-    expect(result.current).toBe(normalizedId);
-    expect(mockNavigate).toHaveBeenCalledWith(`/trace/${normalizedId}`, {
-      replace: true,
-      state: null,
-    });
+    expect(result.current).toBe(idWithLeadingZeros);
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it('strips leading zeros and lowercases in one redirect', () => {
+  it('lowercases a trace ID that has leading zeros and uppercase hex', () => {
     const paddedUpperId = '000ABC123';
-    const normalizedId = 'abc123';
+    const normalizedId = '000abc123';
 
     const { result } = renderHook(() => useNormalizeTraceId(paddedUpperId));
 

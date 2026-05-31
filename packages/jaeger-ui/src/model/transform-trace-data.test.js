@@ -29,14 +29,14 @@ describe('normalizeId()', () => {
   it('lowercases the ID', () => {
     expect(normalizeId('ABCD1234')).toBe('abcd1234');
   });
-  it('strips leading zeros', () => {
-    expect(normalizeId('000abc123')).toBe('abc123');
+  it('preserves leading zeros', () => {
+    expect(normalizeId('000abc123')).toBe('000abc123');
   });
-  it('combines lowercase and leading-zero stripping', () => {
-    expect(normalizeId('000ABC')).toBe('abc');
+  it('lowercases while preserving leading zeros', () => {
+    expect(normalizeId('000ABC')).toBe('000abc');
   });
-  it('returns 0 for an all-zero ID', () => {
-    expect(normalizeId('0000')).toBe('0');
+  it('leaves an all-zero ID unchanged', () => {
+    expect(normalizeId('0000')).toBe('0000');
   });
   it('leaves an already-normalized ID unchanged', () => {
     expect(normalizeId('abc123')).toBe('abc123');
@@ -142,12 +142,12 @@ describe('transformTraceData()', () => {
     },
   };
 
-  it('normalizes traceID and spanIDs to lower-case with no leading zeros', () => {
-    const paddedTraceID = `000${traceID.toUpperCase()}`;
-    const paddedSpanID = `00${rootSpanID.toUpperCase()}`;
+  it('lowercases traceID and spanIDs while preserving leading zeros', () => {
+    const upperTraceID = traceID.toUpperCase();
+    const upperPaddedSpanID = `00${rootSpanID.toUpperCase()}`;
     const rawSpan = {
-      traceID: paddedTraceID,
-      spanID: paddedSpanID,
+      traceID: upperTraceID,
+      spanID: upperPaddedSpanID,
       operationName: rootOperationName,
       references: [],
       startTime,
@@ -156,38 +156,9 @@ describe('transformTraceData()', () => {
       logs: [],
       processID: 'p1',
     };
-    const result = transformTraceData({ traceID: paddedTraceID, processes, spans: [rawSpan] });
+    const result = transformTraceData({ traceID: upperTraceID, processes, spans: [rawSpan] });
     expect(result.traceID).toBe(traceID);
-    expect(result.spans[0].spanID).toBe(rootSpanID);
-  });
-
-  it('normalizes reference spanIDs so parent-child linking works across mixed-padding inputs', () => {
-    const paddedRootID = `000${rootSpanID}`;
-    const childSpan = {
-      traceID,
-      spanID: '41f71485ed2593e4',
-      operationName: 'child',
-      references: [{ refType: 'CHILD_OF', traceID, spanID: paddedRootID }],
-      startTime: startTime + 10,
-      duration,
-      tags: [],
-      logs: [],
-      processID: 'p1',
-    };
-    const rootSpan = {
-      traceID,
-      spanID: rootSpanID,
-      operationName: rootOperationName,
-      references: [],
-      startTime,
-      duration,
-      tags: [],
-      logs: [],
-      processID: 'p1',
-    };
-    const result = transformTraceData({ traceID, processes, spans: [childSpan, rootSpan] });
-    const child = result.spans.find(s => s.operationName === 'child');
-    expect(child.depth).toBe(1);
+    expect(result.spans[0].spanID).toBe(`00${rootSpanID}`);
   });
 
   it('should return null for trace without traceID', () => {

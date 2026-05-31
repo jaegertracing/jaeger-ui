@@ -57,12 +57,11 @@ export function orderTags(spanTags: KeyValuePair[], topPrefixes?: readonly strin
 }
 
 /**
- * Returns the canonical form of a trace or span ID: lower-case with leading zeros stripped.
- * Applied once at the API boundary so all downstream code works with a consistent form.
- * The `|| '0'` guard handles the pathological all-zero case without returning an empty string.
+ * Returns the canonical form of a trace or span ID: lower-case.
+ * Leading zeros are preserved because OTEL 128-bit IDs are opaque blobs where every bit matters.
  */
 export function normalizeId(id: string): string {
-  return id.toLowerCase().replace(/^0+/, '') || '0';
+  return id.toLowerCase();
 }
 
 /**
