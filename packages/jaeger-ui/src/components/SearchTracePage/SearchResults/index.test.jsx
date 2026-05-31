@@ -121,8 +121,8 @@ const baseRawTraces = [
 ];
 
 const baseProps = {
-  cohortAddTrace: jest.fn(),
-  cohortRemoveTrace: jest.fn(),
+  addTraceToCohort: jest.fn(),
+  removeTraceFromCohort: jest.fn(),
   diffCohort: [],
   disableComparisons: false,
   hideGraph: false,
@@ -197,8 +197,8 @@ describe('<SearchResults>', () => {
     renderWithRouter(
       <SearchResults
         {...baseProps}
-        cohortAddTrace={add}
-        cohortRemoveTrace={remove}
+        addTraceToCohort={add}
+        removeTraceFromCohort={remove}
         diffCohort={[
           {
             traceID: 'existing',
@@ -220,9 +220,9 @@ describe('<SearchResults>', () => {
     expect(remove).toHaveBeenCalledWith('b');
   });
 
-  it('does not call cohortAddTrace when the traceID has no matching summary', () => {
+  it('does not call addTraceToCohort when the traceID has no matching summary', () => {
     const add = jest.fn();
-    renderWithRouter(<SearchResults {...baseProps} cohortAddTrace={add} />);
+    renderWithRouter(<SearchResults {...baseProps} addTraceToCohort={add} />);
     const diffSelectionProps = DiffSelection.mock.calls[0][0];
     diffSelectionProps.toggleComparison('not-a-real-id');
     expect(add).not.toHaveBeenCalled();

@@ -33,8 +33,8 @@ import SearchableSelect from '../../common/SearchableSelect';
 import { useSearchResultsStore } from '../store.search-results';
 
 type SearchResultsProps = {
-  cohortAddTrace: (summary: TraceSummary) => void;
-  cohortRemoveTrace: (traceId: string) => void;
+  addTraceToCohort: (summary: TraceSummary) => void;
+  removeTraceFromCohort: (traceId: string) => void;
   diffCohort: TraceSummary[];
   disableComparisons: boolean;
   hideGraph: boolean;
@@ -91,8 +91,8 @@ export function UnconnectedSearchResults({
   rawTraces,
   sortBy,
   handleSortChange,
-  cohortAddTrace,
-  cohortRemoveTrace,
+  addTraceToCohort,
+  removeTraceFromCohort,
 }: SearchResultsProps) {
   const navigate = useNavigate();
   const viewMode = useSearchResultsStore(s => s.viewMode);
@@ -106,21 +106,21 @@ export function UnconnectedSearchResults({
   const toggleComparison = useCallback(
     (traceID: string, remove?: boolean) => {
       if (remove) {
-        cohortRemoveTrace(traceID);
+        removeTraceFromCohort(traceID);
         return;
       }
       const summary = traceSummaryById.get(traceID);
       // Defensive: every rendered row's traceID is a key in traceSummaryById,
       // so this lookup cannot miss in normal UI flow.
       if (!summary) return;
-      cohortAddTrace(summary);
+      addTraceToCohort(summary);
     },
-    [cohortAddTrace, cohortRemoveTrace, traceSummaryById]
+    [addTraceToCohort, removeTraceFromCohort, traceSummaryById]
   );
 
   const clearAllComparisons = useCallback(() => {
-    diffCohort.forEach(t => cohortRemoveTrace(t.traceID));
-  }, [diffCohort, cohortRemoveTrace]);
+    diffCohort.forEach(t => removeTraceFromCohort(t.traceID));
+  }, [diffCohort, removeTraceFromCohort]);
 
   const getLink = useCallback(
     (traceID: string) =>

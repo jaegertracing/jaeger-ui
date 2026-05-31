@@ -114,10 +114,10 @@ export function SearchTracePageImpl() {
   // when we are on compare; while we are on Search, the list in the store
   // is whatever we set with the ui actions, not something that only updates
   // when we open the compare page.
-  const { cohortAddTrace, cohortRemoveTrace } = useTraceDiffStore(
+  const { addTraceToCohort, removeTraceFromCohort } = useTraceDiffStore(
     useShallow(s => ({
-      cohortAddTrace: s.cohortAddTrace,
-      cohortRemoveTrace: s.cohortRemoveTrace,
+      addTraceToCohort: s.addTraceToCohort,
+      removeTraceFromCohort: s.removeTraceFromCohort,
     }))
   );
   const cohortIDs = useTraceDiffStore(s => s.cohort);
@@ -188,8 +188,8 @@ export function SearchTracePageImpl() {
           // SearchResults is wrapped with withRouteProps, so its prop types aren't visible to TS.
           <SearchResults
             {...({
-              cohortAddTrace,
-              cohortRemoveTrace,
+              addTraceToCohort,
+              removeTraceFromCohort,
               diffCohort,
               disableComparisons: !!embedded,
               hideGraph: Boolean(embedded?.searchHideGraph),

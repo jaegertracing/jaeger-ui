@@ -42,12 +42,12 @@ describe('trace-diff-store', () => {
     });
   });
 
-  describe('cohortAddTrace', () => {
+  describe('addTraceToCohort', () => {
     it('adds trace that does not already exist in state', () => {
       const oldCohort = useTraceDiffStore.getState().cohort;
       expect(oldCohort.includes(newTraceId)).toBe(false);
 
-      useTraceDiffStore.getState().cohortAddTrace(makeSummary(newTraceId));
+      useTraceDiffStore.getState().addTraceToCohort(makeSummary(newTraceId));
       const newCohort = useTraceDiffStore.getState().cohort;
       expect(newCohort).not.toBe(oldCohort);
       expect(newCohort.includes(newTraceId)).toBe(true);
@@ -55,30 +55,30 @@ describe('trace-diff-store', () => {
     });
 
     it('returns original cohort if traceID already exists in state', () => {
-      useTraceDiffStore.getState().cohortAddTrace(makeSummary(initialCohort[0]));
+      useTraceDiffStore.getState().addTraceToCohort(makeSummary(initialCohort[0]));
       const cohort = useTraceDiffStore.getState().cohort;
       expect(cohort).toEqual(initialCohort);
     });
 
     it('stores the summary in cohortSummaries keyed by traceID', () => {
       const summary = makeSummary(newTraceId);
-      useTraceDiffStore.getState().cohortAddTrace(summary);
+      useTraceDiffStore.getState().addTraceToCohort(summary);
       expect(useTraceDiffStore.getState().cohortSummaries.get(newTraceId)).toEqual(summary);
     });
 
     it('updates the summary even when traceID is already in the cohort', () => {
       const original = makeSummary(initialCohort[0]);
-      useTraceDiffStore.getState().cohortAddTrace(original);
+      useTraceDiffStore.getState().addTraceToCohort(original);
       const updated = { ...original, spanCount: 999 };
-      useTraceDiffStore.getState().cohortAddTrace(updated);
+      useTraceDiffStore.getState().addTraceToCohort(updated);
       expect(useTraceDiffStore.getState().cohortSummaries.get(initialCohort[0])).toEqual(updated);
     });
   });
 
-  describe('cohortRemoveTrace', () => {
+  describe('removeTraceFromCohort', () => {
     it('removes trace that exists in state.cohort', () => {
       const oldCohort = useTraceDiffStore.getState().cohort;
-      useTraceDiffStore.getState().cohortRemoveTrace(initialCohort[2]);
+      useTraceDiffStore.getState().removeTraceFromCohort(initialCohort[2]);
       const newCohort = useTraceDiffStore.getState().cohort;
       expect(newCohort).not.toBe(oldCohort);
       expect(newCohort.includes(initialCohort[2])).toBe(false);
@@ -89,7 +89,7 @@ describe('trace-diff-store', () => {
     it('removes state.a', () => {
       const oldState = useTraceDiffStore.getState();
       const oldCohort = oldState.cohort;
-      useTraceDiffStore.getState().cohortRemoveTrace(oldState.a!);
+      useTraceDiffStore.getState().removeTraceFromCohort(oldState.a!);
       const newState = useTraceDiffStore.getState();
       const newCohort = newState.cohort;
       expect(newState.a).toBe(null);
@@ -101,7 +101,7 @@ describe('trace-diff-store', () => {
     it('removes state.b', () => {
       const oldState = useTraceDiffStore.getState();
       const oldCohort = oldState.cohort;
-      useTraceDiffStore.getState().cohortRemoveTrace(oldState.b!);
+      useTraceDiffStore.getState().removeTraceFromCohort(oldState.b!);
       const newState = useTraceDiffStore.getState();
       const newCohort = newState.cohort;
       expect(newState.b).toBe(null);
@@ -112,29 +112,15 @@ describe('trace-diff-store', () => {
 
     it('returns original cohort if traceID not in state', () => {
       const cohortBefore = [...useTraceDiffStore.getState().cohort];
-      useTraceDiffStore.getState().cohortRemoveTrace(newTraceId);
+      useTraceDiffStore.getState().removeTraceFromCohort(newTraceId);
       expect(useTraceDiffStore.getState().cohort).toEqual(cohortBefore);
     });
   });
 
-  describe('diffSetA', () => {
-    it('set a to provided traceId', () => {
-      useTraceDiffStore.getState().diffSetA(newTraceId);
-      expect(useTraceDiffStore.getState().a).toBe(newTraceId);
-    });
-  });
-
-  describe('diffSetB', () => {
-    it('set b to provided traceId', () => {
-      useTraceDiffStore.getState().diffSetB(newTraceId);
-      expect(useTraceDiffStore.getState().b).toBe(newTraceId);
-    });
-  });
-
-  describe('forceState', () => {
+  describe('hydrateCohort', () => {
     it('replaces a, b, cohort', () => {
       const newState = newInitialState();
-      useTraceDiffStore.getState().forceState(newState);
+      useTraceDiffStore.getState().hydrateCohort(newState);
       expect(useTraceDiffStore.getState().a).toBe(null);
       expect(useTraceDiffStore.getState().b).toBe(null);
       expect(useTraceDiffStore.getState().cohort).toEqual([]);
@@ -154,7 +140,7 @@ describe('trace-diff-store', () => {
         ]),
       });
 
-      useTraceDiffStore.getState().forceState({
+      useTraceDiffStore.getState().hydrateCohort({
         cohort: [initialCohort[0], initialCohort[2]],
         a: initialCohort[0],
         b: initialCohort[2],
