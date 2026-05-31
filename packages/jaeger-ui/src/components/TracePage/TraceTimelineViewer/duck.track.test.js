@@ -36,10 +36,9 @@ describe('middlewareHooks', () => {
   beforeEach(() => {
     trackEvent.mockClear();
     stateClone = _cloneDeep(state);
-    // Seed the cache under the lowercased key for the normal case, and under the
-    // leading-zero key for the case where the backend includes leading zeros.
-    queryClient.setQueryData(['trace', traceID.toLowerCase()], traceData);
-    queryClient.setQueryData(['trace', `00${traceID.toLowerCase()}`], traceData);
+    // Seed under the canonical 32-char padded key. Both 'ABC' and '00ABC' pad
+    // to the same key, so one seed covers the leading-zeros test case too.
+    queryClient.setQueryData(['trace', traceID.toLowerCase().padStart(32, '0')], traceData);
   });
 
   afterEach(() => {
