@@ -1,7 +1,7 @@
 // Copyright (c) 2019 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import transformTraceData, { orderTags, deduplicateTags } from './transform-trace-data';
+import transformTraceData, { orderTags, deduplicateTags, normalizeId } from './transform-trace-data';
 
 describe('orderTags()', () => {
   it('correctly orders tags', () => {
@@ -22,6 +22,24 @@ describe('orderTags()', () => {
       { key: 'http.Status_code', value: '200' },
       { key: 'b.ip', value: '8.8.4.4' },
     ]);
+  });
+});
+
+describe('normalizeId()', () => {
+  it('lowercases the ID', () => {
+    expect(normalizeId('ABCD1234')).toBe('abcd1234');
+  });
+  it('strips leading zeros', () => {
+    expect(normalizeId('000abc123')).toBe('abc123');
+  });
+  it('combines lowercase and leading-zero stripping', () => {
+    expect(normalizeId('000ABC')).toBe('abc');
+  });
+  it('returns 0 for an all-zero ID', () => {
+    expect(normalizeId('0000')).toBe('0');
+  });
+  it('leaves an already-normalized ID unchanged', () => {
+    expect(normalizeId('abc123')).toBe('abc123');
   });
 });
 
@@ -123,6 +141,54 @@ describe('transformTraceData()', () => {
       tags: [],
     },
   };
+
+  it('normalizes traceID and spanIDs to lower-case with no leading zeros', () => {
+    const paddedTraceID = `000${traceID.toUpperCase()}`;
+    const paddedSpanID = `00${rootSpanID.toUpperCase()}`;
+    const rawSpan = {
+      traceID: paddedTraceID,
+      spanID: paddedSpanID,
+      operationName: rootOperationName,
+      references: [],
+      startTime,
+      duration,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+    const result = transformTraceData({ traceID: paddedTraceID, processes, spans: [rawSpan] });
+    expect(result.traceID).toBe(traceID);
+    expect(result.spans[0].spanID).toBe(rootSpanID);
+  });
+
+  it('normalizes reference spanIDs so parent-child linking works across mixed-padding inputs', () => {
+    const paddedRootID = `000${rootSpanID}`;
+    const childSpan = {
+      traceID,
+      spanID: '41f71485ed2593e4',
+      operationName: 'child',
+      references: [{ refType: 'CHILD_OF', traceID, spanID: paddedRootID }],
+      startTime: startTime + 10,
+      duration,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+    const rootSpan = {
+      traceID,
+      spanID: rootSpanID,
+      operationName: rootOperationName,
+      references: [],
+      startTime,
+      duration,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+    const result = transformTraceData({ traceID, processes, spans: [childSpan, rootSpan] });
+    const child = result.spans.find(s => s.operationName === 'child');
+    expect(child.depth).toBe(1);
+  });
 
   it('should return null for trace without traceID', () => {
     const traceData = {
@@ -413,7 +479,7 @@ describe('transformTraceData()', () => {
       };
       const grandChild1 = {
         ...spans[0],
-        spanID: 'grandChild1',
+        spanID: 'grandchild1',
         startTime: tStart + 15,
         references: [{ refType: 'CHILD_OF', traceID, spanID: 'child1' }],
       };
@@ -438,18 +504,18 @@ describe('transformTraceData()', () => {
       const map = result.spanMap;
       expect(map.get('root').depth).toBe(0);
       expect(map.get('child1').depth).toBe(1);
-      expect(map.get('grandChild1').depth).toBe(2);
+      expect(map.get('grandchild1').depth).toBe(2);
       expect(map.get('child2').depth).toBe(1);
 
       // Check hasChildren
       expect(map.get('root').hasChildren).toBe(true);
       expect(map.get('child1').hasChildren).toBe(true);
-      expect(map.get('grandChild1').hasChildren).toBe(false);
+      expect(map.get('grandchild1').hasChildren).toBe(false);
       expect(map.get('child2').hasChildren).toBe(false);
 
       // Check flat spans order (DFS)
       const ids = result.spans.map(s => s.spanID);
-      expect(ids).toEqual(['root', 'child1', 'grandChild1', 'child2']);
+      expect(ids).toEqual(['root', 'child1', 'grandchild1', 'child2']);
     });
   });
 });
