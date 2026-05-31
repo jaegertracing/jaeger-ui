@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import transformTraceData from '../../../model/transform-trace-data';
+import { searchInTable } from './index';
 import { getColumnValues, getColumnValuesSecondDropdown } from './tableValues';
 
 import testTraceNormal from './tableValuesTestTrace/testTraceNormal.json';
@@ -662,8 +663,6 @@ describe('check self time', () => {
     expect(resultArraySecondGroupBy.length).toBe(3);
   });
 });
-
-import { searchInTable } from './index';
 
 describe('searchInTable', () => {
   it('should test searchInTable with complex search scenarios', () => {
