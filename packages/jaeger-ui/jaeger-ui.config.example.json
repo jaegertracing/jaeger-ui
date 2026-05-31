@@ -1,4 +1,7 @@
 {
+  "ai": {
+    "enabled": false
+  },
   "dependencies": {
     "menuEnabled": true
   },
