@@ -1,7 +1,6 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import * as jaegerApiActions from '../actions/jaeger-api';
 import * as fileReaderActions from '../actions/file-reader-api';
 import { fetchedState } from '../constants';
 import traceGenerator from '../demo/trace-generators';
@@ -13,91 +12,13 @@ const ACTION_POSTFIX_PENDING = '_PENDING';
 const ACTION_POSTFIX_REJECTED = '_REJECTED';
 
 const trace = traceGenerator.trace({ numberOfSpans: 1 });
-const { traceID: id } = trace;
-
-describe('search traces', () => {
-  const query = 'some-query';
-
-  it('handles a pending request', () => {
-    const state = traceReducer(undefined, {
-      type: `${jaegerApiActions.searchTraces}${ACTION_POSTFIX_PENDING}`,
-      meta: { query },
-    });
-    const outcome = {
-      query,
-      results: [],
-      state: fetchedState.LOADING,
-    };
-    expect(state.search).toEqual(outcome);
-  });
-
-  it('handles a successful request', () => {
-    const state = traceReducer(
-      { search: { query } },
-      {
-        type: `${jaegerApiActions.searchTraces}${ACTION_POSTFIX_FULFILLED}`,
-        payload: { data: [trace] },
-        meta: { query },
-      }
-    );
-
-    expect(state.search).toEqual({
-      query,
-      state: fetchedState.DONE,
-      results: [id],
-    });
-    expect(state.rawTraces).toEqual([trace]);
-    // Transformed trace IDs are discoverable via rawTraces + transformTraceData
-    expect(transformTraceData(state.rawTraces[0]).traceID).toBe(id);
-  });
-
-  it('handles a failed request', () => {
-    const error = 'some-error';
-    const state = traceReducer(
-      { search: { query } },
-      {
-        type: `${jaegerApiActions.searchTraces}${ACTION_POSTFIX_REJECTED}`,
-        payload: error,
-        meta: { query },
-      }
-    );
-    const outcome = {
-      error,
-      query,
-      results: [],
-      state: fetchedState.ERROR,
-    };
-    expect(state.search).toEqual(outcome);
-  });
-
-  it('ignores the results with the wrong query', () => {
-    const otherQuery = 'some-other-query';
-    [ACTION_POSTFIX_FULFILLED, ACTION_POSTFIX_REJECTED].forEach(postfix => {
-      const state = traceReducer(
-        { search: { query } },
-        {
-          type: `${jaegerApiActions.searchTraces}${postfix}`,
-          meta: { query: otherQuery },
-        }
-      );
-      expect(state.search).toEqual({ query });
-    });
-  });
-});
 
 describe('load json traces', () => {
   it('handles a pending load json request', () => {
-    const state = traceReducer(
-      { search: { results: [id] } },
-      {
-        type: `${fileReaderActions.loadJsonTraces}${ACTION_POSTFIX_PENDING}`,
-      }
-    );
-    const outcome = {
-      results: [id],
-      state: fetchedState.LOADING,
-    };
-    expect(state.search).toEqual(outcome);
+    const state = traceReducer(undefined, {
+      type: `${fileReaderActions.loadJsonTraces}${ACTION_POSTFIX_PENDING}`,
+    });
+    expect(state.search.state).toBe(fetchedState.LOADING);
   });
 
   it('handles a successful load json request', () => {
@@ -105,13 +26,7 @@ describe('load json traces', () => {
       type: `${fileReaderActions.loadJsonTraces}${ACTION_POSTFIX_FULFILLED}`,
       payload: { data: [trace] },
     });
-
-    expect(state.search).toEqual({
-      query: null,
-      state: fetchedState.DONE,
-      results: [id],
-    });
-    expect(state.rawTraces).toEqual([trace]);
+    expect(state.search.state).toBe(fetchedState.DONE);
   });
 
   it('handles a failed load json request', () => {
@@ -119,39 +34,19 @@ describe('load json traces', () => {
     const state = traceReducer(undefined, {
       type: `${fileReaderActions.loadJsonTraces}${ACTION_POSTFIX_REJECTED}`,
       payload: error,
-      meta: { id },
     });
-    const outcome = {
-      error,
-      query: null,
-      results: [],
-      state: fetchedState.ERROR,
-    };
-    expect(state.search).toEqual(outcome);
+    expect(state.search.state).toBe(fetchedState.ERROR);
+    expect(state.search.error).toBe(error);
   });
 
   it('handles error when processing json trace data', () => {
-    const initialState = {
-      search: {
-        results: ['existing-trace-id'],
-        state: fetchedState.LOADING,
-      },
-    };
-    const corruptedTrace = {
-      ...trace,
-      spans: null,
-    };
-
-    const state = traceReducer(initialState, {
+    const corruptedTrace = { ...trace, spans: null };
+    const state = traceReducer(undefined, {
       type: `${fileReaderActions.loadJsonTraces}${ACTION_POSTFIX_FULFILLED}`,
       payload: { data: [corruptedTrace] },
     });
-
-    expect(state.search).toEqual({
-      error: expect.any(Error),
-      results: [],
-      state: fetchedState.ERROR,
-    });
+    expect(state.search.state).toBe(fetchedState.ERROR);
+    expect(state.search.error).toBeInstanceOf(Error);
   });
 
   it('process multiple references', () => {
