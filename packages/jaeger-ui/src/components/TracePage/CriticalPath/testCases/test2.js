@@ -24,7 +24,7 @@ const happyTrace = {
   traceID: 'trace-123',
   spans: [
     {
-      spanID: 'span-X',
+      spanID: 'span-x',
       operationName: 'op1',
       startTime: 1,
       duration: 100,
@@ -34,14 +34,14 @@ const happyTrace = {
       logs: [],
     },
     {
-      spanID: 'span-A',
+      spanID: 'span-a',
       operationName: 'op2',
       startTime: 10,
       duration: 40,
       references: [
         {
           refType: 'CHILD_OF',
-          spanID: 'span-X',
+          spanID: 'span-x',
         },
       ],
       processID: 'p1',
@@ -49,14 +49,14 @@ const happyTrace = {
       logs: [],
     },
     {
-      spanID: 'span-C',
+      spanID: 'span-c',
       operationName: 'op3',
       startTime: 20,
       duration: 40,
       references: [
         {
           refType: 'CHILD_OF',
-          spanID: 'span-X',
+          spanID: 'span-x',
         },
       ],
       processID: 'p1',
@@ -76,17 +76,17 @@ const transformedTrace = transformTraceData(happyTrace);
 
 const criticalPathSections = [
   {
-    spanID: 'span-X',
+    spanID: 'span-x',
     sectionStart: 60,
     sectionEnd: 101,
   },
   {
-    spanID: 'span-C',
+    spanID: 'span-c',
     sectionStart: 20,
     sectionEnd: 60,
   },
   {
-    spanID: 'span-X',
+    spanID: 'span-x',
     sectionStart: 1,
     sectionEnd: 20,
   },

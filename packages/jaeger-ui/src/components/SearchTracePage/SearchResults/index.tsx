@@ -3,6 +3,7 @@
 
 import * as React from 'react';
 import { useCallback, useMemo } from 'react';
+import { normalizeId } from '../../../model/transform-trace-data';
 import { Radio, Select } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
@@ -103,6 +104,17 @@ export function UnconnectedSearchResults({
     [traceSummaries]
   );
 
+  // spanLinks come from user config and may use padded or mixed-case keys.
+  // Normalize once so getLink can do a simple direct lookup with the canonical traceID.
+  const normalizedSpanLinks = useMemo(() => {
+    if (!spanLinks) return undefined;
+    const result: Record<string, string> = {};
+    for (const [key, value] of Object.entries(spanLinks)) {
+      result[normalizeId(key)] = value;
+    }
+    return result;
+  }, [spanLinks]);
+
   const toggleComparison = useCallback(
     (traceID: string, remove?: boolean) => {
       if (remove) {
@@ -127,9 +139,9 @@ export function UnconnectedSearchResults({
       getTracePageLink(
         traceID,
         { fromSearch: location.pathname + location.search },
-        spanLinks && spanLinks[traceID]
+        normalizedSpanLinks && normalizedSpanLinks[traceID]
       ),
-    [location, spanLinks]
+    [location, normalizedSpanLinks]
   );
 
   const goToTrace = useCallback(
