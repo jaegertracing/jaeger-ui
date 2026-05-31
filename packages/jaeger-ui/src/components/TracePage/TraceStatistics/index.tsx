@@ -109,7 +109,7 @@ const columnsArray: {
  * @param allTableSpans entries that are shown
  */
 export function searchInTable(
-  uiFindVertexKeys: Set<string>,
+  uiFindVertexKeys: Set<string> | undefined,
   allTableSpans: ITableSpan[],
   uiFind: string | null | undefined
 ): ITableSpan[] {
@@ -126,7 +126,7 @@ export function searchInTable(
     }
   }
   if (typeof uiFindVertexKeys !== 'undefined') {
-    uiFindVertexKeys!.forEach(function calc(value) {
+    uiFindVertexKeys.forEach(function calc(value) {
       const uiFindVertexKeysSplit = value.split('\u000b');
       for (let i = 0; i < allTableSpansChange.length; i++) {
         if (
