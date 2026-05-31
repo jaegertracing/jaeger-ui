@@ -5,12 +5,14 @@ import { handleActions } from 'redux-actions';
 
 import { loadJsonTraces } from '../actions/file-reader-api';
 import { fetchedState } from '../constants';
+import type { FetchedState } from '../types';
+import type { SearchQuery } from '../types/search';
 
 type TraceState = {
   search: {
-    query: any;
-    state?: string;
-    error?: any;
+    query: SearchQuery | null;
+    state?: FetchedState;
+    error?: unknown;
   };
 };
 
