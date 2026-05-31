@@ -33,19 +33,15 @@ function cohortSummariesForCohort(
 
 function cohortAddTraceState(
   state: TTraceDiffStateWithSummaries,
-  traceID: string,
-  summary?: TraceSummary
+  summary: TraceSummary
 ): TTraceDiffStateWithSummaries {
-  let cohortSummaries = state.cohortSummaries;
-  if (summary) {
-    cohortSummaries = new Map(state.cohortSummaries);
-    cohortSummaries.set(traceID, summary);
-  }
+  const { traceID } = summary;
+  const cohortSummaries = new Map(state.cohortSummaries);
+  cohortSummaries.set(traceID, summary);
   if (state.cohort.indexOf(traceID) >= 0) {
-    return summary ? { ...state, cohortSummaries } : state;
+    return { ...state, cohortSummaries };
   }
-  const cohort = state.cohort.slice();
-  cohort.push(traceID);
+  const cohort = [...state.cohort, traceID];
   return { ...state, cohort, cohortSummaries };
 }
 
@@ -75,7 +71,7 @@ function diffSetBState(state: TTraceDiffState, traceID: string): TTraceDiffState
 }
 
 type TraceDiffStore = TTraceDiffStateWithSummaries & {
-  cohortAddTrace: (traceID: string, summary?: TraceSummary) => void;
+  cohortAddTrace: (summary: TraceSummary) => void;
   cohortRemoveTrace: (traceID: string) => void;
   diffSetA: (traceID: string) => void;
   diffSetB: (traceID: string) => void;
@@ -89,7 +85,7 @@ function sliceOnly(s: TraceDiffStore): TTraceDiffStateWithSummaries {
 export const useTraceDiffStore = create<TraceDiffStore>((set, _get) => ({
   ...newInitialState(),
   cohortSummaries: new Map(),
-  cohortAddTrace: (traceID, summary) => set(s => cohortAddTraceState(sliceOnly(s), traceID, summary)),
+  cohortAddTrace: summary => set(s => cohortAddTraceState(sliceOnly(s), summary)),
   cohortRemoveTrace: traceID => set(s => cohortRemoveTraceState(sliceOnly(s), traceID)),
   diffSetA: traceID => set(s => diffSetAState(sliceOnly(s), traceID)),
   diffSetB: traceID => set(s => diffSetBState(sliceOnly(s), traceID)),

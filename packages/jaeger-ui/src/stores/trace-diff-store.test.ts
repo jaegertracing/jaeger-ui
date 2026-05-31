@@ -47,7 +47,7 @@ describe('trace-diff-store', () => {
       const oldCohort = useTraceDiffStore.getState().cohort;
       expect(oldCohort.includes(newTraceId)).toBe(false);
 
-      useTraceDiffStore.getState().cohortAddTrace(newTraceId);
+      useTraceDiffStore.getState().cohortAddTrace(makeSummary(newTraceId));
       const newCohort = useTraceDiffStore.getState().cohort;
       expect(newCohort).not.toBe(oldCohort);
       expect(newCohort.includes(newTraceId)).toBe(true);
@@ -55,15 +55,23 @@ describe('trace-diff-store', () => {
     });
 
     it('returns original cohort if traceID already exists in state', () => {
-      useTraceDiffStore.getState().cohortAddTrace(initialCohort[0]);
+      useTraceDiffStore.getState().cohortAddTrace(makeSummary(initialCohort[0]));
       const cohort = useTraceDiffStore.getState().cohort;
       expect(cohort).toEqual(initialCohort);
     });
 
-    it('stores summary when provided', () => {
+    it('stores the summary in cohortSummaries keyed by traceID', () => {
       const summary = makeSummary(newTraceId);
-      useTraceDiffStore.getState().cohortAddTrace(newTraceId, summary);
+      useTraceDiffStore.getState().cohortAddTrace(summary);
       expect(useTraceDiffStore.getState().cohortSummaries.get(newTraceId)).toEqual(summary);
+    });
+
+    it('updates the summary even when traceID is already in the cohort', () => {
+      const original = makeSummary(initialCohort[0]);
+      useTraceDiffStore.getState().cohortAddTrace(original);
+      const updated = { ...original, spanCount: 999 };
+      useTraceDiffStore.getState().cohortAddTrace(updated);
+      expect(useTraceDiffStore.getState().cohortSummaries.get(initialCohort[0])).toEqual(updated);
     });
   });
 

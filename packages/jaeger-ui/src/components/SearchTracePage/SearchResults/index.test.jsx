@@ -214,10 +214,18 @@ describe('<SearchResults>', () => {
     );
     const diffSelectionProps = DiffSelection.mock.calls[0][0];
     const toggleComparison = diffSelectionProps.toggleComparison;
-    toggleComparison('id-1');
-    toggleComparison('id-2', true);
-    expect(add).toHaveBeenCalledWith('id-1', undefined);
-    expect(remove).toHaveBeenCalledWith('id-2');
+    toggleComparison('a');
+    toggleComparison('b', true);
+    expect(add).toHaveBeenCalledWith(baseTraces[0]);
+    expect(remove).toHaveBeenCalledWith('b');
+  });
+
+  it('does not call cohortAddTrace when the traceID has no matching summary', () => {
+    const add = jest.fn();
+    renderWithRouter(<SearchResults {...baseProps} cohortAddTrace={add} />);
+    const diffSelectionProps = DiffSelection.mock.calls[0][0];
+    diffSelectionProps.toggleComparison('not-a-real-id');
+    expect(add).not.toHaveBeenCalled();
   });
 
   it('sets trace color to red if errorSpanCount > 0', () => {

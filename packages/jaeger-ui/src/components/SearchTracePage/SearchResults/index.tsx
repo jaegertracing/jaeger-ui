@@ -33,7 +33,7 @@ import SearchableSelect from '../../common/SearchableSelect';
 import { useSearchResultsStore } from '../store.search-results';
 
 type SearchResultsProps = {
-  cohortAddTrace: (traceId: string, summary?: TraceSummary) => void;
+  cohortAddTrace: (summary: TraceSummary) => void;
   cohortRemoveTrace: (traceId: string) => void;
   diffCohort: TraceSummary[];
   disableComparisons: boolean;
@@ -107,9 +107,13 @@ export function UnconnectedSearchResults({
     (traceID: string, remove?: boolean) => {
       if (remove) {
         cohortRemoveTrace(traceID);
-      } else {
-        cohortAddTrace(traceID, traceSummaryById.get(traceID));
+        return;
       }
+      const summary = traceSummaryById.get(traceID);
+      // Defensive: every rendered row's traceID is a key in traceSummaryById,
+      // so this lookup cannot miss in normal UI flow.
+      if (!summary) return;
+      cohortAddTrace(summary);
     },
     [cohortAddTrace, cohortRemoveTrace, traceSummaryById]
   );
