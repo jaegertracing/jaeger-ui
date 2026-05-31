@@ -23,7 +23,7 @@ type TimelineHeaderRowProps = {
   numTicks: number;
   onCollapseAll: () => void;
   onCollapseOne: () => void;
-  onColummWidthChange: (width: number) => void;
+  onColumnWidthChange: (width: number) => void;
   onSidePanelWidthChange: (width: number) => void;
   onExpandAll: () => void;
   onExpandOne: () => void;
@@ -48,7 +48,7 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
     numTicks,
     onCollapseAll,
     onCollapseOne,
-    onColummWidthChange,
+    onColumnWidthChange,
     onSidePanelWidthChange,
     onExpandAll,
     onExpandOne,
@@ -95,7 +95,7 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
           </TimelineRow.Cell>
           <VerticalResizer
             position={nameColumnWidth}
-            onChange={onColummWidthChange}
+            onChange={onColumnWidthChange}
             min={0.15}
             max={resizerMax}
           />

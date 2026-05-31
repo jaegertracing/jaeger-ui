@@ -7,7 +7,12 @@ import { legacy_createStore as createStore } from 'redux';
 import { Provider } from 'react-redux';
 
 import TraceTimelineViewer, { TraceTimelineViewerImpl } from './index';
-import { MIN_TIMELINE_COLUMN_WIDTH, SIDE_PANEL_WIDTH_MAX, SIDE_PANEL_WIDTH_MIN } from './store.constants';
+import {
+  MIN_TIMELINE_COLUMN_WIDTH,
+  SIDE_PANEL_WIDTH_MAX,
+  SIDE_PANEL_WIDTH_MIN,
+  SPAN_NAME_COLUMN_WIDTH_MIN,
+} from './store.constants';
 import * as KeyboardShortcuts from '../keyboard-shortcuts';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
@@ -320,10 +325,17 @@ describe('<TraceTimelineViewer>', () => {
       withLayoutPrefs({ spanNameColumnWidth: 0.7, sidePanelWidth: 0.4 }, () => {
         render(<TraceTimelineViewerImpl {...props} />);
         const header = screen.getByTestId('timeline-header-row-mock');
-        const mainFraction = 1 - mockLayoutPrefsStore.sidePanelWidth;
+        const effectiveSidePanelWidth = Math.min(
+          mockLayoutPrefsStore.sidePanelWidth,
+          1 - SPAN_NAME_COLUMN_WIDTH_MIN - MIN_TIMELINE_COLUMN_WIDTH
+        );
+        const mainFraction = 1 - effectiveSidePanelWidth;
         const resizerMax = mainFraction - MIN_TIMELINE_COLUMN_WIDTH;
         const effectiveHeaderNameWidth = Math.min(
-          Math.min(mockLayoutPrefsStore.spanNameColumnWidth / mainFraction, 1) * mainFraction,
+          Math.max(
+            Math.min(mockLayoutPrefsStore.spanNameColumnWidth / mainFraction, 1) * mainFraction,
+            SPAN_NAME_COLUMN_WIDTH_MIN
+          ),
           resizerMax
         );
         const expectedMin = Math.min(
@@ -338,7 +350,7 @@ describe('<TraceTimelineViewer>', () => {
     });
 
     it('keeps header resizer positions ordered when the stored name column would consume the main area', () => {
-      withLayoutPrefs({ spanNameColumnWidth: 0.95, sidePanelWidth: 0.7 }, () => {
+      withLayoutPrefs({ spanNameColumnWidth: 0.95, sidePanelWidth: 0.95 }, () => {
         render(<TraceTimelineViewerImpl {...props} />);
         const header = screen.getByTestId('timeline-header-row-mock');
         const nameColumnWidth = Number(header.dataset.nameColumnWidth);
@@ -347,6 +359,7 @@ describe('<TraceTimelineViewer>', () => {
         const sidePanelResizerMax = Number(header.dataset.sidePanelResizerMax);
 
         expect(nameColumnWidth).toBeCloseTo(resizerMax);
+        expect(nameColumnWidth).toBeGreaterThanOrEqual(SPAN_NAME_COLUMN_WIDTH_MIN);
         expect(nameColumnWidth).toBeLessThanOrEqual(resizerMax);
         expect(sidePanelResizerMin).toBeLessThanOrEqual(sidePanelResizerMax);
       });

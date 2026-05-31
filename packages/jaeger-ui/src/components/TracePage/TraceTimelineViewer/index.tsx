@@ -12,6 +12,7 @@ import {
   SIDE_PANEL_WIDTH_MAX,
   SIDE_PANEL_WIDTH_MIN,
   SPAN_NAME_COLUMN_WIDTH_MAX,
+  SPAN_NAME_COLUMN_WIDTH_MIN,
   useLayoutPrefsStore,
   useTraceTimelineStore,
 } from './store';
@@ -143,8 +144,11 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
 
   // When timeline bars are hidden with the side panel active, the side panel expands to absorb
   // the timeline column so the Service/Operation column keeps its pixel width unchanged.
-  const effectiveSidePanelWidth =
-    sidePanelActive && !timelineBarsVisible ? 1 - spanNameColumnWidth : sidePanelWidth;
+  const effectiveSidePanelWidth = sidePanelActive
+    ? timelineBarsVisible
+      ? Math.min(sidePanelWidth, 1 - SPAN_NAME_COLUMN_WIDTH_MIN - MIN_TIMELINE_COLUMN_WIDTH)
+      : 1 - spanNameColumnWidth
+    : sidePanelWidth;
 
   // Fraction of the main (non-panel) content area occupied by the name column.
   // In side panel mode the --main container is narrowed; rescaling keeps the name column at its
@@ -159,7 +163,9 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   // Equals spanNameColumnWidth when bars are visible (the round-trip through mainFraction cancels).
   // When bars are hidden with no side panel, the name column spans the full page.
   const rawHeaderNameWidth = rawNameColumnWidth * mainFraction;
-  const headerNameWidth = timelineBarsVisible ? Math.min(rawHeaderNameWidth, resizerMax) : rawHeaderNameWidth;
+  const headerNameWidth = timelineBarsVisible
+    ? Math.min(Math.max(rawHeaderNameWidth, SPAN_NAME_COLUMN_WIDTH_MIN), resizerMax)
+    : rawHeaderNameWidth;
   const nameColumnWidth = timelineBarsVisible && mainFraction > 0 ? headerNameWidth / mainFraction : 1;
   const sidePanelResizerMax = clamp01(1 - SIDE_PANEL_WIDTH_MIN);
   const sidePanelAvailableSpace = clamp01(1 - headerNameWidth - MIN_TIMELINE_COLUMN_WIDTH);
@@ -217,7 +223,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       numTicks={NUM_TICKS}
       onCollapseAll={collapseAll}
       onCollapseOne={collapseOne}
-      onColummWidthChange={setSpanNameColumnWidth}
+      onColumnWidthChange={setSpanNameColumnWidth}
       onExpandAll={expandAll}
       onExpandOne={expandOne}
       resizerMax={resizerMax}

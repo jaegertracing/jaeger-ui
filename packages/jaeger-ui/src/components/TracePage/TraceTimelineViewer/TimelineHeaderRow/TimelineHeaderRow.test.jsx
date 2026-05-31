@@ -77,7 +77,7 @@ describe('<TimelineHeaderRow>', () => {
     numTicks: 5,
     onCollapseAll: jest.fn(),
     onCollapseOne: jest.fn(),
-    onColummWidthChange: jest.fn(),
+    onColumnWidthChange: jest.fn(),
     onSidePanelWidthChange: jest.fn(),
     onExpandAll: jest.fn(),
     onExpandOne: jest.fn(),
@@ -170,11 +170,12 @@ describe('<TimelineHeaderRow>', () => {
       expect(screen.getByText('Trace Root')).toBeInTheDocument();
     });
 
-    it('sets resizer max to 1 - sidePanelWidth', () => {
-      render(<TimelineHeaderRow {...sidePanelProps} />);
+    it('passes resizerMax through to the name-column resizer', () => {
+      const resizerMax = 0.42;
+      render(<TimelineHeaderRow {...sidePanelProps} resizerMax={resizerMax} />);
       const [nameColumnResizer] = screen.getAllByTestId('vertical-resizer');
 
-      expect(nameColumnResizer).toHaveAttribute('data-max', String(1 - sidePanelWidth));
+      expect(nameColumnResizer).toHaveAttribute('data-max', String(resizerMax));
     });
 
     it('renders a side panel resizer aligned with the side panel boundary', () => {
