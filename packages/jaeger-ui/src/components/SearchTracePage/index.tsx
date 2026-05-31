@@ -4,7 +4,9 @@
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
 
-import { Col, Row, Tabs } from 'antd';
+import { Tabs, Tooltip } from 'antd';
+import { IoSearch, IoCloudUpload } from 'react-icons/io5';
+import { LuPanelLeftClose } from 'react-icons/lu';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useConfig } from '../../hooks/useConfig';
@@ -24,6 +26,8 @@ import ErrorMessage from '../common/ErrorMessage';
 import { sortTraceSummaries } from '../../model/search';
 import FileLoader from './FileLoader';
 import { useUploadedTraces } from './useUploadedTraces';
+import VerticalResizer from '../common/VerticalResizer';
+import { useSearchPanelStore, PANEL_WIDTH_MIN, PANEL_WIDTH_MAX } from './search-panel-store';
 
 import './index.css';
 import JaegerLogo from '../../img/jaeger-logo.svg';
@@ -88,6 +92,16 @@ export function SearchTracePageImpl() {
   }, [searchData, uploadedSummaries]);
 
   const [sortBy, setSortBy] = useState(orderBy.MOST_RECENT);
+  const [activeTab, setActiveTab] = useState<'searchForm' | 'fileLoader'>('searchForm');
+
+  const { panelWidth, collapsed, setPanelWidth, setCollapsed } = useSearchPanelStore(
+    useShallow(s => ({
+      panelWidth: s.panelWidth,
+      collapsed: s.collapsed,
+      setPanelWidth: s.setPanelWidth,
+      setCollapsed: s.setCollapsed,
+    }))
+  );
 
   const sortedTraceSummaries = useMemo(
     () => sortTraceSummaries(traceSummaries, sortBy),
@@ -166,16 +180,80 @@ export function SearchTracePageImpl() {
     });
   }
 
+  const openPanel = useCallback(
+    (tab: 'searchForm' | 'fileLoader') => {
+      setActiveTab(tab);
+      setCollapsed(false);
+    },
+    [setCollapsed]
+  );
+
   return (
-    <Row className="SearchTracePage--row">
-      {!embedded && (
-        <Col xs={24} sm={6} className="SearchTracePage--column">
-          <div className="SearchTracePage--find">
-            <Tabs size="large" items={tabItems} />
-          </div>
-        </Col>
+    <div className="SearchTracePage--row">
+      {!embedded && collapsed && (
+        <div className="SearchTracePage--collapsedPanel">
+          <Tooltip title="Search" placement="right">
+            <button
+              type="button"
+              className="SearchTracePage--iconBtn"
+              onClick={() => openPanel('searchForm')}
+              aria-label="Open search panel"
+            >
+              <IoSearch />
+            </button>
+          </Tooltip>
+          {!disableFileUploadControl && (
+            <Tooltip title="Upload" placement="right">
+              <button
+                type="button"
+                className="SearchTracePage--iconBtn"
+                onClick={() => openPanel('fileLoader')}
+                aria-label="Open upload panel"
+              >
+                <IoCloudUpload />
+              </button>
+            </Tooltip>
+          )}
+        </div>
       )}
-      <Col xs={24} sm={!embedded ? 18 : 24} className="SearchTracePage--column">
+      {!embedded && !collapsed && (
+        <div
+          className="SearchTracePage--column SearchTracePage--panelColumn"
+          style={{ width: `${panelWidth * 100}%` }}
+        >
+          <div className="SearchTracePage--find">
+            <Tabs
+              activeKey={activeTab}
+              onChange={key => setActiveTab(key as 'searchForm' | 'fileLoader')}
+              size="large"
+              items={tabItems}
+              tabBarExtraContent={{
+                right: (
+                  <Tooltip title="Collapse panel" placement="right">
+                    <button
+                      type="button"
+                      className="SearchTracePage--collapseBtn"
+                      onClick={() => setCollapsed(true)}
+                      aria-label="Collapse search panel"
+                    >
+                      <LuPanelLeftClose />
+                    </button>
+                  </Tooltip>
+                ),
+              }}
+            />
+          </div>
+        </div>
+      )}
+      {!embedded && !collapsed && (
+        <VerticalResizer
+          min={PANEL_WIDTH_MIN}
+          max={PANEL_WIDTH_MAX}
+          onChange={setPanelWidth}
+          position={panelWidth}
+        />
+      )}
+      <div className="SearchTracePage--column SearchTracePage--resultsColumn">
         {showErrors && (
           <div className="js-test-error-message">
             <h2>There was an error loading traces: </h2>
@@ -214,8 +292,8 @@ export function SearchTracePageImpl() {
             width="400"
           />
         )}
-      </Col>
-    </Row>
+      </div>
+    </div>
   );
 }
 
