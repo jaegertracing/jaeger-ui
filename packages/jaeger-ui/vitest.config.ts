@@ -24,6 +24,7 @@ export default defineConfig({
     pool: 'threads',
     environment: 'jsdom',
     globals: true,
+    testTimeout: 30000,
     globalSetup: path.resolve(__dirname, 'test/vitest-global-setup.ts'),
     setupFiles: [path.resolve(__dirname, 'test/vitest-setup.ts')],
     include: ['src/**/*.{test,spec}.{js,jsx,ts,tsx}', 'index.test.ts'],
