@@ -24,7 +24,7 @@ type TimelineHeaderRowProps = {
   onCollapseAll: () => void;
   onCollapseOne: () => void;
   onColummWidthChange: (width: number) => void;
-  onSidePanelWidthChange?: (width: number) => void;
+  onSidePanelWidthChange: (width: number) => void;
   onExpandAll: () => void;
   onExpandOne: () => void;
   resizerMax: number;
@@ -32,8 +32,8 @@ type TimelineHeaderRowProps = {
   sidePanelVisible: boolean;
   sidePanelWidth: number;
   sidePanelLabel: string;
-  sidePanelResizerMin?: number;
-  sidePanelResizerMax?: number;
+  sidePanelResizerMin: number;
+  sidePanelResizerMax: number;
   timelineBarsVisible: boolean;
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
@@ -68,12 +68,6 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
   const startTime = (viewStart * duration) as IOtelSpan['startTime'];
   const endTime = (viewEnd * duration) as IOtelSpan['endTime'];
   const timelineColumnWidth = 1 - nameColumnWidth - (sidePanelVisible ? sidePanelWidth : 0);
-  const showSidePanelResizer =
-    sidePanelVisible &&
-    timelineBarsVisible &&
-    onSidePanelWidthChange &&
-    typeof sidePanelResizerMin === 'number' &&
-    typeof sidePanelResizerMax === 'number';
   return (
     <TimelineRow className="TimelineHeaderRow">
       <TimelineRow.Cell className="ub-flex ub-px2" width={nameColumnWidth}>
@@ -112,7 +106,7 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
           <h3 className="TimelineHeaderRow--title">{sidePanelLabel}</h3>
         </TimelineRow.Cell>
       )}
-      {showSidePanelResizer && (
+      {sidePanelVisible && timelineBarsVisible && (
         <VerticalResizer
           position={1 - sidePanelWidth}
           onChange={position => onSidePanelWidthChange(1 - position)}

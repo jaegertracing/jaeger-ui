@@ -7,58 +7,53 @@ import { legacy_createStore as createStore } from 'redux';
 import { Provider } from 'react-redux';
 
 import TraceTimelineViewer, { TraceTimelineViewerImpl } from './index';
+import { MIN_TIMELINE_COLUMN_WIDTH, SIDE_PANEL_WIDTH_MAX, SIDE_PANEL_WIDTH_MIN } from './store.constants';
 import * as KeyboardShortcuts from '../keyboard-shortcuts';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
 
-const { layoutConstants, mockLayoutPrefsStore, mockTraceTimelineStore, mockUseTraceTimelineStore } =
-  vi.hoisted(() => {
-    const layoutConstants = {
-      SPAN_NAME_COLUMN_WIDTH_MIN: 0.15,
-      SPAN_NAME_COLUMN_WIDTH_MAX: 0.85,
-      SIDE_PANEL_WIDTH_MIN: 0.2,
-      SIDE_PANEL_WIDTH_MAX: 0.7,
-      MIN_TIMELINE_COLUMN_WIDTH: 0.05,
-    };
-    const mockTraceTimelineStore = {
-      detailStates: new Map(),
-      prunedServices: new Set(),
-      setPrunedServices: vi.fn(),
-      collapseAll: vi.fn(),
-      collapseOne: vi.fn(),
-      expandAll: vi.fn(),
-      expandOne: vi.fn(),
-    };
-    const mockUseTraceTimelineStore = Object.assign(
-      vi.fn(selector => selector(mockTraceTimelineStore)),
-      {
-        getState: () => mockTraceTimelineStore,
-        setState: vi.fn(partial => Object.assign(mockTraceTimelineStore, partial)),
-      }
-    );
-    return {
-      layoutConstants,
-      mockLayoutPrefsStore: {
-        spanNameColumnWidth: 0.25,
-        sidePanelWidth: 0.375,
-        detailPanelMode: 'inline',
-        timelineBarsVisible: true,
-        setSpanNameColumnWidth: vi.fn(),
-        setSidePanelWidth: vi.fn(),
-        setTimelineBarsVisible: vi.fn(),
-      },
-      mockTraceTimelineStore,
-      mockUseTraceTimelineStore,
-    };
-  });
+const { mockLayoutPrefsStore, mockTraceTimelineStore, mockUseTraceTimelineStore } = vi.hoisted(() => {
+  const mockTraceTimelineStore = {
+    detailStates: new Map(),
+    prunedServices: new Set(),
+    setPrunedServices: vi.fn(),
+    collapseAll: vi.fn(),
+    collapseOne: vi.fn(),
+    expandAll: vi.fn(),
+    expandOne: vi.fn(),
+  };
+  const mockUseTraceTimelineStore = Object.assign(
+    vi.fn(selector => selector(mockTraceTimelineStore)),
+    {
+      getState: () => mockTraceTimelineStore,
+      setState: vi.fn(partial => Object.assign(mockTraceTimelineStore, partial)),
+    }
+  );
+  return {
+    mockLayoutPrefsStore: {
+      spanNameColumnWidth: 0.25,
+      sidePanelWidth: 0.375,
+      detailPanelMode: 'inline',
+      timelineBarsVisible: true,
+      setSpanNameColumnWidth: vi.fn(),
+      setSidePanelWidth: vi.fn(),
+      setTimelineBarsVisible: vi.fn(),
+    },
+    mockTraceTimelineStore,
+    mockUseTraceTimelineStore,
+  };
+});
 
-vi.mock('./store', () => ({
-  useLayoutPrefsStore: vi.fn(selector => selector(mockLayoutPrefsStore)),
-  useTraceTimelineStore: mockUseTraceTimelineStore,
-  getSelectedSpanID: detailStatesArg =>
-    detailStatesArg.size > 0 ? detailStatesArg.keys().next().value : null,
-  ...layoutConstants,
-}));
+vi.mock('./store', async () => {
+  const constants = await vi.importActual('./store.constants');
+  return {
+    useLayoutPrefsStore: vi.fn(selector => selector(mockLayoutPrefsStore)),
+    useTraceTimelineStore: mockUseTraceTimelineStore,
+    getSelectedSpanID: detailStatesArg =>
+      detailStatesArg.size > 0 ? detailStatesArg.keys().next().value : null,
+    ...constants,
+  };
+});
 vi.mock('./duck', () => ({
   actions: {
     setSpanNameColumnWidth: width => ({ type: 'setSpanNameColumnWidth', width }),
@@ -294,7 +289,7 @@ describe('<TraceTimelineViewer>', () => {
       expect(screen.getByTestId('virtualized-trace-view-mock')).toBeInTheDocument();
     });
 
-    it('does not render a body VerticalResizer between main and side panel when timeline bars are visible', () => {
+    it('keeps the side panel VerticalResizer in TimelineHeaderRow instead of the body layout', () => {
       render(<TraceTimelineViewerImpl {...props} />);
       expect(screen.queryByTestId('vertical-resizer-mock')).not.toBeInTheDocument();
     });
@@ -304,12 +299,12 @@ describe('<TraceTimelineViewer>', () => {
       const header = screen.getByTestId('timeline-header-row-mock');
       const resizerMin = Number(header.dataset.sidePanelResizerMin);
       const resizerMax = Number(header.dataset.sidePanelResizerMax);
-      const expectedMax = 1 - layoutConstants.SIDE_PANEL_WIDTH_MIN;
+      const expectedMax = 1 - SIDE_PANEL_WIDTH_MIN;
       const expectedMin = Math.min(
         1 -
           Math.min(
-            layoutConstants.SIDE_PANEL_WIDTH_MAX,
-            1 - mockLayoutPrefsStore.spanNameColumnWidth - layoutConstants.MIN_TIMELINE_COLUMN_WIDTH
+            SIDE_PANEL_WIDTH_MAX,
+            1 - mockLayoutPrefsStore.spanNameColumnWidth - MIN_TIMELINE_COLUMN_WIDTH
           ),
         expectedMax
       );
@@ -327,12 +322,8 @@ describe('<TraceTimelineViewer>', () => {
         const effectiveHeaderNameWidth =
           Math.min(mockLayoutPrefsStore.spanNameColumnWidth / mainFraction, 1) * mainFraction;
         const expectedMin = Math.min(
-          1 -
-            Math.min(
-              layoutConstants.SIDE_PANEL_WIDTH_MAX,
-              1 - effectiveHeaderNameWidth - layoutConstants.MIN_TIMELINE_COLUMN_WIDTH
-            ),
-          1 - layoutConstants.SIDE_PANEL_WIDTH_MIN
+          1 - Math.min(SIDE_PANEL_WIDTH_MAX, 1 - effectiveHeaderNameWidth - MIN_TIMELINE_COLUMN_WIDTH),
+          1 - SIDE_PANEL_WIDTH_MIN
         );
 
         expect(Number(header.dataset.sidePanelResizerMin)).toBeCloseTo(expectedMin);

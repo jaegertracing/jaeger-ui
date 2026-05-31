@@ -190,14 +190,6 @@ describe('<TimelineHeaderRow>', () => {
       expect(sidePanelResizer).toHaveAttribute('data-max', String(sidePanelResizerMax));
     });
 
-    it('does not render the side panel resizer when its config is omitted', () => {
-      const { onSidePanelWidthChange, sidePanelResizerMin, sidePanelResizerMax, ...propsWithoutResizer } =
-        sidePanelProps;
-      render(<TimelineHeaderRow {...propsWithoutResizer} />);
-
-      expect(screen.getAllByTestId('vertical-resizer')).toHaveLength(1);
-    });
-
     it('calls the side panel width handler from the side panel resizer', () => {
       const onSidePanelWidthChange = jest.fn();
       render(<TimelineHeaderRow {...sidePanelProps} onSidePanelWidthChange={onSidePanelWidthChange} />);
