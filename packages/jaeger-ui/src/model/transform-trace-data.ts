@@ -57,8 +57,8 @@ export function orderTags(spanTags: KeyValuePair[], topPrefixes?: readonly strin
 }
 
 /**
- * Returns the canonical form of a trace or span ID: lower-case.
- * Leading zeros are preserved because OTEL 128-bit IDs are opaque blobs where every bit matters.
+ * Lowercases a trace or span ID for case-insensitive user-input comparisons.
+ * Backend IDs are treated as opaque blobs and stored exactly as received.
  */
 export function normalizeId(id: string): string {
   return id.toLowerCase();
@@ -73,8 +73,6 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   if (!traceID) {
     return null;
   }
-  traceID = normalizeId(traceID);
-
   let traceEndTime = 0;
   let traceStartTime = Number.MAX_SAFE_INTEGER;
   const spanIdCounts = new Map<string, number>();
@@ -89,14 +87,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     // We populate/fix all properties below.
     const span: Span = data.spans[i] as Span;
     const { startTime, duration, processID } = span;
-    let spanID = normalizeId(span.spanID);
-    span.spanID = spanID;
-    // Normalize reference spanIDs so spanMap lookups in the second pass succeed
-    if (Array.isArray(span.references)) {
-      span.references.forEach(ref => {
-        ref.spanID = normalizeId(ref.spanID);
-      });
-    }
+    let spanID = span.spanID;
     // make sure span IDs are unique
     const idCount = spanIdCounts.get(spanID);
     if (idCount != null) {
