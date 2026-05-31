@@ -58,7 +58,7 @@ export default function filterSpans(textFilter: string, spans: ReadonlyArray<Spa
         isTextInKeyValues(span.tags) ||
         (Array.isArray(span.logs) && span.logs.some(log => isTextInKeyValues(log.fields))) ||
         isTextInKeyValues(span.process.tags) ||
-        includeFilters.some(filter => filter.replace(/^0*/, '') === span.spanID.replace(/^0*/, ''))
+        includeFilters.some(filter => filter.replace(/^0+/, '') === span.spanID)
       );
     }
     // IOtelSpan

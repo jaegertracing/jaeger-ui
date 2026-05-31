@@ -36,10 +36,9 @@ describe('middlewareHooks', () => {
   beforeEach(() => {
     trackEvent.mockClear();
     stateClone = _cloneDeep(state);
-    // Seed the React Query cache so trackParent can find the trace by ID.
-    // Also seed the leading-zero key for the leading-0s test case.
-    queryClient.setQueryData(['trace', traceID], traceData);
-    queryClient.setQueryData(['trace', `00${traceID}`], undefined);
+    // Seed the React Query cache under the normalized key so trackParent can find the trace.
+    // normalizeId('ABC') = 'abc', and normalizeId('00ABC') = 'abc', so both resolve to the same key.
+    queryClient.setQueryData(['trace', traceID.toLowerCase()], traceData);
   });
 
   afterEach(() => {
