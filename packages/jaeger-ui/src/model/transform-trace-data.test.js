@@ -142,12 +142,10 @@ describe('transformTraceData()', () => {
     },
   };
 
-  it('lowercases traceID and spanIDs while preserving leading zeros', () => {
-    const upperTraceID = traceID.toUpperCase();
-    const upperPaddedSpanID = `00${rootSpanID.toUpperCase()}`;
+  it('passes traceID and spanIDs through unchanged from the backend', () => {
     const rawSpan = {
-      traceID: upperTraceID,
-      spanID: upperPaddedSpanID,
+      traceID,
+      spanID: `00${rootSpanID}`,
       operationName: rootOperationName,
       references: [],
       startTime,
@@ -156,7 +154,7 @@ describe('transformTraceData()', () => {
       logs: [],
       processID: 'p1',
     };
-    const result = transformTraceData({ traceID: upperTraceID, processes, spans: [rawSpan] });
+    const result = transformTraceData({ traceID, processes, spans: [rawSpan] });
     expect(result.traceID).toBe(traceID);
     expect(result.spans[0].spanID).toBe(`00${rootSpanID}`);
   });

@@ -10,7 +10,6 @@
 
 import prefixUrl from '../../utils/prefix-url';
 import { ServicesResponseSchema, OperationsResponseSchema, TraceSummariesResponseSchema } from './schemas';
-import { normalizeId } from '../../model/transform-trace-data';
 import type { SearchQuery } from '../../types/search';
 import type { TraceSummary, ServiceSummary } from '../../types/trace-summary';
 import type { Microseconds } from '../../types/units';
@@ -105,7 +104,7 @@ export class JaegerClient {
         errorSpanCount: svc.errorSpanCount,
       }));
       return {
-        traceID: normalizeId(s.traceId ?? ''),
+        traceID: s.traceId ?? '',
         traceName:
           rootServiceName && rootOperationName
             ? `${rootServiceName}: ${rootOperationName}`

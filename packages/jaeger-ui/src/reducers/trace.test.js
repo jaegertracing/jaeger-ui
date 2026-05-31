@@ -5,7 +5,7 @@ import * as jaegerApiActions from '../actions/jaeger-api';
 import * as fileReaderActions from '../actions/file-reader-api';
 import { fetchedState } from '../constants';
 import traceGenerator from '../demo/trace-generators';
-import transformTraceData, { normalizeId } from '../model/transform-trace-data';
+import transformTraceData from '../model/transform-trace-data';
 import traceReducer from './trace';
 
 const ACTION_POSTFIX_FULFILLED = '_FULFILLED';
@@ -47,8 +47,8 @@ describe('search traces', () => {
       results: [id],
     });
     expect(state.rawTraces).toEqual([trace]);
-    // transformTraceData normalizes IDs to lowercase (leading zeros are preserved)
-    expect(transformTraceData(state.rawTraces[0]).traceID).toBe(normalizeId(id));
+    // transformTraceData passes IDs through unchanged from the backend
+    expect(transformTraceData(state.rawTraces[0]).traceID).toBe(id);
   });
 
   it('handles a failed request', () => {
