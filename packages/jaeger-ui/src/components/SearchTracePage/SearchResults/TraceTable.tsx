@@ -100,8 +100,7 @@ export default function TraceTable({
   // Hide columns when no summary in the result set supports them.
   // A backend that omits errorSpanCount/spanCount leaves those fields undefined;
   // a backend that genuinely returned 0 will have a numeric value.
-  const showServicesColumn =
-    traceSummaries.length === 0 || traceSummaries.some(t => t.services.length > 0);
+  const showServicesColumn = traceSummaries.length === 0 || traceSummaries.some(t => t.services.length > 0);
   const showErrorsColumn =
     traceSummaries.length === 0 || traceSummaries.some(t => t.errorSpanCount !== undefined);
 
@@ -254,7 +253,17 @@ export default function TraceTable({
     }
 
     return cols;
-  }, [sortKey, sortOrder, maxTraceDuration, getLink, disableComparisons, cohortIds, toggleComparison, showServicesColumn, showErrorsColumn]);
+  }, [
+    sortKey,
+    sortOrder,
+    maxTraceDuration,
+    getLink,
+    disableComparisons,
+    cohortIds,
+    toggleComparison,
+    showServicesColumn,
+    showErrorsColumn,
+  ]);
 
   const onChange: TableProps<TraceSummary>['onChange'] = (_pagination, _filters, sorter) => {
     const s = Array.isArray(sorter) ? sorter[0] : (sorter as SorterResult<TraceSummary>);

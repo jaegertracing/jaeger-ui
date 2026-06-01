@@ -385,7 +385,9 @@ describe('JaegerClient', () => {
       const promise = client.fetchTraceSummaries(query);
       vi.runAllTimers();
       const [summary] = await promise;
-      expect(summary.services).toEqual([{ name: 'partial-svc', spanCount: undefined, errorSpanCount: undefined }]);
+      expect(summary.services).toEqual([
+        { name: 'partial-svc', spanCount: undefined, errorSpanCount: undefined },
+      ]);
     });
 
     it('throws ZodError when traceId is missing', async () => {
