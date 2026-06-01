@@ -317,6 +317,8 @@ describe('JaegerClient', () => {
       expect(summary.errorSpanCount).toBe(1);
       expect(summary.orphanSpanCount).toBe(0);
       expect(summary.services).toEqual(mockApiSummary.services);
+      expect(summary.serviceSummariesSupported).toBe(true);
+      expect(summary.errorSpanCountSupported).toBe(true);
     });
 
     it('falls back to defaults for all optional fields when absent', async () => {
@@ -338,6 +340,40 @@ describe('JaegerClient', () => {
       expect(summary.errorSpanCount).toBe(0);
       expect(summary.orphanSpanCount).toBe(0);
       expect(summary.services).toEqual([]);
+      expect(summary.serviceSummariesSupported).toBe(false);
+      expect(summary.errorSpanCountSupported).toBe(false);
+    });
+
+    it('marks service summaries unsupported when the API returns only empty service lists', async () => {
+      const unsupportedServices = {
+        ...mockApiSummary,
+        errorSpanCount: undefined,
+        orphanSpanCount: undefined,
+        services: [],
+      };
+      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ summaries: [unsupportedServices] }) });
+
+      const promise = client.fetchTraceSummaries(query);
+      vi.runAllTimers();
+      const [summary] = await promise;
+
+      expect(summary.services).toEqual([]);
+      expect(summary.errorSpanCount).toBe(0);
+      expect(summary.serviceSummariesSupported).toBe(false);
+      expect(summary.errorSpanCountSupported).toBe(false);
+    });
+
+    it('keeps error counts supported when clean summaries include service summaries', async () => {
+      const cleanWithServices = { ...mockApiSummary, errorSpanCount: undefined };
+      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ summaries: [cleanWithServices] }) });
+
+      const promise = client.fetchTraceSummaries(query);
+      vi.runAllTimers();
+      const [summary] = await promise;
+
+      expect(summary.errorSpanCount).toBe(0);
+      expect(summary.serviceSummariesSupported).toBe(true);
+      expect(summary.errorSpanCountSupported).toBe(true);
     });
 
     it('clamps duration to 0 when only minStartTimeUnixNano is present', async () => {

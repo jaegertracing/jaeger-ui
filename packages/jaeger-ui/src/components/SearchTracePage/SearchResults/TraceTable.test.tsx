@@ -133,6 +133,66 @@ describe('TraceTable', () => {
     );
     expect(container.querySelector('svg')).toBeInTheDocument();
   });
+
+  it('hides service and error columns when trace summaries mark them unsupported', () => {
+    const traces = [
+      {
+        ...makeTrace('unsupported'),
+        services: [],
+        errorSpanCount: 0,
+        serviceSummariesSupported: false,
+        errorSpanCountSupported: false,
+      },
+    ];
+
+    render(
+      <MemoryRouter>
+        <TraceTable {...defaultProps} traceSummaries={traces} />
+      </MemoryRouter>
+    );
+
+    expect(screen.queryByRole('columnheader', { name: 'Services' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: 'Errors' })).not.toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Spans' })).toBeInTheDocument();
+  });
+
+  it('keeps supported zero-error columns visible', () => {
+    const traces = [{ ...makeTrace('zero-error'), services: [], errorSpanCount: 0 }];
+
+    render(
+      <MemoryRouter>
+        <TraceTable {...defaultProps} traceSummaries={traces} />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole('columnheader', { name: 'Services' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Errors' })).toBeInTheDocument();
+  });
+
+  it('renders unsupported error counts as unknown when mixed with supported summaries', () => {
+    const traces = [
+      makeTrace('supported'),
+      {
+        ...makeTrace('unsupported'),
+        services: [],
+        errorSpanCount: 0,
+        serviceSummariesSupported: false,
+        errorSpanCountSupported: false,
+      },
+    ];
+
+    const { container } = render(
+      <MemoryRouter>
+        <TraceTable {...defaultProps} traceSummaries={traces} />
+      </MemoryRouter>
+    );
+
+    const rows = container.querySelectorAll('tbody tr');
+    const unsupported = Array.from(rows).find(r => r.textContent?.includes('Trace unsupported'));
+    expect(unsupported).toBeTruthy();
+    const cells = unsupported!.querySelectorAll('td');
+    expect(within(cells[3] as HTMLElement).getByText('-')).toBeInTheDocument();
+  });
 });
 
 describe('sort onChange wiring', () => {

@@ -20,4 +20,6 @@ export type TraceSummary = {
   errorSpanCount: number;
   orphanSpanCount: number;
   services: ServiceSummary[];
+  serviceSummariesSupported?: boolean;
+  errorSpanCountSupported?: boolean;
 };

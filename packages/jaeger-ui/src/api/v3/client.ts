@@ -103,6 +103,7 @@ export class JaegerClient {
         spanCount: svc.spanCount ?? 0,
         errorSpanCount: svc.errorSpanCount ?? 0,
       }));
+      const hasServiceSummaries = services.length > 0;
       return {
         traceID: s.traceId,
         traceName:
@@ -117,6 +118,9 @@ export class JaegerClient {
         errorSpanCount: s.errorSpanCount ?? 0,
         orphanSpanCount: s.orphanSpanCount ?? 0,
         services,
+        serviceSummariesSupported: hasServiceSummaries,
+        errorSpanCountSupported:
+          s.errorSpanCount !== undefined || s.orphanSpanCount !== undefined || hasServiceSummaries,
       };
     });
   }
