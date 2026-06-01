@@ -178,3 +178,18 @@ it('calls trackConversions on click', () => {
   buttons[0].click();
   expect(spy).toHaveBeenCalledWith(tracking.EAltViewActions.Traces);
 });
+
+it('<ResultItem /> renders - when spanCount is undefined', () => {
+  const summary = { ...traceSummary, spanCount: undefined, errorSpanCount: undefined, orphanSpanCount: undefined };
+  renderWithRouter(
+    <ResultItem
+      traceSummary={summary}
+      durationPercent={50}
+      linkTo={{ pathname: '/' }}
+      toggleComparison={() => {}}
+      isInDiffCohort={false}
+      disableComparision={false}
+    />
+  );
+  expect(screen.getByTestId(markers.NUM_SPANS)).toHaveTextContent('-');
+});

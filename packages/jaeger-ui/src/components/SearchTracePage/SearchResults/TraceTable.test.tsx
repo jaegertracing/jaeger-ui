@@ -212,3 +212,70 @@ describe('fromOrderBy', () => {
     expect(fromOrderBy(orderBy.MOST_RECENT)).toEqual({ key: 'startTime', order: 'descend' });
   });
 });
+
+describe('column suppression for unsupported backends', () => {
+  const makeUnsupportedTrace = (id: string) => ({
+    traceID: id,
+    traceName: `Trace ${id}`,
+    rootServiceName: 'svc',
+    rootOperationName: 'op',
+    startTime: FIXED_START_TIME,
+    duration: 1000 as Microseconds,
+    spanCount: 10,
+    errorSpanCount: undefined,
+    orphanSpanCount: undefined,
+    services: [],
+  });
+
+  it('hides the Errors column when all summaries have undefined errorSpanCount', () => {
+    const traces = [makeUnsupportedTrace('u1'), makeUnsupportedTrace('u2')];
+    render(
+      <MemoryRouter>
+        <TraceTable {...defaultProps} traceSummaries={traces} />
+      </MemoryRouter>
+    );
+    expect(screen.queryByText('Errors')).not.toBeInTheDocument();
+  });
+
+  it('hides the Services column when all summaries have empty services', () => {
+    const traces = [makeUnsupportedTrace('u1'), makeUnsupportedTrace('u2')];
+    render(
+      <MemoryRouter>
+        <TraceTable {...defaultProps} traceSummaries={traces} />
+      </MemoryRouter>
+    );
+    expect(screen.queryByText('Services')).not.toBeInTheDocument();
+  });
+
+  it('shows the Errors column and renders - for unsupported rows in mixed results', () => {
+    const supported = makeTrace('s1', 2);
+    const unsupported = makeUnsupportedTrace('u1');
+    render(
+      <MemoryRouter>
+        <TraceTable {...defaultProps} traceSummaries={[supported, unsupported]} />
+      </MemoryRouter>
+    );
+    expect(screen.getByText('Errors')).toBeInTheDocument();
+    const rows = document.querySelectorAll('tbody tr');
+    const unsupportedRow = Array.from(rows).find(r => r.textContent?.includes('Trace u1'));
+    expect(unsupportedRow).toBeTruthy();
+    // Find the Errors column index from the header, then check same index in the data row
+    const headers = Array.from(document.querySelectorAll('thead th'));
+    const errorsIndex = headers.findIndex(h => h.textContent?.includes('Errors'));
+    expect(errorsIndex).toBeGreaterThan(-1);
+    const cells = unsupportedRow!.querySelectorAll('td');
+    expect(cells[errorsIndex].textContent).toBe('-');
+  });
+
+  it('shows both columns when at least one summary has services and errorSpanCount', () => {
+    const supported = makeTrace('s1', 0);
+    const unsupported = makeUnsupportedTrace('u1');
+    render(
+      <MemoryRouter>
+        <TraceTable {...defaultProps} traceSummaries={[supported, unsupported]} />
+      </MemoryRouter>
+    );
+    expect(screen.getByText('Services')).toBeInTheDocument();
+    expect(screen.getByText('Errors')).toBeInTheDocument();
+  });
+});
