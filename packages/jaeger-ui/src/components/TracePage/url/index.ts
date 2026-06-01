@@ -60,7 +60,10 @@ export function stringifyLayoutSettings(settings: Partial<UrlLayoutSettings>): R
   if (settings.timelineBarsVisible === true) params[URL_PARAM_TIMELINE] = 'on';
   if (settings.timelineBarsVisible === false) params[URL_PARAM_TIMELINE] = 'off';
   if (settings.detailPanelMode) {
-    params[URL_PARAM_SIDEBAR] = SIDEBAR_PARAM_VALUES[settings.detailPanelMode];
+    // Guard the lookup: a non-enum value (e.g. from JS callers or stale persisted data)
+    // would produce undefined, which must not be written into the Record<string, string>.
+    const sidebarValue = SIDEBAR_PARAM_VALUES[settings.detailPanelMode];
+    if (typeof sidebarValue === 'string') params[URL_PARAM_SIDEBAR] = sidebarValue;
   }
   return params;
 }
@@ -74,7 +77,9 @@ export function stringifyLayoutSettings(settings: Partial<UrlLayoutSettings>): R
  * Used when a caller needs a clean base URL without any layout overrides.
  */
 export function stripLayoutSettings(search: string): string {
-  const params = queryString.parse(search);
+  // Strip a leading '?' before parsing so keys are never prefixed with it,
+  // regardless of the query-string version in use.
+  const params = queryString.parse(search.replace(/^\?/, ''));
   if (!LAYOUT_PARAM_NAMES.some(p => p in params)) return search; // no layout params — no churn
   for (const p of LAYOUT_PARAM_NAMES) delete params[p];
   const newSearch = queryString.stringify(params);
@@ -92,7 +97,9 @@ export function stripLayoutSettings(search: string): string {
  */
 export function stripLayoutSettingParam(search: string, key: keyof UrlLayoutSettings): string {
   const paramName = SETTINGS_PARAM_NAMES[key];
-  const params = queryString.parse(search);
+  // Strip a leading '?' before parsing so keys are never prefixed with it,
+  // regardless of the query-string version in use.
+  const params = queryString.parse(search.replace(/^\?/, ''));
   if (!(paramName in params)) return search; // param absent — no change, no stringify churn
   delete params[paramName];
   const newSearch = queryString.stringify(params);
@@ -150,6 +157,27 @@ export type TracePageLink = {
   state?: LocationState;
 };
 
+/** Options-bag shape accepted by the getTracePageLink overload. */
+type TracePageLinkOptions = {
+  state?: LocationState;
+  uiFind?: string;
+  settings?: Partial<UrlLayoutSettings>;
+};
+
+/**
+ * Type guard that distinguishes a plain options bag from a LocationState object.
+ * An argument is treated as options when it carries at least one known option key
+ * OR when it is an empty object {} (caller omitted all optional args).
+ * All checks are allocation-free: `in` for property existence, a short-circuiting
+ * for..in loop (no array created) for the empty-object case.
+ */
+function isTracePageLinkOptions(arg: object): arg is TracePageLinkOptions {
+  if ('state' in arg || 'uiFind' in arg || 'settings' in arg) return true;
+  // for..in exits immediately on the first own-enumerable property — zero allocation.
+  for (const _ in arg) return false; // eslint-disable-line no-unreachable-loop
+  return true; // empty object — treat as options bag
+}
+
 export function getTracePageLink(
   id: string,
   state?: LocationState,
@@ -173,29 +201,10 @@ export function getTracePageLink(
   let layoutSettings: Partial<UrlLayoutSettings> | undefined = settings;
 
   if (stateOrOptions && typeof stateOrOptions === 'object') {
-    // Classify the argument as an options bag when it carries at least one known key,
-    // OR when it is an empty object {} (caller passed no extra args).
-    // All checks are allocation-free: `in` for property existence, a short-circuiting
-    // for..in loop (no array created) for the empty-object case.
-    const isOptions =
-      'state' in stateOrOptions ||
-      'uiFind' in stateOrOptions ||
-      'settings' in stateOrOptions ||
-      // for..in exits on the very first own-enumerable property — zero allocation.
-      (() => {
-        for (const _ in stateOrOptions) return false;
-        return true;
-      })();
-
-    if (isOptions) {
-      const opts = stateOrOptions as {
-        state?: LocationState;
-        uiFind?: string;
-        settings?: Partial<UrlLayoutSettings>;
-      };
-      state = opts.state;
-      resolvedUiFind = opts.uiFind;
-      layoutSettings = opts.settings;
+    if (isTracePageLinkOptions(stateOrOptions)) {
+      state = stateOrOptions.state;
+      resolvedUiFind = stateOrOptions.uiFind;
+      layoutSettings = stateOrOptions.settings;
     } else {
       state = stateOrOptions as LocationState;
     }
@@ -213,7 +222,9 @@ export function getTracePageLink(
  * including when the corresponding query parameter is absent or unrecognized.
  */
 export function parseLayoutSettingsFromUrl(search: string): UrlLayoutSettings {
-  const params = queryString.parse(search);
+  // Strip a leading '?' before parsing so keys are never prefixed with it,
+  // regardless of the query-string version in use.
+  const params = queryString.parse(search.replace(/^\?/, ''));
 
   let timelineBarsVisible: boolean | null = null;
   const timelineParamRaw = params[URL_PARAM_TIMELINE];

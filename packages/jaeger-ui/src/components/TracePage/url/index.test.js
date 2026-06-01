@@ -48,9 +48,17 @@ describe('TracePage/url', () => {
       expect(stripLayoutSettings(search)).toBe('?uiFind=foo');
     });
 
+    it('removes all layout params from a raw query string (no leading ?)', () => {
+      expect(stripLayoutSettings('uiFind=foo&timeline=on&sidebar=sidepanel')).toBe('uiFind=foo');
+    });
+
     it('returns empty string if only layout params were present', () => {
       const search = '?timeline=on&sidebar=sidepanel';
       expect(stripLayoutSettings(search)).toBe('');
+    });
+
+    it('returns empty string for raw query with only layout params (no leading ?)', () => {
+      expect(stripLayoutSettings('timeline=on&sidebar=sidepanel')).toBe('');
     });
 
     it('is a no-op when no layout params are present', () => {
@@ -68,8 +76,21 @@ describe('TracePage/url', () => {
       expect(queryString.parse(result)).toEqual({ sidebar: 'sidepanel', uiFind: 'foo' });
     });
 
+    it('strips timeline from a raw query string (no leading ?)', () => {
+      const result = stripLayoutSettingParam(
+        'uiFind=foo&timeline=on&sidebar=sidepanel',
+        'timelineBarsVisible'
+      );
+      expect(queryString.parse(result)).toEqual({ sidebar: 'sidepanel', uiFind: 'foo' });
+    });
+
     it('strips only the sidebar param, leaving timeline and uiFind intact', () => {
       const result = stripLayoutSettingParam('?uiFind=foo&timeline=on&sidebar=sidepanel', 'detailPanelMode');
+      expect(queryString.parse(result)).toEqual({ timeline: 'on', uiFind: 'foo' });
+    });
+
+    it('strips sidebar from a raw query string (no leading ?)', () => {
+      const result = stripLayoutSettingParam('uiFind=foo&timeline=on&sidebar=sidepanel', 'detailPanelMode');
       expect(queryString.parse(result)).toEqual({ timeline: 'on', uiFind: 'foo' });
     });
 
