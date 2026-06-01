@@ -180,7 +180,12 @@ it('calls trackConversions on click', () => {
 });
 
 it('<ResultItem /> renders - when spanCount is undefined', () => {
-  const summary = { ...traceSummary, spanCount: undefined, errorSpanCount: undefined, orphanSpanCount: undefined };
+  const summary = {
+    ...traceSummary,
+    spanCount: undefined,
+    errorSpanCount: undefined,
+    orphanSpanCount: undefined,
+  };
   renderWithRouter(
     <ResultItem
       traceSummary={summary}
