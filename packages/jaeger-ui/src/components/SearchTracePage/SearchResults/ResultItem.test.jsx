@@ -179,7 +179,7 @@ it('calls trackConversions on click', () => {
   expect(spy).toHaveBeenCalledWith(tracking.EAltViewActions.Traces);
 });
 
-it('<ResultItem /> renders - when spanCount is undefined', () => {
+it('<ResultItem /> hides span tag when spanCount is undefined', () => {
   const summary = {
     ...traceSummary,
     spanCount: undefined,
@@ -196,5 +196,5 @@ it('<ResultItem /> renders - when spanCount is undefined', () => {
       disableComparision={false}
     />
   );
-  expect(screen.getByTestId(markers.NUM_SPANS)).toHaveTextContent('-');
+  expect(screen.queryByTestId(markers.NUM_SPANS)).not.toBeInTheDocument();
 });
