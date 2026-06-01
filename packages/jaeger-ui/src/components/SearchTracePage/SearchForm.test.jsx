@@ -23,7 +23,7 @@ vi.mock('../../hooks/useConfig', () => ({
   useConfig: () => ({
     useOpenTelemetryTerms: false,
     search: {
-      maxLookback: { label: '2 Days', value: '2d' },
+      maxLookback: { label: '2 days', value: '2d' },
       adjustEndTime: '1m',
       maxLimit: 1500,
     },
@@ -43,10 +43,12 @@ vi.mock('../../hooks/useTraceDiscovery', () => ({
     isLoading: false,
   })),
   useIsSearchFetching: mockUseIsSearchFetching,
-  useExecuteSearch: jest.fn(() => jest.fn(() => Promise.resolve())),
 }));
 vi.mock('./useUploadedTraces', () => ({
   useClearUploadedTraces: jest.fn(() => jest.fn()),
+}));
+vi.mock('../../utils/config/get-config', () => ({
+  default: jest.fn(() => ({ search: {} })),
 }));
 
 import React from 'react';
@@ -76,6 +78,7 @@ import * as markers from './SearchForm.markers';
 import { CHANGE_SERVICE_ACTION_TYPE } from '../../constants/search-form';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 import { AppQueryClientProvider } from '../../query/app-query-client';
+import getConfig from '../../utils/config/get-config';
 
 function makeDateParams(dateOffset = 0) {
   const date = new Date();
@@ -204,6 +207,14 @@ describe('lookback utils', () => {
         }
       });
     });
+
+    it('falls back to default lookback for unsupported units', () => {
+      expect(nowInMicroseconds - lookbackToTimestamp('99x', now)).toBe(hourInMicroseconds);
+    });
+
+    it('falls back to default lookback for invalid amounts', () => {
+      expect(nowInMicroseconds - lookbackToTimestamp('xh', now)).toBe(hourInMicroseconds);
+    });
   });
 
   describe('applyAdjustTime', () => {
@@ -243,27 +254,27 @@ describe('lookback utils', () => {
   describe('optionsWithinMaxLookback', () => {
     const threeHoursOfExpectedOptions = [
       {
-        label: '5 Minutes',
+        label: '5 minutes',
         value: '5m',
       },
       {
-        label: '15 Minutes',
+        label: '15 minutes',
         value: '15m',
       },
       {
-        label: '30 Minutes',
+        label: '30 minutes',
         value: '30m',
       },
       {
-        label: 'Hour',
+        label: '1 hour',
         value: '1h',
       },
       {
-        label: '2 Hours',
+        label: '2 hours',
         value: '2h',
       },
       {
-        label: '3 Hours',
+        label: '3 hours',
         value: '3h',
       },
     ];
@@ -997,6 +1008,18 @@ describe('mapStateToProps()', () => {
     // within 60 seconds (CI tests run slowly)
     expect(msDiff(dateParams.dateStr, '00:00', startDate, startDateTime)).toBeLessThan(60 * 1000);
     expect(msDiff(dateParams.dateStr, dateParams.dateTimeStr, endDate, endDateTime)).toBeLessThan(60 * 1000);
+  });
+
+  it('uses search.defaultLookback from config when no lookback is in the URL', () => {
+    vi.mocked(getConfig).mockReturnValue({ search: { defaultLookback: '15m' } });
+    const { lookback } = callMapStateToProps('').initialValues;
+    expect(lookback).toBe('15m');
+  });
+
+  it('URL lookback takes precedence over search.defaultLookback', () => {
+    vi.mocked(getConfig).mockReturnValue({ search: { defaultLookback: '15m' } });
+    const { lookback } = callMapStateToProps('lookback=2h').initialValues;
+    expect(lookback).toBe('2h');
   });
 });
 

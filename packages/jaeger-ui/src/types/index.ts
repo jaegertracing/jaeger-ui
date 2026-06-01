@@ -32,11 +32,6 @@ export type LocationState = {
 export type ReduxState = {
   type: string;
   ddg: TDdgState;
-  dependencies: {
-    dependencies: { parent: string; child: string; callCount: number }[];
-    loading: boolean;
-    error: ApiError | TNil;
-  };
   trace: {
     search: {
       error?: ApiError;
