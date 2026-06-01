@@ -75,9 +75,9 @@ export default function ResultItem({
       <Link to={{ pathname: linkTo.pathname, search: linkTo.search }} state={linkTo.state}>
         <Row>
           <Col xs={24} sm={4} className="ub-p2">
-            {Boolean(spanCount) && (
+            {spanCount !== undefined && (
               <Tag className="ub-m1" data-testid={markers.NUM_SPANS} variant="outlined">
-                {spanCount} Span{spanCount! > 1 && 's'}
+                {spanCount} Span{spanCount > 1 && 's'}
               </Tag>
             )}
             {Boolean(errorSpanCount) && (

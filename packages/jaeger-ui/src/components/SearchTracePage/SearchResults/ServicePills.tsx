@@ -19,7 +19,8 @@ function ServicePill({ service }: { service: ServiceEntry }) {
       variant="outlined"
     >
       {Boolean(service.errorSpanCount) && <IoAlert className="ServicePills--errorIcon" />}
-      {service.name} ({service.spanCount})
+      {service.name}
+      {service.spanCount !== undefined && ` (${service.spanCount})`}
     </Tag>
   );
 }
