@@ -132,11 +132,18 @@ export function getUrl(
   let uiFind: string | undefined;
   let layoutSettings: Partial<UrlLayoutSettings> | undefined = settings;
 
-  if (typeof uiFindOrOptions === 'object' && uiFindOrOptions !== null) {
+  // Only treat the second argument as an options bag when it carries at least one known
+  // key. This avoids silently swallowing a mistakenly-passed settings object or a
+  // String wrapper object (new String('foo')) when the caller meant to pass a uiFind string.
+  if (
+    uiFindOrOptions !== null &&
+    typeof uiFindOrOptions === 'object' &&
+    ('uiFind' in uiFindOrOptions || 'settings' in uiFindOrOptions)
+  ) {
     uiFind = uiFindOrOptions.uiFind;
     layoutSettings = uiFindOrOptions.settings;
   } else {
-    uiFind = uiFindOrOptions;
+    uiFind = uiFindOrOptions !== undefined && uiFindOrOptions !== null ? String(uiFindOrOptions) : undefined;
   }
 
   const traceUrl = prefixUrl(`/trace/${id}`);
@@ -166,16 +173,12 @@ type TracePageLinkOptions = {
 
 /**
  * Type guard that distinguishes a plain options bag from a LocationState object.
- * An argument is treated as options when it carries at least one known option key
- * OR when it is an empty object {} (caller omitted all optional args).
- * All checks are allocation-free: `in` for property existence, a short-circuiting
- * for..in loop (no array created) for the empty-object case.
+ * An argument qualifies as an options bag only when it carries at least one of the
+ * three known option keys. An empty object {} or an object with unrecognised keys
+ * is treated as a LocationState, preserving backward-compatible positional behaviour.
  */
 function isTracePageLinkOptions(arg: object): arg is TracePageLinkOptions {
-  if ('state' in arg || 'uiFind' in arg || 'settings' in arg) return true;
-  // for..in exits immediately on the first own-enumerable property — zero allocation.
-  for (const _ in arg) return false; // eslint-disable-line no-unreachable-loop
-  return true; // empty object — treat as options bag
+  return 'state' in arg || 'uiFind' in arg || 'settings' in arg;
 }
 
 export function getTracePageLink(

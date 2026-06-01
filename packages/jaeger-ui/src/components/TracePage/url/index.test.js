@@ -113,6 +113,10 @@ describe('TracePage/url', () => {
       expect(getUrl(traceID, uiFind)).toBe(`${prefixUrl(`/trace/${traceID}`)}?uiFind=${uiFind}`);
     });
 
+    it('coerces String objects to primitive string (positional)', () => {
+      expect(getUrl(traceID, new String('foo'))).toBe(`${prefixUrl(`/trace/${traceID}`)}?uiFind=foo`);
+    });
+
     it('includes traceID and uiFind (options)', () => {
       expect(getUrl(traceID, { uiFind })).toBe(`${prefixUrl(`/trace/${traceID}`)}?uiFind=${uiFind}`);
     });
@@ -161,9 +165,9 @@ describe('TracePage/url', () => {
       });
     });
 
-    it('treats an empty options object {} as an options bag, not as LocationState', () => {
+    it('treats an empty options object {} as LocationState, preserving backward compatibility', () => {
       expect(getTracePageLink(traceID, {})).toEqual({
-        state: undefined,
+        state: {},
         pathname: prefixUrl(`/trace/${traceID}`),
       });
     });
@@ -197,6 +201,22 @@ describe('TracePage/url', () => {
         state,
         pathname: prefixUrl(`/trace/${traceID}`),
         search: 'timeline=off',
+      });
+    });
+
+    it('includes both uiFind and settings (positional)', () => {
+      expect(getTracePageLink(traceID, state, uiFind, { timelineBarsVisible: false })).toEqual({
+        state,
+        pathname: prefixUrl(`/trace/${traceID}`),
+        search: `timeline=off&uiFind=${uiFind}`,
+      });
+    });
+
+    it('includes both uiFind and settings (options)', () => {
+      expect(getTracePageLink(traceID, { state, uiFind, settings: { timelineBarsVisible: false } })).toEqual({
+        state,
+        pathname: prefixUrl(`/trace/${traceID}`),
+        search: `timeline=off&uiFind=${uiFind}`,
       });
     });
   });
