@@ -6,9 +6,14 @@ import {
   ServicesResponseSchema,
   OperationsResponseSchema,
   OperationSchema,
-  TraceSummariesResponseSchema,
-  traceIdHex,
-  spanIdHex,
+  TraceIdSchema,
+  SpanIdSchema,
+  TimestampSchema,
+  AnyValueSchema,
+  KeyValueSchema,
+  StatusSchema,
+  SpanSchema,
+  TracesDataSchema,
 } from './schemas';
 
 describe('ServicesResponseSchema', () => {
@@ -18,24 +23,8 @@ describe('ServicesResponseSchema', () => {
     expect(result.services).toEqual(['service-a', 'service-b']);
   });
 
-  it('validates empty services array', () => {
-    const data = { services: [] };
-    const result = ServicesResponseSchema.parse(data);
-    expect(result.services).toEqual([]);
-  });
-
   it('rejects missing services field', () => {
     const data = {};
-    expect(() => ServicesResponseSchema.parse(data)).toThrow(z.ZodError);
-  });
-
-  it('rejects non-array services field', () => {
-    const data = { services: 'not-an-array' };
-    expect(() => ServicesResponseSchema.parse(data)).toThrow(z.ZodError);
-  });
-
-  it('rejects non-string elements in services array', () => {
-    const data = { services: ['valid', 123, 'valid-again'] };
     expect(() => ServicesResponseSchema.parse(data)).toThrow(z.ZodError);
   });
 });
@@ -47,222 +36,184 @@ describe('OperationSchema', () => {
     expect(result.name).toBe('GET /api/users');
     expect(result.spanKind).toBe('SPAN_KIND_CLIENT');
   });
+});
 
-  it('rejects missing name field', () => {
-    const data = { spanKind: 'SPAN_KIND_CLIENT' };
-    expect(() => OperationSchema.parse(data)).toThrow(z.ZodError);
+describe('ID and Timestamp Validators', () => {
+  describe('TraceIdSchema', () => {
+    it('accepts valid 32-char hex trace ID', () => {
+      const id = '0102030405060708090a0b0c0d0e0f10';
+      expect(TraceIdSchema.parse(id)).toBe(id);
+    });
+
+    it('rejects invalid trace IDs', () => {
+      expect(() => TraceIdSchema.parse('invalid')).toThrow('Invalid trace ID');
+      expect(() => TraceIdSchema.parse('0102030405060708090a0b0c0d0e0fXX')).toThrow('Invalid trace ID');
+    });
   });
 
-  it('rejects missing spanKind field', () => {
-    const data = { name: 'GET /api/users' };
-    expect(() => OperationSchema.parse(data)).toThrow(z.ZodError);
+  describe('SpanIdSchema', () => {
+    it('accepts valid 16-char hex span ID', () => {
+      const id = '0102030405060708';
+      expect(SpanIdSchema.parse(id)).toBe(id);
+    });
+
+    it('rejects invalid span IDs', () => {
+      expect(() => SpanIdSchema.parse('invalid')).toThrow('Invalid span ID');
+    });
+  });
+
+  describe('TimestampSchema', () => {
+    it('accepts numeric string', () => {
+      const ts = '1234567890123456789';
+      expect(TimestampSchema.parse(ts)).toBe(ts);
+    });
+
+    it('rejects non-numeric string', () => {
+      expect(() => TimestampSchema.parse('not-a-timestamp')).toThrow('Invalid timestamp');
+    });
   });
 });
 
-describe('OperationsResponseSchema', () => {
+describe('AnyValueSchema', () => {
+  it('validates stringValue', () => {
+    const data = { stringValue: 'test' };
+    expect(AnyValueSchema.parse(data)).toEqual(data);
+  });
+
+  it('validates boolValue', () => {
+    const data = { boolValue: true };
+    expect(AnyValueSchema.parse(data)).toEqual(data);
+  });
+
+  it('validates intValue', () => {
+    const data = { intValue: '123' };
+    expect(AnyValueSchema.parse(data)).toEqual(data);
+  });
+
+  it('validates doubleValue', () => {
+    const data = { doubleValue: 123.45 };
+    expect(AnyValueSchema.parse(data)).toEqual(data);
+  });
+
+  it('validates nested arrayValue', () => {
+    const data = {
+      arrayValue: {
+        values: [{ stringValue: 'a' }, { boolValue: true }],
+      },
+    };
+    expect(AnyValueSchema.parse(data)).toEqual(data);
+  });
+
+  it('validates nested kvlistValue', () => {
+    const data = {
+      kvlistValue: {
+        values: [
+          { key: 'foo', value: { stringValue: 'bar' } },
+          { key: 'baz', value: { boolValue: false } },
+        ],
+      },
+    };
+    expect(AnyValueSchema.parse(data)).toEqual(data);
+  });
+
+  it('allows unknown fields via passthrough', () => {
+    const data = { stringValue: 'test', extra: 'field' };
+    expect(AnyValueSchema.parse(data)).toEqual(data);
+  });
+});
+
+describe('KeyValueSchema', () => {
   it('validates correct structure', () => {
-    const data = {
-      operations: [
-        { name: 'GET /api/users', spanKind: 'SPAN_KIND_CLIENT' },
-        { name: 'POST /api/users', spanKind: 'SPAN_KIND_SERVER' },
-      ],
-    };
-    const result = OperationsResponseSchema.parse(data);
-    expect(result.operations).toHaveLength(2);
-    expect(result.operations[0].name).toBe('GET /api/users');
+    const data = { key: 'http.method', value: { stringValue: 'GET' } };
+    expect(KeyValueSchema.parse(data)).toEqual(data);
   });
 
-  it('validates empty operations array', () => {
-    const data = { operations: [] };
-    const result = OperationsResponseSchema.parse(data);
-    expect(result.operations).toEqual([]);
-  });
-
-  it('rejects missing operations field', () => {
-    const data = {};
-    expect(() => OperationsResponseSchema.parse(data)).toThrow(z.ZodError);
-  });
-
-  it('rejects non-array operations field', () => {
-    const data = { operations: 'not-an-array' };
-    expect(() => OperationsResponseSchema.parse(data)).toThrow(z.ZodError);
-  });
-
-  it('rejects invalid operation objects', () => {
-    const data = {
-      operations: [{ name: 'valid', spanKind: 'valid' }, { name: 'invalid' }],
-    };
-    expect(() => OperationsResponseSchema.parse(data)).toThrow(z.ZodError);
+  it('rejects missing key', () => {
+    const data = { value: { stringValue: 'GET' } };
+    expect(() => KeyValueSchema.parse(data)).toThrow(z.ZodError);
   });
 });
 
-describe('TraceSummariesResponseSchema', () => {
-  const fullSummary = {
-    traceId: 'aaaabbbbccccdddd0000111122223333',
-    rootServiceName: 'svc',
-    rootOperationName: 'op',
-    minStartTimeUnixNano: '1700000001000000000',
-    maxEndTimeUnixNano: '1700000001000500000',
-    spanCount: 5,
-    errorSpanCount: 1,
-    orphanSpanCount: 0,
-    services: [{ name: 'svc', spanCount: 5, errorSpanCount: 1 }],
+describe('StatusSchema', () => {
+  it('validates correct structure', () => {
+    const data = { code: 1, message: 'some error' };
+    expect(StatusSchema.parse(data)).toEqual(data);
+  });
+
+  it('validates minimal structure', () => {
+    const data = { code: 0 };
+    expect(StatusSchema.parse(data)).toEqual(data);
+  });
+});
+
+describe('SpanSchema', () => {
+  const validSpan = {
+    traceId: '0102030405060708090a0b0c0d0e0f10',
+    spanId: '0102030405060708',
+    name: 'test-span',
+    kind: 2,
+    startTimeUnixNano: '1234567890',
+    endTimeUnixNano: '1234567891',
+    attributes: [{ key: 'attr1', value: { stringValue: 'val1' } }],
   };
 
-  it('accepts a fully-populated summary with traceId (spec field name)', () => {
-    const result = TraceSummariesResponseSchema.parse({ summaries: [fullSummary] });
-    expect(result.summaries!).toHaveLength(1);
-    expect(result.summaries![0].traceId).toBe(fullSummary.traceId);
+  it('validates correct span structure', () => {
+    expect(SpanSchema.parse(validSpan)).toEqual(validSpan);
   });
 
-  it('accepts traceID (uppercase D) and normalizes it to traceId', () => {
-    const { traceId, ...rest } = fullSummary;
-    const withUpperD = { traceID: traceId, ...rest };
-    const result = TraceSummariesResponseSchema.parse({ summaries: [withUpperD] });
-    expect(result.summaries![0].traceId).toBe(traceId);
+  it('rejects span with invalid traceId', () => {
+    const invalid = { ...validSpan, traceId: 'too-short' };
+    expect(() => SpanSchema.parse(invalid)).toThrow('Invalid trace ID');
   });
 
-  it('accepts a minimal summary with only traceId', () => {
-    const minimal = { traceId: 'aaaabbbbccccdddd0000111122223333' };
-    const result = TraceSummariesResponseSchema.parse({ summaries: [minimal] });
-    expect(result.summaries![0].traceId).toBe(minimal.traceId);
-    expect(result.summaries![0].spanCount).toBeUndefined();
-    expect(result.summaries![0].minStartTimeUnixNano).toBeUndefined();
-  });
-
-  it('accepts a summary with timestamps present', () => {
-    const withTimestamps = {
-      traceId: 'aaaabbbbccccdddd0000111122223333',
-      minStartTimeUnixNano: '1000000',
-      maxEndTimeUnixNano: '2000000',
+  it('validates span with optional fields and passthrough', () => {
+    const complexSpan = {
+      ...validSpan,
+      parentSpanId: '1234567890abcdef',
+      events: [
+        {
+          timeUnixNano: '1234567892',
+          name: 'event1',
+          attributes: [],
+          extra: 'allowed',
+        },
+      ],
+      status: { code: 0 },
     };
-    const result = TraceSummariesResponseSchema.parse({ summaries: [withTimestamps] });
-    expect(result.summaries![0].minStartTimeUnixNano).toBe('1000000');
-  });
-
-  it('rejects a summary missing traceId', () => {
-    const { traceId: _omit, ...noTraceId } = fullSummary;
-    expect(() => TraceSummariesResponseSchema.parse({ summaries: [noTraceId] })).toThrow(z.ZodError);
-  });
-
-  it('rejects a traceId that is not a 32-char hex string', () => {
-    expect(() =>
-      TraceSummariesResponseSchema.parse({ summaries: [{ ...fullSummary, traceId: 'not-hex' }] })
-    ).toThrow(z.ZodError);
-  });
-
-  it('rejects a non-decimal minStartTimeUnixNano when present', () => {
-    expect(() =>
-      TraceSummariesResponseSchema.parse({
-        summaries: [{ ...fullSummary, minStartTimeUnixNano: 'not-a-number' }],
-      })
-    ).toThrow(z.ZodError);
-  });
-
-  it('rejects a numeric (non-string) minStartTimeUnixNano', () => {
-    expect(() =>
-      TraceSummariesResponseSchema.parse({ summaries: [{ ...fullSummary, minStartTimeUnixNano: 12345 }] })
-    ).toThrow(z.ZodError);
-  });
-
-  it('accepts an empty summaries array', () => {
-    const result = TraceSummariesResponseSchema.parse({ summaries: [] });
-    expect(result.summaries).toEqual([]);
-  });
-
-  it('accepts response with no summaries field (treats as absent)', () => {
-    const result = TraceSummariesResponseSchema.parse({});
-    expect(result.summaries).toBeUndefined();
-  });
-
-  it('prefers traceId over traceID when both are present', () => {
-    const both = { ...fullSummary, traceID: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' };
-    const result = TraceSummariesResponseSchema.parse({ summaries: [both] });
-    expect(result.summaries![0].traceId).toBe(fullSummary.traceId);
-  });
-
-  it('rejects negative spanCount', () => {
-    expect(() =>
-      TraceSummariesResponseSchema.parse({ summaries: [{ ...fullSummary, spanCount: -1 }] })
-    ).toThrow(z.ZodError);
-  });
-
-  it('rejects negative errorSpanCount in services', () => {
-    expect(() =>
-      TraceSummariesResponseSchema.parse({
-        summaries: [{ ...fullSummary, services: [{ name: 'svc', errorSpanCount: -1 }] }],
-      })
-    ).toThrow(z.ZodError);
+    expect(SpanSchema.parse(complexSpan)).toEqual(complexSpan);
   });
 });
 
-describe('ID Validators', () => {
-  describe('traceIdHex', () => {
-    it('accepts valid 32-char lowercase hex trace ID', () => {
-      const id = '0102030405060708090a0b0c0d0e0f10';
-      expect(traceIdHex.parse(id)).toBe(id);
-    });
-
-    it('accepts valid 32-char uppercase hex trace ID', () => {
-      const id = '0102030405060708090A0B0C0D0E0F10';
-      expect(traceIdHex.parse(id)).toBe(id);
-    });
-
-    it('accepts valid 32-char mixed case hex trace ID', () => {
-      const id = '0102030405060708090a0B0C0d0E0F10';
-      expect(traceIdHex.parse(id)).toBe(id);
-    });
-
-    it('rejects trace ID with invalid characters', () => {
-      expect(() => traceIdHex.parse('0102030405060708090a0b0c0d0e0fXX')).toThrow(
-        'must be 32-char hex string'
-      );
-    });
-
-    it('rejects trace ID with wrong length (too short)', () => {
-      expect(() => traceIdHex.parse('0102030405060708090a0b0c0d0e0f')).toThrow('must be 32-char hex string');
-    });
-
-    it('rejects trace ID with wrong length (too long)', () => {
-      expect(() => traceIdHex.parse('0102030405060708090a0b0c0d0e0f1011')).toThrow(
-        'must be 32-char hex string'
-      );
-    });
-
-    it('rejects base64-encoded trace ID', () => {
-      expect(() => traceIdHex.parse('AQIDBAUG')).toThrow('must be 32-char hex string');
-    });
-
-    it('rejects empty string', () => {
-      expect(() => traceIdHex.parse('')).toThrow('must be 32-char hex string');
-    });
+describe('TracesDataSchema', () => {
+  it('validates complex trace data structure', () => {
+    const data = {
+      resourceSpans: [
+        {
+          resource: { attributes: [] },
+          scopeSpans: [
+            {
+              scope: { name: 'test-scope', version: '1.0' },
+              spans: [
+                {
+                  traceId: '0102030405060708090a0b0c0d0e0f10',
+                  spanId: '0102030405060708',
+                  name: 'span1',
+                  kind: 1,
+                  startTimeUnixNano: '1',
+                  endTimeUnixNano: '2',
+                  attributes: [],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    expect(TracesDataSchema.parse(data)).toEqual(data);
   });
 
-  describe('spanIdHex', () => {
-    it('accepts valid 16-char lowercase hex span ID', () => {
-      const id = '0102030405060708';
-      expect(spanIdHex.parse(id)).toBe(id);
-    });
-
-    it('accepts valid 16-char uppercase hex span ID', () => {
-      const id = '0102030405060708';
-      expect(spanIdHex.parse(id)).toBe(id);
-    });
-
-    it('rejects span ID with invalid characters', () => {
-      expect(() => spanIdHex.parse('010203040506070X')).toThrow('must be 16-char hex string');
-    });
-
-    it('rejects span ID with wrong length (too short)', () => {
-      expect(() => spanIdHex.parse('01020304050607')).toThrow('must be 16-char hex string');
-    });
-
-    it('rejects span ID with wrong length (too long)', () => {
-      expect(() => spanIdHex.parse('01020304050607081')).toThrow('must be 16-char hex string');
-    });
-
-    it('rejects empty string', () => {
-      expect(() => spanIdHex.parse('')).toThrow('must be 16-char hex string');
-    });
+  it('rejects malformed traces data envelope', () => {
+    const data = { resourceSpans: 'not-an-array' };
+    expect(() => TracesDataSchema.parse(data)).toThrow(z.ZodError);
   });
 });

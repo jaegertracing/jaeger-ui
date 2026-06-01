@@ -9,10 +9,68 @@
  */
 
 import prefixUrl from '../../utils/prefix-url';
-import { ServicesResponseSchema, OperationsResponseSchema, TraceSummariesResponseSchema } from './schemas';
+import {
+  ServicesResponseSchema,
+  OperationsResponseSchema,
+  TracesDataSchema,
+  FindTraceSummariesResponseSchema,
+  type ITracesData,
+  type ITraceSummaryResponse,
+} from './schemas';
+import type { TraceSummary } from '../../types/trace-summary';
 import type { SearchQuery } from '../../types/search';
-import type { TraceSummary, ServiceSummary } from '../../types/trace-summary';
-import type { Microseconds } from '../../types/units';
+
+/** Nanoseconds → microseconds (Jaeger UI works in µs). */
+function nanosToMicros(ns: string | undefined): number {
+  if (!ns || typeof ns !== 'string' || !/^\d+$/.test(ns)) return 0;
+  try {
+    // ns is a decimal integer string; divide by 1000 and truncate
+    const n = BigInt(ns);
+    return Number(n / 1000n);
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Convert a UI SearchQuery into the query-string parameters accepted by
+ * /api/v3/trace-summaries. The field mapping follows the generated
+ * jaeger_api_v3_TraceQueryParameters schema.
+ */
+function buildTraceSummariesParams(query: SearchQuery): Record<string, string> {
+  const params: Record<string, string> = {};
+
+  if (query.service) params['query.serviceName'] = query.service;
+  if (query.operation) params['query.operationName'] = query.operation;
+  if (query.tags) params['query.attributes'] = query.tags;
+  if (query.minDuration) {
+    params['query.durationMin'] = /^\d+(?:\.\d+)?$/.test(query.minDuration)
+      ? `${query.minDuration}s`
+      : query.minDuration;
+  }
+  if (query.maxDuration) {
+    params['query.durationMax'] = /^\d+(?:\.\d+)?$/.test(query.maxDuration)
+      ? `${query.maxDuration}s`
+      : query.maxDuration;
+  }
+  if (query.limit) params['query.searchDepth'] = String(query.limit);
+
+  // start / end are unix microseconds from the UI; convert to ISO-8601 for the v3 API
+  if (query.start) {
+    const startMs = Number(query.start) / 1000;
+    if (Number.isFinite(startMs) && startMs > 0) {
+      params['query.startTimeMin'] = new Date(startMs).toISOString();
+    }
+  }
+  if (query.end) {
+    const endMs = Number(query.end) / 1000;
+    if (Number.isFinite(endMs) && endMs > 0) {
+      params['query.startTimeMax'] = new Date(endMs).toISOString();
+    }
+  }
+
+  return params;
+}
 
 export class JaegerClient {
   private apiRoot = prefixUrl('/api/v3');
@@ -55,70 +113,81 @@ export class JaegerClient {
   }
 
   /**
-   * Search for traces by query parameters.
-   * Calls /api/v3/trace-summaries and maps the response to TraceSummary[].
+   * Search for traces matching the given query and return UI-shaped TraceSummary objects.
+   * Calls /api/v3/trace-summaries.
+   * @param query - The search parameters
+   * @returns Promise<TraceSummary[]>
    */
   async fetchTraceSummaries(query: SearchQuery): Promise<TraceSummary[]> {
-    const params = new URLSearchParams();
-    if (query.service) params.set('query.serviceName', query.service);
-    if (query.operation) params.set('query.operationName', String(query.operation));
-    // start/end are microsecond epoch integers from the URL; convert to ISO for the v3 API.
-    // Guard with Number.isFinite to drop malformed URL params gracefully.
-    const startUs = Number(query.start);
-    const endUs = Number(query.end);
-    if (Number.isFinite(startUs) && startUs > 0)
-      params.set('query.startTimeMin', new Date(startUs / 1000).toISOString());
-    if (Number.isFinite(endUs) && endUs > 0)
-      params.set('query.startTimeMax', new Date(endUs / 1000).toISOString());
-    if (query.limit) params.set('query.searchDepth', String(query.limit));
-    if (query.minDuration) params.set('query.durationMin', query.minDuration);
-    if (query.maxDuration) params.set('query.durationMax', query.maxDuration);
-    if (query.tags) params.set('query.attributes', query.tags);
+    const params = buildTraceSummariesParams(query);
+    const qs = new URLSearchParams(params).toString();
+    const url = qs ? `${this.apiRoot}/trace-summaries?${qs}` : `${this.apiRoot}/trace-summaries`;
 
-    const url = `${this.apiRoot}/trace-summaries?${params.toString()}`;
     const response = await this.fetchWithTimeout(url);
     if (!response.ok) {
       throw new Error(`Failed to fetch trace summaries: ${response.status} ${response.statusText}`);
     }
     const data = await response.json();
-    const validated = TraceSummariesResponseSchema.parse(data);
 
-    // Timestamps are decimal ns strings (proto3 JSON encoding for int64).
-    // Use BigInt arithmetic to avoid precision loss; µs-epoch values (~1.7e15)
-    // fit safely in Number after dividing by 1000.
-    // Fall back to 0 when timestamps are absent (partial backend implementation).
-    return (validated.summaries ?? []).map(s => {
-      // If only one timestamp is present, clamp the missing one to the present one
-      // so duration is 0 rather than an astronomically large value from epoch.
-      const startNsRaw = s.minStartTimeUnixNano ? BigInt(s.minStartTimeUnixNano) : null;
-      const endNsRaw = s.maxEndTimeUnixNano ? BigInt(s.maxEndTimeUnixNano) : null;
-      const startNs = startNsRaw ?? endNsRaw ?? 0n;
-      const endNs = endNsRaw ?? startNsRaw ?? 0n;
-      const rootServiceName = s.rootServiceName ?? '';
-      const rootOperationName = s.rootOperationName ?? '';
-      // Wire field is `traceId` (proto3 camelCase of `trace_id`).
-      // Internal TraceSummary uses `traceID` (Jaeger convention) to match legacy code.
-      const services: ServiceSummary[] = (s.services ?? []).map(svc => ({
-        name: svc.name ?? '',
-        spanCount: svc.spanCount ?? 0,
-        errorSpanCount: svc.errorSpanCount ?? 0,
-      }));
+    // Runtime validation with Zod (safeParse for resilience)
+    const result = FindTraceSummariesResponseSchema.safeParse(data);
+    const summaries: ITraceSummaryResponse[] = result.success
+      ? result.data.summaries ?? []
+      : (data?.summaries ?? []);
+
+    if (!result.success) {
+      console.error('[OTLP Validation] Error for trace-summaries response:', result.error.format());
+    }
+
+    // Map API TraceSummary → UI TraceSummary
+    return summaries.map((s: ITraceSummaryResponse) => {
+      const traceID = s.traceId || (s as any).traceID;
+      const startNs = s.minStartTimeUnixNano;
+      const endNs = s.maxEndTimeUnixNano;
+      const startUs = nanosToMicros(startNs);
+      const endUs = nanosToMicros(endNs);
+
       return {
-        traceID: s.traceId,
-        traceName:
-          rootServiceName && rootOperationName
-            ? `${rootServiceName}: ${rootOperationName}`
-            : rootServiceName || rootOperationName,
-        rootServiceName,
-        rootOperationName,
-        startTime: Number(startNs / 1000n) as Microseconds,
-        duration: Number((endNs - startNs) / 1000n) as Microseconds,
+        traceID,
+        traceName: s.rootOperationName
+          ? `${s.rootServiceName ?? ''}: ${s.rootOperationName}`
+          : (s.rootServiceName ?? traceID),
+        rootServiceName: s.rootServiceName ?? '',
+        rootOperationName: s.rootOperationName ?? '',
+        startTime: startUs,
+        duration: endUs > startUs ? endUs - startUs : 0,
         spanCount: s.spanCount ?? 0,
         errorSpanCount: s.errorSpanCount ?? 0,
         orphanSpanCount: s.orphanSpanCount ?? 0,
-        services,
-      };
+        services: (s.services ?? []).map(svc => ({
+          name: svc.name ?? '',
+          spanCount: svc.spanCount ?? 0,
+          errorSpanCount: svc.errorSpanCount ?? 0,
+        })),
+      } as TraceSummary;
     });
+  }
+
+  /**
+   * Fetch a single trace by ID and validate its structure against OTLP Zod schemas.
+   * @param traceId - The trace ID in hex format
+   * @returns Promise<ITracesData>
+   */
+  async fetchTrace(traceId: string): Promise<ITracesData> {
+    const response = await this.fetchWithTimeout(`${this.apiRoot}/traces/${traceId}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch trace "${traceId}": ${response.status} ${response.statusText}`);
+    }
+    const data = await response.json();
+
+    // Runtime validation with Zod (safeParse for resilience)
+    const result = TracesDataSchema.safeParse(data);
+    if (!result.success) {
+      // Graceful degradation: log error for observability but return data to avoid blank screens
+      console.error(`[OTLP Validation] Error for trace ${traceId}:`, result.error.format());
+      return data as ITracesData;
+    }
+    return result.data;
   }
 
   /**
