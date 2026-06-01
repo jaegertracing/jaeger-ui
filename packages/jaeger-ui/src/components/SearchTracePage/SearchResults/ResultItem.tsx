@@ -76,15 +76,15 @@ export default function ResultItem({
         <Row>
           <Col xs={24} sm={4} className="ub-p2">
             <Tag className="ub-m1" data-testid={markers.NUM_SPANS} variant="outlined">
-              {spanCount} Span{spanCount > 1 && 's'}
+              {spanCount ?? '-'} Span{(spanCount ?? 0) > 1 && 's'}
             </Tag>
             {Boolean(errorSpanCount) && (
               <Tag className="ub-m1" color="red" variant="outlined">
-                {errorSpanCount} Error{errorSpanCount > 1 && 's'}
+                {errorSpanCount} Error{(errorSpanCount ?? 0) > 1 && 's'}
               </Tag>
             )}
-            {orphanSpanCount > 0 && (
-              <Tooltip title={getIncompleteTraceTooltip(orphanSpanCount)}>
+            {(orphanSpanCount ?? 0) > 0 && (
+              <Tooltip title={getIncompleteTraceTooltip(orphanSpanCount ?? 0)}>
                 <Tag className="ub-m1" color="orange">
                   <IoWarning className="ResultItem--warningIcon" />
                   Incomplete

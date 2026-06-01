@@ -18,8 +18,8 @@ function ServicePill({ service }: { service: ServiceEntry }) {
       style={{ borderLeftColor: colorGenerator.getColorByKey(service.name) }}
       variant="outlined"
     >
-      {service.errorSpanCount > 0 && <IoAlert className="ServicePills--errorIcon" />}
-      {service.name} ({service.spanCount})
+      {(service.errorSpanCount ?? 0) > 0 && <IoAlert className="ServicePills--errorIcon" />}
+      {service.name} ({service.spanCount ?? '-'})
     </Tag>
   );
 }

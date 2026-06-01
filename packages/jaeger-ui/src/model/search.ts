@@ -31,8 +31,8 @@ const summaryComparators: Record<string, (a: TraceSummary, b: TraceSummary) => n
   [MOST_RECENT]: (a, b) => +(b.startTime > a.startTime) || +(a.startTime === b.startTime) - 1,
   [SHORTEST_FIRST]: (a, b) => +(a.duration > b.duration) || +(a.duration === b.duration) - 1,
   [LONGEST_FIRST]: (a, b) => +(b.duration > a.duration) || +(a.duration === b.duration) - 1,
-  [MOST_SPANS]: (a, b) => +(b.spanCount > a.spanCount) || +(a.spanCount === b.spanCount) - 1,
-  [LEAST_SPANS]: (a, b) => +(a.spanCount > b.spanCount) || +(a.spanCount === b.spanCount) - 1,
+  [MOST_SPANS]: (a, b) => +((b.spanCount ?? 0) > (a.spanCount ?? 0)) || +((a.spanCount ?? 0) === (b.spanCount ?? 0)) - 1,
+  [LEAST_SPANS]: (a, b) => +((a.spanCount ?? 0) > (b.spanCount ?? 0)) || +((a.spanCount ?? 0) === (b.spanCount ?? 0)) - 1,
 };
 
 /**

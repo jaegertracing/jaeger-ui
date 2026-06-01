@@ -97,6 +97,14 @@ export default function TraceTable({
   const navigate = useNavigate();
   const { key: sortKey, order: sortOrder } = fromOrderBy(sortBy);
 
+  // Hide columns when no summary in the result set supports them.
+  // A backend that omits errorSpanCount/spanCount leaves those fields undefined;
+  // a backend that genuinely returned 0 will have a numeric value.
+  const showServicesColumn =
+    traceSummaries.length === 0 || traceSummaries.some(t => t.services.length > 0);
+  const showErrorsColumn =
+    traceSummaries.length === 0 || traceSummaries.some(t => t.errorSpanCount !== undefined);
+
   const columns: ColumnsType<TraceSummary> = useMemo(() => {
     const cols: ColumnsType<TraceSummary> = [
       {
@@ -126,14 +134,18 @@ export default function TraceTable({
           );
         },
       },
-      {
-        title: 'Services',
-        key: 'services',
-        width: '35%',
-        onCell: () => ({ style: { overflow: 'hidden' } }),
-        render: (_: unknown, trace: TraceSummary) =>
-          trace.services.length > 0 ? <ServicePills services={trace.services} /> : '-',
-      },
+      ...(showServicesColumn
+        ? [
+            {
+              title: 'Services',
+              key: 'services',
+              width: '35%',
+              onCell: () => ({ style: { overflow: 'hidden' } }),
+              render: (_: unknown, trace: TraceSummary) =>
+                trace.services.length > 0 ? <ServicePills services={trace.services} /> : '-',
+            } as const,
+          ]
+        : []),
       {
         title: 'Spans',
         key: 'spans',
@@ -144,27 +156,33 @@ export default function TraceTable({
         sortOrder: sortKey === 'spans' ? sortOrder : undefined,
         sortDirections: ['ascend', 'descend'],
       },
-      {
-        title: 'Errors',
-        key: 'errors',
-        width: '5rem',
-        align: 'center',
-        render: (_: unknown, trace: TraceSummary) =>
-          trace.errorSpanCount > 0 ? (
-            <Tag
-              variant="outlined"
-              style={{
-                margin: 0,
-                color: 'var(--feedback-error-text)',
-                borderColor: 'var(--feedback-error-text)',
-              }}
-            >
-              {trace.errorSpanCount}
-            </Tag>
-          ) : (
-            0
-          ),
-      },
+      ...(showErrorsColumn
+        ? [
+            {
+              title: 'Errors',
+              key: 'errors',
+              width: '5rem',
+              align: 'center' as const,
+              render: (_: unknown, trace: TraceSummary) =>
+                trace.errorSpanCount === undefined ? (
+                  '-'
+                ) : trace.errorSpanCount > 0 ? (
+                  <Tag
+                    variant="outlined"
+                    style={{
+                      margin: 0,
+                      color: 'var(--feedback-error-text)',
+                      borderColor: 'var(--feedback-error-text)',
+                    }}
+                  >
+                    {trace.errorSpanCount}
+                  </Tag>
+                ) : (
+                  0
+                ),
+            },
+          ]
+        : []),
       {
         title: 'Duration',
         key: 'duration',
@@ -236,7 +254,7 @@ export default function TraceTable({
     }
 
     return cols;
-  }, [sortKey, sortOrder, maxTraceDuration, getLink, disableComparisons, cohortIds, toggleComparison]);
+  }, [sortKey, sortOrder, maxTraceDuration, getLink, disableComparisons, cohortIds, toggleComparison, showServicesColumn, showErrorsColumn]);
 
   const onChange: TableProps<TraceSummary>['onChange'] = (_pagination, _filters, sorter) => {
     const s = Array.isArray(sorter) ? sorter[0] : (sorter as SorterResult<TraceSummary>);
