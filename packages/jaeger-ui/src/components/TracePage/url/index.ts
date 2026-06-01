@@ -29,7 +29,7 @@ const SETTINGS_PARAM_NAMES: Record<keyof UrlLayoutSettings, string> = {
   detailPanelMode: URL_PARAM_SIDEBAR,
 };
 
-const LAYOUT_PARAM_NAMES = [URL_PARAM_TIMELINE, URL_PARAM_SIDEBAR];
+const LAYOUT_PARAM_NAMES = [URL_PARAM_TIMELINE, URL_PARAM_SIDEBAR] as const;
 
 /**
  * Maps each valid SpanDetailPanelMode to its URL query-parameter value.
@@ -173,15 +173,21 @@ export function getTracePageLink(
   let layoutSettings: Partial<UrlLayoutSettings> | undefined = settings;
 
   if (stateOrOptions && typeof stateOrOptions === 'object') {
-    // Treat the argument as an options bag when it carries at least one known option key,
-    // OR when it is an empty object {} (i.e. caller passed no positional args at all).
-    // Use the `in` operator throughout — no Object.keys() allocation on every call.
-    if (
+    // Classify the argument as an options bag when it carries at least one known key,
+    // OR when it is an empty object {} (caller passed no extra args).
+    // All checks are allocation-free: `in` for property existence, a short-circuiting
+    // for..in loop (no array created) for the empty-object case.
+    const isOptions =
       'state' in stateOrOptions ||
       'uiFind' in stateOrOptions ||
       'settings' in stateOrOptions ||
-      !Object.keys(stateOrOptions).length
-    ) {
+      // for..in exits on the very first own-enumerable property — zero allocation.
+      (() => {
+        for (const _ in stateOrOptions) return false;
+        return true;
+      })();
+
+    if (isOptions) {
       const opts = stateOrOptions as {
         state?: LocationState;
         uiFind?: string;
