@@ -359,6 +359,10 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
     [formData, searchAdjustEndTime, adjustTimeEnabled, submitFormHandler, navigate, clearUploadedTraces]
   );
 
+  const handleReset = useCallback(() => {
+    setFormData({});
+  }, []);
+
   const { service: selectedService, lookback: selectedLookback } = formData;
   const noSelectedService = selectedService === '-' || !selectedService;
   const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
@@ -654,6 +658,9 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
         />
       </FormItem>
 
+      <Button className="SearchForm--reset" disabled={submitting} onClick={handleReset}>
+        Reset
+      </Button>
       <Button
         htmlType="submit"
         className="SearchForm--submit"
