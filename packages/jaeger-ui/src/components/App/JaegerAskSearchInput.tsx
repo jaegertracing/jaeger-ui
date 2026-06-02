@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { getUrl } from '../TracePage/url';
 import { useJaegerAssistantOptional } from './JaegerAssistantContext';
-import { isJaegerAssistantConfigured } from './jaegerAgUi';
+import { useJaegerAssistantConfigured } from '../../hooks/useJaegerAssistant';
 
 import './JaegerAskSearchInput.css';
 
@@ -22,7 +22,8 @@ function looksLikeTraceId(value: string): boolean {
 // Toggle button for the Ask Jaeger side panel
 export const JaegerAssistantToggle: React.FC = () => {
   const assistant = useJaegerAssistantOptional();
-  if (!assistant || !isJaegerAssistantConfigured()) return null;
+  const assistantConfigured = useJaegerAssistantConfigured();
+  if (!assistant || !assistantConfigured) return null;
 
   const { panelOpen, setPanelOpen } = assistant;
   return (
@@ -42,6 +43,7 @@ export const JaegerAssistantToggle: React.FC = () => {
 const JaegerAskSearchInput: React.FC = () => {
   const navigate = useNavigate();
   const assistant = useJaegerAssistantOptional();
+  const assistantConfigured = useJaegerAssistantConfigured();
 
   const [isOpen, setIsOpen] = React.useState(false);
   const [value, setValue] = React.useState('');
@@ -86,7 +88,7 @@ const JaegerAskSearchInput: React.FC = () => {
     const raw = value.trim();
     if (!raw) return;
 
-    const assistantOn = isJaegerAssistantConfigured() && assistant;
+    const assistantOn = assistantConfigured && assistant;
     if (assistantOn && !looksLikeTraceId(raw)) {
       assistant.requestAskJaeger(raw);
     } else {
@@ -94,7 +96,7 @@ const JaegerAskSearchInput: React.FC = () => {
     }
     setValue('');
     setIsOpen(false);
-  }, [value, assistant, navigate]);
+  }, [value, assistant, assistantConfigured, navigate]);
 
   const onKeyDown = React.useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -108,9 +110,7 @@ const JaegerAskSearchInput: React.FC = () => {
     [submit]
   );
 
-  const placeholder = isJaegerAssistantConfigured()
-    ? 'Ask Jaeger or lookup trace ID…'
-    : 'Lookup by Trace ID…';
+  const placeholder = assistantConfigured ? 'Ask Jaeger or lookup trace ID…' : 'Lookup by Trace ID…';
 
   const floatingPanel =
     isOpen && floatPos ? (

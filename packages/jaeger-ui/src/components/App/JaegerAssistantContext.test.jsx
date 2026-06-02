@@ -20,7 +20,11 @@ const capturedAgUiOnError = vi.hoisted(() => ({ fn: /** @type {null | ((e: unkno
 
 vi.mock('./jaegerAgUi', () => ({
   getJaegerAgUiUrl: () => agUiMock.url,
-  isJaegerAssistantConfigured: () => agUiMock.configured,
+}));
+
+vi.mock('../../hooks/useJaegerAssistant', () => ({
+  useJaegerAssistantConfigured: () => agUiMock.configured,
+  useJaegerAssistantEnabled: () => agUiMock.configured,
 }));
 
 vi.mock('@ag-ui/client', () => ({

@@ -9,7 +9,7 @@ import { useLocation } from 'react-router-dom';
 import TopNav from './TopNav';
 import { JaegerAssistantDock } from './JaegerAssistantPanel';
 import { useJaegerAssistantOptional } from './JaegerAssistantContext';
-import { isJaegerAssistantConfigured } from './jaegerAgUi';
+import { useJaegerAssistantConfigured } from '../../hooks/useJaegerAssistant';
 import { useEmbeddedState } from '../../stores/embedded-store';
 import { trackPageView } from '../../utils/tracking';
 import DocumentTitle from '../../utils/documentTitle';
@@ -28,8 +28,9 @@ export const PageImpl: React.FC<TProps> = props => {
   const { children } = props;
   const { pathname, search } = useLocation();
   const assistant = useJaegerAssistantOptional();
+  const assistantConfigured = useJaegerAssistantConfigured();
   const assistantPanelOpen = Boolean(assistant?.panelOpen);
-  const assistantEnvOn = !embedded && isJaegerAssistantConfigured();
+  const assistantEnvOn = !embedded && assistantConfigured;
   const assistantDockOpen = assistantEnvOn && assistantPanelOpen;
 
   React.useEffect(() => {

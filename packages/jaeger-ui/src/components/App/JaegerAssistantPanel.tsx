@@ -13,7 +13,7 @@ import {
 import { IoClose } from 'react-icons/io5';
 
 import { useJaegerAssistant, useJaegerAssistantOptional } from './JaegerAssistantContext';
-import { isJaegerAssistantConfigured } from './jaegerAgUi';
+import { useJaegerAssistantConfigured } from '../../hooks/useJaegerAssistant';
 
 import './JaegerAssistantPanel.css';
 
@@ -107,7 +107,8 @@ function JaegerAssistantThreadView() {
  */
 export function JaegerAssistantDock() {
   const assistant = useJaegerAssistantOptional();
-  if (!assistant || !isJaegerAssistantConfigured()) {
+  const assistantConfigured = useJaegerAssistantConfigured();
+  if (!assistant || !assistantConfigured) {
     return null;
   }
 

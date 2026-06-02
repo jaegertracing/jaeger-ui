@@ -6,7 +6,8 @@ import { HttpAgent } from '@ag-ui/client';
 import { useAgUiRuntime } from '@assistant-ui/react-ag-ui';
 import { AssistantRuntimeProvider } from '@assistant-ui/react';
 
-import { getJaegerAgUiUrl, isJaegerAssistantConfigured } from './jaegerAgUi';
+import { getJaegerAgUiUrl } from './jaegerAgUi';
+import { useJaegerAssistantConfigured } from '../../hooks/useJaegerAssistant';
 
 interface IJaegerAssistantContextValue {
   panelOpen: boolean;
@@ -35,6 +36,7 @@ function JaegerAssistantRuntimeProvider({ children }: { children: React.ReactNod
 }
 
 export function JaegerAssistantProvider({ children }: { children: React.ReactNode }) {
+  const assistantConfigured = useJaegerAssistantConfigured();
   const [panelOpen, setPanelOpen] = React.useState(false);
   const [bootstrapUserText, setBootstrapUserText] = React.useState<string | null>(null);
 
@@ -62,7 +64,7 @@ export function JaegerAssistantProvider({ children }: { children: React.ReactNod
 
   // Only wrap with the runtime provider when the feature is configured so the
   // HttpAgent is never instantiated in deployments that don't use the assistant.
-  if (isJaegerAssistantConfigured()) {
+  if (assistantConfigured) {
     return <JaegerAssistantRuntimeProvider>{inner}</JaegerAssistantRuntimeProvider>;
   }
 

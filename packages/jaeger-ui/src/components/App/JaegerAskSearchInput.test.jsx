@@ -22,9 +22,9 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-vi.mock('./jaegerAgUi', () => ({
-  getJaegerAgUiUrl: () => (agUiMock.configured ? 'http://localhost/ag-ui' : ''),
-  isJaegerAssistantConfigured: () => agUiMock.configured,
+vi.mock('../../hooks/useJaegerAssistant', () => ({
+  useJaegerAssistantConfigured: () => agUiMock.configured,
+  useJaegerAssistantEnabled: () => agUiMock.configured,
 }));
 
 function openTextarea() {
