@@ -297,13 +297,13 @@ function defaultFormData(
     operation: initialValues?.operation ?? DEFAULT_OPERATION,
     resultsLimit: initialValues?.resultsLimit ?? String(DEFAULT_LIMIT),
     lookback: initialValues?.lookback ?? asValidConfigLookback(configLookback) ?? DEFAULT_LOOKBACK,
-    tags: initialValues?.tags,
+    tags: initialValues?.tags ?? '',
     startDate: initialValues?.startDate ?? today,
     startDateTime: initialValues?.startDateTime ?? '00:00',
     endDate: initialValues?.endDate ?? today,
     endDateTime: initialValues?.endDateTime ?? currentTime,
-    minDuration: initialValues?.minDuration,
-    maxDuration: initialValues?.maxDuration,
+    minDuration: initialValues?.minDuration ?? '',
+    maxDuration: initialValues?.maxDuration ?? '',
   };
 }
 
