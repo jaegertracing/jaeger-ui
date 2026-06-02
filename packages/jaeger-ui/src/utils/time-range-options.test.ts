@@ -1,6 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+import type { Microseconds } from '../types/units';
 import {
   ONE_HOUR_MS,
   TIME_RANGE_OPTIONS,
@@ -34,28 +35,30 @@ describe('TIME_RANGE_OPTIONS', () => {
   });
 });
 
+const ONE_HOUR_US = ONE_HOUR_MS * 1000;
+
 describe('lookbackFromDuration', () => {
   it('returns the exact matching option when duration equals a bucket', () => {
-    expect(lookbackFromDuration(ONE_HOUR_MS)).toBe('1h');
-    expect(lookbackFromDuration(15 * 60_000)).toBe('15m');
-    expect(lookbackFromDuration(2 * 24 * ONE_HOUR_MS)).toBe('2d');
+    expect(lookbackFromDuration(ONE_HOUR_US as Microseconds)).toBe('1h');
+    expect(lookbackFromDuration((15 * 60_000 * 1000) as Microseconds)).toBe('15m');
+    expect(lookbackFromDuration((2 * 24 * ONE_HOUR_US) as Microseconds)).toBe('2d');
   });
 
   it('snaps up to the next bucket when duration falls between two options', () => {
     // 70 minutes is between 1h and 2h → should snap up to 2h
-    expect(lookbackFromDuration(70 * 60_000)).toBe('2h');
+    expect(lookbackFromDuration((70 * 60_000 * 1000) as Microseconds)).toBe('2h');
     // 1 minute is less than 5m → should return 5m (smallest bucket)
-    expect(lookbackFromDuration(60_000)).toBe('5m');
+    expect(lookbackFromDuration((60_000 * 1000) as Microseconds)).toBe('5m');
   });
 
   it('returns "custom" when duration exceeds the largest option', () => {
-    const largestMs = TIME_RANGE_OPTIONS[TIME_RANGE_OPTIONS.length - 1].valueMs;
-    expect(lookbackFromDuration(largestMs + 1)).toBe('custom');
-    expect(lookbackFromDuration(365 * 24 * ONE_HOUR_MS)).toBe('custom');
+    const largestUs = TIME_RANGE_OPTIONS[TIME_RANGE_OPTIONS.length - 1].valueMs * 1000;
+    expect(lookbackFromDuration((largestUs + 1) as Microseconds)).toBe('custom');
+    expect(lookbackFromDuration((365 * 24 * ONE_HOUR_US) as Microseconds)).toBe('custom');
   });
 
   it('returns the smallest option for duration of 0', () => {
-    expect(lookbackFromDuration(0)).toBe(TIME_RANGE_OPTIONS[0].lookback);
+    expect(lookbackFromDuration(0 as Microseconds)).toBe(TIME_RANGE_OPTIONS[0].lookback);
   });
 });
 

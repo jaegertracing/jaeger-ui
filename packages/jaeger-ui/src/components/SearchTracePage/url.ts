@@ -11,6 +11,7 @@ import { MAX_LENGTH } from '../DeepDependencies/Graph/DdgNodeContent/constants';
 import { SearchQuery } from '../../types/search';
 import parseQuery from '../../utils/parseQuery';
 import { asValidLookback, lookbackFromDuration, lookbackToTimestamp } from '../../utils/time-range-options';
+import type { Microseconds } from '../../types/units';
 
 export { isSameQuery, isQueryEmpty } from '../../utils/search-query';
 
@@ -111,7 +112,7 @@ function lookbackFromUrlState(q: TUrlState): string {
   if (lookback) return lookback;
   const startUs = Number(firstOf(q.start));
   const endUs = Number(firstOf(q.end));
-  if (startUs > 0 && endUs > startUs) return lookbackFromDuration((endUs - startUs) / 1000);
+  if (startUs > 0 && endUs > startUs) return lookbackFromDuration((endUs - startUs) as Microseconds);
   return '';
 }
 

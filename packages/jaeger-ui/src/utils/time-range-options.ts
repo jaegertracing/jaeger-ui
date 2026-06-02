@@ -120,13 +120,13 @@ export function asValidConfigLookback(value: string | undefined): string | undef
 }
 
 /**
- * Given a duration in milliseconds, return the lookback string of the smallest
- * TIME_RANGE_OPTIONS entry whose window is >= durationMs.
- * Returns 'custom' if durationMs exceeds the largest option.
+ * Given a duration in microseconds, return the lookback string of the smallest
+ * TIME_RANGE_OPTIONS entry whose window covers the duration.
+ * Returns 'custom' if the duration exceeds the largest option.
  */
-export function lookbackFromDuration(durationMs: number): string {
+export function lookbackFromDuration(durationUs: Microseconds): string {
   for (const option of TIME_RANGE_OPTIONS) {
-    if (option.valueMs >= durationMs) return option.lookback;
+    if (option.valueMs * 1000 >= durationUs) return option.lookback;
   }
   return 'custom';
 }
