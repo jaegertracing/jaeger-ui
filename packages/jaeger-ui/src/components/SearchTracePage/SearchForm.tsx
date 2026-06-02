@@ -5,7 +5,7 @@ import React, { useState, useCallback, useMemo, ComponentProps } from 'react';
 import { Input, Button, Tooltip, Select, Row, Col, Form, Switch } from 'antd';
 import logfmtParser from 'logfmt/lib/logfmt_parser';
 import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
-import dayjs, { ManipulateType } from 'dayjs';
+import dayjs from 'dayjs';
 import memoizeOne from 'memoize-one';
 import queryString from 'query-string';
 import { IoHelp } from 'react-icons/io5';
@@ -30,21 +30,16 @@ import { useConfig } from '../../hooks/useConfig';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 import { ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
-import { TIME_RANGE_OPTIONS, asValidConfigLookback } from '../../utils/time-range-options';
+import {
+  TIME_RANGE_OPTIONS,
+  asValidConfigLookback,
+  lookbackToStartTimeMicros,
+} from '../../utils/time-range-options';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
 
 const ADJUST_TIME_ENABLED_KEY = 'jaeger-ui/search-adjust-time-enabled';
-const LOOKBACK_UNIT_BY_SUFFIX: Partial<Record<string, ManipulateType>> = {
-  s: 'second',
-  m: 'minute',
-  h: 'hour',
-  d: 'day',
-  w: 'week',
-};
-const DEFAULT_LOOKBACK_VALUE = parseInt(DEFAULT_LOOKBACK, 10);
-const DEFAULT_LOOKBACK_UNIT = LOOKBACK_UNIT_BY_SUFFIX[DEFAULT_LOOKBACK.slice(-1)] ?? 'hour';
 
 interface TimeStampParams {
   startDate: string;
@@ -88,21 +83,6 @@ export function convTagsLogfmt(tags: string | null | undefined): string | null {
   return JSON.stringify(data);
 }
 
-function parseLookback(s: string): { value: number; unit: ManipulateType } | null {
-  const match = s.match(/^(\d+)([smhdw])$/);
-  if (!match) return null;
-  const unit = LOOKBACK_UNIT_BY_SUFFIX[match[2]];
-  return unit !== undefined ? { value: Number(match[1]), unit } : null;
-}
-
-export function lookbackToTimestamp(lookback: string, from: Date | number): number {
-  const { value, unit } = parseLookback(lookback) ?? {
-    value: DEFAULT_LOOKBACK_VALUE,
-    unit: DEFAULT_LOOKBACK_UNIT,
-  };
-  return dayjs(from).subtract(value, unit).valueOf() * 1000;
-}
-
 interface ILookbackOption {
   label: string;
   value: string;
@@ -115,17 +95,17 @@ const lookbackOptions: ILookbackOption[] = TIME_RANGE_OPTIONS.map(({ label, look
 
 export const optionsWithinMaxLookback = memoizeOne((maxLookback: ILookbackOption) => {
   const now = new Date();
-  const minTimestamp = lookbackToTimestamp(maxLookback.value, now);
-  const lookbackToTimestampMap = new Map<string, number>();
+  const minTimestamp = lookbackToStartTimeMicros(maxLookback.value, now);
+  const lookbackToStartTimeMicrosMap = new Map<string, number>();
   const options = lookbackOptions.filter(({ value }) => {
-    const lookbackTimestamp = lookbackToTimestamp(value, now);
-    lookbackToTimestampMap.set(value, lookbackTimestamp);
+    const lookbackTimestamp = lookbackToStartTimeMicros(value, now);
+    lookbackToStartTimeMicrosMap.set(value, lookbackTimestamp);
     return lookbackTimestamp >= minTimestamp;
   });
   const lastInRangeIndex = options.length - 1;
   const lastInRangeOption = options[lastInRangeIndex];
   if (lastInRangeOption.label !== maxLookback.label) {
-    if (lookbackToTimestampMap.get(lastInRangeOption.value) !== minTimestamp) {
+    if (lookbackToStartTimeMicrosMap.get(lastInRangeOption.value) !== minTimestamp) {
       options.push(maxLookback);
     } else {
       options.splice(lastInRangeIndex, 1, maxLookback);
@@ -204,7 +184,7 @@ export function applyAdjustTime(endTimestamp: number, adjustTime: string | null 
   if (!adjustTime) {
     return endTimestamp;
   }
-  const adjustedEnd = lookbackToTimestamp(adjustTime, endTimestamp / 1000);
+  const adjustedEnd = lookbackToStartTimeMicros(adjustTime, endTimestamp / 1000);
   return adjustedEnd;
 }
 
@@ -245,7 +225,7 @@ function buildSearchQuery(
   let end: number;
   if (lookback !== 'custom') {
     const now = new Date();
-    start = String(lookbackToTimestamp(lookback, now));
+    start = String(lookbackToStartTimeMicros(lookback, now));
     end = now.valueOf() * 1000;
   } else {
     const times = getUnixTimeStampInMSFromForm({

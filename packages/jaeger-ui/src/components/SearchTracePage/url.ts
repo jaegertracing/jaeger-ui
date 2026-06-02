@@ -10,7 +10,11 @@ import { MAX_LENGTH } from '../DeepDependencies/Graph/DdgNodeContent/constants';
 
 import { SearchQuery } from '../../types/search';
 import parseQuery from '../../utils/parseQuery';
-import { asValidLookback, lookbackFromDuration } from '../../utils/time-range-options';
+import {
+  asValidLookback,
+  lookbackFromDuration,
+  lookbackToStartTimeMicros,
+} from '../../utils/time-range-options';
 
 export { isSameQuery, isQueryEmpty } from '../../utils/search-query';
 
@@ -138,10 +142,19 @@ export function searchQueryFromUrl(search: string): SearchQuery | null {
   const q = getUrlState(search);
   if (!q.service && !q.start && !q.end) return null;
 
-  const startStr = firstOf(q.start) ?? '';
-  const endStr = firstOf(q.end) ?? '';
+  let startStr = firstOf(q.start) ?? '';
+  let endStr = firstOf(q.end) ?? '';
 
   const lookback = lookbackFromUrlState(q);
+
+  // Old-style URLs (e.g. from HotROD) carry only `lookback` without explicit
+  // `start`/`end`.  Derive concrete timestamps so the v3 API call always
+  // receives the required startTimeMin/startTimeMax.
+  if ((!startStr || startStr === '0') && (!endStr || endStr === '0') && lookback && lookback !== 'custom') {
+    const now = new Date();
+    endStr = String(now.valueOf() * 1000);
+    startStr = String(lookbackToStartTimeMicros(lookback, now));
+  }
 
   return {
     service: firstOf(q?.service),

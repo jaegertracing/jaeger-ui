@@ -1,6 +1,8 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+import dayjs, { type ManipulateType } from 'dayjs';
+
 const ONE_MINUTE_MS = 60_000;
 export const ONE_HOUR_MS = 60 * ONE_MINUTE_MS;
 const ONE_DAY_MS = 24 * ONE_HOUR_MS;
@@ -126,4 +128,30 @@ export function lookbackFromDuration(durationMs: number): string {
     if (option.valueMs >= durationMs) return option.lookback;
   }
   return 'custom';
+}
+
+const LOOKBACK_UNIT_BY_SUFFIX: Partial<Record<string, ManipulateType>> = {
+  s: 'second',
+  m: 'minute',
+  h: 'hour',
+  d: 'day',
+  w: 'week',
+};
+
+function parseLookback(s: string): { value: number; unit: ManipulateType } | null {
+  const match = s.match(/^(\d+)([smhdw])$/);
+  if (!match) return null;
+  const unit = LOOKBACK_UNIT_BY_SUFFIX[match[2]];
+  return unit !== undefined ? { value: Number(match[1]), unit } : null;
+}
+
+/**
+ * Given a lookback string (e.g. "1h", "2d") and a reference point in time,
+ * returns the start timestamp in microseconds (epoch µs) that corresponds to
+ * "now − lookback". Falls back to 1h when the string is unrecognised.
+ */
+export function lookbackToStartTimeMicros(lookback: string, now: Date | number = new Date()): number {
+  const parsed = parseLookback(lookback);
+  const { value, unit } = parsed ?? { value: 1, unit: 'hour' as ManipulateType };
+  return dayjs(now).subtract(value, unit).valueOf() * 1000;
 }
