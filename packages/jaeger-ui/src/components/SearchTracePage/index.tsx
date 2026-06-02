@@ -66,6 +66,17 @@ export function SearchTracePageImpl() {
     }
   }, [searchQuery, searchData?.query, navigate]);
 
+  // Upgrade legacy URLs that carry only `lookback` without `start`/`end`
+  // (e.g. links from HotROD). searchQueryFromUrl derives the timestamps in
+  // memory so the API call succeeds, then we rewrite the URL to the canonical
+  // form so the link becomes repeatable and shareable.
+  const rawUrlState = useMemo(() => getUrlState(location.search), [location.search]);
+  useEffect(() => {
+    if (searchQuery?.start && searchQuery?.end && !rawUrlState.start && !rawUrlState.end) {
+      navigate(getUrl(searchQueryToUrlState(searchQuery)), { replace: true });
+    }
+  }, [searchQuery, rawUrlState, navigate]);
+
   const { uploadedSummaries, uploadedRawTraces, handleTracesLoaded } = useUploadedTraces();
 
   // Merge API and uploaded summaries, deduplicating by traceID (API results take precedence).
