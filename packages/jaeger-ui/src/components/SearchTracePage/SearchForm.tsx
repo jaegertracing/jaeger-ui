@@ -364,6 +364,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
       service: prev.service,
       operation: DEFAULT_OPERATION,
       lookback: DEFAULT_LOOKBACK,
+      resultsLimit: DEFAULT_LIMIT,
     }));
   }, []);
 
