@@ -14,7 +14,7 @@ import parseQuery from '../../utils/parseQuery';
 
 type TOwnProps = {
   allowClear?: boolean;
-  inputProps?: Omit<InputProps, 'value' | 'onChange' | 'ref'>;
+  inputProps?: Omit<InputProps, 'value' | 'onChange' | 'ref' | 'allowClear'>;
   trackFindFunction?: (str: string | TNil) => void;
   uiFind?: string;
 };
@@ -113,6 +113,7 @@ export const UnconnectedUiFindInput = React.forwardRef<InputRef, TProps>((props,
     <Input
       placeholder="Find..."
       {...inputProps}
+      allowClear={false}
       onBlur={handleInputBlur}
       onChange={handleInputChange}
       ref={internalRef}
