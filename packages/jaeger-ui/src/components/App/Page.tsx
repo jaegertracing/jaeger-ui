@@ -24,6 +24,7 @@ export const PageImpl: React.FC<TProps> = props => {
   const embedded = useEmbeddedState();
   const { children } = props;
   const { pathname, search } = useLocation();
+
   React.useEffect(() => {
     trackPageView(pathname, search);
   }, [pathname, search]);

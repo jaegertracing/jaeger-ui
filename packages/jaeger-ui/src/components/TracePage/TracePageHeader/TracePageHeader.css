@@ -22,6 +22,7 @@ SPDX-License-Identifier: Apache-2.0
   align-items: center;
   background-color: var(--surface-primary);
   display: flex;
+  flex-wrap: wrap;
 }
 
 .TracePageHeader--back {
@@ -47,6 +48,7 @@ SPDX-License-Identifier: Apache-2.0
   color: var(--text-primary);
   display: flex;
   flex: 1;
+  min-width: 0;
 }
 
 .TracePageHeader--titleLink:hover * {
@@ -74,6 +76,8 @@ SPDX-License-Identifier: Apache-2.0
   font-size: 1.7em;
   line-height: 1em;
   margin: 0 0 0 0.5em;
+  min-width: 0;
+  overflow-wrap: anywhere;
   padding: 0.5em 0;
 }
 

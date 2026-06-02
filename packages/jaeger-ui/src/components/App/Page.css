@@ -4,7 +4,8 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .Page--topNav {
-  height: auto;
+  height: var(--nav-height);
+  overflow: hidden;
   padding: 0;
   position: fixed;
   width: 100%;
