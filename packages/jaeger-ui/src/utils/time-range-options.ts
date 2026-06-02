@@ -2,100 +2,36 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import dayjs, { type ManipulateType } from 'dayjs';
-import type { Microseconds } from '../types/units';
+import type { Microseconds, Milliseconds } from '../types/units';
 
-const ONE_MINUTE_MS = 60_000;
-export const ONE_HOUR_MS = 60 * ONE_MINUTE_MS;
-const ONE_DAY_MS = 24 * ONE_HOUR_MS;
-const ONE_WEEK_MS = 7 * ONE_DAY_MS;
+const ONE_MINUTE_MS = 60_000 as Milliseconds;
+export const ONE_HOUR_MS = (60 * ONE_MINUTE_MS) as Milliseconds;
+const ONE_DAY_MS = (24 * ONE_HOUR_MS) as Milliseconds;
+const ONE_WEEK_MS = (7 * ONE_DAY_MS) as Milliseconds;
 
 export interface ITimeRangeOption {
   readonly label: string;
   readonly lookback: string;
-  readonly valueMs: number;
+  readonly valueMs: Milliseconds;
 }
 
 export const TIME_RANGE_OPTIONS: readonly ITimeRangeOption[] = Object.freeze([
-  {
-    label: '5 minutes',
-    lookback: '5m',
-    valueMs: 5 * ONE_MINUTE_MS,
-  },
-  {
-    label: '15 minutes',
-    lookback: '15m',
-    valueMs: 15 * ONE_MINUTE_MS,
-  },
-  {
-    label: '30 minutes',
-    lookback: '30m',
-    valueMs: 30 * ONE_MINUTE_MS,
-  },
-  {
-    label: '1 hour',
-    lookback: '1h',
-    valueMs: ONE_HOUR_MS,
-  },
-  {
-    label: '2 hours',
-    lookback: '2h',
-    valueMs: 2 * ONE_HOUR_MS,
-  },
-  {
-    label: '3 hours',
-    lookback: '3h',
-    valueMs: 3 * ONE_HOUR_MS,
-  },
-  {
-    label: '6 hours',
-    lookback: '6h',
-    valueMs: 6 * ONE_HOUR_MS,
-  },
-  {
-    label: '12 hours',
-    lookback: '12h',
-    valueMs: 12 * ONE_HOUR_MS,
-  },
-  {
-    label: '24 hours',
-    lookback: '24h',
-    valueMs: 24 * ONE_HOUR_MS,
-  },
-  {
-    label: '2 days',
-    lookback: '2d',
-    valueMs: 2 * ONE_DAY_MS,
-  },
-  {
-    label: '3 days',
-    lookback: '3d',
-    valueMs: 3 * ONE_DAY_MS,
-  },
-  {
-    label: '5 days',
-    lookback: '5d',
-    valueMs: 5 * ONE_DAY_MS,
-  },
-  {
-    label: '7 days',
-    lookback: '7d',
-    valueMs: 7 * ONE_DAY_MS,
-  },
-  {
-    label: '2 weeks',
-    lookback: '2w',
-    valueMs: 2 * ONE_WEEK_MS,
-  },
-  {
-    label: '3 weeks',
-    lookback: '3w',
-    valueMs: 3 * ONE_WEEK_MS,
-  },
-  {
-    label: '4 weeks',
-    lookback: '4w',
-    valueMs: 4 * ONE_WEEK_MS,
-  },
+  { label: '5 minutes', lookback: '5m', valueMs: (5 * ONE_MINUTE_MS) as Milliseconds },
+  { label: '15 minutes', lookback: '15m', valueMs: (15 * ONE_MINUTE_MS) as Milliseconds },
+  { label: '30 minutes', lookback: '30m', valueMs: (30 * ONE_MINUTE_MS) as Milliseconds },
+  { label: '1 hour', lookback: '1h', valueMs: ONE_HOUR_MS },
+  { label: '2 hours', lookback: '2h', valueMs: (2 * ONE_HOUR_MS) as Milliseconds },
+  { label: '3 hours', lookback: '3h', valueMs: (3 * ONE_HOUR_MS) as Milliseconds },
+  { label: '6 hours', lookback: '6h', valueMs: (6 * ONE_HOUR_MS) as Milliseconds },
+  { label: '12 hours', lookback: '12h', valueMs: (12 * ONE_HOUR_MS) as Milliseconds },
+  { label: '24 hours', lookback: '24h', valueMs: (24 * ONE_HOUR_MS) as Milliseconds },
+  { label: '2 days', lookback: '2d', valueMs: (2 * ONE_DAY_MS) as Milliseconds },
+  { label: '3 days', lookback: '3d', valueMs: (3 * ONE_DAY_MS) as Milliseconds },
+  { label: '5 days', lookback: '5d', valueMs: (5 * ONE_DAY_MS) as Milliseconds },
+  { label: '7 days', lookback: '7d', valueMs: (7 * ONE_DAY_MS) as Milliseconds },
+  { label: '2 weeks', lookback: '2w', valueMs: (2 * ONE_WEEK_MS) as Milliseconds },
+  { label: '3 weeks', lookback: '3w', valueMs: (3 * ONE_WEEK_MS) as Milliseconds },
+  { label: '4 weeks', lookback: '4w', valueMs: (4 * ONE_WEEK_MS) as Milliseconds },
 ]);
 
 /**
