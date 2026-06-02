@@ -150,7 +150,7 @@ function parseLookback(s: string): { value: number; unit: ManipulateType } | nul
  * returns the start timestamp in microseconds (epoch µs) that corresponds to
  * "now − lookback". Falls back to 1h when the string is unrecognised.
  */
-export function lookbackToStartTimeMicros(lookback: string, now: Date | number = new Date()): number {
+export function lookbackToTimestampMicros(lookback: string, now: Date | number = new Date()): number {
   const parsed = parseLookback(lookback);
   const { value, unit } = parsed ?? { value: 1, unit: 'hour' as ManipulateType };
   return dayjs(now).subtract(value, unit).valueOf() * 1000;

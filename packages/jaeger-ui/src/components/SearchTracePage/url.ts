@@ -13,7 +13,7 @@ import parseQuery from '../../utils/parseQuery';
 import {
   asValidLookback,
   lookbackFromDuration,
-  lookbackToStartTimeMicros,
+  lookbackToTimestampMicros,
 } from '../../utils/time-range-options';
 
 export { isSameQuery, isQueryEmpty } from '../../utils/search-query';
@@ -153,7 +153,7 @@ export function searchQueryFromUrl(search: string): SearchQuery | null {
   if ((!startStr || startStr === '0') && (!endStr || endStr === '0') && lookback && lookback !== 'custom') {
     const now = new Date();
     endStr = String(now.valueOf() * 1000);
-    startStr = String(lookbackToStartTimeMicros(lookback, now));
+    startStr = String(lookbackToTimestampMicros(lookback, now));
   }
 
   return {

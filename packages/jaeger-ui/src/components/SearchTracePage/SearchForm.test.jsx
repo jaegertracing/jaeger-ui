@@ -78,7 +78,7 @@ import { CHANGE_SERVICE_ACTION_TYPE } from '../../constants/search-form';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 import { AppQueryClientProvider } from '../../query/app-query-client';
 import getConfig from '../../utils/config/get-config';
-import { lookbackToStartTimeMicros } from '../../utils/time-range-options';
+import { lookbackToTimestampMicros } from '../../utils/time-range-options';
 
 function makeDateParams(dateOffset = 0) {
   const date = new Date();
@@ -172,14 +172,14 @@ describe('conversion utils', () => {
 });
 
 describe('lookback utils', () => {
-  describe('lookbackToStartTimeMicros', () => {
+  describe('lookbackToTimestampMicros', () => {
     const hourInMicroseconds = 60 * 60 * 1000 * 1000;
     const now = new Date();
     const nowInMicroseconds = now * 1000;
 
     it('creates timestamp for hours ago', () => {
       [1, 2, 4, 7].forEach(lookbackNum => {
-        expect(nowInMicroseconds - lookbackToStartTimeMicros(`${lookbackNum}h`, now)).toBe(
+        expect(nowInMicroseconds - lookbackToTimestampMicros(`${lookbackNum}h`, now)).toBe(
           lookbackNum * hourInMicroseconds
         );
       });
@@ -187,7 +187,7 @@ describe('lookback utils', () => {
 
     it('creates timestamp for days ago', () => {
       [1, 2, 4, 7].forEach(lookbackNum => {
-        const actual = nowInMicroseconds - lookbackToStartTimeMicros(`${lookbackNum}d`, now);
+        const actual = nowInMicroseconds - lookbackToTimestampMicros(`${lookbackNum}d`, now);
         const expected = lookbackNum * 24 * hourInMicroseconds;
         try {
           expect(actual).toBe(expected);
@@ -199,7 +199,7 @@ describe('lookback utils', () => {
 
     it('creates timestamp for weeks ago', () => {
       [1, 2, 4, 7].forEach(lookbackNum => {
-        const actual = nowInMicroseconds - lookbackToStartTimeMicros(`${lookbackNum}w`, now);
+        const actual = nowInMicroseconds - lookbackToTimestampMicros(`${lookbackNum}w`, now);
         try {
           expect(actual).toBe(lookbackNum * 7 * 24 * hourInMicroseconds);
         } catch (_e) {
@@ -209,11 +209,11 @@ describe('lookback utils', () => {
     });
 
     it('falls back to default lookback for unsupported units', () => {
-      expect(nowInMicroseconds - lookbackToStartTimeMicros('99x', now)).toBe(hourInMicroseconds);
+      expect(nowInMicroseconds - lookbackToTimestampMicros('99x', now)).toBe(hourInMicroseconds);
     });
 
     it('falls back to default lookback for invalid amounts', () => {
-      expect(nowInMicroseconds - lookbackToStartTimeMicros('xh', now)).toBe(hourInMicroseconds);
+      expect(nowInMicroseconds - lookbackToTimestampMicros('xh', now)).toBe(hourInMicroseconds);
     });
   });
 
