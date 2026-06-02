@@ -209,10 +209,10 @@ export function UnconnectedSearchResults({
                   x: t.startTime,
                   y: t.duration,
                   traceID: t.traceID,
-                  spanCount: t.spanCount,
+                  spanCount: t.spanCount ?? 0,
                   serviceCount: t.services.length,
                   name: t.traceName,
-                  color: t.errorSpanCount > 0 ? 'red' : '#12939A',
+                  color: (t.errorSpanCount ?? 0) > 0 ? 'red' : '#12939A',
                 };
               })}
               onValueClick={(t: { traceID: string }) => {

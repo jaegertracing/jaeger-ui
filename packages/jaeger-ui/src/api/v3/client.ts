@@ -100,8 +100,8 @@ export class JaegerClient {
       // Internal TraceSummary uses `traceID` (Jaeger convention) to match legacy code.
       const services: ServiceSummary[] = (s.services ?? []).map(svc => ({
         name: svc.name ?? '',
-        spanCount: svc.spanCount ?? 0,
-        errorSpanCount: svc.errorSpanCount ?? 0,
+        spanCount: svc.spanCount,
+        errorSpanCount: svc.errorSpanCount,
       }));
       return {
         traceID: s.traceId ?? '',
@@ -113,9 +113,9 @@ export class JaegerClient {
         rootOperationName,
         startTime: Number(startNs / 1000n) as Microseconds,
         duration: Number((endNs - startNs) / 1000n) as Microseconds,
-        spanCount: s.spanCount ?? 0,
-        errorSpanCount: s.errorSpanCount ?? 0,
-        orphanSpanCount: s.orphanSpanCount ?? 0,
+        spanCount: s.spanCount,
+        errorSpanCount: s.errorSpanCount,
+        orphanSpanCount: s.orphanSpanCount,
         services,
       };
     });
