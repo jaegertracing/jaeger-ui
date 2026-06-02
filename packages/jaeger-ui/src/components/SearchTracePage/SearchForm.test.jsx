@@ -772,14 +772,24 @@ describe('submitting state from useIsSearchFetching', () => {
       expect(limitInput.value).toBe(String(20)); // DEFAULT_LIMIT
     });
 
-    it('preserves service selection after reset', () => {
-      const { container } = renderForm(<SearchForm {...defaultProps} initialValues={{ service: 'svcA' }} />);
+    it('preserves service and restores operation and lookback to defaults', () => {
+      const { container } = renderForm(
+        <SearchForm {...defaultProps} initialValues={{ service: 'svcA', operation: 'op1', lookback: '2d' }} />
+      );
 
       fireEvent.click(container.querySelector('.SearchForm--reset'));
 
       expect(container.querySelector('[data-testid="mock-select-service"]')).toHaveAttribute(
         'data-value',
         'svcA'
+      );
+      expect(container.querySelector('[data-testid="mock-select-operation"]')).toHaveAttribute(
+        'data-value',
+        'all'
+      );
+      expect(container.querySelector('[data-testid="mock-select-lookback"]')).toHaveAttribute(
+        'data-value',
+        '1h'
       );
     });
   });
