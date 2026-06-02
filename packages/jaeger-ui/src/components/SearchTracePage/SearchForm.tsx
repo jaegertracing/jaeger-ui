@@ -196,9 +196,9 @@ interface ISearchFormFields {
   endDate: string;
   endDateTime: string;
   operation: string;
-  tags?: string;
-  minDuration?: string;
-  maxDuration?: string;
+  tags: string;
+  minDuration: string;
+  maxDuration: string;
   lookback: string;
 }
 
