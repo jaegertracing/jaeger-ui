@@ -289,16 +289,19 @@ function defaultFormData(
   initialValues: Partial<ISearchFormFields> | undefined,
   configLookback: string | undefined
 ): Partial<ISearchFormFields> {
+  const nowInMicroseconds = dayjs().valueOf() * 1000;
+  const today = formatDate(nowInMicroseconds);
+  const currentTime = formatTime(nowInMicroseconds);
   return {
     service: initialValues?.service,
     operation: initialValues?.operation ?? DEFAULT_OPERATION,
     resultsLimit: initialValues?.resultsLimit ?? String(DEFAULT_LIMIT),
     lookback: initialValues?.lookback ?? asValidConfigLookback(configLookback) ?? DEFAULT_LOOKBACK,
     tags: initialValues?.tags,
-    startDate: initialValues?.startDate,
-    startDateTime: initialValues?.startDateTime,
-    endDate: initialValues?.endDate,
-    endDateTime: initialValues?.endDateTime,
+    startDate: initialValues?.startDate ?? today,
+    startDateTime: initialValues?.startDateTime ?? '00:00',
+    endDate: initialValues?.endDate ?? today,
+    endDateTime: initialValues?.endDateTime ?? currentTime,
     minDuration: initialValues?.minDuration,
     maxDuration: initialValues?.maxDuration,
   };
@@ -667,7 +670,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
         />
       </FormItem>
 
-      <Button className="SearchForm--reset" disabled={submitting} onClick={handleReset}>
+      <Button htmlType="button" className="SearchForm--reset" disabled={submitting} onClick={handleReset}>
         Reset
       </Button>
       <Button

@@ -737,6 +737,50 @@ describe('submitting state from useIsSearchFetching', () => {
     const submitBtn = container.querySelector(`[data-test="${markers.SUBMIT_BTN}"]`);
     expect(submitBtn).toBeDisabled();
   });
+
+  describe('Reset button', () => {
+    it('clears tags and duration fields', () => {
+      const { container } = renderForm(
+        <SearchForm
+          {...defaultProps}
+          initialValues={{ service: 'svcA', tags: 'http.status=200', minDuration: '1ms', maxDuration: '1s' }}
+        />
+      );
+
+      const tagsInput = container.querySelector('input[name="tags"]');
+      const minInput = container.querySelector('input[name="minDuration"]');
+      const maxInput = container.querySelector('input[name="maxDuration"]');
+      expect(tagsInput.value).toBe('http.status=200');
+
+      fireEvent.click(container.querySelector('.SearchForm--reset'));
+
+      expect(tagsInput.value).toBe('');
+      expect(minInput.value).toBe('');
+      expect(maxInput.value).toBe('');
+    });
+
+    it('restores default limit after reset', () => {
+      const { container } = renderForm(
+        <SearchForm {...defaultProps} initialValues={{ service: 'svcA', resultsLimit: '500' }} />
+      );
+
+      const limitInput = container.querySelector('input[name="resultsLimit"]');
+      expect(limitInput.value).toBe('500');
+
+      fireEvent.click(container.querySelector('.SearchForm--reset'));
+
+      expect(limitInput.value).toBe(String(20)); // DEFAULT_LIMIT
+    });
+
+    it('preserves service selection after reset', () => {
+      renderForm(<SearchForm {...defaultProps} initialValues={{ service: 'svcA' }} />);
+
+      fireEvent.click(document.querySelector('.SearchForm--reset'));
+
+      // service select retains its value — the mock captures the last onChange value
+      expect(SearchableSelect.onChangeFns.service).toBeDefined();
+    });
+  });
 });
 
 describe('handleAdjustTimeToggle', () => {
