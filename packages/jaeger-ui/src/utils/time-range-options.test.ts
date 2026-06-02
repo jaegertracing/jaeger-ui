@@ -5,7 +5,7 @@ import {
   ONE_HOUR_MS,
   TIME_RANGE_OPTIONS,
   lookbackFromDuration,
-  lookbackToTimestampMicros,
+  lookbackToTimestamp,
 } from './time-range-options';
 
 describe('TIME_RANGE_OPTIONS', () => {
@@ -59,14 +59,14 @@ describe('lookbackFromDuration', () => {
   });
 });
 
-describe('lookbackToTimestampMicros', () => {
+describe('lookbackToTimestamp', () => {
   const hourInMicroseconds = 60 * 60 * 1000 * 1000;
   const now = new Date();
   const nowInMicroseconds = now.valueOf() * 1000;
 
   it('creates timestamp for hours ago', () => {
     [1, 2, 4, 7].forEach(lookbackNum => {
-      expect(nowInMicroseconds - lookbackToTimestampMicros(`${lookbackNum}h`, now)).toBe(
+      expect(nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}h`, now)).toBe(
         lookbackNum * hourInMicroseconds
       );
     });
@@ -74,7 +74,7 @@ describe('lookbackToTimestampMicros', () => {
 
   it('creates timestamp for days ago', () => {
     [1, 2, 4, 7].forEach(lookbackNum => {
-      const actual = nowInMicroseconds - lookbackToTimestampMicros(`${lookbackNum}d`, now);
+      const actual = nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}d`, now);
       const expected = lookbackNum * 24 * hourInMicroseconds;
       try {
         expect(actual).toBe(expected);
@@ -86,7 +86,7 @@ describe('lookbackToTimestampMicros', () => {
 
   it('creates timestamp for weeks ago', () => {
     [1, 2, 4, 7].forEach(lookbackNum => {
-      const actual = nowInMicroseconds - lookbackToTimestampMicros(`${lookbackNum}w`, now);
+      const actual = nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}w`, now);
       try {
         expect(actual).toBe(lookbackNum * 7 * 24 * hourInMicroseconds);
       } catch {
@@ -96,10 +96,10 @@ describe('lookbackToTimestampMicros', () => {
   });
 
   it('falls back to 1h for unsupported units', () => {
-    expect(nowInMicroseconds - lookbackToTimestampMicros('99x', now)).toBe(hourInMicroseconds);
+    expect(nowInMicroseconds - lookbackToTimestamp('99x', now)).toBe(hourInMicroseconds);
   });
 
   it('falls back to 1h for invalid amounts', () => {
-    expect(nowInMicroseconds - lookbackToTimestampMicros('xh', now)).toBe(hourInMicroseconds);
+    expect(nowInMicroseconds - lookbackToTimestamp('xh', now)).toBe(hourInMicroseconds);
   });
 });

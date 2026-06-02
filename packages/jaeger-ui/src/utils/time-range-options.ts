@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import dayjs, { type ManipulateType } from 'dayjs';
+import type { Microseconds } from '../types/units';
 
 const ONE_MINUTE_MS = 60_000;
 export const ONE_HOUR_MS = 60 * ONE_MINUTE_MS;
@@ -145,13 +146,8 @@ function parseLookback(s: string): { value: number; unit: ManipulateType } | nul
   return unit !== undefined ? { value: Number(match[1]), unit } : null;
 }
 
-/**
- * Given a lookback string (e.g. "1h", "2d") and a reference point in time,
- * returns the start timestamp in microseconds (epoch µs) that corresponds to
- * "now − lookback". Falls back to 1h when the string is unrecognised.
- */
-export function lookbackToTimestampMicros(lookback: string, now: Date | number = new Date()): number {
+export function lookbackToTimestamp(lookback: string, now: Date | number = new Date()): Microseconds {
   const parsed = parseLookback(lookback);
   const { value, unit } = parsed ?? { value: 1, unit: 'hour' as ManipulateType };
-  return dayjs(now).subtract(value, unit).valueOf() * 1000;
+  return (dayjs(now).subtract(value, unit).valueOf() * 1000) as Microseconds;
 }

@@ -10,11 +10,7 @@ import { MAX_LENGTH } from '../DeepDependencies/Graph/DdgNodeContent/constants';
 
 import { SearchQuery } from '../../types/search';
 import parseQuery from '../../utils/parseQuery';
-import {
-  asValidLookback,
-  lookbackFromDuration,
-  lookbackToTimestampMicros,
-} from '../../utils/time-range-options';
+import { asValidLookback, lookbackFromDuration, lookbackToTimestamp } from '../../utils/time-range-options';
 
 export { isSameQuery, isQueryEmpty } from '../../utils/search-query';
 
@@ -153,7 +149,7 @@ export function searchQueryFromUrl(search: string): SearchQuery | null {
   if ((!startStr || startStr === '0') && (!endStr || endStr === '0') && lookback && lookback !== 'custom') {
     const now = new Date();
     endStr = String(now.valueOf() * 1000);
-    startStr = String(lookbackToTimestampMicros(lookback, now));
+    startStr = String(lookbackToTimestamp(lookback, now));
   }
 
   return {

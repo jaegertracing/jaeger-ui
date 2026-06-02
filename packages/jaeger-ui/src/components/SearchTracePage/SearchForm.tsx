@@ -33,7 +33,7 @@ import { SearchQuery } from '../../types/search';
 import {
   TIME_RANGE_OPTIONS,
   asValidConfigLookback,
-  lookbackToTimestampMicros,
+  lookbackToTimestamp,
 } from '../../utils/time-range-options';
 
 const FormItem = Form.Item;
@@ -95,17 +95,17 @@ const lookbackOptions: ILookbackOption[] = TIME_RANGE_OPTIONS.map(({ label, look
 
 export const optionsWithinMaxLookback = memoizeOne((maxLookback: ILookbackOption) => {
   const now = new Date();
-  const minTimestamp = lookbackToTimestampMicros(maxLookback.value, now);
-  const lookbackToTimestampMicrosMap = new Map<string, number>();
+  const minTimestamp = lookbackToTimestamp(maxLookback.value, now);
+  const lookbackToTimestampMap = new Map<string, number>();
   const options = lookbackOptions.filter(({ value }) => {
-    const lookbackTimestamp = lookbackToTimestampMicros(value, now);
-    lookbackToTimestampMicrosMap.set(value, lookbackTimestamp);
+    const lookbackTimestamp = lookbackToTimestamp(value, now);
+    lookbackToTimestampMap.set(value, lookbackTimestamp);
     return lookbackTimestamp >= minTimestamp;
   });
   const lastInRangeIndex = options.length - 1;
   const lastInRangeOption = options[lastInRangeIndex];
   if (lastInRangeOption.label !== maxLookback.label) {
-    if (lookbackToTimestampMicrosMap.get(lastInRangeOption.value) !== minTimestamp) {
+    if (lookbackToTimestampMap.get(lastInRangeOption.value) !== minTimestamp) {
       options.push(maxLookback);
     } else {
       options.splice(lastInRangeIndex, 1, maxLookback);
@@ -184,7 +184,7 @@ export function applyAdjustTime(endTimestamp: number, adjustTime: string | null 
   if (!adjustTime) {
     return endTimestamp;
   }
-  const adjustedEnd = lookbackToTimestampMicros(adjustTime, endTimestamp / 1000);
+  const adjustedEnd = lookbackToTimestamp(adjustTime, endTimestamp / 1000);
   return adjustedEnd;
 }
 
@@ -225,7 +225,7 @@ function buildSearchQuery(
   let end: number;
   if (lookback !== 'custom') {
     const now = new Date();
-    start = String(lookbackToTimestampMicros(lookback, now));
+    start = String(lookbackToTimestamp(lookback, now));
     end = now.valueOf() * 1000;
   } else {
     const times = getUnixTimeStampInMSFromForm({
