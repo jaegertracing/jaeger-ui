@@ -285,6 +285,25 @@ interface ISearchFormImplProps {
   ) => string;
 }
 
+function defaultFormData(
+  initialValues: Partial<ISearchFormFields> | undefined,
+  configLookback: string | undefined
+): Partial<ISearchFormFields> {
+  return {
+    service: initialValues?.service,
+    operation: initialValues?.operation ?? DEFAULT_OPERATION,
+    resultsLimit: initialValues?.resultsLimit ?? String(DEFAULT_LIMIT),
+    lookback: initialValues?.lookback ?? asValidConfigLookback(configLookback) ?? DEFAULT_LOOKBACK,
+    tags: initialValues?.tags,
+    startDate: initialValues?.startDate,
+    startDateTime: initialValues?.startDateTime,
+    endDate: initialValues?.endDate,
+    endDateTime: initialValues?.endDateTime,
+    minDuration: initialValues?.minDuration,
+    maxDuration: initialValues?.maxDuration,
+  };
+}
+
 export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   invalid = false,
   initialValues,
@@ -296,19 +315,9 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   const { useOpenTelemetryTerms: useOtelTerms, search: searchConfig } = useConfig();
   const searchMaxLookback: ILookbackOption | undefined = searchConfig?.maxLookback;
   const searchAdjustEndTime: string | undefined = searchConfig?.adjustEndTime;
-  const [formData, setFormData] = useState<Partial<ISearchFormFields>>(() => ({
-    service: initialValues?.service,
-    operation: initialValues?.operation,
-    tags: initialValues?.tags,
-    lookback: initialValues?.lookback,
-    startDate: initialValues?.startDate,
-    startDateTime: initialValues?.startDateTime,
-    endDate: initialValues?.endDate,
-    endDateTime: initialValues?.endDateTime,
-    minDuration: initialValues?.minDuration,
-    maxDuration: initialValues?.maxDuration,
-    resultsLimit: initialValues?.resultsLimit,
-  }));
+  const [formData, setFormData] = useState<Partial<ISearchFormFields>>(() =>
+    defaultFormData(initialValues, searchConfig?.defaultLookback)
+  );
 
   // Fetch services using React Query
   const { data: services = [], isLoading: isLoadingServices, error: servicesError } = useServices();
@@ -360,13 +369,8 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   );
 
   const handleReset = useCallback(() => {
-    setFormData(prev => ({
-      service: prev.service,
-      operation: DEFAULT_OPERATION,
-      lookback: DEFAULT_LOOKBACK,
-      resultsLimit: DEFAULT_LIMIT,
-    }));
-  }, []);
+    setFormData(prev => defaultFormData({ service: prev.service }, searchConfig?.defaultLookback));
+  }, [searchConfig?.defaultLookback]);
 
   const { service: selectedService, lookback: selectedLookback } = formData;
   const noSelectedService = selectedService === '-' || !selectedService;
