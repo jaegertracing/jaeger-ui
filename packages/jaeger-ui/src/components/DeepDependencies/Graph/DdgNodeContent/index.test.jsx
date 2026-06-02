@@ -9,18 +9,23 @@ vi.mock('./calc-positioning', async () =>
     svcMarginTop: 10,
   }))
 );
-vi.mock('antd', async () => {
-  const actual = await vi.importActual('antd');
-  return {
-    ...actual,
-    Popover: ({ children, content }) => (
-      <>
-        {children}
-        {content}
-      </>
-    ),
-  };
-});
+vi.mock('antd', () => ({
+  Checkbox: ({ checked, className, indeterminate }) => (
+    <input
+      checked={checked}
+      className={className}
+      data-indeterminate={indeterminate}
+      readOnly
+      type="checkbox"
+    />
+  ),
+  Popover: ({ children, content }) => (
+    <>
+      {children}
+      {content}
+    </>
+  ),
+}));
 
 // Mutable object so individual tests can control the location without re-creating the mock.
 const mockLocation = { search: '' };

@@ -351,14 +351,7 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
   ];
 
   return (
-    <div
-      ref={nodeRef}
-      className="DdgNodeContent"
-      role="button"
-      tabIndex={0}
-      onMouseOver={onMouseUx}
-      onMouseOut={onMouseUx}
-    >
+    <div ref={nodeRef} className="DdgNodeContent" onMouseOver={onMouseUx} onMouseOut={onMouseUx}>
       {decorationProgressbar}
       <div
         className={cx('DdgNodeContent--core', {
@@ -408,7 +401,7 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
   );
 });
 
-export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
+export function mapDispatchToProps(dispatch: Dispatch): TDispatchProps {
   const { getDecoration } = bindActionCreators(padActions, dispatch);
 
   return {
@@ -420,8 +413,8 @@ type DdgNodeContentProps = Omit<TProps, keyof TDispatchProps | keyof TDecoration
 
 function DdgNodeContent(props: DdgNodeContentProps) {
   const { search } = useLocation();
-  const dispatch = useDispatch();
-  const dispatchProps = React.useMemo(() => mapDispatchToProps(dispatch as Dispatch<ReduxState>), [dispatch]);
+  const dispatch = useDispatch<Dispatch>();
+  const dispatchProps = React.useMemo(() => mapDispatchToProps(dispatch), [dispatch]);
   const decorationProps = useSelector(
     (state: ReduxState) =>
       extractDecorationFromState(state, {
