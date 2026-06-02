@@ -360,7 +360,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   );
 
   const handleReset = useCallback(() => {
-    setFormData({});
+    setFormData(prev => ({ service: prev.service, lookback: DEFAULT_LOOKBACK }));
   }, []);
 
   const { service: selectedService, lookback: selectedLookback } = formData;
