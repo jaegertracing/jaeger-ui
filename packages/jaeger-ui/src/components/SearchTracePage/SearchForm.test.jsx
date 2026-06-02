@@ -773,12 +773,14 @@ describe('submitting state from useIsSearchFetching', () => {
     });
 
     it('preserves service selection after reset', () => {
-      renderForm(<SearchForm {...defaultProps} initialValues={{ service: 'svcA' }} />);
+      const { container } = renderForm(<SearchForm {...defaultProps} initialValues={{ service: 'svcA' }} />);
 
-      fireEvent.click(document.querySelector('.SearchForm--reset'));
+      fireEvent.click(container.querySelector('.SearchForm--reset'));
 
-      // service select retains its value — the mock captures the last onChange value
-      expect(SearchableSelect.onChangeFns.service).toBeDefined();
+      expect(container.querySelector('[data-testid="mock-select-service"]')).toHaveAttribute(
+        'data-value',
+        'svcA'
+      );
     });
   });
 });
