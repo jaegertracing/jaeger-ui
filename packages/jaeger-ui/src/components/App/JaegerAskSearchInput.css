@@ -3,46 +3,47 @@ Copyright (c) 2026 The Jaeger Authors.
 SPDX-License-Identifier: Apache-2.0
 */
 
-/* Trigger bar */
-.JaegerAskSearchInput--trigger {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0 0.75rem;
-  height: 32px;
-  width: 10.5rem;
-  max-width: 100%;
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
-  cursor: text;
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 14px;
-  transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease;
-  vertical-align: middle;
+/* Trace ID lookup */
+.TraceIDSearchInput--form {
+  line-height: inherit;
 }
 
-.JaegerAskSearchInput--trigger:hover,
-.JaegerAskSearchInput--trigger:focus,
-.JaegerAskSearchInput--trigger[aria-expanded='true'] {
+.TraceIDSearchInput--input.ant-input-affix-wrapper {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.TraceIDSearchInput--input.ant-input-affix-wrapper:hover,
+.TraceIDSearchInput--input.ant-input-affix-wrapper:focus,
+.TraceIDSearchInput--input.ant-input-affix-wrapper-focused {
   background-color: rgba(255, 255, 255, 0.15);
   border-color: rgba(255, 255, 255, 0.4);
-  outline: none;
 }
 
-.JaegerAskSearchInput--triggerIcon {
-  flex-shrink: 0;
-  font-size: 14px;
+.TraceIDSearchInput--input .ant-input {
+  background-color: transparent;
+  color: rgba(255, 255, 255, 0.85);
 }
 
-.JaegerAskSearchInput--triggerLabel {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+.TraceIDSearchInput--input .ant-input::placeholder {
   color: rgba(255, 255, 255, 0.5);
-  font-size: 14px;
+}
+
+.TraceIDSearchInput--input .ant-input-prefix {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.TraceIDSearchInput--input .ant-input-clear-icon {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.TraceIDSearchInput--input .ant-input-clear-icon:hover {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.TraceIDSearchInput--form .TraceIDSearchInput--input[readonly] .ant-input {
+  cursor: text;
 }
 
 /* Floating textarea panel */

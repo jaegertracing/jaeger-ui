@@ -46,6 +46,11 @@ vi.mock('../../hooks/useConfig', () => ({
   useConfig: (...args) => useConfigMock(...args),
 }));
 
+vi.mock('../../hooks/useJaegerAssistant', () => ({
+  useJaegerAssistantConfigured: () => false,
+  useJaegerAssistantEnabled: () => false,
+}));
+
 vi.mock('../../utils/config/get-config', async () => {
   return {
     default: jest.fn(() => ({
@@ -265,6 +270,6 @@ describe('<TopNav>', () => {
       </BrowserRouter>
     );
 
-    expect(screen.getByTestId('JaegerAskSearchInput--input')).toBeInTheDocument();
+    expect(screen.getByTestId('TraceIDSearchInput--form')).toBeInTheDocument();
   });
 });

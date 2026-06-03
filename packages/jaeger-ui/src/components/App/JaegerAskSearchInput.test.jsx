@@ -27,50 +27,40 @@ vi.mock('../../hooks/useJaegerAssistant', () => ({
   useJaegerAssistantEnabled: () => agUiMock.configured,
 }));
 
-function openTextarea() {
+function openAssistantTextarea() {
   fireEvent.click(screen.getByTestId('JaegerAskSearchInput--input'));
   return screen.getByTestId('JaegerAskSearchInput--textarea');
 }
 
-describe('<JaegerAskSearchInput />', () => {
+describe('<JaegerAskSearchInput /> trace lookup (assistant disabled)', () => {
   beforeEach(() => {
     mockNavigate.mockReset();
     agUiMock.configured = false;
   });
 
-  it('renders the trigger button', () => {
+  it('renders the main-style trace ID input', () => {
     render(
       <MemoryRouter>
         <JaegerAskSearchInput />
       </MemoryRouter>
     );
-    expect(screen.getByTestId('JaegerAskSearchInput--input')).toBeInTheDocument();
+    expect(screen.getByTestId('TraceIDSearchInput--form')).toBeInTheDocument();
+    expect(screen.getByTestId('idInput')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Lookup by Trace ID...')).toBeInTheDocument();
   });
 
-  it('opens the floating textarea when trigger is clicked', () => {
-    render(
-      <MemoryRouter>
-        <JaegerAskSearchInput />
-      </MemoryRouter>
-    );
-    expect(screen.queryByTestId('JaegerAskSearchInput--textarea')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByTestId('JaegerAskSearchInput--input'));
-    expect(screen.getByTestId('JaegerAskSearchInput--textarea')).toBeInTheDocument();
-  });
-
-  it('navigates to trace page when assistant is not configured', () => {
+  it('navigates to trace page on form submit', () => {
     render(
       <MemoryRouter>
         <JaegerAskSearchInput />
       </MemoryRouter>
     );
     const traceId = 'MOCK-TRACE-ID';
-    const textarea = openTextarea();
-    fireEvent.change(textarea, { target: { value: traceId } });
-    fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false });
+    fireEvent.change(screen.getByTestId('idInput'), { target: { value: traceId } });
+    fireEvent.submit(screen.getByTestId('TraceIDSearchInput--form'));
 
     expect(mockNavigate).toHaveBeenCalledTimes(1);
-    expect(mockNavigate).toHaveBeenCalledWith(`/trace/${traceId.toLowerCase()}`);
+    expect(mockNavigate).toHaveBeenCalledWith(`/trace/${traceId}`);
   });
 
   it('does not navigate when input is empty', () => {
@@ -79,24 +69,45 @@ describe('<JaegerAskSearchInput />', () => {
         <JaegerAskSearchInput />
       </MemoryRouter>
     );
-    const textarea = openTextarea();
-    fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false });
+    fireEvent.submit(screen.getByTestId('TraceIDSearchInput--form'));
     expect(mockNavigate).not.toHaveBeenCalled();
   });
+});
 
-  it('closes the textarea on Escape', () => {
-    render(
-      <MemoryRouter>
-        <JaegerAskSearchInput />
-      </MemoryRouter>
-    );
-    const textarea = openTextarea();
-    fireEvent.keyDown(textarea, { key: 'Escape' });
-    expect(screen.queryByTestId('JaegerAskSearchInput--textarea')).not.toBeInTheDocument();
+describe('<JaegerAskSearchInput /> assistant mode', () => {
+  beforeEach(() => {
+    mockNavigate.mockReset();
+    agUiMock.configured = true;
   });
 
-  it('opens assistant for natural language when configured instead of navigating', () => {
-    agUiMock.configured = true;
+  it('renders the same styled search input as trace lookup', () => {
+    render(
+      <MemoryRouter>
+        <JaegerAssistantProvider>
+          <JaegerAskSearchInput />
+        </JaegerAssistantProvider>
+      </MemoryRouter>
+    );
+    const input = screen.getByTestId('JaegerAskSearchInput--input');
+    expect(input).toBeInTheDocument();
+    expect(input.closest('.TraceIDSearchInput--input')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Ask Jaeger or lookup trace ID…')).toBeInTheDocument();
+  });
+
+  it('opens the floating textarea when search input is clicked', () => {
+    render(
+      <MemoryRouter>
+        <JaegerAssistantProvider>
+          <JaegerAskSearchInput />
+        </JaegerAssistantProvider>
+      </MemoryRouter>
+    );
+    expect(screen.queryByTestId('JaegerAskSearchInput--textarea')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('JaegerAskSearchInput--input'));
+    expect(screen.getByTestId('JaegerAskSearchInput--textarea')).toBeInTheDocument();
+  });
+
+  it('opens assistant for natural language instead of navigating', () => {
     render(
       <MemoryRouter>
         <JaegerAssistantProvider>
@@ -105,15 +116,14 @@ describe('<JaegerAskSearchInput />', () => {
       </MemoryRouter>
     );
 
-    const textarea = openTextarea();
+    const textarea = openAssistantTextarea();
     fireEvent.change(textarea, { target: { value: 'What is a trace?' } });
     fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false });
 
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it('still navigates for 16–32 hex trace ids when assistant is configured', () => {
-    agUiMock.configured = true;
+  it('still navigates for 16–32 hex trace ids', () => {
     render(
       <MemoryRouter>
         <JaegerAssistantProvider>
@@ -123,7 +133,7 @@ describe('<JaegerAskSearchInput />', () => {
     );
 
     const traceId = 'a1b2c3d4e5f67890';
-    const textarea = openTextarea();
+    const textarea = openAssistantTextarea();
     fireEvent.change(textarea, { target: { value: traceId } });
     fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false });
 
@@ -133,23 +143,40 @@ describe('<JaegerAskSearchInput />', () => {
   it('Shift+Enter does not submit', () => {
     render(
       <MemoryRouter>
-        <JaegerAskSearchInput />
+        <JaegerAssistantProvider>
+          <JaegerAskSearchInput />
+        </JaegerAssistantProvider>
       </MemoryRouter>
     );
-    const textarea = openTextarea();
+    const textarea = openAssistantTextarea();
     fireEvent.change(textarea, { target: { value: 'some query' } });
     fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: true });
     expect(mockNavigate).not.toHaveBeenCalled();
     expect(screen.getByTestId('JaegerAskSearchInput--textarea')).toBeInTheDocument();
   });
 
+  it('closes the textarea on Escape', () => {
+    render(
+      <MemoryRouter>
+        <JaegerAssistantProvider>
+          <JaegerAskSearchInput />
+        </JaegerAssistantProvider>
+      </MemoryRouter>
+    );
+    const textarea = openAssistantTextarea();
+    fireEvent.keyDown(textarea, { key: 'Escape' });
+    expect(screen.queryByTestId('JaegerAskSearchInput--textarea')).not.toBeInTheDocument();
+  });
+
   it('closes floating textarea on mousedown outside trigger and float', () => {
     render(
       <MemoryRouter>
-        <JaegerAskSearchInput />
+        <JaegerAssistantProvider>
+          <JaegerAskSearchInput />
+        </JaegerAssistantProvider>
       </MemoryRouter>
     );
-    openTextarea();
+    openAssistantTextarea();
     expect(screen.getByTestId('JaegerAskSearchInput--textarea')).toBeInTheDocument();
     const outside = document.createElement('div');
     document.body.appendChild(outside);
