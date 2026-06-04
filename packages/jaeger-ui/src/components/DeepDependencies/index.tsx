@@ -6,8 +6,6 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
 import _get from 'lodash/get';
-import { bindActionCreators, Dispatch } from 'redux';
-import { connect, useSelector } from 'react-redux';
 
 import { trackClearOperation, trackFocusPaths, trackHide, trackSetService, trackShow } from './index.track';
 import Graph from './Graph';
@@ -18,7 +16,6 @@ import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { parseUiFind, TExtractUiFindFromStateReturn } from '../common/UiFindInput';
 import { getUrl as getSearchUrl } from '../SearchTracePage/url';
-import * as jaegerApiActions from '../../actions/jaeger-api';
 import { fetchedState } from '../../constants';
 import getStateEntryKey from '../../model/ddg/getStateEntryKey';
 import GraphModel, { makeGraph } from '../../model/ddg/GraphModel';
@@ -34,8 +31,9 @@ import {
 } from '../../model/ddg/types';
 import { encode, encodeDistance } from '../../model/ddg/visibility-codec';
 import getConfig from '../../utils/config/get-config';
-import { ReduxState } from '../../types';
 import { TDdgStateEntry } from '../../types/TDdgState';
+import { graphStateFromDdgQuery } from '../../hooks/ddgGraphState';
+import { useDeepDependencyGraphQueryFromUrl } from '../../hooks/useDeepDependencyGraphQuery';
 
 import { localeStringComparator } from '../../utils/sort';
 
@@ -54,10 +52,6 @@ interface IErrorState {
   state: typeof fetchedState.ERROR;
   error: ApiError;
 }
-
-type TDispatchProps = {
-  fetchDeepDependencyGraph?: (query: TDdgModelParams) => void;
-};
 
 type TDdgViewModifierProps = {
   addViewModifier: (kwarg: TDdgModelParams & { viewModifier: number; visibilityIndices: number[] }) => void;
@@ -89,7 +83,7 @@ type TOwnProps = {
 
 type TExternalProps = Partial<Omit<TOwnProps, 'navigate' | 'location'>>;
 
-type TProps = TDispatchProps & TReduxProps & TOwnProps & THookProps & TDdgViewModifierProps;
+type TProps = TReduxProps & TOwnProps & THookProps & TDdgViewModifierProps;
 
 type TState = {
   selectedVertex?: TDdgVertex;
@@ -102,24 +96,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
     baseUrl: ROUTE_PATH,
   };
 
-  static fetchModelIfStale(props: TProps) {
-    const { fetchDeepDependencyGraph, graphState = null, urlState } = props;
-    const { service, operation } = urlState;
-    if (!graphState && service && fetchDeepDependencyGraph) {
-      fetchDeepDependencyGraph({ service, operation, start: 0, end: 0 });
-    }
-  }
-
   state: TState = {};
-
-  constructor(props: TProps) {
-    super(props);
-    DeepDependencyGraphPageImpl.fetchModelIfStale(props);
-  }
-
-  componentDidUpdate() {
-    DeepDependencyGraphPageImpl.fetchModelIfStale(this.props);
-  }
 
   clearOperation = () => {
     trackClearOperation();
@@ -390,54 +367,41 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
 }
 
 // export for tests
-export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
-  // Services and operations are now fetched using React Query hooks (useServices/useServerSpanNames)
-  // instead of Redux state. See the default export wrapper component below.
-  const urlState = getUrlState(ownProps.location.search);
+export function deriveDdgPageProps(
+  locationSearch: string,
+  graphState: TDdgStateEntry | undefined
+): TReduxProps {
+  const urlState = getUrlState(locationSearch);
   const { density, operation, service, showOp: urlStateShowOp } = urlState;
   const showOp = urlStateShowOp !== undefined ? urlStateShowOp : operation !== undefined;
-  let graphState: TDdgStateEntry | undefined;
-  if (service) {
-    graphState = _get(state.ddg, getStateEntryKey({ service, operation, start: 0, end: 0 }));
-  }
+  const effectiveGraphState = service ? graphState : undefined;
   let graph: GraphModel | undefined;
-  if (graphState && graphState.state === fetchedState.DONE) {
-    graph = makeGraph((graphState as IDoneState).model, showOp, density);
+  if (effectiveGraphState && effectiveGraphState.state === fetchedState.DONE) {
+    graph = makeGraph((effectiveGraphState as IDoneState).model, showOp, density);
   }
   return {
     graph,
-    graphState,
+    graphState: effectiveGraphState,
     showOp,
-    urlState: sanitizeUrlState(urlState, _get(graphState, 'model.hash')),
-    uiFind: parseUiFind(ownProps.location.search),
+    urlState: sanitizeUrlState(urlState, _get(effectiveGraphState, 'model.hash')),
+    uiFind: parseUiFind(locationSearch),
   };
 }
 
-// export for tests
-export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  const { fetchDeepDependencyGraph } = bindActionCreators(jaegerApiActions, dispatch);
-
-  return {
-    fetchDeepDependencyGraph,
-  };
-}
-
-const ConnectedDeepDependencyGraphPageImpl = withRouteProps(
-  connect(mapStateToProps, mapDispatchToProps)(DeepDependencyGraphPageImpl)
-) as React.ComponentType<Omit<TOwnProps, 'location' | 'navigate'> & THookProps & TDdgViewModifierProps>;
+export type TDdgViewModifierBridgeOptions = {
+  modelHash?: string;
+};
 
 // Bridges Zustand-based view modifier state into the TDdgViewModifierProps shape expected by the
-// Redux-connected DeepDependencyGraphPageImpl. Also clears stale view modifiers when the graph changes.
-export function useDdgViewModifierBridgeProps(): TDdgViewModifierProps {
+// page implementation. Also clears stale view modifiers when the graph changes.
+export function useDdgViewModifierBridgeProps(
+  options?: TDdgViewModifierBridgeOptions
+): TDdgViewModifierProps {
   const location = useLocation();
   const urlState = getUrlState(location.search);
   const { service, operation } = urlState;
   const graphKey = service ? getStateEntryKey({ service, operation, start: 0, end: 0 }) : null;
-  const graphState = useSelector((state: ReduxState) =>
-    graphKey ? (_get(state.ddg, graphKey) as TDdgStateEntry | undefined) : undefined
-  );
-  const hash =
-    graphState && graphState.state === fetchedState.DONE ? (graphState as IDoneState).model.hash : undefined;
+  const hash = options?.modelHash;
 
   const viewModifiers = useDdgViewModifiersStore(
     useCallback(
@@ -482,6 +446,45 @@ export function useDdgViewModifierBridgeProps(): TDdgViewModifierProps {
   return { addViewModifier, removeViewModifierFromIndices, viewModifiers };
 }
 
+type TConnectedPageProps = TOwnProps & THookProps & TExternalProps;
+type TConnectedPageExternalProps = THookProps & TExternalProps;
+
+const DeepDependencyGraphPageConnected = withRouteProps(function DeepDependencyGraphPageConnected(
+  props: TConnectedPageProps
+) {
+  const {
+    baseUrl = ROUTE_PATH,
+    showSvcOpsHeader = true,
+    location,
+    navigate,
+    services,
+    serverOps,
+    extraUrlArgs,
+  } = props;
+  const urlState = getUrlState(location.search);
+  const { service, operation } = urlState;
+  const ddgQuery = useDeepDependencyGraphQueryFromUrl(service, operation);
+  const graphState = graphStateFromDdgQuery(ddgQuery);
+  const modelHash =
+    graphState && graphState.state === fetchedState.DONE ? (graphState as IDoneState).model.hash : undefined;
+  const pageProps = deriveDdgPageProps(location.search, graphState);
+  const viewModifierProps = useDdgViewModifierBridgeProps({ modelHash });
+
+  return (
+    <DeepDependencyGraphPageImpl
+      baseUrl={baseUrl}
+      showSvcOpsHeader={showSvcOpsHeader}
+      location={location}
+      navigate={navigate}
+      extraUrlArgs={extraUrlArgs}
+      services={services}
+      serverOps={serverOps}
+      {...pageProps}
+      {...viewModifierProps}
+    />
+  );
+}) as React.ComponentType<TConnectedPageExternalProps>;
+
 export default function DeepDependencyGraphPage({
   baseUrl = ROUTE_PATH,
   showSvcOpsHeader = true,
@@ -497,13 +500,11 @@ export default function DeepDependencyGraphPage({
     [serverOpsData]
   );
 
-  const viewModifierProps = useDdgViewModifierBridgeProps();
-  const props = { baseUrl, showSvcOpsHeader, ...restProps };
-
   return (
-    <ConnectedDeepDependencyGraphPageImpl
-      {...props}
-      {...viewModifierProps}
+    <DeepDependencyGraphPageConnected
+      {...restProps}
+      baseUrl={baseUrl}
+      showSvcOpsHeader={showSvcOpsHeader}
       services={services}
       serverOps={serverOps}
     />
