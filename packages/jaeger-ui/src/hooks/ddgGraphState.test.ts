@@ -52,6 +52,19 @@ describe('graphStateFromDdgQuery', () => {
     ).toEqual({ state: fetchedState.ERROR, error });
   });
 
+  it('returns DONE when data is present even if a background refetch errored', () => {
+    const error = new Error('refetch failed') as ApiError;
+    expect(
+      graphStateFromDdgQuery({
+        data: mockModel,
+        error,
+        isPending: false,
+        isLoading: false,
+        isFetching: false,
+      })
+    ).toEqual({ state: fetchedState.DONE, model: mockModel });
+  });
+
   it('returns DONE with the model when data is present', () => {
     expect(
       graphStateFromDdgQuery({

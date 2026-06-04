@@ -18,11 +18,12 @@ export function graphStateFromDdgQuery(
   if (loading) {
     return { state: fetchedState.LOADING };
   }
-  if (query.error) {
-    return { state: fetchedState.ERROR, error: query.error };
-  }
+  // Prefer cached data over a stale error (e.g. background refetch failure).
   if (query.data) {
     return { state: fetchedState.DONE, model: query.data };
+  }
+  if (query.error) {
+    return { state: fetchedState.ERROR, error: query.error };
   }
   return undefined;
 }
