@@ -21,6 +21,7 @@ export default defineConfig({
       'docs/',
       'CHANGELOG.md',
       'RELEASE.md',
+      '.github/copilot-instructions.md',
     ],
   },
   lint: {
