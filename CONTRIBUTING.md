@@ -138,7 +138,7 @@ Finally, we generally adhere to the [Airbnb Style Guide](https://github.com/airb
 
 ### Toolchain configuration
 
-All formatter and linter configuration lives in `vite.config.ts` as a single source of truth — do not create separate config files such as `.prettierignore`, `.oxlintignore`, or `biome.json`. To exclude a file from formatting, add it to the `fmt.ignorePatterns` array in `vite.config.ts`.
+All formatter and linter configuration lives in `vite.config.ts` as a single source of truth. To exclude a file from formatting, add it to the `fmt.ignorePatterns` array in `vite.config.ts`.
 
 ## File Headers
 

@@ -96,7 +96,7 @@ Run from `packages/jaeger-ui/`:
 - Use single quotes for strings
 - Trailing commas in ES5 style
 - Print width: 110 characters
-- All formatter and linter configuration lives in `vite.config.ts` — do not create separate config files such as `.prettierignore`, `.oxlintignore`, or `biome.json`. To exclude a file from formatting, add it to `fmt.ignorePatterns` in `vite.config.ts`.
+- All formatter and linter configuration lives in `vite.config.ts` as a single source of truth. To exclude a file from formatting, add it to `fmt.ignorePatterns` in `vite.config.ts`.
 
 ### React Components
 
