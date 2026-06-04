@@ -136,6 +136,10 @@ Most issues will be caught by the linter, which can be applied via `npm run oxli
 
 Finally, we generally adhere to the [Airbnb Style Guide](https://github.com/airbnb/javascript), with exceptions as noted in our `.oxlintrc.json` (Oxlint configuration).
 
+### Toolchain configuration
+
+All formatter and linter configuration lives in `vite.config.ts` as a single source of truth — do not create separate config files such as `.prettierignore`, `.oxlintignore`, or `biome.json`. To exclude a file from formatting, add it to the `fmt.ignorePatterns` array in `vite.config.ts`.
+
 ## File Headers
 
 If you are adding a new file it should have a header like below.
