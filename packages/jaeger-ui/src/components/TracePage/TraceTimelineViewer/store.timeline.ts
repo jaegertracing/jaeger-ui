@@ -19,6 +19,7 @@ type TraceTimelineInteractionStore = {
   detailStates: Map<string, DetailState>;
   shouldScrollToFirstUiFindMatch: boolean;
   prunedServices: Set<string>;
+  tagHighlight: string | TNil;
   setPrunedServices: (pruned: Set<string>) => void;
   clearServiceFilter: () => void;
   // Resets ephemeral fields for a new trace and optionally pre-apply a uiFind filter
@@ -37,6 +38,7 @@ type TraceTimelineInteractionStore = {
   detailReferencesToggle: (spanID: string) => void;
   clearShouldScrollToFirstUiFindMatch: () => void;
   focusUiFindMatches: (trace: IOtelTrace, uiFind?: string | TNil, allowHide?: boolean) => void;
+  setTagHighlight: (query: string | TNil, spans?: ReadonlyArray<IOtelSpan>) => void;
 };
 
 export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((set, get) => ({
@@ -45,6 +47,7 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
   detailStates: new Map<string, DetailState>(),
   shouldScrollToFirstUiFindMatch: false,
   prunedServices: new Set<string>(),
+  tagHighlight: null,
 
   setPrunedServices: (pruned: Set<string>) => set({ prunedServices: new Set(pruned) }),
 
@@ -213,5 +216,9 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
     let focused = calculateFocusedFindRowStates(uiFind, trace.spans, allowHide);
     focused = trimFocusedDetailStatesForSidePanel(focused, detailPanelMode);
     set(focused);
+  },
+
+  setTagHighlight: (query: string | TNil) => {
+    set({ tagHighlight: query });
   },
 }));

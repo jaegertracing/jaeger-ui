@@ -8,6 +8,7 @@ import TimelineCollapser from './TimelineCollapser';
 import TimelineViewingLayer from './TimelineViewingLayer';
 import Ticks from '../Ticks';
 import TimelineRow from '../TimelineRow';
+import TagHighlightInput from '../TagHighlightInput';
 import { TUpdateViewRangeTimeFunction, IViewRangeTime, ViewRangeTimeUpdate } from '../../types';
 import { IOtelSpan } from '../../../../types/otel';
 
@@ -75,6 +76,7 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
           onCollapseOne={onCollapseOne}
           onExpandOne={onExpandOne}
         />
+        <TagHighlightInput />
       </TimelineRow.Cell>
       {timelineBarsVisible && (
         <>

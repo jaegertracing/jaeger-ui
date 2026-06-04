@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { Button, Input, InputRef, Tooltip } from 'antd';
+import { Button, InputRef, Space, Tooltip } from 'antd';
 import cx from 'classnames';
 import { IoLocate, IoHelp, IoChevronDown, IoChevronUp } from 'react-icons/io5';
 
@@ -75,13 +75,13 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
   return (
     <div className="TracePageSearchBar">
       {/* style inline because compact overwrites the display */}
-      <Input.Group className="ub-justify-end" compact style={{ display: 'flex' }}>
+      <Space.Compact className="ub-justify-end" style={{ display: 'flex' }}>
         <UiFindInput inputProps={uiFindInputInputProps} ref={forwardedRef} trackFindFunction={trackFilter} />
         <Tooltip
           arrow={{ pointAtCenter: true }}
           placement="bottomLeft"
           trigger="hover"
-          overlayStyle={{ maxWidth: '600px' }} // This is a large tooltip and the default is too narrow.
+          styles={{ root: { maxWidth: '600px' } }} // This is a large tooltip and the default is too narrow.
           title={renderTooltip()}
         >
           <div className="help-btn-container">
@@ -118,7 +118,7 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
             </Button>
           </>
         )}
-      </Input.Group>
+      </Space.Compact>
     </div>
   );
 }
