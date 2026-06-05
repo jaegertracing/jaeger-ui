@@ -75,3 +75,17 @@ When running the UI in development mode via `npm start`, you can provide custom 
 An example JSON config file is provided at [jaeger-ui.config.example.json](./jaeger-ui.config.example.json). You can copy it to `jaeger-ui.config.json` and modify it as needed.
 
 These local config files are ignored by git (see `.gitignore`).
+
+### Ask Jaeger assistant (`ai`)
+
+AI features are **off by default** (`ai.enabled: false`). Enable in UI config for local dev or production:
+
+```json
+{
+  "ai": {
+    "enabled": true
+  }
+}
+```
+
+When disabled, the header shows **Lookup by Trace ID…** only (no sparkles / Ask Jaeger panel). When enabled, the UI uses `/api/ai/chat` by default, or `VITE_JAEGER_AG_UI_URL` at build time.
