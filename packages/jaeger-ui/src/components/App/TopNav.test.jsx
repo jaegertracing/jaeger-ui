@@ -46,6 +46,11 @@ vi.mock('../../hooks/useConfig', () => ({
   useConfig: (...args) => useConfigMock(...args),
 }));
 
+vi.mock('../../hooks/useJaegerAssistant', () => ({
+  useJaegerAssistantConfigured: () => false,
+  useJaegerAssistantEnabled: () => false,
+}));
+
 vi.mock('../../utils/config/get-config', async () => {
   return {
     default: jest.fn(() => ({

@@ -34,23 +34,23 @@ type TOwnProps = {
 function syncStates(
   urlValues: TTraceDiffState,
   reduxValues: TTraceDiffState,
-  forceState: (newState: TTraceDiffState) => void
+  hydrateCohort: (newState: TTraceDiffState) => void
 ) {
   const { a: urlA, b: urlB } = urlValues;
   const { a: reduxA, b: reduxB } = reduxValues;
   if ((urlA ?? null) !== (reduxA ?? null) || (urlB ?? null) !== (reduxB ?? null)) {
-    forceState(urlValues);
+    hydrateCohort(urlValues);
     return;
   }
   const urlCohort = new Set(urlValues.cohort);
   const reduxCohort = new Set(reduxValues.cohort || []);
   if (urlCohort.size !== reduxCohort.size) {
-    forceState(urlValues);
+    hydrateCohort(urlValues);
     return;
   }
   const needSync = Array.from(urlCohort).some(id => !reduxCohort.has(id));
   if (needSync) {
-    forceState(urlValues);
+    hydrateCohort(urlValues);
   }
 }
 
@@ -82,7 +82,7 @@ export function TraceDiffImpl({ a, b, cohort }: TStateProps & TOwnProps) {
   }, []);
 
   const processProps = React.useCallback(() => {
-    syncStates({ a, b, cohort }, traceDiffState, useTraceDiffStore.getState().forceState);
+    syncStates({ a, b, cohort }, traceDiffState, useTraceDiffStore.getState().hydrateCohort);
   }, [a, b, cohort, traceDiffState]);
 
   const diffSetUrl = React.useCallback(
