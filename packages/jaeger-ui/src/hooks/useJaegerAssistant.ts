@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { getJaegerAgUiUrl } from '../components/App/jaegerAgUi';
+import { getJaegerAgUiUrl } from '../components/App/jaeger-AG-UI';
 import { useConfig } from './useConfig';
 
 // Whether the operator enabled AI features via UI config (`ai.enabled`).

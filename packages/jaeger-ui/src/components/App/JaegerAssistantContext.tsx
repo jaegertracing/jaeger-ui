@@ -6,7 +6,7 @@ import { HttpAgent } from '@ag-ui/client';
 import { useAgUiRuntime } from '@assistant-ui/react-ag-ui';
 import { AssistantRuntimeProvider } from '@assistant-ui/react';
 
-import { getJaegerAgUiUrl } from './jaegerAgUi';
+import { getJaegerAgUiUrl } from './jaeger-AG-UI';
 import { useJaegerAssistantConfigured } from '../../hooks/useJaegerAssistant';
 
 interface IJaegerAssistantContextValue {

@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 vi.mock('./useConfig');
-vi.mock('../components/App/jaegerAgUi', () => ({
+vi.mock('../components/App/jaeger-AG-UI', () => ({
   getJaegerAgUiUrl: vi.fn(() => '/api/ai/chat'),
 }));
 
 import { renderHook } from '@testing-library/react';
-import { getJaegerAgUiUrl } from '../components/App/jaegerAgUi';
+import { getJaegerAgUiUrl } from '../components/App/jaeger-AG-UI';
 import { useConfig } from './useConfig';
 import { useJaegerAssistantConfigured, useJaegerAssistantEnabled } from './useJaegerAssistant';
 
