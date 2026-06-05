@@ -70,8 +70,15 @@ const threadMessageComponents = {
 
 export { JaegerThreadMessageBody, threadMessageComponents };
 
-function JaegerAssistantThreadView() {
+function JaegerAssistantThreadView({ focusComposer }: { focusComposer: boolean }) {
   const viewportRef = useThreadViewportAutoScroll({});
+  const composerRef = React.useRef<HTMLTextAreaElement>(null);
+
+  React.useEffect(() => {
+    if (focusComposer) {
+      composerRef.current?.focus();
+    }
+  }, [focusComposer]);
 
   return (
     <ThreadPrimitive.Root className="JaegerAssistantPanel-thread">
@@ -85,7 +92,7 @@ function JaegerAssistantThreadView() {
         <ComposerPrimitive.Input
           placeholder="Message Jaeger…"
           submitMode="enter"
-          autoFocus
+          ref={composerRef}
           className="JaegerAssistantPanel-composerInput"
           rows={1}
         />
@@ -100,7 +107,8 @@ function JaegerAssistantThreadView() {
  *
  * The <aside> stays mounted whenever the feature is configured so that the
  * thread history (held by the runtime in JaegerAssistantContext) is preserved
- * across open/close cycles. Visibility is toggled with CSS only.
+ * across open/close cycles. Visibility is toggled via inline display:none so
+ * the thread state is not reset on close.
  */
 export function JaegerAssistantDock() {
   const assistant = useJaegerAssistantOptional();
@@ -131,7 +139,7 @@ export function JaegerAssistantDock() {
         </button>
       </header>
       <div className="JaegerAssistantPanel-body">
-        <JaegerAssistantThreadView />
+        <JaegerAssistantThreadView focusComposer={panelOpen} />
       </div>
     </aside>
   );

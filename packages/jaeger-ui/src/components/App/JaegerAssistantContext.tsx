@@ -20,7 +20,7 @@ interface IJaegerAssistantContextValue {
 
 const JaegerAssistantContext = React.createContext<IJaegerAssistantContextValue | null>(null);
 
-/** Inner provider that creates the long-lived AG-UI runtime (only mounted when env URL is set). */
+/** Inner provider that creates the long-lived AG-UI runtime (only mounted when ai.enabled is true). */
 function JaegerAssistantRuntimeProvider({ children }: { children: React.ReactNode }) {
   const url = getJaegerAgUiUrl();
   const agent = React.useMemo(() => new HttpAgent({ url }), [url]);
@@ -63,7 +63,7 @@ export function JaegerAssistantProvider({ children }: { children: React.ReactNod
   const inner = <JaegerAssistantContext.Provider value={value}>{children}</JaegerAssistantContext.Provider>;
 
   // Only wrap with the runtime provider when the feature is configured so the
-  // HttpAgent is never instantiated in deployments that don't use the assistant.
+  // HttpAgent is never instantiated when ai.enabled is false.
   if (assistantConfigured) {
     return <JaegerAssistantRuntimeProvider>{inner}</JaegerAssistantRuntimeProvider>;
   }

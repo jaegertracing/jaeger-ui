@@ -9,7 +9,7 @@ import { MemoryRouter } from 'react-router-dom';
 import JaegerAskSearchInput, { JaegerAssistantToggle } from './JaegerAskSearchInput';
 import { JaegerAssistantProvider } from './JaegerAssistantContext';
 
-const mockNavigate = jest.fn();
+const mockNavigate = vi.fn();
 
 const agUiMock = vi.hoisted(() => ({
   configured: false,
