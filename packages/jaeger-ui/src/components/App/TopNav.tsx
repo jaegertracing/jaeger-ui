@@ -7,7 +7,8 @@ import { IoChevronDown } from 'react-icons/io5';
 import _has from 'lodash/has';
 import { Link } from 'react-router-dom';
 
-import TraceIDSearchInput from './TraceIDSearchInput';
+import JaegerAskSearchInput, { JaegerAssistantToggle } from './JaegerAskSearchInput';
+import { useJaegerAssistantConfigured } from '../../hooks/useJaegerAssistant';
 import ThemeToggleButton from './ThemeToggleButton';
 import Branding from './Branding';
 import * as dependencyGraph from '../DependencyGraph/url';
@@ -119,11 +120,19 @@ export function TopNavImpl(props: Props) {
   );
   const propsWithDiff: PropsWithTraceDiff = { ...props, traceDiff };
   const menuItems = Array.isArray(config.menu) ? config.menu : [];
+  const assistantConfigured = useJaegerAssistantConfigured();
 
   const itemsGlobalRight: MenuProps['items'] = [
     {
-      label: <TraceIDSearchInput />,
-      key: 'TraceIDSearchInput',
+      label: assistantConfigured ? (
+        <span className="TopNav--askArea">
+          <JaegerAskSearchInput />
+          <JaegerAssistantToggle />
+        </span>
+      ) : (
+        <JaegerAskSearchInput />
+      ),
+      key: assistantConfigured ? 'JaegerAskArea' : 'TraceIDSearchInput',
     },
     ...menuItems.map((m: ConfigMenuItem | ConfigMenuGroup) => {
       if (isItem(m)) {
