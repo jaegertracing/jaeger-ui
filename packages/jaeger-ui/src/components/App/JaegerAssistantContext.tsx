@@ -6,7 +6,7 @@ import { HttpAgent } from '@ag-ui/client';
 import { useAgUiRuntime } from '@assistant-ui/react-ag-ui';
 import { AssistantRuntimeProvider } from '@assistant-ui/react';
 
-import { getJaegerAgUiUrl } from './jaeger-AG-UI';
+import { getJaegerAGUIUrl } from './jaeger-AG-UI';
 import { useJaegerAssistantConfigured } from '../../hooks/useJaegerAssistant';
 
 interface IJaegerAssistantContextValue {
@@ -22,7 +22,7 @@ const JaegerAssistantContext = React.createContext<IJaegerAssistantContextValue 
 
 /** Inner provider that creates the long-lived AG-UI runtime (only mounted when ai.enabled is true). */
 function JaegerAssistantRuntimeProvider({ children }: { children: React.ReactNode }) {
-  const url = getJaegerAgUiUrl();
+  const url = getJaegerAGUIUrl();
   const agent = React.useMemo(() => new HttpAgent({ url }), [url]);
   const runtime = useAgUiRuntime({
     agent,

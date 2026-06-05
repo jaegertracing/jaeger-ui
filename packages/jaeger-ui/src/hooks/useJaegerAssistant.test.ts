@@ -3,16 +3,16 @@
 
 vi.mock('./useConfig');
 vi.mock('../components/App/jaeger-AG-UI', () => ({
-  getJaegerAgUiUrl: vi.fn(() => '/api/ai/chat'),
+  getJaegerAGUIUrl: vi.fn(() => '/api/ai/chat'),
 }));
 
 import { renderHook } from '@testing-library/react';
-import { getJaegerAgUiUrl } from '../components/App/jaeger-AG-UI';
+import { getJaegerAGUIUrl } from '../components/App/jaeger-AG-UI';
 import { useConfig } from './useConfig';
 import { useJaegerAssistantConfigured, useJaegerAssistantEnabled } from './useJaegerAssistant';
 
 const mockUseConfig = vi.mocked(useConfig);
-const mockGetJaegerAgUiUrl = vi.mocked(getJaegerAgUiUrl);
+const mockGetJaegerAgUiUrl = vi.mocked(getJaegerAGUIUrl);
 
 const baseConfig = {
   criticalPathEnabled: false,
