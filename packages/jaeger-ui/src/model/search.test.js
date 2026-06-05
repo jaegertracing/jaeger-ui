@@ -127,6 +127,18 @@ describe('sortTraceSummaries()', () => {
     expect(result[0].traceID).toBe('d'); // traceName 'gamma'
   });
 
+  it('sorts trace names using the same traceID fallback shown in the table', () => {
+    const result = sortTraceSummaries(
+      [
+        makeSummary('z-trace', 100, 300, 10, ''),
+        makeSummary('alpha-trace', 400, 100, 50, ''),
+        makeSummary('named-trace', 200, 500, 5, 'beta'),
+      ],
+      TRACE_NAME_ASC
+    );
+    expect(result.map(summary => summary.traceID)).toEqual(['alpha-trace', 'named-trace', 'z-trace']);
+  });
+
   it(`sorts by ${MOST_ERRORS}`, () => {
     const result = sortTraceSummaries(summaries, MOST_ERRORS);
     expect(result[0].traceID).toBe('c'); // errorSpanCount 7
@@ -139,6 +151,11 @@ describe('sortTraceSummaries()', () => {
 
   it('falls back to LONGEST_FIRST for unknown sort key', () => {
     const result = sortTraceSummaries(summaries, 'unknown');
+    expect(result[0].traceID).toBe('c'); // duration 500
+  });
+
+  it('falls back to LONGEST_FIRST for inherited property names', () => {
+    const result = sortTraceSummaries(summaries, 'toString');
     expect(result[0].traceID).toBe('c'); // duration 500
   });
 });
