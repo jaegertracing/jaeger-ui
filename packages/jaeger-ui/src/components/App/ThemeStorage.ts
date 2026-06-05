@@ -49,7 +49,11 @@ export function writeStoredTheme(mode: ThemeMode, targetWindow?: Window | null) 
   }
 }
 
-export function getInitialTheme(): ThemeMode {
+export function getInitialTheme(embeddedTheme?: ThemeMode | null): ThemeMode {
+  // Host-injected theme takes unconditional precedence (uiEmbed=v0&uiTheme=dark).
+  if (embeddedTheme) {
+    return embeddedTheme;
+  }
   if (!getConfig().themes?.enabled) {
     return DEFAULT_MODE;
   }

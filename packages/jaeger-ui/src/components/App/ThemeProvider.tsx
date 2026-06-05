@@ -7,6 +7,7 @@ import { ConfigProvider, theme } from 'antd';
 
 import { DEFAULT_MODE, ThemeMode, getInitialTheme, writeStoredTheme } from './ThemeStorage';
 import { ThemeTokenSync } from './ThemeTokenSync';
+import { useEmbeddedState } from '../../stores/embedded-store';
 
 type ThemeContextValue = {
   mode: ThemeMode;
@@ -107,7 +108,8 @@ const darkTheme: ThemeConfig = {
 };
 
 export default function AppThemeProvider({ children }: ThemeProviderProps) {
-  const [mode, setModeState] = useState<ThemeMode>(() => getInitialTheme());
+  const embedded = useEmbeddedState();
+  const [mode, setModeState] = useState<ThemeMode>(() => getInitialTheme(embedded?.theme));
 
   const setMode = useCallback((value: ThemeMode) => {
     setModeState(value);
