@@ -12,10 +12,12 @@ vi.mock('./calc-positioning', async () =>
 
 // Mutable object so individual tests can control the location without re-creating the mock.
 const mockLocation = { search: '' };
+const mockNavigate = jest.fn();
 
 vi.mock('../../../../model/path-agnostic-decorations', () => mockDefault(jest.fn(() => ({}))));
 vi.mock('react-router-dom', () => ({
   useLocation: () => mockLocation,
+  useNavigate: () => mockNavigate,
 }));
 
 import React from 'react';
@@ -29,7 +31,7 @@ import DdgNodeContentWrapper, {
   mapDispatchToProps,
   UnconnectedDdgNodeContent as DdgNodeContent,
 } from '.';
-import { MAX_LENGTH, MAX_LINKED_TRACES, MIN_LENGTH, PARAM_NAME_LENGTH, RADIUS } from './constants';
+import { RADIUS } from './constants';
 import * as track from '../../index.track';
 import * as getSearchUrl from '../../../SearchTracePage/url';
 
@@ -497,7 +499,6 @@ describe('<DdgNodeContent>', () => {
       jest.spyOn(track, 'trackViewTraces');
       jest.spyOn(track, 'trackVertexSetOperation');
       jest.spyOn(getSearchUrl, 'getUrl');
-      jest.spyOn(window, 'open').mockImplementation();
     });
 
     afterEach(() => {
@@ -562,19 +563,18 @@ describe('<DdgNodeContent>', () => {
     });
 
     describe('viewTraces', () => {
-      const mockTraceIds = ['trace1', 'trace2', 'trace3'];
-      const mockPathElems = [
-        { memberOf: { traceIDs: ['trace1'] } },
-        { memberOf: { traceIDs: ['trace2'] } },
-        { memberOf: { traceIDs: ['trace3'] } },
-      ];
-
       beforeEach(() => {
-        props.getVisiblePathElems.mockReturnValue(mockPathElems);
-        getSearchUrl.getUrl.mockImplementation(params => `mock-search-url-${params.traceID.join('-')}`);
+        mockNavigate.mockClear();
+        jest.spyOn(getSearchUrl, 'getUrlState').mockReturnValue({
+          start: '123',
+          end: '456',
+          traceID: ['t1'],
+          spanLinks: { t1: 's1' },
+        });
+        getSearchUrl.getUrl.mockImplementation(params => `mock-search-url-for-${params.service}`);
       });
 
-      it('opens search URL with trace IDs and tracks the event', () => {
+      it('navigates to search URL with the node service and operation, preserving original time/filters but without trace IDs', () => {
         const { container } = render(<DdgNodeContent {...props} />);
 
         const actionItems = container.querySelectorAll('.NodeContent--actionsItem');
@@ -585,69 +585,19 @@ describe('<DdgNodeContent>', () => {
         fireEvent.click(viewTracesAction);
 
         expect(track.trackViewTraces).toHaveBeenCalled();
-        expect(getSearchUrl.getUrl).toHaveBeenCalledWith({ traceID: mockTraceIds });
-        expect(window.open).toHaveBeenCalledWith('mock-search-url-trace1-trace2-trace3', '_blank');
-      });
-
-      it('handles case when getVisiblePathElems returns undefined', () => {
-        props.getVisiblePathElems.mockReturnValue(undefined);
-
-        const { container } = render(<DdgNodeContent {...props} />);
-
-        const actionItems = container.querySelectorAll('.NodeContent--actionsItem');
-        const viewTracesAction = Array.from(actionItems).find(item =>
-          item.textContent.includes('View traces')
-        );
-
-        fireEvent.click(viewTracesAction);
-
-        expect(track.trackViewTraces).toHaveBeenCalled();
-        expect(getSearchUrl.getUrl).not.toHaveBeenCalled();
-        expect(window.open).not.toHaveBeenCalled();
-      });
-
-      it('respects MAX_LINKED_TRACES limit', () => {
-        const mockElems = [];
-        for (let i = 0; i < MAX_LINKED_TRACES + 5; i++) {
-          mockElems.push({
-            memberOf: {
-              traceIDs: [`trace-${i}`],
-            },
-          });
-        }
-        props.getVisiblePathElems.mockReturnValue(mockElems);
-
-        const { container } = render(<DdgNodeContent {...props} />);
-
-        const actionItems = container.querySelectorAll('.NodeContent--actionsItem');
-        const viewTracesAction = Array.from(actionItems).find(item =>
-          item.textContent.includes('View traces')
-        );
-
-        fireEvent.click(viewTracesAction);
-
-        const expectedTraceIds = [];
-        for (let i = 0; i < MAX_LINKED_TRACES; i++) {
-          expectedTraceIds.push(`trace-${i}`);
-        }
+        expect(getSearchUrl.getUrlState).toHaveBeenCalledWith(mockLocation.search);
 
         expect(getSearchUrl.getUrl).toHaveBeenCalledWith({
-          traceID: expectedTraceIds,
+          start: '123',
+          end: '456',
+          service: props.service,
+          operation: props.operation,
         });
-        expect(window.open).toHaveBeenCalledWith(`mock-search-url-${expectedTraceIds.join('-')}`, '_blank');
+        expect(mockNavigate).toHaveBeenCalledWith(`mock-search-url-for-${props.service}`);
       });
 
-      it('respects MAX_LENGTH limit', () => {
-        const longTraceId = 'a'.repeat(MAX_LENGTH - MIN_LENGTH - PARAM_NAME_LENGTH);
-        const shortTraceId = 'b'.repeat(10);
-
-        const mockElems = [
-          { memberOf: { traceIDs: [longTraceId] } },
-          { memberOf: { traceIDs: [shortTraceId] } },
-        ];
-        props.getVisiblePathElems.mockReturnValue(mockElems);
-
-        const { container } = render(<DdgNodeContent {...props} />);
+      it('navigates to search URL omitting operation when operation is an array', () => {
+        const { container } = render(<DdgNodeContent {...props} operation={['op1', 'op2']} />);
 
         const actionItems = container.querySelectorAll('.NodeContent--actionsItem');
         const viewTracesAction = Array.from(actionItems).find(item =>
@@ -657,33 +607,11 @@ describe('<DdgNodeContent>', () => {
         fireEvent.click(viewTracesAction);
 
         expect(getSearchUrl.getUrl).toHaveBeenCalledWith({
-          traceID: [longTraceId],
+          start: '123',
+          end: '456',
+          service: props.service,
+          operation: undefined,
         });
-        expect(window.open).toHaveBeenCalledWith(`mock-search-url-${longTraceId}`, '_blank');
-      });
-
-      it('handles duplicate trace IDs', () => {
-        const traceId = 'duplicate-trace';
-        const mockElems = [
-          { memberOf: { traceIDs: [traceId] } },
-          { memberOf: { traceIDs: [traceId] } },
-          { memberOf: { traceIDs: [null, traceId] } },
-        ];
-        props.getVisiblePathElems.mockReturnValue(mockElems);
-
-        const { container } = render(<DdgNodeContent {...props} />);
-
-        const actionItems = container.querySelectorAll('.NodeContent--actionsItem');
-        const viewTracesAction = Array.from(actionItems).find(item =>
-          item.textContent.includes('View traces')
-        );
-
-        fireEvent.click(viewTracesAction);
-
-        expect(getSearchUrl.getUrl).toHaveBeenCalledWith({
-          traceID: [traceId],
-        });
-        expect(window.open).toHaveBeenCalledWith(`mock-search-url-${traceId}`, '_blank');
       });
     });
   });
