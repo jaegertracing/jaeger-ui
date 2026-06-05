@@ -23,6 +23,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { ConfigMenuItem, ConfigMenuGroup } from '../../types/config';
 import getConfig from '../../utils/config/get-config';
 import { useConfig } from '../../hooks/useConfig';
+import { useEmbeddedState } from '../../stores/embedded-store';
 
 import './TopNav.css';
 import withRouteProps, { IWithRouteProps } from '../../utils/withRouteProps';
@@ -121,6 +122,7 @@ export function TopNavImpl(props: Props) {
   const propsWithDiff: PropsWithTraceDiff = { ...props, traceDiff };
   const menuItems = Array.isArray(config.menu) ? config.menu : [];
   const assistantConfigured = useJaegerAssistantConfigured();
+  const embedded = useEmbeddedState();
 
   const itemsGlobalRight: MenuProps['items'] = [
     {
@@ -140,7 +142,7 @@ export function TopNavImpl(props: Props) {
       }
       return { label: <CustomNavDropdown key={m.label} {...m} />, key: m.label };
     }),
-    ...(config.themes?.enabled
+    ...(config.themes?.enabled && !embedded?.theme
       ? [
           {
             label: <ThemeToggleButton />,
