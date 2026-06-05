@@ -90,7 +90,7 @@ describe('<JaegerAskSearchInput /> assistant mode', () => {
       </MemoryRouter>
     );
     expect(screen.getByTestId('JaegerAskSearchInput--textarea')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Ask Jaeger or lookup trace ID…')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Ask Jaeger or lookup trace')).toBeInTheDocument();
   });
 
   it('expands when focused and collapses when blurred with no text', () => {
