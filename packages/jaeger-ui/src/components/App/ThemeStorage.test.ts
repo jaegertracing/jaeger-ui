@@ -37,7 +37,7 @@ describe('ThemeStorage', () => {
     vi.clearAllMocks();
     setupMatchMedia(false);
     mockGetConfig.mockReturnValue({ themes: { enabled: true } });
-    mockStorage.getString.mockReturnValue(undefined);
+    mockStorage.getString.mockReturnValue(undefined as unknown as string);
   });
 
   describe('readStoredTheme', () => {
