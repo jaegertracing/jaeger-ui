@@ -65,7 +65,6 @@ import {
   convertQueryParamsToFormDates,
   convTagsLogfmt,
   getUnixTimeStampInMSFromForm,
-  lookbackToTimestamp,
   mapDispatchToProps,
   mapStateToProps,
   optionsWithinMaxLookback,
@@ -172,51 +171,6 @@ describe('conversion utils', () => {
 });
 
 describe('lookback utils', () => {
-  describe('lookbackToTimestamp', () => {
-    const hourInMicroseconds = 60 * 60 * 1000 * 1000;
-    const now = new Date();
-    const nowInMicroseconds = now * 1000;
-
-    it('creates timestamp for hours ago', () => {
-      [1, 2, 4, 7].forEach(lookbackNum => {
-        expect(nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}h`, now)).toBe(
-          lookbackNum * hourInMicroseconds
-        );
-      });
-    });
-
-    it('creates timestamp for days ago', () => {
-      [1, 2, 4, 7].forEach(lookbackNum => {
-        const actual = nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}d`, now);
-        const expected = lookbackNum * 24 * hourInMicroseconds;
-        try {
-          expect(actual).toBe(expected);
-        } catch (_e) {
-          expect(Math.abs(actual - expected)).toBe(hourInMicroseconds);
-        }
-      });
-    });
-
-    it('creates timestamp for weeks ago', () => {
-      [1, 2, 4, 7].forEach(lookbackNum => {
-        const actual = nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}w`, now);
-        try {
-          expect(actual).toBe(lookbackNum * 7 * 24 * hourInMicroseconds);
-        } catch (_e) {
-          expect(Math.abs(actual - lookbackNum * 7 * 24 * hourInMicroseconds)).toBe(hourInMicroseconds);
-        }
-      });
-    });
-
-    it('falls back to default lookback for unsupported units', () => {
-      expect(nowInMicroseconds - lookbackToTimestamp('99x', now)).toBe(hourInMicroseconds);
-    });
-
-    it('falls back to default lookback for invalid amounts', () => {
-      expect(nowInMicroseconds - lookbackToTimestamp('xh', now)).toBe(hourInMicroseconds);
-    });
-  });
-
   describe('applyAdjustTime', () => {
     const minuteInMicroseconds = 60 * 1000 * 1000;
     const now = new Date();
@@ -782,6 +736,62 @@ describe('submitting state from useIsSearchFetching', () => {
 
     const submitBtn = container.querySelector(`[data-test="${markers.SUBMIT_BTN}"]`);
     expect(submitBtn).toBeDisabled();
+  });
+
+  describe('Reset button', () => {
+    it('clears tags and duration fields', () => {
+      const { container } = renderForm(
+        <SearchForm
+          {...defaultProps}
+          initialValues={{ service: 'svcA', tags: 'http.status=200', minDuration: '1ms', maxDuration: '1s' }}
+        />
+      );
+
+      const tagsInput = container.querySelector('input[name="tags"]');
+      const minInput = container.querySelector('input[name="minDuration"]');
+      const maxInput = container.querySelector('input[name="maxDuration"]');
+      expect(tagsInput.value).toBe('http.status=200');
+
+      fireEvent.click(container.querySelector('.SearchForm--reset'));
+
+      expect(tagsInput.value).toBe('');
+      expect(minInput.value).toBe('');
+      expect(maxInput.value).toBe('');
+    });
+
+    it('restores default limit after reset', () => {
+      const { container } = renderForm(
+        <SearchForm {...defaultProps} initialValues={{ service: 'svcA', resultsLimit: '500' }} />
+      );
+
+      const limitInput = container.querySelector('input[name="resultsLimit"]');
+      expect(limitInput.value).toBe('500');
+
+      fireEvent.click(container.querySelector('.SearchForm--reset'));
+
+      expect(limitInput.value).toBe(String(20)); // DEFAULT_LIMIT
+    });
+
+    it('preserves service and restores operation and lookback to defaults', () => {
+      const { container } = renderForm(
+        <SearchForm {...defaultProps} initialValues={{ service: 'svcA', operation: 'op1', lookback: '2d' }} />
+      );
+
+      fireEvent.click(container.querySelector('.SearchForm--reset'));
+
+      expect(container.querySelector('[data-testid="mock-select-service"]')).toHaveAttribute(
+        'data-value',
+        'svcA'
+      );
+      expect(container.querySelector('[data-testid="mock-select-operation"]')).toHaveAttribute(
+        'data-value',
+        'all'
+      );
+      expect(container.querySelector('[data-testid="mock-select-lookback"]')).toHaveAttribute(
+        'data-value',
+        '1h'
+      );
+    });
   });
 });
 

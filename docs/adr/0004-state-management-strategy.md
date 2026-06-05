@@ -40,7 +40,7 @@ These should be migrated to **React Query**:
 | ~~`services`~~ (removed) | ~~Lists of services and operations~~ → React Query (`useServices` / `useSpanNames`, Phase 2c) | `SearchPage`, `MonitorPage`, `DeepDependencies` |
 | ~~`dependencies`~~ (removed) | ~~Service dependency graph data~~ → React Query (`useDependenciesQuery`, Phase 2d) | `DependencyGraph` |
 | `metrics` | Sytem performance metrics (latencies, errors) | `MonitorPage` |
-| `ddg` | Deep Dependency Graph data | `DeepDependenciesPage` |
+| ~~`ddg`~~ (removed) | ~~Deep Dependency Graph data~~ → React Query (`useDeepDependencyGraphQuery`, Phase 2e) | `DeepDependencies` |
 | `archive` | Status of archived traces | `TracePage` |
 
 #### 2. Client UI State (View)
@@ -1141,11 +1141,18 @@ queryKey: ['dependencies', source, keyEndTs, lookback]
 
 **Components using hook**: `DependencyGraph` (default export, which is also the single page component after the Redux-era `DependencyGraphPageImpl` / wrapper split was collapsed).
 
-#### ⬜ 2e. Deep Dependencies graph fetch
+#### ✅ 2e. Deep Dependencies graph fetch
 
-**Redux removed**: graph-payload fields in `src/reducers/ddg.ts` (view modifiers already moved in Phase 1d).
+**Redux removed**: `src/reducers/ddg.ts` (graph payload only; view modifiers moved in Phase 1d).
 
-**New hook**: `queryKey: ['ddg', service, operation, start, end]`; Zustand store (Phase 1d) holds the modifier flags.
+**New hook** (`src/hooks/useDeepDependencyGraphQuery.ts`):
+```typescript
+queryKey: ['ddg', service, operation, start, end]
+```
+
+**Callers** use `useDeepDependencyGraphQuery` / `useDeepDependencyGraphQueryFromUrl` and `deriveDdgPageProps` — not cache key literals. Zustand (`store.view-modifiers.ts`) holds modifier flags; `useDdgViewModifierBridgeProps({ modelHash })` receives hash from the page or traces embed.
+
+**Components using hook**: `DeepDependencies` (default export); traces embed passes `modelHash` to the bridge only.
 
 #### ⬜ 2f. Monitor metrics
 

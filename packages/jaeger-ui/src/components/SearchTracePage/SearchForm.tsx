@@ -5,7 +5,7 @@ import React, { useState, useCallback, useMemo, ComponentProps } from 'react';
 import { Input, Button, Tooltip, Select, Row, Col, Form, Switch } from 'antd';
 import logfmtParser from 'logfmt/lib/logfmt_parser';
 import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
-import dayjs, { ManipulateType } from 'dayjs';
+import dayjs from 'dayjs';
 import memoizeOne from 'memoize-one';
 import queryString from 'query-string';
 import { IoHelp } from 'react-icons/io5';
@@ -30,21 +30,16 @@ import { useConfig } from '../../hooks/useConfig';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 import { ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
-import { TIME_RANGE_OPTIONS, asValidConfigLookback } from '../../utils/time-range-options';
+import {
+  TIME_RANGE_OPTIONS,
+  asValidConfigLookback,
+  lookbackToTimestamp,
+} from '../../utils/time-range-options';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
 
 const ADJUST_TIME_ENABLED_KEY = 'jaeger-ui/search-adjust-time-enabled';
-const LOOKBACK_UNIT_BY_SUFFIX: Partial<Record<string, ManipulateType>> = {
-  s: 'second',
-  m: 'minute',
-  h: 'hour',
-  d: 'day',
-  w: 'week',
-};
-const DEFAULT_LOOKBACK_VALUE = parseInt(DEFAULT_LOOKBACK, 10);
-const DEFAULT_LOOKBACK_UNIT = LOOKBACK_UNIT_BY_SUFFIX[DEFAULT_LOOKBACK.slice(-1)] ?? 'hour';
 
 interface TimeStampParams {
   startDate: string;
@@ -86,21 +81,6 @@ export function convTagsLogfmt(tags: string | null | undefined): string | null {
     }
   });
   return JSON.stringify(data);
-}
-
-function parseLookback(s: string): { value: number; unit: ManipulateType } | null {
-  const match = s.match(/^(\d+)([smhdw])$/);
-  if (!match) return null;
-  const unit = LOOKBACK_UNIT_BY_SUFFIX[match[2]];
-  return unit !== undefined ? { value: Number(match[1]), unit } : null;
-}
-
-export function lookbackToTimestamp(lookback: string, from: Date | number): number {
-  const { value, unit } = parseLookback(lookback) ?? {
-    value: DEFAULT_LOOKBACK_VALUE,
-    unit: DEFAULT_LOOKBACK_UNIT,
-  };
-  return dayjs(from).subtract(value, unit).valueOf() * 1000;
 }
 
 interface ILookbackOption {
@@ -216,9 +196,9 @@ interface ISearchFormFields {
   endDate: string;
   endDateTime: string;
   operation: string;
-  tags?: string;
-  minDuration?: string;
-  maxDuration?: string;
+  tags: string;
+  minDuration: string;
+  maxDuration: string;
   lookback: string;
 }
 
@@ -305,6 +285,28 @@ interface ISearchFormImplProps {
   ) => string;
 }
 
+function defaultFormData(
+  initialValues: Partial<ISearchFormFields> | undefined,
+  configLookback: string | undefined
+): Partial<ISearchFormFields> {
+  const nowInMicroseconds = dayjs().valueOf() * 1000;
+  const today = formatDate(nowInMicroseconds);
+  const currentTime = formatTime(nowInMicroseconds);
+  return {
+    service: initialValues?.service,
+    operation: initialValues?.operation ?? DEFAULT_OPERATION,
+    resultsLimit: initialValues?.resultsLimit ?? String(DEFAULT_LIMIT),
+    lookback: initialValues?.lookback ?? asValidConfigLookback(configLookback) ?? DEFAULT_LOOKBACK,
+    tags: initialValues?.tags ?? '',
+    startDate: initialValues?.startDate ?? today,
+    startDateTime: initialValues?.startDateTime ?? '00:00',
+    endDate: initialValues?.endDate ?? today,
+    endDateTime: initialValues?.endDateTime ?? currentTime,
+    minDuration: initialValues?.minDuration ?? '',
+    maxDuration: initialValues?.maxDuration ?? '',
+  };
+}
+
 export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   invalid = false,
   initialValues,
@@ -316,19 +318,9 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   const { useOpenTelemetryTerms: useOtelTerms, search: searchConfig } = useConfig();
   const searchMaxLookback: ILookbackOption | undefined = searchConfig?.maxLookback;
   const searchAdjustEndTime: string | undefined = searchConfig?.adjustEndTime;
-  const [formData, setFormData] = useState<Partial<ISearchFormFields>>(() => ({
-    service: initialValues?.service,
-    operation: initialValues?.operation,
-    tags: initialValues?.tags,
-    lookback: initialValues?.lookback,
-    startDate: initialValues?.startDate,
-    startDateTime: initialValues?.startDateTime,
-    endDate: initialValues?.endDate,
-    endDateTime: initialValues?.endDateTime,
-    minDuration: initialValues?.minDuration,
-    maxDuration: initialValues?.maxDuration,
-    resultsLimit: initialValues?.resultsLimit,
-  }));
+  const [formData, setFormData] = useState<Partial<ISearchFormFields>>(() =>
+    defaultFormData(initialValues, searchConfig?.defaultLookback)
+  );
 
   // Fetch services using React Query
   const { data: services = [], isLoading: isLoadingServices, error: servicesError } = useServices();
@@ -378,6 +370,10 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
     },
     [formData, searchAdjustEndTime, adjustTimeEnabled, submitFormHandler, navigate, clearUploadedTraces]
   );
+
+  const handleReset = useCallback(() => {
+    setFormData(prev => defaultFormData({ service: prev.service }, searchConfig?.defaultLookback));
+  }, [searchConfig?.defaultLookback]);
 
   const { service: selectedService, lookback: selectedLookback } = formData;
   const noSelectedService = selectedService === '-' || !selectedService;
@@ -674,6 +670,9 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
         />
       </FormItem>
 
+      <Button htmlType="button" className="SearchForm--reset" disabled={submitting} onClick={handleReset}>
+        Reset
+      </Button>
       <Button
         htmlType="submit"
         className="SearchForm--submit"

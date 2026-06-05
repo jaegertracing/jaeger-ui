@@ -25,3 +25,4 @@ npm-debug.log
 # scripts
 scripts/release-notes.py
 scripts/draft-release.py
+.claude/settings.local.json
