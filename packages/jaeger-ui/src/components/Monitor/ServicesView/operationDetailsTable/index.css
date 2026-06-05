@@ -4,10 +4,10 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 th.header-item {
-  background: rgba(216, 216, 216, 0.7);
-  border-left: 1px solid rgba(216, 216, 216, 1);
-  border-top: 1px solid rgba(216, 216, 216, 1);
-  border-bottom: 1px solid rgba(216, 216, 216, 1);
+  background: var(--surface-secondary);
+  border-left: 1px solid var(--border-default);
+  border-top: 1px solid var(--border-default);
+  border-bottom: 1px solid var(--border-default);
   border-radius: 0px;
   height: 40px;
   font-size: 14px;
@@ -16,7 +16,7 @@ th.header-item {
 }
 
 th.header-item:last-child {
-  border-right: 1px solid rgba(216, 216, 216, 1);
+  border-right: 1px solid var(--border-default);
 }
 
 th.header-item span {
@@ -26,14 +26,14 @@ th.header-item span {
 
 td.header-item {
   height: 50px;
-  border-bottom: 1px solid rgba(233, 233, 233, 1);
+  border-bottom: 1px solid var(--border-default);
   font-size: 14px;
   font-weight: 500;
   padding: 0 10px !important;
 }
 
 .table-row:hover {
-  background: rgba(247, 247, 247, 1);
+  background: var(--surface-component-background-hover);
 }
 
 .ant-table-tbody > tr.ant-table-row-level-0:hover > td {
@@ -42,7 +42,7 @@ td.header-item {
 
 .ant-progress-inner {
   border-radius: 0px;
-  background: rgba(199, 224, 224, 1);
+  background: var(--interactive-primary-light);
 }
 
 .impact {
