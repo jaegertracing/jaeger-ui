@@ -14,6 +14,14 @@ export enum OrderBy {
   LEAST_ERRORS = 'LEAST_ERRORS',
 }
 
+export type TraceOrderBy =
+  | OrderBy.MOST_RECENT
+  | OrderBy.OLDEST_FIRST
+  | OrderBy.SHORTEST_FIRST
+  | OrderBy.LONGEST_FIRST
+  | OrderBy.MOST_SPANS
+  | OrderBy.LEAST_SPANS;
+
 // Re-export individual constants for backward compatibility with
 // `import * as orderBy from './order-by'` call sites.
 export const MOST_RECENT = OrderBy.MOST_RECENT;

@@ -1,59 +1,51 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { OrderBy } from './order-by';
+import { OrderBy, TraceOrderBy } from './order-by';
 
 import type { IOtelTrace } from '../types/otel';
 import type { TraceSummary } from '../types/trace-summary';
 
 type ISortableTrace = Pick<IOtelTrace, 'startTime' | 'duration' | 'spans'>;
 
-const comparators: Partial<Record<OrderBy, (a: ISortableTrace, b: ISortableTrace) => number>> = {
-  [OrderBy.MOST_RECENT]: (a, b) => +(b.startTime > a.startTime) || +(a.startTime === b.startTime) - 1,
-  [OrderBy.OLDEST_FIRST]: (a, b) => +(a.startTime > b.startTime) || +(a.startTime === b.startTime) - 1,
-  [OrderBy.SHORTEST_FIRST]: (a, b) => +(a.duration > b.duration) || +(a.duration === b.duration) - 1,
-  [OrderBy.LONGEST_FIRST]: (a, b) => +(b.duration > a.duration) || +(a.duration === b.duration) - 1,
-  [OrderBy.MOST_SPANS]: (a, b) =>
-    +(b.spans.length > a.spans.length) || +(a.spans.length === b.spans.length) - 1,
-  [OrderBy.LEAST_SPANS]: (a, b) =>
-    +(a.spans.length > b.spans.length) || +(a.spans.length === b.spans.length) - 1,
+const comparators: Record<TraceOrderBy, (a: ISortableTrace, b: ISortableTrace) => number> = {
+  [OrderBy.MOST_RECENT]: (a, b) => b.startTime - a.startTime,
+  [OrderBy.OLDEST_FIRST]: (a, b) => a.startTime - b.startTime,
+  [OrderBy.SHORTEST_FIRST]: (a, b) => a.duration - b.duration,
+  [OrderBy.LONGEST_FIRST]: (a, b) => b.duration - a.duration,
+  [OrderBy.MOST_SPANS]: (a, b) => b.spans.length - a.spans.length,
+  [OrderBy.LEAST_SPANS]: (a, b) => a.spans.length - b.spans.length,
 };
 
 /**
  * Sorts traces in place.
  *
  * @param  {ISortableTrace[]} traces The trace array to sort.
- * @param  {string} sortBy A sort specification, see ./order-by.ts.
+ * @param  {TraceOrderBy} sortBy A sort specification, see ./order-by.ts.
  */
-export function sortTraces(traces: ISortableTrace[], sortBy: OrderBy) {
+export function sortTraces(traces: ISortableTrace[], sortBy: TraceOrderBy) {
   const comparator = comparators[sortBy] || comparators[OrderBy.LONGEST_FIRST];
   traces.sort(comparator);
 }
 
 const summaryComparators: Record<OrderBy, (a: TraceSummary, b: TraceSummary) => number> = {
-  [OrderBy.MOST_RECENT]: (a, b) => +(b.startTime > a.startTime) || +(a.startTime === b.startTime) - 1,
-  [OrderBy.OLDEST_FIRST]: (a, b) => +(a.startTime > b.startTime) || +(a.startTime === b.startTime) - 1,
-  [OrderBy.SHORTEST_FIRST]: (a, b) => +(a.duration > b.duration) || +(a.duration === b.duration) - 1,
-  [OrderBy.LONGEST_FIRST]: (a, b) => +(b.duration > a.duration) || +(a.duration === b.duration) - 1,
-  [OrderBy.MOST_SPANS]: (a, b) =>
-    +((b.spanCount ?? 0) > (a.spanCount ?? 0)) || +((a.spanCount ?? 0) === (b.spanCount ?? 0)) - 1,
-  [OrderBy.LEAST_SPANS]: (a, b) =>
-    +((a.spanCount ?? 0) > (b.spanCount ?? 0)) || +((a.spanCount ?? 0) === (b.spanCount ?? 0)) - 1,
+  [OrderBy.MOST_RECENT]: (a, b) => b.startTime - a.startTime,
+  [OrderBy.OLDEST_FIRST]: (a, b) => a.startTime - b.startTime,
+  [OrderBy.SHORTEST_FIRST]: (a, b) => a.duration - b.duration,
+  [OrderBy.LONGEST_FIRST]: (a, b) => b.duration - a.duration,
+  [OrderBy.MOST_SPANS]: (a, b) => (b.spanCount ?? 0) - (a.spanCount ?? 0),
+  [OrderBy.LEAST_SPANS]: (a, b) => (a.spanCount ?? 0) - (b.spanCount ?? 0),
   [OrderBy.TRACE_NAME_ASC]: (a, b) => a.traceName.localeCompare(b.traceName),
   [OrderBy.TRACE_NAME_DESC]: (a, b) => b.traceName.localeCompare(a.traceName),
-  [OrderBy.MOST_ERRORS]: (a, b) =>
-    +((b.errorSpanCount ?? 0) > (a.errorSpanCount ?? 0)) ||
-    +((a.errorSpanCount ?? 0) === (b.errorSpanCount ?? 0)) - 1,
-  [OrderBy.LEAST_ERRORS]: (a, b) =>
-    +((a.errorSpanCount ?? 0) > (b.errorSpanCount ?? 0)) ||
-    +((a.errorSpanCount ?? 0) === (b.errorSpanCount ?? 0)) - 1,
+  [OrderBy.MOST_ERRORS]: (a, b) => (b.errorSpanCount ?? 0) - (a.errorSpanCount ?? 0),
+  [OrderBy.LEAST_ERRORS]: (a, b) => (a.errorSpanCount ?? 0) - (b.errorSpanCount ?? 0),
 };
 
 /**
  * Returns a sorted copy of `TraceSummary[]`.
  */
-export function sortTraceSummaries(traces: TraceSummary[], sortBy: OrderBy): TraceSummary[] {
-  const comparator = summaryComparators[sortBy] || summaryComparators[OrderBy.LONGEST_FIRST];
+export function sortTraceSummaries(traces: TraceSummary[], sortBy: OrderBy | string): TraceSummary[] {
+  const comparator = summaryComparators[sortBy as OrderBy] || summaryComparators[OrderBy.LONGEST_FIRST];
   return [...traces].sort(comparator);
 }
 
