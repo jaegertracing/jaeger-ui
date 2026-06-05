@@ -66,7 +66,14 @@ export function SelectSort({ sortBy, handleSortChange }: SelectSortProps) {
   return (
     <label>
       Sort:{' '}
-      <SearchableSelect value={sortBy} onChange={(value: string) => handleSortChange(value as OrderBy)}>
+      <SearchableSelect
+        value={sortBy}
+        onChange={(value: string) => {
+          if (Object.values(OrderBy).includes(value as OrderBy)) {
+            handleSortChange(value as OrderBy);
+          }
+        }}
+      >
         <Option value={orderBy.MOST_RECENT}>Most Recent</Option>
         <Option value={orderBy.OLDEST_FIRST}>Oldest First</Option>
         <Option value={orderBy.LONGEST_FIRST}>Longest First</Option>
