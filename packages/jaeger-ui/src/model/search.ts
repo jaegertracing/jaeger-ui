@@ -8,6 +8,14 @@ import type { TraceSummary } from '../types/trace-summary';
 
 type ISortableTrace = Pick<IOtelTrace, 'startTime' | 'duration' | 'spans'>;
 
+function getDisplayedTraceName(summary: TraceSummary) {
+  return summary.traceName || summary.traceID;
+}
+
+function assertNever(value: never): never {
+  throw new Error(`Unhandled OrderBy value: ${String(value)}`);
+}
+
 const comparators: Record<TraceOrderBy, (a: ISortableTrace, b: ISortableTrace) => number> = {
   [OrderBy.MOST_RECENT]: (a, b) => b.startTime - a.startTime,
   [OrderBy.OLDEST_FIRST]: (a, b) => a.startTime - b.startTime,
@@ -35,17 +43,24 @@ const summaryComparators: Record<OrderBy, (a: TraceSummary, b: TraceSummary) => 
   [OrderBy.LONGEST_FIRST]: (a, b) => b.duration - a.duration,
   [OrderBy.MOST_SPANS]: (a, b) => (b.spanCount ?? 0) - (a.spanCount ?? 0),
   [OrderBy.LEAST_SPANS]: (a, b) => (a.spanCount ?? 0) - (b.spanCount ?? 0),
-  [OrderBy.TRACE_NAME_ASC]: (a, b) => a.traceName.localeCompare(b.traceName),
-  [OrderBy.TRACE_NAME_DESC]: (a, b) => b.traceName.localeCompare(a.traceName),
+  [OrderBy.TRACE_NAME_ASC]: (a, b) => getDisplayedTraceName(a).localeCompare(getDisplayedTraceName(b)),
+  [OrderBy.TRACE_NAME_DESC]: (a, b) => getDisplayedTraceName(b).localeCompare(getDisplayedTraceName(a)),
   [OrderBy.MOST_ERRORS]: (a, b) => (b.errorSpanCount ?? 0) - (a.errorSpanCount ?? 0),
   [OrderBy.LEAST_ERRORS]: (a, b) => (a.errorSpanCount ?? 0) - (b.errorSpanCount ?? 0),
 };
+
+function getSummaryComparator(sortBy: OrderBy | string) {
+  if (Object.hasOwn(summaryComparators, sortBy)) {
+    return summaryComparators[sortBy as OrderBy];
+  }
+  return summaryComparators[OrderBy.LONGEST_FIRST];
+}
 
 /**
  * Returns a sorted copy of `TraceSummary[]`.
  */
 export function sortTraceSummaries(traces: TraceSummary[], sortBy: OrderBy | string): TraceSummary[] {
-  const comparator = summaryComparators[sortBy as OrderBy] || summaryComparators[OrderBy.LONGEST_FIRST];
+  const comparator = getSummaryComparator(sortBy);
   return [...traces].sort(comparator);
 }
 
@@ -86,6 +101,8 @@ export function toOrderBy(
  */
 export function fromOrderBy(sort: OrderBy): { key: SortableColumnKey; order: SortDirection } {
   switch (sort) {
+    case OrderBy.MOST_RECENT:
+      return { key: 'startTime', order: 'descend' };
     case OrderBy.TRACE_NAME_ASC:
       return { key: 'traceName', order: 'ascend' };
     case OrderBy.TRACE_NAME_DESC:
@@ -104,7 +121,6 @@ export function fromOrderBy(sort: OrderBy): { key: SortableColumnKey; order: Sor
       return { key: 'duration', order: 'ascend' };
     case OrderBy.OLDEST_FIRST:
       return { key: 'startTime', order: 'ascend' };
-    default:
-      return { key: 'startTime', order: 'descend' };
   }
+  return assertNever(sort);
 }
