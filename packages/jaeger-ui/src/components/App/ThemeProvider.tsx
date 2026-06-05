@@ -109,7 +109,8 @@ const darkTheme: ThemeConfig = {
 
 export default function AppThemeProvider({ children }: ThemeProviderProps) {
   const embedded = useEmbeddedState();
-  const [mode, setModeState] = useState<ThemeMode>(() => getInitialTheme(embedded?.theme));
+  const embeddedMode = embedded?.theme;
+  const [mode, setModeState] = useState<ThemeMode>(() => getInitialTheme(embeddedMode));
 
   const setMode = useCallback((value: ThemeMode) => {
     setModeState(value);
@@ -121,8 +122,10 @@ export default function AppThemeProvider({ children }: ThemeProviderProps) {
 
   useEffect(() => {
     document.body.dataset.theme = mode;
-    writeStoredTheme(mode);
-  }, [mode]);
+    // Don't persist when the host controls the theme — avoid overwriting the
+    // user's standalone preference with an embed-injected value.
+    if (!embeddedMode) writeStoredTheme(mode);
+  }, [mode, embeddedMode]);
 
   const value = useMemo(
     () => ({
