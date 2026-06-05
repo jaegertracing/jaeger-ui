@@ -77,10 +77,7 @@ function JaegerAssistantThreadView() {
     <ThreadPrimitive.Root className="JaegerAssistantPanel-thread">
       <ThreadPrimitive.Viewport ref={viewportRef} className="JaegerAssistantPanel-viewport">
         <ThreadPrimitive.Empty>
-          <p className="JaegerAssistantPanel-hint">
-            Ask about traces, services, or how to use Jaeger. Submit from the header field to start with your
-            question.
-          </p>
+          <p className="JaegerAssistantPanel-hint">Ask about traces, services, or how to use Jaeger.</p>
         </ThreadPrimitive.Empty>
         <ThreadPrimitive.Messages components={threadMessageComponents} />
       </ThreadPrimitive.Viewport>

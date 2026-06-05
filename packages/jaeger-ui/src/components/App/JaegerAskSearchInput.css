@@ -42,38 +42,106 @@ SPDX-License-Identifier: Apache-2.0
   color: rgba(255, 255, 255, 0.85);
 }
 
-.TraceIDSearchInput--form .TraceIDSearchInput--input[readonly] .ant-input {
-  cursor: text;
+/* Expanding Ask Jaeger search input */
+.JaegerAskSearchInput--wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 220px;
+  height: 32px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 0 8px;
+  gap: 6px;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+  /* Let the expanded textarea overflow without clipping */
+  overflow: visible;
 }
 
-/* Floating textarea panel */
-.JaegerAskSearchInput--float {
-  position: fixed;
-  z-index: 1060;
-  width: min(26rem, 92vw);
-  background-color: #1b2438;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 8px;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
-  overflow: hidden;
+.JaegerAskSearchInput--wrap:hover,
+.JaegerAskSearchInput--wrap:focus-within {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.JaegerAskSearchInput--icon {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+  pointer-events: none;
+  /* keep icon above the absolutely-positioned expanded textarea */
+  position: relative;
+  z-index: 2;
 }
 
 .JaegerAskSearchInput--textarea {
-  display: block;
-  width: 100%;
-  padding: 0.7rem 0.9rem;
+  flex: 1;
   background: transparent;
   border: none;
+  /* vertical padding centers text within the 32px wrap */
+  padding: 6px 0;
+  margin: 0;
   color: rgba(255, 255, 255, 0.9);
-  font-size: 14px;
-  line-height: 1.55;
+  font-size: inherit;
+  font-family: inherit;
+  line-height: 1.4;
   resize: none;
   outline: none;
-  font-family: inherit;
+  overflow: hidden;
+  height: 100%;
+  transition: none;
 }
 
 .JaegerAskSearchInput--textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Rich placeholder overlay shown in expanded state when textarea is empty */
+.JaegerAskSearchInput--placeholder {
+  position: absolute;
+  top: 6px;
+  left: 28px;
+  right: 8px;
+  z-index: 2;
   color: rgba(255, 255, 255, 0.38);
+  font-size: inherit;
+  font-family: inherit;
+  line-height: 1.4;
+  pointer-events: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.JaegerAskSearchInput--placeholder-icon {
+  display: inline-block;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+}
+
+/* When expanded: detach from flow and grow downward, aligned to wrap border */
+.JaegerAskSearchInput--wrap--expanded .JaegerAskSearchInput--textarea {
+  position: absolute;
+  /* align outer edge of expanded box with outer edge of wrap border */
+  top: -1px;
+  /* offset right of icon + gap + wrap padding */
+  left: -1px;
+  width: calc(100% + 2px);
+  /* text content starts after icon space */
+  padding: 6px 8px 7px 28px;
+  height: auto;
+  min-height: calc(4 * 1.5em + 14px);
+  overflow: auto;
+  background: #1a4767;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 6px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+  z-index: 1;
+  line-height: 1.5;
+  font-size: inherit;
 }
 
 /* Toggle button */

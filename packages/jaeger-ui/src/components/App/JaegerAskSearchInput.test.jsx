@@ -28,8 +28,9 @@ vi.mock('../../hooks/useJaegerAssistant', () => ({
 }));
 
 function openAssistantTextarea() {
-  fireEvent.click(screen.getByTestId('JaegerAskSearchInput--input'));
-  return screen.getByTestId('JaegerAskSearchInput--textarea');
+  const textarea = screen.getByTestId('JaegerAskSearchInput--textarea');
+  fireEvent.focus(textarea);
+  return textarea;
 }
 
 describe('<JaegerAskSearchInput /> trace lookup (assistant disabled)', () => {
@@ -80,7 +81,7 @@ describe('<JaegerAskSearchInput /> assistant mode', () => {
     agUiMock.configured = true;
   });
 
-  it('renders the same styled search input as trace lookup', () => {
+  it('renders a textarea with the Ask Jaeger placeholder', () => {
     render(
       <MemoryRouter>
         <JaegerAssistantProvider>
@@ -88,13 +89,11 @@ describe('<JaegerAskSearchInput /> assistant mode', () => {
         </JaegerAssistantProvider>
       </MemoryRouter>
     );
-    const input = screen.getByTestId('JaegerAskSearchInput--input');
-    expect(input).toBeInTheDocument();
-    expect(input.closest('.TraceIDSearchInput--input')).toBeInTheDocument();
+    expect(screen.getByTestId('JaegerAskSearchInput--textarea')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Ask Jaeger or lookup trace ID…')).toBeInTheDocument();
   });
 
-  it('opens the floating textarea when search input is clicked', () => {
+  it('expands when focused and collapses when blurred with no text', () => {
     render(
       <MemoryRouter>
         <JaegerAssistantProvider>
@@ -102,9 +101,12 @@ describe('<JaegerAskSearchInput /> assistant mode', () => {
         </JaegerAssistantProvider>
       </MemoryRouter>
     );
-    expect(screen.queryByTestId('JaegerAskSearchInput--textarea')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByTestId('JaegerAskSearchInput--input'));
-    expect(screen.getByTestId('JaegerAskSearchInput--textarea')).toBeInTheDocument();
+    const textarea = screen.getByTestId('JaegerAskSearchInput--textarea');
+    expect(textarea.closest('.JaegerAskSearchInput--wrap--expanded')).not.toBeInTheDocument();
+    fireEvent.focus(textarea);
+    expect(textarea.closest('.JaegerAskSearchInput--wrap--expanded')).toBeInTheDocument();
+    fireEvent.blur(textarea);
+    expect(textarea.closest('.JaegerAskSearchInput--wrap--expanded')).not.toBeInTheDocument();
   });
 
   it('opens assistant for natural language instead of navigating', () => {
@@ -152,10 +154,10 @@ describe('<JaegerAskSearchInput /> assistant mode', () => {
     fireEvent.change(textarea, { target: { value: 'some query' } });
     fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: true });
     expect(mockNavigate).not.toHaveBeenCalled();
-    expect(screen.getByTestId('JaegerAskSearchInput--textarea')).toBeInTheDocument();
+    expect(textarea).toHaveValue('some query');
   });
 
-  it('closes the textarea on Escape', () => {
+  it('collapses and clears on Escape', () => {
     render(
       <MemoryRouter>
         <JaegerAssistantProvider>
@@ -164,11 +166,14 @@ describe('<JaegerAskSearchInput /> assistant mode', () => {
       </MemoryRouter>
     );
     const textarea = openAssistantTextarea();
+    fireEvent.change(textarea, { target: { value: 'some text' } });
     fireEvent.keyDown(textarea, { key: 'Escape' });
-    expect(screen.queryByTestId('JaegerAskSearchInput--textarea')).not.toBeInTheDocument();
+    expect(textarea).toBeInTheDocument();
+    expect(textarea.closest('.JaegerAskSearchInput--wrap--expanded')).not.toBeInTheDocument();
+    expect(textarea).toHaveValue('');
   });
 
-  it('closes floating textarea on mousedown outside trigger and float', () => {
+  it('collapses when blurred with no text', () => {
     render(
       <MemoryRouter>
         <JaegerAssistantProvider>
@@ -176,13 +181,10 @@ describe('<JaegerAskSearchInput /> assistant mode', () => {
         </JaegerAssistantProvider>
       </MemoryRouter>
     );
-    openAssistantTextarea();
-    expect(screen.getByTestId('JaegerAskSearchInput--textarea')).toBeInTheDocument();
-    const outside = document.createElement('div');
-    document.body.appendChild(outside);
-    fireEvent.mouseDown(outside);
-    document.body.removeChild(outside);
-    expect(screen.queryByTestId('JaegerAskSearchInput--textarea')).not.toBeInTheDocument();
+    const textarea = openAssistantTextarea();
+    expect(textarea.closest('.JaegerAskSearchInput--wrap--expanded')).toBeInTheDocument();
+    fireEvent.blur(textarea);
+    expect(textarea.closest('.JaegerAskSearchInput--wrap--expanded')).not.toBeInTheDocument();
   });
 });
 

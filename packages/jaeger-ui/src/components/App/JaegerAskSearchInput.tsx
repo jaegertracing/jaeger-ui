@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 import { Form, Input } from 'antd';
 import { IoSearch, IoSparkles } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
@@ -17,7 +16,7 @@ import './JaegerAskSearchInput.css';
 const TRACE_ID_HEX_RE = /^[0-9a-fA-F]{16,32}$/;
 
 const TRACE_LOOKUP_PLACEHOLDER = 'Lookup by Trace ID...';
-const ASK_JAEGER_PLACEHOLDER = 'Ask Jaeger or lookup trace ID…';
+const ASK_JAEGER_PLACEHOLDER = 'Ask Jaeger or lookup trace';
 
 function looksLikeTraceId(value: string): boolean {
   return TRACE_ID_HEX_RE.test(value.trim());
@@ -81,44 +80,8 @@ const JaegerAskAssistantSearchInput: React.FC = () => {
   const navigate = useNavigate();
   const assistant = useJaegerAssistantOptional();
 
-  const [isOpen, setIsOpen] = React.useState(false);
   const [value, setValue] = React.useState('');
-  const [floatPos, setFloatPos] = React.useState<{ top: number; right: number } | null>(null);
-
-  const triggerRef = React.useRef<HTMLDivElement>(null);
-  const floatRef = React.useRef<HTMLDivElement>(null);
-  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
-
-  const openFloat = React.useCallback(() => {
-    if (triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      setFloatPos({
-        top: rect.bottom + 12,
-        right: window.innerWidth - rect.right - 16,
-      });
-    }
-    setIsOpen(true);
-  }, []);
-
-  // Close when clicking outside both the search field and the floating panel
-  React.useEffect(() => {
-    if (!isOpen) return undefined;
-    const onDown = (e: MouseEvent) => {
-      const t = e.target as Node;
-      if (!triggerRef.current?.contains(t) && !floatRef.current?.contains(t)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', onDown);
-    return () => document.removeEventListener('mousedown', onDown);
-  }, [isOpen]);
-
-  // Move focus into the textarea as soon as the panel opens
-  React.useEffect(() => {
-    if (isOpen) {
-      requestAnimationFrame(() => textareaRef.current?.focus());
-    }
-  }, [isOpen]);
+  const [expanded, setExpanded] = React.useState(false);
 
   const submit = React.useCallback(() => {
     const raw = value.trim();
@@ -130,7 +93,7 @@ const JaegerAskAssistantSearchInput: React.FC = () => {
       navigate(getUrl(raw.toLowerCase()));
     }
     setValue('');
-    setIsOpen(false);
+    setExpanded(false);
   }, [value, assistant, navigate]);
 
   const onKeyDown = React.useCallback(
@@ -139,50 +102,46 @@ const JaegerAskAssistantSearchInput: React.FC = () => {
         e.preventDefault();
         submit();
       } else if (e.key === 'Escape') {
-        setIsOpen(false);
+        setValue('');
+        setExpanded(false);
+        e.currentTarget.blur();
       }
     },
     [submit]
   );
 
-  const floatingPanel =
-    isOpen && floatPos ? (
-      <div
-        ref={floatRef}
-        className="JaegerAskSearchInput--float"
-        style={{ top: floatPos.top, right: floatPos.right }}
-      >
-        <textarea
-          ref={textareaRef}
-          value={value}
-          onChange={e => setValue(e.target.value)}
-          onKeyDown={onKeyDown}
-          placeholder={ASK_JAEGER_PLACEHOLDER}
-          rows={3}
-          className="JaegerAskSearchInput--textarea"
-          data-testid="JaegerAskSearchInput--textarea"
-        />
-      </div>
-    ) : null;
-
   return (
-    <>
-      <div ref={triggerRef} className="TraceIDSearchInput--form">
-        <Input
-          className="TraceIDSearchInput--input"
-          data-testid="JaegerAskSearchInput--input"
-          placeholder={ASK_JAEGER_PLACEHOLDER}
-          prefix={<IoSearch />}
-          readOnly
-          onClick={openFloat}
-          onFocus={openFloat}
-          aria-label={ASK_JAEGER_PLACEHOLDER}
-          aria-expanded={isOpen}
-          aria-haspopup="dialog"
-        />
-      </div>
-      {typeof document !== 'undefined' && ReactDOM.createPortal(floatingPanel, document.body)}
-    </>
+    <div
+      className={`JaegerAskSearchInput--wrap${expanded ? ' JaegerAskSearchInput--wrap--expanded' : ''}`}
+      // Prevent the antd Menu from stealing focus back after a click inside
+      onMouseDown={e => e.stopPropagation()}
+    >
+      <IoSearch className="JaegerAskSearchInput--icon" />
+      <textarea
+        data-testid="JaegerAskSearchInput--textarea"
+        value={value}
+        onChange={e => setValue(e.target.value)}
+        onKeyDown={onKeyDown}
+        onFocus={() => setExpanded(true)}
+        onBlur={() => setExpanded(false)}
+        placeholder={expanded ? '' : ASK_JAEGER_PLACEHOLDER}
+        rows={1}
+        className="JaegerAskSearchInput--textarea"
+        aria-label={ASK_JAEGER_PLACEHOLDER}
+        aria-expanded={expanded}
+      />
+      {expanded && !value && (
+        <div className="JaegerAskSearchInput--placeholder" aria-hidden>
+          Enter your question,
+          <br />
+          or paste a Trace ID,
+          <br />
+          or click the |<IoSparkles size={12} className="JaegerAskSearchInput--placeholder-icon" />| button
+          <br />
+          for the assistant sidebar
+        </div>
+      )}
+    </div>
   );
 };
 
