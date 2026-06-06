@@ -7,6 +7,7 @@ import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
 import { UnconnectedSearchResults as SearchResults, SelectSort } from '.';
+import { useSearchResultsStore } from '../store.search-results';
 import * as track from './index.track';
 import * as orderBy from '../../../model/order-by';
 import { getUrl } from '../url';
@@ -55,6 +56,8 @@ vi.mock('./DownloadResults', () =>
 vi.mock('../../DeepDependencies/traces', () => mockDefault(jest.fn(() => <div data-testid="ddg" />)));
 
 vi.mock('../../common/LoadingIndicator', () => mockDefault(jest.fn(() => <div data-testid="loading" />)));
+
+vi.mock('./TraceTable', () => mockDefault(jest.fn(() => <div data-testid="trace-table" />)));
 
 vi.mock('../../common/NewWindowIcon', () =>
   mockDefault(jest.fn(() => <span data-testid="new-window-icon" />))
@@ -118,8 +121,8 @@ const baseRawTraces = [
 ];
 
 const baseProps = {
-  cohortAddTrace: jest.fn(),
-  cohortRemoveTrace: jest.fn(),
+  addTraceToCohort: jest.fn(),
+  removeTraceFromCohort: jest.fn(),
   diffCohort: [],
   disableComparisons: false,
   hideGraph: false,
@@ -194,8 +197,8 @@ describe('<SearchResults>', () => {
     renderWithRouter(
       <SearchResults
         {...baseProps}
-        cohortAddTrace={add}
-        cohortRemoveTrace={remove}
+        addTraceToCohort={add}
+        removeTraceFromCohort={remove}
         diffCohort={[
           {
             traceID: 'existing',
@@ -211,10 +214,18 @@ describe('<SearchResults>', () => {
     );
     const diffSelectionProps = DiffSelection.mock.calls[0][0];
     const toggleComparison = diffSelectionProps.toggleComparison;
-    toggleComparison('id-1');
-    toggleComparison('id-2', true);
-    expect(add).toHaveBeenCalledWith('id-1');
-    expect(remove).toHaveBeenCalledWith('id-2');
+    toggleComparison('a');
+    toggleComparison('b', true);
+    expect(add).toHaveBeenCalledWith(baseTraces[0]);
+    expect(remove).toHaveBeenCalledWith('b');
+  });
+
+  it('does not call addTraceToCohort when the traceID has no matching summary', () => {
+    const add = jest.fn();
+    renderWithRouter(<SearchResults {...baseProps} addTraceToCohort={add} />);
+    const diffSelectionProps = DiffSelection.mock.calls[0][0];
+    diffSelectionProps.toggleComparison('not-a-real-id');
+    expect(add).not.toHaveBeenCalled();
   });
 
   it('sets trace color to red if errorSpanCount > 0', () => {
@@ -508,6 +519,34 @@ describe('<SearchResults>', () => {
       renderWithRouter(<SearchResults {...baseProps} showStandaloneLink={false} />);
       expect(screen.queryByRole('link')).not.toBeInTheDocument();
       expect(screen.queryByTestId('new-window-icon')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('view mode toggle', () => {
+    beforeEach(() => {
+      useSearchResultsStore.setState({ viewMode: 'list' });
+      localStorage.clear();
+    });
+
+    it('defaults to list view', () => {
+      renderWithRouter(<SearchResults {...baseProps} />);
+      expect(screen.getByTestId('result-a')).toBeInTheDocument();
+      expect(screen.queryByTestId('trace-table')).not.toBeInTheDocument();
+    });
+
+    it('switches to table view when Table button is clicked', () => {
+      renderWithRouter(<SearchResults {...baseProps} />);
+      fireEvent.click(screen.getByText('Table'));
+      expect(screen.getByTestId('trace-table')).toBeInTheDocument();
+      expect(screen.queryByTestId('result-a')).not.toBeInTheDocument();
+    });
+
+    it('switches back to list view when List button is clicked', () => {
+      renderWithRouter(<SearchResults {...baseProps} />);
+      fireEvent.click(screen.getByText('Table'));
+      fireEvent.click(screen.getByText('List'));
+      expect(screen.getByTestId('result-a')).toBeInTheDocument();
+      expect(screen.queryByTestId('trace-table')).not.toBeInTheDocument();
     });
   });
 });

@@ -20,6 +20,7 @@ import 'antd/dist/reset.css';
 import './index.css';
 import { store } from '../../utils/configure-store';
 import ThemeProvider from './ThemeProvider';
+import { JaegerAssistantProvider } from './JaegerAssistantContext';
 
 // Initialize API configuration and process configuration scripts at module level
 // to ensure they run once when the application is loaded, before any components are rendered
@@ -31,17 +32,19 @@ export default function JaegerUIApp() {
     <AppQueryClientProvider>
       <ThemeProvider>
         <Provider store={store as any}>
-          <Page>
-            <Routes>
-              {ROUTES.map(({ path, element }) => (
-                <Route key={path} path={path} element={element} />
-              ))}
-              <Route path="/" element={<Navigate to={searchPath} replace />} />
-              <Route path={prefixUrl()} element={<Navigate to={searchPath} replace />} />
-              <Route path={prefixUrl('/')} element={<Navigate to={searchPath} replace />} />
-              <Route path="*" element={<NotFound error="Page not found" />} />
-            </Routes>
-          </Page>
+          <JaegerAssistantProvider>
+            <Page>
+              <Routes>
+                {ROUTES.map(({ path, element }) => (
+                  <Route key={path} path={path} element={element} />
+                ))}
+                <Route path="/" element={<Navigate to={searchPath} replace />} />
+                <Route path={prefixUrl()} element={<Navigate to={searchPath} replace />} />
+                <Route path={prefixUrl('/')} element={<Navigate to={searchPath} replace />} />
+                <Route path="*" element={<NotFound error="Page not found" />} />
+              </Routes>
+            </Page>
+          </JaegerAssistantProvider>
         </Provider>
       </ThemeProvider>
     </AppQueryClientProvider>

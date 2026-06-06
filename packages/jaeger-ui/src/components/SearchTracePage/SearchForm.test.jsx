@@ -23,7 +23,7 @@ vi.mock('../../hooks/useConfig', () => ({
   useConfig: () => ({
     useOpenTelemetryTerms: false,
     search: {
-      maxLookback: { label: '2 Days', value: '2d' },
+      maxLookback: { label: '2 days', value: '2d' },
       adjustEndTime: '1m',
       maxLimit: 1500,
     },
@@ -47,6 +47,9 @@ vi.mock('../../hooks/useTraceDiscovery', () => ({
 vi.mock('./useUploadedTraces', () => ({
   useClearUploadedTraces: jest.fn(() => jest.fn()),
 }));
+vi.mock('../../utils/config/get-config', () => ({
+  default: jest.fn(() => ({ search: {} })),
+}));
 
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
@@ -62,7 +65,6 @@ import {
   convertQueryParamsToFormDates,
   convTagsLogfmt,
   getUnixTimeStampInMSFromForm,
-  lookbackToTimestamp,
   mapDispatchToProps,
   mapStateToProps,
   optionsWithinMaxLookback,
@@ -75,6 +77,7 @@ import * as markers from './SearchForm.markers';
 import { CHANGE_SERVICE_ACTION_TYPE } from '../../constants/search-form';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 import { AppQueryClientProvider } from '../../query/app-query-client';
+import getConfig from '../../utils/config/get-config';
 
 function makeDateParams(dateOffset = 0) {
   const date = new Date();
@@ -168,43 +171,6 @@ describe('conversion utils', () => {
 });
 
 describe('lookback utils', () => {
-  describe('lookbackToTimestamp', () => {
-    const hourInMicroseconds = 60 * 60 * 1000 * 1000;
-    const now = new Date();
-    const nowInMicroseconds = now * 1000;
-
-    it('creates timestamp for hours ago', () => {
-      [1, 2, 4, 7].forEach(lookbackNum => {
-        expect(nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}h`, now)).toBe(
-          lookbackNum * hourInMicroseconds
-        );
-      });
-    });
-
-    it('creates timestamp for days ago', () => {
-      [1, 2, 4, 7].forEach(lookbackNum => {
-        const actual = nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}d`, now);
-        const expected = lookbackNum * 24 * hourInMicroseconds;
-        try {
-          expect(actual).toBe(expected);
-        } catch (_e) {
-          expect(Math.abs(actual - expected)).toBe(hourInMicroseconds);
-        }
-      });
-    });
-
-    it('creates timestamp for weeks ago', () => {
-      [1, 2, 4, 7].forEach(lookbackNum => {
-        const actual = nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}w`, now);
-        try {
-          expect(actual).toBe(lookbackNum * 7 * 24 * hourInMicroseconds);
-        } catch (_e) {
-          expect(Math.abs(actual - lookbackNum * 7 * 24 * hourInMicroseconds)).toBe(hourInMicroseconds);
-        }
-      });
-    });
-  });
-
   describe('applyAdjustTime', () => {
     const minuteInMicroseconds = 60 * 1000 * 1000;
     const now = new Date();
@@ -242,27 +208,27 @@ describe('lookback utils', () => {
   describe('optionsWithinMaxLookback', () => {
     const threeHoursOfExpectedOptions = [
       {
-        label: '5 Minutes',
+        label: '5 minutes',
         value: '5m',
       },
       {
-        label: '15 Minutes',
+        label: '15 minutes',
         value: '15m',
       },
       {
-        label: '30 Minutes',
+        label: '30 minutes',
         value: '30m',
       },
       {
-        label: 'Hour',
+        label: '1 hour',
         value: '1h',
       },
       {
-        label: '2 Hours',
+        label: '2 hours',
         value: '2h',
       },
       {
-        label: '3 Hours',
+        label: '3 hours',
         value: '3h',
       },
     ];
@@ -771,6 +737,62 @@ describe('submitting state from useIsSearchFetching', () => {
     const submitBtn = container.querySelector(`[data-test="${markers.SUBMIT_BTN}"]`);
     expect(submitBtn).toBeDisabled();
   });
+
+  describe('Reset button', () => {
+    it('clears tags and duration fields', () => {
+      const { container } = renderForm(
+        <SearchForm
+          {...defaultProps}
+          initialValues={{ service: 'svcA', tags: 'http.status=200', minDuration: '1ms', maxDuration: '1s' }}
+        />
+      );
+
+      const tagsInput = container.querySelector('input[name="tags"]');
+      const minInput = container.querySelector('input[name="minDuration"]');
+      const maxInput = container.querySelector('input[name="maxDuration"]');
+      expect(tagsInput.value).toBe('http.status=200');
+
+      fireEvent.click(container.querySelector('.SearchForm--reset'));
+
+      expect(tagsInput.value).toBe('');
+      expect(minInput.value).toBe('');
+      expect(maxInput.value).toBe('');
+    });
+
+    it('restores default limit after reset', () => {
+      const { container } = renderForm(
+        <SearchForm {...defaultProps} initialValues={{ service: 'svcA', resultsLimit: '500' }} />
+      );
+
+      const limitInput = container.querySelector('input[name="resultsLimit"]');
+      expect(limitInput.value).toBe('500');
+
+      fireEvent.click(container.querySelector('.SearchForm--reset'));
+
+      expect(limitInput.value).toBe(String(20)); // DEFAULT_LIMIT
+    });
+
+    it('preserves service and restores operation and lookback to defaults', () => {
+      const { container } = renderForm(
+        <SearchForm {...defaultProps} initialValues={{ service: 'svcA', operation: 'op1', lookback: '2d' }} />
+      );
+
+      fireEvent.click(container.querySelector('.SearchForm--reset'));
+
+      expect(container.querySelector('[data-testid="mock-select-service"]')).toHaveAttribute(
+        'data-value',
+        'svcA'
+      );
+      expect(container.querySelector('[data-testid="mock-select-operation"]')).toHaveAttribute(
+        'data-value',
+        'all'
+      );
+      expect(container.querySelector('[data-testid="mock-select-lookback"]')).toHaveAttribute(
+        'data-value',
+        '1h'
+      );
+    });
+  });
 });
 
 describe('handleAdjustTimeToggle', () => {
@@ -996,6 +1018,18 @@ describe('mapStateToProps()', () => {
     // within 60 seconds (CI tests run slowly)
     expect(msDiff(dateParams.dateStr, '00:00', startDate, startDateTime)).toBeLessThan(60 * 1000);
     expect(msDiff(dateParams.dateStr, dateParams.dateTimeStr, endDate, endDateTime)).toBeLessThan(60 * 1000);
+  });
+
+  it('uses search.defaultLookback from config when no lookback is in the URL', () => {
+    vi.mocked(getConfig).mockReturnValue({ search: { defaultLookback: '15m' } });
+    const { lookback } = callMapStateToProps('').initialValues;
+    expect(lookback).toBe('15m');
+  });
+
+  it('URL lookback takes precedence over search.defaultLookback', () => {
+    vi.mocked(getConfig).mockReturnValue({ search: { defaultLookback: '15m' } });
+    const { lookback } = callMapStateToProps('lookback=2h').initialValues;
+    expect(lookback).toBe('2h');
   });
 });
 

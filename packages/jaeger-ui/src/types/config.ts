@@ -82,6 +82,17 @@ export type StorageCapabilities = {
 
 // Default values are provided in packages/jaeger-ui/src/constants/default-config.tsx
 export type Config = {
+  // ai gates AI-assisted UI features (e.g. the in-app assistant).
+  // The UI does not enable these features unless the operator opts in via
+  // `ai.enabled: true`, because the Query Service does not yet ship a
+  // matching backend. Defaults to disabled.
+  ai?: {
+    // enabled turns on AI-assisted features in the UI. When false (the
+    // default), all AI surfaces are hidden regardless of whether the
+    // backend supports them.
+    enabled?: boolean;
+  };
+
   //
   // archiveEnabled enables the Archive Trace button in the trace view.
   // Requires Query Service to be configured with "archive" storage backend.
@@ -107,12 +118,20 @@ export type Config = {
 
   // search section controls some aspects of the Search panel.
   search?: {
+    // defaultLookback sets the pre-selected value in the Lookback dropdown when
+    // no lookback is present in the URL. Must be one of the values in the dropdown
+    // (e.g. "5m", "15m", "30m", "1h", "2h", "3h", "6h", "12h", "24h", "2d",
+    // "3d", "5d", "7d", "2w", "3w", "4w"). Defaults to "1h" when not set or
+    // when the configured value is not one of the recognized options.
+    defaultLookback?: string;
+
     // maxLookback controls how far back in time the search may apply.
-    // By default the Lookback dropdown contains values from "last hour"
-    // to "last 2 days". Setting maxLookback to a shorter time range,
+    // By default the Lookback dropdown contains values from "Last 5 minutes"
+    // to "Last 2 days". Setting maxLookback to a shorter time range,
     // such as "6h" disables the longer ranges.
     maxLookback: {
-      // label to be displayed in the search form dropdown, e.g. "Last 2 days".
+      // Bare duration label shown in the search form dropdown. The UI prepends "Last "
+      // automatically, so use e.g. "2 days" (not "Last 2 days").
       label: string;
 
       // The value submitted in the search query if the label is selected.
