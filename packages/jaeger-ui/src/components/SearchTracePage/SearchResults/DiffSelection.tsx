@@ -16,23 +16,32 @@ import './DiffSelection.css';
 type Props = {
   toggleComparison: (traceID: string, isInDiffCohort: boolean) => void;
   traces: TraceSummary[];
+  hideSelectedItems?: boolean;
+  onClearAll?: () => void;
 };
 
-const CTA_MESSAGE = <h2 className="ub-m0">Compare traces by selecting result items</h2>;
+const CTA_MESSAGE = (
+  <h2 className="ub-m0 DiffSelection--heading">Compare traces by selecting result items</h2>
+);
 
-export default function DiffSelection({ toggleComparison, traces }: Props) {
+export default function DiffSelection({
+  toggleComparison,
+  traces,
+  hideSelectedItems = false,
+  onClearAll,
+}: Props) {
   const cohort = traces.map(t => t.traceID);
   const compareHref = cohort.length > 1 ? getUrl({ cohort }) : null;
 
   const compareBtn = (
-    <Button className="ub-right" disabled={cohort.length < 2} htmlType="button" type="primary">
+    <Button disabled={cohort.length < 2} htmlType="button" type="primary">
       Compare Traces
     </Button>
   );
 
   return (
-    <div className={`DiffSelection ${traces.length ? 'is-non-empty' : ''} ub-mb3`}>
-      {traces.length > 0 && (
+    <div className={`DiffSelection ${traces.length ? 'is-non-empty' : ''}`}>
+      {traces.length > 0 && !hideSelectedItems && (
         <div className="DiffSelection--selectedItems">
           {traces.map(summary => (
             <ResultItemTitle
@@ -52,13 +61,18 @@ export default function DiffSelection({ toggleComparison, traces }: Props) {
       )}
       <div className="DiffSelection--message">
         {traces.length > 0 ? (
-          <React.Fragment>
-            {compareHref ? <Link to={compareHref}>{compareBtn}</Link> : compareBtn}
-            <h2 className="ub-m0">{cohort.length} Selected for comparison</h2>
-          </React.Fragment>
+          <h2 className="ub-m0 DiffSelection--heading">{cohort.length} Selected for comparison</h2>
         ) : (
           CTA_MESSAGE
         )}
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          {traces.length > 0 && (
+            <Button htmlType="button" onClick={onClearAll}>
+              Deselect All
+            </Button>
+          )}
+          {compareHref ? <Link to={compareHref}>{compareBtn}</Link> : compareBtn}
+        </div>
       </div>
     </div>
   );
