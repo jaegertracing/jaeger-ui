@@ -6,9 +6,7 @@
 /**
  * Post-process generated OpenAPI client to:
  * 1. Prepend copyright header
- * 2. Remove .partial() calls for strict validation (Proto3/OpenAPI optionality mismatch)
- * 3. Comment out Zodios imports/usage (avoid runtime dependency until needed)
- * 4. Add convenience exports for schemas
+ * 2. Remove Zodios imports/client code (unused — we only use the Zod schemas)
  */
 
 const fs = require('fs');
@@ -39,44 +37,20 @@ if (!content.includes('Copyright (c)')) {
   console.log('✅ Added copyright header');
 }
 
-// 2. Remove .partial() calls
-const beforeCountPartial = (content.match(/\.partial\(\)/g) || []).length;
-content = content.replace(/\.partial\(\)\s*/g, '');
-const afterCountPartial = (content.match(/\.partial\(\)/g) || []).length;
+// 2. Remove Zodios import (unused — we only use the Zod schemas, not the Zodios client)
+const zodiosImportRegex = /import\s+\{\s*makeApi,\s*Zodios.*?\} from ['"]@zodios\/core['"];\n?/g;
+const beforeZodios = content;
+content = content.replace(zodiosImportRegex, '');
+if (content !== beforeZodios) console.log('✅ Removed Zodios import');
 
-// 3. Comment out Zodios imports
-const zodiosImportRegex = /import\s+\{\s*makeApi,\s*Zodios.*?\} from '@zodios\/core';/g;
-if (zodiosImportRegex.test(content)) {
-  content = content.replace(
-    zodiosImportRegex,
-    "// import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';"
-  );
-  console.log('✅ Commented out Zodios imports');
-}
-
-// 4. Comment out Zodios usage
-content = content.replace(/(const endpoints = makeApi\(\[[\s\S]*?\]\);)/, '/*\n$1\n*/');
-
-content = content.replace(/(export const api = new Zodios\(endpoints\);)/, '// $1');
+// 3. Remove Zodios client code (unused — we only use the Zod schemas)
+content = content.replace(/\nconst endpoints = makeApi\(\[[\s\S]*?\]\);\n?/, '\n');
+content = content.replace(/\nexport const api = new Zodios\(endpoints\);\n?/, '\n');
 content = content.replace(
-  /(export function createApiClient\(baseUrl: string, options\?: ZodiosOptions\) \{[\s\S]*?\})/,
-  '/*\n$1\n*/'
+  /\nexport function createApiClient\(baseUrl: string, options\?: ZodiosOptions\) \{[\s\S]*?\}\n?/,
+  '\n'
 );
-
-// 5. Append convenience exports
-const extraExports = `
-// Export commonly used schemas individually for convenience
-export { GetServicesResponse as ServicesResponseSchema };
-export { GetOperationsResponse as OperationsResponseSchema };
-export { Operation as OperationSchema };
-`;
-
-if (!content.includes('export { GetServicesResponse as ServicesResponseSchema }')) {
-  content += extraExports;
-  console.log('✅ Added convenience exports');
-}
 
 fs.writeFileSync(filePath, content, 'utf8');
 
-console.log(`✅ Removed ${beforeCountPartial - afterCountPartial} .partial() calls`);
 console.log('✅ Zodios dependencies disabled (use schemas only)');

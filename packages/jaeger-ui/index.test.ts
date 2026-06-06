@@ -8,7 +8,7 @@ import { fileURLToPath } from 'url';
 // ROUTES is the array rendered directly into <Routes> in App/index.tsx.
 // Importing it here means the coverage test automatically covers any new
 // route added to the router without requiring manual updates to this file.
-import { ROUTES } from './src/components/App';
+import { ROUTES } from './src/components/App/routes';
 
 // Extract and compile the base-path detection script from index.html once
 // to test the base path determination logic.
