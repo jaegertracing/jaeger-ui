@@ -80,6 +80,68 @@ const defaultConfig: Config = {
     customWebAnalytics: null,
   },
   linkPatterns: [],
+  spanDecorations: [
+    {
+      attributes: [{ key: '^(?:db\\.system|peer\\.service|service\\.name)$', value: 'redis.*' }],
+      icon: 'di.Redis',
+      tooltip: 'Redis',
+    },
+    {
+      attributes: [{ key: '^(?:db\\.system|peer\\.service|service\\.name)$', value: 'postgresql|postgres' }],
+      icon: 'si.Postgresql',
+      tooltip: 'PostgreSQL',
+    },
+    {
+      attributes: [{ key: '^(?:db\\.system|peer\\.service|service\\.name)$', value: 'mysql|mariadb' }],
+      icon: 'si.Mysql',
+      tooltip: 'MySQL',
+    },
+    {
+      attributes: [{ key: '^(?:db\\.system|peer\\.service|service\\.name)$', value: 'mongodb' }],
+      icon: 'si.Mongodb',
+      tooltip: 'MongoDB',
+    },
+    {
+      attributes: [{ key: '^(?:db\\.system)$', value: '.*' }],
+      icon: 'io.Database',
+      tooltip: 'Database Call',
+    },
+    {
+      attributes: [{ key: '^(?:db\\.type)$', value: '.*' }],
+      icon: 'io.Database',
+      tooltip: 'Database Call',
+    },
+    {
+      attributes: [{ key: '^(?:http\\.method|http\\.request\\.method)$', value: '.*' }],
+      icon: 'io.Globe',
+      tooltip: 'HTTP Request',
+    },
+    {
+      attributes: [{ key: '^(?:messaging\\.system)$', value: 'kafka' }],
+      icon: 'si.Apachekafka',
+      tooltip: 'Apache Kafka',
+    },
+    {
+      attributes: [{ key: '^(?:messaging\\.system)$', value: 'rabbitmq' }],
+      icon: 'si.Rabbitmq',
+      tooltip: 'RabbitMQ',
+    },
+    {
+      attributes: [{ key: '^(?:messaging\\.system)$', value: '.*' }],
+      icon: 'io.PaperPlane',
+      tooltip: 'Messaging',
+    },
+    {
+      attributes: [{ key: '^(?:rpc\\.system|rpc\\.system\\.name)$', value: '.*' }],
+      icon: 'io.Swap',
+      tooltip: 'RPC Call',
+    },
+    {
+      attributes: [{ key: '^(?:gen_ai\\.system)$', value: '.*' }],
+      icon: 'io.HardwareChip',
+      tooltip: 'AI/ML Operation',
+    },
+  ],
   monitor: {
     menuEnabled: true,
     emptyState: {

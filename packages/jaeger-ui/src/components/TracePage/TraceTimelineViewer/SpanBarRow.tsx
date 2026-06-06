@@ -1,8 +1,10 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward } from 'react-icons/io5';
+import IconProvider from '../../common/IconProvider';
+import { getSpanDecoration } from '../../../model/span-decorations';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
 import { formatDurationCompact, ViewedBoundsFunctionType } from './utils';
@@ -114,6 +116,20 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   const viewStart = viewBounds.start;
   const viewEnd = viewBounds.end;
 
+  const decorationIcon = useMemo(() => {
+    const decoration = getSpanDecoration(span);
+    if (decoration) {
+      return (
+        <IconProvider
+          className="SpanBarRow--decorationIcon"
+          icon={decoration.icon}
+          tooltip={decoration.tooltip}
+        />
+      );
+    }
+    return null;
+  }, [span]);
+
   const labelDetail = `${serviceName}::${operationName}`;
   let longLabel;
   let hintSide;
@@ -164,6 +180,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
               {!hasOwnError && hasChildError && (
                 <IoAlert className="SpanBarRow--errorIcon SpanBarRow--errorIcon--hollow" />
               )}
+              {decorationIcon}
               {serviceName}{' '}
               {rpc && (
                 <span>
