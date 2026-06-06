@@ -5,14 +5,14 @@ SPDX-License-Identifier: Apache-2.0
 
 .CopyIcon,
 .CopyIcon:hover,
-.CopyIcon:focus,
+.CopyIcon:focus-visible,
 .CopyIcon:active {
   background-color: transparent;
   border: none;
   box-shadow: none;
   color: inherit;
   height: auto;
-  overflow: hidden;
+  overflow: visible;
   padding: 1px;
   font-size: 13px;
   margin-left: 5px;
