@@ -71,7 +71,6 @@ function UIConfig() {
     // JAEGER_BACKEND_CAPABILITIES (independent of UIConfig); the UI config value is ignored.
     // In dev mode, the Vite plugin evaluates UIConfig() and injects backendCapabilities
     // into the same placeholder, so setting it here works with `npm start`.
-    // (Legacy `storageCapabilities` is also accepted for backwards compatibility.)
     // backendCapabilities: { archiveStorage: true, aiAssistant: true }
   };
 }
