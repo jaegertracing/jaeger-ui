@@ -36,6 +36,9 @@ function toOrderBy(columnKey: string | undefined, order: string | undefined): st
     return order === 'ascend' ? orderBy.SHORTEST_FIRST : orderBy.LONGEST_FIRST;
   }
   // startTime descend === MOST_RECENT (default sort); ascending is not supported
+  if (columnKey === 'startTime') {
+    return order === 'ascend' ? orderBy.OLDEST_FIRST : orderBy.MOST_RECENT;
+  }
   return orderBy.MOST_RECENT;
 }
 
@@ -49,6 +52,8 @@ function fromOrderBy(sort: string): { key: string; order: 'ascend' | 'descend' }
       return { key: 'duration', order: 'descend' };
     case orderBy.SHORTEST_FIRST:
       return { key: 'duration', order: 'ascend' };
+    case orderBy.OLDEST_FIRST:
+      return { key: 'startTime', order: 'ascend' };
     default:
       return { key: 'startTime', order: 'descend' };
   }
@@ -222,9 +227,9 @@ export default function TraceTable({
           );
         },
         sorter: true,
-        // startTime descend maps to MOST_RECENT (the default); always show the sort indicator
-        sortOrder: sortKey === 'startTime' ? 'descend' : undefined,
-        sortDirections: ['descend'],
+
+        sortOrder: sortKey === 'startTime' ? sortOrder : undefined,
+        sortDirections: ['ascend', 'descend'],
       },
     ];
 
