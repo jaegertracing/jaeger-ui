@@ -43,7 +43,7 @@ it('<ResultItem /> should render base case correctly', () => {
   );
   expect(screen.getByTestId(markers.NUM_SPANS)).toHaveTextContent(`${traceSummary.spanCount} Spans`);
   const serviceTagsContainer = screen.getByTestId(markers.SERVICE_TAGS);
-  const serviceTags = serviceTagsContainer.querySelectorAll('li > .ResultItem--serviceTag');
+  const serviceTags = serviceTagsContainer.querySelectorAll('li > .ServicePills--tag');
   expect(serviceTags).toHaveLength(traceSummary.services.length);
 });
 
@@ -59,7 +59,7 @@ it('<ResultItem /> should not render any ServiceTags when there are no services'
     />
   );
   const serviceTagsContainer = screen.getByTestId(markers.SERVICE_TAGS);
-  const serviceTags = serviceTagsContainer.querySelectorAll('li > .ResultItem--serviceTag');
+  const serviceTags = serviceTagsContainer.querySelectorAll('li > .ServicePills--tag');
   expect(serviceTags).toHaveLength(0);
 });
 
@@ -87,12 +87,12 @@ it('<ResultItem /> should render error icon on ServiceTags that have an error sp
   );
 
   const serviceTagsContainer = screen.getByTestId(markers.SERVICE_TAGS);
-  const errorTag = Array.from(serviceTagsContainer.querySelectorAll('li > .ResultItem--serviceTag')).find(
-    tag => tag.textContent.includes(targetService.name)
+  const errorTag = Array.from(serviceTagsContainer.querySelectorAll('li > .ServicePills--tag')).find(tag =>
+    tag.textContent.includes(targetService.name)
   );
 
   expect(errorTag).toBeDefined();
-  expect(errorTag.querySelector('.ResultItem--errorIcon')).toBeInTheDocument();
+  expect(errorTag.querySelector('.ServicePills--errorIcon')).toBeInTheDocument();
 });
 
 it('passes router state to destination route when linkTo is a TracePageLink', async () => {
@@ -177,4 +177,24 @@ it('calls trackConversions on click', () => {
   const buttons = screen.getAllByRole('button');
   buttons[0].click();
   expect(spy).toHaveBeenCalledWith(tracking.EAltViewActions.Traces);
+});
+
+it('<ResultItem /> hides span tag when spanCount is undefined', () => {
+  const summary = {
+    ...traceSummary,
+    spanCount: undefined,
+    errorSpanCount: undefined,
+    orphanSpanCount: undefined,
+  };
+  renderWithRouter(
+    <ResultItem
+      traceSummary={summary}
+      durationPercent={50}
+      linkTo={{ pathname: '/' }}
+      toggleComparison={() => {}}
+      isInDiffCohort={false}
+      disableComparision={false}
+    />
+  );
+  expect(screen.queryByTestId(markers.NUM_SPANS)).not.toBeInTheDocument();
 });

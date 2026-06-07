@@ -32,13 +32,14 @@ const jaeger_api_v3_Dependency = z
 const jaeger_api_v3_DependenciesResponse = z
   .object({ dependencies: z.array(jaeger_api_v3_Dependency) })
   .passthrough();
-const google_protobuf_Any = z.object({ '@type': z.string() }).passthrough();
+const google_protobuf_Any = z.object({ '@type': z.string() }).partial().passthrough();
 const google_rpc_Status = z
   .object({
     code: z.number().int(),
     message: z.string(),
     details: z.array(google_protobuf_Any),
   })
+  .partial()
   .passthrough();
 const jaeger_api_v3_Operation = z.object({ name: z.string(), spanKind: z.string() }).passthrough();
 const jaeger_api_v3_GetOperationsResponse = z
@@ -48,25 +49,26 @@ const jaeger_api_v3_GetServicesResponse = z.object({ services: z.array(z.string(
 const jaeger_api_v3_ServiceSummary = z
   .object({
     name: z.string(),
-    spanCount: z.number().int(),
-    errorSpanCount: z.number().int(),
+    spanCount: z.number().int().optional(),
+    errorSpanCount: z.number().int().optional(),
   })
   .passthrough();
 const jaeger_api_v3_TraceSummary = z
   .object({
     traceId: z.string(),
-    rootServiceName: z.string(),
-    rootOperationName: z.string(),
-    minStartTimeUnixNano: z.string(),
-    maxEndTimeUnixNano: z.string(),
-    spanCount: z.number().int(),
-    errorSpanCount: z.number().int(),
-    orphanSpanCount: z.number().int(),
-    services: z.array(jaeger_api_v3_ServiceSummary),
+    rootServiceName: z.string().optional(),
+    rootOperationName: z.string().optional(),
+    minStartTimeUnixNano: z.string().optional(),
+    maxEndTimeUnixNano: z.string().optional(),
+    spanCount: z.number().int().optional(),
+    errorSpanCount: z.number().int().optional(),
+    orphanSpanCount: z.number().int().optional(),
+    services: z.array(jaeger_api_v3_ServiceSummary).optional(),
   })
   .passthrough();
 const jaeger_api_v3_FindTraceSummariesResponse = z
   .object({ summaries: z.array(jaeger_api_v3_TraceSummary) })
+  .partial()
   .passthrough();
 const jaeger_api_v3_TraceQueryParameters = z
   .object({
@@ -80,15 +82,26 @@ const jaeger_api_v3_TraceQueryParameters = z
     searchDepth: z.number().int(),
     rawTraces: z.boolean(),
   })
+  .partial()
   .passthrough();
 const jaeger_api_v3_FindTraceSummariesRequest = z
   .object({ query: jaeger_api_v3_TraceQueryParameters })
+  .partial()
   .passthrough();
 const opentelemetry_proto_common_v1_ArrayValue: z.ZodType<opentelemetry_proto_common_v1_ArrayValue> = z.lazy(
-  () => z.object({ values: z.array(opentelemetry_proto_common_v1_AnyValue) }).passthrough()
+  () =>
+    z
+      .object({ values: z.array(opentelemetry_proto_common_v1_AnyValue) })
+      .partial()
+      .passthrough()
 );
 const opentelemetry_proto_common_v1_KeyValueList: z.ZodType<opentelemetry_proto_common_v1_KeyValueList> =
-  z.lazy(() => z.object({ values: z.array(opentelemetry_proto_common_v1_KeyValue) }).passthrough());
+  z.lazy(() =>
+    z
+      .object({ values: z.array(opentelemetry_proto_common_v1_KeyValue) })
+      .partial()
+      .passthrough()
+  );
 const opentelemetry_proto_common_v1_AnyValue: z.ZodType<opentelemetry_proto_common_v1_AnyValue> = z.lazy(() =>
   z
     .object({
@@ -100,6 +113,7 @@ const opentelemetry_proto_common_v1_AnyValue: z.ZodType<opentelemetry_proto_comm
       kvlistValue: opentelemetry_proto_common_v1_KeyValueList,
       bytesValue: z.string(),
     })
+    .partial()
     .passthrough()
 );
 const opentelemetry_proto_common_v1_KeyValue: z.ZodType<opentelemetry_proto_common_v1_KeyValue> = z.lazy(() =>
@@ -108,6 +122,7 @@ const opentelemetry_proto_common_v1_KeyValue: z.ZodType<opentelemetry_proto_comm
       key: z.string(),
       value: opentelemetry_proto_common_v1_AnyValue,
     })
+    .partial()
     .passthrough()
 );
 const opentelemetry_proto_resource_v1_Resource = z
@@ -115,6 +130,7 @@ const opentelemetry_proto_resource_v1_Resource = z
     attributes: z.array(opentelemetry_proto_common_v1_KeyValue),
     droppedAttributesCount: z.number().int(),
   })
+  .partial()
   .passthrough();
 const opentelemetry_proto_common_v1_InstrumentationScope = z
   .object({
@@ -123,6 +139,7 @@ const opentelemetry_proto_common_v1_InstrumentationScope = z
     attributes: z.array(opentelemetry_proto_common_v1_KeyValue),
     droppedAttributesCount: z.number().int(),
   })
+  .partial()
   .passthrough();
 const opentelemetry_proto_trace_v1_Span_Event = z
   .object({
@@ -131,6 +148,7 @@ const opentelemetry_proto_trace_v1_Span_Event = z
     attributes: z.array(opentelemetry_proto_common_v1_KeyValue),
     droppedAttributesCount: z.number().int(),
   })
+  .partial()
   .passthrough();
 const opentelemetry_proto_trace_v1_Span_Link = z
   .object({
@@ -141,9 +159,11 @@ const opentelemetry_proto_trace_v1_Span_Link = z
     droppedAttributesCount: z.number().int(),
     flags: z.number().int(),
   })
+  .partial()
   .passthrough();
 const opentelemetry_proto_trace_v1_Status = z
   .object({ message: z.string(), code: z.number().int() })
+  .partial()
   .passthrough();
 const opentelemetry_proto_trace_v1_Span = z
   .object({
@@ -164,6 +184,7 @@ const opentelemetry_proto_trace_v1_Span = z
     droppedLinksCount: z.number().int(),
     status: opentelemetry_proto_trace_v1_Status,
   })
+  .partial()
   .passthrough();
 const opentelemetry_proto_trace_v1_ScopeSpans = z
   .object({
@@ -171,6 +192,7 @@ const opentelemetry_proto_trace_v1_ScopeSpans = z
     spans: z.array(opentelemetry_proto_trace_v1_Span),
     schemaUrl: z.string(),
   })
+  .partial()
   .passthrough();
 const opentelemetry_proto_trace_v1_ResourceSpans = z
   .object({
@@ -178,13 +200,18 @@ const opentelemetry_proto_trace_v1_ResourceSpans = z
     scopeSpans: z.array(opentelemetry_proto_trace_v1_ScopeSpans),
     schemaUrl: z.string(),
   })
+  .partial()
   .passthrough();
 const opentelemetry_proto_trace_v1_TracesData = z
   .object({
     resourceSpans: z.array(opentelemetry_proto_trace_v1_ResourceSpans),
   })
+  .partial()
   .passthrough();
-const jaeger_api_v3_FindTracesRequest = z.object({ query: jaeger_api_v3_TraceQueryParameters }).passthrough();
+const jaeger_api_v3_FindTracesRequest = z
+  .object({ query: jaeger_api_v3_TraceQueryParameters })
+  .partial()
+  .passthrough();
 
 export const schemas = {
   jaeger_api_v3_Dependency,
@@ -214,8 +241,3 @@ export const schemas = {
   opentelemetry_proto_trace_v1_TracesData,
   jaeger_api_v3_FindTracesRequest,
 };
-
-// Export commonly used schemas individually for convenience
-export { jaeger_api_v3_GetServicesResponse as ServicesResponseSchema };
-export { jaeger_api_v3_GetOperationsResponse as OperationsResponseSchema };
-export { jaeger_api_v3_Operation as OperationSchema };

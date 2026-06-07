@@ -14,7 +14,7 @@ const { useEmbeddedStateMock, getConfigMock, useSearchTracesMock } = vi.hoisted(
       customWebAnalytics: null,
     },
   })),
-  useSearchTracesMock: jest.fn(() => ({ data: [], isFetching: false, error: null })),
+  useSearchTracesMock: jest.fn(() => ({ data: undefined, isFetching: false, error: null })),
 }));
 
 // Capture last props passed to SearchResults and FileLoader so tests can inspect/invoke them.
@@ -56,16 +56,16 @@ vi.mock('../../hooks/useTraceDiscovery', () => ({
   useSpanNames: jest.fn(() => ({ data: [], isLoading: false })),
   useSearchTraces: (...args) => useSearchTracesMock(...args),
   useIsSearchFetching: jest.fn(() => false),
-  useExecuteSearch: jest.fn(() => jest.fn(() => Promise.resolve())),
 }));
 
 import React from 'react';
-import { render, act, fireEvent, screen } from '@testing-library/react';
+import { render, act, fireEvent, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Provider } from 'react-redux';
 import { SearchTracePageImpl as SearchTracePage } from './index';
 import { useServices } from '../../hooks/useTraceDiscovery';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
+import { useSearchPanelStore, LS_WIDTH_KEY, LS_COLLAPSED_KEY } from './search-panel-store';
 import { store as globalStore } from '../../utils/configure-store';
 
 const queryClient = new QueryClient({
@@ -111,7 +111,7 @@ describe('<SearchTracePage>', () => {
   beforeEach(() => {
     useEmbeddedStateMock.mockReturnValue(null);
     useSearchTracesMock.mockClear();
-    useSearchTracesMock.mockReturnValue({ data: [], isFetching: false, error: null });
+    useSearchTracesMock.mockReturnValue({ data: undefined, isFetching: false, error: null });
     getConfigMock.mockReset();
     getConfigMock.mockReturnValue({
       disableFileUploadControl: false,
@@ -121,6 +121,10 @@ describe('<SearchTracePage>', () => {
         customWebAnalytics: null,
       },
     });
+    useSearchPanelStore.setState({ panelWidth: 0.25, collapsed: false });
+    localStorage.removeItem(LS_WIDTH_KEY);
+    localStorage.removeItem(LS_COLLAPSED_KEY);
+    queryClient.clear();
   });
 
   it('uses React Query to fetch services', () => {
@@ -155,7 +159,7 @@ describe('<SearchTracePage>', () => {
   });
 
   it('shows a loading indicator when traces are loading', () => {
-    useSearchTracesMock.mockReturnValue({ data: [], isFetching: true, error: null });
+    useSearchTracesMock.mockReturnValue({ data: undefined, isFetching: true, error: null });
     const { container } = render(
       <AllProvider initialEntries={['/search?service=svc-a']}>
         <SearchTracePage />
@@ -174,7 +178,11 @@ describe('<SearchTracePage>', () => {
   });
 
   it('shows an error message if the search query returns an error', () => {
-    useSearchTracesMock.mockReturnValue({ data: [], isFetching: false, error: new Error('big-error') });
+    useSearchTracesMock.mockReturnValue({
+      data: undefined,
+      isFetching: false,
+      error: new Error('big-error'),
+    });
     const { container } = render(
       <AllProvider initialEntries={['/search?service=svc-a']}>
         <SearchTracePage />
@@ -238,6 +246,45 @@ describe('<SearchTracePage>', () => {
     expect(container.querySelector('[data-node-key="fileLoader"]')).toBeInTheDocument();
   });
 
+  it('restores the URL from cached query when mounted at bare /search', async () => {
+    const cachedQuery = { service: 'svc-a', start: '100', end: '200', limit: 20, lookback: '1h' };
+    useSearchTracesMock.mockReturnValue({
+      data: { results: [], query: cachedQuery },
+      isFetching: false,
+      error: null,
+    });
+
+    // Track location changes inside the MemoryRouter so we can assert the URL was restored.
+    let capturedSearch = null;
+    function LocationCapture() {
+      const { useLocation: useLoc } = require('react-router-dom');
+      const loc = useLoc();
+      capturedSearch = loc.search;
+      return null;
+    }
+
+    await act(async () => {
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={['/search']}>
+            <Provider store={globalStore}>
+              <SearchTracePage />
+              <LocationCapture />
+            </Provider>
+          </MemoryRouter>
+        </QueryClientProvider>
+      );
+    });
+
+    // useSearchTraces is called with null because bare /search has no service/start/end
+    expect(useSearchTracesMock.mock.calls[0][0]).toBeNull();
+
+    // After the useEffect fires, navigate({ replace: true }) should have updated the location
+    await waitFor(() => {
+      expect(capturedSearch).toContain('service=svc-a');
+    });
+  });
+
   it('hides Upload tab if it is disabled via config', () => {
     getConfigMock.mockReturnValue({
       disableFileUploadControl: true,
@@ -254,11 +301,92 @@ describe('<SearchTracePage>', () => {
     );
     expect(container.querySelector('[data-node-key="fileLoader"]')).not.toBeInTheDocument();
   });
+
+  it('shows collapse button when panel is expanded', () => {
+    render(
+      <AllProvider>
+        <SearchTracePage />
+      </AllProvider>
+    );
+    expect(screen.getByLabelText('Collapse search panel')).toBeInTheDocument();
+  });
+
+  it('hides search panel and shows icon buttons when collapsed', async () => {
+    const { container } = render(
+      <AllProvider>
+        <SearchTracePage />
+      </AllProvider>
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('Collapse search panel'));
+    });
+    expect(container.querySelector('[data-node-key="searchForm"]')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Open search panel')).toBeInTheDocument();
+    expect(screen.getByLabelText('Open upload panel')).toBeInTheDocument();
+  });
+
+  it('clicking Search icon button re-opens panel to Search tab', async () => {
+    const { container } = render(
+      <AllProvider>
+        <SearchTracePage />
+      </AllProvider>
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('Collapse search panel'));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('Open search panel'));
+    });
+    expect(container.querySelector('[data-node-key="searchForm"]')).toBeInTheDocument();
+  });
+
+  it('clicking Upload icon button re-opens panel to Upload tab', async () => {
+    const { container } = render(
+      <AllProvider>
+        <SearchTracePage />
+      </AllProvider>
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('Collapse search panel'));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('Open upload panel'));
+    });
+    expect(container.querySelector('[data-node-key="fileLoader"]')).toBeInTheDocument();
+  });
+
+  it('hides Upload icon button in collapsed state when upload is disabled', async () => {
+    getConfigMock.mockReturnValue({
+      disableFileUploadControl: true,
+      tracking: { gaID: null, trackErrors: false, customWebAnalytics: null },
+    });
+    render(
+      <AllProvider>
+        <SearchTracePage />
+      </AllProvider>
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('Collapse search panel'));
+    });
+    expect(screen.queryByLabelText('Open upload panel')).not.toBeInTheDocument();
+  });
+
+  it('panel collapse state persists via store', async () => {
+    render(
+      <AllProvider>
+        <SearchTracePage />
+      </AllProvider>
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('Collapse search panel'));
+    });
+    expect(useSearchPanelStore.getState().collapsed).toBe(true);
+  });
 });
 
 describe('useTraceDiffStore', () => {
   beforeEach(() => {
-    useTraceDiffStore.setState({ cohort: [], a: null, b: null });
+    useTraceDiffStore.setState({ cohort: [], a: null, b: null, cohortSummaries: new Map() });
   });
 
   it('cohort is initially empty', () => {
@@ -271,12 +399,13 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
     lastSearchResultsProps = null;
     lastFileLoaderProps = null;
     queryClient.clear();
-    useSearchTracesMock.mockReturnValue({ data: [], isFetching: false, error: null });
+    useSearchTracesMock.mockReturnValue({ data: undefined, isFetching: false, error: null });
     getConfigMock.mockReturnValue({
       disableFileUploadControl: false,
       tracking: { gaID: null, trackErrors: false, customWebAnalytics: null },
     });
-    useTraceDiffStore.setState({ cohort: [], a: null, b: null });
+    useTraceDiffStore.setState({ cohort: [], a: null, b: null, cohortSummaries: new Map() });
+    useSearchPanelStore.setState({ panelWidth: 0.25, collapsed: false });
   });
 
   it('merges uploaded summaries into traceSummaries when FileLoader calls onTracesLoaded', async () => {
@@ -310,12 +439,16 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
       lastFileLoaderProps.onTracesLoaded([summary], [{ traceID: 'uploaded-1' }]);
     });
 
-    expect(lastSearchResultsProps.traceSummaries).toContainEqual(summary);
-    expect(lastSearchResultsProps.rawTraces).toContainEqual({ traceID: 'uploaded-1' });
+    // With controlled tabs, the tab switch causes a component re-render before onTracesLoaded
+    // is called; the React Query cache update may settle in a subsequent render cycle.
+    await waitFor(() => {
+      expect(lastSearchResultsProps.traceSummaries).toContainEqual(summary);
+      expect(lastSearchResultsProps.rawTraces).toContainEqual({ traceID: 'uploaded-1' });
+    });
   });
 
-  it('filters diffCohort to only summaries present in current results', async () => {
-    const summary = {
+  it('keeps diffCohort traces from prior searches via cached summaries', async () => {
+    const summaryInResults = {
       traceID: 'trace-in-results',
       traceName: 'svc: op',
       rootServiceName: 'svc',
@@ -327,9 +460,31 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
       orphanSpanCount: 0,
       services: [],
     };
-    useSearchTracesMock.mockReturnValue({ data: [summary], isFetching: false, error: null });
-    // Add one known trace and one unknown to the cohort
-    useTraceDiffStore.setState({ cohort: ['trace-in-results', 'trace-not-in-results'] });
+    const summaryFromPriorSearch = {
+      traceID: 'trace-not-in-results',
+      traceName: 'other: op',
+      rootServiceName: 'other',
+      rootOperationName: 'op',
+      startTime: 0,
+      duration: 200,
+      spanCount: 2,
+      errorSpanCount: 0,
+      orphanSpanCount: 0,
+      services: [],
+    };
+
+    useSearchTracesMock.mockReturnValue({
+      data: {
+        results: [summaryInResults],
+        query: { service: 'svc', start: '', end: '', limit: 20, lookback: '1h' },
+      },
+      isFetching: false,
+      error: null,
+    });
+    useTraceDiffStore.setState({
+      cohort: ['trace-in-results', 'trace-not-in-results'],
+      cohortSummaries: new Map([['trace-not-in-results', summaryFromPriorSearch]]),
+    });
 
     render(
       <AllProvider initialEntries={['/search?service=svc']}>
@@ -337,7 +492,7 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
       </AllProvider>
     );
 
-    expect(lastSearchResultsProps.diffCohort).toEqual([summary]);
+    expect(lastSearchResultsProps.diffCohort).toEqual([summaryInResults, summaryFromPriorSearch]);
   });
 
   it('uploaded caches are cleared when useClearUploadedTraces callback is invoked', async () => {

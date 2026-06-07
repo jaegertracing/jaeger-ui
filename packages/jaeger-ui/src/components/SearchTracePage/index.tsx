@@ -2,21 +2,32 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 
-import { Col, Row, Tabs } from 'antd';
-import { useLocation } from 'react-router-dom';
+import { Tabs, Tooltip } from 'antd';
+import { IoSearch, IoCloudUpload } from 'react-icons/io5';
+import { LuPanelLeftClose } from 'react-icons/lu';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useConfig } from '../../hooks/useConfig';
 
 import SearchForm from './SearchForm';
 import SearchResults from './SearchResults';
-import { getUrlState, searchQueryFromUrl } from './url';
+import {
+  getUrlState,
+  searchQueryFromUrl,
+  searchQueryToUrlState,
+  getUrl,
+  isSameQuery,
+  isQueryEmpty,
+} from './url';
 import * as orderBy from '../../model/order-by';
 import ErrorMessage from '../common/ErrorMessage';
 import { sortTraceSummaries } from '../../model/search';
 import FileLoader from './FileLoader';
 import { useUploadedTraces } from './useUploadedTraces';
+import VerticalResizer from '../common/VerticalResizer';
+import { useSearchPanelStore, PANEL_WIDTH_MIN, PANEL_WIDTH_MAX } from './search-panel-store';
 
 import './index.css';
 import JaegerLogo from '../../img/jaeger-logo.svg';
@@ -40,11 +51,31 @@ export function SearchTracePageImpl() {
   const searchQuery = useMemo(() => searchQueryFromUrl(location.search), [location.search]);
   const isHomepage = searchQuery === null;
 
-  const {
-    data: apiTraceSummaries = [],
-    isFetching: loadingTraces,
-    error: searchError,
-  } = useSearchTraces(searchQuery);
+  const navigate = useNavigate();
+
+  const { data: searchData, isFetching: loadingTraces, error: searchError } = useSearchTraces(searchQuery);
+
+  // When the user returns to /search via TopNav (URL loses query params), restore the URL
+  // from the cached query so the address bar remains shareable and bookmarkable.
+  // replace:true avoids adding a spurious history entry.
+  // isQueryEmpty guards against navigating to a URL that would still parse as null,
+  // which would re-trigger this effect on the next render.
+  useEffect(() => {
+    if (!searchQuery && searchData?.query && !isQueryEmpty(searchData.query)) {
+      navigate(getUrl(searchQueryToUrlState(searchData.query)), { replace: true });
+    }
+  }, [searchQuery, searchData?.query, navigate]);
+
+  // Upgrade legacy URLs that carry only `lookback` without `start`/`end`
+  // (e.g. links from HotROD). searchQueryFromUrl derives the timestamps in
+  // memory so the API call succeeds, then we rewrite the URL to the canonical
+  // form so the link becomes repeatable and shareable.
+  const rawUrlState = useMemo(() => getUrlState(location.search), [location.search]);
+  useEffect(() => {
+    if (searchQuery?.start && searchQuery?.end && !rawUrlState.start && !rawUrlState.end) {
+      navigate(getUrl(searchQueryToUrlState(searchQuery)), { replace: true });
+    }
+  }, [searchQuery, rawUrlState, navigate]);
 
   const { uploadedSummaries, uploadedRawTraces, handleTracesLoaded } = useUploadedTraces();
 
@@ -58,6 +89,7 @@ export function SearchTracePageImpl() {
   // traces present in both API results and uploads are not incorrectly badged as "Uploaded"
   // — the API result takes precedence and the badge should not appear on it.
   const { traceSummaries, uploadedTraceIDs } = useMemo(() => {
+    const apiTraceSummaries = searchData?.results ?? [];
     const seen = new Set(apiTraceSummaries.map(s => s.traceID));
     const uniqueUploaded = uploadedSummaries.filter(s => {
       if (seen.has(s.traceID)) return false;
@@ -68,9 +100,19 @@ export function SearchTracePageImpl() {
       traceSummaries: [...apiTraceSummaries, ...uniqueUploaded],
       uploadedTraceIDs: new Set(uniqueUploaded.map(s => s.traceID)),
     };
-  }, [apiTraceSummaries, uploadedSummaries]);
+  }, [searchData, uploadedSummaries]);
 
   const [sortBy, setSortBy] = useState(orderBy.MOST_RECENT);
+  const [activeTab, setActiveTab] = useState<'searchForm' | 'fileLoader'>('searchForm');
+
+  const { panelWidth, collapsed, setPanelWidth, setCollapsed } = useSearchPanelStore(
+    useShallow(s => ({
+      panelWidth: s.panelWidth,
+      collapsed: s.collapsed,
+      setPanelWidth: s.setPanelWidth,
+      setCollapsed: s.setCollapsed,
+    }))
+  );
 
   const sortedTraceSummaries = useMemo(
     () => sortTraceSummaries(traceSummaries, sortBy),
@@ -97,21 +139,22 @@ export function SearchTracePageImpl() {
   // when we are on compare; while we are on Search, the list in the store
   // is whatever we set with the ui actions, not something that only updates
   // when we open the compare page.
-  const { cohortAddTrace, cohortRemoveTrace } = useTraceDiffStore(
+  const { addTraceToCohort, removeTraceFromCohort } = useTraceDiffStore(
     useShallow(s => ({
-      cohortAddTrace: s.cohortAddTrace,
-      cohortRemoveTrace: s.cohortRemoveTrace,
+      addTraceToCohort: s.addTraceToCohort,
+      removeTraceFromCohort: s.removeTraceFromCohort,
     }))
   );
-  const cohort = useTraceDiffStore(s => s.cohort);
+  const cohortIDs = useTraceDiffStore(s => s.cohort);
+  const cohortSummaries = useTraceDiffStore(s => s.cohortSummaries);
 
   const diffCohort = useMemo(() => {
     const summaryMap = new Map(sortedTraceSummaries.map(s => [s.traceID, s]));
-    return cohort.flatMap(id => {
-      const s = summaryMap.get(id);
+    return cohortIDs.flatMap(id => {
+      const s = summaryMap.get(id) ?? cohortSummaries.get(id);
       return s ? [s] : [];
     });
-  }, [cohort, sortedTraceSummaries]);
+  }, [cohortIDs, cohortSummaries, sortedTraceSummaries]);
 
   const config = useConfig();
   const { disableFileUploadControl } = config;
@@ -120,6 +163,10 @@ export function SearchTracePageImpl() {
     setSortBy(newSortBy);
     trackSortByChange(newSortBy);
   }, []);
+
+  // Computed synchronously so the loading indicator shows on the first render after Back
+  // navigation, before the new keyed-cache fetch completes and searchData is updated.
+  const isStale = Boolean(searchQuery && searchData?.query && !isSameQuery(searchQuery, searchData.query));
 
   const errors: Array<{ message: string }> = searchError
     ? [{ message: searchError instanceof Error ? searchError.message : String(searchError) }]
@@ -144,16 +191,80 @@ export function SearchTracePageImpl() {
     });
   }
 
+  const openPanel = useCallback(
+    (tab: 'searchForm' | 'fileLoader') => {
+      setActiveTab(tab);
+      setCollapsed(false);
+    },
+    [setCollapsed]
+  );
+
   return (
-    <Row className="SearchTracePage--row">
-      {!embedded && (
-        <Col xs={24} sm={6} className="SearchTracePage--column">
-          <div className="SearchTracePage--find">
-            <Tabs size="large" items={tabItems} />
-          </div>
-        </Col>
+    <div className="SearchTracePage--row">
+      {!embedded && collapsed && (
+        <div className="SearchTracePage--collapsedPanel">
+          <Tooltip title="Search" placement="right">
+            <button
+              type="button"
+              className="SearchTracePage--iconBtn"
+              onClick={() => openPanel('searchForm')}
+              aria-label="Open search panel"
+            >
+              <IoSearch />
+            </button>
+          </Tooltip>
+          {!disableFileUploadControl && (
+            <Tooltip title="Upload" placement="right">
+              <button
+                type="button"
+                className="SearchTracePage--iconBtn"
+                onClick={() => openPanel('fileLoader')}
+                aria-label="Open upload panel"
+              >
+                <IoCloudUpload />
+              </button>
+            </Tooltip>
+          )}
+        </div>
       )}
-      <Col xs={24} sm={!embedded ? 18 : 24} className="SearchTracePage--column">
+      {!embedded && !collapsed && (
+        <div
+          className="SearchTracePage--column SearchTracePage--panelColumn"
+          style={{ width: `${panelWidth * 100}%` }}
+        >
+          <div className="SearchTracePage--find">
+            <Tabs
+              activeKey={activeTab}
+              onChange={key => setActiveTab(key as 'searchForm' | 'fileLoader')}
+              size="large"
+              items={tabItems}
+              tabBarExtraContent={{
+                right: (
+                  <Tooltip title="Collapse panel" placement="right">
+                    <button
+                      type="button"
+                      className="SearchTracePage--collapseBtn"
+                      onClick={() => setCollapsed(true)}
+                      aria-label="Collapse search panel"
+                    >
+                      <LuPanelLeftClose />
+                    </button>
+                  </Tooltip>
+                ),
+              }}
+            />
+          </div>
+        </div>
+      )}
+      {!embedded && !collapsed && (
+        <VerticalResizer
+          min={PANEL_WIDTH_MIN}
+          max={PANEL_WIDTH_MAX}
+          onChange={setPanelWidth}
+          position={panelWidth}
+        />
+      )}
+      <div className="SearchTracePage--column SearchTracePage--resultsColumn">
         {showErrors && (
           <div className="js-test-error-message">
             <h2>There was an error loading traces: </h2>
@@ -166,12 +277,12 @@ export function SearchTracePageImpl() {
           // SearchResults is wrapped with withRouteProps, so its prop types aren't visible to TS.
           <SearchResults
             {...({
-              cohortAddTrace,
-              cohortRemoveTrace,
+              addTraceToCohort,
+              removeTraceFromCohort,
               diffCohort,
               disableComparisons: !!embedded,
               hideGraph: Boolean(embedded?.searchHideGraph),
-              loading: loadingTraces,
+              loading: loadingTraces || isStale,
               maxTraceDuration,
               showStandaloneLink: Boolean(embedded),
               skipMessage: isHomepage,
@@ -192,8 +303,8 @@ export function SearchTracePageImpl() {
             width="400"
           />
         )}
-      </Col>
-    </Row>
+      </div>
+    </div>
   );
 }
 

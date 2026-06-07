@@ -11,11 +11,12 @@ import queryString from 'query-string';
 import { IoHelp } from 'react-icons/io5';
 import { connect } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getUrl as getSearchUrl } from './url';
+import { getUrl as getSearchUrl, lookbackFromUrl } from './url';
 import type { Dispatch } from 'redux';
-import { useIsSearchFetching, useExecuteSearch } from '../../hooks/useTraceDiscovery';
+import { useIsSearchFetching } from '../../hooks/useTraceDiscovery';
 import { useClearUploadedTraces } from './useUploadedTraces';
 import store from '../../utils/storage';
+import getConfig from '../../utils/config/get-config';
 
 import * as markers from './SearchForm.markers';
 import { trackFormInput } from './SearchForm.track';
@@ -29,6 +30,11 @@ import { useConfig } from '../../hooks/useConfig';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 import { ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
+import {
+  TIME_RANGE_OPTIONS,
+  asValidConfigLookback,
+  lookbackToTimestamp,
+} from '../../utils/time-range-options';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
@@ -77,82 +83,15 @@ export function convTagsLogfmt(tags: string | null | undefined): string | null {
   return JSON.stringify(data);
 }
 
-export function lookbackToTimestamp(lookback: string, from: Date | number): number {
-  const unit = lookback.substr(-1) as any; // dayjs ManipulateType
-  return dayjs(from).subtract(parseInt(lookback, 10), unit).valueOf() * 1000;
-}
-
 interface ILookbackOption {
   label: string;
   value: string;
 }
 
-const lookbackOptions: ILookbackOption[] = [
-  {
-    label: '5 Minutes',
-    value: '5m',
-  },
-  {
-    label: '15 Minutes',
-    value: '15m',
-  },
-  {
-    label: '30 Minutes',
-    value: '30m',
-  },
-  {
-    label: 'Hour',
-    value: '1h',
-  },
-  {
-    label: '2 Hours',
-    value: '2h',
-  },
-  {
-    label: '3 Hours',
-    value: '3h',
-  },
-  {
-    label: '6 Hours',
-    value: '6h',
-  },
-  {
-    label: '12 Hours',
-    value: '12h',
-  },
-  {
-    label: '24 Hours',
-    value: '24h',
-  },
-  {
-    label: '2 Days',
-    value: '2d',
-  },
-  {
-    label: '3 Days',
-    value: '3d',
-  },
-  {
-    label: '5 Days',
-    value: '5d',
-  },
-  {
-    label: '7 Days',
-    value: '7d',
-  },
-  {
-    label: '2 Weeks',
-    value: '2w',
-  },
-  {
-    label: '3 Weeks',
-    value: '3w',
-  },
-  {
-    label: '4 Weeks',
-    value: '4w',
-  },
-];
+const lookbackOptions: ILookbackOption[] = TIME_RANGE_OPTIONS.map(({ label, lookback }) => ({
+  label,
+  value: lookback,
+}));
 
 export const optionsWithinMaxLookback = memoizeOne((maxLookback: ILookbackOption) => {
   const now = new Date();
@@ -257,9 +196,9 @@ interface ISearchFormFields {
   endDate: string;
   endDateTime: string;
   operation: string;
-  tags?: string;
-  minDuration?: string;
-  maxDuration?: string;
+  tags: string;
+  minDuration: string;
+  maxDuration: string;
   lookback: string;
 }
 
@@ -346,6 +285,28 @@ interface ISearchFormImplProps {
   ) => string;
 }
 
+function defaultFormData(
+  initialValues: Partial<ISearchFormFields> | undefined,
+  configLookback: string | undefined
+): Partial<ISearchFormFields> {
+  const nowInMicroseconds = dayjs().valueOf() * 1000;
+  const today = formatDate(nowInMicroseconds);
+  const currentTime = formatTime(nowInMicroseconds);
+  return {
+    service: initialValues?.service,
+    operation: initialValues?.operation ?? DEFAULT_OPERATION,
+    resultsLimit: initialValues?.resultsLimit ?? String(DEFAULT_LIMIT),
+    lookback: initialValues?.lookback ?? asValidConfigLookback(configLookback) ?? DEFAULT_LOOKBACK,
+    tags: initialValues?.tags ?? '',
+    startDate: initialValues?.startDate ?? today,
+    startDateTime: initialValues?.startDateTime ?? '00:00',
+    endDate: initialValues?.endDate ?? today,
+    endDateTime: initialValues?.endDateTime ?? currentTime,
+    minDuration: initialValues?.minDuration ?? '',
+    maxDuration: initialValues?.maxDuration ?? '',
+  };
+}
+
 export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   invalid = false,
   initialValues,
@@ -353,24 +314,13 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
 }) => {
   const submitting = useIsSearchFetching();
   const navigate = useNavigate();
-  const executeSearch = useExecuteSearch();
   const clearUploadedTraces = useClearUploadedTraces();
-  const { useOpenTelemetryTerms: useOtelTerms, search } = useConfig();
-  const searchMaxLookback: ILookbackOption | undefined = search?.maxLookback;
-  const searchAdjustEndTime: string | undefined = search?.adjustEndTime;
-  const [formData, setFormData] = useState<Partial<ISearchFormFields>>(() => ({
-    service: initialValues?.service,
-    operation: initialValues?.operation,
-    tags: initialValues?.tags,
-    lookback: initialValues?.lookback,
-    startDate: initialValues?.startDate,
-    startDateTime: initialValues?.startDateTime,
-    endDate: initialValues?.endDate,
-    endDateTime: initialValues?.endDateTime,
-    minDuration: initialValues?.minDuration,
-    maxDuration: initialValues?.maxDuration,
-    resultsLimit: initialValues?.resultsLimit,
-  }));
+  const { useOpenTelemetryTerms: useOtelTerms, search: searchConfig } = useConfig();
+  const searchMaxLookback: ILookbackOption | undefined = searchConfig?.maxLookback;
+  const searchAdjustEndTime: string | undefined = searchConfig?.adjustEndTime;
+  const [formData, setFormData] = useState<Partial<ISearchFormFields>>(() =>
+    defaultFormData(initialValues, searchConfig?.defaultLookback)
+  );
 
   // Fetch services using React Query
   const { data: services = [], isLoading: isLoadingServices, error: servicesError } = useServices();
@@ -415,22 +365,15 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
       e.preventDefault();
       const fields = formData as ISearchFormFields;
       const url = submitFormHandler(fields, searchAdjustEndTime, adjustTimeEnabled);
-      const query = buildSearchQuery(fields, searchAdjustEndTime, adjustTimeEnabled);
       clearUploadedTraces();
       navigate(url);
-      // Errors surface via useSearchTraces().error; suppress the unhandled rejection.
-      executeSearch(query).catch(() => {});
     },
-    [
-      formData,
-      searchAdjustEndTime,
-      adjustTimeEnabled,
-      submitFormHandler,
-      navigate,
-      clearUploadedTraces,
-      executeSearch,
-    ]
+    [formData, searchAdjustEndTime, adjustTimeEnabled, submitFormHandler, navigate, clearUploadedTraces]
   );
+
+  const handleReset = useCallback(() => {
+    setFormData(prev => defaultFormData({ service: prev.service }, searchConfig?.defaultLookback));
+  }, [searchConfig?.defaultLookback]);
 
   const { service: selectedService, lookback: selectedLookback } = formData;
   const noSelectedService = selectedService === '-' || !selectedService;
@@ -603,7 +546,6 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           data-testid="lookback"
           value={formData.lookback}
           disabled={submitting}
-          defaultValue={DEFAULT_LOOKBACK}
           onChange={(value: string) => handleChange({ lookback: value })}
         >
           {searchMaxLookback && optionsWithinMaxLookback(searchMaxLookback)}
@@ -723,11 +665,14 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           placeholder="Limit Results"
           type="number"
           min={1}
-          max={search?.maxLimit}
+          max={searchConfig?.maxLimit}
           onChange={e => handleChange({ resultsLimit: e.target.value })}
         />
       </FormItem>
 
+      <Button htmlType="button" className="SearchForm--reset" disabled={submitting} onClick={handleReset}>
+        Reset
+      </Button>
       <Button
         htmlType="submit"
         className="SearchForm--submit"
@@ -740,7 +685,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   );
 };
 
-export function mapStateToProps(state: ReduxState, ownProps: { search?: string }) {
+export function mapStateToProps(_state: ReduxState, ownProps: { search?: string }) {
   const {
     service,
     limit,
@@ -751,7 +696,6 @@ export function mapStateToProps(state: ReduxState, ownProps: { search?: string }
     tags: logfmtTags,
     maxDuration,
     minDuration,
-    lookback,
     traceID: traceIDParams,
   } = queryString.parse(ownProps.search || '');
 
@@ -836,7 +780,10 @@ export function mapStateToProps(state: ReduxState, ownProps: { search?: string }
     initialValues: {
       service: (service as string | undefined) || lastSearchService || '-',
       resultsLimit: (limit as string | undefined) || String(DEFAULT_LIMIT),
-      lookback: (lookback as string | undefined) || DEFAULT_LOOKBACK,
+      lookback:
+        lookbackFromUrl(ownProps.search || '') ||
+        asValidConfigLookback(getConfig().search?.defaultLookback) ||
+        DEFAULT_LOOKBACK,
       startDate: queryStartDate || today,
       startDateTime: queryStartDateTime || '00:00',
       endDate: queryEndDate || today,
