@@ -56,6 +56,8 @@ const getConfig = memoizeOne(function getConfig(): Config {
       rv[key] = { ...defaultConfig[key], ...embedded[key] };
     }
   });
+  // backendCapabilities always comes from getJaegerBackendCapabilities(), overriding anything
+  // that may be present in the UI config, so the backend remains authoritative.
   return { ...rv, backendCapabilities };
 });
 
