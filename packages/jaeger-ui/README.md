@@ -6,7 +6,7 @@
 
 1. **Base-path detection** — an inline `<script>` inspects `window.location.pathname` and injects a `<base href="…">` element so that relative asset URLs resolve correctly regardless of the URL prefix under which Jaeger is served. This makes the UI work behind a reverse proxy that exposes it at an arbitrary path (e.g. `/jaeger/`) without any backend configuration. See [ADR-009](https://github.com/jaegertracing/jaeger/blob/main/docs/adr/009-ui-base-path-auto-detection.md) for the design rationale.
 
-2. **Runtime configuration** — three JavaScript functions (`getJaegerUiConfig`, `getJaegerStorageCapabilities`, `getJaegerVersion`) are defined with stub return values. The Jaeger backend replaces those stubs with real data via search-and-replace before serving the file, injecting deployment-specific configuration without a separate API round-trip.
+2. **Runtime configuration** — three JavaScript functions (`getJaegerUiConfig`, `getJaegerBackendCapabilities`, `getJaegerVersion`) are defined with stub return values. The Jaeger backend replaces those stubs with real data via search-and-replace before serving the file, injecting deployment-specific configuration without a separate API round-trip. (A private `_getJaegerStorageCapabilities` helper retains the legacy `JAEGER_STORAGE_CAPABILITIES` search-replace pattern so older backends keep working unchanged.)
 
 3. **SPA mount fallback** — if the React application fails to mount (e.g. due to an unresolvable asset path or an invalid URL), a plain-text error message is shown in `#jaeger-ui-root` instead of a blank page.
 
@@ -76,16 +76,18 @@ An example JSON config file is provided at [jaeger-ui.config.example.json](./jae
 
 These local config files are ignored by git (see `.gitignore`).
 
-### Ask Jaeger assistant (`ai`)
+### Ask Jaeger assistant
 
-AI features are **off by default** (`ai.enabled: false`). Enable in UI config for local dev or production:
+AI assistant visibility is driven by the backend-advertised capability `backendCapabilities.aiAssistant`. The Jaeger backend turns this flag on when a live AI sidecar is reachable; the UI then surfaces the Ask Jaeger panel and sparkles icon. Otherwise the header shows **Lookup by Trace ID…** only.
+
+For local development without a sidecar, set the capability in your local config so the UI renders the panel:
 
 ```json
 {
-  "ai": {
-    "enabled": true
+  "backendCapabilities": {
+    "aiAssistant": true
   }
 }
 ```
 
-When disabled, the header shows **Lookup by Trace ID…** only (no sparkles / Ask Jaeger panel). When enabled, the UI uses `/api/ai/chat` by default, or `VITE_JAEGER_AG_UI_URL` at build time.
+When enabled, the UI uses `/api/ai/chat` by default, or `VITE_JAEGER_AG_UI_URL` at build time.
