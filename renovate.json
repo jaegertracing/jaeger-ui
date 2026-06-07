@@ -22,6 +22,13 @@
       "description": "rolldown ships one package per platform binding (@rolldown/binding-*); group them all into a single PR so they bump in lockstep"
     },
     {
+      "groupName": "assistant-ui and ag-ui",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["/^@assistant-ui//", "/^@ag-ui//"],
+      "rangeStrategy": "pin",
+      "description": "@assistant-ui/* and @ag-ui/* share peer types (AssistantRuntime, HttpAgent); bumping them independently produces duplicate copies in node_modules and tsc errors. Pin exact versions (no ^) so npm dedupes a single copy."
+    },
+    {
       "groupName": "do not apply patch upgrades to dependencies",
       "matchManagers": ["npm"],
       "matchUpdateTypes": ["patch", "digest"],
