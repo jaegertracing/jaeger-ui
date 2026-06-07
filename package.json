@@ -81,7 +81,7 @@
     "@rolldown/binding-android-arm64": "1.0.0-rc.12",
     "@rolldown/binding-darwin-arm64": "1.0.0-rc.12",
     "@rolldown/binding-darwin-x64": "1.0.0-rc.12",
-    "@rolldown/binding-freebsd-x64": "1.0.0-rc.12",
+    "@rolldown/binding-freebsd-x64": "1.1.0",
     "@rolldown/binding-linux-arm-gnueabihf": "1.0.0-rc.12",
     "@rolldown/binding-linux-arm64-gnu": "1.0.0-rc.12",
     "@rolldown/binding-linux-arm64-musl": "1.0.0-rc.12",
