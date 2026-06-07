@@ -16,6 +16,12 @@
       "description": "vite-plus bundles a specific vitest version internally; these must be bumped together to avoid peer-dependency version mismatches"
     },
     {
+      "groupName": "rolldown",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["rolldown", "/^@rolldown//"],
+      "description": "rolldown ships one package per platform binding (@rolldown/binding-*); group them all into a single PR so they bump in lockstep"
+    },
+    {
       "groupName": "do not apply patch upgrades to dependencies",
       "matchManagers": ["npm"],
       "matchUpdateTypes": ["patch", "digest"],
