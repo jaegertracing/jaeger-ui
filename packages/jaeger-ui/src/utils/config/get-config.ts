@@ -34,25 +34,16 @@ function getBackendCapabilities(): BackendCapabilities | null {
  * The final config is assembled from three sources, in increasing priority:
  *   1. defaultConfig  — compile-time defaults
  *   2. getJaegerUiConfig()  — injected into index.html by query-service (or Vite plugin in dev)
- *   3. getJaegerBackendCapabilities()  — injected separately by query-service; always wins for
- *      backendCapabilities so the backend's authoritative knowledge of its own capabilities
- *      cannot be overridden by the UI config file. For backwards compatibility with older
- *      user configs, a `storageCapabilities` field in the embedded config is folded into
- *      `backendCapabilities` before the backend override is applied.
+ *   3. getJaegerBackendCapabilities()  — injected separately by query-service; always wins
+ *      for backendCapabilities so the backend's authoritative knowledge of its own
+ *      capabilities cannot be overridden by the UI config file.
  */
 const getConfig = memoizeOne(function getConfig(): Config {
-  const backendInjected = getBackendCapabilities();
+  const backendCapabilities = { ...defaultConfig.backendCapabilities, ...getBackendCapabilities() };
   const embedded = getUiConfig();
 
-  const mergedCapabilities: BackendCapabilities = {
-    ...defaultConfig.backendCapabilities,
-    ...embedded?.storageCapabilities,
-    ...embedded?.backendCapabilities,
-    ...backendInjected,
-  };
-
   if (!embedded) {
-    return { ...defaultConfig, backendCapabilities: mergedCapabilities };
+    return { ...defaultConfig, backendCapabilities };
   }
   // check for deprecated config values
   if (Array.isArray(deprecations)) {
@@ -65,7 +56,7 @@ const getConfig = memoizeOne(function getConfig(): Config {
       rv[key] = { ...defaultConfig[key], ...embedded[key] };
     }
   });
-  return { ...rv, backendCapabilities: mergedCapabilities };
+  return { ...rv, backendCapabilities };
 });
 
 export default getConfig;

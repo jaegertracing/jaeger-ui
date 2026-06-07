@@ -90,20 +90,6 @@ describe('getConfig()', () => {
         aiAssistant: false,
       });
     });
-
-    it('folds legacy storageCapabilities from the UI config into backendCapabilities', () => {
-      // Backwards compatibility: existing user configs that set `storageCapabilities`
-      // should continue to work when the backend has not (yet) injected its own values.
-      window.getJaegerUiConfig = jest.fn(() => ({
-        storageCapabilities: { archiveStorage: true, metricsStorage: true },
-      }));
-      window.getJaegerBackendCapabilities = undefined;
-      expect(getConfig().backendCapabilities).toEqual({
-        archiveStorage: true,
-        metricsStorage: true,
-        aiAssistant: false,
-      });
-    });
   });
 
   describe('index functions are injected by backend', () => {

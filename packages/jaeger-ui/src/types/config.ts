@@ -73,12 +73,10 @@ export type TraceGraphConfig = {
   layoutManagerMemory?: number;
 };
 
-// BackendCapabilities is the unified capability blob advertised by the
-// backend via window.getJaegerBackendCapabilities. It supersedes the older
-// storage-only shape and adds non-storage flags such as `aiAssistant`. The
-// legacy `storageCapabilities` shape (just `archiveStorage` + `metricsStorage`)
-// is still accepted in user UI configs for backwards compatibility and is
-// folded into this blob at config-load time.
+// BackendCapabilities is the capability blob advertised by the backend via
+// window.getJaegerBackendCapabilities. The backend overlays this on top of
+// the user UI config independently, so the user UI config cannot set these
+// values in production.
 export type BackendCapabilities = {
   // archiveStorage indicates whether the query service supports archive storage.
   archiveStorage?: boolean;
@@ -155,15 +153,9 @@ export type Config = {
   // traceIdDisplayLength controls the length of the trace ID displayed in the UI.
   traceIdDisplayLength?: number;
 
-  // Deprecated: storage capabilities advertised by older backends.
-  // Retained so existing user UI configs that set this field still work; at
-  // load time the values are folded into `backendCapabilities` (the backend
-  // injection remains authoritative). Shape: { archiveStorage?, metricsStorage? }.
-  storageCapabilities?: Pick<BackendCapabilities, 'archiveStorage' | 'metricsStorage'>;
-
-  // backendCapabilities is the unified capability blob advertised by the
-  // backend. Internal UI code should read this field; the legacy
-  // `storageCapabilities` is merged in for backwards compatibility.
+  // backendCapabilities is the capability blob advertised by the backend
+  // (overlaid on top of any embedded UI config at index.html boot). Internal
+  // UI code reads this field.
   backendCapabilities?: BackendCapabilities;
 
   // topTagPrefixes defines a set of prefixes for span tag names that are considered
