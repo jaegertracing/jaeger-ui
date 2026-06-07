@@ -84,7 +84,7 @@
     "@rolldown/binding-freebsd-x64": "1.0.0-rc.12",
     "@rolldown/binding-linux-arm-gnueabihf": "1.0.0-rc.12",
     "@rolldown/binding-linux-arm64-gnu": "1.0.0-rc.12",
-    "@rolldown/binding-linux-arm64-musl": "1.0.0-rc.12",
+    "@rolldown/binding-linux-arm64-musl": "1.1.0",
     "@rolldown/binding-linux-ppc64-gnu": "1.0.0-rc.12",
     "@rolldown/binding-linux-s390x-gnu": "1.0.0-rc.12",
     "@rolldown/binding-linux-x64-gnu": "1.0.0-rc.12",
