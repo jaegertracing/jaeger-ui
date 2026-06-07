@@ -1,5 +1,6 @@
-// Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2026 The Jaeger Authors.
+// Copyright (c) 2017 Uber Technologies, Inc.
 
 export const MOST_RECENT = 'MOST_RECENT';
 export const LONGEST_FIRST = 'LONGEST_FIRST';
