@@ -35,7 +35,7 @@ function toOrderBy(columnKey: string | undefined, order: string | undefined): st
   if (columnKey === 'duration') {
     return order === 'ascend' ? orderBy.SHORTEST_FIRST : orderBy.LONGEST_FIRST;
   }
-  // startTime descend === MOST_RECENT (default sort); ascending is not supported
+  // startTime descend maps to MOST_RECENT; ascend maps to OLDEST_FIRST
   if (columnKey === 'startTime') {
     return order === 'ascend' ? orderBy.OLDEST_FIRST : orderBy.MOST_RECENT;
   }
