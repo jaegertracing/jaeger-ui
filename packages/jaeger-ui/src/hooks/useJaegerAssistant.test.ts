@@ -22,7 +22,7 @@ const baseConfig = {
   themes: { enabled: true },
   useOpenTelemetryTerms: false,
   menu: [],
-  ai: { enabled: false },
+  backendCapabilities: { aiAssistant: false },
 };
 
 describe('useJaegerAssistant', () => {
@@ -32,32 +32,41 @@ describe('useJaegerAssistant', () => {
   });
 
   describe('useJaegerAssistantEnabled', () => {
-    it('is false when ai.enabled is false', () => {
+    it('is false when backendCapabilities.aiAssistant is false', () => {
       const { result } = renderHook(() => useJaegerAssistantEnabled());
       expect(result.current).toBe(false);
     });
 
-    it('is true when ai.enabled is true', () => {
-      mockUseConfig.mockReturnValue({ ...baseConfig, ai: { enabled: true } } as ReturnType<typeof useConfig>);
+    it('is true when backendCapabilities.aiAssistant is true', () => {
+      mockUseConfig.mockReturnValue({
+        ...baseConfig,
+        backendCapabilities: { aiAssistant: true },
+      } as ReturnType<typeof useConfig>);
       const { result } = renderHook(() => useJaegerAssistantEnabled());
       expect(result.current).toBe(true);
     });
   });
 
   describe('useJaegerAssistantConfigured', () => {
-    it('is false when ai.enabled is false', () => {
+    it('is false when the capability is off', () => {
       const { result } = renderHook(() => useJaegerAssistantConfigured());
       expect(result.current).toBe(false);
     });
 
-    it('is true when ai.enabled is true and URL is set', () => {
-      mockUseConfig.mockReturnValue({ ...baseConfig, ai: { enabled: true } } as ReturnType<typeof useConfig>);
+    it('is true when the capability is on and URL is set', () => {
+      mockUseConfig.mockReturnValue({
+        ...baseConfig,
+        backendCapabilities: { aiAssistant: true },
+      } as ReturnType<typeof useConfig>);
       const { result } = renderHook(() => useJaegerAssistantConfigured());
       expect(result.current).toBe(true);
     });
 
-    it('is false when ai.enabled is true but URL is empty', () => {
-      mockUseConfig.mockReturnValue({ ...baseConfig, ai: { enabled: true } } as ReturnType<typeof useConfig>);
+    it('is false when the capability is on but URL is empty', () => {
+      mockUseConfig.mockReturnValue({
+        ...baseConfig,
+        backendCapabilities: { aiAssistant: true },
+      } as ReturnType<typeof useConfig>);
       mockGetJaegerAgUiUrl.mockReturnValue('');
       const { result } = renderHook(() => useJaegerAssistantConfigured());
       expect(result.current).toBe(false);

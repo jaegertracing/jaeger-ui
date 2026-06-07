@@ -120,6 +120,23 @@ function jaegerUiConfigPlugin() {
   const jsConfigPath = path.resolve(__dirname, 'jaeger-ui.config.js');
   const jsonConfigPath = path.resolve(__dirname, 'jaeger-ui.config.json');
 
+  // Merge legacy `storageCapabilities` and new `backendCapabilities` into a single
+  // capability blob and inject it at the JAEGER_BACKEND_CAPABILITIES swap point.
+  // Mirrors how a post-RFC-0003 Jaeger backend will inject the same field; until
+  // then, the index.html composer also falls back to JAEGER_STORAGE_CAPABILITIES
+  // for the archive/metrics flags, so legacy backends keep working unchanged.
+  function injectBackendCapabilities(
+    html: string,
+    config: { storageCapabilities?: Record<string, unknown>; backendCapabilities?: Record<string, unknown> }
+  ) {
+    const merged = { ...config.storageCapabilities, ...config.backendCapabilities };
+    if (Object.keys(merged).length === 0) return html;
+    return html.replace(
+      'const JAEGER_BACKEND_CAPABILITIES = DEFAULT_BACKEND_CAPABILITIES;',
+      `const JAEGER_BACKEND_CAPABILITIES = { ...DEFAULT_BACKEND_CAPABILITIES, ...${JSON.stringify(merged)} };`
+    );
+  }
+
   return {
     name: 'jaeger-ui-config',
     configureServer(server) {
@@ -142,23 +159,20 @@ function jaegerUiConfigPlugin() {
             // matching the contract enforced by the jaeger binary.
             html = html.replace('// JAEGER_CONFIG_JS', jsContent);
 
-            // Extract storageCapabilities from the JS config by executing it in a sandbox
+            // Extract capabilities from the JS config by executing it in a sandbox
             // and calling UIConfig(), mirroring the JSON config path's special treatment.
             try {
-              const sandbox: { UIConfig?: () => { storageCapabilities?: Record<string, unknown> } } = {};
+              const sandbox: {
+                UIConfig?: () => {
+                  storageCapabilities?: Record<string, unknown>;
+                  backendCapabilities?: Record<string, unknown>;
+                };
+              } = {};
               vm.runInNewContext(jsContent, sandbox);
-              const storageCapabilities = sandbox.UIConfig?.()?.storageCapabilities;
-              if (storageCapabilities) {
-                html = html.replace(
-                  'const JAEGER_STORAGE_CAPABILITIES = DEFAULT_STORAGE_CAPABILITIES;',
-                  `const JAEGER_STORAGE_CAPABILITIES = { ...DEFAULT_STORAGE_CAPABILITIES, ...${JSON.stringify(storageCapabilities)} };`
-                );
-              }
+              const cfg = sandbox.UIConfig?.() ?? {};
+              html = injectBackendCapabilities(html, cfg);
             } catch (evalErr) {
-              console.warn(
-                '[jaeger-ui-config] Could not evaluate JS config for storageCapabilities:',
-                evalErr
-              );
+              console.warn('[jaeger-ui-config] Could not evaluate JS config for capabilities:', evalErr);
             }
 
             console.log('[jaeger-ui-config] Loaded config from jaeger-ui.config.js');
@@ -181,16 +195,11 @@ function jaegerUiConfigPlugin() {
               `const JAEGER_CONFIG = ${JSON.stringify(parsedConfig)};`
             );
 
-            // Inject storageCapabilities if present in the config file.
-            // The Go server injects this separately via its own search-replace on
-            // JAEGER_STORAGE_CAPABILITIES; the Vite plugin must replicate that here so that
-            // setting storageCapabilities in jaeger-ui.config.json works in dev mode too.
-            if (parsedConfig.storageCapabilities) {
-              html = html.replace(
-                'const JAEGER_STORAGE_CAPABILITIES = DEFAULT_STORAGE_CAPABILITIES;',
-                `const JAEGER_STORAGE_CAPABILITIES = { ...DEFAULT_STORAGE_CAPABILITIES, ...${JSON.stringify(parsedConfig.storageCapabilities)} };`
-              );
-            }
+            // Inject backendCapabilities (and legacy storageCapabilities) if present in
+            // the config file. The Go server injects this separately via its own
+            // search-replace; the Vite plugin replicates that here so capability
+            // overrides in jaeger-ui.config.json work with `npm start`.
+            html = injectBackendCapabilities(html, parsedConfig);
 
             console.log('[jaeger-ui-config] Loaded config from jaeger-ui.config.json');
             return html;

@@ -27,7 +27,7 @@ describe('getConfig()', () => {
   describe('index functions are not yet injected by backend', () => {
     beforeAll(() => {
       window.getJaegerUiConfig = undefined;
-      window.getJaegerStorageCapabilities = undefined;
+      window.getJaegerBackendCapabilities = undefined;
     });
 
     it('warns once', () => {
@@ -42,43 +42,67 @@ describe('getConfig()', () => {
     });
   });
 
-  describe('storageCapabilities', () => {
+  describe('backendCapabilities', () => {
     beforeEach(() => {
       // Reset memoization before each test
       getConfig.apply({}, []);
     });
 
-    it('uses storageCapabilities from getJaegerStorageCapabilities when injected', () => {
+    it('uses backendCapabilities from getJaegerBackendCapabilities when injected', () => {
       // This is the normal production path: the backend (or Vite plugin in dev) injects
-      // storageCapabilities via window.getJaegerStorageCapabilities, independently of
+      // backendCapabilities via window.getJaegerBackendCapabilities, independently of
       // the main UI config.
       window.getJaegerUiConfig = jest.fn(() => ({}));
-      window.getJaegerStorageCapabilities = jest.fn(() => ({
+      window.getJaegerBackendCapabilities = jest.fn(() => ({
         archiveStorage: true,
         metricsStorage: true,
+        aiAssistant: true,
       }));
-      expect(getConfig().storageCapabilities).toEqual({ archiveStorage: true, metricsStorage: true });
+      expect(getConfig().backendCapabilities).toEqual({
+        archiveStorage: true,
+        metricsStorage: true,
+        aiAssistant: true,
+      });
     });
 
-    it('falls back to defaultConfig.storageCapabilities when getJaegerStorageCapabilities is not injected', () => {
+    it('falls back to defaultConfig.backendCapabilities when getJaegerBackendCapabilities is not injected', () => {
       // When neither the backend nor the Vite plugin has injected the capabilities function,
-      // the default (metricsStorage: false) is used.
+      // the defaults are used.
       window.getJaegerUiConfig = jest.fn(() => ({}));
-      window.getJaegerStorageCapabilities = undefined;
-      expect(getConfig().storageCapabilities).toEqual(defaultConfig.storageCapabilities);
+      window.getJaegerBackendCapabilities = undefined;
+      expect(getConfig().backendCapabilities).toEqual(defaultConfig.backendCapabilities);
     });
 
-    it('getJaegerStorageCapabilities takes precedence over storageCapabilities in the UI config', () => {
-      // storageCapabilities in the main UI config object is always overridden by
-      // getJaegerStorageCapabilities so the backend remains authoritative.
+    it('getJaegerBackendCapabilities takes precedence over backendCapabilities in the UI config', () => {
+      // backendCapabilities in the main UI config object is always overridden by
+      // getJaegerBackendCapabilities so the backend remains authoritative.
+      window.getJaegerUiConfig = jest.fn(() => ({
+        backendCapabilities: { archiveStorage: true, metricsStorage: true, aiAssistant: true },
+      }));
+      window.getJaegerBackendCapabilities = jest.fn(() => ({
+        archiveStorage: false,
+        metricsStorage: false,
+        aiAssistant: false,
+      }));
+      expect(getConfig().backendCapabilities).toEqual({
+        archiveStorage: false,
+        metricsStorage: false,
+        aiAssistant: false,
+      });
+    });
+
+    it('folds legacy storageCapabilities from the UI config into backendCapabilities', () => {
+      // Backwards compatibility: existing user configs that set `storageCapabilities`
+      // should continue to work when the backend has not (yet) injected its own values.
       window.getJaegerUiConfig = jest.fn(() => ({
         storageCapabilities: { archiveStorage: true, metricsStorage: true },
       }));
-      window.getJaegerStorageCapabilities = jest.fn(() => ({
-        archiveStorage: false,
-        metricsStorage: false,
-      }));
-      expect(getConfig().storageCapabilities).toEqual({ archiveStorage: false, metricsStorage: false });
+      window.getJaegerBackendCapabilities = undefined;
+      expect(getConfig().backendCapabilities).toEqual({
+        archiveStorage: true,
+        metricsStorage: true,
+        aiAssistant: false,
+      });
     });
   });
 
@@ -90,8 +114,8 @@ describe('getConfig()', () => {
       getConfig.apply({}, []);
       embedded = {};
       window.getJaegerUiConfig = jest.fn(() => embedded);
-      capabilities = defaultConfig.storageCapabilities;
-      window.getJaegerStorageCapabilities = jest.fn(() => capabilities);
+      capabilities = defaultConfig.backendCapabilities;
+      window.getJaegerBackendCapabilities = jest.fn(() => capabilities);
     });
 
     it('returns the default config when the embedded config is `null`', () => {
@@ -99,22 +123,24 @@ describe('getConfig()', () => {
       expect(getConfig()).toEqual(defaultConfig);
     });
 
-    it('merges the defaultConfig with the embedded config and storage capabilities', () => {
+    it('merges the defaultConfig with the embedded config and backend capabilities', () => {
       embedded = { novel: 'prop' };
-      capabilities = { archiveStorage: true, metricsStorage: false };
-      expect(getConfig()).toEqual({ ...defaultConfig, ...embedded, storageCapabilities: capabilities });
+      capabilities = { archiveStorage: true, metricsStorage: false, aiAssistant: false };
+      expect(getConfig()).toEqual({ ...defaultConfig, ...embedded, backendCapabilities: capabilities });
     });
 
     describe('overwriting precedence and merging', () => {
       describe('fields not in mergeFields', () => {
         it('gives precedence to the embedded config', () => {
           const mergeFieldsSet = new Set(mergeFields);
-          const keys = Object.keys(defaultConfig).filter(k => !mergeFieldsSet.has(k));
+          const keys = Object.keys(defaultConfig).filter(
+            k => !mergeFieldsSet.has(k) && k !== 'backendCapabilities'
+          );
           embedded = {};
           keys.forEach(key => {
             embedded[key] = key;
           });
-          expect(getConfig()).toEqual({ ...defaultConfig, ...embedded, storageCapabilities: capabilities });
+          expect(getConfig()).toEqual({ ...defaultConfig, ...embedded, backendCapabilities: capabilities });
         });
       });
 
@@ -124,7 +150,7 @@ describe('getConfig()', () => {
           mergeFields.forEach((k, i) => {
             embedded[k] = i ? true : null;
           });
-          expect(getConfig()).toEqual({ ...defaultConfig, ...embedded, storageCapabilities: capabilities });
+          expect(getConfig()).toEqual({ ...defaultConfig, ...embedded, backendCapabilities: capabilities });
         });
 
         it('merges object values', () => {
@@ -136,7 +162,7 @@ describe('getConfig()', () => {
           embedded[key] = { a: true, b: false };
           const expected = { ...defaultConfig, ...embedded };
           expected[key] = { ...defaultConfig[key], ...embedded[key] };
-          expect(getConfig()).toEqual({ ...expected, storageCapabilities: capabilities });
+          expect(getConfig()).toEqual({ ...expected, backendCapabilities: capabilities });
         });
       });
     });
