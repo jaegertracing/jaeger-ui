@@ -19,6 +19,10 @@ SPDX-License-Identifier: Apache-2.0
   white-space: nowrap;
 }
 
+.SpanDetail--headerList {
+  margin-left: auto;
+}
+
 .SpanDetail--debugInfo {
   display: block;
   letter-spacing: 0.25px;

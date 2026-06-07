@@ -89,9 +89,11 @@ export default function SpanDetail(props: SpanDetailProps) {
   return (
     <div>
       <div className="ub-flex ub-items-center SpanDetail--header">
-        <h2 className="ub-flex-auto ub-m0 SpanDetail--headerTitle">{span.name}</h2>
+        <h2 className="ub-flex-auto ub-m0 SpanDetail--headerTitle" title={span.name} aria-label={span.name}>
+          {span.name}
+        </h2>
         <LabeledList
-          className="ub-tx-right-align"
+          className="ub-tx-right-align SpanDetail--headerList"
           dividerClassName="SpanDetail--divider"
           items={overviewItems}
         />
