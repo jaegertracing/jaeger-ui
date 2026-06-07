@@ -119,9 +119,7 @@ describe('getConfig()', () => {
       describe('fields not in mergeFields', () => {
         it('gives precedence to the embedded config', () => {
           const mergeFieldsSet = new Set(mergeFields);
-          const keys = Object.keys(defaultConfig).filter(
-            k => !mergeFieldsSet.has(k) && k !== 'backendCapabilities'
-          );
+          const keys = Object.keys(defaultConfig).filter(k => !mergeFieldsSet.has(k));
           embedded = {};
           keys.forEach(key => {
             embedded[key] = key;
