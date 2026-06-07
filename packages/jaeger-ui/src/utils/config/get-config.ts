@@ -18,10 +18,9 @@ function getUiConfig() {
 
 // getBackendCapabilities reads the capability blob injected by the
 // query-service backend via window.getJaegerBackendCapabilities
-// (search-replaced into index.html). Returns null when the function has not
-// been injected (e.g. in tests or before the backend rewrites index.html)
-// so the merge step in getConfig can distinguish "no backend signal" from
-// "backend says everything is false".
+// (search-replaced into index.html). index.html defines this function
+// unconditionally, so a non-function value only appears in environments
+// that don't load index.html (e.g. unit tests).
 function getBackendCapabilities(): BackendCapabilities | null {
   const getter = window.getJaegerBackendCapabilities;
   return typeof getter === 'function' ? getter() : null;
