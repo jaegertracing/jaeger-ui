@@ -93,7 +93,11 @@ export function transformServiceMetrics(payload: FetchedAllServiceMetricsRespons
             let y: number | null;
             try {
               y = parseFloat(p.gaugeValue.doubleValue.toFixed(2));
-              max = y > max ? y : max;
+              if (Number.isNaN(y)) {
+                y = null;
+              } else {
+                max = y > max ? y : max;
+              }
             } catch {
               y = null;
             }

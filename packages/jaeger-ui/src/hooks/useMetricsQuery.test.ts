@@ -181,6 +181,36 @@ describe('transformServiceMetrics', () => {
     expect(result.serviceMetrics.service_latencies![0].metricPoints[0].y).toBeNull();
   });
 
+  it('normalises NaN doubleValue to null and does not corrupt max', () => {
+    const nanPoint = { gaugeValue: { doubleValue: NaN }, timestamp: '2021-01-01T00:00:00.000Z' };
+    const goodPoint = { gaugeValue: { doubleValue: 50 }, timestamp: '2021-01-01T00:01:00.000Z' };
+    const payload = [
+      {
+        status: 'fulfilled',
+        value: {
+          name: 'service_latencies',
+          type: 'GAUGE',
+          help: '',
+          quantile: 0.5,
+          metrics: [
+            { labels: [{ name: 'service_name', value: 'svc' }], metricPoints: [nanPoint, goodPoint] },
+          ],
+        },
+      },
+      latency75,
+      latency95,
+      callRate,
+      errorRate,
+    ] as any as FetchedAllServiceMetricsResponse;
+    const result = transformServiceMetrics(payload);
+    const latency = result.serviceMetrics.service_latencies![0];
+    // NaN point becomes null, good point becomes 50
+    expect(latency.metricPoints[0].y).toBeNull();
+    expect(latency.metricPoints[1].y).toBe(50);
+    // max should reflect only the valid point, not NaN
+    expect(latency.max).toBe(50);
+  });
+
   it('returns empty metrics when payload has no metric entries', () => {
     const empty = [
       {
