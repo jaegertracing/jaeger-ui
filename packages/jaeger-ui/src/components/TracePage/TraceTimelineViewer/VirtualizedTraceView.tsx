@@ -12,7 +12,7 @@ import memoizeOne from 'memoize-one';
 import type { Location, NavigateFunction } from 'react-router-dom';
 import { actions } from './duck';
 import generateRowStates, { RowState } from './generateRowStates';
-import ListView from './ListView';
+import ListView, { ListViewRef } from './ListView';
 import PrunedSpanRow from './PrunedSpanRow';
 import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
@@ -211,7 +211,7 @@ const memoizedPrunedCriticalPaths = memoizeOne(
 
 // export from tests
 export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceViewProps> {
-  listView: ListView | TNil;
+  listView: ListViewRef | TNil;
   constructor(props: VirtualizedTraceViewProps) {
     super(props);
     const { setTrace, trace, uiFind } = props;
@@ -358,7 +358,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     throw new Error(`unable to find row for span index: ${index}`);
   };
 
-  setListView = (listView: ListView | TNil) => {
+  setListView = (listView: ListViewRef | TNil) => {
     const isChanged = this.listView !== listView;
     this.listView = listView;
     if (listView && isChanged) {
