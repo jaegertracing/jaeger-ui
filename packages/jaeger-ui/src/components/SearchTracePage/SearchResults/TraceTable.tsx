@@ -54,6 +54,8 @@ function fromOrderBy(sort: string): { key: string; order: 'ascend' | 'descend' }
       return { key: 'duration', order: 'ascend' };
     case orderBy.OLDEST_FIRST:
       return { key: 'startTime', order: 'ascend' };
+    case orderBy.MOST_RECENT:
+      return { key: 'startTime', order: 'descend' };
     default:
       return { key: 'startTime', order: 'descend' };
   }
@@ -229,7 +231,7 @@ export default function TraceTable({
         sorter: true,
 
         sortOrder: sortKey === 'startTime' ? sortOrder : undefined,
-        sortDirections: ['ascend', 'descend'],
+        sortDirections: ['descend', 'ascend'],
       },
     ];
 
