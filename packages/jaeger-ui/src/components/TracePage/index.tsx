@@ -54,7 +54,7 @@ import TraceStatistics from './TraceStatistics/index';
 import TraceSpanView from './TraceSpanView/index';
 import TraceFlamegraph from './TraceFlamegraph/index';
 import TraceLogsView from './TraceLogsView/index';
-import type { SpanDetailPanelMode, StorageCapabilities, TraceGraphConfig } from '../../types/config';
+import type { BackendCapabilities, SpanDetailPanelMode, TraceGraphConfig } from '../../types/config';
 
 import './index.css';
 import memoizedTraceCriticalPath from './CriticalPath/index';
@@ -71,7 +71,7 @@ type TOwnProps = {
   params: { id: string };
   archiveEnabled: boolean;
   enableSidePanel: boolean;
-  storageCapabilities: StorageCapabilities | TNil;
+  backendCapabilities: BackendCapabilities | TNil;
   criticalPathEnabled: boolean;
   disableJsonView: boolean;
   traceGraphConfig?: TraceGraphConfig;
@@ -148,7 +148,7 @@ export function TracePageImpl(props: TProps) {
     params,
     setDetailPanelMode: reduxSetDetailPanelMode,
     setTimelineBarsVisible: reduxSetTimelineBarsVisible,
-    storageCapabilities,
+    backendCapabilities,
     traceGraphConfig,
     uiFind,
     useOtelTerms,
@@ -381,7 +381,7 @@ export function TracePageImpl(props: TProps) {
 
   const locationState = location.state;
   const isEmbedded = Boolean(embedded);
-  const hasArchiveStorage = Boolean(storageCapabilities?.archiveStorage);
+  const hasArchiveStorage = Boolean(backendCapabilities?.archiveStorage);
   const headerProps = {
     focusUiFindMatches,
     slimView,
@@ -524,7 +524,7 @@ const TracePage = (props: TracePageProps) => {
       params={{ ...props.params, id: normalizedTraceID }}
       archiveEnabled={Boolean(config.archiveEnabled)}
       enableSidePanel={Boolean(config.traceTimeline?.enableSidePanel)}
-      storageCapabilities={config.storageCapabilities}
+      backendCapabilities={config.backendCapabilities}
       criticalPathEnabled={config.criticalPathEnabled}
       disableJsonView={config.disableJsonView}
       traceGraphConfig={config.traceGraph}

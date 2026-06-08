@@ -631,8 +631,8 @@ describe('<TracePage>', () => {
 
     describe('showArchiveButton', () => {
       it('shows archive button based on conditions', () => {
-        const getShowArchiveButton = (embedded, archiveEnabled, storageCapabilities) => {
-          const hasStorage = storageCapabilities && storageCapabilities.archiveStorage;
+        const getShowArchiveButton = (embedded, archiveEnabled, backendCapabilities) => {
+          const hasStorage = backendCapabilities && backendCapabilities.archiveStorage;
           return !embedded && archiveEnabled && hasStorage;
         };
 
@@ -640,25 +640,25 @@ describe('<TracePage>', () => {
           {
             embedded: undefined,
             archiveEnabled: true,
-            storageCapabilities: { archiveStorage: true },
+            backendCapabilities: { archiveStorage: true },
             showArchiveButton: getShowArchiveButton(undefined, true, { archiveStorage: true }),
           },
           {
             embedded: { timeline: {} },
             archiveEnabled: true,
-            storageCapabilities: { archiveStorage: true },
+            backendCapabilities: { archiveStorage: true },
             showArchiveButton: getShowArchiveButton({ timeline: {} }, true, { archiveStorage: true }),
           },
           {
             embedded: undefined,
             archiveEnabled: false,
-            storageCapabilities: { archiveStorage: true },
+            backendCapabilities: { archiveStorage: true },
             showArchiveButton: getShowArchiveButton(undefined, false, { archiveStorage: true }),
           },
           {
             embedded: undefined,
             archiveEnabled: true,
-            storageCapabilities: { archiveStorage: false },
+            backendCapabilities: { archiveStorage: false },
             showArchiveButton: getShowArchiveButton(undefined, true, { archiveStorage: false }),
           },
         ];
