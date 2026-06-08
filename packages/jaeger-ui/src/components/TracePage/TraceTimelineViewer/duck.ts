@@ -243,11 +243,14 @@ function setTrace(state: TTraceTimeline, { uiFind, trace }: TTraceUiFindValue) {
 }
 
 function setColumnWidth(state: TTraceTimeline, { width }: TWidthValue): TTraceTimeline {
-  // In side-panel mode the name column must leave room for both the side panel and timeline bars.
-  const maxWidth =
-    state.detailPanelMode === 'sidepanel'
-      ? Math.min(SPAN_NAME_COLUMN_WIDTH_MAX, 1 - state.sidePanelWidth - MIN_TIMELINE_COLUMN_WIDTH)
-      : SPAN_NAME_COLUMN_WIDTH_MAX;
+  // In side-panel mode the name column must leave room for the side panel and, when visible, timeline bars.
+  let maxWidth = SPAN_NAME_COLUMN_WIDTH_MAX;
+  if (state.detailPanelMode === 'sidepanel') {
+    const availableWidth = state.timelineBarsVisible
+      ? 1 - state.sidePanelWidth - MIN_TIMELINE_COLUMN_WIDTH
+      : 1 - SIDE_PANEL_WIDTH_MIN;
+    maxWidth = Math.min(SPAN_NAME_COLUMN_WIDTH_MAX, availableWidth);
+  }
   const spanNameColumnWidth = Math.min(Math.max(width, SPAN_NAME_COLUMN_WIDTH_MIN), maxWidth);
   return { ...state, spanNameColumnWidth };
 }
@@ -352,15 +355,14 @@ function setDetailPanelMode(state: TTraceTimeline, { mode }: TDetailPanelModeVal
     const firstKey = detailStates.keys().next().value as string;
     detailStates = new Map([[firstKey, DetailState.forDetailPanelMode('sidepanel')]]);
   }
-  // When switching to sidepanel mode, ensure spanNameColumnWidth leaves room for the side panel and
-  // the minimum timeline column. A wide name column stored in inline mode would otherwise produce a
-  // zero/negative timeline column width as soon as the side panel is enabled.
+  // When switching to sidepanel mode, ensure spanNameColumnWidth leaves room for the side panel
+  // and, when visible, the minimum timeline column.
   let { spanNameColumnWidth } = state;
   if (mode === 'sidepanel') {
-    const maxWidth = Math.min(
-      SPAN_NAME_COLUMN_WIDTH_MAX,
-      1 - state.sidePanelWidth - MIN_TIMELINE_COLUMN_WIDTH
-    );
+    const availableWidth = state.timelineBarsVisible
+      ? 1 - state.sidePanelWidth - MIN_TIMELINE_COLUMN_WIDTH
+      : 1 - SIDE_PANEL_WIDTH_MIN;
+    const maxWidth = Math.min(SPAN_NAME_COLUMN_WIDTH_MAX, availableWidth);
     spanNameColumnWidth = Math.min(spanNameColumnWidth, maxWidth);
   }
   return { ...state, detailPanelMode: mode, detailStates, spanNameColumnWidth };
