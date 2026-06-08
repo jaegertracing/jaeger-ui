@@ -3,19 +3,12 @@
 
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
-import { Provider } from 'react-redux';
-import { createStore, combineReducers } from 'redux';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import store from '../../utils/storage';
 import MonitorATMPage from '.';
-import metricsReducer from '../../reducers/metrics';
-import * as jaegerApiActions from '../../actions/jaeger-api';
 import getConfig from '../../utils/config/get-config';
-
-// --- Mock Modules ---
-// Mock the actions module
-vi.mock('../../actions/jaeger-api');
+import { serviceMetrics, serviceOpsMetrics, originInitialState } from '../../reducers/metrics.mock';
 
 vi.mock('../../utils/config/get-config', () => ({
   default: jest.fn(() => ({
@@ -23,7 +16,7 @@ vi.mock('../../utils/config/get-config', () => ({
     backendCapabilities: { metricsStorage: true },
   })),
 }));
-// Mock the storage utility
+
 vi.mock('../../utils/storage', () => ({
   default: {
     getString: jest.fn(),
@@ -34,7 +27,6 @@ vi.mock('../../utils/storage', () => ({
   },
 }));
 
-// Mock useServices hook with stable data reference to prevent infinite loops
 vi.mock('../../hooks/useTraceDiscovery', () => {
   const services = ['service1', 'service2'];
   return {
@@ -42,48 +34,23 @@ vi.mock('../../hooks/useTraceDiscovery', () => {
   };
 });
 
-// --- Mock References ---
-// Reference the mocked actions module
-const mockedJaegerApiActions = jaegerApiActions;
-const mockedStorage = store;
+vi.mock('../../hooks/useMetricsQuery', () => ({
+  useServiceMetricsQuery: jest.fn(() => ({
+    data: { serviceMetrics, serviceError: originInitialState.serviceError },
+    isFetching: false,
+  })),
+  useOperationMetricsQuery: jest.fn(() => ({
+    data: { serviceOpsMetrics, opsError: originInitialState.opsError },
+    isFetching: false,
+  })),
+}));
 
-// --- Redux Setup ---
-const rootReducer = combineReducers({
-  metrics: metricsReducer,
-});
-const initialState = {
-  metrics: {
-    loading: false,
-    operationMetricsLoading: false,
-    opsError: { opsCalls: null, opsErrors: null, opsLatencies: null },
-    serviceOpsMetrics: [],
-    serviceMetrics: { service_latencies: null, service_error_rate: null, service_call_rate: null },
-    serviceError: {
-      service_latencies_50: null,
-      service_latencies_75: null,
-      service_latencies_95: null,
-      service_error_rate: null,
-      service_call_rate: null,
-    },
-  },
-};
-const mockStore = createStore(rootReducer, initialState);
+const mockedStorage = store;
 
 describe('<MonitorATMPage>', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    // --- Configure Mocks ---
-    // Configure mock implementations on the *actions* module
-    // Use mockImplementation or mockReturnValue as appropriate for actions
-    mockedJaegerApiActions.fetchAllServiceMetrics.mockImplementation(() => ({
-      type: 'FETCH_ALL_METRICS_MOCK',
-    }));
-    mockedJaegerApiActions.fetchAggregatedServiceMetrics.mockImplementation(() => ({
-      type: 'FETCH_AGG_METRICS_MOCK',
-    }));
-
-    // Configure store mocks
     mockedStorage.getString.mockImplementation(key => {
       if (key === 'lastAtmSearchService') return '';
       if (key === 'lastAtmSearchSpanKind') return 'server';
@@ -96,32 +63,21 @@ describe('<MonitorATMPage>', () => {
 
   it('does not explode and renders initial elements', () => {
     const { container } = render(
-      <Provider store={mockStore}>
-        <MemoryRouter>
-          <MonitorATMPage />
-        </MemoryRouter>
-      </Provider>
+      <MemoryRouter>
+        <MonitorATMPage />
+      </MemoryRouter>
     );
 
     expect(container).toBeDefined();
 
-    // Check calls on the mocked *actions*
-
-    // Metrics fetches should happen because useServices hook provides data.
-    expect(mockedJaegerApiActions.fetchAllServiceMetrics).toHaveBeenCalled();
-    expect(mockedJaegerApiActions.fetchAggregatedServiceMetrics).toHaveBeenCalled();
-
-    // Check main headings and selectors
     expect(screen.getByRole('heading', { name: /^Service$/ })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Span Kind/i })).toBeInTheDocument();
     expect(screen.getAllByRole('combobox').length).toBeGreaterThanOrEqual(3);
 
-    // Check graph headers using roles
     expect(screen.getByRole('heading', { name: /Latency/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Error rate/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Request rate/i })).toBeInTheDocument();
 
-    // Check table section
     expect(screen.getByRole('heading', { name: /Operations metrics/i })).toBeInTheDocument();
     expect(screen.getByRole('table')).toBeInTheDocument();
   });
@@ -132,22 +88,16 @@ describe('<MonitorATMPage>', () => {
       backendCapabilities: { metricsStorage: false },
     }));
     try {
-      const emptyStateStore = createStore(rootReducer, initialState);
-
       render(
-        <Provider store={emptyStateStore}>
-          <MemoryRouter>
-            <MonitorATMPage />
-          </MemoryRouter>
-        </Provider>
+        <MemoryRouter>
+          <MonitorATMPage />
+        </MemoryRouter>
       );
 
       expect(screen.getByAltText('jaeger-monitor-tab-preview')).toBeInTheDocument();
       expect(screen.queryByRole('heading', { name: /^Service$/i })).not.toBeInTheDocument();
       expect(screen.queryByRole('heading', { name: /Latency/i })).not.toBeInTheDocument();
       expect(screen.queryByRole('table')).not.toBeInTheDocument();
-      expect(mockedJaegerApiActions.fetchAllServiceMetrics).not.toHaveBeenCalled();
-      expect(mockedJaegerApiActions.fetchAggregatedServiceMetrics).not.toHaveBeenCalled();
     } finally {
       getConfig.mockImplementation(() => ({
         qualityMetrics: { apiEndpoint: '/api/quality-metrics' },

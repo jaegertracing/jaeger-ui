@@ -1,29 +1,22 @@
 // Copyright (c) 2021 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useEffect, useState, useRef, useCallback, useLayoutEffect } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useLayoutEffect, useMemo } from 'react';
 import { Row, Col, Input, Alert, Select } from 'antd';
-import { ActionFunctionAny, Action } from 'redux-actions';
 import _debounce from 'lodash/debounce';
 import _isEmpty from 'lodash/isEmpty';
 import store from '../../../utils/storage';
-import { connect } from 'react-redux';
-import { bindActionCreators, Dispatch } from 'redux';
 import { Link } from 'react-router-dom';
-import * as jaegerApiActions from '../../../actions/jaeger-api';
 import OperationTableDetails from './operationDetailsTable';
 import ServiceGraph from './serviceGraph';
 import LoadingIndicator from '../../common/LoadingIndicator';
 
-import { ReduxState } from '../../../types';
 import {
   MetricsAPIQueryParams,
-  MetricsReduxState,
   Points,
   ServiceMetricsObject,
   ServiceOpsMetrics,
   spanKinds,
-  FetchAggregatedServiceMetricsResponse,
 } from '../../../types/metrics';
 import prefixUrl from '../../../utils/prefix-url';
 import { convertTimeUnitToShortTerm, getSuitableTimeUnit } from '../../../utils/date';
@@ -42,17 +35,7 @@ import withRouteProps from '../../../utils/withRouteProps';
 
 import SearchableSelect from '../../common/SearchableSelect';
 import { useServices } from '../../../hooks/useTraceDiscovery';
-
-type TReduxProps = {
-  metrics: MetricsReduxState;
-};
-
-type TProps = TReduxProps & TDispatchProps;
-
-type TDispatchProps = {
-  fetchAggregatedServiceMetrics: ActionFunctionAny<Action<Promise<FetchAggregatedServiceMetricsResponse>>>;
-  fetchAllServiceMetrics: (serviceName: string, query: MetricsAPIQueryParams) => void;
-};
+import { useServiceMetricsQuery, useOperationMetricsQuery } from '../../../hooks/useMetricsQuery';
 
 const trackSearchOperationDebounced = _debounce(searchQuery => trackSearchOperation(searchQuery), 1000);
 
@@ -96,8 +79,7 @@ const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMe
   return { ...serviceErrorRate, metricPoints: convertedMetricsPoints };
 };
 
-export function MonitorATMServicesViewImpl(props: TProps) {
-  const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics, metrics } = props;
+export function MonitorATMServicesViewImpl() {
   const { data: services = [], isLoading: servicesLoading } = useServices();
   const docsLink = getConfig().monitor?.docsLink;
   const graphDivWrapper = useRef<HTMLDivElement>(null);
@@ -116,6 +98,45 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   const [selectedTimeFrame, setSelectedTimeFrame] = useState<number>(
     store.getNumber('lastAtmSearchTimeframe', ONE_HOUR_MS)
   );
+
+  const currentService = selectedService || services[0];
+
+  const metricQueryParams: MetricsAPIQueryParams | undefined = useMemo(() => {
+    if (!currentService) return undefined;
+    return {
+      quantile: 0.95,
+      endTs: endTime,
+      lookback: selectedTimeFrame,
+      step: 60 * 1000,
+      ratePer: 10 * 60 * 1000,
+      spanKind: selectedSpanKind,
+    };
+  }, [currentService, endTime, selectedTimeFrame, selectedSpanKind]);
+
+  const { data: serviceMetricsData, isFetching: serviceMetricsLoading } = useServiceMetricsQuery(
+    currentService,
+    metricQueryParams
+  );
+
+  const { data: operationMetricsData, isFetching: operationMetricsLoading } = useOperationMetricsQuery(
+    currentService,
+    metricQueryParams
+  );
+
+  const serviceMetrics = serviceMetricsData?.serviceMetrics ?? null;
+  const serviceError = serviceMetricsData?.serviceError ?? {
+    service_latencies_50: null,
+    service_latencies_75: null,
+    service_latencies_95: null,
+    service_call_rate: null,
+    service_error_rate: null,
+  };
+  const fetchedServiceOpsMetrics = operationMetricsData?.serviceOpsMetrics;
+  const opsError = operationMetricsData?.opsError ?? {
+    opsLatencies: null,
+    opsCalls: null,
+    opsErrors: null,
+  };
 
   const calcGraphXDomain = useCallback(() => {
     const currentTime = Date.now();
@@ -149,39 +170,17 @@ export function MonitorATMServicesViewImpl(props: TProps) {
     trackSelectTimeframe(label);
   }, []);
 
-  const fetchMetrics = useCallback(() => {
-    const currentService = selectedService || services[0];
-
+  const triggerFetch = useCallback(() => {
     if (currentService) {
       const newEndTime = Date.now();
       setEndTime(newEndTime);
       store.set('lastAtmSearchSpanKind', selectedSpanKind);
       store.set('lastAtmSearchTimeframe', selectedTimeFrame);
       store.set('lastAtmSearchService', currentService);
-
-      const metricQueryPayload = {
-        quantile: 0.95,
-        endTs: newEndTime,
-        lookback: selectedTimeFrame,
-        step: 60 * 1000,
-        ratePer: 10 * 60 * 1000,
-        spanKind: selectedSpanKind,
-      };
-
-      fetchAllServiceMetrics(currentService, metricQueryPayload);
-      fetchAggregatedServiceMetrics(currentService, metricQueryPayload);
-
       setServiceOpsMetrics(undefined);
       setSearchOps('');
     }
-  }, [
-    fetchAllServiceMetrics,
-    fetchAggregatedServiceMetrics,
-    services,
-    selectedService,
-    selectedSpanKind,
-    selectedTimeFrame,
-  ]);
+  }, [currentService, selectedSpanKind, selectedTimeFrame]);
 
   // componentDidMount equivalent
   useEffect(() => {
@@ -205,20 +204,26 @@ export function MonitorATMServicesViewImpl(props: TProps) {
     }
   }, [servicesLoading, updateDimensions]);
 
-  // componentDidUpdate equivalent
+  //fresh fetch whenever the service list loads for the first time
   useEffect(() => {
     if (services.length !== 0) {
-      fetchMetrics();
+      triggerFetch();
     }
-  }, [services, fetchMetrics]);
+  }, [services, triggerFetch]);
 
   useEffect(() => {
     calcGraphXDomain();
   }, [selectedTimeFrame, calcGraphXDomain]);
 
-  const serviceLatencies = metrics.serviceMetrics ? metrics.serviceMetrics.service_latencies : null;
+  // Reset filtered ops when fresh data arrives from the hook
+  useEffect(() => {
+    setServiceOpsMetrics(undefined);
+    setSearchOps('');
+  }, [fetchedServiceOpsMetrics]);
+
+  const serviceLatencies = serviceMetrics ? serviceMetrics.service_latencies : null;
   const displayTimeUnit = calcDisplayTimeUnit(serviceLatencies);
-  const serviceErrorRate = metrics.serviceMetrics ? metrics.serviceMetrics.service_error_rate : null;
+  const serviceErrorRate = serviceMetrics ? serviceMetrics.service_error_rate : null;
 
   if (servicesLoading) {
     return <LoadingIndicator vcentered centered />;
@@ -226,7 +231,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
 
   return (
     <>
-      {_isEmpty(metrics && metrics.serviceMetrics && metrics.serviceMetrics.service_latencies) && (
+      {_isEmpty(serviceMetrics && serviceMetrics.service_latencies) && (
         <Alert
           message={
             <>
@@ -250,8 +255,8 @@ export function MonitorATMServicesViewImpl(props: TProps) {
               onChange={handleServiceChange}
               placeholder="Select A Service"
               className="select-a-service-input"
-              disabled={metrics.operationMetricsLoading}
-              loading={metrics.operationMetricsLoading}
+              disabled={operationMetricsLoading}
+              loading={operationMetricsLoading}
             >
               {services.map((service: string) => (
                 <Option key={service} value={service}>
@@ -267,8 +272,8 @@ export function MonitorATMServicesViewImpl(props: TProps) {
               onChange={handleSpanKindChange}
               placeholder="Select A Span Kind"
               className="span-kind-selector"
-              disabled={metrics.operationMetricsLoading}
-              loading={metrics.operationMetricsLoading}
+              disabled={operationMetricsLoading}
+              loading={operationMetricsLoading}
             >
               {spanKindOptions.map(option => (
                 <Option key={option.value} value={option.value}>
@@ -303,8 +308,8 @@ export function MonitorATMServicesViewImpl(props: TProps) {
               onChange={handleTimeFrameChange}
               placeholder="Select A Timeframe"
               className="select-a-timeframe-input"
-              disabled={metrics.operationMetricsLoading}
-              loading={metrics.operationMetricsLoading}
+              disabled={operationMetricsLoading}
+              loading={operationMetricsLoading}
             >
               {timeFrameOptions.map(option => (
                 <Option key={option.value} value={option.value}>
@@ -320,11 +325,11 @@ export function MonitorATMServicesViewImpl(props: TProps) {
             <ServiceGraph
               key="latency"
               error={
-                metrics.serviceError.service_latencies_50 &&
-                metrics.serviceError.service_latencies_75 &&
-                metrics.serviceError.service_latencies_95
+                serviceError.service_latencies_50 &&
+                serviceError.service_latencies_75 &&
+                serviceError.service_latencies_95
               }
-              loading={metrics.loading}
+              loading={serviceMetricsLoading}
               name={`Latency (${convertTimeUnitToShortTerm(displayTimeUnit)})`}
               width={graphWidth}
               metricsData={serviceLatencies}
@@ -338,8 +343,8 @@ export function MonitorATMServicesViewImpl(props: TProps) {
           <Col span={8}>
             <ServiceGraph
               key="errRate"
-              error={metrics.serviceError.service_error_rate}
-              loading={metrics.loading}
+              error={serviceError.service_error_rate}
+              loading={serviceMetricsLoading}
               name="Error rate (%)"
               width={graphWidth}
               metricsData={convertServiceErrorRateToPercentages(serviceErrorRate)}
@@ -352,11 +357,11 @@ export function MonitorATMServicesViewImpl(props: TProps) {
           <Col span={8}>
             <ServiceGraph
               key="requests"
-              loading={metrics.loading}
-              error={metrics.serviceError.service_call_rate}
+              loading={serviceMetricsLoading}
+              error={serviceError.service_call_rate}
               name="Request rate (req/s)"
               width={graphWidth}
-              metricsData={metrics.serviceMetrics ? metrics.serviceMetrics.service_call_rate : null}
+              metricsData={serviceMetrics ? serviceMetrics.service_call_rate : null}
               showHorizontalLines
               color="#4795BA"
               marginClassName="request-margins"
@@ -374,9 +379,9 @@ export function MonitorATMServicesViewImpl(props: TProps) {
               placeholder="Search operation"
               className="select-operation-input"
               value={searchOps}
-              disabled={metrics.operationMetricsLoading === true || metrics.serviceOpsMetrics === undefined}
+              disabled={operationMetricsLoading === true || fetchedServiceOpsMetrics === undefined}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                const filteredData = metrics.serviceOpsMetrics!.filter(({ name }: { name: string }) => {
+                const filteredData = fetchedServiceOpsMetrics!.filter(({ name }: { name: string }) => {
                   return name.toLowerCase().includes(e.target.value.toLowerCase());
                 });
 
@@ -390,9 +395,9 @@ export function MonitorATMServicesViewImpl(props: TProps) {
         </Row>
         <Row>
           <OperationTableDetails
-            loading={metrics.operationMetricsLoading}
-            error={metrics.opsError}
-            data={serviceOpsMetrics === undefined ? metrics.serviceOpsMetrics : serviceOpsMetrics}
+            loading={operationMetricsLoading}
+            error={opsError}
+            data={serviceOpsMetrics === undefined ? fetchedServiceOpsMetrics : serviceOpsMetrics}
             endTime={endTime}
             lookback={selectedTimeFrame}
             serviceName={getSelectedService()}
@@ -403,24 +408,4 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   );
 }
 
-export function mapStateToProps(state: ReduxState): TReduxProps {
-  const { metrics } = state;
-  return {
-    metrics,
-  };
-}
-
-export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics } = bindActionCreators(
-    jaegerApiActions,
-    dispatch
-  );
-
-  return {
-    fetchAllServiceMetrics: fetchAllServiceMetrics as unknown as TDispatchProps['fetchAllServiceMetrics'],
-    fetchAggregatedServiceMetrics:
-      fetchAggregatedServiceMetrics as unknown as TDispatchProps['fetchAggregatedServiceMetrics'],
-  };
-}
-
-export default withRouteProps(connect(mapStateToProps, mapDispatchToProps)(MonitorATMServicesViewImpl));
+export default withRouteProps(MonitorATMServicesViewImpl);
