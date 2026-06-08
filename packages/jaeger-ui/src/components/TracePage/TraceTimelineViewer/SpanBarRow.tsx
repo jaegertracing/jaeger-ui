@@ -13,6 +13,8 @@ import Ticks from './Ticks';
 import { TNil } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan } from '../../../types/otel';
+import { GenAISpanIcon } from './GenAISpanIcon';
+import { GenAITokenBadge } from './GenAITokenBadge';
 
 import './SpanBarRow.css';
 
@@ -164,6 +166,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
               {!hasOwnError && hasChildError && (
                 <IoAlert className="SpanBarRow--errorIcon SpanBarRow--errorIcon--hollow" />
               )}
+              <GenAISpanIcon span={span} size={14} />
               {serviceName}{' '}
               {rpc && (
                 <span>
@@ -184,6 +187,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
               )}
             </span>
             <small className="endpoint-name">{rpc ? rpc.operationName : operationName}</small>
+            <GenAITokenBadge span={span} />
           </a>
           {hasLinks && (
             <ReferencesButton

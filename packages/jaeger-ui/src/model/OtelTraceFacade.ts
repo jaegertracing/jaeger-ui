@@ -4,6 +4,7 @@
 import { Trace } from '../types/trace';
 import { IOtelTrace, IOtelSpan } from '../types/otel';
 import OtelSpanFacade from './OtelSpanFacade';
+import { isGenAITrace } from '../utils/genai/detect';
 
 export default class OtelTraceFacade implements IOtelTrace {
   private legacyTrace: Trace;
@@ -11,6 +12,7 @@ export default class OtelTraceFacade implements IOtelTrace {
   private _spanMap: Map<string, IOtelSpan>;
   private _rootSpans: IOtelSpan[];
   private _orphanSpanCount: number;
+  readonly isGenAITrace: boolean;
 
   constructor(legacyTrace: Trace) {
     this.legacyTrace = legacyTrace;
@@ -36,6 +38,8 @@ export default class OtelTraceFacade implements IOtelTrace {
     this._orphanSpanCount = this._spans.filter(
       s => s.parentSpanID && !this._spanMap.has(s.parentSpanID)
     ).length;
+
+    this.isGenAITrace = isGenAITrace(this);
 
     // Wire up parentSpan, childSpans, and link span references
     this._spans.forEach(span => {
