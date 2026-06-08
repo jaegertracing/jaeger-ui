@@ -296,8 +296,9 @@ describe('<TraceTimelineViewer>', () => {
       expect(mockLayoutPrefsStore.setSpanNameColumnWidth.mock.calls[0][0]).toBeCloseTo(0.7);
       expect(props.setSpanNameColumnWidth).toHaveBeenCalledTimes(1);
       expect(props.setSpanNameColumnWidth.mock.calls[0][0]).toBeCloseTo(0.7);
-      // The side panel width setter must not be touched in this mode.
+      // The side panel width setter must not be touched in this mode (neither Zustand nor the Redux-tracking prop).
       expect(mockLayoutPrefsStore.setSidePanelWidth).not.toHaveBeenCalled();
+      expect(props.setSidePanelWidth).not.toHaveBeenCalled();
     });
 
     it('uses "Trace Root" label when no span is selected (empty detailStates)', () => {

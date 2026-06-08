@@ -264,7 +264,9 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
             // resizes the side panel by adjusting the name column width.
             <VerticalResizer
               position={spanNameColumnWidth}
-              min={SPAN_NAME_COLUMN_WIDTH_MIN}
+              // Bound the name column so the derived side panel width stays within
+              // [SIDE_PANEL_WIDTH_MIN, SIDE_PANEL_WIDTH_MAX] (sidePanel = 1 - spanNameColumnWidth).
+              min={Math.max(SPAN_NAME_COLUMN_WIDTH_MIN, 1 - SIDE_PANEL_WIDTH_MAX)}
               max={Math.min(SPAN_NAME_COLUMN_WIDTH_MAX, 1 - SIDE_PANEL_WIDTH_MIN)}
               onChange={newPosition => setSpanNameColumnWidth(newPosition)}
             />
