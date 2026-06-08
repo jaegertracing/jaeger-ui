@@ -17,6 +17,7 @@ import {
 } from '../url/svcFilter';
 import { IOtelTrace } from '../../../types/otel';
 import type { SpanDetailPanelMode } from '../../../types/config';
+import { getGenAIServiceNames } from '../../../utils/genai/detect';
 
 function setsEqual(a: Set<string>, b: Set<string>): boolean {
   if (a.size !== b.size) return false;
@@ -55,14 +56,15 @@ function sanitizePrunedServices(pruned: Set<string>, rootServiceNames: Set<strin
 
 /**
  * Resolves the initial prunedServices set for a trace.
- * Priority: URL svcFilter param > localStorage defaults > empty (no filter).
+ * Priority: URL svcFilter param > localStorage defaults > GenAI auto-filter > empty (no filter).
  * Returns the pruned set and, if the URL param was stale/invalid, the cleaned params to navigate to.
  */
 export function resolveInitialFilter(
   search: string,
   sortedServiceNames: string[],
   rootServiceNames: Set<string>,
-  skipDefaults = false
+  skipDefaults = false,
+  genaiServiceNames?: Set<string>
 ): { pruned: Set<string>; cleanSearch?: string } {
   const params = queryString.parse(search);
   const svcFilterParam = typeof params.svcFilter === 'string' ? params.svcFilter : null;
@@ -115,6 +117,18 @@ export function resolveInitialFilter(
     }
   } catch {
     // Ignore localStorage errors.
+  }
+
+  // No localStorage defaults: if this is a GenAI trace, pre-configure the filter
+  // to show only GenAI services as a starting approximation.
+  if (genaiServiceNames && genaiServiceNames.size > 0) {
+    const pruned = new Set(sortedServiceNames.filter(name => !genaiServiceNames.has(name)));
+    if (pruned.size > 0) {
+      const sanitized = sanitizePrunedServices(pruned, rootServiceNames);
+      if (sanitized.size > 0) {
+        return { pruned: sanitized };
+      }
+    }
   }
 
   return { pruned: new Set() };
@@ -170,6 +184,11 @@ export function useServiceFilter(
     return names;
   }, [trace.rootSpans]);
 
+  const genaiServiceNames = useMemo(
+    () => (trace.isGenAITrace ? getGenAIServiceNames(trace) : undefined),
+    [trace]
+  );
+
   const prunedServices = useTraceTimelineStore(s => s.prunedServices);
   const zustandSetPrunedServices = useTraceTimelineStore(s => s.setPrunedServices);
 
@@ -191,7 +210,8 @@ export function useServiceFilter(
       location.search,
       sortedServiceNames,
       rootServiceNames,
-      skipDefaults
+      skipDefaults,
+      genaiServiceNames
     );
 
     // Avoid unnecessary Zustand writes (and re-renders) when the resolved set matches.
@@ -204,6 +224,7 @@ export function useServiceFilter(
       navigate({ pathname: location.pathname, search: cleanSearch }, { replace: true });
     }
   }, [
+    genaiServiceNames,
     location.pathname,
     location.search,
     navigate,

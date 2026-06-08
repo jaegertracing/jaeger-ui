@@ -54,11 +54,20 @@ vi.mock('../url/svcFilter', async importOriginal => {
   };
 });
 
+vi.mock('../../../utils/genai/detect', async importOriginal => {
+  const actual = await importOriginal<typeof import('../../../utils/genai/detect')>();
+  return {
+    ...actual,
+    getGenAIServiceNames: vi.fn(() => new Set<string>()),
+  };
+});
+
 import { useLocation } from 'react-router-dom';
 import { useTraceTimelineStore } from './store';
 import { decodeSvcFilter, encodeSvcFilter } from '../url/svcFilter';
 import { resolveInitialFilter, buildFilterSearch, useServiceFilter } from './useServiceFilter';
 import { IOtelSpan, IOtelTrace } from '../../../types/otel';
+import { getGenAIServiceNames } from '../../../utils/genai/detect';
 
 describe('resolveInitialFilter', () => {
   const roots = new Set(['svc-a']);
@@ -121,6 +130,57 @@ describe('resolveInitialFilter', () => {
     localStorage.setItem('svcFilter.defaults', 'not-json');
     const result = resolveInitialFilter('', ['svc-a'], roots);
     expect(result.pruned.size).toBe(0);
+  });
+
+  describe('GenAI auto-filter', () => {
+    it('prunes non-GenAI services when genaiServiceNames is provided and no URL/localStorage filter', () => {
+      const result = resolveInitialFilter('', ['svc-a', 'svc-b', 'svc-c'], roots, false, new Set(['svc-a']));
+      expect(result.pruned).toEqual(new Set(['svc-b', 'svc-c']));
+    });
+
+    it('does not apply GenAI filter when URL svcFilter is present', () => {
+      vi.mocked(decodeSvcFilter).mockReturnValue({
+        visibleServices: new Set(['svc-a', 'svc-b', 'svc-c']),
+        stale: false,
+      });
+      const result = resolveInitialFilter(
+        '?svcFilter=abc.7',
+        ['svc-a', 'svc-b', 'svc-c'],
+        roots,
+        false,
+        new Set(['svc-a'])
+      );
+      expect(result.pruned.size).toBe(0);
+    });
+
+    it('does not apply GenAI filter when localStorage defaults are present', () => {
+      localStorage.setItem('svcFilter.defaults', JSON.stringify({ prunedServices: ['svc-b'] }));
+      const result = resolveInitialFilter('', ['svc-a', 'svc-b', 'svc-c'], roots, false, new Set(['svc-a']));
+      expect(result.pruned).toEqual(new Set(['svc-b']));
+    });
+
+    it('does not prune anything when all services are GenAI services', () => {
+      const result = resolveInitialFilter('', ['svc-a', 'svc-b'], roots, false, new Set(['svc-a', 'svc-b']));
+      expect(result.pruned.size).toBe(0);
+    });
+
+    it('respects root service protection when applying GenAI filter', () => {
+      // svc-a is the root and is not a GenAI service; it must remain visible
+      const result = resolveInitialFilter(
+        '',
+        ['svc-a', 'svc-b', 'svc-c'],
+        new Set(['svc-a']),
+        false,
+        new Set(['svc-b'])
+      );
+      expect(result.pruned.has('svc-a')).toBe(false);
+      expect(result.pruned.has('svc-c')).toBe(true);
+    });
+
+    it('skips GenAI filter when skipDefaults is true', () => {
+      const result = resolveInitialFilter('', ['svc-a', 'svc-b', 'svc-c'], roots, true, new Set(['svc-a']));
+      expect(result.pruned.size).toBe(0);
+    });
   });
 
   describe('root service sanitization', () => {
@@ -227,7 +287,11 @@ describe('buildFilterSearch', () => {
 });
 
 describe('useServiceFilter hook', () => {
-  function makeTrace(serviceNames: string[], rootServiceNames?: string[]): IOtelTrace {
+  function makeTrace(
+    serviceNames: string[],
+    rootServiceNames?: string[],
+    opts: { isGenAITrace?: boolean } = {}
+  ): IOtelTrace {
     const services = serviceNames.map(name => ({ name, numberOfSpans: 3 }));
     const roots = rootServiceNames ?? [serviceNames[0]];
     const rootSpans = roots.map((name, i) => ({
@@ -240,6 +304,7 @@ describe('useServiceFilter hook', () => {
       rootSpans,
       spans: [],
       spanMap: new Map(),
+      isGenAITrace: opts.isGenAITrace ?? false,
     } as unknown as IOtelTrace;
   }
 
@@ -254,6 +319,7 @@ describe('useServiceFilter hook', () => {
     >);
     vi.mocked(decodeSvcFilter).mockReturnValue(null);
     vi.mocked(encodeSvcFilter).mockReturnValue(null);
+    vi.mocked(getGenAIServiceNames).mockReturnValue(new Set());
     (useTraceTimelineStore as unknown as { setState: ReturnType<typeof vi.fn> }).setState.mockClear();
     localStorage.clear();
   });
@@ -300,6 +366,20 @@ describe('useServiceFilter hook', () => {
     localStorage.setItem('svcFilter.defaults', JSON.stringify({ prunedServices: ['svc-b'] }));
     renderHook(() => useServiceFilter(makeTrace(['svc-a', 'svc-b', 'svc-c']), 'inline'));
     expect(mockSetPrunedServices).toHaveBeenCalledWith(new Set(['svc-b']));
+  });
+
+  it('pre-configures filter for GenAI trace when no URL filter or localStorage', () => {
+    vi.mocked(getGenAIServiceNames).mockReturnValue(new Set(['svc-a']));
+    const trace = makeTrace(['svc-a', 'svc-b', 'svc-c'], ['svc-a'], { isGenAITrace: true });
+    renderHook(() => useServiceFilter(trace, 'inline'));
+    expect(mockSetPrunedServices).toHaveBeenCalledWith(new Set(['svc-b', 'svc-c']));
+  });
+
+  it('does not apply GenAI filter for non-GenAI trace', () => {
+    vi.mocked(getGenAIServiceNames).mockReturnValue(new Set(['svc-a']));
+    const trace = makeTrace(['svc-a', 'svc-b', 'svc-c'], ['svc-a'], { isGenAITrace: false });
+    renderHook(() => useServiceFilter(trace, 'inline'));
+    expect(mockSetPrunedServices).not.toHaveBeenCalled();
   });
 
   function HookRenderer({ trace, mode }: { trace: IOtelTrace; mode: 'inline' | 'sidepanel' }) {
