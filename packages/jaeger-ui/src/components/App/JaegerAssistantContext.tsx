@@ -23,7 +23,13 @@ const JaegerAssistantContext = React.createContext<IJaegerAssistantContextValue 
 /** Inner provider that creates the long-lived AG-UI runtime (only mounted when the assistant capability is on). */
 function JaegerAssistantRuntimeProvider({ children }: { children: React.ReactNode }) {
   const url = getJaegerAGUIUrl();
-  const agent = React.useMemo(() => new HttpAgent({ url }), [url]);
+  // HttpAgent stores the supplied fetch as `this.fetch` and later invokes it as a method,
+  // so the bare global `fetch` would be called with `this === HttpAgent` and throw
+  // "Illegal invocation". Wrap it to detach the receiver.
+  const agent = React.useMemo(
+    () => new HttpAgent({ url, fetch: (input, init) => fetch(input, init) }),
+    [url]
+  );
   const runtime = useAgUiRuntime({
     agent,
     showThinking: true,
