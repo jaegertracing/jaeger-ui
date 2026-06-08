@@ -27,7 +27,12 @@ function JaegerAssistantRuntimeProvider({ children }: { children: React.ReactNod
   // so the bare global `fetch` would be called with `this === HttpAgent` and throw
   // "Illegal invocation". Wrap it to detach the receiver.
   const agent = React.useMemo(
-    () => new HttpAgent({ url, fetch: (input, init) => fetch(input, init) }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    () =>
+      new HttpAgent({
+        url,
+        fetch: (input: RequestInfo | URL, init?: RequestInit) => fetch(input, init),
+      } as any),
     [url]
   );
   const runtime = useAgUiRuntime({
