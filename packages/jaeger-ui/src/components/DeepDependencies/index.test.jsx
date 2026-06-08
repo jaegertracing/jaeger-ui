@@ -264,8 +264,11 @@ describe('DeepDependencyGraphPage', () => {
       describe('focusPathsThroughVertex', () => {
         let trackFocusPathsSpy;
 
-        beforeEach(() => {
+        beforeAll(() => {
           trackFocusPathsSpy = vi.spyOn(track, 'trackFocusPaths');
+        });
+
+        beforeEach(() => {
           trackFocusPathsSpy.mockClear();
           props.graph.getVertexVisiblePathElems.mockClear();
         });
@@ -624,7 +627,7 @@ describe('DeepDependencyGraphPage', () => {
 
     describe('view modifiers', () => {
       const visibilityIndices = [0, 1, 2];
-      const targetVM = EViewModifier.emphasized;
+      const targetVM = EViewModifier.Emphasized;
 
       beforeEach(() => {
         props.addViewModifier.mockClear();

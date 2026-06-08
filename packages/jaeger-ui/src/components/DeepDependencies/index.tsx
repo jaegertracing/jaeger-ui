@@ -123,16 +123,13 @@ export function DeepDependencyGraphPageImpl({
   );
 
   const clearOperation = useCallback(() => {
-  state: TState = {};
-
-  clearOperation = () => {
     trackClearOperation();
     updateUrlState({ operation: undefined });
   }, [updateUrlState]);
 
   const focusPathsThroughVertex = useCallback(
     (vertexKey: string) => {
-      const elems = graph ? graph.getVertexVisiblePathElems(vertexKey, visEncoding) : undefined;
+      const elems = graph!.getVertexVisiblePathElems(vertexKey, visEncoding);
       if (!elems) return;
 
       trackFocusPaths();
@@ -146,29 +143,21 @@ export function DeepDependencyGraphPageImpl({
 
   const getGenerationVisibility = useCallback(
     (vertexKey: string, direction: EDirection): ECheckedStatus | null => {
-      if (graph) {
-        return graph.getGenerationVisibility(vertexKey, direction, visEncoding);
-      }
-      return null;
+      return graph!.getGenerationVisibility(vertexKey, direction, visEncoding);
     },
     [graph, visEncoding]
   );
 
   const getVisiblePathElems = useCallback(
     (key: string) => {
-      if (graph) {
-        return graph.getVertexVisiblePathElems(key, visEncoding);
-      }
-      return undefined;
+      return graph!.getVertexVisiblePathElems(key, visEncoding);
     },
     [graph, visEncoding]
   );
 
   const hideVertex = useCallback(
     (vertexKey: string) => {
-      if (!graph) return;
-
-      const newVisEncoding = graph.getVisWithoutVertex(vertexKey, visEncoding);
+      const newVisEncoding = graph!.getVisWithoutVertex(vertexKey, visEncoding);
       if (!newVisEncoding) return;
 
       trackHide();
@@ -220,17 +209,17 @@ export function DeepDependencyGraphPageImpl({
   const setViewModifier = useCallback(
     (visibilityIndices: number[], viewModifier: EViewModifier, enable: boolean) => {
       const fn = enable ? addViewModifier : removeViewModifierFromIndices;
-      if (!fn || !graph || !service) return;
+      if (!fn) return;
       fn({
         operation,
-        service,
+        service: service!,
         viewModifier,
         visibilityIndices,
         end: 0,
         start: 0,
       });
     },
-    [addViewModifier, graph, removeViewModifierFromIndices, operation, service]
+    [addViewModifier, removeViewModifierFromIndices, operation, service]
   );
 
   const selectVertex = useCallback((newSelectedVertex?: TDdgVertex) => {
@@ -252,9 +241,7 @@ export function DeepDependencyGraphPageImpl({
 
   const updateGenerationVisibility = useCallback(
     (vertexKey: string, direction: EDirection) => {
-      if (!graph) return;
-
-      const result = graph.getVisWithUpdatedGeneration(vertexKey, direction, visEncoding);
+      const result = graph!.getVisWithUpdatedGeneration(vertexKey, direction, visEncoding);
       if (!result) return;
 
       const { visEncoding: newVisEncoding, update } = result;
@@ -415,11 +402,6 @@ export function deriveDdgPageProps(
   };
 }
 
-const MemoizedDeepDependencyGraphPageImpl = React.memo(DeepDependencyGraphPageImpl);
-
-const ConnectedDeepDependencyGraphPageImpl = withRouteProps(
-  connect(mapStateToProps, mapDispatchToProps)(MemoizedDeepDependencyGraphPageImpl)
-) as React.ComponentType<Omit<TOwnProps, 'location' | 'navigate'> & THookProps & TDdgViewModifierProps>;
 export type TDdgViewModifierBridgeOptions = {
   modelHash?: string;
 };
