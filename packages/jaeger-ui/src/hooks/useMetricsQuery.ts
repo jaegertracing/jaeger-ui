@@ -86,27 +86,14 @@ export function transformServiceMetrics(payload: FetchedAllServiceMetricsRespons
     if (promiseResult.status === 'fulfilled') {
       const metrics = promiseResult.value;
       if (metrics.metrics[0]) {
-        let max = 0;
+        const metricPoints = parseMetricPoints(metrics.metrics[0].metricPoints);
+        const max = metricPoints.reduce((m, p) => (p.y !== null && p.y > m ? p.y : m), 0);
         const metric: ServiceMetricsObject = {
           serviceName: metrics.metrics[0].labels[0].value,
           quantile: metrics.quantile,
-          max: 0,
-          metricPoints: metrics.metrics[0].metricPoints.map((p: MetricPointObject) => {
-            let y: number | null;
-            try {
-              y = parseFloat(p.gaugeValue.doubleValue.toFixed(2));
-              if (Number.isNaN(y)) {
-                y = null;
-              } else {
-                max = y > max ? y : max;
-              }
-            } catch {
-              y = null;
-            }
-            return { x: new Date(p.timestamp).getTime(), y };
-          }),
+          max,
+          metricPoints,
         };
-        metric.max = max;
         if (metrics.name === 'service_latencies') {
           if (serviceMetrics[metrics.name] === null) {
             serviceMetrics[metrics.name] = [];

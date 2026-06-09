@@ -117,10 +117,11 @@ export function MonitorATMServicesViewImpl() {
     metricQueryParams
   );
 
-  const { data: operationMetricsData, isFetching: operationMetricsLoading } = useOperationMetricsQuery(
-    currentService,
-    metricQueryParams
-  );
+  const {
+    data: operationMetricsData,
+    isFetching: operationMetricsLoading,
+    dataUpdatedAt: opsDataUpdatedAt,
+  } = useOperationMetricsQuery(currentService, metricQueryParams);
 
   const serviceMetrics = serviceMetricsData?.serviceMetrics ?? null;
   const serviceError = serviceMetricsData?.serviceError ?? {
@@ -388,7 +389,7 @@ export function MonitorATMServicesViewImpl() {
             loading={operationMetricsLoading}
             error={opsError}
             data={serviceOpsMetrics === undefined ? fetchedServiceOpsMetrics : serviceOpsMetrics}
-            endTime={Date.now()}
+            endTime={opsDataUpdatedAt || Date.now()}
             lookback={selectedTimeFrame}
             serviceName={getSelectedService()}
           />

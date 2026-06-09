@@ -39,7 +39,7 @@ These should be migrated to **React Query**:
 | `trace` | Map of `FetchedTrace` and `search` results | `TracePage`, `SearchPage` |
 | ~~`services`~~ (removed) | ~~Lists of services and operations~~ → React Query (`useServices` / `useSpanNames`, Phase 2c) | `SearchPage`, `MonitorPage`, `DeepDependencies` |
 | ~~`dependencies`~~ (removed) | ~~Service dependency graph data~~ → React Query (`useDependenciesQuery`, Phase 2d) | `DependencyGraph` |
-| ~~`metrics`~~ (removed) | ~~Sytem performance metrics (latencies, errors)~~ → React Query (`useServiceMetricsQuery` / `useOperationMetricsQuery`, Phase 2f) | `MonitorPage` |
+| ~~`metrics`~~ (removed) | ~~System performance metrics (latencies, errors)~~ → React Query (`useServiceMetricsQuery` / `useOperationMetricsQuery`, Phase 2f) | `MonitorPage` |
 | ~~`ddg`~~ (removed) | ~~Deep Dependency Graph data~~ → React Query (`useDeepDependencyGraphQuery`, Phase 2e) | `DeepDependencies` |
 | `archive` | Status of archived traces | `TracePage` |
 
