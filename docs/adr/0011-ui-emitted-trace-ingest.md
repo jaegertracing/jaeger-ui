@@ -77,23 +77,6 @@ When `enabled` is false (the default) `initTracing()` is a no-op: no
 provider is registered, no exporter is created, and any code paths that
 ask the OTel global API for a tracer get a no-op tracer.
 
-### Implementation
-
-Wired in [`packages/jaeger-ui/src/tracing/`](../../packages/jaeger-ui/src/tracing/):
-
-- `index.ts` — `initTracing()` registers a `WebTracerProvider` with a
-  `BatchSpanProcessor` over `OTLPTraceExporter`, plus
-  `DocumentLoadInstrumentation` and `FetchInstrumentation`. Called once
-  from `src/index.tsx` before React mounts so document-load timing
-  spans capture the initial render.
-- `page-attribution.ts` — a `SpanProcessor` that stamps every span on
-  start with `app.url.path` and `app.session.id` (a stable per-tab UUID
-  in `sessionStorage`).
-
-The fetch instrumentation excludes the export endpoint to prevent
-recursion (every export would otherwise create another fetch span and
-trigger another export).
-
 ---
 
 ## In-UI tracing model
@@ -136,7 +119,7 @@ parents under the most specific currently-active root.
 | **Cons** | Default span name is `"Event: click"` — useless without app-side `data-otel-name` or accessible-name plumbing. Every click becomes a trace, including tooltip-opens and other interaction noise. `setTimeout`/`MessageChannel` continuations lose context. |
 | **Status** | Deferred. Will require a `data-otel-trace="true"` opt-in convention and a `spanNameProvider` before it produces signal worth shipping. |
 
-#### 4. Named application operations (AI Assistant turn, etc.) — **planned for Phase 1**
+#### 4. Named application operations (AI Assistant turn, etc.) — **deferred**
 
 | | |
 |---|---|
@@ -144,7 +127,7 @@ parents under the most specific currently-active root.
 | **How** | Manual `tracer.startActiveSpan(name, attrs, fn)` at the operation's entry point. All work inside the callback parents under the named span. |
 | **Pros** | Cleanest data shape: honest name and accurate boundaries because the app code knows what it's doing. Extends to any other named operation worth timing (search, DAG layout, etc.). |
 | **Cons** | Requires app-code edits at each named entry point. |
-| **Status** | The infrastructure ships in Phase 1; the AI Assistant runtime (`@ag-ui/client` `HttpAgent`) does not expose a per-turn lifecycle hook, so the explicit `traceTurn(...)` wrap is a follow-up. In the meantime the fetch instrumentation captures each AG-UI request as a single-span trace, page-attributed via the processor. |
+| **Status** | The OTel tracer API is available globally to any caller, but no named operation is wrapped yet. The AI Assistant runtime (`@ag-ui/client` `HttpAgent` via `@assistant-ui/react-ag-ui`) does not expose a per-turn lifecycle hook, so wrapping the conversational round requires subscribing to the assistant-ui runtime's thread state — a small follow-up. In the meantime the fetch instrumentation captures each AG-UI request as a single-span trace, page-attributed via the processor. |
 
 ### Fetch/XHR fallback
 
