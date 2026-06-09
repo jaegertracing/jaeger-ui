@@ -11,13 +11,7 @@ import OperationTableDetails from './operationDetailsTable';
 import ServiceGraph from './serviceGraph';
 import LoadingIndicator from '../../common/LoadingIndicator';
 
-import {
-  MetricsAPIQueryParams,
-  Points,
-  ServiceMetricsObject,
-  ServiceOpsMetrics,
-  spanKinds,
-} from '../../../types/metrics';
+import { Points, ServiceMetricsObject, ServiceOpsMetrics, spanKinds } from '../../../types/metrics';
 import prefixUrl from '../../../utils/prefix-url';
 import { convertTimeUnitToShortTerm, getSuitableTimeUnit } from '../../../utils/date';
 import { ONE_HOUR_MS, timeFrameOptions, getLoopbackInterval, yAxisTickFormat } from './timeFrameUtils';
@@ -35,7 +29,11 @@ import withRouteProps from '../../../utils/withRouteProps';
 
 import SearchableSelect from '../../common/SearchableSelect';
 import { useServices } from '../../../hooks/useTraceDiscovery';
-import { useServiceMetricsQuery, useOperationMetricsQuery } from '../../../hooks/useMetricsQuery';
+import {
+  useServiceMetricsQuery,
+  useOperationMetricsQuery,
+  MetricsHookParams,
+} from '../../../hooks/useMetricsQuery';
 
 const trackSearchOperationDebounced = _debounce(searchQuery => trackSearchOperation(searchQuery), 1000);
 
@@ -83,7 +81,6 @@ export function MonitorATMServicesViewImpl() {
   const { data: services = [], isLoading: servicesLoading } = useServices();
   const docsLink = getConfig().monitor?.docsLink;
   const graphDivWrapper = useRef<HTMLDivElement>(null);
-  const [endTime, setEndTime] = useState<number>(Date.now());
   const [graphWidth, setGraphWidth] = useState<number>(300);
   const [serviceOpsMetrics, setServiceOpsMetrics] = useState<ServiceOpsMetrics[] | undefined>(undefined);
   const [searchOps, setSearchOps] = useState<string>('');
@@ -101,17 +98,19 @@ export function MonitorATMServicesViewImpl() {
 
   const currentService = selectedService || services[0];
 
-  const metricQueryParams: MetricsAPIQueryParams | undefined = useMemo(() => {
+  // endTs is intentionally absent — it is resolved to Date.now() inside each
+  // hook's queryFn so that the query key stays stable and React Query's staleTime
+  // governs freshness, rather than an imperative "trigger a fetch" effect.
+  const metricQueryParams: MetricsHookParams | undefined = useMemo(() => {
     if (!currentService) return undefined;
     return {
       quantile: 0.95,
-      endTs: endTime,
       lookback: selectedTimeFrame,
       step: 60 * 1000,
       ratePer: 10 * 60 * 1000,
       spanKind: selectedSpanKind,
     };
-  }, [currentService, endTime, selectedTimeFrame, selectedSpanKind]);
+  }, [currentService, selectedTimeFrame, selectedSpanKind]);
 
   const { data: serviceMetricsData, isFetching: serviceMetricsLoading } = useServiceMetricsQuery(
     currentService,
@@ -155,34 +154,24 @@ export function MonitorATMServicesViewImpl() {
 
   const handleServiceChange = useCallback((value: string) => {
     setSelectedService(value);
+    store.set('lastAtmSearchService', value);
     trackSelectService(value);
   }, []);
 
   const handleSpanKindChange = useCallback((value: string) => {
     setSelectedSpanKind(value as spanKinds);
+    store.set('lastAtmSearchSpanKind', value);
     const { label } = spanKindOptions.find(option => option.value === value)!;
     trackSelectSpanKind(label);
   }, []);
 
   const handleTimeFrameChange = useCallback((value: number) => {
     setSelectedTimeFrame(value);
+    store.set('lastAtmSearchTimeframe', value);
     const { label } = timeFrameOptions.find(option => option.value === value)!;
     trackSelectTimeframe(label);
   }, []);
 
-  const triggerFetch = useCallback(() => {
-    if (currentService) {
-      const newEndTime = Date.now();
-      setEndTime(newEndTime);
-      store.set('lastAtmSearchSpanKind', selectedSpanKind);
-      store.set('lastAtmSearchTimeframe', selectedTimeFrame);
-      store.set('lastAtmSearchService', currentService);
-      setServiceOpsMetrics(undefined);
-      setSearchOps('');
-    }
-  }, [currentService, selectedSpanKind, selectedTimeFrame]);
-
-  // componentDidMount equivalent
   useEffect(() => {
     window.addEventListener('resize', updateDimensions);
     calcGraphXDomain();
@@ -204,22 +193,23 @@ export function MonitorATMServicesViewImpl() {
     }
   }, [servicesLoading, updateDimensions]);
 
-  //fresh fetch whenever the service list loads for the first time
-  useEffect(() => {
-    if (services.length !== 0) {
-      triggerFetch();
-    }
-  }, [services, triggerFetch]);
-
   useEffect(() => {
     calcGraphXDomain();
   }, [selectedTimeFrame, calcGraphXDomain]);
 
-  // Reset filtered ops when fresh data arrives from the hook
+  // Reset filtered ops when fresh data arrives from the hook.
   useEffect(() => {
     setServiceOpsMetrics(undefined);
     setSearchOps('');
   }, [fetchedServiceOpsMetrics]);
+
+  // Persist the active service to localStorage once the services list resolves
+  // and currentService is known (covers the "no prior selection" first-visit case).
+  useEffect(() => {
+    if (currentService) {
+      store.set('lastAtmSearchService', currentService);
+    }
+  }, [currentService]);
 
   const serviceLatencies = serviceMetrics ? serviceMetrics.service_latencies : null;
   const displayTimeUnit = calcDisplayTimeUnit(serviceLatencies);
@@ -398,7 +388,7 @@ export function MonitorATMServicesViewImpl() {
             loading={operationMetricsLoading}
             error={opsError}
             data={serviceOpsMetrics === undefined ? fetchedServiceOpsMetrics : serviceOpsMetrics}
-            endTime={endTime}
+            endTime={Date.now()}
             lookback={selectedTimeFrame}
             serviceName={getSelectedService()}
           />

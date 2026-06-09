@@ -10,6 +10,7 @@ import {
   transformOperationMetrics,
   useServiceMetricsQuery,
   useOperationMetricsQuery,
+  MetricsHookParams,
 } from './useMetricsQuery';
 import type {
   FetchedAllServiceMetricsResponse,
@@ -343,9 +344,8 @@ const makeWrapper = (client: QueryClient) => {
   return Wrapper;
 };
 
-const baseParams = {
+const baseParams: MetricsHookParams = {
   quantile: 0.95,
-  endTs: 1000,
   lookback: 3600000,
   step: 60000,
   ratePer: 600000,
@@ -413,6 +413,28 @@ describe('useServiceMetricsQuery', () => {
     expect(calls[1][2]).toMatchObject({ quantile: 0.75 });
     expect(calls[2][2]).toMatchObject({ quantile: 0.95 });
   });
+
+  it('resolves endTs to Date.now() inside queryFn', async () => {
+    const fakeNow = 1_700_000_000_000;
+    vi.spyOn(Date, 'now').mockReturnValue(fakeNow);
+    vi.mocked(JaegerAPI.fetchMetrics).mockResolvedValue({
+      name: 'service_latencies',
+      type: 'GAUGE',
+      help: '',
+      quantile: 0.95,
+      metrics: [],
+    });
+
+    const { result } = renderHook(() => useServiceMetricsQuery('svc', baseParams), {
+      wrapper: makeWrapper(qc),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    for (const call of vi.mocked(JaegerAPI.fetchMetrics).mock.calls) {
+      expect(call[2]).toMatchObject({ endTs: fakeNow });
+    }
+    vi.restoreAllMocks();
+  });
 });
 
 describe('useOperationMetricsQuery', () => {
@@ -447,7 +469,9 @@ describe('useOperationMetricsQuery', () => {
     expect(result.current.data!.serviceOpsMetrics![0].name).toBe('op1');
   });
 
-  it('passes groupByOperation: true for all three calls', async () => {
+  it('passes groupByOperation: true and resolves endTs for all three calls', async () => {
+    const fakeNow = 1_700_000_000_000;
+    vi.spyOn(Date, 'now').mockReturnValue(fakeNow);
     vi.mocked(JaegerAPI.fetchMetrics).mockResolvedValue({
       name: 'service_operation_latencies',
       type: 'GAUGE',
@@ -462,7 +486,8 @@ describe('useOperationMetricsQuery', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     for (const call of vi.mocked(JaegerAPI.fetchMetrics).mock.calls) {
-      expect(call[2]).toMatchObject({ groupByOperation: true });
+      expect(call[2]).toMatchObject({ groupByOperation: true, endTs: fakeNow });
     }
+    vi.restoreAllMocks();
   });
 });
