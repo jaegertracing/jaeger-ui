@@ -90,7 +90,7 @@ boundary is a design choice. Four candidate roots cover the useful
 shapes; they compose via OTel's active-context mechanism so each fetch
 parents under the most specific currently-active root.
 
-#### 1. Initial page load — **implemented**
+#### 1. Initial page load — ✅ **implemented**
 
 | | |
 |---|---|
@@ -129,7 +129,7 @@ parents under the most specific currently-active root.
 | **Cons** | Requires app-code edits at each named entry point. |
 | **Status** | The OTel tracer API is available globally to any caller, but no named operation is wrapped yet. The AI Assistant runtime (`@ag-ui/client` `HttpAgent` via `@assistant-ui/react-ag-ui`) does not expose a per-turn lifecycle hook, so wrapping the conversational round requires subscribing to the assistant-ui runtime's thread state — a small follow-up. In the meantime the fetch instrumentation captures each AG-UI request as a single-span trace, page-attributed via the processor. |
 
-### Fetch/XHR fallback
+### Fetch/XHR fallback — ✅ implemented
 
 Independent of the four roots above, every outbound `/api/*` call
 produces a fetch span via `@opentelemetry/instrumentation-fetch`. When a
@@ -137,7 +137,7 @@ root is active the fetch becomes its child; otherwise it becomes a
 single-span trace. This is the bare-minimum guarantee — every backend
 call is at least traced.
 
-### Page attribution
+### Page attribution — ✅ implemented
 
 Every span (including single-span fetch traces) carries:
 
@@ -178,7 +178,7 @@ A browser-rooted trace is more useful if backend spans it triggers share
 the same trace ID. The W3C Trace Context spec offers two ways to wire
 this, with materially different trust properties.
 
-### UI propagates `traceparent` — default, implemented
+### UI propagates `traceparent` — ✅ default, implemented
 
 The standard OTel JS fetch instrumentation injects `traceparent` on
 same-origin fetches automatically; no config needed. The UI mints the
@@ -225,7 +225,7 @@ cannot trust browser-supplied IDs.
 | **Direct cross-origin to vendor** (e.g. Datadog RUM intake) | UI POSTs to a vendor's hosted ingest endpoint with a per-project token. | Jaeger is not a vendor; baking in a public ingest origin doesn't fit. |
 | **Customer-controlled tunnel/proxy on a first-party origin** (Sentry `tunnel`, Datadog RUM `proxy`) | Customer runs a relay that forwards to a hosted vendor. | Operators can already build this with NGINX in front of `jaeger-collector`; nothing to bless in the UI. |
 | **Direct cross-origin to `jaeger-collector`** | Browser exports OTLP/HTTP cross-origin to a CORS-enabled `jaeger-collector`. Made possible by [jaeger#4459](https://github.com/jaegertracing/jaeger/issues/4459). | Pushes `allowed_origins` config onto every operator and exposes a writable port to end-user browsers. Re-establishing the query API's auth posture on the collector port is per-deployment work. **Kept as a supported override**: setting `tracing.endpoint` to a cross-origin URL bypasses the same-origin proxy. |
-| **Same-origin ingest on the UI server** ← **chosen** | OTLP/HTTP proxy in `jaeger-query` at `/api/otlp/v1/*`. | No CORS. One deployment shape (query port already exposed). Auth piggybacks on whatever protects `/api/traces`. Composes with the OTLP-native migration in [ADR 0002](./0002-otlp-api-v3-migration.md). |
+| ✅ **Same-origin ingest on the UI server** ← **chosen** | OTLP/HTTP proxy in `jaeger-query` at `/api/otlp/v1/*`. | No CORS. One deployment shape (query port already exposed). Auth piggybacks on whatever protects `/api/traces`. Composes with the OTLP-native migration in [ADR 0002](./0002-otlp-api-v3-migration.md). |
 | **`navigator.sendBeacon` with `text/plain` to dodge preflight** (Sentry trick) | Use a CORS-safelisted content type to skip preflight on cross-origin. | Unnecessary once ingest is same-origin. |
 
 OpenTelemetry's own guidance is that browsers should not export
