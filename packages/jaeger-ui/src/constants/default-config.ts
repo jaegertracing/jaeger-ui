@@ -67,9 +67,10 @@ const defaultConfig: Config = {
     maxLimit: 1500,
   },
   traceIdDisplayLength: 7,
-  storageCapabilities: {
+  backendCapabilities: {
     archiveStorage: false,
     metricsStorage: false,
+    aiAssistant: false,
   },
   tracking: {
     gaID: null,

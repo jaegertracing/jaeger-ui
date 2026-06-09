@@ -19,7 +19,7 @@
     "@noble/hashes": "2.2.0",
     "@testing-library/dom": "^10.4.1",
     "depcheck": "1.4.7",
-    "knip": "6.14.1",
+    "knip": "6.16.1",
     "eslint-plugin-react-x": "5.8.0",
     "husky": "9.1.0",
     "jsdom": "29.1.1",
@@ -74,23 +74,23 @@
     ]
   },
   "dependencies": {
-    "@tanstack/react-virtual": "3.13.12",
+    "@tanstack/react-virtual": "3.14.2",
     "react-side-effect": "2.1.2"
   },
   "optionalDependencies": {
-    "@rolldown/binding-android-arm64": "1.0.0-rc.12",
-    "@rolldown/binding-darwin-arm64": "1.0.0-rc.12",
-    "@rolldown/binding-darwin-x64": "1.0.0-rc.12",
-    "@rolldown/binding-freebsd-x64": "1.0.0-rc.12",
-    "@rolldown/binding-linux-arm-gnueabihf": "1.0.0-rc.12",
-    "@rolldown/binding-linux-arm64-gnu": "1.0.0-rc.12",
-    "@rolldown/binding-linux-arm64-musl": "1.0.0-rc.12",
-    "@rolldown/binding-linux-ppc64-gnu": "1.0.0-rc.12",
-    "@rolldown/binding-linux-s390x-gnu": "1.0.0-rc.12",
-    "@rolldown/binding-linux-x64-gnu": "1.0.0-rc.12",
-    "@rolldown/binding-linux-x64-musl": "1.0.0-rc.12",
-    "@rolldown/binding-openharmony-arm64": "1.0.0-rc.12",
-    "@rolldown/binding-win32-arm64-msvc": "1.0.0-rc.12",
-    "@rolldown/binding-win32-x64-msvc": "1.0.0-rc.12"
+    "@rolldown/binding-android-arm64": "1.1.0",
+    "@rolldown/binding-darwin-arm64": "1.1.0",
+    "@rolldown/binding-darwin-x64": "1.1.0",
+    "@rolldown/binding-freebsd-x64": "1.1.0",
+    "@rolldown/binding-linux-arm-gnueabihf": "1.1.0",
+    "@rolldown/binding-linux-arm64-gnu": "1.1.0",
+    "@rolldown/binding-linux-arm64-musl": "1.1.0",
+    "@rolldown/binding-linux-ppc64-gnu": "1.1.0",
+    "@rolldown/binding-linux-s390x-gnu": "1.1.0",
+    "@rolldown/binding-linux-x64-gnu": "1.1.0",
+    "@rolldown/binding-linux-x64-musl": "1.1.0",
+    "@rolldown/binding-openharmony-arm64": "1.1.0",
+    "@rolldown/binding-win32-arm64-msvc": "1.1.0",
+    "@rolldown/binding-win32-x64-msvc": "1.1.0"
   }
 }
