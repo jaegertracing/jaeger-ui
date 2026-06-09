@@ -357,6 +357,22 @@ describe('computeTraceLink()', () => {
       },
     ]);
   });
+
+  it('applies a non-idempotent formatter exactly once', () => {
+    const patterns = [
+      {
+        type: 'traces',
+        url: 'http://example.com/?startTime=#{startTime | add 1000}',
+        text: 't=#{startTime | add 1000}',
+      },
+    ].map(processLinkPattern);
+    expect(computeTraceLink(patterns, { ...trace, startTime: 5 })).toEqual([
+      {
+        url: 'http://example.com/?startTime=1005',
+        text: 't=1005',
+      },
+    ]);
+  });
 });
 
 describe('computeLinks()', () => {
@@ -425,6 +441,43 @@ describe('computeLinks()', () => {
       {
         url: 'http://example.com/?myKey1=valueOfMyKey&myKey=valueOfThirdMyKey&traceID=trc1&startTime=1000',
         text: 'third link (valueOfThirdMyKey) for traceID - trc1',
+      },
+    ]);
+  });
+
+  it('renders an attribute-level link pattern that uses a formatter', () => {
+    const patterns = [
+      {
+        type: 'attributes',
+        key: 'myKey',
+        url: 'http://example.com/?myKey=#{myKey | pad_start 10 0}',
+        text: 'padded (#{myKey | pad_start 10 0})',
+      },
+    ].map(processLinkPattern);
+    const span = { depth: 0, resource: {}, attributes: [{ key: 'myKey', value: '42' }] };
+    expect(computeLinks(patterns, span, span.attributes, 0, trace)).toEqual([
+      {
+        url: 'http://example.com/?myKey=0000000042',
+        text: 'padded (0000000042)',
+      },
+    ]);
+  });
+
+  it('renders a trace.* link pattern parameter that uses a formatter', () => {
+    const patterns = [
+      {
+        type: 'events',
+        key: 'myThirdKey',
+        url: 'http://example.com/?startTime=#{trace.startTime | add 1000}',
+        text: 'start=#{trace.startTime | add 1000}',
+      },
+    ].map(processLinkPattern);
+    expect(
+      computeLinks(patterns, spans[1], spans[1].events[0].attributes, 1, { ...trace, startTime: 5 })
+    ).toEqual([
+      {
+        url: 'http://example.com/?startTime=1005',
+        text: 'start=1005',
       },
     ]);
   });
