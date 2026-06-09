@@ -11,12 +11,23 @@ import { resourceFromAttributes } from '@opentelemetry/resources';
 import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
 import getConfig from '../utils/config/get-config';
+import prefixUrl from '../utils/prefix-url';
 import { PageAttributionProcessor } from './page-attribution';
 import { version } from '../../package.json';
 
 const DEFAULT_ENDPOINT = '/api/otlp/v1/traces';
 
 let initialized = false;
+
+// Same-origin paths get the UI's site-prefix (e.g. '/jaeger') applied so
+// base-path deployments POST to the right route. Absolute URLs (used for
+// the cross-origin override, Pattern C in ADR-0011) pass through untouched.
+function resolveEndpoint(endpoint: string): string {
+  if (/^https?:\/\//i.test(endpoint) || endpoint.startsWith('//')) {
+    return endpoint;
+  }
+  return prefixUrl(endpoint);
+}
 
 /**
  * Initializes browser-side OpenTelemetry instrumentation if the UI is
@@ -31,7 +42,7 @@ export function initTracing(): void {
   const cfg = getConfig().tracing;
   if (!cfg?.enabled) return;
 
-  const endpoint = cfg.endpoint ?? DEFAULT_ENDPOINT;
+  const endpoint = resolveEndpoint(cfg.endpoint ?? DEFAULT_ENDPOINT);
 
   const provider = new WebTracerProvider({
     resource: resourceFromAttributes({
