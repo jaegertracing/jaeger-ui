@@ -18,6 +18,10 @@ SPDX-License-Identifier: Apache-2.0
   line-height: 1;
   transform: none;
   transition: none;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  width: fit-content;
 }
 
 .CopyIcon:focus-visible {
