@@ -1,0 +1,124 @@
+{
+  "data": {
+    "services": [
+      {
+        "name": "partial-genai-service",
+        "numberOfSpans": 2
+      }
+    ],
+    "spans": [
+      {
+        "traceID": "partial-genai-trace-00000001",
+        "spanID": "b1b2b3b4b5b6b7b8",
+        "flags": 1,
+        "operationName": "partial-agent-run",
+        "references": [],
+        "startTime": 1660049722779884,
+        "duration": 800000,
+        "tags": [
+          {
+            "key": "gen_ai.system",
+            "type": "string",
+            "value": "openai"
+          },
+          {
+            "key": "internal.span.format",
+            "type": "string",
+            "value": "jaeger"
+          }
+        ],
+        "logs": [],
+        "processID": "p1",
+        "warnings": [],
+        "process": {
+          "serviceName": "partial-genai-service",
+          "tags": []
+        },
+        "relativeStartTime": 0,
+        "depth": 0,
+        "hasChildren": true
+      },
+      {
+        "traceID": "partial-genai-trace-00000001",
+        "spanID": "c2c3c4c5c6c7c8c9",
+        "flags": 1,
+        "operationName": "partial-llm",
+        "references": [
+          {
+            "refType": "CHILD_OF",
+            "traceID": "partial-genai-trace-00000001",
+            "spanID": "b1b2b3b4b5b6b7b8",
+            "span": {
+              "traceID": "partial-genai-trace-00000001",
+              "spanID": "b1b2b3b4b5b6b7b8",
+              "flags": 1,
+              "operationName": "partial-agent-run",
+              "references": [],
+              "startTime": 1660049722779884,
+              "duration": 800000,
+              "tags": [
+                {
+                  "key": "gen_ai.system",
+                  "type": "string",
+                  "value": "openai"
+                },
+                {
+                  "key": "internal.span.format",
+                  "type": "string",
+                  "value": "jaeger"
+                }
+              ],
+              "logs": [],
+              "processID": "p1",
+              "warnings": [],
+              "process": {
+                "serviceName": "partial-genai-service",
+                "tags": []
+              },
+              "relativeStartTime": 0,
+              "depth": 0,
+              "hasChildren": true
+            }
+          }
+        ],
+        "startTime": 1660049722879884,
+        "duration": 500000,
+        "tags": [
+          {
+            "key": "gen_ai.operation.name",
+            "type": "string",
+            "value": "chat"
+          },
+          {
+            "key": "internal.span.format",
+            "type": "string",
+            "value": "jaeger"
+          }
+        ],
+        "logs": [],
+        "processID": "p1",
+        "warnings": [],
+        "process": {
+          "serviceName": "partial-genai-service",
+          "tags": []
+        },
+        "relativeStartTime": 100000,
+        "depth": 1,
+        "hasChildren": false
+      }
+    ],
+    "traceID": "partial-genai-trace-00000001",
+    "traceName": "partial-genai-service: partial-agent-run",
+    "processes": {
+      "p1": {
+        "serviceName": "partial-genai-service",
+        "tags": []
+      }
+    },
+    "duration": 800000,
+    "startTime": 1660049722779884,
+    "endTime": 1660049723579884
+  },
+  "id": "partial-genai-trace-00000001",
+  "state": "FETCH_DONE"
+}
