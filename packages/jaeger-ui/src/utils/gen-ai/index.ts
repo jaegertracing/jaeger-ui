@@ -4,9 +4,12 @@
 export { detectGenAISpan, isGenAITrace } from './detect-gen-ai';
 export type { GenAISpanKind } from './detect-gen-ai';
 export {
+  AGENT_EPISODE_ID,
   DB_COLLECTION_NAME,
+  DB_SYSTEM,
   GEN_AI_COMPLETION,
   GEN_AI_OPERATION_NAME,
+  GEN_AI_PREFIX,
   GEN_AI_PROMPT,
   GEN_AI_REQUEST_MODEL,
   GEN_AI_SYSTEM,
@@ -18,5 +21,5 @@ export {
   GEN_AI_USAGE_OUTPUT_TOKENS,
   getAttr,
   getAttrsByPrefix,
-  isMediaUrl,
+  detectMediaType,
 } from './gen-ai-attrs';

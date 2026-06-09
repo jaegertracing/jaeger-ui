@@ -3,6 +3,7 @@
 
 import { IOtelSpan, IOtelTrace } from '../../types/otel';
 import {
+  AGENT_EPISODE_ID,
   DB_SYSTEM,
   GEN_AI_OPERATION_NAME,
   GEN_AI_PREFIX,
@@ -19,7 +20,7 @@ export type GenAISpanKind = 'llm' | 'tool' | 'retrieval' | 'agent';
 export function detectGenAISpan(span: IOtelSpan): GenAISpanKind | null {
   if (getAttr(span, GEN_AI_TOOL_NAME) !== undefined) return 'tool';
   if (getAttr(span, DB_SYSTEM) === 'vector') return 'retrieval';
-  if (getAttr(span, 'agent.episode_id') !== undefined) return 'agent';
+  if (getAttr(span, AGENT_EPISODE_ID) !== undefined) return 'agent';
   if (getAttr(span, GEN_AI_OPERATION_NAME) !== undefined) return 'llm';
   if (span.attributes.some(a => a.key.startsWith(GEN_AI_PREFIX) && a.key !== GEN_AI_TOOL_CALL_ID))
     return 'llm';

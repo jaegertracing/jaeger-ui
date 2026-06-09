@@ -17,6 +17,7 @@ export const GEN_AI_TOOL_INPUT = 'gen_ai.tool.input';
 export const GEN_AI_TOOL_OUTPUT = 'gen_ai.tool.output';
 export const DB_SYSTEM = 'db.system';
 export const DB_COLLECTION_NAME = 'db.collection.name';
+export const AGENT_EPISODE_ID = 'agent.episode_id';
 
 export const GEN_AI_PREFIX = 'gen_ai.';
 
@@ -33,7 +34,7 @@ export function getAttrsByPrefix(span: IOtelSpan, prefix: string): IAttribute[] 
 const IMAGE_RE = /\.(png|jpg|jpeg|gif|webp|svg)([?#].*)?$/i;
 const AUDIO_RE = /\.(mp3|wav|ogg|flac|m4a)([?#].*)?$/i;
 
-export function isMediaUrl(value: unknown): 'image' | 'audio' | null {
+export function detectMediaType(value: unknown): 'image' | 'audio' | null {
   if (typeof value !== 'string') return null;
   if (IMAGE_RE.test(value)) return 'image';
   if (AUDIO_RE.test(value)) return 'audio';
