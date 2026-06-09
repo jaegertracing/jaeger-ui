@@ -242,8 +242,8 @@ export function MonitorATMServicesViewImpl(props: TProps) {
         />
       )}
       <div className="service-view-container">
-        <Row>
-          <Col span={6}>
+        <Row className="service-span-kind-row" gutter={16} align="bottom">
+          <Col className="service-filter-col">
             <h2 className="service-selector-header">Service</h2>
             <SearchableSelect
               value={getSelectedService()}
@@ -260,7 +260,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
               ))}
             </SearchableSelect>
           </Col>
-          <Col span={6}>
+          <Col className="span-kind-filter-col">
             <h2 className="span-kind-selector-header">Span Kind</h2>
             <SearchableSelect
               value={selectedSpanKind}
@@ -364,7 +364,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
             />
           </Col>
         </Row>
-        <Row className="operation-table-block">
+        <Row className="operation-table-block" align="middle">
           <Col span={16}>
             <h2 className="table-header">Operations metrics under {getSelectedService()}</h2>{' '}
             <span className="over-the-last">Last {getLoopbackInterval(selectedTimeFrame)}</span>
