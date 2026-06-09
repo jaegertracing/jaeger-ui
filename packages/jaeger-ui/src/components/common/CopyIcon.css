@@ -21,7 +21,6 @@ SPDX-License-Identifier: Apache-2.0
   display: inline-flex;
   align-items: center;
   vertical-align: middle;
-  width: fit-content;
 }
 
 .CopyIcon:focus-visible {
