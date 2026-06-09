@@ -6,16 +6,27 @@ import { ReadableSpan, Span, SpanProcessor } from '@opentelemetry/sdk-trace-base
 
 const SESSION_ID_KEY = 'jaegerUi.tracing.sessionId';
 
+// crypto.randomUUID requires a secure context. Fall back to a
+// non-cryptographic ID — for span attribution, uniqueness within a tab
+// session is sufficient and crashing tracing init is not acceptable.
+function safeUuid(): string {
+  try {
+    return crypto.randomUUID();
+  } catch {
+    return `s-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  }
+}
+
 function getOrCreateSessionId(): string {
   try {
     const existing = window.sessionStorage.getItem(SESSION_ID_KEY);
     if (existing) return existing;
-    const next = crypto.randomUUID();
+    const next = safeUuid();
     window.sessionStorage.setItem(SESSION_ID_KEY, next);
     return next;
   } catch {
-    // sessionStorage can throw in privacy modes; fall back to per-call UUID.
-    return crypto.randomUUID();
+    // sessionStorage can throw in privacy modes; fall back to per-call ID.
+    return safeUuid();
   }
 }
 
