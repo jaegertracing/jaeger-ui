@@ -74,6 +74,8 @@
     ]
   },
   "dependencies": {
+    "@assistant-ui/store": "0.2.14",
+    "@assistant-ui/tap": "0.6.1",
     "@tanstack/react-virtual": "3.14.2",
     "react-side-effect": "2.1.2"
   },

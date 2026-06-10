@@ -17,6 +17,11 @@ const config: KnipConfig = {
         // version pulled in by @exodus/bytes; not imported directly anywhere.
         '@noble/hashes',
 
+        // Pinned at root so npm hoists a single compatible copy for packages/jaeger-ui;
+        // @assistant-ui/* share peer types and break when store/tap dedupe wrong.
+        '@assistant-ui/store',
+        '@assistant-ui/tap',
+
         // Declared as a workspace-level dependency so that @tanstack/react-virtual is
         // hoisted to the root node_modules (used by packages/jaeger-ui but declared at
         // root to ensure a single copy is resolved).
