@@ -3,6 +3,7 @@
 
 import React, { useCallback } from 'react';
 import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward } from 'react-icons/io5';
+import GenAISpanIcon from './GenAISpanIcon';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
 import { formatDurationCompact, ViewedBoundsFunctionType } from './utils';
@@ -164,6 +165,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
               {!hasOwnError && hasChildError && (
                 <IoAlert className="SpanBarRow--errorIcon SpanBarRow--errorIcon--hollow" />
               )}
+              <GenAISpanIcon span={span} className="SpanBarRow--genAIIcon" />
               {serviceName}{' '}
               {rpc && (
                 <span>
