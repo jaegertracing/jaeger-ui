@@ -9,7 +9,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Packages used only at build/test time that depcheck cannot detect automatically.
-const otherPackages = ['@vitest/coverage-v8', 'identity-obj-proxy'];
+// @assistant-ui/store and @assistant-ui/tap are pinned here so npm hoists a single
+// compatible copy alongside @assistant-ui/react; they are not imported directly.
+const otherPackages = [
+  '@assistant-ui/store',
+  '@assistant-ui/tap',
+  '@vitest/coverage-v8',
+  'identity-obj-proxy',
+];
 
 // Use the selected targetPackage for generating depcheckrcContent
 const depcheckrcContent = {
