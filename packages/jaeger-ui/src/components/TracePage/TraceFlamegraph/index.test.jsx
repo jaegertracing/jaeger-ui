@@ -7,6 +7,7 @@ import '@testing-library/jest-dom';
 import { convertJaegerTraceToProfile, FlamegraphRenderer } from '@pyroscope/flamegraph';
 import TraceFlamegraph from './index';
 import testTrace from './testTrace.json';
+import transformTraceData from '../../../model/transform-trace-data';
 
 // Mock the FlamegraphRenderer component
 vi.mock('@pyroscope/flamegraph', async () => {
@@ -23,6 +24,7 @@ vi.mock('@pyroscope/flamegraph', async () => {
 });
 
 const profile = convertJaegerTraceToProfile(testTrace.data);
+const otelTrace = transformTraceData(testTrace.data).asOtelTrace();
 
 describe('convertJaegerTraceToProfile', () => {
   it('returns correct profile format', () => {
@@ -47,12 +49,12 @@ describe('<TraceFlamegraph />', () => {
   });
 
   it('renders the flamegraph wrapper', () => {
-    render(<TraceFlamegraph trace={testTrace} />);
+    render(<TraceFlamegraph trace={otelTrace} />);
     expect(screen.getByTestId('flamegraph-wrapper')).toBeInTheDocument();
   });
 
   it('renders the FlamegraphRenderer with converted profile when trace is provided', () => {
-    render(<TraceFlamegraph trace={testTrace} />);
+    render(<TraceFlamegraph trace={otelTrace} />);
 
     // Check if the mocked renderer is in the document
     const renderer = screen.getByTestId('flamegraph-renderer');
@@ -62,7 +64,7 @@ describe('<TraceFlamegraph />', () => {
     expect(FlamegraphRenderer).toHaveBeenCalledTimes(1);
     const receivedProps = FlamegraphRenderer.mock.calls[0][0];
     expect(receivedProps.profile).toBeDefined();
-    expect(receivedProps.profile.metadata.units).toEqual(profile.metadata.units); // Check if correct profile was passed
+    expect(receivedProps.profile.metadata.units).toEqual(profile.metadata.units);
 
     // Check the content rendered by the mock based on the profile
     expect(renderer).toHaveTextContent(`Profile Loaded - Units: ${profile.metadata.units}`);
@@ -84,8 +86,8 @@ describe('<TraceFlamegraph />', () => {
     expect(renderer).toHaveTextContent('No Profile Data');
   });
 
-  it('renders the FlamegraphRenderer with null profile when trace data is missing', () => {
-    render(<TraceFlamegraph trace={{}} />); // trace without 'data' property
+  it('renders the FlamegraphRenderer with null profile when trace is not an OtelTraceFacade', () => {
+    render(<TraceFlamegraph trace={{}} />);
 
     // Check if the mocked renderer is in the document
     const renderer = screen.getByTestId('flamegraph-renderer');

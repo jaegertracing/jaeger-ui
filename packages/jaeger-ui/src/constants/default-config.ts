@@ -61,15 +61,16 @@ const defaultConfig: Config = {
   ],
   search: {
     maxLookback: {
-      label: '2 Days',
+      label: '2 days',
       value: '2d',
     },
     maxLimit: 1500,
   },
   traceIdDisplayLength: 7,
-  storageCapabilities: {
+  backendCapabilities: {
     archiveStorage: false,
     metricsStorage: false,
+    aiAssistant: false,
   },
   tracking: {
     gaID: null,

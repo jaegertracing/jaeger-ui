@@ -24,6 +24,10 @@ SPDX-License-Identifier: Apache-2.0
   margin-top: 0.5em;
 }
 
+.SearchForm--reset {
+  float: left;
+}
+
 .SearchForm--submit {
   background-color: var(--interactive-primary);
   color: var(--text-inverse);

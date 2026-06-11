@@ -8,7 +8,7 @@ import { Config } from '../types/config';
  * Returns the application configuration.
  *
  * Config is static after app boot (assembled once from window.getJaegerUiConfig
- * and window.getJaegerStorageCapabilities, then memoized). This hook is a thin
+ * and window.getJaegerBackendCapabilities, then memoized). This hook is a thin
  * wrapper so component code never imports getConfig directly — the backing
  * implementation can change without touching call sites.
  */

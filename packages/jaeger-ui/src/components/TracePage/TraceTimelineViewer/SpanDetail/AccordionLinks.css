@@ -45,6 +45,10 @@ SPDX-License-Identifier: Apache-2.0
   content: attr(data-label);
 }
 
+.AccordionLinks--emptyIcon {
+  color: var(--text-muted);
+}
+
 .SpanReference--debugLabel {
   margin: 0 5px 0 5px;
 }
