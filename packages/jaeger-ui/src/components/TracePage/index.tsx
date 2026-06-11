@@ -506,7 +506,7 @@ export function TracePageImpl(props: TProps) {
         {traceIsGenAI && !genAiBannerDismissed && viewType !== ETraceViewType.GenAITimelineViewer && (
           <Alert
             message="GenAI trace detected"
-            description="Switch to GenAI View to see agentic hierarchy and rich attribute rendering."
+            description="This trace contains GenAI spans. Switch to GenAI View for a dedicated visualization."
             type="info"
             closable
             onClose={() => {
