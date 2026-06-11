@@ -34,7 +34,7 @@ vi.mock('../../hooks/useTraceDiscovery', () => {
   };
 });
 
-vi.mock('../../hooks/useMetricsQuery', () => ({
+vi.mock('./ServicesView/useMetricsQuery', () => ({
   useServiceMetricsQuery: jest.fn(() => ({
     data: { serviceMetrics, serviceError: originInitialState.serviceError },
     isFetching: false,

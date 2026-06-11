@@ -1158,7 +1158,7 @@ queryKey: ['ddg', service, operation, start, end]
 
 **Redux removed**: `src/reducers/metrics.ts`.
 
-**New hooks** (in `src/hooks/useMetricsQuery.ts`):
+**New hooks** (in `src/components/Monitor/ServicesView/useMetricsQuery.ts`):
 
 - `useServiceMetricsQuery(serviceName, params)` - fires five parallel `fetchMetrics` calls (latency p50/p75/p95, call-rate, error-rate) via `Promise.allSettled`, then applies `transformServiceMetrics` to produce `{ serviceMetrics, serviceError }`.
 - `useOperationMetricsQuery(serviceName, params)` - fires three parallel `fetchMetrics` calls with `groupByOperation: true`, then applies `transformOperationMetrics` to produce `{ serviceOpsMetrics, opsError }`.

@@ -4,7 +4,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
-import JaegerAPI from '../api/jaeger';
+import JaegerAPI from '../../../api/jaeger';
 import {
   transformServiceMetrics,
   transformOperationMetrics,
@@ -14,9 +14,9 @@ import {
 import type {
   FetchedAllServiceMetricsResponse,
   FetchAggregatedServiceMetricsResponse,
-} from '../types/metrics';
+} from '../../../types/metrics';
 
-vi.mock('../api/jaeger', () => ({
+vi.mock('../../../api/jaeger', () => ({
   default: {
     fetchMetrics: vi.fn(),
   },

@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
-import JaegerAPI from '../api/jaeger';
-import type { ApiError } from '../types/api-error';
+import JaegerAPI from '../../../api/jaeger';
+import type { ApiError } from '../../../types/api-error';
 import type {
   FetchAggregatedServiceMetricsResponse,
   FetchedAllServiceMetricsResponse,
@@ -15,7 +15,7 @@ import type {
   ServiceMetrics,
   ServiceMetricsObject,
   ServiceOpsMetrics,
-} from '../types/metrics';
+} from '../../../types/metrics';
 
 // Module-private query keys
 function serviceMetricsQueryKey(

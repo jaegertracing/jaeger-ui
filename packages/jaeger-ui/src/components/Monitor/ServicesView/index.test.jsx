@@ -9,7 +9,7 @@ import '@testing-library/jest-dom';
 import { MonitorATMServicesViewImpl as MonitorATMServicesView } from '.';
 import { getLoopbackInterval, timeFrameOptions, yAxisTickFormat } from './timeFrameUtils';
 import { useServices } from '../../../hooks/useTraceDiscovery';
-import { useServiceMetricsQuery, useOperationMetricsQuery } from '../../../hooks/useMetricsQuery';
+import { useServiceMetricsQuery, useOperationMetricsQuery } from './useMetricsQuery';
 import { ONE_HOUR_MS, TIME_RANGE_OPTIONS } from '../../../utils/time-range-options';
 import {
   serviceMetrics,
@@ -48,7 +48,7 @@ vi.mock('../../../hooks/useTraceDiscovery', async () => ({
   useServices: jest.fn(() => ({ data: ['service1', 'service2'], isLoading: false })),
 }));
 
-vi.mock('../../../hooks/useMetricsQuery', async () => ({
+vi.mock('./useMetricsQuery', async () => ({
   useServiceMetricsQuery: jest.fn(() => ({
     data: { serviceMetrics, serviceError: originInitialState.serviceError },
     isFetching: false,

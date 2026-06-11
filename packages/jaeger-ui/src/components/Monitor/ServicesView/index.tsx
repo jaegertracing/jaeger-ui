@@ -35,7 +35,7 @@ import withRouteProps from '../../../utils/withRouteProps';
 
 import SearchableSelect from '../../common/SearchableSelect';
 import { useServices } from '../../../hooks/useTraceDiscovery';
-import { useServiceMetricsQuery, useOperationMetricsQuery } from '../../../hooks/useMetricsQuery';
+import { useServiceMetricsQuery, useOperationMetricsQuery } from './useMetricsQuery';
 
 const trackSearchOperationDebounced = _debounce(searchQuery => trackSearchOperation(searchQuery), 1000);
 
