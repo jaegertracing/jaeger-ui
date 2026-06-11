@@ -7,7 +7,13 @@ import '@testing-library/jest-dom';
 import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
-import { DEFAULT_HEIGHTS, VirtualizedTraceViewImpl, getCriticalPathSections } from './VirtualizedTraceView';
+
+import {
+  buildCriticalPathIndex,
+  buildPrunedCriticalPaths,
+  getVisibleCriticalPathSections,
+} from './criticalPath';
+import { DEFAULT_HEIGHTS, VirtualizedTraceViewImpl } from './VirtualizedTraceView';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
 import updateUiFindSpy from '../../../utils/update-ui-find';
@@ -525,7 +531,16 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
     it('returns [] from mergeChildrenCriticalPath when criticalPath is falsy', () => {
       const span = trace.spans[0];
-      const result = getCriticalPathSections(true, false, trace, span, undefined, new Set());
+
+      const result = getVisibleCriticalPathSections(
+        true,
+        false,
+        trace,
+        span,
+        undefined,
+        buildCriticalPathIndex([]),
+        new Map()
+      );
       expect(result).toEqual([]);
     });
 
@@ -556,13 +571,15 @@ describe('<VirtualizedTraceViewImpl>', () => {
         { spanID: 'pruned-child', sectionStart: 10, sectionEnd: 20 },
         { spanID: 'visible-child', sectionStart: 20, sectionEnd: 30 },
       ];
-      const result = getCriticalPathSections(
+
+      const result = getVisibleCriticalPathSections(
         false,
         true,
         customTrace,
         parentSpan,
         fakeCriticalPath,
-        new Set(['svc-pruned'])
+        buildCriticalPathIndex(fakeCriticalPath),
+        buildPrunedCriticalPaths(fakeCriticalPath, new Set(['svc-pruned']), customTrace.spans)
       );
       const spanIDs = result.map(s => s.spanID);
       expect(spanIDs).toContain('parent');
