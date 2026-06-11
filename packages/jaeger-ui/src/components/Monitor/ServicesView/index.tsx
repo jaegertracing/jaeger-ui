@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useEffect, useState, useRef, useCallback, useLayoutEffect, useMemo } from 'react';
-import { Row, Col, Input, Alert, Select } from 'antd';
+import { Row, Col, Input, Alert, Select, Button } from 'antd';
 import _debounce from 'lodash/debounce';
 import _isEmpty from 'lodash/isEmpty';
 import store from '../../../utils/storage';
@@ -11,7 +11,13 @@ import OperationTableDetails from './operationDetailsTable';
 import ServiceGraph from './serviceGraph';
 import LoadingIndicator from '../../common/LoadingIndicator';
 
-import { Points, ServiceMetricsObject, ServiceOpsMetrics, spanKinds } from '../../../types/metrics';
+import {
+  MetricsAPIQueryParams,
+  Points,
+  ServiceMetricsObject,
+  ServiceOpsMetrics,
+  spanKinds,
+} from '../../../types/metrics';
 import prefixUrl from '../../../utils/prefix-url';
 import { convertTimeUnitToShortTerm, getSuitableTimeUnit } from '../../../utils/date';
 import { ONE_HOUR_MS, timeFrameOptions, getLoopbackInterval, yAxisTickFormat } from './timeFrameUtils';
@@ -29,11 +35,7 @@ import withRouteProps from '../../../utils/withRouteProps';
 
 import SearchableSelect from '../../common/SearchableSelect';
 import { useServices } from '../../../hooks/useTraceDiscovery';
-import {
-  useServiceMetricsQuery,
-  useOperationMetricsQuery,
-  MetricsHookParams,
-} from '../../../hooks/useMetricsQuery';
+import { useServiceMetricsQuery, useOperationMetricsQuery } from '../../../hooks/useMetricsQuery';
 
 const trackSearchOperationDebounced = _debounce(searchQuery => trackSearchOperation(searchQuery), 1000);
 
@@ -81,6 +83,7 @@ export function MonitorATMServicesViewImpl() {
   const { data: services = [], isLoading: servicesLoading } = useServices();
   const docsLink = getConfig().monitor?.docsLink;
   const graphDivWrapper = useRef<HTMLDivElement>(null);
+  const [endTime, setEndTime] = useState<number>(Date.now());
   const [graphWidth, setGraphWidth] = useState<number>(300);
   const [serviceOpsMetrics, setServiceOpsMetrics] = useState<ServiceOpsMetrics[] | undefined>(undefined);
   const [searchOps, setSearchOps] = useState<string>('');
@@ -98,30 +101,31 @@ export function MonitorATMServicesViewImpl() {
 
   const currentService = selectedService || services[0];
 
-  // endTs is intentionally absent — it is resolved to Date.now() inside each
-  // hook's queryFn so that the query key stays stable and React Query's staleTime
-  // governs freshness, rather than an imperative "trigger a fetch" effect.
-  const metricQueryParams: MetricsHookParams | undefined = useMemo(() => {
+  const metricQueryParams: MetricsAPIQueryParams | undefined = useMemo(() => {
     if (!currentService) return undefined;
     return {
       quantile: 0.95,
+      endTs: endTime,
       lookback: selectedTimeFrame,
       step: 60 * 1000,
       ratePer: 10 * 60 * 1000,
       spanKind: selectedSpanKind,
     };
-  }, [currentService, selectedTimeFrame, selectedSpanKind]);
+  }, [currentService, endTime, selectedTimeFrame, selectedSpanKind]);
 
-  const { data: serviceMetricsData, isFetching: serviceMetricsLoading } = useServiceMetricsQuery(
-    currentService,
-    metricQueryParams
-  );
+  const {
+    data: serviceMetricsData,
+    isFetching: serviceMetricsFetching,
+    isLoading: serviceMetricsInitialLoading,
+  } = useServiceMetricsQuery(currentService, metricQueryParams);
 
   const {
     data: operationMetricsData,
-    isFetching: operationMetricsLoading,
-    dataUpdatedAt: opsDataUpdatedAt,
+    isFetching: operationMetricsFetching,
+    isLoading: operationMetricsInitialLoading,
   } = useOperationMetricsQuery(currentService, metricQueryParams);
+
+  const [refreshRequested, setRefreshRequested] = useState(false);
 
   const serviceMetrics = serviceMetricsData?.serviceMetrics ?? null;
   const serviceError = serviceMetricsData?.serviceError ?? {
@@ -138,11 +142,6 @@ export function MonitorATMServicesViewImpl() {
     opsErrors: null,
   };
 
-  const calcGraphXDomain = useCallback(() => {
-    const currentTime = Date.now();
-    setGraphXDomain([currentTime - selectedTimeFrame, currentTime]);
-  }, [selectedTimeFrame]);
-
   const updateDimensions = useCallback(() => {
     if (graphDivWrapper.current) {
       setGraphWidth(graphDivWrapper.current.offsetWidth - 24);
@@ -153,15 +152,24 @@ export function MonitorATMServicesViewImpl() {
     return selectedService || store.getString('lastAtmSearchService') || services[0];
   }, [services, selectedService]);
 
+  // Bumping endTime is the single mechanism for refreshing metrics — it changes
+  // metricQueryParams (and thus the query key), so React Query fetches fresh data.
+  const handleRefresh = useCallback(() => {
+    setRefreshRequested(true);
+    setEndTime(Date.now());
+  }, []);
+
   const handleServiceChange = useCallback((value: string) => {
     setSelectedService(value);
     store.set('lastAtmSearchService', value);
+    setEndTime(Date.now());
     trackSelectService(value);
   }, []);
 
   const handleSpanKindChange = useCallback((value: string) => {
     setSelectedSpanKind(value as spanKinds);
     store.set('lastAtmSearchSpanKind', value);
+    setEndTime(Date.now());
     const { label } = spanKindOptions.find(option => option.value === value)!;
     trackSelectSpanKind(label);
   }, []);
@@ -169,18 +177,18 @@ export function MonitorATMServicesViewImpl() {
   const handleTimeFrameChange = useCallback((value: number) => {
     setSelectedTimeFrame(value);
     store.set('lastAtmSearchTimeframe', value);
+    setEndTime(Date.now());
     const { label } = timeFrameOptions.find(option => option.value === value)!;
     trackSelectTimeframe(label);
   }, []);
 
   useEffect(() => {
     window.addEventListener('resize', updateDimensions);
-    calcGraphXDomain();
 
     return () => {
       window.removeEventListener('resize', updateDimensions);
     };
-  }, [updateDimensions, calcGraphXDomain]);
+  }, [updateDimensions]);
 
   // Measure the graph container width after every servicesLoading → false
   // transition. useLayoutEffect ensures the measurement happens before paint,
@@ -195,14 +203,21 @@ export function MonitorATMServicesViewImpl() {
   }, [servicesLoading, updateDimensions]);
 
   useEffect(() => {
-    calcGraphXDomain();
-  }, [selectedTimeFrame, calcGraphXDomain]);
+    setGraphXDomain([endTime - selectedTimeFrame, endTime]);
+  }, [endTime, selectedTimeFrame]);
 
   // Reset filtered ops when fresh data arrives from the hook.
   useEffect(() => {
     setServiceOpsMetrics(undefined);
     setSearchOps('');
   }, [fetchedServiceOpsMetrics]);
+
+  // Clear the Refresh-button spinner once the manual refresh fetch completes.
+  useEffect(() => {
+    if (!serviceMetricsFetching && !operationMetricsFetching) {
+      setRefreshRequested(false);
+    }
+  }, [serviceMetricsFetching, operationMetricsFetching]);
 
   // Persist the active service to localStorage once the services list resolves
   // and currentService is known (covers the "no prior selection" first-visit case).
@@ -215,6 +230,8 @@ export function MonitorATMServicesViewImpl() {
   const serviceLatencies = serviceMetrics ? serviceMetrics.service_latencies : null;
   const displayTimeUnit = calcDisplayTimeUnit(serviceLatencies);
   const serviceErrorRate = serviceMetrics ? serviceMetrics.service_error_rate : null;
+  const controlsInitialLoading = serviceMetricsInitialLoading || operationMetricsInitialLoading;
+  const refreshLoading = refreshRequested && (serviceMetricsFetching || operationMetricsFetching);
 
   if (servicesLoading) {
     return <LoadingIndicator vcentered centered />;
@@ -246,8 +263,8 @@ export function MonitorATMServicesViewImpl() {
               onChange={handleServiceChange}
               placeholder="Select A Service"
               className="select-a-service-input"
-              disabled={operationMetricsLoading}
-              loading={operationMetricsLoading}
+              disabled={controlsInitialLoading}
+              loading={controlsInitialLoading}
             >
               {services.map((service: string) => (
                 <Option key={service} value={service}>
@@ -263,8 +280,8 @@ export function MonitorATMServicesViewImpl() {
               onChange={handleSpanKindChange}
               placeholder="Select A Span Kind"
               className="span-kind-selector"
-              disabled={operationMetricsLoading}
-              loading={operationMetricsLoading}
+              disabled={controlsInitialLoading}
+              loading={controlsInitialLoading}
             >
               {spanKindOptions.map(option => (
                 <Option key={option.value} value={option.value}>
@@ -273,6 +290,16 @@ export function MonitorATMServicesViewImpl() {
               ))}
             </SearchableSelect>
           </Col>
+          <Col span={4} className="refresh-col">
+            <Button
+              className="refresh-btn"
+              onClick={handleRefresh}
+              loading={refreshLoading}
+              disabled={!currentService || refreshLoading}
+            >
+              Refresh
+            </Button>
+          </Col>
         </Row>
         <Row align="middle">
           <Col span={16}>
@@ -280,10 +307,10 @@ export function MonitorATMServicesViewImpl() {
               Aggregation of all &quot;{getSelectedService()}&quot; metrics in selected timeframe.{' '}
               <a
                 href={prefixUrl(
-                  `/search?end=${Date.now()}000&limit=20&lookback=${
+                  `/search?end=${endTime}000&limit=20&lookback=${
                     selectedTimeFrame / (3600 * 1000)
                   }h&maxDuration&minDuration&service=${getSelectedService()}&start=${
-                    Date.now() - selectedTimeFrame
+                    endTime - selectedTimeFrame
                   }000`
                 )}
                 target="blank"
@@ -299,8 +326,8 @@ export function MonitorATMServicesViewImpl() {
               onChange={handleTimeFrameChange}
               placeholder="Select A Timeframe"
               className="select-a-timeframe-input"
-              disabled={operationMetricsLoading}
-              loading={operationMetricsLoading}
+              disabled={controlsInitialLoading}
+              loading={controlsInitialLoading}
             >
               {timeFrameOptions.map(option => (
                 <Option key={option.value} value={option.value}>
@@ -320,7 +347,7 @@ export function MonitorATMServicesViewImpl() {
                 serviceError.service_latencies_75 &&
                 serviceError.service_latencies_95
               }
-              loading={serviceMetricsLoading}
+              loading={serviceMetricsFetching}
               name={`Latency (${convertTimeUnitToShortTerm(displayTimeUnit)})`}
               width={graphWidth}
               metricsData={serviceLatencies}
@@ -335,7 +362,7 @@ export function MonitorATMServicesViewImpl() {
             <ServiceGraph
               key="errRate"
               error={serviceError.service_error_rate}
-              loading={serviceMetricsLoading}
+              loading={serviceMetricsFetching}
               name="Error rate (%)"
               width={graphWidth}
               metricsData={convertServiceErrorRateToPercentages(serviceErrorRate)}
@@ -348,7 +375,7 @@ export function MonitorATMServicesViewImpl() {
           <Col span={8}>
             <ServiceGraph
               key="requests"
-              loading={serviceMetricsLoading}
+              loading={serviceMetricsFetching}
               error={serviceError.service_call_rate}
               name="Request rate (req/s)"
               width={graphWidth}
@@ -370,7 +397,7 @@ export function MonitorATMServicesViewImpl() {
               placeholder="Search operation"
               className="select-operation-input"
               value={searchOps}
-              disabled={operationMetricsLoading === true || fetchedServiceOpsMetrics === undefined}
+              disabled={operationMetricsFetching === true || fetchedServiceOpsMetrics === undefined}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 const filteredData = fetchedServiceOpsMetrics!.filter(({ name }: { name: string }) => {
                   return name.toLowerCase().includes(e.target.value.toLowerCase());
@@ -386,10 +413,10 @@ export function MonitorATMServicesViewImpl() {
         </Row>
         <Row>
           <OperationTableDetails
-            loading={operationMetricsLoading}
+            loading={operationMetricsFetching}
             error={opsError}
             data={serviceOpsMetrics === undefined ? fetchedServiceOpsMetrics : serviceOpsMetrics}
-            endTime={opsDataUpdatedAt || Date.now()}
+            endTime={endTime}
             lookback={selectedTimeFrame}
             serviceName={getSelectedService()}
           />

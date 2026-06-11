@@ -17,20 +17,18 @@ import type {
   ServiceOpsMetrics,
 } from '../types/metrics';
 
-export type MetricsHookParams = Omit<MetricsAPIQueryParams, 'endTs'>;
-
 // Module-private query keys
 function serviceMetricsQueryKey(
   serviceName: string | undefined,
-  params: MetricsHookParams
-): readonly ['serviceMetrics', string | undefined, MetricsHookParams] {
+  params: MetricsAPIQueryParams
+): readonly ['serviceMetrics', string | undefined, MetricsAPIQueryParams] {
   return ['serviceMetrics', serviceName, params] as const;
 }
 
 function operationMetricsQueryKey(
   serviceName: string | undefined,
-  params: MetricsHookParams
-): readonly ['operationMetrics', string | undefined, MetricsHookParams] {
+  params: MetricsAPIQueryParams
+): readonly ['operationMetrics', string | undefined, MetricsAPIQueryParams] {
   return ['operationMetrics', serviceName, params] as const;
 }
 
@@ -262,25 +260,22 @@ export function transformOperationMetrics(
 /**
  * Fetches service-level latency, error-rate, and call-rate metrics
  * (`Promise.allSettled` across 5 `GET /api/metrics/*` calls).
- *
- * `endTs` is resolved to `Date.now()` inside `queryFn`
  */
 export function useServiceMetricsQuery(
   serviceName: string | undefined,
-  params: MetricsHookParams | undefined
+  params: MetricsAPIQueryParams | undefined
 ): UseQueryResult<ServiceMetricsResult, ApiError> {
   return useQuery({
     queryKey: params
       ? serviceMetricsQueryKey(serviceName, params)
       : (['serviceMetrics', 'disabled'] as const),
     queryFn: async () => {
-      const endTs = Date.now();
       const payload = (await Promise.allSettled([
-        JaegerAPI.fetchMetrics('latencies', [serviceName!], { ...params!, quantile: 0.5, endTs }),
-        JaegerAPI.fetchMetrics('latencies', [serviceName!], { ...params!, quantile: 0.75, endTs }),
-        JaegerAPI.fetchMetrics('latencies', [serviceName!], { ...params!, endTs }),
-        JaegerAPI.fetchMetrics('calls', [serviceName!], { ...params!, endTs }),
-        JaegerAPI.fetchMetrics('errors', [serviceName!], { ...params!, endTs }),
+        JaegerAPI.fetchMetrics('latencies', [serviceName!], { ...params!, quantile: 0.5 }),
+        JaegerAPI.fetchMetrics('latencies', [serviceName!], { ...params!, quantile: 0.75 }),
+        JaegerAPI.fetchMetrics('latencies', [serviceName!], { ...params! }),
+        JaegerAPI.fetchMetrics('calls', [serviceName!], { ...params! }),
+        JaegerAPI.fetchMetrics('errors', [serviceName!], { ...params! }),
       ])) as FetchedAllServiceMetricsResponse;
       return transformServiceMetrics(payload);
     },
@@ -293,20 +288,17 @@ export function useServiceMetricsQuery(
 /**
  * Fetches per-operation latency, call-rate, and error-rate metrics
  * (`Promise.allSettled` across 3 `GET /api/metrics/*` calls with `groupByOperation=true`).
- *
- * `endTs` is resolved to `Date.now()` inside `queryFn`
  */
 export function useOperationMetricsQuery(
   serviceName: string | undefined,
-  params: MetricsHookParams | undefined
+  params: MetricsAPIQueryParams | undefined
 ): UseQueryResult<OperationMetricsResult, ApiError> {
   return useQuery({
     queryKey: params
       ? operationMetricsQueryKey(serviceName, params)
       : (['operationMetrics', 'disabled'] as const),
     queryFn: async () => {
-      const endTs = Date.now();
-      const query = { ...params!, groupByOperation: true, endTs };
+      const query = { ...params!, groupByOperation: true };
       const payload = (await Promise.allSettled([
         JaegerAPI.fetchMetrics('latencies', [serviceName!], { ...query }),
         JaegerAPI.fetchMetrics('calls', [serviceName!], { ...query }),
