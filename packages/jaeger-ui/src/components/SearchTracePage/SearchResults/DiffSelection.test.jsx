@@ -7,31 +7,36 @@ import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 
 import DiffSelection from './DiffSelection';
-import { fetchedState } from '../../../constants';
 
 describe('DiffSelection', () => {
   const toggleComparison = () => {};
   const traces = [
     {
-      id: 'trace-id-0',
-      data: {
-        duration: 0,
-        traceName: 'trace-name-0',
-      },
-      error: new Error('error-0'),
-      state: fetchedState.DONE,
+      traceID: 'trace-id-0',
+      duration: 100,
+      traceName: 'trace-name-0',
+      services: [],
+      startTime: 0,
+      spanCount: 1,
+      errorSpanCount: 0,
     },
     {
-      id: 'trace-id-1',
-      // deliberately missing data to test default
-      error: new Error('error-1'),
-      state: fetchedState.DONE,
+      traceID: 'trace-id-1',
+      duration: 200,
+      traceName: 'trace-name-1',
+      services: [],
+      startTime: 0,
+      spanCount: 2,
+      errorSpanCount: 0,
     },
     {
-      id: 'trace-id-2',
-      // deliberately missing data to test default
-      error: new Error('error-2'),
-      state: fetchedState.ERROR,
+      traceID: 'trace-id-2',
+      duration: 300,
+      traceName: 'trace-name-2',
+      services: [],
+      startTime: 0,
+      spanCount: 3,
+      errorSpanCount: 0,
     },
   ];
 
@@ -56,7 +61,7 @@ describe('DiffSelection', () => {
 
     const resultItems = document.querySelectorAll('.ResultItemTitle');
     expect(resultItems).toHaveLength(traces.length);
-    expect(screen.getByText('2 Selected for comparison')).toBeInTheDocument();
+    expect(screen.getByText('3 Selected for comparison')).toBeInTheDocument();
     expect(screen.getByText('Compare Traces')).toBeInTheDocument();
   });
 

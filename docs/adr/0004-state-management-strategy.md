@@ -1,7 +1,7 @@
 # ADR 0004: State Management Strategy for Jaeger UI
 
 **Status**: Proposed  
-**Last Updated**: 2026-04-17 
+**Last Updated**: 2026-05-30 
 **Reviewed**: Pending
 
 ---
@@ -37,10 +37,10 @@ These should be migrated to **React Query**:
 | State Slice | Description | Primary Consumers |
 |-------------|-------------|-------------------|
 | `trace` | Map of `FetchedTrace` and `search` results | `TracePage`, `SearchPage` |
-| `services` | Lists of services and operations | `SearchPage`, `MonitorPage` |
-| `dependencies`| Service dependency graph data | `DependenciesPage` |
+| ~~`services`~~ (removed) | ~~Lists of services and operations~~ → React Query (`useServices` / `useSpanNames`, Phase 2c) | `SearchPage`, `MonitorPage`, `DeepDependencies` |
+| ~~`dependencies`~~ (removed) | ~~Service dependency graph data~~ → React Query (`useDependenciesQuery`, Phase 2d) | `DependencyGraph` |
 | `metrics` | Sytem performance metrics (latencies, errors) | `MonitorPage` |
-| `ddg` | Deep Dependency Graph data | `DeepDependenciesPage` |
+| ~~`ddg`~~ (removed) | ~~Deep Dependency Graph data~~ → React Query (`useDeepDependencyGraphQuery`, Phase 2e) | `DeepDependencies` |
 | `archive` | Status of archived traces | `TracePage` |
 
 #### 2. Client UI State (View)
@@ -699,11 +699,15 @@ function useTrace(traceId: string) {
   });
 }
 
-function useSearchTraces(query: SearchQuery) {
+function useSearchTraces(query: SearchQuery | null) {
+  // Fixed key: only one "current search result" exists at a time. New searches
+  // are triggered via invalidateQueries rather than a new key, to avoid
+  // accumulating one cache entry per distinct query (unbounded memory growth).
   return useQuery({
-    queryKey: ['traces', 'search', query],
-    queryFn: () => searchTraces(query),
-    enabled: !!query.serviceName, // Only run if query is set
+    queryKey: ['traceSummaries'],
+    queryFn: query ? () => searchTraces(query) : skipToken,
+    staleTime: Infinity,
+    gcTime: Infinity,
   });
 }
 
@@ -893,7 +897,7 @@ The **target architecture** (layers, data flow, and where each kind of state sho
 - Implement `src/query/app-query-client.tsx`: `createAppQueryClient()`, a singleton `QueryClient`, and `AppQueryClientProvider`.
 - Wire `AppQueryClientProvider` around the app shell in `components/App/index.tsx`.
 - Shared defaults: `staleTime` and `retry`. Traces use `staleTime: Infinity` (immutable once loaded).
-- **Follow-up (optional)**: centralise query key constants to avoid key divergence between hooks. Discovery hooks currently use inline arrays in `src/hooks/useTraceDiscovery.ts` (`['services']`, `['spanNames', service]`).
+- Discovery query keys are private to `src/hooks/useTraceDiscovery.ts`; consumers use hooks and accessors such as `useIsSearchFetching()` (Phase 2c).
 
 #### ✅ 0b. Zustand + class-component bridge
 
@@ -1027,7 +1031,7 @@ Keep `useConfig()` as the stable **public API** throughout - only the backing im
 
 **Goal**: Replace "dispatch → promise middleware → reducer → selector" with query hooks and a cache key. Coordinate with [ADR 0002](./0002-otlp-api-v3-migration.md) / `api/v3` where applicable.
 
-#### ⬜ 2a. Single trace load
+#### ✅ 2a. Single trace load
 
 **Redux removed**: `trace` reducer fields: `traces` map, per-trace loading/error state.
 
@@ -1044,44 +1048,111 @@ export function useTraceQuery(traceId: string) {
 
 **Components to rewire**: `TracePage`, `TraceDiff` (both `a` and `b` traces).
 
-#### ⬜ 2b. Search + multi-trace fetch
+#### ✅ 2b. Search + file upload
 
-**Redux removed**: `trace.search`, `trace.rawTraces`.
+**Redux removed**: `trace.search`, `trace.rawTraces`, `connect`/`mapStateToProps`/`mapDispatchToProps` from `SearchTracePage`.
 
-**New hook**:
+Search now calls `/api/v3/trace-summaries` via `useSearchTraces(query)` in `src/hooks/useTraceDiscovery.ts`. The hook uses a keyed query key `['traceSummaries', query]` and returns `{ results: TraceSummary[], query: SearchQuery }`, storing the query alongside the results. When called with `null`, the hook resolves the key from the most-recently-updated cache entry so the component can restore the URL without an additional fetch.
+
+**Keyed cache with single-slot invariant**: the query key is `['traceSummaries', query]`, which is standard React Query — a new key on form submit means a cache miss, so a fresh fetch fires with the correct query, with no closure race condition. A `useEffect` inside `useSearchTraces` evicts all cache entries whose key differs from the current query after each render, keeping at most one live entry at all times and bounding memory growth to a single slot regardless of how many distinct searches are submitted in a session. Similarly, `uploadedSummaries` and `uploadedRawTraces` use singleton cache keys.
+
+**Fetch model**: `SearchForm.handleSubmit` calls `navigate(url)`. The URL change causes `SearchTracePage` to re-render with a new `searchQuery` derived from `useLocation()`, which produces a new cache key in `useSearchTraces` — a miss — and React Query fires the fetch automatically.
+
+**`staleTime` and `gcTime` semantics**:
+- `staleTime: Infinity` — data is never considered stale on its own; a new form submission produces a new key (cache miss), which is the only trigger for a re-fetch.
+- `gcTime: Infinity` — prevents eviction while `SearchTracePage` is unmounted (e.g. user is viewing a trace page). With the default `gcTime` of 5 minutes, a user spending more than 5 minutes on a trace page would lose the cached results and see a fresh fetch on Back. Safe here because the single-slot invariant bounds memory to one entry regardless.
+
+**URL and cache consistency**: the cached value is `{ results: TraceSummary[], query: SearchQuery }`, storing the query alongside the results.
+
+- *Bare URL after TopNav navigation*: when `useSearchTraces` is called with `null` (no search params in the URL), it finds the most-recently-updated cache entry by `dataUpdatedAt`, extracts its query as `effectiveQuery`, and subscribes `useQuery` to that key — so `SearchTracePage` sees the cached results and restores the full URL via `navigate(getUrl(cachedQuery), { replace: true })` with no reload or refetch.
+
+- *Back button after multiple searches*: the URL reverts to the previous query, producing a different cache key. If that entry was evicted (by the single-slot invariant after a subsequent search), it is a cache miss and React Query fetches fresh results. If it is somehow still present, it is returned immediately. Either way, the displayed results match the URL. `SearchTracePage` also computes `isStale` synchronously during render — true when the URL query differs from the cached query — and passes `loading: loadingTraces || isStale` to `SearchResults`, so the loading indicator appears immediately on the first render after Back navigation rather than after the `useEffect` fires.
+
+`SearchTracePage` derives URL query params from `useLocation()` directly (no Redux `mapStateToProps`).
+
+**JSON file upload**: `FileLoader.tsx` parses each file via `readJsonFile`, clones the raw JSON (`structuredClone`) before passing it to `transformTraceData().asOtelTrace()` (which mutates its input), inserts the transformed trace into the React Query trace cache via `populateTraceCache()`, and summarizes it with `traceToTraceSummary()`. The clone and summary are returned to `SearchTracePage` via an `onTracesLoaded` callback. `SearchTracePage` writes them into the singleton React Query cache keys `uploadedSummaries` / `uploadedRawTraces` via `setQueryData`. Components subscribe to those keys with `skipToken` (no fetch, subscribe-only), so the data survives navigation (component unmount/remount) due to `gcTime: Infinity`. Uploaded results are cleared when a new API search is submitted, and merged with API results for display.
+
+**Components rewired**: `SearchTracePage` (fully disconnected from Redux), `FileLoader` (accepts `onTracesLoaded` callback instead of Redux action).
+
+> **Note**: `SearchForm` still uses the legacy `connect(mapStateToProps, mapDispatchToProps)` pattern. Removing it is deferred to a phase 4 follow-up.
+
+#### ✅ 2c. Services and operations discovery
+
+**Redux removed**: `services` reducer (no longer in `src/reducers/index.ts`; discovery never writes to Redux).
+
+**Query keys** are centralised as module-private constants and accessors in `src/hooks/useTraceDiscovery.ts` (same module as Phase 2b `useSearchTraces`; not exported):
+
 ```typescript
-export function useSearchTracesQuery(params: SearchQuery) {
+const SERVICES_QUERY_KEY = ['services'] as const;
+const TRACE_SUMMARIES_QUERY_KEY = 'traceSummaries'; // Phase 2b; string prefix for cache scans / useIsFetching
+
+function spanNamesQueryKey(service: string | null): readonly ['spanNames', string | null] {
+  return ['spanNames', service] as const;
+}
+```
+
+Parameterised discovery keys use an accessor (`spanNamesQueryKey`) so new hooks in this file do not reintroduce divergent inline key literals.
+
+**Hooks**:
+
+```typescript
+export function useServices(): UseQueryResult<string[]> {
   return useQuery({
-    queryKey: ['search', params],   // cached per unique query
-    queryFn: () => jaegerClient.searchTraces(params),
+    queryKey: SERVICES_QUERY_KEY,
+    queryFn: () => jaegerClient.fetchServices(),
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: true,
+    select: data => [...data].sort(localeStringComparator),
+  });
+}
+
+export function useSpanNames(service: string | null, spanKind?: string): UseQueryResult<...> {
+  return useQuery({
+    queryKey: spanNamesQueryKey(service),
+    queryFn: service ? () => jaegerClient.fetchSpanNames(service) : skipToken,
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: true,
+    select: data => { /* optional spanKind filter + sort */ },
   });
 }
 ```
 
-Handle **JSON file upload** as a separate path: insert synthetic data into the QueryClient cache rather than an HTTP fetch.
+**Callers** use `useServices`, `useSpanNames`, `useSearchTraces`, and `useIsSearchFetching()` — not cache key literals or a separate keys module.
 
-**Components to rewire**: `SearchTracePage`, `ResultsTable`.
+**Components using hooks** (no Redux service/ops fetch): `SearchForm`, `DeepDependencies` (Header graph), `Monitor/ServicesView`, `QualityMetrics`.
 
-#### ⬜ 2c. Services and operations discovery
+> **Note**: Legacy `JaegerAPI.fetchServices` / `fetchServiceOperations` remain in `api/jaeger.ts` for non-v3 callers; UI discovery paths use v3 via `jaegerClient`.
 
-**Redux removed**: `services` reducer.
-
-Discovery hooks are **partially present** in `src/hooks/useTraceDiscovery.ts` (`['services']`, `['spanNames', service]`). Centralise query key constants to avoid divergence when new hooks are added.
-
-#### ⬜ 2d. Dependencies page
+#### ✅ 2d. Dependencies page
 
 **Redux removed**: `src/reducers/dependencies.ts`.
 
 **New hook** (`src/hooks/useDependenciesQuery.ts`):
 ```typescript
-queryKey: ['dependencies', { start, end, lookback }]
+queryKey: ['dependencies', source, keyEndTs, lookback]
 ```
 
-#### ⬜ 2e. Deep Dependencies graph fetch
+**Hook signature**: `useDependenciesQuery(source: DataSource = 'Backend', { endTs?, lookback? } = {})`.
 
-**Redux removed**: graph-payload fields in `src/reducers/ddg.ts` (view modifiers already moved in Phase 1d).
+- `source` selects between the real backend (`'Backend'`) and the dev-only canned datasets (`'Small Graph'`, `'Large Graph'`); the dev branches dynamic-import `./sample_data/*.json` under `import.meta.env.DEV` so Vite tree-shakes them out of production bundles. The previous module-level `createSampleDataManager` / `getSampleData` / `useEffectiveDependencies` / `sampleRevision` indirection that bridged a side cache back into React is gone — the dev sources are just alternative React Query entries keyed by `source`.
+- `endTs` is resolved lazily inside `queryFn` (`params.endTs ?? Date.now()`) rather than captured at mount, because the dep-graph page has no user-facing time-window UI. The implicit semantic is "show me up to now", so refetches (incl. `refetchOnWindowFocus`) advance with wall-clock time. Contrast with `useSearchTraces`, where `endTs` is part of the URL/SearchQuery and resolved eagerly because the user owns the window. `keyEndTs` is `params.endTs ?? null` so an unspecified `endTs` is shared across mounts.
 
-**New hook**: `queryKey: ['ddg', service, operation, start, end]`; Zustand store (Phase 1d) holds the modifier flags.
+**Callers** use `useDependenciesQuery(source)` — not cache key literals.
+
+**Components using hook**: `DependencyGraph` (default export, which is also the single page component after the Redux-era `DependencyGraphPageImpl` / wrapper split was collapsed).
+
+#### ✅ 2e. Deep Dependencies graph fetch
+
+**Redux removed**: `src/reducers/ddg.ts` (graph payload only; view modifiers moved in Phase 1d).
+
+**New hook** (`src/hooks/useDeepDependencyGraphQuery.ts`):
+```typescript
+queryKey: ['ddg', service, operation, start, end]
+```
+
+**Callers** use `useDeepDependencyGraphQuery` / `useDeepDependencyGraphQueryFromUrl` and `deriveDdgPageProps` — not cache key literals. Zustand (`store.view-modifiers.ts`) holds modifier flags; `useDdgViewModifierBridgeProps({ modelHash })` receives hash from the page or traces embed.
+
+**Components using hook**: `DeepDependencies` (default export); traces embed passes `modelHash` to the bridge only.
 
 #### ⬜ 2f. Monitor metrics
 

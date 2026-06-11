@@ -4,17 +4,16 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { connect } from 'react-redux';
-import { bindActionCreators, Dispatch } from 'redux';
 import { useShallow } from 'zustand/react/shallow';
 
 import { getUrl, TDiffRouteParams } from './url';
 import TraceDiffGraph from './TraceDiffGraph';
 import TraceDiffHeader from './TraceDiffHeader';
-import * as jaegerApiActions from '../../actions/jaeger-api';
 import { TOP_NAV_HEIGHT } from '../../constants';
 import { FetchedTrace, TNil, ReduxState } from '../../types';
 import TTraceDiffState from '../../types/TTraceDiffState';
 import pluckTruthy from '../../utils/ts/pluckTruthy';
+import { useTraces } from '../../hooks/useTraceLoading';
 
 import './TraceDiff.css';
 import parseQuery from '../../utils/parseQuery';
@@ -25,11 +24,6 @@ type TStateProps = {
   a: string | undefined;
   b: string | undefined;
   cohort: string[];
-  tracesData: Map<string, FetchedTrace>;
-};
-
-type TDispatchProps = {
-  fetchMultipleTraces: (ids: string[]) => void;
 };
 
 type TOwnProps = {
@@ -40,33 +34,28 @@ type TOwnProps = {
 function syncStates(
   urlValues: TTraceDiffState,
   reduxValues: TTraceDiffState,
-  forceState: (newState: TTraceDiffState) => void
+  hydrateCohort: (newState: TTraceDiffState) => void
 ) {
   const { a: urlA, b: urlB } = urlValues;
   const { a: reduxA, b: reduxB } = reduxValues;
   if ((urlA ?? null) !== (reduxA ?? null) || (urlB ?? null) !== (reduxB ?? null)) {
-    forceState(urlValues);
+    hydrateCohort(urlValues);
     return;
   }
   const urlCohort = new Set(urlValues.cohort);
   const reduxCohort = new Set(reduxValues.cohort || []);
   if (urlCohort.size !== reduxCohort.size) {
-    forceState(urlValues);
+    hydrateCohort(urlValues);
     return;
   }
   const needSync = Array.from(urlCohort).some(id => !reduxCohort.has(id));
   if (needSync) {
-    forceState(urlValues);
+    hydrateCohort(urlValues);
   }
 }
 
-export function TraceDiffImpl({
-  a,
-  b,
-  cohort,
-  tracesData,
-  fetchMultipleTraces,
-}: TStateProps & TDispatchProps & TOwnProps) {
+export function TraceDiffImpl({ a, b, cohort }: TStateProps & TOwnProps) {
+  const tracesData = useTraces(cohort);
   const traceDiffState = useTraceDiffStore(
     useShallow(s => ({
       a: s.a,
@@ -93,13 +82,8 @@ export function TraceDiffImpl({
   }, []);
 
   const processProps = React.useCallback(() => {
-    syncStates({ a, b, cohort }, traceDiffState, useTraceDiffStore.getState().forceState);
-    const cohortData = cohort.map(id => tracesData.get(id) || { id, state: null });
-    const needForDiffs = cohortData.filter(ft => ft.state == null).map(ft => ft.id);
-    if (needForDiffs.length) {
-      fetchMultipleTraces(needForDiffs);
-    }
-  }, [a, b, cohort, traceDiffState, tracesData, fetchMultipleTraces]);
+    syncStates({ a, b, cohort }, traceDiffState, useTraceDiffStore.getState().hydrateCohort);
+  }, [a, b, cohort, traceDiffState]);
 
   const diffSetUrl = React.useCallback(
     (change: { newA?: string | TNil; newB?: string | TNil }) => {
@@ -157,8 +141,8 @@ export function TraceDiffImpl({
   );
 }
 
-// TODO(joe): simplify but do not invalidate the URL
-export function mapStateToProps(state: ReduxState, ownProps: TOwnProps) {
+// export for tests
+export function mapStateToProps(_state: ReduxState, ownProps: TOwnProps): TStateProps {
   let { a, b, id } = ownProps.params;
   /*
   In v5, the route pattern /trace/:a?\.\.\.":b? 
@@ -176,26 +160,9 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps) {
   const { cohort: origCohort = [] } = parseQuery(ownProps.search || '');
   const fullCohortSet: Set<string> = new Set(pluckTruthy([a, b].concat(origCohort)));
   const cohort: string[] = Array.from(fullCohortSet);
-  const { traces } = state.trace;
-  const kvPairs = cohort.map<[string, FetchedTrace]>(id => [id, traces[id] || { id, state: null }]);
-  const tracesData: Map<string, FetchedTrace> = new Map(kvPairs);
-  return {
-    a,
-    b,
-    cohort,
-    tracesData,
-  };
-}
-
-// export for tests
-export function mapDispatchToProps(dispatch: Dispatch<ReduxState>) {
-  const { fetchMultipleTraces } = bindActionCreators(jaegerApiActions, dispatch);
-  return { fetchMultipleTraces };
+  return { a, b, cohort };
 }
 
 export default withRouteProps(
-  connect<TStateProps, TDispatchProps, TOwnProps, ReduxState>(
-    mapStateToProps,
-    mapDispatchToProps
-  )(TraceDiffImpl)
+  connect<TStateProps, Record<string, never>, TOwnProps, ReduxState>(mapStateToProps)(TraceDiffImpl)
 );
