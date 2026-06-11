@@ -19,12 +19,12 @@
     "@noble/hashes": "2.2.0",
     "@testing-library/dom": "^10.4.1",
     "depcheck": "1.4.7",
-    "knip": "6.12.2",
-    "eslint-plugin-react-x": "5.7.1",
+    "knip": "6.16.1",
+    "eslint-plugin-react-x": "5.8.0",
     "husky": "9.1.0",
     "jsdom": "29.1.1",
     "lint-staged": "17.0.4",
-    "npm-run-all2": "8.0.1",
+    "npm-run-all2": "9.0.1",
     "openapi-zod-client": "1.18.3",
     "typescript": "6.0.2",
     "vite-plus": "0.1.17",
@@ -34,7 +34,7 @@
   "overrides": {
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "yaml": "2.8.3",
+    "yaml": "2.9.0",
     "@exodus/bytes": {
       "@noble/hashes": "$@noble/hashes"
     }
@@ -66,7 +66,7 @@
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,mts}": [
-      "vp lint --fix",
+      "vp lint --fix --no-error-on-unmatched-pattern",
       "vp fmt"
     ],
     "*.{json,css}": [
@@ -74,23 +74,23 @@
     ]
   },
   "dependencies": {
-    "@tanstack/react-virtual": "3.13.12",
+    "@tanstack/react-virtual": "3.14.2",
     "react-side-effect": "2.1.2"
   },
   "optionalDependencies": {
-    "@rolldown/binding-android-arm64": "1.0.0-rc.12",
-    "@rolldown/binding-darwin-arm64": "1.0.0-rc.12",
-    "@rolldown/binding-darwin-x64": "1.0.0-rc.12",
-    "@rolldown/binding-freebsd-x64": "1.0.0-rc.12",
-    "@rolldown/binding-linux-arm-gnueabihf": "1.0.0-rc.12",
-    "@rolldown/binding-linux-arm64-gnu": "1.0.0-rc.12",
-    "@rolldown/binding-linux-arm64-musl": "1.0.0-rc.12",
-    "@rolldown/binding-linux-ppc64-gnu": "1.0.0-rc.12",
-    "@rolldown/binding-linux-s390x-gnu": "1.0.0-rc.12",
-    "@rolldown/binding-linux-x64-gnu": "1.0.0-rc.12",
-    "@rolldown/binding-linux-x64-musl": "1.0.0-rc.12",
-    "@rolldown/binding-openharmony-arm64": "1.0.0-rc.12",
-    "@rolldown/binding-win32-arm64-msvc": "1.0.0-rc.12",
-    "@rolldown/binding-win32-x64-msvc": "1.0.0-rc.12"
+    "@rolldown/binding-android-arm64": "1.1.0",
+    "@rolldown/binding-darwin-arm64": "1.1.0",
+    "@rolldown/binding-darwin-x64": "1.1.0",
+    "@rolldown/binding-freebsd-x64": "1.1.0",
+    "@rolldown/binding-linux-arm-gnueabihf": "1.1.0",
+    "@rolldown/binding-linux-arm64-gnu": "1.1.0",
+    "@rolldown/binding-linux-arm64-musl": "1.1.0",
+    "@rolldown/binding-linux-ppc64-gnu": "1.1.0",
+    "@rolldown/binding-linux-s390x-gnu": "1.1.0",
+    "@rolldown/binding-linux-x64-gnu": "1.1.0",
+    "@rolldown/binding-linux-x64-musl": "1.1.0",
+    "@rolldown/binding-openharmony-arm64": "1.1.0",
+    "@rolldown/binding-win32-arm64-msvc": "1.1.0",
+    "@rolldown/binding-win32-x64-msvc": "1.1.0"
   }
 }

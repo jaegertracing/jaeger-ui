@@ -16,8 +16,9 @@
       "text": "Information about Jaeger SDK release #{jaeger.version}"
     }
   ],
-  "storageCapabilities": {
+  "backendCapabilities": {
     "archiveStorage": false,
-    "metricsStorage": true
+    "metricsStorage": true,
+    "aiAssistant": false
   }
 }

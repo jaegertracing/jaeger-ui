@@ -107,10 +107,6 @@ export type TDdgModelParams = {
   end: number;
 };
 
-export type TDdgActionMeta = {
-  query: TDdgModelParams;
-};
-
 export type TDdgAddViewModifierPayload = TDdgModelParams & {
   // Number instead of EViewModifier so that multiple views can be changed at once.
   viewModifier: number;
