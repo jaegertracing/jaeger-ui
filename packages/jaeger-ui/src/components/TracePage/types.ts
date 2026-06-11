@@ -52,4 +52,5 @@ export enum ETraceViewType {
   TraceSpansView = 'TraceSpansView',
   TraceFlamegraph = 'TraceFlamegraph',
   TraceLogs = 'TraceLogs',
+  GenAITimelineViewer = 'GenAITimelineViewer',
 }
