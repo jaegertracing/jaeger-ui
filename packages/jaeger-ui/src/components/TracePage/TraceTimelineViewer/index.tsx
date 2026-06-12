@@ -143,7 +143,8 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
 
   const { serviceFilterNode } = useServiceFilter(trace, detailPanelMode);
 
-  const [selectedFields, setSelectedFields] = useState<string[]>([]);
+  const selectedFields = useLayoutPrefsStore(s => s.selectedSummaryFields);
+  const setSelectedSummaryFields = useLayoutPrefsStore(s => s.setSelectedSummaryFields);
   const availableFields = useMemo(() => buildAvailableFields(trace), [trace]);
   const summaryLookup = useMemo(() => buildSummaryLookup(trace, selectedFields), [trace, selectedFields]);
   const hasSummaryFieldsBar = availableFields.length > 0;
@@ -209,7 +210,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     <SummaryFieldsBar
       trace={trace}
       selectedFields={selectedFields}
-      onSelectedFieldsChange={setSelectedFields}
+      onSelectedFieldsChange={setSelectedSummaryFields}
     />
   ) : null;
 
