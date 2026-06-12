@@ -146,8 +146,28 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   const selectedFields = useLayoutPrefsStore(s => s.selectedSummaryFields);
   const setSelectedSummaryFields = useLayoutPrefsStore(s => s.setSelectedSummaryFields);
   const availableFields = useMemo(() => buildAvailableFields(trace), [trace]);
-  const summaryLookup = useMemo(() => buildSummaryLookup(trace, selectedFields), [trace, selectedFields]);
+  const availableFieldKeys = useMemo(
+    () => new Set(availableFields.map(field => field.key)),
+    [availableFields]
+  );
+  const effectiveSelectedFields = useMemo(
+    () => selectedFields.filter(key => availableFieldKeys.has(key)),
+    [availableFieldKeys, selectedFields]
+  );
+  const summaryLookup = useMemo(
+    () => buildSummaryLookup(trace, effectiveSelectedFields),
+    [trace, effectiveSelectedFields]
+  );
   const hasSummaryFieldsBar = availableFields.length > 0;
+
+  useEffect(() => {
+    const needsSanitize =
+      effectiveSelectedFields.length !== selectedFields.length ||
+      effectiveSelectedFields.some((key, index) => key !== selectedFields[index]);
+    if (needsSanitize) {
+      setSelectedSummaryFields(effectiveSelectedFields);
+    }
+  }, [effectiveSelectedFields, selectedFields, setSelectedSummaryFields]);
 
   // When timeline bars are hidden with the side panel active, the side panel expands to absorb
   // the timeline column so the Service/Operation column keeps its pixel width unchanged.
@@ -209,7 +229,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   const summaryFieldsBar = hasSummaryFieldsBar ? (
     <SummaryFieldsBar
       trace={trace}
-      selectedFields={selectedFields}
+      selectedFields={effectiveSelectedFields}
       onSelectedFieldsChange={setSelectedSummaryFields}
     />
   ) : null;
@@ -244,7 +264,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       useOtelTerms={useOtelTerms}
       currentViewRangeTime={viewRange.time.current}
       nameColumnWidth={nameColumnWidth}
-      selectedFields={selectedFields}
+      selectedFields={effectiveSelectedFields}
       summaryLookup={summaryLookup}
     />
   );

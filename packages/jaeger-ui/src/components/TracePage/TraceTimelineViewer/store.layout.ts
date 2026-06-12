@@ -11,6 +11,7 @@ import {
   SPAN_NAME_COLUMN_WIDTH_MAX,
   SPAN_NAME_COLUMN_WIDTH_MIN,
 } from './store.constants';
+import { MAX_SUMMARY_FIELDS } from './summaryFieldsUtils';
 
 type TraceTimelineLayoutPrefsStore = {
   spanNameColumnWidth: number;
@@ -26,6 +27,22 @@ type TraceTimelineLayoutPrefsStore = {
   setSelectedSummaryFields: (fields: string[]) => void;
 };
 
+function normalizeSummaryFields(fields: unknown[]): string[] {
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+  for (const key of fields) {
+    if (typeof key !== 'string' || seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    normalized.push(key);
+    if (normalized.length >= MAX_SUMMARY_FIELDS) {
+      break;
+    }
+  }
+  return normalized;
+}
+
 function parseStoredSummaryFields(): string[] {
   try {
     const stored = localStorage.getItem('summaryFields');
@@ -36,7 +53,7 @@ function parseStoredSummaryFields(): string[] {
     if (!Array.isArray(parsed)) {
       return [];
     }
-    return parsed.filter((key): key is string => typeof key === 'string');
+    return normalizeSummaryFields(parsed);
   } catch {
     return [];
   }
@@ -154,7 +171,7 @@ export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()((set,
   },
 
   setSelectedSummaryFields: (fields: string[]) => {
-    const selectedSummaryFields = fields.filter((key): key is string => typeof key === 'string');
+    const selectedSummaryFields = normalizeSummaryFields(fields);
     localStorage.setItem('summaryFields', JSON.stringify(selectedSummaryFields));
     set({ selectedSummaryFields });
   },

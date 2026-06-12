@@ -109,21 +109,26 @@ SPDX-License-Identifier: Apache-2.0
   width: 180px;
 }
 
-.SummaryFieldsBar--search.ant-input {
+.SummaryFieldsBar--search.ant-input-affix-wrapper {
   background-color: var(--surface-primary);
   border-color: var(--border-default);
-  color: var(--text-primary);
 }
 
-.SummaryFieldsBar--search.ant-input::placeholder {
-  color: var(--text-muted);
-}
-
-.SummaryFieldsBar--search.ant-input:hover {
+.SummaryFieldsBar--search.ant-input-affix-wrapper:hover,
+.SummaryFieldsBar--search.ant-input-affix-wrapper-focused {
   border-color: var(--border-strong);
 }
 
-.SummaryFieldsBar--search.ant-input:focus {
+.SummaryFieldsBar--search.ant-input-affix-wrapper-focused {
   border-color: var(--interactive-primary);
   box-shadow: 0 0 0 2px var(--interactive-primary-light);
+}
+
+.SummaryFieldsBar--search .ant-input {
+  background-color: transparent;
+  color: var(--text-primary);
+}
+
+.SummaryFieldsBar--search .ant-input::placeholder {
+  color: var(--text-muted);
 }
