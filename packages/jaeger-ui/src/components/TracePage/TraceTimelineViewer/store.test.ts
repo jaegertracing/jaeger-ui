@@ -58,6 +58,11 @@ describe('getInitialLayoutState()', () => {
     expect(getInitialLayoutState().selectedSummaryFields).toEqual([]);
   });
 
+  it('deduplicates and caps selectedSummaryFields from localStorage', () => {
+    localStorage.setItem('summaryFields', JSON.stringify(['a', 'b', 'a', 'c', 'd', 'e']));
+    expect(getInitialLayoutState().selectedSummaryFields).toEqual(['a', 'b', 'c']);
+  });
+
   it('reads spanNameColumnWidth from localStorage', () => {
     localStorage.setItem('spanNameColumnWidth', '0.4');
     const state = getInitialLayoutState();
@@ -267,6 +272,14 @@ describe('trace timeline zustand stores', () => {
           .setSelectedSummaryFields(['valid', 42 as unknown as string, null as unknown as string]);
         expect(useLayoutPrefsStore.getState().selectedSummaryFields).toEqual(['valid']);
         expect(localStorage.getItem('summaryFields')).toBe(JSON.stringify(['valid']));
+      });
+
+      it('deduplicates and caps fields before persisting', () => {
+        useLayoutPrefsStore
+          .getState()
+          .setSelectedSummaryFields(['one', 'two', 'one', 'three', 'four', 'five']);
+        expect(useLayoutPrefsStore.getState().selectedSummaryFields).toEqual(['one', 'two', 'three']);
+        expect(localStorage.getItem('summaryFields')).toBe(JSON.stringify(['one', 'two', 'three']));
       });
     });
   });
