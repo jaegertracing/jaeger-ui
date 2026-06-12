@@ -33,6 +33,7 @@ import colorGenerator from '../../../utils/color-generator';
 import { TNil, ReduxState } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan, IOtelTrace, IAttribute, IEvent } from '../../../types/otel';
+import { LatencyStats, heatmapColor } from '../../../utils/span-latency-stats';
 import TTraceTimeline from '../../../types/TTraceTimeline';
 import { getSelectedSpanID, useLayoutPrefsStore, useTraceTimelineStore } from './store';
 
@@ -50,6 +51,8 @@ type TVirtualizedTraceViewOwnProps = {
   trace: IOtelTrace;
   criticalPath: CriticalPathSection[];
   useOtelTerms: boolean;
+  heatmapEnabled?: boolean;
+  heatmapStatsMap?: Map<string, LatencyStats>;
 };
 
 type TDispatchProps = {
@@ -522,6 +525,8 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       trace,
       criticalPath,
       useOtelTerms,
+      heatmapEnabled,
+      heatmapStatsMap,
     } = this.props;
     // to avert flow error
     if (!trace) {
@@ -530,7 +535,9 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
 
     const { spans } = trace;
 
-    const color = colorGenerator.getColorByKey(serviceName);
+    const baseColor = colorGenerator.getColorByKey(serviceName);
+    const heatStats = heatmapEnabled && heatmapStatsMap ? heatmapStatsMap.get(span.spanID) : undefined;
+    const color = heatStats !== undefined ? heatmapColor(heatStats.weightedScore) : baseColor;
     const isCollapsed = childrenHiddenIDs.has(spanID);
     const isDetailExpanded = detailStates.has(spanID);
     const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
