@@ -164,8 +164,8 @@ describe('DeepDependencyGraphPage', () => {
 
     /**
      * Helper: render DeepDependencyGraphPageImpl with the given props and
-     * return a function that retrieves the latest captured Header callback
-     * by name. Call the returned getter *after* render so the mocks have run.
+     * return an object containing the latest captured props for each mocked
+     * child component (header, graph, sidePanel), plus rerender/unmount helpers.
      */
     function renderAndGetCallbacks(renderProps) {
       const { rerender, unmount } = render(<DeepDependencyGraphPageImpl {...renderProps} />);
