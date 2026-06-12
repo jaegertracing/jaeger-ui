@@ -9,7 +9,7 @@ import '@testing-library/jest-dom';
 
 import DetailState from './DetailState';
 import SpanDetail from './index';
-import { formatDuration } from '../utils';
+import { formatDuration, formatDurationCompact } from '../utils';
 import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
 import OtelSpanFacade from '../../../../model/OtelSpanFacade';
@@ -84,6 +84,8 @@ describe('<SpanDetail>', () => {
   beforeEach(() => {
     formatDuration.mockReset();
     formatDuration.mockImplementation(duration => `${duration}ms`);
+    formatDurationCompact.mockReset();
+    formatDurationCompact.mockImplementation(duration => `${duration}ms`);
 
     const rawTrace = traceGenerator.trace({ numberOfSpans: 1 });
     spanData = rawTrace.spans[0];
@@ -195,6 +197,10 @@ describe('<SpanDetail>', () => {
     // Check that Duration and Start Time are present in the table
     expect(screen.getByText('Duration:')).toBeInTheDocument();
     expect(screen.getByText('Start Time:')).toBeInTheDocument();
+
+    // Check that their formatted values are rendered
+    expect(screen.getByText(`${span.duration}ms`)).toBeInTheDocument();
+    expect(screen.getByText(`${span.relativeStartTime}ms`)).toBeInTheDocument();
   });
 
   it('renders span tags accordian and triggers toggle callback with span ID', () => {

@@ -19,8 +19,13 @@ SPDX-License-Identifier: Apache-2.0
   white-space: nowrap;
 }
 
-.SpanDetail--headerServiceName {
-  /* Inherits h2 styles but gives a clear structure */
+.SpanDetail--overviewTableCaption {
+  position: absolute;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  width: 1px;
+  height: 1px;
+  margin: -1px;
 }
 
 .SpanDetail--headerEndpointName {
