@@ -49,6 +49,8 @@ type TVirtualizedTraceViewOwnProps = {
   registerAccessors: (accesors: Accessors) => void;
   trace: IOtelTrace;
   criticalPath: CriticalPathSection[];
+  selectedFields: ReadonlyArray<string>;
+  summaryLookup: Map<string, Record<string, string>>;
   useOtelTerms: boolean;
 };
 
@@ -475,6 +477,8 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         timelineBarsVisible,
         trace,
         criticalPath,
+        selectedFields,
+        summaryLookup,
         useOtelTerms,
       } = propsRef.current;
       // to avert flow error
@@ -483,6 +487,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
       }
 
       const { spans } = trace;
+      const summaryValues = summaryLookup.get(spanID);
 
       const color = colorGenerator.getColorByKey(serviceName);
       const isCollapsed = childrenHiddenIDs.has(spanID);
@@ -552,6 +557,8 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
             span={span}
             focusSpan={focusSpan}
             traceDuration={trace.duration}
+            selectedFields={selectedFields}
+            summaryValues={summaryValues}
             useOtelTerms={useOtelTerms}
           />
         </div>

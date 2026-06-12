@@ -76,6 +76,8 @@ describe('<VirtualizedTraceViewImpl>', () => {
       spanNameColumnWidth: 0.5,
       nameColumnWidth: 0.5,
       prunedServices: new Set(),
+      selectedFields: [],
+      summaryLookup: new Map(),
       trace,
       criticalPath,
       uiFind: 'uiFind',
