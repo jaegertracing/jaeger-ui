@@ -249,10 +249,6 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     />
   );
 
-  const viewerClassName = hasSummaryFieldsBar
-    ? 'TraceTimelineViewer TraceTimelineViewer--withSummaryFields'
-    : 'TraceTimelineViewer';
-
   if (sidePanelActive) {
     const mainWidth = (1 - effectiveSidePanelWidth) * 100;
     const sidePanelStyle: React.CSSProperties = {
@@ -263,7 +259,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       }),
     };
     return (
-      <div className={viewerClassName}>
+      <div className="TraceTimelineViewer">
         {summaryFieldsBar}
         {headerRow}
         <div className="TraceTimelineViewer--sidePanelLayout" ref={layoutRef}>
@@ -291,7 +287,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   }
 
   return (
-    <div className={viewerClassName}>
+    <div className="TraceTimelineViewer">
       {summaryFieldsBar}
       {headerRow}
       {virtualizedView}
