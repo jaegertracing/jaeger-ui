@@ -55,6 +55,19 @@ export default function AccordionEvents({
   const pendingTimers = React.useRef<ReturnType<typeof setTimeout>[]>([]);
   const pendingRaf = React.useRef<number | null>(null);
 
+ const cancelPendingReflow = React.useCallback(() => {
+    pendingTimers.current.forEach(clearTimeout);
+    pendingTimers.current = [];
+    if (
+      pendingRaf.current !== null &&
+      typeof window !== 'undefined' &&
+      'cancelAnimationFrame' in window
+    ) {
+      window.cancelAnimationFrame(pendingRaf.current);
+      pendingRaf.current = null;
+    }
+  }, []);
+
   const notifyListReflow = React.useCallback(() => {
     const emit = () => {
       try {
@@ -67,6 +80,10 @@ export default function AccordionEvents({
         void error;
       }
     };
+
+    // Cancel any previously scheduled, not-yet-fired reflow before scheduling new one
+    cancelPendingReflow();
+
     const t1 = setTimeout(emit);
     pendingTimers.current.push(t1);
     if (typeof window !== 'undefined' && 'requestAnimationFrame' in window) {
@@ -74,19 +91,14 @@ export default function AccordionEvents({
     }
     const t2 = setTimeout(emit, 50);
     pendingTimers.current.push(t2);
-  }, [spanID]);
+  }, [spanID, cancelPendingReflow]);
 
   React.useEffect(() => {
     return () => {
-      pendingTimers.current.forEach(clearTimeout);
-      pendingTimers.current = [];
-      if (pendingRaf.current !== null) {
-        window.cancelAnimationFrame(pendingRaf.current);
-        pendingRaf.current = null;
-      }
+      cancelPendingReflow();
     };
-  }, []);
-
+  }, [cancelPendingReflow]);
+  
   // Observe height changes in the content area to notify virtualized list to reflow
   React.useEffect(() => {
     if (!interactive || !isOpen) return;
