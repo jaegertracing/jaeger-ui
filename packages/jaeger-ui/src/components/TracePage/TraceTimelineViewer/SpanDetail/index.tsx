@@ -82,13 +82,18 @@ export default function SpanDetail(props: SpanDetailProps) {
       <Divider className="SpanDetail--divider ub-my1" />
       <div>
         <table className="SpanDetail--overviewTable ub-mb1">
+          <caption className="SpanDetail--overviewTableCaption">Span Overview</caption>
           <tbody>
             <tr>
-              <td className="SpanDetail--overviewTableKey">Duration:</td>
+              <th scope="row" className="SpanDetail--overviewTableKey">
+                Duration:
+              </th>
               <td>{formatDurationCompact(span.duration)}</td>
             </tr>
             <tr>
-              <td className="SpanDetail--overviewTableKey">Start Time:</td>
+              <th scope="row" className="SpanDetail--overviewTableKey">
+                Start Time:
+              </th>
               <td>{formatDuration(span.relativeStartTime)}</td>
             </tr>
           </tbody>
