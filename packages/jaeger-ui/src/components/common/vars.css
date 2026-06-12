@@ -88,6 +88,7 @@ SPDX-License-Identifier: Apache-2.0
   /* Layout Variables */
   --nav-height: 48px;
   --timeline-header-row-height: 38px;
+  --summary-fields-bar-height: 36px;
 
   /* 
      Span categorical colors (IBM Carbon Sequence)
