@@ -39,6 +39,18 @@ describe('getInitialLayoutState()', () => {
     expect(state.timelineBarsVisible).toBe(true);
     expect(state.detailPanelMode).toBe('inline');
     expect(state.sidePanelWidth).toBeCloseTo(0.375);
+    expect(state.selectedSummaryFields).toEqual([]);
+  });
+
+  it('reads selectedSummaryFields from localStorage', () => {
+    localStorage.setItem('summaryFields', JSON.stringify(['customer.id', 'http.status_code']));
+    const state = getInitialLayoutState();
+    expect(state.selectedSummaryFields).toEqual(['customer.id', 'http.status_code']);
+  });
+
+  it('ignores malformed selectedSummaryFields in localStorage', () => {
+    localStorage.setItem('summaryFields', 'not-json');
+    expect(getInitialLayoutState().selectedSummaryFields).toEqual([]);
   });
 
   it('reads spanNameColumnWidth from localStorage', () => {
@@ -144,6 +156,7 @@ describe('trace timeline zustand stores', () => {
       sidePanelWidth: 0.375,
       detailPanelMode: 'inline',
       timelineBarsVisible: true,
+      selectedSummaryFields: [],
     });
     useTraceTimelineStore.setState({
       traceID: null,
@@ -221,6 +234,26 @@ describe('trace timeline zustand stores', () => {
         useLayoutPrefsStore.getState().setTimelineBarsVisible(false);
         useLayoutPrefsStore.getState().setTimelineBarsVisible(true);
         expect(localStorage.getItem('timelineVisible')).toBe('true');
+      });
+    });
+
+    describe('setSelectedSummaryFields', () => {
+      it('updates selectedSummaryFields and persists to localStorage', () => {
+        useLayoutPrefsStore.getState().setSelectedSummaryFields(['customer.id', 'http.status_code']);
+        expect(useLayoutPrefsStore.getState().selectedSummaryFields).toEqual([
+          'customer.id',
+          'http.status_code',
+        ]);
+        expect(localStorage.getItem('summaryFields')).toBe(
+          JSON.stringify(['customer.id', 'http.status_code'])
+        );
+      });
+
+      it('persists empty array when clearing selected fields', () => {
+        useLayoutPrefsStore.getState().setSelectedSummaryFields(['customer.id']);
+        useLayoutPrefsStore.getState().setSelectedSummaryFields([]);
+        expect(useLayoutPrefsStore.getState().selectedSummaryFields).toEqual([]);
+        expect(localStorage.getItem('summaryFields')).toBe('[]');
       });
     });
   });

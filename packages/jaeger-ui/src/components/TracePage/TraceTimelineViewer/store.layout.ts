@@ -17,18 +17,40 @@ type TraceTimelineLayoutPrefsStore = {
   sidePanelWidth: number;
   detailPanelMode: SpanDetailPanelMode;
   timelineBarsVisible: boolean;
+  selectedSummaryFields: string[];
   setSpanNameColumnWidth: (width: number) => void;
   setSidePanelWidth: (width: number) => void;
   // Updates layout fields only; use `setDetailPanelMode` from `./store` to also sync detail panel state.
   applyDetailPanelModeToLayout: (mode: SpanDetailPanelMode) => void;
   setTimelineBarsVisible: (visible: boolean) => void;
+  setSelectedSummaryFields: (fields: string[]) => void;
 };
+
+function parseStoredSummaryFields(): string[] {
+  try {
+    const stored = localStorage.getItem('summaryFields');
+    if (!stored) {
+      return [];
+    }
+    const parsed = JSON.parse(stored);
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+    return parsed.filter((key): key is string => typeof key === 'string');
+  } catch {
+    return [];
+  }
+}
 
 // Reads user layout preferences from localStorage and merges them with config-driven defaults.
 // Mirrors the logic that was previously in TraceTimelineViewer/duck.ts `newInitialState()`.
 export function getInitialLayoutState(): Pick<
   TraceTimelineLayoutPrefsStore,
-  'spanNameColumnWidth' | 'sidePanelWidth' | 'detailPanelMode' | 'timelineBarsVisible'
+  | 'spanNameColumnWidth'
+  | 'sidePanelWidth'
+  | 'detailPanelMode'
+  | 'timelineBarsVisible'
+  | 'selectedSummaryFields'
 > {
   const { traceTimeline } = getConfig();
 
@@ -86,7 +108,9 @@ export function getInitialLayoutState(): Pick<
     }
   }
 
-  return { spanNameColumnWidth, sidePanelWidth, detailPanelMode, timelineBarsVisible };
+  const selectedSummaryFields = parseStoredSummaryFields();
+
+  return { spanNameColumnWidth, sidePanelWidth, detailPanelMode, timelineBarsVisible, selectedSummaryFields };
 }
 
 export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()((set, get) => ({
@@ -127,5 +151,11 @@ export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()((set,
   setTimelineBarsVisible: (visible: boolean) => {
     localStorage.setItem('timelineVisible', String(visible));
     set({ timelineBarsVisible: visible });
+  },
+
+  setSelectedSummaryFields: (fields: string[]) => {
+    const selectedSummaryFields = fields.filter((key): key is string => typeof key === 'string');
+    localStorage.setItem('summaryFields', JSON.stringify(selectedSummaryFields));
+    set({ selectedSummaryFields });
   },
 }));
