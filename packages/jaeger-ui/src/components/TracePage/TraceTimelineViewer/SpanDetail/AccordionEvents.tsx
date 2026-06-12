@@ -52,6 +52,8 @@ export default function AccordionEvents({
   const [showOutOfRangeEvents, setShowOutOfRangeEvents] = React.useState(false);
   const [showAllEvents, setShowAllEvents] = React.useState(false);
   const contentRef = React.useRef<HTMLDivElement | null>(null);
+  const pendingTimers = React.useRef<ReturnType<typeof setTimeout>[]>([]);
+  const pendingRaf = React.useRef<number | null>(null);
 
   const notifyListReflow = React.useCallback(() => {
     const emit = () => {
@@ -65,13 +67,25 @@ export default function AccordionEvents({
         void error;
       }
     };
-
-    setTimeout(emit);
+    const t1 = setTimeout(emit);
+    pendingTimers.current.push(t1);
     if (typeof window !== 'undefined' && 'requestAnimationFrame' in window) {
-      window.requestAnimationFrame(emit);
+      pendingRaf.current = window.requestAnimationFrame(emit);
     }
-    setTimeout(emit, 50);
+    const t2 = setTimeout(emit, 50);
+    pendingTimers.current.push(t2);
   }, [spanID]);
+
+  React.useEffect(() => {
+    return () => {
+      pendingTimers.current.forEach(clearTimeout);
+      pendingTimers.current = [];
+      if (pendingRaf.current !== null) {
+        window.cancelAnimationFrame(pendingRaf.current);
+        pendingRaf.current = null;
+      }
+    };
+  }, []);
 
   // Observe height changes in the content area to notify virtualized list to reflow
   React.useEffect(() => {
@@ -188,8 +202,6 @@ export default function AccordionEvents({
               const labelContent = useOtelTerms ? `${event.name} (${durationLabel})` : durationLabel;
               return (
                 <AccordionAttributes
-                  // `i` is necessary in the key because timestamps can repeat
-
                   key={`${event.timestamp}-${i}`}
                   className={i < visibleLogs.length - 1 ? 'ub-mb1' : null}
                   data={event.attributes}
