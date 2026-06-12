@@ -65,20 +65,6 @@ vi.mock('./AccordionText', () => {
   });
 });
 
-vi.mock('../../../common/LabeledList', () => {
-  return mockDefault(function MockLabeledList({ items }) {
-    return (
-      <div data-testid="labeled-list">
-        {items.map(item => (
-          <div key={item.key} data-testid={`item-${item.key}`}>
-            {item.label} {item.value}
-          </div>
-        ))}
-      </div>
-    );
-  });
-});
-
 vi.mock('../../../common/CopyIcon', () => {
   return mockDefault(function MockCopyIcon({ copyText }) {
     return (
@@ -198,19 +184,17 @@ describe('<SpanDetail>', () => {
     expect(heading).toHaveTextContent(span.name);
   });
 
-  it('renders overview items with service name, duration and start time labels', () => {
+  it('renders overview items with duration and start time in a table', () => {
     render(<SpanDetail {...props} />);
 
-    const labeledList = screen.getByTestId('labeled-list');
-    expect(labeledList).toBeInTheDocument();
+    // Check that service name is in the heading
+    const heading = screen.getByRole('heading', { level: 2 });
+    expect(heading).toHaveTextContent(span.resource.serviceName);
+    expect(heading).toHaveTextContent(span.name);
 
-    expect(screen.getByTestId('item-svc')).toBeInTheDocument();
-    expect(screen.getByTestId('item-duration')).toBeInTheDocument();
-    expect(screen.getByTestId('item-start')).toBeInTheDocument();
-
-    expect(screen.getByTestId('item-svc')).toHaveTextContent('Service:');
-    expect(screen.getByTestId('item-duration')).toHaveTextContent('Duration:');
-    expect(screen.getByTestId('item-start')).toHaveTextContent('Start Time:');
+    // Check that Duration and Start Time are present in the table
+    expect(screen.getByText('Duration:')).toBeInTheDocument();
+    expect(screen.getByText('Start Time:')).toBeInTheDocument();
   });
 
   it('renders span tags accordian and triggers toggle callback with span ID', () => {

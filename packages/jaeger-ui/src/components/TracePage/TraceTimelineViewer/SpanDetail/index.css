@@ -19,8 +19,23 @@ SPDX-License-Identifier: Apache-2.0
   white-space: nowrap;
 }
 
-.SpanDetail--headerList {
-  margin-left: auto;
+.SpanDetail--headerServiceName {
+  /* Inherits h2 styles but gives a clear structure */
+}
+
+.SpanDetail--headerEndpointName {
+  color: var(--text-secondary);
+  font-weight: normal;
+}
+
+.SpanDetail--overviewTable {
+  border-spacing: 0;
+  line-height: 1.5;
+}
+
+.SpanDetail--overviewTableKey {
+  color: var(--text-secondary);
+  padding-right: 0.5rem;
 }
 
 .SpanDetail--debugInfo {
