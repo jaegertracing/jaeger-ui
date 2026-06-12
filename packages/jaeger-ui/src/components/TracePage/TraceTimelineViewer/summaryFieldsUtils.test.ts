@@ -4,7 +4,8 @@
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
 import { SpanData, TraceData } from '../../../types/trace';
-import { buildAvailableFields, buildSummaryLookup } from './summaryFieldsUtils';
+import { IOtelTrace } from '../../../types/otel';
+import { buildAvailableFields, buildSummaryLookup, isHttpStatusCode5xx } from './summaryFieldsUtils';
 
 const summaryFieldsTestTrace: TraceData & { spans: SpanData[] } = {
   traceID: 'test-trace-summary-fields',
@@ -182,5 +183,57 @@ describe('summaryFieldsUtils', () => {
       }
     }
     expect(lookup1.size).toBe(expectedSpanCount);
+  });
+
+  it('buildSummaryLookup returns empty map when no fields selected', () => {
+    expect(buildSummaryLookup(trace, []).size).toBe(0);
+  });
+
+  describe('isHttpStatusCode5xx', () => {
+    it('returns true only for http.status_code values >= 500', () => {
+      expect(isHttpStatusCode5xx('http.status_code', '500')).toBe(true);
+      expect(isHttpStatusCode5xx('http.status_code', '503')).toBe(true);
+      expect(isHttpStatusCode5xx('http.status_code', '404')).toBe(false);
+      expect(isHttpStatusCode5xx('customer.id', '500')).toBe(false);
+      expect(isHttpStatusCode5xx('http.status_code', 'not-a-number')).toBe(false);
+    });
+  });
+
+  it('buildSummaryLookup stringifies object attribute values', () => {
+    const objectTrace = {
+      spans: [
+        {
+          spanID: 'obj-span',
+          attributes: [{ key: 'meta', value: { region: 'us-east' } }],
+        },
+      ],
+    } as unknown as IOtelTrace;
+
+    const lookup = buildSummaryLookup(objectTrace, ['meta']);
+    expect(lookup.get('obj-span')).toEqual({ meta: '{"region":"us-east"}' });
+  });
+
+  it('buildAvailableFields sorts equal-coverage keys alphabetically', () => {
+    const tieTrace = transformTraceData({
+      traceID: 'tie',
+      processes: { p1: { serviceName: 'svc', tags: [] } },
+      spans: [
+        {
+          spanID: 's1',
+          traceID: 'tie',
+          operationName: 'op',
+          duration: 1,
+          startTime: 1,
+          processID: 'p1',
+          references: [],
+          tags: [
+            { key: 'zebra', value: '1' },
+            { key: 'apple', value: '2' },
+          ],
+        },
+      ],
+    })!.asOtelTrace();
+    const fields = buildAvailableFields(tieTrace);
+    expect(fields.map(f => f.key)).toEqual(['apple', 'zebra']);
   });
 });

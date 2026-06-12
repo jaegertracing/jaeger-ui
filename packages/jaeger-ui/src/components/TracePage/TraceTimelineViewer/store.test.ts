@@ -53,6 +53,11 @@ describe('getInitialLayoutState()', () => {
     expect(getInitialLayoutState().selectedSummaryFields).toEqual([]);
   });
 
+  it('ignores non-array selectedSummaryFields in localStorage', () => {
+    localStorage.setItem('summaryFields', JSON.stringify({ not: 'array' }));
+    expect(getInitialLayoutState().selectedSummaryFields).toEqual([]);
+  });
+
   it('reads spanNameColumnWidth from localStorage', () => {
     localStorage.setItem('spanNameColumnWidth', '0.4');
     const state = getInitialLayoutState();
@@ -254,6 +259,14 @@ describe('trace timeline zustand stores', () => {
         useLayoutPrefsStore.getState().setSelectedSummaryFields([]);
         expect(useLayoutPrefsStore.getState().selectedSummaryFields).toEqual([]);
         expect(localStorage.getItem('summaryFields')).toBe('[]');
+      });
+
+      it('filters non-string entries before persisting', () => {
+        useLayoutPrefsStore
+          .getState()
+          .setSelectedSummaryFields(['valid', 42 as unknown as string, null as unknown as string]);
+        expect(useLayoutPrefsStore.getState().selectedSummaryFields).toEqual(['valid']);
+        expect(localStorage.getItem('summaryFields')).toBe(JSON.stringify(['valid']));
       });
     });
   });

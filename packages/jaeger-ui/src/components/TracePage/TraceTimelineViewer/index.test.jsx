@@ -134,6 +134,7 @@ describe('<TraceTimelineViewer>', () => {
     props.setSidePanelWidth.mockClear();
     mockLayoutPrefsStore.setSpanNameColumnWidth.mockClear();
     mockLayoutPrefsStore.setSidePanelWidth.mockClear();
+    mockLayoutPrefsStore.setSelectedSummaryFields.mockClear();
     mockTraceTimelineStore.collapseAll.mockClear();
     mockTraceTimelineStore.collapseOne.mockClear();
     mockTraceTimelineStore.expandAll.mockClear();
@@ -160,6 +161,17 @@ describe('<TraceTimelineViewer>', () => {
     const initialCount = screen.getAllByTestId('virtualized-trace-view-mock').length;
     renderWithRedux(<TraceTimelineViewer {...props} />);
     expect(screen.getAllByTestId('virtualized-trace-view-mock')).toHaveLength(initialCount + 1);
+  });
+
+  it('renders SummaryFieldsBar when trace has span attributes', () => {
+    render(<TraceTimelineViewerImpl {...props} />);
+    expect(screen.getByTestId('summary-fields-bar')).toBeInTheDocument();
+  });
+
+  it('calls setSelectedSummaryFields when a summary field is toggled', () => {
+    render(<TraceTimelineViewerImpl {...props} />);
+    fireEvent.click(screen.getAllByRole('checkbox')[0]);
+    expect(mockLayoutPrefsStore.setSelectedSummaryFields).toHaveBeenCalled();
   });
 
   it('derives selectedSpanID from Zustand detailStates', () => {
