@@ -4,13 +4,12 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { Checkbox, Input, Tag } from 'antd';
 
-import { IOtelTrace } from '../../../../types/otel';
-import { AvailableField, buildAvailableFields, MAX_SUMMARY_FIELDS } from '../summaryFieldsUtils';
+import { AvailableField, MAX_SUMMARY_FIELDS } from '../summaryFieldsUtils';
 
 import './index.css';
 
 type SummaryFieldsBarProps = {
-  trace: IOtelTrace;
+  availableFields: AvailableField[];
   selectedFields: string[];
   onSelectedFieldsChange: (fields: string[]) => void;
 };
@@ -42,13 +41,12 @@ function FieldCheckbox({ field, isSelected, isDisabled, onToggle }: FieldCheckbo
 }
 
 export default function SummaryFieldsBar({
-  trace,
+  availableFields,
   selectedFields,
   onSelectedFieldsChange,
 }: SummaryFieldsBarProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
-  const availableFields = useMemo(() => buildAvailableFields(trace), [trace]);
   const selectedSet = useMemo(() => new Set(selectedFields), [selectedFields]);
 
   const filteredFields = useMemo(() => {

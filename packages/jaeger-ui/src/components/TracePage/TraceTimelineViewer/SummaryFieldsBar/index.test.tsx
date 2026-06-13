@@ -10,6 +10,7 @@ import SummaryFieldsBar from './index';
 import transformTraceData from '../../../../model/transform-trace-data';
 import { IOtelTrace } from '../../../../types/otel';
 import { SpanData, TraceData } from '../../../../types/trace';
+import { buildAvailableFields } from '../summaryFieldsUtils';
 
 const barTestTrace: TraceData & { spans: SpanData[] } = {
   traceID: 'bar-test',
@@ -44,10 +45,12 @@ const barTestTrace: TraceData & { spans: SpanData[] } = {
 };
 
 const trace = transformTraceData(barTestTrace)!.asOtelTrace();
+const availableFields = buildAvailableFields(trace);
 
 const emptyTrace = {
   spans: [{ spanID: 's0', attributes: [] }],
 } as unknown as IOtelTrace;
+const emptyAvailableFields = buildAvailableFields(emptyTrace);
 
 describe('SummaryFieldsBar', () => {
   let onSelectedFieldsChange: (fields: string[]) => void;
@@ -59,7 +62,7 @@ describe('SummaryFieldsBar', () => {
   it('renders null when trace has no attribute keys', () => {
     const { container } = render(
       <SummaryFieldsBar
-        trace={emptyTrace}
+        availableFields={emptyAvailableFields}
         selectedFields={[]}
         onSelectedFieldsChange={onSelectedFieldsChange}
       />
@@ -69,7 +72,11 @@ describe('SummaryFieldsBar', () => {
 
   it('renders bar with field checkboxes and count tag', () => {
     render(
-      <SummaryFieldsBar trace={trace} selectedFields={[]} onSelectedFieldsChange={onSelectedFieldsChange} />
+      <SummaryFieldsBar
+        availableFields={availableFields}
+        selectedFields={[]}
+        onSelectedFieldsChange={onSelectedFieldsChange}
+      />
     );
     expect(screen.getByTestId('summary-fields-bar')).toBeInTheDocument();
     expect(screen.getByText('0 of 3')).toBeInTheDocument();
@@ -78,7 +85,11 @@ describe('SummaryFieldsBar', () => {
 
   it('adds a field when checkbox is checked', () => {
     render(
-      <SummaryFieldsBar trace={trace} selectedFields={[]} onSelectedFieldsChange={onSelectedFieldsChange} />
+      <SummaryFieldsBar
+        availableFields={availableFields}
+        selectedFields={[]}
+        onSelectedFieldsChange={onSelectedFieldsChange}
+      />
     );
     fireEvent.click(screen.getByLabelText('Add alpha from summary fields'));
     expect(onSelectedFieldsChange).toHaveBeenCalledWith(['alpha']);
@@ -87,7 +98,7 @@ describe('SummaryFieldsBar', () => {
   it('removes a field when checkbox is unchecked', () => {
     render(
       <SummaryFieldsBar
-        trace={trace}
+        availableFields={availableFields}
         selectedFields={['alpha']}
         onSelectedFieldsChange={onSelectedFieldsChange}
       />
@@ -99,7 +110,7 @@ describe('SummaryFieldsBar', () => {
   it('does not add more than 3 fields', () => {
     render(
       <SummaryFieldsBar
-        trace={trace}
+        availableFields={availableFields}
         selectedFields={['alpha', 'beta', 'gamma']}
         onSelectedFieldsChange={onSelectedFieldsChange}
       />
@@ -112,7 +123,11 @@ describe('SummaryFieldsBar', () => {
 
   it('filters fields by search query', () => {
     render(
-      <SummaryFieldsBar trace={trace} selectedFields={[]} onSelectedFieldsChange={onSelectedFieldsChange} />
+      <SummaryFieldsBar
+        availableFields={availableFields}
+        selectedFields={[]}
+        onSelectedFieldsChange={onSelectedFieldsChange}
+      />
     );
     fireEvent.change(screen.getByPlaceholderText('Search attribute keys...'), { target: { value: 'alp' } });
     expect(screen.getByText('alpha')).toBeInTheDocument();

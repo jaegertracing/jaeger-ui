@@ -235,7 +235,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
 
   const summaryFieldsBar = hasSummaryFieldsBar ? (
     <SummaryFieldsBar
-      trace={trace}
+      availableFields={availableFields}
       selectedFields={effectiveSelectedFields}
       onSelectedFieldsChange={setSelectedSummaryFields}
     />
