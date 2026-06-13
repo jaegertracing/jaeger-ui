@@ -3,19 +3,23 @@
 
 import { Context } from '@opentelemetry/api';
 import { ReadableSpan, Span, SpanProcessor } from '@opentelemetry/sdk-trace-base';
-import { ATTR_URL_PATH } from '@opentelemetry/semantic-conventions';
 import { ATTR_SESSION_ID, ATTR_SESSION_PREVIOUS_ID } from '@opentelemetry/semantic-conventions/incubating';
 
 const SESSION_ID_KEY = 'jaeger.tracing.sessionId';
 const SESSION_LAST_ACTIVITY_KEY = 'jaeger.tracing.sessionLastActivity';
 const DEFAULT_INACTIVITY_MS = 30 * 60 * 1000;
 
+// Vendor-prefixed page-path attribute. The OTel-standard `url.path` is
+// reserved for the URL of an HTTP request and is set by FetchInstrumentation
+// on every fetch span, so using it here would be clobbered on those spans.
+const ATTR_APP_URL_PATH = 'app.url.path';
+
 /**
  * Stamps every span with attributes identifying the page and user session
  * that issued it. Implements OTel's session semantic convention:
  * https://opentelemetry.io/docs/specs/semconv/general/session/
  *
- *  - url.path: window.location.pathname
+ *  - app.url.path: window.location.pathname
  *  - session.id: derived from the trace id of the first span of the
  *    session. Scoped to the browser tab (sessionStorage) and rotated
  *    after a configurable period of inactivity (default 30 minutes).
@@ -51,7 +55,7 @@ export class PageAttributionProcessor implements SpanProcessor {
       this.write(SESSION_ID_KEY, this.sessionId);
     }
 
-    span.setAttribute(ATTR_URL_PATH, window.location.pathname);
+    span.setAttribute(ATTR_APP_URL_PATH, window.location.pathname);
     span.setAttribute(ATTR_SESSION_ID, this.sessionId);
     if (this.pendingPreviousId) {
       span.setAttribute(ATTR_SESSION_PREVIOUS_ID, this.pendingPreviousId);

@@ -28,12 +28,12 @@ describe('PageAttributionProcessor', () => {
     vi.restoreAllMocks();
   });
 
-  it('stamps url.path and session.id on every span', () => {
+  it('stamps app.url.path and session.id on every span', () => {
     const proc = new PageAttributionProcessor();
     const { span, attrs } = makeSpan('trace-1');
     proc.onStart(span, {} as any);
 
-    expect(attrs.get('url.path')).toBe(window.location.pathname);
+    expect(attrs.get('app.url.path')).toBe(window.location.pathname);
     expect(attrs.get('session.id')).toBe('trace-1');
   });
 
