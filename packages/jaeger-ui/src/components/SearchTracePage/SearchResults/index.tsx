@@ -103,6 +103,18 @@ export function UnconnectedSearchResults({
     [traceSummaries]
   );
 
+  // spanLinks come from user config and may use abbreviated or mixed-case keys.
+  // Pad each key to the standard 32-char OTEL trace ID length so lookups match
+  // regardless of how many leading zeros the user omitted when writing the config.
+  const normalizedSpanLinks = useMemo(() => {
+    if (!spanLinks) return undefined;
+    const result: Record<string, string> = {};
+    for (const [key, value] of Object.entries(spanLinks)) {
+      result[key.toLowerCase().padStart(32, '0')] = value;
+    }
+    return result;
+  }, [spanLinks]);
+
   const toggleComparison = useCallback(
     (traceID: string, remove?: boolean) => {
       if (remove) {
@@ -127,9 +139,9 @@ export function UnconnectedSearchResults({
       getTracePageLink(
         traceID,
         { fromSearch: location.pathname + location.search },
-        spanLinks && (spanLinks[traceID] || spanLinks[traceID.replace(/^0*/, '')])
+        normalizedSpanLinks && normalizedSpanLinks[traceID.padStart(32, '0')]
       ),
-    [location, spanLinks]
+    [location, normalizedSpanLinks]
   );
 
   const goToTrace = useCallback(

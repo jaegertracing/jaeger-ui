@@ -47,7 +47,7 @@ describe('search traces', () => {
       results: [id],
     });
     expect(state.rawTraces).toEqual([trace]);
-    // Transformed trace IDs are discoverable via rawTraces + transformTraceData
+    // transformTraceData passes IDs through unchanged from the backend
     expect(transformTraceData(state.rawTraces[0]).traceID).toBe(id);
   });
 

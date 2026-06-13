@@ -104,7 +104,7 @@ export class JaegerClient {
         errorSpanCount: svc.errorSpanCount,
       }));
       return {
-        traceID: s.traceId,
+        traceID: s.traceId ?? '',
         traceName:
           rootServiceName && rootOperationName
             ? `${rootServiceName}: ${rootOperationName}`

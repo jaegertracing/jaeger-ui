@@ -43,7 +43,9 @@ describe('getCachedTrace', () => {
     expect(getCachedTrace(otelTrace.traceID)).toBe(otelTrace);
   });
 
-  it('strips leading zeros when looking up by padded ID', () => {
+  it('finds a trace by a shorter ID that shares the same padded canonical form', () => {
+    // 'abc123' and '000abc123' both padStart(32, '0') to the same 32-char key,
+    // so a user typing an abbreviated ID resolves to the same cache entry.
     const fixedId = 'abc123';
     const paddedId = `000${fixedId}`;
     const fakeTrace = { ...otelTrace, traceID: fixedId };

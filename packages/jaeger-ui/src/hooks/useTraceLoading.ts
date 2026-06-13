@@ -10,14 +10,14 @@ import { queryClient } from '../query/app-query-client';
 import { FetchedTrace } from '../types';
 import type { IOtelTrace } from '../types/otel';
 
-const TRACE_QUERY_KEY = (id: string) => ['trace', id] as const;
+// Pad to the canonical 128-bit (32 hex char) representation so that a user
+// supplying a short ID (e.g. 'abc') resolves to the same cache entry as the
+// full backend ID ('000...0abc').
+const TRACE_QUERY_KEY = (id: string) => ['trace', id.toLowerCase().padStart(32, '0')] as const;
 
 // TODO: remove once callers (duck.track.ts, TraceDiff) are migrated off Redux/non-hook paths
 export function getCachedTrace(id: string): IOtelTrace | undefined {
-  return (
-    queryClient.getQueryData<IOtelTrace>(TRACE_QUERY_KEY(id)) ||
-    queryClient.getQueryData<IOtelTrace>(TRACE_QUERY_KEY(id.replace(/^0+/, '')))
-  );
+  return queryClient.getQueryData<IOtelTrace>(TRACE_QUERY_KEY(id));
 }
 
 export function populateTraceCache(trace: IOtelTrace): void {

@@ -129,26 +129,33 @@ describe('filterSpans', () => {
     expect(filterSpans(spanID2, spans)).toEqual(new Set([spanID2]));
   });
 
-  it('should return spans whose spanID matches a filter except for leading 0s', () => {
-    const spanID0WithLeading0s = `00${spanID0}`;
-    const spanID2WithLeading0s = `00${spanID2}`;
+  it('should find a span with leading zeros by typing only its significant digits', () => {
+    // Span IDs from the backend keep their leading zeros (opaque blobs).
+    // The filter is padded to the span's length so users can type just the significant
+    // hex digits and still get a match.
+    const spanWithZeros0 = { ...span0, spanID: `00${spanID0}` };
+    const spanWithZeros2 = { ...span2, spanID: `00${spanID2}` };
+    const spansWithZeros = [spanWithZeros0, spanWithZeros2];
 
-    expect(filterSpans('spanID', spans)).toEqual(new Set([]));
-    expect(filterSpans(spanID0WithLeading0s, spans)).toEqual(new Set([spanID0]));
-    expect(filterSpans(spanID2WithLeading0s, spans)).toEqual(new Set([spanID2]));
+    expect(filterSpans(spanID0, spansWithZeros)).toEqual(new Set([`00${spanID0}`]));
+    expect(filterSpans(spanID2, spansWithZeros)).toEqual(new Set([`00${spanID2}`]));
+    // Typing the full padded ID also works
+    expect(filterSpans(`00${spanID0}`, spansWithZeros)).toEqual(new Set([`00${spanID0}`]));
+  });
 
-    const spansWithLeading0s = [
-      {
-        ...span0,
-        spanID: spanID0WithLeading0s,
-      },
-      {
-        ...span2,
-        spanID: spanID2WithLeading0s,
-      },
-    ];
-    expect(filterSpans(spanID0, spansWithLeading0s)).toEqual(new Set([spanID0WithLeading0s]));
-    expect(filterSpans(spanID2, spansWithLeading0s)).toEqual(new Set([spanID2WithLeading0s]));
+  it('should find an IOtelSpan with leading zeros by typing only its significant digits', () => {
+    const fullSpanID = '00abc123def456';
+    const otelSpan = {
+      spanID: fullSpanID,
+      name: 'otelOperation',
+      resource: { serviceName: 'otelService', attributes: [] },
+      attributes: [],
+      events: [],
+    };
+    // Short filter padded to the span's length matches
+    expect(filterSpans('abc123def456', [otelSpan])).toEqual(new Set([fullSpanID]));
+    // Full form also matches
+    expect(filterSpans(fullSpanID, [otelSpan])).toEqual(new Set([fullSpanID]));
   });
 
   it('should return spans whose operationName match a filter', () => {

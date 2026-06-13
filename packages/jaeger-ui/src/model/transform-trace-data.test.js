@@ -1,7 +1,7 @@
 // Copyright (c) 2019 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import transformTraceData, { orderTags, deduplicateTags } from './transform-trace-data';
+import transformTraceData, { orderTags, deduplicateTags, normalizeId } from './transform-trace-data';
 
 describe('orderTags()', () => {
   it('correctly orders tags', () => {
@@ -22,6 +22,24 @@ describe('orderTags()', () => {
       { key: 'http.Status_code', value: '200' },
       { key: 'b.ip', value: '8.8.4.4' },
     ]);
+  });
+});
+
+describe('normalizeId()', () => {
+  it('lowercases the ID', () => {
+    expect(normalizeId('ABCD1234')).toBe('abcd1234');
+  });
+  it('preserves leading zeros', () => {
+    expect(normalizeId('000abc123')).toBe('000abc123');
+  });
+  it('lowercases while preserving leading zeros', () => {
+    expect(normalizeId('000ABC')).toBe('000abc');
+  });
+  it('leaves an all-zero ID unchanged', () => {
+    expect(normalizeId('0000')).toBe('0000');
+  });
+  it('leaves an already-normalized ID unchanged', () => {
+    expect(normalizeId('abc123')).toBe('abc123');
   });
 });
 
@@ -123,6 +141,23 @@ describe('transformTraceData()', () => {
       tags: [],
     },
   };
+
+  it('passes traceID and spanIDs through unchanged from the backend', () => {
+    const rawSpan = {
+      traceID,
+      spanID: `00${rootSpanID}`,
+      operationName: rootOperationName,
+      references: [],
+      startTime,
+      duration,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+    const result = transformTraceData({ traceID, processes, spans: [rawSpan] });
+    expect(result.traceID).toBe(traceID);
+    expect(result.spans[0].spanID).toBe(`00${rootSpanID}`);
+  });
 
   it('should return null for trace without traceID', () => {
     const traceData = {
@@ -413,7 +448,7 @@ describe('transformTraceData()', () => {
       };
       const grandChild1 = {
         ...spans[0],
-        spanID: 'grandChild1',
+        spanID: 'grandchild1',
         startTime: tStart + 15,
         references: [{ refType: 'CHILD_OF', traceID, spanID: 'child1' }],
       };
@@ -438,18 +473,18 @@ describe('transformTraceData()', () => {
       const map = result.spanMap;
       expect(map.get('root').depth).toBe(0);
       expect(map.get('child1').depth).toBe(1);
-      expect(map.get('grandChild1').depth).toBe(2);
+      expect(map.get('grandchild1').depth).toBe(2);
       expect(map.get('child2').depth).toBe(1);
 
       // Check hasChildren
       expect(map.get('root').hasChildren).toBe(true);
       expect(map.get('child1').hasChildren).toBe(true);
-      expect(map.get('grandChild1').hasChildren).toBe(false);
+      expect(map.get('grandchild1').hasChildren).toBe(false);
       expect(map.get('child2').hasChildren).toBe(false);
 
       // Check flat spans order (DFS)
       const ids = result.spans.map(s => s.spanID);
-      expect(ids).toEqual(['root', 'child1', 'grandChild1', 'child2']);
+      expect(ids).toEqual(['root', 'child1', 'grandchild1', 'child2']);
     });
   });
 });

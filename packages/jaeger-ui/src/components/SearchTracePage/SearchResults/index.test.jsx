@@ -364,19 +364,22 @@ describe('<SearchResults>', () => {
       expect(second[0].linkTo.search).toBeUndefined();
     });
 
-    it('deep links traces with leading 0', () => {
+    it('normalizes spanLinks keys so abbreviated config keys match backend traceIDs', () => {
+      // Trace IDs from the API are lowercase (leading zeros are preserved as opaque data).
+      // spanLinks come from user config and may use abbreviated or mixed-case keys.
+      // The component pads spanLinks keys to 32 chars so lookups always work.
       const uiFind0 = 'ui-find-0';
       const uiFind1 = 'ui-find-1';
-      const traceID0 = '00traceID0';
-      const traceID1 = 'traceID1';
+      const canonicalID0 = 'traceid0';
+      const canonicalID1 = 'traceid1';
       const spanLinks = {
-        [traceID0]: uiFind0,
-        [traceID1]: uiFind1,
+        '00traceID0': uiFind0, // padded + mixed-case key in config
+        traceID1: uiFind1, // mixed-case key in config
       };
-      const zeroIDTraces = [
+      const traces = [
         {
-          traceID: traceID0,
-          traceName: traceID0,
+          traceID: canonicalID0,
+          traceName: canonicalID0,
           rootServiceName: '',
           rootOperationName: '',
           startTime: 0,
@@ -387,8 +390,8 @@ describe('<SearchResults>', () => {
           services: [],
         },
         {
-          traceID: `000${traceID1}`,
-          traceName: `000${traceID1}`,
+          traceID: canonicalID1,
+          traceName: canonicalID1,
           rootServiceName: '',
           rootOperationName: '',
           startTime: 0,
@@ -399,7 +402,7 @@ describe('<SearchResults>', () => {
           services: [],
         },
       ];
-      renderWithRouter(<SearchResults {...baseProps} traceSummaries={zeroIDTraces} spanLinks={spanLinks} />);
+      renderWithRouter(<SearchResults {...baseProps} traceSummaries={traces} spanLinks={spanLinks} />);
       const calls = ResultItem.mock.calls;
       expect(calls[0][0].linkTo.search).toBe(`uiFind=${uiFind0}`);
       expect(calls[1][0].linkTo.search).toBe(`uiFind=${uiFind1}`);

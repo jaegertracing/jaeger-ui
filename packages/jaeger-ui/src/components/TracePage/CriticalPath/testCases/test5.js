@@ -23,7 +23,7 @@ const trace = {
   traceID: 'trace-abc',
   spans: [
     {
-      spanID: 'span-A',
+      spanID: 'span-a',
       operationName: 'op-A',
       references: [],
       startTime: 1,
@@ -32,12 +32,12 @@ const trace = {
       tags: [{ key: 'span.kind', value: 'producer' }],
     },
     {
-      spanID: 'span-B',
+      spanID: 'span-b',
       operationName: 'op-B',
       references: [
         {
           refType: 'FOLLOWS_FROM',
-          spanID: 'span-A',
+          spanID: 'span-a',
         },
       ],
       startTime: 10,
@@ -46,12 +46,12 @@ const trace = {
       tags: [{ key: 'span.kind', value: 'consumer' }],
     },
     {
-      spanID: 'span-C',
+      spanID: 'span-c',
       operationName: 'op-C',
       references: [
         {
           refType: 'CHILD_OF',
-          spanID: 'span-B',
+          spanID: 'span-b',
         },
       ],
       startTime: 12,
@@ -70,7 +70,7 @@ const transformedTrace = transformTraceData(trace);
 
 const criticalPathSections = [
   {
-    spanID: 'span-A',
+    spanID: 'span-a',
     sectionStart: 1,
     sectionEnd: 31,
   },
