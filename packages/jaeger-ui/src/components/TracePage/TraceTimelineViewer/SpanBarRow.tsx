@@ -5,7 +5,7 @@ import React, { useCallback } from 'react';
 import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward } from 'react-icons/io5';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
-import { formatDurationCompact, ViewedBoundsFunctionType } from './utils';
+import { formatDurationCompact, getGenAiModel, ViewedBoundsFunctionType } from './utils';
 import SpanTreeOffset from './SpanTreeOffset';
 import SpanBar from './SpanBar';
 import Ticks from './Ticks';
@@ -114,7 +114,15 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   const viewStart = viewBounds.start;
   const viewEnd = viewBounds.end;
 
-  const labelDetail = `${serviceName}::${operationName}`;
+  const genAiModel = getGenAiModel(span);
+  const endpointLabel = rpc
+    ? rpc.operationName
+    : genAiModel
+      ? `${operationName} · ${genAiModel}`
+      : operationName;
+  const labelDetail = genAiModel
+    ? `${serviceName}::${operationName} (${genAiModel})`
+    : `${serviceName}::${operationName}`;
   let longLabel;
   let hintSide;
   if (viewStart > 1 - viewEnd) {
@@ -183,7 +191,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
                 </span>
               )}
             </span>
-            <small className="endpoint-name">{rpc ? rpc.operationName : operationName}</small>
+            <small className="endpoint-name">{endpointLabel}</small>
           </a>
           {hasLinks && (
             <ReferencesButton
