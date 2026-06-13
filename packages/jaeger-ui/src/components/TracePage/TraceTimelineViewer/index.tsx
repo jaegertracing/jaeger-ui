@@ -163,7 +163,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   const hasSummaryFieldsBar = availableFields.length > 0;
 
   const viewerStyle = {
-    '--trace-page-header-height': `${tracePageHeaderHeight}px`,
+    '--trace-page-header-height': `${tracePageHeaderHeight ?? 0}px`,
     '--summary-fields-bar-stack-height': hasSummaryFieldsBar ? 'var(--summary-fields-bar-height)' : '0px',
     '--span-graph-padding-bottom-offset': hasSummaryFieldsBar ? 'var(--span-graph-padding-bottom)' : '0px',
     '--virtualized-span-list-padding-top': hasSummaryFieldsBar ? '0px' : 'var(--timeline-header-row-height)',
