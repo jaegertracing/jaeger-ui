@@ -1,0 +1,139 @@
+/*
+Copyright (c) 2026 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+/* Fixed below the trace-page header; paired with an in-flow spacer for document offset. */
+.SummaryFieldsBar {
+  align-items: center;
+  background: var(--surface-tertiary);
+  border-bottom: 1px solid var(--border-strong);
+  box-sizing: border-box;
+  color: var(--text-primary);
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.5rem;
+  height: var(--summary-fields-bar-height);
+  line-height: var(--summary-fields-bar-height);
+  padding: 0 var(--content-right-padding) 0 0.5rem;
+  position: fixed;
+  top: calc(
+    var(--page-nav-offset, 0px) + var(--trace-page-header-height, 0px) - var(--span-graph-padding-bottom, 0px)
+  );
+  width: 100%;
+  z-index: 5;
+}
+
+.SummaryFieldsBar--label {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  font-size: 0.85em;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.SummaryFieldsBar--countTag {
+  background: var(--interactive-primary-light);
+  border-color: var(--interactive-primary);
+  color: var(--interactive-primary);
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.SummaryFieldsBar--fields {
+  display: flex;
+  flex: 1;
+  gap: 0.5rem;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 0.15rem 0;
+}
+
+.SummaryFieldsBar--fieldItem {
+  flex-shrink: 0;
+  padding: 0 0.15rem;
+}
+
+.SummaryFieldsBar--fieldItem .ant-checkbox-wrapper {
+  align-items: center;
+  color: var(--text-primary);
+  cursor: pointer;
+  display: inline-flex;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.SummaryFieldsBar .ant-checkbox .ant-checkbox-inner {
+  background-color: var(--surface-primary);
+  border-color: var(--border-strong);
+}
+
+.SummaryFieldsBar .ant-checkbox-wrapper:hover .ant-checkbox-inner,
+.SummaryFieldsBar .ant-checkbox:hover .ant-checkbox-inner {
+  border-color: var(--interactive-primary);
+}
+
+.SummaryFieldsBar .ant-checkbox-checked .ant-checkbox-inner,
+.SummaryFieldsBar .ant-checkbox-indeterminate .ant-checkbox-inner {
+  background-color: var(--interactive-primary);
+  border-color: var(--interactive-primary);
+}
+
+.SummaryFieldsBar .ant-checkbox-checked .ant-checkbox-inner::after,
+.SummaryFieldsBar .ant-checkbox-indeterminate .ant-checkbox-inner::after {
+  border-color: var(--text-inverse);
+}
+
+.SummaryFieldsBar .ant-checkbox-disabled .ant-checkbox-inner {
+  background-color: var(--surface-component-background);
+  border-color: var(--border-default);
+}
+
+.SummaryFieldsBar .ant-checkbox-disabled + span {
+  color: var(--text-muted);
+}
+
+.SummaryFieldsBar--fieldKey {
+  color: var(--text-primary);
+  font-size: 0.85em;
+}
+
+.SummaryFieldsBar--separator {
+  color: var(--text-muted);
+  margin: 0 1px;
+}
+
+.SummaryFieldsBar--coverage {
+  color: var(--text-secondary);
+  font-size: 0.85em;
+  opacity: 0.6;
+}
+
+.SummaryFieldsBar--search {
+  flex-shrink: 0;
+  width: 180px;
+}
+
+.SummaryFieldsBar--search.ant-input-affix-wrapper {
+  background-color: var(--surface-primary);
+  border-color: var(--border-default);
+}
+
+.SummaryFieldsBar--search.ant-input-affix-wrapper:hover,
+.SummaryFieldsBar--search.ant-input-affix-wrapper-focused {
+  border-color: var(--border-strong);
+}
+
+.SummaryFieldsBar--search.ant-input-affix-wrapper-focused {
+  border-color: var(--interactive-primary);
+  box-shadow: 0 0 0 2px var(--interactive-primary-light);
+}
+
+.SummaryFieldsBar--search .ant-input {
+  background-color: transparent;
+  color: var(--text-primary);
+}
+
+.SummaryFieldsBar--search .ant-input::placeholder {
+  color: var(--text-muted);
+}

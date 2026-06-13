@@ -4,9 +4,7 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .VirtualizedTraceView--spans {
-  padding-top: var(--timeline-header-row-height);
-  /* position: relative;
-  z-index: 1; */
+  padding-top: var(--virtualized-span-list-padding-top, var(--timeline-header-row-height));
 }
 
 .VirtualizedTraceView--rowsWrapper {

@@ -49,6 +49,8 @@ type TVirtualizedTraceViewOwnProps = {
   registerAccessors: (accesors: Accessors) => void;
   trace: IOtelTrace;
   criticalPath: CriticalPathSection[];
+  selectedFields: ReadonlyArray<string>;
+  summaryLookup: Map<string, Record<string, string>>;
   useOtelTerms: boolean;
 };
 
@@ -521,6 +523,8 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       timelineBarsVisible,
       trace,
       criticalPath,
+      selectedFields,
+      summaryLookup,
       useOtelTerms,
     } = this.props;
     // to avert flow error
@@ -529,6 +533,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     }
 
     const { spans } = trace;
+    const summaryValues = summaryLookup.get(spanID);
 
     const color = colorGenerator.getColorByKey(serviceName);
     const isCollapsed = childrenHiddenIDs.has(spanID);
@@ -597,6 +602,8 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           span={span}
           focusSpan={this.focusSpan}
           traceDuration={trace.duration}
+          selectedFields={selectedFields}
+          summaryValues={summaryValues}
           useOtelTerms={useOtelTerms}
         />
       </div>

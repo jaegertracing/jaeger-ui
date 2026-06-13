@@ -34,9 +34,11 @@ const { mockLayoutPrefsStore, mockTraceTimelineStore, mockUseTraceTimelineStore 
       sidePanelWidth: 0.375,
       detailPanelMode: 'inline',
       timelineBarsVisible: true,
+      selectedSummaryFields: [],
       setSpanNameColumnWidth: vi.fn(),
       setSidePanelWidth: vi.fn(),
       setTimelineBarsVisible: vi.fn(),
+      setSelectedSummaryFields: vi.fn(),
     },
     mockTraceTimelineStore,
     mockUseTraceTimelineStore,
@@ -96,6 +98,7 @@ describe('<TraceTimelineViewer>', () => {
   const trace = legacyTrace.asOtelTrace();
   const props = {
     trace,
+    tracePageHeaderHeight: 200,
     textFilter: null,
     viewRange: {
       time: {
@@ -132,6 +135,7 @@ describe('<TraceTimelineViewer>', () => {
     props.setSidePanelWidth.mockClear();
     mockLayoutPrefsStore.setSpanNameColumnWidth.mockClear();
     mockLayoutPrefsStore.setSidePanelWidth.mockClear();
+    mockLayoutPrefsStore.setSelectedSummaryFields.mockClear();
     mockTraceTimelineStore.collapseAll.mockClear();
     mockTraceTimelineStore.collapseOne.mockClear();
     mockTraceTimelineStore.expandAll.mockClear();
@@ -158,6 +162,39 @@ describe('<TraceTimelineViewer>', () => {
     const initialCount = screen.getAllByTestId('virtualized-trace-view-mock').length;
     renderWithRedux(<TraceTimelineViewer {...props} />);
     expect(screen.getAllByTestId('virtualized-trace-view-mock')).toHaveLength(initialCount + 1);
+  });
+
+  it('renders SummaryFieldsBar when trace has span attributes', () => {
+    render(<TraceTimelineViewerImpl {...props} />);
+    expect(screen.getByTestId('summary-fields-bar')).toBeInTheDocument();
+  });
+
+  it('calls setSelectedSummaryFields when a summary field is toggled', () => {
+    render(<TraceTimelineViewerImpl {...props} />);
+    fireEvent.click(screen.getAllByRole('checkbox')[0]);
+    expect(mockLayoutPrefsStore.setSelectedSummaryFields).toHaveBeenCalled();
+  });
+
+  it('does not auto-persist summary fields filtered by trace availability', () => {
+    mockLayoutPrefsStore.selectedSummaryFields = ['customer.id'];
+    const traceWithoutCustomerId = transformTraceData({
+      traceID: 'no-customer',
+      processes: { p1: { serviceName: 'svc', tags: [] } },
+      spans: [
+        {
+          spanID: 's1',
+          traceID: 'no-customer',
+          operationName: 'op',
+          duration: 1,
+          startTime: 1,
+          processID: 'p1',
+          references: [],
+          tags: [{ key: 'region', value: 'us-east-1' }],
+        },
+      ],
+    }).asOtelTrace();
+    render(<TraceTimelineViewerImpl {...props} trace={traceWithoutCustomerId} />);
+    expect(mockLayoutPrefsStore.setSelectedSummaryFields).not.toHaveBeenCalled();
   });
 
   it('derives selectedSpanID from Zustand detailStates', () => {

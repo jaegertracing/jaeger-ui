@@ -11,24 +11,65 @@ import {
   SPAN_NAME_COLUMN_WIDTH_MAX,
   SPAN_NAME_COLUMN_WIDTH_MIN,
 } from './store.constants';
+import { MAX_SUMMARY_FIELDS } from './summaryFieldsUtils';
+
+const SUMMARY_FIELDS_STORAGE_KEY = 'summaryFields';
 
 type TraceTimelineLayoutPrefsStore = {
   spanNameColumnWidth: number;
   sidePanelWidth: number;
   detailPanelMode: SpanDetailPanelMode;
   timelineBarsVisible: boolean;
+  selectedSummaryFields: string[];
   setSpanNameColumnWidth: (width: number) => void;
   setSidePanelWidth: (width: number) => void;
   // Updates layout fields only; use `setDetailPanelMode` from `./store` to also sync detail panel state.
   applyDetailPanelModeToLayout: (mode: SpanDetailPanelMode) => void;
   setTimelineBarsVisible: (visible: boolean) => void;
+  setSelectedSummaryFields: (fields: string[]) => void;
 };
+
+function normalizeSummaryFields(fields: unknown[]): string[] {
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+  for (const key of fields) {
+    if (typeof key !== 'string' || seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    normalized.push(key);
+    if (normalized.length >= MAX_SUMMARY_FIELDS) {
+      break;
+    }
+  }
+  return normalized;
+}
+
+function parseStoredSummaryFields(): string[] {
+  try {
+    const stored = localStorage.getItem(SUMMARY_FIELDS_STORAGE_KEY);
+    if (!stored) {
+      return [];
+    }
+    const parsed = JSON.parse(stored);
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+    return normalizeSummaryFields(parsed);
+  } catch {
+    return [];
+  }
+}
 
 // Reads user layout preferences from localStorage and merges them with config-driven defaults.
 // Mirrors the logic that was previously in TraceTimelineViewer/duck.ts `newInitialState()`.
 export function getInitialLayoutState(): Pick<
   TraceTimelineLayoutPrefsStore,
-  'spanNameColumnWidth' | 'sidePanelWidth' | 'detailPanelMode' | 'timelineBarsVisible'
+  | 'spanNameColumnWidth'
+  | 'sidePanelWidth'
+  | 'detailPanelMode'
+  | 'timelineBarsVisible'
+  | 'selectedSummaryFields'
 > {
   const { traceTimeline } = getConfig();
 
@@ -86,7 +127,9 @@ export function getInitialLayoutState(): Pick<
     }
   }
 
-  return { spanNameColumnWidth, sidePanelWidth, detailPanelMode, timelineBarsVisible };
+  const selectedSummaryFields = parseStoredSummaryFields();
+
+  return { spanNameColumnWidth, sidePanelWidth, detailPanelMode, timelineBarsVisible, selectedSummaryFields };
 }
 
 export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()((set, get) => ({
@@ -127,5 +170,11 @@ export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()((set,
   setTimelineBarsVisible: (visible: boolean) => {
     localStorage.setItem('timelineVisible', String(visible));
     set({ timelineBarsVisible: visible });
+  },
+
+  setSelectedSummaryFields: (fields: string[]) => {
+    const selectedSummaryFields = normalizeSummaryFields(fields);
+    localStorage.setItem(SUMMARY_FIELDS_STORAGE_KEY, JSON.stringify(selectedSummaryFields));
+    set({ selectedSummaryFields });
   },
 }));

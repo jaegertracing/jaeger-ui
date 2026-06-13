@@ -250,6 +250,39 @@ describe('<SpanBarRow>', () => {
     });
   });
 
+  describe('summary field chips', () => {
+    it('renders value chips for selected fields', () => {
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          selectedFields={['customer.id', 'http.status_code']}
+          summaryValues={{ 'customer.id': 'cust-319', 'http.status_code': '500' }}
+        />
+      );
+      expect(screen.getByLabelText('customer.id: cust-319')).toBeInTheDocument();
+      const errorChip = screen.getByLabelText('http.status_code: 500');
+      expect(errorChip).toBeInTheDocument();
+      expect(errorChip).toHaveClass('is-error');
+    });
+
+    it('skips chips when value is missing for a selected field', () => {
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          selectedFields={['customer.id', 'missing.key']}
+          summaryValues={{ 'customer.id': 'cust-319' }}
+        />
+      );
+      expect(screen.getByLabelText('customer.id: cust-319')).toBeInTheDocument();
+      expect(screen.queryByLabelText(/missing\.key/)).not.toBeInTheDocument();
+    });
+
+    it('does not render chips when summaryValues is undefined', () => {
+      render(<SpanBarRow {...defaultProps} selectedFields={['customer.id']} />);
+      expect(screen.queryByLabelText(/customer\.id/)).not.toBeInTheDocument();
+    });
+  });
+
   it('sets longLabel and hintSide to right when viewStart <= 1 - viewEnd', () => {
     const getViewedBounds = jest.fn().mockReturnValue({ start: 0.2, end: 0.3 });
     const props = {

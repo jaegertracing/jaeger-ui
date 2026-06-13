@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { InputRef } from 'antd';
 import { useNormalizeTraceId } from './useNormalizeTraceId';
 import { useNavigate } from 'react-router-dom';
@@ -213,7 +213,7 @@ export function TracePageImpl(props: TProps) {
     _memoize(filterSpans, (textFilter: string) => `${textFilter} ${idRef.current}`)
   ).current;
 
-  const scrollManagerRef = useRef<ScrollManager>(new ScrollManager(traceData, { scrollBy, scrollTo }));
+  const scrollManagerRef = useRef<ScrollManager>(new ScrollManager(null, { scrollBy, scrollTo }));
 
   const updateViewRangeTime: TUpdateViewRangeTimeFunction = useCallback(
     (start: number, end: number, trackSrc?: string) => {
@@ -289,25 +289,50 @@ export function TracePageImpl(props: TProps) {
 
   const headerResizeObserverRef = useRef<ResizeObserver | TNil>(null);
 
-  const headerRefCallback = useCallback((elm: HTMLElement | TNil) => {
-    if (headerResizeObserverRef.current) {
-      headerResizeObserverRef.current.disconnect();
-      headerResizeObserverRef.current = null;
-    }
-    headerElmRef.current = elm;
-    if (elm) {
-      setHeaderHeight(elm.clientHeight);
-      if (typeof ResizeObserver !== 'undefined') {
-        const resizeObserver = new ResizeObserver(() => {
-          setHeaderHeight(elm.clientHeight);
-        });
-        resizeObserver.observe(elm);
-        headerResizeObserverRef.current = resizeObserver;
-      }
-    } else {
-      setHeaderHeight(null);
-    }
+  const measureHeaderHeight = useCallback(() => {
+    const elm = headerElmRef.current;
+    if (!elm) return;
+    // Prefer layout box height; fall back to offset/client when getBoundingClientRect is 0 (e.g. jsdom).
+    const measured = Math.ceil(
+      Math.max(elm.getBoundingClientRect().height, elm.offsetHeight, elm.clientHeight)
+    );
+    setHeaderHeight(prev => (prev === measured ? prev : measured));
   }, []);
+
+  const headerRefCallback = useCallback(
+    (elm: HTMLElement | TNil) => {
+      if (headerResizeObserverRef.current) {
+        headerResizeObserverRef.current.disconnect();
+        headerResizeObserverRef.current = null;
+      }
+      headerElmRef.current = elm;
+      if (elm) {
+        measureHeaderHeight();
+        if (typeof ResizeObserver !== 'undefined') {
+          const resizeObserver = new ResizeObserver(measureHeaderHeight);
+          resizeObserver.observe(elm);
+          headerResizeObserverRef.current = resizeObserver;
+        }
+      } else {
+        setHeaderHeight(null);
+      }
+    },
+    [measureHeaderHeight]
+  );
+
+  // Re-measure when trace/header content changes (e.g. minimap mounts, slim view toggles).
+  useLayoutEffect(() => {
+    measureHeaderHeight();
+    let raf2 = 0;
+    const raf1 = requestAnimationFrame(() => {
+      measureHeaderHeight();
+      raf2 = requestAnimationFrame(measureHeaderHeight);
+    });
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+    };
+  }, [measureHeaderHeight, traceData?.traceID, slimView, viewType]);
 
   const toggleSlimView = useCallback(() => {
     setSlimView(prev => {
@@ -428,6 +453,7 @@ export function TracePageImpl(props: TProps) {
         scrollToFirstVisibleSpan={sm.scrollToFirstVisibleSpan}
         findMatchesIDs={spanFindMatches}
         trace={traceData}
+        tracePageHeaderHeight={headerHeight ?? 0}
         criticalPath={criticalPath}
         updateNextViewRangeTime={updateNextViewRangeTime}
         updateViewRangeTime={updateViewRangeTime}
