@@ -46,6 +46,7 @@ type TProps = TDispatchProps & {
   findMatchesIDs: Set<string> | TNil;
   scrollToFirstVisibleSpan: () => void;
   trace: IOtelTrace;
+  tracePageHeaderHeight: number;
   criticalPath: CriticalPathSection[];
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
@@ -74,6 +75,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     updateViewRangeTime,
     viewRange,
     trace,
+    tracePageHeaderHeight,
     useOtelTerms,
     ...rest
   } = props;
@@ -160,14 +162,16 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   );
   const hasSummaryFieldsBar = availableFields.length > 0;
 
-  useEffect(() => {
-    const needsSanitize =
-      effectiveSelectedFields.length !== selectedFields.length ||
-      effectiveSelectedFields.some((key, index) => key !== selectedFields[index]);
-    if (needsSanitize) {
-      setSelectedSummaryFields(effectiveSelectedFields);
-    }
-  }, [effectiveSelectedFields, selectedFields, setSelectedSummaryFields]);
+  const viewerStyle = {
+    '--trace-page-header-height': `${tracePageHeaderHeight}px`,
+    '--summary-fields-bar-stack-height': hasSummaryFieldsBar ? 'var(--summary-fields-bar-height)' : '0px',
+    '--span-graph-padding-bottom-offset': hasSummaryFieldsBar ? 'var(--span-graph-padding-bottom)' : '0px',
+    '--virtualized-span-list-padding-top': hasSummaryFieldsBar ? '0px' : 'var(--timeline-header-row-height)',
+  } as React.CSSProperties;
+
+  const fixedHeaderSpacer = hasSummaryFieldsBar ? (
+    <div className="TraceTimelineViewer--fixedHeaderSpacer" aria-hidden="true" />
+  ) : null;
 
   // When timeline bars are hidden with the side panel active, the side panel expands to absorb
   // the timeline column so the Service/Operation column keeps its pixel width unchanged.
@@ -192,12 +196,14 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   const sidePanelLabel =
     selectedSpanID === null || selectedSpanID === rootSpanID ? 'Trace Root' : 'Span Details';
 
-  // TimelineHeaderRow is position:fixed (see TimelineHeaderRow.css), so it takes no space in the
-  // document flow. layoutRef is on the --sidePanelLayout div which starts at the same document
-  // position as the header row. We compute panelTop once:
-  //   top + scrollY = document-relative top of the layout area = the fixed viewport top of the header
-  //   + 38          = the fixed header height, so the panel starts just below the header
-  // Because the header is fixed, panelTop is constant — only a resize listener is needed.
+  // SummaryFieldsBar and TimelineHeaderRow are position:fixed (see their CSS), so they take no space
+  // in the document flow. An in-flow spacer reserves the combined fixed-stack height when the
+  // summary bar is visible; otherwise VirtualizedTraceView padding-top covers the timeline header.
+  // layoutRef is on the --sidePanelLayout div which starts at the same document position as the
+  // spacer. We compute panelTop once:
+  //   top + scrollY = document-relative top of the layout area
+  //   + fixed stack height = summary bar (when visible) + timeline header
+  // Because the headers are fixed, panelTop is constant — only a resize listener is needed.
   const layoutRef = useRef<HTMLDivElement>(null);
   const [panelTop, setPanelTop] = useState<number | null>(null);
 
@@ -209,7 +215,8 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       const { top } = layoutRef.current.getBoundingClientRect();
       const rootStyle = getComputedStyle(document.documentElement);
       const timelineHeaderHeight = parseInt(rootStyle.getPropertyValue('--timeline-header-row-height'), 10);
-      setPanelTop(top + window.scrollY + timelineHeaderHeight);
+      // With the summary bar, the in-flow spacer already clears the fixed stack (incl. pb2 trim).
+      setPanelTop(top + window.scrollY + (hasSummaryFieldsBar ? 0 : timelineHeaderHeight));
     };
     measure();
     window.addEventListener('resize', measure);
@@ -224,7 +231,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       /* istanbul ignore next */
       resizeObserver.disconnect();
     };
-  }, [sidePanelActive]);
+  }, [hasSummaryFieldsBar, sidePanelActive]);
 
   const summaryFieldsBar = hasSummaryFieldsBar ? (
     <SummaryFieldsBar
@@ -279,9 +286,10 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       }),
     };
     return (
-      <div className="TraceTimelineViewer">
+      <div className="TraceTimelineViewer" style={viewerStyle}>
         {summaryFieldsBar}
         {headerRow}
+        {fixedHeaderSpacer}
         <div className="TraceTimelineViewer--sidePanelLayout" ref={layoutRef}>
           <div className="TraceTimelineViewer--main" style={{ width: `${mainWidth}%` }}>
             {virtualizedView}
@@ -307,9 +315,10 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   }
 
   return (
-    <div className="TraceTimelineViewer">
+    <div className="TraceTimelineViewer" style={viewerStyle}>
       {summaryFieldsBar}
       {headerRow}
+      {fixedHeaderSpacer}
       {virtualizedView}
     </div>
   );

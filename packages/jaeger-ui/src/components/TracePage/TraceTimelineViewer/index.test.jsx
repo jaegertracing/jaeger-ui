@@ -98,6 +98,7 @@ describe('<TraceTimelineViewer>', () => {
   const trace = legacyTrace.asOtelTrace();
   const props = {
     trace,
+    tracePageHeaderHeight: 200,
     textFilter: null,
     viewRange: {
       time: {
@@ -172,6 +173,28 @@ describe('<TraceTimelineViewer>', () => {
     render(<TraceTimelineViewerImpl {...props} />);
     fireEvent.click(screen.getAllByRole('checkbox')[0]);
     expect(mockLayoutPrefsStore.setSelectedSummaryFields).toHaveBeenCalled();
+  });
+
+  it('does not auto-persist summary fields filtered by trace availability', () => {
+    mockLayoutPrefsStore.selectedSummaryFields = ['customer.id'];
+    const traceWithoutCustomerId = transformTraceData({
+      traceID: 'no-customer',
+      processes: { p1: { serviceName: 'svc', tags: [] } },
+      spans: [
+        {
+          spanID: 's1',
+          traceID: 'no-customer',
+          operationName: 'op',
+          duration: 1,
+          startTime: 1,
+          processID: 'p1',
+          references: [],
+          tags: [{ key: 'region', value: 'us-east-1' }],
+        },
+      ],
+    }).asOtelTrace();
+    render(<TraceTimelineViewerImpl {...props} trace={traceWithoutCustomerId} />);
+    expect(mockLayoutPrefsStore.setSelectedSummaryFields).not.toHaveBeenCalled();
   });
 
   it('derives selectedSpanID from Zustand detailStates', () => {

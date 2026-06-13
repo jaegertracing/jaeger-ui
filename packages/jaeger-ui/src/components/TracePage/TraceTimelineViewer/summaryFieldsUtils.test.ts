@@ -190,10 +190,13 @@ describe('summaryFieldsUtils', () => {
   });
 
   describe('isHttpStatusCode5xx', () => {
-    it('returns true only for http.status_code values >= 500', () => {
+    it('returns true only for http status code keys with values >= 500', () => {
       expect(isHttpStatusCode5xx('http.status_code', '500')).toBe(true);
       expect(isHttpStatusCode5xx('http.status_code', '503')).toBe(true);
+      expect(isHttpStatusCode5xx('http.response.status_code', '500')).toBe(true);
+      expect(isHttpStatusCode5xx('http.response.status_code', '502')).toBe(true);
       expect(isHttpStatusCode5xx('http.status_code', '404')).toBe(false);
+      expect(isHttpStatusCode5xx('http.response.status_code', '404')).toBe(false);
       expect(isHttpStatusCode5xx('customer.id', '500')).toBe(false);
       expect(isHttpStatusCode5xx('http.status_code', 'not-a-number')).toBe(false);
     });
