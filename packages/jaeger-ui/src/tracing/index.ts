@@ -58,7 +58,12 @@ export function initTracing(): void {
     instrumentations: [
       new DocumentLoadInstrumentation(),
       // Don't instrument the OTLP export itself — that would recurse.
-      new FetchInstrumentation({ ignoreUrls: [endpoint] }),
+      // FetchInstrumentation matches against the resolved absolute href and
+      // treats string entries as EXACT equality, so we use an unanchored
+      // regex to substring-match the path within the absolute URL.
+      new FetchInstrumentation({
+        ignoreUrls: [new RegExp(endpoint.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))],
+      }),
     ],
   });
 

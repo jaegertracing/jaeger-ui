@@ -149,13 +149,18 @@ describe('initTracing', () => {
     expect(providerArgs.resource.attrs['service.name']).toBe('my-ui');
   });
 
-  it('configures FetchInstrumentation to ignore the OTLP export endpoint', async () => {
+  it('configures FetchInstrumentation to ignore the OTLP export endpoint against absolute URLs', async () => {
     mockGetConfig.mockReturnValue({ tracing: { enabled: true } });
     const initTracing = await loadInitTracing();
     initTracing();
 
     const fetchOpts = fetchInstrumentationCtor.mock.calls[0][0] as any;
-    expect(fetchOpts.ignoreUrls).toEqual(['/jaeger/api/otlp/v1/traces']);
+    expect(fetchOpts.ignoreUrls).toHaveLength(1);
+    const ignore: RegExp = fetchOpts.ignoreUrls[0];
+    // FetchInstrumentation passes the resolved absolute href to the matcher.
+    expect(ignore.test('http://localhost:3000/jaeger/api/otlp/v1/traces')).toBe(true);
+    expect(ignore.test('https://example.com/jaeger/api/otlp/v1/traces')).toBe(true);
+    expect(ignore.test('http://localhost:3000/api/services')).toBe(false);
   });
 
   it('is idempotent — second call does not re-register', async () => {
