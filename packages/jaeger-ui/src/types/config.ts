@@ -246,9 +246,11 @@ export type Config = {
   useOpenTelemetryTerms: boolean;
 
   // tracing controls in-browser OpenTelemetry instrumentation. When enabled,
-  // the UI exports spans via OTLP/HTTP to the configured endpoint
-  // (default: same-origin '/api/otlp/v1/traces', which the jaeger-query
-  // otlp_proxy extension forwards to the OTel Collector). Disabled by default.
+  // the UI exports spans via OTLP/HTTP to the same-origin path
+  // '/api/otlp/v1/traces', which the jaeger-query otlp_proxy extension
+  // forwards to the OTel Collector. The endpoint is intentionally not
+  // configurable — see docs/adr/0011-ui-emitted-trace-ingest.md.
+  // Disabled by default.
   tracing?: {
     enabled?: boolean;
     serviceName?: string;
