@@ -453,7 +453,7 @@ export function TracePageImpl(props: TProps) {
         scrollToFirstVisibleSpan={sm.scrollToFirstVisibleSpan}
         findMatchesIDs={spanFindMatches}
         trace={traceData}
-        tracePageHeaderHeight={headerHeight}
+        tracePageHeaderHeight={headerHeight ?? 0}
         criticalPath={criticalPath}
         updateNextViewRangeTime={updateNextViewRangeTime}
         updateViewRangeTime={updateViewRangeTime}

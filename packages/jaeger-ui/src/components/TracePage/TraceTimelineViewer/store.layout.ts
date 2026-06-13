@@ -13,6 +13,8 @@ import {
 } from './store.constants';
 import { MAX_SUMMARY_FIELDS } from './summaryFieldsUtils';
 
+const SUMMARY_FIELDS_STORAGE_KEY = 'summaryFields';
+
 type TraceTimelineLayoutPrefsStore = {
   spanNameColumnWidth: number;
   sidePanelWidth: number;
@@ -45,7 +47,7 @@ function normalizeSummaryFields(fields: unknown[]): string[] {
 
 function parseStoredSummaryFields(): string[] {
   try {
-    const stored = localStorage.getItem('summaryFields');
+    const stored = localStorage.getItem(SUMMARY_FIELDS_STORAGE_KEY);
     if (!stored) {
       return [];
     }
@@ -172,7 +174,7 @@ export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()((set,
 
   setSelectedSummaryFields: (fields: string[]) => {
     const selectedSummaryFields = normalizeSummaryFields(fields);
-    localStorage.setItem('summaryFields', JSON.stringify(selectedSummaryFields));
+    localStorage.setItem(SUMMARY_FIELDS_STORAGE_KEY, JSON.stringify(selectedSummaryFields));
     set({ selectedSummaryFields });
   },
 }));
