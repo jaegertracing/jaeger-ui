@@ -66,12 +66,18 @@ mechanism, in [`default-config.ts`](../../packages/jaeger-ui/src/constants/defau
 
 ```ts
 tracing?: {
-  enabled?: boolean;       // default false
-  endpoint?: string;       // default '/api/otlp/v1/traces'
-  serviceName?: string;    // default 'jaeger-ui'
-  sampleRatio?: number;    // default 1.0
+  enabled?: boolean;                // default false
+  serviceName?: string;             // default 'jaeger-ui'
+  sampleRatio?: number;             // default 1.0
+  sessionInactivityMinutes?: number; // default 30 — rotates session.id
 };
 ```
+
+The OTLP endpoint is not configurable. The UI always exports to a
+same-origin `/api/otlp/v1/traces` path (site-prefixed for base-path
+deployments). This matches the fixed convention used by every other
+Jaeger API endpoint and avoids inviting cross-origin export setups
+the otlp_proxy isn't designed for.
 
 When `enabled` is false (the default) `initTracing()` is a no-op: no
 provider is registered, no exporter is created, and any code paths that
@@ -143,8 +149,9 @@ Every span (including single-span fetch traces) carries:
 
 | Attribute | Value | Purpose |
 |---|---|---|
-| `app.url.path` | `window.location.pathname` | Identifies the page that issued the call. |
-| `app.session.id` | Per-tab UUID in `sessionStorage` | Groups all spans from one tab session. |
+| `app.url.path` | `window.location.pathname` | Identifies the page that issued the call. Vendor-prefixed because the OTel-standard `url.path` is set by HTTP instrumentation to the *request* URL path and would clobber the page path on fetch spans. |
+| `session.id` | The first span's `traceId`, persisted in `sessionStorage` and scoped per browser tab. | Groups all spans from one user session, per [OTel session semconv](https://opentelemetry.io/docs/specs/semconv/general/session/). |
+| `session.previous_id` | The prior `session.id` (only on the first span after a session rotates). | Lets backends link a new session to the one it replaced when the inactivity timeout (default 30 min, see `tracing.sessionInactivityMinutes`) elapses. |
 
 `app.route` (the matched React Router pattern) is intentionally **not**
 emitted yet — the matched pattern is only resolvable inside the React
