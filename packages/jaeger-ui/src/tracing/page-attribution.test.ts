@@ -4,10 +4,19 @@
 import { Span } from '@opentelemetry/sdk-trace-base';
 import { PageAttributionProcessor } from './page-attribution';
 
-const SESSION_ID_KEY = 'jaegerUi.tracing.sessionId';
+const SESSION_ID_KEY = 'jaeger.tracing.sessionId';
+const SESSION_LAST_ACTIVITY_KEY = 'jaeger.tracing.sessionLastActivity';
 
-function makeSpan() {
-  return { setAttribute: vi.fn() } as unknown as Span;
+function makeSpan(traceId: string) {
+  const calls = new Map<string, unknown>();
+  const setAttribute = vi.fn((key: string, value: unknown) => {
+    calls.set(key, value);
+  });
+  const span = {
+    setAttribute,
+    spanContext: () => ({ traceId }),
+  } as unknown as Span;
+  return { span, attrs: calls, setAttribute };
 }
 
 describe('PageAttributionProcessor', () => {
@@ -19,95 +28,141 @@ describe('PageAttributionProcessor', () => {
     vi.restoreAllMocks();
   });
 
-  it('onStart stamps app.url.path and app.session.id on the span', () => {
+  it('stamps url.path and session.id on every span', () => {
     const proc = new PageAttributionProcessor();
-    const span = makeSpan();
-
+    const { span, attrs } = makeSpan('trace-1');
     proc.onStart(span, {} as any);
 
-    expect(span.setAttribute).toHaveBeenCalledWith('app.url.path', window.location.pathname);
-    expect(span.setAttribute).toHaveBeenCalledWith('app.session.id', expect.any(String));
+    expect(attrs.get('url.path')).toBe(window.location.pathname);
+    expect(attrs.get('session.id')).toBe('trace-1');
   });
 
-  it('reuses the same session id across spans', () => {
+  it('uses the first span trace id as the session id', () => {
     const proc = new PageAttributionProcessor();
-    const a = makeSpan();
-    const b = makeSpan();
+    const a = makeSpan('trace-A');
+    const b = makeSpan('trace-B');
 
-    proc.onStart(a, {} as any);
-    proc.onStart(b, {} as any);
+    proc.onStart(a.span, {} as any);
+    proc.onStart(b.span, {} as any);
 
-    const sessionIdA = (a.setAttribute as ReturnType<typeof vi.fn>).mock.calls.find(
-      ([k]) => k === 'app.session.id'
-    )?.[1];
-    const sessionIdB = (b.setAttribute as ReturnType<typeof vi.fn>).mock.calls.find(
-      ([k]) => k === 'app.session.id'
-    )?.[1];
-
-    expect(sessionIdA).toBeTruthy();
-    expect(sessionIdA).toBe(sessionIdB);
+    expect(a.attrs.get('session.id')).toBe('trace-A');
+    expect(b.attrs.get('session.id')).toBe('trace-A');
   });
 
-  it('persists session id in sessionStorage so new processors reuse it', () => {
-    const first = new PageAttributionProcessor();
-    const span1 = makeSpan();
-    first.onStart(span1, {} as any);
-
-    const stored = window.sessionStorage.getItem(SESSION_ID_KEY);
-    expect(stored).toBeTruthy();
-
-    const second = new PageAttributionProcessor();
-    const span2 = makeSpan();
-    second.onStart(span2, {} as any);
-
-    const sessionId = (span2.setAttribute as ReturnType<typeof vi.fn>).mock.calls.find(
-      ([k]) => k === 'app.session.id'
-    )?.[1];
-    expect(sessionId).toBe(stored);
-  });
-
-  it('falls back to a non-cryptographic id when crypto.randomUUID throws', () => {
-    vi.spyOn(crypto, 'randomUUID').mockImplementation(() => {
-      throw new Error('insecure context');
-    });
-
+  it('persists session id and last-activity to sessionStorage', () => {
     const proc = new PageAttributionProcessor();
-    const span = makeSpan();
+    const { span } = makeSpan('trace-1');
     proc.onStart(span, {} as any);
 
-    const sessionId = (span.setAttribute as ReturnType<typeof vi.fn>).mock.calls.find(
-      ([k]) => k === 'app.session.id'
-    )?.[1];
-    expect(sessionId).toMatch(/^s-[a-z0-9]+-[a-z0-9]+$/);
+    expect(window.sessionStorage.getItem(SESSION_ID_KEY)).toBe('trace-1');
+    expect(Number(window.sessionStorage.getItem(SESSION_LAST_ACTIVITY_KEY))).toBeGreaterThan(0);
   });
 
-  it('falls back to per-call id when sessionStorage throws', () => {
-    vi.spyOn(window.sessionStorage.__proto__, 'getItem').mockImplementation(() => {
+  it('reuses a session id stored by a prior processor (e.g. across page reloads)', () => {
+    window.sessionStorage.setItem(SESSION_ID_KEY, 'prior-trace');
+    window.sessionStorage.setItem(SESSION_LAST_ACTIVITY_KEY, String(Date.now()));
+
+    const proc = new PageAttributionProcessor();
+    const { span, attrs } = makeSpan('fresh-trace');
+    proc.onStart(span, {} as any);
+
+    expect(attrs.get('session.id')).toBe('prior-trace');
+    expect(attrs.has('session.previous_id')).toBe(false);
+  });
+
+  it('does not stamp session.previous_id during a single active session', () => {
+    const proc = new PageAttributionProcessor();
+    const a = makeSpan('trace-A');
+    const b = makeSpan('trace-B');
+    proc.onStart(a.span, {} as any);
+    proc.onStart(b.span, {} as any);
+
+    expect(a.attrs.has('session.previous_id')).toBe(false);
+    expect(b.attrs.has('session.previous_id')).toBe(false);
+  });
+
+  it('rotates session.id and stamps session.previous_id after inactivity timeout', () => {
+    const dateSpy = vi.spyOn(Date, 'now').mockReturnValue(1_000_000);
+    const proc = new PageAttributionProcessor({ inactivityMs: 60_000 });
+
+    const a = makeSpan('trace-A');
+    proc.onStart(a.span, {} as any);
+    expect(a.attrs.get('session.id')).toBe('trace-A');
+
+    // Advance past the inactivity window.
+    dateSpy.mockReturnValue(1_000_000 + 61_000);
+    const b = makeSpan('trace-B');
+    proc.onStart(b.span, {} as any);
+
+    expect(b.attrs.get('session.id')).toBe('trace-B');
+    expect(b.attrs.get('session.previous_id')).toBe('trace-A');
+
+    // Subsequent spans in the new session should NOT include previous_id.
+    dateSpy.mockReturnValue(1_000_000 + 62_000);
+    const c = makeSpan('trace-C');
+    proc.onStart(c.span, {} as any);
+    expect(c.attrs.get('session.id')).toBe('trace-B');
+    expect(c.attrs.has('session.previous_id')).toBe(false);
+  });
+
+  it('rotates a stored session loaded from sessionStorage when it has expired', () => {
+    window.sessionStorage.setItem(SESSION_ID_KEY, 'stale-trace');
+    window.sessionStorage.setItem(SESSION_LAST_ACTIVITY_KEY, String(1_000_000));
+    vi.spyOn(Date, 'now').mockReturnValue(1_000_000 + 31 * 60 * 1000);
+
+    const proc = new PageAttributionProcessor();
+    const { span, attrs } = makeSpan('new-trace');
+    proc.onStart(span, {} as any);
+
+    expect(attrs.get('session.id')).toBe('new-trace');
+    expect(attrs.get('session.previous_id')).toBe('stale-trace');
+  });
+
+  it('honors a custom inactivityMs', () => {
+    const dateSpy = vi.spyOn(Date, 'now').mockReturnValue(0);
+    const proc = new PageAttributionProcessor({ inactivityMs: 10 });
+
+    const a = makeSpan('trace-A');
+    proc.onStart(a.span, {} as any);
+
+    dateSpy.mockReturnValue(20);
+    const b = makeSpan('trace-B');
+    proc.onStart(b.span, {} as any);
+
+    expect(b.attrs.get('session.id')).toBe('trace-B');
+    expect(b.attrs.get('session.previous_id')).toBe('trace-A');
+  });
+
+  it('falls back to in-memory state when sessionStorage.getItem throws', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
       throw new Error('privacy mode');
     });
 
     const proc = new PageAttributionProcessor();
-    const span = makeSpan();
-    proc.onStart(span, {} as any);
+    const a = makeSpan('trace-A');
+    const b = makeSpan('trace-B');
+    proc.onStart(a.span, {} as any);
+    proc.onStart(b.span, {} as any);
 
-    const sessionId = (span.setAttribute as ReturnType<typeof vi.fn>).mock.calls.find(
-      ([k]) => k === 'app.session.id'
-    )?.[1];
-    expect(sessionId).toBeTruthy();
+    expect(a.attrs.get('session.id')).toBe('trace-A');
+    expect(b.attrs.get('session.id')).toBe('trace-A');
   });
 
-  it('onEnd is a no-op and does not throw', () => {
+  it('does not throw when sessionStorage.setItem throws', () => {
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('quota exceeded');
+    });
+
+    const proc = new PageAttributionProcessor();
+    const { span, attrs } = makeSpan('trace-A');
+    expect(() => proc.onStart(span, {} as any)).not.toThrow();
+    expect(attrs.get('session.id')).toBe('trace-A');
+  });
+
+  it('onEnd, shutdown, and forceFlush are no-ops', async () => {
     const proc = new PageAttributionProcessor();
     expect(() => proc.onEnd({} as any)).not.toThrow();
-  });
-
-  it('shutdown resolves', async () => {
-    const proc = new PageAttributionProcessor();
     await expect(proc.shutdown()).resolves.toBeUndefined();
-  });
-
-  it('forceFlush resolves', async () => {
-    const proc = new PageAttributionProcessor();
     await expect(proc.forceFlush()).resolves.toBeUndefined();
   });
 });

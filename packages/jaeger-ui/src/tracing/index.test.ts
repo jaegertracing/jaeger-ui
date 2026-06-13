@@ -108,7 +108,18 @@ describe('initTracing', () => {
     expect(registerSpy).toHaveBeenCalledTimes(1);
     expect(registerInstrumentationsSpy).toHaveBeenCalledTimes(1);
     expect(pageAttributionProcessorCtor).toHaveBeenCalledTimes(1);
+    expect(pageAttributionProcessorCtor).toHaveBeenCalledWith({ inactivityMs: undefined });
     expect(batchSpanProcessorCtor).toHaveBeenCalledTimes(1);
+  });
+
+  it('converts tracing.sessionInactivityMinutes to milliseconds for the page-attribution processor', async () => {
+    mockGetConfig.mockReturnValue({
+      tracing: { enabled: true, sessionInactivityMinutes: 5 },
+    });
+    const initTracing = await loadInitTracing();
+    initTracing();
+
+    expect(pageAttributionProcessorCtor).toHaveBeenCalledWith({ inactivityMs: 5 * 60_000 });
   });
 
   it('uses defaults for endpoint, sampleRatio, and serviceName when unset', async () => {

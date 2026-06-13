@@ -254,5 +254,10 @@ export type Config = {
     endpoint?: string;
     serviceName?: string;
     sampleRatio?: number;
+    // sessionInactivityMinutes controls how many minutes of inactivity end
+    // the current user session. The next span after the timeout starts a new
+    // `session.id` and stamps the prior one as `session.previous_id`,
+    // per OTel session semantics. Default: 30.
+    sessionInactivityMinutes?: number;
   };
 };

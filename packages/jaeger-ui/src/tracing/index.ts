@@ -51,7 +51,10 @@ export function initTracing(): void {
     }),
     sampler: new TraceIdRatioBasedSampler(cfg.sampleRatio ?? 1.0),
     spanProcessors: [
-      new PageAttributionProcessor(),
+      new PageAttributionProcessor({
+        inactivityMs:
+          cfg.sessionInactivityMinutes != null ? cfg.sessionInactivityMinutes * 60_000 : undefined,
+      }),
       new BatchSpanProcessor(new OTLPTraceExporter({ url: endpoint })),
     ],
   });

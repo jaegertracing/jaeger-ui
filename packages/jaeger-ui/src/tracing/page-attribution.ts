@@ -4,47 +4,78 @@
 import { Context } from '@opentelemetry/api';
 import { ReadableSpan, Span, SpanProcessor } from '@opentelemetry/sdk-trace-base';
 
-const SESSION_ID_KEY = 'jaegerUi.tracing.sessionId';
-
-// crypto.randomUUID requires a secure context. Fall back to a
-// non-cryptographic ID — for span attribution, uniqueness within a tab
-// session is sufficient and crashing tracing init is not acceptable.
-function safeUuid(): string {
-  try {
-    return crypto.randomUUID();
-  } catch {
-    return `s-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-  }
-}
-
-function getOrCreateSessionId(): string {
-  try {
-    const existing = window.sessionStorage.getItem(SESSION_ID_KEY);
-    if (existing) return existing;
-    const next = safeUuid();
-    window.sessionStorage.setItem(SESSION_ID_KEY, next);
-    return next;
-  } catch {
-    // sessionStorage can throw in privacy modes; fall back to per-call ID.
-    return safeUuid();
-  }
-}
+const SESSION_ID_KEY = 'jaeger.tracing.sessionId';
+const SESSION_LAST_ACTIVITY_KEY = 'jaeger.tracing.sessionLastActivity';
+const DEFAULT_INACTIVITY_MS = 30 * 60 * 1000;
 
 /**
- * Stamps every span with attributes identifying the page that issued it.
- * This is what makes single-span fetch traces useful — even when no
- * higher-level root (page-load, assistant turn) is active, the resulting
- * one-span trace tells you which page issued the call.
+ * Stamps every span with attributes identifying the page and user session
+ * that issued it. Implements OTel's session semantic convention:
+ * https://opentelemetry.io/docs/specs/semconv/general/session/
  *
- *  - app.url.path: window.location.pathname (full path, high cardinality)
- *  - app.session.id: stable per-tab UUID kept in sessionStorage
+ *  - url.path: window.location.pathname
+ *  - session.id: derived from the trace id of the first span of the
+ *    session. Scoped to the browser tab (sessionStorage) and rotated
+ *    after a configurable period of inactivity (default 30 minutes).
+ *  - session.previous_id: stamped only on the first span of a rotated
+ *    session, per the OTel spec.
  */
 export class PageAttributionProcessor implements SpanProcessor {
-  private readonly sessionId = getOrCreateSessionId();
+  private readonly inactivityMs: number;
+  private sessionId: string | undefined;
+  private lastActivity = 0;
+  private pendingPreviousId: string | undefined;
+  private initialized = false;
+
+  constructor(opts?: { inactivityMs?: number }) {
+    this.inactivityMs = opts?.inactivityMs ?? DEFAULT_INACTIVITY_MS;
+  }
 
   onStart(span: Span, _parentContext: Context): void {
-    span.setAttribute('app.url.path', window.location.pathname);
-    span.setAttribute('app.session.id', this.sessionId);
+    const now = Date.now();
+
+    if (!this.initialized) {
+      this.loadFromStorage();
+      this.initialized = true;
+    }
+
+    if (this.sessionId && now - this.lastActivity > this.inactivityMs) {
+      this.pendingPreviousId = this.sessionId;
+      this.sessionId = undefined;
+    }
+
+    if (!this.sessionId) {
+      this.sessionId = span.spanContext().traceId;
+      this.write(SESSION_ID_KEY, this.sessionId);
+    }
+
+    span.setAttribute('url.path', window.location.pathname);
+    span.setAttribute('session.id', this.sessionId);
+    if (this.pendingPreviousId) {
+      span.setAttribute('session.previous_id', this.pendingPreviousId);
+      this.pendingPreviousId = undefined;
+    }
+
+    this.lastActivity = now;
+    this.write(SESSION_LAST_ACTIVITY_KEY, String(now));
+  }
+
+  private loadFromStorage(): void {
+    try {
+      this.sessionId = window.sessionStorage.getItem(SESSION_ID_KEY) ?? undefined;
+      const la = window.sessionStorage.getItem(SESSION_LAST_ACTIVITY_KEY);
+      this.lastActivity = la ? Number(la) : 0;
+    } catch {
+      // sessionStorage can throw in privacy modes; use in-memory state only.
+    }
+  }
+
+  private write(key: string, value: string): void {
+    try {
+      window.sessionStorage.setItem(key, value);
+    } catch {
+      // sessionStorage can throw in privacy modes; ignore.
+    }
   }
 
   onEnd(_span: ReadableSpan): void {}
