@@ -79,8 +79,10 @@ function buildSummaryLookupImpl(
 export const buildAvailableFields = memoizeOne(buildAvailableFieldsImpl);
 export const buildSummaryLookup = memoizeOne(buildSummaryLookupImpl);
 
+const HTTP_STATUS_CODE_KEYS = new Set(['http.status_code', 'http.response.status_code']);
+
 export function isHttpStatusCode5xx(key: string, value: string): boolean {
-  if (key !== 'http.status_code') {
+  if (!HTTP_STATUS_CODE_KEYS.has(key)) {
     return false;
   }
   const code = parseInt(value, 10);

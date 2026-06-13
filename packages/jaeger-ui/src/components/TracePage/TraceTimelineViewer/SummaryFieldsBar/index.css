@@ -3,20 +3,25 @@ Copyright (c) 2026 The Jaeger Authors.
 SPDX-License-Identifier: Apache-2.0
 */
 
-/* In document flow below the fixed trace-page header (minimap stays in the header).
-   Matches TimelineHeaderRow surface treatment. */
+/* Fixed below the trace-page header; paired with an in-flow spacer for document offset. */
 .SummaryFieldsBar {
   align-items: center;
   background: var(--surface-tertiary);
   border-bottom: 1px solid var(--border-strong);
+  box-sizing: border-box;
   color: var(--text-primary);
   display: flex;
   flex-shrink: 0;
   gap: 0.5rem;
   height: var(--summary-fields-bar-height);
   line-height: var(--summary-fields-bar-height);
-  padding: 0 0.5rem;
+  padding: 0 var(--content-right-padding) 0 0.5rem;
+  position: fixed;
+  top: calc(
+    var(--page-nav-offset, 0px) + var(--trace-page-header-height, 0px) - var(--span-graph-padding-bottom, 0px)
+  );
   width: 100%;
+  z-index: 5;
 }
 
 .SummaryFieldsBar--label {
@@ -38,7 +43,7 @@ SPDX-License-Identifier: Apache-2.0
 .SummaryFieldsBar--fields {
   display: flex;
   flex: 1;
-  gap: 0.25rem;
+  gap: 0.5rem;
   min-width: 0;
   overflow-x: auto;
   padding: 0.15rem 0;
