@@ -251,7 +251,6 @@ export type Config = {
   // otlp_proxy extension forwards to the OTel Collector). Disabled by default.
   tracing?: {
     enabled?: boolean;
-    endpoint?: string;
     serviceName?: string;
     sampleRatio?: number;
     // sessionInactivityMinutes controls how many minutes of inactivity end

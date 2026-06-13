@@ -3,6 +3,8 @@
 
 import { Context } from '@opentelemetry/api';
 import { ReadableSpan, Span, SpanProcessor } from '@opentelemetry/sdk-trace-base';
+import { ATTR_URL_PATH } from '@opentelemetry/semantic-conventions';
+import { ATTR_SESSION_ID, ATTR_SESSION_PREVIOUS_ID } from '@opentelemetry/semantic-conventions/incubating';
 
 const SESSION_ID_KEY = 'jaeger.tracing.sessionId';
 const SESSION_LAST_ACTIVITY_KEY = 'jaeger.tracing.sessionLastActivity';
@@ -49,10 +51,10 @@ export class PageAttributionProcessor implements SpanProcessor {
       this.write(SESSION_ID_KEY, this.sessionId);
     }
 
-    span.setAttribute('url.path', window.location.pathname);
-    span.setAttribute('session.id', this.sessionId);
+    span.setAttribute(ATTR_URL_PATH, window.location.pathname);
+    span.setAttribute(ATTR_SESSION_ID, this.sessionId);
     if (this.pendingPreviousId) {
-      span.setAttribute('session.previous_id', this.pendingPreviousId);
+      span.setAttribute(ATTR_SESSION_PREVIOUS_ID, this.pendingPreviousId);
       this.pendingPreviousId = undefined;
     }
 

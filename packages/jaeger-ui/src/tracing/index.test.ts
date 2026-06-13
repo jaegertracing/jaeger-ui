@@ -122,13 +122,12 @@ describe('initTracing', () => {
     expect(pageAttributionProcessorCtor).toHaveBeenCalledWith({ inactivityMs: 5 * 60_000 });
   });
 
-  it('uses defaults for endpoint, sampleRatio, and serviceName when unset', async () => {
+  it('uses defaults for sampleRatio and serviceName when unset, and prefixes the OTLP endpoint', async () => {
     mockGetConfig.mockReturnValue({ tracing: { enabled: true } });
     const initTracing = await loadInitTracing();
     initTracing();
 
     expect(traceIdRatioBasedSamplerCtor).toHaveBeenCalledWith(1.0);
-    // Default endpoint '/api/otlp/v1/traces' is a relative path → prefixUrl applied
     expect(otlpTraceExporterCtor).toHaveBeenCalledWith({ url: '/jaeger/api/otlp/v1/traces' });
 
     const providerArgs = webTracerProviderCtor.mock.calls[0][0] as any;
@@ -138,70 +137,25 @@ describe('initTracing', () => {
     });
   });
 
-  it('honors configured serviceName, sampleRatio, and endpoint', async () => {
+  it('honors configured serviceName and sampleRatio', async () => {
     mockGetConfig.mockReturnValue({
-      tracing: {
-        enabled: true,
-        endpoint: '/custom/otlp',
-        serviceName: 'my-ui',
-        sampleRatio: 0.25,
-      },
+      tracing: { enabled: true, serviceName: 'my-ui', sampleRatio: 0.25 },
     });
     const initTracing = await loadInitTracing();
     initTracing();
 
     expect(traceIdRatioBasedSamplerCtor).toHaveBeenCalledWith(0.25);
-    expect(otlpTraceExporterCtor).toHaveBeenCalledWith({ url: '/jaeger/custom/otlp' });
-
     const providerArgs = webTracerProviderCtor.mock.calls[0][0] as any;
     expect(providerArgs.resource.attrs['service.name']).toBe('my-ui');
   });
 
-  it('passes absolute https URLs through without prefixing', async () => {
-    mockGetConfig.mockReturnValue({
-      tracing: { enabled: true, endpoint: 'https://collector.example.com/v1/traces' },
-    });
-    const initTracing = await loadInitTracing();
-    initTracing();
-    expect(otlpTraceExporterCtor).toHaveBeenCalledWith({
-      url: 'https://collector.example.com/v1/traces',
-    });
-  });
-
-  it('passes absolute http URLs through without prefixing', async () => {
-    mockGetConfig.mockReturnValue({
-      tracing: { enabled: true, endpoint: 'http://collector.local/v1/traces' },
-    });
-    const initTracing = await loadInitTracing();
-    initTracing();
-    expect(otlpTraceExporterCtor).toHaveBeenCalledWith({
-      url: 'http://collector.local/v1/traces',
-    });
-  });
-
-  it('passes protocol-relative URLs through without prefixing', async () => {
-    mockGetConfig.mockReturnValue({
-      tracing: { enabled: true, endpoint: '//collector.local/v1/traces' },
-    });
-    const initTracing = await loadInitTracing();
-    initTracing();
-    expect(otlpTraceExporterCtor).toHaveBeenCalledWith({
-      url: '//collector.local/v1/traces',
-    });
-  });
-
-  it('builds a FetchInstrumentation that ignores the exporter endpoint', async () => {
-    mockGetConfig.mockReturnValue({
-      tracing: { enabled: true, endpoint: '/api/otlp/v1/traces' },
-    });
+  it('configures FetchInstrumentation to ignore the OTLP export endpoint', async () => {
+    mockGetConfig.mockReturnValue({ tracing: { enabled: true } });
     const initTracing = await loadInitTracing();
     initTracing();
 
     const fetchOpts = fetchInstrumentationCtor.mock.calls[0][0] as any;
-    expect(fetchOpts.ignoreUrls).toHaveLength(1);
-    const ignore: RegExp = fetchOpts.ignoreUrls[0];
-    expect(ignore.test('/jaeger/api/otlp/v1/traces')).toBe(true);
-    expect(ignore.test('/other/path')).toBe(false);
+    expect(fetchOpts.ignoreUrls).toEqual(['/jaeger/api/otlp/v1/traces']);
   });
 
   it('is idempotent — second call does not re-register', async () => {

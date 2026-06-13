@@ -15,19 +15,12 @@ import prefixUrl from '../utils/prefix-url';
 import { PageAttributionProcessor } from './page-attribution';
 import { version } from '../../package.json';
 
-const DEFAULT_ENDPOINT = '/api/otlp/v1/traces';
+// Same-origin path served by the jaeger-query otlp_proxy extension.
+// prefixUrl() prepends the UI's site-prefix so base-path deployments
+// (e.g. mounted at /jaeger/) POST to the right route.
+const OTLP_TRACES_PATH = '/api/otlp/v1/traces';
 
 let initialized = false;
-
-// Same-origin paths get the UI's site-prefix (e.g. '/jaeger') applied so
-// base-path deployments POST to the right route. Absolute URLs (used for
-// the cross-origin override, Pattern C in ADR-0011) pass through untouched.
-function resolveEndpoint(endpoint: string): string {
-  if (/^https?:\/\//i.test(endpoint) || endpoint.startsWith('//')) {
-    return endpoint;
-  }
-  return prefixUrl(endpoint);
-}
 
 /**
  * Initializes browser-side OpenTelemetry instrumentation if the UI is
@@ -42,7 +35,7 @@ export function initTracing(): void {
   const cfg = getConfig().tracing;
   if (!cfg?.enabled) return;
 
-  const endpoint = resolveEndpoint(cfg.endpoint ?? DEFAULT_ENDPOINT);
+  const endpoint = prefixUrl(OTLP_TRACES_PATH);
 
   const provider = new WebTracerProvider({
     resource: resourceFromAttributes({
@@ -64,10 +57,8 @@ export function initTracing(): void {
   registerInstrumentations({
     instrumentations: [
       new DocumentLoadInstrumentation(),
-      new FetchInstrumentation({
-        // Don't trace the export request itself — that would recurse.
-        ignoreUrls: [new RegExp(`^${endpoint.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`)],
-      }),
+      // Don't instrument the OTLP export itself — that would recurse.
+      new FetchInstrumentation({ ignoreUrls: [endpoint] }),
     ],
   });
 
