@@ -105,6 +105,21 @@ describe('PageAttributionProcessor', () => {
     expect(c.attrs.has('session.previous_id')).toBe(false);
   });
 
+  it('rotates a stored session when sessionStorage has a corrupted last-activity value', () => {
+    window.sessionStorage.setItem(SESSION_ID_KEY, 'stale-trace');
+    window.sessionStorage.setItem(SESSION_LAST_ACTIVITY_KEY, 'not-a-number');
+    vi.spyOn(Date, 'now').mockReturnValue(1_000_000);
+
+    const proc = new PageAttributionProcessor({ inactivityMs: 1000 });
+    const { span, attrs } = makeSpan('new-trace');
+    proc.onStart(span, {} as any);
+
+    // NaN comparisons would block rotation forever; we expect the
+    // corrupted timestamp to be treated as 0 and rotate the session.
+    expect(attrs.get('session.id')).toBe('new-trace');
+    expect(attrs.get('session.previous_id')).toBe('stale-trace');
+  });
+
   it('rotates a stored session loaded from sessionStorage when it has expired', () => {
     window.sessionStorage.setItem(SESSION_ID_KEY, 'stale-trace');
     window.sessionStorage.setItem(SESSION_LAST_ACTIVITY_KEY, String(1_000_000));

@@ -70,7 +70,11 @@ export class PageAttributionProcessor implements SpanProcessor {
     try {
       this.sessionId = window.sessionStorage.getItem(SESSION_ID_KEY) ?? undefined;
       const la = window.sessionStorage.getItem(SESSION_LAST_ACTIVITY_KEY);
-      this.lastActivity = la ? Number(la) : 0;
+      // Treat missing / non-numeric / NaN as 0 so a corrupted timestamp
+      // forces a rotation rather than wedging the session forever
+      // (NaN comparisons against inactivityMs are always false).
+      const parsed = la != null ? Number(la) : 0;
+      this.lastActivity = Number.isFinite(parsed) ? parsed : 0;
     } catch {
       // sessionStorage can throw in privacy modes; use in-memory state only.
     }
