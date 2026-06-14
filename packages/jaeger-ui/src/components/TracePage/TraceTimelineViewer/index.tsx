@@ -12,6 +12,7 @@ import {
   SIDE_PANEL_WIDTH_MAX,
   SIDE_PANEL_WIDTH_MIN,
   SPAN_NAME_COLUMN_WIDTH_MAX,
+  SPAN_NAME_COLUMN_WIDTH_MIN,
   useLayoutPrefsStore,
   useTraceTimelineStore,
 } from './store';
@@ -19,7 +20,6 @@ import SpanDetailSidePanel from './SpanDetailSidePanel';
 import TimelineHeaderRow from './TimelineHeaderRow';
 import { useServiceFilter } from './useServiceFilter';
 import VirtualizedTraceView from './VirtualizedTraceView';
-import VerticalResizer from '../../common/VerticalResizer';
 import { merge as mergeShortcuts } from '../keyboard-shortcuts';
 import { Accessors } from '../ScrollManager';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '../types';
@@ -52,6 +52,7 @@ type TProps = TDispatchProps & {
 };
 
 const NUM_TICKS = 5;
+const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
 
 /**
  * `TraceTimelineViewer` now renders the header row because it is sensitive to
@@ -143,20 +144,35 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
 
   // When timeline bars are hidden with the side panel active, the side panel expands to absorb
   // the timeline column so the Service/Operation column keeps its pixel width unchanged.
-  const effectiveSidePanelWidth =
-    sidePanelActive && !timelineBarsVisible ? 1 - spanNameColumnWidth : sidePanelWidth;
+  const effectiveSidePanelWidth = sidePanelActive
+    ? timelineBarsVisible
+      ? Math.min(sidePanelWidth, 1 - SPAN_NAME_COLUMN_WIDTH_MIN - MIN_TIMELINE_COLUMN_WIDTH)
+      : 1 - spanNameColumnWidth
+    : sidePanelWidth;
 
   // Fraction of the main (non-panel) content area occupied by the name column.
   // In side panel mode the --main container is narrowed; rescaling keeps the name column at its
   // stored pixel width. When timeline bars are hidden the name column fills everything (= 1).
   const panelFraction = sidePanelActive ? effectiveSidePanelWidth : 0;
   const mainFraction = 1 - panelFraction;
-  const nameColumnWidth = timelineBarsVisible ? Math.min(spanNameColumnWidth / mainFraction, 1) : 1;
+  const rawNameColumnWidth = timelineBarsVisible ? Math.min(spanNameColumnWidth / mainFraction, 1) : 1;
+  const resizerMax = sidePanelActive
+    ? clamp01(mainFraction - MIN_TIMELINE_COLUMN_WIDTH)
+    : SPAN_NAME_COLUMN_WIDTH_MAX;
   // Page-fraction width of the name column header cell and resizer position.
   // Equals spanNameColumnWidth when bars are visible (the round-trip through mainFraction cancels).
   // When bars are hidden with no side panel, the name column spans the full page.
-  const headerNameWidth = nameColumnWidth * mainFraction;
-  const resizerMax = sidePanelActive ? mainFraction - MIN_TIMELINE_COLUMN_WIDTH : SPAN_NAME_COLUMN_WIDTH_MAX;
+  const rawHeaderNameWidth = rawNameColumnWidth * mainFraction;
+  const headerNameWidth = timelineBarsVisible
+    ? Math.min(Math.max(rawHeaderNameWidth, SPAN_NAME_COLUMN_WIDTH_MIN), resizerMax)
+    : rawHeaderNameWidth;
+  const nameColumnWidth = timelineBarsVisible && mainFraction > 0 ? headerNameWidth / mainFraction : 1;
+  const sidePanelResizerMax = clamp01(1 - SIDE_PANEL_WIDTH_MIN);
+  const sidePanelAvailableSpace = clamp01(1 - headerNameWidth - MIN_TIMELINE_COLUMN_WIDTH);
+  const sidePanelResizerMin = Math.min(
+    clamp01(1 - Math.min(SIDE_PANEL_WIDTH_MAX, sidePanelAvailableSpace)),
+    sidePanelResizerMax
+  );
 
   // Column header label: "Trace Root" when showing the root span (explicit or fallback),
   // "Span Details" for any other selected span.
@@ -207,7 +223,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       numTicks={NUM_TICKS}
       onCollapseAll={collapseAll}
       onCollapseOne={collapseOne}
-      onColummWidthChange={setSpanNameColumnWidth}
+      onColumnWidthChange={setSpanNameColumnWidth}
       onExpandAll={expandAll}
       onExpandOne={expandOne}
       resizerMax={resizerMax}
@@ -215,6 +231,9 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       sidePanelVisible={sidePanelActive}
       sidePanelWidth={effectiveSidePanelWidth}
       sidePanelLabel={sidePanelLabel}
+      sidePanelResizerMin={sidePanelResizerMin}
+      sidePanelResizerMax={sidePanelResizerMax}
+      onSidePanelWidthChange={setSidePanelWidth}
       timelineBarsVisible={timelineBarsVisible}
       viewRangeTime={viewRange.time}
       updateNextViewRangeTime={updateNextViewRangeTime}
@@ -249,14 +268,6 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
           <div className="TraceTimelineViewer--main" style={{ width: `${mainWidth}%` }}>
             {virtualizedView}
           </div>
-          {timelineBarsVisible && (
-            <VerticalResizer
-              position={1 - sidePanelWidth}
-              min={1 - Math.min(SIDE_PANEL_WIDTH_MAX, 1 - spanNameColumnWidth - MIN_TIMELINE_COLUMN_WIDTH)}
-              max={1 - SIDE_PANEL_WIDTH_MIN}
-              onChange={newPosition => setSidePanelWidth(1 - newPosition)}
-            />
-          )}
           <div className="TraceTimelineViewer--sidePanel" style={sidePanelStyle}>
             <SpanDetailSidePanel
               trace={trace}

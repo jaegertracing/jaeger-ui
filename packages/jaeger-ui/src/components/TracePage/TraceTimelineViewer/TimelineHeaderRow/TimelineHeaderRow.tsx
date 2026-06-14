@@ -23,7 +23,8 @@ type TimelineHeaderRowProps = {
   numTicks: number;
   onCollapseAll: () => void;
   onCollapseOne: () => void;
-  onColummWidthChange: (width: number) => void;
+  onColumnWidthChange: (width: number) => void;
+  onSidePanelWidthChange: (width: number) => void;
   onExpandAll: () => void;
   onExpandOne: () => void;
   resizerMax: number;
@@ -31,6 +32,8 @@ type TimelineHeaderRowProps = {
   sidePanelVisible: boolean;
   sidePanelWidth: number;
   sidePanelLabel: string;
+  sidePanelResizerMin: number;
+  sidePanelResizerMax: number;
   timelineBarsVisible: boolean;
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
@@ -45,7 +48,8 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
     numTicks,
     onCollapseAll,
     onCollapseOne,
-    onColummWidthChange,
+    onColumnWidthChange,
+    onSidePanelWidthChange,
     onExpandAll,
     onExpandOne,
     resizerMax,
@@ -53,6 +57,8 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
     sidePanelVisible,
     sidePanelWidth,
     sidePanelLabel,
+    sidePanelResizerMin,
+    sidePanelResizerMax,
     timelineBarsVisible,
     updateViewRangeTime,
     updateNextViewRangeTime,
@@ -89,7 +95,7 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
           </TimelineRow.Cell>
           <VerticalResizer
             position={nameColumnWidth}
-            onChange={onColummWidthChange}
+            onChange={onColumnWidthChange}
             min={0.15}
             max={resizerMax}
           />
@@ -99,6 +105,14 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
         <TimelineRow.Cell className="ub-flex ub-px2 TimelineHeaderRow--sidePanelCell" width={sidePanelWidth}>
           <h3 className="TimelineHeaderRow--title">{sidePanelLabel}</h3>
         </TimelineRow.Cell>
+      )}
+      {sidePanelVisible && timelineBarsVisible && (
+        <VerticalResizer
+          position={1 - sidePanelWidth}
+          onChange={position => onSidePanelWidthChange(1 - position)}
+          min={sidePanelResizerMin}
+          max={sidePanelResizerMax}
+        />
       )}
     </TimelineRow>
   );
