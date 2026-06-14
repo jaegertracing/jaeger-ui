@@ -39,6 +39,13 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
     props.onDetailToggled(props.span.spanID);
   };
 
+  const _detailToggleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      props.onDetailToggled(props.span.spanID);
+    }
+  };
+
   const {
     color,
     nameColumnWidth,
@@ -68,8 +75,10 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
               className="detail-row-expanded-accent"
               aria-checked="true"
               onClick={_detailToggle}
+              onKeyDown={_detailToggleKeyDown}
               role="switch"
               style={{ borderColor: color }}
+              tabIndex={0}
             />
           </span>
         </TimelineRow.Cell>
