@@ -1,11 +1,13 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import type { IOtelSpan } from '../../types/otel';
+import type { IAttribute } from '../../types/otel';
 
 export type GenAISpanKind = 'LLM_CALL' | 'TOOL_CALL' | 'AGENT' | 'RETRIEVAL' | 'UNKNOWN_GENAI' | 'STANDARD';
 
-const OPERATION_TO_KIND: Record<string, GenAISpanKind> = {
+type SpanAttrs = { attributes: ReadonlyArray<IAttribute> };
+
+const OPERATION_TO_KIND: Partial<Record<string, GenAISpanKind>> = {
   chat: 'LLM_CALL',
   text_completion: 'LLM_CALL',
   execute_tool: 'TOOL_CALL',
@@ -13,14 +15,19 @@ const OPERATION_TO_KIND: Record<string, GenAISpanKind> = {
   retrieval: 'RETRIEVAL',
 };
 
-export function classifySpan(span: IOtelSpan): GenAISpanKind {
-  const opAttr = span.attributes.find(a => a.key === 'gen_ai.operation.name');
-  if (opAttr) {
-    return OPERATION_TO_KIND[String(opAttr.value)] ?? 'UNKNOWN_GENAI';
+export function classifySpan(span: SpanAttrs): GenAISpanKind {
+  let hasGenAI = false;
+  for (const attr of span.attributes) {
+    if (attr.key === 'gen_ai.operation.name') {
+      return OPERATION_TO_KIND[String(attr.value)] ?? 'UNKNOWN_GENAI';
+    }
+    if (!hasGenAI && attr.key.startsWith('gen_ai.')) {
+      hasGenAI = true;
+    }
   }
-  return span.attributes.some(a => a.key.startsWith('gen_ai.')) ? 'UNKNOWN_GENAI' : 'STANDARD';
+  return hasGenAI ? 'UNKNOWN_GENAI' : 'STANDARD';
 }
 
-export function isGenAITrace(spans: ReadonlyArray<IOtelSpan>): boolean {
+export function isGenAITrace(spans: ReadonlyArray<SpanAttrs>): boolean {
   return spans.some(s => classifySpan(s) !== 'STANDARD');
 }
