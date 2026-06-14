@@ -34,6 +34,10 @@ describe('<OperationTableDetails>', () => {
     jest.clearAllMocks();
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it('does not explode', () => {
     const { container } = render(<OperationTableDetails {...props} />);
     expect(container).toBeInTheDocument();
@@ -67,6 +71,10 @@ describe('<OperationTableDetails> with data', () => {
   beforeEach(() => {
     originalProps = { ...props };
     jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it('render No data table', () => {
