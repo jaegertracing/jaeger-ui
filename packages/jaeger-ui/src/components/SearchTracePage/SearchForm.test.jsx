@@ -832,6 +832,12 @@ describe('validation', () => {
 
   it('should return `undefined` if the value is a populated string that adheres to expected format', () => {
     expect(validateDurationFields('100ms')).toBeUndefined();
+    expect(validateDurationFields('100 ms')).toBeUndefined();
+    expect(validateDurationFields('500us')).toBeUndefined();
+    expect(validateDurationFields('500 us')).toBeUndefined();
+    expect(validateDurationFields('1.2s')).toBeUndefined();
+    expect(validateDurationFields('1.2 s')).toBeUndefined();
+    expect(validateDurationFields('1h')).toBeUndefined();
   });
 });
 
