@@ -37,7 +37,7 @@ import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { useEmbeddedState } from '../../stores/embedded-store';
 import { useShallow } from 'zustand/react/shallow';
 import { useSearchTraces } from '../../hooks/useTraceDiscovery';
-import { OrderBy } from '../../model/order-by';
+import type { OrderBy } from '../../model/order-by';
 
 // export for tests
 export function SearchTracePageImpl() {

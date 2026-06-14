@@ -22,7 +22,7 @@ import NewWindowIcon from '../../common/NewWindowIcon';
 import SearchResultsDDG from '../../DeepDependencies/traces';
 import { getTracePageLink } from '../../TracePage/url';
 import * as orderBy from '../../../model/order-by';
-import { OrderBy } from '../../../model/order-by';
+import type { OrderBy } from '../../../model/order-by';
 import { getPercentageOfDuration } from '../../../utils/date';
 
 import { TraceSummary } from '../../../types/trace-summary';
@@ -66,14 +66,7 @@ export function SelectSort({ sortBy, handleSortChange }: SelectSortProps) {
   return (
     <label>
       Sort:{' '}
-      <SearchableSelect
-        value={sortBy}
-        onChange={(value: string) => {
-          if (Object.values(OrderBy).includes(value as OrderBy)) {
-            handleSortChange(value as OrderBy);
-          }
-        }}
-      >
+      <SearchableSelect value={sortBy} onChange={(value: OrderBy) => handleSortChange(value)}>
         <Option value={orderBy.MOST_RECENT}>Most Recent</Option>
         <Option value={orderBy.OLDEST_FIRST}>Oldest First</Option>
         <Option value={orderBy.LONGEST_FIRST}>Longest First</Option>

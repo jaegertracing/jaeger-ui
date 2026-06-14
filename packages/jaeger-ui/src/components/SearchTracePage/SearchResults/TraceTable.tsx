@@ -14,9 +14,11 @@ import { formatDuration, formatDurationCompact, formatDatetime } from '../../../
 import RelativeBar from '../../common/RelativeBar';
 import { toOrderBy, fromOrderBy } from '../../../model/search';
 import type { SortableColumnKey, SortDirection } from '../../../model/search';
-import { OrderBy } from '../../../model/order-by';
+import type { OrderBy } from '../../../model/order-by';
 import type { TracePageLink } from '../../TracePage/url';
 import { ServicePill, type ServiceEntry } from './ServicePills';
+
+const BOTH_DIRECTIONS: SortOrder[] = ['ascend', 'descend'];
 
 type TraceTableProps = {
   traceSummaries: TraceSummary[];
@@ -106,7 +108,7 @@ export default function TraceTable({
         },
         sorter: true,
         sortOrder: sortKey === 'traceName' ? sortOrder : undefined,
-        sortDirections: ['ascend', 'descend'] as SortOrder[],
+        sortDirections: BOTH_DIRECTIONS,
       },
       ...(showServicesColumn
         ? [
@@ -128,7 +130,7 @@ export default function TraceTable({
         render: (_: unknown, trace: TraceSummary) => trace.spanCount,
         sorter: true,
         sortOrder: sortKey === 'spans' ? sortOrder : undefined,
-        sortDirections: ['ascend', 'descend'] as SortOrder[],
+        sortDirections: BOTH_DIRECTIONS,
       },
       ...(showErrorsColumn
         ? [
@@ -156,7 +158,7 @@ export default function TraceTable({
                 ),
               sorter: true,
               sortOrder: sortKey === 'errors' ? sortOrder : undefined,
-              sortDirections: ['ascend', 'descend'] as SortOrder[],
+              sortDirections: BOTH_DIRECTIONS,
             },
           ]
         : []),
@@ -175,7 +177,7 @@ export default function TraceTable({
         ),
         sorter: true,
         sortOrder: sortKey === 'duration' ? sortOrder : undefined,
-        sortDirections: ['ascend', 'descend'] as SortOrder[],
+        sortDirections: BOTH_DIRECTIONS,
       },
       {
         title: 'Start Time',
@@ -202,7 +204,7 @@ export default function TraceTable({
         },
         sorter: true,
         sortOrder: sortKey === 'startTime' ? sortOrder : undefined,
-        sortDirections: ['ascend', 'descend'] as SortOrder[],
+        sortDirections: BOTH_DIRECTIONS,
       },
     ];
 
@@ -258,7 +260,6 @@ export default function TraceTable({
 
   return (
     <Table<TraceSummary>
-      className="TraceTable"
       columns={columns}
       dataSource={traceSummaries}
       rowKey="traceID"
