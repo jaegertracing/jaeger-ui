@@ -243,11 +243,16 @@ function setTrace(state: TTraceTimeline, { uiFind, trace }: TTraceUiFindValue) {
 }
 
 function setColumnWidth(state: TTraceTimeline, { width }: TWidthValue): TTraceTimeline {
-  // In side-panel mode the name column must leave room for both the side panel and timeline bars.
-  const maxWidth =
-    state.detailPanelMode === 'sidepanel'
+  // In side-panel mode the name column must leave room for the side panel. When timeline bars are
+  // visible it must also reserve MIN_TIMELINE_COLUMN_WIDTH for them; when bars are hidden the side
+  // panel absorbs the timeline column (sidePanel = 1 - spanNameColumnWidth), so the only bound is
+  // keeping the side panel >= SIDE_PANEL_WIDTH_MIN — matching the resizer max in TraceTimelineViewer.
+  let maxWidth = SPAN_NAME_COLUMN_WIDTH_MAX;
+  if (state.detailPanelMode === 'sidepanel') {
+    maxWidth = state.timelineBarsVisible
       ? Math.min(SPAN_NAME_COLUMN_WIDTH_MAX, 1 - state.sidePanelWidth - MIN_TIMELINE_COLUMN_WIDTH)
-      : SPAN_NAME_COLUMN_WIDTH_MAX;
+      : Math.min(SPAN_NAME_COLUMN_WIDTH_MAX, 1 - SIDE_PANEL_WIDTH_MIN);
+  }
   const spanNameColumnWidth = Math.min(Math.max(width, SPAN_NAME_COLUMN_WIDTH_MIN), maxWidth);
   return { ...state, spanNameColumnWidth };
 }

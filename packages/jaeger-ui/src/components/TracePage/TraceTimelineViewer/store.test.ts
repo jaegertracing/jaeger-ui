@@ -178,6 +178,18 @@ describe('trace timeline zustand stores', () => {
         useLayoutPrefsStore.getState().setSpanNameColumnWidth(0.99);
         expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(0.65);
       });
+
+      it('does not reserve a timeline column when bars are hidden in sidepanel mode', () => {
+        // Bars hidden: the side panel absorbs the timeline column, so the name column max is bounded
+        // only by the side panel min: max = min(0.85, 1 - SIDE_PANEL_WIDTH_MIN) = 0.8 (vs 0.65 with bars).
+        useLayoutPrefsStore.setState({
+          detailPanelMode: 'sidepanel',
+          sidePanelWidth: 0.3,
+          timelineBarsVisible: false,
+        });
+        useLayoutPrefsStore.getState().setSpanNameColumnWidth(0.99);
+        expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(0.8);
+      });
     });
 
     describe('setSidePanelWidth', () => {
