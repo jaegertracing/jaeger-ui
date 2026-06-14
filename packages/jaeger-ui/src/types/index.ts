@@ -6,7 +6,6 @@ import { SearchQuery } from './search';
 import tNil from './TNil';
 import { IOtelTrace } from './otel';
 import TTraceTimeline from './TTraceTimeline';
-import { MetricsReduxState } from './metrics';
 
 export type TNil = tNil;
 
@@ -40,5 +39,4 @@ export type ReduxState = {
     rawTraces?: unknown[];
   };
   traceTimeline: TTraceTimeline;
-  metrics: MetricsReduxState;
 };

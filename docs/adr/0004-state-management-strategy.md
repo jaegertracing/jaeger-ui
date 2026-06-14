@@ -39,7 +39,7 @@ These should be migrated to **React Query**:
 | `trace` | Map of `FetchedTrace` and `search` results | `TracePage`, `SearchPage` |
 | ~~`services`~~ (removed) | ~~Lists of services and operations~~ → React Query (`useServices` / `useSpanNames`, Phase 2c) | `SearchPage`, `MonitorPage`, `DeepDependencies` |
 | ~~`dependencies`~~ (removed) | ~~Service dependency graph data~~ → React Query (`useDependenciesQuery`, Phase 2d) | `DependencyGraph` |
-| `metrics` | Sytem performance metrics (latencies, errors) | `MonitorPage` |
+| ~~`metrics`~~ (removed) | ~~System performance metrics (latencies, errors)~~ → React Query (`useServiceMetricsQuery` / `useOperationMetricsQuery`, Phase 2f) | `MonitorPage` |
 | ~~`ddg`~~ (removed) | ~~Deep Dependency Graph data~~ → React Query (`useDeepDependencyGraphQuery`, Phase 2e) | `DeepDependencies` |
 | `archive` | Status of archived traces | `TracePage` |
 
@@ -1154,11 +1154,25 @@ queryKey: ['ddg', service, operation, start, end]
 
 **Components using hook**: `DeepDependencies` (default export); traces embed passes `modelHash` to the bridge only.
 
-#### ⬜ 2f. Monitor metrics
+#### ✅ 2f. Monitor metrics
 
 **Redux removed**: `src/reducers/metrics.ts`.
 
-**New hooks**: one hook per metric dimension, mirroring current loading/error shapes.
+**New hooks** (in `src/components/Monitor/ServicesView/useMetricsQuery.ts`):
+
+- `useServiceMetricsQuery(serviceName, params)` - fires five parallel `fetchMetrics` calls (latency p50/p75/p95, call-rate, error-rate) via `Promise.allSettled`, then applies `transformServiceMetrics` to produce `{ serviceMetrics, serviceError }`.
+- `useOperationMetricsQuery(serviceName, params)` - fires three parallel `fetchMetrics` calls with `groupByOperation: true`, then applies `transformOperationMetrics` to produce `{ serviceOpsMetrics, opsError }`.
+
+```ts
+queryKey: ['serviceMetrics', serviceName, params]
+queryKey: ['operationMetrics', serviceName, params]
+```
+
+Both hooks are **disabled** (`enabled: false`) when `serviceName` or `params` is `undefined`, so no fetch happens before services are loaded.
+
+The transformation logic previously in the reducer (`fetchServiceMetricsDone`, `fetchOpsMetricsDone`) is now in the exported helper functions `transformServiceMetrics` and `transformOperationMetrics`, which are also unit-tested directly.
+
+**Components using hooks**: `MonitorATMServicesViewImpl` (default export `MonitorPage`), which no longer accepts Redux props and instead reads data directly from the hooks.
 
 #### ⬜ 2g. Path-agnostic decorations
 
