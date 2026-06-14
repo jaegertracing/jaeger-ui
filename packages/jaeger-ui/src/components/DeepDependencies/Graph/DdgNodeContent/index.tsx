@@ -4,30 +4,22 @@
 import * as React from 'react';
 import { Popover } from 'antd';
 import cx from 'classnames';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate, NavigateFunction } from 'react-router-dom';
 import { TLayoutVertex } from '@jaegertracing/plexus/lib/types';
+import { IoLocate, IoEyeOff, IoSearch } from 'react-icons/io5';
+import { connect } from 'react-redux';
 import { IoLocate, IoEyeOff } from 'react-icons/io5';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
 import calcPositioning from './calc-positioning';
-import {
-  MAX_LENGTH,
-  MAX_LINKED_TRACES,
-  MIN_LENGTH,
-  OP_PADDING_TOP,
-  PARAM_NAME_LENGTH,
-  PROGRESS_BAR_STROKE_WIDTH,
-  RADIUS,
-  WORD_RX,
-} from './constants';
+import { OP_PADDING_TOP, PROGRESS_BAR_STROKE_WIDTH, RADIUS, WORD_RX } from './constants';
 import { setFocusIcon } from './node-icons';
 import { trackSetFocus, trackViewTraces, trackVertexSetOperation } from '../../index.track';
 import { getUrl } from '../../url';
 import BreakableText from '../../../common/BreakableText';
 import FilteredList from '../../../common/FilteredList';
-import NewWindowIcon from '../../../common/NewWindowIcon';
-import { getUrl as getSearchUrl } from '../../../SearchTracePage/url';
+import { getUrl as getSearchUrl, getUrlState } from '../../../SearchTracePage/url';
 import padActions from '../../../../actions/path-agnostic-decorations';
 import {
   ECheckedStatus,
@@ -66,6 +58,8 @@ type TProps = TDispatchProps &
     updateGenerationVisibility: (vertexKey: string, direction: EDirection) => void;
     vertex: TDdgVertex;
     vertexKey: string;
+    search: string;
+    navigate: NavigateFunction;
   };
 
 type TState = {
@@ -227,6 +221,111 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
 
   const viewTraces = React.useCallback(() => {
     trackViewTraces();
+    const { operation, search, service, navigate } = this.props;
+    const { traceID: _traceID, spanLinks: _spanLinks, ...urlState } = getUrlState(search);
+
+    navigate(
+      getSearchUrl({
+        ...urlState,
+        service,
+        operation: typeof operation === 'string' ? operation : undefined,
+      })
+    );
+  };
+
+  private onMouseUx = (event: React.MouseEvent<HTMLElement>) => {
+    const { getGenerationVisibility, getVisiblePathElems, setViewModifier, vertexKey } = this.props;
+    const hovered = event.type === 'mouseover';
+    const visIndices = hovered
+      ? (getVisiblePathElems(vertexKey) || []).map(({ visibilityIdx }) => {
+          this.hoveredIndices.add(visibilityIdx);
+          return visibilityIdx;
+        })
+      : Array.from(this.hoveredIndices);
+    setViewModifier(visIndices, EViewModifier.Hovered, hovered);
+
+    if (hovered) {
+      if (this.state.shouldPositionTooltipBelow === undefined) this.checkTooltipPosition();
+      this.setState({
+        childrenVisibility: getGenerationVisibility(vertexKey, EDirection.Downstream),
+        parentVisibility: getGenerationVisibility(vertexKey, EDirection.Upstream),
+      });
+    } else this.hoveredIndices.clear();
+  };
+
+  render() {
+    const { childrenVisibility, parentVisibility } = this.state;
+    const {
+      decorationProgressbar,
+      decorationValue,
+      focalNodeUrl,
+      isFocalNode,
+      isPositioned,
+      operation,
+      service,
+    } = this.props;
+
+    const { radius, svcWidth, opWidth, svcMarginTop } = calcPositioning(service, operation);
+    const trueRadius = decorationProgressbar ? RADIUS - PROGRESS_BAR_STROKE_WIDTH : RADIUS;
+    const scaleFactor = trueRadius / radius;
+    const transform = `translate(${RADIUS - radius}px, ${RADIUS - radius}px) scale(${scaleFactor})`;
+
+    const menuItems: IActionMenuItem[] = [
+      {
+        id: 'set-focus',
+        label: 'Set focus',
+        icon: setFocusIcon,
+        href: focalNodeUrl || undefined,
+        onClick: trackSetFocus,
+        isVisible: Boolean(focalNodeUrl),
+      },
+      {
+        id: 'view-traces',
+        label: 'View traces',
+        icon: <IoSearch />,
+        onClick: this.viewTraces,
+      },
+      {
+        id: 'focus-paths',
+        label: 'Focus paths through this node',
+        icon: <IoLocate />,
+        onClick: this.focusPaths,
+        isVisible: !isFocalNode,
+      },
+      {
+        id: 'hide-node',
+        label: 'Hide node',
+        icon: <IoEyeOff />,
+        onClick: this.hideVertex,
+        isVisible: !isFocalNode,
+      },
+      {
+        id: 'view-parents',
+        label: 'View Parents',
+        icon: null,
+        onClick: this.updateParents,
+        isVisible: Boolean(parentVisibility),
+        checkboxProps: parentVisibility
+          ? {
+              checked: parentVisibility === ECheckedStatus.Full,
+              indeterminate: parentVisibility === ECheckedStatus.Partial,
+            }
+          : undefined,
+      },
+      {
+        id: 'view-children',
+        label: 'View Children',
+        icon: null,
+        onClick: this.updateChildren,
+        isVisible: Boolean(childrenVisibility),
+        checkboxProps: childrenVisibility
+          ? {
+              checked: childrenVisibility === ECheckedStatus.Full,
+              indeterminate: childrenVisibility === ECheckedStatus.Partial,
+            }
+          : undefined,
+      },
+    ];
     const elems = getVisiblePathElems(vertexKey);
     if (elems) {
       const urlIds: Set<string> = new Set();
@@ -409,6 +508,18 @@ export function mapDispatchToProps(dispatch: Dispatch): TDispatchProps {
   };
 }
 
+const ConnectedDdgNodeContent = connect(
+  extractDecorationFromState,
+  mapDispatchToProps
+)(UnconnectedDdgNodeContent);
+
+// search is always injected from useLocation(); callers cannot supply it.
+type DdgNodeContentProps = Omit<React.ComponentProps<typeof ConnectedDdgNodeContent>, 'search' | 'navigate'>;
+
+function DdgNodeContent(props: DdgNodeContentProps) {
+  const { search } = useLocation();
+  const navigate = useNavigate();
+  return <ConnectedDdgNodeContent {...props} search={search} navigate={navigate} />;
 type DdgNodeContentProps = Omit<TProps, keyof TDispatchProps | keyof TDecorationFromState | 'search'>;
 
 function DdgNodeContent(props: DdgNodeContentProps) {
