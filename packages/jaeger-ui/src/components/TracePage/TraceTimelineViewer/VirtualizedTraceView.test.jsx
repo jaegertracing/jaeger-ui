@@ -544,6 +544,80 @@ describe('<VirtualizedTraceViewImpl>', () => {
       expect(result).toEqual([]);
     });
 
+    it('merges consecutive child and parent critical path sections when row is collapsed', () => {
+      const childSpan = {
+        ...trace.spans[1],
+        spanID: 'child',
+        hasChildren: false,
+        childSpans: [],
+      };
+      const parentSpan = {
+        ...trace.spans[0],
+        spanID: 'parent',
+        hasChildren: true,
+        childSpans: [childSpan],
+      };
+      const customTrace = {
+        ...trace,
+        spans: [parentSpan, childSpan],
+        spanMap: new Map([
+          [parentSpan.spanID, parentSpan],
+          [childSpan.spanID, childSpan],
+        ]),
+      };
+      const fakeCriticalPath = [
+        { spanID: 'parent', sectionStart: 10, sectionEnd: 20 },
+        { spanID: 'child', sectionStart: 0, sectionEnd: 10 },
+      ];
+
+      const result = getVisibleCriticalPathSections(
+        true,
+        false,
+        customTrace,
+        parentSpan,
+        fakeCriticalPath,
+        buildCriticalPathIndex(fakeCriticalPath),
+        new Map()
+      );
+
+      expect(result).toEqual([{ spanID: 'parent', sectionStart: 0, sectionEnd: 20 }]);
+    });
+
+    it('collects critical path sections from descendants of pruned children', () => {
+      const grandchildSpan = {
+        ...trace.spans[2],
+        spanID: 'grandchild',
+        hasChildren: false,
+        childSpans: [],
+        resource: { ...trace.spans[2].resource, serviceName: 'svc-grandchild' },
+      };
+      const prunedChild = {
+        ...trace.spans[1],
+        spanID: 'pruned-child',
+        hasChildren: true,
+        childSpans: [grandchildSpan],
+        resource: { ...trace.spans[1].resource, serviceName: 'svc-pruned' },
+      };
+      const parentSpan = {
+        ...trace.spans[0],
+        spanID: 'parent',
+        hasChildren: true,
+        childSpans: [prunedChild],
+      };
+      const fakeCriticalPath = [
+        { spanID: 'pruned-child', sectionStart: 10, sectionEnd: 20 },
+        { spanID: 'grandchild', sectionStart: 20, sectionEnd: 30 },
+      ];
+
+      const result = buildPrunedCriticalPaths(
+        buildCriticalPathIndex(fakeCriticalPath),
+        new Set(['svc-pruned']),
+        [parentSpan, prunedChild, grandchildSpan]
+      );
+
+      expect(result.get('parent')).toEqual(fakeCriticalPath);
+    });
+
     it('merges only pruned subtree critical path when hasPrunedChildren is true', () => {
       const prunedChild = {
         spanID: 'pruned-child',
@@ -571,6 +645,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
         { spanID: 'pruned-child', sectionStart: 10, sectionEnd: 20 },
         { spanID: 'visible-child', sectionStart: 20, sectionEnd: 30 },
       ];
+      const pathBySpanID = buildCriticalPathIndex(fakeCriticalPath);
 
       const result = getVisibleCriticalPathSections(
         false,
@@ -578,8 +653,8 @@ describe('<VirtualizedTraceViewImpl>', () => {
         customTrace,
         parentSpan,
         fakeCriticalPath,
-        buildCriticalPathIndex(fakeCriticalPath),
-        buildPrunedCriticalPaths(fakeCriticalPath, new Set(['svc-pruned']), customTrace.spans)
+        pathBySpanID,
+        buildPrunedCriticalPaths(pathBySpanID, new Set(['svc-pruned']), customTrace.spans)
       );
       const spanIDs = result.map(s => s.spanID);
       expect(spanIDs).toContain('parent');

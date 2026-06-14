@@ -56,12 +56,11 @@ export function buildCriticalPathIndex(criticalPath: CriticalPathSection[]) {
 }
 
 export function buildPrunedCriticalPaths(
-  criticalPath: CriticalPathSection[],
+  pathBySpanID: ReturnType<typeof buildCriticalPathIndex>,
   prunedServices: Set<string>,
   spans: ReadonlyArray<IOtelSpan>
 ): Map<string, CriticalPathSection[]> {
   if (prunedServices.size === 0) return new Map();
-  const pathBySpanID = buildCriticalPathIndex(criticalPath);
   const result = new Map<string, CriticalPathSection[]>();
 
   const collectFromSubtree = (s: IOtelSpan, sections: CriticalPathSection[]) => {

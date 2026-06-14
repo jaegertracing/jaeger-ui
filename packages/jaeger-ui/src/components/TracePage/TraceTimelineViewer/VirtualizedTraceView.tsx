@@ -122,11 +122,13 @@ const memoizedGenerateRowStates = memoizeOne(generateRowStatesFromTrace);
 const memoizedViewBoundsFunc = memoizeOne(createViewedBoundsFunc, _isEqual);
 const memoizedGetCssClasses = memoizeOne(getCssClasses, _isEqual);
 const memoizedCriticalPathsBySpanID = memoizeOne(buildCriticalPathIndex);
+const emptyCriticalPathIndex: ReturnType<typeof buildCriticalPathIndex> = {};
+const emptyPrunedPaths = new Map<string, CriticalPathSection[]>();
 
 /**
  * Precompute bubbled critical path sections for all parents with pruned children.
  * Returns a map from parent spanID → merged critical path sections from pruned subtrees.
- * Memoized so it runs once per render cycle (when criticalPath/prunedServices/spans change).
+ * Memoized so it runs once per render cycle (when pathBySpanID/prunedServices/spans change).
  */
 const memoizedPrunedCriticalPaths = memoizeOne(buildPrunedCriticalPaths);
 
@@ -377,17 +379,32 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
       const hasPrunedChildren =
         prunedServices.size > 0 &&
         span.childSpans.some(child => prunedServices.has(child.resource.serviceName));
-      const pathBySpanID = memoizedCriticalPathsBySpanID(criticalPath);
-      const prunedPaths = memoizedPrunedCriticalPaths(criticalPath, prunedServices, trace.spans);
-      const criticalPathSections = getVisibleCriticalPathSections(
-        isCollapsed,
-        hasPrunedChildren,
-        trace,
-        span,
-        criticalPath,
-        pathBySpanID,
-        prunedPaths
-      );
+      let criticalPathSections: CriticalPathSection[];
+      if (isCollapsed) {
+        criticalPathSections = getVisibleCriticalPathSections(
+          isCollapsed,
+          hasPrunedChildren,
+          trace,
+          span,
+          criticalPath,
+          emptyCriticalPathIndex,
+          emptyPrunedPaths
+        );
+      } else {
+        const pathBySpanID = memoizedCriticalPathsBySpanID(criticalPath);
+        const prunedPaths = hasPrunedChildren
+          ? memoizedPrunedCriticalPaths(pathBySpanID, prunedServices, trace.spans)
+          : emptyPrunedPaths;
+        criticalPathSections = getVisibleCriticalPathSections(
+          isCollapsed,
+          hasPrunedChildren,
+          trace,
+          span,
+          criticalPath,
+          pathBySpanID,
+          prunedPaths
+        );
+      }
       // Check for direct child "server" span if the span is a "client" span.
       let rpc = null;
       if (isCollapsed) {
