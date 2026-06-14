@@ -136,7 +136,6 @@ describe('<TraceTagOverview>', () => {
 
     await act(async () => {
       componentInstance.setState({
-        ...componentInstance.state,
         tableValue: [
           makeRow('parent-a', false, 'none'),
           makeRow('detail-a1', true, 'parent-a', { hasSubgroupValue: false }),
@@ -181,7 +180,6 @@ describe('<TraceTagOverview>', () => {
     // 6. Should trigger onClickOption when clicking on name cell with sql.query selector
     await act(async () => {
       componentInstance.setState({
-        ...componentInstance.state,
         valueNameSelector1: 'sql.query',
         tableValue: [
           {
@@ -229,7 +227,6 @@ describe('<TraceTagOverview>', () => {
     // Clean up popup
     await act(async () => {
       componentInstance.setState({
-        ...componentInstance.state,
         showPopup: false,
       });
     });
@@ -237,7 +234,6 @@ describe('<TraceTagOverview>', () => {
     // 7. Should handle onClickOption when hasSubgroupValue is false
     await act(async () => {
       componentInstance.setState({
-        ...componentInstance.state,
         valueNameSelector1: 'sql.query',
         tableValue: [
           {
@@ -293,7 +289,6 @@ describe('<TraceTagOverview>', () => {
     // 9. Should test sorter function with items that have no hasSubgroupValue
     await act(async () => {
       componentInstance.setState({
-        ...componentInstance.state,
         tableValue: [
           {
             name: 'item1',
