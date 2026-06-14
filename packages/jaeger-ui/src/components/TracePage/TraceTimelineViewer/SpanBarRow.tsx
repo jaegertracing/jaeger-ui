@@ -5,7 +5,7 @@ import React, { useCallback } from 'react';
 import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward } from 'react-icons/io5';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
-import { formatDurationCompact, ViewedBoundsFunctionType } from './utils';
+import { formatDurationCompact, ViewedBoundsFunctionType, SpanTreeOffsetState } from './utils';
 import SpanTreeOffset from './SpanTreeOffset';
 import SpanBar from './SpanBar';
 import Ticks from './Ticks';
@@ -49,6 +49,7 @@ type SpanBarRowProps = {
   getViewedBounds: ViewedBoundsFunctionType;
   traceStartTime: number;
   span: IOtelSpan;
+  treeOffsetMap: Map<string, SpanTreeOffsetState>;
   focusSpan: (spanID: string) => void;
   traceDuration: number;
   useOtelTerms: boolean;
@@ -80,6 +81,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   getViewedBounds,
   traceStartTime,
   span,
+  treeOffsetMap,
   focusSpan,
   traceDuration,
   onDetailToggled,
@@ -130,6 +132,11 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   const hasLinks = span.links && span.links.length > 0;
   const hasInboundLinks = span.inboundLinks && span.inboundLinks.length > 0;
 
+  const treeOffsetState = treeOffsetMap.get(span.spanID) ?? {
+    ancestors: [],
+    isLastChild: false,
+  };
+
   return (
     <TimelineRow
       className={`
@@ -144,9 +151,12 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
         <div className={`span-name-wrapper ${isMatchingFilter ? 'is-matching-filter' : ''}`}>
           <SpanTreeOffset
             childrenVisible={isChildrenExpanded}
-            span={span}
+            spanID={span.spanID}
+            hasChildren={isParent}
+            childCount={span.childSpans.length}
             onClick={isParent ? _childrenToggle : undefined}
             color={color}
+            {...treeOffsetState}
           />
           <a
             className={`span-name ${isDetailExpanded ? 'is-detail-expanded' : ''}`}

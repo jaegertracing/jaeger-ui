@@ -30,6 +30,8 @@ describe('<SpanDetailRow>', () => {
     durationMicros: 100n,
     attributes: [],
     events: [],
+    hasChildren: false,
+    childSpans: [],
     resource: {
       serviceName: 'service',
       attributes: [],
@@ -55,6 +57,7 @@ describe('<SpanDetailRow>', () => {
     currentViewRangeTime: [0, 100],
     traceDuration: 1000,
     useOtelTerms: false,
+    treeOffsetMap: new Map([['some-id', { ancestors: [], isLastChild: false }]]),
   };
 
   beforeEach(() => {
@@ -91,7 +94,7 @@ describe('<SpanDetailRow>', () => {
     expect(MockSpanTreeOffset).toHaveBeenCalledTimes(1);
     expect(MockSpanTreeOffset).toHaveBeenCalledWith(
       expect.objectContaining({
-        span: props.span,
+        spanID: props.span.spanID,
         isDetailRow: true,
       })
     );

@@ -8,6 +8,7 @@ import {
   spanContainsErredSpan,
   isKindClient,
   isKindProducer,
+  buildTreeOffsetMap,
 } from './utils';
 
 import traceGenerator from '../../../demo/trace-generators';
@@ -157,6 +158,116 @@ describe('TraceTimelineViewer/utils', () => {
     it('returns false when span kind is not PRODUCER', () => {
       const span = { kind: SpanKind.CLIENT };
       expect(isKindProducer(span)).toBe(false);
+    });
+  });
+
+  describe('buildTreeOffsetMap()', () => {
+    // Minimal span factory — only the fields touched by buildTreeOffsetMap.
+    const makeSpan = (spanID, depth, parentSpan, childSpans, serviceName = 'svc') => ({
+      spanID,
+      depth,
+      parentSpan: parentSpan ?? null,
+      childSpans: childSpans ?? [],
+      resource: { serviceName },
+    });
+
+    it('returns empty map for empty span array', () => {
+      const result = buildTreeOffsetMap([]);
+      expect(result.size).toBe(0);
+    });
+
+    it('root span gets empty ancestors and isLastChild=false', () => {
+      const root = makeSpan('root', 0, null, []);
+      const map = buildTreeOffsetMap([root]);
+      expect(map.get('root')).toEqual({
+        ancestors: [],
+        isLastChild: false,
+      });
+    });
+
+    it('single child gets one ancestor entry and isLastChild=true', () => {
+      const root = makeSpan('root', 0, null, [], 'root-svc');
+      const child = makeSpan('child', 1, root, [], 'child-svc');
+      root.childSpans = [child];
+      const map = buildTreeOffsetMap([root, child]);
+      const childState = map.get('child');
+      expect(childState.ancestors).toHaveLength(1);
+      expect(childState.ancestors[0].spanID).toBe('root');
+      expect(childState.isLastChild).toBe(true);
+    });
+
+    it('siblings share the same ancestors array object (referential equality)', () => {
+      const root = makeSpan('root', 0, null, [], 'root-svc');
+      const c1 = makeSpan('c1', 1, root, [], 'svc');
+      const c2 = makeSpan('c2', 1, root, [], 'svc');
+      root.childSpans = [c1, c2];
+      const map = buildTreeOffsetMap([root, c1, c2]);
+      // Both children have root as their only ancestor. The array should be the
+      // same object (shared, not re-allocated per sibling).
+      expect(map.get('c1').ancestors).toBe(map.get('c2').ancestors);
+    });
+
+    it('first sibling has isLastChild=false, last sibling has isLastChild=true', () => {
+      const root = makeSpan('root', 0, null, [], 'root-svc');
+      const c1 = makeSpan('c1', 1, root, [], 'svc');
+      const c2 = makeSpan('c2', 1, root, [], 'svc');
+      root.childSpans = [c1, c2];
+      const map = buildTreeOffsetMap([root, c1, c2]);
+      expect(map.get('c1').isLastChild).toBe(false);
+      expect(map.get('c2').isLastChild).toBe(true);
+    });
+
+    it('ancestor isTerminated reflects whether that ancestor was the last child of its parent', () => {
+      // Tree: root -> [c1, c2];  c1 -> [gc1]
+      // c1 is NOT last child of root (c2 is). So when rendering gc1,
+      // the ancestor entry for root should have isTerminated=false (bar continues down).
+      const root = makeSpan('root', 0, null, [], 'root-svc');
+      const c1 = makeSpan('c1', 1, root, [], 'svc');
+      const c2 = makeSpan('c2', 1, root, [], 'svc');
+      const gc1 = makeSpan('gc1', 2, c1, [], 'svc');
+      root.childSpans = [c1, c2];
+      c1.childSpans = [gc1];
+      const map = buildTreeOffsetMap([root, c1, gc1, c2]);
+      const gc1State = map.get('gc1');
+      // ancestors for gc1: [root, c1]
+      expect(gc1State.ancestors).toHaveLength(2);
+      // root is not terminated (c2 comes after c1 under root)
+      expect(gc1State.ancestors[0].spanID).toBe('root');
+      expect(gc1State.ancestors[0].isTerminated).toBe(false);
+      expect(gc1State.isLastChild).toBe(true); // gc1 is last child of c1
+    });
+
+    it('ancestor isTerminated is true for a descendant under the last sibling', () => {
+      // Tree: root -> [c1, c2]; c2 -> [gc2]
+      // c2 IS the last child of root. When rendering gc2 the ancestor entry
+      // for root must have isTerminated=true (bar stops — no more siblings).
+      const root = makeSpan('root', 0, null, [], 'root-svc');
+      const c1 = makeSpan('c1', 1, root, [], 'svc');
+      const c2 = makeSpan('c2', 1, root, [], 'svc');
+      const gc2 = makeSpan('gc2', 2, c2, [], 'svc');
+      root.childSpans = [c1, c2];
+      c2.childSpans = [gc2];
+      const map = buildTreeOffsetMap([root, c1, c2, gc2]);
+      const gc2State = map.get('gc2');
+      // ancestors for gc2: [root, c2]
+      expect(gc2State.ancestors).toHaveLength(2);
+      // root.isTerminated must be true — c2 is root's last child
+      expect(gc2State.ancestors[0].spanID).toBe('root');
+      expect(gc2State.ancestors[0].isTerminated).toBe(true);
+      // c2.isTerminated must be true — gc2 is c2's last child
+      expect(gc2State.ancestors[1].spanID).toBe('c2');
+      expect(gc2State.ancestors[1].isTerminated).toBe(true);
+      expect(gc2State.isLastChild).toBe(true);
+    });
+
+    it('grandchild depth produces correct ancestor chain length', () => {
+      const root = makeSpan('root', 0, null, [], 'svc');
+      const child = makeSpan('child', 1, root, [], 'svc');
+      const grandchild = makeSpan('gc', 2, child, [], 'svc');
+      root.childSpans = [child];
+      child.childSpans = [grandchild];
+      const map = buildTreeOffsetMap([root, child, grandchild]);
+      expect(map.get('gc').ancestors).toHaveLength(2);
     });
   });
 });

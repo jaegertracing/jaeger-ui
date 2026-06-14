@@ -9,9 +9,9 @@ import SpanBarRow from './SpanBarRow';
 import SpanBar from './SpanBar';
 
 vi.mock('./SpanTreeOffset', () => ({
-  default: jest.fn(({ span, childrenVisible, onClick }) => (
+  default: jest.fn(({ spanID, childrenVisible, onClick }) => (
     <div data-testid="span-tree-offset" onClick={onClick}>
-      SpanTreeOffset: {span.spanID} - {childrenVisible ? 'expanded' : 'collapsed'}
+      SpanTreeOffset: {spanID} - {childrenVisible ? 'expanded' : 'collapsed'}
     </div>
   )),
 }));
@@ -78,6 +78,8 @@ describe('<SpanBarRow>', () => {
       instrumentationScope: { name: 'scope' },
       depth: 0,
       hasChildren: true,
+      childSpans: [],
+      parentSpan: null,
       relativeStartTime: 100,
       inboundLinks: [],
       warnings: null,
@@ -86,6 +88,7 @@ describe('<SpanBarRow>', () => {
     traceDuration: 1000,
     focusSpan: jest.fn(),
     useOtelTerms: false,
+    treeOffsetMap: new Map([['some-id', { ancestors: [], isLastChild: false }]]),
   };
 
   beforeEach(() => {

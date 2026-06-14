@@ -71,6 +71,8 @@ describe('<SpanDetailRow> icon behavior', () => {
     currentViewRangeTime: [0, 100],
     traceDuration: 1000,
     useOtelTerms: false,
+    timelineBarsVisible: true,
+    treeOffsetMap: new Map([]),
   };
 
   it('does not render expand/collapse icon even when span has children', () => {
