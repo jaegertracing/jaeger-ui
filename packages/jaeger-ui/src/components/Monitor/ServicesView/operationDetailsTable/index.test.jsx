@@ -34,6 +34,10 @@ describe('<OperationTableDetails>', () => {
     jest.clearAllMocks();
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it('does not explode', () => {
     const { container } = render(<OperationTableDetails {...props} />);
     expect(container).toBeInTheDocument();
@@ -69,156 +73,94 @@ describe('<OperationTableDetails> with data', () => {
     jest.clearAllMocks();
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it('render No data table', () => {
     const { container } = render(<OperationTableDetails {...props} loading={false} />);
     expect(container.querySelector('table')).toBeInTheDocument();
   });
 
-  it('render some values in the table', () => {
-    const { container } = render(
-      <OperationTableDetails {...props} data={serviceOpsMetrics} loading={false} />
-    );
-    expect(container.querySelector('table')).toBeInTheDocument();
-    expect(screen.getByText('/PlaceOrder')).toBeInTheDocument();
-  });
+  it('renders data, formats values correctly, supports sorting, row hover highlights, and tracks events', () => {
+    const trackSortOperationsSpy = jest.spyOn(track, 'trackSortOperations');
+    const trackViewTracesSpy = jest.spyOn(track, 'trackViewTraces');
 
-  it('render latency in seconds in the table', () => {
-    const cloneServiceOpsMetrics = { ...serviceOpsMetrics[0] };
-    cloneServiceOpsMetrics.latency = 8000;
-    render(<OperationTableDetails {...props} data={[cloneServiceOpsMetrics]} loading={false} />);
-    expect(screen.getByText('8s')).toBeInTheDocument();
-  });
-
-  it('render lower than 0.1 request rate value', () => {
-    const cloneServiceOpsMetrics = { ...serviceOpsMetrics[0] };
-    cloneServiceOpsMetrics.requests = 0.02;
-    render(<OperationTableDetails {...props} data={[cloneServiceOpsMetrics]} loading={false} />);
-    expect(screen.getByText('< 0.1 req/s')).toBeInTheDocument();
-  });
-
-  it('render request rate number with more than 2 decimal places value', () => {
-    const cloneServiceOpsMetrics = { ...serviceOpsMetrics[0] };
-    cloneServiceOpsMetrics.requests = 0.2888;
-    render(<OperationTableDetails {...props} data={[cloneServiceOpsMetrics]} loading={false} />);
-    expect(screen.getByText('0.28 req/s')).toBeInTheDocument();
-  });
-
-  it('render lower than 0.1 error rate', () => {
-    const cloneServiceOpsMetrics = { ...serviceOpsMetrics[0] };
-    cloneServiceOpsMetrics.errRates = 0.00001;
-    const { container } = render(
-      <OperationTableDetails {...props} data={[cloneServiceOpsMetrics]} loading={false} />
-    );
-    expect(container.querySelector('table')).toBeInTheDocument();
-  });
-
-  it('render error rate with more than 2 decimal places value', () => {
-    const cloneServiceOpsMetrics = { ...serviceOpsMetrics[0] };
-    cloneServiceOpsMetrics.latency = 33.333333;
-    const { container } = render(
-      <OperationTableDetails {...props} data={[cloneServiceOpsMetrics]} loading={false} />
-    );
-    expect(container.querySelector('table')).toBeInTheDocument();
-  });
-
-  it('render lower than 0.1 P95 latency', () => {
-    const cloneServiceOpsMetrics = { ...serviceOpsMetrics[0] };
-    cloneServiceOpsMetrics.latency = 0.00001;
-    const { container } = render(
-      <OperationTableDetails {...props} data={[cloneServiceOpsMetrics]} loading={false} />
-    );
-    expect(container.querySelector('table')).toBeInTheDocument();
-  });
-
-  it('render P95 latency with more than 2 decimal places value', () => {
-    const cloneServiceOpsMetrics = { ...serviceOpsMetrics[0] };
-    cloneServiceOpsMetrics.latency = 0.2988;
-    const { container } = render(
-      <OperationTableDetails {...props} data={[cloneServiceOpsMetrics]} loading={false} />
-    );
-    expect(container.querySelector('table')).toBeInTheDocument();
-  });
-
-  it('test column render function', () => {
-    const data = [
+    // Combine all edge cases into a single dataset to test formatting/columns in one render
+    const testData = [
       {
         ...serviceOpsMetrics[0],
+        name: '/PlaceOrder',
+        latency: 8000,
+        requests: 0.02,
+        errRates: 0.00001,
+        impact: 20,
+        key: 0,
+      },
+      {
+        ...serviceOpsMetrics[0],
+        name: '/Accounts',
+        latency: 0.2988,
+        requests: 0.2888,
+        errRates: 1,
+        impact: 10,
+        key: 1,
+      },
+      {
+        ...serviceOpsMetrics[0],
+        name: '/NoDataPoints',
+        latency: 0.00001,
+        requests: 1.5,
+        errRates: 0.05,
+        impact: 0,
+        key: 2,
         dataPoints: {
-          ...serviceOpsMetrics[0].dataPoints,
+          avg: {
+            service_operation_call_rate: 11,
+            service_operation_error_rate: 22,
+            service_operation_latencies: 99,
+          },
           service_operation_call_rate: [],
           service_operation_error_rate: [],
           service_operation_latencies: [],
         },
       },
     ];
-    const { container } = render(<OperationTableDetails {...props} data={data} loading={false} />);
+
+    const { container } = render(<OperationTableDetails {...props} data={testData} loading={false} />);
+
+    // 1. Assert formatting
     expect(container.querySelector('table')).toBeInTheDocument();
-  });
+    expect(screen.getByText('/PlaceOrder')).toBeInTheDocument();
+    expect(screen.getByText('/Accounts')).toBeInTheDocument();
+    expect(screen.getByText('8s')).toBeInTheDocument();
+    expect(screen.getByText('< 0.1 req/s')).toBeInTheDocument();
+    expect(screen.getByText('0.28 req/s')).toBeInTheDocument();
 
-  it('highlight the row', () => {
-    render(<OperationTableDetails {...props} data={serviceOpsMetrics} loading={false} />);
+    // 2. Assert Graph avg label test (avgDivs should be empty if dataPoints are empty/custom)
+    const avgDivs = container
+      .querySelectorAll('tbody tr.ant-table-row')[2]
+      .querySelectorAll('div.table-graph-avg');
+    avgDivs.forEach(div => {
+      expect(div.textContent).toBe('');
+    });
 
-    const tableRow = screen.getAllByRole('row')[1];
-
+    // 3. Highlight the row
+    const tableRow = screen.getAllByRole('row')[1]; // Row 1 (/PlaceOrder)
     fireEvent.mouseEnter(tableRow);
     expect(tableRow).toHaveClass('table-row--hovered');
     expect(screen.getByText('View traces')).toBeInTheDocument();
 
+    // 4. Track view traces event
+    const viewTracesButton = screen.getByText('View traces');
+    fireEvent.click(viewTracesButton);
+    expect(trackViewTracesSpy).toHaveBeenCalledWith('/PlaceOrder');
+
     fireEvent.mouseLeave(tableRow);
     expect(tableRow).not.toHaveClass('table-row--hovered');
     expect(screen.queryByText('View traces')).not.toBeInTheDocument();
-  });
 
-  it('sort row', () => {
-    const data = [...serviceOpsMetrics];
-    data.push({
-      dataPoints: {
-        avg: {
-          service_operation_call_rate: 0.02,
-          service_operation_error_rate: 2,
-          service_operation_latencies: 800.16,
-        },
-        service_operation_call_rate: [
-          {
-            x: 1631534436235,
-            y: 0.01,
-          },
-          {
-            x: 1631534496235,
-            y: 0.01,
-          },
-        ],
-        service_operation_error_rate: [
-          {
-            x: 1631534436235,
-            y: 1,
-          },
-          {
-            x: 1631534496235,
-            y: 1,
-          },
-        ],
-        service_operation_latencies: [
-          {
-            x: 1631534436235,
-            y: 737.33,
-          },
-          {
-            x: 1631534496235,
-            y: 735,
-          },
-        ],
-      },
-      errRates: 2,
-      impact: 0,
-      key: 1,
-      latency: 800.16,
-      name: '/Accounts',
-      requests: 0.002,
-    });
-
-    render(<OperationTableDetails {...props} data={data} loading={false} />);
-
+    // 5. Sort row
     let cells = screen.getAllByRole('cell');
     expect(cells[0].textContent).toBe('/PlaceOrder');
 
@@ -228,6 +170,7 @@ describe('<OperationTableDetails> with data', () => {
 
     cells = screen.getAllByRole('cell');
     expect(cells[0].textContent).toBe('/Accounts');
+    expect(trackSortOperationsSpy).toHaveBeenCalledWith('Name');
 
     const latencyHeader = screen.getByText('P95 Latency').closest('th');
     const latencySorter = latencyHeader.querySelector('.ant-table-column-sorter-up');
@@ -244,58 +187,6 @@ describe('<OperationTableDetails> with data', () => {
     const impactHeader = screen.getByText('Impact').closest('th');
     const impactSorter = impactHeader.querySelector('.ant-table-column-sorter-up');
     fireEvent.click(impactSorter);
-  });
-
-  it('Graph avg label test', () => {
-    const data = [
-      {
-        dataPoints: {
-          avg: {
-            service_operation_call_rate: 11,
-            service_operation_error_rate: 22,
-            service_operation_latencies: 99,
-          },
-          service_operation_call_rate: [],
-          service_operation_error_rate: [],
-          service_operation_latencies: [],
-        },
-        errRates: 1,
-        impact: 2,
-        key: 1,
-        latency: 3,
-        name: '/Accounts',
-        requests: 4,
-      },
-    ];
-
-    const { container } = render(<OperationTableDetails {...props} data={data} loading={false} />);
-
-    const avgDivs = container.querySelectorAll('div.table-graph-avg');
-
-    avgDivs.forEach(div => {
-      expect(div.textContent).toBe('');
-    });
-  });
-
-  it('Should track all events', () => {
-    const trackSortOperationsSpy = jest.spyOn(track, 'trackSortOperations');
-    const trackViewTracesSpy = jest.spyOn(track, 'trackViewTraces');
-
-    render(<OperationTableDetails {...props} data={serviceOpsMetrics} loading={false} />);
-
-    const tableRow = screen.getAllByRole('row')[1];
-    fireEvent.mouseEnter(tableRow);
-    const viewTracesButton = screen.getByText('View traces');
-    fireEvent.click(viewTracesButton);
-
-    expect(trackViewTracesSpy).toHaveBeenCalledWith(serviceOpsMetrics[0].name);
-
-    const nameHeader = screen.getByText('Name').closest('th');
-    fireEvent.click(nameHeader);
-    expect(trackSortOperationsSpy).toHaveBeenCalledWith('Name');
-
-    const impactHeader = screen.getByText('Impact').closest('th');
-    fireEvent.click(impactHeader);
     expect(trackSortOperationsSpy).toHaveBeenCalledWith('Impact');
   });
 });
