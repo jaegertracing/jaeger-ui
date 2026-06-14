@@ -28,6 +28,7 @@ import ZoomManager, { zoomIdentity, ZoomTransform } from '../zoom/ZoomManager';
 
 type TDigraphState<T = {}, U = {}> = Omit<TExposedGraphState<T, U>, 'renderUtils'> & {
   sizeVertices: TSizeVertex<T>[] | null;
+  layoutVersion: number;
 };
 
 type TDigraphProps<T = unknown, U = unknown> = {
@@ -91,6 +92,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     sizeVertices: null,
     vertices: [],
     zoomTransform: zoomIdentity,
+    layoutVersion: 0,
   };
 
   baseId = `plexus--Digraph--${idCounter++}`;
@@ -120,10 +122,52 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     };
   }
 
+  /**
+   * Note: Digraph relies on referential equality to detect data changes.
+   * Callers MUST NOT mutate `edges` or `vertices` in place. They must pass
+   * new array references when the graph data changes to trigger a layout reset.
+   */
+  static getDerivedStateFromProps(nextProps: TDigraphProps<any, any>, prevState: TDigraphState<any, any>) {
+    const { edges, vertices } = nextProps;
+    if (edges !== prevState.edges || vertices !== prevState.vertices) {
+      if (Array.isArray(edges) && edges.length && Array.isArray(vertices) && vertices.length) {
+        return {
+          edges,
+          vertices,
+          layoutEdges: null,
+          layoutGraph: null,
+          layoutPhase: ELayoutPhase.CalcSizes,
+          layoutVertices: null,
+          sizeVertices: null,
+          layoutVersion: prevState.layoutVersion + 1,
+        };
+      }
+      return {
+        edges,
+        vertices,
+        layoutEdges: null,
+        layoutGraph: null,
+        layoutPhase: ELayoutPhase.NoData,
+        layoutVertices: null,
+        sizeVertices: null,
+        layoutVersion: prevState.layoutVersion + 1,
+      };
+    }
+    return null;
+  }
+
   componentDidMount() {
     const { current } = this.rootRef;
     if (current && this.zoomManager) {
       this.zoomManager.setElement(current);
+    }
+  }
+
+  componentDidUpdate(_prevProps: TDigraphProps<T, U>, prevState: TDigraphState<T, U>) {
+    if (this.state.layoutPhase === ELayoutPhase.NoData && prevState.layoutPhase !== ELayoutPhase.NoData) {
+      if (this.zoomManager) {
+        this.zoomManager.resetZoom();
+      }
     }
   }
 
@@ -134,12 +178,12 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
   private setSizeVertices = (senderKey: string, sizeVertices: TSizeVertex<T>[]) => {
     const { edges, layoutManager, measurableNodesKey: expectedKey } = this.props;
     if (senderKey !== expectedKey) {
-      const values = `expected ${JSON.stringify(expectedKey)}, recieved ${JSON.stringify(senderKey)}`;
+      const values = `expected ${JSON.stringify(expectedKey)}, received ${JSON.stringify(senderKey)}`;
       throw new Error(`Key mismatch for measuring nodes; ${values}`);
     }
-    this.setState({ sizeVertices });
+    const version = this.state.layoutVersion;
     const { layout } = layoutManager.getLayout(edges, sizeVertices);
-    layout.then(this.onLayoutDone);
+    layout.then(result => this.onLayoutDone(result, version));
     this.setState({ sizeVertices, layoutPhase: ELayoutPhase.CalcPositions });
     // We can add support for drawing nodes in the correct position before we have edges
     // via the following (instead of the above)
@@ -245,8 +289,8 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     this.setState({ zoomTransform });
   };
 
-  private onLayoutDone = (result: TCancelled | TLayoutDone<T, U>) => {
-    if (result.isCancelled) {
+  private onLayoutDone = (result: TCancelled | TLayoutDone<T, U>, version: number) => {
+    if (result.isCancelled || version !== this.state.layoutVersion) {
       return;
     }
     const { edges: layoutEdges, graph: layoutGraph, vertices: layoutVertices } = result;
