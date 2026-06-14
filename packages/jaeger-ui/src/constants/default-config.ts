@@ -123,6 +123,9 @@ const defaultConfig: Config = {
     defaultDetailPanelMode: 'inline',
   },
   useOpenTelemetryTerms: false,
+  tracing: {
+    enabled: false,
+  },
 };
 
 // Fields that should be merged with user-supplied config values rather than overwritten.
