@@ -9,6 +9,7 @@ import AccordionAttributes from './AccordionAttributes';
 import AccordionEvents from './AccordionEvents';
 import AccordionLinks from './AccordionLinks';
 import AccordionText from './AccordionText';
+import LazyAttributeSection from './LazyAttributeSection';
 import DetailState from './DetailState';
 import { formatDuration, formatDurationCompact } from '../utils';
 import CopyIcon from '../../../common/CopyIcon';
@@ -38,6 +39,8 @@ type SpanDetailProps = {
   eventsInitialVisibleCount?: number;
 };
 
+const LARGE_ATTR_THRESHOLD_CHARS = 10240; // ~10 KB of UTF-16 code units
+
 export default function SpanDetail(props: SpanDetailProps) {
   const {
     detailState,
@@ -59,6 +62,21 @@ export default function SpanDetail(props: SpanDetailProps) {
 
   const { isAttributesOpen, isResourceOpen, events: eventsState, isWarningsOpen, isLinksOpen } = detailState;
   const warnings = span.warnings;
+
+  const { largeAttrs, standardAttrs } = React.useMemo(() => {
+    const attributes = span.attributes || [];
+    return attributes.reduce<{ largeAttrs: IAttribute[]; standardAttrs: IAttribute[] }>(
+      (acc, attr) => {
+        if (typeof attr.value === 'string' && attr.value.length >= LARGE_ATTR_THRESHOLD_CHARS) {
+          acc.largeAttrs.push(attr);
+        } else {
+          acc.standardAttrs.push(attr);
+        }
+        return acc;
+      },
+      { largeAttrs: [], standardAttrs: [] }
+    );
+  }, [span.attributes]);
 
   // Get links for display in AccordionLinks
   const links = span.links || [];
@@ -100,12 +118,18 @@ export default function SpanDetail(props: SpanDetailProps) {
       <div>
         <div>
           <AccordionAttributes
-            data={span.attributes}
+            data={standardAttrs}
             label={attributesLabel}
             linksGetter={linksGetter}
             isOpen={isAttributesOpen}
             onToggle={() => attributesToggle(span.spanID)}
           />
+          {largeAttrs.map(attr => (
+            <LazyAttributeSection
+              key={`${attr.key}-${typeof attr.value === 'string' ? attr.value.length : 'v'}`}
+              attribute={attr}
+            />
+          ))}
           {span.resource.attributes && span.resource.attributes.length > 0 && (
             <AccordionAttributes
               className="ub-mb1"
