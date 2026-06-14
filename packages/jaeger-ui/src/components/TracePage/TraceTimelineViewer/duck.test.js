@@ -80,6 +80,15 @@ describe('TraceTimelineViewer/duck', () => {
     expect(store.getState().spanNameColumnWidth).toBeCloseTo(0.575);
   });
 
+  it('does not reserve a timeline column for spanNameColumnWidth when bars are hidden in sidepanel mode', () => {
+    // With bars hidden the side panel absorbs the timeline column, so the name column is bounded only
+    // by the side panel min: max = min(0.85, 1 - SIDE_PANEL_WIDTH_MIN) = 0.8 (vs 0.575 with bars).
+    store.dispatch(actions.setDetailPanelMode('sidepanel'));
+    store.dispatch(actions.setTimelineBarsVisible(false));
+    store.dispatch(actions.setSpanNameColumnWidth(0.99));
+    expect(store.getState().spanNameColumnWidth).toBeCloseTo(0.8);
+  });
+
   describe('focusUiFindMatches', () => {
     const uiFind = 'uiFind';
     const action = actions.focusUiFindMatches(trace, uiFind);

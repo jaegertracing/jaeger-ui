@@ -12,6 +12,7 @@ import {
   SIDE_PANEL_WIDTH_MAX,
   SIDE_PANEL_WIDTH_MIN,
   SPAN_NAME_COLUMN_WIDTH_MAX,
+  SPAN_NAME_COLUMN_WIDTH_MIN,
   useLayoutPrefsStore,
   useTraceTimelineStore,
 } from './store';
@@ -249,12 +250,25 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
           <div className="TraceTimelineViewer--main" style={{ width: `${mainWidth}%` }}>
             {virtualizedView}
           </div>
-          {timelineBarsVisible && (
+          {timelineBarsVisible ? (
             <VerticalResizer
               position={1 - sidePanelWidth}
               min={1 - Math.min(SIDE_PANEL_WIDTH_MAX, 1 - spanNameColumnWidth - MIN_TIMELINE_COLUMN_WIDTH)}
               max={1 - SIDE_PANEL_WIDTH_MIN}
               onChange={newPosition => setSidePanelWidth(1 - newPosition)}
+            />
+          ) : (
+            // With the timeline bars hidden the side panel absorbs the timeline column, so its width
+            // is derived from spanNameColumnWidth (see effectiveSidePanelWidth above). The boundary
+            // between the name column and the side panel sits at spanNameColumnWidth; dragging it
+            // resizes the side panel by adjusting the name column width.
+            <VerticalResizer
+              position={spanNameColumnWidth}
+              // Bound the name column so the derived side panel width stays within
+              // [SIDE_PANEL_WIDTH_MIN, SIDE_PANEL_WIDTH_MAX] (sidePanel = 1 - spanNameColumnWidth).
+              min={Math.max(SPAN_NAME_COLUMN_WIDTH_MIN, 1 - SIDE_PANEL_WIDTH_MAX)}
+              max={Math.min(SPAN_NAME_COLUMN_WIDTH_MAX, 1 - SIDE_PANEL_WIDTH_MIN)}
+              onChange={newPosition => setSpanNameColumnWidth(newPosition)}
             />
           )}
           <div className="TraceTimelineViewer--sidePanel" style={sidePanelStyle}>

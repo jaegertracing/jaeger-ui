@@ -233,7 +233,8 @@ describe('<TraceTimelineViewer>', () => {
         render(<TraceTimelineViewerImpl {...props} />);
 
         const sidePanelActive = detailPanelMode === 'sidepanel';
-        const resizerExpected = sidePanelActive && timelineBarsVisible;
+        // The side panel is resizable whenever it is active, regardless of timeline bar visibility.
+        const resizerExpected = sidePanelActive;
 
         if (sidePanelActive) {
           expect(screen.getByTestId('span-detail-side-panel-mock')).toBeInTheDocument();
@@ -270,10 +271,10 @@ describe('<TraceTimelineViewer>', () => {
       expect(screen.getByTestId('vertical-resizer-mock')).toBeInTheDocument();
     });
 
-    it('does not render a VerticalResizer when timeline bars are hidden', () => {
+    it('still renders a VerticalResizer when timeline bars are hidden', () => {
       mockLayoutPrefsStore.timelineBarsVisible = false;
       render(<TraceTimelineViewerImpl {...props} />);
-      expect(screen.queryByTestId('vertical-resizer-mock')).not.toBeInTheDocument();
+      expect(screen.getByTestId('vertical-resizer-mock')).toBeInTheDocument();
     });
 
     it('calls setSidePanelWidth (Zustand + Redux) when the VerticalResizer onChange fires', () => {
@@ -284,6 +285,20 @@ describe('<TraceTimelineViewer>', () => {
       expect(mockLayoutPrefsStore.setSidePanelWidth.mock.calls[0][0]).toBeCloseTo(0.3);
       expect(props.setSidePanelWidth).toHaveBeenCalledTimes(1);
       expect(props.setSidePanelWidth.mock.calls[0][0]).toBeCloseTo(0.3);
+    });
+
+    it('resizes via setSpanNameColumnWidth when bars are hidden and the resizer onChange fires', () => {
+      mockLayoutPrefsStore.timelineBarsVisible = false;
+      render(<TraceTimelineViewerImpl {...props} />);
+      fireEvent.click(screen.getByTestId('vertical-resizer-change'));
+      // With bars hidden the resizer drives the name column directly: onChange(0.7) → setSpanNameColumnWidth(0.7).
+      expect(mockLayoutPrefsStore.setSpanNameColumnWidth).toHaveBeenCalledTimes(1);
+      expect(mockLayoutPrefsStore.setSpanNameColumnWidth.mock.calls[0][0]).toBeCloseTo(0.7);
+      expect(props.setSpanNameColumnWidth).toHaveBeenCalledTimes(1);
+      expect(props.setSpanNameColumnWidth.mock.calls[0][0]).toBeCloseTo(0.7);
+      // The side panel width setter must not be touched in this mode (neither Zustand nor the Redux-tracking prop).
+      expect(mockLayoutPrefsStore.setSidePanelWidth).not.toHaveBeenCalled();
+      expect(props.setSidePanelWidth).not.toHaveBeenCalled();
     });
 
     it('uses "Trace Root" label when no span is selected (empty detailStates)', () => {
