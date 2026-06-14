@@ -93,11 +93,14 @@ export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()((set,
   ...getInitialLayoutState(),
 
   setSpanNameColumnWidth: (width: number) => {
-    const { detailPanelMode, sidePanelWidth } = get();
-    const maxWidth =
-      detailPanelMode === 'sidepanel'
-        ? Math.min(SPAN_NAME_COLUMN_WIDTH_MAX, 1 - sidePanelWidth - MIN_TIMELINE_COLUMN_WIDTH)
-        : SPAN_NAME_COLUMN_WIDTH_MAX;
+    const { detailPanelMode, sidePanelWidth, timelineBarsVisible } = get();
+    let maxWidth = SPAN_NAME_COLUMN_WIDTH_MAX;
+    if (detailPanelMode === 'sidepanel') {
+      const availableWidth = timelineBarsVisible
+        ? 1 - sidePanelWidth - MIN_TIMELINE_COLUMN_WIDTH
+        : 1 - SIDE_PANEL_WIDTH_MIN;
+      maxWidth = Math.min(SPAN_NAME_COLUMN_WIDTH_MAX, availableWidth);
+    }
     const spanNameColumnWidth = Math.min(Math.max(width, SPAN_NAME_COLUMN_WIDTH_MIN), maxWidth);
     localStorage.setItem('spanNameColumnWidth', spanNameColumnWidth.toString());
     set({ spanNameColumnWidth });
@@ -116,9 +119,12 @@ export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()((set,
 
   applyDetailPanelModeToLayout: (mode: SpanDetailPanelMode) => {
     localStorage.setItem('detailPanelMode', mode);
-    let { spanNameColumnWidth, sidePanelWidth } = get();
+    let { spanNameColumnWidth, sidePanelWidth, timelineBarsVisible } = get();
     if (mode === 'sidepanel') {
-      const maxWidth = Math.min(SPAN_NAME_COLUMN_WIDTH_MAX, 1 - sidePanelWidth - MIN_TIMELINE_COLUMN_WIDTH);
+      const availableWidth = timelineBarsVisible
+        ? 1 - sidePanelWidth - MIN_TIMELINE_COLUMN_WIDTH
+        : 1 - SIDE_PANEL_WIDTH_MIN;
+      const maxWidth = Math.min(SPAN_NAME_COLUMN_WIDTH_MAX, availableWidth);
       spanNameColumnWidth = Math.min(spanNameColumnWidth, maxWidth);
     }
     set({ detailPanelMode: mode, spanNameColumnWidth });
