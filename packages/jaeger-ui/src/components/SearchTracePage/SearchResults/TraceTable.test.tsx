@@ -5,8 +5,10 @@ import * as React from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import TraceTable, { toOrderBy, fromOrderBy } from './TraceTable';
+import TraceTable from './TraceTable';
 import * as orderBy from '../../../model/order-by';
+import type { OrderBy } from '../../../model/order-by';
+import { toOrderBy, fromOrderBy } from '../../../model/search';
 import type { Microseconds } from '../../../types/units';
 
 const FIXED_START_TIME = 1700000000000000 as Microseconds;
@@ -30,7 +32,7 @@ const defaultProps = {
   traceSummaries: mockTraces,
   maxTraceDuration: 1000 as Microseconds,
   getLink: (traceID: string) => ({ pathname: `/trace/${traceID}` }),
-  sortBy: orderBy.MOST_RECENT,
+  sortBy: orderBy.MOST_RECENT as OrderBy,
   handleSortChange: vi.fn(),
   disableComparisons: true,
   cohortIds: new Set<string>(),
@@ -147,28 +149,45 @@ describe('sort onChange wiring', () => {
     expect(handleSortChange).toHaveBeenCalledWith(orderBy.LEAST_SPANS);
   });
 
-  it('calls handleSortChange with MOST_RECENT when Ant Design cancel event fires', () => {
+  it('flips sort direction instead of deactivating when AntD fires cancel', () => {
     const handleSortChange = vi.fn();
+    // Start with descend on spans (MOST_SPANS).
+    // Clicking the active column triggers AntD's cancel event (order=undefined,
+    // columnKey=undefined). Our onChange handler intercepts this and flips
+    // descend→ascend, producing LEAST_SPANS instead of falling back to MOST_RECENT.
     render(
       <MemoryRouter>
         <TraceTable {...defaultProps} sortBy={orderBy.MOST_SPANS} handleSortChange={handleSortChange} />
       </MemoryRouter>
     );
-    // Ant Design fires the cancel event (order=undefined, columnKey=undefined) when clicking
-    // an already-descend-sorted column. Our toggle computes order='ascend', but since
-    // columnKey is undefined, toOrderBy falls through to MOST_RECENT.
     fireEvent.click(screen.getByText('Spans'));
-    expect(handleSortChange).toHaveBeenCalledWith(orderBy.MOST_RECENT);
+    expect(handleSortChange).toHaveBeenCalledWith(orderBy.LEAST_SPANS);
   });
 });
 
 describe('toOrderBy', () => {
+  it('maps traceName+ascend to TRACE_NAME_ASC', () => {
+    expect(toOrderBy('traceName', 'ascend')).toBe(orderBy.TRACE_NAME_ASC);
+  });
+
+  it('maps traceName+descend to TRACE_NAME_DESC', () => {
+    expect(toOrderBy('traceName', 'descend')).toBe(orderBy.TRACE_NAME_DESC);
+  });
+
   it('maps spans+descend to MOST_SPANS', () => {
     expect(toOrderBy('spans', 'descend')).toBe(orderBy.MOST_SPANS);
   });
 
   it('maps spans+ascend to LEAST_SPANS', () => {
     expect(toOrderBy('spans', 'ascend')).toBe(orderBy.LEAST_SPANS);
+  });
+
+  it('maps errors+descend to MOST_ERRORS', () => {
+    expect(toOrderBy('errors', 'descend')).toBe(orderBy.MOST_ERRORS);
+  });
+
+  it('maps errors+ascend to LEAST_ERRORS', () => {
+    expect(toOrderBy('errors', 'ascend')).toBe(orderBy.LEAST_ERRORS);
   });
 
   it('maps duration+descend to LONGEST_FIRST', () => {
@@ -179,12 +198,15 @@ describe('toOrderBy', () => {
     expect(toOrderBy('duration', 'ascend')).toBe(orderBy.SHORTEST_FIRST);
   });
 
-  it('maps startTime+descend to MOST_RECENT (default branch)', () => {
+  it('maps startTime+descend to MOST_RECENT', () => {
     expect(toOrderBy('startTime', 'descend')).toBe(orderBy.MOST_RECENT);
-    expect(toOrderBy('unknown-col', 'descend')).toBe(orderBy.MOST_RECENT);
   });
 
-  it('returns MOST_RECENT when order is cleared (3rd click)', () => {
+  it('maps startTime+ascend to OLDEST_FIRST', () => {
+    expect(toOrderBy('startTime', 'ascend')).toBe(orderBy.OLDEST_FIRST);
+  });
+
+  it('returns MOST_RECENT when order is cleared', () => {
     expect(toOrderBy('spans', undefined)).toBe(orderBy.MOST_RECENT);
     expect(toOrderBy('duration', undefined)).toBe(orderBy.MOST_RECENT);
     expect(toOrderBy(undefined, undefined)).toBe(orderBy.MOST_RECENT);
@@ -192,6 +214,14 @@ describe('toOrderBy', () => {
 });
 
 describe('fromOrderBy', () => {
+  it('maps TRACE_NAME_ASC to traceName+ascend', () => {
+    expect(fromOrderBy(orderBy.TRACE_NAME_ASC)).toEqual({ key: 'traceName', order: 'ascend' });
+  });
+
+  it('maps TRACE_NAME_DESC to traceName+descend', () => {
+    expect(fromOrderBy(orderBy.TRACE_NAME_DESC)).toEqual({ key: 'traceName', order: 'descend' });
+  });
+
   it('maps MOST_SPANS to spans+descend', () => {
     expect(fromOrderBy(orderBy.MOST_SPANS)).toEqual({ key: 'spans', order: 'descend' });
   });
@@ -200,12 +230,24 @@ describe('fromOrderBy', () => {
     expect(fromOrderBy(orderBy.LEAST_SPANS)).toEqual({ key: 'spans', order: 'ascend' });
   });
 
+  it('maps MOST_ERRORS to errors+descend', () => {
+    expect(fromOrderBy(orderBy.MOST_ERRORS)).toEqual({ key: 'errors', order: 'descend' });
+  });
+
+  it('maps LEAST_ERRORS to errors+ascend', () => {
+    expect(fromOrderBy(orderBy.LEAST_ERRORS)).toEqual({ key: 'errors', order: 'ascend' });
+  });
+
   it('maps LONGEST_FIRST to duration+descend', () => {
     expect(fromOrderBy(orderBy.LONGEST_FIRST)).toEqual({ key: 'duration', order: 'descend' });
   });
 
   it('maps SHORTEST_FIRST to duration+ascend', () => {
     expect(fromOrderBy(orderBy.SHORTEST_FIRST)).toEqual({ key: 'duration', order: 'ascend' });
+  });
+
+  it('maps OLDEST_FIRST to startTime+ascend', () => {
+    expect(fromOrderBy(orderBy.OLDEST_FIRST)).toEqual({ key: 'startTime', order: 'ascend' });
   });
 
   it('maps MOST_RECENT to startTime+descend', () => {

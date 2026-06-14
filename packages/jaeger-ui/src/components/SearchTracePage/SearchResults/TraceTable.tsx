@@ -6,55 +6,30 @@ import { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Checkbox, Table, Tag, Tooltip } from 'antd';
 import type { ColumnsType, TableProps } from 'antd/es/table';
-import type { SorterResult } from 'antd/es/table/interface';
+import type { SorterResult, SortOrder } from 'antd/es/table/interface';
 import Overflow from '@rc-component/overflow';
 import _sortBy from 'lodash/sortBy';
 import { TraceSummary } from '../../../types/trace-summary';
 import { formatDuration, formatDurationCompact, formatDatetime } from '../../../utils/date';
 import RelativeBar from '../../common/RelativeBar';
-import * as orderBy from '../../../model/order-by';
+import { toOrderBy, fromOrderBy } from '../../../model/search';
+import type { SortableColumnKey, SortDirection } from '../../../model/search';
+import type { OrderBy } from '../../../model/order-by';
 import type { TracePageLink } from '../../TracePage/url';
 import { ServicePill, type ServiceEntry } from './ServicePills';
+
+const BOTH_DIRECTIONS: SortOrder[] = ['ascend', 'descend'];
 
 type TraceTableProps = {
   traceSummaries: TraceSummary[];
   maxTraceDuration: number;
   getLink: (traceID: string) => TracePageLink;
-  sortBy: string;
-  handleSortChange: (sortBy: string) => void;
+  sortBy: OrderBy;
+  handleSortChange: (sortBy: OrderBy) => void;
   disableComparisons: boolean;
   cohortIds: Set<string>;
   toggleComparison: (traceID: string, isInDiffCohort: boolean) => void;
 };
-
-function toOrderBy(columnKey: string | undefined, order: string | undefined): string {
-  if (order == null) return orderBy.MOST_RECENT;
-  if (columnKey === 'spans') {
-    return order === 'ascend' ? orderBy.LEAST_SPANS : orderBy.MOST_SPANS;
-  }
-  if (columnKey === 'duration') {
-    return order === 'ascend' ? orderBy.SHORTEST_FIRST : orderBy.LONGEST_FIRST;
-  }
-  // startTime descend === MOST_RECENT (default sort); ascending is not supported
-  return orderBy.MOST_RECENT;
-}
-
-function fromOrderBy(sort: string): { key: string; order: 'ascend' | 'descend' } {
-  switch (sort) {
-    case orderBy.MOST_SPANS:
-      return { key: 'spans', order: 'descend' };
-    case orderBy.LEAST_SPANS:
-      return { key: 'spans', order: 'ascend' };
-    case orderBy.LONGEST_FIRST:
-      return { key: 'duration', order: 'descend' };
-    case orderBy.SHORTEST_FIRST:
-      return { key: 'duration', order: 'ascend' };
-    default:
-      return { key: 'startTime', order: 'descend' };
-  }
-}
-
-export { toOrderBy, fromOrderBy };
 
 function ServicePills({ services }: { services: TraceSummary['services'] }) {
   const sorted = _sortBy(services, s => s.name);
@@ -131,6 +106,9 @@ export default function TraceTable({
             </Tooltip>
           );
         },
+        sorter: true,
+        sortOrder: sortKey === 'traceName' ? sortOrder : undefined,
+        sortDirections: BOTH_DIRECTIONS,
       },
       ...(showServicesColumn
         ? [
@@ -152,7 +130,7 @@ export default function TraceTable({
         render: (_: unknown, trace: TraceSummary) => trace.spanCount,
         sorter: true,
         sortOrder: sortKey === 'spans' ? sortOrder : undefined,
-        sortDirections: ['ascend', 'descend'],
+        sortDirections: BOTH_DIRECTIONS,
       },
       ...(showErrorsColumn
         ? [
@@ -178,6 +156,9 @@ export default function TraceTable({
                 ) : (
                   0
                 ),
+              sorter: true,
+              sortOrder: sortKey === 'errors' ? sortOrder : undefined,
+              sortDirections: BOTH_DIRECTIONS,
             },
           ]
         : []),
@@ -196,7 +177,7 @@ export default function TraceTable({
         ),
         sorter: true,
         sortOrder: sortKey === 'duration' ? sortOrder : undefined,
-        sortDirections: ['ascend', 'descend'],
+        sortDirections: BOTH_DIRECTIONS,
       },
       {
         title: 'Start Time',
@@ -222,9 +203,8 @@ export default function TraceTable({
           );
         },
         sorter: true,
-        // startTime descend maps to MOST_RECENT (the default); always show the sort indicator
-        sortOrder: sortKey === 'startTime' ? 'descend' : undefined,
-        sortDirections: ['descend'],
+        sortOrder: sortKey === 'startTime' ? sortOrder : undefined,
+        sortDirections: BOTH_DIRECTIONS,
       },
     ];
 
@@ -266,9 +246,16 @@ export default function TraceTable({
 
   const onChange: TableProps<TraceSummary>['onChange'] = (_pagination, _filters, sorter) => {
     const s = Array.isArray(sorter) ? sorter[0] : (sorter as SorterResult<TraceSummary>);
-    // When Ant Design's 3rd-click "cancel" fires, columnKey is undefined and order is undefined.
-    // toOrderBy(undefined, undefined) returns MOST_RECENT, which is the correct fallback.
-    handleSortChange(toOrderBy(s.columnKey as string | undefined, s.order ?? undefined));
+    const columnKey = s.columnKey as SortableColumnKey | undefined;
+    const order = (s.order ?? undefined) as SortDirection | undefined;
+    // When Ant Design's 3rd click fires a "cancel" (order === undefined, columnKey === undefined),
+    // flip the current sort direction instead of deactivating sorting.
+    if (order == null) {
+      const flipped: SortDirection = sortOrder === 'descend' ? 'ascend' : 'descend';
+      handleSortChange(toOrderBy(sortKey, flipped));
+      return;
+    }
+    handleSortChange(toOrderBy(columnKey, order));
   };
 
   return (

@@ -22,6 +22,7 @@ import NewWindowIcon from '../../common/NewWindowIcon';
 import SearchResultsDDG from '../../DeepDependencies/traces';
 import { getTracePageLink } from '../../TracePage/url';
 import * as orderBy from '../../../model/order-by';
+import type { OrderBy } from '../../../model/order-by';
 import { getPercentageOfDuration } from '../../../utils/date';
 
 import { TraceSummary } from '../../../types/trace-summary';
@@ -47,13 +48,13 @@ type SearchResultsProps = {
   traceSummaries: TraceSummary[];
   uploadedTraceIDs: ReadonlySet<string>;
   rawTraces: unknown[];
-  sortBy: string;
-  handleSortChange: (sortBy: string) => void;
+  sortBy: OrderBy;
+  handleSortChange: (sortBy: OrderBy) => void;
 };
 
 type SelectSortProps = {
-  sortBy: string;
-  handleSortChange: (sortBy: string) => void;
+  sortBy: OrderBy;
+  handleSortChange: (sortBy: OrderBy) => void;
 };
 
 const Option = Select.Option;
@@ -65,12 +66,17 @@ export function SelectSort({ sortBy, handleSortChange }: SelectSortProps) {
   return (
     <label>
       Sort:{' '}
-      <SearchableSelect value={sortBy} onChange={(value: string) => handleSortChange(value)}>
+      <SearchableSelect value={sortBy} onChange={(value: OrderBy) => handleSortChange(value)}>
         <Option value={orderBy.MOST_RECENT}>Most Recent</Option>
+        <Option value={orderBy.OLDEST_FIRST}>Oldest First</Option>
         <Option value={orderBy.LONGEST_FIRST}>Longest First</Option>
         <Option value={orderBy.SHORTEST_FIRST}>Shortest First</Option>
         <Option value={orderBy.MOST_SPANS}>Most Spans</Option>
         <Option value={orderBy.LEAST_SPANS}>Least Spans</Option>
+        <Option value={orderBy.MOST_ERRORS}>Most Errors</Option>
+        <Option value={orderBy.LEAST_ERRORS}>Least Errors</Option>
+        <Option value={orderBy.TRACE_NAME_ASC}>Trace Name A-Z</Option>
+        <Option value={orderBy.TRACE_NAME_DESC}>Trace Name Z-A</Option>
       </SearchableSelect>
     </label>
   );
