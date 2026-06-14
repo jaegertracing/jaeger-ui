@@ -7,6 +7,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import TraceTable from './TraceTable';
 import * as orderBy from '../../../model/order-by';
+import type { OrderBy } from '../../../model/order-by';
 import { toOrderBy, fromOrderBy } from '../../../model/search';
 import type { Microseconds } from '../../../types/units';
 
@@ -31,7 +32,7 @@ const defaultProps = {
   traceSummaries: mockTraces,
   maxTraceDuration: 1000 as Microseconds,
   getLink: (traceID: string) => ({ pathname: `/trace/${traceID}` }),
-  sortBy: orderBy.MOST_RECENT,
+  sortBy: orderBy.MOST_RECENT as OrderBy,
   handleSortChange: vi.fn(),
   disableComparisons: true,
   cohortIds: new Set<string>(),
@@ -75,6 +76,7 @@ describe('TraceTable', () => {
     );
     const firstRow = container.querySelector('tbody tr')!;
     expect(firstRow.getAttribute('tabindex')).toBe('0');
+    // Click and keydown should not throw
     fireEvent.click(firstRow.querySelectorAll('td')[1]);
     fireEvent.keyDown(firstRow, { key: 'Enter' });
     fireEvent.keyDown(firstRow, { key: ' ' });
@@ -108,6 +110,7 @@ describe('TraceTable', () => {
         <TraceTable {...defaultProps} disableComparisons={false} toggleComparison={toggleComparison} />
       </MemoryRouter>
     );
+    // Click the <td> — the whole cell triggers the toggle, not just the checkbox input
     const firstCell = container.querySelector('tbody tr td')!;
     fireEvent.click(firstCell);
     expect(toggleComparison).toHaveBeenCalled();
@@ -246,13 +249,12 @@ describe('fromOrderBy', () => {
   it('maps OLDEST_FIRST to startTime+ascend', () => {
     expect(fromOrderBy(orderBy.OLDEST_FIRST)).toEqual({ key: 'startTime', order: 'ascend' });
   });
-
   it('maps MOST_RECENT to startTime+descend', () => {
     expect(fromOrderBy(orderBy.MOST_RECENT)).toEqual({ key: 'startTime', order: 'descend' });
   });
 
-  it('falls back to startTime+descend for an unknown sort value', () => {
-    expect(fromOrderBy('unknown-sort-value')).toEqual({ key: 'startTime', order: 'descend' });
+  it('throws an error for an unknown sort value', () => {
+    expect(() => fromOrderBy('unknown-sort-value' as any)).toThrowError('Unhandled OrderBy value');
   });
 });
 

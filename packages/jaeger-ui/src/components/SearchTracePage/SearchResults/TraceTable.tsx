@@ -9,15 +9,16 @@ import type { ColumnsType, TableProps } from 'antd/es/table';
 import type { SorterResult, SortOrder } from 'antd/es/table/interface';
 import Overflow from '@rc-component/overflow';
 import _sortBy from 'lodash/sortBy';
-import { IoArrowUp, IoArrowDown } from 'react-icons/io5';
 import { TraceSummary } from '../../../types/trace-summary';
 import { formatDuration, formatDurationCompact, formatDatetime } from '../../../utils/date';
 import RelativeBar from '../../common/RelativeBar';
 import { toOrderBy, fromOrderBy } from '../../../model/search';
 import type { SortableColumnKey, SortDirection } from '../../../model/search';
-import { OrderBy } from '../../../model/order-by';
+import type { OrderBy } from '../../../model/order-by';
 import type { TracePageLink } from '../../TracePage/url';
 import { ServicePill, type ServiceEntry } from './ServicePills';
+
+const BOTH_DIRECTIONS: SortOrder[] = ['ascend', 'descend'];
 
 type TraceTableProps = {
   traceSummaries: TraceSummary[];
@@ -29,26 +30,6 @@ type TraceTableProps = {
   cohortIds: Set<string>;
   toggleComparison: (traceID: string, isInDiffCohort: boolean) => void;
 };
-
-/**
- * Renders an IoArrowUp or IoArrowDown icon next to the column title when that column is the
- * active sort column. Returns plain text otherwise.
- */
-function sortableTitle(
-  label: string,
-  columnKey: string,
-  activeSortKey: string,
-  activeSortOrder: 'ascend' | 'descend'
-) {
-  if (columnKey !== activeSortKey) return label;
-  const Icon = activeSortOrder === 'ascend' ? IoArrowUp : IoArrowDown;
-  return (
-    <span>
-      {label}
-      <Icon className="TraceTable--sortIcon" aria-hidden />
-    </span>
-  );
-}
 
 function ServicePills({ services }: { services: TraceSummary['services'] }) {
   const sorted = _sortBy(services, s => s.name);
@@ -127,7 +108,7 @@ export default function TraceTable({
         },
         sorter: true,
         sortOrder: sortKey === 'traceName' ? sortOrder : undefined,
-        sortDirections: ['ascend', 'descend'] as SortOrder[],
+        sortDirections: BOTH_DIRECTIONS,
       },
       ...(showServicesColumn
         ? [
@@ -149,7 +130,7 @@ export default function TraceTable({
         render: (_: unknown, trace: TraceSummary) => trace.spanCount,
         sorter: true,
         sortOrder: sortKey === 'spans' ? sortOrder : undefined,
-        sortDirections: ['ascend', 'descend'] as SortOrder[],
+        sortDirections: BOTH_DIRECTIONS,
       },
       ...(showErrorsColumn
         ? [
@@ -177,7 +158,7 @@ export default function TraceTable({
                 ),
               sorter: true,
               sortOrder: sortKey === 'errors' ? sortOrder : undefined,
-              sortDirections: ['ascend', 'descend'] as SortOrder[],
+              sortDirections: BOTH_DIRECTIONS,
             },
           ]
         : []),
@@ -196,7 +177,7 @@ export default function TraceTable({
         ),
         sorter: true,
         sortOrder: sortKey === 'duration' ? sortOrder : undefined,
-        sortDirections: ['ascend', 'descend'] as SortOrder[],
+        sortDirections: BOTH_DIRECTIONS,
       },
       {
         title: 'Start Time',
@@ -224,7 +205,7 @@ export default function TraceTable({
         sorter: true,
 
         sortOrder: sortKey === 'startTime' ? sortOrder : undefined,
-        sortDirections: ['descend', 'ascend'],
+        sortDirections: BOTH_DIRECTIONS,
       },
     ];
 
@@ -280,7 +261,6 @@ export default function TraceTable({
 
   return (
     <Table<TraceSummary>
-      className="TraceTable"
       columns={columns}
       dataSource={traceSummaries}
       rowKey="traceID"
