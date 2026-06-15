@@ -29,6 +29,12 @@
       "description": "@assistant-ui/* and @ag-ui/* share peer types (AssistantRuntime, HttpAgent); bumping them independently produces duplicate copies in node_modules and tsc errors. Pin exact versions (no ^) so npm dedupes a single copy."
     },
     {
+      "groupName": "opentelemetry",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["/^@opentelemetry//"],
+      "description": "@opentelemetry/* packages share internal type contracts and version-locked peer deps; bump them together to avoid mismatches"
+    },
+    {
       "groupName": "do not apply patch upgrades to dependencies",
       "matchManagers": ["npm"],
       "matchUpdateTypes": ["patch", "digest"],
