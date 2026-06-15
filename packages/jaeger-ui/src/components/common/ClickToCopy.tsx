@@ -51,6 +51,7 @@ function ClickToCopy({ text, className = '', children }: Props) {
 
   const whenClicked = (e: React.MouseEvent<HTMLSpanElement>) => {
     e.stopPropagation();
+    e.preventDefault();
     doCopy();
   };
 
@@ -62,8 +63,8 @@ function ClickToCopy({ text, className = '', children }: Props) {
         onKeyDown={e => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.stopPropagation();
-            doCopy();
             e.preventDefault();
+            doCopy();
           }
         }}
         role="button"
