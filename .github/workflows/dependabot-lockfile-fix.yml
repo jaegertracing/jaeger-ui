@@ -30,7 +30,7 @@ jobs:
           npm install -g npm@$NPM_VERSION
 
       - name: Regenerate lockfile
-        run: npm install --package-lock-only --ignore-scripts
+        run: npm install --ignore-scripts
 
       - name: Commit if changed
         run: |
