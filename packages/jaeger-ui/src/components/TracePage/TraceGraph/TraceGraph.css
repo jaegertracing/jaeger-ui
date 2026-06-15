@@ -57,6 +57,13 @@ SPDX-License-Identifier: Apache-2.0
 
 .TraceGraph--dag {
   stroke-width: 0.8;
+  stroke: var(--text-secondary);
+}
+
+/* Theme-aware color for edge arrowheads (marker) so they stay visible in dark mode */
+.TraceGraph--dag marker {
+  stroke: var(--text-secondary);
+  fill: var(--text-secondary);
 }
 
 /* DAG minimap */

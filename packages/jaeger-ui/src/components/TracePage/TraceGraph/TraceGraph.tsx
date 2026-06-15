@@ -77,7 +77,7 @@ const getHelpContent = (useOtelTerms: boolean) => (
     </div>
     <div>
       <svg width="100%" height="40">
-        <line x1="0" y1="10" x2="90" y2="10" style={{ stroke: 'var(--text-primary)', strokeWidth: 2 }} />
+        <line x1="0" y1="10" x2="90" y2="10" style={{ stroke: 'var(--text-secondary)', strokeWidth: 2 }} />
         <text alignmentBaseline="middle" x="100" y="10">
           ChildOf
         </text>
@@ -86,7 +86,7 @@ const getHelpContent = (useOtelTerms: boolean) => (
           y1="30"
           x2="90"
           y2="30"
-          style={{ stroke: 'var(--text-primary)', strokeWidth: 2, strokeDasharray: '4' }}
+          style={{ stroke: 'var(--text-secondary)', strokeWidth: 2, strokeDasharray: '4' }}
         />
         <text alignmentBaseline="middle" x="100" y="30">
           Non-Blocking
