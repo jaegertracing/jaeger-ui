@@ -256,6 +256,36 @@
       "logs": [],
       "processID": "p1",
       "warnings": null
+    },
+    {
+      "traceID": "trace-123",
+      "spanID": "span-8",
+      "flags": 1,
+      "operationName": "op8",
+      "startTime": 1542666453350000,
+      "duration": 15000,
+      "references": [
+        {
+          "refType": "CHILD_OF",
+          "traceID": "trace-123",
+          "spanID": "span-1"
+        },
+        {
+          "refType": "FOLLOWS_FROM",
+          "traceID": "trace-123",
+          "spanID": "span-6"
+        }
+      ],
+      "tags": [
+        {
+          "key": "span.kind",
+          "type": "string",
+          "value": "internal"
+        }
+      ],
+      "logs": [],
+      "processID": "p1",
+      "warnings": null
     }
   ],
   "processes": {

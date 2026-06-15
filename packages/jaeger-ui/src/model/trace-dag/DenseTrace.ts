@@ -28,6 +28,7 @@ function convSpans(spans: ReadonlyArray<IOtelSpan>) {
       attributes,
       children: new Set<string>(),
       skipToChild: false,
+      links: span.links || [],
     };
     const parent = parentSpanID && map.get(parentSpanID);
     if (!parent) {
