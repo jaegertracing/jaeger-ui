@@ -98,6 +98,7 @@ export default function SummaryFieldsBar({
       </div>
       <Input
         allowClear
+        aria-label="Search attribute keys"
         className="SummaryFieldsBar--search"
         onChange={e => setSearchQuery(e.target.value)}
         placeholder="Search attribute keys..."
