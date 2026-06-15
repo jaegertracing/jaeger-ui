@@ -55,14 +55,30 @@ SPDX-License-Identifier: Apache-2.0
   margin-top: 1rem;
 }
 
+/* Legend sample edge lines — same theme-aware color as the real graph edges */
+.TraceGraph--legendLine {
+  stroke: var(--text-secondary);
+  stroke-width: 2;
+}
+
+.TraceGraph--legendLine.is-nonBlocking {
+  stroke-dasharray: 4;
+}
+
 .TraceGraph--dag {
   stroke-width: 0.8;
+}
+
+/*
+  Theme-aware edge lines and arrowheads so they stay visible in dark mode.
+  Scoped to the edge path and marker shape (rather than the .TraceGraph--dag
+  container) so inherited stroke/fill cannot restyle nodes, borders, or overlays.
+*/
+.TraceGraph--dag .plexus-Digraph--SvgEdge {
   stroke: var(--text-secondary);
 }
 
-/* Theme-aware color for edge arrowheads (marker) so they stay visible in dark mode */
-.TraceGraph--dag marker {
-  stroke: var(--text-secondary);
+.TraceGraph--dag .plexus-Digraph--DefEntry path {
   fill: var(--text-secondary);
 }
 
