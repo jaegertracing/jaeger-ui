@@ -24,12 +24,13 @@ jobs:
         with:
           cache: npm
           node-version-file: 'package.json'
-      - name: Upgrade npm
-        run: |
-          NPM_VERSION=$(node -p "require('./package.json').engines.npm.replace(/[^0-9.]/g, '')")
-          npm install -g npm@$NPM_VERSION
+      - run: corepack enable
       - run: npm --version
       - run: npm ci
+      - name: Verify lockfile is in sync
+        run: |
+          npm install --package-lock-only --ignore-scripts
+          git diff --exit-code package-lock.json || (echo '❌ package-lock.json is out of sync with the pinned npm version. Run "corepack enable && npm install" locally and commit the result.' && exit 1)
       - name: Run depcheck
         run: npm run depcheck
       - run: npm run lint
