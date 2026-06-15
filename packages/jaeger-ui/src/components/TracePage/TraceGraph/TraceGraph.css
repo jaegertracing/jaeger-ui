@@ -71,14 +71,15 @@ SPDX-License-Identifier: Apache-2.0
 
 /*
   Theme-aware edge lines and arrowheads so they stay visible in dark mode.
-  Scoped to the edge path and marker shape (rather than the .TraceGraph--dag
-  container) so inherited stroke/fill cannot restyle nodes, borders, or overlays.
+  Scoped to the edge path and the arrowhead marker's child shape (rather than
+  the .TraceGraph--dag container) so inherited stroke/fill cannot restyle nodes,
+  borders, overlays, or other <defs> primitives (clipPaths, masks, gradients).
 */
 .TraceGraph--dag .plexus-Digraph--SvgEdge {
   stroke: var(--text-secondary);
 }
 
-.TraceGraph--dag .plexus-Digraph--DefEntry path {
+.TraceGraph--dag marker path {
   fill: var(--text-secondary);
 }
 
