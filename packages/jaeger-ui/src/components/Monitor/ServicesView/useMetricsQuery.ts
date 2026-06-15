@@ -17,22 +17,6 @@ import type {
   ServiceOpsMetrics,
 } from '../../../types/metrics';
 
-// Module-private query keys
-function serviceMetricsQueryKey(
-  serviceName: string | undefined,
-  params: MetricsAPIQueryParams
-): readonly ['serviceMetrics', string | undefined, MetricsAPIQueryParams] {
-  return ['serviceMetrics', serviceName, params] as const;
-}
-
-function operationMetricsQueryKey(
-  serviceName: string | undefined,
-  params: MetricsAPIQueryParams
-): readonly ['operationMetrics', string | undefined, MetricsAPIQueryParams] {
-  return ['operationMetrics', serviceName, params] as const;
-}
-
-// Transformation helpers (extracted from src/reducers/metrics.ts)
 export type ServiceMetricsResult = {
   serviceMetrics: ServiceMetrics;
   serviceError: {
@@ -52,6 +36,23 @@ export type OperationMetricsResult = {
     opsErrors: null | ApiError;
   };
 };
+
+type OpsMap = Record<string, { name: string; metricPoints: OpsDataPoints }>;
+
+// Module-private query keys
+function serviceMetricsQueryKey(
+  serviceName: string | undefined,
+  params: MetricsAPIQueryParams
+): readonly ['serviceMetrics', string | undefined, MetricsAPIQueryParams] {
+  return ['serviceMetrics', serviceName, params] as const;
+}
+
+function operationMetricsQueryKey(
+  serviceName: string | undefined,
+  params: MetricsAPIQueryParams
+): readonly ['operationMetrics', string | undefined, MetricsAPIQueryParams] {
+  return ['operationMetrics', serviceName, params] as const;
+}
 
 function parseMetricPoints(rawPoints: MetricPointObject[]): { x: number; y: number | null }[] {
   return rawPoints.map(p => {
@@ -135,7 +136,6 @@ export function transformOperationMetrics(
     opsErrors: null,
   };
 
-  type OpsMap = Record<string, { name: string; metricPoints: OpsDataPoints }>;
   let opsMetrics: OpsMap | null = null;
 
   payload.forEach((promiseResult, i) => {
