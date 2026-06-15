@@ -186,7 +186,14 @@ export default function TraceSpanView(props: Props) {
           <Tooltip
             title={`${dayjs(span.startTime / 1000).format('DD MMM YYYY hh:mm:ss A')} (${preciseValue})`}
           >
-            <span style={{ fontFamily: 'monospace', fontSize: '12px', display: 'block', textAlign: 'right' }}>
+            <span
+              style={{
+                fontFamily: 'monospace',
+                fontSize: '12px',
+                display: 'block',
+                textAlign: 'right',
+              }}
+            >
               {compactValue}
             </span>
           </Tooltip>

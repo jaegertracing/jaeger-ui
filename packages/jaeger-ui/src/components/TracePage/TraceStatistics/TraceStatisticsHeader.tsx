@@ -9,7 +9,6 @@ import { ITableSpan } from './types';
 import { generateDropdownValue, generateSecondDropdownValue } from './generateDropdownValue';
 import { getColumnValues, getColumnValuesSecondDropdown, getServiceName } from './tableValues';
 import SearchableSelect from '../../common/SearchableSelect';
-import generateColor from './generateColor';
 import './TraceStatisticsHeader.css';
 
 type Props = {
@@ -20,7 +19,8 @@ type Props = {
     tableValue: ITableSpan[],
     wholeTable: ITableSpan[],
     valueNameSelector1: string,
-    valueNameSelector2: string | null
+    valueNameSelector2: string | null,
+    colorByAttribute: string
   ) => void;
   useOtelTerms: boolean;
 };
@@ -43,112 +43,80 @@ export default function TraceStatisticsHeader(props: Props) {
   const [valueNameSelector1, setValueNameSelector1State] = useState<string>(getServiceName);
   const [valueNameSelector2, setValueNameSelector2State] = useState<string | null>(null);
   const [valueNameSelector3, setValueNameSelector3State] = useState<string>('Count');
-  const [checkboxStatus, setCheckboxStatus] = useState<boolean>(false);
+  const [checkboxStatus, setCheckboxStatus] = useState<boolean>(true);
+
+  const getValue = (currentCheckboxStatus = checkboxStatus) => {
+    if (!currentCheckboxStatus) {
+      return '';
+    }
+    let toColor = optionsNameSelector3.get(valueNameSelector3);
+    if (toColor === undefined) {
+      toColor = 'count';
+    }
+    return toColor;
+  };
 
   useLayoutEffect(() => {
     handler(
       getColumnValues(valueNameSelector1, trace, useOtelTerms),
       getColumnValues(valueNameSelector1, trace, useOtelTerms),
       valueNameSelector1,
-      null
+      null,
+      getValue()
     );
     // eslint-disable-next-line react-x/exhaustive-deps
   }, []);
 
-  /**
-   * Returns the value of optionsNameSelector3.
-   */
-  const getValue = () => {
-    let toColor = optionsNameSelector3.get(valueNameSelector3);
-    if (toColor === undefined) {
-      toColor = '';
-    }
-    return toColor;
-  };
-
-  /**
-   * Is called after a value from the first dropdown is selected.
-   */
   const setValueNameSelector1 = (value: string) => {
     setValueNameSelector1State(value);
     setValueNameSelector2State(null);
-    const newTableValue = generateColor(
+    handler(
       getColumnValues(value, trace, useOtelTerms),
-      getValue(),
-      checkboxStatus
-    );
-    const newWholeTable = generateColor(
       getColumnValues(value, trace, useOtelTerms),
-      getValue(),
-      checkboxStatus
+      value,
+      null,
+      getValue()
     );
-    handler(newTableValue, newWholeTable, value, null);
   };
 
-  /**
-   * Is called after a value from the second dropdown is selected.
-   */
   const setValueNameSelector2 = (value: string | null | undefined) => {
-    // antd's allowClear fires onChange(undefined) before onClear; ignore it
-    // and let clearValue own the reset path.
     if (value == null) return;
     setValueNameSelector2State(value);
-    const newTableValue = generateColor(
+    handler(
       getColumnValuesSecondDropdown(tableValue, valueNameSelector1, value, trace, useOtelTerms),
-      getValue(),
-      checkboxStatus
-    );
-    const newWholeTable = generateColor(
       getColumnValuesSecondDropdown(wholeTable, valueNameSelector1, value, trace, useOtelTerms),
-      getValue(),
-      checkboxStatus
+      valueNameSelector1,
+      value,
+      getValue()
     );
-    handler(newTableValue, newWholeTable, valueNameSelector1, value);
   };
 
-  /**
-   * Is called after a value from the third dropdown is selected.
-   */
   const setValueNameSelector3 = (value: string) => {
     setValueNameSelector3State(value);
 
     let toColor = optionsNameSelector3.get(value);
     if (toColor === undefined) {
-      toColor = '';
+      toColor = 'count';
     }
-    const newTableValue = generateColor(tableValue, toColor, checkboxStatus);
-    const newWholeTable = generateColor(wholeTable, toColor, checkboxStatus);
-    handler(newTableValue, newWholeTable, valueNameSelector1, valueNameSelector2);
+
+    handler(tableValue, wholeTable, valueNameSelector1, valueNameSelector2, checkboxStatus ? toColor : '');
   };
 
-  /**
-   * Is called after the checkbox changes its status.
-   */
   const checkboxButton = (e: CheckboxChangeEvent) => {
-    setCheckboxStatus(e.target.checked);
-
-    const newTableValue = generateColor(tableValue, getValue(), e.target.checked);
-    const newWholeTable = generateColor(wholeTable, getValue(), e.target.checked);
-    handler(newTableValue, newWholeTable, valueNameSelector1, valueNameSelector2);
+    const isChecked = e.target.checked;
+    setCheckboxStatus(isChecked);
+    handler(tableValue, wholeTable, valueNameSelector1, valueNameSelector2, getValue(isChecked));
   };
 
-  /**
-   * Sets the second dropdown to "No Item selected" and sets the table to the values after the first dropdown.
-   */
   const clearValue = () => {
     setValueNameSelector2State(null);
-
-    const newTableValue = generateColor(
+    handler(
       getColumnValues(valueNameSelector1, trace, useOtelTerms),
-      getValue(),
-      checkboxStatus
-    );
-    const newWholeTable = generateColor(
       getColumnValues(valueNameSelector1, trace, useOtelTerms),
-      getValue(),
-      checkboxStatus
+      valueNameSelector1,
+      null,
+      getValue()
     );
-    handler(newTableValue, newWholeTable, valueNameSelector1, null);
   };
 
   const optionsNameSelector1 = generateDropdownValue(trace, useOtelTerms);
@@ -192,7 +160,11 @@ export default function TraceStatisticsHeader(props: Props) {
         </SearchableSelect>
       </label>
       <div className="TraceStatisticsHeader--colorByWrapper">
-        <Checkbox className="TraceStatisticsHeader--checkbox" onChange={checkboxButton} />
+        <Checkbox
+          className="TraceStatisticsHeader--checkbox"
+          onChange={checkboxButton}
+          checked={checkboxStatus}
+        />
         <label className="TraceStatisticsHeader--label">
           <span className="TraceStatisticsHeader--labelText">Color by:</span>
           <SearchableSelect

@@ -16,13 +16,57 @@ SPDX-License-Identifier: Apache-2.0
   color: rgb(153, 153, 153);
   font-style: italic;
   cursor: default;
+  background-color: var(--surface-primary);
 }
 
 .MainTableData--TraceStatistics {
   border-top: 1px solid var(--border-strong);
+  background-color: var(--surface-primary);
 }
 
-.MainTableData--TraceStatistics:hover {
-  background: var(--surface-component-background-hover);
+.MainTableData--TraceStatistics:hover,
+.undefClass--TraceStatistics:hover {
+  background-color: var(--surface-component-background-hover);
   color: var(--text-primary);
+}
+
+/* Ensure expanded rows (tree data) also use the correct background */
+.span-view-table .ant-table-tbody > tr > td {
+  background-color: var(--surface-primary);
+}
+
+/* Override Ant Design cells on hover without using !important */
+.span-view-table.ant-table-wrapper .ant-table-tbody > tr.ant-table-row-hover > td,
+.span-view-table.ant-table-wrapper .ant-table-tbody > tr:hover > td {
+  background-color: var(--surface-component-background-hover);
+  color: var(--text-primary);
+}
+
+/* Search highlight cell formatting with an inset border highlight */
+.span-view-table.ant-table-wrapper .ant-table-tbody > tr > td.TraceStatistics--searchMatch {
+  background-color: var(--trace-emphasis-highlight);
+  box-shadow: inset 0 0 0 1px var(--trace-emphasis-highlight);
+}
+
+/* Ensure highlighted cells retain their highlight color on hover */
+.span-view-table.ant-table-wrapper
+  .ant-table-tbody
+  > tr.ant-table-row-hover
+  > td.TraceStatistics--searchMatch,
+.span-view-table.ant-table-wrapper .ant-table-tbody > tr:hover > td.TraceStatistics--searchMatch {
+  background-color: var(--trace-emphasis-highlight);
+}
+
+.TraceStatistics--valueContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.TraceStatistics--valueDisplay {
+  white-space: nowrap;
+  font-family: monospace;
+  font-size: 12px;
+  text-align: right;
 }
