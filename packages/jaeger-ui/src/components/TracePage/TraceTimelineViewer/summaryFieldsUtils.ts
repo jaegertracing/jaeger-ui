@@ -85,6 +85,10 @@ export function isHttpStatusCode5xx(key: string, value: string): boolean {
   if (!HTTP_STATUS_CODE_KEYS.has(key)) {
     return false;
   }
-  const code = parseInt(value, 10);
-  return !Number.isNaN(code) && code >= 500;
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) {
+    return false;
+  }
+  const code = Number(trimmed);
+  return code >= 500;
 }

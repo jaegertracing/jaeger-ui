@@ -199,6 +199,9 @@ describe('summaryFieldsUtils', () => {
       expect(isHttpStatusCode5xx('http.response.status_code', '404')).toBe(false);
       expect(isHttpStatusCode5xx('customer.id', '500')).toBe(false);
       expect(isHttpStatusCode5xx('http.status_code', 'not-a-number')).toBe(false);
+      expect(isHttpStatusCode5xx('http.status_code', '500abc')).toBe(false);
+      expect(isHttpStatusCode5xx('http.status_code', ' 503 ')).toBe(true);
+      expect(isHttpStatusCode5xx('http.status_code', '500.0')).toBe(false);
     });
   });
 
