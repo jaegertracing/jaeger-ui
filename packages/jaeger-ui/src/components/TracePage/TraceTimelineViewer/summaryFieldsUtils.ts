@@ -90,5 +90,5 @@ export function isHttpStatusCode5xx(key: string, value: string): boolean {
     return false;
   }
   const code = Number(trimmed);
-  return code >= 500;
+  return code >= 500 && code < 600;
 }
