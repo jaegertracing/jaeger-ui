@@ -33,14 +33,12 @@ function normalizeSummaryFields(fields: unknown[]): string[] {
   const seen = new Set<string>();
   const normalized: string[] = [];
   for (const key of fields) {
-    if (typeof key !== 'string' || seen.has(key)) {
-      continue;
-    }
-    seen.add(key);
-    normalized.push(key);
-    if (normalized.length >= MAX_SUMMARY_FIELDS) {
-      break;
-    }
+    if (typeof key !== 'string') continue;
+    const trimmed = key.trim();
+    if (!trimmed || seen.has(trimmed)) continue;
+    seen.add(trimmed);
+    normalized.push(trimmed);
+    if (normalized.length >= MAX_SUMMARY_FIELDS) break;
   }
   return normalized;
 }
