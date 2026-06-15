@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, createEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ClickToCopy from './ClickToCopy';
 import { act } from '@testing-library/react';
@@ -57,22 +57,29 @@ describe('<ClickToCopy />', () => {
     expect(parentClickHandler).not.toHaveBeenCalled();
   });
 
-  it('calls preventDefault on click to avoid parent link navigation', () => {
+  it('prevents default on click to avoid parent link navigation', () => {
     render(<ClickToCopy text={textToCopy}>{childText}</ClickToCopy>);
     const span = screen.getByRole('button', { name: /Copy to clipboard/i });
-    const event = new MouseEvent('click', { bubbles: true, cancelable: true });
-    const preventDefaultSpy = jest.spyOn(event, 'preventDefault');
-    span.dispatchEvent(event);
-    expect(preventDefaultSpy).toHaveBeenCalled();
+    const event = createEvent.click(span);
+    fireEvent(span, event);
+    expect(event.defaultPrevented).toBe(true);
   });
 
-  it('calls preventDefault on Enter/Space keydown to avoid parent link navigation', () => {
+  it('prevents default on Enter and Space keyboard activation', () => {
     render(<ClickToCopy text={textToCopy}>{childText}</ClickToCopy>);
     const span = screen.getByRole('button', { name: /Copy to clipboard/i });
-    const enterEvent = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
-    const preventDefaultSpy = jest.spyOn(enterEvent, 'preventDefault');
-    span.dispatchEvent(enterEvent);
-    expect(preventDefaultSpy).toHaveBeenCalled();
+
+    const enterEvent = createEvent.keyDown(span, { key: 'Enter', code: 'Enter' });
+    fireEvent(span, enterEvent);
+    expect(enterEvent.defaultPrevented).toBe(true);
+
+    const spaceKeyDown = createEvent.keyDown(span, { key: ' ', code: 'Space' });
+    fireEvent(span, spaceKeyDown);
+    expect(spaceKeyDown.defaultPrevented).toBe(true);
+
+    const spaceKeyUp = createEvent.keyUp(span, { key: ' ', code: 'Space' });
+    fireEvent(span, spaceKeyUp);
+    expect(spaceKeyUp.defaultPrevented).toBe(true);
   });
 
   it('shows "Copied to clipboard" when clicked and resets after timeout', async () => {
@@ -110,7 +117,8 @@ describe('<ClickToCopy />', () => {
     expect(copySpy).toHaveBeenCalledWith('copy');
 
     fireEvent.keyDown(button, { key: ' ', code: 'Space' });
-    expect(copySpy).toHaveBeenCalledWith('copy');
+    fireEvent.keyUp(button, { key: ' ', code: 'Space' });
+    expect(copySpy).toHaveBeenCalledTimes(2);
 
     copySpy.mockRestore();
   });

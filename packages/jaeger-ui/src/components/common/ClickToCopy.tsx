@@ -61,7 +61,17 @@ function ClickToCopy({ text, className = '', children }: Props) {
         className={className}
         onClick={whenClicked}
         onKeyDown={e => {
-          if (e.key === 'Enter' || e.key === ' ') {
+          if (e.key === 'Enter') {
+            e.stopPropagation();
+            e.preventDefault();
+            doCopy();
+          } else if (e.key === ' ') {
+            e.stopPropagation();
+            e.preventDefault();
+          }
+        }}
+        onKeyUp={e => {
+          if (e.key === ' ') {
             e.stopPropagation();
             e.preventDefault();
             doCopy();
