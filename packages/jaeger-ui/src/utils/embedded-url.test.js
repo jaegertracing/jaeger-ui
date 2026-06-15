@@ -33,7 +33,23 @@ describe('getEmbeddedState()', () => {
         hideMinimap: false,
         hideSummary: false,
       },
+      theme: undefined,
     });
+  });
+
+  it('parses uiTheme=dark', () => {
+    const search = 'uiEmbed=v0&uiTheme=dark';
+    expect(getEmbeddedState(search)).toMatchObject({ theme: 'dark' });
+  });
+
+  it('parses uiTheme=light', () => {
+    const search = 'uiEmbed=v0&uiTheme=light';
+    expect(getEmbeddedState(search)).toMatchObject({ theme: 'light' });
+  });
+
+  it('ignores invalid uiTheme values', () => {
+    const search = 'uiEmbed=v0&uiTheme=sepia';
+    expect(getEmbeddedState(search)).toMatchObject({ theme: undefined });
   });
 
   it('handles mixed values correctly', () => {
