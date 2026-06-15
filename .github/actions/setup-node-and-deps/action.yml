@@ -10,9 +10,13 @@ runs:
       with:
         cache: npm
         node-version-file: 'package.json'
-    - run: corepack enable
+    - run: corepack enable npm
       shell: bash
     - run: node --version && npm --version
       shell: bash
+      env:
+        COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
     - run: npm ci
       shell: bash
+      env:
+        COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'

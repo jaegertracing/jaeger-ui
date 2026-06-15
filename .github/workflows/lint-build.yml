@@ -24,7 +24,7 @@ jobs:
       - name: Verify lockfile is in sync
         run: |
           npm install --package-lock-only --ignore-scripts
-          git diff --exit-code package-lock.json || (echo '❌ package-lock.json is out of sync with the pinned npm version. Run "corepack enable && npm install" locally and commit the result.' && exit 1)
+          git diff --exit-code package-lock.json || (echo '❌ package-lock.json is out of sync with the pinned npm version. Run "corepack enable npm && npm install" locally and commit the result.' && exit 1)
       - run: npm ls --all
       - name: Run depcheck
         run: npm run depcheck
