@@ -247,26 +247,6 @@ export function getCriticalPathSections(
   return ownSections;
 }
 
-// export from tests
-export function arePropsEqual(
-  prevProps: VirtualizedTraceViewProps,
-  nextProps: VirtualizedTraceViewProps
-): boolean {
-  // If any prop updates, VirtualizedTraceViewImpl should update.
-  const nextPropKeys = Object.keys(nextProps) as (keyof VirtualizedTraceViewProps)[];
-  for (let i = 0; i < nextPropKeys.length; i += 1) {
-    if (nextProps[nextPropKeys[i]] !== prevProps[nextPropKeys[i]]) {
-      // Unless the only change was props.shouldScrollToFirstUiFindMatch changing to false.
-      if (nextPropKeys[i] === 'shouldScrollToFirstUiFindMatch') {
-        if (nextProps[nextPropKeys[i]]) return false;
-      } else {
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
 // export for tests
 export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceViewImpl(
   props: VirtualizedTraceViewProps
@@ -673,9 +653,13 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
   }, [handleListResize, handleDetailMeasure]);
 
   const { registerAccessors } = props;
+  const prevRegisterAccessorsRef = useRef(registerAccessors);
   useEffect(() => {
-    if (listViewRef.current) {
-      registerAccessors(getAccessors());
+    if (registerAccessors !== prevRegisterAccessorsRef.current) {
+      prevRegisterAccessorsRef.current = registerAccessors;
+      if (listViewRef.current) {
+        registerAccessors(getAccessors());
+      }
     }
   }, [registerAccessors, getAccessors]);
 
@@ -704,7 +688,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
       />
     </div>
   );
-}, arePropsEqual);
+});
 
 /**
  * Functional wrapper that reads Zustand (ephemeral timeline state + layout prefs) and the

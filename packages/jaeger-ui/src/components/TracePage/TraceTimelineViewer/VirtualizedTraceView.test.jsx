@@ -7,12 +7,7 @@ import '@testing-library/jest-dom';
 import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
-import {
-  DEFAULT_HEIGHTS,
-  VirtualizedTraceViewImpl,
-  arePropsEqual,
-  getCriticalPathSections,
-} from './VirtualizedTraceView';
+import { DEFAULT_HEIGHTS, VirtualizedTraceViewImpl, getCriticalPathSections } from './VirtualizedTraceView';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
 import updateUiFindSpy from '../../../utils/update-ui-find';
@@ -582,38 +577,6 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
       expect(mockProps.scrollToFirstVisibleSpan).toHaveBeenCalledTimes(1);
       expect(mockProps.clearShouldScrollToFirstUiFindMatch).toHaveBeenCalledTimes(1);
-    });
-
-    describe('arePropsEqual', () => {
-      it('returns false (should update) if props.shouldScrollToFirstUiFindMatch changes to true', () => {
-        const result = arePropsEqual(mockProps, {
-          ...mockProps,
-          shouldScrollToFirstUiFindMatch: true,
-        });
-        expect(result).toBe(false);
-      });
-
-      it('returns false if props.shouldScrollToFirstUiFindMatch changes to false and another prop changes', () => {
-        const result = arePropsEqual(
-          { ...mockProps, shouldScrollToFirstUiFindMatch: true },
-          {
-            ...mockProps,
-            shouldScrollToFirstUiFindMatch: false,
-            clearShouldScrollToFirstUiFindMatch: jest.fn(),
-          }
-        );
-        expect(result).toBe(false);
-      });
-
-      it('returns true (skip update) if props.shouldScrollToFirstUiFindMatch changes to false and no other props change', () => {
-        const result = arePropsEqual({ ...mockProps, shouldScrollToFirstUiFindMatch: true }, mockProps);
-        expect(result).toBe(true);
-      });
-
-      it('returns true if all props are unchanged', () => {
-        const result = arePropsEqual(mockProps, mockProps);
-        expect(result).toBe(true);
-      });
     });
   });
 
