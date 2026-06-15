@@ -1,7 +1,7 @@
 # Copyright (c) 2026 The Jaeger Authors.
 # SPDX-License-Identifier: Apache-2.0
 
-name: 'Setup Node'
+name: 'Setup Node and Deps'
 description: 'Setup Node.js with corepack-managed npm and install dependencies'
 runs:
   using: "composite"
@@ -12,7 +12,7 @@ runs:
         node-version-file: 'package.json'
     - run: corepack enable
       shell: bash
-    - run: npm --version
+    - run: node --version && npm --version
       shell: bash
     - run: npm ci
       shell: bash

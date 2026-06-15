@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
-      - uses: ./.github/actions/setup-node
+      - uses: ./.github/actions/setup-node-and-deps
       - name: Verify lockfile is in sync
         run: |
           npm install --package-lock-only --ignore-scripts
