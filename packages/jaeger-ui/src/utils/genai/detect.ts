@@ -11,7 +11,7 @@
  *
  * @see https://opentelemetry.io/docs/specs/semconv/gen-ai/
  */
-export const RICH_MEDIA_ATTRIBUTE_KEYS: Readonly<Record<string, 'markdown' | 'json'>> = {
+const RICH_MEDIA_ATTRIBUTE_KEYS: Readonly<Record<string, 'markdown' | 'json'>> = {
   'gen_ai.input.messages': 'markdown',
   'gen_ai.output.messages': 'markdown',
   'gen_ai.system_instructions': 'markdown',
@@ -20,3 +20,5 @@ export const RICH_MEDIA_ATTRIBUTE_KEYS: Readonly<Record<string, 'markdown' | 'js
   'gen_ai.tool.definitions': 'json',
   'gen_ai.retrieval.documents': 'json',
 };
+
+export const GENAI_RICH_MEDIA_ATTRIBUTE_KEYS = new Set(Object.keys(RICH_MEDIA_ATTRIBUTE_KEYS));

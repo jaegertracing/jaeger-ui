@@ -6,7 +6,8 @@ import { Divider } from 'antd';
 
 import { IoLinkOutline } from 'react-icons/io5';
 import AccordionAttributes from './AccordionAttributes';
-import AccordionGenAIAttributes, { GENAI_RICH_ATTRIBUTE_KEYS } from './AccordionGenAIAttributes';
+import AccordionGenAIAttributes from './AccordionGenAIAttributes';
+import { GENAI_RICH_MEDIA_ATTRIBUTE_KEYS } from '../../../../utils/genai/detect';
 import AccordionEvents from './AccordionEvents';
 import AccordionLinks from './AccordionLinks';
 import AccordionText from './AccordionText';
@@ -87,6 +88,17 @@ export default function SpanDetail(props: SpanDetailProps) {
   ];
   const deepLinkCopyText = `${window.location.origin}${window.location.pathname}?uiFind=${span.spanID}`;
 
+  const { richAttrs, standardAttrs } = React.useMemo(() => {
+    const r: IAttribute[] = [];
+    const s: IAttribute[] = [];
+    for (let i = 0; i < span.attributes.length; i++) {
+      const a = span.attributes[i];
+      if (GENAI_RICH_MEDIA_ATTRIBUTE_KEYS.has(a.key)) r.push(a);
+      else s.push(a);
+    }
+    return { richAttrs: r, standardAttrs: s };
+  }, [span.attributes]);
+
   return (
     <div>
       <div className="ub-flex ub-items-center">
@@ -100,22 +112,16 @@ export default function SpanDetail(props: SpanDetailProps) {
       <Divider className="SpanDetail--divider ub-my1" />
       <div>
         <div>
-          {(() => {
-            const richAttrs = span.attributes.filter(a => GENAI_RICH_ATTRIBUTE_KEYS.has(a.key));
-            const standardAttrs = span.attributes.filter(a => !GENAI_RICH_ATTRIBUTE_KEYS.has(a.key));
-            return (
-              <>
-                {richAttrs.length > 0 && <AccordionGenAIAttributes data={richAttrs} />}
-                <AccordionAttributes
-                  data={standardAttrs}
-                  label={attributesLabel}
-                  linksGetter={linksGetter}
-                  isOpen={isAttributesOpen}
-                  onToggle={() => attributesToggle(span.spanID)}
-                />
-              </>
-            );
-          })()}
+          <>
+            {richAttrs.length > 0 && <AccordionGenAIAttributes data={richAttrs} />}
+            <AccordionAttributes
+              data={standardAttrs}
+              label={attributesLabel}
+              linksGetter={linksGetter}
+              isOpen={isAttributesOpen}
+              onToggle={() => attributesToggle(span.spanID)}
+            />
+          </>
           {span.resource.attributes && span.resource.attributes.length > 0 && (
             <AccordionAttributes
               className="ub-mb1"

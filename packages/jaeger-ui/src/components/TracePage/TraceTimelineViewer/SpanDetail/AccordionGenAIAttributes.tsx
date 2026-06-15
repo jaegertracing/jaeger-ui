@@ -7,17 +7,8 @@ import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
 import 'react-json-view-lite/dist/index.css';
 
 import { IAttribute } from '../../../../types/otel';
-import { RICH_MEDIA_ATTRIBUTE_KEYS } from '../../../../utils/genai/detect';
 
 import './AccordionGenAIAttributes.css';
-
-/**
- * The set of OTel GenAI semantic-convention attribute keys that contain
- * serialised JSON and warrant rich tree rendering instead of a flat row.
- *
- * @see https://opentelemetry.io/docs/specs/semconv/gen-ai/
- */
-export const GENAI_RICH_ATTRIBUTE_KEYS = new Set(Object.keys(RICH_MEDIA_ATTRIBUTE_KEYS));
 
 type SingleAttributeRowProps = {
   attribute: IAttribute;
@@ -43,6 +34,13 @@ function SingleAttributeRow({ attribute }: SingleAttributeRowProps) {
 
   const toggle = React.useCallback(() => setIsOpen(prev => !prev), []);
 
+  const onKeyDown = React.useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setIsOpen(prev => !prev);
+    }
+  }, []);
+
   const isParsedObject = isOpen && parsed !== null && typeof parsed === 'object';
 
   return (
@@ -51,7 +49,9 @@ function SingleAttributeRow({ attribute }: SingleAttributeRowProps) {
         className="AccordionGenAIAttributes--header"
         role="switch"
         aria-checked={isOpen}
+        tabIndex={0}
         onClick={toggle}
+        onKeyDown={onKeyDown}
         data-testid={`genai-attr-toggle-${attribute.key}`}
       >
         {isOpen ? (
@@ -86,7 +86,7 @@ function SingleAttributeRow({ attribute }: SingleAttributeRowProps) {
                 nullValue: 'json-markup-null',
                 undefinedValue: 'json-markup-undefined',
                 basicChildStyle: 'json-markup-child',
-                punctuation: 'json-markup-puncuation',
+                punctuation: 'json-markup-punctuation',
                 otherValue: 'json-markup-other',
               }}
             />
