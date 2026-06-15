@@ -55,28 +55,19 @@ function ClickToCopy({ text, className = '', children }: Props) {
     doCopy();
   };
 
+  const whenKeyDown = (e: React.KeyboardEvent<HTMLSpanElement>) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.stopPropagation();
+    e.preventDefault();
+    doCopy();
+  };
+
   return (
     <Tooltip title={isCopied ? 'Copied to clipboard' : 'Copy to clipboard'}>
       <span
         className={className}
         onClick={whenClicked}
-        onKeyDown={e => {
-          if (e.key === 'Enter') {
-            e.stopPropagation();
-            e.preventDefault();
-            doCopy();
-          } else if (e.key === ' ') {
-            e.stopPropagation();
-            e.preventDefault();
-          }
-        }}
-        onKeyUp={e => {
-          if (e.key === ' ') {
-            e.stopPropagation();
-            e.preventDefault();
-            doCopy();
-          }
-        }}
+        onKeyDown={whenKeyDown}
         role="button"
         tabIndex={0}
         aria-label={isCopied ? 'Copied to clipboard' : 'Copy to clipboard'}

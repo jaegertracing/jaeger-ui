@@ -76,10 +76,6 @@ describe('<ClickToCopy />', () => {
     const spaceKeyDown = createEvent.keyDown(span, { key: ' ', code: 'Space' });
     fireEvent(span, spaceKeyDown);
     expect(spaceKeyDown.defaultPrevented).toBe(true);
-
-    const spaceKeyUp = createEvent.keyUp(span, { key: ' ', code: 'Space' });
-    fireEvent(span, spaceKeyUp);
-    expect(spaceKeyUp.defaultPrevented).toBe(true);
   });
 
   it('shows "Copied to clipboard" when clicked and resets after timeout', async () => {
@@ -117,7 +113,6 @@ describe('<ClickToCopy />', () => {
     expect(copySpy).toHaveBeenCalledWith('copy');
 
     fireEvent.keyDown(button, { key: ' ', code: 'Space' });
-    fireEvent.keyUp(button, { key: ' ', code: 'Space' });
     expect(copySpy).toHaveBeenCalledTimes(2);
 
     copySpy.mockRestore();
