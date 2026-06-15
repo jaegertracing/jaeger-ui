@@ -203,7 +203,6 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
                     key={fieldKey}
                     aria-label={`${fieldKey}: ${value}`}
                     className={cx('SpanBarRow--summaryChip', { 'is-error': isError })}
-                    variant="filled"
                   >
                     {value}
                   </Tag>

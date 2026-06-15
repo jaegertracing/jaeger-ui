@@ -31,7 +31,6 @@ function FieldCheckbox({ field, isSelected, isDisabled, onToggle }: FieldCheckbo
         aria-label={`${isSelected ? 'Remove' : 'Add'} ${field.key} from summary fields`}
       >
         <span className="SummaryFieldsBar--fieldKey">{field.key}</span>
-        <span className="SummaryFieldsBar--separator" aria-hidden="true"></span>
         <span className="SummaryFieldsBar--coverage">
           {field.coverage}/{field.total}
         </span>
@@ -78,7 +77,7 @@ export default function SummaryFieldsBar({
   return (
     <div className="SummaryFieldsBar" data-testid="summary-fields-bar">
       <span className="SummaryFieldsBar--label">Summary fields</span>
-      <Tag className="SummaryFieldsBar--countTag" variant="outlined">
+      <Tag className="SummaryFieldsBar--countTag">
         {selectedFields.length} of {MAX_SUMMARY_FIELDS}
       </Tag>
       <div className="SummaryFieldsBar--fields" role="group" aria-label="Summary field selection">

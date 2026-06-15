@@ -106,6 +106,7 @@ SPDX-License-Identifier: Apache-2.0
 .SummaryFieldsBar--coverage {
   color: var(--text-secondary);
   font-size: 0.85em;
+  margin-left: 0.25rem;
   opacity: 0.6;
 }
 
