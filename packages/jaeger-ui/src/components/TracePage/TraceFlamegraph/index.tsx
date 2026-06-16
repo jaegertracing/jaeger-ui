@@ -30,6 +30,7 @@ interface TooltipState {
   y: number;
   name: string;
   value: number;
+  count: number;
 }
 
 const HIGHLIGHT_COLOR = '#E600E6';
@@ -125,7 +126,8 @@ const TraceFlamegraph = ({ trace }: any) => {
         const d3Data = (target as any).__data__;
         const name = d3Data?.data?.name || '';
         const value = d3Data?.data?.value || 0;
-        setTooltip({ x: e.clientX, y: e.clientY, name, value });
+        const count = d3Data?.data?.count || 1;
+        setTooltip({ x: e.clientX, y: e.clientY, name, value, count });
       });
       svgEl.addEventListener('mouseleave', () => {
         setTooltip(null);
@@ -259,6 +261,7 @@ const TraceFlamegraph = ({ trace }: any) => {
           y={tooltip.y}
           name={tooltip.name}
           value={tooltip.value}
+          count={tooltip.count}
           rootValue={flameData?.value || 1}
         />
       )}

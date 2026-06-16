@@ -11,10 +11,11 @@ type Props = {
   y: number;
   name: string;
   value: number;
+  count: number;
   rootValue: number;
 };
 
-const FlamegraphTooltip = ({ x, y, name, value, rootValue }: Props) => {
+const FlamegraphTooltip = ({ x, y, name, value, count, rootValue }: Props) => {
   const pct = rootValue > 0 ? ((value / rootValue) * 100).toFixed(2) : '0';
   const dur = formatDuration(value as Microseconds);
 
@@ -31,6 +32,12 @@ const FlamegraphTooltip = ({ x, y, name, value, rootValue }: Props) => {
             <td>Duration:</td>
             <td>{dur}</td>
           </tr>
+          {count > 1 && (
+            <tr>
+              <td>Spans:</td>
+              <td>{count}</td>
+            </tr>
+          )}
         </tbody>
       </table>
       <div className="Flamegraph-tooltip--hint">Right click for more node viewing options</div>

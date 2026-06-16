@@ -6,6 +6,7 @@ import { IOtelTrace, IOtelSpan } from '../../../types/otel';
 export interface IFlameNode {
   name: string;
   value: number;
+  count: number;
   children: IFlameNode[];
 }
 
@@ -14,6 +15,7 @@ export function convertOtelTraceToFlameData(trace: IOtelTrace): IFlameNode {
   const virtualRoot: IFlameNode = {
     name: 'total',
     value: 0,
+    count: 1,
     children: [],
   };
 
@@ -36,6 +38,7 @@ function buildSubtree(span: IOtelSpan): IFlameNode {
   return {
     name: `${span.resource.serviceName}: ${span.name}`,
     value: span.duration,
+    count: 1,
     children: grouped,
   };
 }
@@ -46,6 +49,7 @@ function groupChildrenByName(children: IFlameNode[]): IFlameNode[] {
     const existing = groups.get(child.name);
     if (existing) {
       existing.value += child.value;
+      existing.count += child.count;
       existing.children.push(...child.children);
     } else {
       groups.set(child.name, { ...child, children: [...child.children] });
