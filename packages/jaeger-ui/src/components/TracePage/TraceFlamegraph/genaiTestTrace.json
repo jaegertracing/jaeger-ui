@@ -35,8 +35,8 @@
           "tags": [
             { "key": "gen_ai.operation.name", "type": "string", "value": "chat" },
             { "key": "gen_ai.request.model", "type": "string", "value": "gpt-4o" },
-            { "key": "gen_ai.usage.input_tokens", "type": "int", "value": 1500 },
-            { "key": "gen_ai.usage.output_tokens", "type": "int", "value": 450 },
+            { "key": "gen_ai.usage.input_tokens", "type": "int64", "value": 1500 },
+            { "key": "gen_ai.usage.output_tokens", "type": "int64", "value": 450 },
             { 
               "key": "gen_ai.input.messages", 
               "type": "string", 

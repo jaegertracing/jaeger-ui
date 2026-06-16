@@ -83,14 +83,16 @@ describe('genaiTestTrace.json fixture', () => {
 
     const chatSpan = requireSpan(fullTrace.spans, 'chat');
     const messagesTag = requireTag(chatSpan.tags, 'gen_ai.input.messages');
-    
+
     const messagesString = messagesTag.value;
     expect(typeof messagesString).toBe('string');
-    expect(messagesString.length).toBeGreaterThanOrEqual(1024); // >= 1 KB
-    
-    expect(() => JSON.parse(messagesString as string)).not.toThrow();
+    expect(Buffer.byteLength(messagesString, 'utf8')).toBeGreaterThanOrEqual(1024); // >= 1 KB
+
+    let parsedMessages: any;
+    expect(() => {
+      parsedMessages = JSON.parse(messagesString as string);
+    }).not.toThrow();
     // Verify it's valid JSON and contains at least 3 messages
-    const parsedMessages = JSON.parse(messagesString as string);
     expect(Array.isArray(parsedMessages)).toBe(true);
     expect(parsedMessages.length).toBeGreaterThanOrEqual(3);
   });
@@ -98,10 +100,10 @@ describe('genaiTestTrace.json fixture', () => {
   it('contains a second partial-GenAI fixture (iconography-only)', () => {
     const partialTrace = genaiTestTrace.data.find(t => t.traceID === 'genai-partial-trace-002');
     if (!partialTrace) throw new Error('Could not find trace with ID genai-partial-trace-002');
-    
+
     const llmSpan = requireSpan(partialTrace.spans, 'llm_completion');
     const systemTag = requireTag(llmSpan.tags, 'gen_ai.system');
-    
+
     expect(systemTag.value).toBe('openai');
   });
 });
