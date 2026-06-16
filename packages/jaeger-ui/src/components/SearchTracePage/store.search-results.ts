@@ -23,7 +23,7 @@ export const useSearchResultsStore = create<SearchResultsStore>()(
       setSortBy: sortBy => set({ sortBy: VALID_SORT_KEYS.has(sortBy) ? sortBy : MOST_RECENT }),
     }),
     {
-      name: 'jaeger.search-results.mode',
+      name: 'jaeger.search-results',
       merge: (persisted, current) => {
         const p = persisted as Partial<SearchResultsStore>;
         return {

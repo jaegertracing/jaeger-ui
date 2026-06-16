@@ -102,8 +102,9 @@ export function SearchTracePageImpl() {
     };
   }, [searchData, uploadedSummaries]);
 
-  const sortBy = useSearchResultsStore(s => s.sortBy);
-  const setSortBy = useSearchResultsStore(s => s.setSortBy);
+  const { sortBy, setSortBy } = useSearchResultsStore(
+    useShallow(s => ({ sortBy: s.sortBy, setSortBy: s.setSortBy }))
+  );
   const [activeTab, setActiveTab] = useState<'searchForm' | 'fileLoader'>('searchForm');
 
   const { panelWidth, collapsed, setPanelWidth, setCollapsed } = useSearchPanelStore(
