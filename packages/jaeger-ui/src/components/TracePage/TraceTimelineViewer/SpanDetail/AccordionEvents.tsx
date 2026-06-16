@@ -52,6 +52,33 @@ export default function AccordionEvents({
   const [showOutOfRangeEvents, setShowOutOfRangeEvents] = React.useState(false);
   const [showAllEvents, setShowAllEvents] = React.useState(false);
   const contentRef = React.useRef<HTMLDivElement | null>(null);
+  const pendingReflowTimers = React.useRef<{
+    timeoutId: number | null;
+    delayedTimeoutId: number | null;
+    animationFrameId: number | null;
+  }>({
+    timeoutId: null,
+    delayedTimeoutId: null,
+    animationFrameId: null,
+  });
+
+  const clearPendingReflowTimers = React.useCallback(() => {
+    const { timeoutId, delayedTimeoutId, animationFrameId } = pendingReflowTimers.current;
+    if (timeoutId !== null) {
+      window.clearTimeout(timeoutId);
+    }
+    if (delayedTimeoutId !== null) {
+      window.clearTimeout(delayedTimeoutId);
+    }
+    if (animationFrameId !== null && typeof window.cancelAnimationFrame === 'function') {
+      window.cancelAnimationFrame(animationFrameId);
+    }
+    pendingReflowTimers.current = {
+      timeoutId: null,
+      delayedTimeoutId: null,
+      animationFrameId: null,
+    };
+  }, []);
 
   const notifyListReflow = React.useCallback(() => {
     const emit = () => {
@@ -66,12 +93,14 @@ export default function AccordionEvents({
       }
     };
 
-    setTimeout(emit);
+    clearPendingReflowTimers();
+
+    pendingReflowTimers.current.timeoutId = window.setTimeout(emit);
     if (typeof window !== 'undefined' && 'requestAnimationFrame' in window) {
-      window.requestAnimationFrame(emit);
+      pendingReflowTimers.current.animationFrameId = window.requestAnimationFrame(emit);
     }
-    setTimeout(emit, 50);
-  }, [spanID]);
+    pendingReflowTimers.current.delayedTimeoutId = window.setTimeout(emit, 50);
+  }, [clearPendingReflowTimers, spanID]);
 
   // Observe height changes in the content area to notify virtualized list to reflow
   React.useEffect(() => {
@@ -106,8 +135,9 @@ export default function AccordionEvents({
           void error;
         }
       }
+      clearPendingReflowTimers();
     };
-  }, [interactive, isOpen, notifyListReflow]);
+  }, [clearPendingReflowTimers, interactive, isOpen, notifyListReflow]);
 
   const inRangeEvents = React.useMemo(() => {
     const viewStartAbsolute = timestamp + currentViewRangeTime[0] * traceDuration;
