@@ -6,12 +6,12 @@ import { IoSparkles, IoServer, IoGlobe, IoChatbubble, IoCodeSlash } from 'react-
 
 import { IAttribute } from '../types/otel';
 
-const ATTR_ICON_RULES: [prefix: string, icon: IconType][] = [
-  ['gen_ai.', IoSparkles],
-  ['db.', IoServer],
-  ['http.', IoGlobe],
-  ['messaging.', IoChatbubble],
-  ['rpc.', IoCodeSlash],
+const ATTR_ICON_RULES: { prefix: string; icon: IconType }[] = [
+  { prefix: 'gen_ai.', icon: IoSparkles },
+  { prefix: 'db.', icon: IoServer },
+  { prefix: 'http.', icon: IoGlobe },
+  { prefix: 'messaging.', icon: IoChatbubble },
+  { prefix: 'rpc.', icon: IoCodeSlash },
 ];
 
 export function getSpanIconComponent(attributes: IAttribute[] | undefined): IconType | null {
@@ -19,12 +19,12 @@ export function getSpanIconComponent(attributes: IAttribute[] | undefined): Icon
   let bestIndex = ATTR_ICON_RULES.length;
   for (const attr of attributes) {
     for (let i = 0; i < bestIndex; i++) {
-      if (attr.key.startsWith(ATTR_ICON_RULES[i][0])) {
+      if (attr.key.startsWith(ATTR_ICON_RULES[i].prefix)) {
         bestIndex = i;
         break;
       }
     }
     if (bestIndex === 0) break;
   }
-  return bestIndex < ATTR_ICON_RULES.length ? ATTR_ICON_RULES[bestIndex][1] : null;
+  return bestIndex < ATTR_ICON_RULES.length ? ATTR_ICON_RULES[bestIndex].icon : null;
 }

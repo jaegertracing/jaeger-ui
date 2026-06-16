@@ -44,4 +44,8 @@ describe('getSpanIconComponent', () => {
   it('gen_ai takes priority over db when both present', () => {
     expect(getSpanIconComponent(makeAttrs(['gen_ai.model', 'db.system']))).toBe(IoSparkles);
   });
+
+  it('respects rule priority regardless of attribute order', () => {
+    expect(getSpanIconComponent(makeAttrs(['db.system', 'gen_ai.model']))).toBe(IoSparkles);
+  });
 });
