@@ -1,7 +1,7 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { PureComponent } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import memoize from 'memoize-one';
 import { Digraph, LayoutManager } from '@jaegertracing/plexus';
 import { TSetProps, TFromGraphStateFn, TDefEntry } from '@jaegertracing/plexus/lib/Digraph/types';
@@ -60,107 +60,114 @@ const edgesDefs: TNonEmptyArray<TDefEntry<TDdgVertex, unknown>> = [
   { localId: 'arrow-hovered', setOnEntry: { className: 'Ddg--Arrow is-pathHovered' } },
 ];
 
-export default class Graph extends PureComponent<TProps> {
-  private getNodeRenderers = memoize(getNodeRenderers);
-  private getNodeContentRenderer = memoize(getNodeRenderer);
-  private getSetOnEdge = memoize(getSetOnEdge);
+const emptyFindSet: Set<string> = new Set();
 
-  private layoutManager: LayoutManager = new LayoutManager({
-    nodesep: 0.55,
-    ranksep: 1.5,
-    rankdir: 'TB',
-    shape: 'circle',
-    splines: 'polyline',
-    useDotEdges: true,
-  });
+const Graph = (props: TProps) => {
+  const {
+    baseUrl,
+    density,
+    edges,
+    edgesViewModifiers,
+    extraUrlArgs,
+    focusPathsThroughVertex,
+    getGenerationVisibility,
+    getVisiblePathElems,
+    hideVertex,
+    selectVertex,
+    setOperation,
+    setViewModifier,
+    uiFindMatches,
+    updateGenerationVisibility,
+    vertices,
+    verticesViewModifiers,
+  } = props;
 
-  private emptyFindSet: Set<string> = new Set();
+  const memoizedGetNodeRenderers = useMemo(() => memoize(getNodeRenderers), []);
+  const memoizedGetNodeContentRenderer = useMemo(() => memoize(getNodeRenderer), []);
+  const memoizedGetSetOnEdge = useMemo(() => memoize(getSetOnEdge), []);
 
-  componentWillUnmount() {
-    this.layoutManager.stopAndRelease();
-  }
+  const layoutManager = useMemo(
+    () =>
+      new LayoutManager({
+        nodesep: 0.55,
+        ranksep: 1.5,
+        rankdir: 'TB',
+        shape: 'circle',
+        splines: 'polyline',
+        useDotEdges: true,
+      }),
+    []
+  );
 
-  render() {
-    const {
-      baseUrl,
-      density,
-      edges,
-      edgesViewModifiers,
-      extraUrlArgs,
-      focusPathsThroughVertex,
-      getGenerationVisibility,
-      getVisiblePathElems,
-      hideVertex,
-      selectVertex,
-      setOperation,
-      setViewModifier,
-      uiFindMatches,
-      updateGenerationVisibility,
-      vertices,
-      verticesViewModifiers,
-    } = this.props;
-    const nodeRenderers = this.getNodeRenderers(uiFindMatches || this.emptyFindSet, verticesViewModifiers);
+  useEffect(() => {
+    return () => {
+      layoutManager.stopAndRelease();
+    };
+  }, [layoutManager]);
 
-    return (
-      <Digraph<TDdgVertex>
-        minimap
-        zoom
-        minimapClassName="u-miniMap"
-        layoutManager={this.layoutManager}
-        edges={edges}
-        vertices={vertices}
-        measurableNodesKey="nodes/content"
-        layers={[
-          {
-            key: 'nodes/find-emphasis/vector-color-band',
-            layerType: 'svg',
-            renderNode: nodeRenderers.vectorFindColorBand,
-          },
-          {
-            key: 'nodes/find-emphasis/html',
-            layerType: 'html',
-            renderNode: nodeRenderers.htmlEmphasis,
-          },
-          {
-            key: 'nodes/vector-border',
-            layerType: 'svg',
-            renderNode: nodeRenderers.vectorBorder,
-            setOnContainer: verticesViewModifiers.size
-              ? setOnVectorBorderContainerWithViewModifiers
-              : Digraph.propsFactories.scaleStrokeOpacityStrongest,
-          },
-          {
-            key: 'edges',
-            layerType: 'svg',
-            edges: true,
-            defs: edgesDefs,
-            markerEndId: 'arrow',
-            setOnContainer: edgesViewModifiers.size
-              ? setOnEdgesContainer.withViewModifiers
-              : setOnEdgesContainer.withoutViewModifiers,
-            setOnEdge: this.getSetOnEdge(edgesViewModifiers),
-          },
-          {
-            key: 'nodes/content',
-            layerType: 'html',
-            measurable: true,
-            measureNode,
-            renderNode: this.getNodeContentRenderer({
-              baseUrl,
-              density,
-              extraUrlArgs,
-              focusPathsThroughVertex,
-              getGenerationVisibility,
-              getVisiblePathElems,
-              hideVertex,
-              selectVertex,
-              setOperation,
-              setViewModifier,
-              updateGenerationVisibility,
-            }),
-          },
-        ]}
-      />
-    );
-  }
-}
+  const nodeRenderers = memoizedGetNodeRenderers(uiFindMatches || emptyFindSet, verticesViewModifiers);
+
+  return (
+    <Digraph<TDdgVertex>
+      minimap
+      zoom
+      minimapClassName="u-miniMap"
+      layoutManager={layoutManager}
+      edges={edges}
+      vertices={vertices}
+      measurableNodesKey="nodes/content"
+      layers={[
+        {
+          key: 'nodes/find-emphasis/vector-color-band',
+          layerType: 'svg',
+          renderNode: nodeRenderers.vectorFindColorBand,
+        },
+        {
+          key: 'nodes/find-emphasis/html',
+          layerType: 'html',
+          renderNode: nodeRenderers.htmlEmphasis,
+        },
+        {
+          key: 'nodes/vector-border',
+          layerType: 'svg',
+          renderNode: nodeRenderers.vectorBorder,
+          setOnContainer: verticesViewModifiers.size
+            ? setOnVectorBorderContainerWithViewModifiers
+            : Digraph.propsFactories.scaleStrokeOpacityStrongest,
+        },
+        {
+          key: 'edges',
+          layerType: 'svg',
+          edges: true,
+          defs: edgesDefs,
+          markerEndId: 'arrow',
+          setOnContainer: edgesViewModifiers.size
+            ? setOnEdgesContainer.withViewModifiers
+            : setOnEdgesContainer.withoutViewModifiers,
+          setOnEdge: memoizedGetSetOnEdge(edgesViewModifiers),
+        },
+        {
+          key: 'nodes/content',
+          layerType: 'html',
+          measurable: true,
+          measureNode,
+          renderNode: memoizedGetNodeContentRenderer({
+            baseUrl,
+            density,
+            extraUrlArgs,
+            focusPathsThroughVertex,
+            getGenerationVisibility,
+            getVisiblePathElems,
+            hideVertex,
+            selectVertex,
+            setOperation,
+            setViewModifier,
+            updateGenerationVisibility,
+          }),
+        },
+      ]}
+    />
+  );
+};
+
+export default React.memo(Graph);
