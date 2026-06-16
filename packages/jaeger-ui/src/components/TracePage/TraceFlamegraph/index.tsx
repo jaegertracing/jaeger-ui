@@ -204,7 +204,7 @@ const TraceFlamegraph = ({ trace }: any) => {
   const handleCopyName = useCallback(() => {
     if (contextMenu) {
       const rawName = contextMenu.name.replace(/\s*\([^)]*%,\s*[^)]*\)\s*$/, '');
-      navigator.clipboard.writeText(rawName);
+      navigator.clipboard?.writeText(rawName).catch(() => {});
     }
     setContextMenu(null);
   }, [contextMenu]);
@@ -289,8 +289,14 @@ const TraceFlamegraph = ({ trace }: any) => {
         <FlamegraphContextMenu
           x={contextMenu.x}
           y={contextMenu.y}
-          onReset={handleReset}
-          onCollapseAbove={handleCollapseAbove}
+          onReset={() => {
+            handleReset();
+            setContextMenu(null);
+          }}
+          onCollapseAbove={() => {
+            handleCollapseAbove();
+            setContextMenu(null);
+          }}
           onCopyName={handleCopyName}
           onHighlightSimilar={handleHighlightSimilar}
           onClose={handleContextMenuClose}
