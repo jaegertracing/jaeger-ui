@@ -32,10 +32,10 @@ export const useSearchResultsStore = create<SearchResultsStore>()(
       setSortBy: sortBy => set({ sortBy: sanitizeSortBy(sortBy) }),
     }),
     {
-      name: 'jaeger.search-results',
+      name: 'jaeger.search-results.mode',
       version: 1,
       migrate: (persistedState, version) => {
-        // version 0 = jaeger.search-results.mode (viewMode only, no sortBy)
+        // version 0 had only viewMode; version 1 added sortBy
         const p = (persistedState ?? {}) as Record<string, unknown>;
         return {
           viewMode: sanitizeViewMode(p.viewMode),
@@ -50,6 +50,7 @@ export const useSearchResultsStore = create<SearchResultsStore>()(
           sortBy: sanitizeSortBy(p.sortBy),
         };
       },
+      partialize: state => ({ viewMode: state.viewMode, sortBy: state.sortBy }),
     }
   )
 );

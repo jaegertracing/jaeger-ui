@@ -4,7 +4,7 @@
 import { useSearchResultsStore } from './store.search-results';
 import { MOST_RECENT, LONGEST_FIRST, SHORTEST_FIRST, MOST_SPANS, LEAST_SPANS } from '../../model/order-by';
 
-const STORAGE_KEY = 'jaeger.search-results';
+const STORAGE_KEY = 'jaeger.search-results.mode';
 
 describe('useSearchResultsStore', () => {
   beforeEach(() => {
