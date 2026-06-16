@@ -76,7 +76,7 @@ describe('deduplicateTags()', () => {
       { key: 'a', value: 'b:c' },
     ]);
     // Both duplicated pairs are tracked separately; neither warning is dropped.
-    expect(tagsInfo.warnings).toHaveLength(2);
+    expect(tagsInfo.warnings).toEqual(['Duplicate tag "a:b:c"', 'Duplicate tag "a:b:c"']);
   });
 });
 

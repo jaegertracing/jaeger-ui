@@ -25,7 +25,7 @@ export function deduplicateTags(spanTags: ReadonlyArray<KeyValuePair>) {
       seenValuesByKey.set(tag.key, seenValues);
     }
     if (seenValues.has(tag.value)) {
-      warningsHash.set(JSON.stringify([tag.key, tag.value]), `Duplicate tag "${tag.key}:${tag.value}"`);
+      warningsHash.set(`${tag.key}\0${String(tag.value)}`, `Duplicate tag "${tag.key}:${tag.value}"`);
     } else {
       seenValues.add(tag.value);
       tags.push(tag);
