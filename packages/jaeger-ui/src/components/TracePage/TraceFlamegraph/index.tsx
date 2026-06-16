@@ -10,6 +10,8 @@ import { select } from 'd3-selection';
 
 import OtelTraceFacade from '../../../model/OtelTraceFacade';
 import colorGenerator from '../../../utils/color-generator';
+import { formatDurationCompact } from '../../../utils/date';
+import { Microseconds } from '../../../types/units';
 import { convertOtelTraceToFlameData } from './convertOtelTraceToFlameData';
 import { generateTableData } from './generateTableData';
 import FlamegraphToolbar, { ViewMode } from './FlamegraphToolbar';
@@ -44,19 +46,31 @@ const TraceFlamegraph = ({ trace }: any) => {
     const container = containerRef.current;
     container.innerHTML = '';
 
+    const rootValue = flameData.value;
     const chart = flamegraph()
       .width(container.clientWidth || 800)
       .cellHeight(18)
       .inverted(true)
       .sort(false)
+      .selfValue(false)
       .transitionDuration(300)
       .onClick((d: any) => {
-        setChartZoomed(d?.data?.name !== flameData.name);
+        const isZoom = d?.data?.name !== flameData.name;
+        setChartZoomed(isZoom);
+        if (d?.data?.name) {
+          setSelectedItem(d.data.name);
+        }
       })
       .setColorMapper((d: any) => {
         if (!d || !d.data || !d.data.name) return '#ccc';
         const serviceName = d.data.name.split(': ')[0];
         return colorGenerator.getColorByKey(serviceName);
+      })
+      .setLabelHandler((d: any) => {
+        if (!d || !d.data) return '';
+        const pct = rootValue > 0 ? ((d.data.value / rootValue) * 100).toFixed(2) : '0';
+        const dur = formatDurationCompact(d.data.value as Microseconds);
+        return `${d.data.name} (${pct}%, ${dur})`;
       });
 
     chartRef.current = chart;
@@ -88,6 +102,13 @@ const TraceFlamegraph = ({ trace }: any) => {
     }
   }, []);
 
+  const handleCollapseAbove = useCallback(() => {
+    setChartZoomed(false);
+    if (chartRef.current) {
+      chartRef.current.resetZoom();
+    }
+  }, []);
+
   const handleRowClick = useCallback((name: string) => {
     setSelectedItem(prev => (prev === name ? null : name));
   }, []);
@@ -114,6 +135,9 @@ const TraceFlamegraph = ({ trace }: any) => {
         onSearchChange={handleSearchChange}
         onReset={handleReset}
         isDirty={isDirty}
+        chartZoomed={chartZoomed}
+        onCollapseAbove={handleCollapseAbove}
+        showChart={showChart}
       />
       <div className="Flamegraph-content" data-view-mode={viewMode}>
         {showTable && (
@@ -129,7 +153,12 @@ const TraceFlamegraph = ({ trace }: any) => {
           </div>
         )}
         {showChart && (
-          <div className="Flamegraph-content--chart" ref={containerRef} data-testid="flamegraph-chart" />
+          <div className="Flamegraph-content--chart-wrapper">
+            <div className="Flamegraph-content--chart-caption">
+              Frame width represents aggregated span duration
+            </div>
+            <div className="Flamegraph-content--chart" ref={containerRef} data-testid="flamegraph-chart" />
+          </div>
         )}
       </div>
     </div>

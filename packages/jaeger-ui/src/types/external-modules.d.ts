@@ -39,6 +39,7 @@ declare module 'd3-flame-graph' {
     setColorHue(hue: string): FlameGraph;
     onClick(callback: (d: any) => void): FlameGraph;
     onHover(callback: (d: any) => void): FlameGraph;
+    setLabelHandler(handler: (d: any) => string): FlameGraph;
     tooltip(tip: any): FlameGraph;
     search(term: string): void;
     clear(): void;

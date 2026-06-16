@@ -4,13 +4,14 @@
 // Adapted from @pyroscope/flamegraph v0.35.6 (Apache-2.0)
 // Copyright (c) 2020 Pyroscope, Inc.
 
-// Toolbar with search input, reset button, and view mode toggle on the right.
+// Toolbar with search input, reset/collapse buttons, and view mode toggle.
 
 import React from 'react';
 import { Button, Input, Segmented, Space } from 'antd';
 import { IoRefreshOutline } from 'react-icons/io5';
 import { HiOutlineViewColumns } from 'react-icons/hi2';
 import { BsTable, BsFire } from 'react-icons/bs';
+import { TbArrowMerge } from 'react-icons/tb';
 
 export type ViewMode = 'table' | 'both' | 'flamegraph';
 
@@ -21,6 +22,9 @@ type Props = {
   onSearchChange: (query: string) => void;
   onReset: () => void;
   isDirty: boolean;
+  chartZoomed: boolean;
+  onCollapseAbove: () => void;
+  showChart: boolean;
 };
 
 const VIEW_OPTIONS = [
@@ -60,6 +64,9 @@ const FlamegraphToolbar = ({
   onSearchChange,
   onReset,
   isDirty,
+  chartZoomed,
+  onCollapseAbove,
+  showChart,
 }: Props) => (
   <div className="Flamegraph-toolbar" role="toolbar">
     <Space size="middle">
@@ -81,6 +88,17 @@ const FlamegraphToolbar = ({
       >
         Reset View
       </Button>
+      {showChart && (
+        <Button
+          size="small"
+          icon={<TbArrowMerge />}
+          disabled={!chartZoomed}
+          onClick={onCollapseAbove}
+          data-testid="flamegraph-collapse"
+        >
+          Collapse nodes above
+        </Button>
+      )}
     </Space>
     <div className="Flamegraph-toolbar--right">
       <Segmented

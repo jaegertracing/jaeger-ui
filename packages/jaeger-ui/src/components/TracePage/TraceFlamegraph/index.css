@@ -39,6 +39,20 @@ SPDX-License-Identifier: Apache-2.0
   overflow: auto;
 }
 
+.Flamegraph-content--chart-wrapper {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.Flamegraph-content--chart-caption {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 4px 0;
+}
+
 .Flamegraph-content--chart {
   flex: 1;
   min-width: 0;
@@ -50,7 +64,7 @@ SPDX-License-Identifier: Apache-2.0
   max-width: 40%;
 }
 
-.Flamegraph-content[data-view-mode='both'] .Flamegraph-content--chart {
+.Flamegraph-content[data-view-mode='both'] .Flamegraph-content--chart-wrapper {
   flex: 1;
 }
 
