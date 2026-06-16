@@ -88,8 +88,9 @@ describe('TraceIdDisplayLength', () => {
 
       const longLength = MOCK_TRACE_ID.length;
       getConfig.mockReturnValue({ traceIdDisplayLength: longLength });
-      renderComponent();
+      const { unmount: unmountFull } = renderComponent();
       expect(screen.getByText(MOCK_TRACE_ID)).toHaveClass('TraceIDLength--full');
+      unmountFull();
     });
   });
 });
