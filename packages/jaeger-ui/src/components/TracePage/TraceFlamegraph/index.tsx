@@ -41,6 +41,7 @@ const TraceFlamegraph = ({ trace }: any) => {
   const chartRef = useRef<ReturnType<typeof flamegraph> | null>(null);
   const searchActiveRef = useRef(false);
   const zoomedNodeRef = useRef<any>(null);
+  const hoveredFrameRef = useRef<Element | null>(null);
 
   const [viewMode, setViewMode] = useState<ViewMode>('both');
   const [searchQuery, setSearchQuery] = useState('');
@@ -129,9 +130,14 @@ const TraceFlamegraph = ({ trace }: any) => {
       svgEl.addEventListener('mousemove', (e: MouseEvent) => {
         const target = (e.target as Element).closest('g.frame');
         if (!target) {
-          setTooltip(null);
+          if (hoveredFrameRef.current) {
+            hoveredFrameRef.current = null;
+            setTooltip(null);
+          }
           return;
         }
+        if (target === hoveredFrameRef.current) return;
+        hoveredFrameRef.current = target;
         const d3Data = (target as any).__data__;
         const name = d3Data?.data?.name || '';
         const value = d3Data?.data?.duration ?? d3Data?.data?.value ?? 0;
@@ -139,6 +145,7 @@ const TraceFlamegraph = ({ trace }: any) => {
         setTooltip({ x: e.clientX, y: e.clientY, name, value, count });
       });
       svgEl.addEventListener('mouseleave', () => {
+        hoveredFrameRef.current = null;
         setTooltip(null);
       });
     }
@@ -250,6 +257,7 @@ const TraceFlamegraph = ({ trace }: any) => {
             <div className="Flamegraph-content--chart-caption">
               Shows total resource cost per operation (not wall-clock critical path)
               <Tooltip
+                trigger={['hover', 'focus']}
                 title={
                   <span>
                     This flamegraph aggregates spans by service and operation, summing their durations. It
@@ -263,7 +271,14 @@ const TraceFlamegraph = ({ trace }: any) => {
                   </span>
                 }
               >
-                <span className="Flamegraph-content--chart-help">?</span>
+                <span
+                  className="Flamegraph-content--chart-help"
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Flamegraph explanation"
+                >
+                  ?
+                </span>
               </Tooltip>
             </div>
             <div className="Flamegraph-content--chart" ref={containerRef} data-testid="flamegraph-chart" />
