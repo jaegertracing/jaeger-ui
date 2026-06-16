@@ -4,101 +4,53 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { convertJaegerTraceToProfile, FlamegraphRenderer } from '@pyroscope/flamegraph';
 import TraceFlamegraph from './index';
 import testTrace from './testTrace.json';
 import transformTraceData from '../../../model/transform-trace-data';
 
-// Mock the FlamegraphRenderer component
-vi.mock('@pyroscope/flamegraph', async () => {
-  const originalModule = await vi.importActual('@pyroscope/flamegraph');
-  return {
-    ...originalModule, // Keep original convertJaegerTraceToProfile
+const mockChart = {
+  width: vi.fn().mockReturnThis(),
+  cellHeight: vi.fn().mockReturnThis(),
+  inverted: vi.fn().mockReturnThis(),
+  sort: vi.fn().mockReturnThis(),
+  setColorMapper: vi.fn().mockReturnThis(),
+  destroy: vi.fn(),
+};
 
-    FlamegraphRenderer: jest.fn(({ profile }) => (
-      <div data-testid="flamegraph-renderer">
-        {profile ? `Profile Loaded - Units: ${profile.metadata?.units}` : 'No Profile Data'}
-      </div>
-    )),
-  };
-});
+vi.mock('d3-flame-graph', () => ({
+  default: () => mockChart,
+}));
 
-const profile = convertJaegerTraceToProfile(testTrace.data);
+vi.mock('d3-selection', () => ({
+  select: vi.fn(() => ({
+    datum: vi.fn().mockReturnThis(),
+    call: vi.fn().mockReturnThis(),
+  })),
+}));
+
 const otelTrace = transformTraceData(testTrace.data).asOtelTrace();
 
-describe('convertJaegerTraceToProfile', () => {
-  it('returns correct profile format', () => {
-    expect(profile.version).toBe(1);
-
-    expect(Array.isArray(profile.flamebearer.levels)).toBe(true);
-    expect(profile.flamebearer.levels[0].every(el => typeof el === 'number')).toBe(true);
-    expect(Array.isArray(profile.flamebearer.names)).toBe(true);
-    expect(profile.flamebearer.names.every(el => typeof el === 'string')).toBe(true);
-    expect(typeof profile.flamebearer.numTicks).toBe('number');
-
-    expect(typeof profile.metadata.format).toBe('string');
-    expect(typeof profile.metadata.sampleRate).toBe('number');
-    expect(typeof profile.metadata.spyName).toBe('string');
-    expect(typeof profile.metadata.units).toBe('string');
-  });
-});
-
 describe('<TraceFlamegraph />', () => {
-  beforeEach(() => {
-    FlamegraphRenderer.mockClear();
-  });
-
   it('renders the flamegraph wrapper', () => {
     render(<TraceFlamegraph trace={otelTrace} />);
     expect(screen.getByTestId('flamegraph-wrapper')).toBeInTheDocument();
   });
 
-  it('renders the FlamegraphRenderer with converted profile when trace is provided', () => {
-    render(<TraceFlamegraph trace={otelTrace} />);
-
-    // Check if the mocked renderer is in the document
-    const renderer = screen.getByTestId('flamegraph-renderer');
-    expect(renderer).toBeInTheDocument();
-
-    // Check if the mocked renderer received the profile
-    expect(FlamegraphRenderer).toHaveBeenCalledTimes(1);
-    const receivedProps = FlamegraphRenderer.mock.calls[0][0];
-    expect(receivedProps.profile).toBeDefined();
-    expect(receivedProps.profile.metadata.units).toEqual(profile.metadata.units);
-
-    // Check the content rendered by the mock based on the profile
-    expect(renderer).toHaveTextContent(`Profile Loaded - Units: ${profile.metadata.units}`);
-  });
-
-  it('renders the FlamegraphRenderer with null profile when trace is not provided', () => {
+  it('renders empty state when trace is null', () => {
     render(<TraceFlamegraph trace={null} />);
-
-    // Check if the mocked renderer is in the document
-    const renderer = screen.getByTestId('flamegraph-renderer');
-    expect(renderer).toBeInTheDocument();
-
-    // Check if the mocked renderer received null profile
-    expect(FlamegraphRenderer).toHaveBeenCalledTimes(1);
-    const receivedProps = FlamegraphRenderer.mock.calls[0][0];
-    expect(receivedProps.profile).toBeNull();
-
-    // Check the content rendered by the mock for no profile
-    expect(renderer).toHaveTextContent('No Profile Data');
+    expect(screen.getByTestId('flamegraph-empty')).toBeInTheDocument();
+    expect(screen.getByTestId('flamegraph-empty')).toHaveTextContent('No data');
   });
 
-  it('renders the FlamegraphRenderer with null profile when trace is not an OtelTraceFacade', () => {
+  it('renders empty state when trace is not an OtelTraceFacade', () => {
     render(<TraceFlamegraph trace={{}} />);
+    expect(screen.getByTestId('flamegraph-empty')).toBeInTheDocument();
+  });
 
-    // Check if the mocked renderer is in the document
-    const renderer = screen.getByTestId('flamegraph-renderer');
-    expect(renderer).toBeInTheDocument();
-
-    // Check if the mocked renderer received null profile
-    expect(FlamegraphRenderer).toHaveBeenCalledTimes(1);
-    const receivedProps = FlamegraphRenderer.mock.calls[0][0];
-    expect(receivedProps.profile).toBeNull();
-
-    // Check the content rendered by the mock for no profile
-    expect(renderer).toHaveTextContent('No Profile Data');
+  it('calls d3-flame-graph with correct options when trace is provided', () => {
+    render(<TraceFlamegraph trace={otelTrace} />);
+    expect(mockChart.inverted).toHaveBeenCalledWith(true);
+    expect(mockChart.sort).toHaveBeenCalledWith(false);
+    expect(mockChart.cellHeight).toHaveBeenCalledWith(20);
   });
 });
