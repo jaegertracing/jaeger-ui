@@ -110,8 +110,7 @@ const TraceFlamegraph = ({ trace }: any) => {
       })
       .setSearchMatch((d: any, term: string) => {
         if (!term || !d?.data?.name) return false;
-        const re = new RegExp(term);
-        return Boolean(d.data.name.match(re));
+        return d.data.name.toLowerCase().includes(term.toLowerCase());
       });
 
     chartRef.current = chart;
