@@ -140,93 +140,96 @@ describe('<AccordionEvents>', () => {
 
   it('dispatches events and handles show more/less functionality', () => {
     jest.useFakeTimers();
-    const originalDispatchEvent = window.dispatchEvent;
-    const mockDispatchEvent = jest.fn();
-    window.dispatchEvent = mockDispatchEvent;
+    const dispatchSpy = jest.spyOn(window, 'dispatchEvent').mockImplementation(() => true);
 
-    const manyLogs = Array.from({ length: 5 }, (_, i) => ({
-      timestamp: 10 + i,
-      name: 'event',
-      attributes: [{ key: 'message', value: `event ${i}` }],
-    }));
+    try {
+      const manyLogs = Array.from({ length: 5 }, (_, i) => ({
+        timestamp: 10 + i,
+        name: 'event',
+        attributes: [{ key: 'message', value: `event ${i}` }],
+      }));
 
-    const propsWithManyLogs = {
-      ...defaultProps,
-      events: manyLogs,
-      currentViewRangeTime: [0.0, 1.0],
-      initialVisibleCount: 3,
-      spanID: 'test-span-123',
-    };
+      const propsWithManyLogs = {
+        ...defaultProps,
+        events: manyLogs,
+        currentViewRangeTime: [0.0, 1.0],
+        initialVisibleCount: 3,
+        spanID: 'test-span-123',
+      };
 
-    const { unmount } = render(<AccordionEvents {...propsWithManyLogs} isOpen />);
-    const showMoreButton = screen.getByRole('button', { name: /show more.../i });
-    fireEvent.click(showMoreButton);
-    jest.runAllTimers();
+      const { unmount } = render(<AccordionEvents {...propsWithManyLogs} isOpen />);
+      const showMoreButton = screen.getByRole('button', { name: /show more\.\.\./i });
+      fireEvent.click(showMoreButton);
+      jest.runAllTimers();
 
-    expect(mockDispatchEvent).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: 'jaeger:detail-measure',
-        detail: { spanID: 'test-span-123' },
-      })
-    );
+      expect(dispatchSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'jaeger:detail-measure',
+          detail: { spanID: 'test-span-123' },
+        })
+      );
 
-    const showLessButton = screen.getByRole('button', { name: /show less/i });
-    fireEvent.click(showLessButton);
+      const showLessButton = screen.getByRole('button', { name: /show less/i });
+      fireEvent.click(showLessButton);
 
-    unmount();
+      unmount();
 
-    mockDispatchEvent.mockClear();
-    const propsWithoutSpanID = { ...propsWithManyLogs, spanID: undefined };
-    render(<AccordionEvents {...propsWithoutSpanID} isOpen />);
-    const showMoreButton2 = screen.getByRole('button', { name: /show more.../i });
-    fireEvent.click(showMoreButton2);
+      dispatchSpy.mockClear();
+      const propsWithoutSpanID = { ...propsWithManyLogs, spanID: undefined };
+      render(<AccordionEvents {...propsWithoutSpanID} isOpen />);
+      const showMoreButton2 = screen.getByRole('button', { name: /show more\.\.\./i });
+      fireEvent.click(showMoreButton2);
 
-    jest.runAllTimers();
+      jest.runAllTimers();
 
-    expect(mockDispatchEvent).toHaveBeenCalledWith(expect.objectContaining({ type: 'jaeger:list-resize' }));
-
-    window.dispatchEvent = originalDispatchEvent;
-    jest.useRealTimers();
+      expect(dispatchSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'jaeger:list-resize' })
+      );
+    } finally {
+      dispatchSpy.mockRestore();
+      jest.useRealTimers();
+    }
   });
 
   it('cancels pending reflow timers when unmounted', () => {
     jest.useFakeTimers();
-    const originalDispatchEvent = window.dispatchEvent;
-    const originalRequestAnimationFrame = window.requestAnimationFrame;
-    const originalCancelAnimationFrame = window.cancelAnimationFrame;
-    const mockDispatchEvent = jest.fn();
+    const dispatchSpy = jest.spyOn(window, 'dispatchEvent').mockImplementation(() => true);
+    const requestAnimationFrameSpy = jest
+      .spyOn(window, 'requestAnimationFrame')
+      .mockImplementation(callback => window.setTimeout(callback, 16));
+    const cancelAnimationFrameSpy = jest
+      .spyOn(window, 'cancelAnimationFrame')
+      .mockImplementation(id => window.clearTimeout(id));
 
-    window.dispatchEvent = mockDispatchEvent;
-    window.requestAnimationFrame = jest.fn(callback => window.setTimeout(callback, 16));
-    window.cancelAnimationFrame = jest.fn(id => window.clearTimeout(id));
+    try {
+      const manyLogs = Array.from({ length: 5 }, (_, i) => ({
+        timestamp: 10 + i,
+        name: 'event',
+        attributes: [{ key: 'message', value: `event ${i}` }],
+      }));
 
-    const manyLogs = Array.from({ length: 5 }, (_, i) => ({
-      timestamp: 10 + i,
-      name: 'event',
-      attributes: [{ key: 'message', value: `event ${i}` }],
-    }));
+      const propsWithManyLogs = {
+        ...defaultProps,
+        events: manyLogs,
+        currentViewRangeTime: [0.0, 1.0],
+        initialVisibleCount: 3,
+        spanID: 'test-span-123',
+      };
 
-    const propsWithManyLogs = {
-      ...defaultProps,
-      events: manyLogs,
-      currentViewRangeTime: [0.0, 1.0],
-      initialVisibleCount: 3,
-      spanID: 'test-span-123',
-    };
+      const { unmount } = render(<AccordionEvents {...propsWithManyLogs} isOpen />);
+      fireEvent.click(screen.getByRole('button', { name: /show more\.\.\./i }));
+      unmount();
 
-    const { unmount } = render(<AccordionEvents {...propsWithManyLogs} isOpen />);
-    fireEvent.click(screen.getByRole('button', { name: /show more.../i }));
-    unmount();
+      jest.runAllTimers();
 
-    jest.runAllTimers();
-
-    expect(mockDispatchEvent).not.toHaveBeenCalled();
-    expect(window.cancelAnimationFrame).toHaveBeenCalled();
-
-    window.dispatchEvent = originalDispatchEvent;
-    window.requestAnimationFrame = originalRequestAnimationFrame;
-    window.cancelAnimationFrame = originalCancelAnimationFrame;
-    jest.useRealTimers();
+      expect(dispatchSpy).not.toHaveBeenCalled();
+      expect(cancelAnimationFrameSpy).toHaveBeenCalled();
+    } finally {
+      dispatchSpy.mockRestore();
+      requestAnimationFrameSpy.mockRestore();
+      cancelAnimationFrameSpy.mockRestore();
+      jest.useRealTimers();
+    }
   });
 
   it('handles observer cleanup and errors', () => {

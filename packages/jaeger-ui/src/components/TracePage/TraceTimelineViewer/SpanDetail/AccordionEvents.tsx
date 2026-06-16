@@ -64,14 +64,16 @@ export default function AccordionEvents({
 
   const clearPendingReflowTimers = React.useCallback(() => {
     const { timeoutId, delayedTimeoutId, animationFrameId } = pendingReflowTimers.current;
-    if (timeoutId !== null) {
-      window.clearTimeout(timeoutId);
-    }
-    if (delayedTimeoutId !== null) {
-      window.clearTimeout(delayedTimeoutId);
-    }
-    if (animationFrameId !== null && typeof window.cancelAnimationFrame === 'function') {
-      window.cancelAnimationFrame(animationFrameId);
+    if (typeof window !== 'undefined') {
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+      if (delayedTimeoutId !== null) {
+        window.clearTimeout(delayedTimeoutId);
+      }
+      if (animationFrameId !== null && typeof window.cancelAnimationFrame === 'function') {
+        window.cancelAnimationFrame(animationFrameId);
+      }
     }
     pendingReflowTimers.current = {
       timeoutId: null,
@@ -83,6 +85,9 @@ export default function AccordionEvents({
   const notifyListReflow = React.useCallback(() => {
     const emit = () => {
       try {
+        if (typeof window === 'undefined') {
+          return;
+        }
         if (spanID) {
           window.dispatchEvent(new CustomEvent('jaeger:detail-measure', { detail: { spanID } }));
         } else {
@@ -95,8 +100,11 @@ export default function AccordionEvents({
 
     clearPendingReflowTimers();
 
+    if (typeof window === 'undefined') {
+      return;
+    }
     pendingReflowTimers.current.timeoutId = window.setTimeout(emit);
-    if (typeof window !== 'undefined' && 'requestAnimationFrame' in window) {
+    if ('requestAnimationFrame' in window) {
       pendingReflowTimers.current.animationFrameId = window.requestAnimationFrame(emit);
     }
     pendingReflowTimers.current.delayedTimeoutId = window.setTimeout(emit, 50);
