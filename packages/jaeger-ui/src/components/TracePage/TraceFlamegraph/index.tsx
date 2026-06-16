@@ -160,7 +160,7 @@ const TraceFlamegraph = ({ trace }: any) => {
       searchActiveRef.current = false;
       chartRef.current.clear();
     }
-  }, [searchQuery, selectedItem]);
+  }, [searchQuery, selectedItem, viewMode]);
 
   const handleReset = useCallback(() => {
     setSearchQuery('');

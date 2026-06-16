@@ -11,7 +11,7 @@ export default function computeSpanSelfTime(span: IOtelSpan): number {
   let selfTime: number = span.duration;
   let previousChildEndTime = span.startTime;
 
-  const children = [...span.childSpans].sort((a, b) => a.startTime - b.startTime);
+  const children = span.childSpans;
   const parentEndTime = span.endTime;
 
   for (const child of children) {
