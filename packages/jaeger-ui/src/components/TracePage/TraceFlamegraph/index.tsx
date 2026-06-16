@@ -1,6 +1,9 @@
 // Copyright (c) 2022 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+// Flamegraph view for a trace: renders an interactive d3-flame-graph chart and/or
+// a sortable table of aggregated durations, with search highlighting and view toggle.
+
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import flamegraph from 'd3-flame-graph';
 import { select } from 'd3-selection';

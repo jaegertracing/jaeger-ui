@@ -1,8 +1,10 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 //
-// Adapted from @pyroscope/flamegraph (Apache-2.0)
-// Copyright (c) 2022 Pyroscope, Inc.
+// Adapted from @pyroscope/flamegraph v0.35.6 (Apache-2.0)
+// Copyright (c) 2020 Pyroscope, Inc.
+
+// Toolbar with view mode toggle (Table/Both/Flamegraph), search input, and reset button.
 
 import React from 'react';
 import { Button, Input, Segmented, Space, Tooltip } from 'antd';

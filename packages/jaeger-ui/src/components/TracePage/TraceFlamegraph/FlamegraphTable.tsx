@@ -1,8 +1,11 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 //
-// Adapted from @pyroscope/flamegraph (Apache-2.0)
-// Copyright (c) 2022 Pyroscope, Inc.
+// Adapted from @pyroscope/flamegraph v0.35.6 (Apache-2.0)
+// Copyright (c) 2020 Pyroscope, Inc.
+
+// Sortable table showing aggregated span durations by service:operation,
+// with color-coded service indicators and proportional duration bars.
 
 import React, { useMemo } from 'react';
 import { Table } from 'antd';

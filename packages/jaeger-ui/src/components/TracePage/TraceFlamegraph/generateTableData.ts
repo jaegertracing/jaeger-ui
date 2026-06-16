@@ -1,8 +1,11 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 //
-// Adapted from @pyroscope/flamegraph (Apache-2.0)
-// Copyright (c) 2022 Pyroscope, Inc.
+// Adapted from @pyroscope/flamegraph v0.35.6 (Apache-2.0)
+// Copyright (c) 2020 Pyroscope, Inc.
+
+// Aggregates span data into table rows grouped by "service: operation",
+// computing self-time (exclusive of child spans) and total time for each group.
 
 import { IOtelTrace, IOtelSpan } from '../../../types/otel';
 
