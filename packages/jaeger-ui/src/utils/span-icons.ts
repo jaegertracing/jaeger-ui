@@ -15,10 +15,16 @@ const ATTR_ICON_RULES: [prefix: string, icon: IconType][] = [
 ];
 
 export function getSpanIconComponent(attributes: IAttribute[] | undefined): IconType | null {
-  for (const [prefix, icon] of ATTR_ICON_RULES) {
-    if (attributes?.some(a => a.key.startsWith(prefix))) {
-      return icon;
+  if (!attributes) return null;
+  let bestIndex = ATTR_ICON_RULES.length;
+  for (const attr of attributes) {
+    for (let i = 0; i < bestIndex; i++) {
+      if (attr.key.startsWith(ATTR_ICON_RULES[i][0])) {
+        bestIndex = i;
+        break;
+      }
     }
+    if (bestIndex === 0) break;
   }
-  return null;
+  return bestIndex < ATTR_ICON_RULES.length ? ATTR_ICON_RULES[bestIndex][1] : null;
 }

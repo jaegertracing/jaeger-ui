@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward } from 'react-icons/io5';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
@@ -112,7 +112,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
     attributes,
     resource: { serviceName },
   } = span;
-  const SpanTypeIcon = useMemo(() => getSpanIconComponent(attributes), [attributes]);
+  const SpanTypeIcon = getSpanIconComponent(attributes);
   const label = formatDurationCompact(duration);
   const viewBounds = getViewedBounds(span.startTime, span.endTime);
   const viewStart = viewBounds.start;
