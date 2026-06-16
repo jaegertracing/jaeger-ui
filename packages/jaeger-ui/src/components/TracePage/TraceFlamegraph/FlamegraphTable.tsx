@@ -7,9 +7,10 @@
 // Sortable table showing aggregated span durations by service:operation,
 // with color-coded service indicators and proportional duration bars.
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Table, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import type { SorterResult } from 'antd/es/table/interface';
 
 import colorGenerator from '../../../utils/color-generator';
 import { formatDuration, formatDurationCompact } from '../../../utils/date';
@@ -27,18 +28,37 @@ type Props = {
 };
 
 const FlamegraphTable = ({ data, searchQuery, selectedItem, onRowClick, maxSelf, maxTotal }: Props) => {
+  const [sortState, setSortState] = useState<{ field: string; order: 'ascend' | 'descend' }>({
+    field: 'self',
+    order: 'descend',
+  });
+
   const filteredData = useMemo(() => {
     if (!searchQuery) return data;
     const q = searchQuery.toLowerCase();
     return data.filter(row => row.name.toLowerCase().includes(q));
   }, [data, searchQuery]);
 
+  const handleTableChange = (
+    _pagination: any,
+    _filters: any,
+    sorter: SorterResult<IFlamegraphTableRow> | SorterResult<IFlamegraphTableRow>[]
+  ) => {
+    const s = Array.isArray(sorter) ? sorter[0] : sorter;
+    if (s.columnKey && s.order) {
+      setSortState({ field: s.columnKey as string, order: s.order });
+    } else {
+      const newOrder = sortState.order === 'descend' ? 'ascend' : 'descend';
+      setSortState({ field: sortState.field, order: newOrder });
+    }
+  };
+
   const columns: ColumnsType<IFlamegraphTableRow> = [
     {
       title: 'Service & Operation',
       dataIndex: 'name',
       key: 'name',
-      sortDirections: ['ascend', 'descend'],
+      sortOrder: sortState.field === 'name' ? sortState.order : undefined,
       sorter: (a, b) => a.name.localeCompare(b.name),
       render: (_name: string, row: IFlamegraphTableRow) => {
         const opName = row.name.slice(row.serviceName.length + 2);
@@ -59,7 +79,7 @@ const FlamegraphTable = ({ data, searchQuery, selectedItem, onRowClick, maxSelf,
       dataIndex: 'count',
       key: 'count',
       width: 70,
-      sortDirections: ['descend', 'ascend'],
+      sortOrder: sortState.field === 'count' ? sortState.order : undefined,
       sorter: (a, b) => a.count - b.count,
     },
     {
@@ -67,8 +87,7 @@ const FlamegraphTable = ({ data, searchQuery, selectedItem, onRowClick, maxSelf,
       dataIndex: 'self',
       key: 'self',
       width: 160,
-      defaultSortOrder: 'descend',
-      sortDirections: ['descend', 'ascend'],
+      sortOrder: sortState.field === 'self' ? sortState.order : undefined,
       sorter: (a, b) => a.self - b.self,
       render: (value: number) => (
         <Tooltip title={formatDuration(value as Microseconds)}>
@@ -86,7 +105,7 @@ const FlamegraphTable = ({ data, searchQuery, selectedItem, onRowClick, maxSelf,
       dataIndex: 'total',
       key: 'total',
       width: 160,
-      sortDirections: ['descend', 'ascend'],
+      sortOrder: sortState.field === 'total' ? sortState.order : undefined,
       sorter: (a, b) => a.total - b.total,
       render: (value: number) => (
         <Tooltip title={formatDuration(value as Microseconds)}>
@@ -109,6 +128,7 @@ const FlamegraphTable = ({ data, searchQuery, selectedItem, onRowClick, maxSelf,
       size="small"
       pagination={false}
       showSorterTooltip={false}
+      onChange={handleTableChange}
       rowClassName={record => (record.name === selectedItem ? 'Flamegraph-table--row-selected' : '')}
       onRow={record => ({
         onClick: () => onRowClick(record.name),
