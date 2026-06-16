@@ -53,7 +53,7 @@ describe('useSearchResultsStore', () => {
     it('sanitizes invalid sortBy from persisted state on rehydration', async () => {
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ state: { sortBy: 'INVALID_SORT_KEY', viewMode: 'list' }, version: 0 })
+        JSON.stringify({ state: { sortBy: 'INVALID_SORT_KEY', viewMode: 'list' }, version: 1 })
       );
       await useSearchResultsStore.persist.rehydrate();
       expect(useSearchResultsStore.getState().sortBy).toBe(MOST_RECENT);
@@ -62,10 +62,26 @@ describe('useSearchResultsStore', () => {
     it('preserves valid sortBy from persisted state on rehydration', async () => {
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ state: { sortBy: LONGEST_FIRST, viewMode: 'list' }, version: 0 })
+        JSON.stringify({ state: { sortBy: LONGEST_FIRST, viewMode: 'list' }, version: 1 })
       );
       await useSearchResultsStore.persist.rehydrate();
       expect(useSearchResultsStore.getState().sortBy).toBe(LONGEST_FIRST);
+    });
+
+    it('sanitizes invalid viewMode from persisted state on rehydration', async () => {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ state: { sortBy: MOST_RECENT, viewMode: 'invalid_mode' }, version: 1 })
+      );
+      await useSearchResultsStore.persist.rehydrate();
+      expect(useSearchResultsStore.getState().viewMode).toBe('list');
+    });
+
+    it('migrates version 0 state (viewMode-only) without carrying over sortBy', async () => {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ state: { viewMode: 'table' }, version: 0 }));
+      await useSearchResultsStore.persist.rehydrate();
+      expect(useSearchResultsStore.getState().viewMode).toBe('table');
+      expect(useSearchResultsStore.getState().sortBy).toBe(MOST_RECENT);
     });
   });
 });
