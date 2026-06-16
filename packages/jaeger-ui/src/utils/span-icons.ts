@@ -4,7 +4,7 @@
 import type { IconType } from 'react-icons';
 import { IoSparkles, IoServer, IoGlobe, IoChatbubble, IoCodeSlash } from 'react-icons/io5';
 
-import { IOtelSpan } from '../types/otel';
+import { IAttribute } from '../types/otel';
 
 const ATTR_ICON_RULES: [prefix: string, icon: IconType][] = [
   ['gen_ai.', IoSparkles],
@@ -14,9 +14,9 @@ const ATTR_ICON_RULES: [prefix: string, icon: IconType][] = [
   ['rpc.', IoCodeSlash],
 ];
 
-export function getSpanTypeIcon(span: IOtelSpan): IconType | null {
+export function getSpanIconComponent(attributes: IAttribute[] | undefined): IconType | null {
   for (const [prefix, icon] of ATTR_ICON_RULES) {
-    if (span.attributes.some(a => a.key.startsWith(prefix))) {
+    if (attributes?.some(a => a.key.startsWith(prefix))) {
       return icon;
     }
   }
