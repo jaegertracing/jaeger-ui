@@ -95,9 +95,11 @@ describe('<TraceGraph>', () => {
 
     // Initial mode should be service
     expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SERVICE);
-    const timeButton = screen.getByRole('button', { name: 'T' });
-    const selftimeButton = screen.getByRole('button', { name: 'ST' });
-    const serviceButton = screen.getByRole('button', { name: 'S' });
+    const timeButton = screen.getByRole('button', { name: /switch trace graph coloring to time/i });
+    const selftimeButton = screen.getByRole('button', { name: /switch trace graph coloring to self time/i });
+    const serviceButton = screen.getByRole('button', {
+      name: /switch trace graph coloring to service/i,
+    });
 
     // Switch to time
     await userEvent.click(timeButton);
@@ -143,7 +145,7 @@ describe('<TraceGraph>', () => {
     expect(screen.getByText('Colored by total time')).toBeInTheDocument();
 
     // Verify selftime mode
-    expect(screen.getByText('Selftime')).toBeInTheDocument();
+    expect(screen.getByText('Self time')).toBeInTheDocument();
     expect(screen.getByText('Colored by self time (*)')).toBeInTheDocument();
 
     // Verify edge type explanations
