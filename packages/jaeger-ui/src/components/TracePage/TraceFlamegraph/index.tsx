@@ -74,11 +74,6 @@ const TraceFlamegraph = ({ trace }: any) => {
       .onClick((d: any) => {
         const isRoot = d?.data?.name === flameData.name;
         setChartZoomed(!isRoot);
-        if (isRoot) {
-          setSelectedItem(null);
-        } else if (d?.data?.name) {
-          setSelectedItem(d.data.name);
-        }
       })
       .setColorMapper((d: any, _originalColor: string) => {
         if (d.highlight) return HIGHLIGHT_COLOR;

@@ -51,5 +51,10 @@ function groupChildrenByName(children: IFlameNode[]): IFlameNode[] {
       groups.set(child.name, { ...child, children: [...child.children] });
     }
   }
+  for (const node of groups.values()) {
+    if (node.children.length > 1) {
+      node.children = groupChildrenByName(node.children);
+    }
+  }
   return Array.from(groups.values());
 }

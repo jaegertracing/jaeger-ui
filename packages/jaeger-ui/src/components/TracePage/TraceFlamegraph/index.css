@@ -171,6 +171,7 @@ SPDX-License-Identifier: Apache-2.0
 
 .Flamegraph-context-menu--item:disabled {
   color: var(--text-tertiary);
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
