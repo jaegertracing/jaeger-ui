@@ -189,6 +189,46 @@ describe('<AccordionEvents>', () => {
     jest.useRealTimers();
   });
 
+  it('cancels pending reflow timers when unmounted', () => {
+    jest.useFakeTimers();
+    const originalDispatchEvent = window.dispatchEvent;
+    const originalRequestAnimationFrame = window.requestAnimationFrame;
+    const originalCancelAnimationFrame = window.cancelAnimationFrame;
+    const mockDispatchEvent = jest.fn();
+
+    window.dispatchEvent = mockDispatchEvent;
+    window.requestAnimationFrame = jest.fn(callback => window.setTimeout(callback, 16));
+    window.cancelAnimationFrame = jest.fn(id => window.clearTimeout(id));
+
+    const manyLogs = Array.from({ length: 5 }, (_, i) => ({
+      timestamp: 10 + i,
+      name: 'event',
+      attributes: [{ key: 'message', value: `event ${i}` }],
+    }));
+
+    const propsWithManyLogs = {
+      ...defaultProps,
+      events: manyLogs,
+      currentViewRangeTime: [0.0, 1.0],
+      initialVisibleCount: 3,
+      spanID: 'test-span-123',
+    };
+
+    const { unmount } = render(<AccordionEvents {...propsWithManyLogs} isOpen />);
+    fireEvent.click(screen.getByRole('button', { name: /show more.../i }));
+    unmount();
+
+    jest.runAllTimers();
+
+    expect(mockDispatchEvent).not.toHaveBeenCalled();
+    expect(window.cancelAnimationFrame).toHaveBeenCalled();
+
+    window.dispatchEvent = originalDispatchEvent;
+    window.requestAnimationFrame = originalRequestAnimationFrame;
+    window.cancelAnimationFrame = originalCancelAnimationFrame;
+    jest.useRealTimers();
+  });
+
   it('handles observer cleanup and errors', () => {
     const originalResizeObserver = window.ResizeObserver;
     const originalMutationObserver = window.MutationObserver;
