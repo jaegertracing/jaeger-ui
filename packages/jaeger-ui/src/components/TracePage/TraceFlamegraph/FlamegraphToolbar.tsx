@@ -69,44 +69,44 @@ const FlamegraphToolbar = ({
   showChart,
 }: Props) => (
   <div className="Flamegraph-toolbar" role="toolbar">
-    <Space size="middle">
-      <Input
-        placeholder="Search..."
-        allowClear
-        value={searchQuery}
-        onChange={e => onSearchChange(e.target.value)}
-        style={{ width: 200 }}
-        size="small"
-        data-testid="flamegraph-search"
-      />
-      <Button
-        size="small"
-        icon={<IoRefreshOutline />}
-        disabled={!isDirty}
-        onClick={onReset}
-        data-testid="flamegraph-reset"
-      >
-        Reset View
-      </Button>
-      {showChart && (
+    <Input
+      placeholder="Search..."
+      allowClear
+      value={searchQuery}
+      onChange={e => onSearchChange(e.target.value)}
+      style={{ width: 200 }}
+      size="small"
+      data-testid="flamegraph-search"
+    />
+    <div className="Flamegraph-toolbar--right">
+      <Space size="middle">
         <Button
           size="small"
-          icon={<TbArrowMerge />}
-          disabled={!chartZoomed}
-          onClick={onCollapseAbove}
-          data-testid="flamegraph-collapse"
+          icon={<IoRefreshOutline />}
+          disabled={!isDirty}
+          onClick={onReset}
+          data-testid="flamegraph-reset"
         >
-          Collapse nodes above
+          Reset View
         </Button>
-      )}
-    </Space>
-    <div className="Flamegraph-toolbar--right">
-      <Segmented
-        options={VIEW_OPTIONS}
-        value={viewMode}
-        onChange={value => onViewModeChange(value as ViewMode)}
-        size="small"
-      />
+        {showChart && (
+          <Button
+            size="small"
+            icon={<TbArrowMerge />}
+            disabled={!chartZoomed}
+            onClick={onCollapseAbove}
+            data-testid="flamegraph-collapse"
+          >
+            Collapse nodes above
+          </Button>
+        )}
+        <Segmented
+          options={VIEW_OPTIONS}
+          value={viewMode}
+          onChange={value => onViewModeChange(value as ViewMode)}
+          size="small"
+        />
+      </Space>
     </div>
   </div>
 );
