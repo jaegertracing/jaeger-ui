@@ -4,10 +4,10 @@
 // Adapted from @pyroscope/flamegraph v0.35.6 (Apache-2.0)
 // Copyright (c) 2020 Pyroscope, Inc.
 
-// Derives table rows from the flamegraph tree, computing self-time as
-// node.value minus sum of children values, then aggregating by name.
+// Aggregates spans by "service: operation", showing the longest span's
+// self-time and duration as the representative values for each group.
 
-import { IFlameNode } from './convertOtelTraceToFlameData';
+import { IOtelTrace, IOtelSpan } from '../../../types/otel';
 
 export interface IFlamegraphTableRow {
   key: string;
@@ -18,34 +18,57 @@ export interface IFlamegraphTableRow {
   total: number;
 }
 
-export function generateTableData(root: IFlameNode): IFlamegraphTableRow[] {
+export function generateTableData(trace: IOtelTrace): IFlamegraphTableRow[] {
   const groups = new Map<string, IFlamegraphTableRow>();
-  aggregateNode(root, groups);
+
+  for (const span of trace.spans) {
+    const name = `${span.resource.serviceName}: ${span.name}`;
+    const self = computeSelfTime(span);
+
+    const existing = groups.get(name);
+    if (existing) {
+      existing.count += 1;
+      if (span.duration > existing.total) {
+        existing.self = self;
+        existing.total = span.duration;
+      }
+    } else {
+      groups.set(name, {
+        key: name,
+        serviceName: span.resource.serviceName,
+        name,
+        count: 1,
+        self,
+        total: span.duration,
+      });
+    }
+  }
+
   return Array.from(groups.values());
 }
 
-function aggregateNode(node: IFlameNode, groups: Map<string, IFlamegraphTableRow>): void {
-  const childrenTotal = node.children.reduce((sum, child) => sum + child.value, 0);
-  const self = Math.max(0, node.value - childrenTotal);
+function computeSelfTime(span: IOtelSpan): number {
+  if (!span.hasChildren) return span.duration;
 
-  const existing = groups.get(node.name);
-  if (existing) {
-    existing.self += self;
-    existing.total += node.value;
-    existing.count += 1;
-  } else {
-    const serviceName = node.name.includes(': ') ? node.name.split(': ')[0] : node.name;
-    groups.set(node.name, {
-      key: node.name,
-      serviceName,
-      name: node.name,
-      count: 1,
-      self,
-      total: node.value,
-    });
+  let selfTime: number = span.duration;
+  let previousChildEndTime = span.startTime;
+
+  const children = [...span.childSpans].sort((a, b) => a.startTime - b.startTime);
+  const parentEndTime = span.endTime;
+
+  for (const child of children) {
+    const childEndTime = child.endTime;
+    if (child.startTime > parentEndTime || childEndTime < previousChildEndTime) {
+      continue;
+    }
+
+    const nonOverlappingStart = Math.max(previousChildEndTime, child.startTime);
+    const clampedEnd = Math.min(parentEndTime, childEndTime);
+    selfTime -= clampedEnd - nonOverlappingStart;
+
+    if (clampedEnd === parentEndTime) break;
+    previousChildEndTime = childEndTime;
   }
 
-  for (const child of node.children) {
-    aggregateNode(child, groups);
-  }
+  return Math.max(0, selfTime);
 }

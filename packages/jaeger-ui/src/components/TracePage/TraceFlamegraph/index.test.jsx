@@ -14,6 +14,7 @@ const mockChart = {
   inverted: vi.fn().mockReturnThis(),
   sort: vi.fn().mockReturnThis(),
   transitionDuration: vi.fn().mockReturnThis(),
+  onClick: vi.fn().mockReturnThis(),
   setColorMapper: vi.fn().mockReturnThis(),
   search: vi.fn(),
   clear: vi.fn(),

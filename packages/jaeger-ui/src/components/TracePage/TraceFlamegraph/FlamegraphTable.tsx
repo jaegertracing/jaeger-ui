@@ -38,6 +38,7 @@ const FlamegraphTable = ({ data, searchQuery, selectedItem, onRowClick, maxSelf,
       title: 'Location',
       dataIndex: 'name',
       key: 'name',
+      sortDirections: ['ascend', 'descend'],
       sorter: (a, b) => a.name.localeCompare(b.name),
       render: (name: string, row: IFlamegraphTableRow) => (
         <div className="Flamegraph-table--location">
@@ -54,6 +55,7 @@ const FlamegraphTable = ({ data, searchQuery, selectedItem, onRowClick, maxSelf,
       dataIndex: 'count',
       key: 'count',
       width: 70,
+      sortDirections: ['descend', 'ascend'],
       sorter: (a, b) => a.count - b.count,
     },
     {
@@ -62,6 +64,7 @@ const FlamegraphTable = ({ data, searchQuery, selectedItem, onRowClick, maxSelf,
       key: 'self',
       width: 160,
       defaultSortOrder: 'descend',
+      sortDirections: ['descend', 'ascend'],
       sorter: (a, b) => a.self - b.self,
       render: (value: number) => (
         <Tooltip title={formatDuration(value as Microseconds)}>
@@ -79,6 +82,7 @@ const FlamegraphTable = ({ data, searchQuery, selectedItem, onRowClick, maxSelf,
       dataIndex: 'total',
       key: 'total',
       width: 160,
+      sortDirections: ['descend', 'ascend'],
       sorter: (a, b) => a.total - b.total,
       render: (value: number) => (
         <Tooltip title={formatDuration(value as Microseconds)}>

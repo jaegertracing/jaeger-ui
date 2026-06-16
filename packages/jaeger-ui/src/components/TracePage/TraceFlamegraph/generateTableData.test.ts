@@ -2,84 +2,151 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { generateTableData } from './generateTableData';
-import { convertOtelTraceToFlameData, IFlameNode } from './convertOtelTraceToFlameData';
 import testTrace from './testTrace.json';
 import transformTraceData from '../../../model/transform-trace-data';
 
 const otelTrace = transformTraceData(testTrace.data as any)!.asOtelTrace();
-const flameData = convertOtelTraceToFlameData(otelTrace);
 
 describe('generateTableData', () => {
-  it('returns one row per unique service:operation plus the virtual root', () => {
-    const rows = generateTableData(flameData);
-    const names = rows.map(r => r.name).sort();
-    expect(names).toContain('load-generator: OrderVehicle');
-    expect(names).toContain('load-generator: HTTP GET');
-    expect(names).toContain('ride-sharing-app: FindNearestVehicle');
-    expect(names).toContain('ride-sharing-app: BikeHandler');
-    expect(names).toContain('total');
+  it('returns one row per unique service:operation', () => {
+    const rows = generateTableData(otelTrace);
+    expect(rows).toHaveLength(4);
+    expect(rows.map(r => r.name).sort()).toEqual([
+      'load-generator: HTTP GET',
+      'load-generator: OrderVehicle',
+      'ride-sharing-app: BikeHandler',
+      'ride-sharing-app: FindNearestVehicle',
+    ]);
   });
 
-  it('sets total to the aggregated node value', () => {
-    const rows = generateTableData(flameData);
+  it('shows the longest span duration as total', () => {
+    const rows = generateTableData(otelTrace);
     const root = rows.find(r => r.name === 'load-generator: OrderVehicle')!;
     expect(root.total).toBe(1181596);
   });
 
-  it('computes self time as value minus sum of children values', () => {
-    const rows = generateTableData(flameData);
+  it('computes self time as duration minus non-overlapping children', () => {
+    const rows = generateTableData(otelTrace);
     // OrderVehicle (1181596) has child HTTP GET (968334)
     // self = 1181596 - 968334 = 213262
     const root = rows.find(r => r.name === 'load-generator: OrderVehicle')!;
     expect(root.self).toBe(1181596 - 968334);
   });
 
-  it('self time equals total for leaf nodes', () => {
-    const rows = generateTableData(flameData);
+  it('self time equals duration for leaf spans', () => {
+    const rows = generateTableData(otelTrace);
     const leaf = rows.find(r => r.name === 'ride-sharing-app: FindNearestVehicle')!;
     expect(leaf.self).toBe(leaf.total);
   });
 
   it('extracts serviceName correctly', () => {
-    const rows = generateTableData(flameData);
+    const rows = generateTableData(otelTrace);
     const row = rows.find(r => r.name === 'load-generator: OrderVehicle')!;
     expect(row.serviceName).toBe('load-generator');
   });
 
-  it('includes count field for grouped nodes', () => {
-    const rows = generateTableData(flameData);
+  it('includes count field', () => {
+    const rows = generateTableData(otelTrace);
     for (const row of rows) {
       expect(row.count).toBeGreaterThanOrEqual(1);
     }
   });
 
-  it('aggregates nodes with the same name', () => {
-    const tree: IFlameNode = {
-      name: 'total',
-      value: 200,
-      children: [
-        { name: 'svc: op-A', value: 100, children: [] },
-        { name: 'svc: op-A', value: 100, children: [] },
+  it('groups spans by name and keeps the longest as representative', () => {
+    const mockTrace = {
+      spans: [
+        {
+          spanID: 's1',
+          name: 'GET /api',
+          duration: 100,
+          startTime: 0,
+          endTime: 100,
+          hasChildren: false,
+          childSpans: [],
+          resource: { serviceName: 'frontend', attributes: [] },
+        },
+        {
+          spanID: 's2',
+          name: 'GET /api',
+          duration: 50,
+          startTime: 200,
+          endTime: 250,
+          hasChildren: false,
+          childSpans: [],
+          resource: { serviceName: 'frontend', attributes: [] },
+        },
       ],
-    };
-    const rows = generateTableData(tree);
-    const opA = rows.find(r => r.name === 'svc: op-A')!;
-    expect(opA.total).toBe(200);
-    expect(opA.self).toBe(200);
-    expect(opA.count).toBe(2);
+    } as any;
+
+    const rows = generateTableData(mockTrace);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].total).toBe(100);
+    expect(rows[0].self).toBe(100);
+    expect(rows[0].count).toBe(2);
   });
 
-  it('virtual root self time is zero when children account for all value', () => {
-    const tree: IFlameNode = {
-      name: 'total',
-      value: 300,
-      children: [
-        { name: 'svc: A', value: 150, children: [] },
-        { name: 'svc: B', value: 150, children: [] },
+  it('handles overlapping children correctly', () => {
+    const mockTrace = {
+      spans: [
+        {
+          spanID: 'parent',
+          name: 'parent-op',
+          duration: 100,
+          startTime: 0,
+          endTime: 100,
+          hasChildren: true,
+          childSpans: [
+            {
+              spanID: 'c1',
+              name: 'child-1',
+              duration: 60,
+              startTime: 10,
+              endTime: 70,
+              hasChildren: false,
+              childSpans: [],
+              resource: { serviceName: 'svc', attributes: [] },
+            },
+            {
+              spanID: 'c2',
+              name: 'child-2',
+              duration: 40,
+              startTime: 50,
+              endTime: 90,
+              hasChildren: false,
+              childSpans: [],
+              resource: { serviceName: 'svc', attributes: [] },
+            },
+          ],
+          resource: { serviceName: 'svc', attributes: [] },
+        },
+        {
+          spanID: 'c1',
+          name: 'child-1',
+          duration: 60,
+          startTime: 10,
+          endTime: 70,
+          hasChildren: false,
+          childSpans: [],
+          resource: { serviceName: 'svc', attributes: [] },
+        },
+        {
+          spanID: 'c2',
+          name: 'child-2',
+          duration: 40,
+          startTime: 50,
+          endTime: 90,
+          hasChildren: false,
+          childSpans: [],
+          resource: { serviceName: 'svc', attributes: [] },
+        },
       ],
-    };
-    const rows = generateTableData(tree);
-    const root = rows.find(r => r.name === 'total')!;
-    expect(root.self).toBe(0);
+    } as any;
+
+    const rows = generateTableData(mockTrace);
+    const parent = rows.find(r => r.name === 'svc: parent-op')!;
+    // children: c1 [10,70], c2 [50,90]
+    // non-overlapping coverage: [10, 90] = 80
+    // self = 100 - 80 = 20
+    expect(parent.self).toBe(20);
   });
 });

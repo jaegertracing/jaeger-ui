@@ -4,15 +4,13 @@
 // Adapted from @pyroscope/flamegraph v0.35.6 (Apache-2.0)
 // Copyright (c) 2020 Pyroscope, Inc.
 
-// Toolbar with search, Head First/Tail First toggle, Collapse Nodes Above,
-// Reset View, and view mode toggle (Table/Both/Flamegraph) on the right.
+// Toolbar with search input, reset button, and view mode toggle on the right.
 
 import React from 'react';
-import { Button, Dropdown, Input, Segmented, Space } from 'antd';
+import { Button, Input, Segmented, Space } from 'antd';
 import { IoRefreshOutline } from 'react-icons/io5';
 import { HiOutlineViewColumns } from 'react-icons/hi2';
 import { BsTable, BsFire } from 'react-icons/bs';
-import { TbArrowMerge } from 'react-icons/tb';
 
 export type ViewMode = 'table' | 'both' | 'flamegraph';
 
@@ -23,16 +21,36 @@ type Props = {
   onSearchChange: (query: string) => void;
   onReset: () => void;
   isDirty: boolean;
-  inverted: boolean;
-  onInvertedChange: (inverted: boolean) => void;
-  onCollapseAbove: () => void;
-  showChart: boolean;
 };
 
 const VIEW_OPTIONS = [
-  { label: <BsTable title="Table" />, value: 'table' },
-  { label: <HiOutlineViewColumns title="Both" />, value: 'both' },
-  { label: <BsFire title="Flamegraph" />, value: 'flamegraph' },
+  {
+    label: (
+      <Space size={4}>
+        <BsTable />
+        Table
+      </Space>
+    ),
+    value: 'table',
+  },
+  {
+    label: (
+      <Space size={4}>
+        <HiOutlineViewColumns />
+        Both
+      </Space>
+    ),
+    value: 'both',
+  },
+  {
+    label: (
+      <Space size={4}>
+        <BsFire />
+        Flamegraph
+      </Space>
+    ),
+    value: 'flamegraph',
+  },
 ];
 
 const FlamegraphToolbar = ({
@@ -42,10 +60,6 @@ const FlamegraphToolbar = ({
   onSearchChange,
   onReset,
   isDirty,
-  inverted,
-  onInvertedChange,
-  onCollapseAbove,
-  showChart,
 }: Props) => (
   <div className="Flamegraph-toolbar" role="toolbar">
     <Space size="middle">
@@ -58,32 +72,6 @@ const FlamegraphToolbar = ({
         size="small"
         data-testid="flamegraph-search"
       />
-      {showChart && (
-        <Dropdown
-          menu={{
-            items: [
-              { key: 'head', label: 'Head First' },
-              { key: 'tail', label: 'Tail First' },
-            ],
-            selectedKeys: [inverted ? 'head' : 'tail'],
-            onClick: ({ key }) => onInvertedChange(key === 'head'),
-          }}
-        >
-          <Button size="small" data-testid="flamegraph-orientation">
-            {inverted ? 'Head First' : 'Tail First'}
-          </Button>
-        </Dropdown>
-      )}
-      {showChart && (
-        <Button
-          size="small"
-          icon={<TbArrowMerge />}
-          onClick={onCollapseAbove}
-          data-testid="flamegraph-collapse"
-        >
-          Collapse Nodes Above
-        </Button>
-      )}
       <Button
         size="small"
         icon={<IoRefreshOutline />}

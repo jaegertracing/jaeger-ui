@@ -25,16 +25,16 @@ const TraceFlamegraph = ({ trace }: any) => {
   const [viewMode, setViewMode] = useState<ViewMode>('both');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
-  const [inverted, setInverted] = useState(true);
+  const [chartZoomed, setChartZoomed] = useState(false);
 
   const otelTrace = trace instanceof OtelTraceFacade ? trace : null;
 
   const flameData = useMemo(() => (otelTrace ? convertOtelTraceToFlameData(otelTrace) : null), [otelTrace]);
-  const tableData = useMemo(() => (flameData ? generateTableData(flameData) : []), [flameData]);
+  const tableData = useMemo(() => (otelTrace ? generateTableData(otelTrace) : []), [otelTrace]);
   const maxSelf = useMemo(() => Math.max(...tableData.map(r => r.self), 1), [tableData]);
   const maxTotal = useMemo(() => Math.max(...tableData.map(r => r.total), 1), [tableData]);
 
-  const isDirty = searchQuery !== '' || selectedItem !== null;
+  const isDirty = searchQuery !== '' || selectedItem !== null || chartZoomed;
   const showChart = viewMode === 'flamegraph' || viewMode === 'both';
   const showTable = viewMode === 'table' || viewMode === 'both';
 
@@ -47,9 +47,12 @@ const TraceFlamegraph = ({ trace }: any) => {
     const chart = flamegraph()
       .width(container.clientWidth || 800)
       .cellHeight(18)
-      .inverted(inverted)
+      .inverted(true)
       .sort(false)
       .transitionDuration(300)
+      .onClick((d: any) => {
+        setChartZoomed(d?.data?.name !== flameData.name);
+      })
       .setColorMapper((d: any) => {
         if (!d || !d.data || !d.data.name) return '#ccc';
         const serviceName = d.data.name.split(': ')[0];
@@ -63,11 +66,11 @@ const TraceFlamegraph = ({ trace }: any) => {
       chartRef.current = null;
       chart.destroy();
     };
-  }, [flameData, showChart, inverted]);
+  }, [flameData, showChart]);
 
   useEffect(() => {
     if (!chartRef.current) return;
-    const query = searchQuery || selectedItem;
+    const query = selectedItem || searchQuery;
     if (query) {
       chartRef.current.search(query);
     } else {
@@ -78,6 +81,7 @@ const TraceFlamegraph = ({ trace }: any) => {
   const handleReset = useCallback(() => {
     setSearchQuery('');
     setSelectedItem(null);
+    setChartZoomed(false);
     if (chartRef.current) {
       chartRef.current.resetZoom();
       chartRef.current.clear();
@@ -91,12 +95,6 @@ const TraceFlamegraph = ({ trace }: any) => {
   const handleSearchChange = useCallback((query: string) => {
     setSearchQuery(query);
     if (query) setSelectedItem(null);
-  }, []);
-
-  const handleCollapseAbove = useCallback(() => {
-    if (chartRef.current) {
-      chartRef.current.resetZoom();
-    }
   }, []);
 
   if (!otelTrace) {
@@ -116,10 +114,6 @@ const TraceFlamegraph = ({ trace }: any) => {
         onSearchChange={handleSearchChange}
         onReset={handleReset}
         isDirty={isDirty}
-        inverted={inverted}
-        onInvertedChange={setInverted}
-        onCollapseAbove={handleCollapseAbove}
-        showChart={showChart}
       />
       <div className="Flamegraph-content" data-view-mode={viewMode}>
         {showTable && (
