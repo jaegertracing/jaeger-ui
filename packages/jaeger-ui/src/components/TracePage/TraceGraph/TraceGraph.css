@@ -77,6 +77,10 @@ SPDX-License-Identifier: Apache-2.0
 */
 .TraceGraph--dag .plexus-Digraph--SvgEdge {
   stroke: var(--text-secondary);
+  /* A sub-1px stroke anti-aliases into near-invisibility against a dark
+     background, even with sufficient color contrast. Widen the edges so
+     they read clearly, matching the legend sample lines (stroke-width: 2). */
+  stroke-width: 1.5;
 }
 
 .TraceGraph--dag marker path {
