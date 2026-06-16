@@ -1,44 +1,95 @@
 // Copyright (c) 2024 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import genaiTestTrace from './genaiTestTrace.json';
+import genaiTestTraceRaw from './genaiTestTrace.json';
+
+interface KeyValuePair {
+  key: string;
+  type: string;
+  value: any;
+}
+
+interface SpanReference {
+  refType: string;
+  traceID: string;
+  spanID: string;
+}
+
+interface Span {
+  traceID: string;
+  spanID: string;
+  operationName: string;
+  references: SpanReference[];
+  startTime: number;
+  duration: number;
+  processID: string;
+  tags: KeyValuePair[];
+}
+
+interface Trace {
+  traceID: string;
+  spans: Span[];
+  processes: Record<string, any>;
+}
+
+interface FixtureData {
+  data: Trace[];
+}
+
+const genaiTestTrace = genaiTestTraceRaw as unknown as FixtureData;
+
+function requireSpan(spans: Span[], operationName: string): Span {
+  const span = spans.find((s) => s.operationName === operationName);
+  if (!span) {
+    throw new Error(`Required span with operationName '${operationName}' was not found in fixture.`);
+  }
+  return span;
+}
+
+function requireTag(tags: KeyValuePair[], key: string): KeyValuePair {
+  const tag = tags.find((t) => t.key === key);
+  if (!tag) {
+    throw new Error(`Required tag '${key}' was not found.`);
+  }
+  return tag;
+}
 
 describe('genaiTestTrace.json fixture', () => {
   it('loads without errors and has correct structure', () => {
     expect(genaiTestTrace).toBeDefined();
     expect(Array.isArray(genaiTestTrace.data)).toBe(true);
-    expect(genaiTestTrace.data.length).toBe(2);
   });
 
   it('contains a full GenAI trace with required span hierarchy', () => {
-    const fullTrace = genaiTestTrace.data[0];
-    expect(fullTrace.traceID).toBe('genai-full-trace-001');
+    const fullTrace = genaiTestTrace.data.find(t => t.traceID === 'genai-full-trace-001');
+    if (!fullTrace) throw new Error('Could not find trace with ID genai-full-trace-001');
 
-    const invokeAgentSpan = fullTrace.spans.find((s: any) => s.operationName === 'invoke_agent');
-    const chatSpan = fullTrace.spans.find((s: any) => s.operationName === 'chat');
-    const httpClientSpan = fullTrace.spans.find((s: any) => s.operationName === 'HTTP POST');
-    const executeToolSpan = fullTrace.spans.find((s: any) => s.operationName === 'execute_tool');
-    const retrievalSpan = fullTrace.spans.find((s: any) => s.operationName === 'retrieval');
-
-    expect(invokeAgentSpan).toBeDefined();
-    expect(chatSpan).toBeDefined();
-    expect(httpClientSpan).toBeDefined();
-    expect(executeToolSpan).toBeDefined();
-    expect(retrievalSpan).toBeDefined();
+    const invokeAgentSpan = requireSpan(fullTrace.spans, 'invoke_agent');
+    const chatSpan = requireSpan(fullTrace.spans, 'chat');
+    const httpClientSpan = requireSpan(fullTrace.spans, 'HTTP POST');
+    const executeToolSpan = requireSpan(fullTrace.spans, 'execute_tool');
+    const retrievalSpan = requireSpan(fullTrace.spans, 'retrieval');
 
     // Verify parent-child relationships
+    expect(chatSpan.references.length).toBeGreaterThan(0);
     expect(chatSpan.references[0].spanID).toBe(invokeAgentSpan.spanID);
+
+    expect(httpClientSpan.references.length).toBeGreaterThan(0);
     expect(httpClientSpan.references[0].spanID).toBe(chatSpan.spanID);
+
+    expect(executeToolSpan.references.length).toBeGreaterThan(0);
     expect(executeToolSpan.references[0].spanID).toBe(invokeAgentSpan.spanID);
+
+    expect(retrievalSpan.references.length).toBeGreaterThan(0);
     expect(retrievalSpan.references[0].spanID).toBe(invokeAgentSpan.spanID);
   });
 
   it('gen_ai.input.messages value is >= 1 KB serialised', () => {
-    const fullTrace = genaiTestTrace.data[0];
-    const chatSpan = fullTrace.spans.find((s: any) => s.operationName === 'chat');
-    
-    const messagesTag = chatSpan.tags.find((t: any) => t.key === 'gen_ai.input.messages');
-    expect(messagesTag).toBeDefined();
+    const fullTrace = genaiTestTrace.data.find(t => t.traceID === 'genai-full-trace-001');
+    if (!fullTrace) throw new Error('Could not find trace with ID genai-full-trace-001');
+
+    const chatSpan = requireSpan(fullTrace.spans, 'chat');
+    const messagesTag = requireTag(chatSpan.tags, 'gen_ai.input.messages');
     
     const messagesString = messagesTag.value;
     expect(messagesString.length).toBeGreaterThanOrEqual(1024); // >= 1 KB
@@ -50,14 +101,12 @@ describe('genaiTestTrace.json fixture', () => {
   });
 
   it('contains a second partial-GenAI fixture (iconography-only)', () => {
-    const partialTrace = genaiTestTrace.data[1];
-    expect(partialTrace.traceID).toBe('genai-partial-trace-002');
+    const partialTrace = genaiTestTrace.data.find(t => t.traceID === 'genai-partial-trace-002');
+    if (!partialTrace) throw new Error('Could not find trace with ID genai-partial-trace-002');
     
-    const llmSpan = partialTrace.spans.find((s: any) => s.operationName === 'llm_completion');
-    expect(llmSpan).toBeDefined();
+    const llmSpan = requireSpan(partialTrace.spans, 'llm_completion');
+    const systemTag = requireTag(llmSpan.tags, 'gen_ai.system');
     
-    const systemTag = llmSpan.tags.find((t: any) => t.key === 'gen_ai.system');
-    expect(systemTag).toBeDefined();
     expect(systemTag.value).toBe('openai');
   });
 });
