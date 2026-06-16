@@ -4,7 +4,7 @@
 import memoizeOne from 'memoize-one';
 import objectHash from 'object-hash';
 
-import { KeyValuePair } from '../../types/trace';
+import type { KeyValuePair } from '../../types/trace';
 
 import {
   PathElem,
@@ -18,7 +18,7 @@ import {
 
 const stringifyEntry = ({ service, operation }: TDdgPayloadEntry) => `${service}\v${operation}`;
 
-function group(arg: KeyValuePair<any>[]): Record<string, any[]> {
+function group(arg: KeyValuePair[]): Record<string, any[]> {
   const result: Record<string, any[]> = {};
   arg.forEach(({ key, value }) => {
     if (!result[key]) result[key] = [];
