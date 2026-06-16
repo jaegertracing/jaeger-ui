@@ -244,4 +244,21 @@ export type Config = {
   // (tags, logs, process, operation name) or OpenTelemetry terminology
   // (attributes, events, resource, name).
   useOpenTelemetryTerms: boolean;
+
+  // tracing controls in-browser OpenTelemetry instrumentation. When enabled,
+  // the UI exports spans via OTLP/HTTP to the same-origin path
+  // '/api/otlp/v1/traces', which the jaeger-query otlp_proxy extension
+  // forwards to the OTel Collector. The endpoint is intentionally not
+  // configurable — see docs/adr/0011-ui-emitted-trace-ingest.md.
+  // Disabled by default.
+  tracing?: {
+    enabled?: boolean;
+    serviceName?: string;
+    sampleRatio?: number;
+    // sessionInactivityMinutes controls how many minutes of inactivity end
+    // the current user session. The next span after the timeout starts a new
+    // `session.id` and stamps the prior one as `session.previous_id`,
+    // per OTel session semantics. Default: 30.
+    sessionInactivityMinutes?: number;
+  };
 };
