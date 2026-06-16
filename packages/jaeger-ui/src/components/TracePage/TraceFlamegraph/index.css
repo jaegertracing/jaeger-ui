@@ -73,15 +73,19 @@ SPDX-License-Identifier: Apache-2.0
   white-space: nowrap;
 }
 
-/* Table: duration cell with background bar */
+/* Table: duration cell with RelativeBar */
 .Flamegraph-table--duration-cell {
-  padding: 2px 8px;
-  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
 }
 
 .Flamegraph-table--duration-value {
   white-space: nowrap;
-  font-variant-numeric: tabular-nums;
+  min-width: 60px;
+  text-align: right;
+  font-family: monospace;
   font-size: 12px;
 }
 

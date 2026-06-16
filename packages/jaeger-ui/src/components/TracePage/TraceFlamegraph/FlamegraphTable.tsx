@@ -8,12 +8,13 @@
 // with color-coded service indicators and proportional duration bars.
 
 import React, { useMemo } from 'react';
-import { Table } from 'antd';
+import { Table, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 
 import colorGenerator from '../../../utils/color-generator';
-import { formatDurationCompact } from '../../../utils/date';
+import { formatDuration, formatDurationCompact } from '../../../utils/date';
 import { Microseconds } from '../../../types/units';
+import RelativeBar from '../../common/RelativeBar';
 import { IFlamegraphTableRow } from './generateTableData';
 
 type Props = {
@@ -24,13 +25,6 @@ type Props = {
   maxSelf: number;
   maxTotal: number;
 };
-
-function durationBarStyle(value: number, max: number): React.CSSProperties {
-  const pct = max > 0 ? (value / max) * 100 : 0;
-  return {
-    background: `linear-gradient(to right, var(--interactive-primary-light) ${pct}%, transparent ${pct}%)`,
-  };
-}
 
 const FlamegraphTable = ({ data, searchQuery, selectedItem, onRowClick, maxSelf, maxTotal }: Props) => {
   const filteredData = useMemo(() => {
@@ -56,32 +50,45 @@ const FlamegraphTable = ({ data, searchQuery, selectedItem, onRowClick, maxSelf,
       ),
     },
     {
+      title: 'Count',
+      dataIndex: 'count',
+      key: 'count',
+      width: 70,
+      sorter: (a, b) => a.count - b.count,
+    },
+    {
       title: 'Self',
       dataIndex: 'self',
       key: 'self',
-      width: 130,
+      width: 160,
       defaultSortOrder: 'descend',
       sorter: (a, b) => a.self - b.self,
       render: (value: number) => (
-        <div className="Flamegraph-table--duration-cell" style={durationBarStyle(value, maxSelf)}>
-          <span className="Flamegraph-table--duration-value">
-            {formatDurationCompact(value as Microseconds)}
-          </span>
-        </div>
+        <Tooltip title={formatDuration(value as Microseconds)}>
+          <div className="Flamegraph-table--duration-cell">
+            <RelativeBar value={value} maxValue={maxSelf} />
+            <span className="Flamegraph-table--duration-value">
+              {formatDurationCompact(value as Microseconds)}
+            </span>
+          </div>
+        </Tooltip>
       ),
     },
     {
       title: 'Total',
       dataIndex: 'total',
       key: 'total',
-      width: 130,
+      width: 160,
       sorter: (a, b) => a.total - b.total,
       render: (value: number) => (
-        <div className="Flamegraph-table--duration-cell" style={durationBarStyle(value, maxTotal)}>
-          <span className="Flamegraph-table--duration-value">
-            {formatDurationCompact(value as Microseconds)}
-          </span>
-        </div>
+        <Tooltip title={formatDuration(value as Microseconds)}>
+          <div className="Flamegraph-table--duration-cell">
+            <RelativeBar value={value} maxValue={maxTotal} />
+            <span className="Flamegraph-table--duration-value">
+              {formatDurationCompact(value as Microseconds)}
+            </span>
+          </div>
+        </Tooltip>
       ),
     },
   ];

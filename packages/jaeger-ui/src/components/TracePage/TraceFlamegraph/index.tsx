@@ -25,11 +25,12 @@ const TraceFlamegraph = ({ trace }: any) => {
   const [viewMode, setViewMode] = useState<ViewMode>('both');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
+  const [inverted, setInverted] = useState(true);
 
   const otelTrace = trace instanceof OtelTraceFacade ? trace : null;
 
   const flameData = useMemo(() => (otelTrace ? convertOtelTraceToFlameData(otelTrace) : null), [otelTrace]);
-  const tableData = useMemo(() => (otelTrace ? generateTableData(otelTrace) : []), [otelTrace]);
+  const tableData = useMemo(() => (flameData ? generateTableData(flameData) : []), [flameData]);
   const maxSelf = useMemo(() => Math.max(...tableData.map(r => r.self), 1), [tableData]);
   const maxTotal = useMemo(() => Math.max(...tableData.map(r => r.total), 1), [tableData]);
 
@@ -37,7 +38,6 @@ const TraceFlamegraph = ({ trace }: any) => {
   const showChart = viewMode === 'flamegraph' || viewMode === 'both';
   const showTable = viewMode === 'table' || viewMode === 'both';
 
-  // Initialize / re-initialize chart when container becomes visible and data is available
   useEffect(() => {
     if (!containerRef.current || !flameData || !showChart) return;
 
@@ -47,7 +47,7 @@ const TraceFlamegraph = ({ trace }: any) => {
     const chart = flamegraph()
       .width(container.clientWidth || 800)
       .cellHeight(18)
-      .inverted(true)
+      .inverted(inverted)
       .sort(false)
       .transitionDuration(300)
       .setColorMapper((d: any) => {
@@ -63,9 +63,8 @@ const TraceFlamegraph = ({ trace }: any) => {
       chartRef.current = null;
       chart.destroy();
     };
-  }, [flameData, showChart]);
+  }, [flameData, showChart, inverted]);
 
-  // Sync search/selection to chart highlight
   useEffect(() => {
     if (!chartRef.current) return;
     const query = searchQuery || selectedItem;
@@ -94,6 +93,12 @@ const TraceFlamegraph = ({ trace }: any) => {
     if (query) setSelectedItem(null);
   }, []);
 
+  const handleCollapseAbove = useCallback(() => {
+    if (chartRef.current) {
+      chartRef.current.resetZoom();
+    }
+  }, []);
+
   if (!otelTrace) {
     return (
       <div className="Flamegraph-wrapper" data-testid="flamegraph-wrapper">
@@ -111,6 +116,10 @@ const TraceFlamegraph = ({ trace }: any) => {
         onSearchChange={handleSearchChange}
         onReset={handleReset}
         isDirty={isDirty}
+        inverted={inverted}
+        onInvertedChange={setInverted}
+        onCollapseAbove={handleCollapseAbove}
+        showChart={showChart}
       />
       <div className="Flamegraph-content" data-view-mode={viewMode}>
         {showTable && (
