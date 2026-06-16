@@ -1,33 +1,50 @@
 // Copyright (c) 2022 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-// Flamegraph view for a trace: renders an interactive d3-flame-graph chart and/or
-// a sortable table of aggregated durations, with search highlighting and view toggle.
-
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import flamegraph from 'd3-flame-graph';
 import { select } from 'd3-selection';
 
 import OtelTraceFacade from '../../../model/OtelTraceFacade';
 import colorGenerator from '../../../utils/color-generator';
-import { formatDurationCompact } from '../../../utils/date';
+import { formatDuration, formatDurationCompact } from '../../../utils/date';
 import { Microseconds } from '../../../types/units';
 import { convertOtelTraceToFlameData } from './convertOtelTraceToFlameData';
 import { generateTableData } from './generateTableData';
 import FlamegraphToolbar, { ViewMode } from './FlamegraphToolbar';
 import FlamegraphTable from './FlamegraphTable';
+import FlamegraphContextMenu from './FlamegraphContextMenu';
+import FlamegraphTooltip from './FlamegraphTooltip';
 
 import 'd3-flame-graph/dist/d3-flamegraph.css';
 import './index.css';
 
+interface ContextMenuState {
+  x: number;
+  y: number;
+  name: string;
+}
+
+interface TooltipState {
+  x: number;
+  y: number;
+  name: string;
+  value: number;
+}
+
+const HIGHLIGHT_COLOR = '#E600E6';
+
 const TraceFlamegraph = ({ trace }: any) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<ReturnType<typeof flamegraph> | null>(null);
+  const searchActiveRef = useRef(false);
 
   const [viewMode, setViewMode] = useState<ViewMode>('both');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [chartZoomed, setChartZoomed] = useState(false);
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
+  const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
   const otelTrace = trace instanceof OtelTraceFacade ? trace : null;
 
@@ -55,26 +72,70 @@ const TraceFlamegraph = ({ trace }: any) => {
       .selfValue(false)
       .transitionDuration(300)
       .onClick((d: any) => {
-        const isZoom = d?.data?.name !== flameData.name;
-        setChartZoomed(isZoom);
-        if (d?.data?.name) {
+        const isRoot = d?.data?.name === flameData.name;
+        setChartZoomed(!isRoot);
+        if (isRoot) {
+          setSelectedItem(null);
+        } else if (d?.data?.name) {
           setSelectedItem(d.data.name);
         }
       })
-      .setColorMapper((d: any) => {
+      .setColorMapper((d: any, _originalColor: string) => {
+        if (d.highlight) return HIGHLIGHT_COLOR;
         if (!d || !d.data || !d.data.name) return '#ccc';
         const serviceName = d.data.name.split(': ')[0];
+        if (searchActiveRef.current) {
+          const [r, g, b] = colorGenerator.getRgbColorByKey(serviceName);
+          return `rgba(${r}, ${g}, ${b}, 0.3)`;
+        }
         return colorGenerator.getColorByKey(serviceName);
       })
-      .setLabelHandler((d: any) => {
+      .getName((d: any) => {
         if (!d || !d.data) return '';
         const pct = rootValue > 0 ? ((d.data.value / rootValue) * 100).toFixed(2) : '0';
         const dur = formatDurationCompact(d.data.value as Microseconds);
         return `${d.data.name} (${pct}%, ${dur})`;
+      })
+      .setLabelHandler((d: any) => {
+        if (!d || !d.data) return '';
+        const pct = rootValue > 0 ? ((d.data.value / rootValue) * 100).toFixed(2) : '0';
+        const dur = formatDuration(d.data.value as Microseconds);
+        return `${d.data.name} (${pct}%, ${dur})`;
+      })
+      .setSearchMatch((d: any, term: string) => {
+        if (!term || !d?.data?.name) return false;
+        const re = new RegExp(term);
+        return Boolean(d.data.name.match(re));
       });
 
     chartRef.current = chart;
     select(container).datum(flameData).call(chart);
+
+    const svgEl = container.querySelector('svg');
+    if (svgEl) {
+      svgEl.addEventListener('contextmenu', (e: MouseEvent) => {
+        const target = (e.target as Element).closest('g.frame');
+        if (!target) return;
+        e.preventDefault();
+        const name = target.getAttribute('name') || '';
+        setContextMenu({ x: e.clientX, y: e.clientY, name });
+        setTooltip(null);
+      });
+      svgEl.addEventListener('mousemove', (e: MouseEvent) => {
+        const target = (e.target as Element).closest('g.frame');
+        if (!target) {
+          setTooltip(null);
+          return;
+        }
+        const d3Data = (target as any).__data__;
+        const name = d3Data?.data?.name || '';
+        const value = d3Data?.data?.value || 0;
+        setTooltip({ x: e.clientX, y: e.clientY, name, value });
+      });
+      svgEl.addEventListener('mouseleave', () => {
+        setTooltip(null);
+      });
+    }
 
     return () => {
       chartRef.current = null;
@@ -86,8 +147,10 @@ const TraceFlamegraph = ({ trace }: any) => {
     if (!chartRef.current) return;
     const query = selectedItem || searchQuery;
     if (query) {
+      searchActiveRef.current = true;
       chartRef.current.search(query);
     } else {
+      searchActiveRef.current = false;
       chartRef.current.clear();
     }
   }, [searchQuery, selectedItem]);
@@ -117,6 +180,27 @@ const TraceFlamegraph = ({ trace }: any) => {
     setSearchQuery(query);
     if (query) setSelectedItem(null);
   }, []);
+
+  const handleContextMenuClose = useCallback(() => {
+    setContextMenu(null);
+  }, []);
+
+  const handleCopyName = useCallback(() => {
+    if (contextMenu) {
+      const rawName = contextMenu.name.replace(/\s*\([^)]*%,\s*[^)]*\)\s*$/, '');
+      navigator.clipboard.writeText(rawName);
+    }
+    setContextMenu(null);
+  }, [contextMenu]);
+
+  const handleHighlightSimilar = useCallback(() => {
+    if (contextMenu) {
+      const rawName = contextMenu.name.replace(/\s*\([^)]*%,\s*[^)]*\)\s*$/, '');
+      setSelectedItem(rawName);
+      setSearchQuery('');
+    }
+    setContextMenu(null);
+  }, [contextMenu]);
 
   if (!otelTrace) {
     return (
@@ -161,6 +245,28 @@ const TraceFlamegraph = ({ trace }: any) => {
           </div>
         )}
       </div>
+      {contextMenu && (
+        <FlamegraphContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onReset={handleReset}
+          onCollapseAbove={handleCollapseAbove}
+          onCopyName={handleCopyName}
+          onHighlightSimilar={handleHighlightSimilar}
+          onClose={handleContextMenuClose}
+          isDirty={isDirty}
+          chartZoomed={chartZoomed}
+        />
+      )}
+      {tooltip && !contextMenu && (
+        <FlamegraphTooltip
+          x={tooltip.x}
+          y={tooltip.y}
+          name={tooltip.name}
+          value={tooltip.value}
+          rootValue={flameData?.value || 1}
+        />
+      )}
     </div>
   );
 };

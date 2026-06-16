@@ -40,6 +40,8 @@ declare module 'd3-flame-graph' {
     onClick(callback: (d: any) => void): FlameGraph;
     onHover(callback: (d: any) => void): FlameGraph;
     setLabelHandler(handler: (d: any) => string): FlameGraph;
+    getName(handler: (d: any) => string): FlameGraph;
+    setSearchMatch(handler: (d: any, term: string, ignoreCase?: boolean) => boolean): FlameGraph;
     tooltip(tip: any): FlameGraph;
     search(term: string): void;
     clear(): void;

@@ -18,6 +18,8 @@ const mockChart = {
   onClick: vi.fn().mockReturnThis(),
   setColorMapper: vi.fn().mockReturnThis(),
   setLabelHandler: vi.fn().mockReturnThis(),
+  getName: vi.fn().mockReturnThis(),
+  setSearchMatch: vi.fn().mockReturnThis(),
   search: vi.fn(),
   clear: vi.fn(),
   resetZoom: vi.fn(),
