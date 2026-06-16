@@ -53,6 +53,21 @@ SPDX-License-Identifier: Apache-2.0
   padding: 4px 0;
 }
 
+.Flamegraph-content--chart-help {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-left: 4px;
+  border-radius: 50%;
+  border: 1px solid var(--text-tertiary);
+  font-size: 10px;
+  color: var(--text-tertiary);
+  cursor: help;
+  vertical-align: middle;
+}
+
 .Flamegraph-content--chart {
   flex: 1;
   min-width: 0;
@@ -85,6 +100,20 @@ SPDX-License-Identifier: Apache-2.0
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Table: service & operation names */
+.Flamegraph-table--svc-name {
+  font-size: 1.05em;
+  padding-right: 0.25rem;
+}
+
+.Flamegraph-table--op-name {
+  color: var(--text-secondary);
+}
+
+.ant-table-row:hover .Flamegraph-table--op-name {
+  color: var(--text-primary);
 }
 
 /* Table: duration cell with RelativeBar */

@@ -75,16 +75,18 @@ describe('<TraceFlamegraph />', () => {
 
   it('renders table with correct data', () => {
     render(<TraceFlamegraph trace={otelTrace} />);
-    expect(screen.getByText('load-generator: OrderVehicle')).toBeInTheDocument();
-    expect(screen.getByText('ride-sharing-app: FindNearestVehicle')).toBeInTheDocument();
+    expect(screen.getAllByText('load-generator').length).toBeGreaterThan(0);
+    expect(screen.getByText('OrderVehicle')).toBeInTheDocument();
+    expect(screen.getAllByText('ride-sharing-app').length).toBeGreaterThan(0);
+    expect(screen.getByText('FindNearestVehicle')).toBeInTheDocument();
   });
 
   it('search input filters table rows', () => {
     render(<TraceFlamegraph trace={otelTrace} />);
     const searchInput = screen.getByTestId('flamegraph-search');
     fireEvent.change(searchInput, { target: { value: 'OrderVehicle' } });
-    expect(screen.getByText('load-generator: OrderVehicle')).toBeInTheDocument();
-    expect(screen.queryByText('ride-sharing-app: FindNearestVehicle')).not.toBeInTheDocument();
+    expect(screen.getByText('OrderVehicle')).toBeInTheDocument();
+    expect(screen.queryByText('FindNearestVehicle')).not.toBeInTheDocument();
   });
 
   it('reset button is disabled when state is clean', () => {

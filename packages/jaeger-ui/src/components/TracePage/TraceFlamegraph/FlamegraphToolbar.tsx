@@ -7,11 +7,10 @@
 // Toolbar with search input, reset/collapse buttons, and view mode toggle.
 
 import React from 'react';
-import { Button, Input, Segmented, Space } from 'antd';
+import { Button, Input, Radio, Space } from 'antd';
 import { IoRefreshOutline } from 'react-icons/io5';
-import { HiOutlineViewColumns } from 'react-icons/hi2';
 import { BsTable, BsFire } from 'react-icons/bs';
-import { TbArrowMerge } from 'react-icons/tb';
+import { TbArrowMerge, TbColumns2 } from 'react-icons/tb';
 
 export type ViewMode = 'table' | 'both' | 'flamegraph';
 
@@ -26,36 +25,6 @@ type Props = {
   onCollapseAbove: () => void;
   showChart: boolean;
 };
-
-const VIEW_OPTIONS = [
-  {
-    label: (
-      <Space size={4}>
-        <BsTable />
-        Table
-      </Space>
-    ),
-    value: 'table',
-  },
-  {
-    label: (
-      <Space size={4}>
-        <HiOutlineViewColumns />
-        Both
-      </Space>
-    ),
-    value: 'both',
-  },
-  {
-    label: (
-      <Space size={4}>
-        <BsFire />
-        Flamegraph
-      </Space>
-    ),
-    value: 'flamegraph',
-  },
-];
 
 const FlamegraphToolbar = ({
   viewMode,
@@ -100,12 +69,24 @@ const FlamegraphToolbar = ({
             Collapse nodes above
           </Button>
         )}
-        <Segmented
-          options={VIEW_OPTIONS}
-          value={viewMode}
-          onChange={value => onViewModeChange(value as ViewMode)}
+        <Radio.Group
           size="small"
-        />
+          value={viewMode}
+          onChange={e => onViewModeChange(e.target.value as ViewMode)}
+        >
+          <Radio.Button value="table">
+            <BsTable style={{ marginRight: 4, verticalAlign: 'middle' }} />
+            Table
+          </Radio.Button>
+          <Radio.Button value="both">
+            <TbColumns2 style={{ marginRight: 4, verticalAlign: 'middle' }} />
+            Both
+          </Radio.Button>
+          <Radio.Button value="flamegraph">
+            <BsFire style={{ marginRight: 4, verticalAlign: 'middle' }} />
+            Flamegraph
+          </Radio.Button>
+        </Radio.Group>
       </Space>
     </div>
   </div>

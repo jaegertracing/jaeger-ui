@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Tooltip } from 'antd';
 import flamegraph from 'd3-flame-graph';
 import { select } from 'd3-selection';
 
@@ -70,7 +71,7 @@ const TraceFlamegraph = ({ trace }: any) => {
     const container = containerRef.current;
     container.innerHTML = '';
 
-    const rootValue = flameData.value;
+    const rootValue = flameData.duration ?? flameData.value;
     const chart = flamegraph()
       .width(container.clientWidth || 800)
       .cellHeight(18)
@@ -95,14 +96,16 @@ const TraceFlamegraph = ({ trace }: any) => {
       })
       .getName((d: any) => {
         if (!d || !d.data) return '';
-        const pct = rootValue > 0 ? ((d.data.value / rootValue) * 100).toFixed(2) : '0';
-        const dur = formatDurationCompact(d.data.value as Microseconds);
+        const duration = d.data.duration ?? d.data.value;
+        const pct = rootValue > 0 ? ((duration / rootValue) * 100).toFixed(2) : '0';
+        const dur = formatDurationCompact(duration as Microseconds);
         return `${d.data.name} (${pct}%, ${dur})`;
       })
       .setLabelHandler((d: any) => {
         if (!d || !d.data) return '';
-        const pct = rootValue > 0 ? ((d.data.value / rootValue) * 100).toFixed(2) : '0';
-        const dur = formatDuration(d.data.value as Microseconds);
+        const duration = d.data.duration ?? d.data.value;
+        const pct = rootValue > 0 ? ((duration / rootValue) * 100).toFixed(2) : '0';
+        const dur = formatDuration(duration as Microseconds);
         return `${d.data.name} (${pct}%, ${dur})`;
       })
       .setSearchMatch((d: any, term: string) => {
@@ -132,7 +135,7 @@ const TraceFlamegraph = ({ trace }: any) => {
         }
         const d3Data = (target as any).__data__;
         const name = d3Data?.data?.name || '';
-        const value = d3Data?.data?.value || 0;
+        const value = d3Data?.data?.duration ?? d3Data?.data?.value ?? 0;
         const count = d3Data?.data?.count || 1;
         setTooltip({ x: e.clientX, y: e.clientY, name, value, count });
       });
@@ -145,7 +148,7 @@ const TraceFlamegraph = ({ trace }: any) => {
       chartRef.current = null;
       chart.destroy();
     };
-  }, [flameData, showChart]);
+  }, [flameData, showChart, viewMode]);
 
   useEffect(() => {
     if (!chartRef.current) return;
@@ -246,7 +249,23 @@ const TraceFlamegraph = ({ trace }: any) => {
         {showChart && (
           <div className="Flamegraph-content--chart-wrapper">
             <div className="Flamegraph-content--chart-caption">
-              Frame width represents aggregated span duration
+              Shows total resource cost per operation (not wall-clock critical path)
+              <Tooltip
+                title={
+                  <span>
+                    This flamegraph aggregates spans by service and operation, summing their durations. It
+                    answers &quot;how much total work does this request generate?&quot; — useful for spotting
+                    N+1 calls, redundant operations, and disproportionately expensive subtrees.
+                    <br />
+                    <br />
+                    Parallel spans are summed, so frame widths may exceed the parent span&apos;s wall-clock
+                    duration. For latency analysis (&quot;why is this request slow?&quot;), use the Timeline
+                    view with critical path highlighting.
+                  </span>
+                }
+              >
+                <span className="Flamegraph-content--chart-help">?</span>
+              </Tooltip>
             </div>
             <div className="Flamegraph-content--chart" ref={containerRef} data-testid="flamegraph-chart" />
           </div>
@@ -272,7 +291,7 @@ const TraceFlamegraph = ({ trace }: any) => {
           name={tooltip.name}
           value={tooltip.value}
           count={tooltip.count}
-          rootValue={flameData?.value || 1}
+          rootValue={flameData?.duration ?? flameData?.value ?? 1}
         />
       )}
     </div>

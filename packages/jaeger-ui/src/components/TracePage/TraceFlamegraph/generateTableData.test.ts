@@ -19,9 +19,10 @@ describe('generateTableData', () => {
     ]);
   });
 
-  it('shows the longest span duration as total', () => {
+  it('shows sum of span durations as total', () => {
     const rows = generateTableData(otelTrace);
     const root = rows.find(r => r.name === 'load-generator: OrderVehicle')!;
+    // Only one span with this name, so sum == single duration
     expect(root.total).toBe(1181596);
   });
 
@@ -52,7 +53,7 @@ describe('generateTableData', () => {
     }
   });
 
-  it('groups spans by name and keeps the longest as representative', () => {
+  it('groups spans by name and sums their durations', () => {
     const mockTrace = {
       spans: [
         {
@@ -80,8 +81,8 @@ describe('generateTableData', () => {
 
     const rows = generateTableData(mockTrace);
     expect(rows).toHaveLength(1);
-    expect(rows[0].total).toBe(100);
-    expect(rows[0].self).toBe(100);
+    expect(rows[0].total).toBe(150); // 100 + 50
+    expect(rows[0].self).toBe(150); // both are leaves, self = duration
     expect(rows[0].count).toBe(2);
   });
 

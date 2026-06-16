@@ -4,10 +4,11 @@
 // Adapted from @pyroscope/flamegraph v0.35.6 (Apache-2.0)
 // Copyright (c) 2020 Pyroscope, Inc.
 
-// Aggregates spans by "service: operation", showing the longest span's
-// self-time and duration as the representative values for each group.
+// Aggregates spans by "service: operation", summing self-time and duration
+// across all spans in each group to show total resource cost.
 
-import { IOtelTrace, IOtelSpan } from '../../../types/otel';
+import { IOtelTrace } from '../../../types/otel';
+import computeSpanSelfTime from '../../../utils/compute-span-self-time';
 
 export interface IFlamegraphTableRow {
   key: string;
@@ -23,15 +24,13 @@ export function generateTableData(trace: IOtelTrace): IFlamegraphTableRow[] {
 
   for (const span of trace.spans) {
     const name = `${span.resource.serviceName}: ${span.name}`;
-    const self = computeSelfTime(span);
+    const self = computeSpanSelfTime(span);
 
     const existing = groups.get(name);
     if (existing) {
       existing.count += 1;
-      if (span.duration > existing.total) {
-        existing.self = self;
-        existing.total = span.duration;
-      }
+      existing.self += self;
+      existing.total += span.duration;
     } else {
       groups.set(name, {
         key: name,
@@ -45,30 +44,4 @@ export function generateTableData(trace: IOtelTrace): IFlamegraphTableRow[] {
   }
 
   return Array.from(groups.values());
-}
-
-function computeSelfTime(span: IOtelSpan): number {
-  if (!span.hasChildren) return span.duration;
-
-  let selfTime: number = span.duration;
-  let previousChildEndTime = span.startTime;
-
-  const children = [...span.childSpans].sort((a, b) => a.startTime - b.startTime);
-  const parentEndTime = span.endTime;
-
-  for (const child of children) {
-    const childEndTime = child.endTime;
-    if (child.startTime > parentEndTime || childEndTime < previousChildEndTime) {
-      continue;
-    }
-
-    const nonOverlappingStart = Math.max(previousChildEndTime, child.startTime);
-    const clampedEnd = Math.min(parentEndTime, childEndTime);
-    selfTime -= clampedEnd - nonOverlappingStart;
-
-    if (clampedEnd === parentEndTime) break;
-    previousChildEndTime = childEndTime;
-  }
-
-  return Math.max(0, selfTime);
 }

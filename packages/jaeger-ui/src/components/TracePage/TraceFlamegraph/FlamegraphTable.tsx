@@ -40,15 +40,19 @@ const FlamegraphTable = ({ data, searchQuery, selectedItem, onRowClick, maxSelf,
       key: 'name',
       sortDirections: ['ascend', 'descend'],
       sorter: (a, b) => a.name.localeCompare(b.name),
-      render: (name: string, row: IFlamegraphTableRow) => (
-        <div className="Flamegraph-table--location">
-          <span
-            className="Flamegraph-table--color-dot"
-            style={{ backgroundColor: colorGenerator.getColorByKey(row.serviceName) }}
-          />
-          {name}
-        </div>
-      ),
+      render: (_name: string, row: IFlamegraphTableRow) => {
+        const opName = row.name.slice(row.serviceName.length + 2);
+        return (
+          <div className="Flamegraph-table--location">
+            <span
+              className="Flamegraph-table--color-dot"
+              style={{ backgroundColor: colorGenerator.getColorByKey(row.serviceName) }}
+            />
+            <span className="Flamegraph-table--svc-name">{row.serviceName}</span>
+            <small className="Flamegraph-table--op-name">{opName}</small>
+          </div>
+        );
+      },
     },
     {
       title: 'Count',
