@@ -40,6 +40,8 @@ declare module 'd3-flame-graph' {
     onClick(callback: (d: any) => void): FlameGraph;
     onHover(callback: (d: any) => void): FlameGraph;
     tooltip(tip: any): FlameGraph;
+    search(term: string): void;
+    clear(): void;
     update(data: FlameGraphNode): void;
     resetZoom(): void;
     destroy(): void;

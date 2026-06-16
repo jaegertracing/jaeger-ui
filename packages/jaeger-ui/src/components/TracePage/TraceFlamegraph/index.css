@@ -2,6 +2,106 @@
 Copyright (c) 2022 The Jaeger Authors.
 SPDX-License-Identifier: Apache-2.0
 */
+
 .Flamegraph-wrapper {
   padding: 0 calc(1rem - 5px);
+}
+
+/* Toolbar */
+.Flamegraph-toolbar {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-default);
+  margin-bottom: 8px;
+}
+
+.Flamegraph-toolbar--right {
+  margin-left: auto;
+}
+
+/* Content layout */
+.Flamegraph-content {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  min-height: 300px;
+}
+
+.Flamegraph-content[data-view-mode='table'],
+.Flamegraph-content[data-view-mode='flamegraph'] {
+  flex-direction: column;
+}
+
+.Flamegraph-content--table {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+}
+
+.Flamegraph-content--chart {
+  flex: 1;
+  min-width: 0;
+}
+
+/* "Both" mode: table 40%, chart fills rest */
+.Flamegraph-content[data-view-mode='both'] .Flamegraph-content--table {
+  flex: 0 0 40%;
+  max-width: 40%;
+}
+
+.Flamegraph-content[data-view-mode='both'] .Flamegraph-content--chart {
+  flex: 1;
+}
+
+/* Table: color dot */
+.Flamegraph-table--color-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.Flamegraph-table--location {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Table: duration cell with background bar */
+.Flamegraph-table--duration-cell {
+  padding: 2px 8px;
+  border-radius: 2px;
+}
+
+.Flamegraph-table--duration-value {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+}
+
+/* Table: selected row */
+.Flamegraph-table--row-selected td {
+  background-color: var(--surface-tertiary) !important;
+}
+
+/* Table: clickable rows */
+.Flamegraph-wrapper .ant-table-row {
+  cursor: pointer;
+}
+
+/* Dark mode: d3-flame-graph text */
+[data-theme='dark'] .Flamegraph-content--chart text {
+  fill: var(--text-primary) !important;
+}
+
+/* Frame width annotation */
+.Flamegraph-content--chart .d3-flame-graph rect {
+  stroke: var(--surface-primary);
+  stroke-width: 0.5px;
 }
