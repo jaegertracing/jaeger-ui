@@ -194,6 +194,14 @@ describe('<AccordionEvents>', () => {
   it('cancels pending reflow timers when unmounted', () => {
     jest.useFakeTimers();
     const dispatchSpy = jest.spyOn(window, 'dispatchEvent').mockImplementation(() => true);
+    const originalRequestAnimationFrame = window.requestAnimationFrame;
+    const originalCancelAnimationFrame = window.cancelAnimationFrame;
+    if (typeof window.requestAnimationFrame !== 'function') {
+      window.requestAnimationFrame = callback => window.setTimeout(callback, 16);
+    }
+    if (typeof window.cancelAnimationFrame !== 'function') {
+      window.cancelAnimationFrame = id => window.clearTimeout(id);
+    }
     const requestAnimationFrameSpy = jest
       .spyOn(window, 'requestAnimationFrame')
       .mockImplementation(callback => window.setTimeout(callback, 16));
@@ -228,6 +236,8 @@ describe('<AccordionEvents>', () => {
       dispatchSpy.mockRestore();
       requestAnimationFrameSpy.mockRestore();
       cancelAnimationFrameSpy.mockRestore();
+      window.requestAnimationFrame = originalRequestAnimationFrame;
+      window.cancelAnimationFrame = originalCancelAnimationFrame;
       jest.useRealTimers();
     }
   });

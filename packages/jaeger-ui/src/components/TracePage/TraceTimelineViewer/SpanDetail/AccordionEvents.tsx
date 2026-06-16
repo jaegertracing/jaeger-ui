@@ -104,7 +104,7 @@ export default function AccordionEvents({
       return;
     }
     pendingReflowTimers.current.timeoutId = window.setTimeout(emit);
-    if ('requestAnimationFrame' in window) {
+    if (typeof window.requestAnimationFrame === 'function') {
       pendingReflowTimers.current.animationFrameId = window.requestAnimationFrame(emit);
     }
     pendingReflowTimers.current.delayedTimeoutId = window.setTimeout(emit, 50);
