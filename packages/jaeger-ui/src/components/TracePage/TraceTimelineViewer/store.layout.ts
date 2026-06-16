@@ -141,15 +141,26 @@ function normalizeLayoutPrefs(stored: Partial<LayoutPrefs>): LayoutPrefs {
 // Storage adapter that reads/writes the namespaced JSON key and, on first load (before that key exists),
 // transparently falls back to the legacy unprefixed keys. The legacy keys are intentionally left in place:
 // the not-yet-removed Redux `duck.ts` still reads them in `newInitialState()`.
+//
+// Normalization (config defaults + clamping) happens here, exactly once per load, so the returned `state`
+// is always a complete, consistent LayoutPrefs. This intentionally bypasses persist's version/migrate
+// machinery — `normalizeLayoutPrefs` is the single reconciliation step — so callers must not normalize
+// again in `merge` (double-normalization is not idempotent for the width-budget reset).
 const layoutPrefsStorage: PersistStorage<LayoutPrefs> = {
   getItem: name => {
     const raw = localStorage.getItem(name);
     if (raw) {
-      return JSON.parse(raw) as StorageValue<LayoutPrefs>;
+      try {
+        const parsed = JSON.parse(raw) as StorageValue<Partial<LayoutPrefs>>;
+        return { state: normalizeLayoutPrefs(parsed.state ?? {}), version: STORAGE_VERSION };
+      } catch {
+        // Corrupted / partially-written value: drop it and fall back to legacy keys so the page still loads.
+        localStorage.removeItem(name);
+      }
     }
     const legacy = readLegacyLayoutPrefs();
     if (legacy) {
-      return { state: legacy as LayoutPrefs, version: STORAGE_VERSION };
+      return { state: normalizeLayoutPrefs(legacy), version: STORAGE_VERSION };
     }
     return null;
   },
@@ -213,11 +224,8 @@ export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()(
         detailPanelMode: state.detailPanelMode,
         timelineBarsVisible: state.timelineBarsVisible,
       }),
-      // Re-apply config defaults + clamping over whatever was rehydrated (or migrated from legacy keys).
-      merge: (persistedState, currentState) => ({
-        ...currentState,
-        ...normalizeLayoutPrefs((persistedState ?? {}) as Partial<LayoutPrefs>),
-      }),
+      // No custom `merge`: the storage adapter already returns a fully-normalized state, so persist's
+      // default shallow merge ({ ...current, ...persisted }) correctly overlays the four prefs.
     }
   )
 );
