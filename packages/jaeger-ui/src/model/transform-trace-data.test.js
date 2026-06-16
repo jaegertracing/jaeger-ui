@@ -41,6 +41,43 @@ describe('deduplicateTags()', () => {
     ]);
     expect(tagsInfo.warnings).toEqual(['Duplicate tag "b.ip:8.8.4.4"']);
   });
+
+  it('collapses repeated duplicates into a single warning and keeps the first', () => {
+    const tagsInfo = deduplicateTags([
+      { key: 'x', value: 'a' },
+      { key: 'x', value: 'a' },
+      { key: 'x', value: 'a' },
+    ]);
+
+    expect(tagsInfo.tags).toEqual([{ key: 'x', value: 'a' }]);
+    expect(tagsInfo.warnings).toEqual(['Duplicate tag "x:a"']);
+  });
+
+  it('does not collide when key or value contains a colon', () => {
+    const tagsInfo = deduplicateTags([
+      { key: 'a:b', value: 'c' },
+      { key: 'a', value: 'b:c' },
+    ]);
+
+    expect(tagsInfo.tags).toHaveLength(2);
+    expect(tagsInfo.warnings).toEqual([]);
+  });
+
+  it('reports both duplicates when colliding key/value pairs are each duplicated', () => {
+    const tagsInfo = deduplicateTags([
+      { key: 'a:b', value: 'c' },
+      { key: 'a:b', value: 'c' },
+      { key: 'a', value: 'b:c' },
+      { key: 'a', value: 'b:c' },
+    ]);
+
+    expect(tagsInfo.tags).toEqual([
+      { key: 'a:b', value: 'c' },
+      { key: 'a', value: 'b:c' },
+    ]);
+    // Both duplicated pairs are tracked separately; neither warning is dropped.
+    expect(tagsInfo.warnings).toHaveLength(2);
+  });
 });
 
 describe('transformTraceData()', () => {
