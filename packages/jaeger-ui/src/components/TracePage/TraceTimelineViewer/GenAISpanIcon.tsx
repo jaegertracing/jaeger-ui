@@ -3,12 +3,11 @@
 
 import * as React from 'react';
 import { MdSmartToy, MdBolt, MdBuild, MdStorage, MdAutoAwesome } from 'react-icons/md';
+import type { IconType } from 'react-icons';
 import { classifySpan, GenAISpanKind } from '../../../utils/genai/detect';
-import { IOtelSpan } from '../../../types/otel';
+import type { IOtelSpan } from '../../../types/otel';
 
-type IconComponent = React.ComponentType<{ title?: string; 'aria-label'?: string }>;
-
-const KIND_ICONS: Record<Exclude<GenAISpanKind, 'STANDARD'>, IconComponent> = {
+const KIND_ICONS: Record<Exclude<GenAISpanKind, 'STANDARD'>, IconType> = {
   AGENT: MdSmartToy,
   LLM_CALL: MdBolt,
   TOOL_CALL: MdBuild,
