@@ -105,7 +105,11 @@ SPDX-License-Identifier: Apache-2.0
 
 /* Table: selected row */
 .Flamegraph-table--row-selected td {
-  background-color: var(--surface-tertiary) !important;
+  background-color: var(--interactive-primary-light) !important;
+}
+
+.Flamegraph-table--row-selected td:first-child {
+  box-shadow: inset 3px 0 0 var(--interactive-primary);
 }
 
 /* Table: clickable rows */
