@@ -60,9 +60,8 @@ const edgesDefs: TNonEmptyArray<TDefEntry<TDdgVertex, unknown>> = [
   { localId: 'arrow-hovered', setOnEntry: { className: 'Ddg--Arrow is-pathHovered' } },
 ];
 
-const emptyFindSet: Set<string> = new Set();
-
 const Graph = (props: TProps) => {
+  const emptyFindSet = useMemo(() => new Set<string>(), []);
   const {
     baseUrl,
     density,
@@ -104,6 +103,35 @@ const Graph = (props: TProps) => {
       layoutManager.stopAndRelease();
     };
   }, [layoutManager]);
+
+  const nodeContentRendererOptions = useMemo(
+    () => ({
+      baseUrl,
+      density,
+      extraUrlArgs,
+      focusPathsThroughVertex,
+      getGenerationVisibility,
+      getVisiblePathElems,
+      hideVertex,
+      selectVertex,
+      setOperation,
+      setViewModifier,
+      updateGenerationVisibility,
+    }),
+    [
+      baseUrl,
+      density,
+      extraUrlArgs,
+      focusPathsThroughVertex,
+      getGenerationVisibility,
+      getVisiblePathElems,
+      hideVertex,
+      selectVertex,
+      setOperation,
+      setViewModifier,
+      updateGenerationVisibility,
+    ]
+  );
 
   const nodeRenderers = memoizedGetNodeRenderers(uiFindMatches || emptyFindSet, verticesViewModifiers);
 
@@ -151,19 +179,7 @@ const Graph = (props: TProps) => {
             layerType: 'html',
             measurable: true,
             measureNode,
-            renderNode: memoizedGetNodeContentRenderer({
-              baseUrl,
-              density,
-              extraUrlArgs,
-              focusPathsThroughVertex,
-              getGenerationVisibility,
-              getVisiblePathElems,
-              hideVertex,
-              selectVertex,
-              setOperation,
-              setViewModifier,
-              updateGenerationVisibility,
-            }),
+            renderNode: memoizedGetNodeContentRenderer(nodeContentRendererOptions),
           },
         ]}
       />
