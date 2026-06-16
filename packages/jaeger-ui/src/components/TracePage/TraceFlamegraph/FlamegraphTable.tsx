@@ -35,7 +35,7 @@ const FlamegraphTable = ({ data, searchQuery, selectedItem, onRowClick, maxSelf,
 
   const columns: ColumnsType<IFlamegraphTableRow> = [
     {
-      title: 'Location',
+      title: 'Service & Operation',
       dataIndex: 'name',
       key: 'name',
       sortDirections: ['ascend', 'descend'],

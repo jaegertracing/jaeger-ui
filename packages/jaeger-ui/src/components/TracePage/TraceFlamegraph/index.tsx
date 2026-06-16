@@ -39,22 +39,28 @@ const TraceFlamegraph = ({ trace }: any) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<ReturnType<typeof flamegraph> | null>(null);
   const searchActiveRef = useRef(false);
+  const zoomedNodeRef = useRef<any>(null);
 
   const [viewMode, setViewMode] = useState<ViewMode>('both');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [chartZoomed, setChartZoomed] = useState(false);
+  const [collapsedRoot, setCollapsedRoot] = useState<any>(null);
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
   const otelTrace = trace instanceof OtelTraceFacade ? trace : null;
 
-  const flameData = useMemo(() => (otelTrace ? convertOtelTraceToFlameData(otelTrace) : null), [otelTrace]);
+  const fullFlameData = useMemo(
+    () => (otelTrace ? convertOtelTraceToFlameData(otelTrace) : null),
+    [otelTrace]
+  );
+  const flameData = collapsedRoot || fullFlameData;
   const tableData = useMemo(() => (otelTrace ? generateTableData(otelTrace) : []), [otelTrace]);
   const maxSelf = useMemo(() => Math.max(...tableData.map(r => r.self), 1), [tableData]);
   const maxTotal = useMemo(() => Math.max(...tableData.map(r => r.total), 1), [tableData]);
 
-  const isDirty = searchQuery !== '' || selectedItem !== null || chartZoomed;
+  const isDirty = searchQuery !== '' || selectedItem !== null || chartZoomed || collapsedRoot !== null;
   const showChart = viewMode === 'flamegraph' || viewMode === 'both';
   const showTable = viewMode === 'table' || viewMode === 'both';
 
@@ -75,6 +81,7 @@ const TraceFlamegraph = ({ trace }: any) => {
       .onClick((d: any) => {
         const isRoot = d?.data?.name === flameData.name;
         setChartZoomed(!isRoot);
+        zoomedNodeRef.current = isRoot ? null : d.data;
       })
       .setColorMapper((d: any, _originalColor: string) => {
         if (d.highlight) return HIGHLIGHT_COLOR;
@@ -156,6 +163,8 @@ const TraceFlamegraph = ({ trace }: any) => {
     setSearchQuery('');
     setSelectedItem(null);
     setChartZoomed(false);
+    setCollapsedRoot(null);
+    zoomedNodeRef.current = null;
     if (chartRef.current) {
       chartRef.current.resetZoom();
       chartRef.current.clear();
@@ -163,10 +172,11 @@ const TraceFlamegraph = ({ trace }: any) => {
   }, []);
 
   const handleCollapseAbove = useCallback(() => {
-    setChartZoomed(false);
-    if (chartRef.current) {
-      chartRef.current.resetZoom();
+    if (zoomedNodeRef.current) {
+      setCollapsedRoot(zoomedNodeRef.current);
+      zoomedNodeRef.current = null;
     }
+    setChartZoomed(false);
   }, []);
 
   const handleRowClick = useCallback((name: string) => {

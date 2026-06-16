@@ -24,7 +24,19 @@ export function convertOtelTraceToFlameData(trace: IOtelTrace): IFlameNode {
   }
 
   virtualRoot.value = virtualRoot.children.reduce((sum, child) => sum + child.value, 0);
+  ensureParentCoversChildren(virtualRoot);
   return virtualRoot;
+}
+
+function ensureParentCoversChildren(node: IFlameNode) {
+  if (node.children.length === 0) return;
+  for (const child of node.children) {
+    ensureParentCoversChildren(child);
+  }
+  const childSum = node.children.reduce((sum, child) => sum + child.value, 0);
+  if (childSum > node.value) {
+    node.value = childSum;
+  }
 }
 
 function buildSubtree(span: IOtelSpan): IFlameNode {
