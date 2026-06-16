@@ -192,8 +192,10 @@ function TraceGraph({
               <Button
                 className={cx('TraceGraph--btn-service', { active: mode === MODE_SERVICE })}
                 htmlType="button"
+                aria-label="Switch trace graph coloring to service"
                 shape="circle"
                 size="small"
+                title="Service"
                 onClick={() => setMode(MODE_SERVICE)}
               >
                 S
@@ -205,8 +207,10 @@ function TraceGraph({
               <Button
                 className={cx('TraceGraph--btn-time', { active: mode === MODE_TIME })}
                 htmlType="button"
+                aria-label="Switch trace graph coloring to time"
                 shape="circle"
                 size="small"
+                title="Time"
                 onClick={() => setMode(MODE_TIME)}
               >
                 T
@@ -218,8 +222,10 @@ function TraceGraph({
               <Button
                 className={cx('TraceGraph--btn-selftime', { active: mode === MODE_SELFTIME })}
                 htmlType="button"
+                aria-label="Switch trace graph coloring to self time"
                 shape="circle"
                 size="small"
+                title="Selftime"
                 onClick={() => setMode(MODE_SELFTIME)}
               >
                 ST
