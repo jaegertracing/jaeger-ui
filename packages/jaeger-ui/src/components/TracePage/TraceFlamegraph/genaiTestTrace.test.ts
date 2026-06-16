@@ -36,14 +36,14 @@ interface FixtureData {
   data: Trace[];
 }
 
-const genaiTestTrace = genaiTestTraceRaw as unknown as FixtureData;
+const genaiTestTrace: FixtureData = genaiTestTraceRaw as any;
 
 function requireSpan(spans: Span[], operationName: string): Span {
-  const span = spans.find((s) => s.operationName === operationName);
-  if (!span) {
-    throw new Error(`Required span with operationName '${operationName}' was not found in fixture.`);
+  const matches = spans.filter((s) => s.operationName === operationName);
+  if (matches.length !== 1) {
+    throw new Error(`Expected exactly one span with operationName '${operationName}', found ${matches.length}.`);
   }
-  return span;
+  return matches[0];
 }
 
 function requireTag(tags: KeyValuePair[], key: string): KeyValuePair {
@@ -70,18 +70,11 @@ describe('genaiTestTrace.json fixture', () => {
     const executeToolSpan = requireSpan(fullTrace.spans, 'execute_tool');
     const retrievalSpan = requireSpan(fullTrace.spans, 'retrieval');
 
-    // Verify parent-child relationships
-    expect(chatSpan.references.length).toBeGreaterThan(0);
-    expect(chatSpan.references[0].spanID).toBe(invokeAgentSpan.spanID);
-
-    expect(httpClientSpan.references.length).toBeGreaterThan(0);
-    expect(httpClientSpan.references[0].spanID).toBe(chatSpan.spanID);
-
-    expect(executeToolSpan.references.length).toBeGreaterThan(0);
-    expect(executeToolSpan.references[0].spanID).toBe(invokeAgentSpan.spanID);
-
-    expect(retrievalSpan.references.length).toBeGreaterThan(0);
-    expect(retrievalSpan.references[0].spanID).toBe(invokeAgentSpan.spanID);
+    // Verify parent-child relationships using some() to tolerate fixture reference ordering
+    expect(chatSpan.references.some(r => r.refType === 'CHILD_OF' && r.spanID === invokeAgentSpan.spanID)).toBe(true);
+    expect(httpClientSpan.references.some(r => r.refType === 'CHILD_OF' && r.spanID === chatSpan.spanID)).toBe(true);
+    expect(executeToolSpan.references.some(r => r.refType === 'CHILD_OF' && r.spanID === invokeAgentSpan.spanID)).toBe(true);
+    expect(retrievalSpan.references.some(r => r.refType === 'CHILD_OF' && r.spanID === invokeAgentSpan.spanID)).toBe(true);
   });
 
   it('gen_ai.input.messages value is >= 1 KB serialised', () => {
@@ -92,10 +85,12 @@ describe('genaiTestTrace.json fixture', () => {
     const messagesTag = requireTag(chatSpan.tags, 'gen_ai.input.messages');
     
     const messagesString = messagesTag.value;
+    expect(typeof messagesString).toBe('string');
     expect(messagesString.length).toBeGreaterThanOrEqual(1024); // >= 1 KB
     
+    expect(() => JSON.parse(messagesString as string)).not.toThrow();
     // Verify it's valid JSON and contains at least 3 messages
-    const parsedMessages = JSON.parse(messagesString);
+    const parsedMessages = JSON.parse(messagesString as string);
     expect(Array.isArray(parsedMessages)).toBe(true);
     expect(parsedMessages.length).toBeGreaterThanOrEqual(3);
   });
