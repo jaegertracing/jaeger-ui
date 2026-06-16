@@ -457,9 +457,11 @@ describe('transformTraceData()', () => {
   it('populates subsidiarilyReferencedBy for spans with multiple references', () => {
     const multiRefTrace = traceGenerator.trace({ numberOfSpans: 7, maxDepth: 3, spansPerLevel: 4 });
     const { traceID, spanID: rootSpanId } = multiRefTrace.spans[0];
-    const [willGainRef, willNotChange] = multiRefTrace.spans.filter(
+    const candidates = multiRefTrace.spans.filter(
       span => span.references.length > 0 && span.references[0].spanID !== rootSpanId
     );
+    expect(candidates.length).toBeGreaterThanOrEqual(2);
+    const [willGainRef, willNotChange] = candidates;
     const { spanID: existingRefID } = willGainRef.references[0];
     const { spanID: willBeReferencedID } = willNotChange.references[0];
 
