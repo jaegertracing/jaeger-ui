@@ -13,7 +13,7 @@ import {
 } from './store.constants';
 import { MAX_SUMMARY_FIELDS } from './summaryFieldsUtils';
 
-const SUMMARY_FIELDS_STORAGE_KEY = 'summaryFields';
+export const SUMMARY_FIELDS_STORAGE_KEY = 'summaryFields';
 
 type TraceTimelineLayoutPrefsStore = {
   spanNameColumnWidth: number;

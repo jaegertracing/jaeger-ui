@@ -57,21 +57,33 @@ export default function TraceViewSettings(props: Props) {
   }, [closeSettings]);
 
   const panelContent = (
-    <div className="TraceViewSettings--panel" data-testid="trace-view-settings-panel">
-      <button className="TraceViewSettings--menuItem" type="button" onClick={handleTimelineToggle}>
+    <div className="TraceViewSettings--panel" data-testid="trace-view-settings-panel" role="menu">
+      <button
+        className="TraceViewSettings--menuItem"
+        type="button"
+        role="menuitemcheckbox"
+        aria-checked={timelineBarsVisible}
+        onClick={handleTimelineToggle}
+      >
         {timelineBarsVisible ? (
-          <IoCheckmark className="TraceViewSettings--check" />
+          <IoCheckmark className="TraceViewSettings--check" aria-hidden />
         ) : (
-          <span className="TraceViewSettings--checkPlaceholder" />
+          <span className="TraceViewSettings--checkPlaceholder" aria-hidden />
         )}
         Show Timeline
       </button>
       {enableSidePanel && (
-        <button className="TraceViewSettings--menuItem" type="button" onClick={handleDetailPanelModeToggle}>
+        <button
+          className="TraceViewSettings--menuItem"
+          type="button"
+          role="menuitemcheckbox"
+          aria-checked={detailPanelMode === 'sidepanel'}
+          onClick={handleDetailPanelModeToggle}
+        >
           {detailPanelMode === 'sidepanel' ? (
-            <IoCheckmark className="TraceViewSettings--check" />
+            <IoCheckmark className="TraceViewSettings--check" aria-hidden />
           ) : (
-            <span className="TraceViewSettings--checkPlaceholder" />
+            <span className="TraceViewSettings--checkPlaceholder" aria-hidden />
           )}
           Show Span in Sidebar
         </button>
@@ -90,8 +102,13 @@ export default function TraceViewSettings(props: Props) {
         </>
       )}
       <div className="TraceViewSettings--divider" />
-      <button className="TraceViewSettings--menuItem" type="button" onClick={handleKeyboardShortcuts}>
-        <span className="TraceViewSettings--checkPlaceholder" />
+      <button
+        className="TraceViewSettings--menuItem"
+        type="button"
+        role="menuitem"
+        onClick={handleKeyboardShortcuts}
+      >
+        <span className="TraceViewSettings--checkPlaceholder" aria-hidden />
         Keyboard Shortcuts
       </button>
     </div>

@@ -13,6 +13,7 @@ import {
   SIDE_PANEL_WIDTH_MIN,
   SPAN_NAME_COLUMN_WIDTH_MAX,
   SPAN_NAME_COLUMN_WIDTH_MIN,
+  SUMMARY_FIELDS_STORAGE_KEY,
   useLayoutPrefsStore,
   useTraceTimelineStore,
 } from './store';
@@ -43,23 +44,23 @@ describe('getInitialLayoutState()', () => {
   });
 
   it('reads selectedSummaryFields from localStorage', () => {
-    localStorage.setItem('summaryFields', JSON.stringify(['customer.id', 'http.status_code']));
+    localStorage.setItem(SUMMARY_FIELDS_STORAGE_KEY, JSON.stringify(['customer.id', 'http.status_code']));
     const state = getInitialLayoutState();
     expect(state.selectedSummaryFields).toEqual(['customer.id', 'http.status_code']);
   });
 
   it('ignores malformed selectedSummaryFields in localStorage', () => {
-    localStorage.setItem('summaryFields', 'not-json');
+    localStorage.setItem(SUMMARY_FIELDS_STORAGE_KEY, 'not-json');
     expect(getInitialLayoutState().selectedSummaryFields).toEqual([]);
   });
 
   it('ignores non-array selectedSummaryFields in localStorage', () => {
-    localStorage.setItem('summaryFields', JSON.stringify({ not: 'array' }));
+    localStorage.setItem(SUMMARY_FIELDS_STORAGE_KEY, JSON.stringify({ not: 'array' }));
     expect(getInitialLayoutState().selectedSummaryFields).toEqual([]);
   });
 
   it('deduplicates and caps selectedSummaryFields from localStorage', () => {
-    localStorage.setItem('summaryFields', JSON.stringify(['a', 'b', 'a', 'c', 'd', 'e']));
+    localStorage.setItem(SUMMARY_FIELDS_STORAGE_KEY, JSON.stringify(['a', 'b', 'a', 'c', 'd', 'e']));
     expect(getInitialLayoutState().selectedSummaryFields).toEqual(['a', 'b', 'c']);
   });
 
@@ -254,7 +255,7 @@ describe('trace timeline zustand stores', () => {
           'customer.id',
           'http.status_code',
         ]);
-        expect(localStorage.getItem('summaryFields')).toBe(
+        expect(localStorage.getItem(SUMMARY_FIELDS_STORAGE_KEY)).toBe(
           JSON.stringify(['customer.id', 'http.status_code'])
         );
       });
@@ -263,7 +264,7 @@ describe('trace timeline zustand stores', () => {
         useLayoutPrefsStore.getState().setSelectedSummaryFields(['customer.id']);
         useLayoutPrefsStore.getState().setSelectedSummaryFields([]);
         expect(useLayoutPrefsStore.getState().selectedSummaryFields).toEqual([]);
-        expect(localStorage.getItem('summaryFields')).toBe('[]');
+        expect(localStorage.getItem(SUMMARY_FIELDS_STORAGE_KEY)).toBe('[]');
       });
 
       it('filters non-string entries before persisting', () => {
@@ -271,7 +272,7 @@ describe('trace timeline zustand stores', () => {
           .getState()
           .setSelectedSummaryFields(['valid', 42 as unknown as string, null as unknown as string]);
         expect(useLayoutPrefsStore.getState().selectedSummaryFields).toEqual(['valid']);
-        expect(localStorage.getItem('summaryFields')).toBe(JSON.stringify(['valid']));
+        expect(localStorage.getItem(SUMMARY_FIELDS_STORAGE_KEY)).toBe(JSON.stringify(['valid']));
       });
 
       it('deduplicates and caps fields before persisting', () => {
@@ -279,7 +280,9 @@ describe('trace timeline zustand stores', () => {
           .getState()
           .setSelectedSummaryFields(['one', 'two', 'one', 'three', 'four', 'five']);
         expect(useLayoutPrefsStore.getState().selectedSummaryFields).toEqual(['one', 'two', 'three']);
-        expect(localStorage.getItem('summaryFields')).toBe(JSON.stringify(['one', 'two', 'three']));
+        expect(localStorage.getItem(SUMMARY_FIELDS_STORAGE_KEY)).toBe(
+          JSON.stringify(['one', 'two', 'three'])
+        );
       });
     });
   });

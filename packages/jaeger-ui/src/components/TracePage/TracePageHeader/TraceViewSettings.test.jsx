@@ -62,7 +62,7 @@ describe('<TraceViewSettings>', () => {
   it('calls onTimelineToggle when "Show Timeline" is clicked', async () => {
     render(<TraceViewSettings {...defaultProps} />);
     await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
-    await userEvent.click(await screen.findByText('Show Timeline'));
+    await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: /show timeline/i }));
     expect(defaultProps.onTimelineToggle).toHaveBeenCalledTimes(1);
   });
 
@@ -79,10 +79,25 @@ describe('<TraceViewSettings>', () => {
     expect(await screen.findByText('Show Span in Sidebar')).toBeInTheDocument();
   });
 
+  it('exposes checked state for toggle items to assistive tech', async () => {
+    render(
+      <TraceViewSettings {...defaultProps} timelineBarsVisible enableSidePanel detailPanelMode="sidepanel" />
+    );
+    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
+    expect(await screen.findByRole('menuitemcheckbox', { name: /show timeline/i })).toHaveAttribute(
+      'aria-checked',
+      'true'
+    );
+    expect(screen.getByRole('menuitemcheckbox', { name: /show span in sidebar/i })).toHaveAttribute(
+      'aria-checked',
+      'true'
+    );
+  });
+
   it('calls onDetailPanelModeToggle when "Show Span in Sidebar" is clicked', async () => {
     render(<TraceViewSettings {...defaultProps} enableSidePanel />);
     await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
-    await userEvent.click(await screen.findByText('Show Span in Sidebar'));
+    await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: /show span in sidebar/i }));
     expect(defaultProps.onDetailPanelModeToggle).toHaveBeenCalledTimes(1);
   });
 

@@ -69,12 +69,14 @@ function buildSummaryLookupImpl(
 
   for (const span of trace.spans) {
     const values: Record<string, string> = {};
+    let hasValue = false;
     for (const attr of span.attributes) {
       if (fieldSet.has(attr.key)) {
         values[attr.key] = formatAttributeValue(attr.value);
+        hasValue = true;
       }
     }
-    if (Object.keys(values).length > 0) {
+    if (hasValue) {
       result.set(span.spanID, values);
     }
   }
