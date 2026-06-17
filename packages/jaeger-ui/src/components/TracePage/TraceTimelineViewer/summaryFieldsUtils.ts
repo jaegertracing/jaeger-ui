@@ -13,18 +13,26 @@ export type AvailableField = {
   total: number;
 };
 
+function safeStringify(value: unknown): string {
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return '[unserializable]';
+  }
+}
+
 function formatAttributeValue(value: AttributeValue): string {
   if (value === null || value === undefined) {
     return '';
   }
   if (value instanceof Uint8Array) {
-    return JSON.stringify(Array.from(value));
+    return safeStringify(Array.from(value));
   }
   if (Array.isArray(value)) {
-    return JSON.stringify(value);
+    return safeStringify(value);
   }
   if (typeof value === 'object') {
-    return JSON.stringify(value);
+    return safeStringify(value);
   }
   return String(value);
 }

@@ -213,7 +213,7 @@ export function TracePageImpl(props: TProps) {
     _memoize(filterSpans, (textFilter: string) => `${textFilter} ${idRef.current}`)
   ).current;
 
-  const scrollManagerRef = useRef<ScrollManager>(new ScrollManager(null, { scrollBy, scrollTo }));
+  const scrollManagerRef = useRef<ScrollManager>(new ScrollManager(traceData, { scrollBy, scrollTo }));
 
   const updateViewRangeTime: TUpdateViewRangeTimeFunction = useCallback(
     (start: number, end: number, trackSrc?: string) => {

@@ -11,7 +11,7 @@ import SummaryFieldsSelect from './index';
 import transformTraceData from '../../../../model/transform-trace-data';
 import { IOtelTrace } from '../../../../types/otel';
 import { SpanData, TraceData } from '../../../../types/trace';
-import { buildAvailableFields } from '../../TraceTimelineViewer/summaryFieldsUtils';
+import { buildAvailableFields, MAX_SUMMARY_FIELDS } from '../../TraceTimelineViewer/summaryFieldsUtils';
 
 const selectTestTrace: TraceData & { spans: SpanData[] } = {
   traceID: 'select-test',
@@ -80,7 +80,7 @@ describe('SummaryFieldsSelect', () => {
       />
     );
     expect(screen.getByTestId('summary-fields-select')).toBeInTheDocument();
-    expect(screen.getByText('Select up to 3 fields...')).toBeInTheDocument();
+    expect(screen.getByText(`Select up to ${MAX_SUMMARY_FIELDS} fields...`)).toBeInTheDocument();
     expect(screen.getByText('0/3')).toBeInTheDocument();
     expect(screen.queryByTestId('summary-fields-list')).not.toBeInTheDocument();
   });

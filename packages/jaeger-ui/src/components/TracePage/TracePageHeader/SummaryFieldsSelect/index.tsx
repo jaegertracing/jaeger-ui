@@ -17,7 +17,7 @@ type SummaryFieldsSelectProps = {
 
 function buildTriggerLabel(selectedFields: string[]): string {
   if (selectedFields.length === 0) {
-    return 'Select up to 3 fields...';
+    return `Select up to ${MAX_SUMMARY_FIELDS} fields...`;
   }
   if (selectedFields.length === 1) {
     return selectedFields[0];

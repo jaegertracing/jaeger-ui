@@ -57,12 +57,11 @@ export default function TraceViewSettings(props: Props) {
   }, [closeSettings]);
 
   const panelContent = (
-    <div className="TraceViewSettings--panel" data-testid="trace-view-settings-panel" role="menu">
+    <div className="TraceViewSettings--panel" data-testid="trace-view-settings-panel">
       <button
         className="TraceViewSettings--menuItem"
         type="button"
-        role="menuitemcheckbox"
-        aria-checked={timelineBarsVisible}
+        aria-pressed={timelineBarsVisible}
         onClick={handleTimelineToggle}
       >
         {timelineBarsVisible ? (
@@ -76,8 +75,7 @@ export default function TraceViewSettings(props: Props) {
         <button
           className="TraceViewSettings--menuItem"
           type="button"
-          role="menuitemcheckbox"
-          aria-checked={detailPanelMode === 'sidepanel'}
+          aria-pressed={detailPanelMode === 'sidepanel'}
           onClick={handleDetailPanelModeToggle}
         >
           {detailPanelMode === 'sidepanel' ? (
@@ -102,12 +100,7 @@ export default function TraceViewSettings(props: Props) {
         </>
       )}
       <div className="TraceViewSettings--divider" />
-      <button
-        className="TraceViewSettings--menuItem"
-        type="button"
-        role="menuitem"
-        onClick={handleKeyboardShortcuts}
-      >
+      <button className="TraceViewSettings--menuItem" type="button" onClick={handleKeyboardShortcuts}>
         <span className="TraceViewSettings--checkPlaceholder" aria-hidden />
         Keyboard Shortcuts
       </button>

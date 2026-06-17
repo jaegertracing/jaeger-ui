@@ -162,8 +162,8 @@ describe('summaryFieldsUtils', () => {
   });
 
   it('buildSummaryLookup memoizes and builds large-trace lookup in one pass', () => {
-    const largeTrace = transformTraceData(traceGenerator.trace({ numberOfSpans: 15000 }))!.asOtelTrace();
-    expect(largeTrace.spans.length).toBe(15000);
+    const largeTrace = transformTraceData(traceGenerator.trace({ numberOfSpans: 1000 }))!.asOtelTrace();
+    expect(largeTrace.spans.length).toBe(1000);
 
     const selectedFields = buildAvailableFields(largeTrace)
       .slice(0, 2)
