@@ -44,7 +44,6 @@ type TProps = TDispatchProps & {
   findMatchesIDs: Set<string> | TNil;
   scrollToFirstVisibleSpan: () => void;
   trace: IOtelTrace;
-  tracePageHeaderHeight: number;
   criticalPath: CriticalPathSection[];
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
@@ -66,7 +65,6 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     updateViewRangeTime,
     viewRange,
     trace,
-    tracePageHeaderHeight,
     useOtelTerms,
     ...rest
   } = props;
@@ -147,10 +145,6 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     () => buildSummaryLookup(trace, effectiveSelectedFields),
     [trace, effectiveSelectedFields]
   );
-
-  const viewerStyle = {
-    '--trace-page-header-height': `${tracePageHeaderHeight ?? 0}px`,
-  } as React.CSSProperties;
 
   const effectiveSidePanelWidth =
     sidePanelActive && !timelineBarsVisible ? 1 - spanNameColumnWidth : sidePanelWidth;
@@ -236,7 +230,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       }),
     };
     return (
-      <div className="TraceTimelineViewer" style={viewerStyle}>
+      <div className="TraceTimelineViewer">
         {headerRow}
         <div className="TraceTimelineViewer--sidePanelLayout" ref={layoutRef}>
           <div className="TraceTimelineViewer--main" style={{ width: `${mainWidth}%` }}>
@@ -263,7 +257,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   }
 
   return (
-    <div className="TraceTimelineViewer" style={viewerStyle}>
+    <div className="TraceTimelineViewer">
       {headerRow}
       {virtualizedView}
     </div>

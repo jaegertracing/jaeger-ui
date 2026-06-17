@@ -98,7 +98,6 @@ describe('<TraceTimelineViewer>', () => {
   const trace = legacyTrace.asOtelTrace();
   const props = {
     trace,
-    tracePageHeaderHeight: 200,
     textFilter: null,
     viewRange: {
       time: {
