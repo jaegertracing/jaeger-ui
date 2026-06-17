@@ -77,6 +77,9 @@ const TraceFlamegraph = ({ trace }: any) => {
   useEffect(() => {
     if (!containerRef.current || !flameData || !showChart) return;
 
+    setChartZoomed(false);
+    zoomedNodeRef.current = null;
+
     const container = containerRef.current;
     container.innerHTML = '';
 

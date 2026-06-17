@@ -321,6 +321,7 @@ describe('<TraceFlamegraph />', () => {
       // Zoom into a node first
       act(() => {
         callbacks.onClick({
+          parent: {},
           data: { name: 'load-generator: OrderVehicle', value: 100, duration: 100, children: [] },
         });
       });
