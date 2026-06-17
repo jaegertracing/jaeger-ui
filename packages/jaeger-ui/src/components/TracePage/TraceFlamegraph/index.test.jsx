@@ -200,7 +200,7 @@ describe('<TraceFlamegraph />', () => {
   it('shows chart caption with help tooltip', () => {
     render(<TraceFlamegraph trace={otelTrace} />);
     expect(screen.getByText(/total resource cost/)).toBeInTheDocument();
-    expect(screen.getByText('?')).toBeInTheDocument();
+    expect(screen.getByLabelText('Flamegraph explanation')).toBeInTheDocument();
   });
 
   it('collapse button is disabled when not zoomed', () => {

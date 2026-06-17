@@ -57,15 +57,18 @@ SPDX-License-Identifier: Apache-2.0
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 14px;
-  height: 14px;
   margin-left: 4px;
-  border-radius: 50%;
-  border: 1px solid var(--text-tertiary);
-  font-size: 10px;
-  color: var(--text-tertiary);
-  cursor: help;
+  border-radius: 100px;
+  border: 1px solid var(--text-muted);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 1px;
   vertical-align: middle;
+}
+
+.Flamegraph-content--chart-help:hover {
+  color: var(--text-primary);
+  border-color: var(--text-primary);
 }
 
 .Flamegraph-content--chart {

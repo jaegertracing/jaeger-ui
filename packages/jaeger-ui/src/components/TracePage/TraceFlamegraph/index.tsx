@@ -5,6 +5,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Tooltip } from 'antd';
 import flamegraph from 'd3-flame-graph';
 import { select } from 'd3-selection';
+import { IoHelp } from 'react-icons/io5';
 
 import OtelTraceFacade from '../../../model/OtelTraceFacade';
 import colorGenerator from '../../../utils/color-generator';
@@ -276,7 +277,7 @@ const TraceFlamegraph = ({ trace }: any) => {
                   tabIndex={0}
                   aria-label="Flamegraph explanation"
                 >
-                  ?
+                  <IoHelp />
                 </span>
               </Tooltip>
             </div>
