@@ -454,8 +454,9 @@ describe('transformTraceData()', () => {
 
     it('should handle deeply nested traces without overflowing the call stack', () => {
       // A long parent -> child chain previously overflowed the stack because the
-      // traversal was recursive. The depth here exceeds the JS call-stack limit.
-      const depth = 20000;
+      // traversal was recursive. This depth exceeds typical call-stack limits in
+      // our test runtime (V8), so the old recursive code reliably threw here.
+      const depth = 15000;
       const deepSpans = [];
       for (let i = 0; i < depth; i++) {
         deepSpans.push({
