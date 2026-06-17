@@ -3,19 +3,24 @@
 
 import computeSpanSelfTime from './compute-span-self-time';
 import { IOtelSpan } from '../types/otel';
+import { Microseconds } from '../types/units';
+
+function us(n: number): Microseconds {
+  return n as Microseconds;
+}
 
 function makeSpan(startTime: number, duration: number, children: Partial<IOtelSpan>[] = []): IOtelSpan {
   return {
-    startTime,
-    duration,
-    endTime: startTime + duration,
+    startTime: us(startTime),
+    duration: us(duration),
+    endTime: us(startTime + duration),
     hasChildren: children.length > 0,
     childSpans: children as IOtelSpan[],
-  } as IOtelSpan;
+  } as unknown as IOtelSpan;
 }
 
 function makeChild(startTime: number, duration: number): Partial<IOtelSpan> {
-  return { startTime, duration, endTime: startTime + duration };
+  return { startTime: us(startTime), duration: us(duration), endTime: us(startTime + duration) };
 }
 
 describe('computeSpanSelfTime', () => {
