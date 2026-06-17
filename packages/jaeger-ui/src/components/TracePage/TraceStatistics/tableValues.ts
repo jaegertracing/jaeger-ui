@@ -1,80 +1,14 @@
 // Copyright (c) 2020 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import memoizeOne from 'memoize-one';
 import { IOtelTrace, IOtelSpan } from '../../../types/otel';
 import { ITableSpan } from './types';
 import colorGenerator from '../../../utils/color-generator';
+import computeSpanSelfTime from '../../../utils/compute-span-self-time';
 
 export const getServiceName = () => 'Service Name';
 export const getOperationName = (useOtelTerms: boolean) => (useOtelTerms ? 'Span Name' : 'Operation Name');
 const getAttributeName = (useOtelTerms: boolean) => (useOtelTerms ? 'Attribute' : 'Tag');
-
-function parentChildOfMap(allSpans: ReadonlyArray<IOtelSpan>): Record<string, IOtelSpan[]> {
-  const parentChildOfMap: Record<string, IOtelSpan[]> = {};
-  allSpans.forEach(s => {
-    if (s.parentSpanID) {
-      parentChildOfMap[s.parentSpanID] = parentChildOfMap[s.parentSpanID] || [];
-      parentChildOfMap[s.parentSpanID].push(s);
-    }
-  });
-  return parentChildOfMap;
-}
-
-const memoizedParentChildOfMap = memoizeOne(parentChildOfMap);
-
-function getChildOfSpans(parentID: string, allSpans: ReadonlyArray<IOtelSpan>): IOtelSpan[] {
-  return memoizedParentChildOfMap(allSpans)[parentID] || [];
-}
-
-function computeSelfTime(parentSpan: IOtelSpan, allSpans: ReadonlyArray<IOtelSpan>): IOtelSpan['duration'] {
-  if (!parentSpan.hasChildren) return parentSpan.duration;
-
-  let parentSpanSelfTime = parentSpan.duration;
-  let previousChildEndTime = parentSpan.startTime;
-
-  const children = getChildOfSpans(parentSpan.spanID, allSpans).sort((a, b) => a.startTime - b.startTime);
-
-  const parentSpanEndTime = parentSpan.endTime;
-
-  for (let index = 0; index < children.length; index++) {
-    const child = children[index];
-
-    const childEndTime = child.endTime;
-    const childStartsAfterParentEnded = child.startTime > parentSpanEndTime;
-    const childEndsBeforePreviousChild = childEndTime < previousChildEndTime;
-
-    // parent |..................|
-    // child    |.......|                     - previousChild
-    // child     |.....|                      - childEndsBeforePreviousChild is true, skipped
-    // child                         |......| - childStartsAfterParentEnded is true, skipped
-    if (childStartsAfterParentEnded || childEndsBeforePreviousChild) {
-      continue;
-    }
-
-    // parent |.....................|
-    // child    |.......|                    - previousChild
-    // child        |.....|                  - nonOverlappingStartTime is previousChildEndTime
-    // child                |.....|          - nonOverlappingStartTime is child.startTime
-    const nonOverlappingStartTime = Math.max(previousChildEndTime, child.startTime);
-    const childEndTimeOrParentEndTime = Math.min(parentSpanEndTime, childEndTime);
-
-    const nonOverlappingDuration = childEndTimeOrParentEndTime - nonOverlappingStartTime;
-    parentSpanSelfTime = (parentSpanSelfTime - nonOverlappingDuration) as IOtelSpan['duration'];
-
-    // last span which can be included in self time calculation, because it ends after parent span ends
-    // parent |.......................|
-    // child                      |.....|        - last span included in self time calculation
-    // child                       |.........|   - skipped
-    if (childEndTimeOrParentEndTime === parentSpanEndTime) {
-      break;
-    }
-
-    previousChildEndTime = childEndTime as IOtelSpan['duration'];
-  }
-
-  return parentSpanSelfTime;
-}
 
 function computeColumnValues(
   trace: IOtelTrace,
@@ -92,7 +26,7 @@ function computeColumnValues(
     resultValueChange.max = span.duration;
   }
 
-  const tempSelf = computeSelfTime(span, allSpans);
+  const tempSelf = computeSpanSelfTime(span) as IOtelSpan['duration'];
   if (resultValueChange.selfMin > tempSelf) {
     resultValueChange.selfMin = tempSelf;
   }

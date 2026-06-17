@@ -63,6 +63,11 @@ export default defineConfig({
       // More-specific alias must come first
       '@jaegertracing/plexus/demo': path.resolve(__dirname, '../plexus/demo/src/index'),
       '@jaegertracing/plexus': path.resolve(__dirname, '../plexus/src'),
+      // d3-flame-graph doesn't export its CSS in package.json exports field
+      'd3-flame-graph/dist/d3-flamegraph.css': path.resolve(
+        __dirname,
+        '../../node_modules/d3-flame-graph/dist/d3-flamegraph.css'
+      ),
     },
   },
 });
