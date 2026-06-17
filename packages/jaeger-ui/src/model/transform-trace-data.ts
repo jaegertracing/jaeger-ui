@@ -16,7 +16,7 @@ export function deduplicateTags(spanTags: ReadonlyArray<KeyValuePair>) {
   const seen = new Set<string>();
   const tags: KeyValuePair[] = [];
   for (const tag of spanTags) {
-    const key = `${tag.key}:${tag.value}`;
+    const key = `${tag.key}\0${tag.type ?? ''}\0${tag.value}`;
     if (!seen.has(key)) {
       seen.add(key);
       tags.push(tag);
