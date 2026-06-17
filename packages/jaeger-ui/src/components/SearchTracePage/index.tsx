@@ -36,7 +36,7 @@ import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { useEmbeddedState } from '../../stores/embedded-store';
 import { useShallow } from 'zustand/react/shallow';
 import { useSearchTraces } from '../../hooks/useTraceDiscovery';
-import { useSearchResultsStore } from './store.search-results';
+import { useSearchResultsStore, sanitizeSortBy } from './store.search-results';
 
 // export for tests
 export function SearchTracePageImpl() {
@@ -164,7 +164,7 @@ export function SearchTracePageImpl() {
   const handleSortChange = useCallback(
     (newSortBy: string) => {
       setSortBy(newSortBy);
-      trackSortByChange(useSearchResultsStore.getState().sortBy);
+      trackSortByChange(sanitizeSortBy(newSortBy));
     },
     [setSortBy]
   );

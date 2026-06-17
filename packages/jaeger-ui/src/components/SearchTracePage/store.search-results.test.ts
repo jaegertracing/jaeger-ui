@@ -11,7 +11,7 @@ describe('useSearchResultsStore', () => {
     localStorage.removeItem(STORAGE_KEY);
     useSearchResultsStore.getState().setViewMode('list');
     useSearchResultsStore.getState().setSortBy(MOST_RECENT);
-    await new Promise(r => setTimeout(r, 0));
+    await Promise.resolve();
     localStorage.removeItem(STORAGE_KEY);
   });
 
@@ -55,11 +55,11 @@ describe('useSearchResultsStore', () => {
   describe('persist flag', () => {
     it('updates sortBy in state but skips localStorage when persist:false', async () => {
       useSearchResultsStore.getState().setSortBy(MOST_RECENT);
-      await new Promise(r => setTimeout(r, 0));
+      await Promise.resolve();
       const before = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
 
       useSearchResultsStore.getState().setSortBy(LONGEST_FIRST, { persist: false });
-      await new Promise(r => setTimeout(r, 0));
+      await Promise.resolve();
 
       expect(useSearchResultsStore.getState().sortBy).toBe(LONGEST_FIRST);
       const after = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
@@ -68,11 +68,11 @@ describe('useSearchResultsStore', () => {
 
     it('updates viewMode in state but skips localStorage when persist:false', async () => {
       useSearchResultsStore.getState().setViewMode('list');
-      await new Promise(r => setTimeout(r, 0));
+      await Promise.resolve();
       const before = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
 
       useSearchResultsStore.getState().setViewMode('table', { persist: false });
-      await new Promise(r => setTimeout(r, 0));
+      await Promise.resolve();
 
       expect(useSearchResultsStore.getState().viewMode).toBe('table');
       const after = JSON.parse(localStorage.getItem(STORAGE_KEY)!);

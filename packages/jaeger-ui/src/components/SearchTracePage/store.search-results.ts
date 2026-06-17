@@ -8,8 +8,15 @@ import { MOST_RECENT, LONGEST_FIRST, SHORTEST_FIRST, MOST_SPANS, LEAST_SPANS } f
 const VALID_SORT_KEYS = new Set([MOST_RECENT, LONGEST_FIRST, SHORTEST_FIRST, MOST_SPANS, LEAST_SPANS]);
 const VALID_VIEW_MODES = new Set<string>(['list', 'table']);
 
-function sanitizeSortBy(value: unknown): string {
-  return typeof value === 'string' && VALID_SORT_KEYS.has(value) ? value : MOST_RECENT;
+export type SortKey =
+  | typeof MOST_RECENT
+  | typeof LONGEST_FIRST
+  | typeof SHORTEST_FIRST
+  | typeof MOST_SPANS
+  | typeof LEAST_SPANS;
+
+export function sanitizeSortBy(value: unknown): SortKey {
+  return typeof value === 'string' && VALID_SORT_KEYS.has(value) ? (value as SortKey) : MOST_RECENT;
 }
 
 function sanitizeViewMode(value: unknown): 'list' | 'table' {
@@ -19,21 +26,21 @@ function sanitizeViewMode(value: unknown): 'list' | 'table' {
 // ADR-0010 PR 2: setters accept { persist: false } to update state without
 // writing to localStorage — for URL-driven or heuristic overrides that
 // should not overwrite the user's saved preference.
-//
-// The skip flag lives inside the factory closure so it cannot be affected
-// by unrelated store instances or parallel test imports. The flag is a
-// one-shot: the setter clears it, setItem reads and resets it.
+// A counter (not a boolean) tracks pending skips so consecutive { persist: false }
+// calls each suppress exactly one write without interfering with each other.
 // The storage methods guard against non-browser environments (SSR / Node).
 function createConditionalStorage() {
-  let _writeEnabled = true;
+  let _skipCount = 0;
   const skip = () => {
-    _writeEnabled = false;
+    _skipCount++;
   };
   const storage = createJSONStorage(() => ({
     getItem: (name: string) => (typeof window !== 'undefined' ? localStorage.getItem(name) : null),
     setItem: (name: string, value: string) => {
-      if (typeof window !== 'undefined' && _writeEnabled) localStorage.setItem(name, value);
-      _writeEnabled = true;
+      if (typeof window !== 'undefined') {
+        if (_skipCount === 0) localStorage.setItem(name, value);
+        else _skipCount--;
+      }
     },
     removeItem: (name: string) => {
       if (typeof window !== 'undefined') localStorage.removeItem(name);
@@ -48,7 +55,7 @@ type SetterOpts = { persist?: boolean };
 
 type SearchResultsStore = {
   viewMode: 'list' | 'table';
-  sortBy: string;
+  sortBy: SortKey;
   setViewMode: (mode: 'list' | 'table', opts?: SetterOpts) => void;
   setSortBy: (sortBy: string, opts?: SetterOpts) => void;
 };
