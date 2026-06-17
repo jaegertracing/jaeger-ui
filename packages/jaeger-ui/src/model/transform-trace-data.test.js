@@ -39,7 +39,7 @@ describe('deduplicateTags()', () => {
       { key: 'b.ip', value: '8.8.8.8' },
       { key: 'a.ip', value: '8.8.8.8' },
     ]);
-    expect(tagsInfo.warnings).toEqual(['Duplicate tag "b.ip:8.8.4.4"']);
+    expect(tagsInfo.warnings).toEqual(['Duplicate tag key="b.ip" value="8.8.4.4"']);
   });
 
   it('collapses repeated duplicates into a single warning and keeps the first', () => {
@@ -50,7 +50,7 @@ describe('deduplicateTags()', () => {
     ]);
 
     expect(tagsInfo.tags).toEqual([{ key: 'x', value: 'a' }]);
-    expect(tagsInfo.warnings).toEqual(['Duplicate tag "x:a"']);
+    expect(tagsInfo.warnings).toEqual(['Duplicate tag key="x" value="a"']);
   });
 
   it('does not collide when key or value contains a colon', () => {
@@ -76,7 +76,25 @@ describe('deduplicateTags()', () => {
       { key: 'a', value: 'b:c' },
     ]);
     // Both duplicated pairs are tracked separately; neither warning is dropped.
-    expect(tagsInfo.warnings).toEqual(['Duplicate tag "a:b:c"', 'Duplicate tag "a:b:c"']);
+    expect(tagsInfo.warnings).toEqual([
+      'Duplicate tag key="a:b" value="c"',
+      'Duplicate tag key="a" value="b:c"',
+    ]);
+  });
+
+  it('preserves distinct duplicate warnings when mixed-type values stringify the same', () => {
+    const tagsInfo = deduplicateTags([
+      { key: 'x', value: 1 },
+      { key: 'x', value: 1 },
+      { key: 'x', value: '1' },
+      { key: 'x', value: '1' },
+    ]);
+
+    expect(tagsInfo.tags).toEqual([
+      { key: 'x', value: 1 },
+      { key: 'x', value: '1' },
+    ]);
+    expect(tagsInfo.warnings).toEqual(['Duplicate tag key="x" value="1"', 'Duplicate tag key="x" value="1"']);
   });
 });
 

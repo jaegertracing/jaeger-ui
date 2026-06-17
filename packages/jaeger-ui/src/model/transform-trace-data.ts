@@ -25,7 +25,10 @@ export function deduplicateTags(spanTags: ReadonlyArray<KeyValuePair>) {
       }
       tags.push(tag);
     } else {
-      warningsHash.set(`${tag.key}\0${String(tag.value)}`, `Duplicate tag "${tag.key}:${tag.value}"`);
+      warningsHash.set(
+        `${tag.key}\0${typeof tag.value}\0${String(tag.value)}`,
+        `Duplicate tag key="${tag.key}" value="${String(tag.value)}"`
+      );
     }
   }
   const warnings = Array.from(warningsHash.values());
