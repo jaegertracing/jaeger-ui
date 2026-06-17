@@ -187,15 +187,12 @@ describe('<TraceTimelineViewer>', () => {
   });
 
   it('derives selectedSpanID from Zustand detailStates', () => {
-    // The root span is selected → selectedSpanID === rootSpanID → label should be 'Trace Root'.
     const spanID = trace.rootSpans[0].spanID;
     mockLayoutPrefsStore.detailPanelMode = 'sidepanel';
     mockLayoutPrefsStore.sidePanelWidth = 0.3;
     mockTraceTimelineStore.detailStates = new Map([[spanID, {}]]);
     render(<TraceTimelineViewerImpl {...props} />);
-    // Side panel renders because detailPanelMode is 'sidepanel'.
     expect(screen.getByTestId('span-detail-side-panel-mock')).toBeInTheDocument();
-    // selectedSpanID === rootSpanID → sidePanelLabel === 'Trace Root'.
     expect(screen.getByTestId('timeline-header-row-mock').dataset.sidePanelLabel).toBe('Trace Root');
   });
 
@@ -273,7 +270,6 @@ describe('<TraceTimelineViewer>', () => {
           expect(screen.queryByTestId('vertical-resizer-mock')).not.toBeInTheDocument();
         }
 
-        // VirtualizedTraceView is always rendered.
         expect(screen.getByTestId('virtualized-trace-view-mock')).toBeInTheDocument();
       });
     });
@@ -305,7 +301,6 @@ describe('<TraceTimelineViewer>', () => {
     it('calls setSidePanelWidth (Zustand + Redux) when the VerticalResizer onChange fires', () => {
       render(<TraceTimelineViewerImpl {...props} />);
       fireEvent.click(screen.getByTestId('vertical-resizer-change'));
-      // onChange receives newPosition=0.7 → setSidePanelWidth(1 - 0.7 ≈ 0.3)
       expect(mockLayoutPrefsStore.setSidePanelWidth).toHaveBeenCalledTimes(1);
       expect(mockLayoutPrefsStore.setSidePanelWidth.mock.calls[0][0]).toBeCloseTo(0.3);
       expect(props.setSidePanelWidth).toHaveBeenCalledTimes(1);
@@ -323,8 +318,5 @@ describe('<TraceTimelineViewer>', () => {
       render(<TraceTimelineViewerImpl {...props} />);
       expect(screen.getByTestId('timeline-header-row-mock').dataset.sidePanelLabel).toBe('Span Details');
     });
-
-    // Side panel cleanup when a selected span's service is pruned is tested
-    // in useServiceFilter.test.ts (the hook owns that logic now).
   });
 });

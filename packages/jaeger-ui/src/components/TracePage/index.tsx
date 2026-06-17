@@ -292,7 +292,6 @@ export function TracePageImpl(props: TProps) {
   const measureHeaderHeight = useCallback(() => {
     const elm = headerElmRef.current;
     if (!elm) return;
-    // Prefer layout box height; fall back to offset/client when getBoundingClientRect is 0 (e.g. jsdom).
     const measured = Math.ceil(
       Math.max(elm.getBoundingClientRect().height, elm.offsetHeight, elm.clientHeight)
     );
@@ -320,7 +319,6 @@ export function TracePageImpl(props: TProps) {
     [measureHeaderHeight]
   );
 
-  // Re-measure when trace/header content changes (e.g. minimap mounts, slim view toggles).
   useLayoutEffect(() => {
     measureHeaderHeight();
     let raf2 = 0;

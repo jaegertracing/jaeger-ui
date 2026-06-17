@@ -31,7 +31,6 @@ import { CriticalPathSection } from '../../../types/critical_path';
 import './index.css';
 
 type TDispatchProps = {
-  // These Redux dispatchers are kept for the tracking middleware only.
   setSpanNameColumnWidth: (width: number) => void;
   setSidePanelWidth: (width: number) => void;
   collapseAll: (spans: ReadonlyArray<IOtelSpan>) => void;
@@ -55,13 +54,6 @@ type TProps = TDispatchProps & {
 
 const NUM_TICKS = 5;
 
-/**
- * `TraceTimelineViewer` now renders the header row because it is sensitive to
- * `props.viewRange.time.cursor`. If `VirtualizedTraceView` renders it, it will
- * re-render the ListView every time the cursor is moved on the trace minimap
- * or `TimelineHeaderRow`.
- */
-
 export const TraceTimelineViewerImpl = (props: TProps) => {
   const {
     collapseAll: collapseAllAction,
@@ -79,7 +71,6 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     ...rest
   } = props;
 
-  // Layout preferences are owned by Zustand; Redux setters are also called for the tracking middleware.
   const detailPanelMode = useLayoutPrefsStore(s => s.detailPanelMode);
   const sidePanelWidth = useLayoutPrefsStore(s => s.sidePanelWidth);
   const spanNameColumnWidth = useLayoutPrefsStore(s => s.spanNameColumnWidth);
@@ -110,7 +101,6 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     [zustandSetSidePanelWidth, reduxSetSidePanelWidth]
   );
 
-  // Side panel is permanently visible whenever side panel mode is active.
   const sidePanelActive = detailPanelMode === 'sidepanel';
 
   const collapseAll = useCallback(() => {
@@ -162,36 +152,19 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     '--trace-page-header-height': `${tracePageHeaderHeight ?? 0}px`,
   } as React.CSSProperties;
 
-  // When timeline bars are hidden with the side panel active, the side panel expands to absorb
-  // the timeline column so the Service/Operation column keeps its pixel width unchanged.
   const effectiveSidePanelWidth =
     sidePanelActive && !timelineBarsVisible ? 1 - spanNameColumnWidth : sidePanelWidth;
 
-  // Fraction of the main (non-panel) content area occupied by the name column.
-  // In side panel mode the --main container is narrowed; rescaling keeps the name column at its
-  // stored pixel width. When timeline bars are hidden the name column fills everything (= 1).
   const panelFraction = sidePanelActive ? effectiveSidePanelWidth : 0;
   const mainFraction = 1 - panelFraction;
   const nameColumnWidth = timelineBarsVisible ? Math.min(spanNameColumnWidth / mainFraction, 1) : 1;
-  // Page-fraction width of the name column header cell and resizer position.
-  // Equals spanNameColumnWidth when bars are visible (the round-trip through mainFraction cancels).
-  // When bars are hidden with no side panel, the name column spans the full page.
   const headerNameWidth = nameColumnWidth * mainFraction;
   const resizerMax = sidePanelActive ? mainFraction - MIN_TIMELINE_COLUMN_WIDTH : SPAN_NAME_COLUMN_WIDTH_MAX;
 
-  // Column header label: "Trace Root" when showing the root span (explicit or fallback),
-  // "Span Details" for any other selected span.
   const rootSpanID = trace.rootSpans[0]?.spanID;
   const sidePanelLabel =
     selectedSpanID === null || selectedSpanID === rootSpanID ? 'Trace Root' : 'Span Details';
 
-  // TimelineHeaderRow is position:fixed (see its CSS), so it takes no space in the document flow.
-  // VirtualizedTraceView padding-top covers the timeline header row height.
-  // layoutRef is on the --sidePanelLayout div which starts at the same document position as the
-  // timeline content. We compute panelTop once:
-  //   top + scrollY = document-relative top of the layout area
-  //   + timeline header height
-  // Because the header is fixed, panelTop is constant — only a resize listener is needed.
   const layoutRef = useRef<HTMLDivElement>(null);
   const [panelTop, setPanelTop] = useState<number | null>(null);
 
@@ -207,8 +180,6 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     };
     measure();
     window.addEventListener('resize', measure);
-    // ResizeObserver catches layout shifts that window resize misses (e.g. slim-header toggle,
-    // archive notifier appearing), which would change the layout container's document offset.
     /* istanbul ignore next */
     const resizeObserver = new ResizeObserver(measure);
     /* istanbul ignore next */
@@ -299,7 +270,6 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   );
 };
 
-// selectedSpanID is now computed inside TraceTimelineViewerImpl from the Zustand store.
 function mapStateToProps(_state: ReduxState) {
   return {};
 }
