@@ -154,16 +154,10 @@ SPDX-License-Identifier: Apache-2.0
   color: var(--text-primary) !important;
 }
 
-/* Frame styling */
+/* Frame styling — subtle divider between bars */
 .Flamegraph-content--chart .d3-flame-graph rect {
-  stroke: var(--surface-primary);
+  stroke: var(--border-default);
   stroke-width: 0.5px;
-}
-
-/* Highlighted (search match) frames get a visible border */
-.Flamegraph-content--chart .d3-flame-graph g:not(.fade) rect {
-  stroke: var(--interactive-primary);
-  stroke-width: 1.5px;
 }
 
 /* Faded (non-matching) frames during search */

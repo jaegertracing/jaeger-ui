@@ -73,6 +73,8 @@ const TraceFlamegraph = ({ trace }: any) => {
     const container = containerRef.current;
     container.innerHTML = '';
 
+    const rootFrameColor =
+      getComputedStyle(container).getPropertyValue('--surface-tertiary').trim() || '#ccc';
     const rootValue = flameData.duration ?? flameData.value;
     const chart = flamegraph()
       .width(container.clientWidth || 800)
@@ -88,7 +90,7 @@ const TraceFlamegraph = ({ trace }: any) => {
       })
       .setColorMapper((d: any, _originalColor: string) => {
         if (d.highlight) return HIGHLIGHT_COLOR;
-        if (!d || !d.data || !d.data.serviceName) return '#ccc';
+        if (!d || !d.data || !d.data.serviceName) return rootFrameColor;
         const { serviceName } = d.data;
         if (searchActiveRef.current) {
           const [r, g, b] = colorGenerator.getRgbColorByKey(serviceName);
