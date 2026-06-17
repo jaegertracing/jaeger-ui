@@ -2,28 +2,240 @@
 Copyright (c) 2022 The Jaeger Authors.
 SPDX-License-Identifier: Apache-2.0
 */
+
 .Flamegraph-wrapper {
   padding: 0 calc(1rem - 5px);
 }
-/* Style  flamegraph inputs with design tokens */
-.Flamegraph-wrapper input,
-.Flamegraph-wrapper input[type='text'],
-.Flamegraph-wrapper input[type='search'] {
-  background-color: var(--surface-component-background);
+
+/* Toolbar */
+.Flamegraph-toolbar {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-default);
+  margin-bottom: 8px;
+}
+
+.Flamegraph-toolbar--right {
+  margin-left: auto;
+}
+
+/* Content layout */
+.Flamegraph-content {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  min-height: 300px;
+}
+
+.Flamegraph-content[data-view-mode='table'],
+.Flamegraph-content[data-view-mode='flamegraph'] {
+  flex-direction: column;
+}
+
+.Flamegraph-content--table {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+}
+
+.Flamegraph-content--chart-wrapper {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.Flamegraph-content--chart-caption {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 4px 0;
+}
+
+.Flamegraph-content--chart-help {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4px;
+  border-radius: 100px;
+  border: 1px solid var(--text-muted);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 1px;
+  vertical-align: middle;
+}
+
+.Flamegraph-content--chart-help:hover {
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
+.Flamegraph-content--chart {
+  flex: 1;
+  min-width: 0;
+}
+
+/* "Both" mode: table 40%, chart fills rest */
+.Flamegraph-content[data-view-mode='both'] .Flamegraph-content--table {
+  flex: 0 0 40%;
+  max-width: 40%;
+}
+
+.Flamegraph-content[data-view-mode='both'] .Flamegraph-content--chart-wrapper {
+  flex: 1;
+}
+
+/* Table: color dot */
+.Flamegraph-table--color-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.Flamegraph-table--location {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Table: service & operation names */
+.Flamegraph-table--svc-name {
+  font-size: 1.05em;
+  padding-right: 0.25rem;
+}
+
+.Flamegraph-table--op-name {
+  color: var(--text-secondary);
+}
+
+.ant-table-row:hover .Flamegraph-table--op-name {
+  color: var(--text-primary);
+}
+
+/* Table: duration cell with RelativeBar */
+.Flamegraph-table--duration-cell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.Flamegraph-table--duration-value {
+  white-space: nowrap;
+  min-width: 60px;
+  text-align: right;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+/* Table: selected row */
+.Flamegraph-table--row-selected td {
+  background-color: var(--interactive-primary-light) !important;
+}
+
+.Flamegraph-table--row-selected td:first-child {
+  box-shadow: inset 3px 0 0 var(--interactive-primary);
+}
+
+/* Table: clickable rows */
+.Flamegraph-wrapper .ant-table-row {
+  cursor: pointer;
+}
+
+/* Override d3-flame-graph's hardcoded black label color */
+.Flamegraph-content--chart .d3-flame-graph-label {
   color: var(--text-primary) !important;
-  border-color: var(--border-default);
 }
 
-.Flamegraph-wrapper input::placeholder,
-.Flamegraph-wrapper input[type='text']::placeholder,
-.Flamegraph-wrapper input[type='search']::placeholder {
-  color: var(--text-secondary) !important ;
-  opacity: 1;
+/* Frame styling — use page background as stroke to create visible gaps between bars */
+.Flamegraph-content--chart .d3-flame-graph rect {
+  stroke: var(--surface-primary);
+  stroke-width: 1px;
 }
 
-.Flamegraph-wrapper {
-  --ps-tooltip-bg: var(--surface-component-background);
-  --ps-tooltip-text: var(--text-primary);
-  --ps-tooltip-header-bg: var(--surface-tertiary);
-  --ps-right-click-info: var(--text-secondary);
+/* Faded (non-matching) frames during search */
+.Flamegraph-content--chart .d3-flame-graph .fade rect {
+  opacity: 0.4;
+}
+
+/* Context menu */
+.Flamegraph-context-menu {
+  position: fixed;
+  z-index: 1050;
+  background: var(--surface-primary);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  padding: 4px 0;
+  min-width: 200px;
+}
+
+.Flamegraph-context-menu--item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 16px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-primary);
+  text-align: left;
+}
+
+.Flamegraph-context-menu--item:hover:not(:disabled) {
+  background: var(--interactive-primary-light);
+}
+
+.Flamegraph-context-menu--item:disabled {
+  color: var(--text-tertiary);
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Tooltip */
+.Flamegraph-tooltip {
+  position: fixed;
+  z-index: 1040;
+  background: var(--surface-primary);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  box-shadow: var(--shadow-md);
+  padding: 10px 14px;
+  pointer-events: none;
+  font-size: 13px;
+  max-width: 400px;
+}
+
+.Flamegraph-tooltip--title {
+  font-weight: 600;
+  margin-bottom: 6px;
+  word-break: break-all;
+}
+
+.Flamegraph-tooltip--table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.Flamegraph-tooltip--table td {
+  padding: 2px 8px 2px 0;
+}
+
+.Flamegraph-tooltip--table td:first-child {
+  color: var(--text-secondary);
+}
+
+.Flamegraph-tooltip--hint {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-tertiary);
 }
