@@ -7,15 +7,37 @@ import '@testing-library/jest-dom';
 
 import TraceViewSettings from './TraceViewSettings';
 import track from './KeyboardShortcutsHelp.track';
+import transformTraceData from '../../../model/transform-trace-data';
+import { buildAvailableFields } from '../TraceTimelineViewer/summaryFieldsUtils';
 
 vi.mock('./KeyboardShortcutsHelp.track');
 vi.mock('../keyboard-mappings', () => mockDefault({}));
 
+const trace = transformTraceData({
+  traceID: 'settings-test',
+  processes: { p1: { serviceName: 'svc', tags: [] } },
+  spans: [
+    {
+      spanID: 's1',
+      traceID: 'settings-test',
+      operationName: 'op',
+      duration: 1,
+      startTime: 1,
+      processID: 'p1',
+      references: [],
+      tags: [{ key: 'alpha', value: '1' }],
+    },
+  ],
+}).asOtelTrace();
+
 const defaultProps = {
+  availableFields: buildAvailableFields(trace),
   detailPanelMode: 'inline',
   enableSidePanel: false,
   onDetailPanelModeToggle: jest.fn(),
+  onSelectedSummaryFieldsChange: jest.fn(),
   onTimelineToggle: jest.fn(),
+  selectedSummaryFields: [],
   timelineBarsVisible: true,
 };
 
@@ -31,7 +53,7 @@ describe('<TraceViewSettings>', () => {
     expect(button).toHaveAttribute('title', 'Trace view settings');
   });
 
-  it('opens dropdown on click and shows "Show Timeline" item', async () => {
+  it('opens panel on click and shows "Show Timeline" item', async () => {
     render(<TraceViewSettings {...defaultProps} />);
     await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
     expect(await screen.findByText('Show Timeline')).toBeInTheDocument();
@@ -64,7 +86,21 @@ describe('<TraceViewSettings>', () => {
     expect(defaultProps.onDetailPanelModeToggle).toHaveBeenCalledTimes(1);
   });
 
-  it('always shows "Keyboard Shortcuts" in the dropdown', async () => {
+  it('shows summary fields section when trace has attribute keys', async () => {
+    render(<TraceViewSettings {...defaultProps} />);
+    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
+    expect(await screen.findByText('Summary fields')).toBeInTheDocument();
+    expect(screen.getByTestId('summary-fields-select')).toBeInTheDocument();
+  });
+
+  it('hides summary fields section when trace has no attribute keys', async () => {
+    render(<TraceViewSettings {...defaultProps} availableFields={[]} />);
+    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
+    await screen.findByText('Show Timeline');
+    expect(screen.queryByText('Summary fields')).not.toBeInTheDocument();
+  });
+
+  it('always shows "Keyboard Shortcuts" in the panel', async () => {
     render(<TraceViewSettings {...defaultProps} />);
     await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
     expect(await screen.findByText('Keyboard Shortcuts')).toBeInTheDocument();

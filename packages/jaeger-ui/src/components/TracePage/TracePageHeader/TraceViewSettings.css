@@ -13,3 +13,57 @@ SPDX-License-Identifier: Apache-2.0
 .TraceViewSettings--icon {
   font-size: 1.2rem;
 }
+
+.TraceViewSettings--panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 320px;
+  padding: 0.25rem 0;
+}
+
+.TraceViewSettings--menuItem {
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  gap: 0.5rem;
+  padding: 0.45rem 0.75rem;
+  text-align: left;
+  width: 100%;
+}
+
+.TraceViewSettings--menuItem:hover {
+  background: var(--surface-hover);
+}
+
+.TraceViewSettings--check {
+  flex-shrink: 0;
+  font-size: 14px;
+  width: 22px;
+}
+
+.TraceViewSettings--checkPlaceholder {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 22px;
+}
+
+.TraceViewSettings--divider {
+  background: var(--border-default);
+  height: 1px;
+  margin: 0.25rem 0;
+}
+
+.TraceViewSettings--section {
+  padding: 0.35rem 0.75rem 0.5rem;
+}
+
+.TraceViewSettings--sectionLabel {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}

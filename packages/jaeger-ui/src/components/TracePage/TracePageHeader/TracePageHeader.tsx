@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import * as React from 'react';
+import React, { useMemo } from 'react';
 import { Button, InputRef, Tooltip } from 'antd';
 import _get from 'lodash/get';
 import _maxBy from 'lodash/maxBy';
@@ -12,6 +12,8 @@ import DocumentTitle from '../../../utils/documentTitle';
 import AltViewOptions from './AltViewOptions';
 import SpanGraph from './SpanGraph';
 import TraceViewSettings from './TraceViewSettings';
+import { buildAvailableFields } from '../TraceTimelineViewer/summaryFieldsUtils';
+import { useLayoutPrefsStore } from '../TraceTimelineViewer/store';
 import TracePageSearchBar from './TracePageSearchBar';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, ETraceViewType } from '../types';
 import LabeledList from '../../common/LabeledList';
@@ -152,6 +154,18 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     useOtelTerms,
   } = props;
 
+  const selectedSummaryFields = useLayoutPrefsStore(s => s.selectedSummaryFields);
+  const setSelectedSummaryFields = useLayoutPrefsStore(s => s.setSelectedSummaryFields);
+  const availableFields = useMemo(() => (trace ? buildAvailableFields(trace) : []), [trace]);
+  const availableFieldKeys = useMemo(
+    () => new Set(availableFields.map(field => field.key)),
+    [availableFields]
+  );
+  const effectiveSelectedSummaryFields = useMemo(
+    () => selectedSummaryFields.filter(key => availableFieldKeys.has(key)),
+    [availableFieldKeys, selectedSummaryFields]
+  );
+
   if (!trace) {
     return null;
   }
@@ -209,11 +223,14 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           useOtelTerms={useOtelTerms}
         />
         <TraceViewSettings
+          availableFields={availableFields}
           className="ub-m2"
           detailPanelMode={detailPanelMode}
           enableSidePanel={enableSidePanel}
           onDetailPanelModeToggle={onDetailPanelModeToggle}
+          onSelectedSummaryFieldsChange={setSelectedSummaryFields}
           onTimelineToggle={onTimelineToggle}
+          selectedSummaryFields={effectiveSelectedSummaryFields}
           timelineBarsVisible={timelineBarsVisible}
         />
         {showViewOptions && (

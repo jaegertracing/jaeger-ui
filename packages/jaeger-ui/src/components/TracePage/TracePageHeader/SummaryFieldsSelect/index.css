@@ -1,0 +1,173 @@
+/*
+Copyright (c) 2026 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.SummaryFieldsSelect {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.SummaryFieldsSelect--trigger {
+  align-items: center;
+  background: var(--surface-primary);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  gap: 0.5rem;
+  min-height: 32px;
+  padding: 0.25rem 0.5rem;
+  text-align: left;
+  width: 100%;
+}
+
+.SummaryFieldsSelect--trigger:hover {
+  border-color: var(--border-strong);
+}
+
+.SummaryFieldsSelect--trigger:focus-visible {
+  border-color: var(--interactive-primary);
+  box-shadow: 0 0 0 2px var(--interactive-primary-light);
+  outline: none;
+}
+
+.SummaryFieldsSelect--triggerLabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.SummaryFieldsSelect--count {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  font-size: 0.75rem;
+}
+
+.SummaryFieldsSelect--chevron {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  transition: transform 0.15s ease;
+}
+
+.SummaryFieldsSelect--chevron.is-expanded {
+  transform: rotate(180deg);
+}
+
+.SummaryFieldsSelect--panel {
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  overflow: hidden;
+  padding: 0.35rem;
+}
+
+.SummaryFieldsSelect--search.ant-input-affix-wrapper {
+  background-color: var(--surface-primary);
+  border-color: var(--border-default);
+}
+
+.SummaryFieldsSelect--search.ant-input-affix-wrapper:hover,
+.SummaryFieldsSelect--search.ant-input-affix-wrapper-focused {
+  border-color: var(--border-strong);
+}
+
+.SummaryFieldsSelect--search.ant-input-affix-wrapper-focused {
+  border-color: var(--interactive-primary);
+  box-shadow: 0 0 0 2px var(--interactive-primary-light);
+}
+
+.SummaryFieldsSelect--search .ant-input {
+  background-color: transparent;
+  color: var(--text-primary);
+}
+
+.SummaryFieldsSelect--search .ant-input::placeholder {
+  color: var(--text-muted);
+}
+
+.SummaryFieldsSelect--list {
+  display: flex;
+  flex-direction: column;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.SummaryFieldsSelect--option {
+  align-items: center;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.2rem 0.15rem;
+}
+
+.SummaryFieldsSelect--option:hover:not(.is-disabled) {
+  background: var(--surface-hover);
+}
+
+.SummaryFieldsSelect--option.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.SummaryFieldsSelect--option .ant-checkbox-wrapper {
+  flex-shrink: 0;
+  margin-inline-end: 0;
+}
+
+.SummaryFieldsSelect--optionKey {
+  color: var(--text-primary);
+  flex: 1;
+  font-size: 0.85em;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.SummaryFieldsSelect--coverage {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+
+.SummaryFieldsSelect--empty {
+  color: var(--text-muted);
+  font-size: 0.85em;
+  padding: 0.35rem 0.15rem;
+}
+
+.SummaryFieldsSelect .ant-checkbox .ant-checkbox-inner {
+  background-color: var(--surface-primary);
+  border-color: var(--border-strong);
+}
+
+.SummaryFieldsSelect .ant-checkbox-wrapper:hover .ant-checkbox-inner,
+.SummaryFieldsSelect .ant-checkbox:hover .ant-checkbox-inner {
+  border-color: var(--interactive-primary);
+}
+
+.SummaryFieldsSelect .ant-checkbox-checked .ant-checkbox-inner {
+  background-color: var(--interactive-primary);
+  border-color: var(--interactive-primary);
+}
+
+.SummaryFieldsSelect .ant-checkbox-checked .ant-checkbox-inner::after {
+  border-color: var(--text-inverse);
+}
+
+.SummaryFieldsSelect .ant-checkbox-disabled .ant-checkbox-inner {
+  background-color: var(--surface-component-background);
+  border-color: var(--border-default);
+}

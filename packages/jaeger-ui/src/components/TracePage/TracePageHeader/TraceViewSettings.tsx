@@ -2,79 +2,120 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { Button, Dropdown } from 'antd';
-import type { MenuProps } from 'antd';
+import { Button, Popover } from 'antd';
 import { IoSettingsOutline, IoCheckmark } from 'react-icons/io5';
 
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
+import SummaryFieldsSelect from './SummaryFieldsSelect';
+import { AvailableField } from '../TraceTimelineViewer/summaryFieldsUtils';
 
 import './TraceViewSettings.css';
 
 type Props = {
+  availableFields: AvailableField[];
   className?: string;
   detailPanelMode: 'inline' | 'sidepanel';
   enableSidePanel: boolean;
   onDetailPanelModeToggle: () => void;
+  onSelectedSummaryFieldsChange: (fields: string[]) => void;
   onTimelineToggle: () => void;
+  selectedSummaryFields: string[];
   timelineBarsVisible: boolean;
 };
 
-const CHECK_STYLE = { marginRight: 8, fontSize: 14 };
-const CHECK_PLACEHOLDER = <span style={{ display: 'inline-block', width: 22 }} />;
-
 export default function TraceViewSettings(props: Props) {
   const {
+    availableFields,
     className,
     detailPanelMode,
     enableSidePanel,
     onDetailPanelModeToggle,
+    onSelectedSummaryFieldsChange,
     onTimelineToggle,
+    selectedSummaryFields,
     timelineBarsVisible,
   } = props;
 
   const [kbdModalVisible, setKbdModalVisible] = React.useState(false);
+  const [settingsOpen, setSettingsOpen] = React.useState(false);
 
-  const items: MenuProps['items'] = [
-    {
-      key: 'timeline',
-      icon: timelineBarsVisible ? <IoCheckmark style={CHECK_STYLE} /> : CHECK_PLACEHOLDER,
-      label: 'Show Timeline',
-      onClick: onTimelineToggle,
-    },
-  ];
+  const closeSettings = React.useCallback(() => setSettingsOpen(false), []);
 
-  if (enableSidePanel) {
-    const isSidePanel = detailPanelMode === 'sidepanel';
-    items.push({
-      key: 'detail-panel-mode',
-      icon: isSidePanel ? <IoCheckmark style={CHECK_STYLE} /> : CHECK_PLACEHOLDER,
-      label: 'Show Span in Sidebar',
-      onClick: onDetailPanelModeToggle,
-    });
-  }
+  const handleTimelineToggle = React.useCallback(() => {
+    onTimelineToggle();
+    closeSettings();
+  }, [closeSettings, onTimelineToggle]);
 
-  items.push(
-    { type: 'divider' },
-    {
-      key: 'keyboard-shortcuts',
-      icon: CHECK_PLACEHOLDER,
-      label: 'Keyboard Shortcuts',
-      onClick: () => setKbdModalVisible(true),
-    }
+  const handleDetailPanelModeToggle = React.useCallback(() => {
+    onDetailPanelModeToggle();
+    closeSettings();
+  }, [closeSettings, onDetailPanelModeToggle]);
+
+  const handleKeyboardShortcuts = React.useCallback(() => {
+    closeSettings();
+    setKbdModalVisible(true);
+  }, [closeSettings]);
+
+  const panelContent = (
+    <div className="TraceViewSettings--panel" data-testid="trace-view-settings-panel">
+      <button className="TraceViewSettings--menuItem" type="button" onClick={handleTimelineToggle}>
+        {timelineBarsVisible ? (
+          <IoCheckmark className="TraceViewSettings--check" />
+        ) : (
+          <span className="TraceViewSettings--checkPlaceholder" />
+        )}
+        Show Timeline
+      </button>
+      {enableSidePanel && (
+        <button className="TraceViewSettings--menuItem" type="button" onClick={handleDetailPanelModeToggle}>
+          {detailPanelMode === 'sidepanel' ? (
+            <IoCheckmark className="TraceViewSettings--check" />
+          ) : (
+            <span className="TraceViewSettings--checkPlaceholder" />
+          )}
+          Show Span in Sidebar
+        </button>
+      )}
+      {availableFields.length > 0 && (
+        <>
+          <div className="TraceViewSettings--divider" />
+          <div className="TraceViewSettings--section">
+            <div className="TraceViewSettings--sectionLabel">Summary fields</div>
+            <SummaryFieldsSelect
+              availableFields={availableFields}
+              onSelectedFieldsChange={onSelectedSummaryFieldsChange}
+              selectedFields={selectedSummaryFields}
+            />
+          </div>
+        </>
+      )}
+      <div className="TraceViewSettings--divider" />
+      <button className="TraceViewSettings--menuItem" type="button" onClick={handleKeyboardShortcuts}>
+        <span className="TraceViewSettings--checkPlaceholder" />
+        Keyboard Shortcuts
+      </button>
+    </div>
   );
 
   return (
     <>
-      <Dropdown menu={{ items }} trigger={['click']}>
+      <Popover
+        content={panelContent}
+        onOpenChange={setSettingsOpen}
+        open={settingsOpen}
+        placement="bottomRight"
+        trigger="click"
+      >
         <Button
           className={`TraceViewSettings ${className || ''}`}
+          data-testid="trace-view-settings"
           htmlType="button"
           aria-label="Trace view settings"
           title="Trace view settings"
         >
           <IoSettingsOutline className="TraceViewSettings--icon" />
         </Button>
-      </Dropdown>
+      </Popover>
       <KeyboardShortcutsHelp open={kbdModalVisible} onClose={() => setKbdModalVisible(false)} />
     </>
   );

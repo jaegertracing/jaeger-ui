@@ -7,14 +7,6 @@ SPDX-License-Identifier: Apache-2.0
   border-bottom: 1px solid var(--border-default);
 }
 
-.TraceTimelineViewer--fixedHeaderSpacer {
-  flex-shrink: 0;
-  height: calc(
-    var(--timeline-header-row-height) + var(--summary-fields-bar-height) -
-      var(--span-graph-padding-bottom, 0px)
-  );
-}
-
 .TraceTimelineViewer--sidePanelLayout {
   align-items: flex-start;
   display: flex;

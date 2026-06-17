@@ -2,23 +2,24 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
-import SummaryFieldsBar from './index';
+import SummaryFieldsSelect from './index';
 import transformTraceData from '../../../../model/transform-trace-data';
 import { IOtelTrace } from '../../../../types/otel';
 import { SpanData, TraceData } from '../../../../types/trace';
-import { buildAvailableFields } from '../summaryFieldsUtils';
+import { buildAvailableFields } from '../../TraceTimelineViewer/summaryFieldsUtils';
 
-const barTestTrace: TraceData & { spans: SpanData[] } = {
-  traceID: 'bar-test',
+const selectTestTrace: TraceData & { spans: SpanData[] } = {
+  traceID: 'select-test',
   processes: { p1: { serviceName: 'svc', tags: [] } },
   spans: [
     {
       spanID: 's1',
-      traceID: 'bar-test',
+      traceID: 'select-test',
       operationName: 'op',
       duration: 1,
       startTime: 1,
@@ -33,7 +34,7 @@ const barTestTrace: TraceData & { spans: SpanData[] } = {
     },
     {
       spanID: 's2',
-      traceID: 'bar-test',
+      traceID: 'select-test',
       operationName: 'op',
       duration: 1,
       startTime: 2,
@@ -44,7 +45,7 @@ const barTestTrace: TraceData & { spans: SpanData[] } = {
   ],
 };
 
-const trace = transformTraceData(barTestTrace)!.asOtelTrace();
+const trace = transformTraceData(selectTestTrace)!.asOtelTrace();
 const availableFields = buildAvailableFields(trace);
 
 const emptyTrace = {
@@ -52,7 +53,7 @@ const emptyTrace = {
 } as unknown as IOtelTrace;
 const emptyAvailableFields = buildAvailableFields(emptyTrace);
 
-describe('SummaryFieldsBar', () => {
+describe('SummaryFieldsSelect', () => {
   let onSelectedFieldsChange: (fields: string[]) => void;
 
   beforeEach(() => {
@@ -61,7 +62,7 @@ describe('SummaryFieldsBar', () => {
 
   it('renders null when trace has no attribute keys', () => {
     const { container } = render(
-      <SummaryFieldsBar
+      <SummaryFieldsSelect
         availableFields={emptyAvailableFields}
         selectedFields={[]}
         onSelectedFieldsChange={onSelectedFieldsChange}
@@ -70,65 +71,95 @@ describe('SummaryFieldsBar', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('renders bar with field checkboxes and count tag', () => {
+  it('renders collapsed trigger with placeholder and count', () => {
     render(
-      <SummaryFieldsBar
+      <SummaryFieldsSelect
         availableFields={availableFields}
         selectedFields={[]}
         onSelectedFieldsChange={onSelectedFieldsChange}
       />
     );
-    expect(screen.getByTestId('summary-fields-bar')).toBeInTheDocument();
-    expect(screen.getByText('0 of 3')).toBeInTheDocument();
+    expect(screen.getByTestId('summary-fields-select')).toBeInTheDocument();
+    expect(screen.getByText('Select up to 3 fields...')).toBeInTheDocument();
+    expect(screen.getByText('0/3')).toBeInTheDocument();
+    expect(screen.queryByTestId('summary-fields-list')).not.toBeInTheDocument();
+  });
+
+  it('expands checkbox list inside the panel when trigger is clicked', async () => {
+    render(
+      <SummaryFieldsSelect
+        availableFields={availableFields}
+        selectedFields={[]}
+        onSelectedFieldsChange={onSelectedFieldsChange}
+      />
+    );
+    await userEvent.click(screen.getByTestId('summary-fields-trigger'));
+    expect(screen.getByTestId('summary-fields-list')).toBeInTheDocument();
     expect(screen.getByText('alpha')).toBeInTheDocument();
   });
 
-  it('adds a field when checkbox is checked', () => {
+  it('shows summary label for multiple selected fields when collapsed', () => {
     render(
-      <SummaryFieldsBar
+      <SummaryFieldsSelect
+        availableFields={availableFields}
+        selectedFields={['alpha', 'beta']}
+        onSelectedFieldsChange={onSelectedFieldsChange}
+      />
+    );
+    expect(screen.getByText('2 fields selected')).toBeInTheDocument();
+    expect(screen.getByText('2/3')).toBeInTheDocument();
+  });
+
+  it('adds a field when checkbox is checked', async () => {
+    render(
+      <SummaryFieldsSelect
         availableFields={availableFields}
         selectedFields={[]}
         onSelectedFieldsChange={onSelectedFieldsChange}
       />
     );
+    await userEvent.click(screen.getByTestId('summary-fields-trigger'));
     fireEvent.click(screen.getByLabelText('Add alpha from summary fields'));
     expect(onSelectedFieldsChange).toHaveBeenCalledWith(['alpha']);
   });
 
-  it('removes a field when checkbox is unchecked', () => {
+  it('removes a field when checkbox is unchecked', async () => {
     render(
-      <SummaryFieldsBar
+      <SummaryFieldsSelect
         availableFields={availableFields}
         selectedFields={['alpha']}
         onSelectedFieldsChange={onSelectedFieldsChange}
       />
     );
+    await userEvent.click(screen.getByTestId('summary-fields-trigger'));
     fireEvent.click(screen.getByLabelText('Remove alpha from summary fields'));
     expect(onSelectedFieldsChange).toHaveBeenCalledWith([]);
   });
 
-  it('does not add more than 3 fields', () => {
+  it('does not add more than 3 fields', async () => {
     render(
-      <SummaryFieldsBar
+      <SummaryFieldsSelect
         availableFields={availableFields}
         selectedFields={['alpha', 'beta', 'gamma']}
         onSelectedFieldsChange={onSelectedFieldsChange}
       />
     );
+    await userEvent.click(screen.getByTestId('summary-fields-trigger'));
     const deltaCheckbox = screen.getByLabelText('Add delta from summary fields');
     expect(deltaCheckbox).toBeDisabled();
     fireEvent.click(deltaCheckbox);
     expect(onSelectedFieldsChange).not.toHaveBeenCalled();
   });
 
-  it('filters fields by search query', () => {
+  it('filters fields by search query', async () => {
     render(
-      <SummaryFieldsBar
+      <SummaryFieldsSelect
         availableFields={availableFields}
         selectedFields={[]}
         onSelectedFieldsChange={onSelectedFieldsChange}
       />
     );
+    await userEvent.click(screen.getByTestId('summary-fields-trigger'));
     fireEvent.change(screen.getByPlaceholderText('Search attribute keys...'), { target: { value: 'alp' } });
     expect(screen.getByText('alpha')).toBeInTheDocument();
     expect(screen.queryByText('beta')).not.toBeInTheDocument();

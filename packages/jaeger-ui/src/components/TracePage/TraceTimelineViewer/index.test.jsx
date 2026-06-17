@@ -164,17 +164,6 @@ describe('<TraceTimelineViewer>', () => {
     expect(screen.getAllByTestId('virtualized-trace-view-mock')).toHaveLength(initialCount + 1);
   });
 
-  it('renders SummaryFieldsBar when trace has span attributes', () => {
-    render(<TraceTimelineViewerImpl {...props} />);
-    expect(screen.getByTestId('summary-fields-bar')).toBeInTheDocument();
-  });
-
-  it('calls setSelectedSummaryFields when a summary field is toggled', () => {
-    render(<TraceTimelineViewerImpl {...props} />);
-    fireEvent.click(screen.getAllByRole('checkbox')[0]);
-    expect(mockLayoutPrefsStore.setSelectedSummaryFields).toHaveBeenCalled();
-  });
-
   it('does not auto-persist summary fields filtered by trace availability', () => {
     mockLayoutPrefsStore.selectedSummaryFields = ['customer.id'];
     const traceWithoutCustomerId = transformTraceData({

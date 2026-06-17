@@ -88,10 +88,9 @@ SPDX-License-Identifier: Apache-2.0
   /* Layout Variables */
   --nav-height: 48px;
   --timeline-header-row-height: 38px;
-  --summary-fields-bar-height: 36px;
-  /* Visual trim below minimap; tuned to 2px to align fixed summary bar with minimap edge */
+  /* Visual trim below minimap; tuned to 2px to align fixed timeline header with minimap edge */
   --span-graph-padding-bottom: 2px;
-  /* Right inset for trace page toolbar controls (AltViewOptions) and SummaryFieldsBar search */
+  /* Right inset for trace page toolbar controls (AltViewOptions) */
   --content-right-padding: 0.5rem;
 
   /* 
