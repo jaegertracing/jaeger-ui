@@ -157,13 +157,12 @@ const TraceFlamegraph = ({ trace }: any) => {
   }, [flameData, showChart, viewMode]);
 
   useEffect(() => {
-    if (!chartRef.current) return;
     const query = selectedItem || searchQuery;
+    searchActiveRef.current = Boolean(query);
+    if (!chartRef.current) return;
     if (query) {
-      searchActiveRef.current = true;
       chartRef.current.search(query);
     } else {
-      searchActiveRef.current = false;
       chartRef.current.clear();
     }
   }, [searchQuery, selectedItem, viewMode]);
