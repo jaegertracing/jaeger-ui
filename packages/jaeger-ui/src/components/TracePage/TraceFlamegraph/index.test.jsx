@@ -259,11 +259,16 @@ describe('<TraceFlamegraph />', () => {
     });
 
     it('colorMapper returns highlight color when d.highlight is true', () => {
-      expect(callbacks.colorMapper({ highlight: true, data: { name: 'svc: op' } }, '#000')).toBe('#E600E6');
+      expect(
+        callbacks.colorMapper({ highlight: true, data: { name: 'svc: op', serviceName: 'svc' } }, '#000')
+      ).toBe('#E600E6');
     });
 
     it('colorMapper returns service color normally', () => {
-      const color = callbacks.colorMapper({ data: { name: 'load-generator: op' } }, '#000');
+      const color = callbacks.colorMapper(
+        { data: { name: 'load-generator: op', serviceName: 'load-generator' } },
+        '#000'
+      );
       expect(color).toBeTruthy();
       expect(color).not.toBe('#ccc');
     });
@@ -271,7 +276,7 @@ describe('<TraceFlamegraph />', () => {
     it('colorMapper returns #ccc for invalid data', () => {
       expect(callbacks.colorMapper({}, '#000')).toBe('#ccc');
       expect(callbacks.colorMapper({ data: {} }, '#000')).toBe('#ccc');
-      expect(callbacks.colorMapper({ data: { name: '' } }, '#000')).toBe('#ccc');
+      expect(callbacks.colorMapper({ data: { serviceName: '' } }, '#000')).toBe('#ccc');
     });
 
     it('searchMatch performs case-insensitive substring matching', () => {
@@ -457,7 +462,10 @@ describe('<TraceFlamegraph />', () => {
       const searchInput = screen.getByTestId('flamegraph-search');
       fireEvent.change(searchInput, { target: { value: 'test' } });
       // Now the colorMapper should return faded colors for non-highlighted nodes
-      const color = callbacks.colorMapper({ data: { name: 'load-generator: op' } }, '#000');
+      const color = callbacks.colorMapper(
+        { data: { name: 'load-generator: op', serviceName: 'load-generator' } },
+        '#000'
+      );
       expect(color).toMatch(/^rgba\(\d+, \d+, \d+, 0\.3\)$/);
     });
 
@@ -465,7 +473,10 @@ describe('<TraceFlamegraph />', () => {
       render(<TraceFlamegraph trace={otelTrace} />);
       const searchInput = screen.getByTestId('flamegraph-search');
       fireEvent.change(searchInput, { target: { value: 'test' } });
-      const color = callbacks.colorMapper({ highlight: true, data: { name: 'svc: op' } }, '#000');
+      const color = callbacks.colorMapper(
+        { highlight: true, data: { name: 'svc: op', serviceName: 'svc' } },
+        '#000'
+      );
       expect(color).toBe('#E600E6');
     });
   });

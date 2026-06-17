@@ -24,6 +24,7 @@ import { IOtelTrace, IOtelSpan } from '../../../types/otel';
 
 export interface IFlameNode {
   name: string;
+  serviceName: string;
   value: number;
   // Real aggregated duration for display. Equals `value` for leaf/grouped nodes,
   // but preserves the original when `ensureParentCoversChildren` inflates `value`.
@@ -36,6 +37,7 @@ export function convertOtelTraceToFlameData(trace: IOtelTrace): IFlameNode {
   const rootSpans = trace.rootSpans;
   const virtualRoot: IFlameNode = {
     name: 'total',
+    serviceName: '',
     value: 0,
     duration: 0,
     count: 1,
@@ -82,6 +84,7 @@ function buildSubtree(span: IOtelSpan): IFlameNode {
 
   return {
     name: `${span.resource.serviceName}: ${span.name}`,
+    serviceName: span.resource.serviceName,
     value: span.duration,
     duration: span.duration,
     count: 1,

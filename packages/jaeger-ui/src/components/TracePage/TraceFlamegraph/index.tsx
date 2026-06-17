@@ -87,8 +87,8 @@ const TraceFlamegraph = ({ trace }: any) => {
       })
       .setColorMapper((d: any, _originalColor: string) => {
         if (d.highlight) return HIGHLIGHT_COLOR;
-        if (!d || !d.data || !d.data.name) return '#ccc';
-        const serviceName = d.data.name.split(': ')[0];
+        if (!d || !d.data || !d.data.serviceName) return '#ccc';
+        const { serviceName } = d.data;
         if (searchActiveRef.current) {
           const [r, g, b] = colorGenerator.getRgbColorByKey(serviceName);
           return `rgba(${r}, ${g}, ${b}, 0.3)`;
