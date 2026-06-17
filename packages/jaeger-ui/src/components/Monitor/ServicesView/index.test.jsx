@@ -52,10 +52,12 @@ vi.mock('./useMetricsQuery', async () => ({
   useServiceMetricsQuery: jest.fn(() => ({
     data: { serviceMetrics, serviceError: originInitialState.serviceError },
     isFetching: false,
+    isLoading: false,
   })),
   useOperationMetricsQuery: jest.fn(() => ({
     data: { serviceOpsMetrics, opsError: originInitialState.opsError },
     isFetching: false,
+    isLoading: false,
   })),
 }));
 
@@ -64,10 +66,12 @@ const defaultUseServicesImpl = () => ({ data: ['service1', 'service2'], isLoadin
 const defaultServiceMetricsImpl = () => ({
   data: { serviceMetrics, serviceError: originInitialState.serviceError },
   isFetching: false,
+  isLoading: false,
 });
 const defaultOperationMetricsImpl = () => ({
   data: { serviceOpsMetrics, opsError: originInitialState.opsError },
   isFetching: false,
+  isLoading: false,
 });
 
 vi.mock('lodash/debounce', async () => mockDefault(fn => fn));
@@ -275,10 +279,33 @@ describe('<MonitorATMServicesView>', () => {
         serviceError: originInitialState.serviceError,
       },
       isFetching: false,
+      isLoading: false,
     });
     renderWithRouter(<MonitorATMServicesView />);
     expect(screen.getAllByText(/No data yet!/)[0]).toBeInTheDocument();
     expect(screen.getByText(/instructions/)).toBeInTheDocument();
+  });
+
+  it('does not show no-metrics alert while service metrics are loading', () => {
+    cleanup();
+    useServiceMetricsQuery.mockReturnValue({
+      data: undefined,
+      isFetching: true,
+      isLoading: true,
+    });
+    renderWithRouter(<MonitorATMServicesView />);
+    expect(screen.queryByText(/No data yet!/)).not.toBeInTheDocument();
+  });
+
+  it('does not show no-metrics alert while service metrics are refetching', () => {
+    cleanup();
+    useServiceMetricsQuery.mockReturnValue({
+      data: { serviceMetrics, serviceError: originInitialState.serviceError },
+      isFetching: true,
+      isLoading: false,
+    });
+    renderWithRouter(<MonitorATMServicesView />);
+    expect(screen.queryByText(/No data yet!/)).not.toBeInTheDocument();
   });
 
   it('handles null error rate values in metrics', () => {

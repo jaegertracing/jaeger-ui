@@ -232,6 +232,8 @@ export function MonitorATMServicesViewImpl() {
   const serviceErrorRate = serviceMetrics ? serviceMetrics.service_error_rate : null;
   const controlsInitialLoading = serviceMetricsInitialLoading || operationMetricsInitialLoading;
   const refreshLoading = refreshRequested && (serviceMetricsFetching || operationMetricsFetching);
+  const showNoMetricsAlert =
+    !serviceMetricsFetching && !serviceMetricsInitialLoading && _isEmpty(serviceMetrics?.service_latencies);
 
   if (servicesLoading) {
     return <LoadingIndicator vcentered centered />;
@@ -239,7 +241,7 @@ export function MonitorATMServicesViewImpl() {
 
   return (
     <>
-      {_isEmpty(serviceMetrics && serviceMetrics.service_latencies) && (
+      {showNoMetricsAlert && (
         <Alert
           message={
             <>

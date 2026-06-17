@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useQuery, UseQueryResult } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, UseQueryResult } from '@tanstack/react-query';
 import JaegerAPI from '../../../api/jaeger';
 import type { ApiError } from '../../../types/api-error';
 import type {
@@ -273,13 +273,14 @@ export function useServiceMetricsQuery(
       const payload = (await Promise.allSettled([
         JaegerAPI.fetchMetrics('latencies', [serviceName!], { ...params!, quantile: 0.5 }),
         JaegerAPI.fetchMetrics('latencies', [serviceName!], { ...params!, quantile: 0.75 }),
-        JaegerAPI.fetchMetrics('latencies', [serviceName!], { ...params! }),
+        JaegerAPI.fetchMetrics('latencies', [serviceName!], { ...params!, quantile: 0.95 }),
         JaegerAPI.fetchMetrics('calls', [serviceName!], { ...params! }),
         JaegerAPI.fetchMetrics('errors', [serviceName!], { ...params! }),
       ])) as FetchedAllServiceMetricsResponse;
       return transformServiceMetrics(payload);
     },
     enabled: Boolean(serviceName && params),
+    placeholderData: keepPreviousData,
     staleTime: 60 * 1000,
     refetchOnWindowFocus: false,
   });
@@ -307,6 +308,7 @@ export function useOperationMetricsQuery(
       return transformOperationMetrics(payload);
     },
     enabled: Boolean(serviceName && params),
+    placeholderData: keepPreviousData,
     staleTime: 60 * 1000,
     refetchOnWindowFocus: false,
   });
