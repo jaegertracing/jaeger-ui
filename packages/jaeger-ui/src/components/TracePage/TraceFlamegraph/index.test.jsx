@@ -73,6 +73,11 @@ const otelTrace = transformTraceData(testTrace.data).asOtelTrace();
 describe('<TraceFlamegraph />', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    callbacks.onClick = null;
+    callbacks.colorMapper = null;
+    callbacks.getName = null;
+    callbacks.labelHandler = null;
+    callbacks.searchMatch = null;
   });
 
   it('renders the flamegraph wrapper', () => {
@@ -293,18 +298,18 @@ describe('<TraceFlamegraph />', () => {
 
     it('onClick with non-root sets chartZoomed', () => {
       act(() => {
-        callbacks.onClick({ data: { name: 'svc: op' } });
+        callbacks.onClick({ parent: {}, data: { name: 'svc: op' } });
       });
       // Collapse button should be enabled now
       expect(screen.getByTestId('flamegraph-collapse')).not.toBeDisabled();
     });
 
-    it('onClick with root name clears chartZoomed', () => {
+    it('onClick with root (no parent) clears chartZoomed', () => {
       act(() => {
-        callbacks.onClick({ data: { name: 'svc: op' } });
+        callbacks.onClick({ parent: {}, data: { name: 'svc: op' } });
       });
       act(() => {
-        callbacks.onClick({ data: { name: 'total' } });
+        callbacks.onClick({ parent: null, data: { name: 'total' } });
       });
       expect(screen.getByTestId('flamegraph-collapse')).toBeDisabled();
     });

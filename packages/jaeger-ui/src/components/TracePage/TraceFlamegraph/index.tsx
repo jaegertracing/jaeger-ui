@@ -68,6 +68,13 @@ const TraceFlamegraph = ({ trace }: any) => {
   const showTable = viewMode === 'table' || viewMode === 'both';
 
   useEffect(() => {
+    if (!showChart) {
+      setContextMenu(null);
+      setTooltip(null);
+    }
+  }, [showChart]);
+
+  useEffect(() => {
     if (!containerRef.current || !flameData || !showChart) return;
 
     const container = containerRef.current;
@@ -84,7 +91,7 @@ const TraceFlamegraph = ({ trace }: any) => {
       .selfValue(false)
       .transitionDuration(300)
       .onClick((d: any) => {
-        const isRoot = d?.data?.name === flameData.name;
+        const isRoot = !d.parent;
         setChartZoomed(!isRoot);
         zoomedNodeRef.current = isRoot ? null : d.data;
       })
