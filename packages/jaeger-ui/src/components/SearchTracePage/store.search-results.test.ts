@@ -49,6 +49,34 @@ describe('useSearchResultsStore', () => {
     });
   });
 
+  describe('persist flag', () => {
+    it('updates sortBy in state but skips localStorage when persist:false', async () => {
+      useSearchResultsStore.setState({ sortBy: MOST_RECENT });
+      await new Promise(r => setTimeout(r, 0));
+      const before = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
+
+      useSearchResultsStore.getState().setSortBy(LONGEST_FIRST, { persist: false });
+      await new Promise(r => setTimeout(r, 0));
+
+      expect(useSearchResultsStore.getState().sortBy).toBe(LONGEST_FIRST);
+      const after = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
+      expect(after.state.sortBy).toBe(before.state.sortBy);
+    });
+
+    it('updates viewMode in state but skips localStorage when persist:false', async () => {
+      useSearchResultsStore.setState({ viewMode: 'list' });
+      await new Promise(r => setTimeout(r, 0));
+      const before = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
+
+      useSearchResultsStore.getState().setViewMode('table', { persist: false });
+      await new Promise(r => setTimeout(r, 0));
+
+      expect(useSearchResultsStore.getState().viewMode).toBe('table');
+      const after = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
+      expect(after.state.viewMode).toBe(before.state.viewMode);
+    });
+  });
+
   describe('rehydration', () => {
     it('sanitizes invalid sortBy from persisted state on rehydration', async () => {
       localStorage.setItem(
