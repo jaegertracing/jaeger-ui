@@ -17,7 +17,13 @@ function formatAttributeValue(value: AttributeValue): string {
   if (value === null || value === undefined) {
     return '';
   }
-  if (typeof value === 'object' && !Array.isArray(value) && !(value instanceof Uint8Array)) {
+  if (value instanceof Uint8Array) {
+    return JSON.stringify(Array.from(value));
+  }
+  if (Array.isArray(value)) {
+    return JSON.stringify(value);
+  }
+  if (typeof value === 'object') {
     return JSON.stringify(value);
   }
   return String(value);

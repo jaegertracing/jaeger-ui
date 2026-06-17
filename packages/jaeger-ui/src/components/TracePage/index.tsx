@@ -292,9 +292,8 @@ export function TracePageImpl(props: TProps) {
   const measureHeaderHeight = useCallback(() => {
     const elm = headerElmRef.current;
     if (!elm) return;
-    const measured = Math.ceil(
-      Math.max(elm.getBoundingClientRect().height, elm.offsetHeight, elm.clientHeight)
-    );
+    const rectHeight = elm.getBoundingClientRect().height;
+    const measured = Math.ceil(rectHeight > 0 ? rectHeight : Math.max(elm.offsetHeight, elm.clientHeight));
     setHeaderHeight(prev => (prev === measured ? prev : measured));
   }, []);
 
@@ -321,14 +320,9 @@ export function TracePageImpl(props: TProps) {
 
   useLayoutEffect(() => {
     measureHeaderHeight();
-    let raf2 = 0;
-    const raf1 = requestAnimationFrame(() => {
-      measureHeaderHeight();
-      raf2 = requestAnimationFrame(measureHeaderHeight);
-    });
+    const rafId = requestAnimationFrame(measureHeaderHeight);
     return () => {
-      cancelAnimationFrame(raf1);
-      cancelAnimationFrame(raf2);
+      cancelAnimationFrame(rafId);
     };
   }, [measureHeaderHeight, traceData?.traceID, slimView, viewType]);
 

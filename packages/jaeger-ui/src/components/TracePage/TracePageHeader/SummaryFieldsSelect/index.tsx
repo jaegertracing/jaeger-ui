@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useId, useMemo, useState } from 'react';
 import { Checkbox, Input } from 'antd';
 import { IoChevronDown } from 'react-icons/io5';
 
@@ -32,6 +32,7 @@ export default function SummaryFieldsSelect({
 }: SummaryFieldsSelectProps) {
   const [expanded, setExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const fieldListId = useId();
 
   const selectedSet = useMemo(() => new Set(selectedFields), [selectedFields]);
 
@@ -73,8 +74,8 @@ export default function SummaryFieldsSelect({
       onMouseDown={event => event.stopPropagation()}
     >
       <button
+        aria-controls={fieldListId}
         aria-expanded={expanded}
-        aria-haspopup="listbox"
         className="SummaryFieldsSelect--trigger"
         data-testid="summary-fields-trigger"
         onClick={handleToggleExpanded}
@@ -103,6 +104,7 @@ export default function SummaryFieldsSelect({
           <div
             className="SummaryFieldsSelect--list"
             data-testid="summary-fields-list"
+            id={fieldListId}
             role="group"
             aria-label="Summary field selection"
           >

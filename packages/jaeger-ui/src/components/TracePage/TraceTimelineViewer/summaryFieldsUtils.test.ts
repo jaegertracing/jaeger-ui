@@ -221,6 +221,34 @@ describe('summaryFieldsUtils', () => {
     expect(lookup.get('obj-span')).toEqual({ meta: '{"region":"us-east"}' });
   });
 
+  it('buildSummaryLookup stringifies array attribute values', () => {
+    const arrayTrace = {
+      spans: [
+        {
+          spanID: 'array-span',
+          attributes: [{ key: 'tags', value: ['a', 'b'] }],
+        },
+      ],
+    } as unknown as IOtelTrace;
+
+    const lookup = buildSummaryLookup(arrayTrace, ['tags']);
+    expect(lookup.get('array-span')).toEqual({ tags: '["a","b"]' });
+  });
+
+  it('buildSummaryLookup stringifies Uint8Array attribute values', () => {
+    const bytesTrace = {
+      spans: [
+        {
+          spanID: 'bytes-span',
+          attributes: [{ key: 'payload', value: new Uint8Array([1, 2, 3]) }],
+        },
+      ],
+    } as unknown as IOtelTrace;
+
+    const lookup = buildSummaryLookup(bytesTrace, ['payload']);
+    expect(lookup.get('bytes-span')).toEqual({ payload: '[1,2,3]' });
+  });
+
   it('buildAvailableFields sorts equal-coverage keys alphabetically', () => {
     const tieTrace = transformTraceData({
       traceID: 'tie',
