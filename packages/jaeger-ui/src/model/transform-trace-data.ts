@@ -14,21 +14,18 @@ import OtelTraceFacade from './OtelTraceFacade';
 export function deduplicateTags(spanTags: ReadonlyArray<KeyValuePair>) {
   const warningsHash: Map<string, string> = new Map<string, string>();
   const tags: KeyValuePair[] = [];
-  // Track seen values per key so duplicate detection is a single O(n) pass
-  // instead of rescanning the accumulated list for every tag. Keying by value
-  // (rather than a combined key+value string) avoids copying large tag values.
-  const seenValuesByKey = new Map<string, Set<KeyValuePair['value']>>();
+  const seen = new Map<string, Set<KeyValuePair['value']>>();
   for (const tag of spanTags) {
-    let seenValues = seenValuesByKey.get(tag.key);
-    if (!seenValues) {
-      seenValues = new Set();
-      seenValuesByKey.set(tag.key, seenValues);
-    }
-    if (seenValues.has(tag.value)) {
-      warningsHash.set(`${tag.key}\0${String(tag.value)}`, `Duplicate tag "${tag.key}:${tag.value}"`);
-    } else {
-      seenValues.add(tag.value);
+    const values = seen.get(tag.key);
+    if (!values || !values.has(tag.value)) {
+      if (values) {
+        values.add(tag.value);
+      } else {
+        seen.set(tag.key, new Set([tag.value]));
+      }
       tags.push(tag);
+    } else {
+      warningsHash.set(`${tag.key}\0${String(tag.value)}`, `Duplicate tag "${tag.key}:${tag.value}"`);
     }
   }
   const warnings = Array.from(warningsHash.values());
