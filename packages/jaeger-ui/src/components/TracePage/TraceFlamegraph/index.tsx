@@ -74,7 +74,7 @@ const TraceFlamegraph = ({ trace }: any) => {
     container.innerHTML = '';
 
     const rootFrameColor =
-      getComputedStyle(container).getPropertyValue('--surface-tertiary').trim() || '#ccc';
+      getComputedStyle(container).getPropertyValue('--border-strongest').trim() || '#ccc';
     const rootValue = flameData.duration ?? flameData.value;
     const chart = flamegraph()
       .width(container.clientWidth || 800)
