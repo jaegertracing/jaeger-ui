@@ -164,7 +164,7 @@ export function SearchTracePageImpl() {
   const handleSortChange = useCallback(
     (newSortBy: string) => {
       setSortBy(newSortBy);
-      trackSortByChange(newSortBy);
+      trackSortByChange(useSearchResultsStore.getState().sortBy);
     },
     [setSortBy]
   );

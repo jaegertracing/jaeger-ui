@@ -7,9 +7,12 @@ import { MOST_RECENT, LONGEST_FIRST, SHORTEST_FIRST, MOST_SPANS, LEAST_SPANS } f
 const STORAGE_KEY = 'jaeger.search-results.mode';
 
 describe('useSearchResultsStore', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     localStorage.removeItem(STORAGE_KEY);
-    useSearchResultsStore.setState({ viewMode: 'list', sortBy: MOST_RECENT });
+    useSearchResultsStore.getState().setViewMode('list');
+    useSearchResultsStore.getState().setSortBy(MOST_RECENT);
+    await new Promise(r => setTimeout(r, 0));
+    localStorage.removeItem(STORAGE_KEY);
   });
 
   describe('sortBy', () => {
@@ -26,7 +29,7 @@ describe('useSearchResultsStore', () => {
     );
 
     it('rejects unknown sort key and falls back to MOST_RECENT', () => {
-      useSearchResultsStore.setState({ sortBy: LONGEST_FIRST });
+      useSearchResultsStore.getState().setSortBy(LONGEST_FIRST);
       useSearchResultsStore.getState().setSortBy('INVALID_KEY');
       expect(useSearchResultsStore.getState().sortBy).toBe(MOST_RECENT);
     });
@@ -43,7 +46,7 @@ describe('useSearchResultsStore', () => {
     });
 
     it('switches back to list', () => {
-      useSearchResultsStore.setState({ viewMode: 'table' });
+      useSearchResultsStore.getState().setViewMode('table');
       useSearchResultsStore.getState().setViewMode('list');
       expect(useSearchResultsStore.getState().viewMode).toBe('list');
     });
@@ -51,7 +54,7 @@ describe('useSearchResultsStore', () => {
 
   describe('persist flag', () => {
     it('updates sortBy in state but skips localStorage when persist:false', async () => {
-      useSearchResultsStore.setState({ sortBy: MOST_RECENT });
+      useSearchResultsStore.getState().setSortBy(MOST_RECENT);
       await new Promise(r => setTimeout(r, 0));
       const before = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
 
@@ -64,7 +67,7 @@ describe('useSearchResultsStore', () => {
     });
 
     it('updates viewMode in state but skips localStorage when persist:false', async () => {
-      useSearchResultsStore.setState({ viewMode: 'list' });
+      useSearchResultsStore.getState().setViewMode('list');
       await new Promise(r => setTimeout(r, 0));
       const before = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
 

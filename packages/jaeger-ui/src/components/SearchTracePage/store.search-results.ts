@@ -19,17 +19,30 @@ function sanitizeViewMode(value: unknown): 'list' | 'table' {
 // ADR-0010 PR 2: setters accept { persist: false } to update state without
 // writing to localStorage — for URL-driven or heuristic overrides that
 // should not overwrite the user's saved preference.
-// One-shot flag: cleared by the setter, reset inside setItem after each write.
-let _writeEnabled = true;
+//
+// The skip flag lives inside the factory closure so it cannot be affected
+// by unrelated store instances or parallel test imports. The flag is a
+// one-shot: the setter clears it, setItem reads and resets it.
+// The storage methods guard against non-browser environments (SSR / Node).
+function createConditionalStorage() {
+  let _writeEnabled = true;
+  const skip = () => {
+    _writeEnabled = false;
+  };
+  const storage = createJSONStorage(() => ({
+    getItem: (name: string) => (typeof window !== 'undefined' ? localStorage.getItem(name) : null),
+    setItem: (name: string, value: string) => {
+      if (typeof window !== 'undefined' && _writeEnabled) localStorage.setItem(name, value);
+      _writeEnabled = true;
+    },
+    removeItem: (name: string) => {
+      if (typeof window !== 'undefined') localStorage.removeItem(name);
+    },
+  }));
+  return { storage, skip };
+}
 
-const storage = createJSONStorage(() => ({
-  getItem: (name: string) => localStorage.getItem(name),
-  setItem: (name: string, value: string) => {
-    if (_writeEnabled) localStorage.setItem(name, value);
-    _writeEnabled = true;
-  },
-  removeItem: (name: string) => localStorage.removeItem(name),
-}));
+const { storage, skip: skipNextWrite } = createConditionalStorage();
 
 type SetterOpts = { persist?: boolean };
 
@@ -46,11 +59,11 @@ export const useSearchResultsStore = create<SearchResultsStore>()(
       viewMode: 'list',
       sortBy: MOST_RECENT,
       setViewMode: (mode, opts = {}) => {
-        if (opts.persist === false) _writeEnabled = false;
+        if (opts.persist === false) skipNextWrite();
         set({ viewMode: mode });
       },
       setSortBy: (sortBy, opts = {}) => {
-        if (opts.persist === false) _writeEnabled = false;
+        if (opts.persist === false) skipNextWrite();
         set({ sortBy: sanitizeSortBy(sortBy) });
       },
     }),
