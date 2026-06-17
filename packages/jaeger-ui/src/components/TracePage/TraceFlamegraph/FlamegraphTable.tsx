@@ -12,6 +12,7 @@ import { Table, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import type { SorterResult } from 'antd/es/table/interface';
 
+import { useConfig } from '../../../hooks/useConfig';
 import colorGenerator from '../../../utils/color-generator';
 import { formatDuration, formatDurationCompact } from '../../../utils/date';
 import { Microseconds } from '../../../types/units';
@@ -28,6 +29,7 @@ type Props = {
 };
 
 const FlamegraphTable = ({ data, searchQuery, selectedItem, onRowClick, maxSelf, maxTotal }: Props) => {
+  const { useOpenTelemetryTerms } = useConfig();
   const [sortState, setSortState] = useState<{ field: string; order: 'ascend' | 'descend' }>({
     field: 'self',
     order: 'descend',
@@ -55,7 +57,7 @@ const FlamegraphTable = ({ data, searchQuery, selectedItem, onRowClick, maxSelf,
 
   const columns: ColumnsType<IFlamegraphTableRow> = [
     {
-      title: 'Service & Operation',
+      title: `Service & ${useOpenTelemetryTerms ? 'Span Name' : 'Operation'}`,
       dataIndex: 'name',
       key: 'name',
       sortOrder: sortState.field === 'name' ? sortState.order : undefined,
