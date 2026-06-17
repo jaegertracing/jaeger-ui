@@ -154,10 +154,10 @@ SPDX-License-Identifier: Apache-2.0
   color: var(--text-primary) !important;
 }
 
-/* Frame styling — visible divider between same-color bars */
+/* Frame styling — use page background as stroke to create visible gaps between bars */
 .Flamegraph-content--chart .d3-flame-graph rect {
-  stroke: var(--border-default);
-  stroke-width: 1.5px;
+  stroke: var(--surface-primary);
+  stroke-width: 1px;
 }
 
 /* Faded (non-matching) frames during search */
