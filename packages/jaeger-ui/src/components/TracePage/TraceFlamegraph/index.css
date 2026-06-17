@@ -146,8 +146,8 @@ SPDX-License-Identifier: Apache-2.0
   cursor: pointer;
 }
 
-/* Dark mode: d3-flame-graph text */
-[data-theme='dark'] .Flamegraph-content--chart text {
+/* Override d3-flame-graph's hardcoded black text fill */
+.Flamegraph-content--chart text {
   fill: var(--text-primary) !important;
 }
 
