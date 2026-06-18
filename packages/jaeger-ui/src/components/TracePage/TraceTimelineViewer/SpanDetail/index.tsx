@@ -56,33 +56,36 @@ function tryParseJsonString(value: string): unknown {
 function AccordionGenAiBlock(props: { label: string; content: string }) {
   const { content, label } = props;
   const [isOpen, setIsOpen] = useState(true);
-  const parsed = tryParseJsonString(content);
-  const isJson = typeof parsed === 'object' && parsed !== null;
+
+  const textContent = React.useMemo(() => {
+    const parsed = tryParseJsonString(content);
+    const isJson = typeof parsed === 'object' && parsed !== null;
+    if (isJson && Array.isArray(parsed)) {
+      const contents = parsed
+        .map(msg => {
+          const msgContent = msg && typeof msg === 'object' ? msg.content : undefined;
+          if (typeof msgContent === 'string') return msgContent;
+          if (msgContent) return JSON.stringify(msgContent, null, 2);
+          return '';
+        })
+        .filter(Boolean);
+      if (contents.length > 0) {
+        return contents.join('\n\n');
+      }
+    } else if (isJson) {
+      return JSON.stringify(parsed, null, 2);
+    }
+    return content;
+  }, [content]);
+
   const iconCls = 'u-align-icon';
   const arrow = isOpen ? <IoChevronDown className={iconCls} /> : <IoChevronForward className={iconCls} />;
-
-  let textContent = content;
-  if (isJson && Array.isArray(parsed)) {
-    const contents = parsed
-      .map(msg => {
-        const msgContent = msg && typeof msg === 'object' ? msg.content : undefined;
-        if (typeof msgContent === 'string') return msgContent;
-        if (msgContent) return JSON.stringify(msgContent, null, 2);
-        return '';
-      })
-      .filter(Boolean);
-    if (contents.length > 0) {
-      textContent = contents.join('\n\n');
-    }
-  } else if (isJson) {
-    textContent = JSON.stringify(parsed, null, 2);
-  }
 
   return (
     <div className="SpanDetail--accordionGenAi">
       <div
         className="AccordionAttributes--header"
-        aria-checked={isOpen}
+        aria-expanded={isOpen}
         onClick={() => setIsOpen(!isOpen)}
         role="button"
         tabIndex={0}

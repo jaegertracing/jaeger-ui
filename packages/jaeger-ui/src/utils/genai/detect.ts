@@ -3,17 +3,6 @@
 
 import { IEvent } from '../../types/otel';
 
-/**
- * Attribute keys that carry structured GenAI content and deserve richer
- * rendering than a plain flat key-value row.
- *
- * Values indicate the preferred rendering hint:
- *   - 'markdown': the value is natural-language text (e.g. a prompt)
- *   - 'json':     the value is serialised JSON (e.g. tool arguments)
- *
- * @see https://opentelemetry.io/docs/specs/semconv/gen-ai/
- */
-
 type GenAiAttributeValue = string | number | boolean | null | undefined;
 
 type GenAiSpanKind = 'agent' | 'llm' | 'tool' | 'retrieval' | 'workflow';
