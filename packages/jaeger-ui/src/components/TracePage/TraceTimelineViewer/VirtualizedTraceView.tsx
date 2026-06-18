@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import cx from 'classnames';
 import { useDispatch, useSelector } from 'react-redux';
 import _isEqual from 'lodash/isEqual';
@@ -10,11 +10,7 @@ import _isEqual from 'lodash/isEqual';
 import memoizeOne from 'memoize-one';
 import type { Location, NavigateFunction } from 'react-router-dom';
 import { actions } from './duck';
-import {
-  buildCriticalPathIndex,
-  buildPrunedCriticalPaths,
-  getVisibleCriticalPathSections,
-} from './criticalPath';
+import { makeCriticalPathContext } from './criticalPath';
 import generateRowStates, { RowState } from './generateRowStates';
 import ListView from './ListView';
 import PrunedSpanRow from './PrunedSpanRow';
@@ -121,16 +117,6 @@ function getCssClasses(currentViewRange: [number, number]) {
 const memoizedGenerateRowStates = memoizeOne(generateRowStatesFromTrace);
 const memoizedViewBoundsFunc = memoizeOne(createViewedBoundsFunc, _isEqual);
 const memoizedGetCssClasses = memoizeOne(getCssClasses, _isEqual);
-const memoizedCriticalPathsBySpanID = memoizeOne(buildCriticalPathIndex);
-const emptyCriticalPathIndex: ReturnType<typeof buildCriticalPathIndex> = {};
-const emptyPrunedPaths = new Map<string, CriticalPathSection[]>();
-
-/**
- * Precompute bubbled critical path sections for all parents with pruned children.
- * Returns a map from parent spanID → merged critical path sections from pruned subtrees.
- * Memoized so it runs once per render cycle (when pathBySpanID/prunedServices/spans change).
- */
-const memoizedPrunedCriticalPaths = memoizeOne(buildPrunedCriticalPaths);
 
 // export for tests
 export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceViewImpl(
@@ -140,6 +126,11 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
 
   const propsRef = useRef(props);
   propsRef.current = props;
+
+  const criticalPathContext = useMemo(
+    () => makeCriticalPathContext(props.trace, props.criticalPath, props.prunedServices),
+    [props.trace, props.criticalPath, props.prunedServices]
+  );
 
   const getRowStates = useCallback((): RowState[] => {
     const { trace, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices } = propsRef.current;
@@ -359,7 +350,6 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         selectedSpanID,
         timelineBarsVisible,
         trace,
-        criticalPath,
         useOtelTerms,
       } = propsRef.current;
       // to avert flow error
@@ -379,32 +369,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
       const hasPrunedChildren =
         prunedServices.size > 0 &&
         span.childSpans.some(child => prunedServices.has(child.resource.serviceName));
-      let criticalPathSections: CriticalPathSection[];
-      if (isCollapsed) {
-        criticalPathSections = getVisibleCriticalPathSections(
-          isCollapsed,
-          hasPrunedChildren,
-          trace,
-          span,
-          criticalPath,
-          emptyCriticalPathIndex,
-          emptyPrunedPaths
-        );
-      } else {
-        const pathBySpanID = memoizedCriticalPathsBySpanID(criticalPath);
-        const prunedPaths = hasPrunedChildren
-          ? memoizedPrunedCriticalPaths(pathBySpanID, prunedServices, trace.spans)
-          : emptyPrunedPaths;
-        criticalPathSections = getVisibleCriticalPathSections(
-          isCollapsed,
-          hasPrunedChildren,
-          trace,
-          span,
-          criticalPath,
-          pathBySpanID,
-          prunedPaths
-        );
-      }
+      const criticalPathSections = criticalPathContext.sectionsFor(span, isCollapsed, hasPrunedChildren);
       // Check for direct child "server" span if the span is a "client" span.
       let rpc = null;
       if (isCollapsed) {
@@ -460,7 +425,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         </div>
       );
     },
-    [getClippingCssClasses, getViewedBounds, focusSpan]
+    [getClippingCssClasses, getViewedBounds, focusSpan, criticalPathContext]
   );
 
   const renderSpanDetailRow = useCallback(

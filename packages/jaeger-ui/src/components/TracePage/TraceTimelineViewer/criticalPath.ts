@@ -1,8 +1,6 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import _groupBy from 'lodash/groupBy';
-
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan, IOtelTrace } from '../../../types/otel';
 
@@ -51,11 +49,23 @@ function mergeChildrenCriticalPath(
   return criticalPathSections;
 }
 
-export function buildCriticalPathIndex(criticalPath: CriticalPathSection[]) {
-  return _groupBy(criticalPath, x => x.spanID);
+function buildCriticalPathIndex(criticalPath: CriticalPathSection[]) {
+  const result = new Map<string, CriticalPathSection[]>();
+  if (!criticalPath) return result;
+
+  for (const section of criticalPath) {
+    const sections = result.get(section.spanID);
+    if (sections) {
+      sections.push(section);
+    } else {
+      result.set(section.spanID, [section]);
+    }
+  }
+
+  return result;
 }
 
-export function buildPrunedCriticalPaths(
+function buildPrunedCriticalPaths(
   pathBySpanID: ReturnType<typeof buildCriticalPathIndex>,
   prunedServices: Set<string>,
   spans: ReadonlyArray<IOtelSpan>
@@ -64,7 +74,7 @@ export function buildPrunedCriticalPaths(
   const result = new Map<string, CriticalPathSection[]>();
 
   const collectFromSubtree = (s: IOtelSpan, sections: CriticalPathSection[]) => {
-    const spanSections = pathBySpanID[s.spanID];
+    const spanSections = pathBySpanID.get(s.spanID);
     if (spanSections) {
       for (const section of spanSections) {
         sections.push({ ...section });
@@ -100,7 +110,7 @@ export function buildPrunedCriticalPaths(
  *   the service filter prunes entire subtrees, so the direct parent is always the nearest
  *   visible ancestor of a pruned span.
  */
-export function getVisibleCriticalPathSections(
+function getVisibleCriticalPathSections(
   isCollapsed: boolean,
   hasPrunedChildren: boolean,
   trace: IOtelTrace,
@@ -113,7 +123,7 @@ export function getVisibleCriticalPathSections(
     return mergeChildrenCriticalPath(trace, span.spanID, criticalPath);
   }
 
-  const ownSections = span.spanID in pathBySpanID ? pathBySpanID[span.spanID] : [];
+  const ownSections = pathBySpanID.get(span.spanID) ?? [];
 
   if (hasPrunedChildren) {
     // Precomputed map of parent spanID → critical path sections from pruned subtrees.
@@ -124,4 +134,31 @@ export function getVisibleCriticalPathSections(
   }
 
   return ownSections;
+}
+
+export type CriticalPathContext = {
+  sectionsFor(span: IOtelSpan, isCollapsed: boolean, hasPrunedChildren: boolean): CriticalPathSection[];
+};
+
+export function makeCriticalPathContext(
+  trace: IOtelTrace,
+  criticalPath: CriticalPathSection[],
+  prunedServices: Set<string>
+): CriticalPathContext {
+  const index = buildCriticalPathIndex(criticalPath);
+  const pruned = buildPrunedCriticalPaths(index, prunedServices, trace.spans);
+
+  return {
+    sectionsFor(span, isCollapsed, hasPrunedChildren) {
+      return getVisibleCriticalPathSections(
+        isCollapsed,
+        hasPrunedChildren,
+        trace,
+        span,
+        criticalPath,
+        index,
+        pruned
+      );
+    },
+  };
 }

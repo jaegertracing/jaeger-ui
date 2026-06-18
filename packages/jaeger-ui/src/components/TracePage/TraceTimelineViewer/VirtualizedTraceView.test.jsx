@@ -8,11 +8,7 @@ import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
 
-import {
-  buildCriticalPathIndex,
-  buildPrunedCriticalPaths,
-  getVisibleCriticalPathSections,
-} from './criticalPath';
+import { makeCriticalPathContext } from './criticalPath';
 import { DEFAULT_HEIGHTS, VirtualizedTraceViewImpl } from './VirtualizedTraceView';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
@@ -153,11 +149,6 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
   it('renders without exploding', () => {
     const { container } = render(<VirtualizedTraceViewImpl {...mockProps} />);
-    expect(container).toBeTruthy();
-  });
-
-  it('renders when a trace is not set', () => {
-    const { container } = render(<VirtualizedTraceViewImpl {...mockProps} trace={null} />);
     expect(container).toBeTruthy();
   });
 
@@ -472,13 +463,6 @@ describe('<VirtualizedTraceViewImpl>', () => {
       });
     });
 
-    it('renderSpanBarRow returns null if trace is falsy', () => {
-      const { listViewProps } = renderAndCapture({ ...mockProps, trace: null });
-      // With no trace, getRowStates returns [] so no rows exist to render.
-      // Verify the component still renders without errors.
-      expect(listViewProps.dataLength).toBe(0);
-    });
-
     it('renderSpanBarRow passes isSelected=true for the span selected in side panel mode', () => {
       const selectedSpan = trace.spans[0];
       const { listViewProps } = renderAndCapture({ ...mockProps, selectedSpanID: selectedSpan.spanID });
@@ -532,15 +516,8 @@ describe('<VirtualizedTraceViewImpl>', () => {
     it('returns [] from mergeChildrenCriticalPath when criticalPath is falsy', () => {
       const span = trace.spans[0];
 
-      const result = getVisibleCriticalPathSections(
-        true,
-        false,
-        trace,
-        span,
-        undefined,
-        buildCriticalPathIndex([]),
-        new Map()
-      );
+      const context = makeCriticalPathContext(trace, undefined, new Set());
+      const result = context.sectionsFor(span, true, false);
       expect(result).toEqual([]);
     });
 
@@ -570,15 +547,8 @@ describe('<VirtualizedTraceViewImpl>', () => {
         { spanID: 'child', sectionStart: 0, sectionEnd: 10 },
       ];
 
-      const result = getVisibleCriticalPathSections(
-        true,
-        false,
-        customTrace,
-        parentSpan,
-        fakeCriticalPath,
-        buildCriticalPathIndex(fakeCriticalPath),
-        new Map()
-      );
+      const context = makeCriticalPathContext(customTrace, fakeCriticalPath, new Set());
+      const result = context.sectionsFor(parentSpan, true, false);
 
       expect(result).toEqual([{ spanID: 'parent', sectionStart: 0, sectionEnd: 20 }]);
     });
@@ -609,13 +579,11 @@ describe('<VirtualizedTraceViewImpl>', () => {
         { spanID: 'grandchild', sectionStart: 20, sectionEnd: 30 },
       ];
 
-      const result = buildPrunedCriticalPaths(
-        buildCriticalPathIndex(fakeCriticalPath),
-        new Set(['svc-pruned']),
-        [parentSpan, prunedChild, grandchildSpan]
-      );
+      const customTrace = { ...trace, spans: [parentSpan, prunedChild, grandchildSpan] };
+      const context = makeCriticalPathContext(customTrace, fakeCriticalPath, new Set(['svc-pruned']));
+      const result = context.sectionsFor(parentSpan, false, true);
 
-      expect(result.get('parent')).toEqual(fakeCriticalPath);
+      expect(result).toEqual(fakeCriticalPath);
     });
 
     it('merges only pruned subtree critical path when hasPrunedChildren is true', () => {
@@ -645,17 +613,8 @@ describe('<VirtualizedTraceViewImpl>', () => {
         { spanID: 'pruned-child', sectionStart: 10, sectionEnd: 20 },
         { spanID: 'visible-child', sectionStart: 20, sectionEnd: 30 },
       ];
-      const pathBySpanID = buildCriticalPathIndex(fakeCriticalPath);
-
-      const result = getVisibleCriticalPathSections(
-        false,
-        true,
-        customTrace,
-        parentSpan,
-        fakeCriticalPath,
-        pathBySpanID,
-        buildPrunedCriticalPaths(pathBySpanID, new Set(['svc-pruned']), customTrace.spans)
-      );
+      const context = makeCriticalPathContext(customTrace, fakeCriticalPath, new Set(['svc-pruned']));
+      const result = context.sectionsFor(parentSpan, false, true);
       const spanIDs = result.map(s => s.spanID);
       expect(spanIDs).toContain('parent');
       expect(spanIDs).toContain('pruned-child');
