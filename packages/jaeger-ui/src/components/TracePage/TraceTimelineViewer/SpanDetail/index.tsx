@@ -55,9 +55,10 @@ function tryParseJsonString(value: string): unknown {
 
 function AccordionGenAiBlock(props: { label: string; content: string }) {
   const { content, label } = props;
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 
   const textContent = React.useMemo(() => {
+    if (!isOpen) return '';
     const parsed = tryParseJsonString(content);
     const isJson = typeof parsed === 'object' && parsed !== null;
     if (isJson && Array.isArray(parsed)) {
@@ -76,7 +77,7 @@ function AccordionGenAiBlock(props: { label: string; content: string }) {
       return JSON.stringify(parsed, null, 2);
     }
     return content;
-  }, [content]);
+  }, [content, isOpen]);
 
   const iconCls = 'u-align-icon';
   const arrow = isOpen ? <IoChevronDown className={iconCls} /> : <IoChevronForward className={iconCls} />;
