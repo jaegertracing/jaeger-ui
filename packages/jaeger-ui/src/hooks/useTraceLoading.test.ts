@@ -43,12 +43,12 @@ describe('getCachedTrace', () => {
     expect(getCachedTrace(otelTrace.traceID)).toBe(otelTrace);
   });
 
-  it('strips leading zeros when looking up by padded ID', () => {
+  it('does not strip leading zeros — IDs are opaque strings', () => {
     const fixedId = 'abc123';
     const paddedId = `000${fixedId}`;
     const fakeTrace = { ...otelTrace, traceID: fixedId };
     populateTraceCache(fakeTrace);
-    expect(getCachedTrace(paddedId)).toBe(fakeTrace);
+    expect(getCachedTrace(paddedId)).toBeUndefined();
   });
 });
 
