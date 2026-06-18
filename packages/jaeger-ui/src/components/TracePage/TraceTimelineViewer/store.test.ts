@@ -222,14 +222,43 @@ describe('trace timeline zustand stores', () => {
         useLayoutPrefsStore.getState().setTimelineBarsVisible(true);
         expect(localStorage.getItem('timelineVisible')).toBe('true');
       });
+
+      it('updates timelineBarsVisible but skips localStorage when persist=false', () => {
+        localStorage.setItem('timelineVisible', 'true');
+        useLayoutPrefsStore.getState().setTimelineBarsVisible(false, false);
+        expect(useLayoutPrefsStore.getState().timelineBarsVisible).toBe(false);
+        expect(localStorage.getItem('timelineVisible')).toBe('true');
+      });
+    });
+
+    describe('applyDetailPanelModeToLayout', () => {
+      it('updates detailPanelMode and persists to localStorage by default', () => {
+        useLayoutPrefsStore.getState().applyDetailPanelModeToLayout('sidepanel');
+        expect(useLayoutPrefsStore.getState().detailPanelMode).toBe('sidepanel');
+        expect(localStorage.getItem('detailPanelMode')).toBe('sidepanel');
+      });
+
+      it('updates detailPanelMode but skips localStorage when persist=false', () => {
+        localStorage.setItem('detailPanelMode', 'inline');
+        useLayoutPrefsStore.getState().applyDetailPanelModeToLayout('sidepanel', false);
+        expect(useLayoutPrefsStore.getState().detailPanelMode).toBe('sidepanel');
+        expect(localStorage.getItem('detailPanelMode')).toBe('inline');
+      });
     });
   });
 
   describe('setDetailPanelMode coordinator', () => {
-    it('updates detailPanelMode and persists to localStorage', () => {
+    it('updates detailPanelMode and persists to localStorage by default', () => {
       setDetailPanelMode('sidepanel');
       expect(useLayoutPrefsStore.getState().detailPanelMode).toBe('sidepanel');
       expect(localStorage.getItem('detailPanelMode')).toBe('sidepanel');
+    });
+
+    it('updates detailPanelMode but skips localStorage when persist=false', () => {
+      localStorage.setItem('detailPanelMode', 'inline');
+      setDetailPanelMode('sidepanel', false);
+      expect(useLayoutPrefsStore.getState().detailPanelMode).toBe('sidepanel');
+      expect(localStorage.getItem('detailPanelMode')).toBe('inline');
     });
 
     it('clamps spanNameColumnWidth when switching to sidepanel', () => {
