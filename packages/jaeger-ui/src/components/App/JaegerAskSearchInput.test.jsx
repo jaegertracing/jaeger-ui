@@ -156,7 +156,7 @@ describe('<JaegerAskSearchInput /> assistant mode', () => {
     fireEvent.change(textarea, { target: { value: traceId } });
     fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false });
 
-    expect(mockNavigate).toHaveBeenCalledWith(`/trace/${traceId}`);
+    expect(mockNavigate).toHaveBeenCalledWith(`/trace/${encodeURIComponent(traceId)}`);
   });
 
   it('Shift+Enter does not submit', () => {
