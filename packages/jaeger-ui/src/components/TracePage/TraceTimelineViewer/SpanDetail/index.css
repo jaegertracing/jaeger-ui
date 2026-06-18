@@ -52,63 +52,6 @@ SPDX-License-Identifier: Apache-2.0
 .AccordianWarnings--label {
   color: var(--feedback-warning);
 }
-/*
- * Copyright (c) 2026 The Jaeger Authors.
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
-.SpanDetail--divider {
-  background: var(--border-default);
-}
-
-.SpanDetail--debugInfo {
-  display: block;
-  letter-spacing: 0.25px;
-  margin: 0.5em 0 -0.75em;
-  text-align: right;
-}
-
-.SpanDetail--debugLabel::before {
-  color: var(--text-muted);
-  content: attr(data-label);
-}
-
-.SpanDetail--debugValue {
-  background-color: inherit;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-}
-
-.SpanDetail--debugValue:hover {
-  color: var(--text-primary);
-}
-
-.AccordianWarnings {
-  background: var(--surface-tertiary);
-  border: 1px solid var(--border-default);
-  margin-bottom: 0.25rem;
-}
-
-.AccordianWarnings--header {
-  background: var(--feedback-warning);
-  padding: 0.25rem 0.5rem;
-}
-
-.AccordianWarnings--header:hover {
-  background: var(--feedback-warning);
-  opacity: 0.8;
-}
-
-.AccordianWarnings--header.is-open {
-  border-bottom: 1px solid var(--border-default);
-}
-
-.AccordianWarnings--label {
-  color: var(--text-inverse);
-}
-
 .SpanDetail--genAi {
   border-bottom: 1px solid var(--border-default);
   margin-bottom: 0.5rem;
