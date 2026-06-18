@@ -3,7 +3,7 @@
 
 import { IEvent } from '../../types/otel';
 
-type GenAiAttributeValue = string | number | boolean | null | undefined;
+type GenAiAttributeValue = string | number | boolean | null | undefined | object;
 
 type GenAiSpanKind = 'agent' | 'llm' | 'tool' | 'retrieval' | 'workflow';
 type AttributesLike = ReadonlyArray<{ key: string; value: unknown }> | null | undefined;
