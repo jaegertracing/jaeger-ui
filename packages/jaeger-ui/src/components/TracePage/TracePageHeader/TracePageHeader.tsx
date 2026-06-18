@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Button, InputRef, Tooltip } from 'antd';
 import _get from 'lodash/get';
 import _maxBy from 'lodash/maxBy';
@@ -166,6 +166,16 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     [availableFieldKeys, selectedSummaryFields]
   );
 
+  // The settings UI only sees fields present in the current trace. Re-append any stored fields that
+  // belong to other traces so editing the selection here doesn't silently drop them from localStorage.
+  const handleSelectedSummaryFieldsChange = useCallback(
+    (fields: string[]) => {
+      const hiddenSelected = selectedSummaryFields.filter(key => !availableFieldKeys.has(key));
+      setSelectedSummaryFields([...fields, ...hiddenSelected]);
+    },
+    [availableFieldKeys, selectedSummaryFields, setSelectedSummaryFields]
+  );
+
   if (!trace) {
     return null;
   }
@@ -228,7 +238,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           detailPanelMode={detailPanelMode}
           enableSidePanel={enableSidePanel}
           onDetailPanelModeToggle={onDetailPanelModeToggle}
-          onSelectedSummaryFieldsChange={setSelectedSummaryFields}
+          onSelectedSummaryFieldsChange={handleSelectedSummaryFieldsChange}
           onTimelineToggle={onTimelineToggle}
           selectedSummaryFields={effectiveSelectedSummaryFields}
           timelineBarsVisible={timelineBarsVisible}
