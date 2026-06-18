@@ -24,6 +24,5 @@ export function useNormalizeTraceId(urlTraceId: string, trace: IOtelTrace | unde
       const url = getUrl(canonicalId);
       navigate(`${url}${location.search}`, { replace: true, state: location.state });
     }
-    // eslint-disable-next-line react-x/exhaustive-deps
-  }, [trace, urlTraceId]);
+  }, [trace, urlTraceId, location.search, location.state, navigate]);
 }
