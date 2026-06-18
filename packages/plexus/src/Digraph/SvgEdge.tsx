@@ -36,13 +36,13 @@ function makePathD(points: [number, number][]) {
   return dArr.join(' ');
 }
 
-function computeLabelCoord(pathPoints: [number, number][], label?: string | undefined) {
+function computeLabelCoord(pathPoints: [number, number][], label?: string | undefined, selfLoop = false) {
   const [startX, startY] = pathPoints[0];
   const [endX, endY] = pathPoints[pathPoints.length - 1];
 
   const xOffset = (label?.length ?? 0) * 5;
   const labelX = (startX + endX) / 2 - xOffset;
-  const labelY = (startY + endY) / 2;
+  const labelY = selfLoop ? Math.min(...pathPoints.map(([, y]) => y)) - 8 : (startY + endY) / 2;
 
   return { labelX, labelY };
 }
@@ -62,7 +62,8 @@ function SvgEdge<U = {}>(props: TProps<U>) {
     getProps(setOnEdge, layoutEdge, renderUtils)
   );
 
-  const { labelX, labelY } = computeLabelCoord(pathPoints, label);
+  const selfLoop = layoutEdge.edge.from === layoutEdge.edge.to;
+  const { labelX, labelY } = computeLabelCoord(pathPoints, label, selfLoop);
 
   return (
     <g>
@@ -76,7 +77,7 @@ function SvgEdge<U = {}>(props: TProps<U>) {
       />
 
       {label && (
-        <text x={labelX} y={labelY} fill="currentColor" fontSize="1rem" fontWeight="bold">
+        <text x={labelX} y={labelY} fill="currentColor" fontSize="1rem" fontWeight="bold" dominantBaseline="middle">
           {label}
         </text>
       )}
