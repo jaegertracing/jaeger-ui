@@ -63,10 +63,10 @@ function AccordionGenAiBlock(props: { label: string; content: string }) {
     const isJson = typeof parsed === 'object' && parsed !== null;
     if (isJson && Array.isArray(parsed)) {
       const contents = parsed
-        .map(msg => {
-          const msgContent = msg && typeof msg === 'object' ? msg.content : undefined;
+        .map((msg: any) => {
+          const msgContent = msg && typeof msg === 'object' && 'content' in msg ? msg.content : undefined;
           if (typeof msgContent === 'string') return msgContent;
-          if (msgContent) return JSON.stringify(msgContent, null, 2);
+          if (msgContent !== undefined) return JSON.stringify(msgContent, null, 2);
           return '';
         })
         .filter(Boolean);
@@ -315,7 +315,9 @@ export default function SpanDetail(props: SpanDetailProps) {
       { key: 'default', label: 'Default', children: standardContent },
     ];
 
-    contentNode = <Tabs defaultActiveKey="genai" items={tabItems} className="SpanDetail--tabs" />;
+    contentNode = (
+      <Tabs defaultActiveKey="genai" items={tabItems} className="SpanDetail--tabs" destroyInactiveTabPane />
+    );
   }
 
   return (
