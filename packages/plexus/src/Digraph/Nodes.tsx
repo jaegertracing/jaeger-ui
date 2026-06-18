@@ -1,3 +1,4 @@
+// Copyright (c) 2026 The Jaeger Authors
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -6,7 +7,6 @@ import * as React from 'react';
 import Node from './Node';
 import { TLayerType, TNodeRenderer, TRendererUtils } from './types';
 import { TLayoutVertex } from '../types';
-import { isSamePropSetter } from './utils';
 
 type TProps<T = {}> = TNodeRenderer<T> & {
   getClassName: (name: string) => string;
@@ -16,31 +16,27 @@ type TProps<T = {}> = TNodeRenderer<T> & {
   renderUtils: TRendererUtils;
 };
 
-export default class Nodes<T = {}> extends React.Component<TProps<T>> {
-  shouldComponentUpdate(np: TProps<T>) {
-    const p = this.props;
-    return (
-      p.renderNode !== np.renderNode ||
-      p.getClassName !== np.getClassName ||
-      p.layerType !== np.layerType ||
-      p.layoutVertices !== np.layoutVertices ||
-      p.renderUtils !== np.renderUtils ||
-      !isSamePropSetter(p.setOnNode, np.setOnNode)
-    );
-  }
-
-  render() {
-    const { getClassName, layoutVertices, renderUtils, layerType, renderNode, setOnNode } = this.props;
-    return layoutVertices.map(lv => (
-      <Node
-        key={lv.vertex.key}
-        getClassName={getClassName}
-        layerType={layerType}
-        layoutVertex={lv}
-        renderNode={renderNode}
-        renderUtils={renderUtils}
-        setOnNode={setOnNode}
-      />
-    ));
-  }
+function Nodes<T = {}>({
+  getClassName,
+  layoutVertices,
+  renderUtils,
+  layerType,
+  renderNode,
+  setOnNode,
+}: TProps<T>) {
+  return layoutVertices.map(lv => (
+    <Node
+      key={lv.vertex.key}
+      getClassName={getClassName}
+      layerType={layerType}
+      layoutVertex={lv}
+      renderNode={renderNode}
+      renderUtils={renderUtils}
+      setOnNode={setOnNode}
+    />
+  ));
 }
+
+// Double cast via `unknown` is needed because Nodes is generic;
+// React.memo does not preserve the generic signature.
+export default React.memo(Nodes) as unknown as typeof Nodes;
