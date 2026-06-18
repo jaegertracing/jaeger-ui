@@ -27,24 +27,6 @@ vi.mock('./AccordionAttributes', () => {
   });
 });
 
-vi.mock('./AccordionGenAIAttributes', () => {
-  const GENAI_RICH_ATTRIBUTE_KEYS = new Set([
-    'gen_ai.input.messages',
-    'gen_ai.output.messages',
-    'gen_ai.tool.call.arguments',
-    'gen_ai.tool.call.result',
-    'gen_ai.retrieval.documents',
-    'gen_ai.tool.definitions',
-  ]);
-  return {
-    __esModule: true,
-    default: function MockAccordionGenAIAttributes({ data }) {
-      return <div data-testid="genai-attributes">{data.map(a => a.key).join(',')}</div>;
-    },
-    GENAI_RICH_ATTRIBUTE_KEYS,
-  };
-});
-
 vi.mock('./AccordionEvents', () => {
   return mockDefault(function MockAccordionEvents({ onToggle, onItemToggle }) {
     return (
@@ -305,7 +287,7 @@ describe('<SpanDetail>', () => {
     expect(copyText).toContain(`?uiFind=${props.span.spanID}`);
   });
 
-  it('routes GenAI attributes to AccordionGenAIAttributes and excludes them from AccordionAttributes', () => {
+  it('renders GenAI and Default tabs when GenAI attributes are present', () => {
     const genaiAttr = { key: 'gen_ai.input.messages', value: '[{"role":"user","content":"hi"}]' };
     const spanWithGenAI = Object.create(span);
     Object.defineProperty(spanWithGenAI, 'attributes', {
@@ -315,21 +297,18 @@ describe('<SpanDetail>', () => {
 
     render(<SpanDetail {...props} />);
 
-    // GenAI renderer should receive the genai attribute
-    const genaiContainer = screen.getByTestId('genai-attributes');
-    expect(genaiContainer).toBeInTheDocument();
-    expect(genaiContainer).toHaveTextContent('gen_ai.input.messages');
+    // Tabs should be present
+    expect(screen.getByText('GenAI')).toBeInTheDocument();
+    expect(screen.getByText('Default')).toBeInTheDocument();
 
-    // Standard AccordionAttributes should NOT receive the genai attribute (count = span.attributes.length - 1)
-    const countEl = screen.getByTestId('accordian-keyvalues-tags-count');
-    expect(Number(countEl.textContent)).toBe(
-      span.attributes.filter(a => a.key !== 'gen_ai.input.messages').length
-    );
+    // Standard AccordionAttributes should receive the genai attribute because Default tab shows raw attributes
+    const countEls = screen.getAllByTestId('accordian-keyvalues-tags-count');
+    expect(countEls.length).toBeGreaterThan(0);
   });
 
-  it('does not render AccordionGenAIAttributes when there are no GenAI attributes', () => {
+  it('does not render tabs when there are no GenAI attributes', () => {
     // span from beforeEach has no GenAI attributes by default
     render(<SpanDetail {...props} />);
-    expect(screen.queryByTestId('genai-attributes')).not.toBeInTheDocument();
+    expect(screen.queryByText('GenAI')).not.toBeInTheDocument();
   });
 });

@@ -52,3 +52,296 @@ SPDX-License-Identifier: Apache-2.0
 .AccordianWarnings--label {
   color: var(--feedback-warning);
 }
+/*
+ * Copyright (c) 2026 The Jaeger Authors.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+.SpanDetail--divider {
+  background: var(--border-default);
+}
+
+.SpanDetail--debugInfo {
+  display: block;
+  letter-spacing: 0.25px;
+  margin: 0.5em 0 -0.75em;
+  text-align: right;
+}
+
+.SpanDetail--debugLabel::before {
+  color: var(--text-muted);
+  content: attr(data-label);
+}
+
+.SpanDetail--debugValue {
+  background-color: inherit;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.SpanDetail--debugValue:hover {
+  color: var(--text-primary);
+}
+
+.AccordianWarnings {
+  background: var(--surface-tertiary);
+  border: 1px solid var(--border-default);
+  margin-bottom: 0.25rem;
+}
+
+.AccordianWarnings--header {
+  background: var(--feedback-warning);
+  padding: 0.25rem 0.5rem;
+}
+
+.AccordianWarnings--header:hover {
+  background: var(--feedback-warning);
+  opacity: 0.8;
+}
+
+.AccordianWarnings--header.is-open {
+  border-bottom: 1px solid var(--border-default);
+}
+
+.AccordianWarnings--label {
+  color: var(--text-inverse);
+}
+
+.SpanDetail--genAi {
+  border-bottom: 1px solid var(--border-default);
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  padding-top: 0.25rem;
+}
+
+.SpanDetail--genAiSection + .SpanDetail--genAiSection {
+  border-top: 1px solid var(--border-default);
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+}
+
+.SpanDetail--genAiSectionTitle {
+  align-items: center;
+  color: var(--text-primary);
+  display: flex;
+  font-size: 0.95rem;
+  font-weight: 600;
+  gap: 0.4rem;
+  margin: 0 0 0.5rem;
+  padding-left: 0.1em;
+}
+
+.SpanDetail--genAiSectionAccent {
+  background: var(--interactive-primary);
+  border-radius: 2px;
+  display: inline-block;
+  height: 1rem;
+  width: 4px;
+}
+
+.SpanDetail--genAiMeta {
+  margin-bottom: 0.25rem;
+  margin-left: calc(0.1em + 4px + 0.4rem);
+}
+
+.SpanDetail--genAiMetaTable {
+  border-spacing: 0;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+  margin-left: calc(0.1em + 4px + 0.4rem);
+}
+
+.SpanDetail--genAiMetaTable td {
+  padding: 0 0 0.25rem 0;
+}
+
+.SpanDetail--genAiMetaDivider {
+  padding: 0 0.5rem !important;
+}
+
+.SpanDetail--genAiConversation {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.SpanDetail--genAiContentBox {
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  padding: 0.5rem;
+  margin: 0.25rem 0 0.5rem 1.4rem;
+}
+
+.SpanDetail--genAiMessage {
+  background: var(--surface-primary);
+  border: 1px solid var(--border-default);
+  border-left: 3px solid var(--span-color-5);
+  border-radius: 4px;
+  color: var(--text-primary);
+  padding: 0.55rem 0.65rem;
+  margin-left: calc(0.1em + 4px + 0.4rem);
+}
+
+.SpanDetail--genAiMessage + .SpanDetail--genAiMessage {
+  margin-top: 0.6rem;
+}
+
+.SpanDetail--genAiMessage--user {
+  background: var(--surface-secondary);
+  border-left-color: var(--span-color-1);
+}
+
+.SpanDetail--genAiMessage--assistant {
+  background: var(--surface-primary);
+  border-left-color: var(--span-color-5);
+}
+
+.SpanDetail--genAiMessage--tool {
+  background: var(--surface-secondary);
+  border-left-color: var(--span-color-5);
+}
+
+.SpanDetail--genAiMessage--no-border {
+  background: var(--surface-secondary);
+  border-left: 1px solid var(--border-default);
+  margin-top: 0.25rem;
+}
+
+.SpanDetail--genAiMessageLabel {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.35rem;
+}
+
+.SpanDetail--genAiMessageBody {
+  font-size: 0.85rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.SpanDetail--genAiMessageBody p {
+  margin: 0 0 0.5em 0;
+}
+
+.SpanDetail--genAiMessageBody p:last-child {
+  margin-bottom: 0;
+}
+
+.SpanDetail--genAiMessageBody pre {
+  background: var(--surface-primary);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  padding: 0.5rem;
+  overflow-x: auto;
+  margin: 0.5em 0;
+}
+
+.SpanDetail--genAiMessageBody pre:last-child {
+  margin-bottom: 0;
+}
+
+.SpanDetail--genAiMessageBody code {
+  background: var(--surface-primary);
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+}
+
+.SpanDetail--genAiMessageBody pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.SpanDetail--genAiShowMore {
+  background: transparent;
+  border: 0;
+  color: var(--text-link);
+  cursor: pointer;
+  font-size: 0.8rem;
+  margin-top: 0.35rem;
+  padding: 0;
+}
+
+.SpanDetail--genAiShowMore:hover {
+  color: var(--text-link-hover);
+  text-decoration: underline;
+}
+
+.SpanDetail--genAiJson {
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  margin: 0;
+  overflow-x: auto;
+  padding: 0.5rem;
+  white-space: pre-wrap;
+}
+
+.SpanDetail--genAiJsonKey {
+  color: var(--text-link);
+}
+
+.SpanDetail--genAiJsonString {
+  color: var(--syntax-string);
+}
+
+.SpanDetail--genAiJsonNumber {
+  color: var(--syntax-number);
+}
+
+.SpanDetail--genAiJsonBoolean,
+.SpanDetail--genAiJsonNull {
+  color: var(--syntax-bool);
+}
+
+.SpanDetail--genAiMessageBody table {
+  border-collapse: collapse;
+  margin: 0.5rem 0;
+  width: max-content;
+  max-width: 100%;
+}
+
+.SpanDetail--genAiMessageBody th,
+.SpanDetail--genAiMessageBody td {
+  border: 1px solid var(--border-default);
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+}
+
+.SpanDetail--genAiMessageBody th {
+  background: var(--surface-secondary);
+  font-weight: 600;
+}
+
+.SpanDetail--genAiAttachments {
+  margin-top: 0.75rem;
+  padding-top: 0.5rem;
+}
+
+.SpanDetail--genAiAttachmentsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.SpanDetail--genAiAttachmentThumb {
+  height: 120px;
+  width: auto;
+  border-radius: 4px;
+  border: 1px solid var(--border-default);
+  object-fit: cover;
+  background: var(--surface-primary);
+}
+
+.SpanDetail--genAiAttachmentAudio {
+  height: 40px;
+  max-width: 100%;
+  border-radius: 4px;
+}
