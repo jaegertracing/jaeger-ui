@@ -208,8 +208,16 @@ describe('fromOrderBy', () => {
     expect(fromOrderBy(orderBy.SHORTEST_FIRST)).toEqual({ key: 'duration', order: 'ascend' });
   });
 
+  it('maps OLDEST_FIRST to startTime+ascend', () => {
+    expect(fromOrderBy(orderBy.OLDEST_FIRST)).toEqual({ key: 'startTime', order: 'ascend' });
+  });
+
   it('maps MOST_RECENT to startTime+descend', () => {
     expect(fromOrderBy(orderBy.MOST_RECENT)).toEqual({ key: 'startTime', order: 'descend' });
+  });
+
+  it('falls back to startTime+descend for an unknown sort value', () => {
+    expect(fromOrderBy('unknown-sort-value')).toEqual({ key: 'startTime', order: 'descend' });
   });
 });
 
