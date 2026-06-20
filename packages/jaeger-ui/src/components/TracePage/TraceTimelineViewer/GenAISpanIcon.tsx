@@ -6,6 +6,7 @@ import { MdSmartToy, MdBolt, MdBuild, MdStorage, MdAutoAwesome } from 'react-ico
 import type { IconType } from 'react-icons';
 import { classifySpan, GenAISpanKind } from '../../../utils/genai/detect';
 import type { IOtelSpan } from '../../../types/otel';
+import './GenAISpanIcon.css';
 
 const KIND_ICONS: Record<Exclude<GenAISpanKind, 'STANDARD'>, IconType> = {
   AGENT: MdSmartToy,
@@ -28,5 +29,5 @@ export function GenAISpanIcon({ span }: { span: IOtelSpan }): React.ReactElement
   if (kind === 'STANDARD') return null;
   const Icon = KIND_ICONS[kind];
   const label = KIND_LABELS[kind];
-  return <Icon title={label} aria-label={label} />;
+  return <Icon className="GenAISpanIcon" title={label} aria-label={label} />;
 }
