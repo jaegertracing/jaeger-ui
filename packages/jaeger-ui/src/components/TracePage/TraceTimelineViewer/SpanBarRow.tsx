@@ -115,11 +115,8 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   const viewEnd = viewBounds.end;
 
   const genAiModel = getGenAiModel(span);
-  const endpointLabel = rpc
-    ? rpc.operationName
-    : genAiModel
-      ? `${operationName} · ${genAiModel}`
-      : operationName;
+  const baseLabel = rpc ? rpc.operationName : operationName;
+  const endpointLabel = genAiModel ? `${baseLabel} · ${genAiModel}` : baseLabel;
   const labelDetail = genAiModel
     ? `${serviceName}::${operationName} (${genAiModel})`
     : `${serviceName}::${operationName}`;

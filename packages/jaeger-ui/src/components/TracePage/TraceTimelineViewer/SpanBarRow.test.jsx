@@ -283,6 +283,18 @@ describe('<SpanBarRow>', () => {
     expect(screen.getByText('op-name')).toBeInTheDocument();
   });
 
+  it('shows model annotation alongside rpc.operationName when both are present', () => {
+    const props = {
+      ...defaultProps,
+      span: {
+        ...defaultProps.span,
+        attributes: [{ key: GEN_AI_REQUEST_MODEL_KEY, value: 'gpt-4o' }],
+      },
+    };
+    render(<SpanBarRow {...props} />);
+    expect(screen.getByText('rpc-op-name · gpt-4o')).toBeInTheDocument();
+  });
+
   it('includes gen_ai.request.model in longLabel for the span bar tooltip', () => {
     const getViewedBounds = jest.fn().mockReturnValue({ start: 0.2, end: 0.3 });
     const props = {
