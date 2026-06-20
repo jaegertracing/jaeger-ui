@@ -10,6 +10,7 @@ import { MonitorATMServicesViewImpl as MonitorATMServicesView, mapStateToProps, 
 import { getLoopbackInterval, timeFrameOptions, yAxisTickFormat } from './timeFrameUtils';
 import { useServices } from '../../../hooks/useTraceDiscovery';
 import { ONE_HOUR_MS, TIME_RANGE_OPTIONS } from '../../../utils/time-range-options';
+import store from '../../../utils/storage';
 import {
   originInitialState,
   serviceMetrics,
@@ -736,6 +737,81 @@ describe('<MonitorATMServicesView>', () => {
       expect(fetchAll).toHaveBeenCalled();
       expect(fetchAgg).toHaveBeenCalled();
     });
+  });
+});
+
+describe('<MonitorATMServicesView> URL query params', () => {
+  const mockFetchAllServiceMetrics = jest.fn();
+  const mockFetchAggregatedServiceMetrics = jest.fn();
+
+  const baseProps = {
+    ...props,
+    fetchAllServiceMetrics: mockFetchAllServiceMetrics,
+    fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
+  };
+
+  beforeEach(() => {
+    cleanup();
+    jest.clearAllMocks();
+    useServices.mockReturnValue({ data: ['service1', 'service2'], isLoading: false });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+    useServices.mockReset();
+    useServices.mockImplementation(defaultUseServicesImpl);
+    cleanup();
+  });
+
+  it('seeds filters from URL query params', () => {
+    renderWithRouter(
+      <MonitorATMServicesView {...baseProps} search="?service=service2&spanKind=client&timeframe=3600000" />
+    );
+
+    expect(screen.getByTestId('select-a-service-input').value).toBe('service2');
+    expect(screen.getByTestId('span-kind-selector').value).toBe('client');
+    expect(screen.getByTestId('select-a-timeframe-input').value).toBe('3600000');
+  });
+
+  it('does not persist URL-sourced filters to localStorage', () => {
+    renderWithRouter(
+      <MonitorATMServicesView {...baseProps} search="?service=service2&spanKind=client&timeframe=3600000" />
+    );
+
+    expect(store.set).not.toHaveBeenCalledWith('lastAtmSearchService', expect.anything());
+    expect(store.set).not.toHaveBeenCalledWith('lastAtmSearchSpanKind', expect.anything());
+    expect(store.set).not.toHaveBeenCalledWith('lastAtmSearchTimeframe', expect.anything());
+  });
+
+  it('falls back to defaults and persists them when no URL params are present', () => {
+    renderWithRouter(<MonitorATMServicesView {...baseProps} search="" />);
+
+    expect(store.set).toHaveBeenCalledWith('lastAtmSearchService', 'service1');
+    expect(store.set).toHaveBeenCalledWith('lastAtmSearchSpanKind', 'server');
+  });
+
+  it('ignores invalid URL params and falls back to defaults', () => {
+    renderWithRouter(<MonitorATMServicesView {...baseProps} search="?spanKind=bogus&timeframe=notanumber" />);
+
+    expect(screen.getByTestId('span-kind-selector').value).toBe('server');
+    expect(store.set).toHaveBeenCalledWith('lastAtmSearchSpanKind', 'server');
+  });
+
+  it('persists a URL-seeded filter once the user changes it', async () => {
+    const trackSpy = jest.spyOn(track, 'trackSelectSpanKind').mockImplementation(() => {});
+    const user = userEvent.setup();
+
+    renderWithRouter(<MonitorATMServicesView {...baseProps} search="?spanKind=client" />);
+
+    expect(store.set).not.toHaveBeenCalledWith('lastAtmSearchSpanKind', expect.anything());
+
+    await user.selectOptions(screen.getByTestId('span-kind-selector'), 'server');
+
+    await waitFor(() => {
+      expect(store.set).toHaveBeenCalledWith('lastAtmSearchSpanKind', 'server');
+    });
+
+    trackSpy.mockRestore();
   });
 });
 
