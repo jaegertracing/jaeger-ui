@@ -9,27 +9,27 @@
     "url": "https://github.com/jaegertracing/jaeger-ui.git"
   },
   "engines": {
-    "node": ">=24.6.0",
-    "npm": ">=11.6.0"
+    "node": ">=24.6.0"
   },
+  "packageManager": "npm@11.17.0",
   "devDependencies": {
-    "@babel/core": "7.29.0",
+    "@babel/core": "7.29.6",
     "@emnapi/core": "^1.9.1",
     "@emnapi/runtime": "^1.9.1",
     "@noble/hashes": "2.2.0",
     "@testing-library/dom": "^10.4.1",
     "depcheck": "1.4.7",
     "knip": "6.16.1",
-    "eslint-plugin-react-x": "5.8.0",
+    "eslint-plugin-react-x": "5.9.0",
     "husky": "9.1.0",
     "jsdom": "29.1.1",
     "lint-staged": "17.0.4",
     "npm-run-all2": "9.0.1",
     "openapi-zod-client": "1.18.3",
     "typescript": "6.0.2",
-    "vite-plus": "0.1.17",
-    "@vitest/coverage-v8": "4.1.4",
-    "vitest": "4.1.4"
+    "vite-plus": "0.1.24",
+    "@vitest/coverage-v8": "4.1.8",
+    "vitest": "4.1.8"
   },
   "overrides": {
     "react": "19.2.0",
@@ -55,6 +55,7 @@
     "fmt": "vp fmt",
     "knip": "knip",
     "lint": "npm-run-all -ln --parallel fmt-lint tsc-lint oxlint check-license check-copyright-year check-tsx-naming check-overrides knip",
+    "preinstall": "node scripts/check-npm-version.cjs",
     "prepare": "husky",
     "fmt-lint": "vp fmt --check || (echo '*** ❌ PLEASE RUN make fmt AND RESUBMIT ***' && false)",
     "generate:api-types": "openapi-zod-client https://raw.githubusercontent.com/jaegertracing/jaeger-idl/refs/heads/main/swagger/api_v3/query_service.openapi.yaml --output packages/jaeger-ui/src/api/v3/generated-client.ts --with-alias && node scripts/postprocess-schemas.cjs && vp fmt packages/jaeger-ui/src/api/v3/generated-client.ts",
