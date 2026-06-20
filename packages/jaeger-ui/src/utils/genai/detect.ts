@@ -18,8 +18,8 @@ const OPERATION_TO_KIND: Partial<Record<string, GenAISpanKind>> = {
 export function classifySpan(span: SpanAttrs): GenAISpanKind {
   let hasGenAI = false;
   for (const attr of span.attributes) {
-    if (attr.key === 'gen_ai.operation.name') {
-      return OPERATION_TO_KIND[String(attr.value)] ?? 'UNKNOWN_GENAI';
+    if (attr.key === 'gen_ai.operation.name' && typeof attr.value === 'string') {
+      return OPERATION_TO_KIND[attr.value] ?? 'UNKNOWN_GENAI';
     }
     if (!hasGenAI && attr.key.startsWith('gen_ai.')) {
       hasGenAI = true;
