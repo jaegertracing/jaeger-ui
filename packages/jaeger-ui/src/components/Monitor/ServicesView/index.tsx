@@ -168,7 +168,13 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   }, []);
 
   const fetchMetrics = useCallback(() => {
-    const currentService = selectedService || services[0];
+    const isValidSelected = selectedService != null && services.includes(selectedService);
+
+    if (!isValidSelected && urlOwned.current.service) {
+      urlOwned.current.service = false;
+    }
+
+    const currentService = isValidSelected ? selectedService : services[0];
 
     if (currentService) {
       const newEndTime = Date.now();

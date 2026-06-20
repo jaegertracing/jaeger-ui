@@ -813,6 +813,14 @@ describe('<MonitorATMServicesView> URL query params', () => {
 
     trackSpy.mockRestore();
   });
+
+  it('falls back to a loaded service when the URL service is not recognized', () => {
+    renderWithRouter(<MonitorATMServicesView {...baseProps} search="?service=evil%26foo=bar" />);
+
+    expect(mockFetchAllServiceMetrics).toHaveBeenCalledWith('service1', expect.anything());
+    expect(mockFetchAggregatedServiceMetrics).toHaveBeenCalledWith('service1', expect.anything());
+    expect(store.set).toHaveBeenCalledWith('lastAtmSearchService', 'service1');
+  });
 });
 
 describe('<MonitorATMServicesView> on page switch', () => {
