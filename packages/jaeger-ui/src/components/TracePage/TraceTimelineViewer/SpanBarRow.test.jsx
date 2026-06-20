@@ -7,6 +7,7 @@ import '@testing-library/jest-dom';
 
 import SpanBarRow from './SpanBarRow';
 import SpanBar from './SpanBar';
+import { GEN_AI_REQUEST_MODEL_KEY } from './utils';
 
 vi.mock('./SpanTreeOffset', () => ({
   default: jest.fn(({ span, childrenVisible, onClick }) => (
@@ -269,7 +270,7 @@ describe('<SpanBarRow>', () => {
       rpc: null,
       span: {
         ...defaultProps.span,
-        attributes: [{ key: 'gen_ai.request.model', value: 'gpt-4o' }],
+        attributes: [{ key: GEN_AI_REQUEST_MODEL_KEY, value: 'gpt-4o' }],
       },
     };
     render(<SpanBarRow {...props} />);
@@ -290,7 +291,7 @@ describe('<SpanBarRow>', () => {
       getViewedBounds,
       span: {
         ...defaultProps.span,
-        attributes: [{ key: 'gen_ai.request.model', value: 'claude-3-haiku' }],
+        attributes: [{ key: GEN_AI_REQUEST_MODEL_KEY, value: 'claude-3-haiku' }],
       },
     };
     render(<SpanBarRow {...props} />);

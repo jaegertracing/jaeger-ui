@@ -9,6 +9,7 @@ import {
   isKindClient,
   isKindProducer,
   getGenAiModel,
+  GEN_AI_REQUEST_MODEL_KEY,
 } from './utils';
 
 import traceGenerator from '../../../demo/trace-generators';
@@ -163,7 +164,7 @@ describe('TraceTimelineViewer/utils', () => {
 
   describe('getGenAiModel()', () => {
     it('returns the model name when gen_ai.request.model is present', () => {
-      const span = { attributes: [{ key: 'gen_ai.request.model', value: 'gpt-4o' }] };
+      const span = { attributes: [{ key: GEN_AI_REQUEST_MODEL_KEY, value: 'gpt-4o' }] };
       expect(getGenAiModel(span)).toBe('gpt-4o');
     });
 
@@ -181,7 +182,7 @@ describe('TraceTimelineViewer/utils', () => {
     });
 
     it('returns undefined when gen_ai.request.model value is not a string', () => {
-      const span = { attributes: [{ key: 'gen_ai.request.model', value: 42 }] };
+      const span = { attributes: [{ key: GEN_AI_REQUEST_MODEL_KEY, value: 42 }] };
       expect(getGenAiModel(span)).toBeUndefined();
     });
   });
