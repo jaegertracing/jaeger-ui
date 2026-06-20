@@ -8,8 +8,12 @@ export type GenAISpanKind = 'LLM_CALL' | 'TOOL_CALL' | 'AGENT' | 'RETRIEVAL' | '
 const OPERATION_TO_KIND: Record<string, GenAISpanKind> = {
   chat: 'LLM_CALL',
   text_completion: 'LLM_CALL',
+  generate_content: 'LLM_CALL',
+  embeddings: 'LLM_CALL',
   execute_tool: 'TOOL_CALL',
   invoke_agent: 'AGENT',
+  create_agent: 'AGENT',
+  invoke_workflow: 'AGENT',
   retrieval: 'RETRIEVAL',
 };
 

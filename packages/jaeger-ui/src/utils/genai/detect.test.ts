@@ -19,6 +19,16 @@ describe('classifySpan', () => {
     );
   });
 
+  it('classifies generate_content as LLM_CALL', () => {
+    expect(classifySpan(makeSpan([{ key: 'gen_ai.operation.name', value: 'generate_content' }]))).toBe(
+      'LLM_CALL'
+    );
+  });
+
+  it('classifies embeddings as LLM_CALL', () => {
+    expect(classifySpan(makeSpan([{ key: 'gen_ai.operation.name', value: 'embeddings' }]))).toBe('LLM_CALL');
+  });
+
   it('classifies execute_tool as TOOL_CALL', () => {
     expect(classifySpan(makeSpan([{ key: 'gen_ai.operation.name', value: 'execute_tool' }]))).toBe(
       'TOOL_CALL'
@@ -27,6 +37,16 @@ describe('classifySpan', () => {
 
   it('classifies invoke_agent as AGENT', () => {
     expect(classifySpan(makeSpan([{ key: 'gen_ai.operation.name', value: 'invoke_agent' }]))).toBe('AGENT');
+  });
+
+  it('classifies create_agent as AGENT', () => {
+    expect(classifySpan(makeSpan([{ key: 'gen_ai.operation.name', value: 'create_agent' }]))).toBe('AGENT');
+  });
+
+  it('classifies invoke_workflow as AGENT', () => {
+    expect(classifySpan(makeSpan([{ key: 'gen_ai.operation.name', value: 'invoke_workflow' }]))).toBe(
+      'AGENT'
+    );
   });
 
   it('classifies retrieval as RETRIEVAL', () => {
