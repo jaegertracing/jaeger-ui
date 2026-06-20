@@ -14,11 +14,14 @@ const OPERATION_TO_KIND: Record<string, GenAISpanKind> = {
 };
 
 export function classifySpan(span: IOtelSpan): GenAISpanKind {
-  const opAttr = span.attributes.find(a => a.key === 'gen_ai.operation.name');
-  if (opAttr) {
-    return OPERATION_TO_KIND[String(opAttr.value)] ?? 'UNKNOWN_GENAI';
+  let hasGenAI = false;
+  for (const attr of span.attributes) {
+    if (attr.key === 'gen_ai.operation.name' && typeof attr.value === 'string') {
+      return OPERATION_TO_KIND[attr.value] ?? 'UNKNOWN_GENAI';
+    }
+    if (attr.key.startsWith('gen_ai.')) hasGenAI = true;
   }
-  return span.attributes.some(a => a.key.startsWith('gen_ai.')) ? 'UNKNOWN_GENAI' : 'STANDARD';
+  return hasGenAI ? 'UNKNOWN_GENAI' : 'STANDARD';
 }
 
 export function isGenAITrace(spans: ReadonlyArray<IOtelSpan>): boolean {

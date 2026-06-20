@@ -29,5 +29,9 @@ export function GenAISpanIcon({ span }: { span: IOtelSpan }): React.ReactElement
   if (kind === 'STANDARD') return null;
   const Icon = KIND_ICONS[kind];
   const label = KIND_LABELS[kind];
-  return <Icon className="GenAISpanIcon" title={label} aria-label={label} />;
+  return (
+    <span role="img" aria-label={label} className="GenAISpanIcon">
+      <Icon aria-hidden="true" />
+    </span>
+  );
 }
