@@ -191,6 +191,25 @@ describe('<TraceFlamegraph />', () => {
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
 
+  it('renders a resizer in "both" mode with the table at the default 50% split', () => {
+    render(<TraceFlamegraph trace={otelTrace} />);
+    expect(screen.getByTestId('vertical-resizer')).toBeInTheDocument();
+    const tablePanel = screen.getByRole('table').closest('.Flamegraph-content--table');
+    expect(tablePanel).toHaveStyle({ maxWidth: '50%' });
+  });
+
+  it('does not render the resizer in table-only mode', () => {
+    render(<TraceFlamegraph trace={otelTrace} />);
+    fireEvent.click(screen.getByText('Table'));
+    expect(screen.queryByTestId('vertical-resizer')).not.toBeInTheDocument();
+  });
+
+  it('does not render the resizer in flamegraph-only mode', () => {
+    render(<TraceFlamegraph trace={otelTrace} />);
+    fireEvent.click(screen.getByText('Flamegraph'));
+    expect(screen.queryByTestId('vertical-resizer')).not.toBeInTheDocument();
+  });
+
   it('reset calls chart.resetZoom and chart.clear', () => {
     render(<TraceFlamegraph trace={otelTrace} />);
     const searchInput = screen.getByTestId('flamegraph-search');
