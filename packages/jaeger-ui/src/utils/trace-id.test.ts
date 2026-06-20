@@ -28,6 +28,15 @@ describe('looksLikeTraceId', () => {
     expect(looksLikeTraceId('abc+def/ghijklmnop==')).toBe(true);
   });
 
+  it('accepts URL-safe base64 with - and _ characters', () => {
+    expect(looksLikeTraceId('s23gbclyqrBxrBGc-Eyg_A==')).toBe(true);
+  });
+
+  it('rejects strings with invalid base64 length (1 mod 4 unpadded)', () => {
+    // 5 chars unpadded → 1 mod 4, impossible in valid base64
+    expect(looksLikeTraceId('ABCDE')).toBe(false);
+  });
+
   it('rejects natural language (contains spaces)', () => {
     expect(looksLikeTraceId('What is a trace?')).toBe(false);
   });
@@ -40,8 +49,9 @@ describe('looksLikeTraceId', () => {
     expect(looksLikeTraceId('   ')).toBe(false);
   });
 
-  it('rejects short strings', () => {
-    expect(looksLikeTraceId('abc')).toBe(false);
+  it('rejects strings with non-base64, non-hex characters', () => {
+    expect(looksLikeTraceId('hello world!')).toBe(false);
+    expect(looksLikeTraceId('not.a" trace')).toBe(false);
   });
 
   it('trims whitespace before checking', () => {
