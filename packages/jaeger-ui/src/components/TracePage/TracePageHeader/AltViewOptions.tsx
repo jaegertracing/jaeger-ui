@@ -25,6 +25,7 @@ type Props = {
   traceID: string;
   disableJsonView: boolean;
   viewType: ETraceViewType;
+  showGenAIView: boolean;
 };
 
 const MENU_ITEMS = [
@@ -59,7 +60,7 @@ const MENU_ITEMS = [
 ];
 
 export default function AltViewOptions(props: Props) {
-  const { onTraceViewChange, viewType, traceID, disableJsonView } = props;
+  const { onTraceViewChange, viewType, traceID, disableJsonView, showGenAIView } = props;
 
   const handleSelectView = (item: ETraceViewType) => {
     if (item === ETraceViewType.TraceTimelineViewer) {
@@ -76,7 +77,10 @@ export default function AltViewOptions(props: Props) {
     onTraceViewChange(item);
   };
 
-  const dropdownItems = MENU_ITEMS.filter(item => item.viewType !== viewType).map(item => ({
+  const dropdownItems = MENU_ITEMS.filter(
+    item =>
+      item.viewType !== viewType && (item.viewType !== ETraceViewType.GenAITimelineViewer || showGenAIView)
+  ).map(item => ({
     key: item.viewType as ETraceViewType | string,
     label: (
       <a onClick={() => handleSelectView(item.viewType)} role="button">

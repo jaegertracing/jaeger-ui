@@ -1073,6 +1073,7 @@ describe('<TracePage>', () => {
       genAiProps = {
         ...defaultProps,
         id: genAiOtelTrace.traceID,
+        backendCapabilities: { aiAssistant: true },
       };
     });
 
@@ -1094,6 +1095,16 @@ describe('<TracePage>', () => {
     it('does not show banner for a plain trace', () => {
       useTraceMock.mockReturnValue({ data: trace, isPending: false, isError: false, error: null });
       render(<TracePage {...defaultProps} />);
+      expect(screen.queryByText('GenAI trace detected')).not.toBeInTheDocument();
+    });
+
+    it('does not show banner when backendCapabilities.aiAssistant is not set', () => {
+      render(<TracePage {...genAiProps} backendCapabilities={null} />);
+      expect(screen.queryByText('GenAI trace detected')).not.toBeInTheDocument();
+    });
+
+    it('does not show banner when backendCapabilities.aiAssistant is false', () => {
+      render(<TracePage {...genAiProps} backendCapabilities={{ aiAssistant: false }} />);
       expect(screen.queryByText('GenAI trace detected')).not.toBeInTheDocument();
     });
 

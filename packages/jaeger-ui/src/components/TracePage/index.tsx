@@ -419,6 +419,7 @@ export function TracePageImpl(props: TProps) {
     ref: searchBarRef,
     resultCount: findCount,
     disableJsonView,
+    showGenAIView: Boolean(backendCapabilities?.aiAssistant),
     showArchiveButton: !isEmbedded && archiveEnabled && hasArchiveStorage,
     showStandaloneLink: isEmbedded,
     showViewOptions: !isEmbedded,
@@ -493,23 +494,26 @@ export function TracePageImpl(props: TProps) {
       )}
       <div className="Tracepage--headerSection" ref={headerRefCallback}>
         <TracePageHeader {...headerProps} />
-        {traceIsGenAI && !genAiBannerDismissed && viewType !== ETraceViewType.GenAITimelineViewer && (
-          <Alert
-            message="GenAI trace detected"
-            description="This trace contains GenAI spans. Switch to GenAI View for a dedicated visualization."
-            type="info"
-            closable
-            onClose={() => {
-              sessionStorage.setItem('genai-banner-dismissed', 'true');
-              setGenAiBannerDismissed(true);
-            }}
-            action={
-              <Button size="small" onClick={() => setTraceView(ETraceViewType.GenAITimelineViewer)}>
-                Switch to GenAI View
-              </Button>
-            }
-          />
-        )}
+        {traceIsGenAI &&
+          !genAiBannerDismissed &&
+          backendCapabilities?.aiAssistant &&
+          viewType !== ETraceViewType.GenAITimelineViewer && (
+            <Alert
+              message="GenAI trace detected"
+              description="This trace contains GenAI spans. Switch to GenAI View for a dedicated visualization."
+              type="info"
+              closable
+              onClose={() => {
+                sessionStorage.setItem('genai-banner-dismissed', 'true');
+                setGenAiBannerDismissed(true);
+              }}
+              action={
+                <Button size="small" onClick={() => setTraceView(ETraceViewType.GenAITimelineViewer)}>
+                  Switch to GenAI View
+                </Button>
+              }
+            />
+          )}
       </div>
       {headerHeight ? <section style={{ paddingTop: headerHeight }}>{view}</section> : null}
     </div>
