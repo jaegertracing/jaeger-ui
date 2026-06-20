@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { Divider } from 'antd';
+import { Divider, Tabs } from 'antd';
 
 import { IoLinkOutline } from 'react-icons/io5';
 import AccordionAttributes from './AccordionAttributes';
@@ -10,9 +10,12 @@ import AccordionEvents from './AccordionEvents';
 import AccordionLinks from './AccordionLinks';
 import AccordionText from './AccordionText';
 import DetailState from './DetailState';
+import GenAITab from './GenAITab';
 import { formatDuration, formatDurationCompact } from '../utils';
 import CopyIcon from '../../../common/CopyIcon';
 import LabeledList from '../../../common/LabeledList';
+import { useJaegerAssistantEnabled } from '../../../../hooks/useJaegerAssistant';
+import { isGenAISpan } from '../../../../utils/genai';
 
 import { TNil } from '../../../../types';
 import { Hyperlink } from '../../../../types/hyperlink';
@@ -86,6 +89,83 @@ export default function SpanDetail(props: SpanDetailProps) {
   ];
   const deepLinkCopyText = `${window.location.origin}${window.location.pathname}?uiFind=${span.spanID}`;
 
+  const aiEnabled = useJaegerAssistantEnabled();
+  const showGenAITab = aiEnabled && isGenAISpan(span);
+
+  const detailsContent = (
+    <div>
+      <div>
+        <AccordionAttributes
+          data={span.attributes}
+          label={attributesLabel}
+          linksGetter={linksGetter}
+          isOpen={isAttributesOpen}
+          onToggle={() => attributesToggle(span.spanID)}
+        />
+        {span.resource.attributes && span.resource.attributes.length > 0 && (
+          <AccordionAttributes
+            className="ub-mb1"
+            data={span.resource.attributes}
+            label={resourceLabel}
+            linksGetter={linksGetter}
+            isOpen={isResourceOpen}
+            onToggle={() => resourceToggle(span.spanID)}
+          />
+        )}
+      </div>
+      {span.events && span.events.length > 0 && (
+        <AccordionEvents
+          linksGetter={linksGetter}
+          events={span.events}
+          isOpen={eventsState.isOpen}
+          openedItems={eventsState.openedItems}
+          onToggle={() => eventsToggle(span.spanID)}
+          onItemToggle={eventItem => eventItemToggle(span.spanID, eventItem)}
+          timestamp={traceStartTime}
+          currentViewRangeTime={currentViewRangeTime}
+          traceDuration={traceDuration}
+          spanID={span.spanID}
+          useOtelTerms={useOtelTerms}
+          initialVisibleCount={eventsInitialVisibleCount}
+        />
+      )}
+      {warnings && warnings.length > 0 && (
+        <AccordionText
+          className="AccordianWarnings"
+          headerClassName="AccordianWarnings--header"
+          label={<span className="AccordianWarnings--label">Warnings</span>}
+          data={warnings}
+          isOpen={isWarningsOpen}
+          onToggle={() => warningsToggle(span.spanID)}
+        />
+      )}
+      {links && links.length > 0 && (
+        <AccordionLinks
+          data={links}
+          isOpen={isLinksOpen}
+          onToggle={() => linksToggle(span.spanID)}
+          focusSpan={focusSpan}
+          useOtelTerms={useOtelTerms}
+        />
+      )}
+      <small className="SpanDetail--debugInfo">
+        <span className="SpanDetail--debugLabel" data-label="SpanID:" /> {span.spanID}
+        <CopyIcon
+          copyText={deepLinkCopyText}
+          icon={<IoLinkOutline />}
+          placement="topRight"
+          tooltipTitle="Copy deep link to this span"
+          buttonText="Copy"
+        />
+      </small>
+    </div>
+  );
+
+  const tabItems = [
+    { key: 'details', label: 'Details', children: detailsContent },
+    ...(showGenAITab ? [{ key: 'genai', label: 'GenAI', children: <GenAITab span={span} /> }] : []),
+  ];
+
   return (
     <div>
       <div className="ub-flex ub-items-center">
@@ -97,72 +177,7 @@ export default function SpanDetail(props: SpanDetailProps) {
         />
       </div>
       <Divider className="SpanDetail--divider ub-my1" />
-      <div>
-        <div>
-          <AccordionAttributes
-            data={span.attributes}
-            label={attributesLabel}
-            linksGetter={linksGetter}
-            isOpen={isAttributesOpen}
-            onToggle={() => attributesToggle(span.spanID)}
-          />
-          {span.resource.attributes && span.resource.attributes.length > 0 && (
-            <AccordionAttributes
-              className="ub-mb1"
-              data={span.resource.attributes}
-              label={resourceLabel}
-              linksGetter={linksGetter}
-              isOpen={isResourceOpen}
-              onToggle={() => resourceToggle(span.spanID)}
-            />
-          )}
-        </div>
-        {span.events && span.events.length > 0 && (
-          <AccordionEvents
-            linksGetter={linksGetter}
-            events={span.events}
-            isOpen={eventsState.isOpen}
-            openedItems={eventsState.openedItems}
-            onToggle={() => eventsToggle(span.spanID)}
-            onItemToggle={eventItem => eventItemToggle(span.spanID, eventItem)}
-            timestamp={traceStartTime}
-            currentViewRangeTime={currentViewRangeTime}
-            traceDuration={traceDuration}
-            spanID={span.spanID}
-            useOtelTerms={useOtelTerms}
-            initialVisibleCount={eventsInitialVisibleCount}
-          />
-        )}
-        {warnings && warnings.length > 0 && (
-          <AccordionText
-            className="AccordianWarnings"
-            headerClassName="AccordianWarnings--header"
-            label={<span className="AccordianWarnings--label">Warnings</span>}
-            data={warnings}
-            isOpen={isWarningsOpen}
-            onToggle={() => warningsToggle(span.spanID)}
-          />
-        )}
-        {links && links.length > 0 && (
-          <AccordionLinks
-            data={links}
-            isOpen={isLinksOpen}
-            onToggle={() => linksToggle(span.spanID)}
-            focusSpan={focusSpan}
-            useOtelTerms={useOtelTerms}
-          />
-        )}
-        <small className="SpanDetail--debugInfo">
-          <span className="SpanDetail--debugLabel" data-label="SpanID:" /> {span.spanID}
-          <CopyIcon
-            copyText={deepLinkCopyText}
-            icon={<IoLinkOutline />}
-            placement="topRight"
-            tooltipTitle="Copy deep link to this span"
-            buttonText="Copy"
-          />
-        </small>
-      </div>
+      <Tabs defaultActiveKey={showGenAITab ? 'genai' : 'details'} items={tabItems} />
     </div>
   );
 }

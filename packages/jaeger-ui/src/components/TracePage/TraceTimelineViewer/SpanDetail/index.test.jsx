@@ -89,6 +89,23 @@ vi.mock('../../../common/CopyIcon', () => {
   });
 });
 
+vi.mock('./GenAITab', () => {
+  return mockDefault(function MockGenAITab() {
+    return <div data-testid="genai-tab">GenAI Tab</div>;
+  });
+});
+
+const { useJaegerAssistantEnabledMock, isGenAISpanMock } = vi.hoisted(() => ({
+  useJaegerAssistantEnabledMock: vi.fn(() => false),
+  isGenAISpanMock: vi.fn(() => false),
+}));
+vi.mock('../../../../hooks/useJaegerAssistant', () => ({
+  useJaegerAssistantEnabled: useJaegerAssistantEnabledMock,
+}));
+vi.mock('../../../../utils/genai', () => ({
+  isGenAISpan: isGenAISpanMock,
+}));
+
 describe('<SpanDetail>', () => {
   let props;
   let spanData;
@@ -284,5 +301,47 @@ describe('<SpanDetail>', () => {
 
     expect(copyIcon).toBeInTheDocument();
     expect(copyText).toContain(`?uiFind=${props.span.spanID}`);
+  });
+
+  describe('GenAI tab', () => {
+    beforeEach(() => {
+      useJaegerAssistantEnabledMock.mockReset();
+      isGenAISpanMock.mockReset();
+    });
+
+    it('does not show the GenAI tab when the AI assistant is disabled', () => {
+      useJaegerAssistantEnabledMock.mockReturnValue(false);
+      isGenAISpanMock.mockReturnValue(true);
+      render(<SpanDetail {...props} />);
+      expect(screen.queryByTestId('genai-tab')).not.toBeInTheDocument();
+    });
+
+    it('does not show the GenAI tab when the span has no gen_ai.* attributes', () => {
+      useJaegerAssistantEnabledMock.mockReturnValue(true);
+      isGenAISpanMock.mockReturnValue(false);
+      render(<SpanDetail {...props} />);
+      expect(screen.queryByTestId('genai-tab')).not.toBeInTheDocument();
+    });
+
+    it('shows the GenAI tab when AI assistant is enabled and span has gen_ai.* attributes', () => {
+      useJaegerAssistantEnabledMock.mockReturnValue(true);
+      isGenAISpanMock.mockReturnValue(true);
+      render(<SpanDetail {...props} />);
+      expect(screen.getByTestId('genai-tab')).toBeInTheDocument();
+    });
+
+    it('defaults to the Details tab for a non-GenAI span', () => {
+      useJaegerAssistantEnabledMock.mockReturnValue(true);
+      isGenAISpanMock.mockReturnValue(false);
+      render(<SpanDetail {...props} />);
+      expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute('aria-selected', 'true');
+    });
+
+    it('defaults to the GenAI tab when span has gen_ai.* attributes and assistant is enabled', () => {
+      useJaegerAssistantEnabledMock.mockReturnValue(true);
+      isGenAISpanMock.mockReturnValue(true);
+      render(<SpanDetail {...props} />);
+      expect(screen.getByRole('tab', { name: 'GenAI' })).toHaveAttribute('aria-selected', 'true');
+    });
   });
 });
