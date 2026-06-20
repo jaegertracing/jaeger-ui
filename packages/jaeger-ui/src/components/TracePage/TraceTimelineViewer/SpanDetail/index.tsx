@@ -161,11 +161,6 @@ export default function SpanDetail(props: SpanDetailProps) {
     </div>
   );
 
-  const tabItems = [
-    { key: 'details', label: 'Details', children: detailsContent },
-    ...(showGenAITab ? [{ key: 'genai', label: 'GenAI', children: <GenAITab span={span} /> }] : []),
-  ];
-
   return (
     <div>
       <div className="ub-flex ub-items-center">
@@ -177,7 +172,18 @@ export default function SpanDetail(props: SpanDetailProps) {
         />
       </div>
       <Divider className="SpanDetail--divider ub-my1" />
-      <Tabs defaultActiveKey={showGenAITab ? 'genai' : 'details'} items={tabItems} />
+      {showGenAITab ? (
+        <Tabs
+          key={span.spanID}
+          defaultActiveKey="genai"
+          items={[
+            { key: 'details', label: 'Details', children: detailsContent },
+            { key: 'genai', label: 'GenAI', children: <GenAITab span={span} /> },
+          ]}
+        />
+      ) : (
+        detailsContent
+      )}
     </div>
   );
 }

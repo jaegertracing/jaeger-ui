@@ -330,11 +330,12 @@ describe('<SpanDetail>', () => {
       expect(screen.getByTestId('genai-tab')).toBeInTheDocument();
     });
 
-    it('defaults to the Details tab for a non-GenAI span', () => {
+    it('renders no tab bar for a non-GenAI span — content is shown directly', () => {
       useJaegerAssistantEnabledMock.mockReturnValue(true);
       isGenAISpanMock.mockReturnValue(false);
       render(<SpanDetail {...props} />);
-      expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute('aria-selected', 'true');
+      expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+      expect(screen.getByTestId('accordian-keyvalues-tags')).toBeInTheDocument();
     });
 
     it('defaults to the GenAI tab when span has gen_ai.* attributes and assistant is enabled', () => {
