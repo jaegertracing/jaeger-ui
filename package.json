@@ -13,7 +13,7 @@
   },
   "packageManager": "npm@11.17.0",
   "devDependencies": {
-    "@babel/core": "7.29.6",
+    "@babel/core": "8.0.1",
     "@emnapi/core": "^1.9.1",
     "@emnapi/runtime": "^1.9.1",
     "@noble/hashes": "2.2.0",
