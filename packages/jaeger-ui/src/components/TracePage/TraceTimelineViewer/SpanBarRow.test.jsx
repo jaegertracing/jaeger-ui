@@ -293,5 +293,32 @@ describe('<SpanBarRow>', () => {
       render(<SpanBarRow {...defaultProps} span={span} />);
       expect(screen.getByRole('img', { name: 'Tool call' })).toBeInTheDocument();
     });
+
+    it('shows an agent icon when span has gen_ai.operation.name=invoke_agent', () => {
+      const span = {
+        ...defaultProps.span,
+        attributes: [{ key: 'gen_ai.operation.name', value: 'invoke_agent' }],
+      };
+      render(<SpanBarRow {...defaultProps} span={span} />);
+      expect(screen.getByRole('img', { name: 'Agent' })).toBeInTheDocument();
+    });
+
+    it('shows a retrieval icon when span has gen_ai.operation.name=retrieval', () => {
+      const span = {
+        ...defaultProps.span,
+        attributes: [{ key: 'gen_ai.operation.name', value: 'retrieval' }],
+      };
+      render(<SpanBarRow {...defaultProps} span={span} />);
+      expect(screen.getByRole('img', { name: 'Retrieval' })).toBeInTheDocument();
+    });
+
+    it('shows a generic GenAI icon for a span with only gen_ai.system set', () => {
+      const span = {
+        ...defaultProps.span,
+        attributes: [{ key: 'gen_ai.system', value: 'openai' }],
+      };
+      render(<SpanBarRow {...defaultProps} span={span} />);
+      expect(screen.getByRole('img', { name: 'GenAI span' })).toBeInTheDocument();
+    });
   });
 });
