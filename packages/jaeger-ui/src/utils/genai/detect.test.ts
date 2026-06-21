@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { classifySpan, isGenAITrace } from './detect';
+import { classifySpan, isGenAISpan, isGenAITrace } from './detect';
 import type { IAttribute } from '../../types/otel';
 
 function makeSpan(attrs: IAttribute[]): { attributes: IAttribute[] } {
@@ -19,6 +19,16 @@ describe('classifySpan', () => {
     );
   });
 
+  it('classifies generate_content as LLM_CALL', () => {
+    expect(classifySpan(makeSpan([{ key: 'gen_ai.operation.name', value: 'generate_content' }]))).toBe(
+      'LLM_CALL'
+    );
+  });
+
+  it('classifies embeddings as LLM_CALL', () => {
+    expect(classifySpan(makeSpan([{ key: 'gen_ai.operation.name', value: 'embeddings' }]))).toBe('LLM_CALL');
+  });
+
   it('classifies execute_tool as TOOL_CALL', () => {
     expect(classifySpan(makeSpan([{ key: 'gen_ai.operation.name', value: 'execute_tool' }]))).toBe(
       'TOOL_CALL'
@@ -27,6 +37,16 @@ describe('classifySpan', () => {
 
   it('classifies invoke_agent as AGENT', () => {
     expect(classifySpan(makeSpan([{ key: 'gen_ai.operation.name', value: 'invoke_agent' }]))).toBe('AGENT');
+  });
+
+  it('classifies create_agent as AGENT', () => {
+    expect(classifySpan(makeSpan([{ key: 'gen_ai.operation.name', value: 'create_agent' }]))).toBe('AGENT');
+  });
+
+  it('classifies invoke_workflow as AGENT', () => {
+    expect(classifySpan(makeSpan([{ key: 'gen_ai.operation.name', value: 'invoke_workflow' }]))).toBe(
+      'AGENT'
+    );
   });
 
   it('classifies retrieval as RETRIEVAL', () => {
@@ -49,6 +69,24 @@ describe('classifySpan', () => {
 
   it('returns STANDARD for a span with empty attributes', () => {
     expect(classifySpan(makeSpan([]))).toBe('STANDARD');
+  });
+});
+
+describe('isGenAISpan', () => {
+  it('returns true for a span with a gen_ai.* attribute', () => {
+    expect(isGenAISpan(makeSpan([{ key: 'gen_ai.system', value: 'openai' }]))).toBe(true);
+  });
+
+  it('returns true for a span with gen_ai.operation.name', () => {
+    expect(isGenAISpan(makeSpan([{ key: 'gen_ai.operation.name', value: 'chat' }]))).toBe(true);
+  });
+
+  it('returns false for a span with no gen_ai.* attribute', () => {
+    expect(isGenAISpan(makeSpan([{ key: 'http.method', value: 'GET' }]))).toBe(false);
+  });
+
+  it('returns false for a span with empty attributes', () => {
+    expect(isGenAISpan(makeSpan([]))).toBe(false);
   });
 });
 

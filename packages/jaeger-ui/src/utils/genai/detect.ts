@@ -10,10 +10,18 @@ type SpanAttrs = { attributes: ReadonlyArray<IAttribute> };
 const OPERATION_TO_KIND: Partial<Record<string, GenAISpanKind>> = {
   chat: 'LLM_CALL',
   text_completion: 'LLM_CALL',
+  generate_content: 'LLM_CALL',
+  embeddings: 'LLM_CALL',
   execute_tool: 'TOOL_CALL',
   invoke_agent: 'AGENT',
+  create_agent: 'AGENT',
+  invoke_workflow: 'AGENT',
   retrieval: 'RETRIEVAL',
 };
+
+export function isGenAISpan(span: SpanAttrs): boolean {
+  return span.attributes.some(a => a.key.startsWith('gen_ai.'));
+}
 
 export function classifySpan(span: SpanAttrs): GenAISpanKind {
   let hasGenAI = false;
