@@ -1,8 +1,8 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useState } from 'react';
-import { JsonView, allExpanded, defaultStyles } from 'react-json-view-lite';
+import React from 'react';
+import { JsonView, allExpanded, collapseAllNested, defaultStyles } from 'react-json-view-lite';
 import 'react-json-view-lite/dist/index.css';
 
 import { RICH_MEDIA_ATTRIBUTE_KEYS } from '../../../../utils/genai/detect';
@@ -53,9 +53,10 @@ type JsonRendererProps = { value: unknown };
 function JsonRenderer({ value }: JsonRendererProps) {
   const parsed = tryParseJson(value);
   if (parsed !== null) {
+    const isSmall = typeof parsed === 'object' && parsed !== null && Object.keys(parsed).length <= 10;
     return (
       <div className="GenAIAttributeRenderer--json">
-        <JsonView data={parsed} shouldExpandNode={allExpanded} style={defaultStyles} />
+        <JsonView data={parsed} shouldExpandNode={isSmall ? allExpanded : collapseAllNested} style={defaultStyles} />
       </div>
     );
   }
@@ -77,8 +78,8 @@ function MarkdownRenderer({ value }: MarkdownRendererProps) {
  * non-GenAI spans.
  */
 export default function GenAIAttributeRenderer({ attribute, isOpen }: Props): React.ReactElement | null {
+  if (!Object.hasOwn(RICH_MEDIA_ATTRIBUTE_KEYS, attribute.key)) return null;
   const renderKind = RICH_MEDIA_ATTRIBUTE_KEYS[attribute.key];
-  if (renderKind === undefined) return null;
 
   // Lazy: do not parse or render when the section is collapsed
   if (!isOpen) return null;
