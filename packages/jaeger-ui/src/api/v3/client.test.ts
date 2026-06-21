@@ -547,6 +547,17 @@ describe('JaegerClient', () => {
 
       await expect(promise).rejects.toThrow(/not found or contained no spans/);
     });
+
+    it('throws on a truncated (incomplete) streamed response', async () => {
+      // First object is complete; the second is cut off mid-stream.
+      const truncated = JSON.stringify(wrapped([aSpan])) + '{"result":{"resourceSpans":[{"resou';
+      mockFetch.mockResolvedValue({ ok: true, text: async () => truncated });
+
+      const promise = client.getTrace(TRACE);
+      vi.runAllTimers();
+
+      await expect(promise).rejects.toThrow(/incomplete JSON/);
+    });
   });
 });
 

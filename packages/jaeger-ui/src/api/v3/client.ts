@@ -45,6 +45,11 @@ function splitConcatenatedJson(text: string): unknown[] {
       }
     }
   }
+  // A leftover open object/string means the stream was truncated mid-response;
+  // fail loudly rather than silently returning a partial trace.
+  if (depth !== 0 || inString || start !== -1) {
+    throw new Error('Invalid streamed trace response: incomplete JSON');
+  }
   return out;
 }
 

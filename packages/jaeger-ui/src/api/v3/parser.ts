@@ -81,6 +81,8 @@ type MutableOtelSpan = IOtelSpan & {
 };
 
 const NANOS_PER_MICRO = 1000n;
+// int64 attribute values beyond this magnitude lose precision as JS numbers and are kept as strings.
+const MAX_SAFE_BIG = BigInt(Number.MAX_SAFE_INTEGER);
 
 function nanoToMicros(ns: string | undefined): Microseconds {
   if (!ns) return 0 as Microseconds;
@@ -136,7 +138,16 @@ function toAttributeValue(value: IOtlpAnyValue | undefined): AttributeValue {
   if (!value) return '';
   if (value.stringValue !== undefined) return value.stringValue;
   if (value.boolValue !== undefined) return value.boolValue;
-  if (value.intValue !== undefined) return Number(value.intValue);
+  if (value.intValue !== undefined) {
+    // intValue is an int64 encoded as a string; keep it as a string when it would
+    // lose precision as a JS number, otherwise convert for numeric use downstream.
+    try {
+      const asBig = BigInt(value.intValue);
+      return asBig > MAX_SAFE_BIG || asBig < -MAX_SAFE_BIG ? value.intValue : Number(asBig);
+    } catch {
+      return value.intValue;
+    }
+  }
   if (value.doubleValue !== undefined) return value.doubleValue;
   if (value.bytesValue !== undefined) return value.bytesValue;
   if (value.arrayValue !== undefined) return (value.arrayValue.values ?? []).map(toAttributeValue);
@@ -152,7 +163,7 @@ function toAttributeValue(value: IOtlpAnyValue | undefined): AttributeValue {
 
 function toAttributes(kvs: IOtlpKeyValue[] | undefined): IAttribute[] {
   return (kvs ?? [])
-    .filter(kv => kv.key !== undefined)
+    .filter(kv => kv.key !== undefined && kv.value !== undefined)
     .map(kv => ({ key: kv.key as string, value: toAttributeValue(kv.value) }));
 }
 
@@ -183,13 +194,13 @@ export function parseOtelTrace(data: IOtlpTracesData): IOtelTrace | null {
       };
 
       for (const sp of scopeSpans.spans ?? []) {
-        // A span without an id or start time can't be placed in the timeline.
-        if (!sp.spanId || !sp.startTimeUnixNano) continue;
+        // A span without a trace/span id or start time can't be placed in the timeline.
+        if (!sp.traceId || !sp.spanId || !sp.startTimeUnixNano) continue;
         const startTime = nanoToMicros(sp.startTimeUnixNano);
         const duration = durationMicros(sp.startTimeUnixNano, sp.endTimeUnixNano);
         const endTime = (startTime + duration) as Microseconds;
         flat.push({
-          traceID: (sp.traceId ?? '').toLowerCase(),
+          traceID: sp.traceId.toLowerCase(),
           spanID: sp.spanId.toLowerCase(),
           parentSpanID: sp.parentSpanId ? sp.parentSpanId.toLowerCase() : undefined,
           name: sp.name ?? '',

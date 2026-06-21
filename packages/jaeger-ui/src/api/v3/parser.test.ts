@@ -234,16 +234,40 @@ describe('parseOtelTrace', () => {
     expect(services).toEqual({ 'svc-a': 1, 'svc-b': 2 });
   });
 
-  it('skips spans missing an id or start time', () => {
+  it('skips spans missing a trace id, span id, or start time', () => {
     const trace = parseOtelTrace(
       otlp([
         makeSpan({ spanId: S1 }),
         makeSpan({ spanId: undefined }),
         makeSpan({ spanId: S2, startTimeUnixNano: undefined }),
+        makeSpan({ spanId: S3, traceId: undefined }),
       ])
     )!;
     expect(trace.spans).toHaveLength(1);
     expect(trace.spans[0].spanID).toBe(S1);
+  });
+
+  it('keeps large int64 attribute values as strings to avoid precision loss', () => {
+    const trace = parseOtelTrace(
+      otlp([
+        makeSpan({
+          attributes: [
+            { key: 'big', value: { intValue: '9223372036854775807' } }, // > Number.MAX_SAFE_INTEGER
+            { key: 'small', value: { intValue: '123' } },
+          ],
+        }),
+      ])
+    )!;
+    const attrs = Object.fromEntries(trace.spans[0].attributes.map(a => [a.key, a.value]));
+    expect(attrs.big).toBe('9223372036854775807');
+    expect(attrs.small).toBe(123);
+  });
+
+  it('drops attributes whose value is absent rather than inventing an empty string', () => {
+    const trace = parseOtelTrace(
+      otlp([makeSpan({ attributes: [{ key: 'present', value: { stringValue: 'v' } }, { key: 'absent' }] })])
+    )!;
+    expect(trace.spans[0].attributes).toEqual([{ key: 'present', value: 'v' }]);
   });
 
   it('parses a real /api/v3/traces response with parity to the legacy span count', () => {
