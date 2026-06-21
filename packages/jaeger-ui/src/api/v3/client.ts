@@ -10,9 +10,67 @@
 
 import prefixUrl from '../../utils/prefix-url';
 import { ServicesResponseSchema, OperationsResponseSchema, TraceSummariesResponseSchema } from './schemas';
+import { parseOtelTrace, IOtlpTracesData } from './parser';
 import type { SearchQuery } from '../../types/search';
 import type { TraceSummary, ServiceSummary } from '../../types/trace-summary';
+import type { IOtelTrace } from '../../types/otel';
 import type { Microseconds } from '../../types/units';
+
+// Split a string of concatenated top-level JSON objects, tracking brace depth
+// while respecting string literals and escapes.
+function splitConcatenatedJson(text: string): unknown[] {
+  const out: unknown[] = [];
+  let depth = 0;
+  let start = -1;
+  let inString = false;
+  let escaped = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (ch === '\\') escaped = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') {
+      inString = true;
+    } else if (ch === '{') {
+      if (depth === 0) start = i;
+      depth++;
+    } else if (ch === '}') {
+      depth--;
+      if (depth === 0 && start >= 0) {
+        out.push(JSON.parse(text.slice(start, i + 1)));
+        start = -1;
+      }
+    }
+  }
+  return out;
+}
+
+function parseJsonStream(text: string): unknown[] {
+  const trimmed = text.trim();
+  if (!trimmed) return [];
+  try {
+    const parsed = JSON.parse(trimmed);
+    return Array.isArray(parsed) ? parsed : [parsed];
+  } catch {
+    return splitConcatenatedJson(trimmed);
+  }
+}
+
+// The v3 GetTrace endpoint is server-streaming: over HTTP the gRPC gateway emits
+// one or more `{"result": TracesData}` JSON objects, either as a single object, a
+// JSON array, or concatenated objects for large traces. Collect them all and merge
+// the resourceSpans into a single TracesData document.
+function mergeStreamedTrace(text: string): IOtlpTracesData {
+  const resourceSpans: NonNullable<IOtlpTracesData['resourceSpans']> = [];
+  for (const chunk of parseJsonStream(text)) {
+    const chunkSpans = (chunk as { result?: IOtlpTracesData })?.result?.resourceSpans;
+    if (Array.isArray(chunkSpans)) resourceSpans.push(...chunkSpans);
+  }
+  return { resourceSpans };
+}
 
 export class JaegerClient {
   private apiRoot = prefixUrl('/api/v3');
@@ -119,6 +177,23 @@ export class JaegerClient {
         services,
       };
     });
+  }
+
+  /**
+   * Fetch a single trace by ID from `/api/v3/traces/{id}` and parse the OTLP
+   * response into an enriched `IOtelTrace`.
+   */
+  async getTrace(traceId: string): Promise<IOtelTrace> {
+    const response = await this.fetchWithTimeout(`${this.apiRoot}/traces/${encodeURIComponent(traceId)}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch trace "${traceId}": ${response.status} ${response.statusText}`);
+    }
+    const tracesData = mergeStreamedTrace(await response.text());
+    const trace = parseOtelTrace(tracesData);
+    if (!trace) {
+      throw new Error(`Trace "${traceId}" not found or contained no spans`);
+    }
+    return trace;
   }
 
   /**

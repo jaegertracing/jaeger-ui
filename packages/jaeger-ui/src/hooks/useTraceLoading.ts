@@ -3,9 +3,8 @@
 
 import { useMemo } from 'react';
 import { useQuery, useQueries, UseQueryResult } from '@tanstack/react-query';
-import JaegerAPI from '../api/jaeger';
+import { jaegerClient } from '../api/v3/client';
 import { fetchedState } from '../constants';
-import transformTraceData from '../model/transform-trace-data';
 import { queryClient } from '../query/app-query-client';
 import { FetchedTrace } from '../types';
 import type { IOtelTrace } from '../types/otel';
@@ -32,14 +31,7 @@ export function populateTraceCache(trace: IOtelTrace): void {
 export function useTrace(traceId: string): UseQueryResult<IOtelTrace> {
   return useQuery({
     queryKey: TRACE_QUERY_KEY(traceId),
-    queryFn: async () => {
-      const response = await JaegerAPI.fetchTrace(traceId);
-      const data = transformTraceData(response.data[0]);
-      if (!data) {
-        throw new Error('Invalid trace data received.');
-      }
-      return data.asOtelTrace();
-    },
+    queryFn: async () => jaegerClient.getTrace(traceId),
     staleTime: Infinity,
   });
 }
@@ -51,14 +43,7 @@ export function useTraces(ids: string[]): Map<string, FetchedTrace> {
   const results = useQueries({
     queries: ids.map(id => ({
       queryKey: TRACE_QUERY_KEY(id),
-      queryFn: async () => {
-        const response = await JaegerAPI.fetchTrace(id);
-        const data = transformTraceData(response.data[0]);
-        if (!data) {
-          throw new Error('Invalid trace data received.');
-        }
-        return data.asOtelTrace();
-      },
+      queryFn: async () => jaegerClient.getTrace(id),
       staleTime: Infinity,
     })),
   });
