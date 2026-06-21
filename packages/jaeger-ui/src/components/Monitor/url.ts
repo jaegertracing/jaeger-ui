@@ -43,8 +43,8 @@ export const getUrlState = memoizeOne(function getUrlState(search: string): TMon
   }
 
   const timeframeValue = firstValue(timeframe);
-  if (timeframeValue != null) {
-    const parsed = Number.parseInt(timeframeValue, 10);
+  if (timeframeValue != null && /^\d+$/.test(timeframeValue)) {
+    const parsed = Number(timeframeValue);
     if (Number.isFinite(parsed) && timeFrameOptions.some(option => option.value === parsed)) {
       rv.timeframe = parsed;
     }

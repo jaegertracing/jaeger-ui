@@ -821,6 +821,15 @@ describe('<MonitorATMServicesView> URL query params', () => {
     expect(mockFetchAggregatedServiceMetrics).toHaveBeenCalledWith('service1', expect.anything());
     expect(store.set).toHaveBeenCalledWith('lastAtmSearchService', 'service1');
   });
+
+  it('does not surface an unrecognized URL service in the View all traces link', () => {
+    renderWithRouter(<MonitorATMServicesView {...baseProps} search="?service=evil%26foo=bar" />);
+
+    const link = screen.getByText('View all traces');
+    const href = link.getAttribute('href');
+    expect(href).toContain('service=service1');
+    expect(href).not.toContain('evil');
+  });
 });
 
 describe('<MonitorATMServicesView> on page switch', () => {

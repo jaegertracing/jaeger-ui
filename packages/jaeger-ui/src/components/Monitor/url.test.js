@@ -36,6 +36,10 @@ describe('Monitor/url', () => {
       expect(getUrlState('?timeframe=notanumber')).toEqual({});
     });
 
+    it('omits a timeframe with trailing non-numeric characters', () => {
+      expect(getUrlState('?timeframe=3600000junk')).toEqual({});
+    });
+
     it('ignores unrelated params such as uiEmbed', () => {
       expect(getUrlState('?service=myservice&uiEmbed=v0')).toEqual({ service: 'myservice' });
     });

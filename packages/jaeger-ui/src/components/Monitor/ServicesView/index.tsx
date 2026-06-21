@@ -144,7 +144,8 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   }, []);
 
   const getSelectedService = useCallback(() => {
-    return selectedService || store.getString('lastAtmSearchService') || services[0];
+    const candidate = selectedService || store.getString('lastAtmSearchService');
+    return candidate && services.includes(candidate) ? candidate : services[0];
   }, [services, selectedService]);
 
   const handleServiceChange = useCallback((value: string) => {
