@@ -1138,6 +1138,25 @@ describe('<TracePage>', () => {
       });
       expect(screen.queryByText('GenAI trace detected')).not.toBeInTheDocument();
     });
+
+    it('still shows banner when sessionStorage.getItem throws (e.g. privacy mode)', () => {
+      jest.spyOn(Storage.prototype, 'getItem').mockImplementationOnce(() => {
+        throw new DOMException('SecurityError');
+      });
+      render(<TracePage {...genAiProps} />);
+      expect(screen.getByText('GenAI trace detected')).toBeInTheDocument();
+    });
+
+    it('still dismisses banner in memory when sessionStorage.setItem throws (e.g. privacy mode)', () => {
+      jest.spyOn(Storage.prototype, 'setItem').mockImplementationOnce(() => {
+        throw new DOMException('SecurityError');
+      });
+      render(<TracePage {...genAiProps} />);
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: /close/i }));
+      });
+      expect(screen.queryByText('GenAI trace detected')).not.toBeInTheDocument();
+    });
   });
 });
 
