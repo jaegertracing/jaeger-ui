@@ -33,6 +33,11 @@ vi.mock('./SpanBar', () => ({
   default: jest.fn(() => <div data-testid="span-bar">SpanBar</div>),
 }));
 
+const mockUseJaegerAssistantEnabled = vi.fn().mockReturnValue(true);
+vi.mock('../../../hooks/useJaegerAssistant', () => ({
+  useJaegerAssistantEnabled: () => mockUseJaegerAssistantEnabled(),
+}));
+
 vi.mock('./utils', () => ({
   formatDurationCompact: jest.fn(d => `formatted-${d}`),
   ViewedBoundsFunctionType: {},
@@ -292,6 +297,28 @@ describe('<SpanBarRow>', () => {
       };
       render(<SpanBarRow {...defaultProps} span={span} />);
       expect(screen.getByRole('img', { name: 'Tool call' })).toBeInTheDocument();
+    });
+
+    it('hides GenAI icon when backend does not support assistant', () => {
+      mockUseJaegerAssistantEnabled.mockReturnValueOnce(false);
+      const span = {
+        ...defaultProps.span,
+        attributes: [{ key: 'gen_ai.operation.name', value: 'chat' }],
+      };
+      render(<SpanBarRow {...defaultProps} span={span} />);
+      expect(
+        screen.queryByRole('img', { name: /LLM call|Tool call|Agent|Retrieval|GenAI span/ })
+      ).not.toBeInTheDocument();
+    });
+
+    it('shows GenAI icon when backend supports assistant', () => {
+      mockUseJaegerAssistantEnabled.mockReturnValueOnce(true);
+      const span = {
+        ...defaultProps.span,
+        attributes: [{ key: 'gen_ai.operation.name', value: 'chat' }],
+      };
+      render(<SpanBarRow {...defaultProps} span={span} />);
+      expect(screen.getByRole('img', { name: 'LLM call' })).toBeInTheDocument();
     });
   });
 });
