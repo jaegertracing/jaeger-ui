@@ -14,7 +14,6 @@ import Ticks from './Ticks';
 import { TNil } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan } from '../../../types/otel';
-import { useJaegerAssistantEnabled } from '../../../hooks/useJaegerAssistant';
 
 import './SpanBarRow.css';
 
@@ -96,8 +95,6 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
     onChildrenToggled(span.spanID);
   }, [onChildrenToggled, span.spanID]);
 
-  const aiEnabled = useJaegerAssistantEnabled();
-
   const _detailToggleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Enter' || e.key === ' ') {
@@ -168,7 +165,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
               {!hasOwnError && hasChildError && (
                 <IoAlert className="SpanBarRow--errorIcon SpanBarRow--errorIcon--hollow" />
               )}
-              {aiEnabled && <GenAISpanIcon span={span} />}
+              <GenAISpanIcon span={span} />
               {serviceName}{' '}
               {rpc && (
                 <span>
