@@ -80,6 +80,30 @@ describe('useSearchResultsStore', () => {
     });
   });
 
+  describe('storage error handling', () => {
+    it('returns null and does not throw when localStorage.getItem throws', async () => {
+      jest.spyOn(Storage.prototype, 'getItem').mockImplementationOnce(() => {
+        throw new DOMException('SecurityError');
+      });
+      await expect(useSearchResultsStore.persist.rehydrate()).resolves.not.toThrow();
+    });
+
+    it('does not throw when localStorage.setItem throws', async () => {
+      jest.spyOn(Storage.prototype, 'setItem').mockImplementationOnce(() => {
+        throw new DOMException('SecurityError');
+      });
+      expect(() => useSearchResultsStore.getState().setSortBy(LONGEST_FIRST)).not.toThrow();
+      expect(useSearchResultsStore.getState().sortBy).toBe(LONGEST_FIRST);
+    });
+
+    it('does not throw when localStorage.removeItem throws', () => {
+      jest.spyOn(Storage.prototype, 'removeItem').mockImplementationOnce(() => {
+        throw new DOMException('SecurityError');
+      });
+      expect(() => useSearchResultsStore.persist.clearStorage()).not.toThrow();
+    });
+  });
+
   describe('rehydration', () => {
     it('sanitizes invalid sortBy from persisted state on rehydration', async () => {
       localStorage.setItem(
