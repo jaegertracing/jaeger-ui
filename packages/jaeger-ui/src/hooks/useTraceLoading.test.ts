@@ -1,7 +1,11 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-vi.mock('../api/v3/client');
+vi.mock('../api/v3/client', () => ({
+  jaegerClient: {
+    getTrace: vi.fn(),
+  },
+}));
 
 import React from 'react';
 import { renderHook, waitFor } from '@testing-library/react';
