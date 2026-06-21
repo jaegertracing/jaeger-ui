@@ -1061,7 +1061,7 @@ describe('<TracePage>', () => {
     });
   });
 
-  describe('GenAI detection banner', () => {
+  describe('GenAI auto-activation', () => {
     let clientHeightSpy;
     let genAiOtelTrace;
     let genAiProps;
@@ -1077,7 +1077,6 @@ describe('<TracePage>', () => {
     });
 
     beforeEach(() => {
-      sessionStorage.clear();
       clientHeightSpy = jest.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(100);
       useTraceMock.mockReturnValue({ data: genAiOtelTrace, isPending: false, isError: false, error: null });
     });
@@ -1086,76 +1085,31 @@ describe('<TracePage>', () => {
       clientHeightSpy.mockRestore();
     });
 
-    it('shows banner when trace has gen_ai.* attributes', () => {
+    it('auto-switches to GenAITimelineViewer when trace has gen_ai.* attributes', () => {
       render(<TracePage {...genAiProps} />);
-      expect(screen.getByText('GenAI trace detected')).toBeInTheDocument();
-    });
-
-    it('does not show banner for a plain trace', () => {
-      useTraceMock.mockReturnValue({ data: trace, isPending: false, isError: false, error: null });
-      render(<TracePage {...defaultProps} />);
-      expect(screen.queryByText('GenAI trace detected')).not.toBeInTheDocument();
-    });
-
-    it('shows banner regardless of backendCapabilities.aiAssistant — GenAI view is client-side', () => {
-      render(<TracePage {...genAiProps} backendCapabilities={null} />);
-      expect(screen.getByText('GenAI trace detected')).toBeInTheDocument();
-    });
-
-    it('hides banner after dismissal', () => {
-      render(<TracePage {...genAiProps} />);
-      expect(screen.getByText('GenAI trace detected')).toBeInTheDocument();
-      act(() => {
-        fireEvent.click(screen.getByRole('button', { name: /close/i }));
-      });
-      expect(screen.queryByText('GenAI trace detected')).not.toBeInTheDocument();
-    });
-
-    it('switches to GenAITimelineViewer when clicking the action button', () => {
-      render(<TracePage {...genAiProps} />);
-      act(() => {
-        fireEvent.click(screen.getByText('Switch to GenAI View'));
-      });
       expect(capturedHeaderProps.viewType).toBe(ETraceViewType.GenAITimelineViewer);
     });
 
-    it('banner stays dismissed after clicking Switch to GenAI View then switching to another view', () => {
-      render(<TracePage {...genAiProps} />);
-      act(() => {
-        fireEvent.click(screen.getByText('Switch to GenAI View'));
-      });
-      // Now switch back to the plain timeline — banner must not reappear
-      act(() => {
-        capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceTimelineViewer);
-      });
-      expect(screen.queryByText('GenAI trace detected')).not.toBeInTheDocument();
+    it('does not auto-switch for a plain trace', () => {
+      useTraceMock.mockReturnValue({ data: trace, isPending: false, isError: false, error: null });
+      render(<TracePage {...defaultProps} />);
+      expect(capturedHeaderProps.viewType).toBe(ETraceViewType.TraceTimelineViewer);
     });
 
-    it('does not show banner when already in GenAI view', () => {
-      render(<TracePage {...genAiProps} />);
-      act(() => {
-        capturedHeaderProps.onTraceViewChange(ETraceViewType.GenAITimelineViewer);
-      });
-      expect(screen.queryByText('GenAI trace detected')).not.toBeInTheDocument();
+    it('auto-switches regardless of backendCapabilities.aiAssistant — GenAI view is client-side', () => {
+      render(<TracePage {...genAiProps} backendCapabilities={null} />);
+      expect(capturedHeaderProps.viewType).toBe(ETraceViewType.GenAITimelineViewer);
     });
 
-    it('still shows banner when sessionStorage.getItem throws (e.g. privacy mode)', () => {
-      jest.spyOn(Storage.prototype, 'getItem').mockImplementationOnce(() => {
-        throw new DOMException('SecurityError');
-      });
+    it('passes isGenAITrace true in eligibility when trace has gen_ai.* attributes', () => {
       render(<TracePage {...genAiProps} />);
-      expect(screen.getByText('GenAI trace detected')).toBeInTheDocument();
+      expect(capturedHeaderProps.eligibility.isGenAITrace).toBe(true);
     });
 
-    it('still dismisses banner in memory when sessionStorage.setItem throws (e.g. privacy mode)', () => {
-      jest.spyOn(Storage.prototype, 'setItem').mockImplementationOnce(() => {
-        throw new DOMException('SecurityError');
-      });
-      render(<TracePage {...genAiProps} />);
-      act(() => {
-        fireEvent.click(screen.getByRole('button', { name: /close/i }));
-      });
-      expect(screen.queryByText('GenAI trace detected')).not.toBeInTheDocument();
+    it('passes isGenAITrace false in eligibility for a plain trace', () => {
+      useTraceMock.mockReturnValue({ data: trace, isPending: false, isError: false, error: null });
+      render(<TracePage {...defaultProps} />);
+      expect(capturedHeaderProps.eligibility.isGenAITrace).toBe(false);
     });
   });
 });

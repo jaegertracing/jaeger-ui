@@ -20,47 +20,40 @@ import prefixUrl from '../../../utils/prefix-url';
 import { ETraceViewType } from '../types';
 import { getTargetBlankOrTop } from '../../../utils/config/get-target';
 
+export type EligibilityContext = {
+  isGenAITrace: boolean;
+  jsonEnabled: boolean;
+};
+
 type Props = {
   onTraceViewChange: (viewType: ETraceViewType) => void;
   traceID: string;
-  disableJsonView: boolean;
   viewType: ETraceViewType;
-  showGenAIView: boolean;
+  eligibility: EligibilityContext;
 };
 
-const MENU_ITEMS = [
-  {
-    viewType: ETraceViewType.TraceTimelineViewer,
-    label: 'Trace Timeline',
-  },
-  {
-    viewType: ETraceViewType.TraceGraph,
-    label: 'Trace Graph',
-  },
-  {
-    viewType: ETraceViewType.TraceStatistics,
-    label: 'Trace Statistics',
-  },
-  {
-    viewType: ETraceViewType.TraceSpansView,
-    label: 'Trace Spans Table',
-  },
-  {
-    viewType: ETraceViewType.TraceFlamegraph,
-    label: 'Trace Flamegraph',
-  },
-  {
-    viewType: ETraceViewType.TraceLogs,
-    label: 'Trace Logs',
-  },
+type MenuItem = {
+  viewType: ETraceViewType;
+  label: string;
+  isEligible?: (ctx: EligibilityContext) => boolean;
+};
+
+const MENU_ITEMS: MenuItem[] = [
+  { viewType: ETraceViewType.TraceTimelineViewer, label: 'Trace Timeline' },
+  { viewType: ETraceViewType.TraceGraph, label: 'Trace Graph' },
+  { viewType: ETraceViewType.TraceStatistics, label: 'Trace Statistics' },
+  { viewType: ETraceViewType.TraceSpansView, label: 'Trace Spans Table' },
+  { viewType: ETraceViewType.TraceFlamegraph, label: 'Trace Flamegraph' },
+  { viewType: ETraceViewType.TraceLogs, label: 'Trace Logs' },
   {
     viewType: ETraceViewType.GenAITimelineViewer,
     label: 'GenAI View',
+    isEligible: (ctx: EligibilityContext) => ctx.isGenAITrace,
   },
 ];
 
 export default function AltViewOptions(props: Props) {
-  const { onTraceViewChange, viewType, traceID, disableJsonView, showGenAIView } = props;
+  const { onTraceViewChange, viewType, traceID, eligibility } = props;
 
   const handleSelectView = (item: ETraceViewType) => {
     if (item === ETraceViewType.TraceTimelineViewer) {
@@ -78,8 +71,7 @@ export default function AltViewOptions(props: Props) {
   };
 
   const dropdownItems = MENU_ITEMS.filter(
-    item =>
-      item.viewType !== viewType && (item.viewType !== ETraceViewType.GenAITimelineViewer || showGenAIView)
+    item => item.viewType !== viewType && (!item.isEligible || item.isEligible(eligibility))
   ).map(item => ({
     key: item.viewType as ETraceViewType | string,
     label: (
@@ -88,7 +80,7 @@ export default function AltViewOptions(props: Props) {
       </a>
     ),
   }));
-  if (!disableJsonView) {
+  if (eligibility.jsonEnabled) {
     dropdownItems.push(
       {
         key: 'trace-json',

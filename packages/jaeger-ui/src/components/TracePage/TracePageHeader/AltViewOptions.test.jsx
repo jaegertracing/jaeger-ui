@@ -55,7 +55,7 @@ describe('AltViewOptions', () => {
     viewType: ETraceViewType.TraceTimelineViewer,
     traceID: 'test trace ID',
     onTraceViewChange: jest.fn(),
-    disableJsonView: false,
+    eligibility: { isGenAITrace: false, jsonEnabled: true },
   };
 
   beforeAll(() => {
@@ -108,14 +108,24 @@ describe('AltViewOptions', () => {
     expect(screen.getByTestId('menu-item-trace-json-unadjusted')).toBeInTheDocument();
   });
 
-  it('hides json links when disableJsonView is true', () => {
-    renderComponent({ disableJsonView: true });
+  it('hides json links when eligibility.jsonEnabled is false', () => {
+    renderComponent({ eligibility: { isGenAITrace: false, jsonEnabled: false } });
 
     expect(screen.queryByTestId('menu-item-trace-json')).not.toBeInTheDocument();
     expect(screen.queryByTestId('menu-item-trace-json-unadjusted')).not.toBeInTheDocument();
 
     expect(screen.getByTestId('menu-item-TraceGraph')).toBeInTheDocument();
     expect(screen.getByTestId('menu-item-TraceStatistics')).toBeInTheDocument();
+  });
+
+  it('shows GenAI View option when eligibility.isGenAITrace is true', () => {
+    renderComponent({ eligibility: { isGenAITrace: true, jsonEnabled: true } });
+    expect(screen.getByTestId('menu-item-GenAITimelineViewer')).toBeInTheDocument();
+  });
+
+  it('hides GenAI View option when eligibility.isGenAITrace is false', () => {
+    renderComponent();
+    expect(screen.queryByTestId('menu-item-GenAITimelineViewer')).not.toBeInTheDocument();
   });
 
   it('tracks and changes view for Trace Graph', () => {

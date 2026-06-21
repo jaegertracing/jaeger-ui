@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Button, InputRef } from 'antd';
+import { InputRef } from 'antd';
 import { useNormalizeTraceId } from './useNormalizeTraceId';
 import { useNavigate } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
@@ -195,23 +195,6 @@ export function TracePageImpl(props: TProps) {
   const [slimView, setSlimView] = useState(() => Boolean(embedded?.timeline?.collapseTitle));
   const [viewType, setViewType] = useState<ETraceViewType>(ETraceViewType.TraceTimelineViewer);
   const [viewRange, setViewRange] = useState<IViewRange>({ time: { current: [0, 1] } });
-  const [genAiBannerDismissed, setGenAiBannerDismissed] = useState(() => {
-    try {
-      return sessionStorage.getItem('genai-banner-dismissed') === 'true';
-    } catch {
-      return false;
-    }
-  });
-
-  const dismissGenAiBanner = useCallback(() => {
-    try {
-      sessionStorage.setItem('genai-banner-dismissed', 'true');
-    } catch {
-      // sessionStorage can throw in privacy modes; dismissal is in-memory only.
-    }
-    setGenAiBannerDismissed(true);
-  }, []);
-
   const traceDagEV = useMemo(
     () => (viewType === ETraceViewType.TraceGraph && traceData ? calculateTraceDagEV(traceData) : null),
     [traceData, viewType]
@@ -310,6 +293,12 @@ export function TracePageImpl(props: TProps) {
       clearSearch();
     }
   }, [id, updateViewRangeTime, clearSearch]);
+
+  useEffect(() => {
+    if (traceIsGenAI) {
+      setTraceView(ETraceViewType.GenAITimelineViewer);
+    }
+  }, [traceIsGenAI]);
 
   const headerResizeObserverRef = useRef<ResizeObserver | TNil>(null);
 
@@ -431,8 +420,7 @@ export function TracePageImpl(props: TProps) {
     prevResult,
     ref: searchBarRef,
     resultCount: findCount,
-    disableJsonView,
-    showGenAIView: traceIsGenAI,
+    eligibility: { isGenAITrace: traceIsGenAI, jsonEnabled: !disableJsonView },
     showArchiveButton: !isEmbedded && archiveEnabled && hasArchiveStorage,
     showStandaloneLink: isEmbedded,
     showViewOptions: !isEmbedded,
@@ -507,26 +495,6 @@ export function TracePageImpl(props: TProps) {
       )}
       <div className="Tracepage--headerSection" ref={headerRefCallback}>
         <TracePageHeader {...headerProps} />
-        {traceIsGenAI && !genAiBannerDismissed && viewType !== ETraceViewType.GenAITimelineViewer && (
-          <Alert
-            message="GenAI trace detected"
-            description="This trace contains GenAI spans. Switch to GenAI View for a dedicated visualization."
-            type="info"
-            closable
-            onClose={dismissGenAiBanner}
-            action={
-              <Button
-                size="small"
-                onClick={() => {
-                  dismissGenAiBanner();
-                  setTraceView(ETraceViewType.GenAITimelineViewer);
-                }}
-              >
-                Switch to GenAI View
-              </Button>
-            }
-          />
-        )}
       </div>
       {headerHeight ? <section style={{ paddingTop: headerHeight }}>{view}</section> : null}
     </div>

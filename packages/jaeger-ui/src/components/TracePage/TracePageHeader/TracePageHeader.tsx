@@ -9,7 +9,7 @@ import { IoArrowBack, IoFileTrayFull, IoChevronForward, IoWarning } from 'react-
 import { Link } from 'react-router-dom';
 
 import DocumentTitle from '../../../utils/documentTitle';
-import AltViewOptions from './AltViewOptions';
+import AltViewOptions, { EligibilityContext } from './AltViewOptions';
 import SpanGraph from './SpanGraph';
 import TraceViewSettings from './TraceViewSettings';
 import TracePageSearchBar from './TracePageSearchBar';
@@ -47,8 +47,7 @@ type TracePageHeaderEmbedProps = {
   resultCount: number;
   showArchiveButton: boolean;
   showStandaloneLink: boolean;
-  disableJsonView: boolean;
-  showGenAIView: boolean;
+  eligibility: EligibilityContext;
   showViewOptions: boolean;
   slimView: boolean;
   textFilter: string | TNil;
@@ -139,9 +138,8 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     resultCount,
     showArchiveButton,
     showStandaloneLink,
-    showGenAIView,
+    eligibility,
     showViewOptions,
-    disableJsonView,
     slimView,
     textFilter,
     timelineBarsVisible,
@@ -222,9 +220,8 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
         />
         {showViewOptions && (
           <AltViewOptions
-            disableJsonView={disableJsonView}
+            eligibility={eligibility}
             onTraceViewChange={onTraceViewChange}
-            showGenAIView={showGenAIView}
             traceID={trace.traceID}
             viewType={viewType}
           />
