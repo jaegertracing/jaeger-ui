@@ -4,7 +4,7 @@
 import type { IconType } from 'react-icons';
 import { IoSparkles, IoServer, IoGlobe, IoChatbubble, IoCodeSlash } from 'react-icons/io5';
 
-import { IAttribute } from '../types/otel';
+import type { IAttribute } from '../types/otel';
 
 const ATTR_ICON_RULES: { prefix: string; icon: IconType }[] = [
   { prefix: 'gen_ai.', icon: IoSparkles },
