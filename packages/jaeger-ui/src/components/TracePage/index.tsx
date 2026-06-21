@@ -195,9 +195,22 @@ export function TracePageImpl(props: TProps) {
   const [slimView, setSlimView] = useState(() => Boolean(embedded?.timeline?.collapseTitle));
   const [viewType, setViewType] = useState<ETraceViewType>(ETraceViewType.TraceTimelineViewer);
   const [viewRange, setViewRange] = useState<IViewRange>({ time: { current: [0, 1] } });
-  const [genAiBannerDismissed, setGenAiBannerDismissed] = useState(
-    () => sessionStorage.getItem('genai-banner-dismissed') === 'true'
-  );
+  const [genAiBannerDismissed, setGenAiBannerDismissed] = useState(() => {
+    try {
+      return sessionStorage.getItem('genai-banner-dismissed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const dismissGenAiBanner = useCallback(() => {
+    try {
+      sessionStorage.setItem('genai-banner-dismissed', 'true');
+    } catch {
+      // sessionStorage can throw in privacy modes; dismissal is in-memory only.
+    }
+    setGenAiBannerDismissed(true);
+  }, []);
 
   const traceDagEV = useMemo(
     () => (viewType === ETraceViewType.TraceGraph && traceData ? calculateTraceDagEV(traceData) : null),
@@ -419,7 +432,7 @@ export function TracePageImpl(props: TProps) {
     ref: searchBarRef,
     resultCount: findCount,
     disableJsonView,
-    showGenAIView: Boolean(backendCapabilities?.aiAssistant),
+    showGenAIView: traceIsGenAI,
     showArchiveButton: !isEmbedded && archiveEnabled && hasArchiveStorage,
     showStandaloneLink: isEmbedded,
     showViewOptions: !isEmbedded,
@@ -494,26 +507,26 @@ export function TracePageImpl(props: TProps) {
       )}
       <div className="Tracepage--headerSection" ref={headerRefCallback}>
         <TracePageHeader {...headerProps} />
-        {traceIsGenAI &&
-          !genAiBannerDismissed &&
-          backendCapabilities?.aiAssistant &&
-          viewType !== ETraceViewType.GenAITimelineViewer && (
-            <Alert
-              message="GenAI trace detected"
-              description="This trace contains GenAI spans. Switch to GenAI View for a dedicated visualization."
-              type="info"
-              closable
-              onClose={() => {
-                sessionStorage.setItem('genai-banner-dismissed', 'true');
-                setGenAiBannerDismissed(true);
-              }}
-              action={
-                <Button size="small" onClick={() => setTraceView(ETraceViewType.GenAITimelineViewer)}>
-                  Switch to GenAI View
-                </Button>
-              }
-            />
-          )}
+        {traceIsGenAI && !genAiBannerDismissed && viewType !== ETraceViewType.GenAITimelineViewer && (
+          <Alert
+            message="GenAI trace detected"
+            description="This trace contains GenAI spans. Switch to GenAI View for a dedicated visualization."
+            type="info"
+            closable
+            onClose={dismissGenAiBanner}
+            action={
+              <Button
+                size="small"
+                onClick={() => {
+                  dismissGenAiBanner();
+                  setTraceView(ETraceViewType.GenAITimelineViewer);
+                }}
+              >
+                Switch to GenAI View
+              </Button>
+            }
+          />
+        )}
       </div>
       {headerHeight ? <section style={{ paddingTop: headerHeight }}>{view}</section> : null}
     </div>

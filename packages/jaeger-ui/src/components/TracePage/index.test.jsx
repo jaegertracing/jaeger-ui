@@ -1073,7 +1073,6 @@ describe('<TracePage>', () => {
       genAiProps = {
         ...defaultProps,
         id: genAiOtelTrace.traceID,
-        backendCapabilities: { aiAssistant: true },
       };
     });
 
@@ -1098,14 +1097,9 @@ describe('<TracePage>', () => {
       expect(screen.queryByText('GenAI trace detected')).not.toBeInTheDocument();
     });
 
-    it('does not show banner when backendCapabilities.aiAssistant is not set', () => {
+    it('shows banner regardless of backendCapabilities.aiAssistant — GenAI view is client-side', () => {
       render(<TracePage {...genAiProps} backendCapabilities={null} />);
-      expect(screen.queryByText('GenAI trace detected')).not.toBeInTheDocument();
-    });
-
-    it('does not show banner when backendCapabilities.aiAssistant is false', () => {
-      render(<TracePage {...genAiProps} backendCapabilities={{ aiAssistant: false }} />);
-      expect(screen.queryByText('GenAI trace detected')).not.toBeInTheDocument();
+      expect(screen.getByText('GenAI trace detected')).toBeInTheDocument();
     });
 
     it('hides banner after dismissal', () => {
@@ -1123,6 +1117,18 @@ describe('<TracePage>', () => {
         fireEvent.click(screen.getByText('Switch to GenAI View'));
       });
       expect(capturedHeaderProps.viewType).toBe(ETraceViewType.GenAITimelineViewer);
+    });
+
+    it('banner stays dismissed after clicking Switch to GenAI View then switching to another view', () => {
+      render(<TracePage {...genAiProps} />);
+      act(() => {
+        fireEvent.click(screen.getByText('Switch to GenAI View'));
+      });
+      // Now switch back to the plain timeline — banner must not reappear
+      act(() => {
+        capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceTimelineViewer);
+      });
+      expect(screen.queryByText('GenAI trace detected')).not.toBeInTheDocument();
     });
 
     it('does not show banner when already in GenAI view', () => {
