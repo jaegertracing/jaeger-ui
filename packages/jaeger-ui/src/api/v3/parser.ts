@@ -154,7 +154,7 @@ function toAttributeValue(value: IOtlpAnyValue | undefined): AttributeValue {
   if (value.kvlistValue !== undefined) {
     const obj: { [key: string]: AttributeValue } = {};
     for (const kv of value.kvlistValue.values ?? []) {
-      if (kv.key) obj[kv.key] = toAttributeValue(kv.value);
+      if (kv.key && kv.value !== undefined) obj[kv.key] = toAttributeValue(kv.value);
     }
     return obj;
   }
