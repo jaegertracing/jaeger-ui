@@ -17,7 +17,7 @@ describe('useSearchResultsStore', () => {
 
   describe('sortBy', () => {
     it('defaults to MOST_RECENT', () => {
-      expect(useSearchResultsStore.getState().sortBy).toBe(MOST_RECENT);
+      expect(useSearchResultsStore.getInitialState().sortBy).toBe(MOST_RECENT);
     });
 
     it.each([MOST_RECENT, LONGEST_FIRST, SHORTEST_FIRST, MOST_SPANS, LEAST_SPANS])(
@@ -37,7 +37,7 @@ describe('useSearchResultsStore', () => {
 
   describe('viewMode', () => {
     it('defaults to list', () => {
-      expect(useSearchResultsStore.getState().viewMode).toBe('list');
+      expect(useSearchResultsStore.getInitialState().viewMode).toBe('list');
     });
 
     it('switches to table', () => {

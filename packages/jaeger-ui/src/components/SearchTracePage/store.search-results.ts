@@ -35,15 +35,33 @@ function createConditionalStorage() {
     _skipCount++;
   };
   const storage = createJSONStorage(() => ({
-    getItem: (name: string) => (typeof window !== 'undefined' ? localStorage.getItem(name) : null),
+    getItem: (name: string) => {
+      if (typeof window === 'undefined') return null;
+      try {
+        return localStorage.getItem(name);
+      } catch {
+        return null;
+      }
+    },
     setItem: (name: string, value: string) => {
-      if (typeof window !== 'undefined') {
-        if (_skipCount === 0) localStorage.setItem(name, value);
-        else _skipCount--;
+      if (typeof window === 'undefined') return;
+      if (_skipCount > 0) {
+        _skipCount--;
+        return;
+      }
+      try {
+        localStorage.setItem(name, value);
+      } catch {
+        // Ignore SecurityError or QuotaExceededError
       }
     },
     removeItem: (name: string) => {
-      if (typeof window !== 'undefined') localStorage.removeItem(name);
+      if (typeof window === 'undefined') return;
+      try {
+        localStorage.removeItem(name);
+      } catch {
+        // Ignore SecurityError
+      }
     },
   }));
   return { storage, skip };
