@@ -299,7 +299,7 @@ export function parseOtelTrace(data: IOtlpTracesData): IOtelTrace | null {
     }
   }
 
-  const headerSpan = spans[0];
+  const headerSpan = rootSpans.find(s => !s.parentSpanID) ?? rootSpans[0];
   const traceName = headerSpan ? `${headerSpan.resource.serviceName}: ${headerSpan.name}` : '';
   const tracePageTitle = headerSpan ? `${headerSpan.name} (${headerSpan.resource.serviceName})` : '';
   const services = Object.keys(serviceCounts).map(name => ({ name, numberOfSpans: serviceCounts[name] }));
