@@ -214,11 +214,13 @@ export function parseOtelTrace(data: IOtlpTracesData): IOtelTrace | null {
             name: e.name || 'log',
             attributes: toAttributes(e.attributes),
           })),
-          links: (sp.links ?? []).map(l => ({
-            traceID: (l.traceId ?? '').toLowerCase(),
-            spanID: (l.spanId ?? '').toLowerCase(),
-            attributes: toAttributes(l.attributes),
-          })),
+          links: (sp.links ?? [])
+            .filter(l => l.spanId)
+            .map(l => ({
+              traceID: (l.traceId ?? sp.traceId).toLowerCase(),
+              spanID: (l.spanId as string).toLowerCase(),
+              attributes: toAttributes(l.attributes),
+            })),
           status: toStatus(sp.status),
           resource,
           instrumentationScope,
