@@ -104,6 +104,21 @@ describe('useTrace', () => {
     await waitFor(() => expect(result.current.isError).toBe(true));
   });
 
+  it('seeds cache under canonical ID when response traceID differs from request', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const altId = 'UPPERCASE_VERSION';
+    const responseTrace = { ...rawTrace, traceID: otelTrace.traceID };
+    mockFetchTrace.mockResolvedValue({ data: [responseTrace] } as any);
+
+    const { result } = renderHook(() => useTrace(altId), {
+      wrapper: makeWrapper(client),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    // The canonical ID is seeded in the singleton appQueryClient
+    expect(appQueryClient.getQueryData(['trace', otelTrace.traceID])).toBeDefined();
+  });
+
   it('serves data from cache without fetching when already populated', async () => {
     // populateTraceCache writes into the singleton appQueryClient.
     // useTrace also uses the same singleton, so pre-populating it means the
@@ -168,6 +183,22 @@ describe('useTraces', () => {
       expect(result.current.get('err-id')?.state).toBe(fetchedState.ERROR);
     });
     expect(result.current.get('err-id')?.error).toBeInstanceOf(Error);
+  });
+
+  it('seeds cache under canonical ID when response traceID differs from request', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const altId = 'BASE64_ENCODED_ID';
+    const responseTrace = { ...rawTrace, traceID: otelTrace.traceID };
+    mockFetchTrace.mockResolvedValue({ data: [responseTrace] } as any);
+
+    const { result } = renderHook(() => useTraces([altId]), {
+      wrapper: makeWrapper(client),
+    });
+
+    await waitFor(() => {
+      expect(result.current.get(altId)?.state).toBe(fetchedState.DONE);
+    });
+    expect(appQueryClient.getQueryData(['trace', otelTrace.traceID])).toBeDefined();
   });
 
   it('handles multiple IDs independently', async () => {

@@ -151,12 +151,12 @@ describe('<JaegerAskSearchInput /> assistant mode', () => {
       </MemoryRouter>
     );
 
-    const traceId = 's23gbclyqrBxrBGcUEygfA==';
+    const traceId = '/lhpXXcq1Bdw+4twt863jg==';
     const textarea = openAssistantTextarea();
     fireEvent.change(textarea, { target: { value: traceId } });
     fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false });
 
-    expect(mockNavigate).toHaveBeenCalledWith(`/trace/${encodeURIComponent(traceId)}`);
+    expect(mockNavigate).toHaveBeenCalledWith('/trace/%2FlhpXXcq1Bdw%2B4twt863jg%3D%3D');
   });
 
   it('Shift+Enter does not submit', () => {
