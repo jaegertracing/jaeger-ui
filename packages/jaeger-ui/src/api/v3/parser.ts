@@ -152,7 +152,7 @@ function toAttributeValue(value: IOtlpAnyValue | undefined): AttributeValue {
   if (value.bytesValue !== undefined) return value.bytesValue;
   if (value.arrayValue !== undefined) return (value.arrayValue.values ?? []).map(toAttributeValue);
   if (value.kvlistValue !== undefined) {
-    const obj: { [key: string]: AttributeValue } = {};
+    const obj = Object.create(null) as Record<string, AttributeValue>;
     for (const kv of value.kvlistValue.values ?? []) {
       if (kv.key && kv.value !== undefined) obj[kv.key] = toAttributeValue(kv.value);
     }
