@@ -15,9 +15,8 @@ jobs:
     if: ${{ github.event.issue.pull_request || github.event.pull_request }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
-
+      # No checkout needed: the script is fetched via curl and only uses GitHub API.
+      # Also, actions/checkout@v7 blocks fork PRs on pull_request_target events.
       - name: Download Waiting for Author script
         run: |
           curl -fsSL -o /tmp/waiting-for-author.js \
