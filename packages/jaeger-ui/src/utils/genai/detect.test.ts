@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { classifySpan, isGenAITrace, GenAISpanKind } from './detect';
-import { IOtelSpan, IOtelTrace, SpanKind, StatusCode } from '../../types/otel';
+import { IOtelSpan, SpanKind, StatusCode } from '../../types/otel';
 
 function makeSpan(attrs: Record<string, string> = {}): IOtelSpan {
   return {
@@ -28,24 +28,8 @@ function makeSpan(attrs: Record<string, string> = {}): IOtelSpan {
   };
 }
 
-function makeTrace(spans: IOtelSpan[]): IOtelTrace {
-  const trace: Omit<IOtelTrace, 'isGenAITrace'> & { isGenAITrace: boolean } = {
-    traceID: 'trace-1',
-    spans,
-    duration: 1 as IOtelTrace['duration'],
-    startTime: 0 as IOtelTrace['startTime'],
-    endTime: 1 as IOtelTrace['endTime'],
-    traceName: 'test',
-    tracePageTitle: 'test',
-    traceEmoji: '',
-    services: [],
-    spanMap: new Map(spans.map(s => [s.spanID, s])),
-    rootSpans: spans.slice(0, 1),
-    orphanSpanCount: 0,
-    isGenAITrace: false,
-    hasErrors: () => false,
-  };
-  return trace;
+function makeTrace(spans: IOtelSpan[]) {
+  return { spans };
 }
 
 describe('classifySpan', () => {

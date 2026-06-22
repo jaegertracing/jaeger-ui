@@ -165,7 +165,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
               {!hasOwnError && hasChildError && (
                 <IoAlert className="SpanBarRow--errorIcon SpanBarRow--errorIcon--hollow" />
               )}
-              <GenAISpanIcon span={span} size={14} />
+              <GenAISpanIcon span={span} size={14} className="SpanBarRow--genAIIcon" />
               {serviceName}{' '}
               {rpc && (
                 <span>

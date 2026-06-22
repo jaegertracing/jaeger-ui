@@ -21,12 +21,12 @@ export function classifySpan(span: IOtelSpan): GenAISpanKind {
   return span.attributes.some(a => a.key.startsWith('gen_ai.')) ? 'UNKNOWN_GENAI' : 'STANDARD';
 }
 
-export function isGenAITrace(trace: IOtelTrace): boolean {
+export function isGenAITrace(trace: Pick<IOtelTrace, 'spans'>): boolean {
   return trace.spans.some(s => classifySpan(s) !== 'STANDARD');
 }
 
 // Attribute keys that carry structured GenAI content and deserve richer rendering.
-export const RICH_MEDIA_ATTRIBUTE_KEYS: Readonly<Record<string, 'markdown' | 'json'>> = {
+export const RICH_MEDIA_ATTRIBUTE_KEYS = {
   'gen_ai.input.messages': 'markdown',
   'gen_ai.output.messages': 'markdown',
   'gen_ai.system_instructions': 'markdown',
@@ -34,4 +34,6 @@ export const RICH_MEDIA_ATTRIBUTE_KEYS: Readonly<Record<string, 'markdown' | 'js
   'gen_ai.tool.call.result': 'json',
   'gen_ai.tool.definitions': 'json',
   'gen_ai.retrieval.documents': 'json',
-};
+} as const satisfies Readonly<Record<string, 'markdown' | 'json'>>;
+
+export type RichMediaAttributeKey = keyof typeof RICH_MEDIA_ATTRIBUTE_KEYS;
