@@ -1100,7 +1100,6 @@ describe('<TracePage>', () => {
       render(<TracePage {...genAiProps} backendCapabilities={null} />);
       expect(capturedHeaderProps.viewType).toBe(ETraceViewType.GenAITimelineViewer);
     });
-
   });
 });
 
