@@ -54,3 +54,11 @@ export enum ETraceViewType {
   TraceLogs = 'TraceLogs',
   GenAITimelineViewer = 'GenAITimelineViewer',
 }
+
+export function viewTypeShowsMinimap(viewType: ETraceViewType): boolean {
+  return viewType === ETraceViewType.TraceTimelineViewer || viewType === ETraceViewType.GenAITimelineViewer;
+}
+
+export function viewTypeIsNavigable(viewType: ETraceViewType): boolean {
+  return viewType === ETraceViewType.TraceTimelineViewer || viewType === ETraceViewType.GenAITimelineViewer;
+}

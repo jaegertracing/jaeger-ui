@@ -39,7 +39,13 @@ import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import { filterPrunedSpanIDs } from './TraceTimelineViewer/generateRowStates';
 import { actions as timelineActions } from './TraceTimelineViewer/duck';
-import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, ETraceViewType } from './types';
+import {
+  TUpdateViewRangeTimeFunction,
+  IViewRange,
+  ViewRangeTimeUpdate,
+  ETraceViewType,
+  viewTypeShowsMinimap,
+} from './types';
 import { getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
@@ -294,12 +300,6 @@ export function TracePageImpl(props: TProps) {
     }
   }, [id, updateViewRangeTime, clearSearch]);
 
-  useEffect(() => {
-    if (traceIsGenAI) {
-      setTraceView(ETraceViewType.GenAITimelineViewer);
-    }
-  }, [traceIsGenAI]);
-
   const headerResizeObserverRef = useRef<ResizeObserver | TNil>(null);
 
   const headerRefCallback = useCallback((elm: HTMLElement | TNil) => {
@@ -332,6 +332,12 @@ export function TracePageImpl(props: TProps) {
   const setTraceView = useCallback((newViewType: ETraceViewType) => {
     setViewType(newViewType);
   }, []);
+
+  useEffect(() => {
+    if (traceIsGenAI) {
+      setTraceView(ETraceViewType.GenAITimelineViewer);
+    }
+  }, [traceIsGenAI, setTraceView]);
 
   const archiveTrace = useCallback(() => {
     submitTraceToArchiveFn(id);
@@ -405,10 +411,7 @@ export function TracePageImpl(props: TProps) {
     clearSearch,
     detailPanelMode,
     enableSidePanel,
-    hideMap: Boolean(
-      (viewType !== ETraceViewType.TraceTimelineViewer && viewType !== ETraceViewType.GenAITimelineViewer) ||
-      Boolean(embedded?.timeline?.hideMinimap)
-    ),
+    hideMap: !viewTypeShowsMinimap(viewType) || Boolean(embedded?.timeline?.hideMinimap),
     hideSummary: Boolean(embedded?.timeline?.hideSummary),
     linkToStandalone: getUrl(id),
     nextResult,
@@ -435,10 +438,21 @@ export function TracePageImpl(props: TProps) {
   const sm = scrollManagerRef.current;
   let view;
   const criticalPath = criticalPathEnabled ? memoizedTraceCriticalPath(traceData) : [];
-  if (
-    (ETraceViewType.TraceTimelineViewer === viewType || ETraceViewType.GenAITimelineViewer === viewType) &&
-    headerHeight
-  ) {
+  if (ETraceViewType.TraceTimelineViewer === viewType && headerHeight) {
+    view = (
+      <TraceTimelineViewer
+        registerAccessors={sm.setAccessors}
+        scrollToFirstVisibleSpan={sm.scrollToFirstVisibleSpan}
+        findMatchesIDs={spanFindMatches}
+        trace={traceData}
+        criticalPath={criticalPath}
+        updateNextViewRangeTime={updateNextViewRangeTime}
+        updateViewRangeTime={updateViewRangeTime}
+        viewRange={viewRange}
+        useOtelTerms={useOtelTerms}
+      />
+    );
+  } else if (ETraceViewType.GenAITimelineViewer === viewType && headerHeight) {
     view = (
       <TraceTimelineViewer
         registerAccessors={sm.setAccessors}
