@@ -168,6 +168,21 @@ describe('<SpanBarRow>', () => {
     expect(screen.getByText('no-instrumented-service')).toBeVisible();
   });
 
+  it('does not render a GenAI icon for a standard (non-GenAI) span', () => {
+    render(<SpanBarRow {...defaultProps} />);
+    expect(document.querySelector('.SpanBarRow--genAIIcon')).not.toBeInTheDocument();
+  });
+
+  it('renders a GenAI icon for a span with gen_ai.operation.name', () => {
+    const span = {
+      ...defaultProps.span,
+      attributes: [{ key: 'gen_ai.operation.name', value: 'invoke_agent' }],
+    };
+    render(<SpanBarRow {...defaultProps} span={span} />);
+    expect(document.querySelector('.SpanBarRow--genAIIcon')).toBeInTheDocument();
+    expect(screen.getByLabelText('AI agent')).toBeInTheDocument();
+  });
+
   it('renders with error icon when hasOwnError is true', () => {
     const props = {
       ...defaultProps,

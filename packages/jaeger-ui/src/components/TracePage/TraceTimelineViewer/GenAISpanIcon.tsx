@@ -13,7 +13,7 @@ import {
 import { classifySpan, type GenAISpanKind } from '../../../utils/genai/detect';
 import { IOtelSpan } from '../../../types/otel';
 
-type IconComponent = React.ComponentType<{ className?: string }>;
+type IconComponent = React.ComponentType<React.SVGProps<SVGSVGElement>>;
 
 const KIND_ICON: Record<Exclude<GenAISpanKind, 'STANDARD'>, IconComponent> = {
   AGENT: IoHardwareChipOutline,

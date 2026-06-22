@@ -3,7 +3,17 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+
+vi.mock('react-icons/io5', () => ({
+  IoHardwareChipOutline: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-icon="hardware-chip" {...props} />
+  ),
+  IoFlashOutline: (props: React.SVGProps<SVGSVGElement>) => <svg data-icon="flash" {...props} />,
+  IoBuildOutline: (props: React.SVGProps<SVGSVGElement>) => <svg data-icon="build" {...props} />,
+  IoServerOutline: (props: React.SVGProps<SVGSVGElement>) => <svg data-icon="server" {...props} />,
+  IoStarOutline: (props: React.SVGProps<SVGSVGElement>) => <svg data-icon="star" {...props} />,
+}));
 
 import GenAISpanIcon from './GenAISpanIcon';
 import type { IOtelSpan } from '../../../types/otel';
@@ -20,34 +30,46 @@ describe('<GenAISpanIcon>', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('renders an icon with aria-label "AI agent" for an invoke_agent span', () => {
+  it('renders IoHardwareChipOutline with aria-label "AI agent" for an invoke_agent span', () => {
     render(<GenAISpanIcon span={makeSpan({ 'gen_ai.operation.name': 'invoke_agent' })} />);
-    expect(screen.getByLabelText('AI agent')).toBeInTheDocument();
+    const icon = screen.getByLabelText('AI agent');
+    expect(icon).toBeInTheDocument();
+    expect(icon).toHaveAttribute('data-icon', 'hardware-chip');
   });
 
-  it('renders an icon with aria-label "LLM call" for a chat span', () => {
+  it('renders IoFlashOutline with aria-label "LLM call" for a chat span', () => {
     render(<GenAISpanIcon span={makeSpan({ 'gen_ai.operation.name': 'chat' })} />);
-    expect(screen.getByLabelText('LLM call')).toBeInTheDocument();
+    const icon = screen.getByLabelText('LLM call');
+    expect(icon).toBeInTheDocument();
+    expect(icon).toHaveAttribute('data-icon', 'flash');
   });
 
-  it('renders an icon with aria-label "LLM call" for a text_completion span', () => {
+  it('renders IoFlashOutline with aria-label "LLM call" for a text_completion span', () => {
     render(<GenAISpanIcon span={makeSpan({ 'gen_ai.operation.name': 'text_completion' })} />);
-    expect(screen.getByLabelText('LLM call')).toBeInTheDocument();
+    const icon = screen.getByLabelText('LLM call');
+    expect(icon).toBeInTheDocument();
+    expect(icon).toHaveAttribute('data-icon', 'flash');
   });
 
-  it('renders an icon with aria-label "Tool call" for an execute_tool span', () => {
+  it('renders IoBuildOutline with aria-label "Tool call" for an execute_tool span', () => {
     render(<GenAISpanIcon span={makeSpan({ 'gen_ai.operation.name': 'execute_tool' })} />);
-    expect(screen.getByLabelText('Tool call')).toBeInTheDocument();
+    const icon = screen.getByLabelText('Tool call');
+    expect(icon).toBeInTheDocument();
+    expect(icon).toHaveAttribute('data-icon', 'build');
   });
 
-  it('renders an icon with aria-label "RAG retrieval" for a retrieval span', () => {
+  it('renders IoServerOutline with aria-label "RAG retrieval" for a retrieval span', () => {
     render(<GenAISpanIcon span={makeSpan({ 'gen_ai.operation.name': 'retrieval' })} />);
-    expect(screen.getByLabelText('RAG retrieval')).toBeInTheDocument();
+    const icon = screen.getByLabelText('RAG retrieval');
+    expect(icon).toBeInTheDocument();
+    expect(icon).toHaveAttribute('data-icon', 'server');
   });
 
-  it('renders an icon with aria-label "GenAI span" for an unknown gen_ai operation', () => {
+  it('renders IoStarOutline with aria-label "GenAI span" for an unknown gen_ai operation', () => {
     render(<GenAISpanIcon span={makeSpan({ 'gen_ai.provider.name': 'openai' })} />);
-    expect(screen.getByLabelText('GenAI span')).toBeInTheDocument();
+    const icon = screen.getByLabelText('GenAI span');
+    expect(icon).toBeInTheDocument();
+    expect(icon).toHaveAttribute('data-icon', 'star');
   });
 
   it('applies the className prop to the rendered icon', () => {
