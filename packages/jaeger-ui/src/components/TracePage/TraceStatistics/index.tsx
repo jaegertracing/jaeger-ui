@@ -103,6 +103,65 @@ const columnsArray: {
   },
 ];
 
+export function searchInTable(
+  uiFindVertexKeys: Set<string>,
+  allTableSpans: ITableSpan[],
+  uiFind: string | null | undefined
+): ITableSpan[] {
+  const allTableSpansChange = allTableSpans;
+  const yellowSearchCollor = 'rgb(255,243,215)';
+  const defaultGrayCollor = 'rgb(248,248,248)';
+  for (let i = 0; i < allTableSpansChange.length; i++) {
+    if (!allTableSpansChange[i].isDetail && allTableSpansChange[i].hasSubgroupValue) {
+      allTableSpansChange[i].searchColor = 'transparent';
+    } else if (allTableSpansChange[i].hasSubgroupValue) {
+      allTableSpansChange[i].searchColor = defaultGrayCollor;
+    } else {
+      allTableSpansChange[i].searchColor = defaultGrayCollor;
+    }
+  }
+  if (typeof uiFindVertexKeys !== 'undefined') {
+    uiFindVertexKeys!.forEach(function calc(value) {
+      const uiFindVertexKeysSplit = value.split('\u000b');
+      for (let i = 0; i < allTableSpansChange.length; i++) {
+        if (
+          uiFindVertexKeysSplit[uiFindVertexKeysSplit.length - 1].indexOf(allTableSpansChange[i].name) !== -1
+        ) {
+          if (allTableSpansChange[i].parentElement === 'none') {
+            allTableSpansChange[i].searchColor = yellowSearchCollor;
+          } else if (
+            uiFindVertexKeysSplit[uiFindVertexKeysSplit.length - 1].indexOf(
+              allTableSpansChange[i].parentElement
+            ) !== -1
+          ) {
+            allTableSpansChange[i].searchColor = yellowSearchCollor;
+          }
+        }
+      }
+    });
+  }
+  if (uiFind) {
+    for (let i = 0; i < allTableSpansChange.length; i++) {
+      if (allTableSpansChange[i].name.indexOf(uiFind!) !== -1) {
+        allTableSpansChange[i].searchColor = yellowSearchCollor;
+        for (let j = 0; j < allTableSpansChange.length; j++) {
+          if (allTableSpansChange[j].parentElement === allTableSpansChange[i].name) {
+            allTableSpansChange[j].searchColor = yellowSearchCollor;
+          }
+        }
+        if (allTableSpansChange[i].isDetail) {
+          for (let j = 0; j < allTableSpansChange.length; j++) {
+            if (allTableSpansChange[i].parentElement === allTableSpansChange[j].name) {
+              allTableSpansChange[j].searchColor = yellowSearchCollor;
+            }
+          }
+        }
+      }
+    }
+  }
+  return allTableSpansChange;
+}
+
 /**
  * Trace Statistics Component
  */
@@ -194,63 +253,7 @@ export default class TraceStatistics extends Component<Props, State> {
     uiFindVertexKeys: Set<string>,
     allTableSpans: ITableSpan[],
     uiFind: string | null | undefined
-  ) => {
-    const allTableSpansChange = allTableSpans;
-    const yellowSearchCollor = 'rgb(255,243,215)';
-    const defaultGrayCollor = 'rgb(248,248,248)';
-    for (let i = 0; i < allTableSpansChange.length; i++) {
-      if (!allTableSpansChange[i].isDetail && allTableSpansChange[i].hasSubgroupValue) {
-        allTableSpansChange[i].searchColor = 'transparent';
-      } else if (allTableSpansChange[i].hasSubgroupValue) {
-        allTableSpansChange[i].searchColor = defaultGrayCollor;
-      } else {
-        allTableSpansChange[i].searchColor = defaultGrayCollor;
-      }
-    }
-    if (typeof uiFindVertexKeys !== 'undefined') {
-      uiFindVertexKeys!.forEach(function calc(value) {
-        const uiFindVertexKeysSplit = value.split('\u000b');
-
-        for (let i = 0; i < allTableSpansChange.length; i++) {
-          if (
-            uiFindVertexKeysSplit[uiFindVertexKeysSplit.length - 1].indexOf(allTableSpansChange[i].name) !==
-            -1
-          ) {
-            if (allTableSpansChange[i].parentElement === 'none') {
-              allTableSpansChange[i].searchColor = yellowSearchCollor;
-            } else if (
-              uiFindVertexKeysSplit[uiFindVertexKeysSplit.length - 1].indexOf(
-                allTableSpansChange[i].parentElement
-              ) !== -1
-            ) {
-              allTableSpansChange[i].searchColor = yellowSearchCollor;
-            }
-          }
-        }
-      });
-    }
-    if (uiFind) {
-      for (let i = 0; i < allTableSpansChange.length; i++) {
-        if (allTableSpansChange[i].name.indexOf(uiFind!) !== -1) {
-          allTableSpansChange[i].searchColor = yellowSearchCollor;
-
-          for (let j = 0; j < allTableSpansChange.length; j++) {
-            if (allTableSpansChange[j].parentElement === allTableSpansChange[i].name) {
-              allTableSpansChange[j].searchColor = yellowSearchCollor;
-            }
-          }
-          if (allTableSpansChange[i].isDetail) {
-            for (let j = 0; j < allTableSpansChange.length; j++) {
-              if (allTableSpansChange[i].parentElement === allTableSpansChange[j].name) {
-                allTableSpansChange[j].searchColor = yellowSearchCollor;
-              }
-            }
-          }
-        }
-      }
-    }
-    return allTableSpansChange;
-  };
+  ) => searchInTable(uiFindVertexKeys, allTableSpans, uiFind);
 
   render() {
     const onClickOption = (hasSubgroupValue: boolean, name: string) => {

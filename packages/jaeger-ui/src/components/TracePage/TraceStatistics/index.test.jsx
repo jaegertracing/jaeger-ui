@@ -4,7 +4,7 @@
 import React from 'react';
 import { act, cleanup, render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import TraceStatistics from './index';
+import TraceStatistics, { searchInTable } from './index';
 import transformTraceData from '../../../model/transform-trace-data';
 import { getColumnValues, getColumnValuesSecondDropdown } from './tableValues';
 
@@ -426,16 +426,7 @@ describe('<TraceTagOverview>', () => {
     });
   });
 
-  it('should test searchInTable with complex search scenarios', async () => {
-    let componentRef;
-    const TestWrapper = () => {
-      const ref = React.useRef();
-      componentRef = ref;
-      return <TraceStatistics ref={ref} {...defaultProps} />;
-    };
-
-    render(<TestWrapper />);
-
+  it('should test searchInTable with complex search scenarios', () => {
     const mockTableData = [
       {
         name: 'parent1',
@@ -464,26 +455,12 @@ describe('<TraceTagOverview>', () => {
     ];
 
     const searchSet = new Set(['parent1detail1']);
-
-    await waitFor(() => {
-      if (componentRef.current) {
-        const result = componentRef.current.searchInTable(searchSet, mockTableData, null);
-        expect(result).toBeDefined();
-        expect(result.length).toBe(3);
-      }
-    });
+    const result = searchInTable(searchSet, mockTableData, null);
+    expect(result).toBeDefined();
+    expect(result.length).toBe(3);
   });
 
-  it('should test searchInTable with uiFind matching and detail items', async () => {
-    let componentRef;
-    const TestWrapper = () => {
-      const ref = React.useRef();
-      componentRef = ref;
-      return <TraceStatistics ref={ref} {...defaultProps} />;
-    };
-
-    render(<TestWrapper />);
-
+  it('should test searchInTable with uiFind matching and detail items', () => {
     const mockTableData = [
       {
         name: 'searchterm',
@@ -511,25 +488,12 @@ describe('<TraceTagOverview>', () => {
       },
     ];
 
-    await waitFor(() => {
-      if (componentRef.current) {
-        const result = componentRef.current.searchInTable(undefined, mockTableData, 'searchterm');
-        const highlightedItems = result.filter(item => item.searchColor === 'rgb(255,243,215)');
-        expect(highlightedItems.length).toBeGreaterThan(0);
-      }
-    });
+    const result = searchInTable(undefined, mockTableData, 'searchterm');
+    const highlightedItems = result.filter(item => item.searchColor === 'rgb(255,243,215)');
+    expect(highlightedItems.length).toBeGreaterThan(0);
   });
 
-  it('should test searchInTable with items that have subgroup values but are details', async () => {
-    let componentRef;
-    const TestWrapper = () => {
-      const ref = React.useRef();
-      componentRef = ref;
-      return <TraceStatistics ref={ref} {...defaultProps} />;
-    };
-
-    render(<TestWrapper />);
-
+  it('should test searchInTable with items that have subgroup values but are details', () => {
     const mockTableData = [
       {
         name: 'item1',
@@ -549,12 +513,8 @@ describe('<TraceTagOverview>', () => {
       },
     ];
 
-    await waitFor(() => {
-      if (componentRef.current) {
-        const result = componentRef.current.searchInTable(undefined, mockTableData, null);
-        expect(result[0].searchColor).toBe('rgb(248,248,248)');
-        expect(result[1].searchColor).toBe('rgb(248,248,248)');
-      }
-    });
+    const result = searchInTable(undefined, mockTableData, null);
+    expect(result[0].searchColor).toBe('rgb(248,248,248)');
+    expect(result[1].searchColor).toBe('rgb(248,248,248)');
   });
 });
