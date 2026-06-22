@@ -282,7 +282,7 @@ export function parseOtelTrace(data: IOtlpTracesData): IOtelTrace | null {
   // Pre-order DFS (iterative, to stay safe on very deeply nested traces) to set
   // depth/relative timing, order siblings by start time, and build the flat list.
   const spans: MutableOtelSpan[] = [];
-  const serviceCounts: Record<string, number> = {};
+  const serviceCounts = Object.create(null) as Record<string, number>;
   rootSpans.sort((a, b) => a.startTime - b.startTime);
   const stack: { span: MutableOtelSpan; depth: number }[] = [];
   for (let i = rootSpans.length - 1; i >= 0; i--) stack.push({ span: rootSpans[i], depth: 0 });
