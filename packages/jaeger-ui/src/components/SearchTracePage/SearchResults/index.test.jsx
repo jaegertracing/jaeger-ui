@@ -339,6 +339,10 @@ describe('<SearchResults>', () => {
   });
 
   describe('search finished with results', () => {
+    beforeEach(() => {
+      useSearchResultsStore.setState({ viewMode: 'list' });
+    });
+
     it('shows a scatter plot', () => {
       renderWithRouter(<SearchResults {...baseProps} />);
       expect(screen.getByTestId('scatterplot')).toBeInTheDocument();
@@ -524,29 +528,29 @@ describe('<SearchResults>', () => {
 
   describe('view mode toggle', () => {
     beforeEach(() => {
-      useSearchResultsStore.setState({ viewMode: 'list' });
+      useSearchResultsStore.setState({ viewMode: 'table' });
       localStorage.clear();
     });
 
-    it('defaults to list view', () => {
+    it('defaults to table view', () => {
       renderWithRouter(<SearchResults {...baseProps} />);
-      expect(screen.getByTestId('result-a')).toBeInTheDocument();
-      expect(screen.queryByTestId('trace-table')).not.toBeInTheDocument();
-    });
-
-    it('switches to table view when Table button is clicked', () => {
-      renderWithRouter(<SearchResults {...baseProps} />);
-      fireEvent.click(screen.getByText('Table'));
       expect(screen.getByTestId('trace-table')).toBeInTheDocument();
       expect(screen.queryByTestId('result-a')).not.toBeInTheDocument();
     });
 
-    it('switches back to list view when List button is clicked', () => {
+    it('switches to list view when List button is clicked', () => {
       renderWithRouter(<SearchResults {...baseProps} />);
-      fireEvent.click(screen.getByText('Table'));
       fireEvent.click(screen.getByText('List'));
       expect(screen.getByTestId('result-a')).toBeInTheDocument();
       expect(screen.queryByTestId('trace-table')).not.toBeInTheDocument();
+    });
+
+    it('switches back to table view when Table button is clicked', () => {
+      renderWithRouter(<SearchResults {...baseProps} />);
+      fireEvent.click(screen.getByText('List'));
+      fireEvent.click(screen.getByText('Table'));
+      expect(screen.getByTestId('trace-table')).toBeInTheDocument();
+      expect(screen.queryByTestId('result-a')).not.toBeInTheDocument();
     });
   });
 });
