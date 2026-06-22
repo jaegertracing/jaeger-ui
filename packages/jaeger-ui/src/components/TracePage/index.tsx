@@ -336,6 +336,10 @@ export function TracePageImpl(props: TProps) {
   useEffect(() => {
     if (traceIsGenAI) {
       setTraceView(ETraceViewType.GenAITimelineViewer);
+    } else {
+      setViewType(vt =>
+        vt === ETraceViewType.GenAITimelineViewer ? ETraceViewType.TraceTimelineViewer : vt
+      );
     }
   }, [traceIsGenAI, setTraceView]);
 

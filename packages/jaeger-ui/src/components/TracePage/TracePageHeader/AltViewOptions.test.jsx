@@ -43,13 +43,7 @@ vi.mock('antd', async () => {
 });
 
 describe('AltViewOptions', () => {
-  let trackGanttView;
-  let trackGraphView;
-  let trackJsonView;
-  let trackRawJsonView;
-  let trackStatisticsView;
-  let trackTraceSpansView;
-  let trackTraceLogsView;
+  let trackViewChange;
 
   const props = {
     viewType: ETraceViewType.TraceTimelineViewer,
@@ -59,13 +53,7 @@ describe('AltViewOptions', () => {
   };
 
   beforeAll(() => {
-    trackGanttView = jest.spyOn(track, 'trackGanttView');
-    trackGraphView = jest.spyOn(track, 'trackGraphView');
-    trackJsonView = jest.spyOn(track, 'trackJsonView');
-    trackRawJsonView = jest.spyOn(track, 'trackRawJsonView');
-    trackStatisticsView = jest.spyOn(track, 'trackStatisticsView');
-    trackTraceSpansView = jest.spyOn(track, 'trackTraceSpansView');
-    trackTraceLogsView = jest.spyOn(track, 'trackTraceLogsView');
+    trackViewChange = jest.spyOn(track, 'trackViewChange');
   });
 
   afterEach(() => {
@@ -124,69 +112,18 @@ describe('AltViewOptions', () => {
     expect(screen.getByTestId('menu-item-TraceStatistics')).toBeInTheDocument();
   });
 
-  it('tracks and changes view for Trace Graph', () => {
+  it.each([
+    [ETraceViewType.TraceGraph, 'menu-item-TraceGraph'],
+    [ETraceViewType.TraceStatistics, 'menu-item-TraceStatistics'],
+    [ETraceViewType.TraceSpansView, 'menu-item-TraceSpansView'],
+    [ETraceViewType.TraceFlamegraph, 'menu-item-TraceFlamegraph'],
+    [ETraceViewType.TraceLogs, 'menu-item-TraceLogs'],
+    [ETraceViewType.GenAITimelineViewer, 'menu-item-GenAITimelineViewer'],
+  ])('tracks and changes view for %s', (viewType, testId) => {
     renderComponent({ viewType: ETraceViewType.TraceTimelineViewer });
-    const menuItem = screen.getByTestId('menu-item-TraceGraph');
-
-    fireEvent.click(menuItem);
-
-    expect(props.onTraceViewChange).toHaveBeenCalledWith(ETraceViewType.TraceGraph);
-    expect(trackGraphView).toHaveBeenCalledTimes(1);
-  });
-
-  it('tracks and changes view for Trace Statistics', () => {
-    renderComponent({ viewType: ETraceViewType.TraceGraph });
-    const menuItem = screen.getByTestId('menu-item-TraceStatistics');
-
-    fireEvent.click(menuItem);
-
-    expect(props.onTraceViewChange).toHaveBeenCalledWith(ETraceViewType.TraceStatistics);
-    expect(trackStatisticsView).toHaveBeenCalledTimes(1);
-  });
-
-  it('tracks and changes view for Trace Timeline', () => {
-    renderComponent({ viewType: ETraceViewType.TraceStatistics });
-    const menuItem = screen.getByTestId('menu-item-TraceTimelineViewer');
-
-    fireEvent.click(menuItem);
-
-    expect(props.onTraceViewChange).toHaveBeenCalledWith(ETraceViewType.TraceTimelineViewer);
-    expect(trackGanttView).toHaveBeenCalledTimes(1);
-  });
-
-  it('tracks and changes view for Trace Spans Table', () => {
-    renderComponent({ viewType: ETraceViewType.TraceTimelineViewer });
-    const menuItem = screen.getByTestId('menu-item-TraceSpansView');
-
-    fireEvent.click(menuItem);
-
-    expect(props.onTraceViewChange).toHaveBeenCalledWith(ETraceViewType.TraceSpansView);
-    expect(trackTraceSpansView).toHaveBeenCalledTimes(1);
-  });
-
-  it('does not track or change view for Trace Flamegraph', () => {
-    renderComponent({ viewType: ETraceViewType.TraceTimelineViewer });
-    const menuItem = screen.getByTestId('menu-item-TraceFlamegraph');
-
-    fireEvent.click(menuItem);
-
-    expect(props.onTraceViewChange).toHaveBeenCalledWith(ETraceViewType.TraceFlamegraph);
-
-    expect(trackGanttView).not.toHaveBeenCalled();
-    expect(trackGraphView).not.toHaveBeenCalled();
-    expect(trackStatisticsView).not.toHaveBeenCalled();
-    expect(trackTraceSpansView).not.toHaveBeenCalled();
-    expect(trackTraceLogsView).not.toHaveBeenCalled();
-  });
-
-  it('tracks and changes view for Trace Logs', () => {
-    renderComponent({ viewType: ETraceViewType.TraceTimelineViewer });
-    const menuItem = screen.getByTestId('menu-item-TraceLogs');
-
-    fireEvent.click(menuItem);
-
-    expect(props.onTraceViewChange).toHaveBeenCalledWith(ETraceViewType.TraceLogs);
-    expect(trackTraceLogsView).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByTestId(testId));
+    expect(props.onTraceViewChange).toHaveBeenCalledWith(viewType);
+    expect(trackViewChange).toHaveBeenCalledWith(viewType);
   });
 
   it('renders JSON links with correct URLs', () => {

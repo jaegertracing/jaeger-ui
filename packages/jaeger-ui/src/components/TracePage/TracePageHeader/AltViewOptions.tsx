@@ -7,15 +7,7 @@ import { IoChevronDown } from 'react-icons/io5';
 import { Link } from 'react-router-dom';
 import './AltViewOptions.css';
 
-import {
-  trackGanttView,
-  trackGraphView,
-  trackStatisticsView,
-  trackTraceSpansView,
-  trackTraceLogsView,
-  trackJsonView,
-  trackRawJsonView,
-} from './TracePageHeader.track';
+import { trackViewChange, trackJsonView, trackRawJsonView } from './TracePageHeader.track';
 import prefixUrl from '../../../utils/prefix-url';
 import { ETraceViewType } from '../types';
 import { getTargetBlankOrTop } from '../../../utils/config/get-target';
@@ -41,17 +33,7 @@ export default function AltViewOptions(props: Props) {
   const { onTraceViewChange, viewType, traceID, disableJsonView } = props;
 
   const handleSelectView = (item: ETraceViewType) => {
-    if (item === ETraceViewType.TraceTimelineViewer) {
-      trackGanttView();
-    } else if (item === ETraceViewType.TraceGraph) {
-      trackGraphView();
-    } else if (item === ETraceViewType.TraceStatistics) {
-      trackStatisticsView();
-    } else if (item === ETraceViewType.TraceSpansView) {
-      trackTraceSpansView();
-    } else if (item === ETraceViewType.TraceLogs) {
-      trackTraceLogsView();
-    }
+    trackViewChange(item);
     onTraceViewChange(item);
   };
 
