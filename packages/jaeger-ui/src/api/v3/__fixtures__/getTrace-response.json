@@ -1,0 +1,1457 @@
+{
+  "result": {
+    "resourceSpans": [
+      {
+        "resource": {
+          "attributes": [
+            { "key": "host.name", "value": { "stringValue": "2fd43f7d79c6" } },
+            { "key": "os.type", "value": { "stringValue": "linux" } },
+            { "key": "service.name", "value": { "stringValue": "frontend" } },
+            { "key": "telemetry.sdk.language", "value": { "stringValue": "go" } },
+            { "key": "telemetry.sdk.name", "value": { "stringValue": "opentelemetry" } },
+            { "key": "telemetry.sdk.version", "value": { "stringValue": "1.44.0" } }
+          ]
+        },
+        "scopeSpans": [
+          {
+            "scope": {
+              "name": "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp",
+              "version": "0.69.0"
+            },
+            "spans": [
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "9082d67808fc8870",
+                "parentSpanId": "c8d93156b47cd010",
+                "flags": 257,
+                "name": "HTTP GET",
+                "kind": 3,
+                "startTimeUnixNano": "1782036644636668325",
+                "endTimeUnixNano": "1782036644898226779",
+                "attributes": [
+                  { "key": "http.request.method", "value": { "stringValue": "GET" } },
+                  { "key": "http.response.status_code", "value": { "intValue": "200" } },
+                  { "key": "network.protocol.version", "value": { "stringValue": "1.1" } },
+                  { "key": "server.address", "value": { "stringValue": "0.0.0.0" } },
+                  { "key": "server.port", "value": { "intValue": "8081" } },
+                  {
+                    "key": "url.full",
+                    "value": { "stringValue": "http://0.0.0.0:8081/customer?customer=123" }
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "7286f10626650bcb",
+                "parentSpanId": "c8d93156b47cd010",
+                "flags": 257,
+                "name": "HTTP GET",
+                "kind": 3,
+                "startTimeUnixNano": "1782036645125825261",
+                "endTimeUnixNano": "1782036645163101708",
+                "attributes": [
+                  { "key": "http.request.method", "value": { "stringValue": "GET" } },
+                  { "key": "http.response.status_code", "value": { "intValue": "200" } },
+                  { "key": "network.protocol.version", "value": { "stringValue": "1.1" } },
+                  { "key": "server.address", "value": { "stringValue": "0.0.0.0" } },
+                  { "key": "server.port", "value": { "intValue": "8083" } },
+                  {
+                    "key": "url.full",
+                    "value": { "stringValue": "http://0.0.0.0:8083/route?dropoff=115%2C277&pickup=468%2C923" }
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "2f9e73787cb2a7a8",
+                "parentSpanId": "c8d93156b47cd010",
+                "flags": 257,
+                "name": "HTTP GET",
+                "kind": 3,
+                "startTimeUnixNano": "1782036645125640970",
+                "endTimeUnixNano": "1782036645172670606",
+                "attributes": [
+                  { "key": "http.request.method", "value": { "stringValue": "GET" } },
+                  { "key": "http.response.status_code", "value": { "intValue": "200" } },
+                  { "key": "network.protocol.version", "value": { "stringValue": "1.1" } },
+                  { "key": "server.address", "value": { "stringValue": "0.0.0.0" } },
+                  { "key": "server.port", "value": { "intValue": "8083" } },
+                  {
+                    "key": "url.full",
+                    "value": { "stringValue": "http://0.0.0.0:8083/route?dropoff=115%2C277&pickup=811%2C145" }
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "94af439a37c917cf",
+                "parentSpanId": "c8d93156b47cd010",
+                "flags": 257,
+                "name": "HTTP GET",
+                "kind": 3,
+                "startTimeUnixNano": "1782036645125551248",
+                "endTimeUnixNano": "1782036645186734802",
+                "attributes": [
+                  { "key": "http.request.method", "value": { "stringValue": "GET" } },
+                  { "key": "http.response.status_code", "value": { "intValue": "200" } },
+                  { "key": "network.protocol.version", "value": { "stringValue": "1.1" } },
+                  { "key": "server.address", "value": { "stringValue": "0.0.0.0" } },
+                  { "key": "server.port", "value": { "intValue": "8083" } },
+                  {
+                    "key": "url.full",
+                    "value": { "stringValue": "http://0.0.0.0:8083/route?dropoff=115%2C277&pickup=510%2C191" }
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "e834e36759dbe8dd",
+                "parentSpanId": "c8d93156b47cd010",
+                "flags": 257,
+                "name": "HTTP GET",
+                "kind": 3,
+                "startTimeUnixNano": "1782036645172761771",
+                "endTimeUnixNano": "1782036645231384785",
+                "attributes": [
+                  { "key": "http.request.method", "value": { "stringValue": "GET" } },
+                  { "key": "http.response.status_code", "value": { "intValue": "200" } },
+                  { "key": "network.protocol.version", "value": { "stringValue": "1.1" } },
+                  { "key": "server.address", "value": { "stringValue": "0.0.0.0" } },
+                  { "key": "server.port", "value": { "intValue": "8083" } },
+                  {
+                    "key": "url.full",
+                    "value": { "stringValue": "http://0.0.0.0:8083/route?dropoff=115%2C277&pickup=788%2C346" }
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "189294936eee8222",
+                "parentSpanId": "c8d93156b47cd010",
+                "flags": 257,
+                "name": "HTTP GET",
+                "kind": 3,
+                "startTimeUnixNano": "1782036645163191489",
+                "endTimeUnixNano": "1782036645231407986",
+                "attributes": [
+                  { "key": "http.request.method", "value": { "stringValue": "GET" } },
+                  { "key": "http.response.status_code", "value": { "intValue": "200" } },
+                  { "key": "network.protocol.version", "value": { "stringValue": "1.1" } },
+                  { "key": "server.address", "value": { "stringValue": "0.0.0.0" } },
+                  { "key": "server.port", "value": { "intValue": "8083" } },
+                  {
+                    "key": "url.full",
+                    "value": { "stringValue": "http://0.0.0.0:8083/route?dropoff=115%2C277&pickup=648%2C675" }
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "3b534a7e03a9cbbf",
+                "parentSpanId": "c8d93156b47cd010",
+                "flags": 257,
+                "name": "HTTP GET",
+                "kind": 3,
+                "startTimeUnixNano": "1782036645186820686",
+                "endTimeUnixNano": "1782036645245337827",
+                "attributes": [
+                  { "key": "http.request.method", "value": { "stringValue": "GET" } },
+                  { "key": "http.response.status_code", "value": { "intValue": "200" } },
+                  { "key": "network.protocol.version", "value": { "stringValue": "1.1" } },
+                  { "key": "server.address", "value": { "stringValue": "0.0.0.0" } },
+                  { "key": "server.port", "value": { "intValue": "8083" } },
+                  {
+                    "key": "url.full",
+                    "value": { "stringValue": "http://0.0.0.0:8083/route?dropoff=115%2C277&pickup=763%2C986" }
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "e63985207c3d6f70",
+                "parentSpanId": "c8d93156b47cd010",
+                "flags": 257,
+                "name": "HTTP GET",
+                "kind": 3,
+                "startTimeUnixNano": "1782036645231468004",
+                "endTimeUnixNano": "1782036645272185281",
+                "attributes": [
+                  { "key": "http.request.method", "value": { "stringValue": "GET" } },
+                  { "key": "http.response.status_code", "value": { "intValue": "200" } },
+                  { "key": "network.protocol.version", "value": { "stringValue": "1.1" } },
+                  { "key": "server.address", "value": { "stringValue": "0.0.0.0" } },
+                  { "key": "server.port", "value": { "intValue": "8083" } },
+                  {
+                    "key": "url.full",
+                    "value": { "stringValue": "http://0.0.0.0:8083/route?dropoff=115%2C277&pickup=286%2C330" }
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "471a336105a4c311",
+                "parentSpanId": "c8d93156b47cd010",
+                "flags": 257,
+                "name": "HTTP GET",
+                "kind": 3,
+                "startTimeUnixNano": "1782036645231489379",
+                "endTimeUnixNano": "1782036645281024627",
+                "attributes": [
+                  { "key": "http.request.method", "value": { "stringValue": "GET" } },
+                  { "key": "http.response.status_code", "value": { "intValue": "200" } },
+                  { "key": "network.protocol.version", "value": { "stringValue": "1.1" } },
+                  { "key": "server.address", "value": { "stringValue": "0.0.0.0" } },
+                  { "key": "server.port", "value": { "intValue": "8083" } },
+                  {
+                    "key": "url.full",
+                    "value": { "stringValue": "http://0.0.0.0:8083/route?dropoff=115%2C277&pickup=735%2C177" }
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "76a38f6d0c2fcad1",
+                "parentSpanId": "c8d93156b47cd010",
+                "flags": 257,
+                "name": "HTTP GET",
+                "kind": 3,
+                "startTimeUnixNano": "1782036645245482135",
+                "endTimeUnixNano": "1782036645289165091",
+                "attributes": [
+                  { "key": "http.request.method", "value": { "stringValue": "GET" } },
+                  { "key": "http.response.status_code", "value": { "intValue": "200" } },
+                  { "key": "network.protocol.version", "value": { "stringValue": "1.1" } },
+                  { "key": "server.address", "value": { "stringValue": "0.0.0.0" } },
+                  { "key": "server.port", "value": { "intValue": "8083" } },
+                  {
+                    "key": "url.full",
+                    "value": { "stringValue": "http://0.0.0.0:8083/route?dropoff=115%2C277&pickup=935%2C147" }
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "195b12659fa28a50",
+                "parentSpanId": "c8d93156b47cd010",
+                "flags": 257,
+                "name": "HTTP GET",
+                "kind": 3,
+                "startTimeUnixNano": "1782036645272348304",
+                "endTimeUnixNano": "1782036645332902792",
+                "attributes": [
+                  { "key": "http.request.method", "value": { "stringValue": "GET" } },
+                  { "key": "http.response.status_code", "value": { "intValue": "200" } },
+                  { "key": "network.protocol.version", "value": { "stringValue": "1.1" } },
+                  { "key": "server.address", "value": { "stringValue": "0.0.0.0" } },
+                  { "key": "server.port", "value": { "intValue": "8083" } },
+                  {
+                    "key": "url.full",
+                    "value": { "stringValue": "http://0.0.0.0:8083/route?dropoff=115%2C277&pickup=517%2C268" }
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "c8d93156b47cd010",
+                "flags": 257,
+                "name": "GET /dispatch",
+                "kind": 2,
+                "startTimeUnixNano": "1782036644630407050",
+                "endTimeUnixNano": "1782036645333015327",
+                "attributes": [
+                  { "key": "client.address", "value": { "stringValue": "172.17.0.1" } },
+                  { "key": "http.request.method", "value": { "stringValue": "GET" } },
+                  { "key": "http.response.body.size", "value": { "intValue": "40" } },
+                  { "key": "http.response.status_code", "value": { "intValue": "200" } },
+                  { "key": "http.route", "value": { "stringValue": "/dispatch" } },
+                  { "key": "network.peer.address", "value": { "stringValue": "172.17.0.1" } },
+                  { "key": "network.peer.port", "value": { "intValue": "55760" } },
+                  { "key": "network.protocol.version", "value": { "stringValue": "1.1" } },
+                  { "key": "server.address", "value": { "stringValue": "localhost" } },
+                  { "key": "server.port", "value": { "intValue": "8080" } },
+                  { "key": "url.path", "value": { "stringValue": "/dispatch" } },
+                  { "key": "url.scheme", "value": { "stringValue": "http" } },
+                  {
+                    "key": "user_agent.original",
+                    "value": {
+                      "stringValue": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+                    }
+                  }
+                ],
+                "events": [
+                  {
+                    "timeUnixNano": "1782036645332989516",
+                    "name": "Dispatch successful",
+                    "attributes": [
+                      { "key": "driver", "value": { "stringValue": "T724621C" } },
+                      { "key": "eta", "value": { "stringValue": "2m0s" } },
+                      { "key": "level", "value": { "stringValue": "info" } }
+                    ]
+                  },
+                  {
+                    "timeUnixNano": "1782036644898504047",
+                    "name": "Finding nearest drivers",
+                    "attributes": [
+                      { "key": "level", "value": { "stringValue": "info" } },
+                      { "key": "location", "value": { "stringValue": "115,277" } }
+                    ]
+                  },
+                  {
+                    "timeUnixNano": "1782036645125527527",
+                    "name": "Finding route",
+                    "attributes": [
+                      { "key": "dropoff", "value": { "stringValue": "115,277" } },
+                      { "key": "level", "value": { "stringValue": "info" } },
+                      { "key": "pickup", "value": { "stringValue": "510,191" } }
+                    ]
+                  },
+                  {
+                    "timeUnixNano": "1782036645125577918",
+                    "name": "Finding route",
+                    "attributes": [
+                      { "key": "dropoff", "value": { "stringValue": "115,277" } },
+                      { "key": "level", "value": { "stringValue": "info" } },
+                      { "key": "pickup", "value": { "stringValue": "811,145" } }
+                    ]
+                  },
+                  {
+                    "timeUnixNano": "1782036645125741495",
+                    "name": "Finding route",
+                    "attributes": [
+                      { "key": "dropoff", "value": { "stringValue": "115,277" } },
+                      { "key": "level", "value": { "stringValue": "info" } },
+                      { "key": "pickup", "value": { "stringValue": "468,923" } }
+                    ]
+                  },
+                  {
+                    "timeUnixNano": "1782036645163127149",
+                    "name": "Finding route",
+                    "attributes": [
+                      { "key": "dropoff", "value": { "stringValue": "115,277" } },
+                      { "key": "level", "value": { "stringValue": "info" } },
+                      { "key": "pickup", "value": { "stringValue": "648,675" } }
+                    ]
+                  },
+                  {
+                    "timeUnixNano": "1782036645172694723",
+                    "name": "Finding route",
+                    "attributes": [
+                      { "key": "dropoff", "value": { "stringValue": "115,277" } },
+                      { "key": "level", "value": { "stringValue": "info" } },
+                      { "key": "pickup", "value": { "stringValue": "788,346" } }
+                    ]
+                  },
+                  {
+                    "timeUnixNano": "1782036645186763559",
+                    "name": "Finding route",
+                    "attributes": [
+                      { "key": "dropoff", "value": { "stringValue": "115,277" } },
+                      { "key": "level", "value": { "stringValue": "info" } },
+                      { "key": "pickup", "value": { "stringValue": "763,986" } }
+                    ]
+                  },
+                  {
+                    "timeUnixNano": "1782036645231409682",
+                    "name": "Finding route",
+                    "attributes": [
+                      { "key": "dropoff", "value": { "stringValue": "115,277" } },
+                      { "key": "level", "value": { "stringValue": "info" } },
+                      { "key": "pickup", "value": { "stringValue": "286,330" } }
+                    ]
+                  },
+                  {
+                    "timeUnixNano": "1782036645231450677",
+                    "name": "Finding route",
+                    "attributes": [
+                      { "key": "dropoff", "value": { "stringValue": "115,277" } },
+                      { "key": "level", "value": { "stringValue": "info" } },
+                      { "key": "pickup", "value": { "stringValue": "735,177" } }
+                    ]
+                  },
+                  {
+                    "timeUnixNano": "1782036645245399701",
+                    "name": "Finding route",
+                    "attributes": [
+                      { "key": "dropoff", "value": { "stringValue": "115,277" } },
+                      { "key": "level", "value": { "stringValue": "info" } },
+                      { "key": "pickup", "value": { "stringValue": "935,147" } }
+                    ]
+                  },
+                  {
+                    "timeUnixNano": "1782036645272217026",
+                    "name": "Finding route",
+                    "attributes": [
+                      { "key": "dropoff", "value": { "stringValue": "115,277" } },
+                      { "key": "level", "value": { "stringValue": "info" } },
+                      { "key": "pickup", "value": { "stringValue": "517,268" } }
+                    ]
+                  },
+                  {
+                    "timeUnixNano": "1782036644898410560",
+                    "name": "Found customer",
+                    "attributes": [{ "key": "level", "value": { "stringValue": "info" } }]
+                  },
+                  {
+                    "timeUnixNano": "1782036645125475183",
+                    "name": "Found drivers",
+                    "attributes": [{ "key": "level", "value": { "stringValue": "info" } }]
+                  },
+                  {
+                    "timeUnixNano": "1782036645332930020",
+                    "name": "Found routes",
+                    "attributes": [{ "key": "level", "value": { "stringValue": "info" } }]
+                  },
+                  {
+                    "timeUnixNano": "1782036644635649615",
+                    "name": "Getting customer",
+                    "attributes": [
+                      { "key": "customer_id", "value": { "intValue": "123" } },
+                      { "key": "level", "value": { "stringValue": "info" } }
+                    ]
+                  },
+                  {
+                    "timeUnixNano": "1782036644630449832",
+                    "name": "HTTP request received",
+                    "attributes": [
+                      { "key": "level", "value": { "stringValue": "info" } },
+                      { "key": "method", "value": { "stringValue": "GET" } },
+                      {
+                        "key": "url",
+                        "value": { "stringValue": "/dispatch?customer=123&nonse=0.7647600816788169" }
+                      }
+                    ]
+                  }
+                ],
+                "status": {}
+              }
+            ]
+          },
+          {
+            "scope": {
+              "name": "go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc",
+              "version": "0.69.0"
+            },
+            "spans": [
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "4fc89bb4bc7afb79",
+                "parentSpanId": "c8d93156b47cd010",
+                "flags": 257,
+                "name": "driver.DriverService/FindNearest",
+                "kind": 3,
+                "startTimeUnixNano": "1782036644898589215",
+                "endTimeUnixNano": "1782036645125442138",
+                "attributes": [
+                  { "key": "rpc.method", "value": { "stringValue": "driver.DriverService/FindNearest" } },
+                  { "key": "rpc.response.status_code", "value": { "stringValue": "OK" } },
+                  { "key": "rpc.system.name", "value": { "stringValue": "grpc" } },
+                  { "key": "server.address", "value": { "stringValue": "127.0.0.1" } },
+                  { "key": "server.port", "value": { "intValue": "8082" } }
+                ],
+                "status": {}
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "resource": {
+          "attributes": [
+            { "key": "host.name", "value": { "stringValue": "2fd43f7d79c6" } },
+            { "key": "os.type", "value": { "stringValue": "linux" } },
+            { "key": "service.name", "value": { "stringValue": "driver" } },
+            { "key": "telemetry.sdk.language", "value": { "stringValue": "go" } },
+            { "key": "telemetry.sdk.name", "value": { "stringValue": "opentelemetry" } },
+            { "key": "telemetry.sdk.version", "value": { "stringValue": "1.44.0" } }
+          ]
+        },
+        "scopeSpans": [
+          {
+            "scope": {
+              "name": "go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc",
+              "version": "0.69.0"
+            },
+            "spans": [
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "12c2cadb3c59f584",
+                "parentSpanId": "4fc89bb4bc7afb79",
+                "flags": 769,
+                "name": "driver.DriverService/FindNearest",
+                "kind": 2,
+                "startTimeUnixNano": "1782036644899101911",
+                "endTimeUnixNano": "1782036645125156107",
+                "attributes": [
+                  { "key": "rpc.method", "value": { "stringValue": "driver.DriverService/FindNearest" } },
+                  { "key": "rpc.response.status_code", "value": { "stringValue": "OK" } },
+                  { "key": "rpc.system.name", "value": { "stringValue": "grpc" } },
+                  { "key": "server.address", "value": { "stringValue": "127.0.0.1" } },
+                  { "key": "server.port", "value": { "intValue": "8082" } }
+                ],
+                "events": [
+                  {
+                    "timeUnixNano": "1782036644951664442",
+                    "name": "Retrying GetDriver after error",
+                    "attributes": [
+                      { "key": "error", "value": { "stringValue": "redis timeout" } },
+                      { "key": "level", "value": { "stringValue": "error" } },
+                      { "key": "retry_no", "value": { "intValue": "1" } }
+                    ]
+                  },
+                  {
+                    "timeUnixNano": "1782036645036540917",
+                    "name": "Retrying GetDriver after error",
+                    "attributes": [
+                      { "key": "error", "value": { "stringValue": "redis timeout" } },
+                      { "key": "level", "value": { "stringValue": "error" } },
+                      { "key": "retry_no", "value": { "intValue": "1" } }
+                    ]
+                  },
+                  {
+                    "timeUnixNano": "1782036645106547150",
+                    "name": "Retrying GetDriver after error",
+                    "attributes": [
+                      { "key": "error", "value": { "stringValue": "redis timeout" } },
+                      { "key": "level", "value": { "stringValue": "error" } },
+                      { "key": "retry_no", "value": { "intValue": "1" } }
+                    ]
+                  },
+                  {
+                    "timeUnixNano": "1782036645124689111",
+                    "name": "Search successful",
+                    "attributes": [
+                      { "key": "driver_count", "value": { "intValue": "10" } },
+                      { "key": "level", "value": { "stringValue": "info" } },
+                      {
+                        "key": "locations",
+                        "value": {
+                          "stringValue": "[{\"driverID\":\"T778539C\",\"location\":\"811,145\"},{\"driverID\":\"T724505C\",\"location\":\"468,923\"},{\"driverID\":\"T738368C\",\"location\":\"510,191\"},{\"driverID\":\"T752635C\",\"location\":\"648,675\"},{\"driverID\":\"T724621C\",\"location\":\"788,346\"},{\"driverID\":\"T796884C\",\"location\":\"763,986\"},{\"driverID\":\"T754522C\",\"location\":\"286,330\"},{\"driverID\":\"T705156C\",\"location\":\"735,177\"},{\"driverID\":\"T707578C\",\"location\":\"935,147\"},{\"driverID\":\"T741148C\",\"location\":\"517,268\"}]"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "timeUnixNano": "1782036644899130607",
+                    "name": "Searching for nearby drivers",
+                    "attributes": [
+                      { "key": "level", "value": { "stringValue": "info" } },
+                      { "key": "location", "value": { "stringValue": "115,277" } }
+                    ]
+                  }
+                ],
+                "status": {}
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "resource": {
+          "attributes": [
+            { "key": "host.name", "value": { "stringValue": "2fd43f7d79c6" } },
+            { "key": "os.type", "value": { "stringValue": "linux" } },
+            { "key": "service.name", "value": { "stringValue": "route" } },
+            { "key": "telemetry.sdk.language", "value": { "stringValue": "go" } },
+            { "key": "telemetry.sdk.name", "value": { "stringValue": "opentelemetry" } },
+            { "key": "telemetry.sdk.version", "value": { "stringValue": "1.44.0" } }
+          ]
+        },
+        "scopeSpans": [
+          {
+            "scope": {
+              "name": "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp",
+              "version": "0.69.0"
+            },
+            "spans": [
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "e6708333fe663354",
+                "parentSpanId": "7286f10626650bcb",
+                "flags": 769,
+                "name": "GET /route",
+                "kind": 2,
+                "startTimeUnixNano": "1782036645126491080",
+                "endTimeUnixNano": "1782036645162893993",
+                "attributes": [
+                  { "key": "client.address", "value": { "stringValue": "127.0.0.1" } },
+                  { "key": "http.request.method", "value": { "stringValue": "GET" } },
+                  { "key": "http.response.body.size", "value": { "intValue": "59" } },
+                  { "key": "http.response.status_code", "value": { "intValue": "200" } },
+                  { "key": "http.route", "value": { "stringValue": "/route" } },
+                  { "key": "network.peer.address", "value": { "stringValue": "127.0.0.1" } },
+                  { "key": "network.peer.port", "value": { "intValue": "53588" } },
+                  { "key": "network.protocol.version", "value": { "stringValue": "1.1" } },
+                  { "key": "server.address", "value": { "stringValue": "0.0.0.0" } },
+                  { "key": "server.port", "value": { "intValue": "8083" } },
+                  { "key": "url.path", "value": { "stringValue": "/route" } },
+                  { "key": "url.scheme", "value": { "stringValue": "http" } },
+                  { "key": "user_agent.original", "value": { "stringValue": "Go-http-client/1.1" } }
+                ],
+                "events": [
+                  {
+                    "timeUnixNano": "1782036645126503668",
+                    "name": "HTTP request received",
+                    "attributes": [
+                      { "key": "level", "value": { "stringValue": "info" } },
+                      { "key": "method", "value": { "stringValue": "GET" } },
+                      {
+                        "key": "url",
+                        "value": { "stringValue": "/route?dropoff=115%2C277&pickup=468%2C923" }
+                      }
+                    ]
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "e69fd8bf52cdcfe3",
+                "parentSpanId": "2f9e73787cb2a7a8",
+                "flags": 769,
+                "name": "GET /route",
+                "kind": 2,
+                "startTimeUnixNano": "1782036645126022681",
+                "endTimeUnixNano": "1782036645172485965",
+                "attributes": [
+                  { "key": "client.address", "value": { "stringValue": "127.0.0.1" } },
+                  { "key": "http.request.method", "value": { "stringValue": "GET" } },
+                  { "key": "http.response.body.size", "value": { "intValue": "59" } },
+                  { "key": "http.response.status_code", "value": { "intValue": "200" } },
+                  { "key": "http.route", "value": { "stringValue": "/route" } },
+                  { "key": "network.peer.address", "value": { "stringValue": "127.0.0.1" } },
+                  { "key": "network.peer.port", "value": { "intValue": "49078" } },
+                  { "key": "network.protocol.version", "value": { "stringValue": "1.1" } },
+                  { "key": "server.address", "value": { "stringValue": "0.0.0.0" } },
+                  { "key": "server.port", "value": { "intValue": "8083" } },
+                  { "key": "url.path", "value": { "stringValue": "/route" } },
+                  { "key": "url.scheme", "value": { "stringValue": "http" } },
+                  { "key": "user_agent.original", "value": { "stringValue": "Go-http-client/1.1" } }
+                ],
+                "events": [
+                  {
+                    "timeUnixNano": "1782036645126035234",
+                    "name": "HTTP request received",
+                    "attributes": [
+                      { "key": "level", "value": { "stringValue": "info" } },
+                      { "key": "method", "value": { "stringValue": "GET" } },
+                      {
+                        "key": "url",
+                        "value": { "stringValue": "/route?dropoff=115%2C277&pickup=811%2C145" }
+                      }
+                    ]
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "fb67fcd2a1a5d2de",
+                "parentSpanId": "94af439a37c917cf",
+                "flags": 769,
+                "name": "GET /route",
+                "kind": 2,
+                "startTimeUnixNano": "1782036645125836866",
+                "endTimeUnixNano": "1782036645186371018",
+                "attributes": [
+                  { "key": "client.address", "value": { "stringValue": "127.0.0.1" } },
+                  { "key": "http.request.method", "value": { "stringValue": "GET" } },
+                  { "key": "http.response.body.size", "value": { "intValue": "59" } },
+                  { "key": "http.response.status_code", "value": { "intValue": "200" } },
+                  { "key": "http.route", "value": { "stringValue": "/route" } },
+                  { "key": "network.peer.address", "value": { "stringValue": "127.0.0.1" } },
+                  { "key": "network.peer.port", "value": { "intValue": "49062" } },
+                  { "key": "network.protocol.version", "value": { "stringValue": "1.1" } },
+                  { "key": "server.address", "value": { "stringValue": "0.0.0.0" } },
+                  { "key": "server.port", "value": { "intValue": "8083" } },
+                  { "key": "url.path", "value": { "stringValue": "/route" } },
+                  { "key": "url.scheme", "value": { "stringValue": "http" } },
+                  { "key": "user_agent.original", "value": { "stringValue": "Go-http-client/1.1" } }
+                ],
+                "events": [
+                  {
+                    "timeUnixNano": "1782036645125848674",
+                    "name": "HTTP request received",
+                    "attributes": [
+                      { "key": "level", "value": { "stringValue": "info" } },
+                      { "key": "method", "value": { "stringValue": "GET" } },
+                      {
+                        "key": "url",
+                        "value": { "stringValue": "/route?dropoff=115%2C277&pickup=510%2C191" }
+                      }
+                    ]
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "738a073abd6dcfe0",
+                "parentSpanId": "e834e36759dbe8dd",
+                "flags": 769,
+                "name": "GET /route",
+                "kind": 2,
+                "startTimeUnixNano": "1782036645173199270",
+                "endTimeUnixNano": "1782036645231218104",
+                "attributes": [
+                  { "key": "client.address", "value": { "stringValue": "127.0.0.1" } },
+                  { "key": "http.request.method", "value": { "stringValue": "GET" } },
+                  { "key": "http.response.body.size", "value": { "intValue": "59" } },
+                  { "key": "http.response.status_code", "value": { "intValue": "200" } },
+                  { "key": "http.route", "value": { "stringValue": "/route" } },
+                  { "key": "network.peer.address", "value": { "stringValue": "127.0.0.1" } },
+                  { "key": "network.peer.port", "value": { "intValue": "49078" } },
+                  { "key": "network.protocol.version", "value": { "stringValue": "1.1" } },
+                  { "key": "server.address", "value": { "stringValue": "0.0.0.0" } },
+                  { "key": "server.port", "value": { "intValue": "8083" } },
+                  { "key": "url.path", "value": { "stringValue": "/route" } },
+                  { "key": "url.scheme", "value": { "stringValue": "http" } },
+                  { "key": "user_agent.original", "value": { "stringValue": "Go-http-client/1.1" } }
+                ],
+                "events": [
+                  {
+                    "timeUnixNano": "1782036645173211836",
+                    "name": "HTTP request received",
+                    "attributes": [
+                      { "key": "level", "value": { "stringValue": "info" } },
+                      { "key": "method", "value": { "stringValue": "GET" } },
+                      {
+                        "key": "url",
+                        "value": { "stringValue": "/route?dropoff=115%2C277&pickup=788%2C346" }
+                      }
+                    ]
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "f814ac80472afcdd",
+                "parentSpanId": "189294936eee8222",
+                "flags": 769,
+                "name": "GET /route",
+                "kind": 2,
+                "startTimeUnixNano": "1782036645163428927",
+                "endTimeUnixNano": "1782036645231322885",
+                "attributes": [
+                  { "key": "client.address", "value": { "stringValue": "127.0.0.1" } },
+                  { "key": "http.request.method", "value": { "stringValue": "GET" } },
+                  { "key": "http.response.body.size", "value": { "intValue": "59" } },
+                  { "key": "http.response.status_code", "value": { "intValue": "200" } },
+                  { "key": "http.route", "value": { "stringValue": "/route" } },
+                  { "key": "network.peer.address", "value": { "stringValue": "127.0.0.1" } },
+                  { "key": "network.peer.port", "value": { "intValue": "53588" } },
+                  { "key": "network.protocol.version", "value": { "stringValue": "1.1" } },
+                  { "key": "server.address", "value": { "stringValue": "0.0.0.0" } },
+                  { "key": "server.port", "value": { "intValue": "8083" } },
+                  { "key": "url.path", "value": { "stringValue": "/route" } },
+                  { "key": "url.scheme", "value": { "stringValue": "http" } },
+                  { "key": "user_agent.original", "value": { "stringValue": "Go-http-client/1.1" } }
+                ],
+                "events": [
+                  {
+                    "timeUnixNano": "1782036645163461048",
+                    "name": "HTTP request received",
+                    "attributes": [
+                      { "key": "level", "value": { "stringValue": "info" } },
+                      { "key": "method", "value": { "stringValue": "GET" } },
+                      {
+                        "key": "url",
+                        "value": { "stringValue": "/route?dropoff=115%2C277&pickup=648%2C675" }
+                      }
+                    ]
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "1b6d49b4c55dc321",
+                "parentSpanId": "3b534a7e03a9cbbf",
+                "flags": 769,
+                "name": "GET /route",
+                "kind": 2,
+                "startTimeUnixNano": "1782036645187073130",
+                "endTimeUnixNano": "1782036645245063379",
+                "attributes": [
+                  { "key": "client.address", "value": { "stringValue": "127.0.0.1" } },
+                  { "key": "http.request.method", "value": { "stringValue": "GET" } },
+                  { "key": "http.response.body.size", "value": { "intValue": "59" } },
+                  { "key": "http.response.status_code", "value": { "intValue": "200" } },
+                  { "key": "http.route", "value": { "stringValue": "/route" } },
+                  { "key": "network.peer.address", "value": { "stringValue": "127.0.0.1" } },
+                  { "key": "network.peer.port", "value": { "intValue": "49062" } },
+                  { "key": "network.protocol.version", "value": { "stringValue": "1.1" } },
+                  { "key": "server.address", "value": { "stringValue": "0.0.0.0" } },
+                  { "key": "server.port", "value": { "intValue": "8083" } },
+                  { "key": "url.path", "value": { "stringValue": "/route" } },
+                  { "key": "url.scheme", "value": { "stringValue": "http" } },
+                  { "key": "user_agent.original", "value": { "stringValue": "Go-http-client/1.1" } }
+                ],
+                "events": [
+                  {
+                    "timeUnixNano": "1782036645187086506",
+                    "name": "HTTP request received",
+                    "attributes": [
+                      { "key": "level", "value": { "stringValue": "info" } },
+                      { "key": "method", "value": { "stringValue": "GET" } },
+                      {
+                        "key": "url",
+                        "value": { "stringValue": "/route?dropoff=115%2C277&pickup=763%2C986" }
+                      }
+                    ]
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "3fdccc29146fc898",
+                "parentSpanId": "e63985207c3d6f70",
+                "flags": 769,
+                "name": "GET /route",
+                "kind": 2,
+                "startTimeUnixNano": "1782036645231552630",
+                "endTimeUnixNano": "1782036645271861617",
+                "attributes": [
+                  { "key": "client.address", "value": { "stringValue": "127.0.0.1" } },
+                  { "key": "http.request.method", "value": { "stringValue": "GET" } },
+                  { "key": "http.response.body.size", "value": { "intValue": "59" } },
+                  { "key": "http.response.status_code", "value": { "intValue": "200" } },
+                  { "key": "http.route", "value": { "stringValue": "/route" } },
+                  { "key": "network.peer.address", "value": { "stringValue": "127.0.0.1" } },
+                  { "key": "network.peer.port", "value": { "intValue": "53588" } },
+                  { "key": "network.protocol.version", "value": { "stringValue": "1.1" } },
+                  { "key": "server.address", "value": { "stringValue": "0.0.0.0" } },
+                  { "key": "server.port", "value": { "intValue": "8083" } },
+                  { "key": "url.path", "value": { "stringValue": "/route" } },
+                  { "key": "url.scheme", "value": { "stringValue": "http" } },
+                  { "key": "user_agent.original", "value": { "stringValue": "Go-http-client/1.1" } }
+                ],
+                "events": [
+                  {
+                    "timeUnixNano": "1782036645231562025",
+                    "name": "HTTP request received",
+                    "attributes": [
+                      { "key": "level", "value": { "stringValue": "info" } },
+                      { "key": "method", "value": { "stringValue": "GET" } },
+                      {
+                        "key": "url",
+                        "value": { "stringValue": "/route?dropoff=115%2C277&pickup=286%2C330" }
+                      }
+                    ]
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "fb51867fe63b7533",
+                "parentSpanId": "471a336105a4c311",
+                "flags": 769,
+                "name": "GET /route",
+                "kind": 2,
+                "startTimeUnixNano": "1782036645231605428",
+                "endTimeUnixNano": "1782036645280788619",
+                "attributes": [
+                  { "key": "client.address", "value": { "stringValue": "127.0.0.1" } },
+                  { "key": "http.request.method", "value": { "stringValue": "GET" } },
+                  { "key": "http.response.body.size", "value": { "intValue": "59" } },
+                  { "key": "http.response.status_code", "value": { "intValue": "200" } },
+                  { "key": "http.route", "value": { "stringValue": "/route" } },
+                  { "key": "network.peer.address", "value": { "stringValue": "127.0.0.1" } },
+                  { "key": "network.peer.port", "value": { "intValue": "49078" } },
+                  { "key": "network.protocol.version", "value": { "stringValue": "1.1" } },
+                  { "key": "server.address", "value": { "stringValue": "0.0.0.0" } },
+                  { "key": "server.port", "value": { "intValue": "8083" } },
+                  { "key": "url.path", "value": { "stringValue": "/route" } },
+                  { "key": "url.scheme", "value": { "stringValue": "http" } },
+                  { "key": "user_agent.original", "value": { "stringValue": "Go-http-client/1.1" } }
+                ],
+                "events": [
+                  {
+                    "timeUnixNano": "1782036645231614782",
+                    "name": "HTTP request received",
+                    "attributes": [
+                      { "key": "level", "value": { "stringValue": "info" } },
+                      { "key": "method", "value": { "stringValue": "GET" } },
+                      {
+                        "key": "url",
+                        "value": { "stringValue": "/route?dropoff=115%2C277&pickup=735%2C177" }
+                      }
+                    ]
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "625faeaeb037c2f2",
+                "parentSpanId": "76a38f6d0c2fcad1",
+                "flags": 769,
+                "name": "GET /route",
+                "kind": 2,
+                "startTimeUnixNano": "1782036645245814440",
+                "endTimeUnixNano": "1782036645288956902",
+                "attributes": [
+                  { "key": "client.address", "value": { "stringValue": "127.0.0.1" } },
+                  { "key": "http.request.method", "value": { "stringValue": "GET" } },
+                  { "key": "http.response.body.size", "value": { "intValue": "59" } },
+                  { "key": "http.response.status_code", "value": { "intValue": "200" } },
+                  { "key": "http.route", "value": { "stringValue": "/route" } },
+                  { "key": "network.peer.address", "value": { "stringValue": "127.0.0.1" } },
+                  { "key": "network.peer.port", "value": { "intValue": "49062" } },
+                  { "key": "network.protocol.version", "value": { "stringValue": "1.1" } },
+                  { "key": "server.address", "value": { "stringValue": "0.0.0.0" } },
+                  { "key": "server.port", "value": { "intValue": "8083" } },
+                  { "key": "url.path", "value": { "stringValue": "/route" } },
+                  { "key": "url.scheme", "value": { "stringValue": "http" } },
+                  { "key": "user_agent.original", "value": { "stringValue": "Go-http-client/1.1" } }
+                ],
+                "events": [
+                  {
+                    "timeUnixNano": "1782036645245828218",
+                    "name": "HTTP request received",
+                    "attributes": [
+                      { "key": "level", "value": { "stringValue": "info" } },
+                      { "key": "method", "value": { "stringValue": "GET" } },
+                      {
+                        "key": "url",
+                        "value": { "stringValue": "/route?dropoff=115%2C277&pickup=935%2C147" }
+                      }
+                    ]
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "d855eea4e7c9a9f3",
+                "parentSpanId": "195b12659fa28a50",
+                "flags": 769,
+                "name": "GET /route",
+                "kind": 2,
+                "startTimeUnixNano": "1782036645272575298",
+                "endTimeUnixNano": "1782036645332674661",
+                "attributes": [
+                  { "key": "client.address", "value": { "stringValue": "127.0.0.1" } },
+                  { "key": "http.request.method", "value": { "stringValue": "GET" } },
+                  { "key": "http.response.body.size", "value": { "intValue": "59" } },
+                  { "key": "http.response.status_code", "value": { "intValue": "200" } },
+                  { "key": "http.route", "value": { "stringValue": "/route" } },
+                  { "key": "network.peer.address", "value": { "stringValue": "127.0.0.1" } },
+                  { "key": "network.peer.port", "value": { "intValue": "53588" } },
+                  { "key": "network.protocol.version", "value": { "stringValue": "1.1" } },
+                  { "key": "server.address", "value": { "stringValue": "0.0.0.0" } },
+                  { "key": "server.port", "value": { "intValue": "8083" } },
+                  { "key": "url.path", "value": { "stringValue": "/route" } },
+                  { "key": "url.scheme", "value": { "stringValue": "http" } },
+                  { "key": "user_agent.original", "value": { "stringValue": "Go-http-client/1.1" } }
+                ],
+                "events": [
+                  {
+                    "timeUnixNano": "1782036645272593929",
+                    "name": "HTTP request received",
+                    "attributes": [
+                      { "key": "level", "value": { "stringValue": "info" } },
+                      { "key": "method", "value": { "stringValue": "GET" } },
+                      {
+                        "key": "url",
+                        "value": { "stringValue": "/route?dropoff=115%2C277&pickup=517%2C268" }
+                      }
+                    ]
+                  }
+                ],
+                "status": {}
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "resource": {
+          "attributes": [
+            { "key": "host.name", "value": { "stringValue": "2fd43f7d79c6" } },
+            { "key": "os.type", "value": { "stringValue": "linux" } },
+            { "key": "service.name", "value": { "stringValue": "mysql" } },
+            { "key": "telemetry.sdk.language", "value": { "stringValue": "go" } },
+            { "key": "telemetry.sdk.name", "value": { "stringValue": "opentelemetry" } },
+            { "key": "telemetry.sdk.version", "value": { "stringValue": "1.44.0" } }
+          ]
+        },
+        "scopeSpans": [
+          {
+            "scope": { "name": "mysql" },
+            "spans": [
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "9580b82434d5a1b8",
+                "parentSpanId": "2947f6da1a6168d0",
+                "flags": 257,
+                "name": "SQL SELECT",
+                "kind": 3,
+                "startTimeUnixNano": "1782036644640068371",
+                "endTimeUnixNano": "1782036644897378725",
+                "attributes": [
+                  { "key": "request", "value": { "stringValue": "848-1" } },
+                  { "key": "service.peer.name", "value": { "stringValue": "mysql" } },
+                  {
+                    "key": "sql.query",
+                    "value": { "stringValue": "SELECT * FROM customer WHERE customer_id=123" }
+                  }
+                ],
+                "events": [
+                  {
+                    "timeUnixNano": "1782036644640087916",
+                    "name": "Acquired lock; 0 transactions waiting behind",
+                    "attributes": [
+                      { "key": "level", "value": { "stringValue": "info" } },
+                      { "key": "waiters", "value": { "stringValue": "[]" } }
+                    ]
+                  }
+                ],
+                "status": {}
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "resource": {
+          "attributes": [
+            { "key": "host.name", "value": { "stringValue": "2fd43f7d79c6" } },
+            { "key": "os.type", "value": { "stringValue": "linux" } },
+            { "key": "service.name", "value": { "stringValue": "redis-manual" } },
+            { "key": "telemetry.sdk.language", "value": { "stringValue": "go" } },
+            { "key": "telemetry.sdk.name", "value": { "stringValue": "opentelemetry" } },
+            { "key": "telemetry.sdk.version", "value": { "stringValue": "1.44.0" } }
+          ]
+        },
+        "scopeSpans": [
+          {
+            "scope": { "name": "redis-manual" },
+            "spans": [
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "287ef456402ce2ad",
+                "parentSpanId": "12c2cadb3c59f584",
+                "flags": 257,
+                "name": "FindDriverIDs",
+                "kind": 3,
+                "startTimeUnixNano": "1782036644899180813",
+                "endTimeUnixNano": "1782036644918894466",
+                "attributes": [{ "key": "param.driver.location", "value": { "stringValue": "115,277" } }],
+                "events": [
+                  {
+                    "timeUnixNano": "1782036644918665662",
+                    "name": "Found drivers",
+                    "attributes": [
+                      {
+                        "key": "drivers",
+                        "value": {
+                          "stringValue": "[T778539C T724505C T738368C T752635C T724621C T796884C T754522C T705156C T707578C T741148C]"
+                        }
+                      },
+                      { "key": "level", "value": { "stringValue": "info" } }
+                    ]
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "515f970d6a704d52",
+                "parentSpanId": "12c2cadb3c59f584",
+                "flags": 257,
+                "name": "GetDriver",
+                "kind": 3,
+                "startTimeUnixNano": "1782036644919043867",
+                "endTimeUnixNano": "1782036644951596687",
+                "attributes": [{ "key": "param.driverID", "value": { "stringValue": "T778539C" } }],
+                "events": [
+                  {
+                    "timeUnixNano": "1782036644951364847",
+                    "name": "exception",
+                    "attributes": [
+                      { "key": "exception.message", "value": { "stringValue": "redis timeout" } },
+                      { "key": "exception.type", "value": { "stringValue": "*errors.errorString" } }
+                    ]
+                  },
+                  {
+                    "timeUnixNano": "1782036644951391790",
+                    "name": "redis timeout",
+                    "attributes": [
+                      { "key": "driver_id", "value": { "stringValue": "T778539C" } },
+                      { "key": "error", "value": { "stringValue": "redis timeout" } },
+                      { "key": "level", "value": { "stringValue": "error" } }
+                    ]
+                  }
+                ],
+                "status": { "message": "An error occurred", "code": 2 }
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "bd0ab5445ccdf1dc",
+                "parentSpanId": "12c2cadb3c59f584",
+                "flags": 257,
+                "name": "GetDriver",
+                "kind": 3,
+                "startTimeUnixNano": "1782036644951687337",
+                "endTimeUnixNano": "1782036644967087072",
+                "attributes": [{ "key": "param.driverID", "value": { "stringValue": "T778539C" } }],
+                "events": [
+                  {
+                    "timeUnixNano": "1782036644966991739",
+                    "name": "Got driver's ID",
+                    "attributes": [
+                      { "key": "driverID", "value": { "stringValue": "T778539C" } },
+                      { "key": "level", "value": { "stringValue": "info" } }
+                    ]
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "e12694039e60435c",
+                "parentSpanId": "12c2cadb3c59f584",
+                "flags": 257,
+                "name": "GetDriver",
+                "kind": 3,
+                "startTimeUnixNano": "1782036644967219743",
+                "endTimeUnixNano": "1782036644975782918",
+                "attributes": [{ "key": "param.driverID", "value": { "stringValue": "T724505C" } }],
+                "events": [
+                  {
+                    "timeUnixNano": "1782036644975684097",
+                    "name": "Got driver's ID",
+                    "attributes": [
+                      { "key": "driverID", "value": { "stringValue": "T724505C" } },
+                      { "key": "level", "value": { "stringValue": "info" } }
+                    ]
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "a516405383126a3c",
+                "parentSpanId": "12c2cadb3c59f584",
+                "flags": 257,
+                "name": "GetDriver",
+                "kind": 3,
+                "startTimeUnixNano": "1782036644975825891",
+                "endTimeUnixNano": "1782036644987277505",
+                "attributes": [{ "key": "param.driverID", "value": { "stringValue": "T738368C" } }],
+                "events": [
+                  {
+                    "timeUnixNano": "1782036644987181089",
+                    "name": "Got driver's ID",
+                    "attributes": [
+                      { "key": "driverID", "value": { "stringValue": "T738368C" } },
+                      { "key": "level", "value": { "stringValue": "info" } }
+                    ]
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "abf20f9e8b09bafd",
+                "parentSpanId": "12c2cadb3c59f584",
+                "flags": 257,
+                "name": "GetDriver",
+                "kind": 3,
+                "startTimeUnixNano": "1782036644987320833",
+                "endTimeUnixNano": "1782036644997799233",
+                "attributes": [{ "key": "param.driverID", "value": { "stringValue": "T752635C" } }],
+                "events": [
+                  {
+                    "timeUnixNano": "1782036644997708813",
+                    "name": "Got driver's ID",
+                    "attributes": [
+                      { "key": "driverID", "value": { "stringValue": "T752635C" } },
+                      { "key": "level", "value": { "stringValue": "info" } }
+                    ]
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "07ec899a462aa19a",
+                "parentSpanId": "12c2cadb3c59f584",
+                "flags": 257,
+                "name": "GetDriver",
+                "kind": 3,
+                "startTimeUnixNano": "1782036644997843116",
+                "endTimeUnixNano": "1782036645036504462",
+                "attributes": [{ "key": "param.driverID", "value": { "stringValue": "T724621C" } }],
+                "events": [
+                  {
+                    "timeUnixNano": "1782036645036405771",
+                    "name": "exception",
+                    "attributes": [
+                      { "key": "exception.message", "value": { "stringValue": "redis timeout" } },
+                      { "key": "exception.type", "value": { "stringValue": "*errors.errorString" } }
+                    ]
+                  },
+                  {
+                    "timeUnixNano": "1782036645036418652",
+                    "name": "redis timeout",
+                    "attributes": [
+                      { "key": "driver_id", "value": { "stringValue": "T724621C" } },
+                      { "key": "error", "value": { "stringValue": "redis timeout" } },
+                      { "key": "level", "value": { "stringValue": "error" } }
+                    ]
+                  }
+                ],
+                "status": { "message": "An error occurred", "code": 2 }
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "2c1cb1091eb36207",
+                "parentSpanId": "12c2cadb3c59f584",
+                "flags": 257,
+                "name": "GetDriver",
+                "kind": 3,
+                "startTimeUnixNano": "1782036645036557589",
+                "endTimeUnixNano": "1782036645047120545",
+                "attributes": [{ "key": "param.driverID", "value": { "stringValue": "T724621C" } }],
+                "events": [
+                  {
+                    "timeUnixNano": "1782036645047043850",
+                    "name": "Got driver's ID",
+                    "attributes": [
+                      { "key": "driverID", "value": { "stringValue": "T724621C" } },
+                      { "key": "level", "value": { "stringValue": "info" } }
+                    ]
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "df66b565c13642a6",
+                "parentSpanId": "12c2cadb3c59f584",
+                "flags": 257,
+                "name": "GetDriver",
+                "kind": 3,
+                "startTimeUnixNano": "1782036645047168449",
+                "endTimeUnixNano": "1782036645055628537",
+                "attributes": [{ "key": "param.driverID", "value": { "stringValue": "T796884C" } }],
+                "events": [
+                  {
+                    "timeUnixNano": "1782036645055520551",
+                    "name": "Got driver's ID",
+                    "attributes": [
+                      { "key": "driverID", "value": { "stringValue": "T796884C" } },
+                      { "key": "level", "value": { "stringValue": "info" } }
+                    ]
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "a3eed1d52800c46b",
+                "parentSpanId": "12c2cadb3c59f584",
+                "flags": 257,
+                "name": "GetDriver",
+                "kind": 3,
+                "startTimeUnixNano": "1782036645055680520",
+                "endTimeUnixNano": "1782036645067117205",
+                "attributes": [{ "key": "param.driverID", "value": { "stringValue": "T754522C" } }],
+                "events": [
+                  {
+                    "timeUnixNano": "1782036645067008003",
+                    "name": "Got driver's ID",
+                    "attributes": [
+                      { "key": "driverID", "value": { "stringValue": "T754522C" } },
+                      { "key": "level", "value": { "stringValue": "info" } }
+                    ]
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "a44d496b4a3794d4",
+                "parentSpanId": "12c2cadb3c59f584",
+                "flags": 257,
+                "name": "GetDriver",
+                "kind": 3,
+                "startTimeUnixNano": "1782036645067174851",
+                "endTimeUnixNano": "1782036645073683561",
+                "attributes": [{ "key": "param.driverID", "value": { "stringValue": "T705156C" } }],
+                "events": [
+                  {
+                    "timeUnixNano": "1782036645073549538",
+                    "name": "Got driver's ID",
+                    "attributes": [
+                      { "key": "driverID", "value": { "stringValue": "T705156C" } },
+                      { "key": "level", "value": { "stringValue": "info" } }
+                    ]
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "86be964c30cd8888",
+                "parentSpanId": "12c2cadb3c59f584",
+                "flags": 257,
+                "name": "GetDriver",
+                "kind": 3,
+                "startTimeUnixNano": "1782036645073763129",
+                "endTimeUnixNano": "1782036645106516084",
+                "attributes": [{ "key": "param.driverID", "value": { "stringValue": "T707578C" } }],
+                "events": [
+                  {
+                    "timeUnixNano": "1782036645106402932",
+                    "name": "exception",
+                    "attributes": [
+                      { "key": "exception.message", "value": { "stringValue": "redis timeout" } },
+                      { "key": "exception.type", "value": { "stringValue": "*errors.errorString" } }
+                    ]
+                  },
+                  {
+                    "timeUnixNano": "1782036645106414312",
+                    "name": "redis timeout",
+                    "attributes": [
+                      { "key": "driver_id", "value": { "stringValue": "T707578C" } },
+                      { "key": "error", "value": { "stringValue": "redis timeout" } },
+                      { "key": "level", "value": { "stringValue": "error" } }
+                    ]
+                  }
+                ],
+                "status": { "message": "An error occurred", "code": 2 }
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "38ed8da6db5365eb",
+                "parentSpanId": "12c2cadb3c59f584",
+                "flags": 257,
+                "name": "GetDriver",
+                "kind": 3,
+                "startTimeUnixNano": "1782036645106560172",
+                "endTimeUnixNano": "1782036645116017778",
+                "attributes": [{ "key": "param.driverID", "value": { "stringValue": "T707578C" } }],
+                "events": [
+                  {
+                    "timeUnixNano": "1782036645115956531",
+                    "name": "Got driver's ID",
+                    "attributes": [
+                      { "key": "driverID", "value": { "stringValue": "T707578C" } },
+                      { "key": "level", "value": { "stringValue": "info" } }
+                    ]
+                  }
+                ],
+                "status": {}
+              },
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "97cd4b29775e4768",
+                "parentSpanId": "12c2cadb3c59f584",
+                "flags": 257,
+                "name": "GetDriver",
+                "kind": 3,
+                "startTimeUnixNano": "1782036645116048204",
+                "endTimeUnixNano": "1782036645124414941",
+                "attributes": [{ "key": "param.driverID", "value": { "stringValue": "T741148C" } }],
+                "events": [
+                  {
+                    "timeUnixNano": "1782036645124345245",
+                    "name": "Got driver's ID",
+                    "attributes": [
+                      { "key": "driverID", "value": { "stringValue": "T741148C" } },
+                      { "key": "level", "value": { "stringValue": "info" } }
+                    ]
+                  }
+                ],
+                "status": {}
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "resource": {
+          "attributes": [
+            { "key": "host.name", "value": { "stringValue": "2fd43f7d79c6" } },
+            { "key": "os.type", "value": { "stringValue": "linux" } },
+            { "key": "service.name", "value": { "stringValue": "customer" } },
+            { "key": "telemetry.sdk.language", "value": { "stringValue": "go" } },
+            { "key": "telemetry.sdk.name", "value": { "stringValue": "opentelemetry" } },
+            { "key": "telemetry.sdk.version", "value": { "stringValue": "1.44.0" } }
+          ]
+        },
+        "scopeSpans": [
+          {
+            "scope": {
+              "name": "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp",
+              "version": "0.69.0"
+            },
+            "spans": [
+              {
+                "traceId": "2ea75461946a7dd10f2c15ab36a076cb",
+                "spanId": "2947f6da1a6168d0",
+                "parentSpanId": "9082d67808fc8870",
+                "flags": 769,
+                "name": "GET /customer",
+                "kind": 2,
+                "startTimeUnixNano": "1782036644639344824",
+                "endTimeUnixNano": "1782036644897766287",
+                "attributes": [
+                  { "key": "client.address", "value": { "stringValue": "127.0.0.1" } },
+                  { "key": "http.request.method", "value": { "stringValue": "GET" } },
+                  { "key": "http.response.body.size", "value": { "intValue": "66" } },
+                  { "key": "http.response.status_code", "value": { "intValue": "200" } },
+                  { "key": "http.route", "value": { "stringValue": "/customer" } },
+                  { "key": "network.peer.address", "value": { "stringValue": "127.0.0.1" } },
+                  { "key": "network.peer.port", "value": { "intValue": "57188" } },
+                  { "key": "network.protocol.version", "value": { "stringValue": "1.1" } },
+                  { "key": "server.address", "value": { "stringValue": "0.0.0.0" } },
+                  { "key": "server.port", "value": { "intValue": "8081" } },
+                  { "key": "url.path", "value": { "stringValue": "/customer" } },
+                  { "key": "url.scheme", "value": { "stringValue": "http" } },
+                  { "key": "user_agent.original", "value": { "stringValue": "Go-http-client/1.1" } }
+                ],
+                "events": [
+                  {
+                    "timeUnixNano": "1782036644639411328",
+                    "name": "HTTP request received",
+                    "attributes": [
+                      { "key": "level", "value": { "stringValue": "info" } },
+                      { "key": "method", "value": { "stringValue": "GET" } },
+                      { "key": "url", "value": { "stringValue": "/customer?customer=123" } }
+                    ]
+                  },
+                  {
+                    "timeUnixNano": "1782036644639914685",
+                    "name": "Loading customer",
+                    "attributes": [
+                      { "key": "customer_id", "value": { "intValue": "123" } },
+                      { "key": "level", "value": { "stringValue": "info" } }
+                    ]
+                  }
+                ],
+                "status": {}
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

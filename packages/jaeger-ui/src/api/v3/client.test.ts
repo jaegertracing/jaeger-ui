@@ -448,6 +448,115 @@ describe('JaegerClient', () => {
       expect(jaegerClient.fetchServices).toBeInstanceOf(Function);
       expect(jaegerClient.fetchSpanNames).toBeInstanceOf(Function);
       expect(jaegerClient.fetchTraceSummaries).toBeInstanceOf(Function);
+      expect(jaegerClient.getTrace).toBeInstanceOf(Function);
+    });
+  });
+
+  describe('getTrace', () => {
+    const TRACE = 'abcdef0123456789abcdef0123456789';
+    const aSpan = {
+      traceId: TRACE,
+      spanId: '1111111111111111',
+      name: 'op',
+      kind: 2,
+      startTimeUnixNano: '1000000',
+      endTimeUnixNano: '2000000',
+    };
+    const wrapped = (spans: unknown[]) => ({
+      result: {
+        resourceSpans: [
+          {
+            resource: { attributes: [{ key: 'service.name', value: { stringValue: 'svc' } }] },
+            scopeSpans: [{ scope: { name: 'lib' }, spans }],
+          },
+        ],
+      },
+    });
+
+    it('fetches and parses a single-object OTLP response', async () => {
+      mockFetch.mockResolvedValue({ ok: true, text: async () => JSON.stringify(wrapped([aSpan])) });
+
+      const promise = client.getTrace(TRACE);
+      vi.runAllTimers();
+      const trace = await promise;
+
+      expect(trace.traceID).toBe(TRACE);
+      expect(trace.spans).toHaveLength(1);
+      expect(mockFetch).toHaveBeenCalledWith(
+        `/api/v3/traces/${TRACE}`,
+        expect.objectContaining({ signal: expect.any(AbortSignal) })
+      );
+    });
+
+    it('merges concatenated streamed result chunks', async () => {
+      const child = {
+        ...aSpan,
+        spanId: '2222222222222222',
+        parentSpanId: '1111111111111111',
+        startTimeUnixNano: '1200000',
+        endTimeUnixNano: '1800000',
+      };
+      mockFetch.mockResolvedValue({
+        ok: true,
+        text: async () => JSON.stringify(wrapped([aSpan])) + JSON.stringify(wrapped([child])),
+      });
+
+      const promise = client.getTrace(TRACE);
+      vi.runAllTimers();
+      const trace = await promise;
+
+      expect(trace.spans).toHaveLength(2);
+    });
+
+    it('splits concatenated chunks even when string values contain braces', async () => {
+      const tricky = { ...aSpan, attributes: [{ key: 'payload', value: { stringValue: '}{"x":1}' } }] };
+      const child = { ...aSpan, spanId: '2222222222222222', parentSpanId: '1111111111111111' };
+      mockFetch.mockResolvedValue({
+        ok: true,
+        text: async () => JSON.stringify(wrapped([tricky])) + JSON.stringify(wrapped([child])),
+      });
+
+      const promise = client.getTrace(TRACE);
+      vi.runAllTimers();
+      const trace = await promise;
+
+      expect(trace.spans).toHaveLength(2);
+      const payload = trace.spans
+        .find(s => s.spanID === '1111111111111111')!
+        .attributes.find(a => a.key === 'payload');
+      expect(payload?.value).toBe('}{"x":1}');
+    });
+
+    it('throws when the response is not ok', async () => {
+      mockFetch.mockResolvedValue({ ok: false, status: 404, statusText: 'Not Found', text: async () => '' });
+
+      const promise = client.getTrace('missing');
+      vi.runAllTimers();
+
+      await expect(promise).rejects.toThrow(/Failed to fetch trace/);
+    });
+
+    it('throws when the trace contains no spans', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        text: async () => JSON.stringify({ result: { resourceSpans: [] } }),
+      });
+
+      const promise = client.getTrace(TRACE);
+      vi.runAllTimers();
+
+      await expect(promise).rejects.toThrow(/not found or contained no spans/);
+    });
+
+    it('throws on a truncated (incomplete) streamed response', async () => {
+      // First object is complete; the second is cut off mid-stream.
+      const truncated = JSON.stringify(wrapped([aSpan])) + '{"result":{"resourceSpans":[{"resou';
+      mockFetch.mockResolvedValue({ ok: true, text: async () => truncated });
+
+      const promise = client.getTrace(TRACE);
+      vi.runAllTimers();
+
+      await expect(promise).rejects.toThrow(/incomplete JSON/);
     });
   });
 });
