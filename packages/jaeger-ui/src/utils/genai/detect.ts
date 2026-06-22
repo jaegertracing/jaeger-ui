@@ -1,4 +1,4 @@
-// Copyright (c) 2025 The Jaeger Authors.
+// Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 import { IOtelSpan, IOtelTrace } from '../../types/otel';
@@ -14,11 +14,16 @@ const OPERATION_NAME_MAP: Record<string, GenAISpanKind> = {
 };
 
 export function classifySpan(span: IOtelSpan): GenAISpanKind {
-  const opAttr = span.attributes.find(a => a.key === 'gen_ai.operation.name');
-  if (opAttr) {
-    return OPERATION_NAME_MAP[String(opAttr.value)] ?? 'UNKNOWN_GENAI';
+  let hasGenAI = false;
+  for (const attr of span.attributes) {
+    if (attr.key === 'gen_ai.operation.name') {
+      return OPERATION_NAME_MAP[String(attr.value)] ?? 'UNKNOWN_GENAI';
+    }
+    if (!hasGenAI && attr.key.startsWith('gen_ai.')) {
+      hasGenAI = true;
+    }
   }
-  return span.attributes.some(a => a.key.startsWith('gen_ai.')) ? 'UNKNOWN_GENAI' : 'STANDARD';
+  return hasGenAI ? 'UNKNOWN_GENAI' : 'STANDARD';
 }
 
 export function isGenAITrace(trace: Pick<IOtelTrace, 'spans'>): boolean {
