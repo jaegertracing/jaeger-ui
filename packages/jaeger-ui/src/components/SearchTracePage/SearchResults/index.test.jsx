@@ -528,8 +528,8 @@ describe('<SearchResults>', () => {
 
   describe('view mode toggle', () => {
     beforeEach(() => {
-      useSearchResultsStore.setState({ viewMode: 'table' });
       localStorage.clear();
+      useSearchResultsStore.setState(useSearchResultsStore.getInitialState());
     });
 
     it('defaults to table view', () => {
