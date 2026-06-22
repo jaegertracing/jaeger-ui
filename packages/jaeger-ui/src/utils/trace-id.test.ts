@@ -49,6 +49,11 @@ describe('looksLikeTraceId', () => {
     expect(looksLikeTraceId('   ')).toBe(false);
   });
 
+  it('rejects short words that are technically valid base64 but too few bytes', () => {
+    expect(looksLikeTraceId('help')).toBe(false);
+    expect(looksLikeTraceId('latency')).toBe(false);
+  });
+
   it('rejects strings with non-base64, non-hex characters', () => {
     expect(looksLikeTraceId('hello world!')).toBe(false);
     expect(looksLikeTraceId('not.a" trace')).toBe(false);
