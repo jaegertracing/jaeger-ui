@@ -124,12 +124,6 @@ describe('AltViewOptions', () => {
     expect(screen.getByTestId('menu-item-TraceStatistics')).toBeInTheDocument();
   });
 
-  it('hides a specific view when viewOptions maps it to false', () => {
-    renderComponent({ viewOptions: { [ETraceViewType.GenAITimelineViewer]: false } });
-    expect(screen.queryByTestId('menu-item-GenAITimelineViewer')).not.toBeInTheDocument();
-    expect(screen.getByTestId('menu-item-TraceGraph')).toBeInTheDocument();
-  });
-
   it('tracks and changes view for Trace Graph', () => {
     renderComponent({ viewType: ETraceViewType.TraceTimelineViewer });
     const menuItem = screen.getByTestId('menu-item-TraceGraph');

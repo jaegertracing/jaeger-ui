@@ -54,7 +54,6 @@ type TracePageHeaderEmbedProps = {
   showArchiveButton: boolean;
   showStandaloneLink: boolean;
   disableJsonView: boolean;
-  viewOptions?: Partial<Record<ETraceViewType, boolean>>;
   showViewOptions: boolean;
   slimView: boolean;
   textFilter: string | TNil;
@@ -146,7 +145,6 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     showArchiveButton,
     showStandaloneLink,
     disableJsonView,
-    viewOptions,
     showViewOptions,
     slimView,
     textFilter,
@@ -227,7 +225,6 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
         {showViewOptions && (
           <AltViewOptions
             disableJsonView={disableJsonView}
-            viewOptions={viewOptions}
             onTraceViewChange={onTraceViewChange}
             traceID={trace.traceID}
             viewType={viewType}

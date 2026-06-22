@@ -25,7 +25,6 @@ type Props = {
   traceID: string;
   viewType: ETraceViewType;
   disableJsonView: boolean;
-  viewOptions?: Partial<Record<ETraceViewType, boolean>>;
 };
 
 const MENU_ITEMS: { viewType: ETraceViewType; label: string }[] = [
@@ -39,7 +38,7 @@ const MENU_ITEMS: { viewType: ETraceViewType; label: string }[] = [
 ];
 
 export default function AltViewOptions(props: Props) {
-  const { onTraceViewChange, viewType, traceID, disableJsonView, viewOptions } = props;
+  const { onTraceViewChange, viewType, traceID, disableJsonView } = props;
 
   const handleSelectView = (item: ETraceViewType) => {
     if (item === ETraceViewType.TraceTimelineViewer) {
@@ -56,9 +55,7 @@ export default function AltViewOptions(props: Props) {
     onTraceViewChange(item);
   };
 
-  const dropdownItems = MENU_ITEMS.filter(
-    item => item.viewType !== viewType && viewOptions?.[item.viewType] !== false
-  ).map(item => ({
+  const dropdownItems = MENU_ITEMS.filter(item => item.viewType !== viewType).map(item => ({
     key: item.viewType as ETraceViewType | string,
     label: (
       <a onClick={() => handleSelectView(item.viewType)} role="button">
