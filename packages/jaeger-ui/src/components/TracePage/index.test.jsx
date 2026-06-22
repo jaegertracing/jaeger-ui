@@ -1101,16 +1101,6 @@ describe('<TracePage>', () => {
       expect(capturedHeaderProps.viewType).toBe(ETraceViewType.GenAITimelineViewer);
     });
 
-    it('passes isGenAITrace true in eligibility when trace has gen_ai.* attributes', () => {
-      render(<TracePage {...genAiProps} />);
-      expect(capturedHeaderProps.eligibility.isGenAITrace).toBe(true);
-    });
-
-    it('passes isGenAITrace false in eligibility for a plain trace', () => {
-      useTraceMock.mockReturnValue({ data: trace, isPending: false, isError: false, error: null });
-      render(<TracePage {...defaultProps} />);
-      expect(capturedHeaderProps.eligibility.isGenAITrace).toBe(false);
-    });
   });
 });
 

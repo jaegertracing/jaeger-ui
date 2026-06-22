@@ -55,7 +55,7 @@ describe('AltViewOptions', () => {
     viewType: ETraceViewType.TraceTimelineViewer,
     traceID: 'test trace ID',
     onTraceViewChange: jest.fn(),
-    eligibility: { isGenAITrace: false, jsonEnabled: true },
+    disableJsonView: false,
   };
 
   beforeAll(() => {
@@ -104,12 +104,18 @@ describe('AltViewOptions', () => {
     expect(screen.getByTestId('menu-item-TraceSpansView')).toBeInTheDocument();
     expect(screen.getByTestId('menu-item-TraceFlamegraph')).toBeInTheDocument();
     expect(screen.getByTestId('menu-item-TraceLogs')).toBeInTheDocument();
+    expect(screen.getByTestId('menu-item-GenAITimelineViewer')).toBeInTheDocument();
     expect(screen.getByTestId('menu-item-trace-json')).toBeInTheDocument();
     expect(screen.getByTestId('menu-item-trace-json-unadjusted')).toBeInTheDocument();
   });
 
-  it('hides json links when eligibility.jsonEnabled is false', () => {
-    renderComponent({ eligibility: { isGenAITrace: false, jsonEnabled: false } });
+  it('always shows GenAI View regardless of trace type', () => {
+    renderComponent();
+    expect(screen.getByTestId('menu-item-GenAITimelineViewer')).toBeInTheDocument();
+  });
+
+  it('hides json links when disableJsonView is true', () => {
+    renderComponent({ disableJsonView: true });
 
     expect(screen.queryByTestId('menu-item-trace-json')).not.toBeInTheDocument();
     expect(screen.queryByTestId('menu-item-trace-json-unadjusted')).not.toBeInTheDocument();
@@ -118,14 +124,10 @@ describe('AltViewOptions', () => {
     expect(screen.getByTestId('menu-item-TraceStatistics')).toBeInTheDocument();
   });
 
-  it('shows GenAI View option when eligibility.isGenAITrace is true', () => {
-    renderComponent({ eligibility: { isGenAITrace: true, jsonEnabled: true } });
-    expect(screen.getByTestId('menu-item-GenAITimelineViewer')).toBeInTheDocument();
-  });
-
-  it('hides GenAI View option when eligibility.isGenAITrace is false', () => {
-    renderComponent();
+  it('hides a specific view when viewOptions maps it to false', () => {
+    renderComponent({ viewOptions: { [ETraceViewType.GenAITimelineViewer]: false } });
     expect(screen.queryByTestId('menu-item-GenAITimelineViewer')).not.toBeInTheDocument();
+    expect(screen.getByTestId('menu-item-TraceGraph')).toBeInTheDocument();
   });
 
   it('tracks and changes view for Trace Graph', () => {
@@ -233,6 +235,7 @@ describe('AltViewOptions', () => {
       { type: ETraceViewType.TraceSpansView, testId: 'menu-item-TraceSpansView' },
       { type: ETraceViewType.TraceFlamegraph, testId: 'menu-item-TraceFlamegraph' },
       { type: ETraceViewType.TraceLogs, testId: 'menu-item-TraceLogs' },
+      { type: ETraceViewType.GenAITimelineViewer, testId: 'menu-item-GenAITimelineViewer' },
     ];
 
     viewTypes.forEach(({ type, testId }) => {

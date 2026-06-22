@@ -420,7 +420,7 @@ export function TracePageImpl(props: TProps) {
     prevResult,
     ref: searchBarRef,
     resultCount: findCount,
-    eligibility: { isGenAITrace: traceIsGenAI, jsonEnabled: !disableJsonView },
+    disableJsonView,
     showArchiveButton: !isEmbedded && archiveEnabled && hasArchiveStorage,
     showStandaloneLink: isEmbedded,
     showViewOptions: !isEmbedded,

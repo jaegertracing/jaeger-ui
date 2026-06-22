@@ -20,40 +20,26 @@ import prefixUrl from '../../../utils/prefix-url';
 import { ETraceViewType } from '../types';
 import { getTargetBlankOrTop } from '../../../utils/config/get-target';
 
-export type EligibilityContext = {
-  isGenAITrace: boolean;
-  jsonEnabled: boolean;
-};
-
 type Props = {
   onTraceViewChange: (viewType: ETraceViewType) => void;
   traceID: string;
   viewType: ETraceViewType;
-  eligibility: EligibilityContext;
+  disableJsonView: boolean;
+  viewOptions?: Partial<Record<ETraceViewType, boolean>>;
 };
 
-type MenuItem = {
-  viewType: ETraceViewType;
-  label: string;
-  isEligible?: (ctx: EligibilityContext) => boolean;
-};
-
-const MENU_ITEMS: MenuItem[] = [
+const MENU_ITEMS: { viewType: ETraceViewType; label: string }[] = [
   { viewType: ETraceViewType.TraceTimelineViewer, label: 'Trace Timeline' },
   { viewType: ETraceViewType.TraceGraph, label: 'Trace Graph' },
   { viewType: ETraceViewType.TraceStatistics, label: 'Trace Statistics' },
   { viewType: ETraceViewType.TraceSpansView, label: 'Trace Spans Table' },
   { viewType: ETraceViewType.TraceFlamegraph, label: 'Trace Flamegraph' },
   { viewType: ETraceViewType.TraceLogs, label: 'Trace Logs' },
-  {
-    viewType: ETraceViewType.GenAITimelineViewer,
-    label: 'GenAI View',
-    isEligible: (ctx: EligibilityContext) => ctx.isGenAITrace,
-  },
+  { viewType: ETraceViewType.GenAITimelineViewer, label: 'GenAI View' },
 ];
 
 export default function AltViewOptions(props: Props) {
-  const { onTraceViewChange, viewType, traceID, eligibility } = props;
+  const { onTraceViewChange, viewType, traceID, disableJsonView, viewOptions } = props;
 
   const handleSelectView = (item: ETraceViewType) => {
     if (item === ETraceViewType.TraceTimelineViewer) {
@@ -71,7 +57,7 @@ export default function AltViewOptions(props: Props) {
   };
 
   const dropdownItems = MENU_ITEMS.filter(
-    item => item.viewType !== viewType && (!item.isEligible || item.isEligible(eligibility))
+    item => item.viewType !== viewType && viewOptions?.[item.viewType] !== false
   ).map(item => ({
     key: item.viewType as ETraceViewType | string,
     label: (
@@ -80,7 +66,7 @@ export default function AltViewOptions(props: Props) {
       </a>
     ),
   }));
-  if (eligibility.jsonEnabled) {
+  if (!disableJsonView) {
     dropdownItems.push(
       {
         key: 'trace-json',
