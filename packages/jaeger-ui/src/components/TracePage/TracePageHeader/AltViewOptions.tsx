@@ -15,8 +15,8 @@ import { getTargetBlankOrTop } from '../../../utils/config/get-target';
 type Props = {
   onTraceViewChange: (viewType: ETraceViewType) => void;
   traceID: string;
-  viewType: ETraceViewType;
   disableJsonView: boolean;
+  viewType: ETraceViewType;
 };
 
 const MENU_ITEMS: { viewType: ETraceViewType; label: string }[] = [
