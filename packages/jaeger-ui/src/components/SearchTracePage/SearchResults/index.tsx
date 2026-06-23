@@ -127,7 +127,7 @@ export function UnconnectedSearchResults({
       getTracePageLink(
         traceID,
         { fromSearch: location.pathname + location.search },
-        spanLinks && (spanLinks[traceID] || spanLinks[traceID.replace(/^0*/, '')])
+        spanLinks && spanLinks[traceID]
       ),
     [location, spanLinks]
   );
