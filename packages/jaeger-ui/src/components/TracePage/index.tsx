@@ -551,12 +551,13 @@ type TracePageProps = {
 const TracePage = (props: TracePageProps) => {
   const config = useConfig();
   const traceID = props.params.id;
-  const normalizedTraceID = useNormalizeTraceId(traceID);
+  const { data: traceData } = useTrace(traceID);
+  useNormalizeTraceId(traceID, traceData);
 
   return (
     <ConnectedTracePage
       {...props}
-      params={{ ...props.params, id: normalizedTraceID }}
+      params={{ ...props.params, id: traceID }}
       archiveEnabled={Boolean(config.archiveEnabled)}
       enableSidePanel={Boolean(config.traceTimeline?.enableSidePanel)}
       backendCapabilities={config.backendCapabilities}
