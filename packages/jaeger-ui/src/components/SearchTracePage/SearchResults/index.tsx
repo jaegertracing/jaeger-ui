@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { useCallback } from 'react';
-import { Select } from 'antd';
+import { useCallback, useMemo } from 'react';
+import { Radio, Select } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
 import queryString from 'query-string';
@@ -15,6 +15,7 @@ import * as markers from './index.markers';
 import { EAltViewActions, trackAltView } from './index.track';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';
+import TraceTable from './TraceTable';
 import { getUrl } from '../url';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import NewWindowIcon from '../../common/NewWindowIcon';
@@ -22,32 +23,30 @@ import SearchResultsDDG from '../../DeepDependencies/traces';
 import { getTracePageLink } from '../../TracePage/url';
 import * as orderBy from '../../../model/order-by';
 import { getPercentageOfDuration } from '../../../utils/date';
-import { stripEmbeddedState } from '../../../utils/embedded-url';
 
-import { FetchedTrace } from '../../../types';
-import { SearchQuery } from '../../../types/search';
-import { IOtelTrace } from '../../../types/otel';
+import { TraceSummary } from '../../../types/trace-summary';
 
 import './index.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import withRouteProps from '../../../utils/withRouteProps';
 import SearchableSelect from '../../common/SearchableSelect';
+import { useSearchResultsStore } from '../store.search-results';
 
 type SearchResultsProps = {
-  cohortAddTrace: (traceId: string) => void;
-  cohortRemoveTrace: (traceId: string) => void;
-  diffCohort: FetchedTrace[];
+  addTraceToCohort: (summary: TraceSummary) => void;
+  removeTraceFromCohort: (traceId: string) => void;
+  diffCohort: TraceSummary[];
   disableComparisons: boolean;
   hideGraph: boolean;
   loading: boolean;
   location: Location;
   maxTraceDuration: number;
-  queryOfResults?: SearchQuery;
   showStandaloneLink: boolean;
   skipMessage?: boolean;
   spanLinks?: Record<string, string> | undefined;
-  traces: IOtelTrace[];
-  rawTraces: any[];
+  traceSummaries: TraceSummary[];
+  uploadedTraceIDs: ReadonlySet<string>;
+  rawTraces: unknown[];
   sortBy: string;
   handleSortChange: (sortBy: string) => void;
 };
@@ -77,52 +76,6 @@ export function SelectSort({ sortBy, handleSortChange }: SelectSortProps) {
   );
 }
 
-const getStripCircular = () => {
-  const cache = new Set();
-  return function (this: any, key: string, value: any) {
-    if (
-      key === 'childSpans' ||
-      key === 'process' ||
-      key === 'span' ||
-      key === 'subsidiarilyReferencedBy' ||
-      key === '_otelFacade' ||
-      key === 'traceName' ||
-      key === 'tracePageTitle' ||
-      key === 'traceEmoji' ||
-      key === 'services' ||
-      key === 'spanMap' ||
-      key === 'rootSpans' ||
-      key === 'orphanSpanCount' ||
-      key === 'endTime' ||
-      key === 'depth' ||
-      key === 'hasChildren' ||
-      key === 'relativeStartTime'
-    ) {
-      return;
-    }
-    // We need to strip duration and startTime from TraceData but not from SpanData.
-    // The TraceData object can be recognized by the presence of 'processes' field.
-    if ((key === 'duration' || key === 'startTime') && this.processes) {
-      return;
-    }
-
-    if (typeof value === 'object' && value !== null) {
-      if (cache.has(value)) {
-        // Circular reference found, discard key
-        return;
-      }
-      // Store value in our collection
-      cache.add(value);
-    }
-    return value;
-  };
-};
-
-export function createBlob(rawTraces: any[]) {
-  const stringified = JSON.stringify(rawTraces, getStripCircular());
-  return new Blob([`{"data":${stringified}}`], { type: 'application/json' });
-}
-
 export function UnconnectedSearchResults({
   diffCohort,
   disableComparisons,
@@ -130,63 +83,86 @@ export function UnconnectedSearchResults({
   loading,
   location,
   maxTraceDuration,
-  queryOfResults,
   showStandaloneLink,
   skipMessage = false,
   spanLinks,
-  traces,
+  traceSummaries,
+  uploadedTraceIDs,
   rawTraces,
   sortBy,
   handleSortChange,
-  cohortAddTrace,
-  cohortRemoveTrace,
+  addTraceToCohort,
+  removeTraceFromCohort,
 }: SearchResultsProps) {
   const navigate = useNavigate();
+  const viewMode = useSearchResultsStore(s => s.viewMode);
+  const setViewMode = useSearchResultsStore(s => s.setViewMode);
+
+  const traceSummaryById = useMemo(
+    () => new Map(traceSummaries.map(summary => [summary.traceID, summary])),
+    [traceSummaries]
+  );
 
   const toggleComparison = useCallback(
     (traceID: string, remove?: boolean) => {
       if (remove) {
-        cohortRemoveTrace(traceID);
-      } else {
-        cohortAddTrace(traceID);
+        removeTraceFromCohort(traceID);
+        return;
       }
+      const summary = traceSummaryById.get(traceID);
+      // Defensive: every rendered row's traceID is a key in traceSummaryById,
+      // so this lookup cannot miss in normal UI flow.
+      if (!summary) return;
+      addTraceToCohort(summary);
     },
-    [cohortAddTrace, cohortRemoveTrace]
+    [addTraceToCohort, removeTraceFromCohort, traceSummaryById]
+  );
+
+  const clearAllComparisons = useCallback(() => {
+    diffCohort.forEach(t => removeTraceFromCohort(t.traceID));
+  }, [diffCohort, removeTraceFromCohort]);
+
+  const getLink = useCallback(
+    (traceID: string) =>
+      getTracePageLink(
+        traceID,
+        { fromSearch: location.pathname + location.search },
+        spanLinks && spanLinks[traceID]
+      ),
+    [location, spanLinks]
   );
 
   const goToTrace = useCallback(
     (traceID: string) => {
-      const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
+      const searchUrl = location.pathname + location.search;
       const locationObj = getTracePageLink(traceID, { fromSearch: searchUrl });
       navigate(locationObj.pathname + (locationObj.search ? `?${locationObj.search}` : ''), {
         state: locationObj.state,
       });
     },
-    [queryOfResults, navigate]
+    [location, navigate]
   );
 
   const onDdgViewClicked = useCallback(() => {
     const urlState = queryString.parse(location.search);
     const view = urlState.view && urlState.view === 'ddg' ? EAltViewActions.Traces : EAltViewActions.Ddg;
     trackAltView(view);
-    navigate(getUrl({ ...urlState, view }));
-  }, [location, navigate]);
-
-  const onDownloadResultsClicked = useCallback(() => {
-    const file = createBlob(rawTraces);
-    const element = document.createElement('a');
-    element.href = URL.createObjectURL(file);
-    element.download = `traces-${Date.now()}.json`;
-    document.body.appendChild(element);
-    element.click();
-    URL.revokeObjectURL(element.href);
-    element.remove();
-  }, [rawTraces]);
+    // When URL has lost search params (e.g. after TopNav navigation to bare /search),
+    // fall back to the root service of the first result so DDG can build the graph.
+    const serviceFromUrl = typeof urlState.service === 'string' ? urlState.service : undefined;
+    const service = serviceFromUrl ?? traceSummaries[0]?.rootServiceName;
+    navigate(getUrl({ ...urlState, service, view }));
+  }, [location, navigate, traceSummaries]);
 
   const traceResultsView = queryString.parse(location.search).view !== 'ddg';
 
   const diffSelection = !disableComparisons && (
-    <DiffSelection toggleComparison={toggleComparison} traces={diffCohort} />
+    <DiffSelection
+      toggleComparison={toggleComparison}
+      traces={diffCohort}
+      hideSelectedItems={viewMode === 'table'}
+      onClearAll={clearAllComparisons}
+    />
   );
   if (loading) {
     return (
@@ -196,7 +172,7 @@ export function UnconnectedSearchResults({
       </React.Fragment>
     );
   }
-  if (!Array.isArray(traces) || !traces.length) {
+  if (!Array.isArray(traceSummaries) || !traceSummaries.length) {
     return (
       <React.Fragment key="no-results">
         {diffCohort.length > 0 && diffSelection}
@@ -208,38 +184,50 @@ export function UnconnectedSearchResults({
       </React.Fragment>
     );
   }
-  const cohortIds = new Set(diffCohort.map(datum => datum.id));
-  const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
+  const cohortIds = new Set(diffCohort.map(datum => datum.traceID));
+  const searchUrl = location.pathname + location.search;
   return (
     <div className="SearchResults">
       <div className="SearchResults--header">
         {!hideGraph && traceResultsView && (
           <div className="ub-p3 SearchResults--headerScatterPlot">
             <ScatterPlot
-              data={traces.map(t => {
+              data={traceSummaries.map(t => {
                 return {
                   x: t.startTime,
                   y: t.duration,
                   traceID: t.traceID,
-                  size: t.spans.length,
+                  spanCount: t.spanCount ?? 0,
+                  serviceCount: t.services.length,
                   name: t.traceName,
-                  color: t.hasErrors() ? 'red' : '#12939A',
-                  services: t.services || [],
+                  color: (t.errorSpanCount ?? 0) > 0 ? 'red' : '#12939A',
                 };
               })}
-              onValueClick={(t: IOtelTrace) => {
+              onValueClick={(t: { traceID: string }) => {
                 goToTrace(t.traceID);
               }}
             />
           </div>
         )}
         <div className="SearchResults--headerOverview">
-          <h2 className="ub-m0 u-flex-1">
-            {traces.length} Trace{traces.length > 1 && 's'}
+          <h2 className="ub-m0 u-flex-1 SearchResults--resultCount">
+            {traceSummaries.length} Trace{traceSummaries.length > 1 && 's'}
           </h2>
-          {traceResultsView && <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />}
-          {traceResultsView && <DownloadResults onDownloadResultsClicked={onDownloadResultsClicked} />}
+          {traceResultsView && viewMode === 'list' && (
+            <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />
+          )}
+          {traceResultsView && <DownloadResults traceSummaries={traceSummaries} rawTraces={rawTraces} />}
           <AltViewOptions traceResultsView={traceResultsView} onDdgViewClicked={onDdgViewClicked} />
+          {traceResultsView && (
+            <Radio.Group
+              aria-label="Results view mode"
+              value={viewMode}
+              onChange={e => setViewMode(e.target.value as 'list' | 'table')}
+            >
+              <Radio.Button value="list">List</Radio.Button>
+              <Radio.Button value="table">Table</Radio.Button>
+            </Radio.Group>
+          )}
           {showStandaloneLink && (
             <Link
               className="u-tx-inherit ub-nowrap ub-ml3"
@@ -254,24 +242,33 @@ export function UnconnectedSearchResults({
       </div>
       {!traceResultsView && (
         <div className="SearchResults--ddg-container">
-          <SearchResultsDDG location={location as any} />
+          <SearchResultsDDG location={location} traceIDs={traceSummaries.map(s => s.traceID)} />
         </div>
       )}
       {traceResultsView && diffSelection}
-      {traceResultsView && (
+      {traceResultsView && viewMode === 'table' && (
+        <TraceTable
+          traceSummaries={traceSummaries}
+          maxTraceDuration={maxTraceDuration}
+          getLink={getLink}
+          sortBy={sortBy}
+          handleSortChange={handleSortChange}
+          disableComparisons={disableComparisons}
+          cohortIds={cohortIds}
+          toggleComparison={toggleComparison}
+        />
+      )}
+      {traceResultsView && viewMode === 'list' && (
         <ul className="ub-list-reset">
-          {traces.map(trace => (
-            <li className="ub-my3" key={trace.traceID}>
+          {traceSummaries.map(traceSummary => (
+            <li className="ub-my3" key={traceSummary.traceID}>
               <ResultItem
-                durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}
-                isInDiffCohort={cohortIds.has(trace.traceID)}
-                linkTo={getTracePageLink(
-                  trace.traceID,
-                  { fromSearch: searchUrl },
-                  spanLinks && (spanLinks[trace.traceID] || spanLinks[trace.traceID.replace(/^0*/, '')])
-                )}
+                durationPercent={getPercentageOfDuration(traceSummary.duration, maxTraceDuration)}
+                isInDiffCohort={cohortIds.has(traceSummary.traceID)}
+                isUploaded={uploadedTraceIDs.has(traceSummary.traceID)}
+                linkTo={getLink(traceSummary.traceID)}
                 toggleComparison={toggleComparison}
-                trace={trace}
+                traceSummary={traceSummary}
                 disableComparision={disableComparisons}
               />
             </li>

@@ -138,6 +138,12 @@ export function formatSecondTime(duration: number): string {
  * Shows both primary and secondary units when applicable (e.g., "2d 3h").
  * For decimal-based units (μs, ms, s), displays as a decimal (e.g., "2.36ms").
  *
+ * Use this function ONLY when maximum precision matters — specifically for relative
+ * offset comparisons where small differences between consecutive values are meaningful
+ * (e.g., event timestamps, relative start times shown side-by-side). For standalone
+ * latency measurements (span durations, trace durations, axis labels), use
+ * `formatDurationCompact` instead.
+ *
  * @param duration - Duration in microseconds
  * @returns Formatted string with up to 2 units (e.g., "2.36ms", "2d 3h")
  *
@@ -221,8 +227,9 @@ export function convertToTimeUnit(microseconds: number, targetTimeUnit: string):
 
 /**
  * Formats a duration in microseconds to a compact string with 3 significant digits.
- * Useful for displaying durations in tables where space is limited and excessive precision
- * reduces readability.
+ * Use this for all standalone latency displays: span durations, trace durations, axis
+ * labels, table cells. Prefer this over `formatDuration` unless you specifically need
+ * the higher precision for relative offset comparisons.
  *
  * @param microseconds - Duration in microseconds
  * @returns Formatted string with 3 significant digits and appropriate unit (μs, ms, s, m)

@@ -8,19 +8,8 @@ import { AppQueryClientProvider } from '../../query/app-query-client';
 
 import NotFound from './NotFound';
 import { PageImpl as Page } from './Page';
-import DependencyGraph from '../DependencyGraph';
-import { ROUTE_PATH as dependenciesPath } from '../DependencyGraph/url';
-import DeepDependencies from '../DeepDependencies';
-import { ROUTE_PATH as deepDependenciesPath } from '../DeepDependencies/url';
-import QualityMetrics from '../QualityMetrics';
-import { ROUTE_PATH as qualityMetricsPath } from '../QualityMetrics/url';
-import SearchTracePage from '../SearchTracePage';
 import { ROUTE_PATH as searchPath } from '../SearchTracePage/url';
-import TraceRouter from './TraceRouter';
-import { ROUTE_PATH as tracePath } from '../TracePage/url';
-import MonitorATMPage from '../Monitor';
-import { ROUTE_PATH as monitorATMPath } from '../Monitor/url';
-import { ROUTE_PATH as plexusDemoPath } from '../PlexusDemo/url';
+import { ROUTES } from './routes';
 import JaegerAPI, { DEFAULT_API_ROOT } from '../../api/jaeger';
 import processScripts from '../../utils/config/process-scripts';
 import prefixUrl from '../../utils/prefix-url';
@@ -31,48 +20,31 @@ import 'antd/dist/reset.css';
 import './index.css';
 import { store } from '../../utils/configure-store';
 import ThemeProvider from './ThemeProvider';
+import { JaegerAssistantProvider } from './JaegerAssistantContext';
 
 // Initialize API configuration and process configuration scripts at module level
 // to ensure they run once when the application is loaded, before any components are rendered
 JaegerAPI.apiRoot = DEFAULT_API_ROOT;
 processScripts();
 
-// Only include the Plexus demo in development builds.
-// Vite replaces import.meta.env.DEV with false in production, which causes Rollup
-// to tree-shake the dynamic import and exclude the demo files from the prod bundle.
-const PlexusDemoPage = import.meta.env.DEV ? React.lazy(() => import('../PlexusDemo')) : null;
-
 export default function JaegerUIApp() {
   return (
     <AppQueryClientProvider>
       <ThemeProvider>
         <Provider store={store as any}>
-          <Page>
-            <Routes>
-              <Route path={searchPath} element={<SearchTracePage />} />
-              <Route path={tracePath} element={<TraceRouter />} />
-              <Route path={dependenciesPath} element={<DependencyGraph />} />
-              <Route path={deepDependenciesPath} element={<DeepDependencies />} />
-              <Route path={qualityMetricsPath} element={<QualityMetrics />} />
-              <Route path={monitorATMPath} element={<MonitorATMPage />} />
-              {PlexusDemoPage && (
-                <Route
-                  path={plexusDemoPath}
-                  element={
-                    <React.Suspense fallback={null}>
-                      <PlexusDemoPage />
-                    </React.Suspense>
-                  }
-                />
-              )}
-
-              <Route path="/" element={<Navigate to={searchPath} replace />} />
-              <Route path={prefixUrl()} element={<Navigate to={searchPath} replace />} />
-              <Route path={prefixUrl('/')} element={<Navigate to={searchPath} replace />} />
-
-              <Route path="*" element={<NotFound error="Page not found" />} />
-            </Routes>
-          </Page>
+          <JaegerAssistantProvider>
+            <Page>
+              <Routes>
+                {ROUTES.map(({ path, element }) => (
+                  <Route key={path} path={path} element={element} />
+                ))}
+                <Route path="/" element={<Navigate to={searchPath} replace />} />
+                <Route path={prefixUrl()} element={<Navigate to={searchPath} replace />} />
+                <Route path={prefixUrl('/')} element={<Navigate to={searchPath} replace />} />
+                <Route path="*" element={<NotFound error="Page not found" />} />
+              </Routes>
+            </Page>
+          </JaegerAssistantProvider>
         </Provider>
       </ThemeProvider>
     </AppQueryClientProvider>

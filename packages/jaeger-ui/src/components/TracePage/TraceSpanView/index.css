@@ -32,11 +32,6 @@ SPDX-License-Identifier: Apache-2.0
   padding: 8px 12px;
 }
 
-/* Make duration bar background more visible in dark theme */
-[data-theme='dark'] .span-view-table .duration-bar-background {
-  background: rgba(255, 255, 255, 0.15) !important;
-}
-
 /* Monospace font for Span ID column */
 .span-view-table .span-id-cell {
   font-family: monospace;

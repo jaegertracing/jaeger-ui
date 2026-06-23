@@ -13,13 +13,19 @@ import AltViewOptions from './AltViewOptions';
 import SpanGraph from './SpanGraph';
 import TraceViewSettings from './TraceViewSettings';
 import TracePageSearchBar from './TracePageSearchBar';
-import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, ETraceViewType } from '../types';
+import {
+  TUpdateViewRangeTimeFunction,
+  IViewRange,
+  ViewRangeTimeUpdate,
+  ETraceViewType,
+  viewTypeIsNavigable,
+} from '../types';
 import LabeledList from '../../common/LabeledList';
 import NewWindowIcon from '../../common/NewWindowIcon';
 import TraceName from '../../common/TraceName';
 import { TNil } from '../../../types';
 import { IOtelTrace } from '../../../types/otel';
-import { formatDatetime, formatDuration } from '../../../utils/date';
+import { formatDatetime, formatDurationCompact } from '../../../utils/date';
 import { getTraceLinks } from '../../../model/link-patterns';
 import { getIncompleteTraceTooltip } from '../../../model/trace-viewer';
 
@@ -81,7 +87,7 @@ export const HEADER_ITEMS = [
   {
     key: 'duration',
     label: 'Duration',
-    renderer: (trace: IOtelTrace) => formatDuration(trace.duration),
+    renderer: (trace: IOtelTrace) => formatDurationCompact(trace.duration),
   },
   {
     key: 'service-count',
@@ -205,7 +211,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           ref={forwardedRef}
           resultCount={resultCount}
           textFilter={textFilter}
-          navigable={viewType === ETraceViewType.TraceTimelineViewer}
+          navigable={viewTypeIsNavigable(viewType)}
           useOtelTerms={useOtelTerms}
         />
         <TraceViewSettings

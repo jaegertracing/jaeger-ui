@@ -22,6 +22,6 @@ export default function updateUiFind({
   if (uiFind) (queryParams as Record<string, string>).uiFind = uiFind;
   navigate(
     { pathname: location.pathname, search: `?${queryString.stringify(queryParams)}` },
-    { replace: true }
+    { replace: true, state: location.state }
   );
 }

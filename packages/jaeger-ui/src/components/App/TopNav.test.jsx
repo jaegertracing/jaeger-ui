@@ -46,6 +46,11 @@ vi.mock('../../hooks/useConfig', () => ({
   useConfig: (...args) => useConfigMock(...args),
 }));
 
+vi.mock('../../hooks/useJaegerAssistant', () => ({
+  useJaegerAssistantConfigured: () => false,
+  useJaegerAssistantEnabled: () => false,
+}));
+
 vi.mock('../../utils/config/get-config', async () => {
   return {
     default: jest.fn(() => ({
@@ -56,7 +61,7 @@ vi.mock('../../utils/config/get-config', async () => {
         menuLabel: 'Quality',
         apiEndpoint: '/quality-metrics',
       },
-      storageCapabilities: { metricsStorage: true },
+      backendCapabilities: { metricsStorage: true },
       themes: { enabled: true },
     })),
   };

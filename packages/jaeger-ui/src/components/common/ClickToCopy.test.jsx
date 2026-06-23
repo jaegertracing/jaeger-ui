@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, createEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ClickToCopy from './ClickToCopy';
 import { act } from '@testing-library/react';
@@ -45,6 +45,39 @@ describe('<ClickToCopy />', () => {
     expect(document.execCommand).toHaveBeenCalledWith('copy');
   });
 
+  it('stops click event propagation to prevent parent handlers from firing', () => {
+    const parentClickHandler = jest.fn();
+    render(
+      <div onClick={parentClickHandler}>
+        <ClickToCopy text={textToCopy}>{childText}</ClickToCopy>
+      </div>
+    );
+    const span = screen.getByRole('button', { name: /Copy to clipboard/i });
+    fireEvent.click(span);
+    expect(parentClickHandler).not.toHaveBeenCalled();
+  });
+
+  it('prevents default on click to avoid parent link navigation', () => {
+    render(<ClickToCopy text={textToCopy}>{childText}</ClickToCopy>);
+    const span = screen.getByRole('button', { name: /Copy to clipboard/i });
+    const event = createEvent.click(span);
+    fireEvent(span, event);
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it('prevents default on Enter and Space keyboard activation', () => {
+    render(<ClickToCopy text={textToCopy}>{childText}</ClickToCopy>);
+    const span = screen.getByRole('button', { name: /Copy to clipboard/i });
+
+    const enterEvent = createEvent.keyDown(span, { key: 'Enter', code: 'Enter' });
+    fireEvent(span, enterEvent);
+    expect(enterEvent.defaultPrevented).toBe(true);
+
+    const spaceKeyDown = createEvent.keyDown(span, { key: ' ', code: 'Space' });
+    fireEvent(span, spaceKeyDown);
+    expect(spaceKeyDown.defaultPrevented).toBe(true);
+  });
+
   it('shows "Copied to clipboard" when clicked and resets after timeout', async () => {
     jest.useFakeTimers();
     render(
@@ -80,7 +113,7 @@ describe('<ClickToCopy />', () => {
     expect(copySpy).toHaveBeenCalledWith('copy');
 
     fireEvent.keyDown(button, { key: ' ', code: 'Space' });
-    expect(copySpy).toHaveBeenCalledWith('copy');
+    expect(copySpy).toHaveBeenCalledTimes(2);
 
     copySpy.mockRestore();
   });

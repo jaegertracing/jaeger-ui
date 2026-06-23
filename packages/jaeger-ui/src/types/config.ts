@@ -73,11 +73,18 @@ export type TraceGraphConfig = {
   layoutManagerMemory?: number;
 };
 
-export type StorageCapabilities = {
+// BackendCapabilities is the capability blob advertised by the backend via
+// window.getJaegerBackendCapabilities. The backend overlays this on top of
+// the user UI config independently, so the user UI config cannot set these
+// values in production.
+export type BackendCapabilities = {
   // archiveStorage indicates whether the query service supports archive storage.
   archiveStorage?: boolean;
   // metricsStorage indicates whether the query service supports metrics storage (for Monitor/SPM tab).
   metricsStorage?: boolean;
+  // aiAssistant indicates whether the in-app AI assistant should be available.
+  // The backend advertises this when a live AI sidecar is reachable.
+  aiAssistant?: boolean;
 };
 
 // Default values are provided in packages/jaeger-ui/src/constants/default-config.tsx
@@ -107,12 +114,20 @@ export type Config = {
 
   // search section controls some aspects of the Search panel.
   search?: {
+    // defaultLookback sets the pre-selected value in the Lookback dropdown when
+    // no lookback is present in the URL. Must be one of the values in the dropdown
+    // (e.g. "5m", "15m", "30m", "1h", "2h", "3h", "6h", "12h", "24h", "2d",
+    // "3d", "5d", "7d", "2w", "3w", "4w"). Defaults to "1h" when not set or
+    // when the configured value is not one of the recognized options.
+    defaultLookback?: string;
+
     // maxLookback controls how far back in time the search may apply.
-    // By default the Lookback dropdown contains values from "last hour"
-    // to "last 2 days". Setting maxLookback to a shorter time range,
+    // By default the Lookback dropdown contains values from "Last 5 minutes"
+    // to "Last 2 days". Setting maxLookback to a shorter time range,
     // such as "6h" disables the longer ranges.
     maxLookback: {
-      // label to be displayed in the search form dropdown, e.g. "Last 2 days".
+      // Bare duration label shown in the search form dropdown. The UI prepends "Last "
+      // automatically, so use e.g. "2 days" (not "Last 2 days").
       label: string;
 
       // The value submitted in the search query if the label is selected.
@@ -138,8 +153,10 @@ export type Config = {
   // traceIdDisplayLength controls the length of the trace ID displayed in the UI.
   traceIdDisplayLength?: number;
 
-  // storage capabilities given by the query service.
-  storageCapabilities?: StorageCapabilities;
+  // backendCapabilities is the capability blob advertised by the backend
+  // (overlaid on top of any embedded UI config at index.html boot). Internal
+  // UI code reads this field.
+  backendCapabilities?: BackendCapabilities;
 
   // topTagPrefixes defines a set of prefixes for span tag names that are considered
   // "important" and cause the matching tags to appear higher in the list of tags.
@@ -227,4 +244,21 @@ export type Config = {
   // (tags, logs, process, operation name) or OpenTelemetry terminology
   // (attributes, events, resource, name).
   useOpenTelemetryTerms: boolean;
+
+  // tracing controls in-browser OpenTelemetry instrumentation. When enabled,
+  // the UI exports spans via OTLP/HTTP to the same-origin path
+  // '/api/otlp/v1/traces', which the jaeger-query otlp_proxy extension
+  // forwards to the OTel Collector. The endpoint is intentionally not
+  // configurable — see docs/adr/0011-ui-emitted-trace-ingest.md.
+  // Disabled by default.
+  tracing?: {
+    enabled?: boolean;
+    serviceName?: string;
+    sampleRatio?: number;
+    // sessionInactivityMinutes controls how many minutes of inactivity end
+    // the current user session. The next span after the timeout starts a new
+    // `session.id` and stamps the prior one as `session.previous_id`,
+    // per OTel session semantics. Default: 30.
+    sessionInactivityMinutes?: number;
+  };
 };
