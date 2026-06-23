@@ -95,12 +95,8 @@ vi.mock('./GenAITab', () => {
   });
 });
 
-const { useJaegerAssistantEnabledMock, isGenAISpanMock } = vi.hoisted(() => ({
-  useJaegerAssistantEnabledMock: vi.fn(() => false),
+const { isGenAISpanMock } = vi.hoisted(() => ({
   isGenAISpanMock: vi.fn(() => false),
-}));
-vi.mock('../../../../hooks/useJaegerAssistant', () => ({
-  useJaegerAssistantEnabled: useJaegerAssistantEnabledMock,
 }));
 vi.mock('../../../../utils/genai', () => ({
   isGenAISpan: isGenAISpanMock,
@@ -305,41 +301,29 @@ describe('<SpanDetail>', () => {
 
   describe('GenAI tab', () => {
     beforeEach(() => {
-      useJaegerAssistantEnabledMock.mockReset();
       isGenAISpanMock.mockReset();
     });
 
-    it('does not show the GenAI tab when the AI assistant is disabled', () => {
-      useJaegerAssistantEnabledMock.mockReturnValue(false);
-      isGenAISpanMock.mockReturnValue(true);
-      render(<SpanDetail {...props} />);
-      expect(screen.queryByTestId('genai-tab')).not.toBeInTheDocument();
-    });
-
     it('does not show the GenAI tab when the span has no gen_ai.* attributes', () => {
-      useJaegerAssistantEnabledMock.mockReturnValue(true);
       isGenAISpanMock.mockReturnValue(false);
       render(<SpanDetail {...props} />);
-      expect(screen.queryByTestId('genai-tab')).not.toBeInTheDocument();
+      expect(screen.queryByRole('tab')).not.toBeInTheDocument();
     });
 
-    it('shows the GenAI tab when AI assistant is enabled and span has gen_ai.* attributes', () => {
-      useJaegerAssistantEnabledMock.mockReturnValue(true);
+    it('shows the GenAI tab when the span has gen_ai.* attributes', () => {
       isGenAISpanMock.mockReturnValue(true);
       render(<SpanDetail {...props} />);
       expect(screen.getByRole('tab', { name: 'GenAI' })).toBeInTheDocument();
     });
 
     it('renders no tab bar for a non-GenAI span — content is shown directly', () => {
-      useJaegerAssistantEnabledMock.mockReturnValue(true);
       isGenAISpanMock.mockReturnValue(false);
       render(<SpanDetail {...props} />);
       expect(screen.queryByRole('tab')).not.toBeInTheDocument();
       expect(screen.getByTestId('accordian-keyvalues-tags')).toBeInTheDocument();
     });
 
-    it('defaults to the Details tab even when the span has gen_ai.* attributes', () => {
-      useJaegerAssistantEnabledMock.mockReturnValue(true);
+    it('defaults to the Details tab for a GenAI span', () => {
       isGenAISpanMock.mockReturnValue(true);
       render(<SpanDetail {...props} />);
       expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute('aria-selected', 'true');

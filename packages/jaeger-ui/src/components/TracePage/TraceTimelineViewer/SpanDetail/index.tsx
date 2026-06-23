@@ -14,7 +14,6 @@ import GenAITab from './GenAITab';
 import { formatDuration, formatDurationCompact } from '../utils';
 import CopyIcon from '../../../common/CopyIcon';
 import LabeledList from '../../../common/LabeledList';
-import { useJaegerAssistantEnabled } from '../../../../hooks/useJaegerAssistant';
 import { isGenAISpan } from '../../../../utils/genai';
 
 import { TNil } from '../../../../types';
@@ -89,8 +88,7 @@ export default function SpanDetail(props: SpanDetailProps) {
   ];
   const deepLinkCopyText = `${window.location.origin}${window.location.pathname}?uiFind=${span.spanID}`;
 
-  const aiEnabled = useJaegerAssistantEnabled();
-  const showGenAITab = aiEnabled && isGenAISpan(span);
+  const showGenAITab = isGenAISpan(span);
 
   const detailsContent = (
     <div>
