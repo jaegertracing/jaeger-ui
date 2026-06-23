@@ -18,13 +18,17 @@ const ASK_JAEGER_PLACEHOLDER = 'Ask Jaeger or lookup trace';
 
 function TraceLookupSearchInput() {
   const navigate = useNavigate();
+  const [value, setValue] = React.useState('');
+  const valueRef = React.useRef(value);
+  valueRef.current = value;
+
   const goToTrace = React.useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      const form = event.currentTarget;
-      const value = (form.elements.namedItem('idInput') as HTMLInputElement)?.value;
-      if (value) {
-        navigate(getUrl(value));
+      const val = valueRef.current;
+      if (val) {
+        navigate(getUrl(val));
+        setValue('');
       }
     },
     [navigate]
@@ -41,6 +45,8 @@ function TraceLookupSearchInput() {
         className="TraceIDSearchInput--input"
         data-testid="idInput"
         name="idInput"
+        value={value}
+        onChange={e => setValue(e.target.value)}
         placeholder={TRACE_LOOKUP_PLACEHOLDER}
         prefix={<IoSearch />}
         allowClear

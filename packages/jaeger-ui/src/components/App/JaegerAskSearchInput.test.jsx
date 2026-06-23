@@ -50,7 +50,7 @@ describe('<JaegerAskSearchInput /> trace lookup (assistant disabled)', () => {
     expect(screen.getByPlaceholderText('Lookup by Trace ID...')).toBeInTheDocument();
   });
 
-  it('navigates to trace page on form submit', () => {
+  it('navigates to trace page on form submit and clears the input', () => {
     render(
       <MemoryRouter>
         <JaegerAskSearchInput />
@@ -62,6 +62,7 @@ describe('<JaegerAskSearchInput /> trace lookup (assistant disabled)', () => {
 
     expect(mockNavigate).toHaveBeenCalledTimes(1);
     expect(mockNavigate).toHaveBeenCalledWith(`/trace/${traceId}`);
+    expect(screen.getByTestId('idInput')).toHaveValue('');
   });
 
   it('does not navigate when input is empty', () => {
@@ -123,6 +124,7 @@ describe('<JaegerAskSearchInput /> assistant mode', () => {
     fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false });
 
     expect(mockNavigate).not.toHaveBeenCalled();
+    expect(textarea).toHaveValue('');
   });
 
   it('still navigates for 16–32 hex trace ids (preserves original form)', () => {
@@ -140,6 +142,7 @@ describe('<JaegerAskSearchInput /> assistant mode', () => {
     fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false });
 
     expect(mockNavigate).toHaveBeenCalledWith(`/trace/${traceId}`);
+    expect(textarea).toHaveValue('');
   });
 
   it('navigates for base64-encoded trace ids', () => {
@@ -157,6 +160,7 @@ describe('<JaegerAskSearchInput /> assistant mode', () => {
     fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false });
 
     expect(mockNavigate).toHaveBeenCalledWith('/trace/%2FlhpXXcq1Bdw%2B4twt863jg%3D%3D');
+    expect(textarea).toHaveValue('');
   });
 
   it('Shift+Enter does not submit', () => {
