@@ -1,7 +1,7 @@
 // Copyright (c) 2022 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Tooltip } from 'antd';
 import flamegraph from 'd3-flame-graph';
 import { select } from 'd3-selection';
@@ -17,6 +17,7 @@ import FlamegraphToolbar, { ViewMode } from './FlamegraphToolbar';
 import FlamegraphTable from './FlamegraphTable';
 import FlamegraphContextMenu from './FlamegraphContextMenu';
 import FlamegraphTooltip from './FlamegraphTooltip';
+import VerticalResizer from '../../common/VerticalResizer';
 
 import 'd3-flame-graph/dist/d3-flamegraph.css';
 import './index.css';
@@ -37,14 +38,24 @@ interface TooltipState {
 
 const HIGHLIGHT_COLOR = '#E600E6';
 
+// Smallest gap (px) to leave to the right of the fixed first column when the table is at its
+// minimum width, so a sliver of the scrollable columns stays visible.
+const TABLE_MIN_GUTTER_PX = 16;
+
 const TraceFlamegraph = ({ trace }: any) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<ReturnType<typeof flamegraph> | null>(null);
   const searchActiveRef = useRef(false);
   const zoomedNodeRef = useRef<any>(null);
   const hoveredFrameRef = useRef<Element | null>(null);
 
   const [viewMode, setViewMode] = useState<ViewMode>('both');
+  // Fraction of the content width allotted to the table in "both" mode (rest goes to the chart).
+  const [tableWidth, setTableWidth] = useState(0.5);
+  // Lower bound for the table fraction, derived from the (fixed) first column's width so the
+  // resizer can't shrink the table narrower than the Service & Operation column.
+  const [tableMinFraction, setTableMinFraction] = useState(0.2);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [chartZoomed, setChartZoomed] = useState(false);
@@ -180,6 +191,38 @@ const TraceFlamegraph = ({ trace }: any) => {
     }
   }, [searchQuery, selectedItem, viewMode]);
 
+  // Re-fit the chart to its new width after the split is dragged (onChange fires once, on drag end).
+  useEffect(() => {
+    if (!showChart || !chartRef.current || !containerRef.current || !flameData) return;
+    chartRef.current.width(containerRef.current.clientWidth || 800);
+    select(containerRef.current).datum(flameData).call(chartRef.current);
+  }, [tableWidth, showChart, flameData]);
+
+  // Keep the resizer's minimum tied to the fixed first column's width, recomputing on layout
+  // changes (mode switch, data change, window resize). Without this the table could be dragged
+  // narrower than the pinned column, making the horizontal scroll behave erratically.
+  useLayoutEffect(() => {
+    if (viewMode !== 'both') return undefined;
+    const measure = () => {
+      const content = contentRef.current;
+      if (!content) return;
+      const contentW = content.clientWidth;
+      const firstCol = content.querySelector<HTMLElement>('.Flamegraph-content--table thead th');
+      const colW = firstCol ? firstCol.getBoundingClientRect().width : 0;
+      if (contentW > 0 && colW > 0) {
+        setTableMinFraction(Math.min(0.6, (colW + TABLE_MIN_GUTTER_PX) / contentW));
+      }
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [viewMode, tableData]);
+
+  // Clamp the current split into the allowed range whenever the minimum changes.
+  useEffect(() => {
+    setTableWidth(w => Math.min(0.8, Math.max(tableMinFraction, w)));
+  }, [tableMinFraction]);
+
   const handleReset = useCallback(() => {
     setSearchQuery('');
     setSelectedItem(null);
@@ -251,9 +294,16 @@ const TraceFlamegraph = ({ trace }: any) => {
         onCollapseAbove={handleCollapseAbove}
         showChart={showChart}
       />
-      <div className="Flamegraph-content" data-view-mode={viewMode}>
+      <div className="Flamegraph-content" data-view-mode={viewMode} ref={contentRef}>
         {showTable && (
-          <div className="Flamegraph-content--table">
+          <div
+            className="Flamegraph-content--table"
+            style={
+              viewMode === 'both'
+                ? { flex: `0 0 ${tableWidth * 100}%`, maxWidth: `${tableWidth * 100}%` }
+                : undefined
+            }
+          >
             <FlamegraphTable
               data={tableData}
               searchQuery={searchQuery}
@@ -263,6 +313,9 @@ const TraceFlamegraph = ({ trace }: any) => {
               maxTotal={maxTotal}
             />
           </div>
+        )}
+        {viewMode === 'both' && (
+          <VerticalResizer min={tableMinFraction} max={0.8} position={tableWidth} onChange={setTableWidth} />
         )}
         {showChart && (
           <div className="Flamegraph-content--chart-wrapper">
