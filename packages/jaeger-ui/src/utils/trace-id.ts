@@ -5,6 +5,7 @@ const HEX_16_OR_32_RE = /^[0-9a-fA-F]{16,32}$/;
 
 const MIN_TRACE_ID_BYTES = 8;
 
+// atob uses "forgiving base64 decode" (HTML spec) which handles unpadded input.
 function isValidBase64(v: string): boolean {
   try {
     return atob(v.replace(/-/g, '+').replace(/_/g, '/')).length >= MIN_TRACE_ID_BYTES;
