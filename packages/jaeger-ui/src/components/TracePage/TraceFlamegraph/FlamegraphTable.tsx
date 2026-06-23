@@ -60,6 +60,7 @@ const FlamegraphTable = ({ data, searchQuery, selectedItem, onRowClick, maxSelf,
       title: `Service & ${useOpenTelemetryTerms ? 'Span Name' : 'Operation'}`,
       dataIndex: 'name',
       key: 'name',
+      fixed: 'left',
       sortOrder: sortState.field === 'name' ? sortState.order : undefined,
       sorter: (a, b) => a.name.localeCompare(b.name),
       render: (_name: string, row: IFlamegraphTableRow) => {
@@ -135,6 +136,7 @@ const FlamegraphTable = ({ data, searchQuery, selectedItem, onRowClick, maxSelf,
       onRow={record => ({
         onClick: () => onRowClick(record.name),
       })}
+      scroll={{ x: 'max-content' }}
       data-testid="flamegraph-table"
     />
   );

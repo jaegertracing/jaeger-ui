@@ -39,7 +39,13 @@ import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import { filterPrunedSpanIDs } from './TraceTimelineViewer/generateRowStates';
 import { actions as timelineActions } from './TraceTimelineViewer/duck';
-import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, ETraceViewType } from './types';
+import {
+  TUpdateViewRangeTimeFunction,
+  IViewRange,
+  ViewRangeTimeUpdate,
+  ETraceViewType,
+  viewTypeShowsMinimap,
+} from './types';
 import { getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
@@ -195,10 +201,17 @@ export function TracePageImpl(props: TProps) {
   const [slimView, setSlimView] = useState(() => Boolean(embedded?.timeline?.collapseTitle));
   const [viewType, setViewType] = useState<ETraceViewType>(ETraceViewType.TraceTimelineViewer);
   const [viewRange, setViewRange] = useState<IViewRange>({ time: { current: [0, 1] } });
-
   const traceDagEV = useMemo(
     () => (viewType === ETraceViewType.TraceGraph && traceData ? calculateTraceDagEV(traceData) : null),
     [traceData, viewType]
+  );
+
+  const traceIsGenAI = useMemo(
+    () =>
+      traceData?.spans
+        ? traceData.spans.some(s => s.attributes.some(a => a.key.startsWith('gen_ai.')))
+        : false,
+    [traceData]
   );
 
   const searchBarRef = useRef<InputRef>(null);
@@ -320,6 +333,16 @@ export function TracePageImpl(props: TProps) {
     setViewType(newViewType);
   }, []);
 
+  useEffect(() => {
+    if (traceIsGenAI) {
+      setTraceView(ETraceViewType.GenAITimelineViewer);
+    } else {
+      setViewType(vt =>
+        vt === ETraceViewType.GenAITimelineViewer ? ETraceViewType.TraceTimelineViewer : vt
+      );
+    }
+  }, [traceIsGenAI, setTraceView]);
+
   const archiveTrace = useCallback(() => {
     submitTraceToArchiveFn(id);
   }, [submitTraceToArchiveFn, id]);
@@ -392,9 +415,7 @@ export function TracePageImpl(props: TProps) {
     clearSearch,
     detailPanelMode,
     enableSidePanel,
-    hideMap: Boolean(
-      viewType !== ETraceViewType.TraceTimelineViewer || Boolean(embedded?.timeline?.hideMinimap)
-    ),
+    hideMap: !viewTypeShowsMinimap(viewType) || Boolean(embedded?.timeline?.hideMinimap),
     hideSummary: Boolean(embedded?.timeline?.hideSummary),
     linkToStandalone: getUrl(id),
     nextResult,
@@ -422,6 +443,20 @@ export function TracePageImpl(props: TProps) {
   let view;
   const criticalPath = criticalPathEnabled ? memoizedTraceCriticalPath(traceData) : [];
   if (ETraceViewType.TraceTimelineViewer === viewType && headerHeight) {
+    view = (
+      <TraceTimelineViewer
+        registerAccessors={sm.setAccessors}
+        scrollToFirstVisibleSpan={sm.scrollToFirstVisibleSpan}
+        findMatchesIDs={spanFindMatches}
+        trace={traceData}
+        criticalPath={criticalPath}
+        updateNextViewRangeTime={updateNextViewRangeTime}
+        updateViewRangeTime={updateViewRangeTime}
+        viewRange={viewRange}
+        useOtelTerms={useOtelTerms}
+      />
+    );
+  } else if (ETraceViewType.GenAITimelineViewer === viewType && headerHeight) {
     view = (
       <TraceTimelineViewer
         registerAccessors={sm.setAccessors}
