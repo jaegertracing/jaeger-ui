@@ -124,7 +124,7 @@ const JaegerAPI = {
     return getJSON(`${this.apiRoot}services`);
   },
   fetchTrace(id: string): Promise<any> {
-    return getJSON(`${this.apiRoot}traces/${id}`);
+    return getJSON(`${this.apiRoot}traces/${encodeURIComponent(id)}`);
   },
   searchTraces(query: Record<string, any>): Promise<any> {
     return getJSON(`${this.apiRoot}traces`, { query });
