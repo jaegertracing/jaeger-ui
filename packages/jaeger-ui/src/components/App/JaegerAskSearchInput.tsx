@@ -9,18 +9,12 @@ import { useNavigate } from 'react-router-dom';
 import { getUrl } from '../TracePage/url';
 import { useJaegerAssistantOptional } from './JaegerAssistantContext';
 import { useJaegerAssistantConfigured } from '../../hooks/useJaegerAssistant';
+import { looksLikeTraceId } from '../../utils/trace-id';
 
 import './JaegerAskSearchInput.css';
 
-/** OpenTelemetry / Jaeger trace ids are often 16- or 32-hex-character strings. */
-const TRACE_ID_HEX_RE = /^[0-9a-fA-F]{16,32}$/;
-
 const TRACE_LOOKUP_PLACEHOLDER = 'Lookup by Trace ID...';
 const ASK_JAEGER_PLACEHOLDER = 'Ask Jaeger or lookup trace';
-
-function looksLikeTraceId(value: string): boolean {
-  return TRACE_ID_HEX_RE.test(value.trim());
-}
 
 function TraceLookupSearchInput() {
   const navigate = useNavigate();
@@ -90,7 +84,7 @@ const JaegerAskAssistantSearchInput: React.FC = () => {
     if (!looksLikeTraceId(raw)) {
       assistant?.requestAskJaeger(raw);
     } else {
-      navigate(getUrl(raw.toLowerCase()));
+      navigate(getUrl(raw));
     }
     setValue('');
     setExpanded(false);
