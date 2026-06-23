@@ -36,3 +36,15 @@ lint:
 .PHONY: test
 test:
 	npm run test
+
+.PHONY: build
+build:
+	npm run build
+
+.PHONY: coverage
+coverage:
+	npm run coverage
+
+.PHONY: depcheck
+depcheck:
+	npm run depcheck
