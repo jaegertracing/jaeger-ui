@@ -2,24 +2,30 @@
 # Copyright (c) 2026 The Jaeger Authors.
 # SPDX-License-Identifier: Apache-2.0
 
-# Checks for stale npm overrides in the root package.json.
+# Checks for stale (phantom) pnpm overrides in the root package.json.
 #
-# An override is stale when:
-#   - phantom:    the package is not in the dependency tree at all (no-op override)
-#   - redundant:  the package is in the tree but no instance is actually overridden
-#                 (every consumer already resolves to a compatible version naturally)
+# An override is phantom when the package is not in the dependency tree at all,
+# making the override a no-op.
 #
-# Nested/object overrides (e.g. "@exodus/bytes": {"@noble/hashes": "..."}) are
-# skipped — they cannot be checked with a simple `npm ls`.
+# Overrides are read from the "pnpm.overrides" field. The following entries are
+# skipped because their effect cannot be verified with a simple presence check:
+#   - nested/scoped keys containing ">" (e.g. "@exodus/bytes>@noble/hashes")
+#   - reference values starting with "$" (e.g. "$@noble/hashes")
+#
+# Note: unlike npm, pnpm does not annotate "overridden" packages in its
+# dependency listing, so this script cannot detect "redundant" overrides (ones
+# whose target would resolve to the same version naturally, without the
+# override). Only phantom overrides are detected.
 
 set -euo pipefail
 
-# Extract simple (string-valued) overrides from package.json.
-# jq outputs "name version" pairs, one per line.
+# Extract simple (string-valued, non-reference, non-nested) override package
+# names from package.json's pnpm.overrides, one per line.
 overrides=$(jq -r '
-  .overrides // {} | to_entries[]
-  | select(.value | type == "string")
-  | "\(.key) \(.value)"
+  .pnpm.overrides // {} | to_entries[]
+  | select((.key | contains(">")) | not)
+  | select((.value | type == "string") and (.value | startswith("$") | not))
+  | .key
 ' package.json)
 
 if [ -z "$overrides" ]; then
@@ -29,21 +35,23 @@ fi
 
 failed=false
 
-while IFS=' ' read -r pkg version; do
-  tree=$(npm ls "$pkg" --all 2>&1) || true
+while IFS= read -r pkg; do
+  [ -z "$pkg" ] && continue
+  # `pnpm why` lists the dependency chains that lead to $pkg across all workspace
+  # projects. A project node carries a "dependencies"/"devDependencies" key only
+  # when at least one such chain exists, i.e. the package is present in the tree.
+  present=$(pnpm why "$pkg" -r --json 2>/dev/null \
+    | jq -r 'any(.[]; has("dependencies") or has("devDependencies"))')
 
-  if echo "$tree" | grep -q "(empty)"; then
-    echo "⛔ phantom override: \"$pkg\": \"$version\" — package is not in the dependency tree"
-    failed=true
-  elif ! echo "$tree" | grep -q "overridden"; then
-    echo "⛔ redundant override: \"$pkg\": \"$version\" — all instances resolve naturally, override not needed"
+  if [ "$present" != "true" ]; then
+    echo "⛔ phantom override: \"$pkg\" — package is not in the dependency tree"
     failed=true
   fi
 done <<< "$overrides"
 
 if [ "$failed" = "true" ]; then
   echo ""
-  echo "Remove stale overrides from the root package.json."
+  echo "Remove stale overrides from the root package.json (pnpm.overrides)."
   exit 1
 else
   echo "All overrides are active."
