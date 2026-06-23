@@ -26,6 +26,8 @@ SPDX-License-Identifier: Apache-2.0
   flex-direction: row;
   gap: 16px;
   min-height: 300px;
+  /* positioning context for the absolutely-positioned VerticalResizer in "both" mode */
+  position: relative;
 }
 
 .Flamegraph-content[data-view-mode='table'],
@@ -76,12 +78,7 @@ SPDX-License-Identifier: Apache-2.0
   min-width: 0;
 }
 
-/* "Both" mode: table 40%, chart fills rest */
-.Flamegraph-content[data-view-mode='both'] .Flamegraph-content--table {
-  flex: 0 0 40%;
-  max-width: 40%;
-}
-
+/* "Both" mode: table width is set inline (default 50%, drag-resizable); chart fills the rest */
 .Flamegraph-content[data-view-mode='both'] .Flamegraph-content--chart-wrapper {
   flex: 1;
 }
