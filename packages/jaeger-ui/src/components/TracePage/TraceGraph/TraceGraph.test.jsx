@@ -95,9 +95,9 @@ describe('<TraceGraph>', () => {
 
     // Initial mode should be service
     expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SERVICE);
-    const timeButton = screen.getByRole('button', { name: 'T' });
-    const selftimeButton = screen.getByRole('button', { name: 'ST' });
-    const serviceButton = screen.getByRole('button', { name: 'S' });
+    const timeButton = screen.getByRole('button', { name: 'Color by total time' });
+    const selftimeButton = screen.getByRole('button', { name: 'Color by self time' });
+    const serviceButton = screen.getByRole('button', { name: 'Color by service' });
 
     // Switch to time
     await userEvent.click(timeButton);
