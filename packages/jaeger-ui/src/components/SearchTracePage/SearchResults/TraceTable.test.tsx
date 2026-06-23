@@ -1,5 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2026 The Jaeger Authors.
+// SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
@@ -154,9 +156,6 @@ describe('sort onChange wiring', () => {
         <TraceTable {...defaultProps} sortBy={orderBy.MOST_SPANS} handleSortChange={handleSortChange} />
       </MemoryRouter>
     );
-    // Ant Design fires the cancel event (order=undefined, columnKey=undefined) when clicking
-    // an already-descend-sorted column. Our toggle computes order='ascend', but since
-    // columnKey is undefined, toOrderBy falls through to MOST_RECENT.
     fireEvent.click(screen.getByText('Spans'));
     expect(handleSortChange).toHaveBeenCalledWith(orderBy.MOST_RECENT);
   });
@@ -182,6 +181,10 @@ describe('toOrderBy', () => {
   it('maps startTime+descend to MOST_RECENT (default branch)', () => {
     expect(toOrderBy('startTime', 'descend')).toBe(orderBy.MOST_RECENT);
     expect(toOrderBy('unknown-col', 'descend')).toBe(orderBy.MOST_RECENT);
+  });
+
+  it('maps startTime+ascend to OLDEST_FIRST', () => {
+    expect(toOrderBy('startTime', 'ascend')).toBe(orderBy.OLDEST_FIRST);
   });
 
   it('returns MOST_RECENT when order is cleared (3rd click)', () => {
@@ -267,7 +270,6 @@ describe('column suppression for unsupported backends', () => {
     const rows = document.querySelectorAll('tbody tr');
     const unsupportedRow = Array.from(rows).find(r => r.textContent?.includes('Trace u1'));
     expect(unsupportedRow).toBeTruthy();
-    // Find the Errors column index from the header, then check same index in the data row
     const headers = Array.from(document.querySelectorAll('thead th'));
     const errorsIndex = headers.findIndex(h => h.textContent?.includes('Errors'));
     expect(errorsIndex).toBeGreaterThan(-1);
