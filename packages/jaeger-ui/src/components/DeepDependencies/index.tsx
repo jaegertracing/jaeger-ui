@@ -5,7 +5,6 @@ import * as React from 'react';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
-import _get from 'lodash/get';
 
 import { trackClearOperation, trackFocusPaths, trackHide, trackSetService, trackShow } from './index.track';
 import Graph from './Graph';
@@ -216,7 +215,10 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
   updateUrlState = (newValues: Partial<TDdgSparseUrlState>) => {
     const { baseUrl, extraUrlArgs, graphState, navigate, uiFind, urlState } = this.props;
     const getUrlArg = { uiFind, ...urlState, ...newValues, ...extraUrlArgs };
-    const hash = _get(graphState, 'model.hash');
+    const hash =
+      graphState && graphState.state === fetchedState.DONE
+        ? (graphState as IDoneState).model.hash
+        : undefined;
     if (hash) getUrlArg.hash = hash;
     navigate(getUrl(getUrlArg, baseUrl));
   };
@@ -383,7 +385,12 @@ export function deriveDdgPageProps(
     graph,
     graphState: effectiveGraphState,
     showOp,
-    urlState: sanitizeUrlState(urlState, _get(effectiveGraphState, 'model.hash')),
+    urlState: sanitizeUrlState(
+      urlState,
+      effectiveGraphState && effectiveGraphState.state === fetchedState.DONE
+        ? (effectiveGraphState as IDoneState).model.hash
+        : undefined
+    ),
     uiFind: parseUiFind(locationSearch),
   };
 }

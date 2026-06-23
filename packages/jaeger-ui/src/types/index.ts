@@ -5,6 +5,7 @@ import { ApiError } from './api-error';
 import { SearchQuery } from './search';
 import tNil from './TNil';
 import { IOtelTrace } from './otel';
+import TPathAgnosticDecorationsState from './TPathAgnosticDecorationsState';
 import TTraceTimeline from './TTraceTimeline';
 import { MetricsReduxState } from './metrics';
 
@@ -30,6 +31,7 @@ export type LocationState = {
 
 export type ReduxState = {
   type: string;
+  pathAgnosticDecorations: TPathAgnosticDecorationsState;
   trace: {
     search: {
       error?: ApiError;
