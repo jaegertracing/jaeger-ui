@@ -77,8 +77,10 @@ function readLegacyLayoutPrefs(): Partial<LayoutPrefs> | null {
 
 // Applies config-driven defaults and clamps the stored prefs into a consistent layout.
 // Mirrors the bootstrapping logic that previously lived in `getInitialLayoutState()`/duck `newInitialState()`,
-// but operates on already-typed values instead of reading localStorage directly. Runs on every rehydrate
-// (via persist `merge`) and for the initial state, so a stale/oversized stored width can never break layout.
+// but operates on already-typed values instead of reading localStorage directly. It is invoked exactly once
+// per load inside `layoutPrefsStorage.getItem` (and for the store's initial state); persist then applies its
+// default shallow merge. Do not also normalize in a custom `merge`: the width-budget reset is not idempotent,
+// so a stale/oversized stored width must be reconciled exactly once.
 function normalizeLayoutPrefs(stored: Partial<LayoutPrefs>): LayoutPrefs {
   const { traceTimeline } = getConfig();
 
