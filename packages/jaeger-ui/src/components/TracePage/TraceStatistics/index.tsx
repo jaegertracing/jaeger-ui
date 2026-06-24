@@ -133,11 +133,12 @@ export default class TraceStatistics extends Component<Props, State> {
   }
 
   /**
-   * If the search query changes the search function is called and the match count is reported up.
-   * @param props all props
+   * Re-run the search and report the count when either the query or the trace changes (e.g.
+   * navigating to a different trace while staying on the Statistics view).
+   * @param prevProps previous props
    */
-  componentDidUpdate(props: Props) {
-    if (this.props.uiFind !== props.uiFind) {
+  componentDidUpdate(prevProps: Props) {
+    if (this.props.uiFind !== prevProps.uiFind || this.props.trace !== prevProps.trace) {
       this.changeTableValueSearch();
       this.reportSearchResults();
     }

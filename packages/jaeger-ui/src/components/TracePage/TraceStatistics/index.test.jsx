@@ -110,6 +110,29 @@ describe('<TraceTagOverview>', () => {
     });
   });
 
+  it('re-reports search results when the trace changes with the same query', async () => {
+    const onSearchResults = jest.fn();
+    const { rerender } = render(
+      <TraceStatistics {...defaultProps} onSearchResults={onSearchResults} uiFind="service1" />
+    );
+    await waitFor(() => expect(onSearchResults).toHaveBeenCalled());
+
+    onSearchResults.mockClear();
+    // Same query, different trace instance → should recompute and report again.
+    const otherTrace = transformTraceData(testTrace).asOtelTrace();
+    await act(async () => {
+      rerender(
+        <TraceStatistics
+          {...defaultProps}
+          trace={otherTrace}
+          onSearchResults={onSearchResults}
+          uiFind="service1"
+        />
+      );
+    });
+    await waitFor(() => expect(onSearchResults).toHaveBeenCalled());
+  });
+
   it('check handler', async () => {
     async function timedAct(fn, label) {
       const startTime = performance.now();

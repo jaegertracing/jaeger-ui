@@ -198,15 +198,20 @@ export function TracePageImpl(props: TProps) {
 
   // Each searchable view computes its own matches and reports the count up via onSearchResults.
   // The parent only tracks the count for display in the header; it has no knowledge of how any
-  // particular view searches. Reset to 0 on view change so a stale count from the previous view
-  // is never shown before the new view reports its results.
-  const [findCount, setFindCount] = useState(0);
-  const handleSearchResults = useCallback((results: TSearchResults) => setFindCount(results.count), []);
-  const prevViewTypeRef = useRef(viewType);
-  if (prevViewTypeRef.current !== viewType) {
-    prevViewTypeRef.current = viewType;
-    setFindCount(0);
-  }
+  // particular view searches. The reported result is tagged with the view type that produced it, so
+  // a count from a previous view reads as 0 until the current view reports — this resets the count
+  // on view change without mutating state during render.
+  const viewTypeRef = useRef(viewType);
+  viewTypeRef.current = viewType;
+  const [findResult, setFindResult] = useState<{ viewType: ETraceViewType; count: number }>({
+    viewType,
+    count: 0,
+  });
+  const handleSearchResults = useCallback(
+    (results: TSearchResults) => setFindResult({ viewType: viewTypeRef.current, count: results.count }),
+    []
+  );
+  const findCount = findResult.viewType === viewType ? findResult.count : 0;
 
   const traceIsGenAI = useMemo(
     () =>
