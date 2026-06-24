@@ -1,12 +1,11 @@
 FROM node:24.17.0
-
 WORKDIR /workspace
-
 COPY package.json package.json
-COPY package-lock.json package-lock.json
+COPY pnpm-lock.yaml pnpm-lock.yaml
+COPY pnpm-workspace.yaml pnpm-workspace.yaml
 COPY packages/jaeger-ui/package.json packages/jaeger-ui/package.json
 COPY packages/plexus/package.json packages/plexus/package.json
-RUN npm ci --ignore-scripts
-
+RUN corepack enable
+RUN pnpm install --frozen-lockfile --ignore-scripts
 COPY . .
-RUN npm run build
+RUN pnpm build
