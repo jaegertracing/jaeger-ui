@@ -129,26 +129,12 @@ describe('filterSpans', () => {
     expect(filterSpans(spanID2, spans)).toEqual(new Set([spanID2]));
   });
 
-  it('should return spans whose spanID matches a filter except for leading 0s', () => {
-    const spanID0WithLeading0s = `00${spanID0}`;
-    const spanID2WithLeading0s = `00${spanID2}`;
-
+  it('should match spanIDs as exact opaque strings', () => {
     expect(filterSpans('spanID', spans)).toEqual(new Set([]));
-    expect(filterSpans(spanID0WithLeading0s, spans)).toEqual(new Set([spanID0]));
-    expect(filterSpans(spanID2WithLeading0s, spans)).toEqual(new Set([spanID2]));
-
-    const spansWithLeading0s = [
-      {
-        ...span0,
-        spanID: spanID0WithLeading0s,
-      },
-      {
-        ...span2,
-        spanID: spanID2WithLeading0s,
-      },
-    ];
-    expect(filterSpans(spanID0, spansWithLeading0s)).toEqual(new Set([spanID0WithLeading0s]));
-    expect(filterSpans(spanID2, spansWithLeading0s)).toEqual(new Set([spanID2WithLeading0s]));
+    expect(filterSpans(spanID0, spans)).toEqual(new Set([spanID0]));
+    expect(filterSpans(spanID2, spans)).toEqual(new Set([spanID2]));
+    // Leading zeros produce a different string — no match
+    expect(filterSpans(`00${spanID0}`, spans)).toEqual(new Set([]));
   });
 
   it('should return spans whose operationName match a filter', () => {
