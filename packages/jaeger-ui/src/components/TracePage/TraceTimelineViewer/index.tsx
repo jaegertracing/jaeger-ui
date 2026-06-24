@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
@@ -22,10 +22,17 @@ import VirtualizedTraceView from './VirtualizedTraceView';
 import VerticalResizer from '../../common/VerticalResizer';
 import { merge as mergeShortcuts } from '../keyboard-shortcuts';
 import { Accessors } from '../ScrollManager';
-import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '../types';
+import {
+  TUpdateViewRangeTimeFunction,
+  IViewRange,
+  ViewRangeTimeUpdate,
+  OnSearchResultsCallback,
+} from '../types';
 import { TNil, ReduxState } from '../../../types';
 import { IOtelSpan, IOtelTrace } from '../../../types/otel';
 import { CriticalPathSection } from '../../../types/critical_path';
+import filterSpans from '../../../utils/filter-spans';
+import { filterPrunedSpanIDs } from './generateRowStates';
 
 import './index.css';
 
@@ -41,7 +48,8 @@ type TDispatchProps = {
 
 type TProps = TDispatchProps & {
   registerAccessors: (accessors: Accessors) => void;
-  findMatchesIDs: Set<string> | TNil;
+  uiFind: string | TNil;
+  onSearchResults?: OnSearchResultsCallback;
   scrollToFirstVisibleSpan: () => void;
   trace: IOtelTrace;
   criticalPath: CriticalPathSection[];
@@ -73,6 +81,8 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     viewRange,
     trace,
     useOtelTerms,
+    uiFind,
+    onSearchResults,
     ...rest
   } = props;
 
@@ -90,6 +100,19 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   const zustandCollapseOne = useTraceTimelineStore(s => s.collapseOne);
   const zustandExpandAll = useTraceTimelineStore(s => s.expandAll);
   const zustandExpandOne = useTraceTimelineStore(s => s.expandOne);
+  const prunedServices = useTraceTimelineStore(s => s.prunedServices);
+
+  const matches = useMemo(() => {
+    if (!uiFind) return null;
+    const allMatches = filterSpans(uiFind, trace.spans);
+    return prunedServices.size > 0
+      ? filterPrunedSpanIDs(allMatches, trace.spanMap, prunedServices)
+      : allMatches;
+  }, [uiFind, trace.spans, trace.spanMap, prunedServices]);
+
+  useEffect(() => {
+    onSearchResults?.({ count: matches?.size ?? 0 });
+  }, [matches, onSearchResults]);
 
   const setSpanNameColumnWidth = useCallback(
     (width: number) => {
@@ -226,6 +249,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   const virtualizedView = (
     <VirtualizedTraceView
       {...rest}
+      findMatchesIDs={matches}
       trace={trace}
       useOtelTerms={useOtelTerms}
       currentViewRangeTime={viewRange.time.current}

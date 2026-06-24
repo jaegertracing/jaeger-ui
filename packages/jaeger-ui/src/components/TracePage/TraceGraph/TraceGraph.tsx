@@ -16,21 +16,25 @@ import {
   MODE_SELFTIME,
   getHelpTable,
 } from './OpNode';
-import { TEv, TSumSpan } from './types';
+import { TSumSpan } from './types';
 import { TDenseSpanMembers } from '../../../model/trace-dag/types';
 import TDagPlexusVertex from '../../../model/trace-dag/types/TDagPlexusVertex';
 import { TNil } from '../../../types';
 import { TraceGraphConfig } from '../../../types/config';
+import { IOtelTrace } from '../../../types/otel';
+import { OnSearchResultsCallback } from '../types';
+import calculateTraceDagEV from './calculateTraceDagEV';
+import { getUiFindVertexKeys } from '../../TraceDiff/TraceDiffGraph/traceDiffGraphUtils';
 
 import './TraceGraph.css';
 
 type Props = {
   headerHeight: number;
-  ev?: TEv | TNil;
+  trace?: IOtelTrace | TNil;
   uiFind: string | TNil;
-  uiFindVertexKeys: Set<string> | TNil;
   traceGraphConfig?: TraceGraphConfig;
   useOtelTerms: boolean;
+  onSearchResults?: OnSearchResultsCallback;
 };
 
 const { classNameIsSmall, scaleOpacity, scaleStrokeOpacity } = Digraph.propsFactories;
@@ -102,14 +106,28 @@ const getHelpContent = (useOtelTerms: boolean) => (
 
 function TraceGraph({
   headerHeight,
-  ev = null,
+  trace = null,
   uiFind,
-  uiFindVertexKeys,
   traceGraphConfig,
   useOtelTerms,
+  onSearchResults,
 }: Props) {
   const [showHelp, setShowHelp] = React.useState(false);
   const [mode, setMode] = React.useState(MODE_SERVICE);
+
+  const ev = React.useMemo(() => {
+    if (!trace) return null;
+    return calculateTraceDagEV(trace);
+  }, [trace]);
+
+  const uiFindVertexKeys = React.useMemo(() => {
+    if (!uiFind || !ev) return undefined;
+    return getUiFindVertexKeys(uiFind, ev.vertices || []);
+  }, [uiFind, ev]);
+
+  React.useEffect(() => {
+    onSearchResults?.({ count: uiFindVertexKeys?.size ?? 0 });
+  }, [uiFindVertexKeys, onSearchResults]);
 
   const layoutManagerRef = React.useRef<LayoutManager | null>(null);
   if (layoutManagerRef.current === null) {
