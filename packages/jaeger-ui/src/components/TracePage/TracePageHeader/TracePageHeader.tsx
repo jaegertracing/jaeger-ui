@@ -28,6 +28,7 @@ import { IOtelTrace } from '../../../types/otel';
 import { formatDatetime, formatDurationCompact } from '../../../utils/date';
 import { getTraceLinks } from '../../../model/link-patterns';
 import { getIncompleteTraceTooltip } from '../../../model/trace-viewer';
+import type { ResolvedLayoutSettings } from '../useLayoutSettings';
 
 import './TracePageHeader.css';
 import ExternalLinks from '../../common/ExternalLinks';
@@ -65,6 +66,8 @@ type TracePageHeaderEmbedProps = {
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
   viewRange: IViewRange;
   useOtelTerms: boolean;
+  settingSources?: ResolvedLayoutSettings;
+  saveSettingAsDefault?: (key: 'timelineBarsVisible' | 'detailPanelMode') => void;
 };
 
 export const HEADER_ITEMS = [
@@ -97,7 +100,7 @@ export const HEADER_ITEMS = [
   {
     key: 'depth',
     label: 'Depth',
-    renderer: (trace: IOtelTrace) => _get(_maxBy(trace.spans as any[], 'depth'), 'depth', 0) + 1,
+    renderer: (trace: IOtelTrace) => _get(_maxBy(trace.spans as unknown[], 'depth'), 'depth', 0) + 1,
   },
   {
     key: 'span-count',
@@ -156,6 +159,8 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     updateViewRangeTime,
     viewRange,
     useOtelTerms,
+    settingSources,
+    saveSettingAsDefault,
   } = props;
 
   if (!trace) {
@@ -221,6 +226,8 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           onDetailPanelModeToggle={onDetailPanelModeToggle}
           onTimelineToggle={onTimelineToggle}
           timelineBarsVisible={timelineBarsVisible}
+          settingSources={settingSources}
+          saveSettingAsDefault={saveSettingAsDefault}
         />
         {showViewOptions && (
           <AltViewOptions
