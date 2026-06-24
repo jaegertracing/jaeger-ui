@@ -45,6 +45,12 @@ export interface IViewRange {
   time: IViewRangeTime;
 }
 
+export interface ISearchResults {
+  count: number;
+}
+
+export type OnSearchResultsCallback = (results: ISearchResults) => void;
+
 export enum ETraceViewType {
   TraceTimelineViewer = 'TraceTimelineViewer',
   TraceGraph = 'TraceGraph',
