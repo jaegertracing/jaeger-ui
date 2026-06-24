@@ -148,10 +148,10 @@ export function UnconnectedSearchResults({
     const urlState = queryString.parse(location.search);
     const view = urlState.view && urlState.view === 'ddg' ? EAltViewActions.Traces : EAltViewActions.Ddg;
     trackAltView(view);
-    const serviceFromUrl = typeof urlState.service === 'string' ? urlState.service : undefined;
-    const service = serviceFromUrl ?? traceSummaries[0]?.rootServiceName;
     // When URL has lost search params (e.g. after TopNav navigation to bare /search),
     // fall back to the root service of the first result so DDG can build the graph
+    const serviceFromUrl = typeof urlState.service === 'string' ? urlState.service : undefined;
+    const service = serviceFromUrl ?? traceSummaries[0]?.rootServiceName;
     navigate(getUrl({ ...urlState, service, view }));
   }, [location, navigate, traceSummaries]);
 
