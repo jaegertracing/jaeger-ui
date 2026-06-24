@@ -110,7 +110,7 @@ export function UnconnectedSearchResults({
         removeTraceFromCohort(traceID);
         return;
       }
- // Defensive: every rendered row's traceID is a key in traceSummaryById,
+      // Defensive: every rendered row's traceID is a key in traceSummaryById,
       // so this lookup cannot miss in normal UI flow.
       const summary = traceSummaryById.get(traceID);
       if (!summary) return;
