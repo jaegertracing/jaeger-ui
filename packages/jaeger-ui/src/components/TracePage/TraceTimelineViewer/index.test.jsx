@@ -62,7 +62,16 @@ const mockUseServiceFilter = vi.hoisted(() => ({
 vi.mock('./useServiceFilter', () => ({
   useServiceFilter: vi.fn(() => mockUseServiceFilter),
 }));
-vi.mock('./VirtualizedTraceView', () => mockDefault(() => <div data-testid="virtualized-trace-view-mock" />));
+let capturedVirtualizedProps = {};
+vi.mock('./VirtualizedTraceView', () =>
+  mockDefault(props => {
+    capturedVirtualizedProps = props;
+    return <div data-testid="virtualized-trace-view-mock" />;
+  })
+);
+
+const mockFilterSpans = vi.hoisted(() => vi.fn());
+vi.mock('../../../utils/filter-spans', () => ({ default: mockFilterSpans }));
 vi.mock('./SpanDetailSidePanel', () => mockDefault(() => <div data-testid="span-detail-side-panel-mock" />));
 vi.mock('../../common/VerticalResizer', () => ({
   default: ({ onChange }) => (
@@ -97,6 +106,8 @@ describe('<TraceTimelineViewer>', () => {
   const props = {
     trace,
     textFilter: null,
+    uiFind: undefined,
+    onSearchResults: jest.fn(),
     viewRange: {
       time: {
         current: [0, 1],
@@ -130,6 +141,7 @@ describe('<TraceTimelineViewer>', () => {
     props.collapseOne.mockClear();
     props.setSpanNameColumnWidth.mockClear();
     props.setSidePanelWidth.mockClear();
+    props.onSearchResults.mockClear();
     mockLayoutPrefsStore.setSpanNameColumnWidth.mockClear();
     mockLayoutPrefsStore.setSidePanelWidth.mockClear();
     mockTraceTimelineStore.collapseAll.mockClear();
@@ -144,6 +156,9 @@ describe('<TraceTimelineViewer>', () => {
     mockUseTraceTimelineStore.setState.mockClear();
     mockUseServiceFilter.prunedServices = new Set();
     mockUseServiceFilter.serviceFilterNode = null;
+    mockTraceTimelineStore.prunedServices = new Set();
+    mockFilterSpans.mockReset();
+    capturedVirtualizedProps = {};
     jest.spyOn(KeyboardShortcuts, 'merge').mockClear();
   });
 
@@ -158,6 +173,37 @@ describe('<TraceTimelineViewer>', () => {
     const initialCount = screen.getAllByTestId('virtualized-trace-view-mock').length;
     renderWithRedux(<TraceTimelineViewer {...props} />);
     expect(screen.getAllByTestId('virtualized-trace-view-mock')).toHaveLength(initialCount + 1);
+  });
+
+  describe('search', () => {
+    it('reports 0 matches and passes no findMatchesIDs when there is no uiFind', () => {
+      render(<TraceTimelineViewerImpl {...props} uiFind={undefined} />);
+      expect(mockFilterSpans).not.toHaveBeenCalled();
+      expect(props.onSearchResults).toHaveBeenLastCalledWith({ count: 0, matches: new Set() });
+      expect(capturedVirtualizedProps.findMatchesIDs).toBeNull();
+    });
+
+    it('computes matches from uiFind, passes them to VirtualizedTraceView, and reports the count', () => {
+      const matches = new Set(['a', 'b', 'c']);
+      mockFilterSpans.mockReturnValue(matches);
+      render(<TraceTimelineViewerImpl {...props} uiFind="query" />);
+      expect(mockFilterSpans).toHaveBeenCalledWith('query', trace.spans);
+      expect(capturedVirtualizedProps.findMatchesIDs).toBe(matches);
+      expect(props.onSearchResults).toHaveBeenLastCalledWith({ count: 3, matches });
+    });
+
+    it('applies service pruning to the matches when services are pruned', () => {
+      // Match every span, then prune one service so the survivor set is strictly smaller.
+      const matches = new Set(trace.spans.map(s => s.spanID));
+      mockFilterSpans.mockReturnValue(matches);
+      mockTraceTimelineStore.prunedServices = new Set([trace.spans[0].resource.serviceName]);
+      render(<TraceTimelineViewerImpl {...props} uiFind="query" />);
+
+      const ids = capturedVirtualizedProps.findMatchesIDs;
+      const reported = props.onSearchResults.mock.calls.at(-1)[0];
+      expect(reported.count).toBe(ids ? ids.size : 0);
+      expect(reported.count).toBeLessThan(matches.size);
+    });
   });
 
   it('derives selectedSpanID from Zustand detailStates', () => {

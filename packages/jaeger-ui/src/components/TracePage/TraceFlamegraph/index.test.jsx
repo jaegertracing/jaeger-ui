@@ -54,6 +54,9 @@ vi.mock('d3-flame-graph', () => ({
   default: () => mockChart,
 }));
 
+const mockFilterSpans = vi.hoisted(() => vi.fn(() => new Set()));
+vi.mock('../../../utils/filter-spans', () => ({ default: mockFilterSpans }));
+
 vi.mock('d3-selection', () => ({
   select: vi.fn(container => {
     // Create a fake SVG element in the container so event listeners can attach
@@ -83,6 +86,22 @@ describe('<TraceFlamegraph />', () => {
   it('renders the flamegraph wrapper', () => {
     render(<TraceFlamegraph trace={otelTrace} />);
     expect(screen.getByTestId('flamegraph-wrapper')).toBeInTheDocument();
+  });
+
+  it('reports uiFind match count via onSearchResults', () => {
+    const onSearchResults = vi.fn();
+    mockFilterSpans.mockReturnValue(new Set());
+    const { rerender } = render(
+      <TraceFlamegraph trace={otelTrace} uiFind={undefined} onSearchResults={onSearchResults} />
+    );
+    // No query → reports 0.
+    expect(onSearchResults).toHaveBeenLastCalledWith({ count: 0, matches: new Set() });
+
+    const matches = new Set(['x', 'y']);
+    mockFilterSpans.mockReturnValue(matches);
+    onSearchResults.mockClear();
+    rerender(<TraceFlamegraph trace={otelTrace} uiFind="q" onSearchResults={onSearchResults} />);
+    expect(onSearchResults).toHaveBeenLastCalledWith({ count: 2, matches });
   });
 
   it('renders empty state when trace is null', () => {

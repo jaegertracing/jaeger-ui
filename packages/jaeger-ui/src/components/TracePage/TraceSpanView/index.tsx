@@ -1,7 +1,7 @@
 // Copyright (c) 2018 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Table, Button, Select, Form, Tooltip } from 'antd';
 import dayjs from 'dayjs';
 import { ColumnProps } from 'antd/es/table';
@@ -13,21 +13,35 @@ import { formatDuration, formatDurationCompact } from '../../../utils/date';
 import prefixUrl from '../../../utils/prefix-url';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import SearchableSelect from '../../common/SearchableSelect';
+import filterSpans from '../../../utils/filter-spans';
+import { TOnSearchResults } from '../types';
 
 type FilterType = 'serviceName' | 'operationName';
 
 type Props = {
   trace: IOtelTrace;
-  uiFindVertexKeys: Set<string> | TNil;
-  uiFind: string | null | undefined;
+  uiFind: string | TNil;
+  onSearchResults: TOnSearchResults;
   useOtelTerms: boolean;
 };
 
 export default function TraceSpanView(props: Props) {
+  const { uiFind, onSearchResults } = props;
   const [filters, setFilters] = useState<Record<FilterType, string[]>>({
     serviceName: [],
     operationName: [],
   });
+
+  // The spans table owns its own search: it computes matching span IDs from `uiFind` and reports
+  // the count up so the parent can display it without knowing how this view searches.
+  const matches = useMemo(
+    () => (uiFind ? (filterSpans(uiFind, props.trace.spans) ?? new Set<string>()) : new Set<string>()),
+    [uiFind, props.trace.spans]
+  );
+
+  useEffect(() => {
+    onSearchResults({ count: matches.size, matches });
+  }, [matches, onSearchResults]);
 
   const { serviceNamesList, operationNamesList, serviceToOperationsMap, maxDuration } = useMemo(() => {
     const serviceNamesSet = new Set<string>();

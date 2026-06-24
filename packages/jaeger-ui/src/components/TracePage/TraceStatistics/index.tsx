@@ -8,14 +8,15 @@ import { ColumnProps } from 'antd/es/table';
 import { IOtelTrace } from '../../../types/otel';
 import TraceStatisticsHeader from './TraceStatisticsHeader';
 import { ITableSpan } from './types';
-import { TNil } from '../../../types';
 import PopupSQL from './PopupSql';
 import { getServiceName } from './tableValues';
+import filterSpans from '../../../utils/filter-spans';
+import { TOnSearchResults } from '../types';
 
 type Props = {
   trace: IOtelTrace;
-  uiFindVertexKeys: Set<string> | TNil;
   uiFind: string | null | undefined;
+  onSearchResults: TOnSearchResults;
   useOtelTerms: boolean;
 };
 
@@ -124,21 +125,40 @@ export default class TraceStatistics extends Component<Props, State> {
     this.handler = this.handler.bind(this);
     this.togglePopup = this.togglePopup.bind(this);
 
-    this.searchInTable(this.props.uiFindVertexKeys!, this.state.tableValue, this.props.uiFind);
+    this.searchInTable(this.getSearchMatches(), this.state.tableValue, this.props.uiFind);
+  }
+
+  componentDidMount() {
+    this.reportSearchResults();
   }
 
   /**
-   * If the search props change the search function is called.
+   * If the search query changes the search function is called and the match count is reported up.
    * @param props all props
    */
   componentDidUpdate(props: Props) {
-    if (this.props.uiFindVertexKeys !== props.uiFindVertexKeys) {
+    if (this.props.uiFind !== props.uiFind) {
       this.changeTableValueSearch();
+      this.reportSearchResults();
     }
   }
 
+  /**
+   * Compute the set of matching span IDs for the current query. The view owns this so the parent
+   * does not need to know how statistics search works.
+   */
+  getSearchMatches(): Set<string> {
+    const { uiFind, trace } = this.props;
+    return uiFind ? filterSpans(uiFind, trace.spans) || new Set<string>() : new Set<string>();
+  }
+
+  reportSearchResults() {
+    const matches = this.getSearchMatches();
+    this.props.onSearchResults({ count: matches.size, matches });
+  }
+
   changeTableValueSearch() {
-    this.searchInTable(this.props.uiFindVertexKeys!, this.state.tableValue, this.props.uiFind);
+    this.searchInTable(this.getSearchMatches(), this.state.tableValue, this.props.uiFind);
     // reload the componente
     const tableValueState = this.state.tableValue;
     this.setState(prevState => ({
@@ -160,7 +180,7 @@ export default class TraceStatistics extends Component<Props, State> {
     this.setState(prevState => {
       return {
         ...prevState,
-        tableValue: this.searchInTable(this.props.uiFindVertexKeys!, tableValue, this.props.uiFind),
+        tableValue: this.searchInTable(this.getSearchMatches(), tableValue, this.props.uiFind),
         sortIndex: 1,
         sortAsc: false,
         valueNameSelector1,
