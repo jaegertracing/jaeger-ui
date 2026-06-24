@@ -12,6 +12,12 @@
 # Nested/object overrides and `>`-scoped overrides are skipped.
 set -euo pipefail
 
+# Ensure pnpm is available; otherwise the tree checks below are meaningless.
+if ! command -v pnpm >/dev/null 2>&1; then
+  echo "pnpm not found on PATH; run via pnpm/corepack." >&2
+  exit 1
+fi
+
 # Extract simple (string-valued, non-scoped) overrides from package.json#pnpm.overrides.
 overrides=$(jq -r '
   .pnpm.overrides // {} | to_entries[]

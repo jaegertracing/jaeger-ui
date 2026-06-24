@@ -23,7 +23,7 @@ jobs:
       - uses: ./.github/actions/setup-node-and-deps
       - name: Verify lockfile is in sync
         run: |
-          pnpm install --lockfile-only
+          pnpm install --lockfile-only --ignore-scripts
           git diff --exit-code pnpm-lock.yaml || (echo '❌ pnpm-lock.yaml is out of sync with package.json. Run "corepack enable && pnpm install" locally and commit the result.' && exit 1)
       - run: pnpm list -r --depth Infinity
       - name: Run depcheck
