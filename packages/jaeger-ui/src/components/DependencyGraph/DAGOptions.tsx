@@ -8,6 +8,7 @@ import SearchableSelect from '../common/SearchableSelect';
 import UiFindInput from '../common/UiFindInput';
 import './DAGOptions.css';
 import { getAppEnvironment } from '../../utils/constants';
+import type { DataSource } from '../../hooks/useDependenciesQuery';
 
 const { Option } = Select;
 
@@ -27,9 +28,9 @@ interface IDAGOptionsProps {
   selectedDepth?: number;
   onReset: () => void;
   isHierarchicalDisabled: boolean;
-  selectedSampleDatasetType: string;
-  onSampleDatasetTypeChange: (type: string) => void;
-  sampleDatasetTypes: string[];
+  selectedDataSource: DataSource;
+  onDataSourceChange: (source: DataSource) => void;
+  dataSources: readonly DataSource[];
   uiFind?: string;
   matchCount?: number;
 }
@@ -49,9 +50,9 @@ const DAGOptions: React.FC<IDAGOptionsProps> = ({
   selectedDepth = 0,
   onReset,
   isHierarchicalDisabled,
-  selectedSampleDatasetType,
-  onSampleDatasetTypeChange,
-  sampleDatasetTypes,
+  selectedDataSource,
+  onDataSourceChange,
+  dataSources,
   uiFind,
   matchCount,
 }) => {
@@ -138,7 +139,7 @@ const DAGOptions: React.FC<IDAGOptionsProps> = ({
           ))}
         </SearchableSelect>
       </div>
-      <div className="selector-container">
+      <div className="selector-container depth-column">
         <div className="selector-label-container">
           <span className="selector-label">Depth</span>
           <Popover
@@ -158,28 +159,29 @@ const DAGOptions: React.FC<IDAGOptionsProps> = ({
             <IoHelp className="hint-trigger" data-testid="depth-help-icon" />
           </Popover>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <InputNumber
-            className="number-input"
-            value={selectedDepth}
-            onChange={onDepthChange}
-            min={0}
-            placeholder="Enter number"
-            disabled={!selectedService}
-            data-testid="depth-input"
-          />
-          <Button
-            onClick={onReset}
-            data-testid="reset-button"
-            type="default"
-            className="reset-button"
-            size="small"
-          >
-            Reset
-          </Button>
-        </div>
+        <InputNumber
+          className="number-input"
+          value={selectedDepth}
+          onChange={onDepthChange}
+          min={0}
+          placeholder="Enter number"
+          disabled={!selectedService}
+          data-testid="depth-input"
+        />
       </div>
-      <div className="selector-container">
+      <div className="selector-container reset-column">
+        <Button
+          onClick={onReset}
+          data-testid="reset-button"
+          type="default"
+          className="reset-button"
+          size="small"
+          disabled={!selectedService}
+        >
+          Reset
+        </Button>
+      </div>
+      <div className="selector-container search-column">
         <div className="selector-label-container">
           <span className="selector-label">Search</span>
           <Popover
@@ -211,18 +213,18 @@ const DAGOptions: React.FC<IDAGOptionsProps> = ({
       {getAppEnvironment() === 'development' && (
         <div className="selector-container data-selector">
           <div className="selector-label-container">
-            <span className="selector-label">Sample Dataset</span>
+            <span className="selector-label">Dataset Source</span>
           </div>
           <SearchableSelect
-            value={selectedSampleDatasetType}
-            onChange={onSampleDatasetTypeChange}
-            placeholder="Select Sample Dataset Type"
-            className="select-sample-dataset-type-input"
-            data-testid="sample-dataset-type-select"
+            value={selectedDataSource}
+            onChange={onDataSourceChange}
+            placeholder="Select dataset source"
+            className="select-data-source-input"
+            data-testid="data-source-select"
           >
-            {sampleDatasetTypes.map(type => (
-              <Option key={type} value={type} data-testid={`sample-dataset-type-option-${type}`}>
-                {type}
+            {dataSources.map(source => (
+              <Option key={source} value={source} data-testid={`data-source-option-${source}`}>
+                {source}
               </Option>
             ))}
           </SearchableSelect>
