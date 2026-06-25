@@ -19,10 +19,11 @@ describe('sortTraces()', () => {
     { ...transformTraceData(traceGenerator.trace({ numberOfSpans: 1 })), traceID: idMinSpans },
   ];
 
-  const { MOST_SPANS, LEAST_SPANS, LONGEST_FIRST, SHORTEST_FIRST, MOST_RECENT } = orderBy;
+  const { MOST_SPANS, LEAST_SPANS, LONGEST_FIRST, SHORTEST_FIRST, MOST_RECENT, OLDEST_FIRST } = orderBy;
 
   const expecations = {
     [MOST_RECENT]: _maxBy(traces, trace => trace.startTime).traceID,
+    [OLDEST_FIRST]: _minBy(traces, trace => trace.startTime).traceID,
     [LONGEST_FIRST]: _maxBy(traces, trace => trace.duration).traceID,
     [SHORTEST_FIRST]: _minBy(traces, trace => trace.duration).traceID,
     [MOST_SPANS]: idMaxSpans,
@@ -40,7 +41,7 @@ describe('sortTraces()', () => {
 });
 
 describe('sortTraceSummaries()', () => {
-  const { MOST_SPANS, LEAST_SPANS, LONGEST_FIRST, SHORTEST_FIRST, MOST_RECENT } = orderBy;
+  const { MOST_SPANS, LEAST_SPANS, LONGEST_FIRST, SHORTEST_FIRST, MOST_RECENT, OLDEST_FIRST } = orderBy;
 
   const makeSummary = (traceID, startTime, duration, spanCount) => ({
     traceID,
@@ -71,6 +72,11 @@ describe('sortTraceSummaries()', () => {
   it(`sorts by ${MOST_RECENT}`, () => {
     const result = sortTraceSummaries(summaries, MOST_RECENT);
     expect(result[0].traceID).toBe('b'); // startTime 400
+  });
+
+  it(`sorts by ${OLDEST_FIRST}`, () => {
+    const result = sortTraceSummaries(summaries, OLDEST_FIRST);
+    expect(result[0].traceID).toBe('a'); // startTime 100 → oldest
   });
 
   it(`sorts by ${LONGEST_FIRST}`, () => {

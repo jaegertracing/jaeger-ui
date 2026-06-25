@@ -67,6 +67,7 @@ export function SelectSort({ sortBy, handleSortChange }: SelectSortProps) {
       Sort:{' '}
       <SearchableSelect value={sortBy} onChange={(value: string) => handleSortChange(value)}>
         <Option value={orderBy.MOST_RECENT}>Most Recent</Option>
+        <Option value={orderBy.OLDEST_FIRST}>Oldest First</Option>
         <Option value={orderBy.LONGEST_FIRST}>Longest First</Option>
         <Option value={orderBy.SHORTEST_FIRST}>Shortest First</Option>
         <Option value={orderBy.MOST_SPANS}>Most Spans</Option>
@@ -109,9 +110,9 @@ export function UnconnectedSearchResults({
         removeTraceFromCohort(traceID);
         return;
       }
-      const summary = traceSummaryById.get(traceID);
       // Defensive: every rendered row's traceID is a key in traceSummaryById,
       // so this lookup cannot miss in normal UI flow.
+      const summary = traceSummaryById.get(traceID);
       if (!summary) return;
       addTraceToCohort(summary);
     },
@@ -127,7 +128,7 @@ export function UnconnectedSearchResults({
       getTracePageLink(
         traceID,
         { fromSearch: location.pathname + location.search },
-        spanLinks && (spanLinks[traceID] || spanLinks[traceID.replace(/^0*/, '')])
+        spanLinks && spanLinks[traceID]
       ),
     [location, spanLinks]
   );
@@ -148,7 +149,7 @@ export function UnconnectedSearchResults({
     const view = urlState.view && urlState.view === 'ddg' ? EAltViewActions.Traces : EAltViewActions.Ddg;
     trackAltView(view);
     // When URL has lost search params (e.g. after TopNav navigation to bare /search),
-    // fall back to the root service of the first result so DDG can build the graph.
+    // fall back to the root service of the first result so DDG can build the graph
     const serviceFromUrl = typeof urlState.service === 'string' ? urlState.service : undefined;
     const service = serviceFromUrl ?? traceSummaries[0]?.rootServiceName;
     navigate(getUrl({ ...urlState, service, view }));
