@@ -139,8 +139,8 @@ export function TraceDiffImpl({ a, b, cohort }: TStateProps & TOwnProps) {
   );
 }
 
-// TODO(joe): simplify but do not invalidate the URL
-export function mapStateToProps(state: ReduxState, ownProps: TOwnProps) {
+// export for tests
+export function mapStateToProps(_state: ReduxState, ownProps: TOwnProps): TStateProps {
   let { a, b } = ownProps.params;
   const { id } = ownProps.params;
   if (!a && id) {

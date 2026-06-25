@@ -3,7 +3,7 @@
 
 import * as ReactRouterDom from 'react-router-dom';
 
-import { ROUTE_PATH, matches, getUrl, getDiffIds } from './url';
+import { ROUTE_PATH, matches, getUrl, getDiffIds, isDiffUrl } from './url';
 
 vi.mock('react-router-dom', () => ({
   matchPath: vi.fn(),
@@ -58,6 +58,19 @@ describe('TraceDiff/url', () => {
     });
   });
 
+  describe('isDiffUrl', () => {
+    it('returns false for undefined', () => {
+      expect(isDiffUrl(undefined)).toBe(false);
+    });
+
+    it('returns false for a plain trace ID (no ...)', () => {
+      expect(isDiffUrl('abc123')).toBe(false);
+    });
+
+    it('returns true for a diff URL segment (contains ...)', () => {
+      expect(isDiffUrl('a...b')).toBe(true);
+    });
+  });
   describe('getDiffIds', () => {
     it('returns empty object when id is undefined', () => {
       expect(getDiffIds(undefined)).toEqual({});
