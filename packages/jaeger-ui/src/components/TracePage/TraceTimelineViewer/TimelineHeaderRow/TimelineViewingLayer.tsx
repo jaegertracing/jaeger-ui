@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Uber Technologies, Inc.
+﻿// Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
@@ -144,34 +144,6 @@ function TimelineViewingLayer(props: TimelineViewingLayerProps) {
     propsRef.current.updateNextViewRangeTime({ cursor: undefined });
   }, []);
 
-<<<<<<< HEAD
-  render() {
-    const { viewRangeTime } = this.props;
-    const { current, cursor, reframe, shiftEnd, shiftStart } = viewRangeTime;
-    const [viewStart, viewEnd] = current;
-    const haveNextTimeRange = reframe != null || shiftEnd != null || shiftStart != null;
-    let cursorPosition: string | TNil;
-    if (!haveNextTimeRange && cursor != null && cursor >= viewStart && cursor <= viewEnd) {
-      cursorPosition = `${mapToViewSubRange(viewStart, viewEnd, cursor) * 100}%`;
-    }
-    return (
-      <div
-        aria-hidden
-        className="TimelineViewingLayer"
-        ref={this._root}
-        onMouseDown={this._draggerReframe.handleMouseDown}
-        onMouseLeave={this._draggerReframe.handleMouseLeave}
-        onMouseMove={this._draggerReframe.handleMouseMove}
-      >
-        {cursorPosition != null && (
-          <div className="TimelineViewingLayer--cursorGuide" style={{ left: cursorPosition }} />
-        )}
-        {reframe != null && getMarkers(viewStart, viewEnd, reframe.anchor, reframe.shift, false)}
-        {shiftEnd != null && getMarkers(viewStart, viewEnd, viewEnd, shiftEnd, true)}
-        {shiftStart != null && getMarkers(viewStart, viewEnd, viewStart, shiftStart, true)}
-      </div>
-    );
-=======
   const handleReframeDragUpdate = React.useCallback(
     ({ value }: DraggingUpdate) => {
       const { anchor, shift } = getAnchorAndShift(value);
@@ -247,7 +219,6 @@ function TimelineViewingLayer(props: TimelineViewingLayerProps) {
   let cursorPosition: string | TNil;
   if (!haveNextTimeRange && cursor != null && cursor >= viewStart && cursor <= viewEnd) {
     cursorPosition = `${mapToViewSubRange(viewStart, viewEnd, cursor) * 100}%`;
->>>>>>> upstream/main
   }
 
   return (
