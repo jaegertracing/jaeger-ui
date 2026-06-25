@@ -72,6 +72,32 @@ const spanKindOptions = [
   { label: 'Consumer', value: 'consumer' },
 ];
 
+const getDefaultSpanKind = (): spanKinds => {
+  const stored = store.getString('lastAtmSearchSpanKind');
+  return spanKindOptions.some(opt => opt.value === stored) ? (stored as spanKinds) : 'server';
+};
+
+const resolveService = (candidate: string | undefined, services: string[]): string | undefined => {
+  if (candidate && services.includes(candidate)) return candidate;
+  const stored = store.getString('lastAtmSearchService');
+  if (stored && services.includes(stored)) return stored;
+  return services[0];
+};
+
+const getFiltersFromSearch = (search: string) => {
+  const urlState = getUrlState(search);
+  return {
+    selectedService: urlState.service ?? store.getString('lastAtmSearchService'),
+    selectedSpanKind: urlState.spanKind ?? getDefaultSpanKind(),
+    selectedTimeFrame: urlState.timeframe ?? store.getNumber('lastAtmSearchTimeframe', ONE_HOUR_MS),
+    urlOwned: {
+      service: urlState.service != null,
+      spanKind: urlState.spanKind != null,
+      timeframe: urlState.timeframe != null,
+    },
+  };
+};
+
 const calcDisplayTimeUnit = (serviceLatencies: ServiceMetricsObject | ServiceMetricsObject[] | null) => {
   let maxValue = 0;
 
@@ -107,30 +133,26 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   const docsLink = getConfig().monitor?.docsLink;
   const graphDivWrapper = useRef<HTMLDivElement>(null);
 
-  const urlState = getUrlState(search);
+  const initialFilters = getFiltersFromSearch(search);
 
   const [endTime, setEndTime] = useState<number>(Date.now());
   const [graphWidth, setGraphWidth] = useState<number>(300);
   const [serviceOpsMetrics, setServiceOpsMetrics] = useState<ServiceOpsMetrics[] | undefined>(undefined);
   const [searchOps, setSearchOps] = useState<string>('');
   const [graphXDomain, setGraphXDomain] = useState<number[]>([]);
-  const [selectedService, setSelectedService] = useState<string | undefined>(
-    urlState.service ?? store.getString('lastAtmSearchService')
-  );
-  const [selectedSpanKind, setSelectedSpanKind] = useState<spanKinds>(() => {
-    if (urlState.spanKind) return urlState.spanKind;
-    const stored = store.getString('lastAtmSearchSpanKind');
-    return spanKindOptions.some(opt => opt.value === stored) ? (stored as spanKinds) : 'server';
-  });
-  const [selectedTimeFrame, setSelectedTimeFrame] = useState<number>(
-    urlState.timeframe ?? store.getNumber('lastAtmSearchTimeframe', ONE_HOUR_MS)
-  );
+  const [selectedService, setSelectedService] = useState<string | undefined>(initialFilters.selectedService);
+  const [selectedSpanKind, setSelectedSpanKind] = useState<spanKinds>(initialFilters.selectedSpanKind);
+  const [selectedTimeFrame, setSelectedTimeFrame] = useState<number>(initialFilters.selectedTimeFrame);
 
-  const urlOwned = useRef({
-    service: urlState.service != null,
-    spanKind: urlState.spanKind != null,
-    timeframe: urlState.timeframe != null,
-  });
+  const urlOwned = useRef(initialFilters.urlOwned);
+
+  useEffect(() => {
+    const filters = getFiltersFromSearch(search);
+    urlOwned.current = filters.urlOwned;
+    setSelectedService(filters.selectedService);
+    setSelectedSpanKind(filters.selectedSpanKind);
+    setSelectedTimeFrame(filters.selectedTimeFrame);
+  }, [search]);
 
   const calcGraphXDomain = useCallback(() => {
     const currentTime = Date.now();
@@ -144,8 +166,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   }, []);
 
   const getSelectedService = useCallback(() => {
-    const candidate = selectedService || store.getString('lastAtmSearchService');
-    return candidate && services.includes(candidate) ? candidate : services[0];
+    return resolveService(selectedService, services);
   }, [services, selectedService]);
 
   const handleServiceChange = useCallback((value: string) => {
@@ -169,13 +190,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   }, []);
 
   const fetchMetrics = useCallback(() => {
-    const isValidSelected = selectedService != null && services.includes(selectedService);
-
-    if (!isValidSelected && urlOwned.current.service) {
-      urlOwned.current.service = false;
-    }
-
-    const currentService = isValidSelected ? selectedService : services[0];
+    const currentService = resolveService(selectedService, services);
 
     if (currentService) {
       const newEndTime = Date.now();
@@ -420,7 +435,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
             data={serviceOpsMetrics === undefined ? metrics.serviceOpsMetrics : serviceOpsMetrics}
             endTime={endTime}
             lookback={selectedTimeFrame}
-            serviceName={getSelectedService()}
+            serviceName={getSelectedService() ?? ''}
           />
         </Row>
       </div>

@@ -753,6 +753,8 @@ describe('<MonitorATMServicesView> URL query params', () => {
   beforeEach(() => {
     cleanup();
     jest.clearAllMocks();
+    store.getString.mockReturnValue(undefined);
+    store.getNumber.mockReturnValue(undefined);
     useServices.mockReturnValue({ data: ['service1', 'service2'], isLoading: false });
   });
 
@@ -819,7 +821,37 @@ describe('<MonitorATMServicesView> URL query params', () => {
 
     expect(mockFetchAllServiceMetrics).toHaveBeenCalledWith('service1', expect.anything());
     expect(mockFetchAggregatedServiceMetrics).toHaveBeenCalledWith('service1', expect.anything());
-    expect(store.set).toHaveBeenCalledWith('lastAtmSearchService', 'service1');
+    expect(store.set).not.toHaveBeenCalledWith('lastAtmSearchService', expect.anything());
+  });
+
+  it('falls back to stored service when URL service is invalid', () => {
+    store.getString.mockImplementation(key => {
+      if (key === 'lastAtmSearchService') return 'service2';
+      return undefined;
+    });
+
+    renderWithRouter(<MonitorATMServicesView {...baseProps} search="?service=missing" />);
+
+    expect(screen.getByTestId('select-a-service-input').value).toBe('service2');
+    expect(mockFetchAllServiceMetrics).toHaveBeenCalledWith('service2', expect.anything());
+    expect(store.set).not.toHaveBeenCalledWith('lastAtmSearchService', expect.anything());
+  });
+
+  it('updates filters when search changes without remounting', () => {
+    const { rerender } = renderWithRouter(
+      <MonitorATMServicesView {...baseProps} search="?service=service1" />
+    );
+
+    expect(screen.getByTestId('select-a-service-input').value).toBe('service1');
+
+    rerender(
+      <MemoryRouter>
+        <MonitorATMServicesView {...baseProps} search="?service=service2&spanKind=client" />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByTestId('select-a-service-input').value).toBe('service2');
+    expect(screen.getByTestId('span-kind-selector').value).toBe('client');
   });
 
   it('does not surface an unrecognized URL service in the View all traces link', () => {
