@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { TVertex } from '@jaegertracing/plexus/lib/types';
-import { IAttribute } from '../../types/otel';
+import { KeyValuePair } from '../../types/trace';
 
 import PathElem from './PathElem';
 
@@ -42,7 +42,7 @@ export type TDdgPayloadEntry = {
 
 export type TDdgPayloadPath = {
   path: TDdgPayloadEntry[];
-  attributes: IAttribute[];
+  attributes: (KeyValuePair & { key: 'exemplar_trace_id'; value: string })[];
 };
 
 export type TDdgPayload = {

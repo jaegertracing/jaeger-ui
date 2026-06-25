@@ -16,8 +16,8 @@ import {
 
 const stringifyEntry = ({ service, operation }: TDdgPayloadEntry) => `${service}\v${operation}`;
 
-function group<T extends { key: string; value: any }>(arg: T[]): Record<string, T['value'][]> {
-  const result: Record<string, T['value'][]> = {};
+function group<V>(arg: Array<{ key: string; value: V }>): Record<string, V[]> {
+  const result: Record<string, V[]> = {};
   arg.forEach(({ key, value }) => {
     if (!result[key]) result[key] = [];
     result[key].push(value);
@@ -55,7 +55,7 @@ function transformDdgData(
       hashArg.push(pathCompareValues.get(payloadPath) || payloadPath.map(stringifyEntry).join());
 
       const groupedAttrs = group(attributes);
-      const traceIDs = (groupedAttrs.exemplar_trace_id || []) as string[];
+      const traceIDs = groupedAttrs.exemplar_trace_id || [];
 
       // Path with stand-in values is necessary for assigning PathElem.memberOf
       const path: TDdgPath = { focalIdx: -1, members: [], traceIDs };
