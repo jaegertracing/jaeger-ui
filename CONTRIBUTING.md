@@ -12,7 +12,7 @@ This document provides Jaeger UI-specific guidance to complement the general gui
 
 - [nvm (Node Version Manager)](https://github.com/nvm-sh/nvm)
 - [Node.JS](https://nodejs.org/en)
-- npm package manager
+- pnpm package manager (managed via corepack)
 
 ### Installation
 
@@ -29,10 +29,10 @@ Use the recommended Node versions: (defined in [.nvmrc](./.nvmrc) file):
 nvm use
 ```
 
-Install dependencies via `npm`:
+Install dependencies via `pnpm`:
 
 ```bash
-npm ci
+pnpm install
 ```
 
 ## Running the application
@@ -60,7 +60,7 @@ const proxyConfig = {
 Start the development server with hot loading:
 
 ```bash
-npm start
+pnpm start
 ```
 
 The above command will run a web server on `http://localhost:5173` that will serve the UI assets, with hot reloading support, and it will proxy all API requests to `http://localhost:16686` where Jaeger query should be running.
@@ -69,12 +69,12 @@ The above command will run a web server on `http://localhost:5173` that will ser
 
 | Command | Description |
 | --- | --- |
-| `npm start` | Starts development server with hot reloading and api proxy. |
-| `npm test` | Run all the tests |
-| `npm test -w packages/jaeger-ui -- $file` | Run tests for a specific file, e.g. `npm test -w packages/jaeger-ui -- src/api/jaeger.test.js` |
-| `npm run lint` | Lint the project (oxlint, oxfmt, typescript, knip) |
-| `npm run fmt` | Format source code with Oxfmt |
-| `npm run build` | Runs production build. Outputs files to `packages/jaeger-ui/build`. |
+| `pnpm start` | Starts development server with hot reloading and api proxy. |
+| `pnpm test` | Run all the tests |
+| `pnpm --filter @jaegertracing/jaeger-ui test -- $file` | Run tests for a specific file, e.g. `pnpm --filter @jaegertracing/jaeger-ui test -- src/api/jaeger.test.js` |
+| `pnpm run lint` | Lint the project (oxlint, oxfmt, typescript, knip) |
+| `pnpm run fmt` | Format source code with Oxfmt |
+| `pnpm run build` | Runs production build. Outputs files to `packages/jaeger-ui/build`. |
 | `make bundle-stats` | Runs production build and outputs `packages/jaeger-ui/build/bundle-stats.csv` with per-package size breakdown (estimated post-minification bytes). |
 
 ## Code Coverage
@@ -83,13 +83,13 @@ This project uses Vitest for testing with Codecov integration for tracking.
 
 | Command | Description |
 | --- | --- |
-| `npm test -- --coverage` | Run all tests with full coverage report |
-| `npm test -w packages/jaeger-ui -- src/path/to/file.test.tsx` | Run a single test file |
-| `npm test -w packages/jaeger-ui -- src/path/to/file.test.tsx --coverage --coverage.include="src/path/to/file.tsx"` | Run a single test file with coverage scoped to its source file |
+| `pnpm test -- --coverage` | Run all tests with full coverage report |
+| `pnpm --filter @jaegertracing/jaeger-ui test -- src/path/to/file.test.tsx` | Run a single test file |
+| `pnpm --filter @jaegertracing/jaeger-ui test -- src/path/to/file.test.tsx --coverage --coverage.include="src/path/to/file.tsx"` | Run a single test file with coverage scoped to its source file |
 
-Note: `-w packages/jaeger-ui` is required when passing a file pattern — without it, the root `npm test` also runs Vitest in `packages/plexus`, which finds no matching file and exits with an error. `--coverage.include` scopes which source files appear in the coverage report; it does **not** filter which tests run.
+Note: `--filter @jaegertracing/jaeger-ui` is required when passing a file pattern — without it, the root `pnpm test` also runs Vitest in `packages/plexus`, which finds no matching file and exits with an error. `--coverage.include` scopes which source files appear in the coverage report; it does **not** filter which tests run.
 
-**Example**: `npm test -w packages/jaeger-ui -- src/components/DeepDependencies/Graph/DdgNodeContent/index.test.tsx --coverage --coverage.include="src/components/DeepDependencies/Graph/DdgNodeContent/index.tsx"`
+**Example**: `pnpm --filter @jaegertracing/jaeger-ui test -- src/components/DeepDependencies/Graph/DdgNodeContent/index.test.tsx --coverage --coverage.include="src/components/DeepDependencies/Graph/DdgNodeContent/index.tsx"`
 
 ## Running on Windows OS
 
@@ -128,11 +128,11 @@ Use the following `launch.json` configuration:
 
 ## Style Guide
 
-Use [typescript](https://www.typescriptlang.org/) for new code. Check types via `npm run tsc-lint`.
+Use [typescript](https://www.typescriptlang.org/) for new code. Check types via `pnpm run tsc-lint`.
 
-We use [Oxfmt](https://viteplus.dev) for code formatting (part of the Vite+ toolchain). It can be applied via `npm run fmt`.
+We use [Oxfmt](https://viteplus.dev) for code formatting (part of the Vite+ toolchain). It can be applied via `pnpm run fmt`.
 
-Most issues will be caught by the linter, which can be applied via `npm run oxlint`.
+Most issues will be caught by the linter, which can be applied via `pnpm run oxlint`.
 
 Finally, we generally adhere to the [Airbnb Style Guide](https://github.com/airbnb/javascript), with exceptions configured in the `lint` section of `vite.config.ts`.
 

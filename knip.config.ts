@@ -7,6 +7,11 @@ const config: KnipConfig = {
   workspaces: {
     '.': {
       entry: ['scripts/**/*.{js,ts,cjs}'],
+      ignoreBinaries: [
+        // Invoked via `npx only-allow pnpm` in the preinstall script to block
+        // npm/yarn usage. Not a direct dependency — npx fetches it on the fly.
+        'only-allow',
+      ],
       ignoreDependencies: [
         // Optional native bindings for @napi-rs; installed as optionalDependencies and
         // never imported directly — the parent package selects the right one at runtime.
