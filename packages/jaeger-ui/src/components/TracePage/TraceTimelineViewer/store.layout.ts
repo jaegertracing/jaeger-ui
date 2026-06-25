@@ -12,6 +12,20 @@ import {
   SPAN_NAME_COLUMN_WIDTH_MIN,
 } from './store.constants';
 
+export function getMaxNameColumnWidth(opts: {
+  detailPanelMode: string;
+  timelineBarsVisible: boolean;
+  sidePanelWidth: number;
+}): number {
+  if (opts.detailPanelMode !== 'sidepanel') {
+    return SPAN_NAME_COLUMN_WIDTH_MAX;
+  }
+  const availableWidth = opts.timelineBarsVisible
+    ? 1 - opts.sidePanelWidth - MIN_TIMELINE_COLUMN_WIDTH
+    : 1 - SIDE_PANEL_WIDTH_MIN;
+  return Math.min(SPAN_NAME_COLUMN_WIDTH_MAX, availableWidth);
+}
+
 type TraceTimelineLayoutPrefsStore = {
   spanNameColumnWidth: number;
   sidePanelWidth: number;
@@ -94,13 +108,7 @@ export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()((set,
 
   setSpanNameColumnWidth: (width: number) => {
     const { detailPanelMode, sidePanelWidth, timelineBarsVisible } = get();
-    let maxWidth = SPAN_NAME_COLUMN_WIDTH_MAX;
-    if (detailPanelMode === 'sidepanel') {
-      const availableWidth = timelineBarsVisible
-        ? 1 - sidePanelWidth - MIN_TIMELINE_COLUMN_WIDTH
-        : 1 - SIDE_PANEL_WIDTH_MIN;
-      maxWidth = Math.min(SPAN_NAME_COLUMN_WIDTH_MAX, availableWidth);
-    }
+    const maxWidth = getMaxNameColumnWidth({ detailPanelMode, sidePanelWidth, timelineBarsVisible });
     const spanNameColumnWidth = Math.min(Math.max(width, SPAN_NAME_COLUMN_WIDTH_MIN), maxWidth);
     localStorage.setItem('spanNameColumnWidth', spanNameColumnWidth.toString());
     set({ spanNameColumnWidth });
@@ -121,10 +129,7 @@ export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()((set,
     localStorage.setItem('detailPanelMode', mode);
     let { spanNameColumnWidth, sidePanelWidth, timelineBarsVisible } = get();
     if (mode === 'sidepanel') {
-      const availableWidth = timelineBarsVisible
-        ? 1 - sidePanelWidth - MIN_TIMELINE_COLUMN_WIDTH
-        : 1 - SIDE_PANEL_WIDTH_MIN;
-      const maxWidth = Math.min(SPAN_NAME_COLUMN_WIDTH_MAX, availableWidth);
+      const maxWidth = getMaxNameColumnWidth({ detailPanelMode: mode, sidePanelWidth, timelineBarsVisible });
       spanNameColumnWidth = Math.min(spanNameColumnWidth, maxWidth);
     }
     set({ detailPanelMode: mode, spanNameColumnWidth });
