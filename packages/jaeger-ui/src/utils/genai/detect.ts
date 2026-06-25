@@ -31,13 +31,3 @@ export function classifySpan(span: IOtelSpan): GenAISpanKind {
 export function isGenAITrace(trace: Pick<IOtelTrace, 'spans'>): boolean {
   return trace.spans.some(span => classifySpan(span) !== 'STANDARD');
 }
-
-export const RICH_MEDIA_ATTRIBUTE_KEYS: Readonly<Record<string, 'markdown' | 'json'>> = {
-  'gen_ai.input.messages': 'markdown',
-  'gen_ai.output.messages': 'markdown',
-  'gen_ai.system_instructions': 'markdown',
-  'gen_ai.tool.call.arguments': 'json',
-  'gen_ai.tool.call.result': 'json',
-  'gen_ai.tool.definitions': 'json',
-  'gen_ai.retrieval.documents': 'json',
-};
