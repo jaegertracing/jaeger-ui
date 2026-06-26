@@ -55,7 +55,7 @@ SPDX-License-Identifier: Apache-2.0
   margin-top: 1rem;
 }
 
-/* Legend sample edge lines — same theme-aware color as the real graph edges */
+/* Legend sample edge lines and labels — same theme-aware colors as the real graph edges */
 .TraceGraph--legendLine {
   stroke: var(--text-secondary);
   stroke-width: 2;
@@ -63,6 +63,11 @@ SPDX-License-Identifier: Apache-2.0
 
 .TraceGraph--legendLine.is-nonBlocking {
   stroke-dasharray: 4;
+}
+
+/* SVG text default fill is black; override so labels stay readable in dark mode */
+.TraceGraph--legendText {
+  fill: var(--text-primary);
 }
 
 .TraceGraph--dag {
@@ -78,12 +83,12 @@ SPDX-License-Identifier: Apache-2.0
 .TraceGraph--dag .plexus-Digraph--SvgEdge {
   stroke: var(--text-secondary);
   /* A sub-1px stroke anti-aliases into near-invisibility against a dark
-     background, even with sufficient color contrast. Widen the edges so
-     they read clearly, matching the legend sample lines (stroke-width: 2). */
+     background, even with sufficient color contrast. Widen to 1.5 so
+     the edges read clearly without being heavy. */
   stroke-width: 1.5;
 }
 
-.TraceGraph--dag marker path {
+.TraceGraph--dag marker * {
   fill: var(--text-secondary);
 }
 
