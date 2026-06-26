@@ -12,7 +12,7 @@ type SearchResultsStore = {
 export const useSearchResultsStore = create<SearchResultsStore>()(
   persist(
     set => ({
-      viewMode: 'list',
+      viewMode: 'table',
       setViewMode: mode => set({ viewMode: mode }),
     }),
     { name: 'jaeger.search-results.mode' }

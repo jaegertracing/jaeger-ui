@@ -10,12 +10,6 @@
   },
   "packageRules": [
     {
-      "groupName": "vite-plus and bundled vitest",
-      "matchManagers": ["npm"],
-      "matchPackageNames": ["vite-plus", "vitest", "@vitest/coverage-v8"],
-      "description": "vite-plus bundles a specific vitest version internally; these must be bumped together to avoid peer-dependency version mismatches"
-    },
-    {
       "groupName": "rolldown",
       "matchManagers": ["npm"],
       "matchPackageNames": ["rolldown", "/^@rolldown//"],
@@ -29,10 +23,29 @@
       "description": "@assistant-ui/* and @ag-ui/* share peer types (AssistantRuntime, HttpAgent); bumping them independently produces duplicate copies in node_modules and tsc errors. Pin exact versions (no ^) so npm dedupes a single copy."
     },
     {
+      "groupName": "opentelemetry",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["/^@opentelemetry//"],
+      "description": "@opentelemetry/* packages share internal type contracts and version-locked peer deps; bump them together to avoid mismatches"
+    },
+    {
+      "groupName": "emnapi",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["/^@emnapi//"],
+      "description": "@emnapi/* packages are platform bindings that must stay in lockstep"
+    },
+    {
       "groupName": "do not apply patch upgrades to dependencies",
       "matchManagers": ["npm"],
       "matchUpdateTypes": ["patch", "digest"],
       "enabled": false
+    },
+    {
+      "groupName": "vite-plus and bundled vitest",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["vite-plus", "vitest", "@vitest/coverage-v8"],
+      "enabled": true,
+      "description": "vite-plus bundles a specific vitest version internally; these must be bumped together to avoid peer-dependency version mismatches. Placed after the patch-disable rule so patch bumps are still included."
     },
     {
       "matchManagers": ["github-actions"],
