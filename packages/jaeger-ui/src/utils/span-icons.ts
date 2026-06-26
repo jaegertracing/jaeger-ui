@@ -4,14 +4,15 @@
 import type { IconType } from 'react-icons';
 import { IoSparkles, IoServer, IoGlobe, IoChatbubble, IoCodeSlash } from 'react-icons/io5';
 
+import { SpanAttributeNamespace } from '../constants/span-attributes';
 import type { IAttribute } from '../types/otel';
 
-const ATTR_ICON_RULES: { prefix: string; icon: IconType }[] = [
-  { prefix: 'gen_ai.', icon: IoSparkles },
-  { prefix: 'db.', icon: IoServer },
-  { prefix: 'http.', icon: IoGlobe },
-  { prefix: 'messaging.', icon: IoChatbubble },
-  { prefix: 'rpc.', icon: IoCodeSlash },
+const ATTR_ICON_RULES: { prefix: SpanAttributeNamespace; icon: IconType }[] = [
+  { prefix: SpanAttributeNamespace.GEN_AI, icon: IoSparkles },
+  { prefix: SpanAttributeNamespace.DB, icon: IoServer },
+  { prefix: SpanAttributeNamespace.HTTP, icon: IoGlobe },
+  { prefix: SpanAttributeNamespace.MESSAGING, icon: IoChatbubble },
+  { prefix: SpanAttributeNamespace.RPC, icon: IoCodeSlash },
 ];
 
 export function getSpanIconComponent(attributes: IAttribute[] | undefined): IconType | null {
