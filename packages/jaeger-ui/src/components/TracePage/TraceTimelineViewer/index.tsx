@@ -12,6 +12,7 @@ import {
   SIDE_PANEL_WIDTH_MAX,
   SIDE_PANEL_WIDTH_MIN,
   SPAN_NAME_COLUMN_WIDTH_MAX,
+  SPAN_NAME_COLUMN_WIDTH_MIN,
   useLayoutPrefsStore,
   useTraceTimelineStore,
 } from './store';
@@ -153,7 +154,15 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   const mainFraction = 1 - panelFraction;
   const nameColumnWidth = timelineBarsVisible ? Math.min(spanNameColumnWidth / mainFraction, 1) : 1;
   const headerNameWidth = nameColumnWidth * mainFraction;
-  const resizerMax = sidePanelActive ? mainFraction - MIN_TIMELINE_COLUMN_WIDTH : SPAN_NAME_COLUMN_WIDTH_MAX;
+  let resizerMax: number;
+  if (sidePanelActive && timelineBarsVisible) {
+    resizerMax = mainFraction - MIN_TIMELINE_COLUMN_WIDTH;
+  } else if (sidePanelActive && !timelineBarsVisible) {
+    resizerMax = 1 - SIDE_PANEL_WIDTH_MIN;
+  } else {
+    resizerMax = SPAN_NAME_COLUMN_WIDTH_MAX;
+  }
+  resizerMax = Math.max(SPAN_NAME_COLUMN_WIDTH_MIN, Math.min(resizerMax, 1));
 
   const rootSpanID = trace.rootSpans[0]?.spanID;
   const sidePanelLabel =

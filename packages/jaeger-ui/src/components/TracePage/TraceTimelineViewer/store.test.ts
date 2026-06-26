@@ -202,6 +202,16 @@ describe('trace timeline zustand stores', () => {
         useLayoutPrefsStore.getState().setSpanNameColumnWidth(0.99);
         expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(0.65);
       });
+
+      it('clamps to leave room for side panel when timeline is hidden', () => {
+        useLayoutPrefsStore.setState({
+          detailPanelMode: 'sidepanel',
+          sidePanelWidth: 0.7,
+          timelineBarsVisible: false,
+        });
+        useLayoutPrefsStore.getState().setSpanNameColumnWidth(0.99);
+        expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(1 - SIDE_PANEL_WIDTH_MIN);
+      });
     });
 
     describe('setSidePanelWidth', () => {
@@ -298,6 +308,16 @@ describe('trace timeline zustand stores', () => {
       useLayoutPrefsStore.setState({ spanNameColumnWidth: 0.8, sidePanelWidth: 0.3 });
       setDetailPanelMode('sidepanel');
       expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(0.65);
+    });
+
+    it('clamps spanNameColumnWidth when switching to sidepanel with timeline hidden', () => {
+      useLayoutPrefsStore.setState({
+        spanNameColumnWidth: SPAN_NAME_COLUMN_WIDTH_MAX,
+        sidePanelWidth: 0.7,
+        timelineBarsVisible: false,
+      });
+      setDetailPanelMode('sidepanel');
+      expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(1 - SIDE_PANEL_WIDTH_MIN);
     });
 
     it('does not clamp spanNameColumnWidth when switching to inline', () => {

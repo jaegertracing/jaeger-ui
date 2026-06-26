@@ -50,7 +50,7 @@ describe('<JaegerAskSearchInput /> trace lookup (assistant disabled)', () => {
     expect(screen.getByPlaceholderText('Lookup by Trace ID...')).toBeInTheDocument();
   });
 
-  it('navigates to trace page on form submit', () => {
+  it('navigates to trace page on form submit and clears the input', () => {
     render(
       <MemoryRouter>
         <JaegerAskSearchInput />
@@ -62,6 +62,7 @@ describe('<JaegerAskSearchInput /> trace lookup (assistant disabled)', () => {
 
     expect(mockNavigate).toHaveBeenCalledTimes(1);
     expect(mockNavigate).toHaveBeenCalledWith(`/trace/${traceId}`);
+    expect(screen.getByTestId('idInput')).toHaveValue('');
   });
 
   it('does not navigate when input is empty', () => {
@@ -123,9 +124,10 @@ describe('<JaegerAskSearchInput /> assistant mode', () => {
     fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false });
 
     expect(mockNavigate).not.toHaveBeenCalled();
+    expect(textarea).toHaveValue('');
   });
 
-  it('still navigates for 16–32 hex trace ids', () => {
+  it('still navigates for 16–32 hex trace ids (preserves original form)', () => {
     render(
       <MemoryRouter>
         <JaegerAssistantProvider>
@@ -134,12 +136,31 @@ describe('<JaegerAskSearchInput /> assistant mode', () => {
       </MemoryRouter>
     );
 
-    const traceId = 'a1b2c3d4e5f67890';
+    const traceId = 'A1B2C3D4E5F67890';
     const textarea = openAssistantTextarea();
     fireEvent.change(textarea, { target: { value: traceId } });
     fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false });
 
-    expect(mockNavigate).toHaveBeenCalledWith(`/trace/${traceId.toLowerCase()}`);
+    expect(mockNavigate).toHaveBeenCalledWith(`/trace/${traceId}`);
+    expect(textarea).toHaveValue('');
+  });
+
+  it('navigates for base64-encoded trace ids', () => {
+    render(
+      <MemoryRouter>
+        <JaegerAssistantProvider>
+          <JaegerAskSearchInput />
+        </JaegerAssistantProvider>
+      </MemoryRouter>
+    );
+
+    const traceId = '/lhpXXcq1Bdw+4twt863jg==';
+    const textarea = openAssistantTextarea();
+    fireEvent.change(textarea, { target: { value: traceId } });
+    fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false });
+
+    expect(mockNavigate).toHaveBeenCalledWith('/trace/%2FlhpXXcq1Bdw%2B4twt863jg%3D%3D');
+    expect(textarea).toHaveValue('');
   });
 
   it('Shift+Enter does not submit', () => {
