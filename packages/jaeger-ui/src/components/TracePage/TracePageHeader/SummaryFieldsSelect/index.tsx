@@ -115,7 +115,7 @@ export default function SummaryFieldsSelect({
                 const isSelected = selectedSet.has(field.key);
                 const isDisabled = !isSelected && selectedFields.length >= MAX_SUMMARY_FIELDS;
                 return (
-                  <label
+                  <div
                     key={field.key}
                     className={`SummaryFieldsSelect--option ${isDisabled ? 'is-disabled' : ''}`}
                   >
@@ -123,15 +123,17 @@ export default function SummaryFieldsSelect({
                       checked={isSelected}
                       disabled={isDisabled}
                       onChange={() => handleToggleField(field.key)}
-                      aria-label={`${isSelected ? 'Remove' : 'Add'} ${field.key} from summary fields`}
-                    />
-                    <span className="SummaryFieldsSelect--optionKey" title={field.key}>
-                      {field.key}
-                    </span>
-                    <span className="SummaryFieldsSelect--coverage">
-                      {field.coverage}/{field.total}
-                    </span>
-                  </label>
+                    >
+                      <span className="SummaryFieldsSelect--optionContent">
+                        <span className="SummaryFieldsSelect--optionKey" title={field.key}>
+                          {field.key}
+                        </span>
+                        <span className="SummaryFieldsSelect--coverage">
+                          {field.coverage}/{field.total}
+                        </span>
+                      </span>
+                    </Checkbox>
+                  </div>
                 );
               })
             )}

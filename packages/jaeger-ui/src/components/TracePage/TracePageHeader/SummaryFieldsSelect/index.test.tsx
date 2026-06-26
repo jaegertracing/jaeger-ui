@@ -119,7 +119,7 @@ describe('SummaryFieldsSelect', () => {
       />
     );
     await userEvent.click(screen.getByTestId('summary-fields-trigger'));
-    fireEvent.click(screen.getByLabelText('Add alpha from summary fields'));
+    fireEvent.click(screen.getByRole('checkbox', { name: /alpha/i }));
     expect(onSelectedFieldsChange).toHaveBeenCalledWith(['alpha']);
   });
 
@@ -132,7 +132,7 @@ describe('SummaryFieldsSelect', () => {
       />
     );
     await userEvent.click(screen.getByTestId('summary-fields-trigger'));
-    fireEvent.click(screen.getByLabelText('Remove alpha from summary fields'));
+    fireEvent.click(screen.getByRole('checkbox', { name: /alpha/i }));
     expect(onSelectedFieldsChange).toHaveBeenCalledWith([]);
   });
 
@@ -145,7 +145,7 @@ describe('SummaryFieldsSelect', () => {
       />
     );
     await userEvent.click(screen.getByTestId('summary-fields-trigger'));
-    const deltaCheckbox = screen.getByLabelText('Add delta from summary fields');
+    const deltaCheckbox = screen.getByRole('checkbox', { name: /delta/i });
     expect(deltaCheckbox).toBeDisabled();
     fireEvent.click(deltaCheckbox);
     expect(onSelectedFieldsChange).not.toHaveBeenCalled();

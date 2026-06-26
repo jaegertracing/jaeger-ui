@@ -121,8 +121,17 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .SummaryFieldsSelect--option .ant-checkbox-wrapper {
-  flex-shrink: 0;
+  flex: 1;
   margin-inline-end: 0;
+  width: 100%;
+}
+
+.SummaryFieldsSelect--optionContent {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  gap: 0.35rem;
+  min-width: 0;
 }
 
 .SummaryFieldsSelect--optionKey {
