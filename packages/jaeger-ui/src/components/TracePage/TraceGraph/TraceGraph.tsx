@@ -124,17 +124,18 @@ function TraceGraph({ headerHeight, trace, uiFind, onSearchResults, traceGraphCo
     };
   }, []);
 
-  const ev = useMemo(() => calculateTraceDagEV(trace), [trace]);
+  const ev = useMemo(() => (trace ? calculateTraceDagEV(trace) : null), [trace]);
 
   const uiFindVertexKeys = useMemo(() => {
-    if (!uiFind) return null;
+    if (!uiFind || !ev) return null;
     return getUiFindVertexKeys(uiFind, ev.vertices);
   }, [uiFind, ev]);
 
   useEffect(() => {
-    onSearchResults(uiFindVertexKeys ?? null);
+    if (onSearchResults) {
+      onSearchResults(uiFindVertexKeys ?? null);
+    }
   }, [uiFindVertexKeys, onSearchResults]);
-
   if (!ev) {
     return <h1 className="u-mt-vast u-tx-muted ub-tx-center">No trace found</h1>;
   }

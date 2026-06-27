@@ -66,7 +66,6 @@ vi.mock('@jaegertracing/plexus', () => {
 });
 
 const transformedTrace = transformTraceData(testTrace);
-const ev = calculateTraceDagEV(transformedTrace.asOtelTrace());
 
 describe('<TraceGraph>', () => {
   let props;
@@ -74,7 +73,8 @@ describe('<TraceGraph>', () => {
   beforeEach(() => {
     props = {
       headerHeight: 60,
-      ev,
+      trace: transformedTrace.asOtelTrace(),
+      onSearchResults: vi.fn(),
     };
   });
 

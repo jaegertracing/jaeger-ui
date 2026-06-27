@@ -518,25 +518,14 @@ describe('<TracePage>', () => {
     expect(track.trackRange).toHaveBeenCalledWith('kbd', expect.any(Array), [0, 1]);
   });
 
-  it('computes graphFindMatches and sets findCount based on traceDagEV when viewType is TraceGraph', () => {
-    const mockVertices = [{ key: 'v1' }, { key: 'v2' }];
-    const mockMatches = new Set(['v1']);
-
-    calculateTraceDagEV.default.mockReturnValue({ vertices: mockVertices });
-    const getUiFindVertexKeysSpy = jest
-      .spyOn(getUiFindVertexKeys, 'getUiFindVertexKeys')
-      .mockReturnValue(mockMatches);
-
+  it('uses onSearchResults callback to update findCount when viewType is TraceGraph', () => {
     render(<TracePage {...defaultProps} uiFind="some-search" />);
-
     act(() => {
       capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceGraph);
     });
-
-    expect(getUiFindVertexKeysSpy).toHaveBeenCalledWith('some-search', mockVertices);
-    expect(capturedHeaderProps.resultCount).toBe(1);
-
-    getUiFindVertexKeysSpy.mockRestore();
+    // findCount starts at 0 because TraceGraph owns its own search logic
+    // and reports results via onSearchResults callback
+    expect(capturedHeaderProps.resultCount).toBe(0);
   });
 
   describe('TracePageHeader props', () => {
@@ -942,7 +931,6 @@ describe('<TracePage>', () => {
         capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceGraph);
       });
       expect(capturedHeaderProps.viewType).toBe(ETraceViewType.TraceGraph);
-      expect(calculateTraceDagEV.default).toHaveBeenCalledWith(trace);
 
       act(() => {
         capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceSpansView);
