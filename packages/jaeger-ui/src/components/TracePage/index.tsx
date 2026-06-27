@@ -31,7 +31,6 @@ import {
 } from './keyboard-shortcuts';
 import { cancel as cancelScroll, scrollBy, scrollTo } from './scroll-page';
 import ScrollManager from './ScrollManager';
-import calculateTraceDagEV from './TraceGraph/calculateTraceDagEV';
 import TraceGraph from './TraceGraph/TraceGraph';
 import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
 import { useConfig } from '../../hooks/useConfig';
@@ -50,7 +49,6 @@ import { getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { parseUiFind } from '../common/UiFindInput';
-import { getUiFindVertexKeys } from '../TraceDiff/TraceDiffGraph/traceDiffGraphUtils';
 import { LocationState, ReduxState, TNil } from '../../types';
 import { useTrace } from '../../hooks/useTraceLoading';
 import { IOtelTrace } from '../../types/otel';
@@ -201,10 +199,13 @@ export function TracePageImpl(props: TProps) {
   const [slimView, setSlimView] = useState(() => Boolean(embedded?.timeline?.collapseTitle));
   const [viewType, setViewType] = useState<ETraceViewType>(ETraceViewType.TraceTimelineViewer);
   const [viewRange, setViewRange] = useState<IViewRange>({ time: { current: [0, 1] } });
-  const traceDagEV = useMemo(
-    () => (viewType === ETraceViewType.TraceGraph && traceData ? calculateTraceDagEV(traceData) : null),
-    [traceData, viewType]
-  );
+
+  // findMatches and findCount are now reported back from child views via onSearchResults
+  const [findMatches, setFindMatches] = useState<Set<string> | null>(null);
+
+  const onSearchResults = useCallback((matches: Set<string> | null) => {
+    setFindMatches(matches);
+  }, []);
 
   const traceIsGenAI = useMemo(
     () =>
@@ -384,23 +385,24 @@ export function TracePageImpl(props: TProps) {
     return <LoadingIndicator className="u-mt-vast" centered />;
   }
 
-  let findCount = 0;
-  let graphFindMatches: Set<string> | null | undefined;
+  // spanFindMatches is still computed here for TraceTimelineViewer and other views
   let spanFindMatches: Set<string> | null | undefined;
-  if (uiFind) {
-    if (viewType === ETraceViewType.TraceGraph) {
-      graphFindMatches = getUiFindVertexKeys(uiFind, _get(traceDagEV, 'vertices', []));
-      findCount = graphFindMatches ? graphFindMatches.size : 0;
-    } else {
-      const allMatches = filterSpansMemo(uiFind, _get(traceData, 'spans'));
-      const otelTrace = traceData;
-      spanFindMatches =
-        otelTrace && prunedServices.size > 0
-          ? filterPrunedSpanIDs(allMatches, otelTrace.spanMap, prunedServices)
-          : allMatches;
-      findCount = spanFindMatches ? spanFindMatches.size : 0;
-    }
+  if (uiFind && viewType !== ETraceViewType.TraceGraph) {
+    const allMatches = filterSpansMemo(uiFind, _get(traceData, 'spans'));
+    const otelTrace = traceData;
+    spanFindMatches =
+      otelTrace && prunedServices.size > 0
+        ? filterPrunedSpanIDs(allMatches, otelTrace.spanMap, prunedServices)
+        : allMatches;
   }
+  const findCount =
+    viewType === ETraceViewType.TraceGraph
+      ? findMatches
+        ? findMatches.size
+        : 0
+      : spanFindMatches
+        ? spanFindMatches.size
+        : 0;
 
   const locationState = location.state;
   const isEmbedded = Boolean(embedded);
@@ -474,9 +476,9 @@ export function TracePageImpl(props: TProps) {
     view = (
       <TraceGraph
         headerHeight={headerHeight}
-        ev={traceDagEV}
+        trace={traceData}
         uiFind={uiFind}
-        uiFindVertexKeys={graphFindMatches}
+        onSearchResults={onSearchResults}
         traceGraphConfig={traceGraphConfig}
         useOtelTerms={useOtelTerms}
       />

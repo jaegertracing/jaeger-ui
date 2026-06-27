@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
+import { useEffect, useMemo } from 'react';
 import { Card, Button, Tooltip } from 'antd';
 import { IoClose, IoHelpCircleOutline } from 'react-icons/io5';
 import cx from 'classnames';
@@ -16,19 +17,22 @@ import {
   MODE_SELFTIME,
   getHelpTable,
 } from './OpNode';
-import { TEv, TSumSpan } from './types';
+import calculateTraceDagEV from './calculateTraceDagEV';
+import { TSumSpan } from './types';
 import { TDenseSpanMembers } from '../../../model/trace-dag/types';
 import TDagPlexusVertex from '../../../model/trace-dag/types/TDagPlexusVertex';
 import { TNil } from '../../../types';
 import { TraceGraphConfig } from '../../../types/config';
+import { IOtelTrace } from '../../../types/otel';
+import { getUiFindVertexKeys } from '../../TraceDiff/TraceDiffGraph/traceDiffGraphUtils';
 
 import './TraceGraph.css';
 
 type Props = {
   headerHeight: number;
-  ev?: TEv | TNil;
+  trace: IOtelTrace;
   uiFind: string | TNil;
-  uiFindVertexKeys: Set<string> | TNil;
+  onSearchResults: (matches: Set<string> | null) => void;
   traceGraphConfig?: TraceGraphConfig;
   useOtelTerms: boolean;
 };
@@ -100,14 +104,7 @@ const getHelpContent = (useOtelTerms: boolean) => (
   </div>
 );
 
-function TraceGraph({
-  headerHeight,
-  ev = null,
-  uiFind,
-  uiFindVertexKeys,
-  traceGraphConfig,
-  useOtelTerms,
-}: Props) {
+function TraceGraph({ headerHeight, trace, uiFind, onSearchResults, traceGraphConfig, useOtelTerms }: Props) {
   const [showHelp, setShowHelp] = React.useState(false);
   const [mode, setMode] = React.useState(MODE_SERVICE);
 
@@ -126,6 +123,17 @@ function TraceGraph({
       manager?.stopAndRelease();
     };
   }, []);
+
+  const ev = useMemo(() => calculateTraceDagEV(trace), [trace]);
+
+  const uiFindVertexKeys = useMemo(() => {
+    if (!uiFind) return null;
+    return getUiFindVertexKeys(uiFind, ev.vertices);
+  }, [uiFind, ev]);
+
+  useEffect(() => {
+    onSearchResults(uiFindVertexKeys ?? null);
+  }, [uiFindVertexKeys, onSearchResults]);
 
   if (!ev) {
     return <h1 className="u-mt-vast u-tx-muted ub-tx-center">No trace found</h1>;
