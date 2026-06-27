@@ -206,22 +206,19 @@ describe('<TraceTagOverview>', () => {
       });
     });
 
+    let nameButtonForQuery;
     await waitFor(() => {
       const nameButtons = screen.getAllByRole('button');
-      const nameButton = nameButtons.find(
+      nameButtonForQuery = nameButtons.find(
         button => button.textContent.includes('SELECT') || button.style.borderLeft || button.style.padding
       );
-
-      if (nameButton) {
-        fireEvent.click(nameButton);
-      }
+      expect(nameButtonForQuery).toBeDefined();
     });
 
+    fireEvent.click(nameButtonForQuery);
+
     await waitFor(() => {
-      const textarea = screen.queryByRole('textbox');
-      if (textarea) {
-        expect(textarea).toBeInTheDocument();
-      }
+      expect(screen.getByRole('textbox')).toBeInTheDocument();
     });
 
     // Clean up popup
@@ -260,16 +257,16 @@ describe('<TraceTagOverview>', () => {
       });
     });
 
+    let nameButtonForSubgroup;
     await waitFor(() => {
       const nameButtons = screen.getAllByRole('button');
-      const nameButton = nameButtons.find(
+      nameButtonForSubgroup = nameButtons.find(
         button => button.textContent.includes('test-name') || button.style.borderLeft || button.style.padding
       );
-
-      if (nameButton) {
-        fireEvent.click(nameButton);
-      }
+      expect(nameButtonForSubgroup).toBeDefined();
     });
+
+    fireEvent.click(nameButtonForSubgroup);
 
     await waitFor(() => {
       expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
