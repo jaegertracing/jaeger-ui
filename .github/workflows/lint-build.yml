@@ -23,13 +23,13 @@ jobs:
       - uses: ./.github/actions/setup-node-and-deps
       - name: Verify lockfile is in sync
         run: |
-          npm install --package-lock-only --ignore-scripts
-          git diff --exit-code package-lock.json || (echo '❌ package-lock.json is out of sync with the pinned npm version. Run "corepack enable npm && npm install" locally and commit the result.' && exit 1)
-      - run: npm ls --all
+          pnpm install --lockfile-only
+          git diff --exit-code pnpm-lock.yaml || (echo '❌ pnpm-lock.yaml is out of sync. Run "pnpm install" locally and commit the result.' && exit 1)
+      - run: pnpm ls --depth Infinity
       - name: Run depcheck
-        run: npm run depcheck
-      - run: npm run lint
-      - run: npm run build
+        run: pnpm run depcheck
+      - run: pnpm run lint
+      - run: pnpm run build
       - name: Ensure PR is not on main branch
         uses: jaegertracing/jaeger/.github/actions/block-pr-from-main-branch@main
 

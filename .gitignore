@@ -14,7 +14,7 @@ junit.xml
 
 # misc
 .DS_Store
-npm-debug.log
+pnpm-debug.log
 .vscode
 .idea
 .eslintcache

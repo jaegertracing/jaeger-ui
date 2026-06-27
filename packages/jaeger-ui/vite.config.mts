@@ -292,7 +292,7 @@ export default defineConfig({
       // d3-flame-graph doesn't export its CSS in package.json exports field
       'd3-flame-graph/dist/d3-flamegraph.css': path.resolve(
         __dirname,
-        '../../node_modules/d3-flame-graph/dist/d3-flamegraph.css'
+        'node_modules/d3-flame-graph/dist/d3-flamegraph.css'
       ),
     },
   },
