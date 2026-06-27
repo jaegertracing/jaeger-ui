@@ -7,7 +7,6 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LayoutManager } from '@jaegertracing/plexus';
 import transformTraceData from '../../../model/transform-trace-data';
-import calculateTraceDagEV from './calculateTraceDagEV';
 import TraceGraph, { setOnEdgePath } from './TraceGraph';
 import { MODE_SERVICE, MODE_TIME, MODE_SELFTIME } from './OpNode';
 import testTrace from './testTrace.json';
@@ -86,7 +85,7 @@ describe('<TraceGraph>', () => {
   });
 
   it('may show no traces', () => {
-    render(<TraceGraph />);
+    render(<TraceGraph headerHeight={60} trace={undefined} onSearchResults={vi.fn()} />);
     expect(screen.getByText('No trace found')).toBeInTheDocument();
   });
 
