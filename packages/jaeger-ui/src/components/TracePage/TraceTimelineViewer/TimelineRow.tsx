@@ -20,7 +20,7 @@ function TimelineRowCell({
   className,
   width,
   style = {},
-  onClick = () => {},
+  onClick,
 }: {
   children: React.ReactNode;
   className?: string;
@@ -30,8 +30,23 @@ function TimelineRowCell({
 }) {
   const widthPercent = `${width * 100}%`;
   const mergedStyle = { ...style, flexBasis: widthPercent, maxWidth: widthPercent };
+  const handleKeyDown = onClick
+    ? (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick(e as unknown as React.MouseEvent<HTMLDivElement>);
+        }
+      }
+    : undefined;
   return (
-    <div className={`ub-relative ${className || ''}`} style={mergedStyle} onClick={onClick}>
+    <div
+      className={`ub-relative ${className || ''}`}
+      style={mergedStyle}
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={handleKeyDown}
+    >
       {children}
     </div>
   );
