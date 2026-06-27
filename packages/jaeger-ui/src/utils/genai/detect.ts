@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { IAttribute } from '../../types/otel';
+import { SpanAttributeNamespace, GEN_AI_OPERATION_NAME } from '../../constants/span-attributes';
 
 export type GenAISpanKind = 'LLM_CALL' | 'TOOL_CALL' | 'AGENT' | 'RETRIEVAL' | 'UNKNOWN_GENAI' | 'STANDARD';
 
@@ -20,18 +21,16 @@ const OPERATION_TO_KIND: Partial<Record<string, GenAISpanKind>> = {
 };
 
 export function isGenAISpan(span: SpanAttrs): boolean {
-  return span.attributes.some(a => a.key.startsWith('gen_ai.'));
+  return span.attributes.some(({ key }) => key.startsWith(SpanAttributeNamespace.GEN_AI));
 }
 
 export function classifySpan(span: SpanAttrs): GenAISpanKind {
   let hasGenAI = false;
-  for (const attr of span.attributes) {
-    if (attr.key === 'gen_ai.operation.name' && typeof attr.value === 'string') {
-      return OPERATION_TO_KIND[attr.value] ?? 'UNKNOWN_GENAI';
+  for (const { key, value } of span.attributes) {
+    if (key === GEN_AI_OPERATION_NAME && typeof value === 'string') {
+      return OPERATION_TO_KIND[value] ?? 'UNKNOWN_GENAI';
     }
-    if (!hasGenAI && attr.key.startsWith('gen_ai.')) {
-      hasGenAI = true;
-    }
+    if (key.startsWith(SpanAttributeNamespace.GEN_AI)) hasGenAI = true;
   }
   return hasGenAI ? 'UNKNOWN_GENAI' : 'STANDARD';
 }
