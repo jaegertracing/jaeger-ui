@@ -185,6 +185,12 @@ describe('summaryFieldsUtils', () => {
     expect(lookup1.size).toBe(expectedSpanCount);
   });
 
+  it('buildSummaryLookup memoizes when selectedFields is a new array with same contents', () => {
+    const lookup1 = buildSummaryLookup(trace, ['customer.id', 'http.status_code']);
+    const lookup2 = buildSummaryLookup(trace, ['customer.id', 'http.status_code']);
+    expect(lookup1).toBe(lookup2);
+  });
+
   it('buildSummaryLookup returns empty map when no fields selected', () => {
     expect(buildSummaryLookup(trace, []).size).toBe(0);
   });

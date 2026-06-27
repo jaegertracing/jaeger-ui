@@ -92,8 +92,28 @@ function buildSummaryLookupImpl(
   return result;
 }
 
+function areSummaryLookupArgsEqual(newArgs: readonly unknown[], lastArgs: readonly unknown[]): boolean {
+  if (newArgs[0] !== lastArgs[0]) {
+    return false;
+  }
+  const next = newArgs[1];
+  const prev = lastArgs[1];
+  if (next === prev) {
+    return true;
+  }
+  if (!Array.isArray(next) || !Array.isArray(prev) || next.length !== prev.length) {
+    return false;
+  }
+  for (let i = 0; i < next.length; i += 1) {
+    if (next[i] !== prev[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 export const buildAvailableFields = memoizeOne(buildAvailableFieldsImpl);
-export const buildSummaryLookup = memoizeOne(buildSummaryLookupImpl);
+export const buildSummaryLookup = memoizeOne(buildSummaryLookupImpl, areSummaryLookupArgsEqual);
 
 const HTTP_STATUS_CODE_KEYS = new Set(['http.status_code', 'http.response.status_code']);
 
