@@ -23,12 +23,16 @@ export class JaegerClient {
    */
   async fetchServices(): Promise<string[]> {
     const response = await this.fetchWithTimeout(`${this.apiRoot}/services`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch services: ${response.status} ${response.statusText}`);
-    }
+
+    // Parse once. Jaeger v3 may return 200 OK with an errors array in the body.
     const data = await response.json();
 
-    // Runtime validation with Zod
+    if (data?.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+      // Aggregate all error messages so no detail is lost
+      const messages = data.errors.map((e: { msg: string }) => e.msg).join(', ');
+      throw new Error(`Failed to fetch services: ${messages}`);
+    }
+
     const validated = ServicesResponseSchema.parse(data);
     return validated.services;
   }
@@ -42,14 +46,16 @@ export class JaegerClient {
     const response = await this.fetchWithTimeout(
       `${this.apiRoot}/operations?service=${encodeURIComponent(service)}`
     );
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch span names for service "${service}": ${response.status} ${response.statusText}`
-      );
-    }
+
+    // Jaeger v3 may return HTTP 200 with an 'errors' array in the response body; treat that as a failure.
     const data = await response.json();
 
-    // Runtime validation with Zod
+    if (data?.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+      // Aggregate all error messages for this specific service
+      const messages = data.errors.map((e: { msg: string }) => e.msg).join(', ');
+      throw new Error(`Failed to fetch span names for service "${service}": ${messages}`);
+    }
+
     const validated = OperationsResponseSchema.parse(data);
     return validated.operations;
   }
@@ -134,6 +140,22 @@ export class JaegerClient {
 
     try {
       const response = await fetch(url, { signal: controller.signal });
+
+      if (!response.ok) {
+        let errorDetail = response.statusText;
+        try {
+          const errorBody = await response.json();
+          // Safely check if errors is an array before mapping
+          if (errorBody?.errors && Array.isArray(errorBody.errors) && errorBody.errors.length > 0) {
+            errorDetail = errorBody.errors.map((e: any) => e.msg).join(', ');
+          }
+        } catch {
+          /* Fallback to statusText if body isn't JSON */
+        }
+
+        throw new Error(`${response.status} ${errorDetail}`);
+      }
+
       return response;
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
