@@ -77,10 +77,10 @@ describe('conv-coord', () => {
     });
 
     it('preserves undefined pathPoints', () => {
-      const edge: TLayoutEdge<{}> = {
+      const edge = {
         edge: { from: 'a', to: 'b' },
-        pathPoints: undefined as unknown as [number, number][],
-      };
+        pathPoints: undefined,
+      } as unknown as TLayoutEdge<{}>;
 
       expect(edgeToPixels(graph, edge)).toEqual({
         edge: { from: 'a', to: 'b' },
@@ -145,13 +145,13 @@ describe('conv-coord', () => {
     });
 
     it('preserves null coordinates', () => {
-      const vertex: TLayoutVertex = {
+      const vertex = {
         vertex: { key: 'n1' },
         height: 2,
         width: 3,
-        left: null as unknown as number,
-        top: null as unknown as number,
-      };
+        left: null,
+        top: null,
+      } as unknown as TLayoutVertex;
 
       expect(vertexToPixels(graph, vertex)).toEqual({
         vertex: { key: 'n1' },
