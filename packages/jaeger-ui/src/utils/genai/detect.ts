@@ -25,14 +25,11 @@ export function isGenAISpan(span: SpanAttrs): boolean {
 }
 
 export function classifySpan(span: SpanAttrs): GenAISpanKind {
-  let hasGenAI = false;
-  for (const { key, value } of span.attributes) {
-    if (key === GEN_AI_OPERATION_NAME && typeof value === 'string') {
-      return OPERATION_TO_KIND[value] ?? 'UNKNOWN_GENAI';
-    }
-    if (key.startsWith(SpanAttributeNamespace.GEN_AI)) hasGenAI = true;
+  const opAttr = span.attributes.find(({ key }) => key === GEN_AI_OPERATION_NAME);
+  if (opAttr && typeof opAttr.value === 'string') {
+    return OPERATION_TO_KIND[opAttr.value] ?? 'UNKNOWN_GENAI';
   }
-  return hasGenAI ? 'UNKNOWN_GENAI' : 'STANDARD';
+  return isGenAISpan(span) ? 'UNKNOWN_GENAI' : 'STANDARD';
 }
 
 export function isGenAITrace(spans: ReadonlyArray<SpanAttrs>): boolean {
