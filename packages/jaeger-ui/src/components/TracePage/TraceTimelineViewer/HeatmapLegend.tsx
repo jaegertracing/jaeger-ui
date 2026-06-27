@@ -9,8 +9,7 @@ import './HeatmapLegend.css';
 const STOPS = 20;
 const LABELS = [
   { pos: 0, text: 'Fastest' },
-  { pos: 0.5, text: 'P50' },
-  { pos: 0.95, text: 'P95' },
+  { pos: 0.5, text: 'Median' },
   { pos: 1, text: 'Slowest' },
 ];
 
