@@ -4,28 +4,39 @@
 import type { IconType } from 'react-icons';
 import { IoSparkles, IoServer, IoGlobe, IoChatbubble, IoCodeSlash } from 'react-icons/io5';
 
-import { SpanAttributeNamespace } from '../constants/span-attributes';
 import type { IAttribute } from '../types/otel';
 
-const ATTR_ICON_RULES: { prefix: SpanAttributeNamespace; icon: IconType }[] = [
-  { prefix: SpanAttributeNamespace.GEN_AI, icon: IoSparkles },
-  { prefix: SpanAttributeNamespace.DB, icon: IoServer },
-  { prefix: SpanAttributeNamespace.HTTP, icon: IoGlobe },
-  { prefix: SpanAttributeNamespace.MESSAGING, icon: IoChatbubble },
-  { prefix: SpanAttributeNamespace.RPC, icon: IoCodeSlash },
-];
+// Priority: lower index wins when a span has attributes from multiple namespaces.
+const NAMESPACE_PRIORITY: Record<string, number> = {
+  gen_ai: 0,
+  db: 1,
+  http: 2,
+  messaging: 3,
+  rpc: 4,
+};
+
+const NAMESPACE_ICON: Record<string, IconType> = {
+  gen_ai: IoSparkles,
+  db: IoServer,
+  http: IoGlobe,
+  messaging: IoChatbubble,
+  rpc: IoCodeSlash,
+};
 
 export function getSpanIconComponent(attributes: IAttribute[] | undefined): IconType | null {
   if (!attributes) return null;
-  let bestIndex = ATTR_ICON_RULES.length;
-  for (const attr of attributes) {
-    for (let i = 0; i < bestIndex; i++) {
-      if (attr.key.startsWith(ATTR_ICON_RULES[i].prefix)) {
-        bestIndex = i;
-        break;
-      }
+  let bestPriority = Infinity;
+  let bestIcon: IconType | null = null;
+  for (const { key } of attributes) {
+    const dotIdx = key.indexOf('.');
+    if (dotIdx === -1) continue;
+    const ns = key.slice(0, dotIdx);
+    const priority = NAMESPACE_PRIORITY[ns];
+    if (priority !== undefined && priority < bestPriority) {
+      bestPriority = priority;
+      bestIcon = NAMESPACE_ICON[ns];
+      if (bestPriority === 0) break;
     }
-    if (bestIndex === 0) break;
   }
-  return bestIndex < ATTR_ICON_RULES.length ? ATTR_ICON_RULES[bestIndex].icon : null;
+  return bestIcon;
 }
