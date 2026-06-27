@@ -12,6 +12,7 @@ import { getUrl as getSearchUrl } from '../SearchTracePage/url';
 
 import './dag.css';
 import { DAG_MAX_NUM_SERVICES } from '../../constants';
+import { DEFAULT_LOOKBACK } from '../../constants/search-form';
 
 type TProps = {
   data: {
@@ -59,7 +60,7 @@ export const renderNode = (
 
 export const handleViewTraces = (hoveredNode: TVertex | null) => {
   if (!hoveredNode?.key) return;
-  window.open(getSearchUrl({ service: hoveredNode.key, lookback: '1h' }), '_blank');
+  window.open(getSearchUrl({ service: hoveredNode.key, lookback: DEFAULT_LOOKBACK }), '_blank');
 };
 
 export const createHandleNodeClick =
