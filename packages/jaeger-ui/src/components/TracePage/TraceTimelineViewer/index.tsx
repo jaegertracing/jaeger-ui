@@ -90,7 +90,6 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   const { criticalPath = [] } = props;
   const statsMap = useMemo(
     () => computeLatencyStats(trace.spans, criticalPath),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [trace.spans, criticalPath]
   );
 

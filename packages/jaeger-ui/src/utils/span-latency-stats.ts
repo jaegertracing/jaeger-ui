@@ -7,8 +7,8 @@ import { IOtelSpan } from '../types/otel';
 export type LatencyStats = {
   percentileRank: number; // 0–1, position in the operation's duration distribution
   zScore: number; // NaN when groupSize < 2
-  p50µs: number;
-  p95µs: number;
+  p50Us: number;
+  p95Us: number;
   mean: number;
   stdDev: number;
   groupSize: number;
@@ -37,6 +37,19 @@ function percentileByIndex(sorted: number[], p: number): number {
   if (sorted.length === 0) return 0;
   const idx = Math.floor(p * (sorted.length - 1));
   return sorted[idx];
+}
+
+// Returns the count of elements in a sorted array that are <= target.
+// O(log n) binary search (upper bound).
+function upperBound(sorted: number[], target: number): number {
+  let lo = 0;
+  let hi = sorted.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >>> 1;
+    if (sorted[mid] <= target) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo;
 }
 
 /**
@@ -79,10 +92,11 @@ export function computeLatencyStats(
     const zScore = state.count >= 2 && stdDev > 0 ? (span.duration - state.mean) / stdDev : NaN;
 
     // Percentile rank: fraction of same-operation spans with duration ≤ this span's duration.
-    const rank = sorted.filter(d => d <= span.duration).length / sorted.length;
+    // upperBound runs in O(log m) vs the previous O(m) filter scan.
+    const rank = upperBound(sorted, span.duration) / sorted.length;
 
-    const p50µs = percentileByIndex(sorted, 0.5);
-    const p95µs = percentileByIndex(sorted, 0.95);
+    const p50Us = percentileByIndex(sorted, 0.5);
+    const p95Us = percentileByIndex(sorted, 0.95);
 
     const onCriticalPath = criticalSpanIDs.has(span.spanID);
     const weightedScore = Math.min(rank * (onCriticalPath ? 1.5 : 1.0), 1.0);
@@ -90,8 +104,8 @@ export function computeLatencyStats(
     result.set(span.spanID, {
       percentileRank: rank,
       zScore,
-      p50µs,
-      p95µs,
+      p50Us,
+      p95Us,
       mean: state.mean,
       stdDev,
       groupSize: state.count,

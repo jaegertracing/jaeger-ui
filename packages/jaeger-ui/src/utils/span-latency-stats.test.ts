@@ -88,14 +88,14 @@ describe('computeLatencyStats', () => {
     const spans = [makeSpan('a', 'op', 100), makeSpan('b', 'op', 200), makeSpan('c', 'op', 300)];
     const stats = computeLatencyStats(spans, []);
     // sorted: [100, 200, 300], p50 index = floor(0.5 * 2) = 1 → 200
-    expect(stats.get('a')!.p50µs).toBe(200);
+    expect(stats.get('a')!.p50Us).toBe(200);
   });
 
   it('p95 is at 95th percentile of group', () => {
     const spans = Array.from({ length: 20 }, (_, i) => makeSpan(`s${i}`, 'op', (i + 1) * 100));
     const stats = computeLatencyStats(spans, []);
     // sorted [100..2000], p95 index = floor(0.95 * 19) = 18 → 1900
-    expect(stats.get('s0')!.p95µs).toBe(1900);
+    expect(stats.get('s0')!.p95Us).toBe(1900);
   });
 
   it('mean is correct via Welford algorithm', () => {
@@ -151,14 +151,14 @@ describe('computeLatencyStats', () => {
     expect(fast.weightedScore).toBeCloseTo(fast.percentileRank);
   });
 
-  it('critical-path span has higher weightedScore than equal-rank off-path span', () => {
-    // use slower-percentile scenario to distinguish critical-path boost
-    const spans2 = [makeSpan('x', 'grp', 100), makeSpan('y', 'grp', 200), makeSpan('cp', 'grp', 100)];
-    const stats2 = computeLatencyStats(spans2, [makeCritical('x')]);
-    const xScore = stats2.get('x')!.weightedScore;
-    const cpScore = stats2.get('cp')!.weightedScore;
-    // x and cp have same duration, so same percentileRank, but x is on critical path → higher score
-    expect(xScore).toBeGreaterThanOrEqual(cpScore);
+  it('critical-path span has strictly higher weightedScore than equal-rank off-path span', () => {
+    // 'onPath' and 'offPath' share the same duration and therefore the same percentileRank,
+    // but only 'onPath' receives the 1.5× boost
+    const spans2 = [makeSpan('onPath', 'grp', 100), makeSpan('y', 'grp', 200), makeSpan('offPath', 'grp', 100)];
+    const stats2 = computeLatencyStats(spans2, [makeCritical('onPath')]);
+    const onPathScore = stats2.get('onPath')!.weightedScore;
+    const offPathScore = stats2.get('offPath')!.weightedScore;
+    expect(onPathScore).toBeGreaterThan(offPathScore);
   });
 
   it('different operations are grouped independently', () => {
@@ -173,8 +173,8 @@ describe('computeLatencyStats', () => {
     expect(stats.get('c')!.groupSize).toBe(2);
     expect(stats.get('a')!.groupSize).toBe(2);
     // p50 for fast-op = 10 (index 0), slow-op p50 = 1000 (index 0)
-    expect(stats.get('a')!.p50µs).toBe(10);
-    expect(stats.get('c')!.p50µs).toBe(1000);
+    expect(stats.get('a')!.p50Us).toBe(10);
+    expect(stats.get('c')!.p50Us).toBe(1000);
   });
 
   it('all spans identical duration → all have percentileRank = 1', () => {
