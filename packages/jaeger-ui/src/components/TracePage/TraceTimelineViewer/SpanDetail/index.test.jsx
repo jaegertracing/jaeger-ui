@@ -15,12 +15,13 @@ import transformTraceData from '../../../../model/transform-trace-data';
 import OtelSpanFacade from '../../../../model/OtelSpanFacade';
 
 vi.mock('./AccordionAttributes', () => {
-  return mockDefault(function MockAccordionAttributes({ label, onToggle }) {
+  return mockDefault(function MockAccordionAttributes({ label, onToggle, data }) {
     return (
       <div data-testid={`accordian-keyvalues-${label.toLowerCase()}`}>
         <button type="button" onClick={onToggle} data-testid={`toggle-${label.toLowerCase()}`}>
           Toggle {label}
         </button>
+        <span data-testid={`accordian-keyvalues-${label.toLowerCase()}-count`}>{data?.length}</span>
       </div>
     );
   });
@@ -284,5 +285,36 @@ describe('<SpanDetail>', () => {
 
     expect(copyIcon).toBeInTheDocument();
     expect(copyText).toContain(`?uiFind=${props.span.spanID}`);
+  });
+
+  it('renders GenAI and Default tabs when GenAI attributes are present', async () => {
+    const genaiAttr = { key: 'gen_ai.input.messages', value: '[{"role":"user","content":"hi"}]' };
+    const spanWithGenAI = Object.create(span);
+    Object.defineProperty(spanWithGenAI, 'attributes', {
+      value: [...span.attributes, genaiAttr],
+    });
+    props = { ...props, span: spanWithGenAI };
+
+    render(<SpanDetail {...props} />);
+
+    // Tabs should be present
+    expect(screen.getByText('GenAI')).toBeInTheDocument();
+
+    const defaultTab = screen.getByText('Default');
+    expect(defaultTab).toBeInTheDocument();
+
+    // Switch to Default tab to render its contents
+    fireEvent.click(defaultTab);
+
+    // Standard AccordionAttributes should receive the exact count of attributes
+    const countEls = await screen.findAllByTestId('accordian-keyvalues-tags-count');
+    expect(countEls.length).toBeGreaterThan(0);
+    expect(countEls[0]).toHaveTextContent(String(spanWithGenAI.attributes.length));
+  });
+
+  it('does not render tabs when there are no GenAI attributes', () => {
+    // span from beforeEach has no GenAI attributes by default
+    render(<SpanDetail {...props} />);
+    expect(screen.queryByText('GenAI')).not.toBeInTheDocument();
   });
 });
