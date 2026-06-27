@@ -59,8 +59,11 @@ function toOtlpAttrs(attrs: ReadonlyArray<IAttribute>) {
 }
 
 // Converts microseconds to a nanosecond decimal string.
-// OTLP uint64 timestamps must be strings in proto3 JSON to avoid JS precision loss.
-// Appending "000" is equivalent to ×1000 and avoids BigInt (ES2016 target).
+// Converts whole-microsecond timestamps to nanosecond decimal strings.
+// Jaeger stores all times as integer µs; appending "000" (×1000) avoids the
+// floating-point precision loss that Math.round(us * 1000) causes for large
+// epoch values (e.g. 1_700_000_000_000_000 µs × 1000 overflows f64 mantissa).
+// Non-integer inputs are rounded before the string conversion.
 function usToNanoStr(us: number): string {
   return `${Math.round(us)}000`;
 }

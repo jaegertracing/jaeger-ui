@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, cleanup, waitFor, act } from '@testing-library/react';
+import { render, screen, cleanup, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
-vi.mock('copy-to-clipboard', () => ({ default: vi.fn().mockResolvedValue(true) }));
+vi.mock('copy-to-clipboard', () => ({ default: vi.fn().mockReturnValue(true) }));
 
 vi.mock('../../../../utils/span-to-otlp', () => ({
   spanToOtlpJson: vi.fn().mockReturnValue({ resourceSpans: [{ stub: 'otlp' }] }),
@@ -93,7 +93,7 @@ describe('<ExportSpanButton>', () => {
 
   it('updates aria-label to "Copied!" after a successful copy', async () => {
     const user = userEvent.setup();
-    vi.mocked(copy).mockResolvedValue(true);
+    vi.mocked(copy).mockReturnValue(true);
     render(<ExportSpanButton span={mockSpan} />);
 
     await user.click(screen.getByTestId('export-span-button'));
@@ -104,7 +104,7 @@ describe('<ExportSpanButton>', () => {
 
   it('updates aria-label to failed message when copy returns false', async () => {
     const user = userEvent.setup();
-    vi.mocked(copy).mockResolvedValue(false);
+    vi.mocked(copy).mockReturnValue(false);
     render(<ExportSpanButton span={mockSpan} />);
 
     await user.click(screen.getByTestId('export-span-button'));
@@ -116,15 +116,13 @@ describe('<ExportSpanButton>', () => {
   it('resets to idle aria-label after the 2-second timer', async () => {
     vi.useFakeTimers();
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime.bind(vi) });
-    vi.mocked(copy).mockResolvedValue(true);
+    vi.mocked(copy).mockReturnValue(true);
 
     render(<ExportSpanButton span={mockSpan} />);
     await user.click(screen.getByTestId('export-span-button'));
     await user.click(await screen.findByText('Copy as OTLP JSON'));
 
-    await waitFor(() =>
-      expect(screen.getByTestId('export-span-button')).toHaveAttribute('aria-label', 'Copied!')
-    );
+    expect(screen.getByTestId('export-span-button')).toHaveAttribute('aria-label', 'Copied!');
 
     act(() => vi.advanceTimersByTime(2001));
     expect(screen.getByTestId('export-span-button')).toHaveAttribute('aria-label', 'Export span data');
