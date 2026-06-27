@@ -117,7 +117,7 @@ const linkValueList = (links: Hyperlink[]) => {
   }));
 };
 
-const FILTER_THRESHOLD = 10;
+export const FILTER_THRESHOLD = 10;
 
 type AttributesTableProps = {
   data: ReadonlyArray<IAttribute>;
@@ -131,8 +131,8 @@ export default function AttributesTable(props: AttributesTableProps) {
   const [query, setQuery] = React.useState('');
 
   const visibleRows = React.useMemo(() => {
-    if (!query || data.length <= FILTER_THRESHOLD) return data.map((attr, i) => ({ attr, originalIndex: i }));
-    const lower = query.toLowerCase();
+    if (!query.trim() || data.length <= FILTER_THRESHOLD) return data.map((attr, i) => ({ attr, originalIndex: i }));
+    const lower = query.trim().toLowerCase();
     return data.reduce<{ attr: IAttribute; originalIndex: number }[]>((acc, attr, i) => {
       if (attr.key.toLowerCase().includes(lower) || String(attr.value).toLowerCase().includes(lower)) {
         acc.push({ attr, originalIndex: i });
@@ -154,7 +154,7 @@ export default function AttributesTable(props: AttributesTableProps) {
             onKeyDown={e => e.key === 'Escape' && setQuery('')}
             aria-label="Filter span attributes"
           />
-          {query && (
+          {query.trim() && (
             <>
               <span className="KeyValueTable--filterCount" aria-live="polite">
                 {visibleRows.length} of {data.length}

@@ -6,7 +6,7 @@ import { render, screen, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
-import AttributesTable, { LinkValue } from './AttributesTable';
+import AttributesTable, { LinkValue, FILTER_THRESHOLD } from './AttributesTable';
 
 vi.mock('../../../common/CopyIcon', () => {
   return mockDefault(function CopyIcon({ copyText, tooltipTitle, buttonText, icon, className }) {
@@ -219,13 +219,13 @@ describe('<AttributesTable>', () => {
       cleanup();
     });
 
-    it('does not render filter input when data has 10 or fewer attributes', () => {
-      const fewAttrs = manyAttrs.slice(0, 10);
+    it(`does not render filter input when data has ${FILTER_THRESHOLD} or fewer attributes`, () => {
+      const fewAttrs = manyAttrs.slice(0, FILTER_THRESHOLD);
       render(<AttributesTable data={fewAttrs} />);
       expect(screen.queryByRole('textbox', { name: /filter span attributes/i })).not.toBeInTheDocument();
     });
 
-    it('renders filter input when data has more than 10 attributes', () => {
+    it(`renders filter input when data has more than ${FILTER_THRESHOLD} attributes`, () => {
       render(<AttributesTable data={manyAttrs} />);
       expect(screen.getByRole('textbox', { name: /filter span attributes/i })).toBeInTheDocument();
     });
@@ -335,7 +335,7 @@ describe('<AttributesTable>', () => {
       expect(screen.getAllByRole('row')).toHaveLength(1);
 
       // shrink data below threshold — filter input disappears, stale query must not hide rows
-      const fewAttrs = manyAttrs.slice(0, 5);
+      const fewAttrs = manyAttrs.slice(0, Math.floor(FILTER_THRESHOLD / 2));
       rerender(<AttributesTable data={fewAttrs} />);
 
       expect(screen.queryByRole('textbox', { name: /filter span attributes/i })).not.toBeInTheDocument();
