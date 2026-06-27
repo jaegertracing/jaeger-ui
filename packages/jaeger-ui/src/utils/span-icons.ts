@@ -7,7 +7,7 @@ import { IoSparkles, IoServer, IoGlobe, IoChatbubble, IoCodeSlash } from 'react-
 import type { IAttribute } from '../types/otel';
 
 // Priority: lower index wins when a span has attributes from multiple namespaces.
-const NAMESPACE_PRIORITY: Record<string, number> = {
+const NAMESPACE_PRIORITY: Partial<Record<string, number>> = {
   gen_ai: 0,
   db: 1,
   http: 2,
@@ -15,7 +15,7 @@ const NAMESPACE_PRIORITY: Record<string, number> = {
   rpc: 4,
 };
 
-const NAMESPACE_ICON: Record<string, IconType> = {
+const NAMESPACE_ICON: Partial<Record<string, IconType>> = {
   gen_ai: IoSparkles,
   db: IoServer,
   http: IoGlobe,
@@ -32,9 +32,10 @@ export function getSpanIconComponent(attributes: IAttribute[] | undefined): Icon
     if (dotIdx === -1) continue;
     const ns = key.slice(0, dotIdx);
     const priority = NAMESPACE_PRIORITY[ns];
-    if (priority !== undefined && priority < bestPriority) {
+    const icon = NAMESPACE_ICON[ns];
+    if (priority !== undefined && icon !== undefined && priority < bestPriority) {
       bestPriority = priority;
-      bestIcon = NAMESPACE_ICON[ns];
+      bestIcon = icon;
       if (bestPriority === 0) break;
     }
   }
