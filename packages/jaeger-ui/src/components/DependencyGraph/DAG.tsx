@@ -58,7 +58,8 @@ export const renderNode = (
 };
 
 export const handleViewTraces = (hoveredNode: TVertex | null) => {
-  window.open(getSearchUrl({ service: hoveredNode?.key }), '_blank');
+  if (!hoveredNode?.key) return;
+  window.open(getSearchUrl({ service: hoveredNode.key, lookback: '1h' }), '_blank');
 };
 
 export const createHandleNodeClick =
