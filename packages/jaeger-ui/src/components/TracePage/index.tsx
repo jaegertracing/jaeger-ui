@@ -206,6 +206,11 @@ export function TracePageImpl(props: TProps) {
   const onSearchResults = useCallback((matches: Set<string> | null) => {
     setFindMatches(matches);
   }, []);
+  useEffect(() => {
+    if (viewType !== ETraceViewType.TraceGraph) {
+      setFindMatches(null);
+    }
+  }, [uiFind, viewType]);
 
   const traceIsGenAI = useMemo(
     () =>
