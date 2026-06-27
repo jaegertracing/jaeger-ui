@@ -34,7 +34,7 @@
     "@ag-ui/client": "0.0.54",
     "@assistant-ui/react": "0.14.14",
     "@assistant-ui/react-ag-ui": "0.0.35",
-    "@jaegertracing/plexus": "0.2.0",
+    "@jaegertracing/plexus": "workspace:*",
     "@opentelemetry/api": "1.9.1",
     "@opentelemetry/exporter-trace-otlp-http": "0.219.0",
     "@opentelemetry/instrumentation": "0.219.0",
