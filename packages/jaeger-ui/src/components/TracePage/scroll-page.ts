@@ -6,21 +6,38 @@ import Tween from './Tween';
 const DURATION_MS = 350;
 
 let lastTween: Tween | void;
+let lastTweenContainer: Element | Window | void;
 
 // TODO(joe): this util can be modified a bit to be generalized (e.g. take in
 // an element as a parameter and use scrollTop instead of window.scrollTo)
 
-function _onTweenUpdate({ done, value }: { done: boolean; value: number }) {
-  window.scrollTo(window.scrollX, value);
-  if (done) {
-    lastTween = undefined;
+function getScrollTop(container: Element | Window): number {
+  if (container === window) {
+    return window.scrollY;
+  }
+  return (container as Element).scrollTop;
+}
+
+function setScrollTop(container: Element | Window, value: number) {
+  if (container === window) {
+    window.scrollTo(window.scrollX, value);
+  } else {
+    (container as Element).scrollTop = value;
   }
 }
 
-export function scrollBy(yDelta: number, appendToLast = false) {
-  const { scrollY } = window;
+function _onTweenUpdate(container: Element | Window, { done, value }: { done: boolean; value: number }) {
+  setScrollTop(container, value);
+  if (done) {
+    lastTween = undefined;
+    lastTweenContainer = undefined;
+  }
+}
+
+export function scrollBy(yDelta: number, appendToLast = false, container: Element | Window = window) {
+  const scrollY = getScrollTop(container);
   let targetFrom = scrollY;
-  if (appendToLast && lastTween) {
+  if (appendToLast && lastTween && lastTweenContainer === container) {
     const currentDirection = lastTween.to < scrollY ? 'up' : 'down';
     const nextDirection = yDelta < 0 ? 'up' : 'down';
     if (currentDirection === nextDirection) {
@@ -28,17 +45,30 @@ export function scrollBy(yDelta: number, appendToLast = false) {
     }
   }
   const to = targetFrom + yDelta;
-  lastTween = new Tween({ to, duration: DURATION_MS, from: scrollY, onUpdate: _onTweenUpdate });
+  lastTween = new Tween({
+    to,
+    duration: DURATION_MS,
+    from: scrollY,
+    onUpdate: state => _onTweenUpdate(container, state),
+  });
+  lastTweenContainer = container;
 }
 
-export function scrollTo(y: number) {
-  const { scrollY } = window;
-  lastTween = new Tween({ duration: DURATION_MS, from: scrollY, to: y, onUpdate: _onTweenUpdate });
+export function scrollTo(y: number, container: Element | Window = window) {
+  const scrollY = getScrollTop(container);
+  lastTween = new Tween({
+    duration: DURATION_MS,
+    from: scrollY,
+    to: y,
+    onUpdate: state => _onTweenUpdate(container, state),
+  });
+  lastTweenContainer = container;
 }
 
 export function cancel() {
   if (lastTween) {
     lastTween.cancel();
     lastTween = undefined;
+    lastTweenContainer = undefined;
   }
 }
