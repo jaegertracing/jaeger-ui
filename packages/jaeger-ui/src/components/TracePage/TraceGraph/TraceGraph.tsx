@@ -30,7 +30,7 @@ import './TraceGraph.css';
 
 type Props = {
   headerHeight: number;
-  trace: IOtelTrace;
+  trace?: IOtelTrace;
   uiFind: string | TNil;
   onSearchResults: (matches: Set<string> | null) => void;
   traceGraphConfig?: TraceGraphConfig;
