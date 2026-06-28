@@ -255,6 +255,20 @@ describe('tool-call part rendering', () => {
     expect(resultEl.textContent.endsWith('…')).toBe(true);
   });
 
+  it('JSON-stringifies non-string results', () => {
+    partsMock.parts = [{ type: 'tool-call', toolName: 'get_services', result: { services: ['jaeger'] } }];
+    render(<JaegerThreadMessageBody variant="assistant" />);
+    expect(screen.getByText('{"services":["jaeger"]}')).toBeInTheDocument();
+  });
+
+  it('falls back to String() when JSON.stringify throws', () => {
+    const circular = {};
+    circular.self = circular;
+    partsMock.parts = [{ type: 'tool-call', toolName: 'bad_tool', result: circular }];
+    render(<JaegerThreadMessageBody variant="assistant" />);
+    expect(screen.getByText('[object Object]')).toBeInTheDocument();
+  });
+
   it('renders text parts correctly alongside tool-call parts', () => {
     partsMock.parts = [{ type: 'text' }, { type: 'tool-call', toolName: 'read_skill', result: 'done' }];
     const { container } = render(<JaegerThreadMessageBody variant="assistant" />);
