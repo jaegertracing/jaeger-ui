@@ -47,7 +47,7 @@
     "@rc-component/overflow": "^1.0.1",
     "@tanstack/react-query": "^5.90.19",
     "@tanstack/react-virtual": "3.14.2",
-    "antd": "6.4.2",
+    "antd": "6.5.0",
     "chance": "1.1.13",
     "classnames": "2.5.1",
     "combokeys": "3.0.1",
