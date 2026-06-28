@@ -85,7 +85,15 @@ describe('<TraceGraph>', () => {
   });
 
   it('may show no traces', () => {
-    render(<TraceGraph headerHeight={60} trace={undefined} onSearchResults={vi.fn()} />);
+    render(
+      <TraceGraph
+        headerHeight={60}
+        trace={undefined}
+        uiFind={null}
+        onSearchResults={vi.fn()}
+        useOtelTerms={false}
+      />
+    );
     expect(screen.getByText('No trace found')).toBeInTheDocument();
   });
 

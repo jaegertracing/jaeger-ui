@@ -518,7 +518,7 @@ describe('<TracePage>', () => {
     expect(track.trackRange).toHaveBeenCalledWith('kbd', expect.any(Array), [0, 1]);
   });
 
-  it('uses onSearchResults callback to update findCount when viewType is TraceGraph', () => {
+  it('resultCount defaults to 0 when viewType is TraceGraph (search delegated to TraceGraph via onSearchResults)', () => {
     render(<TracePage {...defaultProps} uiFind="some-search" />);
     act(() => {
       capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceGraph);
