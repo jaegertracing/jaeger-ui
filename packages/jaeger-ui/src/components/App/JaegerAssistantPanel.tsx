@@ -36,7 +36,8 @@ const TOOL_RESULT_MAX_LEN = 300;
 function formatToolResult(result: unknown): string {
   if (typeof result === 'string') return result;
   try {
-    return JSON.stringify(result);
+    const json = JSON.stringify(result);
+    return json ?? String(result);
   } catch {
     return String(result);
   }
