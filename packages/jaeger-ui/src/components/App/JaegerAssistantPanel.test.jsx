@@ -238,21 +238,33 @@ describe('tool-call part rendering', () => {
     expect(screen.getByText('Calling read_skill…')).toBeInTheDocument();
   });
 
-  it('renders tool name and result text when tool-call part has a result', () => {
+  it('renders a collapsible details element when tool-call part has a result', () => {
     partsMock.parts = [{ type: 'tool-call', toolName: 'find_traces', result: 'found 3 traces' }];
     render(<JaegerThreadMessageBody variant="assistant" />);
     expect(screen.getByText('Called find_traces')).toBeInTheDocument();
     expect(screen.getByText('found 3 traces')).toBeInTheDocument();
     expect(screen.queryByText('Calling find_traces…')).not.toBeInTheDocument();
+    const details = document.querySelector('details.JaegerAssistantPanel-toolCall');
+    expect(details).toBeInTheDocument();
+    expect(details.open).toBe(false);
   });
 
-  it('truncates long results with an ellipsis', () => {
-    const longResult = 'x'.repeat(350);
-    partsMock.parts = [{ type: 'tool-call', toolName: 'read_skill', result: longResult }];
+  it('shows Input and Output labels when argsText is present', () => {
+    partsMock.parts = [
+      { type: 'tool-call', toolName: 'get_services', argsText: '{}', result: '{"services":["jaeger"]}' },
+    ];
     render(<JaegerThreadMessageBody variant="assistant" />);
-    const resultEl = document.querySelector('.JaegerAssistantPanel-toolCallResult');
-    expect(resultEl.textContent).toHaveLength(301);
-    expect(resultEl.textContent.endsWith('…')).toBe(true);
+    expect(screen.getByText('Input')).toBeInTheDocument();
+    expect(screen.getByText('Output')).toBeInTheDocument();
+    expect(screen.getByText('{}')).toBeInTheDocument();
+    expect(screen.getByText('{"services":["jaeger"]}')).toBeInTheDocument();
+  });
+
+  it('omits Input section when argsText is empty', () => {
+    partsMock.parts = [{ type: 'tool-call', toolName: 'get_services', argsText: '', result: 'ok' }];
+    render(<JaegerThreadMessageBody variant="assistant" />);
+    expect(screen.queryByText('Input')).not.toBeInTheDocument();
+    expect(screen.getByText('Output')).toBeInTheDocument();
   });
 
   it('JSON-stringifies non-string results', () => {

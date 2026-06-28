@@ -112,9 +112,6 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .JaegerAssistantPanel-toolCall {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
   padding: 0.3rem 0.5rem;
   margin: 0.25rem 0;
   border-radius: 6px;
@@ -128,6 +125,7 @@ SPDX-License-Identifier: Apache-2.0
   color: var(--text-secondary);
   font-family: monospace;
   font-size: 0.75rem;
+  cursor: pointer;
 }
 
 .JaegerAssistantPanel-toolCallStatus {
@@ -135,15 +133,39 @@ SPDX-License-Identifier: Apache-2.0
   font-style: italic;
 }
 
-.JaegerAssistantPanel-toolCallResult {
+.JaegerAssistantPanel-toolCallBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: 0.25rem;
+}
+
+.JaegerAssistantPanel-toolCallSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.JaegerAssistantPanel-toolCallLabel {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+
+.JaegerAssistantPanel-toolCallPre {
+  margin: 0;
+  padding: 0.3rem 0.4rem;
+  border-radius: 4px;
+  background-color: var(--surface-primary);
   color: var(--text-primary);
-  font-size: 0.75rem;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
+  font-family: monospace;
+  font-size: 0.7rem;
   white-space: pre-wrap;
   word-break: break-word;
+  max-height: 10rem;
+  overflow-y: auto;
 }
 
 .JaegerAssistantPanel-composer {
