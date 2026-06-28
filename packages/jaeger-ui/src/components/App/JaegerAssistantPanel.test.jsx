@@ -20,6 +20,10 @@ const agUiMock = vi.hoisted(() => ({
   url: 'http://localhost/ag-ui',
 }));
 
+const partsMock = vi.hoisted(() => ({
+  parts: [{ type: 'text' }],
+}));
+
 vi.mock('./jaegerAgUi', () => ({
   getJaegerAgUiUrl: () => agUiMock.url,
 }));
@@ -64,8 +68,9 @@ vi.mock('@assistant-ui/react', () => {
         if (typeof children === 'function') {
           return (
             <>
-              {children({ part: { type: 'text' } })}
-              {children({ part: { type: 'reasoning' } })}
+              {partsMock.parts.map((part, i) => (
+                <React.Fragment key={i}>{children({ part })}</React.Fragment>
+              ))}
             </>
           );
         }
@@ -107,6 +112,7 @@ describe('JaegerAssistantDock', () => {
   beforeEach(() => {
     agUiMock.configured = false;
     mockAppend.mockReset();
+    partsMock.parts = [{ type: 'text' }, { type: 'reasoning', text: '' }];
   });
 
   it('returns null when assistant is not configured', () => {
@@ -183,6 +189,10 @@ describe('JaegerAssistantDock', () => {
 });
 
 describe('JaegerThreadMessageBody', () => {
+  beforeEach(() => {
+    partsMock.parts = [{ type: 'text' }, { type: 'reasoning', text: '' }];
+  });
+
   it('renders text parts with MessagePartPrimitive.Text (lines 34–47)', () => {
     const { container } = render(<JaegerThreadMessageBody variant="user" />);
     const root = screen.getByTestId('message-primitive-root');
@@ -214,5 +224,42 @@ describe('threadMessageComponents', () => {
     expect(screen.getByTestId('message-primitive-root')).toHaveClass(
       'JaegerAssistantPanel-message--assistant'
     );
+  });
+});
+
+describe('tool-call part rendering', () => {
+  beforeEach(() => {
+    partsMock.parts = [{ type: 'text' }];
+  });
+
+  it('renders a running indicator when tool-call part has no result', () => {
+    partsMock.parts = [{ type: 'tool-call', toolName: 'read_skill', result: undefined }];
+    render(<JaegerThreadMessageBody variant="assistant" />);
+    expect(screen.getByText('Calling read_skill…')).toBeInTheDocument();
+  });
+
+  it('renders tool name and result text when tool-call part has a result', () => {
+    partsMock.parts = [{ type: 'tool-call', toolName: 'find_traces', result: 'found 3 traces' }];
+    render(<JaegerThreadMessageBody variant="assistant" />);
+    expect(screen.getByText('Called find_traces')).toBeInTheDocument();
+    expect(screen.getByText('found 3 traces')).toBeInTheDocument();
+    expect(screen.queryByText('Calling find_traces…')).not.toBeInTheDocument();
+  });
+
+  it('truncates long results with an ellipsis', () => {
+    const longResult = 'x'.repeat(350);
+    partsMock.parts = [{ type: 'tool-call', toolName: 'read_skill', result: longResult }];
+    render(<JaegerThreadMessageBody variant="assistant" />);
+    const resultEl = document.querySelector('.JaegerAssistantPanel-toolCallResult');
+    expect(resultEl.textContent).toHaveLength(301);
+    expect(resultEl.textContent.endsWith('…')).toBe(true);
+  });
+
+  it('renders text parts correctly alongside tool-call parts', () => {
+    partsMock.parts = [{ type: 'text' }, { type: 'tool-call', toolName: 'read_skill', result: 'done' }];
+    const { container } = render(<JaegerThreadMessageBody variant="assistant" />);
+    expect(container.querySelectorAll('[data-testid="message-part-text"]')).toHaveLength(1);
+    expect(screen.getByText('Called read_skill')).toBeInTheDocument();
+    expect(screen.getByText('done')).toBeInTheDocument();
   });
 });

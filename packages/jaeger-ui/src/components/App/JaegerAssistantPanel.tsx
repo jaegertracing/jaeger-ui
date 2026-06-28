@@ -31,21 +31,60 @@ function JaegerAssistantBootstrap() {
   return null;
 }
 
+const TOOL_RESULT_MAX_LEN = 300;
+
+function formatToolResult(result: unknown): string {
+  if (typeof result === 'string') return result;
+  try {
+    return JSON.stringify(result);
+  } catch {
+    return String(result);
+  }
+}
+
+function truncateToolResult(result: unknown): string {
+  const text = formatToolResult(result);
+  if (text.length <= TOOL_RESULT_MAX_LEN) return text;
+  return `${text.slice(0, TOOL_RESULT_MAX_LEN)}…`;
+}
+
+function JaegerToolCallIndicator({ toolName, result }: { toolName: string; result?: unknown }) {
+  const isRunning = result === undefined;
+  return (
+    <div className="JaegerAssistantPanel-toolCall">
+      {isRunning ? (
+        <span className="JaegerAssistantPanel-toolCallStatus">Calling {toolName}…</span>
+      ) : (
+        <>
+          <span className="JaegerAssistantPanel-toolCallName">Called {toolName}</span>
+          <span className="JaegerAssistantPanel-toolCallResult">{truncateToolResult(result)}</span>
+        </>
+      )}
+    </div>
+  );
+}
+
 function JaegerThreadMessageBody({ variant }: { variant: 'user' | 'assistant' }) {
   return (
     <MessagePrimitive.Root
       className={`JaegerAssistantPanel-message JaegerAssistantPanel-message--${variant}`}
     >
       <MessagePrimitive.Parts>
-        {({ part }) =>
-          part.type === 'text' ? (
-            <MessagePartPrimitive.Text
-              component="div"
-              className="JaegerAssistantPanel-messageText"
-              smooth={false}
-            />
-          ) : null
-        }
+        {({ part }) => {
+          if (part.type === 'text') {
+            return (
+              <MessagePartPrimitive.Text
+                component="div"
+                className="JaegerAssistantPanel-messageText"
+                smooth={false}
+              />
+            );
+          }
+          if (part.type === 'tool-call') {
+            return <JaegerToolCallIndicator toolName={part.toolName} result={part.result} />;
+          }
+          return null;
+        }}
       </MessagePrimitive.Parts>
     </MessagePrimitive.Root>
   );
