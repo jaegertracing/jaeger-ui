@@ -11,6 +11,7 @@ import {
   useThreadViewportAutoScroll,
 } from '@assistant-ui/react';
 import { IoClose } from 'react-icons/io5';
+import { JsonView, collapseAllNested, defaultStyles } from 'react-json-view-lite';
 
 import { useJaegerAssistant, useJaegerAssistantOptional } from './JaegerAssistantContext';
 import { useJaegerAssistantConfigured } from '../../hooks/useJaegerAssistant';
@@ -31,14 +32,54 @@ function JaegerAssistantBootstrap() {
   return null;
 }
 
+function tryParseJson(value: unknown): unknown {
+  if (typeof value !== 'string') return value;
+  try {
+    const parsed = JSON.parse(value);
+    return typeof parsed === 'object' && parsed !== null ? parsed : value;
+  } catch {
+    return value;
+  }
+}
+
 function formatToolResult(result: unknown): string {
   if (typeof result === 'string') return result;
   try {
-    const json = JSON.stringify(result);
-    return json ?? String(result);
+    return JSON.stringify(result);
   } catch {
     return String(result);
   }
+}
+
+const jsonViewStyles = {
+  ...defaultStyles,
+  container: 'json-markup',
+  label: 'json-markup-key',
+  stringValue: 'json-markup-string',
+  numberValue: 'json-markup-number',
+  booleanValue: 'json-markup-bool',
+  nullValue: 'json-markup-null',
+  undefinedValue: 'json-markup-undefined',
+  basicChildStyle: 'json-markup-child',
+  punctuation: 'json-markup-punctuation',
+  collapseIcon: 'json-markup-icon-collapse',
+  collapsedContent: 'json-markup-collapse-content',
+  expandIcon: 'json-markup-icon-expand',
+  otherValue: 'json-markup-other',
+};
+
+function ToolCallResultValue({ result }: { result: unknown }) {
+  const parsed = tryParseJson(result);
+  if (typeof parsed === 'object' && parsed !== null) {
+    return (
+      <JsonView
+        data={parsed as Record<string, unknown>}
+        shouldExpandNode={collapseAllNested}
+        style={jsonViewStyles}
+      />
+    );
+  }
+  return <pre className="JaegerAssistantPanel-toolCallPre">{formatToolResult(result)}</pre>;
 }
 
 function JaegerToolCallIndicator({
@@ -46,13 +87,17 @@ function JaegerToolCallIndicator({
   argsText,
   result,
   status,
+  isError,
 }: {
   toolName: string;
   argsText?: string;
   result?: unknown;
   status?: { type: string };
+  isError?: boolean;
 }) {
   const isRunning = status?.type === 'running' || status?.type === 'requires-action';
+  const isFailed = status?.type === 'incomplete' || isError;
+
   if (isRunning) {
     return (
       <div className="JaegerAssistantPanel-toolCall">
@@ -60,9 +105,15 @@ function JaegerToolCallIndicator({
       </div>
     );
   }
+
+  const label = isFailed ? `Failed ${toolName}` : `Called ${toolName}`;
+  const className = isFailed
+    ? 'JaegerAssistantPanel-toolCall JaegerAssistantPanel-toolCall--error'
+    : 'JaegerAssistantPanel-toolCall';
+
   return (
-    <details className="JaegerAssistantPanel-toolCall">
-      <summary className="JaegerAssistantPanel-toolCallName">Called {toolName}</summary>
+    <details className={className}>
+      <summary className="JaegerAssistantPanel-toolCallName">{label}</summary>
       <div className="JaegerAssistantPanel-toolCallBody">
         {argsText && (
           <div className="JaegerAssistantPanel-toolCallSection">
@@ -73,7 +124,7 @@ function JaegerToolCallIndicator({
         {result !== undefined && (
           <div className="JaegerAssistantPanel-toolCallSection">
             <span className="JaegerAssistantPanel-toolCallLabel">Output</span>
-            <pre className="JaegerAssistantPanel-toolCallPre">{formatToolResult(result)}</pre>
+            <ToolCallResultValue result={result} />
           </div>
         )}
       </div>
@@ -104,6 +155,7 @@ function JaegerThreadMessageBody({ variant }: { variant: 'user' | 'assistant' })
                 argsText={part.argsText}
                 result={part.result}
                 status={part.status}
+                isError={part.isError}
               />
             );
           }

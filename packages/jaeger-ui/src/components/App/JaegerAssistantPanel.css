@@ -120,6 +120,10 @@ SPDX-License-Identifier: Apache-2.0
   font-size: 0.8rem;
 }
 
+.JaegerAssistantPanel-toolCall--error {
+  border-color: var(--status-error);
+}
+
 .JaegerAssistantPanel-toolCallName {
   font-weight: 600;
   color: var(--text-secondary);
@@ -166,6 +170,16 @@ SPDX-License-Identifier: Apache-2.0
   word-break: break-word;
   max-height: 10rem;
   overflow-y: auto;
+}
+
+.JaegerAssistantPanel-toolCallSection .json-markup {
+  padding: 0.3rem 0.4rem;
+  border-radius: 4px;
+  background-color: var(--surface-primary);
+  font-size: 0.7rem;
+  max-height: 10rem;
+  overflow: auto;
+  white-space: nowrap;
 }
 
 .JaegerAssistantPanel-composer {
