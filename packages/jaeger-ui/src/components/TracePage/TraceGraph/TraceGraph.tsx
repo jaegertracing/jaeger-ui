@@ -54,6 +54,7 @@ const getHelpContent = (useOtelTerms: boolean) => (
                 className="active"
                 tabIndex={-1}
                 aria-hidden="true"
+                style={{ pointerEvents: 'none' }}
               >
                 S
               </Button>
@@ -63,7 +64,14 @@ const getHelpContent = (useOtelTerms: boolean) => (
           </tr>
           <tr>
             <td>
-              <Button htmlType="button" shape="circle" size="small" tabIndex={-1} aria-hidden="true">
+              <Button
+                htmlType="button"
+                shape="circle"
+                size="small"
+                tabIndex={-1}
+                aria-hidden="true"
+                style={{ pointerEvents: 'none' }}
+              >
                 T
               </Button>
             </td>
@@ -72,7 +80,14 @@ const getHelpContent = (useOtelTerms: boolean) => (
           </tr>
           <tr>
             <td>
-              <Button htmlType="button" shape="circle" size="small" tabIndex={-1} aria-hidden="true">
+              <Button
+                htmlType="button"
+                shape="circle"
+                size="small"
+                tabIndex={-1}
+                aria-hidden="true"
+                style={{ pointerEvents: 'none' }}
+              >
                 ST
               </Button>
             </td>
