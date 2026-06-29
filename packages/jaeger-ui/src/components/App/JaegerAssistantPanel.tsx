@@ -11,10 +11,11 @@ import {
   useThreadViewportAutoScroll,
 } from '@assistant-ui/react';
 import { IoClose } from 'react-icons/io5';
-import { JsonView, collapseAllNested, defaultStyles } from 'react-json-view-lite';
+import { JsonView, collapseAllNested } from 'react-json-view-lite';
 
 import { useJaegerAssistant, useJaegerAssistantOptional } from './JaegerAssistantContext';
 import { useJaegerAssistantConfigured } from '../../hooks/useJaegerAssistant';
+import jsonViewStyles from '../../utils/jsonViewStyles';
 
 import './JaegerAssistantPanel.css';
 
@@ -50,23 +51,6 @@ function formatToolResult(result: unknown): string {
     return String(result);
   }
 }
-
-const jsonViewStyles = {
-  ...defaultStyles,
-  container: 'json-markup',
-  label: 'json-markup-key',
-  stringValue: 'json-markup-string',
-  numberValue: 'json-markup-number',
-  booleanValue: 'json-markup-bool',
-  nullValue: 'json-markup-null',
-  undefinedValue: 'json-markup-undefined',
-  basicChildStyle: 'json-markup-child',
-  punctuation: 'json-markup-punctuation',
-  collapseIcon: 'json-markup-icon-collapse',
-  collapsedContent: 'json-markup-collapse-content',
-  expandIcon: 'json-markup-icon-expand',
-  otherValue: 'json-markup-other',
-};
 
 function ToolCallResultValue({ result }: { result: unknown }) {
   const parsed = React.useMemo(() => tryParseJson(result), [result]);
