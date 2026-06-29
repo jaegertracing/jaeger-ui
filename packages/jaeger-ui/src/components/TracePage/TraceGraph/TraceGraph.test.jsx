@@ -7,7 +7,6 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LayoutManager } from '@jaegertracing/plexus';
 import transformTraceData from '../../../model/transform-trace-data';
-import calculateTraceDagEV from './calculateTraceDagEV';
 import TraceGraph, { setOnEdgePath } from './TraceGraph';
 import { MODE_SERVICE, MODE_TIME, MODE_SELFTIME } from './OpNode';
 import testTrace from './testTrace.json';
@@ -66,7 +65,7 @@ vi.mock('@jaegertracing/plexus', () => {
 });
 
 const transformedTrace = transformTraceData(testTrace);
-const ev = calculateTraceDagEV(transformedTrace.asOtelTrace());
+const otelTrace = transformedTrace.asOtelTrace();
 
 describe('<TraceGraph>', () => {
   let props;
@@ -74,7 +73,8 @@ describe('<TraceGraph>', () => {
   beforeEach(() => {
     props = {
       headerHeight: 60,
-      ev,
+      trace: otelTrace,
+      onSearchResults: jest.fn(),
     };
   });
 
@@ -86,8 +86,22 @@ describe('<TraceGraph>', () => {
   });
 
   it('may show no traces', () => {
-    render(<TraceGraph />);
+    render(<TraceGraph onSearchResults={jest.fn()} />);
     expect(screen.getByText('No trace found')).toBeInTheDocument();
+  });
+
+  it('derives the DAG from the trace and reports the match count for uiFind', () => {
+    const onSearchResults = jest.fn();
+    render(<TraceGraph {...props} uiFind="" onSearchResults={onSearchResults} />);
+    // No query → no matches reported.
+    expect(onSearchResults).toHaveBeenLastCalledWith({ count: 0, matches: new Set() });
+
+    onSearchResults.mockClear();
+    // A query that matches at least one service in the test trace reports a positive count.
+    render(<TraceGraph {...props} uiFind="service" onSearchResults={onSearchResults} />);
+    const reported = onSearchResults.mock.calls.at(-1)[0];
+    expect(reported.count).toBeGreaterThan(0);
+    expect(reported.matches.size).toBe(reported.count);
   });
 
   it('switches node mode when clicking mode buttons', async () => {

@@ -8,9 +8,7 @@ import { useNormalizeTraceId } from './useNormalizeTraceId';
 import { useNavigate } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
 import _clamp from 'lodash/clamp';
-import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
-import _memoize from 'lodash/memoize';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
@@ -31,13 +29,11 @@ import {
 } from './keyboard-shortcuts';
 import { cancel as cancelScroll, scrollBy, scrollTo } from './scroll-page';
 import ScrollManager from './ScrollManager';
-import calculateTraceDagEV from './TraceGraph/calculateTraceDagEV';
 import TraceGraph from './TraceGraph/TraceGraph';
 import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
 import { useConfig } from '../../hooks/useConfig';
 import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
-import { filterPrunedSpanIDs } from './TraceTimelineViewer/generateRowStates';
 import { actions as timelineActions } from './TraceTimelineViewer/duck';
 import {
   TUpdateViewRangeTimeFunction,
@@ -45,16 +41,15 @@ import {
   ViewRangeTimeUpdate,
   ETraceViewType,
   viewTypeShowsMinimap,
+  TSearchResults,
 } from './types';
 import { getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { parseUiFind } from '../common/UiFindInput';
-import { getUiFindVertexKeys } from '../TraceDiff/TraceDiffGraph/traceDiffGraphUtils';
 import { LocationState, ReduxState, TNil } from '../../types';
 import { useTrace } from '../../hooks/useTraceLoading';
 import { IOtelTrace } from '../../types/otel';
-import filterSpans from '../../utils/filter-spans';
 import updateUiFind from '../../utils/update-ui-find';
 import TraceStatistics from './TraceStatistics/index';
 import TraceSpanView from './TraceSpanView/index';
@@ -173,7 +168,6 @@ export function TracePageImpl(props: TProps) {
   const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
   const zustandSetTimelineBarsVisible = useLayoutPrefsStore(s => s.setTimelineBarsVisible);
   const zustandFocusUiFindMatches = useTraceTimelineStore(s => s.focusUiFindMatches);
-  const prunedServices = useTraceTimelineStore(s => s.prunedServices);
 
   const setDetailPanelMode = useCallback(
     (mode: SpanDetailPanelMode) => {
@@ -201,10 +195,23 @@ export function TracePageImpl(props: TProps) {
   const [slimView, setSlimView] = useState(() => Boolean(embedded?.timeline?.collapseTitle));
   const [viewType, setViewType] = useState<ETraceViewType>(ETraceViewType.TraceTimelineViewer);
   const [viewRange, setViewRange] = useState<IViewRange>({ time: { current: [0, 1] } });
-  const traceDagEV = useMemo(
-    () => (viewType === ETraceViewType.TraceGraph && traceData ? calculateTraceDagEV(traceData) : null),
-    [traceData, viewType]
+
+  // Each searchable view computes its own matches and reports the count up via onSearchResults.
+  // The parent only tracks the count for display in the header; it has no knowledge of how any
+  // particular view searches. The reported result is tagged with the view type that produced it, so
+  // a count from a previous view reads as 0 until the current view reports — this resets the count
+  // on view change without mutating state during render.
+  const viewTypeRef = useRef(viewType);
+  viewTypeRef.current = viewType;
+  const [findResult, setFindResult] = useState<{ viewType: ETraceViewType; count: number }>({
+    viewType,
+    count: 0,
+  });
+  const handleSearchResults = useCallback(
+    (results: TSearchResults) => setFindResult({ viewType: viewTypeRef.current, count: results.count }),
+    []
   );
+  const findCount = findResult.viewType === viewType ? findResult.count : 0;
 
   const traceIsGenAI = useMemo(
     () =>
@@ -219,12 +226,6 @@ export function TracePageImpl(props: TProps) {
   const viewRangeRef = useRef(viewRange);
   viewRangeRef.current = viewRange;
   const prevIdRef = useRef(id);
-  const idRef = useRef(id);
-  idRef.current = id;
-
-  const filterSpansMemo = useRef(
-    _memoize(filterSpans, (textFilter: string) => `${textFilter} ${idRef.current}`)
-  ).current;
 
   const scrollManagerRef = useRef<ScrollManager>(new ScrollManager(traceData, { scrollBy, scrollTo }));
 
@@ -384,24 +385,6 @@ export function TracePageImpl(props: TProps) {
     return <LoadingIndicator className="u-mt-vast" centered />;
   }
 
-  let findCount = 0;
-  let graphFindMatches: Set<string> | null | undefined;
-  let spanFindMatches: Set<string> | null | undefined;
-  if (uiFind) {
-    if (viewType === ETraceViewType.TraceGraph) {
-      graphFindMatches = getUiFindVertexKeys(uiFind, _get(traceDagEV, 'vertices', []));
-      findCount = graphFindMatches ? graphFindMatches.size : 0;
-    } else {
-      const allMatches = filterSpansMemo(uiFind, _get(traceData, 'spans'));
-      const otelTrace = traceData;
-      spanFindMatches =
-        otelTrace && prunedServices.size > 0
-          ? filterPrunedSpanIDs(allMatches, otelTrace.spanMap, prunedServices)
-          : allMatches;
-      findCount = spanFindMatches ? spanFindMatches.size : 0;
-    }
-  }
-
   const locationState = location.state;
   const isEmbedded = Boolean(embedded);
   const hasArchiveStorage = Boolean(backendCapabilities?.archiveStorage);
@@ -447,7 +430,8 @@ export function TracePageImpl(props: TProps) {
       <TraceTimelineViewer
         registerAccessors={sm.setAccessors}
         scrollToFirstVisibleSpan={sm.scrollToFirstVisibleSpan}
-        findMatchesIDs={spanFindMatches}
+        uiFind={uiFind}
+        onSearchResults={handleSearchResults}
         trace={traceData}
         criticalPath={criticalPath}
         updateNextViewRangeTime={updateNextViewRangeTime}
@@ -461,7 +445,8 @@ export function TracePageImpl(props: TProps) {
       <TraceTimelineViewer
         registerAccessors={sm.setAccessors}
         scrollToFirstVisibleSpan={sm.scrollToFirstVisibleSpan}
-        findMatchesIDs={spanFindMatches}
+        uiFind={uiFind}
+        onSearchResults={handleSearchResults}
         trace={traceData}
         criticalPath={criticalPath}
         updateNextViewRangeTime={updateNextViewRangeTime}
@@ -474,9 +459,9 @@ export function TracePageImpl(props: TProps) {
     view = (
       <TraceGraph
         headerHeight={headerHeight}
-        ev={traceDagEV}
+        trace={traceData}
         uiFind={uiFind}
-        uiFindVertexKeys={graphFindMatches}
+        onSearchResults={handleSearchResults}
         traceGraphConfig={traceGraphConfig}
         useOtelTerms={useOtelTerms}
       />
@@ -485,8 +470,8 @@ export function TracePageImpl(props: TProps) {
     view = (
       <TraceStatistics
         trace={traceData}
-        uiFindVertexKeys={spanFindMatches}
         uiFind={uiFind}
+        onSearchResults={handleSearchResults}
         useOtelTerms={useOtelTerms}
       />
     );
@@ -495,13 +480,13 @@ export function TracePageImpl(props: TProps) {
       <TraceSpanView
         key={traceData.traceID}
         trace={traceData}
-        uiFindVertexKeys={spanFindMatches}
         uiFind={uiFind}
+        onSearchResults={handleSearchResults}
         useOtelTerms={useOtelTerms}
       />
     );
   } else if (ETraceViewType.TraceFlamegraph === viewType && headerHeight) {
-    view = <TraceFlamegraph trace={traceData} />;
+    view = <TraceFlamegraph trace={traceData} uiFind={uiFind} onSearchResults={handleSearchResults} />;
   } else if (ETraceViewType.TraceLogs === viewType && headerHeight) {
     view = <TraceLogsView trace={traceData} useOtelTerms={useOtelTerms} />;
   }

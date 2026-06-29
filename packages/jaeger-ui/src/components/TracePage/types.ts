@@ -45,6 +45,16 @@ export interface IViewRange {
   time: IViewRangeTime;
 }
 
+// Common contract for "inversion of control on search": a searchable view computes its own matches
+// from the `uiFind` query and reports them up. The parent displays the count without knowing how the
+// view searches. `matches` carries the matching IDs so a parent can use them (e.g. navigation) too.
+export type TSearchResults = {
+  count: number;
+  matches: Set<string>;
+};
+
+export type TOnSearchResults = (results: TSearchResults) => void;
+
 export enum ETraceViewType {
   TraceTimelineViewer = 'TraceTimelineViewer',
   TraceGraph = 'TraceGraph',

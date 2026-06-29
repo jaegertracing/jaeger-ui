@@ -16,19 +16,23 @@ import {
   MODE_SELFTIME,
   getHelpTable,
 } from './OpNode';
-import { TEv, TSumSpan } from './types';
+import { TSumSpan } from './types';
+import calculateTraceDagEV from './calculateTraceDagEV';
 import { TDenseSpanMembers } from '../../../model/trace-dag/types';
 import TDagPlexusVertex from '../../../model/trace-dag/types/TDagPlexusVertex';
 import { TNil } from '../../../types';
+import { IOtelTrace } from '../../../types/otel';
 import { TraceGraphConfig } from '../../../types/config';
+import { getUiFindVertexKeys } from '../../TraceDiff/TraceDiffGraph/traceDiffGraphUtils';
+import { TOnSearchResults } from '../types';
 
 import './TraceGraph.css';
 
 type Props = {
   headerHeight: number;
-  ev?: TEv | TNil;
+  trace?: IOtelTrace | TNil;
   uiFind: string | TNil;
-  uiFindVertexKeys: Set<string> | TNil;
+  onSearchResults: TOnSearchResults;
   traceGraphConfig?: TraceGraphConfig;
   useOtelTerms: boolean;
 };
@@ -94,16 +98,22 @@ const getHelpContent = (useOtelTerms: boolean) => (
   </div>
 );
 
-function TraceGraph({
-  headerHeight,
-  ev = null,
-  uiFind,
-  uiFindVertexKeys,
-  traceGraphConfig,
-  useOtelTerms,
-}: Props) {
+function TraceGraph({ headerHeight, trace, uiFind, onSearchResults, traceGraphConfig, useOtelTerms }: Props) {
   const [showHelp, setShowHelp] = React.useState(false);
   const [mode, setMode] = React.useState(MODE_SERVICE);
+
+  // The graph owns its own search: it derives the DAG from the trace and computes the set of
+  // matching vertices from `uiFind`, then reports the match count to the parent.
+  const ev = React.useMemo(() => (trace ? calculateTraceDagEV(trace) : null), [trace]);
+  const uiFindVertexKeys = React.useMemo(
+    () => (uiFind && ev ? getUiFindVertexKeys(uiFind, ev.vertices) : undefined),
+    [uiFind, ev]
+  );
+
+  React.useEffect(() => {
+    const matches = uiFindVertexKeys ?? new Set<string>();
+    onSearchResults({ count: matches.size, matches });
+  }, [uiFindVertexKeys, onSearchResults]);
 
   const layoutManagerRef = React.useRef<LayoutManager | null>(null);
   if (layoutManagerRef.current === null) {

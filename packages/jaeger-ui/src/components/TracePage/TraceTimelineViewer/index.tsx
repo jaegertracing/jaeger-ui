@@ -1,11 +1,12 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
 import { actions } from './duck';
+import { filterPrunedSpanIDs } from './generateRowStates';
 import {
   getSelectedSpanID,
   MIN_TIMELINE_COLUMN_WIDTH,
@@ -23,10 +24,11 @@ import VirtualizedTraceView from './VirtualizedTraceView';
 import VerticalResizer from '../../common/VerticalResizer';
 import { merge as mergeShortcuts } from '../keyboard-shortcuts';
 import { Accessors } from '../ScrollManager';
-import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '../types';
+import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, TOnSearchResults } from '../types';
 import { TNil, ReduxState } from '../../../types';
 import { IOtelSpan, IOtelTrace } from '../../../types/otel';
 import { CriticalPathSection } from '../../../types/critical_path';
+import filterSpans from '../../../utils/filter-spans';
 
 import './index.css';
 
@@ -42,7 +44,8 @@ type TDispatchProps = {
 
 type TProps = TDispatchProps & {
   registerAccessors: (accessors: Accessors) => void;
-  findMatchesIDs: Set<string> | TNil;
+  uiFind: string | TNil;
+  onSearchResults: TOnSearchResults;
   scrollToFirstVisibleSpan: () => void;
   trace: IOtelTrace;
   criticalPath: CriticalPathSection[];
@@ -73,12 +76,30 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     updateViewRangeTime,
     viewRange,
     trace,
+    uiFind,
+    onSearchResults,
     useOtelTerms,
     ...rest
   } = props;
 
   // Layout preferences are owned by Zustand; Redux setters are also called for the tracking middleware.
   const detailPanelMode = useLayoutPrefsStore(s => s.detailPanelMode);
+  const prunedServices = useTraceTimelineStore(s => s.prunedServices);
+
+  // The timeline owns its own search: it computes the set of matching span IDs from `uiFind`,
+  // applying the same service-pruning that hides rows, then reports the match count to the parent.
+  const findMatchesIDs = useMemo<Set<string> | TNil>(() => {
+    if (!uiFind) return null;
+    const allMatches = filterSpans(uiFind, trace.spans);
+    return prunedServices.size > 0 && allMatches
+      ? filterPrunedSpanIDs(allMatches, trace.spanMap, prunedServices)
+      : allMatches;
+  }, [uiFind, trace, prunedServices]);
+
+  useEffect(() => {
+    const matches = findMatchesIDs ?? new Set<string>();
+    onSearchResults({ count: matches.size, matches });
+  }, [findMatchesIDs, onSearchResults]);
   const sidePanelWidth = useLayoutPrefsStore(s => s.sidePanelWidth);
   const spanNameColumnWidth = useLayoutPrefsStore(s => s.spanNameColumnWidth);
   const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
@@ -235,6 +256,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   const virtualizedView = (
     <VirtualizedTraceView
       {...rest}
+      findMatchesIDs={findMatchesIDs}
       trace={trace}
       useOtelTerms={useOtelTerms}
       currentViewRangeTime={viewRange.time.current}

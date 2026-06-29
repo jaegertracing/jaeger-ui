@@ -16,7 +16,7 @@ describe('<TraceTagOverview>', () => {
   const defaultProps = {
     trace: transformedTrace,
     uiFind: undefined,
-    uiFindVertexKeys: undefined,
+    onSearchResults: jest.fn(),
     useOtelTerms: false,
   };
 
@@ -36,9 +36,6 @@ describe('<TraceTagOverview>', () => {
   });
 
   it('check search', async () => {
-    const searchSet = new Set();
-    searchSet.add('service1	op1	__LEAF__');
-
     let componentInstance;
     const TestWrapper = () => {
       return (
@@ -66,7 +63,6 @@ describe('<TraceTagOverview>', () => {
           }}
           {...defaultProps}
           uiFind="service1"
-          uiFindVertexKeys={searchSet}
         />
       );
     });
@@ -87,7 +83,6 @@ describe('<TraceTagOverview>', () => {
           }}
           {...defaultProps}
           uiFind={undefined}
-          uiFindVertexKeys={undefined}
         />
       );
     });
@@ -96,6 +91,46 @@ describe('<TraceTagOverview>', () => {
       const tableCells = screen.getAllByRole('cell');
       expect(tableCells.length).toBeGreaterThan(0);
     });
+  });
+
+  it('reports the search match count via onSearchResults', async () => {
+    const onSearchResults = jest.fn();
+    const { rerender } = render(
+      <TraceStatistics {...defaultProps} onSearchResults={onSearchResults} uiFind={undefined} />
+    );
+    // No query → reports 0 on mount.
+    expect(onSearchResults).toHaveBeenLastCalledWith({ count: 0, matches: new Set() });
+
+    await act(async () => {
+      rerender(<TraceStatistics {...defaultProps} onSearchResults={onSearchResults} uiFind="service1" />);
+    });
+    // A query that matches spans reports a positive count.
+    await waitFor(() => {
+      expect(onSearchResults.mock.calls.at(-1)[0].count).toBeGreaterThan(0);
+    });
+  });
+
+  it('re-reports search results when the trace changes with the same query', async () => {
+    const onSearchResults = jest.fn();
+    const { rerender } = render(
+      <TraceStatistics {...defaultProps} onSearchResults={onSearchResults} uiFind="service1" />
+    );
+    await waitFor(() => expect(onSearchResults).toHaveBeenCalled());
+
+    onSearchResults.mockClear();
+    // Same query, different trace instance → should recompute and report again.
+    const otherTrace = transformTraceData(testTrace).asOtelTrace();
+    await act(async () => {
+      rerender(
+        <TraceStatistics
+          {...defaultProps}
+          trace={otherTrace}
+          onSearchResults={onSearchResults}
+          uiFind="service1"
+        />
+      );
+    });
+    await waitFor(() => expect(onSearchResults).toHaveBeenCalled());
   });
 
   it('check handler', async () => {

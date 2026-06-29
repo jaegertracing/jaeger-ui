@@ -44,8 +44,23 @@ describe('<TraceSpanView>', () => {
     defaultProps = {
       trace,
       uiFind: undefined,
-      uiFindVertexKeys: undefined,
+      onSearchResults: jest.fn(),
     };
+  });
+
+  it('reports search match count via onSearchResults', () => {
+    const onSearchResults = jest.fn();
+    const { rerender } = render(
+      <TraceSpanView {...defaultProps} onSearchResults={onSearchResults} uiFind={undefined} />
+    );
+    // No query → reports 0.
+    expect(onSearchResults).toHaveBeenLastCalledWith({ count: 0, matches: new Set() });
+
+    onSearchResults.mockClear();
+    rerender(<TraceSpanView {...defaultProps} onSearchResults={onSearchResults} uiFind="service1" />);
+    const reported = onSearchResults.mock.calls.at(-1)[0];
+    expect(reported.count).toBeGreaterThan(0);
+    expect(reported.matches.size).toBe(reported.count);
   });
 
   it('does not explode', () => {

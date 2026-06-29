@@ -18,6 +18,8 @@ import FlamegraphTable from './FlamegraphTable';
 import FlamegraphContextMenu from './FlamegraphContextMenu';
 import FlamegraphTooltip from './FlamegraphTooltip';
 import VerticalResizer from '../../common/VerticalResizer';
+import filterSpans from '../../../utils/filter-spans';
+import { TOnSearchResults } from '../types';
 
 import 'd3-flame-graph/dist/d3-flamegraph.css';
 import './index.css';
@@ -42,7 +44,15 @@ const HIGHLIGHT_COLOR = '#E600E6';
 // minimum width, so a sliver of the scrollable columns stays visible.
 const TABLE_MIN_GUTTER_PX = 16;
 
-const TraceFlamegraph = ({ trace }: any) => {
+const TraceFlamegraph = ({
+  trace,
+  uiFind,
+  onSearchResults = () => {},
+}: {
+  trace: any;
+  uiFind?: string | null;
+  onSearchResults?: TOnSearchResults;
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<ReturnType<typeof flamegraph> | null>(null);
@@ -69,6 +79,17 @@ const TraceFlamegraph = ({ trace }: any) => {
     () => (otelTrace ? convertOtelTraceToFlameData(otelTrace) : null),
     [otelTrace]
   );
+  // Adopt the shared search pattern: compute matches for the global `uiFind` query and report the
+  // count up. This is the in-page find (distinct from the flamegraph's own `searchQuery` box).
+  const uiFindMatches = useMemo(
+    () =>
+      uiFind && otelTrace ? (filterSpans(uiFind, otelTrace.spans) ?? new Set<string>()) : new Set<string>(),
+    [uiFind, otelTrace]
+  );
+  useEffect(() => {
+    onSearchResults({ count: uiFindMatches.size, matches: uiFindMatches });
+  }, [uiFindMatches, onSearchResults]);
+
   const flameData = collapsedRoot || fullFlameData;
   const tableData = useMemo(() => (otelTrace ? generateTableData(otelTrace) : []), [otelTrace]);
   const maxSelf = useMemo(() => Math.max(...tableData.map(r => r.self), 1), [tableData]);
