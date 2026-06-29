@@ -70,10 +70,12 @@ function JaegerToolCallIndicator({
             <pre className="JaegerAssistantPanel-toolCallPre">{argsText}</pre>
           </div>
         )}
-        <div className="JaegerAssistantPanel-toolCallSection">
-          <span className="JaegerAssistantPanel-toolCallLabel">Output</span>
-          <pre className="JaegerAssistantPanel-toolCallPre">{formatToolResult(result)}</pre>
-        </div>
+        {result !== undefined && (
+          <div className="JaegerAssistantPanel-toolCallSection">
+            <span className="JaegerAssistantPanel-toolCallLabel">Output</span>
+            <pre className="JaegerAssistantPanel-toolCallPre">{formatToolResult(result)}</pre>
+          </div>
+        )}
       </div>
     </details>
   );

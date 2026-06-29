@@ -255,6 +255,7 @@ describe('tool-call part rendering', () => {
     render(<JaegerThreadMessageBody variant="assistant" />);
     expect(screen.getByText('Called find_traces')).toBeInTheDocument();
     expect(screen.queryByText('Calling find_traces…')).not.toBeInTheDocument();
+    expect(screen.queryByText('Output')).not.toBeInTheDocument();
   });
 
   it('renders a collapsible details element when tool-call part has a result', () => {
