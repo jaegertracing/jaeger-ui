@@ -10,7 +10,7 @@ import {
   IoSwapHorizontalOutline as RpcIcon,
 } from 'react-icons/io5';
 
-import type { IAttribute } from '../types/otel';
+import type { IAttribute } from '../../../types/otel';
 
 // Priority: lower index wins when a span has attributes from multiple namespaces.
 const NAMESPACE_PRIORITY: Partial<Record<string, number>> = {

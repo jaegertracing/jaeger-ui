@@ -14,7 +14,7 @@ import { TNil } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan } from '../../../types/otel';
 
-import { getSpanIconComponent } from '../../../utils/span-icons';
+import { getSpanIconComponent } from './span-icons';
 
 import './SpanBarRow.css';
 
