@@ -21,7 +21,7 @@ const NAMESPACE_PRIORITY: Partial<Record<string, number>> = {
   rpc: 4,
 };
 
-export const NAMESPACE_ICON: Partial<Record<string, IconType>> = {
+const NAMESPACE_ICON: Partial<Record<string, IconType>> = {
   gen_ai: GenAiIcon,
   db: DbIcon,
   http: HttpIcon,
