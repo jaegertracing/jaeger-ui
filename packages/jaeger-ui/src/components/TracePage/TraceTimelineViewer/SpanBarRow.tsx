@@ -164,11 +164,11 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
             <span
               className={`span-svc-name ${isParent && !isChildrenExpanded ? 'is-children-collapsed' : ''}`}
             >
+              {SpanTypeIcon && <SpanTypeIcon className="SpanBarRow--spanTypeIcon" aria-hidden="true" />}
               {hasOwnError && <IoAlert className="SpanBarRow--errorIcon" />}
               {!hasOwnError && hasChildError && (
                 <IoAlert className="SpanBarRow--errorIcon SpanBarRow--errorIcon--hollow" />
               )}
-              {SpanTypeIcon && <SpanTypeIcon className="SpanBarRow--spanTypeIcon" aria-hidden="true" />}
               {serviceName}{' '}
               {rpc && (
                 <span>

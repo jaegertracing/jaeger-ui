@@ -2,7 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { IconType } from 'react-icons';
-import { IoSparkles, IoServer, IoGlobe, IoChatbubble, IoCodeSlash } from 'react-icons/io5';
+import {
+  IoSparkles as GenAiIcon,
+  IoServer as DbIcon,
+  IoGlobe as HttpIcon,
+  IoChatbubble as MessagingIcon,
+  IoSwapHorizontalOutline as RpcIcon,
+} from 'react-icons/io5';
 
 import type { IAttribute } from '../types/otel';
 
@@ -15,12 +21,12 @@ const NAMESPACE_PRIORITY: Partial<Record<string, number>> = {
   rpc: 4,
 };
 
-const NAMESPACE_ICON: Partial<Record<string, IconType>> = {
-  gen_ai: IoSparkles,
-  db: IoServer,
-  http: IoGlobe,
-  messaging: IoChatbubble,
-  rpc: IoCodeSlash,
+export const NAMESPACE_ICON: Partial<Record<string, IconType>> = {
+  gen_ai: GenAiIcon,
+  db: DbIcon,
+  http: HttpIcon,
+  messaging: MessagingIcon,
+  rpc: RpcIcon,
 };
 
 export function getSpanIconComponent(attributes: IAttribute[] | undefined): IconType | null {
