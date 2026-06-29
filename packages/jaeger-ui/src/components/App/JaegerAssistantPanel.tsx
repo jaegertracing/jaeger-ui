@@ -45,12 +45,14 @@ function JaegerToolCallIndicator({
   toolName,
   argsText,
   result,
+  status,
 }: {
   toolName: string;
   argsText?: string;
   result?: unknown;
+  status?: { type: string };
 }) {
-  const isRunning = result === undefined;
+  const isRunning = status?.type === 'running' || status?.type === 'requires-action';
   if (isRunning) {
     return (
       <div className="JaegerAssistantPanel-toolCall">
@@ -99,6 +101,7 @@ function JaegerThreadMessageBody({ variant }: { variant: 'user' | 'assistant' })
                 toolName={part.toolName}
                 argsText={part.argsText}
                 result={part.result}
+                status={part.status}
               />
             );
           }

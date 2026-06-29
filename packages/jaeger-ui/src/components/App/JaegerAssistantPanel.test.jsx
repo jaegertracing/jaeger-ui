@@ -232,14 +232,35 @@ describe('tool-call part rendering', () => {
     partsMock.parts = [{ type: 'text' }];
   });
 
-  it('renders a running indicator when tool-call part has no result', () => {
-    partsMock.parts = [{ type: 'tool-call', toolName: 'read_skill', result: undefined }];
+  it('renders a running indicator when status is running', () => {
+    partsMock.parts = [
+      { type: 'tool-call', toolName: 'read_skill', status: { type: 'running' }, result: undefined },
+    ];
     render(<JaegerThreadMessageBody variant="assistant" />);
     expect(screen.getByText('Calling read_skill…')).toBeInTheDocument();
   });
 
+  it('renders a running indicator when status is requires-action', () => {
+    partsMock.parts = [
+      { type: 'tool-call', toolName: 'read_skill', status: { type: 'requires-action' }, result: undefined },
+    ];
+    render(<JaegerThreadMessageBody variant="assistant" />);
+    expect(screen.getByText('Calling read_skill…')).toBeInTheDocument();
+  });
+
+  it('renders completed state when status is complete even if result is undefined', () => {
+    partsMock.parts = [
+      { type: 'tool-call', toolName: 'find_traces', status: { type: 'complete' }, result: undefined },
+    ];
+    render(<JaegerThreadMessageBody variant="assistant" />);
+    expect(screen.getByText('Called find_traces')).toBeInTheDocument();
+    expect(screen.queryByText('Calling find_traces…')).not.toBeInTheDocument();
+  });
+
   it('renders a collapsible details element when tool-call part has a result', () => {
-    partsMock.parts = [{ type: 'tool-call', toolName: 'find_traces', result: 'found 3 traces' }];
+    partsMock.parts = [
+      { type: 'tool-call', toolName: 'find_traces', status: { type: 'complete' }, result: 'found 3 traces' },
+    ];
     render(<JaegerThreadMessageBody variant="assistant" />);
     expect(screen.getByText('Called find_traces')).toBeInTheDocument();
     expect(screen.getByText('found 3 traces')).toBeInTheDocument();
@@ -251,7 +272,13 @@ describe('tool-call part rendering', () => {
 
   it('shows Input and Output labels when argsText is present', () => {
     partsMock.parts = [
-      { type: 'tool-call', toolName: 'get_services', argsText: '{}', result: '{"services":["jaeger"]}' },
+      {
+        type: 'tool-call',
+        toolName: 'get_services',
+        argsText: '{}',
+        status: { type: 'complete' },
+        result: '{"services":["jaeger"]}',
+      },
     ];
     render(<JaegerThreadMessageBody variant="assistant" />);
     expect(screen.getByText('Input')).toBeInTheDocument();
@@ -261,14 +288,29 @@ describe('tool-call part rendering', () => {
   });
 
   it('omits Input section when argsText is empty', () => {
-    partsMock.parts = [{ type: 'tool-call', toolName: 'get_services', argsText: '', result: 'ok' }];
+    partsMock.parts = [
+      {
+        type: 'tool-call',
+        toolName: 'get_services',
+        argsText: '',
+        status: { type: 'complete' },
+        result: 'ok',
+      },
+    ];
     render(<JaegerThreadMessageBody variant="assistant" />);
     expect(screen.queryByText('Input')).not.toBeInTheDocument();
     expect(screen.getByText('Output')).toBeInTheDocument();
   });
 
   it('JSON-stringifies non-string results', () => {
-    partsMock.parts = [{ type: 'tool-call', toolName: 'get_services', result: { services: ['jaeger'] } }];
+    partsMock.parts = [
+      {
+        type: 'tool-call',
+        toolName: 'get_services',
+        status: { type: 'complete' },
+        result: { services: ['jaeger'] },
+      },
+    ];
     render(<JaegerThreadMessageBody variant="assistant" />);
     expect(screen.getByText('{"services":["jaeger"]}')).toBeInTheDocument();
   });
@@ -276,13 +318,18 @@ describe('tool-call part rendering', () => {
   it('falls back to String() when JSON.stringify throws', () => {
     const circular = {};
     circular.self = circular;
-    partsMock.parts = [{ type: 'tool-call', toolName: 'bad_tool', result: circular }];
+    partsMock.parts = [
+      { type: 'tool-call', toolName: 'bad_tool', status: { type: 'complete' }, result: circular },
+    ];
     render(<JaegerThreadMessageBody variant="assistant" />);
     expect(screen.getByText('[object Object]')).toBeInTheDocument();
   });
 
   it('renders text parts correctly alongside tool-call parts', () => {
-    partsMock.parts = [{ type: 'text' }, { type: 'tool-call', toolName: 'read_skill', result: 'done' }];
+    partsMock.parts = [
+      { type: 'text' },
+      { type: 'tool-call', toolName: 'read_skill', status: { type: 'complete' }, result: 'done' },
+    ];
     const { container } = render(<JaegerThreadMessageBody variant="assistant" />);
     expect(container.querySelectorAll('[data-testid="message-part-text"]')).toHaveLength(1);
     expect(screen.getByText('Called read_skill')).toBeInTheDocument();
