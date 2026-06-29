@@ -96,7 +96,7 @@ describe('<TraceTimelineViewer>', () => {
   const trace = legacyTrace.asOtelTrace();
   const props = {
     trace,
-    textFilter: null,
+    uiFind: null,
     viewRange: {
       time: {
         current: [0, 1],
@@ -158,6 +158,12 @@ describe('<TraceTimelineViewer>', () => {
     const initialCount = screen.getAllByTestId('virtualized-trace-view-mock').length;
     renderWithRedux(<TraceTimelineViewer {...props} />);
     expect(screen.getAllByTestId('virtualized-trace-view-mock')).toHaveLength(initialCount + 1);
+  });
+
+  it('fires onSearchResults callback when trace and uiFind are provided', () => {
+    const onSearchResults = jest.fn();
+    render(<TraceTimelineViewerImpl {...props} uiFind="service1" onSearchResults={onSearchResults} />);
+    expect(onSearchResults).toHaveBeenCalledWith(expect.objectContaining({ count: expect.any(Number) }));
   });
 
   it('derives selectedSpanID from Zustand detailStates', () => {
