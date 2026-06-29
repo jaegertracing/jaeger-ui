@@ -69,11 +69,12 @@ const jsonViewStyles = {
 };
 
 function ToolCallResultValue({ result }: { result: unknown }) {
-  const parsed = tryParseJson(result);
+  const parsed = React.useMemo(() => tryParseJson(result), [result]);
+
   if (typeof parsed === 'object' && parsed !== null) {
     return (
       <JsonView
-        data={parsed as Record<string, unknown>}
+        data={parsed as Record<string, unknown> | unknown[]}
         shouldExpandNode={collapseAllNested}
         style={jsonViewStyles}
       />
