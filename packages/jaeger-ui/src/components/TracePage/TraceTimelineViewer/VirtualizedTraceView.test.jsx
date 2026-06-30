@@ -887,4 +887,40 @@ describe('<VirtualizedTraceViewImpl>', () => {
       expect(result).toBeTruthy();
     });
   });
+
+  describe('Focus restoration on detail collapse', () => {
+    it('restores focus to the triggering toggle button when a detail row is collapsed', () => {
+      // Mock requestAnimationFrame to run immediately
+      const origRaf = window.requestAnimationFrame;
+      window.requestAnimationFrame = cb => {
+        cb();
+        return 0;
+      };
+
+      try {
+        const { props } = expandRow(0);
+        const { listViewProps } = renderAndCapture(props);
+
+        // Get the SpanBarRow wrapper result from itemRenderer
+        const rowResult = listViewProps.itemRenderer('key-0', {}, 0, {});
+        const spanBarRow = rowResult.props.children;
+
+        // Register a fake toggle anchor element via toggleRef
+        const mockFocus = jest.fn();
+        const mockAnchor = { focus: mockFocus };
+        spanBarRow.props.toggleRef(mockAnchor);
+
+        // Verify that triggering collapse onDetailToggled calls detailToggle and restores focus
+        spanBarRow.props.onDetailToggled(trace.spans[0].spanID);
+
+        expect(mockProps.detailToggle).toHaveBeenCalledWith(trace.spans[0].spanID);
+        expect(mockFocus).toHaveBeenCalledTimes(1);
+
+        // Clean up mockAnchor from map by calling toggleRef(null)
+        spanBarRow.props.toggleRef(null);
+      } finally {
+        window.requestAnimationFrame = origRaf;
+      }
+    });
+  });
 });
