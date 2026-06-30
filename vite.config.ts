@@ -47,6 +47,9 @@ export default defineConfig({
       '**/demo/**',
       'packages/jaeger-ui/src/api/v3/generated-client.ts',
       '**/*.cjs',
+      // Example config file: injected as a browser script or run in a vm sandbox,
+      // neither of which has CommonJS module; UIConfig is a global, not an export.
+      'packages/jaeger-ui/jaeger-ui.config.console-analytics.js',
     ],
     rules: {
       'constructor-super': 'error',

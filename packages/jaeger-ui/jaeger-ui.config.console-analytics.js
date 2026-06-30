@@ -74,5 +74,3 @@ function UIConfig() {
     // backendCapabilities: { archiveStorage: true, aiAssistant: true }
   };
 }
-
-module.exports = UIConfig;
