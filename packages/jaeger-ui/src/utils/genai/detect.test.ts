@@ -88,10 +88,7 @@ describe('isGenAITrace', () => {
   });
 
   it('returns false when no span has gen_ai.* attributes', () => {
-    const trace = makeTrace([
-      makeSpan({ 'http.method': 'GET' }),
-      makeSpan({ 'db.system': 'postgresql' }),
-    ]);
+    const trace = makeTrace([makeSpan({ 'http.method': 'GET' }), makeSpan({ 'db.system': 'postgresql' })]);
     expect(isGenAITrace(trace)).toBe(false);
   });
 
