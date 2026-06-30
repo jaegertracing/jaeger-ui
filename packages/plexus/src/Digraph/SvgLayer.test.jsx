@@ -10,7 +10,7 @@ import SvgLayer from './SvgLayer';
 // Use React.createElement instead of JSX, because jest.mock factory functions cannot reference external variables
 vi.mock('./SvgDefEntry', () => {
   const React = require('react');
-  const MockSvgDefEntry = ({ localId, getClassName: _getClassName }) =>
+  const MockSvgDefEntry = ({ localId, getClassName: _unused }) =>
     React.createElement('marker', { id: localId, 'data-testid': `def-${localId}` });
   return { default: MockSvgDefEntry };
 });
@@ -42,7 +42,7 @@ describe('SvgLayer', () => {
   };
 
   // Helper to render inside SVG context
-  const renderSvgLayer = (props, _options = {}) => {
+  const renderSvgLayer = (props, _unused = {}) => {
     const mergedProps = { ...defaultProps, ...props };
     // If standalone or topLayer, component renders its own svg
     if (mergedProps.standalone || mergedProps.topLayer) {
@@ -76,7 +76,7 @@ describe('SvgLayer', () => {
 
   describe('container props', () => {
     it('merges custom props from setOnContainer', () => {
-      const setOnContainer = _graphState => ({
+      const setOnContainer = _unused => ({
         'data-custom': 'value',
       });
       const { container } = renderSvgLayer({ setOnContainer });

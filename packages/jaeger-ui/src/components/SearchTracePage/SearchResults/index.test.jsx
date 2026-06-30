@@ -154,7 +154,7 @@ describe('<SearchResults>', () => {
   });
 
   it('uses default skipMessage value when not provided', () => {
-    const { skipMessage: _skipMessage, ...propsWithoutSkipMessage } = baseProps;
+    const { skipMessage: _unused, ...propsWithoutSkipMessage } = baseProps;
     renderWithRouter(<SearchResults {...propsWithoutSkipMessage} traceSummaries={[]} />);
     expect(screen.getByText(/No trace results\. Try another query\./i)).toBeInTheDocument();
   });
