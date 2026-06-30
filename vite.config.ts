@@ -166,6 +166,9 @@ export default defineConfig({
       {
         files: ['**/*.{js,jsx}'],
         rules: {
+          // JS/JSX files are not checked by tsc, so lint rules are the only safety net here.
+          // Rules that cannot be enforced cleanly are listed below with an explanation.
+          //
           // no-shadow is off because vi.mock() factory functions must re-require('react')
           // inside the factory (factories cannot close over outer variables), which
           // unavoidably shadows the top-level React import.
