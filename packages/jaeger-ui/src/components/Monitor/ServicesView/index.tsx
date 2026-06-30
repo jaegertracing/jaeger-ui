@@ -42,12 +42,17 @@ import withRouteProps from '../../../utils/withRouteProps';
 
 import SearchableSelect from '../../common/SearchableSelect';
 import { useServices } from '../../../hooks/useTraceDiscovery';
+import { getUrlState } from '../url';
 
 type TReduxProps = {
   metrics: MetricsReduxState;
 };
 
-type TProps = TReduxProps & TDispatchProps;
+type TOwnProps = {
+  search?: string;
+};
+
+type TProps = TReduxProps & TDispatchProps & TOwnProps;
 
 type TDispatchProps = {
   fetchAggregatedServiceMetrics: ActionFunctionAny<Action<Promise<FetchAggregatedServiceMetricsResponse>>>;
@@ -66,6 +71,32 @@ const spanKindOptions = [
   { label: 'Producer', value: 'producer' },
   { label: 'Consumer', value: 'consumer' },
 ];
+
+const getDefaultSpanKind = (): spanKinds => {
+  const stored = store.getString('lastAtmSearchSpanKind');
+  return spanKindOptions.some(opt => opt.value === stored) ? (stored as spanKinds) : 'server';
+};
+
+const resolveService = (candidate: string | undefined, services: string[]): string | undefined => {
+  if (candidate && services.includes(candidate)) return candidate;
+  const stored = store.getString('lastAtmSearchService');
+  if (stored && services.includes(stored)) return stored;
+  return services[0];
+};
+
+const getFiltersFromSearch = (search: string) => {
+  const urlState = getUrlState(search);
+  return {
+    selectedService: urlState.service ?? store.getString('lastAtmSearchService'),
+    selectedSpanKind: urlState.spanKind ?? getDefaultSpanKind(),
+    selectedTimeFrame: urlState.timeframe ?? store.getNumber('lastAtmSearchTimeframe', ONE_HOUR_MS),
+    urlOwned: {
+      service: urlState.service != null,
+      spanKind: urlState.spanKind != null,
+      timeframe: urlState.timeframe != null,
+    },
+  };
+};
 
 const calcDisplayTimeUnit = (serviceLatencies: ServiceMetricsObject | ServiceMetricsObject[] | null) => {
   let maxValue = 0;
@@ -97,25 +128,31 @@ const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMe
 };
 
 export function MonitorATMServicesViewImpl(props: TProps) {
-  const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics, metrics } = props;
+  const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics, metrics, search = '' } = props;
   const { data: services = [], isLoading: servicesLoading } = useServices();
   const docsLink = getConfig().monitor?.docsLink;
   const graphDivWrapper = useRef<HTMLDivElement>(null);
+
+  const initialFilters = getFiltersFromSearch(search);
+
   const [endTime, setEndTime] = useState<number>(Date.now());
   const [graphWidth, setGraphWidth] = useState<number>(300);
   const [serviceOpsMetrics, setServiceOpsMetrics] = useState<ServiceOpsMetrics[] | undefined>(undefined);
   const [searchOps, setSearchOps] = useState<string>('');
   const [graphXDomain, setGraphXDomain] = useState<number[]>([]);
-  const [selectedService, setSelectedService] = useState<string | undefined>(
-    store.getString('lastAtmSearchService')
-  );
-  const [selectedSpanKind, setSelectedSpanKind] = useState<spanKinds>(() => {
-    const stored = store.getString('lastAtmSearchSpanKind');
-    return spanKindOptions.some(opt => opt.value === stored) ? (stored as spanKinds) : 'server';
-  });
-  const [selectedTimeFrame, setSelectedTimeFrame] = useState<number>(
-    store.getNumber('lastAtmSearchTimeframe', ONE_HOUR_MS)
-  );
+  const [selectedService, setSelectedService] = useState<string | undefined>(initialFilters.selectedService);
+  const [selectedSpanKind, setSelectedSpanKind] = useState<spanKinds>(initialFilters.selectedSpanKind);
+  const [selectedTimeFrame, setSelectedTimeFrame] = useState<number>(initialFilters.selectedTimeFrame);
+
+  const urlOwned = useRef(initialFilters.urlOwned);
+
+  useEffect(() => {
+    const filters = getFiltersFromSearch(search);
+    urlOwned.current = filters.urlOwned;
+    setSelectedService(filters.selectedService);
+    setSelectedSpanKind(filters.selectedSpanKind);
+    setSelectedTimeFrame(filters.selectedTimeFrame);
+  }, [search]);
 
   const calcGraphXDomain = useCallback(() => {
     const currentTime = Date.now();
@@ -129,35 +166,38 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   }, []);
 
   const getSelectedService = useCallback(() => {
-    return selectedService || store.getString('lastAtmSearchService') || services[0];
+    return resolveService(selectedService, services);
   }, [services, selectedService]);
 
   const handleServiceChange = useCallback((value: string) => {
+    urlOwned.current.service = false;
     setSelectedService(value);
     trackSelectService(value);
   }, []);
 
   const handleSpanKindChange = useCallback((value: string) => {
+    urlOwned.current.spanKind = false;
     setSelectedSpanKind(value as spanKinds);
     const { label } = spanKindOptions.find(option => option.value === value)!;
     trackSelectSpanKind(label);
   }, []);
 
   const handleTimeFrameChange = useCallback((value: number) => {
+    urlOwned.current.timeframe = false;
     setSelectedTimeFrame(value);
     const { label } = timeFrameOptions.find(option => option.value === value)!;
     trackSelectTimeframe(label);
   }, []);
 
   const fetchMetrics = useCallback(() => {
-    const currentService = selectedService || services[0];
+    const currentService = resolveService(selectedService, services);
 
     if (currentService) {
       const newEndTime = Date.now();
       setEndTime(newEndTime);
-      store.set('lastAtmSearchSpanKind', selectedSpanKind);
-      store.set('lastAtmSearchTimeframe', selectedTimeFrame);
-      store.set('lastAtmSearchService', currentService);
+      if (!urlOwned.current.spanKind) store.set('lastAtmSearchSpanKind', selectedSpanKind);
+      if (!urlOwned.current.timeframe) store.set('lastAtmSearchTimeframe', selectedTimeFrame);
+      if (!urlOwned.current.service) store.set('lastAtmSearchService', currentService);
 
       const metricQueryPayload = {
         quantile: 0.95,
@@ -395,7 +435,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
             data={serviceOpsMetrics === undefined ? metrics.serviceOpsMetrics : serviceOpsMetrics}
             endTime={endTime}
             lookback={selectedTimeFrame}
-            serviceName={getSelectedService()}
+            serviceName={getSelectedService() ?? ''}
           />
         </Row>
       </div>
