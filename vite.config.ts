@@ -166,13 +166,9 @@ export default defineConfig({
       {
         files: ['**/*.{js,jsx}'],
         rules: {
-          // JavaScript/JSX files: disable rules that tsc enforces for .ts files.
-          // no-unused-vars is enabled here because tsc does not check .js files.
-          //
-          // no-shadow stays off: vi.mock() factory functions cannot close over outer
-          // variables, so tests legitimately re-require('react') inside the factory,
-          // which shadows the top-level import. There is no clean fix short of
-          // per-site eslint-disable comments.
+          // no-shadow is off because vi.mock() factory functions must re-require('react')
+          // inside the factory (factories cannot close over outer variables), which
+          // unavoidably shadows the top-level React import.
           'no-shadow': 'off',
         },
       },
