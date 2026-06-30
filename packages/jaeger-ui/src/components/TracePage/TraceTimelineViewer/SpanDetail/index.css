@@ -72,7 +72,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .GenAIAttributeRenderer--pre {
-  background: var(--surface-secondary, #f5f5f5);
+  background: var(--surface-secondary);
   border-radius: 2px;
   font-size: 0.85em;
   margin: 0;
