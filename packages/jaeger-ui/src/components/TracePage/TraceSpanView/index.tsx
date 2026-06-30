@@ -1,7 +1,7 @@
 // Copyright (c) 2018 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Table, Button, Select, Form, Tooltip } from 'antd';
 import dayjs from 'dayjs';
 import { ColumnProps } from 'antd/es/table';
@@ -18,8 +18,8 @@ type FilterType = 'serviceName' | 'operationName';
 
 type Props = {
   trace: IOtelTrace;
-  uiFindVertexKeys: Set<string> | TNil;
-  uiFind: string | null | undefined;
+  uiFind?: string | null | undefined;
+  onSearchResults?: (matches: Set<string> | TNil) => void;
   useOtelTerms: boolean;
 };
 
@@ -28,6 +28,13 @@ export default function TraceSpanView(props: Props) {
     serviceName: [],
     operationName: [],
   });
+
+  const { onSearchResults } = props;
+  useEffect(() => {
+    if (onSearchResults) {
+      onSearchResults(null);
+    }
+  }, [onSearchResults]);
 
   const { serviceNamesList, operationNamesList, serviceToOperationsMap, maxDuration } = useMemo(() => {
     const serviceNamesSet = new Set<string>();

@@ -265,6 +265,21 @@ describe('<TraceTimelineViewer>', () => {
       expect(screen.getByTestId('virtualized-trace-view-mock')).toBeInTheDocument();
     });
 
+    describe('onSearchResults', () => {
+      it('calls onSearchResults with matches when uiFind is provided', () => {
+        const onSearchResults = vi.fn();
+        const { rerender } = render(<TraceTimelineViewerImpl {...props} onSearchResults={onSearchResults} />);
+
+        expect(onSearchResults).toHaveBeenCalledWith(null);
+
+        rerender(<TraceTimelineViewerImpl {...props} uiFind="redis" onSearchResults={onSearchResults} />);
+
+        expect(onSearchResults).toHaveBeenCalled();
+        const lastCall = onSearchResults.mock.calls[onSearchResults.mock.calls.length - 1][0];
+        expect(lastCall).toBeInstanceOf(Set);
+      });
+    });
+
     it('renders a VerticalResizer between main and side panel when timeline bars are visible', () => {
       render(<TraceTimelineViewerImpl {...props} />);
       expect(screen.getByTestId('vertical-resizer-mock')).toBeInTheDocument();

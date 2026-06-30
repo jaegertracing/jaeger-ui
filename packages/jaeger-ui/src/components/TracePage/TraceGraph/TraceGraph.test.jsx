@@ -7,7 +7,6 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LayoutManager } from '@jaegertracing/plexus';
 import transformTraceData from '../../../model/transform-trace-data';
-import calculateTraceDagEV from './calculateTraceDagEV';
 import TraceGraph, { setOnEdgePath } from './TraceGraph';
 import { MODE_SERVICE, MODE_TIME, MODE_SELFTIME } from './OpNode';
 import testTrace from './testTrace.json';
@@ -66,7 +65,6 @@ vi.mock('@jaegertracing/plexus', () => {
 });
 
 const transformedTrace = transformTraceData(testTrace);
-const ev = calculateTraceDagEV(transformedTrace.asOtelTrace());
 
 describe('<TraceGraph>', () => {
   let props;
@@ -74,7 +72,7 @@ describe('<TraceGraph>', () => {
   beforeEach(() => {
     props = {
       headerHeight: 60,
-      ev,
+      trace: transformedTrace.asOtelTrace(),
     };
   });
 
@@ -174,8 +172,22 @@ describe('<TraceGraph>', () => {
     const edge = { from: 0, to: 1, isNonBlocking: true };
     expect(setOnEdgePath(edge)).toEqual({ strokeDasharray: 4 });
 
-    const edge2 = { from: 0, to: 1, isNonBlocking: false };
-    expect(setOnEdgePath(edge2)).toEqual({});
+    expect(setOnEdgePath({ isNonBlocking: false })).toEqual({});
+  });
+
+  describe('onSearchResults', () => {
+    it('calls onSearchResults with uiFindVertexKeys when uiFind is provided', () => {
+      const onSearchResults = vi.fn();
+      const { rerender } = render(<TraceGraph trace={props.trace} onSearchResults={onSearchResults} />);
+
+      expect(onSearchResults).toHaveBeenCalledWith(null);
+
+      rerender(<TraceGraph trace={props.trace} uiFind="frontend" onSearchResults={onSearchResults} />);
+
+      expect(onSearchResults).toHaveBeenCalled();
+      const lastCall = onSearchResults.mock.calls[onSearchResults.mock.calls.length - 1][0];
+      expect(lastCall).toBeInstanceOf(Set);
+    });
   });
 
   it('handles uiFind mode correctly', () => {

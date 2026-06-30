@@ -11,11 +11,13 @@ import { ITableSpan } from './types';
 import { TNil } from '../../../types';
 import PopupSQL from './PopupSql';
 import { getServiceName } from './tableValues';
+import filterSpans from '../../../utils/filter-spans';
 
 type Props = {
   trace: IOtelTrace;
-  uiFindVertexKeys: Set<string> | TNil;
+  uiFindVertexKeys?: Set<string> | TNil;
   uiFind: string | null | undefined;
+  onSearchResults?: (matches: Set<string> | TNil) => void;
   useOtelTerms: boolean;
 };
 
@@ -106,7 +108,7 @@ const columnsArray: {
 /**
  * Trace Statistics Component
  */
-export default class TraceStatistics extends Component<Props, State> {
+class TraceStatistics extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
 
@@ -207,8 +209,8 @@ export default class TraceStatistics extends Component<Props, State> {
         allTableSpansChange[i].searchColor = defaultGrayCollor;
       }
     }
-    if (typeof uiFindVertexKeys !== 'undefined') {
-      uiFindVertexKeys!.forEach(function calc(value) {
+    if (uiFindVertexKeys) {
+      uiFindVertexKeys.forEach(function calc(value) {
         const uiFindVertexKeysSplit = value.split('\u000b');
 
         for (let i = 0; i < allTableSpansChange.length; i++) {
@@ -393,3 +395,21 @@ export default class TraceStatistics extends Component<Props, State> {
     );
   }
 }
+
+const TraceStatisticsWrapper = React.forwardRef<TraceStatistics, Props>((props, ref) => {
+  const { trace, uiFind, onSearchResults } = props;
+  const matches = React.useMemo(() => {
+    if (!uiFind) return null;
+    return filterSpans(uiFind, trace.spans);
+  }, [uiFind, trace]);
+
+  React.useEffect(() => {
+    if (onSearchResults) {
+      onSearchResults(matches);
+    }
+  }, [matches, onSearchResults]);
+
+  return <TraceStatistics {...props} ref={ref} uiFindVertexKeys={matches} />;
+});
+
+export default TraceStatisticsWrapper;
