@@ -56,7 +56,11 @@ function JsonRenderer({ value }: JsonRendererProps) {
     const isSmall = typeof parsed === 'object' && parsed !== null && Object.keys(parsed).length <= 10;
     return (
       <div className="GenAIAttributeRenderer--json">
-        <JsonView data={parsed} shouldExpandNode={isSmall ? allExpanded : collapseAllNested} style={defaultStyles} />
+        <JsonView
+          data={parsed}
+          shouldExpandNode={isSmall ? allExpanded : collapseAllNested}
+          style={defaultStyles}
+        />
       </div>
     );
   }
