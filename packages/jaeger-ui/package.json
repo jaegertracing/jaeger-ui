@@ -73,7 +73,7 @@
     "react-json-view-lite": "2.5.0",
     "react-redux": "9.3.0",
     "react-router-dom": "7.18.0",
-    "recharts": "3.8.0",
+    "recharts": "3.9.1",
     "redux": "5.0.1",
     "redux-actions": "3.0.3",
     "redux-promise-middleware": "6.2.0",
