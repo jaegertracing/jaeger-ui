@@ -168,10 +168,12 @@ export default defineConfig({
         rules: {
           // JavaScript/JSX files: disable rules that tsc enforces for .ts files.
           // no-unused-vars is enabled here because tsc does not check .js files.
-          'no-redeclare': 'off',
+          //
+          // no-shadow stays off: vi.mock() factory functions cannot close over outer
+          // variables, so tests legitimately re-require('react') inside the factory,
+          // which shadows the top-level import. There is no clean fix short of
+          // per-site eslint-disable comments.
           'no-shadow': 'off',
-          'no-use-before-define': 'off',
-          'no-useless-constructor': 'off',
         },
       },
     ],
