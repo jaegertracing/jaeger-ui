@@ -235,4 +235,42 @@ describe('filterSpans', () => {
   it('should return an empty set if no spans match the filter', () => {
     expect(filterSpans('-processTagKey1', spans)).toEqual(new Set());
   });
+  it('should return spans whose tags have an object value containing the filter text', () => {
+    const spanWithObjectTag = {
+      spanID: 'span-id-object',
+      operationName: 'operationNameObject',
+      process: {
+        serviceName: 'serviceNameObject',
+        tags: [],
+      },
+      tags: [
+        {
+          key: 'gen_ai.input.messages',
+          value: { role: 'user', content: 'hello world' },
+        },
+      ],
+      logs: [],
+    };
+    expect(filterSpans('hello', [spanWithObjectTag])).toEqual(new Set(['span-id-object']));
+    expect(filterSpans('user', [spanWithObjectTag])).toEqual(new Set(['span-id-object']));
+  });
+
+  it('should return spans whose tags have an array value containing the filter text', () => {
+    const spanWithArrayTag = {
+      spanID: 'span-id-array',
+      operationName: 'operationNameArray',
+      process: {
+        serviceName: 'serviceNameArray',
+        tags: [],
+      },
+      tags: [
+        {
+          key: 'http.response.headers',
+          value: ['application/json', 'gzip'],
+        },
+      ],
+      logs: [],
+    };
+    expect(filterSpans('application/json', [spanWithArrayTag])).toEqual(new Set(['span-id-array']));
+  });
 });
