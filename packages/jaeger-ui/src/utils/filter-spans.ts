@@ -39,7 +39,10 @@ export default function filterSpans(textFilter: string, spans: ReadonlyArray<Spa
           if (isTextInFilters(excludeKeys, kv.key)) return false;
           const value = (kv as any).value; // handle legacy KeyValuePair and IAttribute
           if (value === null || value === undefined) return false;
-          const valueString = String(value);
+          const valueString =
+            typeof value === 'object' && !(value instanceof Uint8Array)
+              ? JSON.stringify(value)
+              : String(value);
           // match if key, value or key=value string matches an item in includeFilters
           return (
             isTextInFilters(includeFilters, kv.key) ||
