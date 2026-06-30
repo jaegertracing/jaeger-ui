@@ -12,7 +12,6 @@ import AccordionText from './AccordionText';
 import DetailState from './DetailState';
 import { formatDuration, formatDurationCompact } from '../utils';
 import CopyIcon from '../../../common/CopyIcon';
-import LabeledList from '../../../common/LabeledList';
 
 import { TNil } from '../../../../types';
 import { Hyperlink } from '../../../../types/hyperlink';
@@ -67,37 +66,38 @@ export default function SpanDetail(props: SpanDetailProps) {
   const attributesLabel = useOtelTerms ? 'Attributes' : 'Tags';
   const resourceLabel = useOtelTerms ? 'Resource' : 'Process';
 
-  const overviewItems = [
-    {
-      key: 'svc',
-      label: 'Service:',
-      value: span.resource.serviceName,
-    },
-    {
-      key: 'duration',
-      label: 'Duration:',
-      value: formatDurationCompact(span.duration),
-    },
-    {
-      key: 'start',
-      label: 'Start Time:',
-      value: formatDuration(span.relativeStartTime),
-    },
-  ];
   const deepLinkCopyText = `${window.location.origin}${window.location.pathname}?uiFind=${span.spanID}`;
 
   return (
     <div>
-      <div className="ub-flex ub-items-center">
-        <h2 className="ub-flex-auto ub-m0">{span.name}</h2>
-        <LabeledList
-          className="ub-tx-right-align"
-          dividerClassName="SpanDetail--divider"
-          items={overviewItems}
-        />
+      <div className="ub-flex ub-items-center SpanDetail--header">
+        <h2
+          className="ub-flex-auto ub-m0 SpanDetail--headerTitle"
+          title={`${span.resource.serviceName}::${span.name}`}
+        >
+          <span className="SpanDetail--headerServiceName">{span.resource.serviceName}</span>{' '}
+          <small className="SpanDetail--headerEndpointName">{span.name}</small>
+        </h2>
       </div>
       <Divider className="SpanDetail--divider ub-my1" />
       <div>
+        <table className="SpanDetail--overviewTable ub-mb1">
+          <caption className="SpanDetail--overviewTableCaption">Span Overview</caption>
+          <tbody>
+            <tr>
+              <th scope="row" className="SpanDetail--overviewTableKey">
+                Duration:
+              </th>
+              <td>{formatDurationCompact(span.duration)}</td>
+            </tr>
+            <tr>
+              <th scope="row" className="SpanDetail--overviewTableKey">
+                Start Time:
+              </th>
+              <td>{formatDuration(span.relativeStartTime)}</td>
+            </tr>
+          </tbody>
+        </table>
         <div>
           <AccordionAttributes
             data={span.attributes}
