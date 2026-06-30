@@ -12,7 +12,6 @@ import SpanDetail from './index';
 import { formatDuration } from '../utils';
 import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
-import OtelSpanFacade from '../../../../model/OtelSpanFacade';
 
 vi.mock('./AccordionAttributes', () => {
   return mockDefault(function MockAccordionAttributes({ label, onToggle }) {
