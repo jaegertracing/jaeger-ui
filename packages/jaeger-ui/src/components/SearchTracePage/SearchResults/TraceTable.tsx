@@ -4,19 +4,26 @@
 import * as React from 'react';
 import { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Checkbox, Table, Tag, Tooltip } from 'antd';
+import { Button, Checkbox, Table, Tag, Tooltip } from 'antd';
 import type { ColumnsType, TableProps } from 'antd/es/table';
 import type { SorterResult, SortOrder } from 'antd/es/table/interface';
 import Overflow from '@rc-component/overflow';
 import _sortBy from 'lodash/sortBy';
+import { IoSwapHorizontalOutline } from 'react-icons/io5';
 import { TraceSummary } from '../../../types/trace-summary';
-import { formatDuration, formatDurationCompact, formatDatetime } from '../../../utils/date';
+import {
+  formatDuration,
+  formatDurationCompact,
+  formatDatetime,
+  formatRelativeTime,
+} from '../../../utils/date';
 import RelativeBar from '../../common/RelativeBar';
 import { toOrderBy, fromOrderBy } from '../../../model/search';
 import type { SortableColumnKey, SortDirection } from '../../../model/search';
 import type { OrderBy } from '../../../model/order-by';
 import type { TracePageLink } from '../../TracePage/url';
 import { ServicePill, type ServiceEntry } from './ServicePills';
+import { useSearchResultsStore } from '../store.search-results';
 
 const BOTH_DIRECTIONS: SortOrder[] = ['ascend', 'descend'];
 
@@ -71,6 +78,8 @@ export default function TraceTable({
 }: TraceTableProps) {
   const navigate = useNavigate();
   const { key: sortKey, order: sortOrder } = fromOrderBy(sortBy);
+  const startTimeDisplay = useSearchResultsStore(s => s.startTimeDisplay);
+  const setStartTimeDisplay = useSearchResultsStore(s => s.setStartTimeDisplay);
 
   // Hide columns when no summary in the result set supports them.
   // A backend that omits errorSpanCount/spanCount leaves those fields undefined;
@@ -180,11 +189,28 @@ export default function TraceTable({
         sortDirections: BOTH_DIRECTIONS,
       },
       {
-        title: 'Start Time',
+        title: (
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            Start Time
+            <Tooltip title={startTimeDisplay === 'absolute' ? 'Show relative time' : 'Show absolute time'}>
+              <Button
+                type="text"
+                size="small"
+                icon={<IoSwapHorizontalOutline />}
+                aria-label="Toggle start time format"
+                onClick={e => {
+                  e.stopPropagation();
+                  setStartTimeDisplay(startTimeDisplay === 'absolute' ? 'relative' : 'absolute');
+                }}
+              />
+            </Tooltip>
+          </span>
+        ),
         key: 'startTime',
         onCell: () => ({ style: { overflow: 'hidden' } }),
         render: (_: unknown, trace: TraceSummary) => {
           const formatted = formatDatetime(trace.startTime);
+          const displayed = startTimeDisplay === 'relative' ? formatRelativeTime(trace.startTime) : formatted;
           return (
             <Tooltip title={formatted}>
               <span
@@ -197,13 +223,12 @@ export default function TraceTable({
                   display: 'block',
                 }}
               >
-                {formatted}
+                {displayed}
               </span>
             </Tooltip>
           );
         },
         sorter: true,
-
         sortOrder: sortKey === 'startTime' ? sortOrder : undefined,
         sortDirections: BOTH_DIRECTIONS,
       },
@@ -243,6 +268,8 @@ export default function TraceTable({
     toggleComparison,
     showServicesColumn,
     showErrorsColumn,
+    startTimeDisplay,
+    setStartTimeDisplay,
   ]);
 
   const onChange: TableProps<TraceSummary>['onChange'] = (_pagination, _filters, sorter) => {

@@ -5,11 +5,13 @@ import dayjs, { ConfigType } from 'dayjs';
 import _dropWhile from 'lodash/dropWhile';
 import _round from 'lodash/round';
 import _duration, { DurationUnitType } from 'dayjs/plugin/duration';
+import _relativeTime from 'dayjs/plugin/relativeTime';
 
 import { toFloatPrecision } from './number';
 import { Microseconds } from '../types/units';
 
 dayjs.extend(_duration);
+dayjs.extend(_relativeTime);
 
 const TODAY = 'Today';
 const YESTERDAY = 'Yesterday';
@@ -101,6 +103,19 @@ export function formatTime(duration: number): string {
  */
 export function formatDatetime(duration: number): string {
   return dayjs(duration / ONE_MILLISECOND).format(STANDARD_DATETIME_FORMAT);
+}
+
+/**
+ * @param {number} duration - Unix Time
+ * @return {string} relative, human-readable time string
+ *
+ * @example
+ * ```
+ * formatRelativeTime(Date.now() * 1000) // => 'a few seconds ago'
+ * ```
+ */
+export function formatRelativeTime(duration: number): string {
+  return dayjs(duration / ONE_MILLISECOND).fromNow();
 }
 
 /**
