@@ -10,6 +10,8 @@ import * as orderBy from '../../../model/order-by';
 import type { OrderBy } from '../../../model/order-by';
 import { toOrderBy, fromOrderBy } from '../../../model/search';
 import type { Microseconds } from '../../../types/units';
+import { useSearchResultsStore } from '../store.search-results';
+import { formatDatetime } from '../../../utils/date';
 
 const FIXED_START_TIME = 1700000000000000 as Microseconds;
 
@@ -42,6 +44,8 @@ const defaultProps = {
 describe('TraceTable', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
+    useSearchResultsStore.setState({ startTimeDisplay: 'absolute' });
   });
 
   it('renders correct row count for a 5-trace fixture', () => {
@@ -134,6 +138,55 @@ describe('TraceTable', () => {
       </MemoryRouter>
     );
     expect(container.querySelector('svg')).toBeInTheDocument();
+  });
+});
+
+describe('Start Time display toggle', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    useSearchResultsStore.setState({ startTimeDisplay: 'absolute' });
+  });
+
+  it('renders absolute formatted time by default', () => {
+    render(
+      <MemoryRouter>
+        <TraceTable {...defaultProps} />
+      </MemoryRouter>
+    );
+    expect(screen.getAllByText(formatDatetime(FIXED_START_TIME))).toHaveLength(mockTraces.length);
+  });
+
+  it('switches to relative time when the header toggle is clicked', () => {
+    render(
+      <MemoryRouter>
+        <TraceTable {...defaultProps} />
+      </MemoryRouter>
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Toggle start time format' }));
+    expect(screen.queryByText(formatDatetime(FIXED_START_TIME))).not.toBeInTheDocument();
+    expect(useSearchResultsStore.getState().startTimeDisplay).toBe('relative');
+  });
+
+  it('clicking the toggle does not trigger column sorting', () => {
+    const handleSortChange = vi.fn();
+    render(
+      <MemoryRouter>
+        <TraceTable {...defaultProps} handleSortChange={handleSortChange} />
+      </MemoryRouter>
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Toggle start time format' }));
+    expect(handleSortChange).not.toHaveBeenCalled();
+  });
+
+  it('persists the preference to localStorage', () => {
+    render(
+      <MemoryRouter>
+        <TraceTable {...defaultProps} />
+      </MemoryRouter>
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Toggle start time format' }));
+    const stored = JSON.parse(localStorage.getItem('jaeger.search-results.mode') ?? '{}');
+    expect(stored.state.startTimeDisplay).toBe('relative');
   });
 });
 
