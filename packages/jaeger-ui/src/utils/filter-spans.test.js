@@ -246,14 +246,18 @@ describe('filterSpans', () => {
     });
 
     it('matches text inside an object attribute value', () => {
-      const span = makeOtelSpan('obj-span', [{ key: 'gen_ai.message', value: { role: 'user', content: 'hello world' } }]);
+      const span = makeOtelSpan('obj-span', [
+        { key: 'gen_ai.message', value: { role: 'user', content: 'hello world' } },
+      ]);
       expect(filterSpans('hello', [span])).toEqual(new Set(['obj-span']));
       expect(filterSpans('user', [span])).toEqual(new Set(['obj-span']));
       expect(filterSpans('notfound', [span])).toEqual(new Set([]));
     });
 
     it('matches text inside an array attribute value', () => {
-      const span = makeOtelSpan('arr-span', [{ key: 'http.request.header.accept', value: ['application/json', 'text/html'] }]);
+      const span = makeOtelSpan('arr-span', [
+        { key: 'http.request.header.accept', value: ['application/json', 'text/html'] },
+      ]);
       expect(filterSpans('application/json', [span])).toEqual(new Set(['arr-span']));
       expect(filterSpans('text/html', [span])).toEqual(new Set(['arr-span']));
       expect(filterSpans('notfound', [span])).toEqual(new Set([]));
