@@ -10,6 +10,7 @@
 
 import { ALL_SERVICES } from '../../constants/search-form';
 import prefixUrl from '../../utils/prefix-url';
+import getConfig from '../../utils/config/get-config';
 import {
   ServicesResponseSchema,
   OperationsResponseSchema,
@@ -151,11 +152,11 @@ export class JaegerClient {
   /**
    * Fetch with timeout support using AbortController.
    * @param url - The URL to fetch
-   * @param timeout - Timeout in milliseconds (default: 10 seconds)
+   * @param timeout - Timeout in milliseconds (defaults to the configured request timeout)
    * @returns Promise<Response>
    * @throws Error if request times out or network error occurs
    */
-  private async fetchWithTimeout(url: string, timeout = 10000): Promise<Response> {
+  private async fetchWithTimeout(url: string, timeout = getConfig().api.requestTimeoutMs): Promise<Response> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
