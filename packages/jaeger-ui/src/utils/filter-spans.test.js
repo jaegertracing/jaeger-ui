@@ -269,5 +269,12 @@ describe('filterSpans', () => {
       const span = makeOtelSpan('obj-span', [{ key: 'payload', value: { status: 'ok' } }]);
       expect(filterSpans('payload={"status":"ok"}', [span])).toEqual(new Set(['obj-span']));
     });
+
+    it('does not throw on circular reference values, falls back to String()', () => {
+      const circular = {};
+      circular.self = circular;
+      const span = makeOtelSpan('circ-span', [{ key: 'meta', value: circular }]);
+      expect(() => filterSpans('meta', [span])).not.toThrow();
+    });
   });
 });
