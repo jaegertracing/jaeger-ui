@@ -62,6 +62,7 @@
     "test": "npm run --workspaces test --",
     "tsc-lint": "tsc -p packages/jaeger-ui/tsconfig.json && tsc -p packages/plexus/tsconfig.json",
     "tsc-lint-debug": "tsc -p packages/jaeger-ui/tsconfig.json --listFiles && tsc -p packages/plexus/tsconfig.json --listFiles",
+    "dev:check": "./scripts/check-dev-server.sh",
     "start": "cd packages/jaeger-ui && npm run start",
     "update-snapshots": "cd packages/jaeger-ui && npm test -- -u"
   },

@@ -30,6 +30,8 @@ jobs:
         run: npm run depcheck
       - run: npm run lint
       - run: npm run build
+      - name: Verify dev server starts without errors
+        run: npm run dev:check
       - name: Ensure PR is not on main branch
         uses: jaegertracing/jaeger/.github/actions/block-pr-from-main-branch@main
 
