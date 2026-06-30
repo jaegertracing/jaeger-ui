@@ -114,7 +114,7 @@ export function formatDatetime(duration: number): string {
  * formatRelativeTime(Date.now() * 1000) // => 'a few seconds ago'
  * ```
  */
-export function formatRelativeTime(duration: number): string {
+export function formatRelativeTime(duration: Microseconds): string {
   return dayjs(duration / ONE_MILLISECOND).fromNow();
 }
 
