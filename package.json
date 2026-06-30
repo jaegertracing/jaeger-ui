@@ -43,7 +43,7 @@
     "fmt": "vp fmt",
     "knip": "knip",
     "lint": "npm-run-all -ln --parallel fmt-lint tsc-lint oxlint check-license check-copyright-year check-tsx-naming check-overrides knip",
-    "preinstall": "npx only-allow pnpm",
+    "preinstall": "node scripts/check-package-manager.cjs",
     "prepare": "husky",
     "fmt-lint": "vp fmt --check || (echo '*** ❌ PLEASE RUN make fmt AND RESUBMIT ***' && false)",
     "generate:api-types": "openapi-zod-client https://raw.githubusercontent.com/jaegertracing/jaeger-idl/refs/heads/main/swagger/api_v3/query_service.openapi.yaml --output packages/jaeger-ui/src/api/v3/generated-client.ts --with-alias && node scripts/postprocess-schemas.cjs && vp fmt packages/jaeger-ui/src/api/v3/generated-client.ts",
