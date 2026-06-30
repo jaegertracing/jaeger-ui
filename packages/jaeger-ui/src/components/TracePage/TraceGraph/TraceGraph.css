@@ -55,8 +55,41 @@ SPDX-License-Identifier: Apache-2.0
   margin-top: 1rem;
 }
 
+/* Legend sample edge lines and labels — same theme-aware colors as the real graph edges */
+.TraceGraph--legendLine {
+  stroke: var(--text-secondary);
+  stroke-width: 2;
+}
+
+.TraceGraph--legendLine.is-nonBlocking {
+  stroke-dasharray: 4;
+}
+
+/* SVG text default fill is black; override so labels stay readable in dark mode */
+.TraceGraph--legendText {
+  fill: var(--text-primary);
+}
+
 .TraceGraph--dag {
   stroke-width: 0.8;
+}
+
+/*
+  Theme-aware edge lines and arrowheads so they stay visible in dark mode.
+  Scoped to the edge path and the arrowhead marker's child shape (rather than
+  the .TraceGraph--dag container) so inherited stroke/fill cannot restyle nodes,
+  borders, overlays, or other <defs> primitives (clipPaths, masks, gradients).
+*/
+.TraceGraph--dag .plexus-Digraph--SvgEdge {
+  stroke: var(--text-secondary);
+  /* A sub-1px stroke anti-aliases into near-invisibility against a dark
+     background, even with sufficient color contrast. Widen to 1.5 so
+     the edges read clearly without being heavy. */
+  stroke-width: 1.5;
+}
+
+.TraceGraph--dag marker * {
+  fill: var(--text-secondary);
 }
 
 /* DAG minimap */

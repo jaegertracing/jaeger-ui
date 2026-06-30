@@ -11,9 +11,11 @@ import {
   useThreadViewportAutoScroll,
 } from '@assistant-ui/react';
 import { IoClose } from 'react-icons/io5';
+import { JsonView, collapseAllNested } from 'react-json-view-lite';
 
 import { useJaegerAssistant, useJaegerAssistantOptional } from './JaegerAssistantContext';
 import { useJaegerAssistantConfigured } from '../../hooks/useJaegerAssistant';
+import jsonViewStyles from '../../utils/jsonViewStyles';
 
 import './JaegerAssistantPanel.css';
 
@@ -31,21 +33,119 @@ function JaegerAssistantBootstrap() {
   return null;
 }
 
+function tryParseJson(value: unknown): unknown {
+  if (typeof value !== 'string') return value;
+  try {
+    const parsed = JSON.parse(value);
+    return typeof parsed === 'object' && parsed !== null ? parsed : value;
+  } catch {
+    return value;
+  }
+}
+
+function formatToolResult(result: unknown): string {
+  if (typeof result === 'string') return result;
+  try {
+    return JSON.stringify(result);
+  } catch {
+    return String(result);
+  }
+}
+
+function ToolCallResultValue({ result }: { result: unknown }) {
+  const parsed = React.useMemo(() => tryParseJson(result), [result]);
+
+  if (typeof parsed === 'object' && parsed !== null) {
+    return (
+      <JsonView
+        data={parsed as Record<string, unknown> | unknown[]}
+        shouldExpandNode={collapseAllNested}
+        style={jsonViewStyles}
+      />
+    );
+  }
+  return <pre className="JaegerAssistantPanel-toolCallPre">{formatToolResult(result)}</pre>;
+}
+
+function JaegerToolCallIndicator({
+  toolName,
+  argsText,
+  result,
+  status,
+  isError,
+}: {
+  toolName: string;
+  argsText?: string;
+  result?: unknown;
+  status?: { type: string };
+  isError?: boolean;
+}) {
+  const isRunning = status?.type === 'running' || status?.type === 'requires-action';
+  const isFailed = status?.type === 'incomplete' || isError;
+
+  if (isRunning) {
+    return (
+      <div className="JaegerAssistantPanel-toolCall">
+        <span className="JaegerAssistantPanel-toolCallStatus">Calling {toolName}…</span>
+      </div>
+    );
+  }
+
+  const label = isFailed ? `Failed ${toolName}` : `Called ${toolName}`;
+  const className = isFailed
+    ? 'JaegerAssistantPanel-toolCall JaegerAssistantPanel-toolCall--error'
+    : 'JaegerAssistantPanel-toolCall';
+
+  return (
+    <details className={className}>
+      <summary className="JaegerAssistantPanel-toolCallName">{label}</summary>
+      <div className="JaegerAssistantPanel-toolCallBody">
+        {argsText && (
+          <div className="JaegerAssistantPanel-toolCallSection">
+            <span className="JaegerAssistantPanel-toolCallLabel">Input</span>
+            <pre className="JaegerAssistantPanel-toolCallPre">{argsText}</pre>
+          </div>
+        )}
+        {result !== undefined && (
+          <div className="JaegerAssistantPanel-toolCallSection">
+            <span className="JaegerAssistantPanel-toolCallLabel">Output</span>
+            <ToolCallResultValue result={result} />
+          </div>
+        )}
+      </div>
+    </details>
+  );
+}
+
 function JaegerThreadMessageBody({ variant }: { variant: 'user' | 'assistant' }) {
   return (
     <MessagePrimitive.Root
       className={`JaegerAssistantPanel-message JaegerAssistantPanel-message--${variant}`}
     >
       <MessagePrimitive.Parts>
-        {({ part }) =>
-          part.type === 'text' ? (
-            <MessagePartPrimitive.Text
-              component="div"
-              className="JaegerAssistantPanel-messageText"
-              smooth={false}
-            />
-          ) : null
-        }
+        {({ part }) => {
+          if (part.type === 'text') {
+            return (
+              <MessagePartPrimitive.Text
+                component="div"
+                className="JaegerAssistantPanel-messageText"
+                smooth={false}
+              />
+            );
+          }
+          if (part.type === 'tool-call') {
+            return (
+              <JaegerToolCallIndicator
+                toolName={part.toolName}
+                argsText={part.argsText}
+                result={part.result}
+                status={part.status}
+                isError={part.isError}
+              />
+            );
+          }
+          return null;
+        }}
       </MessagePrimitive.Parts>
     </MessagePrimitive.Root>
   );
