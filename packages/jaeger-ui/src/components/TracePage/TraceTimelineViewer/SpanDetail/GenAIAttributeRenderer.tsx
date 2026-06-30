@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { JsonView, allExpanded, collapseAllNested, defaultStyles } from 'react-json-view-lite';
-import 'react-json-view-lite/dist/index.css';
+import { JsonView, allExpanded, collapseAllNested } from 'react-json-view-lite';
 
 import { RICH_MEDIA_ATTRIBUTE_KEYS } from '../../../../utils/genai/detect';
+import jsonViewStyles from '../../../../utils/jsonViewStyles';
 import type { IAttribute } from '../../../../types/otel';
 
 type Props = {
@@ -38,8 +38,9 @@ function extractMessageText(value: unknown): string {
     return parsed
       .map(msg => {
         if (typeof msg === 'object' && msg !== null && 'content' in msg) {
-          const role = 'role' in msg ? `[${msg.role}]` : '';
-          return `${role}\n${String((msg as Record<string, unknown>).content)}`;
+          const rec = msg as Record<string, unknown>;
+          const roleStr = typeof rec.role === 'string' && rec.role ? `[${rec.role}]\n` : '';
+          return `${roleStr}${String(rec.content)}`;
         }
         return String(msg);
       })
@@ -59,7 +60,7 @@ function JsonRenderer({ value }: JsonRendererProps) {
         <JsonView
           data={parsed}
           shouldExpandNode={isSmall ? allExpanded : collapseAllNested}
-          style={defaultStyles}
+          style={jsonViewStyles}
         />
       </div>
     );
