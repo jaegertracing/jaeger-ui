@@ -53,8 +53,8 @@ type JsonRendererProps = { value: unknown };
 
 function JsonRenderer({ value }: JsonRendererProps) {
   const parsed = tryParseJson(value);
-  if (parsed !== null) {
-    const isSmall = typeof parsed === 'object' && parsed !== null && Object.keys(parsed).length <= 10;
+  if (typeof parsed === 'object' && parsed !== null) {
+    const isSmall = Object.keys(parsed).length <= 10;
     return (
       <div className="GenAIAttributeRenderer--json">
         <JsonView
