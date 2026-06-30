@@ -106,8 +106,8 @@ export function formatDatetime(duration: number): string {
 }
 
 /**
- * @param {number} duration - Unix Time
- * @return {string} relative, human-readable time string
+ * @param duration - Unix timestamp in microseconds
+ * @return relative, human-readable time string
  *
  * @example
  * ```
