@@ -95,6 +95,26 @@ it('<ResultItem /> should render error icon on ServiceTags that have an error sp
   expect(errorTag.querySelector('.ServicePills--errorIcon')).toBeInTheDocument();
 });
 
+it('<ResultItem /> should render warning badge when warningSpanCount > 0', () => {
+  const summaryWithWarning = {
+    ...traceSummary,
+    warningSpanCount: 2,
+  };
+
+  renderWithRouter(
+    <ResultItem
+      traceSummary={summaryWithWarning}
+      durationPercent={50}
+      linkTo={{ pathname: '/' }}
+      toggleComparison={() => {}}
+      isInDiffCohort={false}
+      disableComparision={false}
+    />
+  );
+
+  expect(screen.getByText('2 Warnings')).toBeInTheDocument();
+});
+
 it('passes router state to destination route when linkTo is a TracePageLink', async () => {
   function Destination() {
     const location = useLocation();

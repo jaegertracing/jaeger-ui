@@ -25,6 +25,8 @@ import {
   isKindClient,
   isKindProducer,
   spanContainsErredSpan,
+  hasGenAIWarning,
+  spanContainsWarningSpan,
 } from './utils';
 import { Accessors } from '../ScrollManager';
 import { parseUiFind, TExtractUiFindFromStateReturn } from '../../common/UiFindInput';
@@ -366,6 +368,8 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
       const isSelected = selectedSpanID === spanID;
       const hasOwnError = isErrorSpan(span);
       const hasChildError = isCollapsed && spanContainsErredSpan(spans, spanIndex);
+      const hasOwnWarning = hasGenAIWarning(span);
+      const hasChildWarning = isCollapsed && spanContainsWarningSpan(spans, spanIndex);
       const hasPrunedChildren =
         prunedServices.size > 0 &&
         span.childSpans.some(child => prunedServices.has(child.resource.serviceName));
@@ -415,6 +419,8 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
             noInstrumentedServer={noInstrumentedServer}
             hasOwnError={hasOwnError}
             hasChildError={hasChildError}
+            hasOwnWarning={hasOwnWarning}
+            hasChildWarning={hasChildWarning}
             getViewedBounds={getViewedBounds()}
             traceStartTime={trace.startTime}
             span={span}

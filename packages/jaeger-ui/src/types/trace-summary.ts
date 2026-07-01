@@ -7,6 +7,7 @@ export type ServiceSummary = {
   name: string;
   spanCount?: number;
   errorSpanCount?: number;
+  warningSpanCount?: number;
 };
 
 export type TraceSummary = {
@@ -18,6 +19,7 @@ export type TraceSummary = {
   duration: Microseconds;
   spanCount?: number;
   errorSpanCount?: number;
+  warningSpanCount?: number;
   orphanSpanCount?: number;
   services: ServiceSummary[];
 };

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useCallback } from 'react';
-import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward } from 'react-icons/io5';
+import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward, IoWarning } from 'react-icons/io5';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
 import { formatDurationCompact, ViewedBoundsFunctionType } from './utils';
@@ -48,6 +48,8 @@ type SpanBarRowProps = {
     | TNil;
   hasOwnError: boolean;
   hasChildError: boolean;
+  hasOwnWarning: boolean;
+  hasChildWarning: boolean;
   getViewedBounds: ViewedBoundsFunctionType;
   traceStartTime: number;
   span: IOtelSpan;
@@ -79,6 +81,8 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   noInstrumentedServer,
   hasOwnError,
   hasChildError,
+  hasOwnWarning,
+  hasChildWarning,
   getViewedBounds,
   traceStartTime,
   span,
@@ -168,6 +172,10 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
               {hasOwnError && <IoAlert className="SpanBarRow--errorIcon" />}
               {!hasOwnError && hasChildError && (
                 <IoAlert className="SpanBarRow--errorIcon SpanBarRow--errorIcon--hollow" />
+              )}
+              {hasOwnWarning && !hasOwnError && <IoWarning className="SpanBarRow--warningIcon" />}
+              {!hasOwnWarning && hasChildWarning && !hasOwnError && !hasChildError && (
+                <IoWarning className="SpanBarRow--warningIcon SpanBarRow--warningIcon--hollow" />
               )}
               {serviceName}{' '}
               {rpc && (
