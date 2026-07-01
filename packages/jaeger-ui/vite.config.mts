@@ -273,6 +273,12 @@ export default defineConfig({
       ],
     },
   },
+  optimizeDeps: {
+    // react-icons/tb is a 4400+ icon barrel. Vite 8 / Rolldown pre-bundles it
+    // into a single 4 MB file that Rolldown's import-analysis parser can't handle.
+    // Exclude it so Vite serves the ESM entry directly without pre-bundling.
+    exclude: ['react-icons/tb'],
+  },
   base: './',
   build: {
     outDir: 'build',

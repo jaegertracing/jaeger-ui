@@ -71,18 +71,23 @@ const { storage, skip: skipNextWrite } = createConditionalStorage();
 
 type SetterOpts = { persist?: boolean };
 
+type StartTimeDisplay = 'absolute' | 'relative';
+
 type SearchResultsStore = {
   viewMode: 'list' | 'table';
   sortBy: SortKey;
+  startTimeDisplay: StartTimeDisplay;
   setViewMode: (mode: 'list' | 'table', opts?: SetterOpts) => void;
   setSortBy: (sortBy: string, opts?: SetterOpts) => void;
+  setStartTimeDisplay: (display: StartTimeDisplay) => void;
 };
 
 export const useSearchResultsStore = create<SearchResultsStore>()(
   persist(
     set => ({
-      viewMode: 'list',
+      viewMode: 'table',
       sortBy: MOST_RECENT,
+      startTimeDisplay: 'absolute' as StartTimeDisplay,
       setViewMode: (mode, opts = {}) => {
         if (opts.persist === false) skipNextWrite();
         set({ viewMode: mode });
@@ -91,17 +96,20 @@ export const useSearchResultsStore = create<SearchResultsStore>()(
         if (opts.persist === false) skipNextWrite();
         set({ sortBy: sanitizeSortBy(sortBy) });
       },
+      setStartTimeDisplay: display => set({ startTimeDisplay: display }),
     }),
     {
       name: 'jaeger.search-results.mode',
       storage,
-      version: 1,
+      version: 2,
       migrate: (persistedState, version) => {
-        // version 0 had only viewMode; version 1 added sortBy
+        // version 0: viewMode only; version 1: added sortBy; version 2: added startTimeDisplay
         const p = (persistedState ?? {}) as Record<string, unknown>;
+        const startTimeDisplay = p.startTimeDisplay === 'relative' ? 'relative' : ('absolute' as StartTimeDisplay);
         return {
           viewMode: sanitizeViewMode(p.viewMode),
           sortBy: version >= 1 ? sanitizeSortBy(p.sortBy) : MOST_RECENT,
+          startTimeDisplay,
         };
       },
       merge: (persisted, current) => {
@@ -110,9 +118,10 @@ export const useSearchResultsStore = create<SearchResultsStore>()(
           ...current,
           viewMode: sanitizeViewMode(p.viewMode),
           sortBy: sanitizeSortBy(p.sortBy),
+          startTimeDisplay: p.startTimeDisplay ?? 'absolute',
         };
       },
-      partialize: state => ({ viewMode: state.viewMode, sortBy: state.sortBy }),
+      partialize: state => ({ viewMode: state.viewMode, sortBy: state.sortBy, startTimeDisplay: state.startTimeDisplay }),
     }
   )
 );

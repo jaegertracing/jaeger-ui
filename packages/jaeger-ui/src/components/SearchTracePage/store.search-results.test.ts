@@ -1,6 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+import { vi } from 'vitest';
 import { useSearchResultsStore } from './store.search-results';
 import { MOST_RECENT, LONGEST_FIRST, SHORTEST_FIRST, MOST_SPANS, LEAST_SPANS } from '../../model/order-by';
 
@@ -9,7 +10,7 @@ const STORAGE_KEY = 'jaeger.search-results.mode';
 describe('useSearchResultsStore', () => {
   beforeEach(async () => {
     localStorage.removeItem(STORAGE_KEY);
-    useSearchResultsStore.getState().setViewMode('list');
+    useSearchResultsStore.getState().setViewMode('table');
     useSearchResultsStore.getState().setSortBy(MOST_RECENT);
     await Promise.resolve();
     localStorage.removeItem(STORAGE_KEY);
@@ -36,19 +37,19 @@ describe('useSearchResultsStore', () => {
   });
 
   describe('viewMode', () => {
-    it('defaults to list', () => {
-      expect(useSearchResultsStore.getInitialState().viewMode).toBe('list');
+    it('defaults to table', () => {
+      expect(useSearchResultsStore.getInitialState().viewMode).toBe('table');
     });
 
-    it('switches to table', () => {
-      useSearchResultsStore.getState().setViewMode('table');
-      expect(useSearchResultsStore.getState().viewMode).toBe('table');
-    });
-
-    it('switches back to list', () => {
-      useSearchResultsStore.getState().setViewMode('table');
+    it('switches to list', () => {
       useSearchResultsStore.getState().setViewMode('list');
       expect(useSearchResultsStore.getState().viewMode).toBe('list');
+    });
+
+    it('switches back to table', () => {
+      useSearchResultsStore.getState().setViewMode('list');
+      useSearchResultsStore.getState().setViewMode('table');
+      expect(useSearchResultsStore.getState().viewMode).toBe('table');
     });
   });
 
@@ -67,14 +68,14 @@ describe('useSearchResultsStore', () => {
     });
 
     it('updates viewMode in state but skips localStorage when persist:false', async () => {
-      useSearchResultsStore.getState().setViewMode('list');
+      useSearchResultsStore.getState().setViewMode('table');
       await Promise.resolve();
       const before = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
 
-      useSearchResultsStore.getState().setViewMode('table', { persist: false });
+      useSearchResultsStore.getState().setViewMode('list', { persist: false });
       await Promise.resolve();
 
-      expect(useSearchResultsStore.getState().viewMode).toBe('table');
+      expect(useSearchResultsStore.getState().viewMode).toBe('list');
       const after = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
       expect(after.state.viewMode).toBe(before.state.viewMode);
     });
@@ -108,7 +109,7 @@ describe('useSearchResultsStore', () => {
     it('sanitizes invalid sortBy from persisted state on rehydration', async () => {
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ state: { sortBy: 'INVALID_SORT_KEY', viewMode: 'list' }, version: 1 })
+        JSON.stringify({ state: { sortBy: 'INVALID_SORT_KEY', viewMode: 'table' }, version: 1 })
       );
       await useSearchResultsStore.persist.rehydrate();
       expect(useSearchResultsStore.getState().sortBy).toBe(MOST_RECENT);
@@ -117,7 +118,7 @@ describe('useSearchResultsStore', () => {
     it('preserves valid sortBy from persisted state on rehydration', async () => {
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ state: { sortBy: LONGEST_FIRST, viewMode: 'list' }, version: 1 })
+        JSON.stringify({ state: { sortBy: LONGEST_FIRST, viewMode: 'table' }, version: 1 })
       );
       await useSearchResultsStore.persist.rehydrate();
       expect(useSearchResultsStore.getState().sortBy).toBe(LONGEST_FIRST);
@@ -138,5 +139,35 @@ describe('useSearchResultsStore', () => {
       expect(useSearchResultsStore.getState().viewMode).toBe('table');
       expect(useSearchResultsStore.getState().sortBy).toBe(MOST_RECENT);
     });
+  });
+});
+
+describe('useSearchResultsStore — startTimeDisplay', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    useSearchResultsStore.setState({ viewMode: 'table', startTimeDisplay: 'absolute' });
+  });
+
+  it('defaults startTimeDisplay to absolute', () => {
+    expect(useSearchResultsStore.getInitialState().startTimeDisplay).toBe('absolute');
+  });
+
+  it('setStartTimeDisplay updates startTimeDisplay', () => {
+    useSearchResultsStore.getState().setStartTimeDisplay('relative');
+    expect(useSearchResultsStore.getState().startTimeDisplay).toBe('relative');
+  });
+
+  it('setStartTimeDisplay persists to localStorage', () => {
+    useSearchResultsStore.getState().setStartTimeDisplay('relative');
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}');
+    expect(stored.state.startTimeDisplay).toBe('relative');
+  });
+
+  it('persists startTimeDisplay independently of viewMode', () => {
+    useSearchResultsStore.getState().setViewMode('list');
+    useSearchResultsStore.getState().setStartTimeDisplay('relative');
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}');
+    expect(stored.state.viewMode).toBe('list');
+    expect(stored.state.startTimeDisplay).toBe('relative');
   });
 });
