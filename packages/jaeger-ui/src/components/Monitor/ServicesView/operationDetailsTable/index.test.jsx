@@ -66,10 +66,7 @@ describe('<OperationTableDetails>', () => {
 });
 
 describe('<OperationTableDetails> with data', () => {
-  let originalProps;
-
   beforeEach(() => {
-    originalProps = { ...props };
     jest.clearAllMocks();
   });
 

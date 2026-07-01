@@ -84,29 +84,6 @@ const AllProvider = ({ children, initialEntries = ['/search'] }) => (
   </QueryClientProvider>
 );
 
-// Helper that exposes the MemoryRouter's navigate function via a callback ref.
-function NavigateSpy({ onNavigate }) {
-  const { useNavigate: useNav } = require('react-router-dom');
-  const navigate = useNav();
-  React.useEffect(() => {
-    onNavigate(navigate);
-  }, [navigate, onNavigate]);
-  return null;
-}
-
-function AllProviderWithNav({ children, initialEntries = ['/search'], onNavigate }) {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={initialEntries}>
-        <Provider store={globalStore}>
-          {children}
-          <NavigateSpy onNavigate={onNavigate} />
-        </Provider>
-      </MemoryRouter>
-    </QueryClientProvider>
-  );
-}
-
 describe('<SearchTracePage>', () => {
   beforeEach(() => {
     useEmbeddedStateMock.mockReturnValue(null);
