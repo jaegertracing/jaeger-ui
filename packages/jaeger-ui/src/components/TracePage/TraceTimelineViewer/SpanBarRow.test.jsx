@@ -270,4 +270,33 @@ describe('<SpanBarRow>', () => {
       undefined
     );
   });
+
+  describe('ARIA attributes on toggle button', () => {
+    it('sets aria-expanded=false when isDetailExpanded is false', () => {
+      render(<SpanBarRow {...defaultProps} isDetailExpanded={false} />);
+      const toggle = screen.getByRole('switch');
+      expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('sets aria-expanded=true when isDetailExpanded is true', () => {
+      render(<SpanBarRow {...defaultProps} isDetailExpanded={true} />);
+      const toggle = screen.getByRole('switch');
+      expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    it('sets aria-controls pointing to the detail panel id', () => {
+      render(<SpanBarRow {...defaultProps} />);
+      const toggle = screen.getByRole('switch');
+      expect(toggle).toHaveAttribute('aria-controls', `span-detail-${spanID}`);
+    });
+  });
+
+  describe('toggleRef prop', () => {
+    it('calls toggleRef with the toggle anchor element when mounted', () => {
+      const toggleRef = jest.fn();
+      render(<SpanBarRow {...defaultProps} toggleRef={toggleRef} />);
+      expect(toggleRef).toHaveBeenCalledTimes(1);
+      expect(toggleRef).toHaveBeenCalledWith(expect.any(HTMLElement));
+    });
+  });
 });

@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import SpanDetail from './SpanDetail';
 import DetailState from './SpanDetail/DetailState';
@@ -39,6 +39,15 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
     props.onDetailToggled(props.span.spanID);
   };
 
+  // Auto-focus the detail panel when it mounts so keyboard users land
+  // directly inside the expanded content (WCAG 2.1 SC 2.4.3).
+  const detailPanelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (detailPanelRef.current) {
+      detailPanelRef.current.focus();
+    }
+  }, []);
+
   const {
     color,
     nameColumnWidth,
@@ -75,7 +84,15 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
         </TimelineRow.Cell>
       )}
       <TimelineRow.Cell width={timelineBarsVisible ? 1 - nameColumnWidth : 1}>
-        <div className="detail-info-wrapper" style={{ borderTopColor: color }}>
+        <div
+          id={`span-detail-${span.spanID}`}
+          className="detail-info-wrapper"
+          style={{ borderTopColor: color }}
+          // tabIndex={-1} makes the div programmatically focusable without
+          // adding it to the natural tab order.
+          tabIndex={-1}
+          ref={detailPanelRef}
+        >
           <SpanDetail
             detailState={detailState}
             linksGetter={linksGetter}

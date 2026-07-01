@@ -30,6 +30,8 @@ type SpanBarRowProps = {
   timelineBarsVisible: boolean;
   onDetailToggled: (spanID: string) => void;
   onChildrenToggled: (spanID: string) => void;
+  /** Ref callback so the parent can restore focus to this row after collapse. */
+  toggleRef?: (el: HTMLAnchorElement | null) => void;
   numTicks: number;
   rpc?:
     | {
@@ -86,6 +88,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   traceDuration,
   onDetailToggled,
   onChildrenToggled,
+  toggleRef,
   useOtelTerms,
 }) => {
   const _detailToggle = useCallback(() => {
@@ -155,11 +158,14 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
           <a
             className={`span-name ${isDetailExpanded ? 'is-detail-expanded' : ''}`}
             aria-checked={isDetailExpanded}
+            aria-controls={`span-detail-${span.spanID}`}
+            aria-expanded={isDetailExpanded}
             onClick={_detailToggle}
             onKeyDown={_detailToggleKeyDown}
             role="switch"
             style={{ borderColor: color }}
             tabIndex={0}
+            ref={toggleRef}
           >
             <span
               className={`span-svc-name ${isParent && !isChildrenExpanded ? 'is-children-collapsed' : ''}`}
