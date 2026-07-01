@@ -152,7 +152,6 @@ const renderWithRouter = component => {
 };
 
 describe('<MonitorATMServicesView>', () => {
-  let wrapper;
   const mockFetchServices = jest.fn();
   const mockFetchAllServiceMetrics = jest.fn();
   const mockFetchAggregatedServiceMetrics = jest.fn();
@@ -169,11 +168,10 @@ describe('<MonitorATMServicesView>', () => {
       fetchAllServiceMetrics: mockFetchAllServiceMetrics,
       fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
     };
-    wrapper = renderWithRouter(<MonitorATMServicesView {...defaultProps} />);
+    renderWithRouter(<MonitorATMServicesView {...defaultProps} />);
   });
 
   afterEach(() => {
-    wrapper = null;
     jest.clearAllMocks();
     // Reset useServices mock to default implementation to avoid test order-dependence
     useServices.mockReset();
@@ -865,7 +863,6 @@ describe('<MonitorATMServicesView> URL query params', () => {
 });
 
 describe('<MonitorATMServicesView> on page switch', () => {
-  let wrapper;
   const stateOnPageSwitch = {
     services: {
       services: [],
@@ -875,14 +872,13 @@ describe('<MonitorATMServicesView> on page switch', () => {
   };
 
   const propsOnPageSwitch = mapStateToProps(stateOnPageSwitch);
-  const mockFetchServices = jest.fn();
   const mockFetchAllServiceMetrics = jest.fn();
   const mockFetchAggregatedServiceMetrics = jest.fn();
 
   beforeEach(() => {
     cleanup();
     useServices.mockReturnValue({ data: ['apple'], isLoading: false });
-    wrapper = renderWithRouter(
+    renderWithRouter(
       <MonitorATMServicesView
         {...propsOnPageSwitch}
         fetchAllServiceMetrics={mockFetchAllServiceMetrics}
