@@ -260,11 +260,15 @@ export function JaegerAssistantDock() {
         document.body.style.userSelect = '';
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', stopDragging);
+        window.removeEventListener('blur', stopDragging);
         dragCleanupRef.current = null;
       };
 
       document.addEventListener('mousemove', onMouseMove);
       document.addEventListener('mouseup', stopDragging);
+      // A mouseup outside the window never reaches the document; ending the
+      // drag when the window loses focus keeps body styles from getting stuck.
+      window.addEventListener('blur', stopDragging);
       dragCleanupRef.current = stopDragging;
     },
     [width]

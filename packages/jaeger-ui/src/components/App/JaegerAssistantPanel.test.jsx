@@ -274,6 +274,18 @@ describe('JaegerAssistantDock', () => {
       expect(aside.style.width).toBe('566px');
     });
 
+    it('stops the drag when the window loses focus', () => {
+      const { aside, handle } = renderDock();
+      fireEvent.mouseDown(handle, { clientX: 500 });
+      fireEvent.mouseMove(document, { clientX: 400 });
+      expect(aside.style.width).toBe('516px');
+      fireEvent.blur(window);
+      expect(document.body.style.cursor).toBe('');
+      expect(document.body.style.userSelect).toBe('');
+      fireEvent.mouseMove(document, { clientX: 100 });
+      expect(aside.style.width).toBe('516px');
+    });
+
     it('restores body styles when unmounted mid-drag', () => {
       agUiMock.configured = true;
       const { container, unmount } = render(
