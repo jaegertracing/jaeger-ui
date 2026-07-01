@@ -18,14 +18,14 @@ jobs:
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - uses: ./.github/actions/setup-node-and-deps
-      - run: npm run lint
-      - run: npm run build
-        id: npm-build
+      - run: pnpm lint
+      - run: pnpm build
+        id: pnpm-build
 
       - name: Package artifacts
         id: package-artifacts
         run: tar -czvf ./assets.tar.gz --strip-components=3  packages/jaeger-ui/build/
-        if: steps.npm-build.outcome == 'success'
+        if: steps.pnpm-build.outcome == 'success'
 
       - name: Upload artifacts
         uses: svenstaro/upload-release-action@1beeb572c19a9242f4361f4cee78f8e0d9aec5df

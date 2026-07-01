@@ -1,24 +1,28 @@
 #!/bin/bash
 # Copyright (c) 2026 The Jaeger Authors.
 # SPDX-License-Identifier: Apache-2.0
-
-# Checks for stale npm overrides in the root package.json.
+# Checks for stale pnpm overrides in the root package.json (pnpm.overrides).
 #
 # An override is stale when:
 #   - phantom:    the package is not in the dependency tree at all (no-op override)
-#   - redundant:  the package is in the tree but no instance is actually overridden
-#                 (every consumer already resolves to a compatible version naturally)
 #
-# Nested/object overrides (e.g. "@exodus/bytes": {"@noble/hashes": "..."}) are
-# skipped — they cannot be checked with a simple `npm ls`.
-
+# Note: Under pnpm we only flag phantom overrides. Unlike npm's `npm ls`, pnpm's
+# `pnpm why` does not annotate which instances were overridden, so we cannot
+# reliably detect the "redundant but present" case without false positives.
+# Nested/object overrides and `>`-scoped overrides are skipped.
 set -euo pipefail
 
-# Extract simple (string-valued) overrides from package.json.
-# jq outputs "name version" pairs, one per line.
+# Ensure pnpm is available; otherwise the tree checks below are meaningless.
+if ! command -v pnpm >/dev/null 2>&1; then
+  echo "pnpm not found on PATH; run via pnpm/corepack." >&2
+  exit 1
+fi
+
+# Extract simple (string-valued, non-scoped) overrides from package.json#pnpm.overrides.
 overrides=$(jq -r '
-  .overrides // {} | to_entries[]
+  .pnpm.overrides // {} | to_entries[]
   | select(.value | type == "string")
+  | select(.key | contains(">") | not)
   | "\(.key) \(.value)"
 ' package.json)
 
@@ -28,15 +32,11 @@ if [ -z "$overrides" ]; then
 fi
 
 failed=false
-
 while IFS=' ' read -r pkg version; do
-  tree=$(npm ls "$pkg" --all 2>&1) || true
-
-  if echo "$tree" | grep -q "(empty)"; then
+  [ -z "$pkg" ] && continue
+  tree=$(pnpm why "$pkg" 2>&1) || true
+  if echo "$tree" | grep -qiE "no projects|not found|\(empty\)"; then
     echo "⛔ phantom override: \"$pkg\": \"$version\" — package is not in the dependency tree"
-    failed=true
-  elif ! echo "$tree" | grep -q "overridden"; then
-    echo "⛔ redundant override: \"$pkg\": \"$version\" — all instances resolve naturally, override not needed"
     failed=true
   fi
 done <<< "$overrides"
@@ -46,5 +46,5 @@ if [ "$failed" = "true" ]; then
   echo "Remove stale overrides from the root package.json."
   exit 1
 else
-  echo "All overrides are active."
+  echo "All overrides are present in the dependency tree."
 fi
