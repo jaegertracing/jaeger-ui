@@ -103,6 +103,7 @@ export class JaegerClient {
         name: svc.name ?? '',
         spanCount: svc.spanCount,
         errorSpanCount: svc.errorSpanCount,
+        warningSpanCount: svc.warningSpanCount,
       }));
       return {
         traceID: s.traceId,
@@ -116,6 +117,7 @@ export class JaegerClient {
         duration: Number((endNs - startNs) / 1000n) as Microseconds,
         spanCount: s.spanCount,
         errorSpanCount: s.errorSpanCount,
+        warningSpanCount: s.warningSpanCount,
         orphanSpanCount: s.orphanSpanCount,
         services,
       };
@@ -129,7 +131,10 @@ export class JaegerClient {
    * @returns Promise<Response>
    * @throws Error if request times out or network error occurs
    */
-  private async fetchWithTimeout(url: string, timeout = getConfig().api.requestTimeoutMs): Promise<Response> {
+  private async fetchWithTimeout(
+    url: string,
+    timeout = getConfig().api.requestTimeoutMs ?? 10000
+  ): Promise<Response> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 

@@ -4,7 +4,7 @@
 import { StatusCode } from '../types/otel';
 import type { IOtelTrace } from '../types/otel';
 import type { ServiceSummary, TraceSummary } from '../types/trace-summary';
-import { hasGenAIWarning } from '../components/TracePage/TraceTimelineViewer/utils';
+import { hasGenAIWarning } from '../utils/genai';
 
 export function traceToTraceSummary(trace: IOtelTrace): TraceSummary {
   const rootSpan = trace.rootSpans[0];

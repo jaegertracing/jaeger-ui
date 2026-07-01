@@ -39,6 +39,7 @@ const permissiveServiceSummary = z.object({
   name: z.string(),
   spanCount: z.number().int().min(0).optional(),
   errorSpanCount: z.number().int().min(0).optional(),
+  warningSpanCount: z.number().int().min(0).optional(),
 });
 
 // Enrich the generated TraceSummary schema with format constraints and wire-name
@@ -65,6 +66,7 @@ const normalizeTraceId = z.preprocess(
     // Counts must be nonnegative when present; client.ts applies 0 fallbacks.
     spanCount: z.number().int().min(0).optional(),
     errorSpanCount: z.number().int().min(0).optional(),
+    warningSpanCount: z.number().int().min(0).optional(),
     orphanSpanCount: z.number().int().min(0).optional(),
     services: z.array(permissiveServiceSummary).optional(),
   })

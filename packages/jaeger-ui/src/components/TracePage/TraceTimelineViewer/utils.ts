@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { IOtelSpan, SpanKind, StatusCode } from '../../../types/otel';
-import { ATTR_GEN_AI_RESPONSE_FINISH_REASONS } from '@opentelemetry/semantic-conventions/incubating';
-
+import { hasGenAIWarning } from '../../../utils/genai';
 export type ViewedBoundsFunctionType = (start: number, end: number) => { start: number; end: number };
 /**
  * Given a range (`min`, `max`) and factoring in a zoom (`viewStart`, `viewEnd`)
@@ -73,19 +72,6 @@ export function spanContainsErredSpan(spans: ReadonlyArray<IOtelSpan>, parentSpa
     }
   }
   return false;
-}
-
-/**
- * Returns `true` if the span has a GenAI warning.
- *
- * @param  {IOtelSpan} span  The OTEL span to check.
- * @return {boolean}         True if the span has a GenAI warning.
- */
-export function hasGenAIWarning(span: IOtelSpan): boolean {
-  const attr = span.attributes.find(a => a.key === ATTR_GEN_AI_RESPONSE_FINISH_REASONS);
-  if (!attr) return false;
-  const reasons = Array.isArray(attr.value) ? attr.value : [attr.value];
-  return reasons.some(r => r === 'content_filter' || r === 'length');
 }
 
 /**

@@ -6,12 +6,12 @@ import {
   createViewedBoundsFunc,
   isErrorSpan,
   spanContainsErredSpan,
-  hasGenAIWarning,
   spanContainsWarningSpan,
   isKindClient,
   isKindProducer,
 } from './utils';
 import { ATTR_GEN_AI_RESPONSE_FINISH_REASONS } from '@opentelemetry/semantic-conventions/incubating';
+import { hasGenAIWarning } from '../../../utils/genai';
 
 import traceGenerator from '../../../demo/trace-generators';
 import { SpanKind, StatusCode } from '../../../types/otel';
