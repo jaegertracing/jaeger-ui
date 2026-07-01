@@ -156,7 +156,9 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   const spans: Span[] = [];
   const svcCounts: Record<string, number> = {};
 
-  // Depth-first traversal to order spans and populate flat array
+  // Pre-order depth-first traversal to order spans and populate flat array.
+  // Implemented iteratively with an explicit stack (rather than recursion) so
+  // that deeply nested traces do not overflow the call stack.
   const processSpan = (span: Span, depth: number) => {
     span.depth = depth;
     span.hasChildren = span.childSpans.length > 0;
@@ -184,13 +186,27 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
 
     spans.push(span);
 
-    // Sort children by startTime before processing them
+    // Sort children by startTime before processing them.
     (span.childSpans as Span[]).sort((a, b) => a.startTime - b.startTime);
-    span.childSpans.forEach(child => processSpan(child, depth + 1));
   };
 
   rootSpans.sort((a, b) => a.startTime - b.startTime);
-  rootSpans.forEach(root => processSpan(root, 0));
+
+  // Stack of spans pending traversal. Children are pushed in reverse order so
+  // they are popped (and thus visited) in ascending startTime order, matching
+  // the order a recursive pre-order traversal would produce.
+  const stack: { span: Span; depth: number }[] = [];
+  for (let i = rootSpans.length - 1; i >= 0; i--) {
+    stack.push({ span: rootSpans[i], depth: 0 });
+  }
+
+  while (stack.length > 0) {
+    const { span, depth } = stack.pop()!;
+    processSpan(span, depth);
+    for (let i = span.childSpans.length - 1; i >= 0; i--) {
+      stack.push({ span: span.childSpans[i], depth: depth + 1 });
+    }
+  }
 
   const traceName = getTraceName(spans);
   const tracePageTitle = getTracePageTitle(spans);

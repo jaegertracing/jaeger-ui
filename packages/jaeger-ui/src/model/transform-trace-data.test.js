@@ -440,5 +440,40 @@ describe('transformTraceData()', () => {
       const ids = result.spans.map(s => s.spanID);
       expect(ids).toEqual(['root', 'child1', 'grandChild1', 'child2']);
     });
+
+    it('should handle deeply nested traces without overflowing the call stack', () => {
+      // A long parent -> child chain previously overflowed the stack because the
+      // traversal was recursive. This depth exceeds typical call-stack limits in
+      // our test runtime (V8), so the old recursive code reliably threw here.
+      const depth = 15000;
+      const deepSpans = [];
+      for (let i = 0; i < depth; i++) {
+        deepSpans.push({
+          traceID,
+          spanID: `span-${i}`,
+          operationName: `op-${i}`,
+          references: i > 0 ? [{ refType: 'CHILD_OF', traceID, spanID: `span-${i - 1}` }] : [],
+          startTime: startTime + i,
+          duration,
+          tags: [],
+          logs: [],
+          processID: 'p1',
+        });
+      }
+
+      const traceData = { traceID, processes, spans: deepSpans };
+
+      let result;
+      expect(() => {
+        result = transformTraceData(traceData);
+      }).not.toThrow();
+
+      expect(result.spans.length).toBe(depth);
+      // Pre-order traversal keeps the chain in order, with depth matching position.
+      expect(result.spans[0].spanID).toBe('span-0');
+      expect(result.spans[0].depth).toBe(0);
+      expect(result.spans[depth - 1].spanID).toBe(`span-${depth - 1}`);
+      expect(result.spans[depth - 1].depth).toBe(depth - 1);
+    });
   });
 });
