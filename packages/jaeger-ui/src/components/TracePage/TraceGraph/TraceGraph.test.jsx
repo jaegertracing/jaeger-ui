@@ -95,21 +95,35 @@ describe('<TraceGraph>', () => {
 
     // Initial mode should be service
     expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SERVICE);
-    const timeButton = screen.getByRole('button', { name: 'T' });
-    const selftimeButton = screen.getByRole('button', { name: 'ST' });
-    const serviceButton = screen.getByRole('button', { name: 'S' });
+    const timeButton = screen.getByRole('button', { name: 'Color by total time' });
+    const selftimeButton = screen.getByRole('button', { name: 'Color by self time' });
+    const serviceButton = screen.getByRole('button', { name: 'Color by service' });
+
+    // Initial aria-pressed: only service is active
+    expect(serviceButton).toHaveAttribute('aria-pressed', 'true');
+    expect(timeButton).toHaveAttribute('aria-pressed', 'false');
+    expect(selftimeButton).toHaveAttribute('aria-pressed', 'false');
 
     // Switch to time
     await userEvent.click(timeButton);
     expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_TIME);
+    expect(timeButton).toHaveAttribute('aria-pressed', 'true');
+    expect(serviceButton).toHaveAttribute('aria-pressed', 'false');
+    expect(selftimeButton).toHaveAttribute('aria-pressed', 'false');
 
     // Switch to selftime
     await userEvent.click(selftimeButton);
     expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SELFTIME);
+    expect(selftimeButton).toHaveAttribute('aria-pressed', 'true');
+    expect(serviceButton).toHaveAttribute('aria-pressed', 'false');
+    expect(timeButton).toHaveAttribute('aria-pressed', 'false');
 
     // Switch back to service
     await userEvent.click(serviceButton);
     expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SERVICE);
+    expect(serviceButton).toHaveAttribute('aria-pressed', 'true');
+    expect(timeButton).toHaveAttribute('aria-pressed', 'false');
+    expect(selftimeButton).toHaveAttribute('aria-pressed', 'false');
   });
 
   it('shows help', async () => {
