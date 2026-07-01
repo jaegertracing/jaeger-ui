@@ -124,6 +124,12 @@ SPDX-License-Identifier: Apache-2.0
   white-space: pre-wrap;
 }
 
+/* Markdown-rendered replies must collapse soft line breaks (LLMs hard-wrap
+   paragraphs); pre/code inside keep their own whitespace handling. */
+.JaegerAssistantPanel-md {
+  white-space: normal;
+}
+
 .JaegerAssistantPanel-toolCall {
   padding: 0.3rem 0.5rem;
   margin: 0.25rem 0;

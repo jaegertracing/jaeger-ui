@@ -240,6 +240,11 @@ export function JaegerAssistantDock() {
 
   const onDragStart = React.useCallback(
     (e: React.MouseEvent) => {
+      if (e.button !== 0) return;
+      // A mouseup released outside the window can be missed; tear down any
+      // in-flight drag before starting a new one so listeners never stack.
+      dragCleanupRef.current?.();
+      e.preventDefault();
       const startX = e.clientX;
       const startWidth = width;
       document.body.style.cursor = 'ew-resize';

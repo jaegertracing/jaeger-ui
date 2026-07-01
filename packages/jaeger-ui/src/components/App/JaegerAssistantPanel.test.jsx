@@ -249,6 +249,47 @@ describe('JaegerAssistantDock', () => {
       fireEvent.mouseMove(document, { clientX: 100 });
       expect(aside.style.width).toBe('516px');
     });
+
+    it('ignores non-left mouse buttons', () => {
+      const { aside, handle } = renderDock();
+      fireEvent.mouseDown(handle, { clientX: 500, button: 2 });
+      fireEvent.mouseMove(document, { clientX: 400 });
+      expect(aside.style.width).toBe('416px');
+      expect(document.body.style.cursor).toBe('');
+    });
+
+    it('tears down a missed drag when a new drag starts', () => {
+      const { aside, handle } = renderDock();
+      // First drag never receives mouseup (released outside the window).
+      fireEvent.mouseDown(handle, { clientX: 500 });
+      fireEvent.mouseMove(document, { clientX: 400 });
+      expect(aside.style.width).toBe('516px');
+      // Second drag starts; the first drag's listeners must not stack.
+      fireEvent.mouseDown(handle, { clientX: 500 });
+      fireEvent.mouseMove(document, { clientX: 450 });
+      expect(aside.style.width).toBe('566px');
+      fireEvent.mouseUp(document);
+      expect(document.body.style.cursor).toBe('');
+      fireEvent.mouseMove(document, { clientX: 100 });
+      expect(aside.style.width).toBe('566px');
+    });
+
+    it('restores body styles when unmounted mid-drag', () => {
+      agUiMock.configured = true;
+      const { container, unmount } = render(
+        <MemoryRouter>
+          <JaegerAssistantProvider>
+            <JaegerAssistantDock />
+          </JaegerAssistantProvider>
+        </MemoryRouter>
+      );
+      const handle = container.querySelector('.JaegerAssistantPanel-resizeHandle');
+      fireEvent.mouseDown(handle, { clientX: 500 });
+      expect(document.body.style.cursor).toBe('ew-resize');
+      unmount();
+      expect(document.body.style.cursor).toBe('');
+      expect(document.body.style.userSelect).toBe('');
+    });
   });
 });
 
