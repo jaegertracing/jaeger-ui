@@ -4,7 +4,7 @@
 import React from 'react';
 import { act, cleanup, render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import TraceStatistics from './index';
+import TraceStatistics, { searchInTable } from './index';
 import transformTraceData from '../../../model/transform-trace-data';
 import { getColumnValues, getColumnValuesSecondDropdown } from './tableValues';
 
@@ -22,28 +22,26 @@ describe('<TraceTagOverview>', () => {
 
   afterEach(cleanup);
 
-  it('does not explode, renders trace statistics, and handles search, interactive options, sorting, and searchInTable', async () => {
-    // 1. Initial render
-    let componentInstance;
-    const TestWrapper = () => {
-      return (
-        <TraceStatistics
-          ref={ref => {
-            componentInstance = ref;
-          }}
-          {...defaultProps}
-        />
-      );
-    };
-
-    const { rerender, container } = render(<TestWrapper />);
-
-    // Assert it does not explode and renders trace statistics
+  it('renders trace statistics without exploding', () => {
+    render(<TraceStatistics {...defaultProps} />);
     expect(screen.getByText('Trace Statistics')).toBeInTheDocument();
     expect(screen.getByRole('table')).toBeInTheDocument();
     expect(screen.queryByText(/Tag: "SQL"/)).not.toBeInTheDocument();
+  });
 
-    // 2. Check search
+  it('handles search highlights when uiFind and uiFindVertexKeys are provided', async () => {
+    let componentInstance;
+    const TestWrapper = () => (
+      <TraceStatistics
+        ref={ref => {
+          componentInstance = ref;
+        }}
+        {...defaultProps}
+      />
+    );
+
+    const { rerender } = render(<TestWrapper />);
+
     await waitFor(() => {
       expect(componentInstance).toBeTruthy();
       expect(componentInstance.state.tableValue).toBeDefined();
@@ -72,26 +70,25 @@ describe('<TraceTagOverview>', () => {
       );
       expect(hasHighlightedItems).toBe(true);
     });
+  });
 
-    await act(async () => {
-      rerender(
-        <TraceStatistics
-          ref={ref => {
-            componentInstance = ref;
-          }}
-          {...defaultProps}
-          uiFind={undefined}
-          uiFindVertexKeys={undefined}
-        />
-      );
-    });
+  it('updates state via handler', async () => {
+    let componentInstance;
+    const TestWrapper = () => (
+      <TraceStatistics
+        ref={ref => {
+          componentInstance = ref;
+        }}
+        {...defaultProps}
+      />
+    );
+
+    render(<TestWrapper />);
 
     await waitFor(() => {
-      const tableCells = screen.getAllByRole('cell');
-      expect(tableCells.length).toBeGreaterThan(0);
+      expect(componentInstance).toBeTruthy();
     });
 
-    // 3. Check handler
     let tableValue = getColumnValues('Service Name', transformedTrace, false);
     tableValue = getColumnValuesSecondDropdown(
       tableValue,
@@ -109,8 +106,25 @@ describe('<TraceTagOverview>', () => {
     expect(rows.length).toBeGreaterThan(1);
     const cells = screen.getAllByRole('cell');
     expect(cells.length).toBeGreaterThan(0);
+  });
 
-    // 4. Groups detail rows under their matching parent rows
+  it('groups detail rows under their matching parent rows', async () => {
+    let componentInstance;
+    const TestWrapper = () => (
+      <TraceStatistics
+        ref={ref => {
+          componentInstance = ref;
+        }}
+        {...defaultProps}
+      />
+    );
+
+    const { container } = render(<TestWrapper />);
+
+    await waitFor(() => {
+      expect(componentInstance).toBeTruthy();
+    });
+
     const makeRow = (name, isDetail, parentElement, overrides = {}) => ({
       name,
       hasSubgroupValue: !isDetail,
@@ -158,8 +172,25 @@ describe('<TraceTagOverview>', () => {
     const childRows = container.querySelectorAll('tbody tr.ant-table-row-level-1');
     expect(parentRows).toHaveLength(2);
     expect(childRows).toHaveLength(3);
+  });
 
-    // 5. Check togglePopup
+  it('toggles SQL popup', async () => {
+    let componentInstance;
+    const TestWrapper = () => (
+      <TraceStatistics
+        ref={ref => {
+          componentInstance = ref;
+        }}
+        {...defaultProps}
+      />
+    );
+
+    render(<TestWrapper />);
+
+    await waitFor(() => {
+      expect(componentInstance).toBeTruthy();
+    });
+
     await act(async () => {
       componentInstance.togglePopup('select *');
     });
@@ -176,8 +207,25 @@ describe('<TraceTagOverview>', () => {
     await waitFor(() => {
       expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     });
+  });
 
-    // 6. Should trigger onClickOption when clicking on name cell with sql.query selector
+  it('triggers onClickOption when clicking name cell with sql.query selector', async () => {
+    let componentInstance;
+    const TestWrapper = () => (
+      <TraceStatistics
+        ref={ref => {
+          componentInstance = ref;
+        }}
+        {...defaultProps}
+      />
+    );
+
+    render(<TestWrapper />);
+
+    await waitFor(() => {
+      expect(componentInstance).toBeTruthy();
+    });
+
     await act(async () => {
       componentInstance.setState({
         valueNameSelector1: 'sql.query',
@@ -220,15 +268,25 @@ describe('<TraceTagOverview>', () => {
     await waitFor(() => {
       expect(screen.getByRole('textbox')).toBeInTheDocument();
     });
+  });
 
-    // Clean up popup
-    await act(async () => {
-      componentInstance.setState({
-        showPopup: false,
-      });
+  it('does not trigger popup when hasSubgroupValue is false', async () => {
+    let componentInstance;
+    const TestWrapper = () => (
+      <TraceStatistics
+        ref={ref => {
+          componentInstance = ref;
+        }}
+        {...defaultProps}
+      />
+    );
+
+    render(<TestWrapper />);
+
+    await waitFor(() => {
+      expect(componentInstance).toBeTruthy();
     });
 
-    // 7. Should handle onClickOption when hasSubgroupValue is false
     await act(async () => {
       componentInstance.setState({
         valueNameSelector1: 'sql.query',
@@ -271,8 +329,15 @@ describe('<TraceTagOverview>', () => {
     await waitFor(() => {
       expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     });
+  });
 
-    // 8. Should test sorter function with string comparison
+  it('supports sorting by Group column', async () => {
+    render(<TraceStatistics {...defaultProps} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('table')).toBeInTheDocument();
+    });
+
     const columnHeaders = screen.getAllByRole('columnheader');
     const groupColumn = columnHeaders.find(header => header.textContent.includes('Group'));
 
@@ -282,8 +347,25 @@ describe('<TraceTagOverview>', () => {
         expect(screen.getByRole('table')).toBeInTheDocument();
       });
     }
+  });
 
-    // 9. Should test sorter function with items that have no hasSubgroupValue
+  it('supports sorting columns when items lack subgroup values', async () => {
+    let componentInstance;
+    const TestWrapper = () => (
+      <TraceStatistics
+        ref={ref => {
+          componentInstance = ref;
+        }}
+        {...defaultProps}
+      />
+    );
+
+    render(<TestWrapper />);
+
+    await waitFor(() => {
+      expect(componentInstance).toBeTruthy();
+    });
+
     await act(async () => {
       componentInstance.setState({
         tableValue: [
@@ -327,8 +409,11 @@ describe('<TraceTagOverview>', () => {
         expect(screen.getByRole('table')).toBeInTheDocument();
       });
     }
+  });
+});
 
-    // 10. Test searchInTable
+describe('searchInTable()', () => {
+  it('handles search scenario with complex hierarchy', () => {
     const mockTableData = [
       {
         name: 'parent1',
@@ -357,10 +442,12 @@ describe('<TraceTagOverview>', () => {
     ];
 
     const searchSet2 = new Set(['parent1detail1']);
-    const result1 = componentInstance.searchInTable(searchSet2, mockTableData, null);
-    expect(result1).toBeDefined();
-    expect(result1.length).toBe(3);
+    const result = searchInTable(searchSet2, mockTableData, null);
+    expect(result).toBeDefined();
+    expect(result.length).toBe(3);
+  });
 
+  it('handles search term matching detail items', () => {
     const mockTableData2 = [
       {
         name: 'searchterm',
@@ -388,10 +475,12 @@ describe('<TraceTagOverview>', () => {
       },
     ];
 
-    const result2 = componentInstance.searchInTable(undefined, mockTableData2, 'searchterm');
-    const highlightedItems = result2.filter(item => item.searchColor === 'rgb(255,243,215)');
+    const result = searchInTable(undefined, mockTableData2, 'searchterm');
+    const highlightedItems = result.filter(item => item.searchColor === 'rgb(255,243,215)');
     expect(highlightedItems.length).toBeGreaterThan(0);
+  });
 
+  it('sets default colors when no match is found', () => {
     const mockTableData3 = [
       {
         name: 'item1',
@@ -411,8 +500,8 @@ describe('<TraceTagOverview>', () => {
       },
     ];
 
-    const result3 = componentInstance.searchInTable(undefined, mockTableData3, null);
-    expect(result3[0].searchColor).toBe('rgb(248,248,248)');
-    expect(result3[1].searchColor).toBe('rgb(248,248,248)');
-  }, 30000);
+    const result = searchInTable(undefined, mockTableData3, null);
+    expect(result[0].searchColor).toBe('rgb(248,248,248)');
+    expect(result[1].searchColor).toBe('rgb(248,248,248)');
+  });
 });

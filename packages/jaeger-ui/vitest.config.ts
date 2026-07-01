@@ -50,6 +50,9 @@ export default defineConfig({
   },
   server: {
     deps: {
+      // The threads pool uses SSR resolve conditions that prefer .mjs files,
+      // causing CJS/ESM named-export interop failures for packages like
+      // react-router and cookie. Inlining them solves this.
       inline: ['react-router', 'cookie'],
     },
   },

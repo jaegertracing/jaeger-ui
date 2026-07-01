@@ -2,13 +2,18 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react/pure';
 import '@testing-library/jest-dom';
 import OperationTableDetails from '.';
 import { originInitialState, serviceOpsMetrics } from '../../../../reducers/metrics.mock';
 import * as track from './index.track';
 
 vi.mock('../../../../utils/prefix-url', () => mockDefault(jest.fn(url => url)));
+
+vi.mock('./index.track', () => ({
+  trackSortOperations: jest.fn(),
+  trackViewTraces: jest.fn(),
+}));
 
 vi.mock('../../../common/LoadingIndicator', () => {
   return mockDefault(function MockLoadingIndicator(props) {
@@ -36,6 +41,7 @@ describe('<OperationTableDetails>', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
+    cleanup();
   });
 
   it('does not explode', () => {
@@ -77,113 +83,127 @@ describe('<OperationTableDetails> with data', () => {
   it('render No data table', () => {
     const { container } = render(<OperationTableDetails {...props} loading={false} />);
     expect(container.querySelector('table')).toBeInTheDocument();
+    cleanup();
   });
 
-  it('renders data, formats values correctly, supports sorting, row hover highlights, and tracks events', () => {
-    const trackSortOperationsSpy = jest.spyOn(track, 'trackSortOperations');
-    const trackViewTracesSpy = jest.spyOn(track, 'trackViewTraces');
+  describe('with a populated dataset', () => {
+    let container;
 
-    // Combine all edge cases into a single dataset to test formatting/columns in one render
-    const testData = [
-      {
-        ...serviceOpsMetrics[0],
-        name: '/PlaceOrder',
-        latency: 8000,
-        requests: 0.02,
-        errRates: 0.00001,
-        impact: 20,
-        key: 0,
-      },
-      {
-        ...serviceOpsMetrics[0],
-        name: '/Accounts',
-        latency: 0.2988,
-        requests: 0.2888,
-        errRates: 1,
-        impact: 10,
-        key: 1,
-      },
-      {
-        ...serviceOpsMetrics[0],
-        name: '/NoDataPoints',
-        latency: 0.00001,
-        requests: 1.5,
-        errRates: 0.05,
-        impact: 0,
-        key: 2,
-        dataPoints: {
-          avg: {
-            service_operation_call_rate: 11,
-            service_operation_error_rate: 22,
-            service_operation_latencies: 99,
-          },
-          service_operation_call_rate: [],
-          service_operation_error_rate: [],
-          service_operation_latencies: [],
+    beforeAll(() => {
+      // Combine all edge cases into a single dataset to test formatting/columns in one render
+      const testData = [
+        {
+          ...serviceOpsMetrics[0],
+          name: '/PlaceOrder',
+          latency: 8000,
+          requests: 0.02,
+          errRates: 0.00001,
+          impact: 20,
+          key: 0,
         },
-      },
-    ];
+        {
+          ...serviceOpsMetrics[0],
+          name: '/Accounts',
+          latency: 0.2988,
+          requests: 0.2888,
+          errRates: 1,
+          impact: 10,
+          key: 1,
+        },
+        {
+          ...serviceOpsMetrics[0],
+          name: '/NoDataPoints',
+          latency: 0.00001,
+          requests: 1.5,
+          errRates: 0.05,
+          impact: 0,
+          key: 2,
+          dataPoints: {
+            avg: {
+              service_operation_call_rate: 11,
+              service_operation_error_rate: 22,
+              service_operation_latencies: 99,
+            },
+            service_operation_call_rate: [],
+            service_operation_error_rate: [],
+            service_operation_latencies: [],
+          },
+        },
+      ];
 
-    const { container } = render(<OperationTableDetails {...props} data={testData} loading={false} />);
-
-    // 1. Assert formatting
-    expect(container.querySelector('table')).toBeInTheDocument();
-    expect(screen.getByText('/PlaceOrder')).toBeInTheDocument();
-    expect(screen.getByText('/Accounts')).toBeInTheDocument();
-    expect(screen.getByText('8s')).toBeInTheDocument();
-    expect(screen.getByText('< 0.1 req/s')).toBeInTheDocument();
-    expect(screen.getByText('0.28 req/s')).toBeInTheDocument();
-
-    // 2. Assert Graph avg label test (avgDivs should be empty if dataPoints are empty/custom)
-    const avgDivs = container
-      .querySelectorAll('tbody tr.ant-table-row')[2]
-      .querySelectorAll('div.table-graph-avg');
-    avgDivs.forEach(div => {
-      expect(div.textContent).toBe('');
+      const rendered = render(<OperationTableDetails {...props} data={testData} loading={false} />);
+      container = rendered.container;
     });
 
-    // 3. Highlight the row
-    const tableRow = screen.getAllByRole('row')[1]; // Row 1 (/PlaceOrder)
-    fireEvent.mouseEnter(tableRow);
-    expect(tableRow).toHaveClass('table-row--hovered');
-    expect(screen.getByText('View traces')).toBeInTheDocument();
+    afterAll(() => {
+      cleanup();
+    });
 
-    // 4. Track view traces event
-    const viewTracesButton = screen.getByText('View traces');
-    fireEvent.click(viewTracesButton);
-    expect(trackViewTracesSpy).toHaveBeenCalledWith('/PlaceOrder');
+    it('renders the table successfully', () => {
+      expect(container.querySelector('table')).toBeInTheDocument();
+    });
 
-    fireEvent.mouseLeave(tableRow);
-    expect(tableRow).not.toHaveClass('table-row--hovered');
-    expect(screen.queryByText('View traces')).not.toBeInTheDocument();
+    it('formats values correctly', () => {
+      expect(screen.getByText('/PlaceOrder')).toBeInTheDocument();
+      expect(screen.getByText('/Accounts')).toBeInTheDocument();
+      expect(screen.getByText('8s')).toBeInTheDocument();
+      expect(screen.getByText('< 0.1 req/s')).toBeInTheDocument();
+      expect(screen.getByText('0.28 req/s')).toBeInTheDocument();
+    });
 
-    // 5. Sort row
-    let cells = screen.getAllByRole('cell');
-    expect(cells[0].textContent).toBe('/PlaceOrder');
+    it('renders graph avg label correctly', () => {
+      // avgDivs should be empty if dataPoints are empty/custom
+      const avgDivs = container
+        .querySelectorAll('tbody tr.ant-table-row')[2]
+        .querySelectorAll('div.table-graph-avg');
+      avgDivs.forEach(div => {
+        expect(div.textContent).toBe('');
+      });
+    });
 
-    const nameHeader = screen.getByText('Name').closest('th');
-    const ascSorter = nameHeader.querySelector('.ant-table-column-sorter-up');
-    fireEvent.click(ascSorter);
+    it('handles row hover highlights and tracks view traces click', () => {
+      const tableRow = screen.getAllByRole('row')[1]; // Row 1 (/PlaceOrder)
+      fireEvent.mouseEnter(tableRow);
+      expect(tableRow).toHaveClass('table-row--hovered');
+      expect(screen.getByText('View traces')).toBeInTheDocument();
 
-    cells = screen.getAllByRole('cell');
-    expect(cells[0].textContent).toBe('/Accounts');
-    expect(trackSortOperationsSpy).toHaveBeenCalledWith('Name');
+      const viewTracesButton = screen.getByText('View traces');
+      fireEvent.click(viewTracesButton);
+      expect(track.trackViewTraces).toHaveBeenCalledWith('/PlaceOrder');
 
-    const latencyHeader = screen.getByText('P95 Latency').closest('th');
-    const latencySorter = latencyHeader.querySelector('.ant-table-column-sorter-up');
-    fireEvent.click(latencySorter);
+      fireEvent.mouseLeave(tableRow);
+      expect(tableRow).not.toHaveClass('table-row--hovered');
+      expect(screen.queryByText('View traces')).not.toBeInTheDocument();
+    });
 
-    const requestsHeader = screen.getByText('Request rate').closest('th');
-    const requestsSorter = requestsHeader.querySelector('.ant-table-column-sorter-up');
-    fireEvent.click(requestsSorter);
+    it('handles sorting columns', () => {
+      let cells = screen.getAllByRole('cell');
+      expect(cells[0].textContent).toBe('/PlaceOrder');
 
-    const errorsHeader = screen.getByText('Error rate').closest('th');
-    const errorsSorter = errorsHeader.querySelector('.ant-table-column-sorter-up');
-    fireEvent.click(errorsSorter);
+      const nameHeader = screen.getByText('Name').closest('th');
+      const ascSorter = nameHeader.querySelector('.ant-table-column-sorter-up');
+      fireEvent.click(ascSorter);
 
-    const impactHeader = screen.getByText('Impact').closest('th');
-    const impactSorter = impactHeader.querySelector('.ant-table-column-sorter-up');
-    fireEvent.click(impactSorter);
-    expect(trackSortOperationsSpy).toHaveBeenCalledWith('Impact');
+      cells = screen.getAllByRole('cell');
+      expect(cells[0].textContent).toBe('/Accounts');
+      expect(track.trackSortOperations).toHaveBeenCalledWith('Name');
+
+      const latencyHeader = screen.getByText('P95 Latency').closest('th');
+      const latencySorter = latencyHeader.querySelector('.ant-table-column-sorter-up');
+      fireEvent.click(latencySorter);
+
+      const requestsHeader = screen.getByText('Request rate').closest('th');
+      const requestsSorter = requestsHeader.querySelector('.ant-table-column-sorter-up');
+      fireEvent.click(requestsSorter);
+
+      const errorsHeader = screen.getByText('Error rate').closest('th');
+      const errorsSorter = errorsHeader.querySelector('.ant-table-column-sorter-up');
+      fireEvent.click(errorsSorter);
+
+      const impactHeader = screen.getByText('Impact').closest('th');
+      const impactSorter = impactHeader.querySelector('.ant-table-column-sorter-up');
+      fireEvent.click(impactSorter);
+      expect(track.trackSortOperations).toHaveBeenCalledWith('Impact');
+    });
   });
 });
