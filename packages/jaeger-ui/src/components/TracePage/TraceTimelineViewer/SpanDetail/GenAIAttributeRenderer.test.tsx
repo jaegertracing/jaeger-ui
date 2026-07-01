@@ -82,4 +82,47 @@ describe('GenAIAttributeRenderer', () => {
     expect(screen.getByText('gen_ai.retrieval.documents')).toBeInTheDocument();
     expect(screen.getByRole('tree')).toBeInTheDocument();
   });
+
+  it('renders JSON view when attribute value is already a native object', () => {
+    render(
+      <GenAIAttributeRenderer
+        attribute={{ key: 'gen_ai.tool.call.arguments', value: { query: 'Paris' } }}
+        isOpen
+      />
+    );
+    expect(screen.getByRole('tree')).toBeInTheDocument();
+  });
+
+  it('uses collapseAllNested for large JSON objects (more than 10 keys)', () => {
+    const large = Object.fromEntries(Array.from({ length: 12 }, (_, i) => [`key${i}`, i]));
+    render(
+      <GenAIAttributeRenderer
+        attribute={makeAttr('gen_ai.tool.call.arguments', JSON.stringify(large))}
+        isOpen
+      />
+    );
+    expect(screen.getByRole('tree')).toBeInTheDocument();
+  });
+
+  it('renders messages without a role without a leading blank line', () => {
+    const messages = JSON.stringify([{ content: 'roleless message' }]);
+    render(<GenAIAttributeRenderer attribute={makeAttr('gen_ai.input.messages', messages)} isOpen />);
+    expect(screen.getByText('roleless message')).toBeInTheDocument();
+  });
+
+  it('handles array messages with non-object elements via String() fallback', () => {
+    const messages = JSON.stringify(['plain string', 42]);
+    render(<GenAIAttributeRenderer attribute={makeAttr('gen_ai.input.messages', messages)} isOpen />);
+    expect(screen.getByText(/plain string/)).toBeInTheDocument();
+  });
+
+  it('renders JSON.stringify fallback when message value is a non-array object', () => {
+    render(
+      <GenAIAttributeRenderer
+        attribute={{ key: 'gen_ai.output.messages', value: { role: 'assistant', content: 'hi' } }}
+        isOpen
+      />
+    );
+    expect(screen.getByText(/assistant/)).toBeInTheDocument();
+  });
 });
