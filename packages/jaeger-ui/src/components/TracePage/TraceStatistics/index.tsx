@@ -104,17 +104,17 @@ const columnsArray: {
 ];
 
 /**
- * Colors found entries in the table.
- * @param uiFindVertexKeys Set of found spans
- * @param allTableSpans entries that are shown
- * @param uiFind term to search
+ * Applies search highlighting colors to the table entries (returns a new array with updated items).
+ * @param uiFindVertexKeys Set of found spans (may be null/undefined)
+ * @param allTableSpans Entries shown in the table
+ * @param uiFind Search term
  */
 export function searchInTable(
   uiFindVertexKeys: Set<string> | TNil,
   allTableSpans: ITableSpan[],
   uiFind: string | null | undefined
 ): ITableSpan[] {
-  const allTableSpansChange = allTableSpans;
+  const allTableSpansChange = allTableSpans.map(item => ({ ...item }));
   const yellowSearchCollor = 'rgb(255,243,215)';
   const defaultGrayCollor = 'rgb(248,248,248)';
   for (let i = 0; i < allTableSpansChange.length; i++) {
@@ -178,7 +178,7 @@ export default class TraceStatistics extends Component<Props, State> {
     super(props);
 
     this.state = {
-      tableValue: [],
+      tableValue: searchInTable(this.props.uiFindVertexKeys!, [], this.props.uiFind),
       sortIndex: 1,
       sortAsc: false,
       showPopup: false,
@@ -190,8 +190,6 @@ export default class TraceStatistics extends Component<Props, State> {
 
     this.handler = this.handler.bind(this);
     this.togglePopup = this.togglePopup.bind(this);
-
-    searchInTable(this.props.uiFindVertexKeys!, this.state.tableValue, this.props.uiFind);
   }
 
   /**
@@ -205,12 +203,9 @@ export default class TraceStatistics extends Component<Props, State> {
   }
 
   changeTableValueSearch() {
-    searchInTable(this.props.uiFindVertexKeys!, this.state.tableValue, this.props.uiFind);
-    // reload the componente
-    const tableValueState = this.state.tableValue;
     this.setState(prevState => ({
       ...prevState,
-      tableValue: tableValueState,
+      tableValue: searchInTable(this.props.uiFindVertexKeys!, prevState.tableValue, this.props.uiFind),
     }));
   }
 
