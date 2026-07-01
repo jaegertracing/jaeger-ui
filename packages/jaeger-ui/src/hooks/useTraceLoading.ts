@@ -38,7 +38,11 @@ export function useTrace(traceId: string): UseQueryResult<IOtelTrace> {
       if (!data) {
         throw new Error('Invalid trace data received.');
       }
-      return data.asOtelTrace();
+      const otel = data.asOtelTrace();
+      if (otel.traceID !== traceId) {
+        queryClient.setQueryData(TRACE_QUERY_KEY(otel.traceID), otel);
+      }
+      return otel;
     },
     staleTime: Infinity,
   });
@@ -57,7 +61,11 @@ export function useTraces(ids: string[]): Map<string, FetchedTrace> {
         if (!data) {
           throw new Error('Invalid trace data received.');
         }
-        return data.asOtelTrace();
+        const otel = data.asOtelTrace();
+        if (otel.traceID !== id) {
+          queryClient.setQueryData(TRACE_QUERY_KEY(otel.traceID), otel);
+        }
+        return otel;
       },
       staleTime: Infinity,
     })),

@@ -129,33 +129,12 @@ describe('filterSpans', () => {
     expect(filterSpans(spanID2, spans)).toEqual(new Set([spanID2]));
   });
 
-  it('should find a span with leading zeros by typing only its significant digits', () => {
-    // Span IDs from the backend keep their leading zeros (opaque blobs).
-    // The filter is padded to the span's length so users can type just the significant
-    // hex digits and still get a match.
-    const spanWithZeros0 = { ...span0, spanID: `00${spanID0}` };
-    const spanWithZeros2 = { ...span2, spanID: `00${spanID2}` };
-    const spansWithZeros = [spanWithZeros0, spanWithZeros2];
-
-    expect(filterSpans(spanID0, spansWithZeros)).toEqual(new Set([`00${spanID0}`]));
-    expect(filterSpans(spanID2, spansWithZeros)).toEqual(new Set([`00${spanID2}`]));
-    // Typing the full padded ID also works
-    expect(filterSpans(`00${spanID0}`, spansWithZeros)).toEqual(new Set([`00${spanID0}`]));
-  });
-
-  it('should find an IOtelSpan with leading zeros by typing only its significant digits', () => {
-    const fullSpanID = '00abc123def456';
-    const otelSpan = {
-      spanID: fullSpanID,
-      name: 'otelOperation',
-      resource: { serviceName: 'otelService', attributes: [] },
-      attributes: [],
-      events: [],
-    };
-    // Short filter padded to the span's length matches
-    expect(filterSpans('abc123def456', [otelSpan])).toEqual(new Set([fullSpanID]));
-    // Full form also matches
-    expect(filterSpans(fullSpanID, [otelSpan])).toEqual(new Set([fullSpanID]));
+  it('should match spanIDs as exact opaque strings', () => {
+    expect(filterSpans('spanID', spans)).toEqual(new Set([]));
+    expect(filterSpans(spanID0, spans)).toEqual(new Set([spanID0]));
+    expect(filterSpans(spanID2, spans)).toEqual(new Set([spanID2]));
+    // Leading zeros produce a different string — no match
+    expect(filterSpans(`00${spanID0}`, spans)).toEqual(new Set([]));
   });
 
   it('should return spans whose operationName match a filter', () => {
@@ -255,5 +234,51 @@ describe('filterSpans', () => {
   // This test may false positive if other tests are failing
   it('should return an empty set if no spans match the filter', () => {
     expect(filterSpans('-processTagKey1', spans)).toEqual(new Set());
+  });
+
+  describe('object and array attribute values (OTel spans)', () => {
+    const makeOtelSpan = (spanID, attrs) => ({
+      spanID,
+      name: 'op',
+      resource: { serviceName: 'svc', attributes: [] },
+      attributes: attrs,
+      events: [],
+    });
+
+    it('matches text inside an object attribute value', () => {
+      const span = makeOtelSpan('obj-span', [
+        { key: 'gen_ai.message', value: { role: 'user', content: 'hello world' } },
+      ]);
+      expect(filterSpans('hello', [span])).toEqual(new Set(['obj-span']));
+      expect(filterSpans('user', [span])).toEqual(new Set(['obj-span']));
+      expect(filterSpans('notfound', [span])).toEqual(new Set([]));
+    });
+
+    it('matches text inside an array attribute value', () => {
+      const span = makeOtelSpan('arr-span', [
+        { key: 'http.request.header.accept', value: ['application/json', 'text/html'] },
+      ]);
+      expect(filterSpans('application/json', [span])).toEqual(new Set(['arr-span']));
+      expect(filterSpans('text/html', [span])).toEqual(new Set(['arr-span']));
+      expect(filterSpans('notfound', [span])).toEqual(new Set([]));
+    });
+
+    it('does not confuse object values with "[object Object]"', () => {
+      const span = makeOtelSpan('obj-span', [{ key: 'meta', value: { foo: 'bar' } }]);
+      expect(filterSpans('[object Object]', [span])).toEqual(new Set([]));
+      expect(filterSpans('bar', [span])).toEqual(new Set(['obj-span']));
+    });
+
+    it('supports key=value search for object attribute values', () => {
+      const span = makeOtelSpan('obj-span', [{ key: 'payload', value: { status: 'ok' } }]);
+      expect(filterSpans('payload={"status":"ok"}', [span])).toEqual(new Set(['obj-span']));
+    });
+
+    it('does not throw on circular reference values, falls back to String()', () => {
+      const circular = {};
+      circular.self = circular;
+      const span = makeOtelSpan('circ-span', [{ key: 'meta', value: circular }]);
+      expect(() => filterSpans('meta', [span])).not.toThrow();
+    });
   });
 });

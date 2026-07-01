@@ -36,9 +36,8 @@ describe('middlewareHooks', () => {
   beforeEach(() => {
     trackEvent.mockClear();
     stateClone = _cloneDeep(state);
-    // Seed under the canonical 32-char padded key. Both 'ABC' and '00ABC' pad
-    // to the same key, so one seed covers the leading-zeros test case too.
-    queryClient.setQueryData(['trace', traceID.toLowerCase().padStart(32, '0')], traceData);
+    // Seed the React Query cache so trackParent can find the trace by ID.
+    queryClient.setQueryData(['trace', traceID], traceData);
   });
 
   afterEach(() => {
@@ -100,11 +99,11 @@ describe('middlewareHooks', () => {
       noOp: true,
     },
     {
-      msg: 'handles leading 0s in traceID in trackParent',
+      msg: 'handles unknown traceID (no cache match) in trackParent',
       type: types.CHILDREN_TOGGLE,
       stateOverrides: new Map([['traceTimeline.traceID', `00${traceID}`]]),
       category: track.CATEGORY_PARENT,
-      extraTrackArgs: [123],
+      noOp: true,
     },
     {
       action: track.ACTION_EXPAND_ALL,

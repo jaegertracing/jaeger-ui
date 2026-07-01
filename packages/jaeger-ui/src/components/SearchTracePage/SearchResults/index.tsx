@@ -22,6 +22,7 @@ import NewWindowIcon from '../../common/NewWindowIcon';
 import SearchResultsDDG from '../../DeepDependencies/traces';
 import { getTracePageLink } from '../../TracePage/url';
 import * as orderBy from '../../../model/order-by';
+import type { OrderBy } from '../../../model/order-by';
 import { getPercentageOfDuration } from '../../../utils/date';
 
 import { TraceSummary } from '../../../types/trace-summary';
@@ -47,13 +48,13 @@ type SearchResultsProps = {
   traceSummaries: TraceSummary[];
   uploadedTraceIDs: ReadonlySet<string>;
   rawTraces: unknown[];
-  sortBy: string;
-  handleSortChange: (sortBy: string) => void;
+  sortBy: OrderBy;
+  handleSortChange: (sortBy: OrderBy) => void;
 };
 
 type SelectSortProps = {
-  sortBy: string;
-  handleSortChange: (sortBy: string) => void;
+  sortBy: OrderBy;
+  handleSortChange: (sortBy: OrderBy) => void;
 };
 
 const Option = Select.Option;
@@ -65,12 +66,17 @@ export function SelectSort({ sortBy, handleSortChange }: SelectSortProps) {
   return (
     <label>
       Sort:{' '}
-      <SearchableSelect value={sortBy} onChange={(value: string) => handleSortChange(value)}>
+      <SearchableSelect value={sortBy} onChange={(value: OrderBy) => handleSortChange(value)}>
         <Option value={orderBy.MOST_RECENT}>Most Recent</Option>
+        <Option value={orderBy.OLDEST_FIRST}>Oldest First</Option>
         <Option value={orderBy.LONGEST_FIRST}>Longest First</Option>
         <Option value={orderBy.SHORTEST_FIRST}>Shortest First</Option>
         <Option value={orderBy.MOST_SPANS}>Most Spans</Option>
         <Option value={orderBy.LEAST_SPANS}>Least Spans</Option>
+        <Option value={orderBy.MOST_ERRORS}>Most Errors</Option>
+        <Option value={orderBy.LEAST_ERRORS}>Least Errors</Option>
+        <Option value={orderBy.TRACE_NAME_ASC}>Trace Name A-Z</Option>
+        <Option value={orderBy.TRACE_NAME_DESC}>Trace Name Z-A</Option>
       </SearchableSelect>
     </label>
   );
@@ -103,27 +109,15 @@ export function UnconnectedSearchResults({
     [traceSummaries]
   );
 
-  // spanLinks come from user config and may use abbreviated or mixed-case keys.
-  // Pad each key to the standard 32-char OTEL trace ID length so lookups match
-  // regardless of how many leading zeros the user omitted when writing the config.
-  const normalizedSpanLinks = useMemo(() => {
-    if (!spanLinks) return undefined;
-    const result: Record<string, string> = {};
-    for (const [key, value] of Object.entries(spanLinks)) {
-      result[key.toLowerCase().padStart(32, '0')] = value;
-    }
-    return result;
-  }, [spanLinks]);
-
   const toggleComparison = useCallback(
     (traceID: string, remove?: boolean) => {
       if (remove) {
         removeTraceFromCohort(traceID);
         return;
       }
-      const summary = traceSummaryById.get(traceID);
       // Defensive: every rendered row's traceID is a key in traceSummaryById,
       // so this lookup cannot miss in normal UI flow.
+      const summary = traceSummaryById.get(traceID);
       if (!summary) return;
       addTraceToCohort(summary);
     },
@@ -139,9 +133,9 @@ export function UnconnectedSearchResults({
       getTracePageLink(
         traceID,
         { fromSearch: location.pathname + location.search },
-        normalizedSpanLinks && normalizedSpanLinks[traceID.padStart(32, '0')]
+        spanLinks && spanLinks[traceID]
       ),
-    [location, normalizedSpanLinks]
+    [location, spanLinks]
   );
 
   const goToTrace = useCallback(
@@ -160,7 +154,7 @@ export function UnconnectedSearchResults({
     const view = urlState.view && urlState.view === 'ddg' ? EAltViewActions.Traces : EAltViewActions.Ddg;
     trackAltView(view);
     // When URL has lost search params (e.g. after TopNav navigation to bare /search),
-    // fall back to the root service of the first result so DDG can build the graph.
+    // fall back to the root service of the first result so DDG can build the graph
     const serviceFromUrl = typeof urlState.service === 'string' ? urlState.service : undefined;
     const service = serviceFromUrl ?? traceSummaries[0]?.rootServiceName;
     navigate(getUrl({ ...urlState, service, view }));

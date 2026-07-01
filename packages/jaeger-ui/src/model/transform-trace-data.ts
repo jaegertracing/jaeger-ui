@@ -69,10 +69,11 @@ export function normalizeId(id: string): string {
  * generally requires.
  */
 export default function transformTraceData(data: TraceData & { spans: SpanData[] }): Trace | null {
-  let { traceID } = data;
+  const { traceID } = data;
   if (!traceID) {
     return null;
   }
+
   let traceEndTime = 0;
   let traceStartTime = Number.MAX_SAFE_INTEGER;
   const spanIdCounts = new Map<string, number>();

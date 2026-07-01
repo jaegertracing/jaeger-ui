@@ -1,8 +1,6 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-// Simplified mock sufficient for testing normalization logic;
-// URL prefix handling is tested separately in url/index.test.js
 vi.mock('./url', async () => ({
   getUrl: (id: string) => `/trace/${id}`,
 }));
@@ -18,6 +16,11 @@ vi.mock('react-router-dom', () => ({
 import { renderHook } from '@testing-library/react';
 
 import { useNormalizeTraceId } from './useNormalizeTraceId';
+import type { IOtelTrace } from '../../types/otel';
+
+function makeTrace(traceID: string): IOtelTrace {
+  return { traceID } as IOtelTrace;
+}
 
 describe('useNormalizeTraceId', () => {
   beforeEach(() => {
@@ -25,80 +28,60 @@ describe('useNormalizeTraceId', () => {
     mockLocation = { search: '', state: null };
   });
 
-  it('does not redirect when trace ID is already the canonical 32-char lowercase form', () => {
-    const fullId = 'f77950feed55c1ce91dd8e87896623a6';
+  it('redirects when backend returns a different canonical ID (uppercase → lowercase)', () => {
+    const urlId = 'ABC123DEF456';
+    const canonicalId = 'abc123def456';
+    const trace = makeTrace(canonicalId);
 
-    const { result } = renderHook(() => useNormalizeTraceId(fullId));
+    renderHook(() => useNormalizeTraceId(urlId, trace));
 
-    expect(result.current).toBe(fullId);
-    expect(mockNavigate).not.toHaveBeenCalled();
-  });
-
-  it('lowercases an uppercase 32-char trace ID in the URL', () => {
-    const upperId = 'F77950FEED55C1CE91DD8E87896623A6';
-    const lowerId = upperId.toLowerCase();
-
-    const { result } = renderHook(() => useNormalizeTraceId(upperId));
-
-    expect(result.current).toBe(lowerId);
-    expect(mockNavigate).toHaveBeenCalledWith(`/trace/${lowerId}`, {
+    expect(mockNavigate).toHaveBeenCalledWith(`/trace/${canonicalId}`, {
       replace: true,
       state: null,
     });
   });
 
-  it('pads a short lowercase trace ID with leading zeros to 32 chars', () => {
-    const shortId = 'abc123def456';
-    const paddedId = shortId.padStart(32, '0');
+  it('redirects when backend returns a different canonical ID (base64 → hex)', () => {
+    const urlId = 's23gbclyqrBxrBGcUEygfA==';
+    const canonicalId = 'b36de06c5972ab071ac119c504ca07dc';
+    const trace = makeTrace(canonicalId);
 
-    const { result } = renderHook(() => useNormalizeTraceId(shortId));
+    renderHook(() => useNormalizeTraceId(urlId, trace));
 
-    expect(result.current).toBe(paddedId);
-    expect(mockNavigate).toHaveBeenCalledWith(`/trace/${paddedId}`, {
+    expect(mockNavigate).toHaveBeenCalledWith(`/trace/${canonicalId}`, {
       replace: true,
       state: null,
     });
   });
 
-  it('pads a short ID that already has some leading zeros', () => {
-    const shortId = '000abc123def456';
-    const paddedId = shortId.padStart(32, '0');
-
-    const { result } = renderHook(() => useNormalizeTraceId(shortId));
-
-    expect(result.current).toBe(paddedId);
-    expect(mockNavigate).toHaveBeenCalledWith(`/trace/${paddedId}`, {
-      replace: true,
-      state: null,
-    });
-  });
-
-  it('lowercases and pads in a single redirect', () => {
-    const shortUpperId = '000ABC123';
-    const paddedId = shortUpperId.toLowerCase().padStart(32, '0');
-
-    const { result } = renderHook(() => useNormalizeTraceId(shortUpperId));
-
-    expect(result.current).toBe(paddedId);
-    expect(mockNavigate).toHaveBeenCalledWith(`/trace/${paddedId}`, {
-      replace: true,
-      state: null,
-    });
-  });
-
-  it('preserves query parameters during normalization', () => {
-    const shortUpperId = 'ABC123DEF456';
-    const paddedId = shortUpperId.toLowerCase().padStart(32, '0');
+  it('preserves query parameters during redirect', () => {
+    const urlId = 'ABC123DEF456';
+    const canonicalId = 'abc123def456';
     const searchParams = '?uiFind=foo&x=1';
 
     mockLocation = { search: searchParams, state: null };
+    const trace = makeTrace(canonicalId);
 
-    const { result } = renderHook(() => useNormalizeTraceId(shortUpperId));
+    renderHook(() => useNormalizeTraceId(urlId, trace));
 
-    expect(result.current).toBe(paddedId);
-    expect(mockNavigate).toHaveBeenCalledWith(`/trace/${paddedId}${searchParams}`, {
+    expect(mockNavigate).toHaveBeenCalledWith(`/trace/${canonicalId}${searchParams}`, {
       replace: true,
       state: null,
     });
+  });
+
+  it('does not redirect when trace ID already matches', () => {
+    const id = 'abc123def456';
+    const trace = makeTrace(id);
+
+    renderHook(() => useNormalizeTraceId(id, trace));
+
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it('does not redirect when trace is not yet loaded', () => {
+    renderHook(() => useNormalizeTraceId('abc123', undefined));
+
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 });
