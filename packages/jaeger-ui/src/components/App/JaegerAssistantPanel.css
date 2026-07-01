@@ -4,9 +4,7 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .JaegerAssistantPanel {
-  flex: 0 0 min(100%, 26rem);
-  max-width: 26rem;
-  min-width: 20rem;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   border-left: 1px solid var(--border-default);
@@ -18,6 +16,21 @@ SPDX-License-Identifier: Apache-2.0
   max-height: calc(100vh - var(--nav-height));
   min-height: 0;
   overflow: hidden;
+}
+
+.JaegerAssistantPanel-resizeHandle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 4px;
+  height: 100%;
+  cursor: ew-resize;
+  z-index: 10;
+}
+
+.JaegerAssistantPanel-resizeHandle:hover {
+  background-color: var(--interactive-primary);
+  opacity: 0.4;
 }
 
 .JaegerAssistantPanel-topBar {

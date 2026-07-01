@@ -186,6 +186,70 @@ describe('JaegerAssistantDock', () => {
     fireEvent.click(screen.getByRole('button', { name: 'ask-bootstrap-hi' }));
     await waitFor(() => expect(mockAppend).toHaveBeenCalledWith('hi'));
   });
+
+  describe('drag-to-resize', () => {
+    function renderDock() {
+      agUiMock.configured = true;
+      const { container } = render(
+        <MemoryRouter>
+          <JaegerAssistantProvider>
+            <JaegerAssistantDock />
+          </JaegerAssistantProvider>
+        </MemoryRouter>
+      );
+      const aside = container.querySelector('aside[aria-label="Ask Jaeger assistant"]');
+      const handle = container.querySelector('.JaegerAssistantPanel-resizeHandle');
+      return { aside, handle };
+    }
+
+    it('renders a resize handle at the default width', () => {
+      const { aside, handle } = renderDock();
+      expect(handle).not.toBeNull();
+      expect(aside.style.width).toBe('416px');
+    });
+
+    it('widens the panel when dragging the handle left', () => {
+      const { aside, handle } = renderDock();
+      fireEvent.mouseDown(handle, { clientX: 500 });
+      fireEvent.mouseMove(document, { clientX: 400 });
+      expect(aside.style.width).toBe('516px');
+      fireEvent.mouseUp(document);
+    });
+
+    it('narrows the panel when dragging the handle right', () => {
+      const { aside, handle } = renderDock();
+      fireEvent.mouseDown(handle, { clientX: 500 });
+      fireEvent.mouseMove(document, { clientX: 550 });
+      expect(aside.style.width).toBe('366px');
+      fireEvent.mouseUp(document);
+    });
+
+    it('clamps width to PANEL_MAX_WIDTH', () => {
+      const { aside, handle } = renderDock();
+      fireEvent.mouseDown(handle, { clientX: 500 });
+      fireEvent.mouseMove(document, { clientX: -1000 });
+      expect(aside.style.width).toBe('800px');
+      fireEvent.mouseUp(document);
+    });
+
+    it('clamps width to PANEL_MIN_WIDTH', () => {
+      const { aside, handle } = renderDock();
+      fireEvent.mouseDown(handle, { clientX: 500 });
+      fireEvent.mouseMove(document, { clientX: 1000 });
+      expect(aside.style.width).toBe('320px');
+      fireEvent.mouseUp(document);
+    });
+
+    it('stops resizing after mouseup', () => {
+      const { aside, handle } = renderDock();
+      fireEvent.mouseDown(handle, { clientX: 500 });
+      fireEvent.mouseMove(document, { clientX: 400 });
+      expect(aside.style.width).toBe('516px');
+      fireEvent.mouseUp(document);
+      fireEvent.mouseMove(document, { clientX: 100 });
+      expect(aside.style.width).toBe('516px');
+    });
+  });
 });
 
 describe('JaegerThreadMessageBody', () => {
@@ -206,6 +270,22 @@ describe('JaegerThreadMessageBody', () => {
     expect(screen.getByTestId('message-primitive-root')).toHaveClass(
       'JaegerAssistantPanel-message--assistant'
     );
+  });
+
+  it('renders assistant text as markdown instead of MessagePartPrimitive.Text', () => {
+    partsMock.parts = [{ type: 'text', text: 'Hello **world**' }];
+    const { container } = render(<JaegerThreadMessageBody variant="assistant" />);
+    expect(container.querySelector('[data-testid="message-part-text"]')).not.toBeInTheDocument();
+    const markdownRoot = container.querySelector('.JaegerAssistantPanel-md');
+    expect(markdownRoot).toHaveClass('JaegerAssistantPanel-messageText');
+    expect(markdownRoot.querySelector('strong')).toHaveTextContent('world');
+  });
+
+  it('still uses MessagePartPrimitive.Text for user variant even when text is present', () => {
+    partsMock.parts = [{ type: 'text', text: 'Hello **world**' }];
+    const { container } = render(<JaegerThreadMessageBody variant="user" />);
+    expect(container.querySelector('[data-testid="message-part-text"]')).toBeInTheDocument();
+    expect(container.querySelector('.JaegerAssistantPanel-md')).not.toBeInTheDocument();
   });
 });
 

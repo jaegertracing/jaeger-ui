@@ -12,10 +12,12 @@ import {
 } from '@assistant-ui/react';
 import { IoClose } from 'react-icons/io5';
 import { JsonView, collapseAllNested } from 'react-json-view-lite';
+import Markdown from 'markdown-to-jsx';
 
 import { useJaegerAssistant, useJaegerAssistantOptional } from './JaegerAssistantContext';
 import { useJaegerAssistantConfigured } from '../../hooks/useJaegerAssistant';
 import jsonViewStyles from '../../utils/jsonViewStyles';
+import { sharedMarkdownOptions } from '../../utils/markdownOptions';
 
 import './JaegerAssistantPanel.css';
 
@@ -117,6 +119,17 @@ function JaegerToolCallIndicator({
   );
 }
 
+function AssistantMarkdownText({ text }: { text: string }) {
+  return (
+    <Markdown
+      className="JaegerAssistantPanel-messageText JaegerAssistantPanel-md"
+      options={{ ...sharedMarkdownOptions, optimizeForStreaming: true }}
+    >
+      {text}
+    </Markdown>
+  );
+}
+
 function JaegerThreadMessageBody({ variant }: { variant: 'user' | 'assistant' }) {
   return (
     <MessagePrimitive.Root
@@ -125,6 +138,9 @@ function JaegerThreadMessageBody({ variant }: { variant: 'user' | 'assistant' })
       <MessagePrimitive.Parts>
         {({ part }) => {
           if (part.type === 'text') {
+            if (variant === 'assistant' && part.text) {
+              return <AssistantMarkdownText text={part.text} />;
+            }
             return (
               <MessagePartPrimitive.Text
                 component="div"
@@ -202,6 +218,10 @@ function JaegerAssistantThreadView({ focusComposer }: { focusComposer: boolean }
   );
 }
 
+const PANEL_MIN_WIDTH = 320;
+const PANEL_MAX_WIDTH = 800;
+const PANEL_DEFAULT_WIDTH = 416; // 26rem at 16px base
+
 /**
  * Right dock for Ask Jaeger.
  *
@@ -213,6 +233,40 @@ function JaegerAssistantThreadView({ focusComposer }: { focusComposer: boolean }
 export function JaegerAssistantDock() {
   const assistant = useJaegerAssistantOptional();
   const assistantConfigured = useJaegerAssistantConfigured();
+  const [width, setWidth] = React.useState(PANEL_DEFAULT_WIDTH);
+  // Holds the teardown for an in-flight drag so unmounting mid-drag does not
+  // leave document listeners attached or body cursor/user-select overrides stuck.
+  const dragCleanupRef = React.useRef<(() => void) | null>(null);
+
+  const onDragStart = React.useCallback(
+    (e: React.MouseEvent) => {
+      const startX = e.clientX;
+      const startWidth = width;
+      document.body.style.cursor = 'ew-resize';
+      document.body.style.userSelect = 'none';
+
+      const onMouseMove = (ev: MouseEvent) => {
+        const delta = startX - ev.clientX;
+        setWidth(Math.min(PANEL_MAX_WIDTH, Math.max(PANEL_MIN_WIDTH, startWidth + delta)));
+      };
+
+      const stopDragging = () => {
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', stopDragging);
+        dragCleanupRef.current = null;
+      };
+
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', stopDragging);
+      dragCleanupRef.current = stopDragging;
+    },
+    [width]
+  );
+
+  React.useEffect(() => () => dragCleanupRef.current?.(), []);
+
   if (!assistant || !assistantConfigured) {
     return null;
   }
@@ -224,8 +278,9 @@ export function JaegerAssistantDock() {
       className="JaegerAssistantPanel"
       aria-label="Ask Jaeger assistant"
       aria-hidden={!panelOpen}
-      style={{ display: panelOpen ? undefined : 'none' }}
+      style={{ display: panelOpen ? undefined : 'none', width, maxWidth: '100%' }}
     >
+      <div className="JaegerAssistantPanel-resizeHandle" onMouseDown={onDragStart} />
       <JaegerAssistantBootstrap />
       <header className="JaegerAssistantPanel-topBar">
         <h2 className="JaegerAssistantPanel-title">Ask Jaeger</h2>
