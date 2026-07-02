@@ -119,4 +119,10 @@ describe('<TraceSpanView>', () => {
       expect.arrayContaining(['op1', 'op2', 'op3', 'op4', 'op6', 'op7'])
     );
   });
+
+  it('calls onSearchResults with null', () => {
+    const onSearchResults = vi.fn();
+    render(<TraceSpanView {...defaultProps} onSearchResults={onSearchResults} />);
+    expect(onSearchResults).toHaveBeenCalledWith(null);
+  });
 });
