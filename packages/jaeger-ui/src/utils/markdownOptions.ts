@@ -5,12 +5,24 @@ import * as React from 'react';
 import type { MarkdownToJSX } from 'markdown-to-jsx';
 
 function SafeLink({ href, children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) {
+  // Browsers treat URL schemes case-insensitively and tolerate surrounding
+  // whitespace, so the allowlist check must normalize before comparing (e.g.
+  // "HTTPS://…" or a leading-space href must not be wrongly blocked). The
+  // rendered href keeps its original casing -- only the scheme comparison is
+  // normalized, since path/query segments can be legitimately case-sensitive.
+  const trimmedHref = typeof href === 'string' ? href.trim() : '';
+  const lowerHref = trimmedHref.toLowerCase();
   const isSafe =
-    href && (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('mailto:'));
+    !!trimmedHref &&
+    (lowerHref.startsWith('http://') || lowerHref.startsWith('https://') || lowerHref.startsWith('mailto:'));
   if (!isSafe) {
     return React.createElement('span', props, children);
   }
-  return React.createElement('a', { ...props, href, target: '_blank', rel: 'noopener noreferrer' }, children);
+  return React.createElement(
+    'a',
+    { ...props, href: trimmedHref, target: '_blank', rel: 'noopener noreferrer' },
+    children
+  );
 }
 
 function SafeImage({ alt, title }: React.ImgHTMLAttributes<HTMLImageElement>) {

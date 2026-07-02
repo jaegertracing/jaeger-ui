@@ -85,6 +85,24 @@ describe('sharedMarkdownOptions', () => {
       expect(container.querySelectorAll('a').length).toBe(0);
       expect(container.textContent).toContain('empty link');
     });
+
+    it('allows an uppercase scheme, matching browsers treating schemes case-insensitively', () => {
+      const { container } = render(
+        <Markdown options={sharedMarkdownOptions}>[shout link](HTTPS://example.com)</Markdown>
+      );
+      const link = container.querySelector('a');
+      expect(link).not.toBeNull();
+      expect(link).toHaveAttribute('href', 'HTTPS://example.com');
+    });
+
+    it('allows a href with leading/trailing whitespace, trimmed before rendering', () => {
+      const { container } = render(
+        <Markdown options={sharedMarkdownOptions}>{'[padded link](  https://example.com  )'}</Markdown>
+      );
+      const link = container.querySelector('a');
+      expect(link).not.toBeNull();
+      expect(link).toHaveAttribute('href', 'https://example.com');
+    });
   });
 
   describe('image rendering', () => {
