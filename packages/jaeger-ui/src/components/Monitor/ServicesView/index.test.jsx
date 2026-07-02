@@ -862,6 +862,95 @@ describe('<MonitorATMServicesView> URL query params', () => {
   });
 });
 
+describe('<MonitorATMServicesView> URL write-back', () => {
+  const mockFetchAllServiceMetrics = jest.fn();
+  const mockFetchAggregatedServiceMetrics = jest.fn();
+  const mockNavigate = jest.fn();
+
+  const baseProps = {
+    ...props,
+    fetchAllServiceMetrics: mockFetchAllServiceMetrics,
+    fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
+    navigate: mockNavigate,
+  };
+
+  beforeEach(() => {
+    cleanup();
+    jest.clearAllMocks();
+    store.getString.mockReturnValue(undefined);
+    store.getNumber.mockReturnValue(undefined);
+    useServices.mockReturnValue({ data: ['service1', 'service2'], isLoading: false });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+    useServices.mockReset();
+    useServices.mockImplementation(defaultUseServicesImpl);
+    cleanup();
+  });
+
+  it('updates the URL when the user changes the service filter', async () => {
+    const user = userEvent.setup();
+    renderWithRouter(<MonitorATMServicesView {...baseProps} search="" />);
+
+    await user.selectOptions(screen.getByTestId('select-a-service-input'), 'service2');
+
+    expect(mockNavigate).toHaveBeenCalledWith(expect.stringContaining('service=service2'), { replace: true });
+  });
+
+  it('updates the URL when the user changes the span kind filter', async () => {
+    const user = userEvent.setup();
+    renderWithRouter(<MonitorATMServicesView {...baseProps} search="?service=service1" />);
+
+    await user.selectOptions(screen.getByTestId('span-kind-selector'), 'client');
+
+    expect(mockNavigate).toHaveBeenCalledWith(
+      expect.stringMatching(/service=service1.*spanKind=client|spanKind=client.*service=service1/),
+      { replace: true }
+    );
+  });
+
+  it('preserves unrelated query params when updating the URL', async () => {
+    const user = userEvent.setup();
+    renderWithRouter(<MonitorATMServicesView {...baseProps} search="?uiEmbed=v0" />);
+
+    await user.selectOptions(screen.getByTestId('select-a-service-input'), 'service2');
+
+    expect(mockNavigate).toHaveBeenCalledWith(expect.stringContaining('uiEmbed=v0'), { replace: true });
+    expect(mockNavigate).toHaveBeenCalledWith(expect.stringContaining('service=service2'), {
+      replace: true,
+    });
+  });
+
+  it('persists a URL-seeded filter after write-back updates search', async () => {
+    const user = userEvent.setup();
+    let rerenderView = () => {};
+
+    const navigate = jest.fn(url => {
+      const nextSearch = url.includes('?') ? url.slice(url.indexOf('?')) : '';
+      rerenderView(
+        <MemoryRouter>
+          <MonitorATMServicesView {...baseProps} navigate={navigate} search={nextSearch} />
+        </MemoryRouter>
+      );
+    });
+
+    const { rerender } = renderWithRouter(
+      <MonitorATMServicesView {...baseProps} navigate={navigate} search="?spanKind=client" />
+    );
+    rerenderView = rerender;
+
+    expect(store.set).not.toHaveBeenCalledWith('lastAtmSearchSpanKind', expect.anything());
+
+    await user.selectOptions(screen.getByTestId('span-kind-selector'), 'server');
+
+    await waitFor(() => {
+      expect(navigate).toHaveBeenCalled();
+      expect(store.set).toHaveBeenCalledWith('lastAtmSearchSpanKind', 'server');
+    });
+  });
+});
+
 describe('<MonitorATMServicesView> on page switch', () => {
   const stateOnPageSwitch = {
     services: {

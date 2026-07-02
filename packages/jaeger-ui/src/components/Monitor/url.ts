@@ -17,8 +17,23 @@ export function matches(path: string) {
   return Boolean(matchPath(ROUTE_PATH, path));
 }
 
-export function getUrl() {
-  return ROUTE_PATH;
+export type TMonitorUrlParams = {
+  service: string;
+  spanKind: spanKinds;
+  timeframe: number;
+};
+
+export function getUrl(params?: TMonitorUrlParams, currentSearch = ''): string {
+  if (!params) return ROUTE_PATH;
+
+  const merged = {
+    ...queryString.parse(currentSearch),
+    service: params.service,
+    spanKind: params.spanKind,
+    timeframe: params.timeframe,
+  };
+
+  return `${ROUTE_PATH}?${queryString.stringify(merged)}`;
 }
 
 export type TMonitorUrlState = {
