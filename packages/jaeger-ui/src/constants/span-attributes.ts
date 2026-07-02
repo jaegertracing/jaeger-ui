@@ -1,8 +1,6 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-export enum SpanAttributeNamespace {
-  GEN_AI = 'gen_ai.',
-}
+export const GEN_AI_NAMESPACE = 'gen_ai.';
 
 export const GEN_AI_OPERATION_NAME = 'gen_ai.operation.name';

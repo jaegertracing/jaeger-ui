@@ -37,6 +37,7 @@ function makeSpan(serviceName: string, spanID: string, statusCode: StatusCode = 
     spanID,
     name: 'op',
     kind: SpanKind.INTERNAL,
+    genAIKind: 'STANDARD',
     startTime: us(1000),
     endTime: us(1500),
     duration: us(500),

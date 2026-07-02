@@ -17,6 +17,8 @@ export enum StatusCode {
   ERROR = 'ERROR',
 }
 
+export type GenAISpanKind = 'LLM_CALL' | 'TOOL_CALL' | 'AGENT' | 'RETRIEVAL' | 'UNKNOWN_GENAI' | 'STANDARD';
+
 export type AttributeValue =
   | string
   | number
@@ -69,6 +71,7 @@ export interface IOtelSpan {
   // Naming & Classification
   name: string;
   kind: SpanKind;
+  genAIKind: GenAISpanKind;
 
   // Timing
   startTime: Microseconds;
