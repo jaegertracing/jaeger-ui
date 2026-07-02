@@ -1,6 +1,8 @@
 // Copyright (c) 2021 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+import queryString from 'query-string';
+
 import { ROUTE_PATH, matches, getUrl, getUrlState } from './url';
 
 describe('Monitor/url', () => {
@@ -12,6 +14,24 @@ describe('Monitor/url', () => {
 
   it('getUrl', () => {
     expect(getUrl()).toBe(ROUTE_PATH);
+    expect(getUrl({ service: 'myservice', spanKind: 'client', timeframe: 3600000 })).toBe(
+      `${ROUTE_PATH}?service=myservice&spanKind=client&timeframe=3600000`
+    );
+  });
+
+  it('getUrl preserves unrelated query params', () => {
+    const url = getUrl(
+      { service: 'myservice', spanKind: 'server', timeframe: 3600000 },
+      '?uiEmbed=v0&foo=bar'
+    );
+    const query = queryString.parse(url.split('?')[1]);
+    expect(query).toEqual({
+      uiEmbed: 'v0',
+      foo: 'bar',
+      service: 'myservice',
+      spanKind: 'server',
+      timeframe: '3600000',
+    });
   });
 
   describe('getUrlState', () => {
