@@ -50,6 +50,7 @@ export default function ResultItem({
     traceID,
     spanCount,
     errorSpanCount,
+    warningSpanCount,
     orphanSpanCount,
   } = traceSummary;
 
@@ -79,6 +80,11 @@ export default function ResultItem({
             {Boolean(errorSpanCount) && (
               <Tag className="ub-m1" color="red" variant="outlined">
                 {errorSpanCount} Error{(errorSpanCount ?? 0) > 1 && 's'}
+              </Tag>
+            )}
+            {Boolean(warningSpanCount) && (
+              <Tag className="ub-m1" color="warning" variant="outlined">
+                {warningSpanCount} Warning{(warningSpanCount ?? 0) > 1 && 's'}
               </Tag>
             )}
             {Boolean(orphanSpanCount) && (

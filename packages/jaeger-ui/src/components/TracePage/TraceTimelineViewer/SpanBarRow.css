@@ -194,6 +194,24 @@ SPDX-License-Identifier: Apache-2.0
   /* Adjust padding since border adds 1.5px */
 }
 
+.SpanBarRow--warningIcon {
+  background: var(--feedback-warning);
+  border-radius: 6.5px;
+  color: var(--text-inverse);
+  font-size: 0.85em;
+  margin-right: 0.25rem;
+  padding: 1px;
+}
+
+/* Hollow variant for bubbled warnings from collapsed children */
+.SpanBarRow--warningIcon--hollow {
+  background: transparent;
+  border: 1.5px solid var(--feedback-warning);
+  color: var(--feedback-warning);
+  font-weight: bold;
+  padding: 0px;
+}
+
 .SpanBarRow--rpcColorMarker {
   border-radius: 6.5px;
   display: inline-block;

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { IOtelSpan, SpanKind, StatusCode } from '../../../types/otel';
-
+import { hasGenAIWarning } from '../../../utils/genai';
 export type ViewedBoundsFunctionType = (start: number, end: number) => { start: number; end: number };
 /**
  * Given a range (`min`, `max`) and factoring in a zoom (`viewStart`, `viewEnd`)
@@ -68,6 +68,25 @@ export function spanContainsErredSpan(spans: ReadonlyArray<IOtelSpan>, parentSpa
   let i = parentSpanIndex + 1;
   for (; i < spans.length && spans[i].depth > depth; i++) {
     if (isErrorSpan(spans[i])) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Returns `true` if at least one of the descendants of the `parentSpanIndex`
+ * span contains a GenAI warning.
+ *
+ * @param      {IOtelSpan[]}  spans            The OTEL spans for a trace.
+ * @param      {number}       parentSpanIndex  The index of the parent span.
+ * @return     {boolean}      Returns `true` if a descendant contains a GenAI warning.
+ */
+export function spanContainsWarningSpan(spans: ReadonlyArray<IOtelSpan>, parentSpanIndex: number): boolean {
+  const { depth } = spans[parentSpanIndex];
+  let i = parentSpanIndex + 1;
+  for (; i < spans.length && spans[i].depth > depth; i++) {
+    if (hasGenAIWarning(spans[i])) {
       return true;
     }
   }

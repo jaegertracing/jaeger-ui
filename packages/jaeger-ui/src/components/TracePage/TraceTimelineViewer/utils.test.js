@@ -6,9 +6,12 @@ import {
   createViewedBoundsFunc,
   isErrorSpan,
   spanContainsErredSpan,
+  spanContainsWarningSpan,
   isKindClient,
   isKindProducer,
 } from './utils';
+import { ATTR_GEN_AI_RESPONSE_FINISH_REASONS } from '@opentelemetry/semantic-conventions/incubating';
+import { hasGenAIWarning } from '../../../utils/genai';
 
 import { SpanKind, StatusCode } from '../../../types/otel';
 
@@ -100,6 +103,65 @@ describe('TraceTimelineViewer/utils', () => {
         // include the index in the expect condition to know which span failed
         // (if there is a failure, that is)
         const result = [i, spanContainsErredSpan(spans, i)];
+        expect(result).toEqual([i, target]);
+      });
+    });
+  });
+
+  describe('hasGenAIWarning()', () => {
+    it('returns true when finish_reasons contains content_filter', () => {
+      const span = {
+        attributes: [{ key: ATTR_GEN_AI_RESPONSE_FINISH_REASONS, value: 'content_filter' }],
+      };
+      expect(hasGenAIWarning(span)).toBe(true);
+    });
+
+    it('returns true when finish_reasons array contains length', () => {
+      const span = {
+        attributes: [{ key: ATTR_GEN_AI_RESPONSE_FINISH_REASONS, value: ['stop', 'length'] }],
+      };
+      expect(hasGenAIWarning(span)).toBe(true);
+    });
+
+    it('returns false when finish_reasons does not contain warning reasons', () => {
+      const span = {
+        attributes: [{ key: ATTR_GEN_AI_RESPONSE_FINISH_REASONS, value: 'stop' }],
+      };
+      expect(hasGenAIWarning(span)).toBe(false);
+    });
+
+    it('returns false when finish_reasons attribute is missing', () => {
+      const span = { attributes: [] };
+      expect(hasGenAIWarning(span)).toBe(false);
+    });
+  });
+
+  describe('spanContainsWarningSpan()', () => {
+    it('returns true only when a descendant has a warning status', () => {
+      const config = `
+        1   0
+        1     0
+        0       1
+        0     0
+        1     0
+        1       1
+        0         1
+        0           0
+        1         0
+        0           1
+        0   0
+      `
+        .trim()
+        .split('\n')
+        .map(s => s.trim());
+      const expectations = config.map(s => Boolean(Number(s[0])));
+      const spans = config.map(line => ({
+        depth: line.length,
+        attributes: +line.slice(-1) ? [{ key: ATTR_GEN_AI_RESPONSE_FINISH_REASONS, value: 'length' }] : [],
+      }));
+
+      expectations.forEach((target, i) => {
+        const result = [i, spanContainsWarningSpan(spans, i)];
         expect(result).toEqual([i, target]);
       });
     });

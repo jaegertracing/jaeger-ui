@@ -4,6 +4,7 @@
 import { traceToTraceSummary } from './trace-summary';
 import transformTraceData from './transform-trace-data';
 import traceGenerator from '../demo/trace-generators';
+import { ATTR_GEN_AI_RESPONSE_FINISH_REASONS } from '@opentelemetry/semantic-conventions/incubating';
 import { StatusCode, SpanKind } from '../types/otel';
 import type { IOtelTrace, IOtelSpan, IResource } from '../types/otel';
 import type { Microseconds } from '../types/units';
@@ -67,6 +68,7 @@ describe('traceToTraceSummary', () => {
     expect(summary.duration).toBe(500);
     expect(summary.spanCount).toBe(0);
     expect(summary.errorSpanCount).toBe(0);
+    expect(summary.warningSpanCount).toBe(0);
     expect(summary.orphanSpanCount).toBe(0);
     expect(summary.services).toEqual([]);
   });
@@ -106,6 +108,33 @@ describe('traceToTraceSummary', () => {
     expect(svcB.errorSpanCount).toBe(1);
   });
 
+  it('counts total and per-service warning spans', () => {
+    const s1 = makeSpan('svc-a', 's1');
+    s1.attributes = [{ key: ATTR_GEN_AI_RESPONSE_FINISH_REASONS, value: 'content_filter' }];
+    const s2 = makeSpan('svc-a', 's2');
+    const s3 = makeSpan('svc-b', 's3');
+    s3.attributes = [{ key: ATTR_GEN_AI_RESPONSE_FINISH_REASONS, value: 'length' }];
+    const trace = makeMinimalTrace({
+      spans: [s1, s2, s3],
+      services: [
+        { name: 'svc-a', numberOfSpans: 2 },
+        { name: 'svc-b', numberOfSpans: 1 },
+      ],
+    });
+    const summary = traceToTraceSummary(trace);
+
+    expect(summary.spanCount).toBe(3);
+    expect(summary.warningSpanCount).toBe(2);
+
+    const svcA = summary.services.find(s => s.name === 'svc-a')!;
+    expect(svcA.spanCount).toBe(2);
+    expect(svcA.warningSpanCount).toBe(1);
+
+    const svcB = summary.services.find(s => s.name === 'svc-b')!;
+    expect(svcB.spanCount).toBe(1);
+    expect(svcB.warningSpanCount).toBe(1);
+  });
+
   it('reports zero errors when no spans have error status', () => {
     const s1 = makeSpan('svc-a', 's1');
     const s2 = makeSpan('svc-a', 's2', StatusCode.UNSET);
@@ -116,7 +145,9 @@ describe('traceToTraceSummary', () => {
     const summary = traceToTraceSummary(trace);
 
     expect(summary.errorSpanCount).toBe(0);
+    expect(summary.warningSpanCount).toBe(0);
     expect(summary.services[0].errorSpanCount).toBe(0);
+    expect(summary.services[0].warningSpanCount).toBe(0);
   });
 
   it('propagates orphanSpanCount from the OTEL trace', () => {
