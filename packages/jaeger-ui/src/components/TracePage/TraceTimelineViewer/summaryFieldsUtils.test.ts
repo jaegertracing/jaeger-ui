@@ -211,13 +211,13 @@ describe('summaryFieldsUtils', () => {
           tags: [{ key: '__proto__', value: 'polluted' }],
         },
       ],
-    }).asOtelTrace();
+    })!.asOtelTrace();
 
     const lookup = buildSummaryLookup(pollutedTrace, ['__proto__']);
     const values = lookup.get('s1');
     expect(values).toBeDefined();
     expect(values!['__proto__']).toBe('polluted');
-    expect(Object.getPrototypeOf(values)).toBeNull();
+    expect(Object.getPrototypeOf(values!)).toBeNull();
     expect(Object.prototype).not.toHaveProperty('polluted');
   });
 
