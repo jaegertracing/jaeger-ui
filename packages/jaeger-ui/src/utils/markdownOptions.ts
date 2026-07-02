@@ -33,8 +33,16 @@ function SafeImage({ alt, title }: React.ImgHTMLAttributes<HTMLImageElement>) {
   );
 }
 
+// A stable module-level object is required: markdown-to-jsx memoizes its
+// parser on the options reference, so a fresh literal built on every render
+// would defeat that memoization and re-run the compiler on every streamed
+// token. optimizeForStreaming applies to every caller, not just the chat
+// panel -- span attributes rendered in the (future) GenAI span detail tab
+// can be truncated at ingestion, so tolerating unclosed tags is desirable
+// there too.
 export const sharedMarkdownOptions: MarkdownToJSX.Options = {
   disableParsingRawHTML: true,
+  optimizeForStreaming: true,
   // Without this, markdown-to-jsx drops the wrapper element (and with it the
   // className carrying our styling) whenever the parsed output is a single
   // node -- e.g. any one-sentence reply with no inline formatting. Callers
@@ -92,13 +100,4 @@ export const sharedMarkdownOptions: MarkdownToJSX.Options = {
       component: SafeImage,
     },
   },
-};
-
-// A stable object identity is required: markdown-to-jsx memoizes its parser
-// on the options reference, so spreading a new options object on every
-// render (e.g. { ...sharedMarkdownOptions, optimizeForStreaming: true })
-// defeats that memoization and re-runs the compiler on every streamed token.
-export const streamingMarkdownOptions: MarkdownToJSX.Options = {
-  ...sharedMarkdownOptions,
-  optimizeForStreaming: true,
 };

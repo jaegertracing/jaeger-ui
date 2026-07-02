@@ -17,7 +17,7 @@ import Markdown from 'markdown-to-jsx/react';
 import { useJaegerAssistant, useJaegerAssistantOptional } from './JaegerAssistantContext';
 import { useJaegerAssistantConfigured } from '../../hooks/useJaegerAssistant';
 import jsonViewStyles from '../../utils/jsonViewStyles';
-import { streamingMarkdownOptions } from '../../utils/markdownOptions';
+import { sharedMarkdownOptions } from '../../utils/markdownOptions';
 
 import './JaegerAssistantPanel.css';
 
@@ -123,7 +123,7 @@ function AssistantMarkdownText({ text }: { text: string }) {
   return (
     <Markdown
       className="JaegerAssistantPanel-messageText JaegerAssistantPanel-md"
-      options={streamingMarkdownOptions}
+      options={sharedMarkdownOptions}
     >
       {text}
     </Markdown>

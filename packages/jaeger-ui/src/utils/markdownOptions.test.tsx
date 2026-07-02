@@ -5,25 +5,16 @@ import { render } from '@testing-library/react';
 import Markdown from 'markdown-to-jsx/react';
 import { expect, it, describe } from 'vitest';
 
-import { sharedMarkdownOptions, streamingMarkdownOptions } from './markdownOptions';
-
-describe('streamingMarkdownOptions', () => {
-  it('is the same reference across repeated reads', () => {
-    // markdown-to-jsx memoizes its parser on the options object identity. A
-    // fresh { ...sharedMarkdownOptions, optimizeForStreaming: true } literal
-    // built inline on every render would defeat that memoization on every
-    // streamed token; a module-level constant guarantees a stable reference.
-    expect(streamingMarkdownOptions).toBe(streamingMarkdownOptions);
-  });
-
-  it('carries optimizeForStreaming on top of the shared options', () => {
-    expect(streamingMarkdownOptions.optimizeForStreaming).toBe(true);
-    expect(streamingMarkdownOptions.disableParsingRawHTML).toBe(sharedMarkdownOptions.disableParsingRawHTML);
-    expect(streamingMarkdownOptions.overrides).toBe(sharedMarkdownOptions.overrides);
-  });
-});
+import { sharedMarkdownOptions } from './markdownOptions';
 
 describe('sharedMarkdownOptions', () => {
+  it('enables optimizeForStreaming for every caller, not just streamed chat replies', () => {
+    // Span attributes rendered in the (future) GenAI span detail tab can be
+    // truncated at ingestion, so tolerating unclosed tags is desirable there
+    // too -- this is not a streaming-only concern.
+    expect(sharedMarkdownOptions.optimizeForStreaming).toBe(true);
+  });
+
   describe('wrapper element', () => {
     it('always wraps output, even a single plain-text sentence with no formatting', () => {
       // Without forceWrapper, markdown-to-jsx returns the single parsed node
