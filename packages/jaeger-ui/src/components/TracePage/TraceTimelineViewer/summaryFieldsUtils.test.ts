@@ -195,6 +195,32 @@ describe('summaryFieldsUtils', () => {
     expect(buildSummaryLookup(trace, []).size).toBe(0);
   });
 
+  it('buildSummaryLookup does not mutate Object.prototype for __proto__ attribute keys', () => {
+    const pollutedTrace = transformTraceData({
+      traceID: 'proto-test',
+      processes: { p1: { serviceName: 'svc', tags: [] } },
+      spans: [
+        {
+          spanID: 's1',
+          traceID: 'proto-test',
+          operationName: 'op',
+          duration: 1,
+          startTime: 1,
+          processID: 'p1',
+          references: [],
+          tags: [{ key: '__proto__', value: 'polluted' }],
+        },
+      ],
+    }).asOtelTrace();
+
+    const lookup = buildSummaryLookup(pollutedTrace, ['__proto__']);
+    const values = lookup.get('s1');
+    expect(values).toBeDefined();
+    expect(values!['__proto__']).toBe('polluted');
+    expect(Object.getPrototypeOf(values)).toBeNull();
+    expect(Object.prototype).not.toHaveProperty('polluted');
+  });
+
   describe('isHttpStatusCode5xx', () => {
     it('returns true only for http status code keys with values >= 500', () => {
       expect(isHttpStatusCode5xx('http.status_code', '500')).toBe(true);

@@ -76,7 +76,7 @@ function buildSummaryLookupImpl(
   const fieldSet = new Set(selectedFields);
 
   for (const span of trace.spans) {
-    const values: Record<string, string> = {};
+    const values: Record<string, string> = Object.create(null);
     let hasValue = false;
     for (const attr of span.attributes) {
       if (fieldSet.has(attr.key)) {
