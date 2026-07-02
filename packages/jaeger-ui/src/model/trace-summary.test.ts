@@ -24,6 +24,7 @@ function makeMinimalTrace(overrides: Partial<IOtelTrace> = {}): IOtelTrace {
     spanMap: new Map(),
     rootSpans: [],
     orphanSpanCount: 0,
+    isGenAITrace: false,
     hasErrors: () => false,
     ...overrides,
   };
@@ -36,6 +37,7 @@ function makeSpan(serviceName: string, spanID: string, statusCode: StatusCode = 
     spanID,
     name: 'op',
     kind: SpanKind.INTERNAL,
+    genAIKind: 'STANDARD',
     startTime: us(1000),
     endTime: us(1500),
     duration: us(500),
