@@ -9,7 +9,7 @@ import '@testing-library/jest-dom';
 import { UnconnectedSearchResults as SearchResults, SelectSort } from '.';
 import { useSearchResultsStore } from '../store.search-results';
 import * as track from './index.track';
-import * as orderBy from '../../../model/order-by';
+import * as orderBy from '../order-by';
 import { getUrl } from '../url';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';

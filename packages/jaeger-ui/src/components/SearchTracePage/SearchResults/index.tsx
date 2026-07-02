@@ -21,8 +21,8 @@ import LoadingIndicator from '../../common/LoadingIndicator';
 import NewWindowIcon from '../../common/NewWindowIcon';
 import SearchResultsDDG from '../../DeepDependencies/traces';
 import { getTracePageLink } from '../../TracePage/url';
-import * as orderBy from '../../../model/order-by';
-import type { OrderBy } from '../../../model/order-by';
+import * as orderBy from '../order-by';
+import type { OrderBy } from '../order-by';
 import { getPercentageOfDuration } from '../../../utils/date';
 
 import { TraceSummary } from '../../../types/trace-summary';
