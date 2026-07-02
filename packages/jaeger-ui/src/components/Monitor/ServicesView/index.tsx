@@ -147,10 +147,14 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   const [selectedTimeFrame, setSelectedTimeFrame] = useState<number>(initialFilters.selectedTimeFrame);
 
   const urlOwned = useRef(initialFilters.urlOwned);
+  const isInternalUrlSync = useRef(false);
 
   useEffect(() => {
     const filters = getFiltersFromSearch(search);
-    urlOwned.current = filters.urlOwned;
+    if (!isInternalUrlSync.current) {
+      urlOwned.current = filters.urlOwned;
+    }
+    isInternalUrlSync.current = false;
     setSelectedService(filters.selectedService);
     setSelectedSpanKind(filters.selectedSpanKind);
     setSelectedTimeFrame(filters.selectedTimeFrame);
@@ -174,6 +178,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   const syncFiltersToUrl = useCallback(
     (filters: { service: string; spanKind: spanKinds; timeframe: number }) => {
       if (!navigate) return;
+      isInternalUrlSync.current = true;
       navigate(getUrl(filters, search), { replace: true });
     },
     [navigate, search]

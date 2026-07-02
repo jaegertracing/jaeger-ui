@@ -921,6 +921,34 @@ describe('<MonitorATMServicesView> URL write-back', () => {
       replace: true,
     });
   });
+
+  it('persists a URL-seeded filter after write-back updates search', async () => {
+    const user = userEvent.setup();
+    let rerenderView = () => {};
+
+    const navigate = jest.fn(url => {
+      const nextSearch = url.includes('?') ? url.slice(url.indexOf('?')) : '';
+      rerenderView(
+        <MemoryRouter>
+          <MonitorATMServicesView {...baseProps} navigate={navigate} search={nextSearch} />
+        </MemoryRouter>
+      );
+    });
+
+    const { rerender } = renderWithRouter(
+      <MonitorATMServicesView {...baseProps} navigate={navigate} search="?spanKind=client" />
+    );
+    rerenderView = rerender;
+
+    expect(store.set).not.toHaveBeenCalledWith('lastAtmSearchSpanKind', expect.anything());
+
+    await user.selectOptions(screen.getByTestId('span-kind-selector'), 'server');
+
+    await waitFor(() => {
+      expect(navigate).toHaveBeenCalled();
+      expect(store.set).toHaveBeenCalledWith('lastAtmSearchSpanKind', 'server');
+    });
+  });
 });
 
 describe('<MonitorATMServicesView> on page switch', () => {
