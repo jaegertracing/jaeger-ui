@@ -18,6 +18,16 @@ export function isGenAISpan(span: IOtelSpan): boolean {
 export function hasGenAIWarning(span: IOtelSpan): boolean {
   const attr = span.attributes.find(a => a.key === ATTR_GEN_AI_RESPONSE_FINISH_REASONS);
   if (!attr) return false;
-  const reasons = Array.isArray(attr.value) ? attr.value : [attr.value];
+
+  let val = attr.value;
+  if (typeof val === 'string') {
+    try {
+      val = JSON.parse(val);
+    } catch {
+      // fallback to scalar string if not valid JSON
+    }
+  }
+
+  const reasons = Array.isArray(val) ? val : [val];
   return reasons.some(r => r === 'content_filter' || r === 'length');
 }

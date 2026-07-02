@@ -131,10 +131,7 @@ export class JaegerClient {
    * @returns Promise<Response>
    * @throws Error if request times out or network error occurs
    */
-  private async fetchWithTimeout(
-    url: string,
-    timeout = getConfig().api.requestTimeoutMs ?? 10000
-  ): Promise<Response> {
+  private async fetchWithTimeout(url: string, timeout = getConfig().api.requestTimeoutMs): Promise<Response> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
