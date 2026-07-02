@@ -4,7 +4,7 @@
 import type { IAttribute } from '../../types/otel';
 import { SpanAttributeNamespace, GEN_AI_OPERATION_NAME } from '../../constants/span-attributes';
 
-export type GenAISpanKind = 'LLM_CALL' | 'TOOL_CALL' | 'AGENT' | 'RETRIEVAL' | 'UNKNOWN_GENAI' | 'STANDARD';
+type GenAISpanKind = 'LLM_CALL' | 'TOOL_CALL' | 'AGENT' | 'RETRIEVAL' | 'UNKNOWN_GENAI' | 'STANDARD';
 
 type SpanAttrs = { attributes: ReadonlyArray<IAttribute> };
 
