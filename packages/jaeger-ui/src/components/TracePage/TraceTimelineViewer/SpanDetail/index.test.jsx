@@ -94,6 +94,12 @@ vi.mock('./GenAITab', () => {
   });
 });
 
+vi.mock('./GenAIAttributeRenderer', () => {
+  return mockDefault(function MockGenAIAttributeRenderer({ attribute }) {
+    return <div data-testid={`genai-renderer-${attribute.key}`}>{attribute.key}</div>;
+  });
+});
+
 const { isGenAISpanMock } = vi.hoisted(() => ({
   isGenAISpanMock: vi.fn(() => false),
 }));
@@ -327,6 +333,16 @@ describe('<SpanDetail>', () => {
       render(<SpanDetail {...props} />);
       expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute('aria-selected', 'true');
       expect(screen.getByRole('tab', { name: 'GenAI' })).toHaveAttribute('aria-selected', 'false');
+    });
+  });
+
+  describe('rich-media GenAI attribute section', () => {
+    it('renders GenAIAttributeRenderer for rich-media attributes when accordion is open', () => {
+      const richAttr = { key: 'gen_ai.input.messages', value: '[{"role":"user","content":"hi"}]' };
+      props.span.attributes.push(richAttr);
+      render(<SpanDetail {...props} />);
+      expect(screen.getByTestId('genai-renderer-gen_ai.input.messages')).toBeInTheDocument();
+      props.span.attributes.pop();
     });
   });
 });

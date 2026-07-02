@@ -52,3 +52,38 @@ SPDX-License-Identifier: Apache-2.0
 .AccordianWarnings--label {
   color: var(--feedback-warning);
 }
+
+.SpanDetail--genAISection {
+  margin-bottom: 0.25rem;
+}
+
+.GenAIAttributeRenderer {
+  border: 1px solid var(--border-default);
+  margin-bottom: 0.25rem;
+  padding: 0.5rem;
+}
+
+.GenAIAttributeRenderer--key {
+  color: var(--text-muted);
+  display: block;
+  font-size: 0.85em;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.GenAIAttributeRenderer--pre {
+  background: var(--surface-secondary);
+  border-radius: 2px;
+  font-size: 0.85em;
+  margin: 0;
+  max-height: 400px;
+  overflow: auto;
+  padding: 0.5rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.GenAIAttributeRenderer--json {
+  max-height: 400px;
+  overflow: auto;
+}
