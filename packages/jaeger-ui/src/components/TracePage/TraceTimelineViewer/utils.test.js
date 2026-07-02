@@ -8,6 +8,8 @@ import {
   spanContainsErredSpan,
   isKindClient,
   isKindProducer,
+  getGenAiModel,
+  GEN_AI_REQUEST_MODEL_KEY,
 } from './utils';
 
 import { SpanKind, StatusCode } from '../../../types/otel';
@@ -156,6 +158,31 @@ describe('TraceTimelineViewer/utils', () => {
     it('returns false when span kind is not PRODUCER', () => {
       const span = { kind: SpanKind.CLIENT };
       expect(isKindProducer(span)).toBe(false);
+    });
+  });
+
+  describe('getGenAiModel()', () => {
+    it('returns the model name when gen_ai.request.model is present', () => {
+      const span = { attributes: [{ key: GEN_AI_REQUEST_MODEL_KEY, value: 'gpt-4o' }] };
+      expect(getGenAiModel(span)).toBe('gpt-4o');
+    });
+
+    it('returns undefined when attributes is missing entirely', () => {
+      expect(getGenAiModel({})).toBeUndefined();
+    });
+
+    it('returns undefined when attributes is an empty array', () => {
+      expect(getGenAiModel({ attributes: [] })).toBeUndefined();
+    });
+
+    it('returns undefined when gen_ai.request.model is not present', () => {
+      const span = { attributes: [{ key: 'http.method', value: 'GET' }] };
+      expect(getGenAiModel(span)).toBeUndefined();
+    });
+
+    it('returns undefined when gen_ai.request.model value is not a string', () => {
+      const span = { attributes: [{ key: GEN_AI_REQUEST_MODEL_KEY, value: 42 }] };
+      expect(getGenAiModel(span)).toBeUndefined();
     });
   });
 });

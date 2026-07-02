@@ -98,4 +98,11 @@ export const isKindClient = (span: IOtelSpan): boolean => span.kind === SpanKind
 
 export const isKindProducer = (span: IOtelSpan): boolean => span.kind === SpanKind.PRODUCER;
 
+export const GEN_AI_REQUEST_MODEL_KEY = 'gen_ai.request.model';
+
+export function getGenAiModel(span: IOtelSpan): string | undefined {
+  const val = span.attributes?.find(a => a.key === GEN_AI_REQUEST_MODEL_KEY)?.value;
+  return typeof val === 'string' && val ? val : undefined;
+}
+
 export { formatDuration, formatDurationCompact } from '../../../utils/date';
