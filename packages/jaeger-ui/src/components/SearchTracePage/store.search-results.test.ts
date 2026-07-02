@@ -3,7 +3,18 @@
 
 import { vi } from 'vitest';
 import { useSearchResultsStore } from './store.search-results';
-import { MOST_RECENT, LONGEST_FIRST, SHORTEST_FIRST, MOST_SPANS, LEAST_SPANS } from '../../model/order-by';
+import {
+  MOST_RECENT,
+  LONGEST_FIRST,
+  SHORTEST_FIRST,
+  MOST_SPANS,
+  LEAST_SPANS,
+  OLDEST_FIRST,
+  TRACE_NAME_ASC,
+  TRACE_NAME_DESC,
+  MOST_ERRORS,
+  LEAST_ERRORS,
+} from '../../model/order-by';
 
 const STORAGE_KEY = 'jaeger.search-results.mode';
 
@@ -21,13 +32,21 @@ describe('useSearchResultsStore', () => {
       expect(useSearchResultsStore.getInitialState().sortBy).toBe(MOST_RECENT);
     });
 
-    it.each([MOST_RECENT, LONGEST_FIRST, SHORTEST_FIRST, MOST_SPANS, LEAST_SPANS])(
-      'accepts valid sort key %s',
-      key => {
-        useSearchResultsStore.getState().setSortBy(key);
-        expect(useSearchResultsStore.getState().sortBy).toBe(key);
-      }
-    );
+    it.each([
+      MOST_RECENT,
+      LONGEST_FIRST,
+      SHORTEST_FIRST,
+      MOST_SPANS,
+      LEAST_SPANS,
+      OLDEST_FIRST,
+      TRACE_NAME_ASC,
+      TRACE_NAME_DESC,
+      MOST_ERRORS,
+      LEAST_ERRORS,
+    ])('accepts valid sort key %s', key => {
+      useSearchResultsStore.getState().setSortBy(key);
+      expect(useSearchResultsStore.getState().sortBy).toBe(key);
+    });
 
     it('rejects unknown sort key and falls back to MOST_RECENT', () => {
       useSearchResultsStore.getState().setSortBy(LONGEST_FIRST);

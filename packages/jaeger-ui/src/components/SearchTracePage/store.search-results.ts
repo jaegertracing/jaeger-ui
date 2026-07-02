@@ -3,20 +3,13 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { MOST_RECENT, LONGEST_FIRST, SHORTEST_FIRST, MOST_SPANS, LEAST_SPANS } from '../../model/order-by';
+import { MOST_RECENT, isValidOrderBy } from '../../model/order-by';
+import type { OrderBy } from '../../model/order-by';
 
-const VALID_SORT_KEYS = new Set([MOST_RECENT, LONGEST_FIRST, SHORTEST_FIRST, MOST_SPANS, LEAST_SPANS]);
 const VALID_VIEW_MODES = new Set<string>(['list', 'table']);
 
-export type SortKey =
-  | typeof MOST_RECENT
-  | typeof LONGEST_FIRST
-  | typeof SHORTEST_FIRST
-  | typeof MOST_SPANS
-  | typeof LEAST_SPANS;
-
-export function sanitizeSortBy(value: unknown): SortKey {
-  return typeof value === 'string' && VALID_SORT_KEYS.has(value) ? (value as SortKey) : MOST_RECENT;
+export function sanitizeSortBy(value: unknown): OrderBy {
+  return isValidOrderBy(value) ? value : MOST_RECENT;
 }
 
 function sanitizeViewMode(value: unknown): 'list' | 'table' {
@@ -79,7 +72,7 @@ type StartTimeDisplay = 'absolute' | 'relative';
 
 type SearchResultsStore = {
   viewMode: 'list' | 'table';
-  sortBy: SortKey;
+  sortBy: OrderBy;
   startTimeDisplay: StartTimeDisplay;
   setViewMode: (mode: 'list' | 'table', opts?: SetterOpts) => void;
   setSortBy: (sortBy: string, opts?: SetterOpts) => void;
