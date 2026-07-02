@@ -23,6 +23,10 @@ function sanitizeViewMode(value: unknown): 'list' | 'table' {
   return typeof value === 'string' && VALID_VIEW_MODES.has(value) ? (value as 'list' | 'table') : 'list';
 }
 
+function sanitizeStartTimeDisplay(value: unknown): StartTimeDisplay {
+  return value === 'relative' ? 'relative' : 'absolute';
+}
+
 // ADR-0010 PR 2: setters accept { persist: false } to update state without
 // writing to localStorage — for URL-driven or heuristic overrides that
 // should not overwrite the user's saved preference.
@@ -105,11 +109,10 @@ export const useSearchResultsStore = create<SearchResultsStore>()(
       migrate: (persistedState, version) => {
         // version 0: viewMode only; version 1: added sortBy; version 2: added startTimeDisplay
         const p = (persistedState ?? {}) as Record<string, unknown>;
-        const startTimeDisplay = p.startTimeDisplay === 'relative' ? 'relative' : ('absolute' as StartTimeDisplay);
         return {
           viewMode: sanitizeViewMode(p.viewMode),
           sortBy: version >= 1 ? sanitizeSortBy(p.sortBy) : MOST_RECENT,
-          startTimeDisplay,
+          startTimeDisplay: sanitizeStartTimeDisplay(p.startTimeDisplay),
         };
       },
       merge: (persisted, current) => {
@@ -118,10 +121,14 @@ export const useSearchResultsStore = create<SearchResultsStore>()(
           ...current,
           viewMode: sanitizeViewMode(p.viewMode),
           sortBy: sanitizeSortBy(p.sortBy),
-          startTimeDisplay: p.startTimeDisplay ?? 'absolute',
+          startTimeDisplay: sanitizeStartTimeDisplay(p.startTimeDisplay),
         };
       },
-      partialize: state => ({ viewMode: state.viewMode, sortBy: state.sortBy, startTimeDisplay: state.startTimeDisplay }),
+      partialize: state => ({
+        viewMode: state.viewMode,
+        sortBy: state.sortBy,
+        startTimeDisplay: state.startTimeDisplay,
+      }),
     }
   )
 );

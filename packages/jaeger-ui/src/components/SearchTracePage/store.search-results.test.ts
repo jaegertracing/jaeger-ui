@@ -83,14 +83,14 @@ describe('useSearchResultsStore', () => {
 
   describe('storage error handling', () => {
     it('returns null and does not throw when localStorage.getItem throws', async () => {
-      jest.spyOn(Storage.prototype, 'getItem').mockImplementationOnce(() => {
+      vi.spyOn(Storage.prototype, 'getItem').mockImplementationOnce(() => {
         throw new DOMException('SecurityError');
       });
-      await expect(useSearchResultsStore.persist.rehydrate()).resolves.not.toThrow();
+      await expect(useSearchResultsStore.persist.rehydrate()).resolves.toBeUndefined();
     });
 
     it('does not throw when localStorage.setItem throws', async () => {
-      jest.spyOn(Storage.prototype, 'setItem').mockImplementationOnce(() => {
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementationOnce(() => {
         throw new DOMException('SecurityError');
       });
       expect(() => useSearchResultsStore.getState().setSortBy(LONGEST_FIRST)).not.toThrow();
@@ -98,7 +98,7 @@ describe('useSearchResultsStore', () => {
     });
 
     it('does not throw when localStorage.removeItem throws', () => {
-      jest.spyOn(Storage.prototype, 'removeItem').mockImplementationOnce(() => {
+      vi.spyOn(Storage.prototype, 'removeItem').mockImplementationOnce(() => {
         throw new DOMException('SecurityError');
       });
       expect(() => useSearchResultsStore.persist.clearStorage()).not.toThrow();
@@ -169,5 +169,14 @@ describe('useSearchResultsStore — startTimeDisplay', () => {
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}');
     expect(stored.state.viewMode).toBe('list');
     expect(stored.state.startTimeDisplay).toBe('relative');
+  });
+
+  it('sanitizes an invalid startTimeDisplay from persisted state on rehydration', async () => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ state: { startTimeDisplay: 'INVALID_VALUE' }, version: 2 })
+    );
+    await useSearchResultsStore.persist.rehydrate();
+    expect(useSearchResultsStore.getState().startTimeDisplay).toBe('absolute');
   });
 });
