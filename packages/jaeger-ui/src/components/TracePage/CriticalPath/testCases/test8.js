@@ -17,7 +17,7 @@ const trace = {
   traceID: 'trace-abc',
   spans: [
     {
-      spanID: 'span-A',
+      spanID: 'span-a',
       operationName: 'op-A',
       references: [],
       startTime: 10,
@@ -25,12 +25,12 @@ const trace = {
       processID: 'p1',
     },
     {
-      spanID: 'span-B',
+      spanID: 'span-b',
       operationName: 'op-B',
       references: [
         {
           refType: 'CHILD_OF',
-          spanID: 'span-A',
+          spanID: 'span-a',
         },
       ],
       startTime: 5,
@@ -49,7 +49,7 @@ const transformedTrace = transformTraceData(trace);
 
 const criticalPathSections = [
   {
-    spanID: 'span-B',
+    spanID: 'span-b',
     sectionStart: 10,
     sectionEnd: 30,
   },

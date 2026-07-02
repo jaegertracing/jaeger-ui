@@ -15,15 +15,15 @@ function getExpectedSanitizedData(spans, test) {
   // Define what the expected modifications are for each test
   const modifications = {
     test6: {
-      'span-B': { duration: 15 },
-      'span-C': { duration: 10, startTime: 15 },
+      'span-b': { duration: 15 },
+      'span-c': { duration: 10, startTime: 15 },
     },
     test7: {
-      'span-B': { duration: 15 },
-      'span-C': { duration: 10 },
+      'span-b': { duration: 15 },
+      'span-c': { duration: 10 },
     },
     test8: {
-      'span-B': { startTime: 10, duration: 20 },
+      'span-b': { startTime: 10, duration: 20 },
     },
   };
 

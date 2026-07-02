@@ -374,8 +374,8 @@ describe('<SearchResults>', () => {
       const traceID0 = '00traceID0';
       const traceID1 = '000traceID1';
       const spanLinks = {
-        [traceID0]: uiFind0,
-        [traceID1]: uiFind1,
+        '00traceID0': uiFind0, // padded + mixed-case key in config
+        traceID1: uiFind1, // mixed-case key in config
       };
       const traces = [
         {

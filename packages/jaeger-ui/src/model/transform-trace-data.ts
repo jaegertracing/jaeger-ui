@@ -57,6 +57,14 @@ export function orderTags(spanTags: KeyValuePair[], topPrefixes?: readonly strin
 }
 
 /**
+ * Lowercases a trace or span ID for case-insensitive user-input comparisons.
+ * Backend IDs are treated as opaque blobs and stored exactly as received.
+ */
+export function normalizeId(id: string): string {
+  return id.toLowerCase();
+}
+
+/**
  * NOTE: Mutates `data` - Transform the HTTP response data into the form the app
  * generally requires.
  */
