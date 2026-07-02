@@ -12,7 +12,7 @@ import {
 } from '@assistant-ui/react';
 import { IoClose } from 'react-icons/io5';
 import { JsonView, collapseAllNested } from 'react-json-view-lite';
-import Markdown from 'markdown-to-jsx';
+import Markdown from 'markdown-to-jsx/react';
 
 import { useJaegerAssistant, useJaegerAssistantOptional } from './JaegerAssistantContext';
 import { useJaegerAssistantConfigured } from '../../hooks/useJaegerAssistant';
