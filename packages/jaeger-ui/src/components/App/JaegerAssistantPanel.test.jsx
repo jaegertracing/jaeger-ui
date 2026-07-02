@@ -302,6 +302,65 @@ describe('JaegerAssistantDock', () => {
       expect(document.body.style.cursor).toBe('');
       expect(document.body.style.userSelect).toBe('');
     });
+
+    it('continues tracking the latest width across multiple moves in one drag', () => {
+      const { aside, handle } = renderDock();
+      fireEvent.mouseDown(handle, { clientX: 500 });
+      fireEvent.mouseMove(document, { clientX: 400 });
+      expect(aside.style.width).toBe('516px');
+      fireEvent.mouseMove(document, { clientX: 350 });
+      expect(aside.style.width).toBe('566px');
+      fireEvent.mouseUp(document);
+    });
+
+    it('exposes separator role and value ARIA attributes', () => {
+      const { handle } = renderDock();
+      expect(handle).toHaveAttribute('role', 'separator');
+      expect(handle).toHaveAttribute('aria-orientation', 'vertical');
+      expect(handle).toHaveAttribute('aria-valuemin', '320');
+      expect(handle).toHaveAttribute('aria-valuemax', '800');
+      expect(handle).toHaveAttribute('aria-valuenow', '416');
+      expect(handle).toHaveAttribute('tabindex', '0');
+    });
+
+    it('grows the panel with ArrowLeft and updates aria-valuenow', () => {
+      const { aside, handle } = renderDock();
+      fireEvent.keyDown(handle, { key: 'ArrowLeft' });
+      expect(aside.style.width).toBe('432px');
+      expect(handle).toHaveAttribute('aria-valuenow', '432');
+    });
+
+    it('shrinks the panel with ArrowRight', () => {
+      const { aside, handle } = renderDock();
+      fireEvent.keyDown(handle, { key: 'ArrowRight' });
+      expect(aside.style.width).toBe('400px');
+    });
+
+    it('jumps to PANEL_MIN_WIDTH on Home and PANEL_MAX_WIDTH on End', () => {
+      const { aside, handle } = renderDock();
+      fireEvent.keyDown(handle, { key: 'Home' });
+      expect(aside.style.width).toBe('320px');
+      fireEvent.keyDown(handle, { key: 'End' });
+      expect(aside.style.width).toBe('800px');
+    });
+
+    it('clamps keyboard resizing at the bounds', () => {
+      const { aside, handle } = renderDock();
+      fireEvent.keyDown(handle, { key: 'End' });
+      expect(aside.style.width).toBe('800px');
+      fireEvent.keyDown(handle, { key: 'ArrowLeft' });
+      expect(aside.style.width).toBe('800px');
+      fireEvent.keyDown(handle, { key: 'Home' });
+      expect(aside.style.width).toBe('320px');
+      fireEvent.keyDown(handle, { key: 'ArrowRight' });
+      expect(aside.style.width).toBe('320px');
+    });
+
+    it('ignores unrelated keys', () => {
+      const { aside, handle } = renderDock();
+      fireEvent.keyDown(handle, { key: 'Tab' });
+      expect(aside.style.width).toBe('416px');
+    });
   });
 });
 
@@ -339,6 +398,24 @@ describe('JaegerThreadMessageBody', () => {
     const { container } = render(<JaegerThreadMessageBody variant="user" />);
     expect(container.querySelector('[data-testid="message-part-text"]')).toBeInTheDocument();
     expect(container.querySelector('.JaegerAssistantPanel-md')).not.toBeInTheDocument();
+  });
+
+  it('routes the first streaming snapshot (empty text) through the markdown path, not MessagePartPrimitive.Text', () => {
+    // @assistant-ui/react-ag-ui emits the initial snapshot as { type: 'text', text: '' }
+    // before any delta arrives. If this fell through to MessagePartPrimitive.Text (the
+    // library's smoothing-aware primitive) for the empty snapshot and switched to
+    // AssistantMarkdownText once a delta lands, the message would swap renderers
+    // mid-stream. markdown-to-jsx correctly renders nothing for empty input, so the
+    // only observable assertion is that the plain-text path was never used.
+    partsMock.parts = [{ type: 'text', text: '' }];
+    const { container } = render(<JaegerThreadMessageBody variant="assistant" />);
+    expect(container.querySelector('[data-testid="message-part-text"]')).not.toBeInTheDocument();
+  });
+
+  it('routes an assistant text part with no text field at all through the markdown path', () => {
+    partsMock.parts = [{ type: 'text' }];
+    const { container } = render(<JaegerThreadMessageBody variant="assistant" />);
+    expect(container.querySelector('[data-testid="message-part-text"]')).not.toBeInTheDocument();
   });
 });
 
@@ -504,11 +581,14 @@ describe('tool-call part rendering', () => {
 
   it('renders text parts correctly alongside tool-call parts', () => {
     partsMock.parts = [
-      { type: 'text' },
+      { type: 'text', text: 'Here is what I found:' },
       { type: 'tool-call', toolName: 'read_skill', status: { type: 'complete' }, result: 'done' },
     ];
     const { container } = render(<JaegerThreadMessageBody variant="assistant" />);
-    expect(container.querySelectorAll('[data-testid="message-part-text"]')).toHaveLength(1);
+    // Assistant text renders via the markdown path (AssistantMarkdownText),
+    // not MessagePartPrimitive.Text -- see JaegerThreadMessageBody tests above.
+    expect(container.querySelectorAll('[data-testid="message-part-text"]')).toHaveLength(0);
+    expect(container.querySelector('.JaegerAssistantPanel-md')).toHaveTextContent('Here is what I found:');
     expect(screen.getByText('Called read_skill')).toBeInTheDocument();
     expect(screen.getByText('done')).toBeInTheDocument();
   });

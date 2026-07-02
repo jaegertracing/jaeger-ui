@@ -28,9 +28,15 @@ SPDX-License-Identifier: Apache-2.0
   z-index: 10;
 }
 
-.JaegerAssistantPanel-resizeHandle:hover {
+.JaegerAssistantPanel-resizeHandle:hover,
+.JaegerAssistantPanel-resizeHandle:focus-visible {
   background-color: var(--interactive-primary);
   opacity: 0.4;
+}
+
+.JaegerAssistantPanel-resizeHandle:focus-visible {
+  outline: 2px solid var(--interactive-primary);
+  outline-offset: -1px;
 }
 
 .JaegerAssistantPanel-topBar {
