@@ -13,6 +13,7 @@ import {
   SIDE_PANEL_WIDTH_MIN,
   SPAN_NAME_COLUMN_WIDTH_MAX,
   SPAN_NAME_COLUMN_WIDTH_MIN,
+  SUMMARY_FIELDS_STORAGE_KEY,
   useLayoutPrefsStore,
   useTraceTimelineStore,
 } from './store';
@@ -39,6 +40,28 @@ describe('getInitialLayoutState()', () => {
     expect(state.timelineBarsVisible).toBe(true);
     expect(state.detailPanelMode).toBe('inline');
     expect(state.sidePanelWidth).toBeCloseTo(0.375);
+    expect(state.selectedSummaryFields).toEqual([]);
+  });
+
+  it('reads selectedSummaryFields from localStorage', () => {
+    localStorage.setItem(SUMMARY_FIELDS_STORAGE_KEY, JSON.stringify(['customer.id', 'http.status_code']));
+    const state = getInitialLayoutState();
+    expect(state.selectedSummaryFields).toEqual(['customer.id', 'http.status_code']);
+  });
+
+  it('ignores malformed selectedSummaryFields in localStorage', () => {
+    localStorage.setItem(SUMMARY_FIELDS_STORAGE_KEY, 'not-json');
+    expect(getInitialLayoutState().selectedSummaryFields).toEqual([]);
+  });
+
+  it('ignores non-array selectedSummaryFields in localStorage', () => {
+    localStorage.setItem(SUMMARY_FIELDS_STORAGE_KEY, JSON.stringify({ not: 'array' }));
+    expect(getInitialLayoutState().selectedSummaryFields).toEqual([]);
+  });
+
+  it('deduplicates and caps selectedSummaryFields from localStorage', () => {
+    localStorage.setItem(SUMMARY_FIELDS_STORAGE_KEY, JSON.stringify(['a', 'b', 'a', 'c', 'd', 'e']));
+    expect(getInitialLayoutState().selectedSummaryFields).toEqual(['a', 'b', 'c']);
   });
 
   it('reads spanNameColumnWidth from localStorage', () => {
@@ -144,6 +167,7 @@ describe('trace timeline zustand stores', () => {
       sidePanelWidth: 0.375,
       detailPanelMode: 'inline',
       timelineBarsVisible: true,
+      selectedSummaryFields: [],
     });
     useTraceTimelineStore.setState({
       traceID: null,
@@ -231,6 +255,44 @@ describe('trace timeline zustand stores', () => {
         useLayoutPrefsStore.getState().setTimelineBarsVisible(false);
         useLayoutPrefsStore.getState().setTimelineBarsVisible(true);
         expect(localStorage.getItem('timelineVisible')).toBe('true');
+      });
+    });
+
+    describe('setSelectedSummaryFields', () => {
+      it('updates selectedSummaryFields and persists to localStorage', () => {
+        useLayoutPrefsStore.getState().setSelectedSummaryFields(['customer.id', 'http.status_code']);
+        expect(useLayoutPrefsStore.getState().selectedSummaryFields).toEqual([
+          'customer.id',
+          'http.status_code',
+        ]);
+        expect(localStorage.getItem(SUMMARY_FIELDS_STORAGE_KEY)).toBe(
+          JSON.stringify(['customer.id', 'http.status_code'])
+        );
+      });
+
+      it('persists empty array when clearing selected fields', () => {
+        useLayoutPrefsStore.getState().setSelectedSummaryFields(['customer.id']);
+        useLayoutPrefsStore.getState().setSelectedSummaryFields([]);
+        expect(useLayoutPrefsStore.getState().selectedSummaryFields).toEqual([]);
+        expect(localStorage.getItem(SUMMARY_FIELDS_STORAGE_KEY)).toBe('[]');
+      });
+
+      it('filters non-string entries before persisting', () => {
+        useLayoutPrefsStore
+          .getState()
+          .setSelectedSummaryFields(['valid', 42 as unknown as string, null as unknown as string]);
+        expect(useLayoutPrefsStore.getState().selectedSummaryFields).toEqual(['valid']);
+        expect(localStorage.getItem(SUMMARY_FIELDS_STORAGE_KEY)).toBe(JSON.stringify(['valid']));
+      });
+
+      it('deduplicates and caps fields before persisting', () => {
+        useLayoutPrefsStore
+          .getState()
+          .setSelectedSummaryFields(['one', 'two', 'one', 'three', 'four', 'five']);
+        expect(useLayoutPrefsStore.getState().selectedSummaryFields).toEqual(['one', 'two', 'three']);
+        expect(localStorage.getItem(SUMMARY_FIELDS_STORAGE_KEY)).toBe(
+          JSON.stringify(['one', 'two', 'three'])
+        );
       });
     });
   });
