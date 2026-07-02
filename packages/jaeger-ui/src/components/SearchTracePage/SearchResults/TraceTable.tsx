@@ -20,7 +20,7 @@ import {
 import RelativeBar from '../../common/RelativeBar';
 import { toOrderBy, fromOrderBy } from '../../../model/search';
 import type { SortableColumnKey, SortDirection } from '../../../model/search';
-import type { OrderBy } from '../../../model/order-by';
+import type { OrderBy } from '../order-by';
 import type { TracePageLink } from '../../TracePage/url';
 import { ServicePill, type ServiceEntry } from './ServicePills';
 import { useSearchResultsStore } from '../store.search-results';

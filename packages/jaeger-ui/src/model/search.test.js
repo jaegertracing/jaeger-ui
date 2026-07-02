@@ -4,7 +4,7 @@
 import _maxBy from 'lodash/maxBy';
 import _minBy from 'lodash/minBy';
 
-import * as orderBy from './order-by';
+import * as orderBy from '../components/SearchTracePage/order-by';
 import { sortTraces, sortTraceSummaries } from './search';
 import traceGenerator from '../demo/trace-generators';
 import transformTraceData from './transform-trace-data';

@@ -3,8 +3,8 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { MOST_RECENT, isValidOrderBy } from '../../model/order-by';
-import type { OrderBy } from '../../model/order-by';
+import { MOST_RECENT, isValidOrderBy } from './order-by';
+import type { OrderBy } from './order-by';
 
 const VALID_VIEW_MODES = new Set<string>(['list', 'table']);
 

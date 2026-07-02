@@ -12,8 +12,8 @@ import {
   SHORTEST_FIRST,
   TRACE_NAME_ASC,
   TRACE_NAME_DESC,
-} from './order-by';
-import type { OrderBy, TraceOrderBy } from './order-by';
+} from '../components/SearchTracePage/order-by';
+import type { OrderBy, TraceOrderBy } from '../components/SearchTracePage/order-by';
 
 import type { IOtelTrace } from '../types/otel';
 import type { TraceSummary } from '../types/trace-summary';
@@ -48,7 +48,7 @@ function getTraceComparator(sortBy: TraceOrderBy) {
  * Sorts traces in place.
  *
  * @param  {ISortableTrace[]} traces The trace array to sort.
- * @param  {TraceOrderBy} sortBy A sort specification, see ./order-by.ts.
+ * @param  {TraceOrderBy} sortBy A sort specification, see ../components/SearchTracePage/order-by.ts.
  */
 export function sortTraces(traces: ISortableTrace[], sortBy: TraceOrderBy) {
   const comparator = getTraceComparator(sortBy);
