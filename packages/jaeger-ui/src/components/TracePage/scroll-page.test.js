@@ -47,7 +47,9 @@ describe('scroll-by', () => {
         scrollBy(yDelta, true);
         expect(Tween.mock.calls.length).toBe(1);
         scrollBy(yDelta, false);
-        expect(Tween.mock.calls[0]).toEqual(Tween.mock.calls[1]);
+        expect(Tween.mock.calls[0][0].to).toBe(Tween.mock.calls[1][0].to);
+        expect(Tween.mock.calls[0][0].duration).toBe(Tween.mock.calls[1][0].duration);
+        expect(Tween.mock.calls[0][0].from).toBe(Tween.mock.calls[1][0].from);
       });
 
       it('is additive when an in-progress scroll is the same direction', () => {
@@ -142,6 +144,61 @@ describe('scroll-by', () => {
       // if the tween is not discarded, `cancel()` will cancel it
       cancel();
       expect(twCancel.mock.calls.length).toBe(0);
+    });
+  });
+
+  describe('element scrolling', () => {
+    let container;
+    beforeEach(() => {
+      container = {
+        scrollTop: 50,
+        scrollLeft: 0,
+      };
+      Tween.mockReset();
+      cancel();
+    });
+
+    it('reads and updates element scrollTop instead of window.scrollY', () => {
+      scrollBy(100, false, container);
+      expect(Tween.mock.calls.length).toBe(1);
+
+      const tweenOptions = Tween.mock.calls[0][0];
+      expect(tweenOptions.from).toBe(50);
+      expect(tweenOptions.to).toBe(150);
+
+      // Simulate tween update
+      tweenOptions.onUpdate({ done: false, value: 75 });
+      expect(container.scrollTop).toBe(75);
+    });
+
+    it('scrollTo works with elements', () => {
+      scrollTo(200, container);
+      expect(Tween.mock.calls.length).toBe(1);
+
+      const tweenOptions = Tween.mock.calls[0][0];
+      expect(tweenOptions.from).toBe(50);
+      expect(tweenOptions.to).toBe(200);
+
+      // Simulate tween update
+      tweenOptions.onUpdate({ done: true, value: 200 });
+      expect(container.scrollTop).toBe(200);
+    });
+
+    it('does not append a window tween when scrolling an element', () => {
+      window.scrollY = 100;
+
+      // Start a window scroll.
+      scrollBy(100);
+
+      // Start an element scroll while the window tween is still active.
+      scrollBy(10, true, container);
+
+      expect(Tween.mock.calls.length).toBe(2);
+
+      const tweenOptions = Tween.mock.calls[1][0];
+
+      expect(tweenOptions.from).toBe(50);
+      expect(tweenOptions.to).toBe(60);
     });
   });
 });
