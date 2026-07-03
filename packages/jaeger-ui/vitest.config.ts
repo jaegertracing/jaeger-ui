@@ -48,16 +48,6 @@ export default defineConfig({
       '\\.(css|less)$': 'identity-obj-proxy',
     },
   },
-  server: {
-    deps: {
-      // Inline all node_modules through Vite's transform pipeline.
-      // The threads pool uses SSR resolve conditions that prefer .mjs files,
-      // causing CJS/ESM named-export interop failures for packages like
-      // react-router and cookie. inline:true fixes this class of problem
-      // universally rather than playing whack-a-mole with individual packages.
-      inline: true,
-    },
-  },
   resolve: {
     alias: {
       // More-specific alias must come first
