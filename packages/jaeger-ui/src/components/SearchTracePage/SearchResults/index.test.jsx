@@ -154,7 +154,7 @@ describe('<SearchResults>', () => {
   });
 
   it('uses default skipMessage value when not provided', () => {
-    const { skipMessage, ...propsWithoutSkipMessage } = baseProps;
+    const { skipMessage: _unused, ...propsWithoutSkipMessage } = baseProps;
     renderWithRouter(<SearchResults {...propsWithoutSkipMessage} traceSummaries={[]} />);
     expect(screen.getByText(/No trace results\. Try another query\./i)).toBeInTheDocument();
   });
@@ -339,6 +339,10 @@ describe('<SearchResults>', () => {
   });
 
   describe('search finished with results', () => {
+    beforeEach(() => {
+      useSearchResultsStore.setState({ viewMode: 'list' });
+    });
+
     it('shows a scatter plot', () => {
       renderWithRouter(<SearchResults {...baseProps} />);
       expect(screen.getByTestId('scatterplot')).toBeInTheDocument();
@@ -364,16 +368,16 @@ describe('<SearchResults>', () => {
       expect(second[0].linkTo.search).toBeUndefined();
     });
 
-    it('deep links traces with leading 0', () => {
+    it('deep links traces using exact ID match (opaque strings)', () => {
       const uiFind0 = 'ui-find-0';
       const uiFind1 = 'ui-find-1';
       const traceID0 = '00traceID0';
-      const traceID1 = 'traceID1';
+      const traceID1 = '000traceID1';
       const spanLinks = {
         [traceID0]: uiFind0,
         [traceID1]: uiFind1,
       };
-      const zeroIDTraces = [
+      const traces = [
         {
           traceID: traceID0,
           traceName: traceID0,
@@ -387,8 +391,8 @@ describe('<SearchResults>', () => {
           services: [],
         },
         {
-          traceID: `000${traceID1}`,
-          traceName: `000${traceID1}`,
+          traceID: traceID1,
+          traceName: traceID1,
           rootServiceName: '',
           rootOperationName: '',
           startTime: 0,
@@ -399,7 +403,7 @@ describe('<SearchResults>', () => {
           services: [],
         },
       ];
-      renderWithRouter(<SearchResults {...baseProps} traceSummaries={zeroIDTraces} spanLinks={spanLinks} />);
+      renderWithRouter(<SearchResults {...baseProps} traceSummaries={traces} spanLinks={spanLinks} />);
       const calls = ResultItem.mock.calls;
       expect(calls[0][0].linkTo.search).toBe(`uiFind=${uiFind0}`);
       expect(calls[1][0].linkTo.search).toBe(`uiFind=${uiFind1}`);
@@ -524,29 +528,29 @@ describe('<SearchResults>', () => {
 
   describe('view mode toggle', () => {
     beforeEach(() => {
-      useSearchResultsStore.setState({ viewMode: 'list' });
       localStorage.clear();
+      useSearchResultsStore.setState(useSearchResultsStore.getInitialState());
     });
 
-    it('defaults to list view', () => {
+    it('defaults to table view', () => {
       renderWithRouter(<SearchResults {...baseProps} />);
-      expect(screen.getByTestId('result-a')).toBeInTheDocument();
-      expect(screen.queryByTestId('trace-table')).not.toBeInTheDocument();
-    });
-
-    it('switches to table view when Table button is clicked', () => {
-      renderWithRouter(<SearchResults {...baseProps} />);
-      fireEvent.click(screen.getByText('Table'));
       expect(screen.getByTestId('trace-table')).toBeInTheDocument();
       expect(screen.queryByTestId('result-a')).not.toBeInTheDocument();
     });
 
-    it('switches back to list view when List button is clicked', () => {
+    it('switches to list view when List button is clicked', () => {
       renderWithRouter(<SearchResults {...baseProps} />);
-      fireEvent.click(screen.getByText('Table'));
       fireEvent.click(screen.getByText('List'));
       expect(screen.getByTestId('result-a')).toBeInTheDocument();
       expect(screen.queryByTestId('trace-table')).not.toBeInTheDocument();
+    });
+
+    it('switches back to table view when Table button is clicked', () => {
+      renderWithRouter(<SearchResults {...baseProps} />);
+      fireEvent.click(screen.getByText('List'));
+      fireEvent.click(screen.getByText('Table'));
+      expect(screen.getByTestId('trace-table')).toBeInTheDocument();
+      expect(screen.queryByTestId('result-a')).not.toBeInTheDocument();
     });
   });
 });

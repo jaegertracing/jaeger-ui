@@ -4,7 +4,9 @@
 import * as React from 'react';
 import { Dropdown, Tooltip } from 'antd';
 import { IoOpenOutline, IoList, IoCopyOutline, IoInformationCircleOutline } from 'react-icons/io5';
-import { JsonView, allExpanded, collapseAllNested, defaultStyles } from 'react-json-view-lite';
+import { JsonView, allExpanded, collapseAllNested } from 'react-json-view-lite';
+
+import jsonViewStyles from '../../../../utils/jsonViewStyles';
 
 import CopyIcon from '../../../common/CopyIcon';
 
@@ -79,22 +81,7 @@ function formatValue(key: string, value: any) {
       <JsonView
         data={parsed}
         shouldExpandNode={shouldJsonTreeExpand ? allExpanded : collapseAllNested}
-        style={{
-          ...defaultStyles,
-          container: 'json-markup',
-          label: 'json-markup-key',
-          stringValue: 'json-markup-string',
-          collapseIcon: 'json-markup-icon-collapse',
-          collapsedContent: 'json-markup-collapse-content',
-          expandIcon: 'json-markup-icon-expand',
-          numberValue: 'json-markup-number',
-          booleanValue: 'json-markup-bool',
-          nullValue: 'json-markup-null',
-          undefinedValue: 'json-markup-undefined',
-          basicChildStyle: 'json-markup-child',
-          punctuation: 'json-markup-punctuation',
-          otherValue: 'json-markup-other',
-        }}
+        style={jsonViewStyles}
       />
     );
   } else {
