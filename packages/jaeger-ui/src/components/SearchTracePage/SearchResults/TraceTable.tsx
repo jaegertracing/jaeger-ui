@@ -18,9 +18,9 @@ import {
   formatRelativeTime,
 } from '../../../utils/date';
 import RelativeBar from '../../common/RelativeBar';
-import { toOrderBy, fromOrderBy } from '../../../model/search';
-import type { SortableColumnKey, SortDirection } from '../../../model/search';
-import type { OrderBy } from '../order-by';
+import { toOrderBy, fromOrderBy } from './sort';
+import type { SortableColumnKey, SortDirection } from './sort';
+import type { OrderBy } from './order-by';
 import type { TracePageLink } from '../../TracePage/url';
 import { ServicePill, type ServiceEntry } from './ServicePills';
 import { useSearchResultsStore } from '../store.search-results';

@@ -9,7 +9,7 @@ import '@testing-library/jest-dom';
 import { UnconnectedSearchResults as SearchResults, SelectSort } from '.';
 import { useSearchResultsStore } from '../store.search-results';
 import * as track from './index.track';
-import * as orderBy from '../order-by';
+import * as orderBy from './order-by';
 import { getUrl } from '../url';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';
@@ -135,8 +135,6 @@ const baseProps = {
   traceSummaries: baseTraces,
   uploadedTraceIDs: new Set(),
   rawTraces: baseRawTraces,
-  sortBy: orderBy.MOST_RECENT,
-  handleSortChange: jest.fn(),
 };
 
 // to wrap component with Router context (for use in rerender)
@@ -508,6 +506,37 @@ describe('<SearchResults>', () => {
       const { rerender } = render(<SelectSort sortBy={orderBy.MOST_RECENT} handleSortChange={() => {}} />);
       rerender(<SelectSort sortBy={orderBy.SHORTEST_FIRST} handleSortChange={() => {}} />);
       expect(screen.getByTestId('searchable-select')).toHaveValue(orderBy.SHORTEST_FIRST);
+    });
+  });
+
+  describe('sort integration', () => {
+    const distinctTraces = [
+      { ...baseTraces[0], traceID: 'short', duration: 100 },
+      { ...baseTraces[1], traceID: 'long', duration: 5000 },
+    ];
+
+    beforeEach(() => {
+      useSearchResultsStore.setState({ viewMode: 'list', sortBy: orderBy.MOST_RECENT });
+    });
+
+    it('reads sortBy from the store and sorts unsorted traceSummaries internally', () => {
+      renderWithRouter(<SearchResults {...baseProps} traceSummaries={distinctTraces} />);
+      const items = screen.getAllByTestId(/^result-/);
+      expect(items[0]).toHaveAttribute('data-testid', 'result-short');
+      expect(items[1]).toHaveAttribute('data-testid', 'result-long');
+    });
+
+    it('re-sorts the rendered results when the sort dropdown changes', () => {
+      renderWithRouter(<SearchResults {...baseProps} traceSummaries={distinctTraces} />);
+
+      fireEvent.change(screen.getByTestId('searchable-select'), {
+        target: { value: orderBy.LONGEST_FIRST },
+      });
+
+      const items = screen.getAllByTestId(/^result-/);
+      expect(items[0]).toHaveAttribute('data-testid', 'result-long');
+      expect(items[1]).toHaveAttribute('data-testid', 'result-short');
+      expect(useSearchResultsStore.getState().sortBy).toBe(orderBy.LONGEST_FIRST);
     });
   });
 

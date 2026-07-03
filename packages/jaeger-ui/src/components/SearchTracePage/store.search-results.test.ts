@@ -14,7 +14,7 @@ import {
   TRACE_NAME_DESC,
   MOST_ERRORS,
   LEAST_ERRORS,
-} from './order-by';
+} from './SearchResults/order-by';
 
 const STORAGE_KEY = 'jaeger.search-results.mode';
 
