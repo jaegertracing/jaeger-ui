@@ -6,14 +6,11 @@ import { render, screen, cleanup, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
-import {
-  MonitorATMServicesViewImpl as MonitorATMServicesView,
-  mapStateToProps,
-  mapDispatchToProps,
-  getLoopbackInterval,
-  yAxisTickFormat,
-} from '.';
+import { MonitorATMServicesViewImpl as MonitorATMServicesView, mapStateToProps, mapDispatchToProps } from '.';
+import { getLoopbackInterval, timeFrameOptions, yAxisTickFormat } from './timeFrameUtils';
 import { useServices } from '../../../hooks/useTraceDiscovery';
+import { ONE_HOUR_MS, TIME_RANGE_OPTIONS } from '../../../utils/time-range-options';
+import store from '../../../utils/storage';
 import {
   originInitialState,
   serviceMetrics,
@@ -155,7 +152,6 @@ const renderWithRouter = component => {
 };
 
 describe('<MonitorATMServicesView>', () => {
-  let wrapper;
   const mockFetchServices = jest.fn();
   const mockFetchAllServiceMetrics = jest.fn();
   const mockFetchAggregatedServiceMetrics = jest.fn();
@@ -172,11 +168,10 @@ describe('<MonitorATMServicesView>', () => {
       fetchAllServiceMetrics: mockFetchAllServiceMetrics,
       fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
     };
-    wrapper = renderWithRouter(<MonitorATMServicesView {...defaultProps} />);
+    renderWithRouter(<MonitorATMServicesView {...defaultProps} />);
   });
 
   afterEach(() => {
-    wrapper = null;
     jest.clearAllMocks();
     // Reset useServices mock to default implementation to avoid test order-dependence
     useServices.mockReset();
@@ -547,7 +542,7 @@ describe('<MonitorATMServicesView>', () => {
       await user.selectOptions(timeframeSelect, String(2 * 3600000));
 
       await waitFor(() => {
-        expect(trackSelectTimeframeSpy).toHaveBeenCalledWith('Last 2 hours');
+        expect(trackSelectTimeframeSpy).toHaveBeenCalledWith('2 hours');
       });
 
       expect(mockFetchAllServiceMetrics).toHaveBeenCalled();
@@ -743,8 +738,220 @@ describe('<MonitorATMServicesView>', () => {
   });
 });
 
+describe('<MonitorATMServicesView> URL query params', () => {
+  const mockFetchAllServiceMetrics = jest.fn();
+  const mockFetchAggregatedServiceMetrics = jest.fn();
+
+  const baseProps = {
+    ...props,
+    fetchAllServiceMetrics: mockFetchAllServiceMetrics,
+    fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
+  };
+
+  beforeEach(() => {
+    cleanup();
+    jest.clearAllMocks();
+    store.getString.mockReturnValue(undefined);
+    store.getNumber.mockReturnValue(undefined);
+    useServices.mockReturnValue({ data: ['service1', 'service2'], isLoading: false });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+    useServices.mockReset();
+    useServices.mockImplementation(defaultUseServicesImpl);
+    cleanup();
+  });
+
+  it('seeds filters from URL query params', () => {
+    renderWithRouter(
+      <MonitorATMServicesView {...baseProps} search="?service=service2&spanKind=client&timeframe=3600000" />
+    );
+
+    expect(screen.getByTestId('select-a-service-input').value).toBe('service2');
+    expect(screen.getByTestId('span-kind-selector').value).toBe('client');
+    expect(screen.getByTestId('select-a-timeframe-input').value).toBe('3600000');
+  });
+
+  it('does not persist URL-sourced filters to localStorage', () => {
+    renderWithRouter(
+      <MonitorATMServicesView {...baseProps} search="?service=service2&spanKind=client&timeframe=3600000" />
+    );
+
+    expect(store.set).not.toHaveBeenCalledWith('lastAtmSearchService', expect.anything());
+    expect(store.set).not.toHaveBeenCalledWith('lastAtmSearchSpanKind', expect.anything());
+    expect(store.set).not.toHaveBeenCalledWith('lastAtmSearchTimeframe', expect.anything());
+  });
+
+  it('falls back to defaults and persists them when no URL params are present', () => {
+    renderWithRouter(<MonitorATMServicesView {...baseProps} search="" />);
+
+    expect(store.set).toHaveBeenCalledWith('lastAtmSearchService', 'service1');
+    expect(store.set).toHaveBeenCalledWith('lastAtmSearchSpanKind', 'server');
+  });
+
+  it('ignores invalid URL params and falls back to defaults', () => {
+    renderWithRouter(<MonitorATMServicesView {...baseProps} search="?spanKind=bogus&timeframe=notanumber" />);
+
+    expect(screen.getByTestId('span-kind-selector').value).toBe('server');
+    expect(store.set).toHaveBeenCalledWith('lastAtmSearchSpanKind', 'server');
+  });
+
+  it('persists a URL-seeded filter once the user changes it', async () => {
+    const trackSpy = jest.spyOn(track, 'trackSelectSpanKind').mockImplementation(() => {});
+    const user = userEvent.setup();
+
+    renderWithRouter(<MonitorATMServicesView {...baseProps} search="?spanKind=client" />);
+
+    expect(store.set).not.toHaveBeenCalledWith('lastAtmSearchSpanKind', expect.anything());
+
+    await user.selectOptions(screen.getByTestId('span-kind-selector'), 'server');
+
+    await waitFor(() => {
+      expect(store.set).toHaveBeenCalledWith('lastAtmSearchSpanKind', 'server');
+    });
+
+    trackSpy.mockRestore();
+  });
+
+  it('falls back to a loaded service when the URL service is not recognized', () => {
+    renderWithRouter(<MonitorATMServicesView {...baseProps} search="?service=evil%26foo=bar" />);
+
+    expect(mockFetchAllServiceMetrics).toHaveBeenCalledWith('service1', expect.anything());
+    expect(mockFetchAggregatedServiceMetrics).toHaveBeenCalledWith('service1', expect.anything());
+    expect(store.set).not.toHaveBeenCalledWith('lastAtmSearchService', expect.anything());
+  });
+
+  it('falls back to stored service when URL service is invalid', () => {
+    store.getString.mockImplementation(key => {
+      if (key === 'lastAtmSearchService') return 'service2';
+      return undefined;
+    });
+
+    renderWithRouter(<MonitorATMServicesView {...baseProps} search="?service=missing" />);
+
+    expect(screen.getByTestId('select-a-service-input').value).toBe('service2');
+    expect(mockFetchAllServiceMetrics).toHaveBeenCalledWith('service2', expect.anything());
+    expect(store.set).not.toHaveBeenCalledWith('lastAtmSearchService', expect.anything());
+  });
+
+  it('updates filters when search changes without remounting', () => {
+    const { rerender } = renderWithRouter(
+      <MonitorATMServicesView {...baseProps} search="?service=service1" />
+    );
+
+    expect(screen.getByTestId('select-a-service-input').value).toBe('service1');
+
+    rerender(
+      <MemoryRouter>
+        <MonitorATMServicesView {...baseProps} search="?service=service2&spanKind=client" />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByTestId('select-a-service-input').value).toBe('service2');
+    expect(screen.getByTestId('span-kind-selector').value).toBe('client');
+  });
+
+  it('does not surface an unrecognized URL service in the View all traces link', () => {
+    renderWithRouter(<MonitorATMServicesView {...baseProps} search="?service=evil%26foo=bar" />);
+
+    const link = screen.getByText('View all traces');
+    const href = link.getAttribute('href');
+    expect(href).toContain('service=service1');
+    expect(href).not.toContain('evil');
+  });
+});
+
+describe('<MonitorATMServicesView> URL write-back', () => {
+  const mockFetchAllServiceMetrics = jest.fn();
+  const mockFetchAggregatedServiceMetrics = jest.fn();
+  const mockNavigate = jest.fn();
+
+  const baseProps = {
+    ...props,
+    fetchAllServiceMetrics: mockFetchAllServiceMetrics,
+    fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
+    navigate: mockNavigate,
+  };
+
+  beforeEach(() => {
+    cleanup();
+    jest.clearAllMocks();
+    store.getString.mockReturnValue(undefined);
+    store.getNumber.mockReturnValue(undefined);
+    useServices.mockReturnValue({ data: ['service1', 'service2'], isLoading: false });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+    useServices.mockReset();
+    useServices.mockImplementation(defaultUseServicesImpl);
+    cleanup();
+  });
+
+  it('updates the URL when the user changes the service filter', async () => {
+    const user = userEvent.setup();
+    renderWithRouter(<MonitorATMServicesView {...baseProps} search="" />);
+
+    await user.selectOptions(screen.getByTestId('select-a-service-input'), 'service2');
+
+    expect(mockNavigate).toHaveBeenCalledWith(expect.stringContaining('service=service2'), { replace: true });
+  });
+
+  it('updates the URL when the user changes the span kind filter', async () => {
+    const user = userEvent.setup();
+    renderWithRouter(<MonitorATMServicesView {...baseProps} search="?service=service1" />);
+
+    await user.selectOptions(screen.getByTestId('span-kind-selector'), 'client');
+
+    expect(mockNavigate).toHaveBeenCalledWith(
+      expect.stringMatching(/service=service1.*spanKind=client|spanKind=client.*service=service1/),
+      { replace: true }
+    );
+  });
+
+  it('preserves unrelated query params when updating the URL', async () => {
+    const user = userEvent.setup();
+    renderWithRouter(<MonitorATMServicesView {...baseProps} search="?uiEmbed=v0" />);
+
+    await user.selectOptions(screen.getByTestId('select-a-service-input'), 'service2');
+
+    expect(mockNavigate).toHaveBeenCalledWith(expect.stringContaining('uiEmbed=v0'), { replace: true });
+    expect(mockNavigate).toHaveBeenCalledWith(expect.stringContaining('service=service2'), {
+      replace: true,
+    });
+  });
+
+  it('persists a URL-seeded filter after write-back updates search', async () => {
+    const user = userEvent.setup();
+    let rerenderView = () => {};
+
+    const navigate = jest.fn(url => {
+      const nextSearch = url.includes('?') ? url.slice(url.indexOf('?')) : '';
+      rerenderView(
+        <MemoryRouter>
+          <MonitorATMServicesView {...baseProps} navigate={navigate} search={nextSearch} />
+        </MemoryRouter>
+      );
+    });
+
+    const { rerender } = renderWithRouter(
+      <MonitorATMServicesView {...baseProps} navigate={navigate} search="?spanKind=client" />
+    );
+    rerenderView = rerender;
+
+    expect(store.set).not.toHaveBeenCalledWith('lastAtmSearchSpanKind', expect.anything());
+
+    await user.selectOptions(screen.getByTestId('span-kind-selector'), 'server');
+
+    await waitFor(() => {
+      expect(navigate).toHaveBeenCalled();
+      expect(store.set).toHaveBeenCalledWith('lastAtmSearchSpanKind', 'server');
+    });
+  });
+});
+
 describe('<MonitorATMServicesView> on page switch', () => {
-  let wrapper;
   const stateOnPageSwitch = {
     services: {
       services: [],
@@ -754,14 +961,13 @@ describe('<MonitorATMServicesView> on page switch', () => {
   };
 
   const propsOnPageSwitch = mapStateToProps(stateOnPageSwitch);
-  const mockFetchServices = jest.fn();
   const mockFetchAllServiceMetrics = jest.fn();
   const mockFetchAggregatedServiceMetrics = jest.fn();
 
   beforeEach(() => {
     cleanup();
     useServices.mockReturnValue({ data: ['apple'], isLoading: false });
-    wrapper = renderWithRouter(
+    renderWithRouter(
       <MonitorATMServicesView
         {...propsOnPageSwitch}
         fetchAllServiceMetrics={mockFetchAllServiceMetrics}
@@ -807,7 +1013,18 @@ describe('getLoopbackInterval()', () => {
   });
 
   it('timeframe exists', () => {
-    expect(getLoopbackInterval(48 * 3600000)).toBe('last 2 days');
+    expect(getLoopbackInterval(48 * 3600000)).toBe('2 days');
+  });
+});
+
+describe('timeFrameOptions', () => {
+  it('includes shared search time ranges through 2 days', () => {
+    const maxMonitorTimeframe = 48 * ONE_HOUR_MS;
+    const expectedValues = TIME_RANGE_OPTIONS.filter(({ valueMs }) => valueMs <= maxMonitorTimeframe).map(
+      ({ valueMs }) => valueMs
+    );
+
+    expect(timeFrameOptions.map(({ value }) => value)).toEqual(expectedValues);
   });
 });
 

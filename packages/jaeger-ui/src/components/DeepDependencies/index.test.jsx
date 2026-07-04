@@ -47,12 +47,17 @@ vi.mock('../../hooks/useTraceDiscovery', async () => ({
   })),
 }));
 
-import {
-  DeepDependencyGraphPageImpl,
-  mapDispatchToProps,
-  mapStateToProps,
-  useDdgViewModifierBridgeProps,
-} from '.';
+vi.mock('../../hooks/useDeepDependencyGraphQuery', () => ({
+  useDeepDependencyGraphQueryFromUrl: vi.fn(() => ({
+    data: undefined,
+    error: null,
+    isPending: false,
+    isLoading: false,
+    isFetching: false,
+  })),
+}));
+
+import { DeepDependencyGraphPageImpl, deriveDdgPageProps, useDdgViewModifierBridgeProps } from '.';
 import DefaultDeepDependencyGraphPage from '.';
 import * as track from './index.track';
 import * as url from './url';
@@ -102,7 +107,6 @@ describe('DeepDependencyGraphPage', () => {
     const vertexKey = 'test vertex key';
     const propsWithoutGraph = {
       addViewModifier: vi.fn(),
-      fetchDeepDependencyGraph: () => {},
       fetchServices: vi.fn(),
       fetchServiceServerOps: vi.fn(),
       graphState: {
@@ -870,15 +874,7 @@ describe('DeepDependencyGraphPage', () => {
     });
   });
 
-  describe('mapDispatchToProps()', () => {
-    it('creates the actions correctly', () => {
-      expect(mapDispatchToProps(() => {})).toEqual({
-        fetchDeepDependencyGraph: expect.any(Function),
-      });
-    });
-  });
-
-  describe('mapStateToProps()', () => {
+  describe('deriveDdgPageProps()', () => {
     const start = 'testStart';
     const end = 'testEnd';
     const service = 'testService';
@@ -892,34 +888,12 @@ describe('DeepDependencyGraphPage', () => {
         operation,
       },
     };
-    const services = [service];
-    const serverOpsForService = {
-      [service]: ['some operation'],
-    };
-    const state = {
-      otherState: 'otherState',
-      router: {
-        location: {
-          search: 'search',
-        },
-      },
-      services: {
-        serverOpsForService,
-        otherState: 'otherState',
-        services,
-      },
-    };
-    const ownProps = { location: { search } };
     const mockGraph = { getVisible: () => ({}) };
     const hash = 'testHash';
-    const doneState = _set(
-      { ...state },
-      ['ddg', getStateEntryKey({ service, operation, start: 0, end: 0 })],
-      {
-        model: { hash },
-        state: fetchedState.DONE,
-      }
-    );
+    const doneGraphState = {
+      model: { hash },
+      state: fetchedState.DONE,
+    };
     let getUrlStateSpy;
     let makeGraphSpy;
     let sanitizeUrlStateSpy;
@@ -937,7 +911,7 @@ describe('DeepDependencyGraphPage', () => {
     });
 
     it('uses gets relevant params from location.search', () => {
-      const result = mapStateToProps(state, ownProps);
+      const result = deriveDdgPageProps(search, undefined);
       expect(result).toEqual(expect.objectContaining(expected));
       expect(getUrlStateSpy).toHaveBeenLastCalledWith(search);
     });
@@ -951,54 +925,46 @@ describe('DeepDependencyGraphPage', () => {
             showOp,
           };
           getUrlStateSpy.mockReturnValue(urlState);
-          const result = mapStateToProps(state, ownProps);
+          const result = deriveDdgPageProps(search, undefined);
           expect(result.showOp).toBe(showOp === undefined ? focalOp !== undefined : showOp);
         });
       });
     });
 
-    it('includes graphState iff location.search has service, start, end, and optionally operation', () => {
+    it('includes graphState passed from the caller when URL has service (and optionally operation)', () => {
       const graphState = 'testGraphState';
       const graphStateWithoutOp = 'testGraphStateWithoutOp';
-      const reduxState = { ...state };
-      // TODO: Remove 0s once time buckets are implemented
-      _set(reduxState, ['ddg', getStateEntryKey({ service, operation, start: 0, end: 0 })], graphState);
-      _set(reduxState, ['ddg', getStateEntryKey({ service, start: 0, end: 0 })], graphStateWithoutOp);
 
-      const result = mapStateToProps(reduxState, ownProps);
+      const result = deriveDdgPageProps(search, graphState);
       expect(result.graphState).toEqual(graphState);
 
       const { operation: _op, ...rest } = expected.urlState;
       getUrlStateSpy.mockReturnValue(rest);
-      const resultWithoutOp = mapStateToProps(reduxState, ownProps);
+      const resultWithoutOp = deriveDdgPageProps(search, graphStateWithoutOp);
       expect(resultWithoutOp.graphState).toEqual(graphStateWithoutOp);
 
       getUrlStateSpy.mockReturnValue({});
-      const resultWithoutParams = mapStateToProps(reduxState, ownProps);
+      const resultWithoutParams = deriveDdgPageProps(search, graphState);
       expect(resultWithoutParams.graphState).toBeUndefined();
     });
 
     it('includes graph iff graphState.state is fetchedState.DONE', () => {
       const loadingState = { state: fetchedState.LOADING };
-      const reduxState = { ...state };
-      // TODO: Remove 0s once time buckets are implemented
-      _set(reduxState, ['ddg', getStateEntryKey({ service, operation, start: 0, end: 0 })], loadingState);
-      const result = mapStateToProps(reduxState, ownProps);
+      const result = deriveDdgPageProps(search, loadingState);
       expect(result.graph).toBe(undefined);
 
-      const doneResult = mapStateToProps(doneState, ownProps);
+      const doneResult = deriveDdgPageProps(search, doneGraphState);
       expect(doneResult.graph).toBe(mockGraph);
     });
 
     it('sanitizes urlState', () => {
-      mapStateToProps(doneState, ownProps);
+      deriveDdgPageProps(search, doneGraphState);
       expect(sanitizeUrlStateSpy).toHaveBeenLastCalledWith(expected.urlState, hash);
     });
   });
 
   describe('DeepDependencyGraphPage (default export wrapper)', () => {
     const mockReduxStore = createStore(() => ({
-      ddg: {},
       router: { location: { search: '?service=test-service' } },
     }));
 
@@ -1038,40 +1004,15 @@ describe('DeepDependencyGraphPage', () => {
   });
 
   describe('useDdgViewModifierBridgeProps', () => {
-    const SET_DDG = 'SET_DDG';
     const serviceOne = 'svc-bridge-one';
     const serviceTwo = 'svc-bridge-two';
     const keyOne = getStateEntryKey({ service: serviceOne, operation: '*', start: 0, end: 0 });
     const keyTwo = getStateEntryKey({ service: serviceTwo, operation: '*', start: 0, end: 0 });
 
-    function makeDoneEntry(hash) {
-      return {
-        state: fetchedState.DONE,
-        model: {
-          hash,
-          distanceToPathElems: new Map(),
-          paths: [],
-          services: new Map(),
-          visIdxToPathElem: [],
-        },
-      };
-    }
-
-    function createDdgStore(initialDdg) {
-      return createStore(
-        (state = { ddg: initialDdg }, action) => {
-          if (action.type === SET_DDG && action.payload) {
-            return { ddg: action.payload };
-          }
-          return state;
-        },
-        { ddg: initialDdg }
-      );
-    }
-
-    function renderBridgeHook(store) {
-      const Wrapper = ({ children }) => <Provider store={store}>{children}</Provider>;
-      return renderHook(() => useDdgViewModifierBridgeProps(), { wrapper: Wrapper });
+    function renderBridgeHook(initialOptions) {
+      return renderHook(({ options }) => useDdgViewModifierBridgeProps(options), {
+        initialProps: { options: initialOptions },
+      });
     }
 
     beforeEach(() => {
@@ -1084,7 +1025,7 @@ describe('DeepDependencyGraphPage', () => {
     });
 
     it('prunes view modifiers when the graph key changes', () => {
-      const store = createDdgStore({ [keyOne]: makeDoneEntry('h1') });
+      const { rerender } = renderBridgeHook({ modelHash: 'h1' });
       useDdgViewModifiersStore.getState().addViewModifier({
         service: serviceOne,
         operation: '*',
@@ -1102,21 +1043,18 @@ describe('DeepDependencyGraphPage', () => {
         viewModifier: EViewModifier.Selected,
       });
 
-      const { rerender } = renderBridgeHook(store);
-
       expect(useDdgViewModifiersStore.getState().byKey[keyOne]).toBeDefined();
       expect(useDdgViewModifiersStore.getState().byKey[keyTwo]).toBeDefined();
 
       mockUseLocationValue.search = `?service=${serviceTwo}`;
-      store.dispatch({ type: SET_DDG, payload: { [keyTwo]: makeDoneEntry('h2') } });
-      rerender();
+      rerender({ options: { modelHash: 'h2' } });
 
       expect(useDdgViewModifiersStore.getState().byKey[keyOne]).toBeUndefined();
       expect(useDdgViewModifiersStore.getState().byKey[keyTwo].get(2)).toBe(EViewModifier.Selected);
     });
 
     it('clears view modifiers for the current graph when model hash changes', () => {
-      const store = createDdgStore({ [keyOne]: makeDoneEntry('hash-a') });
+      const { rerender } = renderBridgeHook({ modelHash: 'hash-a' });
       useDdgViewModifiersStore.getState().addViewModifier({
         service: serviceOne,
         operation: '*',
@@ -1126,11 +1064,9 @@ describe('DeepDependencyGraphPage', () => {
         viewModifier: EViewModifier.Hovered,
       });
 
-      const { rerender } = renderBridgeHook(store);
       expect(useDdgViewModifiersStore.getState().byKey[keyOne].get(3)).toBe(EViewModifier.Hovered);
 
-      store.dispatch({ type: SET_DDG, payload: { [keyOne]: makeDoneEntry('hash-b') } });
-      rerender();
+      rerender({ options: { modelHash: 'hash-b' } });
 
       expect(useDdgViewModifiersStore.getState().byKey[keyOne]).toBeUndefined();
     });

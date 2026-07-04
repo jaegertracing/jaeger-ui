@@ -123,4 +123,10 @@ export default class OtelTraceFacade implements IOtelTrace {
   hasErrors(): boolean {
     return this._spans.some(sp => sp.status.code === 'ERROR');
   }
+
+  // Escape hatch for code that still requires the legacy Jaeger Trace shape.
+  // Use sparingly; prefer IOtelTrace fields where possible.
+  toLegacyTrace(): Trace {
+    return this.legacyTrace;
+  }
 }

@@ -9,6 +9,50 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v2.19.0 (2026-06-03)
+
+#### ⛔ Breaking Changes
+
+* Feat: migrate search to /api/v3/trace-summaries (adr-010 phase 2b) ([@yurishkuro](https://github.com/yurishkuro) in [#3943](https://github.com/jaegertracing/jaeger-ui/pull/3943))
+
+#### ✨ New Features
+
+* Feat(search): add table view as alternative to list view in search results ([@yurishkuro](https://github.com/yurishkuro) in [#3980](https://github.com/jaegertracing/jaeger-ui/pull/3980))
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Feat(search): add reset button to clear the search form ([@yurishkuro](https://github.com/yurishkuro) in [#4009](https://github.com/jaegertracing/jaeger-ui/pull/4009))
+* Fix(search): support legacy lookback-only search urls ([@yurishkuro](https://github.com/yurishkuro) in [#4008](https://github.com/jaegertracing/jaeger-ui/pull/4008))
+* Fix(search): suppress trace summary columns unsupported by storage ([@ghosthouse7](https://github.com/ghosthouse7) in [#4007](https://github.com/jaegertracing/jaeger-ui/pull/4007))
+* Fix(search): keep trace comparison selection across searches ([@parshipcy](https://github.com/parshipcy) in [#3968](https://github.com/jaegertracing/jaeger-ui/pull/3968))
+* Refactor(deps-graph): fold dev dataset sources into usedependenciesquery ([@yurishkuro](https://github.com/yurishkuro) in [#3993](https://github.com/jaegertracing/jaeger-ui/pull/3993))
+* Fix(deps-graph): tidy toolbar layout and clear stale visual issues ([@yurishkuro](https://github.com/yurishkuro) in [#3992](https://github.com/jaegertracing/jaeger-ui/pull/3992))
+* Feat(searchtracepage): resizable and collapsible search side panel ([@swetalin-10](https://github.com/swetalin-10) in [#3984](https://github.com/jaegertracing/jaeger-ui/pull/3984))
+* Docs(tracking): add console analytics example and improve custom analytics docs ([@yurishkuro](https://github.com/yurishkuro) in [#3988](https://github.com/jaegertracing/jaeger-ui/pull/3988))
+* Feat(search): make default lookback configurable; reconstruct lookback from url timestamps ([@yurishkuro](https://github.com/yurishkuro) in [#3973](https://github.com/jaegertracing/jaeger-ui/pull/3973))
+* Refactor(ui): share time range options between search and monitor ([@yurishkuro](https://github.com/yurishkuro) in [#3978](https://github.com/jaegertracing/jaeger-ui/pull/3978))
+* Feat(search): add v3 trace-summaries api client and sort model (adr-010 phase 2b, part 1) ([@yurishkuro](https://github.com/yurishkuro) in [#3947](https://github.com/jaegertracing/jaeger-ui/pull/3947))
+* Refactor(dev): extract routes and timeframe utils, lazy-load secondary pages ([@yurishkuro](https://github.com/yurishkuro) in [#3946](https://github.com/jaegertracing/jaeger-ui/pull/3946))
+* Chore: bump tsconfig target from es2016 to es2020 ([@yurishkuro](https://github.com/yurishkuro) in [#3945](https://github.com/jaegertracing/jaeger-ui/pull/3945))
+* Fix(ui): delay empty-root error check to avoid flash with react 18 ([@yurishkuro](https://github.com/yurishkuro) in [#3942](https://github.com/jaegertracing/jaeger-ui/pull/3942))
+* Fix(ui): correct typos in accordionlinks class name and css punctuation key ([@Pulkit7070](https://github.com/Pulkit7070) in [#3905](https://github.com/jaegertracing/jaeger-ui/pull/3905))
+
+#### 🚧 Experimental Features
+
+* Feat(config): add ai.enabled flag (default false) for ai-assisted ui ([@yurishkuro](https://github.com/yurishkuro) in [#4003](https://github.com/jaegertracing/jaeger-ui/pull/4003))
+
+#### ⚙️ Refactoring
+
+* Refactor(ddg): convert node content to hooks ([@sksingh2005](https://github.com/sksingh2005) in [#3948](https://github.com/jaegertracing/jaeger-ui/pull/3948))
+* Feat(state): migrate dependencies page to react query (adr-004 2d) ([@parshipcy](https://github.com/parshipcy) in [#3991](https://github.com/jaegertracing/jaeger-ui/pull/3991))
+* Refactor(trace): convert timelineviewinglayer to hooks ([@sksingh2005](https://github.com/sksingh2005) in [#3868](https://github.com/jaegertracing/jaeger-ui/pull/3868))
+* Refactor(search): complete phase 2c discovery query keys ([@parshipcy](https://github.com/parshipcy) in [#3966](https://github.com/jaegertracing/jaeger-ui/pull/3966))
+* Feat(search): use /api/v3/trace-summaries for search results ([@yurishkuro](https://github.com/yurishkuro) in [#3964](https://github.com/jaegertracing/jaeger-ui/pull/3964))
+* Fix(search): replace singleton cache with keyed cache + eviction for trace search ([@yurishkuro](https://github.com/yurishkuro) in [#3961](https://github.com/jaegertracing/jaeger-ui/pull/3961))
+* Chore(api): regenerate v3 openapi client from latest idl ([@yurishkuro](https://github.com/yurishkuro) in [#3953](https://github.com/jaegertracing/jaeger-ui/pull/3953))
+* Refactor(trace): phase 2(a) - migrate single/multi trace load to react query ([@parshipcy](https://github.com/parshipcy) in [#3835](https://github.com/jaegertracing/jaeger-ui/pull/3835))
+* Refactor(search): introduce tracesummary type for search results ([@yurishkuro](https://github.com/yurishkuro) in [#3941](https://github.com/jaegertracing/jaeger-ui/pull/3941))
+
 ## v2.18.0 (2026-05-13)
 
 #### ⛔ Breaking Changes

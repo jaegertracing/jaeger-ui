@@ -20,6 +20,7 @@ const VERSION_0 = 'v0';
 // uiTimelineCollapseTitle=1
 // uiTimelineHideMinimap=1
 // uiTimelineHideSummary=1
+// uiTheme=light|dark
 const STATE_PARAMS_V0 = {
   searchHideGraph: 'uiSearchHideGraph',
   timeline: {
@@ -27,6 +28,7 @@ const STATE_PARAMS_V0 = {
     hideMinimap: 'uiTimelineHideMinimap',
     hideSummary: 'uiTimelineHideSummary',
   },
+  theme: 'uiTheme',
 };
 
 const PARAM_KEYS_V0 = getStrings(STATE_PARAMS_V0);
@@ -36,6 +38,8 @@ export function getEmbeddedState(search: string): null | EmbeddedState {
   if (uiEmbed !== VERSION_0) {
     return null;
   }
+  const rawTheme = rest[STATE_PARAMS_V0.theme];
+  const theme = rawTheme === 'dark' || rawTheme === 'light' ? rawTheme : undefined;
   return {
     version: VERSION_0,
     searchHideGraph: rest[STATE_PARAMS_V0.searchHideGraph] === VALUE_ENABLED,
@@ -44,6 +48,7 @@ export function getEmbeddedState(search: string): null | EmbeddedState {
       hideMinimap: rest[STATE_PARAMS_V0.timeline.hideMinimap] === VALUE_ENABLED,
       hideSummary: rest[STATE_PARAMS_V0.timeline.hideSummary] === VALUE_ENABLED,
     },
+    theme,
   };
 }
 

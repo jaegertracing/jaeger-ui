@@ -88,6 +88,7 @@ export interface IOtelSpan {
   // Derived properties
   depth: number;
   hasChildren: boolean;
+  // Sorted by startTime (ascending).
   childSpans: ReadonlyArray<IOtelSpan>;
   relativeStartTime: Microseconds; // microseconds since trace start
 
