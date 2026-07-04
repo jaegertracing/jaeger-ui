@@ -25,7 +25,9 @@ export type GenAiMetadata = {
 function asNumber(value: unknown): number | undefined {
   if (typeof value === 'number' && !Number.isNaN(value)) return value;
   if (typeof value === 'string') {
-    const parsed = Number(value);
+    const trimmed = value.trim();
+    if (!trimmed) return undefined;
+    const parsed = Number(trimmed);
     return Number.isNaN(parsed) ? undefined : parsed;
   }
   return undefined;
