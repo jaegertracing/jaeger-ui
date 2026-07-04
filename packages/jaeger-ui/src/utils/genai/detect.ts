@@ -163,6 +163,7 @@ export function isGenAiSpan(attributes: AttributesLike, spanName?: string): bool
 }
 
 export function formatTokenCount(totalTokens?: number): string | null {
-  if (!totalTokens || totalTokens <= 0) return null;
+  if (totalTokens == null) return null;
+  if (totalTokens < 0) return null;
   return new Intl.NumberFormat('en-US').format(totalTokens);
 }
