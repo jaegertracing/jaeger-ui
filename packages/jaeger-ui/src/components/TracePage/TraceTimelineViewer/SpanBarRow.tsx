@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useCallback } from 'react';
+import { Tag } from 'antd';
+import cx from 'classnames';
 import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward } from 'react-icons/io5';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
@@ -13,6 +15,7 @@ import Ticks from './Ticks';
 import { TNil } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan } from '../../../types/otel';
+import { isHttpStatusCode5xx } from './summaryFieldsUtils';
 
 import { getSpanIconComponent } from './span-icons';
 
@@ -53,6 +56,8 @@ type SpanBarRowProps = {
   span: IOtelSpan;
   focusSpan: (spanID: string) => void;
   traceDuration: number;
+  selectedFields: ReadonlyArray<string>;
+  summaryValues?: Record<string, string>;
   useOtelTerms: boolean;
 };
 
@@ -84,6 +89,8 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   span,
   focusSpan,
   traceDuration,
+  selectedFields,
+  summaryValues,
   onDetailToggled,
   onChildrenToggled,
   useOtelTerms,
@@ -189,6 +196,23 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
               )}
             </span>
             <small className="endpoint-name">{rpc ? rpc.operationName : operationName}</small>
+            {summaryValues &&
+              selectedFields.map(fieldKey => {
+                const value = summaryValues[fieldKey];
+                if (value == null) {
+                  return null;
+                }
+                const isError = isHttpStatusCode5xx(fieldKey, value);
+                return (
+                  <Tag
+                    key={fieldKey}
+                    aria-label={`${fieldKey}: ${value}`}
+                    className={cx('SpanBarRow--summaryChip', { 'is-error': isError })}
+                  >
+                    {value}
+                  </Tag>
+                );
+              })}
           </a>
           {hasLinks && (
             <ReferencesButton

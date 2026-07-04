@@ -80,6 +80,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       prunedServices: new Set(),
       trace,
       criticalPath,
+      summaryLookup: new Map(),
       uiFind: 'uiFind',
       navigate: jest.fn(),
       location: {

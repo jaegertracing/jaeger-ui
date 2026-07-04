@@ -17,6 +17,7 @@ import PrunedSpanRow from './PrunedSpanRow';
 import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
+import { HTTP_STATUS_SUMMARY_FIELDS } from './summaryFieldsUtils';
 import {
   createViewedBoundsFunc,
   ViewedBoundsFunctionType,
@@ -49,6 +50,7 @@ type TVirtualizedTraceViewOwnProps = {
   registerAccessors: (accesors: Accessors) => void;
   trace: IOtelTrace;
   criticalPath: CriticalPathSection[];
+  summaryLookup: Map<string, Record<string, string>>;
   useOtelTerms: boolean;
 };
 
@@ -351,6 +353,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         timelineBarsVisible,
         trace,
         useOtelTerms,
+        summaryLookup,
       } = propsRef.current;
       // to avert flow error
       if (!trace) {
@@ -370,6 +373,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         prunedServices.size > 0 &&
         span.childSpans.some(child => prunedServices.has(child.resource.serviceName));
       const criticalPathSections = criticalPathContext.sectionsFor(span, isCollapsed, hasPrunedChildren);
+      const summaryValues = summaryLookup.get(spanID);
       // Check for direct child "server" span if the span is a "client" span.
       let rpc = null;
       if (isCollapsed) {
@@ -420,6 +424,8 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
             span={span}
             focusSpan={focusSpan}
             traceDuration={trace.duration}
+            selectedFields={HTTP_STATUS_SUMMARY_FIELDS}
+            summaryValues={summaryValues}
             useOtelTerms={useOtelTerms}
           />
         </div>

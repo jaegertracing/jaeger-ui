@@ -85,6 +85,7 @@ describe('<SpanBarRow>', () => {
     traceStartTime: 0,
     traceDuration: 1000,
     focusSpan: jest.fn(),
+    selectedFields: [],
     useOtelTerms: false,
   };
 
@@ -247,6 +248,31 @@ describe('<SpanBarRow>', () => {
       const nameCell = container.querySelector('.span-name-column');
       expect(nameCell).toHaveStyle('flex-basis: 100%');
       expect(nameCell).toHaveStyle('max-width: 100%');
+    });
+  });
+
+  describe('summary field chips', () => {
+    it('renders HTTP status chip with error styling for 5xx', () => {
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          selectedFields={['http.status_code']}
+          summaryValues={{ 'http.status_code': '500' }}
+        />
+      );
+      const errorChip = screen.getByLabelText('http.status_code: 500');
+      expect(errorChip).toBeInTheDocument();
+      expect(errorChip).toHaveClass('is-error');
+    });
+
+    it('skips chips when value is missing for a selected field', () => {
+      render(<SpanBarRow {...defaultProps} selectedFields={['http.status_code']} summaryValues={{}} />);
+      expect(screen.queryByLabelText(/http\.status_code/)).not.toBeInTheDocument();
+    });
+
+    it('does not render chips when summaryValues is undefined', () => {
+      render(<SpanBarRow {...defaultProps} selectedFields={['http.status_code']} />);
+      expect(screen.queryByLabelText(/http\.status_code/)).not.toBeInTheDocument();
     });
   });
 

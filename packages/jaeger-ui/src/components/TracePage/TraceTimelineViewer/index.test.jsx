@@ -11,37 +11,41 @@ import * as KeyboardShortcuts from '../keyboard-shortcuts';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
 
-const { mockLayoutPrefsStore, mockTraceTimelineStore, mockUseTraceTimelineStore } = vi.hoisted(() => {
-  const mockTraceTimelineStore = {
-    detailStates: new Map(),
-    prunedServices: new Set(),
-    setPrunedServices: vi.fn(),
-    collapseAll: vi.fn(),
-    collapseOne: vi.fn(),
-    expandAll: vi.fn(),
-    expandOne: vi.fn(),
-  };
-  const mockUseTraceTimelineStore = Object.assign(
-    vi.fn(selector => selector(mockTraceTimelineStore)),
-    {
-      getState: () => mockTraceTimelineStore,
-      setState: vi.fn(partial => Object.assign(mockTraceTimelineStore, partial)),
-    }
-  );
-  return {
-    mockLayoutPrefsStore: {
-      spanNameColumnWidth: 0.25,
-      sidePanelWidth: 0.375,
-      detailPanelMode: 'inline',
-      timelineBarsVisible: true,
-      setSpanNameColumnWidth: vi.fn(),
-      setSidePanelWidth: vi.fn(),
-      setTimelineBarsVisible: vi.fn(),
-    },
-    mockTraceTimelineStore,
-    mockUseTraceTimelineStore,
-  };
-});
+const { mockLayoutPrefsStore, mockTraceTimelineStore, mockUseTraceTimelineStore, mockUseConfig } = vi.hoisted(
+  () => {
+    const mockTraceTimelineStore = {
+      detailStates: new Map(),
+      prunedServices: new Set(),
+      setPrunedServices: vi.fn(),
+      collapseAll: vi.fn(),
+      collapseOne: vi.fn(),
+      expandAll: vi.fn(),
+      expandOne: vi.fn(),
+    };
+    const mockUseTraceTimelineStore = Object.assign(
+      vi.fn(selector => selector(mockTraceTimelineStore)),
+      {
+        getState: () => mockTraceTimelineStore,
+        setState: vi.fn(partial => Object.assign(mockTraceTimelineStore, partial)),
+      }
+    );
+    const mockUseConfig = vi.fn(() => ({ traceTimeline: { summaryFieldsEnabled: true } }));
+    return {
+      mockLayoutPrefsStore: {
+        spanNameColumnWidth: 0.25,
+        sidePanelWidth: 0.375,
+        detailPanelMode: 'inline',
+        timelineBarsVisible: true,
+        setSpanNameColumnWidth: vi.fn(),
+        setSidePanelWidth: vi.fn(),
+        setTimelineBarsVisible: vi.fn(),
+      },
+      mockTraceTimelineStore,
+      mockUseTraceTimelineStore,
+      mockUseConfig,
+    };
+  }
+);
 
 vi.mock('./store', () => ({
   useLayoutPrefsStore: vi.fn(selector => selector(mockLayoutPrefsStore)),
@@ -61,6 +65,13 @@ const mockUseServiceFilter = vi.hoisted(() => ({
 }));
 vi.mock('./useServiceFilter', () => ({
   useServiceFilter: vi.fn(() => mockUseServiceFilter),
+}));
+const mockBuildHttpStatusSummaryLookup = vi.hoisted(() => vi.fn(() => new Map()));
+vi.mock('./summaryFieldsUtils', () => ({
+  buildHttpStatusSummaryLookup: mockBuildHttpStatusSummaryLookup,
+}));
+vi.mock('../../../hooks/useConfig', () => ({
+  useConfig: mockUseConfig,
 }));
 vi.mock('./VirtualizedTraceView', () => mockDefault(() => <div data-testid="virtualized-trace-view-mock" />));
 vi.mock('./SpanDetailSidePanel', () => mockDefault(() => <div data-testid="span-detail-side-panel-mock" />));
@@ -144,6 +155,8 @@ describe('<TraceTimelineViewer>', () => {
     mockUseTraceTimelineStore.setState.mockClear();
     mockUseServiceFilter.prunedServices = new Set();
     mockUseServiceFilter.serviceFilterNode = null;
+    mockBuildHttpStatusSummaryLookup.mockClear();
+    mockUseConfig.mockReturnValue({ traceTimeline: { summaryFieldsEnabled: true } });
     jest.spyOn(KeyboardShortcuts, 'merge').mockClear();
   });
 
@@ -158,6 +171,12 @@ describe('<TraceTimelineViewer>', () => {
     const initialCount = screen.getAllByTestId('virtualized-trace-view-mock').length;
     renderWithRedux(<TraceTimelineViewer {...props} />);
     expect(screen.getAllByTestId('virtualized-trace-view-mock')).toHaveLength(initialCount + 1);
+  });
+
+  it('skips HTTP status summary lookup when summaryFieldsEnabled is false', () => {
+    mockUseConfig.mockReturnValue({ traceTimeline: { summaryFieldsEnabled: false } });
+    render(<TraceTimelineViewerImpl {...props} />);
+    expect(mockBuildHttpStatusSummaryLookup).not.toHaveBeenCalled();
   });
 
   it('derives selectedSpanID from Zustand detailStates', () => {
