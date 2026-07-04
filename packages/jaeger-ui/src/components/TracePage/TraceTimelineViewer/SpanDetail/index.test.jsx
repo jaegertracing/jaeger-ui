@@ -4,7 +4,7 @@
 vi.mock('../utils');
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import DetailState from './DetailState';
@@ -206,13 +206,18 @@ describe('<SpanDetail>', () => {
     expect(heading).toHaveTextContent(span.resource.serviceName);
     expect(heading).toHaveTextContent(span.name);
 
-    // Check that Duration and Start Time are present in the table
-    expect(screen.getByText('Duration:')).toBeInTheDocument();
-    expect(screen.getByText('Start Time:')).toBeInTheDocument();
+    // Scope all overview assertions to the overview table to prevent false positives
+    // if the same text appears elsewhere in the component tree
+    const overviewTable = screen.getByRole('table');
+    const { getByText, getByRole } = within(overviewTable);
 
-    // Check that their formatted values are rendered
-    expect(screen.getByText(`${span.duration}ms`)).toBeInTheDocument();
-    expect(screen.getByText(`${span.relativeStartTime}ms`)).toBeInTheDocument();
+    // Check labels
+    expect(getByRole('rowheader', { name: 'Duration:' })).toBeInTheDocument();
+    expect(getByRole('rowheader', { name: 'Start Time:' })).toBeInTheDocument();
+
+    // Check that the mocked formatted values are rendered in the correct cells
+    expect(getByText(`${span.duration}ms`)).toBeInTheDocument();
+    expect(getByText(`${span.relativeStartTime}ms`)).toBeInTheDocument();
   });
 
   it('renders span tags accordian and triggers toggle callback with span ID', () => {

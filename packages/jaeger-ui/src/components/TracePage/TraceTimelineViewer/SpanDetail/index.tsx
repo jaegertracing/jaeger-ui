@@ -13,7 +13,6 @@ import DetailState from './DetailState';
 import GenAITab from './GenAITab';
 import { formatDuration, formatDurationCompact } from '../utils';
 import CopyIcon from '../../../common/CopyIcon';
-import LabeledList from '../../../common/LabeledList';
 import { isGenAISpan } from '../../../../utils/genai';
 
 import { TNil } from '../../../../types';
@@ -142,7 +141,7 @@ export default function SpanDetail(props: SpanDetailProps) {
     </div>
   );
 
-  return (
+  const header = (
     <div>
       <div className="ub-flex ub-items-center SpanDetail--header">
         <h2
@@ -154,89 +153,54 @@ export default function SpanDetail(props: SpanDetailProps) {
         </h2>
       </div>
       <Divider className="SpanDetail--divider ub-my1" />
+      <table className="SpanDetail--overviewTable ub-mb1">
+        <caption className="SpanDetail--overviewTableCaption">Span Overview</caption>
+        <tbody>
+          <tr>
+            <th scope="row" className="SpanDetail--overviewTableKey">
+              Duration:
+            </th>
+            <td>{formatDurationCompact(span.duration)}</td>
+          </tr>
+          <tr>
+            <th scope="row" className="SpanDetail--overviewTableKey">
+              Start Time:
+            </th>
+            <td>{formatDuration(span.relativeStartTime)}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+
+  if (showGenAITab) {
+    return (
       <div>
-        <table className="SpanDetail--overviewTable ub-mb1">
-          <caption className="SpanDetail--overviewTableCaption">Span Overview</caption>
-          <tbody>
-            <tr>
-              <th scope="row" className="SpanDetail--overviewTableKey">
-                Duration:
-              </th>
-              <td>{formatDurationCompact(span.duration)}</td>
-            </tr>
-            <tr>
-              <th scope="row" className="SpanDetail--overviewTableKey">
-                Start Time:
-              </th>
-              <td>{formatDuration(span.relativeStartTime)}</td>
-            </tr>
-          </tbody>
-        </table>
-        <div>
-          <AccordionAttributes
-            data={span.attributes}
-            label={attributesLabel}
-            linksGetter={linksGetter}
-            isOpen={isAttributesOpen}
-            onToggle={() => attributesToggle(span.spanID)}
-          />
-          {span.resource.attributes && span.resource.attributes.length > 0 && (
-            <AccordionAttributes
-              className="ub-mb1"
-              data={span.resource.attributes}
-              label={resourceLabel}
-              linksGetter={linksGetter}
-              isOpen={isResourceOpen}
-              onToggle={() => resourceToggle(span.spanID)}
-            />
-          )}
-        </div>
-        {span.events && span.events.length > 0 && (
-          <AccordionEvents
-            linksGetter={linksGetter}
-            events={span.events}
-            isOpen={eventsState.isOpen}
-            openedItems={eventsState.openedItems}
-            onToggle={() => eventsToggle(span.spanID)}
-            onItemToggle={eventItem => eventItemToggle(span.spanID, eventItem)}
-            timestamp={traceStartTime}
-            currentViewRangeTime={currentViewRangeTime}
-            traceDuration={traceDuration}
-            spanID={span.spanID}
-            useOtelTerms={useOtelTerms}
-            initialVisibleCount={eventsInitialVisibleCount}
-          />
-        )}
-        {warnings && warnings.length > 0 && (
-          <AccordionText
-            className="AccordianWarnings"
-            headerClassName="AccordianWarnings--header"
-            label={<span className="AccordianWarnings--label">Warnings</span>}
-            data={warnings}
-            isOpen={isWarningsOpen}
-            onToggle={() => warningsToggle(span.spanID)}
-          />
-        )}
-        {links && links.length > 0 && (
-          <AccordionLinks
-            data={links}
-            isOpen={isLinksOpen}
-            onToggle={() => linksToggle(span.spanID)}
-            focusSpan={focusSpan}
-            useOtelTerms={useOtelTerms}
-          />
-        )}
-        <small className="SpanDetail--debugInfo">
-          <span className="SpanDetail--debugLabel" data-label="SpanID:" /> {span.spanID}
-          <CopyIcon
-            copyText={deepLinkCopyText}
-            icon={<IoLinkOutline />}
-            placement="topRight"
-            tooltipTitle="Copy deep link to this span"
-            buttonText="Copy"
-          />
-        </small>
+        {header}
+        <Tabs
+          defaultActiveKey="details"
+          destroyInactiveTabPane
+          items={[
+            {
+              key: 'details',
+              label: 'Details',
+              children: detailsContent,
+            },
+            {
+              key: 'genai',
+              label: 'GenAI',
+              children: <GenAITab span={span} />,
+            },
+          ]}
+        />
       </div>
+    );
+  }
+
+  return (
+    <div>
+      {header}
+      {detailsContent}
     </div>
   );
 }

@@ -12,6 +12,11 @@ SPDX-License-Identifier: Apache-2.0
   gap: 0.125rem 0.5rem;
 }
 
+/* Keep metadata right-aligned even when the header wraps onto a new line */
+.SpanDetail--header .LabeledList {
+  margin-left: auto;
+}
+
 .SpanDetail--headerTitle {
   min-width: 0;
   overflow: hidden;
@@ -25,7 +30,10 @@ SPDX-License-Identifier: Apache-2.0
   clip: rect(0 0 0 0);
   width: 1px;
   height: 1px;
+  padding: 0;
+  border: 0;
   margin: -1px;
+  white-space: nowrap;
 }
 
 .SpanDetail--headerEndpointName {
