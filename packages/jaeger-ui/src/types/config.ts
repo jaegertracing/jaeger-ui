@@ -87,7 +87,7 @@ export type BackendCapabilities = {
   aiAssistant?: boolean;
 };
 
-export type SpanDecorationConfig = {
+type SpanDecorationConfig = {
   // A set of tag key/value regular expressions. A span matches if all attributes match.
   // Both 'key' and 'value' are treated as regular expressions.
   attributes: readonly { key: string; value: string }[];

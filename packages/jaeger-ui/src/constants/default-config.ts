@@ -100,6 +100,16 @@ const defaultConfig: Config = {
       tooltip: 'MongoDB',
     },
     {
+      attributes: [{ key: '^(?:db\\.system|peer\\.service|service\\.name)$', value: 'elasticsearch' }],
+      icon: 'si.Elasticsearch',
+      tooltip: 'Elasticsearch',
+    },
+    {
+      attributes: [{ key: '^(?:graphql\\.operation\\.name|graphql\\.operation\\.type)$', value: '.*' }],
+      icon: 'si.Graphql',
+      tooltip: 'GraphQL',
+    },
+    {
       attributes: [{ key: '^(?:db\\.system)$', value: '.*' }],
       icon: 'io.Database',
       tooltip: 'Database Call',

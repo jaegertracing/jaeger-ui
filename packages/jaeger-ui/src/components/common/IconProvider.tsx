@@ -33,7 +33,9 @@ import {
   SiGo,
   SiPython,
   SiNodedotjs,
-} from 'react-icons/si';
+  SiGraphql,
+  SiElasticsearch,
+} from './SiIcons';
 
 const ICON_MAP: Record<string, React.ElementType> = {
   // Formal built-in tokens
@@ -64,6 +66,8 @@ const ICON_MAP: Record<string, React.ElementType> = {
   'si.Go': SiGo,
   'si.Python': SiPython,
   'si.Nodedotjs': SiNodedotjs,
+  'si.Graphql': SiGraphql,
+  'si.Elasticsearch': SiElasticsearch,
 };
 
 type Props = {
@@ -73,18 +77,27 @@ type Props = {
 };
 
 const IconProvider: React.FC<Props> = ({ icon, className, tooltip }) => {
-  // 1. Check built-in tokens
+  // 1. Check for image URL
+  if (icon.startsWith('http://') || icon.startsWith('https://') || icon.startsWith('/')) {
+    const ariaProps = tooltip ? { alt: tooltip } : { alt: '', 'aria-hidden': true };
+    const resolvedIcon = icon.startsWith('/') ? prefixUrl(icon) : icon;
+    return (
+      <img
+        src={resolvedIcon}
+        className={className}
+        title={tooltip}
+        referrerPolicy="no-referrer"
+        crossOrigin="anonymous"
+        {...ariaProps}
+      />
+    );
+  }
+
+  // 2. Check built-in tokens
   const BuiltInIcon = ICON_MAP[icon];
   if (BuiltInIcon) {
     const ariaProps = tooltip ? { role: 'img', 'aria-label': tooltip } : { 'aria-hidden': true };
     return <BuiltInIcon className={className} title={tooltip} {...ariaProps} />;
-  }
-
-  // 2. Check for image URL
-  if (icon.startsWith('http://') || icon.startsWith('https://') || icon.startsWith('/')) {
-    const ariaProps = tooltip ? { alt: tooltip } : { alt: '', 'aria-hidden': true };
-    const resolvedIcon = icon.startsWith('/') ? prefixUrl(icon) : icon;
-    return <img src={resolvedIcon} className={className} title={tooltip} {...ariaProps} />;
   }
 
   return null;

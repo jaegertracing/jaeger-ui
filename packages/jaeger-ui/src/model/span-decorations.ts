@@ -47,10 +47,13 @@ function getProcessedRules(): ProcessedRule[] {
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const parsedAttributes = (rule.attributes || [])
-        .filter((attr: any) => typeof attr.key === 'string' && attr.key.trim().length > 0)
+        .filter(
+          (attr: any) =>
+            typeof attr.key === 'string' && attr.key.trim().length > 0 && typeof attr.value === 'string'
+        )
         .map((attr: any) => ({
           keyRegex: new RegExp(attr.key),
-          valueRegex: attr.value ? new RegExp(attr.value) : null,
+          valueRegex: new RegExp(attr.value),
         }));
 
       if (parsedAttributes.length === 0) {

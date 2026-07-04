@@ -200,7 +200,7 @@ SPDX-License-Identifier: Apache-2.0
   vertical-align: middle;
 }
 
-.SpanBarRow--decorationIcon img {
+img.SpanBarRow--decorationIcon {
   width: 1em;
   height: 1em;
   object-fit: contain;

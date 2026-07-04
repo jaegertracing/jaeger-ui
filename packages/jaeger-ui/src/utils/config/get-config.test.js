@@ -119,12 +119,19 @@ describe('getConfig()', () => {
       describe('fields not in mergeFields', () => {
         it('gives precedence to the embedded config', () => {
           const mergeFieldsSet = new Set(mergeFields);
-          const keys = Object.keys(defaultConfig).filter(k => !mergeFieldsSet.has(k));
+          const keys = Object.keys(defaultConfig).filter(
+            k => !mergeFieldsSet.has(k) && k !== 'spanDecorations'
+          );
           embedded = {};
           keys.forEach(key => {
             embedded[key] = key;
           });
-          expect(getConfig()).toEqual({ ...defaultConfig, ...embedded, backendCapabilities: capabilities });
+          expect(getConfig()).toEqual({
+            ...defaultConfig,
+            ...embedded,
+            backendCapabilities: capabilities,
+            spanDecorations: defaultConfig.spanDecorations || [],
+          });
         });
       });
 

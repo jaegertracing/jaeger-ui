@@ -56,7 +56,7 @@ The span decoration engine follows these rules:
 
 The `icon` property can be one of:
 
-1.  **Built-in Tokens:** Pre-defined icons bundled with Jaeger UI (e.g., `io.Database`, `io.Server`, `si.Redis`).
+1.  **Built-in Tokens:** Pre-defined icons bundled with Jaeger UI (e.g., `io.Database`, `io.Server`, `di.Redis`).
 2.  **External URLs:** A full URL starting with `http://` or `https://` pointing to an image (e.g., SVG, PNG).
 3.  **Local Paths:** A path starting with `/` pointing to an asset served by the Jaeger UI server.
 
