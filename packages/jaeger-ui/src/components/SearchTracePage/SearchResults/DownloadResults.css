@@ -1,0 +1,21 @@
+/*
+Copyright (c) 2026 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+/* Needed so the absolute bar is clipped to the button's rounded corners */
+.DownloadResults--btn {
+  overflow: hidden;
+  position: relative;
+}
+
+/* Thin progress bar that grows along the bottom edge of the button */
+.DownloadResults--bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: var(--ant-color-primary, #1677ff);
+  transition: width 0.2s ease;
+  pointer-events: none;
+}

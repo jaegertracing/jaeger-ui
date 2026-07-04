@@ -6,3 +6,8 @@
  * This provides type safety to ensure time values are not confused with other numeric values.
  */
 export type Microseconds = number & { readonly __brand: unique symbol };
+
+/**
+ * A branded type representing time values in milliseconds.
+ */
+export type Milliseconds = number & { readonly __brand: unique symbol };

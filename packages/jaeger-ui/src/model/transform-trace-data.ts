@@ -61,11 +61,10 @@ export function orderTags(spanTags: KeyValuePair[], topPrefixes?: readonly strin
  * generally requires.
  */
 export default function transformTraceData(data: TraceData & { spans: SpanData[] }): Trace | null {
-  let { traceID } = data;
+  const { traceID } = data;
   if (!traceID) {
     return null;
   }
-  traceID = traceID.toLowerCase();
 
   let traceEndTime = 0;
   let traceStartTime = Number.MAX_SAFE_INTEGER;
