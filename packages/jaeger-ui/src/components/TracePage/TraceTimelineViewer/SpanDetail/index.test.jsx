@@ -14,12 +14,13 @@ import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
 
 vi.mock('./AccordionAttributes', () => {
-  return mockDefault(function MockAccordionAttributes({ label, onToggle }) {
+  return mockDefault(function MockAccordionAttributes({ label, onToggle, data }) {
     return (
       <div data-testid={`accordian-keyvalues-${label.toLowerCase()}`}>
         <button type="button" onClick={onToggle} data-testid={`toggle-${label.toLowerCase()}`}>
           Toggle {label}
         </button>
+        <span data-testid={`accordian-keyvalues-${label.toLowerCase()}-count`}>{data?.length}</span>
       </div>
     );
   });

@@ -3,8 +3,8 @@
 
 import React from 'react';
 import { Divider, Tabs } from 'antd';
-
 import { IoLinkOutline } from 'react-icons/io5';
+
 import AccordionAttributes from './AccordionAttributes';
 import AccordionEvents from './AccordionEvents';
 import AccordionLinks from './AccordionLinks';
@@ -62,29 +62,14 @@ export default function SpanDetail(props: SpanDetailProps) {
   const { isAttributesOpen, isResourceOpen, events: eventsState, isWarningsOpen, isLinksOpen } = detailState;
   const warnings = span.warnings;
 
-  // Get links for display in AccordionLinks
   const links = span.links || [];
-
-  // Display labels based on terminology flag
   const attributesLabel = useOtelTerms ? 'Attributes' : 'Tags';
   const resourceLabel = useOtelTerms ? 'Resource' : 'Process';
 
   const overviewItems = [
-    {
-      key: 'svc',
-      label: 'Service:',
-      value: span.resource.serviceName,
-    },
-    {
-      key: 'duration',
-      label: 'Duration:',
-      value: formatDurationCompact(span.duration),
-    },
-    {
-      key: 'start',
-      label: 'Start Time:',
-      value: formatDuration(span.relativeStartTime),
-    },
+    { key: 'svc', label: 'Service:', value: span.resource.serviceName },
+    { key: 'duration', label: 'Duration:', value: formatDurationCompact(span.duration) },
+    { key: 'start', label: 'Start Time:', value: formatDuration(span.relativeStartTime) },
   ];
   const deepLinkCopyText = `${window.location.origin}${window.location.pathname}?uiFind=${span.spanID}`;
 
