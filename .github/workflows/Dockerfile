@@ -1,4 +1,5 @@
-FROM node:24.17.0
+FROM node:24.18.0
+
 WORKDIR /workspace
 COPY package.json package.json
 COPY pnpm-lock.yaml pnpm-lock.yaml
