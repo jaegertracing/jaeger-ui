@@ -52,6 +52,19 @@ function upperBound(sorted: number[], target: number): number {
   return lo;
 }
 
+// Returns the count of elements in a sorted array that are < target.
+// O(log n) binary search (lower bound).
+function lowerBound(sorted: number[], target: number): number {
+  let lo = 0;
+  let hi = sorted.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >>> 1;
+    if (sorted[mid] < target) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo;
+}
+
 /**
  * Computes per-span latency statistics relative to same-operation peers in the trace.
  * Uses Welford's algorithm for O(n) single-pass mean/variance, then O(m log m) sort
@@ -91,9 +104,13 @@ export function computeLatencyStats(
     const stdDev = state.count >= 2 ? Math.sqrt(state.M2 / (state.count - 1)) : 0;
     const zScore = state.count >= 2 && stdDev > 0 ? (span.duration - state.mean) / stdDev : NaN;
 
-    // Percentile rank: fraction of same-operation spans with duration ≤ this span's duration.
-    // upperBound runs in O(log m) vs the previous O(m) filter scan.
-    const rank = upperBound(sorted, span.duration) / sorted.length;
+    // Percentile rank: tie-aware mid-rank, i.e. the midpoint of the range of positions
+    // ([lowerBound, upperBound)) occupied by spans with this exact duration. This keeps
+    // tied durations centered in the distribution instead of all reporting as "slowest".
+    // Both bounds run in O(log m) vs the previous O(m) filter scan.
+    const lower = lowerBound(sorted, span.duration);
+    const upper = upperBound(sorted, span.duration);
+    const rank = (lower + upper) / 2 / sorted.length;
 
     const p50Us = percentileByIndex(sorted, 0.5);
     const p95Us = percentileByIndex(sorted, 0.95);

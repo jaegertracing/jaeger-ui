@@ -27,14 +27,9 @@ describe('HeatmapLegend', () => {
     expect(screen.getByText('Slowest')).toBeInTheDocument();
   });
 
-  it('shows P50 label', () => {
+  it('shows Median label', () => {
     render(<HeatmapLegend />);
-    expect(screen.getByText('P50')).toBeInTheDocument();
-  });
-
-  it('shows P95 label', () => {
-    render(<HeatmapLegend />);
-    expect(screen.getByText('P95')).toBeInTheDocument();
+    expect(screen.getByText('Median')).toBeInTheDocument();
   });
 
   it('shows critical path hint', () => {

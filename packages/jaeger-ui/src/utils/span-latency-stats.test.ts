@@ -63,18 +63,20 @@ describe('computeLatencyStats', () => {
     expect(stats.get('c')!.groupSize).toBe(1);
   });
 
-  it('single span in group: percentileRank = 1, zScore = NaN, stdDev = 0', () => {
+  it('single span in group: percentileRank = 0.5 (tie-aware mid-rank), zScore = NaN, stdDev = 0', () => {
     const stats = computeLatencyStats([makeSpan('x', 'lonely', 300)], []);
     const s = stats.get('x')!;
-    expect(s.percentileRank).toBe(1);
+    expect(s.percentileRank).toBe(0.5);
     expect(Number.isNaN(s.zScore)).toBe(true);
     expect(s.stdDev).toBe(0);
   });
 
-  it('slowest span in group has percentileRank = 1', () => {
+  it('slowest span in a distinct-duration group has percentileRank < 1 but highest in the group', () => {
     const spans = [makeSpan('fast', 'op', 100), makeSpan('slow', 'op', 500)];
     const stats = computeLatencyStats(spans, []);
-    expect(stats.get('slow')!.percentileRank).toBe(1);
+    // tie-aware mid-rank: slow occupies position [1, 2) of 2 → (1+2)/2/2 = 0.75
+    expect(stats.get('slow')!.percentileRank).toBe(0.75);
+    expect(stats.get('slow')!.percentileRank).toBeGreaterThan(stats.get('fast')!.percentileRank);
   });
 
   it('fastest span in group has lowest percentileRank', () => {
@@ -138,10 +140,10 @@ describe('computeLatencyStats', () => {
   });
 
   it('weightedScore is capped at 1.0 even with 1.5× multiplier', () => {
-    const spans = [makeSpan('a', 'op', 100)];
-    // single span → percentileRank=1, × 1.5 = 1.5, should cap at 1.0
-    const stats = computeLatencyStats(spans, [makeCritical('a')]);
-    expect(stats.get('a')!.weightedScore).toBe(1.0);
+    const spans = [makeSpan('a', 'op', 100), makeSpan('b', 'op', 200), makeSpan('c', 'op', 300)];
+    // 'c' is slowest of 3 → percentileRank = (2+3)/2/3 ≈ 0.833, × 1.5 ≈ 1.25, should cap at 1.0
+    const stats = computeLatencyStats(spans, [makeCritical('c')]);
+    expect(stats.get('c')!.weightedScore).toBe(1.0);
   });
 
   it('weightedScore without critical path equals percentileRank', () => {
@@ -181,11 +183,11 @@ describe('computeLatencyStats', () => {
     expect(stats.get('c')!.p50Us).toBe(1000);
   });
 
-  it('all spans identical duration → all have percentileRank = 1', () => {
+  it('all spans identical duration → all have percentileRank ≈ 0.5 (tie-aware mid-rank)', () => {
     const spans = [makeSpan('a', 'op', 200), makeSpan('b', 'op', 200), makeSpan('c', 'op', 200)];
     const stats = computeLatencyStats(spans, []);
     for (const id of ['a', 'b', 'c']) {
-      expect(stats.get(id)!.percentileRank).toBe(1);
+      expect(stats.get(id)!.percentileRank).toBe(0.5);
     }
   });
 
