@@ -36,8 +36,8 @@ export default function ExportSpanButton({ span }: Props) {
     timerRef.current = setTimeout(() => setStatus('idle'), 2000);
   }
 
-  function handleExport(payload: Record<string, unknown>) {
-    const ok = copy(JSON.stringify(payload, null, 2));
+  async function handleExport(payload: Record<string, unknown>) {
+    const ok = await copy(JSON.stringify(payload, null, 2));
     setStatus(ok ? 'copied' : 'failed');
     scheduleReset();
   }

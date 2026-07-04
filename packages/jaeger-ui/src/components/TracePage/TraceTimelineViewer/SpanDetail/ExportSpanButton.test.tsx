@@ -6,7 +6,7 @@ import { render, screen, cleanup, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
-vi.mock('copy-to-clipboard', () => ({ default: vi.fn().mockReturnValue(true) }));
+vi.mock('copy-to-clipboard', () => ({ default: vi.fn().mockResolvedValue(true) }));
 
 vi.mock('../../../../utils/span-to-otlp', () => ({
   spanToOtlpJson: vi.fn().mockReturnValue({ resourceSpans: [{ stub: 'otlp' }] }),
@@ -93,36 +93,36 @@ describe('<ExportSpanButton>', () => {
 
   it('updates aria-label to "Copied!" after a successful copy', async () => {
     const user = userEvent.setup();
-    vi.mocked(copy).mockReturnValue(true);
+    vi.mocked(copy).mockResolvedValue(true);
     render(<ExportSpanButton span={mockSpan} />);
 
     await user.click(screen.getByTestId('export-span-button'));
     await user.click(await screen.findByText('Copy as OTLP JSON'));
 
-    expect(screen.getByTestId('export-span-button')).toHaveAttribute('aria-label', 'Copied!');
+    expect(await screen.findByLabelText('Copied!')).toBeInTheDocument();
   });
 
   it('updates aria-label to failed message when copy returns false', async () => {
     const user = userEvent.setup();
-    vi.mocked(copy).mockReturnValue(false);
+    vi.mocked(copy).mockResolvedValue(false);
     render(<ExportSpanButton span={mockSpan} />);
 
     await user.click(screen.getByTestId('export-span-button'));
     await user.click(await screen.findByText('Copy as OTLP JSON'));
 
-    expect(screen.getByTestId('export-span-button')).toHaveAttribute('aria-label', 'Copy failed — try again');
+    expect(await screen.findByLabelText('Copy failed — try again')).toBeInTheDocument();
   });
 
   it('resets to idle aria-label after the 2-second timer', async () => {
     vi.useFakeTimers();
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime.bind(vi) });
-    vi.mocked(copy).mockReturnValue(true);
+    vi.mocked(copy).mockResolvedValue(true);
 
     render(<ExportSpanButton span={mockSpan} />);
     await user.click(screen.getByTestId('export-span-button'));
     await user.click(await screen.findByText('Copy as OTLP JSON'));
 
-    expect(screen.getByTestId('export-span-button')).toHaveAttribute('aria-label', 'Copied!');
+    expect(await screen.findByLabelText('Copied!')).toBeInTheDocument();
 
     act(() => vi.advanceTimersByTime(2001));
     expect(screen.getByTestId('export-span-button')).toHaveAttribute('aria-label', 'Export span data');
