@@ -81,7 +81,7 @@ describe('OtelTraceFacade', () => {
       const genAISpan: Span = {
         ...mockSpan,
         spanID: 'genai-span-1',
-        tags: [{ key: 'gen_ai.operation.name', type: 'string', value: 'chat' }],
+        tags: [{ key: 'gen_ai.operation.name', value: 'chat' }],
       };
       const genAITrace: Trace = {
         ...mockLegacyTrace,
@@ -99,7 +99,7 @@ describe('OtelTraceFacade', () => {
       const httpSpan: Span = {
         ...mockSpan,
         spanID: 'http-span-1',
-        tags: [{ key: 'http.method', type: 'string', value: 'GET' }],
+        tags: [{ key: 'http.method', value: 'GET' }],
       };
       const httpTrace: Trace = {
         ...mockLegacyTrace,
