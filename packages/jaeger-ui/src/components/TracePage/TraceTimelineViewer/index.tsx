@@ -89,10 +89,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   const zustandSetSidePanelWidth = useLayoutPrefsStore(s => s.setSidePanelWidth);
 
   const { criticalPath = [] } = props;
-  const statsMap = useMemo(
-    () => computeLatencyStats(trace.spans, criticalPath),
-    [trace.spans, criticalPath]
-  );
+  const statsMap = useMemo(() => computeLatencyStats(trace.spans, criticalPath), [trace.spans, criticalPath]);
 
   const detailStates = useTraceTimelineStore(s => s.detailStates);
   const selectedSpanID = detailPanelMode === 'sidepanel' ? getSelectedSpanID(detailStates) : null;

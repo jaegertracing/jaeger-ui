@@ -154,7 +154,11 @@ describe('computeLatencyStats', () => {
   it('critical-path span has strictly higher weightedScore than equal-rank off-path span', () => {
     // 'onPath' and 'offPath' share the same duration and therefore the same percentileRank,
     // but only 'onPath' receives the 1.5× boost
-    const spans2 = [makeSpan('onPath', 'grp', 100), makeSpan('y', 'grp', 200), makeSpan('offPath', 'grp', 100)];
+    const spans2 = [
+      makeSpan('onPath', 'grp', 100),
+      makeSpan('y', 'grp', 200),
+      makeSpan('offPath', 'grp', 100),
+    ];
     const stats2 = computeLatencyStats(spans2, [makeCritical('onPath')]);
     const onPathScore = stats2.get('onPath')!.weightedScore;
     const offPathScore = stats2.get('offPath')!.weightedScore;
