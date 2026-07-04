@@ -1,7 +1,7 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-export function makeCacheScope() {
+function makeCacheScope() {
   const cache = new Map<string, any>();
   return function cacheAs(key: string, value: any) {
     const stored = cache.get(key);

@@ -31,7 +31,7 @@ describe('calcPositioning', () => {
   let svcMeasurements;
   let opMeasurements;
   let genStrCalls = 0;
-  const genStr = n => `${new Array(n).fill('foo').join(':')}${genStrCalls++}`;
+  const genStr = n => `${Array.from({ length: n }, () => 'foo').join(':')}${genStrCalls++}`;
   const lineHeight = LINE_HEIGHT * FONT_SIZE;
   const measureSvc = jest.fn().mockImplementation(() => [svcMeasurements[measureSvc.mock.calls.length - 1]]);
   const measureOp = jest.fn().mockImplementation(() => [opMeasurements[measureOp.mock.calls.length - 1]]);
@@ -134,7 +134,7 @@ describe('calcPositioning', () => {
         expect(svcMarginTop).toBe(radius - radius * Math.sin(Math.acos(svcWidth / 2 / radius)));
       });
 
-      it('it handles strings without words', () => {
+      it('handles strings without words', () => {
         svcMeasurements = genWidths([3]);
         opMeasurements = genWidths([3]);
         const { opWidth, radius, svcWidth, svcMarginTop } = calcPositioning('::::', '/////');
@@ -150,11 +150,12 @@ describe('calcPositioning', () => {
       it('treats multiple operations as a single word', () => {
         const maxSvcLines = 2;
         const operationCount = 10;
-        svcMeasurements = genWidths(new Array(maxSvcLines).fill(0.5));
-        opMeasurements = genWidths(new Array(operationCount).fill(3));
+        svcMeasurements = genWidths(Array.from({ length: maxSvcLines }, () => 0.5));
+        opMeasurements = genWidths(Array.from({ length: operationCount }, () => 3));
+        const filler = genStr(1);
         const { opWidth, radius, svcWidth, svcMarginTop } = calcPositioning(
           genStr(maxSvcLines),
-          new Array(operationCount).fill(genStr(1))
+          Array.from({ length: operationCount }, () => filler)
         );
         expect(measureSvc).toHaveBeenCalledTimes(maxSvcLines);
         expect(measureOp).toHaveBeenCalledTimes(1);
@@ -235,7 +236,7 @@ describe('calcPositioning', () => {
       const wordCount = xssString.match(WORD_RX)?.length || 1;
       const capturedHtml = [];
       const originalImplementation = measureSvc.getMockImplementation();
-      svcMeasurements = genWidths(new Array(wordCount).fill(1));
+      svcMeasurements = genWidths(Array.from({ length: wordCount }, () => 1));
 
       measureSvc.mockImplementation(() => {
         capturedHtml.push(svcSpan.innerHTML);

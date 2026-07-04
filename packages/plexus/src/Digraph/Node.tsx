@@ -7,7 +7,7 @@ import { TRendererUtils, TLayerType, ELayerType, TRenderNodeFn, TSetProps, TAnyP
 import { assignMergeCss, getProps } from './utils';
 import { TLayoutVertex } from '../types';
 
-export type TProps<T = {}> = {
+type TProps<T = {}> = {
   getClassName: (name: string) => string;
   layerType: TLayerType;
   layoutVertex: TLayoutVertex<T>;

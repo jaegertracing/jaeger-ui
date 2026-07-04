@@ -11,8 +11,6 @@ import EmphasizedNode from '../../common/EmphasizedNode';
 describe('drawNode', () => {
   const operation = 'operationName';
   const service = 'serviceName';
-  const defaultCount = 100;
-
   afterEach(cleanup);
 
   describe('diffNode', () => {
@@ -68,8 +66,8 @@ describe('drawNode', () => {
     const key = 'vertex-key';
     const vertex = {
       data: {
-        a: new Array(lenA),
-        b: new Array(lenB),
+        a: Array.from({ length: lenA }),
+        b: Array.from({ length: lenB }),
         operation,
         service,
       },

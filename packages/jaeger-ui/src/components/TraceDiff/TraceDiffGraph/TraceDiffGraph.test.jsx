@@ -12,18 +12,20 @@ import { fetchedState } from '../../../constants';
 import * as getConfig from '../../../utils/config/get-config';
 import transformTraceData from '../../../model/transform-trace-data';
 
-jest.mock('../../common/UiFindInput', () => ({
-  __esModule: true,
+vi.mock('../../common/UiFindInput', async () => ({
+  ...(await vi.importActual('../../common/UiFindInput')),
   default: props => (
     <div data-testid="ui-find-input" {...props.inputProps}>
       UiFindInput {props.inputProps?.suffix}
     </div>
   ),
-  parseUiFind: jest.requireActual('../../common/UiFindInput').parseUiFind,
-  extractUiFindFromState: jest.requireActual('../../common/UiFindInput').extractUiFindFromState,
 }));
-jest.mock('../../common/ErrorMessage', () => props => <div data-testid="error-message">{props.error}</div>);
-jest.mock('../../common/LoadingIndicator', () => () => <div data-testid="loading-indicator">Loading...</div>);
+vi.mock('../../common/ErrorMessage', async () =>
+  mockDefault(props => <div data-testid="error-message">{props.error}</div>)
+);
+vi.mock('../../common/LoadingIndicator', async () =>
+  mockDefault(() => <div data-testid="loading-indicator">Loading...</div>)
+);
 
 afterEach(cleanup);
 
@@ -57,13 +59,13 @@ describe('TraceDiffGraph', () => {
 
   const baseProps = {
     a: {
-      data: transformTraceData(traceFixtureA),
+      data: transformTraceData(traceFixtureA).asOtelTrace(),
       error: null,
       id: 'trace-id-a',
       state: fetchedState.DONE,
     },
     b: {
-      data: transformTraceData(traceFixtureB),
+      data: transformTraceData(traceFixtureB).asOtelTrace(),
       error: null,
       id: 'trace-id-b',
       state: fetchedState.DONE,
@@ -208,7 +210,7 @@ describe('TraceDiffGraph', () => {
     };
 
     const matchedTrace = {
-      data: transformTraceData(traceWithSpan),
+      data: transformTraceData(traceWithSpan).asOtelTrace(),
       error: null,
       id: 't-id',
       state: fetchedState.DONE,

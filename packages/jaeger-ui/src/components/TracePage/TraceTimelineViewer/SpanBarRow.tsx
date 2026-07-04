@@ -5,7 +5,7 @@ import React, { useCallback } from 'react';
 import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward } from 'react-icons/io5';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
-import { formatDuration, ViewedBoundsFunctionType } from './utils';
+import { formatDurationCompact, ViewedBoundsFunctionType } from './utils';
 import SpanTreeOffset from './SpanTreeOffset';
 import SpanBar from './SpanBar';
 import Ticks from './Ticks';
@@ -13,6 +13,8 @@ import Ticks from './Ticks';
 import { TNil } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan } from '../../../types/otel';
+
+import { getSpanIconComponent } from './span-icons';
 
 import './SpanBarRow.css';
 
@@ -94,13 +96,24 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
     onChildrenToggled(span.spanID);
   }, [onChildrenToggled, span.spanID]);
 
+  const _detailToggleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onDetailToggled(span.spanID);
+      }
+    },
+    [onDetailToggled, span.spanID]
+  );
   const {
     duration,
     hasChildren: isParent,
     name: operationName,
+    attributes,
     resource: { serviceName },
   } = span;
-  const label = formatDuration(duration);
+  const SpanTypeIcon = getSpanIconComponent(attributes);
+  const label = formatDurationCompact(duration);
   const viewBounds = getViewedBounds(span.startTime, span.endTime);
   const viewStart = viewBounds.start;
   const viewEnd = viewBounds.end;
@@ -143,6 +156,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
             className={`span-name ${isDetailExpanded ? 'is-detail-expanded' : ''}`}
             aria-checked={isDetailExpanded}
             onClick={_detailToggle}
+            onKeyDown={_detailToggleKeyDown}
             role="switch"
             style={{ borderColor: color }}
             tabIndex={0}
@@ -150,6 +164,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
             <span
               className={`span-svc-name ${isParent && !isChildrenExpanded ? 'is-children-collapsed' : ''}`}
             >
+              {SpanTypeIcon && <SpanTypeIcon className="SpanBarRow--spanTypeIcon" aria-hidden="true" />}
               {hasOwnError && <IoAlert className="SpanBarRow--errorIcon" />}
               {!hasOwnError && hasChildError && (
                 <IoAlert className="SpanBarRow--errorIcon SpanBarRow--errorIcon--hollow" />

@@ -9,8 +9,7 @@ import { KeyboardKey as EKey } from '../../../constants/keyboard-keys';
 
 import FilteredList from './index';
 
-jest.mock('@tanstack/react-virtual', () => {
-  const React = jest.requireActual('react');
+vi.mock('@tanstack/react-virtual', () => {
   return {
     useVirtualizer: ({ count }) => {
       const items = [];
@@ -31,9 +30,8 @@ jest.mock('@tanstack/react-virtual', () => {
   };
 });
 
-jest.mock('./ListItem', () => {
-  const React = jest.requireActual('react');
-  return ({ index, data }) => {
+vi.mock('./ListItem', () => {
+  return mockDefault(({ index, data }) => {
     const { options, setValue, selectedValue, addValues, removeValues, multi } = data;
     const option = options[index];
     const [isFocused, setIsFocused] = React.useState(false);
@@ -62,7 +60,7 @@ jest.mock('./ListItem', () => {
       },
       option
     );
-  };
+  });
 });
 
 describe('<FilteredList>', () => {

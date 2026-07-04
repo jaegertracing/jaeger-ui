@@ -7,6 +7,7 @@ import { ConfigProvider, theme } from 'antd';
 
 import { DEFAULT_MODE, ThemeMode, getInitialTheme, writeStoredTheme } from './ThemeStorage';
 import { ThemeTokenSync } from './ThemeTokenSync';
+import { useEmbeddedState } from '../../stores/embedded-store';
 
 type ThemeContextValue = {
   mode: ThemeMode;
@@ -107,7 +108,8 @@ const darkTheme: ThemeConfig = {
 };
 
 export default function AppThemeProvider({ children }: ThemeProviderProps) {
-  const [mode, setModeState] = useState<ThemeMode>(() => getInitialTheme());
+  const embeddedState = useEmbeddedState();
+  const [mode, setModeState] = useState<ThemeMode>(() => getInitialTheme(embeddedState?.theme));
 
   const setMode = useCallback((value: ThemeMode) => {
     setModeState(value);
@@ -118,12 +120,11 @@ export default function AppThemeProvider({ children }: ThemeProviderProps) {
   }, []);
 
   useEffect(() => {
-    if (typeof document !== 'undefined') {
-      document.body.dataset.theme = mode;
-    }
-
-    writeStoredTheme(mode);
-  }, [mode]);
+    document.body.dataset.theme = mode;
+    // Don't persist when the host controls the theme — avoid overwriting the
+    // user's standalone preference with an embed-injected value.
+    if (!embeddedState?.theme) writeStoredTheme(mode);
+  }, [mode, embeddedState]);
 
   const value = useMemo(
     () => ({

@@ -3,29 +3,27 @@
 
 import React from 'react';
 import '@testing-library/jest-dom';
-import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import AppThemeProvider, { useThemeMode } from './ThemeProvider';
 import { THEME_STORAGE_KEY } from './ThemeStorage';
 import getConfig from '../../utils/config/get-config';
+import { resetEmbeddedFromUrlCacheForTests } from '../../stores/embedded-store';
 
-jest.mock('../../utils/config/get-config', () => ({
-  __esModule: true,
-  default: jest.fn(),
-}));
+vi.mock('../../utils/config/get-config', () => mockDefault(vi.fn()));
 
 function setupMatchMedia(matches = false) {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
-    value: jest.fn().mockImplementation(query => ({
+    value: vi.fn().mockImplementation(query => ({
       matches,
       media: query,
       onchange: null,
-      addListener: jest.fn(),
-      removeListener: jest.fn(),
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
-      dispatchEvent: jest.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
     })),
   });
 }
@@ -50,7 +48,9 @@ describe('AppThemeProvider', () => {
     window.localStorage.clear();
     delete document.body.dataset.theme;
     setupMatchMedia(false);
-    (getConfig as unknown as jest.Mock).mockReturnValue({ themes: { enabled: true } });
+    (getConfig as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ themes: { enabled: true } });
+    resetEmbeddedFromUrlCacheForTests();
+    window.history.replaceState({}, '', '/');
   });
 
   it('initializes using the stored preference when present', () => {
@@ -78,7 +78,7 @@ describe('AppThemeProvider', () => {
     await waitFor(() => {
       expect(screen.getByTestId('theme-mode')).toHaveTextContent('dark');
       expect(document.body.dataset.theme).toBe('dark');
-      expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe('dark');
+      expect(JSON.parse(window.localStorage.getItem(THEME_STORAGE_KEY)!)).toBe('dark');
     });
   });
 
@@ -96,7 +96,7 @@ describe('AppThemeProvider', () => {
     await waitFor(() => {
       expect(screen.getByTestId('theme-mode')).toHaveTextContent('light');
       expect(document.body.dataset.theme).toBe('light');
-      expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe('light');
+      expect(JSON.parse(window.localStorage.getItem(THEME_STORAGE_KEY)!)).toBe('light');
     });
   });
 
@@ -125,7 +125,7 @@ describe('AppThemeProvider', () => {
   });
 
   it('ignores stored preference when themes are disabled', () => {
-    (getConfig as unknown as jest.Mock).mockReturnValue({ themes: { enabled: false } });
+    (getConfig as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ themes: { enabled: false } });
     window.localStorage.setItem(THEME_STORAGE_KEY, 'dark');
 
     render(
@@ -151,56 +151,12 @@ describe('AppThemeProvider', () => {
     await waitFor(() => {
       expect(screen.getByTestId('theme-mode')).toHaveTextContent('light');
       expect(document.body.dataset.theme).toBe('light');
-      expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe('light');
+      expect(JSON.parse(window.localStorage.getItem(THEME_STORAGE_KEY)!)).toBe('light');
     });
-  });
-
-  it('swallows storage errors when persisting mode changes', async () => {
-    const originalSetItem = window.localStorage.setItem;
-    window.localStorage.setItem = jest.fn(() => {
-      throw new Error('quota exceeded');
-    });
-
-    try {
-      render(
-        <AppThemeProvider>
-          <ThemeConsumer />
-        </AppThemeProvider>
-      );
-
-      const toggleButton = screen.getByRole('button', { name: /toggle theme/i });
-      fireEvent.click(toggleButton);
-
-      await waitFor(() => {
-        expect(screen.getByTestId('theme-mode')).toHaveTextContent('dark');
-        expect(document.body.dataset.theme).toBe('dark');
-      });
-    } finally {
-      window.localStorage.setItem = originalSetItem;
-    }
-  });
-
-  it('ignores errors when reading the stored preference', () => {
-    const originalGetItem = window.localStorage.getItem;
-    window.localStorage.getItem = jest.fn(() => {
-      throw new Error('blocked');
-    });
-
-    try {
-      render(
-        <AppThemeProvider>
-          <ThemeConsumer />
-        </AppThemeProvider>
-      );
-
-      expect(screen.getByTestId('theme-mode')).toHaveTextContent('light');
-    } finally {
-      window.localStorage.getItem = originalGetItem;
-    }
   });
 
   it('provides default context values when the hook is used without a provider', () => {
-    const observer = jest.fn();
+    const observer = vi.fn();
 
     function BareConsumer() {
       const context = useThemeMode();
@@ -224,19 +180,65 @@ describe('AppThemeProvider', () => {
     expect(context.toggleMode()).toBeUndefined();
   });
 
-  it('skips updating document body when document is undefined', () => {
-    const { result } = renderHook(() => useThemeMode(), { wrapper: AppThemeProvider });
+  describe('embedded uiTheme', () => {
+    it('applies dark mode from uiTheme URL param regardless of themes.enabled', () => {
+      (getConfig as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ themes: { enabled: false } });
+      window.history.replaceState({}, '', '/?uiEmbed=v0&uiTheme=dark');
+      resetEmbeddedFromUrlCacheForTests();
 
-    const originalDocument = (global as any).document;
-    delete (global as any).document;
+      render(
+        <AppThemeProvider>
+          <ThemeConsumer />
+        </AppThemeProvider>
+      );
 
-    try {
-      act(() => {
-        result.current.toggleMode();
+      expect(screen.getByTestId('theme-mode')).toHaveTextContent('dark');
+    });
+
+    it('applies dark mode from uiTheme even when localStorage says light', () => {
+      window.localStorage.setItem(THEME_STORAGE_KEY, 'light');
+      window.history.replaceState({}, '', '/?uiEmbed=v0&uiTheme=dark');
+      resetEmbeddedFromUrlCacheForTests();
+
+      render(
+        <AppThemeProvider>
+          <ThemeConsumer />
+        </AppThemeProvider>
+      );
+
+      expect(screen.getByTestId('theme-mode')).toHaveTextContent('dark');
+    });
+
+    it('does not write to localStorage when host controls the theme', async () => {
+      window.history.replaceState({}, '', '/?uiEmbed=v0&uiTheme=dark');
+      resetEmbeddedFromUrlCacheForTests();
+
+      render(
+        <AppThemeProvider>
+          <ThemeConsumer />
+        </AppThemeProvider>
+      );
+
+      await waitFor(() => {
+        expect(document.body.dataset.theme).toBe('dark');
       });
-    } finally {
-      (global as any).document = originalDocument;
-    }
+
+      expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBeNull();
+    });
+
+    it('ignores an invalid uiTheme value and falls back to normal logic', () => {
+      window.history.replaceState({}, '', '/?uiEmbed=v0&uiTheme=sepia');
+      resetEmbeddedFromUrlCacheForTests();
+      window.localStorage.setItem(THEME_STORAGE_KEY, 'dark');
+
+      render(
+        <AppThemeProvider>
+          <ThemeConsumer />
+        </AppThemeProvider>
+      );
+
+      expect(screen.getByTestId('theme-mode')).toHaveTextContent('dark');
+    });
   });
 
   it('correctly calculates and syncs AntD tokens in dark mode', async () => {

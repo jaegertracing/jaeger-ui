@@ -3,9 +3,8 @@
 
 import { ApiError } from './api-error';
 
-export type MetricsType = 'latencies' | 'calls' | 'errors';
-export type AvailableServiceMetrics = 'service_call_rate' | 'service_latencies' | 'service_error_rate';
-export type AvailableOpsMetrics =
+type AvailableServiceMetrics = 'service_call_rate' | 'service_latencies' | 'service_error_rate';
+type AvailableOpsMetrics =
   | 'service_operation_call_rate'
   | 'service_operation_latencies'
   | 'service_operation_error_rate';
@@ -22,7 +21,7 @@ export type MetricsAPIQueryParams = {
   spanKind: spanKinds;
 };
 
-export type LableObject = {
+type LableObject = {
   name: string;
   value: string;
 };
@@ -39,7 +38,7 @@ export type MetricObject = {
   metricPoints: MetricPointObject[];
 };
 
-export type MetricsAPIServiceResponseData<T = AvailableServiceMetrics, U = 0.95> = {
+type MetricsAPIServiceResponseData<T = AvailableServiceMetrics, U = 0.95> = {
   name: T;
   type: 'GAUGE';
   help: string;
@@ -47,7 +46,7 @@ export type MetricsAPIServiceResponseData<T = AvailableServiceMetrics, U = 0.95>
   quantile: U;
 };
 
-export type MetricsAPIOpsResponseData<T = AvailableOpsMetrics> = {
+type MetricsAPIOpsResponseData<T = AvailableOpsMetrics> = {
   name: T;
   type: 'GAUGE';
   help: string;
@@ -60,7 +59,7 @@ export type Points = {
   y: number | null;
 };
 
-export type DataAvg = {
+type DataAvg = {
   service_operation_call_rate: null | number;
   service_operation_error_rate: null | number;
   service_operation_latencies: null | number;
@@ -115,12 +114,12 @@ export type MetricsReduxState = {
   serviceOpsMetrics: ServiceOpsMetrics[] | undefined;
 };
 
-export enum PromiseStatus {
+enum PromiseStatus {
   fulfilled = 'fulfilled',
   rejected = 'rejected',
 }
 
-export type PromiseFulfilledResult<T> = {
+type PromiseFulfilledResult<T> = {
   status: PromiseStatus.fulfilled;
   value: T;
 };

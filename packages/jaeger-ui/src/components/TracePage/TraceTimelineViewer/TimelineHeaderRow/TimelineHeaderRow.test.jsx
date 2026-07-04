@@ -7,7 +7,7 @@ import '@testing-library/jest-dom';
 
 import TimelineHeaderRow from './TimelineHeaderRow';
 
-jest.mock('../TimelineRow', () => {
+vi.mock('../TimelineRow', () => {
   const TimelineRowMock = ({ children, className }) => (
     <div className={className || 'TimelineRow'}>{children}</div>
   );
@@ -17,20 +17,17 @@ jest.mock('../TimelineRow', () => {
     </div>
   );
   return {
-    __esModule: true,
     default: TimelineRowMock,
   };
 });
 
-jest.mock('../../../common/VerticalResizer', () => ({
-  __esModule: true,
+vi.mock('../../../common/VerticalResizer', () => ({
   default: ({ position, min, max }) => (
     <div data-testid="vertical-resizer" data-position={position} data-min={min} data-max={max} />
   ),
 }));
 
-jest.mock('./TimelineViewingLayer', () => ({
-  __esModule: true,
+vi.mock('./TimelineViewingLayer', () => ({
   default: ({ boundsInvalidator, viewRangeTime }) => (
     <div
       data-testid="timeline-viewing-layer"
@@ -40,8 +37,7 @@ jest.mock('./TimelineViewingLayer', () => ({
   ),
 }));
 
-jest.mock('../Ticks', () => ({
-  __esModule: true,
+vi.mock('../Ticks', () => ({
   default: ({ numTicks, startTime, endTime, showLabels }) => (
     <div
       data-testid="ticks"
@@ -53,8 +49,7 @@ jest.mock('../Ticks', () => ({
   ),
 }));
 
-jest.mock('./TimelineCollapser', () => ({
-  __esModule: true,
+vi.mock('./TimelineCollapser', () => ({
   default: () => <div data-testid="timeline-collapser" />,
 }));
 
@@ -178,7 +173,7 @@ describe('<TimelineHeaderRow>', () => {
       expect(screen.queryByTestId('timeline-viewing-layer')).not.toBeInTheDocument();
     });
 
-    it('does not render the VerticalResizer', () => {
+    it('does not render the VerticalResizer when sidePanel is hidden', () => {
       render(<TimelineHeaderRow {...barsHiddenProps} />);
       expect(screen.queryByTestId('vertical-resizer')).not.toBeInTheDocument();
     });
@@ -188,6 +183,23 @@ describe('<TimelineHeaderRow>', () => {
       const cells = container.querySelectorAll('.TimelineRow--cellMock');
       expect(cells).toHaveLength(1);
       expect(cells[0]).toHaveAttribute('data-width', '1');
+    });
+
+    describe('with side panel visible', () => {
+      const treeOnlySidePanelProps = {
+        ...barsHiddenProps,
+        sidePanelVisible: true,
+        sidePanelWidth: 0.3,
+        sidePanelLabel: 'Span Details',
+        resizerMax: 0.8,
+      };
+
+      it('renders the VerticalResizer', () => {
+        render(<TimelineHeaderRow {...treeOnlySidePanelProps} />);
+        const resizer = screen.getByTestId('vertical-resizer');
+        expect(resizer).toBeInTheDocument();
+        expect(resizer).toHaveAttribute('data-max', '0.8');
+      });
     });
   });
 });

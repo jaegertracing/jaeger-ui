@@ -1,33 +1,32 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import * as reactRouterDomCompat from 'react-router-dom';
+import * as ReactRouterDom from 'react-router-dom';
 
 import { ROUTE_PATH, matches, getUrl, getUrlState, sanitizeUrlState } from './url';
 import * as parseQuery from '../../utils/parseQuery';
 
-jest.mock('react-router-dom', () => ({
-  matchPath: jest.fn(),
+vi.mock('react-router-dom', () => ({
+  matchPath: vi.fn(),
 }));
 
 describe('DeepDependencyGraph/url', () => {
   describe('matches', () => {
     const path = 'path argument';
-    let matchPathSpy;
 
-    beforeAll(() => {
-      matchPathSpy = jest.spyOn(reactRouterDomCompat, 'matchPath');
+    beforeEach(() => {
+      ReactRouterDom.matchPath.mockReset();
     });
 
     it('calls matchPath with expected arguments', () => {
       matches(path);
-      expect(matchPathSpy).toHaveBeenLastCalledWith(ROUTE_PATH, path);
+      expect(ReactRouterDom.matchPath).toHaveBeenLastCalledWith(ROUTE_PATH, path);
     });
 
     it("returns truthiness of matchPath's return value", () => {
-      matchPathSpy.mockReturnValueOnce(null);
+      ReactRouterDom.matchPath.mockReturnValueOnce(null);
       expect(matches(path)).toBe(false);
-      matchPathSpy.mockReturnValueOnce({});
+      ReactRouterDom.matchPath.mockReturnValueOnce({});
       expect(matches(path)).toBe(true);
     });
   });
@@ -118,18 +117,18 @@ describe('DeepDependencyGraph/url', () => {
 
     it('handles absent values', () => {
       ['end', 'hash', 'operation', 'service', 'start', 'visEncoding'].forEach(param => {
-        const { [param]: unused, ...rest } = expectedParams;
+        const { [param]: _unused, ...rest } = expectedParams;
 
-        const { [param]: alsoUnused, ...rv } = acceptableParams;
+        const { [param]: _alsoUnused, ...rv } = acceptableParams;
         parseSpy.mockReturnValue(rv);
         expect(getUrlState(getSearch())).toEqual(rest);
       });
     });
 
     it("defaults `density` to 'ppe'", () => {
-      const { density: unused, ...rest } = expectedParams;
+      const { density: _unused, ...rest } = expectedParams;
 
-      const { density: alsoUnused, ...rv } = acceptableParams;
+      const { density: _alsoUnused, ...rv } = acceptableParams;
       parseSpy.mockReturnValue(rv);
       expect(getUrlState(getSearch())).toEqual({ ...rest, density: 'ppe' });
     });

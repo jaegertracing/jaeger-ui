@@ -7,15 +7,7 @@ import { IoChevronDown } from 'react-icons/io5';
 import { Link } from 'react-router-dom';
 import './AltViewOptions.css';
 
-import {
-  trackGanttView,
-  trackGraphView,
-  trackStatisticsView,
-  trackTraceSpansView,
-  trackTraceLogsView,
-  trackJsonView,
-  trackRawJsonView,
-} from './TracePageHeader.track';
+import { trackViewChange, trackJsonView, trackRawJsonView } from './TracePageHeader.track';
 import prefixUrl from '../../../utils/prefix-url';
 import { ETraceViewType } from '../types';
 import { getTargetBlankOrTop } from '../../../utils/config/get-target';
@@ -27,61 +19,32 @@ type Props = {
   viewType: ETraceViewType;
 };
 
-const MENU_ITEMS = [
-  {
-    viewType: ETraceViewType.TraceTimelineViewer,
-    label: 'Trace Timeline',
-  },
-  {
-    viewType: ETraceViewType.TraceGraph,
-    label: 'Trace Graph',
-  },
-  {
-    viewType: ETraceViewType.TraceStatistics,
-    label: 'Trace Statistics',
-  },
-  {
-    viewType: ETraceViewType.TraceSpansView,
-    label: 'Trace Spans Table',
-  },
-  {
-    viewType: ETraceViewType.TraceFlamegraph,
-    label: 'Trace Flamegraph',
-  },
-  {
-    viewType: ETraceViewType.TraceLogs,
-    label: 'Trace Logs',
-  },
+const MENU_ITEMS: { viewType: ETraceViewType; label: string }[] = [
+  { viewType: ETraceViewType.TraceTimelineViewer, label: 'Trace Timeline' },
+  { viewType: ETraceViewType.TraceGraph, label: 'Trace Graph' },
+  { viewType: ETraceViewType.TraceStatistics, label: 'Trace Statistics' },
+  { viewType: ETraceViewType.TraceSpansView, label: 'Trace Spans Table' },
+  { viewType: ETraceViewType.TraceFlamegraph, label: 'Trace Flamegraph' },
+  { viewType: ETraceViewType.TraceLogs, label: 'Trace Logs' },
+  { viewType: ETraceViewType.GenAITimelineViewer, label: 'GenAI View' },
 ];
 
 export default function AltViewOptions(props: Props) {
   const { onTraceViewChange, viewType, traceID, disableJsonView } = props;
 
   const handleSelectView = (item: ETraceViewType) => {
-    if (item === ETraceViewType.TraceTimelineViewer) {
-      trackGanttView();
-    } else if (item === ETraceViewType.TraceGraph) {
-      trackGraphView();
-    } else if (item === ETraceViewType.TraceStatistics) {
-      trackStatisticsView();
-    } else if (item === ETraceViewType.TraceSpansView) {
-      trackTraceSpansView();
-    } else if (item === ETraceViewType.TraceLogs) {
-      trackTraceLogsView();
-    }
+    trackViewChange(item);
     onTraceViewChange(item);
   };
 
-  const dropdownItems = [
-    ...MENU_ITEMS.filter(item => item.viewType !== viewType).map(item => ({
-      key: item.viewType as ETraceViewType | string,
-      label: (
-        <a onClick={() => handleSelectView(item.viewType)} role="button">
-          {item.label}
-        </a>
-      ),
-    })),
-  ];
+  const dropdownItems = MENU_ITEMS.filter(item => item.viewType !== viewType).map(item => ({
+    key: item.viewType as ETraceViewType | string,
+    label: (
+      <a onClick={() => handleSelectView(item.viewType)} role="button">
+        {item.label}
+      </a>
+    ),
+  }));
   if (!disableJsonView) {
     dropdownItems.push(
       {

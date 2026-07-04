@@ -6,11 +6,11 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import TickLabels from './TickLabels';
-import { formatDuration } from '../../../../utils/date';
+import { formatDurationCompact } from '../../../../utils/date';
 
-// Mock the formatDuration function
-jest.mock('../../../../utils/date', () => ({
-  formatDuration: jest.fn(duration => `formatted:${duration}`),
+// Mock the formatDurationCompact function
+vi.mock('../../../../utils/date', () => ({
+  formatDurationCompact: jest.fn(duration => `formatted:${duration}`),
 }));
 
 describe('<TickLabels>', () => {
@@ -20,8 +20,7 @@ describe('<TickLabels>', () => {
   };
 
   beforeEach(() => {
-    // Reset the mock before each test if needed, though it might not be strictly necessary here
-    formatDuration.mockClear();
+    formatDurationCompact.mockClear();
     render(<TickLabels {...defaultProps} />);
   });
 
@@ -31,12 +30,12 @@ describe('<TickLabels>', () => {
   });
 
   it('renders the correct tick labels', () => {
-    expect(formatDuration).toHaveBeenCalledTimes(defaultProps.numTicks + 1);
-    expect(formatDuration).toHaveBeenCalledWith(0); // 0/4 * 5000
-    expect(formatDuration).toHaveBeenCalledWith(1250); // 1/4 * 5000
-    expect(formatDuration).toHaveBeenCalledWith(2500); // 2/4 * 5000
-    expect(formatDuration).toHaveBeenCalledWith(3750); // 3/4 * 5000
-    expect(formatDuration).toHaveBeenCalledWith(5000); // 4/4 * 5000
+    expect(formatDurationCompact).toHaveBeenCalledTimes(defaultProps.numTicks + 1);
+    expect(formatDurationCompact).toHaveBeenCalledWith(0); // 0/4 * 5000
+    expect(formatDurationCompact).toHaveBeenCalledWith(1250); // 1/4 * 5000
+    expect(formatDurationCompact).toHaveBeenCalledWith(2500); // 2/4 * 5000
+    expect(formatDurationCompact).toHaveBeenCalledWith(3750); // 3/4 * 5000
+    expect(formatDurationCompact).toHaveBeenCalledWith(5000); // 4/4 * 5000
 
     expect(screen.getByText('formatted:0')).toBeInTheDocument();
     expect(screen.getByText('formatted:1250')).toBeInTheDocument();

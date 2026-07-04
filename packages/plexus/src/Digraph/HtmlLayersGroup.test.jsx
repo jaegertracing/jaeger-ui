@@ -3,10 +3,17 @@
 
 import React from 'react';
 import { render } from '@testing-library/react';
+import { zoomIdentity } from 'd3-zoom';
 import HtmlLayersGroup from './HtmlLayersGroup';
 
 describe('HtmlLayersGroup', () => {
-  const mockGraphState = { edges: [], vertices: [], layoutEdges: [], layoutVertices: [] };
+  const mockGraphState = {
+    edges: [],
+    vertices: [],
+    layoutEdges: [],
+    layoutVertices: [],
+    zoomTransform: zoomIdentity,
+  };
   const mockGetClassName = name => `mock-${name}`;
   const mockSetSizeVertices = jest.fn();
 

@@ -1,25 +1,50 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-jest.mock('./calc-positioning', () => () => ({
-  radius: 50,
-  svcWidth: 20,
-  opWidth: 30,
-  svcMarginTop: 10,
+vi.mock('./calc-positioning', async () =>
+  mockDefault(() => ({
+    radius: 50,
+    svcWidth: 20,
+    opWidth: 30,
+    svcMarginTop: 10,
+  }))
+);
+vi.mock('antd', () => ({
+  Checkbox: ({ checked, className, indeterminate }) => (
+    <input
+      checked={checked}
+      className={className}
+      data-indeterminate={indeterminate}
+      readOnly
+      type="checkbox"
+    />
+  ),
+  Popover: ({ children, content }) => (
+    <>
+      {children}
+      {content}
+    </>
+  ),
 }));
 
 // Mutable object so individual tests can control the location without re-creating the mock.
 const mockLocation = { search: '' };
 
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+vi.mock('../../../../model/path-agnostic-decorations', () => mockDefault(jest.fn(() => ({}))));
+vi.mock('react-router-dom', () => ({
   useLocation: () => mockLocation,
 }));
-
-jest.mock('../../../../model/path-agnostic-decorations', () => ({
-  __esModule: true,
-  default: jest.fn(() => ({})),
-}));
+vi.mock('../../../common/FilteredList', () =>
+  mockDefault(({ options, setValue }) => (
+    <div>
+      {options.map(option => (
+        <button key={option} type="button" onClick={() => setValue(option)}>
+          {option}
+        </button>
+      ))}
+    </div>
+  ))
+);
 
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -367,46 +392,12 @@ describe('<DdgNodeContent>', () => {
       expect(tooltip).not.toBeInTheDocument();
     });
 
-    it('handles case when node ref is not available', () => {
-      const instance = new DdgNodeContent(props);
-      instance.nodeRef = { current: null };
+    it('does not check position before the node is hovered', () => {
       mockQuerySelector.mockClear();
 
-      expect(() => {
-        instance.checkTooltipPosition();
-      }).not.toThrow();
+      render(<DdgNodeContent {...props} />);
 
       expect(mockQuerySelector).not.toHaveBeenCalled();
-    });
-
-    it('does not update state when tooltip position has not changed', () => {
-      const instance = new DdgNodeContent(props);
-      instance.nodeRef = {
-        current: {
-          getBoundingClientRect: () => ({
-            top: 100,
-            bottom: 200,
-            left: 50,
-            right: 150,
-            width: 100,
-            height: 100,
-          }),
-        },
-      };
-
-      // set initial state directly (not using setState on unmounted component)
-      instance.state = { shouldPositionTooltipBelow: true };
-
-      // Spy on setState
-      const setStateSpy = jest.spyOn(instance, 'setState');
-
-      // call checkTooltipPosition with same conditions that would result in true
-      instance.checkTooltipPosition();
-
-      // setState should not be called since position hasn't changed (still true)
-      expect(setStateSpy).not.toHaveBeenCalled();
-
-      setStateSpy.mockRestore();
     });
 
     it('does not check position when already determined on subsequent hovers', () => {
@@ -537,9 +528,10 @@ describe('<DdgNodeContent>', () => {
 
     describe('setOperation', () => {
       it('calls setOperation with the provided operation and tracks the event', () => {
-        const instance = new DdgNodeContent(props);
         const newOperation = 'op1';
-        instance.setOperation(newOperation);
+        render(<DdgNodeContent {...props} operation={operationArray} />);
+
+        fireEvent.click(screen.getByText(newOperation));
 
         expect(props.setOperation).toHaveBeenCalledWith(newOperation);
         expect(track.trackVertexSetOperation).toHaveBeenCalled();
@@ -548,8 +540,14 @@ describe('<DdgNodeContent>', () => {
 
     describe('updateChildren', () => {
       it('calls updateGenerationVisibility with vertexKey and Downstream direction', () => {
-        const instance = new DdgNodeContent(props);
-        instance.updateChildren();
+        props.getGenerationVisibility.mockImplementation((_key, direction) =>
+          direction === EDirection.Downstream ? ECheckedStatus.Full : null
+        );
+        const { container } = render(<DdgNodeContent {...props} />);
+        const nodeContent = container.querySelector('.DdgNodeContent');
+
+        fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
+        fireEvent.click(screen.getByText('View Children'));
 
         expect(props.updateGenerationVisibility).toHaveBeenCalledWith(vertexKey, EDirection.Downstream);
       });
@@ -557,8 +555,14 @@ describe('<DdgNodeContent>', () => {
 
     describe('updateParents', () => {
       it('calls updateGenerationVisibility with vertexKey and Upstream direction', () => {
-        const instance = new DdgNodeContent(props);
-        instance.updateParents();
+        props.getGenerationVisibility.mockImplementation((_key, direction) =>
+          direction === EDirection.Upstream ? ECheckedStatus.Full : null
+        );
+        const { container } = render(<DdgNodeContent {...props} />);
+        const nodeContent = container.querySelector('.DdgNodeContent');
+
+        fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
+        fireEvent.click(screen.getByText('View Parents'));
 
         expect(props.updateGenerationVisibility).toHaveBeenCalledWith(vertexKey, EDirection.Upstream);
       });

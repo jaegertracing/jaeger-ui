@@ -11,19 +11,47 @@ import DetailState from '../SpanDetail/DetailState';
 import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
 
-jest.mock('../SpanDetail', () =>
-  jest.fn(({ span, focusSpan, linksGetter }) => {
-    linksGetter([], 0);
-    return (
-      <div data-testid="span-detail-mock" data-span-id={span.spanID}>
-        <button data-testid="focus-span-button" type="button" onClick={() => focusSpan('test-find')} />
-      </div>
-    );
-  })
+vi.mock('../SpanDetail', () =>
+  mockDefault(
+    jest.fn(({ span, focusSpan, linksGetter }) => {
+      linksGetter([], 0);
+      return (
+        <div data-testid="span-detail-mock" data-span-id={span.spanID}>
+          <button data-testid="focus-span-button" type="button" onClick={() => focusSpan('test-find')} />
+        </div>
+      );
+    })
+  )
 );
 
-jest.mock('../../../../model/link-patterns', () => jest.fn(() => []));
-jest.mock('../../../../utils/update-ui-find', () => jest.fn());
+vi.mock('../../../../model/link-patterns', () => mockDefault(jest.fn(() => [])));
+vi.mock('../../../../utils/update-ui-find');
+
+const mockZustandState = vi.hoisted(() => ({
+  detailStates: new Map(),
+  detailLogItemToggle: jest.fn(),
+  detailLogsToggle: jest.fn(),
+  detailProcessToggle: jest.fn(),
+  detailReferencesToggle: jest.fn(),
+  detailTagsToggle: jest.fn(),
+  detailWarningsToggle: jest.fn(),
+  focusUiFindMatches: jest.fn(),
+}));
+
+vi.mock('../store', async importOriginal => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    useTraceTimelineStore: selector => selector(mockZustandState),
+    getSelectedSpanID: detailStatesArg =>
+      detailStatesArg.size > 0 ? detailStatesArg.keys().next().value : null,
+  };
+});
+
+const mockDispatch = vi.hoisted(() => jest.fn());
+vi.mock('react-redux', () => ({
+  useDispatch: () => mockDispatch,
+}));
 
 describe('<SpanDetailSidePanelImpl>', () => {
   let trace;
@@ -35,17 +63,13 @@ describe('<SpanDetailSidePanelImpl>', () => {
       trace,
       currentViewRangeTime: [0, 1],
       useOtelTerms: false,
-      detailStates: new Map(),
-      detailLogItemToggle: jest.fn(),
-      detailLogsToggle: jest.fn(),
-      detailProcessToggle: jest.fn(),
-      detailReferencesToggle: jest.fn(),
-      detailTagsToggle: jest.fn(),
-      detailWarningsToggle: jest.fn(),
-      focusUiFindMatches: jest.fn(),
       location: { pathname: '/', search: '', hash: '', state: undefined },
-      history: { push: jest.fn() },
+      navigate: jest.fn(),
     };
+    // reset Zustand mock state
+    mockZustandState.detailStates = new Map();
+    mockDispatch.mockReset();
+    Object.values(mockZustandState).forEach(v => typeof v === 'function' && v.mockReset?.());
   });
 
   it('renders without crashing', () => {
@@ -60,27 +84,28 @@ describe('<SpanDetailSidePanelImpl>', () => {
 
   it('shows the explicitly selected span when detailStates has an entry', () => {
     const secondSpan = trace.spans[1];
-    const detailStates = new Map([[secondSpan.spanID, new DetailState()]]);
-    render(<SpanDetailSidePanelImpl {...baseProps} detailStates={detailStates} />);
+    mockZustandState.detailStates = new Map([[secondSpan.spanID, new DetailState()]]);
+    render(<SpanDetailSidePanelImpl {...baseProps} />);
     expect(screen.getByTestId('span-detail-mock').dataset.spanId).toBe(secondSpan.spanID);
   });
 
   it('returns null when trace has no spans', () => {
-    const emptyTrace = { ...trace, spans: [], spanMap: new Map() };
+    const emptyTrace = { ...trace, spans: [], spanMap: new Map(), rootSpans: [] };
     const { container } = render(<SpanDetailSidePanelImpl {...baseProps} trace={emptyTrace} />);
     expect(container.firstChild).toBeNull();
   });
 
   it('returns null when detailStates references an unknown spanID', () => {
-    const detailStates = new Map([['unknown-span-id', new DetailState()]]);
-    const { container } = render(<SpanDetailSidePanelImpl {...baseProps} detailStates={detailStates} />);
+    mockZustandState.detailStates = new Map([['unknown-span-id', new DetailState()]]);
+    const { container } = render(<SpanDetailSidePanelImpl {...baseProps} />);
     expect(container.firstChild).toBeNull();
   });
 
-  it('calls focusUiFindMatches with the uiFind string when focusSpan is invoked', () => {
+  it('dual-writes focusUiFindMatches when focusSpan is invoked', () => {
     render(<SpanDetailSidePanelImpl {...baseProps} />);
     fireEvent.click(screen.getByTestId('focus-span-button'));
-    expect(baseProps.focusUiFindMatches).toHaveBeenCalledWith(baseProps.trace, 'test-find', false);
+    expect(mockDispatch).toHaveBeenCalled();
+    expect(mockZustandState.focusUiFindMatches).toHaveBeenCalledWith(baseProps.trace, 'test-find', false);
   });
 
   it('passes eventsInitialVisibleCount={10} to SpanDetail', () => {

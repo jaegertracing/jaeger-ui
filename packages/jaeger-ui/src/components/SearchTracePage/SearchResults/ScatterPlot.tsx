@@ -16,20 +16,17 @@ import {
 } from 'recharts';
 
 import { FALLBACK_TRACE_NAME } from '../../../constants';
-import { ONE_MILLISECOND, formatDuration } from '../../../utils/date';
+import { ONE_MILLISECOND, formatDurationCompact } from '../../../utils/date';
 
 import './ScatterPlot.css';
 
-export type TScatterPlotPoint = {
+type TScatterPlotPoint = {
   x: number;
   y: number;
   traceID: string;
-  size: number;
+  spanCount: number;
+  serviceCount: number;
   name?: string;
-  services?: ReadonlyArray<{
-    name: string;
-    numberOfSpans: number;
-  }>;
   color?: string;
 };
 
@@ -50,17 +47,15 @@ export const CustomTooltip = ({
 }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
-    const numServices = data.services ? data.services.length : 0;
-
     return (
       <div className="scatter-plot-hint">
         <h4>{data.name || FALLBACK_TRACE_NAME}</h4>
         <div className="scatter-plot-hint-stats">
           <div>
-            <strong>Spans:</strong> {data.size}
+            <strong>Spans:</strong> {data.spanCount}
           </div>
           <div>
-            <strong>Services:</strong> {numServices}
+            <strong>Services:</strong> {data.serviceCount}
           </div>
         </div>
       </div>
@@ -69,17 +64,7 @@ export const CustomTooltip = ({
   return null;
 };
 
-export const RenderDot = ({
-  cx,
-  cy,
-  fill,
-  size,
-}: {
-  cx?: number;
-  cy?: number;
-  fill?: string;
-  size?: number;
-}) => {
+const RenderDot = ({ cx, cy, fill, size }: { cx?: number; cy?: number; fill?: string; size?: number }) => {
   const maxSize = Math.min(300, size || 0);
   return (
     <Dot cx={cx} cy={cy} fill={fill} fillOpacity={0.5} r={maxSize * 0.035} style={{ cursor: 'pointer' }} />
@@ -174,7 +159,7 @@ export default function ScatterPlot({
               type="number"
               dataKey="y"
               name="Duration"
-              tickFormatter={t => formatDuration(t)}
+              tickFormatter={t => formatDurationCompact(t)}
               tick={{ fontSize: 11, dx: -5 }}
               axisLine={{ stroke: '#e6e6e9', strokeWidth: 2 }}
               tickLine={{ stroke: '#e6e6e9', strokeWidth: 1 }}
@@ -191,7 +176,7 @@ export default function ScatterPlot({
                 angle={-90}
               />
             </YAxis>
-            <ZAxis dataKey="size" type="number" range={[1, 300]} />
+            <ZAxis dataKey="spanCount" type="number" range={[1, 300]} />
             <Tooltip content={<CustomTooltip />} cursor={false} isAnimationActive={false} />
             <Scatter
               data={data.map(point => {

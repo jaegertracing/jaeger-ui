@@ -1,7 +1,16 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import queryString from 'query-string';
+// vi.spyOn cannot patch ESM named exports; mock the whole module instead.
+// vi.hoisted ensures mock functions are available when the factory runs.
+const { parseMock, stringifyMock } = vi.hoisted(() => ({
+  parseMock: vi.fn(),
+  stringifyMock: vi.fn(),
+}));
+
+vi.mock('query-string', () => ({
+  default: { parse: parseMock, stringify: stringifyMock },
+}));
 
 import updateUiFind from './update-ui-find';
 
@@ -10,30 +19,30 @@ describe('updateUiFind', () => {
   const newUiFind = 'newUiFind';
   const unrelatedQueryParamName = 'unrelatedQueryParamName';
   const unrelatedQueryParamValue = 'unrelatedQueryParamValue';
+  const queryStringStringifySpyMockReturnValue = 'queryStringStringifySpyMockReturnValue';
 
   const navigate = jest.fn();
-  const queryStringParseSpy = jest.spyOn(queryString, 'parse').mockReturnValue({
-    uiFind: existingUiFind,
-    [unrelatedQueryParamName]: unrelatedQueryParamValue,
-  });
-  const queryStringStringifySpyMockReturnValue = 'queryStringStringifySpyMockReturnValue';
-  const queryStringStringifySpy = jest
-    .spyOn(queryString, 'stringify')
-    .mockReturnValue(queryStringStringifySpyMockReturnValue);
 
   const location = {
     pathname: '/trace/traceID',
     search: 'location.search',
+    state: { fromSearch: '/search?service=foo' },
   };
   const expectedNavigateArg = {
     pathname: location.pathname,
     search: `?${queryStringStringifySpyMockReturnValue}`,
   };
+  const expectedNavigateOptions = { replace: true, state: location.state };
 
   beforeEach(() => {
     navigate.mockReset();
-    queryStringParseSpy.mockClear();
-    queryStringStringifySpy.mockClear();
+    parseMock.mockClear();
+    stringifyMock.mockClear();
+    parseMock.mockReturnValue({
+      uiFind: existingUiFind,
+      [unrelatedQueryParamName]: unrelatedQueryParamValue,
+    });
+    stringifyMock.mockReturnValue(queryStringStringifySpyMockReturnValue);
   });
 
   it('adds truthy graphSearch to existing params', () => {
@@ -42,12 +51,12 @@ describe('updateUiFind', () => {
       location,
       uiFind: newUiFind,
     });
-    expect(queryStringParseSpy).toHaveBeenCalledWith(location.search);
-    expect(queryStringStringifySpy).toHaveBeenCalledWith({
+    expect(parseMock).toHaveBeenCalledWith(location.search);
+    expect(stringifyMock).toHaveBeenCalledWith({
       uiFind: newUiFind,
       [unrelatedQueryParamName]: unrelatedQueryParamValue,
     });
-    expect(navigate).toHaveBeenCalledWith(expectedNavigateArg, { replace: true });
+    expect(navigate).toHaveBeenCalledWith(expectedNavigateArg, expectedNavigateOptions);
   });
 
   it('omits falsy graphSearch from query params', () => {
@@ -56,11 +65,11 @@ describe('updateUiFind', () => {
       location,
       uiFind: '',
     });
-    expect(queryStringParseSpy).toHaveBeenCalledWith(location.search);
-    expect(queryStringStringifySpy).toHaveBeenCalledWith({
+    expect(parseMock).toHaveBeenCalledWith(location.search);
+    expect(stringifyMock).toHaveBeenCalledWith({
       [unrelatedQueryParamName]: unrelatedQueryParamValue,
     });
-    expect(navigate).toHaveBeenCalledWith(expectedNavigateArg, { replace: true });
+    expect(navigate).toHaveBeenCalledWith(expectedNavigateArg, expectedNavigateOptions);
   });
 
   it('omits absent graphSearch from query params', () => {
@@ -68,11 +77,11 @@ describe('updateUiFind', () => {
       navigate,
       location,
     });
-    expect(queryStringParseSpy).toHaveBeenCalledWith(location.search);
-    expect(queryStringStringifySpy).toHaveBeenCalledWith({
+    expect(parseMock).toHaveBeenCalledWith(location.search);
+    expect(stringifyMock).toHaveBeenCalledWith({
       [unrelatedQueryParamName]: unrelatedQueryParamValue,
     });
-    expect(navigate).toHaveBeenCalledWith(expectedNavigateArg, { replace: true });
+    expect(navigate).toHaveBeenCalledWith(expectedNavigateArg, expectedNavigateOptions);
   });
 
   describe('trackFindFunction provided', () => {

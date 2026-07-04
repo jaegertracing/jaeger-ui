@@ -27,8 +27,7 @@ const LinkValue = (props: {
   </a>
 );
 
-// export for testing
-export const linkValueList = (links: Hyperlink[]) => {
+const linkValueList = (links: Hyperlink[]) => {
   const dropdownItems = links.map(({ text, url }, index) => ({
     label: (
       <LinkValue href={url} title={text}>

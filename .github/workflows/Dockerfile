@@ -1,4 +1,4 @@
-FROM node:24.14.0
+FROM node:24.18.0
 
 WORKDIR /workspace
 

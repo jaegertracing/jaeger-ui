@@ -4,12 +4,50 @@
   "labels": ["changelog:dependencies"],
   "suppressNotifications": ["prEditedNotification"],
   "schedule": ["on sunday"],
+  "minimumReleaseAge": "7 days",
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["security"],
+    "minimumReleaseAge": "0 days"
+  },
   "packageRules": [
+    {
+      "groupName": "rolldown",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["rolldown", "/^@rolldown//"],
+      "description": "rolldown ships one package per platform binding (@rolldown/binding-*); group them all into a single PR so they bump in lockstep"
+    },
+    {
+      "groupName": "assistant-ui and ag-ui",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["/^@assistant-ui//", "/^@ag-ui//"],
+      "rangeStrategy": "pin",
+      "description": "@assistant-ui/* and @ag-ui/* share peer types (AssistantRuntime, HttpAgent); bumping them independently produces duplicate copies in node_modules and tsc errors. Pin exact versions (no ^) so npm dedupes a single copy."
+    },
+    {
+      "groupName": "opentelemetry",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["/^@opentelemetry//"],
+      "description": "@opentelemetry/* packages share internal type contracts and version-locked peer deps; bump them together to avoid mismatches"
+    },
+    {
+      "groupName": "emnapi",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["/^@emnapi//"],
+      "description": "@emnapi/* packages are platform bindings that must stay in lockstep"
+    },
     {
       "groupName": "do not apply patch upgrades to dependencies",
       "matchManagers": ["npm"],
       "matchUpdateTypes": ["patch", "digest"],
       "enabled": false
+    },
+    {
+      "groupName": "vite-plus and bundled vitest",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["vite-plus", "vitest", "@vitest/coverage-v8"],
+      "enabled": true,
+      "description": "vite-plus bundles a specific vitest version internally; these must be bumped together to avoid peer-dependency version mismatches. Placed after the patch-disable rule so patch bumps are still included."
     },
     {
       "matchManagers": ["github-actions"],

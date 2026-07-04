@@ -3,6 +3,7 @@ updates:
   - package-ecosystem: docker
     schedule:
       interval: 'monthly'
+    labels: ['changelog:dependencies']
     directories:
       - /.github/workflows/Dockerfile
 

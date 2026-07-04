@@ -18,7 +18,7 @@ const fetchDecoration = memoize(10)((url: string) => JaegerAPI.fetchDecoration(u
 
 export const actionTypes = generateActionTypes('@jaeger-ui/PATH_AGNOSTIC_DECORATIONS', ['GET_DECORATION']);
 
-export const getDecorationSchema = _memoize((id: string): TPathAgnosticDecorationSchema | undefined => {
+const getDecorationSchema = _memoize((id: string): TPathAgnosticDecorationSchema | undefined => {
   const schemas = getConfig().pathAgnosticDecorations;
   if (!schemas) return undefined;
   return schemas.find(s => s.id === id);

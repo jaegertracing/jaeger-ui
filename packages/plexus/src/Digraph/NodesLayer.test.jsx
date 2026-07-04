@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { render } from '@testing-library/react';
+import { zoomIdentity } from 'd3-zoom';
 import NodesLayer from './NodesLayer';
 import { ELayerType } from './types';
 
@@ -63,6 +64,7 @@ describe('NodesLayer', () => {
     renderUtils: {
       getGlobalId: id => `global-${id}`,
     },
+    zoomTransform: zoomIdentity,
   });
 
   const mockRenderNode = () => <circle />;

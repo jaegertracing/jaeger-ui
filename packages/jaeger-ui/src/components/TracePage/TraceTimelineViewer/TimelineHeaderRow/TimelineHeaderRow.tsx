@@ -10,6 +10,7 @@ import Ticks from '../Ticks';
 import TimelineRow from '../TimelineRow';
 import { TUpdateViewRangeTimeFunction, IViewRangeTime, ViewRangeTimeUpdate } from '../../types';
 import { IOtelSpan } from '../../../../types/otel';
+import { SPAN_NAME_COLUMN_WIDTH_MIN } from '../store.constants';
 
 import './TimelineHeaderRow.css';
 
@@ -27,6 +28,7 @@ type TimelineHeaderRowProps = {
   onExpandAll: () => void;
   onExpandOne: () => void;
   resizerMax: number;
+  serviceFilterNode?: React.ReactNode;
   sidePanelVisible: boolean;
   sidePanelWidth: number;
   sidePanelLabel: string;
@@ -48,6 +50,7 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
     onExpandAll,
     onExpandOne,
     resizerMax,
+    serviceFilterNode,
     sidePanelVisible,
     sidePanelWidth,
     sidePanelLabel,
@@ -66,6 +69,7 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
         <h3 className="TimelineHeaderRow--title">
           Service &amp; {props.useOtelTerms ? 'Span Name' : 'Operation'}
         </h3>
+        {serviceFilterNode}
         <TimelineCollapser
           onCollapseAll={onCollapseAll}
           onExpandAll={onExpandAll}
@@ -74,23 +78,23 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
         />
       </TimelineRow.Cell>
       {timelineBarsVisible && (
-        <>
-          <TimelineRow.Cell width={timelineColumnWidth}>
-            <TimelineViewingLayer
-              boundsInvalidator={nameColumnWidth}
-              updateNextViewRangeTime={updateNextViewRangeTime}
-              updateViewRangeTime={updateViewRangeTime}
-              viewRangeTime={viewRangeTime}
-            />
-            <Ticks numTicks={numTicks} startTime={startTime} endTime={endTime} showLabels />
-          </TimelineRow.Cell>
-          <VerticalResizer
-            position={nameColumnWidth}
-            onChange={onColummWidthChange}
-            min={0.15}
-            max={resizerMax}
+        <TimelineRow.Cell width={timelineColumnWidth}>
+          <TimelineViewingLayer
+            boundsInvalidator={nameColumnWidth}
+            updateNextViewRangeTime={updateNextViewRangeTime}
+            updateViewRangeTime={updateViewRangeTime}
+            viewRangeTime={viewRangeTime}
           />
-        </>
+          <Ticks numTicks={numTicks} startTime={startTime} endTime={endTime} showLabels />
+        </TimelineRow.Cell>
+      )}
+      {(timelineBarsVisible || sidePanelVisible) && (
+        <VerticalResizer
+          position={nameColumnWidth}
+          onChange={onColummWidthChange}
+          min={SPAN_NAME_COLUMN_WIDTH_MIN}
+          max={resizerMax}
+        />
       )}
       {sidePanelVisible && (
         <TimelineRow.Cell className="ub-flex ub-px2 TimelineHeaderRow--sidePanelCell" width={sidePanelWidth}>

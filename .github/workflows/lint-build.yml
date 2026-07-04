@@ -19,32 +19,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
-        with:
-          cache: npm
-          node-version-file: 'package.json'
-      - name: Upgrade npm
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: ./.github/actions/setup-node-and-deps
+      - name: Verify lockfile is in sync
         run: |
-          NPM_VERSION=$(node -p "require('./package.json').engines.npm.replace(/[^0-9.]/g, '')")
-          npm install -g npm@$NPM_VERSION
-      - run: npm --version
-      - run: npm ci
+          npm install --package-lock-only --ignore-scripts
+          git diff --exit-code package-lock.json || (echo '❌ package-lock.json is out of sync with the pinned npm version. Run "corepack enable npm && npm install" locally and commit the result.' && exit 1)
+      - run: npm ls --all
       - name: Run depcheck
         run: npm run depcheck
       - run: npm run lint
       - run: npm run build
+      - name: Verify dev server starts without errors
+        run: npm run dev:check
       - name: Ensure PR is not on main branch
         uses: jaegertracing/jaeger/.github/actions/block-pr-from-main-branch@main
 
   validate-3rd-party-configs:
     runs-on: ubuntu-latest
     steps:
-      - uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
+      - uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           submodules: false
 

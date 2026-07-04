@@ -9,8 +9,8 @@ import userEvent from '@testing-library/user-event';
 import TraceDiffHeader from './TraceDiffHeader';
 import { fetchedState } from '../../../constants';
 
-jest.mock('./CohortTable', () => {
-  return function MockCohortTable({ selectTrace }) {
+vi.mock('./CohortTable', () => {
+  return mockDefault(function MockCohortTable({ selectTrace }) {
     return (
       <div data-testid="cohort-table">
         <button type="button" onClick={() => selectTrace('test-id')}>
@@ -18,13 +18,13 @@ jest.mock('./CohortTable', () => {
         </button>
       </div>
     );
-  };
+  });
 });
 
-jest.mock('./TraceHeader', () => () => <div data-testid="trace-header">TraceHeader</div>);
+vi.mock('./TraceHeader', () => mockDefault(() => <div data-testid="trace-header">TraceHeader</div>));
 
-jest.mock('./TraceIdInput', () => {
-  return function MockTraceIdInput({ selectTrace }) {
+vi.mock('./TraceIdInput', () => {
+  return mockDefault(function MockTraceIdInput({ selectTrace }) {
     return (
       <div data-testid="trace-id-input">
         <button type="button" onClick={() => selectTrace('test-id')}>
@@ -32,7 +32,7 @@ jest.mock('./TraceIdInput', () => {
         </button>
       </div>
     );
-  };
+  });
 });
 
 describe('TraceDiffHeader', () => {
@@ -93,9 +93,14 @@ describe('TraceDiffHeader', () => {
   });
 
   const getVisibleTables = () =>
-    screen
-      .queryAllByTestId('cohort-table')
-      .filter(el => !el.closest('.TraceDiffHeader--popover')?.classList.contains('ant-popover-hidden'));
+    screen.queryAllByTestId('cohort-table').filter(el => {
+      const popover = el.closest('.TraceDiffHeader--popover');
+      if (!popover) return false;
+      // Ant Design v6 uses animation classes; a popover is "leaving" (hidden) when it has ant-zoom-big-leave
+      return (
+        !popover.classList.contains('ant-popover-hidden') && !popover.classList.contains('ant-zoom-big-leave')
+      );
+    });
 
   it('renders as expected', () => {
     render(<TraceDiffHeader {...props} />);

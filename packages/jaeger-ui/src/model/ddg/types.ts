@@ -7,6 +7,8 @@ import PathElem from './PathElem';
 
 export { default as PathElem } from './PathElem';
 
+import type { KeyValuePair } from '../../types/trace';
+
 export enum EViewModifier {
   None,
   Hovered,
@@ -41,18 +43,14 @@ export type TDdgPayloadEntry = {
 
 export type TDdgPayloadPath = {
   path: TDdgPayloadEntry[];
-  // TODO: Everett Tech Debt: Fix KeyValuePair types
-  attributes: {
-    key: 'exemplar_trace_id';
-    value: string;
-  }[];
+  attributes: (KeyValuePair & { key: 'exemplar_trace_id'; value: string })[];
 };
 
 export type TDdgPayload = {
   dependencies: TDdgPayloadPath[];
 };
 
-export type TDdgService = {
+type TDdgService = {
   name: string;
   operations: Map<string, TDdgOperation>;
 };
@@ -107,21 +105,17 @@ export type TDdgModelParams = {
   end: number;
 };
 
-export type TDdgActionMeta = {
-  query: TDdgModelParams;
-};
-
 export type TDdgAddViewModifierPayload = TDdgModelParams & {
   // Number instead of EViewModifier so that multiple views can be changed at once.
   viewModifier: number;
   visibilityIndices: number[];
 };
 
-export type TDdgClearViewModifiersFromIndicesPayload = TDdgAddViewModifierPayload & { viewModifier?: void };
+type TDdgClearViewModifiersFromIndicesPayload = TDdgAddViewModifierPayload & { viewModifier?: void };
 
 export type TDdgRemoveViewModifierFromIndicesPayload = TDdgAddViewModifierPayload;
 
-export type TDdgRemoveViewModifierPayload = TDdgAddViewModifierPayload & { visibilityIndices?: void };
+type TDdgRemoveViewModifierPayload = TDdgAddViewModifierPayload & { visibilityIndices?: void };
 
 export type TDdgViewModifierRemovalPayload =
   | TDdgClearViewModifiersFromIndicesPayload

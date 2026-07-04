@@ -18,8 +18,7 @@ const queryClient = new QueryClient({
 
 const mockNavigate = jest.fn();
 const mockLocation = { search: '?service=test-service&lookback=48' };
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+vi.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
   useLocation: () => mockLocation,
 }));
@@ -30,7 +29,7 @@ const headerMock = {
   setLookback: null,
 };
 
-jest.mock('./Header', () => {
+vi.mock('./Header', async () => {
   const mockHeader = jest.fn(props => {
     mockHeader.mockProps = props;
     headerMock.props = props;
@@ -38,47 +37,45 @@ jest.mock('./Header', () => {
     headerMock.setLookback = props.setLookback;
     return <div data-testid="header">Header Component</div>;
   });
-  return mockHeader;
+  return mockDefault(mockHeader);
 });
 
-jest.mock('../common/LoadingIndicator', () => {
-  return function MockLoadingIndicator() {
+vi.mock('../common/LoadingIndicator', async () => {
+  return mockDefault(function MockLoadingIndicator() {
     return <div data-testid="loading-indicator">Loading...</div>;
-  };
+  });
 });
 
-jest.mock('./BannerText', () => {
-  return function MockBannerText({ bannerText }) {
+vi.mock('./BannerText', async () => {
+  return mockDefault(function MockBannerText({ bannerText }) {
     return <div data-testid="banner-text">{bannerText}</div>;
-  };
+  });
 });
 
-jest.mock('./ScoreCard', () => {
-  return function MockScoreCard({ score }) {
+vi.mock('./ScoreCard', async () => {
+  return mockDefault(function MockScoreCard({ score }) {
     return (
       <div data-testid="score-card" data-key={score.key}>
         {score.key}
       </div>
     );
-  };
+  });
 });
 
-jest.mock('./MetricCard', () => {
-  return function MockMetricCard({ metric }) {
+vi.mock('./MetricCard', async () => {
+  return mockDefault(function MockMetricCard({ metric }) {
     return (
       <div data-testid="metric-card" data-name={metric.name}>
         {metric.name}
       </div>
     );
-  };
+  });
 });
 
-jest.mock(
-  '../common/ExamplesLink',
-  () =>
-    function MockExamplesLink() {
-      return <div>ExamplesLink Component</div>;
-    }
+vi.mock('../common/ExamplesLink', async () =>
+  mockDefault(function MockExamplesLink() {
+    return <div>ExamplesLink Component</div>;
+  })
 );
 
 describe('QualityMetrics', () => {
@@ -224,7 +221,7 @@ describe('QualityMetrics', () => {
           rej(error);
           try {
             await promise;
-          } catch (e) {
+          } catch {
             // intentionally left blank
           }
         });
@@ -318,6 +315,7 @@ describe('QualityMetrics', () => {
         );
 
         headerMock.setLookback('test-service');
+        expect(mockNavigate).not.toHaveBeenCalled();
       });
 
       it('ignores less than one lookback', () => {
@@ -382,7 +380,7 @@ describe('QualityMetrics', () => {
           rej({ message });
           try {
             await promise;
-          } catch (e) {
+          } catch {
             // intentionally left blank
           }
         });

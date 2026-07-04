@@ -16,9 +16,4 @@ export type TDdgStateEntry =
   | {
       model: TDdgModel;
       state: typeof fetchedState.DONE;
-      viewModifiers: Map<number, number>;
     };
-
-type TDdgState = Record<string, TDdgStateEntry>;
-
-export default TDdgState;

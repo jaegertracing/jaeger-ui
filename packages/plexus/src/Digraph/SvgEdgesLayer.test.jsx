@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { render } from '@testing-library/react';
+import { zoomIdentity } from 'd3-zoom';
 import SvgEdgesLayer from './SvgEdgesLayer';
 import SvgEdges from './SvgEdges';
 import SvgLayer from './SvgLayer';
@@ -49,6 +50,7 @@ describe('SvgEdgesLayer', () => {
     },
     vertices: [],
     layoutVertices: null,
+    zoomTransform: zoomIdentity,
   });
 
   const defaultProps = {
@@ -101,9 +103,9 @@ describe('SvgEdgesLayer', () => {
       expect(SvgLayer.lastProps.classNamePart).toBe('SvgEdgesLayer');
     });
 
-    it('passes extraWrapper with black stroke to SvgLayer', () => {
+    it('passes extraWrapper with currentColor stroke to SvgLayer', () => {
       render(<SvgEdgesLayer {...defaultProps} />);
-      expect(SvgLayer.lastProps.extraWrapper).toEqual({ stroke: '#000' });
+      expect(SvgLayer.lastProps.extraWrapper).toEqual({ stroke: 'currentColor' });
     });
 
     it('passes getClassName to SvgLayer', () => {

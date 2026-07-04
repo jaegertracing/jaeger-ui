@@ -86,7 +86,7 @@ function getJSON(url: string, options: FetchOptions = {}): Promise<any> {
 
 export const DEFAULT_API_ROOT = prefixUrl('/api/');
 export const ANALYTICS_ROOT = prefixUrl('/analytics/');
-export const QUALITY_METRICS_ROOT = prefixUrl(getConfig().qualityMetrics?.apiEndpoint || '');
+const QUALITY_METRICS_ROOT = prefixUrl(getConfig().qualityMetrics?.apiEndpoint || '');
 export const DEFAULT_DEPENDENCY_LOOKBACK = dayjs.duration(1, 'weeks').asMilliseconds();
 
 const JaegerAPI = {
@@ -124,7 +124,7 @@ const JaegerAPI = {
     return getJSON(`${this.apiRoot}services`);
   },
   fetchTrace(id: string): Promise<any> {
-    return getJSON(`${this.apiRoot}traces/${id}`);
+    return getJSON(`${this.apiRoot}traces/${encodeURIComponent(id)}`);
   },
   searchTraces(query: Record<string, any>): Promise<any> {
     return getJSON(`${this.apiRoot}traces`, { query });

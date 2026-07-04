@@ -3,13 +3,14 @@
 
 import React from 'react';
 import { render } from '@testing-library/react';
+import { zoomIdentity } from 'd3-zoom';
 import SvgLayer from './SvgLayer';
 
 // Mock SvgDefEntry component
 // Use React.createElement instead of JSX, because jest.mock factory functions cannot reference external variables
 vi.mock('./SvgDefEntry', () => {
   const React = require('react');
-  const MockSvgDefEntry = ({ localId, getClassName }) =>
+  const MockSvgDefEntry = ({ localId, getClassName: _unused }) =>
     React.createElement('marker', { id: localId, 'data-testid': `def-${localId}` });
   return { default: MockSvgDefEntry };
 });
@@ -18,12 +19,12 @@ vi.mock('./SvgDefEntry', () => {
 vi.mock('../zoom/ZoomManager', () => ({
   default: {
     getZoomAttr: transform =>
-      transform ? `translate(${transform.x.toFixed()},${transform.y.toFixed()}) scale(${transform.k})` : null,
+      `translate(${transform.x.toFixed()},${transform.y.toFixed()}) scale(${transform.k})`,
   },
 }));
 
 describe('SvgLayer', () => {
-  const createGraphState = (zoomTransform = null) => ({
+  const createGraphState = (zoomTransform = zoomIdentity) => ({
     vertices: [],
     layoutVertices: null,
     layoutEdges: null,
@@ -41,7 +42,7 @@ describe('SvgLayer', () => {
   };
 
   // Helper to render inside SVG context
-  const renderSvgLayer = (props, options = {}) => {
+  const renderSvgLayer = (props, _unused = {}) => {
     const mergedProps = { ...defaultProps, ...props };
     // If standalone or topLayer, component renders its own svg
     if (mergedProps.standalone || mergedProps.topLayer) {
@@ -75,7 +76,7 @@ describe('SvgLayer', () => {
 
   describe('container props', () => {
     it('merges custom props from setOnContainer', () => {
-      const setOnContainer = graphState => ({
+      const setOnContainer = _unused => ({
         'data-custom': 'value',
       });
       const { container } = renderSvgLayer({ setOnContainer });

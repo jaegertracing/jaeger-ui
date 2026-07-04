@@ -8,8 +8,8 @@ import '@testing-library/jest-dom';
 import TraceViewSettings from './TraceViewSettings';
 import track from './KeyboardShortcutsHelp.track';
 
-jest.mock('./KeyboardShortcutsHelp.track', () => jest.fn());
-jest.mock('../keyboard-mappings', () => ({}));
+vi.mock('./KeyboardShortcutsHelp.track');
+vi.mock('../keyboard-mappings', () => mockDefault({}));
 
 const defaultProps = {
   detailPanelMode: 'inline',

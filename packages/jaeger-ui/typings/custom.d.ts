@@ -1,17 +1,15 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// For jest
-declare const global: {
-  location: Location;
-};
+// Test helper — defined in test/vitest-setup.ts, available in all test files.
+declare function mockDefault<T>(mod: T): { default: T };
 
 declare interface Window {
   // For setting the site-prefix
   __webpack_public_path__: string;
   // For getting ui config
   getJaegerUiConfig?: () => Record<string, any>;
-  getJaegerStorageCapabilities?: () => Record<string, any>;
+  getJaegerBackendCapabilities?: () => Record<string, any>;
   getJaegerVersion?: () => Record<string, any>;
 }
 

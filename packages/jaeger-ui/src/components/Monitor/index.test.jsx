@@ -15,18 +15,16 @@ import getConfig from '../../utils/config/get-config';
 
 // --- Mock Modules ---
 // Mock the actions module
-jest.mock('../../actions/jaeger-api');
+vi.mock('../../actions/jaeger-api');
 
-jest.mock('../../utils/config/get-config', () => ({
-  __esModule: true,
+vi.mock('../../utils/config/get-config', () => ({
   default: jest.fn(() => ({
     qualityMetrics: { apiEndpoint: '/api/quality-metrics' },
-    storageCapabilities: { metricsStorage: true },
+    backendCapabilities: { metricsStorage: true },
   })),
 }));
 // Mock the storage utility
-jest.mock('../../utils/storage', () => ({
-  __esModule: true,
+vi.mock('../../utils/storage', () => ({
   default: {
     getString: jest.fn(),
     getNumber: jest.fn(),
@@ -37,7 +35,7 @@ jest.mock('../../utils/storage', () => ({
 }));
 
 // Mock useServices hook with stable data reference to prevent infinite loops
-jest.mock('../../hooks/useTraceDiscovery', () => {
+vi.mock('../../hooks/useTraceDiscovery', () => {
   const services = ['service1', 'service2'];
   return {
     useServices: jest.fn(() => ({ data: services, isLoading: false })),
@@ -131,7 +129,7 @@ describe('<MonitorATMPage>', () => {
   it('renders EmptyState when metricsStorage is disabled in config', () => {
     getConfig.mockImplementation(() => ({
       qualityMetrics: { apiEndpoint: '/api/quality-metrics' },
-      storageCapabilities: { metricsStorage: false },
+      backendCapabilities: { metricsStorage: false },
     }));
     try {
       const emptyStateStore = createStore(rootReducer, initialState);
@@ -153,7 +151,7 @@ describe('<MonitorATMPage>', () => {
     } finally {
       getConfig.mockImplementation(() => ({
         qualityMetrics: { apiEndpoint: '/api/quality-metrics' },
-        storageCapabilities: { metricsStorage: true },
+        backendCapabilities: { metricsStorage: true },
       }));
     }
   });

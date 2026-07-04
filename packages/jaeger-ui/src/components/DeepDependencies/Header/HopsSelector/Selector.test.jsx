@@ -9,7 +9,7 @@ import { EDirection, ECheckedStatus } from '../../../../model/ddg/types';
 import Selector from './Selector';
 
 // Mock the tracking function as it's called within the component
-jest.mock('../../index.track', () => ({
+vi.mock('../../index.track', () => ({
   trackHopChange: jest.fn(),
 }));
 

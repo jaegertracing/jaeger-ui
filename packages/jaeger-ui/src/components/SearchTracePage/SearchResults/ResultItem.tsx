@@ -5,31 +5,29 @@ import * as React from 'react';
 import { Col, Divider, Row, Tag, Tooltip } from 'antd';
 import { Link } from 'react-router-dom';
 
-import _sortBy from 'lodash/sortBy';
 import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
 
-import { IoAlert, IoWarning } from 'react-icons/io5';
+import { IoWarning } from 'react-icons/io5';
 
 import { trackConversions, EAltViewActions } from './index.track';
 import * as markers from './ResultItem.markers';
 import ResultItemTitle from './ResultItemTitle';
-import colorGenerator from '../../../utils/color-generator';
-import { formatRelativeDate } from '../../../utils/date';
+import ServicePills from './ServicePills';
+import { formatRelativeDate, formatRelativeTime } from '../../../utils/date';
 import { getIncompleteTraceTooltip } from '../../../model/trace-viewer';
 
-import { IOtelTrace, StatusCode } from '../../../types/otel';
+import type { TraceSummary } from '../../../types/trace-summary';
+import type { TracePageLink } from '../../TracePage/url';
 
 import './ResultItem.css';
-
-dayjs.extend(relativeTime);
 
 type Props = {
   durationPercent: number;
   isInDiffCohort: boolean;
-  linkTo: React.ComponentProps<typeof Link>['to'];
+  isUploaded?: boolean;
+  linkTo: TracePageLink;
   toggleComparison: (traceID: string) => void;
-  trace: IOtelTrace;
+  traceSummary: TraceSummary;
   disableComparision: boolean;
 };
 
@@ -38,35 +36,25 @@ const trackTraceConversions = () => trackConversions(EAltViewActions.Traces);
 export default function ResultItem({
   durationPercent,
   isInDiffCohort,
+  isUploaded,
   linkTo,
   toggleComparison,
-  trace,
+  traceSummary,
   disableComparision,
 }: Props) {
-  const { duration, services = [], startTime, traceName, traceID, spans, orphanSpanCount } = trace;
+  const {
+    duration,
+    services = [],
+    startTime,
+    traceName,
+    traceID,
+    spanCount,
+    errorSpanCount,
+    orphanSpanCount,
+  } = traceSummary;
 
-  // Initialize state values
-  const [erroredServices, setErroredServices] = React.useState<Set<string>>(new Set());
-  const [numSpans] = React.useState(spans.length);
-  const [numErredSpans, setNumErredSpans] = React.useState(0);
-  const [timeStr, setTimeStr] = React.useState('');
-  const [fromNow, setFromNow] = React.useState<string | boolean>('');
-
-  React.useEffect(() => {
-    const startTimeDayjs = dayjs(startTime / 1000);
-    setTimeStr(startTimeDayjs.format('h:mm:ss a'));
-    setFromNow(startTimeDayjs.fromNow());
-
-    const errored = new Set<string>();
-    const erredCount = spans.filter(sp => {
-      const hasError = sp.status.code === StatusCode.ERROR;
-      if (hasError) errored.add(sp.resource.serviceName);
-      return hasError;
-    }).length;
-
-    setErroredServices(errored);
-    setNumErredSpans(erredCount);
-  }, [startTime, spans]);
+  const timeStr = dayjs(startTime / 1000).format('h:mm:ss a');
+  const fromNow = formatRelativeTime(startTime);
 
   return (
     <div className="ResultItem" onClick={trackTraceConversions} role="button">
@@ -80,46 +68,39 @@ export default function ResultItem({
         traceName={traceName}
         disableComparision={disableComparision}
       />
-      <Link to={linkTo}>
+      <Link to={{ pathname: linkTo.pathname, search: linkTo.search }} state={linkTo.state}>
         <Row>
-          <Col span={4} className="ub-p2">
-            <Tag className="ub-m1" data-testid={markers.NUM_SPANS} variant="outlined">
-              {numSpans} Span{numSpans > 1 && 's'}
-            </Tag>
-            {Boolean(numErredSpans) && (
-              <Tag className="ub-m1" color="red" variant="outlined">
-                {numErredSpans} Error{numErredSpans > 1 && 's'}
+          <Col xs={24} sm={4} className="ub-p2">
+            {spanCount !== undefined && (
+              <Tag className="ub-m1" data-testid={markers.NUM_SPANS} variant="outlined">
+                {spanCount} Span{spanCount > 1 && 's'}
               </Tag>
             )}
-            {orphanSpanCount > 0 && (
-              <Tooltip title={getIncompleteTraceTooltip(orphanSpanCount)}>
+            {Boolean(errorSpanCount) && (
+              <Tag className="ub-m1" color="red" variant="outlined">
+                {errorSpanCount} Error{(errorSpanCount ?? 0) > 1 && 's'}
+              </Tag>
+            )}
+            {Boolean(orphanSpanCount) && (
+              <Tooltip title={getIncompleteTraceTooltip(orphanSpanCount ?? 0)}>
                 <Tag className="ub-m1" color="orange">
                   <IoWarning className="ResultItem--warningIcon" />
                   Incomplete
                 </Tag>
               </Tooltip>
             )}
+            {isUploaded && (
+              <Tag className="ub-m1" color="blue" variant="outlined">
+                Uploaded
+              </Tag>
+            )}
           </Col>
-          <Col span={16} className="ub-p2">
-            <ul className="ub-list-reset" data-testid={markers.SERVICE_TAGS}>
-              {_sortBy(services, s => s.name).map(service => {
-                const { name, numberOfSpans: count } = service;
-                return (
-                  <li key={name} className="ub-inline-block ub-m1">
-                    <Tag
-                      className="ResultItem--serviceTag"
-                      style={{ borderLeftColor: colorGenerator.getColorByKey(name) }}
-                      variant="outlined"
-                    >
-                      {erroredServices.has(name) && <IoAlert className="ResultItem--errorIcon" />}
-                      {name} ({count})
-                    </Tag>
-                  </li>
-                );
-              })}
-            </ul>
+          <Col xs={24} sm={16} className="ub-p2">
+            <div data-testid={markers.SERVICE_TAGS}>
+              <ServicePills services={services} />
+            </div>
           </Col>
-          <Col span={4} className="ub-p3 ub-tx-right-align">
+          <Col xs={24} sm={4} className="ub-p3 ub-tx-right-align">
             {formatRelativeDate(startTime / 1000)}
             <Divider vertical />
             {timeStr.slice(0, -3)}&nbsp;{timeStr.slice(-2)}

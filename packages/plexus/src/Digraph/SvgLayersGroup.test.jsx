@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { render } from '@testing-library/react';
+import { zoomIdentity } from 'd3-zoom';
 import SvgLayersGroup from './SvgLayersGroup';
 import { ELayerType } from './types';
 
@@ -63,6 +64,7 @@ describe('SvgLayersGroup', () => {
     renderUtils: {
       getGlobalId: id => `global-${id}`,
     },
+    zoomTransform: zoomIdentity,
   });
 
   const defaultProps = {

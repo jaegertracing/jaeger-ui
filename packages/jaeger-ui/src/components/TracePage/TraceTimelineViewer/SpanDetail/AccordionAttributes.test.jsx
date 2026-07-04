@@ -7,7 +7,7 @@ import '@testing-library/jest-dom';
 import AccordionAttributes, { AttributesSummary } from './AccordionAttributes';
 import * as markers from './AccordionAttributes.markers';
 
-jest.mock('./AttributesTable', () => {
+vi.mock('./AttributesTable', () => {
   const MockAttributesTable = ({ data, linksGetter }) => (
     <table
       data-testid="key-values-table"
@@ -15,7 +15,7 @@ jest.mock('./AttributesTable', () => {
       data-has-links-getter={!!linksGetter}
     />
   );
-  return MockAttributesTable;
+  return mockDefault(MockAttributesTable);
 });
 
 const tags = [

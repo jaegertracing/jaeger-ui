@@ -43,10 +43,23 @@ function ClickToCopy({ text, className = '', children }: Props) {
     };
   }, [isCopied, previousClick]);
 
-  const whenClicked = () => {
+  const doCopy = () => {
     copy(text);
     setIsCopied(true);
     setPreviousClick(Date.now());
+  };
+
+  const whenClicked = (e: React.MouseEvent<HTMLSpanElement>) => {
+    e.stopPropagation();
+    e.preventDefault();
+    doCopy();
+  };
+
+  const whenKeyDown = (e: React.KeyboardEvent<HTMLSpanElement>) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.stopPropagation();
+    e.preventDefault();
+    doCopy();
   };
 
   return (
@@ -54,12 +67,7 @@ function ClickToCopy({ text, className = '', children }: Props) {
       <span
         className={className}
         onClick={whenClicked}
-        onKeyDown={e => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            whenClicked();
-            e.preventDefault();
-          }
-        }}
+        onKeyDown={whenKeyDown}
         role="button"
         tabIndex={0}
         aria-label={isCopied ? 'Copied to clipboard' : 'Copy to clipboard'}

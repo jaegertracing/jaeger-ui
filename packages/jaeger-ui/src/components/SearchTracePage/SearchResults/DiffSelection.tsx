@@ -7,65 +7,72 @@ import { Link } from 'react-router-dom';
 
 import ResultItemTitle from './ResultItemTitle';
 import { getUrl } from '../../TraceDiff/url';
-import { getUrl as getTracePageUrl } from '../../TracePage/url';
-import { fetchedState } from '../../../constants';
+import { getTracePageLink } from '../../TracePage/url';
 
-import { FetchedTrace } from '../../../types';
-import { IOtelTrace } from '../../../types/otel';
+import { TraceSummary } from '../../../types/trace-summary';
 
 import './DiffSelection.css';
 
 type Props = {
   toggleComparison: (traceID: string, isInDiffCohort: boolean) => void;
-  traces: FetchedTrace[];
+  traces: TraceSummary[];
+  hideSelectedItems?: boolean;
+  onClearAll?: () => void;
 };
 
-// Exported for tests
-export const CTA_MESSAGE = <h2 className="ub-m0">Compare traces by selecting result items</h2>;
+const CTA_MESSAGE = (
+  <h2 className="ub-m0 DiffSelection--heading">Compare traces by selecting result items</h2>
+);
 
-export default function DiffSelection({ toggleComparison, traces }: Props) {
-  const cohort = traces.filter(ft => ft.state !== fetchedState.ERROR).map(ft => ft.id);
-
+export default function DiffSelection({
+  toggleComparison,
+  traces,
+  hideSelectedItems = false,
+  onClearAll,
+}: Props) {
+  const cohort = traces.map(t => t.traceID);
   const compareHref = cohort.length > 1 ? getUrl({ cohort }) : null;
 
   const compareBtn = (
-    <Button className="ub-right" disabled={cohort.length < 2} htmlType="button" type="primary">
+    <Button disabled={cohort.length < 2} htmlType="button" type="primary">
       Compare Traces
     </Button>
   );
 
   return (
-    <div className={`DiffSelection ${traces.length ? 'is-non-empty' : ''} ub-mb3`}>
-      {traces.length > 0 && (
+    <div className={`DiffSelection ${traces.length ? 'is-non-empty' : ''}`}>
+      {traces.length > 0 && !hideSelectedItems && (
         <div className="DiffSelection--selectedItems">
-          {traces.map(fetchedTrace => {
-            const { data, error, id, state } = fetchedTrace;
-            return (
-              <ResultItemTitle
-                key={id}
-                duration={data && (data.duration as IOtelTrace['duration'])}
-                error={error}
-                isInDiffCohort
-                linkTo={getTracePageUrl(id)}
-                state={state}
-                targetBlank
-                toggleComparison={toggleComparison}
-                traceID={id}
-                traceName={data && data.traceName}
-              />
-            );
-          })}
+          {traces.map(summary => (
+            <ResultItemTitle
+              key={summary.traceID}
+              duration={summary.duration}
+              error={undefined}
+              isInDiffCohort
+              linkTo={getTracePageLink(summary.traceID)}
+              state={undefined}
+              targetBlank
+              toggleComparison={toggleComparison}
+              traceID={summary.traceID}
+              traceName={summary.traceName}
+            />
+          ))}
         </div>
       )}
       <div className="DiffSelection--message">
         {traces.length > 0 ? (
-          <React.Fragment>
-            {compareHref ? <Link to={compareHref}>{compareBtn}</Link> : compareBtn}
-            <h2 className="ub-m0">{cohort.length} Selected for comparison</h2>
-          </React.Fragment>
+          <h2 className="ub-m0 DiffSelection--heading">{cohort.length} Selected for comparison</h2>
         ) : (
           CTA_MESSAGE
         )}
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          {traces.length > 0 && (
+            <Button htmlType="button" onClick={onClearAll}>
+              Deselect All
+            </Button>
+          )}
+          {compareHref ? <Link to={compareHref}>{compareBtn}</Link> : compareBtn}
+        </div>
       </div>
     </div>
   );

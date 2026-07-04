@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Default TanStack Query client for Jaeger UI. Centralize the cache timing
 //  so new query hooks stay consistent.
-export function createAppQueryClient(): QueryClient {
+function createAppQueryClient(): QueryClient {
   return new QueryClient({
     defaultOptions: {
       queries: {
@@ -17,7 +17,7 @@ export function createAppQueryClient(): QueryClient {
   });
 }
 
-const queryClient = createAppQueryClient();
+export const queryClient = createAppQueryClient();
 
 interface IAppQueryClientProviderProps {
   children: React.ReactNode;

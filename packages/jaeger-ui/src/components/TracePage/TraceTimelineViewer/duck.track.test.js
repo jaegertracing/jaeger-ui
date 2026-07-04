@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-jest.mock('../../../utils/tracking');
+vi.mock('../../../utils/tracking');
 
 import _set from 'lodash/set';
 import _cloneDeep from 'lodash/cloneDeep';
@@ -9,8 +9,8 @@ import _cloneDeep from 'lodash/cloneDeep';
 import DetailState from './SpanDetail/DetailState';
 import * as track from './duck.track';
 import { actionTypes as types } from './duck';
-import { fetchedState } from '../../../constants';
 import { trackEvent } from '../../../utils/tracking';
+import { queryClient } from '../../../query/app-query-client';
 
 describe('middlewareHooks', () => {
   const traceID = 'ABC';
@@ -18,16 +18,8 @@ describe('middlewareHooks', () => {
   const spanDepth = 123;
   const columnWidth = { real: 0.15, tracked: 150 };
   const payload = { spanID };
+  const traceData = { spans: [{ spanID, depth: spanDepth }] };
   const state = {
-    trace: {
-      traces: {
-        [traceID]: {
-          id: traceID,
-          data: { spans: [{ spanID, depth: spanDepth }] },
-          state: fetchedState.DONE,
-        },
-      },
-    },
     traceTimeline: {
       traceID,
       childrenHiddenIDs: new Map(),
@@ -44,6 +36,12 @@ describe('middlewareHooks', () => {
   beforeEach(() => {
     trackEvent.mockClear();
     stateClone = _cloneDeep(state);
+    // Seed the React Query cache so trackParent can find the trace by ID.
+    queryClient.setQueryData(['trace', traceID], traceData);
+  });
+
+  afterEach(() => {
+    queryClient.removeQueries({ queryKey: ['trace'] });
   });
 
   const cases = [
@@ -101,11 +99,11 @@ describe('middlewareHooks', () => {
       noOp: true,
     },
     {
-      msg: 'handles leading 0s in traceID in trackParent',
+      msg: 'handles unknown traceID (no cache match) in trackParent',
       type: types.CHILDREN_TOGGLE,
       stateOverrides: new Map([['traceTimeline.traceID', `00${traceID}`]]),
       category: track.CATEGORY_PARENT,
-      extraTrackArgs: [123],
+      noOp: true,
     },
     {
       action: track.ACTION_EXPAND_ALL,
@@ -207,7 +205,7 @@ describe('middlewareHooks', () => {
       extraTrackArgs = [],
       payloadCustom,
     }) => {
-      it(msg, () => {
+      it(`${msg}`, () => {
         const reduxAction = {
           type,
           payload: payloadCustom !== undefined ? payloadCustom : payload,

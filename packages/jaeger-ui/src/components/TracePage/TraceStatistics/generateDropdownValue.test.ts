@@ -10,7 +10,7 @@ import testTrace from './tableValuesTestTrace/testTrace.json';
 const transformedTrace = transformTraceData(testTrace as any)!;
 const otelTrace = transformedTrace.asOtelTrace();
 
-describe(' generateDropdownValue', () => {
+describe('generateDropdownValue', () => {
   it('check generateDropdownValue (legacy)', () => {
     const expectValues = ['Service Name', 'Operation Name', 'span.kind', 'error', 'db.type'];
     const values = generateDropdownValue(otelTrace, false);

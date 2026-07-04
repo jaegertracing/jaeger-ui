@@ -76,8 +76,7 @@ Run from `packages/jaeger-ui/`:
 
 | Command            | Description                    |
 | ------------------ | ------------------------------ |
-| `npm test`         | Run Jest tests                 |
-| `npm test <file>`  | Run tests for a specific file  |
+| `npm test`         | Run Vitest tests               |
 | `npm run coverage` | Run tests with coverage report |
 | `npm run build`    | Build for production           |
 | `npm start`        | Start dev server               |
@@ -97,6 +96,7 @@ Run from `packages/jaeger-ui/`:
 - Use single quotes for strings
 - Trailing commas in ES5 style
 - Print width: 110 characters
+- All formatter and linter configuration lives in `vite.config.ts` as a single source of truth. To exclude a file from formatting, add it to `fmt.ignorePatterns` in `vite.config.ts`.
 
 ### React Components
 
@@ -116,17 +116,32 @@ All new files must include this copyright header with the current year (e.g. 202
 
 ## Testing
 
-- Uses Jest with jsdom environment
+- Uses **Vitest** (not Jest) with jsdom environment
 - React Testing Library for component testing
 - Tests are co-located with source files (`*.test.js` or `*.test.tsx`)
-- Run individual tests: `npm test -- --testPathPattern=<pattern>`
-- Update snapshots: `npm run update-snapshots` (from repository root), but do not use snapshots for any new tests, only existing legacy tests
+- Update snapshots: `npm run update-snapshots` (from repository root) or `npx vitest run -u` (from `packages/jaeger-ui`), but do not use snapshots for any new tests, only existing legacy tests
+
+### Running Tests
+
+**Always run tests from the repository root** using `npm test`. This uses npm workspaces to invoke Vitest in each package with the correct config and setup files.
+
+**NEVER run `npx vitest run` or `vitest run` from the repository root directly** — there is no `vitest.config.ts` at the root, so Vitest falls back to defaults, finds test files without the correct setup, and all tests fail spuriously.
+
+To run a specific test file:
+
+```bash
+# -w is required; without it plexus also runs and fails (no matching file)
+npm test -w packages/jaeger-ui -- src/components/Foo/index.test.jsx
+
+# From packages/jaeger-ui — also correct
+cd packages/jaeger-ui && npx vitest run src/components/Foo/index.test.jsx
+```
 
 ### Test Coverage
 
 ```bash
 npm test -- --coverage
-npm test -- --coverage --collectCoverageFrom="src/path/to/file.tsx"
+npm test -w packages/jaeger-ui -- --coverage --coverage.include="src/path/to/file.tsx"
 ```
 
 ## Common Patterns
@@ -165,7 +180,7 @@ ComponentName/
 - **React Router v5** for routing
 - **Ant Design v6** for UI components
 - **Vite** for build tooling
-- **Jest** for testing
+- **Vitest** for testing
 
 ## Commits
 
@@ -173,6 +188,7 @@ ComponentName/
 - Follow [good commit message](https://chris.beams.io/posts/git-commit/) guidelines
 - Keep subject line under 50 characters
 - Use imperative mood in subject line
+- **Capitalize the first word of the description** after the `type(scope):` prefix, e.g. `fix(test): Inline all deps…` not `fix(test): inline all deps…`
 
 ## Working with GitHub CLI (`gh`)
 
@@ -185,6 +201,10 @@ Use the GitHub API with pagination to retrieve all comments in a raw JSON format
 ```bash
 gh api repos/jaegertracing/jaeger-ui/pulls/:number/comments --paginate --jq '.[].body'
 ```
+
+## Performance Considerations
+
+- Jaeger UI has been tested with traces up to 80k spans. Large row counts in the trace timeline are realistic, not hypothetical. Flag O(n) per-interaction algorithms in `VirtualizedTraceView`, `generateRowStates`, and `ListView` as a real concern, not a theoretical one.
 
 ## Additional Notes
 

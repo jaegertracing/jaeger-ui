@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, renderHook, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import _set from 'lodash/set';
 import { MemoryRouter } from 'react-router-dom';
@@ -10,27 +10,36 @@ import { Provider } from 'react-redux';
 import { createStore } from 'redux';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-jest.mock('node-fetch', () =>
-  jest.fn(() =>
-    Promise.resolve({
-      status: 200,
-      ok: true,
-      json: () => Promise.resolve({}),
-      text: () => Promise.resolve(''),
-    })
+vi.mock('isomorphic-fetch', () =>
+  mockDefault(
+    vi.fn(() =>
+      Promise.resolve({
+        status: 200,
+        ok: true,
+        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(''),
+      })
+    )
   )
 );
 
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => jest.fn(),
-  useLocation: () => ({ search: '?service=test-service&operation=test-op' }),
-  useParams: () => ({}),
-}));
+const mockUseLocationValue = {
+  search: '?service=test-service&operation=test-op',
+};
 
-jest.mock('../../hooks/useTraceDiscovery', () => ({
-  useServices: jest.fn(() => ({ data: ['svc1', 'svc2'], isLoading: false })),
-  useSpanNames: jest.fn(() => ({
+vi.mock('react-router-dom', async () => {
+  const { MemoryRouter: ActualMemoryRouter } = await vi.importActual('react-router-dom');
+  return {
+    MemoryRouter: ActualMemoryRouter,
+    useNavigate: () => vi.fn(),
+    useLocation: () => mockUseLocationValue,
+    useParams: () => ({}),
+  };
+});
+
+vi.mock('../../hooks/useTraceDiscovery', async () => ({
+  useServices: vi.fn(() => ({ data: ['svc1', 'svc2'], isLoading: false })),
+  useSpanNames: vi.fn(() => ({
     data: [
       { name: 'op1', spanKind: 'server' },
       { name: 'op2', spanKind: 'server' },
@@ -38,7 +47,17 @@ jest.mock('../../hooks/useTraceDiscovery', () => ({
   })),
 }));
 
-import { DeepDependencyGraphPageImpl, mapDispatchToProps, mapStateToProps } from '.';
+vi.mock('../../hooks/useDeepDependencyGraphQuery', () => ({
+  useDeepDependencyGraphQueryFromUrl: vi.fn(() => ({
+    data: undefined,
+    error: null,
+    isPending: false,
+    isLoading: false,
+    isFetching: false,
+  })),
+}));
+
+import { DeepDependencyGraphPageImpl, deriveDdgPageProps, useDdgViewModifierBridgeProps } from '.';
 import DefaultDeepDependencyGraphPage from '.';
 import * as track from './index.track';
 import * as url from './url';
@@ -51,55 +70,55 @@ import * as getConfig from '../../utils/config/get-config';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 
 import { ECheckedStatus, EDirection, EDdgDensity, EViewModifier } from '../../model/ddg/types';
+import { useDdgViewModifiersStore } from './store';
 
-jest.mock('./Graph', () => {
-  return function MockGraph(props) {
+vi.mock('./Graph', async () => {
+  return mockDefault(function MockGraph(props) {
     return <div data-testid="graph" {...props} />;
-  };
+  });
 });
 
-jest.mock('./Header', () => {
-  return function MockHeader(props) {
+vi.mock('./Header', async () => {
+  return mockDefault(function MockHeader(props) {
     return <div data-testid="header" {...props} />;
-  };
+  });
 });
 
-jest.mock('./SidePanel', () => {
-  return function MockSidePanel(props) {
+vi.mock('./SidePanel', async () => {
+  return mockDefault(function MockSidePanel(props) {
     return <div data-testid="side-panel" {...props} />;
-  };
+  });
 });
 
-jest.mock('../common/ErrorMessage', () => {
-  return function MockErrorMessage(props) {
+vi.mock('../common/ErrorMessage', async () => {
+  return mockDefault(function MockErrorMessage(props) {
     return <div data-testid="error-message" error={JSON.stringify(props.error)} />;
-  };
+  });
 });
 
-jest.mock('../common/LoadingIndicator', () => {
-  return function MockLoadingIndicator(props) {
+vi.mock('../common/LoadingIndicator', async () => {
+  return mockDefault(function MockLoadingIndicator(props) {
     return <div data-testid="loading-indicator" {...props} />;
-  };
+  });
 });
 
 describe('DeepDependencyGraphPage', () => {
   describe('DeepDependencyGraphPageImpl', () => {
     const vertexKey = 'test vertex key';
     const propsWithoutGraph = {
-      addViewModifier: jest.fn(),
-      fetchDeepDependencyGraph: () => {},
-      fetchServices: jest.fn(),
-      fetchServiceServerOps: jest.fn(),
+      addViewModifier: vi.fn(),
+      fetchServices: vi.fn(),
+      fetchServiceServerOps: vi.fn(),
       graphState: {
         model: {
           distanceToPathElems: new Map(),
         },
         state: fetchedState.DONE,
-        viewModifiers: new Map(),
       },
-      navigate: jest.fn(),
+      navigate: vi.fn(),
       serverOpsForService: {},
-      removeViewModifierFromIndices: jest.fn(),
+      removeViewModifierFromIndices: vi.fn(),
+      viewModifiers: new Map(),
       urlState: {
         start: 'testStart',
         end: 'testEnd',
@@ -116,12 +135,12 @@ describe('DeepDependencyGraphPage', () => {
           vertices: [],
         }),
         getHiddenUiFindMatches: () => new Set(),
-        getGenerationVisibility: jest.fn(),
-        getVertexVisiblePathElems: jest.fn(),
+        getGenerationVisibility: vi.fn(),
+        getVertexVisiblePathElems: vi.fn(),
         getVisibleUiFindMatches: () => new Set(),
-        getVisWithVertices: jest.fn(),
-        getVisWithoutVertex: jest.fn(),
-        getVisWithUpdatedGeneration: jest.fn(),
+        getVisWithVertices: vi.fn(),
+        getVisWithoutVertex: vi.fn(),
+        getVisWithUpdatedGeneration: vi.fn(),
         getDerivedViewModifiers: () => ({ edges: new Map(), vertices: new Map() }),
       },
     };
@@ -137,8 +156,8 @@ describe('DeepDependencyGraphPage', () => {
       let trackHideSpy;
 
       beforeAll(() => {
-        getUrlSpy = jest.spyOn(url, 'getUrl');
-        trackHideSpy = jest.spyOn(track, 'trackHide');
+        getUrlSpy = vi.spyOn(url, 'getUrl');
+        trackHideSpy = vi.spyOn(track, 'trackHide');
       });
 
       beforeEach(() => {
@@ -210,7 +229,7 @@ describe('DeepDependencyGraphPage', () => {
         let trackClearOperationSpy;
 
         beforeAll(() => {
-          trackClearOperationSpy = jest.spyOn(track, 'trackClearOperation');
+          trackClearOperationSpy = vi.spyOn(track, 'trackClearOperation');
         });
 
         it('removes op from urlState', () => {
@@ -224,7 +243,7 @@ describe('DeepDependencyGraphPage', () => {
         let trackFocusPathsSpy;
 
         beforeAll(() => {
-          trackFocusPathsSpy = jest.spyOn(track, 'trackFocusPaths');
+          trackFocusPathsSpy = vi.spyOn(track, 'trackFocusPaths');
         });
 
         beforeEach(() => {
@@ -330,7 +349,7 @@ describe('DeepDependencyGraphPage', () => {
         let encodeDistanceSpy;
 
         beforeAll(() => {
-          encodeDistanceSpy = jest.spyOn(codec, 'encodeDistance').mockImplementation(() => visEncoding);
+          encodeDistanceSpy = vi.spyOn(codec, 'encodeDistance').mockImplementation(() => visEncoding);
         });
 
         it('updates url with result of encodeDistance iff graph is loaded', () => {
@@ -386,7 +405,7 @@ describe('DeepDependencyGraphPage', () => {
         let trackSetServiceSpy;
 
         beforeAll(() => {
-          trackSetServiceSpy = jest.spyOn(track, 'trackSetService');
+          trackSetServiceSpy = vi.spyOn(track, 'trackSetService');
         });
 
         beforeEach(() => {
@@ -454,7 +473,7 @@ describe('DeepDependencyGraphPage', () => {
         let trackShowSpy;
 
         beforeAll(() => {
-          trackShowSpy = jest.spyOn(track, 'trackShow');
+          trackShowSpy = vi.spyOn(track, 'trackShow');
         });
 
         beforeEach(() => {
@@ -526,14 +545,14 @@ describe('DeepDependencyGraphPage', () => {
 
       it('calls setState with the selected vertex', () => {
         const ddgInstance = new DeepDependencyGraphPageImpl({ ...props, graphState: undefined });
-        const setStateSpy = jest.spyOn(ddgInstance, 'setState');
+        const setStateSpy = vi.spyOn(ddgInstance, 'setState');
         ddgInstance.selectVertex(selectedVertex);
         expect(setStateSpy).toHaveBeenCalledWith({ selectedVertex });
       });
 
       it('calls setState to clear the selected vertex', () => {
         const ddgInstance = new DeepDependencyGraphPageImpl({ ...props, graphState: undefined });
-        const setStateSpy = jest.spyOn(ddgInstance, 'setState');
+        const setStateSpy = vi.spyOn(ddgInstance, 'setState');
         ddgInstance.selectVertex();
         expect(setStateSpy).toHaveBeenCalledWith({ selectedVertex: undefined });
       });
@@ -647,7 +666,7 @@ describe('DeepDependencyGraphPage', () => {
       const vertices = [{ key: 'key0' }, { key: 'key1' }, { key: 'key2' }];
       const visibleFindCount = vertices.length - 1;
       const graph = {
-        getVisible: jest.fn(),
+        getVisible: vi.fn(),
         getDerivedViewModifiers: () => ({ edges: new Map(), vertices: new Map() }),
         getHiddenUiFindMatches: () => new Set(vertices.slice(visibleFindCount)),
         getVisibleUiFindMatches: () => new Set(vertices.slice(0, visibleFindCount)),
@@ -707,8 +726,8 @@ describe('DeepDependencyGraphPage', () => {
         let getSearchUrlSpy;
 
         beforeAll(() => {
-          getConfigValueSpy = jest.spyOn(getConfig, 'default');
-          getSearchUrlSpy = jest.spyOn(getSearchUrl, 'getUrl');
+          getConfigValueSpy = vi.spyOn(getConfig, 'default');
+          getSearchUrlSpy = vi.spyOn(getSearchUrl, 'getUrl');
         });
 
         beforeEach(() => {
@@ -855,17 +874,7 @@ describe('DeepDependencyGraphPage', () => {
     });
   });
 
-  describe('mapDispatchToProps()', () => {
-    it('creates the actions correctly', () => {
-      expect(mapDispatchToProps(() => {})).toEqual({
-        addViewModifier: expect.any(Function),
-        fetchDeepDependencyGraph: expect.any(Function),
-        removeViewModifierFromIndices: expect.any(Function),
-      });
-    });
-  });
-
-  describe('mapStateToProps()', () => {
+  describe('deriveDdgPageProps()', () => {
     const start = 'testStart';
     const end = 'testEnd';
     const service = 'testService';
@@ -879,42 +888,20 @@ describe('DeepDependencyGraphPage', () => {
         operation,
       },
     };
-    const services = [service];
-    const serverOpsForService = {
-      [service]: ['some operation'],
-    };
-    const state = {
-      otherState: 'otherState',
-      router: {
-        location: {
-          search: 'search',
-        },
-      },
-      services: {
-        serverOpsForService,
-        otherState: 'otherState',
-        services,
-      },
-    };
-    const ownProps = { location: { search } };
     const mockGraph = { getVisible: () => ({}) };
     const hash = 'testHash';
-    const doneState = _set(
-      { ...state },
-      ['ddg', getStateEntryKey({ service, operation, start: 0, end: 0 })],
-      {
-        model: { hash },
-        state: fetchedState.DONE,
-      }
-    );
+    const doneGraphState = {
+      model: { hash },
+      state: fetchedState.DONE,
+    };
     let getUrlStateSpy;
     let makeGraphSpy;
     let sanitizeUrlStateSpy;
 
     beforeAll(() => {
-      getUrlStateSpy = jest.spyOn(url, 'getUrlState');
-      sanitizeUrlStateSpy = jest.spyOn(url, 'sanitizeUrlState');
-      makeGraphSpy = jest.spyOn(GraphModel, 'makeGraph').mockReturnValue(mockGraph);
+      getUrlStateSpy = vi.spyOn(url, 'getUrlState');
+      sanitizeUrlStateSpy = vi.spyOn(url, 'sanitizeUrlState');
+      makeGraphSpy = vi.spyOn(GraphModel, 'makeGraph').mockReturnValue(mockGraph);
     });
 
     beforeEach(() => {
@@ -924,7 +911,7 @@ describe('DeepDependencyGraphPage', () => {
     });
 
     it('uses gets relevant params from location.search', () => {
-      const result = mapStateToProps(state, ownProps);
+      const result = deriveDdgPageProps(search, undefined);
       expect(result).toEqual(expect.objectContaining(expected));
       expect(getUrlStateSpy).toHaveBeenLastCalledWith(search);
     });
@@ -938,54 +925,46 @@ describe('DeepDependencyGraphPage', () => {
             showOp,
           };
           getUrlStateSpy.mockReturnValue(urlState);
-          const result = mapStateToProps(state, ownProps);
+          const result = deriveDdgPageProps(search, undefined);
           expect(result.showOp).toBe(showOp === undefined ? focalOp !== undefined : showOp);
         });
       });
     });
 
-    it('includes graphState iff location.search has service, start, end, and optionally operation', () => {
+    it('includes graphState passed from the caller when URL has service (and optionally operation)', () => {
       const graphState = 'testGraphState';
       const graphStateWithoutOp = 'testGraphStateWithoutOp';
-      const reduxState = { ...state };
-      // TODO: Remove 0s once time buckets are implemented
-      _set(reduxState, ['ddg', getStateEntryKey({ service, operation, start: 0, end: 0 })], graphState);
-      _set(reduxState, ['ddg', getStateEntryKey({ service, start: 0, end: 0 })], graphStateWithoutOp);
 
-      const result = mapStateToProps(reduxState, ownProps);
+      const result = deriveDdgPageProps(search, graphState);
       expect(result.graphState).toEqual(graphState);
 
       const { operation: _op, ...rest } = expected.urlState;
       getUrlStateSpy.mockReturnValue(rest);
-      const resultWithoutOp = mapStateToProps(reduxState, ownProps);
+      const resultWithoutOp = deriveDdgPageProps(search, graphStateWithoutOp);
       expect(resultWithoutOp.graphState).toEqual(graphStateWithoutOp);
 
       getUrlStateSpy.mockReturnValue({});
-      const resultWithoutParams = mapStateToProps(reduxState, ownProps);
+      const resultWithoutParams = deriveDdgPageProps(search, graphState);
       expect(resultWithoutParams.graphState).toBeUndefined();
     });
 
     it('includes graph iff graphState.state is fetchedState.DONE', () => {
       const loadingState = { state: fetchedState.LOADING };
-      const reduxState = { ...state };
-      // TODO: Remove 0s once time buckets are implemented
-      _set(reduxState, ['ddg', getStateEntryKey({ service, operation, start: 0, end: 0 })], loadingState);
-      const result = mapStateToProps(reduxState, ownProps);
+      const result = deriveDdgPageProps(search, loadingState);
       expect(result.graph).toBe(undefined);
 
-      const doneResult = mapStateToProps(doneState, ownProps);
+      const doneResult = deriveDdgPageProps(search, doneGraphState);
       expect(doneResult.graph).toBe(mockGraph);
     });
 
     it('sanitizes urlState', () => {
-      mapStateToProps(doneState, ownProps);
+      deriveDdgPageProps(search, doneGraphState);
       expect(sanitizeUrlStateSpy).toHaveBeenLastCalledWith(expected.urlState, hash);
     });
   });
 
   describe('DeepDependencyGraphPage (default export wrapper)', () => {
     const mockReduxStore = createStore(() => ({
-      ddg: {},
       router: { location: { search: '?service=test-service' } },
     }));
 
@@ -1005,7 +984,7 @@ describe('DeepDependencyGraphPage', () => {
 
     beforeEach(() => {
       // Restore spies from other tests (like getUrlState)
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
       useServices.mockClear();
       useSpanNames.mockClear();
     });
@@ -1021,6 +1000,75 @@ describe('DeepDependencyGraphPage', () => {
         <DefaultDeepDependencyGraphPage baseUrl="/custom-path" showSvcOpsHeader={false} />
       );
       expect(useServices).toHaveBeenCalled();
+    });
+  });
+
+  describe('useDdgViewModifierBridgeProps', () => {
+    const serviceOne = 'svc-bridge-one';
+    const serviceTwo = 'svc-bridge-two';
+    const keyOne = getStateEntryKey({ service: serviceOne, operation: '*', start: 0, end: 0 });
+    const keyTwo = getStateEntryKey({ service: serviceTwo, operation: '*', start: 0, end: 0 });
+
+    function renderBridgeHook(initialOptions) {
+      return renderHook(({ options }) => useDdgViewModifierBridgeProps(options), {
+        initialProps: { options: initialOptions },
+      });
+    }
+
+    beforeEach(() => {
+      useDdgViewModifiersStore.setState({ byKey: {} });
+      mockUseLocationValue.search = `?service=${serviceOne}`;
+    });
+
+    afterEach(() => {
+      mockUseLocationValue.search = '?service=test-service&operation=test-op';
+    });
+
+    it('prunes view modifiers when the graph key changes', () => {
+      const { rerender } = renderBridgeHook({ modelHash: 'h1' });
+      useDdgViewModifiersStore.getState().addViewModifier({
+        service: serviceOne,
+        operation: '*',
+        start: 0,
+        end: 0,
+        visibilityIndices: [1],
+        viewModifier: EViewModifier.Hovered,
+      });
+      useDdgViewModifiersStore.getState().addViewModifier({
+        service: serviceTwo,
+        operation: '*',
+        start: 0,
+        end: 0,
+        visibilityIndices: [2],
+        viewModifier: EViewModifier.Selected,
+      });
+
+      expect(useDdgViewModifiersStore.getState().byKey[keyOne]).toBeDefined();
+      expect(useDdgViewModifiersStore.getState().byKey[keyTwo]).toBeDefined();
+
+      mockUseLocationValue.search = `?service=${serviceTwo}`;
+      rerender({ options: { modelHash: 'h2' } });
+
+      expect(useDdgViewModifiersStore.getState().byKey[keyOne]).toBeUndefined();
+      expect(useDdgViewModifiersStore.getState().byKey[keyTwo].get(2)).toBe(EViewModifier.Selected);
+    });
+
+    it('clears view modifiers for the current graph when model hash changes', () => {
+      const { rerender } = renderBridgeHook({ modelHash: 'hash-a' });
+      useDdgViewModifiersStore.getState().addViewModifier({
+        service: serviceOne,
+        operation: '*',
+        start: 0,
+        end: 0,
+        visibilityIndices: [3],
+        viewModifier: EViewModifier.Hovered,
+      });
+
+      expect(useDdgViewModifiersStore.getState().byKey[keyOne].get(3)).toBe(EViewModifier.Hovered);
+
+      rerender({ options: { modelHash: 'hash-b' } });
+
+      expect(useDdgViewModifiersStore.getState().byKey[keyOne]).toBeUndefined();
     });
   });
 });

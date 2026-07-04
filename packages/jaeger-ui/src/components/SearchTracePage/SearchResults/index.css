@@ -12,14 +12,17 @@ SPDX-License-Identifier: Apache-2.0
 .SearchResults--header {
   border: 1px solid var(--border-default);
   color: var(--text-primary);
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.5rem;
 }
 
 .SearchResults--headerOverview {
   align-items: center;
   background-color: var(--surface-secondary);
   display: flex;
-  padding: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  padding: 0.5rem 1rem;
 }
 
 .SearchResults--headerScatterPlot {
@@ -38,4 +41,8 @@ SPDX-License-Identifier: Apache-2.0
   border: var(--border-default) 1px solid;
   flex-grow: 1;
   position: relative;
+}
+
+.SearchResults--resultCount {
+  font-size: 1rem;
 }

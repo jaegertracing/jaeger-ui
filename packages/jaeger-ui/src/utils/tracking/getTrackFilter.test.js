@@ -1,8 +1,8 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-jest.mock('lodash/throttle', () => jest.fn(fn => fn));
-jest.mock('../../utils/tracking');
+vi.mock('lodash/throttle', () => mockDefault(jest.fn(fn => fn)));
+vi.mock('../../utils/tracking');
 
 import _throttle from 'lodash/throttle';
 

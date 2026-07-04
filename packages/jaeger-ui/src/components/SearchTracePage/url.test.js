@@ -1,13 +1,13 @@
 // Copyright (c) 2020 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import * as reactRouterDomCompat from 'react-router-dom';
+import * as ReactRouterDom from 'react-router-dom';
 
 import { MAX_LENGTH } from '../DeepDependencies/Graph/DdgNodeContent/constants';
-import { ROUTE_PATH, getUrl, getUrlState, isSameQuery, matches } from './url';
+import { ROUTE_PATH, getUrl, getUrlState, isSameQuery, matches, searchQueryFromUrl } from './url';
 
-jest.mock('react-router-dom', () => ({
-  matchPath: jest.fn(),
+vi.mock('react-router-dom', () => ({
+  matchPath: vi.fn(),
 }));
 
 describe('SearchTracePage/url', () => {
@@ -20,21 +20,20 @@ describe('SearchTracePage/url', () => {
 
   describe('matches', () => {
     const path = 'path argument';
-    let matchPathSpy;
 
-    beforeAll(() => {
-      matchPathSpy = jest.spyOn(reactRouterDomCompat, 'matchPath');
+    beforeEach(() => {
+      ReactRouterDom.matchPath.mockReset();
     });
 
     it('calls matchPath with expected arguments', () => {
       matches(path);
-      expect(matchPathSpy).toHaveBeenLastCalledWith(ROUTE_PATH, path);
+      expect(ReactRouterDom.matchPath).toHaveBeenLastCalledWith(ROUTE_PATH, path);
     });
 
     it("returns truthiness of matchPath's return value", () => {
-      matchPathSpy.mockReturnValueOnce(null);
+      ReactRouterDom.matchPath.mockReturnValueOnce(null);
       expect(matches(path)).toBe(false);
-      matchPathSpy.mockReturnValueOnce({});
+      ReactRouterDom.matchPath.mockReturnValueOnce({});
       expect(matches(path)).toBe(true);
     });
   });
@@ -127,7 +126,7 @@ describe('SearchTracePage/url', () => {
 
         expect(
           getUrl({
-            traceID: new Array(numberOfArgs).fill(trace0),
+            traceID: Array.from({ length: numberOfArgs }, () => trace0),
           }).length
         ).toBeLessThan(MAX_LENGTH);
       });
@@ -135,7 +134,7 @@ describe('SearchTracePage/url', () => {
       it('does not over shorten', () => {
         const numberOfArgs = Math.floor(maxLengthOfArgs / lengthOfOneArg);
         const remainder = maxLengthOfArgs % lengthOfOneArg;
-        const ids = new Array(numberOfArgs).fill(trace0);
+        const ids = Array.from({ length: numberOfArgs }, () => trace0);
         ids[ids.length - 1] = `${ids[ids.length - 1]}${'x'.repeat(remainder)}`;
         ids.push(trace0);
 
@@ -241,6 +240,62 @@ describe('SearchTracePage/url', () => {
       const { [otherKey]: _omitted, ...copy } = baseQuery;
       expect(isSameQuery(baseQuery, copy)).toBe(true);
       expect(isSameQuery(baseQuery, { ...copy, [otherKey]: 'changed' })).toBe(true);
+    });
+  });
+
+  describe('searchQueryFromUrl', () => {
+    it('returns null when no service, start, or end is present', () => {
+      expect(searchQueryFromUrl('?limit=20')).toBeNull();
+    });
+
+    it('uses explicit lookback from URL when present', () => {
+      const result = searchQueryFromUrl('?service=svc&start=1000000000&end=4600000000&lookback=1h');
+      expect(result?.lookback).toBe('1h');
+    });
+
+    it('reconstructs lookback from duration when lookback is absent', () => {
+      // 6-hour window in microseconds
+      const startUs = 1_000_000_000_000;
+      const endUs = startUs + 6 * 60 * 60 * 1_000_000;
+      const result = searchQueryFromUrl(`?service=svc&start=${startUs}&end=${endUs}`);
+      expect(result?.lookback).toBe('6h');
+    });
+
+    it('snaps up to the next bucket when duration falls between options', () => {
+      // 70-minute window → should snap up to 2h
+      const startUs = 1_000_000_000_000;
+      const endUs = startUs + 70 * 60 * 1_000_000;
+      const result = searchQueryFromUrl(`?service=svc&start=${startUs}&end=${endUs}`);
+      expect(result?.lookback).toBe('2h');
+    });
+
+    it('returns "custom" when duration exceeds the largest option', () => {
+      const startUs = 1_000_000_000_000;
+      const endUs = startUs + 100 * 24 * 60 * 60 * 1_000_000; // 100 days
+      const result = searchQueryFromUrl(`?service=svc&start=${startUs}&end=${endUs}`);
+      expect(result?.lookback).toBe('custom');
+    });
+
+    it('returns empty lookback when service is present but no timestamps', () => {
+      const result = searchQueryFromUrl('?service=svc');
+      expect(result?.lookback).toBe('');
+    });
+
+    it('derives start/end from lookback when old-style URL omits timestamps', () => {
+      const before = Date.now();
+      const result = searchQueryFromUrl(
+        '?service=frontend&lookback=1h&limit=20&tags=%7B%22driver%22%3A%22T789090C%22%7D'
+      );
+      const after = Date.now();
+      expect(result).not.toBeNull();
+      expect(result?.lookback).toBe('1h');
+      const startUs = Number(result?.start);
+      const endUs = Number(result?.end);
+      // end should be approximately now (within 1 second)
+      expect(endUs).toBeGreaterThanOrEqual(before * 1000);
+      expect(endUs).toBeLessThanOrEqual(after * 1000 + 1000 * 1000);
+      // start should be 1 hour before end
+      expect(endUs - startUs).toBeCloseTo(60 * 60 * 1_000_000, -6);
     });
   });
 });

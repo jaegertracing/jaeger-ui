@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-jest.mock('./scroll-page');
+vi.mock('./scroll-page');
 
 import { scrollBy, scrollTo } from './scroll-page';
 import ScrollManager from './ScrollManager';
@@ -63,7 +63,7 @@ describe('ScrollManager', () => {
   describe('_scrollPast()', () => {
     it('throws if accessors is not set', () => {
       manager.setAccessors(null);
-      expect(() => manager._scrollPast(0, 1)).toThrow();
+      expect(() => manager._scrollPast(0, 1)).toThrow('Accessors not set');
     });
 
     it('is a noop if an invalid rowPosition is returned by the accessors', () => {
@@ -110,7 +110,7 @@ describe('ScrollManager', () => {
     });
     it('throws if accessors is not set', () => {
       manager.setAccessors(null);
-      expect(() => manager._scrollToVisibleSpan(1)).toThrow();
+      expect(() => manager._scrollToVisibleSpan(1)).toThrow('Accessors not set');
     });
     it('exits if the trace is not set', () => {
       manager.setTrace(null);
@@ -183,6 +183,35 @@ describe('ScrollManager', () => {
 
       manager._scrollToVisibleSpan(1);
       expect(scrollPastMock).toHaveBeenLastCalledWith(parentOfLastRowWithHiddenChildrenIndex, 1);
+    });
+
+    it('scrolls to index 0 when scrolling down and index 0 is the only match', () => {
+      accessors.getTopRowIndexVisible.mockReturnValue(5);
+      accessors.getBottomRowIndexVisible.mockReturnValue(5);
+      accessors.getSearchedSpanIDs = () => new Set([trace.spans[0].spanID]);
+
+      manager._scrollToVisibleSpan(1, 0);
+      expect(scrollPastMock).toHaveBeenLastCalledWith(0, 1);
+    });
+
+    it('scrolls to correct span when startRow is provided and mapping is not 1:1', () => {
+      // Mock non-1:1 mapping: row 2 maps to span 4, and span 4 maps to row 2
+      accessors.mapRowIndexToSpanIndex.mockImplementation(r => (r === 2 ? 4 : r));
+      accessors.mapSpanIndexToRowIndex.mockImplementation(s => (s === 4 ? 2 : s));
+      accessors.getSearchedSpanIDs = () => new Set([trace.spans[4].spanID]);
+
+      manager._scrollToVisibleSpan(1, 2);
+      expect(accessors.mapRowIndexToSpanIndex).toHaveBeenCalledWith(2);
+      expect(scrollPastMock).toHaveBeenLastCalledWith(2, 1);
+    });
+
+    it('scrolls to index 0 when scrolling up and index 0 is the only match', () => {
+      accessors.getTopRowIndexVisible.mockReturnValue(1);
+      accessors.getBottomRowIndexVisible.mockReturnValue(1);
+      accessors.getSearchedSpanIDs = () => new Set([trace.spans[0].spanID]);
+
+      manager._scrollToVisibleSpan(-1);
+      expect(scrollPastMock).toHaveBeenLastCalledWith(0, -1);
     });
 
     describe('scrollToNextVisibleSpan() and scrollToPrevVisibleSpan()', () => {
