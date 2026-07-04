@@ -118,7 +118,8 @@ export default function AttributesTable(props: AttributesTableProps) {
   const [query, setQuery] = React.useState('');
 
   const visibleRows = React.useMemo(() => {
-    if (!query.trim() || data.length <= FILTER_THRESHOLD) return data.map((attr, i) => ({ attr, originalIndex: i }));
+    if (!query.trim() || data.length <= FILTER_THRESHOLD)
+      return data.map((attr, i) => ({ attr, originalIndex: i }));
     const lower = query.trim().toLowerCase();
     return data.reduce<{ attr: IAttribute; originalIndex: number }[]>((acc, attr, i) => {
       if (attr.key.toLowerCase().includes(lower) || String(attr.value).toLowerCase().includes(lower)) {
