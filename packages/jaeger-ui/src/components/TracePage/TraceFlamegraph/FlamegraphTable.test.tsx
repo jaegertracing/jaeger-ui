@@ -42,13 +42,14 @@ describe('<FlamegraphTable />', () => {
 
   it('shows "Service & Operation" column header by default', () => {
     render(<FlamegraphTable {...defaultProps} />);
-    expect(screen.getByText('Service & Operation')).toBeInTheDocument();
+    // The first column is fixed, so antd clones its header into the fixed-column layer.
+    expect(screen.getAllByText('Service & Operation')[0]).toBeInTheDocument();
   });
 
   it('shows "Service & Span Name" when useOpenTelemetryTerms is true', () => {
     mockUseConfig.mockReturnValue({ useOpenTelemetryTerms: true });
     render(<FlamegraphTable {...defaultProps} />);
-    expect(screen.getByText('Service & Span Name')).toBeInTheDocument();
+    expect(screen.getAllByText('Service & Span Name')[0]).toBeInTheDocument();
   });
 
   it('displays service name and operation name separately', () => {
@@ -99,7 +100,7 @@ describe('<FlamegraphTable />', () => {
 
   it('clicking column header toggles sort direction', () => {
     render(<FlamegraphTable {...defaultProps} />);
-    const countHeader = screen.getByText('Count');
+    const countHeader = screen.getAllByText('Count')[0];
     fireEvent.click(countHeader);
     // After clicking Count, rows should be sorted by count
     const rows = screen.getAllByRole('row');
@@ -110,7 +111,7 @@ describe('<FlamegraphTable />', () => {
   it('sort does not allow a third "cancel" state', () => {
     render(<FlamegraphTable {...defaultProps} />);
     // Default sort: self descend. Click Self header twice — should toggle to ascend then back to descend, never cancel
-    const selfHeader = screen.getByText('Self');
+    const selfHeader = screen.getAllByText('Self')[0];
     fireEvent.click(selfHeader); // ascend
     fireEvent.click(selfHeader); // descend
     // All rows should still be visible (sorted, not unsorted/cancelled)

@@ -4,17 +4,13 @@
   "labels": ["changelog:dependencies"],
   "suppressNotifications": ["prEditedNotification"],
   "schedule": ["on sunday"],
+  "minimumReleaseAge": "7 days",
   "vulnerabilityAlerts": {
     "enabled": true,
-    "labels": ["security"]
+    "labels": ["security"],
+    "minimumReleaseAge": "0 days"
   },
   "packageRules": [
-    {
-      "groupName": "vite-plus and bundled vitest",
-      "matchManagers": ["npm"],
-      "matchPackageNames": ["vite-plus", "vitest", "@vitest/coverage-v8"],
-      "description": "vite-plus bundles a specific vitest version internally; these must be bumped together to avoid peer-dependency version mismatches"
-    },
     {
       "groupName": "rolldown",
       "matchManagers": ["npm"],
@@ -45,6 +41,13 @@
       "matchManagers": ["npm"],
       "matchUpdateTypes": ["patch", "digest"],
       "enabled": false
+    },
+    {
+      "groupName": "vite-plus and bundled vitest",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["vite-plus", "vitest", "@vitest/coverage-v8"],
+      "enabled": true,
+      "description": "vite-plus bundles a specific vitest version internally; these must be bumped together to avoid peer-dependency version mismatches. Placed after the patch-disable rule so patch bumps are still included."
     },
     {
       "matchManagers": ["github-actions"],
