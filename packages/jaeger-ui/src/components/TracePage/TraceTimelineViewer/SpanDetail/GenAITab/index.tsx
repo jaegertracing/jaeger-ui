@@ -37,7 +37,10 @@ function AccordionGenAiBlock(props: { label: string; content: string }) {
     if (isJson && Array.isArray(parsed)) {
       const contents = parsed
         .map((msg: unknown) => {
-          const msgContent = msg && typeof msg === 'object' && 'content' in msg ? msg.content : undefined;
+          const msgContent =
+            msg && typeof msg === 'object' && 'content' in msg
+              ? (msg as { content?: unknown }).content
+              : undefined;
           if (typeof msgContent === 'string') return msgContent;
           if (msgContent !== undefined) return JSON.stringify(msgContent, null, 2);
           return '';
