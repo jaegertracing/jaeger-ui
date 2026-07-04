@@ -178,6 +178,7 @@ export default function SpanDetail(props: SpanDetailProps) {
       <div>
         {header}
         <Tabs
+          key={span.spanID}
           defaultActiveKey="details"
           destroyInactiveTabPane
           items={[

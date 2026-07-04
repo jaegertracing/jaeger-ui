@@ -208,7 +208,7 @@ describe('<SpanDetail>', () => {
 
     // Scope all overview assertions to the overview table to prevent false positives
     // if the same text appears elsewhere in the component tree
-    const overviewTable = screen.getByRole('table');
+    const overviewTable = screen.getByRole('table', { name: 'Span Overview' });
     const { getByText, getByRole } = within(overviewTable);
 
     // Check labels
