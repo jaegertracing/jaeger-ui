@@ -87,13 +87,13 @@ function AccordionGenAiBlock(props: { label: string; content: string }) {
       <div
         className="AccordionAttributes--header"
         aria-expanded={isOpen}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => setIsOpen(prev => !prev)}
         role="button"
         tabIndex={0}
         onKeyDown={e => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            setIsOpen(!isOpen);
+            setIsOpen(prev => !prev);
           }
         }}
       >
@@ -105,7 +105,12 @@ function AccordionGenAiBlock(props: { label: string; content: string }) {
           {textContent && (
             <div className="ub-relative">
               <div className="ub-absolute ub-right-0 ub-top-0 ub-m1">
-                <CopyIcon copyText={textContent} buttonText="" tooltipTitle="Copy" placement="topRight" />
+                <CopyIcon
+                  copyText={textContent}
+                  buttonText="Copy"
+                  tooltipTitle="Copy payload"
+                  placement="topRight"
+                />
               </div>
               <div style={{ paddingRight: '2rem' }}>{textContent}</div>
             </div>
@@ -150,6 +155,11 @@ export default function SpanDetail(props: SpanDetailProps) {
   const deepLinkCopyText = `${window.location.origin}${window.location.pathname}?uiFind=${span.spanID}`;
 
   const isGenAi = isGenAiSpan(span.attributes, span.name);
+  const genAiMetadata = React.useMemo(() => {
+    return isGenAi
+      ? getGenAiMetadata(span.attributes, span.events)
+      : ({} as ReturnType<typeof getGenAiMetadata>);
+  }, [isGenAi, span.attributes, span.events]);
 
   const standardContent = (
     <>
@@ -211,7 +221,6 @@ export default function SpanDetail(props: SpanDetailProps) {
   let contentNode = standardContent;
 
   if (isGenAi) {
-    const genAiMetadata = getGenAiMetadata(span.attributes, span.events);
     const genAiSummaryItems = [
       genAiMetadata.provider && { key: 'provider', label: 'Provider:', value: genAiMetadata.provider },
       genAiMetadata.model && { key: 'model', label: 'Model:', value: genAiMetadata.model },
@@ -316,7 +325,13 @@ export default function SpanDetail(props: SpanDetailProps) {
     ];
 
     contentNode = (
-      <Tabs defaultActiveKey="genai" items={tabItems} className="SpanDetail--tabs" destroyInactiveTabPane />
+      <Tabs
+        key={span.spanID}
+        defaultActiveKey="genai"
+        items={tabItems}
+        className="SpanDetail--tabs"
+        destroyInactiveTabPane
+      />
     );
   }
 
