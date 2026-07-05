@@ -10,6 +10,7 @@ import store from '../../../utils/storage';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 import { Link } from 'react-router-dom';
+import type { NavigateFunction } from 'react-router-dom';
 import * as jaegerApiActions from '../../../actions/jaeger-api';
 import OperationTableDetails from './operationDetailsTable';
 import ServiceGraph from './serviceGraph';
@@ -26,7 +27,8 @@ import {
   FetchAggregatedServiceMetricsResponse,
 } from '../../../types/metrics';
 import prefixUrl from '../../../utils/prefix-url';
-import { convertToTimeUnit, convertTimeUnitToShortTerm, getSuitableTimeUnit } from '../../../utils/date';
+import { convertTimeUnitToShortTerm, getSuitableTimeUnit } from '../../../utils/date';
+import { ONE_HOUR_MS, timeFrameOptions, getLoopbackInterval, yAxisTickFormat } from './timeFrameUtils';
 
 import './index.css';
 import getConfig from '../../../utils/config/get-config';
@@ -41,12 +43,18 @@ import withRouteProps from '../../../utils/withRouteProps';
 
 import SearchableSelect from '../../common/SearchableSelect';
 import { useServices } from '../../../hooks/useTraceDiscovery';
+import { getUrl, getUrlState } from '../url';
 
 type TReduxProps = {
   metrics: MetricsReduxState;
 };
 
-type TProps = TReduxProps & TDispatchProps;
+type TOwnProps = {
+  search?: string;
+  navigate?: NavigateFunction;
+};
+
+type TProps = TReduxProps & TDispatchProps & TOwnProps;
 
 type TDispatchProps = {
   fetchAggregatedServiceMetrics: ActionFunctionAny<Action<Promise<FetchAggregatedServiceMetricsResponse>>>;
@@ -58,19 +66,6 @@ const trackSearchOperationDebounced = _debounce(searchQuery => trackSearchOperat
 const Search = Input.Search;
 const Option = Select.Option;
 
-const oneHourInMilliSeconds = 3600000;
-const oneMinuteInMilliSeconds = 60000;
-const timeFrameOptions = [
-  { label: 'Last 5 minutes', value: 5 * oneMinuteInMilliSeconds },
-  { label: 'Last 15 minutes', value: 15 * oneMinuteInMilliSeconds },
-  { label: 'Last 30 minutes', value: 30 * oneMinuteInMilliSeconds },
-  { label: 'Last Hour', value: oneHourInMilliSeconds },
-  { label: 'Last 2 hours', value: 2 * oneHourInMilliSeconds },
-  { label: 'Last 6 hours', value: 6 * oneHourInMilliSeconds },
-  { label: 'Last 12 hours', value: 12 * oneHourInMilliSeconds },
-  { label: 'Last 24 hours', value: 24 * oneHourInMilliSeconds },
-  { label: 'Last 2 days', value: 48 * oneHourInMilliSeconds },
-];
 const spanKindOptions = [
   { label: 'Client', value: 'client' },
   { label: 'Server', value: 'server' },
@@ -79,15 +74,30 @@ const spanKindOptions = [
   { label: 'Consumer', value: 'consumer' },
 ];
 
-// export for tests
-export const getLoopbackInterval = (interval: number) => {
-  if (interval === undefined) return '';
+const getDefaultSpanKind = (): spanKinds => {
+  const stored = store.getString('lastAtmSearchSpanKind');
+  return spanKindOptions.some(opt => opt.value === stored) ? (stored as spanKinds) : 'server';
+};
 
-  const timeFrameObj = timeFrameOptions.find(t => t.value === interval);
+const resolveService = (candidate: string | undefined, services: string[]): string | undefined => {
+  if (candidate && services.includes(candidate)) return candidate;
+  const stored = store.getString('lastAtmSearchService');
+  if (stored && services.includes(stored)) return stored;
+  return services[0];
+};
 
-  if (timeFrameObj === undefined) return '';
-
-  return timeFrameObj.label.toLowerCase();
+const getFiltersFromSearch = (search: string) => {
+  const urlState = getUrlState(search);
+  return {
+    selectedService: urlState.service ?? store.getString('lastAtmSearchService'),
+    selectedSpanKind: urlState.spanKind ?? getDefaultSpanKind(),
+    selectedTimeFrame: urlState.timeframe ?? store.getNumber('lastAtmSearchTimeframe', ONE_HOUR_MS),
+    urlOwned: {
+      service: urlState.service != null,
+      spanKind: urlState.spanKind != null,
+      timeframe: urlState.timeframe != null,
+    },
+  };
 };
 
 const calcDisplayTimeUnit = (serviceLatencies: ServiceMetricsObject | ServiceMetricsObject[] | null) => {
@@ -102,10 +112,6 @@ const calcDisplayTimeUnit = (serviceLatencies: ServiceMetricsObject | ServiceMet
 
   return getSuitableTimeUnit(maxValue * 1000);
 };
-
-// export for tests
-export const yAxisTickFormat = (timeInMS: number, displayTimeUnit: string) =>
-  convertToTimeUnit(timeInMS * 1000, displayTimeUnit);
 
 const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMetricsObject) => {
   if (!serviceErrorRate) return null;
@@ -124,25 +130,35 @@ const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMe
 };
 
 export function MonitorATMServicesViewImpl(props: TProps) {
-  const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics, metrics } = props;
+  const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics, metrics, search = '', navigate } = props;
   const { data: services = [], isLoading: servicesLoading } = useServices();
   const docsLink = getConfig().monitor?.docsLink;
   const graphDivWrapper = useRef<HTMLDivElement>(null);
+
+  const initialFilters = getFiltersFromSearch(search);
+
   const [endTime, setEndTime] = useState<number>(Date.now());
   const [graphWidth, setGraphWidth] = useState<number>(300);
   const [serviceOpsMetrics, setServiceOpsMetrics] = useState<ServiceOpsMetrics[] | undefined>(undefined);
   const [searchOps, setSearchOps] = useState<string>('');
   const [graphXDomain, setGraphXDomain] = useState<number[]>([]);
-  const [selectedService, setSelectedService] = useState<string | undefined>(
-    store.getString('lastAtmSearchService')
-  );
-  const [selectedSpanKind, setSelectedSpanKind] = useState<spanKinds>(() => {
-    const stored = store.getString('lastAtmSearchSpanKind');
-    return spanKindOptions.some(opt => opt.value === stored) ? (stored as spanKinds) : 'server';
-  });
-  const [selectedTimeFrame, setSelectedTimeFrame] = useState<number>(
-    store.getNumber('lastAtmSearchTimeframe', oneHourInMilliSeconds)
-  );
+  const [selectedService, setSelectedService] = useState<string | undefined>(initialFilters.selectedService);
+  const [selectedSpanKind, setSelectedSpanKind] = useState<spanKinds>(initialFilters.selectedSpanKind);
+  const [selectedTimeFrame, setSelectedTimeFrame] = useState<number>(initialFilters.selectedTimeFrame);
+
+  const urlOwned = useRef(initialFilters.urlOwned);
+  const isInternalUrlSync = useRef(false);
+
+  useEffect(() => {
+    const filters = getFiltersFromSearch(search);
+    if (!isInternalUrlSync.current) {
+      urlOwned.current = filters.urlOwned;
+    }
+    isInternalUrlSync.current = false;
+    setSelectedService(filters.selectedService);
+    setSelectedSpanKind(filters.selectedSpanKind);
+    setSelectedTimeFrame(filters.selectedTimeFrame);
+  }, [search]);
 
   const calcGraphXDomain = useCallback(() => {
     const currentTime = Date.now();
@@ -156,35 +172,66 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   }, []);
 
   const getSelectedService = useCallback(() => {
-    return selectedService || store.getString('lastAtmSearchService') || services[0];
+    return resolveService(selectedService, services);
   }, [services, selectedService]);
 
-  const handleServiceChange = useCallback((value: string) => {
-    setSelectedService(value);
-    trackSelectService(value);
-  }, []);
+  const syncFiltersToUrl = useCallback(
+    (filters: { service: string; spanKind: spanKinds; timeframe: number }) => {
+      if (!navigate) return;
+      isInternalUrlSync.current = true;
+      navigate(getUrl(filters, search), { replace: true });
+    },
+    [navigate, search]
+  );
 
-  const handleSpanKindChange = useCallback((value: string) => {
-    setSelectedSpanKind(value as spanKinds);
-    const { label } = spanKindOptions.find(option => option.value === value)!;
-    trackSelectSpanKind(label);
-  }, []);
+  const handleServiceChange = useCallback(
+    (value: string) => {
+      urlOwned.current.service = false;
+      setSelectedService(value);
+      trackSelectService(value);
+      syncFiltersToUrl({ service: value, spanKind: selectedSpanKind, timeframe: selectedTimeFrame });
+    },
+    [selectedSpanKind, selectedTimeFrame, syncFiltersToUrl]
+  );
 
-  const handleTimeFrameChange = useCallback((value: number) => {
-    setSelectedTimeFrame(value);
-    const { label } = timeFrameOptions.find(option => option.value === value)!;
-    trackSelectTimeframe(label);
-  }, []);
+  const handleSpanKindChange = useCallback(
+    (value: string) => {
+      const spanKind = value as spanKinds;
+      urlOwned.current.spanKind = false;
+      setSelectedSpanKind(spanKind);
+      const { label } = spanKindOptions.find(option => option.value === value)!;
+      trackSelectSpanKind(label);
+      const service = resolveService(selectedService, services);
+      if (service) {
+        syncFiltersToUrl({ service, spanKind, timeframe: selectedTimeFrame });
+      }
+    },
+    [selectedService, selectedTimeFrame, services, syncFiltersToUrl]
+  );
+
+  const handleTimeFrameChange = useCallback(
+    (value: number) => {
+      urlOwned.current.timeframe = false;
+      setSelectedTimeFrame(value);
+      const { label } = timeFrameOptions.find(option => option.value === value)!;
+      trackSelectTimeframe(label);
+      const service = resolveService(selectedService, services);
+      if (service) {
+        syncFiltersToUrl({ service, spanKind: selectedSpanKind, timeframe: value });
+      }
+    },
+    [selectedService, selectedSpanKind, services, syncFiltersToUrl]
+  );
 
   const fetchMetrics = useCallback(() => {
-    const currentService = selectedService || services[0];
+    const currentService = resolveService(selectedService, services);
 
     if (currentService) {
       const newEndTime = Date.now();
       setEndTime(newEndTime);
-      store.set('lastAtmSearchSpanKind', selectedSpanKind);
-      store.set('lastAtmSearchTimeframe', selectedTimeFrame);
-      store.set('lastAtmSearchService', currentService);
+      if (!urlOwned.current.spanKind) store.set('lastAtmSearchSpanKind', selectedSpanKind);
+      if (!urlOwned.current.timeframe) store.set('lastAtmSearchTimeframe', selectedTimeFrame);
+      if (!urlOwned.current.service) store.set('lastAtmSearchService', currentService);
 
       const metricQueryPayload = {
         quantile: 0.95,
@@ -269,8 +316,8 @@ export function MonitorATMServicesViewImpl(props: TProps) {
         />
       )}
       <div className="service-view-container">
-        <Row>
-          <Col span={6}>
+        <Row className="service-span-kind-row" gutter={16} align="bottom">
+          <Col className="service-filter-col">
             <h2 className="service-selector-header">Service</h2>
             <SearchableSelect
               value={getSelectedService()}
@@ -287,7 +334,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
               ))}
             </SearchableSelect>
           </Col>
-          <Col span={6}>
+          <Col className="span-kind-filter-col">
             <h2 className="span-kind-selector-header">Span Kind</h2>
             <SearchableSelect
               value={selectedSpanKind}
@@ -335,7 +382,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
             >
               {timeFrameOptions.map(option => (
                 <Option key={option.value} value={option.value}>
-                  {option.label}
+                  {`Last ${option.label}`}
                 </Option>
               ))}
             </SearchableSelect>
@@ -391,10 +438,10 @@ export function MonitorATMServicesViewImpl(props: TProps) {
             />
           </Col>
         </Row>
-        <Row className="operation-table-block">
+        <Row className="operation-table-block" align="middle">
           <Col span={16}>
             <h2 className="table-header">Operations metrics under {getSelectedService()}</h2>{' '}
-            <span className="over-the-last">Over the {getLoopbackInterval(selectedTimeFrame)}</span>
+            <span className="over-the-last">Last {getLoopbackInterval(selectedTimeFrame)}</span>
           </Col>
           <Col span={8} className="select-operation-column">
             <Search
@@ -422,7 +469,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
             data={serviceOpsMetrics === undefined ? metrics.serviceOpsMetrics : serviceOpsMetrics}
             endTime={endTime}
             lookback={selectedTimeFrame}
-            serviceName={getSelectedService()}
+            serviceName={getSelectedService() ?? ''}
           />
         </Row>
       </div>

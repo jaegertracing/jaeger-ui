@@ -5,6 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 
 th.header-item {
   background: var(--surface-secondary);
+  background: var(--surface-tertiary);
   border-left: 1px solid var(--border-default);
   border-top: 1px solid var(--border-default);
   border-bottom: 1px solid var(--border-default);
@@ -33,16 +34,20 @@ td.header-item {
 }
 
 .table-row:hover {
+.table-row:hover,
+.table-row--hovered {
   background: var(--surface-component-background-hover);
 }
 
-.ant-table-tbody > tr.ant-table-row-level-0:hover > td {
-  background: unset;
+.ant-table-tbody > tr.ant-table-row-level-0:not(.ant-table-row-selected):hover > td,
+.ant-table-tbody > tr.table-row--hovered:not(.ant-table-row-selected) > td {
+  background: var(--surface-component-background-hover);
 }
 
 .ant-progress-inner {
   border-radius: 0px;
   background: var(--interactive-primary-light);
+  background: var(--surface-component-background);
 }
 
 .impact {
