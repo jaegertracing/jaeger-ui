@@ -16,7 +16,13 @@ import { IAttribute } from '../../../../types/otel';
 
 import './AttributesTable.css';
 
-const jsonObjectOrArrayStartRegex = /^(\[|\{)/;
+// .length counts UTF-16 code units, not bytes. Non-ASCII strings may be larger
+// in memory than this number suggests, but this threshold is a reasonable proxy
+// for "expensive to render synchronously".
+const LARGE_VALUE_THRESHOLD_CHARS = 10_000;
+
+// Allow leading whitespace so indented/pretty-printed JSON is also detected
+const jsonObjectOrArrayStartRegex = /^\s*[{[]/;
 
 function tryParseJson(value: string) {
   // if the value is a string representing actual json object or array, then use json-markup
@@ -91,6 +97,47 @@ function formatValue(key: string, value: any) {
   return <div className="ub-inline-block">{content}</div>;
 }
 
+function formatSize(chars: number) {
+  if (chars < 1024) return `${chars} chars`;
+  return `${(chars / 1024).toFixed(1)} KB`;
+}
+
+/**
+ * LargeValueCell renders a collapsed placeholder for large attribute values and
+ * expands them lazily on click. Keeping state in a dedicated component (rather
+ * than a closure inside .map) is required by the Rules of Hooks.
+ */
+function LargeValueCell({ attrKey, value }: { attrKey: string; value: string }) {
+  const [isExpanded, setIsExpanded] = React.useState(false);
+  const [isDeferredLoaded, setIsDeferredLoaded] = React.useState(false);
+
+  // useEffect (not a click-handler return) so the timeout is properly cleaned up
+  // if the component unmounts or the user collapses before 50 ms elapses.
+  React.useEffect(() => {
+    if (!isExpanded || isDeferredLoaded) return undefined;
+    const t = setTimeout(() => setIsDeferredLoaded(true), 50);
+    return () => clearTimeout(t);
+  }, [isExpanded, isDeferredLoaded]);
+
+  if (!isExpanded) {
+    return (
+      <button
+        type="button"
+        className="KeyValueTable--largeValuePlaceholder"
+        onClick={() => setIsExpanded(true)}
+      >
+        {formatSize(value.length)} — click to expand
+      </button>
+    );
+  }
+
+  if (!isDeferredLoaded) {
+    return <span className="KeyValueTable--largeValueLoading">Parsing…</span>;
+  }
+
+  return <div className="ub-inline-block">{formatValue(attrKey, value)}</div>;
+}
+
 export const LinkValue = (props: { href: string; title?: string; children: React.ReactNode }) => (
   <a href={props.href} title={props.title || ''} target="_blank" rel="noopener noreferrer">
     {props.children} <IoOpenOutline className="KeyValueTable--linkIcon" />
@@ -119,10 +166,16 @@ export default function AttributesTable(props: AttributesTableProps) {
       <table className="u-width-100">
         <tbody className="KeyValueTable--body">
           {data.map((row, i) => {
-            const jsonTable = formatValue(row.key, row.value);
+            const isLarge = typeof row.value === 'string' && row.value.length >= LARGE_VALUE_THRESHOLD_CHARS;
+            const jsonTable = isLarge ? null : formatValue(row.key, row.value);
             const links = linksGetter ? linksGetter(data, i) : null;
+
             let valueMarkup;
-            if (links?.length === 1) {
+            if (isLarge) {
+              // Render lazily inline — preserves ordering, count, and linksGetter is still
+              // available in the same row if needed in the future.
+              valueMarkup = <LargeValueCell attrKey={row.key} value={row.value as string} />;
+            } else if (links?.length === 1) {
               valueMarkup = (
                 <div>
                   <LinkValue href={links[0].url} title={links[0].text}>
@@ -166,21 +219,23 @@ export default function AttributesTable(props: AttributesTableProps) {
               <tr className="KeyValueTable--row" key={`${row.key}-${i}`}>
                 <td className="KeyValueTable--keyColumn">{keyMarkup}</td>
                 <td className="KeyValueTable--valueColumn">
-                  <div className="KeyValueTable--copyContainer">
-                    <CopyIcon
-                      className="KeyValueTable--copyIcon"
-                      copyText={String(row.value)}
-                      tooltipTitle="Copy value"
-                      buttonText="Copy"
-                    />
-                    <CopyIcon
-                      className="KeyValueTable--copyIcon"
-                      icon={<IoCopyOutline />}
-                      copyText={JSON.stringify(row, null, 2)}
-                      tooltipTitle="Copy JSON"
-                      buttonText="JSON"
-                    />
-                  </div>
+                  {!isLarge && (
+                    <div className="KeyValueTable--copyContainer">
+                      <CopyIcon
+                        className="KeyValueTable--copyIcon"
+                        copyText={String(row.value)}
+                        tooltipTitle="Copy value"
+                        buttonText="Copy"
+                      />
+                      <CopyIcon
+                        className="KeyValueTable--copyIcon"
+                        icon={<IoCopyOutline />}
+                        copyText={JSON.stringify(row, null, 2)}
+                        tooltipTitle="Copy JSON"
+                        buttonText="JSON"
+                      />
+                    </div>
+                  )}
                   {valueMarkup}
                 </td>
               </tr>
