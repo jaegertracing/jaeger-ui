@@ -31,7 +31,7 @@ vi.mock('antd', () => ({
 const mockLocation = { search: '' };
 const mockNavigate = vi.fn();
 
-vi.mock('../../../../model/path-agnostic-decorations', () => mockDefault(jest.fn(() => ({}))));
+vi.mock('../../../../model/path-agnostic-decorations', () => mockDefault(vi.fn(() => ({}))));
 vi.mock('react-router-dom', () => ({
   useLocation: () => mockLocation,
   useNavigate: () => mockNavigate,
@@ -74,19 +74,19 @@ describe('<DdgNodeContent>', () => {
   const vertexKey = 'some-key';
   const props = {
     focalNodeUrl: 'some-url',
-    focusPathsThroughVertex: jest.fn(),
-    getDecoration: jest.fn(),
-    getGenerationVisibility: jest.fn(),
-    getVisiblePathElems: jest.fn(),
-    hideVertex: jest.fn(),
+    focusPathsThroughVertex: vi.fn(),
+    getDecoration: vi.fn(),
+    getGenerationVisibility: vi.fn(),
+    getVisiblePathElems: vi.fn(),
+    hideVertex: vi.fn(),
     isFocalNode: false,
     isPositioned: true,
     operation,
-    selectVertex: jest.fn(),
-    setOperation: jest.fn(),
-    setViewModifier: jest.fn(),
+    selectVertex: vi.fn(),
+    setOperation: vi.fn(),
+    setViewModifier: vi.fn(),
     service,
-    updateGenerationVisibility: jest.fn(),
+    updateGenerationVisibility: vi.fn(),
     vertex: {
       key: vertexKey,
     },
@@ -321,7 +321,7 @@ describe('<DdgNodeContent>', () => {
     let mockQuerySelector;
 
     beforeEach(() => {
-      mockGetBoundingClientRect = jest.fn(() => ({
+      mockGetBoundingClientRect = vi.fn(() => ({
         top: 100,
         bottom: 200,
         left: 50,
@@ -330,7 +330,7 @@ describe('<DdgNodeContent>', () => {
         height: 100,
       }));
 
-      mockQuerySelector = jest.fn(selector => {
+      mockQuerySelector = vi.fn(selector => {
         if (selector === '.DdgHeader--controlHeader') {
           return {
             getBoundingClientRect: () => ({
@@ -628,8 +628,8 @@ describe('<DdgNodeContent>', () => {
   describe('DdgNodeContentWrapper (default export)', () => {
     const store = {
       getState: () => ({}),
-      dispatch: jest.fn(),
-      subscribe: jest.fn(() => jest.fn()),
+      dispatch: vi.fn(),
+      subscribe: vi.fn(() => vi.fn()),
     };
 
     beforeEach(() => {

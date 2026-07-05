@@ -4,11 +4,10 @@
 import * as React from 'react';
 import { Popover } from 'antd';
 import cx from 'classnames';
-import { useLocation, useNavigate, NavigateFunction } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import type { NavigateFunction } from 'react-router-dom';
 import { TLayoutVertex } from '@jaegertracing/plexus/lib/types';
 import { IoLocate, IoEyeOff, IoSearch } from 'react-icons/io5';
-import { connect } from 'react-redux';
-import { IoLocate, IoEyeOff } from 'react-icons/io5';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
@@ -221,7 +220,8 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
 
   const viewTraces = React.useCallback(() => {
     trackViewTraces();
-    const { operation, search, service, navigate } = this.props;
+    const { operation, search, service, navigate } = props;
+    // Omit traceID and spanLinks via destructuring (rather than using delete on a mutable object)
     const { traceID: _traceID, spanLinks: _spanLinks, ...urlState } = getUrlState(search);
 
     navigate(
@@ -231,129 +231,7 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
         operation: typeof operation === 'string' ? operation : undefined,
       })
     );
-  };
-
-  private onMouseUx = (event: React.MouseEvent<HTMLElement>) => {
-    const { getGenerationVisibility, getVisiblePathElems, setViewModifier, vertexKey } = this.props;
-    const hovered = event.type === 'mouseover';
-    const visIndices = hovered
-      ? (getVisiblePathElems(vertexKey) || []).map(({ visibilityIdx }) => {
-          this.hoveredIndices.add(visibilityIdx);
-          return visibilityIdx;
-        })
-      : Array.from(this.hoveredIndices);
-    setViewModifier(visIndices, EViewModifier.Hovered, hovered);
-
-    if (hovered) {
-      if (this.state.shouldPositionTooltipBelow === undefined) this.checkTooltipPosition();
-      this.setState({
-        childrenVisibility: getGenerationVisibility(vertexKey, EDirection.Downstream),
-        parentVisibility: getGenerationVisibility(vertexKey, EDirection.Upstream),
-      });
-    } else this.hoveredIndices.clear();
-  };
-
-  render() {
-    const { childrenVisibility, parentVisibility } = this.state;
-    const {
-      decorationProgressbar,
-      decorationValue,
-      focalNodeUrl,
-      isFocalNode,
-      isPositioned,
-      operation,
-      service,
-    } = this.props;
-
-    const { radius, svcWidth, opWidth, svcMarginTop } = calcPositioning(service, operation);
-    const trueRadius = decorationProgressbar ? RADIUS - PROGRESS_BAR_STROKE_WIDTH : RADIUS;
-    const scaleFactor = trueRadius / radius;
-    const transform = `translate(${RADIUS - radius}px, ${RADIUS - radius}px) scale(${scaleFactor})`;
-
-    const menuItems: IActionMenuItem[] = [
-      {
-        id: 'set-focus',
-        label: 'Set focus',
-        icon: setFocusIcon,
-        href: focalNodeUrl || undefined,
-        onClick: trackSetFocus,
-        isVisible: Boolean(focalNodeUrl),
-      },
-      {
-        id: 'view-traces',
-        label: 'View traces',
-        icon: <IoSearch />,
-        onClick: this.viewTraces,
-      },
-      {
-        id: 'focus-paths',
-        label: 'Focus paths through this node',
-        icon: <IoLocate />,
-        onClick: this.focusPaths,
-        isVisible: !isFocalNode,
-      },
-      {
-        id: 'hide-node',
-        label: 'Hide node',
-        icon: <IoEyeOff />,
-        onClick: this.hideVertex,
-        isVisible: !isFocalNode,
-      },
-      {
-        id: 'view-parents',
-        label: 'View Parents',
-        icon: null,
-        onClick: this.updateParents,
-        isVisible: Boolean(parentVisibility),
-        checkboxProps: parentVisibility
-          ? {
-              checked: parentVisibility === ECheckedStatus.Full,
-              indeterminate: parentVisibility === ECheckedStatus.Partial,
-            }
-          : undefined,
-      },
-      {
-        id: 'view-children',
-        label: 'View Children',
-        icon: null,
-        onClick: this.updateChildren,
-        isVisible: Boolean(childrenVisibility),
-        checkboxProps: childrenVisibility
-          ? {
-              checked: childrenVisibility === ECheckedStatus.Full,
-              indeterminate: childrenVisibility === ECheckedStatus.Partial,
-            }
-          : undefined,
-      },
-    ];
-    const elems = getVisiblePathElems(vertexKey);
-    if (elems) {
-      const urlIds: Set<string> = new Set();
-      let currLength = MIN_LENGTH;
-      // Because there is a limit on traceIDs, attempt to get some from each elem rather than all from one.
-      const allIDs = elems.map(({ memberOf }) => memberOf.traceIDs.slice());
-      while (allIDs.length) {
-        const ids = allIDs.shift();
-        if (ids && ids.length) {
-          const id = ids.pop();
-          if (id && !urlIds.has(id)) {
-            // Keep track of the length, then break if it is too long, to avoid opening a tab with a URL that
-            // the backend cannot process, even if there are more traceIDs
-            currLength += PARAM_NAME_LENGTH + id.length;
-            if (currLength > MAX_LENGTH) {
-              break;
-            }
-            urlIds.add(id);
-            if (urlIds.size >= MAX_LINKED_TRACES) {
-              break;
-            }
-          }
-          allIDs.push(ids);
-        }
-      }
-      window.open(getSearchUrl({ traceID: Array.from(urlIds) }), '_blank');
-    }
-  }, [getVisiblePathElems, vertexKey]);
+  }, [props]);
 
   const onMouseUx = React.useCallback(
     (event: React.MouseEvent<HTMLElement>) => {
@@ -404,7 +282,7 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
     {
       id: 'view-traces',
       label: 'View traces',
-      icon: <NewWindowIcon />,
+      icon: <IoSearch />,
       onClick: viewTraces,
     },
     {
@@ -508,22 +386,14 @@ export function mapDispatchToProps(dispatch: Dispatch): TDispatchProps {
   };
 }
 
-const ConnectedDdgNodeContent = connect(
-  extractDecorationFromState,
-  mapDispatchToProps
-)(UnconnectedDdgNodeContent);
-
-// search is always injected from useLocation(); callers cannot supply it.
-type DdgNodeContentProps = Omit<React.ComponentProps<typeof ConnectedDdgNodeContent>, 'search' | 'navigate'>;
+type DdgNodeContentProps = Omit<
+  TProps,
+  keyof TDispatchProps | keyof TDecorationFromState | 'search' | 'navigate'
+>;
 
 function DdgNodeContent(props: DdgNodeContentProps) {
   const { search } = useLocation();
   const navigate = useNavigate();
-  return <ConnectedDdgNodeContent {...props} search={search} navigate={navigate} />;
-type DdgNodeContentProps = Omit<TProps, keyof TDispatchProps | keyof TDecorationFromState | 'search'>;
-
-function DdgNodeContent(props: DdgNodeContentProps) {
-  const { search } = useLocation();
   const dispatch = useDispatch<Dispatch>();
   const dispatchProps = React.useMemo(() => mapDispatchToProps(dispatch), [dispatch]);
   const decorationProps = useSelector(
@@ -536,7 +406,15 @@ function DdgNodeContent(props: DdgNodeContentProps) {
     shallowEqual
   );
 
-  return <UnconnectedDdgNodeContent {...props} {...dispatchProps} {...decorationProps} />;
+  return (
+    <UnconnectedDdgNodeContent
+      {...props}
+      search={search}
+      navigate={navigate}
+      {...dispatchProps}
+      {...decorationProps}
+    />
+  );
 }
 
 export default DdgNodeContent;
