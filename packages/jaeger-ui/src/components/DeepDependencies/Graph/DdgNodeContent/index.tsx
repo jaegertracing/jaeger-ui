@@ -223,21 +223,20 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
     const { operation, search, service, navigate } = props;
     // Omit traceID and spanLinks via destructuring (rather than using delete on a mutable object)
     const { traceID: _traceID, spanLinks: _spanLinks, ...rawUrlState } = getUrlState(search);
-    const { start, end, lookback, limit, minDuration, maxDuration, tags } = rawUrlState;
 
-    navigate(
-      getSearchUrl({
-        start,
-        end,
-        lookback,
-        limit,
-        minDuration,
-        maxDuration,
-        tags,
-        service,
-        operation: typeof operation === 'string' ? operation : undefined,
-      })
-    );
+    const query = {
+      service,
+      operation: typeof operation === 'string' ? operation : undefined,
+      ...(rawUrlState.start !== undefined ? { start: rawUrlState.start } : {}),
+      ...(rawUrlState.end !== undefined ? { end: rawUrlState.end } : {}),
+      ...(rawUrlState.lookback !== undefined ? { lookback: rawUrlState.lookback } : {}),
+      ...(rawUrlState.limit !== undefined ? { limit: rawUrlState.limit } : {}),
+      ...(rawUrlState.minDuration !== undefined ? { minDuration: rawUrlState.minDuration } : {}),
+      ...(rawUrlState.maxDuration !== undefined ? { maxDuration: rawUrlState.maxDuration } : {}),
+      ...(rawUrlState.tags !== undefined ? { tags: rawUrlState.tags } : {}),
+    };
+
+    navigate(getSearchUrl(query));
   }, [props]);
 
   const onMouseUx = React.useCallback(
