@@ -104,13 +104,15 @@ export function computeLatencyStats(
     const stdDev = state.count >= 2 ? Math.sqrt(state.M2 / (state.count - 1)) : 0;
     const zScore = state.count >= 2 && stdDev > 0 ? (span.duration - state.mean) / stdDev : NaN;
 
-    // Percentile rank: tie-aware mid-rank, i.e. the midpoint of the range of positions
-    // ([lowerBound, upperBound)) occupied by spans with this exact duration. This keeps
-    // tied durations centered in the distribution instead of all reporting as "slowest".
+    // Percentile rank: tie-aware mid-rank normalized so the group's minimum duration
+    // maps to exactly 0 and its maximum maps to exactly 1 (mean-rank formula scaled to
+    // [0, 1] by (n - 1) rather than n). This keeps tied durations centered in the
+    // distribution while still letting the fastest/slowest span reach full green/red.
+    // A group of size 1 has no meaningful min/max, so it reports a neutral 0.5.
     // Both bounds run in O(log m) vs the previous O(m) filter scan.
     const lower = lowerBound(sorted, span.duration);
     const upper = upperBound(sorted, span.duration);
-    const rank = (lower + upper) / 2 / sorted.length;
+    const rank = sorted.length > 1 ? (lower + upper - 1) / (2 * (sorted.length - 1)) : 0.5;
 
     const p50Us = percentileByIndex(sorted, 0.5);
     const p95Us = percentileByIndex(sorted, 0.95);
