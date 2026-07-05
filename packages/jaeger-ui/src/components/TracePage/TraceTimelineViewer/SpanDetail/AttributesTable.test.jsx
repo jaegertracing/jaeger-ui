@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import AttributesTable, { LinkValue } from './AttributesTable';
@@ -254,6 +254,61 @@ describe('<AttributesTable>', () => {
         expect(copyIcon).toHaveAttribute('data-copy-text', JSON.stringify(datum, null, 2));
         expect(copyIcon).toHaveAttribute('data-tooltip-title', 'Copy JSON');
       }
+    });
+  });
+
+  describe('LargeValueCell — inline lazy expand', () => {
+    const LARGE_VALUE = 'x'.repeat(10_001);
+
+    it('renders a placeholder button instead of full content for large string values', () => {
+      const largeData = [{ key: 'big_attr', value: LARGE_VALUE }];
+      render(<AttributesTable data={largeData} />);
+
+      // Should show a collapsed placeholder, not the full value
+      expect(screen.getByRole('button', { name: /click to expand/i })).toBeInTheDocument();
+      // Full value should not be in the DOM
+      expect(screen.queryByText(LARGE_VALUE)).not.toBeInTheDocument();
+    });
+
+    it('expands the value inline after clicking the placeholder', () => {
+      vi.useFakeTimers();
+      try {
+        const largeData = [{ key: 'big_attr', value: '{"hello":"world"}' + 'x'.repeat(10_000) }];
+        const { unmount } = render(<AttributesTable data={largeData} />);
+
+        const placeholder = screen.getByRole('button', { name: /click to expand/i });
+
+        // Use fireEvent (sync) so fake timers don't cause a deadlock
+        act(() => {
+          placeholder.click();
+        });
+
+        // After click: show loading state while deferred timeout hasn't fired
+        expect(screen.getByText('Parsing…')).toBeInTheDocument();
+
+        // Fire the deferred timeout
+        act(() => vi.runAllTimers());
+
+        // Placeholder and loading state should be gone; value cell is rendered
+        expect(screen.queryByRole('button', { name: /click to expand/i })).not.toBeInTheDocument();
+        expect(screen.queryByText('Parsing…')).not.toBeInTheDocument();
+
+        unmount();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('does not render copy icons for large value rows', () => {
+      const mixedData = [
+        { key: 'small', value: 'tiny' },
+        { key: 'big', value: LARGE_VALUE },
+      ];
+      render(<AttributesTable data={mixedData} />);
+
+      // Only the small row has copy icons (2 icons per small row)
+      const copyIcons = screen.getAllByTestId('copy-icon');
+      expect(copyIcons).toHaveLength(2);
     });
   });
 });

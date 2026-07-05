@@ -64,7 +64,6 @@ vi.mock('./AccordionText', () => {
   });
 });
 
-
 vi.mock('../../../common/LabeledList', () => {
   return mockDefault(function MockLabeledList({ items }) {
     return (
@@ -331,7 +330,6 @@ describe('<SpanDetail>', () => {
     });
   });
 
-
   it('passes all attributes (including large ones) to AccordionAttributes as a single list', () => {
     const largeValue = 'a'.repeat(10241); // above threshold
     const localProps = {
@@ -349,6 +347,7 @@ describe('<SpanDetail>', () => {
     render(<SpanDetail {...localProps} />);
 
     // All attributes go through AccordionAttributes — no separate lazy section
+    // AccordionAttributes is mocked — just verify it rendered (tags label)
     expect(screen.queryByTestId('lazy-attribute')).not.toBeInTheDocument();
     expect(screen.getByTestId('accordian-keyvalues-tags')).toBeInTheDocument();
   });
