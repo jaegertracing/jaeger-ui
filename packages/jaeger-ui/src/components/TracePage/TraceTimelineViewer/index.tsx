@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
@@ -18,8 +18,8 @@ import {
 } from './store';
 import SpanDetailSidePanel from './SpanDetailSidePanel';
 import TimelineHeaderRow from './TimelineHeaderRow';
-import { buildHttpStatusSummaryLookup } from './summaryFieldsUtils';
 import { useServiceFilter } from './useServiceFilter';
+import { useSpanPills } from './useSpanPills';
 import VirtualizedTraceView from './VirtualizedTraceView';
 import VerticalResizer from '../../common/VerticalResizer';
 import { merge as mergeShortcuts } from '../keyboard-shortcuts';
@@ -28,7 +28,6 @@ import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '.
 import { TNil, ReduxState } from '../../../types';
 import { IOtelSpan, IOtelTrace } from '../../../types/otel';
 import { CriticalPathSection } from '../../../types/critical_path';
-import { useConfig } from '../../../hooks/useConfig';
 
 import './index.css';
 
@@ -144,13 +143,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
 
   const { serviceFilterNode } = useServiceFilter(trace, detailPanelMode);
 
-  const summaryFieldsEnabled = useConfig().traceTimeline?.summaryFieldsEnabled === true;
-  const summaryLookup = useMemo(() => {
-    if (!summaryFieldsEnabled) {
-      return new Map<string, Record<string, string>>();
-    }
-    return buildHttpStatusSummaryLookup(trace);
-  }, [summaryFieldsEnabled, trace]);
+  const spanPills = useSpanPills(trace);
 
   // When timeline bars are hidden with the side panel active, the side panel expands to absorb
   // the timeline column so the Service/Operation column keeps its pixel width unchanged.
@@ -249,7 +242,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       useOtelTerms={useOtelTerms}
       currentViewRangeTime={viewRange.time.current}
       nameColumnWidth={nameColumnWidth}
-      summaryLookup={summaryLookup}
+      spanPills={spanPills}
     />
   );
 

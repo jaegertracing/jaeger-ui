@@ -239,10 +239,10 @@ export type Config = {
     // Default: 'inline'.
     defaultDetailPanelMode?: SpanDetailPanelMode;
 
-    // summaryFieldsEnabled controls the summary fields feature in the trace timeline.
-    // When false, HTTP status chips are hidden and summary lookup is skipped.
+    // spanPillsEnabled controls span pill overlays in the trace timeline.
+    // When false, pills are hidden and pill building is skipped.
     // Default: false (PR1 opt-in; flipped to true in a later PR).
-    summaryFieldsEnabled?: boolean;
+    spanPillsEnabled?: boolean;
   };
 
   // useOpenTelemetryTerms determines whether the UI uses legacy Jaeger terminology

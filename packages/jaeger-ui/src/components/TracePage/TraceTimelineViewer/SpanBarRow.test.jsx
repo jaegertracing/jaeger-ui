@@ -85,7 +85,7 @@ describe('<SpanBarRow>', () => {
     traceStartTime: 0,
     traceDuration: 1000,
     focusSpan: jest.fn(),
-    selectedFields: [],
+    pills: [],
     useOtelTerms: false,
   };
 
@@ -251,27 +251,25 @@ describe('<SpanBarRow>', () => {
     });
   });
 
-  describe('summary field chips', () => {
-    it('renders HTTP status chip with error styling for 5xx', () => {
+  describe('span pills', () => {
+    it('renders pills with error styling when isError is set', () => {
       render(
-        <SpanBarRow
-          {...defaultProps}
-          selectedFields={['http.status_code']}
-          summaryValues={{ 'http.status_code': '500' }}
-        />
+        <SpanBarRow {...defaultProps} pills={[{ label: 'http.status_code', value: '500', isError: true }]} />
       );
-      const errorChip = screen.getByLabelText('http.status_code: 500');
-      expect(errorChip).toBeInTheDocument();
-      expect(errorChip).toHaveClass('is-error');
+      const errorPill = screen.getByLabelText('http.status_code: 500');
+      expect(errorPill).toBeInTheDocument();
+      expect(errorPill).toHaveClass('is-error');
     });
 
-    it('skips chips when value is missing for a selected field', () => {
-      render(<SpanBarRow {...defaultProps} selectedFields={['http.status_code']} summaryValues={{}} />);
-      expect(screen.queryByLabelText(/http\.status_code/)).not.toBeInTheDocument();
+    it('renders neutral pills without error styling', () => {
+      render(<SpanBarRow {...defaultProps} pills={[{ label: 'http.status_code', value: '200' }]} />);
+      const pill = screen.getByLabelText('http.status_code: 200');
+      expect(pill).toBeInTheDocument();
+      expect(pill).not.toHaveClass('is-error');
     });
 
-    it('does not render chips when summaryValues is undefined', () => {
-      render(<SpanBarRow {...defaultProps} selectedFields={['http.status_code']} />);
+    it('does not render pills when pills is undefined', () => {
+      render(<SpanBarRow {...defaultProps} pills={undefined} />);
       expect(screen.queryByLabelText(/http\.status_code/)).not.toBeInTheDocument();
     });
   });
