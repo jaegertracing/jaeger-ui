@@ -141,17 +141,19 @@ describe('spanToOtlpJson', () => {
     expect(scope).not.toHaveProperty('version');
   });
 
-  it('sets traceId and spanId on the span', () => {
+  it('sets traceId and spanId on the span, left-padded to OTLP spec widths (32/16 hex)', () => {
     const out = spanToOtlpJson(makeSpan());
     const span = (out.resourceSpans as any)[0].scopeSpans[0].spans[0];
-    expect(span.traceId).toBe('aabbccddeeff0011');
+    // Jaeger's 16-hex (64-bit) traceID is padded to the OTLP-required 32 hex chars;
+    // spanId is already 16 hex chars, the OTLP-required width, so it passes through.
+    expect(span.traceId).toBe('0'.repeat(16) + 'aabbccddeeff0011');
     expect(span.spanId).toBe('1122334455667788');
   });
 
-  it('includes parentSpanId when parentSpanID is set', () => {
+  it('includes parentSpanId when parentSpanID is set, left-padded to 16 hex chars', () => {
     const out = spanToOtlpJson(makeSpan({ parentSpanID: 'parentabc' }));
     const span = (out.resourceSpans as any)[0].scopeSpans[0].spans[0];
-    expect(span.parentSpanId).toBe('parentabc');
+    expect(span.parentSpanId).toBe('0'.repeat(7) + 'parentabc');
   });
 
   it('omits parentSpanId when parentSpanID is absent', () => {
@@ -250,8 +252,9 @@ describe('spanToOtlpJson', () => {
     );
     const span = (out.resourceSpans as any)[0].scopeSpans[0].spans[0];
     expect(span.links).toHaveLength(1);
-    expect(span.links[0].traceId).toBe('linkedtrace001');
-    expect(span.links[0].spanId).toBe('linkedspan001');
+    // link IDs are padded to the same OTLP spec widths as the span's own IDs
+    expect(span.links[0].traceId).toBe('0'.repeat(32 - 'linkedtrace001'.length) + 'linkedtrace001');
+    expect(span.links[0].spanId).toBe('0'.repeat(16 - 'linkedspan001'.length) + 'linkedspan001');
     expect(span.links[0].attributes).toEqual([{ key: 'link.type', value: { stringValue: 'follows_from' } }]);
   });
 });

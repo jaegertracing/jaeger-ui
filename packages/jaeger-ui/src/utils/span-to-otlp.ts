@@ -68,6 +68,17 @@ function usToNanoStr(us: number): string {
   return `${Math.round(us)}000`;
 }
 
+// OTLP/JSON requires traceId to be exactly 32 hex chars (16 bytes) and
+// spanId/parentSpanId to be exactly 16 hex chars (8 bytes). Jaeger can emit
+// 64-bit trace IDs (16 hex chars), so left-pad with zeros to the spec width
+// -- otherwise strict OTLP-compatible backends reject the payload.
+function padHexId(id: string, hexLen: number): string {
+  return id.length >= hexLen ? id : id.padStart(hexLen, '0');
+}
+
+const padTraceId = (id: string) => padHexId(id, 32);
+const padSpanId = (id: string) => padHexId(id, 16);
+
 /**
  * Converts a Jaeger IOtelSpan to a spec-compliant OTLP/JSON resourceSpans payload.
  * The output is suitable for import into any OpenTelemetry-compatible backend.
@@ -92,9 +103,9 @@ export function spanToOtlpJson(span: IOtelSpan): Record<string, unknown> {
             },
             spans: [
               {
-                traceId: span.traceID,
-                spanId: span.spanID,
-                ...(span.parentSpanID && { parentSpanId: span.parentSpanID }),
+                traceId: padTraceId(span.traceID),
+                spanId: padSpanId(span.spanID),
+                ...(span.parentSpanID && { parentSpanId: padSpanId(span.parentSpanID) }),
                 name: span.name,
                 kind: SPAN_KIND_INT[span.kind] ?? 0,
                 startTimeUnixNano: usToNanoStr(span.startTime),
@@ -106,8 +117,8 @@ export function spanToOtlpJson(span: IOtelSpan): Record<string, unknown> {
                   attributes: toOtlpAttrs(ev.attributes),
                 })),
                 links: span.links.map(lk => ({
-                  traceId: lk.traceID,
-                  spanId: lk.spanID,
+                  traceId: padTraceId(lk.traceID),
+                  spanId: padSpanId(lk.spanID),
                   attributes: toOtlpAttrs(lk.attributes),
                 })),
                 status: {
