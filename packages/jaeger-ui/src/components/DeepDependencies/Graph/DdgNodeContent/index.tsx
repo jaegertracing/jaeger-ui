@@ -222,11 +222,18 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
     trackViewTraces();
     const { operation, search, service, navigate } = props;
     // Omit traceID and spanLinks via destructuring (rather than using delete on a mutable object)
-    const { traceID: _traceID, spanLinks: _spanLinks, ...urlState } = getUrlState(search);
+    const { traceID: _traceID, spanLinks: _spanLinks, ...rawUrlState } = getUrlState(search);
+    const { start, end, lookback, limit, minDuration, maxDuration, tags } = rawUrlState;
 
     navigate(
       getSearchUrl({
-        ...urlState,
+        start,
+        end,
+        lookback,
+        limit,
+        minDuration,
+        maxDuration,
+        tags,
         service,
         operation: typeof operation === 'string' ? operation : undefined,
       })
