@@ -252,6 +252,18 @@ describe('<AttributesTable>', () => {
       expect(screen.getByText('key.0')).toBeInTheDocument();
     });
 
+    it('filters rows by value when the value is an object (JSON-stringified, not "[object Object]")', async () => {
+      const attrsWithObject = [...manyAttrs, { key: 'gen_ai.tool.call.arguments', value: { city: 'Paris' } }];
+      render(<AttributesTable data={attrsWithObject} />);
+      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
+
+      await user.type(input, 'Paris');
+
+      const rows = screen.getAllByRole('row');
+      expect(rows.length).toBe(1);
+      expect(screen.getByText('gen_ai.tool.call.arguments')).toBeInTheDocument();
+    });
+
     it('shows N of M count label when filter is active', async () => {
       render(<AttributesTable data={manyAttrs} />);
       const input = screen.getByRole('textbox', { name: /filter span attributes/i });

@@ -106,6 +106,21 @@ const linkValueList = (links: Hyperlink[]) => {
 
 export const FILTER_THRESHOLD = 10;
 
+// Objects/arrays stringify to "[object Object]" via String(), which makes value
+// filtering silently fail for structured attribute values (common in GenAI/HTTP
+// header traces). JSON.stringify preserves the actual searchable content; Uint8Array
+// is kept on the String() path since JSON.stringify on a typed array yields "{}".
+function getFilterValue(value: IAttribute['value']): string {
+  if (value !== null && typeof value === 'object' && !(value instanceof Uint8Array)) {
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  }
+  return String(value);
+}
+
 type AttributesTableProps = {
   data: ReadonlyArray<IAttribute>;
   linksGetter: ((pairs: ReadonlyArray<IAttribute>, index: number) => Hyperlink[]) | TNil;
@@ -122,7 +137,10 @@ export default function AttributesTable(props: AttributesTableProps) {
       return data.map((attr, i) => ({ attr, originalIndex: i }));
     const lower = query.trim().toLowerCase();
     return data.reduce<{ attr: IAttribute; originalIndex: number }[]>((acc, attr, i) => {
-      if (attr.key.toLowerCase().includes(lower) || String(attr.value).toLowerCase().includes(lower)) {
+      if (
+        attr.key.toLowerCase().includes(lower) ||
+        getFilterValue(attr.value).toLowerCase().includes(lower)
+      ) {
         acc.push({ attr, originalIndex: i });
       }
       return acc;
