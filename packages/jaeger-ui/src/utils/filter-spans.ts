@@ -39,7 +39,16 @@ export default function filterSpans(textFilter: string, spans: ReadonlyArray<Spa
           if (isTextInFilters(excludeKeys, kv.key)) return false;
           const value = (kv as any).value; // handle legacy KeyValuePair and IAttribute
           if (value === null || value === undefined) return false;
-          const valueString = String(value);
+          let valueString: string;
+          if (typeof value === 'object' && !(value instanceof Uint8Array)) {
+            try {
+              valueString = JSON.stringify(value);
+            } catch {
+              valueString = String(value);
+            }
+          } else {
+            valueString = String(value);
+          }
           // match if key, value or key=value string matches an item in includeFilters
           return (
             isTextInFilters(includeFilters, kv.key) ||
@@ -58,7 +67,7 @@ export default function filterSpans(textFilter: string, spans: ReadonlyArray<Spa
         isTextInKeyValues(span.tags) ||
         (Array.isArray(span.logs) && span.logs.some(log => isTextInKeyValues(log.fields))) ||
         isTextInKeyValues(span.process.tags) ||
-        includeFilters.some(filter => filter.replace(/^0*/, '') === span.spanID.replace(/^0*/, ''))
+        includeFilters.some(filter => filter === span.spanID)
       );
     }
     // IOtelSpan
@@ -68,7 +77,7 @@ export default function filterSpans(textFilter: string, spans: ReadonlyArray<Spa
       isTextInKeyValues(span.attributes) ||
       (Array.isArray(span.events) && span.events.some(event => isTextInKeyValues(event.attributes))) ||
       isTextInKeyValues(span.resource.attributes) ||
-      includeFilters.some(filter => filter.replace(/^0*/, '') === span.spanID.replace(/^0*/, ''))
+      includeFilters.some(filter => filter === span.spanID)
     );
   };
 

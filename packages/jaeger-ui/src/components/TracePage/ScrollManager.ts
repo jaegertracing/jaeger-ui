@@ -118,7 +118,9 @@ export default class ScrollManager {
     }
     // fullViewSpanIndex is one row inside the view window unless already at the top or bottom
     let fullViewSpanIndex = spanIndex;
-    if (spanIndex !== 0 && spanIndex !== spans.length - 1) {
+    if (startRow != null) {
+      fullViewSpanIndex = spanIndex - direction;
+    } else if (spanIndex !== 0 && spanIndex !== spans.length - 1) {
       fullViewSpanIndex -= direction;
     }
     const [viewStart, viewEnd] = xrs.getViewRange();
@@ -155,7 +157,7 @@ export default class ScrollManager {
       nextSpanIndex = i;
       break;
     }
-    if (!nextSpanIndex || nextSpanIndex === boundary) {
+    if (nextSpanIndex === undefined || nextSpanIndex === boundary) {
       // might as well scroll to the top or bottom
       nextSpanIndex = boundary - direction;
 

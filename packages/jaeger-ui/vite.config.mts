@@ -120,6 +120,20 @@ function jaegerUiConfigPlugin() {
   const jsConfigPath = path.resolve(__dirname, 'jaeger-ui.config.js');
   const jsonConfigPath = path.resolve(__dirname, 'jaeger-ui.config.json');
 
+  // Inject `backendCapabilities` from the local dev config at the
+  // JAEGER_BACKEND_CAPABILITIES swap point. Mirrors how the Jaeger backend
+  // overlays its capability blob in production.
+  function injectBackendCapabilities(
+    html: string,
+    config: { backendCapabilities?: Record<string, unknown> }
+  ) {
+    if (!config.backendCapabilities) return html;
+    return html.replace(
+      'const JAEGER_BACKEND_CAPABILITIES = DEFAULT_BACKEND_CAPABILITIES;',
+      `const JAEGER_BACKEND_CAPABILITIES = { ...DEFAULT_BACKEND_CAPABILITIES, ...${JSON.stringify(config.backendCapabilities)} };`
+    );
+  }
+
   return {
     name: 'jaeger-ui-config',
     configureServer(server) {
@@ -142,23 +156,17 @@ function jaegerUiConfigPlugin() {
             // matching the contract enforced by the jaeger binary.
             html = html.replace('// JAEGER_CONFIG_JS', jsContent);
 
-            // Extract storageCapabilities from the JS config by executing it in a sandbox
+            // Extract capabilities from the JS config by executing it in a sandbox
             // and calling UIConfig(), mirroring the JSON config path's special treatment.
             try {
-              const sandbox: { UIConfig?: () => { storageCapabilities?: Record<string, unknown> } } = {};
+              const sandbox: {
+                UIConfig?: () => { backendCapabilities?: Record<string, unknown> };
+              } = {};
               vm.runInNewContext(jsContent, sandbox);
-              const storageCapabilities = sandbox.UIConfig?.()?.storageCapabilities;
-              if (storageCapabilities) {
-                html = html.replace(
-                  'const JAEGER_STORAGE_CAPABILITIES = DEFAULT_STORAGE_CAPABILITIES;',
-                  `const JAEGER_STORAGE_CAPABILITIES = { ...DEFAULT_STORAGE_CAPABILITIES, ...${JSON.stringify(storageCapabilities)} };`
-                );
-              }
+              const cfg = sandbox.UIConfig?.() ?? {};
+              html = injectBackendCapabilities(html, cfg);
             } catch (evalErr) {
-              console.warn(
-                '[jaeger-ui-config] Could not evaluate JS config for storageCapabilities:',
-                evalErr
-              );
+              console.warn('[jaeger-ui-config] Could not evaluate JS config for capabilities:', evalErr);
             }
 
             console.log('[jaeger-ui-config] Loaded config from jaeger-ui.config.js');
@@ -181,16 +189,11 @@ function jaegerUiConfigPlugin() {
               `const JAEGER_CONFIG = ${JSON.stringify(parsedConfig)};`
             );
 
-            // Inject storageCapabilities if present in the config file.
-            // The Go server injects this separately via its own search-replace on
-            // JAEGER_STORAGE_CAPABILITIES; the Vite plugin must replicate that here so that
-            // setting storageCapabilities in jaeger-ui.config.json works in dev mode too.
-            if (parsedConfig.storageCapabilities) {
-              html = html.replace(
-                'const JAEGER_STORAGE_CAPABILITIES = DEFAULT_STORAGE_CAPABILITIES;',
-                `const JAEGER_STORAGE_CAPABILITIES = { ...DEFAULT_STORAGE_CAPABILITIES, ...${JSON.stringify(parsedConfig.storageCapabilities)} };`
-              );
-            }
+            // Inject backendCapabilities if present in the config file. The Go server
+            // injects this separately via its own search-replace; the Vite plugin
+            // replicates that here so capability overrides in jaeger-ui.config.json
+            // work with `npm start`.
+            html = injectBackendCapabilities(html, parsedConfig);
 
             console.log('[jaeger-ui-config] Loaded config from jaeger-ui.config.json');
             return html;
@@ -270,6 +273,12 @@ export default defineConfig({
       ],
     },
   },
+  optimizeDeps: {
+    // react-icons/tb is a 4400+ icon barrel. Vite 8 / Rolldown pre-bundles it
+    // into a single 4 MB file that Rolldown's import-analysis parser can't handle.
+    // Exclude it so Vite serves the ESM entry directly without pre-bundling.
+    exclude: ['react-icons/tb'],
+  },
   base: './',
   build: {
     outDir: 'build',
@@ -286,6 +295,11 @@ export default defineConfig({
       // More-specific alias must come first; Vite matches the first prefix that applies.
       '@jaegertracing/plexus/demo': path.resolve(__dirname, '../plexus/demo/src/index'),
       '@jaegertracing/plexus': path.resolve(__dirname, '../plexus/src'),
+      // d3-flame-graph doesn't export its CSS in package.json exports field
+      'd3-flame-graph/dist/d3-flamegraph.css': path.resolve(
+        __dirname,
+        '../../node_modules/d3-flame-graph/dist/d3-flamegraph.css'
+      ),
     },
   },
 });
