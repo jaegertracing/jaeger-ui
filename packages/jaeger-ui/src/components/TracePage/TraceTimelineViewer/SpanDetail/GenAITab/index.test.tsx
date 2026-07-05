@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 
 import GenAITab from '.';
 import type { IAttribute, IOtelSpan } from '../../../../../types/otel';
@@ -112,6 +112,18 @@ describe('GenAITab', () => {
     expect(container.querySelector('.json-markup-string')?.textContent).toBe('"NYC"');
   });
 
+  it('renders tool call arguments that fail to parse as JSON as plain text, not a crash', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          { key: 'gen_ai.tool.name', value: 'get_weather' },
+          { key: 'gen_ai.tool.call.arguments', value: 'not valid json' },
+        ])}
+      />
+    );
+    expect(screen.getByText('not valid json')).toBeInTheDocument();
+  });
+
   it('shows an empty state when the span has no gen_ai attributes', () => {
     render(<GenAITab span={makeSpan([{ key: 'http.method', value: 'GET' }])} />);
     expect(screen.getByText('No GenAI-specific attributes found on this span.')).toBeInTheDocument();
@@ -124,5 +136,12 @@ describe('GenAITab', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('gen_ai.operation.name')).toBeInTheDocument();
     expect(screen.queryByText('No GenAI-specific attributes found on this span.')).not.toBeInTheDocument();
+  });
+
+  it('expands the Other GenAI Attributes accordion on click', () => {
+    render(<GenAITab span={makeSpan([{ key: 'gen_ai.operation.name', value: 'chat' }])} />);
+    const header = screen.getByText((_, element) => element?.textContent === 'Other GenAI Attributes:');
+    fireEvent.click(header);
+    expect(screen.getByText('chat')).toBeInTheDocument();
   });
 });

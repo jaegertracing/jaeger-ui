@@ -52,6 +52,22 @@ describe('extractGenAiData', () => {
     });
   });
 
+  it('parses numeric-string token counts, and ignores non-numeric strings', () => {
+    const data = extractGenAiData(
+      attrs({
+        'gen_ai.usage.input_tokens': '100',
+        'gen_ai.usage.output_tokens': 'not a number',
+      })
+    );
+    expect(data.usage.inputTokens).toBe(100);
+    expect(data.usage.outputTokens).toBeUndefined();
+  });
+
+  it('stringifies a non-string, non-null model attribute value', () => {
+    const data = extractGenAiData(attrs({ 'gen_ai.request.model': 12345 }));
+    expect(data.model).toBe('12345');
+  });
+
   it('parses input/output messages from the spec-defined {role, parts} shape', () => {
     const data = extractGenAiData(
       attrs({
@@ -151,6 +167,43 @@ describe('extractGenAiData', () => {
       })
     );
     expect(data.inputMessages[0].content).toContain('some_future_part');
+  });
+
+  it('renders a server_tool_call_response part with its response value', () => {
+    const data = extractGenAiData(
+      attrs({
+        'gen_ai.output.messages': [
+          {
+            role: 'assistant',
+            parts: [{ type: 'server_tool_call_response', server_tool_call_response: { status: 'ok' } }],
+          },
+        ],
+      })
+    );
+    expect(data.outputMessages[0].content).toBe('← {"status":"ok"}');
+  });
+
+  it('renders a tool_call part with no arguments as an empty call rather than "(undefined)"', () => {
+    const data = extractGenAiData(
+      attrs({
+        'gen_ai.output.messages': [{ role: 'assistant', parts: [{ type: 'tool_call', name: 'ping' }] }],
+      })
+    );
+    expect(data.outputMessages[0].content).toBe('→ ping({})');
+  });
+
+  it('drops an unrecognized role to undefined instead of trusting an arbitrary string', () => {
+    const data = extractGenAiData(
+      attrs({
+        'gen_ai.input.messages': [{ role: 'developer', parts: [{ type: 'text', content: 'hi' }] }],
+      })
+    );
+    expect(data.inputMessages[0].role).toBeUndefined();
+  });
+
+  it('treats a non-object entry in a messages array as a roleless message', () => {
+    const data = extractGenAiData(attrs({ 'gen_ai.input.messages': ['just a string entry'] }));
+    expect(data.inputMessages).toEqual([{ role: undefined, content: 'just a string entry' }]);
   });
 
   it('falls back to deprecated prompt/completion when input/output messages are absent', () => {

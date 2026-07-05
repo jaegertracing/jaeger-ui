@@ -5,6 +5,12 @@ import type { IAttribute, AttributeValue } from '../../../../../types/otel';
 
 type GenAiRole = 'system' | 'user' | 'assistant' | 'tool' | undefined;
 
+const GEN_AI_ROLES = new Set(['system', 'user', 'assistant', 'tool']);
+
+function asRole(value: unknown): GenAiRole {
+  return typeof value === 'string' && GEN_AI_ROLES.has(value) ? (value as GenAiRole) : undefined;
+}
+
 export type GenAiMessage = {
   role: GenAiRole;
   content: string;
@@ -131,7 +137,7 @@ function renderPart(part: unknown): string {
     case 'tool_call':
     case 'server_tool_call': {
       const name = typeof rec.name === 'string' ? rec.name : 'unknown_tool';
-      const args = rec.type === 'tool_call' ? rec.arguments : rec.server_tool_call;
+      const args = (rec.type === 'tool_call' ? rec.arguments : rec.server_tool_call) ?? {};
       return `→ ${name}(${JSON.stringify(args)})`;
     }
     case 'tool_call_response':
@@ -182,7 +188,7 @@ function parseMessages(value: AttributeValue | undefined): GenAiMessage[] {
       return { role: undefined, content: String(entry) };
     }
     const rec = entry as Record<string, unknown>;
-    const role = typeof rec.role === 'string' ? (rec.role as GenAiRole) : undefined;
+    const role = asRole(rec.role);
     if (Array.isArray(rec.parts)) {
       return { role, content: renderParts(rec.parts) };
     }
