@@ -121,6 +121,24 @@ function stringifyValue(value: unknown): string {
 }
 
 /**
+ * Instrumentation commonly emits tool-call arguments/results as an
+ * already-JSON-encoded string rather than a parsed object. Parse-then-restringify
+ * so the output isn't double-encoded (`"{\"city\":\"Paris\"}"` instead of
+ * `{"city":"Paris"}`); non-JSON strings are kept as-is. Mirrors JsonBlock's
+ * handling of the same shape for the top-level gen_ai.tool.call.* attributes.
+ */
+function stringifyToolValue(value: unknown): string {
+  if (typeof value === 'string') {
+    try {
+      return JSON.stringify(JSON.parse(value));
+    } catch {
+      return value;
+    }
+  }
+  return JSON.stringify(value ?? {});
+}
+
+/**
  * Renders one ChatMessage part per the OTel GenAI parts schema (text,
  * tool_call, tool_call_response, reasoning, blob/file/uri, compaction,
  * server_tool_call(_response)). Unrecognized/future part types fall back to
@@ -137,13 +155,17 @@ function renderPart(part: unknown): string {
     case 'tool_call':
     case 'server_tool_call': {
       const name = typeof rec.name === 'string' ? rec.name : 'unknown_tool';
-      const args = (rec.type === 'tool_call' ? rec.arguments : rec.server_tool_call) ?? {};
-      return `→ ${name}(${JSON.stringify(args)})`;
+      // Field name genuinely differs by part type, not a typo: per the OTel
+      // GenAI parts schema, ToolCallRequestPart carries its payload under
+      // `arguments`, while ServerToolCallPart carries it under a same-named
+      // `server_tool_call` field (a polymorphic, provider-specific object).
+      const args = rec.type === 'tool_call' ? rec.arguments : rec.server_tool_call;
+      return `→ ${name}(${stringifyToolValue(args)})`;
     }
     case 'tool_call_response':
-      return `← ${JSON.stringify(rec.response)}`;
+      return `← ${stringifyToolValue(rec.response)}`;
     case 'server_tool_call_response':
-      return `← ${JSON.stringify(rec.server_tool_call_response)}`;
+      return `← ${stringifyToolValue(rec.server_tool_call_response)}`;
     case 'blob':
     case 'file':
     case 'uri': {

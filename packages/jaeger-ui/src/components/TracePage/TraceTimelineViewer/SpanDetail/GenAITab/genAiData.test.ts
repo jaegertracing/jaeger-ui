@@ -132,7 +132,7 @@ describe('extractGenAiData', () => {
     expect(data.outputMessages[0].content).toBe('→ get_weather({"city":"Paris"})');
   });
 
-  it('renders a tool_call_response part with its response value', () => {
+  it('renders a tool_call_response part with a plain-string response unquoted', () => {
     const data = extractGenAiData(
       attrs({
         'gen_ai.input.messages': [
@@ -143,7 +143,21 @@ describe('extractGenAiData', () => {
         ],
       })
     );
-    expect(data.inputMessages[0].content).toBe('← "rainy, 57°F"');
+    expect(data.inputMessages[0].content).toBe('← rainy, 57°F');
+  });
+
+  it('renders a tool_call_response part with a JSON-encoded string response parsed, not double-encoded', () => {
+    const data = extractGenAiData(
+      attrs({
+        'gen_ai.input.messages': [
+          {
+            role: 'tool',
+            parts: [{ type: 'tool_call_response', id: 'call_1', response: JSON.stringify({ tempF: 57 }) }],
+          },
+        ],
+      })
+    );
+    expect(data.inputMessages[0].content).toBe('← {"tempF":57}');
   });
 
   it('renders media parts (blob/file/uri) as a placeholder instead of dropping them', () => {
@@ -190,6 +204,51 @@ describe('extractGenAiData', () => {
       })
     );
     expect(data.outputMessages[0].content).toBe('→ ping({})');
+  });
+
+  it('parses string-encoded tool_call arguments instead of double-encoding them', () => {
+    const data = extractGenAiData(
+      attrs({
+        'gen_ai.output.messages': [
+          {
+            role: 'assistant',
+            parts: [{ type: 'tool_call', name: 'get_weather', arguments: JSON.stringify({ city: 'Paris' }) }],
+          },
+        ],
+      })
+    );
+    expect(data.outputMessages[0].content).toBe('→ get_weather({"city":"Paris"})');
+  });
+
+  it('falls back to the raw string when tool_call arguments are a non-JSON string', () => {
+    const data = extractGenAiData(
+      attrs({
+        'gen_ai.output.messages': [
+          { role: 'assistant', parts: [{ type: 'tool_call', name: 'get_weather', arguments: 'Paris' }] },
+        ],
+      })
+    );
+    expect(data.outputMessages[0].content).toBe('→ get_weather(Paris)');
+  });
+
+  it('reads server_tool_call args from the server_tool_call field, not arguments (per the OTel spec, this differs from tool_call by design)', () => {
+    const data = extractGenAiData(
+      attrs({
+        'gen_ai.output.messages': [
+          {
+            role: 'assistant',
+            parts: [
+              {
+                type: 'server_tool_call',
+                name: 'web_search',
+                server_tool_call: { query: 'weather in Paris' },
+              },
+            ],
+          },
+        ],
+      })
+    );
+    expect(data.outputMessages[0].content).toBe('→ web_search({"query":"weather in Paris"})');
   });
 
   it('drops an unrecognized role to undefined instead of trusting an arbitrary string', () => {

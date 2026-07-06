@@ -72,6 +72,13 @@ export default function GenAITab({ span }: Props): React.ReactElement {
   const showTokens = hasAnyTokenUsage(usage);
   const showConversation =
     inputMessages.length > 0 || outputMessages.length > 0 || Boolean(systemInstructions);
+  const hasContent =
+    showTokens ||
+    showConversation ||
+    Boolean(toolCall) ||
+    Boolean(provider) ||
+    Boolean(model) ||
+    otherAttributes.length > 0;
 
   return (
     <div className="GenAITab">
@@ -171,14 +178,7 @@ export default function GenAITab({ span }: Props): React.ReactElement {
         />
       )}
 
-      {!showTokens &&
-        !showConversation &&
-        !toolCall &&
-        !provider &&
-        !model &&
-        otherAttributes.length === 0 && (
-          <div className="GenAITab--empty">No GenAI-specific attributes found on this span.</div>
-        )}
+      {!hasContent && <div className="GenAITab--empty">No GenAI-specific attributes found on this span.</div>}
     </div>
   );
 }
