@@ -18,20 +18,28 @@ function mergeChildrenCriticalPath(
   // Use pre-built spanMap
   const spanMap = trace.spanMap;
 
-  // If the span is collapsed, recursively find all of its descendants.
-  const findAllDescendants = (span: IOtelSpan) => {
-    if (span.hasChildren && span.childSpans.length > 0) {
-      span.childSpans.forEach(child => {
-        allRequiredSpanIds.add(child.spanID);
-        findAllDescendants(child);
-      });
-    }
-  };
-
   // Start from the initially selected span
   const startingSpan = spanMap.get(spanID);
   if (startingSpan) {
-    findAllDescendants(startingSpan);
+    const allDescendantsStack: IOtelSpan[] = [];
+    if (startingSpan.hasChildren && startingSpan.childSpans.length > 0) {
+      for (let i = startingSpan.childSpans.length - 1; i >= 0; i--) {
+        const child = startingSpan.childSpans[i];
+        allRequiredSpanIds.add(child.spanID);
+        allDescendantsStack.push(child);
+      }
+    }
+
+    while (allDescendantsStack.length > 0) {
+      const span = allDescendantsStack.pop()!;
+      if (span.hasChildren && span.childSpans.length > 0) {
+        for (let i = span.childSpans.length - 1; i >= 0; i--) {
+          const child = span.childSpans[i];
+          allRequiredSpanIds.add(child.spanID);
+          allDescendantsStack.push(child);
+        }
+      }
+    }
   }
 
   const criticalPathSections: CriticalPathSection[] = [];
@@ -74,14 +82,19 @@ function buildPrunedCriticalPaths(
   const result = new Map<string, CriticalPathSection[]>();
 
   const collectFromSubtree = (s: IOtelSpan, sections: CriticalPathSection[]) => {
-    const spanSections = pathBySpanID.get(s.spanID);
-    if (spanSections) {
-      for (const section of spanSections) {
-        sections.push({ ...section });
+    const cfStack: IOtelSpan[] = [s];
+    while (cfStack.length > 0) {
+      const span = cfStack.pop()!;
+      const spanSections = pathBySpanID.get(span.spanID);
+      if (spanSections) {
+        for (const section of spanSections) {
+          sections.push({ ...section });
+        }
       }
-    }
-    for (const child of s.childSpans) {
-      collectFromSubtree(child, sections);
+      // Push children in reverse order so they pop left-to-right, preserving original DFS order
+      for (let i = span.childSpans.length - 1; i >= 0; i--) {
+        cfStack.push(span.childSpans[i]);
+      }
     }
   };
 
