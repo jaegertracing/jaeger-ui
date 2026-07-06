@@ -120,6 +120,21 @@ function stringifyValue(value: unknown): string {
   }
 }
 
+const jsonObjectOrArrayStartRegex = /^(\[|\{)/;
+
+/**
+ * Only attempts JSON.parse when the string looks like an object/array literal,
+ * same guard as AttributesTable.tryParseJson - avoids relying on try/catch
+ * exceptions for control flow on the common case of plain, non-JSON strings.
+ */
+export function tryParseJson(value: string): unknown {
+  try {
+    return jsonObjectOrArrayStartRegex.test(value) ? JSON.parse(value) : value;
+  } catch {
+    return value;
+  }
+}
+
 /**
  * Instrumentation commonly emits tool-call arguments/results as an
  * already-JSON-encoded string rather than a parsed object. Parse-then-restringify
@@ -129,11 +144,8 @@ function stringifyValue(value: unknown): string {
  */
 function stringifyToolValue(value: unknown): string {
   if (typeof value === 'string') {
-    try {
-      return JSON.stringify(JSON.parse(value));
-    } catch {
-      return value;
-    }
+    const parsed = tryParseJson(value);
+    return parsed === value ? value : JSON.stringify(parsed);
   }
   return JSON.stringify(value ?? {});
 }

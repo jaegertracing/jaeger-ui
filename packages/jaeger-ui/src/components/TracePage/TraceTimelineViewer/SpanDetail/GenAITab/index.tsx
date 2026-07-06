@@ -4,7 +4,13 @@
 import React, { useMemo, useState } from 'react';
 import { JsonView, allExpanded, collapseAllNested } from 'react-json-view-lite';
 
-import { extractGenAiData, hasAnyTokenUsage, formatTokenCount, GenAiMessage } from './genAiData';
+import {
+  extractGenAiData,
+  hasAnyTokenUsage,
+  formatTokenCount,
+  tryParseJson,
+  GenAiMessage,
+} from './genAiData';
 import AccordionAttributes from '../AccordionAttributes';
 import jsonViewStyles from '../../../../../utils/jsonViewStyles';
 import CopyIcon from '../../../../common/CopyIcon';
@@ -31,15 +37,11 @@ function MessageBlock({ message, index }: { message: GenAiMessage; index: number
 function JsonBlock({ value }: { value: unknown }) {
   // Tool call arguments/results may arrive already parsed or as a JSON-encoded
   // string, same as gen_ai.input.messages - try to parse strings so they get
-  // the interactive tree view too, not just a raw text dump.
-  let parsed = value;
-  if (typeof value === 'string') {
-    try {
-      parsed = JSON.parse(value);
-    } catch {
-      parsed = value;
-    }
-  }
+  // the interactive tree view too, not just a raw text dump. tryParseJson only
+  // attempts JSON.parse when the string looks like an object/array literal,
+  // same guard AttributesTable uses, so plain non-JSON strings (the common
+  // case) don't pay for a parse attempt that's guaranteed to throw.
+  const parsed = typeof value === 'string' ? tryParseJson(value) : value;
   if (typeof parsed !== 'object' || parsed === null) {
     return <pre className="GenAITab--pre">{String(parsed)}</pre>;
   }

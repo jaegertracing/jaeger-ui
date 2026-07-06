@@ -231,6 +231,20 @@ describe('extractGenAiData', () => {
     expect(data.outputMessages[0].content).toBe('→ get_weather(Paris)');
   });
 
+  it('falls back to the raw string when tool_call arguments look like JSON but fail to parse', () => {
+    const data = extractGenAiData(
+      attrs({
+        'gen_ai.output.messages': [
+          {
+            role: 'assistant',
+            parts: [{ type: 'tool_call', name: 'get_weather', arguments: '{not valid json' }],
+          },
+        ],
+      })
+    );
+    expect(data.outputMessages[0].content).toBe('→ get_weather({not valid json)');
+  });
+
   it('reads server_tool_call args from the server_tool_call field, not arguments (per the OTel spec, this differs from tool_call by design)', () => {
     const data = extractGenAiData(
       attrs({
