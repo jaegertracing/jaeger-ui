@@ -16,7 +16,7 @@
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
     "@vitest/coverage-v8": "4.1.9",
-    "antd": "6.4.2",
+    "antd": "6.5.0",
     "identity-obj-proxy": "3.0.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
@@ -31,7 +31,7 @@
     "d3-selection": "3.0.0",
     "d3-zoom": "3.0.0",
     "memoize-one": "6.0.0",
-    "react-icons": "5.6.0"
+    "react-icons": "5.7.0"
   },
   "scripts": {
     "build": "tsc --noEmit",
