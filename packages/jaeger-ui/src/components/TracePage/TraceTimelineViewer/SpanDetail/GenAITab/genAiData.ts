@@ -172,7 +172,9 @@ function renderParts(parts: unknown): string {
 /**
  * OTel GenAI message attributes may arrive already parsed (array/object,
  * per the IAttribute value type) or as a JSON-encoded string, depending on
- * the instrumentation. Handle both.
+ * the instrumentation. Handle both, including a single already-parsed
+ * message object that isn't array-wrapped - wrapping it in a one-element
+ * array preserves it instead of silently returning no messages for it.
  *
  * Current spec (gen_ai.input.messages/output.messages): each ChatMessage is
  * `{ role, parts: [...] }` - there is no top-level `content` field, message
@@ -191,8 +193,8 @@ function parseMessages(value: AttributeValue | undefined): GenAiMessage[] {
       return [{ role: undefined, content: value }];
     }
   }
-  if (!Array.isArray(parsed)) return [];
-  return parsed.map((entry): GenAiMessage => {
+  const entries = Array.isArray(parsed) ? parsed : [parsed];
+  return entries.map((entry): GenAiMessage => {
     if (typeof entry !== 'object' || entry === null) {
       return { role: undefined, content: String(entry) };
     }
@@ -290,26 +292,36 @@ const REGISTRY: SectionBuilder[] = [
 ];
 
 /**
- * Extracts GenAI span data as a single-pass registry of section builders: one
- * Map is built once from the span's attributes, each builder above reads
- * whichever keys it needs through get() (which removes a key from the map the
- * moment it's read), and whatever's left unclaimed afterward automatically
- * becomes the generic "other" section. There is no second, separately
- * maintained key list to keep in sync with what each builder reads.
+ * Extracts GenAI span data as a single-pass registry of section builders:
+ * each builder above reads whichever keys it needs through get() (which
+ * claims an attribute by index the moment it's read, not by key), and
+ * whatever's left unclaimed afterward automatically becomes the generic
+ * "other" section. There is no second, separately maintained key list to
+ * keep in sync with what each builder reads.
+ *
+ * Claiming happens by index rather than building a Map keyed by attribute
+ * name: a Map would silently keep only the last value for a repeated key,
+ * dropping any earlier occurrence before a builder ever sees it (and it
+ * would never reach "Other GenAI Attributes" either, since the key would
+ * already read as claimed). Tracking indices means a repeated key's extra
+ * occurrences remain available - either for another get() call, or, if
+ * unclaimed, they still surface under "other" like any other unclaimed
+ * attribute.
  */
 export function extractGenAiSections(attributes: ReadonlyArray<IAttribute>): GenAiSection[] {
-  const remaining = new Map(attributes.map(a => [a.key, a.value]));
+  const claimed = new Set<number>();
   const get: GetAttr = key => {
-    const value = remaining.get(key);
-    remaining.delete(key);
-    return value;
+    const index = attributes.findIndex((a, i) => a.key === key && !claimed.has(i));
+    if (index === -1) return undefined;
+    claimed.add(index);
+    return attributes[index].value;
   };
 
   const sections = REGISTRY.map(build => build(get)).filter((s): s is GenAiSection => s !== undefined);
 
-  const other = [...remaining]
-    .filter(([k]) => k.startsWith('gen_ai.'))
-    .map(([key, value]) => ({ key, value }));
+  const other = attributes
+    .filter((a, i) => !claimed.has(i) && a.key.startsWith('gen_ai.'))
+    .map(({ key, value }) => ({ key, value }));
   if (other.length) sections.push({ type: 'other', data: { attributes: other } });
 
   return sections;

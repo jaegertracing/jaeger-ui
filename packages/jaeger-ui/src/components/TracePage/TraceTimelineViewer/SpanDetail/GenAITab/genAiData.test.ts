@@ -332,6 +332,13 @@ describe('extractGenAiSections', () => {
       ]);
     });
 
+    it('handles a single already-parsed message object that is not array-wrapped, instead of silently dropping it', () => {
+      const sections = extractGenAiSections(
+        attrs({ 'gen_ai.input.messages': { role: 'user', parts: [{ type: 'text', content: 'Hi' }] } })
+      );
+      expect(section(sections, 'conversation')?.inputMessages).toEqual([{ role: 'user', content: 'Hi' }]);
+    });
+
     it('falls back to deprecated prompt/completion when input/output messages are absent', () => {
       const sections = extractGenAiSections(
         attrs({
@@ -466,6 +473,22 @@ describe('extractGenAiSections', () => {
     it('excludes non-gen_ai attributes from the other section', () => {
       const sections = extractGenAiSections(attrs({ 'http.method': 'GET' }));
       expect(section(sections, 'other')).toBeUndefined();
+    });
+
+    it('preserves a repeated attribute key instead of dropping the earlier occurrence, since attributes are tracked by index, not name', () => {
+      const duplicateKeyAttrs: IAttribute[] = [
+        { key: 'gen_ai.tool.name', value: 'first_call' },
+        { key: 'gen_ai.tool.name', value: 'second_call' },
+      ];
+      const sections = extractGenAiSections(duplicateKeyAttrs);
+      // The first occurrence is claimed by the toolCall builder.
+      expect(section(sections, 'toolCall')?.name).toBe('first_call');
+      // The second occurrence is not claimed by anything, so it must still
+      // surface under "other" rather than being silently discarded by a
+      // name-keyed Map that would have kept only the last value.
+      expect(section(sections, 'other')?.attributes).toEqual([
+        { key: 'gen_ai.tool.name', value: 'second_call' },
+      ]);
     });
   });
 
