@@ -21,8 +21,8 @@ const OPERATION_TO_KIND: Partial<Record<string, GenAISpanKind>> = {
 // Single pass over attributes: looks for gen_ai.operation.name while also
 // tracking whether any gen_ai.* attribute was seen, so a span with GenAI
 // attributes but an unrecognized (or missing) operation name still maps to
-// UNKNOWN_GENAI instead of STANDARD.
-export function classifySpan(span: SpanAttrs): GenAISpanKind {
+// UNKNOWN_GENAI instead of undefined.
+export function classifySpan(span: SpanAttrs): GenAISpanKind | undefined {
   let hasGenAI = false;
   for (const { key, value } of span.attributes) {
     if (key === GEN_AI_OPERATION_NAME && typeof value === 'string') {
@@ -32,13 +32,13 @@ export function classifySpan(span: SpanAttrs): GenAISpanKind {
       hasGenAI = true;
     }
   }
-  return hasGenAI ? 'UNKNOWN_GENAI' : 'STANDARD';
+  return hasGenAI ? 'UNKNOWN_GENAI' : undefined;
 }
 
 export function isGenAISpan(span: SpanAttrs): boolean {
-  return classifySpan(span) !== 'STANDARD';
+  return classifySpan(span) !== undefined;
 }
 
 export function isGenAITrace(spans: ReadonlyArray<SpanAttrs>): boolean {
-  return spans.some(s => classifySpan(s) !== 'STANDARD');
+  return spans.some(s => classifySpan(s) !== undefined);
 }

@@ -22,7 +22,7 @@ export default class OtelSpanFacade implements IOtelSpan {
   private _kind: SpanKind;
   private _parentSpanID: string | undefined;
   private _attributes: IAttribute[];
-  private _genAIKind: GenAISpanKind;
+  private _genAIKind: GenAISpanKind | undefined;
   private _events: IEvent[];
   private _links: ILink[];
   private _status: IStatus;
@@ -117,7 +117,7 @@ export default class OtelSpanFacade implements IOtelSpan {
     return this._kind;
   }
 
-  get genAIKind(): GenAISpanKind {
+  get genAIKind(): GenAISpanKind | undefined {
     return this._genAIKind;
   }
 

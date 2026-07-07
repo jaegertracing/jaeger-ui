@@ -63,12 +63,12 @@ describe('classifySpan', () => {
     expect(classifySpan(makeSpan([{ key: 'gen_ai.system', value: 'openai' }]))).toBe('UNKNOWN_GENAI');
   });
 
-  it('returns STANDARD for a span with no gen_ai.* attrs', () => {
-    expect(classifySpan(makeSpan([{ key: 'http.method', value: 'GET' }]))).toBe('STANDARD');
+  it('returns undefined for a span with no gen_ai.* attrs', () => {
+    expect(classifySpan(makeSpan([{ key: 'http.method', value: 'GET' }]))).toBeUndefined();
   });
 
-  it('returns STANDARD for a span with empty attributes', () => {
-    expect(classifySpan(makeSpan([]))).toBe('STANDARD');
+  it('returns undefined for a span with empty attributes', () => {
+    expect(classifySpan(makeSpan([]))).toBeUndefined();
   });
 });
 
@@ -87,6 +87,10 @@ describe('isGenAISpan', () => {
 
   it('returns false for a span with empty attributes', () => {
     expect(isGenAISpan(makeSpan([]))).toBe(false);
+  });
+
+  it('does not match keys that merely contain "gen_ai" in the middle', () => {
+    expect(isGenAISpan(makeSpan([{ key: 'custom.gen_ai.tag', value: 'x' }]))).toBe(false);
   });
 });
 

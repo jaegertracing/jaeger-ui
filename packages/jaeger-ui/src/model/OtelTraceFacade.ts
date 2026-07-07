@@ -40,7 +40,7 @@ export default class OtelTraceFacade implements IOtelTrace {
 
     // Each span's genAIKind is already computed once in OtelSpanFacade's
     // constructor, so this reads cached values instead of re-scanning attributes.
-    this.isGenAITrace = this._spans.some(s => s.genAIKind !== 'STANDARD');
+    this.isGenAITrace = this._spans.some(s => s.genAIKind !== undefined);
 
     // Wire up parentSpan, childSpans, and link span references
     this._spans.forEach(span => {

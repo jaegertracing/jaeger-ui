@@ -176,8 +176,8 @@ describe('OtelSpanFacade', () => {
   });
 
   describe('genAIKind classification', () => {
-    it('classifies a span with no gen_ai.* attributes as STANDARD', () => {
-      expect(facade.genAIKind).toBe('STANDARD');
+    it('classifies a span with no gen_ai.* attributes as undefined', () => {
+      expect(facade.genAIKind).toBeUndefined();
     });
 
     it('classifies a span with a known gen_ai.operation.name', () => {
