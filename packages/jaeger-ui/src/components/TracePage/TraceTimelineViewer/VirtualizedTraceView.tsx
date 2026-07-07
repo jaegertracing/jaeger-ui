@@ -11,7 +11,7 @@ import memoizeOne from 'memoize-one';
 import type { Location, NavigateFunction } from 'react-router-dom';
 import { actions } from './duck';
 import { makeCriticalPathContext } from './criticalPath';
-import generateRowStates, { RowState } from './generateRowStates';
+import generateRowStates, { RowStatesView, ROW_TYPE_PRUNED, ROW_TYPE_SPAN } from './generateRowStates';
 import ListView from './ListView';
 import PrunedSpanRow from './PrunedSpanRow';
 import SpanBarRow from './SpanBarRow';
@@ -99,9 +99,9 @@ function generateRowStatesFromTrace(
   detailStates: Map<string, DetailState | TNil>,
   detailPanelMode: 'inline' | 'sidepanel',
   prunedServices: Set<string>
-): RowState[] {
+): RowStatesView {
   if (!trace) {
-    return [];
+    return new RowStatesView([]);
   }
   return generateRowStates(trace.spans, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices);
 }
@@ -132,7 +132,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
     [props.trace, props.criticalPath, props.prunedServices]
   );
 
-  const getRowStates = useCallback((): RowState[] => {
+  const getRowStates = useCallback((): RowStatesView => {
     const { trace, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices } = propsRef.current;
     return memoizedGenerateRowStates(trace, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices);
   }, []);
@@ -188,7 +188,16 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
   const getCollapsedChildren = useCallback(() => propsRef.current.childrenHiddenIDs, []);
 
   const mapRowIndexToSpanIndex = useCallback(
-    (index: number) => getRowStates()[index].spanIndex,
+    (index: number) => {
+      const rowStates = getRowStates();
+      if (index < 0 || index >= rowStates.length) {
+        throw new Error(
+          `invalid row index ${index} (view length ${rowStates.length}); ` +
+            `this usually means ListView reported a visible row when there are no rows`
+        );
+      }
+      return rowStates.spanIndices[index];
+    },
     [getRowStates]
   );
 
@@ -197,8 +206,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
       const rows = getRowStates();
       const max = rows.length;
       for (let i = 0; i < max; i++) {
-        const { spanIndex } = rows[i];
-        if (spanIndex === index) {
+        if (rows.spanIndices[i] === index) {
           return i;
         }
       }
@@ -246,8 +254,11 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
   // https://github.com/facebook/flow/issues/3076#issuecomment-290944051
   const getKeyFromIndex = useCallback(
     (index: number) => {
-      const row = getRowStates()[index];
-      if ('isPrunedPlaceholder' in row) {
+      const view = getRowStates();
+      const type = view.rowTypes[index];
+      // So we must use getRow to get the correct spanID, but it's only called per visible row so it's fine.
+      const row = view.getRow(index);
+      if (type === ROW_TYPE_PRUNED) {
         return `${row.span.spanID}--pruned`;
       }
       return `${row.span.spanID}--${row.isDetail ? 'detail' : 'bar'}`;
@@ -261,27 +272,19 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
       const _spanID = parts[0];
       const _type = parts[1];
       const rows = getRowStates();
-      for (let i = 0; i < rows.length; i++) {
-        const row = rows[i];
-        if (row.span.spanID !== _spanID) continue;
-        if (_type === 'pruned' && 'isPrunedPlaceholder' in row) return i;
-        if (_type === 'detail' && row.isDetail && !('isPrunedPlaceholder' in row)) return i;
-        if (_type === 'bar' && !row.isDetail && !('isPrunedPlaceholder' in row)) return i;
-      }
-      return -1;
+      return rows.findIndexByKey(_spanID, _type);
     },
     [getRowStates]
   );
 
   const getRowHeight = useCallback(
     (index: number) => {
-      const row = getRowStates()[index];
-      if ('isPrunedPlaceholder' in row) {
+      const view = getRowStates();
+      const type = view.rowTypes[index];
+      if (type === ROW_TYPE_PRUNED || type === ROW_TYPE_SPAN) {
         return DEFAULT_HEIGHTS.bar;
       }
-      if (!row.isDetail) {
-        return DEFAULT_HEIGHTS.bar;
-      }
+      const row = view.getRow(index);
       if (Array.isArray(row.span.events) && row.span.events.length) {
         return DEFAULT_HEIGHTS.detailWithLogs;
       }
@@ -483,7 +486,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
 
   const renderRow = useCallback(
     (key: string, style: React.CSSProperties, index: number, attrs: object) => {
-      const row = getRowStates()[index];
+      const row = getRowStates().getRow(index);
       if ('isPrunedPlaceholder' in row) {
         return renderPrunedSpanRow(
           row.span,
@@ -494,10 +497,10 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
           attrs
         );
       }
-      const { isDetail, span, spanIndex } = row;
-      return isDetail
-        ? renderSpanDetailRow(span, key, style, attrs)
-        : renderSpanBarRow(span, spanIndex, key, style, attrs);
+      if (row.isDetail) {
+        return renderSpanDetailRow(row.span, key, style, attrs);
+      }
+      return renderSpanBarRow(row.span, row.spanIndex, key, style, attrs);
     },
     [getRowStates, renderPrunedSpanRow, renderSpanDetailRow, renderSpanBarRow]
   );

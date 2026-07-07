@@ -3,7 +3,12 @@
 
 import { describe, expect, it } from 'vitest';
 
-import generateRowStates, { isSpanPruned, filterPrunedSpanIDs } from './generateRowStates';
+import generateRowStates, {
+  isSpanPruned,
+  filterPrunedSpanIDs,
+  RowState,
+  RowStatesView,
+} from './generateRowStates';
 import DetailState from './SpanDetail/DetailState';
 import { IOtelSpan, StatusCode } from '../../../types/otel';
 
@@ -47,27 +52,38 @@ function makeTestSpans(): IOtelSpan[] {
   ];
 }
 
+function rowViewToArray(view: RowStatesView): RowState[] {
+  const result: RowState[] = [];
+  for (let i = 0; i < view.length; i++) {
+    result.push(view.getRow(i));
+  }
+  return result;
+}
+
 describe('generateRowStates', () => {
   it('returns empty array for null spans', () => {
-    expect(generateRowStates(null, new Set(), new Map(), 'inline', new Set())).toEqual([]);
+    const result = generateRowStates(null, new Set(), new Map(), 'inline', new Set());
+    expect(rowViewToArray(result as RowStatesView)).toEqual([]);
   });
 
   it('returns all spans when no collapse or pruning', () => {
     const spans = makeTestSpans();
-    const rows = generateRowStates(spans, new Set(), new Map(), 'inline', new Set());
+    const rows = rowViewToArray(generateRowStates(spans, new Set(), new Map(), 'inline', new Set()));
     expect(rows.map(r => r.span.spanID)).toEqual(['span-0', 'span-1', 'span-2', 'span-3']);
   });
 
   it('collapses children when span is in childrenHiddenIDs', () => {
     const spans = makeTestSpans();
-    const rows = generateRowStates(spans, new Set(['span-1']), new Map(), 'inline', new Set());
+    const rows = rowViewToArray(
+      generateRowStates(spans, new Set(['span-1']), new Map(), 'inline', new Set())
+    );
     expect(rows.map(r => r.span.spanID)).toEqual(['span-0', 'span-1', 'span-3']);
   });
 
   it('adds detail rows for spans in detailStates (inline mode)', () => {
     const spans = makeTestSpans();
     const details = new Map([['span-1', new DetailState()]]);
-    const rows = generateRowStates(spans, new Set(), details, 'inline', new Set());
+    const rows = rowViewToArray(generateRowStates(spans, new Set(), details, 'inline', new Set()));
     const detailRows = rows.filter(r => r.isDetail);
     expect(detailRows).toHaveLength(1);
     expect(detailRows[0].span.spanID).toBe('span-1');
@@ -76,44 +92,51 @@ describe('generateRowStates', () => {
   it('skips detail rows in sidepanel mode', () => {
     const spans = makeTestSpans();
     const details = new Map([['span-1', new DetailState()]]);
-    const rows = generateRowStates(spans, new Set(), details, 'sidepanel', new Set());
+    const rows = rowViewToArray(generateRowStates(spans, new Set(), details, 'sidepanel', new Set()));
     expect(rows.filter(r => r.isDetail)).toHaveLength(0);
   });
 
   describe('service filter pruning', () => {
     it('prunes spans of a pruned service and their subtrees', () => {
       const spans = makeTestSpans();
-      const rows = generateRowStates(spans, new Set(), new Map(), 'inline', new Set(['svc-b']));
+      const rows = rowViewToArray(
+        generateRowStates(spans, new Set(), new Map(), 'inline', new Set(['svc-b']))
+      );
       const spanIDs = rows.filter(r => !('isPrunedPlaceholder' in r)).map(r => r.span.spanID);
       expect(spanIDs).toEqual(['span-0', 'span-3']);
     });
 
     it('inserts a pruned placeholder with total subtree count', () => {
       const spans = makeTestSpans();
-      const rows = generateRowStates(spans, new Set(), new Map(), 'inline', new Set(['svc-b']));
+      const rows = rowViewToArray(
+        generateRowStates(spans, new Set(), new Map(), 'inline', new Set(['svc-b']))
+      );
       const placeholders = rows.filter(r => 'isPrunedPlaceholder' in r);
       expect(placeholders).toHaveLength(1);
-      expect(placeholders[0].prunedChildrenCount).toBe(2); // span-1 + span-2
-      expect(placeholders[0].span.spanID).toBe('span-0'); // parent
+      expect(placeholders[0].prunedChildrenCount).toBe(2);
+      expect(placeholders[0].span.spanID).toBe('span-0');
     });
 
     it('counts errors in pruned subtrees', () => {
       const spans = makeTestSpans();
-      const rows = generateRowStates(spans, new Set(), new Map(), 'inline', new Set(['svc-b']));
+      const rows = rowViewToArray(
+        generateRowStates(spans, new Set(), new Map(), 'inline', new Set(['svc-b']))
+      );
       const placeholder = rows.find(r => 'isPrunedPlaceholder' in r);
       expect(placeholder!.prunedErrorCount).toBe(1);
     });
 
     it('produces no placeholders when prunedServices is empty', () => {
       const spans = makeTestSpans();
-      const rows = generateRowStates(spans, new Set(), new Map(), 'inline', new Set());
+      const rows = rowViewToArray(generateRowStates(spans, new Set(), new Map(), 'inline', new Set()));
       expect(rows.filter(r => 'isPrunedPlaceholder' in r)).toHaveLength(0);
     });
 
     it('places placeholder after visible children of the parent', () => {
       const spans = makeTestSpans();
-      // Prune svc-c (span-3); span-0's visible children are span-1 subtree, placeholder should be last
-      const rows = generateRowStates(spans, new Set(), new Map(), 'inline', new Set(['svc-c']));
+      const rows = rowViewToArray(
+        generateRowStates(spans, new Set(), new Map(), 'inline', new Set(['svc-c']))
+      );
       const lastRow = rows[rows.length - 1];
       expect('isPrunedPlaceholder' in lastRow).toBe(true);
       expect(lastRow.span.spanID).toBe('span-0');
@@ -121,14 +144,12 @@ describe('generateRowStates', () => {
 
     it('assigns non-decreasing spanIndex to placeholder rows', () => {
       const spans = makeTestSpans();
-      // Prune svc-c (span-3, index 3 in the spans array)
-      const rows = generateRowStates(spans, new Set(), new Map(), 'inline', new Set(['svc-c']));
-      // Collect spanIndex values from non-detail rows (span bars + placeholders).
+      const rows = rowViewToArray(
+        generateRowStates(spans, new Set(), new Map(), 'inline', new Set(['svc-c']))
+      );
       const spanIndices = rows.filter(r => !r.isDetail).map(r => r.spanIndex);
-      // Verify monotonically non-decreasing.
       const isSorted = spanIndices.every((val, i) => i === 0 || val >= spanIndices[i - 1]);
       expect(isSorted).toBe(true);
-      // The placeholder's spanIndex should be >= the last visible child's spanIndex.
       const placeholder = rows.find(r => 'isPrunedPlaceholder' in r)!;
       const visibleSpanRows = rows.filter(r => !r.isDetail && !('isPrunedPlaceholder' in r));
       const lastVisible = visibleSpanRows[visibleSpanRows.length - 1];
