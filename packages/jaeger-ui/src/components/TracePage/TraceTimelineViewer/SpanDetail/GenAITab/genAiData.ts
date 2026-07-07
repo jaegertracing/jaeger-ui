@@ -294,25 +294,33 @@ const REGISTRY: SectionBuilder[] = [
 /**
  * Extracts GenAI span data as a single-pass registry of section builders:
  * each builder above reads whichever keys it needs through get() (which
- * claims an attribute by index the moment it's read, not by key), and
- * whatever's left unclaimed afterward automatically becomes the generic
- * "other" section. There is no second, separately maintained key list to
- * keep in sync with what each builder reads.
+ * claims an attribute the moment it's read), and whatever's left unclaimed
+ * afterward automatically becomes the generic "other" section. There is no
+ * second, separately maintained key list to keep in sync with what each
+ * builder reads.
  *
- * Claiming happens by index rather than building a Map keyed by attribute
- * name: a Map would silently keep only the last value for a repeated key,
- * dropping any earlier occurrence before a builder ever sees it (and it
- * would never reach "Other GenAI Attributes" either, since the key would
- * already read as claimed). Tracking indices means a repeated key's extra
- * occurrences remain available - either for another get() call, or, if
- * unclaimed, they still surface under "other" like any other unclaimed
- * attribute.
+ * indicesByKey is built once, up front, mapping each key to the (ordered)
+ * list of indices where it appears - a repeated gen_ai.* key is not
+ * collapsed into a single entry the way a plain Map<key, value> would
+ * collapse it (silently keeping only the last value and losing any earlier
+ * occurrence before a builder ever saw it, with no path to "Other GenAI
+ * Attributes" either, since the key would already read as claimed). get()
+ * then does an O(1) map lookup plus popping the front of a short
+ * (typically single-element) per-key list, rather than re-scanning the
+ * whole attributes array on every call.
  */
 export function extractGenAiSections(attributes: ReadonlyArray<IAttribute>): GenAiSection[] {
+  const indicesByKey = new Map<string, number[]>();
+  attributes.forEach((a, i) => {
+    const indices = indicesByKey.get(a.key);
+    if (indices) indices.push(i);
+    else indicesByKey.set(a.key, [i]);
+  });
+
   const claimed = new Set<number>();
   const get: GetAttr = key => {
-    const index = attributes.findIndex((a, i) => a.key === key && !claimed.has(i));
-    if (index === -1) return undefined;
+    const index = indicesByKey.get(key)?.shift();
+    if (index === undefined) return undefined;
     claimed.add(index);
     return attributes[index].value;
   };
