@@ -175,7 +175,7 @@ export default function SpanDetail(props: SpanDetailProps) {
       {showGenAITab ? (
         <Tabs
           key={span.spanID}
-          defaultActiveKey="details"
+          defaultActiveKey="genai"
           items={[
             { key: 'details', label: 'Details', children: detailsContent },
             { key: 'genai', label: 'GenAI', children: <GenAITab span={span} /> },
