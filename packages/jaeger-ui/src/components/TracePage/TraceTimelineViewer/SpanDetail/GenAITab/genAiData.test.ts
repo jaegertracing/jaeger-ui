@@ -318,6 +318,24 @@ describe('extractGenAiSections', () => {
       );
     });
 
+    it('falls back to String() instead of throwing when tool_call arguments are circular and cannot be JSON.stringify-d', () => {
+      const circularArgs: Record<string, unknown> = {};
+      circularArgs.self = circularArgs;
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.output.messages': [
+            {
+              role: 'assistant',
+              parts: [{ type: 'tool_call', name: 'get_weather', arguments: circularArgs }],
+            },
+          ],
+        })
+      );
+      expect(section(sections, 'conversation')?.outputMessages[0].content).toBe(
+        `→ get_weather(${String(circularArgs)})`
+      );
+    });
+
     it('drops an unrecognized role to undefined instead of trusting an arbitrary string', () => {
       const sections = extractGenAiSections(
         attrs({ 'gen_ai.input.messages': [{ role: 'developer', parts: [{ type: 'text', content: 'hi' }] }] })
@@ -408,6 +426,15 @@ describe('extractGenAiSections', () => {
     it('falls back to the raw string for system instructions that are not JSON', () => {
       const sections = extractGenAiSections(attrs({ 'gen_ai.system_instructions': 'Be concise.' }));
       expect(section(sections, 'conversation')?.systemInstructions).toBe('Be concise.');
+    });
+
+    it("falls back to String() instead of throwing when a system-instruction part's content is circular and cannot be JSON.stringify-d", () => {
+      const circularContent: Record<string, unknown> = {};
+      circularContent.self = circularContent;
+      const sections = extractGenAiSections(
+        attrs({ 'gen_ai.system_instructions': [{ type: 'text', content: circularContent }] })
+      );
+      expect(section(sections, 'conversation')?.systemInstructions).toBe(String(circularContent));
     });
   });
 

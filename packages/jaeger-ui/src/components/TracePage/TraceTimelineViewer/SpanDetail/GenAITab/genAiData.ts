@@ -59,6 +59,15 @@ function asNumber(value: AttributeValue | undefined): number | undefined {
   return undefined;
 }
 
+function stringifyValue(value: unknown): string {
+  if (typeof value === 'string') return value;
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
+}
+
 /**
  * gen_ai.system_instructions is a JSON array of `{ type: "text", content: "..." }`
  * parts per the OTel spec, though instrumentation MAY emit a single part object
@@ -81,18 +90,9 @@ function parseSystemInstructions(value: AttributeValue | undefined): string | un
       typeof part === 'object' && part !== null ? (part as Record<string, unknown>).content : part
     )
     .filter(content => content != null)
-    .map(content => (typeof content === 'string' ? content : JSON.stringify(content)))
+    .map(stringifyValue)
     .join('\n\n');
   return text || undefined;
-}
-
-function stringifyValue(value: unknown): string {
-  if (typeof value === 'string') return value;
-  try {
-    return JSON.stringify(value, null, 2);
-  } catch {
-    return String(value);
-  }
 }
 
 const jsonObjectOrArrayStartRegex = /^(\[|\{)/;
@@ -122,7 +122,15 @@ function stringifyToolValue(value: unknown): string {
     const parsed = tryParseJson(value);
     return parsed === value ? value : JSON.stringify(parsed);
   }
-  return JSON.stringify(value ?? {});
+  // Not routed through stringifyValue: it pretty-prints with 2-space
+  // indentation, which would break the single-line "-> name(args)" format
+  // this value renders into. Same try/catch safety against malformed,
+  // non-serializable data, just without the formatting change.
+  try {
+    return JSON.stringify(value ?? {});
+  } catch {
+    return String(value);
+  }
 }
 
 /**
