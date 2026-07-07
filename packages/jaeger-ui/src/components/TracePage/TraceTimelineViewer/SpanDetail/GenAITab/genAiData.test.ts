@@ -19,7 +19,7 @@ function section<T extends keyof SectionDataMap>(
 
 describe('extractGenAiSections', () => {
   describe('meta section (provider/model)', () => {
-    it('prefers current provider/model attribute names over deprecated ones when they agree', () => {
+    it('prefers current provider attribute names over deprecated one when they disagree', () => {
       const sections = extractGenAiSections(
         attrs({
           'gen_ai.provider.name': 'openai',

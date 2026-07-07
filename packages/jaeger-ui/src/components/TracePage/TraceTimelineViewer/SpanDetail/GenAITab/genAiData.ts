@@ -16,7 +16,7 @@ export type GenAiMessage = {
   content: string;
 };
 
-type GenAiToolCall = {
+export type GenAiToolCall = {
   id?: string;
   name?: string;
   arguments?: unknown;

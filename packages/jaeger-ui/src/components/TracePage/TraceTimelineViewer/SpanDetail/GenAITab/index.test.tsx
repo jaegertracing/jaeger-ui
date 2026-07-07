@@ -100,6 +100,12 @@ describe('GenAITab', () => {
     expect(screen.getByText('Result')).toBeInTheDocument();
   });
 
+  it('renders the tool call ID when present', () => {
+    render(<GenAITab span={makeSpan([{ key: 'gen_ai.tool.call.id', value: 'call_1' }])} />);
+    expect(screen.getByText('ID')).toBeInTheDocument();
+    expect(screen.getByText('call_1')).toBeInTheDocument();
+  });
+
   it('parses tool call arguments given as a JSON-encoded string into the interactive tree, not raw text', () => {
     const { container } = render(
       <GenAITab

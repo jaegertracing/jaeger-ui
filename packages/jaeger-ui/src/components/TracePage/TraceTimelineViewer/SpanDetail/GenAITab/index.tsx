@@ -10,6 +10,7 @@ import {
   tryParseJson,
   GenAiMessage,
   GenAiTokenUsage,
+  GenAiToolCall,
 } from './genAiData';
 import AccordionAttributes from '../AccordionAttributes';
 import jsonViewStyles from '../../../../../utils/jsonViewStyles';
@@ -130,24 +131,25 @@ function ConversationSection({
   );
 }
 
-function ToolCallSection({
-  toolCall,
-}: {
-  toolCall: { id?: string; name?: string; arguments?: unknown; result?: unknown };
-}) {
+function ToolCallSection({ id, name, arguments: args, result }: GenAiToolCall) {
   return (
     <div className="GenAITab--section">
-      <h3 className="GenAITab--sectionTitle">Tool Call{toolCall.name ? `: ${toolCall.name}` : ''}</h3>
-      {toolCall.arguments !== undefined && (
+      <h3 className="GenAITab--sectionTitle">Tool Call{name && `: ${name}`}</h3>
+      {id && (
         <div className="GenAITab--toolSubsection">
-          <span className="GenAITab--toolLabel">Arguments</span>
-          <JsonBlock value={toolCall.arguments} />
+          <span className="GenAITab--toolLabel">ID</span> {id}
         </div>
       )}
-      {toolCall.result !== undefined && (
+      {args !== undefined && (
+        <div className="GenAITab--toolSubsection">
+          <span className="GenAITab--toolLabel">Arguments</span>
+          <JsonBlock value={args} />
+        </div>
+      )}
+      {result !== undefined && (
         <div className="GenAITab--toolSubsection">
           <span className="GenAITab--toolLabel">Result</span>
-          <JsonBlock value={toolCall.result} />
+          <JsonBlock value={result} />
         </div>
       )}
     </div>
@@ -194,7 +196,7 @@ export default function GenAITab({ span }: Props): React.ReactElement {
           case 'conversation':
             return <ConversationSection key="conversation" {...section.data} />;
           case 'toolCall':
-            return <ToolCallSection key="toolCall" toolCall={section.data} />;
+            return <ToolCallSection key="toolCall" {...section.data} />;
           case 'other':
             return (
               <AccordionAttributes
