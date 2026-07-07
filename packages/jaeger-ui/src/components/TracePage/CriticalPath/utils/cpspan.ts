@@ -29,7 +29,7 @@ export function createCPSpan(span: IOtelSpan): CPSpan {
 }
 
 /**
- * Recursively builds a map of CPSpan objects starting from a root span.
+ * Iteratively builds a map of CPSpan objects starting from a root span.
  * Only blocking spans and their descendants are included in the map.
  * Non-blocking branches are pruned during traversal.
  *
