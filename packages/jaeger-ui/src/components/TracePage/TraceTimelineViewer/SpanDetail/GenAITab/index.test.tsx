@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { vi } from 'vitest';
 
 import GenAITab from '.';
 import type { IAttribute, IOtelSpan } from '../../../../../types/otel';
@@ -143,5 +144,34 @@ describe('GenAITab', () => {
     const header = screen.getByText((_, element) => element?.textContent === 'Other GenAI Attributes:');
     fireEvent.click(header);
     expect(screen.getByText('chat')).toBeInTheDocument();
+  });
+});
+
+describe('GenAITab defensive fallback for an unrecognized section type', () => {
+  // extractGenAiSections can never actually produce a section type outside
+  // GenAiSection today - this is defensive code for if that invariant is
+  // ever broken (e.g. a new section type added to the registry without a
+  // matching case in the dispatcher). Force that path via vi.doMock (unlike
+  // vi.mock, not hoisted module-wide) scoped to just this test, combined with
+  // resetModules + a dynamic import so the rest of the file keeps using the
+  // real extractor.
+  afterEach(() => {
+    vi.doUnmock('./genAiData');
+    vi.resetModules();
+  });
+
+  it('renders a generic key/value dump instead of nothing for an unrecognized section type', async () => {
+    vi.resetModules();
+    vi.doMock('./genAiData', async () => {
+      const actual = await vi.importActual<typeof import('./genAiData')>('./genAiData');
+      return {
+        ...actual,
+        extractGenAiSections: vi.fn(() => [{ type: 'futureSectionType', data: { someField: 'someValue' } }]),
+      };
+    });
+    const { default: GenAITabWithMock } = await import('.');
+    render(<GenAITabWithMock span={makeSpan([])} />);
+    expect(screen.getByText('futureSectionType')).toBeInTheDocument();
+    expect(screen.getByText('someField')).toBeInTheDocument();
   });
 });

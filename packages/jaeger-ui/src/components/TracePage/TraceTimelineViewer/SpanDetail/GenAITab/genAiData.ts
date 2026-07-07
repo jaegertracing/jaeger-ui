@@ -23,7 +23,7 @@ type GenAiToolCall = {
   result?: unknown;
 };
 
-type GenAiTokenUsage = {
+export type GenAiTokenUsage = {
   inputTokens?: number;
   outputTokens?: number;
   cacheReadInputTokens?: number;
@@ -31,44 +31,18 @@ type GenAiTokenUsage = {
   reasoningOutputTokens?: number;
 };
 
-type GenAiData = {
-  provider?: string;
-  model?: string;
-  usage: GenAiTokenUsage;
-  inputMessages: GenAiMessage[];
-  outputMessages: GenAiMessage[];
-  systemInstructions?: string;
-  toolCall?: GenAiToolCall;
-  otherAttributes: IAttribute[];
-};
-
-// Attribute keys already surfaced by named fields above (including deprecated
-// aliases). Anything else starting with "gen_ai." falls through to
-// otherAttributes so a span is never shown as empty when isGenAISpan is true.
-const HANDLED_KEYS = new Set([
-  'gen_ai.provider.name',
-  'gen_ai.system',
-  'gen_ai.response.model',
-  'gen_ai.request.model',
-  'gen_ai.input.messages',
-  'gen_ai.prompt',
-  'gen_ai.output.messages',
-  'gen_ai.completion',
-  'gen_ai.usage.input_tokens',
-  'gen_ai.usage.output_tokens',
-  'gen_ai.usage.cache_read.input_tokens',
-  'gen_ai.usage.cache_creation.input_tokens',
-  'gen_ai.usage.reasoning.output_tokens',
-  'gen_ai.tool.name',
-  'gen_ai.tool.call.arguments',
-  'gen_ai.tool.call.result',
-  'gen_ai.tool.call.id',
-  'gen_ai.system_instructions',
-]);
-
-function findAttribute(attributes: ReadonlyArray<IAttribute>, key: string): AttributeValue | undefined {
-  return attributes.find(a => a.key === key)?.value;
-}
+// Every variant separates its discriminant (`type`) from its payload (`data`)
+// so a generic fallback renderer can walk `Object.entries(data)` for a
+// section type it doesn't have a specific case for.
+export type GenAiSection =
+  | { type: 'meta'; data: { provider?: string; model?: string } }
+  | { type: 'tokens'; data: GenAiTokenUsage }
+  | {
+      type: 'conversation';
+      data: { systemInstructions?: string; inputMessages: GenAiMessage[]; outputMessages: GenAiMessage[] };
+    }
+  | { type: 'toolCall'; data: GenAiToolCall }
+  | { type: 'other'; data: { attributes: IAttribute[] } };
 
 function asString(value: AttributeValue | undefined): string | undefined {
   if (typeof value === 'string') return value;
@@ -87,8 +61,9 @@ function asNumber(value: AttributeValue | undefined): number | undefined {
 
 /**
  * gen_ai.system_instructions is a JSON array of `{ type: "text", content: "..." }`
- * parts per the OTel spec (not a plain string), though instrumentation MAY fall
- * back to a raw string if it can't produce structured output. Handle both.
+ * parts per the OTel spec, though instrumentation MAY emit a single part object
+ * (not array-wrapped) or a raw string instead. Handle all three so a
+ * non-array-but-otherwise-valid value doesn't get silently dropped.
  */
 function parseSystemInstructions(value: AttributeValue | undefined): string | undefined {
   if (value == null) return undefined;
@@ -100,8 +75,8 @@ function parseSystemInstructions(value: AttributeValue | undefined): string | un
       return value;
     }
   }
-  if (!Array.isArray(parsed)) return undefined;
-  const text = parsed
+  const parts = Array.isArray(parsed) ? parsed : [parsed];
+  const text = parts
     .map(part =>
       typeof part === 'object' && part !== null ? (part as Record<string, unknown>).content : part
     )
@@ -237,56 +212,6 @@ function parseMessages(value: AttributeValue | undefined): GenAiMessage[] {
   });
 }
 
-/**
- * Extracts GenAI span data from OTel attributes.
- * Checks current attribute names first, falling back to deprecated ones
- * still commonly emitted by existing instrumentation:
- * - gen_ai.provider.name (current) vs gen_ai.system (deprecated)
- * - gen_ai.input.messages/output.messages (current) vs gen_ai.prompt/completion (deprecated)
- */
-export function extractGenAiData(attributes: ReadonlyArray<IAttribute>): GenAiData {
-  const provider = asString(
-    findAttribute(attributes, 'gen_ai.provider.name') ?? findAttribute(attributes, 'gen_ai.system')
-  );
-  const model = asString(
-    findAttribute(attributes, 'gen_ai.response.model') ?? findAttribute(attributes, 'gen_ai.request.model')
-  );
-
-  const inputMessagesRaw =
-    findAttribute(attributes, 'gen_ai.input.messages') ?? findAttribute(attributes, 'gen_ai.prompt');
-  const outputMessagesRaw =
-    findAttribute(attributes, 'gen_ai.output.messages') ?? findAttribute(attributes, 'gen_ai.completion');
-
-  const usage: GenAiTokenUsage = {
-    inputTokens: asNumber(findAttribute(attributes, 'gen_ai.usage.input_tokens')),
-    outputTokens: asNumber(findAttribute(attributes, 'gen_ai.usage.output_tokens')),
-    cacheReadInputTokens: asNumber(findAttribute(attributes, 'gen_ai.usage.cache_read.input_tokens')),
-    cacheCreationInputTokens: asNumber(findAttribute(attributes, 'gen_ai.usage.cache_creation.input_tokens')),
-    reasoningOutputTokens: asNumber(findAttribute(attributes, 'gen_ai.usage.reasoning.output_tokens')),
-  };
-
-  const toolName = asString(findAttribute(attributes, 'gen_ai.tool.name'));
-  const toolArguments = findAttribute(attributes, 'gen_ai.tool.call.arguments');
-  const toolResult = findAttribute(attributes, 'gen_ai.tool.call.result');
-  const toolId = asString(findAttribute(attributes, 'gen_ai.tool.call.id'));
-  const hasToolCall = toolName != null || toolArguments != null || toolResult != null;
-
-  const otherAttributes = attributes.filter(a => a.key.startsWith('gen_ai.') && !HANDLED_KEYS.has(a.key));
-
-  return {
-    provider,
-    model,
-    usage,
-    inputMessages: parseMessages(inputMessagesRaw),
-    outputMessages: parseMessages(outputMessagesRaw),
-    systemInstructions: parseSystemInstructions(findAttribute(attributes, 'gen_ai.system_instructions')),
-    toolCall: hasToolCall
-      ? { id: toolId, name: toolName, arguments: toolArguments, result: toolResult }
-      : undefined,
-    otherAttributes,
-  };
-}
-
 export function hasAnyTokenUsage(usage: GenAiTokenUsage): boolean {
   return Object.values(usage).some(v => v != null);
 }
@@ -294,4 +219,98 @@ export function hasAnyTokenUsage(usage: GenAiTokenUsage): boolean {
 export function formatTokenCount(value: number | undefined): string | undefined {
   if (value == null) return undefined;
   return new Intl.NumberFormat('en-US').format(value);
+}
+
+// get() claims a key as a side effect of reading it (removes it from the
+// shared pool). A build function's "owned keys" are exactly the keys it
+// happens to call get() on - nothing is declared twice, so there is no
+// separate allowlist that can drift out of sync with what's actually read.
+type GetAttr = (key: string) => AttributeValue | undefined;
+type SectionBuilder = (get: GetAttr) => GenAiSection | undefined;
+
+// Array order IS render order - no separate rank field to keep in sync with
+// position; the loop below walks this array (developer-controlled, fixed
+// order), not the span's attributes (whose order is instrumentation-dependent).
+const REGISTRY: SectionBuilder[] = [
+  get => {
+    // gen_ai.provider.name/gen_ai.system is a genuine current/deprecated pair -
+    // `||` short-circuits so gen_ai.system is only read (and claimed) when
+    // gen_ai.provider.name is absent/empty, leaving a disagreeing legacy value
+    // unclaimed so it surfaces in "Other GenAI Attributes" instead of being
+    // silently discarded.
+    const provider = asString(get('gen_ai.provider.name')) || asString(get('gen_ai.system'));
+
+    // gen_ai.request.model/gen_ai.response.model are NOT a current/deprecated
+    // pair per the OTel spec - both are current, and they record different
+    // things: which model was requested vs. which model actually served the
+    // response (a provider substituting a pinned version, e.g. request
+    // "gpt-4" / response "gpt-4-0613", is the expected case, not a conflict).
+    // Show both rather than collapsing one into a fallback for the other.
+    const requestModel = asString(get('gen_ai.request.model'));
+    const responseModel = asString(get('gen_ai.response.model'));
+    const model =
+      responseModel && requestModel && responseModel !== requestModel
+        ? `${responseModel} (requested: ${requestModel})`
+        : responseModel || requestModel;
+
+    return provider || model ? { type: 'meta', data: { provider, model } } : undefined;
+  },
+  get => {
+    const usage: GenAiTokenUsage = {
+      inputTokens: asNumber(get('gen_ai.usage.input_tokens')),
+      outputTokens: asNumber(get('gen_ai.usage.output_tokens')),
+      cacheReadInputTokens: asNumber(get('gen_ai.usage.cache_read.input_tokens')),
+      cacheCreationInputTokens: asNumber(get('gen_ai.usage.cache_creation.input_tokens')),
+      reasoningOutputTokens: asNumber(get('gen_ai.usage.reasoning.output_tokens')),
+    };
+    return hasAnyTokenUsage(usage) ? { type: 'tokens', data: usage } : undefined;
+  },
+  get => {
+    // Same short-circuit-on-purpose rule as the meta builder above: only fall
+    // back to gen_ai.prompt/gen_ai.completion when the current key is absent,
+    // so a legacy value that disagrees with the current one is left unclaimed
+    // and surfaces in "Other GenAI Attributes" instead of being silently
+    // dropped.
+    const inputMessages = parseMessages(get('gen_ai.input.messages') ?? get('gen_ai.prompt'));
+    const outputMessages = parseMessages(get('gen_ai.output.messages') ?? get('gen_ai.completion'));
+    const systemInstructions = parseSystemInstructions(get('gen_ai.system_instructions'));
+    return inputMessages.length || outputMessages.length || systemInstructions
+      ? { type: 'conversation', data: { inputMessages, outputMessages, systemInstructions } }
+      : undefined;
+  },
+  get => {
+    const id = asString(get('gen_ai.tool.call.id'));
+    const name = asString(get('gen_ai.tool.name'));
+    const args = get('gen_ai.tool.call.arguments');
+    const result = get('gen_ai.tool.call.result');
+    return id || name || args !== undefined || result !== undefined
+      ? { type: 'toolCall', data: { id, name, arguments: args, result } }
+      : undefined;
+  },
+];
+
+/**
+ * Extracts GenAI span data as a single-pass registry of section builders: one
+ * Map is built once from the span's attributes, each builder above reads
+ * whichever keys it needs through get() (which removes a key from the map the
+ * moment it's read), and whatever's left unclaimed afterward automatically
+ * becomes the generic "other" section. There is no second, separately
+ * maintained key list to keep in sync with what each builder reads.
+ */
+export function extractGenAiSections(attributes: ReadonlyArray<IAttribute>): GenAiSection[] {
+  const remaining = new Map(attributes.map(a => [a.key, a.value]));
+  const get: GetAttr = key => {
+    const value = remaining.get(key);
+    remaining.delete(key);
+    return value;
+  };
+
+  const sections = REGISTRY.map(build => build(get)).filter((s): s is GenAiSection => s !== undefined);
+
+  const other = [...remaining]
+    .filter(([k]) => k.startsWith('gen_ai.'))
+    .map(([key, value]) => ({ key, value }));
+  if (other.length) sections.push({ type: 'other', data: { attributes: other } });
+
+  return sections;
 }

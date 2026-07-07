@@ -5,11 +5,11 @@ import React, { useMemo, useState } from 'react';
 import { JsonView, allExpanded, collapseAllNested } from 'react-json-view-lite';
 
 import {
-  extractGenAiData,
-  hasAnyTokenUsage,
+  extractGenAiSections,
   formatTokenCount,
   tryParseJson,
   GenAiMessage,
+  GenAiTokenUsage,
 } from './genAiData';
 import AccordionAttributes from '../AccordionAttributes';
 import jsonViewStyles from '../../../../../utils/jsonViewStyles';
@@ -57,130 +57,166 @@ function JsonBlock({ value }: { value: unknown }) {
   );
 }
 
+function MetaRow({ provider, model }: { provider?: string; model?: string }) {
+  return (
+    <div className="GenAITab--meta">
+      {provider && (
+        <span className="GenAITab--metaItem">
+          <span className="GenAITab--metaLabel">Provider</span> {provider}
+        </span>
+      )}
+      {model && (
+        <span className="GenAITab--metaItem">
+          <span className="GenAITab--metaLabel">Model</span> {model}
+        </span>
+      )}
+    </div>
+  );
+}
+
+// Cosmetic only - a key missing from here still renders, just under its raw
+// field name instead of a friendly label, so a future token-usage field
+// shows up automatically without needing a matching entry added here.
+const TOKEN_LABELS: Partial<Record<keyof GenAiTokenUsage, string>> = {
+  inputTokens: 'Input',
+  outputTokens: 'Output',
+  cacheReadInputTokens: 'Cached (read)',
+  cacheCreationInputTokens: 'Cached (write)',
+  reasoningOutputTokens: 'Reasoning',
+};
+
+function TokensRow({ usage }: { usage: GenAiTokenUsage }) {
+  return (
+    <div className="GenAITab--tokens">
+      {(Object.keys(usage) as Array<keyof GenAiTokenUsage>).map(key => {
+        const value = usage[key];
+        if (value == null) return null;
+        return (
+          <span key={key} className="GenAITab--tokenItem">
+            <span className="GenAITab--tokenLabel">{TOKEN_LABELS[key] ?? key}</span> {formatTokenCount(value)}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+function ConversationSection({
+  systemInstructions,
+  inputMessages,
+  outputMessages,
+}: {
+  systemInstructions?: string;
+  inputMessages: GenAiMessage[];
+  outputMessages: GenAiMessage[];
+}) {
+  return (
+    <div className="GenAITab--section">
+      <h3 className="GenAITab--sectionTitle">Conversation</h3>
+      {systemInstructions && (
+        <MessageBlock message={{ role: 'system', content: systemInstructions }} index={-1} />
+      )}
+      {inputMessages.map((message, i) => (
+        <MessageBlock key={`input-${i}`} message={message} index={i} />
+      ))}
+      {outputMessages.map((message, i) => (
+        <MessageBlock
+          key={`output-${i}`}
+          message={{ role: message.role || 'assistant', content: message.content }}
+          index={inputMessages.length + i}
+        />
+      ))}
+    </div>
+  );
+}
+
+function ToolCallSection({
+  toolCall,
+}: {
+  toolCall: { id?: string; name?: string; arguments?: unknown; result?: unknown };
+}) {
+  return (
+    <div className="GenAITab--section">
+      <h3 className="GenAITab--sectionTitle">Tool Call{toolCall.name ? `: ${toolCall.name}` : ''}</h3>
+      {toolCall.arguments !== undefined && (
+        <div className="GenAITab--toolSubsection">
+          <span className="GenAITab--toolLabel">Arguments</span>
+          <JsonBlock value={toolCall.arguments} />
+        </div>
+      )}
+      {toolCall.result !== undefined && (
+        <div className="GenAITab--toolSubsection">
+          <span className="GenAITab--toolLabel">Result</span>
+          <JsonBlock value={toolCall.result} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// The set of GenAiSection types is closed and authored in this same module,
+// so this is dead code today - every variant extractGenAiSections can
+// currently produce has an explicit case above it. It costs nothing while the
+// switch stays exhaustive, and only ever runs if that invariant is broken (a
+// future section type added to the registry without a matching case here).
+// Per the no-data-hiding principle, an ugly-but-honest key/value dump beats
+// silently rendering nothing.
+function UnknownSection({ type, data }: { type: string; data: Record<string, unknown> }) {
+  return (
+    <div className="GenAITab--section">
+      <h3 className="GenAITab--sectionTitle">{type}</h3>
+      {Object.entries(data).map(([key, value]) => (
+        <div key={key} className="GenAITab--toolSubsection">
+          <span className="GenAITab--toolLabel">{key}</span>
+          <JsonBlock value={value} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function GenAITab({ span }: Props): React.ReactElement {
-  const data = useMemo(() => extractGenAiData(span.attributes), [span.attributes]);
-  const {
-    provider,
-    model,
-    usage,
-    inputMessages,
-    outputMessages,
-    systemInstructions,
-    toolCall,
-    otherAttributes,
-  } = data;
+  const sections = useMemo(() => extractGenAiSections(span.attributes), [span.attributes]);
   const [isOtherOpen, setIsOtherOpen] = useState(false);
 
-  const showTokens = hasAnyTokenUsage(usage);
-  const showConversation =
-    inputMessages.length > 0 || outputMessages.length > 0 || Boolean(systemInstructions);
-  const hasContent =
-    showTokens ||
-    showConversation ||
-    Boolean(toolCall) ||
-    Boolean(provider) ||
-    Boolean(model) ||
-    otherAttributes.length > 0;
+  if (sections.length === 0) {
+    return <div className="GenAITab--empty">No GenAI-specific attributes found on this span.</div>;
+  }
 
   return (
     <div className="GenAITab">
-      {(provider || model) && (
-        <div className="GenAITab--meta">
-          {provider && (
-            <span className="GenAITab--metaItem">
-              <span className="GenAITab--metaLabel">Provider</span> {provider}
-            </span>
-          )}
-          {model && (
-            <span className="GenAITab--metaItem">
-              <span className="GenAITab--metaLabel">Model</span> {model}
-            </span>
-          )}
-        </div>
-      )}
-
-      {showTokens && (
-        <div className="GenAITab--tokens">
-          {usage.inputTokens != null && (
-            <span className="GenAITab--tokenItem">
-              <span className="GenAITab--tokenLabel">Input</span> {formatTokenCount(usage.inputTokens)}
-            </span>
-          )}
-          {usage.outputTokens != null && (
-            <span className="GenAITab--tokenItem">
-              <span className="GenAITab--tokenLabel">Output</span> {formatTokenCount(usage.outputTokens)}
-            </span>
-          )}
-          {usage.cacheReadInputTokens != null && (
-            <span className="GenAITab--tokenItem">
-              <span className="GenAITab--tokenLabel">Cached (read)</span>{' '}
-              {formatTokenCount(usage.cacheReadInputTokens)}
-            </span>
-          )}
-          {usage.cacheCreationInputTokens != null && (
-            <span className="GenAITab--tokenItem">
-              <span className="GenAITab--tokenLabel">Cached (write)</span>{' '}
-              {formatTokenCount(usage.cacheCreationInputTokens)}
-            </span>
-          )}
-          {usage.reasoningOutputTokens != null && (
-            <span className="GenAITab--tokenItem">
-              <span className="GenAITab--tokenLabel">Reasoning</span>{' '}
-              {formatTokenCount(usage.reasoningOutputTokens)}
-            </span>
-          )}
-        </div>
-      )}
-
-      {showConversation && (
-        <div className="GenAITab--section">
-          <h3 className="GenAITab--sectionTitle">Conversation</h3>
-          {systemInstructions && (
-            <MessageBlock message={{ role: 'system', content: systemInstructions }} index={-1} />
-          )}
-          {inputMessages.map((message, i) => (
-            <MessageBlock key={`input-${i}`} message={message} index={i} />
-          ))}
-          {outputMessages.map((message, i) => (
-            <MessageBlock
-              key={`output-${i}`}
-              message={{ role: message.role || 'assistant', content: message.content }}
-              index={inputMessages.length + i}
-            />
-          ))}
-        </div>
-      )}
-
-      {toolCall && (
-        <div className="GenAITab--section">
-          <h3 className="GenAITab--sectionTitle">Tool Call{toolCall.name ? `: ${toolCall.name}` : ''}</h3>
-          {toolCall.arguments !== undefined && (
-            <div className="GenAITab--toolSubsection">
-              <span className="GenAITab--toolLabel">Arguments</span>
-              <JsonBlock value={toolCall.arguments} />
-            </div>
-          )}
-          {toolCall.result !== undefined && (
-            <div className="GenAITab--toolSubsection">
-              <span className="GenAITab--toolLabel">Result</span>
-              <JsonBlock value={toolCall.result} />
-            </div>
-          )}
-        </div>
-      )}
-
-      {otherAttributes.length > 0 && (
-        <AccordionAttributes
-          className="GenAITab--otherAttributes"
-          data={otherAttributes}
-          label="Other GenAI Attributes"
-          linksGetter={null}
-          isOpen={isOtherOpen}
-          onToggle={() => setIsOtherOpen(o => !o)}
-        />
-      )}
-
-      {!hasContent && <div className="GenAITab--empty">No GenAI-specific attributes found on this span.</div>}
+      {sections.map(section => {
+        switch (section.type) {
+          case 'meta':
+            return <MetaRow key="meta" {...section.data} />;
+          case 'tokens':
+            return <TokensRow key="tokens" usage={section.data} />;
+          case 'conversation':
+            return <ConversationSection key="conversation" {...section.data} />;
+          case 'toolCall':
+            return <ToolCallSection key="toolCall" toolCall={section.data} />;
+          case 'other':
+            return (
+              <AccordionAttributes
+                key="other"
+                className="GenAITab--otherAttributes"
+                data={section.data.attributes}
+                label="Other GenAI Attributes"
+                linksGetter={null}
+                isOpen={isOtherOpen}
+                onToggle={() => setIsOtherOpen(o => !o)}
+              />
+            );
+          default:
+            return (
+              <UnknownSection
+                key={(section as { type: string }).type}
+                type={(section as { type: string }).type}
+                data={(section as { data: Record<string, unknown> }).data}
+              />
+            );
+        }
+      })}
     </div>
   );
 }
