@@ -120,6 +120,27 @@ describe('<ListView>', () => {
       const expectedDrawnLength = componentInstance._endIndexDrawn - componentInstance._startIndexDrawn + 1;
       expect(expectedDrawnLength).toBeGreaterThanOrEqual(props.initialDraw);
     });
+
+    it('items array has no holes — rendered count matches drawn range', () => {
+      let componentInstance;
+      function TestComponent() {
+        const ref = React.useRef();
+        React.useEffect(() => {
+          componentInstance = ref.current;
+        });
+        return <ListView {...props} ref={ref} />;
+      }
+      const { container } = render(<TestComponent />);
+      expect(componentInstance).toBeDefined();
+      const start = componentInstance._startIndexDrawn;
+      const end = componentInstance._endIndexDrawn;
+      const expectedCount = end - start + 1;
+      const items = container.querySelectorAll(`.${props.itemsWrapperClassName} > div`);
+      // items.length must equal end - start + 1 (no array holes).
+      // Regression guard for: items.length = end - start + 1; for(... items.push(...))
+      // which created 2N items with N leading holes.
+      expect(items.length).toBe(expectedCount);
+    });
   });
 
   describe('mount tests', () => {
