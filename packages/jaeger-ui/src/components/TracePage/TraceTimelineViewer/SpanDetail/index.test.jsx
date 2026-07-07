@@ -322,11 +322,11 @@ describe('<SpanDetail>', () => {
       expect(screen.getByTestId('accordian-keyvalues-tags')).toBeInTheDocument();
     });
 
-    it('defaults to the Details tab for a GenAI span', () => {
+    it('defaults to the GenAI tab for a GenAI span, now that it has real content', () => {
       isGenAISpanMock.mockReturnValue(true);
       render(<SpanDetail {...props} />);
-      expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute('aria-selected', 'true');
-      expect(screen.getByRole('tab', { name: 'GenAI' })).toHaveAttribute('aria-selected', 'false');
+      expect(screen.getByRole('tab', { name: 'GenAI' })).toHaveAttribute('aria-selected', 'true');
+      expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute('aria-selected', 'false');
     });
   });
 });
