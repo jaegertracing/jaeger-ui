@@ -430,6 +430,7 @@ export default class ListView extends React.Component<TListViewProps> {
       const attrs = { 'data-item-key': itemKey };
       items.push(itemRenderer(itemKey, style, i, attrs));
     }
+    this._lastItemsLength = items.length;
     const wrapperProps: TWrapperProps = {
       style: { position: 'relative' },
       ref: this._initWrapper,

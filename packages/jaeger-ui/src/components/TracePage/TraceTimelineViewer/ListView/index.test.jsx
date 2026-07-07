@@ -130,16 +130,17 @@ describe('<ListView>', () => {
         });
         return <ListView {...props} ref={ref} />;
       }
-      const { container } = render(<TestComponent />);
+      render(<TestComponent />);
       expect(componentInstance).toBeDefined();
       const start = componentInstance._startIndexDrawn;
       const end = componentInstance._endIndexDrawn;
       const expectedCount = end - start + 1;
-      const items = container.querySelectorAll(`.${props.itemsWrapperClassName} > div`);
-      // items.length must equal end - start + 1 (no array holes).
-      // Regression guard for: items.length = end - start + 1; for(... items.push(...))
-      // which created 2N items with N leading holes.
-      expect(items.length).toBe(expectedCount);
+      // Assert on the internal items array length, not DOM node count.
+      // React skips array holes during rendering (undefined entries produce no DOM),
+      // so DOM assertions wouldn't detect the old bug where:
+      //   items.length = end - start + 1;  (N holes)
+      //   for (...) { items.push(<div/>); }  (N real items → length = 2N)
+      expect(componentInstance._lastItemsLength).toBe(expectedCount);
     });
   });
 
