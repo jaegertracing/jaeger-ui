@@ -175,6 +175,30 @@ describe('OtelSpanFacade', () => {
     expect(facade.kind).toBe(SpanKind.SERVER);
   });
 
+  describe('genAIKind classification', () => {
+    it('classifies a span with no gen_ai.* attributes as undefined', () => {
+      expect(facade.genAIKind).toBeUndefined();
+    });
+
+    it('classifies a span with a known gen_ai.operation.name', () => {
+      const span: Span = {
+        ...mockLegacySpan,
+        tags: [...mockLegacySpan.tags, { key: 'gen_ai.operation.name', value: 'chat' }],
+      };
+      const spanFacade = new OtelSpanFacade(span);
+      expect(spanFacade.genAIKind).toBe('LLM_CALL');
+    });
+
+    it('classifies a span with gen_ai.* attributes but no recognized operation.name as UNKNOWN_GENAI', () => {
+      const span: Span = {
+        ...mockLegacySpan,
+        tags: [...mockLegacySpan.tags, { key: 'gen_ai.system', value: 'openai' }],
+      };
+      const spanFacade = new OtelSpanFacade(span);
+      expect(spanFacade.genAIKind).toBe('UNKNOWN_GENAI');
+    });
+  });
+
   it('maps timing fields', () => {
     expect(facade.startTime).toBe(1000);
     expect(facade.endTime).toBe(1500);

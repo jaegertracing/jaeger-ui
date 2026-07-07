@@ -11,15 +11,18 @@ import {
   IStatus,
   StatusCode,
   SpanKind,
+  GenAISpanKind,
   IResource,
   IScope,
 } from '../types/otel';
+import { classifySpan } from '../utils/genai/detect';
 
 export default class OtelSpanFacade implements IOtelSpan {
   private legacySpan: Span;
   private _kind: SpanKind;
   private _parentSpanID: string | undefined;
   private _attributes: IAttribute[];
+  private _genAIKind: GenAISpanKind | undefined;
   private _events: IEvent[];
   private _links: ILink[];
   private _status: IStatus;
@@ -52,6 +55,7 @@ export default class OtelSpanFacade implements IOtelSpan {
     this._parentSpanID = parentSpanRef?.spanID;
 
     this._attributes = OtelSpanFacade.toOtelAttributes(this.legacySpan.tags);
+    this._genAIKind = classifySpan({ attributes: this._attributes });
 
     this._events = this.legacySpan.logs.map(log => ({
       timestamp: log.timestamp as IEvent['timestamp'],
@@ -111,6 +115,10 @@ export default class OtelSpanFacade implements IOtelSpan {
 
   get kind(): SpanKind {
     return this._kind;
+  }
+
+  get genAIKind(): GenAISpanKind | undefined {
+    return this._genAIKind;
   }
 
   get startTime(): IOtelSpan['startTime'] {
