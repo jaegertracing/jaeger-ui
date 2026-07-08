@@ -5,7 +5,6 @@ import * as React from 'react';
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
-import _get from 'lodash/get';
 import memoizeOne from 'memoize-one';
 import queryString from 'query-string';
 import { DeepDependencyGraphPageImpl, TReduxProps, useDdgViewModifierBridgeProps } from '.';
@@ -62,10 +61,7 @@ const TracesDdgImpl: React.FC<TOwnProps> = React.memo(props => {
 
   const modelHash = graphState && graphState.state === fetchedState.DONE ? graphState.model.hash : undefined;
   const viewModifierProps = useDdgViewModifierBridgeProps({ modelHash });
-  const sanitizedUrlState = useMemo(
-    () => sanitizeUrlState(urlState, _get(graphState, 'model.hash')),
-    [urlState, graphState]
-  );
+  const sanitizedUrlState = useMemo(() => sanitizeUrlState(urlState, modelHash), [urlState, modelHash]);
 
   const ddgProps: TReduxProps = {
     graph,
