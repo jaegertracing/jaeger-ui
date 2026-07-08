@@ -605,6 +605,17 @@ describe('<TracePage>', () => {
         const spanGraph = screen.queryByTestId('span-graph');
         expect(spanGraph).not.toBeInTheDocument();
       });
+
+      it('is true if timelineBarsVisible is false', () => {
+        mockLayoutPrefsStore.timelineBarsVisible = false;
+        renderWithRouter(<TracePage {...defaultProps} />);
+
+        const spanGraph = screen.queryByTestId('span-graph');
+        expect(spanGraph).not.toBeInTheDocument();
+
+        // Restore default
+        mockLayoutPrefsStore.timelineBarsVisible = true;
+      });
     });
 
     describe('calculates hideSummary correctly', () => {
