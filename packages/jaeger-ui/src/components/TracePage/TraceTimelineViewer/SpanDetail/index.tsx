@@ -106,6 +106,7 @@ export default function SpanDetail(props: SpanDetailProps) {
           linksGetter={linksGetter}
           isOpen={isAttributesOpen}
           onToggle={() => attributesToggle(span.spanID)}
+          hasAdditionalContent={richMediaAttrs.length > 0}
         />
         {richMediaAttrs.length > 0 && isAttributesOpen && (
           <div className="SpanDetail--genAISection">

@@ -344,9 +344,12 @@ describe('<SpanDetail>', () => {
       isGenAISpanMock.mockReturnValue(false);
       const richAttr = { key: 'gen_ai.input.messages', value: '[{"role":"user","content":"hi"}]' };
       props.span.attributes.push(richAttr);
-      render(<SpanDetail {...props} />);
-      expect(screen.getByTestId('genai-renderer-gen_ai.input.messages')).toBeInTheDocument();
-      props.span.attributes.pop();
+      try {
+        render(<SpanDetail {...props} />);
+        expect(screen.getByTestId('genai-renderer-gen_ai.input.messages')).toBeInTheDocument();
+      } finally {
+        props.span.attributes.pop();
+      }
     });
   });
 });

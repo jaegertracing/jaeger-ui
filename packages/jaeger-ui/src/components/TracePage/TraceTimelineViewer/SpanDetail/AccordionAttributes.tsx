@@ -42,6 +42,7 @@ export default function AccordionAttributes({
   label,
   linksGetter,
   onToggle = null,
+  hasAdditionalContent = false,
 }: {
   className?: string | TNil;
   data: ReadonlyArray<IAttribute>;
@@ -51,8 +52,12 @@ export default function AccordionAttributes({
   label: string;
   linksGetter: ((pairs: ReadonlyArray<IAttribute>, index: number) => Hyperlink[]) | TNil;
   onToggle?: null | (() => void);
+  // True when the caller renders extra content (e.g. GenAI rich-media attributes) alongside
+  // this table under the same header. Keeps the header looking active/expandable even when
+  // `data` itself is empty, since the header still controls a non-empty section.
+  hasAdditionalContent?: boolean;
 }) {
-  const isEmpty = !Array.isArray(data) || !data.length;
+  const isEmpty = (!Array.isArray(data) || !data.length) && !hasAdditionalContent;
   const iconCls = cx('u-align-icon', { 'AccordionAttributes--emptyIcon': isEmpty });
   let arrow: React.ReactNode | null = null;
   let headerProps: object | null = null;
