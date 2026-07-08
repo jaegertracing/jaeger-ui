@@ -10,7 +10,6 @@ import {
   isKindProducer,
 } from './utils';
 
-import traceGenerator from '../../../demo/trace-generators';
 import { SpanKind, StatusCode } from '../../../types/otel';
 
 describe('TraceTimelineViewer/utils', () => {

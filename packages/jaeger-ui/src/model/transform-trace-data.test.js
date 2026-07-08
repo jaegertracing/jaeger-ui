@@ -381,17 +381,6 @@ describe('transformTraceData()', () => {
 
     it('should calculate depth and sort spans in DFS order', () => {
       // Create a linear trace: Root -> Child -> GrandChild
-      const grandChildSpan = {
-        traceID,
-        spanID: 'grandChild',
-        operationName: 'grandChildOp',
-        references: [{ refType: 'CHILD_OF', traceID, spanID: spans[0].spanID }],
-        startTime: startTime + 200,
-        duration: 10,
-        tags: [],
-        processID: 'p1',
-      };
-
       // spans[0] is 'someOperationName', referencing rootSpanID
       // rootSpanWithoutRefs is the root (start + 50)
       // spans[0] starts at startTime (0 relative to trace start? No, trace start is startTime).

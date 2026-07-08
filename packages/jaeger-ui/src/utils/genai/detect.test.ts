@@ -1,11 +1,11 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { classifySpan, isGenAITrace } from './detect';
-import type { IOtelSpan } from '../../types/otel';
+import { classifySpan, isGenAISpan, isGenAITrace } from './detect';
+import type { IAttribute } from '../../types/otel';
 
-function makeSpan(attrs: { key: string; value: string }[]): IOtelSpan {
-  return { attributes: attrs } as unknown as IOtelSpan;
+function makeSpan(attrs: IAttribute[]): { attributes: IAttribute[] } {
+  return { attributes: attrs };
 }
 
 describe('classifySpan', () => {
@@ -63,12 +63,34 @@ describe('classifySpan', () => {
     expect(classifySpan(makeSpan([{ key: 'gen_ai.system', value: 'openai' }]))).toBe('UNKNOWN_GENAI');
   });
 
-  it('returns STANDARD for a span with no gen_ai.* attrs', () => {
-    expect(classifySpan(makeSpan([{ key: 'http.method', value: 'GET' }]))).toBe('STANDARD');
+  it('returns undefined for a span with no gen_ai.* attrs', () => {
+    expect(classifySpan(makeSpan([{ key: 'http.method', value: 'GET' }]))).toBeUndefined();
   });
 
-  it('returns STANDARD for a span with empty attributes', () => {
-    expect(classifySpan(makeSpan([]))).toBe('STANDARD');
+  it('returns undefined for a span with empty attributes', () => {
+    expect(classifySpan(makeSpan([]))).toBeUndefined();
+  });
+});
+
+describe('isGenAISpan', () => {
+  it('returns true for a span with a gen_ai.* attribute', () => {
+    expect(isGenAISpan(makeSpan([{ key: 'gen_ai.system', value: 'openai' }]))).toBe(true);
+  });
+
+  it('returns true for a span with gen_ai.operation.name', () => {
+    expect(isGenAISpan(makeSpan([{ key: 'gen_ai.operation.name', value: 'chat' }]))).toBe(true);
+  });
+
+  it('returns false for a span with no gen_ai.* attribute', () => {
+    expect(isGenAISpan(makeSpan([{ key: 'http.method', value: 'GET' }]))).toBe(false);
+  });
+
+  it('returns false for a span with empty attributes', () => {
+    expect(isGenAISpan(makeSpan([]))).toBe(false);
+  });
+
+  it('does not match keys that merely contain "gen_ai" in the middle', () => {
+    expect(isGenAISpan(makeSpan([{ key: 'custom.gen_ai.tag', value: 'x' }]))).toBe(false);
   });
 });
 

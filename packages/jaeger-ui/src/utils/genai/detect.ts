@@ -1,11 +1,12 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import type { IOtelSpan } from '../../types/otel';
+import type { IAttribute, GenAISpanKind } from '../../types/otel';
+import { GEN_AI_NAMESPACE, GEN_AI_OPERATION_NAME } from '../../constants/span-attributes';
 
-export type GenAISpanKind = 'LLM_CALL' | 'TOOL_CALL' | 'AGENT' | 'RETRIEVAL' | 'UNKNOWN_GENAI' | 'STANDARD';
+type SpanAttrs = { attributes: ReadonlyArray<IAttribute> };
 
-const OPERATION_TO_KIND: Record<string, GenAISpanKind> = {
+const OPERATION_TO_KIND: Partial<Record<string, GenAISpanKind>> = {
   chat: 'LLM_CALL',
   text_completion: 'LLM_CALL',
   generate_content: 'LLM_CALL',
@@ -17,17 +18,27 @@ const OPERATION_TO_KIND: Record<string, GenAISpanKind> = {
   retrieval: 'RETRIEVAL',
 };
 
-export function classifySpan(span: IOtelSpan): GenAISpanKind {
+// Single pass over attributes: looks for gen_ai.operation.name while also
+// tracking whether any gen_ai.* attribute was seen, so a span with GenAI
+// attributes but an unrecognized (or missing) operation name still maps to
+// UNKNOWN_GENAI instead of undefined.
+export function classifySpan(span: SpanAttrs): GenAISpanKind | undefined {
   let hasGenAI = false;
-  for (const attr of span.attributes) {
-    if (attr.key === 'gen_ai.operation.name' && typeof attr.value === 'string') {
-      return OPERATION_TO_KIND[attr.value] ?? 'UNKNOWN_GENAI';
+  for (const { key, value } of span.attributes) {
+    if (key === GEN_AI_OPERATION_NAME && typeof value === 'string') {
+      return OPERATION_TO_KIND[value] ?? 'UNKNOWN_GENAI';
     }
-    if (attr.key.startsWith('gen_ai.')) hasGenAI = true;
+    if (!hasGenAI && key.startsWith(GEN_AI_NAMESPACE)) {
+      hasGenAI = true;
+    }
   }
-  return hasGenAI ? 'UNKNOWN_GENAI' : 'STANDARD';
+  return hasGenAI ? 'UNKNOWN_GENAI' : undefined;
 }
 
-export function isGenAITrace(spans: ReadonlyArray<IOtelSpan>): boolean {
-  return spans.some(s => classifySpan(s) !== 'STANDARD');
+export function isGenAISpan(span: SpanAttrs): boolean {
+  return classifySpan(span) !== undefined;
+}
+
+export function isGenAITrace(spans: ReadonlyArray<SpanAttrs>): boolean {
+  return spans.some(s => classifySpan(s) !== undefined);
 }
