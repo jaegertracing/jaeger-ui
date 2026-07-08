@@ -127,6 +127,10 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
   const propsRef = useRef(props);
   propsRef.current = props;
 
+  // Stores a ref to each span row's toggle <a> element so we can
+  // restore focus back to the triggering row when the detail is collapsed.
+  const spanToggleRefs = useRef<Map<string, HTMLAnchorElement>>(new Map());
+
   const criticalPathContext = useMemo(
     () => makeCriticalPathContext(props.trace, props.criticalPath, props.prunedServices),
     [props.trace, props.criticalPath, props.prunedServices]
@@ -150,6 +154,24 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
       viewStart: zoomStart,
       viewEnd: zoomEnd,
     });
+  }, []);
+
+  // When a span detail is collapsed, restore focus to the toggle button that
+  // triggered the expand so keyboard users do not lose their position in the list.
+  const handleDetailToggle = useCallback((spanID: string) => {
+    const { detailStates, detailToggle } = propsRef.current;
+    const isCurrentlyExpanded = detailStates.has(spanID);
+    detailToggle(spanID);
+    if (isCurrentlyExpanded) {
+      // Use rAF so the DOM has settled (the detail row is removed) before we
+      // move focus — avoids the browser jumping back up to the document root.
+      requestAnimationFrame(() => {
+        const toggleEl = spanToggleRefs.current.get(spanID);
+        if (toggleEl) {
+          toggleEl.focus();
+        }
+      });
+    }
   }, []);
 
   const focusSpan = useCallback((uiFind: string) => {
@@ -343,7 +365,6 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         childrenHiddenIDs,
         childrenToggle,
         detailStates,
-        detailToggle,
         findMatchesIDs,
         nameColumnWidth,
         prunedServices,
@@ -396,6 +417,16 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         };
       }
 
+      // Ref callback: store (or remove) the toggle element for this spanID
+      // so we can restore focus when the detail row collapses.
+      const handleToggleRef = (el: HTMLAnchorElement | null) => {
+        if (el) {
+          spanToggleRefs.current.set(spanID, el);
+        } else {
+          spanToggleRefs.current.delete(spanID);
+        }
+      };
+
       return (
         <div className="VirtualizedTraceView--row" key={key} style={style} {...attrs}>
           <SpanBarRow
@@ -409,8 +440,9 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
             isSelected={isSelected}
             timelineBarsVisible={timelineBarsVisible}
             numTicks={NUM_TICKS}
-            onDetailToggled={detailToggle}
+            onDetailToggled={handleDetailToggle}
             onChildrenToggled={childrenToggle}
+            toggleRef={handleToggleRef}
             rpc={rpc}
             noInstrumentedServer={noInstrumentedServer}
             hasOwnError={hasOwnError}
@@ -425,7 +457,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         </div>
       );
     },
-    [getClippingCssClasses, getViewedBounds, focusSpan, criticalPathContext]
+    [getClippingCssClasses, getViewedBounds, focusSpan, criticalPathContext, handleDetailToggle]
   );
 
   const renderSpanDetailRow = useCallback(
@@ -440,7 +472,6 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         detailWarningsToggle,
         detailStates,
         detailTagsToggle,
-        detailToggle,
         nameColumnWidth,
         timelineBarsVisible,
         trace,
@@ -459,7 +490,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
             color={color}
             nameColumnWidth={nameColumnWidth}
             timelineBarsVisible={timelineBarsVisible}
-            onDetailToggled={detailToggle}
+            onDetailToggled={handleDetailToggle}
             detailState={detailState}
             linksGetter={linksGetterFromAttributes(span)}
             eventItemToggle={eventItemToggleAdapter(detailLogItemToggle)}
@@ -478,7 +509,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         </div>
       );
     },
-    [linksGetterFromAttributes, eventItemToggleAdapter, focusSpan]
+    [linksGetterFromAttributes, eventItemToggleAdapter, focusSpan, handleDetailToggle]
   );
 
   const renderRow = useCallback(

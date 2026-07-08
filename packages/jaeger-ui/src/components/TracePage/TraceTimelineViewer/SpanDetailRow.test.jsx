@@ -147,4 +147,24 @@ describe('<SpanDetailRow>', () => {
     // linksGetter is passed directly to SpanDetail (no adapter needed since props already have OTEL signature)
     expect(props.linksGetter).toHaveBeenCalledWith(attributes, 0);
   });
+
+  describe('Focus management & ARIA linking', () => {
+    it('sets the correct ID on the detail wrapper', () => {
+      const { container } = render(<SpanDetailRow {...props} />);
+      const wrapper = container.querySelector('.detail-info-wrapper');
+      expect(wrapper).toHaveAttribute('id', `span-detail-${span.spanID}`);
+    });
+
+    it('sets tabIndex={-1} to allow programmatic focus', () => {
+      const { container } = render(<SpanDetailRow {...props} />);
+      const wrapper = container.querySelector('.detail-info-wrapper');
+      expect(wrapper).toHaveAttribute('tabIndex', '-1');
+    });
+
+    it('auto-focuses the detail wrapper on mount', () => {
+      const { container } = render(<SpanDetailRow {...props} />);
+      const wrapper = container.querySelector('.detail-info-wrapper');
+      expect(document.activeElement).toBe(wrapper);
+    });
+  });
 });
