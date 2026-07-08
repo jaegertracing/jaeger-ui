@@ -6,7 +6,7 @@ import { IOtelSpan } from '../types/otel';
 
 export type LatencyStats = {
   percentileRank: number; // 0–1, position in the operation's duration distribution
-  zScore: number; // NaN when groupSize < 2
+  zScore: number; // NaN when groupSize < 2 or when stdDev is 0 (all durations in the group are identical)
   p50Us: number;
   p95Us: number;
   mean: number;
