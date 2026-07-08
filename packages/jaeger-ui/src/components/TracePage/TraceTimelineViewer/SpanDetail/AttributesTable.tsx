@@ -179,7 +179,7 @@ export default function AttributesTable(props: AttributesTableProps) {
       )}
       <table className="u-width-100">
         <tbody className="KeyValueTable--body">
-          {visibleRows.length === 0 && query && (
+          {visibleRows.length === 0 && data.length > FILTER_THRESHOLD && query.trim() && (
             <tr className="KeyValueTable--row">
               <td className="KeyValueTable--emptyState" colSpan={2}>
                 No attributes match &ldquo;{query}&rdquo;

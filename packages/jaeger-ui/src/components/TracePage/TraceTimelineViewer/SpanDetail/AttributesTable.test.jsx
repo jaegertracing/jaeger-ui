@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
@@ -313,6 +313,21 @@ describe('<AttributesTable>', () => {
       expect(screen.queryAllByRole('row')).toHaveLength(1);
       expect(screen.getByText(/no attributes match/i)).toBeInTheDocument();
       expect(screen.getByText(/zzz/)).toBeInTheDocument();
+    });
+
+    it('does not render the empty-state message when the filter input itself is not shown', () => {
+      // Simulates data.length dropping to/below FILTER_THRESHOLD (e.g. navigating to a span
+      // with few or zero attributes) while a query happens to be non-empty in local state --
+      // the filter input isn't rendered below the threshold, so there's no way to see or clear
+      // that query, and an empty-state message would be misleading for a span with 0 attributes.
+      const { rerender } = render(<AttributesTable data={manyAttrs} />);
+      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
+      fireEvent.change(input, { target: { value: 'zzz' } });
+
+      rerender(<AttributesTable data={[]} />);
+
+      expect(screen.queryByRole('textbox', { name: /filter span attributes/i })).not.toBeInTheDocument();
+      expect(screen.queryByText(/no attributes match/i)).not.toBeInTheDocument();
     });
 
     it('passes the original data index to linksGetter when rows are filtered', async () => {
