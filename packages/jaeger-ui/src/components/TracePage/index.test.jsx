@@ -607,14 +607,20 @@ describe('<TracePage>', () => {
       });
 
       it('is true if timelineBarsVisible is false', () => {
+        // Assert baseline: Minimap is shown by default when timelineBarsVisible is true
+        const { unmount } = renderWithRouter(<TracePage {...defaultProps} />);
+        expect(screen.queryByTestId('span-graph')).toBeInTheDocument();
+        unmount();
+
+        // Mutate state and assert minimap is hidden
         mockLayoutPrefsStore.timelineBarsVisible = false;
-        renderWithRouter(<TracePage {...defaultProps} />);
-
-        const spanGraph = screen.queryByTestId('span-graph');
-        expect(spanGraph).not.toBeInTheDocument();
-
-        // Restore default
-        mockLayoutPrefsStore.timelineBarsVisible = true;
+        try {
+          renderWithRouter(<TracePage {...defaultProps} />);
+          expect(screen.queryByTestId('span-graph')).not.toBeInTheDocument();
+        } finally {
+          // Guarantee restoration even if the assertion above throws
+          mockLayoutPrefsStore.timelineBarsVisible = true;
+        }
       });
     });
 
