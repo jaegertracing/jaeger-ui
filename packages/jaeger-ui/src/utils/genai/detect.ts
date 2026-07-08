@@ -1,62 +1,46 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import type { IAttribute, IOtelSpan, IOtelTrace } from '../../types/otel';
+import type { IAttribute, GenAISpanKind } from '../../types/otel';
+import { GEN_AI_NAMESPACE, GEN_AI_OPERATION_NAME } from '../../constants/span-attributes';
 
-/**
- * Span classification based on OTel GenAI semantic conventions.
- * https://opentelemetry.io/docs/specs/semconv/gen-ai/
- */
-export type GenAISpanKind = 'LLM_CALL' | 'TOOL_CALL' | 'AGENT' | 'RETRIEVAL' | 'UNKNOWN_GENAI' | 'STANDARD';
+type SpanAttrs = { attributes: ReadonlyArray<IAttribute> };
 
-const LLM_OPS = new Set(['chat', 'text_completion', 'generate_content', 'embeddings']);
-const TOOL_OPS = new Set(['execute_tool']);
-const AGENT_OPS = new Set(['invoke_agent', 'create_agent', 'invoke_workflow']);
-const RETRIEVAL_OPS = new Set(['retrieval']);
+const OPERATION_TO_KIND: Partial<Record<string, GenAISpanKind>> = {
+  chat: 'LLM_CALL',
+  text_completion: 'LLM_CALL',
+  generate_content: 'LLM_CALL',
+  embeddings: 'LLM_CALL',
+  execute_tool: 'TOOL_CALL',
+  invoke_agent: 'AGENT',
+  create_agent: 'AGENT',
+  invoke_workflow: 'AGENT',
+  retrieval: 'RETRIEVAL',
+};
 
-function getStringAttribute(attributes: ReadonlyArray<IAttribute>, key: string): string | undefined {
-  const attr = attributes.find(a => a.key === key);
-  return attr !== undefined && typeof attr.value === 'string' ? attr.value : undefined;
-}
-
-export function hasGenAIAttributes(attributes: ReadonlyArray<IAttribute>): boolean {
-  return attributes.some(a => a.key.startsWith('gen_ai.'));
-}
-
-/**
- * Classifies a single span by its gen_ai.operation.name attribute.
- * Returns 'STANDARD' for any span with no gen_ai.* attributes.
- */
-export function classifySpan(span: IOtelSpan): GenAISpanKind {
-  if (!hasGenAIAttributes(span.attributes)) {
-    return 'STANDARD';
+// Single pass over attributes: looks for gen_ai.operation.name while also
+// tracking whether any gen_ai.* attribute was seen, so a span with GenAI
+// attributes but an unrecognized (or missing) operation name still maps to
+// UNKNOWN_GENAI instead of undefined.
+export function classifySpan(span: SpanAttrs): GenAISpanKind | undefined {
+  let hasGenAI = false;
+  for (const { key, value } of span.attributes) {
+    if (key === GEN_AI_OPERATION_NAME && typeof value === 'string') {
+      return OPERATION_TO_KIND[value] ?? 'UNKNOWN_GENAI';
+    }
+    if (!hasGenAI && key.startsWith(GEN_AI_NAMESPACE)) {
+      hasGenAI = true;
+    }
   }
-  const op = getStringAttribute(span.attributes, 'gen_ai.operation.name');
-  if (op === undefined) {
-    return 'UNKNOWN_GENAI';
-  }
-  if (LLM_OPS.has(op)) return 'LLM_CALL';
-  if (TOOL_OPS.has(op)) return 'TOOL_CALL';
-  if (AGENT_OPS.has(op)) return 'AGENT';
-  if (RETRIEVAL_OPS.has(op)) return 'RETRIEVAL';
-  return 'UNKNOWN_GENAI';
+  return hasGenAI ? 'UNKNOWN_GENAI' : undefined;
 }
 
-/**
- * Returns true if the span carries any gen_ai.* attributes, i.e. it is not
- * classified as 'STANDARD'. Used to decide whether to show GenAI-specific UI
- * (the GenAI detail tab, rich-media attribute rendering) for a given span.
- */
-export function isGenAISpan(span: IOtelSpan): boolean {
-  return classifySpan(span) !== 'STANDARD';
+export function isGenAISpan(span: SpanAttrs): boolean {
+  return classifySpan(span) !== undefined;
 }
 
-/**
- * Returns true if any span in the trace carries gen_ai.* attributes.
- * Result is O(n*attrs) on first call; callers should cache it.
- */
-export function isGenAITrace(trace: IOtelTrace): boolean {
-  return trace.spans.some(span => hasGenAIAttributes(span.attributes));
+export function isGenAITrace(spans: ReadonlyArray<SpanAttrs>): boolean {
+  return spans.some(s => classifySpan(s) !== undefined);
 }
 
 /**

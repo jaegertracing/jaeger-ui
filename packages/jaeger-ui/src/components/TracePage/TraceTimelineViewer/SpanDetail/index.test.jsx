@@ -338,6 +338,10 @@ describe('<SpanDetail>', () => {
 
   describe('rich-media GenAI attribute section', () => {
     it('renders GenAIAttributeRenderer for rich-media attributes when accordion is open', () => {
+      // isGenAISpan is unrelated to whether a span carries rich-media attributes
+      // (it drives the separate GenAI *tab*) -- force it false here so
+      // detailsContent renders directly instead of behind a lazily-mounted tab pane.
+      isGenAISpanMock.mockReturnValue(false);
       const richAttr = { key: 'gen_ai.input.messages', value: '[{"role":"user","content":"hi"}]' };
       props.span.attributes.push(richAttr);
       render(<SpanDetail {...props} />);
