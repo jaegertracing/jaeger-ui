@@ -8,7 +8,7 @@
   padding: 4px 8px;
   font-size: 11px;
   line-height: 1.4;
-  color: var(--color-text-secondary, #666);
+  color: var(--text-secondary, #666);
   user-select: none;
 }
 
