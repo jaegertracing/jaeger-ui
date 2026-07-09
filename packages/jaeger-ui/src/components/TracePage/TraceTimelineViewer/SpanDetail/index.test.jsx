@@ -12,7 +12,6 @@ import SpanDetail from './index';
 import { formatDuration } from '../utils';
 import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
-import OtelSpanFacade from '../../../../model/OtelSpanFacade';
 
 vi.mock('./AccordionAttributes', () => {
   return mockDefault(function MockAccordionAttributes({ label, onToggle }) {
@@ -88,6 +87,19 @@ vi.mock('../../../common/CopyIcon', () => {
     );
   });
 });
+
+vi.mock('./GenAITab', () => {
+  return mockDefault(function MockGenAITab() {
+    return <div data-testid="genai-tab">GenAI Tab</div>;
+  });
+});
+
+const { isGenAISpanMock } = vi.hoisted(() => ({
+  isGenAISpanMock: vi.fn(() => false),
+}));
+vi.mock('../../../../utils/genai', () => ({
+  isGenAISpan: isGenAISpanMock,
+}));
 
 describe('<SpanDetail>', () => {
   let props;
@@ -284,5 +296,37 @@ describe('<SpanDetail>', () => {
 
     expect(copyIcon).toBeInTheDocument();
     expect(copyText).toContain(`?uiFind=${props.span.spanID}`);
+  });
+
+  describe('GenAI tab', () => {
+    beforeEach(() => {
+      isGenAISpanMock.mockReset();
+    });
+
+    it('does not show the GenAI tab when the span has no gen_ai.* attributes', () => {
+      isGenAISpanMock.mockReturnValue(false);
+      render(<SpanDetail {...props} />);
+      expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+    });
+
+    it('shows the GenAI tab when the span has gen_ai.* attributes', () => {
+      isGenAISpanMock.mockReturnValue(true);
+      render(<SpanDetail {...props} />);
+      expect(screen.getByRole('tab', { name: 'GenAI' })).toBeInTheDocument();
+    });
+
+    it('renders no tab bar for a non-GenAI span — content is shown directly', () => {
+      isGenAISpanMock.mockReturnValue(false);
+      render(<SpanDetail {...props} />);
+      expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+      expect(screen.getByTestId('accordian-keyvalues-tags')).toBeInTheDocument();
+    });
+
+    it('defaults to the GenAI tab for a GenAI span, now that it has real content', () => {
+      isGenAISpanMock.mockReturnValue(true);
+      render(<SpanDetail {...props} />);
+      expect(screen.getByRole('tab', { name: 'GenAI' })).toHaveAttribute('aria-selected', 'true');
+      expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute('aria-selected', 'false');
+    });
   });
 });

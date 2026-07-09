@@ -47,6 +47,9 @@ export default defineConfig({
       '**/demo/**',
       'packages/jaeger-ui/src/api/v3/generated-client.ts',
       '**/*.cjs',
+      // Example config file: injected as a browser script or run in a vm sandbox,
+      // neither of which has CommonJS module; UIConfig is a global, not an export.
+      'packages/jaeger-ui/jaeger-ui.config.console-analytics.js',
     ],
     rules: {
       'constructor-super': 'error',
@@ -163,13 +166,13 @@ export default defineConfig({
       {
         files: ['**/*.{js,jsx}'],
         rules: {
-          // JavaScript/JSX files: fully disable rules that TypeScript handles for .ts files.
-          // This override applies to all matched JS/JSX files in the repo, which tsc does not check.
-          'no-unused-vars': 'off',
-          'no-redeclare': 'off',
+          // JS/JSX files are not checked by tsc, so lint rules are the only safety net here.
+          // Rules that cannot be enforced cleanly are listed below with an explanation.
+          //
+          // no-shadow is off because vi.mock() factory functions must re-require('react')
+          // inside the factory (factories cannot close over outer variables), which
+          // unavoidably shadows the top-level React import.
           'no-shadow': 'off',
-          'no-use-before-define': 'off',
-          'no-useless-constructor': 'off',
         },
       },
     ],
