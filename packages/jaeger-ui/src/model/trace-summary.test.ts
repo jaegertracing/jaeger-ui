@@ -24,6 +24,7 @@ function makeMinimalTrace(overrides: Partial<IOtelTrace> = {}): IOtelTrace {
     spanMap: new Map(),
     rootSpans: [],
     orphanSpanCount: 0,
+    isGenAITrace: false,
     hasErrors: () => false,
     ...overrides,
   };
