@@ -17,6 +17,8 @@ export enum StatusCode {
   ERROR = 'ERROR',
 }
 
+export type GenAISpanKind = 'LLM_CALL' | 'TOOL_CALL' | 'AGENT' | 'RETRIEVAL' | 'UNKNOWN_GENAI';
+
 export type AttributeValue =
   | string
   | number
@@ -69,6 +71,8 @@ export interface IOtelSpan {
   // Naming & Classification
   name: string;
   kind: SpanKind;
+  // undefined when the span carries no gen_ai.* attributes.
+  genAIKind?: GenAISpanKind;
 
   // Timing
   startTime: Microseconds;
@@ -117,6 +121,9 @@ export interface IOtelTrace {
 
   // Number of orphan spans (spans with parent references to spans not in the trace)
   orphanSpanCount: number;
+
+  // True if any span in the trace carries a gen_ai.* attribute
+  isGenAITrace: boolean;
 
   // Helper methods
   hasErrors(): boolean;
