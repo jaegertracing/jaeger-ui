@@ -4,40 +4,40 @@
 import * as React from 'react';
 import { render, screen } from '@testing-library/react';
 import { GenAISpanIcon } from './GenAISpanIcon';
-import type { IOtelSpan } from '../../../types/otel';
+import type { IOtelSpan, GenAISpanKind } from '../../../types/otel';
 
-function makeSpan(attrs: { key: string; value: string }[]): IOtelSpan {
-  return { attributes: attrs } as unknown as IOtelSpan;
+function makeSpan(genAIKind?: GenAISpanKind): IOtelSpan {
+  return { genAIKind } as unknown as IOtelSpan;
 }
 
 describe('GenAISpanIcon', () => {
-  it('returns null for a span with no gen_ai.* attributes', () => {
-    const { container } = render(<GenAISpanIcon span={makeSpan([{ key: 'http.method', value: 'GET' }])} />);
+  it('returns null for a span with no genAIKind', () => {
+    const { container } = render(<GenAISpanIcon span={makeSpan(undefined)} />);
     expect(container.firstChild).toBeNull();
   });
 
-  it('renders an LLM call icon for gen_ai.operation.name=chat', () => {
-    render(<GenAISpanIcon span={makeSpan([{ key: 'gen_ai.operation.name', value: 'chat' }])} />);
+  it('renders an LLM call icon for genAIKind=LLM_CALL', () => {
+    render(<GenAISpanIcon span={makeSpan('LLM_CALL')} />);
     expect(screen.getByRole('img', { name: 'LLM call' })).toBeInTheDocument();
   });
 
-  it('renders a tool call icon for gen_ai.operation.name=execute_tool', () => {
-    render(<GenAISpanIcon span={makeSpan([{ key: 'gen_ai.operation.name', value: 'execute_tool' }])} />);
+  it('renders a tool call icon for genAIKind=TOOL_CALL', () => {
+    render(<GenAISpanIcon span={makeSpan('TOOL_CALL')} />);
     expect(screen.getByRole('img', { name: 'Tool call' })).toBeInTheDocument();
   });
 
-  it('renders an agent icon for gen_ai.operation.name=invoke_agent', () => {
-    render(<GenAISpanIcon span={makeSpan([{ key: 'gen_ai.operation.name', value: 'invoke_agent' }])} />);
+  it('renders an agent icon for genAIKind=AGENT', () => {
+    render(<GenAISpanIcon span={makeSpan('AGENT')} />);
     expect(screen.getByRole('img', { name: 'Agent' })).toBeInTheDocument();
   });
 
-  it('renders a retrieval icon for gen_ai.operation.name=retrieval', () => {
-    render(<GenAISpanIcon span={makeSpan([{ key: 'gen_ai.operation.name', value: 'retrieval' }])} />);
+  it('renders a retrieval icon for genAIKind=RETRIEVAL', () => {
+    render(<GenAISpanIcon span={makeSpan('RETRIEVAL')} />);
     expect(screen.getByRole('img', { name: 'Retrieval' })).toBeInTheDocument();
   });
 
-  it('renders a generic GenAI icon for unrecognized gen_ai.* attributes', () => {
-    render(<GenAISpanIcon span={makeSpan([{ key: 'gen_ai.system', value: 'openai' }])} />);
+  it('renders a generic GenAI icon for genAIKind=UNKNOWN_GENAI', () => {
+    render(<GenAISpanIcon span={makeSpan('UNKNOWN_GENAI')} />);
     expect(screen.getByRole('img', { name: 'GenAI span' })).toBeInTheDocument();
   });
 });

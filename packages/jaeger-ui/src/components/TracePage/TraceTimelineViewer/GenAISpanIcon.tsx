@@ -4,7 +4,6 @@
 import * as React from 'react';
 import { MdSmartToy, MdBolt, MdBuild, MdStorage, MdAutoAwesome } from 'react-icons/md';
 import type { IconType } from 'react-icons';
-import { classifySpan } from '../../../utils/genai/detect';
 import type { IOtelSpan, GenAISpanKind } from '../../../types/otel';
 import './GenAISpanIcon.css';
 
@@ -25,7 +24,7 @@ const KIND_LABELS: Record<GenAISpanKind, string> = {
 };
 
 export function GenAISpanIcon({ span }: { span: IOtelSpan }): React.ReactElement | null {
-  const kind = classifySpan(span);
+  const kind = span.genAIKind;
   if (kind === undefined) return null;
   const Icon = KIND_ICONS[kind];
   const label = KIND_LABELS[kind];

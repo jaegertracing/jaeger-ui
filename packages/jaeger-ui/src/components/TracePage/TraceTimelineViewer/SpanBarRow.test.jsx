@@ -279,44 +279,32 @@ describe('<SpanBarRow>', () => {
       ).not.toBeInTheDocument();
     });
 
-    it('shows an LLM call icon when span has gen_ai.operation.name=chat', () => {
-      const span = { ...defaultProps.span, attributes: [{ key: 'gen_ai.operation.name', value: 'chat' }] };
+    it('shows an LLM call icon when span.genAIKind=LLM_CALL', () => {
+      const span = { ...defaultProps.span, genAIKind: 'LLM_CALL' };
       render(<SpanBarRow {...defaultProps} span={span} />);
       expect(screen.getByRole('img', { name: 'LLM call' })).toBeInTheDocument();
     });
 
-    it('shows a tool call icon when span has gen_ai.operation.name=execute_tool', () => {
-      const span = {
-        ...defaultProps.span,
-        attributes: [{ key: 'gen_ai.operation.name', value: 'execute_tool' }],
-      };
+    it('shows a tool call icon when span.genAIKind=TOOL_CALL', () => {
+      const span = { ...defaultProps.span, genAIKind: 'TOOL_CALL' };
       render(<SpanBarRow {...defaultProps} span={span} />);
       expect(screen.getByRole('img', { name: 'Tool call' })).toBeInTheDocument();
     });
 
-    it('shows an agent icon when span has gen_ai.operation.name=invoke_agent', () => {
-      const span = {
-        ...defaultProps.span,
-        attributes: [{ key: 'gen_ai.operation.name', value: 'invoke_agent' }],
-      };
+    it('shows an agent icon when span.genAIKind=AGENT', () => {
+      const span = { ...defaultProps.span, genAIKind: 'AGENT' };
       render(<SpanBarRow {...defaultProps} span={span} />);
       expect(screen.getByRole('img', { name: 'Agent' })).toBeInTheDocument();
     });
 
-    it('shows a retrieval icon when span has gen_ai.operation.name=retrieval', () => {
-      const span = {
-        ...defaultProps.span,
-        attributes: [{ key: 'gen_ai.operation.name', value: 'retrieval' }],
-      };
+    it('shows a retrieval icon when span.genAIKind=RETRIEVAL', () => {
+      const span = { ...defaultProps.span, genAIKind: 'RETRIEVAL' };
       render(<SpanBarRow {...defaultProps} span={span} />);
       expect(screen.getByRole('img', { name: 'Retrieval' })).toBeInTheDocument();
     });
 
-    it('shows a generic GenAI icon for a span with only gen_ai.system set', () => {
-      const span = {
-        ...defaultProps.span,
-        attributes: [{ key: 'gen_ai.system', value: 'openai' }],
-      };
+    it('shows a generic GenAI icon when span.genAIKind=UNKNOWN_GENAI', () => {
+      const span = { ...defaultProps.span, genAIKind: 'UNKNOWN_GENAI' };
       render(<SpanBarRow {...defaultProps} span={span} />);
       expect(screen.getByRole('img', { name: 'GenAI span' })).toBeInTheDocument();
     });
