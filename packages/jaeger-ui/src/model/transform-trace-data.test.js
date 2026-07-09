@@ -469,6 +469,7 @@ describe('transformTraceData()', () => {
     const hasReferral = tTrace.spans.filter(
       span => span.subsidiarilyReferencedBy && span.subsidiarilyReferencedBy.length > 0
     );
+    expect(hasReferral.length).toEqual(1);
     expect(new Set(hasReferral[0].subsidiarilyReferencedBy)).toEqual(
       new Set([expect.objectContaining({ spanID: willGainRef.spanID })])
     );
