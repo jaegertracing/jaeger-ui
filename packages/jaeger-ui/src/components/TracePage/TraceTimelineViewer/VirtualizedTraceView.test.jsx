@@ -622,24 +622,25 @@ describe('<VirtualizedTraceViewImpl>', () => {
     });
 
     it('should not overflow stack on a deep collapsed chain', () => {
+      const DEPTH = 15000;
       const spans = [];
-      for (let i = 0; i < 10000; i++)
+      for (let i = 0; i < DEPTH; i++)
         spans.push({
           spanID: `s${i}`,
-          hasChildren: i < 9999,
+          hasChildren: i < DEPTH - 1,
           childSpans: [],
           resource: { serviceName: 'svc' },
         });
-      for (let i = 0; i < 9999; i++) spans[i].childSpans = [spans[i + 1]];
+      for (let i = 0; i < DEPTH - 1; i++) spans[i].childSpans = [spans[i + 1]];
       const cpSections = spans.map(s => ({ spanID: s.spanID, sectionStart: 0, sectionEnd: 1 }));
       const trace = {
         spans,
         spanMap: new Map(spans.map(s => [s.spanID, s])),
-        services: [{ name: 'svc', numberOfSpans: 10000 }],
+        services: [{ name: 'svc', numberOfSpans: DEPTH }],
         traceID: 't',
         startTime: 0,
-        endTime: 10000,
-        duration: 10000,
+        endTime: DEPTH,
+        duration: DEPTH,
         rootSpans: [spans[0]],
         traceName: 't',
         orphanSpanCount: 0,
@@ -647,10 +648,15 @@ describe('<VirtualizedTraceViewImpl>', () => {
         traceEmoji: '',
         hasErrors: () => false,
       };
-      expect(() =>
-        makeCriticalPathContext(trace, cpSections, new Set()).sectionsFor(spans[0], true, false)
-      ).not.toThrow();
-    }, 30_000);
+      expect(() => {
+        const result = makeCriticalPathContext(trace, cpSections, new Set()).sectionsFor(
+          spans[0],
+          true,
+          false
+        );
+        expect(result.length).toBe(DEPTH);
+      }).not.toThrow();
+    }, 60_000);
   });
 
   describe('shouldScrollToFirstUiFindMatch', () => {
