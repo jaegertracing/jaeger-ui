@@ -487,6 +487,33 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
     expect(queryClient.getQueryData(['uploadedRawTraces'])).toEqual([]);
   });
 
+  it('passes onUploadedTracesClear to FileLoader and clears caches when invoked', async () => {
+    const summary = { traceID: 'uploaded-1' };
+    queryClient.setQueryData(['uploadedSummaries'], [summary]);
+    queryClient.setQueryData(['uploadedRawTraces'], [{ traceID: 'uploaded-1' }]);
+
+    render(
+      <AllProvider>
+        <SearchTracePage />
+      </AllProvider>
+    );
+
+    const uploadTab = screen.getByText('Upload');
+    await act(async () => {
+      fireEvent.click(uploadTab);
+    });
+
+    expect(lastFileLoaderProps).not.toBeNull();
+    expect(lastFileLoaderProps.onUploadedTracesClear).toEqual(expect.any(Function));
+
+    await act(async () => {
+      lastFileLoaderProps.onUploadedTracesClear();
+    });
+
+    expect(queryClient.getQueryData(['uploadedSummaries'])).toEqual([]);
+    expect(queryClient.getQueryData(['uploadedRawTraces'])).toEqual([]);
+  });
+
   it('handleSortChange updates sortBy passed to SearchResults', async () => {
     render(
       <AllProvider>

@@ -18,6 +18,8 @@ const Dragger = Upload.Dragger;
 
 type FileLoaderProps = {
   onTracesLoaded: (summaries: TraceSummary[], rawTraces: unknown[]) => void;
+  /** Clears all uploaded traces from the React Query cache when a file row is removed. */
+  onUploadedTracesClear: () => void;
 };
 
 export type LoadResult = {
@@ -95,6 +97,12 @@ export default function FileLoader(props: FileLoaderProps) {
             );
           });
         return false;
+      }}
+      // Ant Design's trash icon only updates its internal fileList unless onRemove is set.
+      // Clear the uploaded-traces cache so results match the file list. Limitation: this is a
+      // global clear — removing one of several uploaded files clears all uploaded traces.
+      onRemove={() => {
+        props.onUploadedTracesClear();
       }}
       multiple
     >

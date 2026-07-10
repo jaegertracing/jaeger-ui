@@ -24,8 +24,9 @@ vi.mock('../../hooks/useTraceLoading', () => ({
 vi.mock('antd', async () => {
   const antd = await vi.importActual('antd');
   const { Upload } = antd;
-  const MockedDragger = ({ beforeUpload, children, ...props }) => {
+  const MockedDragger = ({ beforeUpload, onRemove, children, ...props }) => {
     global.mockBeforeUpload = beforeUpload;
+    global.mockOnRemove = onRemove;
     return (
       <div data-testid="upload-dragger" {...props}>
         {children}
@@ -61,6 +62,7 @@ beforeEach(() => {
   traceToTraceSummary.mockClear();
   populateTraceCache.mockClear();
   global.mockBeforeUpload = null;
+  global.mockOnRemove = null;
 });
 
 describe('loadTracesFromFile', () => {
@@ -166,19 +168,26 @@ describe('loadTracesFromFile', () => {
 
 describe('<FileLoader />', () => {
   const mockOnTracesLoaded = jest.fn();
+  const mockOnUploadedTracesClear = jest.fn();
+
+  const renderFileLoader = () =>
+    render(
+      <FileLoader onTracesLoaded={mockOnTracesLoaded} onUploadedTracesClear={mockOnUploadedTracesClear} />
+    );
 
   beforeEach(() => {
     mockOnTracesLoaded.mockClear();
+    mockOnUploadedTracesClear.mockClear();
   });
 
   it('renders the file upload area', () => {
-    render(<FileLoader onTracesLoaded={mockOnTracesLoaded} />);
+    renderFileLoader();
     expect(screen.getByText('Click or drag files to this area.')).toBeInTheDocument();
     expect(screen.getByText('JSON files containing one or more traces are supported.')).toBeInTheDocument();
   });
 
   it('beforeUpload returns false to prevent default upload', async () => {
-    render(<FileLoader onTracesLoaded={mockOnTracesLoaded} />);
+    renderFileLoader();
     readJsonFile.mockResolvedValue({ data: [] });
 
     const file = makeFile();
@@ -198,13 +207,20 @@ describe('<FileLoader />', () => {
     transformTraceData.mockReturnValue({ asOtelTrace: () => otelTrace });
     traceToTraceSummary.mockReturnValue(summary);
 
-    render(<FileLoader onTracesLoaded={mockOnTracesLoaded} />);
+    renderFileLoader();
     const file = makeFile();
     await act(async () => {
       global.mockBeforeUpload(file);
     });
 
     expect(mockOnTracesLoaded).toHaveBeenCalledWith([summary], [rawTrace]);
+  });
+
+  it('calls onUploadedTracesClear when a file is removed', () => {
+    renderFileLoader();
+    expect(global.mockOnRemove).toEqual(expect.any(Function));
+    global.mockOnRemove({ name: 'trace.json' });
+    expect(mockOnUploadedTracesClear).toHaveBeenCalledTimes(1);
   });
 
   it('shows error message when traces fail to parse', async () => {
@@ -214,7 +230,7 @@ describe('<FileLoader />', () => {
       throw new Error('fail');
     });
 
-    render(<FileLoader onTracesLoaded={mockOnTracesLoaded} />);
+    renderFileLoader();
     await act(async () => {
       global.mockBeforeUpload(makeFile('traces.json'));
     });
@@ -227,7 +243,7 @@ describe('<FileLoader />', () => {
     const { message } = await import('antd');
     readJsonFile.mockResolvedValue({ data: [] });
 
-    render(<FileLoader onTracesLoaded={mockOnTracesLoaded} />);
+    renderFileLoader();
     await act(async () => {
       global.mockBeforeUpload(makeFile('empty.json'));
     });
@@ -240,7 +256,7 @@ describe('<FileLoader />', () => {
     const { message } = await import('antd');
     readJsonFile.mockRejectedValue(new Error('not valid JSON'));
 
-    render(<FileLoader onTracesLoaded={mockOnTracesLoaded} />);
+    renderFileLoader();
     await act(async () => {
       global.mockBeforeUpload(makeFile('bad.json'));
     });
@@ -255,7 +271,7 @@ describe('<FileLoader />', () => {
     transformTraceData.mockReturnValue({ asOtelTrace: () => ({ traceID: 'a' }) });
     traceToTraceSummary.mockReturnValue({ traceID: 'a' });
 
-    render(<FileLoader onTracesLoaded={mockOnTracesLoaded} />);
+    renderFileLoader();
     const file1 = makeFile('trace1.json');
     const file2 = makeFile('trace2.json');
 

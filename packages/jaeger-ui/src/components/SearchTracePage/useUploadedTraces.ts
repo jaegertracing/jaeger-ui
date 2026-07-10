@@ -32,7 +32,8 @@ export function useClearUploadedTraces(): () => void {
  *
  * Both keys use skipToken (subscribe-only, no fetch) and gcTime: Infinity so the
  * data survives navigation away from the search page and is restored on Back.
- * Clearing is an explicit action driven by SearchForm on submit via useClearUploadedTraces()().
+ * Clearing is an explicit action via useClearUploadedTraces(): SearchForm on submit, and
+ * FileLoader onRemove (trash icon) — both clear the entire uploaded-traces cache.
  */
 export function useUploadedTraces(): UploadedTraces {
   const queryClient = useQueryClient();
