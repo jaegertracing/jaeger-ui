@@ -17,7 +17,6 @@ import PrunedSpanRow from './PrunedSpanRow';
 import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
-import { ISpanPill } from './spanPills';
 import {
   createViewedBoundsFunc,
   ViewedBoundsFunctionType,
@@ -50,7 +49,7 @@ type TVirtualizedTraceViewOwnProps = {
   registerAccessors: (accesors: Accessors) => void;
   trace: IOtelTrace;
   criticalPath: CriticalPathSection[];
-  spanPills: Map<string, ISpanPill[]>;
+  spanPillsEnabled: boolean;
   useOtelTerms: boolean;
 };
 
@@ -353,7 +352,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         timelineBarsVisible,
         trace,
         useOtelTerms,
-        spanPills,
+        spanPillsEnabled,
       } = propsRef.current;
       // to avert flow error
       if (!trace) {
@@ -373,7 +372,6 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         prunedServices.size > 0 &&
         span.childSpans.some(child => prunedServices.has(child.resource.serviceName));
       const criticalPathSections = criticalPathContext.sectionsFor(span, isCollapsed, hasPrunedChildren);
-      const pills = spanPills.get(spanID);
       // Check for direct child "server" span if the span is a "client" span.
       let rpc = null;
       if (isCollapsed) {
@@ -424,7 +422,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
             span={span}
             focusSpan={focusSpan}
             traceDuration={trace.duration}
-            pills={pills}
+            spanPillsEnabled={spanPillsEnabled}
             useOtelTerms={useOtelTerms}
           />
         </div>

@@ -15,7 +15,7 @@ import Ticks from './Ticks';
 import { TNil } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan } from '../../../types/otel';
-import { ISpanPill } from './spanPills';
+import { getSpanPillsForSpan } from './spanPills';
 
 import { getSpanIconComponent } from './span-icons';
 
@@ -56,7 +56,7 @@ type SpanBarRowProps = {
   span: IOtelSpan;
   focusSpan: (spanID: string) => void;
   traceDuration: number;
-  pills?: ISpanPill[];
+  spanPillsEnabled?: boolean;
   useOtelTerms: boolean;
 };
 
@@ -88,7 +88,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   span,
   focusSpan,
   traceDuration,
-  pills,
+  spanPillsEnabled,
   onDetailToggled,
   onChildrenToggled,
   useOtelTerms,
@@ -117,6 +117,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
     attributes,
     resource: { serviceName },
   } = span;
+  const pills = spanPillsEnabled ? getSpanPillsForSpan(span) : [];
   const SpanTypeIcon = getSpanIconComponent(attributes);
   const label = formatDurationCompact(duration);
   const viewBounds = getViewedBounds(span.startTime, span.endTime);
@@ -194,7 +195,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
               )}
             </span>
             <small className="endpoint-name">{rpc ? rpc.operationName : operationName}</small>
-            {pills?.map(pill => (
+            {pills.map(pill => (
               <Tag
                 key={pill.label}
                 aria-label={`${pill.label}: ${pill.value}`}

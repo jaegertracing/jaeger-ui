@@ -1,9 +1,35 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+import { renderHook } from '@testing-library/react';
+
 import transformTraceData from '../../../model/transform-trace-data';
-import { IOtelTrace } from '../../../types/otel';
-import { buildSpanPills } from './spanPills';
+import { IOtelSpan } from '../../../types/otel';
+import { getSpanPillsForSpan, useSpanPillsEnabled } from './spanPills';
+
+const mockUseConfig = vi.hoisted(() => vi.fn(() => ({ traceTimeline: {} })));
+
+vi.mock('../../../hooks/useConfig', () => ({
+  useConfig: mockUseConfig,
+}));
+
+function makeSpan(attributes: { key: string; value: string }[]): IOtelSpan {
+  return {
+    spanID: 's1',
+    attributes,
+    resource: { serviceName: 'svc', attributes: [] },
+    name: 'op',
+    startTime: 0,
+    endTime: 1,
+    duration: 1,
+    childSpans: [],
+    links: [],
+    inboundLinks: [],
+    events: [],
+    status: { code: 0 },
+    kind: 0,
+  } as unknown as IOtelSpan;
+}
 
 const httpStatusTrace = transformTraceData({
   traceID: 'http-status-trace',
@@ -43,142 +69,63 @@ const httpStatusTrace = transformTraceData({
 })!.asOtelTrace();
 
 describe('spanPills', () => {
-  describe('buildSpanPills', () => {
+  describe('getSpanPillsForSpan', () => {
     it('maps http.status_code and http.response.status_code to pills', () => {
-      const spanPills = buildSpanPills(httpStatusTrace);
-      expect(spanPills.get('s1')).toEqual([{ label: 'http.status_code', value: '200' }]);
-      expect(spanPills.get('s2')).toEqual([{ label: 'http.status_code', value: '503', isError: true }]);
-      expect(spanPills.has('s3')).toBe(false);
+      const [s1, s2, s3] = httpStatusTrace.spans;
+      expect(getSpanPillsForSpan(s1)).toEqual([{ label: 'http.status_code', value: '200' }]);
+      expect(getSpanPillsForSpan(s2)).toEqual([{ label: 'http.status_code', value: '503', isError: true }]);
+      expect(getSpanPillsForSpan(s3)).toEqual([]);
     });
 
     it('prefers http.status_code when both status attributes are present', () => {
-      const trace = {
-        spans: [
-          {
-            spanID: 'both',
-            attributes: [
-              { key: 'http.status_code', value: '200' },
-              { key: 'http.response.status_code', value: '500' },
-            ],
-            resource: { serviceName: 'svc', attributes: [] },
-            name: 'op',
-            startTime: 0,
-            endTime: 1,
-            duration: 1,
-            childSpans: [],
-            links: [],
-            inboundLinks: [],
-            events: [],
-            status: { code: 0 },
-            kind: 0,
-          },
-        ],
-        traceID: 't',
-        startTime: 0,
-        endTime: 1,
-        duration: 1,
-        rootSpans: [],
-      } as unknown as IOtelTrace;
-
-      const spanPills = buildSpanPills(trace);
-      expect(spanPills.get('both')).toEqual([{ label: 'http.status_code', value: '200' }]);
+      const span = makeSpan([
+        { key: 'http.status_code', value: '200' },
+        { key: 'http.response.status_code', value: '500' },
+      ]);
+      expect(getSpanPillsForSpan(span)).toEqual([{ label: 'http.status_code', value: '200' }]);
     });
 
     it('falls back to http.response.status_code when http.status_code is empty', () => {
-      const trace = {
-        spans: [
-          {
-            spanID: 'empty-primary',
-            attributes: [
-              { key: 'http.status_code', value: '' },
-              { key: 'http.response.status_code', value: '503' },
-            ],
-            resource: { serviceName: 'svc', attributes: [] },
-            name: 'op',
-            startTime: 0,
-            endTime: 1,
-            duration: 1,
-            childSpans: [],
-            links: [],
-            inboundLinks: [],
-            events: [],
-            status: { code: 0 },
-            kind: 0,
-          },
-        ],
-        traceID: 't',
-        startTime: 0,
-        endTime: 1,
-        duration: 1,
-        rootSpans: [],
-      } as unknown as IOtelTrace;
-
-      const spanPills = buildSpanPills(trace);
-      expect(spanPills.get('empty-primary')).toEqual([
-        { label: 'http.status_code', value: '503', isError: true },
+      const span = makeSpan([
+        { key: 'http.status_code', value: '' },
+        { key: 'http.response.status_code', value: '503' },
       ]);
+      expect(getSpanPillsForSpan(span)).toEqual([{ label: 'http.status_code', value: '503', isError: true }]);
     });
 
     it('sets isError for 5xx status codes only', () => {
-      const trace = {
-        spans: [
-          {
-            spanID: 'five',
-            attributes: [{ key: 'http.status_code', value: '500' }],
-            resource: { serviceName: 'svc', attributes: [] },
-            name: 'op',
-            startTime: 0,
-            endTime: 1,
-            duration: 1,
-            childSpans: [],
-            links: [],
-            inboundLinks: [],
-            events: [],
-            status: { code: 0 },
-            kind: 0,
-          },
-          {
-            spanID: 'four',
-            attributes: [{ key: 'http.status_code', value: '404' }],
-            resource: { serviceName: 'svc', attributes: [] },
-            name: 'op',
-            startTime: 0,
-            endTime: 1,
-            duration: 1,
-            childSpans: [],
-            links: [],
-            inboundLinks: [],
-            events: [],
-            status: { code: 0 },
-            kind: 0,
-          },
-          {
-            spanID: 'bad',
-            attributes: [{ key: 'http.status_code', value: 'not-a-number' }],
-            resource: { serviceName: 'svc', attributes: [] },
-            name: 'op',
-            startTime: 0,
-            endTime: 1,
-            duration: 1,
-            childSpans: [],
-            links: [],
-            inboundLinks: [],
-            events: [],
-            status: { code: 0 },
-            kind: 0,
-          },
-        ],
-        traceID: 't',
-        startTime: 0,
-        endTime: 1,
-        duration: 1,
-        rootSpans: [],
-      } as unknown as IOtelTrace;
+      expect(getSpanPillsForSpan(makeSpan([{ key: 'http.status_code', value: '500' }]))).toEqual([
+        { label: 'http.status_code', value: '500', isError: true },
+      ]);
+      expect(getSpanPillsForSpan(makeSpan([{ key: 'http.status_code', value: '404' }]))).toEqual([
+        { label: 'http.status_code', value: '404' },
+      ]);
+      expect(getSpanPillsForSpan(makeSpan([{ key: 'http.status_code', value: 'not-a-number' }]))).toEqual([
+        { label: 'http.status_code', value: 'not-a-number' },
+      ]);
+    });
+  });
 
-      const spanPills = buildSpanPills(trace);
-      expect(spanPills.get('five')).toEqual([{ label: 'http.status_code', value: '500', isError: true }]);
-      expect(spanPills.get('four')).toEqual([{ label: 'http.status_code', value: '404' }]);
-      expect(spanPills.get('bad')).toEqual([{ label: 'http.status_code', value: 'not-a-number' }]);
+  describe('useSpanPillsEnabled', () => {
+    beforeEach(() => {
+      mockUseConfig.mockReturnValue({ traceTimeline: {} });
+    });
+
+    it('defaults to enabled when config omits the flag', () => {
+      const { result } = renderHook(() => useSpanPillsEnabled());
+      expect(result.current).toBe(true);
+    });
+
+    it('returns true when spanPillsEnabled is true', () => {
+      mockUseConfig.mockReturnValue({ traceTimeline: { spanPillsEnabled: true } });
+      const { result } = renderHook(() => useSpanPillsEnabled());
+      expect(result.current).toBe(true);
+    });
+
+    it('returns false when spanPillsEnabled is false', () => {
+      mockUseConfig.mockReturnValue({ traceTimeline: { spanPillsEnabled: false } });
+      const { result } = renderHook(() => useSpanPillsEnabled());
+      expect(result.current).toBe(false);
     });
   });
 });

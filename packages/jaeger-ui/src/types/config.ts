@@ -240,8 +240,7 @@ export type Config = {
     defaultDetailPanelMode?: SpanDetailPanelMode;
 
     // spanPillsEnabled controls span pill overlays in the trace timeline.
-    // When false, pills are hidden and pill building is skipped.
-    // Default: false (PR1 opt-in; flipped to true in a later PR).
+    // Default: true. Set to false to disable if needed.
     spanPillsEnabled?: boolean;
   };
 
