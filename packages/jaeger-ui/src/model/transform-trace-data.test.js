@@ -441,4 +441,42 @@ describe('transformTraceData()', () => {
       expect(ids).toEqual(['root', 'child1', 'grandChild1', 'child2']);
     });
   });
+
+  describe('stack safety', () => {
+    it('should not overflow stack on a chain of 15000 spans', () => {
+      const traceID = 'deep-chain';
+      const spans = [
+        {
+          traceID,
+          spanID: 'root',
+          operationName: 'root',
+          references: [],
+          startTime: 1000,
+          duration: 1000,
+          tags: [],
+          logs: [],
+          processID: 'p1',
+        },
+      ];
+      for (let i = 0; i < 15000; i++) {
+        spans.push({
+          traceID,
+          spanID: `s${i}`,
+          operationName: 'op',
+          references: [{ refType: 'CHILD_OF', traceID, spanID: i === 0 ? 'root' : `s${i - 1}` }],
+          startTime: 1000 + (i + 1) * 10,
+          duration: 100,
+          tags: [],
+          logs: [],
+          processID: 'p1',
+        });
+      }
+      const traceData = { traceID, processes: { p1: { serviceName: 'svc', tags: [] } }, spans };
+      expect(() => {
+        const result = transformTraceData(traceData);
+        expect(result).not.toBeNull();
+        expect(result.spans.length).toBe(15001);
+      }).not.toThrow();
+    });
+  });
 });

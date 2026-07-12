@@ -156,8 +156,16 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   const spans: Span[] = [];
   const svcCounts: Record<string, number> = {};
 
-  // Depth-first traversal to order spans and populate flat array
-  const processSpan = (span: Span, depth: number) => {
+  // Iterative depth-first traversal to order spans and populate flat array.
+  // Avoids stack overflow on deeply nested traces (e.g. 80k spans in a chain).
+  const stack: Array<{ span: Span; depth: number }> = [];
+  rootSpans.sort((a, b) => a.startTime - b.startTime);
+  for (let i = rootSpans.length - 1; i >= 0; i--) {
+    stack.push({ span: rootSpans[i], depth: 0 });
+  }
+
+  while (stack.length > 0) {
+    const { span, depth } = stack.pop()!;
     span.depth = depth;
     span.hasChildren = span.childSpans.length > 0;
     span.relativeStartTime = span.startTime - traceStartTime;
@@ -184,13 +192,16 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
 
     spans.push(span);
 
-    // Sort children by startTime before processing them
-    (span.childSpans as Span[]).sort((a, b) => a.startTime - b.startTime);
-    span.childSpans.forEach(child => processSpan(child, depth + 1));
-  };
-
-  rootSpans.sort((a, b) => a.startTime - b.startTime);
-  rootSpans.forEach(root => processSpan(root, 0));
+    // Sort children by startTime; push in reverse order so leftmost child
+    // is processed first (stack is LIFO).
+    const children = span.childSpans as Span[];
+    if (children.length > 0) {
+      children.sort((a, b) => a.startTime - b.startTime);
+      for (let i = children.length - 1; i >= 0; i--) {
+        stack.push({ span: children[i], depth: depth + 1 });
+      }
+    }
+  }
 
   const traceName = getTraceName(spans);
   const tracePageTitle = getTracePageTitle(spans);

@@ -29,7 +29,7 @@ export function createCPSpan(span: IOtelSpan): CPSpan {
 }
 
 /**
- * Recursively builds a map of CPSpan objects starting from a root span.
+ * Iteratively builds a map of CPSpan objects starting from a root span.
  * Only blocking spans and their descendants are included in the map.
  * Non-blocking branches are pruned during traversal.
  *
@@ -38,21 +38,37 @@ export function createCPSpan(span: IOtelSpan): CPSpan {
  */
 export function createCPSpanMap(rootSpan: IOtelSpan): Map<string, CPSpan> {
   const spanMap = new Map<string, CPSpan>();
+  const stack: IOtelSpan[] = [rootSpan];
 
-  const traverse = (span: IOtelSpan) => {
+  while (stack.length > 0) {
+    const span = stack.pop()!;
+    if (spanMap.has(span.spanID)) continue;
+
     const cpSpan = createCPSpan(span);
     spanMap.set(span.spanID, cpSpan);
 
-    span.childSpans.forEach(child => {
+    // Collect blocking children in forward order, then push to stack in reverse
+    // so they pop left-to-right (preserving original DFS traversal order).
+    const blockingChildren: IOtelSpan[] = [];
+    for (let i = 0; i < span.childSpans.length; i++) {
+      const child = span.childSpans[i];
       // A child is blocking if it's NOT a PRODUCER -> CONSUMER relationship.
-      // THE ROOT SPAN ITSELF IS ALWAYS CONSIDERED BLOCKING (already handled by start of traversal).
+      // THE ROOT SPAN ITSELF IS ALWAYS CONSIDERED BLOCKING (handled by start of traversal).
       if (isBlockingSpan(child.kind, span.kind)) {
-        cpSpan.childSpanIDs.push(child.spanID);
-        traverse(child);
+        blockingChildren.push(child);
       }
-    });
-  };
+    }
 
-  traverse(rootSpan);
+    // Populate childSpanIDs in forward order
+    for (const child of blockingChildren) {
+      cpSpan.childSpanIDs.push(child.spanID);
+    }
+
+    // Push to stack in reverse order for left-to-right DFS
+    for (let i = blockingChildren.length - 1; i >= 0; i--) {
+      stack.push(blockingChildren[i]);
+    }
+  }
+
   return spanMap;
 }
