@@ -8,6 +8,7 @@ import TimelineRow from './TimelineRow';
 import { formatDurationCompact, ViewedBoundsFunctionType } from './utils';
 import SpanTreeOffset from './SpanTreeOffset';
 import SpanBar from './SpanBar';
+import { GenAISpanIcon } from './GenAISpanIcon';
 import Ticks from './Ticks';
 
 import { TNil } from '../../../types';
@@ -169,6 +170,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
               {!hasOwnError && hasChildError && (
                 <IoAlert className="SpanBarRow--errorIcon SpanBarRow--errorIcon--hollow" />
               )}
+              <GenAISpanIcon span={span} />
               {serviceName}{' '}
               {rpc && (
                 <span>
