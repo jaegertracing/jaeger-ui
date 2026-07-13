@@ -169,7 +169,11 @@ export default function AttributesTable(props: AttributesTableProps) {
                   <div className="KeyValueTable--copyContainer">
                     <CopyIcon
                       className="KeyValueTable--copyIcon"
-                      copyText={String(row.value)}
+                      copyText={
+                        row.value && typeof row.value === 'object' && !(row.value instanceof Uint8Array)
+                          ? JSON.stringify(row.value, null, 2)
+                          : String(row.value)
+                      }
                       tooltipTitle="Copy value"
                       buttonText="Copy"
                     />
