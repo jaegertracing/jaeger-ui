@@ -104,6 +104,23 @@ const linkValueList = (links: Hyperlink[]) => {
   }));
 };
 
+export const FILTER_THRESHOLD = 10;
+
+// Objects/arrays stringify to "[object Object]" via String(), which makes value
+// filtering silently fail for structured attribute values (common in GenAI/HTTP
+// header traces). JSON.stringify preserves the actual searchable content; Uint8Array
+// is kept on the String() path since JSON.stringify on a typed array yields "{}".
+function getFilterValue(value: IAttribute['value']): string {
+  if (value !== null && typeof value === 'object' && !(value instanceof Uint8Array)) {
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  }
+  return String(value);
+}
+
 type AttributesTableProps = {
   data: ReadonlyArray<IAttribute>;
   linksGetter: ((pairs: ReadonlyArray<IAttribute>, index: number) => Hyperlink[]) | TNil;
@@ -113,12 +130,64 @@ type AttributesTableProps = {
 // Example: https://github.com/jaegertracing/jaeger-ui/assets/94157520/b518cad9-cb37-4775-a3d6-b667a1235f89
 export default function AttributesTable(props: AttributesTableProps) {
   const { data, linksGetter } = props;
+  const [query, setQuery] = React.useState('');
+
+  const visibleRows = React.useMemo(() => {
+    if (!query.trim() || data.length <= FILTER_THRESHOLD)
+      return data.map((attr, i) => ({ attr, originalIndex: i }));
+    const lower = query.trim().toLowerCase();
+    return data.reduce<{ attr: IAttribute; originalIndex: number }[]>((acc, attr, i) => {
+      if (
+        attr.key.toLowerCase().includes(lower) ||
+        getFilterValue(attr.value).toLowerCase().includes(lower)
+      ) {
+        acc.push({ attr, originalIndex: i });
+      }
+      return acc;
+    }, []);
+  }, [data, query]);
 
   return (
     <div className="KeyValueTable u-simple-scrollbars">
+      {data.length > FILTER_THRESHOLD && (
+        <div className="KeyValueTable--filterRow">
+          <input
+            className="KeyValueTable--filter"
+            type="text"
+            placeholder="Filter attributes…"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onKeyDown={e => e.key === 'Escape' && setQuery('')}
+            aria-label="Filter span attributes"
+          />
+          {query.trim() && (
+            <>
+              <span className="KeyValueTable--filterCount" aria-live="polite">
+                {visibleRows.length} of {data.length}
+              </span>
+              <button
+                type="button"
+                className="KeyValueTable--clearButton"
+                aria-label="Clear filter"
+                onClick={() => setQuery('')}
+              >
+                ×
+              </button>
+            </>
+          )}
+        </div>
+      )}
       <table className="u-width-100">
         <tbody className="KeyValueTable--body">
-          {data.map((row, i) => {
+          {visibleRows.length === 0 && data.length > FILTER_THRESHOLD && query.trim() && (
+            <tr className="KeyValueTable--row">
+              <td className="KeyValueTable--emptyState" colSpan={2}>
+                No attributes match &ldquo;{query}&rdquo;
+              </td>
+            </tr>
+          )}
+          {visibleRows.map(({ attr: row, originalIndex }) => {
+            const i = originalIndex;
             const jsonTable = formatValue(row.key, row.value);
             const links = linksGetter ? linksGetter(data, i) : null;
             let valueMarkup;
@@ -162,7 +231,7 @@ export default function AttributesTable(props: AttributesTableProps) {
             );
 
             return (
-              // `i` is necessary in the key because row.key can repeat
+              // originalIndex in key guards against duplicate row.key values across the full list
               <tr className="KeyValueTable--row" key={`${row.key}-${i}`}>
                 <td className="KeyValueTable--keyColumn">{keyMarkup}</td>
                 <td className="KeyValueTable--valueColumn">

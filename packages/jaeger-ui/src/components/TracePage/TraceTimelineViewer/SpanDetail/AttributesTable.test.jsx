@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
-import AttributesTable, { LinkValue } from './AttributesTable';
+import AttributesTable, { LinkValue, FILTER_THRESHOLD } from './AttributesTable';
 
 vi.mock('../../../common/CopyIcon', () => {
   return mockDefault(function CopyIcon({ copyText, tooltipTitle, buttonText, icon, className }) {
@@ -200,6 +201,173 @@ describe('<AttributesTable>', () => {
 
     const valueCell = screen.getByText('{"complete": "test"');
     expect(valueCell).toBeInTheDocument();
+  });
+
+  describe('attribute filter', () => {
+    const manyAttrs = Array.from({ length: 12 }, (_, i) => ({
+      key: `key.${i}`,
+      value: `value-${i}`,
+    }));
+
+    let user;
+
+    beforeEach(() => {
+      user = userEvent.setup();
+    });
+
+    afterEach(() => {
+      cleanup();
+    });
+
+    it(`does not render filter input when data has ${FILTER_THRESHOLD} or fewer attributes`, () => {
+      const fewAttrs = manyAttrs.slice(0, FILTER_THRESHOLD);
+      render(<AttributesTable data={fewAttrs} />);
+      expect(screen.queryByRole('textbox', { name: /filter span attributes/i })).not.toBeInTheDocument();
+    });
+
+    it(`renders filter input when data has more than ${FILTER_THRESHOLD} attributes`, () => {
+      render(<AttributesTable data={manyAttrs} />);
+      expect(screen.getByRole('textbox', { name: /filter span attributes/i })).toBeInTheDocument();
+    });
+
+    it('filters rows by key when query matches', async () => {
+      render(<AttributesTable data={manyAttrs} />);
+      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
+
+      await user.type(input, 'key.1');
+
+      // key.1, key.10, key.11 match
+      const rows = screen.getAllByRole('row');
+      expect(rows.length).toBe(3);
+    });
+
+    it('filters rows by value when query matches', async () => {
+      render(<AttributesTable data={manyAttrs} />);
+      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
+
+      await user.type(input, 'value-0');
+
+      const rows = screen.getAllByRole('row');
+      expect(rows.length).toBe(1);
+      expect(screen.getByText('key.0')).toBeInTheDocument();
+    });
+
+    it('filters rows by value when the value is an object (JSON-stringified, not "[object Object]")', async () => {
+      const attrsWithObject = [...manyAttrs, { key: 'gen_ai.tool.call.arguments', value: { city: 'Paris' } }];
+      render(<AttributesTable data={attrsWithObject} />);
+      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
+
+      await user.type(input, 'Paris');
+
+      const rows = screen.getAllByRole('row');
+      expect(rows.length).toBe(1);
+      expect(screen.getByText('gen_ai.tool.call.arguments')).toBeInTheDocument();
+    });
+
+    it('shows N of M count label when filter is active', async () => {
+      render(<AttributesTable data={manyAttrs} />);
+      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
+
+      await user.type(input, 'key.1');
+
+      expect(screen.getByText('3 of 12')).toBeInTheDocument();
+    });
+
+    it('hides count label when filter is empty', () => {
+      render(<AttributesTable data={manyAttrs} />);
+      expect(screen.queryByText(/of 12/)).not.toBeInTheDocument();
+    });
+
+    it('shows all rows when filter is cleared via the × button', async () => {
+      render(<AttributesTable data={manyAttrs} />);
+      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
+
+      await user.type(input, 'key.0');
+      expect(screen.getAllByRole('row')).toHaveLength(1);
+
+      await user.click(screen.getByRole('button', { name: /clear filter/i }));
+
+      expect(screen.getAllByRole('row')).toHaveLength(manyAttrs.length);
+      expect(input).toHaveValue('');
+    });
+
+    it('shows all rows when filter is cleared via the Escape key', async () => {
+      render(<AttributesTable data={manyAttrs} />);
+      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
+
+      await user.type(input, 'key.0');
+      expect(screen.getAllByRole('row')).toHaveLength(1);
+
+      await user.keyboard('{Escape}');
+
+      expect(screen.getAllByRole('row')).toHaveLength(manyAttrs.length);
+      expect(input).toHaveValue('');
+    });
+
+    it('renders an empty-state message when no attributes match the query', async () => {
+      render(<AttributesTable data={manyAttrs} />);
+      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
+
+      await user.type(input, 'zzz');
+
+      expect(screen.queryAllByRole('row')).toHaveLength(1);
+      expect(screen.getByText(/no attributes match/i)).toBeInTheDocument();
+      expect(screen.getByText(/zzz/)).toBeInTheDocument();
+    });
+
+    it('does not render the empty-state message when the filter input itself is not shown', () => {
+      // Simulates data.length dropping to/below FILTER_THRESHOLD (e.g. navigating to a span
+      // with few or zero attributes) while a query happens to be non-empty in local state --
+      // the filter input isn't rendered below the threshold, so there's no way to see or clear
+      // that query, and an empty-state message would be misleading for a span with 0 attributes.
+      const { rerender } = render(<AttributesTable data={manyAttrs} />);
+      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
+      fireEvent.change(input, { target: { value: 'zzz' } });
+
+      rerender(<AttributesTable data={[]} />);
+
+      expect(screen.queryByRole('textbox', { name: /filter span attributes/i })).not.toBeInTheDocument();
+      expect(screen.queryByText(/no attributes match/i)).not.toBeInTheDocument();
+    });
+
+    it('passes the original data index to linksGetter when rows are filtered', async () => {
+      const linksGetter = vi.fn().mockReturnValue([]);
+      render(<AttributesTable data={manyAttrs} linksGetter={linksGetter} />);
+      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
+
+      await user.type(input, 'value-5');
+
+      // After typing 'value-5', exactly one row is visible
+      expect(screen.getAllByRole('row')).toHaveLength(1);
+      // The final render's linksGetter call must pass originalIndex 5, not the filtered position
+      const lastCall = linksGetter.mock.calls.at(-1);
+      expect(lastCall[1]).toBe(5);
+    });
+
+    it('is case-insensitive', async () => {
+      render(<AttributesTable data={manyAttrs} />);
+      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
+
+      await user.type(input, 'KEY.0');
+
+      const rows = screen.getAllByRole('row');
+      expect(rows.length).toBe(1);
+    });
+
+    it('shows all rows when data shrinks below threshold while a query is active', async () => {
+      const { rerender } = render(<AttributesTable data={manyAttrs} />);
+      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
+
+      await user.type(input, 'key.0');
+      expect(screen.getAllByRole('row')).toHaveLength(1);
+
+      // shrink data below threshold — filter input disappears, stale query must not hide rows
+      const fewAttrs = manyAttrs.slice(0, Math.floor(FILTER_THRESHOLD / 2));
+      rerender(<AttributesTable data={fewAttrs} />);
+
+      expect(screen.queryByRole('textbox', { name: /filter span attributes/i })).not.toBeInTheDocument();
+      expect(screen.getAllByRole('row')).toHaveLength(fewAttrs.length);
+    });
   });
 
   it('renders CopyIcon components with correct copyText properties for each data element', () => {

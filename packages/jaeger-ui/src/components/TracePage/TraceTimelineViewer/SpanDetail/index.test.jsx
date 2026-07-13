@@ -9,7 +9,7 @@ import '@testing-library/jest-dom';
 
 import DetailState from './DetailState';
 import SpanDetail from './index';
-import { formatDuration } from '../utils';
+import { formatDuration, formatDurationCompact } from '../utils';
 import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
 
@@ -110,6 +110,8 @@ describe('<SpanDetail>', () => {
   beforeEach(() => {
     formatDuration.mockReset();
     formatDuration.mockImplementation(duration => `${duration}ms`);
+    formatDurationCompact.mockReset();
+    formatDurationCompact.mockImplementation(duration => `compact:${duration}`);
 
     const rawTrace = traceGenerator.trace({ numberOfSpans: 1 });
     spanData = rawTrace.spans[0];
@@ -286,6 +288,12 @@ describe('<SpanDetail>', () => {
     fireEvent.click(toggleButton);
 
     expect(props.linksToggle).toHaveBeenCalledWith(span.spanID);
+  });
+
+  it('uses formatDurationCompact for the duration overview item', () => {
+    render(<SpanDetail {...props} />);
+    expect(formatDurationCompact).toHaveBeenCalledWith(span.duration);
+    expect(screen.getByTestId('item-duration')).toHaveTextContent(`compact:${span.duration}`);
   });
 
   it('renders copy icon with deep link URL containing the span ID parameter', () => {
