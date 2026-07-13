@@ -40,4 +40,9 @@ describe('GenAISpanIcon', () => {
     render(<GenAISpanIcon span={makeSpan('UNKNOWN_GENAI')} />);
     expect(screen.getByRole('img', { name: 'GenAI span' })).toBeInTheDocument();
   });
+
+  it('falls back to the generic GenAI icon for an unrecognized genAIKind', () => {
+    render(<GenAISpanIcon span={makeSpan('FUTURE_KIND' as GenAISpanKind)} />);
+    expect(screen.getByRole('img', { name: 'GenAI span' })).toBeInTheDocument();
+  });
 });

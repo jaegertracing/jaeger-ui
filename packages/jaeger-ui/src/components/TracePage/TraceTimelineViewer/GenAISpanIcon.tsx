@@ -7,27 +7,18 @@ import type { IconType } from 'react-icons';
 import type { IOtelSpan, GenAISpanKind } from '../../../types/otel';
 import './GenAISpanIcon.css';
 
-const KIND_ICONS: Record<GenAISpanKind, IconType> = {
-  AGENT: MdSmartToy,
-  LLM_CALL: MdBolt,
-  TOOL_CALL: MdBuild,
-  RETRIEVAL: MdStorage,
-  UNKNOWN_GENAI: MdAutoAwesome,
-};
-
-const KIND_LABELS: Record<GenAISpanKind, string> = {
-  AGENT: 'Agent',
-  LLM_CALL: 'LLM call',
-  TOOL_CALL: 'Tool call',
-  RETRIEVAL: 'Retrieval',
-  UNKNOWN_GENAI: 'GenAI span',
+const KIND_META: Record<GenAISpanKind, { icon: IconType; label: string }> = {
+  AGENT: { icon: MdSmartToy, label: 'Agent' },
+  LLM_CALL: { icon: MdBolt, label: 'LLM call' },
+  TOOL_CALL: { icon: MdBuild, label: 'Tool call' },
+  RETRIEVAL: { icon: MdStorage, label: 'Retrieval' },
+  UNKNOWN_GENAI: { icon: MdAutoAwesome, label: 'GenAI span' },
 };
 
 export function GenAISpanIcon({ span }: { span: IOtelSpan }): React.ReactElement | null {
   const kind = span.genAIKind;
   if (kind === undefined) return null;
-  const Icon = KIND_ICONS[kind];
-  const label = KIND_LABELS[kind];
+  const { icon: Icon, label } = KIND_META[kind] ?? KIND_META.UNKNOWN_GENAI;
   return (
     <span role="img" aria-label={label} className="GenAISpanIcon">
       <Icon aria-hidden="true" />
