@@ -92,7 +92,13 @@ function formatValue(key: string, value: any) {
 }
 
 export const LinkValue = (props: { href: string; title?: string; children: React.ReactNode }) => (
-  <a href={props.href} title={props.title || ''} target="_blank" rel="noopener noreferrer">
+  <a 
+    href={props.href} 
+    title={props.title || ''} 
+    target="_blank" 
+    rel="noopener noreferrer"
+    aria-label={props.title ? props.title : 'Open external link'}
+  >
     {props.children} <IoOpenOutline className="KeyValueTable--linkIcon" />
   </a>
 );
