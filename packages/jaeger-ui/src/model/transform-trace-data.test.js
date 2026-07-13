@@ -40,7 +40,62 @@ describe('deduplicateTags()', () => {
       { key: 'b.ip', value: '8.8.8.8' },
       { key: 'a.ip', value: '8.8.8.8' },
     ]);
-    expect(tagsInfo.warnings).toEqual(['Duplicate tag "b.ip:8.8.4.4"']);
+    expect(tagsInfo.warnings).toEqual(['Duplicate tag key="b.ip" value="8.8.4.4"']);
+  });
+
+  it('collapses repeated duplicates into a single warning and keeps the first', () => {
+    const tagsInfo = deduplicateTags([
+      { key: 'x', value: 'a' },
+      { key: 'x', value: 'a' },
+      { key: 'x', value: 'a' },
+    ]);
+
+    expect(tagsInfo.tags).toEqual([{ key: 'x', value: 'a' }]);
+    expect(tagsInfo.warnings).toEqual(['Duplicate tag key="x" value="a"']);
+  });
+
+  it('does not collide when key or value contains a colon', () => {
+    const tagsInfo = deduplicateTags([
+      { key: 'a:b', value: 'c' },
+      { key: 'a', value: 'b:c' },
+    ]);
+
+    expect(tagsInfo.tags).toHaveLength(2);
+    expect(tagsInfo.warnings).toEqual([]);
+  });
+
+  it('reports both duplicates when colliding key/value pairs are each duplicated', () => {
+    const tagsInfo = deduplicateTags([
+      { key: 'a:b', value: 'c' },
+      { key: 'a:b', value: 'c' },
+      { key: 'a', value: 'b:c' },
+      { key: 'a', value: 'b:c' },
+    ]);
+
+    expect(tagsInfo.tags).toEqual([
+      { key: 'a:b', value: 'c' },
+      { key: 'a', value: 'b:c' },
+    ]);
+    // Both duplicated pairs are tracked separately; neither warning is dropped.
+    expect(tagsInfo.warnings).toEqual([
+      'Duplicate tag key="a:b" value="c"',
+      'Duplicate tag key="a" value="b:c"',
+    ]);
+  });
+
+  it('preserves distinct duplicate warnings when mixed-type values stringify the same', () => {
+    const tagsInfo = deduplicateTags([
+      { key: 'x', value: 1 },
+      { key: 'x', value: 1 },
+      { key: 'x', value: '1' },
+      { key: 'x', value: '1' },
+    ]);
+
+    expect(tagsInfo.tags).toEqual([
+      { key: 'x', value: 1 },
+      { key: 'x', value: '1' },
+    ]);
+    expect(tagsInfo.warnings).toEqual(['Duplicate tag key="x" value="1"', 'Duplicate tag key="x" value="1"']);
   });
 });
 
