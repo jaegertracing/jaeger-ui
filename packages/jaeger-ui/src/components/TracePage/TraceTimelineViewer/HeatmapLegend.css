@@ -1,0 +1,61 @@
+/* Copyright (c) 2026 The Jaeger Authors. */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+.HeatmapLegend {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 4px 8px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-secondary, #666);
+  user-select: none;
+}
+
+.HeatmapLegend--title {
+  font-weight: 600;
+  margin-bottom: 3px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.HeatmapLegend--bar {
+  display: flex;
+  width: 200px;
+  height: 10px;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.HeatmapLegend--segment {
+  flex: 1;
+}
+
+.HeatmapLegend--labels {
+  position: relative;
+  width: 200px;
+  height: 14px;
+  margin-top: 2px;
+}
+
+.HeatmapLegend--label {
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 10px;
+}
+
+.HeatmapLegend--label:first-child {
+  transform: translateX(0);
+}
+
+.HeatmapLegend--label:last-child {
+  transform: translateX(-100%);
+}
+
+.HeatmapLegend--hint {
+  margin-top: 2px;
+  font-size: 10px;
+  opacity: 0.75;
+}
