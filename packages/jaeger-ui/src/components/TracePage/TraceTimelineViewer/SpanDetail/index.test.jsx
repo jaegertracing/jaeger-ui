@@ -94,6 +94,12 @@ vi.mock('./GenAITab', () => {
   });
 });
 
+vi.mock('./GenAIAttributeRenderer', () => {
+  return mockDefault(function MockGenAIAttributeRenderer({ attribute }) {
+    return <div data-testid={`genai-renderer-${attribute.key}`}>{attribute.key}</div>;
+  });
+});
+
 const { isGenAISpanMock } = vi.hoisted(() => ({
   isGenAISpanMock: vi.fn(() => false),
 }));
@@ -327,6 +333,23 @@ describe('<SpanDetail>', () => {
       render(<SpanDetail {...props} />);
       expect(screen.getByRole('tab', { name: 'GenAI' })).toHaveAttribute('aria-selected', 'true');
       expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute('aria-selected', 'false');
+    });
+  });
+
+  describe('rich-media GenAI attribute section', () => {
+    it('renders GenAIAttributeRenderer for rich-media attributes when accordion is open', () => {
+      // isGenAISpan is unrelated to whether a span carries rich-media attributes
+      // (it drives the separate GenAI *tab*) -- force it false here so
+      // detailsContent renders directly instead of behind a lazily-mounted tab pane.
+      isGenAISpanMock.mockReturnValue(false);
+      const richAttr = { key: 'gen_ai.input.messages', value: '[{"role":"user","content":"hi"}]' };
+      props.span.attributes.push(richAttr);
+      try {
+        render(<SpanDetail {...props} />);
+        expect(screen.getByTestId('genai-renderer-gen_ai.input.messages')).toBeInTheDocument();
+      } finally {
+        props.span.attributes.pop();
+      }
     });
   });
 });

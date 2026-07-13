@@ -10,6 +10,7 @@ import AccordionEvents from './AccordionEvents';
 import AccordionLinks from './AccordionLinks';
 import AccordionText from './AccordionText';
 import DetailState from './DetailState';
+import GenAIAttributeRenderer from './GenAIAttributeRenderer';
 import GenAITab from './GenAITab';
 import { formatDuration, formatDurationCompact } from '../utils';
 import CopyIcon from '../../../common/CopyIcon';
@@ -19,6 +20,7 @@ import { isGenAISpan } from '../../../../utils/genai';
 import { TNil } from '../../../../types';
 import { Hyperlink } from '../../../../types/hyperlink';
 import { IOtelSpan, IAttribute, IEvent } from '../../../../types/otel';
+import { RICH_MEDIA_ATTRIBUTE_KEYS } from '../../../../utils/genai/detect';
 
 import './index.css';
 
@@ -65,6 +67,11 @@ export default function SpanDetail(props: SpanDetailProps) {
   // Get links for display in AccordionLinks
   const links = span.links || [];
 
+  // Split attributes: rich-media GenAI attributes rendered by GenAIAttributeRenderer;
+  // all others passed to AccordionAttributes unchanged.
+  const richMediaAttrs = span.attributes.filter(a => Object.hasOwn(RICH_MEDIA_ATTRIBUTE_KEYS, a.key));
+  const standardAttrs = span.attributes.filter(a => !Object.hasOwn(RICH_MEDIA_ATTRIBUTE_KEYS, a.key));
+
   // Display labels based on terminology flag
   const attributesLabel = useOtelTerms ? 'Attributes' : 'Tags';
   const resourceLabel = useOtelTerms ? 'Resource' : 'Process';
@@ -94,12 +101,20 @@ export default function SpanDetail(props: SpanDetailProps) {
     <div>
       <div>
         <AccordionAttributes
-          data={span.attributes}
+          data={isAttributesOpen ? standardAttrs : span.attributes}
           label={attributesLabel}
           linksGetter={linksGetter}
           isOpen={isAttributesOpen}
           onToggle={() => attributesToggle(span.spanID)}
+          hasAdditionalContent={richMediaAttrs.length > 0}
         />
+        {richMediaAttrs.length > 0 && isAttributesOpen && (
+          <div className="SpanDetail--genAISection">
+            {richMediaAttrs.map((attr, i) => (
+              <GenAIAttributeRenderer key={`${attr.key}-${i}`} attribute={attr} isOpen={isAttributesOpen} />
+            ))}
+          </div>
+        )}
         {span.resource.attributes && span.resource.attributes.length > 0 && (
           <AccordionAttributes
             className="ub-mb1"

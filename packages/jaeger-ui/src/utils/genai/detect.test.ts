@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { classifySpan, isGenAISpan, isGenAITrace } from './detect';
+import { classifySpan, isGenAISpan, isGenAITrace, RICH_MEDIA_ATTRIBUTE_KEYS } from './detect';
 import type { IAttribute } from '../../types/otel';
 
 function makeSpan(attrs: IAttribute[]): { attributes: IAttribute[] } {
@@ -113,5 +113,27 @@ describe('isGenAITrace', () => {
 
   it('returns false for an empty span list', () => {
     expect(isGenAITrace([])).toBe(false);
+  });
+});
+
+describe('RICH_MEDIA_ATTRIBUTE_KEYS', () => {
+  it('classifies gen_ai.input.messages as markdown', () => {
+    expect(RICH_MEDIA_ATTRIBUTE_KEYS['gen_ai.input.messages']).toBe('markdown');
+  });
+
+  it('classifies gen_ai.output.messages as markdown', () => {
+    expect(RICH_MEDIA_ATTRIBUTE_KEYS['gen_ai.output.messages']).toBe('markdown');
+  });
+
+  it('classifies gen_ai.tool.call.arguments as json', () => {
+    expect(RICH_MEDIA_ATTRIBUTE_KEYS['gen_ai.tool.call.arguments']).toBe('json');
+  });
+
+  it('classifies gen_ai.tool.call.result as json', () => {
+    expect(RICH_MEDIA_ATTRIBUTE_KEYS['gen_ai.tool.call.result']).toBe('json');
+  });
+
+  it('does not classify gen_ai.operation.name as a rich-media key', () => {
+    expect(RICH_MEDIA_ATTRIBUTE_KEYS['gen_ai.operation.name']).toBeUndefined();
   });
 });

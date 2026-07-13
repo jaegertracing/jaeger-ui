@@ -42,3 +42,20 @@ export function isGenAISpan(span: SpanAttrs): boolean {
 export function isGenAITrace(spans: ReadonlyArray<SpanAttrs>): boolean {
   return spans.some(s => classifySpan(s) !== undefined);
 }
+
+/**
+ * Attribute keys defined by OTel GenAI semconv that carry rich content
+ * (structured JSON or human-readable text) and need specialized rendering.
+ *
+ * 'json'     - render with react-json-view-lite
+ * 'markdown' - render as preformatted text (Markdown-like prompts/completions)
+ */
+export const RICH_MEDIA_ATTRIBUTE_KEYS: Readonly<Record<string, 'json' | 'markdown'>> = {
+  'gen_ai.input.messages': 'markdown',
+  'gen_ai.output.messages': 'markdown',
+  'gen_ai.system_instructions': 'markdown',
+  'gen_ai.tool.call.arguments': 'json',
+  'gen_ai.tool.call.result': 'json',
+  'gen_ai.tool.definitions': 'json',
+  'gen_ai.retrieval.documents': 'json',
+};

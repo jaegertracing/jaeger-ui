@@ -123,4 +123,14 @@ describe('<AccordionAttributes />', () => {
     fireEvent.click(header);
     expect(defaultProps.onToggle).toHaveBeenCalledTimes(1);
   });
+
+  it('applies is-empty styling when data is empty and hasAdditionalContent is not set', () => {
+    const { container } = render(<AccordionAttributes {...defaultProps} data={[]} />);
+    expect(container.querySelector('.AccordionAttributes--header')).toHaveClass('is-empty');
+  });
+
+  it('does not apply is-empty styling when data is empty but hasAdditionalContent is true', () => {
+    const { container } = render(<AccordionAttributes {...defaultProps} data={[]} hasAdditionalContent />);
+    expect(container.querySelector('.AccordionAttributes--header')).not.toHaveClass('is-empty');
+  });
 });
