@@ -2,7 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useCallback } from 'react';
-import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward } from 'react-icons/io5';
+import {
+  IoAlert,
+  IoGitNetwork,
+  IoCloudUploadOutline,
+  IoArrowForward,
+  IoServerOutline,
+  IoSparklesOutline,
+  IoChatbubbleEllipsesOutline,
+  IoGlobeOutline,
+} from 'react-icons/io5';
+import { IconType } from 'react-icons';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
 import { formatDurationCompact, ViewedBoundsFunctionType } from './utils';
@@ -13,6 +23,7 @@ import Ticks from './Ticks';
 import { TNil } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan } from '../../../types/otel';
+import { classifySpan, ISpanClassification, SpanType } from '../../../model/span-classification';
 
 import { getSpanIconComponent } from './span-icons';
 
@@ -55,6 +66,23 @@ type SpanBarRowProps = {
   traceDuration: number;
   useOtelTerms: boolean;
 };
+
+function getSpanTypeIcon(classification: ISpanClassification): IconType | null {
+  switch (classification.type) {
+    case SpanType.Database:
+      return IoServerOutline;
+    case SpanType.GenAI:
+    case SpanType.MCP:
+      return IoSparklesOutline;
+    case SpanType.Messaging:
+      return IoChatbubbleEllipsesOutline;
+    case SpanType.HTTP:
+    case SpanType.RPC:
+      return IoGlobeOutline;
+    default:
+      return null;
+  }
+}
 
 /**
  * This was originally a stateless function, but changing to a PureComponent
@@ -133,6 +161,8 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   // Show the references button if there's at least one link.
   const hasLinks = span.links && span.links.length > 0;
   const hasInboundLinks = span.inboundLinks && span.inboundLinks.length > 0;
+  const spanClassification = classifySpan(span);
+  const SpanTypeIcon = spanClassification ? getSpanTypeIcon(spanClassification) : null;
 
   return (
     <TimelineRow
@@ -168,6 +198,15 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
               {hasOwnError && <IoAlert className="SpanBarRow--errorIcon" />}
               {!hasOwnError && hasChildError && (
                 <IoAlert className="SpanBarRow--errorIcon SpanBarRow--errorIcon--hollow" />
+              )}
+              {SpanTypeIcon && spanClassification && (
+                <SpanTypeIcon
+                  aria-label={`Span type: ${spanClassification.label}`}
+                  className="SpanBarRow--spanTypeIcon"
+                  focusable="false"
+                  role="img"
+                  title={`Span type: ${spanClassification.label}`}
+                />
               )}
               {serviceName}{' '}
               {rpc && (

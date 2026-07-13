@@ -7,6 +7,7 @@ import '@testing-library/jest-dom';
 
 import SpanBarRow from './SpanBarRow';
 import SpanBar from './SpanBar';
+import { SpanKind } from '../../../types/otel';
 
 vi.mock('./SpanTreeOffset', () => ({
   default: jest.fn(({ span, childrenVisible, onClick }) => (
@@ -199,6 +200,27 @@ describe('<SpanBarRow>', () => {
     };
     render(<SpanBarRow {...props} />);
     expect(document.querySelector('.SpanBarRow--errorIcon')).toBeInTheDocument();
+  });
+
+  it('renders a span type icon for classified spans', () => {
+    const span = {
+      ...defaultProps.span,
+      attributes: [{ key: 'db.system', value: 'postgresql' }],
+    };
+
+    render(<SpanBarRow {...defaultProps} span={span} />);
+    expect(screen.getByLabelText('Span type: Database call')).toBeVisible();
+  });
+
+  it('does not render a span type icon for unclassified spans', () => {
+    const span = {
+      ...defaultProps.span,
+      attributes: [],
+      kind: SpanKind.INTERNAL,
+    };
+
+    render(<SpanBarRow {...defaultProps} span={span} />);
+    expect(screen.queryByLabelText(/Span type:/)).not.toBeInTheDocument();
   });
 
   it('applies is-detail-expanded class when isDetailExpanded is true', () => {
