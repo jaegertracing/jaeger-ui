@@ -95,3 +95,26 @@ window.matchMedia = vi.fn().mockImplementation((query: string) => ({
 //
 // See docs/adr/0007-vite-plus-migration.md §9 (PR H2c / H3) for details.
 (global as any).mockDefault = (mod: unknown) => ({ default: mod });
+
+// jsdom does not provide localStorage by default if URL is not set
+const localStorageMock = (function () {
+  let store: Record<string, string> = {};
+  return {
+    getItem(key: string) {
+      return store[key] || null;
+    },
+    setItem(key: string, value: string) {
+      store[key] = value.toString();
+    },
+    clear() {
+      store = {};
+    },
+    removeItem(key: string) {
+      delete store[key];
+    },
+  };
+})();
+Object.defineProperty(window, 'localStorage', {
+  value: localStorageMock,
+  writable: true,
+});

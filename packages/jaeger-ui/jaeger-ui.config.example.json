@@ -16,6 +16,17 @@
       "text": "Information about Jaeger SDK release #{jaeger.version}"
     }
   ],
+  "spanDecorations": [
+    {
+      "attributes": [
+        {
+          "key": "db.system",
+          "value": ".*"
+        }
+      ],
+      "icon": "io.Database"
+    }
+  ],
   "backendCapabilities": {
     "archiveStorage": false,
     "metricsStorage": true,

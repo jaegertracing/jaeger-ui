@@ -87,7 +87,18 @@ export type BackendCapabilities = {
   aiAssistant?: boolean;
 };
 
-// Default values are provided in packages/jaeger-ui/src/constants/default-config.tsx
+type SpanDecorationConfig = {
+  // A set of tag key/value regular expressions. A span matches if all attributes match.
+  // Both 'key' and 'value' are treated as regular expressions.
+  attributes: readonly { key: string; value: string }[];
+  // Name of the icon to render. This can be a built-in token (e.g. 'io.Server')
+  // or a full URL to an external image.
+  icon: string;
+  // Optional tooltip text to show on hover.
+  tooltip?: string;
+};
+
+// Default values are provided in packages/jaeger-ui/src/constants/default-config.ts
 export type Config = {
   //
   // archiveEnabled enables the Archive Trace button in the trace view.
@@ -96,6 +107,9 @@ export type Config = {
 
   // criticalPath enables to show the criticalPath of each span in a trace view.
   criticalPathEnabled: boolean;
+
+  // spanDecorations defines icons to be shown next to spans based on their tags/attributes.
+  spanDecorations?: readonly SpanDecorationConfig[];
 
   // dependencies controls the behavior of System Architecture tab.
   dependencies?: {

@@ -55,6 +55,16 @@ const getConfig = memoizeOne(function getConfig(): Config {
       rv[key] = { ...defaultConfig[key], ...embedded[key] };
     }
   });
+  if (embedded && 'spanDecorations' in embedded) {
+    if (Array.isArray(embedded.spanDecorations)) {
+      if (embedded.spanDecorations !== defaultConfig.spanDecorations) {
+        rv.spanDecorations = [...embedded.spanDecorations, ...(defaultConfig.spanDecorations || [])];
+      }
+    } else {
+      rv.spanDecorations = defaultConfig.spanDecorations || [];
+    }
+  }
+
   // backendCapabilities always comes from getJaegerBackendCapabilities(), overriding anything
   // that may be present in the UI config, so the backend remains authoritative.
   return { ...rv, backendCapabilities };
