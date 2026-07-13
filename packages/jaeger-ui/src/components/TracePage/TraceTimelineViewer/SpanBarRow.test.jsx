@@ -85,6 +85,7 @@ describe('<SpanBarRow>', () => {
     traceStartTime: 0,
     traceDuration: 1000,
     focusSpan: jest.fn(),
+    spanPillsEnabled: false,
     useOtelTerms: false,
   };
 
@@ -247,6 +248,54 @@ describe('<SpanBarRow>', () => {
       const nameCell = container.querySelector('.span-name-column');
       expect(nameCell).toHaveStyle('flex-basis: 100%');
       expect(nameCell).toHaveStyle('max-width: 100%');
+    });
+  });
+
+  describe('span pills', () => {
+    it('renders pills with error styling for 5xx status codes', () => {
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          spanPillsEnabled
+          span={{
+            ...defaultProps.span,
+            attributes: [{ key: 'http.status_code', value: '500' }],
+          }}
+        />
+      );
+      const errorPill = screen.getByLabelText('http.status_code: 500');
+      expect(errorPill).toBeInTheDocument();
+      expect(errorPill).toHaveClass('is-error');
+    });
+
+    it('renders neutral pills without error styling for non-5xx', () => {
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          spanPillsEnabled
+          span={{
+            ...defaultProps.span,
+            attributes: [{ key: 'http.status_code', value: '200' }],
+          }}
+        />
+      );
+      const pill = screen.getByLabelText('http.status_code: 200');
+      expect(pill).toBeInTheDocument();
+      expect(pill).not.toHaveClass('is-error');
+    });
+
+    it('does not render pills when spanPillsEnabled is false', () => {
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          spanPillsEnabled={false}
+          span={{
+            ...defaultProps.span,
+            attributes: [{ key: 'http.status_code', value: '200' }],
+          }}
+        />
+      );
+      expect(screen.queryByLabelText(/http\.status_code/)).not.toBeInTheDocument();
     });
   });
 

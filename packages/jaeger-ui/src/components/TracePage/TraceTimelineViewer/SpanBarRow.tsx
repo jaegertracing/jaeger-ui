@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useCallback } from 'react';
+import { Tag } from 'antd';
+import cx from 'classnames';
 import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward } from 'react-icons/io5';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
@@ -14,6 +16,7 @@ import Ticks from './Ticks';
 import { TNil } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan } from '../../../types/otel';
+import { getSpanPillsForSpan } from './spanPills';
 
 import { getSpanIconComponent } from './span-icons';
 
@@ -54,6 +57,7 @@ type SpanBarRowProps = {
   span: IOtelSpan;
   focusSpan: (spanID: string) => void;
   traceDuration: number;
+  spanPillsEnabled?: boolean;
   useOtelTerms: boolean;
 };
 
@@ -85,6 +89,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   span,
   focusSpan,
   traceDuration,
+  spanPillsEnabled,
   onDetailToggled,
   onChildrenToggled,
   useOtelTerms,
@@ -113,6 +118,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
     attributes,
     resource: { serviceName },
   } = span;
+  const pills = spanPillsEnabled ? getSpanPillsForSpan(span) : [];
   const SpanTypeIcon = getSpanIconComponent(attributes);
   const label = formatDurationCompact(duration);
   const viewBounds = getViewedBounds(span.startTime, span.endTime);
@@ -191,6 +197,15 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
               )}
             </span>
             <small className="endpoint-name">{rpc ? rpc.operationName : operationName}</small>
+            {pills.map(pill => (
+              <Tag
+                key={pill.label}
+                aria-label={`${pill.label}: ${pill.value}`}
+                className={cx('SpanBarRow--pill', { 'is-error': pill.isError })}
+              >
+                {pill.value}
+              </Tag>
+            ))}
           </a>
           {hasLinks && (
             <ReferencesButton

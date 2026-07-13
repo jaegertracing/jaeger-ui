@@ -49,6 +49,7 @@ type TVirtualizedTraceViewOwnProps = {
   registerAccessors: (accesors: Accessors) => void;
   trace: IOtelTrace;
   criticalPath: CriticalPathSection[];
+  spanPillsEnabled: boolean;
   useOtelTerms: boolean;
 };
 
@@ -351,6 +352,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         timelineBarsVisible,
         trace,
         useOtelTerms,
+        spanPillsEnabled,
       } = propsRef.current;
       // to avert flow error
       if (!trace) {
@@ -420,6 +422,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
             span={span}
             focusSpan={focusSpan}
             traceDuration={trace.duration}
+            spanPillsEnabled={spanPillsEnabled}
             useOtelTerms={useOtelTerms}
           />
         </div>
