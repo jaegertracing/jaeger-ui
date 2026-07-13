@@ -57,14 +57,23 @@ export function orderTags(spanTags: KeyValuePair[], topPrefixes?: readonly strin
 }
 
 /**
+ * Converts a trace or span ID to its canonical form: lower-case, no leading zeros.
+ * The `|| '0'` guard handles the pathological all-zero input without returning an empty string.
+ */
+export function normalizeId(id: string): string {
+  return id.replace(/^0+/, '').toLowerCase() || '0';
+}
+
+/**
  * NOTE: Mutates `data` - Transform the HTTP response data into the form the app
  * generally requires.
  */
 export default function transformTraceData(data: TraceData & { spans: SpanData[] }): Trace | null {
-  const { traceID } = data;
-  if (!traceID) {
+  const { traceID: rawTraceID } = data;
+  if (!rawTraceID) {
     return null;
   }
+  const traceID = normalizeId(rawTraceID);
 
   let traceEndTime = 0;
   let traceStartTime = Number.MAX_SAFE_INTEGER;
@@ -80,7 +89,8 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     // We populate/fix all properties below.
     const span: Span = data.spans[i] as Span;
     const { startTime, duration, processID } = span;
-    let spanID = span.spanID;
+    let spanID = normalizeId(span.spanID);
+    span.spanID = spanID;
     // make sure span IDs are unique
     const idCount = spanIdCounts.get(spanID);
     if (idCount != null) {
@@ -102,6 +112,9 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
       log.fields = log.fields || [];
     });
     span.references = span.references || [];
+    span.references.forEach(ref => {
+      ref.spanID = normalizeId(ref.spanID);
+    });
     span.childSpans = [];
     span.subsidiarilyReferencedBy = [];
 

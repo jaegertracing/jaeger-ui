@@ -319,6 +319,23 @@ describe('JaegerClient', () => {
       expect(summary.services).toEqual(mockApiSummary.services);
     });
 
+    it('normalizes traceId: strips leading zeros and lowercases', async () => {
+      const paddedSummary = {
+        ...mockApiSummary,
+        traceId: '0000BBBBCCCCDDDD0000111122223333',
+      };
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ summaries: [paddedSummary] }),
+      });
+
+      const promise = client.fetchTraceSummaries(query);
+      vi.runAllTimers();
+      const [summary] = await promise;
+
+      expect(summary.traceID).toBe('bbbbccccdddd0000111122223333');
+    });
+
     it('falls back to defaults for all optional fields when absent', async () => {
       // Only traceId is required; everything else including timestamps is optional.
       const minimal = { traceId: 'aaaabbbbccccdddd0000111122223333' };

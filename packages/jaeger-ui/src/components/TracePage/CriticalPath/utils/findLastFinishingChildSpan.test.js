@@ -12,22 +12,22 @@ describe('findLastFinishingChildSpanId', () => {
     const spanMap = createCPSpanMap(test1.trace.rootSpans[0]);
     const sanitizedSpanMap = sanitizeOverFlowingChildren(spanMap);
 
-    const currentSpan = sanitizedSpanMap.get('span-C');
+    const currentSpan = sanitizedSpanMap.get('span-c');
     let lastFinishingChildSpan = findLastFinishingChildSpanId(sanitizedSpanMap, currentSpan);
-    expect(lastFinishingChildSpan).toStrictEqual(sanitizedSpanMap.get('span-E'));
+    expect(lastFinishingChildSpan).toStrictEqual(sanitizedSpanMap.get('span-e'));
 
     // Second Case to check if it works with spawn time or not
     lastFinishingChildSpan = findLastFinishingChildSpanId(sanitizedSpanMap, currentSpan, 50);
-    expect(lastFinishingChildSpan).toStrictEqual(sanitizedSpanMap.get('span-D'));
+    expect(lastFinishingChildSpan).toStrictEqual(sanitizedSpanMap.get('span-d'));
   });
 
   it('Should find lfc of a span correctly with test2', () => {
     const spanMap = createCPSpanMap(test2.trace.rootSpans[0]);
     const sanitizedSpanMap = sanitizeOverFlowingChildren(spanMap);
 
-    const currentSpan = sanitizedSpanMap.get('span-X');
+    const currentSpan = sanitizedSpanMap.get('span-x');
     let lastFinishingChildSpanId = findLastFinishingChildSpanId(sanitizedSpanMap, currentSpan);
-    expect(lastFinishingChildSpanId).toStrictEqual(sanitizedSpanMap.get('span-C'));
+    expect(lastFinishingChildSpanId).toStrictEqual(sanitizedSpanMap.get('span-c'));
 
     // Second Case to check if it works with spawn time or not
     lastFinishingChildSpanId = findLastFinishingChildSpanId(sanitizedSpanMap, currentSpan, 20);

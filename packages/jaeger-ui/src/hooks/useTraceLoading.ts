@@ -10,6 +10,10 @@ import { queryClient } from '../query/app-query-client';
 import { FetchedTrace } from '../types';
 import type { IOtelTrace } from '../types/otel';
 
+// IDs are normalized once at the API boundary (transform-trace-data.ts) and
+// treated as opaque strings from then on -- no further transformation here.
+// Short/abbreviated IDs a user types are resolved by the backend, which
+// redirects the URL to the canonical ID (see useNormalizeTraceId.ts).
 const TRACE_QUERY_KEY = (id: string) => ['trace', id] as const;
 
 // TODO: remove once callers (duck.track.ts, TraceDiff) are migrated off Redux/non-hook paths
