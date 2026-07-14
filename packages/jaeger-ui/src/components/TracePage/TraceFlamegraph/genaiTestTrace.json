@@ -1,0 +1,126 @@
+{
+  "data": [
+    {
+      "traceID": "genai-full-trace-001",
+      "processes": {
+        "p1": {
+          "serviceName": "ai-agent-service",
+          "tags": []
+        }
+      },
+      "spans": [
+        {
+          "traceID": "genai-full-trace-001",
+          "spanID": "span-invoke-agent",
+          "operationName": "invoke_agent",
+          "references": [],
+          "startTime": 1700000000000000,
+          "duration": 5000000,
+          "processID": "p1",
+          "tags": [
+            { "key": "gen_ai.operation.name", "type": "string", "value": "invoke_agent" },
+            { "key": "gen_ai.agent.name", "type": "string", "value": "research-agent" }
+          ]
+        },
+        {
+          "traceID": "genai-full-trace-001",
+          "spanID": "span-chat",
+          "operationName": "chat",
+          "references": [
+            { "refType": "CHILD_OF", "traceID": "genai-full-trace-001", "spanID": "span-invoke-agent" }
+          ],
+          "startTime": 1700000000500000,
+          "duration": 2000000,
+          "processID": "p1",
+          "tags": [
+            { "key": "gen_ai.operation.name", "type": "string", "value": "chat" },
+            { "key": "gen_ai.request.model", "type": "string", "value": "gpt-4o" },
+            { "key": "gen_ai.usage.input_tokens", "type": "int64", "value": 1500 },
+            { "key": "gen_ai.usage.output_tokens", "type": "int64", "value": 450 },
+            { 
+              "key": "gen_ai.input.messages", 
+              "type": "string", 
+              "value": "[{\"role\":\"system\",\"content\":\"You are an expert in distributed tracing, specifically Jaeger and OpenTelemetry. You provide highly detailed, accurate, and structured advice on setting up observability for microservices architecture. Your responses should consider performance overhead, sampling strategies (probabilistic vs adaptive), and secure transmission of telemetry data via OTLP over gRPC or HTTP. When users ask for examples, provide comprehensive code snippets in Go or Python, explaining the initialization of the tracer provider, resource attributes, and context propagation mechanics.\"},{\"role\":\"user\",\"content\":\"Can you explain how to set up an OpenTelemetry collector that receives spans from my Go application and exports them to a Jaeger v2 backend? I am specifically interested in how the OTLP receiver is configured in the collector, and how I should initialize the OpenTelemetry SDK in my Go code to ensure that spans are batched correctly before being sent to the collector. Also, what is the recommended way to handle context propagation across HTTP boundaries?\"},{\"role\":\"assistant\",\"content\":\"Setting up OpenTelemetry with Jaeger involves three main components: your instrumented Go application, the OpenTelemetry Collector, and the Jaeger backend. \\n\\nFirst, in your Go application, you need to initialize the OpenTelemetry SDK. You should use the `go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc` package to create an OTLP exporter. Configure the `TracerProvider` with a `BatchSpanProcessor` to ensure spans are buffered and sent in batches, which reduces network overhead. For context propagation across HTTP boundaries, configure the global TextMapPropagator to use both TraceContext and Baggage. \\n\\nSecond, configure the OpenTelemetry Collector. Your `config.yaml` should define an `otlp` receiver listening on port 4317 (gRPC) and 4318 (HTTP). Under the `exporters` section, you can use the `otlp` exporter to forward data to your Jaeger backend, or if you are using Jaeger v2, Jaeger itself acts as the collector so you can just send directly to Jaeger's OTLP receiver.\\n\\nFinally, ensure your Jaeger instance is running and has the OTLP ports exposed. Jaeger v2 natively supports OTLP ingestion, meaning you can bypass an intermediate collector if no advanced processing (like tail-based sampling) is required.\"}]" 
+            },
+            { 
+              "key": "gen_ai.output.messages", 
+              "type": "string", 
+              "value": "[{\"role\":\"assistant\",\"content\":\"Setting up OpenTelemetry with Jaeger involves three main components: your instrumented Go application, the OpenTelemetry Collector, and the Jaeger backend...\"}]" 
+            }
+          ]
+        },
+        {
+          "traceID": "genai-full-trace-001",
+          "spanID": "span-http-client",
+          "operationName": "HTTP POST",
+          "references": [
+            { "refType": "CHILD_OF", "traceID": "genai-full-trace-001", "spanID": "span-chat" }
+          ],
+          "startTime": 1700000000600000,
+          "duration": 1800000,
+          "processID": "p1",
+          "tags": [
+            { "key": "http.method", "type": "string", "value": "POST" },
+            { "key": "http.url", "type": "string", "value": "https://api.openai.com/v1/chat/completions" }
+          ]
+        },
+        {
+          "traceID": "genai-full-trace-001",
+          "spanID": "span-execute-tool",
+          "operationName": "execute_tool",
+          "references": [
+            { "refType": "CHILD_OF", "traceID": "genai-full-trace-001", "spanID": "span-invoke-agent" }
+          ],
+          "startTime": 1700000003000000,
+          "duration": 1500000,
+          "processID": "p1",
+          "tags": [
+            { "key": "gen_ai.operation.name", "type": "string", "value": "execute_tool" },
+            { "key": "gen_ai.tool.name", "type": "string", "value": "web_search" },
+            { "key": "gen_ai.tool.call.arguments", "type": "string", "value": "{\"query\":\"OpenTelemetry Jaeger v2 configuration OTLP receiver setup example\"}" },
+            { "key": "gen_ai.tool.call.result", "type": "string", "value": "{\"results\":[{\"url\":\"https://jaegertracing.io/docs/latest/getting-started/\",\"snippet\":\"Jaeger natively supports OTLP...\"}]}" }
+          ]
+        },
+        {
+          "traceID": "genai-full-trace-001",
+          "spanID": "span-retrieval",
+          "operationName": "retrieval",
+          "references": [
+            { "refType": "CHILD_OF", "traceID": "genai-full-trace-001", "spanID": "span-invoke-agent" }
+          ],
+          "startTime": 1700000004600000,
+          "duration": 300000,
+          "processID": "p1",
+          "tags": [
+            { "key": "gen_ai.operation.name", "type": "string", "value": "retrieval" },
+            { "key": "gen_ai.retrieval.documents", "type": "string", "value": "[{\"title\":\"Jaeger Docs - Architecture\",\"content\":\"Jaeger v2 is based on the OpenTelemetry Collector architecture. It natively supports OTLP via gRPC and HTTP. When using Jaeger v2, you do not necessarily need a separate OTEL Collector deployed alongside it unless you require specific processors like tail-based sampling or metric generation from spans.\"},{\"title\":\"OpenTelemetry Go SDK\",\"content\":\"To send traces to Jaeger natively, use the OTLP exporter in your Go code. Example: exporter, err := otlptracegrpc.New(ctx, otlptracegrpc.WithInsecure(), otlptracegrpc.WithEndpoint(\\\"localhost:4317\\\"))\"}]" }
+          ]
+        }
+      ]
+    },
+    {
+      "traceID": "genai-partial-trace-002",
+      "processes": {
+        "p1": {
+          "serviceName": "simple-llm-service",
+          "tags": []
+        }
+      },
+      "spans": [
+        {
+          "traceID": "genai-partial-trace-002",
+          "spanID": "span-partial-1",
+          "operationName": "llm_completion",
+          "references": [],
+          "startTime": 1700000010000000,
+          "duration": 1000000,
+          "processID": "p1",
+          "tags": [
+            { "key": "gen_ai.system", "type": "string", "value": "openai" },
+            { "key": "gen_ai.operation.name", "type": "string", "value": "chat" }
+          ]
+        }
+      ]
+    }
+  ]
+}
