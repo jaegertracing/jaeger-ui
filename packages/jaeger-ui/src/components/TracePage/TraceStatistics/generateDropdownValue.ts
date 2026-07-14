@@ -50,7 +50,7 @@ function getValueNoAttributeIsPicked(trace: IOtelTrace, nameSelectorTitle: strin
 
 export function generateDropdownValue(trace: IOtelTrace, useOtelTerms: boolean) {
   const allSpans = trace.spans;
-  const attributeKeys = _uniq(allSpans.flatMap(o => [...o.attributes.keys()]));
+  const attributeKeys = _uniq(allSpans.flatMap(o => o.attributes.keys()));
   const values = [getServiceName(), getOperationName(useOtelTerms), ...attributeKeys];
   return values;
 }

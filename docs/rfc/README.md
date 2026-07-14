@@ -9,4 +9,3 @@ An RFC is a document that describes a problem, surveys the solution space, and p
 ## RFCs in This Repository
 
 - [Embedded Web Component](./embedded-web-component.md) - Extending Jaeger UI from an SPA into a reusable Custom Element with Shadow DOM isolation, with a Grafana panel plugin as the reference integration
-- [An `IAttributes` Collection Type for OTel Span Data](./otel-attributes-collection.md) - Replacing raw `IAttribute[]` arrays with a collection type that exposes O(1) key lookup instead of the array, removing the linear-scan footgun

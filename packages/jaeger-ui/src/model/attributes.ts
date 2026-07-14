@@ -54,9 +54,10 @@ class Attributes implements IAttributes {
 const EMPTY = new Attributes([]);
 
 /**
- * Wraps an `IAttribute[]` into an {@link IAttributes} collection. The returned
- * object owns the passed array and returns the same reference from `entries()`,
- * so identity-based consumers (e.g. the link-pattern cache) remain stable.
+ * Wraps an `IAttribute[]` into an {@link IAttributes} collection. For a given
+ * instance, `entries()` returns a stable array reference across calls, so
+ * identity-based consumers (e.g. the link-pattern cache) remain stable. Empty
+ * input returns a shared empty singleton rather than a fresh wrapper.
  */
 export function makeAttributes(entries: ReadonlyArray<IAttribute> = []): IAttributes {
   return entries.length === 0 ? EMPTY : new Attributes(entries);
