@@ -7,9 +7,10 @@ import { vi } from 'vitest';
 
 import GenAITab from '.';
 import type { IAttribute, IOtelSpan } from '../../../../../types/otel';
+import { makeAttributes } from '../../../../../model/attributes';
 
 function makeSpan(attributes: IAttribute[]): IOtelSpan {
-  return { spanID: 'abc123', attributes } as unknown as IOtelSpan;
+  return { spanID: 'abc123', attributes: makeAttributes(attributes) } as unknown as IOtelSpan;
 }
 
 describe('GenAITab', () => {

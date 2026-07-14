@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { extractGenAiSections, hasAnyTokenUsage, formatTokenCount, GenAiSection } from './genAiData';
-import type { IAttribute } from '../../../../../types/otel';
+import type { IAttribute, IAttributes } from '../../../../../types/otel';
+import { makeAttributes } from '../../../../../model/attributes';
 
-function attrs(pairs: Record<string, unknown>): IAttribute[] {
-  return Object.entries(pairs).map(([key, value]) => ({ key, value }) as IAttribute);
+function attrs(pairs: Record<string, unknown>): IAttributes {
+  return makeAttributes(Object.entries(pairs).map(([key, value]) => ({ key, value }) as IAttribute));
 }
 
 type SectionDataMap = { [S in GenAiSection as S['type']]: S['data'] };
@@ -484,7 +485,7 @@ describe('extractGenAiSections', () => {
           'http.method': 'GET',
         })
       );
-      expect(section(sections, 'other')?.attributes).toEqual([
+      expect(section(sections, 'other')?.attributes.entries()).toEqual([
         { key: 'gen_ai.operation.name', value: 'chat' },
         { key: 'gen_ai.conversation.id', value: 'conv-1' },
       ]);
@@ -507,13 +508,13 @@ describe('extractGenAiSections', () => {
         { key: 'gen_ai.tool.name', value: 'first_call' },
         { key: 'gen_ai.tool.name', value: 'second_call' },
       ];
-      const sections = extractGenAiSections(duplicateKeyAttrs);
+      const sections = extractGenAiSections(makeAttributes(duplicateKeyAttrs));
       // The first occurrence is claimed by the toolCall builder.
       expect(section(sections, 'toolCall')?.name).toBe('first_call');
       // The second occurrence is not claimed by anything, so it must still
       // surface under "other" rather than being silently discarded by a
       // name-keyed Map that would have kept only the last value.
-      expect(section(sections, 'other')?.attributes).toEqual([
+      expect(section(sections, 'other')?.attributes.entries()).toEqual([
         { key: 'gen_ai.tool.name', value: 'second_call' },
       ]);
     });

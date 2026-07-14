@@ -7,6 +7,7 @@ import '@testing-library/jest-dom';
 
 import SpanBarRow from './SpanBarRow';
 import SpanBar from './SpanBar';
+import { makeAttributes } from '../../../model/attributes';
 
 vi.mock('./SpanTreeOffset', () => ({
   default: jest.fn(({ span, childrenVisible, onClick }) => (
@@ -70,11 +71,11 @@ describe('<SpanBarRow>', () => {
       startTime: 100,
       endTime: 200,
       duration: 100,
-      attributes: [],
+      attributes: makeAttributes([]),
       events: [],
       links: [],
       status: { code: 'OK' },
-      resource: { attributes: [], serviceName: 'service-name' },
+      resource: { attributes: makeAttributes([]), serviceName: 'service-name' },
       instrumentationScope: { name: 'scope' },
       depth: 0,
       hasChildren: true,
@@ -259,7 +260,7 @@ describe('<SpanBarRow>', () => {
           spanPillsEnabled
           span={{
             ...defaultProps.span,
-            attributes: [{ key: 'http.status_code', value: '500' }],
+            attributes: makeAttributes([{ key: 'http.status_code', value: '500' }]),
           }}
         />
       );
@@ -275,7 +276,7 @@ describe('<SpanBarRow>', () => {
           spanPillsEnabled
           span={{
             ...defaultProps.span,
-            attributes: [{ key: 'http.status_code', value: '200' }],
+            attributes: makeAttributes([{ key: 'http.status_code', value: '200' }]),
           }}
         />
       );
@@ -291,7 +292,7 @@ describe('<SpanBarRow>', () => {
           spanPillsEnabled={false}
           span={{
             ...defaultProps.span,
-            attributes: [{ key: 'http.status_code', value: '200' }],
+            attributes: makeAttributes([{ key: 'http.status_code', value: '200' }]),
           }}
         />
       );
