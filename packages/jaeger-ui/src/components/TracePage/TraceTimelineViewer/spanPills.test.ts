@@ -3,6 +3,7 @@
 
 import { renderHook } from '@testing-library/react';
 
+import { GEN_AI_REQUEST_MODEL_KEY } from '../../../constants/span-attributes';
 import transformTraceData from '../../../model/transform-trace-data';
 import { IOtelSpan } from '../../../types/otel';
 import { getSpanPillsForSpan, useSpanPillsEnabled } from './spanPills';
@@ -103,6 +104,27 @@ describe('spanPills', () => {
       ]);
       expect(getSpanPillsForSpan(makeSpan([{ key: 'http.status_code', value: 'not-a-number' }]))).toEqual([
         { label: 'http.status_code', value: 'not-a-number' },
+      ]);
+    });
+
+    it('maps gen_ai.request.model to a pill', () => {
+      const span = makeSpan([{ key: GEN_AI_REQUEST_MODEL_KEY, value: 'gpt-4o' }]);
+      expect(getSpanPillsForSpan(span)).toEqual([{ label: 'gen_ai.request.model', value: 'gpt-4o' }]);
+    });
+
+    it('returns no pill when gen_ai.request.model is absent', () => {
+      const span = makeSpan([{ key: 'region', value: 'us-east-1' }]);
+      expect(getSpanPillsForSpan(span)).toEqual([]);
+    });
+
+    it('returns both pills when http status and gen_ai.request.model are both present', () => {
+      const span = makeSpan([
+        { key: 'http.status_code', value: '500' },
+        { key: GEN_AI_REQUEST_MODEL_KEY, value: 'claude-3-haiku' },
+      ]);
+      expect(getSpanPillsForSpan(span)).toEqual([
+        { label: 'http.status_code', value: '500', isError: true },
+        { label: 'gen_ai.request.model', value: 'claude-3-haiku' },
       ]);
     });
   });

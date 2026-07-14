@@ -34,10 +34,13 @@ vi.mock('./SpanBar', () => ({
   default: jest.fn(() => <div data-testid="span-bar">SpanBar</div>),
 }));
 
-vi.mock('./utils', () => ({
-  formatDurationCompact: jest.fn(d => `formatted-${d}`),
-  ViewedBoundsFunctionType: {},
-}));
+vi.mock('./utils', async importOriginal => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    formatDurationCompact: jest.fn(d => `formatted-${d}`),
+  };
+});
 
 describe('<SpanBarRow>', () => {
   const spanID = 'some-id';
@@ -297,6 +300,40 @@ describe('<SpanBarRow>', () => {
         />
       );
       expect(screen.queryByLabelText(/http\.status_code/)).not.toBeInTheDocument();
+    });
+
+    it('renders a pill for gen_ai.request.model', () => {
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          spanPillsEnabled
+          span={{
+            ...defaultProps.span,
+            attributes: makeAttributes([{ key: 'gen_ai.request.model', value: 'gpt-4o' }]),
+          }}
+        />
+      );
+      const pill = screen.getByLabelText('gen_ai.request.model: gpt-4o');
+      expect(pill).toBeInTheDocument();
+      expect(pill).not.toHaveClass('is-error');
+    });
+
+    it('renders both an http status pill and a gen_ai.request.model pill when both are present', () => {
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          spanPillsEnabled
+          span={{
+            ...defaultProps.span,
+            attributes: makeAttributes([
+              { key: 'http.status_code', value: '500' },
+              { key: 'gen_ai.request.model', value: 'claude-3-haiku' },
+            ]),
+          }}
+        />
+      );
+      expect(screen.getByLabelText('http.status_code: 500')).toBeInTheDocument();
+      expect(screen.getByLabelText('gen_ai.request.model: claude-3-haiku')).toBeInTheDocument();
     });
   });
 
