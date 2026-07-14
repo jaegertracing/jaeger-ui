@@ -98,9 +98,9 @@ function getAttributeValueFromSpan(attributeKey: string, span: IOtelSpan, useOte
   } else if (attributeKey === getServiceName()) {
     attributeValue = span.resource.serviceName;
   } else {
-    const attr = span.attributes.find(a => a.key === attributeKey);
-    if (attr) {
-      attributeValue = String(attr.value);
+    const value = span.attributes.getValue(attributeKey);
+    if (value !== undefined) {
+      attributeValue = String(value);
     }
   }
 
@@ -309,13 +309,7 @@ function generateDetailRest(
           allColumnValues[i].name === allSpans[j].resource.serviceName ||
           allColumnValues[i].name === allSpans[j].name
         ) {
-          let rest = true;
-          for (let l = 0; l < allSpans[j].attributes.length; l++) {
-            if (allSpans[j].attributes[l].key === selectedAttributeKeySecond) {
-              rest = false;
-              break;
-            }
-          }
+          const rest = !allSpans[j].attributes.has(selectedAttributeKeySecond);
           if (rest) {
             resultValue = computeColumnValues(trace, allSpans[j], allSpans, resultValue);
           }

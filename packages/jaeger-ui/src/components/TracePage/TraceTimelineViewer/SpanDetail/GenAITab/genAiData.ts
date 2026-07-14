@@ -1,7 +1,8 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import type { IAttribute, AttributeValue } from '../../../../../types/otel';
+import type { IAttributes, AttributeValue } from '../../../../../types/otel';
+import { makeAttributes } from '../../../../../model/attributes';
 
 type GenAiRole = 'system' | 'user' | 'assistant' | 'tool' | undefined;
 
@@ -42,7 +43,7 @@ export type GenAiSection =
       data: { systemInstructions?: string; inputMessages: GenAiMessage[]; outputMessages: GenAiMessage[] };
     }
   | { type: 'toolCall'; data: GenAiToolCall }
-  | { type: 'other'; data: { attributes: IAttribute[] } };
+  | { type: 'other'; data: { attributes: IAttributes } };
 
 function asString(value: AttributeValue | undefined): string | undefined {
   if (typeof value === 'string') return value;
@@ -317,9 +318,12 @@ const REGISTRY: SectionBuilder[] = [
  * (typically single-element) per-key list, rather than re-scanning the
  * whole attributes array on every call.
  */
-export function extractGenAiSections(attributes: ReadonlyArray<IAttribute>): GenAiSection[] {
+export function extractGenAiSections(attributes: IAttributes): GenAiSection[] {
+  // This builder genuinely needs every attribute (it claims keys and buckets
+  // the leftovers), so entries() is the sanctioned whole-collection access.
+  const entries = attributes.entries();
   const indicesByKey = new Map<string, number[]>();
-  attributes.forEach((a, i) => {
+  entries.forEach((a, i) => {
     const indices = indicesByKey.get(a.key);
     if (indices) indices.push(i);
     else indicesByKey.set(a.key, [i]);
@@ -330,15 +334,15 @@ export function extractGenAiSections(attributes: ReadonlyArray<IAttribute>): Gen
     const index = indicesByKey.get(key)?.shift();
     if (index === undefined) return undefined;
     claimed.add(index);
-    return attributes[index].value;
+    return entries[index].value;
   };
 
   const sections = REGISTRY.map(build => build(get)).filter((s): s is GenAiSection => s !== undefined);
 
-  const other = attributes
+  const other = entries
     .filter((a, i) => !claimed.has(i) && a.key.startsWith('gen_ai.'))
     .map(({ key, value }) => ({ key, value }));
-  if (other.length) sections.push({ type: 'other', data: { attributes: other } });
+  if (other.length) sections.push({ type: 'other', data: { attributes: makeAttributes(other) } });
 
   return sections;
 }

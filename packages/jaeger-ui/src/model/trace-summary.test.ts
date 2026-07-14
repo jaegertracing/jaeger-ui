@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { traceToTraceSummary } from './trace-summary';
+import { makeAttributes } from './attributes';
 import transformTraceData from './transform-trace-data';
 import traceGenerator from '../demo/trace-generators';
 import { StatusCode, SpanKind } from '../types/otel';
@@ -31,7 +32,7 @@ function makeMinimalTrace(overrides: Partial<IOtelTrace> = {}): IOtelTrace {
 }
 
 function makeSpan(serviceName: string, spanID: string, statusCode: StatusCode = StatusCode.OK): IOtelSpan {
-  const resource: IResource = { serviceName, attributes: [] };
+  const resource: IResource = { serviceName, attributes: makeAttributes() };
   return {
     traceID: 'abc123',
     spanID,
@@ -40,7 +41,7 @@ function makeSpan(serviceName: string, spanID: string, statusCode: StatusCode = 
     startTime: us(1000),
     endTime: us(1500),
     duration: us(500),
-    attributes: [],
+    attributes: makeAttributes(),
     events: [],
     links: [],
     status: { code: statusCode },

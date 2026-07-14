@@ -9,18 +9,18 @@ import * as markers from './AccordionAttributes.markers';
 import AttributesTable from './AttributesTable';
 import { TNil } from '../../../../types';
 import { Hyperlink } from '../../../../types/hyperlink';
-import { IAttribute } from '../../../../types/otel';
+import { IAttributes } from '../../../../types/otel';
 
 import './AccordionAttributes.css';
 
 // export for tests
-export function AttributesSummary({ data }: { data: ReadonlyArray<IAttribute> }) {
-  if (!Array.isArray(data) || !data.length) {
+export function AttributesSummary({ data }: { data: IAttributes }) {
+  if (data.size === 0) {
     return null;
   }
   return (
     <ul className="AccordionAttributes--summary">
-      {data.map((item, i) => (
+      {data.entries().map((item, i) => (
         // `i` is necessary in the key because item.key can repeat
 
         <li className="AccordionAttributes--summaryItem" key={`${item.key}-${i}`}>
@@ -44,15 +44,15 @@ export default function AccordionAttributes({
   onToggle = null,
 }: {
   className?: string | TNil;
-  data: ReadonlyArray<IAttribute>;
+  data: IAttributes;
   highContrast?: boolean;
   interactive?: boolean;
   isOpen: boolean;
   label: string;
-  linksGetter: ((pairs: ReadonlyArray<IAttribute>, index: number) => Hyperlink[]) | TNil;
+  linksGetter: ((pairs: IAttributes, index: number) => Hyperlink[]) | TNil;
   onToggle?: null | (() => void);
 }) {
-  const isEmpty = !Array.isArray(data) || !data.length;
+  const isEmpty = data.size === 0;
   const iconCls = cx('u-align-icon', { 'AccordionAttributes--emptyIcon': isEmpty });
   let arrow: React.ReactNode | null = null;
   let headerProps: object | null = null;

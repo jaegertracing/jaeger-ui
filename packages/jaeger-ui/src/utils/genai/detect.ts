@@ -1,10 +1,10 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import type { IAttribute, GenAISpanKind } from '../../types/otel';
+import type { IAttributes, GenAISpanKind } from '../../types/otel';
 import { GEN_AI_NAMESPACE, GEN_AI_OPERATION_NAME } from '../../constants/span-attributes';
 
-type SpanAttrs = { attributes: ReadonlyArray<IAttribute> };
+type SpanAttrs = { attributes: IAttributes };
 
 const OPERATION_TO_KIND: Partial<Record<string, GenAISpanKind>> = {
   chat: 'LLM_CALL',
@@ -18,20 +18,15 @@ const OPERATION_TO_KIND: Partial<Record<string, GenAISpanKind>> = {
   retrieval: 'RETRIEVAL',
 };
 
-// Single pass over attributes: looks for gen_ai.operation.name while also
-// tracking whether any gen_ai.* attribute was seen, so a span with GenAI
-// attributes but an unrecognized (or missing) operation name still maps to
-// UNKNOWN_GENAI instead of undefined.
+// Looks for gen_ai.operation.name while also tracking whether any gen_ai.*
+// attribute was seen, so a span with GenAI attributes but an unrecognized
+// (or missing) operation name still maps to UNKNOWN_GENAI instead of undefined.
 export function classifySpan(span: SpanAttrs): GenAISpanKind | undefined {
-  let hasGenAI = false;
-  for (const { key, value } of span.attributes) {
-    if (key === GEN_AI_OPERATION_NAME && typeof value === 'string') {
-      return OPERATION_TO_KIND[value] ?? 'UNKNOWN_GENAI';
-    }
-    if (!hasGenAI && key.startsWith(GEN_AI_NAMESPACE)) {
-      hasGenAI = true;
-    }
+  const operation = span.attributes.getValue(GEN_AI_OPERATION_NAME);
+  if (typeof operation === 'string') {
+    return OPERATION_TO_KIND[operation] ?? 'UNKNOWN_GENAI';
   }
+  const hasGenAI = span.attributes.keys().some(key => key.startsWith(GEN_AI_NAMESPACE));
   return hasGenAI ? 'UNKNOWN_GENAI' : undefined;
 }
 

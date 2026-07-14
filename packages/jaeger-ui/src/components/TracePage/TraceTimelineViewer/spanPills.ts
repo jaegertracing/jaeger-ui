@@ -11,8 +11,8 @@ export type ISpanPill = { label: string; value: string; isError?: boolean };
 
 function httpStatusPill(span: IOtelSpan): ISpanPill | undefined {
   for (const key of HTTP_STATUS_ATTR_KEYS) {
-    const attr = span.attributes.find(a => a.key === key);
-    const value = attr?.value == null ? '' : String(attr.value);
+    const attrValue = span.attributes.getValue(key);
+    const value = attrValue == null ? '' : String(attrValue);
     if (value) {
       const code = Number(value.trim());
       const pill: ISpanPill = { label: 'http.status_code', value };

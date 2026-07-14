@@ -6,6 +6,7 @@ import { renderHook } from '@testing-library/react';
 import transformTraceData from '../../../model/transform-trace-data';
 import { IOtelSpan } from '../../../types/otel';
 import { getSpanPillsForSpan, useSpanPillsEnabled } from './spanPills';
+import { makeAttributes } from '../../../model/attributes';
 
 const mockUseConfig = vi.hoisted(() => vi.fn(() => ({ traceTimeline: {} })));
 
@@ -16,8 +17,8 @@ vi.mock('../../../hooks/useConfig', () => ({
 function makeSpan(attributes: { key: string; value: string }[]): IOtelSpan {
   return {
     spanID: 's1',
-    attributes,
-    resource: { serviceName: 'svc', attributes: [] },
+    attributes: makeAttributes(attributes),
+    resource: { serviceName: 'svc', attributes: makeAttributes() },
     name: 'op',
     startTime: 0,
     endTime: 1,
