@@ -67,6 +67,7 @@ import {
   getUnixTimeStampInMSFromForm,
   mapDispatchToProps,
   mapStateToProps,
+  mergeSpanKindIntoTags,
   optionsWithinMaxLookback,
   submitForm,
   traceIDsToQuery,
@@ -77,6 +78,7 @@ import * as markers from './SearchForm.markers';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 import { AppQueryClientProvider } from '../../query/app-query-client';
 import getConfig from '../../utils/config/get-config';
+import { DEFAULT_SPAN_KIND, SPAN_KIND_OPTIONS } from '../../constants/search-form';
 
 function makeDateParams(dateOffset = 0) {
   const date = new Date();
@@ -152,6 +154,32 @@ describe('conversion utils', () => {
         num: '9',
       });
       expect(convTagsLogfmt(input)).toBe(target);
+    });
+  });
+
+  describe('mergeSpanKindIntoTags()', () => {
+    it('returns tags unchanged when spanKind is falsy', () => {
+      expect(mergeSpanKindIntoTags('error=true', undefined)).toBe('error=true');
+      expect(mergeSpanKindIntoTags('error=true', null)).toBe('error=true');
+      expect(mergeSpanKindIntoTags('error=true', '')).toBe('error=true');
+    });
+
+    it('returns tags unchanged when spanKind is the default ("all")', () => {
+      expect(mergeSpanKindIntoTags('error=true', DEFAULT_SPAN_KIND)).toBe('error=true');
+    });
+
+    it('returns just the span.kind tag when tags is empty', () => {
+      expect(mergeSpanKindIntoTags('', 'server')).toBe('span.kind=server');
+      expect(mergeSpanKindIntoTags(undefined, 'server')).toBe('span.kind=server');
+      expect(mergeSpanKindIntoTags(null, 'server')).toBe('span.kind=server');
+    });
+
+    it('appends the span.kind tag after existing tags', () => {
+      expect(mergeSpanKindIntoTags('error=true', 'consumer')).toBe('error=true span.kind=consumer');
+    });
+
+    it('trims existing tags before appending', () => {
+      expect(mergeSpanKindIntoTags('  error=true  ', 'client')).toBe('error=true span.kind=client');
     });
   });
 
@@ -381,6 +409,44 @@ describe('submitForm()', () => {
     });
   });
 
+  describe('`fields.spanKind`', () => {
+    it('is ignored when `fields.spanKind` is "all"', () => {
+      fields.spanKind = 'all';
+      const url = submitForm(fields);
+      const { tags } = getUrlParams(url);
+      expect(tags).toBe(undefined);
+    });
+
+    it('is ignored when `fields.spanKind` is unset', () => {
+      const url = submitForm(fields);
+      const { tags } = getUrlParams(url);
+      expect(tags).toBe(undefined);
+    });
+
+    it('is folded into `tags` when set to a real span kind', () => {
+      fields.spanKind = 'server';
+      const url = submitForm(fields);
+      const { tags } = getUrlParams(url);
+      expect(tags).toEqual(JSON.stringify({ 'span.kind': 'server' }));
+    });
+
+    it('is appended after any manually-entered tags', () => {
+      fields.tags = 'error=true';
+      fields.spanKind = 'producer';
+      const url = submitForm(fields);
+      const { tags } = getUrlParams(url);
+      expect(tags).toEqual(JSON.stringify({ error: 'true', 'span.kind': 'producer' }));
+    });
+
+    it('overrides a span.kind manually typed into the tags field', () => {
+      fields.tags = 'span.kind=client';
+      fields.spanKind = 'consumer';
+      const url = submitForm(fields);
+      const { tags } = getUrlParams(url);
+      expect(tags).toEqual(JSON.stringify({ 'span.kind': 'consumer' }));
+    });
+  });
+
   describe('`fields.{minDuration,maxDuration}', () => {
     it('retains values as-is when they are truthy', () => {
       fields.minDuration = 'some-min';
@@ -506,6 +572,21 @@ describe('<SearchForm>', () => {
     fireEvent.change(tagsInput, { target: { value: 'new=tag' } });
 
     expect(tagsInput.value).toBe('new=tag');
+  });
+
+  it('renders the Span Kind filter with no value selected by default', () => {
+    const { getByTestId } = renderForm(<SearchForm {...defaultProps} />);
+    const spanKindSelect = getByTestId('mock-select-spanKind');
+    // DEFAULT_SPAN_KIND ("all") is normalized to `undefined` so the placeholder shows,
+    // mirroring how Operation's "all" sentinel is never passed down as a real value.
+    expect(spanKindSelect.getAttribute('data-value')).toBe(null);
+  });
+
+  it('exposes client/server/internal/producer/consumer as Span Kind options', () => {
+    expect(SPAN_KIND_OPTIONS).toHaveLength(5);
+    expect(SPAN_KIND_OPTIONS.map(o => o.value).sort()).toEqual(
+      ['client', 'consumer', 'internal', 'producer', 'server'].sort()
+    );
   });
 
   it('prevents default form submission behavior', async () => {
@@ -719,6 +800,48 @@ describe('SearchForm onChange handlers', () => {
       fireEvent.change(maxDurationInput, { target: { value: '5s' } });
     });
     await waitFor(() => expect(maxDurationInput.value).toBe('5s'));
+  });
+
+  it('resets operation and re-queries useSpanNames when spanKind changes', async () => {
+    const props = {
+      ...defaultProps,
+      initialValues: { service: 'svcA', operation: 'testOperation' },
+    };
+    const { getByTestId } = renderForm(<SearchForm key="span-kind-change" {...props} />);
+
+    await waitFor(() =>
+      expect(getByTestId('mock-select-operation').getAttribute('data-value')).toBe('testOperation')
+    );
+
+    await act(async () => {
+      SearchableSelect.onChangeFns.spanKind('consumer');
+    });
+
+    await waitFor(() =>
+      expect(getByTestId('mock-select-spanKind').getAttribute('data-value')).toBe('consumer')
+    );
+    // Selecting a Span Kind can invalidate the previously selected operation
+    // (it may not exist under the new filter), so it resets to 'all', same as
+    // what happens when the service changes.
+    await waitFor(() => expect(getByTestId('mock-select-operation').getAttribute('data-value')).toBe('all'));
+
+    // Confirm the selected spanKind was forwarded to useSpanNames as a filter.
+    await waitFor(() => expect(useSpanNames).toHaveBeenLastCalledWith('svcA', 'consumer'));
+  });
+
+  it('clearing the Span Kind filter passes undefined to useSpanNames', async () => {
+    const props = { ...defaultProps, initialValues: { service: 'svcA' } };
+    renderForm(<SearchForm key="span-kind-clear" {...props} />);
+
+    await act(async () => {
+      SearchableSelect.onChangeFns.spanKind('internal');
+    });
+    await waitFor(() => expect(useSpanNames).toHaveBeenLastCalledWith('svcA', 'internal'));
+
+    await act(async () => {
+      SearchableSelect.onChangeFns.spanKind('');
+    });
+    await waitFor(() => expect(useSpanNames).toHaveBeenLastCalledWith('svcA', undefined));
   });
 });
 
