@@ -7,6 +7,7 @@ const DURATION_MS = 350;
 
 let lastTween: Tween | void;
 let lastTweenContainer: Element | Window | void;
+let tweenGeneration = 0;
 
 // TODO(joe): this util can be modified a bit to be generalized (e.g. take in
 // an element as a parameter and use scrollTop instead of window.scrollTo)
@@ -26,9 +27,13 @@ function setScrollTop(container: Element | Window, value: number) {
   }
 }
 
-function _onTweenUpdate(container: Element | Window, { done, value }: { done: boolean; value: number }) {
+function _onTweenUpdate(
+  container: Element | Window,
+  { done, value }: { done: boolean; value: number },
+  gen: number
+) {
   setScrollTop(container, value);
-  if (done) {
+  if (done && gen === tweenGeneration) {
     lastTween = undefined;
     lastTweenContainer = undefined;
   }
@@ -45,22 +50,24 @@ export function scrollBy(yDelta: number, appendToLast = false, container: Elemen
     }
   }
   const to = targetFrom + yDelta;
+  const gen = ++tweenGeneration;
   lastTween = new Tween({
     to,
     duration: DURATION_MS,
     from: scrollY,
-    onUpdate: state => _onTweenUpdate(container, state),
+    onUpdate: state => _onTweenUpdate(container, state, gen),
   });
   lastTweenContainer = container;
 }
 
 export function scrollTo(y: number, container: Element | Window = window) {
   const scrollY = getScrollTop(container);
+  const gen = ++tweenGeneration;
   lastTween = new Tween({
     duration: DURATION_MS,
     from: scrollY,
     to: y,
-    onUpdate: state => _onTweenUpdate(container, state),
+    onUpdate: state => _onTweenUpdate(container, state, gen),
   });
   lastTweenContainer = container;
 }

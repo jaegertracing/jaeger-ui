@@ -154,7 +154,7 @@ describe('scroll-by', () => {
         scrollTop: 50,
         scrollLeft: 0,
       };
-      Tween.mockReset();
+      Tween.mockClear();
       cancel();
     });
 
@@ -199,6 +199,28 @@ describe('scroll-by', () => {
 
       expect(tweenOptions.from).toBe(50);
       expect(tweenOptions.to).toBe(60);
+    });
+
+    it('does not clear the active tween when an older cross-container tween completes', () => {
+      window.scrollY = 100;
+
+      // Start tween A (window).
+      scrollBy(100);
+
+      // Start tween B (element) while A is still active.
+      scrollBy(10, false, container);
+
+      expect(tweenInstances.length).toBe(2);
+      const tweenA = tweenInstances[0];
+      const tweenB = tweenInstances[1];
+
+      // A finishes first — invoke its onUpdate with done: true.
+      tweenA.onUpdate({ value: 200, done: true });
+
+      // cancel() should still cancel B since B is the active tween.
+      cancel();
+      expect(tweenB.cancel.mock.calls.length).toBe(1);
+      expect(tweenA.cancel.mock.calls.length).toBe(0);
     });
   });
 });
