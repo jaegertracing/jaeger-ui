@@ -203,6 +203,8 @@ describe('scroll-by', () => {
 
     it('does not clear the active tween when an older cross-container tween completes', () => {
       window.scrollY = 100;
+      const oldScrollTo = window.scrollTo;
+      window.scrollTo = jest.fn();
 
       // Start tween A (window).
       scrollBy(100);
@@ -215,7 +217,11 @@ describe('scroll-by', () => {
       const tweenB = tweenInstances[1];
 
       // A finishes first — invoke its onUpdate with done: true.
-      tweenA.onUpdate({ value: 200, done: true });
+      try {
+        tweenA.onUpdate({ value: 200, done: true });
+      } finally {
+        window.scrollTo = oldScrollTo;
+      }
 
       // cancel() should still cancel B since B is the active tween.
       cancel();
