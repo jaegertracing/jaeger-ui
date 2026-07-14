@@ -32,8 +32,11 @@ function _onTweenUpdate(
   { done, value }: { done: boolean; value: number },
   gen: number
 ) {
+  if (gen !== tweenGeneration) {
+    return;
+  }
   setScrollTop(container, value);
-  if (done && gen === tweenGeneration) {
+  if (done) {
     lastTween = undefined;
     lastTweenContainer = undefined;
   }
