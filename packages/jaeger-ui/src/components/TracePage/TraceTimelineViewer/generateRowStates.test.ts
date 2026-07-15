@@ -6,13 +6,14 @@ import { describe, expect, it } from 'vitest';
 import generateRowStates, { isSpanPruned, filterPrunedSpanIDs } from './generateRowStates';
 import DetailState from './SpanDetail/DetailState';
 import { IOtelSpan, StatusCode } from '../../../types/otel';
+import { makeAttributes } from '../../../model/attributes';
 
 function makeSpan(overrides: Partial<IOtelSpan> & { spanID: string; depth: number }): IOtelSpan {
   return {
     hasChildren: false,
     childSpans: [],
     parentSpan: undefined,
-    resource: { serviceName: 'default-svc', attributes: [] },
+    resource: { serviceName: 'default-svc', attributes: makeAttributes() },
     status: { code: StatusCode.UNSET },
     ...overrides,
   } as unknown as IOtelSpan;
@@ -29,21 +30,25 @@ function makeTestSpans(): IOtelSpan[] {
       spanID: 'span-0',
       depth: 0,
       hasChildren: true,
-      resource: { serviceName: 'svc-a', attributes: [] },
+      resource: { serviceName: 'svc-a', attributes: makeAttributes() },
     }),
     makeSpan({
       spanID: 'span-1',
       depth: 1,
       hasChildren: true,
-      resource: { serviceName: 'svc-b', attributes: [] },
+      resource: { serviceName: 'svc-b', attributes: makeAttributes() },
     }),
     makeSpan({
       spanID: 'span-2',
       depth: 2,
-      resource: { serviceName: 'svc-b', attributes: [] },
+      resource: { serviceName: 'svc-b', attributes: makeAttributes() },
       status: { code: StatusCode.ERROR },
     }),
-    makeSpan({ spanID: 'span-3', depth: 1, resource: { serviceName: 'svc-c', attributes: [] } }),
+    makeSpan({
+      spanID: 'span-3',
+      depth: 1,
+      resource: { serviceName: 'svc-c', attributes: makeAttributes() },
+    }),
   ];
 }
 
@@ -139,32 +144,48 @@ describe('generateRowStates', () => {
 
 describe('isSpanPruned', () => {
   it('returns false when prunedServices is empty', () => {
-    const span = makeSpan({ spanID: 's1', depth: 0, resource: { serviceName: 'svc-a', attributes: [] } });
+    const span = makeSpan({
+      spanID: 's1',
+      depth: 0,
+      resource: { serviceName: 'svc-a', attributes: makeAttributes() },
+    });
     expect(isSpanPruned(span, new Set())).toBe(false);
   });
 
   it('returns true when span service is pruned', () => {
-    const span = makeSpan({ spanID: 's1', depth: 0, resource: { serviceName: 'svc-a', attributes: [] } });
+    const span = makeSpan({
+      spanID: 's1',
+      depth: 0,
+      resource: { serviceName: 'svc-a', attributes: makeAttributes() },
+    });
     expect(isSpanPruned(span, new Set(['svc-a']))).toBe(true);
   });
 
   it('returns true when an ancestor service is pruned', () => {
-    const parent = makeSpan({ spanID: 'p1', depth: 0, resource: { serviceName: 'svc-a', attributes: [] } });
+    const parent = makeSpan({
+      spanID: 'p1',
+      depth: 0,
+      resource: { serviceName: 'svc-a', attributes: makeAttributes() },
+    });
     const child = makeSpan({
       spanID: 'c1',
       depth: 1,
-      resource: { serviceName: 'svc-b', attributes: [] },
+      resource: { serviceName: 'svc-b', attributes: makeAttributes() },
       parentSpan: parent,
     });
     expect(isSpanPruned(child, new Set(['svc-a']))).toBe(true);
   });
 
   it('returns false when neither span nor ancestors are pruned', () => {
-    const parent = makeSpan({ spanID: 'p1', depth: 0, resource: { serviceName: 'svc-a', attributes: [] } });
+    const parent = makeSpan({
+      spanID: 'p1',
+      depth: 0,
+      resource: { serviceName: 'svc-a', attributes: makeAttributes() },
+    });
     const child = makeSpan({
       spanID: 'c1',
       depth: 1,
-      resource: { serviceName: 'svc-b', attributes: [] },
+      resource: { serviceName: 'svc-b', attributes: makeAttributes() },
       parentSpan: parent,
     });
     expect(isSpanPruned(child, new Set(['svc-c']))).toBe(false);
@@ -187,19 +208,23 @@ describe('filterPrunedSpanIDs', () => {
 
   it('filters out spans whose service is pruned', () => {
     const spans = [
-      makeSpan({ spanID: 's1', depth: 0, resource: { serviceName: 'svc-a', attributes: [] } }),
-      makeSpan({ spanID: 's2', depth: 0, resource: { serviceName: 'svc-b', attributes: [] } }),
+      makeSpan({ spanID: 's1', depth: 0, resource: { serviceName: 'svc-a', attributes: makeAttributes() } }),
+      makeSpan({ spanID: 's2', depth: 0, resource: { serviceName: 'svc-b', attributes: makeAttributes() } }),
     ];
     const result = filterPrunedSpanIDs(new Set(['s1', 's2']), buildSpanMap(spans), new Set(['svc-a']));
     expect(result).toEqual(new Set(['s2']));
   });
 
   it('filters out spans whose ancestor service is pruned', () => {
-    const parent = makeSpan({ spanID: 'p1', depth: 0, resource: { serviceName: 'svc-a', attributes: [] } });
+    const parent = makeSpan({
+      spanID: 'p1',
+      depth: 0,
+      resource: { serviceName: 'svc-a', attributes: makeAttributes() },
+    });
     const child = makeSpan({
       spanID: 'c1',
       depth: 1,
-      resource: { serviceName: 'svc-b', attributes: [] },
+      resource: { serviceName: 'svc-b', attributes: makeAttributes() },
       parentSpan: parent,
     });
     const result = filterPrunedSpanIDs(new Set(['c1']), buildSpanMap([parent, child]), new Set(['svc-a']));
@@ -207,7 +232,9 @@ describe('filterPrunedSpanIDs', () => {
   });
 
   it('returns null when all matches are pruned', () => {
-    const spans = [makeSpan({ spanID: 's1', depth: 0, resource: { serviceName: 'svc-a', attributes: [] } })];
+    const spans = [
+      makeSpan({ spanID: 's1', depth: 0, resource: { serviceName: 'svc-a', attributes: makeAttributes() } }),
+    ];
     const result = filterPrunedSpanIDs(new Set(['s1']), buildSpanMap(spans), new Set(['svc-a']));
     expect(result).toBeNull();
   });

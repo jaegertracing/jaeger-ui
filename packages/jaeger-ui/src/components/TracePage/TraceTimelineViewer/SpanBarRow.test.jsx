@@ -7,6 +7,7 @@ import '@testing-library/jest-dom';
 
 import SpanBarRow from './SpanBarRow';
 import SpanBar from './SpanBar';
+import { makeAttributes } from '../../../model/attributes';
 
 vi.mock('./SpanTreeOffset', () => ({
   default: jest.fn(({ span, childrenVisible, onClick }) => (
@@ -70,11 +71,11 @@ describe('<SpanBarRow>', () => {
       startTime: 100,
       endTime: 200,
       duration: 100,
-      attributes: [],
+      attributes: makeAttributes([]),
       events: [],
       links: [],
       status: { code: 'OK' },
-      resource: { attributes: [], serviceName: 'service-name' },
+      resource: { attributes: makeAttributes([]), serviceName: 'service-name' },
       instrumentationScope: { name: 'scope' },
       depth: 0,
       hasChildren: true,
@@ -85,6 +86,7 @@ describe('<SpanBarRow>', () => {
     traceStartTime: 0,
     traceDuration: 1000,
     focusSpan: jest.fn(),
+    spanPillsEnabled: false,
     useOtelTerms: false,
   };
 
@@ -250,6 +252,54 @@ describe('<SpanBarRow>', () => {
     });
   });
 
+  describe('span pills', () => {
+    it('renders pills with error styling for 5xx status codes', () => {
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          spanPillsEnabled
+          span={{
+            ...defaultProps.span,
+            attributes: makeAttributes([{ key: 'http.status_code', value: '500' }]),
+          }}
+        />
+      );
+      const errorPill = screen.getByLabelText('http.status_code: 500');
+      expect(errorPill).toBeInTheDocument();
+      expect(errorPill).toHaveClass('is-error');
+    });
+
+    it('renders neutral pills without error styling for non-5xx', () => {
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          spanPillsEnabled
+          span={{
+            ...defaultProps.span,
+            attributes: makeAttributes([{ key: 'http.status_code', value: '200' }]),
+          }}
+        />
+      );
+      const pill = screen.getByLabelText('http.status_code: 200');
+      expect(pill).toBeInTheDocument();
+      expect(pill).not.toHaveClass('is-error');
+    });
+
+    it('does not render pills when spanPillsEnabled is false', () => {
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          spanPillsEnabled={false}
+          span={{
+            ...defaultProps.span,
+            attributes: makeAttributes([{ key: 'http.status_code', value: '200' }]),
+          }}
+        />
+      );
+      expect(screen.queryByLabelText(/http\.status_code/)).not.toBeInTheDocument();
+    });
+  });
+
   it('sets longLabel and hintSide to right when viewStart <= 1 - viewEnd', () => {
     const getViewedBounds = jest.fn().mockReturnValue({ start: 0.2, end: 0.3 });
     const props = {
@@ -269,5 +319,44 @@ describe('<SpanBarRow>', () => {
       }),
       undefined
     );
+  });
+
+  describe('GenAI icon', () => {
+    it('shows no GenAI icon for a standard span', () => {
+      render(<SpanBarRow {...defaultProps} />);
+      expect(
+        screen.queryByRole('img', { name: /LLM call|Tool call|Agent|Retrieval|GenAI span/ })
+      ).not.toBeInTheDocument();
+    });
+
+    it('shows an LLM call icon when span.genAIKind=LLM_CALL', () => {
+      const span = { ...defaultProps.span, genAIKind: 'LLM_CALL' };
+      render(<SpanBarRow {...defaultProps} span={span} />);
+      expect(screen.getByRole('img', { name: 'LLM call' })).toBeInTheDocument();
+    });
+
+    it('shows a tool call icon when span.genAIKind=TOOL_CALL', () => {
+      const span = { ...defaultProps.span, genAIKind: 'TOOL_CALL' };
+      render(<SpanBarRow {...defaultProps} span={span} />);
+      expect(screen.getByRole('img', { name: 'Tool call' })).toBeInTheDocument();
+    });
+
+    it('shows an agent icon when span.genAIKind=AGENT', () => {
+      const span = { ...defaultProps.span, genAIKind: 'AGENT' };
+      render(<SpanBarRow {...defaultProps} span={span} />);
+      expect(screen.getByRole('img', { name: 'Agent' })).toBeInTheDocument();
+    });
+
+    it('shows a retrieval icon when span.genAIKind=RETRIEVAL', () => {
+      const span = { ...defaultProps.span, genAIKind: 'RETRIEVAL' };
+      render(<SpanBarRow {...defaultProps} span={span} />);
+      expect(screen.getByRole('img', { name: 'Retrieval' })).toBeInTheDocument();
+    });
+
+    it('shows a generic GenAI icon when span.genAIKind=UNKNOWN_GENAI', () => {
+      const span = { ...defaultProps.span, genAIKind: 'UNKNOWN_GENAI' };
+      render(<SpanBarRow {...defaultProps} span={span} />);
+      expect(screen.getByRole('img', { name: 'GenAI span' })).toBeInTheDocument();
+    });
   });
 });

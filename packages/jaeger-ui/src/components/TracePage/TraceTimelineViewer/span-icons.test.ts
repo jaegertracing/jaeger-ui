@@ -2,9 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { getSpanIconComponent } from './span-icons';
+import { makeAttributes } from '../../../model/attributes';
 
 function makeAttrs(attrKeys: string[]) {
-  return attrKeys.map(key => ({ key, value: 'test' }));
+  return makeAttributes(attrKeys.map(key => ({ key, value: 'test' })));
 }
 
 describe('getSpanIconComponent', () => {
