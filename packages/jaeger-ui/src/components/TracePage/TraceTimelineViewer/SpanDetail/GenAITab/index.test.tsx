@@ -71,6 +71,38 @@ describe('GenAITab', () => {
     expect(screen.getByText('It is sunny.')).toBeInTheDocument();
   });
 
+  it('renders markdown formatting in message content instead of literal syntax', () => {
+    const { container } = render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.output.messages',
+            value: [{ role: 'assistant', content: 'Here is **bold** and a list:\n- one\n- two' }],
+          },
+        ])}
+      />
+    );
+    const content = container.querySelector('.GenAITab--messageContent');
+    expect(content?.querySelector('strong')).toHaveTextContent('bold');
+    expect(content?.querySelectorAll('li')).toHaveLength(2);
+    expect(content?.textContent).not.toContain('**bold**');
+  });
+
+  it('renders a fenced code block in message content with the shared code styling', () => {
+    const { container } = render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.output.messages',
+            value: [{ role: 'assistant', content: '```js\nconst x = 1;\n```' }],
+          },
+        ])}
+      />
+    );
+    const content = container.querySelector('.GenAITab--messageContent');
+    expect(content?.querySelector('pre code')).toHaveTextContent('const x = 1;');
+  });
+
   it('renders system instructions as a system-role message, visible by default', () => {
     render(
       <GenAITab

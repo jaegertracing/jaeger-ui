@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useMemo, useState } from 'react';
+import Markdown from 'markdown-to-jsx/react';
 import { JsonView, allExpanded, collapseAllNested } from 'react-json-view-lite';
 
 import {
@@ -13,6 +14,7 @@ import {
   GenAiToolCall,
 } from './genAiData';
 import AccordionAttributes from '../AccordionAttributes';
+import { sharedMarkdownOptions } from '../../../../../utils/markdownOptions';
 import jsonViewStyles from '../../../../../utils/jsonViewStyles';
 import CopyIcon from '../../../../common/CopyIcon';
 import type { IOtelSpan } from '../../../../../types/otel';
@@ -21,16 +23,16 @@ import './index.css';
 
 type Props = { span: IOtelSpan };
 
-function MessageBlock({ message, index }: { message: GenAiMessage; index: number }) {
+function MessageBlock({ message }: { message: GenAiMessage }) {
   return (
     <div className={`GenAITab--message GenAITab--message-${message.role || 'unknown'}`}>
       <div className="GenAITab--messageHeader">
         <span className="GenAITab--messageRole">{message.role || 'message'}</span>
         <CopyIcon copyText={message.content} tooltipTitle="Copy message" buttonText="Copy" />
       </div>
-      <pre className="GenAITab--messageContent" data-testid={`genai-message-${index}`}>
+      <Markdown className="GenAITab--messageContent" options={sharedMarkdownOptions}>
         {message.content}
-      </pre>
+      </Markdown>
     </div>
   );
 }
@@ -114,17 +116,14 @@ function ConversationSection({
   return (
     <div className="GenAITab--section">
       <h3 className="GenAITab--sectionTitle">Conversation</h3>
-      {systemInstructions && (
-        <MessageBlock message={{ role: 'system', content: systemInstructions }} index={-1} />
-      )}
+      {systemInstructions && <MessageBlock message={{ role: 'system', content: systemInstructions }} />}
       {inputMessages.map((message, i) => (
-        <MessageBlock key={`input-${i}`} message={message} index={i} />
+        <MessageBlock key={`input-${i}`} message={message} />
       ))}
       {outputMessages.map((message, i) => (
         <MessageBlock
           key={`output-${i}`}
           message={{ role: message.role || 'assistant', content: message.content }}
-          index={inputMessages.length + i}
         />
       ))}
     </div>
