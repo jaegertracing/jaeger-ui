@@ -12,7 +12,7 @@ import CopyIcon from '../../../common/CopyIcon';
 
 import { TNil } from '../../../../types';
 import { Hyperlink } from '../../../../types/hyperlink';
-import { IAttribute } from '../../../../types/otel';
+import { IAttributes } from '../../../../types/otel';
 
 import './AttributesTable.css';
 
@@ -105,8 +105,8 @@ const linkValueList = (links: Hyperlink[]) => {
 };
 
 type AttributesTableProps = {
-  data: ReadonlyArray<IAttribute>;
-  linksGetter: ((pairs: ReadonlyArray<IAttribute>, index: number) => Hyperlink[]) | TNil;
+  data: IAttributes;
+  linksGetter: ((pairs: IAttributes, index: number) => Hyperlink[]) | TNil;
 };
 
 // AttributesTable is displayed as a menu at span level.
@@ -118,7 +118,7 @@ export default function AttributesTable(props: AttributesTableProps) {
     <div className="KeyValueTable u-simple-scrollbars">
       <table className="u-width-100">
         <tbody className="KeyValueTable--body">
-          {data.map((row, i) => {
+          {data.entries().map((row, i) => {
             const jsonTable = formatValue(row.key, row.value);
             const links = linksGetter ? linksGetter(data, i) : null;
             let valueMarkup;

@@ -32,7 +32,7 @@ import getLinks from '../../../model/link-patterns';
 import colorGenerator from '../../../utils/color-generator';
 import { TNil, ReduxState } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
-import { IOtelSpan, IOtelTrace, IAttribute, IEvent } from '../../../types/otel';
+import { IOtelSpan, IOtelTrace, IAttributes, IEvent } from '../../../types/otel';
 import TTraceTimeline from '../../../types/TTraceTimeline';
 import { getSelectedSpanID, useLayoutPrefsStore, useTraceTimelineStore } from './store';
 
@@ -161,7 +161,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
     }
   }, []);
 
-  const linksGetter = useCallback((span: IOtelSpan, items: ReadonlyArray<IAttribute>, itemIndex: number) => {
+  const linksGetter = useCallback((span: IOtelSpan, items: IAttributes, itemIndex: number) => {
     const { trace } = propsRef.current;
     if (!trace) return [];
     return getLinks(span, items, itemIndex, trace);
@@ -169,7 +169,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
 
   // Adapter for OTEL components that need links from attributes
   const linksGetterFromAttributes = useCallback(
-    (span: IOtelSpan) => (attributes: ReadonlyArray<IAttribute>, index: number) => {
+    (span: IOtelSpan) => (attributes: IAttributes, index: number) => {
       return linksGetter(span, attributes, index);
     },
     [linksGetter]
@@ -387,14 +387,14 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
           };
         }
       }
-      const peerServiceAttr = span.attributes.find(attr => attr.key === PEER_SERVICE);
+      const peerServiceValue = span.attributes.getValue(PEER_SERVICE);
       // Leaf, kind == client and has peer.service tag, is likely a client span that does a request
       // to an uninstrumented/external service
       let noInstrumentedServer = null;
-      if (!span.hasChildren && peerServiceAttr && (isKindClient(span) || isKindProducer(span))) {
+      if (!span.hasChildren && peerServiceValue != null && (isKindClient(span) || isKindProducer(span))) {
         noInstrumentedServer = {
-          serviceName: String(peerServiceAttr.value),
-          color: colorGenerator.getColorByKey(String(peerServiceAttr.value)),
+          serviceName: String(peerServiceValue),
+          color: colorGenerator.getColorByKey(String(peerServiceValue)),
         };
       }
 
