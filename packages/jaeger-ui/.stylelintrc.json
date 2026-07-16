@@ -11,7 +11,6 @@
         ]
       },
       {
-        "severity": "warning",
         "message": "Use a token from src/components/common/vars.css instead of a hardcoded color."
       }
     ],

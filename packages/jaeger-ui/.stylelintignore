@@ -35,3 +35,7 @@ src/components/DeepDependencies/Graph/DdgNodeContent/index.css
 src/components/App/TopNav.css
 src/components/App/Page.css
 src/components/App/JaegerAskSearchInput.css
+src/components/App/ThemeToggleButton.css
+src/components/TracePage/TraceStatistics/index.css
+src/components/TracePage/TraceStatistics/PopupSql.css
+src/components/TracePage/TraceSpanView/index.css
