@@ -6,8 +6,8 @@
     "declaration-property-value-disallowed-list": [
       {
         "/^(color|background|background-color|border(-top|-right|-bottom|-left)?(-color)?|outline|outline-color|fill|stroke|box-shadow)$/": [
-          "/^#[0-9a-fA-F]{3,8}$/",
-          "/^rgba?\\(\\s*\\d/i"
+          "/#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\\b/",
+          "/rgba?\\(\\s*\\d/i"
         ]
       },
       {
