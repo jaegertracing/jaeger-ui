@@ -14,6 +14,10 @@ function makeSpan(attributes: IAttribute[]): IOtelSpan {
 }
 
 describe('GenAITab', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
   it('renders provider and model when present', () => {
     render(
       <GenAITab
@@ -71,7 +75,7 @@ describe('GenAITab', () => {
     expect(screen.getByText('It is sunny.')).toBeInTheDocument();
   });
 
-  it('renders markdown formatting in message content instead of literal syntax', () => {
+  it('defaults message content to plain text, showing markdown syntax literally', () => {
     const { container } = render(
       <GenAITab
         span={makeSpan([
@@ -82,13 +86,31 @@ describe('GenAITab', () => {
         ])}
       />
     );
+    expect(screen.getByText(/\*\*bold\*\*/)).toBeInTheDocument();
+    const content = container.querySelector('.GenAITab--messageContent-plain');
+    expect(content?.tagName).toBe('PRE');
+    expect(content?.querySelector('strong')).toBeNull();
+  });
+
+  it('renders markdown formatting once the user switches the format dropdown to Markdown', () => {
+    const { container } = render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.output.messages',
+            value: [{ role: 'assistant', content: 'Here is **bold** and a list:\n- one\n- two' }],
+          },
+        ])}
+      />
+    );
+    fireEvent.change(screen.getByLabelText('Content format'), { target: { value: 'markdown' } });
     const content = container.querySelector('.GenAITab--messageContent');
     expect(content?.querySelector('strong')).toHaveTextContent('bold');
     expect(content?.querySelectorAll('li')).toHaveLength(2);
     expect(content?.textContent).not.toContain('**bold**');
   });
 
-  it('renders a fenced code block in message content with the shared code styling', () => {
+  it('renders a fenced code block once switched to Markdown, with the shared code styling', () => {
     const { container } = render(
       <GenAITab
         span={makeSpan([
@@ -99,8 +121,91 @@ describe('GenAITab', () => {
         ])}
       />
     );
+    fireEvent.change(screen.getByLabelText('Content format'), { target: { value: 'markdown' } });
     const content = container.querySelector('.GenAITab--messageContent');
     expect(content?.querySelector('pre code')).toHaveTextContent('const x = 1;');
+  });
+
+  it('defaults message content that parses as JSON to the interactive tree view, not plain or markdown', () => {
+    const { container } = render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.output.messages',
+            value: [{ role: 'assistant', content: JSON.stringify({ answer: 42 }) }],
+          },
+        ])}
+      />
+    );
+    expect(container.querySelector('.GenAITab--json .json-markup-key')?.textContent).toContain('answer');
+    expect(screen.getByLabelText('Content format')).toHaveValue('json');
+  });
+
+  it('persists the chosen format per attribute name, applying it to a later message from the same attribute', () => {
+    const { unmount } = render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.output.messages',
+            value: [{ role: 'assistant', content: 'Here is **bold** text.' }],
+          },
+        ])}
+      />
+    );
+    fireEvent.change(screen.getByLabelText('Content format'), { target: { value: 'markdown' } });
+    unmount();
+
+    const { container } = render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.output.messages',
+            value: [{ role: 'assistant', content: 'A second, unrelated **bold** message.' }],
+          },
+        ])}
+      />
+    );
+    expect(screen.getByLabelText('Content format')).toHaveValue('markdown');
+    expect(container.querySelector('.GenAITab--messageContent strong')).toBeInTheDocument();
+  });
+
+  it('applies a format change to every currently-rendered message from the same attribute immediately, not just future mounts', () => {
+    const { container } = render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.output.messages',
+            value: [
+              { role: 'assistant', content: 'First **bold** message.' },
+              { role: 'assistant', content: 'Second **bold** message.' },
+            ],
+          },
+        ])}
+      />
+    );
+    const [firstSelect, secondSelect] = screen.getAllByLabelText('Content format');
+    fireEvent.change(firstSelect, { target: { value: 'markdown' } });
+    expect(secondSelect).toHaveValue('markdown');
+    expect(container.querySelectorAll('.GenAITab--messageContent strong')).toHaveLength(2);
+  });
+
+  it('keeps the format preference scoped per attribute name, not shared across attributes', () => {
+    const { container } = render(
+      <GenAITab
+        span={makeSpan([
+          { key: 'gen_ai.output.messages', value: [{ role: 'assistant', content: 'Output text.' }] },
+          { key: 'gen_ai.input.messages', value: [{ role: 'user', content: 'Input text.' }] },
+        ])}
+      />
+    );
+    const outputBlock = screen.getByText('Output text.').closest('.GenAITab--message');
+    const inputBlock = screen.getByText('Input text.').closest('.GenAITab--message');
+    const outputSelect = outputBlock?.querySelector('.GenAITab--formatSelect') as HTMLSelectElement;
+    const inputSelect = inputBlock?.querySelector('.GenAITab--formatSelect') as HTMLSelectElement;
+
+    fireEvent.change(outputSelect, { target: { value: 'markdown' } });
+    expect(inputSelect).toHaveValue('plain');
+    expect(container.querySelectorAll('.GenAITab--formatSelect')).toHaveLength(2);
   });
 
   it('renders system instructions as a system-role message, visible by default', () => {

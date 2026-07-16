@@ -84,6 +84,21 @@ SPDX-License-Identifier: Apache-2.0
   letter-spacing: 0.03em;
 }
 
+.GenAITab--messageHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.GenAITab--formatSelect {
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: var(--surface-primary);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  padding: 1px 4px;
+}
+
 .GenAITab--messageContent {
   padding: 8px;
   word-break: break-word;
@@ -98,6 +113,11 @@ SPDX-License-Identifier: Apache-2.0
 
 .GenAITab--messageContent > :last-child {
   margin-bottom: 0;
+}
+
+.GenAITab--messageContent-plain {
+  margin: 0;
+  white-space: pre-wrap;
 }
 
 .GenAITab--toolSubsection {
