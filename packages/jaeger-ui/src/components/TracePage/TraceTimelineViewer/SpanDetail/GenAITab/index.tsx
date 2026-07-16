@@ -92,10 +92,12 @@ function MessageBlock({
   message,
   format,
   onFormatChange,
+  messageNumber,
 }: {
   message: GenAiMessage;
   format: MessageFormat;
   onFormatChange: (format: MessageFormat) => void;
+  messageNumber: number;
 }) {
   const isOversized = message.content.length > MARKDOWN_SIZE_LIMIT;
   const effectiveFormat = format === 'markdown' && isOversized ? 'plain' : format;
@@ -107,7 +109,7 @@ function MessageBlock({
         <div className="GenAITab--messageHeaderActions">
           <select
             className="GenAITab--formatSelect"
-            aria-label="Content format"
+            aria-label={`Content format for message ${messageNumber} (${message.role || 'message'})`}
             value={effectiveFormat}
             onChange={e => onFormatChange(e.target.value as MessageFormat)}
           >
@@ -192,30 +194,42 @@ function ConversationSection({
 }) {
   const { getFormat, setFormat } = useMessageFormatOverrides();
 
+  // Flattened into one ordered list (rather than three separate blocks) so each
+  // message can get a stable, unique position number for its format dropdown's
+  // accessible name - with per-role select elements otherwise indistinguishable
+  // to a screen reader when a conversation has multiple messages.
+  const messages: Array<{ key: string; message: GenAiMessage; attributeKey: string }> = [
+    ...(systemInstructions
+      ? [
+          {
+            key: 'system',
+            message: { role: 'system', content: systemInstructions },
+            attributeKey: 'gen_ai.system_instructions',
+          },
+        ]
+      : []),
+    ...inputMessages.map((message, i) => ({
+      key: `input-${i}`,
+      message,
+      attributeKey: 'gen_ai.input.messages',
+    })),
+    ...outputMessages.map((message, i) => ({
+      key: `output-${i}`,
+      message: { role: message.role || 'assistant', content: message.content },
+      attributeKey: 'gen_ai.output.messages',
+    })),
+  ];
+
   return (
     <div className="GenAITab--section">
       <h3 className="GenAITab--sectionTitle">Conversation</h3>
-      {systemInstructions && (
+      {messages.map(({ key, message, attributeKey }, i) => (
         <MessageBlock
-          message={{ role: 'system', content: systemInstructions }}
-          format={getFormat('gen_ai.system_instructions', systemInstructions)}
-          onFormatChange={f => setFormat('gen_ai.system_instructions', f)}
-        />
-      )}
-      {inputMessages.map((message, i) => (
-        <MessageBlock
-          key={`input-${i}`}
+          key={key}
           message={message}
-          format={getFormat('gen_ai.input.messages', message.content)}
-          onFormatChange={f => setFormat('gen_ai.input.messages', f)}
-        />
-      ))}
-      {outputMessages.map((message, i) => (
-        <MessageBlock
-          key={`output-${i}`}
-          message={{ role: message.role || 'assistant', content: message.content }}
-          format={getFormat('gen_ai.output.messages', message.content)}
-          onFormatChange={f => setFormat('gen_ai.output.messages', f)}
+          format={getFormat(attributeKey, message.content)}
+          onFormatChange={f => setFormat(attributeKey, f)}
+          messageNumber={i + 1}
         />
       ))}
     </div>

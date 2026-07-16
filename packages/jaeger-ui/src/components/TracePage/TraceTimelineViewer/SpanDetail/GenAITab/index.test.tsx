@@ -103,7 +103,7 @@ describe('GenAITab', () => {
         ])}
       />
     );
-    fireEvent.change(screen.getByLabelText('Content format'), { target: { value: 'markdown' } });
+    fireEvent.change(screen.getByLabelText(/Content format/), { target: { value: 'markdown' } });
     const content = container.querySelector('.GenAITab--messageContent');
     expect(content?.querySelector('strong')).toHaveTextContent('bold');
     expect(content?.querySelectorAll('li')).toHaveLength(2);
@@ -121,7 +121,7 @@ describe('GenAITab', () => {
         ])}
       />
     );
-    fireEvent.change(screen.getByLabelText('Content format'), { target: { value: 'markdown' } });
+    fireEvent.change(screen.getByLabelText(/Content format/), { target: { value: 'markdown' } });
     const content = container.querySelector('.GenAITab--messageContent');
     expect(content?.querySelector('pre code')).toHaveTextContent('const x = 1;');
   });
@@ -138,7 +138,7 @@ describe('GenAITab', () => {
         ])}
       />
     );
-    const select = screen.getByLabelText('Content format') as HTMLSelectElement;
+    const select = screen.getByLabelText(/Content format/) as HTMLSelectElement;
     fireEvent.change(select, { target: { value: 'markdown' } });
 
     // The dropdown must reflect what's actually rendered, not the stored preference -
@@ -163,7 +163,7 @@ describe('GenAITab', () => {
       />
     );
     expect(container.querySelector('.GenAITab--json .json-markup-key')?.textContent).toContain('answer');
-    expect(screen.getByLabelText('Content format')).toHaveValue('json');
+    expect(screen.getByLabelText(/Content format/)).toHaveValue('json');
   });
 
   it('defaults pretty-printed JSON with leading whitespace to the interactive tree view, not plain text', () => {
@@ -178,7 +178,7 @@ describe('GenAITab', () => {
       />
     );
     expect(container.querySelector('.GenAITab--json .json-markup-key')?.textContent).toContain('answer');
-    expect(screen.getByLabelText('Content format')).toHaveValue('json');
+    expect(screen.getByLabelText(/Content format/)).toHaveValue('json');
   });
 
   it('persists the chosen format per attribute name, applying it to a later message from the same attribute', () => {
@@ -192,7 +192,7 @@ describe('GenAITab', () => {
         ])}
       />
     );
-    fireEvent.change(screen.getByLabelText('Content format'), { target: { value: 'markdown' } });
+    fireEvent.change(screen.getByLabelText(/Content format/), { target: { value: 'markdown' } });
     unmount();
 
     const { container } = render(
@@ -205,7 +205,7 @@ describe('GenAITab', () => {
         ])}
       />
     );
-    expect(screen.getByLabelText('Content format')).toHaveValue('markdown');
+    expect(screen.getByLabelText(/Content format/)).toHaveValue('markdown');
     expect(container.querySelector('.GenAITab--messageContent strong')).toBeInTheDocument();
   });
 
@@ -223,10 +223,29 @@ describe('GenAITab', () => {
         ])}
       />
     );
-    const [firstSelect, secondSelect] = screen.getAllByLabelText('Content format');
+    const [firstSelect, secondSelect] = screen.getAllByLabelText(/Content format/);
     fireEvent.change(firstSelect, { target: { value: 'markdown' } });
     expect(secondSelect).toHaveValue('markdown');
     expect(container.querySelectorAll('.GenAITab--messageContent strong')).toHaveLength(2);
+  });
+
+  it('gives each format dropdown a distinct accessible name including role and position, not a shared generic label', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.input.messages',
+            value: [{ role: 'user', content: 'What is the weather?' }],
+          },
+          {
+            key: 'gen_ai.output.messages',
+            value: [{ role: 'assistant', content: 'It is sunny.' }],
+          },
+        ])}
+      />
+    );
+    expect(screen.getByLabelText('Content format for message 1 (user)')).toBeInTheDocument();
+    expect(screen.getByLabelText('Content format for message 2 (assistant)')).toBeInTheDocument();
   });
 
   it('keeps the format preference scoped per attribute name, not shared across attributes', () => {
