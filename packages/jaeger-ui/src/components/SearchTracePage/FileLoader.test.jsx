@@ -223,6 +223,32 @@ describe('<FileLoader />', () => {
     expect(mockOnUploadedTracesClear).toHaveBeenCalledTimes(1);
   });
 
+  it('does not call onTracesLoaded when remove invalidates an in-flight parse', async () => {
+    const rawTrace = { traceID: 'abc', spans: [] };
+    const otelTrace = { traceID: 'abc' };
+    const summary = { traceID: 'abc', traceName: 'svc: op' };
+    let resolveRead;
+    readJsonFile.mockReturnValue(
+      new Promise(resolve => {
+        resolveRead = resolve;
+      })
+    );
+    transformTraceData.mockReturnValue({ asOtelTrace: () => otelTrace });
+    traceToTraceSummary.mockReturnValue(summary);
+
+    renderFileLoader();
+    const file = makeFile();
+    global.mockBeforeUpload(file);
+    global.mockOnRemove({ name: 'trace.json' });
+
+    await act(async () => {
+      resolveRead({ data: [rawTrace] });
+    });
+
+    expect(mockOnUploadedTracesClear).toHaveBeenCalledTimes(1);
+    expect(mockOnTracesLoaded).not.toHaveBeenCalled();
+  });
+
   it('shows error message when traces fail to parse', async () => {
     const { message } = await import('antd');
     readJsonFile.mockResolvedValue({ data: [{ traceID: 'bad' }, { traceID: 'bad2' }] });

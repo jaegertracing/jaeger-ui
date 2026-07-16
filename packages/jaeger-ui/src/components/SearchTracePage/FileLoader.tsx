@@ -71,6 +71,9 @@ export async function loadTracesFromFile(file: File): Promise<LoadResult> {
 }
 
 export default function FileLoader(props: FileLoaderProps) {
+  // Incremented on remove so in-flight parse callbacks cannot repopulate the cache after clear.
+  const loadGenerationRef = React.useRef(0);
+
   return (
     <Dragger
       accept=".json,.jsonl"
@@ -78,8 +81,12 @@ export default function FileLoader(props: FileLoaderProps) {
         // beforeUpload(file, fileList) is called once per selected file. Each invocation
         // receives the full fileList, so iterating fileList here would process N files
         // N times (N²). We process only the current `file` argument to avoid that.
+        const generation = loadGenerationRef.current;
         loadTracesFromFile(file)
           .then(({ summaries, rawTraces, errorCount }) => {
+            if (generation !== loadGenerationRef.current) {
+              return;
+            }
             if (errorCount > 0) {
               message.error(
                 `${errorCount} trace${errorCount > 1 ? 's' : ''} could not be loaded from ${file.name}.`
@@ -92,6 +99,9 @@ export default function FileLoader(props: FileLoaderProps) {
             }
           })
           .catch((err: unknown) => {
+            if (generation !== loadGenerationRef.current) {
+              return;
+            }
             message.error(
               `Failed to parse ${file.name}: ${err instanceof Error ? err.message : String(err)}`
             );
@@ -102,6 +112,7 @@ export default function FileLoader(props: FileLoaderProps) {
       // Clear the uploaded-traces cache so results match the file list. Limitation: this is a
       // global clear — removing one of several uploaded files clears all uploaded traces.
       onRemove={() => {
+        loadGenerationRef.current += 1;
         props.onUploadedTracesClear();
       }}
       multiple
