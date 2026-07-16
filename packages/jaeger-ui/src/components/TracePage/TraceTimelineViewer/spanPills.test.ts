@@ -105,6 +105,51 @@ describe('spanPills', () => {
         { label: 'http.status_code', value: 'not-a-number' },
       ]);
     });
+
+    it('returns multiple hardcoded pills in source order', () => {
+      const span = makeSpan([
+        { key: 'http.method', value: 'GET' },
+        { key: 'http.status_code', value: '200' },
+        { key: 'db.system', value: 'mysql' },
+      ]);
+      expect(getSpanPillsForSpan(span)).toEqual([
+        { label: 'http.status_code', value: '200' },
+        { label: 'http.method', value: 'GET' },
+        { label: 'db.system', value: 'mysql' },
+      ]);
+    });
+
+    it('maps http.method and falls back to http.request.method', () => {
+      expect(getSpanPillsForSpan(makeSpan([{ key: 'http.method', value: 'POST' }]))).toEqual([
+        { label: 'http.method', value: 'POST' },
+      ]);
+      expect(getSpanPillsForSpan(makeSpan([{ key: 'http.request.method', value: 'PUT' }]))).toEqual([
+        { label: 'http.method', value: 'PUT' },
+      ]);
+      expect(
+        getSpanPillsForSpan(
+          makeSpan([
+            { key: 'http.method', value: 'GET' },
+            { key: 'http.request.method', value: 'PUT' },
+          ])
+        )
+      ).toEqual([{ label: 'http.method', value: 'GET' }]);
+    });
+
+    it('maps db.system and rpc.system pills', () => {
+      expect(getSpanPillsForSpan(makeSpan([{ key: 'db.system', value: 'redis' }]))).toEqual([
+        { label: 'db.system', value: 'redis' },
+      ]);
+      expect(getSpanPillsForSpan(makeSpan([{ key: 'rpc.system', value: 'grpc' }]))).toEqual([
+        { label: 'rpc.system', value: 'grpc' },
+      ]);
+    });
+
+    it('maps span.kind pill', () => {
+      expect(getSpanPillsForSpan(makeSpan([{ key: 'span.kind', value: 'server' }]))).toEqual([
+        { label: 'span.kind', value: 'server' },
+      ]);
+    });
   });
 
   describe('useSpanPillsEnabled', () => {

@@ -298,6 +298,24 @@ describe('<SpanBarRow>', () => {
       );
       expect(screen.queryByLabelText(/http\.status_code/)).not.toBeInTheDocument();
     });
+
+    it('renders multiple pills from span attributes', () => {
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          spanPillsEnabled
+          span={{
+            ...defaultProps.span,
+            attributes: makeAttributes([
+              { key: 'http.status_code', value: '200' },
+              { key: 'http.method', value: 'GET' },
+            ]),
+          }}
+        />
+      );
+      expect(screen.getByLabelText('http.status_code: 200')).toBeInTheDocument();
+      expect(screen.getByLabelText('http.method: GET')).toBeInTheDocument();
+    });
   });
 
   it('sets longLabel and hintSide to right when viewStart <= 1 - viewEnd', () => {
