@@ -2,10 +2,17 @@
   "extends": "stylelint-config-recommended",
   "plugins": ["stylelint-value-no-unknown-custom-properties"],
   "rules": {
-    "csstools/value-no-unknown-custom-properties": [
-      true,
+    "csstools/value-no-unknown-custom-properties": null,
+    "declaration-property-value-disallowed-list": [
       {
-        "importFrom": ["src/components/common/vars.css"]
+        "/^(color|background|background-color|border(-top|-right|-bottom|-left)?(-color)?|outline|outline-color|fill|stroke|box-shadow)$/": [
+          "/^#[0-9a-fA-F]{3,8}$/",
+          "/^rgba?\\(/i"
+        ]
+      },
+      {
+        "severity": "warning",
+        "message": "Use a token from src/components/common/vars.css instead of a hardcoded color."
       }
     ],
     "no-descending-specificity": null,
@@ -17,5 +24,13 @@
     "shorthand-property-no-redundant-values": null,
     "declaration-block-no-redundant-longhand-properties": null,
     "declaration-property-value-keyword-no-deprecated": null
-  }
+  },
+  "overrides": [
+    {
+      "files": ["**/vars.css"],
+      "rules": {
+        "declaration-property-value-disallowed-list": null
+      }
+    }
+  ]
 }
