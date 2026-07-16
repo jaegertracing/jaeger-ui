@@ -166,6 +166,21 @@ describe('GenAITab', () => {
     expect(screen.getByLabelText('Content format')).toHaveValue('json');
   });
 
+  it('defaults pretty-printed JSON with leading whitespace to the interactive tree view, not plain text', () => {
+    const { container } = render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.output.messages',
+            value: [{ role: 'assistant', content: `\n${JSON.stringify({ answer: 42 }, null, 2)}` }],
+          },
+        ])}
+      />
+    );
+    expect(container.querySelector('.GenAITab--json .json-markup-key')?.textContent).toContain('answer');
+    expect(screen.getByLabelText('Content format')).toHaveValue('json');
+  });
+
   it('persists the chosen format per attribute name, applying it to a later message from the same attribute', () => {
     const { unmount } = render(
       <GenAITab
