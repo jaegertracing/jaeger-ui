@@ -97,8 +97,8 @@ function MessageBlock({
   format: MessageFormat;
   onFormatChange: (format: MessageFormat) => void;
 }) {
-  const effectiveFormat =
-    format === 'markdown' && message.content.length > MARKDOWN_SIZE_LIMIT ? 'plain' : format;
+  const isOversized = message.content.length > MARKDOWN_SIZE_LIMIT;
+  const effectiveFormat = format === 'markdown' && isOversized ? 'plain' : format;
 
   return (
     <div className={`GenAITab--message GenAITab--message-${message.role || 'unknown'}`}>
@@ -108,11 +108,17 @@ function MessageBlock({
           <select
             className="GenAITab--formatSelect"
             aria-label="Content format"
-            value={format}
+            value={effectiveFormat}
             onChange={e => onFormatChange(e.target.value as MessageFormat)}
           >
             <option value="plain">Plain</option>
-            <option value="markdown">Markdown</option>
+            <option
+              value="markdown"
+              disabled={isOversized}
+              title={isOversized ? 'Markdown is disabled for messages over 150KB' : undefined}
+            >
+              Markdown{isOversized ? ' (too large)' : ''}
+            </option>
             <option value="json">JSON</option>
           </select>
           <CopyIcon copyText={message.content} tooltipTitle="Copy message" buttonText="Copy" />

@@ -126,6 +126,31 @@ describe('GenAITab', () => {
     expect(content?.querySelector('pre code')).toHaveTextContent('const x = 1;');
   });
 
+  it('falls back to plain text for a message over the markdown size limit, keeping the dropdown in sync', () => {
+    const oversizedContent = `**bold** ${'x'.repeat(150_001)}`;
+    const { container } = render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.output.messages',
+            value: [{ role: 'assistant', content: oversizedContent }],
+          },
+        ])}
+      />
+    );
+    const select = screen.getByLabelText('Content format') as HTMLSelectElement;
+    fireEvent.change(select, { target: { value: 'markdown' } });
+
+    // The dropdown must reflect what's actually rendered, not the stored preference -
+    // showing "Markdown" while the content renders as plain would be misleading.
+    expect(select).toHaveValue('plain');
+    const markdownOption = select.querySelector('option[value="markdown"]') as HTMLOptionElement;
+    expect(markdownOption.disabled).toBe(true);
+    const content = container.querySelector('.GenAITab--messageContent-plain');
+    expect(content?.tagName).toBe('PRE');
+    expect(content?.querySelector('strong')).toBeNull();
+  });
+
   it('defaults message content that parses as JSON to the interactive tree view, not plain or markdown', () => {
     const { container } = render(
       <GenAITab
