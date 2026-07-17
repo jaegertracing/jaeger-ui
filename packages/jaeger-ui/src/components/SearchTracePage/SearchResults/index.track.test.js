@@ -1,7 +1,7 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { trackAltView, CATEGORY_ALT_VIEW, EAltViewActions } from './index.track';
+import { trackAltView, trackSearchLatency, CATEGORY_ALT_VIEW, EAltViewActions } from './index.track';
 import * as trackingUtils from '../../../utils/tracking';
 
 describe('SearchResults tracking', () => {
@@ -24,5 +24,10 @@ describe('SearchResults tracking', () => {
       trackAltView(action);
       expect(trackEvent).toHaveBeenLastCalledWith(CATEGORY_ALT_VIEW, action);
     });
+  });
+
+  it('tracks search latency as a numeric value', () => {
+    trackSearchLatency(1234);
+    expect(trackEvent).toHaveBeenLastCalledWith('jaeger/ux/search/results', 'latency', 1234);
   });
 });
