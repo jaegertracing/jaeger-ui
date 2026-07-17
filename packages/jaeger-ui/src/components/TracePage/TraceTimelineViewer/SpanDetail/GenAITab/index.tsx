@@ -197,28 +197,27 @@ function ConversationSection({
   // Flattened into one ordered list (rather than three separate blocks) so each
   // message can get a stable, unique position number for its format dropdown's
   // accessible name - with per-role select elements otherwise indistinguishable
-  // to a screen reader when a conversation has multiple messages.
-  const messages: Array<{ key: string; message: GenAiMessage; attributeKey: string }> = [
-    ...(systemInstructions
-      ? [
-          {
-            key: 'system',
-            message: { role: 'system', content: systemInstructions },
-            attributeKey: 'gen_ai.system_instructions',
-          },
-        ]
-      : []),
-    ...inputMessages.map((message, i) => ({
-      key: `input-${i}`,
-      message,
-      attributeKey: 'gen_ai.input.messages',
-    })),
-    ...outputMessages.map((message, i) => ({
+  // to a screen reader when a conversation has multiple messages. Built via push
+  // rather than spread so each pushed object literal stays contextually typed
+  // against GenAiMessage's role union, instead of widening to a plain string.
+  const messages: Array<{ key: string; message: GenAiMessage; attributeKey: string }> = [];
+  if (systemInstructions) {
+    messages.push({
+      key: 'system',
+      message: { role: 'system', content: systemInstructions },
+      attributeKey: 'gen_ai.system_instructions',
+    });
+  }
+  inputMessages.forEach((message, i) => {
+    messages.push({ key: `input-${i}`, message, attributeKey: 'gen_ai.input.messages' });
+  });
+  outputMessages.forEach((message, i) => {
+    messages.push({
       key: `output-${i}`,
       message: { role: message.role || 'assistant', content: message.content },
       attributeKey: 'gen_ai.output.messages',
-    })),
-  ];
+    });
+  });
 
   return (
     <div className="GenAITab--section">
