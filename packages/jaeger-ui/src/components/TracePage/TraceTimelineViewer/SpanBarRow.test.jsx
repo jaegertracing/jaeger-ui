@@ -372,5 +372,28 @@ describe('<SpanBarRow>', () => {
       expect(container.querySelector('.SpanBarRow--spanTypeIcon')).not.toBeInTheDocument();
       expect(screen.getByRole('img', { name: 'LLM call' })).toBeInTheDocument();
     });
+
+    it('suppresses the generic namespace icon even when a GenAI span also carries http attributes, not just gen_ai ones (#4217)', () => {
+      // Regression case found by testing against a real trace: the root HTTP
+      // server span for a GenAI agent's own endpoint carries both gen_ai.* and
+      // real http.* attributes (http.request.method, http.response.status_code,
+      // etc.). Removing only the gen_ai entry from the generic icon's namespace
+      // map was not enough - the icon then fell through to http's globe icon
+      // instead, recreating the same double-icon bug with a different pair of
+      // icons. The generic icon must be suppressed for any GenAI-classified span
+      // regardless of what other namespaces it also has attributes from.
+      const span = {
+        ...defaultProps.span,
+        genAIKind: 'AGENT',
+        attributes: makeAttributes([
+          { key: 'gen_ai.operation.name', value: 'invoke_agent' },
+          { key: 'http.request.method', value: 'POST' },
+          { key: 'http.response.status_code', value: 200 },
+        ]),
+      };
+      const { container } = render(<SpanBarRow {...defaultProps} span={span} />);
+      expect(container.querySelector('.SpanBarRow--spanTypeIcon')).not.toBeInTheDocument();
+      expect(screen.getByRole('img', { name: 'Agent' })).toBeInTheDocument();
+    });
   });
 });
