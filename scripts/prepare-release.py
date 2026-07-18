@@ -74,10 +74,92 @@ def create_branch(version, dry_run=False):
     return branch_name
 
 def generate_release_notes():
-    print("Generating release notes via 'make changelog'...")
-    # Run make -s (silent) to suppress echoing commands, capturing only the script output
-    # Stream stderr (capture_stderr=False) to show progress bars from release-notes.py
-    return run_command(["make", "-s", "changelog"], capture_stderr=False)
+    print("Generating release notes via 'gh pr list'...")
+    
+    try:
+        last_tag = run_command(["git", "describe", "--tags", "--abbrev=0"])
+    except subprocess.CalledProcessError:
+        print("Error: Could not find previous tag.")
+        sys.exit(1)
+        
+    date_str = run_command(["git", "log", "-1", "--format=%cI", last_tag])
+    
+    prs_json = run_command([
+        "gh", "pr", "list", 
+        "--search", f"is:merged base:main merged:>{date_str}", 
+        "--limit", "1000", 
+        "--json", "number,title,author,labels"
+    ])
+    
+    prs = json.loads(prs_json)
+    
+    categories = {
+        'changelog:breaking-change': ('#### ⛔ Breaking Changes', []),
+        'changelog:new-feature': ('#### ✨ New Features', []),
+        'changelog:bugfix-or-minor-feature': ('#### 🐞 Bug fixes, Minor Improvements', []),
+        'changelog:experimental': ('#### 🚧 Experimental Features', []),
+        'changelog:ci': ('#### 👷 CI Improvements', []),
+        'changelog:refactoring': ('#### ⚙️ Refactoring', []),
+        'changelog:documentation': ('#### 📖 Documentation', []),
+    }
+    
+    uncategorized = []
+    commits_with_multiple_labels = []
+    skipped_dependabot = 0
+    
+    for pr in prs:
+        author_login = (pr.get('author') or {}).get('login', 'unknown')
+        
+        # Mimic --exclude-dependabot flag from original Makefile
+        if author_login == "app/dependabot":
+            skipped_dependabot += 1
+            continue
+            
+        labels = [l['name'] for l in pr.get('labels', []) if l['name'].startswith('changelog:')]
+        
+        # Skip if explicitly labeled to skip, test, or dependencies
+        if any(l in ('changelog:skip', 'changelog:test', 'changelog:dependencies') for l in labels):
+            continue
+            
+        # Warning for multiple labels like original script
+        if len(labels) > 1:
+            commits_with_multiple_labels.append((pr['number'], labels))
+            continue
+            
+        entry = f"* {pr['title']} (@{author_login} in #{pr['number']})"
+        
+        categorized = False
+        for label in labels:
+            if label in categories:
+                categories[label][1].append(entry)
+                categorized = True
+                break
+                
+        if not categorized:
+            uncategorized.append(entry)
+            
+    notes_lines = []
+    for label, (title, items) in categories.items():
+        if items:
+            notes_lines.append(title)
+            notes_lines.extend(items)
+            notes_lines.append("")
+            
+    if uncategorized:
+        notes_lines.append('#### 💩 Uncategorized')
+        notes_lines.extend(uncategorized)
+        notes_lines.append("")
+        
+    if commits_with_multiple_labels:
+        print("Warnings: Pull requests with more than one changelog label found. Please fix them:\n", file=sys.stderr)
+        for pull_id, labels in commits_with_multiple_labels:
+            print(f"Pull Request #{pull_id} associated with multiple changelog labels: {', '.join(labels)}", file=sys.stderr)
+        print("", file=sys.stderr)
+        
+    if skipped_dependabot:
+        print(f"(Skipped dependabot commits: {skipped_dependabot})")
+        
+    return "\n".join(notes_lines)
 
 def update_changelog(version, notes, dry_run=False):
     print("Updating CHANGELOG.md...")
@@ -151,7 +233,7 @@ def git_commit_and_pr(version, branch_name):
     
     print("Creating Pull Request...")
     pr_body = f"Prepare release {version}.\n\nAutomated release preparation."
-    run_command(["gh", "pr", "create", "--title", commit_msg, "--body", pr_body, "--label", "changelog:skip", "--head", branch_name], capture_stdout=False, capture_stderr=False)
+    run_command(["gh", "pr", "create", "--title", commit_msg, "--body", pr_body, "--label", "changelog:skip"], capture_stdout=False, capture_stderr=False)
 
 def main():
     parser = argparse.ArgumentParser(description="Prepare Jaeger UI release")
