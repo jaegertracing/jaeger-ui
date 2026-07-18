@@ -13,57 +13,32 @@ import {
   GenAiTokenUsage,
   GenAiToolCall,
 } from './genAiData';
+import {
+  MessageFormat,
+  MARKDOWN_SIZE_LIMIT,
+  readStoredMessageFormat,
+  writeStoredMessageFormat,
+  detectDefaultMessageFormat,
+} from './messageFormat';
 import AccordionAttributes from '../AccordionAttributes';
 import { sharedMarkdownOptions } from '../../../../../utils/markdownOptions';
 import jsonViewStyles from '../../../../../utils/jsonViewStyles';
 import CopyIcon from '../../../../common/CopyIcon';
-import storage from '../../../../../utils/storage';
 import type { IOtelSpan } from '../../../../../types/otel';
 
 import './index.css';
 
 type Props = { span: IOtelSpan };
 
-// Message text has no declared format in the OTel GenAI conventions - it can be prose,
-// Markdown, JSON, code, or a template. Per review discussion, the format is not assumed:
-// content that parses as JSON defaults to the tree view, everything else defaults to
-// plain text, and the user can override per attribute via the dropdown below. The
-// override is remembered per attribute name (not globally, and not per-message), so
-// e.g. a user's choice for gen_ai.output.messages applies to every output message.
-type MessageFormat = 'plain' | 'markdown' | 'json';
-
-const MESSAGE_FORMAT_STORAGE_PREFIX = 'jaeger.genaiTab.messageFormat.';
-
-// Above this length, Markdown parsing is skipped even if selected - avoids pathological
-// reflow/parse cost on huge attributes. Plain text and the JSON tree view have no such
-// cap since neither does Markdown's block-level reparsing.
-const MARKDOWN_SIZE_LIMIT = 150_000;
-
-// Lives in the parent (ConversationSection), not per-MessageBlock: a format choice for
-// an attribute name must apply to every currently-rendered message from that attribute
-// immediately, not just on that one message's own instance or a future remount.
-function useMessageFormatOverrides(): {
-  getFormat: (attributeKey: string, content: string) => MessageFormat;
-  setFormat: (attributeKey: string, format: MessageFormat) => void;
-} {
-  const [overrides, setOverrides] = useState<Partial<Record<string, MessageFormat>>>({});
-
-  const getFormat = (attributeKey: string, content: string): MessageFormat => {
-    const override = overrides[attributeKey];
-    if (override) return override;
-    const stored = storage.getString(MESSAGE_FORMAT_STORAGE_PREFIX + attributeKey);
-    if (stored === 'plain' || stored === 'markdown' || stored === 'json') return stored;
-    const parsed = tryParseJson(content);
-    return typeof parsed === 'object' && parsed !== null ? 'json' : 'plain';
-  };
-
-  const setFormat = (attributeKey: string, format: MessageFormat) => {
-    storage.set(MESSAGE_FORMAT_STORAGE_PREFIX + attributeKey, format);
-    setOverrides(prev => ({ ...prev, [attributeKey]: format }));
-  };
-
-  return { getFormat, setFormat };
-}
+// markdown-to-jsx only wraps its output in a block element (a <div>) once it has more
+// than one top-level child; a single short sentence with no other formatting compiles
+// to one inline node, which forceWrapper (see sharedMarkdownOptions) then wraps in a
+// bare <span> instead - and padding/margin on an inline element only shows at the very
+// start/end of the whole run, not around each wrapped line, so a one-paragraph message
+// renders with an indented first line and no padding on the rest. forceBlock makes the
+// compiler always parse content as a block (a <p>), which forceWrapper then always
+// wraps in a real <div>, giving every message the same block box our CSS assumes.
+const genAiMarkdownOptions = { ...sharedMarkdownOptions, forceBlock: true };
 
 function JsonBlock({ value }: { value: unknown }) {
   // Tool call arguments/results may arrive already parsed or as a JSON-encoded
@@ -100,7 +75,12 @@ function MessageBlock({
   messageNumber: number;
 }) {
   const isOversized = message.content.length > MARKDOWN_SIZE_LIMIT;
-  const effectiveFormat = format === 'markdown' && isOversized ? 'plain' : format;
+  // Parsed once and reused both for the JSON option's disabled state and for the
+  // JSON render branch below, instead of parsing the same string twice.
+  const parsedJson = tryParseJson(message.content);
+  const isValidJson = typeof parsedJson === 'object' && parsedJson !== null;
+  const effectiveFormat: MessageFormat =
+    (format === 'markdown' && isOversized) || (format === 'json' && !isValidJson) ? 'plain' : format;
 
   return (
     <div className={`GenAITab--message GenAITab--message-${message.role || 'unknown'}`}>
@@ -121,15 +101,21 @@ function MessageBlock({
             >
               Markdown{isOversized ? ' (too large)' : ''}
             </option>
-            <option value="json">JSON</option>
+            <option
+              value="json"
+              disabled={!isValidJson}
+              title={!isValidJson ? 'JSON is disabled - this content is not valid JSON' : undefined}
+            >
+              JSON{!isValidJson ? ' (not JSON)' : ''}
+            </option>
           </select>
           <CopyIcon copyText={message.content} tooltipTitle="Copy message" buttonText="Copy" />
         </div>
       </div>
       {effectiveFormat === 'json' ? (
-        <JsonBlock value={message.content} />
+        <JsonBlock value={parsedJson} />
       ) : effectiveFormat === 'markdown' ? (
-        <Markdown className="GenAITab--messageContent" options={sharedMarkdownOptions}>
+        <Markdown className="GenAITab--messageContent" options={genAiMarkdownOptions}>
           {message.content}
         </Markdown>
       ) : (
@@ -192,7 +178,19 @@ function ConversationSection({
   inputMessages: GenAiMessage[];
   outputMessages: GenAiMessage[];
 }) {
-  const { getFormat, setFormat } = useMessageFormatOverrides();
+  // In-memory overrides live here (ConversationSection), not in each MessageBlock
+  // instance: a format choice for an attribute name must apply to every
+  // currently-rendered message from that attribute immediately, not just on that one
+  // message's own instance or a future remount.
+  const [overrides, setOverrides] = useState<Partial<Record<string, MessageFormat>>>({});
+
+  const getFormat = (attributeKey: string, content: string): MessageFormat =>
+    overrides[attributeKey] ?? readStoredMessageFormat(attributeKey) ?? detectDefaultMessageFormat(content);
+
+  const setFormat = (attributeKey: string, format: MessageFormat) => {
+    writeStoredMessageFormat(attributeKey, format);
+    setOverrides(prev => ({ ...prev, [attributeKey]: format }));
+  };
 
   // Flattened into one ordered list (rather than three separate blocks) so each
   // message can get a stable, unique position number for its format dropdown's

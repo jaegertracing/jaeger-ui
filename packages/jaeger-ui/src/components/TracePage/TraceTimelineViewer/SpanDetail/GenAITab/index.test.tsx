@@ -110,6 +110,34 @@ describe('GenAITab', () => {
     expect(content?.textContent).not.toContain('**bold**');
   });
 
+  it('wraps a single-sentence markdown message in a real block element, not a bare inline span', () => {
+    // Regression test: markdown-to-jsx only wraps its compiled output in a block
+    // element once there is more than one top-level node. A short, single-sentence
+    // message with no other markdown formatting compiles to exactly one inline node,
+    // and without forceBlock the message content class lands on a bare <span> -
+    // padding on that inline element only shows at the start/end of the whole run,
+    // not around each wrapped line, producing an indented first line with no padding
+    // on the rest of the paragraph once it wraps.
+    const { container } = render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.output.messages',
+            value: [
+              { role: 'assistant', content: 'A single plain sentence with no markdown syntax at all.' },
+            ],
+          },
+        ])}
+      />
+    );
+    fireEvent.change(screen.getByLabelText(/Content format/), { target: { value: 'markdown' } });
+    const content = container.querySelector('.GenAITab--messageContent');
+    expect(content?.tagName).toBe('DIV');
+    expect(content?.querySelector('p')).toHaveTextContent(
+      'A single plain sentence with no markdown syntax at all.'
+    );
+  });
+
   it('renders a fenced code block once switched to Markdown, with the shared code styling', () => {
     const { container } = render(
       <GenAITab
@@ -179,6 +207,51 @@ describe('GenAITab', () => {
     );
     expect(container.querySelector('.GenAITab--json .json-markup-key')?.textContent).toContain('answer');
     expect(screen.getByLabelText(/Content format/)).toHaveValue('json');
+  });
+
+  it('disables the JSON option on a message whose content does not parse as JSON', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.output.messages',
+            value: [{ role: 'assistant', content: 'Just a plain sentence, no JSON here.' }],
+          },
+        ])}
+      />
+    );
+    const select = screen.getByLabelText(/Content format/) as HTMLSelectElement;
+    const jsonOption = select.querySelector('option[value="json"]') as HTMLOptionElement;
+    expect(jsonOption.disabled).toBe(true);
+  });
+
+  it('falls back to plain text on a message whose content is not valid JSON, even when the attribute-level preference is JSON, keeping the dropdown in sync', () => {
+    const { container } = render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.output.messages',
+            value: [
+              { role: 'assistant', content: JSON.stringify({ answer: 42 }) },
+              { role: 'assistant', content: 'This is plain prose, not JSON.' },
+            ],
+          },
+        ])}
+      />
+    );
+    const [firstSelect, secondSelect] = screen.getAllByLabelText(/Content format/) as HTMLSelectElement[];
+    // The format preference is stored per attribute name, not per message - explicitly
+    // selecting JSON on the first (valid-JSON) message sets that attribute-level
+    // preference, which the second message also picks up despite its own content not
+    // being JSON.
+    fireEvent.change(firstSelect, { target: { value: 'json' } });
+
+    expect(secondSelect).toHaveValue('plain');
+    const jsonOption = secondSelect.querySelector('option[value="json"]') as HTMLOptionElement;
+    expect(jsonOption.disabled).toBe(true);
+    const secondBlock = screen.getByText('This is plain prose, not JSON.').closest('.GenAITab--message');
+    expect(secondBlock?.querySelector('.GenAITab--messageContent-plain')).toBeInTheDocument();
+    expect(container.querySelectorAll('.GenAITab--json')).toHaveLength(1);
   });
 
   it('persists the chosen format per attribute name, applying it to a later message from the same attribute', () => {
