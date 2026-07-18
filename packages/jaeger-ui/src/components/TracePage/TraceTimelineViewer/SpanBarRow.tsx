@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useCallback } from 'react';
-import { Tag } from 'antd';
+import { Tag, Tooltip } from 'antd';
 import cx from 'classnames';
 import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward } from 'react-icons/io5';
 import ReferencesButton from './ReferencesButton';
@@ -198,13 +198,17 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
             </span>
             <small className="endpoint-name">{rpc ? rpc.operationName : operationName}</small>
             {pills.map(pill => (
-              <Tag
-                key={pill.label}
-                aria-label={`${pill.label}: ${pill.value}`}
-                className={cx('SpanBarRow--pill', { 'is-error': pill.isError })}
-              >
-                {pill.value}
-              </Tag>
+              <Tooltip key={pill.label} mouseEnterDelay={0} title={pill.label}>
+                {/* span keeps Tooltip trigger above .span-name::after hit area */}
+                <span className="SpanBarRow--pillWrap">
+                  <Tag
+                    aria-label={`${pill.label}: ${pill.value}`}
+                    className={cx('SpanBarRow--pill', { 'is-error': pill.isError })}
+                  >
+                    {pill.value}
+                  </Tag>
+                </span>
+              </Tooltip>
             ))}
           </a>
           {hasLinks && (
