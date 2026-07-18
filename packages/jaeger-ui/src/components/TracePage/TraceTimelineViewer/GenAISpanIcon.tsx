@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
+import { Tooltip } from 'antd';
 import { MdSmartToy, MdBolt, MdBuild, MdStorage, MdAutoAwesome } from 'react-icons/md';
 import type { IconType } from 'react-icons';
 import type { IOtelSpan, GenAISpanKind } from '../../../types/otel';
@@ -20,8 +21,10 @@ export function GenAISpanIcon({ span }: { span: IOtelSpan }): React.ReactElement
   if (kind === undefined) return null;
   const { icon: Icon, label } = KIND_META[kind] ?? KIND_META.UNKNOWN_GENAI;
   return (
-    <span role="img" aria-label={label} className="GenAISpanIcon">
-      <Icon aria-hidden="true" />
-    </span>
+    <Tooltip title={label}>
+      <span role="img" aria-label={label} className="GenAISpanIcon">
+        <Icon aria-hidden="true" />
+      </span>
+    </Tooltip>
   );
 }
