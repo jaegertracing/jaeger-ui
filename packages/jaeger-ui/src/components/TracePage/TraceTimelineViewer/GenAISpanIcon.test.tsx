@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { GenAISpanIcon } from './GenAISpanIcon';
 import type { IOtelSpan, GenAISpanKind } from '../../../types/otel';
 
@@ -44,5 +44,14 @@ describe('GenAISpanIcon', () => {
   it('falls back to the generic GenAI icon for an unrecognized genAIKind', () => {
     render(<GenAISpanIcon span={makeSpan('FUTURE_KIND' as GenAISpanKind)} />);
     expect(screen.getByRole('img', { name: 'GenAI span' })).toBeInTheDocument();
+  });
+
+  it('shows a hover tooltip explaining what the icon means (#4217)', async () => {
+    render(<GenAISpanIcon span={makeSpan('TOOL_CALL')} />);
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    fireEvent.mouseEnter(screen.getByRole('img', { name: 'Tool call' }));
+    await waitFor(() => {
+      expect(screen.getByRole('tooltip')).toHaveTextContent('Tool call');
+    });
   });
 });

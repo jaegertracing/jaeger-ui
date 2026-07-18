@@ -358,5 +358,19 @@ describe('<SpanBarRow>', () => {
       render(<SpanBarRow {...defaultProps} span={span} />);
       expect(screen.getByRole('img', { name: 'GenAI span' })).toBeInTheDocument();
     });
+
+    it('does not also render the generic namespace icon for a span with gen_ai attributes, only the kind-specific GenAISpanIcon (#4217)', () => {
+      const span = {
+        ...defaultProps.span,
+        genAIKind: 'LLM_CALL',
+        attributes: makeAttributes([{ key: 'gen_ai.system', value: 'openai' }]),
+      };
+      const { container } = render(<SpanBarRow {...defaultProps} span={span} />);
+      // getSpanIconComponent's generic namespace icon (aria-hidden, rendered via
+      // this class) must not appear alongside GenAISpanIcon's kind-specific icon -
+      // that combination was the reported double-sparkle/double-icon rendering.
+      expect(container.querySelector('.SpanBarRow--spanTypeIcon')).not.toBeInTheDocument();
+      expect(screen.getByRole('img', { name: 'LLM call' })).toBeInTheDocument();
+    });
   });
 });
