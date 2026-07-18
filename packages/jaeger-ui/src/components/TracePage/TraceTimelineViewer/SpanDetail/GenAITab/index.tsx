@@ -89,6 +89,7 @@ const TOKEN_LABELS: Partial<Record<keyof GenAiTokenUsage, string>> = {
 function TokensRow({ usage }: { usage: GenAiTokenUsage }) {
   return (
     <div className="GenAITab--tokens">
+      <span className="GenAITab--tokensPrefix">Tokens:</span>
       {(Object.keys(usage) as Array<keyof GenAiTokenUsage>).map(key => {
         const value = usage[key];
         if (value == null) return null;

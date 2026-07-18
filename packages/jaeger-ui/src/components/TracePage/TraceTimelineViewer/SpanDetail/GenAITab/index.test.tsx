@@ -44,6 +44,24 @@ describe('GenAITab', () => {
     expect(screen.getByText('20')).toBeInTheDocument();
   });
 
+  it('prefixes the token usage row with "Tokens:" so the numbers are labeled as a group (#4219)', () => {
+    const { container } = render(
+      <GenAITab
+        span={makeSpan([
+          { key: 'gen_ai.usage.input_tokens', value: 100 },
+          { key: 'gen_ai.usage.output_tokens', value: 50 },
+        ])}
+      />
+    );
+    const prefix = screen.getByText('Tokens:');
+    expect(prefix).toBeInTheDocument();
+    expect(prefix).toHaveClass('GenAITab--tokensPrefix');
+    // The prefix must actually lead the row, not just be present somewhere on
+    // the page - assert it precedes the Input/Output items in document order.
+    const tokensRow = container.querySelector('.GenAITab--tokens');
+    expect(tokensRow?.firstElementChild).toBe(prefix);
+  });
+
   it('renders a zero input token count, not treating it as missing', () => {
     render(<GenAITab span={makeSpan([{ key: 'gen_ai.usage.input_tokens', value: 0 }])} />);
     expect(screen.getByText('Input')).toBeInTheDocument();
