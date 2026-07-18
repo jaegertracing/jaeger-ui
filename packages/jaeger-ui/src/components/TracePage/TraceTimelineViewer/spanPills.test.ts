@@ -4,7 +4,7 @@
 import { renderHook } from '@testing-library/react';
 
 import transformTraceData from '../../../model/transform-trace-data';
-import { IOtelSpan } from '../../../types/otel';
+import { AttributeValue, IOtelSpan } from '../../../types/otel';
 import { getSpanPillsForSpan, useSpanPillsEnabled } from './spanPills';
 import { makeAttributes } from '../../../model/attributes';
 
@@ -14,7 +14,7 @@ vi.mock('../../../hooks/useConfig', () => ({
   useConfig: mockUseConfig,
 }));
 
-function makeSpan(attributes: { key: string; value: string }[]): IOtelSpan {
+function makeSpan(attributes: ReadonlyArray<{ key: string; value: AttributeValue }>): IOtelSpan {
   return {
     spanID: 's1',
     attributes: makeAttributes(attributes),
@@ -106,7 +106,7 @@ describe('spanPills', () => {
       ]);
     });
 
-    it('returns multiple hardcoded pills in source order', () => {
+    it('returns multiple default pills in source order', () => {
       const span = makeSpan([
         { key: 'http.method', value: 'GET' },
         { key: 'http.status_code', value: '200' },
@@ -145,10 +145,22 @@ describe('spanPills', () => {
       ]);
     });
 
-    it('maps span.kind pill', () => {
-      expect(getSpanPillsForSpan(makeSpan([{ key: 'span.kind', value: 'server' }]))).toEqual([
-        { label: 'span.kind', value: 'server' },
+    it('formats non-string attribute values', () => {
+      expect(getSpanPillsForSpan(makeSpan([{ key: 'http.status_code', value: 404 }]))).toEqual([
+        { label: 'http.status_code', value: '404' },
       ]);
+      expect(getSpanPillsForSpan(makeSpan([{ key: 'http.status_code', value: 503 }]))).toEqual([
+        { label: 'http.status_code', value: '503', isError: true },
+      ]);
+      expect(getSpanPillsForSpan(makeSpan([{ key: 'db.system', value: ['mysql', 'postgres'] }]))).toEqual([
+        { label: 'db.system', value: '["mysql","postgres"]' },
+      ]);
+      expect(getSpanPillsForSpan(makeSpan([{ key: 'rpc.system', value: { name: 'grpc' } }]))).toEqual([
+        { label: 'rpc.system', value: '{"name":"grpc"}' },
+      ]);
+      expect(getSpanPillsForSpan(makeSpan([{ key: 'db.system', value: new Uint8Array([1, 2, 3]) }]))).toEqual(
+        [{ label: 'db.system', value: '[1,2,3]' }]
+      );
     });
   });
 

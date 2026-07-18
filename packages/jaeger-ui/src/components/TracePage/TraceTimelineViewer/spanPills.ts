@@ -12,8 +12,7 @@ type IPillSource = {
   isError?: (value: string) => boolean;
 };
 
-// PR2: hardcoded OTel semantic-convention pills. User-selectable fields come later.
-const HARDCODED_PILL_SOURCES: readonly IPillSource[] = [
+const DEFAULT_PILL_SOURCES: readonly IPillSource[] = [
   {
     label: 'http.status_code',
     attrKeys: ['http.status_code', 'http.response.status_code'],
@@ -28,7 +27,6 @@ const HARDCODED_PILL_SOURCES: readonly IPillSource[] = [
   },
   { label: 'db.system', attrKeys: ['db.system'] },
   { label: 'rpc.system', attrKeys: ['rpc.system'] },
-  { label: 'span.kind', attrKeys: ['span.kind'] },
 ];
 
 function safeStringify(value: object): string {
@@ -77,7 +75,7 @@ function pillFromSource(span: IOtelSpan, source: IPillSource): ISpanPill | undef
 /** Builds pills for a single span. Owns which attributes become pills; callers do not. */
 export function getSpanPillsForSpan(span: IOtelSpan): ISpanPill[] {
   const pills: ISpanPill[] = [];
-  for (const source of HARDCODED_PILL_SOURCES) {
+  for (const source of DEFAULT_PILL_SOURCES) {
     const pill = pillFromSource(span, source);
     if (pill) {
       pills.push(pill);
