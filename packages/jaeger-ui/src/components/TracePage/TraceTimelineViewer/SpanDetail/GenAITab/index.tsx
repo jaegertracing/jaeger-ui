@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useMemo, useState } from 'react';
+import Markdown from 'markdown-to-jsx/react';
 import { JsonView, allExpanded, collapseAllNested } from 'react-json-view-lite';
 
 import {
@@ -12,7 +13,9 @@ import {
   GenAiTokenUsage,
   GenAiToolCall,
 } from './genAiData';
+import { MessageFormat, useMessageFormatStore } from './message-format-store';
 import AccordionAttributes from '../AccordionAttributes';
+import { sharedMarkdownOptions } from '../../../../../utils/markdownOptions';
 import jsonViewStyles from '../../../../../utils/jsonViewStyles';
 import CopyIcon from '../../../../common/CopyIcon';
 import type { IOtelSpan } from '../../../../../types/otel';
@@ -21,19 +24,20 @@ import './index.css';
 
 type Props = { span: IOtelSpan };
 
-function MessageBlock({ message, index }: { message: GenAiMessage; index: number }) {
-  return (
-    <div className={`GenAITab--message GenAITab--message-${message.role || 'unknown'}`}>
-      <div className="GenAITab--messageHeader">
-        <span className="GenAITab--messageRole">{message.role || 'message'}</span>
-        <CopyIcon copyText={message.content} tooltipTitle="Copy message" buttonText="Copy" />
-      </div>
-      <pre className="GenAITab--messageContent" data-testid={`genai-message-${index}`}>
-        {message.content}
-      </pre>
-    </div>
-  );
-}
+// Above this length, Markdown parsing is skipped even if selected - avoids pathological
+// reflow/parse cost on huge attributes. Plain text and the JSON tree view have no such
+// cap since neither does Markdown's block-level reparsing.
+const MARKDOWN_SIZE_LIMIT = 150_000;
+
+// markdown-to-jsx only wraps its output in a block element (a <div>) once it has more
+// than one top-level child; a single short sentence with no other formatting compiles
+// to one inline node, which forceWrapper (see sharedMarkdownOptions) then wraps in a
+// bare <span> instead - and padding/margin on an inline element only shows at the very
+// start/end of the whole run, not around each wrapped line, so a one-paragraph message
+// renders with an indented first line and no padding on the rest. forceBlock makes the
+// compiler always parse content as a block (a <p>), which forceWrapper then always
+// wraps in a real <div>, giving every message the same block box our CSS assumes.
+const genAiMarkdownOptions = { ...sharedMarkdownOptions, forceBlock: true };
 
 function JsonBlock({ value }: { value: unknown }) {
   // Tool call arguments/results may arrive already parsed or as a JSON-encoded
@@ -54,6 +58,73 @@ function JsonBlock({ value }: { value: unknown }) {
         shouldExpandNode={isSmall ? allExpanded : collapseAllNested}
         style={jsonViewStyles}
       />
+    </div>
+  );
+}
+
+function MessageBlock({
+  message,
+  formatOverride,
+  onFormatChange,
+  messageNumber,
+}: {
+  message: GenAiMessage;
+  // User's chosen format that overrides the content-derived default; null to use the default.
+  formatOverride: MessageFormat | null;
+  onFormatChange: (format: MessageFormat) => void;
+  messageNumber: number;
+}) {
+  const parsedJson = useMemo(() => tryParseJson(message.content), [message.content]);
+  // Each view can only render content it supports; a requested view that can't falls back to plain.
+  const canRender: Record<MessageFormat, boolean> = {
+    plain: true,
+    markdown: message.content.length <= MARKDOWN_SIZE_LIMIT,
+    json: parsedJson !== null && typeof parsedJson === 'object',
+  };
+  // If no user override passed then JSON-parseable content defaults to the tree view,
+  // else plain text (Markdown is only opt-in).
+  const requestedFormat: MessageFormat = formatOverride ?? (canRender.json ? 'json' : 'plain');
+  const effectiveFormat: MessageFormat = canRender[requestedFormat] ? requestedFormat : 'plain';
+
+  return (
+    <div className={`GenAITab--message GenAITab--message-${message.role || 'unknown'}`}>
+      <div className="GenAITab--messageHeader">
+        <span className="GenAITab--messageRole">{message.role || 'message'}</span>
+        <div className="GenAITab--messageHeaderActions">
+          <select
+            className="GenAITab--formatSelect"
+            aria-label={`Content format for message ${messageNumber} (${message.role || 'message'})`}
+            value={effectiveFormat}
+            onChange={e => onFormatChange(e.target.value as MessageFormat)}
+          >
+            <option value="plain">Plain</option>
+            <option
+              value="markdown"
+              disabled={!canRender.markdown}
+              title={canRender.markdown ? undefined : 'Markdown is disabled for messages over 150KB'}
+            >
+              Markdown{canRender.markdown ? '' : ' (too large)'}
+            </option>
+            <option
+              value="json"
+              disabled={!canRender.json}
+              title={canRender.json ? undefined : 'JSON is disabled - this content is not valid JSON'}
+            >
+              JSON{canRender.json ? '' : ' (not JSON)'}
+            </option>
+          </select>
+          <CopyIcon copyText={message.content} tooltipTitle="Copy message" buttonText="Copy" />
+        </div>
+      </div>
+      {effectiveFormat === 'json' ? (
+        <JsonBlock value={parsedJson} />
+      ) : effectiveFormat === 'markdown' ? (
+        <Markdown className="GenAITab--messageContent" options={genAiMarkdownOptions}>
+          {message.content}
+        </Markdown>
+      ) : (
+        <pre className="GenAITab--messageContent GenAITab--messageContent-plain">{message.content}</pre>
+      )}
     </div>
   );
 }
@@ -112,20 +183,50 @@ function ConversationSection({
   inputMessages: GenAiMessage[];
   outputMessages: GenAiMessage[];
 }) {
+  // Format overrides are store subscribers, not local state - a choice for an attribute
+  // name applies to every currently-rendered message from that attribute immediately, and
+  // useMessageFormatStore.overrides already merges in-memory and persisted state, so there's
+  // no separate read-then-merge step here.
+  const overrides = useMessageFormatStore(state => state.overrides);
+  const setFormat = useMessageFormatStore(state => state.setFormat);
+
+  const getFormatOverride = (attributeKey: string): MessageFormat | null => overrides[attributeKey] ?? null;
+
+  // Flattened into one ordered list (rather than three separate blocks) so each
+  // message can get a stable, unique position number for its format dropdown's
+  // accessible name - with per-role select elements otherwise indistinguishable
+  // to a screen reader when a conversation has multiple messages. Built via push
+  // rather than spread so each pushed object literal stays contextually typed
+  // against GenAiMessage's role union, instead of widening to a plain string.
+  const messages: Array<{ key: string; message: GenAiMessage; attributeKey: string }> = [];
+  if (systemInstructions) {
+    messages.push({
+      key: 'system',
+      message: { role: 'system', content: systemInstructions },
+      attributeKey: 'gen_ai.system_instructions',
+    });
+  }
+  inputMessages.forEach((message, i) => {
+    messages.push({ key: `input-${i}`, message, attributeKey: 'gen_ai.input.messages' });
+  });
+  outputMessages.forEach((message, i) => {
+    messages.push({
+      key: `output-${i}`,
+      message: { role: message.role || 'assistant', content: message.content },
+      attributeKey: 'gen_ai.output.messages',
+    });
+  });
+
   return (
     <div className="GenAITab--section">
       <h3 className="GenAITab--sectionTitle">Conversation</h3>
-      {systemInstructions && (
-        <MessageBlock message={{ role: 'system', content: systemInstructions }} index={-1} />
-      )}
-      {inputMessages.map((message, i) => (
-        <MessageBlock key={`input-${i}`} message={message} index={i} />
-      ))}
-      {outputMessages.map((message, i) => (
+      {messages.map(({ key, message, attributeKey }, i) => (
         <MessageBlock
-          key={`output-${i}`}
-          message={{ role: message.role || 'assistant', content: message.content }}
-          index={inputMessages.length + i}
+          key={key}
+          message={message}
+          formatOverride={getFormatOverride(attributeKey)}
+          onFormatChange={f => setFormat(attributeKey, f)}
+          messageNumber={i + 1}
         />
       ))}
     </div>
