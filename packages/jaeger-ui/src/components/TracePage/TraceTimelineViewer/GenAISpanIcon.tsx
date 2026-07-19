@@ -3,18 +3,25 @@
 
 import * as React from 'react';
 import { Tooltip } from 'antd';
-import { MdSmartToy, MdBuild, MdStorage, MdAutoAwesome } from 'react-icons/md';
-import { RiGraduationCapFill } from 'react-icons/ri';
+// Icons are aliased by their intended purpose so swapping a glyph only touches
+// these imports, not the KIND_META table below.
+import {
+  MdSmartToy as AgentIcon,
+  MdBuild as ToolCallIcon,
+  MdStorage as RetrievalIcon,
+  MdAutoAwesome as GenericGenAIIcon,
+} from 'react-icons/md';
+import { RiGraduationCapFill as LLMCallIcon } from 'react-icons/ri';
 import type { IconType } from 'react-icons';
 import type { IOtelSpan, GenAISpanKind } from '../../../types/otel';
 import './GenAISpanIcon.css';
 
 const KIND_META: Record<GenAISpanKind, { icon: IconType; label: string }> = {
-  AGENT: { icon: MdSmartToy, label: 'AI Agent' },
-  LLM_CALL: { icon: RiGraduationCapFill, label: 'LLM call' },
-  TOOL_CALL: { icon: MdBuild, label: 'MCP Tool call' },
-  RETRIEVAL: { icon: MdStorage, label: 'Retrieval' },
-  UNKNOWN_GENAI: { icon: MdAutoAwesome, label: 'GenAI span' },
+  AGENT: { icon: AgentIcon, label: 'AI Agent' },
+  LLM_CALL: { icon: LLMCallIcon, label: 'LLM call' },
+  TOOL_CALL: { icon: ToolCallIcon, label: 'MCP Tool call' },
+  RETRIEVAL: { icon: RetrievalIcon, label: 'Retrieval' },
+  UNKNOWN_GENAI: { icon: GenericGenAIIcon, label: 'GenAI span' },
 };
 
 export function GenAISpanIcon({ span }: { span: IOtelSpan }): React.ReactElement | null {
