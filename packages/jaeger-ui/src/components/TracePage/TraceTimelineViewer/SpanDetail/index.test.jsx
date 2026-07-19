@@ -210,19 +210,29 @@ describe('<SpanDetail>', () => {
     expect(heading).toHaveTextContent(span.name);
   });
 
-  it('renders overview items with service name, duration and start time labels', () => {
+  it('renders overview items with service name, kind, duration and start time labels', () => {
     render(<SpanDetail {...props} />);
 
     const labeledList = screen.getByTestId('labeled-list');
     expect(labeledList).toBeInTheDocument();
 
     expect(screen.getByTestId('item-svc')).toBeInTheDocument();
+    expect(screen.getByTestId('item-kind')).toBeInTheDocument();
     expect(screen.getByTestId('item-duration')).toBeInTheDocument();
     expect(screen.getByTestId('item-start')).toBeInTheDocument();
 
     expect(screen.getByTestId('item-svc')).toHaveTextContent('Service:');
+    expect(screen.getByTestId('item-kind')).toHaveTextContent('Kind:');
     expect(screen.getByTestId('item-duration')).toHaveTextContent('Duration:');
     expect(screen.getByTestId('item-start')).toHaveTextContent('Start Time:');
+  });
+
+  it('displays span kind as a lowercase badge in the overview', () => {
+    render(<SpanDetail {...props} />);
+    const kindItem = screen.getByTestId('item-kind');
+    const badge = kindItem.querySelector('.SpanDetail--kindBadge');
+    expect(badge).toBeInTheDocument();
+    expect(badge.textContent).toBe(span.kind.toLowerCase());
   });
 
   it('renders span tags accordian and triggers toggle callback with span ID', () => {

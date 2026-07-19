@@ -7,6 +7,15 @@ SPDX-License-Identifier: Apache-2.0
   background: var(--border-default);
 }
 
+.SpanDetail--kindBadge {
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 3px;
+  font-size: 0.8em;
+  font-weight: 500;
+  padding: 0.1em 0.4em;
+}
+
 .SpanDetail--debugInfo {
   display: block;
   letter-spacing: 0.25px;
