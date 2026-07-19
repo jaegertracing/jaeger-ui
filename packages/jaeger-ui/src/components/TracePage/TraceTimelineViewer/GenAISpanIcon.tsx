@@ -3,15 +3,16 @@
 
 import * as React from 'react';
 import { Tooltip } from 'antd';
-import { MdSmartToy, MdBolt, MdBuild, MdStorage, MdAutoAwesome } from 'react-icons/md';
+import { MdSmartToy, MdBuild, MdStorage, MdAutoAwesome } from 'react-icons/md';
+import { RiGraduationCapFill } from 'react-icons/ri';
 import type { IconType } from 'react-icons';
 import type { IOtelSpan, GenAISpanKind } from '../../../types/otel';
 import './GenAISpanIcon.css';
 
 const KIND_META: Record<GenAISpanKind, { icon: IconType; label: string }> = {
-  AGENT: { icon: MdSmartToy, label: 'Agent' },
-  LLM_CALL: { icon: MdBolt, label: 'LLM call' },
-  TOOL_CALL: { icon: MdBuild, label: 'Tool call' },
+  AGENT: { icon: MdSmartToy, label: 'AI Agent' },
+  LLM_CALL: { icon: RiGraduationCapFill, label: 'LLM call' },
+  TOOL_CALL: { icon: MdBuild, label: 'MCP Tool call' },
   RETRIEVAL: { icon: MdStorage, label: 'Retrieval' },
   UNKNOWN_GENAI: { icon: MdAutoAwesome, label: 'GenAI span' },
 };

@@ -23,12 +23,12 @@ describe('GenAISpanIcon', () => {
 
   it('renders a tool call icon for genAIKind=TOOL_CALL', () => {
     render(<GenAISpanIcon span={makeSpan('TOOL_CALL')} />);
-    expect(screen.getByRole('img', { name: 'Tool call' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'MCP Tool call' })).toBeInTheDocument();
   });
 
   it('renders an agent icon for genAIKind=AGENT', () => {
     render(<GenAISpanIcon span={makeSpan('AGENT')} />);
-    expect(screen.getByRole('img', { name: 'Agent' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'AI Agent' })).toBeInTheDocument();
   });
 
   it('renders a retrieval icon for genAIKind=RETRIEVAL', () => {
@@ -49,9 +49,9 @@ describe('GenAISpanIcon', () => {
   it('shows a hover tooltip explaining what the icon means (#4217)', async () => {
     render(<GenAISpanIcon span={makeSpan('TOOL_CALL')} />);
     expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
-    fireEvent.mouseEnter(screen.getByRole('img', { name: 'Tool call' }));
+    fireEvent.mouseEnter(screen.getByRole('img', { name: 'MCP Tool call' }));
     await waitFor(() => {
-      expect(screen.getByRole('tooltip')).toHaveTextContent('Tool call');
+      expect(screen.getByRole('tooltip')).toHaveTextContent('MCP Tool call');
     });
   });
 });
