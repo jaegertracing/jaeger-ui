@@ -119,7 +119,14 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
     resource: { serviceName },
   } = span;
   const pills = spanPillsEnabled ? getSpanPillsForSpan(span) : [];
-  const SpanTypeIcon = getSpanIconComponent(attributes);
+  // A span classified as GenAI (agent/LLM call/tool call/retrieval/etc.) already
+  // renders exactly one icon via GenAISpanIcon below. Suppress the generic
+  // namespace icon entirely for such spans, not just its gen_ai entry - a GenAI
+  // span commonly also carries http/db/messaging attributes (e.g. the root HTTP
+  // server span for an agent's own endpoint), and without this check the generic
+  // icon would fall through to whichever of those namespaces is left, recreating
+  // the same double-icon problem with a different second icon (#4217).
+  const SpanTypeIcon = span.genAIKind === undefined ? getSpanIconComponent(attributes) : null;
   const label = formatDurationCompact(duration);
   const viewBounds = getViewedBounds(span.startTime, span.endTime);
   const viewStart = viewBounds.start;
