@@ -2,12 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { TVertex } from '@jaegertracing/plexus/lib/types';
+import { KeyValuePair } from '../../types/trace';
 
 import PathElem from './PathElem';
 
 export { default as PathElem } from './PathElem';
-
-import type { KeyValuePair } from '../../types/trace';
 
 export enum EViewModifier {
   None,
