@@ -36,3 +36,15 @@ lint:
 .PHONY: test
 test:
 	pnpm run test
+
+.PHONY: build
+build:
+	pnpm run build
+
+.PHONY: coverage
+coverage:
+	pnpm run coverage
+
+.PHONY: depcheck
+depcheck:
+	pnpm run depcheck
