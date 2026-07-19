@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useCallback } from 'react';
-import { Tag } from 'antd';
-import cx from 'classnames';
 import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward } from 'react-icons/io5';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
@@ -16,7 +14,7 @@ import Ticks from './Ticks';
 import { TNil } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan } from '../../../types/otel';
-import { getSpanPillsForSpan } from './spanPills';
+import { getSpanPillsForSpan, SpanPill } from './spanPills';
 
 import { getSpanIconComponent } from './span-icons';
 
@@ -205,13 +203,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
             </span>
             <small className="endpoint-name">{rpc ? rpc.operationName : operationName}</small>
             {pills.map(pill => (
-              <Tag
-                key={pill.label}
-                aria-label={`${pill.label}: ${pill.value}`}
-                className={cx('SpanBarRow--pill', { 'is-error': pill.isError })}
-              >
-                {pill.value}
-              </Tag>
+              <SpanPill key={pill.label} pill={pill} />
             ))}
           </a>
           {hasLinks && (

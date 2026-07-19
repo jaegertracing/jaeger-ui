@@ -316,6 +316,21 @@ describe('<SpanBarRow>', () => {
       expect(screen.getByLabelText('http.status_code: 200')).toBeInTheDocument();
       expect(screen.getByLabelText('http.method: GET')).toBeInTheDocument();
     });
+
+    it('shows pill.label as a tooltip on hover', async () => {
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          spanPillsEnabled
+          span={{
+            ...defaultProps.span,
+            attributes: makeAttributes([{ key: 'http.status_code', value: '200' }]),
+          }}
+        />
+      );
+      fireEvent.mouseEnter(screen.getByLabelText('http.status_code: 200').parentElement);
+      expect(await screen.findByRole('tooltip')).toHaveTextContent('http.status_code');
+    });
   });
 
   it('sets longLabel and hintSide to right when viewStart <= 1 - viewEnd', () => {
