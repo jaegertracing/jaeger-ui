@@ -1,6 +1,10 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+import React from 'react';
+import { Tag, Tooltip } from 'antd';
+import cx from 'classnames';
+
 import { useConfig } from '../../../hooks/useConfig';
 import { AttributeValue, IOtelSpan } from '../../../types/otel';
 
@@ -87,4 +91,21 @@ export function getSpanPillsForSpan(span: IOtelSpan): ISpanPill[] {
 /** Enabled unless explicitly disabled via config (default on). */
 export function useSpanPillsEnabled(): boolean {
   return useConfig().traceTimeline?.spanPillsEnabled !== false;
+}
+
+/** Renders a single span pill with its attribute-key tooltip. */
+export function SpanPill({ pill }: { pill: ISpanPill }) {
+  return (
+    <Tooltip mouseEnterDelay={0} title={pill.label}>
+      {/* span keeps Tooltip trigger above .span-name::after hit area */}
+      <span className="SpanBarRow--pillWrap">
+        <Tag
+          aria-label={`${pill.label}: ${pill.value}`}
+          className={cx('SpanBarRow--pill', { 'is-error': pill.isError })}
+        >
+          {pill.value}
+        </Tag>
+      </span>
+    </Tooltip>
+  );
 }
