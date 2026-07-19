@@ -21,7 +21,7 @@ describe('useMessageFormatStore', () => {
 
   it('setFormat persists to localStorage under the attribute-scoped key', () => {
     useMessageFormatStore.getState().setFormat('gen_ai.output.messages', 'json');
-    expect(localStorage.getItem('jaeger.genaiTab.messageFormat.gen_ai.output.messages')).toBe('"json"');
+    expect(localStorage.getItem('jaeger.spanDetail.attributeFormat.gen_ai.output.messages')).toBe('"json"');
   });
 
   it('setFormat keeps overrides for other attribute names untouched', () => {
@@ -52,14 +52,14 @@ describe('getInitialState — localStorage-driven initialization', () => {
   });
 
   it('hydrates a stored override for a known attribute key', () => {
-    localStorage.setItem('jaeger.genaiTab.messageFormat.gen_ai.input.messages', '"json"');
+    localStorage.setItem('jaeger.spanDetail.attributeFormat.gen_ai.input.messages', '"json"');
     expect(getInitialState().overrides).toEqual({ 'gen_ai.input.messages': 'json' });
   });
 
   it('hydrates stored overrides for all three known attribute keys', () => {
-    localStorage.setItem('jaeger.genaiTab.messageFormat.gen_ai.system_instructions', '"plain"');
-    localStorage.setItem('jaeger.genaiTab.messageFormat.gen_ai.input.messages', '"markdown"');
-    localStorage.setItem('jaeger.genaiTab.messageFormat.gen_ai.output.messages', '"json"');
+    localStorage.setItem('jaeger.spanDetail.attributeFormat.gen_ai.system_instructions', '"plain"');
+    localStorage.setItem('jaeger.spanDetail.attributeFormat.gen_ai.input.messages', '"markdown"');
+    localStorage.setItem('jaeger.spanDetail.attributeFormat.gen_ai.output.messages', '"json"');
     expect(getInitialState().overrides).toEqual({
       'gen_ai.system_instructions': 'plain',
       'gen_ai.input.messages': 'markdown',
@@ -68,7 +68,7 @@ describe('getInitialState — localStorage-driven initialization', () => {
   });
 
   it('ignores an invalid stored value', () => {
-    localStorage.setItem('jaeger.genaiTab.messageFormat.gen_ai.input.messages', '"not-a-format"');
+    localStorage.setItem('jaeger.spanDetail.attributeFormat.gen_ai.input.messages', '"not-a-format"');
     expect(getInitialState().overrides).toEqual({});
   });
 });

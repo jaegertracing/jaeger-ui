@@ -5,7 +5,7 @@ import { create } from 'zustand';
 import storage from '../../../../../utils/storage';
 import type { MessageFormat } from './messageFormat';
 
-const MESSAGE_FORMAT_STORAGE_PREFIX = 'jaeger.genaiTab.messageFormat.';
+const MESSAGE_FORMAT_STORAGE_PREFIX = 'jaeger.spanDetail.attributeFormat.';
 
 // The closed set of attribute names ConversationSection assigns a format preference to.
 // Listed here (rather than derived at runtime) so the store can hydrate synchronously at
@@ -30,6 +30,9 @@ type MessageFormatStore = {
   setFormat: (attributeKey: string, format: MessageFormat) => void;
 };
 
+// Exported only so tests can exercise the localStorage hydration path directly:
+// create() runs once at module load, so the initialization branch is otherwise
+// hard to reach after seeding localStorage. The store itself uses it internally below.
 export function getInitialState(): Pick<MessageFormatStore, 'overrides'> {
   const overrides: Partial<Record<string, MessageFormat>> = {};
   MESSAGE_FORMAT_ATTRIBUTE_KEYS.forEach(attributeKey => {
