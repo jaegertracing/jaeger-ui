@@ -2,15 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import cx from 'classnames';
 import { useDispatch, useSelector } from 'react-redux';
 import _isEqual from 'lodash/isEqual';
-import _groupBy from 'lodash/groupBy';
 
 import memoizeOne from 'memoize-one';
 import type { Location, NavigateFunction } from 'react-router-dom';
 import { actions } from './duck';
+import { makeCriticalPathContext } from './criticalPath';
 import generateRowStates, { RowState } from './generateRowStates';
 import ListView from './ListView';
 import PrunedSpanRow from './PrunedSpanRow';
@@ -32,7 +32,7 @@ import getLinks from '../../../model/link-patterns';
 import colorGenerator from '../../../utils/color-generator';
 import { TNil, ReduxState } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
-import { IOtelSpan, IOtelTrace, IAttribute, IEvent } from '../../../types/otel';
+import { IOtelSpan, IOtelTrace, IAttributes, IEvent } from '../../../types/otel';
 import TTraceTimeline from '../../../types/TTraceTimeline';
 import { getSelectedSpanID, useLayoutPrefsStore, useTraceTimelineStore } from './store';
 
@@ -49,6 +49,7 @@ type TVirtualizedTraceViewOwnProps = {
   registerAccessors: (accesors: Accessors) => void;
   trace: IOtelTrace;
   criticalPath: CriticalPathSection[];
+  spanPillsEnabled: boolean;
   useOtelTerms: boolean;
 };
 
@@ -114,138 +115,9 @@ function getCssClasses(currentViewRange: [number, number]) {
   });
 }
 
-function mergeChildrenCriticalPath(
-  trace: IOtelTrace,
-  spanID: string,
-  criticalPath: CriticalPathSection[]
-): CriticalPathSection[] {
-  if (!criticalPath) {
-    return [];
-  }
-  // Define an array to store the IDs of the span and its descendants (if the span is collapsed)
-  const allRequiredSpanIds = new Set<string>([spanID]);
-
-  // Use pre-built spanMap
-  const spanMap = trace.spanMap;
-
-  // If the span is collapsed, recursively find all of its descendants.
-  const findAllDescendants = (span: IOtelSpan) => {
-    if (span.hasChildren && span.childSpans.length > 0) {
-      span.childSpans.forEach(child => {
-        allRequiredSpanIds.add(child.spanID);
-        findAllDescendants(child);
-      });
-    }
-  };
-
-  // Start from the initially selected span
-  const startingSpan = spanMap.get(spanID);
-  if (startingSpan) {
-    findAllDescendants(startingSpan);
-  }
-
-  const criticalPathSections: CriticalPathSection[] = [];
-  criticalPath.forEach(each => {
-    if (allRequiredSpanIds.has(each.spanID)) {
-      if (criticalPathSections.length !== 0 && each.sectionEnd === criticalPathSections[0].sectionStart) {
-        // Merge Critical Paths if they are consecutive
-        criticalPathSections[0].sectionStart = each.sectionStart;
-      } else {
-        criticalPathSections.unshift({ ...each });
-      }
-    }
-  });
-
-  return criticalPathSections;
-}
-
 const memoizedGenerateRowStates = memoizeOne(generateRowStatesFromTrace);
 const memoizedViewBoundsFunc = memoizeOne(createViewedBoundsFunc, _isEqual);
 const memoizedGetCssClasses = memoizeOne(getCssClasses, _isEqual);
-const memoizedCriticalPathsBySpanID = memoizeOne((criticalPath: CriticalPathSection[]) =>
-  _groupBy(criticalPath, x => x.spanID)
-);
-
-/**
- * Precompute bubbled critical path sections for all parents with pruned children.
- * Returns a map from parent spanID → merged critical path sections from pruned subtrees.
- * Memoized so it runs once per render cycle (when criticalPath/prunedServices/spans change).
- */
-const memoizedPrunedCriticalPaths = memoizeOne(
-  (
-    criticalPath: CriticalPathSection[],
-    prunedServices: Set<string>,
-    spans: ReadonlyArray<IOtelSpan>
-  ): Map<string, CriticalPathSection[]> => {
-    if (prunedServices.size === 0) return new Map();
-    const pathBySpanID = memoizedCriticalPathsBySpanID(criticalPath);
-    const result = new Map<string, CriticalPathSection[]>();
-
-    const collectFromSubtree = (s: IOtelSpan, sections: CriticalPathSection[]) => {
-      const spanSections = pathBySpanID[s.spanID];
-      if (spanSections) {
-        for (const section of spanSections) {
-          sections.push({ ...section });
-        }
-      }
-      for (const child of s.childSpans) {
-        collectFromSubtree(child, sections);
-      }
-    };
-
-    for (const span of spans) {
-      if (!span.hasChildren) continue;
-      const prunedSections: CriticalPathSection[] = [];
-      for (const child of span.childSpans) {
-        if (prunedServices.has(child.resource.serviceName)) {
-          collectFromSubtree(child, prunedSections);
-        }
-      }
-      if (prunedSections.length > 0) {
-        result.set(span.spanID, prunedSections);
-      }
-    }
-    return result;
-  }
-);
-
-/**
- * Critical path display invariant: a span's bar shows the critical path sections of
- * itself and all spans hidden beneath it, whether hidden by collapse or service filter.
- * - Collapsed: mergeChildrenCriticalPath collects the full subtree (pruning-unaware,
- *   which is correct — a collapsed subtree is entirely hidden regardless of filter).
- * - Expanded with pruned direct children: own sections + pruned subtree sections bubbled
- *   up via memoizedPrunedCriticalPaths. Only direct-child pruning needs handling because
- *   the service filter prunes entire subtrees, so the direct parent is always the nearest
- *   visible ancestor of a pruned span.
- */
-// export for tests
-export function getCriticalPathSections(
-  isCollapsed: boolean,
-  hasPrunedChildren: boolean,
-  trace: IOtelTrace,
-  span: IOtelSpan,
-  criticalPath: CriticalPathSection[],
-  prunedServices: Set<string>
-): CriticalPathSection[] {
-  if (isCollapsed) {
-    return mergeChildrenCriticalPath(trace, span.spanID, criticalPath);
-  }
-
-  const pathBySpanID = memoizedCriticalPathsBySpanID(criticalPath);
-  const ownSections = span.spanID in pathBySpanID ? pathBySpanID[span.spanID] : [];
-
-  if (hasPrunedChildren) {
-    // Precomputed map of parent spanID → critical path sections from pruned subtrees.
-    const prunedPaths = memoizedPrunedCriticalPaths(criticalPath, prunedServices, trace.spans);
-    const prunedSections = prunedPaths.get(span.spanID);
-    if (prunedSections && prunedSections.length > 0) {
-      return [...ownSections, ...prunedSections];
-    }
-  }
-
-  return ownSections;
-}
 
 // export for tests
 export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceViewImpl(
@@ -255,6 +127,11 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
 
   const propsRef = useRef(props);
   propsRef.current = props;
+
+  const criticalPathContext = useMemo(
+    () => makeCriticalPathContext(props.trace, props.criticalPath, props.prunedServices),
+    [props.trace, props.criticalPath, props.prunedServices]
+  );
 
   const getRowStates = useCallback((): RowState[] => {
     const { trace, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices } = propsRef.current;
@@ -284,7 +161,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
     }
   }, []);
 
-  const linksGetter = useCallback((span: IOtelSpan, items: ReadonlyArray<IAttribute>, itemIndex: number) => {
+  const linksGetter = useCallback((span: IOtelSpan, items: IAttributes, itemIndex: number) => {
     const { trace } = propsRef.current;
     if (!trace) return [];
     return getLinks(span, items, itemIndex, trace);
@@ -292,7 +169,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
 
   // Adapter for OTEL components that need links from attributes
   const linksGetterFromAttributes = useCallback(
-    (span: IOtelSpan) => (attributes: ReadonlyArray<IAttribute>, index: number) => {
+    (span: IOtelSpan) => (attributes: IAttributes, index: number) => {
       return linksGetter(span, attributes, index);
     },
     [linksGetter]
@@ -474,8 +351,8 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         selectedSpanID,
         timelineBarsVisible,
         trace,
-        criticalPath,
         useOtelTerms,
+        spanPillsEnabled,
       } = propsRef.current;
       // to avert flow error
       if (!trace) {
@@ -494,14 +371,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
       const hasPrunedChildren =
         prunedServices.size > 0 &&
         span.childSpans.some(child => prunedServices.has(child.resource.serviceName));
-      const criticalPathSections = getCriticalPathSections(
-        isCollapsed,
-        hasPrunedChildren,
-        trace,
-        span,
-        criticalPath,
-        prunedServices
-      );
+      const criticalPathSections = criticalPathContext.sectionsFor(span, isCollapsed, hasPrunedChildren);
       // Check for direct child "server" span if the span is a "client" span.
       let rpc = null;
       if (isCollapsed) {
@@ -517,14 +387,14 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
           };
         }
       }
-      const peerServiceAttr = span.attributes.find(attr => attr.key === PEER_SERVICE);
+      const peerServiceValue = span.attributes.getValue(PEER_SERVICE);
       // Leaf, kind == client and has peer.service tag, is likely a client span that does a request
       // to an uninstrumented/external service
       let noInstrumentedServer = null;
-      if (!span.hasChildren && peerServiceAttr && (isKindClient(span) || isKindProducer(span))) {
+      if (!span.hasChildren && peerServiceValue != null && (isKindClient(span) || isKindProducer(span))) {
         noInstrumentedServer = {
-          serviceName: String(peerServiceAttr.value),
-          color: colorGenerator.getColorByKey(String(peerServiceAttr.value)),
+          serviceName: String(peerServiceValue),
+          color: colorGenerator.getColorByKey(String(peerServiceValue)),
         };
       }
 
@@ -552,12 +422,13 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
             span={span}
             focusSpan={focusSpan}
             traceDuration={trace.duration}
+            spanPillsEnabled={spanPillsEnabled}
             useOtelTerms={useOtelTerms}
           />
         </div>
       );
     },
-    [getClippingCssClasses, getViewedBounds, focusSpan]
+    [getClippingCssClasses, getViewedBounds, focusSpan, criticalPathContext]
   );
 
   const renderSpanDetailRow = useCallback(

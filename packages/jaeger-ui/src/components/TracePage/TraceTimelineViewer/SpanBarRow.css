@@ -3,6 +3,32 @@ Copyright (c) 2017 Uber Technologies, Inc.
 SPDX-License-Identifier: Apache-2.0
 */
 
+.SpanBarRow--pillWrap {
+  /* Sit above .span-name::after so hover tooltips receive pointer events. */
+  display: inline-flex;
+  max-width: 100%;
+  position: relative;
+  vertical-align: middle;
+  z-index: 1;
+}
+
+.SpanBarRow--pill {
+  background: var(--surface-component-background);
+  border: 1px solid var(--border-default);
+  display: inline-flex;
+  font-size: 0.85em;
+  line-height: 1.2;
+  margin-left: 0.25rem;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.SpanBarRow--pill.is-error {
+  background: color-mix(in srgb, var(--feedback-error) 12%, var(--surface-primary));
+  border-color: var(--feedback-error-text);
+  color: var(--feedback-error-text);
+}
+
 .span-row.is-matching-filter {
   background-color: var(--trace-emphasis-highlight);
 }
@@ -206,5 +232,12 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .SpanBarRow--arrowForwardIcon {
+  vertical-align: middle;
+}
+
+.SpanBarRow--spanTypeIcon {
+  color: var(--text-secondary);
+  font-size: 0.85em;
+  margin-right: 0.25rem;
   vertical-align: middle;
 }

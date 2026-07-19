@@ -4,13 +4,15 @@
 import * as React from 'react';
 import { Dropdown, Tooltip } from 'antd';
 import { IoOpenOutline, IoList, IoCopyOutline, IoInformationCircleOutline } from 'react-icons/io5';
-import { JsonView, allExpanded, collapseAllNested, defaultStyles } from 'react-json-view-lite';
+import { JsonView, allExpanded, collapseAllNested } from 'react-json-view-lite';
+
+import jsonViewStyles from '../../../../utils/jsonViewStyles';
 
 import CopyIcon from '../../../common/CopyIcon';
 
 import { TNil } from '../../../../types';
 import { Hyperlink } from '../../../../types/hyperlink';
-import { IAttribute } from '../../../../types/otel';
+import { IAttributes } from '../../../../types/otel';
 
 import './AttributesTable.css';
 
@@ -79,22 +81,7 @@ function formatValue(key: string, value: any) {
       <JsonView
         data={parsed}
         shouldExpandNode={shouldJsonTreeExpand ? allExpanded : collapseAllNested}
-        style={{
-          ...defaultStyles,
-          container: 'json-markup',
-          label: 'json-markup-key',
-          stringValue: 'json-markup-string',
-          collapseIcon: 'json-markup-icon-collapse',
-          collapsedContent: 'json-markup-collapse-content',
-          expandIcon: 'json-markup-icon-expand',
-          numberValue: 'json-markup-number',
-          booleanValue: 'json-markup-bool',
-          nullValue: 'json-markup-null',
-          undefinedValue: 'json-markup-undefined',
-          basicChildStyle: 'json-markup-child',
-          punctuation: 'json-markup-punctuation',
-          otherValue: 'json-markup-other',
-        }}
+        style={jsonViewStyles}
       />
     );
   } else {
@@ -118,8 +105,8 @@ const linkValueList = (links: Hyperlink[]) => {
 };
 
 type AttributesTableProps = {
-  data: ReadonlyArray<IAttribute>;
-  linksGetter: ((pairs: ReadonlyArray<IAttribute>, index: number) => Hyperlink[]) | TNil;
+  data: IAttributes;
+  linksGetter: ((pairs: IAttributes, index: number) => Hyperlink[]) | TNil;
 };
 
 // AttributesTable is displayed as a menu at span level.
@@ -131,7 +118,7 @@ export default function AttributesTable(props: AttributesTableProps) {
     <div className="KeyValueTable u-simple-scrollbars">
       <table className="u-width-100">
         <tbody className="KeyValueTable--body">
-          {data.map((row, i) => {
+          {data.entries().map((row, i) => {
             const jsonTable = formatValue(row.key, row.value);
             const links = linksGetter ? linksGetter(data, i) : null;
             let valueMarkup;

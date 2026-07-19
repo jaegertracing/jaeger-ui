@@ -5,21 +5,26 @@ import { Span } from '../types/trace';
 import {
   IOtelSpan,
   IAttribute,
+  IAttributes,
   AttributeValue,
   IEvent,
   ILink,
   IStatus,
   StatusCode,
   SpanKind,
+  GenAISpanKind,
   IResource,
   IScope,
 } from '../types/otel';
+import { classifySpan } from '../utils/genai/detect';
+import { makeAttributes } from './attributes';
 
 export default class OtelSpanFacade implements IOtelSpan {
   private legacySpan: Span;
   private _kind: SpanKind;
   private _parentSpanID: string | undefined;
-  private _attributes: IAttribute[];
+  private _attributes: IAttributes;
+  private _genAIKind: GenAISpanKind | undefined;
   private _events: IEvent[];
   private _links: ILink[];
   private _status: IStatus;
@@ -51,12 +56,13 @@ export default class OtelSpanFacade implements IOtelSpan {
       references.find(r => r.traceID === traceID && r.refType === 'FOLLOWS_FROM');
     this._parentSpanID = parentSpanRef?.spanID;
 
-    this._attributes = OtelSpanFacade.toOtelAttributes(this.legacySpan.tags);
+    this._attributes = makeAttributes(OtelSpanFacade.toOtelAttributes(this.legacySpan.tags));
+    this._genAIKind = classifySpan({ attributes: this._attributes });
 
     this._events = this.legacySpan.logs.map(log => ({
       timestamp: log.timestamp as IEvent['timestamp'],
       name: (log.fields.find(f => f.key === 'event')?.value as string) || 'log',
-      attributes: OtelSpanFacade.toOtelAttributes(log.fields),
+      attributes: makeAttributes(OtelSpanFacade.toOtelAttributes(log.fields)),
     }));
 
     this._links = this.legacySpan.references
@@ -64,7 +70,7 @@ export default class OtelSpanFacade implements IOtelSpan {
       .map(ref => ({
         traceID: ref.traceID,
         spanID: ref.spanID,
-        attributes: [], // Legacy references don't have attributes
+        attributes: makeAttributes(), // Legacy references don't have attributes
       }));
 
     const errorTag = this.legacySpan.tags.find(t => t.key === 'error');
@@ -73,14 +79,14 @@ export default class OtelSpanFacade implements IOtelSpan {
 
     const process = this.legacySpan.process;
     this._resource = {
-      attributes: process ? OtelSpanFacade.toOtelAttributes(process.tags) : [],
+      attributes: makeAttributes(process ? OtelSpanFacade.toOtelAttributes(process.tags) : []),
       serviceName: process ? process.serviceName : 'unknown-service',
     };
 
     this._inboundLinks = this.legacySpan.subsidiarilyReferencedBy.map(ref => ({
       traceID: ref.traceID,
       spanID: ref.spanID,
-      attributes: [],
+      attributes: makeAttributes(),
     }));
   }
 
@@ -113,6 +119,10 @@ export default class OtelSpanFacade implements IOtelSpan {
     return this._kind;
   }
 
+  get genAIKind(): GenAISpanKind | undefined {
+    return this._genAIKind;
+  }
+
   get startTime(): IOtelSpan['startTime'] {
     return this.legacySpan.startTime as IOtelSpan['startTime'];
   }
@@ -125,7 +135,7 @@ export default class OtelSpanFacade implements IOtelSpan {
     return this.legacySpan.duration as IOtelSpan['duration'];
   }
 
-  get attributes(): IAttribute[] {
+  get attributes(): IAttributes {
     return this._attributes;
   }
 

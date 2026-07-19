@@ -1,0 +1,11 @@
+/*
+Copyright (c) 2026 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.GenAISpanIcon {
+  font-size: 0.85em;
+  margin-right: 0.25rem;
+  vertical-align: middle;
+  color: var(--text-secondary);
+}

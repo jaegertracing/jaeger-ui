@@ -30,13 +30,15 @@ jobs:
         run: make depcheck
       - run: make lint
       - run: make build
+      - name: Verify dev server starts without errors
+        run: npm run dev:check
       - name: Ensure PR is not on main branch
         uses: jaegertracing/jaeger/.github/actions/block-pr-from-main-branch@main
 
   validate-3rd-party-configs:
     runs-on: ubuntu-latest
     steps:
-      - uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+      - uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 

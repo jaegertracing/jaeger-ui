@@ -4,9 +4,11 @@
   "labels": ["changelog:dependencies"],
   "suppressNotifications": ["prEditedNotification"],
   "schedule": ["on sunday"],
+  "minimumReleaseAge": "7 days",
   "vulnerabilityAlerts": {
     "enabled": true,
-    "labels": ["security"]
+    "labels": ["security"],
+    "minimumReleaseAge": "0 days"
   },
   "packageRules": [
     {
