@@ -13,8 +13,7 @@ import {
   GenAiTokenUsage,
   GenAiToolCall,
 } from './genAiData';
-import { MessageFormat, MARKDOWN_SIZE_LIMIT } from './messageFormat';
-import { useMessageFormatStore } from './message-format-store';
+import { MessageFormat, useMessageFormatStore } from './message-format-store';
 import AccordionAttributes from '../AccordionAttributes';
 import { sharedMarkdownOptions } from '../../../../../utils/markdownOptions';
 import jsonViewStyles from '../../../../../utils/jsonViewStyles';
@@ -24,6 +23,11 @@ import type { IOtelSpan } from '../../../../../types/otel';
 import './index.css';
 
 type Props = { span: IOtelSpan };
+
+// Above this length, Markdown parsing is skipped even if selected - avoids pathological
+// reflow/parse cost on huge attributes. Plain text and the JSON tree view have no such
+// cap since neither does Markdown's block-level reparsing.
+const MARKDOWN_SIZE_LIMIT = 150_000;
 
 // markdown-to-jsx only wraps its output in a block element (a <div>) once it has more
 // than one top-level child; a single short sentence with no other formatting compiles
