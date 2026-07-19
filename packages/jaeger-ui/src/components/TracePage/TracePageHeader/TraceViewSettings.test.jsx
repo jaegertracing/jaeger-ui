@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
@@ -19,6 +19,12 @@ const defaultProps = {
   timelineBarsVisible: true,
 };
 
+async function openPanel() {
+  await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
+  // The panel content is rendered inside the popover
+  return screen.findByRole('group', { name: /timeline view/i });
+}
+
 describe('<TraceViewSettings>', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -31,63 +37,147 @@ describe('<TraceViewSettings>', () => {
     expect(button).toHaveAttribute('title', 'Trace view settings');
   });
 
-  it('opens dropdown on click and shows "Show Timeline" item', async () => {
+  it('opens popover on click and shows "Timeline View" setting', async () => {
     render(<TraceViewSettings {...defaultProps} />);
-    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
-    expect(await screen.findByText('Show Timeline')).toBeInTheDocument();
+    await openPanel();
+    expect(screen.getByText('Timeline View')).toBeInTheDocument();
   });
 
-  it('calls onTimelineToggle when "Show Timeline" is clicked', async () => {
+  it('calls onTimelineToggle when the Timeline switch is clicked', async () => {
     render(<TraceViewSettings {...defaultProps} />);
-    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
-    await userEvent.click(await screen.findByText('Show Timeline'));
+    await openPanel();
+    // The switch for timeline is labelled by "Timeline View"
+    const timelineSwitch = screen.getByRole('switch', { name: /timeline view/i });
+    await userEvent.click(timelineSwitch);
     expect(defaultProps.onTimelineToggle).toHaveBeenCalledTimes(1);
   });
 
-  it('does not show "Show Span in Sidebar" when enableSidePanel is false', async () => {
+  it('does not show "Span Details Sidebar" setting when enableSidePanel is false', async () => {
     render(<TraceViewSettings {...defaultProps} enableSidePanel={false} />);
-    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
-    await screen.findByText('Show Timeline');
-    expect(screen.queryByText('Show Span in Sidebar')).not.toBeInTheDocument();
+    await openPanel();
+    expect(screen.queryByText('Span Details Sidebar')).not.toBeInTheDocument();
   });
 
-  it('shows "Show Span in Sidebar" when enableSidePanel is true', async () => {
+  it('shows "Span Details Sidebar" setting when enableSidePanel is true', async () => {
     render(<TraceViewSettings {...defaultProps} enableSidePanel />);
-    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
-    expect(await screen.findByText('Show Span in Sidebar')).toBeInTheDocument();
+    await openPanel();
+    expect(screen.getByText('Span Details Sidebar')).toBeInTheDocument();
   });
 
-  it('calls onDetailPanelModeToggle when "Show Span in Sidebar" is clicked', async () => {
+  it('calls onDetailPanelModeToggle when the Sidebar switch is clicked', async () => {
     render(<TraceViewSettings {...defaultProps} enableSidePanel />);
-    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
-    await userEvent.click(await screen.findByText('Show Span in Sidebar'));
+    await openPanel();
+    const sidebarSwitch = screen.getByRole('switch', { name: /span details sidebar/i });
+    await userEvent.click(sidebarSwitch);
     expect(defaultProps.onDetailPanelModeToggle).toHaveBeenCalledTimes(1);
   });
 
-  it('always shows "Keyboard Shortcuts" in the dropdown', async () => {
+  it('always shows "Keyboard Shortcuts" button in the panel', async () => {
     render(<TraceViewSettings {...defaultProps} />);
-    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
-    expect(await screen.findByText('Keyboard Shortcuts')).toBeInTheDocument();
+    await openPanel();
+    expect(screen.getByText('Keyboard Shortcuts')).toBeInTheDocument();
   });
 
   it('opens the keyboard shortcuts modal and calls track() when "Keyboard Shortcuts" is clicked', async () => {
     render(<TraceViewSettings {...defaultProps} />);
-    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
-    await userEvent.click(await screen.findByText('Keyboard Shortcuts'));
+    await openPanel();
+    await userEvent.click(screen.getByText('Keyboard Shortcuts'));
     expect(track).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 
-  it('returns the cached kbdTable on a second call to getHelpModal', async () => {
-    const { unmount } = render(<TraceViewSettings {...defaultProps} />);
-    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
-    await userEvent.click(await screen.findByText('Keyboard Shortcuts'));
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
-    unmount();
+  it('shows "Set by shared link" badge when timeline source is "url"', async () => {
+    const settingSources = {
+      timelineBarsVisible: { value: false, source: 'url', isOverridden: true },
+      detailPanelMode: { value: 'inline', source: 'localstorage', isOverridden: false },
+    };
+    render(
+      <TraceViewSettings {...defaultProps} timelineBarsVisible={false} settingSources={settingSources} />
+    );
+    await openPanel();
+    expect(screen.getByText('Set by shared link')).toBeInTheDocument();
+  });
 
-    render(<TraceViewSettings {...defaultProps} />);
-    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
-    await userEvent.click(await screen.findByText('Keyboard Shortcuts'));
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  it('does not show a source badge when source is "localstorage"', async () => {
+    const settingSources = {
+      timelineBarsVisible: { value: true, source: 'localstorage', isOverridden: false },
+      detailPanelMode: { value: 'inline', source: 'localstorage', isOverridden: false },
+    };
+    render(<TraceViewSettings {...defaultProps} settingSources={settingSources} />);
+    await openPanel();
+    expect(screen.queryByText('Set by shared link')).not.toBeInTheDocument();
+  });
+
+  it('shows "Set as my default" link when a setting is overridden', async () => {
+    const settingSources = {
+      timelineBarsVisible: { value: false, source: 'url', isOverridden: true },
+      detailPanelMode: { value: 'inline', source: 'localstorage', isOverridden: false },
+    };
+    render(
+      <TraceViewSettings
+        {...defaultProps}
+        timelineBarsVisible={false}
+        settingSources={settingSources}
+        saveSettingAsDefault={jest.fn()}
+      />
+    );
+    await openPanel();
+    expect(screen.getByText('Set as my default')).toBeInTheDocument();
+  });
+
+  it('calls saveSettingAsDefault with correct key when "Set as my default" is clicked', async () => {
+    const saveSettingAsDefault = jest.fn();
+    const settingSources = {
+      timelineBarsVisible: { value: false, source: 'url', isOverridden: true },
+      detailPanelMode: { value: 'inline', source: 'localstorage', isOverridden: false },
+    };
+    render(
+      <TraceViewSettings
+        {...defaultProps}
+        timelineBarsVisible={false}
+        settingSources={settingSources}
+        saveSettingAsDefault={saveSettingAsDefault}
+      />
+    );
+    await openPanel();
+    await userEvent.click(screen.getByText('Set as my default'));
+    expect(saveSettingAsDefault).toHaveBeenCalledWith('timelineBarsVisible');
+  });
+
+  it('does not show "Set as my default" link when isOverridden is false', async () => {
+    const settingSources = {
+      timelineBarsVisible: { value: true, source: 'localstorage', isOverridden: false },
+      detailPanelMode: { value: 'inline', source: 'localstorage', isOverridden: false },
+    };
+    render(
+      <TraceViewSettings {...defaultProps} settingSources={settingSources} saveSettingAsDefault={jest.fn()} />
+    );
+    await openPanel();
+    await waitFor(() => {
+      expect(screen.queryByText('Set as my default')).not.toBeInTheDocument();
+    });
+  });
+
+  it('shows "Set as my default" for sidebar when sidebar source is "url"', async () => {
+    const saveSettingAsDefault = jest.fn();
+    const settingSources = {
+      timelineBarsVisible: { value: true, source: 'localstorage', isOverridden: false },
+      detailPanelMode: { value: 'sidepanel', source: 'url', isOverridden: true },
+    };
+    render(
+      <TraceViewSettings
+        {...defaultProps}
+        enableSidePanel
+        detailPanelMode="sidepanel"
+        settingSources={settingSources}
+        saveSettingAsDefault={saveSettingAsDefault}
+      />
+    );
+    await openPanel();
+    const saveLinks = screen.getAllByText('Set as my default');
+    // Only one override (sidebar), so exactly one link
+    expect(saveLinks).toHaveLength(1);
+    await userEvent.click(saveLinks[0]);
+    expect(saveSettingAsDefault).toHaveBeenCalledWith('detailPanelMode');
   });
 });
