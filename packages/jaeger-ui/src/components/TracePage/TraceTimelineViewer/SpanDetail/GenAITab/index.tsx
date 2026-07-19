@@ -18,7 +18,6 @@ import {
   MARKDOWN_SIZE_LIMIT,
   readStoredMessageFormat,
   writeStoredMessageFormat,
-  detectDefaultMessageFormat,
 } from './messageFormat';
 import AccordionAttributes from '../AccordionAttributes';
 import { sharedMarkdownOptions } from '../../../../../utils/markdownOptions';
@@ -65,22 +64,27 @@ function JsonBlock({ value }: { value: unknown }) {
 
 function MessageBlock({
   message,
-  format,
+  formatOverride,
   onFormatChange,
   messageNumber,
 }: {
   message: GenAiMessage;
-  format: MessageFormat;
+  // User's chosen format that overrides the content-derived default; null to use the default.
+  formatOverride: MessageFormat | null;
   onFormatChange: (format: MessageFormat) => void;
   messageNumber: number;
 }) {
-  const isOversized = message.content.length > MARKDOWN_SIZE_LIMIT;
-  // Parsed once and reused both for the JSON option's disabled state and for the
-  // JSON render branch below, instead of parsing the same string twice.
-  const parsedJson = tryParseJson(message.content);
-  const isValidJson = typeof parsedJson === 'object' && parsedJson !== null;
-  const effectiveFormat: MessageFormat =
-    (format === 'markdown' && isOversized) || (format === 'json' && !isValidJson) ? 'plain' : format;
+  const parsedJson = useMemo(() => tryParseJson(message.content), [message.content]);
+  // Each view can only render content it supports; a requested view that can't falls back to plain.
+  const canRender: Record<MessageFormat, boolean> = {
+    plain: true,
+    markdown: message.content.length <= MARKDOWN_SIZE_LIMIT,
+    json: parsedJson !== null && typeof parsedJson === 'object',
+  };
+  // If no user override passed then JSON-parseable content defaults to the tree view,
+  // else plain text (Markdown is only opt-in).
+  const requestedFormat: MessageFormat = formatOverride ?? (canRender.json ? 'json' : 'plain');
+  const effectiveFormat: MessageFormat = canRender[requestedFormat] ? requestedFormat : 'plain';
 
   return (
     <div className={`GenAITab--message GenAITab--message-${message.role || 'unknown'}`}>
@@ -96,17 +100,17 @@ function MessageBlock({
             <option value="plain">Plain</option>
             <option
               value="markdown"
-              disabled={isOversized}
-              title={isOversized ? 'Markdown is disabled for messages over 150KB' : undefined}
+              disabled={!canRender.markdown}
+              title={canRender.markdown ? undefined : 'Markdown is disabled for messages over 150KB'}
             >
-              Markdown{isOversized ? ' (too large)' : ''}
+              Markdown{canRender.markdown ? '' : ' (too large)'}
             </option>
             <option
               value="json"
-              disabled={!isValidJson}
-              title={!isValidJson ? 'JSON is disabled - this content is not valid JSON' : undefined}
+              disabled={!canRender.json}
+              title={canRender.json ? undefined : 'JSON is disabled - this content is not valid JSON'}
             >
-              JSON{!isValidJson ? ' (not JSON)' : ''}
+              JSON{canRender.json ? '' : ' (not JSON)'}
             </option>
           </select>
           <CopyIcon copyText={message.content} tooltipTitle="Copy message" buttonText="Copy" />
@@ -179,14 +183,14 @@ function ConversationSection({
   inputMessages: GenAiMessage[];
   outputMessages: GenAiMessage[];
 }) {
-  // In-memory overrides live here (ConversationSection), not in each MessageBlock
+  // On-page overrides live here (ConversationSection), not in each MessageBlock
   // instance: a format choice for an attribute name must apply to every
   // currently-rendered message from that attribute immediately, not just on that one
   // message's own instance or a future remount.
   const [overrides, setOverrides] = useState<Partial<Record<string, MessageFormat>>>({});
 
-  const getFormat = (attributeKey: string, content: string): MessageFormat =>
-    overrides[attributeKey] ?? readStoredMessageFormat(attributeKey) ?? detectDefaultMessageFormat(content);
+  const getFormatOverride = (attributeKey: string): MessageFormat | null =>
+    overrides[attributeKey] ?? readStoredMessageFormat(attributeKey);
 
   const setFormat = (attributeKey: string, format: MessageFormat) => {
     writeStoredMessageFormat(attributeKey, format);
@@ -225,7 +229,7 @@ function ConversationSection({
         <MessageBlock
           key={key}
           message={message}
-          format={getFormat(attributeKey, message.content)}
+          formatOverride={getFormatOverride(attributeKey)}
           onFormatChange={f => setFormat(attributeKey, f)}
           messageNumber={i + 1}
         />

@@ -1,7 +1,6 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { tryParseJson } from './genAiData';
 import storage from '../../../../../utils/storage';
 
 // Message text has no declared format in the OTel GenAI conventions - it can be prose,
@@ -26,12 +25,4 @@ export function readStoredMessageFormat(attributeKey: string): MessageFormat | n
 
 export function writeStoredMessageFormat(attributeKey: string, format: MessageFormat): void {
   storage.set(MESSAGE_FORMAT_STORAGE_PREFIX + attributeKey, format);
-}
-
-// Only reached when there is no explicit user override (in-memory or stored): content
-// that parses as a JSON object/array defaults to the tree view, everything else to plain
-// text - Markdown is opt-in only, never auto-selected.
-export function detectDefaultMessageFormat(content: string): MessageFormat {
-  const parsed = tryParseJson(content);
-  return typeof parsed === 'object' && parsed !== null ? 'json' : 'plain';
 }
