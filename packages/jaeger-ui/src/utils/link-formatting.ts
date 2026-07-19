@@ -35,6 +35,7 @@ const formatFunctions: Record<string, <T>(value: T, ...args: string[]) => T | st
         desiredLength: desiredLengthString,
         padCharacter,
       });
+      return value;
     }
 
     return value.padStart(desiredLength, padCharacter);

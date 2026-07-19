@@ -35,8 +35,21 @@ describe('getParameterAndFormatter()', () => {
     });
 
     test('Invalid desired length', () => {
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const padStartSpy = vi.spyOn(String.prototype, 'padStart');
       const result = getParameterAndFormatter('traceID | pad_start invalid 0');
       expect(result.formatFunction('12345')).toEqual('12345');
+      expect(errorSpy).toHaveBeenCalledWith(
+        'pad_start() needs a desired length as second argument, ignoring formatting',
+        expect.objectContaining({
+          value: '12345',
+          desiredLength: 'invalid',
+          padCharacter: '0',
+        })
+      );
+      expect(padStartSpy).not.toHaveBeenCalled();
+      padStartSpy.mockRestore();
+      errorSpy.mockRestore();
     });
 
     test('Invalid input', () => {
