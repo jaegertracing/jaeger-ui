@@ -125,20 +125,26 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
 
   const rootSpans: Span[] = [];
   let orphanSpanCount = 0;
+  const parentRefBySpanID = new Map<string, SpanReference>();
+  const hasValidSameTraceSpanRef = (ref: SpanReference) =>
+    ref.traceID.toLowerCase() === traceID && spanMap.has(ref.spanID);
 
   // Second pass: link parents/children and identify roots
   for (const span of spanMap.values()) {
     let parent: Span | undefined;
     if (Array.isArray(span.references) && span.references.length > 0) {
-      // Find the first CHILD_OF or FOLLOWS_FROM reference that exists in the spanMap
-      for (const ref of span.references) {
-        if (ref.refType === 'CHILD_OF' || ref.refType === 'FOLLOWS_FROM') {
-          parent = spanMap.get(ref.spanID);
-          if (parent) {
-            break;
-          }
-        }
+      let parentRef = span.references.find(
+        ref => ref.refType === 'CHILD_OF' && hasValidSameTraceSpanRef(ref)
+      );
+      parentRef =
+        parentRef ||
+        span.references.find(ref => ref.refType === 'FOLLOWS_FROM' && hasValidSameTraceSpanRef(ref));
+
+      if (parentRef) {
+        parentRefBySpanID.set(span.spanID, parentRef);
+        parent = spanMap.get(parentRef.spanID);
       }
+
       if (!parent) {
         orphanSpanCount++;
       }
@@ -165,11 +171,12 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     const { serviceName } = span.process;
     svcCounts[serviceName] = (svcCounts[serviceName] || 0) + 1;
 
-    span.references.forEach((ref, index) => {
-      const refSpan = spanMap.get(ref.spanID);
+    const parentRef = parentRefBySpanID.get(span.spanID);
+    span.references.forEach(ref => {
+      const refSpan = hasValidSameTraceSpanRef(ref) ? spanMap.get(ref.spanID) : undefined;
       if (refSpan) {
         ref.span = refSpan;
-        if (index > 0) {
+        if (ref !== parentRef) {
           // Don't take into account the parent, just other references.
           refSpan.subsidiarilyReferencedBy = refSpan.subsidiarilyReferencedBy || [];
           (refSpan.subsidiarilyReferencedBy as SpanReference[]).push({
