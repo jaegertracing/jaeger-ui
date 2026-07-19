@@ -27,9 +27,9 @@ jobs:
           git diff --exit-code package-lock.json || (echo '❌ package-lock.json is out of sync with the pinned npm version. Run "corepack enable npm && npm install" locally and commit the result.' && exit 1)
       - run: npm ls --all
       - name: Run depcheck
-        run: npm run depcheck
-      - run: npm run lint
-      - run: npm run build
+        run: make depcheck
+      - run: make lint
+      - run: make build
       - name: Verify dev server starts without errors
         run: npm run dev:check
       - name: Ensure PR is not on main branch
