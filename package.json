@@ -35,6 +35,7 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "yaml": "2.9.0",
+    "@types/node": "24.13.1",
     "@exodus/bytes": {
       "@noble/hashes": "$@noble/hashes"
     }
