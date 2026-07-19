@@ -4,8 +4,8 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .GenAISpanIcon {
-  font-size: 0.85em;
-  margin-right: 0.25rem;
-  vertical-align: middle;
-  color: var(--text-secondary);
+  font-size: 1.3em;
+  margin-right: 0.3rem;
+  vertical-align: -0.18em;
+  color: var(--interactive-primary);
 }

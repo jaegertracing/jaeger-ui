@@ -236,8 +236,8 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .SpanBarRow--spanTypeIcon {
-  color: var(--text-secondary);
-  font-size: 0.85em;
-  margin-right: 0.25rem;
-  vertical-align: middle;
+  color: var(--interactive-primary);
+  font-size: 1.3em;
+  margin-right: 0.3rem;
+  vertical-align: -0.18em;
 }

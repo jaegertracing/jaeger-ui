@@ -36,7 +36,7 @@ SPDX-License-Identifier: Apache-2.0
   /* Center on 20px box: 0.25rem + (20px / 2) - 0.5px (half of line width) */
   width: 1px;
   height: 100%;
-  background-color: currentColor;
+  background-color: color-mix(in srgb, currentColor 45%, transparent);
 }
 
 /* For the last ancestor (immediate parent), only show vertical line in top half */
@@ -60,7 +60,7 @@ SPDX-License-Identifier: Apache-2.0
   height: 1px;
   top: 50%;
   transform: translateY(-50%);
-  background-color: inherit;
+  background-color: color-mix(in srgb, var(--span-line-color) 45%, transparent);
 }
 
 .SpanTreeOffset--iconWrapper {
@@ -80,7 +80,7 @@ SPDX-License-Identifier: Apache-2.0
   height: 20px;
   padding: 0 4px;
   border-radius: 3px;
-  border: 1px solid;
+  border: 1px solid color-mix(in srgb, var(--span-box-color) 45%, transparent);
   background-color: var(--surface-secondary);
   color: var(--text-primary);
   font-size: 11px;
@@ -88,9 +88,11 @@ SPDX-License-Identifier: Apache-2.0
   cursor: pointer;
 }
 
-/* Filled box when collapsed */
+/* Tinted (not fully filled) box when collapsed - keeps the count bright */
 .SpanTreeOffset--box.is-collapsed {
-  color: white;
+  border-color: color-mix(in srgb, var(--span-box-color) 60%, transparent);
+  background-color: color-mix(in srgb, var(--span-box-color) 22%, var(--surface-secondary));
+  color: var(--text-primary);
 }
 
 /* Colored dot for leaf spans */
@@ -99,4 +101,5 @@ SPDX-License-Identifier: Apache-2.0
   width: 8px;
   height: 8px;
   border-radius: 50%;
+  background-color: color-mix(in srgb, var(--span-box-color) 45%, transparent);
 }
