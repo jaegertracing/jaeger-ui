@@ -358,7 +358,7 @@ describe('<SpanBarRow>', () => {
     it('shows no GenAI icon for a standard span', () => {
       render(<SpanBarRow {...defaultProps} />);
       expect(
-        screen.queryByRole('img', { name: /LLM call|Tool call|Agent|Retrieval|GenAI span/ })
+        screen.queryByRole('img', { name: /LLM call|MCP Tool call|AI Agent|Retrieval|GenAI span/ })
       ).not.toBeInTheDocument();
     });
 
@@ -371,13 +371,13 @@ describe('<SpanBarRow>', () => {
     it('shows a tool call icon when span.genAIKind=TOOL_CALL', () => {
       const span = { ...defaultProps.span, genAIKind: 'TOOL_CALL' };
       render(<SpanBarRow {...defaultProps} span={span} />);
-      expect(screen.getByRole('img', { name: 'Tool call' })).toBeInTheDocument();
+      expect(screen.getByRole('img', { name: 'MCP Tool call' })).toBeInTheDocument();
     });
 
     it('shows an agent icon when span.genAIKind=AGENT', () => {
       const span = { ...defaultProps.span, genAIKind: 'AGENT' };
       render(<SpanBarRow {...defaultProps} span={span} />);
-      expect(screen.getByRole('img', { name: 'Agent' })).toBeInTheDocument();
+      expect(screen.getByRole('img', { name: 'AI Agent' })).toBeInTheDocument();
     });
 
     it('shows a retrieval icon when span.genAIKind=RETRIEVAL', () => {
@@ -426,7 +426,7 @@ describe('<SpanBarRow>', () => {
       };
       const { container } = render(<SpanBarRow {...defaultProps} span={span} />);
       expect(container.querySelector('.SpanBarRow--spanTypeIcon')).not.toBeInTheDocument();
-      expect(screen.getByRole('img', { name: 'Agent' })).toBeInTheDocument();
+      expect(screen.getByRole('img', { name: 'AI Agent' })).toBeInTheDocument();
     });
   });
 });
