@@ -6,6 +6,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
 
 import GenAITab from '.';
+import { useMessageFormatStore } from './message-format-store';
 import type { IAttribute, IOtelSpan } from '../../../../../types/otel';
 import { makeAttributes } from '../../../../../model/attributes';
 
@@ -16,6 +17,10 @@ function makeSpan(attributes: IAttribute[]): IOtelSpan {
 describe('GenAITab', () => {
   beforeEach(() => {
     localStorage.clear();
+    // useMessageFormatStore is a module-level singleton, so its in-memory overrides
+    // outlive any single render() and must be reset explicitly - clearing localStorage
+    // alone only affects what a *future* store creation would hydrate from.
+    useMessageFormatStore.setState({ overrides: {} });
   });
 
   it('renders provider and model when present', () => {

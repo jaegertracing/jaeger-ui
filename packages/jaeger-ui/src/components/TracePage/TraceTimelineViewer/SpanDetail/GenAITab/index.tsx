@@ -13,12 +13,8 @@ import {
   GenAiTokenUsage,
   GenAiToolCall,
 } from './genAiData';
-import {
-  MessageFormat,
-  MARKDOWN_SIZE_LIMIT,
-  readStoredMessageFormat,
-  writeStoredMessageFormat,
-} from './messageFormat';
+import { MessageFormat, MARKDOWN_SIZE_LIMIT } from './messageFormat';
+import { useMessageFormatStore } from './message-format-store';
 import AccordionAttributes from '../AccordionAttributes';
 import { sharedMarkdownOptions } from '../../../../../utils/markdownOptions';
 import jsonViewStyles from '../../../../../utils/jsonViewStyles';
@@ -183,19 +179,14 @@ function ConversationSection({
   inputMessages: GenAiMessage[];
   outputMessages: GenAiMessage[];
 }) {
-  // On-page overrides live here (ConversationSection), not in each MessageBlock
-  // instance: a format choice for an attribute name must apply to every
-  // currently-rendered message from that attribute immediately, not just on that one
-  // message's own instance or a future remount.
-  const [overrides, setOverrides] = useState<Partial<Record<string, MessageFormat>>>({});
+  // Format overrides are store subscribers, not local state - a choice for an attribute
+  // name applies to every currently-rendered message from that attribute immediately, and
+  // useMessageFormatStore.overrides already merges in-memory and persisted state, so there's
+  // no separate read-then-merge step here.
+  const overrides = useMessageFormatStore(state => state.overrides);
+  const setFormat = useMessageFormatStore(state => state.setFormat);
 
-  const getFormatOverride = (attributeKey: string): MessageFormat | null =>
-    overrides[attributeKey] ?? readStoredMessageFormat(attributeKey);
-
-  const setFormat = (attributeKey: string, format: MessageFormat) => {
-    writeStoredMessageFormat(attributeKey, format);
-    setOverrides(prev => ({ ...prev, [attributeKey]: format }));
-  };
+  const getFormatOverride = (attributeKey: string): MessageFormat | null => overrides[attributeKey] ?? null;
 
   // Flattened into one ordered list (rather than three separate blocks) so each
   // message can get a stable, unique position number for its format dropdown's
