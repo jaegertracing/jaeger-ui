@@ -1,6 +1,7 @@
 // Copyright (c) 2019 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+import traceGenerator from '../demo/trace-generators';
 import transformTraceData, { orderTags, deduplicateTags } from './transform-trace-data';
 
 describe('orderTags()', () => {
@@ -381,17 +382,6 @@ describe('transformTraceData()', () => {
 
     it('should calculate depth and sort spans in DFS order', () => {
       // Create a linear trace: Root -> Child -> GrandChild
-      const grandChildSpan = {
-        traceID,
-        spanID: 'grandChild',
-        operationName: 'grandChildOp',
-        references: [{ refType: 'CHILD_OF', traceID, spanID: spans[0].spanID }],
-        startTime: startTime + 200,
-        duration: 10,
-        tags: [],
-        processID: 'p1',
-      };
-
       // spans[0] is 'someOperationName', referencing rootSpanID
       // rootSpanWithoutRefs is the root (start + 50)
       // spans[0] starts at startTime (0 relative to trace start? No, trace start is startTime).
@@ -451,5 +441,37 @@ describe('transformTraceData()', () => {
       const ids = result.spans.map(s => s.spanID);
       expect(ids).toEqual(['root', 'child1', 'grandChild1', 'child2']);
     });
+  });
+
+  it('populates subsidiarilyReferencedBy for spans with multiple references', () => {
+    const multiRefTrace = traceGenerator.trace({ numberOfSpans: 7, maxDepth: 3, spansPerLevel: 4 });
+    const { traceID, spanID: rootSpanId } = multiRefTrace.spans[0];
+    const candidates = multiRefTrace.spans.filter(
+      span => span.references.length > 0 && span.references[0].spanID !== rootSpanId
+    );
+    expect(candidates.length).toBeGreaterThanOrEqual(2);
+    const [willGainRef, willNotChange] = candidates;
+    const { spanID: existingRefID } = willGainRef.references[0];
+    const { spanID: willBeReferencedID } = willNotChange.references[0];
+
+    willGainRef.references.push({ refType: 'CHILD_OF', traceID, spanID: willBeReferencedID });
+
+    const tTrace = transformTraceData(multiRefTrace);
+    const multiReference = tTrace.spans.filter(span => span.references && span.references.length > 1);
+
+    expect(multiReference.length).toEqual(1);
+    expect(new Set(multiReference[0].references)).toEqual(
+      new Set([
+        expect.objectContaining({ spanID: willBeReferencedID }),
+        expect.objectContaining({ spanID: existingRefID }),
+      ])
+    );
+    const hasReferral = tTrace.spans.filter(
+      span => span.subsidiarilyReferencedBy && span.subsidiarilyReferencedBy.length > 0
+    );
+    expect(hasReferral.length).toEqual(1);
+    expect(new Set(hasReferral[0].subsidiarilyReferencedBy)).toEqual(
+      new Set([expect.objectContaining({ spanID: willGainRef.spanID })])
+    );
   });
 });

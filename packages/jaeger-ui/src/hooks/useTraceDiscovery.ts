@@ -4,10 +4,12 @@
 import { useEffect, useMemo } from 'react';
 import { useQuery, useIsFetching, useQueryClient, skipToken, UseQueryResult } from '@tanstack/react-query';
 import { jaegerClient } from '../api/v3/client';
+import { trackSearchLatency } from '../components/SearchTracePage/SearchResults/index.track';
 import { localeStringComparator } from '../utils/sort';
 import { isSameQuery } from '../utils/search-query';
 import type { SearchQuery } from '../types/search';
 import type { TraceSummary } from '../types/trace-summary';
+import type { Microseconds } from '../types/units';
 
 // Module-private query keys — not exported; other code should use the hooks/accessors below.
 const SERVICES_QUERY_KEY = ['services'] as const;
@@ -60,6 +62,8 @@ export function useSpanNames(
 export type TraceSummariesResult = {
   results: TraceSummary[];
   query: SearchQuery;
+  /** Wall-clock latency of the search request (network + backend). */
+  searchLatency: Microseconds;
 };
 
 /**
@@ -123,11 +127,14 @@ export function useSearchTraces(query: SearchQuery | null): UseQueryResult<Trace
   return useQuery({
     queryKey: [TRACE_SUMMARIES_QUERY_KEY, effectiveQuery],
     queryFn: effectiveQuery
-      ? async () =>
-          ({
-            results: await jaegerClient.fetchTraceSummaries(effectiveQuery),
-            query: effectiveQuery,
-          }) satisfies TraceSummariesResult
+      ? async () => {
+          const startedAt = performance.now();
+          const results = await jaegerClient.fetchTraceSummaries(effectiveQuery);
+          // performance.now() is in milliseconds; convert to the domain-wide Microseconds unit.
+          const searchLatency = ((performance.now() - startedAt) * 1000) as Microseconds;
+          trackSearchLatency(searchLatency);
+          return { results, query: effectiveQuery, searchLatency } satisfies TraceSummariesResult;
+        }
       : skipToken,
     staleTime: Infinity,
     gcTime: Infinity,
