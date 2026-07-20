@@ -9,6 +9,7 @@ import {
   extractGenAiSections,
   formatTokenCount,
   tryParseJson,
+  GenAiAgent,
   GenAiMessage,
   GenAiTokenUsage,
   GenAiToolCall,
@@ -132,6 +133,7 @@ function MessageBlock({
 function MetaRow({ provider, model }: { provider?: string; model?: string }) {
   return (
     <div className="GenAITab--meta">
+      <span className="GenAITab--metaPrefix">LLM:</span>
       {provider && (
         <span className="GenAITab--metaItem">
           <span className="GenAITab--metaLabel">Provider</span> {provider}
@@ -142,6 +144,34 @@ function MetaRow({ provider, model }: { provider?: string; model?: string }) {
           <span className="GenAITab--metaLabel">Model</span> {model}
         </span>
       )}
+    </div>
+  );
+}
+
+// Cosmetic only, same rationale as TOKEN_LABELS below - a field missing from here
+// still renders under its own key, so a future gen_ai.agent.* field shows up
+// automatically without needing a matching entry added here.
+const AGENT_LABELS: Partial<Record<keyof GenAiAgent, string>> = {
+  name: 'Name',
+  version: 'Version',
+  id: 'ID',
+  description: 'Description',
+};
+
+function AgentSection({ id, name, version, description }: GenAiAgent) {
+  const agent: GenAiAgent = { name, version, id, description };
+  return (
+    <div className="GenAITab--section">
+      <h3 className="GenAITab--sectionTitle">Agent</h3>
+      {(Object.keys(agent) as Array<keyof GenAiAgent>).map(key => {
+        const value = agent[key];
+        if (!value) return null;
+        return (
+          <div key={key} className="GenAITab--toolSubsection">
+            <span className="GenAITab--toolLabel">{AGENT_LABELS[key] ?? key}</span> {value}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -291,6 +321,8 @@ export default function GenAITab({ span }: Props): React.ReactElement {
     <div className="GenAITab">
       {sections.map(section => {
         switch (section.type) {
+          case 'agent':
+            return <AgentSection key="agent" {...section.data} />;
           case 'meta':
             return <MetaRow key="meta" {...section.data} />;
           case 'tokens':
