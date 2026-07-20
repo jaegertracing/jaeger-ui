@@ -12,8 +12,8 @@ draft-release:
 
 .PHONY: prepare-release
 prepare-release:
-	@test $(VERSION) || (echo "VERSION is not set. Use 'make prepare-release VERSION=vX.Y.Z'"; exit 1)
-	python3 scripts/prepare-release.py --version $(VERSION)
+	@test $(VERSION) || (echo "VERSION is not set. Use 'make prepare-release VERSION=vX.Y.Z [ISSUE=nnnn]'"; exit 1)
+	python3 scripts/prepare-release.py --version $(VERSION) $(if $(ISSUE),--issue $(ISSUE))
 
 .PHONY: bundle-stats
 bundle-stats:
