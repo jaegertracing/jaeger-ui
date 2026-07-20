@@ -4,7 +4,6 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 th.header-item {
-  background: var(--surface-secondary);
   background: var(--surface-tertiary);
   border-left: 1px solid var(--border-default);
   border-top: 1px solid var(--border-default);
@@ -33,7 +32,6 @@ td.header-item {
   padding: 0 10px !important;
 }
 
-.table-row:hover {
 .table-row:hover,
 .table-row--hovered {
   background: var(--surface-component-background-hover);

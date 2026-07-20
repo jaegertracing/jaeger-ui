@@ -6,7 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 .Ddg--DetailsPanel {
   background-color: var(--surface-tertiary);
   border-left: solid 1px var(--border-default);
-  box-shadow: -3px 0 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -14,7 +14,7 @@ SPDX-License-Identifier: Apache-2.0
 
 .Ddg--DetailsPanel--SvcOpHeader {
   border-bottom: solid 1px var(--border-default);
-  box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   font-size: 1.5em;
   text-align: right;
   padding: 0.1em 0.3em;
@@ -27,8 +27,8 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .Ddg--DetailsPanel--DecorationHeader > span {
-  border-bottom: solid 1px #bbb;
-  box-shadow: 0px 3px 3px -3px rgba(0, 0, 0, 0.1);
+  border-bottom: solid 1px var(--border-default);
+  box-shadow: var(--shadow-sm);
 }
 
 .Ddg--DetailsPanel--DetailLink {
@@ -36,7 +36,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .Ddg--DetailsPanel--errorMsg {
-  color: #e58c33;
+  color: var(--feedback-warning);
 }
 
 .Ddg--DetailsPanel--DetailsCard {
@@ -47,7 +47,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .Ddg--DetailsPanel--DetailsCard.is-error {
-  color: #e58c33;
+  color: var(--feedback-warning);
 }
 
 .Ddg--DetailsPanel--LoadingIndicator {
