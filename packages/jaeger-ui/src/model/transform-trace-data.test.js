@@ -310,6 +310,72 @@ describe('transformTraceData()', () => {
     expect(result.duration).toBe(1000);
   });
 
+  it('should keep and repair sibling spans that have no usable startTime', () => {
+    // NB: this asserts the observable outcome (no span dropped, all startTimes
+    // finite, real sibling ordered last). It does NOT prove the NaN-comparator
+    // ordering issue is gone — that divergence is engine-defined (V8 leaves a
+    // NaN-comparator order unchanged), so it cannot be reproduced deterministically
+    // here. Repairing before the sort addresses it by construction.
+    const realStart = 1784570820629325;
+    const realRoot = {
+      traceID,
+      spanID: rootSpanID,
+      operationName: rootOperationName,
+      references: [],
+      startTime: realStart,
+      duration: 1000,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+    const missingSibling1 = {
+      traceID,
+      spanID: 'missing1',
+      operationName: 'missing1',
+      references: [{ refType: 'CHILD_OF', traceID, spanID: rootSpanID }],
+      duration: 10,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+    const nanSibling = {
+      traceID,
+      spanID: 'nan',
+      operationName: 'nan',
+      references: [{ refType: 'CHILD_OF', traceID, spanID: rootSpanID }],
+      startTime: NaN,
+      duration: 20,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+    const realSibling = {
+      traceID,
+      spanID: 'real',
+      operationName: 'real',
+      references: [{ refType: 'CHILD_OF', traceID, spanID: rootSpanID }],
+      startTime: realStart + 500,
+      duration: 30,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+
+    const result = transformTraceData({
+      traceID,
+      processes,
+      spans: [realRoot, missingSibling1, nanSibling, realSibling],
+    });
+
+    // Every span is kept and has a finite startTime; none was lost or left NaN.
+    expect(result.spans.length).toBe(4);
+    expect(result.spans.every(span => Number.isFinite(span.startTime))).toBe(true);
+    // Repaired siblings inherit the root's start (realStart), so they sort ahead
+    // of the real sibling (realStart + 500), which remains last.
+    expect(result.spanMap.get('real').startTime).toBe(realStart + 500);
+    expect(result.spans[result.spans.length - 1].spanID).toBe('real');
+  });
+
   it('should fall back to 0 for a root with no usable startTime and propagate it to children', () => {
     const brokenRoot = {
       traceID,

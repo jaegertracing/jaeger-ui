@@ -150,25 +150,29 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   const spans: Span[] = [];
   const svcCounts: Record<string, number> = {};
 
-  // Depth-first traversal to order spans, repair start times, and compute the
-  // trace's time range. A startTime that is missing/NaN or 0 (the Unix epoch,
-  // which no real span emits) carries no usable timestamp; such a span inherits
-  // its parent's startTime so it renders in the tree without stretching the
-  // timeline back to ~1970.
+  // A startTime that is missing/NaN or 0 (the Unix epoch, which no real span
+  // emits) carries no usable timestamp. Repair it by inheriting the parent's
+  // already-repaired startTime so the span still renders in the tree without
+  // stretching the timeline back to ~1970; a root with no parent falls back to
+  // 0. Every span is repaired by its caller *before* being sorted or handed to
+  // processSpan, so the sort comparators below never see undefined/NaN (which
+  // would make ordering engine-dependent) and processSpan always reads a finite
+  // startTime.
   //
-  // A root with no usable startTime falls back to 0. We deliberately do not
-  // special-case the pathological shape where such a root has children with
-  // real timestamps: there the trace range would still stretch back to the
-  // epoch. Inferring the root's start from its earliest descendant is possible
-  // but not worth the complexity for that rare, already-broken input.
-  const processSpan = (span: Span, depth: number, parent?: Span) => {
+  // We deliberately do not special-case the pathological shape where a root with
+  // no usable startTime has children with real timestamps: there the trace range
+  // would still stretch back to the epoch. Inferring the root's start from its
+  // earliest descendant is possible but not worth the complexity for that rare,
+  // already-broken input.
+  const repairStartTime = (span: Span, parent?: Span) => {
     if (!Number.isFinite(span.startTime) || span.startTime <= 0) {
-      // The DFS visits (and repairs) the parent before its children, so
-      // parent.startTime is normally already valid here; `|| 0` is a defensive
-      // fallback for a root (no parent) or an unusable inherited value.
       span.startTime = parent?.startTime || 0;
     }
+  };
 
+  // Depth-first traversal to order spans, populate the flat array, and compute
+  // the trace's time range from the (already-repaired) start times.
+  const processSpan = (span: Span, depth: number) => {
     span.depth = depth;
     span.hasChildren = span.childSpans.length > 0;
 
@@ -201,11 +205,15 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
 
     spans.push(span);
 
-    // Sort children by startTime before processing them
-    (span.childSpans as Span[]).sort((a, b) => a.startTime - b.startTime);
-    span.childSpans.forEach(child => processSpan(child, depth + 1, span));
+    // Repair children against this (already-repaired) span, then sort them by
+    // startTime before recursing.
+    const children = span.childSpans as Span[];
+    children.forEach(child => repairStartTime(child, span));
+    children.sort((a, b) => a.startTime - b.startTime);
+    children.forEach(child => processSpan(child, depth + 1));
   };
 
+  rootSpans.forEach(root => repairStartTime(root));
   rootSpans.sort((a, b) => a.startTime - b.startTime);
   rootSpans.forEach(root => processSpan(root, 0));
 
