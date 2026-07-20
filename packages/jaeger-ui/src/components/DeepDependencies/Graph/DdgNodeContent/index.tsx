@@ -9,6 +9,7 @@ import type { NavigateFunction } from 'react-router-dom';
 import { TLayoutVertex } from '@jaegertracing/plexus/lib/types';
 import { IoLocate, IoEyeOff, IoSearch } from 'react-icons/io5';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
+import { Dispatch } from 'redux';
 
 import calcPositioning from './calc-positioning';
 import { OP_PADDING_TOP, PROGRESS_BAR_STROKE_WIDTH, RADIUS, WORD_RX } from './constants';
@@ -152,6 +153,8 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
     updateGenerationVisibility,
     vertex,
     vertexKey,
+    search,
+    navigate,
   } = props;
 
   React.useEffect(() => {
@@ -219,7 +222,6 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
 
   const viewTraces = React.useCallback(() => {
     trackViewTraces();
-    const { operation, search, service, navigate } = props;
     // Omit traceID and spanLinks via destructuring (rather than using delete on a mutable object)
     const { traceID: _traceID, spanLinks: _spanLinks, ...rawUrlState } = getUrlState(search);
 
@@ -230,7 +232,7 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
     };
 
     navigate(getSearchUrl(query));
-  }, [props]);
+  }, [navigate, operation, search, service]);
 
   const onMouseUx = React.useCallback(
     (event: React.MouseEvent<HTMLElement>) => {
@@ -385,8 +387,7 @@ type DdgNodeContentProps = Omit<
 function DdgNodeContent(props: DdgNodeContentProps) {
   const { search } = useLocation();
   const navigate = useNavigate();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const dispatch = useDispatch<any>();
+  const dispatch = useDispatch<Dispatch<any>>();
   const decorationProps = useSelector(
     (state: ReduxState) =>
       extractDecorationFromState(state, {
