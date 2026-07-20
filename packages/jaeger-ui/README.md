@@ -26,7 +26,7 @@ When the config file has `.js` extension, the `jaeger` binary looks for the comm
 
 ### Configuration for Local Development
 
-When running the UI in development mode via `npm start`, you can provide custom configuration without running the Jaeger backend. Create one of the following files in the `packages/jaeger-ui` directory:
+When running the UI in development mode via `pnpm start`, you can provide custom configuration without running the Jaeger backend. Create one of the following files in the `packages/jaeger-ui` directory:
 
 1. **`jaeger-ui.config.json`** - A JSON file containing your config object:
 

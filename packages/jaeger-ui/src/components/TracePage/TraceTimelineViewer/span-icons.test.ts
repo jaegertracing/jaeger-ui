@@ -2,14 +2,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { getSpanIconComponent } from './span-icons';
+import { makeAttributes } from '../../../model/attributes';
 
 function makeAttrs(attrKeys: string[]) {
-  return attrKeys.map(key => ({ key, value: 'test' }));
+  return makeAttributes(attrKeys.map(key => ({ key, value: 'test' })));
 }
 
 describe('getSpanIconComponent', () => {
-  it.each(['gen_ai', 'db', 'http', 'messaging', 'rpc'])('returns an icon for %s attributes', ns => {
+  it.each(['db', 'http', 'messaging', 'rpc'])('returns an icon for %s attributes', ns => {
     expect(getSpanIconComponent(makeAttrs([`${ns}.system`]))).not.toBeNull();
+  });
+
+  it('returns null for gen_ai attributes - GenAISpanIcon renders the kind-specific icon for those instead, not this generic one', () => {
+    expect(getSpanIconComponent(makeAttrs(['gen_ai.system']))).toBeNull();
   });
 
   it('returns null for unrecognized namespace', () => {
@@ -24,10 +29,10 @@ describe('getSpanIconComponent', () => {
     expect(getSpanIconComponent(undefined)).toBeNull();
   });
 
-  it('gen_ai takes priority over db when both present', () => {
-    const genAiOnly = getSpanIconComponent(makeAttrs(['gen_ai.system']));
-    expect(getSpanIconComponent(makeAttrs(['gen_ai.system', 'db.system']))).toBe(genAiOnly);
-    expect(getSpanIconComponent(makeAttrs(['db.system', 'gen_ai.system']))).toBe(genAiOnly);
+  it('db takes priority over http when both present', () => {
+    const dbOnly = getSpanIconComponent(makeAttrs(['db.system']));
+    expect(getSpanIconComponent(makeAttrs(['db.system', 'http.system']))).toBe(dbOnly);
+    expect(getSpanIconComponent(makeAttrs(['http.system', 'db.system']))).toBe(dbOnly);
   });
 
   it('returns a consistent icon regardless of attribute order within the same namespace', () => {

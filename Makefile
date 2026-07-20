@@ -12,27 +12,39 @@ draft-release:
 
 .PHONY: prepare-release
 prepare-release:
-	@test $(VERSION) || (echo "VERSION is not set. Use 'make prepare-release VERSION=vX.Y.Z'"; exit 1)
-	python3 scripts/prepare-release.py --version $(VERSION)
+	@test $(VERSION) || (echo "VERSION is not set. Use 'make prepare-release VERSION=vX.Y.Z [ISSUE=nnnn]'"; exit 1)
+	python3 scripts/prepare-release.py --version $(VERSION) $(if $(ISSUE),--issue $(ISSUE))
 
 .PHONY: bundle-stats
 bundle-stats:
-	BUNDLE_STATS=1 npm run build
+	BUNDLE_STATS=1 pnpm run build
 	@echo "Bundle stats written to packages/jaeger-ui/build/bundle-stats.csv"
 
 .PHONY: reinstall
 reinstall:
 	rm -rf node_modules packages/jaeger-ui/node_modules packages/plexus/node_modules
-	npm ci
+	pnpm install --frozen-lockfile
 
 .PHONY: fmt
 fmt:
-	npm run fmt
+	pnpm run fmt
 
 .PHONY: lint
 lint:
-	npm run lint
+	pnpm run lint
 
 .PHONY: test
 test:
-	npm run test
+	pnpm run test
+
+.PHONY: build
+build:
+	pnpm run build
+
+.PHONY: coverage
+coverage:
+	pnpm run coverage
+
+.PHONY: depcheck
+depcheck:
+	pnpm run depcheck

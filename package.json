@@ -11,7 +11,7 @@
   "engines": {
     "node": ">=24.16.0"
   },
-  "packageManager": "npm@11.18.0",
+  "packageManager": "pnpm@10.5.0",
   "devDependencies": {
     "@babel/core": "8.0.1",
     "@emnapi/core": "^1.9.1",
@@ -19,52 +19,52 @@
     "@noble/hashes": "2.2.0",
     "@testing-library/dom": "^10.4.1",
     "depcheck": "1.4.7",
-    "knip": "6.24.0",
-    "eslint-plugin-react-x": "5.10.1",
+    "knip": "6.26.0",
+    "eslint-plugin-react-x": "5.14.5",
     "husky": "9.1.0",
     "jsdom": "29.1.1",
     "lint-staged": "17.0.4",
     "npm-run-all2": "9.0.1",
     "openapi-zod-client": "1.18.3",
     "typescript": "6.0.2",
-    "vite-plus": "0.2.2",
-    "@vitest/coverage-v8": "4.1.9",
-    "vitest": "4.1.9"
+    "vite-plus": "0.2.4",
+    "@vitest/coverage-v8": "4.1.10",
+    "vitest": "4.1.10"
   },
-  "overrides": {
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
-    "yaml": "2.9.0",
-    "@exodus/bytes": {
-      "@noble/hashes": "$@noble/hashes"
+  "pnpm": {
+    "overrides": {
+      "react": "19.2.0",
+      "react-dom": "19.2.0",
+      "yaml": "2.9.0",
+      "@types/node": "24.13.1",
+      "@exodus/bytes>@noble/hashes": "$@noble/hashes",
+      "@assistant-ui/core": "0.2.10",
+      "@assistant-ui/store": "0.2.13",
+      "@assistant-ui/tap": "0.5.14"
     }
   },
-  "workspaces": [
-    "packages/plexus",
-    "packages/jaeger-ui"
-  ],
   "scripts": {
-    "build": "npm run --workspaces build",
+    "build": "pnpm -r build",
     "check-copyright-year": "./scripts/check-copyright-year.sh",
     "check-license": "./scripts/check-license.sh",
     "check-overrides": "./scripts/check-overrides.sh",
     "check-tsx-naming": "./scripts/check-tsx-naming.sh",
-    "coverage": "npm run --workspaces coverage",
+    "coverage": "pnpm -r coverage",
     "depcheck": "./scripts/run-depcheck.sh",
     "oxlint": "vp lint packages/ scripts/",
     "fmt": "vp fmt",
     "knip": "knip",
     "lint": "npm-run-all -ln --parallel fmt-lint tsc-lint oxlint check-license check-copyright-year check-tsx-naming check-overrides knip",
-    "preinstall": "node scripts/check-npm-version.cjs",
+    "preinstall": "npx only-allow pnpm",
     "prepare": "husky",
     "fmt-lint": "vp fmt --check || (echo '*** ❌ PLEASE RUN make fmt AND RESUBMIT ***' && false)",
     "generate:api-types": "openapi-zod-client https://raw.githubusercontent.com/jaegertracing/jaeger-idl/refs/heads/main/swagger/api_v3/query_service.openapi.yaml --output packages/jaeger-ui/src/api/v3/generated-client.ts --with-alias && node scripts/postprocess-schemas.cjs && vp fmt packages/jaeger-ui/src/api/v3/generated-client.ts",
-    "test": "npm run --workspaces test --",
+    "test": "pnpm -r test --",
     "tsc-lint": "tsc -p packages/jaeger-ui/tsconfig.json && tsc -p packages/plexus/tsconfig.json",
     "tsc-lint-debug": "tsc -p packages/jaeger-ui/tsconfig.json --listFiles && tsc -p packages/plexus/tsconfig.json --listFiles",
     "dev:check": "./scripts/check-dev-server.sh",
-    "start": "cd packages/jaeger-ui && npm run start",
-    "update-snapshots": "cd packages/jaeger-ui && npm test -- -u"
+    "start": "pnpm --filter @jaegertracing/jaeger-ui start",
+    "update-snapshots": "pnpm --filter @jaegertracing/jaeger-ui test -- -u"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,mts}": [

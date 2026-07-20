@@ -80,6 +80,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       prunedServices: new Set(),
       trace,
       criticalPath,
+      spanPillsEnabled: true,
       uiFind: 'uiFind',
       navigate: jest.fn(),
       location: {
@@ -676,8 +677,8 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
     it('linksGetter is expected to receive url and text for a given link pattern', () => {
       const span = trace.spans[1];
-      const key = span.attributes[0].key;
-      const value = span.attributes[0].value;
+      const key = span.attributes.entries()[0].key;
+      const value = span.attributes.entries()[0].value;
       const val = encodeURIComponent(value);
 
       const linkPatternConfig = [
