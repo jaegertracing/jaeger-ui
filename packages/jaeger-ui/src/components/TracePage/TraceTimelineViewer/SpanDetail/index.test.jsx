@@ -95,9 +95,9 @@ describe('<SpanDetail>', () => {
 
   beforeEach(() => {
     formatDuration.mockReset();
-    formatDuration.mockImplementation(duration => `${duration}ms`);
+    formatDuration.mockImplementation(duration => `duration:${duration}`);
     formatDurationCompact.mockReset();
-    formatDurationCompact.mockImplementation(duration => `${duration}ms`);
+    formatDurationCompact.mockImplementation(duration => `compact:${duration}`);
 
     const rawTrace = traceGenerator.trace({ numberOfSpans: 1 });
     spanData = rawTrace.spans[0];
