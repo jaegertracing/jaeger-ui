@@ -120,13 +120,43 @@ describe('<AttributesTable>', () => {
   it('renders table row for each data element with correct key columns', () => {
     render(<AttributesTable data={makeAttributes(data)} />);
 
+    // A JsonView tree (the 'jsonkey' entry) renders as two rows - a key-only row and
+    // a full-width value row below it - instead of sharing one row with the key
+    // column, so the total is data.length plus one extra row for that single
+    // JSON-tree item.
     const rows = screen.getAllByRole('row');
-    expect(rows).toHaveLength(data.length);
+    expect(rows).toHaveLength(data.length + 1);
 
     data.forEach(item => {
       const keyCell = screen.getByText(item.key);
       expect(keyCell).toHaveClass('KeyValueTable--keyColumn');
     });
+  });
+
+  it('renders a JSON-tree value on its own full-width row, separate from the key row', () => {
+    render(<AttributesTable data={makeAttributes(data)} />);
+
+    const keyCell = screen.getByText('jsonkey');
+    const keyRow = keyCell.closest('tr');
+    expect(keyRow).toHaveClass('KeyValueTable--row-jsonKey');
+    expect(keyCell).toHaveAttribute('colSpan', '2');
+    // Only the key sits in this row - no value content alongside it.
+    expect(keyRow).not.toHaveTextContent('world');
+
+    const valueRow = keyRow.nextElementSibling;
+    expect(valueRow).toHaveClass('KeyValueTable--row-jsonValue');
+    const valueCell = valueRow.querySelector('.KeyValueTable--valueColumn-full');
+    expect(valueCell).toHaveAttribute('colSpan', '2');
+    expect(valueCell).toHaveTextContent('world');
+  });
+
+  it('keeps a non-JSON-tree value sharing one row with its key, unchanged from before', () => {
+    render(<AttributesTable data={makeAttributes(data)} />);
+
+    const keyCell = screen.getByText('span.kind');
+    const row = keyCell.closest('tr');
+    expect(row).not.toHaveClass('KeyValueTable--row-jsonKey');
+    expect(row).toHaveTextContent('client');
   });
 
   it('renders expected text content for each span value', () => {

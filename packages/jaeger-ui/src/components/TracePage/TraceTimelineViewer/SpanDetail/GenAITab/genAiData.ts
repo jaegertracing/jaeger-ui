@@ -96,12 +96,15 @@ function parseSystemInstructions(value: AttributeValue | undefined): string | un
   return text || undefined;
 }
 
-const jsonObjectOrArrayStartRegex = /^(\[|\{)/;
+const jsonObjectOrArrayStartRegex = /^\s*[[{]/;
 
 /**
  * Only attempts JSON.parse when the string looks like an object/array literal,
- * same guard as AttributesTable.tryParseJson - avoids relying on try/catch
+ * a similar guard to AttributesTable.tryParseJson - avoids relying on try/catch
  * exceptions for control flow on the common case of plain, non-JSON strings.
+ * Unlike AttributesTable's guard, leading whitespace is tolerated here so
+ * pretty-printed/indented JSON (e.g. "\n{...}") is still detected - JSON.parse
+ * itself already ignores it.
  */
 export function tryParseJson(value: string): unknown {
   try {
