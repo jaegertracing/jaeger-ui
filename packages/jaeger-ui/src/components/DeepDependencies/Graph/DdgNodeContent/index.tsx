@@ -9,7 +9,6 @@ import type { NavigateFunction } from 'react-router-dom';
 import { TLayoutVertex } from '@jaegertracing/plexus/lib/types';
 import { IoLocate, IoEyeOff, IoSearch } from 'react-icons/io5';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
-import { bindActionCreators, Dispatch } from 'redux';
 
 import calcPositioning from './calc-positioning';
 import { OP_PADDING_TOP, PROGRESS_BAR_STROKE_WIDTH, RADIUS, WORD_RX } from './constants';
@@ -384,14 +383,6 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
   );
 });
 
-export function mapDispatchToProps(dispatch: Dispatch): TDispatchProps {
-  const { getDecoration } = bindActionCreators(padActions, dispatch);
-
-  return {
-    getDecoration,
-  };
-}
-
 type DdgNodeContentProps = Omit<
   TProps,
   keyof TDispatchProps | keyof TDecorationFromState | 'search' | 'navigate'
@@ -400,8 +391,8 @@ type DdgNodeContentProps = Omit<
 function DdgNodeContent(props: DdgNodeContentProps) {
   const { search } = useLocation();
   const navigate = useNavigate();
-  const dispatch = useDispatch<Dispatch>();
-  const dispatchProps = React.useMemo(() => mapDispatchToProps(dispatch), [dispatch]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const dispatch = useDispatch<any>();
   const decorationProps = useSelector(
     (state: ReduxState) =>
       extractDecorationFromState(state, {
@@ -412,12 +403,19 @@ function DdgNodeContent(props: DdgNodeContentProps) {
     shallowEqual
   );
 
+  const getDecoration = React.useCallback(
+    (id: string, svc: string, op?: string) => {
+      dispatch(padActions.getDecoration(id, svc, op));
+    },
+    [dispatch]
+  );
+
   return (
     <UnconnectedDdgNodeContent
       {...props}
       search={search}
       navigate={navigate}
-      {...dispatchProps}
+      getDecoration={getDecoration}
       {...decorationProps}
     />
   );
