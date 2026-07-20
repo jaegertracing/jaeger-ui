@@ -159,7 +159,7 @@ const AGENT_LABELS: Partial<Record<keyof GenAiAgent, string>> = {
 };
 
 function AgentSection({ id, name, version, description }: GenAiAgent) {
-  const agent: GenAiAgent = { name, version, id, description };
+  const agent: GenAiAgent = { id, name, version, description };
   return (
     <div className="GenAITab--section">
       <h3 className="GenAITab--sectionTitle">Agent</h3>
