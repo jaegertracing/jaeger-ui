@@ -32,27 +32,57 @@ export interface IAttribute {
   value: AttributeValue;
 }
 
+/**
+ * A collection of attributes that hides the underlying array so that looking
+ * up a specific attribute is an O(1) `getValue(key)` rather than a linear
+ * `.find(a => a.key === key)` scan. Used everywhere OTel attributes are stored
+ * (span, resource, scope, event, link). Construct via `makeAttributes()` in
+ * `model/attributes.ts`.
+ */
+export interface IAttributes {
+  /** Value of the first attribute with the given key, or undefined if absent. O(1). */
+  getValue(key: string): AttributeValue | undefined;
+
+  /** True if any attribute has the given key. O(1). */
+  has(key: string): boolean;
+
+  /** Unique attribute keys, for prefix/namespace scans and key collection. */
+  keys(): ReadonlyArray<string>;
+
+  /**
+   * DO NOT USE THIS UNLESS YOU REALLY NEED TO PROCESS THE WHOLE COLLECTION
+   * (e.g. rendering every attribute or a full-text search). To look up a
+   * specific attribute by key, use getValue()/has() — they are O(1). Calling
+   * .find()/.filter() on the result of entries() re-introduces the exact
+   * linear-scan footgun this type exists to remove.
+   */
+  entries(): ReadonlyArray<IAttribute>;
+
+  /** Total number of attributes (counting duplicate keys). */
+  readonly size: number;
+}
+
 export interface IResource {
-  attributes: IAttribute[]; // includes service.name, etc.
-  serviceName: string; // convenience: attributes['service.name']
+  attributes: IAttributes; // includes service.name, etc.
+  serviceName: string; // convenience: attributes.getValue('service.name')
 }
 
 export interface IScope {
   name: string;
   version?: string;
-  attributes?: IAttribute[];
+  attributes?: IAttributes;
 }
 
 export interface IEvent {
   timestamp: Microseconds;
   name: string;
-  attributes: IAttribute[];
+  attributes: IAttributes;
 }
 
 export interface ILink {
   traceID: string;
   spanID: string;
-  attributes: IAttribute[];
+  attributes: IAttributes;
   span?: IOtelSpan;
 }
 
@@ -80,7 +110,7 @@ export interface IOtelSpan {
   duration: Microseconds;
 
   // Core Data
-  attributes: IAttribute[];
+  attributes: IAttributes;
   events: IEvent[];
   links: ILink[];
   status: IStatus;

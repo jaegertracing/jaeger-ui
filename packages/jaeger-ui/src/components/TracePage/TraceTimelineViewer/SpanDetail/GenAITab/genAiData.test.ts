@@ -1,11 +1,18 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { extractGenAiSections, hasAnyTokenUsage, formatTokenCount, GenAiSection } from './genAiData';
-import type { IAttribute } from '../../../../../types/otel';
+import {
+  extractGenAiSections,
+  hasAnyTokenUsage,
+  formatTokenCount,
+  tryParseJson,
+  GenAiSection,
+} from './genAiData';
+import type { IAttribute, IAttributes } from '../../../../../types/otel';
+import { makeAttributes } from '../../../../../model/attributes';
 
-function attrs(pairs: Record<string, unknown>): IAttribute[] {
-  return Object.entries(pairs).map(([key, value]) => ({ key, value }) as IAttribute);
+function attrs(pairs: Record<string, unknown>): IAttributes {
+  return makeAttributes(Object.entries(pairs).map(([key, value]) => ({ key, value }) as IAttribute));
 }
 
 type SectionDataMap = { [S in GenAiSection as S['type']]: S['data'] };
@@ -484,7 +491,7 @@ describe('extractGenAiSections', () => {
           'http.method': 'GET',
         })
       );
-      expect(section(sections, 'other')?.attributes).toEqual([
+      expect(section(sections, 'other')?.attributes.entries()).toEqual([
         { key: 'gen_ai.operation.name', value: 'chat' },
         { key: 'gen_ai.conversation.id', value: 'conv-1' },
       ]);
@@ -507,13 +514,13 @@ describe('extractGenAiSections', () => {
         { key: 'gen_ai.tool.name', value: 'first_call' },
         { key: 'gen_ai.tool.name', value: 'second_call' },
       ];
-      const sections = extractGenAiSections(duplicateKeyAttrs);
+      const sections = extractGenAiSections(makeAttributes(duplicateKeyAttrs));
       // The first occurrence is claimed by the toolCall builder.
       expect(section(sections, 'toolCall')?.name).toBe('first_call');
       // The second occurrence is not claimed by anything, so it must still
       // surface under "other" rather than being silently discarded by a
       // name-keyed Map that would have kept only the last value.
-      expect(section(sections, 'other')?.attributes).toEqual([
+      expect(section(sections, 'other')?.attributes.entries()).toEqual([
         { key: 'gen_ai.tool.name', value: 'second_call' },
       ]);
     });
@@ -532,6 +539,28 @@ describe('hasAnyTokenUsage', () => {
 
   it('returns false when all fields are undefined', () => {
     expect(hasAnyTokenUsage({})).toBe(false);
+  });
+});
+
+describe('tryParseJson', () => {
+  it('parses a plain JSON object string', () => {
+    expect(tryParseJson('{"a":1}')).toEqual({ a: 1 });
+  });
+
+  it('parses a JSON object with leading whitespace/newlines, not falling back to the raw string', () => {
+    expect(tryParseJson('\n  {"a":1}')).toEqual({ a: 1 });
+  });
+
+  it('parses a JSON array with leading whitespace', () => {
+    expect(tryParseJson('\n[1,2,3]')).toEqual([1, 2, 3]);
+  });
+
+  it('returns non-JSON strings unchanged, including ones with leading whitespace', () => {
+    expect(tryParseJson('  hello world')).toBe('  hello world');
+  });
+
+  it('returns the original string unchanged when it looks like JSON but fails to parse', () => {
+    expect(tryParseJson('{not valid json')).toBe('{not valid json');
   });
 });
 
