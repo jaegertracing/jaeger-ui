@@ -145,13 +145,16 @@ def git_commit_and_pr(version, branch_name):
     run_command(["git", "add", "CHANGELOG.md", "packages/jaeger-ui/package.json"])
     commit_msg = f"Prepare release {version}"
     run_command(["git", "commit", "-s", "-m", commit_msg])
-    
+
     print("Pushing branch...")
     run_command(["git", "push", "-u", "origin", branch_name])
-    
+
     print("Creating Pull Request...")
     pr_body = f"Prepare release {version}.\n\nAutomated release preparation."
-    run_command(["gh", "pr", "create", "--title", commit_msg, "--body", pr_body, "--label", "changelog:skip", "--head", branch_name], capture_stdout=False, capture_stderr=False)
+    # Omit --head so gh infers it from the just-pushed current branch and its
+    # tracking remote. Passing a bare branch name made gh look for it in the base
+    # repo, which fails when origin is a fork and the base repo is another remote.
+    run_command(["gh", "pr", "create", "--title", commit_msg, "--body", pr_body, "--label", "changelog:skip"], capture_stdout=False, capture_stderr=False)
 
 def main():
     parser = argparse.ArgumentParser(description="Prepare Jaeger UI release")
