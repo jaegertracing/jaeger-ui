@@ -25,6 +25,10 @@ reinstall:
 	rm -rf node_modules packages/jaeger-ui/node_modules packages/plexus/node_modules
 	pnpm install --frozen-lockfile
 
+.PHONY: start
+start:
+	pnpm start
+
 .PHONY: fmt
 fmt:
 	pnpm run fmt
@@ -48,3 +52,7 @@ coverage:
 .PHONY: depcheck
 depcheck:
 	pnpm run depcheck
+
+.PHONY: ci
+ci:
+	pnpm install --frozen-lockfile
