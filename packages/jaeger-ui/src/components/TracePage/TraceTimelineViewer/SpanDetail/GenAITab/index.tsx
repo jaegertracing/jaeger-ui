@@ -148,9 +148,11 @@ function MetaRow({ provider, model }: { provider?: string; model?: string }) {
   );
 }
 
-// Cosmetic only, same rationale as TOKEN_LABELS below - a field missing from here
-// still renders under its own key, so a future gen_ai.agent.* field shows up
-// automatically without needing a matching entry added here.
+// Cosmetic only: a key missing from here still renders under its raw field name
+// instead of a friendly label. This does NOT mean a new gen_ai.agent.* attribute
+// shows up automatically - it must first be added to GenAiAgent, extracted by the
+// agent builder in genAiData.ts, and listed in AGENT_FIELD_ORDER below before it
+// renders at all; only the label lookup itself is optional.
 const AGENT_LABELS: Partial<Record<keyof GenAiAgent, string>> = {
   name: 'Name',
   version: 'Version',
@@ -158,14 +160,18 @@ const AGENT_LABELS: Partial<Record<keyof GenAiAgent, string>> = {
   description: 'Description',
 };
 
+// Explicit rather than Object.keys(agent) - render order shouldn't depend on
+// object literal insertion order, and this avoids an unsafe keyof cast.
+const AGENT_FIELD_ORDER: ReadonlyArray<keyof GenAiAgent> = ['id', 'name', 'version', 'description'];
+
 function AgentSection({ id, name, version, description }: GenAiAgent) {
   const agent: GenAiAgent = { id, name, version, description };
   return (
     <div className="GenAITab--section">
       <h3 className="GenAITab--sectionTitle">Agent</h3>
-      {(Object.keys(agent) as Array<keyof GenAiAgent>).map(key => {
+      {AGENT_FIELD_ORDER.map(key => {
         const value = agent[key];
-        if (!value) return null;
+        if (value == null) return null;
         return (
           <div key={key} className="GenAITab--toolSubsection">
             <span className="GenAITab--toolLabel">{AGENT_LABELS[key] ?? key}</span> {value}
