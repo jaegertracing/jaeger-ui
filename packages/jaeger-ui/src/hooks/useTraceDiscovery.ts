@@ -1,9 +1,23 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useQuery, UseQueryResult } from '@tanstack/react-query';
+import { useEffect, useMemo } from 'react';
+import { useQuery, useIsFetching, useQueryClient, skipToken, UseQueryResult } from '@tanstack/react-query';
 import { jaegerClient } from '../api/v3/client';
+import { trackSearchLatency } from '../components/SearchTracePage/SearchResults/index.track';
 import { localeStringComparator } from '../utils/sort';
+import { isSameQuery } from '../utils/search-query';
+import type { SearchQuery } from '../types/search';
+import type { TraceSummary } from '../types/trace-summary';
+import type { Microseconds } from '../types/units';
+
+// Module-private query keys — not exported; other code should use the hooks/accessors below.
+const SERVICES_QUERY_KEY = ['services'] as const;
+const TRACE_SUMMARIES_QUERY_KEY = 'traceSummaries';
+
+function spanNamesQueryKey(service: string | null): readonly ['spanNames', string | null] {
+  return ['spanNames', service] as const;
+}
 
 /**
  * React Query hook to fetch the list of services from the Jaeger API.
@@ -11,7 +25,7 @@ import { localeStringComparator } from '../utils/sort';
  */
 export function useServices(): UseQueryResult<string[]> {
   return useQuery({
-    queryKey: ['services'],
+    queryKey: SERVICES_QUERY_KEY,
     queryFn: () => jaegerClient.fetchServices(),
     staleTime: 60 * 1000, // 1 minute
     refetchOnWindowFocus: true,
@@ -30,9 +44,8 @@ export function useSpanNames(
   spanKind?: string
 ): UseQueryResult<{ name: string; spanKind: string }[]> {
   return useQuery({
-    queryKey: ['spanNames', service],
-    queryFn: () => jaegerClient.fetchSpanNames(service!),
-    enabled: !!service, // Only fetch when service is selected
+    queryKey: spanNamesQueryKey(service),
+    queryFn: service ? () => jaegerClient.fetchSpanNames(service) : skipToken,
     staleTime: 60 * 1000, // 1 minute
     refetchOnWindowFocus: true,
     select: data => {
@@ -44,4 +57,91 @@ export function useSpanNames(
       return [...filtered].sort((a, b) => localeStringComparator(a.name, b.name));
     },
   });
+}
+
+export type TraceSummariesResult = {
+  results: TraceSummary[];
+  query: SearchQuery;
+  /** Wall-clock latency of the search request (network + backend). */
+  searchLatency: Microseconds;
+};
+
+/**
+ * React Query hook to search for traces by query parameters.
+ * Calls /api/v3/trace-summaries and returns `UseQueryResult<TraceSummariesResult>` (results + query).
+ * Pass null to suppress the fetch (e.g. on the homepage before the user submits a search).
+ *
+ * **Keyed cache design**: the query key is `[TRACE_SUMMARIES_QUERY_KEY, query]` so each distinct
+ * search gets its own cache entry. This is standard React Query — a new key means a cache
+ * miss, so navigating to a new URL triggers a fresh fetch.
+ *
+ * **Single-slot invariant**: on every render where `query` is non-null, a `useEffect`
+ * evicts all cache entries whose key differs from the current query. This keeps at most one
+ * live entry in the cache at any time — no unbounded memory growth across a session.
+ *
+ * **query === null (bare /search)**: the hook finds the most-recently-updated cache entry
+ * (by `dataUpdatedAt`), extracts its query as `effectiveQuery`, and subscribes `useQuery`
+ * to that key — so the caller sees the cached results and can restore the URL from `data.query`.
+ *
+ * **staleTime: Infinity** — data is never considered stale on its own; staleness is driven
+ * entirely by explicit form submission (navigate to new URL → new key → cache miss).
+ *
+ * **gcTime: Infinity** — prevents eviction while SearchTracePage is unmounted (e.g. user is
+ * on a trace detail page). Safe because the single-slot invariant bounds memory to one entry.
+ */
+export function useSearchTraces(query: SearchQuery | null): UseQueryResult<TraceSummariesResult> {
+  const queryClient = useQueryClient();
+
+  // When query is null (bare /search after TopNav click), find the most recently updated
+  // cache entry and subscribe to it so the component can restore the URL from data.query.
+  // useMemo is used for idiomatic derived-cache reads; queryClient is stable across renders.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const effectiveQuery = useMemo(() => {
+    if (query) return query;
+    const entries = queryClient
+      .getQueryCache()
+      .findAll({ queryKey: [TRACE_SUMMARIES_QUERY_KEY], exact: false });
+    if (entries.length === 0) return null;
+    const mostRecent = entries.reduce((latest, current) =>
+      current.state.dataUpdatedAt > latest.state.dataUpdatedAt ? current : latest
+    );
+    // Prefer queryKey[1] over state.data?.query so the entry is found even while
+    // still fetching (data is undefined until the first successful response).
+    return (mostRecent.queryKey[1] as SearchQuery | undefined) ?? null;
+  }, [query, queryClient]);
+
+  // Keep at most one cache entry: evict entries that don't match the effective query.
+  useEffect(() => {
+    if (!effectiveQuery) return;
+    queryClient
+      .getQueryCache()
+      .findAll({ queryKey: [TRACE_SUMMARIES_QUERY_KEY], exact: false })
+      .forEach(entry => {
+        const entryQuery = entry.queryKey[1] as SearchQuery | null | undefined;
+        if (!entryQuery || !isSameQuery(entryQuery, effectiveQuery)) {
+          queryClient.removeQueries({ queryKey: entry.queryKey, exact: true });
+        }
+      });
+  }, [effectiveQuery, queryClient]);
+
+  return useQuery({
+    queryKey: [TRACE_SUMMARIES_QUERY_KEY, effectiveQuery],
+    queryFn: effectiveQuery
+      ? async () => {
+          const startedAt = performance.now();
+          const results = await jaegerClient.fetchTraceSummaries(effectiveQuery);
+          // performance.now() is in milliseconds; convert to the domain-wide Microseconds unit.
+          const searchLatency = ((performance.now() - startedAt) * 1000) as Microseconds;
+          trackSearchLatency(searchLatency);
+          return { results, query: effectiveQuery, searchLatency } satisfies TraceSummariesResult;
+        }
+      : skipToken,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+}
+
+/** Returns true while a trace summaries fetch is in flight. */
+export function useIsSearchFetching(): boolean {
+  return useIsFetching({ queryKey: [TRACE_SUMMARIES_QUERY_KEY] }) > 0;
 }

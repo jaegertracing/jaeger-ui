@@ -11,6 +11,7 @@ export default class OtelTraceFacade implements IOtelTrace {
   private _spanMap: Map<string, IOtelSpan>;
   private _rootSpans: IOtelSpan[];
   private _orphanSpanCount: number;
+  readonly isGenAITrace: boolean;
 
   constructor(legacyTrace: Trace) {
     this.legacyTrace = legacyTrace;
@@ -36,6 +37,10 @@ export default class OtelTraceFacade implements IOtelTrace {
     this._orphanSpanCount = this._spans.filter(
       s => s.parentSpanID && !this._spanMap.has(s.parentSpanID)
     ).length;
+
+    // Each span's genAIKind is already computed once in OtelSpanFacade's
+    // constructor, so this reads cached values instead of re-scanning attributes.
+    this.isGenAITrace = this._spans.some(s => s.genAIKind !== undefined);
 
     // Wire up parentSpan, childSpans, and link span references
     this._spans.forEach(span => {
@@ -114,5 +119,11 @@ export default class OtelTraceFacade implements IOtelTrace {
 
   hasErrors(): boolean {
     return this._spans.some(sp => sp.status.code === 'ERROR');
+  }
+
+  // Escape hatch for code that still requires the legacy Jaeger Trace shape.
+  // Use sparingly; prefer IOtelTrace fields where possible.
+  toLegacyTrace(): Trace {
+    return this.legacyTrace;
   }
 }

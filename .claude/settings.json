@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm run *)",
+      "Bash(pnpm test)",
+      "Bash(pnpm test *)",
+      "Bash(pnpm start)",
+      "Bash(pnpm -r *)",
+      "Bash(pnpm --filter *)",
+      "Bash(pnpm install *)",
+      "Bash(pnpm install)",
+      "Bash(pnpm --version)",
+      "Bash(pnpm why *)",
+      "Bash(pnpm view *)",
+      "Bash(npx oxlint *)",
+      "Bash(npx oxc-transform *)",
+      "Bash(npx oxc-parser *)",
+      "Bash(npx vp *)",
+      "Bash(npx @typescript/native-preview *)"
+    ]
+  }
+}

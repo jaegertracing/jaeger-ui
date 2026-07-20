@@ -63,6 +63,8 @@ SPDX-License-Identifier: Apache-2.0
     ============================================ */
 
   --feedback-error: var(--ant-color-error);
+  /* Use --feedback-error-text for text/border on transparent backgrounds; adapts to dark theme. */
+  --feedback-error-text: var(--ant-color-error-text);
   --feedback-warning: var(--ant-color-warning-active);
   --feedback-success: var(--ant-color-success);
   --feedback-info: var(--ant-color-info);
@@ -258,8 +260,8 @@ SPDX-License-Identifier: Apache-2.0
   --trace-emphasis-highlight: #3d3520;
 
   /* Critical Path */
-  --critical-path-color: #000;
-  --critical-path-outline: #fff;
+  --critical-path-color: #fff;
+  --critical-path-outline: #000;
 
   /* ============================================
     TRACE TIMELINE TOKENS - Dark Mode

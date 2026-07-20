@@ -9,6 +9,118 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v2.20.0 (2026-07-19)
+
+#### ✨ New Features
+
+* Feat(genai-tab): add content-sensitive rendering toggle (plain/markdown/json) for message content ([@swetalin-10](https://github.com/swetalin-10) in [#4213](https://github.com/jaegertracing/jaeger-ui/pull/4213))
+* Feat(assistant): add markdown rendering and panel resize ([@SoumyaRaikwar](https://github.com/SoumyaRaikwar) in [#4181](https://github.com/jaegertracing/jaeger-ui/pull/4181))
+* Feat(search): add ascending sort support for start time column ([@akshatsinghai6682-sketch](https://github.com/akshatsinghai6682-sketch) in [#4033](https://github.com/jaegertracing/jaeger-ui/pull/4033))
+* Feat: treat trace ids as opaque strings, support base64 encoding ([@yurishkuro](https://github.com/yurishkuro) in [#4118](https://github.com/jaegertracing/jaeger-ui/pull/4118))
+* Feat(flamegraph): implement native & improved flamegraph trace view ([@yurishkuro](https://github.com/yurishkuro) in [#4098](https://github.com/jaegertracing/jaeger-ui/pull/4098))
+* Feat(tracing): export ui-emitted otlp traces to jaeger ([@yurishkuro](https://github.com/yurishkuro) in [#4051](https://github.com/jaegertracing/jaeger-ui/pull/4051))
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Fix(genai): fix span icon hover tooltip and refine type icons and labels ([@swetalin-10](https://github.com/swetalin-10) in [#4239](https://github.com/jaegertracing/jaeger-ui/pull/4239))
+* Feat(timeline): emphasize span-type icons and soften tree chrome ([@ysh-bot](https://github.com/ysh-bot) in [#4238](https://github.com/jaegertracing/jaeger-ui/pull/4238))
+* Chore(genai-tab): prefix the token usage row with "tokens:" ([@swetalin-10](https://github.com/swetalin-10) in [#4222](https://github.com/jaegertracing/jaeger-ui/pull/4222))
+* Fix(trace): show span pill labels as tooltips ([@udita-0707](https://github.com/udita-0707) in [#4220](https://github.com/jaegertracing/jaeger-ui/pull/4220))
+* Feat(trace): expand span pills to hardcoded attribute set ([@udita-0707](https://github.com/udita-0707) in [#4214](https://github.com/jaegertracing/jaeger-ui/pull/4214))
+* Fix(genai-tab): simplify and fix rendering of genai span icons ([@swetalin-10](https://github.com/swetalin-10) in [#4221](https://github.com/jaegertracing/jaeger-ui/pull/4221))
+* Feat(search): show and track trace search latency ([@ysh-bot](https://github.com/ysh-bot) in [#4216](https://github.com/jaegertracing/jaeger-ui/pull/4216))
+* Refactor(otel): introduce iattributes collection replacing raw attribute arrays ([@ysh-bot](https://github.com/ysh-bot) in [#4211](https://github.com/jaegertracing/jaeger-ui/pull/4211))
+* Feat(trace): add http status summary chips ([@udita-0707](https://github.com/udita-0707) in [#4149](https://github.com/jaegertracing/jaeger-ui/pull/4149))
+* Feat(spanbarrow): add genai span type icons for llm, tool, agent, and retrieval spans ([@swetalin-10](https://github.com/swetalin-10) in [#3857](https://github.com/jaegertracing/jaeger-ui/pull/3857))
+* Fix(stats): make heatmap theme-aware ([@jkowall](https://github.com/jkowall) in [#4200](https://github.com/jaegertracing/jaeger-ui/pull/4200))
+* Fix(listview): remove array-length pre-allocation that created holes ([@dolliecoder](https://github.com/dolliecoder) in [#4194](https://github.com/jaegertracing/jaeger-ui/pull/4194))
+* Feat(genai-tab): add genai span detail content ([@swetalin-10](https://github.com/swetalin-10) in [#4191](https://github.com/jaegertracing/jaeger-ui/pull/4191))
+* Feat(utils): add genai span classification and isgenaitrace detection ([@swetalin-10](https://github.com/swetalin-10) in [#3856](https://github.com/jaegertracing/jaeger-ui/pull/3856))
+* Feat(monitor): sync monitor filters to url on change ([@udita-0707](https://github.com/udita-0707) in [#4182](https://github.com/jaegertracing/jaeger-ui/pull/4182))
+* Fix(timeline): restore critical path hover animation in dark mode ([@yurishkuro](https://github.com/yurishkuro) in [#4180](https://github.com/jaegertracing/jaeger-ui/pull/4180))
+* Feat(search): add absolute/relative toggle for table start time ([@yurishkuro](https://github.com/yurishkuro) in [#4175](https://github.com/jaegertracing/jaeger-ui/pull/4175))
+* Feat(search): improve table view column sorting ([@sksingh2005](https://github.com/sksingh2005) in [#3994](https://github.com/jaegertracing/jaeger-ui/pull/3994))
+* Fix(filter-spans): stringify object/array attribute values for span search ([@bhuvan-somisetty](https://github.com/bhuvan-somisetty) in [#4171](https://github.com/jaegertracing/jaeger-ui/pull/4171))
+* Fix: increase critical path bar contrast in dark mode ([@bhavyamsharmaa](https://github.com/bhavyamsharmaa) in [#4163](https://github.com/jaegertracing/jaeger-ui/pull/4163))
+* Fix(assistant): render tool-call parts in chat thread ([@SoumyaRaikwar](https://github.com/SoumyaRaikwar) in [#4164](https://github.com/jaegertracing/jaeger-ui/pull/4164))
+* Feat(monitor): support service/spankind/timeframe url params ([@udita-0707](https://github.com/udita-0707) in [#4119](https://github.com/jaegertracing/jaeger-ui/pull/4119))
+* Feat(trace): add decorative span type icons in tree view ([@swetalin-10](https://github.com/swetalin-10) in [#3832](https://github.com/jaegertracing/jaeger-ui/pull/3832))
+* Fix(tracegraph): theme-aware edge and legend colors in dark mode ([@bhavyamsharmaa](https://github.com/bhavyamsharmaa) in [#4074](https://github.com/jaegertracing/jaeger-ui/pull/4074))
+* Fix(tracepage): handle root span navigation at index 0 ([@dolliecoder](https://github.com/dolliecoder) in [#4145](https://github.com/jaegertracing/jaeger-ui/pull/4145))
+* Fix: fix sidepanel resize when timeline is hidden ([@sksingh2005](https://github.com/sksingh2005) in [#4046](https://github.com/jaegertracing/jaeger-ui/pull/4046))
+* Fix(bug): clear trace id input field on navigation/reload (#4135) ([@shubhtrek](https://github.com/shubhtrek) in [#4136](https://github.com/jaegertracing/jaeger-ui/pull/4136))
+* Refactor: standardize keyvaluepair typing across the ddg model ([@shubhtrek](https://github.com/shubhtrek) in [#4064](https://github.com/jaegertracing/jaeger-ui/pull/4064))
+* Default to table view for search results ([@yurishkuro](https://github.com/yurishkuro) in [#4133](https://github.com/jaegertracing/jaeger-ui/pull/4133))
+* Feat(flamegraph): resizable 50/50 table/chart split with scroll affordance ([@yurishkuro](https://github.com/yurishkuro) in [#4121](https://github.com/jaegertracing/jaeger-ui/pull/4121))
+* Fix: copyicon button jumps/enlarges on hover (animation/layout glitch) ([@akshatsinghai6682-sketch](https://github.com/akshatsinghai6682-sketch) in [#4022](https://github.com/jaegertracing/jaeger-ui/pull/4022))
+* Fix(plexus): use currentcolor for ddg edge weight labels in dark mode ([@shubhtrek](https://github.com/shubhtrek) in [#4079](https://github.com/jaegertracing/jaeger-ui/pull/4079))
+* Fix(search): keep back-to-search across find and trace id clicks ([@udita-0707](https://github.com/udita-0707) in [#4080](https://github.com/jaegertracing/jaeger-ui/pull/4080))
+* Fix(monitor): replace hardcoded light-mode colors with design tokens in operations table ([@udita-0707](https://github.com/udita-0707) in [#4054](https://github.com/jaegertracing/jaeger-ui/pull/4054))
+* Fix(assistant): wrap fetch passed to httpagent ([@yurishkuro](https://github.com/yurishkuro) in [#4044](https://github.com/jaegertracing/jaeger-ui/pull/4044))
+
+#### 🚧 Experimental Features
+
+* Feat(genai): add genai tab shell to span detail panel ([@swetalin-10](https://github.com/swetalin-10) in [#4122](https://github.com/jaegertracing/jaeger-ui/pull/4122))
+* Feat(tracepage): add genaitimelineviewer view type with auto-activation ([@swetalin-10](https://github.com/swetalin-10) in [#3872](https://github.com/jaegertracing/jaeger-ui/pull/3872))
+
+#### 👷 CI Improvements
+
+* Chore(pnpm): migrate from npm to pnpm ([@thisis-manan](https://github.com/thisis-manan) in [#4137](https://github.com/jaegertracing/jaeger-ui/pull/4137))
+* Chore(ci): route build/lint/test/coverage steps through makefile entrypoints(part of migration to pnpm) ([@aprv10](https://github.com/aprv10) in [#4139](https://github.com/jaegertracing/jaeger-ui/pull/4139))
+
+#### ⚙️ Refactoring
+
+* Refactor(search): remove dead trace redux slice and its search actions/api ([@swetalin-10](https://github.com/swetalin-10) in [#3999](https://github.com/jaegertracing/jaeger-ui/pull/3999))
+* Refactor(timeline): extract critical path logic into helper module ([@sonalyadav1](https://github.com/sonalyadav1) in [#4060](https://github.com/jaegertracing/jaeger-ui/pull/4060))
+* Refactor(stats): extract computespanselftime to shared utility ([@yurishkuro](https://github.com/yurishkuro) in [#4113](https://github.com/jaegertracing/jaeger-ui/pull/4113))
+* Refactor(ddg): use functional component for graph ([@sksingh2005](https://github.com/sksingh2005) in [#4100](https://github.com/jaegertracing/jaeger-ui/pull/4100))
+* Refactor:migrate virtualizedtraceview to functional component ([@sksingh2005](https://github.com/sksingh2005) in [#4081](https://github.com/jaegertracing/jaeger-ui/pull/4081))
+* Refactor(tracegraph): migrate to functional component ([@sksingh2005](https://github.com/sksingh2005) in [#4058](https://github.com/jaegertracing/jaeger-ui/pull/4058))
+
+## v2.19.0 (2026-06-03)
+
+#### ⛔ Breaking Changes
+
+* Feat: migrate search to /api/v3/trace-summaries (adr-010 phase 2b) ([@yurishkuro](https://github.com/yurishkuro) in [#3943](https://github.com/jaegertracing/jaeger-ui/pull/3943))
+
+#### ✨ New Features
+
+* Feat(search): add table view as alternative to list view in search results ([@yurishkuro](https://github.com/yurishkuro) in [#3980](https://github.com/jaegertracing/jaeger-ui/pull/3980))
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Feat(search): add reset button to clear the search form ([@yurishkuro](https://github.com/yurishkuro) in [#4009](https://github.com/jaegertracing/jaeger-ui/pull/4009))
+* Fix(search): support legacy lookback-only search urls ([@yurishkuro](https://github.com/yurishkuro) in [#4008](https://github.com/jaegertracing/jaeger-ui/pull/4008))
+* Fix(search): suppress trace summary columns unsupported by storage ([@ghosthouse7](https://github.com/ghosthouse7) in [#4007](https://github.com/jaegertracing/jaeger-ui/pull/4007))
+* Fix(search): keep trace comparison selection across searches ([@parshipcy](https://github.com/parshipcy) in [#3968](https://github.com/jaegertracing/jaeger-ui/pull/3968))
+* Refactor(deps-graph): fold dev dataset sources into usedependenciesquery ([@yurishkuro](https://github.com/yurishkuro) in [#3993](https://github.com/jaegertracing/jaeger-ui/pull/3993))
+* Fix(deps-graph): tidy toolbar layout and clear stale visual issues ([@yurishkuro](https://github.com/yurishkuro) in [#3992](https://github.com/jaegertracing/jaeger-ui/pull/3992))
+* Feat(searchtracepage): resizable and collapsible search side panel ([@swetalin-10](https://github.com/swetalin-10) in [#3984](https://github.com/jaegertracing/jaeger-ui/pull/3984))
+* Docs(tracking): add console analytics example and improve custom analytics docs ([@yurishkuro](https://github.com/yurishkuro) in [#3988](https://github.com/jaegertracing/jaeger-ui/pull/3988))
+* Feat(search): make default lookback configurable; reconstruct lookback from url timestamps ([@yurishkuro](https://github.com/yurishkuro) in [#3973](https://github.com/jaegertracing/jaeger-ui/pull/3973))
+* Refactor(ui): share time range options between search and monitor ([@yurishkuro](https://github.com/yurishkuro) in [#3978](https://github.com/jaegertracing/jaeger-ui/pull/3978))
+* Feat(search): add v3 trace-summaries api client and sort model (adr-010 phase 2b, part 1) ([@yurishkuro](https://github.com/yurishkuro) in [#3947](https://github.com/jaegertracing/jaeger-ui/pull/3947))
+* Refactor(dev): extract routes and timeframe utils, lazy-load secondary pages ([@yurishkuro](https://github.com/yurishkuro) in [#3946](https://github.com/jaegertracing/jaeger-ui/pull/3946))
+* Chore: bump tsconfig target from es2016 to es2020 ([@yurishkuro](https://github.com/yurishkuro) in [#3945](https://github.com/jaegertracing/jaeger-ui/pull/3945))
+* Fix(ui): delay empty-root error check to avoid flash with react 18 ([@yurishkuro](https://github.com/yurishkuro) in [#3942](https://github.com/jaegertracing/jaeger-ui/pull/3942))
+* Fix(ui): correct typos in accordionlinks class name and css punctuation key ([@Pulkit7070](https://github.com/Pulkit7070) in [#3905](https://github.com/jaegertracing/jaeger-ui/pull/3905))
+
+#### 🚧 Experimental Features
+
+* Feat(config): add ai.enabled flag (default false) for ai-assisted ui ([@yurishkuro](https://github.com/yurishkuro) in [#4003](https://github.com/jaegertracing/jaeger-ui/pull/4003))
+
+#### ⚙️ Refactoring
+
+* Refactor(ddg): convert node content to hooks ([@sksingh2005](https://github.com/sksingh2005) in [#3948](https://github.com/jaegertracing/jaeger-ui/pull/3948))
+* Feat(state): migrate dependencies page to react query (adr-004 2d) ([@parshipcy](https://github.com/parshipcy) in [#3991](https://github.com/jaegertracing/jaeger-ui/pull/3991))
+* Refactor(trace): convert timelineviewinglayer to hooks ([@sksingh2005](https://github.com/sksingh2005) in [#3868](https://github.com/jaegertracing/jaeger-ui/pull/3868))
+* Refactor(search): complete phase 2c discovery query keys ([@parshipcy](https://github.com/parshipcy) in [#3966](https://github.com/jaegertracing/jaeger-ui/pull/3966))
+* Feat(search): use /api/v3/trace-summaries for search results ([@yurishkuro](https://github.com/yurishkuro) in [#3964](https://github.com/jaegertracing/jaeger-ui/pull/3964))
+* Fix(search): replace singleton cache with keyed cache + eviction for trace search ([@yurishkuro](https://github.com/yurishkuro) in [#3961](https://github.com/jaegertracing/jaeger-ui/pull/3961))
+* Chore(api): regenerate v3 openapi client from latest idl ([@yurishkuro](https://github.com/yurishkuro) in [#3953](https://github.com/jaegertracing/jaeger-ui/pull/3953))
+* Refactor(trace): phase 2(a) - migrate single/multi trace load to react query ([@parshipcy](https://github.com/parshipcy) in [#3835](https://github.com/jaegertracing/jaeger-ui/pull/3835))
+* Refactor(search): introduce tracesummary type for search results ([@yurishkuro](https://github.com/yurishkuro) in [#3941](https://github.com/jaegertracing/jaeger-ui/pull/3941))
+
 ## v2.18.0 (2026-05-13)
 
 #### ⛔ Breaking Changes

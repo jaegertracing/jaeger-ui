@@ -62,9 +62,12 @@ const config: KnipConfig = {
         'identity-obj-proxy',
       ],
       entry: [
-        // AUTO-GENERATED from the Jaeger OpenAPI spec (`npm run generate:api-types`).
+        // AUTO-GENERATED from the Jaeger OpenAPI spec (`pnpm run generate:api-types`).
         // Treat as an entry point so knip considers all its exports intentionally public.
         'src/api/v3/generated-client.ts',
+        // Example UI config file; not imported by source but consumed directly by the
+        // jaeger binary and the Vite dev server.
+        'jaeger-ui.config.console-analytics.js',
       ],
     },
     'packages/plexus': {

@@ -19,32 +19,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
-        with:
-          cache: npm
-          node-version-file: 'package.json'
-      - name: Upgrade npm
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: ./.github/actions/setup-node-and-deps
+      - name: Verify lockfile is in sync
         run: |
-          NPM_VERSION=$(node -p "require('./package.json').engines.npm.replace(/[^0-9.]/g, '')")
-          npm install -g npm@$NPM_VERSION
-      - run: npm --version
-      - run: npm ci
+          pnpm install --lockfile-only
+          git diff --exit-code pnpm-lock.yaml || (echo '❌ pnpm-lock.yaml is out of sync with package.json. Run "pnpm install" locally and commit the result.' && exit 1)
+      - run: pnpm list -r --depth Infinity
       - name: Run depcheck
-        run: npm run depcheck
-      - run: npm run lint
-      - run: npm run build
+        run: make depcheck
+      - run: make lint
+      - run: make build
+      - name: Verify dev server starts without errors
+        run: pnpm run dev:check
       - name: Ensure PR is not on main branch
         uses: jaegertracing/jaeger/.github/actions/block-pr-from-main-branch@main
 
   validate-3rd-party-configs:
     runs-on: ubuntu-latest
     steps:
-      - uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+      - uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           submodules: false
 
