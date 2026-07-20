@@ -155,6 +155,197 @@ describe('transformTraceData()', () => {
     expect(transformTraceData(traceData).traceName).toEqual(`${serviceName}: ${rootOperationName}`);
   });
 
+  it('should render the whole tree when every span reports startTime 0', () => {
+    const zeroRoot = {
+      traceID,
+      spanID: rootSpanID,
+      operationName: rootOperationName,
+      references: [],
+      startTime: 0,
+      duration: 100,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+    const zeroChild = {
+      traceID,
+      spanID: 'zeroChild',
+      operationName: 'childOp',
+      references: [{ refType: 'CHILD_OF', traceID, spanID: rootSpanID }],
+      startTime: 0,
+      duration: 50,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+    const noStartTimeChild = {
+      traceID,
+      spanID: 'missingStartTime',
+      operationName: 'missingStartOp',
+      references: [{ refType: 'CHILD_OF', traceID, spanID: rootSpanID }],
+      duration: 10,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+
+    const result = transformTraceData({
+      traceID,
+      processes,
+      spans: [zeroRoot, zeroChild, noStartTimeChild],
+    });
+
+    // No span is dropped: startTime 0 (epoch) and a missing startTime are both
+    // treated as "no usable timestamp" and repaired rather than filtered out.
+    expect(result.spans.map(span => span.spanID)).toEqual([rootSpanID, 'zeroChild', 'missingStartTime']);
+    expect(result.startTime).toBe(0);
+    expect(result.spans.every(span => span.startTime === 0)).toBe(true);
+    expect(result.spanMap.get(rootSpanID).hasChildren).toBe(true);
+  });
+
+  it('should clamp spans with no usable startTime to their parent instead of stretching the timeline', () => {
+    // A realistic microsecond epoch timestamp; a stray 0/missing startTime here
+    // would otherwise pin the trace start ~56 years earlier and squash the real
+    // spans into an invisible sliver.
+    const realStart = 1784570820629325;
+    const realRoot = {
+      traceID,
+      spanID: rootSpanID,
+      operationName: rootOperationName,
+      references: [],
+      startTime: realStart,
+      duration: 1000,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+    const zeroChild = {
+      traceID,
+      spanID: 'zeroChild',
+      operationName: 'childOp',
+      references: [{ refType: 'CHILD_OF', traceID, spanID: rootSpanID }],
+      startTime: 0,
+      duration: 200,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+    const missingChild = {
+      traceID,
+      spanID: 'missingChild',
+      operationName: 'missingOp',
+      references: [{ refType: 'CHILD_OF', traceID, spanID: rootSpanID }],
+      duration: 300,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+
+    const result = transformTraceData({
+      traceID,
+      processes,
+      spans: [realRoot, zeroChild, missingChild],
+    });
+
+    expect(result.startTime).toBe(realStart);
+    // The broken children inherit the parent's startTime, so they sit at the
+    // start of the trace rather than 56 years before it.
+    expect(result.spanMap.get('zeroChild').startTime).toBe(realStart);
+    expect(result.spanMap.get('missingChild').startTime).toBe(realStart);
+    expect(result.spanMap.get('zeroChild').relativeStartTime).toBe(0);
+    // Trace duration reflects the real root span, not an epoch-wide range.
+    expect(result.duration).toBe(1000);
+  });
+
+  it('should inherit a repaired startTime transitively down a chain of broken spans', () => {
+    // root (real) -> middle (0) -> leaf (missing). The middle span is repaired
+    // to the root's startTime first; the leaf must then inherit that repaired
+    // value, not undefined/0. This exercises the DFS ordering invariant that
+    // lets processSpan read an already-fixed parent.startTime.
+    const realStart = 1784570820629325;
+    const realRoot = {
+      traceID,
+      spanID: rootSpanID,
+      operationName: rootOperationName,
+      references: [],
+      startTime: realStart,
+      duration: 1000,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+    const brokenMiddle = {
+      traceID,
+      spanID: 'brokenMiddle',
+      operationName: 'middleOp',
+      references: [{ refType: 'CHILD_OF', traceID, spanID: rootSpanID }],
+      startTime: 0,
+      duration: 400,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+    const brokenLeaf = {
+      traceID,
+      spanID: 'brokenLeaf',
+      operationName: 'leafOp',
+      references: [{ refType: 'CHILD_OF', traceID, spanID: 'brokenMiddle' }],
+      duration: 100,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+
+    const result = transformTraceData({
+      traceID,
+      processes,
+      spans: [realRoot, brokenMiddle, brokenLeaf],
+    });
+
+    expect(result.startTime).toBe(realStart);
+    expect(result.spanMap.get('brokenMiddle').startTime).toBe(realStart);
+    // The leaf inherits the middle span's repaired startTime, not undefined.
+    expect(result.spanMap.get('brokenLeaf').startTime).toBe(realStart);
+    expect(result.spanMap.get('brokenLeaf').relativeStartTime).toBe(0);
+    expect(result.duration).toBe(1000);
+  });
+
+  it('should fall back to 0 for a root with no usable startTime and propagate it to children', () => {
+    const brokenRoot = {
+      traceID,
+      spanID: rootSpanID,
+      operationName: rootOperationName,
+      references: [],
+      duration: 500,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+    const child = {
+      traceID,
+      spanID: 'child',
+      operationName: 'childOp',
+      references: [{ refType: 'CHILD_OF', traceID, spanID: rootSpanID }],
+      startTime: 0,
+      duration: 100,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+
+    const result = transformTraceData({
+      traceID,
+      processes,
+      spans: [brokenRoot, child],
+    });
+
+    // A root with no parent to inherit from falls back to 0; the child inherits
+    // that finite 0 rather than becoming undefined.
+    expect(result.spanMap.get(rootSpanID).startTime).toBe(0);
+    expect(result.spanMap.get('child').startTime).toBe(0);
+    expect(result.startTime).toBe(0);
+  });
+
   it('should detect orphan spans when parent span is missing', () => {
     const traceData = {
       traceID,
