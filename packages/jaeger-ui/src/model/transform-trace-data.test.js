@@ -310,6 +310,45 @@ describe('transformTraceData()', () => {
     expect(result.duration).toBe(1000);
   });
 
+  it('should not produce a negative duration for a trace with spans but no root', () => {
+    // Two spans referencing each other form a cycle, so neither is a root and
+    // nothing is reachable by the traversal. The time range must not be left at
+    // its sentinel value, which would yield a negative duration.
+    const spanA = {
+      traceID,
+      spanID: 'a',
+      operationName: 'a',
+      references: [{ refType: 'CHILD_OF', traceID, spanID: 'b' }],
+      startTime,
+      duration,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+    const spanB = {
+      traceID,
+      spanID: 'b',
+      operationName: 'b',
+      references: [{ refType: 'CHILD_OF', traceID, spanID: 'a' }],
+      startTime,
+      duration,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+
+    const result = transformTraceData({
+      traceID,
+      processes,
+      spans: [spanA, spanB],
+    });
+
+    expect(result.spans.length).toBe(0);
+    expect(result.duration).toBe(0);
+    expect(result.startTime).toBe(0);
+    expect(result.endTime).toBe(0);
+  });
+
   it('should keep and repair sibling spans that have no usable startTime', () => {
     // NB: this asserts the observable outcome (no span dropped, all startTimes
     // finite, real sibling ordered last). It does NOT prove the NaN-comparator

@@ -217,6 +217,15 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   rootSpans.sort((a, b) => a.startTime - b.startTime);
   rootSpans.forEach(root => processSpan(root, 0));
 
+  // traceStartTime/traceEndTime are only updated while visiting spans reachable
+  // from a root. If the trace has spans but no root (e.g. every span is part of
+  // a reference cycle), nothing is visited and traceStartTime keeps its sentinel
+  // value, which would produce a negative duration. Collapse to a zero range.
+  if (spans.length === 0) {
+    traceStartTime = 0;
+    traceEndTime = 0;
+  }
+
   // relativeStartTime depends on the final traceStartTime, which is only known
   // once every span (including repaired ones) has been visited above.
   for (const span of spans) {
