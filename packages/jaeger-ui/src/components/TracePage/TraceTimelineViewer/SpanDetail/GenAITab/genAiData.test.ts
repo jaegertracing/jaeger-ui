@@ -66,6 +66,17 @@ describe('extractGenAiSections', () => {
         { key: 'gen_ai.conversation.id', value: 'conv-1' },
       ]);
     });
+
+    it('still produces an agent section for a legitimate empty-string field, instead of silently dropping it', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.agent.name': '' }));
+      expect(section(sections, 'agent')).toEqual({
+        id: undefined,
+        name: '',
+        version: undefined,
+        description: undefined,
+      });
+      expect(section(sections, 'other')).toBeUndefined();
+    });
   });
 
   describe('meta section (provider/model)', () => {

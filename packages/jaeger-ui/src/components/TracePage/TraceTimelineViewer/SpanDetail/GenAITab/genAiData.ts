@@ -262,7 +262,11 @@ const REGISTRY: SectionBuilder[] = [
     const name = asString(get('gen_ai.agent.name'));
     const version = asString(get('gen_ai.agent.version'));
     const description = asString(get('gen_ai.agent.description'));
-    return id || name || version || description
+    // Presence, not truthiness: get() already claimed these keys, so a
+    // legitimate empty-string value must still produce a section - otherwise
+    // it's dropped here AND excluded from "Other GenAI Attributes" (already
+    // claimed), silently losing the attribute entirely.
+    return id !== undefined || name !== undefined || version !== undefined || description !== undefined
       ? { type: 'agent', data: { id, name, version, description } }
       : undefined;
   },
