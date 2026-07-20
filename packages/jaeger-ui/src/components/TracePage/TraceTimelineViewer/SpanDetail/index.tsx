@@ -179,7 +179,6 @@ export default function SpanDetail(props: SpanDetailProps) {
         {header}
         <Tabs
           key={span.spanID}
-          defaultActiveKey="details"
           destroyInactiveTabPane
           defaultActiveKey="genai"
           items={[
