@@ -46,7 +46,6 @@ td.header-item {
 
 .ant-progress-inner {
   border-radius: 0px;
-  background: var(--interactive-primary-light);
   background: var(--surface-component-background);
 }
 
