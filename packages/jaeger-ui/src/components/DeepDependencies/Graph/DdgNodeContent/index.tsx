@@ -224,15 +224,9 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
     const { traceID: _traceID, spanLinks: _spanLinks, ...rawUrlState } = getUrlState(search);
 
     const query = {
+      ...rawUrlState,
       service,
       operation: typeof operation === 'string' ? operation : undefined,
-      ...(rawUrlState.start !== undefined ? { start: rawUrlState.start } : {}),
-      ...(rawUrlState.end !== undefined ? { end: rawUrlState.end } : {}),
-      ...(rawUrlState.lookback !== undefined ? { lookback: rawUrlState.lookback } : {}),
-      ...(rawUrlState.limit !== undefined ? { limit: rawUrlState.limit } : {}),
-      ...(rawUrlState.minDuration !== undefined ? { minDuration: rawUrlState.minDuration } : {}),
-      ...(rawUrlState.maxDuration !== undefined ? { maxDuration: rawUrlState.maxDuration } : {}),
-      ...(rawUrlState.tags !== undefined ? { tags: rawUrlState.tags } : {}),
     };
 
     navigate(getSearchUrl(query));
