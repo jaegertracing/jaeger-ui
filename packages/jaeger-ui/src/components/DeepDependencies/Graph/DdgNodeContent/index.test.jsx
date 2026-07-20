@@ -56,7 +56,6 @@ import extractDecorationFromState from '../../../../model/path-agnostic-decorati
 import DdgNodeContentWrapper, {
   getNodeRenderer,
   measureNode,
-  mapDispatchToProps,
   UnconnectedDdgNodeContent as DdgNodeContent,
 } from '.';
 import { RADIUS } from './constants';
@@ -349,11 +348,11 @@ describe('<DdgNodeContent>', () => {
       Element.prototype.getBoundingClientRect = mockGetBoundingClientRect;
       document.querySelector = mockQuerySelector;
 
-      jest.spyOn(global, 'setTimeout').mockImplementation(fn => fn());
+      vi.spyOn(global, 'setTimeout').mockImplementation(fn => fn());
     });
 
     afterEach(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     it('positions tooltip below when node is near header', () => {
@@ -481,24 +480,16 @@ describe('<DdgNodeContent>', () => {
     });
   });
 
-  describe('mapDispatchToProps()', () => {
-    it('creates the actions correctly', () => {
-      expect(mapDispatchToProps(() => {})).toEqual({
-        getDecoration: expect.any(Function),
-      });
-    });
-  });
-
   describe('event handlers', () => {
     beforeEach(() => {
-      jest.spyOn(track, 'trackSetFocus');
-      jest.spyOn(track, 'trackViewTraces');
-      jest.spyOn(track, 'trackVertexSetOperation');
-      jest.spyOn(getSearchUrl, 'getUrl');
+      vi.spyOn(track, 'trackSetFocus');
+      vi.spyOn(track, 'trackViewTraces');
+      vi.spyOn(track, 'trackVertexSetOperation');
+      vi.spyOn(getSearchUrl, 'getUrl');
     });
 
     afterEach(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     describe('focusPaths', () => {
@@ -574,7 +565,7 @@ describe('<DdgNodeContent>', () => {
     describe('viewTraces', () => {
       beforeEach(() => {
         mockNavigate.mockClear();
-        jest.spyOn(getSearchUrl, 'getUrlState').mockReturnValue({
+        vi.spyOn(getSearchUrl, 'getUrlState').mockReturnValue({
           start: '123',
           end: '456',
           traceID: ['t1'],
@@ -594,7 +585,7 @@ describe('<DdgNodeContent>', () => {
         fireEvent.click(viewTracesAction);
 
         expect(track.trackViewTraces).toHaveBeenCalled();
-        expect(getSearchUrl.getUrlState).toHaveBeenCalledWith(mockLocation.search);
+        expect(getSearchUrl.getUrlState).toHaveBeenCalledWith(props.search);
 
         expect(getSearchUrl.getUrl).toHaveBeenCalledWith({
           start: '123',
