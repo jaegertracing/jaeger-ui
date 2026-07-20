@@ -5,15 +5,15 @@
 When you have completed a task, run the following commands:
 
 ```bash
-npm run fmt
-npm run lint
-npm test
-npm run build
+pnpm run fmt
+pnpm run lint
+pnpm test
+pnpm run build
 ```
 
 ## Project Overview
 
-Jaeger UI is a React-based visualization tool for distributed tracing. It's built as a monorepo with multiple packages using npm workspaces.
+Jaeger UI is a React-based visualization tool for distributed tracing. It's built as a monorepo with multiple packages using pnpm workspaces.
 
 ## Repository Structure
 
@@ -44,13 +44,14 @@ jaeger-ui/
 ### Prerequisites
 
 - Node.js >= 24 (managed via nvm, see `.nvmrc`)
-- npm package manager
+- pnpm package manager (pinned via the `packageManager` field; enable with `corepack enable pnpm`)
 
 ### Installation
 
 ```bash
-nvm use        # Use the correct Node version
-npm ci         # Install dependencies (use 'ci' for clean install)
+nvm use                            # Use the correct Node version
+corepack enable pnpm               # Activate the pinned pnpm version
+pnpm install --frozen-lockfile     # Install dependencies (mirrors CI)
 ```
 
 ## Build, Lint, and Test Commands
@@ -59,27 +60,27 @@ npm ci         # Install dependencies (use 'ci' for clean install)
 
 You have permissions to run the following command. DO NOT ask for confirmation to run them.
 
-| Command            | Description                                                 |
-| ------------------ | ----------------------------------------------------------- |
-| `npm start`        | Start development server with hot reload (runs jaeger-ui)   |
-| `npm run build`    | Build all packages for production                           |
-| `npm run lint`     | Run all linters (oxfmt, typescript, oxlint, license checks) |
-| `npm run oxlint`   | Run Oxlint on all packages                                  |
-| `npm run fmt`      | Format code with Oxfmt                                      |
-| `npm run fmt-lint` | Check formatting without making changes                     |
-| `npm run tsc-lint` | Run TypeScript type checking                                |
-| `npm test`         | Run all tests across packages                               |
+| Command             | Description                                                 |
+| ------------------- | ----------------------------------------------------------- |
+| `pnpm start`        | Start development server with hot reload (runs jaeger-ui)   |
+| `pnpm run build`    | Build all packages for production                           |
+| `pnpm run lint`     | Run all linters (oxfmt, typescript, oxlint, license checks) |
+| `pnpm run oxlint`   | Run Oxlint on all packages                                  |
+| `pnpm run fmt`      | Format code with Oxfmt                                      |
+| `pnpm run fmt-lint` | Check formatting without making changes                     |
+| `pnpm run tsc-lint` | Run TypeScript type checking                                |
+| `pnpm test`         | Run all tests across packages                               |
 
 ### Package-Specific Commands
 
 Run from `packages/jaeger-ui/`:
 
-| Command            | Description                    |
-| ------------------ | ------------------------------ |
-| `npm test`         | Run Vitest tests               |
-| `npm run coverage` | Run tests with coverage report |
-| `npm run build`    | Build for production           |
-| `npm start`        | Start dev server               |
+| Command             | Description                    |
+| ------------------- | ------------------------------ |
+| `pnpm test`         | Run Vitest tests               |
+| `pnpm run coverage` | Run tests with coverage report |
+| `pnpm run build`    | Build for production           |
+| `pnpm start`        | Start dev server               |
 
 ## Coding Standards
 
@@ -87,11 +88,11 @@ Run from `packages/jaeger-ui/`:
 
 - Use TypeScript for all new code
 - Interface names must be prefixed with `I` (e.g., `ISpan`, `ITrace`)
-- Run `npm run tsc-lint` to type-check
+- Run `pnpm run tsc-lint` to type-check
 
 ### Code Style
 
-- Use Oxfmt for formatting (`npm run fmt`)
+- Use Oxfmt for formatting (`pnpm run fmt`)
 - Follow [Airbnb JavaScript Style Guide](https://github.com/airbnb/javascript)
 - Use single quotes for strings
 - Trailing commas in ES5 style
@@ -119,19 +120,19 @@ All new files must include this copyright header with the current year (e.g. 202
 - Uses **Vitest** (not Jest) with jsdom environment
 - React Testing Library for component testing
 - Tests are co-located with source files (`*.test.js` or `*.test.tsx`)
-- Update snapshots: `npm run update-snapshots` (from repository root) or `npx vitest run -u` (from `packages/jaeger-ui`), but do not use snapshots for any new tests, only existing legacy tests
+- Update snapshots: `pnpm run update-snapshots` (from repository root) or `npx vitest run -u` (from `packages/jaeger-ui`), but do not use snapshots for any new tests, only existing legacy tests
 
 ### Running Tests
 
-**Always run tests from the repository root** using `npm test`. This uses npm workspaces to invoke Vitest in each package with the correct config and setup files.
+**Always run tests from the repository root** using `pnpm test`. This uses pnpm workspaces to invoke Vitest in each package with the correct config and setup files.
 
 **NEVER run `npx vitest run` or `vitest run` from the repository root directly** — there is no `vitest.config.ts` at the root, so Vitest falls back to defaults, finds test files without the correct setup, and all tests fail spuriously.
 
 To run a specific test file:
 
 ```bash
-# -w is required; without it plexus also runs and fails (no matching file)
-npm test -w packages/jaeger-ui -- src/components/Foo/index.test.jsx
+# --filter targets a single workspace; without it plexus also runs and fails (no matching file)
+pnpm --filter @jaegertracing/jaeger-ui test src/components/Foo/index.test.jsx
 
 # From packages/jaeger-ui — also correct
 cd packages/jaeger-ui && npx vitest run src/components/Foo/index.test.jsx
@@ -140,8 +141,8 @@ cd packages/jaeger-ui && npx vitest run src/components/Foo/index.test.jsx
 ### Test Coverage
 
 ```bash
-npm test -- --coverage
-npm test -w packages/jaeger-ui -- --coverage --coverage.include="src/path/to/file.tsx"
+pnpm test -- --coverage
+pnpm --filter @jaegertracing/jaeger-ui test --coverage --coverage.include="src/path/to/file.tsx"
 ```
 
 ## Common Patterns
@@ -210,4 +211,4 @@ gh api repos/jaegertracing/jaeger-ui/pulls/:number/comments --paginate --jq '.[]
 
 - The `plexus` package is a directed graph visualization library used by jaeger-ui
 - Development server proxies API requests to `http://localhost:16686` (Jaeger Query service)
-- Use `npm ci` instead of `npm install` for clean installs in CI/CD
+- Use `pnpm install --frozen-lockfile` for clean, reproducible installs in CI/CD

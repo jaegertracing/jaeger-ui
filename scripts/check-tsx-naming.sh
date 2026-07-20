@@ -68,10 +68,10 @@ if [ ${#MISNAMED_FILES[@]} -gt 0 ]; then
         done
         echo ""
         echo "To automatically rename these files using 'git mv', run:"
-        echo "  npm run check-tsx-naming -- -u"
+        echo "  pnpm run check-tsx-naming -- -u"
         echo ""
         echo "To see what would be renamed without actually doing it, run:"
-        echo "  npm run check-tsx-naming -- -d"
+        echo "  pnpm run check-tsx-naming -- -d"
         exit 1
     fi
 fi

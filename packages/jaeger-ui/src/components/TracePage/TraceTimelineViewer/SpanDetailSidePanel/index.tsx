@@ -12,7 +12,7 @@ import getLinks from '../../../../model/link-patterns';
 import updateUiFind from '../../../../utils/update-ui-find';
 import withRouteProps from '../../../../utils/withRouteProps';
 import { TNil } from '../../../../types';
-import { IAttribute, IEvent, IOtelTrace } from '../../../../types/otel';
+import { IAttributes, IEvent, IOtelTrace } from '../../../../types/otel';
 import { useTraceTimelineStore } from '../store';
 
 import './index.css';
@@ -119,8 +119,7 @@ export function SpanDetailSidePanelImpl(props: TProps) {
   const span = trace.spanMap.get(spanID);
   if (!span) return null;
 
-  const linksGetter = (attributes: ReadonlyArray<IAttribute>, index: number) =>
-    getLinks(span, attributes, index, trace);
+  const linksGetter = (attributes: IAttributes, index: number) => getLinks(span, attributes, index, trace);
 
   return (
     <div className="SpanDetailSidePanel">

@@ -238,6 +238,10 @@ export type Config = {
     // 'sidepanel' makes the side panel the default experience for new users.
     // Default: 'inline'.
     defaultDetailPanelMode?: SpanDetailPanelMode;
+
+    // spanPillsEnabled controls span pill overlays in the trace timeline.
+    // Default: true. Set to false to disable if needed.
+    spanPillsEnabled?: boolean;
   };
 
   // useOpenTelemetryTerms determines whether the UI uses legacy Jaeger terminology
