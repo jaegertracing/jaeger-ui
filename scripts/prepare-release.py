@@ -135,10 +135,10 @@ def update_package_json(version, dry_run=False):
 
 def run_fmt(dry_run=False):
     if dry_run:
-        print("[Dry Run] Would run 'npm run fmt'")
+        print("[Dry Run] Would run 'pnpm run fmt'")
     else:
         print("Running fmt on the modified files to ensure correct formatting...")
-        run_command(["npm", "run", "fmt", "--", "packages/jaeger-ui/package.json"])
+        run_command(["pnpm", "run", "fmt", "packages/jaeger-ui/package.json"])
 
 def git_commit_and_pr(version, branch_name):
     print("Committing changes...")

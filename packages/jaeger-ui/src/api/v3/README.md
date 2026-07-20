@@ -34,7 +34,7 @@ All responses are validated at runtime using Zod schemas.
 Run from the project root:
 
 ```bash
-npm run generate:api-types
+pnpm run generate:api-types
 ```
 
 This file is the source of truth for the full API schema. It is automatically processed by `scripts/postprocess-schemas.cjs` to:
@@ -61,7 +61,7 @@ This gives us:
 
 ## When to Regenerate
 
-Run `npm run generate:api-types` when:
+Run `pnpm run generate:api-types` when:
 
 - The OpenAPI spec in `jaeger-idl` repository changes
 - New endpoints are added to `/api/v3/`
