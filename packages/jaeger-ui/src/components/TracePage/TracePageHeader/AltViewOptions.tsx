@@ -1,3 +1,6 @@
+// Copyright (c) 2018 Uber Technologies, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 import * as React from 'react';
 import { Select } from 'antd';
 import './AltViewOptions.css';
@@ -30,10 +33,18 @@ export default function AltViewOptions(props: Props) {
   const handleChange = (value: string) => {
     if (value === 'trace-json') {
       trackJsonView();
-      window.open(prefixUrl(`/api/traces/${traceID}?prettyPrint=true`), getTargetBlankOrTop());
+      window.open(
+        prefixUrl(`/api/traces/${traceID}?prettyPrint=true`),
+        getTargetBlankOrTop(),
+        'noopener,noreferrer'
+      );
     } else if (value === 'trace-json-unadjusted') {
       trackRawJsonView();
-      window.open(prefixUrl(`/api/traces/${traceID}?raw=true&prettyPrint=true`), getTargetBlankOrTop());
+      window.open(
+        prefixUrl(`/api/traces/${traceID}?raw=true&prettyPrint=true`),
+        getTargetBlankOrTop(),
+        'noopener,noreferrer'
+      );
     } else {
       trackViewChange(value as ETraceViewType);
       onTraceViewChange(value as ETraceViewType);

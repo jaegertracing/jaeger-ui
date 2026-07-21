@@ -126,7 +126,11 @@ describe('AltViewOptions', () => {
     fireEvent.click(screen.getByTestId('menu-item-trace-json'));
 
     expect(trackJsonView).toHaveBeenCalled();
-    expect(windowOpenSpy).toHaveBeenCalledWith('/api/traces/test trace ID?prettyPrint=true', '_blank');
+    expect(windowOpenSpy).toHaveBeenCalledWith(
+      '/api/traces/test trace ID?prettyPrint=true',
+      '_blank',
+      'noopener,noreferrer'
+    );
   });
 
   it('handles unadjusted JSON view correctly', () => {
@@ -137,7 +141,8 @@ describe('AltViewOptions', () => {
     expect(trackRawJsonView).toHaveBeenCalled();
     expect(windowOpenSpy).toHaveBeenCalledWith(
       '/api/traces/test trace ID?raw=true&prettyPrint=true',
-      '_blank'
+      '_blank',
+      'noopener,noreferrer'
     );
   });
 
