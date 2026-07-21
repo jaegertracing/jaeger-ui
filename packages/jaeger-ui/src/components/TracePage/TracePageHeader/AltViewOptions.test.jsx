@@ -42,14 +42,15 @@ describe('AltViewOptions', () => {
   let trackRawJsonView;
   let windowOpenSpy;
 
-  const props = {
-    viewType: ETraceViewType.TraceTimelineViewer,
-    traceID: 'test trace ID',
-    onTraceViewChange: jest.fn(),
-    disableJsonView: false,
-  };
+  let props;
 
   beforeEach(() => {
+    props = {
+      viewType: ETraceViewType.TraceTimelineViewer,
+      traceID: 'test trace ID',
+      onTraceViewChange: vi.fn(),
+      disableJsonView: false,
+    };
     trackViewChange = vi.spyOn(track, 'trackViewChange');
     trackJsonView = vi.spyOn(track, 'trackJsonView');
     trackRawJsonView = vi.spyOn(track, 'trackRawJsonView');

@@ -51,10 +51,11 @@ export default function AltViewOptions(props: Props) {
     }
   };
 
-  const options = MENU_ITEMS.map(item => ({
-    value: item.viewType,
-    label: item.label,
-  }));
+  const options: { value: ETraceViewType | 'trace-json' | 'trace-json-unadjusted'; label: string }[] =
+    MENU_ITEMS.map(item => ({
+      value: item.viewType,
+      label: item.label,
+    }));
 
   if (!disableJsonView) {
     options.push(
