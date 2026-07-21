@@ -13,18 +13,17 @@ vi.mock('antd', async () => {
   const originalModule = await vi.importActual('antd');
   return {
     ...originalModule,
-    Dropdown: ({ children, menu }) => (
-      <div data-testid="dropdown">
-        {children}
-        <div data-testid="dropdown-menu">
-          {menu.items.map(item => (
+    Select: ({ value, onChange, options, 'data-testid': dataTestId }) => (
+      <div data-testid={dataTestId || 'select'}>
+        <div data-testid="select-value">{value}</div>
+        <div data-testid="select-options">
+          {options.map(item => (
             <div
-              key={item.key}
-              data-testid={`menu-item-${item.key}`}
+              key={item.value}
+              data-testid={`menu-item-${item.value}`}
               onClick={() => {
-                // Simulate clicking the link/button inside
-                if (item.label?.props?.onClick) {
-                  item.label.props.onClick();
+                if (onChange) {
+                  onChange(item.value);
                 }
               }}
             >
@@ -34,16 +33,14 @@ vi.mock('antd', async () => {
         </div>
       </div>
     ),
-    Button: ({ children, className }) => (
-      <button type="button" className={className} data-testid="dropdown-button">
-        {children}
-      </button>
-    ),
   };
 });
 
 describe('AltViewOptions', () => {
   let trackViewChange;
+  let trackJsonView;
+  let trackRawJsonView;
+  let windowOpenSpy;
 
   const props = {
     viewType: ETraceViewType.TraceTimelineViewer,
@@ -52,12 +49,15 @@ describe('AltViewOptions', () => {
     disableJsonView: false,
   };
 
-  beforeAll(() => {
-    trackViewChange = jest.spyOn(track, 'trackViewChange');
+  beforeEach(() => {
+    trackViewChange = vi.spyOn(track, 'trackViewChange');
+    trackJsonView = vi.spyOn(track, 'trackJsonView');
+    trackRawJsonView = vi.spyOn(track, 'trackRawJsonView');
+    windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.restoreAllMocks();
     cleanup();
   });
 
@@ -70,23 +70,17 @@ describe('AltViewOptions', () => {
     );
   };
 
-  it('renders dropdown button displaying the current view type', () => {
+  it('renders select with the current view type', () => {
     renderComponent();
-    const button = screen.getByTestId('dropdown-button');
-    expect(button).toHaveTextContent('Trace Timeline');
+    const selectValue = screen.getByTestId('select-value');
+    expect(selectValue).toHaveTextContent(ETraceViewType.TraceTimelineViewer);
   });
 
-  it('shows "Alternate Views" when viewType is not in MENU_ITEMS', () => {
-    renderComponent({ viewType: 'UnknownViewType' });
-    const button = screen.getByTestId('dropdown-button');
-    expect(button).toHaveTextContent('Alternate Views');
-  });
-
-  it('shows all alternate view options except current view', () => {
+  it('shows all alternate view options', () => {
     renderComponent();
 
-    expect(screen.queryByTestId('menu-item-TraceTimelineViewer')).not.toBeInTheDocument();
-
+    // Since Select receives all options, they are all in the DOM.
+    expect(screen.getByTestId('menu-item-TraceTimelineViewer')).toBeInTheDocument();
     expect(screen.getByTestId('menu-item-TraceGraph')).toBeInTheDocument();
     expect(screen.getByTestId('menu-item-TraceStatistics')).toBeInTheDocument();
     expect(screen.getByTestId('menu-item-TraceSpansView')).toBeInTheDocument();
@@ -126,53 +120,44 @@ describe('AltViewOptions', () => {
     expect(trackViewChange).toHaveBeenCalledWith(viewType);
   });
 
-  it('renders JSON links with correct URLs', () => {
+  it('handles JSON view correctly', () => {
     renderComponent();
 
-    const jsonMenuItem = screen.getByTestId('menu-item-trace-json');
-    const jsonLink = jsonMenuItem.querySelector('a');
-    expect(jsonLink).toHaveAttribute('href', '/api/traces/test trace ID?prettyPrint=true');
+    fireEvent.click(screen.getByTestId('menu-item-trace-json'));
 
-    const rawJsonMenuItem = screen.getByTestId('menu-item-trace-json-unadjusted');
-    const rawJsonLink = rawJsonMenuItem.querySelector('a');
-    expect(rawJsonLink).toHaveAttribute('href', '/api/traces/test trace ID?raw=true&prettyPrint=true');
+    expect(trackJsonView).toHaveBeenCalled();
+    expect(windowOpenSpy).toHaveBeenCalledWith('/api/traces/test trace ID?prettyPrint=true', '_blank');
   });
 
-  it('updates dropdown text when view type changes', () => {
-    const { rerender } = renderComponent({ viewType: ETraceViewType.TraceTimelineViewer });
-    expect(screen.getByTestId('dropdown-button')).toHaveTextContent('Trace Timeline');
+  it('handles unadjusted JSON view correctly', () => {
+    renderComponent();
 
-    const rerenderWithViewType = (viewType, expectedText) => {
+    fireEvent.click(screen.getByTestId('menu-item-trace-json-unadjusted'));
+
+    expect(trackRawJsonView).toHaveBeenCalled();
+    expect(windowOpenSpy).toHaveBeenCalledWith(
+      '/api/traces/test trace ID?raw=true&prettyPrint=true',
+      '_blank'
+    );
+  });
+
+  it('updates select value when view type changes', () => {
+    const { rerender } = renderComponent({ viewType: ETraceViewType.TraceTimelineViewer });
+    expect(screen.getByTestId('select-value')).toHaveTextContent(ETraceViewType.TraceTimelineViewer);
+
+    const rerenderWithViewType = viewType => {
       rerender(
         <BrowserRouter>
           <AltViewOptions {...props} viewType={viewType} />
         </BrowserRouter>
       );
-      expect(screen.getByTestId('dropdown-button')).toHaveTextContent(expectedText);
+      expect(screen.getByTestId('select-value')).toHaveTextContent(viewType);
     };
 
-    rerenderWithViewType(ETraceViewType.TraceGraph, 'Trace Graph');
-    rerenderWithViewType(ETraceViewType.TraceStatistics, 'Trace Statistics');
-    rerenderWithViewType(ETraceViewType.TraceSpansView, 'Trace Spans Table');
-    rerenderWithViewType(ETraceViewType.TraceFlamegraph, 'Trace Flamegraph');
-    rerenderWithViewType(ETraceViewType.TraceLogs, 'Trace Logs');
-  });
-
-  it('excludes current view from dropdown options for all view types', () => {
-    const viewTypes = [
-      { type: ETraceViewType.TraceTimelineViewer, testId: 'menu-item-TraceTimelineViewer' },
-      { type: ETraceViewType.TraceGraph, testId: 'menu-item-TraceGraph' },
-      { type: ETraceViewType.TraceStatistics, testId: 'menu-item-TraceStatistics' },
-      { type: ETraceViewType.TraceSpansView, testId: 'menu-item-TraceSpansView' },
-      { type: ETraceViewType.TraceFlamegraph, testId: 'menu-item-TraceFlamegraph' },
-      { type: ETraceViewType.TraceLogs, testId: 'menu-item-TraceLogs' },
-      { type: ETraceViewType.GenAITimelineViewer, testId: 'menu-item-GenAITimelineViewer' },
-    ];
-
-    viewTypes.forEach(({ type, testId }) => {
-      cleanup();
-      renderComponent({ viewType: type });
-      expect(screen.queryByTestId(testId)).not.toBeInTheDocument();
-    });
+    rerenderWithViewType(ETraceViewType.TraceGraph);
+    rerenderWithViewType(ETraceViewType.TraceStatistics);
+    rerenderWithViewType(ETraceViewType.TraceSpansView);
+    rerenderWithViewType(ETraceViewType.TraceFlamegraph);
+    rerenderWithViewType(ETraceViewType.TraceLogs);
   });
 });
