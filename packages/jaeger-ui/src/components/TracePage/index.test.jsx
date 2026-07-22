@@ -1117,6 +1117,18 @@ describe('<TracePage>', () => {
         screen.queryByText('Critical path could not be computed for this trace.')
       ).not.toBeInTheDocument();
     });
+
+    it('re-shows the banner for a different trace after being dismissed on a prior one, since TracePage is not remounted per trace id', () => {
+      memoizedTraceCriticalPath.mockReturnValue({ sections: [], failed: true });
+      const { rerender } = render(<TracePage {...defaultProps} criticalPathEnabled />);
+      fireEvent.click(screen.getByRole('button', { name: /close/i }));
+      expect(
+        screen.queryByText('Critical path could not be computed for this trace.')
+      ).not.toBeInTheDocument();
+
+      rerender(<TracePage {...defaultProps} params={{ id: 'a-different-trace-id' }} criticalPathEnabled />);
+      expect(screen.getByText('Critical path could not be computed for this trace.')).toBeInTheDocument();
+    });
   });
 });
 

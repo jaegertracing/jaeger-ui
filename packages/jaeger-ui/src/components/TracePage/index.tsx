@@ -299,6 +299,7 @@ export function TracePageImpl(props: TProps) {
       prevIdRef.current = id;
       updateViewRangeTime(0, 1);
       clearSearch();
+      setCriticalPathErrorDismissed(false);
     }
   }, [id, updateViewRangeTime, clearSearch]);
 
