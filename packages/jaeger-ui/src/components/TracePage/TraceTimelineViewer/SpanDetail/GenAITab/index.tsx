@@ -130,10 +130,14 @@ function MessageBlock({
   );
 }
 
-function MetaRow({ provider, model }: { provider?: string; model?: string }) {
+function MetaRow({ provider, model, isLlmCall }: { provider?: string; model?: string; isLlmCall: boolean }) {
   return (
     <div className="GenAITab--meta">
-      <span className="GenAITab--metaPrefix">LLM:</span>
+      {/* classifySpan() can also resolve to AGENT/TOOL_CALL/RETRIEVAL, which can carry
+          their own backing provider/model per the OTel GenAI semconv - captioning the
+          row "LLM:" would misrepresent those as LLM calls, so the prefix is scoped to
+          spans classifySpan() actually identifies as one. */}
+      {isLlmCall && <span className="GenAITab--metaPrefix">LLM:</span>}
       {provider && (
         <span className="GenAITab--metaItem">
           <span className="GenAITab--metaLabel">Provider</span> {provider}
@@ -330,7 +334,7 @@ export default function GenAITab({ span }: Props): React.ReactElement {
           case 'agent':
             return <AgentSection key="agent" {...section.data} />;
           case 'meta':
-            return <MetaRow key="meta" {...section.data} />;
+            return <MetaRow key="meta" {...section.data} isLlmCall={span.genAIKind === 'LLM_CALL'} />;
           case 'tokens':
             return <TokensRow key="tokens" usage={section.data} />;
           case 'conversation':
