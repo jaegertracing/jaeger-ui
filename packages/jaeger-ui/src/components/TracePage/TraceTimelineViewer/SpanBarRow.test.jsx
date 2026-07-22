@@ -335,6 +335,22 @@ describe('<SpanBarRow>', () => {
       expect(screen.getByLabelText('http.status_code: 500')).toBeInTheDocument();
       expect(screen.getByLabelText('gen_ai.request.model: claude-3-haiku')).toBeInTheDocument();
     });
+
+    it('carries the full pill value in a title attribute, so a CSS-truncated value is still discoverable on hover', () => {
+      const longModel = 'gpt-4o-2024-08-06-fine-tuned-deployment-name';
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          spanPillsEnabled
+          span={{
+            ...defaultProps.span,
+            attributes: makeAttributes([{ key: 'gen_ai.request.model', value: longModel }]),
+          }}
+        />
+      );
+      const pill = screen.getByLabelText(`gen_ai.request.model: ${longModel}`);
+      expect(pill).toHaveAttribute('title', longModel);
+    });
   });
 
   it('sets longLabel and hintSide to right when viewStart <= 1 - viewEnd', () => {

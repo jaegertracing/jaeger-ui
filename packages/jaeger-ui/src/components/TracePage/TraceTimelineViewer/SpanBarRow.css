@@ -10,8 +10,18 @@ SPDX-License-Identifier: Apache-2.0
   font-size: 0.85em;
   line-height: 1.2;
   margin-left: 0.25rem;
-  max-width: 100%;
+  /* Unlike http.status_code (always 3 fixed digits), values like
+     gen_ai.request.model are unbounded-length strings. Without a cap here,
+     .span-name's overflow: hidden can clip this pill entirely once the
+     preceding service/operation-name text already fills the row, so it
+     disappears with no indication it exists. Capping width and ellipsizing
+     the pill's own text keeps it visible (if truncated); the title attribute
+     on the Tag surfaces the full value on hover. */
+  max-width: 8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
   vertical-align: middle;
+  white-space: nowrap;
 }
 
 .SpanBarRow--pill.is-error {

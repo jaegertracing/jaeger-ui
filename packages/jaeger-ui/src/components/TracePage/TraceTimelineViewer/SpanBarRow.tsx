@@ -201,6 +201,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
               <Tag
                 key={pill.label}
                 aria-label={`${pill.label}: ${pill.value}`}
+                title={pill.value}
                 className={cx('SpanBarRow--pill', { 'is-error': pill.isError })}
               >
                 {pill.value}
