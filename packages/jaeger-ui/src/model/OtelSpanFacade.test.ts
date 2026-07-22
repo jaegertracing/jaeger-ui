@@ -206,19 +206,17 @@ describe('OtelSpanFacade', () => {
   });
 
   it('maps attributes from tags', () => {
-    expect(facade.attributes).toContainEqual({ key: 'http.method', value: 'GET' });
+    expect(facade.attributes.entries()).toContainEqual({ key: 'http.method', value: 'GET' });
   });
 
   it('maps events from logs', () => {
     expect(facade.events).toHaveLength(1);
-    expect(facade.events[0]).toMatchObject({
-      timestamp: 1100,
-      name: 'test-event',
-      attributes: [
-        { key: 'event', value: 'test-event' },
-        { key: 'foo', value: 'bar' },
-      ],
-    });
+    expect(facade.events[0].timestamp).toBe(1100);
+    expect(facade.events[0].name).toBe('test-event');
+    expect(facade.events[0].attributes.entries()).toEqual([
+      { key: 'event', value: 'test-event' },
+      { key: 'foo', value: 'bar' },
+    ]);
   });
 
   describe('links calculation', () => {
@@ -290,7 +288,7 @@ describe('OtelSpanFacade', () => {
 
   it('maps resource from process', () => {
     expect(facade.resource.serviceName).toBe('test-service');
-    expect(facade.resource.attributes).toContainEqual({ key: 'res-tag', value: 'res-val' });
+    expect(facade.resource.attributes.entries()).toContainEqual({ key: 'res-tag', value: 'res-val' });
   });
 
   it('maps instrumentation scope from tags', () => {

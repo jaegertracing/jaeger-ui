@@ -7,8 +7,10 @@ import path from 'path';
 import fs from 'fs';
 import vm from 'vm';
 import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
 
 const proxyConfig = {
   target: 'http://localhost:16686',
@@ -21,7 +23,7 @@ const proxyConfig = {
 /**
  * Vite plugin that emits a bundle-stats.csv with per-module size estimates.
  *
- * Activated by: BUNDLE_STATS=1 npm run build
+ * Activated by: BUNDLE_STATS=1 pnpm run build
  *
  * In generateBundle, it records each module's renderedLength (post-tree-shake,
  * pre-minification) and which chunk it belongs to. In closeBundle, it reads the
@@ -110,7 +112,7 @@ function bundleStatsPlugin(outDir: string) {
  * 1. jaeger-ui.config.js - JavaScript file that exports a config object (or function returning one)
  * 2. jaeger-ui.config.json - JSON file with config object
  *
- * The plugin only runs in development mode (npm start).
+ * The plugin only runs in development mode (pnpm start).
  *
  * Security note: These config files are local to the developer's machine and are
  * excluded from git via .gitignore. The content is injected into the HTML during
@@ -192,7 +194,7 @@ function jaegerUiConfigPlugin() {
             // Inject backendCapabilities if present in the config file. The Go server
             // injects this separately via its own search-replace; the Vite plugin
             // replicates that here so capability overrides in jaeger-ui.config.json
-            // work with `npm start`.
+            // work with `pnpm start`.
             html = injectBackendCapabilities(html, parsedConfig);
 
             console.log('[jaeger-ui-config] Loaded config from jaeger-ui.config.json');
@@ -295,10 +297,12 @@ export default defineConfig({
       // More-specific alias must come first; Vite matches the first prefix that applies.
       '@jaegertracing/plexus/demo': path.resolve(__dirname, '../plexus/demo/src/index'),
       '@jaegertracing/plexus': path.resolve(__dirname, '../plexus/src'),
-      // d3-flame-graph doesn't export its CSS in package.json exports field
-      'd3-flame-graph/dist/d3-flamegraph.css': path.resolve(
-        __dirname,
-        '../../node_modules/d3-flame-graph/dist/d3-flamegraph.css'
+      // d3-flame-graph doesn't export its CSS in package.json exports field, so
+      // resolve the package via Node resolution (works regardless of how the
+      // package manager lays out node_modules) and point at the CSS directly.
+      'd3-flame-graph/dist/d3-flamegraph.css': path.join(
+        path.dirname(require.resolve('d3-flame-graph')),
+        'd3-flamegraph.css'
       ),
     },
   },

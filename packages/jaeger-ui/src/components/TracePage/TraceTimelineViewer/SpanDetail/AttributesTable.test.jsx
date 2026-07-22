@@ -6,6 +6,7 @@ import { render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import AttributesTable, { LinkValue } from './AttributesTable';
+import { makeAttributes } from '../../../../model/attributes';
 
 vi.mock('../../../common/CopyIcon', () => {
   return mockDefault(function CopyIcon({ copyText, tooltipTitle, buttonText, icon, className }) {
@@ -107,7 +108,7 @@ describe('<AttributesTable>', () => {
   ];
 
   it('renders KeyValueTable container with correct structure', () => {
-    render(<AttributesTable data={data} />);
+    render(<AttributesTable data={makeAttributes(data)} />);
 
     const container = document.querySelector('.KeyValueTable.u-simple-scrollbars');
     expect(container).toBeInTheDocument();
@@ -117,10 +118,14 @@ describe('<AttributesTable>', () => {
   });
 
   it('renders table row for each data element with correct key columns', () => {
-    render(<AttributesTable data={data} />);
+    render(<AttributesTable data={makeAttributes(data)} />);
 
+    // A JsonView tree (the 'jsonkey' entry) renders as two rows - a key-only row and
+    // a full-width value row below it - instead of sharing one row with the key
+    // column, so the total is data.length plus one extra row for that single
+    // JSON-tree item.
     const rows = screen.getAllByRole('row');
-    expect(rows).toHaveLength(data.length);
+    expect(rows).toHaveLength(data.length + 1);
 
     data.forEach(item => {
       const keyCell = screen.getByText(item.key);
@@ -128,8 +133,34 @@ describe('<AttributesTable>', () => {
     });
   });
 
+  it('renders a JSON-tree value on its own full-width row, separate from the key row', () => {
+    render(<AttributesTable data={makeAttributes(data)} />);
+
+    const keyCell = screen.getByText('jsonkey');
+    const keyRow = keyCell.closest('tr');
+    expect(keyRow).toHaveClass('KeyValueTable--row-jsonKey');
+    expect(keyCell).toHaveAttribute('colSpan', '2');
+    // Only the key sits in this row - no value content alongside it.
+    expect(keyRow).not.toHaveTextContent('world');
+
+    const valueRow = keyRow.nextElementSibling;
+    expect(valueRow).toHaveClass('KeyValueTable--row-jsonValue');
+    const valueCell = valueRow.querySelector('.KeyValueTable--valueColumn-full');
+    expect(valueCell).toHaveAttribute('colSpan', '2');
+    expect(valueCell).toHaveTextContent('world');
+  });
+
+  it('keeps a non-JSON-tree value sharing one row with its key, unchanged from before', () => {
+    render(<AttributesTable data={makeAttributes(data)} />);
+
+    const keyCell = screen.getByText('span.kind');
+    const row = keyCell.closest('tr');
+    expect(row).not.toHaveClass('KeyValueTable--row-jsonKey');
+    expect(row).toHaveTextContent('client');
+  });
+
   it('renders expected text content for each span value', () => {
-    render(<AttributesTable data={data} />);
+    render(<AttributesTable data={makeAttributes(data)} />);
 
     const valueElements = document.querySelectorAll('.ub-inline-block');
     expect(valueElements).toHaveLength(data.length);
@@ -145,13 +176,13 @@ describe('<AttributesTable>', () => {
   it('renders single link with correct href and title when linksGetter returns one link', () => {
     render(
       <AttributesTable
-        data={data}
+        data={makeAttributes(data)}
         linksGetter={(array, i) =>
-          array[i].key === 'span.kind'
+          array.entries()[i].key === 'span.kind'
             ? [
                 {
-                  url: `http://example.com/?kind=${encodeURIComponent(array[i].value)}`,
-                  text: `More info about ${array[i].value}`,
+                  url: `http://example.com/?kind=${encodeURIComponent(array.entries()[i].value)}`,
+                  text: `More info about ${array.entries()[i].value}`,
                 },
               ]
             : []
@@ -171,12 +202,18 @@ describe('<AttributesTable>', () => {
   it('renders dropdown with multiple links when linksGetter returns multiple links', () => {
     const { container } = render(
       <AttributesTable
-        data={data}
+        data={makeAttributes(data)}
         linksGetter={(array, i) =>
-          array[i].key === 'span.kind'
+          array.entries()[i].key === 'span.kind'
             ? [
-                { url: `http://example.com/1?kind=${encodeURIComponent(array[i].value)}`, text: 'Example 1' },
-                { url: `http://example.com/2?kind=${encodeURIComponent(array[i].value)}`, text: 'Example 2' },
+                {
+                  url: `http://example.com/1?kind=${encodeURIComponent(array.entries()[i].value)}`,
+                  text: 'Example 1',
+                },
+                {
+                  url: `http://example.com/2?kind=${encodeURIComponent(array.entries()[i].value)}`,
+                  text: 'Example 2',
+                },
               ]
             : []
         }
@@ -196,14 +233,14 @@ describe('<AttributesTable>', () => {
 
   it('handles invalid JSON strings gracefully and returns raw value', () => {
     const brokenData = [{ key: 'brokenJSON', value: '{"complete": "test"' }];
-    render(<AttributesTable data={brokenData} />);
+    render(<AttributesTable data={makeAttributes(brokenData)} />);
 
     const valueCell = screen.getByText('{"complete": "test"');
     expect(valueCell).toBeInTheDocument();
   });
 
   it('renders CopyIcon components with correct copyText properties for each data element', () => {
-    render(<AttributesTable data={data} />);
+    render(<AttributesTable data={makeAttributes(data)} />);
 
     const copyIcons = screen.getAllByTestId('copy-icon');
     expect(copyIcons).toHaveLength(2 * data.length);

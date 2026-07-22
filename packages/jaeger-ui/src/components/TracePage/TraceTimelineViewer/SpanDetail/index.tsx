@@ -18,13 +18,13 @@ import { isGenAISpan } from '../../../../utils/genai';
 
 import { TNil } from '../../../../types';
 import { Hyperlink } from '../../../../types/hyperlink';
-import { IOtelSpan, IAttribute, IEvent } from '../../../../types/otel';
+import { IOtelSpan, IAttributes, IEvent } from '../../../../types/otel';
 
 import './index.css';
 
 type SpanDetailProps = {
   detailState: DetailState;
-  linksGetter: ((links: ReadonlyArray<IAttribute>, index: number) => Hyperlink[]) | TNil;
+  linksGetter: ((links: IAttributes, index: number) => Hyperlink[]) | TNil;
   eventItemToggle: (spanID: string, event: IEvent) => void;
   eventsToggle: (spanID: string) => void;
   resourceToggle: (spanID: string) => void;
@@ -99,7 +99,7 @@ export default function SpanDetail(props: SpanDetailProps) {
           isOpen={isAttributesOpen}
           onToggle={() => attributesToggle(span.spanID)}
         />
-        {span.resource.attributes && span.resource.attributes.length > 0 && (
+        {span.resource.attributes && span.resource.attributes.size > 0 && (
           <AccordionAttributes
             className="ub-mb1"
             data={span.resource.attributes}

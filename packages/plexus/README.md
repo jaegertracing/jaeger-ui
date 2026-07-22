@@ -54,7 +54,7 @@ A React component for directed graphs.
 
 ## Demo
 
-When running the Jaeger UI in development mode (`npm start` from the repository root), the Plexus demo is accessible at [http://localhost:5173/plexus-demo](http://localhost:5173/plexus-demo). The demo showcases various graph configurations and is not included in production builds.
+When running the Jaeger UI in development mode (`pnpm start` from the repository root), the Plexus demo is accessible at [http://localhost:5173/plexus-demo](http://localhost:5173/plexus-demo). The demo showcases various graph configurations and is not included in production builds.
 
 ## About
 

@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { classifySpan, isGenAISpan, isGenAITrace } from './detect';
-import type { IAttribute } from '../../types/otel';
+import type { IAttribute, IAttributes } from '../../types/otel';
+import { makeAttributes } from '../../model/attributes';
 
-function makeSpan(attrs: IAttribute[]): { attributes: IAttribute[] } {
-  return { attributes: attrs };
+function makeSpan(attrs: IAttribute[]): { attributes: IAttributes } {
+  return { attributes: makeAttributes(attrs) };
 }
 
 describe('classifySpan', () => {

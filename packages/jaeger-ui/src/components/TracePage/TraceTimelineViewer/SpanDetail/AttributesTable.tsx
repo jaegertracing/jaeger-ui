@@ -12,7 +12,7 @@ import CopyIcon from '../../../common/CopyIcon';
 
 import { TNil } from '../../../../types';
 import { Hyperlink } from '../../../../types/hyperlink';
-import { IAttribute } from '../../../../types/otel';
+import { IAttributes } from '../../../../types/otel';
 
 import './AttributesTable.css';
 
@@ -71,9 +71,15 @@ const scalarMarkup = (value: string | number | boolean) => {
   );
 };
 
-function formatValue(key: string, value: any) {
+// isJsonTree distinguishes a parsed object/array (rendered as an interactive JsonView
+// tree, which needs real width to be readable) from every other value shape (a scalar
+// or a short string list, both fine sharing a row with the key). Callers use it to give
+// JSON content its own full-width row instead of squeezing a tree into the narrow
+// key:value column layout.
+function formatValue(key: string, value: any): { node: React.ReactNode; isJsonTree: boolean } {
   let content;
   let parsed = value;
+  let isJsonTree = false;
 
   if (typeof value === 'string') {
     parsed = tryParseJson(value);
@@ -90,11 +96,12 @@ function formatValue(key: string, value: any) {
         style={jsonViewStyles}
       />
     );
+    isJsonTree = true;
   } else {
     content = scalarMarkup(parsed);
   }
 
-  return <div className="ub-inline-block">{content}</div>;
+  return { node: <div className="ub-inline-block">{content}</div>, isJsonTree };
 }
 
 function formatSize(chars: number) {
@@ -152,8 +159,8 @@ const linkValueList = (links: Hyperlink[]) => {
 };
 
 type AttributesTableProps = {
-  data: ReadonlyArray<IAttribute>;
-  linksGetter: ((pairs: ReadonlyArray<IAttribute>, index: number) => Hyperlink[]) | TNil;
+  data: IAttributes;
+  linksGetter: ((pairs: IAttributes, index: number) => Hyperlink[]) | TNil;
 };
 
 // AttributesTable is displayed as a menu at span level.
@@ -213,10 +220,51 @@ export default function AttributesTable(props: AttributesTableProps) {
             ) : (
               row.key
             );
+            const copyButtons = (
+              <div className="KeyValueTable--copyContainer">
+                <CopyIcon
+                  className="KeyValueTable--copyIcon"
+                  copyText={String(row.value)}
+                  tooltipTitle="Copy value"
+                  buttonText="Copy"
+                />
+                <CopyIcon
+                  className="KeyValueTable--copyIcon"
+                  icon={<IoCopyOutline />}
+                  copyText={JSON.stringify(row, null, 2)}
+                  tooltipTitle="Copy JSON"
+                  buttonText="JSON"
+                />
+              </div>
+            );
+
+            // `i` is necessary in the key because row.key can repeat
+            const rowKey = `${row.key}-${i}`;
+
+            // A JsonView tree needs real width to be readable - squeezed into the
+            // key:value column split, deep/wide objects force horizontal scrolling
+            // inside a narrow cell. Give it the key on its own row and the tree a
+            // full-width row below, instead of sharing one row with the key column.
+            if (isJsonTree) {
+              return (
+                <React.Fragment key={rowKey}>
+                  <tr className="KeyValueTable--row KeyValueTable--row-jsonKey">
+                    <td className="KeyValueTable--keyColumn" colSpan={2}>
+                      {keyMarkup}
+                    </td>
+                  </tr>
+                  <tr className="KeyValueTable--row KeyValueTable--row-jsonValue">
+                    <td className="KeyValueTable--valueColumn KeyValueTable--valueColumn-full" colSpan={2}>
+                      {copyButtons}
+                      {valueMarkup}
+                    </td>
+                  </tr>
+                </React.Fragment>
+              );
+            }
 
             return (
-              // `i` is necessary in the key because row.key can repeat
-              <tr className="KeyValueTable--row" key={`${row.key}-${i}`}>
+              <tr className="KeyValueTable--row" key={rowKey}>
                 <td className="KeyValueTable--keyColumn">{keyMarkup}</td>
                 <td className="KeyValueTable--valueColumn">
                   {!isLarge && (

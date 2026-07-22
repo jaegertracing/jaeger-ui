@@ -209,7 +209,7 @@ export function TracePageImpl(props: TProps) {
   const traceIsGenAI = useMemo(
     () =>
       traceData?.spans
-        ? traceData.spans.some(s => s.attributes.some(a => a.key.startsWith('gen_ai.')))
+        ? traceData.spans.some(s => s.attributes.keys().some(k => k.startsWith('gen_ai.')))
         : false,
     [traceData]
   );
