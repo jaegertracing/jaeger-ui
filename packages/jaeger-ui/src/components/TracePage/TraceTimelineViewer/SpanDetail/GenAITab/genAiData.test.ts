@@ -1,7 +1,13 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { extractGenAiSections, hasAnyTokenUsage, formatTokenCount, GenAiSection } from './genAiData';
+import {
+  extractGenAiSections,
+  hasAnyTokenUsage,
+  formatTokenCount,
+  tryParseJson,
+  GenAiSection,
+} from './genAiData';
 import type { IAttribute, IAttributes } from '../../../../../types/otel';
 import { makeAttributes } from '../../../../../model/attributes';
 
@@ -533,6 +539,28 @@ describe('hasAnyTokenUsage', () => {
 
   it('returns false when all fields are undefined', () => {
     expect(hasAnyTokenUsage({})).toBe(false);
+  });
+});
+
+describe('tryParseJson', () => {
+  it('parses a plain JSON object string', () => {
+    expect(tryParseJson('{"a":1}')).toEqual({ a: 1 });
+  });
+
+  it('parses a JSON object with leading whitespace/newlines, not falling back to the raw string', () => {
+    expect(tryParseJson('\n  {"a":1}')).toEqual({ a: 1 });
+  });
+
+  it('parses a JSON array with leading whitespace', () => {
+    expect(tryParseJson('\n[1,2,3]')).toEqual([1, 2, 3]);
+  });
+
+  it('returns non-JSON strings unchanged, including ones with leading whitespace', () => {
+    expect(tryParseJson('  hello world')).toBe('  hello world');
+  });
+
+  it('returns the original string unchanged when it looks like JSON but fails to parse', () => {
+    expect(tryParseJson('{not valid json')).toBe('{not valid json');
   });
 });
 

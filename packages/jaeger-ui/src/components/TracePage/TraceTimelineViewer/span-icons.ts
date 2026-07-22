@@ -3,7 +3,6 @@
 
 import type { IconType } from 'react-icons';
 import {
-  IoSparkles as GenAiIcon,
   IoServer as DbIcon,
   IoGlobe as HttpIcon,
   IoChatbubble as MessagingIcon,
@@ -12,9 +11,15 @@ import {
 
 import type { IAttributes } from '../../../types/otel';
 
+// gen_ai is deliberately not a namespace here: GenAISpanIcon already renders one
+// icon per GenAI span, classified by operation kind (agent/LLM call/tool call/
+// retrieval, falling back to a generic GenAI icon for an unclassified operation -
+// see classifySpan). A second, generic gen_ai entry in this map would render
+// alongside it on every GenAI span, which is exactly the redundant/confusing
+// double-icon rendering reported in #4217.
+//
 // Priority: lower index wins when a span has attributes from multiple namespaces.
 const NAMESPACE_PRIORITY: Partial<Record<string, number>> = {
-  gen_ai: 0,
   db: 1,
   http: 2,
   messaging: 3,
@@ -22,7 +27,6 @@ const NAMESPACE_PRIORITY: Partial<Record<string, number>> = {
 };
 
 const NAMESPACE_ICON: Partial<Record<string, IconType>> = {
-  gen_ai: GenAiIcon,
   db: DbIcon,
   http: HttpIcon,
   messaging: MessagingIcon,

@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useCallback } from 'react';
-import { Tag } from 'antd';
-import cx from 'classnames';
 import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward } from 'react-icons/io5';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
@@ -16,7 +14,7 @@ import Ticks from './Ticks';
 import { TNil } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan } from '../../../types/otel';
-import { getSpanPillsForSpan } from './spanPills';
+import { getSpanPillsForSpan, SpanPill } from './spanPills';
 
 import { getSpanIconComponent } from './span-icons';
 
@@ -119,7 +117,14 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
     resource: { serviceName },
   } = span;
   const pills = spanPillsEnabled ? getSpanPillsForSpan(span) : [];
-  const SpanTypeIcon = getSpanIconComponent(attributes);
+  // A span classified as GenAI (agent/LLM call/tool call/retrieval/etc.) already
+  // renders exactly one icon via GenAISpanIcon below. Suppress the generic
+  // namespace icon entirely for such spans, not just its gen_ai entry - a GenAI
+  // span commonly also carries http/db/messaging attributes (e.g. the root HTTP
+  // server span for an agent's own endpoint), and without this check the generic
+  // icon would fall through to whichever of those namespaces is left, recreating
+  // the same double-icon problem with a different second icon (#4217).
+  const SpanTypeIcon = span.genAIKind === undefined ? getSpanIconComponent(attributes) : null;
   const label = formatDurationCompact(duration);
   const viewBounds = getViewedBounds(span.startTime, span.endTime);
   const viewStart = viewBounds.start;
@@ -198,14 +203,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
             </span>
             <small className="endpoint-name">{rpc ? rpc.operationName : operationName}</small>
             {pills.map(pill => (
-              <Tag
-                key={pill.label}
-                aria-label={`${pill.label}: ${pill.value}`}
-                title={pill.value}
-                className={cx('SpanBarRow--pill', { 'is-error': pill.isError })}
-              >
-                {pill.value}
-              </Tag>
+              <SpanPill key={pill.label} pill={pill} />
             ))}
           </a>
           {hasLinks && (

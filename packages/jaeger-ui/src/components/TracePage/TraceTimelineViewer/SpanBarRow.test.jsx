@@ -336,7 +336,40 @@ describe('<SpanBarRow>', () => {
       expect(screen.getByLabelText('gen_ai.request.model: claude-3-haiku')).toBeInTheDocument();
     });
 
-    it('carries the full pill value in a title attribute, so a CSS-truncated value is still discoverable on hover', () => {
+    it('renders multiple pills from span attributes', () => {
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          spanPillsEnabled
+          span={{
+            ...defaultProps.span,
+            attributes: makeAttributes([
+              { key: 'http.status_code', value: '200' },
+              { key: 'http.method', value: 'GET' },
+            ]),
+          }}
+        />
+      );
+      expect(screen.getByLabelText('http.status_code: 200')).toBeInTheDocument();
+      expect(screen.getByLabelText('http.method: GET')).toBeInTheDocument();
+    });
+
+    it('shows pill.label as a tooltip on hover', async () => {
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          spanPillsEnabled
+          span={{
+            ...defaultProps.span,
+            attributes: makeAttributes([{ key: 'http.status_code', value: '200' }]),
+          }}
+        />
+      );
+      fireEvent.mouseEnter(screen.getByLabelText('http.status_code: 200').parentElement);
+      expect(await screen.findByRole('tooltip')).toHaveTextContent('http.status_code');
+    });
+
+    it('shows the full label and value in the tooltip, so a CSS-truncated pill value is still discoverable on hover', async () => {
       const longModel = 'gpt-4o-2024-08-06-fine-tuned-deployment-name';
       render(
         <SpanBarRow
@@ -349,7 +382,8 @@ describe('<SpanBarRow>', () => {
         />
       );
       const pill = screen.getByLabelText(`gen_ai.request.model: ${longModel}`);
-      expect(pill).toHaveAttribute('title', longModel);
+      fireEvent.mouseEnter(pill.parentElement);
+      expect(await screen.findByRole('tooltip')).toHaveTextContent(`gen_ai.request.model: ${longModel}`);
     });
   });
 
@@ -378,7 +412,7 @@ describe('<SpanBarRow>', () => {
     it('shows no GenAI icon for a standard span', () => {
       render(<SpanBarRow {...defaultProps} />);
       expect(
-        screen.queryByRole('img', { name: /LLM call|Tool call|Agent|Retrieval|GenAI span/ })
+        screen.queryByRole('img', { name: /LLM call|MCP Tool call|AI Agent|Retrieval|GenAI span/ })
       ).not.toBeInTheDocument();
     });
 
@@ -391,13 +425,13 @@ describe('<SpanBarRow>', () => {
     it('shows a tool call icon when span.genAIKind=TOOL_CALL', () => {
       const span = { ...defaultProps.span, genAIKind: 'TOOL_CALL' };
       render(<SpanBarRow {...defaultProps} span={span} />);
-      expect(screen.getByRole('img', { name: 'Tool call' })).toBeInTheDocument();
+      expect(screen.getByRole('img', { name: 'MCP Tool call' })).toBeInTheDocument();
     });
 
     it('shows an agent icon when span.genAIKind=AGENT', () => {
       const span = { ...defaultProps.span, genAIKind: 'AGENT' };
       render(<SpanBarRow {...defaultProps} span={span} />);
-      expect(screen.getByRole('img', { name: 'Agent' })).toBeInTheDocument();
+      expect(screen.getByRole('img', { name: 'AI Agent' })).toBeInTheDocument();
     });
 
     it('shows a retrieval icon when span.genAIKind=RETRIEVAL', () => {
@@ -410,6 +444,43 @@ describe('<SpanBarRow>', () => {
       const span = { ...defaultProps.span, genAIKind: 'UNKNOWN_GENAI' };
       render(<SpanBarRow {...defaultProps} span={span} />);
       expect(screen.getByRole('img', { name: 'GenAI span' })).toBeInTheDocument();
+    });
+
+    it('does not also render the generic namespace icon for a span with gen_ai attributes, only the kind-specific GenAISpanIcon (#4217)', () => {
+      const span = {
+        ...defaultProps.span,
+        genAIKind: 'LLM_CALL',
+        attributes: makeAttributes([{ key: 'gen_ai.system', value: 'openai' }]),
+      };
+      const { container } = render(<SpanBarRow {...defaultProps} span={span} />);
+      // getSpanIconComponent's generic namespace icon (aria-hidden, rendered via
+      // this class) must not appear alongside GenAISpanIcon's kind-specific icon -
+      // that combination was the reported double-sparkle/double-icon rendering.
+      expect(container.querySelector('.SpanBarRow--spanTypeIcon')).not.toBeInTheDocument();
+      expect(screen.getByRole('img', { name: 'LLM call' })).toBeInTheDocument();
+    });
+
+    it('suppresses the generic namespace icon even when a GenAI span also carries http attributes, not just gen_ai ones (#4217)', () => {
+      // Regression case found by testing against a real trace: the root HTTP
+      // server span for a GenAI agent's own endpoint carries both gen_ai.* and
+      // real http.* attributes (http.request.method, http.response.status_code,
+      // etc.). Removing only the gen_ai entry from the generic icon's namespace
+      // map was not enough - the icon then fell through to http's globe icon
+      // instead, recreating the same double-icon bug with a different pair of
+      // icons. The generic icon must be suppressed for any GenAI-classified span
+      // regardless of what other namespaces it also has attributes from.
+      const span = {
+        ...defaultProps.span,
+        genAIKind: 'AGENT',
+        attributes: makeAttributes([
+          { key: 'gen_ai.operation.name', value: 'invoke_agent' },
+          { key: 'http.request.method', value: 'POST' },
+          { key: 'http.response.status_code', value: 200 },
+        ]),
+      };
+      const { container } = render(<SpanBarRow {...defaultProps} span={span} />);
+      expect(container.querySelector('.SpanBarRow--spanTypeIcon')).not.toBeInTheDocument();
+      expect(screen.getByRole('img', { name: 'AI Agent' })).toBeInTheDocument();
     });
   });
 });

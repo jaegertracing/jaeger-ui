@@ -3,6 +3,15 @@ Copyright (c) 2017 Uber Technologies, Inc.
 SPDX-License-Identifier: Apache-2.0
 */
 
+.SpanBarRow--pillWrap {
+  /* Sit above .span-name::after so hover tooltips receive pointer events. */
+  display: inline-flex;
+  max-width: 100%;
+  position: relative;
+  vertical-align: middle;
+  z-index: 1;
+}
+
 .SpanBarRow--pill {
   background: var(--surface-component-background);
   border: 1px solid var(--border-default);
@@ -15,8 +24,8 @@ SPDX-License-Identifier: Apache-2.0
      .span-name's overflow: hidden can clip this pill entirely once the
      preceding service/operation-name text already fills the row, so it
      disappears with no indication it exists. Capping width and ellipsizing
-     the pill's own text keeps it visible (if truncated); the title attribute
-     on the Tag surfaces the full value on hover. */
+     the pill's own text keeps it visible (if truncated); SpanPill's Tooltip
+     surfaces the full label and value on hover. */
   max-width: 8rem;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -237,8 +246,8 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .SpanBarRow--spanTypeIcon {
-  color: var(--text-secondary);
-  font-size: 0.85em;
-  margin-right: 0.25rem;
-  vertical-align: middle;
+  color: var(--interactive-primary);
+  font-size: 1.3em;
+  margin-right: 0.3rem;
+  vertical-align: -0.18em;
 }

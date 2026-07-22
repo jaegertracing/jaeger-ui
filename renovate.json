@@ -22,7 +22,7 @@
       "matchManagers": ["npm"],
       "matchPackageNames": ["/^@assistant-ui//", "/^@ag-ui//"],
       "rangeStrategy": "pin",
-      "description": "@assistant-ui/* and @ag-ui/* share peer types (AssistantRuntime, HttpAgent); bumping them independently produces duplicate copies in node_modules and tsc errors. Pin exact versions (no ^) so npm dedupes a single copy."
+      "description": "@assistant-ui/* and @ag-ui/* share peer types (AssistantRuntime, HttpAgent); bumping them independently produces duplicate copies in node_modules and tsc errors. Pin exact versions (no ^) so pnpm dedupes a single copy."
     },
     {
       "groupName": "opentelemetry",
