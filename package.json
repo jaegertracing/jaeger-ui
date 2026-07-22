@@ -9,60 +9,62 @@
     "url": "https://github.com/jaegertracing/jaeger-ui.git"
   },
   "engines": {
-    "node": ">=24.6.0",
-    "npm": ">=11.6.0"
+    "node": ">=24.16.0"
   },
+  "packageManager": "pnpm@10.5.0",
   "devDependencies": {
-    "@babel/core": "7.29.0",
+    "@babel/core": "8.0.1",
     "@emnapi/core": "^1.9.1",
     "@emnapi/runtime": "^1.9.1",
     "@noble/hashes": "2.2.0",
     "@testing-library/dom": "^10.4.1",
     "depcheck": "1.4.7",
-    "knip": "6.15.0",
-    "eslint-plugin-react-x": "5.8.0",
+    "knip": "6.26.0",
+    "eslint-plugin-react-x": "5.14.5",
     "husky": "9.1.0",
     "jsdom": "29.1.1",
     "lint-staged": "17.0.4",
     "npm-run-all2": "9.0.1",
     "openapi-zod-client": "1.18.3",
     "typescript": "6.0.2",
-    "vite-plus": "0.1.17",
-    "@vitest/coverage-v8": "4.1.4",
-    "vitest": "4.1.4"
+    "vite-plus": "0.2.4",
+    "@vitest/coverage-v8": "4.1.10",
+    "vitest": "4.1.10"
   },
-  "overrides": {
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
-    "yaml": "2.9.0",
-    "@exodus/bytes": {
-      "@noble/hashes": "$@noble/hashes"
+  "pnpm": {
+    "overrides": {
+      "react": "19.2.0",
+      "react-dom": "19.2.0",
+      "yaml": "2.9.0",
+      "@types/node": "24.13.1",
+      "@exodus/bytes>@noble/hashes": "$@noble/hashes",
+      "@assistant-ui/core": "0.2.10",
+      "@assistant-ui/store": "0.2.13",
+      "@assistant-ui/tap": "0.5.14"
     }
   },
-  "workspaces": [
-    "packages/plexus",
-    "packages/jaeger-ui"
-  ],
   "scripts": {
-    "build": "npm run --workspaces build",
+    "build": "pnpm -r build",
     "check-copyright-year": "./scripts/check-copyright-year.sh",
     "check-license": "./scripts/check-license.sh",
     "check-overrides": "./scripts/check-overrides.sh",
     "check-tsx-naming": "./scripts/check-tsx-naming.sh",
-    "coverage": "npm run --workspaces coverage",
+    "coverage": "pnpm -r coverage",
     "depcheck": "./scripts/run-depcheck.sh",
     "oxlint": "vp lint packages/ scripts/",
     "fmt": "vp fmt",
     "knip": "knip",
     "lint": "npm-run-all -ln --parallel fmt-lint tsc-lint oxlint check-license check-copyright-year check-tsx-naming check-overrides knip",
+    "preinstall": "npx only-allow pnpm",
     "prepare": "husky",
     "fmt-lint": "vp fmt --check || (echo '*** ❌ PLEASE RUN make fmt AND RESUBMIT ***' && false)",
     "generate:api-types": "openapi-zod-client https://raw.githubusercontent.com/jaegertracing/jaeger-idl/refs/heads/main/swagger/api_v3/query_service.openapi.yaml --output packages/jaeger-ui/src/api/v3/generated-client.ts --with-alias && node scripts/postprocess-schemas.cjs && vp fmt packages/jaeger-ui/src/api/v3/generated-client.ts",
-    "test": "npm run --workspaces test --",
+    "test": "pnpm -r test --",
     "tsc-lint": "tsc -p packages/jaeger-ui/tsconfig.json && tsc -p packages/plexus/tsconfig.json",
     "tsc-lint-debug": "tsc -p packages/jaeger-ui/tsconfig.json --listFiles && tsc -p packages/plexus/tsconfig.json --listFiles",
-    "start": "cd packages/jaeger-ui && npm run start",
-    "update-snapshots": "cd packages/jaeger-ui && npm test -- -u"
+    "dev:check": "./scripts/check-dev-server.sh",
+    "start": "pnpm --filter @jaegertracing/jaeger-ui start",
+    "update-snapshots": "pnpm --filter @jaegertracing/jaeger-ui test -- -u"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,mts}": [
@@ -74,23 +76,23 @@
     ]
   },
   "dependencies": {
-    "@tanstack/react-virtual": "3.13.12",
+    "@tanstack/react-virtual": "3.14.2",
     "react-side-effect": "2.1.2"
   },
   "optionalDependencies": {
-    "@rolldown/binding-android-arm64": "1.0.0-rc.12",
-    "@rolldown/binding-darwin-arm64": "1.0.0-rc.12",
-    "@rolldown/binding-darwin-x64": "1.0.0-rc.12",
-    "@rolldown/binding-freebsd-x64": "1.0.0-rc.12",
-    "@rolldown/binding-linux-arm-gnueabihf": "1.0.0-rc.12",
-    "@rolldown/binding-linux-arm64-gnu": "1.0.0-rc.12",
-    "@rolldown/binding-linux-arm64-musl": "1.0.0-rc.12",
-    "@rolldown/binding-linux-ppc64-gnu": "1.0.0-rc.12",
-    "@rolldown/binding-linux-s390x-gnu": "1.0.0-rc.12",
-    "@rolldown/binding-linux-x64-gnu": "1.0.0-rc.12",
-    "@rolldown/binding-linux-x64-musl": "1.0.0-rc.12",
-    "@rolldown/binding-openharmony-arm64": "1.0.0-rc.12",
-    "@rolldown/binding-win32-arm64-msvc": "1.0.0-rc.12",
-    "@rolldown/binding-win32-x64-msvc": "1.0.0-rc.12"
+    "@rolldown/binding-android-arm64": "1.1.0",
+    "@rolldown/binding-darwin-arm64": "1.1.0",
+    "@rolldown/binding-darwin-x64": "1.1.0",
+    "@rolldown/binding-freebsd-x64": "1.1.0",
+    "@rolldown/binding-linux-arm-gnueabihf": "1.1.0",
+    "@rolldown/binding-linux-arm64-gnu": "1.1.0",
+    "@rolldown/binding-linux-arm64-musl": "1.1.0",
+    "@rolldown/binding-linux-ppc64-gnu": "1.1.0",
+    "@rolldown/binding-linux-s390x-gnu": "1.1.0",
+    "@rolldown/binding-linux-x64-gnu": "1.1.0",
+    "@rolldown/binding-linux-x64-musl": "1.1.0",
+    "@rolldown/binding-openharmony-arm64": "1.1.0",
+    "@rolldown/binding-win32-arm64-msvc": "1.1.0",
+    "@rolldown/binding-win32-x64-msvc": "1.1.0"
   }
 }

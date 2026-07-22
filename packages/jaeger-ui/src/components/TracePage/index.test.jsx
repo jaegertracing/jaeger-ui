@@ -17,13 +17,11 @@ import {
 } from './index';
 import * as track from './index.track';
 import * as keyboardShortcutsMod from './keyboard-shortcuts';
-import { reset as resetShortcuts, merge as mergeShortcuts } from './keyboard-shortcuts';
+import { merge as mergeShortcuts } from './keyboard-shortcuts';
 import * as scrollPageMod from './scroll-page';
-import { cancel as cancelScroll } from './scroll-page';
 import * as calculateTraceDagEV from './TraceGraph/calculateTraceDagEV';
 import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
 import * as getUiFindVertexKeys from '../TraceDiff/TraceDiffGraph/traceDiffGraphUtils';
-import { fetchedState } from '../../constants';
 import traceGenerator from '../../demo/trace-generators';
 import transformTraceData from '../../model/transform-trace-data';
 import filterSpansSpy from '../../utils/filter-spans';
@@ -631,8 +629,8 @@ describe('<TracePage>', () => {
 
     describe('showArchiveButton', () => {
       it('shows archive button based on conditions', () => {
-        const getShowArchiveButton = (embedded, archiveEnabled, storageCapabilities) => {
-          const hasStorage = storageCapabilities && storageCapabilities.archiveStorage;
+        const getShowArchiveButton = (embedded, archiveEnabled, backendCapabilities) => {
+          const hasStorage = backendCapabilities && backendCapabilities.archiveStorage;
           return !embedded && archiveEnabled && hasStorage;
         };
 
@@ -640,25 +638,25 @@ describe('<TracePage>', () => {
           {
             embedded: undefined,
             archiveEnabled: true,
-            storageCapabilities: { archiveStorage: true },
+            backendCapabilities: { archiveStorage: true },
             showArchiveButton: getShowArchiveButton(undefined, true, { archiveStorage: true }),
           },
           {
             embedded: { timeline: {} },
             archiveEnabled: true,
-            storageCapabilities: { archiveStorage: true },
+            backendCapabilities: { archiveStorage: true },
             showArchiveButton: getShowArchiveButton({ timeline: {} }, true, { archiveStorage: true }),
           },
           {
             embedded: undefined,
             archiveEnabled: false,
-            storageCapabilities: { archiveStorage: true },
+            backendCapabilities: { archiveStorage: true },
             showArchiveButton: getShowArchiveButton(undefined, false, { archiveStorage: true }),
           },
           {
             embedded: undefined,
             archiveEnabled: true,
-            storageCapabilities: { archiveStorage: false },
+            backendCapabilities: { archiveStorage: false },
             showArchiveButton: getShowArchiveButton(undefined, true, { archiveStorage: false }),
           },
         ];
@@ -1050,6 +1048,55 @@ describe('<TracePage>', () => {
       expect(screen.queryByTestId('mock-trace-statistics')).not.toBeInTheDocument();
       expect(screen.queryByTestId('mock-trace-span-view')).not.toBeInTheDocument();
       expect(screen.queryByTestId('mock-trace-flamegraph')).not.toBeInTheDocument();
+    });
+
+    it('renders TraceTimelineViewer when viewType is GenAITimelineViewer and headerHeight exists', () => {
+      render(<TracePage {...defaultProps} />);
+      act(() => {
+        capturedHeaderProps.onTraceViewChange(ETraceViewType.GenAITimelineViewer);
+      });
+      expect(screen.getByTestId('mock-timeline-viewer')).toBeInTheDocument();
+    });
+  });
+
+  describe('GenAI auto-activation', () => {
+    let clientHeightSpy;
+    let genAiOtelTrace;
+    let genAiProps;
+
+    beforeAll(() => {
+      const raw = traceGenerator.trace({});
+      raw.spans[0].tags.push({ key: 'gen_ai.operation.name', type: 'string', value: 'chat' });
+      genAiOtelTrace = transformTraceData(raw).asOtelTrace();
+      genAiProps = {
+        ...defaultProps,
+        id: genAiOtelTrace.traceID,
+      };
+    });
+
+    beforeEach(() => {
+      clientHeightSpy = jest.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(100);
+      useTraceMock.mockReturnValue({ data: genAiOtelTrace, isPending: false, isError: false, error: null });
+    });
+
+    afterEach(() => {
+      clientHeightSpy.mockRestore();
+    });
+
+    it('auto-switches to GenAITimelineViewer when trace has gen_ai.* attributes', () => {
+      render(<TracePage {...genAiProps} />);
+      expect(capturedHeaderProps.viewType).toBe(ETraceViewType.GenAITimelineViewer);
+    });
+
+    it('does not auto-switch for a plain trace', () => {
+      useTraceMock.mockReturnValue({ data: trace, isPending: false, isError: false, error: null });
+      render(<TracePage {...defaultProps} />);
+      expect(capturedHeaderProps.viewType).toBe(ETraceViewType.TraceTimelineViewer);
+    });
+
+    it('auto-switches regardless of backendCapabilities.aiAssistant — GenAI view is client-side', () => {
+      render(<TracePage {...genAiProps} backendCapabilities={null} />);
+      expect(capturedHeaderProps.viewType).toBe(ETraceViewType.GenAITimelineViewer);
     });
   });
 });

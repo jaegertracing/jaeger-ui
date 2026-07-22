@@ -50,7 +50,7 @@ global.ResizeObserver = vi.fn().mockImplementation(function () {
 // Calls to get-config.tsx and get-version.tsx warn if these globals are not functions.
 // This file is executed before each test file, so they may be overridden safely.
 (window as any).getJaegerUiConfig = () => ({});
-(window as any).getJaegerStorageCapabilities = () => ({});
+(window as any).getJaegerBackendCapabilities = () => ({});
 (window as any).getJaegerVersion = () => ({
   gitCommit: '',
   gitVersion: '',

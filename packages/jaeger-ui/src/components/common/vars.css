@@ -260,8 +260,8 @@ SPDX-License-Identifier: Apache-2.0
   --trace-emphasis-highlight: #3d3520;
 
   /* Critical Path */
-  --critical-path-color: #000;
-  --critical-path-outline: #fff;
+  --critical-path-color: #fff;
+  --critical-path-outline: #000;
 
   /* ============================================
     TRACE TIMELINE TOKENS - Dark Mode

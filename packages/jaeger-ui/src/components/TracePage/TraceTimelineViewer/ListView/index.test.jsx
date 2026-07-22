@@ -120,6 +120,28 @@ describe('<ListView>', () => {
       const expectedDrawnLength = componentInstance._endIndexDrawn - componentInstance._startIndexDrawn + 1;
       expect(expectedDrawnLength).toBeGreaterThanOrEqual(props.initialDraw);
     });
+
+    it('items array has no holes — rendered count matches drawn range', () => {
+      let componentInstance;
+      function TestComponent() {
+        const ref = React.useRef();
+        React.useEffect(() => {
+          componentInstance = ref.current;
+        });
+        return <ListView {...props} ref={ref} />;
+      }
+      render(<TestComponent />);
+      expect(componentInstance).toBeDefined();
+      const start = componentInstance._startIndexDrawn;
+      const end = componentInstance._endIndexDrawn;
+      const expectedCount = end - start + 1;
+      // Assert on the internal items array length, not DOM node count.
+      // React skips array holes during rendering (undefined entries produce no DOM),
+      // so DOM assertions wouldn't detect the old bug where:
+      //   items.length = end - start + 1;  (N holes)
+      //   for (...) { items.push(<div/>); }  (N real items → length = 2N)
+      expect(componentInstance._lastItemsLength).toBe(expectedCount);
+    });
   });
 
   describe('mount tests', () => {

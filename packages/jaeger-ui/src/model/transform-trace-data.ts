@@ -61,26 +61,27 @@ export function orderTags(spanTags: KeyValuePair[], topPrefixes?: readonly strin
  * generally requires.
  */
 export default function transformTraceData(data: TraceData & { spans: SpanData[] }): Trace | null {
-  let { traceID } = data;
+  const { traceID } = data;
   if (!traceID) {
     return null;
   }
-  traceID = traceID.toLowerCase();
 
   let traceEndTime = 0;
   let traceStartTime = Number.MAX_SAFE_INTEGER;
   const spanIdCounts = new Map<string, number>();
   const spanMap = new Map<string, Span>();
 
-  // Filter out spans with empty start times
-  data.spans = data.spans.filter(span => Boolean(span.startTime));
-
+  // Spans with no usable startTime (missing/NaN, or 0 — the Unix epoch, which no
+  // real span emits) are kept rather than dropped, so the span tree still renders
+  // in full. Their startTime is repaired during the depth-first traversal below
+  // by inheriting the parent's startTime; dropping them here would blank the
+  // whole timeline when every span reports startTime 0.
   const numSpans = data.spans.length;
   for (let i = 0; i < numSpans; i++) {
     // Unsafe cast to avoid memory allocations.
     // We populate/fix all properties below.
     const span: Span = data.spans[i] as Span;
-    const { startTime, duration, processID } = span;
+    const { processID } = span;
     let spanID = span.spanID;
     // make sure span IDs are unique
     const idCount = spanIdCounts.get(spanID);
@@ -114,14 +115,6 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     }
 
     spanMap.set(spanID, span);
-
-    // update trace's start / end time
-    if (startTime < traceStartTime) {
-      traceStartTime = startTime;
-    }
-    if (startTime + duration > traceEndTime) {
-      traceEndTime = startTime + duration;
-    }
   }
 
   const rootSpans: Span[] = [];
@@ -157,11 +150,38 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   const spans: Span[] = [];
   const svcCounts: Record<string, number> = {};
 
-  // Depth-first traversal to order spans and populate flat array
+  // A startTime that is missing/NaN or 0 (the Unix epoch, which no real span
+  // emits) carries no usable timestamp. Repair it by inheriting the parent's
+  // already-repaired startTime so the span still renders in the tree without
+  // stretching the timeline back to ~1970; a root with no parent falls back to
+  // 0. Every span is repaired by its caller *before* being sorted or handed to
+  // processSpan, so the sort comparators below never see undefined/NaN (which
+  // would make ordering engine-dependent) and processSpan always reads a finite
+  // startTime.
+  //
+  // We deliberately do not special-case the pathological shape where a root with
+  // no usable startTime has children with real timestamps: there the trace range
+  // would still stretch back to the epoch. Inferring the root's start from its
+  // earliest descendant is possible but not worth the complexity for that rare,
+  // already-broken input.
+  const repairStartTime = (span: Span, parent?: Span) => {
+    if (!Number.isFinite(span.startTime) || span.startTime <= 0) {
+      span.startTime = parent?.startTime || 0;
+    }
+  };
+
+  // Depth-first traversal to order spans, populate the flat array, and compute
+  // the trace's time range from the (already-repaired) start times.
   const processSpan = (span: Span, depth: number) => {
     span.depth = depth;
     span.hasChildren = span.childSpans.length > 0;
-    span.relativeStartTime = span.startTime - traceStartTime;
+
+    if (span.startTime < traceStartTime) {
+      traceStartTime = span.startTime;
+    }
+    if (span.startTime + span.duration > traceEndTime) {
+      traceEndTime = span.startTime + span.duration;
+    }
 
     const { serviceName } = span.process;
     svcCounts[serviceName] = (svcCounts[serviceName] || 0) + 1;
@@ -185,13 +205,32 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
 
     spans.push(span);
 
-    // Sort children by startTime before processing them
-    (span.childSpans as Span[]).sort((a, b) => a.startTime - b.startTime);
-    span.childSpans.forEach(child => processSpan(child, depth + 1));
+    // Repair children against this (already-repaired) span, then sort them by
+    // startTime before recursing.
+    const children = span.childSpans as Span[];
+    children.forEach(child => repairStartTime(child, span));
+    children.sort((a, b) => a.startTime - b.startTime);
+    children.forEach(child => processSpan(child, depth + 1));
   };
 
+  rootSpans.forEach(root => repairStartTime(root));
   rootSpans.sort((a, b) => a.startTime - b.startTime);
   rootSpans.forEach(root => processSpan(root, 0));
+
+  // traceStartTime/traceEndTime are only updated while visiting spans reachable
+  // from a root. If the trace has spans but no root (e.g. every span is part of
+  // a reference cycle), nothing is visited and traceStartTime keeps its sentinel
+  // value, which would produce a negative duration. Collapse to a zero range.
+  if (spans.length === 0) {
+    traceStartTime = 0;
+    traceEndTime = 0;
+  }
+
+  // relativeStartTime depends on the final traceStartTime, which is only known
+  // once every span (including repaired ones) has been visited above.
+  for (const span of spans) {
+    span.relativeStartTime = span.startTime - traceStartTime;
+  }
 
   const traceName = getTraceName(spans);
   const tracePageTitle = getTracePageTitle(spans);

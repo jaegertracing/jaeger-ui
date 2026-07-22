@@ -6,7 +6,7 @@ const { mockUseIsSearchFetching } = vi.hoisted(() => ({
 }));
 
 vi.mock('../common/SearchableSelect', () => {
-  const MockSearchableSelect = ({ onChange, 'data-testid': testId, disabled, value, ...props }) => {
+  const MockSearchableSelect = ({ onChange, 'data-testid': testId, disabled, value }) => {
     if (onChange && testId) {
       MockSearchableSelect.onChangeFns[testId] = onChange;
     }
@@ -74,7 +74,6 @@ import {
   validateDurationFields,
 } from './SearchForm';
 import * as markers from './SearchForm.markers';
-import { CHANGE_SERVICE_ACTION_TYPE } from '../../constants/search-form';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 import { AppQueryClientProvider } from '../../query/app-query-client';
 import getConfig from '../../utils/config/get-config';
@@ -832,6 +831,12 @@ describe('validation', () => {
 
   it('should return `undefined` if the value is a populated string that adheres to expected format', () => {
     expect(validateDurationFields('100ms')).toBeUndefined();
+    expect(validateDurationFields('100 ms')).toBeUndefined();
+    expect(validateDurationFields('500us')).toBeUndefined();
+    expect(validateDurationFields('500 us')).toBeUndefined();
+    expect(validateDurationFields('1.2s')).toBeUndefined();
+    expect(validateDurationFields('1.2 s')).toBeUndefined();
+    expect(validateDurationFields('1h')).toBeUndefined();
   });
 });
 
