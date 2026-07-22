@@ -21,9 +21,7 @@ import {
   isSameQuery,
   isQueryEmpty,
 } from './url';
-import * as orderBy from '../../model/order-by';
 import ErrorMessage from '../common/ErrorMessage';
-import { sortTraceSummaries } from '../../model/search';
 import FileLoader from './FileLoader';
 import { useUploadedTraces } from './useUploadedTraces';
 import VerticalResizer from '../common/VerticalResizer';
@@ -32,12 +30,10 @@ import { useSearchPanelStore, PANEL_WIDTH_MIN, PANEL_WIDTH_MAX } from './search-
 import './index.css';
 import JaegerLogo from '../../img/jaeger-logo.svg';
 import withRouteProps from '../../utils/withRouteProps';
-import { trackSortByChange } from './SearchForm.track';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { useEmbeddedState } from '../../stores/embedded-store';
 import { useShallow } from 'zustand/react/shallow';
 import { useSearchTraces } from '../../hooks/useTraceDiscovery';
-import type { OrderBy } from '../../model/order-by';
 
 // export for tests
 export function SearchTracePageImpl() {
@@ -103,7 +99,6 @@ export function SearchTracePageImpl() {
     };
   }, [searchData, uploadedSummaries]);
 
-  const [sortBy, setSortBy] = useState<OrderBy>(orderBy.MOST_RECENT);
   const [activeTab, setActiveTab] = useState<'searchForm' | 'fileLoader'>('searchForm');
 
   const { panelWidth, collapsed, setPanelWidth, setCollapsed } = useSearchPanelStore(
@@ -113,11 +108,6 @@ export function SearchTracePageImpl() {
       setPanelWidth: s.setPanelWidth,
       setCollapsed: s.setCollapsed,
     }))
-  );
-
-  const sortedTraceSummaries = useMemo(
-    () => sortTraceSummaries(traceSummaries, sortBy),
-    [traceSummaries, sortBy]
   );
 
   const maxTraceDuration = useMemo(
@@ -150,20 +140,15 @@ export function SearchTracePageImpl() {
   const cohortSummaries = useTraceDiffStore(s => s.cohortSummaries);
 
   const diffCohort = useMemo(() => {
-    const summaryMap = new Map(sortedTraceSummaries.map(s => [s.traceID, s]));
+    const summaryMap = new Map(traceSummaries.map(s => [s.traceID, s]));
     return cohortIDs.flatMap(id => {
       const s = summaryMap.get(id) ?? cohortSummaries.get(id);
       return s ? [s] : [];
     });
-  }, [cohortIDs, cohortSummaries, sortedTraceSummaries]);
+  }, [cohortIDs, cohortSummaries, traceSummaries]);
 
   const config = useConfig();
   const { disableFileUploadControl } = config;
-
-  const handleSortChange = useCallback((newSortBy: OrderBy) => {
-    setSortBy(newSortBy);
-    trackSortByChange(newSortBy);
-  }, []);
 
   // Computed synchronously so the loading indicator shows on the first render after Back
   // navigation, before the new keyed-cache fetch completes and searchData is updated.
@@ -173,7 +158,7 @@ export function SearchTracePageImpl() {
     ? [{ message: searchError instanceof Error ? searchError.message : String(searchError) }]
     : [];
 
-  const hasTraceResults = sortedTraceSummaries.length > 0;
+  const hasTraceResults = traceSummaries.length > 0;
   const showErrors = errors.length > 0 && !loadingTraces;
   const showLogo = isHomepage && !hasTraceResults && !loadingTraces && !errors.length && !embedded;
 
@@ -289,11 +274,9 @@ export function SearchTracePageImpl() {
               skipMessage: isHomepage,
               spanLinks: urlQueryParams?.spanLinks,
               searchLatency: searchData?.searchLatency,
-              traceSummaries: sortedTraceSummaries,
+              traceSummaries,
               uploadedTraceIDs,
               rawTraces: uploadedRawTraces,
-              sortBy,
-              handleSortChange,
             } as any)}
           />
         )}
