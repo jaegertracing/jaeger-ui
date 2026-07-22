@@ -13,7 +13,7 @@ export function sanitizeSortBy(value: unknown): OrderBy {
 }
 
 function sanitizeViewMode(value: unknown): 'list' | 'table' {
-  return typeof value === 'string' && VALID_VIEW_MODES.has(value) ? (value as 'list' | 'table') : 'list';
+  return typeof value === 'string' && VALID_VIEW_MODES.has(value) ? (value as 'list' | 'table') : 'table';
 }
 
 function sanitizeStartTimeDisplay(value: unknown): StartTimeDisplay {

@@ -24,9 +24,10 @@ import { getTracePageLink } from '../../TracePage/url';
 import * as orderBy from './order-by';
 import type { OrderBy } from './order-by';
 import { sortTraceSummaries } from './sort';
-import { getPercentageOfDuration } from '../../../utils/date';
+import { formatDurationCompact, getPercentageOfDuration } from '../../../utils/date';
 
 import { TraceSummary } from '../../../types/trace-summary';
+import { Microseconds } from '../../../types/units';
 
 import './index.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
@@ -48,6 +49,7 @@ type SearchResultsProps = {
   showStandaloneLink: boolean;
   skipMessage?: boolean;
   spanLinks?: Record<string, string> | undefined;
+  searchLatency?: Microseconds;
   traceSummaries: TraceSummary[];
   uploadedTraceIDs: ReadonlySet<string>;
   rawTraces: unknown[];
@@ -93,6 +95,7 @@ export function UnconnectedSearchResults({
   showStandaloneLink,
   skipMessage = false,
   spanLinks,
+  searchLatency,
   traceSummaries,
   uploadedTraceIDs,
   rawTraces,
@@ -235,7 +238,8 @@ export function UnconnectedSearchResults({
         )}
         <div className="SearchResults--headerOverview">
           <h2 className="ub-m0 u-flex-1 SearchResults--resultCount">
-            {sortedTraceSummaries.length} Trace{sortedTraceSummaries.length > 1 && 's'}
+            {sortedTraceSummaries.length} trace{sortedTraceSummaries.length !== 1 && 's'}
+            {searchLatency != null && ` (in ${formatDurationCompact(searchLatency)})`}
           </h2>
           {traceResultsView && viewMode === 'list' && (
             <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />

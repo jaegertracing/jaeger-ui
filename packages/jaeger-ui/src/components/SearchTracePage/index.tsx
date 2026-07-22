@@ -273,6 +273,7 @@ export function SearchTracePageImpl() {
               showStandaloneLink: Boolean(embedded),
               skipMessage: isHomepage,
               spanLinks: urlQueryParams?.spanLinks,
+              searchLatency: searchData?.searchLatency,
               traceSummaries,
               uploadedTraceIDs,
               rawTraces: uploadedRawTraces,

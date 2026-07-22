@@ -143,13 +143,13 @@ describe('useSearchResultsStore', () => {
       expect(useSearchResultsStore.getState().sortBy).toBe(LONGEST_FIRST);
     });
 
-    it('sanitizes invalid viewMode from persisted state on rehydration', async () => {
+    it('sanitizes invalid viewMode from persisted state on rehydration, falling back to the store default', async () => {
       localStorage.setItem(
         STORAGE_KEY,
         JSON.stringify({ state: { sortBy: MOST_RECENT, viewMode: 'invalid_mode' }, version: 1 })
       );
       await useSearchResultsStore.persist.rehydrate();
-      expect(useSearchResultsStore.getState().viewMode).toBe('list');
+      expect(useSearchResultsStore.getState().viewMode).toBe('table');
     });
 
     it('migrates version 0 state (viewMode-only) without carrying over sortBy', async () => {
