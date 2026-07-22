@@ -41,7 +41,15 @@ export function useTrace(traceId: string): UseQueryResult<IOtelTrace> {
       }
       return otel;
     },
-    staleTime: Infinity,
+    staleTime: 60_000,
+    meta: {
+      firstFetchedAt: Date.now(),
+    },
+    refetchInterval: query => {
+      const firstFetchedAt = query.meta?.firstFetchedAt as number | undefined;
+      if (!firstFetchedAt) return false;
+      return Date.now() - firstFetchedAt < 5 * 60 * 1000 ? 60_000 : false;
+    },
   });
 }
 
