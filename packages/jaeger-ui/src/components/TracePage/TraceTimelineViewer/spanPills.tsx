@@ -5,7 +5,7 @@ import React from 'react';
 import { Tag, Tooltip } from 'antd';
 import cx from 'classnames';
 
-import { GEN_AI_REQUEST_MODEL_KEY } from '../../../constants/span-attributes';
+import { GEN_AI_REQUEST_MODEL } from '../../../constants/span-attributes';
 import { useConfig } from '../../../hooks/useConfig';
 import { AttributeValue, IOtelSpan } from '../../../types/otel';
 
@@ -32,7 +32,7 @@ const DEFAULT_PILL_SOURCES: readonly IPillSource[] = [
   },
   { label: 'db.system', attrKeys: ['db.system'] },
   { label: 'rpc.system', attrKeys: ['rpc.system'] },
-  { label: GEN_AI_REQUEST_MODEL_KEY, attrKeys: [GEN_AI_REQUEST_MODEL_KEY] },
+  { label: GEN_AI_REQUEST_MODEL, attrKeys: [GEN_AI_REQUEST_MODEL] },
 ];
 
 function safeStringify(value: object): string {

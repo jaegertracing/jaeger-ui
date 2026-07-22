@@ -15,7 +15,11 @@ SPDX-License-Identifier: Apache-2.0
 .SpanBarRow--pill {
   background: var(--surface-component-background);
   border: 1px solid var(--border-default);
-  display: inline-flex;
+  /* text-overflow: ellipsis does not reliably apply inside a flex formatting
+     context (antd's Tag otherwise renders as display: flex here) - it hard-clips
+     the text with no ellipsis marker instead. inline-block keeps the ellipsis
+     working since the truncated content is plain text with no icon/flex children. */
+  display: inline-block;
   font-size: 0.85em;
   line-height: 1.2;
   margin-left: 0.25rem;

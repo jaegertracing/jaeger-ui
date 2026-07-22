@@ -8,6 +8,7 @@ import '@testing-library/jest-dom';
 import SpanBarRow from './SpanBarRow';
 import SpanBar from './SpanBar';
 import { makeAttributes } from '../../../model/attributes';
+import { GEN_AI_REQUEST_MODEL } from '../../../constants/span-attributes';
 
 vi.mock('./SpanTreeOffset', () => ({
   default: jest.fn(({ span, childrenVisible, onClick }) => (
@@ -309,7 +310,7 @@ describe('<SpanBarRow>', () => {
           spanPillsEnabled
           span={{
             ...defaultProps.span,
-            attributes: makeAttributes([{ key: 'gen_ai.request.model', value: 'gpt-4o' }]),
+            attributes: makeAttributes([{ key: GEN_AI_REQUEST_MODEL, value: 'gpt-4o' }]),
           }}
         />
       );
@@ -327,7 +328,7 @@ describe('<SpanBarRow>', () => {
             ...defaultProps.span,
             attributes: makeAttributes([
               { key: 'http.status_code', value: '500' },
-              { key: 'gen_ai.request.model', value: 'claude-3-haiku' },
+              { key: GEN_AI_REQUEST_MODEL, value: 'claude-3-haiku' },
             ]),
           }}
         />
@@ -377,7 +378,7 @@ describe('<SpanBarRow>', () => {
           spanPillsEnabled
           span={{
             ...defaultProps.span,
-            attributes: makeAttributes([{ key: 'gen_ai.request.model', value: longModel }]),
+            attributes: makeAttributes([{ key: GEN_AI_REQUEST_MODEL, value: longModel }]),
           }}
         />
       );
