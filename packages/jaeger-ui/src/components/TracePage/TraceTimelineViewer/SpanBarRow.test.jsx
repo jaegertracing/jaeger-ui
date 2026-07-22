@@ -354,7 +354,7 @@ describe('<SpanBarRow>', () => {
       expect(screen.getByLabelText('http.method: GET')).toBeInTheDocument();
     });
 
-    it('shows pill.label as a tooltip on hover', async () => {
+    it('shows the pill label and value as a tooltip on hover', async () => {
       render(
         <SpanBarRow
           {...defaultProps}
@@ -366,7 +366,7 @@ describe('<SpanBarRow>', () => {
         />
       );
       fireEvent.mouseEnter(screen.getByLabelText('http.status_code: 200').parentElement);
-      expect(await screen.findByRole('tooltip')).toHaveTextContent('http.status_code');
+      expect(await screen.findByRole('tooltip')).toHaveTextContent('http.status_code: 200');
     });
 
     it('shows the full label and value in the tooltip, so a CSS-truncated pill value is still discoverable on hover', async () => {
