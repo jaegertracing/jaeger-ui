@@ -65,7 +65,7 @@ function pillFromSource(span: IOtelSpan, source: IPillSource): ISpanPill | undef
     if (attrValue == null) {
       continue;
     }
-    const value = formatAttributeValue(attrValue);
+    const value = formatAttributeValue(attrValue).trim();
     if (!value) {
       continue;
     }

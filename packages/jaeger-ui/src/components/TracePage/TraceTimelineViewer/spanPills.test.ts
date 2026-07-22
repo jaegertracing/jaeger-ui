@@ -117,6 +117,21 @@ describe('spanPills', () => {
       expect(getSpanPillsForSpan(span)).toEqual([]);
     });
 
+    it('returns no pill when gen_ai.request.model is whitespace-only', () => {
+      const span = makeSpan([{ key: GEN_AI_REQUEST_MODEL, value: '   ' }]);
+      expect(getSpanPillsForSpan(span)).toEqual([]);
+    });
+
+    it('trims surrounding whitespace from gen_ai.request.model', () => {
+      const span = makeSpan([{ key: GEN_AI_REQUEST_MODEL, value: '  gpt-4o  ' }]);
+      expect(getSpanPillsForSpan(span)).toEqual([{ label: 'gen_ai.request.model', value: 'gpt-4o' }]);
+    });
+
+    it('maps a non-string gen_ai.request.model value', () => {
+      const span = makeSpan([{ key: GEN_AI_REQUEST_MODEL, value: 42 }]);
+      expect(getSpanPillsForSpan(span)).toEqual([{ label: 'gen_ai.request.model', value: '42' }]);
+    });
+
     it('returns both pills when http status and gen_ai.request.model are both present', () => {
       const span = makeSpan([
         { key: 'http.status_code', value: '500' },
