@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import TraceSpanView from './index';
 import transformTraceData from '../../../model/transform-trace-data';
@@ -118,5 +118,21 @@ describe('<TraceSpanView>', () => {
     expect(operationOptions.map(opt => opt.textContent.trim())).toEqual(
       expect.arrayContaining(['op1', 'op2', 'op3', 'op4', 'op6', 'op7'])
     );
+  });
+
+  it('calls onSearchResults with matches when uiFind is provided', async () => {
+    const onSearchResults = vi.fn();
+    const { rerender } = render(<TraceSpanView {...defaultProps} onSearchResults={onSearchResults} />);
+
+    expect(onSearchResults).toHaveBeenCalledWith(null);
+
+    rerender(<TraceSpanView {...defaultProps} uiFind="service1" onSearchResults={onSearchResults} />);
+
+    await waitFor(() => {
+      expect(onSearchResults).toHaveBeenCalled();
+      const lastCall = onSearchResults.mock.calls[onSearchResults.mock.calls.length - 1][0];
+      expect(lastCall).toBeInstanceOf(Set);
+      expect(lastCall.size).toBeGreaterThan(0);
+    });
   });
 });

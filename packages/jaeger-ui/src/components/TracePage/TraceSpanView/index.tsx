@@ -1,7 +1,7 @@
 // Copyright (c) 2018 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Table, Button, Select, Form, Tooltip } from 'antd';
 import dayjs from 'dayjs';
 import { ColumnProps } from 'antd/es/table';
@@ -13,13 +13,14 @@ import { formatDuration, formatDurationCompact } from '../../../utils/date';
 import prefixUrl from '../../../utils/prefix-url';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import SearchableSelect from '../../common/SearchableSelect';
+import filterSpans from '../../../utils/filter-spans';
 
 type FilterType = 'serviceName' | 'operationName';
 
 type Props = {
   trace: IOtelTrace;
-  uiFindVertexKeys: Set<string> | TNil;
-  uiFind: string | null | undefined;
+  uiFind?: string | null | undefined;
+  onSearchResults?: (matches: Set<string> | TNil) => void;
   useOtelTerms: boolean;
 };
 
@@ -28,6 +29,19 @@ export default function TraceSpanView(props: Props) {
     serviceName: [],
     operationName: [],
   });
+
+  const { onSearchResults, trace, uiFind } = props;
+
+  const matches = useMemo(() => {
+    if (!uiFind) return null;
+    return filterSpans(uiFind, trace.spans);
+  }, [uiFind, trace]);
+
+  useEffect(() => {
+    if (onSearchResults) {
+      onSearchResults(matches);
+    }
+  }, [matches, onSearchResults]);
 
   const { serviceNamesList, operationNamesList, serviceToOperationsMap, maxDuration } = useMemo(() => {
     const serviceNamesSet = new Set<string>();

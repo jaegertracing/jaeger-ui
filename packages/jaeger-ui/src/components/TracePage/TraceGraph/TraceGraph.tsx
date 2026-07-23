@@ -16,27 +16,30 @@ import {
   MODE_SELFTIME,
   getHelpTable,
 } from './OpNode';
-import { TEv, TSumSpan } from './types';
+import { TSumSpan } from './types';
 import { TDenseSpanMembers } from '../../../model/trace-dag/types';
 import TDagPlexusVertex from '../../../model/trace-dag/types/TDagPlexusVertex';
 import { TNil } from '../../../types';
 import { TraceGraphConfig } from '../../../types/config';
+import calculateTraceDagEV from './calculateTraceDagEV';
+import { getUiFindVertexKeys } from '../../TraceDiff/TraceDiffGraph/traceDiffGraphUtils';
+import { IOtelTrace } from '../../../types/otel';
 
 import './TraceGraph.css';
 
 type Props = {
   headerHeight: number;
-  ev?: TEv | TNil;
+  trace: IOtelTrace;
   uiFind: string | TNil;
-  uiFindVertexKeys: Set<string> | TNil;
+  onSearchResults: (matches: Set<string> | TNil) => void;
   traceGraphConfig?: TraceGraphConfig;
   useOtelTerms: boolean;
 };
 
 const { classNameIsSmall, scaleOpacity, scaleStrokeOpacity } = Digraph.propsFactories;
 
-export function setOnEdgePath(e: any) {
-  return e.isNonBlocking ? { strokeDasharray: 4 } : {};
+export function setOnEdgePath(e: unknown) {
+  return (e as { isNonBlocking?: boolean }).isNonBlocking ? { strokeDasharray: 4 } : {};
 }
 
 const getHelpContent = (useOtelTerms: boolean) => (
@@ -94,14 +97,7 @@ const getHelpContent = (useOtelTerms: boolean) => (
   </div>
 );
 
-function TraceGraph({
-  headerHeight,
-  ev = null,
-  uiFind,
-  uiFindVertexKeys,
-  traceGraphConfig,
-  useOtelTerms,
-}: Props) {
+function TraceGraph({ headerHeight, trace, uiFind, onSearchResults, traceGraphConfig, useOtelTerms }: Props) {
   const [showHelp, setShowHelp] = React.useState(false);
   const [mode, setMode] = React.useState(MODE_SERVICE);
 
@@ -120,6 +116,20 @@ function TraceGraph({
       manager?.stopAndRelease();
     };
   }, []);
+
+  const ev = React.useMemo(() => {
+    if (!trace) return null;
+    return calculateTraceDagEV(trace);
+  }, [trace]);
+  const uiFindVertexKeys = React.useMemo(() => {
+    return uiFind && ev ? getUiFindVertexKeys(uiFind, ev.vertices) : null;
+  }, [uiFind, ev]);
+
+  React.useEffect(() => {
+    if (onSearchResults) {
+      onSearchResults(uiFindVertexKeys);
+    }
+  }, [uiFindVertexKeys, onSearchResults]);
 
   if (!ev) {
     return <h1 className="u-mt-vast u-tx-muted ub-tx-center">No trace found</h1>;
