@@ -7,7 +7,6 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LayoutManager } from '@jaegertracing/plexus';
 import transformTraceData from '../../../model/transform-trace-data';
-import calculateTraceDagEV from './calculateTraceDagEV';
 import TraceGraph, { setOnEdgePath } from './TraceGraph';
 import { MODE_SERVICE, MODE_TIME, MODE_SELFTIME } from './OpNode';
 import testTrace from './testTrace.json';
@@ -66,7 +65,6 @@ vi.mock('@jaegertracing/plexus', () => {
 });
 
 const transformedTrace = transformTraceData(testTrace);
-const ev = calculateTraceDagEV(transformedTrace.asOtelTrace());
 
 describe('<TraceGraph>', () => {
   let props;
@@ -74,7 +72,7 @@ describe('<TraceGraph>', () => {
   beforeEach(() => {
     props = {
       headerHeight: 60,
-      ev,
+      trace: transformedTrace.asOtelTrace(),
     };
   });
 
@@ -181,12 +179,17 @@ describe('<TraceGraph>', () => {
   it('handles uiFind mode correctly', () => {
     const propsWithUiFind = {
       ...props,
-      uiFind: 'test-service',
-      uiFindVertexKeys: new Set(['key1', 'key2']),
+      uiFind: 'service1',
     };
     render(<TraceGraph {...propsWithUiFind} />);
     const wrapper = screen.getByTestId('mock-digraph').parentElement;
     expect(wrapper).toHaveClass('is-uiFind-mode');
+  });
+
+  it('fires onSearchResults callback when trace and uiFind are provided', () => {
+    const onSearchResults = jest.fn();
+    render(<TraceGraph {...props} uiFind="service1" onSearchResults={onSearchResults} />);
+    expect(onSearchResults).toHaveBeenCalledWith(expect.objectContaining({ count: expect.any(Number) }));
   });
 
   it('initializes with correct default mode', () => {

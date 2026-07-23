@@ -44,7 +44,6 @@ describe('<TraceSpanView>', () => {
     defaultProps = {
       trace,
       uiFind: undefined,
-      uiFindVertexKeys: undefined,
     };
   });
 
