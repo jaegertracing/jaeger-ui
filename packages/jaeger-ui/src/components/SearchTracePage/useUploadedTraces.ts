@@ -11,11 +11,13 @@ import type { TraceSummary } from '../../types/trace-summary';
  */
 const UPLOADED_SUMMARIES_QUERY_KEY = ['uploadedSummaries'] as const;
 const UPLOADED_RAW_TRACES_QUERY_KEY = ['uploadedRawTraces'] as const;
+const UPLOADED_FILE_MAP_QUERY_KEY = ['uploadedTraceFileMap'] as const;
 
 type UploadedTraces = {
   uploadedSummaries: TraceSummary[];
   uploadedRawTraces: unknown[];
-  handleTracesLoaded: (summaries: TraceSummary[], rawTraces: unknown[]) => void;
+  handleTracesLoaded: (summaries: TraceSummary[], rawTraces: unknown[], fileId?: string) => void;
+  handleTraceFileRemove: (fileId: string) => void;
 };
 
 /** Returns a stable callback that clears the uploaded traces cache. */
@@ -24,6 +26,7 @@ export function useClearUploadedTraces(): () => void {
   return useCallback(() => {
     queryClient.setQueryData(UPLOADED_SUMMARIES_QUERY_KEY, []);
     queryClient.setQueryData(UPLOADED_RAW_TRACES_QUERY_KEY, []);
+    queryClient.setQueryData(UPLOADED_FILE_MAP_QUERY_KEY, {});
   }, [queryClient]);
 }
 
@@ -51,8 +54,15 @@ export function useUploadedTraces(): UploadedTraces {
     gcTime: Infinity,
   });
 
+  useQuery<Record<string, string[]>>({
+    queryKey: UPLOADED_FILE_MAP_QUERY_KEY,
+    queryFn: skipToken,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+
   const handleTracesLoaded = useCallback(
-    (summaries: TraceSummary[], rawTraces: unknown[]) => {
+    (summaries: TraceSummary[], rawTraces: unknown[], fileId?: string) => {
       queryClient.setQueryData<TraceSummary[]>(UPLOADED_SUMMARIES_QUERY_KEY, prev => {
         const existing = prev ?? [];
         const seen = new Set(existing.map(s => s.traceID));
@@ -76,9 +86,43 @@ export function useUploadedTraces(): UploadedTraces {
         });
         return [...existing, ...incoming];
       });
+
+      if (fileId) {
+        queryClient.setQueryData<Record<string, string[]>>(UPLOADED_FILE_MAP_QUERY_KEY, prev => {
+          return { ...prev, [fileId]: summaries.map(s => s.traceID) };
+        });
+      }
     },
     [queryClient]
   );
 
-  return { uploadedSummaries, uploadedRawTraces, handleTracesLoaded };
+  const handleTraceFileRemove = useCallback(
+    (fileId: string) => {
+      const currentMap =
+        queryClient.getQueryData<Record<string, string[]>>(UPLOADED_FILE_MAP_QUERY_KEY) ?? {};
+      const traceIDsToRemove = currentMap[fileId];
+      if (!traceIDsToRemove || traceIDsToRemove.length === 0) return;
+
+      const idsSet = new Set(traceIDsToRemove);
+
+      queryClient.setQueryData<TraceSummary[]>(UPLOADED_SUMMARIES_QUERY_KEY, prev => {
+        return (prev ?? []).filter(s => !idsSet.has(s.traceID));
+      });
+
+      queryClient.setQueryData<unknown[]>(UPLOADED_RAW_TRACES_QUERY_KEY, prev => {
+        const traceIDOf = (r: unknown) =>
+          r != null && typeof r === 'object' ? String((r as Record<string, unknown>).traceID) : '';
+        return (prev ?? []).filter(r => !idsSet.has(traceIDOf(r)));
+      });
+
+      queryClient.setQueryData<Record<string, string[]>>(UPLOADED_FILE_MAP_QUERY_KEY, prev => {
+        const newMap = { ...prev };
+        delete newMap[fileId];
+        return newMap;
+      });
+    },
+    [queryClient]
+  );
+
+  return { uploadedSummaries, uploadedRawTraces, handleTracesLoaded, handleTraceFileRemove };
 }

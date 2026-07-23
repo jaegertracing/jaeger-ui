@@ -17,7 +17,8 @@ import './FileLoader.css';
 const Dragger = Upload.Dragger;
 
 type FileLoaderProps = {
-  onTracesLoaded: (summaries: TraceSummary[], rawTraces: unknown[]) => void;
+  onTracesLoaded: (summaries: TraceSummary[], rawTraces: unknown[], fileId?: string) => void;
+  onTraceFileRemove?: (fileId: string) => void;
 };
 
 export type LoadResult = {
@@ -69,6 +70,8 @@ export async function loadTracesFromFile(file: File): Promise<LoadResult> {
 }
 
 export default function FileLoader(props: FileLoaderProps) {
+  const removedFilesRef = React.useRef(new Set<string>());
+
   return (
     <Dragger
       accept=".json,.jsonl"
@@ -78,13 +81,17 @@ export default function FileLoader(props: FileLoaderProps) {
         // N times (N²). We process only the current `file` argument to avoid that.
         loadTracesFromFile(file)
           .then(({ summaries, rawTraces, errorCount }) => {
+            if (removedFilesRef.current.has(file.uid)) {
+              removedFilesRef.current.delete(file.uid);
+              return;
+            }
             if (errorCount > 0) {
               message.error(
                 `${errorCount} trace${errorCount > 1 ? 's' : ''} could not be loaded from ${file.name}.`
               );
             }
             if (summaries.length > 0) {
-              props.onTracesLoaded(summaries, rawTraces);
+              props.onTracesLoaded(summaries, rawTraces, file.uid);
             } else if (errorCount === 0) {
               message.warning(`No traces found in ${file.name}.`);
             }
@@ -95,6 +102,12 @@ export default function FileLoader(props: FileLoaderProps) {
             );
           });
         return false;
+      }}
+      onRemove={file => {
+        removedFilesRef.current.add(file.uid);
+        if (props.onTraceFileRemove) {
+          props.onTraceFileRemove(file.uid);
+        }
       }}
       multiple
     >

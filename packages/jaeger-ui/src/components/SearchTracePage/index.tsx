@@ -78,7 +78,8 @@ export function SearchTracePageImpl() {
     }
   }, [searchQuery, rawUrlState, navigate]);
 
-  const { uploadedSummaries, uploadedRawTraces, handleTracesLoaded } = useUploadedTraces();
+  const { uploadedSummaries, uploadedRawTraces, handleTracesLoaded, handleTraceFileRemove } =
+    useUploadedTraces();
 
   // Merge API and uploaded summaries, deduplicating by traceID (API results take precedence).
   // Duplicates arise when the same file is uploaded twice or an uploaded trace also appears
@@ -188,7 +189,7 @@ export function SearchTracePageImpl() {
     tabItems.push({
       label: 'Upload',
       key: 'fileLoader',
-      children: <FileLoader onTracesLoaded={handleTracesLoaded} />,
+      children: <FileLoader onTracesLoaded={handleTracesLoaded} onTraceFileRemove={handleTraceFileRemove} />,
     });
   }
 
