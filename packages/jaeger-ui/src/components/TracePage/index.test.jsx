@@ -211,6 +211,21 @@ describe('makeShortcutCallbacks()', () => {
       expect(adjRange).toHaveBeenLastCalledWith(...shortcutConfig[key]);
     });
   });
+
+  it('does not adjust the range for events originating from a menu or popup', () => {
+    const event = {
+      preventDefault: jest.fn(),
+      target: {
+        closest: () => ({}),
+      },
+    };
+    const callbacks = makeShortcutCallbacks(adjRange);
+    Object.keys(shortcutConfig).forEach(key => {
+      callbacks[key](event);
+    });
+    expect(adjRange).not.toHaveBeenCalled();
+    expect(event.preventDefault).not.toHaveBeenCalled();
+  });
 });
 
 describe('<TracePage>', () => {
