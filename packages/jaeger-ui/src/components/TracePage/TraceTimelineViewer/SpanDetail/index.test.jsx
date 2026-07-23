@@ -329,4 +329,26 @@ describe('<SpanDetail>', () => {
       expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute('aria-selected', 'false');
     });
   });
+
+  it('passes all attributes (including large ones) to AccordionAttributes as a single list', () => {
+    const largeValue = 'a'.repeat(10241); // above threshold
+    const localProps = {
+      ...props,
+      span: {
+        ...props.span,
+        resource: { serviceName: 'test-service', attributes: [] },
+        attributes: [
+          { key: 'large_attr', value: largeValue },
+          { key: 'small_attr', value: 'small' },
+        ],
+      },
+    };
+
+    render(<SpanDetail {...localProps} />);
+
+    // All attributes go through AccordionAttributes — no separate lazy section
+    // AccordionAttributes is mocked — just verify it rendered (tags label)
+    expect(screen.queryByTestId('lazy-attribute')).not.toBeInTheDocument();
+    expect(screen.getByTestId('accordian-keyvalues-tags')).toBeInTheDocument();
+  });
 });

@@ -62,7 +62,6 @@ export default function SpanDetail(props: SpanDetailProps) {
   const { isAttributesOpen, isResourceOpen, events: eventsState, isWarningsOpen, isLinksOpen } = detailState;
   const warnings = span.warnings;
 
-  // Get links for display in AccordionLinks
   const links = span.links || [];
 
   // Display labels based on terminology flag
@@ -94,7 +93,7 @@ export default function SpanDetail(props: SpanDetailProps) {
     <div>
       <div>
         <AccordionAttributes
-          data={span.attributes}
+          data={span.attributes || []}
           label={attributesLabel}
           linksGetter={linksGetter}
           isOpen={isAttributesOpen}

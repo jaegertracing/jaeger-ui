@@ -53,15 +53,25 @@ SPDX-License-Identifier: Apache-2.0
   font-weight: bold;
 }
 
-.KeyValueTable--row-jsonKey > td {
-  padding-bottom: 0;
-  font-weight: 600;
+/* Large value placeholder button — blends with the table's dark surface */
+.KeyValueTable--largeValuePlaceholder {
+  display: inline-block;
+  background: transparent;
+  border: 1px dashed var(--border-default);
+  border-radius: 3px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.85em;
+  padding: 2px 8px;
 }
 
-.KeyValueTable--row-jsonValue > td {
-  padding-top: 0.1rem;
+.KeyValueTable--largeValuePlaceholder:hover {
+  border-color: var(--interactive-primary);
+  color: var(--interactive-primary);
 }
 
-.KeyValueTable--valueColumn-full {
-  width: auto;
+.KeyValueTable--largeValueLoading {
+  color: var(--text-secondary);
+  font-style: italic;
+  font-size: 0.85em;
 }
