@@ -222,16 +222,24 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
 
   const viewTraces = React.useCallback(() => {
     trackViewTraces();
-    // Omit traceID and spanLinks via destructuring (rather than using delete on a mutable object)
-    const { traceID: _traceID, spanLinks: _spanLinks, ...rawUrlState } = getUrlState(search);
+    const { traceID: _traceID, spanLinks: _spanLinks, start, end, lookback } = getUrlState(search);
 
+    // Only pass params that are meaningful on the Search page.
+    // DDG-specific params (density, showOp, visEncoding, etc.) are intentionally excluded.
     const query = {
-      ...rawUrlState,
+      ...(start && { start }),
+      ...(end && { end }),
+      ...(lookback && { lookback }),
       service,
       operation: typeof operation === 'string' ? operation : undefined,
     };
 
-    navigate(getSearchUrl(query));
+    const url = getSearchUrl(query);
+    const qIdx = url.indexOf('?');
+    navigate({
+      pathname: qIdx >= 0 ? url.slice(0, qIdx) : url,
+      search: qIdx >= 0 ? url.slice(qIdx) : '',
+    });
   }, [navigate, operation, search, service]);
 
   const onMouseUx = React.useCallback(
