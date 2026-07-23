@@ -7,7 +7,6 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LayoutManager } from '@jaegertracing/plexus';
 import transformTraceData from '../../../model/transform-trace-data';
-import calculateTraceDagEV from './calculateTraceDagEV';
 import TraceGraph, { setOnEdgePath } from './TraceGraph';
 import { MODE_SERVICE, MODE_TIME, MODE_SELFTIME } from './OpNode';
 import testTrace from './testTrace.json';
@@ -66,7 +65,6 @@ vi.mock('@jaegertracing/plexus', () => {
 });
 
 const transformedTrace = transformTraceData(testTrace);
-const ev = calculateTraceDagEV(transformedTrace.asOtelTrace());
 
 describe('<TraceGraph>', () => {
   let props;

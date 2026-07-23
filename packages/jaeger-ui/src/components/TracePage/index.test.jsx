@@ -559,7 +559,7 @@ describe('<TracePage>', () => {
     expect(capturedHeaderProps.resultCount).toBe(12);
   });
 
-  it('resets resultCount to 0 when viewType changes', () => {
+  it('shows 0 for a freshly switched view until that view reports its own count', () => {
     render(<TracePage {...defaultProps} uiFind="some-search" />);
 
     act(() => {
@@ -572,7 +572,41 @@ describe('<TracePage>', () => {
       capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceGraph);
     });
 
+    // Stale result belonged to the timeline view, not the graph view now showing.
     expect(capturedHeaderProps.resultCount).toBe(0);
+  });
+
+  it('does not get stuck at 0 after the new view reports its count (regression, PR #4143 review)', () => {
+    render(<TracePage {...defaultProps} uiFind="some-search" />);
+
+    // Active search while on Trace Timeline.
+    act(() => {
+      capturedTimelineProps.onSearchResults?.({ count: 1 });
+    });
+    expect(capturedHeaderProps.resultCount).toBe(1);
+
+    // Switch to Trace Graph.
+    act(() => {
+      capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceGraph);
+    });
+    expect(capturedHeaderProps.resultCount).toBe(0);
+
+    // Trace Graph reports its own match count for the same search term.
+    act(() => {
+      capturedGraphProps.onSearchResults?.({ count: 1 });
+    });
+    expect(capturedHeaderProps.resultCount).toBe(1);
+
+    // Switch back to Trace Timeline without retyping the search.
+    act(() => {
+      capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceTimelineViewer);
+    });
+    expect(capturedHeaderProps.resultCount).toBe(0);
+
+    act(() => {
+      capturedTimelineProps.onSearchResults?.({ count: 1 });
+    });
+    expect(capturedHeaderProps.resultCount).toBe(1);
   });
 
   describe('TracePageHeader props', () => {

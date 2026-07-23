@@ -202,15 +202,21 @@ export function TracePageImpl(props: TProps) {
   const [slimView, setSlimView] = useState(() => Boolean(embedded?.timeline?.collapseTitle));
   const [viewType, setViewType] = useState<ETraceViewType>(ETraceViewType.TraceTimelineViewer);
   const [viewRange, setViewRange] = useState<IViewRange>({ time: { current: [0, 1] } });
-  const [findCount, setFindCount] = useState(0);
+  // Tagged with the viewType that produced it so a stale report from a previous view can never be
+  // mistaken for the current one, instead of resetting the count via a competing effect (which races
+  // with the child view's own effect on view switches — see #4143 review).
+  const [findResult, setFindResult] = useState<{ viewType: ETraceViewType; count: number }>(() => ({
+    viewType,
+    count: 0,
+  }));
+  const findCount = findResult.viewType === viewType ? findResult.count : 0;
 
-  const handleSearchResults = useCallback(({ count }: ISearchResults) => {
-    setFindCount(count);
-  }, []);
-
-  useEffect(() => {
-    setFindCount(0);
-  }, [viewType]);
+  const handleSearchResults = useCallback(
+    ({ count }: ISearchResults) => {
+      setFindResult({ viewType, count });
+    },
+    [viewType]
+  );
 
   const traceIsGenAI = useMemo(
     () =>
@@ -248,7 +254,7 @@ export function TracePageImpl(props: TProps) {
 
   useEffect(() => {
     if (viewType === ETraceViewType.TraceStatistics || viewType === ETraceViewType.TraceSpansView) {
-      setFindCount(spanFindMatches?.size ?? 0);
+      setFindResult({ viewType, count: spanFindMatches?.size ?? 0 });
     }
   }, [spanFindMatches, viewType]);
 
