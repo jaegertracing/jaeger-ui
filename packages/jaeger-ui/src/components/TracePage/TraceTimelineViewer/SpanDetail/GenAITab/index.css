@@ -32,6 +32,7 @@ SPDX-License-Identifier: Apache-2.0
   margin-right: 4px;
 }
 
+.GenAITab--metaPrefix,
 .GenAITab--tokensPrefix {
   font-size: 13px;
   font-weight: 600;

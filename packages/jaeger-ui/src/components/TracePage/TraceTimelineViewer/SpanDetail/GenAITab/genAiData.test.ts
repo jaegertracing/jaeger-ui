@@ -25,6 +25,60 @@ function section<T extends keyof SectionDataMap>(
 }
 
 describe('extractGenAiSections', () => {
+  describe('agent section', () => {
+    it('extracts all four gen_ai.agent.* fields', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.agent.id': 'asst_5j66UpCpwteGg4YSxUnt7lPY',
+          'gen_ai.agent.name': 'Math Tutor',
+          'gen_ai.agent.version': '1.0.0',
+          'gen_ai.agent.description': 'Helps with math problems',
+        })
+      );
+      expect(section(sections, 'agent')).toEqual({
+        id: 'asst_5j66UpCpwteGg4YSxUnt7lPY',
+        name: 'Math Tutor',
+        version: '1.0.0',
+        description: 'Helps with math problems',
+      });
+    });
+
+    it('extracts an agent section from gen_ai.agent.name alone', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.agent.name': 'Math Tutor' }));
+      expect(section(sections, 'agent')).toEqual({
+        id: undefined,
+        name: 'Math Tutor',
+        version: undefined,
+        description: undefined,
+      });
+    });
+
+    it('produces no agent section when no gen_ai.agent.* attribute is present', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.provider.name': 'openai' }));
+      expect(section(sections, 'agent')).toBeUndefined();
+    });
+
+    it('excludes claimed gen_ai.agent.* attributes from the other section', () => {
+      const sections = extractGenAiSections(
+        attrs({ 'gen_ai.agent.name': 'Math Tutor', 'gen_ai.conversation.id': 'conv-1' })
+      );
+      expect(section(sections, 'other')?.attributes.entries()).toEqual([
+        { key: 'gen_ai.conversation.id', value: 'conv-1' },
+      ]);
+    });
+
+    it('still produces an agent section for a legitimate empty-string field, instead of silently dropping it', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.agent.name': '' }));
+      expect(section(sections, 'agent')).toEqual({
+        id: undefined,
+        name: '',
+        version: undefined,
+        description: undefined,
+      });
+      expect(section(sections, 'other')).toBeUndefined();
+    });
+  });
+
   describe('meta section (provider/model)', () => {
     it('prefers current provider attribute names over deprecated one when they disagree', () => {
       const sections = extractGenAiSections(

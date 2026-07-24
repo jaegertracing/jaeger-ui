@@ -9,6 +9,7 @@ import {
   extractGenAiSections,
   formatTokenCount,
   tryParseJson,
+  GenAiAgent,
   GenAiMessage,
   GenAiTokenUsage,
   GenAiToolCall,
@@ -129,9 +130,14 @@ function MessageBlock({
   );
 }
 
-function MetaRow({ provider, model }: { provider?: string; model?: string }) {
+function MetaRow({ provider, model, isLlmCall }: { provider?: string; model?: string; isLlmCall: boolean }) {
   return (
     <div className="GenAITab--meta">
+      {/* classifySpan() can also resolve to AGENT/TOOL_CALL/RETRIEVAL, which can carry
+          their own backing provider/model per the OTel GenAI semconv - captioning the
+          row "LLM:" would misrepresent those as LLM calls, so the prefix is scoped to
+          spans classifySpan() actually identifies as one. */}
+      {isLlmCall && <span className="GenAITab--metaPrefix">LLM:</span>}
       {provider && (
         <span className="GenAITab--metaItem">
           <span className="GenAITab--metaLabel">Provider</span> {provider}
@@ -142,6 +148,40 @@ function MetaRow({ provider, model }: { provider?: string; model?: string }) {
           <span className="GenAITab--metaLabel">Model</span> {model}
         </span>
       )}
+    </div>
+  );
+}
+
+// Cosmetic only: a key missing from here still renders under its raw field name
+// instead of a friendly label. This does NOT mean a new gen_ai.agent.* attribute
+// shows up automatically - it must first be added to GenAiAgent, extracted by the
+// agent builder in genAiData.ts, and listed in AGENT_FIELD_ORDER below before it
+// renders at all; only the label lookup itself is optional.
+const AGENT_LABELS: Partial<Record<keyof GenAiAgent, string>> = {
+  name: 'Name',
+  version: 'Version',
+  id: 'ID',
+  description: 'Description',
+};
+
+// Explicit rather than Object.keys(agent) - render order shouldn't depend on
+// object literal insertion order, and this avoids an unsafe keyof cast.
+const AGENT_FIELD_ORDER: ReadonlyArray<keyof GenAiAgent> = ['id', 'name', 'version', 'description'];
+
+function AgentSection({ id, name, version, description }: GenAiAgent) {
+  const agent: GenAiAgent = { id, name, version, description };
+  return (
+    <div className="GenAITab--section">
+      <h3 className="GenAITab--sectionTitle">Agent</h3>
+      {AGENT_FIELD_ORDER.map(key => {
+        const value = agent[key];
+        if (value == null) return null;
+        return (
+          <div key={key} className="GenAITab--toolSubsection">
+            <span className="GenAITab--toolLabel">{AGENT_LABELS[key] ?? key}</span> {value}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -291,8 +331,10 @@ export default function GenAITab({ span }: Props): React.ReactElement {
     <div className="GenAITab">
       {sections.map(section => {
         switch (section.type) {
+          case 'agent':
+            return <AgentSection key="agent" {...section.data} />;
           case 'meta':
-            return <MetaRow key="meta" {...section.data} />;
+            return <MetaRow key="meta" {...section.data} isLlmCall={span.genAIKind === 'LLM_CALL'} />;
           case 'tokens':
             return <TokensRow key="tokens" usage={section.data} />;
           case 'conversation':
