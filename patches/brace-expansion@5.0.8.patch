@@ -1,0 +1,13 @@
+diff --git a/dist/commonjs/index.js b/dist/commonjs/index.js
+index be9df86be09c7655787a65c55ae6da01858894c3..36ef34b5fcd9bc1ad62c9e7056fcf2f4df325db7 100644
+--- a/dist/commonjs/index.js
++++ b/dist/commonjs/index.js
+@@ -260,4 +260,8 @@ function expand_(str, max, maxLength, isTop) {
+     }
+     return acc;
+ }
++// minimatch 3 and 7 expect the CommonJS export to be callable, while
++// minimatch 10 consumes the named `expand` export. Preserve both APIs so all
++// three supported minimatch generations can share this patched release.
++module.exports = Object.assign(expand, exports);
+ //# sourceMappingURL=index.js.map
