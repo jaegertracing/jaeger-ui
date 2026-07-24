@@ -152,7 +152,7 @@ export const UnconnectedTraceDiffGraph: React.FC<Props> = React.memo(props => {
         edges={edges}
         vertices={vertices}
       />
-      <UiFindInput inputProps={inputProps} />
+      <UiFindInput allowClear inputProps={inputProps} />
     </div>
   );
 });
