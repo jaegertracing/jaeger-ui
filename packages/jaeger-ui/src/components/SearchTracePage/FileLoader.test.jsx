@@ -54,7 +54,11 @@ import transformTraceData from '../../model/transform-trace-data';
 import { traceToTraceSummary } from '../../model/trace-summary';
 import { populateTraceCache } from '../../hooks/useTraceLoading';
 
-const makeFile = (name = 'trace.json') => new File(['{}'], name, { type: 'application/json' });
+const makeFile = (name = 'trace.json', uid = 'upload-uid') => {
+  const file = new File(['{}'], name, { type: 'application/json' });
+  file.uid = uid;
+  return file;
+};
 
 beforeEach(() => {
   readJsonFile.mockClear();
@@ -168,16 +172,16 @@ describe('loadTracesFromFile', () => {
 
 describe('<FileLoader />', () => {
   const mockOnTracesLoaded = jest.fn();
-  const mockOnUploadedTracesClear = jest.fn();
+  const mockOnUploadedFileRemove = jest.fn();
 
   const renderFileLoader = () =>
     render(
-      <FileLoader onTracesLoaded={mockOnTracesLoaded} onUploadedTracesClear={mockOnUploadedTracesClear} />
+      <FileLoader onTracesLoaded={mockOnTracesLoaded} onUploadedFileRemove={mockOnUploadedFileRemove} />
     );
 
   beforeEach(() => {
     mockOnTracesLoaded.mockClear();
-    mockOnUploadedTracesClear.mockClear();
+    mockOnUploadedFileRemove.mockClear();
   });
 
   it('renders the file upload area', () => {
@@ -198,7 +202,7 @@ describe('<FileLoader />', () => {
     expect(result).toBe(false);
   });
 
-  it('calls onTracesLoaded after successful parse', async () => {
+  it('calls onTracesLoaded with file uid after successful parse', async () => {
     const rawTrace = { traceID: 'abc', spans: [] };
     const otelTrace = { traceID: 'abc' };
     const summary = { traceID: 'abc', traceName: 'svc: op' };
@@ -208,26 +212,26 @@ describe('<FileLoader />', () => {
     traceToTraceSummary.mockReturnValue(summary);
 
     renderFileLoader();
-    const file = makeFile();
+    const file = makeFile('trace.json', 'uid-a');
     await act(async () => {
       global.mockBeforeUpload(file);
     });
 
-    expect(mockOnTracesLoaded).toHaveBeenCalledWith([summary], [rawTrace]);
+    expect(mockOnTracesLoaded).toHaveBeenCalledWith('uid-a', [summary], [rawTrace]);
   });
 
-  it('calls onUploadedTracesClear when a file is removed', () => {
+  it('calls onUploadedFileRemove with file uid when a file is removed', () => {
     renderFileLoader();
-    expect(global.mockOnRemove).toEqual(expect.any(Function));
-    global.mockOnRemove({ name: 'trace.json' });
-    expect(mockOnUploadedTracesClear).toHaveBeenCalledTimes(1);
+    global.mockOnRemove({ uid: 'uid-a', name: 'trace.json' });
+    expect(mockOnUploadedFileRemove).toHaveBeenCalledWith('uid-a');
   });
 
-  it('does not call onTracesLoaded when remove invalidates an in-flight parse', async () => {
+  it('does not call onTracesLoaded for a removed file when its parse completes later', async () => {
     const rawTrace = { traceID: 'abc', spans: [] };
     const otelTrace = { traceID: 'abc' };
     const summary = { traceID: 'abc', traceName: 'svc: op' };
     let resolveRead;
+
     readJsonFile.mockReturnValue(
       new Promise(resolve => {
         resolveRead = resolve;
@@ -237,16 +241,44 @@ describe('<FileLoader />', () => {
     traceToTraceSummary.mockReturnValue(summary);
 
     renderFileLoader();
-    const file = makeFile();
-    global.mockBeforeUpload(file);
-    global.mockOnRemove({ name: 'trace.json' });
+    global.mockBeforeUpload(makeFile('trace.json', 'uid-a'));
+    global.mockOnRemove({ uid: 'uid-a', name: 'trace.json' });
 
     await act(async () => {
       resolveRead({ data: [rawTrace] });
     });
 
-    expect(mockOnUploadedTracesClear).toHaveBeenCalledTimes(1);
+    expect(mockOnUploadedFileRemove).toHaveBeenCalledWith('uid-a');
     expect(mockOnTracesLoaded).not.toHaveBeenCalled();
+  });
+
+  it('still calls onTracesLoaded for other files when one file is removed while parsing', async () => {
+    const rawTrace = { traceID: 'abc', spans: [] };
+    const otelTrace = { traceID: 'abc' };
+    const summary = { traceID: 'abc', traceName: 'svc: op' };
+    let resolveReadA;
+
+    readJsonFile
+      .mockReturnValueOnce(
+        new Promise(resolve => {
+          resolveReadA = resolve;
+        })
+      )
+      .mockResolvedValueOnce({ data: [rawTrace] });
+    transformTraceData.mockReturnValue({ asOtelTrace: () => otelTrace });
+    traceToTraceSummary.mockReturnValue(summary);
+
+    renderFileLoader();
+    global.mockBeforeUpload(makeFile('trace-a.json', 'uid-a'));
+    global.mockBeforeUpload(makeFile('trace-b.json', 'uid-b'));
+    global.mockOnRemove({ uid: 'uid-a', name: 'trace-a.json' });
+
+    await act(async () => {
+      resolveReadA({ data: [rawTrace] });
+    });
+
+    expect(mockOnTracesLoaded).toHaveBeenCalledTimes(1);
+    expect(mockOnTracesLoaded).toHaveBeenCalledWith('uid-b', [summary], [rawTrace]);
   });
 
   it('shows error message when traces fail to parse', async () => {
@@ -298,8 +330,8 @@ describe('<FileLoader />', () => {
     traceToTraceSummary.mockReturnValue({ traceID: 'a' });
 
     renderFileLoader();
-    const file1 = makeFile('trace1.json');
-    const file2 = makeFile('trace2.json');
+    const file1 = makeFile('trace1.json', 'uid-1');
+    const file2 = makeFile('trace2.json', 'uid-2');
 
     await act(async () => {
       global.mockBeforeUpload(file1);

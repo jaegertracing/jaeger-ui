@@ -25,7 +25,7 @@ import * as orderBy from '../../model/order-by';
 import ErrorMessage from '../common/ErrorMessage';
 import { sortTraceSummaries } from '../../model/search';
 import FileLoader from './FileLoader';
-import { useClearUploadedTraces, useUploadedTraces } from './useUploadedTraces';
+import { useUploadedTraces } from './useUploadedTraces';
 import VerticalResizer from '../common/VerticalResizer';
 import { useSearchPanelStore, PANEL_WIDTH_MIN, PANEL_WIDTH_MAX } from './search-panel-store';
 
@@ -78,8 +78,8 @@ export function SearchTracePageImpl() {
     }
   }, [searchQuery, rawUrlState, navigate]);
 
-  const { uploadedSummaries, uploadedRawTraces, handleTracesLoaded } = useUploadedTraces();
-  const clearUploadedTraces = useClearUploadedTraces();
+  const { uploadedSummaries, uploadedRawTraces, handleTracesLoaded, handleUploadedFileRemove } =
+    useUploadedTraces();
 
   // Merge API and uploaded summaries, deduplicating by traceID (API results take precedence).
   // Duplicates arise when the same file is uploaded twice or an uploaded trace also appears
@@ -190,7 +190,7 @@ export function SearchTracePageImpl() {
       label: 'Upload',
       key: 'fileLoader',
       children: (
-        <FileLoader onTracesLoaded={handleTracesLoaded} onUploadedTracesClear={clearUploadedTraces} />
+        <FileLoader onTracesLoaded={handleTracesLoaded} onUploadedFileRemove={handleUploadedFileRemove} />
       ),
     });
   }

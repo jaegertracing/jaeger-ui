@@ -11,19 +11,29 @@ import type { TraceSummary } from '../../types/trace-summary';
  */
 const UPLOADED_SUMMARIES_QUERY_KEY = ['uploadedSummaries'] as const;
 const UPLOADED_RAW_TRACES_QUERY_KEY = ['uploadedRawTraces'] as const;
+const UPLOADED_FILE_TRACE_MAP_QUERY_KEY = ['uploadedFileTraceMap'] as const;
+
+/** Maps Ant Design Upload file.uid → trace IDs loaded from that file. */
+type UploadedFileTraceMap = Record<string, string[]>;
 
 type UploadedTraces = {
   uploadedSummaries: TraceSummary[];
   uploadedRawTraces: unknown[];
-  handleTracesLoaded: (summaries: TraceSummary[], rawTraces: unknown[]) => void;
+  handleTracesLoaded: (fileUid: string, summaries: TraceSummary[], rawTraces: unknown[]) => void;
+  handleUploadedFileRemove: (fileUid: string) => void;
 };
 
-/** Returns a stable callback that clears the uploaded traces cache. */
+function traceIDOf(raw: unknown): string {
+  return raw != null && typeof raw === 'object' ? String((raw as Record<string, unknown>).traceID) : '';
+}
+
+/** Returns a stable callback that clears all uploaded traces (SearchForm on submit). */
 export function useClearUploadedTraces(): () => void {
   const queryClient = useQueryClient();
   return useCallback(() => {
     queryClient.setQueryData(UPLOADED_SUMMARIES_QUERY_KEY, []);
     queryClient.setQueryData(UPLOADED_RAW_TRACES_QUERY_KEY, []);
+    queryClient.setQueryData<UploadedFileTraceMap>(UPLOADED_FILE_TRACE_MAP_QUERY_KEY, {});
   }, [queryClient]);
 }
 
@@ -32,8 +42,8 @@ export function useClearUploadedTraces(): () => void {
  *
  * Both keys use skipToken (subscribe-only, no fetch) and gcTime: Infinity so the
  * data survives navigation away from the search page and is restored on Back.
- * Clearing is an explicit action via useClearUploadedTraces(): SearchForm on submit, and
- * FileLoader onRemove (trash icon) — both clear the entire uploaded-traces cache.
+ * Clearing is an explicit action via useClearUploadedTraces() on search submit, or
+ * handleUploadedFileRemove() when a file row is removed from the Upload tab.
  */
 export function useUploadedTraces(): UploadedTraces {
   const queryClient = useQueryClient();
@@ -53,7 +63,12 @@ export function useUploadedTraces(): UploadedTraces {
   });
 
   const handleTracesLoaded = useCallback(
-    (summaries: TraceSummary[], rawTraces: unknown[]) => {
+    (fileUid: string, summaries: TraceSummary[], rawTraces: unknown[]) => {
+      queryClient.setQueryData<UploadedFileTraceMap>(UPLOADED_FILE_TRACE_MAP_QUERY_KEY, prev => ({
+        ...prev,
+        [fileUid]: summaries.map(s => s.traceID),
+      }));
+
       queryClient.setQueryData<TraceSummary[]>(UPLOADED_SUMMARIES_QUERY_KEY, prev => {
         const existing = prev ?? [];
         const seen = new Set(existing.map(s => s.traceID));
@@ -66,8 +81,6 @@ export function useUploadedTraces(): UploadedTraces {
       });
       queryClient.setQueryData<unknown[]>(UPLOADED_RAW_TRACES_QUERY_KEY, prev => {
         const existing = prev ?? [];
-        const traceIDOf = (r: unknown) =>
-          r != null && typeof r === 'object' ? String((r as Record<string, unknown>).traceID) : '';
         const seen = new Set(existing.map(traceIDOf));
         const incoming = rawTraces.filter(r => {
           const id = traceIDOf(r);
@@ -81,5 +94,33 @@ export function useUploadedTraces(): UploadedTraces {
     [queryClient]
   );
 
-  return { uploadedSummaries, uploadedRawTraces, handleTracesLoaded };
+  const handleUploadedFileRemove = useCallback(
+    (fileUid: string) => {
+      const map = queryClient.getQueryData<UploadedFileTraceMap>(UPLOADED_FILE_TRACE_MAP_QUERY_KEY) ?? {};
+      const removedTraceIds = map[fileUid];
+      if (removedTraceIds == null) {
+        return;
+      }
+
+      const { [fileUid]: _removed, ...remainingMap } = map;
+      const stillReferenced = new Set(Object.values(remainingMap).flat());
+      const traceIdsToRemove = new Set(removedTraceIds.filter(id => !stillReferenced.has(id)));
+
+      queryClient.setQueryData<UploadedFileTraceMap>(UPLOADED_FILE_TRACE_MAP_QUERY_KEY, remainingMap);
+
+      if (traceIdsToRemove.size === 0) {
+        return;
+      }
+
+      queryClient.setQueryData<TraceSummary[]>(UPLOADED_SUMMARIES_QUERY_KEY, prev =>
+        (prev ?? []).filter(s => !traceIdsToRemove.has(s.traceID))
+      );
+      queryClient.setQueryData<unknown[]>(UPLOADED_RAW_TRACES_QUERY_KEY, prev =>
+        (prev ?? []).filter(r => !traceIdsToRemove.has(traceIDOf(r)))
+      );
+    },
+    [queryClient]
+  );
+
+  return { uploadedSummaries, uploadedRawTraces, handleTracesLoaded, handleUploadedFileRemove };
 }

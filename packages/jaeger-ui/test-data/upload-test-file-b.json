@@ -1,0 +1,23 @@
+{
+  "traceID": "upload-test-file-b",
+  "processes": {
+    "p1": {
+      "serviceName": "upload-demo-b",
+      "tags": []
+    }
+  },
+  "spans": [
+    {
+      "traceID": "upload-test-file-b",
+      "spanID": "span-b-root",
+      "processID": "p1",
+      "operationName": "file-b.root (should stay after removing A)",
+      "startTime": 1700002000000000,
+      "duration": 3000000,
+      "references": [],
+      "tags": [{ "key": "span.kind", "type": "string", "value": "server" }],
+      "logs": [],
+      "warnings": null
+    }
+  ]
+}

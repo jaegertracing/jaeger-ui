@@ -3,6 +3,7 @@
 
 import * as React from 'react';
 import { Upload, message } from 'antd';
+import type { UploadFile } from 'antd/es/upload/interface';
 import { IoDocumentAttachOutline } from 'react-icons/io5';
 
 import readJsonFile from '../../utils/readJsonFile';
@@ -17,9 +18,8 @@ import './FileLoader.css';
 const Dragger = Upload.Dragger;
 
 type FileLoaderProps = {
-  onTracesLoaded: (summaries: TraceSummary[], rawTraces: unknown[]) => void;
-  /** Clears all uploaded traces from the React Query cache when a file row is removed. */
-  onUploadedTracesClear: () => void;
+  onTracesLoaded: (fileUid: string, summaries: TraceSummary[], rawTraces: unknown[]) => void;
+  onUploadedFileRemove: (fileUid: string) => void;
 };
 
 export type LoadResult = {
@@ -71,8 +71,8 @@ export async function loadTracesFromFile(file: File): Promise<LoadResult> {
 }
 
 export default function FileLoader(props: FileLoaderProps) {
-  // Incremented on remove so in-flight parse callbacks cannot repopulate the cache after clear.
-  const loadGenerationRef = React.useRef(0);
+  // Uids marked on remove so in-flight parse callbacks for that file are discarded.
+  const cancelledUidsRef = React.useRef(new Set<string>());
 
   return (
     <Dragger
@@ -81,10 +81,10 @@ export default function FileLoader(props: FileLoaderProps) {
         // beforeUpload(file, fileList) is called once per selected file. Each invocation
         // receives the full fileList, so iterating fileList here would process N files
         // N times (N²). We process only the current `file` argument to avoid that.
-        const generation = loadGenerationRef.current;
+        const fileUid = file.uid;
         loadTracesFromFile(file)
           .then(({ summaries, rawTraces, errorCount }) => {
-            if (generation !== loadGenerationRef.current) {
+            if (cancelledUidsRef.current.has(fileUid)) {
               return;
             }
             if (errorCount > 0) {
@@ -93,13 +93,13 @@ export default function FileLoader(props: FileLoaderProps) {
               );
             }
             if (summaries.length > 0) {
-              props.onTracesLoaded(summaries, rawTraces);
+              props.onTracesLoaded(fileUid, summaries, rawTraces);
             } else if (errorCount === 0) {
               message.warning(`No traces found in ${file.name}.`);
             }
           })
           .catch((err: unknown) => {
-            if (generation !== loadGenerationRef.current) {
+            if (cancelledUidsRef.current.has(fileUid)) {
               return;
             }
             message.error(
@@ -108,12 +108,9 @@ export default function FileLoader(props: FileLoaderProps) {
           });
         return false;
       }}
-      // Ant Design's trash icon only updates its internal fileList unless onRemove is set.
-      // Clear the uploaded-traces cache so results match the file list. Limitation: this is a
-      // global clear — removing one of several uploaded files clears all uploaded traces.
-      onRemove={() => {
-        loadGenerationRef.current += 1;
-        props.onUploadedTracesClear();
+      onRemove={(file: UploadFile) => {
+        cancelledUidsRef.current.add(file.uid);
+        props.onUploadedFileRemove(file.uid);
       }}
       multiple
     >

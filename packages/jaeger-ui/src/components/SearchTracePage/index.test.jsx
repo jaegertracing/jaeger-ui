@@ -413,7 +413,7 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
 
     expect(lastFileLoaderProps).not.toBeNull();
     await act(async () => {
-      lastFileLoaderProps.onTracesLoaded([summary], [{ traceID: 'uploaded-1' }]);
+      lastFileLoaderProps.onTracesLoaded('uid-a', [summary], [{ traceID: 'uploaded-1' }]);
     });
 
     // With controlled tabs, the tab switch causes a component re-render before onTracesLoaded
@@ -476,21 +476,45 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
     const summary = { traceID: 'uploaded-1' };
     queryClient.setQueryData(['uploadedSummaries'], [summary]);
     queryClient.setQueryData(['uploadedRawTraces'], [{ traceID: 'uploaded-1' }]);
+    queryClient.setQueryData(['uploadedFileTraceMap'], { 'uid-a': ['uploaded-1'] });
 
     // Simulate what SearchForm does: invoke the callback returned by useClearUploadedTraces
     await act(async () => {
       queryClient.setQueryData(['uploadedSummaries'], []);
       queryClient.setQueryData(['uploadedRawTraces'], []);
+      queryClient.setQueryData(['uploadedFileTraceMap'], {});
     });
 
     expect(queryClient.getQueryData(['uploadedSummaries'])).toEqual([]);
     expect(queryClient.getQueryData(['uploadedRawTraces'])).toEqual([]);
+    expect(queryClient.getQueryData(['uploadedFileTraceMap'])).toEqual({});
   });
 
-  it('passes onUploadedTracesClear to FileLoader and clears caches when invoked', async () => {
-    const summary = { traceID: 'uploaded-1' };
-    queryClient.setQueryData(['uploadedSummaries'], [summary]);
-    queryClient.setQueryData(['uploadedRawTraces'], [{ traceID: 'uploaded-1' }]);
+  it('passes handleUploadedFileRemove to FileLoader and clears only that file traces', async () => {
+    const summaryA = {
+      traceID: 'uploaded-a',
+      traceName: 'svc: a',
+      rootServiceName: 'svc',
+      rootOperationName: 'a',
+      startTime: 0,
+      duration: 100,
+      spanCount: 1,
+      errorSpanCount: 0,
+      orphanSpanCount: 0,
+      services: [],
+    };
+    const summaryB = {
+      traceID: 'uploaded-b',
+      traceName: 'svc: b',
+      rootServiceName: 'svc',
+      rootOperationName: 'b',
+      startTime: 0,
+      duration: 100,
+      spanCount: 1,
+      errorSpanCount: 0,
+      orphanSpanCount: 0,
+      services: [],
+    };
 
     render(
       <AllProvider>
@@ -504,14 +528,26 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
     });
 
     expect(lastFileLoaderProps).not.toBeNull();
-    expect(lastFileLoaderProps.onUploadedTracesClear).toEqual(expect.any(Function));
 
     await act(async () => {
-      lastFileLoaderProps.onUploadedTracesClear();
+      lastFileLoaderProps.onTracesLoaded('uid-a', [summaryA], [{ traceID: 'uploaded-a' }]);
+      lastFileLoaderProps.onTracesLoaded('uid-b', [summaryB], [{ traceID: 'uploaded-b' }]);
     });
 
-    expect(queryClient.getQueryData(['uploadedSummaries'])).toEqual([]);
-    expect(queryClient.getQueryData(['uploadedRawTraces'])).toEqual([]);
+    await waitFor(() => {
+      expect(lastSearchResultsProps.traceSummaries).toEqual(expect.arrayContaining([summaryA, summaryB]));
+    });
+
+    await act(async () => {
+      lastFileLoaderProps.onUploadedFileRemove('uid-a');
+    });
+
+    await waitFor(() => {
+      expect(lastSearchResultsProps.traceSummaries).toContainEqual(summaryB);
+      expect(lastSearchResultsProps.traceSummaries).not.toContainEqual(summaryA);
+      expect(lastSearchResultsProps.rawTraces).toContainEqual({ traceID: 'uploaded-b' });
+      expect(lastSearchResultsProps.rawTraces).not.toContainEqual({ traceID: 'uploaded-a' });
+    });
   });
 
   it('handleSortChange updates sortBy passed to SearchResults', async () => {
