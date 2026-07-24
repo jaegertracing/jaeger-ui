@@ -40,7 +40,10 @@
       "@exodus/bytes>@noble/hashes": "$@noble/hashes",
       "@assistant-ui/core": "0.2.10",
       "@assistant-ui/store": "0.2.13",
-      "@assistant-ui/tap": "0.5.14"
+      "@assistant-ui/tap": "0.5.14",
+      "@apidevtools/json-schema-ref-parser>js-yaml": "4.3.0",
+      "npm-run-all2>shell-quote": "1.10.0",
+      "ajv>fast-uri": "3.1.4"
     }
   },
   "scripts": {
