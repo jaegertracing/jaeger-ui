@@ -2,36 +2,20 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { IconType } from 'react-icons';
-import {
-  IoServer as DbIcon,
-  IoGlobe as HttpIcon,
-  IoChatbubble as MessagingIcon,
-  IoSwapHorizontalOutline as RpcIcon,
-} from 'react-icons/io5';
 
 import type { IAttributes } from '../../../types/otel';
+import { NAMESPACE_ICONS } from './spanDecorations';
 
-// gen_ai is deliberately not a namespace here: GenAISpanIcon already renders one
-// icon per GenAI span, classified by operation kind (agent/LLM call/tool call/
-// retrieval, falling back to a generic GenAI icon for an unclassified operation -
-// see classifySpan). A second, generic gen_ai entry in this map would render
-// alongside it on every GenAI span, which is exactly the redundant/confusing
-// double-icon rendering reported in #4217.
-//
-// Priority: lower index wins when a span has attributes from multiple namespaces.
-const NAMESPACE_PRIORITY: Partial<Record<string, number>> = {
-  db: 1,
-  http: 2,
-  messaging: 3,
-  rpc: 4,
-};
+// Priority / icon maps derived from the shared decoration registry.
+// gen_ai is deliberately not in that registry: GenAISpanIcon already renders one
+// icon per GenAI span via classifySpan (#4217).
+const NAMESPACE_PRIORITY: Partial<Record<string, number>> = Object.fromEntries(
+  NAMESPACE_ICONS.map(({ namespace, priority }) => [namespace, priority])
+);
 
-const NAMESPACE_ICON: Partial<Record<string, IconType>> = {
-  db: DbIcon,
-  http: HttpIcon,
-  messaging: MessagingIcon,
-  rpc: RpcIcon,
-};
+const NAMESPACE_ICON: Partial<Record<string, IconType>> = Object.fromEntries(
+  NAMESPACE_ICONS.map(({ namespace, icon }) => [namespace, icon])
+);
 
 export function getSpanIconComponent(attributes: IAttributes | undefined): IconType | null {
   if (!attributes) return null;

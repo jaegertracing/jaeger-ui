@@ -7,31 +7,9 @@ import cx from 'classnames';
 
 import { useConfig } from '../../../hooks/useConfig';
 import { AttributeValue, IOtelSpan } from '../../../types/otel';
+import { PILL_SOURCES, type IPillSource } from './spanDecorations';
 
 export type ISpanPill = { label: string; value: string; isError?: boolean };
-
-type IPillSource = {
-  label: string;
-  attrKeys: readonly string[];
-  isError?: (value: string) => boolean;
-};
-
-const DEFAULT_PILL_SOURCES: readonly IPillSource[] = [
-  {
-    label: 'http.status_code',
-    attrKeys: ['http.status_code', 'http.response.status_code'],
-    isError: value => {
-      const code = Number(value.trim());
-      return code >= 500 && code < 600;
-    },
-  },
-  {
-    label: 'http.method',
-    attrKeys: ['http.method', 'http.request.method'],
-  },
-  { label: 'db.system', attrKeys: ['db.system'] },
-  { label: 'rpc.system', attrKeys: ['rpc.system'] },
-];
 
 function safeStringify(value: object): string {
   try {
@@ -76,10 +54,10 @@ function pillFromSource(span: IOtelSpan, source: IPillSource): ISpanPill | undef
   return undefined;
 }
 
-/** Builds pills for a single span. Owns which attributes become pills; callers do not. */
+/** Builds pills for a single span from the shared decoration registry. */
 export function getSpanPillsForSpan(span: IOtelSpan): ISpanPill[] {
   const pills: ISpanPill[] = [];
-  for (const source of DEFAULT_PILL_SOURCES) {
+  for (const source of PILL_SOURCES) {
     const pill = pillFromSource(span, source);
     if (pill) {
       pills.push(pill);
