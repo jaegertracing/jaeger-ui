@@ -20,6 +20,8 @@ const Dragger = Upload.Dragger;
 type FileLoaderProps = {
   onTracesLoaded: (fileUid: string, summaries: TraceSummary[], rawTraces: unknown[]) => void;
   onUploadedFileRemove: (fileUid: string) => void;
+  /** Increment to reset Ant Design Upload fileList (e.g. on search submit). */
+  uploadResetKey?: number;
 };
 
 export type LoadResult = {
@@ -73,10 +75,18 @@ export async function loadTracesFromFile(file: File): Promise<LoadResult> {
 export default function FileLoader(props: FileLoaderProps) {
   // Uids marked on remove so in-flight parse callbacks for that file are discarded.
   const cancelledUidsRef = React.useRef(new Set<string>());
+  const [fileList, setFileList] = React.useState<UploadFile[]>([]);
+
+  React.useEffect(() => {
+    setFileList([]);
+    cancelledUidsRef.current.clear();
+  }, [props.uploadResetKey]);
 
   return (
     <Dragger
       accept=".json,.jsonl"
+      fileList={fileList}
+      onChange={({ fileList: nextFileList }) => setFileList(nextFileList)}
       beforeUpload={file => {
         // beforeUpload(file, fileList) is called once per selected file. Each invocation
         // receives the full fileList, so iterating fileList here would process N files

@@ -14,7 +14,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { getUrl as getSearchUrl, lookbackFromUrl } from './url';
 import type { Dispatch } from 'redux';
 import { useIsSearchFetching } from '../../hooks/useTraceDiscovery';
-import { useClearUploadedTraces } from './useUploadedTraces';
 import store from '../../utils/storage';
 import getConfig from '../../utils/config/get-config';
 
@@ -278,6 +277,7 @@ export function submitForm(
 interface ISearchFormImplProps {
   invalid?: boolean;
   initialValues?: Partial<ISearchFormFields> & { traceIDs?: string | null };
+  onClearUploadedTraces: () => void;
   submitFormHandler: (
     fields: ISearchFormFields,
     adjustEndTime: string | null | undefined,
@@ -310,11 +310,11 @@ function defaultFormData(
 export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   invalid = false,
   initialValues,
+  onClearUploadedTraces,
   submitFormHandler,
 }) => {
   const submitting = useIsSearchFetching();
   const navigate = useNavigate();
-  const clearUploadedTraces = useClearUploadedTraces();
   const { useOpenTelemetryTerms: useOtelTerms, search: searchConfig } = useConfig();
   const searchMaxLookback: ILookbackOption | undefined = searchConfig?.maxLookback;
   const searchAdjustEndTime: string | undefined = searchConfig?.adjustEndTime;
@@ -365,10 +365,10 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
       e.preventDefault();
       const fields = formData as ISearchFormFields;
       const url = submitFormHandler(fields, searchAdjustEndTime, adjustTimeEnabled);
-      clearUploadedTraces();
+      onClearUploadedTraces();
       navigate(url);
     },
-    [formData, searchAdjustEndTime, adjustTimeEnabled, submitFormHandler, navigate, clearUploadedTraces]
+    [formData, searchAdjustEndTime, adjustTimeEnabled, submitFormHandler, navigate, onClearUploadedTraces]
   );
 
   const handleReset = useCallback(() => {

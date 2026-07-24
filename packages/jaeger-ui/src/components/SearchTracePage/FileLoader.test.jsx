@@ -24,9 +24,11 @@ vi.mock('../../hooks/useTraceLoading', () => ({
 vi.mock('antd', async () => {
   const antd = await vi.importActual('antd');
   const { Upload } = antd;
-  const MockedDragger = ({ beforeUpload, onRemove, children, ...props }) => {
+  const MockedDragger = ({ beforeUpload, onRemove, onChange, fileList, children, ...props }) => {
     global.mockBeforeUpload = beforeUpload;
     global.mockOnRemove = onRemove;
+    global.mockOnChange = onChange;
+    global.mockFileList = fileList;
     return (
       <div data-testid="upload-dragger" {...props}>
         {children}
@@ -67,6 +69,8 @@ beforeEach(() => {
   populateTraceCache.mockClear();
   global.mockBeforeUpload = null;
   global.mockOnRemove = null;
+  global.mockOnChange = null;
+  global.mockFileList = null;
 });
 
 describe('loadTracesFromFile', () => {
@@ -224,6 +228,30 @@ describe('<FileLoader />', () => {
     renderFileLoader();
     global.mockOnRemove({ uid: 'uid-a', name: 'trace.json' });
     expect(mockOnUploadedFileRemove).toHaveBeenCalledWith('uid-a');
+  });
+
+  it('clears controlled fileList when uploadResetKey changes', () => {
+    const { rerender } = render(
+      <FileLoader
+        uploadResetKey={0}
+        onTracesLoaded={mockOnTracesLoaded}
+        onUploadedFileRemove={mockOnUploadedFileRemove}
+      />
+    );
+
+    act(() => {
+      global.mockOnChange({ fileList: [{ uid: 'uid-a', name: 'trace-a.json' }] });
+    });
+    expect(global.mockFileList).toEqual([{ uid: 'uid-a', name: 'trace-a.json' }]);
+
+    rerender(
+      <FileLoader
+        uploadResetKey={1}
+        onTracesLoaded={mockOnTracesLoaded}
+        onUploadedFileRemove={mockOnUploadedFileRemove}
+      />
+    );
+    expect(global.mockFileList).toEqual([]);
   });
 
   it('does not call onTracesLoaded for a removed file when its parse completes later', async () => {

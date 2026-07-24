@@ -472,22 +472,44 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
     expect(lastSearchResultsProps.diffCohort).toEqual([summaryInResults, summaryFromPriorSearch]);
   });
 
-  it('uploaded caches are cleared when useClearUploadedTraces callback is invoked', async () => {
-    const summary = { traceID: 'uploaded-1' };
-    queryClient.setQueryData(['uploadedSummaries'], [summary]);
-    queryClient.setQueryData(['uploadedRawTraces'], [{ traceID: 'uploaded-1' }]);
-    queryClient.setQueryData(['uploadedFileTraceMap'], { 'uid-a': ['uploaded-1'] });
+  it('passes uploadResetKey to FileLoader', async () => {
+    render(
+      <AllProvider>
+        <SearchTracePage />
+      </AllProvider>
+    );
 
-    // Simulate what SearchForm does: invoke the callback returned by useClearUploadedTraces
+    const uploadTab = screen.getByText('Upload');
     await act(async () => {
-      queryClient.setQueryData(['uploadedSummaries'], []);
-      queryClient.setQueryData(['uploadedRawTraces'], []);
-      queryClient.setQueryData(['uploadedFileTraceMap'], {});
+      fireEvent.click(uploadTab);
     });
 
-    expect(queryClient.getQueryData(['uploadedSummaries'])).toEqual([]);
-    expect(queryClient.getQueryData(['uploadedRawTraces'])).toEqual([]);
-    expect(queryClient.getQueryData(['uploadedFileTraceMap'])).toEqual({});
+    expect(lastFileLoaderProps.uploadResetKey).toBe(0);
+  });
+
+  it('increments uploadResetKey when search clears uploaded traces', async () => {
+    useServices.mockReturnValue({ data: ['svcA'], isLoading: false });
+
+    const { container } = render(
+      <AllProvider initialEntries={['/search?service=svcA']}>
+        <SearchTracePage />
+      </AllProvider>
+    );
+
+    await waitFor(() => expect(container.querySelector('[data-test="submit-btn"]')).not.toBeDisabled());
+
+    await act(async () => {
+      fireEvent.submit(container.querySelector('form'));
+    });
+
+    const uploadTab = screen.getByText('Upload');
+    await act(async () => {
+      fireEvent.click(uploadTab);
+    });
+
+    await waitFor(() => {
+      expect(lastFileLoaderProps.uploadResetKey).toBe(1);
+    });
   });
 
   it('passes handleUploadedFileRemove to FileLoader and clears only that file traces', async () => {
