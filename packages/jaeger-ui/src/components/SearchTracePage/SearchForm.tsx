@@ -134,7 +134,7 @@ interface ValidationError {
 
 export function validateDurationFields(value: string | null | undefined): ValidationError | undefined {
   if (!value) return undefined;
-  return /\d[\d.]*( us|ms|s|m|h)$/.test(value)
+  return /\d[\d.]*\s*(us|ms|s|m|h)$/.test(value)
     ? undefined
     : {
         content: `Please enter a number followed by a duration unit, ${placeholderDurationFields}`,
@@ -627,21 +627,6 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
 
       <Row gutter={16}>
         <Col className="gutter-row" span={12}>
-          <FormItem label="Max Duration">
-            <ValidatedFormField
-              name="maxDuration"
-              value={formData.maxDuration}
-              disabled={submitting}
-              validate={validateDurationFields}
-              placeholder={placeholderDurationFields}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                handleChange({ maxDuration: e.target.value })
-              }
-            />
-          </FormItem>
-        </Col>
-
-        <Col className="gutter-row" span={12}>
           <FormItem label="Min Duration">
             <ValidatedFormField
               name="minDuration"
@@ -651,6 +636,21 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
               placeholder={placeholderDurationFields}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 handleChange({ minDuration: e.target.value })
+              }
+            />
+          </FormItem>
+        </Col>
+
+        <Col className="gutter-row" span={12}>
+          <FormItem label="Max Duration">
+            <ValidatedFormField
+              name="maxDuration"
+              value={formData.maxDuration}
+              disabled={submitting}
+              validate={validateDurationFields}
+              placeholder={placeholderDurationFields}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                handleChange({ maxDuration: e.target.value })
               }
             />
           </FormItem>

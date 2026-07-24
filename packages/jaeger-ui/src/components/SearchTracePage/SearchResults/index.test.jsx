@@ -159,6 +159,20 @@ describe('<SearchResults>', () => {
     expect(screen.getByText(/No trace results\. Try another query\./i)).toBeInTheDocument();
   });
 
+  it('renders the lowercase trace count and the search latency', () => {
+    renderWithRouter(<SearchResults {...baseProps} searchLatency={2_500_000} />);
+    const count = screen.getByText(/2 traces/);
+    expect(count).toHaveTextContent('2 traces (in 2.5s)');
+    expect(screen.getByText(/\(in 2\.5s\)/)).toBeInTheDocument();
+  });
+
+  it('renders the count without latency when searchLatency is absent', () => {
+    renderWithRouter(<SearchResults {...baseProps} />);
+    const count = screen.getByText(/2 traces/);
+    expect(count).toBeInTheDocument();
+    expect(count).not.toHaveTextContent('(in');
+  });
+
   it('shows a loading indicator if loading traces', () => {
     renderWithRouter(<SearchResults {...baseProps} loading />);
     expect(screen.getByTestId('loading')).toBeInTheDocument();

@@ -3,6 +3,15 @@ Copyright (c) 2017 Uber Technologies, Inc.
 SPDX-License-Identifier: Apache-2.0
 */
 
+.SpanBarRow--pillWrap {
+  /* Sit above .span-name::after so hover tooltips receive pointer events. */
+  display: inline-flex;
+  max-width: 100%;
+  position: relative;
+  vertical-align: middle;
+  z-index: 1;
+}
+
 .SpanBarRow--pill {
   background: var(--surface-component-background);
   border: 1px solid var(--border-default);
@@ -227,8 +236,8 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .SpanBarRow--spanTypeIcon {
-  color: var(--text-secondary);
-  font-size: 0.85em;
-  margin-right: 0.25rem;
-  vertical-align: middle;
+  color: var(--interactive-primary);
+  font-size: 1.3em;
+  margin-right: 0.3rem;
+  vertical-align: -0.18em;
 }
