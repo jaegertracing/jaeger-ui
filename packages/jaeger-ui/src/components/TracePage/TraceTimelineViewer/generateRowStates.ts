@@ -21,30 +21,124 @@ export type RowState =
       prunedErrorCount: number;
     };
 
+export const ROW_TYPE_SPAN = 0;
+const ROW_TYPE_DETAIL = 1;
+export const ROW_TYPE_PRUNED = 2;
+
+/**
+ * RowStatesView implements a Structure of Arrays (SoA) layout for trace timeline rows.
+ * Instead of allocating N RowState objects upfront, we maintain parallel typed-array-like
+ * structures for indices, types, and pruned statistics. Objects are only materialized
+ * via getRow() on-demand for the visible viewport, significantly reducing GC churn on large traces.
+ *
+ * Note: spanObjIndices exists separately from spanIndices because pruned placeholders
+ * need to track their maxSpanIndex for timeline placement (stored in spanIndices), while
+ * referencing their parent span for the actual IOtelSpan object reference (stored in spanObjIndices).
+ */
+export class RowStatesView {
+  private spans: ReadonlyArray<IOtelSpan>;
+
+  public spanIndices: number[] = [];
+  public rowTypes: number[] = [];
+
+  // For pruned placeholders we keep a reference to the *parent* span object.
+  // `spanObjIndices` stores that parent's index in the original `spans` array,
+  // while `spanIndices` stores the *max* span index used for timeline placement.
+  private spanObjIndices: number[] = [];
+
+  // Statistics for pruned placeholders - how many child spans and error spans were collapsed.
+  private prunedChildCounts: number[] = [];
+  private prunedErrorCounts: number[] = [];
+
+  constructor(spans: ReadonlyArray<IOtelSpan>) {
+    this.spans = spans;
+  }
+
+  get length() {
+    return this.spanIndices.length;
+  }
+
+  pushSpan(spanIndex: number) {
+    this.spanIndices.push(spanIndex);
+    this.spanObjIndices.push(spanIndex);
+    this.rowTypes.push(ROW_TYPE_SPAN);
+    this.prunedChildCounts.push(0);
+    this.prunedErrorCounts.push(0);
+  }
+
+  pushDetail(spanIndex: number) {
+    this.spanIndices.push(spanIndex);
+    this.spanObjIndices.push(spanIndex);
+    this.rowTypes.push(ROW_TYPE_DETAIL);
+    this.prunedChildCounts.push(0);
+    this.prunedErrorCounts.push(0);
+  }
+
+  pushPruned(parentSpanIndex: number, maxSpanIndex: number, childCount: number, errorCount: number) {
+    // maxSpanIndex determines the timeline position of the placeholder;
+    // parentSpanIndex points to the actual span object that owns the pruned subtree.
+    this.spanIndices.push(maxSpanIndex);
+    this.spanObjIndices.push(parentSpanIndex);
+    this.rowTypes.push(ROW_TYPE_PRUNED);
+    this.prunedChildCounts.push(childCount);
+    this.prunedErrorCounts.push(errorCount);
+  }
+
+  getRow(index: number): RowState {
+    const spanIndex = this.spanIndices[index];
+    // For pruned placeholders, objIndex refers to the parent span (who owns the collapsed children),
+    // while spanIndex holds the max child index for timeline position.
+    const objIndex = this.spanObjIndices[index];
+    const type = this.rowTypes[index];
+    const span = this.spans[objIndex];
+
+    if (type === ROW_TYPE_SPAN) {
+      return { isDetail: false, span, spanIndex };
+    }
+    if (type === ROW_TYPE_DETAIL) {
+      return { isDetail: true, span, spanIndex };
+    }
+    return {
+      isDetail: false,
+      span,
+      spanIndex,
+      isPrunedPlaceholder: true,
+      prunedChildrenCount: this.prunedChildCounts[index],
+      prunedErrorCount: this.prunedErrorCounts[index],
+    };
+  }
+
+  findIndexByKey(spanID: string, type: string): number {
+    const len = this.length;
+    for (let i = 0; i < len; i++) {
+      const objIndex = this.spanObjIndices[i];
+      if (this.spans[objIndex].spanID === spanID) {
+        const rowType = this.rowTypes[i];
+        if (type === 'pruned' && rowType === ROW_TYPE_PRUNED) return i;
+        if (type === 'detail' && rowType === ROW_TYPE_DETAIL) return i;
+        if (type === 'bar' && rowType === ROW_TYPE_SPAN) return i;
+      }
+    }
+    return -1;
+  }
+}
+
 type PrunedStats = {
   childCounts: number[];
   errorCounts: number[];
 };
 
-/**
- * First pass: build visible rows by applying manual collapse and service filter pruning.
- * Returns the visible rows and, when pruning is active, per-row pruned span/error counts.
- *
- * Assumes spans are in pre-order DFS order (parent before its children, siblings sorted by
- * startTime). This is guaranteed by the trace transformation in transform-trace-data.ts.
- */
 function buildVisibleRows(
   spans: ReadonlyArray<IOtelSpan>,
   childrenHiddenIDs: Set<string>,
   detailStates: Map<string, DetailState | TNil>,
   detailPanelMode: 'inline' | 'sidepanel',
   prunedServices: Set<string>
-): { rows: RowState[]; prunedStats: PrunedStats | null } {
+): { view: RowStatesView; prunedStats: PrunedStats | null } {
   const hasPruning = prunedServices.size > 0;
   let collapseDepth: number | null = null;
-  const rows: RowState[] = [];
+  const view = new RowStatesView(spans);
 
-  // parentByDepth[d] = index into rows of the last emitted span at depth d.
   const parentByDepth: (number | undefined)[] = [];
   const childCounts: number[] = [];
   const errorCounts: number[] = [];
@@ -53,7 +147,6 @@ function buildVisibleRows(
     const span = spans[i];
     const { spanID, depth } = span;
 
-    // Exit collapsed subtree when we return to or above collapse depth.
     if (collapseDepth != null) {
       if (depth >= collapseDepth) {
         continue;
@@ -61,7 +154,6 @@ function buildVisibleRows(
       collapseDepth = null;
     }
 
-    // Service filter pruning: skip this span and its entire subtree.
     if (hasPruning && prunedServices.has(span.resource.serviceName)) {
       let prunedSpanCount = 1;
       let prunedErrors = isErrorSpan(span) ? 1 : 0;
@@ -72,10 +164,6 @@ function buildVisibleRows(
           prunedErrors++;
         }
       }
-      // depth == 0 means this is a root span. Root services are protected by
-      // sanitizePrunedServices, so a pruned root can only occur if the caller bypasses
-      // that guard. In that case we intentionally drop the stats — there is no parent
-      // row to attach a placeholder to.
       if (depth > 0) {
         const parentIdx = parentByDepth[depth - 1];
         if (parentIdx != null) {
@@ -88,79 +176,73 @@ function buildVisibleRows(
       continue;
     }
 
-    // Manual collapse.
     if (childrenHiddenIDs.has(spanID)) {
       collapseDepth = depth + 1;
     }
 
-    parentByDepth[depth] = rows.length;
-    rows.push({ span, isDetail: false, spanIndex: i });
+    parentByDepth[depth] = view.length;
+    view.pushSpan(i);
 
-    // In side panel mode, detail rows are shown in the panel, not inline.
     if (detailPanelMode !== 'sidepanel' && detailStates.has(spanID)) {
-      rows.push({ span, isDetail: true, spanIndex: i });
+      view.pushDetail(i);
     }
   }
 
   return {
-    rows,
+    view,
     prunedStats: hasPruning ? { childCounts, errorCounts } : null,
   };
 }
 
-/**
- * Second pass: interleave pruned placeholder rows at the end of each parent's
- * visible subtree using a depth stack (single linear scan, no splicing).
- *
- * Placeholders are always appended after all visible siblings of the pruned spans,
- * not at the original position of the first pruned child. This is intentional:
- * it keeps the visible children contiguous and avoids mid-list synthetic rows.
- */
-function insertPrunedPlaceholders(rows: RowState[], stats: PrunedStats): RowState[] {
+function insertPrunedPlaceholders(
+  spans: ReadonlyArray<IOtelSpan>,
+  sourceView: RowStatesView,
+  stats: PrunedStats
+): RowStatesView {
   const { childCounts, errorCounts } = stats;
-  const result: RowState[] = [];
-  // Track the max spanIndex seen within each open subtree so placeholders
-  // get a non-decreasing spanIndex (avoids confusing ScrollManager navigation).
+  const result = new RowStatesView(spans);
   const openStack: Array<{ rowIndex: number; depth: number; maxSpanIndex: number }> = [];
 
   const maybeAppendPlaceholder = (entry: { rowIndex: number; maxSpanIndex: number }) => {
     const count = childCounts[entry.rowIndex];
     if (!count) return;
-    const parentRow = rows[entry.rowIndex];
-    result.push({
-      span: parentRow.span,
-      isDetail: false,
-      spanIndex: entry.maxSpanIndex,
-      isPrunedPlaceholder: true,
-      prunedChildrenCount: count,
-      prunedErrorCount: errorCounts[entry.rowIndex] || 0,
-    });
+
+    const parentSpanIndex = sourceView.spanIndices[entry.rowIndex];
+    result.pushPruned(parentSpanIndex, entry.maxSpanIndex, count, errorCounts[entry.rowIndex] || 0);
   };
 
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
-    if (!row.isDetail) {
-      while (openStack.length && openStack[openStack.length - 1].depth >= row.span.depth) {
+  const len = sourceView.length;
+  for (let i = 0; i < len; i++) {
+    const isDetail = sourceView.rowTypes[i] === ROW_TYPE_DETAIL;
+    const spanIndex = sourceView.spanIndices[i];
+    const depth = spans[spanIndex].depth;
+
+    if (!isDetail) {
+      while (openStack.length && openStack[openStack.length - 1].depth >= depth) {
         const closed = openStack.pop()!;
         maybeAppendPlaceholder(closed);
-        // Propagate max spanIndex to the parent entry on the stack.
         if (openStack.length) {
           const parent = openStack[openStack.length - 1];
           parent.maxSpanIndex = Math.max(parent.maxSpanIndex, closed.maxSpanIndex);
         }
       }
     }
-    result.push(row);
-    if (!row.isDetail) {
-      const spanIndex = row.spanIndex;
-      // Update the current top-of-stack's max with this row's spanIndex.
+
+    if (isDetail) {
+      result.pushDetail(spanIndex);
+    } else {
+      result.pushSpan(spanIndex);
+    }
+
+    if (!isDetail) {
       if (openStack.length) {
         const top = openStack[openStack.length - 1];
         top.maxSpanIndex = Math.max(top.maxSpanIndex, spanIndex);
       }
-      openStack.push({ rowIndex: i, depth: row.span.depth, maxSpanIndex: spanIndex });
+      openStack.push({ rowIndex: i, depth, maxSpanIndex: spanIndex });
     }
   }
+
   while (openStack.length) {
     const closed = openStack.pop()!;
     maybeAppendPlaceholder(closed);
@@ -173,28 +255,24 @@ function insertPrunedPlaceholders(rows: RowState[], stats: PrunedStats): RowStat
   return result;
 }
 
-/**
- * Build the visible row list from a trace's spans, applying manual collapse,
- * service filter pruning, and pruned placeholder insertion.
- */
 export default function generateRowStates(
   spans: ReadonlyArray<IOtelSpan> | TNil,
   childrenHiddenIDs: Set<string>,
   detailStates: Map<string, DetailState | TNil>,
   detailPanelMode: 'inline' | 'sidepanel',
   prunedServices: Set<string>
-): RowState[] {
+): RowStatesView {
   if (!spans) {
-    return [];
+    return new RowStatesView([]);
   }
-  const { rows, prunedStats } = buildVisibleRows(
+  const { view, prunedStats } = buildVisibleRows(
     spans,
     childrenHiddenIDs,
     detailStates,
     detailPanelMode,
     prunedServices
   );
-  return prunedStats ? insertPrunedPlaceholders(rows, prunedStats) : rows;
+  return prunedStats ? insertPrunedPlaceholders(spans, view, prunedStats) : view;
 }
 
 /**
