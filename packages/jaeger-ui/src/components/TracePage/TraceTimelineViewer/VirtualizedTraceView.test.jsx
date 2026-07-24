@@ -51,7 +51,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
   beforeEach(() => {
     legacyTrace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 }));
-    criticalPath = memoizedTraceCriticalPath(legacyTrace);
+    criticalPath = memoizedTraceCriticalPath(legacyTrace).sections;
     trace = legacyTrace.asOtelTrace();
     focusUiFindMatchesMock = jest.fn();
 

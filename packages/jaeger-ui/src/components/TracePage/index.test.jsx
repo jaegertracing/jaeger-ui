@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 
@@ -15,6 +15,7 @@ import {
   TracePageImpl as TracePage,
   VIEW_MIN_RANGE,
 } from './index';
+import memoizedTraceCriticalPath from './CriticalPath/index';
 import * as track from './index.track';
 import * as keyboardShortcutsMod from './keyboard-shortcuts';
 import { merge as mergeShortcuts } from './keyboard-shortcuts';
@@ -1097,6 +1098,36 @@ describe('<TracePage>', () => {
     it('auto-switches regardless of backendCapabilities.aiAssistant — GenAI view is client-side', () => {
       render(<TracePage {...genAiProps} backendCapabilities={null} />);
       expect(capturedHeaderProps.viewType).toBe(ETraceViewType.GenAITimelineViewer);
+    });
+  });
+
+  describe('critical path error banner', () => {
+    it('shows the error banner when criticalPathEnabled is true and computation fails', () => {
+      memoizedTraceCriticalPath.mockReturnValue({ sections: [], failed: true });
+      render(<TracePage {...defaultProps} criticalPathEnabled />);
+      expect(screen.getByText('Critical path could not be computed for this trace.')).toBeInTheDocument();
+    });
+
+    it('dismisses the error banner when the close button is clicked', () => {
+      memoizedTraceCriticalPath.mockReturnValue({ sections: [], failed: true });
+      render(<TracePage {...defaultProps} criticalPathEnabled />);
+      expect(screen.getByText('Critical path could not be computed for this trace.')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: /close/i }));
+      expect(
+        screen.queryByText('Critical path could not be computed for this trace.')
+      ).not.toBeInTheDocument();
+    });
+
+    it('re-shows the banner for a different trace after being dismissed on a prior one, since TracePage is not remounted per trace id', () => {
+      memoizedTraceCriticalPath.mockReturnValue({ sections: [], failed: true });
+      const { rerender } = render(<TracePage {...defaultProps} criticalPathEnabled />);
+      fireEvent.click(screen.getByRole('button', { name: /close/i }));
+      expect(
+        screen.queryByText('Critical path could not be computed for this trace.')
+      ).not.toBeInTheDocument();
+
+      rerender(<TracePage {...defaultProps} params={{ id: 'a-different-trace-id' }} criticalPathEnabled />);
+      expect(screen.getByText('Critical path could not be computed for this trace.')).toBeInTheDocument();
     });
   });
 });
