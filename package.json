@@ -40,7 +40,8 @@
       "@exodus/bytes>@noble/hashes": "$@noble/hashes",
       "@assistant-ui/core": "0.2.10",
       "@assistant-ui/store": "0.2.13",
-      "@assistant-ui/tap": "0.5.14"
+      "@assistant-ui/tap": "0.5.14",
+      "brace-expansion": "5.0.8"
     }
   },
   "scripts": {
