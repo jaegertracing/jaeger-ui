@@ -1102,14 +1102,29 @@ describe('<TracePage>', () => {
   });
 
   describe('critical path error banner', () => {
+    const sampleErrors = ["Root span abc123: Cannot read properties of null (reading 'forEach')"];
+
     it('shows the error banner when criticalPathEnabled is true and computation fails', () => {
-      memoizedTraceCriticalPath.mockReturnValue({ sections: [], failed: true });
+      memoizedTraceCriticalPath.mockReturnValue({ sections: [], failed: true, errors: sampleErrors });
       render(<TracePage {...defaultProps} criticalPathEnabled />);
       expect(screen.getByText('Critical path could not be computed for this trace.')).toBeInTheDocument();
     });
 
+    it('shows the actual captured error message rather than a generic guess', () => {
+      memoizedTraceCriticalPath.mockReturnValue({ sections: [], failed: true, errors: sampleErrors });
+      render(<TracePage {...defaultProps} criticalPathEnabled />);
+      expect(screen.getByText(sampleErrors[0])).toBeInTheDocument();
+    });
+
+    it('joins multiple root-span errors into the banner description', () => {
+      const twoErrors = ['Root span a: boom', 'Root span b: kaboom'];
+      memoizedTraceCriticalPath.mockReturnValue({ sections: [], failed: true, errors: twoErrors });
+      render(<TracePage {...defaultProps} criticalPathEnabled />);
+      expect(screen.getByText(twoErrors.join('; '))).toBeInTheDocument();
+    });
+
     it('dismisses the error banner when the close button is clicked', () => {
-      memoizedTraceCriticalPath.mockReturnValue({ sections: [], failed: true });
+      memoizedTraceCriticalPath.mockReturnValue({ sections: [], failed: true, errors: sampleErrors });
       render(<TracePage {...defaultProps} criticalPathEnabled />);
       expect(screen.getByText('Critical path could not be computed for this trace.')).toBeInTheDocument();
       fireEvent.click(screen.getByRole('button', { name: /close/i }));
@@ -1119,7 +1134,7 @@ describe('<TracePage>', () => {
     });
 
     it('re-shows the banner for a different trace after being dismissed on a prior one, since TracePage is not remounted per trace id', () => {
-      memoizedTraceCriticalPath.mockReturnValue({ sections: [], failed: true });
+      memoizedTraceCriticalPath.mockReturnValue({ sections: [], failed: true, errors: sampleErrors });
       const { rerender } = render(<TracePage {...defaultProps} criticalPathEnabled />);
       fireEvent.click(screen.getByRole('button', { name: /close/i }));
       expect(

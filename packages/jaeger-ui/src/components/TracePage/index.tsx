@@ -446,7 +446,7 @@ export function TracePageImpl(props: TProps) {
   let view;
   const cpResult = criticalPathEnabled
     ? memoizedTraceCriticalPath(traceData)
-    : { sections: [], failed: false };
+    : { sections: [], failed: false, errors: [] };
   const criticalPath = cpResult.sections;
   if (ETraceViewType.TraceTimelineViewer === viewType && headerHeight) {
     view = (
@@ -523,7 +523,7 @@ export function TracePageImpl(props: TProps) {
           closable
           onClose={() => setCriticalPathErrorDismissed(true)}
           message="Critical path could not be computed for this trace."
-          description="One or more spans may have clock skew, timestamps outside their parent's bounds, or other instrumentation issues. The critical path overlay may be incomplete or missing. Check the browser console for details."
+          description={cpResult.errors.join('; ')}
           style={{ margin: '8px 16px' }}
         />
       )}

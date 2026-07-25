@@ -16,9 +16,10 @@ describe.each([[test1], [test2], [test3], [test4], [test5], [test6], [test7], [t
   'Happy Path',
   testProps => {
     it('should find criticalPathSections correctly', () => {
-      const { sections, failed } = TraceCriticalPath(testProps.trace);
+      const { sections, failed, errors } = TraceCriticalPath(testProps.trace);
       expect(sections).toStrictEqual(testProps.criticalPathSections);
       expect(failed).toBe(false);
+      expect(errors).toEqual([]);
     });
   }
 );
@@ -87,11 +88,14 @@ describe('criticalPathForTrace immutability', () => {
 const badRootSpan = { spanID: 'bad-root', childSpans: null };
 
 describe('criticalPathForTrace error handling', () => {
-  it('should return failed:true and empty sections when the only root span throws', () => {
-    const { sections, failed } = TraceCriticalPath({ rootSpans: [badRootSpan] });
+  it('should return failed:true, empty sections, and the real error message when the only root span throws', () => {
+    const { sections, failed, errors } = TraceCriticalPath({ rootSpans: [badRootSpan] });
 
     expect(failed).toBe(true);
     expect(sections).toEqual([]);
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toContain(badRootSpan.spanID);
+    expect(errors[0]).toMatch(/forEach/);
   });
 
   it('should return failed:true and partial sections when one of two root spans throws', () => {
@@ -100,9 +104,11 @@ describe('criticalPathForTrace error handling', () => {
       rootSpans: [badRootSpan, ...test1.trace.rootSpans],
     };
 
-    const { sections, failed } = TraceCriticalPath(twoRootTrace);
+    const { sections, failed, errors } = TraceCriticalPath(twoRootTrace);
 
     expect(failed).toBe(true);
     expect(sections.length).toBeGreaterThan(0);
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toContain(badRootSpan.spanID);
   });
 });

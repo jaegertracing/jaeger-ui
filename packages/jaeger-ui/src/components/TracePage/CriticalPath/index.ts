@@ -76,11 +76,12 @@ const computeCriticalPath = (
 type CriticalPathResult = {
   sections: CriticalPathSection[];
   failed: boolean;
+  errors: string[];
 };
 
 function criticalPathForTrace(trace: IOtelTrace): CriticalPathResult {
   let sections: CriticalPathSection[] = [];
-  let failed = false;
+  const errors: string[] = [];
   for (const rootSpan of trace.rootSpans) {
     try {
       // Create a map of CPSpan objects for this root span's tree,
@@ -88,11 +89,12 @@ function criticalPathForTrace(trace: IOtelTrace): CriticalPathResult {
       const sanitizedSpanMap = sanitizeOverFlowingChildren(createCPSpanMap(rootSpan));
       sections = computeCriticalPath(sanitizedSpanMap, rootSpan.spanID, sections);
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
       console.error('Critical path computation failed for root span', rootSpan.spanID, error);
-      failed = true;
+      errors.push(`Root span ${rootSpan.spanID}: ${message}`);
     }
   }
-  return { sections, failed };
+  return { sections, failed: errors.length > 0, errors };
 }
 
 const memoizedTraceCriticalPath = memoizeOne(criticalPathForTrace);
