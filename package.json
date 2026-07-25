@@ -19,7 +19,6 @@
     "@noble/hashes": "2.2.0",
     "@testing-library/dom": "^10.4.1",
     "@typescript/native": "npm:typescript@7.0.2",
-    "depcheck": "1.4.7",
     "knip": "6.26.0",
     "eslint-plugin-react-x": "5.14.5",
     "husky": "9.1.0",
@@ -42,13 +41,7 @@
       "@assistant-ui/core": "0.2.10",
       "@assistant-ui/store": "0.2.13",
       "@assistant-ui/tap": "0.5.14",
-      "depcheck@1.4.7>js-yaml": "3.15.0",
-      "minimatch@3.1.5>brace-expansion": "5.0.8",
-      "minimatch@7.4.9>brace-expansion": "5.0.8",
-      "minimatch@10.2.5>brace-expansion": "5.0.8"
-    },
-    "patchedDependencies": {
-      "brace-expansion@5.0.8": "patches/brace-expansion@5.0.8.patch"
+      "brace-expansion": "5.0.8"
     }
   },
   "scripts": {
@@ -58,7 +51,6 @@
     "check-overrides": "./scripts/check-overrides.sh",
     "check-tsx-naming": "./scripts/check-tsx-naming.sh",
     "coverage": "pnpm -r coverage",
-    "depcheck": "./scripts/run-depcheck.sh",
     "oxlint": "vp lint packages/ scripts/",
     "fmt": "vp fmt",
     "knip": "knip",
