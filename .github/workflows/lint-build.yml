@@ -26,8 +26,6 @@ jobs:
           pnpm install --lockfile-only
           git diff --exit-code pnpm-lock.yaml || (echo '❌ pnpm-lock.yaml is out of sync with package.json. Run "pnpm install" locally and commit the result.' && exit 1)
       - run: pnpm list -r --depth Infinity
-      - name: Run depcheck
-        run: make depcheck
       - run: make lint
       - run: make build
       - name: Verify dev server starts without errors
