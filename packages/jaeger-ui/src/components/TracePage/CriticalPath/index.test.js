@@ -73,6 +73,7 @@ describe('criticalPathForTrace immutability', () => {
   });
 
   it('should not modify non-blocking spans parent childSpans', () => {
+    // test5 has a producer/consumer pair where the consumer is non-blocking
     const parentSpan = test5.trace.spans[0];
     const originalChildSpans = [...parentSpan.childSpans];
     const originalLength = originalChildSpans.length;
