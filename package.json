@@ -23,7 +23,7 @@
     "eslint-plugin-react-x": "5.14.5",
     "husky": "9.1.0",
     "jsdom": "29.1.1",
-    "lint-staged": "17.0.4",
+    "lint-staged": "17.1.0",
     "npm-run-all2": "9.0.1",
     "openapi-zod-client": "1.18.3",
     "typescript": "npm:@typescript/typescript6@6.0.2",
