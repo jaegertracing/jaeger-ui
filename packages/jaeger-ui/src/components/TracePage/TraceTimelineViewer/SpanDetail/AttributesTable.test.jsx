@@ -261,7 +261,7 @@ describe('<AttributesTable>', () => {
     const LARGE_VALUE = 'x'.repeat(10_001);
 
     it('renders a placeholder button instead of full content for large string values', () => {
-      const largeData = [{ key: 'big_attr', value: LARGE_VALUE }];
+      const largeData = makeAttributes([{ key: 'big_attr', value: LARGE_VALUE }]);
       render(<AttributesTable data={largeData} />);
 
       // Should show a collapsed placeholder, not the full value
@@ -273,7 +273,9 @@ describe('<AttributesTable>', () => {
     it('expands the value inline after clicking the placeholder', () => {
       vi.useFakeTimers();
       try {
-        const largeData = [{ key: 'big_attr', value: '{"hello":"world"}' + 'x'.repeat(10_000) }];
+        const largeData = makeAttributes([
+          { key: 'big_attr', value: '{"hello":"world"}' + 'x'.repeat(10_000) },
+        ]);
         const { unmount } = render(<AttributesTable data={largeData} />);
 
         const placeholder = screen.getByRole('button', { name: /click to expand/i });
@@ -300,10 +302,10 @@ describe('<AttributesTable>', () => {
     });
 
     it('does not render copy icons for large value rows', () => {
-      const mixedData = [
+      const mixedData = makeAttributes([
         { key: 'small', value: 'tiny' },
         { key: 'big', value: LARGE_VALUE },
-      ];
+      ]);
       render(<AttributesTable data={mixedData} />);
 
       // Only the small row has copy icons (2 icons per small row)

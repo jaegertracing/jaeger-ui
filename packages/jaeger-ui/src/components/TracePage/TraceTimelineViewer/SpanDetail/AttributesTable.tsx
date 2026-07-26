@@ -142,7 +142,7 @@ function LargeValueCell({ attrKey, value }: { attrKey: string; value: string }) 
     return <span className="KeyValueTable--largeValueLoading">Parsing…</span>;
   }
 
-  return <div className="ub-inline-block">{formatValue(attrKey, value)}</div>;
+  return <div className="ub-inline-block">{formatValue(attrKey, value).node}</div>;
 }
 
 export const LinkValue = (props: { href: string; title?: string; children: React.ReactNode }) => (
