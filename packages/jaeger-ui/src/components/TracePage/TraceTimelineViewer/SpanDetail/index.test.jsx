@@ -344,6 +344,7 @@ describe('<SpanDetail>', () => {
       },
     };
 
+    isGenAISpanMock.mockReturnValue(false);
     render(<SpanDetail {...localProps} />);
 
     // All attributes go through AccordionAttributes — no separate lazy section
