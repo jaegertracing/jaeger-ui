@@ -38,13 +38,14 @@ failed=false
 while IFS= read -r pkg; do
   [ -z "$pkg" ] && continue
   # `pnpm why` lists the dependency chains that lead to $pkg across all workspace
-  # projects. A project node carries a "dependencies"/"devDependencies" key only
-  # when at least one such chain exists, i.e. the package is present in the tree.
+  # projects. It represents matches either as workspace nodes with a
+  # "dependencies"/"devDependencies" key or as package nodes with a "dependents"
+  # key. Either shape proves that the package is present in the tree.
   # Tolerate a non-zero exit or non-JSON output (treat as "not present") so that
   # under `set -euo pipefail` the loop still reports every phantom override.
   why_json=$(pnpm why "$pkg" -r --json 2>/dev/null) || why_json=""
   present=$(printf '%s' "$why_json" \
-    | jq -r 'any(.[]; has("dependencies") or has("devDependencies"))' 2>/dev/null) || present="false"
+    | jq -r 'any(.[]; has("dependencies") or has("devDependencies") or has("dependents"))' 2>/dev/null) || present="false"
   [ -n "$present" ] || present="false"
 
   if [ "$present" != "true" ]; then
