@@ -65,3 +65,25 @@ SPDX-License-Identifier: Apache-2.0
 .KeyValueTable--valueColumn-full {
   width: auto;
 }
+/* Large value placeholder button — blends with the table's dark surface */
+.KeyValueTable--largeValuePlaceholder {
+  display: inline-block;
+  background: transparent;
+  border: 1px dashed var(--border-default);
+  border-radius: 3px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.85em;
+  padding: 2px 8px;
+}
+
+.KeyValueTable--largeValuePlaceholder:hover {
+  border-color: var(--interactive-primary);
+  color: var(--interactive-primary);
+}
+
+.KeyValueTable--largeValueLoading {
+  color: var(--text-secondary);
+  font-style: italic;
+  font-size: 0.85em;
+}
