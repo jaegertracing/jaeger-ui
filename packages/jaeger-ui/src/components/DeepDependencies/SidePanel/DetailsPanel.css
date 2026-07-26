@@ -6,7 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 .Ddg--DetailsPanel {
   background-color: var(--surface-tertiary);
   border-left: solid 1px var(--border-default);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-sidepanel);
   display: flex;
   flex-direction: column;
   height: 100%;
