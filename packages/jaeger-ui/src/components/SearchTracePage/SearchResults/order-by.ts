@@ -1,4 +1,5 @@
 // Copyright (c) 2026 The Jaeger Authors.
+// Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 export const MOST_RECENT = 'MOST_RECENT';
@@ -23,14 +24,6 @@ export type OrderBy =
   | typeof TRACE_NAME_DESC
   | typeof MOST_ERRORS
   | typeof LEAST_ERRORS;
-
-export type TraceOrderBy =
-  | typeof MOST_RECENT
-  | typeof OLDEST_FIRST
-  | typeof SHORTEST_FIRST
-  | typeof LONGEST_FIRST
-  | typeof MOST_SPANS
-  | typeof LEAST_SPANS;
 
 const ORDER_BY_VALUES: ReadonlySet<string> = new Set([
   MOST_RECENT,

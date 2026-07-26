@@ -14,7 +14,8 @@ import {
   TRACE_NAME_DESC,
   MOST_ERRORS,
   LEAST_ERRORS,
-} from './SearchResults/order-by';
+} from './order-by';
+import type { OrderBy } from './order-by';
 
 const STORAGE_KEY = 'jaeger.search-results.mode';
 
@@ -44,13 +45,16 @@ describe('useSearchResultsStore', () => {
       MOST_ERRORS,
       LEAST_ERRORS,
     ])('accepts valid sort key %s', key => {
-      useSearchResultsStore.getState().setSortBy(key);
+      useSearchResultsStore.getState().setSortBy(key as OrderBy);
       expect(useSearchResultsStore.getState().sortBy).toBe(key);
     });
 
     it('rejects unknown sort key and falls back to MOST_RECENT', () => {
       useSearchResultsStore.getState().setSortBy(LONGEST_FIRST);
-      useSearchResultsStore.getState().setSortBy('INVALID_KEY');
+      // setSortBy is typed to OrderBy for well-behaved callers, but still sanitizes
+      // at runtime as a safety net - this simulates a value that bypasses the type
+      // system (e.g. a future caller, or genuinely corrupted runtime state).
+      useSearchResultsStore.getState().setSortBy('INVALID_KEY' as OrderBy);
       expect(useSearchResultsStore.getState().sortBy).toBe(MOST_RECENT);
     });
   });
@@ -69,34 +73,6 @@ describe('useSearchResultsStore', () => {
       useSearchResultsStore.getState().setViewMode('list');
       useSearchResultsStore.getState().setViewMode('table');
       expect(useSearchResultsStore.getState().viewMode).toBe('table');
-    });
-  });
-
-  describe('persist flag', () => {
-    it('updates sortBy in state but skips localStorage when persist:false', async () => {
-      useSearchResultsStore.getState().setSortBy(MOST_RECENT);
-      await Promise.resolve();
-      const before = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
-
-      useSearchResultsStore.getState().setSortBy(LONGEST_FIRST, { persist: false });
-      await Promise.resolve();
-
-      expect(useSearchResultsStore.getState().sortBy).toBe(LONGEST_FIRST);
-      const after = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
-      expect(after.state.sortBy).toBe(before.state.sortBy);
-    });
-
-    it('updates viewMode in state but skips localStorage when persist:false', async () => {
-      useSearchResultsStore.getState().setViewMode('table');
-      await Promise.resolve();
-      const before = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
-
-      useSearchResultsStore.getState().setViewMode('list', { persist: false });
-      await Promise.resolve();
-
-      expect(useSearchResultsStore.getState().viewMode).toBe('list');
-      const after = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
-      expect(after.state.viewMode).toBe(before.state.viewMode);
     });
   });
 

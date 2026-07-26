@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button, Checkbox, Table, Tag, Tooltip } from 'antd';
 import type { ColumnsType, TableProps } from 'antd/es/table';
@@ -23,7 +23,8 @@ import type { SortableColumnKey, SortDirection } from './sort';
 import type { OrderBy } from './order-by';
 import type { TracePageLink } from '../../TracePage/url';
 import { ServicePill, type ServiceEntry } from './ServicePills';
-import { useSearchResultsStore } from '../store.search-results';
+import { useSearchResultsStore } from './store.search-results';
+import { trackSortByChange } from '../SearchForm.track';
 
 const BOTH_DIRECTIONS: SortOrder[] = ['ascend', 'descend'];
 
@@ -31,8 +32,6 @@ type TraceTableProps = {
   traceSummaries: TraceSummary[];
   maxTraceDuration: number;
   getLink: (traceID: string) => TracePageLink;
-  sortBy: OrderBy;
-  handleSortChange: (sortBy: OrderBy) => void;
   disableComparisons: boolean;
   cohortIds: Set<string>;
   toggleComparison: (traceID: string, isInDiffCohort: boolean) => void;
@@ -70,13 +69,20 @@ export default function TraceTable({
   traceSummaries,
   maxTraceDuration,
   getLink,
-  sortBy,
-  handleSortChange,
   disableComparisons,
   cohortIds,
   toggleComparison,
 }: TraceTableProps) {
   const navigate = useNavigate();
+  const sortBy = useSearchResultsStore(s => s.sortBy);
+  const setSortBy = useSearchResultsStore(s => s.setSortBy);
+  const handleSortChange = useCallback(
+    (newSortBy: OrderBy) => {
+      setSortBy(newSortBy);
+      trackSortByChange(newSortBy);
+    },
+    [setSortBy]
+  );
   const { key: sortKey, order: sortOrder } = fromOrderBy(sortBy);
   const startTimeDisplay = useSearchResultsStore(s => s.startTimeDisplay);
   const setStartTimeDisplay = useSearchResultsStore(s => s.setStartTimeDisplay);

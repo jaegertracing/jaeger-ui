@@ -33,7 +33,7 @@ import './index.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import withRouteProps from '../../../utils/withRouteProps';
 import SearchableSelect from '../../common/SearchableSelect';
-import { useSearchResultsStore, sanitizeSortBy } from '../store.search-results';
+import { useSearchResultsStore } from './store.search-results';
 import { trackSortByChange } from '../SearchForm.track';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -113,9 +113,9 @@ export function UnconnectedSearchResults({
   );
 
   const handleSortChange = useCallback(
-    (newSortBy: string) => {
+    (newSortBy: OrderBy) => {
       setSortBy(newSortBy);
-      trackSortByChange(sanitizeSortBy(newSortBy));
+      trackSortByChange(newSortBy);
     },
     [setSortBy]
   );
@@ -281,8 +281,6 @@ export function UnconnectedSearchResults({
           traceSummaries={sortedTraceSummaries}
           maxTraceDuration={maxTraceDuration}
           getLink={getLink}
-          sortBy={sortBy}
-          handleSortChange={handleSortChange}
           disableComparisons={disableComparisons}
           cohortIds={cohortIds}
           toggleComparison={toggleComparison}

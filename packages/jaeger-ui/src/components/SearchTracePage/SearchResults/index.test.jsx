@@ -7,9 +7,8 @@ import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
 import { UnconnectedSearchResults as SearchResults, SelectSort } from '.';
-import { useSearchResultsStore } from '../store.search-results';
+import { useSearchResultsStore } from './store.search-results';
 import * as track from './index.track';
-import * as searchFormTrack from '../SearchForm.track';
 import * as orderBy from './order-by';
 import { getUrl } from '../url';
 import ResultItem from './ResultItem';
@@ -550,18 +549,6 @@ describe('<SearchResults>', () => {
       expect(items[0]).toHaveAttribute('data-testid', 'result-long');
       expect(items[1]).toHaveAttribute('data-testid', 'result-short');
       expect(useSearchResultsStore.getState().sortBy).toBe(orderBy.LONGEST_FIRST);
-    });
-
-    it('tracks the sanitized sortBy, not a raw unrecognized value, when an invalid key reaches the handler', () => {
-      const trackSortByChange = vi.spyOn(searchFormTrack, 'trackSortByChange').mockImplementation(() => {});
-      renderWithRouter(<SearchResults {...baseProps} traceSummaries={distinctTraces} />);
-
-      fireEvent.change(screen.getByTestId('searchable-select'), {
-        target: { value: 'NOT_A_REAL_SORT_KEY' },
-      });
-
-      expect(trackSortByChange).toHaveBeenCalledWith(orderBy.MOST_RECENT);
-      trackSortByChange.mockRestore();
     });
   });
 
