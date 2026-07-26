@@ -49,10 +49,6 @@ build:
 coverage:
 	pnpm run coverage
 
-.PHONY: depcheck
-depcheck:
-	pnpm run depcheck
-
 .PHONY: ci
 ci:
 	pnpm install --frozen-lockfile

@@ -18,7 +18,7 @@
     "@emnapi/runtime": "^1.9.1",
     "@noble/hashes": "2.2.0",
     "@testing-library/dom": "^10.4.1",
-    "depcheck": "1.4.7",
+    "@typescript/native": "npm:typescript@7.0.2",
     "knip": "6.26.0",
     "eslint-plugin-react-x": "5.14.5",
     "husky": "9.1.0",
@@ -26,8 +26,8 @@
     "lint-staged": "17.0.4",
     "npm-run-all2": "9.0.1",
     "openapi-zod-client": "1.18.3",
-    "typescript": "6.0.2",
-    "vite-plus": "0.2.4",
+    "typescript": "npm:@typescript/typescript6@6.0.2",
+    "vite-plus": "0.2.5",
     "@vitest/coverage-v8": "4.1.10",
     "vitest": "4.1.10"
   },
@@ -40,7 +40,8 @@
       "@exodus/bytes>@noble/hashes": "$@noble/hashes",
       "@assistant-ui/core": "0.2.10",
       "@assistant-ui/store": "0.2.13",
-      "@assistant-ui/tap": "0.5.14"
+      "@assistant-ui/tap": "0.5.14",
+      "brace-expansion": "5.0.8"
     }
   },
   "scripts": {
@@ -50,7 +51,6 @@
     "check-overrides": "./scripts/check-overrides.sh",
     "check-tsx-naming": "./scripts/check-tsx-naming.sh",
     "coverage": "pnpm -r coverage",
-    "depcheck": "./scripts/run-depcheck.sh",
     "oxlint": "vp lint packages/ scripts/",
     "fmt": "vp fmt",
     "knip": "knip",

@@ -239,7 +239,12 @@ export function UnconnectedSearchResults({
         <div className="SearchResults--headerOverview">
           <h2 className="ub-m0 u-flex-1 SearchResults--resultCount">
             {sortedTraceSummaries.length} trace{sortedTraceSummaries.length !== 1 && 's'}
-            {searchLatency != null && ` (in ${formatDurationCompact(searchLatency)})`}
+            {searchLatency != null && (
+              <span className="SearchResults--searchLatency">
+                {' '}
+                (in {formatDurationCompact(searchLatency)})
+              </span>
+            )}
           </h2>
           {traceResultsView && viewMode === 'list' && (
             <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />

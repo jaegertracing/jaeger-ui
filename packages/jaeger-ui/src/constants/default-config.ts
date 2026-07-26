@@ -5,6 +5,7 @@ import deepFreeze from 'deep-freeze';
 
 import { FALLBACK_DAG_MAX_NUM_SERVICES } from './index';
 import getVersion from '../utils/version/get-version';
+import shortenCommit from '../utils/version/shorten-commit';
 
 import { version } from '../../package.json';
 import { Config } from '../types/config';
@@ -48,7 +49,7 @@ const defaultConfig: Config = {
           label: `Jaeger ${getVersion().gitVersion}`,
         },
         {
-          label: `Commit ${getVersion().gitCommit.substring(0, 7)}`,
+          label: `Commit ${shortenCommit(getVersion().gitCommit)}`,
         },
         {
           label: `Build ${getVersion().buildDate}`,
