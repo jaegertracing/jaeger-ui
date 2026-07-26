@@ -57,8 +57,8 @@ importers:
         specifier: 29.1.1
         version: 29.1.1(@noble/hashes@2.2.0)
       knip:
-        specifier: 6.26.0
-        version: 6.26.0
+        specifier: 6.27.0
+        version: 6.27.0
       lint-staged:
         specifier: 17.1.0
         version: 17.1.0
@@ -874,12 +874,6 @@ packages:
 
   '@liuli-util/fs-extra@0.1.0':
     resolution: {integrity: sha512-eaAyDyMGT23QuRGbITVY3SOJff3G9ekAAyGqB9joAnTBmqvFN+9a1FazOdO70G6IUqgpKV451eBHYSRcOJ/FNQ==}
-
-  '@napi-rs/wasm-runtime@1.1.5':
-    resolution: {integrity: sha512-AWPoBRJ9tsnVhor4sjO7rkni+7p+2IAEFj6cx06UgP10jkQHqay/36uRV/bFkgrh18D9vb4cr8Q0Pthskgzy+Q==}
-    peerDependencies:
-      '@emnapi/core': ^1.7.1
-      '@emnapi/runtime': ^1.7.1
 
   '@napi-rs/wasm-runtime@1.1.6':
     resolution: {integrity: sha512-ZLv/JdUfkvOy9eCnnBaGfiO+XimbjebAeO+MRQqD/B+FR1tnRN0tpKSJHRbE8sFfS6aqsXZ67TQjfwfsxULVbg==}
@@ -3988,8 +3982,8 @@ packages:
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
 
-  knip@6.26.0:
-    resolution: {integrity: sha512-e9eELEEpBpGTd4H4HB7818/DYj9dMzMyUqAddfYwUN/EbSkgIjOuWEF96W/xHsmV0SDrsdXjIM+oZ2xpPzPsBA==}
+  knip@6.27.0:
+    resolution: {integrity: sha512-CngYEYrD0n20N06FXA8n3u/0Wnnugoa+B9k14OP+iKIgkCHuzvIdsP3nfwjhByoc1WfogpxfiriMboAXFETDUw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
 
@@ -5705,17 +5699,10 @@ snapshots:
       '@types/fs-extra': 9.0.13
       fs-extra: 10.1.0
 
-  '@napi-rs/wasm-runtime@1.1.5(@emnapi/core@1.11.0)(@emnapi/runtime@1.11.0)':
+  '@napi-rs/wasm-runtime@1.1.6(@emnapi/core@1.11.0)(@emnapi/runtime@1.11.0)':
     dependencies:
       '@emnapi/core': 1.11.0
       '@emnapi/runtime': 1.11.0
-      '@tybys/wasm-util': 0.10.3
-    optional: true
-
-  '@napi-rs/wasm-runtime@1.1.5(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)':
-    dependencies:
-      '@emnapi/core': 1.11.1
-      '@emnapi/runtime': 1.11.1
       '@tybys/wasm-util': 0.10.3
     optional: true
 
@@ -5893,7 +5880,7 @@ snapshots:
     dependencies:
       '@emnapi/core': 1.11.1
       '@emnapi/runtime': 1.11.1
-      '@napi-rs/wasm-runtime': 1.1.5(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)
+      '@napi-rs/wasm-runtime': 1.1.6(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)
     optional: true
 
   '@oxc-parser/binding-win32-arm64-msvc@0.137.0':
@@ -5963,7 +5950,7 @@ snapshots:
     dependencies:
       '@emnapi/core': 1.11.0
       '@emnapi/runtime': 1.11.0
-      '@napi-rs/wasm-runtime': 1.1.5(@emnapi/core@1.11.0)(@emnapi/runtime@1.11.0)
+      '@napi-rs/wasm-runtime': 1.1.6(@emnapi/core@1.11.0)(@emnapi/runtime@1.11.0)
     optional: true
 
   '@oxc-resolver/binding-win32-arm64-msvc@11.21.3':
@@ -8533,7 +8520,7 @@ snapshots:
     dependencies:
       json-buffer: 3.0.1
 
-  knip@6.26.0:
+  knip@6.27.0:
     dependencies:
       fdir: 6.5.0(picomatch@4.0.4)
       formatly: 0.3.0
