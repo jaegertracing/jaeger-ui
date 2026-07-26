@@ -9,3 +9,4 @@ An RFC is a document that describes a problem, surveys the solution space, and p
 ## RFCs in This Repository
 
 - [Embedded Web Component](./embedded-web-component.md) - Extending Jaeger UI from an SPA into a reusable Custom Element with Shadow DOM isolation, with a Grafana panel plugin as the reference integration
+- [Graph Visualization Stack](./graph-visualization-stack.md) - Comparing Plexus + viz.js (current) against @xyflow/react + elkjs and Apache ECharts for Jaeger's trace DAG and service dependency graph views; covers layout engine trade-offs, rendering layer capabilities, scale, node interactivity, and migration paths
