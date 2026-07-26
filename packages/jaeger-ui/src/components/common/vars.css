@@ -79,6 +79,8 @@ SPDX-License-Identifier: Apache-2.0
   --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.14);
   /* centered, strong glow effect on components */
   --shadow-component-focus: 0px 0px 5px rgba(0, 0, 0, 0.3);
+  /* left-facing shadow for side panels */
+  --shadow-sidepanel: -3px 0 3px rgba(0, 0, 0, 0.1);
 
   /* ============================================
     SPECIAL PURPOSE TOKENS
@@ -223,6 +225,8 @@ SPDX-License-Identifier: Apache-2.0
   --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.5);
   /* centered, strong glow effect on components */
   --shadow-component-focus: 0px 0px 5px rgba(255, 255, 255, 0.3);
+  /* left-facing shadow for side panels */
+  --shadow-sidepanel: -3px 0 3px rgba(0, 0, 0, 0.3);
 
   /* ============================================
     SPECIAL PURPOSE TOKENS - Dark Mode
