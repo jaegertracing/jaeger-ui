@@ -73,10 +73,10 @@ importers:
         version: '@typescript/typescript6@6.0.2'
       vite-plus:
         specifier: 0.2.5
-        version: 0.2.5(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@typescript/typescript6@6.0.2)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@2.2.0))(less@4.6.4)(terser@5.49.0)(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0))(yaml@2.9.0)
+        version: 0.2.5(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@typescript/typescript6@6.0.2)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@2.2.0))(less@4.7.0)(terser@5.49.0)(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0))(yaml@2.9.0)
       vitest:
         specifier: 4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@vitest/browser-preview@4.1.10)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@vitest/browser-preview@4.1.10)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0))
     optionalDependencies:
       '@rolldown/binding-android-arm64':
         specifier: 1.1.0
@@ -312,7 +312,7 @@ importers:
         version: 2.6.5
       '@vitejs/plugin-react':
         specifier: 6.0.1
-        version: 6.0.1(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0))
+        version: 6.0.1(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0))
       '@vitest/coverage-v8':
         specifier: 4.1.10
         version: 4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10)
@@ -323,17 +323,17 @@ importers:
         specifier: 3.0.0
         version: 3.0.0
       less:
-        specifier: 4.6.4
-        version: 4.6.4
+        specifier: 4.7.0
+        version: 4.7.0
       terser:
         specifier: 5.49.0
         version: 5.49.0
       vite:
         specifier: 8.1.1
-        version: 8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0)
+        version: 8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0)
       vitest:
         specifier: 4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@vitest/browser-preview@4.1.10)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@vitest/browser-preview@4.1.10)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0))
 
   packages/plexus:
     dependencies:
@@ -388,7 +388,7 @@ importers:
         version: 19.2.0(react@19.2.0)
       vitest:
         specifier: 4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@vitest/browser-preview@4.1.10)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@vitest/browser-preview@4.1.10)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0))
 
 packages:
 
@@ -3542,6 +3542,22 @@ packages:
   dayjs@1.11.19:
     resolution: {integrity: sha512-t5EcLVS6QPBNqM2z8fakk/NKel+Xzshgt8FFKAn+qwlD1pzZWxh0nVCrvFK7ZDb6XucZeF9z8C7CBWTRIVApAw==}
 
+  debug@2.6.9:
+    resolution: {integrity: sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==}
+    peerDependencies:
+      supports-color: '*'
+    peerDependenciesMeta:
+      supports-color:
+        optional: true
+
+  debug@3.2.7:
+    resolution: {integrity: sha512-CFjzYYAi4ThfiQvizrFQevTTXHtnCqWfe7x1AhgEscTz6ZbLbfoLRLPugTQyBth6f8ZERVUSyWHFD/7Wu4t1XQ==}
+    peerDependencies:
+      supports-color: '*'
+    peerDependenciesMeta:
+      supports-color:
+        optional: true
+
   debug@4.4.3:
     resolution: {integrity: sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA==}
     engines: {node: '>=6.0'}
@@ -3860,6 +3876,10 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
+  iconv-lite@0.4.24:
+    resolution: {integrity: sha512-v3MXnZAcvnywkTUEZomIActle7RXXeedOR31wwl7VlyoXO4Qi9arvSenNQWne1TcRwhCL1HwLI21bEqdpj8/rA==}
+    engines: {node: '>=0.10.0'}
+
   iconv-lite@0.6.3:
     resolution: {integrity: sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw==}
     engines: {node: '>=0.10.0'}
@@ -3871,11 +3891,6 @@ packages:
   ignore@5.3.2:
     resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
     engines: {node: '>= 4'}
-
-  image-size@0.5.5:
-    resolution: {integrity: sha512-6TDAlDPZxUFCv+fuOkIoXT/V/f3Qbq8e37p+YOiYrUv3v9cc3/6x78VdfPgFVaB9dZYeLUfKgHRebpkm/oP2VQ==}
-    engines: {node: '>=0.10.0'}
-    hasBin: true
 
   immer@11.1.8:
     resolution: {integrity: sha512-/tbkHMW7y10Lx6i1crLjD4/OhNkRG+Fo7byZHtah0547nIeXYcpIXaUh0IAQY6gO5459qpGGYapcEOHtFXkIuA==}
@@ -4009,8 +4024,8 @@ packages:
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
 
-  less@4.6.4:
-    resolution: {integrity: sha512-OJmO5+HxZLLw0RLzkqaNHzcgEAQG7C0y3aMbwtCzIUFZsLMNNq/1IdAdHEycQ58CwUO3jPTHmoN+tE5I7FQxNg==}
+  less@4.7.0:
+    resolution: {integrity: sha512-i7dAlT3+boO0mMh1G4cex0vz1lLAScmBbikm1VEDNv+cy0ore1CUo2UtX8m3N9QLE5WYDr4ISbiCRzHNGyFkrA==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -4101,6 +4116,9 @@ packages:
     resolution: {integrity: sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==}
     engines: {node: '>=10'}
 
+  lodash.merge@4.6.2:
+    resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
+
   lodash@4.18.1:
     resolution: {integrity: sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==}
 
@@ -4132,13 +4150,13 @@ packages:
   magicast@0.5.3:
     resolution: {integrity: sha512-pVKE4UdSQ7DvHzivsCIFx2BJn1mHG6KsyrFcaxFx6tONdneEuThrDx0Cj3AMg58KyN4pzYT+LHOotxDQDjNvkw==}
 
-  make-dir@2.1.0:
-    resolution: {integrity: sha512-LS9X+dc8KLxXCb8dni79fLIIUA5VyZoyjSMCwTluaXA0o27cCK0bhXkpgw+sTXVpPy/lSO57ilRixqk0vDmtRA==}
-    engines: {node: '>=6'}
-
   make-dir@4.0.0:
     resolution: {integrity: sha512-hXdUTZYIVOt1Ex//jAQi+wTZZpUpwBj/0QsOzqegb3rGMMeJiSEu5xLHnYfBrRV4RH2+OCSOO95Is/7x1WJ4bw==}
     engines: {node: '>=10'}
+
+  make-dir@5.1.0:
+    resolution: {integrity: sha512-IfpFq6UM39dUNiphpA6uDezNx/AvWyhwfICWPR3t1VspkgkMZrL+Rk1RbN1bx+aeNYwOrqGJgEgV3yotk+ZUVw==}
+    engines: {node: '>=18'}
 
   markdown-to-jsx@9.8.2:
     resolution: {integrity: sha512-rWUuxKB5NsuJmSfUOuXkQ0O5qk0J/Lr3Lk6dzxKoKQI/jeHYlsVfz3zJdMLAhI46hHoXDYERWhtBOiqtWDZ4LA==}
@@ -4210,6 +4228,9 @@ packages:
     resolution: {integrity: sha512-Y3wQdFg2Va6etvQ5I82yUhGdsKrcYox6p7FfL1LbK2J4V01F9TGlepTIhnK24t7koZibmg82KGglhA1XK5IsLQ==}
     engines: {node: '>=10'}
 
+  ms@2.0.0:
+    resolution: {integrity: sha512-Tpp60P6IUJDTuOq/5Z8cdskzJujfwqfOTkrwIwj7IRISpnkJnT6SyJ4PCPnGMoFjC9ddhal5KVIYtAt97ix05A==}
+
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
 
@@ -4225,6 +4246,11 @@ packages:
 
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
+
+  needle@2.9.1:
+    resolution: {integrity: sha512-6R9fqJ5Zcmf+uYaFgdIHmLwNldn5HbK8L5ybn7Uz+ylX/rnOsSp1AHcvQSrCaFN+qNM1wpymHqD7mVasEOlHGQ==}
+    engines: {node: '>= 4.4.x'}
+    hasBin: true
 
   needle@3.5.0:
     resolution: {integrity: sha512-jaQyPKKk2YokHrEg+vFDYxXIHTCBgiZwSHOoVx/8V3GIBS8/VN6NdVRmg8q1ERtPkMvmOvebsgga4sAj5hls/w==}
@@ -4369,10 +4395,6 @@ packages:
     engines: {node: '>=0.10'}
     hasBin: true
 
-  pify@4.0.1:
-    resolution: {integrity: sha512-uB80kBFb/tfd68bVleG9T5GGsGPjJrLAUpR5PZIrhBnIaRTQRjqdJSsIKkOP6OAIFbj7GOrcudc5pNjZ+geV2g==}
-    engines: {node: '>=6'}
-
   pngjs@7.0.0:
     resolution: {integrity: sha512-LKWqWJRhstyYo9pGvgor/ivk2w94eSjE3RGVuzLGlr3NmD8bf7RcYGze1mNdEHRP6TRP6rMuDHk5t44hnTRyow==}
     engines: {node: '>=14.19.0'}
@@ -4393,6 +4415,9 @@ packages:
   pretty-format@27.5.1:
     resolution: {integrity: sha512-Qb1gy5OrP5+zDf2Bvnzdl3jsTf1qXVMazbvCoKhtKqVs4/YK4ozX4gKQJJVyNe+cajNPn0KoC0MC3FUmaHWEmQ==}
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
+
+  probe-image-size@7.3.0:
+    resolution: {integrity: sha512-7CaDeBwiAbh6ohXsvLbAZhO7wzsZAmaevfxe39qvCwRh8LyaZfDlBGGLU1CCTgrTLtCOdwBBhjOrIHaIIimHfQ==}
 
   proxy-from-env@2.1.0:
     resolution: {integrity: sha512-cJ+oHTW1VAEa8cJslgmUZrc+sjRKgAKl3Zyse6+PV38hZe/V6Z14TbCuXcan9F9ghlz4QrFr2c92TNF82UkYHA==}
@@ -4616,10 +4641,6 @@ packages:
   secure-json-parse@4.1.0:
     resolution: {integrity: sha512-l4KnYfEyqYJxDwlNVyRfO2E4NTHfMKAWdUuA8J0yve2Dz/E/PdBepY03RvyJpssIpRFwJoCD55wA+mEDs6ByWA==}
 
-  semver@5.7.2:
-    resolution: {integrity: sha512-cBznnQ9KjJqU67B52RMC65CMarK2600WFnbkcaiwWq3xy/5haFJlshgnpjovMVJ+Hff49d8GEn0b87C5pDQ10g==}
-    hasBin: true
-
   semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
     hasBin: true
@@ -4690,6 +4711,9 @@ packages:
 
   std-env@4.1.0:
     resolution: {integrity: sha512-Rq7ybcX2RuC55r9oaPVEW7/xu3tj8u4GeBYHBWCychFtzMIr86A7e3PPEBPT37sHStKX3+TiX/Fr/ACmJLVlLQ==}
+
+  stream-parser@0.3.1:
+    resolution: {integrity: sha512-bJ/HgKq41nlKvlhccD5kaCr/P+Hu0wPNKPJOH7en+YrJu/9EgqUF+88w5Jb6KNcjOFMhfX4B2asfeAtIGuHObQ==}
 
   string-argv@0.3.2:
     resolution: {integrity: sha512-aqD2Q0144Z+/RqG52NeHEkZauTAUWJO8c6yTftGJKO3Tja5tUgIfmIl6kExvhtxSDP7fXB6DvzkfMpCd/F3G+Q==}
@@ -7629,33 +7653,33 @@ snapshots:
     dependencies:
       '@typescript/old': typescript@6.0.3
 
-  '@vitejs/plugin-react@6.0.1(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0))':
+  '@vitejs/plugin-react@6.0.1(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0))':
     dependencies:
       '@rolldown/pluginutils': 1.0.0-rc.7
-      vite: 8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0)
+      vite: 8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0)
 
-  '@vitest/browser-preview@4.1.10(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0))(vitest@4.1.10)':
+  '@vitest/browser-preview@4.1.10(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0))(vitest@4.1.10)':
     dependencies:
       '@testing-library/dom': 10.4.1
       '@testing-library/user-event': 14.6.1(@testing-library/dom@10.4.1)
-      '@vitest/browser': 4.1.10(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0))(vitest@4.1.10)
-      vitest: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@vitest/browser-preview@4.1.10)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0))
+      '@vitest/browser': 4.1.10(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0))(vitest@4.1.10)
+      vitest: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@vitest/browser-preview@4.1.10)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0))
     transitivePeerDependencies:
       - bufferutil
       - msw
       - utf-8-validate
       - vite
 
-  '@vitest/browser@4.1.10(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0))(vitest@4.1.10)':
+  '@vitest/browser@4.1.10(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0))(vitest@4.1.10)':
     dependencies:
       '@blazediff/core': 1.9.1
-      '@vitest/mocker': 4.1.10(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0))
+      '@vitest/mocker': 4.1.10(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0))
       '@vitest/utils': 4.1.10
       magic-string: 0.30.21
       pngjs: 7.0.0
       sirv: 3.0.2
       tinyrainbow: 3.1.0
-      vitest: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@vitest/browser-preview@4.1.10)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0))
+      vitest: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@vitest/browser-preview@4.1.10)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0))
       ws: 8.21.0
     transitivePeerDependencies:
       - bufferutil
@@ -7675,9 +7699,9 @@ snapshots:
       obug: 2.1.3
       std-env: 4.1.0
       tinyrainbow: 3.1.0
-      vitest: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@vitest/browser-preview@4.1.10)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0))
+      vitest: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@vitest/browser-preview@4.1.10)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0))
     optionalDependencies:
-      '@vitest/browser': 4.1.10(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0))(vitest@4.1.10)
+      '@vitest/browser': 4.1.10(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0))(vitest@4.1.10)
 
   '@vitest/expect@4.1.10':
     dependencies:
@@ -7688,13 +7712,13 @@ snapshots:
       chai: 6.2.2
       tinyrainbow: 3.1.0
 
-  '@vitest/mocker@4.1.10(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0))':
+  '@vitest/mocker@4.1.10(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0))':
     dependencies:
       '@vitest/spy': 4.1.10
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0)
+      vite: 8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0)
 
   '@vitest/pretty-format@4.1.10':
     dependencies:
@@ -7722,7 +7746,7 @@ snapshots:
 
   '@viz-js/viz@3.28.0': {}
 
-  '@voidzero-dev/vite-plus-core@0.2.5(@types/node@24.13.1)(@typescript/typescript6@6.0.2)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0)':
+  '@voidzero-dev/vite-plus-core@0.2.5(@types/node@24.13.1)(@typescript/typescript6@6.0.2)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0)':
     dependencies:
       '@oxc-project/runtime': 0.139.0
       '@oxc-project/types': 0.139.0
@@ -7734,7 +7758,7 @@ snapshots:
       '@types/node': 24.13.1
       fsevents: 2.3.3
       jiti: 2.7.0
-      less: 4.6.4
+      less: 4.7.0
       terser: 5.49.0
       typescript: '@typescript/typescript6@6.0.2'
       yaml: 2.9.0
@@ -8160,6 +8184,16 @@ snapshots:
 
   dayjs@1.11.19: {}
 
+  debug@2.6.9:
+    dependencies:
+      ms: 2.0.0
+    optional: true
+
+  debug@3.2.7:
+    dependencies:
+      ms: 2.1.3
+    optional: true
+
   debug@4.4.3:
     dependencies:
       ms: 2.1.3
@@ -8467,6 +8501,11 @@ snapshots:
 
   husky@9.1.0: {}
 
+  iconv-lite@0.4.24:
+    dependencies:
+      safer-buffer: 2.1.2
+    optional: true
+
   iconv-lite@0.6.3:
     dependencies:
       safer-buffer: 2.1.2
@@ -8477,9 +8516,6 @@ snapshots:
       harmony-reflect: 1.6.2
 
   ignore@5.3.2: {}
-
-  image-size@0.5.5:
-    optional: true
 
   immer@11.1.8: {}
 
@@ -8620,18 +8656,20 @@ snapshots:
       yaml: 2.9.0
       zod: 4.4.2
 
-  less@4.6.4:
+  less@4.7.0:
     dependencies:
       copy-anything: 3.0.5
       parse-node-version: 1.0.1
     optionalDependencies:
       errno: 0.1.8
       graceful-fs: 4.2.11
-      image-size: 0.5.5
-      make-dir: 2.1.0
+      make-dir: 5.1.0
       mime: 1.6.0
       needle: 3.5.0
+      probe-image-size: 7.3.0
       source-map: 0.6.1
+    transitivePeerDependencies:
+      - supports-color
 
   levn@0.4.1:
     dependencies:
@@ -8708,6 +8746,9 @@ snapshots:
     dependencies:
       p-locate: 5.0.0
 
+  lodash.merge@4.6.2:
+    optional: true
+
   lodash@4.18.1: {}
 
   log-update@6.1.0:
@@ -8743,15 +8784,12 @@ snapshots:
       '@babel/types': 7.29.7
       source-map-js: 1.2.1
 
-  make-dir@2.1.0:
-    dependencies:
-      pify: 4.0.1
-      semver: 5.7.2
-    optional: true
-
   make-dir@4.0.0:
     dependencies:
       semver: 7.8.5
+
+  make-dir@5.1.0:
+    optional: true
 
   markdown-to-jsx@9.8.2(react@19.2.0):
     optionalDependencies:
@@ -8793,6 +8831,9 @@ snapshots:
 
   mrmime@2.0.1: {}
 
+  ms@2.0.0:
+    optional: true
+
   ms@2.1.3: {}
 
   nanoid@3.3.16: {}
@@ -8800,6 +8841,15 @@ snapshots:
   nanoid@5.1.15: {}
 
   natural-compare@1.4.0: {}
+
+  needle@2.9.1:
+    dependencies:
+      debug: 3.2.7
+      iconv-lite: 0.4.24
+      sax: 1.6.0
+    transitivePeerDependencies:
+      - supports-color
+    optional: true
 
   needle@3.5.0:
     dependencies:
@@ -8920,7 +8970,7 @@ snapshots:
       '@oxc-resolver/binding-win32-arm64-msvc': 11.21.3
       '@oxc-resolver/binding-win32-x64-msvc': 11.21.3
 
-  oxfmt@0.58.0(vite-plus@0.2.5(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@typescript/typescript6@6.0.2)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@2.2.0))(less@4.6.4)(terser@5.49.0)(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0))(yaml@2.9.0)):
+  oxfmt@0.58.0(vite-plus@0.2.5(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@typescript/typescript6@6.0.2)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@2.2.0))(less@4.7.0)(terser@5.49.0)(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0))(yaml@2.9.0)):
     dependencies:
       tinypool: 2.1.0
     optionalDependencies:
@@ -8943,7 +8993,7 @@ snapshots:
       '@oxfmt/binding-win32-arm64-msvc': 0.58.0
       '@oxfmt/binding-win32-ia32-msvc': 0.58.0
       '@oxfmt/binding-win32-x64-msvc': 0.58.0
-      vite-plus: 0.2.5(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@typescript/typescript6@6.0.2)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@2.2.0))(less@4.6.4)(terser@5.49.0)(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0))(yaml@2.9.0)
+      vite-plus: 0.2.5(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@typescript/typescript6@6.0.2)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@2.2.0))(less@4.7.0)(terser@5.49.0)(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0))(yaml@2.9.0)
 
   oxlint-tsgolint@0.24.0:
     optionalDependencies:
@@ -8954,7 +9004,7 @@ snapshots:
       '@oxlint-tsgolint/win32-arm64': 0.24.0
       '@oxlint-tsgolint/win32-x64': 0.24.0
 
-  oxlint@1.73.0(oxlint-tsgolint@0.24.0)(vite-plus@0.2.5(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@typescript/typescript6@6.0.2)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@2.2.0))(less@4.6.4)(terser@5.49.0)(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0))(yaml@2.9.0)):
+  oxlint@1.73.0(oxlint-tsgolint@0.24.0)(vite-plus@0.2.5(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@typescript/typescript6@6.0.2)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@2.2.0))(less@4.7.0)(terser@5.49.0)(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0))(yaml@2.9.0)):
     optionalDependencies:
       '@oxlint/binding-android-arm-eabi': 1.73.0
       '@oxlint/binding-android-arm64': 1.73.0
@@ -8976,7 +9026,7 @@ snapshots:
       '@oxlint/binding-win32-ia32-msvc': 1.73.0
       '@oxlint/binding-win32-x64-msvc': 1.73.0
       oxlint-tsgolint: 0.24.0
-      vite-plus: 0.2.5(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@typescript/typescript6@6.0.2)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@2.2.0))(less@4.6.4)(terser@5.49.0)(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0))(yaml@2.9.0)
+      vite-plus: 0.2.5(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@typescript/typescript6@6.0.2)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@2.2.0))(less@4.7.0)(terser@5.49.0)(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0))(yaml@2.9.0)
 
   p-limit@3.1.0:
     dependencies:
@@ -9014,9 +9064,6 @@ snapshots:
 
   pidtree@0.6.1: {}
 
-  pify@4.0.1:
-    optional: true
-
   pngjs@7.0.0: {}
 
   postcss@8.5.20:
@@ -9034,6 +9081,15 @@ snapshots:
       ansi-regex: 5.0.1
       ansi-styles: 5.2.0
       react-is: 17.0.2
+
+  probe-image-size@7.3.0:
+    dependencies:
+      lodash.merge: 4.6.2
+      needle: 2.9.1
+      stream-parser: 0.3.1
+    transitivePeerDependencies:
+      - supports-color
+    optional: true
 
   proxy-from-env@2.1.0: {}
 
@@ -9313,9 +9369,6 @@ snapshots:
 
   secure-json-parse@4.1.0: {}
 
-  semver@5.7.2:
-    optional: true
-
   semver@6.3.1: {}
 
   semver@7.8.5: {}
@@ -9370,6 +9423,13 @@ snapshots:
   stackback@0.0.2: {}
 
   std-env@4.1.0: {}
+
+  stream-parser@0.3.1:
+    dependencies:
+      debug: 2.6.9
+    transitivePeerDependencies:
+      - supports-color
+    optional: true
 
   string-argv@0.3.2: {}
 
@@ -9586,24 +9646,24 @@ snapshots:
       d3-time: 3.1.0
       d3-timer: 3.0.1
 
-  vite-plus@0.2.5(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@typescript/typescript6@6.0.2)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@2.2.0))(less@4.6.4)(terser@5.49.0)(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0))(yaml@2.9.0):
+  vite-plus@0.2.5(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@typescript/typescript6@6.0.2)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@2.2.0))(less@4.7.0)(terser@5.49.0)(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0))(yaml@2.9.0):
     dependencies:
       '@oxc-project/types': 0.139.0
       '@oxlint/plugins': 1.73.0
-      '@vitest/browser': 4.1.10(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0))(vitest@4.1.10)
-      '@vitest/browser-preview': 4.1.10(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0))(vitest@4.1.10)
+      '@vitest/browser': 4.1.10(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0))(vitest@4.1.10)
+      '@vitest/browser-preview': 4.1.10(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0))(vitest@4.1.10)
       '@vitest/expect': 4.1.10
-      '@vitest/mocker': 4.1.10(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0))
+      '@vitest/mocker': 4.1.10(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0))
       '@vitest/pretty-format': 4.1.10
       '@vitest/runner': 4.1.10
       '@vitest/snapshot': 4.1.10
       '@vitest/spy': 4.1.10
       '@vitest/utils': 4.1.10
-      '@voidzero-dev/vite-plus-core': 0.2.5(@types/node@24.13.1)(@typescript/typescript6@6.0.2)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0)
-      oxfmt: 0.58.0(vite-plus@0.2.5(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@typescript/typescript6@6.0.2)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@2.2.0))(less@4.6.4)(terser@5.49.0)(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0))(yaml@2.9.0))
-      oxlint: 1.73.0(oxlint-tsgolint@0.24.0)(vite-plus@0.2.5(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@typescript/typescript6@6.0.2)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@2.2.0))(less@4.6.4)(terser@5.49.0)(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0))(yaml@2.9.0))
+      '@voidzero-dev/vite-plus-core': 0.2.5(@types/node@24.13.1)(@typescript/typescript6@6.0.2)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0)
+      oxfmt: 0.58.0(vite-plus@0.2.5(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@typescript/typescript6@6.0.2)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@2.2.0))(less@4.7.0)(terser@5.49.0)(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0))(yaml@2.9.0))
+      oxlint: 1.73.0(oxlint-tsgolint@0.24.0)(vite-plus@0.2.5(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@typescript/typescript6@6.0.2)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@2.2.0))(less@4.7.0)(terser@5.49.0)(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0))(yaml@2.9.0))
       oxlint-tsgolint: 0.24.0
-      vitest: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@vitest/browser-preview@4.1.10)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0))
+      vitest: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@vitest/browser-preview@4.1.10)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0))
     optionalDependencies:
       '@voidzero-dev/vite-plus-darwin-arm64': 0.2.5
       '@voidzero-dev/vite-plus-darwin-x64': 0.2.5
@@ -9644,7 +9704,7 @@ snapshots:
       - vite
       - yaml
 
-  vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0):
+  vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0):
     dependencies:
       lightningcss: 1.32.0
       picomatch: 4.0.4
@@ -9655,14 +9715,14 @@ snapshots:
       '@types/node': 24.13.1
       fsevents: 2.3.3
       jiti: 2.7.0
-      less: 4.6.4
+      less: 4.7.0
       terser: 5.49.0
       yaml: 2.9.0
 
-  vitest@4.1.10(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@vitest/browser-preview@4.1.10)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0)):
+  vitest@4.1.10(@opentelemetry/api@1.9.1)(@types/node@24.13.1)(@vitest/browser-preview@4.1.10)(@vitest/coverage-v8@4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10))(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0)):
     dependencies:
       '@vitest/expect': 4.1.10
-      '@vitest/mocker': 4.1.10(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0))
+      '@vitest/mocker': 4.1.10(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0))
       '@vitest/pretty-format': 4.1.10
       '@vitest/runner': 4.1.10
       '@vitest/snapshot': 4.1.10
@@ -9679,12 +9739,12 @@ snapshots:
       tinyexec: 1.2.4
       tinyglobby: 0.2.17
       tinyrainbow: 3.1.0
-      vite: 8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0)
+      vite: 8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@opentelemetry/api': 1.9.1
       '@types/node': 24.13.1
-      '@vitest/browser-preview': 4.1.10(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.6.4)(terser@5.49.0)(yaml@2.9.0))(vitest@4.1.10)
+      '@vitest/browser-preview': 4.1.10(vite@8.1.1(@types/node@24.13.1)(jiti@2.7.0)(less@4.7.0)(terser@5.49.0)(yaml@2.9.0))(vitest@4.1.10)
       '@vitest/coverage-v8': 4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10)
       jsdom: 29.1.1(@noble/hashes@2.2.0)
     transitivePeerDependencies:
