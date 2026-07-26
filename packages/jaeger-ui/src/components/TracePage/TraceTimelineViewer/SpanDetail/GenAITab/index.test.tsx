@@ -112,6 +112,30 @@ describe('GenAITab', () => {
     expect(screen.getByText('Helps with math problems')).toBeInTheDocument();
   });
 
+  it('uses the shared accordion for Agent, collapsible like Other GenAI Attributes, per @yurishkuro review on #4244', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          { key: 'gen_ai.agent.name', value: 'jaeger-gemini-sidecar' },
+          { key: 'gen_ai.agent.version', value: '0.1.0' },
+        ])}
+      />
+    );
+    // Agent starts open (it's primary content, unlike Other GenAI Attributes) - the
+    // expanded table's per-row copy button is a marker only the open table renders.
+    expect(screen.getByText('jaeger-gemini-sidecar')).toBeInTheDocument();
+    expect(screen.getAllByText('Copy').length).toBeGreaterThan(0);
+    const header = screen.getByText('Agent');
+    fireEvent.click(header);
+    // Collapsed: full table gone (no more per-row copy buttons), but name-first
+    // ordering still gives a high-signal one-line preview without expanding -
+    // exactly what the review comment asked for.
+    expect(screen.queryByText('Copy')).not.toBeInTheDocument();
+    expect(
+      screen.getByText((_, element) => element?.textContent === 'Name=jaeger-gemini-sidecar')
+    ).toBeInTheDocument();
+  });
+
   it('renders token usage including cached and reasoning tokens', () => {
     render(
       <GenAITab

@@ -19,7 +19,8 @@ import AccordionAttributes from '../AccordionAttributes';
 import { sharedMarkdownOptions } from '../../../../../utils/markdownOptions';
 import jsonViewStyles from '../../../../../utils/jsonViewStyles';
 import CopyIcon from '../../../../common/CopyIcon';
-import type { IOtelSpan } from '../../../../../types/otel';
+import { makeAttributes } from '../../../../../model/attributes';
+import type { AttributeValue, IAttribute, IOtelSpan } from '../../../../../types/otel';
 
 import './index.css';
 
@@ -168,24 +169,37 @@ const AGENT_LABELS: Partial<Record<keyof GenAiAgent, string>> = {
   description: 'Description',
 };
 
-// Explicit rather than Object.keys(agent) - render order shouldn't depend on
-// object literal insertion order, and this avoids an unsafe keyof cast.
-const AGENT_FIELD_ORDER: ReadonlyArray<keyof GenAiAgent> = ['id', 'name', 'version', 'description'];
+// name first: AccordionAttributes shows the first entries as a one-line preview when
+// collapsed, so leading with name gives high signal without expanding the section.
+const AGENT_FIELD_ORDER: ReadonlyArray<keyof GenAiAgent> = ['name', 'id', 'version', 'description'];
 
-function AgentDetails(agent: GenAiAgent) {
+function AgentDetails({
+  agent,
+  isOpen,
+  onToggle,
+}: {
+  agent: GenAiAgent;
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
+  const data = useMemo(
+    () =>
+      makeAttributes(
+        AGENT_FIELD_ORDER.filter(key => agent[key] != null).map(
+          (key): IAttribute => ({ key: AGENT_LABELS[key] ?? key, value: agent[key] as AttributeValue })
+        )
+      ),
+    [agent]
+  );
   return (
-    <div className="GenAITab--section">
-      <h3 className="GenAITab--sectionTitle">Agent</h3>
-      {AGENT_FIELD_ORDER.map(key => {
-        const value = agent[key];
-        if (value == null) return null;
-        return (
-          <div key={key} className="GenAITab--toolSubsection">
-            <span className="GenAITab--toolLabel">{AGENT_LABELS[key] ?? key}</span> {value}
-          </div>
-        );
-      })}
-    </div>
+    <AccordionAttributes
+      className="GenAITab--section"
+      label="Agent"
+      data={data}
+      linksGetter={null}
+      isOpen={isOpen}
+      onToggle={onToggle}
+    />
   );
 }
 
@@ -276,28 +290,30 @@ function ConversationDetails({
   );
 }
 
-function ToolCallDetails({ id, name, arguments: args, result }: GenAiToolCall) {
+function ToolCallDetails({
+  id,
+  name,
+  arguments: args,
+  result,
+  isOpen,
+  onToggle,
+}: GenAiToolCall & { isOpen: boolean; onToggle: () => void }) {
+  const data = useMemo(() => {
+    const entries: IAttribute[] = [];
+    if (id) entries.push({ key: 'ID', value: id });
+    if (args !== undefined) entries.push({ key: 'Arguments', value: args as AttributeValue });
+    if (result !== undefined) entries.push({ key: 'Result', value: result as AttributeValue });
+    return makeAttributes(entries);
+  }, [id, args, result]);
   return (
-    <div className="GenAITab--section">
-      <h3 className="GenAITab--sectionTitle">Tool Call{name && `: ${name}`}</h3>
-      {id && (
-        <div className="GenAITab--toolSubsection">
-          <span className="GenAITab--toolLabel">ID</span> {id}
-        </div>
-      )}
-      {args !== undefined && (
-        <div className="GenAITab--toolSubsection">
-          <span className="GenAITab--toolLabel">Arguments</span>
-          <JsonBlock value={args} />
-        </div>
-      )}
-      {result !== undefined && (
-        <div className="GenAITab--toolSubsection">
-          <span className="GenAITab--toolLabel">Result</span>
-          <JsonBlock value={result} />
-        </div>
-      )}
-    </div>
+    <AccordionAttributes
+      className="GenAITab--section"
+      label={`Tool Call${name ? `: ${name}` : ''}`}
+      data={data}
+      linksGetter={null}
+      isOpen={isOpen}
+      onToggle={onToggle}
+    />
   );
 }
 
@@ -308,22 +324,43 @@ function ToolCallDetails({ id, name, arguments: args, result }: GenAiToolCall) {
 // future section type added to the registry without a matching case here).
 // Per the no-data-hiding principle, an ugly-but-honest key/value dump beats
 // silently rendering nothing.
-function UnknownDetails({ type, data }: { type: string; data: Record<string, unknown> }) {
+function UnknownDetails({
+  type,
+  data: rawData,
+  isOpen,
+  onToggle,
+}: {
+  type: string;
+  data: Record<string, unknown>;
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
+  const data = useMemo(
+    () =>
+      makeAttributes(
+        Object.entries(rawData).map(([key, value]): IAttribute => ({ key, value: value as AttributeValue }))
+      ),
+    [rawData]
+  );
   return (
-    <div className="GenAITab--section">
-      <h3 className="GenAITab--sectionTitle">{type}</h3>
-      {Object.entries(data).map(([key, value]) => (
-        <div key={key} className="GenAITab--toolSubsection">
-          <span className="GenAITab--toolLabel">{key}</span>
-          <JsonBlock value={value} />
-        </div>
-      ))}
-    </div>
+    <AccordionAttributes
+      className="GenAITab--section"
+      label={type}
+      data={data}
+      linksGetter={null}
+      isOpen={isOpen}
+      onToggle={onToggle}
+    />
   );
 }
 
 export default function GenAITab({ span }: Props): React.ReactElement {
   const sections = useMemo(() => extractGenAiSections(span.attributes), [span.attributes]);
+  // Agent/Tool Call/Unknown default open since they're primary content for the span,
+  // unlike Other GenAI Attributes which is genuinely secondary overflow data.
+  const [isAgentOpen, setIsAgentOpen] = useState(true);
+  const [isToolCallOpen, setIsToolCallOpen] = useState(true);
+  const [isUnknownOpen, setIsUnknownOpen] = useState(true);
   const [isOtherOpen, setIsOtherOpen] = useState(false);
 
   if (sections.length === 0) {
@@ -335,7 +372,14 @@ export default function GenAITab({ span }: Props): React.ReactElement {
       {sections.map(section => {
         switch (section.type) {
           case 'agent':
-            return <AgentDetails key="agent" {...section.data} />;
+            return (
+              <AgentDetails
+                key="agent"
+                agent={section.data}
+                isOpen={isAgentOpen}
+                onToggle={() => setIsAgentOpen(o => !o)}
+              />
+            );
           case 'meta':
             return <LLMDetails key="meta" {...section.data} isLlmCall={span.genAIKind === 'LLM_CALL'} />;
           case 'tokens':
@@ -343,7 +387,14 @@ export default function GenAITab({ span }: Props): React.ReactElement {
           case 'conversation':
             return <ConversationDetails key="conversation" {...section.data} />;
           case 'toolCall':
-            return <ToolCallDetails key="toolCall" {...section.data} />;
+            return (
+              <ToolCallDetails
+                key="toolCall"
+                {...section.data}
+                isOpen={isToolCallOpen}
+                onToggle={() => setIsToolCallOpen(o => !o)}
+              />
+            );
           case 'other':
             return (
               <AccordionAttributes
@@ -362,6 +413,8 @@ export default function GenAITab({ span }: Props): React.ReactElement {
                 key={(section as { type: string }).type}
                 type={(section as { type: string }).type}
                 data={(section as { data: Record<string, unknown> }).data}
+                isOpen={isUnknownOpen}
+                onToggle={() => setIsUnknownOpen(o => !o)}
               />
             );
         }
