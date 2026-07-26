@@ -130,7 +130,15 @@ function MessageBlock({
   );
 }
 
-function MetaRow({ provider, model, isLlmCall }: { provider?: string; model?: string; isLlmCall: boolean }) {
+function LLMDetails({
+  provider,
+  model,
+  isLlmCall,
+}: {
+  provider?: string;
+  model?: string;
+  isLlmCall: boolean;
+}) {
   return (
     <div className="GenAITab--meta">
       {/* classifySpan() can also resolve to AGENT/TOOL_CALL/RETRIEVAL, which can carry
@@ -152,11 +160,7 @@ function MetaRow({ provider, model, isLlmCall }: { provider?: string; model?: st
   );
 }
 
-// Cosmetic only: a key missing from here still renders under its raw field name
-// instead of a friendly label. This does NOT mean a new gen_ai.agent.* attribute
-// shows up automatically - it must first be added to GenAiAgent, extracted by the
-// agent builder in genAiData.ts, and listed in AGENT_FIELD_ORDER below before it
-// renders at all; only the label lookup itself is optional.
+// Map attribute keys to more reader-friendly labels.
 const AGENT_LABELS: Partial<Record<keyof GenAiAgent, string>> = {
   name: 'Name',
   version: 'Version',
@@ -168,8 +172,7 @@ const AGENT_LABELS: Partial<Record<keyof GenAiAgent, string>> = {
 // object literal insertion order, and this avoids an unsafe keyof cast.
 const AGENT_FIELD_ORDER: ReadonlyArray<keyof GenAiAgent> = ['id', 'name', 'version', 'description'];
 
-function AgentSection({ id, name, version, description }: GenAiAgent) {
-  const agent: GenAiAgent = { id, name, version, description };
+function AgentDetails(agent: GenAiAgent) {
   return (
     <div className="GenAITab--section">
       <h3 className="GenAITab--sectionTitle">Agent</h3>
@@ -197,7 +200,7 @@ const TOKEN_LABELS: Partial<Record<keyof GenAiTokenUsage, string>> = {
   reasoningOutputTokens: 'Reasoning',
 };
 
-function TokensRow({ usage }: { usage: GenAiTokenUsage }) {
+function TokenDetails({ usage }: { usage: GenAiTokenUsage }) {
   return (
     <div className="GenAITab--tokens">
       <span className="GenAITab--tokensPrefix">Tokens:</span>
@@ -214,7 +217,7 @@ function TokensRow({ usage }: { usage: GenAiTokenUsage }) {
   );
 }
 
-function ConversationSection({
+function ConversationDetails({
   systemInstructions,
   inputMessages,
   outputMessages,
@@ -273,7 +276,7 @@ function ConversationSection({
   );
 }
 
-function ToolCallSection({ id, name, arguments: args, result }: GenAiToolCall) {
+function ToolCallDetails({ id, name, arguments: args, result }: GenAiToolCall) {
   return (
     <div className="GenAITab--section">
       <h3 className="GenAITab--sectionTitle">Tool Call{name && `: ${name}`}</h3>
@@ -305,7 +308,7 @@ function ToolCallSection({ id, name, arguments: args, result }: GenAiToolCall) {
 // future section type added to the registry without a matching case here).
 // Per the no-data-hiding principle, an ugly-but-honest key/value dump beats
 // silently rendering nothing.
-function UnknownSection({ type, data }: { type: string; data: Record<string, unknown> }) {
+function UnknownDetails({ type, data }: { type: string; data: Record<string, unknown> }) {
   return (
     <div className="GenAITab--section">
       <h3 className="GenAITab--sectionTitle">{type}</h3>
@@ -332,15 +335,15 @@ export default function GenAITab({ span }: Props): React.ReactElement {
       {sections.map(section => {
         switch (section.type) {
           case 'agent':
-            return <AgentSection key="agent" {...section.data} />;
+            return <AgentDetails key="agent" {...section.data} />;
           case 'meta':
-            return <MetaRow key="meta" {...section.data} isLlmCall={span.genAIKind === 'LLM_CALL'} />;
+            return <LLMDetails key="meta" {...section.data} isLlmCall={span.genAIKind === 'LLM_CALL'} />;
           case 'tokens':
-            return <TokensRow key="tokens" usage={section.data} />;
+            return <TokenDetails key="tokens" usage={section.data} />;
           case 'conversation':
-            return <ConversationSection key="conversation" {...section.data} />;
+            return <ConversationDetails key="conversation" {...section.data} />;
           case 'toolCall':
-            return <ToolCallSection key="toolCall" {...section.data} />;
+            return <ToolCallDetails key="toolCall" {...section.data} />;
           case 'other':
             return (
               <AccordionAttributes
@@ -355,7 +358,7 @@ export default function GenAITab({ span }: Props): React.ReactElement {
             );
           default:
             return (
-              <UnknownSection
+              <UnknownDetails
                 key={(section as { type: string }).type}
                 type={(section as { type: string }).type}
                 data={(section as { data: Record<string, unknown> }).data}
