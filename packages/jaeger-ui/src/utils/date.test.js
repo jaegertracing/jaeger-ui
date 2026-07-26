@@ -65,6 +65,19 @@ describe('formatDuration', () => {
     const input = 0;
     expect(formatDuration(input)).toBe('0μs');
   });
+
+  it('carries a rounded-up remainder instead of printing a full unit', () => {
+    // Rounding the secondary unit up can reach the primary unit's base, which
+    // the secondary unit cannot hold ("1h 60m", "1m 60s", "1d 24h").
+    expect(formatDuration(1 * ONE_HOUR + 59 * ONE_MINUTE + 40 * ONE_SECOND)).toBe('2h');
+    expect(formatDuration(1 * ONE_MINUTE + 59.7 * ONE_SECOND)).toBe('2m');
+    expect(formatDuration(1 * ONE_DAY + 23 * ONE_HOUR + 40 * ONE_MINUTE)).toBe('2d');
+  });
+
+  it('still rounds the secondary unit when it does not overflow', () => {
+    expect(formatDuration(2 * ONE_HOUR + 30 * ONE_MINUTE + 30 * ONE_SECOND)).toBe('2h 31m');
+    expect(formatDuration(1 * ONE_HOUR + 58 * ONE_MINUTE + 40 * ONE_SECOND)).toBe('1h 59m');
+  });
 });
 
 describe('getSuitableTimeUnit', () => {

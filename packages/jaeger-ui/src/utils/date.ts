@@ -178,9 +178,18 @@ export function formatDuration(duration: Microseconds): string {
     return `${_round(duration / primaryUnit.microseconds, 2)}${primaryUnit.unit}`;
   }
 
-  const primaryValue = Math.floor(duration / primaryUnit.microseconds);
+  let primaryValue = Math.floor(duration / primaryUnit.microseconds);
+  let secondaryValue = Math.round((duration / secondaryUnit.microseconds) % primaryUnit.ofPrevious);
+
+  // Rounding the remainder up can reach a whole primary unit, which the
+  // secondary unit cannot hold: 1h 59m 40s would render as "1h 60m". Carry it
+  // into the primary unit instead.
+  if (secondaryValue === primaryUnit.ofPrevious) {
+    primaryValue += 1;
+    secondaryValue = 0;
+  }
+
   const primaryUnitString = `${primaryValue}${primaryUnit.unit}`;
-  const secondaryValue = Math.round((duration / secondaryUnit.microseconds) % primaryUnit.ofPrevious);
   const secondaryUnitString = `${secondaryValue}${secondaryUnit.unit}`;
   return secondaryValue === 0 ? primaryUnitString : `${primaryUnitString} ${secondaryUnitString}`;
 }
