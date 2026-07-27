@@ -1,6 +1,6 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
-import { GEN_AI_REQUEST_MODEL } from '../../../constants/span-attributes';
+
 import type { IconType } from 'react-icons';
 import {
   IoServer as DbIcon,
@@ -19,7 +19,9 @@ import {
  *
  * Rules encoded here:
  * - No pill for a pure category signal already covered by an icon (e.g. span.kind).
- * - gen_ai is omitted: GenAISpanIcon + classifySpan handle GenAI (#4217).
+ * - gen_ai has no namespace icon here: GenAISpanIcon + classifySpan handle that (#4217).
+ *   The gen_ai.request.model pill is listed in {@link PILL_ONLY_SOURCES} because the
+ *   model name is value the icon cannot show.
  * - messaging has an icon but no pill yet; messaging.system is a follow-up.
  */
 
@@ -73,8 +75,8 @@ const RPC_SYSTEM_PILL: IPillSource = {
 };
 
 const GEN_AI_MODEL_PILL: IPillSource = {
-  label: GEN_AI_REQUEST_MODEL,
-  attrKeys: [GEN_AI_REQUEST_MODEL],
+  label: 'gen_ai.request.model',
+  attrKeys: ['gen_ai.request.model'],
 };
 
 /** One entry per attribute family that participates in timeline decorations. */
@@ -106,6 +108,12 @@ export const DECORATION_FAMILIES: readonly IDecorationFamily[] = [
   },
 ];
 
+/**
+ * Value-bearing pills with no matching namespace icon in this registry.
+ * GenAI category icons come from GenAISpanIcon / classifySpan instead.
+ */
+export const PILL_ONLY_SOURCES: readonly IPillSource[] = [GEN_AI_MODEL_PILL];
+
 /** Namespace → icon lookups derived from {@link DECORATION_FAMILIES}. */
 export const NAMESPACE_ICONS: readonly INamespaceIcon[] = DECORATION_FAMILIES.map(
   ({ namespace, icon, iconPriority }) => ({
@@ -117,12 +125,12 @@ export const NAMESPACE_ICONS: readonly INamespaceIcon[] = DECORATION_FAMILIES.ma
 
 /**
  * Pill sources in emission order (stable UI order; independent of iconPriority).
- * Built from the same pill definitions attached to {@link DECORATION_FAMILIES}.
+ * Family pills plus {@link PILL_ONLY_SOURCES}.
  */
 export const PILL_SOURCES: readonly IPillSource[] = [
   HTTP_STATUS_PILL,
   HTTP_METHOD_PILL,
   DB_SYSTEM_PILL,
   RPC_SYSTEM_PILL,
-  GEN_AI_MODEL_PILL,
+  ...PILL_ONLY_SOURCES,
 ];

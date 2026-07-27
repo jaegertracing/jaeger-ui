@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { DECORATION_FAMILIES, PILL_SOURCES, NAMESPACE_ICONS } from './spanDecorations';
+import { DECORATION_FAMILIES, PILL_SOURCES, PILL_ONLY_SOURCES, NAMESPACE_ICONS } from './spanDecorations';
 
 describe('spanDecorations registry', () => {
   it('exposes one namespace icon entry per decoration family', () => {
@@ -14,10 +14,18 @@ describe('spanDecorations registry', () => {
     expect([...priorities].sort((a, b) => a - b)).toEqual(priorities);
   });
 
-  it('keeps PILL_SOURCES and family pills in sync (same object identities)', () => {
+  it('keeps family pills represented in PILL_SOURCES (same object identities)', () => {
     const fromFamilies = DECORATION_FAMILIES.flatMap(f => f.pills);
     expect(PILL_SOURCES).toEqual(expect.arrayContaining(fromFamilies));
-    expect(fromFamilies).toEqual(expect.arrayContaining([...PILL_SOURCES]));
+  });
+
+  it('appends pill-only sources after family pills', () => {
+    expect(PILL_ONLY_SOURCES).toContainEqual(
+      expect.objectContaining({ label: 'gen_ai.request.model', attrKeys: ['gen_ai.request.model'] })
+    );
+    for (const source of PILL_ONLY_SOURCES) {
+      expect(PILL_SOURCES).toContain(source);
+    }
   });
 
   it('preserves pill emission order independent of icon priority', () => {
@@ -26,6 +34,7 @@ describe('spanDecorations registry', () => {
       'http.method',
       'db.system',
       'rpc.system',
+      'gen_ai.request.model',
     ]);
   });
 
@@ -44,7 +53,8 @@ describe('spanDecorations registry', () => {
     expect(messaging!.pills).toEqual([]);
   });
 
-  it('does not register gen_ai (handled by GenAISpanIcon / classifySpan)', () => {
+  it('does not register a gen_ai namespace icon (handled by GenAISpanIcon / classifySpan)', () => {
     expect(DECORATION_FAMILIES.map(f => f.namespace)).not.toContain('gen_ai');
+    expect(NAMESPACE_ICONS.map(e => e.namespace)).not.toContain('gen_ai');
   });
 });

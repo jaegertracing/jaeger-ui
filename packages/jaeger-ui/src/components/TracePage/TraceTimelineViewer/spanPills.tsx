@@ -5,7 +5,6 @@ import React from 'react';
 import { Tag, Tooltip } from 'antd';
 import cx from 'classnames';
 
-import { GEN_AI_REQUEST_MODEL } from '../../../constants/span-attributes';
 import { useConfig } from '../../../hooks/useConfig';
 import { AttributeValue, IOtelSpan } from '../../../types/otel';
 import { PILL_SOURCES, type IPillSource } from './spanDecorations';
