@@ -269,6 +269,58 @@ describe('JaegerClient', () => {
       tags: undefined,
     };
 
+    describe('error handling with response body', () => {
+      it('should include error response body in thrown error message', async () => {
+        const errorDetails = {
+          error: 'Invalid service name: "service$pecial"',
+          code: 400,
+          details: 'Service names can only contain alphanumeric characters',
+        };
+
+        mockFetch.mockResolvedValue({
+          ok: false,
+          status: 400,
+          statusText: 'Bad Request',
+          text: async () => JSON.stringify(errorDetails),
+          json: async () => errorDetails,
+        });
+
+        await expect(client.fetchServices()).rejects.toThrow(
+          'Failed to fetch services: 400 Bad Request - Invalid service name: "service$pecial"'
+        );
+      });
+
+      it('should still work when response body is not JSON', async () => {
+        mockFetch.mockResolvedValue({
+          ok: false,
+          status: 500,
+          statusText: 'Internal Server Error',
+          text: async () => 'Database connection failed: timeout after 30s',
+          json: async () => {
+            throw new Error('Invalid JSON');
+          },
+        });
+
+        await expect(client.fetchServices()).rejects.toThrow(
+          'Failed to fetch services: 500 Internal Server Error - Database connection failed: timeout after 30s'
+        );
+      });
+
+      it('should handle empty error response body gracefully', async () => {
+        mockFetch.mockResolvedValue({
+          ok: false,
+          status: 404,
+          statusText: 'Not Found',
+          text: async () => '',
+          json: async () => {
+            throw new Error('Invalid JSON');
+          },
+        });
+
+        await expect(client.fetchServices()).rejects.toThrow('Failed to fetch services: 404 Not Found');
+      });
+    });
+
     // Wire field is `traceId` (proto3 camelCase), not `traceID`.
     const mockApiSummary = {
       traceId: 'aaaabbbbccccdddd0000111122223333',
