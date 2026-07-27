@@ -9,7 +9,6 @@ SPDX-License-Identifier: Apache-2.0
   gap: 16px;
 }
 
-.GenAITab--meta,
 .GenAITab--tokens {
   display: flex;
   flex-wrap: wrap;
@@ -20,19 +19,16 @@ SPDX-License-Identifier: Apache-2.0
   border-radius: 4px;
 }
 
-.GenAITab--metaItem,
 .GenAITab--tokenItem {
   font-size: 13px;
   color: var(--text-primary);
 }
 
-.GenAITab--metaLabel,
 .GenAITab--tokenLabel {
   color: var(--text-secondary);
   margin-right: 4px;
 }
 
-.GenAITab--metaPrefix,
 .GenAITab--tokensPrefix {
   font-size: 13px;
   font-weight: 600;

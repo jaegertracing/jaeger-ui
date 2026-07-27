@@ -135,29 +135,34 @@ function LLMDetails({
   provider,
   model,
   isLlmCall,
+  isOpen,
+  onToggle,
 }: {
   provider?: string;
   model?: string;
   isLlmCall: boolean;
+  isOpen: boolean;
+  onToggle: () => void;
 }) {
+  const data = useMemo(() => {
+    const entries: IAttribute[] = [];
+    if (provider) entries.push({ key: 'Provider', value: provider });
+    if (model) entries.push({ key: 'Model', value: model });
+    return makeAttributes(entries);
+  }, [provider, model]);
   return (
-    <div className="GenAITab--meta">
-      {/* classifySpan() can also resolve to AGENT/TOOL_CALL/RETRIEVAL, which can carry
-          their own backing provider/model per the OTel GenAI semconv - captioning the
-          row "LLM:" would misrepresent those as LLM calls, so the prefix is scoped to
-          spans classifySpan() actually identifies as one. */}
-      {isLlmCall && <span className="GenAITab--metaPrefix">LLM:</span>}
-      {provider && (
-        <span className="GenAITab--metaItem">
-          <span className="GenAITab--metaLabel">Provider</span> {provider}
-        </span>
-      )}
-      {model && (
-        <span className="GenAITab--metaItem">
-          <span className="GenAITab--metaLabel">Model</span> {model}
-        </span>
-      )}
-    </div>
+    <AccordionAttributes
+      className="GenAITab--section"
+      // classifySpan() can also resolve to AGENT/TOOL_CALL/RETRIEVAL, which can carry
+      // their own backing provider/model per the OTel GenAI semconv - captioning the
+      // section "LLM" would misrepresent those as LLM calls, so it's scoped to spans
+      // classifySpan() actually identifies as one.
+      label={isLlmCall ? 'LLM' : 'Model'}
+      data={data}
+      linksGetter={null}
+      isOpen={isOpen}
+      onToggle={onToggle}
+    />
   );
 }
 
@@ -356,8 +361,9 @@ function UnknownDetails({
 
 export default function GenAITab({ span }: Props): React.ReactElement {
   const sections = useMemo(() => extractGenAiSections(span.attributes), [span.attributes]);
-  // Agent/Tool Call/Unknown default open since they're primary content for the span,
-  // unlike Other GenAI Attributes which is genuinely secondary overflow data.
+  // LLM/Agent/Tool Call/Unknown default open since they're primary content for the
+  // span, unlike Other GenAI Attributes which is genuinely secondary overflow data.
+  const [isLlmOpen, setIsLlmOpen] = useState(true);
   const [isAgentOpen, setIsAgentOpen] = useState(true);
   const [isToolCallOpen, setIsToolCallOpen] = useState(true);
   const [isUnknownOpen, setIsUnknownOpen] = useState(true);
@@ -381,7 +387,15 @@ export default function GenAITab({ span }: Props): React.ReactElement {
               />
             );
           case 'meta':
-            return <LLMDetails key="meta" {...section.data} isLlmCall={span.genAIKind === 'LLM_CALL'} />;
+            return (
+              <LLMDetails
+                key="meta"
+                {...section.data}
+                isLlmCall={span.genAIKind === 'LLM_CALL'}
+                isOpen={isLlmOpen}
+                onToggle={() => setIsLlmOpen(o => !o)}
+              />
+            );
           case 'tokens':
             return <TokenDetails key="tokens" usage={section.data} />;
           case 'conversation':

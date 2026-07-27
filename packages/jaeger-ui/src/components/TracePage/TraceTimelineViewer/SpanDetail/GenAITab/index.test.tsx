@@ -45,8 +45,8 @@ describe('GenAITab', () => {
     expect(screen.getByText('gpt-4o')).toBeInTheDocument();
   });
 
-  it('prefixes the provider/model row with "LLM:" on an actual LLM call, so it reads as a labeled group like Tokens: does (#4237)', () => {
-    const { container } = render(
+  it('captions the provider/model section "LLM" on an actual LLM call, using the shared accordion like Agent does (#4237, @yurishkuro review on #4244)', () => {
+    render(
       <GenAITab
         span={makeSpan([
           { key: 'gen_ai.operation.name', value: 'chat' },
@@ -55,14 +55,18 @@ describe('GenAITab', () => {
         ])}
       />
     );
-    const prefix = screen.getByText('LLM:');
-    expect(prefix).toBeInTheDocument();
-    expect(prefix).toHaveClass('GenAITab--metaPrefix');
-    const metaRow = container.querySelector('.GenAITab--meta');
-    expect(metaRow?.firstElementChild).toBe(prefix);
+    // Open by default (primary content) - header shows the bare label, table is visible.
+    expect(screen.getByText('LLM')).toBeInTheDocument();
+    expect(screen.getByText('openai')).toBeInTheDocument();
+    expect(screen.getByText('gpt-4o')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('LLM'));
+    // Collapsed: label gains its trailing colon and the table is replaced by a
+    // one-line key=value preview, same behavior as the Agent accordion.
+    expect(screen.getByText('LLM:')).toBeInTheDocument();
+    expect(screen.getByText((_, element) => element?.textContent === 'Provider=openai')).toBeInTheDocument();
   });
 
-  it('omits the "LLM:" prefix on a non-LLM span that also reports a provider, without hiding the provider itself', () => {
+  it('captions the provider/model section "Model" instead of "LLM" on a non-LLM span that also reports a provider, without hiding the provider itself (Ansh review on #4244)', () => {
     render(
       <GenAITab
         span={makeSpan([
@@ -71,9 +75,11 @@ describe('GenAITab', () => {
         ])}
       />
     );
-    // classifySpan() resolves this to AGENT, not LLM_CALL - captioning it "LLM:" would
+    // classifySpan() resolves this to AGENT, not LLM_CALL - captioning it "LLM" would
     // misrepresent an agent invocation as an LLM call, per Ansh's review on #4244.
+    expect(screen.queryByText('LLM')).not.toBeInTheDocument();
     expect(screen.queryByText('LLM:')).not.toBeInTheDocument();
+    expect(screen.getByText('Model')).toBeInTheDocument();
     expect(screen.getByText('anthropic')).toBeInTheDocument();
   });
 
