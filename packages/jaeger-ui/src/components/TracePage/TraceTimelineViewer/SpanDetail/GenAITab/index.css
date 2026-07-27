@@ -123,20 +123,6 @@ SPDX-License-Identifier: Apache-2.0
   white-space: pre-wrap;
 }
 
-.GenAITab--toolSubsection {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.GenAITab--toolLabel {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
 .GenAITab--json,
 .GenAITab--pre {
   border: 1px solid var(--border-default);
