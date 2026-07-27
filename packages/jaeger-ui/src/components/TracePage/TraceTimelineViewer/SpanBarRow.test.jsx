@@ -8,6 +8,7 @@ import '@testing-library/jest-dom';
 import SpanBarRow from './SpanBarRow';
 import SpanBar from './SpanBar';
 import { makeAttributes } from '../../../model/attributes';
+import { GEN_AI_REQUEST_MODEL } from '../../../constants/span-attributes';
 
 vi.mock('./SpanTreeOffset', () => ({
   default: jest.fn(({ span, childrenVisible, onClick }) => (
@@ -34,10 +35,13 @@ vi.mock('./SpanBar', () => ({
   default: jest.fn(() => <div data-testid="span-bar">SpanBar</div>),
 }));
 
-vi.mock('./utils', () => ({
-  formatDurationCompact: jest.fn(d => `formatted-${d}`),
-  ViewedBoundsFunctionType: {},
-}));
+vi.mock('./utils', async importOriginal => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    formatDurationCompact: jest.fn(d => `formatted-${d}`),
+  };
+});
 
 describe('<SpanBarRow>', () => {
   const spanID = 'some-id';
@@ -299,6 +303,40 @@ describe('<SpanBarRow>', () => {
       expect(screen.queryByLabelText(/http\.status_code/)).not.toBeInTheDocument();
     });
 
+    it('renders a pill for gen_ai.request.model', () => {
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          spanPillsEnabled
+          span={{
+            ...defaultProps.span,
+            attributes: makeAttributes([{ key: GEN_AI_REQUEST_MODEL, value: 'gpt-4o' }]),
+          }}
+        />
+      );
+      const pill = screen.getByLabelText('gen_ai.request.model: gpt-4o');
+      expect(pill).toBeInTheDocument();
+      expect(pill).not.toHaveClass('is-error');
+    });
+
+    it('renders both an http status pill and a gen_ai.request.model pill when both are present', () => {
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          spanPillsEnabled
+          span={{
+            ...defaultProps.span,
+            attributes: makeAttributes([
+              { key: 'http.status_code', value: '500' },
+              { key: GEN_AI_REQUEST_MODEL, value: 'claude-3-haiku' },
+            ]),
+          }}
+        />
+      );
+      expect(screen.getByLabelText('http.status_code: 500')).toBeInTheDocument();
+      expect(screen.getByLabelText('gen_ai.request.model: claude-3-haiku')).toBeInTheDocument();
+    });
+
     it('renders multiple pills from span attributes', () => {
       render(
         <SpanBarRow
@@ -317,7 +355,7 @@ describe('<SpanBarRow>', () => {
       expect(screen.getByLabelText('http.method: GET')).toBeInTheDocument();
     });
 
-    it('shows pill.label as a tooltip on hover', async () => {
+    it('shows the pill label and value as a tooltip on hover', async () => {
       render(
         <SpanBarRow
           {...defaultProps}
@@ -329,7 +367,24 @@ describe('<SpanBarRow>', () => {
         />
       );
       fireEvent.mouseEnter(screen.getByLabelText('http.status_code: 200').parentElement);
-      expect(await screen.findByRole('tooltip')).toHaveTextContent('http.status_code');
+      expect(await screen.findByRole('tooltip')).toHaveTextContent('http.status_code: 200');
+    });
+
+    it('shows the full label and value in the tooltip, so a CSS-truncated pill value is still discoverable on hover', async () => {
+      const longModel = 'gpt-4o-2024-08-06-fine-tuned-deployment-name';
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          spanPillsEnabled
+          span={{
+            ...defaultProps.span,
+            attributes: makeAttributes([{ key: GEN_AI_REQUEST_MODEL, value: longModel }]),
+          }}
+        />
+      );
+      const pill = screen.getByLabelText(`gen_ai.request.model: ${longModel}`);
+      fireEvent.mouseEnter(pill.parentElement);
+      expect(await screen.findByRole('tooltip')).toHaveTextContent(`gen_ai.request.model: ${longModel}`);
     });
   });
 
