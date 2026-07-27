@@ -1,6 +1,6 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
-
+import { GEN_AI_REQUEST_MODEL } from '../../../constants/span-attributes';
 import type { IconType } from 'react-icons';
 import {
   IoServer as DbIcon,
@@ -72,6 +72,11 @@ const RPC_SYSTEM_PILL: IPillSource = {
   attrKeys: ['rpc.system'],
 };
 
+const GEN_AI_MODEL_PILL: IPillSource = {
+  label: GEN_AI_REQUEST_MODEL,
+  attrKeys: [GEN_AI_REQUEST_MODEL],
+};
+
 /** One entry per attribute family that participates in timeline decorations. */
 export const DECORATION_FAMILIES: readonly IDecorationFamily[] = [
   {
@@ -119,4 +124,5 @@ export const PILL_SOURCES: readonly IPillSource[] = [
   HTTP_METHOD_PILL,
   DB_SYSTEM_PILL,
   RPC_SYSTEM_PILL,
+  GEN_AI_MODEL_PILL,
 ];
