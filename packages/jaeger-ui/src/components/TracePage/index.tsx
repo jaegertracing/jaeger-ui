@@ -206,13 +206,10 @@ export function TracePageImpl(props: TProps) {
     [traceData, viewType]
   );
 
-  const traceIsGenAI = useMemo(
-    () =>
-      traceData?.spans
-        ? traceData.spans.some(s => s.attributes.keys().some(k => k.startsWith('gen_ai.')))
-        : false,
-    [traceData]
-  );
+  // Read the trace's own verdict rather than re-deriving it here. It is computed
+  // once from each span's cached genAIKind, so re-scanning attributes is both
+  // redundant and free to drift away from classifySpan as the detector evolves.
+  const traceIsGenAI = traceData?.isGenAITrace ?? false;
 
   const searchBarRef = useRef<InputRef>(null);
   const headerElmRef = useRef<HTMLElement | TNil>(null);
