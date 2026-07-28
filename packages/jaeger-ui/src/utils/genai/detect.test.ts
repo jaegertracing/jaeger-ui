@@ -111,6 +111,50 @@ describe('classifySpan', () => {
     ]);
     expect(classifySpan(span)).toBe('UNKNOWN_GENAI');
   });
+
+  it('classifies db.system=vector as RETRIEVAL even with no gen_ai.* attrs', () => {
+    expect(classifySpan(makeSpan([{ key: 'db.system', value: 'vector' }]))).toBe('RETRIEVAL');
+  });
+
+  it('classifies agent.episode_id as AGENT even with no gen_ai.* attrs', () => {
+    expect(classifySpan(makeSpan([{ key: 'agent.episode_id', value: 'ep-1' }]))).toBe('AGENT');
+  });
+
+  it('lets a recognized operation.name win over agent.episode_id', () => {
+    const span = makeSpan([
+      { key: 'agent.episode_id', value: 'ep-1' },
+      { key: 'gen_ai.operation.name', value: 'chat' },
+    ]);
+    expect(classifySpan(span)).toBe('LLM_CALL');
+  });
+
+  it('lets db.system=vector win over agent.episode_id', () => {
+    const span = makeSpan([
+      { key: 'agent.episode_id', value: 'ep-1' },
+      { key: 'db.system', value: 'vector' },
+    ]);
+    expect(classifySpan(span)).toBe('RETRIEVAL');
+  });
+
+  it('lets gen_ai.tool.name win over db.system=vector', () => {
+    const span = makeSpan([
+      { key: 'db.system', value: 'vector' },
+      { key: 'gen_ai.tool.name', value: 'search_docs' },
+    ]);
+    expect(classifySpan(span)).toBe('TOOL_CALL');
+  });
+
+  it('falls back to db.system=vector for an unrecognized operation.name', () => {
+    const span = makeSpan([
+      { key: 'gen_ai.operation.name', value: 'some_new_op' },
+      { key: 'db.system', value: 'vector' },
+    ]);
+    expect(classifySpan(span)).toBe('RETRIEVAL');
+  });
+
+  it('leaves a non-vector db.system unclassified', () => {
+    expect(classifySpan(makeSpan([{ key: 'db.system', value: 'postgresql' }]))).toBeUndefined();
+  });
 });
 
 describe('isGenAISpan', () => {
@@ -154,5 +198,18 @@ describe('isGenAITrace', () => {
 
   it('returns false for an empty span list', () => {
     expect(isGenAITrace([])).toBe(false);
+  });
+
+  it('returns true for a RAG trace whose retrieval span carries only db.* attrs', () => {
+    const spans = [
+      makeSpan([{ key: 'http.method', value: 'POST' }]),
+      makeSpan([{ key: 'db.system', value: 'vector' }]),
+    ];
+    expect(isGenAITrace(spans)).toBe(true);
+  });
+
+  it('returns true for an agent trace whose spans carry only agent.episode_id', () => {
+    const spans = [makeSpan([{ key: 'agent.episode_id', value: 'ep-1' }])];
+    expect(isGenAITrace(spans)).toBe(true);
   });
 });

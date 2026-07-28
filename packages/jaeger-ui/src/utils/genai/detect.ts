@@ -3,6 +3,9 @@
 
 import type { IAttributes, GenAISpanKind } from '../../types/otel';
 import {
+  AGENT_EPISODE_ID,
+  DB_SYSTEM,
+  DB_SYSTEM_VECTOR,
   GEN_AI_NAMESPACE,
   GEN_AI_OPERATION_NAME,
   GEN_AI_TOOL_CALL_ID,
@@ -28,9 +31,19 @@ const OPERATION_TO_KIND: Partial<Record<string, GenAISpanKind>> = {
  * carries a value we don't recognize. Deliberately consulted *after* the
  * operation name: that attribute is the spec's own discriminator, so a
  * recognized value always wins over these heuristics.
+ *
+ * The db.system and agent.episode_id signals also catch spans carrying no
+ * gen_ai.* attributes at all, emitted by instrumentation that is not
+ * GenAI-aware but is taking part in a GenAI workflow.
+ *
+ * agent.episode_id is checked last because frameworks stamp it on every span
+ * in an episode, not just the agent span — it is only meaningful once the
+ * more specific signals have been ruled out.
  */
 function classifyBySecondarySignals(attributes: IAttributes): GenAISpanKind | undefined {
   if (attributes.has(GEN_AI_TOOL_NAME)) return 'TOOL_CALL';
+  if (attributes.getValue(DB_SYSTEM) === DB_SYSTEM_VECTOR) return 'RETRIEVAL';
+  if (attributes.has(AGENT_EPISODE_ID)) return 'AGENT';
   return undefined;
 }
 
