@@ -29,8 +29,12 @@ A critical-path line drawn in a fixed color is illegible against some span color
 - Palette changes are a single-file CSS edit, reviewable as a diff of hex values.
 - Contrast was chosen against WCAG guidance in both themes, and adjacent indices are from different hue groups, so neighbouring services in a trace stay distinguishable.
 - Theme switching is instant, because it is pure CSS.
-- **Known gap**: `getRgbColorByKey` reads the computed style of `document.documentElement`, but `ThemeProvider` sets `data-theme` on `document.body`. Custom properties inherit downward only, so the `<html>` element always carries the light values and the three canvas-drawing consumers use the light palette in dark mode while the surrounding CSS-driven spans use the dark one. The existing unit test mocks `getComputedStyle` wholesale and cannot catch this.
-- `ColorGenerator`'s constructor still accepts a custom `colors` array, but `getRgbColorByKey` indexes the module-level token list instead, so a custom-palette instance would return RGB values from the default palette. No production caller passes one.
+- Because the runtime lookup asks the DOM for a token's current value, it must query an element that inherits the active theme. `getThemedElement()` resolves against `<body>`, which is where `ThemeProvider` sets `data-theme` and which also inherits the attribute if it is ever moved to `<html>`. Resolving against `<html>` is wrong: custom properties inherit downward only, so `<html>` never sees the `[data-theme='dark']` overrides and reports the light values.
+- **Known gap**: the RGB values are strings baked into canvas draws and inline styles, so a consumer that does not re-render on a theme change keeps the previous theme's colors until something else re-renders it. `CanvasSpanGraph` subscribes to the theme and is correct; `TraceFlamegraph` (search-dimmed frames) and `TraceGraph/OpNode` (service-mode backgrounds) do not.
+
+## Alternatives Considered
+
+**Move `data-theme` to `<html>`** instead of changing the lookup. That would also make an `<html>` lookup correct, and putting the theme attribute on the root element is the more common convention. It was not chosen because it changes the element every themed selector in the app resolves against, to fix a defect in one utility — a much wider blast radius than reading from the element that already carries the attribute.
 
 ## References
 
