@@ -164,6 +164,18 @@ SPDX-License-Identifier: Apache-2.0
   --span-graph-inactive: rgba(216, 216, 216, 0.5);
   --span-bar-log-marker: rgba(0, 0, 0, 0.5);
 
+  /*
+     Span tree chrome — how strongly the service color shows through on the
+     hierarchy guides, connectors, dots, and parent boxes in the Service column.
+     These are percentages consumed by `color-mix(… <strength>, transparent)`,
+     so they are effectively an alpha: 100% matches the span bar exactly, and
+     lower values let the row background wash the color out.
+     Emphasis is used for the collapsed parent box, which is meant to read
+     stronger than the surrounding chrome, so it must stay above the base.
+  */
+  --tree-chrome-strength: 65%;
+  --tree-chrome-strength-emphasis: 80%;
+
   /* ============================================
     SYNTAX HIGHLIGHTING TOKENS
     Used for JSON/KeyValue displays
