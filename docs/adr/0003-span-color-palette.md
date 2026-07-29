@@ -16,7 +16,7 @@ Adopt a **20-color IBM Carbon palette with separate light and dark values**, del
 
 Three rules follow from that, and together they are the whole mechanism:
 
-1. **The palette lives in CSS, not TypeScript.** `packages/jaeger-ui/src/components/common/vars.css` defines `--span-color-1` … `--span-color-20` under `:root`, and overrides all 20 under the `[data-theme='dark']` selector. Each token is annotated with its Carbon swatch name. Cyan is first, so a single-service trace gets the brand-adjacent color.
+1. **The palette lives in CSS, not TypeScript.** `packages/jaeger-ui/src/components/common/vars.css` defines `--span-color-1` … `--span-color-20` under `:root`, and overrides all 20 under the `[data-theme='dark']` selector. Each token is annotated with its Carbon swatch name. [RFC 0003](../rfc/0003-span-color-palette.md) puts Cyan first without stating a reason, and the order has no significance beyond being the order colors are handed out.
 2. **`ColorGenerator` returns token references.** `packages/jaeger-ui/src/utils/color-generator.ts` builds its palette as `var(--span-color-N)` strings; `getColorByKey` hands those to consumers unchanged. There are no hex literals in the file, and theme switching therefore costs no JavaScript and no re-render — the CSS variable changes and every consumer follows.
 3. **Canvas consumers resolve tokens at runtime.** Consumers that need numeric RGB rather than a CSS value — `CanvasSpanGraph`, `TraceFlamegraph`, `TraceGraph/OpNode` — call `getRgbColorByKey`, which reads the computed custom property and parses it with `strToRgb`.
 
@@ -27,6 +27,12 @@ A critical-path line drawn in a fixed color is illegible against some span color
 ## Consequences
 
 - Palette changes are a single-file CSS edit, reviewable as a diff of hex values.
+- **Colors are handed out in first-seen order, not derived from the service name.** `ColorGenerator` keeps a counter and a name→index cache, and `clear()` is never called outside tests, so the cache lives for the whole browser session across every trace visited.
+
+  The counter is what makes the palette work as a *qualitative* scale: consecutive services get consecutive, deliberately dissimilar swatches, so no two services in a trace share a color until the session has seen more than 20 of them and the counter wraps. Deriving the index from a hash of the service name would forfeit that — with 20 buckets, six services collide with probability 56%.
+
+  The cost is that assignment depends on the order services were first encountered since page load, so a service keeps its color while navigating between traces, but the same trace can render with different colors for different viewers. Reconciling reproducibility with the distinctness guarantee needs a per-trace assignment pass rather than a lazy global counter; tracked separately.
+- Because assignment is sequential, the root span's service takes `--span-color-1` on a freshly loaded page. In dark mode that token is 11° in hue from `--surface-secondary`, which is why the collapsed-box tint needs a larger share there than in light mode.
 - Contrast was chosen against WCAG guidance in both themes, and adjacent indices are from different hue groups, so neighbouring services in a trace stay distinguishable.
 - Theme switching is instant, because it is pure CSS.
 - Because the runtime lookup asks the DOM for a token's current value, it must query an element that inherits the active theme. `getThemedElement()` resolves against `<body>`, which is where `ThemeProvider` sets `data-theme` and which also inherits the attribute if it is ever moved to `<html>`. Resolving against `<html>` is wrong: custom properties inherit downward only, so `<html>` never sees the `[data-theme='dark']` overrides and reports the light values.
