@@ -1,9 +1,9 @@
 # RFC 0002: Making Jaeger UI OpenTelemetry-Native
 
-**Status**: Partially Implemented — Phases 1–2 done; the facade design has graduated into [ADR-0002](../adr/0002-otlp-api-v3-migration.md)
-**Created**: 2025-12-29
-**Last Updated**: 2026-07-28
-**Tracking Issue**: [#3265](https://github.com/jaegertracing/jaeger-ui/issues/3265)
+* **Status**: Partially Implemented — Phases 1–2 done; the facade design has graduated into [ADR-0002](../adr/0002-otlp-api-v3-migration.md)
+* **Created**: 2025-12-29
+* **Last Updated**: 2026-07-28
+* **Tracking Issue**: [#3265](https://github.com/jaegertracing/jaeger-ui/issues/3265)
 
 > Originally filed as ADR-0002. It is a proposal with a phased implementation plan, so it now lives here and remains the plan of record for the outstanding milestones; [ADR-0002](../adr/0002-otlp-api-v3-migration.md) records the OTEL facade and `api/v3` client that resulted.
 

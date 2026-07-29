@@ -1,8 +1,8 @@
 # RFC 0004: State Management Strategy for Jaeger UI
 
-**Status**: Partially Implemented — the decision has graduated into [ADR-0004](../adr/0004-state-management-strategy.md); Phases 0–2e delivered, see [Migration Path](#migration-path)
-**Created**: 2026-01-06
-**Last Updated**: 2026-07-28
+* **Status**: Partially Implemented — the decision has graduated into [ADR-0004](../adr/0004-state-management-strategy.md); Phases 0–2e delivered, see [Migration Path](#migration-path)
+* **Created**: 2026-01-06
+* **Last Updated**: 2026-07-28
 
 > Originally filed as ADR-0004. It weighs three options and recommends one, and carries the phased migration checklist, so it now lives here and remains the plan of record for the remaining phases; [ADR-0004](../adr/0004-state-management-strategy.md) records the decision itself.
 

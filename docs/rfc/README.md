@@ -17,6 +17,16 @@ Write an RFC when the work has not been decided yet. Write an ADR when you are r
 
 Both directories number their documents `NNNN-slug.md`, so which genre a document is comes from the directory it sits in, not from its number. The two sequences are independent: an RFC and an ADR may share a number without being related.
 
+## RFCs in This Repository
+
+- [RFC 0001: Jaeger UI as an Embedded Web Component](./0001-embedded-web-component.md) - Extending Jaeger UI from an SPA into a reusable Custom Element with Shadow DOM isolation, with a Grafana panel plugin as the reference integration
+- [RFC 0002: Making Jaeger UI OpenTelemetry-Native](./0002-otel-native-jaeger-ui.md) - A facade over the legacy data model, incremental component migration to OTEL nomenclature, then a switch to `/api/v3/` OTLP endpoints; extracted from ADR-0002, which records the facade design that resulted
+- [RFC 0003: Span Color Palette for Trace Visualization](./0003-span-color-palette.md) - IBM Carbon, Grafana Classic, and Tableau 20 weighed as a theme-aware 20-color span palette; extracted from ADR-0003, which records the outcome
+- [RFC 0004: State Management Strategy for Jaeger UI](./0004-state-management-strategy.md) - React Context, Zustand, and Redux Toolkit weighed at 50,000-span scale, recommending Zustand + TanStack Query, plus the phased checklist for removing Redux; extracted from ADR-0004, which records the decision
+- [RFC 0005: Migrate to Vite+ (Full Vite Toolchain)](./0005-vite-plus-migration.md) - Per-PR plan for replacing Webpack, Babel, ESLint, Prettier, and Jest with Rolldown, Oxlint, Oxfmt, and Vitest, and the unknowns resolved along the way; extracted from ADR-0007, which records the resulting toolchain
+- [RFC 0006: Target State Management Architecture](./0006-target-state-management-architecture.md) - Where each kind of state should live once Redux is gone: target data flows, the URL mapping pattern, and the intended Zustand store shapes; extracted from ADR-0008
+- [RFC 0007: Layout Settings Priority Stack](./0007-layout-settings-priority-stack.md) - Cascading `URL > heuristics > localStorage` resolution for trace-view layout settings, so opening a shared link cannot overwrite the recipient's saved preferences; extracted from ADR-0010
+
 ## Lifecycle
 
 An RFC starts as a proposal, open to comment and revision. Once its approach is adopted, the RFC doubles as the **plan of record for the work**: it decomposes the implementation into independently shippable milestones — in an `Implementation Plan` or `Roadmap` section, and for longer-running efforts a status summary near the top — and that decomposition is where delivery is tracked.
@@ -37,16 +47,16 @@ Graduation is optional and not the only end state. An RFC may also be superseded
 ## Conventions
 
 - File name `NNNN-short-slug.md`, next number in sequence; title `# RFC NNNN: Title`.
-- Header block: Status, Created, Last Updated, plus Tracking Issue / Related / Graduated links where applicable. Statuses in use: Draft, Partially Implemented, Implemented, Superseded.
+- Header block immediately under the title, as a **bulleted list** — one `* **Field**: value` item per field, never bare bold lines:
+
+  ```markdown
+  # RFC 0008: Title
+
+  * **Status**: Draft
+  * **Created**: 2026-07-28
+  * **Last Updated**: 2026-07-28
+  ```
+
+  `Status`, `Created`, and `Last Updated` are required; add `Tracking Issue`, `Related`, or `Supersedes` items where applicable. Statuses in use: Draft, Partially Implemented, Implemented, Superseded.
 - Open with a TL;DR, then Context, Design, Alternatives Considered, and an Implementation Plan.
-- Add an entry to the index below.
-
-## RFCs in This Repository
-
-- [RFC 0001: Jaeger UI as an Embedded Web Component](./0001-embedded-web-component.md) - Extending Jaeger UI from an SPA into a reusable Custom Element with Shadow DOM isolation, with a Grafana panel plugin as the reference integration
-- [RFC 0002: Making Jaeger UI OpenTelemetry-Native](./0002-otel-native-jaeger-ui.md) - A facade over the legacy data model, incremental component migration to OTEL nomenclature, then a switch to `/api/v3/` OTLP endpoints; extracted from ADR-0002, which records the facade design that resulted
-- [RFC 0003: Span Color Palette for Trace Visualization](./0003-span-color-palette.md) - IBM Carbon, Grafana Classic, and Tableau 20 weighed as a theme-aware 20-color span palette; extracted from ADR-0003, which records the outcome
-- [RFC 0004: State Management Strategy for Jaeger UI](./0004-state-management-strategy.md) - React Context, Zustand, and Redux Toolkit weighed at 50,000-span scale, recommending Zustand + TanStack Query, plus the phased checklist for removing Redux; extracted from ADR-0004, which records the decision
-- [RFC 0005: Migrate to Vite+ (Full Vite Toolchain)](./0005-vite-plus-migration.md) - Per-PR plan for replacing Webpack, Babel, ESLint, Prettier, and Jest with Rolldown, Oxlint, Oxfmt, and Vitest, and the unknowns resolved along the way; extracted from ADR-0007, which records the resulting toolchain
-- [RFC 0006: Target State Management Architecture](./0006-target-state-management-architecture.md) - Where each kind of state should live once Redux is gone: target data flows, the URL mapping pattern, and the intended Zustand store shapes; extracted from ADR-0008
-- [RFC 0007: Layout Settings Priority Stack](./0007-layout-settings-priority-stack.md) - Cascading `URL > heuristics > localStorage` resolution for trace-view layout settings, so opening a shared link cannot overwrite the recipient's saved preferences; extracted from ADR-0010
+- Add an entry to the index above.

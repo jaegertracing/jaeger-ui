@@ -1,8 +1,8 @@
 # RFC 0005: Migrate to Vite+ (Full Vite Toolchain)
 
-**Status**: Implemented — graduated into [ADR-0007](../adr/0007-vite-plus-migration.md)
-**Created**: 2026-04-01
-**Last Updated**: 2026-07-28
+* **Status**: Implemented — graduated into [ADR-0007](../adr/0007-vite-plus-migration.md)
+* **Created**: 2026-04-01
+* **Last Updated**: 2026-07-28
 
 > Originally filed as ADR-0007. It is a proposal — a per-PR change plan with unknowns to investigate — so it now lives here; [ADR-0007](../adr/0007-vite-plus-migration.md) records the resulting toolchain. Everything below is kept as the record of how the migration was planned and executed, including the state of the codebase at the time of writing.
 

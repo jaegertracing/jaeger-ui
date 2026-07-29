@@ -1,8 +1,8 @@
 # RFC 0003: Span Color Palette for Trace Visualization
 
-**Status**: Implemented — graduated into [ADR-0003](../adr/0003-span-color-palette.md)
-**Created**: 2026-01-04
-**Last Updated**: 2026-07-28
+* **Status**: Implemented — graduated into [ADR-0003](../adr/0003-span-color-palette.md)
+* **Created**: 2026-01-04
+* **Last Updated**: 2026-07-28
 
 > Originally filed as ADR-0003. It is a proposal — three candidate palettes weighed, one recommended — so it now lives here; [ADR-0003](../adr/0003-span-color-palette.md) records the palette that shipped in [#3306](https://github.com/jaegertracing/jaeger-ui/pull/3306).
 

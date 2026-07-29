@@ -1,8 +1,8 @@
 # RFC 0006: Target State Management Architecture
 
-**Status**: Partially Implemented
-**Created**: 2026-04-09
-**Last Updated**: 2026-07-28
+* **Status**: Partially Implemented
+* **Created**: 2026-04-09
+* **Last Updated**: 2026-07-28
 
 > Originally filed as ADR-0008. It describes a target architecture that does not exist yet rather than a decision taken, so it now lives here.
 
