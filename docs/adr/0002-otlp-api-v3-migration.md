@@ -466,6 +466,8 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 
 **In review, not yet on `main`.** [#4129](https://github.com/jaegertracing/jaeger-ui/pull/4129) implements `getTrace()`, `api/v3/parser.ts`, and the rewiring of `hooks/useTraceLoading.ts`, which today still fetches via `JaegerAPI.fetchTrace` → `transformTraceData(...).asOtelTrace()`. The checkboxes below stay open until it merges. This milestone replaces the transport and the transformer beneath `useTrace` / `useTraces`; their public surface can stay.
 
+**The typing question is the substance of this milestone.** Every integration so far (services, operations, trace summaries) consumed a small, flat, Jaeger-defined message, and the generated Zod schema for it was cheap. A full trace is the first payload where the UI takes on the *whole* OTLP model — nested `resourceSpans` / `scopeSpans`, the recursive `AnyValue` union for attributes, events, links, status — and it is the reason this milestone is harder than the three before it. The two viable answers are to validate against the generated schemas from §3.6.1, or to hand-write a narrow structural type in the parser and accept no runtime validation. §3.5 chose the former, and the [3.7](#37-integration-testing-strategy) checklist item for full trace/span Zod coverage is that decision's other half; a parser that declares its own private wire interface should be treated as incomplete against this ADR rather than as an alternative design.
+
 **Backend response shape** (`jaeger-query`, `apiv3.HTTPGateway.returnTrace`): `GET /api/v3/traces/{trace_id}` returns a **single** JSON object wrapping the payload in a grpc-gateway envelope, `{"result": {"resourceSpans": [...]}}`, serialised with jsonpb. The proto declares `GetTrace` as a server-streaming RPC, but the HTTP gateway buffers and concatenates all chunks before writing ([jaeger#6467](https://github.com/jaegertracing/jaeger/issues/6467) tracks making it a real stream). A client may therefore assume one document today, but should keep envelope handling separable so incremental parsing can be added without touching the enrichment logic.
 
 - [ ] Implement `getTrace(traceId)` in `JaegerClient` (`src/api/v3/client.ts`) with unit tests.
@@ -524,14 +526,23 @@ The new parser replaces the role of `transformTraceData` for the OTLP route. Cov
    * This is equivalent to transformTraceData for the native route.
    */
   export function parseOtlpTrace(wireData: IOtlpTraceData): IOtelTrace {
-    // 1. Validate wireData (optionally with Zod)
-    // 2. Map OTLP properties to IOtelTrace
-    //    - span.kind arrives as "SPAN_KIND_SERVER" (protojson enum name);
-    //      strip the "SPAN_KIND_" prefix to map to the SpanKind enum.
+    // 1. Validate wireData with the generated Zod schemas (see 3.6.1)
+    // 2. Map OTLP properties to IOtelTrace (see the field encodings below)
     // 3. ENRICH: Calculate derived properties (depth, parent/child refs, etc.)
     // 4. Return enriched IOtelTrace
   }
   ```
+
+**Field encodings on this route.** `jaeger-query` serialises the payload with the Collector's own `ptrace.JSONMarshaler` (`jptrace.TracesData.MarshalJSONPB` delegates to it), so the bytes on the wire are canonical OTLP/JSON as pdata emits it, not gogo protojson:
+
+| Field | Wire encoding | Notes |
+| :--- | :--- | :--- |
+| `traceId`, `spanId`, `parentSpanId` | lower-case **hex string** | `hex.EncodeToString`; the `format: bytes` in the OpenAPI spec is wrong, base64 never appears |
+| `startTimeUnixNano`, `endTimeUnixNano` | **quoted decimal string** | per the proto3 JSON rule for 64-bit ints; parse with `BigInt`, never `Number` |
+| `kind` | **JSON number** (`2` = server) | pdata writes the enum as int32 and **omits the field entirely when `0`** (`UNSPECIFIED`) |
+| `status.code` | JSON number | same enum treatment |
+
+Do not expect the protojson enum *name* (`"SPAN_KIND_SERVER"`) on this endpoint. That form would come from gogo protojson, which is not what serialises this response. Note the contrast with `/api/v3/operations` (see Milestone 3.1), which is a Jaeger-defined message rather than OTLP and does return `span_kind` as a lower-case string — the two endpoints genuinely differ, so a shared `SpanKind` mapper needs to handle both.
 
 #### 3.6.1 Wire Format Type Generation & Validation ✅
 
@@ -791,6 +802,10 @@ The blast radius is already small: outside tests, the facade classes have three 
 - [ ] Remove `src/api/jaeger.ts` (old REST API)
 - [ ] Remove `transformTraceData` (old transformer)
 - [ ] Documentation updates
+
+**Backend follow-through (jaeger repo).** This migration is not finished when the UI stops calling `/api/traces`, `/api/services`, and `/api/transform` — it is finished when `jaeger-query` stops serving what nothing consumes. Those v1 HTTP handlers exist largely for the UI, and leaving them in place indefinitely means the backend carries two query paths and two serialisation formats forever, which is the cost this ADR set out to remove.
+
+The v1 API is public, so this is a deprecation exercise rather than a delete: announce, give a release or two of overlap, then remove. It belongs in the `jaeger` repo and should be tracked there once the UI side of Phase 4 lands. `/api/transform` is the exception worth doing early — it exists only to convert OTLP files for the UI, and a native parser makes it dead on arrival.
 
 ---
 
