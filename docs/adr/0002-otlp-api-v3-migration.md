@@ -5,7 +5,7 @@
 **Reviewed**: 2025-12-29
 **Tracking Issue**: https://github.com/jaegertracing/jaeger-ui/issues/3265
 
-**Where this stands**: Phases 1–2 are complete. On Phase 3, service/span-name discovery (3.1) and trace search (3.3) run on `/api/v3/`; single trace loading (3.2) does not, so every trace still arrives over the legacy `/api/traces/:id` route and through `transformTraceData`. Milestone 3.2 is the keystone for the rest: 3.4 and Phase 4 are blocked behind it.
+**Where this stands**: Phases 1–2 are complete. On Phase 3, service/span-name discovery (3.1) and trace search (3.3) run on `/api/v3/`. On `main`, single trace loading (3.2) does not — every trace still arrives over the legacy `/api/traces/:id` route and through `transformTraceData` — but an implementation is open for review in [#4129](https://github.com/jaegertracing/jaeger-ui/pull/4129). Milestone 3.2 is the keystone for the rest: 3.4 and Phase 4 are blocked behind it.
 
 ---
 
@@ -464,9 +464,9 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 #### Milestone 3.2: Single Trace Loading
 **Goal**: Load a full trace by ID using the new OTLP parser.
 
-**Not started.** `hooks/useTraceLoading.ts` (`useTrace` / `useTraces`) already holds traces in TanStack Query, but fetches them via `JaegerAPI.fetchTrace` → `transformTraceData(...).asOtelTrace()`. This milestone replaces the transport and the transformer beneath those hooks; their public surface can stay.
+**In review, not yet on `main`.** [#4129](https://github.com/jaegertracing/jaeger-ui/pull/4129) implements `getTrace()`, `api/v3/parser.ts`, and the rewiring of `hooks/useTraceLoading.ts`, which today still fetches via `JaegerAPI.fetchTrace` → `transformTraceData(...).asOtelTrace()`. The checkboxes below stay open until it merges. This milestone replaces the transport and the transformer beneath `useTrace` / `useTraces`; their public surface can stay.
 
-**Backend response shape** (`jaeger-query`, `apiv3.HTTPGateway.returnTrace`): `GET /api/v3/traces/{trace_id}` returns a **single** JSON object wrapping the payload in a grpc-gateway envelope, `{"result": {"resourceSpans": [...]}}`, serialised with jsonpb. Despite the proto declaring `GetTrace` as a server-streaming RPC, the HTTP gateway buffers and concatenates all chunks before writing ([jaeger#6467](https://github.com/jaegertracing/jaeger/issues/6467) tracks making it a real stream), so the parser can assume one document for now — but should isolate envelope handling so incremental parsing can be added later without touching the enrichment logic.
+**Backend response shape** (`jaeger-query`, `apiv3.HTTPGateway.returnTrace`): `GET /api/v3/traces/{trace_id}` returns a **single** JSON object wrapping the payload in a grpc-gateway envelope, `{"result": {"resourceSpans": [...]}}`, serialised with jsonpb. The proto declares `GetTrace` as a server-streaming RPC, but the HTTP gateway buffers and concatenates all chunks before writing ([jaeger#6467](https://github.com/jaegertracing/jaeger/issues/6467) tracks making it a real stream). A client may therefore assume one document today, but should keep envelope handling separable so incremental parsing can be added without touching the enrichment logic.
 
 - [ ] Implement `getTrace(traceId)` in `JaegerClient` (`src/api/v3/client.ts`) with unit tests.
 - [ ] Implement the OTLP parser (`src/api/v3/parser.ts`) converting OTLP wire JSON → enriched `IOtelTrace` (depth, parent/child refs, relative timing, critical path — equivalent of `transformTraceData` for the v3 route).
@@ -755,7 +755,7 @@ Instead of mocking `fetch` directly, use **Mock Service Worker (MSW)** to interc
 ##### 2. Contract Validation (Zod)
 Use a runtime validation library (e.g., `zod`) in the parser to validate the incoming OTLP JSON.
 - **Goal**: Catch backend breaking changes at the network boundary. Ensures `wireData` strictly matches our generated types.
-- [ ] Extend Zod schema coverage to full trace/span wire types (currently only services and operations endpoints are validated).
+- [ ] Extend Zod schema coverage to full trace/span wire types (currently only services, operations, and trace summaries are validated). Two competing implementations are open: [#3890](https://github.com/jaegertracing/jaeger-ui/pull/3890) and [#3977](https://github.com/jaegertracing/jaeger-ui/pull/3977) — pick one before either is reviewed in depth.
 
 ##### 3. Backend Smoke Tests (Real Jaeger)
 A standalone integration test script that runs against a live Jaeger instance.

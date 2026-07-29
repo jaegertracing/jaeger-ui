@@ -1160,11 +1160,9 @@ queryKey: ['ddg', service, operation, start, end]
 
 #### ⬜ 2f. Monitor metrics
 
-**Redux to remove**: `src/reducers/metrics.ts` — the last reducer whose state is actually read by a `connect()`ed component (`Monitor/ServicesView`).
+**Redux removed**: `src/reducers/metrics.ts`.
 
 **New hooks**: one hook per metric dimension, mirroring current loading/error shapes.
-
-Note that SPM metrics have **no `/api/v3/` counterpart** — `jaeger-idl` defines no metrics endpoint under api_v3 — so this migration keeps calling `/api/metrics/*` through `JaegerAPI.fetchMetrics`. It is a state-layer change only, independent of [ADR 0002](./0002-otlp-api-v3-migration.md).
 
 #### ⬜ 2g. Path-agnostic decorations
 
@@ -1208,11 +1206,13 @@ The residual surface is small enough to enumerate:
 
 | Redux artefact | Consumers | Resolved by |
 | :--- | :--- | :--- |
-| `reducers/metrics.ts` | `Monitor/ServicesView` (`connect`) | Phase 2f |
+| `reducers/metrics.ts` | `Monitor/ServicesView` (`connect`) | Phase 2f — implementation open in [#4048](https://github.com/jaegertracing/jaeger-ui/pull/4048) |
 | `reducers/path-agnostic-decorations.ts`, `actions/path-agnostic-decorations.ts` | `DdgNodeContent`, `DeepDependencies/SidePanel/DetailsPanel` | Phase 2g |
 | `TraceTimelineViewer/duck.ts`, `duck.track.ts`, `middlewares/track.ts` | `TracePage`, `TraceTimelineViewer`, `VirtualizedTraceView`, `SpanTreeOffset`, `SpanDetailSidePanel` | Phase 1c steps 3–4 |
 | Vestigial `connect()` wrappers whose `mapStateToProps` ignores state entirely | `SearchTracePage/SearchForm.tsx`, `TraceDiff/TraceDiff.tsx` | Phase 4b (mechanical) |
 | `utils/configure-store.ts`, `<Provider>` in `components/App/index.tsx`, `ReduxState` in `types/index.ts`, `types/TTraceTimeline.ts` | app shell, ~14 test files | Phase 4b/4c |
+
+Removing the timeline duck is the only item here with a non-mechanical design question in it (where the analytics call sites go), so it is the one worth sequencing first.
 
 #### ⬜ 4b. Remove packages
 
