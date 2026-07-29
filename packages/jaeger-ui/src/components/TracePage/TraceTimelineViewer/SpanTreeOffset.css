@@ -89,12 +89,14 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 /* Tinted (not fully filled) box when collapsed - keeps the count bright.
-   The fill mixes toward a surface color rather than transparency, so it is a
-   tint and not governed by --tree-chrome-strength. */
+   Only the fill changes: the border keeps the same strength as every other box,
+   because collapsing a subtree does not change which service the span is from. */
 .SpanTreeOffset--box.is-collapsed {
-  border-color: color-mix(in srgb, var(--span-box-color) var(--tree-chrome-strength-emphasis), transparent);
-  background-color: color-mix(in srgb, var(--span-box-color) 22%, var(--surface-secondary));
-  color: var(--text-primary);
+  background-color: color-mix(
+    in srgb,
+    var(--span-box-color) var(--tree-chrome-fill),
+    var(--surface-secondary)
+  );
 }
 
 /* Colored dot for leaf spans */

@@ -166,15 +166,24 @@ SPDX-License-Identifier: Apache-2.0
 
   /*
      Span tree chrome — how strongly the service color shows through on the
-     hierarchy guides, connectors, dots, and parent boxes in the Service column.
-     These are percentages consumed by `color-mix(… <strength>, transparent)`,
-     so they are effectively an alpha: 100% matches the span bar exactly, and
-     lower values let the row background wash the color out.
-     Emphasis is used for the collapsed parent box, which is meant to read
-     stronger than the surrounding chrome, so it must stay above the base.
+     hierarchy guides, connectors, dots, and box borders in the Service column.
+     A percentage consumed by `color-mix(… <strength>, transparent)`, so it acts
+     as an alpha: 100% matches the span bar exactly, lower values let the row
+     background wash the color out. It does not vary by state — a box border
+     means "this service", and collapsing a subtree does not change that.
   */
   --tree-chrome-strength: 65%;
-  --tree-chrome-strength-emphasis: 80%;
+
+  /*
+     Fill of a collapsed parent box, which is the sole indicator that a subtree
+     is hidden, so it has to be plainly visible. Mixed toward the box surface
+     rather than toward transparency, so this is a tint, not a strength.
+     Dark needs a larger share than light: `--surface-secondary` is a saturated
+     navy there (hue 215°), so a tint from the blue end of the span palette
+     lands close to its own background, whereas the light surface is neutral
+     and every hue reads against it.
+  */
+  --tree-chrome-fill: 22%;
 
   /* ============================================
     SYNTAX HIGHLIGHTING TOKENS
@@ -282,6 +291,11 @@ SPDX-License-Identifier: Apache-2.0
   /* Trace Timeline - Dark Mode */
   --span-graph-inactive: rgba(200, 200, 200, 0.25);
   --span-bar-log-marker: rgba(255, 255, 255, 0.5);
+
+  /* See the light-mode definition: the dark box surface is a saturated navy, so
+     a tint from the blue end of the palette needs a larger share to separate
+     from it. */
+  --tree-chrome-fill: 40%;
 
   /* ============================================
     SYNTAX HIGHLIGHTING TOKENS - Dark Mode
