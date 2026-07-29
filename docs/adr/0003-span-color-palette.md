@@ -27,7 +27,11 @@ A critical-path line drawn in a fixed color is illegible against some span color
 ## Consequences
 
 - Palette changes are a single-file CSS edit, reviewable as a diff of hex values.
-- **Colors are handed out in first-seen order, not derived from the service name.** `ColorGenerator` keeps a counter and a name→index cache, and `clear()` is never called outside tests, so the cache lives for the whole browser session across every trace visited. Two consequences follow: a service keeps its color while navigating between traces, and the assignment depends on the order services were first encountered since page load — so the same trace can render with different colors for different viewers. Deterministic assignment is tracked separately.
+- **Colors are handed out in first-seen order, not derived from the service name.** `ColorGenerator` keeps a counter and a name→index cache, and `clear()` is never called outside tests, so the cache lives for the whole browser session across every trace visited.
+
+  The counter is what makes the palette work as a *qualitative* scale: consecutive services get consecutive, deliberately dissimilar swatches, so no two services in a trace share a color until the session has seen more than 20 of them and the counter wraps. Deriving the index from a hash of the service name would forfeit that — with 20 buckets, six services collide with probability 56%.
+
+  The cost is that assignment depends on the order services were first encountered since page load, so a service keeps its color while navigating between traces, but the same trace can render with different colors for different viewers. Reconciling reproducibility with the distinctness guarantee needs a per-trace assignment pass rather than a lazy global counter; tracked separately.
 - Because assignment is sequential, the root span's service takes `--span-color-1` on a freshly loaded page. In dark mode that token is 11° in hue from `--surface-secondary`, which is why the collapsed-box tint needs a larger share there than in light mode.
 - Contrast was chosen against WCAG guidance in both themes, and adjacent indices are from different hue groups, so neighbouring services in a trace stay distinguishable.
 - Theme switching is instant, because it is pure CSS.
