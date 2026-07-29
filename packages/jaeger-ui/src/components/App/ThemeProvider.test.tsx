@@ -100,6 +100,36 @@ describe('AppThemeProvider', () => {
     });
   });
 
+  // Regression: the attribute used to be written in a passive effect, which React
+  // runs *after* a descendant's. Consumers that read a theme-dependent CSS custom
+  // property back off the DOM from their own `useEffect` — `ColorGenerator` for the
+  // canvas span graph — therefore saw the previous theme for one commit.
+  it('applies the body attribute before a descendant effect observes it', () => {
+    const seenByChild: (string | undefined)[] = [];
+
+    function ThemeReadingChild() {
+      const { mode } = useThemeMode();
+      React.useEffect(() => {
+        seenByChild.push(document.body.dataset.theme);
+      }, [mode]);
+      return null;
+    }
+
+    render(
+      <AppThemeProvider>
+        <ThemeConsumer />
+        <ThemeReadingChild />
+      </AppThemeProvider>
+    );
+
+    expect(seenByChild).toEqual(['light']);
+
+    fireEvent.click(screen.getByRole('button', { name: /toggle theme/i }));
+
+    // Without the layout effect this second entry is 'light' — the stale value.
+    expect(seenByChild).toEqual(['light', 'dark']);
+  });
+
   it('prefers system dark mode when no stored preference exists', () => {
     setupMatchMedia(true);
 
