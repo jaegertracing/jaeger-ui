@@ -81,7 +81,11 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
           arrow={{ pointAtCenter: true }}
           placement="bottomLeft"
           trigger="hover"
-          overlayStyle={{ maxWidth: '600px' }} // This is a large tooltip and the default is too narrow.
+          styles={{
+            root: {
+              maxWidth: '600px',
+            },
+          }} // This is a large tooltip and the default is too narrow.
           title={renderTooltip()}
         >
           <div className="help-btn-container">
@@ -94,6 +98,8 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
               className={cx(btnClass, 'TracePageSearchBar--locateBtn')}
               disabled={!textFilter}
               htmlType="button"
+              title="Locate current match"
+              aria-label="Locate current match"
               onClick={focusUiFindMatches}
             >
               <IoLocate />
@@ -102,6 +108,8 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
               className={cx(btnClass, 'TracePageSearchBar--ButtonUp')}
               disabled={!textFilter}
               htmlType="button"
+              title="Previous match"
+              aria-label="Previous match"
               data-testid="UpOutlined"
               onClick={prevResult}
             >
@@ -111,6 +119,8 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
               className={cx(btnClass, 'TracePageSearchBar--ButtonDown')}
               disabled={!textFilter}
               htmlType="button"
+              title="Next match"
+              aria-label="Next match"
               data-testid="DownOutlined"
               onClick={nextResult}
             >
