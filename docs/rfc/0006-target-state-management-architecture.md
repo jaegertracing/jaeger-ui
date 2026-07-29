@@ -141,6 +141,15 @@ Legacy class components receive URL-derived props via the project's `withRoutePr
 
 The tables below document the **intended** store shapes. For migration steps — which Redux ducks these replace and which components need rewiring — see **[RFC 0004](./0004-state-management-strategy.md)**, Phase 1.
 
+**How the delivered stores differ from the shapes below.** The inventory of what exists is in [ADR-0005](../adr/0005-current-state-management-architecture.md); four divergences are worth naming here, because each one was a deliberate departure from this design rather than an omission:
+
+- The single `useTraceTimelineStore` proposed below was **delivered as two stores**, split by lifetime: `useTraceTimelineStore` (`store.timeline.ts`) for state that resets with the trace, and `useLayoutPrefsStore` (`store.layout.ts`) for preferences that outlive it. The reset rule below then needs no exceptions, which is why the split was made.
+- `hoverIndentGuideIds` is **still in Redux** — the last field held exclusively by the `traceTimeline` duck ([RFC 0004](./0004-state-management-strategy.md), Phase 1c step 3).
+- `prunedServices` was added to the interaction store after this was written, for the timeline service filter ([ADR-0009](../adr/0009-service-filter-trace-timeline.md)).
+- The DDG store shipped as `useDdgViewModifiersStore`, and its graph query as `useDeepDependencyGraphQuery`.
+
+Stores also did not all land in `src/stores/` as this document assumes. The convention that emerged is `src/stores/` when more than one feature reads a store, and a `store.<slice>.ts` beside the owning feature otherwise.
+
 ### `useTraceTimelineStore`
 
 | Field | Type | Description | Persisted to |
