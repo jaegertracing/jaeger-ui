@@ -220,8 +220,8 @@ importers:
         specifier: 1.1.0
         version: 1.1.0
       markdown-to-jsx:
-        specifier: 9.8.2
-        version: 9.8.2(react@19.2.0)
+        specifier: 9.9.0
+        version: 9.9.0(react@19.2.0)
       match-sorter:
         specifier: 8.3.0
         version: 8.3.0
@@ -4186,8 +4186,8 @@ packages:
     resolution: {integrity: sha512-IfpFq6UM39dUNiphpA6uDezNx/AvWyhwfICWPR3t1VspkgkMZrL+Rk1RbN1bx+aeNYwOrqGJgEgV3yotk+ZUVw==}
     engines: {node: '>=18'}
 
-  markdown-to-jsx@9.8.2:
-    resolution: {integrity: sha512-rWUuxKB5NsuJmSfUOuXkQ0O5qk0J/Lr3Lk6dzxKoKQI/jeHYlsVfz3zJdMLAhI46hHoXDYERWhtBOiqtWDZ4LA==}
+  markdown-to-jsx@9.9.0:
+    resolution: {integrity: sha512-3YRQuriODgdMr9EeY//Ya/104p978bY0nOwmc85IGxHixqOlhNDgq7IJTsLOdmFxjMFKJ6bVzUav30wWVJZOJQ==}
     engines: {node: '>= 18'}
     peerDependencies:
       react: 19.2.0
@@ -8737,7 +8737,7 @@ snapshots:
   make-dir@5.1.0:
     optional: true
 
-  markdown-to-jsx@9.8.2(react@19.2.0):
+  markdown-to-jsx@9.9.0(react@19.2.0):
     optionalDependencies:
       react: 19.2.0
 
