@@ -1,7 +1,12 @@
 # ADR-0010: Layout Settings Priority Stack
 
-* **Status**: Proposed
+* **Status**: Proposed — **not implemented**
 * **Date**: 2026-05-10
+* **Last Updated**: 2026-07-28
+
+None of the five PRs below has landed. There is no `useLayoutSettings`, no `parseSettingsFromUrl`, and no heuristic layer; `TraceViewSettings` is still an antd `Dropdown`, and components read layout settings straight from `useLayoutPrefsStore`, whose every setter calls `localStorage.setItem` unconditionally — so the preference corruption described under Context is still live.
+
+PR 2 overlaps with [#3981](https://github.com/jaegertracing/jaeger-ui/issues/3981), which moves `store.layout.ts` onto Zustand's `persist` middleware. Sequence #3981 first: the `persist` flag PR 2 needs is a property of whatever persistence mechanism the store ends up with, and adding it to the manual `localStorage.setItem` calls only to move them again is wasted work.
 
 ## Context
 

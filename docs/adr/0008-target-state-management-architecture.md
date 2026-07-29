@@ -1,7 +1,7 @@
 # ADR 0008: Target state management architecture
 
 **Status**: In progress (evolves with the codebase)  
-**Last Updated**: 2026-04-07
+**Last Updated**: 2026-07-28
 
 ---
 
@@ -22,7 +22,7 @@ If this ADR conflicts with **0004** on strategic direction, **0004 wins** until 
 | Layer | Owns | Does NOT own | Key files |
 | :--- | :--- | :--- | :--- |
 | **TanStack Query** | Server responses: traces, search results, services, metrics, DDG graph payloads, dependencies | Interaction state; layout settings | `src/query/app-query-client.tsx`, `src/hooks/`, `src/api/v3/` |
-| **Zustand** | Shared client UI state: span collapse/expand, open detail panels, column widths, compare cohort, DDG view modifiers, embedded flags | Primary trace JSON; URL-derived navigation params | `src/stores/` (target location) |
+| **Zustand** | Shared client UI state: span collapse/expand, open detail panels, column widths, compare cohort, DDG view modifiers, embedded flags | Primary trace JSON; URL-derived navigation params | `src/stores/` for cross-feature stores; `store.*.ts` colocated with the owning feature otherwise |
 | **URL** | Current view: trace id, search params, `uiFind`, compare params; anything that should survive a copy-paste link | Large objects; transient hover / focus state | `src/utils/url.ts`, per-page `url.ts` modules |
 | **Local storage** | User preferences that survive sessions: theme, last search service/operation, column widths, detail-panel mode | Server data; application state | `store` utility, direct `localStorage` for per-preference keys |
 | **`useState` / `useMemo`** | Transient leaf UI (hover, draft inputs) and heavy derivations (critical path, stats) keyed to a trace reference | Global sharing; URL persistence | Colocated in component files |
@@ -135,21 +135,44 @@ Legacy class components receive URL-derived props via the project's `withRoutePr
 
 The tables below document the **intended** store shapes. For migration steps — which Redux ducks these replace and which components need rewiring — see **[ADR 0004 → Phase 1](./0004-state-management-strategy.md#phase-1--zustand-for-client-ui-state)**.
 
+### Store inventory
+
+| Store | File | Owns |
+| :--- | :--- | :--- |
+| `useTraceTimelineStore` | `components/TracePage/TraceTimelineViewer/store.timeline.ts` | Per-trace timeline interaction |
+| `useLayoutPrefsStore` | `components/TracePage/TraceTimelineViewer/store.layout.ts` | Timeline layout preferences |
+| `useTraceDiffStore` | `stores/trace-diff-store.ts` | Compare cohort |
+| `useArchiveStore` | `stores/archive-store.ts` | Archive mutation status |
+| `useEmbeddedStore` | `stores/embedded-store.ts` | Embedded-mode chrome flags |
+| `useSearchResultsStore` | `components/SearchTracePage/store.search-results.ts` | Search results view state |
+| `useDdgViewModifiersStore` | `components/DeepDependencies/store.view-modifiers.ts` | DDG view modifier flags |
+
 ### `useTraceTimelineStore`
+
+Per-trace interaction state, all of it ephemeral.
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `traceID` | `string \| null` | Currently loaded trace; changing it resets every other field |
+| `childrenHiddenIDs` | `Set<string>` | Span IDs whose children are collapsed |
+| `detailStates` | `Map<string, DetailState>` | Open detail panels per span ID |
+| `prunedServices` | `Set<string>` | Services pruned by the timeline service filter ([ADR 0009](./0009-service-filter-trace-timeline.md)) |
+| `shouldScrollToFirstUiFindMatch` | `boolean` | One-shot flag; set after `uiFind` focus, cleared by the list |
+
+**Key behaviour**: when `traceID` changes, every field above resets. Layout preferences are deliberately held in a separate store so they survive the reset.
+
+`hoverIndentGuideIds` is **not yet here** — it is the last field still living in the Redux `traceTimeline` duck ([ADR 0004](./0004-state-management-strategy.md) Phase 1c, step 3).
+
+### `useLayoutPrefsStore`
+
+Timeline layout preferences, persisted per key and carried across traces. Resolution against URL params and per-trace heuristics is specified in [ADR 0010](./0010-layout-settings-priority-stack.md).
 
 | Field | Type | Description | Persisted to |
 | :--- | :--- | :--- | :--- |
-| `traceID` | `string \| null` | Currently loaded trace; reset resets interaction state | - |
-| `childrenHiddenIDs` | `Set<string>` | Span IDs whose children are collapsed | - |
-| `detailStates` | `Map<string, DetailState>` | Open detail panels per span ID | - |
-| `hoverIndentGuideIds` | `Set<string>` | Span IDs with active indent-guide hover highlight | - |
 | `spanNameColumnWidth` | `number` | Fraction of timeline width for the name column (0.15–0.85) | `localStorage['spanNameColumnWidth']` |
 | `sidePanelWidth` | `number` | Fraction for side-panel column (0.2–0.7) | `localStorage['sidePanelWidth']` |
 | `detailPanelMode` | `'inline' \| 'sidepanel'` | Whether span details appear inline or in a side panel | `localStorage['detailPanelMode']` |
 | `timelineBarsVisible` | `boolean` | Whether the Gantt bars column is shown | `localStorage['timelineVisible']` |
-| `shouldScrollToFirstUiFindMatch` | `boolean` | One-shot flag; set after `uiFind` focus, cleared by the list | - |
-
-**Key behaviour**: when `traceID` changes, all ephemeral fields (`childrenHiddenIDs`, `detailStates`, `hoverIndentGuideIds`, `shouldScrollToFirstUiFindMatch`) reset; persistent layout fields (`spanNameColumnWidth`, `sidePanelWidth`, `detailPanelMode`, `timelineBarsVisible`) carry over across traces.
 
 ### `useTraceDiffStore`
 
@@ -161,9 +184,9 @@ The tables below document the **intended** store shapes. For migration steps —
 
 Actions: `addToCohort(traceId)`, `removeFromCohort(traceId)`, `setA(traceId)`, `setB(traceId)`. Removing a trace from the cohort also clears `a` or `b` if they match.
 
-### `useDdgModifiersStore`
+### `useDdgViewModifiersStore`
 
-Holds **view modifier flags** only. The DDG graph JSON (nodes + edges) lives in TanStack Query (`useDDGQuery`).
+Holds **view modifier flags** only. The DDG graph JSON (nodes + edges) lives in TanStack Query (`useDeepDependencyGraphQuery`).
 
 | Field | Type | Description |
 | :--- | :--- | :--- |
@@ -184,7 +207,7 @@ Holds **view modifier flags** only. The DDG graph JSON (nodes + edges) lives in 
 ## Where do I put new state? (target)
 
 1. **Fetched from the server or cached by HTTP semantics?** → **TanStack Query** - create a hook in `src/hooks/` and a client method in `src/api/v3/`.
-2. **Shared UI that is not URL-derived and not server data?** → **Zustand** - add to an existing store (prefer) or create a focused new one in `src/stores/`.
+2. **Shared UI that is not URL-derived and not server data?** → **Zustand** - add to an existing store (prefer), or create a focused new one: `src/stores/` if more than one feature reads it, otherwise a `store.<slice>.ts` next to the feature that owns it.
 3. **Should survive refresh and live in the URL?** → **URL** - use the page's `url.ts` `getUrl` / `getUrlState` helpers; never construct URLs inline.
 4. **Must survive a session across browser tabs?** → **Local storage** - use the existing `store` utility or `localStorage` for simple string keys.
 5. **Only this component needs it, or it is a pure function of a trace reference?** → **`useState` / `useMemo`** - keep it colocated; avoid globalising heavy derivations.

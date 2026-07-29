@@ -1,9 +1,11 @@
 # ADR 0002: Making Jaeger UI OpenTelemetry-Native
 
 **Status**: In Progress / Partially Implemented
-**Last Updated**: 2026-05-25
+**Last Updated**: 2026-07-28
 **Reviewed**: 2025-12-29
 **Tracking Issue**: https://github.com/jaegertracing/jaeger-ui/issues/3265
+
+**Where this stands**: Phases 1–2 are complete. On Phase 3, service/span-name discovery (3.1) and trace search (3.3) run on `/api/v3/`; single trace loading (3.2) does not, so every trace still arrives over the legacy `/api/traces/:id` route and through `transformTraceData`. Milestone 3.2 is the keystone for the rest: 3.4 and Phase 4 are blocked behind it.
 
 ---
 
@@ -323,32 +325,11 @@ In the legacy model reference types `CHILD_OF` | `FOLLOWS_FROM` were used to ind
 - ✅ Create `src/model/OtelTraceFacade.tsx`
 - ✅ Create `src/model/OtelSpanFacade.tsx`
 
-#### 1.3 Create Facade Selectors ✅
-  ```typescript
-  // Redux selectors that return facade wrappers
-  export const selectOtelTrace = (state, traceId) => {
-    const legacyTrace = selectTrace(state, traceId);
-    return legacyTrace ? new OtelTraceFacade(legacyTrace) : null;
-  };
-  
-  export const selectOtelSpans = (state, traceId) => {
-    const legacyTrace = selectTrace(state, traceId);
-    return legacyTrace?.spans.map(s => new OtelSpanFacade(s)) || [];
-  };
-  ```
+#### 1.3 / 1.4 Facade access path ✅ (not via selectors or hooks)
 
-#### 1.4 Create React Hooks ✅
-  ```typescript
-  export const useOtelTrace = (traceId: string): OtelTrace | null => {
-    const trace = useSelector(state => selectOtelTrace(state, traceId));
-    return trace;
-  };
-  
-  export const useOtelSpan = (traceId: string, spanId: string): IOtelSpan | null => {
-    const spans = useSelector(state => selectOtelSpans(state, traceId));
-    return spans.find(s => s.spanID === spanId) || null;
-  };
-  ```
+The Redux selectors (`selectOtelTrace`, `selectOtelSpans`) and hooks (`useOtelTrace`, `useOtelSpan`) sketched here do not exist, nor does a `src/selectors/` directory — they became dead code once trace state moved out of Redux into TanStack Query.
+
+The facade is applied instead at the point where a trace enters the Query cache: `transformTraceData(json)` returns a legacy trace whose `asOtelTrace()` method yields the `IOtelTrace` that components consume. Callers are `hooks/useTraceLoading.ts` (API route) and `SearchTracePage/FileLoader.tsx` (uploaded files). Components receive `IOtelTrace` / `IOtelSpan` as plain data and never construct a facade themselves.
 
 #### 1.6 Terminology Toggle Feature Flag
 Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to `false`) to control the display terminology.
@@ -482,6 +463,11 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 
 #### Milestone 3.2: Single Trace Loading
 **Goal**: Load a full trace by ID using the new OTLP parser.
+
+**Not started.** `hooks/useTraceLoading.ts` (`useTrace` / `useTraces`) already holds traces in TanStack Query, but fetches them via `JaegerAPI.fetchTrace` → `transformTraceData(...).asOtelTrace()`. This milestone replaces the transport and the transformer beneath those hooks; their public surface can stay.
+
+**Backend response shape** (`jaeger-query`, `apiv3.HTTPGateway.returnTrace`): `GET /api/v3/traces/{trace_id}` returns a **single** JSON object wrapping the payload in a grpc-gateway envelope, `{"result": {"resourceSpans": [...]}}`, serialised with jsonpb. Despite the proto declaring `GetTrace` as a server-streaming RPC, the HTTP gateway buffers and concatenates all chunks before writing ([jaeger#6467](https://github.com/jaegertracing/jaeger/issues/6467) tracks making it a real stream), so the parser can assume one document for now — but should isolate envelope handling so incremental parsing can be added later without touching the enrichment logic.
+
 - [ ] Implement `getTrace(traceId)` in `JaegerClient` (`src/api/v3/client.ts`) with unit tests.
 - [ ] Implement the OTLP parser (`src/api/v3/parser.ts`) converting OTLP wire JSON → enriched `IOtelTrace` (depth, parent/child refs, relative timing, critical path — equivalent of `transformTraceData` for the v3 route).
 - [ ] Create `useTrace(traceId)` hook (React Query) in `src/hooks/useTraceDiscovery.ts`.
@@ -504,7 +490,10 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 
 #### Milestone 3.4: Extended Operations & Legacy Decommission
 **Goal**: Migrate remaining operations and decommission legacy code.
-- [ ] Implement `archiveTrace`, `fetchDependencies`, and `fetchMetrics` in `JaegerClient`.
+
+**Not everything has a v3 counterpart.** `jaeger-idl`'s api_v3 service defines only `traces/{trace_id}`, `traces`, `services`, `operations`, `dependencies`, and `trace-summaries`. Trace archival (`/api/archive/:id`), SPM metrics (`/api/metrics/*`), DDG (`/analytics/v1/dependencies`), OTLP file transform (`/api/transform`), and config-driven decoration URLs have no v3 endpoint, so they legitimately stay on their current routes. Removing `src/api/jaeger.ts` therefore means folding those calls into `JaegerClient` (or a sibling module) rather than migrating them to `/api/v3/`.
+
+- [ ] Implement `archiveTrace` and `fetchDependencies` (`/api/v3/dependencies`) in `JaegerClient`; carry `fetchMetrics` over unchanged.
 - [ ] Update remaining components to use the new client.
 - [ ] Gradually decommission Redux actions/reducers for trace data.
 - [ ] Remove legacy `src/api/jaeger.ts`.
@@ -794,8 +783,10 @@ We will move towards a model where the Search page only fetches **Trace Summarie
 
 **Goal**: Remove facade layer and legacy code.
 
-- [ ] Remove `OtelSpanFacade`, `OtelTraceFacade` classes
-- [ ] Update selectors to return `IOtelSpan` directly
+The blast radius is already small: outside tests, the facade classes have three importers (`model/transform-trace-data.ts`, `components/TracePage/TraceFlamegraph/index.tsx`, and each other) and `transform-trace-data` has three (`hooks/useTraceLoading.ts`, `SearchTracePage/FileLoader.tsx`, `TraceTimelineViewer/generateRowStates.ts`). Once the parser from Milestone 3.2 produces `IOtelTrace` natively, all six call sites lose their reason to exist.
+
+- [ ] Remove `OtelSpanFacade`, `OtelTraceFacade` classes and the `asOtelTrace()` bridge on the legacy trace type
+- [ ] Parse uploaded OTLP files client-side in `utils/readJsonFile.ts`, dropping its `/api/transform` round trip (an OTLP file is already in the parser's input format)
 - [ ] Remove legacy types (mark as deprecated first)
 - [ ] Remove `src/api/jaeger.ts` (old REST API)
 - [ ] Remove `transformTraceData` (old transformer)

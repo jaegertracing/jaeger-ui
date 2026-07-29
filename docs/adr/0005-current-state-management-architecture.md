@@ -1,14 +1,16 @@
 # ADR 0005: Current State Management Architecture
 
-**Status**: Accepted  
-**Last Updated**: 2026-01-07  
+**Status**: Accepted — to be retired once Redux is gone ([ADR 0004](./0004-state-management-strategy.md) Phase 4c)  
+**Last Updated**: 2026-07-28  
 **Reviewed**: [Date]
 
 ---
 
 ## TL;DR
 
-Jaeger UI uses a multi-layered state management architecture. **Redux** is the primary legacy store for global application state, while **TanStack Query (React Query)** is the new standard for managing server-side data (Phase 3 OTLP migration). **URL State** is the intended source of truth for the current view (deep linking), though its implementation varies in completeness across different pages. **Local Storage** provides multi-session persistence for user preferences.
+Jaeger UI uses a multi-layered state management architecture. **TanStack Query (React Query)** owns server data, **Zustand** owns shared client UI state, **URL State** is the intended source of truth for the current view (deep linking, though completeness varies by page), and **Local Storage** provides multi-session persistence for user preferences.
+
+**Redux is nearly gone.** It no longer holds traces, search results, services, config, dependencies, or the DDG graph. What remains is two reducers (`metrics`, `pathAgnosticDecorations`), the `traceTimeline` duck that survives only because analytics tracking is implemented as a Redux middleware, and a few `connect()` wrappers that no longer read state at all. **Do not add state to Redux** — see the roadmap below. [ADR 0008](./0008-target-state-management-architecture.md) describes the target; [ADR 0004](./0004-state-management-strategy.md) tracks what is left.
 
 ---
 
@@ -20,28 +22,33 @@ As Jaeger UI migrates to OpenTelemetry (OTEL) concepts and OTLP APIs, the state 
 
 ## Architecture Overview
 
-The application state is divided into five distinct layers:
+The application state is divided into these layers:
 
 ```mermaid
 graph TD
-    A[URL State] -->|Initializes| B[Redux Store]
-    A -->|Initializes| C[TanStack Query]
-    D[Local Storage] -->|Hydrates| B
-    B -->|Global App State| E[React Components]
-    C -->|Server Metadata/Data| E
+    A[URL State] -->|Initializes| C[TanStack Query]
+    A -->|Initializes| Z[Zustand Stores]
+    D[Local Storage] -->|Hydrates| Z
+    C -->|Server Data| E[React Components]
+    Z -->|Shared UI State| E
     F[Local Component State] -->|Transient UI| E
-    E -->|Dispatches| G[Redux Actions]
-    E -->|Triggers| H[Query Invalidation]
+    B[Redux Store<br/>residual] -->|metrics, decorations,<br/>hover guides| E
+    E -->|Writes back| A
+    E -->|Store actions| Z
+    E -->|Dispatches| B
 ```
 
-### 1. Redux (Global Application State)
-The legacy core of the application. It manages traces, configuration, and search results. The full schema of the store is defined by the [`ReduxState`](../../packages/jaeger-ui/src/types/index.ts#L36) type.
+The Redux box is scheduled for deletion; the timeline slice inside it is written in parallel with the corresponding Zustand store rather than being read by the UI.
 
-- **Location**: `src/reducers/`, `src/actions/`, and `duck.ts` files in component directories.
+### 1. Redux (residual, closed to new state)
+The legacy core of the application, now reduced to a residue. The full schema of the store is defined by the [`ReduxState`](../../packages/jaeger-ui/src/types/index.ts) type.
+
+- **Location**: `src/reducers/` (`metrics`, `pathAgnosticDecorations`), `src/actions/path-agnostic-decorations.ts`, and `src/components/TracePage/TraceTimelineViewer/duck.ts`; assembled in `src/utils/configure-store.ts`.
 - **Access**:
-    - **Functional Components**: Use `useSelector` and `useDispatch`.
-    - **Class Components**: Wrapped with `connect(mapStateToProps, mapDispatchToProps)`.
-- **Legacy Usage**: Currently used for state that must be shared across disparate routes or complex UI interactions (e.g., Trace Comparison, Timeline collapse state). According to [ADR 0004](./0004-state-management-strategy.md), this role will eventually be migrated to **Zustand**.
+    - **Functional Components**: `useSelector` / `useDispatch` — `DdgNodeContent`, `VirtualizedTraceView` (for `hoverIndentGuideIds`), `SpanDetailSidePanel`.
+    - **Class Components**: `connect(mapStateToProps, mapDispatchToProps)` — `Monitor/ServicesView`, `DeepDependencies/SidePanel/DetailsPanel`, `SpanTreeOffset`, `TracePage`, `TraceTimelineViewer`. `SearchForm` and `TraceDiff` are also still wrapped, but their `mapStateToProps` ignores state entirely and the wrapper is vestigial.
+- **Timeline dual write**: timeline interactions dispatch a Redux action *and* call the equivalent Zustand action, Redux first so the tracking middleware observes pre-update state. The duck exists to feed `src/middlewares/track.ts`, not to serve the UI.
+- **Do not add new state here.** Per [ADR 0004](./0004-state-management-strategy.md), everything above has a scheduled removal; new shared UI state goes to Zustand and new server data to TanStack Query.
 
 ### 2. TanStack Query (Server State)
 The modern standard for fetching and caching server data. Currently being introduced via the OTLP API v3 migration.
@@ -58,7 +65,7 @@ The modern standard for fetching and caching server data. Currently being introd
 The URL is intended to be the definitive source of truth for the "current view" to enable reliable deep linking and browser navigation. However, the current implementation is inconsistent:
 
 - **Search Page**: Highly synchronized. Most form parameters (service, operation, tags, time range) are reflected in the URL.
-- **Trace View**: Partially synchronized. While the trace ID is in the path and `uiFind` is in the query string, many UI settings (e.g., current view type like Gantt vs. Graph, expand/collapse state) are currently stored in Redux or local component state and are lost on page reload.
+- **Trace View**: Partially synchronized. The trace ID is in the path and `uiFind` in the query string, but the selected view type (Gantt vs. Graph vs. Statistics) is `useState` in `TracePage`, expand/collapse state lives in the timeline Zustand store, and column widths / detail-panel mode live in localStorage — none of it round-trips through a shared link. [ADR 0010](./0010-layout-settings-priority-stack.md) proposes the precedence rules for closing this gap.
 
 - **Location**: `src/components/SearchTracePage/url.ts`, `src/utils/url.ts`.
 - **Synchronization Pattern**: We use a `key` pattern on major page components (e.g., `<SearchForm key={searchString} />`) to ensure a fresh state mount and synchronization when the URL changes.
@@ -98,7 +105,7 @@ For state that doesn't need to live globally or survive a page transition.
 3. **Does it need to be deep-linkable?**
     - Sync it with the **URL**.
 4. **Is it complex state shared between many unrelated components?**
-    - Use **Redux** (or **Zustand** if following the strategic direction in ADR 0004).
+    - Use **Zustand** — a store in `src/stores/` or colocated with the feature. Never Redux.
 5. **Is it a global configuration setting?**
     - Use a **dedicated configuration hook** (e.g., `useConfig()`). Avoid direct access to global helper functions, prop drilling, or raw Redux selectors within components. This allows the underlying storage to change (e.g., from Redux to Zustand) without breaking components.
 6. **Is it just for this component?**

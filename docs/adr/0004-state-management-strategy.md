@@ -1,7 +1,7 @@
 # ADR 0004: State Management Strategy for Jaeger UI
 
-**Status**: Proposed  
-**Last Updated**: 2026-05-30 
+**Status**: Accepted / In progress (Phases 0–2e delivered; see [Migration Path](#migration-path))  
+**Last Updated**: 2026-07-28  
 **Reviewed**: Pending
 
 ---
@@ -949,37 +949,46 @@ type IArchiveState = {
 
 **Components to rewire**: `ArchiveNotifier.tsx`, `TracePage` - stop dispatching Redux archive actions.
 
-#### ✅ 1c. Trace timeline UI (`traceTimeline` duck)
+#### 🚧 1c. Trace timeline UI (`traceTimeline` duck)
 
-**Redux removed**: `src/components/TracePage/TraceTimelineViewer/duck.ts`
+**Redux to remove**: `src/components/TracePage/TraceTimelineViewer/duck.ts` — still registered in `src/utils/configure-store.ts` and still dispatched on every timeline interaction.
 
 This is the **largest and most performance-sensitive** slice. Split across multiple PRs.
 
-**New Zustand store** (`src/components/TracePage/TraceTimelineViewer/store.ts`):
+**New Zustand stores** — the slice is split in two by lifetime, both re-exported from `TraceTimelineViewer/store.ts`:
+
+`useLayoutPrefsStore` (`store.layout.ts`) — layout preferences that survive a trace change:
 
 | Field | Type | Description | Persisted to |
 | :--- | :--- | :--- | :--- |
-| `traceID` | `string \| null` | Currently loaded trace; changing it resets ephemeral fields | - |
-| `childrenHiddenIDs` | `Set<string>` | Span IDs whose children are collapsed | - |
-| `detailStates` | `Map<string, DetailState>` | Open detail panels per span ID | - |
-| `hoverIndentGuideIds` | `Set<string>` | Span IDs with active indent-guide hover highlight | - |
 | `spanNameColumnWidth` | `number` (0.15–0.85) | Fraction of timeline width for the name column | `localStorage['spanNameColumnWidth']` |
 | `sidePanelWidth` | `number` (0.2–0.7) | Fraction for the side-panel column | `localStorage['sidePanelWidth']` |
 | `detailPanelMode` | `'inline' \| 'sidepanel'` | Span detail display mode | `localStorage['detailPanelMode']` |
 | `timelineBarsVisible` | `boolean` | Whether Gantt bars are shown | `localStorage['timelineVisible']` |
-| `shouldScrollToFirstUiFindMatch` | `boolean` | One-shot scroll flag; cleared by the list after use | — |
 
-**Key behaviour**: when `traceID` changes, reset `childrenHiddenIDs`, `detailStates`, `hoverIndentGuideIds`, `shouldScrollToFirstUiFindMatch`; carry over layout fields.
+`useTraceTimelineStore` (`store.timeline.ts`) — per-trace interaction state:
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `traceID` | `string \| null` | Currently loaded trace; changing it resets the other fields |
+| `childrenHiddenIDs` | `Set<string>` | Span IDs whose children are collapsed |
+| `detailStates` | `Map<string, DetailState>` | Open detail panels per span ID |
+| `prunedServices` | `Set<string>` | Services pruned by the timeline service filter (ADR 0009) |
+| `shouldScrollToFirstUiFindMatch` | `boolean` | One-shot scroll flag; cleared by the list after use |
+
+**Key behaviour**: when `traceID` changes, reset the interaction fields; layout prefs are held in the separate store and carry over.
 
 **Selectors must be fine-grained** - each row component subscribes only to the span IDs it cares about (e.g. `childrenHiddenIDs.has(spanId)`) so virtualized rows do not re-render on unrelated changes.
 
-**Suggested PR split**:
-1. Layout prefs: `spanNameColumnWidth`, `sidePanelWidth`, `detailPanelMode`, `timelineBarsVisible`.
-2. Collapse/expand + detail: `childrenHiddenIDs`, `detailStates`, `shouldScrollToFirstUiFindMatch`.
-3. Hover: `hoverIndentGuideIds`.
-4. Rewire Redux **tracking middleware** hooks that currently listen to timeline action types.
+**PR split status**:
+1. ✅ Layout prefs: `spanNameColumnWidth`, `sidePanelWidth`, `detailPanelMode`, `timelineBarsVisible`.
+2. ✅ Collapse/expand + detail: `childrenHiddenIDs`, `detailStates`, `shouldScrollToFirstUiFindMatch`.
+3. ⬜ Hover: `hoverIndentGuideIds` still lives only in the duck. `VirtualizedTraceView` reads it with `useSelector`, and `SpanTreeOffset` is still a `connect()`ed component whose `mapStateToProps` reads `state.traceTimeline`.
+4. ⬜ Rewire the Redux **tracking middleware** hooks that listen to timeline action types.
 
-**Components to rewire**: `TraceTimelineViewer`, `SpanBarRow`, `SpanDetailRow`, `TimelineHeaderRow`.
+**Why the duck is still alive**: `duck.track.ts` supplies `middlewareHooks` to `src/middlewares/track.ts`, so analytics for timeline interactions are emitted by a Redux middleware keyed on action types. Every migrated interaction therefore **dual-writes** — the components dispatch the Redux action *first*, so the middleware observes the pre-update state, then call the Zustand action. Severing that dual write requires relocating the analytics call sites off the middleware, and until then neither the duck nor `configure-store.ts` can be deleted.
+
+**Components rewired, still dual-writing to Redux**: `TracePage`, `TraceTimelineViewer`, `VirtualizedTraceView`, `SpanTreeOffset`, `SpanDetailSidePanel`.
 
 #### ✅ 1d. Deep Dependencies view modifiers (`ddg` duck - client-only fields)
 
@@ -1035,18 +1044,13 @@ Keep `useConfig()` as the stable **public API** throughout - only the backing im
 
 **Redux removed**: `trace` reducer fields: `traces` map, per-trace loading/error state.
 
-**New hook** (`src/hooks/useTraceQuery.ts`):
-```typescript
-export function useTraceQuery(traceId: string) {
-  return useQuery({
-    queryKey: ['trace', traceId],
-    queryFn: () => jaegerClient.fetchTrace(traceId),
-    staleTime: Infinity, // traces are immutable once loaded
-  });
-}
-```
+**New hooks** (`src/hooks/useTraceLoading.ts`): `useTrace(traceId)` for a single trace and `useTraces(ids)` for the compare cohort, both on the `['trace', id]` key with `staleTime: Infinity`.
 
-**Components to rewire**: `TracePage`, `TraceDiff` (both `a` and `b` traces).
+The fetch still goes through the **legacy** route — `JaegerAPI.fetchTrace` (`/api/traces/:id`) piped through `transformTraceData(...).asOtelTrace()`. Only the state layer moved off Redux here; switching the transport to `/api/v3/traces/{trace_id}` and a native OTLP parser is [ADR 0002](./0002-otlp-api-v3-migration.md) Milestone 3.2.
+
+Two shape mismatches are noted as TODOs in the hook file: `useTraces` still returns the legacy `Map<string, FetchedTrace>` while `useTrace` returns `UseQueryResult<IOtelTrace>`, and `staleTime: Infinity` is wrong for traces that are still receiving spans.
+
+**Components rewired**: `TracePage`, `TraceDiff` (both `a` and `b` traces).
 
 #### ✅ 2b. Search + file upload
 
@@ -1156,23 +1160,27 @@ queryKey: ['ddg', service, operation, start, end]
 
 #### ⬜ 2f. Monitor metrics
 
-**Redux removed**: `src/reducers/metrics.ts`.
+**Redux to remove**: `src/reducers/metrics.ts` — the last reducer whose state is actually read by a `connect()`ed component (`Monitor/ServicesView`).
 
 **New hooks**: one hook per metric dimension, mirroring current loading/error shapes.
 
+Note that SPM metrics have **no `/api/v3/` counterpart** — `jaeger-idl` defines no metrics endpoint under api_v3 — so this migration keeps calling `/api/metrics/*` through `JaegerAPI.fetchMetrics`. It is a state-layer change only, independent of [ADR 0002](./0002-otlp-api-v3-migration.md).
+
 #### ⬜ 2g. Path-agnostic decorations
 
-**Redux removed**: `src/reducers/path-agnostic-decorations.ts`.
+**Redux to remove**: `src/reducers/path-agnostic-decorations.ts` and `src/actions/path-agnostic-decorations.ts`, read by `DeepDependencies/Graph/DdgNodeContent` (`useSelector`) and `DeepDependencies/SidePanel/DetailsPanel` (`connect`).
 
-**New hook** + optional small Zustand store for decoration UI state.
+**New hook** + optional small Zustand store for decoration UI state. Decoration URLs come from user config, so this too is independent of the v3 API.
 
 ---
 
 ### Phase 3 - Derived state and selectors
 
-#### ⬜ 3a. OTLP selectors / facades
+#### ✅ 3a. OTLP facade access
 
-`selectOtelTrace` / `useOtelTrace` must read from **Query data** (not `state.trace.traces`). The `OtelTraceFacade` adapter wraps the raw OTLP payload into the shape `TraceTimelineViewer` expects.
+No trace data is read from Redux, and the goal here is met without selectors: the facade is applied where a trace enters the Query cache, in `hooks/useTraceLoading.ts` (API route) and `SearchTracePage/FileLoader.tsx` (uploaded files), both calling `transformTraceData(...).asOtelTrace()`. Components consume `IOtelTrace` / `IOtelSpan` as plain data. There is no `src/selectors/` directory and no `selectOtelTrace` / `useOtelTrace` accessor.
+
+Retiring the facade classes themselves belongs to [ADR 0002](./0002-otlp-api-v3-migration.md) Phase 4, once the native OTLP parser makes them redundant.
 
 #### ⬜ 3b. Heavy computations
 
@@ -1195,6 +1203,16 @@ Only promote to a Zustand store if profiling proves the `useMemo` pattern causes
 #### ⬜ 4a. Audit
 
 Grep for `useSelector`, `useDispatch`, `connect(`, `configureStore`, and all imports from `redux-actions` / `redux-promise-middleware`. Every hit must have a migration plan before proceeding.
+
+The residual surface is small enough to enumerate:
+
+| Redux artefact | Consumers | Resolved by |
+| :--- | :--- | :--- |
+| `reducers/metrics.ts` | `Monitor/ServicesView` (`connect`) | Phase 2f |
+| `reducers/path-agnostic-decorations.ts`, `actions/path-agnostic-decorations.ts` | `DdgNodeContent`, `DeepDependencies/SidePanel/DetailsPanel` | Phase 2g |
+| `TraceTimelineViewer/duck.ts`, `duck.track.ts`, `middlewares/track.ts` | `TracePage`, `TraceTimelineViewer`, `VirtualizedTraceView`, `SpanTreeOffset`, `SpanDetailSidePanel` | Phase 1c steps 3–4 |
+| Vestigial `connect()` wrappers whose `mapStateToProps` ignores state entirely | `SearchTracePage/SearchForm.tsx`, `TraceDiff/TraceDiff.tsx` | Phase 4b (mechanical) |
+| `utils/configure-store.ts`, `<Provider>` in `components/App/index.tsx`, `ReduxState` in `types/index.ts`, `types/TTraceTimeline.ts` | app shell, ~14 test files | Phase 4b/4c |
 
 #### ⬜ 4b. Remove packages
 
@@ -1402,9 +1420,8 @@ const trace = {
 
 ---
 
-**Status**: Proposed  
-**Approval Required**: Engineering Team, Project Maintainers  
-**Next Steps**: Review this ADR, discuss concerns, vote on recommendation
+**Status**: Accepted / In progress  
+**Next Steps**: Complete Phase 1c steps 3–4, then Phases 2f–2g and 4
 
 ---
 
