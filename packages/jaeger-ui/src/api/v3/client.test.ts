@@ -66,12 +66,12 @@ describe('JaegerClient', () => {
       await expect(promise).rejects.toBeInstanceOf(ZodError);
     });
 
-    it('throws error when response is not OK', async () => {
+    it('throws error when response is not OK with empty body', async () => {
       mockFetch.mockResolvedValue({
         ok: false,
         status: 500,
         statusText: 'Internal Server Error',
-        json: async () => ({}),
+        text: async () => '',
       });
 
       const promise = client.fetchServices();
@@ -80,18 +80,64 @@ describe('JaegerClient', () => {
       await expect(promise).rejects.toThrow('Failed to fetch services: 500 Internal Server Error');
     });
 
-    it('throws error when response is 404', async () => {
+    it('throws error when response is 404 with empty body', async () => {
       mockFetch.mockResolvedValue({
         ok: false,
         status: 404,
         statusText: 'Not Found',
-        json: async () => ({}),
+        text: async () => '',
       });
 
       const promise = client.fetchServices();
       vi.runAllTimers();
 
       await expect(promise).rejects.toThrow('Failed to fetch services: 404 Not Found');
+    });
+
+    it('includes JSON error message from response body', async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 400,
+        statusText: 'Bad Request',
+        text: async () => JSON.stringify({ message: 'Invalid service name: "service$pecial"' }),
+      });
+
+      const promise = client.fetchServices();
+      vi.runAllTimers();
+
+      await expect(promise).rejects.toThrow(
+        'Failed to fetch services: 400 Bad Request - Invalid service name: "service$pecial"'
+      );
+    });
+
+    it('includes plain-text error body when response is not JSON', async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 503,
+        statusText: 'Service Unavailable',
+        text: async () => 'upstream timeout',
+      });
+
+      const promise = client.fetchServices();
+      vi.runAllTimers();
+
+      await expect(promise).rejects.toThrow(
+        'Failed to fetch services: 503 Service Unavailable - upstream timeout'
+      );
+    });
+
+    it('includes serialized JSON body when no message field is present', async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 400,
+        statusText: 'Bad Request',
+        text: async () => JSON.stringify({ code: 400, error: 'bad input' }),
+      });
+
+      const promise = client.fetchServices();
+      vi.runAllTimers();
+
+      await expect(promise).rejects.toThrow('Failed to fetch services: 400 Bad Request -');
     });
   });
 
@@ -163,7 +209,7 @@ describe('JaegerClient', () => {
         ok: false,
         status: 500,
         statusText: 'Internal Server Error',
-        json: async () => ({}),
+        text: async () => '',
       });
 
       const promise = client.fetchSpanNames('my-service');
@@ -171,6 +217,22 @@ describe('JaegerClient', () => {
 
       await expect(promise).rejects.toThrow(
         'Failed to fetch span names for service "my-service": 500 Internal Server Error'
+      );
+    });
+
+    it('includes JSON error body in span names error message', async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 400,
+        statusText: 'Bad Request',
+        text: async () => JSON.stringify({ message: 'unknown service' }),
+      });
+
+      const promise = client.fetchSpanNames('bad-service');
+      vi.runAllTimers();
+
+      await expect(promise).rejects.toThrow(
+        'Failed to fetch span names for service "bad-service": 400 Bad Request - unknown service'
       );
     });
   });
@@ -399,13 +461,50 @@ describe('JaegerClient', () => {
       await expect(promise).rejects.toThrow(ZodError);
     });
 
-    it('throws on non-ok HTTP response', async () => {
-      mockFetch.mockResolvedValue({ ok: false, status: 500, statusText: 'Internal Server Error' });
+    it('throws on non-ok HTTP response with empty body', async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+        text: async () => '',
+      });
 
       const promise = client.fetchTraceSummaries(query);
       vi.runAllTimers();
 
       await expect(promise).rejects.toThrow('Failed to fetch trace summaries: 500 Internal Server Error');
+    });
+
+    it('includes JSON error body in trace summaries error message', async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 400,
+        statusText: 'Bad Request',
+        text: async () => JSON.stringify({ message: 'invalid time range' }),
+      });
+
+      const promise = client.fetchTraceSummaries(query);
+      vi.runAllTimers();
+
+      await expect(promise).rejects.toThrow(
+        'Failed to fetch trace summaries: 400 Bad Request - invalid time range'
+      );
+    });
+
+    it('includes plain-text error body in trace summaries error message', async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 503,
+        statusText: 'Service Unavailable',
+        text: async () => 'storage backend offline',
+      });
+
+      const promise = client.fetchTraceSummaries(query);
+      vi.runAllTimers();
+
+      await expect(promise).rejects.toThrow(
+        'Failed to fetch trace summaries: 503 Service Unavailable - storage backend offline'
+      );
     });
 
     it('throws ZodError when minStartTimeUnixNano is not a decimal string', async () => {
