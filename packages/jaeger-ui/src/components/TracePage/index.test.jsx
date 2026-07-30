@@ -1098,6 +1098,34 @@ describe('<TracePage>', () => {
       render(<TracePage {...genAiProps} backendCapabilities={null} />);
       expect(capturedHeaderProps.viewType).toBe(ETraceViewType.GenAITimelineViewer);
     });
+
+    // The two cases below deliberately construct a trace whose isGenAITrace
+    // disagrees with a raw gen_ai.* attribute scan. The two cannot disagree today,
+    // but that is exactly what a refinement to classifySpan produces: excluding a
+    // key makes the verdict false while the attribute is still present, and adding
+    // a non-gen_ai signal makes it true while no gen_ai.* attribute exists. Both
+    // pin that TracePage reads the trace's verdict instead of deriving its own.
+    it('does not auto-switch when isGenAITrace is false, despite a gen_ai.* attribute', () => {
+      const raw = traceGenerator.trace({});
+      raw.spans[0].tags.push({ key: 'gen_ai.tool.call.id', type: 'string', value: 'abc-123' });
+      const otelTrace = transformTraceData(raw).asOtelTrace();
+      otelTrace.isGenAITrace = false;
+      useTraceMock.mockReturnValue({ data: otelTrace, isPending: false, isError: false, error: null });
+
+      render(<TracePage {...defaultProps} id={otelTrace.traceID} />);
+      expect(capturedHeaderProps.viewType).toBe(ETraceViewType.TraceTimelineViewer);
+    });
+
+    it('auto-switches when isGenAITrace is true, despite no gen_ai.* attribute', () => {
+      const raw = traceGenerator.trace({});
+      raw.spans[0].tags.push({ key: 'db.system', type: 'string', value: 'vector' });
+      const otelTrace = transformTraceData(raw).asOtelTrace();
+      otelTrace.isGenAITrace = true;
+      useTraceMock.mockReturnValue({ data: otelTrace, isPending: false, isError: false, error: null });
+
+      render(<TracePage {...defaultProps} id={otelTrace.traceID} />);
+      expect(capturedHeaderProps.viewType).toBe(ETraceViewType.GenAITimelineViewer);
+    });
   });
 });
 

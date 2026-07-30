@@ -75,7 +75,7 @@ Each `ignoreDependencies` entry in the config includes an inline comment explain
 
 ## `vite.config.ts` — `lint` field
 
-Oxlint configuration lives in the `lint` field of the root `vite.config.ts`. To change linting rules, edit that field. See `docs/adr/0007-vite-plus-migration.md` for the ESLint → Oxlint rule mapping table.
+Oxlint configuration lives in the `lint` field of the root `vite.config.ts`. To change linting rules, edit that field. See [ADR-0007](docs/adr/0007-vite-plus-migration.md) for the resulting toolchain and [RFC 0005](docs/rfc/0005-vite-plus-migration.md) for the ESLint → Oxlint rule mapping table.
 
 ## `vite.config.ts` — `fmt` field
 
