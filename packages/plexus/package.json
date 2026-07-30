@@ -10,7 +10,7 @@
     "directory": "packages/plexus"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/jest-dom": "7.0.0",
     "@testing-library/react": "^16.3.1",
     "@types/d3-selection": "^3.0.11",
     "@types/d3-zoom": "3.0.8",
