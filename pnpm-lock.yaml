@@ -259,8 +259,8 @@ importers:
         specifier: 7.18.0
         version: 7.18.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       recharts:
-        specifier: 3.9.1
-        version: 3.9.1(@types/react@19.2.7)(react-dom@19.2.0(react@19.2.0))(react-is@19.2.0)(react@19.2.0)(redux@5.0.1)
+        specifier: 3.10.0
+        version: 3.10.0(@types/react@19.2.7)(react-dom@19.2.0(react@19.2.0))(react-is@19.2.0)(react@19.2.0)(redux@5.0.1)
       redux:
         specifier: 5.0.1
         version: 5.0.1
@@ -4605,8 +4605,8 @@ packages:
     resolution: {integrity: sha512-PNaGjoCnw9DBA2Kl8D+8po957z778q/HOPuY2u3Bkw/JO3eC8MDx7jn/PgMtSgpcBbs+6UOjDbwReGpXmRvs0g==}
     engines: {node: ^22.22.2 || ^24.15.0 || >=26.0.0}
 
-  recharts@3.9.1:
-    resolution: {integrity: sha512-WMcwlXcB7l+BbxiEdyClkG+1sxrMHNZpzT577LEvU4+rXPd8oTAy1wXk72hnk2KOOmxuLvw3z5DtXT7HEAydtg==}
+  recharts@3.10.0:
+    resolution: {integrity: sha512-wulMvfncpIlmu2uFtRU/mE5/+NiVtASXkw2KdwJTdHs3WsASX0WxZlX+rpKgyn5BDbIhkPtCpUKkB9XNK5KE0w==}
     engines: {node: '>=18'}
     peerDependencies:
       react: 19.2.0
@@ -9254,7 +9254,7 @@ snapshots:
       json-parse-even-better-errors: 6.0.0
       npm-normalize-package-bin: 6.0.0
 
-  recharts@3.9.1(@types/react@19.2.7)(react-dom@19.2.0(react@19.2.0))(react-is@19.2.0)(react@19.2.0)(redux@5.0.1):
+  recharts@3.10.0(@types/react@19.2.7)(react-dom@19.2.0(react@19.2.0))(react-is@19.2.0)(react@19.2.0)(redux@5.0.1):
     dependencies:
       '@reduxjs/toolkit': 2.12.0(react-redux@9.3.0(@types/react@19.2.7)(react@19.2.0)(redux@5.0.1))(react@19.2.0)
       clsx: 2.1.1
