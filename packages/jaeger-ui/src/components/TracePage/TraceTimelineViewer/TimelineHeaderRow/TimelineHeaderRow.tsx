@@ -29,6 +29,7 @@ type TimelineHeaderRowProps = {
   onExpandOne: () => void;
   resizerMax: number;
   serviceFilterNode?: React.ReactNode;
+  logicalViewToggleNode?: React.ReactNode;
   sidePanelVisible: boolean;
   sidePanelWidth: number;
   sidePanelLabel: string;
@@ -51,6 +52,7 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
     onExpandOne,
     resizerMax,
     serviceFilterNode,
+    logicalViewToggleNode,
     sidePanelVisible,
     sidePanelWidth,
     sidePanelLabel,
@@ -70,6 +72,7 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
           Service &amp; {props.useOtelTerms ? 'Span Name' : 'Operation'}
         </h3>
         {serviceFilterNode}
+        {logicalViewToggleNode}
         <TimelineCollapser
           onCollapseAll={onCollapseAll}
           onExpandAll={onExpandAll}

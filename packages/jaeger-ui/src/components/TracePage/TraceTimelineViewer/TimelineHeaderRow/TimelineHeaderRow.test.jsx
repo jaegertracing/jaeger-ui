@@ -159,6 +159,24 @@ describe('<TimelineHeaderRow>', () => {
     expect(screen.getByTestId('timeline-collapser')).toBeInTheDocument();
   });
 
+  it('renders serviceFilterNode and logicalViewToggleNode when provided', () => {
+    render(
+      <TimelineHeaderRow
+        {...props}
+        serviceFilterNode={<div data-testid="service-filter-node" />}
+        logicalViewToggleNode={<div data-testid="logical-view-toggle-node" />}
+      />
+    );
+    expect(screen.getByTestId('service-filter-node')).toBeInTheDocument();
+    expect(screen.getByTestId('logical-view-toggle-node')).toBeInTheDocument();
+  });
+
+  it('renders nothing extra when serviceFilterNode and logicalViewToggleNode are omitted', () => {
+    render(<TimelineHeaderRow {...props} />);
+    expect(screen.queryByTestId('service-filter-node')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('logical-view-toggle-node')).not.toBeInTheDocument();
+  });
+
   describe('tree-only mode (timelineBarsVisible=false)', () => {
     // In tree-only mode TraceTimelineViewer passes nameColumnWidth=1 (name fills the main area).
     const barsHiddenProps = { ...props, timelineBarsVisible: false, nameColumnWidth: 1 };

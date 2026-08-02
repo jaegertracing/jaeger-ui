@@ -12,6 +12,7 @@ import {
   decodeSvcFilter,
   encodeSvcFilter,
   getSortedServiceNames,
+  sanitizePrunedServices,
   SVC_FILTER_DEFAULTS_KEY,
   SvcFilterDefaults,
 } from '../url/svcFilter';
@@ -24,33 +25,6 @@ function setsEqual(a: Set<string>, b: Set<string>): boolean {
     if (!b.has(v)) return false;
   }
   return true;
-}
-
-/**
- * Sanitize a pruned set against root service protection rules:
- * - If there's a single root service, it must not be pruned.
- * - If all root services would be pruned, discard the filter entirely.
- */
-function sanitizePrunedServices(pruned: Set<string>, rootServiceNames: Set<string>): Set<string> {
-  if (pruned.size === 0) return pruned;
-  if (rootServiceNames.size === 1) {
-    const rootName = rootServiceNames.values().next().value as string;
-    if (pruned.has(rootName)) {
-      const sanitized = new Set(pruned);
-      sanitized.delete(rootName);
-      return sanitized;
-    }
-    return pruned;
-  }
-  // Multiple roots: ensure at least one root remains visible.
-  let anyRootVisible = false;
-  for (const name of rootServiceNames) {
-    if (!pruned.has(name)) {
-      anyRootVisible = true;
-      break;
-    }
-  }
-  return anyRootVisible ? pruned : new Set();
 }
 
 /**

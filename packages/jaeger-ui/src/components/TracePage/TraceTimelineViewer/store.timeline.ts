@@ -6,12 +6,31 @@ import DetailState from './SpanDetail/DetailState';
 import { useLayoutPrefsStore } from './store.layout';
 import { TNil } from '../../../types';
 import { IOtelSpan, IOtelTrace, IEvent } from '../../../types/otel';
+import { getServicesWithoutGenAISpans } from '../../../utils/genai';
+import { sanitizePrunedServices } from '../url/svcFilter';
 import {
   applyDetailSubsectionToggle,
   calculateFocusedFindRowStates,
   shouldDisableCollapse,
   trimFocusedDetailStatesForSidePanel,
 } from './timeline-utils';
+
+/**
+ * Computes which services in a trace own zero GenAI spans, sanitized against the same
+ * root-service-protection rule the manual service filter uses (never orphan the tree).
+ * Called once per trace load; the result is cached on the store, not recomputed on every
+ * render or every logical-view toggle flip.
+ */
+function computeLogicalViewPrunedServices(trace: IOtelTrace): Set<string> {
+  if (!trace.isGenAITrace) return new Set();
+  const candidate = getServicesWithoutGenAISpans(trace.spans);
+  if (candidate.size === 0) return candidate;
+  const rootServiceNames = new Set<string>();
+  for (const span of trace.rootSpans) {
+    rootServiceNames.add(span.resource.serviceName);
+  }
+  return sanitizePrunedServices(candidate, rootServiceNames);
+}
 
 type TraceTimelineInteractionStore = {
   traceID: string | null;
@@ -21,6 +40,12 @@ type TraceTimelineInteractionStore = {
   prunedServices: Set<string>;
   setPrunedServices: (pruned: Set<string>) => void;
   clearServiceFilter: () => void;
+  // Services with zero GenAI spans, computed once per trace load (see setTrace).
+  // Not itself the visible filter - only applied when logicalViewEnabled is true,
+  // via selectEffectivePrunedServices below.
+  logicalViewPrunedServices: Set<string>;
+  logicalViewEnabled: boolean;
+  setLogicalViewEnabled: (enabled: boolean) => void;
   // Resets ephemeral fields for a new trace and optionally pre-apply a uiFind filter
   setTrace: (trace: IOtelTrace, uiFind?: string | TNil) => void;
   childrenToggle: (spanID: string) => void;
@@ -50,6 +75,11 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
 
   clearServiceFilter: () => set({ prunedServices: new Set<string>() }),
 
+  logicalViewPrunedServices: new Set<string>(),
+  logicalViewEnabled: false,
+
+  setLogicalViewEnabled: (enabled: boolean) => set({ logicalViewEnabled: enabled }),
+
   setTrace: (trace: IOtelTrace, uiFind?: string | TNil) => {
     const { traceID: currentTraceID } = get();
     if (trace.traceID === currentTraceID) return;
@@ -62,6 +92,8 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
       detailStates: new Map<string, DetailState>(),
       shouldScrollToFirstUiFindMatch: false,
       prunedServices: new Set<string>(),
+      logicalViewPrunedServices: computeLogicalViewPrunedServices(trace),
+      logicalViewEnabled: false,
     };
 
     if (uiFind) {
@@ -215,3 +247,25 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
     set(focused);
   },
 }));
+
+/**
+ * Selector for the pruned-service set that should actually drive row visibility and
+ * uiFind match filtering: the manual service filter, unioned with the logical-view
+ * filter when it's enabled. Every read site that needs "what's actually hidden right
+ * now" (VirtualizedTraceView, TracePage's uiFind match counting) should use this
+ * selector rather than reading `prunedServices` directly, so the two stay consistent
+ * instead of each re-deriving the union (or forgetting to).
+ *
+ * Returns the existing `prunedServices` Set reference unchanged when logical view is
+ * off or contributes nothing, so unrelated selector subscriptions don't re-render.
+ */
+export function selectEffectivePrunedServices(state: TraceTimelineInteractionStore): Set<string> {
+  const { prunedServices, logicalViewEnabled, logicalViewPrunedServices } = state;
+  if (!logicalViewEnabled || logicalViewPrunedServices.size === 0) {
+    return prunedServices;
+  }
+  if (prunedServices.size === 0) {
+    return logicalViewPrunedServices;
+  }
+  return new Set([...prunedServices, ...logicalViewPrunedServices]);
+}
