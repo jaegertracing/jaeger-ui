@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward } from 'react-icons/io5';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
@@ -15,6 +15,7 @@ import { TNil } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan } from '../../../types/otel';
 import { getSpanPillsForSpan, SpanPill } from './spanPills';
+import colorGenerator from '../../../utils/color-generator';
 
 import { getSpanIconComponent } from './span-icons';
 
@@ -92,6 +93,21 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   onChildrenToggled,
   useOtelTerms,
 }) => {
+  // Compute ancestor chain colors for SpanTreeOffset
+  const { ancestorColors, isLastChild } = useMemo(() => {
+    const colors: (string | null)[] = [];
+    let current: IOtelSpan | undefined = span.parentSpan;
+    while (current) {
+      colors.unshift(colorGenerator.getColorByKey(current.resource.serviceName));
+      current = current.parentSpan;
+    }
+    const parent = span.parentSpan;
+    const lastChild = parent
+      ? (parent.childSpans ?? [])[parent.childSpans?.length - 1]?.spanID === span.spanID
+      : false;
+    return { ancestorColors: colors, isLastChild: lastChild };
+  }, [span]);
+
   const _detailToggle = useCallback(() => {
     onDetailToggled(span.spanID);
   }, [onDetailToggled, span.spanID]);
@@ -160,7 +176,11 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
         <div className={`span-name-wrapper ${isMatchingFilter ? 'is-matching-filter' : ''}`}>
           <SpanTreeOffset
             childrenVisible={isChildrenExpanded}
-            span={span}
+            spanID={span.spanID}
+            hasChildren={isParent}
+            childCount={(span.childSpans ?? []).length}
+            ancestorColors={ancestorColors}
+            isLastChild={isLastChild}
             onClick={isParent ? _childrenToggle : undefined}
             color={color}
           />

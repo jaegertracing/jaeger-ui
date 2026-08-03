@@ -11,9 +11,9 @@ import { makeAttributes } from '../../../model/attributes';
 import { GEN_AI_REQUEST_MODEL } from '../../../constants/span-attributes';
 
 vi.mock('./SpanTreeOffset', () => ({
-  default: jest.fn(({ span, childrenVisible, onClick }) => (
+  default: jest.fn(({ spanID, childrenVisible, onClick }) => (
     <div data-testid="span-tree-offset" onClick={onClick}>
-      SpanTreeOffset: {span.spanID} - {childrenVisible ? 'expanded' : 'collapsed'}
+      SpanTreeOffset: {spanID} - {childrenVisible ? 'expanded' : 'collapsed'}
     </div>
   )),
 }));
