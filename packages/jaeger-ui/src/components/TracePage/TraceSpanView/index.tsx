@@ -6,7 +6,6 @@ import { Table, Button, Select, Form, Tooltip } from 'antd';
 import dayjs from 'dayjs';
 import { ColumnProps } from 'antd/es/table';
 import './index.css';
-import { TNil } from '../../../types';
 import { IOtelSpan, IOtelTrace } from '../../../types/otel';
 import RelativeBar from '../../common/RelativeBar';
 import { formatDuration, formatDurationCompact } from '../../../utils/date';
@@ -18,7 +17,6 @@ type FilterType = 'serviceName' | 'operationName';
 
 type Props = {
   trace: IOtelTrace;
-  uiFindVertexKeys: Set<string> | TNil;
   uiFind: string | null | undefined;
   useOtelTerms: boolean;
 };

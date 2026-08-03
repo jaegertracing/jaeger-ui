@@ -19,9 +19,7 @@ import * as track from './index.track';
 import * as keyboardShortcutsMod from './keyboard-shortcuts';
 import { merge as mergeShortcuts } from './keyboard-shortcuts';
 import * as scrollPageMod from './scroll-page';
-import * as calculateTraceDagEV from './TraceGraph/calculateTraceDagEV';
 import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
-import * as getUiFindVertexKeys from '../TraceDiff/TraceDiffGraph/traceDiffGraphUtils';
 import traceGenerator from '../../demo/trace-generators';
 import transformTraceData from '../../model/transform-trace-data';
 import filterSpansSpy from '../../utils/filter-spans';
@@ -31,15 +29,19 @@ import ScrollManager from './ScrollManager';
 
 let capturedHeaderProps = {};
 let capturedArchiveNotifierProps = {};
+let capturedTimelineProps = {};
+let capturedGraphProps = {};
 
 vi.mock('./TraceTimelineViewer', async () => {
-  return mockDefault(function MockTraceTimelineViewer() {
+  return mockDefault(function MockTraceTimelineViewer(props) {
+    capturedTimelineProps = props;
     return <div data-testid="mock-timeline-viewer">TraceTimelineViewer</div>;
   });
 });
 
 vi.mock('./TraceGraph/TraceGraph', async () => {
-  return mockDefault(function MockTraceGraph() {
+  return mockDefault(function MockTraceGraph(props) {
+    capturedGraphProps = props;
     return <div data-testid="mock-trace-graph">TraceGraph</div>;
   });
 });
@@ -239,8 +241,17 @@ describe('<TracePage>', () => {
     ScrollManager.mockClear();
     capturedHeaderProps = {};
     capturedArchiveNotifierProps = {};
+    capturedTimelineProps = {};
+    capturedGraphProps = {};
     defaultProps.focusUiFindMatches.mockClear();
     mockTraceTimelineStore.focusUiFindMatches.mockClear();
+    // Ensure headerHeight is non-zero so view components (TraceTimelineViewer, TraceGraph)
+    // are rendered. They are gated on `headerHeight` in TracePage.
+    jest.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(100);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   describe('clearSearch', () => {
@@ -344,7 +355,7 @@ describe('<TracePage>', () => {
     });
   });
 
-  it('uses uiFind and params.id to compute memo cache key for filterSpans', () => {
+  it('uses uiFind and params.id to compute memo cache key for filterSpans (Statistics/SpanView only)', () => {
     const uiFind = 'uiFind';
     const localTrace = transformTraceData(traceGenerator.trace({})).asOtelTrace();
     useTraceMock.mockReturnValue({ data: localTrace, isPending: false, isError: false, error: null });
@@ -352,10 +363,14 @@ describe('<TracePage>', () => {
     filterSpansSpy.mockClear();
     filterSpansSpy.mockImplementation(() => new Set());
 
+    // Switch to TraceStatistics — filterSpans only runs for Statistics/SpanView views
     const { rerender } = render(<TracePage {...defaultProps} uiFind={undefined} />);
+    act(() => {
+      capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceStatistics);
+    });
     expect(filterSpansSpy).not.toHaveBeenCalled();
 
-    // Adding uiFind triggers filterSpans
+    // Adding uiFind while in Statistics view triggers filterSpans
     rerender(<TracePage {...defaultProps} uiFind={uiFind} />);
     expect(filterSpansSpy).toHaveBeenCalledTimes(1);
     expect(filterSpansSpy).toHaveBeenLastCalledWith(uiFind, localTrace.spans);
@@ -516,25 +531,82 @@ describe('<TracePage>', () => {
     expect(track.trackRange).toHaveBeenCalledWith('kbd', expect.any(Array), [0, 1]);
   });
 
-  it('computes graphFindMatches and sets findCount based on traceDagEV when viewType is TraceGraph', () => {
-    const mockVertices = [{ key: 'v1' }, { key: 'v2' }];
-    const mockMatches = new Set(['v1']);
-
-    calculateTraceDagEV.default.mockReturnValue({ vertices: mockVertices });
-    const getUiFindVertexKeysSpy = jest
-      .spyOn(getUiFindVertexKeys, 'getUiFindVertexKeys')
-      .mockReturnValue(mockMatches);
-
+  it('updates resultCount when TraceGraph fires onSearchResults callback', () => {
     render(<TracePage {...defaultProps} uiFind="some-search" />);
 
     act(() => {
       capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceGraph);
     });
 
-    expect(getUiFindVertexKeysSpy).toHaveBeenCalledWith('some-search', mockVertices);
+    expect(capturedHeaderProps.resultCount).toBe(0);
+
+    act(() => {
+      capturedGraphProps.onSearchResults?.({ count: 5 });
+    });
+
+    expect(capturedHeaderProps.resultCount).toBe(5);
+  });
+
+  it('updates resultCount when TraceTimelineViewer fires onSearchResults callback', () => {
+    render(<TracePage {...defaultProps} uiFind="some-search" />);
+
+    expect(capturedHeaderProps.resultCount).toBe(0);
+
+    act(() => {
+      capturedTimelineProps.onSearchResults?.({ count: 12 });
+    });
+
+    expect(capturedHeaderProps.resultCount).toBe(12);
+  });
+
+  it('shows 0 for a freshly switched view until that view reports its own count', () => {
+    render(<TracePage {...defaultProps} uiFind="some-search" />);
+
+    act(() => {
+      capturedTimelineProps.onSearchResults?.({ count: 10 });
+    });
+
+    expect(capturedHeaderProps.resultCount).toBe(10);
+
+    act(() => {
+      capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceGraph);
+    });
+
+    // Stale result belonged to the timeline view, not the graph view now showing.
+    expect(capturedHeaderProps.resultCount).toBe(0);
+  });
+
+  it('does not get stuck at 0 after the new view reports its count (regression, PR #4143 review)', () => {
+    render(<TracePage {...defaultProps} uiFind="some-search" />);
+
+    // Active search while on Trace Timeline.
+    act(() => {
+      capturedTimelineProps.onSearchResults?.({ count: 1 });
+    });
     expect(capturedHeaderProps.resultCount).toBe(1);
 
-    getUiFindVertexKeysSpy.mockRestore();
+    // Switch to Trace Graph.
+    act(() => {
+      capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceGraph);
+    });
+    expect(capturedHeaderProps.resultCount).toBe(0);
+
+    // Trace Graph reports its own match count for the same search term.
+    act(() => {
+      capturedGraphProps.onSearchResults?.({ count: 1 });
+    });
+    expect(capturedHeaderProps.resultCount).toBe(1);
+
+    // Switch back to Trace Timeline without retyping the search.
+    act(() => {
+      capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceTimelineViewer);
+    });
+    expect(capturedHeaderProps.resultCount).toBe(0);
+
+    act(() => {
+      capturedTimelineProps.onSearchResults?.({ count: 1 });
+    });
+    expect(capturedHeaderProps.resultCount).toBe(1);
   });
 
   describe('TracePageHeader props', () => {
@@ -668,83 +740,44 @@ describe('<TracePage>', () => {
       });
     });
 
-    describe('resultCount', () => {
-      let getUiFindVertexKeysSpy;
-
-      beforeAll(() => {
-        getUiFindVertexKeysSpy = jest.spyOn(getUiFindVertexKeys, 'getUiFindVertexKeys');
+    describe('resultCount via onSearchResults callback', () => {
+      it('is 0 by default before any view reports results', () => {
+        render(<TracePage {...defaultProps} uiFind="test-find" />);
+        expect(capturedHeaderProps.resultCount).toBe(0);
       });
 
-      beforeEach(() => {
-        getUiFindVertexKeysSpy.mockReset();
-        filterSpansSpy.mockReset();
+      it('reflects the count reported by TraceTimelineViewer', () => {
+        render(<TracePage {...defaultProps} uiFind="test-find" />);
+
+        act(() => {
+          capturedTimelineProps.onSearchResults?.({ count: 20 });
+        });
+
+        expect(capturedHeaderProps.resultCount).toBe(20);
       });
 
-      it('is the size of spanFindMatches when available', () => {
-        const size = 20;
-        const mockSet = new Set();
-        for (let i = 0; i < size; i++) {
-          mockSet.add(`span-${i}`);
-        }
+      it('reflects the count reported by TraceGraph', () => {
+        render(<TracePage {...defaultProps} uiFind="test-find" />);
 
-        filterSpansSpy.mockReset();
-        filterSpansSpy.mockReturnValue(mockSet);
+        act(() => {
+          capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceGraph);
+        });
 
-        const props = {
-          ...defaultProps,
-          uiFind: 'test-find',
-        };
+        act(() => {
+          capturedGraphProps.onSearchResults?.({ count: 30 });
+        });
 
-        let resultCount;
-        if (props.uiFind) {
-          const spanFindMatches = filterSpansSpy(props.uiFind, trace.spans);
-          resultCount = spanFindMatches ? spanFindMatches.size : 0;
-        }
-
-        expect(resultCount).toBe(size);
+        expect(capturedHeaderProps.resultCount).toBe(30);
       });
 
-      it('is the size of graphFindMatches when available', () => {
-        const size = 30;
-        const mockSet = new Set();
-        for (let i = 0; i < size; i++) {
-          mockSet.add(`vertex-${i}`);
-        }
+      it('is 0 when view reports zero results', () => {
+        render(<TracePage {...defaultProps} uiFind="no-matches" />);
 
-        getUiFindVertexKeysSpy.mockReturnValue(mockSet);
+        act(() => {
+          capturedTimelineProps.onSearchResults?.({ count: 0 });
+        });
 
-        const props = {
-          ...defaultProps,
-          uiFind: 'test-find',
-        };
-
-        const viewType = ETraceViewType.TraceGraph;
-        let resultCount;
-
-        if (viewType === ETraceViewType.TraceGraph && props.uiFind) {
-          const vertices = [];
-          const graphFindMatches = getUiFindVertexKeysSpy(props.uiFind, vertices);
-          resultCount = graphFindMatches ? graphFindMatches.size : 0;
-        }
-
-        expect(resultCount).toBe(size);
-      });
-
-      it('defaults to 0 when no matches found', () => {
-        filterSpansSpy.mockReturnValue(null);
-
-        const props = {
-          ...defaultProps,
-          uiFind: 'no-matches',
-        };
-
-        let resultCount = null;
-        if (props.uiFind) {
-          const spanFindMatches = filterSpansSpy(props.uiFind, trace.spans);
-          resultCount = spanFindMatches ? spanFindMatches.size : 0;
-        }
-
-        expect(resultCount).toBe(0);
+        expect(capturedHeaderProps.resultCount).toBe(0);
       });
     });
 
@@ -887,19 +920,12 @@ describe('<TracePage>', () => {
   });
 
   describe('manages various UI state', () => {
-    beforeAll(() => {
-      calculateTraceDagEV.default.mockClear();
-    });
-
     it('propagates headerHeight changes', () => {
-      jest.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(100);
       render(<TracePage {...defaultProps} />);
 
       const section = document.querySelector('section');
       expect(section).toBeInTheDocument();
       expect(section.style.paddingTop).toBe('100px');
-
-      jest.restoreAllMocks();
     });
 
     it('initializes slimView correctly', () => {
@@ -932,15 +958,12 @@ describe('<TracePage>', () => {
     });
 
     it('propagates traceView changes', () => {
-      calculateTraceDagEV.default.mockClear();
-
       render(<TracePage {...defaultProps} />);
 
       act(() => {
         capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceGraph);
       });
       expect(capturedHeaderProps.viewType).toBe(ETraceViewType.TraceGraph);
-      expect(calculateTraceDagEV.default).toHaveBeenCalledWith(trace);
 
       act(() => {
         capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceSpansView);
