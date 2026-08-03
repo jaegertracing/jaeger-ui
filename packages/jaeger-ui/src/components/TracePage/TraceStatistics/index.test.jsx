@@ -557,4 +557,20 @@ describe('<TraceTagOverview>', () => {
       }
     });
   });
+
+  it('calls onSearchResults with matches when uiFind is provided', async () => {
+    const onSearchResults = vi.fn();
+    const { rerender } = render(<TraceStatistics {...defaultProps} onSearchResults={onSearchResults} />);
+
+    expect(onSearchResults).toHaveBeenCalledWith(null);
+
+    rerender(<TraceStatistics {...defaultProps} uiFind="service1" onSearchResults={onSearchResults} />);
+
+    await waitFor(() => {
+      expect(onSearchResults).toHaveBeenCalled();
+      const lastCall = onSearchResults.mock.calls[onSearchResults.mock.calls.length - 1][0];
+      expect(lastCall).toBeInstanceOf(Set);
+      expect(lastCall.size).toBeGreaterThan(0);
+    });
+  });
 });

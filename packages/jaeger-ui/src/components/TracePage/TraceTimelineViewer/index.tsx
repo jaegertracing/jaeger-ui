@@ -1,9 +1,13 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState, useMemo } from 'react';
+import _memoize from 'lodash/memoize';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
+
+import { filterPrunedSpanIDs } from './generateRowStates';
+import filterSpans from '../../../utils/filter-spans';
 
 import { actions } from './duck';
 import {
@@ -43,7 +47,8 @@ type TDispatchProps = {
 
 type TProps = TDispatchProps & {
   registerAccessors: (accessors: Accessors) => void;
-  findMatchesIDs: Set<string> | TNil;
+  uiFind: string | TNil;
+  onSearchResults: (matches: Set<string> | TNil) => void;
   scrollToFirstVisibleSpan: () => void;
   trace: IOtelTrace;
   criticalPath: CriticalPathSection[];
@@ -75,6 +80,8 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     viewRange,
     trace,
     useOtelTerms,
+    uiFind,
+    onSearchResults,
     ...rest
   } = props;
 
@@ -92,6 +99,26 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   const zustandCollapseOne = useTraceTimelineStore(s => s.collapseOne);
   const zustandExpandAll = useTraceTimelineStore(s => s.expandAll);
   const zustandExpandOne = useTraceTimelineStore(s => s.expandOne);
+  const prunedServices = useTraceTimelineStore(s => s.prunedServices);
+
+  const filterSpansMemo = useMemo(
+    () => _memoize(filterSpans, (textFilter: string) => `${textFilter} ${trace.traceID}`),
+    [trace.traceID]
+  );
+
+  const findMatchesIDs = useMemo(() => {
+    if (!uiFind) return null;
+    const allMatches = filterSpansMemo(uiFind, trace.spans);
+    return trace && prunedServices.size > 0
+      ? filterPrunedSpanIDs(allMatches, trace.spanMap, prunedServices)
+      : allMatches;
+  }, [uiFind, trace, prunedServices, filterSpansMemo]);
+
+  useEffect(() => {
+    if (onSearchResults) {
+      onSearchResults(findMatchesIDs);
+    }
+  }, [findMatchesIDs, onSearchResults]);
 
   const setSpanNameColumnWidth = useCallback(
     (width: number) => {
@@ -243,6 +270,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       currentViewRangeTime={viewRange.time.current}
       nameColumnWidth={nameColumnWidth}
       spanPillsEnabled={spanPillsEnabled}
+      findMatchesIDs={findMatchesIDs}
     />
   );
 
