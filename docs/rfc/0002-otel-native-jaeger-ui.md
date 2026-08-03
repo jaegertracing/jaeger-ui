@@ -116,7 +116,8 @@ interface OtelSpan {
   // Naming & Classification
   name: string;                 // was: operationName
   kind: SpanKind;               // was: derived from tags['span.kind'] (lowercase, e.g. "server")
-                                // in OTLP-JSON wire format: "SPAN_KIND_SERVER" (strip prefix when parsing)
+                                // in OTLP-JSON wire format: a JSON number (2 = server), omitted when 0
+                                // (see "Field encodings on this route" under Milestone 3.2)
 
   // Timing
   startTime: Microseconds;      // was: startTime
@@ -553,8 +554,9 @@ The new parser replaces the role of `transformTraceData` for the OTLP route. Cov
   export function parseOtlpTrace(wireData: IOtlpTraceData): IOtelTrace {
     // 1. Validate wireData (optionally with Zod)
     // 2. Map OTLP properties to IOtelTrace
-    //    - span.kind arrives as "SPAN_KIND_SERVER" (protojson enum name);
-    //      strip the "SPAN_KIND_" prefix to map to the SpanKind enum.
+    //    - span.kind arrives as a JSON number (2 = server), omitted entirely
+    //      when 0; map the int32 to the SpanKind enum. It is NOT the protojson
+    //      enum name on this route -- see the field-encoding table below.
     // 3. ENRICH: Calculate derived properties (depth, parent/child refs, etc.)
     // 4. Return enriched IOtelTrace
   }
