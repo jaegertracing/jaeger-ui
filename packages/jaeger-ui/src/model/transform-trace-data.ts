@@ -11,6 +11,10 @@ import { IOtelTrace } from '../types/otel';
 import OtelTraceFacade from './OtelTraceFacade';
 
 // exported for tests
+export const CYCLIC_PARENT_WARNING =
+  'Cyclic parent reference detected; this span was promoted to a root span so the trace can render';
+
+// exported for tests
 export function deduplicateTags(spanTags: ReadonlyArray<KeyValuePair>) {
   const warningsHash: Map<string, string> = new Map<string, string>();
   const tags: KeyValuePair[] = spanTags.reduce<KeyValuePair[]>((uniqueTags, tag) => {
@@ -149,6 +153,10 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
 
   const spans: Span[] = [];
   const svcCounts: Record<string, number> = {};
+  // Tracks which spans the traversal has already emitted. Besides keeping a span out of
+  // the flat list twice, this makes the traversal safe against parent cycles, where a
+  // span can appear inside its own subtree.
+  const visited = new Set<string>();
 
   // A startTime that is missing/NaN or 0 (the Unix epoch, which no real span
   // emits) carries no usable timestamp. Repair it by inheriting the parent's
@@ -173,6 +181,10 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   // Depth-first traversal to order spans, populate the flat array, and compute
   // the trace's time range from the (already-repaired) start times.
   const processSpan = (span: Span, depth: number) => {
+    if (visited.has(span.spanID)) {
+      return;
+    }
+    visited.add(span.spanID);
     span.depth = depth;
     span.hasChildren = span.childSpans.length > 0;
 
@@ -217,9 +229,40 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   rootSpans.sort((a, b) => a.startTime - b.startTime);
   rootSpans.forEach(root => processSpan(root, 0));
 
+  // A span whose parent reference resolves can still be unreachable from every root,
+  // because each member of a parent cycle has its parent inside that cycle and so is
+  // never itself a root. A trace made entirely of such spans has no root at all and
+  // would render as an empty timeline.
+  //
+  // This is reachable from ordinary data: the v1 rendering of an OTLP span link is a
+  // FOLLOWS_FROM reference, and the parent search above accepts FOLLOWS_FROM, so a root
+  // span carrying a link to one of its own descendants becomes that descendant's child.
+  //
+  // Promote the earliest unreached span to a root and traverse again, repeating until
+  // every span has been placed. Sorting once and skipping spans that a previous pass
+  // already reached is equivalent to repeatedly picking the earliest unreached span.
+  // For a normal forest nothing is unreached and this costs one size comparison.
+  if (visited.size < spanMap.size) {
+    const unreached: Span[] = [];
+    for (const span of spanMap.values()) {
+      if (!visited.has(span.spanID)) {
+        unreached.push(span);
+      }
+    }
+    unreached.sort((a, b) => a.startTime - b.startTime);
+    for (const span of unreached) {
+      if (visited.has(span.spanID)) {
+        continue;
+      }
+      repairStartTime(span);
+      (span.warnings as string[]).push(CYCLIC_PARENT_WARNING);
+      rootSpans.push(span);
+      processSpan(span, 0);
+    }
+  }
+
   // traceStartTime/traceEndTime are only updated while visiting spans reachable
-  // from a root. If the trace has spans but no root (e.g. every span is part of
-  // a reference cycle), nothing is visited and traceStartTime keeps its sentinel
+  // from a root. A trace with no spans at all leaves traceStartTime at its sentinel
   // value, which would produce a negative duration. Collapse to a zero range.
   if (spans.length === 0) {
     traceStartTime = 0;
