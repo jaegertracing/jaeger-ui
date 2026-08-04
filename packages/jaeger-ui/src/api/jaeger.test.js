@@ -26,6 +26,7 @@ import JaegerAPI, {
 
 const defaultOptions = {
   credentials: 'same-origin',
+  signal: expect.any(AbortSignal),
 };
 
 describe('archiveTrace', () => {
@@ -245,5 +246,36 @@ describe('fetchMetrics', () => {
 
     const resp = await JaegerAPI.fetchMetrics(metricsType, serviceName, query);
     expect(resp.quantile).toBe(query.quantile);
+  });
+});
+
+describe('getJSON timeout', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    fetchMock.mockReset();
+  });
+
+  it('aborts request and throws Error on timeout', async () => {
+    fetchMock.mockImplementation((url, options) => {
+      return new Promise((resolve, reject) => {
+        if (options && options.signal) {
+          options.signal.addEventListener('abort', () => {
+            const abortError = new Error('The operation was aborted');
+            abortError.name = 'AbortError';
+            reject(abortError);
+          });
+        }
+      });
+    });
+
+    const promise = JaegerAPI.fetchTrace('trace-id');
+    vi.advanceTimersByTime(10000);
+    const err = await promise.catch(e => e);
+    expect(err.message).toMatch('HTTP Error: Request timeout after 10000ms');
+    expect(err.httpUrl).toMatch('/api/traces/trace-id');
   });
 });

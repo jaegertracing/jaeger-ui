@@ -50,38 +50,56 @@ function getJSON(url: string, options: FetchOptions = {}): Promise<any> {
     queryStr = `?${typeof query === 'string' ? query : queryString.stringify(query)}`;
   }
 
-  return fetch(`${url}${queryStr}`, init as RequestInit).then((response: Response) => {
-    if (response.status < 400) {
-      return response.json();
-    }
-    return response.text().then((bodyText: string) => {
-      let data: any;
-      let bodyTextFmt: string | null;
-      let errorMessage: string;
-      try {
-        data = JSON.parse(bodyText);
-        bodyTextFmt = JSON.stringify(data, null, 2);
-      } catch {
-        data = null;
-        bodyTextFmt = null;
+  const timeout = getConfig().api?.requestTimeoutMs ?? 10000;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  (init as any).signal = controller.signal;
+
+  return fetch(`${url}${queryStr}`, init as RequestInit)
+    .then((response: Response) => {
+      if (response.status < 400) {
+        return response.json();
       }
-      if (data && Array.isArray(data.errors) && data.errors.length) {
-        errorMessage = data.errors.map((err: any) => getMessageFromError(err, response.status)).join('; ');
-      } else {
-        errorMessage = bodyText || `${response.status} - ${response.statusText}`;
+      return response.text().then((bodyText: string) => {
+        let data: any;
+        let bodyTextFmt: string | null;
+        let errorMessage: string;
+        try {
+          data = JSON.parse(bodyText);
+          bodyTextFmt = JSON.stringify(data, null, 2);
+        } catch {
+          data = null;
+          bodyTextFmt = null;
+        }
+        if (data && Array.isArray(data.errors) && data.errors.length) {
+          errorMessage = data.errors.map((err: any) => getMessageFromError(err, response.status)).join('; ');
+        } else {
+          errorMessage = bodyText || `${response.status} - ${response.statusText}`;
+        }
+        if (typeof errorMessage === 'string') {
+          errorMessage = errorMessage.trim();
+        }
+        const error: IApiError = new Error(`HTTP Error: ${errorMessage}`);
+        error.httpStatus = response.status;
+        error.httpStatusText = response.statusText;
+        error.httpBody = bodyTextFmt || bodyText;
+        error.httpUrl = url;
+        error.httpQuery = typeof query === 'string' ? query : queryString.stringify(query || {});
+        throw error;
+      });
+    })
+    .catch((err: Error) => {
+      if (err.name === 'AbortError') {
+        const error: IApiError = new Error(`HTTP Error: Request timeout after ${timeout}ms`);
+        error.httpUrl = url;
+        error.httpQuery = typeof query === 'string' ? query : queryString.stringify(query || {});
+        throw error;
       }
-      if (typeof errorMessage === 'string') {
-        errorMessage = errorMessage.trim();
-      }
-      const error: IApiError = new Error(`HTTP Error: ${errorMessage}`);
-      error.httpStatus = response.status;
-      error.httpStatusText = response.statusText;
-      error.httpBody = bodyTextFmt || bodyText;
-      error.httpUrl = url;
-      error.httpQuery = typeof query === 'string' ? query : queryString.stringify(query || {});
-      throw error;
+      throw err;
+    })
+    .finally(() => {
+      clearTimeout(timeoutId);
     });
-  });
 }
 
 export const DEFAULT_API_ROOT = prefixUrl('/api/');

@@ -146,6 +146,13 @@ export type Config = {
     adjustEndTime?: string;
   };
 
+  // api controls backend request behavior.
+  api: {
+    // requestTimeoutMs overrides the default timeout (in milliseconds)
+    // for requests made to the Jaeger backend.
+    requestTimeoutMs?: number;
+  };
+
   // scripts is an array of URLs of additional JavaScript files to be loaded.
   // TODO when is it useful?
   scripts?: readonly TScript[];

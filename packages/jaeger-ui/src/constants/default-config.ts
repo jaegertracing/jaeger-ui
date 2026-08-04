@@ -67,6 +67,10 @@ const defaultConfig: Config = {
     },
     maxLimit: 1500,
   },
+  api: {
+    requestTimeoutMs: 10000,
+  },
+
   traceIdDisplayLength: 7,
   backendCapabilities: {
     archiveStorage: false,
