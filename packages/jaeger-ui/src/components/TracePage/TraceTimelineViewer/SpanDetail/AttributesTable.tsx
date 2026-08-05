@@ -6,15 +6,14 @@ import { Dropdown, Tooltip } from 'antd';
 import { IoOpenOutline, IoList, IoCopyOutline, IoInformationCircleOutline } from 'react-icons/io5';
 import { JsonView, allExpanded, collapseAllNested } from 'react-json-view-lite';
 
-import jsonViewStyles from '../../../../utils/jsonViewStyles';
+import jsonViewStyles from '../../../../../utils/jsonViewStyles';
 
 import CopyIcon from '../../../common/CopyIcon';
 
-import { TNil } from '../../../../types';
-import { Hyperlink } from '../../../../types/hyperlink';
-import { IAttributes } from '../../../../types/otel';
-
-import './AttributesTable.css';
+import { TNil } from '../../../../../types';
+import { Hyperlink } from '../../../../../types/hyperlink';
+import { IAttributes } from '../../../../../types/otel';
+import { formatAttributeForCopy } from './attributeFormatters';
 
 const jsonObjectOrArrayStartRegex = /^(\[|\{)/;
 
@@ -171,7 +170,7 @@ export default function AttributesTable(props: AttributesTableProps) {
               <div className="KeyValueTable--copyContainer">
                 <CopyIcon
                   className="KeyValueTable--copyIcon"
-                  copyText={String(row.value)}
+                  copyText={formatAttributeForCopy(row.value)}
                   tooltipTitle="Copy value"
                   buttonText="Copy"
                 />

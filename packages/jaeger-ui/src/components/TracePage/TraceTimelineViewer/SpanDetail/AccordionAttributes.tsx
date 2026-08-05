@@ -7,9 +7,10 @@ import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
 
 import * as markers from './AccordionAttributes.markers';
 import AttributesTable from './AttributesTable';
-import { TNil } from '../../../../types';
-import { Hyperlink } from '../../../../types/hyperlink';
-import { IAttributes } from '../../../../types/otel';
+import { TNil } from '../../../../../types';
+import { Hyperlink } from '../../../../../types/hyperlink';
+import { IAttributes } from '../../../../../types/otel';
+import { formatAttributeSummary } from './attributeFormatters';
 
 import './AccordionAttributes.css';
 
@@ -22,11 +23,10 @@ export function AttributesSummary({ data }: { data: IAttributes }) {
     <ul className="AccordionAttributes--summary">
       {data.entries().map((item, i) => (
         // `i` is necessary in the key because item.key can repeat
-
         <li className="AccordionAttributes--summaryItem" key={`${item.key}-${i}`}>
           <span className="AccordionAttributes--summaryLabel">{item.key}</span>
           <span className="AccordionAttributes--summaryDelim">=</span>
-          {String(item.value)}
+          {formatAttributeSummary(item.value)}
         </li>
       ))}
     </ul>
