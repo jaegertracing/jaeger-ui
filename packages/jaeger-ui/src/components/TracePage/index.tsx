@@ -405,18 +405,22 @@ export function TracePageImpl(props: TProps) {
   const locationState = location.state;
   const isEmbedded = Boolean(embedded);
   const hasArchiveStorage = Boolean(backendCapabilities?.archiveStorage);
+  const _hideSummary = Boolean(embedded?.timeline?.hideSummary);
+  const _hideMap =
+    !viewTypeShowsMinimap(viewType) || Boolean(embedded?.timeline?.hideMinimap) || !timelineBarsVisible;
+
   const headerProps = {
     focusUiFindMatches,
     slimView,
     textFilter: uiFind,
     viewType,
     viewRange,
-    canCollapse: !embedded || !embedded.timeline?.hideSummary || !embedded.timeline?.hideMinimap,
+    canCollapse: !(_hideSummary && _hideMap),
     clearSearch,
     detailPanelMode,
     enableSidePanel,
-    hideMap: !viewTypeShowsMinimap(viewType) || Boolean(embedded?.timeline?.hideMinimap),
-    hideSummary: Boolean(embedded?.timeline?.hideSummary),
+    hideMap: _hideMap,
+    hideSummary: _hideSummary,
     linkToStandalone: getUrl(id),
     nextResult,
     onArchiveClicked: archiveTrace,
