@@ -54,59 +54,21 @@ export default function AccordionEvents({
   const contentRef = React.useRef<HTMLDivElement | null>(null);
 
   const notifyListReflow = React.useCallback(() => {
-    const emit = () => {
-      try {
-        if (spanID) {
-          window.dispatchEvent(new CustomEvent('jaeger:detail-measure', { detail: { spanID } }));
-        } else {
-          window.dispatchEvent(new Event('jaeger:list-resize'));
-        }
-      } catch (error) {
-        void error;
-      }
-    };
-
-    setTimeout(emit);
-    if (typeof window !== 'undefined' && 'requestAnimationFrame' in window) {
-      window.requestAnimationFrame(emit);
+    if (spanID) {
+      window.dispatchEvent(new CustomEvent('jaeger:detail-measure', { detail: { spanID } }));
+    } else {
+      window.dispatchEvent(new Event('jaeger:list-resize'));
     }
-    setTimeout(emit, 50);
   }, [spanID]);
 
   // Observe height changes in the content area to notify virtualized list to reflow
   React.useEffect(() => {
-    if (!interactive || !isOpen) return;
+    if (!interactive || !isOpen) return undefined;
     const target = contentRef.current;
-    if (!target) return;
-
-    let ro: ResizeObserver | null = null;
-    let mo: MutationObserver | null = null;
-    const callback = () => notifyListReflow();
-
-    if (typeof ResizeObserver !== 'undefined') {
-      ro = new ResizeObserver(callback as ResizeObserverCallback);
-      if (ro) ro.observe(target);
-    } else if (typeof window !== 'undefined' && typeof MutationObserver !== 'undefined') {
-      mo = new MutationObserver(callback);
-      mo.observe(target, { childList: true, subtree: true });
-    }
-
-    return () => {
-      if (ro) {
-        try {
-          ro.disconnect();
-        } catch (error) {
-          void error;
-        }
-      }
-      if (mo) {
-        try {
-          mo.disconnect();
-        } catch (error) {
-          void error;
-        }
-      }
-    };
+    if (!target) return undefined;
+    const ro = new ResizeObserver(notifyListReflow);
+    ro.observe(target);
+    return () => ro.disconnect();
   }, [interactive, isOpen, notifyListReflow]);
 
   const inRangeEvents = React.useMemo(() => {
@@ -134,7 +96,6 @@ export default function AccordionEvents({
         className="AccordionEvents--toggle"
         onClick={() => {
           setShowOutOfRangeEvents(true);
-          notifyListReflow();
         }}
       >
         show all
@@ -148,7 +109,6 @@ export default function AccordionEvents({
         className="AccordionEvents--toggle"
         onClick={() => {
           setShowOutOfRangeEvents(false);
-          notifyListReflow();
         }}
       >
         show in range
@@ -188,8 +148,6 @@ export default function AccordionEvents({
               const labelContent = useOtelTerms ? `${event.name} (${durationLabel})` : durationLabel;
               return (
                 <AccordionAttributes
-                  // `i` is necessary in the key because timestamps can repeat
-
                   key={`${event.timestamp}-${i}`}
                   className={i < visibleLogs.length - 1 ? 'ub-mb1' : null}
                   data={event.attributes}
@@ -211,7 +169,6 @@ export default function AccordionEvents({
                   className="AccordionEvents--toggle"
                   onClick={() => {
                     setShowAllEvents(true);
-                    notifyListReflow();
                   }}
                 >
                   show more...
@@ -222,7 +179,6 @@ export default function AccordionEvents({
                   className="AccordionEvents--toggle"
                   onClick={() => {
                     setShowAllEvents(false);
-                    notifyListReflow();
                   }}
                 >
                   show less
