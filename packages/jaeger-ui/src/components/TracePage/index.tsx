@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { InputRef } from 'antd';
+import { Alert, InputRef } from 'antd';
 import { useNormalizeTraceId } from './useNormalizeTraceId';
 import { useNavigate } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
@@ -201,6 +201,8 @@ export function TracePageImpl(props: TProps) {
   const [slimView, setSlimView] = useState(() => Boolean(embedded?.timeline?.collapseTitle));
   const [viewType, setViewType] = useState<ETraceViewType>(ETraceViewType.TraceTimelineViewer);
   const [viewRange, setViewRange] = useState<IViewRange>({ time: { current: [0, 1] } });
+  const [criticalPathErrorDismissed, setCriticalPathErrorDismissed] = useState(false);
+
   const traceDagEV = useMemo(
     () => (viewType === ETraceViewType.TraceGraph && traceData ? calculateTraceDagEV(traceData) : null),
     [traceData, viewType]
@@ -294,6 +296,7 @@ export function TracePageImpl(props: TProps) {
       prevIdRef.current = id;
       updateViewRangeTime(0, 1);
       clearSearch();
+      setCriticalPathErrorDismissed(false);
     }
   }, [id, updateViewRangeTime, clearSearch]);
 
@@ -438,7 +441,10 @@ export function TracePageImpl(props: TProps) {
 
   const sm = scrollManagerRef.current;
   let view;
-  const criticalPath = criticalPathEnabled ? memoizedTraceCriticalPath(traceData) : [];
+  const cpResult = criticalPathEnabled
+    ? memoizedTraceCriticalPath(traceData)
+    : { sections: [], failed: false, errors: [] };
+  const criticalPath = cpResult.sections;
   if (ETraceViewType.TraceTimelineViewer === viewType && headerHeight) {
     view = (
       <TraceTimelineViewer
@@ -507,6 +513,16 @@ export function TracePageImpl(props: TProps) {
     <div>
       {archiveEnabled && (
         <ArchiveNotifier acknowledge={acknowledgeArchive} archivedState={archiveTraceState} />
+      )}
+      {cpResult.failed && !criticalPathErrorDismissed && (
+        <Alert
+          type="warning"
+          closable
+          onClose={() => setCriticalPathErrorDismissed(true)}
+          message="Critical path could not be computed for this trace."
+          description={cpResult.errors.join('; ')}
+          style={{ margin: '8px 16px' }}
+        />
       )}
       <div className="Tracepage--headerSection" ref={headerRefCallback}>
         <TracePageHeader {...headerProps} />
