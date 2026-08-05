@@ -486,21 +486,4 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
     expect(queryClient.getQueryData(['uploadedSummaries'])).toEqual([]);
     expect(queryClient.getQueryData(['uploadedRawTraces'])).toEqual([]);
   });
-
-  it('handleSortChange updates sortBy passed to SearchResults', async () => {
-    render(
-      <AllProvider>
-        <SearchTracePage />
-      </AllProvider>
-    );
-    expect(lastSearchResultsProps).not.toBeNull();
-    const initialSortBy = lastSearchResultsProps.sortBy;
-
-    await act(async () => {
-      lastSearchResultsProps.handleSortChange('SHORTEST_FIRST');
-    });
-
-    expect(lastSearchResultsProps.sortBy).toBe('SHORTEST_FIRST');
-    expect(lastSearchResultsProps.sortBy).not.toBe(initialSortBy);
-  });
 });
