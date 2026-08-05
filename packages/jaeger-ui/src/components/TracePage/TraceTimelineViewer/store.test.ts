@@ -647,6 +647,33 @@ describe('trace timeline zustand stores', () => {
             new Set(['svc-a', 'svc-b'])
           );
         });
+
+        it('memoizes the union so repeated calls with unchanged inputs return the same reference', () => {
+          useTraceTimelineStore.setState({
+            prunedServices: new Set(['svc-a']),
+            logicalViewEnabled: true,
+            logicalViewPrunedServices: new Set(['svc-b']),
+          });
+          const state = useTraceTimelineStore.getState();
+          const first = selectEffectivePrunedServices(state);
+          const second = selectEffectivePrunedServices(state);
+          expect(second).toBe(first);
+        });
+
+        it('recomputes the union once either input Set reference actually changes', () => {
+          useTraceTimelineStore.setState({
+            prunedServices: new Set(['svc-a']),
+            logicalViewEnabled: true,
+            logicalViewPrunedServices: new Set(['svc-b']),
+          });
+          const first = selectEffectivePrunedServices(useTraceTimelineStore.getState());
+
+          useTraceTimelineStore.setState({ prunedServices: new Set(['svc-a', 'svc-c']) });
+          const second = selectEffectivePrunedServices(useTraceTimelineStore.getState());
+
+          expect(second).not.toBe(first);
+          expect(second).toEqual(new Set(['svc-a', 'svc-c', 'svc-b']));
+        });
       });
     });
 

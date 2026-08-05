@@ -1,6 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+import memoizeOne from 'memoize-one';
 import { create } from 'zustand';
 import DetailState from './SpanDetail/DetailState';
 import { useLayoutPrefsStore } from './store.layout';
@@ -258,7 +259,18 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
  *
  * Returns the existing `prunedServices` Set reference unchanged when logical view is
  * off or contributes nothing, so unrelated selector subscriptions don't re-render.
+ * The union case is memoized (keyed on the two input Set references) so repeated calls
+ * between actual changes to either set also return the same reference, since Zustand
+ * compares selector output with Object.is.
  */
+function unionPrunedServices(
+  prunedServices: Set<string>,
+  logicalViewPrunedServices: Set<string>
+): Set<string> {
+  return new Set([...prunedServices, ...logicalViewPrunedServices]);
+}
+const memoizedUnionPrunedServices = memoizeOne(unionPrunedServices);
+
 export function selectEffectivePrunedServices(state: TraceTimelineInteractionStore): Set<string> {
   const { prunedServices, logicalViewEnabled, logicalViewPrunedServices } = state;
   if (!logicalViewEnabled || logicalViewPrunedServices.size === 0) {
@@ -267,5 +279,5 @@ export function selectEffectivePrunedServices(state: TraceTimelineInteractionSto
   if (prunedServices.size === 0) {
     return logicalViewPrunedServices;
   }
-  return new Set([...prunedServices, ...logicalViewPrunedServices]);
+  return memoizedUnionPrunedServices(prunedServices, logicalViewPrunedServices);
 }
