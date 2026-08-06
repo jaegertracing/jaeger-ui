@@ -257,3 +257,34 @@ describe('<AttributesTable>', () => {
     });
   });
 });
+
+// AttributesTable takes a plain IAttributes bag - it has no notion of "span" vs "span
+// event" vs "resource", so whatever renders richly for a span attribute renders
+// identically for a span event's or a resource's attributes, since they all pass
+// through this same component (span.attributes -> Tags, resource.attributes ->
+// Process, event.attributes -> Logs). This locks in that a gen_ai.* message payload -
+// the same shape GenAITab parses from span.attributes - already renders as a JSON
+// tree here too, regardless of which of those levels it came from, without needing
+// GenAI-specific handling.
+describe('<AttributesTable> - GenAI content on non-span-attribute levels', () => {
+  const genAiMessages = [
+    {
+      role: 'user',
+      parts: [{ type: 'text', content: 'Hello, probe message' }],
+    },
+  ];
+  const genAiData = [{ key: 'gen_ai.input.messages', value: JSON.stringify(genAiMessages) }];
+
+  it('renders gen_ai.* message content as a JSON tree, not raw text', () => {
+    render(<AttributesTable data={makeAttributes(genAiData)} />);
+
+    const keyCell = screen.getByText('gen_ai.input.messages');
+    const keyRow = keyCell.closest('tr');
+    expect(keyRow).toHaveClass('KeyValueTable--row-jsonKey');
+
+    const valueRow = keyRow.nextElementSibling;
+    expect(valueRow).toHaveClass('KeyValueTable--row-jsonValue');
+    expect(valueRow).toHaveTextContent('user');
+    expect(valueRow).toHaveTextContent('Hello, probe message');
+  });
+});
