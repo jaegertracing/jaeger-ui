@@ -36,10 +36,6 @@ const config: KnipConfig = {
         // directly by any source file so knip cannot detect it.
         '@babel/core',
 
-        // Used by scripts/run-depcheck.sh via its CLI binary (node_modules/.bin/depcheck),
-        // not imported as a module — knip does not trace shell script invocations.
-        'depcheck',
-
         // Referenced by Oxlint via the `jsPlugins` field in the `lint` section of vite.config.ts to provide
         // React hooks rules (react-x/rules-of-hooks, react-x/exhaustive-deps).
         // Oxlint delegates to this ESLint plugin rather than having a native implementation.

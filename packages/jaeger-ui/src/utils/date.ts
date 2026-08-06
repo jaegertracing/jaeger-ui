@@ -167,21 +167,26 @@ export function formatSecondTime(duration: number): string {
  * formatDuration(183840000000) // => "2d 3h"
  */
 export function formatDuration(duration: Microseconds): string {
-  // Drop all units that are too large except the last one
-  const [primaryUnit, secondaryUnit] = _dropWhile(
-    UNIT_STEPS,
-    ({ microseconds }, index) => index < UNIT_STEPS.length - 1 && microseconds > duration
-  );
+  const selectUnits = (value: number) =>
+    _dropWhile(
+      UNIT_STEPS,
+      ({ microseconds }, index) => index < UNIT_STEPS.length - 1 && microseconds > value
+    );
+
+  const [primaryUnit, secondaryUnit] = selectUnits(duration);
 
   if (primaryUnit.ofPrevious === 1000) {
-    // If the unit is decimal based, display as a decimal
     return `${_round(duration / primaryUnit.microseconds, 2)}${primaryUnit.unit}`;
   }
 
-  const primaryValue = Math.floor(duration / primaryUnit.microseconds);
-  const primaryUnitString = `${primaryValue}${primaryUnit.unit}`;
-  const secondaryValue = Math.round((duration / secondaryUnit.microseconds) % primaryUnit.ofPrevious);
-  const secondaryUnitString = `${secondaryValue}${secondaryUnit.unit}`;
+  const roundedDuration = Math.round(duration / secondaryUnit.microseconds) * secondaryUnit.microseconds;
+  const [carriedPrimaryUnit, carriedSecondaryUnit] = selectUnits(roundedDuration);
+
+  const primaryValue = Math.floor(roundedDuration / carriedPrimaryUnit.microseconds);
+  const primaryUnitString = `${primaryValue}${carriedPrimaryUnit.unit}`;
+  const secondaryValue =
+    Math.round(roundedDuration / carriedSecondaryUnit.microseconds) % carriedPrimaryUnit.ofPrevious;
+  const secondaryUnitString = `${secondaryValue}${carriedSecondaryUnit.unit}`;
   return secondaryValue === 0 ? primaryUnitString : `${primaryUnitString} ${secondaryUnitString}`;
 }
 

@@ -161,7 +161,9 @@ describe('<SearchResults>', () => {
 
   it('renders the lowercase trace count and the search latency', () => {
     renderWithRouter(<SearchResults {...baseProps} searchLatency={2_500_000} />);
-    expect(screen.getByText(/2 traces \(in 2\.5s\)/)).toBeInTheDocument();
+    const count = screen.getByText(/2 traces/);
+    expect(count).toHaveTextContent('2 traces (in 2.5s)');
+    expect(screen.getByText(/\(in 2\.5s\)/)).toBeInTheDocument();
   });
 
   it('renders the count without latency when searchLatency is absent', () => {

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 
@@ -15,6 +15,7 @@ import {
   TracePageImpl as TracePage,
   VIEW_MIN_RANGE,
 } from './index';
+import memoizedTraceCriticalPath from './CriticalPath/index';
 import * as track from './index.track';
 import * as keyboardShortcutsMod from './keyboard-shortcuts';
 import { merge as mergeShortcuts } from './keyboard-shortcuts';
@@ -1097,6 +1098,79 @@ describe('<TracePage>', () => {
     it('auto-switches regardless of backendCapabilities.aiAssistant — GenAI view is client-side', () => {
       render(<TracePage {...genAiProps} backendCapabilities={null} />);
       expect(capturedHeaderProps.viewType).toBe(ETraceViewType.GenAITimelineViewer);
+    });
+
+    // The two cases below deliberately construct a trace whose isGenAITrace
+    // disagrees with a raw gen_ai.* attribute scan. The two cannot disagree today,
+    // but that is exactly what a refinement to classifySpan produces: excluding a
+    // key makes the verdict false while the attribute is still present, and adding
+    // a non-gen_ai signal makes it true while no gen_ai.* attribute exists. Both
+    // pin that TracePage reads the trace's verdict instead of deriving its own.
+    it('does not auto-switch when isGenAITrace is false, despite a gen_ai.* attribute', () => {
+      const raw = traceGenerator.trace({});
+      raw.spans[0].tags.push({ key: 'gen_ai.tool.call.id', type: 'string', value: 'abc-123' });
+      const otelTrace = transformTraceData(raw).asOtelTrace();
+      otelTrace.isGenAITrace = false;
+      useTraceMock.mockReturnValue({ data: otelTrace, isPending: false, isError: false, error: null });
+
+      render(<TracePage {...defaultProps} id={otelTrace.traceID} />);
+      expect(capturedHeaderProps.viewType).toBe(ETraceViewType.TraceTimelineViewer);
+    });
+
+    it('auto-switches when isGenAITrace is true, despite no gen_ai.* attribute', () => {
+      const raw = traceGenerator.trace({});
+      raw.spans[0].tags.push({ key: 'db.system', type: 'string', value: 'vector' });
+      const otelTrace = transformTraceData(raw).asOtelTrace();
+      otelTrace.isGenAITrace = true;
+      useTraceMock.mockReturnValue({ data: otelTrace, isPending: false, isError: false, error: null });
+
+      render(<TracePage {...defaultProps} id={otelTrace.traceID} />);
+      expect(capturedHeaderProps.viewType).toBe(ETraceViewType.GenAITimelineViewer);
+    });
+  });
+
+  describe('critical path error banner', () => {
+    const sampleErrors = ["Root span abc123: Cannot read properties of null (reading 'forEach')"];
+
+    it('shows the error banner when criticalPathEnabled is true and computation fails', () => {
+      memoizedTraceCriticalPath.mockReturnValue({ sections: [], failed: true, errors: sampleErrors });
+      render(<TracePage {...defaultProps} criticalPathEnabled />);
+      expect(screen.getByText('Critical path could not be computed for this trace.')).toBeInTheDocument();
+    });
+
+    it('shows the actual captured error message rather than a generic guess', () => {
+      memoizedTraceCriticalPath.mockReturnValue({ sections: [], failed: true, errors: sampleErrors });
+      render(<TracePage {...defaultProps} criticalPathEnabled />);
+      expect(screen.getByText(sampleErrors[0])).toBeInTheDocument();
+    });
+
+    it('joins multiple root-span errors into the banner description', () => {
+      const twoErrors = ['Root span a: boom', 'Root span b: kaboom'];
+      memoizedTraceCriticalPath.mockReturnValue({ sections: [], failed: true, errors: twoErrors });
+      render(<TracePage {...defaultProps} criticalPathEnabled />);
+      expect(screen.getByText(twoErrors.join('; '))).toBeInTheDocument();
+    });
+
+    it('dismisses the error banner when the close button is clicked', () => {
+      memoizedTraceCriticalPath.mockReturnValue({ sections: [], failed: true, errors: sampleErrors });
+      render(<TracePage {...defaultProps} criticalPathEnabled />);
+      expect(screen.getByText('Critical path could not be computed for this trace.')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: /close/i }));
+      expect(
+        screen.queryByText('Critical path could not be computed for this trace.')
+      ).not.toBeInTheDocument();
+    });
+
+    it('re-shows the banner for a different trace after being dismissed on a prior one, since TracePage is not remounted per trace id', () => {
+      memoizedTraceCriticalPath.mockReturnValue({ sections: [], failed: true, errors: sampleErrors });
+      const { rerender } = render(<TracePage {...defaultProps} criticalPathEnabled />);
+      fireEvent.click(screen.getByRole('button', { name: /close/i }));
+      expect(
+        screen.queryByText('Critical path could not be computed for this trace.')
+      ).not.toBeInTheDocument();
+
+      rerender(<TracePage {...defaultProps} params={{ id: 'a-different-trace-id' }} criticalPathEnabled />);
+      expect(screen.getByText('Critical path could not be computed for this trace.')).toBeInTheDocument();
     });
   });
 });

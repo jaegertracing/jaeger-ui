@@ -22,11 +22,13 @@ jaeger-ui/
 ├── packages/
 │   ├── jaeger-ui/          # Main React application (Vite + React 19)
 │   │   ├── src/
-│   │   │   ├── actions/    # Redux actions
-│   │   │   ├── api/        # API layer
+│   │   │   ├── actions/    # Redux actions (residual, being removed)
+│   │   │   ├── api/        # API layer (v3/ is the OTLP client)
 │   │   │   ├── components/ # React components
-│   │   │   ├── reducers/   # Redux reducers
-│   │   │   ├── selectors/  # Redux selectors
+│   │   │   ├── hooks/      # TanStack Query hooks
+│   │   │   ├── query/      # Shared QueryClient + provider
+│   │   │   ├── reducers/   # Redux reducers (residual, being removed)
+│   │   │   ├── stores/     # Zustand stores
 │   │   │   ├── types/      # TypeScript types
 │   │   │   └── utils/      # Utility functions
 │   │   └── test/           # Test utilities and setup
@@ -147,13 +149,16 @@ pnpm --filter @jaegertracing/jaeger-ui test --coverage --coverage.include="src/p
 
 ## Common Patterns
 
-### Redux
+### State management
 
-- Actions are in `src/actions/`
-- Reducers are in `src/reducers/`
-- Selectors are in `src/selectors/`
-- Uses redux-actions for action creators
-- Uses redux-promise-middleware for async actions
+New state does **not** go into Redux. See [ADR-0004](./docs/adr/0004-state-management-strategy.md) for the decision, [ADR-0005](./docs/adr/0005-current-state-management-architecture.md) for how the code is wired today, and [RFC 0004](./docs/rfc/0004-state-management-strategy.md) for what is left to migrate.
+
+- Server data → TanStack Query hooks in `src/hooks/`, clients in `src/api/v3/`
+- Shared client UI state → Zustand stores in `src/stores/`, or `store.<slice>.ts` colocated with the owning feature
+- Deep-linkable view state → the page's `url.ts` helpers
+- User preferences → `localStorage`
+
+Redux survives only in `src/reducers/` (`metrics`, `pathAgnosticDecorations`), `src/actions/path-agnostic-decorations.ts`, and `TraceTimelineViewer/duck.ts`; there is no `src/selectors/`.
 
 ### Component Structure
 

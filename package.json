@@ -11,37 +11,25 @@
   "engines": {
     "node": ">=24.16.0"
   },
-  "packageManager": "pnpm@10.5.0",
+  "packageManager": "pnpm@11.17.0",
   "devDependencies": {
     "@babel/core": "8.0.1",
     "@emnapi/core": "^1.9.1",
     "@emnapi/runtime": "^1.9.1",
-    "@noble/hashes": "2.2.0",
+    "@noble/hashes": "catalog:",
     "@testing-library/dom": "^10.4.1",
-    "depcheck": "1.4.7",
-    "knip": "6.26.0",
-    "eslint-plugin-react-x": "5.14.5",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "knip": "6.31.0",
+    "eslint-plugin-react-x": "5.18.0",
     "husky": "9.1.0",
     "jsdom": "29.1.1",
-    "lint-staged": "17.0.4",
+    "lint-staged": "17.2.0",
     "npm-run-all2": "9.0.1",
     "openapi-zod-client": "1.18.3",
-    "typescript": "6.0.2",
-    "vite-plus": "0.2.4",
+    "typescript": "npm:@typescript/typescript6@6.0.2",
+    "vite-plus": "0.2.7",
     "@vitest/coverage-v8": "4.1.10",
     "vitest": "4.1.10"
-  },
-  "pnpm": {
-    "overrides": {
-      "react": "19.2.0",
-      "react-dom": "19.2.0",
-      "yaml": "2.9.0",
-      "@types/node": "24.13.1",
-      "@exodus/bytes>@noble/hashes": "$@noble/hashes",
-      "@assistant-ui/core": "0.2.10",
-      "@assistant-ui/store": "0.2.13",
-      "@assistant-ui/tap": "0.5.14"
-    }
   },
   "scripts": {
     "build": "pnpm -r build",
@@ -50,7 +38,6 @@
     "check-overrides": "./scripts/check-overrides.sh",
     "check-tsx-naming": "./scripts/check-tsx-naming.sh",
     "coverage": "pnpm -r coverage",
-    "depcheck": "./scripts/run-depcheck.sh",
     "oxlint": "vp lint packages/ scripts/",
     "fmt": "vp fmt",
     "knip": "knip",
@@ -80,19 +67,19 @@
     "react-side-effect": "2.1.2"
   },
   "optionalDependencies": {
-    "@rolldown/binding-android-arm64": "1.1.0",
-    "@rolldown/binding-darwin-arm64": "1.1.0",
-    "@rolldown/binding-darwin-x64": "1.1.0",
-    "@rolldown/binding-freebsd-x64": "1.1.0",
-    "@rolldown/binding-linux-arm-gnueabihf": "1.1.0",
-    "@rolldown/binding-linux-arm64-gnu": "1.1.0",
-    "@rolldown/binding-linux-arm64-musl": "1.1.0",
-    "@rolldown/binding-linux-ppc64-gnu": "1.1.0",
-    "@rolldown/binding-linux-s390x-gnu": "1.1.0",
-    "@rolldown/binding-linux-x64-gnu": "1.1.0",
-    "@rolldown/binding-linux-x64-musl": "1.1.0",
-    "@rolldown/binding-openharmony-arm64": "1.1.0",
-    "@rolldown/binding-win32-arm64-msvc": "1.1.0",
-    "@rolldown/binding-win32-x64-msvc": "1.1.0"
+    "@rolldown/binding-android-arm64": "1.2.0",
+    "@rolldown/binding-darwin-arm64": "1.2.0",
+    "@rolldown/binding-darwin-x64": "1.2.0",
+    "@rolldown/binding-freebsd-x64": "1.2.0",
+    "@rolldown/binding-linux-arm-gnueabihf": "1.2.0",
+    "@rolldown/binding-linux-arm64-gnu": "1.2.0",
+    "@rolldown/binding-linux-arm64-musl": "1.2.0",
+    "@rolldown/binding-linux-ppc64-gnu": "1.2.0",
+    "@rolldown/binding-linux-s390x-gnu": "1.2.0",
+    "@rolldown/binding-linux-x64-gnu": "1.2.0",
+    "@rolldown/binding-linux-x64-musl": "1.2.0",
+    "@rolldown/binding-openharmony-arm64": "1.2.0",
+    "@rolldown/binding-win32-arm64-msvc": "1.2.0",
+    "@rolldown/binding-win32-x64-msvc": "1.2.0"
   }
 }
