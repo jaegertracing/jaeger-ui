@@ -1,19 +1,16 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-vi.mock('isomorphic-fetch', () =>
-  mockDefault(
-    vi.fn(() =>
-      Promise.resolve({
-        status: 200,
-        data: () => Promise.resolve({ data: null }),
-        json: () => Promise.resolve({ data: null }),
-      })
-    )
-  )
+const fetchMock = vi.fn(() =>
+  Promise.resolve({
+    status: 200,
+    data: () => Promise.resolve({ data: null }),
+    json: () => Promise.resolve({ data: null }),
+  })
 );
 
-import fetchMock from 'isomorphic-fetch';
+vi.stubGlobal('fetch', fetchMock);
+
 import queryString from 'query-string';
 
 import traceGenerator from '../demo/trace-generators';
