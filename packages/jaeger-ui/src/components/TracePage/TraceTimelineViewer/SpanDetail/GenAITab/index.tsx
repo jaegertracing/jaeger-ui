@@ -16,6 +16,7 @@ import {
 import { MessageFormat, useMessageFormatStore } from './message-format-store';
 import AccordionAttributes from '../AccordionAttributes';
 import { sharedMarkdownOptions } from '../../../../../utils/markdownOptions';
+import { detectMediaType, MediaType } from '../../../../../utils/media';
 import jsonViewStyles from '../../../../../utils/jsonViewStyles';
 import CopyIcon from '../../../../common/CopyIcon';
 import type { IOtelSpan } from '../../../../../types/otel';
@@ -62,6 +63,65 @@ function JsonBlock({ value }: { value: unknown }) {
   );
 }
 
+/**
+ * Renders a message whose entire content is a link to an image or audio clip.
+ *
+ * The raw URL is never replaced, only re-presented: the format dropdown still offers
+ * Plain/Markdown/JSON, and the Copy button still copies the underlying value. If the
+ * resource fails to load, onLoadError lets the caller drop back to text rather than
+ * leaving a broken element behind.
+ */
+function MediaBlock({
+  src,
+  mediaType,
+  label,
+  onLoadError,
+}: {
+  src: string;
+  mediaType: MediaType;
+  label: string;
+  onLoadError: () => void;
+}) {
+  if (mediaType === 'audio') {
+    // preload=none is the audio counterpart to loading=lazy below: with controls alone a
+    // browser is free to fetch the clip, or at least its metadata, as soon as the element
+    // mounts, including for messages scrolled out of view.
+    return (
+      <audio
+        className="GenAITab--media"
+        src={src}
+        controls
+        preload="none"
+        aria-label={label}
+        onError={onLoadError}
+      >
+        {/*
+          Fallback for a browser that cannot play the source at all, which fires no error
+          event. It carries the same no-referrer policy as the image below, since following
+          it must not hand the trace ID to the remote host either, and opens in a new tab so
+          leaving for the audio does not discard the reader's place in the trace.
+        */}
+        <a href={src} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">
+          {label}
+        </a>
+      </audio>
+    );
+  }
+  // referrerPolicy: the URL comes from trace data and may point at a third party, so the
+  // Jaeger URL (which contains the trace ID) must not leak to it. loading=lazy keeps an
+  // off-screen message in a long conversation from issuing a request at all.
+  return (
+    <img
+      className="GenAITab--media"
+      src={src}
+      alt={label}
+      referrerPolicy="no-referrer"
+      loading="lazy"
+      onError={onLoadError}
+    />
+  );
+}
+
 function MessageBlock({
   message,
   formatOverride,
@@ -75,16 +135,37 @@ function MessageBlock({
   messageNumber: number;
 }) {
   const parsedJson = useMemo(() => tryParseJson(message.content), [message.content]);
+  const mediaType = useMemo(() => detectMediaType(message.content), [message.content]);
+  // Set once the resource itself fails to load. Detection only inspects the string, so a
+  // well-formed URL that 404s or is blocked by CSP is only discoverable at render time.
+  const [mediaLoadFailed, setMediaLoadFailed] = useState(false);
+  // The flag describes one specific URL, so it has to be dropped when the content changes
+  // or an unrelated message inherits it. ConversationSection keys messages by position
+  // rather than by content, so nothing about this component forces a remount; today a
+  // span switch happens to remount it anyway (SpanDetail keys its Tabs on span.spanID),
+  // but that is a guard two components away in another file, not a property of this one.
+  // Adjusted during render rather than in an effect so the new content never renders once
+  // with the previous message's flag still set.
+  const [renderedContent, setRenderedContent] = useState(message.content);
+  if (renderedContent !== message.content) {
+    setRenderedContent(message.content);
+    setMediaLoadFailed(false);
+  }
   // Each view can only render content it supports; a requested view that can't falls back to plain.
   const canRender: Record<MessageFormat, boolean> = {
     plain: true,
     markdown: message.content.length <= MARKDOWN_SIZE_LIMIT,
     json: parsedJson !== null && typeof parsedJson === 'object',
+    media: mediaType !== null && !mediaLoadFailed,
   };
-  // If no user override passed then JSON-parseable content defaults to the tree view,
-  // else plain text (Markdown is only opt-in).
-  const requestedFormat: MessageFormat = formatOverride ?? (canRender.json ? 'json' : 'plain');
+  // If no user override passed then a media link defaults to its preview and
+  // JSON-parseable content to the tree view, else plain text (Markdown is only opt-in).
+  const defaultFormat: MessageFormat = canRender.media ? 'media' : canRender.json ? 'json' : 'plain';
+  const requestedFormat: MessageFormat = formatOverride ?? defaultFormat;
   const effectiveFormat: MessageFormat = canRender[requestedFormat] ? requestedFormat : 'plain';
+  const mediaLabel = `${mediaType === 'audio' ? 'Audio' : 'Image'} in message ${messageNumber} (${
+    message.role || 'message'
+  })`;
 
   return (
     <div className={`GenAITab--message GenAITab--message-${message.role || 'unknown'}`}>
@@ -112,11 +193,32 @@ function MessageBlock({
             >
               JSON{canRender.json ? '' : ' (not JSON)'}
             </option>
+            <option
+              value="media"
+              disabled={!canRender.media}
+              title={
+                canRender.media
+                  ? undefined
+                  : mediaLoadFailed
+                    ? 'Media is disabled - this link could not be loaded'
+                    : 'Media is disabled - this content is not an image or audio link'
+              }
+            >
+              Media
+              {canRender.media ? '' : mediaLoadFailed ? ' (failed to load)' : ' (not media)'}
+            </option>
           </select>
           <CopyIcon copyText={message.content} tooltipTitle="Copy message" buttonText="Copy" />
         </div>
       </div>
-      {effectiveFormat === 'json' ? (
+      {effectiveFormat === 'media' && mediaType ? (
+        <MediaBlock
+          src={message.content.trim()}
+          mediaType={mediaType}
+          label={mediaLabel}
+          onLoadError={() => setMediaLoadFailed(true)}
+        />
+      ) : effectiveFormat === 'json' ? (
         <JsonBlock value={parsedJson} />
       ) : effectiveFormat === 'markdown' ? (
         <Markdown className="GenAITab--messageContent" options={genAiMarkdownOptions}>
