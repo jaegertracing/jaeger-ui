@@ -26,3 +26,6 @@ npm-debug.log
 scripts/release-notes.py
 scripts/draft-release.py
 .claude/settings.local.json
+
+#cheatsheet
+Cheatsheet.md
