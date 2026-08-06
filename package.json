@@ -22,7 +22,7 @@
     "knip": "6.31.0",
     "eslint-plugin-react-x": "5.18.0",
     "husky": "9.1.0",
-    "jsdom": "29.1.1",
+    "jsdom": "30.0.1",
     "lint-staged": "17.2.0",
     "npm-run-all2": "9.0.1",
     "openapi-zod-client": "1.18.3",
