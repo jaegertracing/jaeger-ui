@@ -57,24 +57,23 @@ function round2(percent: number) {
 const OpNode = React.memo<Props>(
   ({ count, errors, time, percent, selfTime, percentSelfTime, operation, service, mode }) => {
     // Spans over 20 % time are full red - we have probably to reconsider better approach
-    let backgroundColor;
+    let background;
     if (mode === MODE_TIME) {
       const percentBoosted = Math.min(percent / 20, 1);
-      backgroundColor = [255, 0, 0, percentBoosted].join();
+      background = `rgba(255, 0, 0, ${percentBoosted})`;
     } else if (mode === MODE_SELFTIME) {
-      backgroundColor = [255, 0, 0, percentSelfTime / 100].join();
+      background = `rgba(255, 0, 0, ${percentSelfTime / 100})`;
     } else {
-      backgroundColor = colorGenerator.getRgbColorByKey(service).concat(0.8).join();
+      // Keep the service color as a token reference rather than resolving it to
+      // numbers here: this component is memoized on props that do not include the
+      // theme, so a resolved value would survive a theme switch as the previous
+      // theme's color. `color-mix` leaves the substitution to the browser.
+      background = `color-mix(in srgb, ${colorGenerator.getColorByKey(service)} 80%, transparent)`;
     }
 
     const table = (
       <table className={`OpNode OpNode--mode-${mode}`} cellSpacing="0">
-        <tbody
-          className="OpNode--body"
-          style={{
-            background: `rgba(${backgroundColor})`,
-          }}
-        >
+        <tbody className="OpNode--body" style={{ background }}>
           <tr>
             <td className="OpNode--metricCell OpNode--count">
               {count} / {errors}
