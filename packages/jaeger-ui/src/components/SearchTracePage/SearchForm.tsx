@@ -21,7 +21,13 @@ import getConfig from '../../utils/config/get-config';
 import * as markers from './SearchForm.markers';
 import { trackFormInput } from './SearchForm.track';
 import { formatDate, formatTime } from '../../utils/date';
-import { DEFAULT_OPERATION, DEFAULT_LIMIT, DEFAULT_LOOKBACK } from '../../constants/search-form';
+import {
+  DEFAULT_OPERATION,
+  DEFAULT_LIMIT,
+  DEFAULT_LOOKBACK,
+  DEFAULT_SPAN_KIND,
+  SPAN_KIND_OPTIONS,
+} from '../../constants/search-form';
 import SearchableSelect from '../common/SearchableSelect';
 import './SearchForm.css';
 import ValidatedFormField from '../../utils/ValidatedFormField';
@@ -81,6 +87,23 @@ export function convTagsLogfmt(tags: string | null | undefined): string | null {
     }
   });
   return JSON.stringify(data);
+}
+
+// Folds a selected Span Kind into the logfmt tags string, reusing the existing
+// `tags` query mechanism rather than adding a new backend query param. This is
+// equivalent to a user manually typing `span.kind=<value>` into the Tags field.
+export function mergeSpanKindIntoTags(
+  tags: string | null | undefined,
+  spanKind: string | null | undefined
+): string | null | undefined {
+  if (!spanKind || spanKind === DEFAULT_SPAN_KIND) {
+    return tags;
+  }
+  const spanKindTag = `span.kind=${spanKind}`;
+  const trimmedTags = (tags || '').trim();
+  // Appended last so the explicit Span Kind selection takes precedence over any
+  // span.kind value the user may have separately typed into the Tags field.
+  return trimmedTags ? `${trimmedTags} ${spanKindTag}` : spanKindTag;
 }
 
 interface ILookbackOption {
@@ -196,6 +219,7 @@ interface ISearchFormFields {
   endDate: string;
   endDateTime: string;
   operation: string;
+  spanKind: string;
   tags: string;
   minDuration: string;
   maxDuration: string;
@@ -215,6 +239,7 @@ function buildSearchQuery(
     endDate,
     endDateTime,
     operation,
+    spanKind,
     tags,
     minDuration,
     maxDuration,
@@ -249,7 +274,7 @@ function buildSearchQuery(
     lookback,
     start: String(start),
     end: String(end),
-    tags: convTagsLogfmt(tags) || undefined,
+    tags: convTagsLogfmt(mergeSpanKindIntoTags(tags, spanKind)) || undefined,
     minDuration: minDuration || undefined,
     maxDuration: maxDuration || undefined,
   };
@@ -295,6 +320,7 @@ function defaultFormData(
   return {
     service: initialValues?.service,
     operation: initialValues?.operation ?? DEFAULT_OPERATION,
+    spanKind: initialValues?.spanKind ?? DEFAULT_SPAN_KIND,
     resultsLimit: initialValues?.resultsLimit ?? String(DEFAULT_LIMIT),
     lookback: initialValues?.lookback ?? asValidConfigLookback(configLookback) ?? DEFAULT_LOOKBACK,
     tags: initialValues?.tags ?? '',
@@ -325,13 +351,19 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   // Fetch services using React Query
   const { data: services = [], isLoading: isLoadingServices, error: servicesError } = useServices();
 
-  // Fetch span names for the currently selected service
+  // Fetch span names for the currently selected service, filtered by the
+  // selected Span Kind if one is set. useSpanNames applies this filter to
+  // data it has already fetched (spanKind isn't part of its query key), so
+  // this doesn't trigger an extra request.
   const currentService = formData.service;
+  const selectedSpanKind = formData.spanKind;
+  const spanKindFilter =
+    selectedSpanKind && selectedSpanKind !== DEFAULT_SPAN_KIND ? selectedSpanKind : undefined;
   const {
     data: spanNamesData,
     isLoading: isLoadingSpanNames,
     error: spanNamesError,
-  } = useSpanNames(currentService && currentService !== '-' ? currentService : null);
+  } = useSpanNames(currentService && currentService !== '-' ? currentService : null, spanKindFilter);
 
   // Extract unique operation names from span data
   // API returns { name, spanKind }[] where the same name can appear with different spanKinds
@@ -348,7 +380,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   const handleChange = useCallback((fieldData: Partial<ISearchFormFields>) => {
     setFormData(prev => {
       const nextFormData = { ...prev, ...fieldData };
-      if (fieldData.service) {
+      if (fieldData.service || fieldData.spanKind) {
         nextFormData.operation = DEFAULT_OPERATION;
       }
       return nextFormData;
@@ -432,6 +464,23 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           {['all'].concat(spanNames).map(op => (
             <Option key={op} value={op}>
               {op}
+            </Option>
+          ))}
+        </SearchableSelect>
+      </FormItem>
+
+      <FormItem label="Span Kind">
+        <SearchableSelect
+          data-testid="spanKind"
+          value={selectedSpanKind === DEFAULT_SPAN_KIND ? undefined : selectedSpanKind}
+          disabled={submitting}
+          allowClear
+          placeholder="Any Span Kind"
+          onChange={(value: string) => handleChange({ spanKind: value || DEFAULT_SPAN_KIND })}
+        >
+          {SPAN_KIND_OPTIONS.map(({ label, value }) => (
+            <Option key={value} value={value}>
+              {label}
             </Option>
           ))}
         </SearchableSelect>
