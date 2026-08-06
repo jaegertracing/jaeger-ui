@@ -1,6 +1,7 @@
-# RFC: Jaeger UI as an Embedded Web Component
+# RFC 0001: Jaeger UI as an Embedded Web Component
 
-* **Status**: RFC
+* **Status**: Draft
+* **Created**: 2026-04-20
 * **Last Updated**: 2026-04-20
 
 ---
@@ -165,7 +166,7 @@ export function createStore(): Store { ... }
 export const store = createStore();
 ```
 
-Zustand stores that hold per-view state (DDG modifiers — see ADR-0008) also need instance-scoped
+Zustand stores that hold per-view state (DDG modifiers — see [RFC 0006](./0006-target-state-management-architecture.md)) also need instance-scoped
 creation. The `zustand-class-bridge.tsx` pattern already supports this; Web Component mounts simply
 pass a new store instance via React context.
 
@@ -213,7 +214,7 @@ relative to the JS file's URL). The `site-prefix` module needs a Shadow DOM–aw
   location for relative asset URLs via `import.meta.url`).
 - `site-prefix.ts` gains a `setSitePrefix(url: string)` escape hatch called by the Custom Element
   constructor before React mounts.
-- The `__webpack_public_path__` assignment becomes a no-op (the symbol is unused since ADR-0007).
+- The `__webpack_public_path__` assignment becomes a no-op (the symbol is unused since [ADR-0007](../adr/0007-vite-plus-migration.md)).
 
 ### 8. `document.body` side effects
 
@@ -430,6 +431,6 @@ This breaks shadow DOM isolation but is necessary for strict-CSP environments.
 - [Grafana panel plugin development guide](https://grafana.com/developers/plugin-tools/create-a-plugin/develop-a-plugin/build-a-panel-plugin)
 - [`@grafana/plugin-e2e` testing](https://grafana.com/developers/plugin-tools/e2e-test-a-plugin/introduction)
 - [vite-plugin-css-injected-by-js](https://github.com/marco-prontera/vite-plugin-css-injected-by-js)
-- ADR-0001: Design Token-Based Theming (CSS custom properties — compatible with Shadow DOM)
-- ADR-0004 / ADR-0008: State Management Strategy (Zustand instance-scoped stores)
-- ADR-0007: Vite+ Migration (Vite library mode is the build foundation for this proposal)
+- [ADR-0001: Design Token-Based Theming](../adr/0001-design-token-based-theming.md) (CSS custom properties — compatible with Shadow DOM)
+- [ADR-0004: State Management Strategy](../adr/0004-state-management-strategy.md) and [RFC 0006: Target State Management Architecture](./0006-target-state-management-architecture.md) (Zustand instance-scoped stores)
+- [ADR-0007: Vite+ Toolchain](../adr/0007-vite-plus-migration.md) (Vite library mode is the build foundation for this proposal)
