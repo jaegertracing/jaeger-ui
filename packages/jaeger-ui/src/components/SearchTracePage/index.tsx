@@ -25,7 +25,7 @@ import * as orderBy from '../../model/order-by';
 import ErrorMessage from '../common/ErrorMessage';
 import { sortTraceSummaries } from '../../model/search';
 import FileLoader from './FileLoader';
-import { useUploadedTraces } from './useUploadedTraces';
+import { useClearUploadedTraces, useUploadedTraces } from './useUploadedTraces';
 import VerticalResizer from '../common/VerticalResizer';
 import { useSearchPanelStore, PANEL_WIDTH_MIN, PANEL_WIDTH_MAX } from './search-panel-store';
 
@@ -78,7 +78,14 @@ export function SearchTracePageImpl() {
     }
   }, [searchQuery, rawUrlState, navigate]);
 
-  const { uploadedSummaries, uploadedRawTraces, handleTracesLoaded } = useUploadedTraces();
+  const { uploadedSummaries, uploadedRawTraces, handleTracesLoaded, handleUploadedFileRemove } =
+    useUploadedTraces();
+  const clearUploadedTraces = useClearUploadedTraces();
+  const [uploadResetKey, setUploadResetKey] = useState(0);
+  const handleClearUploadedTraces = useCallback(() => {
+    clearUploadedTraces();
+    setUploadResetKey(key => key + 1);
+  }, [clearUploadedTraces]);
 
   // Merge API and uploaded summaries, deduplicating by traceID (API results take precedence).
   // Duplicates arise when the same file is uploaded twice or an uploaded trace also appears
@@ -182,13 +189,21 @@ export function SearchTracePageImpl() {
   tabItems.push({
     label: 'Search',
     key: 'searchForm',
-    children: <SearchForm key={JSON.stringify(urlQueryParams)} />,
+    children: (
+      <SearchForm key={JSON.stringify(urlQueryParams)} onClearUploadedTraces={handleClearUploadedTraces} />
+    ),
   });
   if (!disableFileUploadControl) {
     tabItems.push({
       label: 'Upload',
       key: 'fileLoader',
-      children: <FileLoader onTracesLoaded={handleTracesLoaded} />,
+      children: (
+        <FileLoader
+          onTracesLoaded={handleTracesLoaded}
+          onUploadedFileRemove={handleUploadedFileRemove}
+          uploadResetKey={uploadResetKey}
+        />
+      ),
     });
   }
 

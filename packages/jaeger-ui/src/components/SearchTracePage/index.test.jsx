@@ -413,7 +413,7 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
 
     expect(lastFileLoaderProps).not.toBeNull();
     await act(async () => {
-      lastFileLoaderProps.onTracesLoaded([summary], [{ traceID: 'uploaded-1' }]);
+      lastFileLoaderProps.onTracesLoaded('uid-a', [summary], [{ traceID: 'uploaded-1' }]);
     });
 
     // With controlled tabs, the tab switch causes a component re-render before onTracesLoaded
@@ -472,19 +472,104 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
     expect(lastSearchResultsProps.diffCohort).toEqual([summaryInResults, summaryFromPriorSearch]);
   });
 
-  it('uploaded caches are cleared when useClearUploadedTraces callback is invoked', async () => {
-    const summary = { traceID: 'uploaded-1' };
-    queryClient.setQueryData(['uploadedSummaries'], [summary]);
-    queryClient.setQueryData(['uploadedRawTraces'], [{ traceID: 'uploaded-1' }]);
+  it('passes uploadResetKey to FileLoader', async () => {
+    render(
+      <AllProvider>
+        <SearchTracePage />
+      </AllProvider>
+    );
 
-    // Simulate what SearchForm does: invoke the callback returned by useClearUploadedTraces
+    const uploadTab = screen.getByText('Upload');
     await act(async () => {
-      queryClient.setQueryData(['uploadedSummaries'], []);
-      queryClient.setQueryData(['uploadedRawTraces'], []);
+      fireEvent.click(uploadTab);
     });
 
-    expect(queryClient.getQueryData(['uploadedSummaries'])).toEqual([]);
-    expect(queryClient.getQueryData(['uploadedRawTraces'])).toEqual([]);
+    expect(lastFileLoaderProps.uploadResetKey).toBe(0);
+  });
+
+  it('increments uploadResetKey when search clears uploaded traces', async () => {
+    useServices.mockReturnValue({ data: ['svcA'], isLoading: false });
+
+    const { container } = render(
+      <AllProvider initialEntries={['/search?service=svcA']}>
+        <SearchTracePage />
+      </AllProvider>
+    );
+
+    await waitFor(() => expect(container.querySelector('[data-test="submit-btn"]')).not.toBeDisabled());
+
+    await act(async () => {
+      fireEvent.submit(container.querySelector('form'));
+    });
+
+    const uploadTab = screen.getByText('Upload');
+    await act(async () => {
+      fireEvent.click(uploadTab);
+    });
+
+    await waitFor(() => {
+      expect(lastFileLoaderProps.uploadResetKey).toBe(1);
+    });
+  });
+
+  it('passes handleUploadedFileRemove to FileLoader and clears only that file traces', async () => {
+    const summaryA = {
+      traceID: 'uploaded-a',
+      traceName: 'svc: a',
+      rootServiceName: 'svc',
+      rootOperationName: 'a',
+      startTime: 0,
+      duration: 100,
+      spanCount: 1,
+      errorSpanCount: 0,
+      orphanSpanCount: 0,
+      services: [],
+    };
+    const summaryB = {
+      traceID: 'uploaded-b',
+      traceName: 'svc: b',
+      rootServiceName: 'svc',
+      rootOperationName: 'b',
+      startTime: 0,
+      duration: 100,
+      spanCount: 1,
+      errorSpanCount: 0,
+      orphanSpanCount: 0,
+      services: [],
+    };
+
+    render(
+      <AllProvider>
+        <SearchTracePage />
+      </AllProvider>
+    );
+
+    const uploadTab = screen.getByText('Upload');
+    await act(async () => {
+      fireEvent.click(uploadTab);
+    });
+
+    expect(lastFileLoaderProps).not.toBeNull();
+
+    await act(async () => {
+      lastFileLoaderProps.onTracesLoaded('uid-a', [summaryA], [{ traceID: 'uploaded-a' }]);
+      lastFileLoaderProps.onTracesLoaded('uid-b', [summaryB], [{ traceID: 'uploaded-b' }]);
+    });
+
+    await waitFor(() => {
+      expect(lastSearchResultsProps.traceSummaries).toEqual(expect.arrayContaining([summaryA, summaryB]));
+    });
+
+    await act(async () => {
+      lastFileLoaderProps.onUploadedFileRemove('uid-a');
+    });
+
+    await waitFor(() => {
+      expect(lastSearchResultsProps.traceSummaries).toContainEqual(summaryB);
+      expect(lastSearchResultsProps.traceSummaries).not.toContainEqual(summaryA);
+      expect(lastSearchResultsProps.rawTraces).toContainEqual({ traceID: 'uploaded-b' });
+      expect(lastSearchResultsProps.rawTraces).not.toContainEqual({ traceID: 'uploaded-a' });
+    });
   });
 
   it('handleSortChange updates sortBy passed to SearchResults', async () => {

@@ -3,6 +3,7 @@
 
 import * as React from 'react';
 import { Upload, message } from 'antd';
+import type { UploadFile } from 'antd/es/upload/interface';
 import { IoDocumentAttachOutline } from 'react-icons/io5';
 
 import readJsonFile from '../../utils/readJsonFile';
@@ -17,7 +18,10 @@ import './FileLoader.css';
 const Dragger = Upload.Dragger;
 
 type FileLoaderProps = {
-  onTracesLoaded: (summaries: TraceSummary[], rawTraces: unknown[]) => void;
+  onTracesLoaded: (fileUid: string, summaries: TraceSummary[], rawTraces: unknown[]) => void;
+  onUploadedFileRemove: (fileUid: string) => void;
+  /** Increment to reset Ant Design Upload fileList (e.g. on search submit). */
+  uploadResetKey?: number;
 };
 
 export type LoadResult = {
@@ -69,32 +73,54 @@ export async function loadTracesFromFile(file: File): Promise<LoadResult> {
 }
 
 export default function FileLoader(props: FileLoaderProps) {
+  // Uids marked on remove so in-flight parse callbacks for that file are discarded.
+  const cancelledUidsRef = React.useRef(new Set<string>());
+  const [fileList, setFileList] = React.useState<UploadFile[]>([]);
+
+  React.useEffect(() => {
+    setFileList([]);
+    cancelledUidsRef.current.clear();
+  }, [props.uploadResetKey]);
+
   return (
     <Dragger
       accept=".json,.jsonl"
+      fileList={fileList}
+      onChange={({ fileList: nextFileList }) => setFileList(nextFileList)}
       beforeUpload={file => {
         // beforeUpload(file, fileList) is called once per selected file. Each invocation
         // receives the full fileList, so iterating fileList here would process N files
         // N times (N²). We process only the current `file` argument to avoid that.
+        const fileUid = file.uid;
         loadTracesFromFile(file)
           .then(({ summaries, rawTraces, errorCount }) => {
+            if (cancelledUidsRef.current.has(fileUid)) {
+              return;
+            }
             if (errorCount > 0) {
               message.error(
                 `${errorCount} trace${errorCount > 1 ? 's' : ''} could not be loaded from ${file.name}.`
               );
             }
             if (summaries.length > 0) {
-              props.onTracesLoaded(summaries, rawTraces);
+              props.onTracesLoaded(fileUid, summaries, rawTraces);
             } else if (errorCount === 0) {
               message.warning(`No traces found in ${file.name}.`);
             }
           })
           .catch((err: unknown) => {
+            if (cancelledUidsRef.current.has(fileUid)) {
+              return;
+            }
             message.error(
               `Failed to parse ${file.name}: ${err instanceof Error ? err.message : String(err)}`
             );
           });
         return false;
+      }}
+      onRemove={(file: UploadFile) => {
+        cancelledUidsRef.current.add(file.uid);
+        props.onUploadedFileRemove(file.uid);
       }}
       multiple
     >

@@ -98,6 +98,7 @@ function makeDateParams(dateOffset = 0) {
 const defaultProps = {
   dataCenters: ['dc1'],
   handleSubmit: () => {},
+  onClearUploadedTraces: jest.fn(),
   submitFormHandler: jest.fn().mockReturnValue('/search'),
 };
 
@@ -525,6 +526,7 @@ describe('<SearchForm>', () => {
       '1m',
       expect.any(Boolean)
     );
+    expect(defaultProps.onClearUploadedTraces).toHaveBeenCalled();
   });
 
   describe('error handling', () => {
