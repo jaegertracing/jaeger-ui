@@ -18,17 +18,49 @@ export class JaegerClient {
   private apiRoot = prefixUrl('/api/v3');
 
   /**
+   * Extract error details from response body
+   * Handles both JSON and plain text responses
+   */
+  private async extractErrorDetails(response: Response): Promise<string> {
+    try {
+      const text = await response.text();
+      if (!text) return '';
+
+      try {
+        const json = JSON.parse(text);
+        if (typeof json.error === 'string') return json.error;
+        if (typeof json.message === 'string') return json.message;
+        if (typeof json.details === 'string') return json.details;
+        return text;
+      } catch {
+        return text;
+      }
+    } catch {
+      return '';
+    }
+  }
+
+  /**
+   * Throw a detailed error with response body information
+   */
+  private async throwApiError(response: Response, context: string): Promise<never> {
+    const details = await this.extractErrorDetails(response);
+    const message = details
+      ? `Failed to ${context}: ${response.status} ${response.statusText} - ${details}`
+      : `Failed to ${context}: ${response.status} ${response.statusText}`;
+    throw new Error(message);
+  }
+
+  /**
    * Fetch the list of services from the Jaeger API.
    * @returns Promise<string[]> - Array of service names
    */
   async fetchServices(): Promise<string[]> {
     const response = await this.fetchWithTimeout(`${this.apiRoot}/services`);
     if (!response.ok) {
-      throw new Error(`Failed to fetch services: ${response.status} ${response.statusText}`);
+      await this.throwApiError(response, 'fetch services');
     }
     const data = await response.json();
-
-    // Runtime validation with Zod
     const validated = ServicesResponseSchema.parse(data);
     return validated.services;
   }
@@ -43,13 +75,9 @@ export class JaegerClient {
       `${this.apiRoot}/operations?service=${encodeURIComponent(service)}`
     );
     if (!response.ok) {
-      throw new Error(
-        `Failed to fetch span names for service "${service}": ${response.status} ${response.statusText}`
-      );
+      await this.throwApiError(response, `fetch span names for service "${service}"`);
     }
     const data = await response.json();
-
-    // Runtime validation with Zod
     const validated = OperationsResponseSchema.parse(data);
     return validated.operations;
   }
@@ -78,7 +106,7 @@ export class JaegerClient {
     const url = `${this.apiRoot}/trace-summaries?${params.toString()}`;
     const response = await this.fetchWithTimeout(url);
     if (!response.ok) {
-      throw new Error(`Failed to fetch trace summaries: ${response.status} ${response.statusText}`);
+      await this.throwApiError(response, 'fetch trace summaries');
     }
     const data = await response.json();
     const validated = TraceSummariesResponseSchema.parse(data);
