@@ -459,10 +459,8 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           placeholder={useOtelTerms ? 'Select A Span Name' : 'Select An Operation'}
           onChange={(value: string) => handleChange({ operation: value })}
         >
-          {/* The reserved "any operation" value keeps its "all" label, which is what the
-              dropdown has always shown for it. */}
           <Option key={ALL_OPERATIONS} value={ALL_OPERATIONS}>
-            all
+            {useOtelTerms ? 'All Span Names' : 'All Operations'}
           </Option>
           {spanNames.map(op => (
             <Option key={op} value={op}>

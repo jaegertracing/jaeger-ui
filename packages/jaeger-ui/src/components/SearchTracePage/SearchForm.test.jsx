@@ -452,6 +452,22 @@ describe('<SearchForm>', () => {
     expect(SearchableSelect.disabled.operation).toBe(true);
   });
 
+  // Both reserved dropdown entries read the same way, and the operation one follows the
+  // Operation/Span Name toggle like its field label does.
+  it.each([
+    [false, 'All Operations'],
+    [true, 'All Span Names'],
+  ])('labels the any-operation entry for useOpenTelemetryTerms=%s', (useOpenTelemetryTerms, expected) => {
+    mockUseConfig.mockImplementation(() => ({ ...baseUiConfig, useOpenTelemetryTerms }));
+
+    renderForm(<SearchForm key={`op-label-${useOpenTelemetryTerms}`} {...defaultProps} />);
+
+    const labelOf = value =>
+      React.Children.toArray(SearchableSelect.children.operation).find(child => child.props.value === value)
+        ?.props.children;
+    expect(labelOf(ALL_OPERATIONS)).toBe(expected);
+  });
+
   describe('All Services option', () => {
     const serviceOptionValues = () =>
       React.Children.toArray(SearchableSelect.children.service).map(child => child.props.value);
