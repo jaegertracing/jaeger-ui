@@ -52,7 +52,7 @@ vi.mock('../../utils/config/get-config', () => ({
 
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
-import { render, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { render, fireEvent, waitFor, cleanup, screen } from '@testing-library/react';
 import { act } from 'react';
 import '@testing-library/jest-dom';
 import dayjs from 'dayjs';
@@ -504,6 +504,36 @@ describe('<SearchForm>', () => {
       // of them.
       await waitFor(() => expect(SearchableSelect.disabled.operation).toBe(true));
       expect(useSpanNames).toHaveBeenCalledWith(null);
+    });
+
+    it('explains why the operation field is disabled', async () => {
+      withAllServicesSupport();
+      const { container } = renderForm(
+        <SearchForm key="all-svc-tooltip" {...defaultProps} initialValues={{ service: ALL_SERVICES }} />
+      );
+
+      // The disabled select cannot emit the hover itself, so the tooltip hangs off the
+      // wrapper around it.
+      const wrapper = container.querySelector('.SearchForm--disabledFieldWrapper');
+      expect(wrapper).toBeInTheDocument();
+      fireEvent.mouseEnter(wrapper);
+
+      expect(await screen.findByText(/unavailable while searching all services/)).toBeInTheDocument();
+    });
+
+    it('leaves the operation field unexplained when it is usable', async () => {
+      withAllServicesSupport();
+      const { container } = renderForm(
+        <SearchForm key="all-svc-tooltip-off" {...defaultProps} initialValues={{ service: 'svcA' }} />
+      );
+
+      fireEvent.mouseEnter(container.querySelector('.SearchForm--disabledFieldWrapper'));
+      // Outlast antd's hover delay, so absence means "no tooltip" rather than "not yet".
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 250));
+      });
+
+      expect(screen.queryByText(/unavailable while searching all services/)).not.toBeInTheDocument();
     });
 
     it('drops an operation carried alongside it, since the filter cannot be scoped', () => {
