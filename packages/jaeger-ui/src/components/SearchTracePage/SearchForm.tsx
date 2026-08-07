@@ -432,11 +432,15 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
               All Services
             </Option>
           )}
-          {services.map(serviceName => (
-            <Option key={serviceName} value={serviceName}>
-              {serviceName}
-            </Option>
-          ))}
+          {/* A service whose name equals the reserved value is shadowed by the option
+              above; filtering it out keeps the option keys unique. */}
+          {services
+            .filter(name => !allowAllServices || name !== ALL_SERVICES)
+            .map(serviceName => (
+              <Option key={serviceName} value={serviceName}>
+                {serviceName}
+              </Option>
+            ))}
         </SearchableSelect>
       </FormItem>
       <FormItem

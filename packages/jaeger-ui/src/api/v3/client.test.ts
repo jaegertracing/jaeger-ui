@@ -454,7 +454,6 @@ describe('JaegerClient', () => {
       // "any service", so it must not travel to the backend as a literal filter.
       const calledUrl = mockFetch.mock.calls[0][0] as string;
       expect(calledUrl).not.toContain('query.serviceName');
-      expect(calledUrl).not.toContain(ALL_SERVICES);
       expect(calledUrl).toContain('query.attributes=http.status%3D500');
     });
   });

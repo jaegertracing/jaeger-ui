@@ -475,6 +475,22 @@ describe('<SearchForm>', () => {
       expect(serviceOptionValues()).toEqual(['svcA', 'svcB']);
     });
 
+    it('shadows a real service whose name equals the reserved value', () => {
+      withAllServicesSupport();
+      useServices.mockReturnValueOnce({
+        data: [ALL_SERVICES, 'svcA'],
+        isLoading: false,
+        error: null,
+      });
+
+      renderForm(<SearchForm key="all-svc-collision" {...defaultProps} />);
+
+      // One option carries the reserved value, so the keys stay unique; the backend's
+      // own service of that name is unreachable, the same trade the 'all' operation
+      // sentinel already makes.
+      expect(serviceOptionValues()).toEqual([ALL_SERVICES, 'svcA']);
+    });
+
     it('enables submission and disables the operation field once selected', async () => {
       withAllServicesSupport();
       const { container } = renderForm(
