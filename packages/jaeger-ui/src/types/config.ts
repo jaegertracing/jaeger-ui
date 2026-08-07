@@ -85,6 +85,10 @@ export type BackendCapabilities = {
   // aiAssistant indicates whether the in-app AI assistant should be available.
   // The backend advertises this when a live AI sidecar is reachable.
   aiAssistant?: boolean;
+  // searchWithoutServiceName indicates whether the trace storage backend accepts a
+  // search that omits the service name. The Service dropdown offers its "All Services"
+  // option only when this is true; Cassandra, for one, cannot answer such a query.
+  searchWithoutServiceName?: boolean;
 };
 
 // Default values are provided in packages/jaeger-ui/src/constants/default-config.tsx

@@ -72,6 +72,7 @@ const defaultConfig: Config = {
     archiveStorage: false,
     metricsStorage: false,
     aiAssistant: false,
+    searchWithoutServiceName: false,
   },
   tracking: {
     gaID: null,

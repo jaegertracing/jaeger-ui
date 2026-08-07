@@ -1,33 +1,31 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-const { mockUseIsSearchFetching } = vi.hoisted(() => ({
+const { mockUseIsSearchFetching, mockUseConfig } = vi.hoisted(() => ({
   mockUseIsSearchFetching: jest.fn().mockReturnValue(false),
+  mockUseConfig: jest.fn(),
 }));
 
 vi.mock('../common/SearchableSelect', () => {
-  const MockSearchableSelect = ({ onChange, 'data-testid': testId, disabled, value }) => {
+  const MockSearchableSelect = ({ onChange, 'data-testid': testId, disabled, value, children }) => {
     if (onChange && testId) {
       MockSearchableSelect.onChangeFns[testId] = onChange;
     }
     if (testId) {
       MockSearchableSelect.disabled[testId] = disabled;
+      MockSearchableSelect.children[testId] = children;
+      MockSearchableSelect.values[testId] = value;
     }
     return <div data-testid={`mock-select-${testId}`} data-disabled={disabled} data-value={value} />;
   };
   MockSearchableSelect.onChangeFns = {};
   MockSearchableSelect.disabled = {};
+  MockSearchableSelect.children = {};
+  MockSearchableSelect.values = {};
   return mockDefault(MockSearchableSelect);
 });
 vi.mock('../../hooks/useConfig', () => ({
-  useConfig: () => ({
-    useOpenTelemetryTerms: false,
-    search: {
-      maxLookback: { label: '2 days', value: '2d' },
-      adjustEndTime: '1m',
-      maxLimit: 1500,
-    },
-  }),
+  useConfig: mockUseConfig,
 }));
 vi.mock('../../hooks/useTraceDiscovery', () => ({
   useServices: jest.fn(() => ({
@@ -74,6 +72,7 @@ import {
   validateDurationFields,
 } from './SearchForm';
 import * as markers from './SearchForm.markers';
+import { ALL_SERVICES, DEFAULT_OPERATION } from '../../constants/search-form';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 import { AppQueryClientProvider } from '../../query/app-query-client';
 import getConfig from '../../utils/config/get-config';
@@ -100,6 +99,20 @@ const defaultProps = {
   handleSubmit: () => {},
   submitFormHandler: jest.fn().mockReturnValue('/search'),
 };
+
+const baseUiConfig = {
+  useOpenTelemetryTerms: false,
+  search: {
+    maxLookback: { label: '2 days', value: '2d' },
+    adjustEndTime: '1m',
+    maxLimit: 1500,
+  },
+  backendCapabilities: {},
+};
+
+// The default backend advertises no capabilities, which is what an older query service
+// or a Cassandra-backed one reports; individual tests override backendCapabilities.
+mockUseConfig.mockImplementation(() => baseUiConfig);
 
 describe('conversion utils', () => {
   describe('getUnixTimeStampInMSFromForm()', () => {
@@ -416,6 +429,9 @@ describe('<SearchForm>', () => {
     jest.clearAllMocks();
     SearchableSelect.onChangeFns = {};
     SearchableSelect.disabled = {};
+    SearchableSelect.children = {};
+    SearchableSelect.values = {};
+    mockUseConfig.mockImplementation(() => baseUiConfig);
   });
 
   it('enables operations only when a service is selected', async () => {
@@ -433,6 +449,69 @@ describe('<SearchForm>', () => {
     renderForm(<SearchForm {...defaultProps} />);
 
     expect(SearchableSelect.disabled.operation).toBe(true);
+  });
+
+  describe('All Services option', () => {
+    const serviceOptionValues = () =>
+      React.Children.toArray(SearchableSelect.children.service).map(child => child.props.value);
+
+    const withAllServicesSupport = () =>
+      mockUseConfig.mockImplementation(() => ({
+        ...baseUiConfig,
+        backendCapabilities: { searchWithoutServiceName: true },
+      }));
+
+    it('is offered when the backend advertises searchWithoutServiceName', () => {
+      withAllServicesSupport();
+
+      renderForm(<SearchForm key="all-svc-on" {...defaultProps} />);
+
+      expect(serviceOptionValues()).toEqual([ALL_SERVICES, 'svcA', 'svcB']);
+    });
+
+    it('is withheld when the backend does not advertise the capability', () => {
+      renderForm(<SearchForm key="all-svc-off" {...defaultProps} />);
+
+      expect(serviceOptionValues()).toEqual(['svcA', 'svcB']);
+    });
+
+    it('enables submission and disables the operation field once selected', async () => {
+      withAllServicesSupport();
+      const { container } = renderForm(
+        <SearchForm key="all-svc-selected" {...defaultProps} initialValues={{ service: ALL_SERVICES }} />
+      );
+
+      const submitButton = container.querySelector(`[data-test="${markers.SUBMIT_BTN}"]`);
+      expect(submitButton).not.toBeDisabled();
+      // Operations are enumerated per service, so there is nothing to pick across all
+      // of them.
+      await waitFor(() => expect(SearchableSelect.disabled.operation).toBe(true));
+      expect(useSpanNames).toHaveBeenCalledWith(null);
+    });
+
+    it('drops an operation carried alongside it, since the filter cannot be scoped', () => {
+      withAllServicesSupport();
+
+      renderForm(
+        <SearchForm
+          key="all-svc-with-op"
+          {...defaultProps}
+          initialValues={{ service: ALL_SERVICES, operation: 'someOperation' }}
+        />
+      );
+
+      expect(SearchableSelect.values.operation).toBe(DEFAULT_OPERATION);
+    });
+
+    it('falls back to no selection when the backend cannot search without a service', () => {
+      const { container } = renderForm(
+        <SearchForm key="all-svc-unsupported" {...defaultProps} initialValues={{ service: ALL_SERVICES }} />
+      );
+
+      expect(SearchableSelect.values.service).toBeUndefined();
+      const submitButton = container.querySelector(`[data-test="${markers.SUBMIT_BTN}"]`);
+      expect(submitButton).toBeDisabled();
+    });
   });
 
   it('shows custom date inputs when lookback is set to "custom"', () => {
@@ -637,6 +716,9 @@ describe('SearchForm onChange handlers', () => {
     jest.clearAllMocks();
     SearchableSelect.onChangeFns = {};
     SearchableSelect.disabled = {};
+    SearchableSelect.children = {};
+    SearchableSelect.values = {};
+    mockUseConfig.mockImplementation(() => baseUiConfig);
   });
 
   it('updates form data when onChange handlers are triggered', async () => {

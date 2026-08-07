@@ -3,6 +3,7 @@
 
 import { JaegerClient, jaegerClient } from './client';
 import { ZodError } from 'zod';
+import { ALL_SERVICES } from '../../constants/search-form';
 
 describe('JaegerClient', () => {
   let client: JaegerClient;
@@ -436,6 +437,25 @@ describe('JaegerClient', () => {
       expect(calledUrl).toContain('query.operationName=GET+%2Fapi');
       expect(calledUrl).toContain('query.attributes=http.status%3D200');
       expect(calledUrl).toContain('query.searchDepth=20');
+    });
+
+    it('omits the service name for an all-services search', async () => {
+      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ summaries: [] }) });
+
+      const promise = client.fetchTraceSummaries({
+        ...query,
+        service: ALL_SERVICES,
+        tags: 'http.status=500',
+      });
+      vi.runAllTimers();
+      await promise;
+
+      // ALL_SERVICES is a UI-only value; the API reads an absent service name as
+      // "any service", so it must not travel to the backend as a literal filter.
+      const calledUrl = mockFetch.mock.calls[0][0] as string;
+      expect(calledUrl).not.toContain('query.serviceName');
+      expect(calledUrl).not.toContain(ALL_SERVICES);
+      expect(calledUrl).toContain('query.attributes=http.status%3D500');
     });
   });
 

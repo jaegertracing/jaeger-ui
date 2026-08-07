@@ -58,7 +58,10 @@ describe('getConfig()', () => {
         metricsStorage: true,
         aiAssistant: true,
       }));
+      // Injected keys win; any the backend did not send keep their default, which is how
+      // a UI stays usable against a backend that predates a capability.
       expect(getConfig().backendCapabilities).toEqual({
+        ...defaultConfig.backendCapabilities,
         archiveStorage: true,
         metricsStorage: true,
         aiAssistant: true,
@@ -85,6 +88,7 @@ describe('getConfig()', () => {
         aiAssistant: false,
       }));
       expect(getConfig().backendCapabilities).toEqual({
+        ...defaultConfig.backendCapabilities,
         archiveStorage: false,
         metricsStorage: false,
         aiAssistant: false,
@@ -112,7 +116,11 @@ describe('getConfig()', () => {
     it('merges the defaultConfig with the embedded config and backend capabilities', () => {
       embedded = { novel: 'prop' };
       capabilities = { archiveStorage: true, metricsStorage: false, aiAssistant: false };
-      expect(getConfig()).toEqual({ ...defaultConfig, ...embedded, backendCapabilities: capabilities });
+      expect(getConfig()).toEqual({
+        ...defaultConfig,
+        ...embedded,
+        backendCapabilities: { ...defaultConfig.backendCapabilities, ...capabilities },
+      });
     });
 
     describe('overwriting precedence and merging', () => {
