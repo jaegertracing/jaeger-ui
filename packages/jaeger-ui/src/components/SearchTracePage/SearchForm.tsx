@@ -22,10 +22,11 @@ import * as markers from './SearchForm.markers';
 import { trackFormInput } from './SearchForm.track';
 import { formatDate, formatTime } from '../../utils/date';
 import {
+  ALL_OPERATIONS,
   ALL_SERVICES,
-  DEFAULT_OPERATION,
   DEFAULT_LIMIT,
   DEFAULT_LOOKBACK,
+  normalizeOperation,
 } from '../../constants/search-form';
 import SearchableSelect from '../common/SearchableSelect';
 import './SearchForm.css';
@@ -249,7 +250,7 @@ function buildSearchQuery(
 
   return {
     service,
-    operation: operation !== DEFAULT_OPERATION ? operation : undefined,
+    operation: operation !== ALL_OPERATIONS ? operation : undefined,
     limit: resultsLimit,
     lookback,
     start: String(start),
@@ -307,7 +308,7 @@ function defaultFormData(
     // In all-services mode there is no per-service operation list, so an operation
     // carried in the URL alongside it is dropped rather than filtered on invisibly.
     operation:
-      initialService === ALL_SERVICES ? DEFAULT_OPERATION : (initialValues?.operation ?? DEFAULT_OPERATION),
+      initialService === ALL_SERVICES ? ALL_OPERATIONS : (initialValues?.operation ?? ALL_OPERATIONS),
     resultsLimit: initialValues?.resultsLimit ?? String(DEFAULT_LIMIT),
     lookback: initialValues?.lookback ?? asValidConfigLookback(configLookback) ?? DEFAULT_LOOKBACK,
     tags: initialValues?.tags ?? '',
@@ -367,7 +368,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
     setFormData(prev => {
       const nextFormData = { ...prev, ...fieldData };
       if (fieldData.service) {
-        nextFormData.operation = DEFAULT_OPERATION;
+        nextFormData.operation = ALL_OPERATIONS;
       }
       return nextFormData;
     });
@@ -432,15 +433,11 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
               All Services
             </Option>
           )}
-          {/* A service whose name equals the reserved value is shadowed by the option
-              above; filtering it out keeps the option keys unique. */}
-          {services
-            .filter(name => !allowAllServices || name !== ALL_SERVICES)
-            .map(serviceName => (
-              <Option key={serviceName} value={serviceName}>
-                {serviceName}
-              </Option>
-            ))}
+          {services.map(serviceName => (
+            <Option key={serviceName} value={serviceName}>
+              {serviceName}
+            </Option>
+          ))}
         </SearchableSelect>
       </FormItem>
       <FormItem
@@ -461,7 +458,12 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           placeholder={useOtelTerms ? 'Select A Span Name' : 'Select An Operation'}
           onChange={(value: string) => handleChange({ operation: value })}
         >
-          {['all'].concat(spanNames).map(op => (
+          {/* The reserved "any operation" value keeps its "all" label, which is what the
+              dropdown has always shown for it. */}
+          <Option key={ALL_OPERATIONS} value={ALL_OPERATIONS}>
+            all
+          </Option>
+          {spanNames.map(op => (
             <Option key={op} value={op}>
               {op}
             </Option>
@@ -743,7 +745,7 @@ export function mapStateToProps(_state: ReduxState, ownProps: { search?: string 
     if (lastSvc && lastSvc !== '-') {
       lastSearchService = lastSvc;
       if (lastOp && lastOp !== '-') {
-        lastSearchOperation = lastOp;
+        lastSearchOperation = normalizeOperation(lastOp);
       }
     }
   }
@@ -820,7 +822,9 @@ export function mapStateToProps(_state: ReduxState, ownProps: { search?: string 
       startDateTime: queryStartDateTime || '00:00',
       endDate: queryEndDate || today,
       endDateTime: queryEndDateTime || currentTime,
-      operation: (operation as string | undefined) || lastSearchOperation || DEFAULT_OPERATION,
+      // normalizeOperation maps the sentinel's former plain-word value, which bookmarked
+      // URLs and stored last-searches still carry, onto the current one.
+      operation: normalizeOperation(operation as string | undefined) || lastSearchOperation || ALL_OPERATIONS,
       tags,
       minDuration: (minDuration as string | undefined) || undefined,
       maxDuration: (maxDuration as string | undefined) || undefined,

@@ -72,7 +72,7 @@ import {
   validateDurationFields,
 } from './SearchForm';
 import * as markers from './SearchForm.markers';
-import { ALL_SERVICES, DEFAULT_OPERATION } from '../../constants/search-form';
+import { ALL_SERVICES, ALL_OPERATIONS } from '../../constants/search-form';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 import { AppQueryClientProvider } from '../../query/app-query-client';
 import getConfig from '../../utils/config/get-config';
@@ -315,8 +315,8 @@ describe('submitForm()', () => {
     };
   });
 
-  it('ignores `fields.operation` when it is "all"', () => {
-    fields.operation = 'all';
+  it('ignores `fields.operation` when it is the reserved any-operation value', () => {
+    fields.operation = ALL_OPERATIONS;
     const url = submitForm(fields);
     const { operation } = getUrlParams(url);
     expect(operation).toBe(undefined);
@@ -475,22 +475,6 @@ describe('<SearchForm>', () => {
       expect(serviceOptionValues()).toEqual(['svcA', 'svcB']);
     });
 
-    it('shadows a real service whose name equals the reserved value', () => {
-      withAllServicesSupport();
-      useServices.mockReturnValueOnce({
-        data: [ALL_SERVICES, 'svcA'],
-        isLoading: false,
-        error: null,
-      });
-
-      renderForm(<SearchForm key="all-svc-collision" {...defaultProps} />);
-
-      // One option carries the reserved value, so the keys stay unique; the backend's
-      // own service of that name is unreachable, the same trade the 'all' operation
-      // sentinel already makes.
-      expect(serviceOptionValues()).toEqual([ALL_SERVICES, 'svcA']);
-    });
-
     it('enables submission and disables the operation field once selected', async () => {
       withAllServicesSupport();
       const { container } = renderForm(
@@ -516,7 +500,7 @@ describe('<SearchForm>', () => {
         />
       );
 
-      expect(SearchableSelect.values.operation).toBe(DEFAULT_OPERATION);
+      expect(SearchableSelect.values.operation).toBe(ALL_OPERATIONS);
     });
 
     it('falls back to no selection when the backend cannot search without a service', () => {
@@ -882,7 +866,7 @@ describe('submitting state from useIsSearchFetching', () => {
       );
       expect(container.querySelector('[data-testid="mock-select-operation"]')).toHaveAttribute(
         'data-value',
-        'all'
+        ALL_OPERATIONS
       );
       expect(container.querySelector('[data-testid="mock-select-lookback"]')).toHaveAttribute(
         'data-value',
@@ -965,6 +949,22 @@ describe('mapStateToProps()', () => {
     const { service, operation } = callMapStateToProps().initialValues;
     expect(operation).toBe(op);
     expect(service).toBe(svc);
+  });
+
+  // The any-operation sentinel used to be the plain word "all". A bookmarked URL or a
+  // last-search stored by an earlier build still carries it, and must keep meaning "any
+  // operation" rather than becoming a filter for an operation of that name.
+  it('reads the legacy any-operation value from the URL as the current sentinel', () => {
+    const { operation } = callMapStateToProps('operation=all').initialValues;
+    expect(operation).toBe(ALL_OPERATIONS);
+  });
+
+  it('reads the legacy any-operation value from lastSearch as the current sentinel', () => {
+    const svc = 'some-svc';
+    state.services = { services: [svc], operationsForService: { [svc]: [] } };
+    localStorage.setItem('lastSearch', JSON.stringify({ operation: 'all', service: svc }));
+    const { operation } = callMapStateToProps().initialValues;
+    expect(operation).toBe(ALL_OPERATIONS);
   });
 
   describe('deriving values from the URL search string (ownProps.search)', () => {
@@ -1109,7 +1109,7 @@ describe('mapStateToProps()', () => {
       service: '-',
       resultsLimit: '20',
       lookback: '1h',
-      operation: 'all',
+      operation: ALL_OPERATIONS,
       tags: undefined,
       minDuration: undefined,
       maxDuration: undefined,
@@ -1139,7 +1139,7 @@ describe('mapStateToProps()', () => {
 describe('submitForm() adjustEndTime toggle', () => {
   const fields = {
     lookback: '1h',
-    operation: 'all',
+    operation: ALL_OPERATIONS,
     resultsLimit: 20,
     service: 'svcA',
   };
