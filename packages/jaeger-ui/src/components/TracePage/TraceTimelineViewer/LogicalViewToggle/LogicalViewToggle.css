@@ -1,0 +1,29 @@
+/*
+Copyright (c) 2026 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.LogicalViewToggle--button {
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 1em;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.25rem;
+  vertical-align: middle;
+}
+
+.LogicalViewToggle--button:hover,
+.LogicalViewToggle--button:focus-visible {
+  color: var(--text-primary);
+  outline: none;
+}
+
+.LogicalViewToggle--button:focus-visible {
+  box-shadow: 0 0 0 2px var(--interactive-primary);
+  border-radius: 3px;
+}
+
+.LogicalViewToggle--button.is-active {
+  color: var(--interactive-primary);
+}

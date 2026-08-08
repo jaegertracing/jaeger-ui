@@ -16,6 +16,7 @@ import {
   useLayoutPrefsStore,
   useTraceTimelineStore,
 } from './store';
+import LogicalViewToggle from './LogicalViewToggle';
 import SpanDetailSidePanel from './SpanDetailSidePanel';
 import TimelineHeaderRow from './TimelineHeaderRow';
 import { useServiceFilter } from './useServiceFilter';
@@ -224,6 +225,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       onExpandOne={expandOne}
       resizerMax={resizerMax}
       serviceFilterNode={serviceFilterNode}
+      logicalViewToggleNode={<LogicalViewToggle trace={trace} detailPanelMode={detailPanelMode} />}
       sidePanelVisible={sidePanelActive}
       sidePanelWidth={effectiveSidePanelWidth}
       sidePanelLabel={sidePanelLabel}
