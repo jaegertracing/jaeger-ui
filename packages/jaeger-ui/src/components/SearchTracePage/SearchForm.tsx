@@ -1,3 +1,4 @@
+// Copyright (c) 2026 The Jaeger Authors.
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -21,7 +22,13 @@ import getConfig from '../../utils/config/get-config';
 import * as markers from './SearchForm.markers';
 import { trackFormInput } from './SearchForm.track';
 import { formatDate, formatTime } from '../../utils/date';
-import { DEFAULT_OPERATION, DEFAULT_LIMIT, DEFAULT_LOOKBACK } from '../../constants/search-form';
+import {
+  ALL_OPERATIONS,
+  ALL_SERVICES,
+  DEFAULT_LIMIT,
+  DEFAULT_LOOKBACK,
+  normalizeOperation,
+} from '../../constants/search-form';
 import SearchableSelect from '../common/SearchableSelect';
 import './SearchForm.css';
 import ValidatedFormField from '../../utils/ValidatedFormField';
@@ -244,7 +251,7 @@ function buildSearchQuery(
 
   return {
     service,
-    operation: operation !== DEFAULT_OPERATION ? operation : undefined,
+    operation: operation !== ALL_OPERATIONS ? operation : undefined,
     limit: resultsLimit,
     lookback,
     start: String(start),
@@ -287,14 +294,22 @@ interface ISearchFormImplProps {
 
 function defaultFormData(
   initialValues: Partial<ISearchFormFields> | undefined,
-  configLookback: string | undefined
+  configLookback: string | undefined,
+  allowAllServices: boolean = false
 ): Partial<ISearchFormFields> {
   const nowInMicroseconds = dayjs().valueOf() * 1000;
   const today = formatDate(nowInMicroseconds);
   const currentTime = formatTime(nowInMicroseconds);
+  // A URL or stored last-search carrying ALL_SERVICES against a backend that cannot
+  // answer it falls back to no selection, rather than seeding a query that would fail.
+  const initialService =
+    initialValues?.service === ALL_SERVICES && !allowAllServices ? undefined : initialValues?.service;
   return {
-    service: initialValues?.service,
-    operation: initialValues?.operation ?? DEFAULT_OPERATION,
+    service: initialService,
+    // In all-services mode there is no per-service operation list, so an operation
+    // carried in the URL alongside it is dropped rather than filtered on invisibly.
+    operation:
+      initialService === ALL_SERVICES ? ALL_OPERATIONS : (initialValues?.operation ?? ALL_OPERATIONS),
     resultsLimit: initialValues?.resultsLimit ?? String(DEFAULT_LIMIT),
     lookback: initialValues?.lookback ?? asValidConfigLookback(configLookback) ?? DEFAULT_LOOKBACK,
     tags: initialValues?.tags ?? '',
@@ -315,11 +330,14 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   const submitting = useIsSearchFetching();
   const navigate = useNavigate();
   const clearUploadedTraces = useClearUploadedTraces();
-  const { useOpenTelemetryTerms: useOtelTerms, search: searchConfig } = useConfig();
+  const { useOpenTelemetryTerms: useOtelTerms, search: searchConfig, backendCapabilities } = useConfig();
+  // The storage backend decides whether a search may omit the service name; Cassandra,
+  // for one, cannot answer such a query, so the option is not offered there.
+  const allowAllServices = Boolean(backendCapabilities?.searchWithoutServiceName);
   const searchMaxLookback: ILookbackOption | undefined = searchConfig?.maxLookback;
   const searchAdjustEndTime: string | undefined = searchConfig?.adjustEndTime;
   const [formData, setFormData] = useState<Partial<ISearchFormFields>>(() =>
-    defaultFormData(initialValues, searchConfig?.defaultLookback)
+    defaultFormData(initialValues, searchConfig?.defaultLookback, allowAllServices)
   );
 
   // Fetch services using React Query
@@ -331,7 +349,9 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
     data: spanNamesData,
     isLoading: isLoadingSpanNames,
     error: spanNamesError,
-  } = useSpanNames(currentService && currentService !== '-' ? currentService : null);
+  } = useSpanNames(
+    currentService && currentService !== '-' && currentService !== ALL_SERVICES ? currentService : null
+  );
 
   // Extract unique operation names from span data
   // API returns { name, spanKind }[] where the same name can appear with different spanKinds
@@ -349,7 +369,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
     setFormData(prev => {
       const nextFormData = { ...prev, ...fieldData };
       if (fieldData.service) {
-        nextFormData.operation = DEFAULT_OPERATION;
+        nextFormData.operation = ALL_OPERATIONS;
       }
       return nextFormData;
     });
@@ -372,11 +392,16 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   );
 
   const handleReset = useCallback(() => {
-    setFormData(prev => defaultFormData({ service: prev.service }, searchConfig?.defaultLookback));
-  }, [searchConfig?.defaultLookback]);
+    setFormData(prev =>
+      defaultFormData({ service: prev.service }, searchConfig?.defaultLookback, allowAllServices)
+    );
+  }, [searchConfig?.defaultLookback, allowAllServices]);
 
   const { service: selectedService, lookback: selectedLookback } = formData;
   const noSelectedService = selectedService === '-' || !selectedService;
+  // Operations are enumerated per service, so there is no list to offer across all of
+  // them; the field is disabled rather than sending a filter the search cannot scope.
+  const allServicesSelected = selectedService === ALL_SERVICES;
   const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
   const invalidDuration =
     validateDurationFields(formData.minDuration) || validateDurationFields(formData.maxDuration);
@@ -404,6 +429,11 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           loading={isLoadingServices}
           onChange={(value: string) => handleChange({ service: value })}
         >
+          {allowAllServices && (
+            <Option key={ALL_SERVICES} value={ALL_SERVICES}>
+              All Services
+            </Option>
+          )}
           {services.map(serviceName => (
             <Option key={serviceName} value={serviceName}>
               {serviceName}
@@ -421,20 +451,38 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
         validateStatus={spanNamesError ? 'error' : undefined}
         help={spanNamesError ? `Error loading operations: ${(spanNamesError as Error).message}` : undefined}
       >
-        <SearchableSelect
-          data-testid="operation"
-          value={formData.operation}
-          disabled={submitting || noSelectedService}
-          loading={isLoadingSpanNames}
-          placeholder={useOtelTerms ? 'Select A Span Name' : 'Select An Operation'}
-          onChange={(value: string) => handleChange({ operation: value })}
+        {/* A disabled control suppresses pointer events, so the tooltip hangs off a
+            wrapper element; the title is set only in all-services mode, which is the
+            case a user cannot otherwise explain. */}
+        <Tooltip
+          placement="topLeft"
+          title={
+            allServicesSelected
+              ? `${useOtelTerms ? 'Span names' : 'Operations'} belong to a single service, ` +
+                'so this filter is unavailable while searching all services.'
+              : undefined
+          }
         >
-          {['all'].concat(spanNames).map(op => (
-            <Option key={op} value={op}>
-              {op}
-            </Option>
-          ))}
-        </SearchableSelect>
+          <span className="SearchForm--disabledFieldWrapper">
+            <SearchableSelect
+              data-testid="operation"
+              value={formData.operation}
+              disabled={submitting || noSelectedService || allServicesSelected}
+              loading={isLoadingSpanNames}
+              placeholder={useOtelTerms ? 'Select A Span Name' : 'Select An Operation'}
+              onChange={(value: string) => handleChange({ operation: value })}
+            >
+              <Option key={ALL_OPERATIONS} value={ALL_OPERATIONS}>
+                {useOtelTerms ? 'All Span Names' : 'All Operations'}
+              </Option>
+              {spanNames.map(op => (
+                <Option key={op} value={op}>
+                  {op}
+                </Option>
+              ))}
+            </SearchableSelect>
+          </span>
+        </Tooltip>
       </FormItem>
 
       <FormItem
@@ -711,7 +759,7 @@ export function mapStateToProps(_state: ReduxState, ownProps: { search?: string 
     if (lastSvc && lastSvc !== '-') {
       lastSearchService = lastSvc;
       if (lastOp && lastOp !== '-') {
-        lastSearchOperation = lastOp;
+        lastSearchOperation = normalizeOperation(lastOp);
       }
     }
   }
@@ -788,7 +836,9 @@ export function mapStateToProps(_state: ReduxState, ownProps: { search?: string 
       startDateTime: queryStartDateTime || '00:00',
       endDate: queryEndDate || today,
       endDateTime: queryEndDateTime || currentTime,
-      operation: (operation as string | undefined) || lastSearchOperation || DEFAULT_OPERATION,
+      // normalizeOperation maps the sentinel's former plain-word value, which bookmarked
+      // URLs and stored last-searches still carry, onto the current one.
+      operation: normalizeOperation(operation as string | undefined) || lastSearchOperation || ALL_OPERATIONS,
       tags,
       minDuration: (minDuration as string | undefined) || undefined,
       maxDuration: (maxDuration as string | undefined) || undefined,

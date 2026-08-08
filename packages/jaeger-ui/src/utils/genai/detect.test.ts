@@ -71,6 +71,46 @@ describe('classifySpan', () => {
   it('returns undefined for a span with empty attributes', () => {
     expect(classifySpan(makeSpan([]))).toBeUndefined();
   });
+
+  it('classifies gen_ai.tool.name as TOOL_CALL when operation.name is absent', () => {
+    expect(classifySpan(makeSpan([{ key: 'gen_ai.tool.name', value: 'get_weather' }]))).toBe('TOOL_CALL');
+  });
+
+  it('lets a recognized operation.name win over gen_ai.tool.name', () => {
+    const span = makeSpan([
+      { key: 'gen_ai.tool.name', value: 'get_weather' },
+      { key: 'gen_ai.operation.name', value: 'chat' },
+    ]);
+    expect(classifySpan(span)).toBe('LLM_CALL');
+  });
+
+  it('falls back to a secondary signal for an unrecognized operation.name', () => {
+    const span = makeSpan([
+      { key: 'gen_ai.operation.name', value: 'some_new_op' },
+      { key: 'gen_ai.tool.name', value: 'get_weather' },
+    ]);
+    expect(classifySpan(span)).toBe('TOOL_CALL');
+  });
+
+  it('returns undefined for gen_ai.tool.call.id alone', () => {
+    expect(classifySpan(makeSpan([{ key: 'gen_ai.tool.call.id', value: 'abc-123' }]))).toBeUndefined();
+  });
+
+  it('returns TOOL_CALL when gen_ai.tool.call.id is paired with gen_ai.tool.name', () => {
+    const span = makeSpan([
+      { key: 'gen_ai.tool.call.id', value: 'abc-123' },
+      { key: 'gen_ai.tool.name', value: 'get_weather' },
+    ]);
+    expect(classifySpan(span)).toBe('TOOL_CALL');
+  });
+
+  it('still returns UNKNOWN_GENAI when tool.call.id accompanies another gen_ai.* key', () => {
+    const span = makeSpan([
+      { key: 'gen_ai.tool.call.id', value: 'abc-123' },
+      { key: 'gen_ai.system', value: 'openai' },
+    ]);
+    expect(classifySpan(span)).toBe('UNKNOWN_GENAI');
+  });
 });
 
 describe('isGenAISpan', () => {

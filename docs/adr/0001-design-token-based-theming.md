@@ -1,7 +1,7 @@
 # ADR 0001: Design Token-Based Theming Architecture
 
-**Status**: Implemented
-**Last Updated**: 2026-04-01
+* **Status**: Implemented
+* **Last Updated**: 2026-04-01
 
 ---
 
