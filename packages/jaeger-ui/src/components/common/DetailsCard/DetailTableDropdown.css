@@ -4,8 +4,8 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .DetailTableDropdown--Footer {
-  background: white;
-  border: 1px solid #ccc;
+  background: var(--surface-primary);
+  border: 1px solid var(--border-default);
   display: flex;
   justify-content: space-between;
   padding: 0.3em;
@@ -18,7 +18,7 @@ SPDX-License-Identifier: Apache-2.0
 .DetailTableDropdown--Btn {
   align-items: center;
   border-radius: 0;
-  color: #ddd;
+  color: var(--text-inverse);
   display: flex;
   padding: 0.3em 0.7em 0.3em 0.6em;
 }
@@ -32,15 +32,16 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .DetailTableDropdown--Btn.Apply {
-  background: #4c21ce;
+  background: var(--interactive-primary);
 }
 
 .DetailTableDropdown--Btn.Cancel {
-  background: #007272;
+  background: var(--surface-component-background);
+  color: var(--text-primary);
 }
 
 .DetailTableDropdown--Btn.Clear {
-  background: #ff2626;
+  background: var(--feedback-error);
 }
 
 .DetailTableDropdown--Tooltip {
