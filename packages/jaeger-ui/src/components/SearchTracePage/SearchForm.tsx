@@ -306,10 +306,7 @@ function defaultFormData(
     initialValues?.service === ALL_SERVICES && !allowAllServices ? undefined : initialValues?.service;
   return {
     service: initialService,
-    // In all-services mode there is no per-service operation list, so an operation
-    // carried in the URL alongside it is dropped rather than filtered on invisibly.
-    operation:
-      initialService === ALL_SERVICES ? ALL_OPERATIONS : (initialValues?.operation ?? ALL_OPERATIONS),
+    operation: initialValues?.operation ?? ALL_OPERATIONS,
     resultsLimit: initialValues?.resultsLimit ?? String(DEFAULT_LIMIT),
     lookback: initialValues?.lookback ?? asValidConfigLookback(configLookback) ?? DEFAULT_LOOKBACK,
     tags: initialValues?.tags ?? '',
@@ -399,9 +396,6 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
 
   const { service: selectedService, lookback: selectedLookback } = formData;
   const noSelectedService = selectedService === '-' || !selectedService;
-  // Operations are enumerated per service, so there is no list to offer across all of
-  // them; the field is disabled rather than sending a filter the search cannot scope.
-  const allServicesSelected = selectedService === ALL_SERVICES;
   const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
   const invalidDuration =
     validateDurationFields(formData.minDuration) || validateDurationFields(formData.maxDuration);
@@ -445,44 +439,40 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
         label={
           <span>
             {useOtelTerms ? 'Span Name' : 'Operation'}{' '}
-            <span className="SearchForm--labelCount">({spanNames.length})</span>
+            <span className="SearchForm--labelCount">({spanNames.length})</span>{' '}
+            <Tooltip
+              placement="topLeft"
+              title={
+                `The list shows the ${useOtelTerms ? 'span names' : 'operations'} of the selected ` +
+                'service. You can also type a name that is not in the list. This lets you filter ' +
+                'by name when you search all services.'
+              }
+            >
+              <IoHelp className="SearchForm--hintTrigger" />
+            </Tooltip>
           </span>
         }
         validateStatus={spanNamesError ? 'error' : undefined}
         help={spanNamesError ? `Error loading operations: ${(spanNamesError as Error).message}` : undefined}
       >
-        {/* A disabled control suppresses pointer events, so the tooltip hangs off a
-            wrapper element; the title is set only in all-services mode, which is the
-            case a user cannot otherwise explain. */}
-        <Tooltip
-          placement="topLeft"
-          title={
-            allServicesSelected
-              ? `${useOtelTerms ? 'Span names' : 'Operations'} belong to a single service, ` +
-                'so this filter is unavailable while searching all services.'
-              : undefined
-          }
+        <SearchableSelect
+          data-testid="operation"
+          value={formData.operation}
+          disabled={submitting || noSelectedService}
+          loading={isLoadingSpanNames}
+          placeholder={useOtelTerms ? 'Select A Span Name' : 'Select An Operation'}
+          allowCustomValue
+          onChange={(value: string) => handleChange({ operation: value })}
         >
-          <span className="SearchForm--disabledFieldWrapper">
-            <SearchableSelect
-              data-testid="operation"
-              value={formData.operation}
-              disabled={submitting || noSelectedService || allServicesSelected}
-              loading={isLoadingSpanNames}
-              placeholder={useOtelTerms ? 'Select A Span Name' : 'Select An Operation'}
-              onChange={(value: string) => handleChange({ operation: value })}
-            >
-              <Option key={ALL_OPERATIONS} value={ALL_OPERATIONS}>
-                {useOtelTerms ? 'All Span Names' : 'All Operations'}
-              </Option>
-              {spanNames.map(op => (
-                <Option key={op} value={op}>
-                  {op}
-                </Option>
-              ))}
-            </SearchableSelect>
-          </span>
-        </Tooltip>
+          <Option key={ALL_OPERATIONS} value={ALL_OPERATIONS}>
+            {useOtelTerms ? 'All Span Names' : 'All Operations'}
+          </Option>
+          {spanNames.map(op => (
+            <Option key={op} value={op}>
+              {op}
+            </Option>
+          ))}
+        </SearchableSelect>
       </FormItem>
 
       <FormItem
