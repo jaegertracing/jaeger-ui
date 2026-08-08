@@ -899,6 +899,7 @@ describe('<TracePage>', () => {
       const section = document.querySelector('section');
       expect(section).toBeInTheDocument();
       expect(section.style.paddingTop).toBe('100px');
+      expect(section.style.getPropertyValue('--trace-page-header-height')).toBe('100px');
 
       jest.restoreAllMocks();
     });

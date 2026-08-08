@@ -527,7 +527,18 @@ export function TracePageImpl(props: TProps) {
       <div className="Tracepage--headerSection" ref={headerRefCallback}>
         <TracePageHeader {...headerProps} />
       </div>
-      {headerHeight ? <section style={{ paddingTop: headerHeight }}>{view}</section> : null}
+      {headerHeight ? (
+        <section
+          style={
+            {
+              paddingTop: headerHeight,
+              '--trace-page-header-height': `${headerHeight}px`,
+            } as React.CSSProperties
+          }
+        >
+          {view}
+        </section>
+      ) : null}
     </div>
   );
 }

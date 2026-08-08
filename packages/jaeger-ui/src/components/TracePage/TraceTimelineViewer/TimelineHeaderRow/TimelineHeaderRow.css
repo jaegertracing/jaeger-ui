@@ -10,6 +10,7 @@ SPDX-License-Identifier: Apache-2.0
   height: var(--timeline-header-row-height);
   line-height: var(--timeline-header-row-height);
   position: fixed;
+  top: var(--trace-page-header-height, 0px);
   width: 100%;
   z-index: 4;
 }
