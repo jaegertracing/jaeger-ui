@@ -103,3 +103,9 @@ SPDX-License-Identifier: Apache-2.0
   background-color: var(--text-secondary);
   border-radius: 4px;
 }
+
+/* Carries the tooltip for a field that may be disabled: a disabled control emits no
+   mouse events for the tooltip to hang off, and the wrapper must not shrink the field. */
+.SearchForm--disabledFieldWrapper {
+  display: block;
+}
