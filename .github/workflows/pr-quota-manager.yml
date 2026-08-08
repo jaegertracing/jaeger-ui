@@ -27,28 +27,16 @@ jobs:
   manage-quota:
     runs-on: ubuntu-latest
     steps:
-      - name: Download PR Quota Manager script
-        run: |
-          curl -fsSL -o /tmp/pr-quota-manager.js \
-            https://raw.githubusercontent.com/jaegertracing/jaeger/refs/heads/main/.github/scripts/pr-quota-manager.js
-
       - name: Process PR Quota
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        # Shared with jaegertracing/jaeger, pinned so a change there reaches this
+        # repository only when the SHA is bumped in a reviewed pull request.
+        # The action predates any release tag, so this pins a commit on that
+        # repository's main branch.
+        uses: jaegertracing/jaeger/.github/actions/pr-quota-manager@d75a722b57bd40d80dacaff17cf83192aebd33c1
         with:
-          # Use the default GITHUB_TOKEN: the pull_request_target trigger runs in the
-          # base repo context, so the job-level issues/pull-requests write permissions
-          # above cover labelling and commenting even on fork PRs.
-          script: |
-            const handler = require('/tmp/pr-quota-manager.js')
-            // For PR events, use PR author; for manual runs, use input. Fail if no username can be determined.
-            const prUser = context.payload.pull_request?.user?.login
-            const inputUser = context.payload.inputs?.username
-            const username = prUser || inputUser
-            if (!username) {
-              core.setFailed('Unable to determine username for quota processing. Aborting.')
-              return
-            }
-            const owner = context.repo.owner
-            const repo = context.repo.repo
-            const dryRun = context.payload.inputs?.dryRun === 'true'
-            await handler({github, core, username, owner, repo, dryRun})
+          # The default GITHUB_TOKEN suffices: the pull_request_target trigger runs in
+          # the base repo context, so the job-level issues/pull-requests write
+          # permissions above cover labelling and commenting even on fork PRs.
+          token: ${{ github.token }}
+          username: ${{ github.event.inputs.username }}
+          dry-run: ${{ github.event.inputs.dryRun }}
