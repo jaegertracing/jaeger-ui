@@ -400,19 +400,25 @@ Download size is not scored in either matrix. Jaeger already ships 468 KB gzippe
 
 ### Decision 1: Layout Engine
 
-| Criterion | Graphviz via `@viz-js/viz` (current) | elkjs |
-|---|---|---|
-| **Layout quality for trees and DAGs** | 🟢 the reference implementation | 🟢 comparable for layered graphs |
-| **Edge routing quality** | 🟢 `dot` polylines today, `neato` splines available unused | 🟡 simpler routing on dense graphs |
-| **Layout-direction toggle** | 🟢 `rankdir` is already a `LayoutManager` option ¹ | 🟢 `elk.direction` |
-| **Algorithm menu** | 🟡 `dot`, `neato`, `sfdp`, `circo`, `twopi` are in the build; two are wired to anything ² | 🟢 nine algorithm ids, each one option string |
-| **Compound (nested) graphs** | 🟡 Graphviz has clusters; Plexus's pipeline does not carry them as written ⁷ | 🟢 native, via `children` and `elk.hierarchyHandling` |
-| **Cycle handling** | 🟢 very mature | 🟡 correct but less studied in production |
-| **Layout off the main thread** | 🟢 Plexus worker pool | 🟢 the same pool — it is engine-agnostic ³ |
-| **License** | 🟢 MIT | 🔴 EPL-2.0 OR GPL-3.0-or-later |
-| **Cost to adopt** | 🟢 nothing to do | 🟡 replace `getLayout.ts` with an ELK adapter |
+**A permissive license is a gate here, not a criterion.** Jaeger UI is Apache-2.0 under the CNCF, and elkjs is `EPL-2.0 OR GPL-3.0-or-later`. The EPL branch is weak copyleft rather than a prohibition, but adopting it would need a license exception and legal review before any technical merit mattered. So elkjs is not scored below. Part 2 compared Graphviz against elkjs alone, which was too narrow a field: the permissive alternatives were never considered, and they are where this decision should have been argued.
 
-**Verdict: stay on Graphviz.** Nothing Jaeger wants today needs ELK. The direction toggle and the algorithm switch are already reachable, the download is identical to the kilobyte, and elkjs is the only candidate here whose license is not permissive. Compound graphs are the closest thing to a reason to switch, and even they are a Plexus limitation rather than a Graphviz one — Graphviz draws clusters, but Plexus's flat DOT and `plain` round-trip cannot express or read them. So the real question, if nested graphs are ever wanted, is whether extending that round-trip is cheaper than adopting ELK.
+| Criterion | Graphviz via `@viz-js/viz` (current) | `@dagrejs/dagre` | `d3-dag` |
+|---|---|---|---|
+| **License** | 🟢 MIT | 🟢 MIT | 🟢 MIT |
+| **Layered DAG quality** | 🟢 the reference implementation | 🟢 same Sugiyama family, with `network-simplex`, `tight-tree`, and `longest-path` rankers | 🟢 Sugiyama with pluggable decross and coord operators |
+| **Trees, which is what most traces are** | 🟢 | 🟢 | 🟢 ¹ |
+| **Force-directed for large dependency graphs** | 🟢 `sfdp`, and the UI already uses it | 🔴 layered only | 🔴 layered only ² |
+| **Edge routing** | 🟢 splines available, polylines in use | 🟡 point lists, no spline routing | 🟡 point lists |
+| **Layout-direction toggle** | 🟢 `rankdir` | 🟢 `rankdir` | 🟡 rotate the result yourself |
+| **Compound (nested) graphs** | 🟡 clusters exist; Plexus's pipeline does not carry them as written ³ | 🟢 native, via `setParent` | 🔴 |
+| **Maturity and activity** | 🟢 Graphviz is ~30 years old; `@viz-js/viz` releases regularly | 🟢 released this week, 5.7k stars, not archived | 🟡 smaller project and community |
+| **Cost to adopt** | 🟢 nothing to do | 🟡 replace `getLayout.ts` with a dagre adapter | 🟡 the same, plus more assembly |
+
+**Verdict: stay on Graphviz — but for a different reason than Part 2 gives.** It is the only candidate that covers both of the layouts Jaeger actually ships. `TraceGraph` and the dependency graph's hierarchical mode need layered layout, which all three do well, and the dependency graph's Force Directed mode needs `sfdp`, which neither dagre nor `d3-dag` offers. Replacing Graphviz therefore means either dropping a shipped feature or running two layout libraries, and no gain on offer is worth that.
+
+The interesting finding is that dagre, not elkjs, is the candidate to evaluate if the layout engine is ever revisited. It is MIT, it supports compound graphs natively through `setParent` — the one capability elkjs appeared to win on — it is actively released, and at 17 KB gzipped it is a twenty-seventh of Graphviz's payload. Pairing it with `d3-force` or WebCola (both MIT) would cover the force-directed case. For the trace view specifically, `d3-hierarchy` (ISC) is a narrower and even smaller option, since the trace DAG is nearly always a strict tree.
+
+¹ `d3-hierarchy` (ISC) is the more focused choice for trees and is smaller still. ² Pair with `d3-force` or WebCola, both MIT, if force-directed layout is needed. ³ `toDot` emits a flat `digraph` with no `subgraph cluster_*`, and `getLayout` asks for `format: 'plain'`, whose records `convPlain` reads as graph, node, edge, and stop — it throws on anything else. Both files are Jaeger's, so this is a cost rather than a barrier: clusters need the DOT change, an output format that reports container bounds, and renderer work to draw them.
 
 ### Decision 2: Rendering Layer
 
@@ -431,7 +437,7 @@ Download size is not scored in either matrix. Jaeger already ships 468 KB gzippe
 
 🟢 good 🟡 partial or caveated 🔴 poor
 
-¹ `rankdir` is already a `TLayoutOptions` field, and `DAG` sets it explicitly. ² Shipped, as the `DAGOptions` Hierarchical / Force Directed switch. ³ `layout.worker.ts` and `Coordinator` never name an engine; only `getLayout.ts` does. ⁴ `node.measured` carries the observed size and `useNodesInitialized()` gates the layout on it, so the cost is one unpositioned render pass to hide, not truncated labels. ⁵ ECharts applies `progressive` to eight series types, none of them graph. ⁶ See the per-view breakdown below. ⁷ `toDot` emits a flat `digraph` with no `subgraph cluster_*`, and `getLayout` asks for `format: 'plain'`, whose records `convPlain` reads as graph, node, edge, and stop — it throws on anything else. Both files are Jaeger's, so this is a cost rather than a barrier: clusters need the DOT change, an output format that reports container bounds, and renderer work to draw them.
+⁴ `node.measured` carries the observed size and `useNodesInitialized()` gates the layout on it, so the cost is one unpositioned render pass to hide, not truncated labels. ⁵ ECharts applies `progressive` to eight series types, none of them graph. ⁶ See the per-view breakdown below.
 
 Splitting the decisions this way also settles where the `LayoutManager` lines belong. Staying on Graphviz keeps them — about 1,180 — no matter which renderer wins, so they are a cost of Decision 1 and not a discount against Decision 2. `@xyflow/react` earns its 🟢 on maintenance by retiring `Digraph` and `zoom`, roughly 1,860 lines, and nothing more.
 
@@ -459,7 +465,7 @@ Be honest about the sequencing cost, though. `Digraph` and `zoom` cannot be dele
 
 - **The dependency graph trial regresses** on layout quality, rendering, or the context-menu UX. Then Plexus keeps the remaining views and the trial is reverted; the in-stack `rankdir` toggle survives either way, since it does not depend on the renderer.
 - **Profiling shows that DOM rendering, not layout, sets `TraceGraph`'s ceiling at real span counts** (Open Question 6). Then ECharts becomes a serious candidate for that view alone — a different destination from the other three — with `OpNode`'s four metric cells moved into the tooltip.
-- **Compound graphs become necessary**, for example to group spans by service inside the trace DAG, or services by namespace in the dependency graph. Neither engine blocks this outright — Graphviz has clusters and ELK has `children` — but Plexus's flat DOT and `plain` round-trip carries neither, so this is the one finding that reopens Decision 1. Weigh extending the DOT pipeline against an ELK adapter in `getLayout.ts`; do not assume ELK wins by default.
+- **Compound graphs become necessary**, for example to group spans by service inside the trace DAG, or services by namespace in the dependency graph. This is the one finding that reopens Decision 1, and it is a build-versus-adopt question: teaching `toDot` to emit `subgraph cluster_*` and reading container bounds back out, against adopting `@dagrejs/dagre`, which models nesting through `setParent` and is MIT. Do not reach for elkjs — it is gated on license, and dagre covers the same capability.
 
 ---
 
