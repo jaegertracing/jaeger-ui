@@ -191,7 +191,7 @@ The **layer system** is the primary customization API: callers compose arrays of
 
 | Dimension | Plexus + Graphviz | `@xyflow/react` + elkjs |
 |---|---|---|
-| **Codebase owned by Jaeger** | ~3,000 lines (Plexus) + Graphviz WASM | 0 lines of rendering code; layout adapter only |
+| **Codebase owned by Jaeger** | ~3,000 lines (Plexus) + Graphviz WASM | 0 lines of rendering code, but keeping Graphviz means keeping `LayoutManager` — about 1,180 of the 3,000 lines stay |
 | **Maintenance burden** | Full ownership | Library updates; breaking-change migration |
 | **React compatibility** | Must be manually maintained | Maintained by xyflow team; React 18/19 tested |
 | **Node dragging** | Not supported | Opt-in (`nodesDraggable={true}`) |
@@ -369,7 +369,7 @@ Three migration paths are worth naming explicitly:
 
 ### Path C: Full stack replacement (Plexus + Graphviz → `@xyflow/react` + elkjs)
 - Replace both rendering and layout for one or both graph views.
-- Gains: all of the above; eliminates Plexus entirely.
+- Gains: all of the above, and this is the only path that removes Plexus entirely — including the ~1,180 lines of `LayoutManager` that Path B keeps. In exchange Jaeger owns an ELK adapter.
 - Cost: highest, because "eliminates Plexus" means porting all four consumers — including the deep dependency graph, whose `DdgNodeContent` is the hardest node in the codebase.
 - Risk: moderate-high; two simultaneous library changes are harder to debug.
 
@@ -392,7 +392,7 @@ These are two independent pieces of work, and the first does not wait on the sec
 - **Algorithm choice already ships.** `DAGOptions` gives the dependency graph a Hierarchical (`dot`) / Force Directed (`sfdp`) switch, and `DependencyGraph` also picks `sfdp` on its own above `dagMaxNumServices`. Graphviz serves that need today; a new engine is not what unlocks it.
 - **A layout-direction toggle is a small in-stack change.** `DAG` already builds its `TLayoutOptions` from the user's layout selection and constructs a new `LayoutManager` whenever that selection changes, so exposing `rankdir` there means adding one field driven by one piece of UI state. `TraceGraph` builds its manager once in a ref and needs the same rebuild-on-change treatment. Both changes stay inside the view.
 
-Neither of those is a reason to change libraries, so ship them where they are. What the current stack cannot answer is node dragging, keyboard accessibility, and who maintains ~3,000 lines of graph code — and those are what `@xyflow/react` is actually for.
+Neither of those is a reason to change libraries, so ship them where they are. What the current stack cannot answer is node dragging, keyboard accessibility, and who maintains the ~1,860 lines of rendering and viewport code in `Digraph` and `zoom` — and those are what `@xyflow/react` is actually for. Keeping Graphviz means `LayoutManager` stays, so this is a reduction of roughly 60% of Plexus, not its removal.
 
 | Criterion | Stay on Plexus + Graphviz | Path A: elkjs layout | Path B/C: `@xyflow/react` | Path D: ECharts |
 |---|---|---|---|---|
@@ -404,12 +404,12 @@ Neither of those is a reason to change libraries, so ship them where they are. W
 | **Keyboard navigation and ARIA** | 🔴 | 🔴 | 🟢 primitives, not conformance | 🔴 canvas exposes nothing |
 | **Variable-width node content** | 🟢 measure phase is built in | 🟢 | 🟡 ³ | 🔴 canvas symbols cannot hold a React subtree |
 | **CSS and design-token theming** | 🟢 | 🟢 | 🟢 | 🔴 colors must be passed into the options object |
-| **Maintenance ownership** | 🔴 Jaeger owns ~3,000 lines | 🟡 Plexus plus an ELK adapter | 🟢 | 🟡 an imperative wrapper to own |
+| **Maintenance ownership** | 🔴 Jaeger owns ~3,000 lines | 🟡 Plexus plus an ELK adapter | 🟡 ⁶ | 🟡 an imperative wrapper to own |
 | **Migration cost and risk** | 🟢 none | 🟡 | 🟡 per view, 🔴 to remove Plexus outright ⁴ | 🔴 |
 
 🟢 good 🟡 partial or caveated 🔴 poor
 
-¹ `rankdir` is already a `TLayoutOptions` field, and `DAG` sets it explicitly. ² Shipped, as the `DAGOptions` Hierarchical / Force Directed switch. ³ Variable-width text is fine — `node.measured` carries the observed size and `useNodesInitialized()` gates the layout on it. The cost is one unpositioned render pass to hide, not truncated labels. ⁴ See the per-view breakdown below. ⁵ ECharts applies `progressive` to eight series types, none of them graph.
+¹ `rankdir` is already a `TLayoutOptions` field, and `DAG` sets it explicitly. ² Shipped, as the `DAGOptions` Hierarchical / Force Directed switch. ³ Variable-width text is fine — `node.measured` carries the observed size and `useNodesInitialized()` gates the layout on it. The cost is one unpositioned render pass to hide, not truncated labels. ⁴ See the per-view breakdown below. ⁵ ECharts applies `progressive` to eight series types, none of them graph. ⁶ Path B retires `Digraph` and `zoom` — about 1,860 lines — and keeps `LayoutManager` at ~1,180 for as long as Graphviz does the layout. Only Path C removes Plexus outright, and it buys an ELK adapter in exchange. Either way the saving arrives with the last view to migrate, not the first.
 
 Off-main-thread layout is deliberately absent from the matrix: every option keeps it, so it does not separate them. Paths B and D leave layout alone, and an ELK adapter inherits the Plexus worker pool, since `layout.worker.ts` and `Coordinator` are engine-agnostic and only `getLayout.ts` knows about Graphviz.
 
@@ -428,6 +428,8 @@ Two things keep the per-view risk at 🟡 rather than 🔴. `@jaegertracing/plex
 ### Why the Dependency Graph Goes First
 
 It is the cheapest of the four views, it has the most interaction to gain, and it carries the least rendering risk, so it is the right place to learn what the library costs in practice before committing the other views. Keeping Graphviz for layout under Path B also isolates the variable: if the result regresses, the layout engine is not a suspect.
+
+Be honest about the sequencing cost, though. `Digraph` and `zoom` cannot be deleted until all four views leave them, so the first migration *adds* a rendering stack rather than retiring one, and the maintenance saving lands last. The trial is therefore justified by what the dependency graph gains — dragging, keyboard access, `NodeToolbar` — and not by any reduction in code ownership, which arrives only if the programme finishes.
 
 `TraceGraph` follows only if the dependency graph goes well, and its own open question is separate — whether DOM rendering rather than layout sets its ceiling at real span counts (Open Question 6). The deep dependency graph stays on Plexus until `DdgNodeContent` is redesigned, and nothing here requires that.
 
