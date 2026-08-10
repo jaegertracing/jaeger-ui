@@ -9,7 +9,7 @@ import { encodedStringSupplant, getParamNames } from '../utils/stringSupplant';
 import { getParameterAndFormatter } from '../utils/link-formatting';
 import { TNil } from '../types';
 import { Hyperlink } from '../types/hyperlink';
-import { IOtelSpan, IOtelTrace, IAttribute } from '../types/otel';
+import { IOtelSpan, IOtelTrace, IAttribute, IAttributes } from '../types/otel';
 
 type ProcessedTemplate = {
   parameters: string[];
@@ -89,11 +89,9 @@ export function processLinkPattern(pattern: any): ProcessedLinkPattern | TNil {
   }
 }
 
-export function getParameterInArray(name: string, array: ReadonlyArray<IAttribute>): IAttribute | undefined {
-  if (array) {
-    return array.find(entry => entry.key === name);
-  }
-  return undefined;
+function getParameterInAttributes(name: string, attributes: IAttributes | undefined): IAttribute | undefined {
+  const value = attributes?.getValue(name);
+  return value === undefined ? undefined : { key: name, value };
 }
 
 export function getParameterInAncestor(name: string, span: IOtelSpan): IAttribute | undefined {
@@ -124,8 +122,8 @@ export function getParameterInAncestor(name: string, span: IOtelSpan): IAttribut
     }
 
     const result =
-      getParameterInArray(name, currentSpan.attributes) ||
-      getParameterInArray(name, currentSpan.resource.attributes);
+      getParameterInAttributes(name, currentSpan.attributes) ||
+      getParameterInAttributes(name, currentSpan.resource.attributes);
     if (result) {
       return result;
     }
@@ -210,11 +208,11 @@ export function computeTraceLink(linkPatterns: ProcessedLinkPattern[], trace: IO
 export function computeLinks(
   linkPatterns: ProcessedLinkPattern[],
   span: IOtelSpan,
-  items: ReadonlyArray<IAttribute>,
+  items: IAttributes,
   itemIndex: number,
   trace: IOtelTrace
 ): Hyperlink[] {
-  const item = items[itemIndex];
+  const item = items.entries()[itemIndex];
   let type: LinkPatternType = 'events';
   let legacyType: LegacyLinkPatternType = 'logs';
 
@@ -241,7 +239,7 @@ export function computeLinks(
         if (parameter.startsWith('trace.')) {
           entry = getParameterInTrace(parameter.split('trace.')[1], trace);
         } else {
-          entry = getParameterInArray(parameter, items);
+          entry = getParameterInAttributes(parameter, items);
 
           if (!entry && type !== 'resource') {
             // do not look in ancestors for resource attributes because the same object may appear in different places in the hierarchy
@@ -275,12 +273,12 @@ export function computeLinks(
 export function createGetLinks(
   linkPatterns: ProcessedLinkPattern[],
   cache: WeakMap<IAttribute, Hyperlink[]>
-): (span: IOtelSpan, items: ReadonlyArray<IAttribute>, itemIndex: number, trace: IOtelTrace) => Hyperlink[] {
-  return (span: IOtelSpan, items: ReadonlyArray<IAttribute>, itemIndex: number, trace: IOtelTrace) => {
+): (span: IOtelSpan, items: IAttributes, itemIndex: number, trace: IOtelTrace) => Hyperlink[] {
+  return (span: IOtelSpan, items: IAttributes, itemIndex: number, trace: IOtelTrace) => {
     if (linkPatterns.length === 0) {
       return [];
     }
-    const item = items[itemIndex];
+    const item = items.entries()[itemIndex];
     let result = cache.get(item);
     if (!result) {
       result = computeLinks(linkPatterns, span, items, itemIndex, trace);

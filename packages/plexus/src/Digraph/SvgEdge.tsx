@@ -76,7 +76,7 @@ function SvgEdge<U = {}>(props: TProps<U>) {
       />
 
       {label && (
-        <text x={labelX} y={labelY} fill="#000" fontSize="1rem" fontWeight="bold">
+        <text x={labelX} y={labelY} fill="currentColor" fontSize="1rem" fontWeight="bold">
           {label}
         </text>
       )}

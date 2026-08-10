@@ -5,8 +5,8 @@ import { Microseconds } from './units';
 
 export type ServiceSummary = {
   name: string;
-  spanCount: number;
-  errorSpanCount: number;
+  spanCount?: number;
+  errorSpanCount?: number;
 };
 
 export type TraceSummary = {
@@ -16,8 +16,8 @@ export type TraceSummary = {
   rootOperationName: string;
   startTime: Microseconds;
   duration: Microseconds;
-  spanCount: number;
-  errorSpanCount: number;
-  orphanSpanCount: number;
+  spanCount?: number;
+  errorSpanCount?: number;
+  orphanSpanCount?: number;
   services: ServiceSummary[];
 };

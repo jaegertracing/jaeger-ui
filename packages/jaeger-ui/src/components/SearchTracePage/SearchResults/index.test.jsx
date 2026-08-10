@@ -7,6 +7,7 @@ import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
 import { UnconnectedSearchResults as SearchResults, SelectSort } from '.';
+import { useSearchResultsStore } from '../store.search-results';
 import * as track from './index.track';
 import * as orderBy from '../../../model/order-by';
 import { getUrl } from '../url';
@@ -55,6 +56,8 @@ vi.mock('./DownloadResults', () =>
 vi.mock('../../DeepDependencies/traces', () => mockDefault(jest.fn(() => <div data-testid="ddg" />)));
 
 vi.mock('../../common/LoadingIndicator', () => mockDefault(jest.fn(() => <div data-testid="loading" />)));
+
+vi.mock('./TraceTable', () => mockDefault(jest.fn(() => <div data-testid="trace-table" />)));
 
 vi.mock('../../common/NewWindowIcon', () =>
   mockDefault(jest.fn(() => <span data-testid="new-window-icon" />))
@@ -118,8 +121,8 @@ const baseRawTraces = [
 ];
 
 const baseProps = {
-  cohortAddTrace: jest.fn(),
-  cohortRemoveTrace: jest.fn(),
+  addTraceToCohort: jest.fn(),
+  removeTraceFromCohort: jest.fn(),
   diffCohort: [],
   disableComparisons: false,
   hideGraph: false,
@@ -151,9 +154,23 @@ describe('<SearchResults>', () => {
   });
 
   it('uses default skipMessage value when not provided', () => {
-    const { skipMessage, ...propsWithoutSkipMessage } = baseProps;
+    const { skipMessage: _unused, ...propsWithoutSkipMessage } = baseProps;
     renderWithRouter(<SearchResults {...propsWithoutSkipMessage} traceSummaries={[]} />);
     expect(screen.getByText(/No trace results\. Try another query\./i)).toBeInTheDocument();
+  });
+
+  it('renders the lowercase trace count and the search latency', () => {
+    renderWithRouter(<SearchResults {...baseProps} searchLatency={2_500_000} />);
+    const count = screen.getByText(/2 traces/);
+    expect(count).toHaveTextContent('2 traces (in 2.5s)');
+    expect(screen.getByText(/\(in 2\.5s\)/)).toBeInTheDocument();
+  });
+
+  it('renders the count without latency when searchLatency is absent', () => {
+    renderWithRouter(<SearchResults {...baseProps} />);
+    const count = screen.getByText(/2 traces/);
+    expect(count).toBeInTheDocument();
+    expect(count).not.toHaveTextContent('(in');
   });
 
   it('shows a loading indicator if loading traces', () => {
@@ -194,8 +211,8 @@ describe('<SearchResults>', () => {
     renderWithRouter(
       <SearchResults
         {...baseProps}
-        cohortAddTrace={add}
-        cohortRemoveTrace={remove}
+        addTraceToCohort={add}
+        removeTraceFromCohort={remove}
         diffCohort={[
           {
             traceID: 'existing',
@@ -211,10 +228,18 @@ describe('<SearchResults>', () => {
     );
     const diffSelectionProps = DiffSelection.mock.calls[0][0];
     const toggleComparison = diffSelectionProps.toggleComparison;
-    toggleComparison('id-1');
-    toggleComparison('id-2', true);
-    expect(add).toHaveBeenCalledWith('id-1');
-    expect(remove).toHaveBeenCalledWith('id-2');
+    toggleComparison('a');
+    toggleComparison('b', true);
+    expect(add).toHaveBeenCalledWith(baseTraces[0]);
+    expect(remove).toHaveBeenCalledWith('b');
+  });
+
+  it('does not call addTraceToCohort when the traceID has no matching summary', () => {
+    const add = jest.fn();
+    renderWithRouter(<SearchResults {...baseProps} addTraceToCohort={add} />);
+    const diffSelectionProps = DiffSelection.mock.calls[0][0];
+    diffSelectionProps.toggleComparison('not-a-real-id');
+    expect(add).not.toHaveBeenCalled();
   });
 
   it('sets trace color to red if errorSpanCount > 0', () => {
@@ -328,6 +353,10 @@ describe('<SearchResults>', () => {
   });
 
   describe('search finished with results', () => {
+    beforeEach(() => {
+      useSearchResultsStore.setState({ viewMode: 'list' });
+    });
+
     it('shows a scatter plot', () => {
       renderWithRouter(<SearchResults {...baseProps} />);
       expect(screen.getByTestId('scatterplot')).toBeInTheDocument();
@@ -353,16 +382,16 @@ describe('<SearchResults>', () => {
       expect(second[0].linkTo.search).toBeUndefined();
     });
 
-    it('deep links traces with leading 0', () => {
+    it('deep links traces using exact ID match (opaque strings)', () => {
       const uiFind0 = 'ui-find-0';
       const uiFind1 = 'ui-find-1';
       const traceID0 = '00traceID0';
-      const traceID1 = 'traceID1';
+      const traceID1 = '000traceID1';
       const spanLinks = {
         [traceID0]: uiFind0,
         [traceID1]: uiFind1,
       };
-      const zeroIDTraces = [
+      const traces = [
         {
           traceID: traceID0,
           traceName: traceID0,
@@ -376,8 +405,8 @@ describe('<SearchResults>', () => {
           services: [],
         },
         {
-          traceID: `000${traceID1}`,
-          traceName: `000${traceID1}`,
+          traceID: traceID1,
+          traceName: traceID1,
           rootServiceName: '',
           rootOperationName: '',
           startTime: 0,
@@ -388,7 +417,7 @@ describe('<SearchResults>', () => {
           services: [],
         },
       ];
-      renderWithRouter(<SearchResults {...baseProps} traceSummaries={zeroIDTraces} spanLinks={spanLinks} />);
+      renderWithRouter(<SearchResults {...baseProps} traceSummaries={traces} spanLinks={spanLinks} />);
       const calls = ResultItem.mock.calls;
       expect(calls[0][0].linkTo.search).toBe(`uiFind=${uiFind0}`);
       expect(calls[1][0].linkTo.search).toBe(`uiFind=${uiFind1}`);
@@ -508,6 +537,34 @@ describe('<SearchResults>', () => {
       renderWithRouter(<SearchResults {...baseProps} showStandaloneLink={false} />);
       expect(screen.queryByRole('link')).not.toBeInTheDocument();
       expect(screen.queryByTestId('new-window-icon')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('view mode toggle', () => {
+    beforeEach(() => {
+      localStorage.clear();
+      useSearchResultsStore.setState(useSearchResultsStore.getInitialState());
+    });
+
+    it('defaults to table view', () => {
+      renderWithRouter(<SearchResults {...baseProps} />);
+      expect(screen.getByTestId('trace-table')).toBeInTheDocument();
+      expect(screen.queryByTestId('result-a')).not.toBeInTheDocument();
+    });
+
+    it('switches to list view when List button is clicked', () => {
+      renderWithRouter(<SearchResults {...baseProps} />);
+      fireEvent.click(screen.getByText('List'));
+      expect(screen.getByTestId('result-a')).toBeInTheDocument();
+      expect(screen.queryByTestId('trace-table')).not.toBeInTheDocument();
+    });
+
+    it('switches back to table view when Table button is clicked', () => {
+      renderWithRouter(<SearchResults {...baseProps} />);
+      fireEvent.click(screen.getByText('List'));
+      fireEvent.click(screen.getByText('Table'));
+      expect(screen.getByTestId('trace-table')).toBeInTheDocument();
+      expect(screen.queryByTestId('result-a')).not.toBeInTheDocument();
     });
   });
 });

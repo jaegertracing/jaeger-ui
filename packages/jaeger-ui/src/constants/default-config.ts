@@ -1,3 +1,4 @@
+// Copyright (c) 2026 The Jaeger Authors.
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -5,6 +6,7 @@ import deepFreeze from 'deep-freeze';
 
 import { FALLBACK_DAG_MAX_NUM_SERVICES } from './index';
 import getVersion from '../utils/version/get-version';
+import shortenCommit from '../utils/version/shorten-commit';
 
 import { version } from '../../package.json';
 import { Config } from '../types/config';
@@ -48,7 +50,7 @@ const defaultConfig: Config = {
           label: `Jaeger ${getVersion().gitVersion}`,
         },
         {
-          label: `Commit ${getVersion().gitCommit.substring(0, 7)}`,
+          label: `Commit ${shortenCommit(getVersion().gitCommit)}`,
         },
         {
           label: `Build ${getVersion().buildDate}`,
@@ -61,15 +63,17 @@ const defaultConfig: Config = {
   ],
   search: {
     maxLookback: {
-      label: '2 Days',
+      label: '2 days',
       value: '2d',
     },
     maxLimit: 1500,
   },
   traceIdDisplayLength: 7,
-  storageCapabilities: {
+  backendCapabilities: {
     archiveStorage: false,
     metricsStorage: false,
+    aiAssistant: false,
+    searchWithoutServiceName: false,
   },
   tracking: {
     gaID: null,
@@ -120,8 +124,12 @@ const defaultConfig: Config = {
   traceTimeline: {
     enableSidePanel: true,
     defaultDetailPanelMode: 'inline',
+    spanPillsEnabled: true,
   },
   useOpenTelemetryTerms: false,
+  tracing: {
+    enabled: false,
+  },
 };
 
 // Fields that should be merged with user-supplied config values rather than overwritten.

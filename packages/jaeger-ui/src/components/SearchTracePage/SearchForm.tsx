@@ -1,3 +1,4 @@
+// Copyright (c) 2026 The Jaeger Authors.
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -11,16 +12,23 @@ import queryString from 'query-string';
 import { IoHelp } from 'react-icons/io5';
 import { connect } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getUrl as getSearchUrl } from './url';
+import { getUrl as getSearchUrl, lookbackFromUrl } from './url';
 import type { Dispatch } from 'redux';
 import { useIsSearchFetching } from '../../hooks/useTraceDiscovery';
 import { useClearUploadedTraces } from './useUploadedTraces';
 import store from '../../utils/storage';
+import getConfig from '../../utils/config/get-config';
 
 import * as markers from './SearchForm.markers';
 import { trackFormInput } from './SearchForm.track';
 import { formatDate, formatTime } from '../../utils/date';
-import { DEFAULT_OPERATION, DEFAULT_LIMIT, DEFAULT_LOOKBACK } from '../../constants/search-form';
+import {
+  ALL_OPERATIONS,
+  ALL_SERVICES,
+  DEFAULT_LIMIT,
+  DEFAULT_LOOKBACK,
+  normalizeOperation,
+} from '../../constants/search-form';
 import SearchableSelect from '../common/SearchableSelect';
 import './SearchForm.css';
 import ValidatedFormField from '../../utils/ValidatedFormField';
@@ -29,6 +37,11 @@ import { useConfig } from '../../hooks/useConfig';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 import { ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
+import {
+  TIME_RANGE_OPTIONS,
+  asValidConfigLookback,
+  lookbackToTimestamp,
+} from '../../utils/time-range-options';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
@@ -77,82 +90,15 @@ export function convTagsLogfmt(tags: string | null | undefined): string | null {
   return JSON.stringify(data);
 }
 
-export function lookbackToTimestamp(lookback: string, from: Date | number): number {
-  const unit = lookback.substr(-1) as any; // dayjs ManipulateType
-  return dayjs(from).subtract(parseInt(lookback, 10), unit).valueOf() * 1000;
-}
-
 interface ILookbackOption {
   label: string;
   value: string;
 }
 
-const lookbackOptions: ILookbackOption[] = [
-  {
-    label: '5 Minutes',
-    value: '5m',
-  },
-  {
-    label: '15 Minutes',
-    value: '15m',
-  },
-  {
-    label: '30 Minutes',
-    value: '30m',
-  },
-  {
-    label: 'Hour',
-    value: '1h',
-  },
-  {
-    label: '2 Hours',
-    value: '2h',
-  },
-  {
-    label: '3 Hours',
-    value: '3h',
-  },
-  {
-    label: '6 Hours',
-    value: '6h',
-  },
-  {
-    label: '12 Hours',
-    value: '12h',
-  },
-  {
-    label: '24 Hours',
-    value: '24h',
-  },
-  {
-    label: '2 Days',
-    value: '2d',
-  },
-  {
-    label: '3 Days',
-    value: '3d',
-  },
-  {
-    label: '5 Days',
-    value: '5d',
-  },
-  {
-    label: '7 Days',
-    value: '7d',
-  },
-  {
-    label: '2 Weeks',
-    value: '2w',
-  },
-  {
-    label: '3 Weeks',
-    value: '3w',
-  },
-  {
-    label: '4 Weeks',
-    value: '4w',
-  },
-];
+const lookbackOptions: ILookbackOption[] = TIME_RANGE_OPTIONS.map(({ label, lookback }) => ({
+  label,
+  value: lookback,
+}));
 
 export const optionsWithinMaxLookback = memoizeOne((maxLookback: ILookbackOption) => {
   const now = new Date();
@@ -195,7 +141,7 @@ interface ValidationError {
 
 export function validateDurationFields(value: string | null | undefined): ValidationError | undefined {
   if (!value) return undefined;
-  return /\d[\d.]*( us|ms|s|m|h)$/.test(value)
+  return /\d[\d.]*\s*(us|ms|s|m|h)$/.test(value)
     ? undefined
     : {
         content: `Please enter a number followed by a duration unit, ${placeholderDurationFields}`,
@@ -257,9 +203,9 @@ interface ISearchFormFields {
   endDate: string;
   endDateTime: string;
   operation: string;
-  tags?: string;
-  minDuration?: string;
-  maxDuration?: string;
+  tags: string;
+  minDuration: string;
+  maxDuration: string;
   lookback: string;
 }
 
@@ -305,7 +251,7 @@ function buildSearchQuery(
 
   return {
     service,
-    operation: operation !== DEFAULT_OPERATION ? operation : undefined,
+    operation: operation !== ALL_OPERATIONS ? operation : undefined,
     limit: resultsLimit,
     lookback,
     start: String(start),
@@ -346,6 +292,33 @@ interface ISearchFormImplProps {
   ) => string;
 }
 
+function defaultFormData(
+  initialValues: Partial<ISearchFormFields> | undefined,
+  configLookback: string | undefined,
+  allowAllServices: boolean = false
+): Partial<ISearchFormFields> {
+  const nowInMicroseconds = dayjs().valueOf() * 1000;
+  const today = formatDate(nowInMicroseconds);
+  const currentTime = formatTime(nowInMicroseconds);
+  // A URL or stored last-search carrying ALL_SERVICES against a backend that cannot
+  // answer it falls back to no selection, rather than seeding a query that would fail.
+  const initialService =
+    initialValues?.service === ALL_SERVICES && !allowAllServices ? undefined : initialValues?.service;
+  return {
+    service: initialService,
+    operation: initialValues?.operation ?? ALL_OPERATIONS,
+    resultsLimit: initialValues?.resultsLimit ?? String(DEFAULT_LIMIT),
+    lookback: initialValues?.lookback ?? asValidConfigLookback(configLookback) ?? DEFAULT_LOOKBACK,
+    tags: initialValues?.tags ?? '',
+    startDate: initialValues?.startDate ?? today,
+    startDateTime: initialValues?.startDateTime ?? '00:00',
+    endDate: initialValues?.endDate ?? today,
+    endDateTime: initialValues?.endDateTime ?? currentTime,
+    minDuration: initialValues?.minDuration ?? '',
+    maxDuration: initialValues?.maxDuration ?? '',
+  };
+}
+
 export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   invalid = false,
   initialValues,
@@ -354,22 +327,15 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   const submitting = useIsSearchFetching();
   const navigate = useNavigate();
   const clearUploadedTraces = useClearUploadedTraces();
-  const { useOpenTelemetryTerms: useOtelTerms, search } = useConfig();
-  const searchMaxLookback: ILookbackOption | undefined = search?.maxLookback;
-  const searchAdjustEndTime: string | undefined = search?.adjustEndTime;
-  const [formData, setFormData] = useState<Partial<ISearchFormFields>>(() => ({
-    service: initialValues?.service,
-    operation: initialValues?.operation,
-    tags: initialValues?.tags,
-    lookback: initialValues?.lookback,
-    startDate: initialValues?.startDate,
-    startDateTime: initialValues?.startDateTime,
-    endDate: initialValues?.endDate,
-    endDateTime: initialValues?.endDateTime,
-    minDuration: initialValues?.minDuration,
-    maxDuration: initialValues?.maxDuration,
-    resultsLimit: initialValues?.resultsLimit,
-  }));
+  const { useOpenTelemetryTerms: useOtelTerms, search: searchConfig, backendCapabilities } = useConfig();
+  // The storage backend decides whether a search may omit the service name; Cassandra,
+  // for one, cannot answer such a query, so the option is not offered there.
+  const allowAllServices = Boolean(backendCapabilities?.searchWithoutServiceName);
+  const searchMaxLookback: ILookbackOption | undefined = searchConfig?.maxLookback;
+  const searchAdjustEndTime: string | undefined = searchConfig?.adjustEndTime;
+  const [formData, setFormData] = useState<Partial<ISearchFormFields>>(() =>
+    defaultFormData(initialValues, searchConfig?.defaultLookback, allowAllServices)
+  );
 
   // Fetch services using React Query
   const { data: services = [], isLoading: isLoadingServices, error: servicesError } = useServices();
@@ -380,7 +346,9 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
     data: spanNamesData,
     isLoading: isLoadingSpanNames,
     error: spanNamesError,
-  } = useSpanNames(currentService && currentService !== '-' ? currentService : null);
+  } = useSpanNames(
+    currentService && currentService !== '-' && currentService !== ALL_SERVICES ? currentService : null
+  );
 
   // Extract unique operation names from span data
   // API returns { name, spanKind }[] where the same name can appear with different spanKinds
@@ -398,7 +366,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
     setFormData(prev => {
       const nextFormData = { ...prev, ...fieldData };
       if (fieldData.service) {
-        nextFormData.operation = DEFAULT_OPERATION;
+        nextFormData.operation = ALL_OPERATIONS;
       }
       return nextFormData;
     });
@@ -419,6 +387,12 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
     },
     [formData, searchAdjustEndTime, adjustTimeEnabled, submitFormHandler, navigate, clearUploadedTraces]
   );
+
+  const handleReset = useCallback(() => {
+    setFormData(prev =>
+      defaultFormData({ service: prev.service }, searchConfig?.defaultLookback, allowAllServices)
+    );
+  }, [searchConfig?.defaultLookback, allowAllServices]);
 
   const { service: selectedService, lookback: selectedLookback } = formData;
   const noSelectedService = selectedService === '-' || !selectedService;
@@ -449,6 +423,11 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           loading={isLoadingServices}
           onChange={(value: string) => handleChange({ service: value })}
         >
+          {allowAllServices && (
+            <Option key={ALL_SERVICES} value={ALL_SERVICES}>
+              All Services
+            </Option>
+          )}
           {services.map(serviceName => (
             <Option key={serviceName} value={serviceName}>
               {serviceName}
@@ -460,7 +439,17 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
         label={
           <span>
             {useOtelTerms ? 'Span Name' : 'Operation'}{' '}
-            <span className="SearchForm--labelCount">({spanNames.length})</span>
+            <span className="SearchForm--labelCount">({spanNames.length})</span>{' '}
+            <Tooltip
+              placement="topLeft"
+              title={
+                `The list shows the ${useOtelTerms ? 'span names' : 'operations'} of the selected ` +
+                'service. You can also type a name that is not in the list. This lets you filter ' +
+                'by name when you search all services.'
+              }
+            >
+              <IoHelp className="SearchForm--hintTrigger" />
+            </Tooltip>
           </span>
         }
         validateStatus={spanNamesError ? 'error' : undefined}
@@ -472,9 +461,13 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           disabled={submitting || noSelectedService}
           loading={isLoadingSpanNames}
           placeholder={useOtelTerms ? 'Select A Span Name' : 'Select An Operation'}
+          allowCustomValue
           onChange={(value: string) => handleChange({ operation: value })}
         >
-          {['all'].concat(spanNames).map(op => (
+          <Option key={ALL_OPERATIONS} value={ALL_OPERATIONS}>
+            {useOtelTerms ? 'All Span Names' : 'All Operations'}
+          </Option>
+          {spanNames.map(op => (
             <Option key={op} value={op}>
               {op}
             </Option>
@@ -591,7 +584,6 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           data-testid="lookback"
           value={formData.lookback}
           disabled={submitting}
-          defaultValue={DEFAULT_LOOKBACK}
           onChange={(value: string) => handleChange({ lookback: value })}
         >
           {searchMaxLookback && optionsWithinMaxLookback(searchMaxLookback)}
@@ -673,21 +665,6 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
 
       <Row gutter={16}>
         <Col className="gutter-row" span={12}>
-          <FormItem label="Max Duration">
-            <ValidatedFormField
-              name="maxDuration"
-              value={formData.maxDuration}
-              disabled={submitting}
-              validate={validateDurationFields}
-              placeholder={placeholderDurationFields}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                handleChange({ maxDuration: e.target.value })
-              }
-            />
-          </FormItem>
-        </Col>
-
-        <Col className="gutter-row" span={12}>
           <FormItem label="Min Duration">
             <ValidatedFormField
               name="minDuration"
@@ -697,6 +674,21 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
               placeholder={placeholderDurationFields}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 handleChange({ minDuration: e.target.value })
+              }
+            />
+          </FormItem>
+        </Col>
+
+        <Col className="gutter-row" span={12}>
+          <FormItem label="Max Duration">
+            <ValidatedFormField
+              name="maxDuration"
+              value={formData.maxDuration}
+              disabled={submitting}
+              validate={validateDurationFields}
+              placeholder={placeholderDurationFields}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                handleChange({ maxDuration: e.target.value })
               }
             />
           </FormItem>
@@ -711,11 +703,14 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           placeholder="Limit Results"
           type="number"
           min={1}
-          max={search?.maxLimit}
+          max={searchConfig?.maxLimit}
           onChange={e => handleChange({ resultsLimit: e.target.value })}
         />
       </FormItem>
 
+      <Button htmlType="button" className="SearchForm--reset" disabled={submitting} onClick={handleReset}>
+        Reset
+      </Button>
       <Button
         htmlType="submit"
         className="SearchForm--submit"
@@ -728,7 +723,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   );
 };
 
-export function mapStateToProps(state: ReduxState, ownProps: { search?: string }) {
+export function mapStateToProps(_state: ReduxState, ownProps: { search?: string }) {
   const {
     service,
     limit,
@@ -739,7 +734,6 @@ export function mapStateToProps(state: ReduxState, ownProps: { search?: string }
     tags: logfmtTags,
     maxDuration,
     minDuration,
-    lookback,
     traceID: traceIDParams,
   } = queryString.parse(ownProps.search || '');
 
@@ -755,7 +749,7 @@ export function mapStateToProps(state: ReduxState, ownProps: { search?: string }
     if (lastSvc && lastSvc !== '-') {
       lastSearchService = lastSvc;
       if (lastOp && lastOp !== '-') {
-        lastSearchOperation = lastOp;
+        lastSearchOperation = normalizeOperation(lastOp);
       }
     }
   }
@@ -824,12 +818,17 @@ export function mapStateToProps(state: ReduxState, ownProps: { search?: string }
     initialValues: {
       service: (service as string | undefined) || lastSearchService || '-',
       resultsLimit: (limit as string | undefined) || String(DEFAULT_LIMIT),
-      lookback: (lookback as string | undefined) || DEFAULT_LOOKBACK,
+      lookback:
+        lookbackFromUrl(ownProps.search || '') ||
+        asValidConfigLookback(getConfig().search?.defaultLookback) ||
+        DEFAULT_LOOKBACK,
       startDate: queryStartDate || today,
       startDateTime: queryStartDateTime || '00:00',
       endDate: queryEndDate || today,
       endDateTime: queryEndDateTime || currentTime,
-      operation: (operation as string | undefined) || lastSearchOperation || DEFAULT_OPERATION,
+      // normalizeOperation maps the sentinel's former plain-word value, which bookmarked
+      // URLs and stored last-searches still carry, onto the current one.
+      operation: normalizeOperation(operation as string | undefined) || lastSearchOperation || ALL_OPERATIONS,
       tags,
       minDuration: (minDuration as string | undefined) || undefined,
       maxDuration: (maxDuration as string | undefined) || undefined,

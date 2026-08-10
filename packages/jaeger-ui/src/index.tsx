@@ -10,7 +10,10 @@ import { BrowserRouter } from 'react-router-dom';
 import { createRoot } from 'react-dom/client';
 
 import JaegerUIApp from './components/App';
+import { initTracing } from './tracing';
 import { context as trackingContext } from './utils/tracking';
+
+initTracing();
 
 // these need to go after the App import
 

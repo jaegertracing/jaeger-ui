@@ -77,7 +77,7 @@ function fixHttpOperation(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>) {
 //     - set self.skipToChild = true
 function skipAnnotationSpans(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>) {
   const { children, parentID, span } = denseSpan;
-  if (children.size !== 1 || span.attributes.length !== 0) {
+  if (children.size !== 1 || span.attributes.size !== 0) {
     return;
   }
   const parent = parentID != null && map.get(parentID);

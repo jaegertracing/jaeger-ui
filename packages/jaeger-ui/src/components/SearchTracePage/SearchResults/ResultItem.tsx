@@ -5,25 +5,21 @@ import * as React from 'react';
 import { Col, Divider, Row, Tag, Tooltip } from 'antd';
 import { Link } from 'react-router-dom';
 
-import _sortBy from 'lodash/sortBy';
 import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
 
-import { IoAlert, IoWarning } from 'react-icons/io5';
+import { IoWarning } from 'react-icons/io5';
 
 import { trackConversions, EAltViewActions } from './index.track';
 import * as markers from './ResultItem.markers';
 import ResultItemTitle from './ResultItemTitle';
-import colorGenerator from '../../../utils/color-generator';
-import { formatRelativeDate } from '../../../utils/date';
+import ServicePills from './ServicePills';
+import { formatRelativeDate, formatRelativeTime } from '../../../utils/date';
 import { getIncompleteTraceTooltip } from '../../../model/trace-viewer';
 
 import type { TraceSummary } from '../../../types/trace-summary';
 import type { TracePageLink } from '../../TracePage/url';
 
 import './ResultItem.css';
-
-dayjs.extend(relativeTime);
 
 type Props = {
   durationPercent: number;
@@ -57,9 +53,8 @@ export default function ResultItem({
     orphanSpanCount,
   } = traceSummary;
 
-  const startTimeDayjs = dayjs(startTime / 1000);
-  const timeStr = startTimeDayjs.format('h:mm:ss a');
-  const fromNow = startTimeDayjs.fromNow();
+  const timeStr = dayjs(startTime / 1000).format('h:mm:ss a');
+  const fromNow = formatRelativeTime(startTime);
 
   return (
     <div className="ResultItem" onClick={trackTraceConversions} role="button">
@@ -76,16 +71,18 @@ export default function ResultItem({
       <Link to={{ pathname: linkTo.pathname, search: linkTo.search }} state={linkTo.state}>
         <Row>
           <Col xs={24} sm={4} className="ub-p2">
-            <Tag className="ub-m1" data-testid={markers.NUM_SPANS} variant="outlined">
-              {spanCount} Span{spanCount > 1 && 's'}
-            </Tag>
-            {Boolean(errorSpanCount) && (
-              <Tag className="ub-m1" color="red" variant="outlined">
-                {errorSpanCount} Error{errorSpanCount > 1 && 's'}
+            {spanCount !== undefined && (
+              <Tag className="ub-m1" data-testid={markers.NUM_SPANS} variant="outlined">
+                {spanCount} Span{spanCount > 1 && 's'}
               </Tag>
             )}
-            {orphanSpanCount > 0 && (
-              <Tooltip title={getIncompleteTraceTooltip(orphanSpanCount)}>
+            {Boolean(errorSpanCount) && (
+              <Tag className="ub-m1" color="red" variant="outlined">
+                {errorSpanCount} Error{(errorSpanCount ?? 0) > 1 && 's'}
+              </Tag>
+            )}
+            {Boolean(orphanSpanCount) && (
+              <Tooltip title={getIncompleteTraceTooltip(orphanSpanCount ?? 0)}>
                 <Tag className="ub-m1" color="orange">
                   <IoWarning className="ResultItem--warningIcon" />
                   Incomplete
@@ -99,20 +96,9 @@ export default function ResultItem({
             )}
           </Col>
           <Col xs={24} sm={16} className="ub-p2">
-            <ul className="ub-list-reset" data-testid={markers.SERVICE_TAGS}>
-              {_sortBy(services, s => s.name).map(service => (
-                <li key={service.name} className="ub-inline-block ub-m1">
-                  <Tag
-                    className="ResultItem--serviceTag"
-                    style={{ borderLeftColor: colorGenerator.getColorByKey(service.name) }}
-                    variant="outlined"
-                  >
-                    {service.errorSpanCount > 0 && <IoAlert className="ResultItem--errorIcon" />}
-                    {service.name} ({service.spanCount})
-                  </Tag>
-                </li>
-              ))}
-            </ul>
+            <div data-testid={markers.SERVICE_TAGS}>
+              <ServicePills services={services} />
+            </div>
           </Col>
           <Col xs={24} sm={4} className="ub-p3 ub-tx-right-align">
             {formatRelativeDate(startTime / 1000)}

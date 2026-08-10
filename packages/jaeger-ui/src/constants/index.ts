@@ -19,4 +19,4 @@ export const fetchedState = {
   DONE: FETCH_DONE,
   ERROR: FETCH_ERROR,
   LOADING: FETCH_LOADING,
-};
+} as const;

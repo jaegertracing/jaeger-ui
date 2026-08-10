@@ -1,0 +1,20 @@
+# Copyright (c) 2026 The Jaeger Authors.
+# SPDX-License-Identifier: Apache-2.0
+
+name: 'Setup Node and Deps'
+description: 'Setup Node.js with a pinned pnpm and install dependencies'
+runs:
+  using: 'composite'
+  steps:
+    # pnpm must be installed before setup-node so that `cache: pnpm` can locate
+    # the pnpm store. The pnpm version is read from the "packageManager" field
+    # in package.json, keeping it deterministic.
+    - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6
+    - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      with:
+        cache: pnpm
+        node-version-file: 'package.json'
+    - run: node --version && pnpm --version
+      shell: bash
+    - run: pnpm install --frozen-lockfile
+      shell: bash

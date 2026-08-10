@@ -62,6 +62,10 @@ const mockUseServiceFilter = vi.hoisted(() => ({
 vi.mock('./useServiceFilter', () => ({
   useServiceFilter: vi.fn(() => mockUseServiceFilter),
 }));
+const mockUseSpanPillsEnabled = vi.hoisted(() => vi.fn(() => true));
+vi.mock('./spanPills', () => ({
+  useSpanPillsEnabled: mockUseSpanPillsEnabled,
+}));
 vi.mock('./VirtualizedTraceView', () => mockDefault(() => <div data-testid="virtualized-trace-view-mock" />));
 vi.mock('./SpanDetailSidePanel', () => mockDefault(() => <div data-testid="span-detail-side-panel-mock" />));
 vi.mock('../../common/VerticalResizer', () => ({
@@ -144,6 +148,7 @@ describe('<TraceTimelineViewer>', () => {
     mockUseTraceTimelineStore.setState.mockClear();
     mockUseServiceFilter.prunedServices = new Set();
     mockUseServiceFilter.serviceFilterNode = null;
+    mockUseSpanPillsEnabled.mockClear();
     jest.spyOn(KeyboardShortcuts, 'merge').mockClear();
   });
 

@@ -201,11 +201,15 @@ export function useServiceFilter(
     }
     if (cleanSearch != null && cleanSearch !== location.search) {
       skipDefaultsRef.current = true;
-      navigate({ pathname: location.pathname, search: cleanSearch }, { replace: true });
+      navigate(
+        { pathname: location.pathname, search: cleanSearch },
+        { replace: true, state: location.state }
+      );
     }
   }, [
     location.pathname,
     location.search,
+    location.state,
     navigate,
     rootServiceNames,
     sortedServiceNames,
@@ -235,7 +239,7 @@ export function useServiceFilter(
       }
 
       const search = buildFilterSearch(location.search, sortedServiceNames, nextPruned);
-      navigate({ pathname: location.pathname, search }, { replace: true });
+      navigate({ pathname: location.pathname, search }, { replace: true, state: location.state });
     },
     [
       zustandSetPrunedServices,
@@ -244,6 +248,7 @@ export function useServiceFilter(
       trace.spanMap,
       location.pathname,
       location.search,
+      location.state,
       sortedServiceNames,
       navigate,
     ]

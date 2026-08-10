@@ -6,21 +6,162 @@ SPDX-License-Identifier: Apache-2.0
 .SearchTracePage--row {
   display: flex;
   flex-grow: 1;
+  position: relative;
 }
 
 .SearchTracePage--column {
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
   padding: 1rem 0.5rem;
 }
 
-.SearchTracePage--column:first-child {
+.SearchTracePage--panelColumn {
+  flex-shrink: 0;
   padding-left: 1rem;
 }
 
-.SearchTracePage--column:last-child {
+.SearchTracePage--resultsColumn {
+  flex: 1;
+  min-width: 0;
   padding-right: 1rem;
+}
+
+.SearchTracePage--collapsedPanel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.75rem 0.25rem;
+  gap: 0.5rem;
+  background-color: var(--surface-secondary);
+  border-right: 1px solid var(--border-default);
+  flex-shrink: 0;
+}
+
+.SearchTracePage--iconBtn {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 0;
+  font-size: 1rem;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.SearchTracePage--iconBtn:hover {
+  background: var(--interactive-primary-subtle);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.SearchTracePage--iconBtn:focus-visible {
+  outline: 2px solid var(--interactive-primary);
+  outline-offset: 2px;
+}
+
+.SearchTracePage--collapseBtn {
+  width: 1.75rem;
+  height: 1.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 0;
+  font-size: 1rem;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.SearchTracePage--collapseBtn:hover {
+  background: var(--interactive-primary-subtle);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.SearchTracePage--collapseBtn:focus-visible {
+  outline: 2px solid var(--interactive-primary);
+  outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+  .SearchTracePage--row {
+    flex-direction: column;
+  }
+
+  .SearchTracePage--panelColumn {
+    width: 100% !important;
+  }
+
+  .SearchTracePage--collapsedPanel {
+    flex-direction: row;
+    border-right: none;
+    border-bottom: 1px solid var(--border-default);
+    padding: 0.5rem;
+  }
+
+  .SearchTracePage--row .VerticalResizer {
+    display: none;
+  }
+}
+
+/* VerticalResizer overrides scoped to SearchTracePage (so the resizer's other
+   usages in TraceTimelineViewer and DetailsPanel are unaffected):
+   - Make the resizer container fill the whole row so its dragger can too
+     (results table is usually taller than the viewport). pointer-events:none
+     on the container keeps the overlay from swallowing clicks on form
+     controls; the dragger reactivates pointer-events for itself.
+   - Center the grip stripes horizontally around the dragger line (one on
+     each side, ~2px out) and pull them up into the row's top padding gap.
+   - Start the dragger line below the stripes so the stripes act as the
+     always-visible handle indicator and the (transparent-until-hovered)
+     dragger line continues down from there as a single visual control. */
+.SearchTracePage--row .VerticalResizer {
+  bottom: 0;
+  pointer-events: none;
+}
+
+.SearchTracePage--row .VerticalResizer--dragger {
+  top: 20px;
+  bottom: 0;
+  height: auto;
+  pointer-events: auto;
+}
+
+/* Extend the dragger's invisible hit zone upward and to the right so the
+   grip stripes (which sit above the dragger and straddle its x-axis) are
+   also draggable — hovering them shows the resize cursor and triggers
+   the same drag as the line itself. */
+.SearchTracePage--row .VerticalResizer--dragger::before {
+  top: -20px;
+  right: -3px;
+}
+
+.SearchTracePage--row .VerticalResizer--gripIcon::before,
+.SearchTracePage--row .VerticalResizer--gripIcon::after {
+  top: 8px;
+  width: 0;
+}
+
+.SearchTracePage--row .VerticalResizer--gripIcon::before {
+  right: 2px;
+}
+
+.SearchTracePage--row .VerticalResizer--gripIcon::after {
+  right: -2px;
 }
 
 .SearchTracePage--find {

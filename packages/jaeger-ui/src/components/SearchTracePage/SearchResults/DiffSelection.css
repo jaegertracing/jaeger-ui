@@ -3,6 +3,10 @@ Copyright (c) 2017 Uber Technologies, Inc.
 SPDX-License-Identifier: Apache-2.0
 */
 
+.DiffSelection {
+  margin-bottom: 0.5rem;
+}
+
 .DiffSelection.is-non-empty {
   position: sticky;
   top: 47px;
@@ -14,7 +18,14 @@ SPDX-License-Identifier: Apache-2.0
   z-index: 11;
   background: rgba(var(--interactive-primary-rgb), 0.1);
   border: 1px solid rgba(var(--interactive-primary-rgb), 0.5);
-  padding: 1rem;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.DiffSelection--heading {
+  font-size: 1rem;
 }
 
 .DiffSelection--selectedItems {

@@ -161,7 +161,10 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
             onMouseLeave={event => handleMouseLeave(event, ancestor.spanID)}
           >
             {isLastAncestor && !isDetailRow && (
-              <span className="SpanTreeOffset--horizontalLine" style={{ backgroundColor: parentColor }} />
+              <span
+                className="SpanTreeOffset--horizontalLine"
+                style={{ '--span-line-color': parentColor } as React.CSSProperties}
+              />
             )}
           </span>
         );
@@ -183,15 +186,19 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
               className={cx('SpanTreeOffset--box', {
                 'is-collapsed': !childrenVisible,
               })}
-              style={{
-                borderColor: color,
-                backgroundColor: !childrenVisible ? color : undefined,
-              }}
+              style={
+                {
+                  '--span-box-color': color,
+                } as React.CSSProperties
+              }
             >
               {childSpans.length}
             </span>
           ) : (
-            <span className="SpanTreeOffset--dot" style={{ backgroundColor: color }} />
+            <span
+              className="SpanTreeOffset--dot"
+              style={{ '--span-box-color': color } as React.CSSProperties}
+            />
           )}
         </span>
       )}

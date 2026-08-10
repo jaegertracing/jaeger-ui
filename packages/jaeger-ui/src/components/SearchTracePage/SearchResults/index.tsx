@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { useCallback } from 'react';
-import { Select } from 'antd';
+import { useCallback, useMemo } from 'react';
+import { Radio, Select } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
 import queryString from 'query-string';
@@ -15,24 +15,28 @@ import * as markers from './index.markers';
 import { EAltViewActions, trackAltView } from './index.track';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';
+import TraceTable from './TraceTable';
 import { getUrl } from '../url';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import NewWindowIcon from '../../common/NewWindowIcon';
 import SearchResultsDDG from '../../DeepDependencies/traces';
 import { getTracePageLink } from '../../TracePage/url';
 import * as orderBy from '../../../model/order-by';
-import { getPercentageOfDuration } from '../../../utils/date';
+import type { OrderBy } from '../../../model/order-by';
+import { formatDurationCompact, getPercentageOfDuration } from '../../../utils/date';
 
 import { TraceSummary } from '../../../types/trace-summary';
+import { Microseconds } from '../../../types/units';
 
 import './index.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import withRouteProps from '../../../utils/withRouteProps';
 import SearchableSelect from '../../common/SearchableSelect';
+import { useSearchResultsStore } from '../store.search-results';
 
 type SearchResultsProps = {
-  cohortAddTrace: (traceId: string) => void;
-  cohortRemoveTrace: (traceId: string) => void;
+  addTraceToCohort: (summary: TraceSummary) => void;
+  removeTraceFromCohort: (traceId: string) => void;
   diffCohort: TraceSummary[];
   disableComparisons: boolean;
   hideGraph: boolean;
@@ -42,16 +46,17 @@ type SearchResultsProps = {
   showStandaloneLink: boolean;
   skipMessage?: boolean;
   spanLinks?: Record<string, string> | undefined;
+  searchLatency?: Microseconds;
   traceSummaries: TraceSummary[];
   uploadedTraceIDs: ReadonlySet<string>;
-  rawTraces: any[];
-  sortBy: string;
-  handleSortChange: (sortBy: string) => void;
+  rawTraces: unknown[];
+  sortBy: OrderBy;
+  handleSortChange: (sortBy: OrderBy) => void;
 };
 
 type SelectSortProps = {
-  sortBy: string;
-  handleSortChange: (sortBy: string) => void;
+  sortBy: OrderBy;
+  handleSortChange: (sortBy: OrderBy) => void;
 };
 
 const Option = Select.Option;
@@ -63,12 +68,17 @@ export function SelectSort({ sortBy, handleSortChange }: SelectSortProps) {
   return (
     <label>
       Sort:{' '}
-      <SearchableSelect value={sortBy} onChange={(value: string) => handleSortChange(value)}>
+      <SearchableSelect value={sortBy} onChange={(value: OrderBy) => handleSortChange(value)}>
         <Option value={orderBy.MOST_RECENT}>Most Recent</Option>
+        <Option value={orderBy.OLDEST_FIRST}>Oldest First</Option>
         <Option value={orderBy.LONGEST_FIRST}>Longest First</Option>
         <Option value={orderBy.SHORTEST_FIRST}>Shortest First</Option>
         <Option value={orderBy.MOST_SPANS}>Most Spans</Option>
         <Option value={orderBy.LEAST_SPANS}>Least Spans</Option>
+        <Option value={orderBy.MOST_ERRORS}>Most Errors</Option>
+        <Option value={orderBy.LEAST_ERRORS}>Least Errors</Option>
+        <Option value={orderBy.TRACE_NAME_ASC}>Trace Name A-Z</Option>
+        <Option value={orderBy.TRACE_NAME_DESC}>Trace Name Z-A</Option>
       </SearchableSelect>
     </label>
   );
@@ -84,25 +94,51 @@ export function UnconnectedSearchResults({
   showStandaloneLink,
   skipMessage = false,
   spanLinks,
+  searchLatency,
   traceSummaries,
   uploadedTraceIDs,
   rawTraces,
   sortBy,
   handleSortChange,
-  cohortAddTrace,
-  cohortRemoveTrace,
+  addTraceToCohort,
+  removeTraceFromCohort,
 }: SearchResultsProps) {
   const navigate = useNavigate();
+  const viewMode = useSearchResultsStore(s => s.viewMode);
+  const setViewMode = useSearchResultsStore(s => s.setViewMode);
+
+  const traceSummaryById = useMemo(
+    () => new Map(traceSummaries.map(summary => [summary.traceID, summary])),
+    [traceSummaries]
+  );
 
   const toggleComparison = useCallback(
     (traceID: string, remove?: boolean) => {
       if (remove) {
-        cohortRemoveTrace(traceID);
-      } else {
-        cohortAddTrace(traceID);
+        removeTraceFromCohort(traceID);
+        return;
       }
+      // Defensive: every rendered row's traceID is a key in traceSummaryById,
+      // so this lookup cannot miss in normal UI flow.
+      const summary = traceSummaryById.get(traceID);
+      if (!summary) return;
+      addTraceToCohort(summary);
     },
-    [cohortAddTrace, cohortRemoveTrace]
+    [addTraceToCohort, removeTraceFromCohort, traceSummaryById]
+  );
+
+  const clearAllComparisons = useCallback(() => {
+    diffCohort.forEach(t => removeTraceFromCohort(t.traceID));
+  }, [diffCohort, removeTraceFromCohort]);
+
+  const getLink = useCallback(
+    (traceID: string) =>
+      getTracePageLink(
+        traceID,
+        { fromSearch: location.pathname + location.search },
+        spanLinks && spanLinks[traceID]
+      ),
+    [location, spanLinks]
   );
 
   const goToTrace = useCallback(
@@ -121,7 +157,7 @@ export function UnconnectedSearchResults({
     const view = urlState.view && urlState.view === 'ddg' ? EAltViewActions.Traces : EAltViewActions.Ddg;
     trackAltView(view);
     // When URL has lost search params (e.g. after TopNav navigation to bare /search),
-    // fall back to the root service of the first result so DDG can build the graph.
+    // fall back to the root service of the first result so DDG can build the graph
     const serviceFromUrl = typeof urlState.service === 'string' ? urlState.service : undefined;
     const service = serviceFromUrl ?? traceSummaries[0]?.rootServiceName;
     navigate(getUrl({ ...urlState, service, view }));
@@ -130,7 +166,12 @@ export function UnconnectedSearchResults({
   const traceResultsView = queryString.parse(location.search).view !== 'ddg';
 
   const diffSelection = !disableComparisons && (
-    <DiffSelection toggleComparison={toggleComparison} traces={diffCohort} />
+    <DiffSelection
+      toggleComparison={toggleComparison}
+      traces={diffCohort}
+      hideSelectedItems={viewMode === 'table'}
+      onClearAll={clearAllComparisons}
+    />
   );
   if (loading) {
     return (
@@ -165,10 +206,10 @@ export function UnconnectedSearchResults({
                   x: t.startTime,
                   y: t.duration,
                   traceID: t.traceID,
-                  spanCount: t.spanCount,
+                  spanCount: t.spanCount ?? 0,
                   serviceCount: t.services.length,
                   name: t.traceName,
-                  color: t.errorSpanCount > 0 ? 'red' : '#12939A',
+                  color: (t.errorSpanCount ?? 0) > 0 ? 'red' : '#12939A',
                 };
               })}
               onValueClick={(t: { traceID: string }) => {
@@ -178,12 +219,30 @@ export function UnconnectedSearchResults({
           </div>
         )}
         <div className="SearchResults--headerOverview">
-          <h2 className="ub-m0 u-flex-1">
-            {traceSummaries.length} Trace{traceSummaries.length > 1 && 's'}
+          <h2 className="ub-m0 u-flex-1 SearchResults--resultCount">
+            {traceSummaries.length} trace{traceSummaries.length !== 1 && 's'}
+            {searchLatency != null && (
+              <span className="SearchResults--searchLatency">
+                {' '}
+                (in {formatDurationCompact(searchLatency)})
+              </span>
+            )}
           </h2>
-          {traceResultsView && <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />}
+          {traceResultsView && viewMode === 'list' && (
+            <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />
+          )}
           {traceResultsView && <DownloadResults traceSummaries={traceSummaries} rawTraces={rawTraces} />}
           <AltViewOptions traceResultsView={traceResultsView} onDdgViewClicked={onDdgViewClicked} />
+          {traceResultsView && (
+            <Radio.Group
+              aria-label="Results view mode"
+              value={viewMode}
+              onChange={e => setViewMode(e.target.value as 'list' | 'table')}
+            >
+              <Radio.Button value="list">List</Radio.Button>
+              <Radio.Button value="table">Table</Radio.Button>
+            </Radio.Group>
+          )}
           {showStandaloneLink && (
             <Link
               className="u-tx-inherit ub-nowrap ub-ml3"
@@ -198,11 +257,23 @@ export function UnconnectedSearchResults({
       </div>
       {!traceResultsView && (
         <div className="SearchResults--ddg-container">
-          <SearchResultsDDG location={location as any} traceIDs={traceSummaries.map(s => s.traceID)} />
+          <SearchResultsDDG location={location} traceIDs={traceSummaries.map(s => s.traceID)} />
         </div>
       )}
       {traceResultsView && diffSelection}
-      {traceResultsView && (
+      {traceResultsView && viewMode === 'table' && (
+        <TraceTable
+          traceSummaries={traceSummaries}
+          maxTraceDuration={maxTraceDuration}
+          getLink={getLink}
+          sortBy={sortBy}
+          handleSortChange={handleSortChange}
+          disableComparisons={disableComparisons}
+          cohortIds={cohortIds}
+          toggleComparison={toggleComparison}
+        />
+      )}
+      {traceResultsView && viewMode === 'list' && (
         <ul className="ub-list-reset">
           {traceSummaries.map(traceSummary => (
             <li className="ub-my3" key={traceSummary.traceID}>
@@ -210,12 +281,7 @@ export function UnconnectedSearchResults({
                 durationPercent={getPercentageOfDuration(traceSummary.duration, maxTraceDuration)}
                 isInDiffCohort={cohortIds.has(traceSummary.traceID)}
                 isUploaded={uploadedTraceIDs.has(traceSummary.traceID)}
-                linkTo={getTracePageLink(
-                  traceSummary.traceID,
-                  { fromSearch: searchUrl },
-                  spanLinks &&
-                    (spanLinks[traceSummary.traceID] || spanLinks[traceSummary.traceID.replace(/^0*/, '')])
-                )}
+                linkTo={getLink(traceSummary.traceID)}
                 toggleComparison={toggleComparison}
                 traceSummary={traceSummary}
                 disableComparision={disableComparisons}

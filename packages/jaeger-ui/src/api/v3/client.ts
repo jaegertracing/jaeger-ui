@@ -8,6 +8,7 @@
  * and returns native OTLP data structures.
  */
 
+import { ALL_SERVICES } from '../../constants/search-form';
 import prefixUrl from '../../utils/prefix-url';
 import { ServicesResponseSchema, OperationsResponseSchema, TraceSummariesResponseSchema } from './schemas';
 import type { SearchQuery } from '../../types/search';
@@ -60,7 +61,9 @@ export class JaegerClient {
    */
   async fetchTraceSummaries(query: SearchQuery): Promise<TraceSummary[]> {
     const params = new URLSearchParams();
-    if (query.service) params.set('query.serviceName', query.service);
+    // ALL_SERVICES is a UI-only value: the v3 search API reads an absent service name
+    // as "any service", so the parameter is left off rather than sent through.
+    if (query.service && query.service !== ALL_SERVICES) params.set('query.serviceName', query.service);
     if (query.operation) params.set('query.operationName', String(query.operation));
     // start/end are microsecond epoch integers from the URL; convert to ISO for the v3 API.
     // Guard with Number.isFinite to drop malformed URL params gracefully.
@@ -100,8 +103,8 @@ export class JaegerClient {
       // Internal TraceSummary uses `traceID` (Jaeger convention) to match legacy code.
       const services: ServiceSummary[] = (s.services ?? []).map(svc => ({
         name: svc.name ?? '',
-        spanCount: svc.spanCount ?? 0,
-        errorSpanCount: svc.errorSpanCount ?? 0,
+        spanCount: svc.spanCount,
+        errorSpanCount: svc.errorSpanCount,
       }));
       return {
         traceID: s.traceId,
@@ -113,9 +116,9 @@ export class JaegerClient {
         rootOperationName,
         startTime: Number(startNs / 1000n) as Microseconds,
         duration: Number((endNs - startNs) / 1000n) as Microseconds,
-        spanCount: s.spanCount ?? 0,
-        errorSpanCount: s.errorSpanCount ?? 0,
-        orphanSpanCount: s.orphanSpanCount ?? 0,
+        spanCount: s.spanCount,
+        errorSpanCount: s.errorSpanCount,
+        orphanSpanCount: s.orphanSpanCount,
         services,
       };
     });

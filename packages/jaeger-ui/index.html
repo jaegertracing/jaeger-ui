@@ -73,11 +73,25 @@
         const JAEGER_CONFIG = DEFAULT_CONFIG;
         return JAEGER_CONFIG;
       }
-      // Jaeger storage compabilities data is embedded by the query-service via search-replace.
-      function getJaegerStorageCapabilities() {
+      // Legacy storage-only capabilities injection used by older Jaeger backends.
+      // Kept as a private helper so existing search-replace on the
+      // JAEGER_STORAGE_CAPABILITIES pattern still works; new code reads
+      // getJaegerBackendCapabilities() below.
+      function _getJaegerStorageCapabilities() {
         const DEFAULT_STORAGE_CAPABILITIES = { archiveStorage: false, metricsStorage: false };
+        // Important! Do not alter the following line; Jaeger looks for that exact pattern.
         const JAEGER_STORAGE_CAPABILITIES = DEFAULT_STORAGE_CAPABILITIES;
         return JAEGER_STORAGE_CAPABILITIES;
+      }
+      // Unified backend capabilities, embedded by the query-service via search-replace.
+      // Composes the legacy storage flags with newer capability fields (e.g. aiAssistant)
+      // so a legacy backend that only injects JAEGER_STORAGE_CAPABILITIES still produces
+      // a sensible result here.
+      function getJaegerBackendCapabilities() {
+        const DEFAULT_BACKEND_CAPABILITIES = { ..._getJaegerStorageCapabilities(), aiAssistant: false };
+        // Important! Do not alter the following line; Jaeger looks for that exact pattern.
+        const JAEGER_BACKEND_CAPABILITIES = DEFAULT_BACKEND_CAPABILITIES;
+        return JAEGER_BACKEND_CAPABILITIES;
       }
       // Jaeger version data is embedded by Jaeger backend via search/replace.
       function getJaegerVersion() {
