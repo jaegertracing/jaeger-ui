@@ -2,13 +2,13 @@
 
 * **Status**: Draft
 * **Created**: 2026-05-26
-* **Last Updated**: 2026-05-26
+* **Last Updated**: 2026-08-09
 
 ---
 
 ## TL;DR
 
-Jaeger UI has two graph views — the trace DAG (`TraceGraph`) and the service dependency graph (`DAG`) — both built on the internal **Plexus** library which uses **Graphviz (via `@viz-js/viz`)** for layout. Neither view allows users to reposition nodes after rendering. This RFC surveys whether migrating to **elkjs** for layout and/or **`@xyflow/react`** for rendering would materially improve either view, and separately examines **Apache ECharts** as an alternative rendering backend motivated primarily by scale. Library capability data is drawn from each project's public documentation and source.
+Jaeger UI has two graph views — the trace DAG (`TraceGraph`) and the service dependency graph (`DAG`) — both built on the internal **Plexus** library which uses **Graphviz (via `@viz-js/viz`)** for layout. Neither view allows users to reposition nodes after rendering. This RFC surveys whether migrating to **elkjs** for layout and/or **`@xyflow/react`** for rendering would materially improve either view, and separately examines **Apache ECharts** as an alternative rendering backend motivated primarily by scale. Library capability data is drawn from each project's public documentation and source. The recommendation is to stay on Plexus + Graphviz for now: the layout controls users are missing can be added inside the current stack, and the two motivations that would actually require a new library — node dragging and the rendering ceiling — are unconfirmed.
 
 ---
 
@@ -21,7 +21,7 @@ Jaeger UI's graph stack was designed around two non-negotiable constraints: (1) 
 - **Maintenance burden**: Plexus is ~1,700 lines of custom React + SVG rendering that the Jaeger team owns entirely. It was last actively developed several years ago. `@xyflow/react` is a widely-maintained open-source library with an active development team; adopting it could transfer much of that maintenance externally.
 - **Ecosystem age**: `@viz-js/viz` (the Graphviz WASM wrapper) is the third incarnation of viz.js and is healthy, but the underlying Graphviz binary has not had significant algorithmic development in many years. elkjs is more actively developed and has a broader algorithm portfolio.
 
-This RFC does not propose a final decision. It documents the comparison so an informed choice can be made.
+The Recommendation section below resolves the comparison; the parts before it lay out the evidence it rests on.
 
 ---
 
@@ -89,7 +89,7 @@ This means adding node drag to the current Plexus stack is not just a coordinate
 ### Graphviz Weaknesses
 
 - **Limited algorithm variety from Jaeger's code path**: `TraceGraph` runs `dot` and gives the user no say in it. The dependency graph is the exception: `DAGOptions` exposes a Hierarchical (`dot`) / Force Directed (`sfdp`) switch, and `DependencyGraph` also flips to `sfdp` on its own once the service count passes `dagMaxNumServices`. `circo` and `twopi` ship in the WASM build and are wired to nothing.
-- **No layout-direction toggle**: `rankdir` is fixed per view — set explicitly by `DAG`, left at the `toDot` default by `TraceGraph`. Adding a user-facing toggle requires passing it through multiple layers of Plexus internals.
+- **No layout-direction toggle**: `rankdir` is fixed per view — set explicitly by `DAG`, left at the `toDot` default by `TraceGraph`. Nothing structural stands in the way of a user-facing toggle, since `rankdir` is already a `TLayoutOptions` field; it is simply not wired to any control.
 - **Heavy WASM binary**: The full Graphviz WASM is 3–5 MB. It runs in a worker, so it does not block rendering, but initial load can be slow on constrained connections.
 - **Opaque coordinate system**: Graphviz outputs coordinates in DOT points (72 DPI), which Plexus converts to pixels via `convCoord`. This conversion is a source of historical bugs when DPI or scale assumptions differ.
 
@@ -121,7 +121,7 @@ This means adding node drag to the current Plexus stack is not just a coordinate
 - Algorithm flexibility: exposing force-directed layout for heavily cyclic or undirected dependency graphs is significantly easier with ELK.
 - Scale: a large deployment's service dependency graph can have hundreds of nodes. Graphviz handles this in its existing worker pool; ELK would need `elk-worker.js` to avoid blocking the main thread at that scale.
 
-**Verdict on layout engine**: The case for elkjs is strongest as an *addition* — enabling layout-direction toggles and algorithm selection — rather than a wholesale Graphviz replacement. A pragmatic migration path would add ELK as an option for `DAG.tsx` first, where its algorithm variety is most useful, and evaluate whether Graphviz is still needed afterward.
+**Verdict on layout engine**: The case for elkjs is strongest as an *addition* rather than a wholesale Graphviz replacement. It is weaker than it first appears, though, because neither of the two headline gains needs ELK: `rankdir` is already a `LayoutManager` option, and the dependency graph already lets the user choose between `dot` and `sfdp`. What ELK adds that Graphviz cannot is compound-graph support and a broader algorithm menu behind one option string. If ELK is adopted, `DAG.tsx` is the place to start, and `elk-worker.js` belongs in the same change.
 
 ---
 
@@ -198,8 +198,8 @@ The **layer system** is the primary customization API: callers compose arrays of
 | **Custom edge renderers** | SVG path via Bezier control points from Graphviz | Custom `edgeTypes` map; path helpers available |
 | **Edge routing** | Graphviz Bezier splines (high quality for dense graphs) | `getSmoothStepPath` (manhattan), `getBezierPath`, or fully custom |
 | **Contextual toolbars** | No built-in primitive; `DAG.tsx` implements one via `setOnNode` click + `position: fixed` overlay | `NodeToolbar` API: built-in, anchored to node, follows zoom/pan automatically |
-| **Layout direction toggle** | Requires prop drilling through Plexus internals | Layout engine option; trivial to expose in UI |
-| **Algorithm selection** | Requires layout engine changes | Layout engine option; trivial to expose in UI |
+| **Layout direction toggle** | `rankdir` is already a `LayoutManager` option; `DAG` rebuilds its manager on every layout change, so a toggle is local to the view | Layout engine option; trivial to expose in UI |
+| **Algorithm selection** | Already shipped for the dependency graph: `DAGOptions` switches between `dot` and `sfdp` | Layout engine option; trivial to expose in UI |
 | **Minimap** | Built-in (`minimap={true}`) | Built-in (`<MiniMap />`) |
 | **Fit-to-view** | `resetZoom()` on `ZoomManager` | `fitView()` on `useReactFlow()` hook; animated |
 | **Keyboard / ARIA** | Not implemented | Built-in; keyboard navigation and ARIA roles |
@@ -381,7 +381,46 @@ Three migration paths are worth naming explicitly:
 - Cost: high; requires replacing `OpNode.tsx` HTML nodes with canvas primitives or building a DOM overlay system, plus the imperative ECharts API integration.
 - Risk: high; significant UX regression risk on node content fidelity. Only justified if TraceGraph rendering performance is a confirmed, measured problem at real-world span counts.
 
-**Pragmatic starting point**: Path A for `DAG.tsx` is the lowest-risk improvement with the most user-visible payoff (layout-direction toggle, force-directed mode for cyclic graphs). It validates the ELK integration before committing to rendering changes. Path D should only be considered after profiling confirms a rendering bottleneck that memoization cannot solve.
+**Pragmatic starting point**: none of these four, yet — the two user-visible payoffs usually attributed to Path A (a layout-direction toggle and force-directed mode for cyclic graphs) are available without changing engines, so Path A pays ELK's integration cost for benefits the current stack can already deliver. See the Recommendation below. Path D should only be considered after profiling confirms a rendering bottleneck that memoization cannot solve.
+
+---
+
+## Recommendation
+
+**Keep Plexus + Graphviz. Deliver the missing layout controls inside the current stack, and do not start a library migration yet.**
+
+Two of the three motivations in Context are already met by the current stack, or sit one small change away from it:
+
+- **Algorithm choice already ships.** `DAGOptions` gives the dependency graph a Hierarchical (`dot`) / Force Directed (`sfdp`) switch, and `DependencyGraph` also picks `sfdp` on its own above `dagMaxNumServices`. Graphviz serves that need today; a new engine is not what unlocks it.
+- **A layout-direction toggle is a small in-stack change.** `DAG` already builds its `TLayoutOptions` from the user's layout selection and constructs a new `LayoutManager` whenever that selection changes, so exposing `rankdir` there means adding one field driven by one piece of UI state. `TraceGraph` builds its manager once in a ref and needs the same rebuild-on-change treatment. Both changes stay inside the view.
+
+That leaves node dragging and the rendering ceiling as the only motivations a migration would genuinely serve. Neither is settled: dragging is an unconfirmed product requirement, and no profiling has established where `TraceGraph`'s ceiling is or whether layout or rendering sets it.
+
+| Criterion | Stay on Plexus + Graphviz | Path A: elkjs layout | Path B/C: `@xyflow/react` | Path D: ECharts |
+|---|---|---|---|---|
+| **Layout quality for both views today** | 🟢 | 🟡 ELK edge routing is simpler | 🟡 same, whichever engine feeds it | 🔴 straight lines or simple curves |
+| **Layout-direction toggle** | 🟢 ¹ | 🟢 | 🟢 | 🟡 direction is owned by the external engine |
+| **Algorithm choice for cyclic dependency graphs** | 🟢 ² | 🟢 | 🟢 | 🔴 force and circular only |
+| **Node dragging** | 🔴 | 🔴 rendering is unchanged | 🟢 | 🔴 force layout only |
+| **Layout stays off the main thread** | 🟢 worker pool by default | 🟡 ³ | 🟡 ³ | 🟡 ³ |
+| **Rendering ceiling at thousands of nodes** | 🔴 | 🔴 rendering is unchanged | 🟡 needs memoization, maybe virtualization | 🟢 |
+| **Keyboard navigation and ARIA** | 🔴 | 🔴 | 🟢 | 🔴 canvas exposes nothing |
+| **Variable-width node content** | 🟢 measure phase is built in | 🟢 | 🔴 ⁴ | 🔴 ⁴ |
+| **CSS and design-token theming** | 🟢 | 🟢 | 🟢 | 🔴 colors must be passed into the options object |
+| **Maintenance ownership** | 🔴 Jaeger owns ~1,700 lines | 🟡 Plexus plus an ELK adapter | 🟢 | 🟡 an imperative wrapper to own |
+| **Migration cost and risk** | 🟢 none | 🟡 | 🔴 | 🔴 |
+
+🟢 good 🟡 partial or caveated 🔴 poor
+
+¹ `rankdir` is already a `TLayoutOptions` field, and `DAG` sets it explicitly. ² Shipped, as the `DAGOptions` Hierarchical / Force Directed switch. ³ elkjs runs on the main thread by default, so `elk-worker.js` has to be wired up before any of these paths is safe at Jaeger's scale. ⁴ `OpNode`'s text has variable width, so either the measure phase is rebuilt outside Plexus or labels get truncated. `DAG` nodes could take a fixed width, which is why the dependency graph is the better first candidate if a migration does happen.
+
+### What Would Change This Recommendation
+
+- **Node dragging becomes a product requirement** (Open Question 2). Then `@xyflow/react` is the only realistic path, and the dependency graph is where to start, because fixed-width service nodes sidestep the measure phase.
+- **Profiling shows that DOM rendering, not layout, sets `TraceGraph`'s ceiling at real span counts** (Open Question 6). Then ECharts becomes a serious candidate for that view alone, with `OpNode`'s six metric cells moved into the tooltip.
+- **Compound graphs become necessary**, for example to group spans by service inside the trace DAG. ELK supports nested graphs natively and Graphviz does not, so Path A moves first — with `elk-worker.js` in the same change, not as a follow-up.
+
+Until one of those holds, a migration buys flexibility that neither view is using, and charges the measure phase, the worker wiring, or both.
 
 ---
 
@@ -391,5 +430,5 @@ Three migration paths are worth naming explicitly:
 2. **Is node dragging a desired feature?** If so, `@xyflow/react` is the only path; adding drag to Plexus would be a major rewrite.
 3. **What is the practical scale ceiling for each view?** TraceGraph already handles traces with thousands of spans; Plexus's Web Worker model makes that feasible today. Any ELK migration must include the `elk-worker.js` wrapper from day one — not as a follow-up. For `@xyflow/react` rendering, it would be worth benchmarking rendering performance at 500–2,000 nodes to confirm whether per-node memoization is sufficient or whether viewport-based virtualization (available via third-party `@xyflow/react` plugins) is needed.
 4. **Is the Plexus multi-layer system (SVG + HTML) needed?** `@xyflow/react` does not have a direct equivalent to Plexus's layered rendering. `TraceGraph` uses SVG layers for node-find emphasis; this would need to become a custom node renderer concern.
-5. **Would a layout-direction toggle alone justify the ELK migration?** This is the highest-value, lowest-cost change and could be shipped independently under Path A.
+5. ~~**Would a layout-direction toggle alone justify the ELK migration?**~~ Answered: no. `rankdir` is already a `LayoutManager` option, so the toggle ships inside the current stack.
 6. **Is TraceGraph rendering performance actually a bottleneck at real-world span counts?** ECharts' canvas backend is only worth the migration cost if profiling shows that SVG/DOM rendering — not layout computation — is the limiting factor. If layout is the bottleneck, the worker model (Graphviz or ELK) is where to invest; if rendering is, ECharts becomes relevant.
