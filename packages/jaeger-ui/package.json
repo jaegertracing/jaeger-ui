@@ -85,9 +85,9 @@
     "zustand": "^5.0.12"
   },
   "scripts": {
-    "build": "NODE_ENV=production REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) vite build",
+    "build": "NODE_ENV=production REACT_APP_VSN_STATE=$(../../scripts/get-build-info.js) vite build",
     "coverage": "vitest run --coverage",
-    "start:ga-debug": "REACT_APP_GA_DEBUG=1 REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) vite",
+    "start:ga-debug": "REACT_APP_GA_DEBUG=1 REACT_APP_VSN_STATE=$(../../scripts/get-build-info.js) vite",
     "start": "vite",
     "test": "vitest run",
     "test-ci": "CI=1 vitest run --reporter=verbose"
