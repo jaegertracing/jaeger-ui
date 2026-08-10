@@ -17,7 +17,7 @@ Jaeger UI has two graph views — the trace DAG (`TraceGraph`) and the service d
 Jaeger UI's graph stack was designed around two non-negotiable constraints: (1) layout quality matters more than interactivity, and (2) the graphs should render correctly with zero user configuration. Plexus + Graphviz have served those constraints well. But several recurring issues expose limits of the current approach:
 
 - **Layout inflexibility**: When Graphviz produces a cluttered or counter-intuitive layout — edge crossings, nodes packed too tightly, an unfortunate root node selection — there is no escape hatch. The user cannot drag a node, change the layout direction, or re-run with different spacing parameters.
-- **No layout-direction toggle**: `TraceGraph` always uses top-down (`TB`) rank direction; `DAG` always uses left-right (`LR`). Neither exposes a toggle.
+- **No layout-direction toggle**: `TraceGraph` passes no `rankdir`, so it gets the `toDot` default of left-right (`LR`); `DAG` sets top-down (`TB`). Neither exposes a toggle.
 - **Maintenance burden**: Plexus is ~1,700 lines of custom React + SVG rendering that the Jaeger team owns entirely. It was last actively developed several years ago. `@xyflow/react` is a widely-maintained open-source library with an active development team; adopting it could transfer much of that maintenance externally.
 - **Ecosystem age**: `@viz-js/viz` (the Graphviz WASM wrapper) is the third incarnation of viz.js and is healthy, but the underlying Graphviz binary has not had significant algorithmic development in many years. elkjs is more actively developed and has a broader algorithm portfolio.
 
@@ -39,7 +39,7 @@ This document covers three questions that can be answered independently:
 
 ### Jaeger UI (current)
 
-**No.** Node positions are fully determined by Graphviz and treated as immutable by Plexus. The position types (`TLayoutVertex.left`, `TLayoutVertex.top`) are read-only after layout. There are no drag event handlers anywhere in Plexus or in the two graph consumers (`TraceGraph.tsx`, `DAG.tsx`). Grep for `onMouseDown`, `onDrag`, `draggable`, `pointermove`, `setPointerCapture` across all of `packages/plexus/` returns zero results.
+**No.** Node positions are fully determined by Graphviz and treated as immutable by Plexus. Nothing in the types enforces that — `TLayoutVertex.left` and `TLayoutVertex.top` are plain mutable `number`s — but no code path writes to them after layout. There are no drag event handlers anywhere in Plexus or in the two graph consumers (`TraceGraph.tsx`, `DAG.tsx`). Grep for `onMouseDown`, `onDrag`, `draggable`, `pointermove`, `setPointerCapture` across all of `packages/plexus/` returns zero results.
 
 What Plexus *does* support at the viewport level is **pan and zoom** via `d3-zoom`: the entire graph can be panned by clicking and dragging empty canvas space, and zoomed via scroll wheel or pinch. This is distinct from per-node repositioning; the graph's internal layout is never modified.
 
@@ -51,11 +51,11 @@ What Plexus *does* support at the viewport level is **pan and zoom** via `d3-zoo
 
 Neither codebase currently supports node dragging. The question of whether to add it is orthogonal to the library choice, but the options differ significantly in implementation cost — and the reason is **edge geometry**, not node positions.
 
-Node positions are plain `{x, y}` numbers at the application layer; moving a node is trivial. The hard part is that Plexus uses Graphviz's `neato` engine to compute edge paths as pre-baked Bezier spline control points (a series of `[x, y]` coordinates per edge), calculated with specific node positions assumed. If a node moves, those stored control points are stale — edges would point at empty space. Correcting them requires re-running the `neato` phase in the Web Worker with the moved node pinned, which has non-trivial latency and would produce jank on every drag event.
+Node positions are plain `{x, y}` numbers at the application layer; moving a node is trivial. The hard part is that edge geometry is pre-baked. Both graph views pass `useDotEdges: true`, which puts the Plexus `Coordinator` in its `DotOnly` phase: one `dot` pass produces node positions and edge points together, and with `splines: 'polyline'` each edge is stored as a fixed series of `[x, y]` points computed for those exact node positions. If a node moves, those stored points are stale — edges would point at empty space. Correcting them requires re-running the layout in the Web Worker with the moved node pinned, which has non-trivial latency and would produce jank on every drag event.
 
 `@xyflow/react` avoids this entirely because it does not pre-compute edge geometry. Edge paths are functions of current node handle positions, recalculated on every render via `getSmoothStepPath` / `getBezierPath`. Dragging a node updates its position in React state; all connected edges recompute their paths in the same render cycle — no worker round-trip, no stale data.
 
-This means adding node drag to the current Plexus stack is not just a coordinate-system rewrite: it requires either (a) accepting a worker round-trip per drag frame (too slow for smooth interaction), or (b) abandoning pre-computed Graphviz splines in favour of client-side edge routing during drag, then optionally re-running `neato` on drag end to restore spline quality. Option (b) is workable but requires managing two edge-rendering modes. With `@xyflow/react`, drag is already architecturally consistent with normal rendering.
+This means adding node drag to the current Plexus stack is not just a coordinate-system rewrite: it requires either (a) accepting a worker round-trip per drag frame (too slow for smooth interaction), or (b) abandoning the pre-computed Graphviz edge points in favour of client-side edge routing during drag, then re-running `dot` on drag end to restore layout quality. Option (b) is workable but requires managing two edge-rendering modes. With `@xyflow/react`, drag is already architecturally consistent with normal rendering.
 
 ---
 
@@ -72,7 +72,7 @@ This means adding node drag to the current Plexus stack is not just a coordinate
 | **Cycle handling** | Handles cycles (DOT supports them); renders with cycle-breaking heuristics | Handles cycles via `elk.layered.cycleBreaking.strategy` option |
 | **Undirected / force-directed** | `neato`, `sfdp`, `fdp` engines available | `stress`, `force`, `mrtree` algorithms available |
 | **Layout options exposed** | `rankdir`, `ranksep`, `nodesep`, `splines`, `sep`, `engine` | Algorithm, direction, layer spacing, node spacing, padding — all numeric JSON |
-| **Two-phase layout** | Used by Plexus: `dot` for positions, `neato` for edge routing | Single-phase; edge routing integrated |
+| **Two-phase layout** | Offered by Plexus (`dot` for positions, then `neato` for edge routing), but both Jaeger views opt out with `useDotEdges: true` and take edges from `dot` | Single-phase; edge routing integrated |
 | **Worker model** | Plexus runs Graphviz in a reusable Web Worker pool — layout never blocks the main thread | Runs on main thread by default; `elkjs/lib/elk-worker.js` exists but must be wired up explicitly |
 | **Scale (layout)** | Designed for large graphs; worker isolation handles 1,000+ node layouts without jank | Main-thread execution blocks UI for very large graphs; worker wrapper is a prerequisite at Jaeger's scale |
 | **Maturity** | Graphviz ~30 years; `@viz-js/viz` wrapper ~10 years, stable | ELK ~10 years (Eclipse project); `elkjs` JS port ~8 years |
@@ -84,12 +84,12 @@ This means adding node drag to the current Plexus stack is not just a coordinate
 
 - **Proven DAG layout**: The `dot` engine's Sugiyama implementation is the reference standard. For strict hierarchies (like trace trees), it rarely produces bad layouts.
 - **DOT language expressiveness**: Edge weights, cluster subgraphs, per-node attributes can all be expressed in DOT without writing custom code.
-- **Two-phase layout quality**: Plexus's use of `dot` for rank assignment + `neato` for edge spline routing is a sophisticated approach that produces high-quality results for dense graphs.
+- **Two-phase layout quality**: Plexus can run `dot` for rank assignment and then `neato` for edge spline routing, which produces high-quality results for dense graphs. Neither Jaeger view enables it — both pass `useDotEdges: true` — so this is headroom the current stack has and is not using.
 
 ### Graphviz Weaknesses
 
-- **Limited algorithm variety from Jaeger's code path**: Plexus only uses `dot` and `neato`. The other Graphviz engines (`sfdp`, `circo`, `twopi`) are available in the WASM build but not wired up to any UI control. Users cannot switch algorithms.
-- **No layout-direction toggle**: `rankdir` is hardcoded per view. Adding a user-facing toggle requires passing it through multiple layers of Plexus internals.
+- **Limited algorithm variety from Jaeger's code path**: `TraceGraph` runs `dot` and gives the user no say in it. The dependency graph is the exception: `DAGOptions` exposes a Hierarchical (`dot`) / Force Directed (`sfdp`) switch, and `DependencyGraph` also flips to `sfdp` on its own once the service count passes `dagMaxNumServices`. `circo` and `twopi` ship in the WASM build and are wired to nothing.
+- **No layout-direction toggle**: `rankdir` is fixed per view — set explicitly by `DAG`, left at the `toDot` default by `TraceGraph`. Adding a user-facing toggle requires passing it through multiple layers of Plexus internals.
 - **Heavy WASM binary**: The full Graphviz WASM is 3–5 MB. It runs in a worker, so it does not block rendering, but initial load can be slow on constrained connections.
 - **Opaque coordinate system**: Graphviz outputs coordinates in DOT points (72 DPI), which Plexus converts to pixels via `convCoord`. This conversion is a source of historical bugs when DPI or scale assumptions differ.
 
@@ -103,7 +103,7 @@ This means adding node drag to the current Plexus stack is not just a coordinate
 
 ### elkjs Weaknesses
 
-- **Edge routing is simpler**: ELK's edge routing is generally good for layered graphs but does not match the spline quality of Graphviz's `neato` post-processing pass for dense graphs.
+- **Edge routing is simpler**: ELK's edge routing is generally good for layered graphs but does not match the spline quality Graphviz reaches with its `neato` routing pass on dense graphs — a pass Jaeger does not currently enable.
 - **No DOT import**: Existing Plexus integration code builds DOT strings; migrating means rewriting `convInputs.ts` / `toDot.ts` to produce ELK JSON instead.
 - **Cycle handling less battle-tested in practice**: Graphviz's cycle-breaking is extremely mature. ELK's is correct but less studied in production.
 - **Worker is not the default**: Unlike Plexus (which always runs Graphviz in a worker), the elkjs default is main-thread execution. Adopting it at Jaeger's scale — traces with thousands of spans, dependency graphs with hundreds of services — requires explicitly switching to `elk-worker.js` and managing the worker lifecycle, which adds integration cost.
@@ -312,7 +312,7 @@ This is the node the user called out: six metric cells displayed in the node bod
 - **Node content that genuinely requires HTML**: `DdgNodeContent` (Deep Dependency Graph) uses a variable-radius circle sized to fit its text, an always-visible action menu attached to the node, and a decoration progress-bar arc. None of these translate cleanly to a canvas symbol. This view is the hardest to migrate.
 - **No built-in hierarchical layout**: External layout engine still required (Graphviz or elkjs) for the DAG and trace views. ECharts handles layout only for force and circular; for everything else `layout: 'none'` is used with pre-computed positions.
 - **Imperative API mismatch with React**: ECharts is fundamentally an imperative library (`setOption`, `getZr`, event listeners). `echarts-for-react` hides some of this but the mental model remains options-object-driven rather than declarative React. Incremental updates require diffing option objects, not state.
-- **Edge routing is basic**: No manhattan/smooth-step routing. Edges are straight lines or simple curves (`curveness` parameter). Dense graphs with many crossing edges will look worse than Graphviz's `neato` post-processing.
+- **Edge routing is basic**: No manhattan/smooth-step routing. Edges are straight lines or simple curves (`curveness` parameter). Dense graphs with many crossing edges will look worse than Graphviz output, and worse again than the `neato` routing pass Jaeger could enable but does not.
 - **No layout direction toggle**: The built-in `tree` series supports `orient: 'LR' | 'TB'`, but for `layout: 'none'` the direction is determined entirely by the external layout engine, same as any other option.
 - **Theming**: Canvas rendering does not inherit CSS custom properties. Dark mode and design token theming require explicitly passing color values into the ECharts options object rather than relying on CSS variables.
 
@@ -326,7 +326,7 @@ This is the node the user called out: six metric cells displayed in the node bod
 | **Built-in hierarchical layout** | Via Graphviz (worker) | No — needs elkjs | No — needs external engine |
 | **React integration** | React-native (Plexus) | React-native | Imperative wrapper via `echarts-for-react` |
 | **Node dragging** | No | Opt-in | Force layout only |
-| **Edge routing quality** | High (Graphviz `neato` splines) | Medium (smooth-step, bezier) | Low (straight lines or simple curves) |
+| **Edge routing quality** | High (Graphviz; `dot` polylines today, `neato` splines available) | Medium (smooth-step, bezier) | Low (straight lines or simple curves) |
 | **Contextual UI (toolbars)** | Custom overlays | `NodeToolbar` API | Custom overlays via `convertToPixel` |
 | **Accessibility / ARIA** | Not implemented | Built-in (WCAG 2.1 AA) | Canvas: none; SVG renderer: partial |
 | **CSS / design token theming** | CSS variables work | CSS variables work | Must pass colors into options object |
