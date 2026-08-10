@@ -83,7 +83,7 @@ This means adding node drag to the current Plexus stack is not just a coordinate
 ### Graphviz Strengths
 
 - **Proven DAG layout**: The `dot` engine's Sugiyama implementation is the reference standard. For strict hierarchies (like trace trees), it rarely produces bad layouts.
-- **DOT language expressiveness**: Edge weights, cluster subgraphs, and per-node attributes are all expressible in DOT without writing custom code. None of it is reachable from Jaeger today, though: `makeNode` emits only `height`, `width`, and an optional `pos`, the graph attributes are a fixed list, and edges carry nothing but a bidirectional flag. This is capability the current stack has and does not use.
+- **DOT language expressiveness**: Edge weights, cluster subgraphs, and per-node attributes are all expressible in DOT. Jaeger owns `toDot.ts`, so all of it is available; it is simply not emitted today — `makeNode` writes only `height`, `width`, and an optional `pos`, the graph attributes are a fixed list, and edges carry nothing but a bidirectional flag. Input-only attributes are cheap to add: edge `weight` to bias rank assignment, or per-node `group`, is a line in `makeEdge` or `makeNode`. Anything whose result has to come back out is the expensive case, which is why clusters cost more than weights.
 - **Two-phase layout quality**: Plexus can run `dot` for rank assignment and then `neato` for edge spline routing, which produces high-quality results for dense graphs. Neither Jaeger view enables it — both pass `useDotEdges: true` — so this is headroom the current stack has and is not using.
 
 ### Graphviz Weaknesses
@@ -404,7 +404,7 @@ The layout engine and the rendering layer are separate decisions, as the Scope s
 | **Edge routing quality** | 🟢 `dot` polylines today, `neato` splines available unused | 🟡 simpler routing on dense graphs |
 | **Layout-direction toggle** | 🟢 `rankdir` is already a `LayoutManager` option ¹ | 🟢 `elk.direction` |
 | **Algorithm menu** | 🟡 `dot`, `neato`, `sfdp`, `circo`, `twopi` are in the build; two are wired to anything ² | 🟢 nine algorithm ids, each one option string |
-| **Compound (nested) graphs** | 🟡 Graphviz has clusters, but Plexus's pipeline cannot carry them ⁷ | 🟢 native, via `children` and `elk.hierarchyHandling` |
+| **Compound (nested) graphs** | 🟡 Graphviz has clusters; Plexus's pipeline does not carry them as written ⁷ | 🟢 native, via `children` and `elk.hierarchyHandling` |
 | **Cycle handling** | 🟢 very mature | 🟡 correct but less studied in production |
 | **Layout off the main thread** | 🟢 Plexus worker pool | 🟢 the same pool — it is engine-agnostic ³ |
 | **Download size** | 🟢 468 KB gzipped | 🟢 467 KB gzipped — a wash |
@@ -431,7 +431,7 @@ The layout engine and the rendering layer are separate decisions, as the Scope s
 
 🟢 good 🟡 partial or caveated 🔴 poor
 
-¹ `rankdir` is already a `TLayoutOptions` field, and `DAG` sets it explicitly. ² Shipped, as the `DAGOptions` Hierarchical / Force Directed switch. ³ `layout.worker.ts` and `Coordinator` never name an engine; only `getLayout.ts` does. ⁴ `node.measured` carries the observed size and `useNodesInitialized()` gates the layout on it, so the cost is one unpositioned render pass to hide, not truncated labels. ⁵ ECharts applies `progressive` to eight series types, none of them graph. ⁶ See the per-view breakdown below. ⁷ `toDot` emits a flat `digraph` with no `subgraph cluster_*`, and `getLayout` asks for `format: 'plain'`, whose records `convPlain` reads as graph, node, edge, and stop — it throws on anything else. Clusters would need both a DOT change and an output format that reports container bounds.
+¹ `rankdir` is already a `TLayoutOptions` field, and `DAG` sets it explicitly. ² Shipped, as the `DAGOptions` Hierarchical / Force Directed switch. ³ `layout.worker.ts` and `Coordinator` never name an engine; only `getLayout.ts` does. ⁴ `node.measured` carries the observed size and `useNodesInitialized()` gates the layout on it, so the cost is one unpositioned render pass to hide, not truncated labels. ⁵ ECharts applies `progressive` to eight series types, none of them graph. ⁶ See the per-view breakdown below. ⁷ `toDot` emits a flat `digraph` with no `subgraph cluster_*`, and `getLayout` asks for `format: 'plain'`, whose records `convPlain` reads as graph, node, edge, and stop — it throws on anything else. Both files are Jaeger's, so this is a cost rather than a barrier: clusters need the DOT change, an output format that reports container bounds, and renderer work to draw them.
 
 Splitting the decisions this way also settles where the `LayoutManager` lines belong. Staying on Graphviz keeps them — about 1,180 — no matter which renderer wins, so they are a cost of Decision 1 and not a discount against Decision 2. `@xyflow/react` earns its 🟢 on maintenance by retiring `Digraph` and `zoom`, roughly 1,860 lines, and nothing more.
 
