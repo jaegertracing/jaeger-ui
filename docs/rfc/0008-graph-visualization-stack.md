@@ -8,7 +8,7 @@
 
 ## TL;DR
 
-Jaeger UI has two graph views — the trace DAG (`TraceGraph`) and the service dependency graph (`DAG`) — both built on the internal **Plexus** library which uses **Graphviz (via `@viz-js/viz`)** for layout. Neither view allows users to reposition nodes after rendering. This RFC surveys whether migrating to **elkjs** for layout and/or **`@xyflow/react`** for rendering would materially improve either view, and separately examines **Apache ECharts** as an alternative rendering backend motivated primarily by scale. Library capability data is drawn from each project's public documentation and source. The recommendation is to add the missing layout controls inside the current stack, where they are cheap, and separately to migrate the service dependency graph to `@xyflow/react` as a trial while keeping Graphviz for layout — that view has the lowest port cost, the most interactivity to gain, and the least rendering risk of the four views Plexus serves.
+Jaeger UI has two graph views — the trace DAG (`TraceGraph`) and the service dependency graph (`DAG`) — both built on the internal **Plexus** library which uses **Graphviz (via `@viz-js/viz`)** for layout. Neither view allows users to reposition nodes after rendering. This RFC surveys whether migrating to **elkjs** for layout and/or **`@xyflow/react`** for rendering would materially improve either view, and separately examines **Apache ECharts** as an alternative rendering backend motivated primarily by scale. Library capability data is drawn from each project's public documentation and source. The recommendation is to add the missing layout controls inside the current stack, where they are cheap, and separately to migrate the service dependency graph to `@xyflow/react` while keeping Graphviz for layout — that view has the lowest port cost and the most interactivity to gain of the four views Plexus serves. ECharts is surveyed and rejected: its only advantage was raw scale, and the product answers scale with focal neighbourhoods rather than by drawing everything. The Validation Plan states the spikes and their acceptance tests.
 
 ---
 
@@ -396,6 +396,8 @@ Neither of those is a reason to change libraries, so ship them where they are. W
 
 The layout engine and the rendering layer are separate decisions, as the Scope section says, so they get separate matrices. Almost every combination is buildable: the one real coupling is that neither `@xyflow/react` nor ECharts computes a hierarchical layout, so both need an engine behind them, and whichever engine that is stays Jaeger's to wrap.
 
+Rendering ceiling is not scored either. Real deployments reach 5,000 services and the largest are nearer 25,000, but drawing them all at once is a poster rather than a tool — Netflix's "death star" is the genre — and Jaeger already answers scale with UX instead of rendering. Above `DAG_MAX_NUM_SERVICES` (1,200) `DAG` declines to draw the graph at all and asks for a focal service and a depth; `DAGOptions` carries that depth control; the deep dependency graph is built entirely around a focal node and a hop count. What the renderer has to be good at is a focal neighbourhood of a few hundred nodes, which all three candidates manage. So raw ceiling is excluded for the same reason download size is: real, measurable, and not what the decision turns on. If a multi-thousand-node view is ever wanted, the first question is whether anyone can use it, not which library draws it.
+
 Download size is not scored in either matrix. Jaeger already ships 468 KB gzipped of Graphviz and the project has no complaint about it, so it is an accepted cost rather than a live criterion — and every candidate here is smaller than that accepted baseline: elkjs 467 KB, ECharts 368 KB for a full build, `@xyflow/react` 86 KB with `@xyflow/system`, Plexus's own `d3-zoom` about 15 KB. The numbers are recorded in Parts 2 through 4 for reference. If page weight ever does become a concern, it will be a concern about the engine, and neither of these decisions is the lever.
 
 ### Decision 1: Layout Engine
@@ -431,15 +433,14 @@ The interesting finding is that dagre, not elkjs, is the candidate to evaluate i
 | **Keyboard navigation and ARIA** | 🔴 not implemented | 🟢 primitives, not conformance | 🔴 canvas exposes nothing |
 | **CSS and design-token theming** | 🟢 | 🟢 | 🔴 colors must be passed into the options object |
 | **Contextual toolbars** | 🟡 hand-rolled `position: fixed` overlay | 🟢 `NodeToolbar`, anchored and zoom-aware | 🟡 overlay via `convertToPixel` |
-| **Rendering ceiling** | 🔴 no virtualization, one DOM node per element | 🟡 needs memoization, maybe virtualization | 🟡 canvas throughput is real, but unmeasured here and still a single paint ⁵ |
 | **Maintenance ownership** | 🔴 ~1,860 lines of `Digraph` and `zoom` | 🟢 external team | 🟡 an imperative wrapper to own |
-| **Migration cost** | 🟢 nothing to do | 🟡 per view ⁶ | 🔴 |
+| **Migration cost** | 🟢 nothing to do | 🟡 per view ⁵ | 🔴 |
 
-**Verdict: migrate to `@xyflow/react`, dependency graph first.** It is better than Plexus on every axis Jaeger lacks and no worse on any axis Jaeger has, once the measure phase is understood correctly. ECharts loses on node content, accessibility, and theming, and its one advantage is unmeasured.
+**Verdict: migrate to `@xyflow/react`, dependency graph first, and drop ECharts from consideration.** `@xyflow/react` is better than Plexus on every axis Jaeger lacks and no worse on any axis Jaeger has, once the measure phase is understood correctly. ECharts scores no green at all here: its single advantage was raw scale, and once scale is excluded as an axis nothing is left to weigh against losing React node content, accessibility, and CSS theming. It should be treated as surveyed and rejected rather than kept in reserve.
 
 🟢 good 🟡 partial or caveated 🔴 poor
 
-⁴ `node.measured` carries the observed size and `useNodesInitialized()` gates the layout on it, so the cost is one unpositioned render pass to hide, not truncated labels. ⁵ ECharts applies `progressive` to eight series types, none of them graph. ⁶ See the per-view breakdown below.
+⁴ `node.measured` carries the observed size and `useNodesInitialized()` gates the layout on it, so the cost is one unpositioned render pass to hide, not truncated labels. ⁵ See the per-view breakdown below.
 
 Splitting the decisions this way also settles where the `LayoutManager` lines belong. Staying on Graphviz keeps them — about 1,180 — no matter which renderer wins, so they are a cost of Decision 1 and not a discount against Decision 2. `@xyflow/react` earns its 🟢 on maintenance by retiring `Digraph` and `zoom`, roughly 1,860 lines, and nothing more.
 
@@ -466,8 +467,41 @@ Be honest about the sequencing cost, though. `Digraph` and `zoom` cannot be dele
 ### What Would Change This Recommendation
 
 - **The dependency graph trial regresses** on layout quality, rendering, or the context-menu UX. Then Plexus keeps the remaining views and the trial is reverted; the in-stack `rankdir` toggle survives either way, since it does not depend on the renderer.
-- **Profiling shows that DOM rendering, not layout, sets `TraceGraph`'s ceiling at real span counts** (Open Question 7). Then ECharts becomes a serious candidate for that view alone — a different destination from the other three — with `OpNode`'s four metric cells moved into the tooltip.
+- **The product decides to draw whole multi-thousand-node graphs as a feature**, rather than the focal neighbourhoods it presents today. That is the only route back to ECharts, and it is a product decision about whether such a view is usable at all, not a rendering benchmark.
 - **Compound graphs become necessary**, for example to group spans by service inside the trace DAG, or services by namespace in the dependency graph. This is the one finding that reopens Decision 1, and it is a build-versus-adopt question: teaching `toDot` to emit `subgraph cluster_*` and reading container bounds back out, against adopting `@dagrejs/dagre`, which models nesting through `setParent` and is MIT. Do not reach for elkjs — it is gated on license, and dagre covers the same capability.
+
+---
+
+## Validation Plan
+
+Two things in the recommendation are untried, and an untried recommendation is not one. Each is a throwaway spike with an acceptance test written before the work starts, so it can fail cleanly.
+
+### Spike 1 — Render the dependency graph with `@xyflow/react`, keeping Graphviz
+
+This is the whole of Decision 2, in one view, with the layout engine deliberately held constant so that any visual change is a conversion bug rather than a layout difference.
+
+- Leave `LayoutManager` alone. `DAG.tsx` keeps calling it and passes the positions it returns straight into `<ReactFlow>` as `node.position`.
+- One `nodeTypes` entry for the existing circle-and-label node; one `edgeTypes` entry that draws the point list Graphviz returns.
+- Replace the `position: fixed` `ActionsMenu` overlay with `NodeToolbar`, keeping the Set focus and View traces items.
+- Turn on `nodesDraggable`, and leave `nodesFocusable` at its default.
+
+**Accept if,** at 50, 200, and 500 services: node positions match today's exactly; the toolbar stays anchored through pan and zoom; dragging a node moves its edges with no worker round-trip; Tab reaches nodes and Enter selects one.
+
+**Reject if** the Graphviz point list cannot be drawn faithfully as an `edgeType`, or if the unpositioned first pass flashes in a way opacity cannot hide.
+
+Days rather than weeks, since the data pipeline and the layout are untouched. Settles Open Questions 2 and 4.
+
+### Spike 2 — Port `TraceGraph`
+
+Only after Spike 1 lands, and it decides whether the migration continues past one view. This is where `node.measured` and `useNodesInitialized()` are exercised for real, because `OpNode`'s text has variable width where the dependency graph's nodes are nearly uniform.
+
+**Accept if** `OpNode` renders unchanged with no truncated labels, the unpositioned pass is invisible, and a 2,000-span trace reaches first paint no slower than today.
+
+### Spike 3 — dagre against `dot`, only if Decision 1 is reopened
+
+Not scheduled. It becomes worth doing if nested graphs are wanted, since `@dagrejs/dagre` supports them through `setParent` and Graphviz's clusters would need new plumbing at both ends of Plexus's DOT round-trip.
+
+Feed the same dependency graph to both engines at 200 and 500 services and compare edge crossings, aspect ratio, and wall-clock layout time. **Accept dagre only if** it matches `dot` on readability at the sizes the UI actually presents. Do not gate it on 5,000 or 25,000 nodes: that is the poster case, not the product, and holding a small permissive library to it would reject it for the wrong reason.
 
 ---
 
@@ -475,8 +509,8 @@ Be honest about the sequencing cost, though. `Digraph` and `zoom` cannot be dele
 
 1. ~~**Are fixed-width nodes acceptable for `TraceGraph`?**~~ Moot: `node.measured` gives the layout engine real sizes, so nodes keep their variable width and labels are not truncated.
 2. **Is node dragging a desired feature?** `@xyflow/react` is the only path to it, and adding drag to Plexus would be a major rewrite. The dependency graph trial answers this cheaply, since the library makes drag a single prop.
-3. **What is the practical scale ceiling for each view?** TraceGraph already handles traces with thousands of spans; Plexus's Web Worker model makes that feasible today. An ELK migration keeps that guarantee by putting its adapter inside the existing worker instead of running ELK on the main thread. For `@xyflow/react` rendering, it would be worth benchmarking rendering performance at 500–2,000 nodes to confirm whether per-node memoization is sufficient or whether viewport-based virtualization (available via third-party `@xyflow/react` plugins) is needed.
+3. **What is the practical scale ceiling for each view?** Deliberately demoted. The views present focal neighbourhoods of a few hundred nodes, so that is the size Spike 1 measures; `DAG` already refuses to draw more than 1,200 services and asks for a focal service instead.
 4. **Is the Plexus multi-layer system (SVG + HTML) needed?** `@xyflow/react` does not have a direct equivalent to Plexus's layered rendering. `TraceGraph` uses SVG layers for node-find emphasis; this would need to become a custom node renderer concern.
 5. ~~**Would a layout-direction toggle alone justify the ELK migration?**~~ Answered: no. `rankdir` is already a `LayoutManager` option, so the toggle ships inside the current stack.
-6. **Does a layered engine stay usable at 500 to 1,200 services?** The dependency graph falls back to `sfdp` above `dagMaxNumServices` because `dot` degrades there, and that fallback is the only thing keeping Graphviz ahead of `@dagrejs/dagre` in Decision 1. Laying out a real dependency graph of that size with dagre would settle it.
-7. **Is TraceGraph rendering performance actually a bottleneck at real-world span counts?** ECharts' canvas backend is only worth the migration cost if profiling shows that SVG/DOM rendering — not layout computation — is the limiting factor. If layout is the bottleneck, the worker model (Graphviz or ELK) is where to invest; if rendering is, ECharts becomes relevant.
+6. **Would dagre lay out a 500-service dependency graph as readably as `dot`?** Spike 3 answers this, and it only needs answering if nested graphs are wanted.
+7. ~~**Is TraceGraph rendering performance actually a bottleneck at real-world span counts?**~~ Closed. Spike 2's acceptance test covers first paint on a 2,000-span trace, which is the size the view actually shows, and no candidate is being chosen for raw ceiling.
