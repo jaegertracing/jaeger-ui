@@ -71,10 +71,10 @@ This means adding node drag to the current Plexus stack is not just a coordinate
 | **DAG layout quality** | Excellent for strict hierarchies; industry reference implementation | Comparable quality; adds configurable spacing parameters and compound graph support |
 | **Cycle handling** | Handles cycles (DOT supports them); renders with cycle-breaking heuristics | Handles cycles via `elk.layered.cycleBreaking.strategy` option |
 | **Undirected / force-directed** | `neato`, `sfdp`, `fdp` engines available | `stress`, `force`, `mrtree` algorithms available |
-| **Layout options exposed** | `rankdir`, `ranksep`, `nodesep`, `splines`, `sep`, `engine` | Algorithm, direction, layer spacing, node spacing, padding — all numeric JSON |
+| **Layout options exposed** | Graphviz has hundreds of attributes; Plexus's `TLayoutOptions` narrows them to `rankdir`, `ranksep`, `nodesep`, `sep`, `shape`, `splines`, `engine`, `useDotEdges`, `dpi`, `totalMemory`, and `sfdpOptions` | Algorithm, direction, layer spacing, node spacing, padding — all numeric JSON |
 | **Two-phase layout** | Offered by Plexus (`dot` for positions, then `neato` for edge routing), but both Jaeger views opt out with `useDotEdges: true` and take edges from `dot` | Single-phase; edge routing integrated |
 | **Worker model** | Plexus runs Graphviz in a reusable Web Worker pool — layout never blocks the main thread | Runs on the main thread by default, but Plexus's pool is engine-agnostic and can host ELK instead (see below), so `elkjs/lib/elk-worker.js` is only needed outside Plexus |
-| **Scale (layout)** | Designed for large graphs; worker isolation handles 1,000+ node layouts without jank | Main-thread execution blocks UI for very large graphs; worker wrapper is a prerequisite at Jaeger's scale |
+| **Scale (layout)** | Designed for large graphs. The isolation that keeps 1,000-node layouts off the main thread is Plexus's worker pool, not something Graphviz provides, and the figure is an estimate rather than a measurement | Blocks the main thread if run naively, but inherits the same Plexus pool through a `getLayout` adapter |
 | **Maturity** | Graphviz ~30 years; `@viz-js/viz` wrapper ~10 years, stable | ELK ~10 years (Eclipse project); `elkjs` JS port ~8 years |
 | **Active development** | Graphviz core stable/slow; `@viz-js/viz` has regular releases | ELK actively developed; elkjs follows upstream regularly |
 | **Bundle size** | `@viz-js/viz` 3.29.0 ships 1.19 MB, 468 KB gzipped, loaded in the worker rather than on the main thread | elkjs 0.12.0 `elk.bundled.js` is 1.61 MB, 467 KB gzipped — the same download, to the kilobyte |
@@ -83,7 +83,7 @@ This means adding node drag to the current Plexus stack is not just a coordinate
 ### Graphviz Strengths
 
 - **Proven DAG layout**: The `dot` engine's Sugiyama implementation is the reference standard. For strict hierarchies (like trace trees), it rarely produces bad layouts.
-- **DOT language expressiveness**: Edge weights, cluster subgraphs, per-node attributes can all be expressed in DOT without writing custom code.
+- **DOT language expressiveness**: Edge weights, cluster subgraphs, and per-node attributes are all expressible in DOT without writing custom code. None of it is reachable from Jaeger today, though: `makeNode` emits only `height`, `width`, and an optional `pos`, the graph attributes are a fixed list, and edges carry nothing but a bidirectional flag. This is capability the current stack has and does not use.
 - **Two-phase layout quality**: Plexus can run `dot` for rank assignment and then `neato` for edge spline routing, which produces high-quality results for dense graphs. Neither Jaeger view enables it — both pass `useDotEdges: true` — so this is headroom the current stack has and is not using.
 
 ### Graphviz Weaknesses
@@ -91,7 +91,7 @@ This means adding node drag to the current Plexus stack is not just a coordinate
 - **Limited algorithm variety from Jaeger's code path**: `TraceGraph` runs `dot` and gives the user no say in it. The dependency graph is the exception: `DAGOptions` exposes a Hierarchical (`dot`) / Force Directed (`sfdp`) switch, and `DependencyGraph` also flips to `sfdp` on its own once the service count passes `dagMaxNumServices`. `circo` and `twopi` ship in the WASM build and are wired to nothing.
 - **No layout-direction toggle**: `rankdir` is fixed per view — set explicitly by `DAG`, left at the `toDot` default by `TraceGraph`. Nothing structural stands in the way of a user-facing toggle, since `rankdir` is already a `TLayoutOptions` field; it is simply not wired to any control.
 - **Sizeable WASM payload**: `@viz-js/viz` is 1.19 MB, 468 KB gzipped. It runs in a worker, so it does not block rendering, but initial load can be slow on constrained connections.
-- **Opaque coordinate system**: Graphviz outputs coordinates in DOT points (72 DPI), which Plexus converts to pixels via `convCoord`. This conversion is a source of historical bugs when DPI or scale assumptions differ.
+- **A coordinate conversion Jaeger owns**: Graphviz works in DOT points, and `conv-coord.ts` converts to pixels with `DEFAULT_DPI = 72` unless a view overrides `dpi` — which `DAG` does, scaling it up to 2000 for large `sfdp` graphs. The conversion, and the bugs that follow when its DPI or scale assumptions disagree with a view's, belong to Plexus rather than to Graphviz.
 
 ### elkjs Strengths
 
@@ -132,8 +132,8 @@ This means adding node drag to the current Plexus stack is not just a coordinate
 Plexus implements a **three-phase render pipeline** entirely in about 1,900 lines of custom React + SVG code (`Digraph` and `zoom`; a further ~1,000 lines sit in `LayoutManager`):
 
 1. **Measure phase** (`CalcSizes`): Renders all nodes invisibly at `(0,0)` to measure their DOM dimensions via refs.
-2. **Layout phase** (`CalcPositions`): Sends measured sizes + graph topology to Graphviz (in a Web Worker); receives back node positions and edge Bezier control points.
-3. **Render phase** (`Done`): Applies computed positions via CSS `transform: translate(x,y)` on HTML nodes and `transform="translate(x,y)"` on SVG `<g>` elements; renders edges as SVG cubic Bezier paths.
+2. **Layout phase** (`CalcPositions`): Sends measured sizes + graph topology to Graphviz (in a Web Worker); receives back node positions and a point list per edge — polyline vertices, since both views ask for `splines: 'polyline'`.
+3. **Render phase** (`Done`): Applies computed positions via CSS `transform: translate(x,y)` on HTML nodes and `transform="translate(x,y)"` on SVG `<g>` elements. `SvgEdge` emits `M … C …`, so the points are drawn through a cubic command whether or not Graphviz produced curves for them.
 
 The **layer system** is the primary customization API: callers compose arrays of layer descriptors, each specifying whether it is HTML or SVG, whether it is the measurable layer, and a `renderNode`/`setOnEdge` factory. Multiple layers share a zoom transform applied at container level by `d3-zoom`.
 
@@ -196,8 +196,8 @@ The **layer system** is the primary customization API: callers compose arrays of
 | **React compatibility** | Must be manually maintained | Maintained by xyflow team; React 18/19 tested |
 | **Node dragging** | Not supported | Opt-in (`nodesDraggable={true}`) |
 | **Custom node renderers** | `renderNode` prop (any React component) | Custom `nodeTypes` map (any React component) |
-| **Custom edge renderers** | SVG path via Bezier control points from Graphviz | Custom `edgeTypes` map; path helpers available |
-| **Edge routing** | Graphviz Bezier splines (high quality for dense graphs) | `getSmoothStepPath` (manhattan), `getBezierPath`, or fully custom |
+| **Custom edge renderers** | An SVG path built from the point list Graphviz returns | Custom `edgeTypes` map; path helpers available |
+| **Edge routing** | `dot` polylines today, because both views set `splines: 'polyline'`; Graphviz's spline routing is available and unused | `getSmoothStepPath` (manhattan), `getBezierPath`, or fully custom |
 | **Contextual toolbars** | No built-in primitive; `DAG.tsx` implements one via `setOnNode` click + `position: fixed` overlay | `NodeToolbar` API: built-in, anchored to node, follows zoom/pan automatically |
 | **Layout direction toggle** | `rankdir` is already a `LayoutManager` option; `DAG` rebuilds its manager on every layout change, so a toggle is local to the view | Layout engine option; trivial to expose in UI |
 | **Algorithm selection** | Already shipped for the dependency graph: `DAGOptions` switches between `dot` and `sfdp` | Layout engine option; trivial to expose in UI |
