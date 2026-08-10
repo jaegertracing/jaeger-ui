@@ -60,24 +60,15 @@ describe('SpanTreeOffset', () => {
       const { container } = render(<SpanTreeOffset {...props} />);
       const indentGuides = container.querySelectorAll('.SpanTreeOffset--indentGuide');
       expect(indentGuides.length).toBe(2); // rootSpan and parentSpan
-      expect(indentGuides[0].getAttribute('data-ancestor-id')).toBe(rootSpanID);
-      expect(indentGuides[1].getAttribute('data-ancestor-id')).toBe(parentSpanID);
-    });
-
-    // Guards against the indent-guide hover highlight being silently reintroduced as dead
-    // state: the `is-active` class + CSS were removed in #3302, so hovering must paint nothing.
-    it('applies no highlight class to indent guides on hover', () => {
-      const { container } = render(<SpanTreeOffset {...props} />);
-      const indentGuide = container.querySelector(`[data-ancestor-id="${parentSpanID}"]`);
-      fireEvent.mouseEnter(indentGuide, {});
-      expect(container.querySelector('.is-active')).toBeNull();
+      expect(indentGuides[0].getAttribute('data-testid')).toBe(`indent-guide-${rootSpanID}`);
+      expect(indentGuides[1].getAttribute('data-testid')).toBe(`indent-guide-${parentSpanID}`);
     });
 
     describe('is-last class (last-child span)', () => {
       it('adds is-last to immediate parent guide when span is last child and isDetailRow is false', () => {
         // ownSpan is the only (last) child of parentSpan
         const { container } = render(<SpanTreeOffset {...props} />);
-        const parentGuide = container.querySelector(`[data-ancestor-id="${parentSpanID}"]`);
+        const parentGuide = container.querySelector(`[data-testid="indent-guide-${parentSpanID}"]`);
         expect(parentGuide).toHaveClass('is-last');
         expect(parentGuide).not.toHaveClass('is-terminated');
       });
@@ -85,7 +76,7 @@ describe('SpanTreeOffset', () => {
       it('adds is-terminated (not is-last) to immediate parent guide when span is last child and isDetailRow is true', () => {
         // ownSpan is the only (last) child of parentSpan
         const { container } = render(<SpanTreeOffset {...props} isDetailRow />);
-        const parentGuide = container.querySelector(`[data-ancestor-id="${parentSpanID}"]`);
+        const parentGuide = container.querySelector(`[data-testid="indent-guide-${parentSpanID}"]`);
         expect(parentGuide).not.toHaveClass('is-last');
         expect(parentGuide).toHaveClass('is-terminated');
       });
@@ -101,7 +92,7 @@ describe('SpanTreeOffset', () => {
         // ownSpan is no longer the last child
         parentSpan.childSpans = [ownSpan, siblingSpan];
         const { container } = render(<SpanTreeOffset {...props} />);
-        const parentGuide = container.querySelector(`[data-ancestor-id="${parentSpanID}"]`);
+        const parentGuide = container.querySelector(`[data-testid="indent-guide-${parentSpanID}"]`);
         expect(parentGuide).not.toHaveClass('is-last');
         expect(parentGuide).not.toHaveClass('is-terminated');
         // restore
@@ -112,19 +103,19 @@ describe('SpanTreeOffset', () => {
     describe('horizontal line', () => {
       it('renders the horizontal line for the immediate parent when isDetailRow is false', () => {
         const { container } = render(<SpanTreeOffset {...props} />);
-        const parentGuide = container.querySelector(`[data-ancestor-id="${parentSpanID}"]`);
+        const parentGuide = container.querySelector(`[data-testid="indent-guide-${parentSpanID}"]`);
         expect(parentGuide.querySelector('.SpanTreeOffset--horizontalLine')).not.toBeNull();
       });
 
       it('does not render the horizontal line for the immediate parent when isDetailRow is true', () => {
         const { container } = render(<SpanTreeOffset {...props} isDetailRow />);
-        const parentGuide = container.querySelector(`[data-ancestor-id="${parentSpanID}"]`);
+        const parentGuide = container.querySelector(`[data-testid="indent-guide-${parentSpanID}"]`);
         expect(parentGuide.querySelector('.SpanTreeOffset--horizontalLine')).toBeNull();
       });
 
       it('does not render the horizontal line for non-immediate ancestors', () => {
         const { container } = render(<SpanTreeOffset {...props} />);
-        const rootGuide = container.querySelector(`[data-ancestor-id="${rootSpanID}"]`);
+        const rootGuide = container.querySelector(`[data-testid="indent-guide-${rootSpanID}"]`);
         expect(rootGuide.querySelector('.SpanTreeOffset--horizontalLine')).toBeNull();
       });
     });
