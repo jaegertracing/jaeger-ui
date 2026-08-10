@@ -385,35 +385,57 @@ Three migration paths are worth naming explicitly:
 
 ## Recommendation
 
-**Ship the missing layout controls inside the current stack now, and migrate the dependency graph to `@xyflow/react` as a Path B trial, keeping Graphviz for layout. Leave the deep dependency graph on Plexus.**
+**Two decisions, taken separately: keep Graphviz for layout, and replace Plexus's rendering with `@xyflow/react`, starting with the service dependency graph. That combination is Path B. Leave the deep dependency graph on Plexus, and ship the missing layout controls in the current stack now, since they wait on neither decision.**
 
 These are two independent pieces of work, and the first does not wait on the second, because two of the three motivations in Context are already met by the current stack or sit one small change away from it:
 
 - **Algorithm choice already ships.** `DAGOptions` gives the dependency graph a Hierarchical (`dot`) / Force Directed (`sfdp`) switch, and `DependencyGraph` also picks `sfdp` on its own above `dagMaxNumServices`. Graphviz serves that need today; a new engine is not what unlocks it.
 - **A layout-direction toggle is a small in-stack change.** `DAG` already builds its `TLayoutOptions` from the user's layout selection and constructs a new `LayoutManager` whenever that selection changes, so exposing `rankdir` there means adding one field driven by one piece of UI state. `TraceGraph` builds its manager once in a ref and needs the same rebuild-on-change treatment. Both changes stay inside the view.
 
-Neither of those is a reason to change libraries, so ship them where they are. What the current stack cannot answer is node dragging, keyboard accessibility, and who maintains the ~1,860 lines of rendering and viewport code in `Digraph` and `zoom` — and those are what `@xyflow/react` is actually for. Keeping Graphviz means `LayoutManager` stays, so this is a reduction of roughly 60% of Plexus, not its removal.
+Neither of those is a reason to change libraries, so ship them where they are. What the current stack cannot answer is node dragging, keyboard accessibility, and who maintains the ~1,860 lines of rendering and viewport code in `Digraph` and `zoom` — and those are what `@xyflow/react` is actually for.
 
-| Criterion | Stay on Plexus + Graphviz | Path A: elkjs layout | Path B/C: `@xyflow/react` | Path D: ECharts |
-|---|---|---|---|---|
-| **Layout quality for both views today** | 🟢 | 🟡 ELK edge routing is simpler | 🟡 same, whichever engine feeds it | 🔴 straight lines or simple curves |
-| **Layout-direction toggle** | 🟢 ¹ | 🟢 | 🟢 | 🟡 direction is owned by the external engine |
-| **Algorithm choice for cyclic dependency graphs** | 🟢 ² | 🟢 | 🟢 | 🔴 force and circular only |
-| **Node dragging** | 🔴 | 🔴 rendering is unchanged | 🟢 | 🔴 force layout only |
-| **Rendering ceiling at thousands of nodes** | 🔴 | 🔴 rendering is unchanged | 🟡 needs memoization, maybe virtualization | 🟡 canvas throughput is real, but unmeasured for Jaeger and with no progressive drawing ⁵ |
-| **Keyboard navigation and ARIA** | 🔴 | 🔴 | 🟢 primitives, not conformance | 🔴 canvas exposes nothing |
-| **Variable-width node content** | 🟢 measure phase is built in | 🟢 | 🟡 ³ | 🔴 canvas symbols cannot hold a React subtree |
-| **CSS and design-token theming** | 🟢 | 🟢 | 🟢 | 🔴 colors must be passed into the options object |
-| **Maintenance ownership** | 🔴 Jaeger owns ~3,000 lines | 🟡 Plexus plus an ELK adapter | 🟡 ⁶ | 🟡 an imperative wrapper to own |
-| **Migration cost and risk** | 🟢 none | 🟡 | 🟡 per view, 🔴 to remove Plexus outright ⁴ | 🔴 |
+The layout engine and the rendering layer are separate decisions, as the Scope section says, so they get separate matrices. Almost every combination is buildable: the one real coupling is that neither `@xyflow/react` nor ECharts computes a hierarchical layout, so both need an engine behind them, and whichever engine that is stays Jaeger's to wrap.
+
+### Decision 1: Layout Engine
+
+| Criterion | Graphviz via `@viz-js/viz` (current) | elkjs |
+|---|---|---|
+| **Layout quality for trees and DAGs** | 🟢 the reference implementation | 🟢 comparable for layered graphs |
+| **Edge routing quality** | 🟢 `dot` polylines today, `neato` splines available unused | 🟡 simpler routing on dense graphs |
+| **Layout-direction toggle** | 🟢 `rankdir` is already a `LayoutManager` option ¹ | 🟢 `elk.direction` |
+| **Algorithm menu** | 🟡 `dot`, `neato`, `sfdp`, `circo`, `twopi` are in the build; two are wired to anything ² | 🟢 nine algorithm ids, each one option string |
+| **Compound (nested) graphs** | 🔴 not supported | 🟢 native |
+| **Cycle handling** | 🟢 very mature | 🟡 correct but less studied in production |
+| **Layout off the main thread** | 🟢 Plexus worker pool | 🟢 the same pool — it is engine-agnostic ³ |
+| **Download size** | 🟢 468 KB gzipped | 🟢 467 KB gzipped — a wash |
+| **License** | 🟢 MIT | 🔴 EPL-2.0 OR GPL-3.0-or-later |
+| **Cost to adopt** | 🟢 nothing to do | 🟡 replace `getLayout.ts` with an ELK adapter |
+
+**Verdict: stay on Graphviz.** Nothing Jaeger wants today needs ELK. The direction toggle and the algorithm switch are already reachable, the download is identical, and elkjs is the only candidate here whose license is not permissive. Compound graphs are the one thing Graphviz genuinely cannot do, so that is the finding to watch for.
+
+### Decision 2: Rendering Layer
+
+| Criterion | Plexus (current) | `@xyflow/react` | ECharts |
+|---|---|---|---|
+| **Node dragging** | 🔴 not supported | 🟢 one prop | 🔴 force layout only |
+| **Variable-width node content** | 🟢 measure phase is built in | 🟡 measured after a first unpositioned mount ⁴ | 🔴 canvas symbols hold no React subtree |
+| **Keyboard navigation and ARIA** | 🔴 not implemented | 🟢 primitives, not conformance | 🔴 canvas exposes nothing |
+| **CSS and design-token theming** | 🟢 | 🟢 | 🔴 colors must be passed into the options object |
+| **Contextual toolbars** | 🟡 hand-rolled `position: fixed` overlay | 🟢 `NodeToolbar`, anchored and zoom-aware | 🟡 overlay via `convertToPixel` |
+| **Rendering ceiling** | 🔴 no virtualization, one DOM node per element | 🟡 needs memoization, maybe virtualization | 🟡 canvas throughput is real, but unmeasured here and still a single paint ⁵ |
+| **Download size** | 🟢 d3-zoom ~15 KB | 🟢 86 KB gzipped | 🟡 368 KB gzipped for the full build |
+| **Maintenance ownership** | 🔴 ~1,860 lines of `Digraph` and `zoom` | 🟢 external team | 🟡 an imperative wrapper to own |
+| **Migration cost** | 🟢 nothing to do | 🟡 per view ⁶ | 🔴 |
+
+**Verdict: migrate to `@xyflow/react`, dependency graph first.** It is better than Plexus on every axis Jaeger lacks and no worse on any axis Jaeger has, once the measure phase is understood correctly. ECharts loses on node content, accessibility, and theming, and its one advantage is unmeasured.
 
 🟢 good 🟡 partial or caveated 🔴 poor
 
-¹ `rankdir` is already a `TLayoutOptions` field, and `DAG` sets it explicitly. ² Shipped, as the `DAGOptions` Hierarchical / Force Directed switch. ³ Variable-width text is fine — `node.measured` carries the observed size and `useNodesInitialized()` gates the layout on it. The cost is one unpositioned render pass to hide, not truncated labels. ⁴ See the per-view breakdown below. ⁵ ECharts applies `progressive` to eight series types, none of them graph. ⁶ Path B retires `Digraph` and `zoom` — about 1,860 lines — and keeps `LayoutManager` at ~1,180 for as long as Graphviz does the layout. Only Path C removes Plexus outright, and it buys an ELK adapter in exchange. Either way the saving arrives with the last view to migrate, not the first.
+¹ `rankdir` is already a `TLayoutOptions` field, and `DAG` sets it explicitly. ² Shipped, as the `DAGOptions` Hierarchical / Force Directed switch. ³ `layout.worker.ts` and `Coordinator` never name an engine; only `getLayout.ts` does. ⁴ `node.measured` carries the observed size and `useNodesInitialized()` gates the layout on it, so the cost is one unpositioned render pass to hide, not truncated labels. ⁵ ECharts applies `progressive` to eight series types, none of them graph. ⁶ See the per-view breakdown below.
 
-Off-main-thread layout is deliberately absent from the matrix: every option keeps it, so it does not separate them. Paths B and D leave layout alone, and an ELK adapter inherits the Plexus worker pool, since `layout.worker.ts` and `Coordinator` are engine-agnostic and only `getLayout.ts` knows about Graphviz.
+Splitting the decisions this way also settles where the `LayoutManager` lines belong. Staying on Graphviz keeps them — about 1,180 — no matter which renderer wins, so they are a cost of Decision 1 and not a discount against Decision 2. `@xyflow/react` earns its 🟢 on maintenance by retiring `Digraph` and `zoom`, roughly 1,860 lines, and nothing more.
 
-Migration cost is not uniform across the four views Plexus serves, which is why the matrix cell carries two scores:
+The 🟡 on migration cost is an average. It is not uniform across the four views Plexus serves:
 
 | Target | Cost | Why |
 |---|---|---|
