@@ -77,7 +77,7 @@ This means adding node drag to the current Plexus stack is not just a coordinate
 | **Scale (layout)** | Designed for large graphs; worker isolation handles 1,000+ node layouts without jank | Main-thread execution blocks UI for very large graphs; worker wrapper is a prerequisite at Jaeger's scale |
 | **Maturity** | Graphviz ~30 years; `@viz-js/viz` wrapper ~10 years, stable | ELK ~10 years (Eclipse project); `elkjs` JS port ~8 years |
 | **Active development** | Graphviz core stable/slow; `@viz-js/viz` has regular releases | ELK actively developed; elkjs follows upstream regularly |
-| **Bundle size** | ~3–5 MB WASM (loaded in worker, not on main thread) | elkjs `elk.bundled` ~1.5 MB (JS only, no WASM dependency) |
+| **Bundle size** | `@viz-js/viz` 3.29.0 ships 1.19 MB, 468 KB gzipped, loaded in the worker rather than on the main thread | elkjs 0.12.0 `elk.bundled.js` is 1.61 MB, 467 KB gzipped — the same download, to the kilobyte |
 | **React integration** | No official React binding; Plexus wraps it | No official React binding; community hooks exist |
 
 ### Graphviz Strengths
@@ -90,15 +90,15 @@ This means adding node drag to the current Plexus stack is not just a coordinate
 
 - **Limited algorithm variety from Jaeger's code path**: `TraceGraph` runs `dot` and gives the user no say in it. The dependency graph is the exception: `DAGOptions` exposes a Hierarchical (`dot`) / Force Directed (`sfdp`) switch, and `DependencyGraph` also flips to `sfdp` on its own once the service count passes `dagMaxNumServices`. `circo` and `twopi` ship in the WASM build and are wired to nothing.
 - **No layout-direction toggle**: `rankdir` is fixed per view — set explicitly by `DAG`, left at the `toDot` default by `TraceGraph`. Nothing structural stands in the way of a user-facing toggle, since `rankdir` is already a `TLayoutOptions` field; it is simply not wired to any control.
-- **Heavy WASM binary**: The full Graphviz WASM is 3–5 MB. It runs in a worker, so it does not block rendering, but initial load can be slow on constrained connections.
+- **Sizeable WASM payload**: `@viz-js/viz` is 1.19 MB, 468 KB gzipped. It runs in a worker, so it does not block rendering, but initial load can be slow on constrained connections.
 - **Opaque coordinate system**: Graphviz outputs coordinates in DOT points (72 DPI), which Plexus converts to pixels via `convCoord`. This conversion is a source of historical bugs when DPI or scale assumptions differ.
 
 ### elkjs Strengths
 
-- **Richer algorithm menu**: `layered`, `stress`, `force`, `mrtree`, `radial`, `box`, `disco`, `fixed` — all accessible by changing a single `'elk.algorithm'` option string. Adding a user-facing layout-algorithm picker requires no architectural changes.
+- **Richer algorithm menu**: `layered`, `stress`, `force`, `mrtree`, `radial`, `box`, `rectpacking`, `topdown`, and `fixed` all appear as algorithm ids in the shipped bundle, and each is selected by changing a single `'elk.algorithm'` option string. Adding a user-facing layout-algorithm picker requires no architectural changes.
 - **Layout direction as a first-class option**: `'elk.direction': 'RIGHT' | 'DOWN' | 'LEFT' | 'UP'` is a top-level JSON option. Changing direction just means passing a different string and re-running the layout — no structural code changes required, making a user-facing toggle trivial to wire up.
 - **JSON model aligns naturally with React state**: Nodes and edges are plain JS objects; positions come back as `child.x`, `child.y` that map directly to React state. No DOT serialization/parsing step.
-- **Smaller bundle**: `elk.bundled.js` is ~1.5 MB JS (no WASM). It runs synchronously but is async-wrapped; `elkjs/lib/elk-worker.js` provides an official Web Worker variant for offloading layout off the main thread.
+- **No WASM**: `elk.bundled.js` is 1.61 MB of plain JS. It is not the bundle-size win it looks like — gzipped it is 467 KB against Graphviz's 468 KB, so the download is a wash. It runs synchronously but is async-wrapped, and `elkjs/lib/elk-worker.min.js` (1.6 MB) is an official Web Worker variant, though Plexus's own worker is the better host here.
 - **Compound graph support**: ELK natively supports hierarchical (nested) graphs — relevant if Jaeger ever wants to group spans by service or process within the trace DAG.
 
 ### elkjs Weaknesses
@@ -206,12 +206,12 @@ The **layer system** is the primary customization API: callers compose arrays of
 | **Keyboard / ARIA** | Not implemented | Keyboard focus and movement, ARIA roles and live regions; helps toward WCAG 2.1 AA rather than conferring it |
 | **Animated layout transitions** | Not supported | CSS transitions on position change; `fitView` animation |
 | **Selection** | Click handlers only; no multi-select | Built-in multi-select (shift-click, drag-box) |
-| **Bundle size** | d3-zoom ~15 KB + Graphviz WASM ~3–5 MB (worker) | `@xyflow/react` ~50 KB + elkjs ~1.5 MB (lazy) |
+| **Bundle size** | d3-zoom ~15 KB + `@viz-js/viz` 468 KB gzipped (worker) | `@xyflow/react` 12.11.2 is 51 KB gzipped, but its mandatory `@xyflow/system` adds 35 KB, so 86 KB; plus a layout engine |
 | **Scale — layout off main thread** | Built-in: Graphviz always runs in a Web Worker pool | Same worker pool is reusable — it is engine-agnostic — whether layout stays on Graphviz or moves to ELK |
 | **Scale — rendering performance** | No virtualization; renders all nodes/edges in DOM | No virtualization by default; `<ReactFlow />` re-renders on every position change — can degrade with thousands of nodes without memoization |
 | **Measure-then-layout** | Handled internally by Plexus, before the first positioned render | `node.measured` plus `useNodesInitialized()` supply the sizes, but only after a first unpositioned mount |
 | **GitHub stars / community** | Internal library | ~38,000 stars; large ecosystem, many examples |
-| **License** | Apache 2.0 (Jaeger) | MIT |
+| **License** | Apache 2.0 (Jaeger) | MIT; note that elkjs, if paired with it, is EPL-2.0 OR GPL-3.0-or-later |
 
 ### The Measure Phase: An Ordering Difference, Not a Missing Feature
 
@@ -286,7 +286,7 @@ Canvas rendering means ECharts does not create a DOM node per graph element. For
 In practice:
 - ECharts is reported to stay fluid at **5,000–10,000 node** graphs where SVG renderers have already degraded. This figure is an estimate from general canvas-versus-DOM experience, not a measurement of Jaeger's graphs, and Open Question 6 exists because it has to be confirmed on real traces before it can justify anything.
 - For the TraceGraph use case — traces with thousands of spans — this is the most significant advantage ECharts offers over the current stack.
-- ECharts also supports [large-graph progressive rendering](https://echarts.apache.org/en/option.html#series-graph.progressive) to incrementally draw elements frame-by-frame, avoiding a single long paint.
+- Progressive rendering does **not** apply to the graph series. `progressive` defaults are defined for the candlestick, effectScatter, pictorialBar, bar, line, parallel, scatter, and treemap series, and not for graph; `lib/chart/graph/circularLayoutHelper.js` says so in a comment — "the progressive rendering is not applied to graph" — and hangs a `FIXME` on the day it might be. So a 10,000-node graph is still one long paint; canvas makes that paint cheaper, it does not break it into frames.
 
 The SVG renderer (opt-in via `{ renderer: 'svg' }` at init time) sacrifices the scale advantage but enables DOM-level accessibility and CSS theming. It is generally used only when vector export or screen reader support is required.
 
@@ -318,7 +318,7 @@ This is the node the user called out: four metric cells alongside the two labels
 | Dimension | Plexus + Graphviz | `@xyflow/react` + elkjs | Apache ECharts |
 |---|---|---|---|
 | **Rendering backend** | SVG + HTML DOM | SVG + HTML DOM | **Canvas** (SVG opt-in) |
-| **Scale ceiling (rendering)** | ~hundreds of nodes before DOM pressure | ~hundreds–low thousands with memoization | **Thousands of nodes** without virtualization |
+| **Scale ceiling (rendering)** | ~hundreds of nodes before DOM pressure | ~hundreds–low thousands with memoization | Thousands of nodes without virtualization, but as a single paint, and the ceiling is an estimate rather than a measurement |
 | **Custom node content** | Full React components | Full React components | Canvas symbols + label only; no React subtrees in nodes |
 | **Built-in hierarchical layout** | Via Graphviz (worker) | No — needs elkjs | No — needs external engine |
 | **React integration** | React-native (Plexus) | React-native | Imperative wrapper via `echarts-for-react` |
@@ -328,8 +328,9 @@ This is the node the user called out: four metric cells alongside the two labels
 | **Accessibility / ARIA** | Not implemented | Keyboard and ARIA primitives; helps toward WCAG 2.1 AA | Canvas: none; SVG renderer: partial |
 | **CSS / design token theming** | CSS variables work | CSS variables work | Must pass colors into options object |
 | **Maintenance** | Jaeger-owned | xyflow team (active) | Apache TLP, very active |
-| **Bundle size** | ~3–5 MB WASM (worker) | ~1.6 MB total (lazy) | ~1 MB tree-shaken; ~2.5 MB full build |
+| **Bundle size** | 468 KB gzipped (worker) | 86 KB gzipped, plus a layout engine | 368 KB gzipped for the full minified build; a graph-only build is smaller |
 | **License** | Apache 2.0 | MIT | Apache 2.0 |
+| **Verified against** | `packages/plexus` at this commit; `@viz-js/viz` 3.29.0 | `@xyflow/react` 12.11.2, `@xyflow/system` 0.0.79 | `echarts` 6.1.0 |
 
 ### Assessment for Jaeger's Two Graph Views
 
@@ -374,7 +375,7 @@ Three migration paths are worth naming explicitly:
 
 ### Path D: ECharts for TraceGraph (scale-motivated)
 - Replace Plexus rendering for `TraceGraph` with ECharts `graph` series using `layout: 'none'` and externally-computed positions (Graphviz or elkjs).
-- Gains: canvas rendering handles thousands of spans without DOM pressure; progressive rendering available.
+- Gains: canvas rendering handles thousands of spans without DOM pressure. Progressive rendering is not among them — ECharts does not apply it to the graph series.
 - Cost: high; requires replacing `OpNode.tsx` HTML nodes with canvas primitives or building a DOM overlay system, plus the imperative ECharts API integration.
 - Risk: high; significant UX regression risk on node content fidelity. Only justified if TraceGraph rendering performance is a confirmed, measured problem at real-world span counts.
 
@@ -399,7 +400,7 @@ Neither of those is a reason to change libraries, so ship them where they are. W
 | **Layout-direction toggle** | 🟢 ¹ | 🟢 | 🟢 | 🟡 direction is owned by the external engine |
 | **Algorithm choice for cyclic dependency graphs** | 🟢 ² | 🟢 | 🟢 | 🔴 force and circular only |
 | **Node dragging** | 🔴 | 🔴 rendering is unchanged | 🟢 | 🔴 force layout only |
-| **Rendering ceiling at thousands of nodes** | 🔴 | 🔴 rendering is unchanged | 🟡 needs memoization, maybe virtualization | 🟢 |
+| **Rendering ceiling at thousands of nodes** | 🔴 | 🔴 rendering is unchanged | 🟡 needs memoization, maybe virtualization | 🟡 canvas throughput is real, but unmeasured for Jaeger and with no progressive drawing ⁵ |
 | **Keyboard navigation and ARIA** | 🔴 | 🔴 | 🟢 primitives, not conformance | 🔴 canvas exposes nothing |
 | **Variable-width node content** | 🟢 measure phase is built in | 🟢 | 🟡 ³ | 🔴 canvas symbols cannot hold a React subtree |
 | **CSS and design-token theming** | 🟢 | 🟢 | 🟢 | 🔴 colors must be passed into the options object |
@@ -408,7 +409,7 @@ Neither of those is a reason to change libraries, so ship them where they are. W
 
 🟢 good 🟡 partial or caveated 🔴 poor
 
-¹ `rankdir` is already a `TLayoutOptions` field, and `DAG` sets it explicitly. ² Shipped, as the `DAGOptions` Hierarchical / Force Directed switch. ³ Variable-width text is fine — `node.measured` carries the observed size and `useNodesInitialized()` gates the layout on it. The cost is one unpositioned render pass to hide, not truncated labels. ⁴ See the per-view breakdown below.
+¹ `rankdir` is already a `TLayoutOptions` field, and `DAG` sets it explicitly. ² Shipped, as the `DAGOptions` Hierarchical / Force Directed switch. ³ Variable-width text is fine — `node.measured` carries the observed size and `useNodesInitialized()` gates the layout on it. The cost is one unpositioned render pass to hide, not truncated labels. ⁴ See the per-view breakdown below. ⁵ ECharts applies `progressive` to eight series types, none of them graph.
 
 Off-main-thread layout is deliberately absent from the matrix: every option keeps it, so it does not separate them. Paths B and D leave layout alone, and an ELK adapter inherits the Plexus worker pool, since `layout.worker.ts` and `Coordinator` are engine-agnostic and only `getLayout.ts` knows about Graphviz.
 
