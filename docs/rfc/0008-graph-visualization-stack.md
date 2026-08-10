@@ -1,4 +1,4 @@
-# RFC 0008: Graph Visualization Stack — Plexus + viz.js vs @xyflow/react + elkjs vs Apache ECharts
+# RFC 0008: Graph Visualization Stack
 
 * **Status**: Draft
 * **Created**: 2026-05-26
@@ -205,7 +205,7 @@ The **layer system** is the primary customization API: callers compose arrays of
 | **Keyboard / ARIA** | Not implemented | Built-in; keyboard navigation and ARIA roles |
 | **Animated layout transitions** | Not supported | CSS transitions on position change; `fitView` animation |
 | **Selection** | Click handlers only; no multi-select | Built-in multi-select (shift-click, drag-box) |
-| **Bundle size** | d3-zoom ~15 KB + Graphviz WASM ~3–5 MB (worker) | @xyflow/react ~50 KB + elkjs ~1.5 MB (lazy) |
+| **Bundle size** | d3-zoom ~15 KB + Graphviz WASM ~3–5 MB (worker) | `@xyflow/react` ~50 KB + elkjs ~1.5 MB (lazy) |
 | **Scale — layout off main thread** | Built-in: Graphviz always runs in a Web Worker pool | Requires explicit `elk-worker.js` integration; not the default |
 | **Scale — rendering performance** | No virtualization; renders all nodes/edges in DOM | No virtualization by default; `<ReactFlow />` re-renders on every position change — can degrade with thousands of nodes without memoization |
 | **Measure-then-layout** | Handled internally by Plexus | Caller's responsibility (not needed if node sizes are fixed) |
@@ -363,13 +363,13 @@ Three migration paths are worth naming explicitly:
 - Cost: moderate; requires writing an ELK adapter that maps Plexus's `TSizeVertex[]` + `TEdge[]` to ELK JSON and back, **plus wiring up `elk-worker.js`** to maintain off-main-thread layout — a prerequisite, not optional.
 - Risk: low; Plexus API is unchanged.
 
-### Path B: Rendering layer only (Plexus → @xyflow/react, keep Graphviz)
+### Path B: Rendering layer only (Plexus → `@xyflow/react`, keep Graphviz)
 - Replace Plexus with `@xyflow/react`; keep Graphviz for layout (run it outside of Plexus, feed positions in).
 - Gains: `NodeToolbar`, ARIA, `fitView` animation, reduced rendering maintenance.
 - Cost: high for `TraceGraph` (measure phase); moderate for `DAG` (fixed-width nodes viable).
 - Risk: moderate; `@xyflow/react` API churn (v11 → v12 had breaking changes).
 
-### Path C: Full stack replacement (Plexus + Graphviz → @xyflow/react + elkjs)
+### Path C: Full stack replacement (Plexus + Graphviz → `@xyflow/react` + elkjs)
 - Replace both rendering and layout for one or both graph views.
 - Gains: all of the above; eliminates Plexus entirely.
 - Cost: highest; requires measure-phase solution for `TraceGraph`, full re-testing.
