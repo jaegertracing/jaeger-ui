@@ -90,7 +90,7 @@ This means adding node drag to the current Plexus stack is not just a coordinate
 
 - **Limited algorithm variety from Jaeger's code path**: `TraceGraph` runs `dot` and gives the user no say in it. The dependency graph is the exception: `DAGOptions` exposes a Hierarchical (`dot`) / Force Directed (`sfdp`) switch, and `DependencyGraph` also flips to `sfdp` on its own once the service count passes `dagMaxNumServices`. `circo` and `twopi` ship in the WASM build and are wired to nothing.
 - **No layout-direction toggle**: `rankdir` is fixed per view — set explicitly by `DAG`, left at the `toDot` default by `TraceGraph`. Nothing structural stands in the way of a user-facing toggle, since `rankdir` is already a `TLayoutOptions` field; it is simply not wired to any control.
-- **Sizeable WASM payload**: `@viz-js/viz` is 1.19 MB, 468 KB gzipped. It runs in a worker, so it does not block rendering, but initial load can be slow on constrained connections.
+- **A large payload nobody has objected to**: `@viz-js/viz` is 1.19 MB, 468 KB gzipped, loaded in the worker rather than on the main thread. It is the biggest single dependency in either graph view, and it has not been raised as a problem, so it is listed here for completeness rather than as a live weakness.
 - **A coordinate conversion Jaeger owns**: Graphviz works in DOT points, and `conv-coord.ts` converts to pixels with `DEFAULT_DPI = 72` unless a view overrides `dpi` — which `DAG` does, scaling it up to 2000 for large `sfdp` graphs. The conversion, and the bugs that follow when its DPI or scale assumptions disagree with a view's, belong to Plexus rather than to Graphviz.
 
 ### elkjs Strengths
@@ -396,6 +396,8 @@ Neither of those is a reason to change libraries, so ship them where they are. W
 
 The layout engine and the rendering layer are separate decisions, as the Scope section says, so they get separate matrices. Almost every combination is buildable: the one real coupling is that neither `@xyflow/react` nor ECharts computes a hierarchical layout, so both need an engine behind them, and whichever engine that is stays Jaeger's to wrap.
 
+Download size is not scored in either matrix. Jaeger already ships 468 KB gzipped of Graphviz and the project has no complaint about it, so it is an accepted cost rather than a live criterion — and every candidate here is smaller than that accepted baseline: elkjs 467 KB, ECharts 368 KB for a full build, `@xyflow/react` 86 KB with `@xyflow/system`, Plexus's own `d3-zoom` about 15 KB. The numbers are recorded in Parts 2 through 4 for reference. If page weight ever does become a concern, it will be a concern about the engine, and neither of these decisions is the lever.
+
 ### Decision 1: Layout Engine
 
 | Criterion | Graphviz via `@viz-js/viz` (current) | elkjs |
@@ -407,7 +409,6 @@ The layout engine and the rendering layer are separate decisions, as the Scope s
 | **Compound (nested) graphs** | 🟡 Graphviz has clusters; Plexus's pipeline does not carry them as written ⁷ | 🟢 native, via `children` and `elk.hierarchyHandling` |
 | **Cycle handling** | 🟢 very mature | 🟡 correct but less studied in production |
 | **Layout off the main thread** | 🟢 Plexus worker pool | 🟢 the same pool — it is engine-agnostic ³ |
-| **Download size** | 🟢 468 KB gzipped | 🟢 467 KB gzipped — a wash |
 | **License** | 🟢 MIT | 🔴 EPL-2.0 OR GPL-3.0-or-later |
 | **Cost to adopt** | 🟢 nothing to do | 🟡 replace `getLayout.ts` with an ELK adapter |
 
@@ -423,7 +424,6 @@ The layout engine and the rendering layer are separate decisions, as the Scope s
 | **CSS and design-token theming** | 🟢 | 🟢 | 🔴 colors must be passed into the options object |
 | **Contextual toolbars** | 🟡 hand-rolled `position: fixed` overlay | 🟢 `NodeToolbar`, anchored and zoom-aware | 🟡 overlay via `convertToPixel` |
 | **Rendering ceiling** | 🔴 no virtualization, one DOM node per element | 🟡 needs memoization, maybe virtualization | 🟡 canvas throughput is real, but unmeasured here and still a single paint ⁵ |
-| **Download size** | 🟢 d3-zoom ~15 KB | 🟢 86 KB gzipped | 🟡 368 KB gzipped for the full build |
 | **Maintenance ownership** | 🔴 ~1,860 lines of `Digraph` and `zoom` | 🟢 external team | 🟡 an imperative wrapper to own |
 | **Migration cost** | 🟢 nothing to do | 🟡 per view ⁶ | 🔴 |
 
