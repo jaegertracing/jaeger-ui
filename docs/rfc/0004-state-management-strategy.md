@@ -983,7 +983,7 @@ This is the **largest and most performance-sensitive** slice. Split across multi
 
 **Why the duck is still alive**: `duck.track.ts` supplies `middlewareHooks` to `src/middlewares/track.ts`, so analytics for timeline interactions are emitted by a Redux middleware keyed on action types. Every migrated interaction therefore **dual-writes** — the components dispatch the Redux action *first*, so the middleware observes the pre-update state, then call the Zustand action. Severing that dual write requires relocating the analytics call sites off the middleware, and until then neither the duck nor `configure-store.ts` can be deleted.
 
-**Components to rewire**: `TraceTimelineViewer`, `SpanBarRow`, `SpanDetailRow`, `TimelineHeaderRow`. Rewired so far, all still dual-writing to Redux: `TracePage`, `TraceTimelineViewer`, `VirtualizedTraceView`, `SpanDetailSidePanel`. `SpanTreeOffset` no longer touches Redux (its only Redux use was the dead hover state removed in step 3).
+**Components to rewire**: `TraceTimelineViewer`, `SpanBarRow`, `SpanDetailRow`, `TimelineHeaderRow`. Rewired so far, all still dual-writing to Redux: `TracePage`, `TraceTimelineViewer`, `VirtualizedTraceView`, `SpanDetailSidePanel`.
 
 #### ✅ 1d. Deep Dependencies view modifiers (`ddg` duck - client-only fields)
 
