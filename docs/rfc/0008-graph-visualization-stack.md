@@ -8,7 +8,7 @@
 
 ## TL;DR
 
-Jaeger UI has two graph views — the trace DAG (`TraceGraph`) and the service dependency graph (`DAG`) — both built on the internal **Plexus** library which uses **Graphviz (via `@viz-js/viz`)** for layout. Neither view allows users to reposition nodes after rendering. This RFC surveys whether migrating to **elkjs** for layout and/or **`@xyflow/react`** for rendering would materially improve either view, and separately examines **Apache ECharts** as an alternative rendering backend motivated primarily by scale. Library capability data is drawn from each project's public documentation and source. The recommendation is to stay on Plexus + Graphviz for now: the layout controls users are missing can be added inside the current stack, and the two motivations that would actually require a new library — node dragging and the rendering ceiling — are unconfirmed.
+Jaeger UI has two graph views — the trace DAG (`TraceGraph`) and the service dependency graph (`DAG`) — both built on the internal **Plexus** library which uses **Graphviz (via `@viz-js/viz`)** for layout. Neither view allows users to reposition nodes after rendering. This RFC surveys whether migrating to **elkjs** for layout and/or **`@xyflow/react`** for rendering would materially improve either view, and separately examines **Apache ECharts** as an alternative rendering backend motivated primarily by scale. Library capability data is drawn from each project's public documentation and source. The recommendation is to add the missing layout controls inside the current stack, where they are cheap, and separately to migrate the service dependency graph to `@xyflow/react` as a trial while keeping Graphviz for layout — that view has the lowest port cost, the most interactivity to gain, and the least rendering risk of the four views Plexus serves.
 
 ---
 
@@ -179,10 +179,11 @@ The **layer system** is the primary customization API: callers compose arrays of
 
 **What `@xyflow/react` does not provide (caller's responsibility):**
 - Layout algorithm: the caller must compute `node.position` before passing nodes in. `@xyflow/react` is layout-agnostic; it pairs with any layout engine (elkjs, Dagre, D3-force, manual, etc.).
-- The measure-then-layout phase that Plexus handles internally must be replicated if node sizes are dynamic and layout-dependent.
+- The *ordering* Plexus uses — measure first, then lay out, then render once. `@xyflow/react` measures nodes too, but only after mounting them at the positions the caller supplied, so a layout that depends on measured sizes takes two passes.
 
 **Typical integration pattern with elkjs:**
-- If node dimensions are fixed, the measure phase is unnecessary — ELK receives hardcoded sizes directly.
+- If node dimensions are fixed, no measurement is needed — ELK receives hardcoded sizes directly.
+- If they are not, mount the nodes, wait for `useNodesInitialized()`, and read each `node.measured` — `@xyflow/react` populates it with the observed width and height.
 - ELK runs once per data change (async), then node positions are written into React state.
 - `@xyflow/react` receives pre-positioned nodes and renders them; it owns only viewport management and interaction.
 
@@ -208,37 +209,33 @@ The **layer system** is the primary customization API: callers compose arrays of
 | **Bundle size** | d3-zoom ~15 KB + Graphviz WASM ~3–5 MB (worker) | `@xyflow/react` ~50 KB + elkjs ~1.5 MB (lazy) |
 | **Scale — layout off main thread** | Built-in: Graphviz always runs in a Web Worker pool | Same worker pool is reusable — it is engine-agnostic — whether layout stays on Graphviz or moves to ELK |
 | **Scale — rendering performance** | No virtualization; renders all nodes/edges in DOM | No virtualization by default; `<ReactFlow />` re-renders on every position change — can degrade with thousands of nodes without memoization |
-| **Measure-then-layout** | Handled internally by Plexus | Caller's responsibility (not needed if node sizes are fixed) |
+| **Measure-then-layout** | Handled internally by Plexus, before the first positioned render | `node.measured` plus `useNodesInitialized()` supply the sizes, but only after a first unpositioned mount |
 | **GitHub stars / community** | Internal library | ~26,000 stars; large ecosystem, many examples |
 | **License** | Apache 2.0 (Jaeger) | MIT |
 
-### The Measure-Phase Problem
+### The Measure Phase: An Ordering Difference, Not a Missing Feature
 
-The most significant architectural gap when moving from Plexus to `@xyflow/react` is the **measure phase**. Plexus automatically renders nodes at `(0,0)`, measures their DOM sizes, passes those sizes to Graphviz, and only then renders nodes at final positions. This means node content can be arbitrary React with dynamic text, and the layout engine receives accurate bounding boxes.
+Plexus renders nodes at `(0,0)`, measures their DOM sizes, passes those sizes to Graphviz, and only then renders them at final positions. Node content can be arbitrary React with dynamic text, and the layout engine still receives accurate bounding boxes.
 
-`@xyflow/react` has no built-in equivalent. It renders nodes at whatever positions the caller provides.
+`@xyflow/react` measures nodes as well. Each node carries `measured: { width?, height? }` holding its observed size, and `useNodesInitialized()` reports whether every node in the flow has been measured. What differs is the order: measurement happens after the nodes mount at whatever positions the caller supplied, so a size-dependent layout runs in two passes — mount, wait for `useNodesInitialized()`, feed `node.measured` to the layout engine, write the positions back.
 
-For Jaeger's use cases:
-- **TraceGraph** nodes (`OpNode.tsx`) contain multi-line service/operation text with variable widths. Sizes are not fixed. Migrating would require either: (a) pre-measuring nodes in a hidden pass before calling ELK, or (b) switching to fixed node dimensions and truncating long labels — which is a UX regression.
-- **DAG** nodes are simpler (service name + call count badge) but still variable-width.
+For Jaeger's use cases this matters less than it appears. `OpNode` and the `DAG` service nodes both have variable-width text, and both can stay exactly as they are: they are React components either way, and the layout engine gets real measured sizes either way. Fixed node dimensions with truncated labels — the UX regression that would otherwise be forced — are not required.
 
-This is a **real migration cost**, not a theoretical one. It would require building a custom `useMeasureNodes` hook that renders nodes invisibly, measures them via `ResizeObserver` or `getBoundingClientRect`, feeds sizes to ELK, and then re-renders with positions — essentially recreating a subset of what Plexus does today.
-
-Alternatively, fixing node dimensions to a maximum width with text truncation + tooltip would eliminate the measure phase entirely (the fixed-dimension approach), but that changes the visual design.
+What the ordering does cost is one render pass in which nodes sit unpositioned, which has to be hidden behind opacity or a deferred `fitView`, plus the state handling for an async layout round-trip. That is a hook's worth of work, not a reimplementation of Plexus.
 
 ### Assessment for Jaeger's Two Graph Views
 
 **TraceGraph** (trace spans as nodes):
-- High migration cost due to variable node sizes.
-- Primary gains would be: NodeToolbar for per-span actions (currently triggered via click), layout-direction toggle, and reduced maintenance burden.
-- The existing Plexus rendering for TraceGraph is well-optimized and not a pain point.
-- **Recommendation**: Low priority for migration; the measure-phase complexity outweighs the benefits unless node-drag or rich toolbar UX becomes a requirement.
+- Moderate migration cost. Variable node sizes are handled by `node.measured`, so `OpNode` ports as-is.
+- Primary gains would be: NodeToolbar for per-span actions (currently triggered via click), and reduced maintenance burden.
+- The existing Plexus rendering for TraceGraph is well-optimized and not a pain point, and this is the view with the most nodes, so it carries the most rendering risk.
+- **Recommendation**: the second view to migrate, not the first. Nothing blocks it, but it has the least to gain from interactivity and the most to lose from a rendering regression.
 
 **Service Dependency Graph** (service names as nodes):
-- Moderate migration cost. Service name nodes *could* be given a fixed maximum width, eliminating the measure phase.
-- Primary gains would be: layout-direction toggle, algorithm selection (force-directed for heavily cyclic graphs), and keyboard accessibility. The existing `position: fixed` context menu works; `NodeToolbar` would be a cleaner implementation since it anchors to the node and follows zoom/pan automatically, but is not a functional gap.
+- Moderate migration cost, and the lowest of the four views: the node is a circle and a label, and node count is in the hundreds rather than the thousands.
+- Primary gains would be: node dragging for untangling a cluttered service graph, keyboard accessibility, and `NodeToolbar`. The existing `position: fixed` context menu works, so `NodeToolbar` is a cleaner implementation rather than a functional gap.
 - The existing `DAG.tsx` context menu (Set focus / View traces) is the most user-interactive part of any Jaeger graph view; `NodeToolbar` would be a natural fit.
-- **Recommendation**: Moderate priority; a fixed-width node design makes migration feasible and the UX improvements are visible.
+- **Recommendation**: migrate this view first. It has the lowest cost, the most interaction to gain, and the least rendering risk, which makes it the right place to find out what the library costs in practice.
 
 ---
 
@@ -366,13 +363,13 @@ Three migration paths are worth naming explicitly:
 ### Path B: Rendering layer only (Plexus → `@xyflow/react`, keep Graphviz)
 - Replace Plexus with `@xyflow/react`; keep Graphviz for layout (run it outside of Plexus, feed positions in).
 - Gains: `NodeToolbar`, ARIA, `fitView` animation, reduced rendering maintenance.
-- Cost: high for `TraceGraph` (measure phase); moderate for `DAG` (fixed-width nodes viable).
+- Cost: moderate per view. `node.measured` removes the measure-phase obstacle, so the work is the node and edge port plus feeding Graphviz positions in from outside Plexus.
 - Risk: moderate; `@xyflow/react` API churn (v11 → v12 had breaking changes).
 
 ### Path C: Full stack replacement (Plexus + Graphviz → `@xyflow/react` + elkjs)
 - Replace both rendering and layout for one or both graph views.
 - Gains: all of the above; eliminates Plexus entirely.
-- Cost: highest; requires measure-phase solution for `TraceGraph`, full re-testing.
+- Cost: highest, because "eliminates Plexus" means porting all four consumers — including the deep dependency graph, whose `DdgNodeContent` is the hardest node in the codebase.
 - Risk: moderate-high; two simultaneous library changes are harder to debug.
 
 ### Path D: ECharts for TraceGraph (scale-motivated)
@@ -387,14 +384,14 @@ Three migration paths are worth naming explicitly:
 
 ## Recommendation
 
-**Keep Plexus + Graphviz. Deliver the missing layout controls inside the current stack, and do not start a library migration yet.**
+**Ship the missing layout controls inside the current stack now, and migrate the dependency graph to `@xyflow/react` as a Path B trial, keeping Graphviz for layout. Leave the deep dependency graph on Plexus.**
 
-Two of the three motivations in Context are already met by the current stack, or sit one small change away from it:
+These are two independent pieces of work, and the first does not wait on the second, because two of the three motivations in Context are already met by the current stack or sit one small change away from it:
 
 - **Algorithm choice already ships.** `DAGOptions` gives the dependency graph a Hierarchical (`dot`) / Force Directed (`sfdp`) switch, and `DependencyGraph` also picks `sfdp` on its own above `dagMaxNumServices`. Graphviz serves that need today; a new engine is not what unlocks it.
 - **A layout-direction toggle is a small in-stack change.** `DAG` already builds its `TLayoutOptions` from the user's layout selection and constructs a new `LayoutManager` whenever that selection changes, so exposing `rankdir` there means adding one field driven by one piece of UI state. `TraceGraph` builds its manager once in a ref and needs the same rebuild-on-change treatment. Both changes stay inside the view.
 
-That leaves node dragging and the rendering ceiling as the only motivations a migration would genuinely serve. Neither is settled: dragging is an unconfirmed product requirement, and no profiling has established where `TraceGraph`'s ceiling is or whether layout or rendering sets it.
+Neither of those is a reason to change libraries, so ship them where they are. What the current stack cannot answer is node dragging, keyboard accessibility, and who maintains ~1,700 lines of rendering code — and those are what `@xyflow/react` is actually for.
 
 | Criterion | Stay on Plexus + Graphviz | Path A: elkjs layout | Path B/C: `@xyflow/react` | Path D: ECharts |
 |---|---|---|---|---|
@@ -404,31 +401,47 @@ That leaves node dragging and the rendering ceiling as the only motivations a mi
 | **Node dragging** | 🔴 | 🔴 rendering is unchanged | 🟢 | 🔴 force layout only |
 | **Rendering ceiling at thousands of nodes** | 🔴 | 🔴 rendering is unchanged | 🟡 needs memoization, maybe virtualization | 🟢 |
 | **Keyboard navigation and ARIA** | 🔴 | 🔴 | 🟢 | 🔴 canvas exposes nothing |
-| **Variable-width node content** | 🟢 measure phase is built in | 🟢 | 🔴 ³ | 🔴 ³ |
+| **Variable-width node content** | 🟢 measure phase is built in | 🟢 | 🟡 ³ | 🔴 canvas symbols cannot hold a React subtree |
 | **CSS and design-token theming** | 🟢 | 🟢 | 🟢 | 🔴 colors must be passed into the options object |
 | **Maintenance ownership** | 🔴 Jaeger owns ~1,700 lines | 🟡 Plexus plus an ELK adapter | 🟢 | 🟡 an imperative wrapper to own |
-| **Migration cost and risk** | 🟢 none | 🟡 | 🔴 | 🔴 |
+| **Migration cost and risk** | 🟢 none | 🟡 | 🟡 per view, 🔴 to remove Plexus outright ⁴ | 🔴 |
 
 🟢 good 🟡 partial or caveated 🔴 poor
 
-¹ `rankdir` is already a `TLayoutOptions` field, and `DAG` sets it explicitly. ² Shipped, as the `DAGOptions` Hierarchical / Force Directed switch. ³ `OpNode`'s text has variable width, so either the measure phase is rebuilt outside Plexus or labels get truncated. `DAG` nodes could take a fixed width, which is why the dependency graph is the better first candidate if a migration does happen.
+¹ `rankdir` is already a `TLayoutOptions` field, and `DAG` sets it explicitly. ² Shipped, as the `DAGOptions` Hierarchical / Force Directed switch. ³ Variable-width text is fine — `node.measured` carries the observed size and `useNodesInitialized()` gates the layout on it. The cost is one unpositioned render pass to hide, not truncated labels. ⁴ See the per-view breakdown below.
 
 Off-main-thread layout is deliberately absent from the matrix: every option keeps it, so it does not separate them. Paths B and D leave layout alone, and an ELK adapter inherits the Plexus worker pool, since `layout.worker.ts` and `Coordinator` are engine-agnostic and only `getLayout.ts` knows about Graphviz.
 
+Migration cost is not uniform across the four views Plexus serves, which is why the matrix cell carries two scores:
+
+| Target | Cost | Why |
+|---|---|---|
+| Dependency graph (`DAG.tsx`) | 🟡 | A circle and a label per node, hundreds of nodes, and a context menu that maps onto `NodeToolbar` |
+| `TraceGraph` | 🟡 | `OpNode` ports as a React component; the risk is rendering at thousands of spans, not fidelity |
+| `TraceDiff` | 🟡 | `DiffNode` is static text on a background color |
+| Deep dependency graph | 🔴 | `DdgNodeContent` sizes its circle to its own text and carries an always-visible `ActionsMenu` and a progress-arc decoration |
+| Removing Plexus outright | 🔴 | Requires the deep dependency graph above |
+
+Two things keep the per-view risk at 🟡 rather than 🔴. `@jaegertracing/plexus` is `private: true`, so no external consumer breaks. And the views are independent, so `@xyflow/react` and Plexus can both be in the tree while the migration proceeds one view at a time.
+
+### Why the Dependency Graph Goes First
+
+It is the cheapest of the four views, it has the most interaction to gain, and it carries the least rendering risk, so it is the right place to learn what the library costs in practice before committing the other views. Keeping Graphviz for layout under Path B also isolates the variable: if the result regresses, the layout engine is not a suspect.
+
+`TraceGraph` follows only if the dependency graph goes well, and its own open question is separate — whether DOM rendering rather than layout sets its ceiling at real span counts (Open Question 6). The deep dependency graph stays on Plexus until `DdgNodeContent` is redesigned, and nothing here requires that.
+
 ### What Would Change This Recommendation
 
-- **Node dragging becomes a product requirement** (Open Question 2). Then `@xyflow/react` is the only realistic path, and the dependency graph is where to start, because fixed-width service nodes sidestep the measure phase.
-- **Profiling shows that DOM rendering, not layout, sets `TraceGraph`'s ceiling at real span counts** (Open Question 6). Then ECharts becomes a serious candidate for that view alone, with `OpNode`'s six metric cells moved into the tooltip.
-- **Compound graphs become necessary**, for example to group spans by service inside the trace DAG. ELK supports nested graphs natively and Graphviz does not, so Path A moves first, with the adapter replacing `getLayout.ts` inside the existing worker.
-
-Until one of those holds, a migration buys flexibility that neither view is using, and charges the measure phase, the worker wiring, or both.
+- **The dependency graph trial regresses** on layout quality, rendering, or the context-menu UX. Then Plexus keeps the remaining views and the trial is reverted; the in-stack `rankdir` toggle survives either way, since it does not depend on the renderer.
+- **Profiling shows that DOM rendering, not layout, sets `TraceGraph`'s ceiling at real span counts** (Open Question 6). Then ECharts becomes a serious candidate for that view alone — a different destination from the other three — with `OpNode`'s six metric cells moved into the tooltip.
+- **Compound graphs become necessary**, for example to group spans by service inside the trace DAG. ELK supports nested graphs natively and Graphviz does not, so Path A joins the plan, with the adapter replacing `getLayout.ts` inside the existing worker.
 
 ---
 
 ## Open Questions
 
-1. **Are fixed-width nodes acceptable for `TraceGraph`?** If yes, the measure-phase obstacle to full migration disappears. The UX trade-off is label truncation vs. layout fidelity.
-2. **Is node dragging a desired feature?** If so, `@xyflow/react` is the only path; adding drag to Plexus would be a major rewrite.
+1. ~~**Are fixed-width nodes acceptable for `TraceGraph`?**~~ Moot: `node.measured` gives the layout engine real sizes, so nodes keep their variable width and labels are not truncated.
+2. **Is node dragging a desired feature?** `@xyflow/react` is the only path to it, and adding drag to Plexus would be a major rewrite. The dependency graph trial answers this cheaply, since the library makes drag a single prop.
 3. **What is the practical scale ceiling for each view?** TraceGraph already handles traces with thousands of spans; Plexus's Web Worker model makes that feasible today. An ELK migration keeps that guarantee by putting its adapter inside the existing worker instead of running ELK on the main thread. For `@xyflow/react` rendering, it would be worth benchmarking rendering performance at 500–2,000 nodes to confirm whether per-node memoization is sufficient or whether viewport-based virtualization (available via third-party `@xyflow/react` plugins) is needed.
 4. **Is the Plexus multi-layer system (SVG + HTML) needed?** `@xyflow/react` does not have a direct equivalent to Plexus's layered rendering. `TraceGraph` uses SVG layers for node-find emphasis; this would need to become a custom node renderer concern.
 5. ~~**Would a layout-direction toggle alone justify the ELK migration?**~~ Answered: no. `rankdir` is already a `LayoutManager` option, so the toggle ships inside the current stack.
