@@ -126,7 +126,7 @@ const defaultConfig: Config = {
     defaultDetailPanelMode: 'inline',
     spanPillsEnabled: true,
   },
-  useOpenTelemetryTerms: false,
+  useOpenTelemetryTerms: true,
   tracing: {
     enabled: false,
   },
