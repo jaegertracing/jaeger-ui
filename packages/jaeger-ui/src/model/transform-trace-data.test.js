@@ -42,6 +42,54 @@ describe('deduplicateTags()', () => {
     ]);
     expect(tagsInfo.warnings).toEqual(['Duplicate tag "b.ip:8.8.4.4"']);
   });
+
+  it('keeps values that only collide once stringified', () => {
+    const tagsInfo = deduplicateTags([
+      { key: 'http.status_code', value: 200 },
+      { key: 'http.status_code', value: '200' },
+      { key: 'retry', value: false },
+      { key: 'retry', value: 'false' },
+    ]);
+
+    expect(tagsInfo.tags).toEqual([
+      { key: 'http.status_code', value: 200 },
+      { key: 'http.status_code', value: '200' },
+      { key: 'retry', value: false },
+      { key: 'retry', value: 'false' },
+    ]);
+    expect(tagsInfo.warnings).toEqual([]);
+  });
+
+  it('keeps distinct objects sharing a key and reports repeated references once', () => {
+    const shared = { nested: true };
+    const tagsInfo = deduplicateTags([
+      { key: 'payload', value: shared },
+      { key: 'payload', value: { nested: true } },
+      { key: 'payload', value: shared },
+    ]);
+
+    expect(tagsInfo.tags).toEqual([
+      { key: 'payload', value: shared },
+      { key: 'payload', value: { nested: true } },
+    ]);
+    expect(tagsInfo.warnings).toEqual(['Duplicate tag "payload:[object Object]"']);
+  });
+
+  it('reports one warning per distinct duplicated tag', () => {
+    const tagsInfo = deduplicateTags([
+      { key: 'a', value: '1' },
+      { key: 'a', value: '1' },
+      { key: 'a', value: '1' },
+      { key: 'b', value: '2' },
+      { key: 'b', value: '2' },
+    ]);
+
+    expect(tagsInfo.tags).toEqual([
+      { key: 'a', value: '1' },
+      { key: 'b', value: '2' },
+    ]);
+    expect(tagsInfo.warnings).toEqual(['Duplicate tag "a:1"', 'Duplicate tag "b:2"']);
+  });
 });
 
 describe('transformTraceData()', () => {
