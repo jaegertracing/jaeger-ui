@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended", ":gitSignOff"],
+  "extends": ["config:recommended", ":gitSignOff", "helpers:pinGitHubActionDigestsToSemver"],
   "labels": ["changelog:dependencies"],
   "suppressNotifications": ["prEditedNotification"],
   "schedule": ["on sunday"],
