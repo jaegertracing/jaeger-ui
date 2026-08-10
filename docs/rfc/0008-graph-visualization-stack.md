@@ -99,7 +99,7 @@ This means adding node drag to the current Plexus stack is not just a coordinate
 - **Layout direction as a first-class option**: `'elk.direction': 'RIGHT' | 'DOWN' | 'LEFT' | 'UP'` is a top-level JSON option. Changing direction just means passing a different string and re-running the layout — no structural code changes required, making a user-facing toggle trivial to wire up.
 - **JSON model aligns naturally with React state**: Nodes and edges are plain JS objects; positions come back as `child.x`, `child.y` that map directly to React state. No DOT serialization/parsing step.
 - **No WASM**: `elk.bundled.js` is 1.61 MB of plain JS. It is not the bundle-size win it looks like — gzipped it is 467 KB against Graphviz's 468 KB, so the download is a wash. It runs synchronously but is async-wrapped, and `elkjs/lib/elk-worker.min.js` (1.6 MB) is an official Web Worker variant, though Plexus's own worker is the better host here.
-- **Compound graph support**: ELK natively supports hierarchical (nested) graphs — relevant if Jaeger ever wants to group spans by service or process within the trace DAG.
+- **Compound graph support**: ELK models nesting directly — a node carries `children`, and `elk.hierarchyHandling` lays out across levels, sizing each container from its contents and routing edges across container boundaries. This is relevant if Jaeger ever wants to group spans by service or process inside the trace DAG, or services by namespace in the dependency graph. Graphviz can do this too, with `subgraph cluster_*`, so the gap is in Plexus rather than in Graphviz: `toDot` emits no clusters and the `plain` output format Plexus parses carries no container geometry.
 
 ### elkjs Weaknesses
 
@@ -404,14 +404,14 @@ The layout engine and the rendering layer are separate decisions, as the Scope s
 | **Edge routing quality** | 🟢 `dot` polylines today, `neato` splines available unused | 🟡 simpler routing on dense graphs |
 | **Layout-direction toggle** | 🟢 `rankdir` is already a `LayoutManager` option ¹ | 🟢 `elk.direction` |
 | **Algorithm menu** | 🟡 `dot`, `neato`, `sfdp`, `circo`, `twopi` are in the build; two are wired to anything ² | 🟢 nine algorithm ids, each one option string |
-| **Compound (nested) graphs** | 🔴 not supported | 🟢 native |
+| **Compound (nested) graphs** | 🟡 Graphviz has clusters, but Plexus's pipeline cannot carry them ⁷ | 🟢 native, via `children` and `elk.hierarchyHandling` |
 | **Cycle handling** | 🟢 very mature | 🟡 correct but less studied in production |
 | **Layout off the main thread** | 🟢 Plexus worker pool | 🟢 the same pool — it is engine-agnostic ³ |
 | **Download size** | 🟢 468 KB gzipped | 🟢 467 KB gzipped — a wash |
 | **License** | 🟢 MIT | 🔴 EPL-2.0 OR GPL-3.0-or-later |
 | **Cost to adopt** | 🟢 nothing to do | 🟡 replace `getLayout.ts` with an ELK adapter |
 
-**Verdict: stay on Graphviz.** Nothing Jaeger wants today needs ELK. The direction toggle and the algorithm switch are already reachable, the download is identical, and elkjs is the only candidate here whose license is not permissive. Compound graphs are the one thing Graphviz genuinely cannot do, so that is the finding to watch for.
+**Verdict: stay on Graphviz.** Nothing Jaeger wants today needs ELK. The direction toggle and the algorithm switch are already reachable, the download is identical to the kilobyte, and elkjs is the only candidate here whose license is not permissive. Compound graphs are the closest thing to a reason to switch, and even they are a Plexus limitation rather than a Graphviz one — Graphviz draws clusters, but Plexus's flat DOT and `plain` round-trip cannot express or read them. So the real question, if nested graphs are ever wanted, is whether extending that round-trip is cheaper than adopting ELK.
 
 ### Decision 2: Rendering Layer
 
@@ -431,7 +431,7 @@ The layout engine and the rendering layer are separate decisions, as the Scope s
 
 🟢 good 🟡 partial or caveated 🔴 poor
 
-¹ `rankdir` is already a `TLayoutOptions` field, and `DAG` sets it explicitly. ² Shipped, as the `DAGOptions` Hierarchical / Force Directed switch. ³ `layout.worker.ts` and `Coordinator` never name an engine; only `getLayout.ts` does. ⁴ `node.measured` carries the observed size and `useNodesInitialized()` gates the layout on it, so the cost is one unpositioned render pass to hide, not truncated labels. ⁵ ECharts applies `progressive` to eight series types, none of them graph. ⁶ See the per-view breakdown below.
+¹ `rankdir` is already a `TLayoutOptions` field, and `DAG` sets it explicitly. ² Shipped, as the `DAGOptions` Hierarchical / Force Directed switch. ³ `layout.worker.ts` and `Coordinator` never name an engine; only `getLayout.ts` does. ⁴ `node.measured` carries the observed size and `useNodesInitialized()` gates the layout on it, so the cost is one unpositioned render pass to hide, not truncated labels. ⁵ ECharts applies `progressive` to eight series types, none of them graph. ⁶ See the per-view breakdown below. ⁷ `toDot` emits a flat `digraph` with no `subgraph cluster_*`, and `getLayout` asks for `format: 'plain'`, whose records `convPlain` reads as graph, node, edge, and stop — it throws on anything else. Clusters would need both a DOT change and an output format that reports container bounds.
 
 Splitting the decisions this way also settles where the `LayoutManager` lines belong. Staying on Graphviz keeps them — about 1,180 — no matter which renderer wins, so they are a cost of Decision 1 and not a discount against Decision 2. `@xyflow/react` earns its 🟢 on maintenance by retiring `Digraph` and `zoom`, roughly 1,860 lines, and nothing more.
 
@@ -459,7 +459,7 @@ Be honest about the sequencing cost, though. `Digraph` and `zoom` cannot be dele
 
 - **The dependency graph trial regresses** on layout quality, rendering, or the context-menu UX. Then Plexus keeps the remaining views and the trial is reverted; the in-stack `rankdir` toggle survives either way, since it does not depend on the renderer.
 - **Profiling shows that DOM rendering, not layout, sets `TraceGraph`'s ceiling at real span counts** (Open Question 6). Then ECharts becomes a serious candidate for that view alone — a different destination from the other three — with `OpNode`'s four metric cells moved into the tooltip.
-- **Compound graphs become necessary**, for example to group spans by service inside the trace DAG. ELK supports nested graphs natively and Graphviz does not, so Path A joins the plan, with the adapter replacing `getLayout.ts` inside the existing worker.
+- **Compound graphs become necessary**, for example to group spans by service inside the trace DAG, or services by namespace in the dependency graph. Neither engine blocks this outright — Graphviz has clusters and ELK has `children` — but Plexus's flat DOT and `plain` round-trip carries neither, so this is the one finding that reopens Decision 1. Weigh extending the DOT pipeline against an ELK adapter in `getLayout.ts`; do not assume ELK wins by default.
 
 ---
 
