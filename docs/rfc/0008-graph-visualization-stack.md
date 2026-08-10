@@ -409,18 +409,47 @@ Download size is not scored in either matrix. Jaeger already ships 468 KB gzippe
 | **License** | 🟢 MIT | 🟢 MIT | 🟢 MIT |
 | **Layered DAG quality** | 🟢 the reference implementation | 🟢 same Sugiyama family, with `network-simplex`, `tight-tree`, and `longest-path` rankers | 🟢 Sugiyama with pluggable decross and coord operators |
 | **Trees, which is what most traces are** | 🟢 | 🟢 | 🟢 ¹ |
-| **Stays usable past ~500 services** | 🟢 falls back to `sfdp`, which works today ² | 🟡 layered only; untested at that size | 🟡 layered only; untested at that size |
+| **Layered layout at 500 services** | 🟡 1.9 s, which is why `dot` is disabled there ² | 🟡 1.1 s — faster than `dot`, still too slow to feel interactive | 🟡 untested |
+| **Beyond ~1,200** | 🔴 `dot` did not finish; `sfdp` is the fallback ² | 🔴 6.3 s at 1,200, out of memory at 5,000 | 🔴 untested |
 | **Edge routing** | 🟢 splines available, polylines in use | 🟡 point lists, no spline routing | 🟡 point lists |
 | **Layout-direction toggle** | 🟢 `rankdir` | 🟢 `rankdir` | 🟡 rotate the result yourself |
 | **Compound (nested) graphs** | 🟡 clusters exist; Plexus's pipeline does not carry them as written ³ | 🟢 native, via `setParent` | 🔴 |
 | **Maturity and activity** | 🟢 Graphviz is ~30 years old; `@viz-js/viz` releases regularly | 🟢 released this week, 5.7k stars, not archived | 🟡 smaller project and community |
 | **Cost to adopt** | 🟢 nothing to do | 🟡 replace `getLayout.ts` with a dagre adapter | 🟡 the same, plus more assembly |
 
-**Verdict: stay on Graphviz, by default rather than on the merits.** Nothing on offer justifies the adapter work today. The direction toggle and the algorithm switch are already reachable in `LayoutManager`, and the one capability gap — nested graphs — is a limitation of `toDot` and the `plain` round-trip rather than of Graphviz.
+**Verdict: stay on Graphviz for now, and schedule the dagre comparison.** Nothing forces a change today: the direction toggle and the algorithm switch are already reachable in `LayoutManager`, and no view is blocked. But the reason Part 2 gives — Graphviz's engine breadth — is not what is holding the line, and neither is scale.
 
-This verdict is weaker than it may look, and it rests on an unknown. The dependency graph does not *need* force-directed layout; it falls back to `sfdp` above `dagMaxNumServices`, which defaults to 500 services, because `dot` stops producing a usable result at that size — `DAGOptions` even disables the Hierarchical option there. `sfdp` is how the current engine copes with scale, not a property the view requires, and the sfdp options say as much: `maxiter: 1` with `overlap: false` is a fast placement plus an overlap pass, not a force simulation anyone asked for. So the honest question is not "which engine offers `sfdp`" but "which engine stays usable at 500 to 1,200 services", and nobody has measured dagre or `d3-dag` against that. If a layered engine holds up at that size, the case for Graphviz is thinner still.
+Laying out synthetic graphs of the same topology through both engines gives:
 
-The interesting finding is that dagre, not elkjs, is the candidate to evaluate if the layout engine is ever revisited. It is MIT, it supports compound graphs natively through `setParent` — the one capability elkjs appeared to win on — it is actively released, and at 17 KB gzipped it is a twenty-seventh of Graphviz's payload. Pairing it with `d3-force` or WebCola (both MIT) would cover the force-directed case. For the trace view specifically, `d3-hierarchy` (ISC) is a narrower and even smaller option, since the trace DAG is nearly always a strict tree.
+| Nodes (with ~60% extra edges) | Graphviz `dot` | `@dagrejs/dagre` |
+|---|---|---|
+| 200 | 159 ms | 184 ms |
+| 500 | 1,920 ms | 1,134 ms |
+| 1,200 | did not finish in two minutes | 6,269 ms |
+| 5,000 | not attempted | out of memory at a 4 GB heap |
+
+These are dense random graphs run under Node rather than Jaeger's own data in a browser, so treat them as an order of magnitude rather than a benchmark. Three things follow anyway. Neither engine is pleasant at 500 nodes, which is independent confirmation of why `DAGOptions` disables Hierarchical there and why `DAG` refuses to draw past 1,200 — the fallback is a symptom of layered layout being expensive at that size, in either library. Both therefore need to stay off the main thread, so Plexus's worker pool survives a change of engine. And dagre is not the weaker engine at the sizes that matter: at 500 it beats `dot`, and the gap at 1,200 favours it heavily.
+
+**What would actually be bought by moving to dagre**, and nesting is only part of it:
+
+- **The DOT round-trip disappears.** dagre takes plain objects carrying `width` and `height` and returns `x`/`y` in pixels. That retires `toDot.ts`, the `convPlain.ts` text parser, and the 72-DPI `conv-coord.ts` conversion this document already lists as a source of historical bugs. The worker and its pool stay, per the timings above.
+- **It is the pairing `@xyflow/react` assumes.** If Decision 2 proceeds, dagre is what the ecosystem's examples and community answers are written against, and Graphviz means maintaining the adapter alone.
+- **No WASM, and 17 KB instead of 468 KB** — not a criterion, per the note above, but it removes the largest dependency in either graph view.
+- **Compound graphs**, discussed below.
+
+**What it would cost:** dagre has no force-directed mode, so the 500-to-1,200 service band that `sfdp` covers today would need either the focal-service UX to start earlier or a companion such as `d3-force` or WebCola. It is also out of the question above a few thousand nodes, though so is `dot`.
+
+### What Nesting Would Buy
+
+A compound graph is one where a node can contain a subgraph. The engine lays the children out inside their parent, sizes the parent to fit, and routes edges that cross the boundary so they leave one container and enter another rather than cutting through unrelated nodes. Drawing a box around a group afterwards is not the same thing, because nothing has kept those nodes together.
+
+For Jaeger there are three plausible uses, none of them requested today:
+
+- **Group spans by service in the trace DAG.** `TraceGraph` already colours nodes by service in `MODE_SERVICE`; nesting would make that boundary structural instead of a colour, so a trace reads as a sequence of service hops with internal detail contained.
+- **Group services by namespace in the dependency graph.** This is the most interesting one, because it is an alternative answer to the problem the focal-service fallback exists for: a 500-service map collapsed into perhaps twenty namespace containers is legible, where 500 free nodes are not, and OTel already supplies the grouping key in `service.namespace` and the Kubernetes resource attributes. Expanding a container is then a UI affordance rather than a re-layout of everything.
+- **Group operations under their service in the deep dependency graph**, whose nodes are already service-and-operation pairs.
+
+That is why nesting appears in this comparison at all. It is a capability neither engine gives Jaeger today — Graphviz has clusters, but Plexus's DOT round-trip carries neither them nor their geometry — and dagre is the only candidate here that offers it under a permissive license.
 
 ¹ `d3-hierarchy` (ISC) is the more focused choice for trees and is smaller still. ² `DependencyGraph` switches to `sfdp` above `dagMaxNumServices` (default 500) and `DAG` forces focal-service selection above 1,200. If a layered engine were adopted, `d3-force` or WebCola (both MIT) could cover the fallback — or a layered engine might simply hold up, which is the untested part. ³ `toDot` emits a flat `digraph` with no `subgraph cluster_*`, and `getLayout` asks for `format: 'plain'`, whose records `convPlain` reads as graph, node, edge, and stop — it throws on anything else. Both files are Jaeger's, so this is a cost rather than a barrier: clusters need the DOT change, an output format that reports container bounds, and renderer work to draw them.
 
@@ -468,7 +497,7 @@ Be honest about the sequencing cost, though. `Digraph` and `zoom` cannot be dele
 
 - **The dependency graph trial regresses** on layout quality, rendering, or the context-menu UX. Then Plexus keeps the remaining views and the trial is reverted; the in-stack `rankdir` toggle survives either way, since it does not depend on the renderer.
 - **The product decides to draw whole multi-thousand-node graphs as a feature**, rather than the focal neighbourhoods it presents today. That is the only route back to ECharts, and it is a product decision about whether such a view is usable at all, not a rendering benchmark.
-- **Compound graphs become necessary**, for example to group spans by service inside the trace DAG, or services by namespace in the dependency graph. This is the one finding that reopens Decision 1, and it is a build-versus-adopt question: teaching `toDot` to emit `subgraph cluster_*` and reading container bounds back out, against adopting `@dagrejs/dagre`, which models nesting through `setParent` and is MIT. Do not reach for elkjs — it is gated on license, and dagre covers the same capability.
+- **Spike 3 finds dagre readable on real data.** Then Decision 1 flips: dagre retires the DOT round-trip, brings nesting with it, and needs only a plan for the band `sfdp` covers today. Nesting alone would also reopen the decision, as a build-versus-adopt question — teach `toDot` to emit `subgraph cluster_*` and read container bounds back, or adopt dagre, which models nesting through `setParent`. Either way, not elkjs: it is gated on license and dagre covers the same capability.
 
 ---
 
@@ -497,11 +526,15 @@ Only after Spike 1 lands, and it decides whether the migration continues past on
 
 **Accept if** `OpNode` renders unchanged with no truncated labels, the unpositioned pass is invisible, and a 2,000-span trace reaches first paint no slower than today.
 
-### Spike 3 — dagre against `dot`, only if Decision 1 is reopened
+### Spike 3 — dagre against `dot` on real dependency data
 
-Not scheduled. It becomes worth doing if nested graphs are wanted, since `@dagrejs/dagre` supports them through `setParent` and Graphviz's clusters would need new plumbing at both ends of Plexus's DOT round-trip.
+Worth scheduling after Spike 1, not contingent on nesting. The synthetic timings in Decision 1 say dagre is competitive at the sizes the UI presents and better past them, and the prize is retiring the DOT round-trip — `toDot`, `convPlain`, and the DPI conversion — while keeping the worker.
 
-Feed the same dependency graph to both engines at 200 and 500 services and compare edge crossings, aspect ratio, and wall-clock layout time. **Accept dagre only if** it matches `dot` on readability at the sizes the UI actually presents. Do not gate it on 5,000 or 25,000 nodes: that is the poster case, not the product, and holding a small permissive library to it would reject it for the wrong reason.
+Export a real dependency graph at roughly 200 and 500 services and lay it out through both engines. Compare edge crossings, aspect ratio, and wall-clock time, and diff the rendered result against today's.
+
+**Accept dagre if** it matches `dot` on readability at those sizes and is no slower, **and** a plan exists for the 500-to-1,200 band that `sfdp` covers today — either starting the focal-service UX earlier or adding `d3-force` or WebCola alongside. **Reject it if** readability regresses on real data, whatever the synthetic numbers said.
+
+Do not gate this on 5,000 or 25,000 nodes. Neither engine reaches that: `dot` did not finish 1,200 nodes in two minutes and dagre exhausted a 4 GB heap at 5,000. That size is the poster case, and the product's answer to it is a focal neighbourhood, not a faster layout library.
 
 ---
 
@@ -512,5 +545,5 @@ Feed the same dependency graph to both engines at 200 and 500 services and compa
 3. **What is the practical scale ceiling for each view?** Deliberately demoted. The views present focal neighbourhoods of a few hundred nodes, so that is the size Spike 1 measures; `DAG` already refuses to draw more than 1,200 services and asks for a focal service instead.
 4. **Is the Plexus multi-layer system (SVG + HTML) needed?** `@xyflow/react` does not have a direct equivalent to Plexus's layered rendering. `TraceGraph` uses SVG layers for node-find emphasis; this would need to become a custom node renderer concern.
 5. ~~**Would a layout-direction toggle alone justify the ELK migration?**~~ Answered: no. `rankdir` is already a `LayoutManager` option, so the toggle ships inside the current stack.
-6. **Would dagre lay out a 500-service dependency graph as readably as `dot`?** Spike 3 answers this, and it only needs answering if nested graphs are wanted.
+6. **Would dagre lay out a real 500-service dependency graph as readably as `dot`?** Spike 3 answers this. Synthetic graphs say dagre is faster at that size; readability on real data is the open part.
 7. ~~**Is TraceGraph rendering performance actually a bottleneck at real-world span counts?**~~ Closed. Spike 2's acceptance test covers first paint on a 2,000-span trace, which is the size the view actually shows, and no candidate is being chosen for raw ceiling.
