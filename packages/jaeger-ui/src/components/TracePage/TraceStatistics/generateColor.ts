@@ -3,37 +3,43 @@
 
 import { ITableSpan } from './types';
 
-export default function generateColor(tableValue: ITableSpan[], attribute: string, colorToPercent: boolean) {
-  let color;
-  let colorString;
-  const tableValue2 = tableValue;
+const MIN_HEATMAP_WEIGHT = 8;
+const MAX_HEATMAP_WEIGHT = 60;
 
-  for (let i = 0; i < tableValue2.length; i++) {
-    if (colorToPercent) {
-      if (attribute === 'percent') {
-        color = 236 - 166 * (tableValue2[i].percent / 100);
-        colorString = `rgb(248,${color},${color})`;
+function getNumericValue(row: ITableSpan, attribute: string): number {
+  const value = row[attribute as keyof ITableSpan];
+  return typeof value === 'number' && Number.isFinite(value) ? Math.max(0, value) : 0;
+}
 
-        tableValue2[i].colorToPercent = colorString;
-      } else {
-        let max = 0;
-        // find hights value
-        for (let j = 0; j < tableValue2.length; j++) {
-          if (max < (tableValue2[j] as any)[attribute]) {
-            max = (tableValue2[j] as any)[attribute];
-          }
-        }
-        const onePercent = 100 / max / 100;
-        color = 236 - 166 * ((tableValue2[i] as any)[attribute] * onePercent);
-        colorString = `rgb(248,${color},${color})`;
+function getHeatmapBackground(ratio: number): string {
+  const normalizedRatio = Math.min(1, Math.max(0, ratio));
+  const weight =
+    Math.round((MIN_HEATMAP_WEIGHT + normalizedRatio * (MAX_HEATMAP_WEIGHT - MIN_HEATMAP_WEIGHT)) * 100) /
+    100;
 
-        tableValue2[i].colorToPercent = colorString;
-      }
-    } else if (tableValue2[i].isDetail) {
-      tableValue2[i].colorToPercent = `rgb(248,248,248)`;
-    } else {
-      tableValue2[i].colorToPercent = 'transparent';
+  return `color-mix(in srgb, var(--span-color-6) ${weight}%, var(--surface-primary))`;
+}
+
+export default function generateColor(tableValue: ITableSpan[], attribute: string, enabled: boolean) {
+  const maxValue =
+    enabled && attribute !== 'percent'
+      ? tableValue.reduce((max, row) => Math.max(max, getNumericValue(row, attribute)), 0)
+      : 100;
+
+  return tableValue.map(row => {
+    if (!enabled) {
+      return {
+        ...row,
+        colorToPercent: row.isDetail ? 'var(--surface-tertiary)' : 'transparent',
+      };
     }
-  }
-  return tableValue2;
+
+    const value = getNumericValue(row, attribute);
+    const ratio = maxValue > 0 ? value / maxValue : 0;
+
+    return {
+      ...row,
+      colorToPercent: getHeatmapBackground(ratio),
+    };
+  });
 }

@@ -8,11 +8,15 @@ import TimelineRow from './TimelineRow';
 import { formatDurationCompact, ViewedBoundsFunctionType } from './utils';
 import SpanTreeOffset from './SpanTreeOffset';
 import SpanBar from './SpanBar';
+import { GenAISpanIcon } from './GenAISpanIcon';
 import Ticks from './Ticks';
 
 import { TNil } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan } from '../../../types/otel';
+import { getSpanPillsForSpan, SpanPill } from './spanPills';
+
+import { getSpanIconComponent } from './span-icons';
 
 import './SpanBarRow.css';
 
@@ -51,6 +55,7 @@ type SpanBarRowProps = {
   span: IOtelSpan;
   focusSpan: (spanID: string) => void;
   traceDuration: number;
+  spanPillsEnabled?: boolean;
   useOtelTerms: boolean;
 };
 
@@ -82,6 +87,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   span,
   focusSpan,
   traceDuration,
+  spanPillsEnabled,
   onDetailToggled,
   onChildrenToggled,
   useOtelTerms,
@@ -107,8 +113,18 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
     duration,
     hasChildren: isParent,
     name: operationName,
+    attributes,
     resource: { serviceName },
   } = span;
+  const pills = spanPillsEnabled ? getSpanPillsForSpan(span) : [];
+  // A span classified as GenAI (agent/LLM call/tool call/retrieval/etc.) already
+  // renders exactly one icon via GenAISpanIcon below. Suppress the generic
+  // namespace icon entirely for such spans, not just its gen_ai entry - a GenAI
+  // span commonly also carries http/db/messaging attributes (e.g. the root HTTP
+  // server span for an agent's own endpoint), and without this check the generic
+  // icon would fall through to whichever of those namespaces is left, recreating
+  // the same double-icon problem with a different second icon (#4217).
+  const SpanTypeIcon = span.genAIKind === undefined ? getSpanIconComponent(attributes) : null;
   const label = formatDurationCompact(duration);
   const viewBounds = getViewedBounds(span.startTime, span.endTime);
   const viewStart = viewBounds.start;
@@ -160,10 +176,12 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
             <span
               className={`span-svc-name ${isParent && !isChildrenExpanded ? 'is-children-collapsed' : ''}`}
             >
+              {SpanTypeIcon && <SpanTypeIcon className="SpanBarRow--spanTypeIcon" aria-hidden="true" />}
               {hasOwnError && <IoAlert className="SpanBarRow--errorIcon" />}
               {!hasOwnError && hasChildError && (
                 <IoAlert className="SpanBarRow--errorIcon SpanBarRow--errorIcon--hollow" />
               )}
+              <GenAISpanIcon span={span} />
               {serviceName}{' '}
               {rpc && (
                 <span>
@@ -184,6 +202,9 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
               )}
             </span>
             <small className="endpoint-name">{rpc ? rpc.operationName : operationName}</small>
+            {pills.map(pill => (
+              <SpanPill key={pill.label} pill={pill} />
+            ))}
           </a>
           {hasLinks && (
             <ReferencesButton

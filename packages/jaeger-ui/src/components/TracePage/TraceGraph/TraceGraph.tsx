@@ -47,7 +47,15 @@ const getHelpContent = (useOtelTerms: boolean) => (
         <tbody>
           <tr>
             <td>
-              <Button htmlType="button" shape="circle" size="small" className="active">
+              <Button
+                htmlType="button"
+                shape="circle"
+                size="small"
+                className="active"
+                tabIndex={-1}
+                aria-hidden="true"
+                style={{ pointerEvents: 'none' }}
+              >
                 S
               </Button>
             </td>
@@ -56,7 +64,14 @@ const getHelpContent = (useOtelTerms: boolean) => (
           </tr>
           <tr>
             <td>
-              <Button htmlType="button" shape="circle" size="small">
+              <Button
+                htmlType="button"
+                shape="circle"
+                size="small"
+                tabIndex={-1}
+                aria-hidden="true"
+                style={{ pointerEvents: 'none' }}
+              >
                 T
               </Button>
             </td>
@@ -65,7 +80,14 @@ const getHelpContent = (useOtelTerms: boolean) => (
           </tr>
           <tr>
             <td>
-              <Button htmlType="button" shape="circle" size="small">
+              <Button
+                htmlType="button"
+                shape="circle"
+                size="small"
+                tabIndex={-1}
+                aria-hidden="true"
+                style={{ pointerEvents: 'none' }}
+              >
                 ST
               </Button>
             </td>
@@ -77,18 +99,12 @@ const getHelpContent = (useOtelTerms: boolean) => (
     </div>
     <div>
       <svg width="100%" height="40">
-        <line x1="0" y1="10" x2="90" y2="10" style={{ stroke: '#000', strokeWidth: 2 }} />
-        <text alignmentBaseline="middle" x="100" y="10">
+        <line x1="0" y1="10" x2="90" y2="10" className="TraceGraph--legendLine" />
+        <text alignmentBaseline="middle" x="100" y="10" className="TraceGraph--legendText">
           ChildOf
         </text>
-        <line
-          x1="0"
-          y1="30"
-          x2="90"
-          y2="30"
-          style={{ stroke: '#000', strokeWidth: 2, strokeDasharray: '4' }}
-        />
-        <text alignmentBaseline="middle" x="100" y="30">
+        <line x1="0" y1="30" x2="90" y2="30" className="TraceGraph--legendLine is-nonBlocking" />
+        <text alignmentBaseline="middle" x="100" y="30" className="TraceGraph--legendText">
           Non-Blocking
         </text>
       </svg>
@@ -195,6 +211,8 @@ function TraceGraph({
                 shape="circle"
                 size="small"
                 onClick={() => setMode(MODE_SERVICE)}
+                aria-label="Color by service"
+                aria-pressed={mode === MODE_SERVICE}
               >
                 S
               </Button>
@@ -208,6 +226,8 @@ function TraceGraph({
                 shape="circle"
                 size="small"
                 onClick={() => setMode(MODE_TIME)}
+                aria-label="Color by total time"
+                aria-pressed={mode === MODE_TIME}
               >
                 T
               </Button>
@@ -221,6 +241,8 @@ function TraceGraph({
                 shape="circle"
                 size="small"
                 onClick={() => setMode(MODE_SELFTIME)}
+                aria-label="Color by self time"
+                aria-pressed={mode === MODE_SELFTIME}
               >
                 ST
               </Button>

@@ -10,6 +10,7 @@ import { LuPanelLeftClose } from 'react-icons/lu';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useConfig } from '../../hooks/useConfig';
+import { ALL_SERVICES } from '../../constants/search-form';
 
 import SearchForm from './SearchForm';
 import SearchResults from './SearchResults';
@@ -37,10 +38,14 @@ import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { useEmbeddedState } from '../../stores/embedded-store';
 import { useShallow } from 'zustand/react/shallow';
 import { useSearchTraces } from '../../hooks/useTraceDiscovery';
+import type { OrderBy } from '../../model/order-by';
 
 // export for tests
 export function SearchTracePageImpl() {
   const embedded = useEmbeddedState();
+
+  const config = useConfig();
+  const { backendCapabilities } = config;
 
   const location = useLocation();
   const urlQueryParams = useMemo(() => {
@@ -53,7 +58,20 @@ export function SearchTracePageImpl() {
 
   const navigate = useNavigate();
 
-  const { data: searchData, isFetching: loadingTraces, error: searchError } = useSearchTraces(searchQuery);
+  // An "all services" link opened against a deployment whose storage requires a service
+  // name cannot be served: the sentinel is dropped when the request is built, so the
+  // search would go out unscoped and come back empty with nothing to explain why. Skip it
+  // and say so instead. The URL is left as it is — rewriting it would destroy the link the
+  // user was given, and it works again against a deployment that supports the query.
+  const allServicesUnsupported = Boolean(
+    searchQuery?.service === ALL_SERVICES && !backendCapabilities?.searchWithoutServiceName
+  );
+
+  const {
+    data: searchData,
+    isFetching: loadingTraces,
+    error: searchError,
+  } = useSearchTraces(searchQuery, { skip: allServicesUnsupported });
 
   // When the user returns to /search via TopNav (URL loses query params), restore the URL
   // from the cached query so the address bar remains shareable and bookmarkable.
@@ -102,7 +120,7 @@ export function SearchTracePageImpl() {
     };
   }, [searchData, uploadedSummaries]);
 
-  const [sortBy, setSortBy] = useState(orderBy.MOST_RECENT);
+  const [sortBy, setSortBy] = useState<OrderBy>(orderBy.MOST_RECENT);
   const [activeTab, setActiveTab] = useState<'searchForm' | 'fileLoader'>('searchForm');
 
   const { panelWidth, collapsed, setPanelWidth, setCollapsed } = useSearchPanelStore(
@@ -156,10 +174,9 @@ export function SearchTracePageImpl() {
     });
   }, [cohortIDs, cohortSummaries, sortedTraceSummaries]);
 
-  const config = useConfig();
   const { disableFileUploadControl } = config;
 
-  const handleSortChange = useCallback((newSortBy: string) => {
+  const handleSortChange = useCallback((newSortBy: OrderBy) => {
     setSortBy(newSortBy);
     trackSortByChange(newSortBy);
   }, []);
@@ -168,9 +185,16 @@ export function SearchTracePageImpl() {
   // navigation, before the new keyed-cache fetch completes and searchData is updated.
   const isStale = Boolean(searchQuery && searchData?.query && !isSameQuery(searchQuery, searchData.query));
 
-  const errors: Array<{ message: string }> = searchError
-    ? [{ message: searchError instanceof Error ? searchError.message : String(searchError) }]
-    : [];
+  const errors: Array<{ message: string }> = [];
+  if (allServicesUnsupported) {
+    errors.push({
+      message:
+        'This link searches across all services, which the storage backend of this Jaeger ' +
+        'deployment does not support. Select a service to search.',
+    });
+  } else if (searchError) {
+    errors.push({ message: searchError instanceof Error ? searchError.message : String(searchError) });
+  }
 
   const hasTraceResults = sortedTraceSummaries.length > 0;
   const showErrors = errors.length > 0 && !loadingTraces;
@@ -287,6 +311,7 @@ export function SearchTracePageImpl() {
               showStandaloneLink: Boolean(embedded),
               skipMessage: isHomepage,
               spanLinks: urlQueryParams?.spanLinks,
+              searchLatency: searchData?.searchLatency,
               traceSummaries: sortedTraceSummaries,
               uploadedTraceIDs,
               rawTraces: uploadedRawTraces,

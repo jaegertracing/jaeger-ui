@@ -25,6 +25,12 @@ SPDX-License-Identifier: Apache-2.0
   overflow-y: auto;
   position: fixed;
   right: 0;
+  z-index: 3;
+}
+
+/* Ensure the side-panel-width resizer paints above the fixed side panel (z-index: 3). */
+.TraceTimelineViewer--sidePanelLayout > .VerticalResizer {
+  z-index: 4;
 }
 
 /* Show a permanent column divider for all VerticalResizers within the trace timeline,

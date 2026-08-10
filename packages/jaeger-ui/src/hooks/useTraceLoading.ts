@@ -13,10 +13,7 @@ const TRACE_QUERY_KEY = (id: string) => ['trace', id] as const;
 
 // TODO: remove once callers (duck.track.ts, TraceDiff) are migrated off Redux/non-hook paths
 export function getCachedTrace(id: string): IOtelTrace | undefined {
-  return (
-    queryClient.getQueryData<IOtelTrace>(TRACE_QUERY_KEY(id)) ||
-    queryClient.getQueryData<IOtelTrace>(TRACE_QUERY_KEY(id.replace(/^0+/, '')))
-  );
+  return queryClient.getQueryData<IOtelTrace>(TRACE_QUERY_KEY(id));
 }
 
 export function populateTraceCache(trace: IOtelTrace): void {
@@ -31,7 +28,18 @@ export function populateTraceCache(trace: IOtelTrace): void {
 export function useTrace(traceId: string): UseQueryResult<IOtelTrace> {
   return useQuery({
     queryKey: TRACE_QUERY_KEY(traceId),
-    queryFn: async () => jaegerClient.getTrace(traceId),
+    queryFn: async () => {
+      const response = await JaegerAPI.fetchTrace(traceId);
+      const data = transformTraceData(response.data[0]);
+      if (!data) {
+        throw new Error('Invalid trace data received.');
+      }
+      const otel = data.asOtelTrace();
+      if (otel.traceID !== traceId) {
+        queryClient.setQueryData(TRACE_QUERY_KEY(otel.traceID), otel);
+      }
+      return otel;
+    },
     staleTime: Infinity,
   });
 }
@@ -43,7 +51,18 @@ export function useTraces(ids: string[]): Map<string, FetchedTrace> {
   const results = useQueries({
     queries: ids.map(id => ({
       queryKey: TRACE_QUERY_KEY(id),
-      queryFn: async () => jaegerClient.getTrace(id),
+      queryFn: async () => {
+        const response = await JaegerAPI.fetchTrace(id);
+        const data = transformTraceData(response.data[0]);
+        if (!data) {
+          throw new Error('Invalid trace data received.');
+        }
+        const otel = data.asOtelTrace();
+        if (otel.traceID !== id) {
+          queryClient.setQueryData(TRACE_QUERY_KEY(otel.traceID), otel);
+        }
+        return otel;
+      },
       staleTime: Infinity,
     })),
   });

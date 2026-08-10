@@ -50,10 +50,8 @@ describe('<TracePageSearchBar>', () => {
   });
 
   describe('truthy textFilter', () => {
-    let wrapper;
-
     beforeEach(() => {
-      wrapper = render(<TracePageSearchBar {...defaultProps} />);
+      render(<TracePageSearchBar {...defaultProps} />);
     });
 
     it('renders UiFindInput with correct props', () => {

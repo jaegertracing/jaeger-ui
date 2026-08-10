@@ -122,7 +122,7 @@ describe('<AccordionEvents>', () => {
   });
 
   it('is interactive by default', () => {
-    const { interactive, ...propsWithoutInteractive } = defaultProps;
+    const { interactive: _unused, ...propsWithoutInteractive } = defaultProps;
     render(<AccordionEvents {...propsWithoutInteractive} isOpen />);
 
     const header = screen.getByRole('switch');

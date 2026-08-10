@@ -80,6 +80,13 @@ describe('TraceTimelineViewer/duck', () => {
     expect(store.getState().spanNameColumnWidth).toBeCloseTo(0.575);
   });
 
+  it('clamps spanNameColumnWidth to leave room for side panel when timeline is hidden', () => {
+    store.dispatch(actions.setTimelineBarsVisible(false));
+    store.dispatch(actions.setDetailPanelMode('sidepanel'));
+    store.dispatch(actions.setSpanNameColumnWidth(0.99));
+    expect(store.getState().spanNameColumnWidth).toBeCloseTo(1 - SIDE_PANEL_WIDTH_MIN);
+  });
+
   describe('focusUiFindMatches', () => {
     const uiFind = 'uiFind';
     const action = actions.focusUiFindMatches(trace, uiFind);
@@ -563,6 +570,13 @@ describe('TraceTimelineViewer/duck', () => {
       const retained = store.getState().detailStates.get(spanA);
       expect(retained.isAttributesOpen).toBe(true);
       expect(retained.isResourceOpen).toBe(true);
+    });
+
+    it('clamps spanNameColumnWidth to leave room for side panel when timeline is hidden', () => {
+      store.dispatch(actions.setSpanNameColumnWidth(SPAN_NAME_COLUMN_WIDTH_MAX));
+      store.dispatch(actions.setTimelineBarsVisible(false));
+      store.dispatch(actions.setDetailPanelMode('sidepanel'));
+      expect(store.getState().spanNameColumnWidth).toBeCloseTo(1 - SIDE_PANEL_WIDTH_MIN);
     });
 
     it('does not persist mode to localStorage (persistence moved to useTraceTimelineStore)', () => {

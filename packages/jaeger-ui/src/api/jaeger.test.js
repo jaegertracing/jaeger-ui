@@ -103,6 +103,16 @@ describe('fetchServiceServerOps', () => {
   });
 });
 
+describe('fetchServiceOperations', () => {
+  it('GETs the specified service operations', () => {
+    JaegerAPI.fetchServiceOperations('service/name');
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      `${DEFAULT_API_ROOT}services/service%2Fname/operations`,
+      defaultOptions
+    );
+  });
+});
+
 describe('transformOTLP', () => {
   it('GETs the transformed trace of Jaeger kind when provided with OTLP', () => {
     const trace = JSON.parse('{"test" : true}');

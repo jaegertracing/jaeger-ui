@@ -173,7 +173,7 @@ describe('<TimelineHeaderRow>', () => {
       expect(screen.queryByTestId('timeline-viewing-layer')).not.toBeInTheDocument();
     });
 
-    it('does not render the VerticalResizer', () => {
+    it('does not render the VerticalResizer when sidePanel is hidden', () => {
       render(<TimelineHeaderRow {...barsHiddenProps} />);
       expect(screen.queryByTestId('vertical-resizer')).not.toBeInTheDocument();
     });
@@ -183,6 +183,23 @@ describe('<TimelineHeaderRow>', () => {
       const cells = container.querySelectorAll('.TimelineRow--cellMock');
       expect(cells).toHaveLength(1);
       expect(cells[0]).toHaveAttribute('data-width', '1');
+    });
+
+    describe('with side panel visible', () => {
+      const treeOnlySidePanelProps = {
+        ...barsHiddenProps,
+        sidePanelVisible: true,
+        sidePanelWidth: 0.3,
+        sidePanelLabel: 'Span Details',
+        resizerMax: 0.8,
+      };
+
+      it('renders the VerticalResizer', () => {
+        render(<TimelineHeaderRow {...treeOnlySidePanelProps} />);
+        const resizer = screen.getByTestId('vertical-resizer');
+        expect(resizer).toBeInTheDocument();
+        expect(resizer).toHaveAttribute('data-max', '0.8');
+      });
     });
   });
 });
