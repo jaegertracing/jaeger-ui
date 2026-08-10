@@ -18,7 +18,7 @@ Jaeger UI's graph stack was designed around two non-negotiable constraints: (1) 
 
 - **Layout inflexibility**: When Graphviz produces a cluttered or counter-intuitive layout — edge crossings, nodes packed too tightly, an unfortunate root node selection — there is no escape hatch. The user cannot drag a node, change the layout direction, or re-run with different spacing parameters.
 - **No layout-direction toggle**: `TraceGraph` passes no `rankdir`, so it gets the `toDot` default of left-right (`LR`); `DAG` sets top-down (`TB`). Neither exposes a toggle.
-- **Maintenance burden**: Plexus is ~1,700 lines of custom React + SVG rendering that the Jaeger team owns entirely. It was last actively developed several years ago. `@xyflow/react` is a widely-maintained open-source library with an active development team; adopting it could transfer much of that maintenance externally.
+- **Maintenance burden**: `packages/plexus/src` is about 3,000 lines the Jaeger team owns entirely — roughly 1,900 of custom React and SVG rendering (`Digraph`, `zoom`) on top of a ~1,000-line `LayoutManager`. It still receives regular work: through the first half of 2026 the team migrated `Digraph`, `Node`, `SvgEdges`, and `MeasurableNode` to functional components, moved its tests to Vitest, dropped `worker-loader`, and fixed dark-mode edge labels. That is the maintenance cost, and adopting `@xyflow/react` would move most of it to an outside team.
 - **Ecosystem age**: `@viz-js/viz` (the Graphviz WASM wrapper) is the third incarnation of viz.js and is healthy, but the underlying Graphviz binary has not had significant algorithmic development in many years. elkjs is more actively developed and has a broader algorithm portfolio.
 
 The Recommendation section below resolves the comparison; the parts before it lay out the evidence it rests on.
@@ -129,7 +129,7 @@ This means adding node drag to the current Plexus stack is not just a coordinate
 
 ### Plexus Architecture (current)
 
-Plexus implements a **three-phase render pipeline** entirely in ~1,700 lines of custom React + SVG code:
+Plexus implements a **three-phase render pipeline** entirely in about 1,900 lines of custom React + SVG code (`Digraph` and `zoom`; a further ~1,000 lines sit in `LayoutManager`):
 
 1. **Measure phase** (`CalcSizes`): Renders all nodes invisibly at `(0,0)` to measure their DOM dimensions via refs.
 2. **Layout phase** (`CalcPositions`): Sends measured sizes + graph topology to Graphviz (in a Web Worker); receives back node positions and edge Bezier control points.
@@ -155,11 +155,11 @@ The **layer system** is the primary customization API: callers compose arrays of
 - Accessibility annotations (ARIA roles on graph elements)
 - Edge labels as first-class elements (only supported via custom `renderNode` workarounds)
 
-**Maintenance status**: Plexus has not had significant feature development in several years. It is stable but effectively in maintenance mode. The Jaeger team bears full ownership of all bugs, React compatibility updates, and feature additions.
+**Maintenance status**: Plexus has had no new features in years, but it is not dormant — most of its 2026 commits are React modernization and tooling migrations rather than fixes. That is the shape of the burden: the Jaeger team owns every bug, every React compatibility update, and every feature it might want, and pays for keeping a private library current with the ecosystem even when nothing about the graphs changes.
 
 ### `@xyflow/react` Architecture
 
-`@xyflow/react` (formerly React Flow; ~26,000 GitHub stars, weekly releases) is a React-native graph canvas with a hooks-based API. It manages an internal store for node/edge state, positions, selection, and viewport transforms. The caller provides `nodes[]` and `edges[]` arrays with positions pre-computed; `@xyflow/react` handles all rendering, interaction, and viewport management.
+`@xyflow/react` (formerly React Flow; ~38,000 GitHub stars as of August 2026, MIT, releasing regularly — v12.11.2 in July 2026) is a React-native graph canvas with a hooks-based API. It manages an internal store for node/edge state, positions, selection, and viewport transforms. The caller provides `nodes[]` and `edges[]` arrays with positions pre-computed; `@xyflow/react` handles all rendering, interaction, and viewport management.
 
 **What `@xyflow/react` provides out of the box:**
 - Pan and zoom (built-in, configurable min/max zoom)
@@ -172,7 +172,7 @@ The **layer system** is the primary customization API: callers compose arrays of
 - `MiniMap`: built-in minimap with custom node color callbacks
 - `useReactFlow()` hook: programmatic `fitView()`, `getNodes()`, `setNodes()`, `screenToFlowPosition()`, etc.
 - Selection: multi-select via shift-click or drag-select box
-- Keyboard navigation and ARIA roles on graph elements (WCAG 2.1 AA)
+- Keyboard navigation and ARIA support: Tab through focusable nodes and edges, Enter or Space to select, arrow keys to move a selected node, auto-pan to a focused node, plus ARIA roles and live regions. The library's own framing is that these features "can help you meet key WCAG 2.1 AA criteria when properly implemented" — the conformance obligation stays with the integrator.
 - Dark/light color mode prop (`colorMode`)
 - Animated edges (CSS `stroke-dasharray` animation built-in)
 - `fitView()` with padding, duration, and `prefers-reduced-motion` respect
@@ -191,7 +191,7 @@ The **layer system** is the primary customization API: callers compose arrays of
 
 | Dimension | Plexus + Graphviz | `@xyflow/react` + elkjs |
 |---|---|---|
-| **Codebase owned by Jaeger** | ~1,700 lines (Plexus) + Graphviz WASM | 0 lines of rendering code; layout adapter only |
+| **Codebase owned by Jaeger** | ~3,000 lines (Plexus) + Graphviz WASM | 0 lines of rendering code; layout adapter only |
 | **Maintenance burden** | Full ownership | Library updates; breaking-change migration |
 | **React compatibility** | Must be manually maintained | Maintained by xyflow team; React 18/19 tested |
 | **Node dragging** | Not supported | Opt-in (`nodesDraggable={true}`) |
@@ -203,14 +203,14 @@ The **layer system** is the primary customization API: callers compose arrays of
 | **Algorithm selection** | Already shipped for the dependency graph: `DAGOptions` switches between `dot` and `sfdp` | Layout engine option; trivial to expose in UI |
 | **Minimap** | Built-in (`minimap={true}`) | Built-in (`<MiniMap />`) |
 | **Fit-to-view** | `resetZoom()` on `ZoomManager` | `fitView()` on `useReactFlow()` hook; animated |
-| **Keyboard / ARIA** | Not implemented | Built-in; keyboard navigation and ARIA roles |
+| **Keyboard / ARIA** | Not implemented | Keyboard focus and movement, ARIA roles and live regions; helps toward WCAG 2.1 AA rather than conferring it |
 | **Animated layout transitions** | Not supported | CSS transitions on position change; `fitView` animation |
 | **Selection** | Click handlers only; no multi-select | Built-in multi-select (shift-click, drag-box) |
 | **Bundle size** | d3-zoom ~15 KB + Graphviz WASM ~3–5 MB (worker) | `@xyflow/react` ~50 KB + elkjs ~1.5 MB (lazy) |
 | **Scale — layout off main thread** | Built-in: Graphviz always runs in a Web Worker pool | Same worker pool is reusable — it is engine-agnostic — whether layout stays on Graphviz or moves to ELK |
 | **Scale — rendering performance** | No virtualization; renders all nodes/edges in DOM | No virtualization by default; `<ReactFlow />` re-renders on every position change — can degrade with thousands of nodes without memoization |
 | **Measure-then-layout** | Handled internally by Plexus, before the first positioned render | `node.measured` plus `useNodesInitialized()` supply the sizes, but only after a first unpositioned mount |
-| **GitHub stars / community** | Internal library | ~26,000 stars; large ecosystem, many examples |
+| **GitHub stars / community** | Internal library | ~38,000 stars; large ecosystem, many examples |
 | **License** | Apache 2.0 (Jaeger) | MIT |
 
 ### The Measure Phase: An Ordering Difference, Not a Missing Feature
@@ -284,7 +284,7 @@ There is **no built-in hierarchical/Sugiyama layout**. For a DAG or tree with ra
 Canvas rendering means ECharts does not create a DOM node per graph element. For a graph with 5,000 nodes, Plexus and `@xyflow/react` produce 5,000 DOM elements (divs, SVG `<g>`s) that the browser must style, composite, and garbage-collect. ECharts draws all 5,000 as canvas pixels in a single element.
 
 In practice:
-- ECharts remains fluid at **5,000–10,000 node** graphs in benchmarks where SVG renderers have already degraded.
+- ECharts is reported to stay fluid at **5,000–10,000 node** graphs where SVG renderers have already degraded. This figure is an estimate from general canvas-versus-DOM experience, not a measurement of Jaeger's graphs, and Open Question 6 exists because it has to be confirmed on real traces before it can justify anything.
 - For the TraceGraph use case — traces with thousands of spans — this is the most significant advantage ECharts offers over the current stack.
 - ECharts also supports [large-graph progressive rendering](https://echarts.apache.org/en/option.html#series-graph.progressive) to incrementally draw elements frame-by-frame, avoiding a single long paint.
 
@@ -300,9 +300,9 @@ The claim that Jaeger's nodes require "rich React components" needs to be examin
 
 **TraceDiff (`DiffNode`)** — A 2×2 table: change-count metric | service name; percentage metric | operation name. Color-coded by diff state (added/removed/changed/same). This is more data than a bare label, but all of it is static text with a background color — representable as a canvas `rect` symbol with a label and `itemStyle.color`, with the metric details moved to a tooltip. **Canvas-compatible with minor simplification.**
 
-**TraceGraph (`OpNode.tsx`)** — The 3×2 metrics table: count/errors | **service** | avg-time; duration+% | operation | self-time+%. Background color encodes the selected mode (service color, time heatmap, self-time heatmap). The node is also wrapped in an antd `Popover` whose content is the same table — so the tooltip currently adds nothing beyond what is already visible in the node body.
+**TraceGraph (`OpNode.tsx`)** — A two-row, three-column table: count/errors | **service** | avg-time; duration+% | operation | self-time+%. Four of the six cells are metrics; the middle column holds the service and operation labels. Background color encodes the selected mode (service color, time heatmap, self-time heatmap). The node is also wrapped in an antd `Popover` whose content is the same table — so the tooltip currently adds nothing beyond what is already visible in the node body.
 
-This is the node the user called out: six metric cells displayed in the node body itself make each node large and the graph harder to read. In canvas terms, the color-encoding (the most information-dense part) maps directly to `itemStyle.color`; service and operation names map to a two-line label; the six metrics are better placed in a tooltip. **Canvas-compatible with a deliberate simplification that is arguably a UX improvement, not a regression.**
+This is the node the user called out: four metric cells alongside the two labels make each node large and the graph harder to read. In canvas terms, the color-encoding (the most information-dense part) maps directly to `itemStyle.color`; service and operation names map to a two-line label; the four metrics are better placed in a tooltip. **Canvas-compatible with a deliberate simplification that is arguably a UX improvement, not a regression.**
 
 ### ECharts Weaknesses for Jaeger's Use Cases
 
@@ -325,7 +325,7 @@ This is the node the user called out: six metric cells displayed in the node bod
 | **Node dragging** | No | Opt-in | Force layout only |
 | **Edge routing quality** | High (Graphviz; `dot` polylines today, `neato` splines available) | Medium (smooth-step, bezier) | Low (straight lines or simple curves) |
 | **Contextual UI (toolbars)** | Custom overlays | `NodeToolbar` API | Custom overlays via `convertToPixel` |
-| **Accessibility / ARIA** | Not implemented | Built-in (WCAG 2.1 AA) | Canvas: none; SVG renderer: partial |
+| **Accessibility / ARIA** | Not implemented | Keyboard and ARIA primitives; helps toward WCAG 2.1 AA | Canvas: none; SVG renderer: partial |
 | **CSS / design token theming** | CSS variables work | CSS variables work | Must pass colors into options object |
 | **Maintenance** | Jaeger-owned | xyflow team (active) | Apache TLP, very active |
 | **Bundle size** | ~3–5 MB WASM (worker) | ~1.6 MB total (lazy) | ~1 MB tree-shaken; ~2.5 MB full build |
@@ -335,7 +335,7 @@ This is the node the user called out: six metric cells displayed in the node bod
 
 **TraceGraph** (thousands of spans):
 - This is the view where ECharts' canvas backend offers a real advantage — if rendering performance at high span counts is a confirmed problem.
-- `OpNode.tsx`'s 3×2 metrics table in the node body is the main obstacle, but as noted above, the color encoding and service/operation label translate cleanly to canvas; the six metric cells are better in a tooltip anyway. The antd `Popover` wrapping the node (which shows the same table as a popover) would simply become an ECharts `tooltip`. This is a design simplification, not a regression.
+- `OpNode.tsx`'s two-row, three-column table in the node body is the main obstacle, but as noted above, the color encoding and service/operation label translate cleanly to canvas; the four metric cells are better in a tooltip anyway. The antd `Popover` wrapping the node (which shows the same table as a popover) would simply become an ECharts `tooltip`. This is a design simplification, not a regression.
 - **Verdict**: More feasible than it initially appears. The canvas port of `OpNode` is plausible with a deliberate decision to move per-span metrics into the tooltip.
 
 **Service Dependency Graph** (hundreds of services):
@@ -391,7 +391,7 @@ These are two independent pieces of work, and the first does not wait on the sec
 - **Algorithm choice already ships.** `DAGOptions` gives the dependency graph a Hierarchical (`dot`) / Force Directed (`sfdp`) switch, and `DependencyGraph` also picks `sfdp` on its own above `dagMaxNumServices`. Graphviz serves that need today; a new engine is not what unlocks it.
 - **A layout-direction toggle is a small in-stack change.** `DAG` already builds its `TLayoutOptions` from the user's layout selection and constructs a new `LayoutManager` whenever that selection changes, so exposing `rankdir` there means adding one field driven by one piece of UI state. `TraceGraph` builds its manager once in a ref and needs the same rebuild-on-change treatment. Both changes stay inside the view.
 
-Neither of those is a reason to change libraries, so ship them where they are. What the current stack cannot answer is node dragging, keyboard accessibility, and who maintains ~1,700 lines of rendering code — and those are what `@xyflow/react` is actually for.
+Neither of those is a reason to change libraries, so ship them where they are. What the current stack cannot answer is node dragging, keyboard accessibility, and who maintains ~3,000 lines of graph code — and those are what `@xyflow/react` is actually for.
 
 | Criterion | Stay on Plexus + Graphviz | Path A: elkjs layout | Path B/C: `@xyflow/react` | Path D: ECharts |
 |---|---|---|---|---|
@@ -400,10 +400,10 @@ Neither of those is a reason to change libraries, so ship them where they are. W
 | **Algorithm choice for cyclic dependency graphs** | 🟢 ² | 🟢 | 🟢 | 🔴 force and circular only |
 | **Node dragging** | 🔴 | 🔴 rendering is unchanged | 🟢 | 🔴 force layout only |
 | **Rendering ceiling at thousands of nodes** | 🔴 | 🔴 rendering is unchanged | 🟡 needs memoization, maybe virtualization | 🟢 |
-| **Keyboard navigation and ARIA** | 🔴 | 🔴 | 🟢 | 🔴 canvas exposes nothing |
+| **Keyboard navigation and ARIA** | 🔴 | 🔴 | 🟢 primitives, not conformance | 🔴 canvas exposes nothing |
 | **Variable-width node content** | 🟢 measure phase is built in | 🟢 | 🟡 ³ | 🔴 canvas symbols cannot hold a React subtree |
 | **CSS and design-token theming** | 🟢 | 🟢 | 🟢 | 🔴 colors must be passed into the options object |
-| **Maintenance ownership** | 🔴 Jaeger owns ~1,700 lines | 🟡 Plexus plus an ELK adapter | 🟢 | 🟡 an imperative wrapper to own |
+| **Maintenance ownership** | 🔴 Jaeger owns ~3,000 lines | 🟡 Plexus plus an ELK adapter | 🟢 | 🟡 an imperative wrapper to own |
 | **Migration cost and risk** | 🟢 none | 🟡 | 🟡 per view, 🔴 to remove Plexus outright ⁴ | 🔴 |
 
 🟢 good 🟡 partial or caveated 🔴 poor
@@ -433,7 +433,7 @@ It is the cheapest of the four views, it has the most interaction to gain, and i
 ### What Would Change This Recommendation
 
 - **The dependency graph trial regresses** on layout quality, rendering, or the context-menu UX. Then Plexus keeps the remaining views and the trial is reverted; the in-stack `rankdir` toggle survives either way, since it does not depend on the renderer.
-- **Profiling shows that DOM rendering, not layout, sets `TraceGraph`'s ceiling at real span counts** (Open Question 6). Then ECharts becomes a serious candidate for that view alone — a different destination from the other three — with `OpNode`'s six metric cells moved into the tooltip.
+- **Profiling shows that DOM rendering, not layout, sets `TraceGraph`'s ceiling at real span counts** (Open Question 6). Then ECharts becomes a serious candidate for that view alone — a different destination from the other three — with `OpNode`'s four metric cells moved into the tooltip.
 - **Compound graphs become necessary**, for example to group spans by service inside the trace DAG. ELK supports nested graphs natively and Graphviz does not, so Path A joins the plan, with the adapter replacing `getLayout.ts` inside the existing worker.
 
 ---
