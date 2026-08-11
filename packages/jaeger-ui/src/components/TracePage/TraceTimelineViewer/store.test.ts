@@ -3,7 +3,9 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import genaiTestTrace from './genaiTestTrace.json';
 import DetailState from './SpanDetail/DetailState';
+import transformTraceData from '../../../model/transform-trace-data';
 import {
   calculateFocusedFindRowStates,
   getInitialLayoutState,
@@ -570,8 +572,25 @@ describe('trace timeline zustand stores', () => {
     });
 
     describe('hide non-GenAI services', () => {
-      const makeGenAISpan = (spanID: string, serviceName: string, genAIKind?: string) =>
-        makeSpan({ spanID, resource: { serviceName }, genAIKind });
+      // genaiTestTrace.json (from #4372) is a real 57-span trace: an agent reached through
+      // two plain tiers (api-edge, graphql-gateway), whose tool calls fan out through a
+      // plain mcp-gateway to a nested agent. Its root (api-edge) does have a GenAI
+      // descendant, so it's never a pruning candidate - it can't exercise the dedicated
+      // root-protection case below, which needs a root with *no* GenAI descendant at all.
+      const fixtureTrace = transformTraceData(genaiTestTrace as never)!.asOtelTrace();
+      const PLAIN_LEAF_SERVICES = new Set([
+        'auth-service',
+        'metrics-backend',
+        'trace-store',
+        'k8s-api',
+        'vector-store',
+      ]);
+
+      // depth is required (not defaulted) because this function builds parent/child
+      // topology for the depth-stack algorithm under test - a flat run of depth-0 spans
+      // would silently test sibling behavior instead of nesting.
+      const makeGenAISpan = (spanID: string, serviceName: string, depth: number, genAIKind?: string) =>
+        makeSpan({ spanID, depth, resource: { serviceName }, genAIKind });
 
       const makeGenAITrace = (traceID: string, spans: any[], rootSpans: any[]) =>
         ({ traceID, spans, rootSpans, isGenAITrace: spans.some(s => s.genAIKind !== undefined) }) as any;
@@ -587,36 +606,33 @@ describe('trace timeline zustand stores', () => {
 
       describe('setTrace computing nonGenAIServicesToHide', () => {
         it('is empty for a non-GenAI trace', () => {
-          const root = makeGenAISpan('root', 'gateway-svc');
+          // No fixture is non-GenAI by definition, so this stays a minimal synthetic trace.
+          const root = makeGenAISpan('root', 'gateway-svc', 0);
           useTraceTimelineStore.getState().setTrace(makeGenAITrace('t-plain', [root], [root]));
           expect(useTraceTimelineStore.getState().nonGenAIServicesToHide).toEqual(new Set());
         });
 
         it('contains services with zero GenAI spans, excluding a GenAI-owning service', () => {
-          // Root is the GenAI-owning service itself, so root protection doesn't interfere
-          // with this assertion - see the dedicated root-protection test below for that.
-          const root = makeGenAISpan('root', 'agent-svc', 'AGENT');
-          const gateway = makeGenAISpan('gateway', 'gateway-svc');
-          const db = makeGenAISpan('db', 'db-svc');
-          useTraceTimelineStore.getState().setTrace(makeGenAITrace('t-mixed', [root, gateway, db], [root]));
-          expect(useTraceTimelineStore.getState().nonGenAIServicesToHide).toEqual(
-            new Set(['gateway-svc', 'db-svc'])
-          );
+          // Root (api-edge) has a GenAI descendant via graphql-gateway -> coding-agent, so
+          // it's already excluded on that basis - root protection doesn't need to interfere
+          // with this assertion; see the dedicated root-protection test below for that.
+          useTraceTimelineStore.getState().setTrace(fixtureTrace);
+          expect(useTraceTimelineStore.getState().nonGenAIServicesToHide).toEqual(PLAIN_LEAF_SERVICES);
         });
 
         it('un-prunes the root service via sanitizePrunedServices, even if it has no GenAI spans', () => {
-          // Root is a plain gateway; the only GenAI span is on a child service. Naive
-          // pruning would remove the root and orphan the tree.
-          const root = makeGenAISpan('root', 'gateway-svc');
-          const agent = makeGenAISpan('agent', 'agent-svc', 'AGENT');
+          // Root is a plain gateway; the only GenAI span is on its child. Naive pruning
+          // would remove the root and orphan the tree. Not representable by the real
+          // fixture, whose root always has a GenAI descendant - kept synthetic.
+          const root = makeGenAISpan('root', 'gateway-svc', 0);
+          const agent = makeGenAISpan('agent', 'agent-svc', 1, 'AGENT');
           useTraceTimelineStore.getState().setTrace(makeGenAITrace('t-root-pruned', [root, agent], [root]));
           expect(useTraceTimelineStore.getState().nonGenAIServicesToHide).toEqual(new Set());
         });
 
         it('resets hideNonGenAIServicesEnabled to false on every new trace', () => {
           useTraceTimelineStore.getState().setHideNonGenAIServicesEnabled(true);
-          const root = makeGenAISpan('root', 'svc');
-          useTraceTimelineStore.getState().setTrace(makeGenAITrace('t-reset', [root], [root]));
+          useTraceTimelineStore.getState().setTrace(fixtureTrace);
           expect(useTraceTimelineStore.getState().hideNonGenAIServicesEnabled).toBe(false);
         });
       });
