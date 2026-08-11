@@ -10,29 +10,30 @@ import { getSelectedSpanID, selectEffectivePrunedServices, useTraceTimelineStore
 import { IOtelTrace } from '../../../../types/otel';
 import type { SpanDetailPanelMode } from '../../../../types/config';
 
-import './LogicalViewToggle.css';
+import '../HeaderIconButton.css';
 
-type LogicalViewToggleProps = {
+type HideNonGenAIServicesToggleProps = {
   trace: IOtelTrace;
   detailPanelMode: SpanDetailPanelMode;
 };
 
 /**
- * Toggle that hides every service with zero GenAI spans, approximating the agent's
- * "logical" flow by folding away infrastructure services. Per yurishkuro's steer on
- * jaegertracing/jaeger-ui#4272, this reuses the service filter's own pruning mechanism
- * rather than a new span-level predicate: `logicalViewPrunedServices` (computed once per
- * trace in store.timeline.ts) is unioned into the effective pruned set through
- * `selectEffectivePrunedServices` when this toggle is on.
+ * Toggle that hides every service with no GenAI span at or below it, reusing the service
+ * filter's own pruning mechanism rather than a new span-level predicate. When on,
+ * `nonGenAIServicesToHide` (computed once per trace in store.timeline.ts) is unioned
+ * into the effective pruned set through `selectEffectivePrunedServices`.
  */
-export default function LogicalViewToggle({ trace, detailPanelMode }: LogicalViewToggleProps) {
-  const logicalViewEnabled = useTraceTimelineStore(s => s.logicalViewEnabled);
-  const logicalViewPrunedServices = useTraceTimelineStore(s => s.logicalViewPrunedServices);
-  const setLogicalViewEnabled = useTraceTimelineStore(s => s.setLogicalViewEnabled);
+export default function HideNonGenAIServicesToggle({
+  trace,
+  detailPanelMode,
+}: HideNonGenAIServicesToggleProps) {
+  const hideNonGenAIServicesEnabled = useTraceTimelineStore(s => s.hideNonGenAIServicesEnabled);
+  const nonGenAIServicesToHide = useTraceTimelineStore(s => s.nonGenAIServicesToHide);
+  const setHideNonGenAIServicesEnabled = useTraceTimelineStore(s => s.setHideNonGenAIServicesEnabled);
 
   const handleToggle = useCallback(() => {
-    const nextEnabled = !logicalViewEnabled;
-    setLogicalViewEnabled(nextEnabled);
+    const nextEnabled = !hideNonGenAIServicesEnabled;
+    setHideNonGenAIServicesEnabled(nextEnabled);
 
     // Mirrors useServiceFilter's handleServiceFilterApply: if enabling the toggle hides
     // the span currently open in the side panel, deselect it rather than leaving a
@@ -40,7 +41,7 @@ export default function LogicalViewToggle({ trace, detailPanelMode }: LogicalVie
     if (nextEnabled && detailPanelMode === 'sidepanel') {
       const nextPruned = selectEffectivePrunedServices({
         ...useTraceTimelineStore.getState(),
-        logicalViewEnabled: true,
+        hideNonGenAIServicesEnabled: true,
       });
       const currentSelectedID = getSelectedSpanID(useTraceTimelineStore.getState().detailStates);
       if (currentSelectedID) {
@@ -50,26 +51,24 @@ export default function LogicalViewToggle({ trace, detailPanelMode }: LogicalVie
         }
       }
     }
-  }, [logicalViewEnabled, setLogicalViewEnabled, detailPanelMode, trace.spanMap]);
+  }, [hideNonGenAIServicesEnabled, setHideNonGenAIServicesEnabled, detailPanelMode, trace.spanMap]);
 
   // Nothing to hide: no GenAI spans in this trace, or every service already has some.
-  if (logicalViewPrunedServices.size === 0) {
+  if (nonGenAIServicesToHide.size === 0) {
     return null;
   }
 
-  const label = logicalViewEnabled
-    ? 'Show infrastructure services'
-    : 'Hide infrastructure services, show only the GenAI/agent flow';
+  const label = hideNonGenAIServicesEnabled ? 'Show all services' : 'Hide services with no GenAI spans';
 
   return (
     <Tooltip title={label}>
       <span
-        className={`LogicalViewToggle--button ${logicalViewEnabled ? 'is-active' : ''}`}
+        className={`TimelineHeaderIconButton ${hideNonGenAIServicesEnabled ? 'is-active' : ''}`}
         role="button"
         tabIndex={0}
         aria-label={label}
-        aria-pressed={logicalViewEnabled}
-        data-testid="logical-view-toggle-button"
+        aria-pressed={hideNonGenAIServicesEnabled}
+        data-testid="hide-non-genai-services-toggle-button"
         onClick={handleToggle}
         onKeyDown={e => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -78,7 +77,7 @@ export default function LogicalViewToggle({ trace, detailPanelMode }: LogicalVie
           }
         }}
       >
-        {logicalViewEnabled ? <IoGitNetwork /> : <IoGitNetworkOutline />}
+        {hideNonGenAIServicesEnabled ? <IoGitNetwork /> : <IoGitNetworkOutline />}
       </span>
     </Tooltip>
   );

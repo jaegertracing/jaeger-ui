@@ -120,7 +120,7 @@ export function getSortedServiceNames(
  * - If all root services would be pruned, discard the filter entirely.
  *
  * Shared by the manual service filter (useServiceFilter.tsx) and any filter that
- * derives a pruned set programmatically (e.g. the logical view's GenAI-service filter),
+ * derives a pruned set programmatically (e.g. the hide-non-GenAI-services toggle),
  * so both apply the same "never orphan the trace" guarantee.
  */
 export function sanitizePrunedServices(pruned: Set<string>, rootServiceNames: Set<string>): Set<string> {

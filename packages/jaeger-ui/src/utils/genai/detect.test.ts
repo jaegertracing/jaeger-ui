@@ -1,16 +1,12 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { classifySpan, isGenAISpan, isGenAITrace, getServicesWithoutGenAISpans } from './detect';
-import type { GenAISpanKind, IAttribute, IAttributes, IOtelSpan } from '../../types/otel';
+import { classifySpan, isGenAISpan, isGenAITrace } from './detect';
+import type { IAttribute, IAttributes } from '../../types/otel';
 import { makeAttributes } from '../../model/attributes';
 
 function makeSpan(attrs: IAttribute[]): { attributes: IAttributes } {
   return { attributes: makeAttributes(attrs) };
-}
-
-function makeServiceSpan(serviceName: string, genAIKind?: GenAISpanKind): IOtelSpan {
-  return { resource: { serviceName, attributes: makeAttributes() }, genAIKind } as unknown as IOtelSpan;
 }
 
 describe('classifySpan', () => {
@@ -158,41 +154,5 @@ describe('isGenAITrace', () => {
 
   it('returns false for an empty span list', () => {
     expect(isGenAITrace([])).toBe(false);
-  });
-});
-
-describe('getServicesWithoutGenAISpans', () => {
-  it('excludes a service that owns at least one GenAI span', () => {
-    const spans = [makeServiceSpan('agent-svc', 'AGENT'), makeServiceSpan('agent-svc', undefined)];
-    expect(getServicesWithoutGenAISpans(spans)).toEqual(new Set());
-  });
-
-  it('includes a service where every span is non-GenAI', () => {
-    const spans = [makeServiceSpan('gateway-svc', undefined), makeServiceSpan('db-svc', undefined)];
-    expect(getServicesWithoutGenAISpans(spans)).toEqual(new Set(['gateway-svc', 'db-svc']));
-  });
-
-  it('splits correctly across a mix of GenAI and non-GenAI services', () => {
-    const spans = [
-      makeServiceSpan('gateway-svc', undefined),
-      makeServiceSpan('agent-svc', 'LLM_CALL'),
-      makeServiceSpan('agent-svc', undefined), // same service also has a plain span
-      makeServiceSpan('db-svc', undefined),
-    ];
-    expect(getServicesWithoutGenAISpans(spans)).toEqual(new Set(['gateway-svc', 'db-svc']));
-  });
-
-  it('treats UNKNOWN_GENAI as a GenAI span, keeping its service out of the result', () => {
-    const spans = [makeServiceSpan('svc', 'UNKNOWN_GENAI')];
-    expect(getServicesWithoutGenAISpans(spans)).toEqual(new Set());
-  });
-
-  it('returns an empty set for an empty span list', () => {
-    expect(getServicesWithoutGenAISpans([])).toEqual(new Set());
-  });
-
-  it('returns an empty set when every service has GenAI spans', () => {
-    const spans = [makeServiceSpan('agent-svc', 'AGENT'), makeServiceSpan('llm-svc', 'LLM_CALL')];
-    expect(getServicesWithoutGenAISpans(spans)).toEqual(new Set());
   });
 });

@@ -7,7 +7,7 @@ import queryString from 'query-string';
 
 import { isSpanPruned } from './generateRowStates';
 import ServiceFilter from './ServiceFilter';
-import { getSelectedSpanID, useTraceTimelineStore } from './store';
+import { getSelectedSpanID, selectEffectivePrunedServices, useTraceTimelineStore } from './store';
 import {
   decodeSvcFilter,
   encodeSvcFilter,
@@ -145,6 +145,7 @@ export function useServiceFilter(
   }, [trace.rootSpans]);
 
   const prunedServices = useTraceTimelineStore(s => s.prunedServices);
+  const effectivePrunedServices = useTraceTimelineStore(selectEffectivePrunedServices);
   const zustandSetPrunedServices = useTraceTimelineStore(s => s.setPrunedServices);
 
   // After cleaning a stale/sanitized URL, the effect re-runs because location.search changes.
@@ -197,6 +198,14 @@ export function useServiceFilter(
       const nextPruned = sanitizePrunedServices(requested, rootServiceNames);
       zustandSetPrunedServices(nextPruned);
 
+      // Applying here is authoritative: the panel showed the effective (manual + auto-hidden
+      // non-GenAI) set, so `requested` already reflects the user's full intent, including any
+      // auto-hidden services they left checked-off or brought back. Turning the auto-hide
+      // toggle off after writing nextPruned makes it read as a one-shot preset that seeded
+      // the manual filter - manual edits always win afterwards, and there's one set of
+      // checkboxes with one meaning instead of two views of "what's hidden" that disagree.
+      useTraceTimelineStore.getState().setHideNonGenAIServicesEnabled(false);
+
       // If the currently selected span (side panel) belongs to a pruned service, deselect it.
       if (nextPruned.size > 0 && detailPanelMode === 'sidepanel') {
         const currentDetailStates = useTraceTimelineStore.getState().detailStates;
@@ -229,8 +238,14 @@ export function useServiceFilter(
   );
 
   const serviceFilterNode = useMemo(
-    () => <ServiceFilter trace={trace} prunedServices={prunedServices} onApply={handleServiceFilterApply} />,
-    [trace, prunedServices, handleServiceFilterApply]
+    () => (
+      <ServiceFilter
+        trace={trace}
+        prunedServices={effectivePrunedServices}
+        onApply={handleServiceFilterApply}
+      />
+    ),
+    [trace, effectivePrunedServices, handleServiceFilterApply]
   );
 
   return { prunedServices, serviceFilterNode };

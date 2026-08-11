@@ -8,10 +8,15 @@ import { renderHook } from '@testing-library/react';
 
 const mockNavigate = vi.fn();
 const mockSetPrunedServices = vi.fn();
+const mockSetHideNonGenAIServicesEnabled = vi.fn();
 const mockStoreState = {
   prunedServices: new Set<string>(),
   setPrunedServices: mockSetPrunedServices,
   detailStates: new Map(),
+  hideNonGenAIServicesEnabled: false,
+  nonGenAIServicesToHide: new Set<string>(),
+  rootServiceNames: new Set<string>(),
+  setHideNonGenAIServicesEnabled: mockSetHideNonGenAIServicesEnabled,
 };
 
 vi.mock('react-router-dom', () => ({
@@ -19,17 +24,24 @@ vi.mock('react-router-dom', () => ({
   useNavigate: vi.fn(() => mockNavigate),
 }));
 
-vi.mock('./store', () => ({
-  useTraceTimelineStore: Object.assign(
-    vi.fn((selector: (s: typeof mockStoreState) => unknown) => selector(mockStoreState)),
-    {
-      getState: () => mockStoreState,
-      setState: vi.fn((partial: Partial<typeof mockStoreState>) => Object.assign(mockStoreState, partial)),
-    }
-  ),
-  getSelectedSpanID: (detailStates: Map<string, unknown>) =>
-    detailStates.size > 0 ? (detailStates.keys().next().value as string) : null,
-}));
+// selectEffectivePrunedServices is the real implementation (a pure function of the state
+// shape above), not a mock - re-mocking its union/sanitization logic here would just be a
+// second, divergable copy of what store.timeline.test.ts already verifies directly.
+vi.mock('./store', async importOriginal => {
+  const actual = await importOriginal<typeof import('./store')>();
+  return {
+    selectEffectivePrunedServices: actual.selectEffectivePrunedServices,
+    useTraceTimelineStore: Object.assign(
+      vi.fn((selector: (s: typeof mockStoreState) => unknown) => selector(mockStoreState)),
+      {
+        getState: () => mockStoreState,
+        setState: vi.fn((partial: Partial<typeof mockStoreState>) => Object.assign(mockStoreState, partial)),
+      }
+    ),
+    getSelectedSpanID: (detailStates: Map<string, unknown>) =>
+      detailStates.size > 0 ? (detailStates.keys().next().value as string) : null,
+  };
+});
 
 vi.mock('./generateRowStates', async importOriginal => {
   const actual = await importOriginal<typeof import('./generateRowStates')>();
@@ -37,9 +49,11 @@ vi.mock('./generateRowStates', async importOriginal => {
 });
 
 let capturedOnApply: ((pruned: Set<string>) => void) | null = null;
+let capturedPrunedServicesProp: Set<string> | null = null;
 vi.mock('./ServiceFilter', () => ({
-  default: (props: { onApply: (pruned: Set<string>) => void }) => {
+  default: (props: { prunedServices: Set<string>; onApply: (pruned: Set<string>) => void }) => {
     capturedOnApply = props.onApply;
+    capturedPrunedServicesProp = props.prunedServices;
     return null;
   },
 }));
@@ -246,9 +260,14 @@ describe('useServiceFilter hook', () => {
   beforeEach(() => {
     mockNavigate.mockClear();
     mockSetPrunedServices.mockClear();
+    mockSetHideNonGenAIServicesEnabled.mockClear();
     mockStoreState.prunedServices = new Set();
     mockStoreState.detailStates = new Map();
+    mockStoreState.hideNonGenAIServicesEnabled = false;
+    mockStoreState.nonGenAIServicesToHide = new Set();
+    mockStoreState.rootServiceNames = new Set();
     capturedOnApply = null;
+    capturedPrunedServicesProp = null;
     vi.mocked(useLocation).mockReturnValue({ search: '', pathname: '/trace/abc' } as ReturnType<
       typeof useLocation
     >);
@@ -349,5 +368,33 @@ describe('useServiceFilter hook', () => {
     const storeSetState = (useTraceTimelineStore as unknown as { setState: ReturnType<typeof vi.fn> })
       .setState;
     expect(storeSetState).not.toHaveBeenCalled();
+  });
+
+  it('passes the effective (manual + auto-hidden non-GenAI) set to ServiceFilter, not just the manual one', () => {
+    // The manual filter is empty, but hiding non-GenAI services is on and hiding svc-b -
+    // the panel must reflect that svc-b is hidden too, or its checkboxes disagree with the timeline.
+    mockStoreState.hideNonGenAIServicesEnabled = true;
+    mockStoreState.nonGenAIServicesToHide = new Set(['svc-b']);
+
+    render(React.createElement(HookRenderer, { trace: makeTrace(['svc-a', 'svc-b']), mode: 'inline' }));
+
+    expect(capturedPrunedServicesProp).toEqual(new Set(['svc-b']));
+  });
+
+  it('onApply writes the manual set and turns the auto-hide toggle off, so it acts as a one-shot preset', () => {
+    mockStoreState.hideNonGenAIServicesEnabled = true;
+    mockStoreState.nonGenAIServicesToHide = new Set(['svc-b']);
+
+    render(
+      React.createElement(HookRenderer, { trace: makeTrace(['svc-a', 'svc-b', 'svc-c']), mode: 'inline' })
+    );
+
+    expect(capturedOnApply).not.toBeNull();
+    // The user brings svc-b back and additionally hides svc-c - the effective set they saw
+    // and edited from was {svc-b}, so this is what ServiceFilter would submit as `requested`.
+    capturedOnApply!(new Set(['svc-c']));
+
+    expect(mockSetPrunedServices).toHaveBeenCalledWith(new Set(['svc-c']));
+    expect(mockSetHideNonGenAIServicesEnabled).toHaveBeenCalledWith(false);
   });
 });

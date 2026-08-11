@@ -132,10 +132,15 @@ const makeSpan = (overrides: Record<string, unknown> = {}) =>
     depth: 0,
     hasChildren: false,
     childSpans: [],
+    resource: { serviceName: 'default-svc' },
     ...overrides,
   }) as any;
 
-const makeTrace = (traceID = 'trace-1', spans: any[] = [makeSpan()]) => ({ traceID, spans }) as any;
+// rootSpans defaults to every passed span - fine for these generic tests, which don't
+// exercise multi-root behavior; the dedicated 'hide non-GenAI services' tests below build their own
+// traces with an explicit, meaningful rootSpans.
+const makeTrace = (traceID = 'trace-1', spans: any[] = [makeSpan()]) =>
+  ({ traceID, spans, rootSpans: spans }) as any;
 
 describe('trace timeline zustand stores', () => {
   beforeEach(() => {
@@ -564,27 +569,27 @@ describe('trace timeline zustand stores', () => {
       });
     });
 
-    describe('logical view', () => {
+    describe('hide non-GenAI services', () => {
       const makeGenAISpan = (spanID: string, serviceName: string, genAIKind?: string) =>
         makeSpan({ spanID, resource: { serviceName }, genAIKind });
 
       const makeGenAITrace = (traceID: string, spans: any[], rootSpans: any[]) =>
         ({ traceID, spans, rootSpans, isGenAITrace: spans.some(s => s.genAIKind !== undefined) }) as any;
 
-      describe('setLogicalViewEnabled', () => {
+      describe('setHideNonGenAIServicesEnabled', () => {
         it('sets the flag', () => {
-          useTraceTimelineStore.getState().setLogicalViewEnabled(true);
-          expect(useTraceTimelineStore.getState().logicalViewEnabled).toBe(true);
-          useTraceTimelineStore.getState().setLogicalViewEnabled(false);
-          expect(useTraceTimelineStore.getState().logicalViewEnabled).toBe(false);
+          useTraceTimelineStore.getState().setHideNonGenAIServicesEnabled(true);
+          expect(useTraceTimelineStore.getState().hideNonGenAIServicesEnabled).toBe(true);
+          useTraceTimelineStore.getState().setHideNonGenAIServicesEnabled(false);
+          expect(useTraceTimelineStore.getState().hideNonGenAIServicesEnabled).toBe(false);
         });
       });
 
-      describe('setTrace computing logicalViewPrunedServices', () => {
+      describe('setTrace computing nonGenAIServicesToHide', () => {
         it('is empty for a non-GenAI trace', () => {
           const root = makeGenAISpan('root', 'gateway-svc');
           useTraceTimelineStore.getState().setTrace(makeGenAITrace('t-plain', [root], [root]));
-          expect(useTraceTimelineStore.getState().logicalViewPrunedServices).toEqual(new Set());
+          expect(useTraceTimelineStore.getState().nonGenAIServicesToHide).toEqual(new Set());
         });
 
         it('contains services with zero GenAI spans, excluding a GenAI-owning service', () => {
@@ -594,7 +599,7 @@ describe('trace timeline zustand stores', () => {
           const gateway = makeGenAISpan('gateway', 'gateway-svc');
           const db = makeGenAISpan('db', 'db-svc');
           useTraceTimelineStore.getState().setTrace(makeGenAITrace('t-mixed', [root, gateway, db], [root]));
-          expect(useTraceTimelineStore.getState().logicalViewPrunedServices).toEqual(
+          expect(useTraceTimelineStore.getState().nonGenAIServicesToHide).toEqual(
             new Set(['gateway-svc', 'db-svc'])
           );
         });
@@ -605,43 +610,44 @@ describe('trace timeline zustand stores', () => {
           const root = makeGenAISpan('root', 'gateway-svc');
           const agent = makeGenAISpan('agent', 'agent-svc', 'AGENT');
           useTraceTimelineStore.getState().setTrace(makeGenAITrace('t-root-pruned', [root, agent], [root]));
-          expect(useTraceTimelineStore.getState().logicalViewPrunedServices).toEqual(new Set());
+          expect(useTraceTimelineStore.getState().nonGenAIServicesToHide).toEqual(new Set());
         });
 
-        it('resets logicalViewEnabled to false on every new trace', () => {
-          useTraceTimelineStore.getState().setLogicalViewEnabled(true);
+        it('resets hideNonGenAIServicesEnabled to false on every new trace', () => {
+          useTraceTimelineStore.getState().setHideNonGenAIServicesEnabled(true);
           const root = makeGenAISpan('root', 'svc');
           useTraceTimelineStore.getState().setTrace(makeGenAITrace('t-reset', [root], [root]));
-          expect(useTraceTimelineStore.getState().logicalViewEnabled).toBe(false);
+          expect(useTraceTimelineStore.getState().hideNonGenAIServicesEnabled).toBe(false);
         });
       });
 
       describe('selectEffectivePrunedServices', () => {
-        it('returns prunedServices unchanged when logical view is off', () => {
+        it('returns prunedServices unchanged when hiding non-GenAI services is off', () => {
           const pruned = new Set(['svc-a']);
           useTraceTimelineStore.setState({
             prunedServices: pruned,
-            logicalViewEnabled: false,
-            logicalViewPrunedServices: new Set(['svc-b']),
+            hideNonGenAIServicesEnabled: false,
+            nonGenAIServicesToHide: new Set(['svc-b']),
           });
           expect(selectEffectivePrunedServices(useTraceTimelineStore.getState())).toBe(pruned);
         });
 
-        it('returns logicalViewPrunedServices unchanged when prunedServices is empty', () => {
-          const logicalPruned = new Set(['svc-b']);
+        it('returns nonGenAIServicesToHide unchanged when prunedServices is empty', () => {
+          const autoHidden = new Set(['svc-b']);
           useTraceTimelineStore.setState({
             prunedServices: new Set(),
-            logicalViewEnabled: true,
-            logicalViewPrunedServices: logicalPruned,
+            hideNonGenAIServicesEnabled: true,
+            nonGenAIServicesToHide: autoHidden,
           });
-          expect(selectEffectivePrunedServices(useTraceTimelineStore.getState())).toBe(logicalPruned);
+          expect(selectEffectivePrunedServices(useTraceTimelineStore.getState())).toBe(autoHidden);
         });
 
-        it('unions manual and logical-view pruned sets when both are non-empty', () => {
+        it('unions manual and auto-hidden non-GenAI pruned sets when both are non-empty', () => {
           useTraceTimelineStore.setState({
             prunedServices: new Set(['svc-a']),
-            logicalViewEnabled: true,
-            logicalViewPrunedServices: new Set(['svc-b']),
+            hideNonGenAIServicesEnabled: true,
+            nonGenAIServicesToHide: new Set(['svc-b']),
+            rootServiceNames: new Set(['root-svc']),
           });
           expect(selectEffectivePrunedServices(useTraceTimelineStore.getState())).toEqual(
             new Set(['svc-a', 'svc-b'])
@@ -651,8 +657,9 @@ describe('trace timeline zustand stores', () => {
         it('memoizes the union so repeated calls with unchanged inputs return the same reference', () => {
           useTraceTimelineStore.setState({
             prunedServices: new Set(['svc-a']),
-            logicalViewEnabled: true,
-            logicalViewPrunedServices: new Set(['svc-b']),
+            hideNonGenAIServicesEnabled: true,
+            nonGenAIServicesToHide: new Set(['svc-b']),
+            rootServiceNames: new Set(['root-svc']),
           });
           const state = useTraceTimelineStore.getState();
           const first = selectEffectivePrunedServices(state);
@@ -663,8 +670,9 @@ describe('trace timeline zustand stores', () => {
         it('recomputes the union once either input Set reference actually changes', () => {
           useTraceTimelineStore.setState({
             prunedServices: new Set(['svc-a']),
-            logicalViewEnabled: true,
-            logicalViewPrunedServices: new Set(['svc-b']),
+            hideNonGenAIServicesEnabled: true,
+            nonGenAIServicesToHide: new Set(['svc-b']),
+            rootServiceNames: new Set(['root-svc']),
           });
           const first = selectEffectivePrunedServices(useTraceTimelineStore.getState());
 
@@ -673,6 +681,32 @@ describe('trace timeline zustand stores', () => {
 
           expect(second).not.toBe(first);
           expect(second).toEqual(new Set(['svc-a', 'svc-c', 'svc-b']));
+        });
+
+        it('re-sanitizes the union: two individually-legal prunes that together orphan every root are discarded', () => {
+          // root-a and root-b are each a legal prune on their own (the other root stays
+          // visible), but the manual filter pruning root-a and the auto-hide-non-GenAI set
+          // pruning root-b, once unioned, would together remove every root - exactly the
+          // collision neither input's own, separate sanitization pass could have caught.
+          useTraceTimelineStore.setState({
+            prunedServices: new Set(['root-a']),
+            hideNonGenAIServicesEnabled: true,
+            nonGenAIServicesToHide: new Set(['root-b']),
+            rootServiceNames: new Set(['root-a', 'root-b']),
+          });
+          expect(selectEffectivePrunedServices(useTraceTimelineStore.getState())).toEqual(new Set());
+        });
+
+        it('keeps the union when at least one root survives it', () => {
+          useTraceTimelineStore.setState({
+            prunedServices: new Set(['root-a']),
+            hideNonGenAIServicesEnabled: true,
+            nonGenAIServicesToHide: new Set(['svc-b']),
+            rootServiceNames: new Set(['root-a', 'root-c']),
+          });
+          expect(selectEffectivePrunedServices(useTraceTimelineStore.getState())).toEqual(
+            new Set(['root-a', 'svc-b'])
+          );
         });
       });
     });
