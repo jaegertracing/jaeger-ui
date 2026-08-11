@@ -419,7 +419,7 @@ Download size is not scored in either matrix. Jaeger already ships 468 KB gzippe
 
 **Verdict: stay on Graphviz for now, and schedule the dagre comparison.** Nothing forces a change today: the direction toggle and the algorithm switch are already reachable in `LayoutManager`, and no view is blocked. But the reason Part 2 gives — Graphviz's engine breadth — is not what is holding the line, and neither is scale.
 
-Laying out synthetic graphs through both engines in a seeded harness (warmup plus median of 3 runs; dot with DAG production options `nodesep=1.5, rankdir=TB, ranksep=1.6, splines=polyline` via `@viz-js/viz` 3.28.0; dagre with equivalent pixel separations via `@dagrejs/dagre` 3.1.1; seeded mulberry32 PRNG) gives:
+Laying out synthetic graphs through both engines in a seeded harness (committed as `scripts/rfc0008-bench.js`; warmup plus median of 3 runs; dot with DAG production options `nodesep=1.5, rankdir=TB, ranksep=1.6, splines=polyline` via `@viz-js/viz` 3.28.0; dagre with equivalent pixel separations via `@dagrejs/dagre` 3.1.1; seeded mulberry32 PRNG) gives:
 
 | Topology | Nodes (n) | Edges | Graphviz `dot` (viz WASM 3.28.0) | `@dagrejs/dagre` 3.1.1 |
 |---|---|---|---|---|
