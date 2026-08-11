@@ -11,7 +11,7 @@
   "engines": {
     "node": ">=24.16.0"
   },
-  "packageManager": "pnpm@11.19.0",
+  "packageManager": "pnpm@11.20.0",
   "devDependencies": {
     "@babel/core": "8.0.1",
     "@emnapi/core": "^1.9.1",
@@ -22,8 +22,8 @@
     "knip": "6.31.0",
     "eslint-plugin-react-x": "5.18.0",
     "husky": "9.1.0",
-    "jsdom": "29.1.1",
-    "lint-staged": "17.2.0",
+    "jsdom": "30.0.1",
+    "lint-staged": "17.3.0",
     "npm-run-all2": "9.0.1",
     "openapi-zod-client": "1.18.3",
     "typescript": "npm:@typescript/typescript6@6.0.2",
@@ -45,6 +45,7 @@
     "preinstall": "npx only-allow pnpm",
     "prepare": "husky",
     "fmt-lint": "vp fmt --check || (echo '*** ❌ PLEASE RUN make fmt AND RESUBMIT ***' && false)",
+    "generate:genai-trace": "node scripts/utils/make-genai-trace.js",
     "generate:api-types": "openapi-zod-client https://raw.githubusercontent.com/jaegertracing/jaeger-idl/refs/heads/main/swagger/api_v3/query_service.openapi.yaml --output packages/jaeger-ui/src/api/v3/generated-client.ts --with-alias && node scripts/postprocess-schemas.cjs && vp fmt packages/jaeger-ui/src/api/v3/generated-client.ts",
     "test": "pnpm -r test --",
     "tsc-lint": "tsc -p packages/jaeger-ui/tsconfig.json && tsc -p packages/plexus/tsconfig.json",
