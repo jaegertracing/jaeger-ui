@@ -10,6 +10,7 @@ import type { SorterResult, SortOrder } from 'antd/es/table/interface';
 import Overflow from '@rc-component/overflow';
 import _sortBy from 'lodash/sortBy';
 import { IoSwapHorizontalOutline } from 'react-icons/io5';
+import { MdAutoAwesome } from 'react-icons/md';
 import { TraceSummary } from '../../../types/trace-summary';
 import {
   formatDuration,
@@ -98,21 +99,39 @@ export default function TraceTable({
           const link = getLink(trace.traceID);
           const label = name || trace.traceID;
           return (
-            <Tooltip title={label}>
-              <Link
-                to={link.pathname + (link.search ? `?${link.search}` : '')}
-                state={link.state}
-                onClick={e => e.stopPropagation()}
-                style={{
-                  display: 'block',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {label}
-              </Link>
-            </Tooltip>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+              {trace.isGenAITrace && (
+                <Tooltip title="GenAI Trace">
+                  <span
+                    role="img"
+                    aria-label="GenAI Trace"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      color: 'var(--brand-primary, #1890ff)',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <MdAutoAwesome aria-hidden="true" />
+                  </span>
+                </Tooltip>
+              )}
+              <Tooltip title={label}>
+                <Link
+                  to={link.pathname + (link.search ? `?${link.search}` : '')}
+                  state={link.state}
+                  onClick={e => e.stopPropagation()}
+                  style={{
+                    display: 'block',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {label}
+                </Link>
+              </Tooltip>
+            </div>
           );
         },
         sorter: true,

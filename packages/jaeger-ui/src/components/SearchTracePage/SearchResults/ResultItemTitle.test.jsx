@@ -212,5 +212,10 @@ describe('ResultItemTitle', () => {
       expect(screen.getByRole('link', { name: /traceNameValue/i })).toBeInTheDocument();
       expect(container.querySelector('.ResultItemTitle--idExcerpt')).toBeInTheDocument();
     });
+
+    it('renders GenAI badge when isGenAITrace is true', () => {
+      setup({ ...defaultProps, isGenAITrace: true });
+      expect(screen.getByLabelText('GenAI Trace')).toBeInTheDocument();
+    });
   });
 });

@@ -19,5 +19,6 @@ export type TraceSummary = {
   spanCount?: number;
   errorSpanCount?: number;
   orphanSpanCount?: number;
+  isGenAITrace?: boolean;
   services: ServiceSummary[];
 };

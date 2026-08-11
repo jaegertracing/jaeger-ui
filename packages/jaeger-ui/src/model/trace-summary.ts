@@ -36,6 +36,7 @@ export function traceToTraceSummary(trace: IOtelTrace): TraceSummary {
     spanCount: trace.spans.length,
     errorSpanCount,
     orphanSpanCount: trace.orphanSpanCount,
+    isGenAITrace: trace.isGenAITrace,
     services,
   };
 }

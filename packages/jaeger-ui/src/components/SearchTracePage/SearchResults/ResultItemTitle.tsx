@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { Checkbox } from 'antd';
+import { Checkbox, Tooltip } from 'antd';
 import { Link } from 'react-router-dom';
+import { MdAutoAwesome } from 'react-icons/md';
 
 import TraceId from '../../common/TraceId';
 import TraceName from '../../common/TraceName';
@@ -23,6 +24,7 @@ type Props = {
   durationPercent?: number;
   error?: ApiError;
   isInDiffCohort: boolean;
+  isGenAITrace?: boolean;
   linkTo: TracePageLink | TNil;
   state?: FetchedState | TNil;
   targetBlank?: boolean;
@@ -41,6 +43,7 @@ export default function ResultItemTitle({
   durationPercent = DEFAULT_DURATION_PERCENT,
   error,
   isInDiffCohort,
+  isGenAITrace = false,
   linkTo,
   state,
   targetBlank = false,
@@ -71,6 +74,22 @@ export default function ResultItemTitle({
       <span className="ResultItemTitle--durationBar" style={{ width: `${durationPercent}%` }} />
       {duration != null && <span className="ub-right ub-relative">{formatDurationCompact(duration)}</span>}
       <h3 className="ResultItemTitle--title">
+        {isGenAITrace && (
+          <Tooltip title="GenAI Trace">
+            <span
+              role="img"
+              aria-label="GenAI Trace"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                color: 'var(--brand-primary, #1890ff)',
+                marginRight: 6,
+              }}
+            >
+              <MdAutoAwesome aria-hidden="true" />
+            </span>
+          </Tooltip>
+        )}
         <TraceName error={error} state={state} traceName={traceName} />
         <TraceId traceId={traceID} className="ResultItemTitle--idExcerpt" />
       </h3>

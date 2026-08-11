@@ -127,6 +127,15 @@ describe('traceToTraceSummary', () => {
     expect(summary.orphanSpanCount).toBe(3);
   });
 
+  it('propagates isGenAITrace from the OTEL trace', () => {
+    const trace = makeMinimalTrace({ isGenAITrace: true });
+    const summary = traceToTraceSummary(trace);
+    expect(summary.isGenAITrace).toBe(true);
+
+    const nonGenAiTrace = makeMinimalTrace({ isGenAITrace: false });
+    expect(traceToTraceSummary(nonGenAiTrace).isGenAITrace).toBe(false);
+  });
+
   it('round-trips correctly through transformTraceData and traceGenerator', () => {
     const raw = traceGenerator.trace({});
     const legacyTrace = transformTraceData(raw)!;

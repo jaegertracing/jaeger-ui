@@ -62,6 +62,7 @@ export default function ResultItem({
         duration={duration}
         durationPercent={durationPercent}
         isInDiffCohort={isInDiffCohort}
+        isGenAITrace={traceSummary.isGenAITrace}
         linkTo={linkTo}
         toggleComparison={toggleComparison}
         traceID={traceID}
@@ -88,6 +89,11 @@ export default function ResultItem({
                   Incomplete
                 </Tag>
               </Tooltip>
+            )}
+            {traceSummary.isGenAITrace && (
+              <Tag className="ub-m1" color="purple" variant="outlined">
+                GenAI
+              </Tag>
             )}
             {isUploaded && (
               <Tag className="ub-m1" color="blue" variant="outlined">

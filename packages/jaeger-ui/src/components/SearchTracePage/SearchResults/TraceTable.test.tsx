@@ -376,4 +376,16 @@ describe('column suppression for unsupported backends', () => {
     expect(screen.getByText('Services')).toBeInTheDocument();
     expect(screen.getByText('Errors')).toBeInTheDocument();
   });
+
+  it('renders GenAI badge when trace isGenAITrace is true', () => {
+    const genAiTrace = { ...makeTrace('genai-1'), isGenAITrace: true };
+    const standardTrace = { ...makeTrace('std-1'), isGenAITrace: false };
+    render(
+      <MemoryRouter>
+        <TraceTable {...defaultProps} traceSummaries={[genAiTrace, standardTrace]} />
+      </MemoryRouter>
+    );
+    const genAiBadges = screen.getAllByLabelText('GenAI Trace');
+    expect(genAiBadges).toHaveLength(1);
+  });
 });
