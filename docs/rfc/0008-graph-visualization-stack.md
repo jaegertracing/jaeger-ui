@@ -77,7 +77,7 @@ This means adding node drag to the current Plexus stack is not just a coordinate
 | **Scale (layout)** | Designed for large graphs. The isolation that keeps 1,000-node layouts off the main thread is Plexus's worker pool, not something Graphviz provides, and the figure is an estimate rather than a measurement | Blocks the main thread if run naively, but inherits the same Plexus pool through a `getLayout` adapter |
 | **Maturity** | Graphviz ~30 years; `@viz-js/viz` wrapper ~10 years, stable | ELK ~10 years (Eclipse project); `elkjs` JS port ~8 years |
 | **Active development** | Graphviz core stable/slow; `@viz-js/viz` has regular releases | ELK actively developed; elkjs follows upstream regularly |
-| **Bundle size** | `@viz-js/viz` 3.29.0 ships 1.19 MB, 468 KB gzipped, loaded in the worker rather than on the main thread | elkjs 0.12.0 `elk.bundled.js` is 1.61 MB, 467 KB gzipped — the same download, to the kilobyte |
+| **Bundle size** | `@viz-js/viz` 3.28.0 ships 1.19 MB, 468 KB gzipped, loaded in the worker rather than on the main thread | elkjs 0.12.0 `elk.bundled.js` is 1.61 MB, 467 KB gzipped: the same download, to the kilobyte |
 | **React integration** | No official React binding; Plexus wraps it | No official React binding; community hooks exist |
 
 ### Graphviz Strengths
@@ -330,7 +330,7 @@ This is the node the user called out: four metric cells alongside the two labels
 | **Maintenance** | Jaeger-owned | xyflow team (active) | Apache TLP, very active |
 | **Bundle size** | 468 KB gzipped (worker) | 86 KB gzipped, plus a layout engine | 368 KB gzipped for the full minified build; a graph-only build is smaller |
 | **License** | Apache 2.0 | MIT | Apache 2.0 |
-| **Verified against** | `packages/plexus` at this commit; `@viz-js/viz` 3.29.0 | `@xyflow/react` 12.11.2, `@xyflow/system` 0.0.79 | `echarts` 6.1.0 |
+| **Verified against** | `packages/plexus` at this commit; `@viz-js/viz` 3.28.0 | `@xyflow/react` 12.11.2, `@xyflow/system` 0.0.79 | `echarts` 6.1.0 |
 
 ### Assessment for Jaeger's Two Graph Views
 
@@ -419,16 +419,24 @@ Download size is not scored in either matrix. Jaeger already ships 468 KB gzippe
 
 **Verdict: stay on Graphviz for now, and schedule the dagre comparison.** Nothing forces a change today: the direction toggle and the algorithm switch are already reachable in `LayoutManager`, and no view is blocked. But the reason Part 2 gives — Graphviz's engine breadth — is not what is holding the line, and neither is scale.
 
-Laying out synthetic graphs of the same topology through both engines gives:
+Laying out synthetic graphs through both engines in a seeded harness (warmup plus median of 3 runs; dot with DAG production options `nodesep=1.5, rankdir=TB, ranksep=1.6, splines=polyline` via `@viz-js/viz` 3.28.0; dagre with equivalent pixel separations via `@dagrejs/dagre` 3.1.1; seeded mulberry32 PRNG) gives:
 
-| Nodes (with ~60% extra edges) | Graphviz `dot` | `@dagrejs/dagre` |
-|---|---|---|
-| 200 | 159 ms | 184 ms |
-| 500 | 1,920 ms | 1,134 ms |
-| 1,200 | did not finish in two minutes | 6,269 ms |
-| 5,000 | not attempted | out of memory at a 4 GB heap |
+| Topology | Nodes (n) | Edges | Graphviz `dot` (viz WASM 3.28.0) | `@dagrejs/dagre` 3.1.1 |
+|---|---|---|---|---|
+| Dense random (spanning tree + 0.6n extra forward edges) | 200 | 319 | 77 ms | 458 ms |
+| Dense random | 500 | 799 | 483 ms | 3,390 ms |
+| Dense random | 1,200 | 1,919 | 4,543 ms | 59,688 ms |
+| Layered sparse (7-layer service DAG) | 500 | 1,062 | 9,302 ms | 7,042 ms |
+| Layered sparse | 1,200 | 2,545 | did not finish (150 s timeout) | 55.4 s |
+| Layered + shared-infra hubs ("realistic" microservices) | 200 | 488 | 667 ms | 1,163 ms |
+| Layered + shared-infra hubs | 500 | 1,234 | 37,576 ms | 10,179 ms |
+| Layered + shared-infra hubs | 1,200 | 2,915 | did not finish (150 s timeout) | 63.7 s |
 
-These are dense random graphs run under Node rather than Jaeger's own data in a browser, so treat them as an order of magnitude rather than a benchmark. Three things follow anyway. Neither engine is pleasant at 500 nodes, which is independent confirmation of why `DAGOptions` disables Hierarchical there and why `DAG` refuses to draw past 1,200 — the fallback is a symptom of layered layout being expensive at that size, in either library. Both therefore need to stay off the main thread, so Plexus's worker pool survives a change of engine. And dagre is not the weaker engine at the sizes that matter: at 500 it beats `dot`, and the gap at 1,200 favours it heavily.
+These measurements run under Node rather than Jaeger's own data in a browser. Several conclusions follow:
+
+1. **Topology shape dominates layered-layout cost.** At a fixed 500 nodes with production layout options, runtime spans 483 ms to 37.6 s for `dot` depending purely on graph structure. Hub fan-in and inter-layer density create significant cross-rank routing complexity.
+2. **The engine ranking flips with topology.** `dot` is faster on dense random graphs (7x faster at 500 nodes), whereas `dagre` is 2x to 4x faster on realistic layered graphs at 500 nodes (confirmed across multiple seeds: dot 17.5 to 37.6 s vs dagre 7.4 to 10.2 s). At 1,200 nodes on realistic topologies, `dot` hits the 150 s timeout while `dagre` finishes in ~55 to 64 s.
+3. **The core architecture conclusions are reinforced.** Neither engine is interactive at 500 nodes on realistic topologies (10 s to 37 s). This independently validates why `DAGOptions` disables Hierarchical layout at 500 nodes, why `DAG` falls back to focal-neighborhood selection past 1,200, and why layout calculations must remain in a background Web Worker regardless of engine.
 
 **What would actually be bought by moving to dagre**, and nesting is only part of it:
 
@@ -528,13 +536,13 @@ Only after Spike 1 lands, and it decides whether the migration continues past on
 
 ### Spike 3 — dagre against `dot` on real dependency data
 
-Worth scheduling after Spike 1, not contingent on nesting. The synthetic timings in Decision 1 say dagre is competitive at the sizes the UI presents and better past them, and the prize is retiring the DOT round-trip — `toDot`, `convPlain`, and the DPI conversion — while keeping the worker.
+Worth scheduling after Spike 1, not contingent on nesting. The synthetic timings in Decision 1 say dagre is competitive at the sizes the UI presents and better past them, and the prize is retiring the DOT round-trip (`toDot`, `convPlain`, and the DPI conversion) while keeping the worker.
 
-Export a real dependency graph at roughly 200 and 500 services and lay it out through both engines. Compare edge crossings, aspect ratio, and wall-clock time, and diff the rendered result against today's.
+Export a real dependency graph at roughly 200 and 500 services and lay it out through both engines. Record graph topology statistics (node count, edge count, out-degree distribution, and shared-infra hub fan-in), compare edge crossings, aspect ratio, and wall-clock time, and diff the rendered result against today's.
 
-**Accept dagre if** it matches `dot` on readability at those sizes and is no slower, **and** a plan exists for the 500-to-1,200 band that `sfdp` covers today — either starting the focal-service UX earlier or adding `d3-force` or WebCola alongside. **Reject it if** readability regresses on real data, whatever the synthetic numbers said.
+**Accept dagre if** it matches `dot` on readability at those sizes and is no slower, **and** a plan exists for the 500-to-1,200 band that `sfdp` covers today: either starting the focal-service UX earlier or adding `d3-force` or WebCola alongside. **Reject it if** readability regresses on real data, whatever the synthetic numbers said.
 
-Do not gate this on 5,000 or 25,000 nodes. Neither engine reaches that: `dot` did not finish 1,200 nodes in two minutes and dagre exhausted a 4 GB heap at 5,000. That size is the poster case, and the product's answer to it is a focal neighbourhood, not a faster layout library.
+Do not gate this on 5,000 or 25,000 nodes. Neither engine reaches that: `dot` did not finish 1,200 nodes on realistic topologies within 150 seconds and dagre exhausted a 4 GB heap at 5,000 on dense graphs. That size is the poster case, and the product's answer to it is a focal neighbourhood, not a faster layout library.
 
 ---
 
