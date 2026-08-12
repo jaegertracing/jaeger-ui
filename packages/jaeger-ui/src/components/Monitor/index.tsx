@@ -7,6 +7,6 @@ import MonitorATMEmptyState from './EmptyState';
 import getConfig from '../../utils/config/get-config';
 
 const MonitorATMPage = () =>
-  getConfig().storageCapabilities?.metricsStorage ? <MonitorATMServicesView /> : <MonitorATMEmptyState />;
+  getConfig().backendCapabilities?.metricsStorage ? <MonitorATMServicesView /> : <MonitorATMEmptyState />;
 
 export default MonitorATMPage;

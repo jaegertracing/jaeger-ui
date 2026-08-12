@@ -12,6 +12,16 @@ SPDX-License-Identifier: Apache-2.0
   top: 130px;
 }
 
+/* When the toolbar wraps to a second row (narrow viewports), it would
+   overlap the fixed graph wrapper. Push the wrapper down to clear the
+   wrapped row. The breakpoint matches the width at which the current
+   DAGOptions controls stop fitting on one line. */
+@media (max-width: 1050px) {
+  .DependencyGraph--graphWrapper {
+    top: 190px;
+  }
+}
+
 .rv-force__node {
   fill: #11939a;
   cursor: pointer;

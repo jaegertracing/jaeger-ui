@@ -26,11 +26,13 @@ describe('updateUiFind', () => {
   const location = {
     pathname: '/trace/traceID',
     search: 'location.search',
+    state: { fromSearch: '/search?service=foo' },
   };
   const expectedNavigateArg = {
     pathname: location.pathname,
     search: `?${queryStringStringifySpyMockReturnValue}`,
   };
+  const expectedNavigateOptions = { replace: true, state: location.state };
 
   beforeEach(() => {
     navigate.mockReset();
@@ -54,7 +56,7 @@ describe('updateUiFind', () => {
       uiFind: newUiFind,
       [unrelatedQueryParamName]: unrelatedQueryParamValue,
     });
-    expect(navigate).toHaveBeenCalledWith(expectedNavigateArg, { replace: true });
+    expect(navigate).toHaveBeenCalledWith(expectedNavigateArg, expectedNavigateOptions);
   });
 
   it('omits falsy graphSearch from query params', () => {
@@ -67,7 +69,7 @@ describe('updateUiFind', () => {
     expect(stringifyMock).toHaveBeenCalledWith({
       [unrelatedQueryParamName]: unrelatedQueryParamValue,
     });
-    expect(navigate).toHaveBeenCalledWith(expectedNavigateArg, { replace: true });
+    expect(navigate).toHaveBeenCalledWith(expectedNavigateArg, expectedNavigateOptions);
   });
 
   it('omits absent graphSearch from query params', () => {
@@ -79,7 +81,7 @@ describe('updateUiFind', () => {
     expect(stringifyMock).toHaveBeenCalledWith({
       [unrelatedQueryParamName]: unrelatedQueryParamValue,
     });
-    expect(navigate).toHaveBeenCalledWith(expectedNavigateArg, { replace: true });
+    expect(navigate).toHaveBeenCalledWith(expectedNavigateArg, expectedNavigateOptions);
   });
 
   describe('trackFindFunction provided', () => {

@@ -32,7 +32,6 @@ type TOwnProps = {
 const TracesDdgImpl: React.FC<TOwnProps> = React.memo(props => {
   const { location, traceIDs } = props;
   const navigate = useNavigate();
-  const viewModifierProps = useDdgViewModifierBridgeProps();
   const urlArgs = queryString.parse(location.search);
   const { end, start, limit, lookback, maxDuration, minDuration, view } = urlArgs;
   const extraArgs = { end, start, limit, lookback, maxDuration, minDuration, view };
@@ -61,6 +60,8 @@ const TracesDdgImpl: React.FC<TOwnProps> = React.memo(props => {
     return { graphState: gs, graph: makeGraph(gs.model, showOp, density) };
   }, [tracesData, service, operation, showOp, density]);
 
+  const modelHash = graphState && graphState.state === fetchedState.DONE ? graphState.model.hash : undefined;
+  const viewModifierProps = useDdgViewModifierBridgeProps({ modelHash });
   const sanitizedUrlState = useMemo(
     () => sanitizeUrlState(urlState, _get(graphState, 'model.hash')),
     [urlState, graphState]

@@ -1,6 +1,7 @@
 // Copyright (c) 2019 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+import traceGenerator from '../demo/trace-generators';
 import transformTraceData, { orderTags, deduplicateTags } from './transform-trace-data';
 
 describe('orderTags()', () => {
@@ -152,6 +153,302 @@ describe('transformTraceData()', () => {
     };
 
     expect(transformTraceData(traceData).traceName).toEqual(`${serviceName}: ${rootOperationName}`);
+  });
+
+  it('should render the whole tree when every span reports startTime 0', () => {
+    const zeroRoot = {
+      traceID,
+      spanID: rootSpanID,
+      operationName: rootOperationName,
+      references: [],
+      startTime: 0,
+      duration: 100,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+    const zeroChild = {
+      traceID,
+      spanID: 'zeroChild',
+      operationName: 'childOp',
+      references: [{ refType: 'CHILD_OF', traceID, spanID: rootSpanID }],
+      startTime: 0,
+      duration: 50,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+    const noStartTimeChild = {
+      traceID,
+      spanID: 'missingStartTime',
+      operationName: 'missingStartOp',
+      references: [{ refType: 'CHILD_OF', traceID, spanID: rootSpanID }],
+      duration: 10,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+
+    const result = transformTraceData({
+      traceID,
+      processes,
+      spans: [zeroRoot, zeroChild, noStartTimeChild],
+    });
+
+    // No span is dropped: startTime 0 (epoch) and a missing startTime are both
+    // treated as "no usable timestamp" and repaired rather than filtered out.
+    expect(result.spans.map(span => span.spanID)).toEqual([rootSpanID, 'zeroChild', 'missingStartTime']);
+    expect(result.startTime).toBe(0);
+    expect(result.spans.every(span => span.startTime === 0)).toBe(true);
+    expect(result.spanMap.get(rootSpanID).hasChildren).toBe(true);
+  });
+
+  it('should clamp spans with no usable startTime to their parent instead of stretching the timeline', () => {
+    // A realistic microsecond epoch timestamp; a stray 0/missing startTime here
+    // would otherwise pin the trace start ~56 years earlier and squash the real
+    // spans into an invisible sliver.
+    const realStart = 1784570820629325;
+    const realRoot = {
+      traceID,
+      spanID: rootSpanID,
+      operationName: rootOperationName,
+      references: [],
+      startTime: realStart,
+      duration: 1000,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+    const zeroChild = {
+      traceID,
+      spanID: 'zeroChild',
+      operationName: 'childOp',
+      references: [{ refType: 'CHILD_OF', traceID, spanID: rootSpanID }],
+      startTime: 0,
+      duration: 200,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+    const missingChild = {
+      traceID,
+      spanID: 'missingChild',
+      operationName: 'missingOp',
+      references: [{ refType: 'CHILD_OF', traceID, spanID: rootSpanID }],
+      duration: 300,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+
+    const result = transformTraceData({
+      traceID,
+      processes,
+      spans: [realRoot, zeroChild, missingChild],
+    });
+
+    expect(result.startTime).toBe(realStart);
+    // The broken children inherit the parent's startTime, so they sit at the
+    // start of the trace rather than 56 years before it.
+    expect(result.spanMap.get('zeroChild').startTime).toBe(realStart);
+    expect(result.spanMap.get('missingChild').startTime).toBe(realStart);
+    expect(result.spanMap.get('zeroChild').relativeStartTime).toBe(0);
+    // Trace duration reflects the real root span, not an epoch-wide range.
+    expect(result.duration).toBe(1000);
+  });
+
+  it('should inherit a repaired startTime transitively down a chain of broken spans', () => {
+    // root (real) -> middle (0) -> leaf (missing). The middle span is repaired
+    // to the root's startTime first; the leaf must then inherit that repaired
+    // value, not undefined/0. This exercises the DFS ordering invariant that
+    // lets processSpan read an already-fixed parent.startTime.
+    const realStart = 1784570820629325;
+    const realRoot = {
+      traceID,
+      spanID: rootSpanID,
+      operationName: rootOperationName,
+      references: [],
+      startTime: realStart,
+      duration: 1000,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+    const brokenMiddle = {
+      traceID,
+      spanID: 'brokenMiddle',
+      operationName: 'middleOp',
+      references: [{ refType: 'CHILD_OF', traceID, spanID: rootSpanID }],
+      startTime: 0,
+      duration: 400,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+    const brokenLeaf = {
+      traceID,
+      spanID: 'brokenLeaf',
+      operationName: 'leafOp',
+      references: [{ refType: 'CHILD_OF', traceID, spanID: 'brokenMiddle' }],
+      duration: 100,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+
+    const result = transformTraceData({
+      traceID,
+      processes,
+      spans: [realRoot, brokenMiddle, brokenLeaf],
+    });
+
+    expect(result.startTime).toBe(realStart);
+    expect(result.spanMap.get('brokenMiddle').startTime).toBe(realStart);
+    // The leaf inherits the middle span's repaired startTime, not undefined.
+    expect(result.spanMap.get('brokenLeaf').startTime).toBe(realStart);
+    expect(result.spanMap.get('brokenLeaf').relativeStartTime).toBe(0);
+    expect(result.duration).toBe(1000);
+  });
+
+  it('should not produce a negative duration for a trace with spans but no root', () => {
+    // Two spans referencing each other form a cycle, so neither is a root and
+    // nothing is reachable by the traversal. The time range must not be left at
+    // its sentinel value, which would yield a negative duration.
+    const spanA = {
+      traceID,
+      spanID: 'a',
+      operationName: 'a',
+      references: [{ refType: 'CHILD_OF', traceID, spanID: 'b' }],
+      startTime,
+      duration,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+    const spanB = {
+      traceID,
+      spanID: 'b',
+      operationName: 'b',
+      references: [{ refType: 'CHILD_OF', traceID, spanID: 'a' }],
+      startTime,
+      duration,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+
+    const result = transformTraceData({
+      traceID,
+      processes,
+      spans: [spanA, spanB],
+    });
+
+    expect(result.spans.length).toBe(0);
+    expect(result.duration).toBe(0);
+    expect(result.startTime).toBe(0);
+    expect(result.endTime).toBe(0);
+  });
+
+  it('should keep and repair sibling spans that have no usable startTime', () => {
+    // NB: this asserts the observable outcome (no span dropped, all startTimes
+    // finite, real sibling ordered last). It does NOT prove the NaN-comparator
+    // ordering issue is gone — that divergence is engine-defined (V8 leaves a
+    // NaN-comparator order unchanged), so it cannot be reproduced deterministically
+    // here. Repairing before the sort addresses it by construction.
+    const realStart = 1784570820629325;
+    const realRoot = {
+      traceID,
+      spanID: rootSpanID,
+      operationName: rootOperationName,
+      references: [],
+      startTime: realStart,
+      duration: 1000,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+    const missingSibling1 = {
+      traceID,
+      spanID: 'missing1',
+      operationName: 'missing1',
+      references: [{ refType: 'CHILD_OF', traceID, spanID: rootSpanID }],
+      duration: 10,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+    const nanSibling = {
+      traceID,
+      spanID: 'nan',
+      operationName: 'nan',
+      references: [{ refType: 'CHILD_OF', traceID, spanID: rootSpanID }],
+      startTime: NaN,
+      duration: 20,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+    const realSibling = {
+      traceID,
+      spanID: 'real',
+      operationName: 'real',
+      references: [{ refType: 'CHILD_OF', traceID, spanID: rootSpanID }],
+      startTime: realStart + 500,
+      duration: 30,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+
+    const result = transformTraceData({
+      traceID,
+      processes,
+      spans: [realRoot, missingSibling1, nanSibling, realSibling],
+    });
+
+    // Every span is kept and has a finite startTime; none was lost or left NaN.
+    expect(result.spans.length).toBe(4);
+    expect(result.spans.every(span => Number.isFinite(span.startTime))).toBe(true);
+    // Repaired siblings inherit the root's start (realStart), so they sort ahead
+    // of the real sibling (realStart + 500), which remains last.
+    expect(result.spanMap.get('real').startTime).toBe(realStart + 500);
+    expect(result.spans[result.spans.length - 1].spanID).toBe('real');
+  });
+
+  it('should fall back to 0 for a root with no usable startTime and propagate it to children', () => {
+    const brokenRoot = {
+      traceID,
+      spanID: rootSpanID,
+      operationName: rootOperationName,
+      references: [],
+      duration: 500,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+    const child = {
+      traceID,
+      spanID: 'child',
+      operationName: 'childOp',
+      references: [{ refType: 'CHILD_OF', traceID, spanID: rootSpanID }],
+      startTime: 0,
+      duration: 100,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+
+    const result = transformTraceData({
+      traceID,
+      processes,
+      spans: [brokenRoot, child],
+    });
+
+    // A root with no parent to inherit from falls back to 0; the child inherits
+    // that finite 0 rather than becoming undefined.
+    expect(result.spanMap.get(rootSpanID).startTime).toBe(0);
+    expect(result.spanMap.get('child').startTime).toBe(0);
+    expect(result.startTime).toBe(0);
   });
 
   it('should detect orphan spans when parent span is missing', () => {
@@ -381,17 +678,6 @@ describe('transformTraceData()', () => {
 
     it('should calculate depth and sort spans in DFS order', () => {
       // Create a linear trace: Root -> Child -> GrandChild
-      const grandChildSpan = {
-        traceID,
-        spanID: 'grandChild',
-        operationName: 'grandChildOp',
-        references: [{ refType: 'CHILD_OF', traceID, spanID: spans[0].spanID }],
-        startTime: startTime + 200,
-        duration: 10,
-        tags: [],
-        processID: 'p1',
-      };
-
       // spans[0] is 'someOperationName', referencing rootSpanID
       // rootSpanWithoutRefs is the root (start + 50)
       // spans[0] starts at startTime (0 relative to trace start? No, trace start is startTime).
@@ -451,5 +737,37 @@ describe('transformTraceData()', () => {
       const ids = result.spans.map(s => s.spanID);
       expect(ids).toEqual(['root', 'child1', 'grandChild1', 'child2']);
     });
+  });
+
+  it('populates subsidiarilyReferencedBy for spans with multiple references', () => {
+    const multiRefTrace = traceGenerator.trace({ numberOfSpans: 7, maxDepth: 3, spansPerLevel: 4 });
+    const { traceID, spanID: rootSpanId } = multiRefTrace.spans[0];
+    const candidates = multiRefTrace.spans.filter(
+      span => span.references.length > 0 && span.references[0].spanID !== rootSpanId
+    );
+    expect(candidates.length).toBeGreaterThanOrEqual(2);
+    const [willGainRef, willNotChange] = candidates;
+    const { spanID: existingRefID } = willGainRef.references[0];
+    const { spanID: willBeReferencedID } = willNotChange.references[0];
+
+    willGainRef.references.push({ refType: 'CHILD_OF', traceID, spanID: willBeReferencedID });
+
+    const tTrace = transformTraceData(multiRefTrace);
+    const multiReference = tTrace.spans.filter(span => span.references && span.references.length > 1);
+
+    expect(multiReference.length).toEqual(1);
+    expect(new Set(multiReference[0].references)).toEqual(
+      new Set([
+        expect.objectContaining({ spanID: willBeReferencedID }),
+        expect.objectContaining({ spanID: existingRefID }),
+      ])
+    );
+    const hasReferral = tTrace.spans.filter(
+      span => span.subsidiarilyReferencedBy && span.subsidiarilyReferencedBy.length > 0
+    );
+    expect(hasReferral.length).toEqual(1);
+    expect(new Set(hasReferral[0].subsidiarilyReferencedBy)).toEqual(
+      new Set([expect.objectContaining({ spanID: willGainRef.spanID })])
+    );
   });
 });

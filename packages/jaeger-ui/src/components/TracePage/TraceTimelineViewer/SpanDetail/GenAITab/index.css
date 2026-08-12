@@ -1,0 +1,163 @@
+/*
+Copyright (c) 2026 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.GenAITab {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.GenAITab--meta,
+.GenAITab--tokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 8px 12px;
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+}
+
+.GenAITab--metaItem,
+.GenAITab--tokenItem {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.GenAITab--metaLabel,
+.GenAITab--tokenLabel {
+  color: var(--text-secondary);
+  margin-right: 4px;
+}
+
+.GenAITab--tokensPrefix {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.GenAITab--section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.GenAITab--sectionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.GenAITab--message {
+  border: 1px solid var(--border-default);
+  border-left-width: 3px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.GenAITab--message-system {
+  border-left-color: var(--span-color-10);
+}
+
+.GenAITab--message-user {
+  border-left-color: var(--span-color-1);
+}
+
+.GenAITab--message-assistant {
+  border-left-color: var(--span-color-3);
+}
+
+.GenAITab--message-tool {
+  border-left-color: var(--span-color-2);
+}
+
+.GenAITab--messageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  background: var(--surface-secondary);
+  font-size: 12px;
+}
+
+.GenAITab--messageRole {
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.03em;
+}
+
+.GenAITab--messageHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.GenAITab--formatSelect {
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: var(--surface-primary);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  padding: 1px 4px;
+}
+
+.GenAITab--messageContent {
+  padding: 8px;
+  word-break: break-word;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--surface-primary);
+}
+
+.GenAITab--messageContent > :first-child {
+  margin-top: 0;
+}
+
+.GenAITab--messageContent > :last-child {
+  margin-bottom: 0;
+}
+
+.GenAITab--messageContent-plain {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.GenAITab--toolSubsection {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.GenAITab--toolLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.GenAITab--json,
+.GenAITab--pre {
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  padding: 8px;
+  background: var(--surface-secondary);
+  font-size: 13px;
+  overflow-x: auto;
+}
+
+.GenAITab--pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.GenAITab--empty {
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 8px 0;
+}

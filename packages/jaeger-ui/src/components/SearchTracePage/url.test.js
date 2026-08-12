@@ -280,5 +280,22 @@ describe('SearchTracePage/url', () => {
       const result = searchQueryFromUrl('?service=svc');
       expect(result?.lookback).toBe('');
     });
+
+    it('derives start/end from lookback when old-style URL omits timestamps', () => {
+      const before = Date.now();
+      const result = searchQueryFromUrl(
+        '?service=frontend&lookback=1h&limit=20&tags=%7B%22driver%22%3A%22T789090C%22%7D'
+      );
+      const after = Date.now();
+      expect(result).not.toBeNull();
+      expect(result?.lookback).toBe('1h');
+      const startUs = Number(result?.start);
+      const endUs = Number(result?.end);
+      // end should be approximately now (within 1 second)
+      expect(endUs).toBeGreaterThanOrEqual(before * 1000);
+      expect(endUs).toBeLessThanOrEqual(after * 1000 + 1000 * 1000);
+      // start should be 1 hour before end
+      expect(endUs - startUs).toBeCloseTo(60 * 60 * 1_000_000, -6);
+    });
   });
 });

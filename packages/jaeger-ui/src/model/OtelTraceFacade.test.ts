@@ -72,6 +72,30 @@ describe('OtelTraceFacade', () => {
     expect(facade.services).toEqual([{ name: 'test-service', numberOfSpans: 1 }]);
   });
 
+  describe('isGenAITrace', () => {
+    it('returns false when no span has gen_ai.* tags', () => {
+      expect(facade.isGenAITrace).toBe(false);
+    });
+
+    it('returns true when at least one span has a gen_ai.* tag', () => {
+      const genAiSpan: Span = {
+        ...mockSpan,
+        spanID: 'genai-span',
+        tags: [{ key: 'gen_ai.operation.name', value: 'chat' }],
+      };
+      const genAiTrace: Trace = {
+        ...mockLegacyTrace,
+        spans: [mockSpan, genAiSpan],
+        spanMap: new Map([
+          [mockSpan.spanID, mockSpan],
+          [genAiSpan.spanID, genAiSpan],
+        ]),
+        rootSpans: [mockSpan],
+      };
+      expect(new OtelTraceFacade(genAiTrace).isGenAITrace).toBe(true);
+    });
+  });
+
   describe('span wiring', () => {
     const parentSpan: Span = { ...mockSpan, spanID: 'parent', hasChildren: true };
     const childSpan: Span = {

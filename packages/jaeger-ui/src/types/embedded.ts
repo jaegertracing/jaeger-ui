@@ -9,6 +9,7 @@ type EmbeddedStateV0 = {
     hideMinimap: boolean;
     hideSummary: boolean;
   };
+  theme?: 'light' | 'dark';
 };
 
 export type EmbeddedState = EmbeddedStateV0;

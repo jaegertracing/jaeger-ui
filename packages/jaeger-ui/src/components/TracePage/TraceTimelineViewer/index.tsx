@@ -12,12 +12,14 @@ import {
   SIDE_PANEL_WIDTH_MAX,
   SIDE_PANEL_WIDTH_MIN,
   SPAN_NAME_COLUMN_WIDTH_MAX,
+  SPAN_NAME_COLUMN_WIDTH_MIN,
   useLayoutPrefsStore,
   useTraceTimelineStore,
 } from './store';
 import SpanDetailSidePanel from './SpanDetailSidePanel';
 import TimelineHeaderRow from './TimelineHeaderRow';
 import { useServiceFilter } from './useServiceFilter';
+import { useSpanPillsEnabled } from './spanPills';
 import VirtualizedTraceView from './VirtualizedTraceView';
 import VerticalResizer from '../../common/VerticalResizer';
 import { merge as mergeShortcuts } from '../keyboard-shortcuts';
@@ -141,6 +143,8 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
 
   const { serviceFilterNode } = useServiceFilter(trace, detailPanelMode);
 
+  const spanPillsEnabled = useSpanPillsEnabled();
+
   // When timeline bars are hidden with the side panel active, the side panel expands to absorb
   // the timeline column so the Service/Operation column keeps its pixel width unchanged.
   const effectiveSidePanelWidth =
@@ -156,7 +160,15 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   // Equals spanNameColumnWidth when bars are visible (the round-trip through mainFraction cancels).
   // When bars are hidden with no side panel, the name column spans the full page.
   const headerNameWidth = nameColumnWidth * mainFraction;
-  const resizerMax = sidePanelActive ? mainFraction - MIN_TIMELINE_COLUMN_WIDTH : SPAN_NAME_COLUMN_WIDTH_MAX;
+  let resizerMax: number;
+  if (sidePanelActive && timelineBarsVisible) {
+    resizerMax = mainFraction - MIN_TIMELINE_COLUMN_WIDTH;
+  } else if (sidePanelActive && !timelineBarsVisible) {
+    resizerMax = 1 - SIDE_PANEL_WIDTH_MIN;
+  } else {
+    resizerMax = SPAN_NAME_COLUMN_WIDTH_MAX;
+  }
+  resizerMax = Math.max(SPAN_NAME_COLUMN_WIDTH_MIN, Math.min(resizerMax, 1));
 
   // Column header label: "Trace Root" when showing the root span (explicit or fallback),
   // "Span Details" for any other selected span.
@@ -230,6 +242,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       useOtelTerms={useOtelTerms}
       currentViewRangeTime={viewRange.time.current}
       nameColumnWidth={nameColumnWidth}
+      spanPillsEnabled={spanPillsEnabled}
     />
   );
 

@@ -90,32 +90,40 @@ describe('<TraceGraph>', () => {
     expect(screen.getByText('No trace found')).toBeInTheDocument();
   });
 
-  it('switches node mode when clicking mode buttons - with state verification', async () => {
-    const setStateSpy = jest.spyOn(TraceGraph.prototype, 'setState');
+  it('switches node mode when clicking mode buttons', async () => {
     render(<TraceGraph {...props} />);
 
     // Initial mode should be service
     expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SERVICE);
-    const timeButton = screen.getByRole('button', { name: 'T' });
-    const selftimeButton = screen.getByRole('button', { name: 'ST' });
-    const serviceButton = screen.getByRole('button', { name: 'S' });
+    const timeButton = screen.getByRole('button', { name: 'Color by total time' });
+    const selftimeButton = screen.getByRole('button', { name: 'Color by self time' });
+    const serviceButton = screen.getByRole('button', { name: 'Color by service' });
+
+    // Initial aria-pressed: only service is active
+    expect(serviceButton).toHaveAttribute('aria-pressed', 'true');
+    expect(timeButton).toHaveAttribute('aria-pressed', 'false');
+    expect(selftimeButton).toHaveAttribute('aria-pressed', 'false');
 
     // Switch to time
     await userEvent.click(timeButton);
-    expect(setStateSpy).toHaveBeenCalledWith({ mode: MODE_TIME }); // Verify state change
     expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_TIME);
+    expect(timeButton).toHaveAttribute('aria-pressed', 'true');
+    expect(serviceButton).toHaveAttribute('aria-pressed', 'false');
+    expect(selftimeButton).toHaveAttribute('aria-pressed', 'false');
 
     // Switch to selftime
     await userEvent.click(selftimeButton);
-    expect(setStateSpy).toHaveBeenCalledWith({ mode: MODE_SELFTIME });
     expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SELFTIME);
+    expect(selftimeButton).toHaveAttribute('aria-pressed', 'true');
+    expect(serviceButton).toHaveAttribute('aria-pressed', 'false');
+    expect(timeButton).toHaveAttribute('aria-pressed', 'false');
 
     // Switch back to service
     await userEvent.click(serviceButton);
-    expect(setStateSpy).toHaveBeenCalledWith({ mode: MODE_SERVICE });
     expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SERVICE);
-
-    setStateSpy.mockRestore();
+    expect(serviceButton).toHaveAttribute('aria-pressed', 'true');
+    expect(timeButton).toHaveAttribute('aria-pressed', 'false');
+    expect(selftimeButton).toHaveAttribute('aria-pressed', 'false');
   });
 
   it('shows help', async () => {
