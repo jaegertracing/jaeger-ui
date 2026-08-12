@@ -76,6 +76,22 @@ An example JSON config file is provided at [jaeger-ui.config.example.json](./jae
 
 These local config files are ignored by git (see `.gitignore`).
 
+#### Backend capabilities in development
+
+The query service reports what its storage supports — archive storage, metrics storage, searching without a service name — by search-replacing a capability blob into the `index.html` it serves. `pnpm start` serves this repository's `index.html` instead and proxies only the API paths, so that blob does not arrive on its own. The dev server therefore asks the proxied query service for its `index.html` and reads the blob out of it, which makes the UI behave as it would when the same backend serves it.
+
+A `backendCapabilities` block in your local config file overrides what the backend reports, so you can exercise a capability the backend at hand does not have:
+
+```json
+{
+  "backendCapabilities": {
+    "searchWithoutServiceName": true
+  }
+}
+```
+
+With no backend running, capabilities fall back to the compile-time defaults in `src/constants/default-config.ts`.
+
 ### Ask Jaeger assistant
 
 AI assistant visibility is driven by the backend-advertised capability `backendCapabilities.aiAssistant`. The Jaeger backend turns this flag on when a live AI sidecar is reachable; the UI then surfaces the Ask Jaeger panel and sparkles icon. Otherwise the header shows **Lookup by Trace ID…** only.

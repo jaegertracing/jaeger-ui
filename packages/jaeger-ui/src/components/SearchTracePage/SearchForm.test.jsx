@@ -8,7 +8,14 @@ const { mockUseIsSearchFetching, mockUseConfig } = vi.hoisted(() => ({
 }));
 
 vi.mock('../common/SearchableSelect', () => {
-  const MockSearchableSelect = ({ onChange, 'data-testid': testId, disabled, value, children }) => {
+  const MockSearchableSelect = ({
+    onChange,
+    'data-testid': testId,
+    disabled,
+    value,
+    children,
+    allowCustomValue,
+  }) => {
     if (onChange && testId) {
       MockSearchableSelect.onChangeFns[testId] = onChange;
     }
@@ -16,6 +23,7 @@ vi.mock('../common/SearchableSelect', () => {
       MockSearchableSelect.disabled[testId] = disabled;
       MockSearchableSelect.children[testId] = children;
       MockSearchableSelect.values[testId] = value;
+      MockSearchableSelect.allowCustomValue[testId] = allowCustomValue;
     }
     return <div data-testid={`mock-select-${testId}`} data-disabled={disabled} data-value={value} />;
   };
@@ -23,6 +31,7 @@ vi.mock('../common/SearchableSelect', () => {
   MockSearchableSelect.disabled = {};
   MockSearchableSelect.children = {};
   MockSearchableSelect.values = {};
+  MockSearchableSelect.allowCustomValue = {};
   return mockDefault(MockSearchableSelect);
 });
 vi.mock('../../hooks/useConfig', () => ({
@@ -432,6 +441,7 @@ describe('<SearchForm>', () => {
     SearchableSelect.disabled = {};
     SearchableSelect.children = {};
     SearchableSelect.values = {};
+    SearchableSelect.allowCustomValue = {};
     mockUseConfig.mockImplementation(() => baseUiConfig);
   });
 
@@ -468,6 +478,19 @@ describe('<SearchForm>', () => {
     expect(labelOf(ALL_OPERATIONS)).toBe(expected);
   });
 
+  it('says a name outside the list may be typed', async () => {
+    const { container } = renderForm(
+      <SearchForm key="op-hint" {...defaultProps} initialValues={{ service: 'svcA' }} />
+    );
+
+    const operationField = container
+      .querySelector('[data-testid="mock-select-operation"]')
+      .closest('.ant-form-item');
+    fireEvent.mouseEnter(operationField.querySelector('.SearchForm--hintTrigger'));
+
+    expect(await screen.findByText(/type a name that is not in the list/)).toBeInTheDocument();
+  });
+
   describe('All Services option', () => {
     const serviceOptionValues = () =>
       React.Children.toArray(SearchableSelect.children.service).map(child => child.props.value);
@@ -492,7 +515,7 @@ describe('<SearchForm>', () => {
       expect(serviceOptionValues()).toEqual(['svcA', 'svcB']);
     });
 
-    it('enables submission and disables the operation field once selected', async () => {
+    it('enables submission once selected, and offers no name to pick from', async () => {
       withAllServicesSupport();
       const { container } = renderForm(
         <SearchForm key="all-svc-selected" {...defaultProps} initialValues={{ service: ALL_SERVICES }} />
@@ -500,43 +523,14 @@ describe('<SearchForm>', () => {
 
       const submitButton = container.querySelector(`[data-test="${markers.SUBMIT_BTN}"]`);
       expect(submitButton).not.toBeDisabled();
-      // Operations are enumerated per service, so there is nothing to pick across all
-      // of them.
-      await waitFor(() => expect(SearchableSelect.disabled.operation).toBe(true));
-      expect(useSpanNames).toHaveBeenCalledWith(null);
+      // Names are enumerated per service, so there is no list to offer across all of them,
+      // but the field stays open for a typed one.
+      await waitFor(() => expect(useSpanNames).toHaveBeenCalledWith(null));
+      expect(SearchableSelect.disabled.operation).toBe(false);
+      expect(SearchableSelect.allowCustomValue.operation).toBe(true);
     });
 
-    it('explains why the operation field is disabled', async () => {
-      withAllServicesSupport();
-      const { container } = renderForm(
-        <SearchForm key="all-svc-tooltip" {...defaultProps} initialValues={{ service: ALL_SERVICES }} />
-      );
-
-      // The disabled select cannot emit the hover itself, so the tooltip hangs off the
-      // wrapper around it.
-      const wrapper = container.querySelector('.SearchForm--disabledFieldWrapper');
-      expect(wrapper).toBeInTheDocument();
-      fireEvent.mouseEnter(wrapper);
-
-      expect(await screen.findByText(/unavailable while searching all services/)).toBeInTheDocument();
-    });
-
-    it('leaves the operation field unexplained when it is usable', async () => {
-      withAllServicesSupport();
-      const { container } = renderForm(
-        <SearchForm key="all-svc-tooltip-off" {...defaultProps} initialValues={{ service: 'svcA' }} />
-      );
-
-      fireEvent.mouseEnter(container.querySelector('.SearchForm--disabledFieldWrapper'));
-      // Outlast antd's hover delay, so absence means "no tooltip" rather than "not yet".
-      await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 250));
-      });
-
-      expect(screen.queryByText(/unavailable while searching all services/)).not.toBeInTheDocument();
-    });
-
-    it('drops an operation carried alongside it, since the filter cannot be scoped', () => {
+    it('keeps an operation carried alongside it', () => {
       withAllServicesSupport();
 
       renderForm(
@@ -547,7 +541,7 @@ describe('<SearchForm>', () => {
         />
       );
 
-      expect(SearchableSelect.values.operation).toBe(ALL_OPERATIONS);
+      expect(SearchableSelect.values.operation).toBe('someOperation');
     });
 
     it('falls back to no selection when the backend cannot search without a service', () => {
@@ -765,6 +759,7 @@ describe('SearchForm onChange handlers', () => {
     SearchableSelect.disabled = {};
     SearchableSelect.children = {};
     SearchableSelect.values = {};
+    SearchableSelect.allowCustomValue = {};
     mockUseConfig.mockImplementation(() => baseUiConfig);
   });
 
