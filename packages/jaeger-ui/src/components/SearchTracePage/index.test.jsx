@@ -64,6 +64,7 @@ import '@testing-library/jest-dom';
 import { Provider } from 'react-redux';
 import { SearchTracePageImpl as SearchTracePage } from './index';
 import { useServices } from '../../hooks/useTraceDiscovery';
+import { ALL_SERVICES } from '../../constants/search-form';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { useSearchPanelStore, LS_WIDTH_KEY, LS_COLLAPSED_KEY } from './search-panel-store';
 import { store as globalStore } from '../../utils/configure-store';
@@ -123,6 +124,44 @@ describe('<SearchTracePage>', () => {
     const [query] = useSearchTracesMock.mock.calls[0];
     expect(query).not.toBeNull();
     expect(query.service).toBe('svc-a');
+  });
+
+  describe('an all-services link on a backend that cannot serve it', () => {
+    const allServicesUrl = [`/search?service=${ALL_SERVICES}&start=1&end=2`];
+
+    it('skips the search and explains why', () => {
+      render(
+        <AllProvider initialEntries={allServicesUrl}>
+          <SearchTracePage />
+        </AllProvider>
+      );
+
+      // The query still reaches the hook — the URL is left intact so the link keeps
+      // working elsewhere — but the fetch is suppressed rather than going out unscoped.
+      const [query, options] = useSearchTracesMock.mock.calls[0];
+      expect(query.service).toBe(ALL_SERVICES);
+      expect(options).toEqual({ skip: true });
+      expect(screen.getByText(/does not support/)).toBeInTheDocument();
+    });
+
+    it('runs the search when the backend advertises the capability', () => {
+      getConfigMock.mockReturnValue({
+        disableFileUploadControl: false,
+        backendCapabilities: { searchWithoutServiceName: true },
+        tracking: { gaID: null, trackErrors: false, customWebAnalytics: null },
+      });
+
+      render(
+        <AllProvider initialEntries={allServicesUrl}>
+          <SearchTracePage />
+        </AllProvider>
+      );
+
+      const [query, options] = useSearchTracesMock.mock.calls[0];
+      expect(query.service).toBe(ALL_SERVICES);
+      expect(options).toEqual({ skip: false });
+      expect(screen.queryByText(/does not support/)).not.toBeInTheDocument();
+    });
   });
 
   it('passes null query to useSearchTraces when no service is in URL params', () => {

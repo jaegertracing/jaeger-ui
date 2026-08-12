@@ -324,6 +324,11 @@ describe('column suppression for unsupported backends', () => {
     services: [],
   });
 
+  const makeNoSpanCountTrace = (id: string) => ({
+    ...makeUnsupportedTrace(id),
+    spanCount: undefined,
+  });
+
   it('hides the Errors column when all summaries have undefined errorSpanCount', () => {
     const traces = [makeUnsupportedTrace('u1'), makeUnsupportedTrace('u2')];
     render(
@@ -362,6 +367,34 @@ describe('column suppression for unsupported backends', () => {
     expect(errorsIndex).toBeGreaterThan(-1);
     const cells = unsupportedRow!.querySelectorAll('td');
     expect(cells[errorsIndex].textContent).toBe('-');
+  });
+
+  it('hides the Spans column when all summaries have undefined spanCount', () => {
+    const traces = [makeNoSpanCountTrace('u1'), makeNoSpanCountTrace('u2')];
+    render(
+      <MemoryRouter>
+        <TraceTable {...defaultProps} traceSummaries={traces} />
+      </MemoryRouter>
+    );
+    expect(screen.queryByText('Spans')).not.toBeInTheDocument();
+  });
+
+  it('shows the Spans column and renders - for rows without spanCount in mixed results', () => {
+    const supported = makeTrace('s1', 0);
+    const noSpanCount = makeNoSpanCountTrace('u1');
+    render(
+      <MemoryRouter>
+        <TraceTable {...defaultProps} traceSummaries={[supported, noSpanCount]} />
+      </MemoryRouter>
+    );
+    expect(screen.getByText('Spans')).toBeInTheDocument();
+    const headers = Array.from(document.querySelectorAll('thead th'));
+    const spansIndex = headers.findIndex(h => h.textContent?.includes('Spans'));
+    expect(spansIndex).toBeGreaterThan(-1);
+    const rows = document.querySelectorAll('tbody tr');
+    const row = Array.from(rows).find(r => r.textContent?.includes('Trace u1'));
+    expect(row).toBeTruthy();
+    expect(row!.querySelectorAll('td')[spansIndex].textContent).toBe('-');
   });
 
   it('shows both columns when at least one summary has services and errorSpanCount', () => {

@@ -114,8 +114,10 @@ const TraceFlamegraph = ({ trace }: any) => {
         if (!d || !d.data || !d.data.serviceName) return rootFrameColor;
         const { serviceName } = d.data;
         if (searchActiveRef.current) {
-          const [r, g, b] = colorGenerator.getRgbColorByKey(serviceName);
-          return `rgba(${r}, ${g}, ${b}, 0.3)`;
+          // Dim via color-mix over the token rather than resolving to numbers: the
+          // chart only redraws when its own data or search changes, so a resolved
+          // value would keep the previous theme's color after a theme switch.
+          return `color-mix(in srgb, ${colorGenerator.getColorByKey(serviceName)} 30%, transparent)`;
         }
         return colorGenerator.getColorByKey(serviceName);
       })

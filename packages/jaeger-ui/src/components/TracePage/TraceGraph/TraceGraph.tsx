@@ -47,7 +47,15 @@ const getHelpContent = (useOtelTerms: boolean) => (
         <tbody>
           <tr>
             <td>
-              <Button htmlType="button" shape="circle" size="small" className="active">
+              <Button
+                htmlType="button"
+                shape="circle"
+                size="small"
+                className="active"
+                tabIndex={-1}
+                aria-hidden="true"
+                style={{ pointerEvents: 'none' }}
+              >
                 S
               </Button>
             </td>
@@ -56,7 +64,14 @@ const getHelpContent = (useOtelTerms: boolean) => (
           </tr>
           <tr>
             <td>
-              <Button htmlType="button" shape="circle" size="small">
+              <Button
+                htmlType="button"
+                shape="circle"
+                size="small"
+                tabIndex={-1}
+                aria-hidden="true"
+                style={{ pointerEvents: 'none' }}
+              >
                 T
               </Button>
             </td>
@@ -65,7 +80,14 @@ const getHelpContent = (useOtelTerms: boolean) => (
           </tr>
           <tr>
             <td>
-              <Button htmlType="button" shape="circle" size="small">
+              <Button
+                htmlType="button"
+                shape="circle"
+                size="small"
+                tabIndex={-1}
+                aria-hidden="true"
+                style={{ pointerEvents: 'none' }}
+              >
                 ST
               </Button>
             </td>
@@ -189,6 +211,8 @@ function TraceGraph({
                 shape="circle"
                 size="small"
                 onClick={() => setMode(MODE_SERVICE)}
+                aria-label="Color by service"
+                aria-pressed={mode === MODE_SERVICE}
               >
                 S
               </Button>
@@ -202,6 +226,8 @@ function TraceGraph({
                 shape="circle"
                 size="small"
                 onClick={() => setMode(MODE_TIME)}
+                aria-label="Color by total time"
+                aria-pressed={mode === MODE_TIME}
               >
                 T
               </Button>
@@ -215,6 +241,8 @@ function TraceGraph({
                 shape="circle"
                 size="small"
                 onClick={() => setMode(MODE_SELFTIME)}
+                aria-label="Color by self time"
+                aria-pressed={mode === MODE_SELFTIME}
               >
                 ST
               </Button>

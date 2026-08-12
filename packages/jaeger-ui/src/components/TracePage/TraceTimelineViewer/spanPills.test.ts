@@ -3,6 +3,7 @@
 
 import { renderHook } from '@testing-library/react';
 
+import { GEN_AI_REQUEST_MODEL } from '../../../constants/span-attributes';
 import transformTraceData from '../../../model/transform-trace-data';
 import { AttributeValue, IOtelSpan } from '../../../types/otel';
 import { getSpanPillsForSpan, useSpanPillsEnabled } from './spanPills';
@@ -103,6 +104,68 @@ describe('spanPills', () => {
       ]);
       expect(getSpanPillsForSpan(makeSpan([{ key: 'http.status_code', value: 'not-a-number' }]))).toEqual([
         { label: 'http.status_code', value: 'not-a-number' },
+      ]);
+    });
+
+    it('maps db.system.name and db.system to pills', () => {
+      expect(getSpanPillsForSpan(makeSpan([{ key: 'db.system.name', value: 'postgresql' }]))).toEqual([
+        { label: 'db.system', value: 'postgresql' },
+      ]);
+      expect(getSpanPillsForSpan(makeSpan([{ key: 'db.system', value: 'mysql' }]))).toEqual([
+        { label: 'db.system', value: 'mysql' },
+      ]);
+    });
+
+    it('prefers db.system.name when both database attributes are present', () => {
+      const span = makeSpan([
+        { key: 'db.system.name', value: 'postgresql' },
+        { key: 'db.system', value: 'mysql' },
+      ]);
+      expect(getSpanPillsForSpan(span)).toEqual([{ label: 'db.system', value: 'postgresql' }]);
+    });
+
+    it('maps rpc.system.name and rpc.system to pills', () => {
+      expect(getSpanPillsForSpan(makeSpan([{ key: 'rpc.system.name', value: 'grpc' }]))).toEqual([
+        { label: 'rpc.system', value: 'grpc' },
+      ]);
+      expect(getSpanPillsForSpan(makeSpan([{ key: 'rpc.system', value: 'grpc' }]))).toEqual([
+        { label: 'rpc.system', value: 'grpc' },
+      ]);
+    });
+
+    it('maps gen_ai.request.model to a pill', () => {
+      const span = makeSpan([{ key: GEN_AI_REQUEST_MODEL, value: 'gpt-4o' }]);
+      expect(getSpanPillsForSpan(span)).toEqual([{ label: 'gen_ai.request.model', value: 'gpt-4o' }]);
+    });
+
+    it('returns no pill when gen_ai.request.model is absent', () => {
+      const span = makeSpan([{ key: 'region', value: 'us-east-1' }]);
+      expect(getSpanPillsForSpan(span)).toEqual([]);
+    });
+
+    it('returns no pill when gen_ai.request.model is whitespace-only', () => {
+      const span = makeSpan([{ key: GEN_AI_REQUEST_MODEL, value: '   ' }]);
+      expect(getSpanPillsForSpan(span)).toEqual([]);
+    });
+
+    it('trims surrounding whitespace from gen_ai.request.model', () => {
+      const span = makeSpan([{ key: GEN_AI_REQUEST_MODEL, value: '  gpt-4o  ' }]);
+      expect(getSpanPillsForSpan(span)).toEqual([{ label: 'gen_ai.request.model', value: 'gpt-4o' }]);
+    });
+
+    it('maps a non-string gen_ai.request.model value', () => {
+      const span = makeSpan([{ key: GEN_AI_REQUEST_MODEL, value: 42 }]);
+      expect(getSpanPillsForSpan(span)).toEqual([{ label: 'gen_ai.request.model', value: '42' }]);
+    });
+
+    it('returns both pills when http status and gen_ai.request.model are both present', () => {
+      const span = makeSpan([
+        { key: 'http.status_code', value: '500' },
+        { key: GEN_AI_REQUEST_MODEL, value: 'claude-3-haiku' },
+      ]);
+      expect(getSpanPillsForSpan(span)).toEqual([
+        { label: 'http.status_code', value: '500', isError: true },
+        { label: 'gen_ai.request.model', value: 'claude-3-haiku' },
       ]);
     });
 

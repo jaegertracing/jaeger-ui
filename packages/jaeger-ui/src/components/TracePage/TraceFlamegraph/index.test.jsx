@@ -481,7 +481,10 @@ describe('<TraceFlamegraph />', () => {
   });
 
   describe('colorMapper with search active', () => {
-    it('returns rgba with 0.3 opacity when search is active', () => {
+    // The dimmed color must stay a token reference rather than resolved numbers:
+    // the chart only redraws on its own data or search changes, so resolved values
+    // would keep the previous theme's colors after a theme switch.
+    it('dims via color-mix over the palette token when search is active', () => {
       render(<TraceFlamegraph trace={otelTrace} />);
       // Trigger a search to set searchActiveRef = true
       const searchInput = screen.getByTestId('flamegraph-search');
@@ -491,7 +494,7 @@ describe('<TraceFlamegraph />', () => {
         { data: { name: 'load-generator: op', serviceName: 'load-generator' } },
         '#000'
       );
-      expect(color).toMatch(/^rgba\(\d+, \d+, \d+, 0\.3\)$/);
+      expect(color).toMatch(/^color-mix\(in srgb, var\(--span-color-\d+\) 30%, transparent\)$/);
     });
 
     it('returns highlight color even when search is active', () => {
