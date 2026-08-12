@@ -20,11 +20,9 @@ vi.mock('./SpanDetail', () => ({
   default: () => <div data-testid="mocked-span-detail" />,
 }));
 
-// Minimal Redux store for SpanTreeOffset's connected component
+// Minimal Redux store for integration test
 const mockStore = createStore(() => ({
-  traceTimeline: {
-    hoverIndentGuideIds: new Set(),
-  },
+  traceTimeline: {},
 }));
 
 describe('<SpanDetailRow> icon behavior', () => {
