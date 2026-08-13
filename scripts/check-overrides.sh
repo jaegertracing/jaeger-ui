@@ -22,11 +22,16 @@ set -euo pipefail
 
 # Extract simple (string-valued, non-reference, non-nested) override package
 # names from pnpm's active overrides configuration, one per line.
-overrides=$(pnpm config get overrides --json | jq -r '
-  (. // {}) | to_entries[]
-  | select((.key | contains(">")) | not)
-  | select((.value | type == "string") and (.value | startswith("$") | not))
-  | .key
+overrides=$(pnpm config get overrides --json | node -e '
+  const fs = require("fs");
+  try {
+    const data = JSON.parse(fs.readFileSync(0, "utf-8")) || {};
+    for (const [key, val] of Object.entries(data)) {
+      if (!key.includes(">") && typeof val === "string" && !val.startsWith("$")) {
+        console.log(key);
+      }
+    }
+  } catch {}
 ')
 
 if [ -z "$overrides" ]; then
@@ -44,8 +49,22 @@ while IFS= read -r pkg; do
   # Tolerate a non-zero exit or non-JSON output (treat as "not present") so that
   # under `set -euo pipefail` the loop still reports every phantom override.
   why_json=$(pnpm why "$pkg" -r --json 2>/dev/null) || why_json=""
-  present=$(printf '%s' "$why_json" \
-    | jq -r 'any(.[]; has("dependencies") or has("devDependencies") or ((.dependents? // []) | length > 0))' 2>/dev/null) || present="false"
+  present=$(printf '%s' "$why_json" | node -e '
+    const fs = require("fs");
+    try {
+      const data = JSON.parse(fs.readFileSync(0, "utf-8"));
+      const isPresent = Array.isArray(data) && data.some(item =>
+        item && (
+          "dependencies" in item ||
+          "devDependencies" in item ||
+          (Array.isArray(item.dependents) && item.dependents.length > 0)
+        )
+      );
+      console.log(isPresent ? "true" : "false");
+    } catch {
+      console.log("false");
+    }
+  ' 2>/dev/null) || present="false"
   [ -n "$present" ] || present="false"
 
   if [ "$present" != "true" ]; then
