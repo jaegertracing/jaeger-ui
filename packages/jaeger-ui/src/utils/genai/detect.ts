@@ -8,20 +8,9 @@ import {
   GEN_AI_TOOL_CALL_ID,
   GEN_AI_TOOL_NAME,
 } from '../../constants/span-attributes';
+import { GEN_AI_OPERATION_TO_KIND } from '../../components/TracePage/TraceTimelineViewer/spanDecorations';
 
 type SpanAttrs = { attributes: IAttributes };
-
-const OPERATION_TO_KIND: Partial<Record<string, GenAISpanKind>> = {
-  chat: 'LLM_CALL',
-  text_completion: 'LLM_CALL',
-  generate_content: 'LLM_CALL',
-  embeddings: 'LLM_CALL',
-  execute_tool: 'TOOL_CALL',
-  invoke_agent: 'AGENT',
-  create_agent: 'AGENT',
-  invoke_workflow: 'AGENT',
-  retrieval: 'RETRIEVAL',
-};
 
 /**
  * Signals that identify a span kind when gen_ai.operation.name is absent or
@@ -41,7 +30,7 @@ export function classifySpan(span: SpanAttrs): GenAISpanKind | undefined {
   const { attributes } = span;
   const operation = attributes.getValue(GEN_AI_OPERATION_NAME);
   if (typeof operation === 'string') {
-    return OPERATION_TO_KIND[operation] ?? classifyBySecondarySignals(attributes) ?? 'UNKNOWN_GENAI';
+    return GEN_AI_OPERATION_TO_KIND[operation] ?? classifyBySecondarySignals(attributes) ?? 'UNKNOWN_GENAI';
   }
 
   const secondary = classifyBySecondarySignals(attributes);

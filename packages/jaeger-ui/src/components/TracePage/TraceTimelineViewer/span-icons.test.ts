@@ -13,7 +13,7 @@ describe('getSpanIconComponent', () => {
     expect(getSpanIconComponent(makeAttrs([`${ns}.system`]))).not.toBeNull();
   });
 
-  it('returns null for gen_ai attributes - GenAISpanIcon renders the kind-specific icon for those instead, not this generic one', () => {
+  it('returns null for gen_ai attributes - GenAI kind icons come from getSpanDecorationIcon instead', () => {
     expect(getSpanIconComponent(makeAttrs(['gen_ai.system']))).toBeNull();
   });
 

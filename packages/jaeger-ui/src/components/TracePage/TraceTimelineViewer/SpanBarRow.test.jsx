@@ -447,29 +447,22 @@ describe('<SpanBarRow>', () => {
       expect(screen.getByRole('img', { name: 'GenAI span' })).toBeInTheDocument();
     });
 
-    it('does not also render the generic namespace icon for a span with gen_ai attributes, only the kind-specific GenAISpanIcon (#4217)', () => {
+    it('renders exactly one icon for a GenAI span — kind icon, not also a namespace icon (#4217)', () => {
       const span = {
         ...defaultProps.span,
         genAIKind: 'LLM_CALL',
         attributes: makeAttributes([{ key: 'gen_ai.system', value: 'openai' }]),
       };
       const { container } = render(<SpanBarRow {...defaultProps} span={span} />);
-      // getSpanIconComponent's generic namespace icon (aria-hidden, rendered via
-      // this class) must not appear alongside GenAISpanIcon's kind-specific icon -
-      // that combination was the reported double-sparkle/double-icon rendering.
+      // getSpanDecorationIcon prefers GenAI; namespace .SpanBarRow--spanTypeIcon must
+      // not appear alongside the kind-specific GenAISpanIcon.
       expect(container.querySelector('.SpanBarRow--spanTypeIcon')).not.toBeInTheDocument();
       expect(screen.getByRole('img', { name: 'LLM call' })).toBeInTheDocument();
     });
 
-    it('suppresses the generic namespace icon even when a GenAI span also carries http attributes, not just gen_ai ones (#4217)', () => {
-      // Regression case found by testing against a real trace: the root HTTP
-      // server span for a GenAI agent's own endpoint carries both gen_ai.* and
-      // real http.* attributes (http.request.method, http.response.status_code,
-      // etc.). Removing only the gen_ai entry from the generic icon's namespace
-      // map was not enough - the icon then fell through to http's globe icon
-      // instead, recreating the same double-icon bug with a different pair of
-      // icons. The generic icon must be suppressed for any GenAI-classified span
-      // regardless of what other namespaces it also has attributes from.
+    it('still renders exactly one icon when a GenAI span also carries http attributes (#4217)', () => {
+      // Root HTTP server span for a GenAI agent often carries both gen_ai.* and
+      // http.* attributes. The unified resolver must not fall through to http.
       const span = {
         ...defaultProps.span,
         genAIKind: 'AGENT',
