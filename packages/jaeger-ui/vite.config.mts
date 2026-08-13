@@ -104,6 +104,46 @@ function bundleStatsPlugin(outDir: string) {
   };
 }
 
+// The query service search-replaces its capability blob into the index.html it serves,
+// under one of these names — the second is what older backends write. Each is a flat
+// object on a single line, so a per-line match up to the closing `};` captures it.
+const BACKEND_CAPABILITY_PATTERNS = [
+  /const JAEGER_BACKEND_CAPABILITIES = (\{.*\});/,
+  /const JAEGER_STORAGE_CAPABILITIES = (\{.*\});/,
+];
+
+/**
+ * Read the capabilities the query service advertises, by asking it for the index.html it
+ * would serve in production and pulling the blob out of it.
+ *
+ * The dev server serves this repository's own index.html and proxies only the API paths,
+ * so the backend's blob never reaches the browser on its own. Without this, a developer
+ * has to restate in `jaeger-ui.config.json` what the running backend already reports.
+ *
+ * Returns null when the backend is unreachable or advertises nothing, which is the normal
+ * case for `pnpm start` with no backend running.
+ */
+async function fetchBackendCapabilities(target: string): Promise<Record<string, unknown> | null> {
+  let html: string;
+  try {
+    const response = await fetch(target, { signal: AbortSignal.timeout(2000) });
+    if (!response.ok) return null;
+    html = await response.text();
+  } catch {
+    return null;
+  }
+  for (const pattern of BACKEND_CAPABILITY_PATTERNS) {
+    const match = html.match(pattern);
+    if (!match) continue;
+    try {
+      return JSON.parse(match[1]);
+    } catch {
+      // An unreplaced pattern leaves an identifier rather than JSON; try the next name.
+    }
+  }
+  return null;
+}
+
 /**
  * Vite plugin to inject local UI config during development.
  * This mimics the behavior of the Go query-service which injects config into index.html.
@@ -111,6 +151,10 @@ function bundleStatsPlugin(outDir: string) {
  * Supports two config file formats:
  * 1. jaeger-ui.config.js - JavaScript file that exports a config object (or function returning one)
  * 2. jaeger-ui.config.json - JSON file with config object
+ *
+ * Capabilities come from the proxied query service when it is running, and a
+ * `backendCapabilities` block in the config file overrides what it reports, so a developer
+ * can exercise a capability the backend at hand does not have.
  *
  * The plugin only runs in development mode (pnpm start).
  *
@@ -122,17 +166,13 @@ function jaegerUiConfigPlugin() {
   const jsConfigPath = path.resolve(__dirname, 'jaeger-ui.config.js');
   const jsonConfigPath = path.resolve(__dirname, 'jaeger-ui.config.json');
 
-  // Inject `backendCapabilities` from the local dev config at the
-  // JAEGER_BACKEND_CAPABILITIES swap point. Mirrors how the Jaeger backend
-  // overlays its capability blob in production.
-  function injectBackendCapabilities(
-    html: string,
-    config: { backendCapabilities?: Record<string, unknown> }
-  ) {
-    if (!config.backendCapabilities) return html;
+  // Inject `backendCapabilities` at the JAEGER_BACKEND_CAPABILITIES swap point. Mirrors
+  // how the Jaeger backend overlays its capability blob in production.
+  function injectBackendCapabilities(html: string, capabilities: Record<string, unknown>) {
+    if (!Object.keys(capabilities).length) return html;
     return html.replace(
       'const JAEGER_BACKEND_CAPABILITIES = DEFAULT_BACKEND_CAPABILITIES;',
-      `const JAEGER_BACKEND_CAPABILITIES = { ...DEFAULT_BACKEND_CAPABILITIES, ...${JSON.stringify(config.backendCapabilities)} };`
+      `const JAEGER_BACKEND_CAPABILITIES = { ...DEFAULT_BACKEND_CAPABILITIES, ...${JSON.stringify(capabilities)} };`
     );
   }
 
@@ -149,7 +189,11 @@ function jaegerUiConfigPlugin() {
     },
     transformIndexHtml: {
       order: 'pre' as const,
-      async handler(html: string) {
+      async handler(html: string, ctx: { server?: unknown }) {
+        // Capabilities the config file asks for, whichever file supplies them.
+        let fileCapabilities: Record<string, unknown> | undefined;
+        let loadedConfigFile = false;
+
         // Check for JS config first (higher priority, like in Go server)
         if (fs.existsSync(jsConfigPath)) {
           try {
@@ -165,21 +209,20 @@ function jaegerUiConfigPlugin() {
                 UIConfig?: () => { backendCapabilities?: Record<string, unknown> };
               } = {};
               vm.runInNewContext(jsContent, sandbox);
-              const cfg = sandbox.UIConfig?.() ?? {};
-              html = injectBackendCapabilities(html, cfg);
+              fileCapabilities = sandbox.UIConfig?.()?.backendCapabilities;
             } catch (evalErr) {
               console.warn('[jaeger-ui-config] Could not evaluate JS config for capabilities:', evalErr);
             }
 
             console.log('[jaeger-ui-config] Loaded config from jaeger-ui.config.js');
-            return html;
+            loadedConfigFile = true;
           } catch (err) {
             console.error('[jaeger-ui-config] Error loading jaeger-ui.config.js:', err);
           }
         }
 
         // Check for JSON config
-        if (fs.existsSync(jsonConfigPath)) {
+        if (!loadedConfigFile && fs.existsSync(jsonConfigPath)) {
           try {
             const jsonContent = fs.readFileSync(jsonConfigPath, 'utf-8');
             // Validate it's valid JSON and use stringified result for injection
@@ -191,20 +234,27 @@ function jaegerUiConfigPlugin() {
               `const JAEGER_CONFIG = ${JSON.stringify(parsedConfig)};`
             );
 
-            // Inject backendCapabilities if present in the config file. The Go server
-            // injects this separately via its own search-replace; the Vite plugin
-            // replicates that here so capability overrides in jaeger-ui.config.json
-            // work with `pnpm start`.
-            html = injectBackendCapabilities(html, parsedConfig);
+            fileCapabilities = parsedConfig.backendCapabilities;
 
             console.log('[jaeger-ui-config] Loaded config from jaeger-ui.config.json');
-            return html;
           } catch (err) {
             console.error('[jaeger-ui-config] Error loading jaeger-ui.config.json:', err);
           }
         }
 
-        return html;
+        // The Go server injects capabilities via its own search-replace, separate from the
+        // UI config. The plugin replicates that here, from the running backend and from the
+        // config file, so both work with `pnpm start`. A production build has no backend to
+        // ask and gets its blob from the query service at serve time, so it only reads the
+        // config file; ctx.server tells the two modes apart.
+        const backendCapabilities = ctx.server ? await fetchBackendCapabilities(proxyConfig.target) : null;
+        if (backendCapabilities) {
+          console.log(
+            `[jaeger-ui-config] Read capabilities from ${proxyConfig.target}:`,
+            JSON.stringify(backendCapabilities)
+          );
+        }
+        return injectBackendCapabilities(html, { ...backendCapabilities, ...fileCapabilities });
       },
     },
   };
