@@ -202,22 +202,27 @@ describe('<ListView /> functional', () => {
   // --------------------
 
   it('debounces scroll events using requestAnimationFrame', () => {
-    const rafSpy = jest.spyOn(window, 'requestAnimationFrame');
+    // Replace rAF with a manual queue so callbacks don't auto-fire, making the
+    // debounce assertion deterministic regardless of how polyfillAnimationFrame works.
+    const rafCallbacks = [];
+    const rafSpy = jest.spyOn(window, 'requestAnimationFrame').mockImplementation(cb => {
+      rafCallbacks.push(cb);
+      return rafCallbacks.length;
+    });
+
     const { container } = render(<ListView {...props} />);
     const wrapper = getWrapper(container);
 
-    // Set up dimensions first
     Object.defineProperty(wrapper, 'clientHeight', {
       value: 300,
       configurable: true,
     });
 
-    // Multiple scroll events should only trigger one RAF
+    // Multiple rapid scroll events should only trigger one RAF due to debouncing
     fireEvent.scroll(wrapper);
     fireEvent.scroll(wrapper);
     fireEvent.scroll(wrapper);
 
-    // Should only call RAF once due to debouncing
     expect(rafSpy).toHaveBeenCalledTimes(1);
 
     rafSpy.mockRestore();
@@ -512,5 +517,96 @@ describe('<ListView /> functional', () => {
     expect(consoleWarnSpy).toHaveBeenCalledWith('itemKey not found');
 
     consoleWarnSpy.mockRestore();
+  });
+});
+
+// --------------------
+// Imperative Ref API
+// --------------------
+
+describe('<ListView /> imperative ref API', () => {
+  polyfillAnimationFrame(window);
+
+  const DATA_LENGTH = 20;
+
+  function getHeight(index) {
+    return index * 2 + 2;
+  }
+
+  function renderItem(itemKey, styles, itemIndex, attrs) {
+    return (
+      <div key={itemKey} style={styles} {...attrs}>
+        {itemIndex}
+      </div>
+    );
+  }
+
+  const props = {
+    dataLength: DATA_LENGTH,
+    getIndexFromKey: Number,
+    getKeyFromIndex: String,
+    initialDraw: 10,
+    itemHeightGetter: getHeight,
+    itemRenderer: renderItem,
+    itemsWrapperClassName: 'RefTestClass',
+    viewBuffer: 5,
+    viewBufferMin: 2,
+    windowScroller: false,
+  };
+
+  it('exposes getViewHeight() returning a number', () => {
+    const ref = React.createRef();
+    render(<ListView {...props} ref={ref} />);
+    expect(ref.current).not.toBeNull();
+    expect(typeof ref.current.getViewHeight()).toBe('number');
+  });
+
+  it('exposes getTopVisibleIndex() returning a number', () => {
+    const ref = React.createRef();
+    render(<ListView {...props} ref={ref} />);
+    const idx = ref.current.getTopVisibleIndex();
+    expect(typeof idx).toBe('number');
+    expect(idx).toBeGreaterThanOrEqual(0);
+  });
+
+  it('exposes getBottomVisibleIndex() returning a number', () => {
+    const ref = React.createRef();
+    render(<ListView {...props} ref={ref} />);
+    const idx = ref.current.getBottomVisibleIndex();
+    expect(typeof idx).toBe('number');
+    expect(idx).toBeGreaterThanOrEqual(0);
+  });
+
+  it('exposes getRowPosition() returning { height, y } for a valid index', () => {
+    const ref = React.createRef();
+    render(<ListView {...props} ref={ref} />);
+    const pos = ref.current.getRowPosition(0);
+    expect(pos).toHaveProperty('height');
+    expect(pos).toHaveProperty('y');
+    expect(typeof pos.height).toBe('number');
+    expect(typeof pos.y).toBe('number');
+  });
+
+  it('exposes forceUpdate() which is callable without error', () => {
+    const ref = React.createRef();
+    render(<ListView {...props} ref={ref} />);
+    expect(() => ref.current.forceUpdate()).not.toThrow();
+  });
+
+  it('ref methods remain callable after scroll', async () => {
+    const ref = React.createRef();
+    const { container } = render(<ListView {...props} ref={ref} />);
+    const wrapper = container.firstChild;
+
+    Object.defineProperty(wrapper, 'scrollTop', { value: 100, writable: true, configurable: true });
+    Object.defineProperty(wrapper, 'clientHeight', { value: 300, writable: true, configurable: true });
+    fireEvent.scroll(wrapper);
+
+    await waitFor(() => {
+      expect(() => ref.current.getViewHeight()).not.toThrow();
+      expect(() => ref.current.getTopVisibleIndex()).not.toThrow();
+      expect(() => ref.current.getBottomVisibleIndex()).not.toThrow();
+      expect(() => ref.current.getRowPosition(0)).not.toThrow();
+    });
   });
 });

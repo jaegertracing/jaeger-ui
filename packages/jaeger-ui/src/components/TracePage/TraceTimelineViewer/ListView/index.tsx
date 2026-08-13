@@ -1,7 +1,9 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useRef, useReducer, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
+import * as React from 'react';
+
+const { useRef, useReducer, useEffect, useCallback, useImperativeHandle, forwardRef } = React;
 
 import Positions from './Positions';
 import { TNil } from '../../../../types';
@@ -15,7 +17,7 @@ type TWrapperProps = {
 /**
  * @typedef
  */
-export type TListViewProps = {
+type TListViewProps = {
   /**
    * Number of elements in the list.
    */
@@ -114,20 +116,21 @@ const ListView = forwardRef<ListViewRef, TListViewProps>((props, ref) => {
   const wrapperElm = useRef<HTMLElement | TNil>(undefined);
   const itemHolderElm = useRef<HTMLElement | TNil>(undefined);
 
-  const [, forceUpdate] = useReducer((x) => x + 1, 0);
+  const [, forceUpdate] = useReducer(x => x + 1, 0);
 
   const getViewHeight = useCallback(() => viewHeight.current, []);
 
+  const { getKeyFromIndex, itemHeightGetter } = props;
   const _getHeight = useCallback(
     (i: number) => {
-      const key = props.getKeyFromIndex(i);
+      const key = getKeyFromIndex(i);
       const known = knownHeights.current.get(key);
       if (known != null && known === known) {
         return known;
       }
-      return props.itemHeightGetter(i, key);
+      return itemHeightGetter(i, key);
     },
-    [props.getKeyFromIndex, props.itemHeightGetter]
+    [getKeyFromIndex, itemHeightGetter]
   );
 
   const getBottomVisibleIndex = useCallback(() => {
@@ -199,8 +202,12 @@ const ListView = forwardRef<ListViewRef, TListViewProps>((props, ref) => {
       return false;
     }
     const useRoot = props.windowScroller;
-    const clientHeight = useRoot ? htmlElm.current.clientHeight : wrapperElm.current.clientHeight;
-    const currentScrollTop = useRoot ? htmlElm.current.scrollTop : wrapperElm.current.scrollTop;
+    // Use the same scroll source as _calcViewIndexes: window.scrollY for windowScroller,
+    // wrapperElm.scrollTop otherwise, to avoid cross-browser inconsistencies.
+    const clientHeight = useRoot
+      ? window.innerHeight - htmlTopOffset.current
+      : wrapperElm.current.clientHeight;
+    const currentScrollTop = useRoot ? window.scrollY : wrapperElm.current.scrollTop;
     return clientHeight !== viewHeight.current || currentScrollTop !== scrollTop.current;
   }, [props.windowScroller]);
 
@@ -281,10 +288,17 @@ const ListView = forwardRef<ListViewRef, TListViewProps>((props, ref) => {
     return undefined;
   }, [props.windowScroller, _onScroll]);
 
-  // We intentionally omit the dependency array here to run after every render, 
-  // mirroring the old class component's componentDidUpdate. 
+  const didMount = useRef(false);
+
+  // We intentionally omit the dependency array here to run after every render,
+  // mirroring the old class component's componentDidUpdate.
   // _scanItemHeights is optimized to bail out early if item heights haven't changed.
+  // We skip the very first run because _initItemHolder already triggers a scan on mount.
   useEffect(() => {
+    if (!didMount.current) {
+      didMount.current = true;
+      return;
+    }
     if (itemHolderElm.current) {
       _scanItemHeights();
     }
@@ -292,16 +306,14 @@ const ListView = forwardRef<ListViewRef, TListViewProps>((props, ref) => {
 
   const {
     dataLength,
-    getKeyFromIndex,
     initialDraw = DEFAULT_INITIAL_DRAW,
     itemsWrapperClassName = '',
     itemRenderer,
     viewBuffer,
     viewBufferMin,
-    windowScroller = false,
   } = props;
   const heightGetter = _getHeight;
-  const items = [];
+  const items: React.ReactNode[] = [];
   let start;
   let end;
 
