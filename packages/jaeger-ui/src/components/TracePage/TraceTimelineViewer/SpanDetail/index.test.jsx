@@ -216,8 +216,8 @@ describe('<SpanDetail>', () => {
     expect(getByRole('rowheader', { name: 'Start Time:' })).toBeInTheDocument();
 
     // Check that the mocked formatted values are rendered in the correct cells
-    expect(getByText(`${span.duration}ms`)).toBeInTheDocument();
-    expect(getByText(`${span.relativeStartTime}ms`)).toBeInTheDocument();
+    expect(getByText(`compact:${span.duration}`)).toBeInTheDocument();
+    expect(getByText(`duration:${span.relativeStartTime}`)).toBeInTheDocument();
   });
 
   it('renders span tags accordian and triggers toggle callback with span ID', () => {
