@@ -1,3 +1,4 @@
+// Copyright (c) 2026 The Jaeger Authors.
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -73,26 +74,26 @@ export type TraceGraphConfig = {
   layoutManagerMemory?: number;
 };
 
-export type StorageCapabilities = {
+// BackendCapabilities is the capability blob advertised by the backend via
+// window.getJaegerBackendCapabilities. The backend overlays this on top of
+// the user UI config independently, so the user UI config cannot set these
+// values in production.
+export type BackendCapabilities = {
   // archiveStorage indicates whether the query service supports archive storage.
   archiveStorage?: boolean;
   // metricsStorage indicates whether the query service supports metrics storage (for Monitor/SPM tab).
   metricsStorage?: boolean;
+  // aiAssistant indicates whether the in-app AI assistant should be available.
+  // The backend advertises this when a live AI sidecar is reachable.
+  aiAssistant?: boolean;
+  // searchWithoutServiceName indicates whether the trace storage backend accepts a
+  // search that omits the service name. The Service dropdown offers its "All Services"
+  // option only when this is true; Cassandra, for one, cannot answer such a query.
+  searchWithoutServiceName?: boolean;
 };
 
 // Default values are provided in packages/jaeger-ui/src/constants/default-config.tsx
 export type Config = {
-  // ai gates AI-assisted UI features (e.g. the in-app assistant).
-  // The UI does not enable these features unless the operator opts in via
-  // `ai.enabled: true`, because the Query Service does not yet ship a
-  // matching backend. Defaults to disabled.
-  ai?: {
-    // enabled turns on AI-assisted features in the UI. When false (the
-    // default), all AI surfaces are hidden regardless of whether the
-    // backend supports them.
-    enabled?: boolean;
-  };
-
   //
   // archiveEnabled enables the Archive Trace button in the trace view.
   // Requires Query Service to be configured with "archive" storage backend.
@@ -157,8 +158,10 @@ export type Config = {
   // traceIdDisplayLength controls the length of the trace ID displayed in the UI.
   traceIdDisplayLength?: number;
 
-  // storage capabilities given by the query service.
-  storageCapabilities?: StorageCapabilities;
+  // backendCapabilities is the capability blob advertised by the backend
+  // (overlaid on top of any embedded UI config at index.html boot). Internal
+  // UI code reads this field.
+  backendCapabilities?: BackendCapabilities;
 
   // topTagPrefixes defines a set of prefixes for span tag names that are considered
   // "important" and cause the matching tags to appear higher in the list of tags.
@@ -240,10 +243,32 @@ export type Config = {
     // 'sidepanel' makes the side panel the default experience for new users.
     // Default: 'inline'.
     defaultDetailPanelMode?: SpanDetailPanelMode;
+
+    // spanPillsEnabled controls span pill overlays in the trace timeline.
+    // Default: true. Set to false to disable if needed.
+    spanPillsEnabled?: boolean;
   };
 
-  // useOpenTelemetryTerms determines whether the UI uses legacy Jaeger terminology
-  // (tags, logs, process, operation name) or OpenTelemetry terminology
-  // (attributes, events, resource, name).
+  // useOpenTelemetryTerms determines whether the UI uses OpenTelemetry terminology
+  // (attributes, events, resource, name) or legacy Jaeger terminology
+  // (tags, logs, process, operation name).
+  // Default: true. Set to false to keep the legacy Jaeger labels.
   useOpenTelemetryTerms: boolean;
+
+  // tracing controls in-browser OpenTelemetry instrumentation. When enabled,
+  // the UI exports spans via OTLP/HTTP to the same-origin path
+  // '/api/otlp/v1/traces', which the jaeger-query otlp_proxy extension
+  // forwards to the OTel Collector. The endpoint is intentionally not
+  // configurable — see docs/adr/0011-ui-emitted-trace-ingest.md.
+  // Disabled by default.
+  tracing?: {
+    enabled?: boolean;
+    serviceName?: string;
+    sampleRatio?: number;
+    // sessionInactivityMinutes controls how many minutes of inactivity end
+    // the current user session. The next span after the timeout starts a new
+    // `session.id` and stamps the prior one as `session.previous_id`,
+    // per OTel session semantics. Default: 30.
+    sessionInactivityMinutes?: number;
+  };
 };

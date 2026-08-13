@@ -127,6 +127,104 @@ const ListView = forwardRef<ListViewRef, TListViewProps>((props, ref) => {
       const known = knownHeights.current.get(key);
       if (known != null && known === known) {
         return known;
+export default class ListView extends React.Component<TListViewProps> {
+  /**
+   * Keeps track of the height and y-value of items, by item index, in the
+   * ListView.
+   */
+  _yPositions: Positions;
+  /**
+   * Keep track of the known / measured heights of the rendered items; populated
+   * with values through observation and keyed on the item key, not the item
+   * index.
+   */
+  _knownHeights: Map<string, number>;
+  /**
+   * The start index of the items currently drawn.
+   */
+  _startIndexDrawn: number;
+  /**
+   * The end index of the items currently drawn.
+   */
+  _endIndexDrawn: number;
+  /**
+   * The start index of the items currently in view.
+   */
+  _startIndex: number;
+  /**
+   * The end index of the items currently in view.
+   */
+  _endIndex: number;
+  /**
+   * Height of the visual window, e.g. height of the scroller element.
+   */
+  _viewHeight: number;
+  /**
+   * `scrollTop` of the current scroll position.
+   */
+  _scrollTop: number;
+  /**
+   * Used to keep track of whether or not a re-calculation of what should be
+   * drawn / viewable has been scheduled.
+   */
+  _isScrolledOrResized: boolean;
+  /**
+   * If `windowScroller` is true, this notes how far down the page the scroller
+   * is located. (Note: repositioning and below-the-fold views are untested)
+   */
+  _htmlTopOffset: number;
+  _windowScrollListenerAdded: boolean;
+  _htmlElm: HTMLElement;
+  /**
+   * HTMLElement holding the scroller.
+   */
+  _wrapperElm: HTMLElement | TNil;
+  /**
+   * HTMLElement holding the rendered items.
+   */
+  _itemHolderElm: HTMLElement | TNil;
+  /**
+   * The actual .length of the items array after rendering, used in tests to
+   * detect sparse arrays (array holes) that can occur when items.length is
+   * pre-allocated before push() calls.
+   */
+  _lastItemsLength: number;
+
+  static defaultProps = {
+    initialDraw: DEFAULT_INITIAL_DRAW,
+    itemsWrapperClassName: '',
+    windowScroller: false,
+  };
+
+  constructor(props: TListViewProps) {
+    super(props);
+
+    this._yPositions = new Positions(200);
+    // _knownHeights is (item-key -> observed height) of list items
+    this._knownHeights = new Map();
+
+    this._startIndexDrawn = 2 ** 20;
+    this._endIndexDrawn = -(2 ** 20);
+    this._startIndex = 0;
+    this._endIndex = 0;
+    this._viewHeight = -1;
+    this._scrollTop = -1;
+    this._isScrolledOrResized = false;
+
+    this._htmlTopOffset = -1;
+    this._windowScrollListenerAdded = false;
+    this._lastItemsLength = 0;
+    // _htmlElm is only relevant if props.windowScroller is true
+    this._htmlElm = document.documentElement as any;
+    this._wrapperElm = undefined;
+    this._itemHolderElm = undefined;
+  }
+
+  componentDidMount() {
+    if (this.props.windowScroller) {
+      if (this._wrapperElm) {
+        const { top } = this._wrapperElm.getBoundingClientRect();
+        this._htmlTopOffset = top + this._htmlElm.scrollTop;
       }
       return itemHeightGetter(i, key);
     },
@@ -283,6 +381,18 @@ const ListView = forwardRef<ListViewRef, TListViewProps>((props, ref) => {
       window.addEventListener('scroll', _onScroll);
       return () => {
         window.removeEventListener('scroll', _onScroll);
+    }
+
+    this._yPositions.calcHeights(end, heightGetter, start || -1);
+    this._startIndexDrawn = start;
+    this._endIndexDrawn = end;
+
+    for (let i = start; i <= end; i++) {
+      const { y: top, height } = this._yPositions.getRowPosition(i, heightGetter);
+      const style = {
+        height,
+        top,
+        position: 'absolute',
       };
     }
     return undefined;
@@ -338,6 +448,15 @@ const ListView = forwardRef<ListViewRef, TListViewProps>((props, ref) => {
     } else {
       start = startIndexDrawn.current;
       end = endIndexDrawn.current > dataLength - 1 ? dataLength - 1 : endIndexDrawn.current;
+    this._lastItemsLength = items.length;
+    const wrapperProps: TWrapperProps = {
+      style: { position: 'relative' },
+      ref: this._initWrapper,
+    };
+    if (!this.props.windowScroller) {
+      wrapperProps.onScroll = this._onScroll;
+      wrapperProps.style.height = '100%';
+      wrapperProps.style.overflowY = 'auto';
     }
   }
 

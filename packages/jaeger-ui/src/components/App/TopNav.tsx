@@ -68,7 +68,7 @@ if (getConfig().qualityMetrics?.menuEnabled) {
   });
 }
 
-if (getConfig().storageCapabilities?.metricsStorage) {
+if (getConfig().backendCapabilities?.metricsStorage) {
   NAV_LINKS.push({
     to: monitorATMUrl.getUrl(),
     matches: monitorATMUrl.matches,

@@ -66,11 +66,11 @@ function UIConfig() {
         text: 'Information about Jaeger SDK release #{jaeger.version}',
       },
     ],
-    // NOTE: storageCapabilities is intentionally omitted from this example.
+    // NOTE: backendCapabilities is intentionally omitted from this example.
     // In production, the jaeger binary injects it via a separate search-replace on
-    // JAEGER_STORAGE_CAPABILITIES (independent of UIConfig); the UI config value is ignored.
-    // In dev mode, the Vite plugin evaluates UIConfig() and injects storageCapabilities
-    // into the same placeholder, so setting it here works with `npm start`.
-    // storageCapabilities: { archiveStorage: true }
+    // JAEGER_BACKEND_CAPABILITIES (independent of UIConfig); the UI config value is ignored.
+    // In dev mode, the Vite plugin evaluates UIConfig() and injects backendCapabilities
+    // into the same placeholder, so setting it here works with `pnpm start`.
+    // backendCapabilities: { archiveStorage: true, aiAssistant: true }
   };
 }

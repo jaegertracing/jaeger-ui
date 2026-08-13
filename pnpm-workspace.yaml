@@ -1,0 +1,20 @@
+# Copyright (c) 2026 The Jaeger Authors.
+# SPDX-License-Identifier: Apache-2.0
+
+packages:
+  - 'packages/jaeger-ui'
+  - 'packages/plexus'
+
+catalog:
+  '@noble/hashes': 2.2.0
+
+overrides:
+  react: 19.2.0
+  react-dom: 19.2.0
+  yaml: 2.9.0
+  '@types/node': 24.13.1
+  '@exodus/bytes>@noble/hashes': 'catalog:'
+  '@assistant-ui/core': 0.3.3
+  '@assistant-ui/store': 0.3.2
+  '@assistant-ui/tap': 0.9.9
+  brace-expansion: 5.0.8

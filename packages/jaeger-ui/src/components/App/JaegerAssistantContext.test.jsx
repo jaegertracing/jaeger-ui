@@ -5,6 +5,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
+import { HttpAgent } from '@ag-ui/client';
 import {
   JaegerAssistantProvider,
   useJaegerAssistant,
@@ -135,6 +136,28 @@ describe('JaegerAssistantContext', () => {
     expect(screen.getByTestId('bootstrap')).toHaveTextContent('hello');
     fireEvent.click(screen.getByRole('button', { name: 'clear' }));
     expect(screen.getByTestId('bootstrap')).toHaveTextContent('none');
+  });
+
+  it('passes a fetch wrapper to HttpAgent that survives method-style invocation', async () => {
+    // Regression: @ag-ui/client's HttpAgent stores the supplied `fetch` as
+    // `this.fetch` and later invokes it as `this.fetch(...)`. Passing the bare
+    // global `fetch` would then be called with `this === HttpAgent`, which throws
+    // "Illegal invocation" in browsers. The provider must supply a wrapper that
+    // detaches the receiver.
+    agUiMock.configured = true;
+    render(
+      <JaegerAssistantProvider>
+        <span />
+      </JaegerAssistantProvider>
+    );
+    expect(HttpAgent).toHaveBeenCalledTimes(1);
+    const opts = HttpAgent.mock.calls[0][0];
+    expect(typeof opts.fetch).toBe('function');
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(undefined);
+    const receiver = { fetch: opts.fetch };
+    await receiver.fetch('/x', { method: 'POST' });
+    expect(fetchSpy).toHaveBeenCalledWith('/x', { method: 'POST' });
+    fetchSpy.mockRestore();
   });
 
   it('useAgUiRuntime onError logs AG-UI errors (lines 29–30)', () => {

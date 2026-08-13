@@ -16,10 +16,14 @@ describe('generateColor', () => {
 
     expect(tableValue1[0].isDetail).toBe(false);
     expect(tableValue1[0].count).toBe(8);
-    expect(tableValue1[0].colorToPercent).toBe('rgb(248,70,70)');
+    expect(tableValue1[0].colorToPercent).toBe(
+      'color-mix(in srgb, var(--span-color-6) 60%, var(--surface-primary))'
+    );
     expect(tableValue1[1].isDetail).toBe(false);
     expect(tableValue1[1].count).toBe(3);
-    expect(tableValue1[1].colorToPercent).toBe('rgb(248,173.75,173.75)');
+    expect(tableValue1[1].colorToPercent).toBe(
+      'color-mix(in srgb, var(--span-color-6) 27.5%, var(--surface-primary))'
+    );
 
     tableValue1 = generateColor(tableValue1, 'count', false);
     expect(tableValue1[0].isDetail).toBe(false);
@@ -36,10 +40,14 @@ describe('generateColor', () => {
 
     expect(tableValue1[0].isDetail).toBe(false);
     expect(tableValue1[0].total).toBe(573);
-    expect(tableValue1[0].colorToPercent).toBe('rgb(248,70,70)');
+    expect(tableValue1[0].colorToPercent).toBe(
+      'color-mix(in srgb, var(--span-color-6) 60%, var(--surface-primary))'
+    );
     expect(tableValue1[1].isDetail).toBe(false);
     expect(tableValue1[1].total).toBe(238);
-    expect(tableValue1[1].colorToPercent).toBe('rgb(248,167.05061082024432,167.05061082024432)');
+    expect(tableValue1[1].colorToPercent).toBe(
+      'color-mix(in srgb, var(--span-color-6) 29.6%, var(--surface-primary))'
+    );
 
     tableValue1 = generateColor(tableValue1, 'count', false);
     expect(tableValue1[0].isDetail).toBe(false);
@@ -63,10 +71,14 @@ describe('generateColor', () => {
 
     expect(tableValue2[0].isDetail).toBe(false);
     expect(tableValue2[0].count).toBe(8);
-    expect(tableValue2[0].colorToPercent).toBe('rgb(248,70,70)');
+    expect(tableValue2[0].colorToPercent).toBe(
+      'color-mix(in srgb, var(--span-color-6) 60%, var(--surface-primary))'
+    );
     expect(tableValue2[1].isDetail).toBe(true);
     expect(tableValue2[1].count).toBe(1);
-    expect(tableValue2[1].colorToPercent).toBe('rgb(248,215.25,215.25)');
+    expect(tableValue2[1].colorToPercent).toBe(
+      'color-mix(in srgb, var(--span-color-6) 14.5%, var(--surface-primary))'
+    );
 
     tableValue2 = generateColor(tableValue2, 'count', false);
 
@@ -75,7 +87,7 @@ describe('generateColor', () => {
     expect(tableValue2[0].colorToPercent).toBe('transparent');
     expect(tableValue2[1].isDetail).toBe(true);
     expect(tableValue2[1].count).toBe(1);
-    expect(tableValue2[1].colorToPercent).toBe('rgb(248,248,248)');
+    expect(tableValue2[1].colorToPercent).toBe('var(--surface-tertiary)');
   });
 
   it('check generateColor with total, two NameSelectors are selcted', () => {
@@ -91,10 +103,14 @@ describe('generateColor', () => {
 
     expect(tableValue2[0].isDetail).toBe(false);
     expect(tableValue2[0].total).toBe(573);
-    expect(tableValue2[0].colorToPercent).toBe('rgb(248,70,70)');
+    expect(tableValue2[0].colorToPercent).toBe(
+      'color-mix(in srgb, var(--span-color-6) 60%, var(--surface-primary))'
+    );
     expect(tableValue2[1].isDetail).toBe(true);
     expect(tableValue2[1].total).toBe(390);
-    expect(tableValue2[1].colorToPercent).toBe('rgb(248,123.01570680628271,123.01570680628271)');
+    expect(tableValue2[1].colorToPercent).toBe(
+      'color-mix(in srgb, var(--span-color-6) 43.39%, var(--surface-primary))'
+    );
 
     tableValue2 = generateColor(tableValue2, 'total', false);
 
@@ -103,7 +119,7 @@ describe('generateColor', () => {
     expect(tableValue2[0].colorToPercent).toBe('transparent');
     expect(tableValue2[1].isDetail).toBe(true);
     expect(tableValue2[1].total).toBe(390);
-    expect(tableValue2[1].colorToPercent).toBe('rgb(248,248,248)');
+    expect(tableValue2[1].colorToPercent).toBe('var(--surface-tertiary)');
   });
 
   it('covers percent attribute with colorToPercent=true', () => {
@@ -114,7 +130,35 @@ describe('generateColor', () => {
 
     const output = generateColor(input, 'percent', true);
 
-    expect(output[0].colorToPercent).toBe('rgb(248,111.5,111.5)');
-    expect(output[1].colorToPercent).toBe('rgb(248,194.5,194.5)');
+    expect(output[0].colorToPercent).toBe(
+      'color-mix(in srgb, var(--span-color-6) 47%, var(--surface-primary))'
+    );
+    expect(output[1].colorToPercent).toBe(
+      'color-mix(in srgb, var(--span-color-6) 21%, var(--surface-primary))'
+    );
+  });
+
+  it('handles zero values without creating invalid colors', () => {
+    const input = [
+      { isDetail: false, count: 0 },
+      { isDetail: false, count: 0 },
+    ];
+
+    const output = generateColor(input, 'count', true);
+
+    expect(output[0].colorToPercent).toBe(
+      'color-mix(in srgb, var(--span-color-6) 8%, var(--surface-primary))'
+    );
+    expect(output[1].colorToPercent).toBe(output[0].colorToPercent);
+  });
+
+  it('does not mutate the input rows', () => {
+    const input = [{ isDetail: false, count: 1, colorToPercent: 'transparent' }];
+
+    const output = generateColor(input, 'count', true);
+
+    expect(output).not.toBe(input);
+    expect(output[0]).not.toBe(input[0]);
+    expect(input[0].colorToPercent).toBe('transparent');
   });
 });

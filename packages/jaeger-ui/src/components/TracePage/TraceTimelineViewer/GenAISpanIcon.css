@@ -1,0 +1,14 @@
+/*
+Copyright (c) 2026 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.GenAISpanIcon {
+  font-size: 1.3em;
+  margin-right: 0.3rem;
+  vertical-align: -0.18em;
+  color: var(--interactive-primary);
+  /* Sit above .span-name::after so the hover tooltip receives pointer events. */
+  position: relative;
+  z-index: 1;
+}

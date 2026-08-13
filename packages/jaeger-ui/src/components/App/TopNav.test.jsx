@@ -61,7 +61,7 @@ vi.mock('../../utils/config/get-config', async () => {
         menuLabel: 'Quality',
         apiEndpoint: '/quality-metrics',
       },
-      storageCapabilities: { metricsStorage: true },
+      backendCapabilities: { metricsStorage: true },
       themes: { enabled: true },
     })),
   };

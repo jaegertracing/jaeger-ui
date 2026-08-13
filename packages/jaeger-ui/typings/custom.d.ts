@@ -9,7 +9,7 @@ declare interface Window {
   __webpack_public_path__: string;
   // For getting ui config
   getJaegerUiConfig?: () => Record<string, any>;
-  getJaegerStorageCapabilities?: () => Record<string, any>;
+  getJaegerBackendCapabilities?: () => Record<string, any>;
   getJaegerVersion?: () => Record<string, any>;
 }
 

@@ -103,9 +103,9 @@ describe('SvgEdgesLayer', () => {
       expect(SvgLayer.lastProps.classNamePart).toBe('SvgEdgesLayer');
     });
 
-    it('passes extraWrapper with black stroke to SvgLayer', () => {
+    it('passes extraWrapper with currentColor stroke to SvgLayer', () => {
       render(<SvgEdgesLayer {...defaultProps} />);
-      expect(SvgLayer.lastProps.extraWrapper).toEqual({ stroke: '#000' });
+      expect(SvgLayer.lastProps.extraWrapper).toEqual({ stroke: 'currentColor' });
     });
 
     it('passes getClassName to SvgLayer', () => {

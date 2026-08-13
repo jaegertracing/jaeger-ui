@@ -11,14 +11,14 @@ import AccordionAttributes from './AccordionAttributes';
 import { formatDuration } from '../../../../utils/date';
 import { TNil } from '../../../../types';
 import { Hyperlink } from '../../../../types/hyperlink';
-import { IEvent, IAttribute } from '../../../../types/otel';
+import { IEvent, IAttributes } from '../../../../types/otel';
 
 import './AccordionEvents.css';
 
 type AccordionEventsProps = {
   interactive?: boolean;
   isOpen: boolean;
-  linksGetter?: ((pairs: ReadonlyArray<IAttribute>, index: number) => Hyperlink[]) | TNil;
+  linksGetter?: ((pairs: IAttributes, index: number) => Hyperlink[]) | TNil;
   events: ReadonlyArray<IEvent>;
   onItemToggle?: (event: IEvent) => void;
   onToggle?: () => void;

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // This file is AUTO-GENERATED from the Jaeger OpenAPI spec.
-// Do not edit manually. Regenerate using: npm run generate:api-types
+// Do not edit manually. Regenerate using: pnpm run generate:api-types
 
 import { z } from 'zod';
 
