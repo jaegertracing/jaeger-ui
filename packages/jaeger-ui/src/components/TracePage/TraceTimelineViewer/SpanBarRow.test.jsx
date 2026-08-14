@@ -454,9 +454,7 @@ describe('<SpanBarRow>', () => {
         attributes: makeAttributes([{ key: 'gen_ai.system', value: 'openai' }]),
       };
       const { container } = render(<SpanBarRow {...defaultProps} span={span} />);
-      // getSpanDecorationIcon prefers GenAI; namespace .SpanBarRow--spanTypeIcon must
-      // not appear alongside the kind-specific GenAISpanIcon.
-      expect(container.querySelector('.SpanBarRow--spanTypeIcon')).not.toBeInTheDocument();
+      expect(container.querySelectorAll('.SpanDecorationIcon')).toHaveLength(1);
       expect(screen.getByRole('img', { name: 'LLM call' })).toBeInTheDocument();
     });
 
@@ -473,8 +471,20 @@ describe('<SpanBarRow>', () => {
         ]),
       };
       const { container } = render(<SpanBarRow {...defaultProps} span={span} />);
-      expect(container.querySelector('.SpanBarRow--spanTypeIcon')).not.toBeInTheDocument();
+      expect(container.querySelectorAll('.SpanDecorationIcon')).toHaveLength(1);
       expect(screen.getByRole('img', { name: 'AI Agent' })).toBeInTheDocument();
+    });
+
+    it('renders the decoration icon before the error icon', () => {
+      const span = { ...defaultProps.span, genAIKind: 'LLM_CALL' };
+      const { container } = render(<SpanBarRow {...defaultProps} span={span} hasOwnError />);
+      const svcName = container.querySelector('.span-svc-name');
+      const decoration = svcName.querySelector('.SpanDecorationIcon');
+      const error = svcName.querySelector('.SpanBarRow--errorIcon');
+      expect(decoration).toBeTruthy();
+      expect(error).toBeTruthy();
+      // DOCUMENT_POSITION_FOLLOWING (4): error comes after decoration in the tree.
+      expect(decoration.compareDocumentPosition(error) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
   });
 });

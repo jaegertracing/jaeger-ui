@@ -8,14 +8,14 @@ import TimelineRow from './TimelineRow';
 import { formatDurationCompact, ViewedBoundsFunctionType } from './utils';
 import SpanTreeOffset from './SpanTreeOffset';
 import SpanBar from './SpanBar';
-import { GenAISpanIcon } from './GenAISpanIcon';
+import { SpanDecorationIcon } from './SpanDecorationIcon';
 import Ticks from './Ticks';
 
 import { TNil } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan } from '../../../types/otel';
-import { getSpanPillsForSpan, SpanPill } from './spanPills';
-import { getSpanDecorationIcon } from './spanDecorations';
+import { SpanPill } from './spanPills';
+import { getSpanDecorationIcon, getSpanPillsForSpan } from './spanDecorations';
 
 import './SpanBarRow.css';
 
@@ -117,7 +117,6 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   const pills = spanPillsEnabled ? getSpanPillsForSpan(span) : [];
   // One resolver for namespace + GenAI icons; GenAI wins when both match (#4217).
   const decoration = getSpanDecorationIcon(span);
-  const SpanTypeIcon = decoration && !decoration.isGenAI ? decoration.icon : null;
   const label = formatDurationCompact(duration);
   const viewBounds = getViewedBounds(span.startTime, span.endTime);
   const viewStart = viewBounds.start;
@@ -169,11 +168,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
             <span
               className={`span-svc-name ${isParent && !isChildrenExpanded ? 'is-children-collapsed' : ''}`}
             >
-              {decoration?.isGenAI ? (
-                <GenAISpanIcon span={span} />
-              ) : (
-                SpanTypeIcon && <SpanTypeIcon className="SpanBarRow--spanTypeIcon" aria-hidden="true" />
-              )}
+              {decoration && <SpanDecorationIcon decoration={decoration} />}
               {hasOwnError && <IoAlert className="SpanBarRow--errorIcon" />}
               {!hasOwnError && hasChildError && (
                 <IoAlert className="SpanBarRow--errorIcon SpanBarRow--errorIcon--hollow" />

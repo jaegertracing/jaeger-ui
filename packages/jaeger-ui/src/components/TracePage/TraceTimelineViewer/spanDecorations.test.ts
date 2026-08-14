@@ -2,83 +2,46 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { makeAttributes } from '../../../model/attributes';
-import {
-  GEN_AI_KIND_META,
-  GEN_AI_OPERATION_TO_KIND,
-  NAMESPACE_ICONS,
-  PILL_SOURCES,
-  getNamespaceIconComponent,
-  getSpanDecorationIcon,
-} from './spanDecorations';
+import type { AttributeValue, IOtelSpan } from '../../../types/otel';
+import { GEN_AI_KIND_META, getSpanDecorationIcon, getSpanPillsForSpan } from './spanDecorations';
 
-describe('spanDecorations registry', () => {
-  it('keeps icon priorities unique and ascending with namespace order', () => {
-    const priorities = NAMESPACE_ICONS.map(e => e.priority);
-    expect(new Set(priorities).size).toBe(priorities.length);
-    expect([...priorities].sort((a, b) => a - b)).toEqual(priorities);
-  });
-
-  it('preserves pill emission order independent of icon priority', () => {
-    expect(PILL_SOURCES.map(s => s.label)).toEqual([
-      'http.status_code',
-      'http.method',
-      'db.system',
-      'rpc.system',
-      'gen_ai.request.model',
-    ]);
-  });
-
-  it('prefers stable OTel attribute key aliases for db/rpc system pills', () => {
-    expect(PILL_SOURCES.find(s => s.label === 'db.system')?.attrKeys).toEqual([
-      'db.system.name',
-      'db.system',
-    ]);
-    expect(PILL_SOURCES.find(s => s.label === 'rpc.system')?.attrKeys).toEqual([
-      'rpc.system.name',
-      'rpc.system',
-    ]);
-  });
-
-  it('does not register a category-only pill (redundancy rule)', () => {
-    const labels = PILL_SOURCES.map(s => s.label);
-    expect(labels).not.toContain('span.kind');
-    for (const { namespace } of NAMESPACE_ICONS) {
-      expect(labels).not.toContain(namespace);
-    }
-  });
-
-  it('documents messaging as icon-only until messaging.system lands', () => {
-    expect(NAMESPACE_ICONS.some(e => e.namespace === 'messaging')).toBe(true);
-    expect(PILL_SOURCES.map(s => s.label)).not.toContain('messaging.system');
-  });
-
-  it('does not register a gen_ai namespace icon (GenAI uses kind icons)', () => {
-    expect(NAMESPACE_ICONS.map(e => e.namespace)).not.toContain('gen_ai');
-  });
-
-  it('maps known gen_ai.operation.name values to kinds', () => {
-    expect(GEN_AI_OPERATION_TO_KIND.chat).toBe('LLM_CALL');
-    expect(GEN_AI_OPERATION_TO_KIND.execute_tool).toBe('TOOL_CALL');
-    expect(GEN_AI_OPERATION_TO_KIND.invoke_agent).toBe('AGENT');
-    expect(GEN_AI_OPERATION_TO_KIND.retrieval).toBe('RETRIEVAL');
-  });
-
-  it('exposes icon+label meta for every GenAI kind', () => {
-    for (const kind of ['LLM_CALL', 'TOOL_CALL', 'AGENT', 'RETRIEVAL', 'UNKNOWN_GENAI'] as const) {
-      expect(GEN_AI_KIND_META[kind].icon).toBeDefined();
-      expect(GEN_AI_KIND_META[kind].label.length).toBeGreaterThan(0);
-    }
-  });
-});
+function makeSpan(attributes: ReadonlyArray<{ key: string; value: AttributeValue }>): IOtelSpan {
+  return {
+    spanID: 's1',
+    attributes: makeAttributes(attributes),
+    resource: { serviceName: 'svc', attributes: makeAttributes() },
+    name: 'op',
+    startTime: 0,
+    endTime: 1,
+    duration: 1,
+    childSpans: [],
+    links: [],
+    inboundLinks: [],
+    events: [],
+    status: { code: 0 },
+    kind: 0,
+  } as unknown as IOtelSpan;
+}
 
 describe('getSpanDecorationIcon', () => {
   it('returns a namespace icon when the span is not GenAI', () => {
     const attributes = makeAttributes([{ key: 'http.method', value: 'GET' }]);
     const decoration = getSpanDecorationIcon({ attributes });
-    expect(decoration).toEqual({
-      icon: getNamespaceIconComponent(attributes),
-      isGenAI: false,
+    expect(decoration).toEqual({ icon: expect.any(Function) });
+    expect(decoration?.label).toBeUndefined();
+  });
+
+  it('resolves db over http when both namespaces are present', () => {
+    const dbOnly = getSpanDecorationIcon({
+      attributes: makeAttributes([{ key: 'db.system', value: 'mysql' }]),
     });
+    const both = getSpanDecorationIcon({
+      attributes: makeAttributes([
+        { key: 'db.system', value: 'mysql' },
+        { key: 'http.method', value: 'GET' },
+      ]),
+    });
+    expect(both?.icon).toBe(dbOnly?.icon);
   });
 
   it('prefers GenAI kind over namespace icons when both would match (#4217)', () => {
@@ -90,11 +53,54 @@ describe('getSpanDecorationIcon', () => {
     expect(decoration).toEqual({
       icon: GEN_AI_KIND_META.LLM_CALL.icon,
       label: 'LLM call',
-      isGenAI: true,
     });
   });
 
   it('returns null when there is neither GenAI kind nor a namespace match', () => {
     expect(getSpanDecorationIcon({ attributes: makeAttributes([]) })).toBeNull();
+  });
+
+  it('does not treat gen_ai attributes as a namespace icon (kind axis only)', () => {
+    expect(
+      getSpanDecorationIcon({ attributes: makeAttributes([{ key: 'gen_ai.system', value: 'openai' }]) })
+    ).toBeNull();
+  });
+});
+
+describe('getSpanPillsForSpan', () => {
+  it('marks a 5xx http status as an error pill', () => {
+    expect(getSpanPillsForSpan(makeSpan([{ key: 'http.status_code', value: '503' }]))).toEqual([
+      { label: 'http.status_code', value: '503', isError: true },
+    ]);
+  });
+
+  it('emits both http pills in registry order', () => {
+    expect(
+      getSpanPillsForSpan(
+        makeSpan([
+          { key: 'http.method', value: 'GET' },
+          { key: 'http.status_code', value: '200' },
+        ])
+      )
+    ).toEqual([
+      { label: 'http.status_code', value: '200' },
+      { label: 'http.method', value: 'GET' },
+    ]);
+  });
+
+  it('emits db.system ahead of http pills when both namespaces are present', () => {
+    expect(
+      getSpanPillsForSpan(
+        makeSpan([
+          { key: 'http.method', value: 'GET' },
+          { key: 'http.status_code', value: '200' },
+          { key: 'db.system', value: 'mysql' },
+        ])
+      )
+    ).toEqual([
+      { label: 'db.system', value: 'mysql' },
+      { label: 'http.status_code', value: '200' },
+      { label: 'http.method', value: 'GET' },
+    ]);
   });
 });

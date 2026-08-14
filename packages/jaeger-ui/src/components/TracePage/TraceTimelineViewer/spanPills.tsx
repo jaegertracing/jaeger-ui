@@ -6,65 +6,9 @@ import { Tag, Tooltip } from 'antd';
 import cx from 'classnames';
 
 import { useConfig } from '../../../hooks/useConfig';
-import { AttributeValue, IOtelSpan } from '../../../types/otel';
-import { PILL_SOURCES, type IPillSource } from './spanDecorations';
+import type { ISpanPill } from './spanDecorations';
 
-export type ISpanPill = { label: string; value: string; isError?: boolean };
-
-function safeStringify(value: object): string {
-  try {
-    return JSON.stringify(value);
-  } catch {
-    return '[unserializable]';
-  }
-}
-
-function formatAttributeValue(value: AttributeValue): string {
-  if (value === null || value === undefined) {
-    return '';
-  }
-  if (value instanceof Uint8Array) {
-    return safeStringify(Array.from(value));
-  }
-  if (Array.isArray(value)) {
-    return safeStringify(value);
-  }
-  if (typeof value === 'object') {
-    return safeStringify(value);
-  }
-  return String(value);
-}
-
-function pillFromSource(span: IOtelSpan, source: IPillSource): ISpanPill | undefined {
-  for (const key of source.attrKeys) {
-    const attrValue = span.attributes.getValue(key);
-    if (attrValue == null) {
-      continue;
-    }
-    const value = formatAttributeValue(attrValue).trim();
-    if (!value) {
-      continue;
-    }
-    const pill: ISpanPill = { label: source.label, value };
-    if (source.isError?.(value)) {
-      pill.isError = true;
-    }
-    return pill;
-  }
-  return undefined;
-}
-
-/** Builds pills for a single span from the shared decoration registry. */
-export function getSpanPillsForSpan(span: IOtelSpan): ISpanPill[] {
-  const pills: ISpanPill[] = [];
-  for (const source of PILL_SOURCES) {
-    const pill = pillFromSource(span, source);
-    if (pill) {
-      pills.push(pill);
-    }
-  }
-  return pills;
-}
+export type { ISpanPill };
 
 /** Enabled unless explicitly disabled via config (default on). */
 export function useSpanPillsEnabled(): boolean {
