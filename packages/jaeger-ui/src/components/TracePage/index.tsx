@@ -416,9 +416,7 @@ export function TracePageImpl(props: TProps) {
     detailPanelMode,
     enableSidePanel,
     hideMap:
-      !viewTypeShowsMinimap(viewType) ||
-      Boolean(embedded?.timeline?.hideMinimap) ||
-      !timelineBarsVisible,
+      !viewTypeShowsMinimap(viewType) || Boolean(embedded?.timeline?.hideMinimap) || !timelineBarsVisible,
     hideSummary: Boolean(embedded?.timeline?.hideSummary),
     linkToStandalone: getUrl(id),
     nextResult,

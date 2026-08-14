@@ -584,6 +584,17 @@ describe('<TracePage>', () => {
     });
 
     describe('calculates hideMap correctly', () => {
+      afterEach(() => {
+        mockLayoutPrefsStore.timelineBarsVisible = true;
+      });
+
+      it('is false on the timeline view', () => {
+        renderWithRouter(<TracePage {...defaultProps} />);
+
+        const spanGraph = screen.queryByTestId('span-graph');
+        expect(spanGraph).toBeInTheDocument();
+      });
+
       it('is true if on traceGraphView', () => {
         renderWithRouter(<TracePage {...defaultProps} />);
 
@@ -607,18 +618,12 @@ describe('<TracePage>', () => {
         expect(spanGraph).not.toBeInTheDocument();
       });
 
-      describe('when timeline bars are hidden', () => {
-        afterEach(() => {
-          mockLayoutPrefsStore.timelineBarsVisible = true;
-        });
+      it('is true if timeline bars are hidden', () => {
+        mockLayoutPrefsStore.timelineBarsVisible = false;
+        renderWithRouter(<TracePage {...defaultProps} />);
 
-        it('is true when timeline bars are hidden', () => {
-          mockLayoutPrefsStore.timelineBarsVisible = false;
-          renderWithRouter(<TracePage {...defaultProps} />);
-
-          const spanGraph = screen.queryByTestId('span-graph');
-          expect(spanGraph).not.toBeInTheDocument();
-        });
+        const spanGraph = screen.queryByTestId('span-graph');
+        expect(spanGraph).not.toBeInTheDocument();
       });
     });
 
