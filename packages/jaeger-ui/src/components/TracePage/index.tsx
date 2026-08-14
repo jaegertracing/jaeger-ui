@@ -451,6 +451,7 @@ export function TracePageImpl(props: TProps) {
         registerAccessors={sm.setAccessors}
         scrollToFirstVisibleSpan={sm.scrollToFirstVisibleSpan}
         findMatchesIDs={spanFindMatches}
+        pageHeaderHeight={headerHeight}
         trace={traceData}
         criticalPath={criticalPath}
         updateNextViewRangeTime={updateNextViewRangeTime}
@@ -465,6 +466,7 @@ export function TracePageImpl(props: TProps) {
         registerAccessors={sm.setAccessors}
         scrollToFirstVisibleSpan={sm.scrollToFirstVisibleSpan}
         findMatchesIDs={spanFindMatches}
+        pageHeaderHeight={headerHeight}
         trace={traceData}
         criticalPath={criticalPath}
         updateNextViewRangeTime={updateNextViewRangeTime}
