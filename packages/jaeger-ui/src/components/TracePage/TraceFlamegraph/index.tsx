@@ -162,13 +162,13 @@ const TraceFlamegraph = ({ trace }: any) => {
           }
           return;
         }
-        if (target === hoveredFrameRef.current) return;
         hoveredFrameRef.current = target;
         const d3Data = (target as any).__data__;
         const name = d3Data?.data?.name || '';
         const value = d3Data?.data?.duration ?? d3Data?.data?.value ?? 0;
         const count = d3Data?.data?.count || 1;
         setTooltip({ x: e.clientX, y: e.clientY, name, value, count });
+        if (target === hoveredFrameRef.current) return;
       });
       svgEl.addEventListener('mouseleave', () => {
         hoveredFrameRef.current = null;
