@@ -31,13 +31,13 @@ import type { AttributeValue, GenAISpanKind, IAttributes, IOtelSpan } from '../.
  * over namespace icons (#4217). The gen_ai registry row has pills only.
  */
 
-export type IPillSource = {
+type IPillSource = {
   label: string;
   attrKeys: readonly string[];
   isError?: (value: string) => boolean;
 };
 
-export type ISpanDecoration = {
+type ISpanDecoration = {
   namespace: string;
   icon?: IconType;
   pills?: readonly IPillSource[];
@@ -56,7 +56,7 @@ function is5xx(value: string): boolean {
   return code >= 500 && code < 600;
 }
 
-export const SPAN_DECORATIONS: readonly ISpanDecoration[] = [
+const SPAN_DECORATIONS: readonly ISpanDecoration[] = [
   {
     namespace: 'db',
     icon: DbIcon,
