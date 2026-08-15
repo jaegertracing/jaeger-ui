@@ -1,0 +1,45 @@
+diff --git a/cjs/react-dom-client.development.js b/cjs/react-dom-client.development.js
+index d005d8b99c428f58cdf62f50027fb855443f98ba..023be2de6bef644caad3db2cbf874c391f60513e 100644
+--- a/cjs/react-dom-client.development.js
++++ b/cjs/react-dom-client.development.js
+@@ -17917,7 +17917,7 @@
+           ? ((root.callbackNode = null),
+             (root.callbackPriority = 0),
+             scheduleCallback$1(NormalPriority$1, function () {
+-              schedulerEvent = window.event;
++              schedulerEvent = typeof window !== 'undefined' ? window.event : void 0;
+               pendingDelayedCommitReason === IMMEDIATE_COMMIT &&
+                 (pendingDelayedCommitReason = DELAYED_PASSIVE_COMMIT);
+               flushPassiveEffects();
+@@ -18819,7 +18819,7 @@
+       }
+     }
+     function processRootScheduleInImmediateTask() {
+-      schedulerEvent = window.event;
++      schedulerEvent = typeof window !== 'undefined' ? window.event : void 0;
+       processRootScheduleInMicrotask();
+     }
+     function processRootScheduleInMicrotask() {
+@@ -18933,7 +18933,7 @@
+     }
+     function performWorkOnRootViaSchedulerTask(root, didTimeout) {
+       nestedUpdateScheduled = currentUpdateIsNested = !1;
+-      schedulerEvent = window.event;
++      schedulerEvent = typeof window !== 'undefined' ? window.event : void 0;
+       if (
+         pendingEffectsStatus !== NO_PENDING_EFFECTS &&
+         pendingEffectsStatus !== PENDING_PASSIVE_PHASE
+@@ -22137,11 +22137,11 @@
+       return !1;
+     }
+     function resolveEventType() {
+-      var event = window.event;
++      var event = typeof window !== 'undefined' ? window.event : null;
+       return event && event !== schedulerEvent ? event.type : null;
+     }
+     function resolveEventTimeStamp() {
+-      var event = window.event;
++      var event = typeof window !== 'undefined' ? window.event : null;
+       return event && event !== schedulerEvent ? event.timeStamp : -1.1;
+     }
+     function handleErrorInNextTick(error) {
