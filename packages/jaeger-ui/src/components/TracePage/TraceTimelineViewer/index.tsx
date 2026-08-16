@@ -45,6 +45,9 @@ type TProps = TDispatchProps & {
   registerAccessors: (accessors: Accessors) => void;
   findMatchesIDs: Set<string> | TNil;
   scrollToFirstVisibleSpan: () => void;
+  // Height of the TracePage header, which pads this view down by that much. The side panel measures
+  // its own document offset, so it has to know when that padding changes.
+  pageHeaderHeight: number;
   trace: IOtelTrace;
   criticalPath: CriticalPathSection[];
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
@@ -73,6 +76,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     updateNextViewRangeTime,
     updateViewRangeTime,
     viewRange,
+    pageHeaderHeight,
     trace,
     useOtelTerms,
     ...rest
@@ -177,13 +181,11 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     selectedSpanID === null || selectedSpanID === rootSpanID ? 'Trace Root' : 'Span Details';
 
   // TimelineHeaderRow is position:fixed (see TimelineHeaderRow.css), so it takes no space in the
-  // document flow. layoutRef is on the --sidePanelLayout div which starts at the same document
-  // position as the header row. We compute panelTop once:
-  //   top + scrollY = document-relative top of the layout area = the fixed viewport top of the header
-  //   + 38          = the fixed header height, so the panel starts just below the header
-  // Because the header is fixed, panelTop is constant — only a resize listener is needed.
+  // document flow. layoutRef is on the --sidePanelLayout div, which therefore starts at the same
+  // document position as the header row: top + scrollY is both the layout area's document offset
+  // and the header row's viewport top. The side panel starts one header row below that.
   const layoutRef = useRef<HTMLDivElement>(null);
-  const [panelTop, setPanelTop] = useState<number | null>(null);
+  const [layoutTop, setLayoutTop] = useState<number | null>(null);
 
   useLayoutEffect(() => {
     if (!sidePanelActive) return;
@@ -191,26 +193,18 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       /* istanbul ignore next */
       if (!layoutRef.current) return;
       const { top } = layoutRef.current.getBoundingClientRect();
-      const headerHeight = parseInt(
-        getComputedStyle(document.documentElement).getPropertyValue('--timeline-header-row-height'),
-        10
-      );
-      setPanelTop(top + window.scrollY + headerHeight);
+      setLayoutTop(top + window.scrollY);
     };
     measure();
     window.addEventListener('resize', measure);
-    // ResizeObserver catches layout shifts that window resize misses (e.g. slim-header toggle,
-    // archive notifier appearing), which would change the layout container's document offset.
-    /* istanbul ignore next */
-    const resizeObserver = new ResizeObserver(measure);
-    /* istanbul ignore next */
-    if (layoutRef.current) resizeObserver.observe(layoutRef.current);
     return () => {
       window.removeEventListener('resize', measure);
-      /* istanbul ignore next */
-      resizeObserver.disconnect();
     };
-  }, [sidePanelActive]);
+    // pageHeaderHeight is a dependency because TracePage pads this view down by it, so a change
+    // moves the layout container without resizing it. The header is taller in timeline view than in
+    // the others, since only the timeline shows the minimap, and its height reaches TracePage's
+    // state one commit after the view switches — too late for the measurement taken on mount.
+  }, [sidePanelActive, pageHeaderHeight]);
 
   const headerRow = (
     <TimelineHeaderRow
@@ -248,11 +242,13 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
 
   if (sidePanelActive) {
     const mainWidth = (1 - effectiveSidePanelWidth) * 100;
+    // The header row height stays in CSS so that vars.css remains its only definition.
+    const headerRowHeight = 'var(--timeline-header-row-height)';
     const sidePanelStyle: React.CSSProperties = {
       width: `${effectiveSidePanelWidth * 100}%`,
-      ...(panelTop !== null && {
-        top: panelTop,
-        height: `calc(100vh - ${panelTop}px)`,
+      ...(layoutTop !== null && {
+        top: `calc(${layoutTop}px + ${headerRowHeight})`,
+        height: `calc(100vh - ${layoutTop}px - ${headerRowHeight})`,
       }),
     };
     return (
