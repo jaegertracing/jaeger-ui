@@ -584,6 +584,17 @@ describe('<TracePage>', () => {
     });
 
     describe('calculates hideMap correctly', () => {
+      afterEach(() => {
+        mockLayoutPrefsStore.timelineBarsVisible = true;
+      });
+
+      it('is false on the timeline view', () => {
+        renderWithRouter(<TracePage {...defaultProps} />);
+
+        const spanGraph = screen.queryByTestId('span-graph');
+        expect(spanGraph).toBeInTheDocument();
+      });
+
       it('is true if on traceGraphView', () => {
         renderWithRouter(<TracePage {...defaultProps} />);
 
@@ -601,6 +612,14 @@ describe('<TracePage>', () => {
           searchHideGraph: false,
           timeline: { collapseTitle: false, hideMinimap: true, hideSummary: false },
         });
+        renderWithRouter(<TracePage {...defaultProps} />);
+
+        const spanGraph = screen.queryByTestId('span-graph');
+        expect(spanGraph).not.toBeInTheDocument();
+      });
+
+      it('is true if timeline bars are hidden', () => {
+        mockLayoutPrefsStore.timelineBarsVisible = false;
         renderWithRouter(<TracePage {...defaultProps} />);
 
         const spanGraph = screen.queryByTestId('span-graph');
