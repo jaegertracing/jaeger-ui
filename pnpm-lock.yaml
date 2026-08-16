@@ -344,8 +344,8 @@ importers:
   packages/plexus:
     dependencies:
       '@viz-js/viz':
-        specifier: 3.28.0
-        version: 3.28.0
+        specifier: 3.29.0
+        version: 3.29.0
       d3-selection:
         specifier: 3.0.0
         version: 3.0.0
@@ -3084,8 +3084,8 @@ packages:
   '@vitest/utils@4.1.10':
     resolution: {integrity: sha512-fy9am/HWxbaGt/Sawrp90vt6Y6jQwf1RX77cz3uwoJwJVMli/e1IEwRPnMNJ7vKfPTwo0diXifkpPvwH9v7nGA==}
 
-  '@viz-js/viz@3.28.0':
-    resolution: {integrity: sha512-nPt+jbGHGgd7lUQLBT79/4lChIzeW44I+hFrscx18AnpNyX9vdRFVNwVbKz9eq+ACeKSm4bFQns17WhCW11eWQ==}
+  '@viz-js/viz@3.29.0':
+    resolution: {integrity: sha512-iq4MTqNCr8pinP4C73JRFx/h2w4QbtHvXINNiPeBv3/C5tSamXwakst6ODlR/l6uh3/SGr7IAGIfSk2qMekiNw==}
 
   '@voidzero-dev/vite-plus-core@0.2.7':
     resolution: {integrity: sha512-zqaBkM1XZ4IHvFJlG2uv7kQF+dqtUcxXSPGyn15BXRfQb101HPpXXe6PHi7YOmZmbQd+hnwNr5+aklXSriZhVQ==}
@@ -7776,7 +7776,7 @@ snapshots:
       convert-source-map: 2.0.0
       tinyrainbow: 3.1.0
 
-  '@viz-js/viz@3.28.0': {}
+  '@viz-js/viz@3.29.0': {}
 
   '@voidzero-dev/vite-plus-core@0.2.7(@types/node@24.13.1)(@typescript/typescript6@6.0.2)(jiti@2.7.0)(less@4.8.0(supports-color@7.2.0))(terser@5.49.0)(yaml@2.9.0)':
     dependencies:
