@@ -415,7 +415,8 @@ export function TracePageImpl(props: TProps) {
     clearSearch,
     detailPanelMode,
     enableSidePanel,
-    hideMap: !viewTypeShowsMinimap(viewType) || Boolean(embedded?.timeline?.hideMinimap),
+    hideMap:
+      !viewTypeShowsMinimap(viewType) || Boolean(embedded?.timeline?.hideMinimap) || !timelineBarsVisible,
     hideSummary: Boolean(embedded?.timeline?.hideSummary),
     linkToStandalone: getUrl(id),
     nextResult,
@@ -451,6 +452,7 @@ export function TracePageImpl(props: TProps) {
         registerAccessors={sm.setAccessors}
         scrollToFirstVisibleSpan={sm.scrollToFirstVisibleSpan}
         findMatchesIDs={spanFindMatches}
+        pageHeaderHeight={headerHeight}
         trace={traceData}
         criticalPath={criticalPath}
         updateNextViewRangeTime={updateNextViewRangeTime}
@@ -465,6 +467,7 @@ export function TracePageImpl(props: TProps) {
         registerAccessors={sm.setAccessors}
         scrollToFirstVisibleSpan={sm.scrollToFirstVisibleSpan}
         findMatchesIDs={spanFindMatches}
+        pageHeaderHeight={headerHeight}
         trace={traceData}
         criticalPath={criticalPath}
         updateNextViewRangeTime={updateNextViewRangeTime}
