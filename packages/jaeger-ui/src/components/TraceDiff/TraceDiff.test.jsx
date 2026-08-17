@@ -23,8 +23,9 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-const { useTracesMock } = vi.hoisted(() => ({
+const { useTracesMock, mockHeaderProps } = vi.hoisted(() => ({
   useTracesMock: jest.fn(),
+  mockHeaderProps: [],
 }));
 
 vi.mock('../../hooks/useTraceLoading', () => ({
@@ -33,6 +34,7 @@ vi.mock('../../hooks/useTraceLoading', () => ({
 
 vi.mock('./TraceDiffHeader', async () => {
   return mockDefault(function MockTraceDiffHeader(props) {
+    mockHeaderProps.push(props);
     return (
       <div data-testid="trace-diff-header">
         <button type="button" data-testid="diff-set-a-btn" onClick={() => props.diffSetA('newAValue')}>
@@ -84,6 +86,7 @@ describe('TraceDiff', () => {
   });
 
   beforeEach(() => {
+    mockHeaderProps.length = 0;
     useTracesMock.mockReturnValue(new Map(defaultCohort.map(id => [id, { id, state: fetchedState.DONE }])));
     getUrlSpy.mockClear();
     mockNavigate.mockClear();
@@ -205,6 +208,28 @@ describe('TraceDiff', () => {
 
       expect(screen.getByTestId('trace-diff-header')).toBeInTheDocument();
       expect(screen.getByTestId('trace-diff-graph')).toBeInTheDocument();
+    });
+    it('memoizes trace props passed to TraceDiffHeader across re-renders', () => {
+      mockHeaderProps.length = 0;
+      const { rerender } = renderWithRouter(<TraceDiffImpl {...defaultProps} />);
+
+      expect(mockHeaderProps).toHaveLength(1);
+      const firstProps = mockHeaderProps[0];
+
+      // Re-render the same component with the identical prop references
+      rerender(
+        <BrowserRouter>
+          <TraceDiffImpl {...defaultProps} />
+        </BrowserRouter>
+      );
+
+      expect(mockHeaderProps).toHaveLength(2);
+      const secondProps = mockHeaderProps[1];
+
+      // Verify reference stability
+      expect(secondProps.a).toBe(firstProps.a);
+      expect(secondProps.b).toBe(firstProps.b);
+      expect(secondProps.cohort).toBe(firstProps.cohort);
     });
   });
 
