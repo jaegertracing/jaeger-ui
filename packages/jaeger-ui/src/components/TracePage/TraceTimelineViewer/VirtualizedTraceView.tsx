@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import cx from 'classnames';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import _isEqual from 'lodash/isEqual';
 
 import memoizeOne from 'memoize-one';
@@ -563,7 +563,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
 
 /**
  * Functional wrapper that reads Zustand (ephemeral timeline state + layout prefs) and the
- * remaining Redux slice (hoverIndentGuideIds, uiFind), creates dual-write action handlers
+ * remaining Redux slice (uiFind), creates dual-write action handlers
  * (Redux dispatch first so the tracking middleware sees the pre-update state, then Zustand),
  * and passes everything into the class component.
  */
@@ -577,7 +577,6 @@ function VirtualizedTraceViewWrapper(
 ) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const dispatch = useDispatch<any>();
-  const hoverIndentGuideIds = useSelector((state: ReduxState) => state.traceTimeline.hoverIndentGuideIds);
   const uiFind = parseUiFind(ownProps.search ?? ownProps.location.search ?? '');
 
   const spanNameColumnWidth = useLayoutPrefsStore(s => s.spanNameColumnWidth);
@@ -699,7 +698,6 @@ function VirtualizedTraceViewWrapper(
 
   const combinedProps: VirtualizedTraceViewProps = {
     ...ownProps,
-    hoverIndentGuideIds,
     uiFind,
     spanNameColumnWidth,
     sidePanelWidth,
