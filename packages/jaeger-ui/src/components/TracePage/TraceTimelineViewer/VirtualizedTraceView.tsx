@@ -12,7 +12,7 @@ import type { Location, NavigateFunction } from 'react-router-dom';
 import { actions } from './duck';
 import { makeCriticalPathContext } from './criticalPath';
 import generateRowStates, { RowState } from './generateRowStates';
-import ListView from './ListView';
+import ListView, { ListViewRef } from './ListView';
 import PrunedSpanRow from './PrunedSpanRow';
 import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
@@ -118,6 +118,61 @@ function getCssClasses(currentViewRange: [number, number]) {
 const memoizedGenerateRowStates = memoizeOne(generateRowStatesFromTrace);
 const memoizedViewBoundsFunc = memoizeOne(createViewedBoundsFunc, _isEqual);
 const memoizedGetCssClasses = memoizeOne(getCssClasses, _isEqual);
+const memoizedCriticalPathsBySpanID = memoizeOne((criticalPath: CriticalPathSection[]) =>
+  _groupBy(criticalPath, x => x.spanID)
+);
+
+/**
+ * Precompute bubbled critical path sections for all parents with pruned children.
+ * Returns a map from parent spanID → merged critical path sections from pruned subtrees.
+ * Memoized so it runs once per render cycle (when criticalPath/prunedServices/spans change).
+ */
+const memoizedPrunedCriticalPaths = memoizeOne(
+  (
+    criticalPath: CriticalPathSection[],
+    prunedServices: Set<string>,
+    spans: ReadonlyArray<IOtelSpan>
+  ): Map<string, CriticalPathSection[]> => {
+    if (prunedServices.size === 0) return new Map();
+    const pathBySpanID = memoizedCriticalPathsBySpanID(criticalPath);
+    const result = new Map<string, CriticalPathSection[]>();
+
+    const collectFromSubtree = (s: IOtelSpan, sections: CriticalPathSection[]) => {
+      const spanSections = pathBySpanID[s.spanID];
+      if (spanSections) {
+        for (const section of spanSections) {
+          sections.push({ ...section });
+        }
+      }
+      for (const child of s.childSpans) {
+        collectFromSubtree(child, sections);
+      }
+    };
+
+    for (const span of spans) {
+      if (!span.hasChildren) continue;
+      const prunedSections: CriticalPathSection[] = [];
+      for (const child of span.childSpans) {
+        if (prunedServices.has(child.resource.serviceName)) {
+          collectFromSubtree(child, prunedSections);
+        }
+      }
+      if (prunedSections.length > 0) {
+        result.set(span.spanID, prunedSections);
+      }
+    }
+    return result;
+  }
+);
+
+// export from tests
+export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceViewProps> {
+  listView: ListViewRef | TNil;
+  constructor(props: VirtualizedTraceViewProps) {
+    super(props);
+    const { setTrace, trace, uiFind } = props;
+    setTrace(trace, uiFind);
+  }
 
 // export for tests
 export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceViewImpl(
