@@ -31,7 +31,7 @@ export default function JaegerUIApp() {
   return (
     <AppQueryClientProvider>
       <ThemeProvider>
-        <Provider store={store as any}>
+        <Provider store={store}>
           <JaegerAssistantProvider>
             <Page>
               <Routes>
