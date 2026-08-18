@@ -1,0 +1,20 @@
+/*
+// Copyright (c) 2025 The Jaeger Authors
+// SPDX-License-Identifier: Apache-2.0
+*/
+
+.tag-selector-header {
+  /* padding-left: 10px; */
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.tag-selector {
+  /* padding-left: 10px; */
+  min-width: 150px; /* Minimum width for usability */
+  width: 100%; /* Allow width to grow based on content */
+}
+
+.multi-tag-selector {
+  padding: 5px;
+}
