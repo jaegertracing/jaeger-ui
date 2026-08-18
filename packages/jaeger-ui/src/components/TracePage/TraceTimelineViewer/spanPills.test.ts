@@ -3,7 +3,7 @@
 
 import { renderHook } from '@testing-library/react';
 
-import { GEN_AI_REQUEST_MODEL } from '../../../constants/span-attributes';
+import { GEN_AI_REQUEST_MODEL, GEN_AI_RESPONSE_MODEL } from '../../../constants/span-attributes';
 import transformTraceData from '../../../model/transform-trace-data';
 import { AttributeValue, IOtelSpan } from '../../../types/otel';
 import { getSpanPillsForSpan, useSpanPillsEnabled } from './spanPills';
@@ -135,6 +135,19 @@ describe('spanPills', () => {
 
     it('maps gen_ai.request.model to a pill', () => {
       const span = makeSpan([{ key: GEN_AI_REQUEST_MODEL, value: 'gpt-4o' }]);
+      expect(getSpanPillsForSpan(span)).toEqual([{ label: 'gen_ai.request.model', value: 'gpt-4o' }]);
+    });
+
+    it('maps gen_ai.response.model when gen_ai.request.model is absent', () => {
+      const span = makeSpan([{ key: GEN_AI_RESPONSE_MODEL, value: 'claude-3-5-sonnet' }]);
+      expect(getSpanPillsForSpan(span)).toEqual([{ label: 'gen_ai.request.model', value: 'claude-3-5-sonnet' }]);
+    });
+
+    it('prefers gen_ai.request.model when both model attributes are present', () => {
+      const span = makeSpan([
+        { key: GEN_AI_REQUEST_MODEL, value: 'gpt-4o' },
+        { key: GEN_AI_RESPONSE_MODEL, value: 'gpt-4o-2024-08-06' },
+      ]);
       expect(getSpanPillsForSpan(span)).toEqual([{ label: 'gen_ai.request.model', value: 'gpt-4o' }]);
     });
 

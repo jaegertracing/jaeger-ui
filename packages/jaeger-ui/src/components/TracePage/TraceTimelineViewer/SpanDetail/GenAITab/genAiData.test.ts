@@ -120,6 +120,22 @@ describe('extractGenAiSections', () => {
       expect(section(sections, 'tokens')?.cacheReadInputTokens).toBe(0);
     });
 
+    it('falls back to legacy prompt_tokens and completion_tokens attributes', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.usage.prompt_tokens': 120,
+          'gen_ai.usage.completion_tokens': 60,
+        })
+      );
+      expect(section(sections, 'tokens')).toEqual({
+        inputTokens: 120,
+        outputTokens: 60,
+        cacheReadInputTokens: undefined,
+        cacheCreationInputTokens: undefined,
+        reasoningOutputTokens: undefined,
+      });
+    });
+
     it('produces no tokens section when no usage attributes are present', () => {
       const sections = extractGenAiSections(attrs({ 'gen_ai.provider.name': 'openai' }));
       expect(section(sections, 'tokens')).toBeUndefined();
