@@ -412,19 +412,35 @@ describe('<TraceFlamegraph />', () => {
       expect(mockChart.search).toHaveBeenCalledWith('svc-a: myOp');
     });
 
-    it('mousemove over g.frame shows tooltip', async () => {
-      render(<TraceFlamegraph trace={otelTrace} />);
+    it('updates tooltip position when mouse moves within the same g.frame', async () => {
+      const { container } = render(<TraceFlamegraph trace={otelTrace} />);
+
       const svg = screen.getByTestId('flamegraph-chart').querySelector('svg');
       const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
       g.classList.add('frame');
-      g.__data__ = { data: { name: 'svc: op', value: 500000, duration: 500000, count: 3 } };
+      g.__data__ = {
+        data: {
+          name: 'svc: op',
+          value: 100,
+          duration: 100,
+          count: 1,
+        },
+      };
       svg.appendChild(g);
 
       await act(() => {
         g.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 200, clientY: 300 }));
       });
-      expect(screen.getByText('svc: op')).toBeInTheDocument();
-      expect(screen.getByText('3')).toBeInTheDocument();
+
+      let tooltip = container.querySelector('.Flamegraph-tooltip');
+      expect(tooltip).toHaveStyle({ left: '210px', top: '310px' });
+
+      await act(() => {
+        g.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 210, clientY: 310 }));
+      });
+
+      tooltip = container.querySelector('.Flamegraph-tooltip');
+      expect(tooltip).toHaveStyle({ left: '220px', top: '320px' });
     });
 
     it('mousemove without g.frame hides tooltip', async () => {
