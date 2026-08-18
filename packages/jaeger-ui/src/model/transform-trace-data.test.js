@@ -2,7 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import traceGenerator from '../demo/trace-generators';
-import transformTraceData, { orderTags, deduplicateTags } from './transform-trace-data';
+import transformTraceData, {
+  orderTags,
+  deduplicateTags,
+  CYCLIC_PARENT_WARNING,
+} from './transform-trace-data';
 
 describe('orderTags()', () => {
   it('correctly orders tags', () => {
@@ -310,10 +314,11 @@ describe('transformTraceData()', () => {
     expect(result.duration).toBe(1000);
   });
 
-  it('should not produce a negative duration for a trace with spans but no root', () => {
-    // Two spans referencing each other form a cycle, so neither is a root and
-    // nothing is reachable by the traversal. The time range must not be left at
-    // its sentinel value, which would yield a negative duration.
+  it('should render a trace whose spans form a reference cycle, without a negative duration', () => {
+    // Two spans referencing each other form a cycle, so neither is a root. The
+    // earliest span is promoted to a root so the trace still renders, and the time
+    // range must not be left at its sentinel value (which would yield a negative
+    // duration).
     const spanA = {
       traceID,
       spanID: 'a',
@@ -343,10 +348,192 @@ describe('transformTraceData()', () => {
       spans: [spanA, spanB],
     });
 
-    expect(result.spans.length).toBe(0);
-    expect(result.duration).toBe(0);
-    expect(result.startTime).toBe(0);
-    expect(result.endTime).toBe(0);
+    expect(result.spans.length).toBe(2);
+    expect(result.spans.map(s => s.spanID)).toEqual(['a', 'b']);
+    expect(result.rootSpans.map(s => s.spanID)).toEqual(['a']);
+    expect(result.duration).toBe(duration);
+    expect(result.startTime).toBe(startTime);
+    expect(result.endTime).toBe(startTime + duration);
+    expect(result.spans[0].warnings).toContain(CYCLIC_PARENT_WARNING);
+    expect(result.spans[1].warnings).not.toContain(CYCLIC_PARENT_WARNING);
+  });
+
+  it('should render a trace where a root span links back to its own child (FOLLOWS_FROM cycle)', () => {
+    // Distinct traceID: getTraceName is memoized on spans[0].traceID.
+    const traceID = 'aa11bb22cc33dd44ee55ff6600778899';
+    // The shape jaeger-query produces for an OTLP span link: the link becomes a
+    // FOLLOWS_FROM reference on the root, and transformTraceData accepts FOLLOWS_FROM
+    // as a parent, so the root becomes its own child's child. Neither span is a root.
+    const root = {
+      traceID,
+      spanID: 'aaaaaaaaaaaaaaaa',
+      operationName: 'root-with-link',
+      references: [{ refType: 'FOLLOWS_FROM', traceID, spanID: 'bbbbbbbbbbbbbbbb' }],
+      startTime,
+      duration,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+    const child = {
+      traceID,
+      spanID: 'bbbbbbbbbbbbbbbb',
+      operationName: 'child',
+      references: [{ refType: 'CHILD_OF', traceID, spanID: 'aaaaaaaaaaaaaaaa' }],
+      startTime: startTime + 1000,
+      duration: duration - 2000,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    };
+
+    const result = transformTraceData({ traceID, processes, spans: [root, child] });
+
+    expect(result.spans.length).toBe(2);
+    // The earliest span wins the promotion, so the real root renders at depth 0.
+    expect(result.spans.map(s => s.spanID)).toEqual(['aaaaaaaaaaaaaaaa', 'bbbbbbbbbbbbbbbb']);
+    expect(result.spans.map(s => s.depth)).toEqual([0, 1]);
+    expect(result.rootSpans.map(s => s.spanID)).toEqual(['aaaaaaaaaaaaaaaa']);
+    expect(result.spans[0].warnings).toContain(CYCLIC_PARENT_WARNING);
+    // getTraceName (model/trace-viewer) runs its own root heuristic that skips any span
+    // holding an internal reference. Every span in a cycle holds one, so it finds no
+    // candidate and the header name stays empty. Out of scope for this fix, which is
+    // about the trace rendering at all; asserted here so the residue is visible.
+    expect(result.traceName).toBe('');
+  });
+
+  it('should place every span of a three-span cycle exactly once', () => {
+    const traceID = 'bb11cc22dd33ee44ff5500667788990a';
+    // a -> b -> c -> a. No span is a root; all three must still render, each once.
+    const mk = (spanID, parentID, offset) => ({
+      traceID,
+      spanID,
+      operationName: `op-${spanID}`,
+      references: [{ refType: 'CHILD_OF', traceID, spanID: parentID }],
+      startTime: startTime + offset,
+      duration,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    });
+    // 'c' is the earliest, so it is the one promoted to a root.
+    const result = transformTraceData({
+      traceID,
+      processes,
+      spans: [mk('a', 'b', 200), mk('b', 'c', 100), mk('c', 'a', 0)],
+    });
+
+    // c is promoted; its child chain is c -> b -> a (a's parent is b, b's parent is c).
+    expect(result.spans.length).toBe(3);
+    expect(result.spans.map(s => s.spanID)).toEqual(['c', 'b', 'a']);
+    expect(result.spans.map(s => s.depth)).toEqual([0, 1, 2]);
+    expect(result.rootSpans.map(s => s.spanID)).toEqual(['c']);
+    expect(new Set(result.spans.map(s => s.spanID)).size).toBe(3);
+    expect(result.spans[0].warnings).toContain(CYCLIC_PARENT_WARNING);
+    expect(result.duration).toBe(200 + duration);
+  });
+
+  it('should promote one root per disjoint cycle and leave a normal subtree untouched', () => {
+    const traceID = 'cc11dd22ee33ff4400556677889900ab';
+    const mk = (spanID, parentID, offset) => ({
+      traceID,
+      spanID,
+      operationName: `op-${spanID}`,
+      references: parentID ? [{ refType: 'CHILD_OF', traceID, spanID: parentID }] : [],
+      startTime: startTime + offset,
+      duration,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    });
+    const result = transformTraceData({
+      traceID,
+      processes,
+      spans: [
+        mk('realRoot', null, 0),
+        mk('realChild', 'realRoot', 10),
+        mk('cyc1', 'cyc2', 30),
+        mk('cyc2', 'cyc1', 20),
+      ],
+    });
+
+    expect(result.spans.length).toBe(4);
+    // Real root traverses first; the cycle is appended with its earliest span promoted.
+    expect(result.spans.map(s => s.spanID)).toEqual(['realRoot', 'realChild', 'cyc2', 'cyc1']);
+    expect(result.rootSpans.map(s => s.spanID)).toEqual(['realRoot', 'cyc2']);
+    expect(result.spans[0].warnings).not.toContain(CYCLIC_PARENT_WARNING);
+    expect(result.spans[1].warnings).not.toContain(CYCLIC_PARENT_WARNING);
+    expect(result.spans[2].warnings).toContain(CYCLIC_PARENT_WARNING);
+  });
+
+  it('should not change the result for a normal acyclic trace', () => {
+    const result = transformTraceData({
+      traceID,
+      processes,
+      spans: [...spans, rootSpanWithoutRefs],
+    });
+
+    expect(result.spans.length).toBe(3);
+    expect(result.rootSpans.map(s => s.spanID)).toEqual([rootSpanID]);
+    expect(result.spans.map(s => s.spanID)).toEqual([rootSpanID, '41f71485ed2593e4', '4f623fd33c213cba']);
+    expect(result.spans.map(s => s.depth)).toEqual([0, 1, 1]);
+    expect(result.traceName).toBe(`${serviceName}: ${rootOperationName}`);
+    // No span in an acyclic trace is ever promoted.
+    result.spans.forEach(s => expect(s.warnings).not.toContain(CYCLIC_PARENT_WARNING));
+  });
+
+  it('should not regress on a deep acyclic trace', () => {
+    const traceID = 'dd11ee22ff334455006677889900aabc';
+    // Deep enough to be representative but below the recursion ceiling tracked in
+    // jaeger-ui#4106 (processSpan is recursive; ~5000 levels already overflows).
+    const depth = 2000;
+    const deepSpans = Array.from({ length: depth }, (_, i) => ({
+      traceID,
+      spanID: `s${i}`,
+      operationName: `op-${i}`,
+      references: i === 0 ? [] : [{ refType: 'CHILD_OF', traceID, spanID: `s${i - 1}` }],
+      startTime: startTime + i,
+      duration,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    }));
+
+    const t0 = performance.now();
+    const result = transformTraceData({ traceID, processes, spans: deepSpans });
+    const elapsed = performance.now() - t0;
+
+    expect(result.spans.length).toBe(depth);
+    expect(result.rootSpans.map(s => s.spanID)).toEqual(['s0']);
+    expect(result.spans[depth - 1].depth).toBe(depth - 1);
+    result.spans.forEach(s => expect(s.warnings).not.toContain(CYCLIC_PARENT_WARNING));
+    // Generous ceiling: this is a regression tripwire, not a benchmark. The traversal
+    // is linear, so a chain of 2000 should be far inside this.
+    expect(elapsed).toBeLessThan(2000);
+  });
+
+  it('should render a wide trace where every span is unreachable', () => {
+    const traceID = 'ee11ff2200334455667788990aabbccd';
+    // Pathological: 500 spans, each pointing at the next, last pointing at the first.
+    const n = 500;
+    const ring = Array.from({ length: n }, (_, i) => ({
+      traceID,
+      spanID: `r${i}`,
+      operationName: `op-${i}`,
+      references: [{ refType: 'CHILD_OF', traceID, spanID: `r${(i + n - 1) % n}` }],
+      startTime: startTime + i,
+      duration,
+      tags: [],
+      logs: [],
+      processID: 'p1',
+    }));
+
+    const result = transformTraceData({ traceID, processes, spans: ring });
+
+    expect(result.spans.length).toBe(n);
+    expect(new Set(result.spans.map(s => s.spanID)).size).toBe(n);
+    expect(result.rootSpans.map(s => s.spanID)).toEqual(['r0']);
+    expect(result.duration).toBeGreaterThan(0);
   });
 
   it('should keep and repair sibling spans that have no usable startTime', () => {
