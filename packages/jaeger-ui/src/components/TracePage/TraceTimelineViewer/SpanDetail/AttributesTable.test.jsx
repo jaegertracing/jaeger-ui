@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import AttributesTable, { LinkValue } from './AttributesTable';
@@ -255,5 +255,54 @@ describe('<AttributesTable>', () => {
         expect(copyIcon).toHaveAttribute('data-tooltip-title', 'Copy JSON');
       }
     });
+  });
+
+  it('does not show filter input when data has 10 or fewer entries', () => {
+    render(<AttributesTable data={makeAttributes(data)} />);
+    const filterInput = screen.queryByLabelText('Filter span attributes');
+    expect(filterInput).not.toBeInTheDocument();
+  });
+
+  it('shows filter input when data has more than 10 entries', () => {
+    const manyAttributes = Array.from({ length: 15 }, (_, i) => ({ key: `attr${i}`, value: `val${i}` }));
+    render(<AttributesTable data={makeAttributes(manyAttributes)} />);
+    const filterInput = screen.getByLabelText('Filter span attributes');
+    expect(filterInput).toBeInTheDocument();
+  });
+
+  it('filters attributes by key', () => {
+    const manyAttributes = Array.from({ length: 15 }, (_, i) => ({ key: `attr${i}`, value: `val${i}` }));
+    render(<AttributesTable data={makeAttributes(manyAttributes)} />);
+    const filterInput = screen.getByLabelText('Filter span attributes');
+
+    // Initially all rows are visible
+    let rows = screen.getAllByRole('row');
+    expect(rows.length).toBeGreaterThan(1);
+
+    // Filter by key
+    fireEvent.change(filterInput, { target: { value: 'attr5' } });
+    rows = screen.getAllByRole('row');
+    expect(rows).toHaveLength(1);
+    expect(screen.getByText('attr5')).toBeInTheDocument();
+    expect(screen.queryByText('attr0')).not.toBeInTheDocument();
+  });
+
+  it('filters attributes by value', () => {
+    const manyAttributes = Array.from({ length: 15 }, (_, i) => ({ key: `key${i}`, value: `target-value` }));
+    render(<AttributesTable data={makeAttributes(manyAttributes)} />);
+    const filterInput = screen.getByLabelText('Filter span attributes');
+
+    fireEvent.change(filterInput, { target: { value: 'target' } });
+    const rows = screen.getAllByRole('row');
+    expect(rows).toHaveLength(15);
+  });
+
+  it('shows count when filtering', () => {
+    const manyAttributes = Array.from({ length: 15 }, (_, i) => ({ key: `attr${i}`, value: `val${i}` }));
+    render(<AttributesTable data={makeAttributes(manyAttributes)} />);
+    const filterInput = screen.getByLabelText('Filter span attributes');
+
+    fireEvent.change(filterInput, { target: { value: 'attr1' } });
+    expect(screen.getByText(/of 15/)).toBeInTheDocument();
   });
 });
