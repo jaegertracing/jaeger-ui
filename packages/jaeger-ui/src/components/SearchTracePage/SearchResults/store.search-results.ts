@@ -3,6 +3,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import storage from '../../../utils/storage';
 import { MOST_RECENT, isValidOrderBy } from './order-by';
 import type { OrderBy } from './order-by';
 
@@ -22,32 +23,7 @@ function sanitizeStartTimeDisplay(value: unknown): StartTimeDisplay {
   return value === 'relative' ? 'relative' : 'absolute';
 }
 
-// A preference is not worth breaking the UI over, so every access swallows its errors:
-// SecurityError, QuotaExceededError, and the ReferenceError thrown where there is no
-// localStorage at all (SSR / Node).
-const storage = createJSONStorage(() => ({
-  getItem: (name: string) => {
-    try {
-      return localStorage.getItem(name);
-    } catch {
-      return null;
-    }
-  },
-  setItem: (name: string, value: string) => {
-    try {
-      localStorage.setItem(name, value);
-    } catch {
-      // Ignore
-    }
-  },
-  removeItem: (name: string) => {
-    try {
-      localStorage.removeItem(name);
-    } catch {
-      // Ignore
-    }
-  },
-}));
+const jsonStorage = createJSONStorage(() => storage);
 
 type SearchResultsStore = {
   viewMode: 'list' | 'table';
@@ -72,7 +48,7 @@ export const useSearchResultsStore = create<SearchResultsStore>()(
       // The key predates sortBy and startTimeDisplay. Renaming it to match what it now
       // holds would reset the view mode every existing user has already chosen.
       name: 'jaeger.search-results.mode',
-      storage,
+      storage: jsonStorage,
       merge: (persisted, current) => {
         const p = persisted as Partial<SearchResultsStore>;
         return {
