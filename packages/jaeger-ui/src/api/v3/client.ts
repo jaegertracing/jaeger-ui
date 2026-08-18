@@ -69,10 +69,12 @@ export class JaegerClient {
     // Guard with Number.isFinite to drop malformed URL params gracefully.
     const startUs = Number(query.start);
     const endUs = Number(query.end);
-    if (Number.isFinite(startUs) && startUs > 0)
-      params.set('query.startTimeMin', new Date(startUs / 1000).toISOString());
-    if (Number.isFinite(endUs) && endUs > 0)
-      params.set('query.startTimeMax', new Date(endUs / 1000).toISOString());
+    const startDate = Number.isFinite(startUs) && startUs > 0 ? new Date(startUs / 1000) : null;
+    if (startDate && Number.isFinite(startDate.getTime()))
+      params.set('query.startTimeMin', startDate.toISOString());
+    const endDate = Number.isFinite(endUs) && endUs > 0 ? new Date(endUs / 1000) : null;
+    if (endDate && Number.isFinite(endDate.getTime()))
+      params.set('query.startTimeMax', endDate.toISOString());
     if (query.limit) params.set('query.searchDepth', String(query.limit));
     if (query.minDuration) params.set('query.durationMin', query.minDuration);
     if (query.maxDuration) params.set('query.durationMax', query.maxDuration);
