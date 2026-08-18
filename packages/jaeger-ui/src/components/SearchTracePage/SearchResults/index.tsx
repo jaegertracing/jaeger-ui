@@ -34,7 +34,7 @@ import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import withRouteProps from '../../../utils/withRouteProps';
 import SearchableSelect from '../../common/SearchableSelect';
 import { useSearchResultsStore } from './store.search-results';
-import { trackSortByChange } from '../SearchForm.track';
+import { useSortBy } from './use-sort-by';
 import { useShallow } from 'zustand/react/shallow';
 
 type SearchResultsProps = {
@@ -103,22 +103,13 @@ export function UnconnectedSearchResults({
   removeTraceFromCohort,
 }: SearchResultsProps) {
   const navigate = useNavigate();
-  const { viewMode, setViewMode, sortBy, setSortBy } = useSearchResultsStore(
+  const { viewMode, setViewMode } = useSearchResultsStore(
     useShallow(s => ({
       viewMode: s.viewMode,
       setViewMode: s.setViewMode,
-      sortBy: s.sortBy,
-      setSortBy: s.setSortBy,
     }))
   );
-
-  const handleSortChange = useCallback(
-    (newSortBy: OrderBy) => {
-      setSortBy(newSortBy);
-      trackSortByChange(newSortBy);
-    },
-    [setSortBy]
-  );
+  const { sortBy, handleSortChange } = useSortBy();
 
   const sortedTraceSummaries = useMemo(
     () => sortTraceSummaries(traceSummaries, sortBy),

@@ -22,12 +22,11 @@ function sanitizeStartTimeDisplay(value: unknown): StartTimeDisplay {
   return value === 'relative' ? 'relative' : 'absolute';
 }
 
-// getItem/setItem/removeItem guard against non-browser environments (SSR / Node)
-// and swallow storage errors (SecurityError / QuotaExceededError), matching the
-// pattern in search-panel-store.ts.
+// A preference is not worth breaking the UI over, so every access swallows its errors:
+// SecurityError, QuotaExceededError, and the ReferenceError thrown where there is no
+// localStorage at all (SSR / Node).
 const storage = createJSONStorage(() => ({
   getItem: (name: string) => {
-    if (typeof window === 'undefined') return null;
     try {
       return localStorage.getItem(name);
     } catch {
@@ -35,19 +34,17 @@ const storage = createJSONStorage(() => ({
     }
   },
   setItem: (name: string, value: string) => {
-    if (typeof window === 'undefined') return;
     try {
       localStorage.setItem(name, value);
     } catch {
-      // Ignore SecurityError or QuotaExceededError
+      // Ignore
     }
   },
   removeItem: (name: string) => {
-    if (typeof window === 'undefined') return;
     try {
       localStorage.removeItem(name);
     } catch {
-      // Ignore SecurityError
+      // Ignore
     }
   },
 }));
@@ -72,14 +69,10 @@ export const useSearchResultsStore = create<SearchResultsStore>()(
       setStartTimeDisplay: display => set({ startTimeDisplay: display }),
     }),
     {
+      // The key predates sortBy and startTimeDisplay. Renaming it to match what it now
+      // holds would reset the view mode every existing user has already chosen.
       name: 'jaeger.search-results.mode',
       storage,
-      version: 2,
-      // merge (below) already sanitizes all three fields on every rehydration path,
-      // including a version mismatch, so this only needs to pass the persisted blob
-      // through - it can't be omitted outright because zustand discards
-      // version-mismatched state entirely when no migrate function is provided.
-      migrate: persistedState => persistedState as SearchResultsStore,
       merge: (persisted, current) => {
         const p = persisted as Partial<SearchResultsStore>;
         return {

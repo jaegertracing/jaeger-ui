@@ -104,7 +104,7 @@ describe('useSearchResultsStore', () => {
     it('sanitizes invalid sortBy from persisted state on rehydration', async () => {
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ state: { sortBy: 'INVALID_SORT_KEY', viewMode: 'table' }, version: 1 })
+        JSON.stringify({ state: { sortBy: 'INVALID_SORT_KEY', viewMode: 'table' }, version: 0 })
       );
       await useSearchResultsStore.persist.rehydrate();
       expect(useSearchResultsStore.getState().sortBy).toBe(MOST_RECENT);
@@ -113,7 +113,7 @@ describe('useSearchResultsStore', () => {
     it('preserves valid sortBy from persisted state on rehydration', async () => {
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ state: { sortBy: LONGEST_FIRST, viewMode: 'table' }, version: 1 })
+        JSON.stringify({ state: { sortBy: LONGEST_FIRST, viewMode: 'table' }, version: 0 })
       );
       await useSearchResultsStore.persist.rehydrate();
       expect(useSearchResultsStore.getState().sortBy).toBe(LONGEST_FIRST);
@@ -122,13 +122,13 @@ describe('useSearchResultsStore', () => {
     it('sanitizes invalid viewMode from persisted state on rehydration, falling back to the store default', async () => {
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ state: { sortBy: MOST_RECENT, viewMode: 'invalid_mode' }, version: 1 })
+        JSON.stringify({ state: { sortBy: MOST_RECENT, viewMode: 'invalid_mode' }, version: 0 })
       );
       await useSearchResultsStore.persist.rehydrate();
       expect(useSearchResultsStore.getState().viewMode).toBe('table');
     });
 
-    it('migrates version 0 state (viewMode-only) without carrying over sortBy', async () => {
+    it('rehydrates pre-existing viewMode-only state without inventing a sortBy', async () => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ state: { viewMode: 'table' }, version: 0 }));
       await useSearchResultsStore.persist.rehydrate();
       expect(useSearchResultsStore.getState().viewMode).toBe('table');
@@ -169,7 +169,7 @@ describe('useSearchResultsStore — startTimeDisplay', () => {
   it('sanitizes an invalid startTimeDisplay from persisted state on rehydration', async () => {
     localStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify({ state: { startTimeDisplay: 'INVALID_VALUE' }, version: 2 })
+      JSON.stringify({ state: { startTimeDisplay: 'INVALID_VALUE' }, version: 0 })
     );
     await useSearchResultsStore.persist.rehydrate();
     expect(useSearchResultsStore.getState().startTimeDisplay).toBe('absolute');

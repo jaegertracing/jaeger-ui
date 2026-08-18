@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button, Checkbox, Table, Tag, Tooltip } from 'antd';
 import type { ColumnsType, ColumnType, TableProps } from 'antd/es/table';
@@ -20,11 +20,10 @@ import {
 import RelativeBar from '../../common/RelativeBar';
 import { toOrderBy, fromOrderBy } from './sort';
 import type { SortableColumnKey, SortDirection } from './sort';
-import type { OrderBy } from './order-by';
 import type { TracePageLink } from '../../TracePage/url';
 import { ServicePill, type ServiceEntry } from './ServicePills';
 import { useSearchResultsStore } from './store.search-results';
-import { trackSortByChange } from '../SearchForm.track';
+import { useSortBy } from './use-sort-by';
 
 const BOTH_DIRECTIONS: SortOrder[] = ['ascend', 'descend'];
 
@@ -74,15 +73,7 @@ export default function TraceTable({
   toggleComparison,
 }: TraceTableProps) {
   const navigate = useNavigate();
-  const sortBy = useSearchResultsStore(s => s.sortBy);
-  const setSortBy = useSearchResultsStore(s => s.setSortBy);
-  const handleSortChange = useCallback(
-    (newSortBy: OrderBy) => {
-      setSortBy(newSortBy);
-      trackSortByChange(newSortBy);
-    },
-    [setSortBy]
-  );
+  const { sortBy, handleSortChange } = useSortBy();
   const { key: sortKey, order: sortOrder } = fromOrderBy(sortBy);
   const startTimeDisplay = useSearchResultsStore(s => s.startTimeDisplay);
   const setStartTimeDisplay = useSearchResultsStore(s => s.setStartTimeDisplay);
