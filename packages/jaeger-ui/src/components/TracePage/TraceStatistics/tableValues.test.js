@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import transformTraceData from '../../../model/transform-trace-data';
+import { searchInTable } from './index';
 import { getColumnValues, getColumnValuesSecondDropdown } from './tableValues';
 
 import testTraceNormal from './tableValuesTestTrace/testTraceNormal.json';
@@ -660,5 +661,96 @@ describe('check self time', () => {
     expect(detailsWithAppTestTag.length).toBe(1);
     expect(detailsWithAppTestTag[0].count).toBe(1);
     expect(resultArraySecondGroupBy.length).toBe(3);
+  });
+});
+
+describe('searchInTable', () => {
+  it('should test searchInTable with complex search scenarios', () => {
+    const mockTableData = [
+      {
+        name: 'parent1',
+        isDetail: false,
+        hasSubgroupValue: true,
+        parentElement: 'none',
+        searchColor: 'rgb(248,248,248)',
+        key: '0',
+      },
+      {
+        name: 'detail1',
+        isDetail: true,
+        hasSubgroupValue: false,
+        parentElement: 'parent1',
+        searchColor: 'rgb(248,248,248)',
+        key: '1',
+      },
+      {
+        name: 'detail2',
+        isDetail: true,
+        hasSubgroupValue: false,
+        parentElement: 'parent2',
+        searchColor: 'rgb(248,248,248)',
+        key: '2',
+      },
+    ];
+    const searchSet = new Set(['parent1detail1']);
+    const result = searchInTable(searchSet, mockTableData, null);
+    expect(result).toBeDefined();
+    expect(result.length).toBe(3);
+  });
+
+  it('should test searchInTable with uiFind matching and detail items', () => {
+    const mockTableData = [
+      {
+        name: 'searchterm',
+        isDetail: true,
+        hasSubgroupValue: false,
+        parentElement: 'parentitem',
+        searchColor: 'rgb(248,248,248)',
+        key: '0',
+      },
+      {
+        name: 'parentitem',
+        isDetail: false,
+        hasSubgroupValue: true,
+        parentElement: 'none',
+        searchColor: 'rgb(248,248,248)',
+        key: '1',
+      },
+      {
+        name: 'childitem',
+        isDetail: true,
+        hasSubgroupValue: false,
+        parentElement: 'searchterm',
+        searchColor: 'rgb(248,248,248)',
+        key: '2',
+      },
+    ];
+    const result = searchInTable(undefined, mockTableData, 'searchterm');
+    const highlightedItems = result.filter(item => item.searchColor === 'rgb(255,243,215)');
+    expect(highlightedItems.length).toBeGreaterThan(0);
+  });
+
+  it('should test searchInTable with items that have subgroup values but are details', () => {
+    const mockTableData = [
+      {
+        name: 'item1',
+        isDetail: true,
+        hasSubgroupValue: true,
+        parentElement: 'none',
+        searchColor: undefined,
+        key: '0',
+      },
+      {
+        name: 'item2',
+        isDetail: false,
+        hasSubgroupValue: false,
+        parentElement: 'none',
+        searchColor: undefined,
+        key: '1',
+      },
+    ];
+    const result = searchInTable(undefined, mockTableData, null);
+    expect(result[0].searchColor).toBe('rgb(248,248,248)');
+    expect(result[1].searchColor).toBe('rgb(248,248,248)');
   });
 });
