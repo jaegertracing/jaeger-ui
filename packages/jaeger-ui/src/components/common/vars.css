@@ -151,6 +151,18 @@ SPDX-License-Identifier: Apache-2.0
   /* Trace Graph */
   --trace-emphasis-highlight: #fff3d7;
 
+  /* Trace Diff (Okabe-Ito Colorblind-Accessible Palette) */
+  --diff-added-bg: #0072b2;
+  --diff-added-border: #005b8e;
+  --diff-added-text: #ffffff;
+  --diff-more-bg: #bfe1f6;
+  --diff-more-border: #0072b2;
+  --diff-removed-bg: #d55e00;
+  --diff-removed-border: #aa4b00;
+  --diff-removed-text: #ffffff;
+  --diff-less-bg: #fcdbc7;
+  --diff-less-border: #d55e00;
+
   /* Critical Path */
   --critical-path-color: #000;
   --critical-path-outline: #fff;
@@ -279,6 +291,18 @@ SPDX-License-Identifier: Apache-2.0
 
   /* Trace Graph */
   --trace-emphasis-highlight: #3d3520;
+
+  /* Trace Diff - Dark Mode (Okabe-Ito Colorblind-Accessible Palette) */
+  --diff-added-bg: #0072b2;
+  --diff-added-border: #56b4e9;
+  --diff-added-text: #ffffff;
+  --diff-more-bg: color-mix(in srgb, #56b4e9 30%, var(--surface-primary));
+  --diff-more-border: #56b4e9;
+  --diff-removed-bg: #d55e00;
+  --diff-removed-border: #ff832b;
+  --diff-removed-text: #ffffff;
+  --diff-less-bg: color-mix(in srgb, #d55e00 30%, var(--surface-primary));
+  --diff-less-border: #ff832b;
 
   /* Critical Path */
   --critical-path-color: #fff;
