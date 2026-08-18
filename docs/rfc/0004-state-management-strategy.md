@@ -978,12 +978,12 @@ This is the **largest and most performance-sensitive** slice. Split across multi
 **Suggested PR split** (status as of 2026-07-28):
 1. ✅ Layout prefs: `spanNameColumnWidth`, `sidePanelWidth`, `detailPanelMode`, `timelineBarsVisible`.
 2. ✅ Collapse/expand + detail: `childrenHiddenIDs`, `detailStates`, `shouldScrollToFirstUiFindMatch`.
-3. ⬜ Hover: `hoverIndentGuideIds` still lives only in the duck. `VirtualizedTraceView` reads it with `useSelector`, and `SpanTreeOffset` is still a `connect()`ed component whose `mapStateToProps` reads `state.traceTimeline`.
+3. ✅ Hover: resolved by deletion rather than migration. `hoverIndentGuideIds` was dead state — the indent-guide highlight that consumed it (the `is-active` class and its CSS) was removed in [#3302](https://github.com/jaegertracing/jaeger-ui/pull/3302), leaving the Redux field, its two actions, the `SpanTreeOffset` mouse-enter/leave writers, and the `VirtualizedTraceView` `useSelector` read as orphaned code that fed nothing. All removed; `SpanTreeOffset` is now a plain (unconnected) functional component. Hover is not tracked by the analytics middleware, so no dual-write was involved.
 4. ⬜ Rewire the Redux **tracking middleware** hooks that listen to timeline action types.
 
 **Why the duck is still alive**: `duck.track.ts` supplies `middlewareHooks` to `src/middlewares/track.ts`, so analytics for timeline interactions are emitted by a Redux middleware keyed on action types. Every migrated interaction therefore **dual-writes** — the components dispatch the Redux action *first*, so the middleware observes the pre-update state, then call the Zustand action. Severing that dual write requires relocating the analytics call sites off the middleware, and until then neither the duck nor `configure-store.ts` can be deleted.
 
-**Components to rewire**: `TraceTimelineViewer`, `SpanBarRow`, `SpanDetailRow`, `TimelineHeaderRow`. Rewired so far, all still dual-writing to Redux: `TracePage`, `TraceTimelineViewer`, `VirtualizedTraceView`, `SpanTreeOffset`, `SpanDetailSidePanel`.
+**Components to rewire**: `TraceTimelineViewer`, `SpanBarRow`, `SpanDetailRow`, `TimelineHeaderRow`. Rewired so far, all still dual-writing to Redux: `TracePage`, `TraceTimelineViewer`, `VirtualizedTraceView`, `SpanDetailSidePanel`.
 
 #### ✅ 1d. Deep Dependencies view modifiers (`ddg` duck - client-only fields)
 
@@ -1212,7 +1212,7 @@ The residual surface is now small enough to enumerate:
 | :--- | :--- | :--- |
 | `reducers/metrics.ts` | `Monitor/ServicesView` (`connect`) | Phase 2f — implementation open in [#4048](https://github.com/jaegertracing/jaeger-ui/pull/4048) |
 | `reducers/path-agnostic-decorations.ts`, `actions/path-agnostic-decorations.ts` | `DdgNodeContent`, `DeepDependencies/SidePanel/DetailsPanel` | Phase 2g |
-| `TraceTimelineViewer/duck.ts`, `duck.track.ts`, `middlewares/track.ts` | `TracePage`, `TraceTimelineViewer`, `VirtualizedTraceView`, `SpanTreeOffset`, `SpanDetailSidePanel` | Phase 1c steps 3–4 |
+| `TraceTimelineViewer/duck.ts`, `duck.track.ts`, `middlewares/track.ts` | `TracePage`, `TraceTimelineViewer`, `VirtualizedTraceView`, `SpanDetailSidePanel` | Phase 1c step 4 (step 3 done) |
 | Vestigial `connect()` wrappers whose `mapStateToProps` ignores state entirely | `SearchTracePage/SearchForm.tsx`, `TraceDiff/TraceDiff.tsx` | Phase 4b (mechanical) |
 | `utils/configure-store.ts`, `<Provider>` in `components/App/index.tsx`, `ReduxState` in `types/index.ts`, `types/TTraceTimeline.ts` | app shell, ~14 test files | Phase 4b/4c |
 
