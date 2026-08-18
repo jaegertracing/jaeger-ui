@@ -13,14 +13,24 @@ import OtelTraceFacade from './OtelTraceFacade';
 // exported for tests
 export function deduplicateTags(spanTags: ReadonlyArray<KeyValuePair>) {
   const warningsHash: Map<string, string> = new Map<string, string>();
-  const tags: KeyValuePair[] = spanTags.reduce<KeyValuePair[]>((uniqueTags, tag) => {
-    if (!uniqueTags.some(t => t.key === tag.key && t.value === tag.value)) {
-      uniqueTags.push(tag);
+  const tags: KeyValuePair[] = [];
+  const seen = new Map<string, Set<KeyValuePair['value']>>();
+  for (const tag of spanTags) {
+    const values = seen.get(tag.key);
+    if (!values || !values.has(tag.value)) {
+      if (values) {
+        values.add(tag.value);
+      } else {
+        seen.set(tag.key, new Set([tag.value]));
+      }
+      tags.push(tag);
     } else {
-      warningsHash.set(`${tag.key}:${tag.value}`, `Duplicate tag "${tag.key}:${tag.value}"`);
+      warningsHash.set(
+        `${tag.key}\0${typeof tag.value}\0${String(tag.value)}`,
+        `Duplicate tag key="${tag.key}" value="${String(tag.value)}"`
+      );
     }
-    return uniqueTags;
-  }, []);
+  }
   const warnings = Array.from(warningsHash.values());
   return { tags, warnings };
 }
