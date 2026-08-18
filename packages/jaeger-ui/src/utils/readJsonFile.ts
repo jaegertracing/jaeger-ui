@@ -55,6 +55,17 @@ export default function readJsonFile(fileList: { file: File }): Promise<string> 
             resolve(result);
           })
           .catch((err: unknown) => {
+            // getJSON attaches httpStatus to every error it derives from a response, so an
+            // error without one means the request never reached the backend.
+            if ((err as { httpStatus?: number } | null)?.httpStatus == null) {
+              reject(
+                new Error(
+                  'Converting OTLP traces requires a Jaeger backend, but POST /api/transform could not be reached',
+                  { cause: err }
+                )
+              );
+              return;
+            }
             const cause = err instanceof Error ? `: ${err.message}` : '';
             reject(new Error(`Error converting OTLP trace to Jaeger${cause}`, { cause: err }));
           });
