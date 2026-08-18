@@ -22,6 +22,7 @@ import {
   MIN_TIMELINE_COLUMN_WIDTH,
 } from './store.constants';
 import { getMaxNameColumnWidth } from './store.layout';
+import { shouldDisableCollapse } from './timeline-utils';
 
 // payloads
 export type TSpanIdLogValue = { logItem: IEvent; spanID: string };
@@ -44,11 +45,6 @@ type TActionTypes =
 type TTimelineViewerActions = {
   [actionName: string]: ActionFunctionAny<Action<TActionTypes>>;
 };
-
-function shouldDisableCollapse(allSpans: IOtelSpan[], hiddenSpansIds: Set<string>) {
-  const allParentSpans = allSpans.filter(s => s.hasChildren);
-  return allParentSpans.length === hiddenSpansIds.size;
-}
 
 export function newInitialState(): TTraceTimeline {
   const { traceTimeline } = getConfig();
