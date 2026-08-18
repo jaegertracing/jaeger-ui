@@ -10,7 +10,7 @@ import storage from '../../../../../utils/storage';
 // plain text, and the user can override per attribute via the dropdown. The override is
 // remembered per attribute name (not globally, and not per-message), so e.g. a user's
 // choice for gen_ai.output.messages applies to every output message.
-export type MessageFormat = 'plain' | 'markdown' | 'json';
+export type MessageFormat = 'plain' | 'markdown' | 'json' | 'media';
 
 const MESSAGE_FORMAT_STORAGE_PREFIX = 'jaeger.spanDetail.attributeFormat.';
 
@@ -25,7 +25,9 @@ const MESSAGE_FORMAT_ATTRIBUTE_KEYS = [
 
 function readStoredFormat(attributeKey: string): MessageFormat | null {
   const stored = storage.getString(MESSAGE_FORMAT_STORAGE_PREFIX + attributeKey);
-  return stored === 'plain' || stored === 'markdown' || stored === 'json' ? stored : null;
+  return stored === 'plain' || stored === 'markdown' || stored === 'json' || stored === 'media'
+    ? stored
+    : null;
 }
 
 type MessageFormatStore = {
