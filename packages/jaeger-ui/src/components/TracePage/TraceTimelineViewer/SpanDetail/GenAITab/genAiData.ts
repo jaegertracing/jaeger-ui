@@ -3,6 +3,7 @@
 
 import type { IAttributes, AttributeValue } from '../../../../../types/otel';
 import { makeAttributes } from '../../../../../model/attributes';
+import { HTTP_URL } from '../../../../../utils/media';
 
 type GenAiRole = 'system' | 'user' | 'assistant' | 'tool' | undefined;
 
@@ -193,6 +194,51 @@ function renderParts(parts: unknown): string {
 }
 
 /**
+ * A message whose parts[] is a single blob/uri part is the common case for a
+ * multimodal attachment (a generated image, an audio reply). renderPart() stubs
+ * that part to a `[modality attached]` placeholder so nothing is silently dropped,
+ * but the placeholder throws away the one thing that would let the UI actually
+ * render it. This recovers the real value for that single-part case, in the same
+ * shape MessageBlock's media detection already knows how to render - a bare
+ * http(s) URL, or a data: URI built from a blob's own mime_type/content.
+ *
+ * Deliberately narrow, for the same reason detectMediaType() is conservative:
+ * - Only a single-part message. A part among other text/tool-call parts keeps
+ *   the placeholder - splicing a raw URL into joined multi-part text would make
+ *   it indistinguishable from prose, and mixed-content rendering is a bigger
+ *   change than this fix is scoped to make.
+ * - Only 'uri' and 'blob' are recoverable. 'file' carries a provider-assigned
+ *   file_id, not a fetchable location - there is nothing here to render, so it
+ *   keeps the placeholder too.
+ * - A 'uri' part's uri is only used when it's http(s). The OTel spec explicitly
+ *   allows provider-internal schemes there (e.g. gs://bucket/object.png), which
+ *   no browser can fetch; passing one through unfiltered would swap readable
+ *   text for a silently broken <img>, worse than the placeholder it replaced.
+ * - A 'blob' part is only used when mime_type is present and is image/* or
+ *   audio/* - the same value detectMediaType() itself requires. Guessing a MIME
+ *   type from modality alone risks the same silently-broken-preview outcome.
+ */
+function singleMediaPartSrc(parts: unknown[]): string | null {
+  if (parts.length !== 1) return null;
+  const part = parts[0];
+  if (typeof part !== 'object' || part === null) return null;
+  const rec = part as Record<string, unknown>;
+
+  if (rec.type === 'uri') {
+    const uri = typeof rec.uri === 'string' ? rec.uri.trim() : '';
+    return uri && HTTP_URL.test(uri) ? uri : null;
+  }
+
+  if (rec.type === 'blob') {
+    const mimeType = typeof rec.mime_type === 'string' ? rec.mime_type : '';
+    const content = typeof rec.content === 'string' ? rec.content : '';
+    return content && /^(image|audio)\//i.test(mimeType) ? `data:${mimeType};base64,${content}` : null;
+  }
+
+  return null;
+}
+
+/**
  * OTel GenAI message attributes may arrive already parsed (array/object,
  * per the IAttribute value type) or as a JSON-encoded string, depending on
  * the instrumentation. Handle both, including a single already-parsed
@@ -224,7 +270,8 @@ function parseMessages(value: AttributeValue | undefined): GenAiMessage[] {
     const rec = entry as Record<string, unknown>;
     const role = asRole(rec.role);
     if (Array.isArray(rec.parts)) {
-      return { role, content: renderParts(rec.parts) };
+      const mediaSrc = singleMediaPartSrc(rec.parts);
+      return { role, content: mediaSrc ?? renderParts(rec.parts) };
     }
     const content = rec.content;
     const contentStr =

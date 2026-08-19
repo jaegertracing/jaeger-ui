@@ -144,3 +144,22 @@ SPDX-License-Identifier: Apache-2.0
   font-size: 13px;
   padding: 8px 0;
 }
+
+.GenAITab--media {
+  display: block;
+  max-width: 100%;
+  margin: 4px 0;
+}
+
+img.GenAITab--media {
+  height: auto;
+  /* A ground colour so a transparent PNG stays visible in either theme. */
+  background-color: var(--surface-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 3px;
+  object-fit: contain;
+}
+
+audio.GenAITab--media {
+  width: 100%;
+}
