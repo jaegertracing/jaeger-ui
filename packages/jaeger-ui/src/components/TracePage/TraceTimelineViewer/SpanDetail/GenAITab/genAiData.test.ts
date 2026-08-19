@@ -280,6 +280,97 @@ describe('extractGenAiSections', () => {
       expect(section(sections, 'conversation')?.inputMessages[0].content).toBe('[image attached]');
     });
 
+    it('recovers the real link for a single http(s) uri part instead of stubbing it', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.output.messages': [
+            {
+              role: 'assistant',
+              parts: [
+                {
+                  type: 'uri',
+                  modality: 'image',
+                  mime_type: 'image/png',
+                  uri: 'https://example.com/chart.png',
+                },
+              ],
+            },
+          ],
+        })
+      );
+      expect(section(sections, 'conversation')?.outputMessages[0].content).toBe(
+        'https://example.com/chart.png'
+      );
+    });
+
+    it('still stubs a uri part on a non-browser-fetchable scheme, even alone', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.output.messages': [
+            { role: 'assistant', parts: [{ type: 'uri', modality: 'image', uri: 'gs://bucket/photo.png' }] },
+          ],
+        })
+      );
+      expect(section(sections, 'conversation')?.outputMessages[0].content).toBe('[image attached]');
+    });
+
+    it('builds a data URI for a single blob part with a recognized mime type', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.output.messages': [
+            {
+              role: 'assistant',
+              parts: [{ type: 'blob', modality: 'image', mime_type: 'image/png', content: 'iVBORw0KGgo=' }],
+            },
+          ],
+        })
+      );
+      expect(section(sections, 'conversation')?.outputMessages[0].content).toBe(
+        'data:image/png;base64,iVBORw0KGgo='
+      );
+    });
+
+    it('still stubs a blob part with no mime type, rather than guessing one', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.output.messages': [
+            { role: 'assistant', parts: [{ type: 'blob', modality: 'image', content: 'iVBORw0KGgo=' }] },
+          ],
+        })
+      );
+      expect(section(sections, 'conversation')?.outputMessages[0].content).toBe('[image attached]');
+    });
+
+    it('still stubs a single file part - a file_id is not a fetchable location', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.output.messages': [
+            { role: 'assistant', parts: [{ type: 'file', modality: 'image', file_id: 'file_abc123' }] },
+          ],
+        })
+      );
+      expect(section(sections, 'conversation')?.outputMessages[0].content).toBe('[image attached]');
+    });
+
+    it('keeps the placeholder for a media part mixed alongside text, not just a lone part', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.output.messages': [
+            {
+              role: 'assistant',
+              parts: [
+                { type: 'text', content: 'Here is the chart you asked for:' },
+                { type: 'uri', modality: 'image', uri: 'https://example.com/chart.png' },
+              ],
+            },
+          ],
+        })
+      );
+      expect(section(sections, 'conversation')?.outputMessages[0].content).toBe(
+        'Here is the chart you asked for:\n\n[image attached]'
+      );
+    });
+
     it('falls back to a JSON dump for unrecognized/future part types', () => {
       const sections = extractGenAiSections(
         attrs({
