@@ -409,8 +409,8 @@ Download size is not scored in either matrix. Jaeger already ships 468 KB gzippe
 | **License** | 🟢 MIT | 🟢 MIT | 🟢 MIT |
 | **Layered DAG quality** | 🟢 the reference implementation | 🟢 same Sugiyama family, with `network-simplex`, `tight-tree`, and `longest-path` rankers | 🟢 Sugiyama with pluggable decross and coord operators |
 | **Trees, which is what most traces are** | 🟢 | 🟢 | 🟢 ¹ |
-| **Layered layout at 500 services** | 🟡 1.9 s, which is why `dot` is disabled there ² | 🟡 1.1 s — faster than `dot`, still too slow to feel interactive | 🟡 untested |
-| **Beyond ~1,200** | 🔴 `dot` did not finish; `sfdp` is the fallback ² | 🔴 6.3 s at 1,200, out of memory at 5,000 | 🔴 untested |
+| **Layered layout at 500 services** | 🔴 483 ms to 37.6 s depending on topology, which is why `dot` is disabled there ² | 🔴 3.4 s to 10.2 s over the same graphs, ahead of `dot` on service-shaped ones and behind it on dense ones | 🟡 untested |
+| **Beyond ~1,200** | 🔴 4.5 s on dense graphs, no finish inside 150 s on service-shaped ones; `sfdp` is the fallback ² | 🔴 55 s to 64 s across all three topologies, out of memory at 5,000 | 🔴 untested |
 | **Edge routing** | 🟢 splines available, polylines in use | 🟡 point lists, no spline routing | 🟡 point lists |
 | **Layout-direction toggle** | 🟢 `rankdir` | 🟢 `rankdir` | 🟡 rotate the result yourself |
 | **Compound (nested) graphs** | 🟡 clusters exist; Plexus's pipeline does not carry them as written ³ | 🟢 native, via `setParent` | 🔴 |
@@ -419,7 +419,7 @@ Download size is not scored in either matrix. Jaeger already ships 468 KB gzippe
 
 **Verdict: stay on Graphviz for now, and schedule the dagre comparison.** Nothing forces a change today: the direction toggle and the algorithm switch are already reachable in `LayoutManager`, and no view is blocked. But the reason Part 2 gives — Graphviz's engine breadth — is not what is holding the line, and neither is scale.
 
-Laying out synthetic graphs through both engines in a seeded harness (committed as `scripts/rfc0008-bench.js`; warmup plus median of 3 runs; dot with DAG production options `nodesep=1.5, rankdir=TB, ranksep=1.6, splines=polyline` via `@viz-js/viz` 3.28.0; dagre with equivalent pixel separations via `@dagrejs/dagre` 3.1.1; seeded mulberry32 PRNG) gives:
+Laying out synthetic graphs through both engines in a seeded harness (committed as `scripts/rfc0008-bench.js`; warmup plus median of 3 runs, except the n=1,200 rows and the extra-seed figures below, which are single runs; dot with DAG production options `nodesep=1.5, rankdir=TB, ranksep=1.6, splines=polyline` via `@viz-js/viz` 3.28.0; dagre with equivalent pixel separations via `@dagrejs/dagre` 3.1.1; seeded mulberry32 PRNG) gives:
 
 | Topology | Nodes (n) | Edges | Graphviz `dot` (viz WASM 3.28.0) | `@dagrejs/dagre` 3.1.1 |
 |---|---|---|---|---|
