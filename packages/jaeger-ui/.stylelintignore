@@ -1,0 +1,41 @@
+# Baseline of files with pre-existing hardcoded colors, tracked in
+# https://github.com/jaegertracing/jaeger-ui/issues/4205
+# Remove an entry once its hardcoded colors are migrated to vars.css tokens.
+src/components/TracePage/TraceGraph/TraceGraph.css
+src/utils/ValidatedFormField.css
+src/utils/DraggableManager/demo/DraggableManagerDemo.css
+src/utils/DraggableManager/demo/DividerDemo.css
+src/components/common/FilteredList/index.css
+src/components/common/FilteredList/ListItem.css
+src/components/common/DetailsCard/index.css
+src/components/common/DetailsCard/DetailTableDropdown.css
+src/components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineViewingLayer.css
+src/components/TracePage/TraceTimelineViewer/SpanDetail/TextList.css
+src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordionText.css
+src/components/TracePage/TraceTimelineViewer/ReferencesButton.css
+src/components/TracePage/TracePageHeader/SpanGraph/ViewingLayer.css
+src/components/TracePage/TraceLogsView/index.css
+src/components/TracePage/TraceGraph/OpNode.css
+src/components/TracePage/ArchiveNotifier/index.css
+src/components/TraceDiff/TraceDiffGraph/renderNode.css
+src/components/SearchTracePage/SearchResults/DownloadResults.css
+src/components/Monitor/ServicesView/serviceGraph.css
+src/components/Monitor/EmptyState/index.css
+src/components/DependencyGraph/index.css
+src/components/DependencyGraph/dag.css
+src/components/DeepDependencies/SidePanel/index.css
+src/components/DeepDependencies/SidePanel/DetailsPanel.css
+src/components/DeepDependencies/Header/index.css
+src/components/DeepDependencies/Header/LayoutSettings/index.css
+src/components/DeepDependencies/Header/HopsSelector/Selector.css
+src/components/DeepDependencies/Header/ChevronDown.css
+src/components/DeepDependencies/Graph/index.css
+src/components/DeepDependencies/Graph/getNodeRenderers.css
+src/components/DeepDependencies/Graph/DdgNodeContent/index.css
+src/components/App/TopNav.css
+src/components/App/Page.css
+src/components/App/JaegerAskSearchInput.css
+src/components/App/ThemeToggleButton.css
+src/components/TracePage/TraceStatistics/index.css
+src/components/TracePage/TraceStatistics/PopupSql.css
+src/components/TracePage/TraceSpanView/index.css
