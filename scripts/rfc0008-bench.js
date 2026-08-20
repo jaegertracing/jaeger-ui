@@ -200,11 +200,25 @@ function requireDagre() {
   }
 }
 
+// Smallest n each generator can honour. genDense places a spanning tree first and
+// then wants 0.6n more acyclic edges, so below 3 it asks for an edge that cannot
+// exist and its retry loop never ends. genRealistic reserves 3 hubs and 1 gateway
+// before the middle layers, so below 5 it walks past the end of its own node array.
+const MIN_N = { dense: 3, layered: 5, realistic: 5 };
+
+const USAGE = 'usage: node scripts/rfc0008-bench.js <dense|layered|realistic> <n> <dot|dagre> [seed]';
+
 async function main() {
   const [topology, nStr, engine, seedStr] = process.argv.slice(2);
-  const n = parseInt(nStr, 10);
-  if (!['dense', 'layered', 'realistic'].includes(topology) || !n || !['dot', 'dagre'].includes(engine)) {
-    console.error('usage: node scripts/rfc0008-bench.js <dense|layered|realistic> <n> <dot|dagre> [seed]');
+  const n = Number(nStr);
+  if (!['dense', 'layered', 'realistic'].includes(topology) || !['dot', 'dagre'].includes(engine)) {
+    console.error(USAGE);
+    process.exit(2);
+  }
+  if (!Number.isInteger(n) || n < MIN_N[topology]) {
+    console.error(
+      `${USAGE}\n  n must be a whole number and at least ${MIN_N[topology]} for the ${topology} topology`
+    );
     process.exit(2);
   }
   const seed = parseInt(seedStr || '42', 10);
