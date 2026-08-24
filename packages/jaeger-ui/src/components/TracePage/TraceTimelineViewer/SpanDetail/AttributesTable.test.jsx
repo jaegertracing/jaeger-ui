@@ -314,3 +314,49 @@ describe('<AttributesTable>', () => {
     });
   });
 });
+
+// AttributesTable's rich-JSON rendering is driven entirely by whether a value parses
+// as JSON - it has no notion of "span" vs "span event" vs "resource" (all three route
+// through this same component: span.attributes -> Tags, resource.attributes ->
+// Process, event.attributes -> Logs), and it has no notion of "gen_ai.*" either. Per
+// yurishkuro's review on #4335: a test that only exercises a gen_ai.* key would wrongly
+// suggest the rich rendering is conditional on the key being gen_ai.* content, when
+// it's actually unconditional - any key with a JSON-shaped value gets the same
+// treatment, gen_ai or not. The 'abcd'/unrelated-key case below is the control that
+// makes that explicit: identical JSON payload, unrelated key, same rendering.
+describe('<AttributesTable> - JSON-shaped values render richly regardless of key or level', () => {
+  const jsonPayload = [
+    {
+      role: 'user',
+      parts: [{ type: 'text', content: 'Hello, probe message' }],
+    },
+  ];
+
+  it('renders a gen_ai.* key with a JSON payload as a JSON tree, not raw text', () => {
+    const data = [{ key: 'gen_ai.input.messages', value: JSON.stringify(jsonPayload) }];
+    render(<AttributesTable data={makeAttributes(data)} />);
+
+    const keyCell = screen.getByText('gen_ai.input.messages');
+    const keyRow = keyCell.closest('tr');
+    expect(keyRow).toHaveClass('KeyValueTable--row-jsonKey');
+
+    const valueRow = keyRow.nextElementSibling;
+    expect(valueRow).toHaveClass('KeyValueTable--row-jsonValue');
+    expect(valueRow).toHaveTextContent('user');
+    expect(valueRow).toHaveTextContent('Hello, probe message');
+  });
+
+  it('renders an unrelated, non-gen_ai key with the same JSON payload identically - the rendering is not gen_ai-specific', () => {
+    const data = [{ key: 'abcd', value: JSON.stringify(jsonPayload) }];
+    render(<AttributesTable data={makeAttributes(data)} />);
+
+    const keyCell = screen.getByText('abcd');
+    const keyRow = keyCell.closest('tr');
+    expect(keyRow).toHaveClass('KeyValueTable--row-jsonKey');
+
+    const valueRow = keyRow.nextElementSibling;
+    expect(valueRow).toHaveClass('KeyValueTable--row-jsonValue');
+    expect(valueRow).toHaveTextContent('user');
+    expect(valueRow).toHaveTextContent('Hello, probe message');
+  });
+});
