@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import _isEqual from 'lodash/isEqual';
 
 import memoizeOne from 'memoize-one';
+import _groupBy from 'lodash/groupBy';
 import type { Location, NavigateFunction } from 'react-router-dom';
 import { actions } from './duck';
 import { makeCriticalPathContext } from './criticalPath';
@@ -127,7 +128,7 @@ const memoizedCriticalPathsBySpanID = memoizeOne((criticalPath: CriticalPathSect
  * Returns a map from parent spanID → merged critical path sections from pruned subtrees.
  * Memoized so it runs once per render cycle (when criticalPath/prunedServices/spans change).
  */
-const memoizedPrunedCriticalPaths = memoizeOne(
+const _memoizedPrunedCriticalPaths = memoizeOne(
   (
     criticalPath: CriticalPathSection[],
     prunedServices: Set<string>,
@@ -165,20 +166,11 @@ const memoizedPrunedCriticalPaths = memoizeOne(
   }
 );
 
-// export from tests
-export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceViewProps> {
-  listView: ListViewRef | TNil;
-  constructor(props: VirtualizedTraceViewProps) {
-    super(props);
-    const { setTrace, trace, uiFind } = props;
-    setTrace(trace, uiFind);
-  }
-
 // export for tests
 export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceViewImpl(
   props: VirtualizedTraceViewProps
 ) {
-  const listViewRef = useRef<ListView | TNil>(null);
+  const listViewRef = useRef<ListViewRef | TNil>(null);
 
   const propsRef = useRef(props);
   propsRef.current = props;
@@ -288,7 +280,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
   ]);
 
   const setListView = useCallback(
-    (listView: ListView | TNil) => {
+    (listView: ListViewRef | TNil) => {
       const isChanged = listViewRef.current !== listView;
       listViewRef.current = listView;
       if (listView && isChanged) {
