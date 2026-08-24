@@ -9,9 +9,18 @@ import GenAITab from '.';
 import { useMessageFormatStore } from './message-format-store';
 import type { IAttribute, IOtelSpan } from '../../../../../types/otel';
 import { makeAttributes } from '../../../../../model/attributes';
+import { classifySpan } from '../../../../../utils/genai/detect';
 
+// genAIKind is always attribute-derived in production (OtelSpanFacade computes it via
+// classifySpan, never set independently) - deriving it here the same way keeps these
+// tests from silently diverging from real span behavior.
 function makeSpan(attributes: IAttribute[]): IOtelSpan {
-  return { spanID: 'abc123', attributes: makeAttributes(attributes) } as unknown as IOtelSpan;
+  const spanAttributes = makeAttributes(attributes);
+  return {
+    spanID: 'abc123',
+    attributes: spanAttributes,
+    genAIKind: classifySpan({ attributes: spanAttributes }),
+  } as unknown as IOtelSpan;
 }
 
 describe('GenAITab', () => {
@@ -34,6 +43,103 @@ describe('GenAITab', () => {
     );
     expect(screen.getByText('openai')).toBeInTheDocument();
     expect(screen.getByText('gpt-4o')).toBeInTheDocument();
+  });
+
+  it('captions the provider/model section "LLM" on an actual LLM call, using the shared accordion like Agent does (#4237, @yurishkuro review on #4244)', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          { key: 'gen_ai.operation.name', value: 'chat' },
+          { key: 'gen_ai.provider.name', value: 'openai' },
+          { key: 'gen_ai.response.model', value: 'gpt-4o' },
+        ])}
+      />
+    );
+    // Open by default (primary content) - header shows the bare label, table is visible.
+    expect(screen.getByText('LLM')).toBeInTheDocument();
+    expect(screen.getByText('openai')).toBeInTheDocument();
+    expect(screen.getByText('gpt-4o')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('LLM'));
+    // Collapsed: label gains its trailing colon and the table is replaced by a
+    // one-line key=value preview, same behavior as the Agent accordion.
+    expect(screen.getByText('LLM:')).toBeInTheDocument();
+    expect(screen.getByText((_, element) => element?.textContent === 'Provider=openai')).toBeInTheDocument();
+  });
+
+  it('captions the provider/model section "Model" instead of "LLM" on a non-LLM span that also reports a provider, without hiding the provider itself (Ansh review on #4244)', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          { key: 'gen_ai.operation.name', value: 'invoke_agent' },
+          { key: 'gen_ai.provider.name', value: 'anthropic' },
+        ])}
+      />
+    );
+    // classifySpan() resolves this to AGENT, not LLM_CALL - captioning it "LLM" would
+    // misrepresent an agent invocation as an LLM call, per Ansh's review on #4244.
+    expect(screen.queryByText('LLM')).not.toBeInTheDocument();
+    expect(screen.queryByText('LLM:')).not.toBeInTheDocument();
+    expect(screen.getByText('Model')).toBeInTheDocument();
+    expect(screen.getByText('anthropic')).toBeInTheDocument();
+  });
+
+  it('elevates gen_ai.agent.* attributes into their own Agent section instead of the raw Other GenAI Attributes dump (#4237)', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          { key: 'gen_ai.agent.name', value: 'jaeger-gemini-sidecar' },
+          { key: 'gen_ai.agent.version', value: '0.1.0' },
+        ])}
+      />
+    );
+    expect(screen.getByText('Agent')).toBeInTheDocument();
+    expect(screen.getByText('Name')).toBeInTheDocument();
+    expect(screen.getByText('jaeger-gemini-sidecar')).toBeInTheDocument();
+    expect(screen.getByText('Version')).toBeInTheDocument();
+    expect(screen.getByText('0.1.0')).toBeInTheDocument();
+    // The claimed keys must not also appear as raw gen_ai.agent.name / gen_ai.agent.version
+    // rows in the Other GenAI Attributes accordion.
+    expect(screen.queryByText('gen_ai.agent.name')).not.toBeInTheDocument();
+    expect(screen.queryByText('gen_ai.agent.version')).not.toBeInTheDocument();
+  });
+
+  it('renders an Agent section from gen_ai.agent.id and gen_ai.agent.description too', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          { key: 'gen_ai.agent.id', value: 'asst_5j66UpCpwteGg4YSxUnt7lPY' },
+          { key: 'gen_ai.agent.description', value: 'Helps with math problems' },
+        ])}
+      />
+    );
+    expect(screen.getByText('ID')).toBeInTheDocument();
+    expect(screen.getByText('asst_5j66UpCpwteGg4YSxUnt7lPY')).toBeInTheDocument();
+    expect(screen.getByText('Description')).toBeInTheDocument();
+    expect(screen.getByText('Helps with math problems')).toBeInTheDocument();
+  });
+
+  it('uses the shared accordion for Agent, collapsible like Other GenAI Attributes, per @yurishkuro review on #4244', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          { key: 'gen_ai.agent.name', value: 'jaeger-gemini-sidecar' },
+          { key: 'gen_ai.agent.version', value: '0.1.0' },
+        ])}
+      />
+    );
+    // Agent starts open (it's primary content, unlike Other GenAI Attributes) - the
+    // expanded table's per-row copy button is a marker only the open table renders.
+    expect(screen.getByText('jaeger-gemini-sidecar')).toBeInTheDocument();
+    expect(screen.getAllByText('Copy').length).toBeGreaterThan(0);
+    const header = screen.getByText('Agent');
+    fireEvent.click(header);
+    // Collapsed: full table gone (no more per-row copy buttons), but name-first
+    // ordering still gives a high-signal one-line preview without expanding -
+    // exactly what the review comment asked for.
+    expect(screen.queryByText('Copy')).not.toBeInTheDocument();
+    expect(
+      screen.getByText((_, element) => element?.textContent === 'Name=jaeger-gemini-sidecar')
+    ).toBeInTheDocument();
   });
 
   it('renders token usage including cached and reasoning tokens', () => {

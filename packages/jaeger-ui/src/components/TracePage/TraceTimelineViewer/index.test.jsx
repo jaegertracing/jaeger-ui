@@ -178,6 +178,34 @@ describe('<TraceTimelineViewer>', () => {
     expect(screen.getByTestId('timeline-header-row-mock').dataset.sidePanelLabel).toBe('Trace Root');
   });
 
+  it('realigns the side panel when the page header changes height', () => {
+    mockLayoutPrefsStore.detailPanelMode = 'sidepanel';
+
+    // Stands in for the padding TracePage puts above this view: the layout container sits at the
+    // page header's height, which grows by the minimap when the timeline becomes the active view.
+    let layoutTop = 80;
+    const rectSpy = jest
+      .spyOn(Element.prototype, 'getBoundingClientRect')
+      .mockImplementation(() => ({ top: layoutTop, bottom: 0, left: 0, right: 0, height: 0, width: 0 }));
+
+    try {
+      const { container, rerender } = render(<TraceTimelineViewerImpl {...props} pageHeaderHeight={80} />);
+      const panel = container.querySelector('.TraceTimelineViewer--sidePanel');
+      // The header row height comes from the CSS variable, so the panel offsets the measured
+      // container top by it rather than by a number known to JS.
+      expect(panel.style.top).toBe('calc(80px + var(--timeline-header-row-height))');
+      expect(panel.style.height).toBe('calc(100vh - 80px - var(--timeline-header-row-height))');
+
+      layoutTop = 165;
+      rerender(<TraceTimelineViewerImpl {...props} pageHeaderHeight={165} />);
+
+      expect(panel.style.top).toBe('calc(165px + var(--timeline-header-row-height))');
+      expect(panel.style.height).toBe('calc(100vh - 165px - var(--timeline-header-row-height))');
+    } finally {
+      rectSpy.mockRestore();
+    }
+  });
+
   it('sets up actions', () => {
     render(<TraceTimelineViewerImpl {...props} />);
 
