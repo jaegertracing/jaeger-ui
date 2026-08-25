@@ -14,7 +14,7 @@ export type MessageFormat = 'plain' | 'markdown' | 'json' | 'media';
 
 const MESSAGE_FORMAT_STORAGE_PREFIX = 'jaeger.spanDetail.attributeFormat.';
 
-// The closed set of attribute names ConversationSection assigns a format preference to.
+// The closed set of attribute names ConversationDetails assigns a format preference to.
 // Listed here (rather than derived at runtime) so the store can hydrate synchronously at
 // creation, matching search-panel-store.ts / store.layout.ts.
 const MESSAGE_FORMAT_ATTRIBUTE_KEYS = [

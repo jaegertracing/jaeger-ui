@@ -1,14 +1,22 @@
+// Copyright (c) 2026 The Jaeger Authors.
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 import deepFreeze from 'deep-freeze';
 
 import { FALLBACK_DAG_MAX_NUM_SERVICES } from './index';
-import getVersion from '../utils/version/get-version';
+import getVersion, { VersionInfo } from '../utils/version/get-version';
 import shortenCommit from '../utils/version/shorten-commit';
 
-import { version } from '../../package.json';
 import { Config } from '../types/config';
+
+// The commit is shown only when the build recorded one, so a release bundle's label is unchanged.
+function frontendBuild({ commit, modified }: VersionInfo['frontend']): string {
+  if (!commit) {
+    return '';
+  }
+  return ` (${commit}${modified ? ', modified' : ''})`;
+}
 
 const defaultConfig: Config = {
   archiveEnabled: true,
@@ -46,16 +54,16 @@ const defaultConfig: Config = {
           url: 'https://github.com/jaegertracing/',
         },
         {
-          label: `Jaeger ${getVersion().gitVersion}`,
+          label: `Jaeger ${getVersion().backend.version}`,
         },
         {
-          label: `Commit ${shortenCommit(getVersion().gitCommit)}`,
+          label: `Commit ${shortenCommit(getVersion().backend.commit)}`,
         },
         {
-          label: `Build ${getVersion().buildDate}`,
+          label: `Build ${getVersion().backend.buildDate}`,
         },
         {
-          label: `Jaeger UI v${version}`,
+          label: `Jaeger UI v${getVersion().frontend.version}${frontendBuild(getVersion().frontend)}`,
         },
       ],
     },
@@ -72,6 +80,7 @@ const defaultConfig: Config = {
     archiveStorage: false,
     metricsStorage: false,
     aiAssistant: false,
+    searchWithoutServiceName: false,
   },
   tracking: {
     gaID: null,
@@ -124,7 +133,7 @@ const defaultConfig: Config = {
     defaultDetailPanelMode: 'inline',
     spanPillsEnabled: true,
   },
-  useOpenTelemetryTerms: false,
+  useOpenTelemetryTerms: true,
   tracing: {
     enabled: false,
   },
