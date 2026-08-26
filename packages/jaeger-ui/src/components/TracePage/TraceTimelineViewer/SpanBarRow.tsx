@@ -92,6 +92,14 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   onChildrenToggled,
   useOtelTerms,
 }) => {
+  const {
+    duration,
+    hasChildren: isParent,
+    name: operationName,
+    attributes,
+    resource: { serviceName },
+  } = span;
+
   const _detailToggle = useCallback(() => {
     onDetailToggled(span.spanID);
   }, [onDetailToggled, span.spanID]);
@@ -105,17 +113,16 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         onDetailToggled(span.spanID);
+      } else if (e.key === 'ArrowRight' && isParent && !isChildrenExpanded) {
+        e.preventDefault();
+        onChildrenToggled(span.spanID);
+      } else if (e.key === 'ArrowLeft' && isParent && isChildrenExpanded) {
+        e.preventDefault();
+        onChildrenToggled(span.spanID);
       }
     },
-    [onDetailToggled, span.spanID]
+    [onDetailToggled, onChildrenToggled, span.spanID, isParent, isChildrenExpanded]
   );
-  const {
-    duration,
-    hasChildren: isParent,
-    name: operationName,
-    attributes,
-    resource: { serviceName },
-  } = span;
   const pills = spanPillsEnabled ? getSpanPillsForSpan(span) : [];
   // A span classified as GenAI (agent/LLM call/tool call/retrieval/etc.) already
   // renders exactly one icon via GenAISpanIcon below. Suppress the generic
@@ -167,6 +174,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
           <a
             className={`span-name ${isDetailExpanded ? 'is-detail-expanded' : ''}`}
             aria-checked={isDetailExpanded}
+            aria-label={`Span ${serviceName}: ${operationName} (${label})`}
             onClick={_detailToggle}
             onKeyDown={_detailToggleKeyDown}
             role="switch"
