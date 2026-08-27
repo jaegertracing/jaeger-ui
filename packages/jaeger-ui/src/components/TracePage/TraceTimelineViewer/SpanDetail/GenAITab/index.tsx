@@ -190,9 +190,10 @@ function AgentDetails({
   const data = useMemo(
     () =>
       makeAttributes(
-        AGENT_FIELD_ORDER.filter(key => agent[key] != null).map(
-          (key): IAttribute => ({ key: AGENT_LABELS[key] ?? key, value: agent[key] as AttributeValue })
-        )
+        AGENT_FIELD_ORDER.filter(key => agent[key] != null).map((key): IAttribute => ({
+          key: AGENT_LABELS[key] ?? key,
+          value: agent[key] as AttributeValue,
+        }))
       ),
     [agent]
   );
