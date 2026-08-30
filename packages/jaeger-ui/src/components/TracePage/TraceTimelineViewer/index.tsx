@@ -214,6 +214,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       onCollapseAll={collapseAll}
       onCollapseOne={collapseOne}
       onColummWidthChange={setSpanNameColumnWidth}
+      onSidePanelWidthChange={setSidePanelWidth}
       onExpandAll={expandAll}
       onExpandOne={expandOne}
       resizerMax={resizerMax}

@@ -149,7 +149,7 @@ describe('<TimelineHeaderRow>', () => {
 
     it('sets resizer max to 1 - sidePanelWidth', () => {
       render(<TimelineHeaderRow {...sidePanelProps} />);
-      const resizer = screen.getByTestId('vertical-resizer');
+      const resizer = screen.getAllByTestId('vertical-resizer')[0];
       expect(resizer).toHaveAttribute('data-max', String(1 - sidePanelWidth));
     });
   });
@@ -196,7 +196,7 @@ describe('<TimelineHeaderRow>', () => {
 
       it('renders the VerticalResizer', () => {
         render(<TimelineHeaderRow {...treeOnlySidePanelProps} />);
-        const resizer = screen.getByTestId('vertical-resizer');
+        const resizer = screen.getAllByTestId('vertical-resizer')[0];
         expect(resizer).toBeInTheDocument();
         expect(resizer).toHaveAttribute('data-max', '0.8');
       });

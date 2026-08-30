@@ -35,3 +35,10 @@ SPDX-License-Identifier: Apache-2.0
 .TimelineHeaderRow--sidePanelCell {
   border-left: 1px solid var(--border-strong);
 }
+
+/* Cap header resizers to the header row so they do not overlay the table's
+   own dividers (issue #3925: the span-details divider was only draggable in
+   the table because the header's full-height dragger intercepted it). */
+.TimelineHeaderRow .VerticalResizer--dragger {
+  height: var(--timeline-header-row-height);
+}

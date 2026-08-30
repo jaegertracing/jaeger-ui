@@ -10,7 +10,7 @@ import Ticks from '../Ticks';
 import TimelineRow from '../TimelineRow';
 import { TUpdateViewRangeTimeFunction, IViewRangeTime, ViewRangeTimeUpdate } from '../../types';
 import { IOtelSpan } from '../../../../types/otel';
-import { SPAN_NAME_COLUMN_WIDTH_MIN } from '../store.constants';
+import { SIDE_PANEL_WIDTH_MAX, SIDE_PANEL_WIDTH_MIN, SPAN_NAME_COLUMN_WIDTH_MIN } from '../store.constants';
 
 import './TimelineHeaderRow.css';
 
@@ -25,6 +25,7 @@ type TimelineHeaderRowProps = {
   onCollapseAll: () => void;
   onCollapseOne: () => void;
   onColummWidthChange: (width: number) => void;
+  onSidePanelWidthChange: (width: number) => void;
   onExpandAll: () => void;
   onExpandOne: () => void;
   resizerMax: number;
@@ -47,6 +48,7 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
     onCollapseAll,
     onCollapseOne,
     onColummWidthChange,
+    onSidePanelWidthChange,
     onExpandAll,
     onExpandOne,
     resizerMax,
@@ -94,6 +96,15 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
           onChange={onColummWidthChange}
           min={SPAN_NAME_COLUMN_WIDTH_MIN}
           max={resizerMax}
+        />
+      )}
+      {sidePanelVisible && (
+        <VerticalResizer
+          position={nameColumnWidth + timelineColumnWidth}
+          onChange={onSidePanelWidthChange}
+          min={SIDE_PANEL_WIDTH_MIN}
+          max={SIDE_PANEL_WIDTH_MAX}
+          rightSide
         />
       )}
       {sidePanelVisible && (
