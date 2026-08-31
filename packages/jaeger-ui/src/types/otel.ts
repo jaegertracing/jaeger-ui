@@ -152,7 +152,7 @@ export interface IOtelTrace {
   // Number of orphan spans (spans with parent references to spans not in the trace)
   orphanSpanCount: number;
 
-  // True if any span in the trace carries a gen_ai.* attribute
+  // True if any span has a recognized GenAI classification.
   isGenAITrace: boolean;
 
   // Helper methods

@@ -94,6 +94,24 @@ describe('OtelTraceFacade', () => {
       };
       expect(new OtelTraceFacade(genAiTrace).isGenAITrace).toBe(true);
     });
+
+    it('returns false when spans only have unrecognized GenAI attributes', () => {
+      const unknownGenAiSpan: Span = {
+        ...mockSpan,
+        spanID: 'unknown-genai-span',
+        tags: [{ key: 'gen_ai.system', value: 'openai' }],
+      };
+      const genAiTrace: Trace = {
+        ...mockLegacyTrace,
+        spans: [mockSpan, unknownGenAiSpan],
+        spanMap: new Map([
+          [mockSpan.spanID, mockSpan],
+          [unknownGenAiSpan.spanID, unknownGenAiSpan],
+        ]),
+        rootSpans: [mockSpan],
+      };
+      expect(new OtelTraceFacade(genAiTrace).isGenAITrace).toBe(false);
+    });
   });
 
   describe('span wiring', () => {
