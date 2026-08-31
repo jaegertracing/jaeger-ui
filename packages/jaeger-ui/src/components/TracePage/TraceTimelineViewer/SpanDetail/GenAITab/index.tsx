@@ -11,6 +11,7 @@ import {
   tryParseJson,
   GenAiAgent,
   GenAiMessage,
+  GenAiSection,
   GenAiTokenUsage,
   GenAiToolCall,
 } from './genAiData';
@@ -24,7 +25,7 @@ import type { AttributeValue, IAttribute, IOtelSpan } from '../../../../../types
 
 import './index.css';
 
-type Props = { span: IOtelSpan };
+type Props = { span: IOtelSpan; sections?: ReadonlyArray<GenAiSection> };
 
 // Above this length, Markdown parsing is skipped even if selected - avoids pathological
 // reflow/parse cost on huge attributes. Plain text and the JSON tree view have no such
@@ -360,8 +361,11 @@ function UnknownDetails({
   );
 }
 
-export default function GenAITab({ span }: Props): React.ReactElement {
-  const sections = useMemo(() => extractGenAiSections(span.attributes), [span.attributes]);
+export default function GenAITab({ span, sections: providedSections }: Props): React.ReactElement {
+  const sections = useMemo(
+    () => providedSections ?? extractGenAiSections(span.attributes),
+    [providedSections, span.attributes]
+  );
   // LLM/Agent/Tool Call/Unknown default open since they're primary content for the
   // span, unlike Other GenAI Attributes which is genuinely secondary overflow data.
   const [isLlmOpen, setIsLlmOpen] = useState(true);

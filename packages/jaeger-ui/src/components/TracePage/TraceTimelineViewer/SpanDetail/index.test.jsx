@@ -90,8 +90,12 @@ vi.mock('../../../common/CopyIcon', () => {
 });
 
 vi.mock('./GenAITab', () => {
-  return mockDefault(function MockGenAITab() {
-    return <div data-testid="genai-tab">GenAI Tab</div>;
+  return mockDefault(function MockGenAITab({ sections }) {
+    return (
+      <div data-testid="genai-tab" data-section-types={sections.map(section => section.type).join(',')}>
+        GenAI Tab
+      </div>
+    );
   });
 });
 
@@ -317,6 +321,7 @@ describe('<SpanDetail>', () => {
       });
       render(<SpanDetail {...props} />);
       expect(screen.getByRole('tab', { name: 'GenAI' })).toBeInTheDocument();
+      expect(screen.getByTestId('genai-tab')).toHaveAttribute('data-section-types', 'meta');
     });
 
     it('does not show the GenAI tab when all gen_ai.* attributes are unrecognized', () => {
