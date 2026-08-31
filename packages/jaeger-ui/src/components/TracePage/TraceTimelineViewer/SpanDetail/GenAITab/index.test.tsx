@@ -45,17 +45,6 @@ describe('GenAITab', () => {
     expect(screen.getByText('gpt-4o')).toBeInTheDocument();
   });
 
-  it('renders precomputed sections without extracting them from the span again', () => {
-    render(
-      <GenAITab
-        span={makeSpan([{ key: 'gen_ai.unrecognized', value: 'ignored' }])}
-        sections={[{ type: 'meta', data: { provider: 'precomputed-provider' } }]}
-      />
-    );
-    expect(screen.getByText('precomputed-provider')).toBeInTheDocument();
-    expect(screen.queryByText('gen_ai.unrecognized')).not.toBeInTheDocument();
-  });
-
   it('captions the provider/model section "LLM" on an actual LLM call, using the shared accordion like Agent does (#4237, @yurishkuro review on #4244)', () => {
     render(
       <GenAITab

@@ -89,11 +89,8 @@ export default function SpanDetail(props: SpanDetailProps) {
   ];
   const deepLinkCopyText = `${window.location.origin}${window.location.pathname}?uiFind=${span.spanID}`;
 
-  const genAISections = React.useMemo(
-    () => (isGenAISpan(span) ? extractGenAiSections(span.attributes) : []),
-    [span]
-  );
-  const showGenAITab = genAISections.some(section => section.type !== 'other');
+  const showGenAITab =
+    isGenAISpan(span) && extractGenAiSections(span.attributes).some(section => section.type !== 'other');
 
   const detailsContent = (
     <div>
@@ -181,7 +178,7 @@ export default function SpanDetail(props: SpanDetailProps) {
           defaultActiveKey="genai"
           items={[
             { key: 'details', label: 'Details', children: detailsContent },
-            { key: 'genai', label: 'GenAI', children: <GenAITab span={span} sections={genAISections} /> },
+            { key: 'genai', label: 'GenAI', children: <GenAITab span={span} /> },
           ]}
         />
       ) : (
