@@ -122,6 +122,30 @@ describe('<SpanRowControls>', () => {
     expect(copy).toHaveBeenCalledWith('span-1');
   });
 
+  it('renders expand subtree label when subtree is already collapsed', () => {
+    useTraceTimelineStore.setState({
+      childrenHiddenIDs: new Set<string>(['span-1']),
+    });
+
+    render(<SpanRowControls span={mockParentSpan} />);
+    const collapseBtn = screen.getByTestId('collapse-subtree-btn');
+    expect(collapseBtn).toHaveAttribute('aria-label', 'Expand subtree');
+  });
+
+  it('stops event propagation when clicking more actions button', () => {
+    const parentClick = vi.fn();
+    render(
+      <div onClick={parentClick}>
+        <SpanRowControls span={mockParentSpan} />
+      </div>
+    );
+
+    const moreBtn = screen.getByTestId('more-actions-btn');
+    fireEvent.click(moreBtn);
+
+    expect(parentClick).not.toHaveBeenCalled();
+  });
+
   it('stops event propagation when clicking controls container', () => {
     const parentClick = vi.fn();
     render(
