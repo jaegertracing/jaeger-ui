@@ -888,4 +888,28 @@ describe('<VirtualizedTraceViewImpl>', () => {
       expect(result).toBeTruthy();
     });
   });
+
+  describe('focusedSubtreeSpanID filtering', () => {
+    it('filters rows to only the subtree when focusedSubtreeSpanID is set', () => {
+      const targetSpanID = trace.spans[1].spanID;
+      const expectedSubtreeCount = trace.spans[1].childSpans.length + 1; // root + children
+
+      const { listViewProps } = renderAndCapture({
+        ...mockProps,
+        focusedSubtreeSpanID: targetSpanID,
+      });
+
+      expect(listViewProps.dataLength).toBe(expectedSubtreeCount);
+      expect(listViewProps.getKeyFromIndex(0)).toContain(targetSpanID);
+    });
+
+    it('falls back to full trace spans when focusedSubtreeSpanID does not exist in trace', () => {
+      const { listViewProps } = renderAndCapture({
+        ...mockProps,
+        focusedSubtreeSpanID: 'non-existent-span-id',
+      });
+
+      expect(listViewProps.dataLength).toBe(trace.spans.length);
+    });
+  });
 });
