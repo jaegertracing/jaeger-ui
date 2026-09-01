@@ -26,6 +26,7 @@ import {
   isKindProducer,
   spanContainsErredSpan,
 } from './utils';
+import { getSubtreeSpans } from './timeline-utils';
 import { Accessors } from '../ScrollManager';
 import { parseUiFind, TExtractUiFindFromStateReturn } from '../../common/UiFindInput';
 import getLinks from '../../../model/link-patterns';
@@ -76,6 +77,7 @@ type RouteProps = {
 type TDerivedStateProps = {
   selectedSpanID: string | null;
   prunedServices: Set<string>;
+  focusedSubtreeSpanID?: string | null;
 };
 
 type VirtualizedTraceViewProps = TVirtualizedTraceViewOwnProps &
@@ -99,12 +101,20 @@ function generateRowStatesFromTrace(
   childrenHiddenIDs: Set<string>,
   detailStates: Map<string, DetailState | TNil>,
   detailPanelMode: 'inline' | 'sidepanel',
-  prunedServices: Set<string>
+  prunedServices: Set<string>,
+  focusedSubtreeSpanID?: string | null
 ): RowState[] {
   if (!trace) {
     return [];
   }
-  return generateRowStates(trace.spans, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices);
+  let spans = trace.spans;
+  if (focusedSubtreeSpanID) {
+    const focusedSpan = trace.spanMap.get(focusedSubtreeSpanID);
+    if (focusedSpan) {
+      spans = getSubtreeSpans(focusedSpan);
+    }
+  }
+  return generateRowStates(spans, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices);
 }
 
 function getCssClasses(currentViewRange: [number, number]) {
@@ -134,8 +144,16 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
   );
 
   const getRowStates = useCallback((): RowState[] => {
-    const { trace, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices } = propsRef.current;
-    return memoizedGenerateRowStates(trace, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices);
+    const { trace, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices, focusedSubtreeSpanID } =
+      propsRef.current;
+    return memoizedGenerateRowStates(
+      trace,
+      childrenHiddenIDs,
+      detailStates,
+      detailPanelMode,
+      prunedServices,
+      focusedSubtreeSpanID
+    );
   }, []);
 
   const getClippingCssClasses = useCallback((): string => {
@@ -585,6 +603,7 @@ function VirtualizedTraceViewWrapper(
   const detailPanelMode = useLayoutPrefsStore(s => s.detailPanelMode);
   const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
   const traceID = useTraceTimelineStore(s => s.traceID);
+  const focusedSubtreeSpanID = useTraceTimelineStore(s => s.focusedSubtreeSpanID);
   const childrenHiddenIDs = useTraceTimelineStore(s => s.childrenHiddenIDs);
   const detailStates = useTraceTimelineStore(s => s.detailStates);
   const shouldScrollToFirstUiFindMatch = useTraceTimelineStore(s => s.shouldScrollToFirstUiFindMatch);
@@ -706,6 +725,7 @@ function VirtualizedTraceViewWrapper(
     detailPanelMode,
     timelineBarsVisible,
     traceID,
+    focusedSubtreeSpanID,
     childrenHiddenIDs,
     detailStates,
     shouldScrollToFirstUiFindMatch,
