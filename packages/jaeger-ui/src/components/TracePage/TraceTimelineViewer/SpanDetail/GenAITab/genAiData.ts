@@ -24,6 +24,16 @@ export type GenAiToolCall = {
   result?: unknown;
 };
 
+// Fields per the gen_ai.agent.* registry (create_agent/invoke_agent spans): id, name,
+// version, description. All are individually optional/conditionally-required per spec,
+// so a span can carry any subset.
+export type GenAiAgent = {
+  id?: string;
+  name?: string;
+  version?: string;
+  description?: string;
+};
+
 export type GenAiTokenUsage = {
   inputTokens?: number;
   outputTokens?: number;
@@ -36,6 +46,7 @@ export type GenAiTokenUsage = {
 // so a generic fallback renderer can walk `Object.entries(data)` for a
 // section type it doesn't have a specific case for.
 export type GenAiSection =
+  | { type: 'agent'; data: GenAiAgent }
   | { type: 'meta'; data: { provider?: string; model?: string } }
   | { type: 'tokens'; data: GenAiTokenUsage }
   | {
@@ -246,6 +257,19 @@ type SectionBuilder = (get: GetAttr) => GenAiSection | undefined;
 // position; the loop below walks this array (developer-controlled, fixed
 // order), not the span's attributes (whose order is instrumentation-dependent).
 const REGISTRY: SectionBuilder[] = [
+  get => {
+    const id = asString(get('gen_ai.agent.id'));
+    const name = asString(get('gen_ai.agent.name'));
+    const version = asString(get('gen_ai.agent.version'));
+    const description = asString(get('gen_ai.agent.description'));
+    // Presence, not truthiness: get() already claimed these keys, so a
+    // legitimate empty-string value must still produce a section - otherwise
+    // it's dropped here AND excluded from "Other GenAI Attributes" (already
+    // claimed), silently losing the attribute entirely.
+    return id !== undefined || name !== undefined || version !== undefined || description !== undefined
+      ? { type: 'agent', data: { id, name, version, description } }
+      : undefined;
+  },
   get => {
     // gen_ai.provider.name/gen_ai.system is a genuine current/deprecated pair -
     // `||` short-circuits so gen_ai.system is only read (and claimed) when
