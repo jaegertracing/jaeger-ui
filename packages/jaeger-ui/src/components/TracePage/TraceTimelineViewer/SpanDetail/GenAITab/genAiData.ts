@@ -294,9 +294,12 @@ const REGISTRY: SectionBuilder[] = [
     return provider || model ? { type: 'meta', data: { provider, model } } : undefined;
   },
   get => {
+    const inputTokens = asNumber(get('gen_ai.usage.input_tokens')) ?? asNumber(get('gen_ai.usage.prompt_tokens'));
+    const outputTokens =
+      asNumber(get('gen_ai.usage.output_tokens')) ?? asNumber(get('gen_ai.usage.completion_tokens'));
     const usage: GenAiTokenUsage = {
-      inputTokens: asNumber(get('gen_ai.usage.input_tokens')),
-      outputTokens: asNumber(get('gen_ai.usage.output_tokens')),
+      inputTokens,
+      outputTokens,
       cacheReadInputTokens: asNumber(get('gen_ai.usage.cache_read.input_tokens')),
       cacheCreationInputTokens: asNumber(get('gen_ai.usage.cache_creation.input_tokens')),
       reasoningOutputTokens: asNumber(get('gen_ai.usage.reasoning.output_tokens')),
