@@ -10,8 +10,8 @@ import PrunedSpanRow from './PrunedSpanRow';
 import { IOtelSpan } from '../../../types/otel';
 
 vi.mock('./SpanTreeOffset', () =>
-  mockDefault(({ span, color }: { span: IOtelSpan; color: string }) => (
-    <span data-testid="span-tree-offset" data-depth={span.depth} data-color={color} />
+  mockDefault(({ spanID, color }: { spanID: string; color: string }) => (
+    <span data-testid="span-tree-offset" data-span-id={spanID} data-color={color} />
   ))
 );
 
@@ -52,7 +52,7 @@ describe('PrunedSpanRow', () => {
     expect(screen.getByText('5 spans pruned')).toBeInTheDocument();
   });
 
-  it('renders SpanTreeOffset at parent depth + 1 with gray color', () => {
+  it('renders SpanTreeOffset with pruned spanID and gray color', () => {
     render(
       <PrunedSpanRow
         parentSpan={makeSpan(3)}
@@ -63,7 +63,7 @@ describe('PrunedSpanRow', () => {
       />
     );
     const offset = screen.getByTestId('span-tree-offset');
-    expect(offset).toHaveAttribute('data-depth', '4');
+    expect(offset).toHaveAttribute('data-span-id', 'span-1--pruned');
     expect(offset).toHaveAttribute('data-color', '#bbb');
   });
 

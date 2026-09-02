@@ -90,7 +90,7 @@ describe('<SpanDetailRow>', () => {
     expect(MockSpanTreeOffset).toHaveBeenCalledTimes(1);
     expect(MockSpanTreeOffset).toHaveBeenCalledWith(
       expect.objectContaining({
-        span: props.span,
+        spanID: props.span.spanID,
         isDetailRow: true,
       })
     );

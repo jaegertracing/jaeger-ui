@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import cx from 'classnames';
 import _get from 'lodash/get';
 import { connect } from 'react-redux';
@@ -9,8 +9,6 @@ import { bindActionCreators, Dispatch } from 'redux';
 
 import { actions } from './duck';
 import { ReduxState } from '../../../types';
-import { IOtelSpan } from '../../../types/otel';
-import colorGenerator from '../../../utils/color-generator';
 
 import './SpanTreeOffset.css';
 
@@ -27,7 +25,11 @@ type TProps = {
   onClick?: () => void;
   showChildrenIcon?: boolean;
   isDetailRow?: boolean;
-  span: IOtelSpan;
+  spanID: string;
+  hasChildren: boolean;
+  childCount: number;
+  ancestorColors: (string | null)[];
+  isLastChild: boolean;
   color: string;
 };
 
@@ -36,22 +38,15 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
   onClick = undefined,
   showChildrenIcon = true,
   isDetailRow = false,
-  span,
+  spanID,
+  hasChildren,
+  childCount,
+  ancestorColors,
+  isLastChild,
   addHoverIndentGuideId,
   removeHoverIndentGuideId,
   color,
 }) => {
-  // Build ancestor chain directly from span.parentSpan
-  const ancestors = useMemo(() => {
-    const chain: IOtelSpan[] = [];
-    let current = span.parentSpan;
-    while (current) {
-      chain.unshift(current);
-      current = current.parentSpan;
-    }
-    return chain;
-  }, [span]);
-
   /**
    * If the mouse leaves to anywhere except another span with the same ancestor id, this span's ancestor id is
    * removed from the set of hoverIndentGuideIds.
@@ -86,7 +81,6 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
     }
   };
 
-  const { hasChildren, spanID, childSpans } = span;
   const _childrenToggleKeyDown = (e: React.KeyboardEvent) => {
     if ((e.key === 'Enter' || e.key === ' ') && onClick) {
       e.preventDefault();
@@ -107,43 +101,35 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
       }
     : null;
 
-  // Get parent color for horizontal line
-  const parentSpan = span.parentSpan;
-  const parentColor = parentSpan ? colorGenerator.getColorByKey(parentSpan.resource.serviceName) : color;
-
-  // Check if this span is the last child of its parent
-  const isLastChild = parentSpan
-    ? parentSpan.childSpans[parentSpan.childSpans.length - 1]?.spanID === spanID
-    : false;
+  // The immediate parent is the last entry in ancestorColors.
+  // Its color is used for the horizontal connector line.
+  const parentColor =
+    ancestorColors.length > 0 ? (ancestorColors[ancestorColors.length - 1] ?? color) : color;
 
   return (
     <span className={`SpanTreeOffset ${hasChildren ? 'is-parent' : ''}`} {...wrapperProps}>
-      {ancestors.map((ancestor, index) => {
-        // Determine the color for this indent guide based on the ancestor
-        const guideColor = colorGenerator.getColorByKey(ancestor.resource.serviceName);
-        const isLastAncestor = index === ancestors.length - 1;
+      {ancestorColors.map((guideColor, index) => {
+        const isLastAncestor = index === ancestorColors.length - 1;
 
-        // For the immediate parent: check if current span is last child
-        // For non-immediate ancestors: check if the ancestor's branch has terminated
-        // (i.e., the descendant of this ancestor in the chain is the last child of its parent)
+        // Determine whether to terminate (hide) this ancestor's vertical line.
         let shouldTerminate = false;
 
         if (isLastAncestor) {
-          // For immediate parent, check if current span is last child
+          // For immediate parent, terminate if current span is last child
           shouldTerminate = isLastChild;
         } else {
-          // For non-immediate ancestors, check if their descendant in the chain is the last child
-          // The descendant of this ancestor in the chain is at index + 1
-          const descendantInChain = ancestors[index + 1];
-          if (descendantInChain && descendantInChain.parentSpan) {
-            const parentChildren = descendantInChain.parentSpan.childSpans;
-            shouldTerminate = parentChildren[parentChildren.length - 1]?.spanID === descendantInChain.spanID;
+          // For non-immediate ancestors: the next entry in ancestorColors
+          // represents the descendant in the chain. If that descendant's
+          // color is null, the branch has terminated at that depth.
+          const nextColor = ancestorColors[index + 1];
+          if (nextColor === null) {
+            shouldTerminate = true;
           }
         }
 
         return (
           <span
-            key={ancestor.spanID}
+            key={index}
             className={cx('SpanTreeOffset--indentGuide', {
               // In a span bar row: show top-half line to connect to the horizontal bar
               // In a detail row: treat the same case as terminated (no line) since the
@@ -153,12 +139,12 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
                 (!isLastAncestor && shouldTerminate) || (isDetailRow && isLastAncestor && isLastChild),
             })}
             style={{
-              color: guideColor,
+              color: guideColor ?? undefined,
             }}
-            data-ancestor-id={ancestor.spanID}
-            data-testid={`indent-guide-${ancestor.spanID}`}
-            onMouseEnter={event => handleMouseEnter(event, ancestor.spanID)}
-            onMouseLeave={event => handleMouseLeave(event, ancestor.spanID)}
+            data-ancestor-id={index}
+            data-testid={`indent-guide-${index}`}
+            onMouseEnter={event => handleMouseEnter(event, String(index))}
+            onMouseLeave={event => handleMouseLeave(event, String(index))}
           >
             {isLastAncestor && !isDetailRow && (
               <span
@@ -192,7 +178,7 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
                 } as React.CSSProperties
               }
             >
-              {childSpans.length}
+              {childCount}
             </span>
           ) : (
             <span
