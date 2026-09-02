@@ -190,9 +190,10 @@ function AgentDetails({
   const data = useMemo(
     () =>
       makeAttributes(
-        AGENT_FIELD_ORDER.filter(key => agent[key] != null).map(
-          (key): IAttribute => ({ key: AGENT_LABELS[key] ?? key, value: agent[key] as AttributeValue })
-        )
+        AGENT_FIELD_ORDER.filter(key => agent[key] != null).map((key): IAttribute => ({
+          key: AGENT_LABELS[key] ?? key,
+          value: agent[key] as AttributeValue,
+        }))
       ),
     [agent]
   );
@@ -361,13 +362,14 @@ function UnknownDetails({
 
 export default function GenAITab({ span }: Props): React.ReactElement {
   const sections = useMemo(() => extractGenAiSections(span.attributes), [span.attributes]);
+  const hasOnlyOtherSection = sections.length === 1 && sections[0].type === 'other';
   // LLM/Agent/Tool Call/Unknown default open since they're primary content for the
   // span, unlike Other GenAI Attributes which is genuinely secondary overflow data.
   const [isLlmOpen, setIsLlmOpen] = useState(true);
   const [isAgentOpen, setIsAgentOpen] = useState(true);
   const [isToolCallOpen, setIsToolCallOpen] = useState(true);
   const [isUnknownOpen, setIsUnknownOpen] = useState(true);
-  const [isOtherOpen, setIsOtherOpen] = useState(false);
+  const [isOtherOpen, setIsOtherOpen] = useState(hasOnlyOtherSection);
 
   if (sections.length === 0) {
     return <div className="GenAITab--empty">No GenAI-specific attributes found on this span.</div>;

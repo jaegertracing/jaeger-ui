@@ -535,20 +535,33 @@ describe('GenAITab', () => {
     expect(screen.getByText('No GenAI-specific attributes found on this span.')).toBeInTheDocument();
   });
 
-  it('shows unhandled gen_ai attributes in a collapsed accordion instead of the empty state', () => {
+  it('auto-expands Other GenAI Attributes when it is the only section', () => {
     render(<GenAITab span={makeSpan([{ key: 'gen_ai.operation.name', value: 'chat' }])} />);
-    expect(
-      screen.getByText((_, element) => element?.textContent === 'Other GenAI Attributes:')
-    ).toBeInTheDocument();
+    expect(screen.getByText('Other GenAI Attributes').closest('[role="switch"]')).toHaveAttribute(
+      'aria-checked',
+      'true'
+    );
     expect(screen.getByText('gen_ai.operation.name')).toBeInTheDocument();
+    expect(screen.getByText('chat')).toBeInTheDocument();
     expect(screen.queryByText('No GenAI-specific attributes found on this span.')).not.toBeInTheDocument();
   });
 
-  it('expands the Other GenAI Attributes accordion on click', () => {
-    render(<GenAITab span={makeSpan([{ key: 'gen_ai.operation.name', value: 'chat' }])} />);
+  it('keeps Other GenAI Attributes collapsed when another section is present and expands it on click', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          { key: 'gen_ai.provider.name', value: 'openai' },
+          { key: 'gen_ai.operation.name', value: 'chat' },
+        ])}
+      />
+    );
     const header = screen.getByText((_, element) => element?.textContent === 'Other GenAI Attributes:');
+    expect(header.closest('[role="switch"]')).toHaveAttribute('aria-checked', 'false');
     fireEvent.click(header);
-    expect(screen.getByText('chat')).toBeInTheDocument();
+    expect(screen.getByText('Other GenAI Attributes').closest('[role="switch"]')).toHaveAttribute(
+      'aria-checked',
+      'true'
+    );
   });
 });
 
