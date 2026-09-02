@@ -19,13 +19,40 @@ export class JaegerClient {
   private apiRoot = prefixUrl('/api/v3');
 
   /**
+   * Extracts a human-readable error detail string from a non-2xx response body.
+   * Tries JSON first, falls back to plain text, and returns an empty string for
+   * empty bodies so callers can omit the detail suffix when there is nothing useful.
+   */
+  private async extractErrorBody(response: Response): Promise<string> {
+    let bodyText: string;
+    try {
+      bodyText = await response.text();
+    } catch {
+      return '';
+    }
+    const trimmed = bodyText.trim();
+    if (!trimmed) return '';
+    try {
+      const parsed = JSON.parse(trimmed) as unknown;
+      if (parsed !== null && typeof parsed === 'object' && 'message' in parsed) {
+        return String((parsed as Record<string, unknown>).message);
+      }
+      return JSON.stringify(parsed);
+    } catch {
+      return trimmed;
+    }
+  }
+
+  /**
    * Fetch the list of services from the Jaeger API.
    * @returns Promise<string[]> - Array of service names
    */
   async fetchServices(): Promise<string[]> {
     const response = await this.fetchWithTimeout(`${this.apiRoot}/services`);
     if (!response.ok) {
-      throw new Error(`Failed to fetch services: ${response.status} ${response.statusText}`);
+      const detail = await this.extractErrorBody(response);
+      const suffix = detail ? ` - ${detail}` : '';
+      throw new Error(`Failed to fetch services: ${response.status} ${response.statusText}${suffix}`);
     }
     const data = await response.json();
 
@@ -44,8 +71,10 @@ export class JaegerClient {
       `${this.apiRoot}/operations?service=${encodeURIComponent(service)}`
     );
     if (!response.ok) {
+      const detail = await this.extractErrorBody(response);
+      const suffix = detail ? ` - ${detail}` : '';
       throw new Error(
-        `Failed to fetch span names for service "${service}": ${response.status} ${response.statusText}`
+        `Failed to fetch span names for service "${service}": ${response.status} ${response.statusText}${suffix}`
       );
     }
     const data = await response.json();
@@ -81,7 +110,9 @@ export class JaegerClient {
     const url = `${this.apiRoot}/trace-summaries?${params.toString()}`;
     const response = await this.fetchWithTimeout(url);
     if (!response.ok) {
-      throw new Error(`Failed to fetch trace summaries: ${response.status} ${response.statusText}`);
+      const detail = await this.extractErrorBody(response);
+      const suffix = detail ? ` - ${detail}` : '';
+      throw new Error(`Failed to fetch trace summaries: ${response.status} ${response.statusText}${suffix}`);
     }
     const data = await response.json();
     const validated = TraceSummariesResponseSchema.parse(data);
