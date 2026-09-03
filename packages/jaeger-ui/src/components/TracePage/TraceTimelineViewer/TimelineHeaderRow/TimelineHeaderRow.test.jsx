@@ -22,8 +22,14 @@ vi.mock('../TimelineRow', () => {
 });
 
 vi.mock('../../../common/VerticalResizer', () => ({
-  default: ({ position, min, max }) => (
-    <div data-testid="vertical-resizer" data-position={position} data-min={min} data-max={max} />
+  default: ({ position, min, max, rightSide }) => (
+    <div
+      data-testid="vertical-resizer"
+      data-position={position}
+      data-min={min}
+      data-max={max}
+      data-right-side={rightSide ? 'true' : undefined}
+    />
   ),
 }));
 
@@ -152,6 +158,23 @@ describe('<TimelineHeaderRow>', () => {
       const resizer = screen.getAllByTestId('vertical-resizer')[0];
       expect(resizer).toHaveAttribute('data-max', String(1 - sidePanelWidth));
     });
+
+    it('renders two resizers: the name-column divider and the side-panel divider', () => {
+      render(<TimelineHeaderRow {...sidePanelProps} />);
+      const resizers = screen.getAllByTestId('vertical-resizer');
+      expect(resizers).toHaveLength(2);
+      expect(resizers[0]).not.toHaveAttribute('data-right-side');
+      expect(resizers[1]).toHaveAttribute('data-right-side', 'true');
+    });
+
+    it('configures the side-panel divider like the body resizer', () => {
+      render(<TimelineHeaderRow {...sidePanelProps} />);
+      const resizers = screen.getAllByTestId('vertical-resizer');
+      expect(resizers[1]).toHaveAttribute('data-position', String(1 - sidePanelWidth));
+      // Keeps the timeline column at MIN_TIMELINE_COLUMN_WIDTH while respecting SIDE_PANEL_WIDTH_MAX.
+      expect(resizers[1]).toHaveAttribute('data-min', String(1 - Math.min(0.7, 1 - nameColumnWidth - 0.05)));
+      expect(resizers[1]).toHaveAttribute('data-max', String(1 - 0.2));
+    });
   });
 
   it('renders the TimelineCollapser', () => {
@@ -194,11 +217,12 @@ describe('<TimelineHeaderRow>', () => {
         resizerMax: 0.8,
       };
 
-      it('renders the VerticalResizer', () => {
+      it('renders only the name-column resizer (the side-panel divider is gated on bars)', () => {
         render(<TimelineHeaderRow {...treeOnlySidePanelProps} />);
-        const resizer = screen.getAllByTestId('vertical-resizer')[0];
-        expect(resizer).toBeInTheDocument();
-        expect(resizer).toHaveAttribute('data-max', '0.8');
+        const resizers = screen.getAllByTestId('vertical-resizer');
+        expect(resizers).toHaveLength(1);
+        expect(resizers[0]).not.toHaveAttribute('data-right-side');
+        expect(resizers[0]).toHaveAttribute('data-max', '0.8');
       });
     });
   });
