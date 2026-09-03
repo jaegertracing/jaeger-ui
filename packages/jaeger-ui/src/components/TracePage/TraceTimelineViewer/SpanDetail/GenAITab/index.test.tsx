@@ -302,9 +302,10 @@ describe('GenAITab', () => {
     expect(select).toHaveValue('markdown');
     expect(select.querySelector('option[value="markdown"]')).not.toBeDisabled();
     expect(container.querySelector('.GenAITab--messageContent strong')).toBeNull();
+    expect(screen.getByText('Content appears to be Markdown (150KB).')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Show text' })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Render anyway' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Show Markdown' }));
 
     expect(container.querySelector('.GenAITab--messageContent strong')).toHaveTextContent('bold');
   });

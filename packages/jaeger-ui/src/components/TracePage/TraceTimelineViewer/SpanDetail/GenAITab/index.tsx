@@ -74,6 +74,9 @@ function JsonBlock({ value }: { value: unknown }) {
  * no way to get at their own data, so every such view says what it is holding back and
  * offers both the render and the plain text.
  *
+ * Every caller words it the same way - what the content appears to be, then Show <view>
+ * beside Show text - so the reader learns one shape rather than one per view.
+ *
  * With no onReveal there is nothing left to try, and the plain text is the only way on.
  */
 function RevealPrompt({
@@ -121,8 +124,8 @@ function MarkdownBlock({ content, onShowText }: { content: string; onShowText: (
   if (content.length > MARKDOWN_SIZE_LIMIT && !renderAnyway) {
     return (
       <RevealPrompt
-        notice={`Markdown for a message this large (${Math.round(content.length / 1000)}KB) is rendered only on request.`}
-        actionLabel="Render anyway"
+        notice={`Content appears to be Markdown (${Math.round(content.length / 1000)}KB).`}
+        actionLabel="Show Markdown"
         onReveal={() => setRenderAnyway(true)}
         onShowText={onShowText}
       />
