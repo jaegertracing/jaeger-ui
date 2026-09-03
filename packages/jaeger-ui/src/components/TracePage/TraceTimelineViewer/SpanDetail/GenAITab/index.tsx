@@ -71,21 +71,26 @@ function MessageBlock({
   messageNumber,
 }: {
   message: GenAiMessage;
-  // User's chosen format that overrides the content-derived default; null to use the default.
+  // Remembered format for this message's attribute, seeding its initial view; null to use
+  // the content-derived default.
   formatOverride: MessageFormat | null;
   onFormatChange: (format: MessageFormat) => void;
   messageNumber: number;
 }) {
   const parsedJson = useMemo(() => tryParseJson(message.content), [message.content]);
+  // This message's own view. The stored preference seeds it at mount and is recorded again
+  // whenever the dropdown is used, so the next span opens the way the reader last left it -
+  // but choosing a format for one message never moves the messages beside it.
+  const [chosenFormat, setChosenFormat] = useState<MessageFormat | null>(formatOverride);
   // Each view can only render content it supports; a requested view that can't falls back to plain.
   const canRender: Record<MessageFormat, boolean> = {
     plain: true,
     markdown: message.content.length <= MARKDOWN_SIZE_LIMIT,
     json: parsedJson !== null && typeof parsedJson === 'object',
   };
-  // If no user override passed then JSON-parseable content defaults to the tree view,
-  // else plain text (Markdown is only opt-in).
-  const requestedFormat: MessageFormat = formatOverride ?? (canRender.json ? 'json' : 'plain');
+  // With nothing chosen, JSON-parseable content defaults to the tree view, else plain
+  // text (Markdown is only opt-in).
+  const requestedFormat: MessageFormat = chosenFormat ?? (canRender.json ? 'json' : 'plain');
   const effectiveFormat: MessageFormat = canRender[requestedFormat] ? requestedFormat : 'plain';
 
   return (
@@ -97,7 +102,11 @@ function MessageBlock({
             className="GenAITab--formatSelect"
             aria-label={`Content format for message ${messageNumber} (${message.role || 'message'})`}
             value={effectiveFormat}
-            onChange={e => onFormatChange(e.target.value as MessageFormat)}
+            onChange={e => {
+              const format = e.target.value as MessageFormat;
+              setChosenFormat(format);
+              onFormatChange(format);
+            }}
           >
             <option value="plain">Plain</option>
             <option
@@ -246,10 +255,10 @@ function ConversationDetails({
   inputMessages: GenAiMessage[];
   outputMessages: GenAiMessage[];
 }) {
-  // Format overrides are store subscribers, not local state - a choice for an attribute
-  // name applies to every currently-rendered message from that attribute immediately, and
-  // useMessageFormatStore.overrides already merges in-memory and persisted state, so there's
-  // no separate read-then-merge step here.
+  // The store remembers the last format chosen for each attribute name and seeds every
+  // message of that attribute as it mounts; each message owns its view from then on.
+  // useMessageFormatStore.overrides already merges in-memory and persisted state, so
+  // there's no separate read-then-merge step here.
   const overrides = useMessageFormatStore(state => state.overrides);
   const setFormat = useMessageFormatStore(state => state.setFormat);
 
