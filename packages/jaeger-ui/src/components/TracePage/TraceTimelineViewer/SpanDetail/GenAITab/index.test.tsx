@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { vi } from 'vitest';
 
 import GenAITab from '.';
@@ -616,5 +616,72 @@ describe('GenAITab defensive fallback for an unrecognized section type', () => {
     render(<GenAITabWithMock span={makeSpan([])} />);
     expect(screen.getByText('futureSectionType')).toBeInTheDocument();
     expect(screen.getByText('someField')).toBeInTheDocument();
+  });
+});
+
+describe('GenAITab message collapsing', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    useMessageFormatStore.setState({ overrides: {} });
+  });
+
+  function renderConversation() {
+    return render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.output.messages',
+            value: [
+              { role: 'assistant', content: 'First message, long enough to be worth folding.' },
+              { role: 'assistant', content: 'Second message.' },
+            ],
+          },
+        ])}
+      />
+    );
+  }
+
+  it('starts expanded, showing the content rather than a preview', () => {
+    const { container } = renderConversation();
+    expect(container.querySelector('.GenAITab--messagePreview')).toBeNull();
+    expect(screen.getAllByRole('button', { expanded: true })).toHaveLength(2);
+  });
+
+  it('folds a message to a single identifiable line when collapsed', () => {
+    const { container } = renderConversation();
+    const messages = container.querySelectorAll('.GenAITab--message');
+
+    fireEvent.click(within(messages[0] as HTMLElement).getByRole('button', { expanded: true }));
+
+    expect(messages[0].querySelector('.GenAITab--messageContent-plain')).toBeNull();
+    expect(messages[0].querySelector('.GenAITab--messagePreview')?.textContent).toBe(
+      'First message, long enough to be worth folding.'
+    );
+    // The role stays legible, so a folded message is still placed in the conversation.
+    expect(within(messages[0] as HTMLElement).getByText('assistant')).toBeInTheDocument();
+  });
+
+  it('collapses only the message whose toggle was used', () => {
+    const { container } = renderConversation();
+    const messages = container.querySelectorAll('.GenAITab--message');
+
+    fireEvent.click(within(messages[0] as HTMLElement).getByRole('button', { expanded: true }));
+
+    expect(messages[1].querySelector('.GenAITab--messageContent-plain')?.textContent).toBe('Second message.');
+    expect(messages[1].querySelector('.GenAITab--messagePreview')).toBeNull();
+  });
+
+  it('expands a collapsed message again, restoring the chosen format', () => {
+    const { container } = renderConversation();
+    const message = container.querySelector('.GenAITab--message') as HTMLElement;
+    fireEvent.change(within(message).getByLabelText(/Content format/), {
+      target: { value: 'markdown' },
+    });
+
+    fireEvent.click(within(message).getByRole('button', { expanded: true }));
+    fireEvent.click(within(message).getByRole('button', { expanded: false }));
+
+    expect(message.querySelector('.GenAITab--messagePreview')).toBeNull();
+    expect(within(message).getByLabelText(/Content format/)).toHaveValue('markdown');
   });
 });
