@@ -7,9 +7,10 @@ import storage from '../../../../../utils/storage';
 // Message text has no declared format in the OTel GenAI conventions - it can be prose,
 // Markdown, JSON, code, or a template. Per review discussion, the format is not assumed:
 // content that parses as JSON defaults to the tree view, everything else defaults to
-// plain text, and the user can override per attribute via the dropdown. The override is
-// remembered per attribute name (not globally, and not per-message), so e.g. a user's
-// choice for gen_ai.output.messages applies to every output message.
+// plain text, and the user can override it per message via the dropdown. The choice is
+// remembered per attribute name (not globally), and seeds each message of that attribute
+// as it mounts - so e.g. choosing Markdown for gen_ai.output.messages is how the next
+// span's output messages open, while messages already on screen keep their own view.
 export type MessageFormat = 'plain' | 'markdown' | 'json';
 
 const MESSAGE_FORMAT_STORAGE_PREFIX = 'jaeger.spanDetail.attributeFormat.';

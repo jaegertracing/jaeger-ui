@@ -411,7 +411,7 @@ describe('GenAITab', () => {
     expect(container.querySelector('.GenAITab--messageContent strong')).toBeInTheDocument();
   });
 
-  it('applies a format change to every currently-rendered message from the same attribute immediately, not just future mounts', () => {
+  it('changes only the message whose dropdown was used, leaving its neighbours alone', () => {
     const { container } = render(
       <GenAITab
         span={makeSpan([
@@ -426,9 +426,12 @@ describe('GenAITab', () => {
       />
     );
     const [firstSelect, secondSelect] = screen.getAllByLabelText(/Content format/);
+
     fireEvent.change(firstSelect, { target: { value: 'markdown' } });
-    expect(secondSelect).toHaveValue('markdown');
-    expect(container.querySelectorAll('.GenAITab--messageContent strong')).toHaveLength(2);
+
+    expect(firstSelect).toHaveValue('markdown');
+    expect(secondSelect).toHaveValue('plain');
+    expect(container.querySelectorAll('.GenAITab--messageContent strong')).toHaveLength(1);
   });
 
   it('gives each format dropdown a distinct accessible name including role and position, not a shared generic label', () => {
