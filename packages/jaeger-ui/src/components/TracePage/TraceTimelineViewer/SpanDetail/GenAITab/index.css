@@ -173,3 +173,30 @@ SPDX-License-Identifier: Apache-2.0
   cursor: pointer;
   font-size: 12px;
 }
+
+.GenAITab--messageToggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.GenAITab--messageToggleIcon {
+  color: var(--text-muted);
+  vertical-align: middle;
+}
+
+.GenAITab--messagePreview {
+  padding: 8px;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 13px;
+  /* One line however long the content is - the point of collapsing. */
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

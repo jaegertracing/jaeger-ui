@@ -3,6 +3,7 @@
 
 import React, { useMemo, useState } from 'react';
 import Markdown from 'markdown-to-jsx/react';
+import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
 import { JsonView, allExpanded, collapseAllNested } from 'react-json-view-lite';
 
 import {
@@ -157,6 +158,7 @@ function MessageBlock({
   // whenever the dropdown is used, so the next span opens the way the reader last left it.
   // Choosing a format for one message does not change how the other messages render.
   const [chosenFormat, setChosenFormat] = useState<MessageFormat | null>(formatOverride);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   // Each view can only render content it supports; a requested view that can't falls back to plain.
   const canRender: Record<MessageFormat, boolean> = {
     plain: true,
@@ -171,7 +173,20 @@ function MessageBlock({
   return (
     <div className={`GenAITab--message GenAITab--message-${message.role || 'unknown'}`}>
       <div className="GenAITab--messageHeader">
-        <span className="GenAITab--messageRole">{message.role || 'message'}</span>
+        <button
+          type="button"
+          className="GenAITab--messageToggle"
+          aria-expanded={!isCollapsed}
+          aria-label={`Message ${messageNumber} (${message.role || 'message'})`}
+          onClick={() => setIsCollapsed(!isCollapsed)}
+        >
+          {isCollapsed ? (
+            <IoChevronForward className="GenAITab--messageToggleIcon" />
+          ) : (
+            <IoChevronDown className="GenAITab--messageToggleIcon" />
+          )}
+          <span className="GenAITab--messageRole">{message.role || 'message'}</span>
+        </button>
         <div className="GenAITab--messageHeaderActions">
           <select
             className="GenAITab--formatSelect"
@@ -196,7 +211,11 @@ function MessageBlock({
           <CopyIcon copyText={message.content} tooltipTitle="Copy message" buttonText="Copy" />
         </div>
       </div>
-      {effectiveFormat === 'json' ? (
+      {isCollapsed ? (
+        // A folded message still has to be identifiable, so it keeps its first line.
+        // The whole value stays in the DOM for browser find-in-page, clipped in CSS.
+        <div className="GenAITab--messagePreview">{message.content}</div>
+      ) : effectiveFormat === 'json' ? (
         <JsonBlock value={parsedJson} />
       ) : effectiveFormat === 'markdown' ? (
         <MarkdownBlock content={message.content} onShowText={() => setChosenFormat('plain')} />
