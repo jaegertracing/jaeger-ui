@@ -144,3 +144,32 @@ SPDX-License-Identifier: Apache-2.0
   font-size: 13px;
   padding: 8px 0;
 }
+
+/* Aligned with .GenAITab--messageContent so switching views does not shift the text. */
+.GenAITab--revealBlock {
+  padding: 8px;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--surface-primary);
+}
+
+.GenAITab--revealNotice {
+  display: block;
+  color: var(--text-muted);
+}
+
+.GenAITab--revealActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.GenAITab--revealButton {
+  padding: 2px 8px;
+  border: 1px solid var(--border-default);
+  border-radius: 3px;
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 12px;
+}
