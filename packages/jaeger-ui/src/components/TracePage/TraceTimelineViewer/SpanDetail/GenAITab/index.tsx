@@ -79,8 +79,8 @@ function MessageBlock({
 }) {
   const parsedJson = useMemo(() => tryParseJson(message.content), [message.content]);
   // This message's own view. The stored preference seeds it at mount and is recorded again
-  // whenever the dropdown is used, so the next span opens the way the reader last left it -
-  // but choosing a format for one message never moves the messages beside it.
+  // whenever the dropdown is used, so the next span opens the way the reader last left it.
+  // Choosing a format for one message does not change how the other messages render.
   const [chosenFormat, setChosenFormat] = useState<MessageFormat | null>(formatOverride);
   // Each view can only render content it supports; a requested view that can't falls back to plain.
   const canRender: Record<MessageFormat, boolean> = {
