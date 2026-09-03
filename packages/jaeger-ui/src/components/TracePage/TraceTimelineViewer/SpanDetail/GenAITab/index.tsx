@@ -26,7 +26,7 @@ import './index.css';
 
 type Props = { span: IOtelSpan };
 
-// Above this length, Markdown parsing is skipped even if selected - avoids pathological
+// Above this length the Markdown view asks before parsing - avoids pathological
 // reflow/parse cost on huge attributes. Plain text and the JSON tree view have no such
 // cap since neither does Markdown's block-level reparsing.
 const MARKDOWN_SIZE_LIMIT = 150_000;
@@ -64,6 +64,78 @@ function JsonBlock({ value }: { value: unknown }) {
   );
 }
 
+/**
+ * Stands in for content a view will not render until asked, saying why and offering the
+ * way forward.
+ *
+ * A view withholds content when rendering it costs something the reader has not agreed
+ * to pay - parse time for a huge message, a request to a third-party host for a remote
+ * link. Withholding it silently, or disabling the view outright, leaves the reader with
+ * no way to get at their own data, so every such view says what it is holding back and
+ * offers both the render and the plain text.
+ *
+ * With no onReveal there is nothing left to try, and the plain text is the only way on.
+ */
+function RevealPrompt({
+  notice,
+  actionLabel,
+  onReveal,
+  onShowText,
+}: {
+  notice: string;
+  actionLabel?: string;
+  onReveal?: () => void;
+  onShowText: () => void;
+}) {
+  return (
+    <div className="GenAITab--revealBlock">
+      <span className="GenAITab--revealNotice">{notice}</span>
+      <div className="GenAITab--revealActions">
+        {onReveal && actionLabel && (
+          <button type="button" className="GenAITab--revealButton" onClick={onReveal}>
+            {actionLabel}
+          </button>
+        )}
+        <button type="button" className="GenAITab--revealButton" onClick={onShowText}>
+          Show text
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * A message rendered as Markdown, withheld above MARKDOWN_SIZE_LIMIT.
+ *
+ * Markdown's block-level reparsing is what makes a huge message expensive, so a message
+ * over the limit is not parsed until the reader says to. Offering the render beats
+ * disabling the view, which left the formatted text of a large message unreachable.
+ *
+ * The confirmation lives with the component instance, so content arriving later in the
+ * same position is parsed without asking again. That costs one large parse the reader did
+ * not explicitly request, and nothing leaves the browser either way.
+ */
+function MarkdownBlock({ content, onShowText }: { content: string; onShowText: () => void }) {
+  const [renderAnyway, setRenderAnyway] = useState(false);
+
+  if (content.length > MARKDOWN_SIZE_LIMIT && !renderAnyway) {
+    return (
+      <RevealPrompt
+        notice={`Markdown for a message this large (${Math.round(content.length / 1000)}KB) is rendered only on request.`}
+        actionLabel="Render anyway"
+        onReveal={() => setRenderAnyway(true)}
+        onShowText={onShowText}
+      />
+    );
+  }
+
+  return (
+    <Markdown className="GenAITab--messageContent" options={genAiMarkdownOptions}>
+      {content}
+    </Markdown>
+  );
+}
+
 function MessageBlock({
   message,
   formatOverride,
@@ -85,7 +157,7 @@ function MessageBlock({
   // Each view can only render content it supports; a requested view that can't falls back to plain.
   const canRender: Record<MessageFormat, boolean> = {
     plain: true,
-    markdown: message.content.length <= MARKDOWN_SIZE_LIMIT,
+    markdown: true,
     json: parsedJson !== null && typeof parsedJson === 'object',
   };
   // With nothing chosen, JSON-parseable content defaults to the tree view, else plain
@@ -108,14 +180,8 @@ function MessageBlock({
               onFormatChange(format);
             }}
           >
-            <option value="plain">Plain</option>
-            <option
-              value="markdown"
-              disabled={!canRender.markdown}
-              title={canRender.markdown ? undefined : 'Markdown is disabled for messages over 150KB'}
-            >
-              Markdown{canRender.markdown ? '' : ' (too large)'}
-            </option>
+            <option value="plain">Plain text</option>
+            <option value="markdown">Markdown</option>
             <option
               value="json"
               disabled={!canRender.json}
@@ -130,9 +196,7 @@ function MessageBlock({
       {effectiveFormat === 'json' ? (
         <JsonBlock value={parsedJson} />
       ) : effectiveFormat === 'markdown' ? (
-        <Markdown className="GenAITab--messageContent" options={genAiMarkdownOptions}>
-          {message.content}
-        </Markdown>
+        <MarkdownBlock content={message.content} onShowText={() => setChosenFormat('plain')} />
       ) : (
         <pre className="GenAITab--messageContent GenAITab--messageContent-plain">{message.content}</pre>
       )}
