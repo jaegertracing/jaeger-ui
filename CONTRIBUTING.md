@@ -48,7 +48,7 @@ ssh -fN -L 16686:$BACKEND_HOST:$BACKEND_PORT $BACKEND_HOST
 
 If you are using the [UI Base Path](https://www.jaegertracing.io/docs/latest/deployment/configuration/#ui-base-path) feature, you need to append the base path into `packages/jaeger-ui/vite.config.mts` in `proxyConfig` object. For example, if the base path is `"/jaeger"`, then the `target` should be `"http://localhost:16686/jaeger"` and your `proxyConfig` object would be:
 
-```js
+```ts
 const proxyConfig = {
   target: 'http://localhost:16686/jaeger',
   secure: false,
