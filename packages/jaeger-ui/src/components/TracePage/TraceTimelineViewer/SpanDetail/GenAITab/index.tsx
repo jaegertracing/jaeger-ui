@@ -288,14 +288,12 @@ function PartControls({
           value="media"
           disabled={!view.canRender.media}
           title={
-            view.canRender.media
-              ? 'Recognized from the value alone, so it may not be media at all - a remote link is not fetched until you ask'
+            part.media
+              ? `Looks like ${part.media.type === 'audio' ? 'an audio clip' : 'an image'}, recognized from the value alone, so it may not be one - a remote link is not fetched until you ask`
               : 'This part carries no image or audio to show'
           }
         >
-          {/* Named for what the part holds. A part with no media names both kinds the
-              view can show, since "media" on its own is not a third thing. */}
-          {part.media ? (part.media.type === 'audio' ? 'Maybe audio' : 'Maybe image') : 'Image or audio'}
+          Image or audio
         </option>
       </select>
     </div>

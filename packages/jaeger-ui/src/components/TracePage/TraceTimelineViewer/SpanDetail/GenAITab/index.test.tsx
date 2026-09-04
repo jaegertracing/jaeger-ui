@@ -714,9 +714,12 @@ describe('GenAITab media rendering', () => {
     expect(container.querySelector('.GenAITab--revealValue')).toHaveAttribute('title', url);
   });
 
-  it('labels the Media option by the type it detected, without claiming certainty', () => {
+  it('says what it recognized on the Media option, without claiming certainty', () => {
     renderMessage('https://example.com/chart.png');
-    expect(screen.getByRole('option', { name: 'Maybe image' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Image or audio' })).toHaveAttribute(
+      'title',
+      expect.stringContaining('Looks like an image, recognized from the value alone')
+    );
   });
 
   it('renders the image with alt text and a no-referrer policy once the user asks for it', () => {
@@ -734,7 +737,10 @@ describe('GenAITab media rendering', () => {
 
   it('waits for a click before rendering a remote audio player, then gives it controls', () => {
     const { container } = renderMessage('https://example.com/reply.mp3');
-    expect(screen.getByRole('option', { name: 'Maybe audio' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Image or audio' })).toHaveAttribute(
+      'title',
+      expect.stringContaining('Looks like an audio clip')
+    );
     expect(screen.getByText('Content appears to be an audio clip link:')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Show audio clip' }));
