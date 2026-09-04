@@ -86,6 +86,12 @@ describe('<TracePageSearchBar>', () => {
       expect(defaultProps.nextResult).toHaveBeenCalled();
     });
 
+    it('renders navigation buttons with accessible names', () => {
+      expect(screen.getByRole('button', { name: /locate current match/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /previous match/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /next match/i })).toBeInTheDocument();
+    });
+
     it('hides navigation buttons when not navigable', () => {
       cleanup();
       render(<TracePageSearchBar {...defaultProps} navigable={false} />);
