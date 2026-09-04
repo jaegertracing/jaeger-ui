@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { detectMediaType } from './media';
+import { detectMediaType, isEmbeddedMedia } from './media';
 
 describe('detectMediaType', () => {
   it('detects an https image URL', () => {
@@ -102,5 +102,19 @@ describe('detectMediaType', () => {
   it('returns null for an empty or whitespace-only string', () => {
     expect(detectMediaType('')).toBeNull();
     expect(detectMediaType('   ')).toBeNull();
+  });
+});
+
+describe('isEmbeddedMedia', () => {
+  it('recognises a data URI, which carries its payload and needs no request', () => {
+    expect(isEmbeddedMedia('data:image/png;base64,iVBORw0KGgo=')).toBe(true);
+    expect(isEmbeddedMedia('  data:audio/mp3;base64,AAAA  ')).toBe(true);
+    expect(isEmbeddedMedia('DATA:image/png;base64,iVBORw0KGgo=')).toBe(true);
+  });
+
+  it('treats anything that points at a host as remote', () => {
+    expect(isEmbeddedMedia('https://example.com/chart.png')).toBe(false);
+    expect(isEmbeddedMedia('gs://bucket/photo.png')).toBe(false);
+    expect(isEmbeddedMedia('')).toBe(false);
   });
 });

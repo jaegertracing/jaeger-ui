@@ -617,120 +617,6 @@ describe('GenAITab defensive fallback for an unrecognized section type', () => {
     expect(screen.getByText('futureSectionType')).toBeInTheDocument();
     expect(screen.getByText('someField')).toBeInTheDocument();
   });
-  describe('media rendering', () => {
-    function renderMessage(content: string) {
-      return render(
-        <GenAITab
-          span={makeSpan([{ key: 'gen_ai.output.messages', value: [{ role: 'assistant', content }] }])}
-        />
-      );
-    }
-
-    it('renders an image URL as an inline preview with alt text', () => {
-      const { container } = renderMessage('https://example.com/chart.png');
-      const img = container.querySelector('img.GenAITab--media') as HTMLImageElement | null;
-      expect(img).not.toBeNull();
-      expect(img?.getAttribute('src')).toBe('https://example.com/chart.png');
-      expect(img?.getAttribute('alt')).toBe('Image in message 1 (assistant)');
-    });
-
-    it('renders an audio URL as a player with controls and no eager fetch', () => {
-      const { container } = renderMessage('https://example.com/reply.mp3');
-      const audio = container.querySelector('audio.GenAITab--media');
-      expect(audio).not.toBeNull();
-      expect(audio?.hasAttribute('controls')).toBe(true);
-      expect(audio?.getAttribute('preload')).toBe('none');
-      expect(audio?.getAttribute('aria-label')).toBe('Audio in message 1 (assistant)');
-    });
-
-    it('gives the audio fallback link a no-referrer policy so the trace ID cannot leak', () => {
-      const { container } = renderMessage('https://example.com/reply.mp3');
-      const fallbackLink = container.querySelector('audio.GenAITab--media a');
-      expect(fallbackLink).not.toBeNull();
-      expect(fallbackLink?.getAttribute('href')).toBe('https://example.com/reply.mp3');
-      expect(fallbackLink?.getAttribute('referrerpolicy')).toBe('no-referrer');
-      expect(fallbackLink?.getAttribute('rel')).toBe('noopener noreferrer');
-      expect(fallbackLink?.getAttribute('target')).toBe('_blank');
-    });
-
-    it('gives the image preview a no-referrer policy and defers off-screen loading', () => {
-      const { container } = renderMessage('https://example.com/chart.png');
-      const img = container.querySelector('img.GenAITab--media');
-      expect(img?.getAttribute('referrerpolicy')).toBe('no-referrer');
-      expect(img?.getAttribute('loading')).toBe('lazy');
-    });
-
-    it('renders a data URI image without needing a network fetch', () => {
-      const dataUri = 'data:image/png;base64,iVBORw0KGgo=';
-      const { container } = renderMessage(dataUri);
-      expect(container.querySelector('img.GenAITab--media')?.getAttribute('src')).toBe(dataUri);
-    });
-
-    it('falls through to plain text for a value that is not a media link', () => {
-      const { container } = renderMessage('Just a sentence about a cat.png file.');
-      expect(container.querySelector('.GenAITab--media')).toBeNull();
-      expect(container.querySelector('.GenAITab--messageContent-plain')).not.toBeNull();
-      expect(screen.getByText(/Just a sentence/)).toBeInTheDocument();
-    });
-
-    it('falls back to plain text when the media fails to load, keeping the raw URL visible', () => {
-      const url = 'https://example.com/broken.png';
-      const { container } = renderMessage(url);
-      const img = container.querySelector('img.GenAITab--media') as HTMLImageElement;
-      expect(img).not.toBeNull();
-
-      fireEvent.error(img);
-
-      expect(container.querySelector('.GenAITab--media')).toBeNull();
-      expect(container.querySelector('.GenAITab--messageContent-plain')?.textContent).toBe(url);
-    });
-
-    it('does not carry a load failure across to a different message reusing the same position', () => {
-      // Messages are keyed by position (output-0), so new content can arrive at the same
-      // component instance. In the app a span switch currently remounts this subtree via
-      // SpanDetail's Tabs key, so this renders GenAITab directly to exercise the component
-      // without that external guard: a load failure recorded for one URL must not disable
-      // media for whatever content replaces it.
-      const { container, rerender } = render(
-        <GenAITab
-          span={makeSpan([
-            {
-              key: 'gen_ai.output.messages',
-              value: [{ role: 'assistant', content: 'https://example.com/broken.png' }],
-            },
-          ])}
-        />
-      );
-      fireEvent.error(container.querySelector('img.GenAITab--media') as HTMLImageElement);
-      expect(container.querySelector('img.GenAITab--media')).toBeNull();
-
-      rerender(
-        <GenAITab
-          span={makeSpan([
-            {
-              key: 'gen_ai.output.messages',
-              value: [{ role: 'assistant', content: 'https://example.com/working.png' }],
-            },
-          ])}
-        />
-      );
-
-      const img = container.querySelector('img.GenAITab--media') as HTMLImageElement | null;
-      expect(img).not.toBeNull();
-      expect(img?.getAttribute('src')).toBe('https://example.com/working.png');
-    });
-
-    it('lets the user switch a media preview back to plain text', () => {
-      const url = 'https://example.com/chart.png';
-      const { container } = renderMessage(url);
-      expect(container.querySelector('img.GenAITab--media')).not.toBeNull();
-
-      fireEvent.change(screen.getByLabelText(/Content format/), { target: { value: 'plain' } });
-
-      expect(container.querySelector('.GenAITab--media')).toBeNull();
-      expect(container.querySelector('.GenAITab--messageContent-plain')?.textContent).toBe(url);
-    });
-  });
 });
 
 describe('GenAITab message collapsing', () => {
@@ -797,5 +683,151 @@ describe('GenAITab message collapsing', () => {
 
     expect(message.querySelector('.GenAITab--messagePreview')).toBeNull();
     expect(within(message).getByLabelText(/Content format/)).toHaveValue('markdown');
+  });
+});
+
+describe('GenAITab media rendering', () => {
+  const DATA_URI = 'data:image/png;base64,iVBORw0KGgo=';
+
+  beforeEach(() => {
+    localStorage.clear();
+    useMessageFormatStore.setState({ overrides: {} });
+  });
+
+  function renderMessage(content: string) {
+    return render(
+      <GenAITab
+        span={makeSpan([{ key: 'gen_ai.output.messages', value: [{ role: 'assistant', content }] }])}
+      />
+    );
+  }
+
+  it('offers a remote image link instead of fetching it, and shows where it points', () => {
+    const url = 'https://example.com/chart.png';
+    const { container } = renderMessage(url);
+    expect(screen.getByLabelText(/Content format/)).toHaveValue('media');
+    expect(screen.getByText('Content appears to be an image link:')).toBeInTheDocument();
+    expect(container.querySelector('img.GenAITab--media')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Show image' })).toBeInTheDocument();
+    // The value is elided by CSS rather than cut down, so the full URL is in the DOM and
+    // in the tooltip while only one line of it is on screen.
+    expect(container.querySelector('.GenAITab--revealValue')).toHaveAttribute('title', url);
+  });
+
+  it('labels the Media option by the type it detected, without claiming certainty', () => {
+    renderMessage('https://example.com/chart.png');
+    expect(screen.getByRole('option', { name: 'Maybe image' })).toBeInTheDocument();
+  });
+
+  it('renders the image with alt text and a no-referrer policy once the user asks for it', () => {
+    const url = 'https://example.com/chart.png';
+    const { container } = renderMessage(url);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show image' }));
+
+    const img = container.querySelector('img.GenAITab--media') as HTMLImageElement | null;
+    expect(img?.getAttribute('src')).toBe(url);
+    expect(img?.getAttribute('alt')).toBe('Image in message 1 (assistant)');
+    expect(img?.getAttribute('referrerpolicy')).toBe('no-referrer');
+    expect(container.querySelectorAll('.GenAITab--revealButton')).toHaveLength(0);
+  });
+
+  it('waits for a click before rendering a remote audio player, then gives it controls', () => {
+    const { container } = renderMessage('https://example.com/reply.mp3');
+    expect(screen.getByRole('option', { name: 'Maybe audio' })).toBeInTheDocument();
+    expect(screen.getByText('Content appears to be an audio clip link:')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show audio clip' }));
+
+    const audio = container.querySelector('audio.GenAITab--media');
+    expect(audio?.hasAttribute('controls')).toBe(true);
+    expect(audio?.getAttribute('aria-label')).toBe('Audio in message 1 (assistant)');
+  });
+
+  it('renders an embedded payload immediately, since showing it requests nothing', () => {
+    const { container } = renderMessage(DATA_URI);
+    expect(container.querySelector('img.GenAITab--media')?.getAttribute('src')).toBe(DATA_URI);
+    expect(container.querySelectorAll('.GenAITab--revealButton')).toHaveLength(0);
+  });
+
+  it('keeps a data URI out of the Media view, where Plain text shows it in full', () => {
+    const { container } = renderMessage(DATA_URI);
+    expect(container.querySelector('.GenAITab--messageContent-plain')).toBeNull();
+
+    fireEvent.change(screen.getByLabelText(/Content format/), { target: { value: 'plain' } });
+
+    expect(container.querySelector('.GenAITab--messageContent-plain')?.textContent).toBe(DATA_URI);
+  });
+
+  it('switches this message to Plain text when the reader asks for the text instead', () => {
+    const url = 'https://example.com/chart.png';
+    const { container } = renderMessage(url);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show text' }));
+
+    expect(screen.getByLabelText(/Content format/)).toHaveValue('plain');
+    expect(container.querySelector('.GenAITab--messageContent-plain')?.textContent).toBe(url);
+  });
+
+  it('remembers a link it already showed, so a trip through Plain text and back does not ask again', () => {
+    const { container } = renderMessage('https://example.com/chart.png');
+    fireEvent.click(screen.getByRole('button', { name: 'Show image' }));
+    const select = screen.getByLabelText(/Content format/);
+
+    fireEvent.change(select, { target: { value: 'plain' } });
+    fireEvent.change(select, { target: { value: 'media' } });
+
+    expect(container.querySelector('img.GenAITab--media')).not.toBeNull();
+    expect(screen.queryByRole('button', { name: 'Show image' })).toBeNull();
+  });
+
+  it('leaves the Media option disabled for a value that is not a media link', () => {
+    const { container } = renderMessage('Just a sentence about a cat.png file.');
+    expect(screen.getByLabelText(/Content format/)).toHaveValue('plain');
+    expect(screen.getByRole('option', { name: 'Media (not media)' })).toBeDisabled();
+    expect(container.querySelector('.GenAITab--media')).toBeNull();
+  });
+
+  it('reports a load failure in place, offering the text as the way on', () => {
+    const { container } = renderMessage('https://example.com/broken.png');
+    fireEvent.click(screen.getByRole('button', { name: 'Show image' }));
+
+    fireEvent.error(container.querySelector('img.GenAITab--media') as HTMLImageElement);
+
+    expect(container.querySelector('img.GenAITab--media')).toBeNull();
+    expect(screen.getByText('This image could not be loaded:')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Show text' })).toBeInTheDocument();
+  });
+
+  it('does not load a different remote link that reuses the same position', () => {
+    // Messages are keyed by position (output-0), so new content arrives at the same
+    // component instance. A reader who chose to load one URL has not consented to
+    // whatever replaces it, so the offer must come back.
+    const { container, rerender } = render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.output.messages',
+            value: [{ role: 'assistant', content: 'https://example.com/first.png' }],
+          },
+        ])}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Show image' }));
+    expect(container.querySelector('img.GenAITab--media')).not.toBeNull();
+
+    rerender(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.output.messages',
+            value: [{ role: 'assistant', content: 'https://example.com/second.png' }],
+          },
+        ])}
+      />
+    );
+
+    expect(container.querySelector('img.GenAITab--media')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Show image' })).toBeInTheDocument();
   });
 });

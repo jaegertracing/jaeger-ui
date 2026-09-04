@@ -154,8 +154,21 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .GenAITab--revealNotice {
-  display: block;
+  display: flex;
+  gap: 4px;
   color: var(--text-muted);
+}
+
+.GenAITab--revealNoticeText {
+  flex: none;
+}
+
+/* The value takes what the notice leaves and elides, like a collapsed message. */
+.GenAITab--revealValue {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .GenAITab--revealActions {
@@ -199,4 +212,27 @@ SPDX-License-Identifier: Apache-2.0
   /* One line however long the content is - the point of collapsing. */
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.GenAITab--media {
+  display: block;
+  max-width: 100%;
+}
+
+img.GenAITab--media {
+  /* An SVG that carries only a viewBox has no intrinsic size, so width:auto fills the
+     panel and the aspect ratio then sets an equally large height. The cap keeps any
+     preview, sized or not, from pushing the rest of the conversation off screen. */
+  max-height: 320px;
+  width: auto;
+  height: auto;
+  /* A ground colour so a transparent PNG stays visible in either theme. */
+  background-color: var(--surface-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 3px;
+  object-fit: contain;
+}
+
+audio.GenAITab--media {
+  width: 100%;
 }

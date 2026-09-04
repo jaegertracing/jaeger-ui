@@ -31,6 +31,17 @@ const HTTP_URL = /^https?:\/\//i;
  * Detection is on the value alone. No attribute key is privileged, so this works for any
  * attribute carrying a link, whether or not it is part of the GenAI conventions.
  */
+/**
+ * Whether a media value carries its own payload rather than pointing at a host.
+ *
+ * An embedded payload costs no request, so rendering it tells no third party that someone
+ * is reading this trace - the distinction the GenAI tab uses to decide what it may show
+ * without being asked.
+ */
+export function isEmbeddedMedia(value: string): boolean {
+  return /^data:/i.test(value.trim());
+}
+
 export function detectMediaType(value: unknown): MediaType | null {
   if (typeof value !== 'string') return null;
   const trimmed = value.trim();
