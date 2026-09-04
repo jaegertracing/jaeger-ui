@@ -272,30 +272,30 @@ function PartControls({
         value={view.format}
         onChange={e => onFormatChange(e.target.value as MessageFormat)}
       >
+        {/* Every view this tab has is listed, whether or not this part suits it, so a
+            reader can see what the tab can do. One that cannot show the part is disabled
+            and says why when pointed at, rather than carrying the reason in its name. */}
         <option value="plain">Plain text</option>
         <option value="markdown">Markdown</option>
         <option
           value="json"
           disabled={!view.canRender.json}
-          title={view.canRender.json ? undefined : 'JSON is disabled - this content is not valid JSON'}
+          title={view.canRender.json ? undefined : 'This part is not JSON, so there is no tree to show'}
         >
-          JSON{view.canRender.json ? '' : ' (not JSON)'}
+          JSON
         </option>
         <option
           value="media"
           disabled={!view.canRender.media}
           title={
             view.canRender.media
-              ? 'Detected from the value alone, so it may not be media at all - a remote link is not fetched until you ask'
-              : 'Media is disabled - this content is not an image or audio link'
+              ? 'Recognized from the value alone, so it may not be media at all - a remote link is not fetched until you ask'
+              : 'This part carries no image or audio to show'
           }
         >
-          {part.media?.type === 'audio'
-            ? 'Maybe audio'
-            : part.media?.type === 'image'
-              ? 'Maybe image'
-              : 'Media'}
-          {view.canRender.media ? '' : ' (not media)'}
+          {/* Named for what the part holds. A part with no media names both kinds the
+              view can show, since "media" on its own is not a third thing. */}
+          {part.media ? (part.media.type === 'audio' ? 'Maybe audio' : 'Maybe image') : 'Image or audio'}
         </option>
       </select>
     </div>

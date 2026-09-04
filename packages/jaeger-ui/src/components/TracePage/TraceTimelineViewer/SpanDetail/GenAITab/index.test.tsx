@@ -784,7 +784,7 @@ describe('GenAITab media rendering', () => {
   it('leaves the Media option disabled for a value that is not a media link', () => {
     const { container } = renderMessage('Just a sentence about a cat.png file.');
     expect(screen.getByLabelText(/Content format/)).toHaveValue('plain');
-    expect(screen.getByRole('option', { name: 'Media (not media)' })).toBeDisabled();
+    expect(screen.getByRole('option', { name: 'Image or audio' })).toBeDisabled();
     expect(container.querySelector('.GenAITab--media')).toBeNull();
   });
 
