@@ -184,8 +184,16 @@ function textPart(text: string): GenAiPart {
   return type ? { text, media: { src, type } } : { text };
 }
 
-function asModality(rec: Record<string, unknown>): string {
-  return typeof rec.modality === 'string' ? rec.modality : 'file';
+/**
+ * Names an attachment, e.g. "image/png attachment" or "image file abc123".
+ *
+ * A blob, file or uri part is required to carry a modality and may also carry a mime_type,
+ * which is the more precise of the two and so preferred. Nothing enforces either, and a
+ * part that names neither is still worth describing by what it is.
+ */
+function describeAttachment(rec: Record<string, unknown>, noun: string): string {
+  const kind = typeof rec.mime_type === 'string' ? rec.mime_type : rec.modality;
+  return typeof kind === 'string' && kind ? `${kind} ${noun}` : noun;
 }
 
 // A blob's mime_type is only usable in a data: URI if it is a bare type/subtype with
@@ -238,13 +246,13 @@ function base64Payload(value: unknown): string {
  * worst, which is what a reader wants from them.
  */
 function blobSummary(rec: Record<string, unknown>): string {
-  const label = typeof rec.mime_type === 'string' ? rec.mime_type : asModality(rec);
+  const label = describeAttachment(rec, 'attachment');
   const content = base64Payload(rec.content);
-  if (!content) return `${label} attachment`;
+  if (!content) return label;
   const padding = (content.match(/=*$/)?.[0] ?? '').length;
   const bytes = Math.max(0, Math.floor((content.length * 3) / 4) - padding);
   const size = bytes < 1024 ? `${bytes} B` : `${Math.round(bytes / 1024)} KB`;
-  return `${label} attachment, ${size}`;
+  return `${label}, ${size}`;
 }
 
 /**
@@ -291,7 +299,9 @@ function toPart(part: unknown): GenAiPart {
     case 'file':
       return {
         text:
-          typeof rec.file_id === 'string' ? `${asModality(rec)} file ${rec.file_id}` : stringifyValue(rec),
+          typeof rec.file_id === 'string'
+            ? describeAttachment(rec, `file ${rec.file_id}`)
+            : stringifyValue(rec),
       };
     // A blob is the one part whose bytes cannot be read in place: thousands of base64
     // characters would bury the rest of the message. So its text describes it while its

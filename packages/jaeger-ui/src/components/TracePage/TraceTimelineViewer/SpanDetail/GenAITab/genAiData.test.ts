@@ -390,6 +390,30 @@ describe('extractGenAiSections', () => {
       );
     });
 
+    it('names an attachment by whatever type it carries, and by neither when it has none', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.output.messages': [
+            {
+              role: 'assistant',
+              parts: [
+                // mime_type is the more precise of the two, so it wins over the modality.
+                { type: 'file', modality: 'image', mime_type: 'image/png', file_id: 'f1' },
+                // A part naming neither is still described by what it is.
+                { type: 'file', file_id: 'f2' },
+                { type: 'blob', content: 'iVBORw0KGgo=' },
+              ],
+            },
+          ],
+        })
+      );
+      expect(section(sections, 'conversation')?.outputMessages[0].parts.map(part => part.text)).toEqual([
+        'image/png file f1',
+        'file f2',
+        'attachment, 8 B',
+      ]);
+    });
+
     it('shows a file part as its file_id, the reference a provider API takes', () => {
       const sections = extractGenAiSections(
         attrs({
