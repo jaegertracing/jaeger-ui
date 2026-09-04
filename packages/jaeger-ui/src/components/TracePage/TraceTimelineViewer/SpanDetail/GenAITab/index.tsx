@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useMemo, useState } from 'react';
+import { Select, Tooltip } from 'antd';
 import Markdown from 'markdown-to-jsx/react';
 import { IoChevronDown, IoChevronForward, IoCopyOutline } from 'react-icons/io5';
 import { JsonView, allExpanded, collapseAllNested } from 'react-json-view-lite';
@@ -256,6 +257,42 @@ function partView(part: GenAiPart, chosen: MessageFormat | null) {
   return { parsedJson, canRender, format: canRender[requested] ? requested : ('plain' as MessageFormat) };
 }
 
+// Every view the tab has, in the order they are offered. All five are listed for every
+// part, so the list never changes shape and a reader can see what the tab can do; one
+// that cannot show this part is disabled and says why.
+const VIEWS: { format: MessageFormat; label: string }[] = [
+  { format: 'plain', label: 'Plain text' },
+  { format: 'markdown', label: 'Markdown' },
+  { format: 'json', label: 'JSON' },
+  { format: 'image', label: 'Image' },
+  { format: 'audio', label: 'Audio' },
+];
+
+/**
+ * Why a view is offered for a part, or why it is not. Empty for a view that always works,
+ * which needs no explaining.
+ *
+ * Recognizing media is a guess - a URL's extension, or a modality the instrumentation
+ * declared and the tab cannot check - so the hedge is stated where the reader chooses.
+ */
+function viewHint(format: MessageFormat, canRender: Record<MessageFormat, boolean>): string {
+  const available = canRender[format];
+  switch (format) {
+    case 'json':
+      return available ? '' : 'This part is not JSON, so there is no tree to show';
+    case 'image':
+      return available
+        ? 'Image (maybe): recognized from the value alone, so it may not be one. A remote link is not fetched until you ask.'
+        : 'This part carries no image to show';
+    case 'audio':
+      return available
+        ? 'Audio clip (maybe): recognized from the value alone, so it may not be one. A remote link is not fetched until you ask.'
+        : 'This part carries no audio to show';
+    default:
+      return '';
+  }
+}
+
 /**
  * The view selector for one part, with the part's position beside it when a message holds
  * several. Its copy buttons sit over the content, in PartBody.
@@ -274,47 +311,36 @@ function PartControls({
   return (
     <div className="GenAITab--partControls">
       {position !== null && <span className="GenAITab--partLabel">{position}</span>}
-      <select
-        className="GenAITab--formatSelect"
-        aria-label={controlName}
-        value={view.format}
-        onChange={e => onFormatChange(e.target.value as MessageFormat)}
-      >
-        {/* Every view this tab has is listed, whether or not this part suits it, so a
-            reader can see what the tab can do. One that cannot show the part is disabled
-            and says why when pointed at, rather than carrying the reason in its name. */}
-        <option value="plain">Plain text</option>
-        <option value="markdown">Markdown</option>
-        <option
-          value="json"
-          disabled={!view.canRender.json}
-          title={view.canRender.json ? undefined : 'This part is not JSON, so there is no tree to show'}
-        >
-          JSON
-        </option>
-        <option
-          value="image"
-          disabled={!view.canRender.image}
-          title={
-            view.canRender.image
-              ? 'Image (maybe): recognized from the value alone, so it may not be one - a remote link is not fetched until you ask'
-              : 'This part carries no image to show'
-          }
-        >
-          Image
-        </option>
-        <option
-          value="audio"
-          disabled={!view.canRender.audio}
-          title={
-            view.canRender.audio
-              ? 'Audio clip (maybe): recognized from the value alone, so it may not be one - a remote link is not fetched until you ask'
-              : 'This part carries no audio to show'
-          }
-        >
-          Audio
-        </option>
-      </select>
+      {/* The chosen view's own explanation is on the control, so the reader does not have
+          to open the list to find out why this part is shown as an image. */}
+      <Tooltip title={viewHint(view.format, view.canRender)} placement="left">
+        <Select<MessageFormat>
+          className="GenAITab--formatSelect"
+          size="small"
+          aria-label={controlName}
+          value={view.format}
+          onChange={onFormatChange}
+          popupMatchSelectWidth={false}
+          options={VIEWS.map(({ format, label }) => ({
+            value: format,
+            label,
+            disabled: !view.canRender[format],
+          }))}
+          // An item's explanation is a Tooltip rather than the title attribute a plain
+          // <option> would carry, which the browser draws too small to read.
+          optionRender={option => {
+            const hint = viewHint(option.value as MessageFormat, view.canRender);
+            const label = <span className="GenAITab--formatOption">{option.data.label}</span>;
+            return hint ? (
+              <Tooltip title={hint} placement="left">
+                {label}
+              </Tooltip>
+            ) : (
+              label
+            );
+          }}
+        />
+      </Tooltip>
     </div>
   );
 }

@@ -93,13 +93,14 @@ SPDX-License-Identifier: Apache-2.0
   gap: 8px;
 }
 
+/* Narrow enough to sit on a message's header line, wide enough for "Plain text". */
 .GenAITab--formatSelect {
+  min-width: 104px;
   font-size: 11px;
-  color: var(--text-secondary);
-  background: var(--surface-primary);
-  border: 1px solid var(--border-default);
-  border-radius: 4px;
-  padding: 1px 4px;
+}
+
+.GenAITab--formatOption {
+  font-size: 12px;
 }
 
 .GenAITab--messageContent {
