@@ -43,7 +43,14 @@ const stringListMarkup = (value: any[]) => (
   </div>
 );
 
-const scalarMarkup = (value: string | number | boolean) => {
+const scalarMarkup = (value: any) => {
+  if (value === null || value === undefined) {
+    return (
+      <div className="json-markup">
+        <span className="json-markup-null">{String(value)}</span>
+      </div>
+    );
+  }
   let className;
   switch (typeof value) {
     case 'boolean': {
@@ -81,7 +88,7 @@ function formatValue(key: string, value: any): { node: React.ReactNode; isJsonTr
 
   if (Array.isArray(parsed) && shouldDisplayAsStringList(key)) {
     content = stringListMarkup(parsed);
-  } else if (typeof parsed === 'object') {
+  } else if (parsed !== null && typeof parsed === 'object') {
     const shouldJsonTreeExpand = Object.keys(parsed).length <= 10;
     content = (
       <JsonView
