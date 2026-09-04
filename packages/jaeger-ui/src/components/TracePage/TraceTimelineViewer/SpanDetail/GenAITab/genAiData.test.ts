@@ -324,8 +324,7 @@ describe('extractGenAiSections', () => {
       expect(section(sections, 'conversation')?.outputMessages[0].parts).toEqual([
         {
           text: 'https://example.com/render?id=5',
-          src: 'https://example.com/render?id=5',
-          mediaType: 'image',
+          media: { src: 'https://example.com/render?id=5', type: 'image' },
         },
       ]);
     });
@@ -348,7 +347,7 @@ describe('extractGenAiSections', () => {
           ],
         })
       );
-      expect(section(sections, 'conversation')?.outputMessages[0].parts[0].mediaType).toBe('audio');
+      expect(section(sections, 'conversation')?.outputMessages[0].parts[0].media?.type).toBe('audio');
     });
 
     it('reads the URL of a uri part that declares nothing renderable', () => {
@@ -366,7 +365,7 @@ describe('extractGenAiSections', () => {
         })
       );
       const parts = section(sections, 'conversation')?.outputMessages[0].parts;
-      expect(parts?.[0].mediaType).toBe('image');
+      expect(parts?.[0].media?.type).toBe('image');
       // Nothing says it is media and nothing about the URL suggests it, so no view offers
       // to render it and the reader still gets the link.
       expect(parts?.[1]).toEqual({ text: 'https://example.com/report' });
@@ -416,8 +415,7 @@ describe('extractGenAiSections', () => {
       expect(section(sections, 'conversation')?.outputMessages[0].parts).toEqual([
         {
           text: 'image/png attachment, 8 B',
-          src: 'data:image/png;base64,iVBORw0KGgo=',
-          mediaType: 'image',
+          media: { src: 'data:image/png;base64,iVBORw0KGgo=', type: 'image' },
         },
       ]);
     });
@@ -442,8 +440,7 @@ describe('extractGenAiSections', () => {
         { text: 'Here is the chart you asked for:' },
         {
           text: 'image/png attachment, 8 B',
-          src: 'data:image/png;base64,iVBORw0KGgo=',
-          mediaType: 'image',
+          media: { src: 'data:image/png;base64,iVBORw0KGgo=', type: 'image' },
         },
       ]);
     });
@@ -845,7 +842,7 @@ describe('extractGenAiSections', () => {
             role: 'assistant',
             parts: [{ type: 'blob', mime_type: 'image/png', content: 'iVBO\nRw0K\nGgo=' }],
           },
-        ])?.[0].parts[0].src
+        ])?.[0].parts[0].media?.src
       ).toBe('data:image/png;base64,iVBORw0KGgo=');
     });
   });

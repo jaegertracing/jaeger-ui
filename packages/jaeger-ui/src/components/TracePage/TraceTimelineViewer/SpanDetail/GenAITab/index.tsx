@@ -237,7 +237,7 @@ function partView(part: GenAiPart, chosen: MessageFormat | null) {
     plain: true,
     markdown: true,
     json: parsedJson !== null && typeof parsedJson === 'object',
-    media: part.mediaType !== undefined,
+    media: part.media !== undefined,
   };
   // With nothing chosen, media defaults to the Media view and JSON-parseable content to
   // the tree view, else plain text (Markdown is only opt-in).
@@ -290,7 +290,11 @@ function PartControls({
               : 'Media is disabled - this content is not an image or audio link'
           }
         >
-          {part.mediaType === 'audio' ? 'Maybe audio' : part.mediaType === 'image' ? 'Maybe image' : 'Media'}
+          {part.media?.type === 'audio'
+            ? 'Maybe audio'
+            : part.media?.type === 'image'
+              ? 'Maybe image'
+              : 'Media'}
           {view.canRender.media ? '' : ' (not media)'}
         </option>
       </select>
@@ -328,7 +332,7 @@ function PartBody({
       <span className="GenAITab--copyContainer">
         <CopyIcon
           className="GenAITab--copyIcon"
-          copyText={part.src ?? part.text}
+          copyText={part.media?.src ?? part.text}
           tooltipTitle="Copy value"
           buttonText="Copy"
         />
@@ -367,14 +371,14 @@ function PartContent({
   onReveal: () => void;
   onShowText: () => void;
 }) {
-  if (view.format === 'media' && part.src && part.mediaType) {
+  if (view.format === 'media' && part.media) {
     return (
       <MediaBlock
-        src={part.src}
-        mediaType={part.mediaType}
+        src={part.media.src}
+        mediaType={part.media.type}
         label={label}
         // An embedded payload costs no request, so it needs no permission to render.
-        shown={isEmbeddedMedia(part.src) || revealed}
+        shown={isEmbeddedMedia(part.media.src) || revealed}
         onShow={onReveal}
         onShowText={onShowText}
       />
@@ -463,17 +467,20 @@ function MessageBlock({
           {message.parts.map((part, i) => {
             const view = partView(part, formats[i] ?? seededFormat);
             return (
-              <div className="GenAITab--messagePart" key={part.src ? `${i}-${part.src}` : `${i}-text`}>
+              <div
+                className="GenAITab--messagePart"
+                key={part.media ? `${i}-${part.media.src}` : `${i}-text`}
+              >
                 {!isSinglePart && controlsFor(part, i)}
                 <PartBody
                   part={part}
                   view={view}
-                  label={`${part.mediaType === 'audio' ? 'Audio' : 'Image'} in ${
+                  label={`${part.media?.type === 'audio' ? 'Audio' : 'Image'} in ${
                     isSinglePart ? '' : `part ${i + 1} of `
                   }message ${messageNumber} (${role})`}
                   copyJson={isSinglePart ? messageJson : JSON.stringify(message.parts[i], null, 2)}
-                  revealed={part.src !== undefined && revealed.has(part.src)}
-                  onReveal={() => setRevealed(new Set(revealed).add(part.src as string))}
+                  revealed={part.media !== undefined && revealed.has(part.media.src)}
+                  onReveal={() => part.media && setRevealed(new Set(revealed).add(part.media.src))}
                   onShowText={() => setFormats({ ...formats, [i]: 'plain' })}
                 />
               </div>

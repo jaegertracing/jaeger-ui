@@ -25,12 +25,11 @@ export type GenAiPart = {
   // What this part reads as. For an attachment whose bytes cannot be shown in place, a
   // description of it - see blobSummary.
   text: string;
-  // Where the part's media can be loaded from, if anywhere: a uri part's URI, a data:
-  // URI built from a blob's payload, or the whole text of a part that is itself a link.
-  src?: string;
-  // What that source is, when it is an image or an audio clip. Set together with src, so a
-  // part carries both what to load and how to show it, and the view never has to guess.
-  mediaType?: MediaType;
+  // An image or audio clip this part carries, if it carries one: where to load it from
+  // (a uri part's URI, a data: URI built from a blob's payload, or the whole text of a
+  // part that is itself a link) and which of the two it is. Loading it needs both, so
+  // they are one field and the view never has to guess at either.
+  media?: { src: string; type: MediaType };
 };
 
 export type GenAiMessage = {
@@ -181,8 +180,8 @@ function stringifyToolValue(value: unknown): string {
  */
 function textPart(text: string): GenAiPart {
   const src = text.trim();
-  const mediaType = detectMediaType(src);
-  return mediaType ? { text, src, mediaType } : { text };
+  const type = detectMediaType(src);
+  return type ? { text, media: { src, type } } : { text };
 }
 
 function asModality(rec: Record<string, unknown>): string {
@@ -286,8 +285,8 @@ function toPart(part: unknown): GenAiPart {
       if (typeof rec.uri !== 'string') return { text: stringifyValue(rec) };
       const uri = rec.uri.trim();
       if (!LOADABLE_SCHEME.test(uri)) return { text: uri };
-      const mediaType = attachmentMediaType(rec, uri);
-      return mediaType ? { text: uri, src: uri, mediaType } : { text: uri };
+      const type = attachmentMediaType(rec, uri);
+      return type ? { text: uri, media: { src: uri, type } } : { text: uri };
     }
     case 'file':
       return {
@@ -303,8 +302,10 @@ function toPart(part: unknown): GenAiPart {
       if (!content || !MEDIA_MIME_TYPE.test(mimeType)) return { text: blobSummary(rec) };
       return {
         text: blobSummary(rec),
-        src: `data:${mimeType};base64,${content}`,
-        mediaType: mimeType.split('/')[0].toLowerCase() as MediaType,
+        media: {
+          src: `data:${mimeType};base64,${content}`,
+          type: mimeType.split('/')[0].toLowerCase() as MediaType,
+        },
       };
     }
     default:
