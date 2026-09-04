@@ -317,12 +317,8 @@ function toParts(parts: unknown): GenAiPart[] {
   return parts.map(toPart);
 }
 
-function joinParts(parts: GenAiPart[]): string {
-  return parts.map(part => part.text).join('\n\n');
-}
-
 function message(role: GenAiRole, parts: GenAiPart[]): GenAiMessage {
-  return { role, content: joinParts(parts), parts };
+  return { role, content: parts.map(part => part.text).join('\n\n'), parts };
 }
 
 /**
