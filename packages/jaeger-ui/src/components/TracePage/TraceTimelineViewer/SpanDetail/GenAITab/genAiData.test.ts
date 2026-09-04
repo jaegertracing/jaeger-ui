@@ -269,7 +269,7 @@ describe('extractGenAiSections', () => {
       expect(section(sections, 'conversation')?.inputMessages[0].content).toBe('← {"tempF":57}');
     });
 
-    it('renders media parts (blob/file/uri) as a placeholder instead of dropping them', () => {
+    it('shows a uri part whose scheme no browser can fetch, rather than hiding it', () => {
       const sections = extractGenAiSections(
         attrs({
           'gen_ai.input.messages': [
@@ -277,10 +277,12 @@ describe('extractGenAiSections', () => {
           ],
         })
       );
-      expect(section(sections, 'conversation')?.inputMessages[0].content).toBe('[image attached]');
+      // detectMediaType will decline this, so it renders as text - which is the whole
+      // value, and more than the reader had when it read "[image attached]".
+      expect(section(sections, 'conversation')?.inputMessages[0].content).toBe('gs://bucket/photo.png');
     });
 
-    it('recovers the real link for a single http(s) uri part instead of stubbing it', () => {
+    it('shows a uri part as its URI, so a media view can offer to render it', () => {
       const sections = extractGenAiSections(
         attrs({
           'gen_ai.output.messages': [
@@ -303,18 +305,37 @@ describe('extractGenAiSections', () => {
       );
     });
 
-    it('still stubs a uri part on a non-browser-fetchable scheme, even alone', () => {
+    it('shows a uri part among text parts too, not only when it stands alone', () => {
       const sections = extractGenAiSections(
         attrs({
           'gen_ai.output.messages': [
-            { role: 'assistant', parts: [{ type: 'uri', modality: 'image', uri: 'gs://bucket/photo.png' }] },
+            {
+              role: 'assistant',
+              parts: [
+                { type: 'text', content: 'Here is the chart you asked for:' },
+                { type: 'uri', modality: 'image', uri: 'https://example.com/chart.png' },
+              ],
+            },
           ],
         })
       );
-      expect(section(sections, 'conversation')?.outputMessages[0].content).toBe('[image attached]');
+      expect(section(sections, 'conversation')?.outputMessages[0].content).toBe(
+        'Here is the chart you asked for:\n\nhttps://example.com/chart.png'
+      );
     });
 
-    it('builds a data URI for a single blob part with a recognized mime type', () => {
+    it('shows a file part as its file_id, the reference a provider API takes', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.output.messages': [
+            { role: 'assistant', parts: [{ type: 'file', modality: 'image', file_id: 'file_abc123' }] },
+          ],
+        })
+      );
+      expect(section(sections, 'conversation')?.outputMessages[0].content).toBe('image file file_abc123');
+    });
+
+    it('renders a lone blob part as a data URI, so its payload is shown in full', () => {
       const sections = extractGenAiSections(
         attrs({
           'gen_ai.output.messages': [
@@ -330,7 +351,7 @@ describe('extractGenAiSections', () => {
       );
     });
 
-    it('still stubs a blob part with no mime type, rather than guessing one', () => {
+    it('summarizes a blob with no mime type by its modality and size', () => {
       const sections = extractGenAiSections(
         attrs({
           'gen_ai.output.messages': [
@@ -338,21 +359,11 @@ describe('extractGenAiSections', () => {
           ],
         })
       );
-      expect(section(sections, 'conversation')?.outputMessages[0].content).toBe('[image attached]');
+      // No mime_type means no data: URI to build, and "image" alone does not name a type.
+      expect(section(sections, 'conversation')?.outputMessages[0].content).toBe('image attachment, 8 B');
     });
 
-    it('still stubs a single file part - a file_id is not a fetchable location', () => {
-      const sections = extractGenAiSections(
-        attrs({
-          'gen_ai.output.messages': [
-            { role: 'assistant', parts: [{ type: 'file', modality: 'image', file_id: 'file_abc123' }] },
-          ],
-        })
-      );
-      expect(section(sections, 'conversation')?.outputMessages[0].content).toBe('[image attached]');
-    });
-
-    it('keeps the placeholder for a media part mixed alongside text, not just a lone part', () => {
+    it('summarizes a blob sharing a message with text, rather than burying the text in base64', () => {
       const sections = extractGenAiSections(
         attrs({
           'gen_ai.output.messages': [
@@ -360,14 +371,14 @@ describe('extractGenAiSections', () => {
               role: 'assistant',
               parts: [
                 { type: 'text', content: 'Here is the chart you asked for:' },
-                { type: 'uri', modality: 'image', uri: 'https://example.com/chart.png' },
+                { type: 'blob', modality: 'image', mime_type: 'image/png', content: 'a'.repeat(60000) },
               ],
             },
           ],
         })
       );
       expect(section(sections, 'conversation')?.outputMessages[0].content).toBe(
-        'Here is the chart you asked for:\n\n[image attached]'
+        'Here is the chart you asked for:\n\nimage/png attachment, 44 KB'
       );
     });
 
@@ -668,6 +679,75 @@ describe('extractGenAiSections', () => {
       expect(section(sections, 'other')?.attributes.entries()).toEqual([
         { key: 'gen_ai.tool.name', value: 'second_call' },
       ]);
+    });
+  });
+
+  // Message attributes are instrumentation output, so any field can be missing or be of
+  // the wrong type. Every read in genAiData is typeof-guarded for that reason; these
+  // tests hold that line, and pin the two cases where a malformed value used to produce
+  // a data: URI that no browser could decode.
+  describe('malformed messages', () => {
+    const messageContent = (value: unknown) =>
+      section(extractGenAiSections(attrs({ 'gen_ai.output.messages': value })), 'conversation')
+        ?.outputMessages;
+
+    it.each([
+      ['parts is not an array', [{ role: 'assistant', parts: 'nope' }]],
+      ['parts is null', [{ role: 'assistant', parts: null }]],
+      ['parts is empty', [{ role: 'assistant', parts: [] }]],
+      ['a part is null', [{ role: 'assistant', parts: [null] }]],
+      ['a part is a number', [{ role: 'assistant', parts: [42] }]],
+      ['a part is an array', [{ role: 'assistant', parts: [[]] }]],
+      ['a part has no type', [{ role: 'assistant', parts: [{}] }]],
+      ['a message entry is null', [null]],
+      ['a message entry is a number', [7]],
+      ['the value is truncated JSON', '{"broken'],
+      ['the value is a number', 42],
+      [
+        'a part nests 200 deep',
+        [{ role: 'assistant', parts: [JSON.parse('['.repeat(200) + ']'.repeat(200))] }],
+      ],
+    ])('yields a string rather than throwing when %s', (_case, value) => {
+      const messages = messageContent(value);
+      (messages ?? []).forEach(m => expect(typeof m.content).toBe('string'));
+    });
+
+    it('shows the raw part when the field it renders from is the wrong type', () => {
+      // Falling back to the JSON dump keeps the part visible, which is the whole point
+      // of not stubbing these out.
+      expect(messageContent([{ role: 'assistant', parts: [{ type: 'uri', uri: null }] }])?.[0].content).toBe(
+        '{\n  "type": "uri",\n  "uri": null\n}'
+      );
+      expect(
+        messageContent([{ role: 'assistant', parts: [{ type: 'file', file_id: 3 }] }])?.[0].content
+      ).toBe('{\n  "type": "file",\n  "file_id": 3\n}');
+    });
+
+    it('refuses a mime_type carrying a comma, which would move where the payload starts', () => {
+      expect(
+        messageContent([
+          { role: 'assistant', parts: [{ type: 'blob', mime_type: 'image/png,x', content: 'AAAA' }] },
+        ])?.[0].content
+      ).toBe('image/png,x attachment, 3 B');
+    });
+
+    it('refuses base64 that is only padding, which decodes to nothing', () => {
+      expect(
+        messageContent([
+          { role: 'assistant', parts: [{ type: 'blob', mime_type: 'image/png', content: '====' }] },
+        ])?.[0].content
+      ).toBe('image/png attachment');
+    });
+
+    it('accepts line-wrapped base64, unwrapping it into the data URI', () => {
+      expect(
+        messageContent([
+          {
+            role: 'assistant',
+            parts: [{ type: 'blob', mime_type: 'image/png', content: 'iVBO\nRw0K\nGgo=' }],
+          },
+        ])?.[0].content
+      ).toBe('data:image/png;base64,iVBORw0KGgo=');
     });
   });
 

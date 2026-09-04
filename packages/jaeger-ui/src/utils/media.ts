@@ -13,9 +13,7 @@ const AUDIO_EXTENSION = /\.(mp3|wav|ogg|oga|flac|m4a|aac|opus|weba)(?:[?#].*)?$/
 // image until its error event fires.
 const DATA_URI = /^data:(image|audio)\/[^;,\s]+(?:;[^;,]*)*,/i;
 
-// Exported because genAiData.ts applies the same test to a uri part, whose scheme the
-// GenAI spec allows to be provider-internal rather than fetchable.
-export const HTTP_URL = /^https?:\/\//i;
+const HTTP_URL = /^https?:\/\//i;
 
 /**
  * Classifies an attribute value that is itself a link to media.

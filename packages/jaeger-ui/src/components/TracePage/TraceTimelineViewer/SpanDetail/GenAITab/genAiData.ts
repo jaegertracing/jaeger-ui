@@ -3,7 +3,6 @@
 
 import type { IAttributes, AttributeValue } from '../../../../../types/otel';
 import { makeAttributes } from '../../../../../model/attributes';
-import { HTTP_URL } from '../../../../../utils/media';
 
 type GenAiRole = 'system' | 'user' | 'assistant' | 'tool' | undefined;
 
@@ -149,6 +148,49 @@ function stringifyToolValue(value: unknown): string {
   }
 }
 
+function asModality(rec: Record<string, unknown>): string {
+  return typeof rec.modality === 'string' ? rec.modality : 'file';
+}
+
+// A blob's mime_type is only usable in a data: URI if it is a bare type/subtype with
+// optional parameters. A data: URI ends its metadata at the first comma, so a mime_type
+// containing one - which instrumentation has no reason to send but nothing prevents -
+// would redefine where the payload starts and produce a broken image.
+const MEDIA_MIME_TYPE = /^(image|audio)\/[\w.+-]+(?:;[\w.+-]+=[\w.+-]+)*$/i;
+
+const BASE64 = /^[A-Za-z0-9+/]+={0,2}$/;
+
+/**
+ * Returns a blob part's content as base64 with any wrapping whitespace removed, or an
+ * empty string if it is not base64 at all.
+ *
+ * Whitespace is not part of the encoding, so line-wrapped base64 is accepted and
+ * unwrapped. Padding alone is not: `====` carries no bytes, and passing it through would
+ * offer the reader an image that cannot decode.
+ */
+function base64Payload(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  const packed = value.replace(/\s+/g, '');
+  return BASE64.test(packed) ? packed : '';
+}
+
+/**
+ * Describes a blob part by its type and payload size, e.g. "image/png attachment, 42 KB".
+ *
+ * Base64 encodes three bytes as four characters, so the decoded size is the length times
+ * 3/4, less one byte per trailing '=' pad. Sizes are approximate by one or two bytes at
+ * worst, which is what a reader wants from them.
+ */
+function blobSummary(rec: Record<string, unknown>): string {
+  const label = typeof rec.mime_type === 'string' ? rec.mime_type : asModality(rec);
+  const content = base64Payload(rec.content);
+  if (!content) return `${label} attachment`;
+  const padding = (content.match(/=*$/)?.[0] ?? '').length;
+  const bytes = Math.max(0, Math.floor((content.length * 3) / 4) - padding);
+  const size = bytes < 1024 ? `${bytes} B` : `${Math.round(bytes / 1024)} KB`;
+  return `${label} attachment, ${size}`;
+}
+
 /**
  * Renders one ChatMessage part per the OTel GenAI parts schema (text,
  * tool_call, tool_call_response, reasoning, blob/file/uri, compaction,
@@ -177,12 +219,24 @@ function renderPart(part: unknown): string {
       return `← ${stringifyToolValue(rec.response)}`;
     case 'server_tool_call_response':
       return `← ${stringifyToolValue(rec.server_tool_call_response)}`;
-    case 'blob':
+    // The three attachment part types, worked through with examples at
+    // https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/non-normative/examples-llm-calls.md#multimodal-chat-completion
+    //
+    // Each carries something the reader may want, so each shows what it has rather than
+    // announcing that an attachment exists: a uri part its URI, which detectMediaType may
+    // then offer to render; a file part its file_id, which is the reference the
+    // provider's own API takes.
+    case 'uri':
+      return typeof rec.uri === 'string' ? rec.uri : stringifyValue(rec);
     case 'file':
-    case 'uri': {
-      const modality = typeof rec.modality === 'string' ? rec.modality : 'file';
-      return `[${modality} attached]`;
-    }
+      return typeof rec.file_id === 'string' ? `${asModality(rec)} file ${rec.file_id}` : stringifyValue(rec);
+    // A blob is the one part whose value cannot be shown in place: its content is raw
+    // base64, and thousands of characters of it would bury whatever text shares the
+    // message. So the summary names what arrived and how much of it, and loneBlobDataUri
+    // hands the payload back whenever the blob is the whole message and there is no
+    // surrounding text to bury. The raw attribute is in the Details tab either way.
+    case 'blob':
+      return blobSummary(rec);
     default:
       return stringifyValue(rec);
   }
@@ -194,53 +248,28 @@ function renderParts(parts: unknown): string {
 }
 
 /**
- * A message whose parts[] is a single blob/uri part is the common case for a
- * multimodal attachment (a generated image, an audio reply). renderPart() stubs
- * that part to a `[modality attached]` placeholder so nothing is silently dropped,
- * but the placeholder throws away the one thing that would let the UI actually
- * render it. This recovers the real value for that single-part case, in the same
- * shape MessageBlock's media detection already knows how to render - a bare
- * http(s) URL, or a data: URI built from a blob's own mime_type/content.
+ * Builds a data: URI from a message that is one blob part and nothing else, or returns
+ * null.
  *
- * Deliberately narrow, for the same reason detectMediaType() is conservative:
- * - Only a single-part message. A part among other text/tool-call parts keeps
- *   the placeholder - splicing a raw URL into joined multi-part text would make
- *   it indistinguishable from prose, and mixed-content rendering is a bigger
- *   change than this fix is scoped to make.
- * - Only 'uri' and 'blob' are recoverable. 'file' carries a provider-assigned
- *   file_id, not a fetchable location - there is nothing here to render, so it
- *   keeps the placeholder too.
- * - A 'uri' part's uri is only used when it's http(s). The spec says of that
- *   field: "The URI may use a scheme known to the provider api (e.g.
- *   gs://bucket/object.png), or be a publicly accessible location", and no
- *   browser can fetch the former; passing one through unfiltered would swap
- *   readable text for a silently broken <img>, worse than the placeholder it
- *   replaced.
- * - A 'blob' part is only used when mime_type is present and is image/* or
- *   audio/* - the same value detectMediaType() itself requires. The spec makes
- *   mime_type optional and only `modality` required, so a spec-compliant blob
- *   can arrive with nothing to build a data: URI from, and a modality of
- *   "image" alone does not name a type; such a part keeps the placeholder
- *   rather than being guessed at.
+ * blobSummary describes a blob rather than showing it, because raw base64 would bury the
+ * text sharing the message. Nothing is buried when the blob is the entire message, so
+ * there the payload becomes the message content: the media view renders it, and Plain
+ * text shows every byte.
+ *
+ * Turning a blob into a data: URI needs its mime_type, which the spec leaves optional
+ * while requiring only modality - and a modality of "image" does not name a type. A blob
+ * without one keeps its summary.
  */
-function singleMediaPartSrc(parts: unknown[]): string | null {
+function loneBlobDataUri(parts: unknown[]): string | null {
   if (parts.length !== 1) return null;
   const part = parts[0];
   if (typeof part !== 'object' || part === null) return null;
   const rec = part as Record<string, unknown>;
-
-  if (rec.type === 'uri') {
-    const uri = typeof rec.uri === 'string' ? rec.uri.trim() : '';
-    return uri && HTTP_URL.test(uri) ? uri : null;
-  }
-
-  if (rec.type === 'blob') {
-    const mimeType = typeof rec.mime_type === 'string' ? rec.mime_type : '';
-    const content = typeof rec.content === 'string' ? rec.content : '';
-    return content && /^(image|audio)\//i.test(mimeType) ? `data:${mimeType};base64,${content}` : null;
-  }
-
-  return null;
+  if (rec.type !== 'blob') return null;
+  const mimeType = typeof rec.mime_type === 'string' ? rec.mime_type : '';
+  if (!MEDIA_MIME_TYPE.test(mimeType)) return null;
+  const content = base64Payload(rec.content);
+  return content ? `data:${mimeType};base64,${content}` : null;
 }
 
 /**
@@ -257,9 +286,10 @@ function singleMediaPartSrc(parts: unknown[]): string | null {
  * attributes instead used a flat `{ role, content }` shape - kept as a fallback
  * for older instrumentation.
  *
- * The GenAI conventions moved out of the semantic-conventions repository into
- * their own, which has no tagged release yet, so this cites a pinned commit:
- * https://github.com/open-telemetry/semantic-conventions-genai/blob/94f432d7126f5884d30a2cdde6f4e89908ebb6fd/model/gen-ai/gen-ai-input-messages.json
+ * The GenAI conventions now live in their own repository, which has yet to cut a release
+ * and has no rendered docs site, so these link to markdown on its main branch:
+ * https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/registry/attributes/gen-ai.md#gen-ai-input-messages
+ * https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-spans.md#capturing-instructions-inputs-and-outputs
  */
 function parseMessages(value: AttributeValue | undefined): GenAiMessage[] {
   if (value == null) return [];
@@ -280,8 +310,7 @@ function parseMessages(value: AttributeValue | undefined): GenAiMessage[] {
     const rec = entry as Record<string, unknown>;
     const role = asRole(rec.role);
     if (Array.isArray(rec.parts)) {
-      const mediaSrc = singleMediaPartSrc(rec.parts);
-      return { role, content: mediaSrc ?? renderParts(rec.parts) };
+      return { role, content: loneBlobDataUri(rec.parts) ?? renderParts(rec.parts) };
     }
     const content = rec.content;
     const contentStr =
