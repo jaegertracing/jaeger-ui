@@ -18,6 +18,7 @@ import {
 import { MessageFormat, useMessageFormatStore } from './message-format-store';
 import AccordionAttributes from '../AccordionAttributes';
 import { sharedMarkdownOptions } from '../../../../../utils/markdownOptions';
+import { detectMediaType, isEmbeddedMedia, MediaType } from '../../../../../utils/media';
 import jsonViewStyles from '../../../../../utils/jsonViewStyles';
 import CopyIcon from '../../../../common/CopyIcon';
 import { makeAttributes } from '../../../../../model/attributes';
@@ -82,18 +83,27 @@ function JsonBlock({ value }: { value: unknown }) {
  */
 function RevealPrompt({
   notice,
+  value,
   actionLabel,
   onReveal,
   onShowText,
 }: {
   notice: string;
+  value?: string;
   actionLabel?: string;
   onReveal?: () => void;
   onShowText: () => void;
 }) {
   return (
     <div className="GenAITab--revealBlock">
-      <span className="GenAITab--revealNotice">{notice}</span>
+      <div className="GenAITab--revealNotice">
+        <span className="GenAITab--revealNoticeText">{notice}</span>
+        {value && (
+          <span className="GenAITab--revealValue" title={value}>
+            {value}
+          </span>
+        )}
+      </div>
       <div className="GenAITab--revealActions">
         {onReveal && actionLabel && (
           <button type="button" className="GenAITab--revealButton" onClick={onReveal}>
@@ -140,6 +150,79 @@ function MarkdownBlock({ content, onShowText }: { content: string; onShowText: (
   );
 }
 
+/**
+ * The Media view of a message whose whole content is a link to an image or audio clip.
+ *
+ * A remote URL comes from trace data, so whoever instrumented the service chooses what the
+ * browser connects to. Loading it on sight would make opening a span enough to reach a
+ * third-party host and confirm who is reading which trace, so a remote link is offered
+ * rather than fetched. An embedded payload needs no request and so tells no one anything;
+ * the caller shows it immediately.
+ *
+ * The prompt shows the start of the link so the reader can see where it points before
+ * deciding, elided to one line so a data: URI cannot fill the pane. Plain text shows the
+ * value in full, and Copy always copies it.
+ */
+function MediaBlock({
+  src,
+  mediaType,
+  label,
+  shown,
+  onShow,
+  onShowText,
+}: {
+  src: string;
+  mediaType: MediaType;
+  label: string;
+  shown: boolean;
+  onShow: () => void;
+  onShowText: () => void;
+}) {
+  const [loadFailed, setLoadFailed] = useState(false);
+  const noun = mediaType === 'audio' ? 'audio clip' : 'image';
+
+  if (!shown) {
+    return (
+      <RevealPrompt
+        notice={`Content appears to be an ${noun} link:`}
+        value={src}
+        actionLabel={`Show ${noun}`}
+        onReveal={onShow}
+        onShowText={onShowText}
+      />
+    );
+  }
+
+  if (loadFailed) {
+    return <RevealPrompt notice={`This ${noun} could not be loaded:`} value={src} onShowText={onShowText} />;
+  }
+
+  return (
+    <div className="GenAITab--revealBlock">
+      {mediaType === 'audio' ? (
+        <audio
+          className="GenAITab--media"
+          src={src}
+          controls
+          aria-label={label}
+          onError={() => setLoadFailed(true)}
+        />
+      ) : (
+        // referrerPolicy: the remote host must not receive the Jaeger URL, which contains
+        // the trace ID. <audio> has no such attribute, so an audio clip cannot be hidden
+        // from its host the same way - one more reason the fetch waits for a click.
+        <img
+          className="GenAITab--media"
+          src={src}
+          alt={label}
+          referrerPolicy="no-referrer"
+          onError={() => setLoadFailed(true)}
+        />
+      )}
+    </div>
+  );
+}
+
 function MessageBlock({
   message,
   formatOverride,
@@ -159,16 +242,29 @@ function MessageBlock({
   // Choosing a format for one message does not change how the other messages render.
   const [chosenFormat, setChosenFormat] = useState<MessageFormat | null>(formatOverride);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const mediaType = useMemo(() => detectMediaType(message.content), [message.content]);
+  // The URL the reader has asked to load. Held here rather than in MediaBlock, which
+  // unmounts whenever the view switches away from Media: without this, going to Plain text
+  // and back would ask again for a link that was on screen a moment ago. Compared by
+  // value, so content arriving later in this position is never shown on a previous
+  // message's say-so.
+  const [revealedSrc, setRevealedSrc] = useState<string | null>(null);
   // Each view can only render content it supports; a requested view that can't falls back to plain.
   const canRender: Record<MessageFormat, boolean> = {
     plain: true,
     markdown: true,
     json: parsedJson !== null && typeof parsedJson === 'object',
+    media: mediaType !== null,
   };
-  // With nothing chosen, JSON-parseable content defaults to the tree view, else plain
-  // text (Markdown is only opt-in).
-  const requestedFormat: MessageFormat = chosenFormat ?? (canRender.json ? 'json' : 'plain');
+  // With nothing chosen, a media link defaults to the Media view and JSON-parseable
+  // content to the tree view, else plain text (Markdown is only opt-in).
+  const defaultFormat: MessageFormat = canRender.media ? 'media' : canRender.json ? 'json' : 'plain';
+  const requestedFormat: MessageFormat = chosenFormat ?? defaultFormat;
   const effectiveFormat: MessageFormat = canRender[requestedFormat] ? requestedFormat : 'plain';
+  const src = message.content.trim();
+  const mediaLabel = `${mediaType === 'audio' ? 'Audio' : 'Image'} in message ${messageNumber} (${
+    message.role || 'message'
+  })`;
 
   return (
     <div className={`GenAITab--message GenAITab--message-${message.role || 'unknown'}`}>
@@ -207,6 +303,18 @@ function MessageBlock({
             >
               JSON{canRender.json ? '' : ' (not JSON)'}
             </option>
+            <option
+              value="media"
+              disabled={!canRender.media}
+              title={
+                canRender.media
+                  ? 'Detected from the value alone, so it may not be media at all - a remote link is not fetched until you ask'
+                  : 'Media is disabled - this content is not an image or audio link'
+              }
+            >
+              {mediaType === 'audio' ? 'Maybe audio' : mediaType === 'image' ? 'Maybe image' : 'Media'}
+              {canRender.media ? '' : ' (not media)'}
+            </option>
           </select>
           <CopyIcon copyText={message.content} tooltipTitle="Copy message" buttonText="Copy" />
         </div>
@@ -215,6 +323,16 @@ function MessageBlock({
         // A folded message still has to be identifiable, so it keeps its first line.
         // The whole value stays in the DOM for browser find-in-page, clipped in CSS.
         <div className="GenAITab--messagePreview">{message.content}</div>
+      ) : effectiveFormat === 'media' && mediaType ? (
+        <MediaBlock
+          src={src}
+          mediaType={mediaType}
+          label={mediaLabel}
+          // An embedded payload costs no request, so it needs no permission to render.
+          shown={isEmbeddedMedia(src) || revealedSrc === src}
+          onShow={() => setRevealedSrc(src)}
+          onShowText={() => setChosenFormat('plain')}
+        />
       ) : effectiveFormat === 'json' ? (
         <JsonBlock value={parsedJson} />
       ) : effectiveFormat === 'markdown' ? (
