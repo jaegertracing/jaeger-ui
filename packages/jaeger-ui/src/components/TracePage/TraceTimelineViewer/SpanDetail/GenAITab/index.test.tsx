@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { vi } from 'vitest';
 
 import GenAITab from '.';
@@ -283,7 +283,7 @@ describe('GenAITab', () => {
     expect(content?.querySelector('pre code')).toHaveTextContent('const x = 1;');
   });
 
-  it('falls back to plain text for a message over the markdown size limit, keeping the dropdown in sync', () => {
+  it('offers the Markdown view for an oversized message instead of refusing it, parsing on request', () => {
     const oversizedContent = `**bold** ${'x'.repeat(150_001)}`;
     const { container } = render(
       <GenAITab
@@ -298,14 +298,36 @@ describe('GenAITab', () => {
     const select = screen.getByLabelText(/Content format/) as HTMLSelectElement;
     fireEvent.change(select, { target: { value: 'markdown' } });
 
-    // The dropdown must reflect what's actually rendered, not the stored preference -
-    // showing "Markdown" while the content renders as plain would be misleading.
-    expect(select).toHaveValue('plain');
-    const markdownOption = select.querySelector('option[value="markdown"]') as HTMLOptionElement;
-    expect(markdownOption.disabled).toBe(true);
-    const content = container.querySelector('.GenAITab--messageContent-plain');
-    expect(content?.tagName).toBe('PRE');
-    expect(content?.querySelector('strong')).toBeNull();
+    // The view stays selected - the size defers the parse rather than denying the view.
+    expect(select).toHaveValue('markdown');
+    expect(select.querySelector('option[value="markdown"]')).not.toBeDisabled();
+    expect(container.querySelector('.GenAITab--messageContent strong')).toBeNull();
+    expect(screen.getByText('Content appears to be Markdown (150KB).')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Show text' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show Markdown' }));
+
+    expect(container.querySelector('.GenAITab--messageContent strong')).toHaveTextContent('bold');
+  });
+
+  it('drops an oversized message to plain text when the reader asks for the text instead', () => {
+    const oversizedContent = `**bold** ${'x'.repeat(150_001)}`;
+    const { container } = render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.output.messages',
+            value: [{ role: 'assistant', content: oversizedContent }],
+          },
+        ])}
+      />
+    );
+    fireEvent.change(screen.getByLabelText(/Content format/), { target: { value: 'markdown' } });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show text' }));
+
+    expect(screen.getByLabelText(/Content format/)).toHaveValue('plain');
+    expect(container.querySelector('.GenAITab--messageContent-plain')?.textContent).toBe(oversizedContent);
   });
 
   it('defaults message content that parses as JSON to the interactive tree view, not plain or markdown', () => {
@@ -411,7 +433,7 @@ describe('GenAITab', () => {
     expect(container.querySelector('.GenAITab--messageContent strong')).toBeInTheDocument();
   });
 
-  it('applies a format change to every currently-rendered message from the same attribute immediately, not just future mounts', () => {
+  it('changes only the message whose dropdown was used, leaving its neighbours alone', () => {
     const { container } = render(
       <GenAITab
         span={makeSpan([
@@ -426,9 +448,12 @@ describe('GenAITab', () => {
       />
     );
     const [firstSelect, secondSelect] = screen.getAllByLabelText(/Content format/);
+
     fireEvent.change(firstSelect, { target: { value: 'markdown' } });
-    expect(secondSelect).toHaveValue('markdown');
-    expect(container.querySelectorAll('.GenAITab--messageContent strong')).toHaveLength(2);
+
+    expect(firstSelect).toHaveValue('markdown');
+    expect(secondSelect).toHaveValue('plain');
+    expect(container.querySelectorAll('.GenAITab--messageContent strong')).toHaveLength(1);
   });
 
   it('gives each format dropdown a distinct accessible name including role and position, not a shared generic label', () => {
@@ -591,5 +616,218 @@ describe('GenAITab defensive fallback for an unrecognized section type', () => {
     render(<GenAITabWithMock span={makeSpan([])} />);
     expect(screen.getByText('futureSectionType')).toBeInTheDocument();
     expect(screen.getByText('someField')).toBeInTheDocument();
+  });
+});
+
+describe('GenAITab message collapsing', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    useMessageFormatStore.setState({ overrides: {} });
+  });
+
+  function renderConversation() {
+    return render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.output.messages',
+            value: [
+              { role: 'assistant', content: 'First message, long enough to be worth folding.' },
+              { role: 'assistant', content: 'Second message.' },
+            ],
+          },
+        ])}
+      />
+    );
+  }
+
+  it('starts expanded, showing the content rather than a preview', () => {
+    const { container } = renderConversation();
+    expect(container.querySelector('.GenAITab--messagePreview')).toBeNull();
+    expect(screen.getAllByRole('button', { expanded: true })).toHaveLength(2);
+  });
+
+  it('folds a message to a single identifiable line when collapsed', () => {
+    const { container } = renderConversation();
+    const messages = container.querySelectorAll('.GenAITab--message');
+
+    fireEvent.click(within(messages[0] as HTMLElement).getByRole('button', { expanded: true }));
+
+    expect(messages[0].querySelector('.GenAITab--messageContent-plain')).toBeNull();
+    expect(messages[0].querySelector('.GenAITab--messagePreview')?.textContent).toBe(
+      'First message, long enough to be worth folding.'
+    );
+    // The role stays legible, so a folded message is still placed in the conversation.
+    expect(within(messages[0] as HTMLElement).getByText('assistant')).toBeInTheDocument();
+  });
+
+  it('collapses only the message whose toggle was used', () => {
+    const { container } = renderConversation();
+    const messages = container.querySelectorAll('.GenAITab--message');
+
+    fireEvent.click(within(messages[0] as HTMLElement).getByRole('button', { expanded: true }));
+
+    expect(messages[1].querySelector('.GenAITab--messageContent-plain')?.textContent).toBe('Second message.');
+    expect(messages[1].querySelector('.GenAITab--messagePreview')).toBeNull();
+  });
+
+  it('expands a collapsed message again, restoring the chosen format', () => {
+    const { container } = renderConversation();
+    const message = container.querySelector('.GenAITab--message') as HTMLElement;
+    fireEvent.change(within(message).getByLabelText(/Content format/), {
+      target: { value: 'markdown' },
+    });
+
+    fireEvent.click(within(message).getByRole('button', { expanded: true }));
+    fireEvent.click(within(message).getByRole('button', { expanded: false }));
+
+    expect(message.querySelector('.GenAITab--messagePreview')).toBeNull();
+    expect(within(message).getByLabelText(/Content format/)).toHaveValue('markdown');
+  });
+});
+
+describe('GenAITab media rendering', () => {
+  const DATA_URI = 'data:image/png;base64,iVBORw0KGgo=';
+
+  beforeEach(() => {
+    localStorage.clear();
+    useMessageFormatStore.setState({ overrides: {} });
+  });
+
+  function renderMessage(content: string) {
+    return render(
+      <GenAITab
+        span={makeSpan([{ key: 'gen_ai.output.messages', value: [{ role: 'assistant', content }] }])}
+      />
+    );
+  }
+
+  it('offers a remote image link instead of fetching it, and shows where it points', () => {
+    const url = 'https://example.com/chart.png';
+    const { container } = renderMessage(url);
+    expect(screen.getByLabelText(/Content format/)).toHaveValue('media');
+    expect(screen.getByText('Content appears to be an image link:')).toBeInTheDocument();
+    expect(container.querySelector('img.GenAITab--media')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Show image' })).toBeInTheDocument();
+    // The value is elided by CSS rather than cut down, so the full URL is in the DOM and
+    // in the tooltip while only one line of it is on screen.
+    expect(container.querySelector('.GenAITab--revealValue')).toHaveAttribute('title', url);
+  });
+
+  it('labels the Media option by the type it detected, without claiming certainty', () => {
+    renderMessage('https://example.com/chart.png');
+    expect(screen.getByRole('option', { name: 'Maybe image' })).toBeInTheDocument();
+  });
+
+  it('renders the image with alt text and a no-referrer policy once the user asks for it', () => {
+    const url = 'https://example.com/chart.png';
+    const { container } = renderMessage(url);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show image' }));
+
+    const img = container.querySelector('img.GenAITab--media') as HTMLImageElement | null;
+    expect(img?.getAttribute('src')).toBe(url);
+    expect(img?.getAttribute('alt')).toBe('Image in message 1 (assistant)');
+    expect(img?.getAttribute('referrerpolicy')).toBe('no-referrer');
+    expect(container.querySelectorAll('.GenAITab--revealButton')).toHaveLength(0);
+  });
+
+  it('waits for a click before rendering a remote audio player, then gives it controls', () => {
+    const { container } = renderMessage('https://example.com/reply.mp3');
+    expect(screen.getByRole('option', { name: 'Maybe audio' })).toBeInTheDocument();
+    expect(screen.getByText('Content appears to be an audio clip link:')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show audio clip' }));
+
+    const audio = container.querySelector('audio.GenAITab--media');
+    expect(audio?.hasAttribute('controls')).toBe(true);
+    expect(audio?.getAttribute('aria-label')).toBe('Audio in message 1 (assistant)');
+  });
+
+  it('renders an embedded payload immediately, since showing it requests nothing', () => {
+    const { container } = renderMessage(DATA_URI);
+    expect(container.querySelector('img.GenAITab--media')?.getAttribute('src')).toBe(DATA_URI);
+    expect(container.querySelectorAll('.GenAITab--revealButton')).toHaveLength(0);
+  });
+
+  it('keeps a data URI out of the Media view, where Plain text shows it in full', () => {
+    const { container } = renderMessage(DATA_URI);
+    expect(container.querySelector('.GenAITab--messageContent-plain')).toBeNull();
+
+    fireEvent.change(screen.getByLabelText(/Content format/), { target: { value: 'plain' } });
+
+    expect(container.querySelector('.GenAITab--messageContent-plain')?.textContent).toBe(DATA_URI);
+  });
+
+  it('switches this message to Plain text when the reader asks for the text instead', () => {
+    const url = 'https://example.com/chart.png';
+    const { container } = renderMessage(url);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show text' }));
+
+    expect(screen.getByLabelText(/Content format/)).toHaveValue('plain');
+    expect(container.querySelector('.GenAITab--messageContent-plain')?.textContent).toBe(url);
+  });
+
+  it('remembers a link it already showed, so a trip through Plain text and back does not ask again', () => {
+    const { container } = renderMessage('https://example.com/chart.png');
+    fireEvent.click(screen.getByRole('button', { name: 'Show image' }));
+    const select = screen.getByLabelText(/Content format/);
+
+    fireEvent.change(select, { target: { value: 'plain' } });
+    fireEvent.change(select, { target: { value: 'media' } });
+
+    expect(container.querySelector('img.GenAITab--media')).not.toBeNull();
+    expect(screen.queryByRole('button', { name: 'Show image' })).toBeNull();
+  });
+
+  it('leaves the Media option disabled for a value that is not a media link', () => {
+    const { container } = renderMessage('Just a sentence about a cat.png file.');
+    expect(screen.getByLabelText(/Content format/)).toHaveValue('plain');
+    expect(screen.getByRole('option', { name: 'Media (not media)' })).toBeDisabled();
+    expect(container.querySelector('.GenAITab--media')).toBeNull();
+  });
+
+  it('reports a load failure in place, offering the text as the way on', () => {
+    const { container } = renderMessage('https://example.com/broken.png');
+    fireEvent.click(screen.getByRole('button', { name: 'Show image' }));
+
+    fireEvent.error(container.querySelector('img.GenAITab--media') as HTMLImageElement);
+
+    expect(container.querySelector('img.GenAITab--media')).toBeNull();
+    expect(screen.getByText('This image could not be loaded:')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Show text' })).toBeInTheDocument();
+  });
+
+  it('does not load a different remote link that reuses the same position', () => {
+    // Messages are keyed by position (output-0), so new content arrives at the same
+    // component instance. A reader who chose to load one URL has not consented to
+    // whatever replaces it, so the offer must come back.
+    const { container, rerender } = render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.output.messages',
+            value: [{ role: 'assistant', content: 'https://example.com/first.png' }],
+          },
+        ])}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Show image' }));
+    expect(container.querySelector('img.GenAITab--media')).not.toBeNull();
+
+    rerender(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.output.messages',
+            value: [{ role: 'assistant', content: 'https://example.com/second.png' }],
+          },
+        ])}
+      />
+    );
+
+    expect(container.querySelector('img.GenAITab--media')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Show image' })).toBeInTheDocument();
   });
 });

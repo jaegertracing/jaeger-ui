@@ -144,3 +144,95 @@ SPDX-License-Identifier: Apache-2.0
   font-size: 13px;
   padding: 8px 0;
 }
+
+/* Aligned with .GenAITab--messageContent so switching views does not shift the text. */
+.GenAITab--revealBlock {
+  padding: 8px;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--surface-primary);
+}
+
+.GenAITab--revealNotice {
+  display: flex;
+  gap: 4px;
+  color: var(--text-muted);
+}
+
+.GenAITab--revealNoticeText {
+  flex: none;
+}
+
+/* The value takes what the notice leaves and elides, like a collapsed message. */
+.GenAITab--revealValue {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.GenAITab--revealActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.GenAITab--revealButton {
+  padding: 2px 8px;
+  border: 1px solid var(--border-default);
+  border-radius: 3px;
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.GenAITab--messageToggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.GenAITab--messageToggleIcon {
+  color: var(--text-muted);
+  vertical-align: middle;
+}
+
+.GenAITab--messagePreview {
+  padding: 8px;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 13px;
+  /* One line however long the content is - the point of collapsing. */
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.GenAITab--media {
+  display: block;
+  max-width: 100%;
+}
+
+img.GenAITab--media {
+  /* An SVG that carries only a viewBox has no intrinsic size, so width:auto fills the
+     panel and the aspect ratio then sets an equally large height. The cap keeps any
+     preview, sized or not, from pushing the rest of the conversation off screen. */
+  max-height: 320px;
+  width: auto;
+  height: auto;
+  /* A ground colour so a transparent PNG stays visible in either theme. */
+  background-color: var(--surface-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 3px;
+  object-fit: contain;
+}
+
+audio.GenAITab--media {
+  width: 100%;
+}
