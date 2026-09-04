@@ -129,9 +129,11 @@ describe('useSearchResultsStore', () => {
     });
 
     it('rehydrates pre-existing viewMode-only state without inventing a sortBy', async () => {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ state: { viewMode: 'table' }, version: 0 }));
+      // 'list' rather than the default 'table', so the assertion below fails if the
+      // persisted viewMode is discarded instead of read.
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ state: { viewMode: 'list' }, version: 0 }));
       await useSearchResultsStore.persist.rehydrate();
-      expect(useSearchResultsStore.getState().viewMode).toBe('table');
+      expect(useSearchResultsStore.getState().viewMode).toBe('list');
       expect(useSearchResultsStore.getState().sortBy).toBe(MOST_RECENT);
     });
   });
