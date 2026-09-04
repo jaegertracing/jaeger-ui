@@ -115,6 +115,14 @@ const mediaAttrs = () => ({
   'gen_ai.response.model': 'model-multimodal',
   'gen_ai.usage.input_tokens': 210,
   'gen_ai.usage.output_tokens': 480,
+  // What each modality cost, and what a cache write cost, the way the reference
+  // implementations for OpenAI and Anthropic report them.
+  'gen_ai.usage.cache_read.input_tokens': 64,
+  'gen_ai.usage.cache_write.input_tokens': 32,
+  'gen_ai.usage.text.input_tokens': 120,
+  'gen_ai.usage.image.input_tokens': 74,
+  'gen_ai.usage.audio.input_tokens': 16,
+  'gen_ai.usage.audio.output_tokens': 40,
   'gen_ai.input.messages': JSON.stringify([
     {
       role: 'user',
@@ -163,6 +171,9 @@ const mediaAttrs = () => ({
       role: 'assistant',
       parts: [{ type: 'file', modality: 'image', mime_type: 'image/png', file_id: 'provider_fileid_123' }],
     },
+    // A compaction part with no summary, which is what a provider sends when it replaces
+    // earlier turns with one of its own.
+    { role: 'assistant', parts: [{ type: 'compaction' }], finish_reason: 'compaction' },
     // Attachments sharing a message with text, which is what the spec's own multimodal
     // example looks like. Each part is rendered in place, so neither the text nor the
     // attachment is lost to the other.

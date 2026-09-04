@@ -621,9 +621,18 @@ function AgentDetails({
 const TOKEN_LABELS: Partial<Record<keyof GenAiTokenUsage, string>> = {
   inputTokens: 'Input',
   outputTokens: 'Output',
-  cacheReadInputTokens: 'Cached (read)',
-  cacheCreationInputTokens: 'Cached (write)',
   reasoningOutputTokens: 'Reasoning',
+  cacheReadInputTokens: 'Cached (read)',
+  cacheWriteInputTokens: 'Cached (write)',
+  textInputTokens: 'Input (text)',
+  imageInputTokens: 'Input (image)',
+  audioInputTokens: 'Input (audio)',
+  textOutputTokens: 'Output (text)',
+  imageOutputTokens: 'Output (image)',
+  audioOutputTokens: 'Output (audio)',
+  textCacheReadInputTokens: 'Cached (read, text)',
+  imageCacheReadInputTokens: 'Cached (read, image)',
+  audioCacheReadInputTokens: 'Cached (read, audio)',
 };
 
 function TokenDetails({ usage }: { usage: GenAiTokenUsage }) {

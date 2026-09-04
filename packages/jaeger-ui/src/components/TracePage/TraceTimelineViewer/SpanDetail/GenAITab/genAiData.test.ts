@@ -138,23 +138,43 @@ describe('extractGenAiSections', () => {
   });
 
   describe('tokens section', () => {
-    it('extracts all token usage categories including cache and reasoning tokens', () => {
+    it('extracts every token count the conventions define, totals and per-modality alike', () => {
       const sections = extractGenAiSections(
         attrs({
           'gen_ai.usage.input_tokens': 100,
           'gen_ai.usage.output_tokens': 50,
-          'gen_ai.usage.cache_read.input_tokens': 80,
-          'gen_ai.usage.cache_creation.input_tokens': 20,
           'gen_ai.usage.reasoning.output_tokens': 30,
+          'gen_ai.usage.cache_read.input_tokens': 80,
+          'gen_ai.usage.cache_write.input_tokens': 20,
+          'gen_ai.usage.text.input_tokens': 60,
+          'gen_ai.usage.image.input_tokens': 25,
+          'gen_ai.usage.audio.input_tokens': 15,
+          'gen_ai.usage.text.output_tokens': 40,
+          'gen_ai.usage.image.output_tokens': 6,
+          'gen_ai.usage.audio.output_tokens': 4,
+          'gen_ai.usage.text.cache_read.input_tokens': 50,
+          'gen_ai.usage.image.cache_read.input_tokens': 20,
+          'gen_ai.usage.audio.cache_read.input_tokens': 10,
         })
       );
       expect(section(sections, 'tokens')).toEqual({
         inputTokens: 100,
         outputTokens: 50,
-        cacheReadInputTokens: 80,
-        cacheCreationInputTokens: 20,
         reasoningOutputTokens: 30,
+        cacheReadInputTokens: 80,
+        cacheWriteInputTokens: 20,
+        textInputTokens: 60,
+        imageInputTokens: 25,
+        audioInputTokens: 15,
+        textOutputTokens: 40,
+        imageOutputTokens: 6,
+        audioOutputTokens: 4,
+        textCacheReadInputTokens: 50,
+        imageCacheReadInputTokens: 20,
+        audioCacheReadInputTokens: 10,
       });
+      // Nothing about token usage is left to the overflow section.
+      expect(section(sections, 'other')).toBeUndefined();
     });
 
     it('parses numeric-string token counts, and ignores non-numeric strings', () => {
@@ -763,6 +783,23 @@ describe('extractGenAiSections', () => {
       });
       // The operation alone no longer leaves a section holding just it.
       expect(section(sections, 'other')).toBeUndefined();
+    });
+
+    it('reads a compaction part as what happened to the conversation', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.output.messages': [
+            // The shape real instrumentation sends: the marker alone, no summary.
+            { role: 'assistant', parts: [{ type: 'compaction' }], finish_reason: 'compaction' },
+          ],
+          'gen_ai.input.messages': [
+            { role: 'assistant', parts: [{ type: 'compaction', content: 'Earlier turns, summarized.' }] },
+          ],
+        })
+      );
+      const conversation = section(sections, 'conversation');
+      expect(conversation?.outputMessages[0].content).toBe('Conversation compacted');
+      expect(conversation?.inputMessages[0].content).toBe('Earlier turns, summarized.');
     });
 
     it('produces no toolCall section when no tool attributes are present', () => {

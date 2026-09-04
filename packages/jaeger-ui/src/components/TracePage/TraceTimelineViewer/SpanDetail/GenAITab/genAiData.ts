@@ -58,12 +58,28 @@ export type GenAiAgent = {
   description?: string;
 };
 
+/**
+ * The token counts an inference span can report.
+ *
+ * The first five are totals. The rest split those totals by modality, which the spec
+ * says to report "when applicable" and asks to be counted in the total as well, so a
+ * span that sends audio shows both the total and the audio share of it.
+ */
 export type GenAiTokenUsage = {
   inputTokens?: number;
   outputTokens?: number;
-  cacheReadInputTokens?: number;
-  cacheCreationInputTokens?: number;
   reasoningOutputTokens?: number;
+  cacheReadInputTokens?: number;
+  cacheWriteInputTokens?: number;
+  textInputTokens?: number;
+  imageInputTokens?: number;
+  audioInputTokens?: number;
+  textOutputTokens?: number;
+  imageOutputTokens?: number;
+  audioOutputTokens?: number;
+  textCacheReadInputTokens?: number;
+  imageCacheReadInputTokens?: number;
+  audioCacheReadInputTokens?: number;
 };
 
 // Every variant separates its discriminant (`type`) from its payload (`data`)
@@ -265,9 +281,15 @@ function toPart(part: unknown): GenAiPart {
   if (typeof part !== 'object' || part === null) return textPart(String(part));
   const rec = part as Record<string, unknown>;
   switch (rec.type) {
+    // Conversation history the provider replaced with a summary. The summary is
+    // optional and usually absent, so the part says what happened when there is
+    // nothing of it to read.
+    case 'compaction':
+      return typeof rec.content === 'string' && rec.content
+        ? textPart(rec.content)
+        : { text: 'Conversation compacted' };
     case 'text':
     case 'reasoning':
-    case 'compaction':
       return textPart(typeof rec.content === 'string' ? rec.content : stringifyValue(rec.content ?? rec));
     case 'tool_call':
     case 'server_tool_call': {
@@ -448,9 +470,18 @@ const REGISTRY: SectionBuilder[] = [
     const usage: GenAiTokenUsage = {
       inputTokens: asNumber(get('gen_ai.usage.input_tokens')),
       outputTokens: asNumber(get('gen_ai.usage.output_tokens')),
-      cacheReadInputTokens: asNumber(get('gen_ai.usage.cache_read.input_tokens')),
-      cacheCreationInputTokens: asNumber(get('gen_ai.usage.cache_creation.input_tokens')),
       reasoningOutputTokens: asNumber(get('gen_ai.usage.reasoning.output_tokens')),
+      cacheReadInputTokens: asNumber(get('gen_ai.usage.cache_read.input_tokens')),
+      cacheWriteInputTokens: asNumber(get('gen_ai.usage.cache_write.input_tokens')),
+      textInputTokens: asNumber(get('gen_ai.usage.text.input_tokens')),
+      imageInputTokens: asNumber(get('gen_ai.usage.image.input_tokens')),
+      audioInputTokens: asNumber(get('gen_ai.usage.audio.input_tokens')),
+      textOutputTokens: asNumber(get('gen_ai.usage.text.output_tokens')),
+      imageOutputTokens: asNumber(get('gen_ai.usage.image.output_tokens')),
+      audioOutputTokens: asNumber(get('gen_ai.usage.audio.output_tokens')),
+      textCacheReadInputTokens: asNumber(get('gen_ai.usage.text.cache_read.input_tokens')),
+      imageCacheReadInputTokens: asNumber(get('gen_ai.usage.image.cache_read.input_tokens')),
+      audioCacheReadInputTokens: asNumber(get('gen_ai.usage.audio.cache_read.input_tokens')),
     };
     return hasAnyTokenUsage(usage) ? { type: 'tokens', data: usage } : undefined;
   },
