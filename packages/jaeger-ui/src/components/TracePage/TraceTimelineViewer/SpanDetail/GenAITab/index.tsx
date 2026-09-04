@@ -240,11 +240,18 @@ function partView(part: GenAiPart, chosen: MessageFormat | null) {
     plain: true,
     markdown: true,
     json: parsedJson !== null && typeof parsedJson === 'object',
-    media: part.media !== undefined,
+    image: part.media?.type === 'image',
+    audio: part.media?.type === 'audio',
   };
-  // With nothing chosen, media defaults to the Media view and JSON-parseable content to
+  // With nothing chosen, a part carrying media opens on it and JSON-parseable content on
   // the tree view, else plain text (Markdown is only opt-in).
-  const defaultFormat: MessageFormat = canRender.media ? 'media' : canRender.json ? 'json' : 'plain';
+  const defaultFormat: MessageFormat = canRender.image
+    ? 'image'
+    : canRender.audio
+      ? 'audio'
+      : canRender.json
+        ? 'json'
+        : 'plain';
   const requested = chosen ?? defaultFormat;
   return { parsedJson, canRender, format: canRender[requested] ? requested : ('plain' as MessageFormat) };
 }
@@ -254,13 +261,11 @@ function partView(part: GenAiPart, chosen: MessageFormat | null) {
  * several. Its copy buttons sit over the content, in PartBody.
  */
 function PartControls({
-  part,
   view,
   onFormatChange,
   controlName,
   position,
 }: {
-  part: GenAiPart;
   view: ReturnType<typeof partView>;
   onFormatChange: (format: MessageFormat) => void;
   controlName: string;
@@ -288,15 +293,26 @@ function PartControls({
           JSON
         </option>
         <option
-          value="media"
-          disabled={!view.canRender.media}
+          value="image"
+          disabled={!view.canRender.image}
           title={
-            part.media
-              ? `${part.media.type === 'audio' ? 'Audio clip' : 'Image'} (maybe): recognized from the value alone, so it may not be one - a remote link is not fetched until you ask`
-              : 'This part carries no image or audio to show'
+            view.canRender.image
+              ? 'Image (maybe): recognized from the value alone, so it may not be one - a remote link is not fetched until you ask'
+              : 'This part carries no image to show'
           }
         >
-          Image or audio
+          Image
+        </option>
+        <option
+          value="audio"
+          disabled={!view.canRender.audio}
+          title={
+            view.canRender.audio
+              ? 'Audio clip (maybe): recognized from the value alone, so it may not be one - a remote link is not fetched until you ask'
+              : 'This part carries no audio to show'
+          }
+        >
+          Audio
         </option>
       </select>
     </div>
@@ -372,7 +388,7 @@ function PartContent({
   onReveal: () => void;
   onShowText: () => void;
 }) {
-  if (view.format === 'media' && part.media) {
+  if ((view.format === 'image' || view.format === 'audio') && part.media) {
     return (
       <MediaBlock
         src={part.media.src}
@@ -421,7 +437,6 @@ function MessageBlock({
 
   const controlsFor = (part: GenAiPart, i: number) => (
     <PartControls
-      part={part}
       view={partView(part, formats[i] ?? seededFormat)}
       onFormatChange={format => {
         setFormats({ ...formats, [i]: format });

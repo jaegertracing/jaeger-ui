@@ -705,7 +705,7 @@ describe('GenAITab media rendering', () => {
   it('offers a remote image link instead of fetching it, and shows where it points', () => {
     const url = 'https://example.com/chart.png';
     const { container } = renderMessage(url);
-    expect(screen.getByLabelText(/Content format/)).toHaveValue('media');
+    expect(screen.getByLabelText(/Content format/)).toHaveValue('image');
     expect(screen.getByText('Image link (maybe):')).toBeInTheDocument();
     expect(container.querySelector('img.GenAITab--media')).toBeNull();
     expect(screen.getByRole('button', { name: 'Show image' })).toBeInTheDocument();
@@ -716,7 +716,7 @@ describe('GenAITab media rendering', () => {
 
   it('says what it recognized on the Media option, without claiming certainty', () => {
     renderMessage('https://example.com/chart.png');
-    expect(screen.getByRole('option', { name: 'Image or audio' })).toHaveAttribute(
+    expect(screen.getByRole('option', { name: 'Image' })).toHaveAttribute(
       'title',
       expect.stringContaining('Image (maybe): recognized from the value alone')
     );
@@ -737,7 +737,7 @@ describe('GenAITab media rendering', () => {
 
   it('waits for a click before rendering a remote audio player, then gives it controls', () => {
     const { container } = renderMessage('https://example.com/reply.mp3');
-    expect(screen.getByRole('option', { name: 'Image or audio' })).toHaveAttribute(
+    expect(screen.getByRole('option', { name: 'Audio' })).toHaveAttribute(
       'title',
       expect.stringContaining('Audio clip (maybe):')
     );
@@ -781,16 +781,17 @@ describe('GenAITab media rendering', () => {
     const select = screen.getByLabelText(/Content format/);
 
     fireEvent.change(select, { target: { value: 'plain' } });
-    fireEvent.change(select, { target: { value: 'media' } });
+    fireEvent.change(select, { target: { value: 'image' } });
 
     expect(container.querySelector('img.GenAITab--media')).not.toBeNull();
     expect(screen.queryByRole('button', { name: 'Show image' })).toBeNull();
   });
 
-  it('leaves the Media option disabled for a value that is not a media link', () => {
+  it('leaves both media options disabled for a value that is not a media link', () => {
     const { container } = renderMessage('Just a sentence about a cat.png file.');
     expect(screen.getByLabelText(/Content format/)).toHaveValue('plain');
-    expect(screen.getByRole('option', { name: 'Image or audio' })).toBeDisabled();
+    expect(screen.getByRole('option', { name: 'Image' })).toBeDisabled();
+    expect(screen.getByRole('option', { name: 'Audio' })).toBeDisabled();
     expect(container.querySelector('.GenAITab--media')).toBeNull();
   });
 
