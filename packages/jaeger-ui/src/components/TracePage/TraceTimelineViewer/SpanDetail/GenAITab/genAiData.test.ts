@@ -17,6 +17,11 @@ function attrs(pairs: Record<string, unknown>): IAttributes {
 
 type SectionDataMap = { [S in GenAiSection as S['type']]: S['data'] };
 
+// These tests assert role and text; the parts array is asserted where parts are the point.
+function roleAndText(messages: { role: unknown; content: string }[] | undefined) {
+  return (messages ?? []).map(({ role, content }) => ({ role, content }));
+}
+
 function section<T extends keyof SectionDataMap>(
   sections: GenAiSection[],
   type: T
@@ -190,7 +195,7 @@ describe('extractGenAiSections', () => {
           ],
         })
       );
-      expect(section(sections, 'conversation')?.inputMessages).toEqual([
+      expect(roleAndText(section(sections, 'conversation')?.inputMessages)).toEqual([
         { role: 'system', content: 'You are helpful.' },
         { role: 'user', content: 'Hi' },
       ]);
@@ -204,7 +209,7 @@ describe('extractGenAiSections', () => {
           ]),
         })
       );
-      expect(section(sections, 'conversation')?.outputMessages).toEqual([
+      expect(roleAndText(section(sections, 'conversation')?.outputMessages)).toEqual([
         { role: 'assistant', content: 'Hello!' },
       ]);
     });
@@ -335,7 +340,7 @@ describe('extractGenAiSections', () => {
       expect(section(sections, 'conversation')?.outputMessages[0].content).toBe('image file file_abc123');
     });
 
-    it('renders a lone blob part as a data URI, so its payload is shown in full', () => {
+    it('gives a blob part a data URI to render from, and text that describes it', () => {
       const sections = extractGenAiSections(
         attrs({
           'gen_ai.output.messages': [
@@ -346,9 +351,31 @@ describe('extractGenAiSections', () => {
           ],
         })
       );
-      expect(section(sections, 'conversation')?.outputMessages[0].content).toBe(
-        'data:image/png;base64,iVBORw0KGgo='
+      expect(section(sections, 'conversation')?.outputMessages[0].parts).toEqual([
+        { text: 'image/png attachment, 8 B', src: 'data:image/png;base64,iVBORw0KGgo=' },
+      ]);
+    });
+
+    it('keeps a blob and the text sharing its message as separate parts', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.output.messages': [
+            {
+              role: 'assistant',
+              parts: [
+                { type: 'text', content: 'Here is the chart you asked for:' },
+                { type: 'blob', modality: 'image', mime_type: 'image/png', content: 'iVBORw0KGgo=' },
+              ],
+            },
+          ],
+        })
       );
+      // Both survive: the text is not lost to the attachment, and the attachment still
+      // has somewhere to render from.
+      expect(section(sections, 'conversation')?.outputMessages[0].parts).toEqual([
+        { text: 'Here is the chart you asked for:', src: undefined },
+        { text: 'image/png attachment, 8 B', src: 'data:image/png;base64,iVBORw0KGgo=' },
+      ]);
     });
 
     it('summarizes a blob with no mime type by its modality and size', () => {
@@ -508,7 +535,7 @@ describe('extractGenAiSections', () => {
 
     it('treats a non-object entry in a messages array as a roleless message', () => {
       const sections = extractGenAiSections(attrs({ 'gen_ai.input.messages': ['just a string entry'] }));
-      expect(section(sections, 'conversation')?.inputMessages).toEqual([
+      expect(roleAndText(section(sections, 'conversation')?.inputMessages)).toEqual([
         { role: undefined, content: 'just a string entry' },
       ]);
     });
@@ -517,7 +544,9 @@ describe('extractGenAiSections', () => {
       const sections = extractGenAiSections(
         attrs({ 'gen_ai.input.messages': { role: 'user', parts: [{ type: 'text', content: 'Hi' }] } })
       );
-      expect(section(sections, 'conversation')?.inputMessages).toEqual([{ role: 'user', content: 'Hi' }]);
+      expect(roleAndText(section(sections, 'conversation')?.inputMessages)).toEqual([
+        { role: 'user', content: 'Hi' },
+      ]);
     });
 
     it('falls back to deprecated prompt/completion when input/output messages are absent', () => {
@@ -527,17 +556,17 @@ describe('extractGenAiSections', () => {
           'gen_ai.completion': JSON.stringify([{ role: 'assistant', content: 'legacy completion' }]),
         })
       );
-      expect(section(sections, 'conversation')?.inputMessages).toEqual([
+      expect(roleAndText(section(sections, 'conversation')?.inputMessages)).toEqual([
         { role: 'user', content: 'legacy prompt' },
       ]);
-      expect(section(sections, 'conversation')?.outputMessages).toEqual([
+      expect(roleAndText(section(sections, 'conversation')?.outputMessages)).toEqual([
         { role: 'assistant', content: 'legacy completion' },
       ]);
     });
 
     it('treats an unparseable message string as a single roleless message', () => {
       const sections = extractGenAiSections(attrs({ 'gen_ai.input.messages': 'not json' }));
-      expect(section(sections, 'conversation')?.inputMessages).toEqual([
+      expect(roleAndText(section(sections, 'conversation')?.inputMessages)).toEqual([
         { role: undefined, content: 'not json' },
       ]);
     });
@@ -746,7 +775,7 @@ describe('extractGenAiSections', () => {
             role: 'assistant',
             parts: [{ type: 'blob', mime_type: 'image/png', content: 'iVBO\nRw0K\nGgo=' }],
           },
-        ])?.[0].content
+        ])?.[0].parts[0].src
       ).toBe('data:image/png;base64,iVBORw0KGgo=');
     });
   });

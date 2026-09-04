@@ -12,9 +12,30 @@ function asRole(value: unknown): GenAiRole {
   return typeof value === 'string' && GEN_AI_ROLES.has(value) ? (value as GenAiRole) : undefined;
 }
 
+/**
+ * One rendered piece of a message: its text, plus a source when a browser could load it.
+ *
+ * A message is a list of parts per the spec, and a single message may mix them - the
+ * multimodal example in the conventions is one user turn carrying a question and the
+ * image it asks about. So each part is kept separate and rendered in place, which is what
+ * lets an attachment be shown without the text around it being lost.
+ */
+type GenAiPart = {
+  // What this part reads as. For an attachment whose bytes cannot be shown in place, a
+  // description of it - see blobSummary.
+  text: string;
+  // Where the part's media can be loaded from, if anywhere: a uri part's URI, or a data:
+  // URI built from a blob's payload.
+  src?: string;
+};
+
 export type GenAiMessage = {
   role: GenAiRole;
+  // Every part's text joined, which is what Copy, Plain text, Markdown and the JSON view
+  // all act on. A message with one text part - still the common case - reads exactly as
+  // its text.
   content: string;
+  parts: GenAiPart[];
 };
 
 export type GenAiToolCall = {
@@ -160,6 +181,10 @@ const MEDIA_MIME_TYPE = /^(image|audio)\/[\w.+-]+(?:;[\w.+-]+=[\w.+-]+)*$/i;
 
 const BASE64 = /^[A-Za-z0-9+/]+={0,2}$/;
 
+// A uri part may name a location only the provider can resolve - the spec's own example is
+// gs://bucket/object.png - so only these two schemes give the browser something to load.
+const LOADABLE_SCHEME = /^(?:https?|data):/i;
+
 /**
  * Returns a blob part's content as base64 with any wrapping whitespace removed, or an
  * empty string if it is not base64 at all.
@@ -197,14 +222,14 @@ function blobSummary(rec: Record<string, unknown>): string {
  * server_tool_call(_response)). Unrecognized/future part types fall back to
  * a JSON dump so nothing is silently dropped.
  */
-function renderPart(part: unknown): string {
-  if (typeof part !== 'object' || part === null) return String(part);
+function toPart(part: unknown): GenAiPart {
+  if (typeof part !== 'object' || part === null) return { text: String(part) };
   const rec = part as Record<string, unknown>;
   switch (rec.type) {
     case 'text':
     case 'reasoning':
     case 'compaction':
-      return typeof rec.content === 'string' ? rec.content : stringifyValue(rec.content ?? rec);
+      return { text: typeof rec.content === 'string' ? rec.content : stringifyValue(rec.content ?? rec) };
     case 'tool_call':
     case 'server_tool_call': {
       const name = typeof rec.name === 'string' ? rec.name : 'unknown_tool';
@@ -213,63 +238,54 @@ function renderPart(part: unknown): string {
       // `arguments`, while ServerToolCallPart carries it under a same-named
       // `server_tool_call` field (a polymorphic, provider-specific object).
       const args = rec.type === 'tool_call' ? rec.arguments : rec.server_tool_call;
-      return `→ ${name}(${stringifyToolValue(args)})`;
+      return { text: `\u2192 ${name}(${stringifyToolValue(args)})` };
     }
     case 'tool_call_response':
-      return `← ${stringifyToolValue(rec.response)}`;
+      return { text: `\u2190 ${stringifyToolValue(rec.response)}` };
     case 'server_tool_call_response':
-      return `← ${stringifyToolValue(rec.server_tool_call_response)}`;
+      return { text: `\u2190 ${stringifyToolValue(rec.server_tool_call_response)}` };
     // The three attachment part types, worked through with examples at
     // https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/non-normative/examples-llm-calls.md#multimodal-chat-completion
     //
-    // Each carries something the reader may want, so each shows what it has rather than
-    // announcing that an attachment exists: a uri part its URI, which detectMediaType may
-    // then offer to render; a file part its file_id, which is the reference the
-    // provider's own API takes.
-    case 'uri':
-      return typeof rec.uri === 'string' ? rec.uri : stringifyValue(rec);
+    // A uri part reads as its URI, and carries it as a source when a browser could
+    // actually fetch it. A file part has only an opaque provider id, which is worth
+    // showing and impossible to load.
+    case 'uri': {
+      if (typeof rec.uri !== 'string') return { text: stringifyValue(rec) };
+      const uri = rec.uri.trim();
+      return LOADABLE_SCHEME.test(uri) ? { text: uri, src: uri } : { text: uri };
+    }
     case 'file':
-      return typeof rec.file_id === 'string' ? `${asModality(rec)} file ${rec.file_id}` : stringifyValue(rec);
-    // A blob is the one part whose value cannot be shown in place: its content is raw
-    // base64, and thousands of characters of it would bury whatever text shares the
-    // message. So the summary names what arrived and how much of it, and loneBlobDataUri
-    // hands the payload back whenever the blob is the whole message and there is no
-    // surrounding text to bury. The raw attribute is in the Details tab either way.
-    case 'blob':
-      return blobSummary(rec);
+      return {
+        text:
+          typeof rec.file_id === 'string' ? `${asModality(rec)} file ${rec.file_id}` : stringifyValue(rec),
+      };
+    // A blob is the one part whose bytes cannot be read in place: thousands of base64
+    // characters would bury the rest of the message. So its text describes it while its
+    // source carries the payload, and the media view renders the image either way.
+    case 'blob': {
+      const mimeType = typeof rec.mime_type === 'string' ? rec.mime_type : '';
+      const content = base64Payload(rec.content);
+      const src =
+        content && MEDIA_MIME_TYPE.test(mimeType) ? `data:${mimeType};base64,${content}` : undefined;
+      return { text: blobSummary(rec), src };
+    }
     default:
-      return stringifyValue(rec);
+      return { text: stringifyValue(rec) };
   }
 }
 
-function renderParts(parts: unknown): string {
-  if (!Array.isArray(parts)) return stringifyValue(parts);
-  return parts.map(renderPart).join('\n\n');
+function toParts(parts: unknown): GenAiPart[] {
+  if (!Array.isArray(parts)) return [{ text: stringifyValue(parts) }];
+  return parts.map(toPart);
 }
 
-/**
- * Builds a data: URI from a message that is one blob part and nothing else, or returns
- * null.
- *
- * blobSummary describes a blob rather than showing it, because raw base64 would bury the
- * text sharing the message. Nothing is buried when the blob is the entire message, so
- * there the payload becomes the message content: the media view renders it, and Plain
- * text shows every byte.
- *
- * Turning a blob into a data: URI needs its mime_type, which the spec leaves optional
- * while requiring only modality - and a modality of "image" does not name a type. A blob
- * without one keeps its summary.
- */
-function loneBlobDataUri(parts: unknown[]): string | null {
-  if (parts.length !== 1) return null;
-  const part = parts[0];
-  if (typeof part !== 'object' || part === null) return null;
-  const rec = part as Record<string, unknown>;
-  if (rec.type !== 'blob') return null;
-  const mimeType = typeof rec.mime_type === 'string' ? rec.mime_type : '';
-  if (!MEDIA_MIME_TYPE.test(mimeType)) return null;
-  const content = base64Payload(rec.content);
-  return content ? `data:${mimeType};base64,${content}` : null;
+function joinParts(parts: GenAiPart[]): string {
+  return parts.map(part => part.text).join('\n\n');
+}
+
+function message(role: GenAiRole, parts: GenAiPart[]): GenAiMessage {
+  return { role, content: joinParts(parts), parts };
 }
 
 /**
@@ -299,19 +315,17 @@ function parseMessages(value: AttributeValue | undefined): GenAiMessage[] {
       parsed = JSON.parse(value);
     } catch {
       // Not JSON - treat the whole string as a single message with no role.
-      return [{ role: undefined, content: value }];
+      return [message(undefined, [{ text: value }])];
     }
   }
   const entries = Array.isArray(parsed) ? parsed : [parsed];
   return entries.map((entry): GenAiMessage => {
     if (typeof entry !== 'object' || entry === null) {
-      return { role: undefined, content: String(entry) };
+      return message(undefined, [{ text: String(entry) }]);
     }
     const rec = entry as Record<string, unknown>;
     const role = asRole(rec.role);
-    if (Array.isArray(rec.parts)) {
-      return { role, content: loneBlobDataUri(rec.parts) ?? renderParts(rec.parts) };
-    }
+    if (Array.isArray(rec.parts)) return message(role, toParts(rec.parts));
     const content = rec.content;
     const contentStr =
       typeof content === 'string'
@@ -319,7 +333,7 @@ function parseMessages(value: AttributeValue | undefined): GenAiMessage[] {
         : content !== undefined
           ? stringifyValue(content)
           : stringifyValue(rec);
-    return { role, content: contentStr };
+    return message(role, [{ text: contentStr }]);
   });
 }
 

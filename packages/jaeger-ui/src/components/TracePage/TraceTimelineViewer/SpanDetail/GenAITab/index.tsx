@@ -242,13 +242,25 @@ function MessageBlock({
   // Choosing a format for one message does not change how the other messages render.
   const [chosenFormat, setChosenFormat] = useState<MessageFormat | null>(formatOverride);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const mediaType = useMemo(() => detectMediaType(message.content), [message.content]);
-  // The URL the reader has asked to load. Held here rather than in MediaBlock, which
-  // unmounts whenever the view switches away from Media: without this, going to Plain text
-  // and back would ask again for a link that was on screen a moment ago. Compared by
-  // value, so content arriving later in this position is never shown on a previous
-  // message's say-so.
-  const [revealedSrc, setRevealedSrc] = useState<string | null>(null);
+  // What each part renders as. A part brings its own src when the spec gave it one (a uri
+  // part, or a blob's payload); a text part earns one when the whole of it is a media
+  // link, which is how a plain URL in a message becomes an image.
+  const renderedParts = useMemo(
+    () =>
+      message.parts.map(part => {
+        const src = part.src ?? part.text.trim();
+        const mediaType = detectMediaType(src);
+        return { text: part.text, src: mediaType ? src : null, mediaType };
+      }),
+    [message.parts]
+  );
+  const mediaType = renderedParts.find(part => part.mediaType)?.mediaType ?? null;
+  // The sources the reader has asked to load, by value. Held here rather than in
+  // MediaBlock, which unmounts whenever the view switches away from Media: without this,
+  // going to Plain text and back would ask again for an image that was on screen a moment
+  // ago. Keyed by value, so content arriving later in this position is never shown on a
+  // previous message's say-so.
+  const [revealed, setRevealed] = useState<ReadonlySet<string>>(new Set());
   // Each view can only render content it supports; a requested view that can't falls back to plain.
   const canRender: Record<MessageFormat, boolean> = {
     plain: true,
@@ -261,10 +273,8 @@ function MessageBlock({
   const defaultFormat: MessageFormat = canRender.media ? 'media' : canRender.json ? 'json' : 'plain';
   const requestedFormat: MessageFormat = chosenFormat ?? defaultFormat;
   const effectiveFormat: MessageFormat = canRender[requestedFormat] ? requestedFormat : 'plain';
-  const src = message.content.trim();
-  const mediaLabel = `${mediaType === 'audio' ? 'Audio' : 'Image'} in message ${messageNumber} (${
-    message.role || 'message'
-  })`;
+  const mediaLabel = (partType: MediaType) =>
+    `${partType === 'audio' ? 'Audio' : 'Image'} in message ${messageNumber} (${message.role || 'message'})`;
 
   return (
     <div className={`GenAITab--message GenAITab--message-${message.role || 'unknown'}`}>
@@ -324,15 +334,26 @@ function MessageBlock({
         // The whole value stays in the DOM for browser find-in-page, clipped in CSS.
         <div className="GenAITab--messagePreview">{message.content}</div>
       ) : effectiveFormat === 'media' && mediaType ? (
-        <MediaBlock
-          src={src}
-          mediaType={mediaType}
-          label={mediaLabel}
-          // An embedded payload costs no request, so it needs no permission to render.
-          shown={isEmbeddedMedia(src) || revealedSrc === src}
-          onShow={() => setRevealedSrc(src)}
-          onShowText={() => setChosenFormat('plain')}
-        />
+        // Every part in order, so an attachment is rendered where it sits and the text
+        // sharing its message is still read.
+        renderedParts.map((part, i) =>
+          part.src && part.mediaType ? (
+            <MediaBlock
+              key={`${i}-${part.src}`}
+              src={part.src}
+              mediaType={part.mediaType}
+              label={mediaLabel(part.mediaType)}
+              // An embedded payload costs no request, so it needs no permission to render.
+              shown={isEmbeddedMedia(part.src) || revealed.has(part.src)}
+              onShow={() => setRevealed(new Set(revealed).add(part.src as string))}
+              onShowText={() => setChosenFormat('plain')}
+            />
+          ) : (
+            <pre key={`${i}-text`} className="GenAITab--messageContent GenAITab--messageContent-plain">
+              {part.text}
+            </pre>
+          )
+        )
       ) : effectiveFormat === 'json' ? (
         <JsonBlock value={parsedJson} />
       ) : effectiveFormat === 'markdown' ? (
@@ -478,7 +499,7 @@ function ConversationDetails({
   if (systemInstructions) {
     messages.push({
       key: 'system',
-      message: { role: 'system', content: systemInstructions },
+      message: { role: 'system', content: systemInstructions, parts: [{ text: systemInstructions }] },
       attributeKey: 'gen_ai.system_instructions',
     });
   }
@@ -488,7 +509,7 @@ function ConversationDetails({
   outputMessages.forEach((message, i) => {
     messages.push({
       key: `output-${i}`,
-      message: { role: message.role || 'assistant', content: message.content },
+      message: { ...message, role: message.role || 'assistant' },
       attributeKey: 'gen_ai.output.messages',
     });
   });

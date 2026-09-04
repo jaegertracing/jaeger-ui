@@ -156,13 +156,22 @@ const mediaAttrs = () => ({
       role: 'assistant',
       parts: [{ type: 'file', modality: 'image', mime_type: 'image/png', file_id: 'provider_fileid_123' }],
     },
-    // A media part standing among text parts, where a bare URL spliced into the joined text
-    // would be indistinguishable from prose.
+    // Attachments sharing a message with text, which is what the spec's own multimodal
+    // example looks like. Each part is rendered in place, so neither the text nor the
+    // attachment is lost to the other.
     {
       role: 'assistant',
       parts: [
         { type: 'text', content: 'Here is the chart you asked for:' },
         { type: 'uri', modality: 'image', mime_type: 'image/svg+xml', uri: MEDIA_IMAGE_URL },
+      ],
+    },
+    {
+      role: 'assistant',
+      parts: [
+        { type: 'text', content: 'And the same chart embedded rather than linked:' },
+        { type: 'blob', modality: 'image', mime_type: 'image/svg+xml', content: MEDIA_BLOB_BASE64 },
+        { type: 'text', content: 'Both show the same latency regression.' },
       ],
     },
   ]),
