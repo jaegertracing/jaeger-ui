@@ -706,7 +706,7 @@ describe('GenAITab media rendering', () => {
     const url = 'https://example.com/chart.png';
     const { container } = renderMessage(url);
     expect(screen.getByLabelText(/Content format/)).toHaveValue('media');
-    expect(screen.getByText('Content appears to be an image link:')).toBeInTheDocument();
+    expect(screen.getByText('Image link (maybe):')).toBeInTheDocument();
     expect(container.querySelector('img.GenAITab--media')).toBeNull();
     expect(screen.getByRole('button', { name: 'Show image' })).toBeInTheDocument();
     // The value is elided by CSS rather than cut down, so the full URL is in the DOM and
@@ -718,7 +718,7 @@ describe('GenAITab media rendering', () => {
     renderMessage('https://example.com/chart.png');
     expect(screen.getByRole('option', { name: 'Image or audio' })).toHaveAttribute(
       'title',
-      expect.stringContaining('Looks like an image, recognized from the value alone')
+      expect.stringContaining('Image (maybe): recognized from the value alone')
     );
   });
 
@@ -739,9 +739,9 @@ describe('GenAITab media rendering', () => {
     const { container } = renderMessage('https://example.com/reply.mp3');
     expect(screen.getByRole('option', { name: 'Image or audio' })).toHaveAttribute(
       'title',
-      expect.stringContaining('Looks like an audio clip')
+      expect.stringContaining('Audio clip (maybe):')
     );
-    expect(screen.getByText('Content appears to be an audio clip link:')).toBeInTheDocument();
+    expect(screen.getByText('Audio clip link (maybe):')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Show audio clip' }));
 
@@ -801,7 +801,7 @@ describe('GenAITab media rendering', () => {
     fireEvent.error(container.querySelector('img.GenAITab--media') as HTMLImageElement);
 
     expect(container.querySelector('img.GenAITab--media')).toBeNull();
-    expect(screen.getByText('This image could not be loaded:')).toBeInTheDocument();
+    expect(screen.getByText('Image could not be loaded:')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Show text' })).toBeInTheDocument();
   });
 

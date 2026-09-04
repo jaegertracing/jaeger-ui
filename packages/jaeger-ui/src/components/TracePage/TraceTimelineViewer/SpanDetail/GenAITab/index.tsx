@@ -181,11 +181,14 @@ function MediaBlock({
 }) {
   const [loadFailed, setLoadFailed] = useState(false);
   const noun = mediaType === 'audio' ? 'audio clip' : 'image';
+  const Noun = mediaType === 'audio' ? 'Audio clip' : 'Image';
 
   if (!shown) {
     return (
       <RevealPrompt
-        notice={`Content appears to be an ${noun} link:`}
+        // What this is leads, and the hedge trails it: the tab recognized a link, from
+        // the value alone, and can be wrong about what it points at.
+        notice={`${Noun} link (maybe):`}
         value={src}
         actionLabel={`Show ${noun}`}
         onReveal={onShow}
@@ -195,7 +198,7 @@ function MediaBlock({
   }
 
   if (loadFailed) {
-    return <RevealPrompt notice={`This ${noun} could not be loaded:`} value={src} onShowText={onShowText} />;
+    return <RevealPrompt notice={`${Noun} could not be loaded:`} value={src} onShowText={onShowText} />;
   }
 
   return (
@@ -289,7 +292,7 @@ function PartControls({
           disabled={!view.canRender.media}
           title={
             part.media
-              ? `Looks like ${part.media.type === 'audio' ? 'an audio clip' : 'an image'}, recognized from the value alone, so it may not be one - a remote link is not fetched until you ask`
+              ? `${part.media.type === 'audio' ? 'Audio clip' : 'Image'} (maybe): recognized from the value alone, so it may not be one - a remote link is not fetched until you ask`
               : 'This part carries no image or audio to show'
           }
         >
