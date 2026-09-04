@@ -71,7 +71,7 @@ export type GenAiTokenUsage = {
 // section type it doesn't have a specific case for.
 export type GenAiSection =
   | { type: 'agent'; data: GenAiAgent }
-  | { type: 'meta'; data: { provider?: string; model?: string } }
+  | { type: 'meta'; data: { operation?: string; provider?: string; model?: string } }
   | { type: 'tokens'; data: GenAiTokenUsage }
   | {
       type: 'conversation';
@@ -415,6 +415,11 @@ const REGISTRY: SectionBuilder[] = [
       : undefined;
   },
   get => {
+    // Every GenAI span carries gen_ai.operation.name ("chat", "execute_tool", ...), so
+    // leaving it unclaimed gave most spans an "Other GenAI Attributes" section holding
+    // nothing else. It says what the span did, which belongs beside the model that did it.
+    const operation = asString(get('gen_ai.operation.name'));
+
     // gen_ai.provider.name/gen_ai.system is a genuine current/deprecated pair -
     // `||` short-circuits so gen_ai.system is only read (and claimed) when
     // gen_ai.provider.name is absent/empty, leaving a disagreeing legacy value
@@ -435,7 +440,9 @@ const REGISTRY: SectionBuilder[] = [
         ? `${responseModel} (requested: ${requestModel})`
         : responseModel || requestModel;
 
-    return provider || model ? { type: 'meta', data: { provider, model } } : undefined;
+    return operation || provider || model
+      ? { type: 'meta', data: { operation, provider, model } }
+      : undefined;
   },
   get => {
     const usage: GenAiTokenUsage = {

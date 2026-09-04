@@ -752,6 +752,19 @@ describe('extractGenAiSections', () => {
       expect(section(sections, 'other')).toBeUndefined();
     });
 
+    it('shows the operation beside the model that performed it', () => {
+      const sections = extractGenAiSections(
+        attrs({ 'gen_ai.operation.name': 'chat', 'gen_ai.request.model': 'gpt-4o' })
+      );
+      expect(section(sections, 'meta')).toEqual({
+        operation: 'chat',
+        provider: undefined,
+        model: 'gpt-4o',
+      });
+      // The operation alone no longer leaves a section holding just it.
+      expect(section(sections, 'other')).toBeUndefined();
+    });
+
     it('produces no toolCall section when no tool attributes are present', () => {
       const sections = extractGenAiSections(attrs({ 'gen_ai.usage.input_tokens': 10 }));
       expect(section(sections, 'toolCall')).toBeUndefined();
@@ -768,7 +781,6 @@ describe('extractGenAiSections', () => {
         })
       );
       expect(section(sections, 'other')?.attributes.entries()).toEqual([
-        { key: 'gen_ai.operation.name', value: 'chat' },
         { key: 'gen_ai.conversation.id', value: 'conv-1' },
       ]);
     });

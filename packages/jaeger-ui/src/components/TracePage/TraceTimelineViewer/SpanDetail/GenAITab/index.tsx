@@ -535,12 +535,14 @@ function MessageBlock({
 }
 
 function LLMDetails({
+  operation,
   provider,
   model,
   isLlmCall,
   isOpen,
   onToggle,
 }: {
+  operation?: string;
   provider?: string;
   model?: string;
   isLlmCall: boolean;
@@ -549,10 +551,11 @@ function LLMDetails({
 }) {
   const data = useMemo(() => {
     const entries: IAttribute[] = [];
+    if (operation) entries.push({ key: 'Operation', value: operation });
     if (provider) entries.push({ key: 'Provider', value: provider });
     if (model) entries.push({ key: 'Model', value: model });
     return makeAttributes(entries);
-  }, [provider, model]);
+  }, [operation, provider, model]);
   return (
     <AccordionAttributes
       className="GenAITab--section"
