@@ -2331,6 +2331,107 @@
       ],
       "logs": [],
       "processID": "p3"
+    },
+    {
+      "traceID": "4a1b2c3d4e5f60718293a4b5c6d7e8f9",
+      "spanID": "000000000000003a",
+      "operationName": "chat model-multimodal",
+      "references": [
+        {
+          "refType": "CHILD_OF",
+          "traceID": "4a1b2c3d4e5f60718293a4b5c6d7e8f9",
+          "spanID": "0000000000000004"
+        }
+      ],
+      "startTime": 1770000000058000,
+      "duration": 2100000,
+      "tags": [
+        {
+          "key": "span.kind",
+          "type": "string",
+          "value": "client"
+        },
+        {
+          "key": "gen_ai.operation.name",
+          "type": "string",
+          "value": "chat"
+        },
+        {
+          "key": "gen_ai.request.model",
+          "type": "string",
+          "value": "model-multimodal"
+        },
+        {
+          "key": "gen_ai.provider.name",
+          "type": "string",
+          "value": "example-ai"
+        },
+        {
+          "key": "gen_ai.response.model",
+          "type": "string",
+          "value": "model-multimodal"
+        },
+        {
+          "key": "gen_ai.usage.input_tokens",
+          "type": "int64",
+          "value": 210
+        },
+        {
+          "key": "gen_ai.usage.output_tokens",
+          "type": "int64",
+          "value": 480
+        },
+        {
+          "key": "gen_ai.input.messages",
+          "type": "string",
+          "value": "[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\"Chart the checkout latency and read the summary out loud.\"}]}]"
+        },
+        {
+          "key": "gen_ai.output.messages",
+          "type": "string",
+          "value": "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\"https://www.jaegertracing.io/img/jaeger-icon-reverse-color.svg\"}]},{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\"https://github.com/rafaelreis-hotmart/Audio-Sample-files/raw/master/sample.mp3\"}]},{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMjAiIGhlaWdodD0iMTYwIj48cmVjdCB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE2MCIgZmlsbD0iIzI2NDY1MyIvPjxjaXJjbGUgY3g9IjgwIiBjeT0iODAiIHI9IjQ1IiBmaWxsPSIjZTljNDZhIi8+PHRleHQgeD0iMTUwIiB5PSI4OCIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjIwIj5lbWJlZGRlZCBibG9iPC90ZXh0Pjwvc3ZnPg==\"}]},{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\"https://example.invalid/missing-chart.png\"}]},{\"role\":\"assistant\",\"parts\":[{\"type\":\"uri\",\"modality\":\"image\",\"mime_type\":\"image/svg+xml\",\"uri\":\"https://www.jaegertracing.io/img/jaeger-icon-reverse-color.svg\"}]},{\"role\":\"assistant\",\"parts\":[{\"type\":\"blob\",\"modality\":\"image\",\"mime_type\":\"image/svg+xml\",\"content\":\"PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMjAiIGhlaWdodD0iMTYwIj48cmVjdCB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE2MCIgZmlsbD0iIzI2NDY1MyIvPjxjaXJjbGUgY3g9IjgwIiBjeT0iODAiIHI9IjQ1IiBmaWxsPSIjZTljNDZhIi8+PHRleHQgeD0iMTUwIiB5PSI4OCIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjIwIj5lbWJlZGRlZCBibG9iPC90ZXh0Pjwvc3ZnPg==\"}]},{\"role\":\"assistant\",\"parts\":[{\"type\":\"uri\",\"modality\":\"image\",\"uri\":\"https://www.jaegertracing.io/img/jaeger-icon-reverse-color.svg?render=1\"}]},{\"role\":\"assistant\",\"parts\":[{\"type\":\"uri\",\"modality\":\"image\",\"uri\":\"gs://example-ai-outputs/chart-a1b2.png\"}]},{\"role\":\"assistant\",\"parts\":[{\"type\":\"blob\",\"modality\":\"audio\",\"content\":\"PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMjAiIGhlaWdodD0iMTYwIj48cmVjdCB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE2MCIgZmlsbD0iIzI2NDY1MyIvPjxjaXJjbGUgY3g9IjgwIiBjeT0iODAiIHI9IjQ1IiBmaWxsPSIjZTljNDZhIi8+PHRleHQgeD0iMTUwIiB5PSI4OCIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjIwIj5lbWJlZGRlZCBibG9iPC90ZXh0Pjwvc3ZnPg==\"}]},{\"role\":\"assistant\",\"parts\":[{\"type\":\"file\",\"modality\":\"image\",\"mime_type\":\"image/png\",\"file_id\":\"provider_fileid_123\"}]},{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\"Here is the chart you asked for:\"},{\"type\":\"uri\",\"modality\":\"image\",\"mime_type\":\"image/svg+xml\",\"uri\":\"https://www.jaegertracing.io/img/jaeger-icon-reverse-color.svg\"}]},{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\"And the same chart embedded rather than linked:\"},{\"type\":\"blob\",\"modality\":\"image\",\"mime_type\":\"image/svg+xml\",\"content\":\"PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMjAiIGhlaWdodD0iMTYwIj48cmVjdCB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE2MCIgZmlsbD0iIzI2NDY1MyIvPjxjaXJjbGUgY3g9IjgwIiBjeT0iODAiIHI9IjQ1IiBmaWxsPSIjZTljNDZhIi8+PHRleHQgeD0iMTUwIiB5PSI4OCIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjIwIj5lbWJlZGRlZCBibG9iPC90ZXh0Pjwvc3ZnPg==\"},{\"type\":\"text\",\"content\":\"Both show the same latency regression.\"}]}]"
+        }
+      ],
+      "logs": [],
+      "processID": "p3"
+    },
+    {
+      "traceID": "4a1b2c3d4e5f60718293a4b5c6d7e8f9",
+      "spanID": "000000000000003b",
+      "operationName": "POST /v1/messages",
+      "references": [
+        {
+          "refType": "CHILD_OF",
+          "traceID": "4a1b2c3d4e5f60718293a4b5c6d7e8f9",
+          "spanID": "000000000000003a"
+        }
+      ],
+      "startTime": 1770000000059000,
+      "duration": 2050000,
+      "tags": [
+        {
+          "key": "span.kind",
+          "type": "string",
+          "value": "client"
+        },
+        {
+          "key": "http.request.method",
+          "type": "string",
+          "value": "POST"
+        },
+        {
+          "key": "url.full",
+          "type": "string",
+          "value": "https://api.example-ai.test/v1/messages"
+        },
+        {
+          "key": "http.response.status_code",
+          "type": "int64",
+          "value": 200
+        }
+      ],
+      "logs": [],
+      "processID": "p3"
     }
   ],
   "processes": {

@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useMemo, useState } from 'react';
+import { Select, Tooltip } from 'antd';
 import Markdown from 'markdown-to-jsx/react';
-import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
+import { IoChevronDown, IoChevronForward, IoCopyOutline } from 'react-icons/io5';
 import { JsonView, allExpanded, collapseAllNested } from 'react-json-view-lite';
 
 import {
@@ -12,13 +13,14 @@ import {
   tryParseJson,
   GenAiAgent,
   GenAiMessage,
+  GenAiPart,
   GenAiTokenUsage,
   GenAiToolCall,
 } from './genAiData';
 import { MessageFormat, useMessageFormatStore } from './message-format-store';
 import AccordionAttributes from '../AccordionAttributes';
 import { sharedMarkdownOptions } from '../../../../../utils/markdownOptions';
-import { detectMediaType, isEmbeddedMedia, MediaType } from '../../../../../utils/media';
+import { isEmbeddedMedia, MediaType } from '../../../../../utils/media';
 import jsonViewStyles from '../../../../../utils/jsonViewStyles';
 import CopyIcon from '../../../../common/CopyIcon';
 import { makeAttributes } from '../../../../../model/attributes';
@@ -180,11 +182,14 @@ function MediaBlock({
 }) {
   const [loadFailed, setLoadFailed] = useState(false);
   const noun = mediaType === 'audio' ? 'audio clip' : 'image';
+  const Noun = mediaType === 'audio' ? 'Audio clip' : 'Image';
 
   if (!shown) {
     return (
       <RevealPrompt
-        notice={`Content appears to be an ${noun} link:`}
+        // What this is leads, and the hedge trails it: the tab recognized a link, from
+        // the value alone, and can be wrong about what it points at.
+        notice={`${Noun} link (maybe):`}
         value={src}
         actionLabel={`Show ${noun}`}
         onReveal={onShow}
@@ -194,7 +199,7 @@ function MediaBlock({
   }
 
   if (loadFailed) {
-    return <RevealPrompt notice={`This ${noun} could not be loaded:`} value={src} onShowText={onShowText} />;
+    return <RevealPrompt notice={`${Noun} could not be loaded:`} value={src} onShowText={onShowText} />;
   }
 
   return (
@@ -223,6 +228,210 @@ function MediaBlock({
   );
 }
 
+/**
+ * Which views can show a part, and which one it lands on.
+ *
+ * The format belongs to the part rather than to the message around it: a turn carrying a
+ * paragraph and an image has no single answer to "render this as what".
+ */
+function partView(part: GenAiPart, chosen: MessageFormat | null) {
+  const parsedJson = tryParseJson(part.text);
+  // Each view can only render content it supports; a requested view that can't falls back to plain.
+  const canRender: Record<MessageFormat, boolean> = {
+    plain: true,
+    markdown: true,
+    json: parsedJson !== null && typeof parsedJson === 'object',
+    image: part.media?.type === 'image',
+    audio: part.media?.type === 'audio',
+  };
+  // With nothing chosen, a part carrying media opens on it and JSON-parseable content on
+  // the tree view, else plain text (Markdown is only opt-in).
+  const defaultFormat: MessageFormat = canRender.image
+    ? 'image'
+    : canRender.audio
+      ? 'audio'
+      : canRender.json
+        ? 'json'
+        : 'plain';
+  const requested = chosen ?? defaultFormat;
+  return { parsedJson, canRender, format: canRender[requested] ? requested : ('plain' as MessageFormat) };
+}
+
+// Every view the tab has, in the order they are offered. All five are listed for every
+// part, so the list never changes shape and a reader can see what the tab can do; one
+// that cannot show this part is disabled and says why.
+const VIEWS: { format: MessageFormat; label: string }[] = [
+  { format: 'plain', label: 'Plain text' },
+  { format: 'markdown', label: 'Markdown' },
+  { format: 'json', label: 'JSON' },
+  { format: 'image', label: 'Image' },
+  { format: 'audio', label: 'Audio' },
+];
+
+/**
+ * Why a view is offered for a part, or why it is not. Empty for a view that always works,
+ * which needs no explaining.
+ *
+ * Recognizing media is a guess - a URL's extension, or a modality the instrumentation
+ * declared and the tab cannot check - so the hedge is stated where the reader chooses.
+ */
+function viewHint(format: MessageFormat, canRender: Record<MessageFormat, boolean>): string {
+  const available = canRender[format];
+  switch (format) {
+    case 'json':
+      return available ? '' : 'This part is not JSON, so there is no tree to show';
+    case 'image':
+      return available
+        ? 'Image (maybe): recognized from the value alone, so it may not be one. A remote link is not fetched until you ask.'
+        : 'This part carries no image to show';
+    case 'audio':
+      return available
+        ? 'Audio clip (maybe): recognized from the value alone, so it may not be one. A remote link is not fetched until you ask.'
+        : 'This part carries no audio to show';
+    default:
+      return '';
+  }
+}
+
+/**
+ * The view selector for one part, with the part's position beside it when a message holds
+ * several. Its copy buttons sit over the content, in PartBody.
+ */
+function PartControls({
+  view,
+  onFormatChange,
+  controlName,
+  position,
+}: {
+  view: ReturnType<typeof partView>;
+  onFormatChange: (format: MessageFormat) => void;
+  controlName: string;
+  position: string | null;
+}) {
+  return (
+    <div className="GenAITab--partControls">
+      {position !== null && <span className="GenAITab--partLabel">{position}</span>}
+      {/* The chosen view's own explanation is on the control, so the reader does not have
+          to open the list to find out why this part is shown as an image. */}
+      <Tooltip title={viewHint(view.format, view.canRender)} placement="left">
+        <Select<MessageFormat>
+          className="GenAITab--formatSelect"
+          size="small"
+          aria-label={controlName}
+          value={view.format}
+          onChange={onFormatChange}
+          popupMatchSelectWidth={false}
+          options={VIEWS.map(({ format, label }) => ({
+            value: format,
+            label,
+            disabled: !view.canRender[format],
+          }))}
+          // An item's explanation is a Tooltip rather than the title attribute a plain
+          // <option> would carry, which the browser draws too small to read.
+          optionRender={option => {
+            const hint = viewHint(option.value as MessageFormat, view.canRender);
+            const label = <span className="GenAITab--formatOption">{option.data.label}</span>;
+            return hint ? (
+              <Tooltip title={hint} placement="left">
+                {label}
+              </Tooltip>
+            ) : (
+              label
+            );
+          }}
+        />
+      </Tooltip>
+    </div>
+  );
+}
+
+/**
+ * A part's content with its copy buttons over the top-right of it.
+ *
+ * The buttons overlay the content rather than sitting in the control line, as in the
+ * attribute table, so they cost no space while reading and appear only where the value
+ * they copy is. A media part's value is the URL or the data: URI its text only describes,
+ * which is how those bytes are reached.
+ */
+function PartBody({
+  part,
+  view,
+  label,
+  copyJson,
+  revealed,
+  onReveal,
+  onShowText,
+}: {
+  part: GenAiPart;
+  view: ReturnType<typeof partView>;
+  label: string;
+  copyJson: string;
+  revealed: boolean;
+  onReveal: () => void;
+  onShowText: () => void;
+}) {
+  return (
+    <div className="GenAITab--partBody">
+      <span className="GenAITab--copyContainer">
+        <CopyIcon
+          className="GenAITab--copyIcon"
+          copyText={part.media?.src ?? part.text}
+          tooltipTitle="Copy value"
+          buttonText="Copy"
+        />
+        <CopyIcon
+          className="GenAITab--copyIcon"
+          icon={<IoCopyOutline />}
+          copyText={copyJson}
+          tooltipTitle="Copy JSON"
+          buttonText="JSON"
+        />
+      </span>
+      <PartContent
+        part={part}
+        view={view}
+        label={label}
+        revealed={revealed}
+        onReveal={onReveal}
+        onShowText={onShowText}
+      />
+    </div>
+  );
+}
+
+function PartContent({
+  part,
+  view,
+  label,
+  revealed,
+  onReveal,
+  onShowText,
+}: {
+  part: GenAiPart;
+  view: ReturnType<typeof partView>;
+  label: string;
+  revealed: boolean;
+  onReveal: () => void;
+  onShowText: () => void;
+}) {
+  if ((view.format === 'image' || view.format === 'audio') && part.media) {
+    return (
+      <MediaBlock
+        src={part.media.src}
+        mediaType={part.media.type}
+        label={label}
+        // An embedded payload costs no request, so it needs no permission to render.
+        shown={isEmbeddedMedia(part.media.src) || revealed}
+        onShow={onReveal}
+        onShowText={onShowText}
+      />
+    );
+  }
+  if (view.format === 'json') return <JsonBlock value={view.parsedJson} />;
+  if (view.format === 'markdown') return <MarkdownBlock content={part.text} onShowText={onShowText} />;
+  return <pre className="GenAITab--messageContent GenAITab--messageContent-plain">{part.text}</pre>;
+}
+
 function MessageBlock({
   message,
   formatOverride,
@@ -230,41 +439,45 @@ function MessageBlock({
   messageNumber,
 }: {
   message: GenAiMessage;
-  // Remembered format for this message's attribute, seeding its initial view; null to use
-  // the content-derived default.
+  // Remembered format for this message's attribute, seeding each part's initial view; null
+  // to use the content-derived default.
   formatOverride: MessageFormat | null;
   onFormatChange: (format: MessageFormat) => void;
   messageNumber: number;
 }) {
-  const parsedJson = useMemo(() => tryParseJson(message.content), [message.content]);
-  // This message's own view. The stored preference seeds it at mount and is recorded again
-  // whenever the dropdown is used, so the next span opens the way the reader last left it.
-  // Choosing a format for one message does not change how the other messages render.
-  const [chosenFormat, setChosenFormat] = useState<MessageFormat | null>(formatOverride);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const mediaType = useMemo(() => detectMediaType(message.content), [message.content]);
-  // The URL the reader has asked to load. Held here rather than in MediaBlock, which
-  // unmounts whenever the view switches away from Media: without this, going to Plain text
-  // and back would ask again for a link that was on screen a moment ago. Compared by
-  // value, so content arriving later in this position is never shown on a previous
-  // message's say-so.
-  const [revealedSrc, setRevealedSrc] = useState<string | null>(null);
-  // Each view can only render content it supports; a requested view that can't falls back to plain.
-  const canRender: Record<MessageFormat, boolean> = {
-    plain: true,
-    markdown: true,
-    json: parsedJson !== null && typeof parsedJson === 'object',
-    media: mediaType !== null,
-  };
-  // With nothing chosen, a media link defaults to the Media view and JSON-parseable
-  // content to the tree view, else plain text (Markdown is only opt-in).
-  const defaultFormat: MessageFormat = canRender.media ? 'media' : canRender.json ? 'json' : 'plain';
-  const requestedFormat: MessageFormat = chosenFormat ?? defaultFormat;
-  const effectiveFormat: MessageFormat = canRender[requestedFormat] ? requestedFormat : 'plain';
-  const src = message.content.trim();
-  const mediaLabel = `${mediaType === 'audio' ? 'Audio' : 'Image'} in message ${messageNumber} (${
-    message.role || 'message'
-  })`;
+  // Chosen view per part, and the sources the reader has asked to load. Both are held here
+  // rather than in the rows, which unmount whenever a view switches away from Media:
+  // without that, going to Plain text and back would ask again for an image that was on
+  // screen a moment ago. Revealed sources are compared by value, so content arriving later
+  // in this position is never shown on a previous part's say-so.
+  const [formats, setFormats] = useState<Record<number, MessageFormat>>({});
+  // The stored preference seeds this message once, at mount. Read live it would be a
+  // subscription shared with every other message on the same attribute, so using one
+  // dropdown would move all of them.
+  const [seededFormat] = useState(formatOverride);
+  const [revealed, setRevealed] = useState<ReadonlySet<string>>(new Set());
+  const role = message.role || 'message';
+  const isSinglePart = message.parts.length === 1;
+  const messageJson = JSON.stringify({ role: message.role, parts: message.parts }, null, 2);
+
+  const controlsFor = (part: GenAiPart, i: number) => (
+    <PartControls
+      view={partView(part, formats[i] ?? seededFormat)}
+      onFormatChange={format => {
+        setFormats({ ...formats, [i]: format });
+        onFormatChange(format);
+      }}
+      // A single-part message has one thing to name, so its control is named for the
+      // message; several parts each need naming apart for a screen reader.
+      controlName={
+        isSinglePart
+          ? `Content format for message ${messageNumber} (${role})`
+          : `Content format for part ${i + 1} of message ${messageNumber} (${role})`
+      }
+      position={isSinglePart ? null : `Part ${i + 1} of ${message.parts.length}`}
+    />
+  );
 
   return (
     <div className={`GenAITab--message GenAITab--message-${message.role || 'unknown'}`}>
@@ -273,7 +486,7 @@ function MessageBlock({
           type="button"
           className="GenAITab--messageToggle"
           aria-expanded={!isCollapsed}
-          aria-label={`Message ${messageNumber} (${message.role || 'message'})`}
+          aria-label={`Message ${messageNumber} (${role})`}
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
           {isCollapsed ? (
@@ -281,76 +494,55 @@ function MessageBlock({
           ) : (
             <IoChevronDown className="GenAITab--messageToggleIcon" />
           )}
-          <span className="GenAITab--messageRole">{message.role || 'message'}</span>
+          <span className="GenAITab--messageRole">{role}</span>
         </button>
-        <div className="GenAITab--messageHeaderActions">
-          <select
-            className="GenAITab--formatSelect"
-            aria-label={`Content format for message ${messageNumber} (${message.role || 'message'})`}
-            value={effectiveFormat}
-            onChange={e => {
-              const format = e.target.value as MessageFormat;
-              setChosenFormat(format);
-              onFormatChange(format);
-            }}
-          >
-            <option value="plain">Plain text</option>
-            <option value="markdown">Markdown</option>
-            <option
-              value="json"
-              disabled={!canRender.json}
-              title={canRender.json ? undefined : 'JSON is disabled - this content is not valid JSON'}
-            >
-              JSON{canRender.json ? '' : ' (not JSON)'}
-            </option>
-            <option
-              value="media"
-              disabled={!canRender.media}
-              title={
-                canRender.media
-                  ? 'Detected from the value alone, so it may not be media at all - a remote link is not fetched until you ask'
-                  : 'Media is disabled - this content is not an image or audio link'
-              }
-            >
-              {mediaType === 'audio' ? 'Maybe audio' : mediaType === 'image' ? 'Maybe image' : 'Media'}
-              {canRender.media ? '' : ' (not media)'}
-            </option>
-          </select>
-          <CopyIcon copyText={message.content} tooltipTitle="Copy message" buttonText="Copy" />
-        </div>
+        {/* One part means one set of controls, which belong on the message's own line
+            rather than taking a row of their own. Several parts each carry their own. */}
+        {isSinglePart && !isCollapsed && controlsFor(message.parts[0], 0)}
       </div>
       {isCollapsed ? (
         // A folded message still has to be identifiable, so it keeps its first line.
         // The whole value stays in the DOM for browser find-in-page, clipped in CSS.
         <div className="GenAITab--messagePreview">{message.content}</div>
-      ) : effectiveFormat === 'media' && mediaType ? (
-        <MediaBlock
-          src={src}
-          mediaType={mediaType}
-          label={mediaLabel}
-          // An embedded payload costs no request, so it needs no permission to render.
-          shown={isEmbeddedMedia(src) || revealedSrc === src}
-          onShow={() => setRevealedSrc(src)}
-          onShowText={() => setChosenFormat('plain')}
-        />
-      ) : effectiveFormat === 'json' ? (
-        <JsonBlock value={parsedJson} />
-      ) : effectiveFormat === 'markdown' ? (
-        <MarkdownBlock content={message.content} onShowText={() => setChosenFormat('plain')} />
       ) : (
-        <pre className="GenAITab--messageContent GenAITab--messageContent-plain">{message.content}</pre>
+        <div className="GenAITab--messageParts">
+          {message.parts.map((part, i) => {
+            const view = partView(part, formats[i] ?? seededFormat);
+            return (
+              <div
+                className="GenAITab--messagePart"
+                key={part.media ? `${i}-${part.media.src}` : `${i}-text`}
+              >
+                {!isSinglePart && controlsFor(part, i)}
+                <PartBody
+                  part={part}
+                  view={view}
+                  label={`${part.media?.type === 'audio' ? 'Audio' : 'Image'} in ${
+                    isSinglePart ? '' : `part ${i + 1} of `
+                  }message ${messageNumber} (${role})`}
+                  copyJson={isSinglePart ? messageJson : JSON.stringify(message.parts[i], null, 2)}
+                  revealed={part.media !== undefined && revealed.has(part.media.src)}
+                  onReveal={() => part.media && setRevealed(new Set(revealed).add(part.media.src))}
+                  onShowText={() => setFormats({ ...formats, [i]: 'plain' })}
+                />
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );
 }
 
 function LLMDetails({
+  operation,
   provider,
   model,
   isLlmCall,
   isOpen,
   onToggle,
 }: {
+  operation?: string;
   provider?: string;
   model?: string;
   isLlmCall: boolean;
@@ -359,10 +551,11 @@ function LLMDetails({
 }) {
   const data = useMemo(() => {
     const entries: IAttribute[] = [];
+    if (operation) entries.push({ key: 'Operation', value: operation });
     if (provider) entries.push({ key: 'Provider', value: provider });
     if (model) entries.push({ key: 'Model', value: model });
     return makeAttributes(entries);
-  }, [provider, model]);
+  }, [operation, provider, model]);
   return (
     <AccordionAttributes
       className="GenAITab--section"
@@ -478,7 +671,7 @@ function ConversationDetails({
   if (systemInstructions) {
     messages.push({
       key: 'system',
-      message: { role: 'system', content: systemInstructions },
+      message: { role: 'system', content: systemInstructions, parts: [{ text: systemInstructions }] },
       attributeKey: 'gen_ai.system_instructions',
     });
   }
@@ -488,7 +681,7 @@ function ConversationDetails({
   outputMessages.forEach((message, i) => {
     messages.push({
       key: `output-${i}`,
-      message: { role: message.role || 'assistant', content: message.content },
+      message: { ...message, role: message.role || 'assistant' },
       attributeKey: 'gen_ai.output.messages',
     });
   });

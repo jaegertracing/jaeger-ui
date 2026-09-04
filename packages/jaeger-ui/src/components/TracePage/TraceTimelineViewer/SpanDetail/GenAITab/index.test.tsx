@@ -23,6 +23,34 @@ function makeSpan(attributes: IAttribute[]): IOtelSpan {
   } as unknown as IOtelSpan;
 }
 
+// The view control is an antd Select, so it shows the chosen view as text rather than
+// carrying it as a form value, and choosing one means opening the list and clicking an
+// item. These read and drive it the way a reader would.
+function viewControl(scope: { getByLabelText: typeof screen.getByLabelText } = screen): HTMLElement {
+  return scope.getByLabelText(/Content format/);
+}
+
+function shownView(control: HTMLElement): string | null | undefined {
+  return control.closest('.ant-select')?.querySelector('.ant-select-content')?.getAttribute('title');
+}
+
+function openViewList(control: HTMLElement): void {
+  fireEvent.mouseDown(control);
+}
+
+// The item for one view in the list this control just opened. Every control's list is
+// portaled to the body and stays there once opened, so the newest match is this one's:
+// reopening a control reuses its list, and opening another appends after it.
+function viewItem(control: HTMLElement, label: string): HTMLElement {
+  openViewList(control);
+  const items = screen.getAllByTitle(label).filter(item => item.classList.contains('ant-select-item-option'));
+  return items[items.length - 1];
+}
+
+function chooseView(control: HTMLElement, label: string): void {
+  fireEvent.click(viewItem(control, label));
+}
+
 describe('GenAITab', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -232,7 +260,7 @@ describe('GenAITab', () => {
         ])}
       />
     );
-    fireEvent.change(screen.getByLabelText(/Content format/), { target: { value: 'markdown' } });
+    chooseView(screen.getByLabelText(/Content format/), 'Markdown');
     const content = container.querySelector('.GenAITab--messageContent');
     expect(content?.querySelector('strong')).toHaveTextContent('bold');
     expect(content?.querySelectorAll('li')).toHaveLength(2);
@@ -259,7 +287,7 @@ describe('GenAITab', () => {
         ])}
       />
     );
-    fireEvent.change(screen.getByLabelText(/Content format/), { target: { value: 'markdown' } });
+    chooseView(screen.getByLabelText(/Content format/), 'Markdown');
     const content = container.querySelector('.GenAITab--messageContent');
     expect(content?.tagName).toBe('DIV');
     expect(content?.querySelector('p')).toHaveTextContent(
@@ -278,7 +306,7 @@ describe('GenAITab', () => {
         ])}
       />
     );
-    fireEvent.change(screen.getByLabelText(/Content format/), { target: { value: 'markdown' } });
+    chooseView(screen.getByLabelText(/Content format/), 'Markdown');
     const content = container.querySelector('.GenAITab--messageContent');
     expect(content?.querySelector('pre code')).toHaveTextContent('const x = 1;');
   });
@@ -295,12 +323,12 @@ describe('GenAITab', () => {
         ])}
       />
     );
-    const select = screen.getByLabelText(/Content format/) as HTMLSelectElement;
-    fireEvent.change(select, { target: { value: 'markdown' } });
+    const select = screen.getByLabelText(/Content format/) as HTMLElement;
+    chooseView(select, 'Markdown');
 
     // The view stays selected - the size defers the parse rather than denying the view.
-    expect(select).toHaveValue('markdown');
-    expect(select.querySelector('option[value="markdown"]')).not.toBeDisabled();
+    expect(shownView(select)).toBe('Markdown');
+    expect(viewItem(select, 'Markdown')).not.toHaveAttribute('aria-disabled', 'true');
     expect(container.querySelector('.GenAITab--messageContent strong')).toBeNull();
     expect(screen.getByText('Content appears to be Markdown (150KB).')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Show text' })).toBeInTheDocument();
@@ -322,11 +350,11 @@ describe('GenAITab', () => {
         ])}
       />
     );
-    fireEvent.change(screen.getByLabelText(/Content format/), { target: { value: 'markdown' } });
+    chooseView(screen.getByLabelText(/Content format/), 'Markdown');
 
     fireEvent.click(screen.getByRole('button', { name: 'Show text' }));
 
-    expect(screen.getByLabelText(/Content format/)).toHaveValue('plain');
+    expect(shownView(screen.getByLabelText(/Content format/))).toBe('Plain text');
     expect(container.querySelector('.GenAITab--messageContent-plain')?.textContent).toBe(oversizedContent);
   });
 
@@ -342,7 +370,7 @@ describe('GenAITab', () => {
       />
     );
     expect(container.querySelector('.GenAITab--json .json-markup-key')?.textContent).toContain('answer');
-    expect(screen.getByLabelText(/Content format/)).toHaveValue('json');
+    expect(shownView(screen.getByLabelText(/Content format/))).toBe('JSON');
   });
 
   it('defaults pretty-printed JSON with leading whitespace to the interactive tree view, not plain text', () => {
@@ -357,7 +385,7 @@ describe('GenAITab', () => {
       />
     );
     expect(container.querySelector('.GenAITab--json .json-markup-key')?.textContent).toContain('answer');
-    expect(screen.getByLabelText(/Content format/)).toHaveValue('json');
+    expect(shownView(screen.getByLabelText(/Content format/))).toBe('JSON');
   });
 
   it('disables the JSON option on a message whose content does not parse as JSON', () => {
@@ -371,9 +399,7 @@ describe('GenAITab', () => {
         ])}
       />
     );
-    const select = screen.getByLabelText(/Content format/) as HTMLSelectElement;
-    const jsonOption = select.querySelector('option[value="json"]') as HTMLOptionElement;
-    expect(jsonOption.disabled).toBe(true);
+    expect(viewItem(viewControl(), 'JSON')).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('falls back to plain text on a message whose content is not valid JSON, even when the attribute-level preference is JSON, keeping the dropdown in sync', () => {
@@ -390,16 +416,15 @@ describe('GenAITab', () => {
         ])}
       />
     );
-    const [firstSelect, secondSelect] = screen.getAllByLabelText(/Content format/) as HTMLSelectElement[];
+    const [firstSelect, secondSelect] = screen.getAllByLabelText(/Content format/) as HTMLElement[];
     // The format preference is stored per attribute name, not per message - explicitly
     // selecting JSON on the first (valid-JSON) message sets that attribute-level
     // preference, which the second message also picks up despite its own content not
     // being JSON.
-    fireEvent.change(firstSelect, { target: { value: 'json' } });
+    chooseView(firstSelect, 'JSON');
 
-    expect(secondSelect).toHaveValue('plain');
-    const jsonOption = secondSelect.querySelector('option[value="json"]') as HTMLOptionElement;
-    expect(jsonOption.disabled).toBe(true);
+    expect(shownView(secondSelect)).toBe('Plain text');
+    expect(viewItem(secondSelect, 'JSON')).toHaveAttribute('aria-disabled', 'true');
     const secondBlock = screen.getByText('This is plain prose, not JSON.').closest('.GenAITab--message');
     expect(secondBlock?.querySelector('.GenAITab--messageContent-plain')).toBeInTheDocument();
     expect(container.querySelectorAll('.GenAITab--json')).toHaveLength(1);
@@ -416,7 +441,7 @@ describe('GenAITab', () => {
         ])}
       />
     );
-    fireEvent.change(screen.getByLabelText(/Content format/), { target: { value: 'markdown' } });
+    chooseView(screen.getByLabelText(/Content format/), 'Markdown');
     unmount();
 
     const { container } = render(
@@ -429,7 +454,7 @@ describe('GenAITab', () => {
         ])}
       />
     );
-    expect(screen.getByLabelText(/Content format/)).toHaveValue('markdown');
+    expect(shownView(screen.getByLabelText(/Content format/))).toBe('Markdown');
     expect(container.querySelector('.GenAITab--messageContent strong')).toBeInTheDocument();
   });
 
@@ -449,10 +474,10 @@ describe('GenAITab', () => {
     );
     const [firstSelect, secondSelect] = screen.getAllByLabelText(/Content format/);
 
-    fireEvent.change(firstSelect, { target: { value: 'markdown' } });
+    chooseView(firstSelect, 'Markdown');
 
-    expect(firstSelect).toHaveValue('markdown');
-    expect(secondSelect).toHaveValue('plain');
+    expect(shownView(firstSelect)).toBe('Markdown');
+    expect(shownView(secondSelect)).toBe('Plain text');
     expect(container.querySelectorAll('.GenAITab--messageContent strong')).toHaveLength(1);
   });
 
@@ -486,11 +511,11 @@ describe('GenAITab', () => {
     );
     const outputBlock = screen.getByText('Output text.').closest('.GenAITab--message');
     const inputBlock = screen.getByText('Input text.').closest('.GenAITab--message');
-    const outputSelect = outputBlock?.querySelector('.GenAITab--formatSelect') as HTMLSelectElement;
-    const inputSelect = inputBlock?.querySelector('.GenAITab--formatSelect') as HTMLSelectElement;
+    const outputSelect = outputBlock?.querySelector('.GenAITab--formatSelect') as HTMLElement;
+    const inputSelect = inputBlock?.querySelector('.GenAITab--formatSelect') as HTMLElement;
 
-    fireEvent.change(outputSelect, { target: { value: 'markdown' } });
-    expect(inputSelect).toHaveValue('plain');
+    chooseView(outputSelect, 'Markdown');
+    expect(shownView(inputSelect)).toBe('Plain text');
     expect(container.querySelectorAll('.GenAITab--formatSelect')).toHaveLength(2);
   });
 
@@ -561,13 +586,13 @@ describe('GenAITab', () => {
   });
 
   it('auto-expands Other GenAI Attributes when it is the only section', () => {
-    render(<GenAITab span={makeSpan([{ key: 'gen_ai.operation.name', value: 'chat' }])} />);
+    render(<GenAITab span={makeSpan([{ key: 'gen_ai.conversation.id', value: 'conv-1' }])} />);
     expect(screen.getByText('Other GenAI Attributes').closest('[role="switch"]')).toHaveAttribute(
       'aria-checked',
       'true'
     );
-    expect(screen.getByText('gen_ai.operation.name')).toBeInTheDocument();
-    expect(screen.getByText('chat')).toBeInTheDocument();
+    expect(screen.getByText('gen_ai.conversation.id')).toBeInTheDocument();
+    expect(screen.getByText('conv-1')).toBeInTheDocument();
     expect(screen.queryByText('No GenAI-specific attributes found on this span.')).not.toBeInTheDocument();
   });
 
@@ -576,7 +601,7 @@ describe('GenAITab', () => {
       <GenAITab
         span={makeSpan([
           { key: 'gen_ai.provider.name', value: 'openai' },
-          { key: 'gen_ai.operation.name', value: 'chat' },
+          { key: 'gen_ai.conversation.id', value: 'conv-1' },
         ])}
       />
     );
@@ -674,15 +699,13 @@ describe('GenAITab message collapsing', () => {
   it('expands a collapsed message again, restoring the chosen format', () => {
     const { container } = renderConversation();
     const message = container.querySelector('.GenAITab--message') as HTMLElement;
-    fireEvent.change(within(message).getByLabelText(/Content format/), {
-      target: { value: 'markdown' },
-    });
+    chooseView(within(message).getByLabelText(/Content format/), 'Markdown');
 
     fireEvent.click(within(message).getByRole('button', { expanded: true }));
     fireEvent.click(within(message).getByRole('button', { expanded: false }));
 
     expect(message.querySelector('.GenAITab--messagePreview')).toBeNull();
-    expect(within(message).getByLabelText(/Content format/)).toHaveValue('markdown');
+    expect(shownView(within(message).getByLabelText(/Content format/))).toBe('Markdown');
   });
 });
 
@@ -705,8 +728,8 @@ describe('GenAITab media rendering', () => {
   it('offers a remote image link instead of fetching it, and shows where it points', () => {
     const url = 'https://example.com/chart.png';
     const { container } = renderMessage(url);
-    expect(screen.getByLabelText(/Content format/)).toHaveValue('media');
-    expect(screen.getByText('Content appears to be an image link:')).toBeInTheDocument();
+    expect(shownView(screen.getByLabelText(/Content format/))).toBe('Image');
+    expect(screen.getByText('Image link (maybe):')).toBeInTheDocument();
     expect(container.querySelector('img.GenAITab--media')).toBeNull();
     expect(screen.getByRole('button', { name: 'Show image' })).toBeInTheDocument();
     // The value is elided by CSS rather than cut down, so the full URL is in the DOM and
@@ -714,9 +737,24 @@ describe('GenAITab media rendering', () => {
     expect(container.querySelector('.GenAITab--revealValue')).toHaveAttribute('title', url);
   });
 
-  it('labels the Media option by the type it detected, without claiming certainty', () => {
+  it('explains the view it chose on the control itself, without claiming certainty', async () => {
     renderMessage('https://example.com/chart.png');
-    expect(screen.getByRole('option', { name: 'Maybe image' })).toBeInTheDocument();
+
+    fireEvent.mouseOver(viewControl());
+
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(
+      'Image (maybe): recognized from the value alone'
+    );
+  });
+
+  it('explains a view on its item in the list too', async () => {
+    renderMessage('Just a sentence about a cat.png file.');
+
+    fireEvent.mouseOver(
+      viewItem(viewControl(), 'Image').querySelector('.GenAITab--formatOption') as HTMLElement
+    );
+
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('This part carries no image to show');
   });
 
   it('renders the image with alt text and a no-referrer policy once the user asks for it', () => {
@@ -734,8 +772,7 @@ describe('GenAITab media rendering', () => {
 
   it('waits for a click before rendering a remote audio player, then gives it controls', () => {
     const { container } = renderMessage('https://example.com/reply.mp3');
-    expect(screen.getByRole('option', { name: 'Maybe audio' })).toBeInTheDocument();
-    expect(screen.getByText('Content appears to be an audio clip link:')).toBeInTheDocument();
+    expect(screen.getByText('Audio clip link (maybe):')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Show audio clip' }));
 
@@ -754,7 +791,7 @@ describe('GenAITab media rendering', () => {
     const { container } = renderMessage(DATA_URI);
     expect(container.querySelector('.GenAITab--messageContent-plain')).toBeNull();
 
-    fireEvent.change(screen.getByLabelText(/Content format/), { target: { value: 'plain' } });
+    chooseView(screen.getByLabelText(/Content format/), 'Plain text');
 
     expect(container.querySelector('.GenAITab--messageContent-plain')?.textContent).toBe(DATA_URI);
   });
@@ -765,7 +802,7 @@ describe('GenAITab media rendering', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Show text' }));
 
-    expect(screen.getByLabelText(/Content format/)).toHaveValue('plain');
+    expect(shownView(screen.getByLabelText(/Content format/))).toBe('Plain text');
     expect(container.querySelector('.GenAITab--messageContent-plain')?.textContent).toBe(url);
   });
 
@@ -774,17 +811,19 @@ describe('GenAITab media rendering', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Show image' }));
     const select = screen.getByLabelText(/Content format/);
 
-    fireEvent.change(select, { target: { value: 'plain' } });
-    fireEvent.change(select, { target: { value: 'media' } });
+    chooseView(select, 'Plain text');
+    chooseView(select, 'Image');
 
     expect(container.querySelector('img.GenAITab--media')).not.toBeNull();
     expect(screen.queryByRole('button', { name: 'Show image' })).toBeNull();
   });
 
-  it('leaves the Media option disabled for a value that is not a media link', () => {
+  it('leaves both media options disabled for a value that is not a media link', () => {
     const { container } = renderMessage('Just a sentence about a cat.png file.');
-    expect(screen.getByLabelText(/Content format/)).toHaveValue('plain');
-    expect(screen.getByRole('option', { name: 'Media (not media)' })).toBeDisabled();
+    expect(shownView(screen.getByLabelText(/Content format/))).toBe('Plain text');
+    const control = viewControl();
+    expect(viewItem(control, 'Image')).toHaveAttribute('aria-disabled', 'true');
+    expect(viewItem(control, 'Audio')).toHaveAttribute('aria-disabled', 'true');
     expect(container.querySelector('.GenAITab--media')).toBeNull();
   });
 
@@ -795,7 +834,7 @@ describe('GenAITab media rendering', () => {
     fireEvent.error(container.querySelector('img.GenAITab--media') as HTMLImageElement);
 
     expect(container.querySelector('img.GenAITab--media')).toBeNull();
-    expect(screen.getByText('This image could not be loaded:')).toBeInTheDocument();
+    expect(screen.getByText('Image could not be loaded:')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Show text' })).toBeInTheDocument();
   });
 

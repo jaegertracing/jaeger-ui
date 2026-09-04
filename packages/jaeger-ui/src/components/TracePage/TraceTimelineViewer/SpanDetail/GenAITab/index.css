@@ -93,13 +93,14 @@ SPDX-License-Identifier: Apache-2.0
   gap: 8px;
 }
 
+/* Narrow enough to sit on a message's header line, wide enough for "Plain text". */
 .GenAITab--formatSelect {
+  min-width: 104px;
   font-size: 11px;
-  color: var(--text-secondary);
-  background: var(--surface-primary);
-  border: 1px solid var(--border-default);
-  border-radius: 4px;
-  padding: 1px 4px;
+}
+
+.GenAITab--formatOption {
+  font-size: 12px;
 }
 
 .GenAITab--messageContent {
@@ -116,6 +117,51 @@ SPDX-License-Identifier: Apache-2.0
 
 .GenAITab--messageContent > :last-child {
   margin-bottom: 0;
+}
+
+/* One row per part, divided the same way the message box is bounded, so a message
+   carrying text and an attachment reads as one message in several rows rather than as
+   several messages. */
+.GenAITab--messagePart + .GenAITab--messagePart {
+  border-top: 1px solid var(--border-default);
+}
+
+/* A part's view selector: on the message's header line when it is the only part, and on a
+   line of its own when a message has several, where "Part 2 of 3" holds the left end so
+   the selector can sit against the right edge instead of floating mid-row. */
+.GenAITab--partControls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.GenAITab--messagePart > .GenAITab--partControls {
+  padding: 2px 8px;
+}
+
+.GenAITab--partLabel {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.GenAITab--partBody {
+  position: relative;
+}
+
+/* Copy sits over the top right of the content it copies and stays out of the way until
+   the part is pointed at, as in the attribute table. The background keeps the first line
+   of text legible underneath. */
+.GenAITab--copyContainer {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  white-space: nowrap;
+  background: var(--surface-primary);
+}
+
+.GenAITab--messagePart:not(:hover) .GenAITab--copyIcon {
+  visibility: hidden;
 }
 
 .GenAITab--messageContent-plain {

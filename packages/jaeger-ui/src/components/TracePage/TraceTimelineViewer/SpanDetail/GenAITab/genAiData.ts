@@ -3,6 +3,7 @@
 
 import type { IAttributes, AttributeValue } from '../../../../../types/otel';
 import { makeAttributes } from '../../../../../model/attributes';
+import { detectMediaType, MediaType } from '../../../../../utils/media';
 
 type GenAiRole = 'system' | 'user' | 'assistant' | 'tool' | undefined;
 
@@ -12,9 +13,32 @@ function asRole(value: unknown): GenAiRole {
   return typeof value === 'string' && GEN_AI_ROLES.has(value) ? (value as GenAiRole) : undefined;
 }
 
+/**
+ * One rendered piece of a message: its text, plus a source when a browser could load it.
+ *
+ * A message is a list of parts per the spec, and a single message may mix them - the
+ * multimodal example in the conventions is one user turn carrying a question and the
+ * image it asks about. So each part is kept separate and rendered in place, which is what
+ * lets an attachment be shown without the text around it being lost.
+ */
+export type GenAiPart = {
+  // What this part reads as. For an attachment whose bytes cannot be shown in place, a
+  // description of it - see blobSummary.
+  text: string;
+  // An image or audio clip this part carries, if it carries one: where to load it from
+  // (a uri part's URI, a data: URI built from a blob's payload, or the whole text of a
+  // part that is itself a link) and which of the two it is. Loading it needs both, so
+  // they are one field and the view never has to guess at either.
+  media?: { src: string; type: MediaType };
+};
+
 export type GenAiMessage = {
   role: GenAiRole;
+  // Every part's text joined, which is what Copy, Plain text, Markdown and the JSON view
+  // all act on. A message with one text part - still the common case - reads exactly as
+  // its text.
   content: string;
+  parts: GenAiPart[];
 };
 
 export type GenAiToolCall = {
@@ -47,7 +71,7 @@ export type GenAiTokenUsage = {
 // section type it doesn't have a specific case for.
 export type GenAiSection =
   | { type: 'agent'; data: GenAiAgent }
-  | { type: 'meta'; data: { provider?: string; model?: string } }
+  | { type: 'meta'; data: { operation?: string; provider?: string; model?: string } }
   | { type: 'tokens'; data: GenAiTokenUsage }
   | {
       type: 'conversation';
@@ -149,19 +173,102 @@ function stringifyToolValue(value: unknown): string {
 }
 
 /**
+ * Makes a part out of text alone, and notices when the whole of that text is a media link.
+ *
+ * This is how a plain URL sent as message text becomes an image: nothing in the message
+ * declares a type, so the value itself is all there is to go on.
+ */
+function textPart(text: string): GenAiPart {
+  const src = text.trim();
+  const type = detectMediaType(src);
+  return type ? { text, media: { src, type } } : { text };
+}
+
+/**
+ * Names an attachment, e.g. "image/png attachment" or "image file abc123".
+ *
+ * A blob, file or uri part is required to carry a modality and may also carry a mime_type,
+ * which is the more precise of the two and so preferred. Nothing enforces either, and a
+ * part that names neither is still worth describing by what it is.
+ */
+function describeAttachment(rec: Record<string, unknown>, noun: string): string {
+  const kind = typeof rec.mime_type === 'string' ? rec.mime_type : rec.modality;
+  return typeof kind === 'string' && kind ? `${kind} ${noun}` : noun;
+}
+
+// A blob's mime_type is only usable in a data: URI if it is a bare type/subtype with
+// optional parameters. A data: URI ends its metadata at the first comma, so a mime_type
+// containing one - which instrumentation has no reason to send but nothing prevents -
+// would redefine where the payload starts and produce a broken image.
+const MEDIA_MIME_TYPE = /^(image|audio)\/[\w.+-]+(?:;[\w.+-]+=[\w.+-]+)*$/i;
+
+const BASE64 = /^[A-Za-z0-9+/]+={0,2}$/;
+
+// A uri part may name a location only the provider can resolve - the spec's own example is
+// gs://bucket/object.png - so only these two schemes give the browser something to load.
+const LOADABLE_SCHEME = /^(?:https?|data):/i;
+
+/**
+ * What an attachment part says it carries, or null if nothing renderable is named.
+ *
+ * The part is asked before its URL is: a uri part is required to carry a `modality` and
+ * may carry a `mime_type`, so an instrumentation that says "image" is believed even when
+ * the URL has no extension to read, as `/render?id=5` does not. Sniffing the URL is the
+ * last resort, for a part that declares neither.
+ */
+function attachmentMediaType(rec: Record<string, unknown>, uri: string): MediaType | null {
+  const mimeType = typeof rec.mime_type === 'string' ? rec.mime_type : '';
+  if (MEDIA_MIME_TYPE.test(mimeType)) return mimeType.split('/')[0].toLowerCase() as MediaType;
+  const modality = typeof rec.modality === 'string' ? rec.modality.toLowerCase() : '';
+  if (modality === 'image' || modality === 'audio') return modality;
+  return detectMediaType(uri);
+}
+
+/**
+ * Returns a blob part's content as base64 with any wrapping whitespace removed, or an
+ * empty string if it is not base64 at all.
+ *
+ * Whitespace is not part of the encoding, so line-wrapped base64 is accepted and
+ * unwrapped. Padding alone is not: `====` carries no bytes, and passing it through would
+ * offer the reader an image that cannot decode.
+ */
+function base64Payload(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  const packed = value.replace(/\s+/g, '');
+  return BASE64.test(packed) ? packed : '';
+}
+
+/**
+ * Describes a blob part by its type and payload size, e.g. "image/png attachment, 42 KB".
+ *
+ * Base64 encodes three bytes as four characters, so the decoded size is the length times
+ * 3/4, less one byte per trailing '=' pad. Sizes are approximate by one or two bytes at
+ * worst, which is what a reader wants from them.
+ */
+function blobSummary(rec: Record<string, unknown>): string {
+  const label = describeAttachment(rec, 'attachment');
+  const content = base64Payload(rec.content);
+  if (!content) return label;
+  const padding = (content.match(/=*$/)?.[0] ?? '').length;
+  const bytes = Math.max(0, Math.floor((content.length * 3) / 4) - padding);
+  const size = bytes < 1024 ? `${bytes} B` : `${Math.round(bytes / 1024)} KB`;
+  return `${label}, ${size}`;
+}
+
+/**
  * Renders one ChatMessage part per the OTel GenAI parts schema (text,
  * tool_call, tool_call_response, reasoning, blob/file/uri, compaction,
  * server_tool_call(_response)). Unrecognized/future part types fall back to
  * a JSON dump so nothing is silently dropped.
  */
-function renderPart(part: unknown): string {
-  if (typeof part !== 'object' || part === null) return String(part);
+function toPart(part: unknown): GenAiPart {
+  if (typeof part !== 'object' || part === null) return textPart(String(part));
   const rec = part as Record<string, unknown>;
   switch (rec.type) {
     case 'text':
     case 'reasoning':
     case 'compaction':
-      return typeof rec.content === 'string' ? rec.content : stringifyValue(rec.content ?? rec);
+      return textPart(typeof rec.content === 'string' ? rec.content : stringifyValue(rec.content ?? rec));
     case 'tool_call':
     case 'server_tool_call': {
       const name = typeof rec.name === 'string' ? rec.name : 'unknown_tool';
@@ -170,26 +277,59 @@ function renderPart(part: unknown): string {
       // `arguments`, while ServerToolCallPart carries it under a same-named
       // `server_tool_call` field (a polymorphic, provider-specific object).
       const args = rec.type === 'tool_call' ? rec.arguments : rec.server_tool_call;
-      return `→ ${name}(${stringifyToolValue(args)})`;
+      return { text: `\u2192 ${name}(${stringifyToolValue(args)})` };
     }
     case 'tool_call_response':
-      return `← ${stringifyToolValue(rec.response)}`;
+      return { text: `\u2190 ${stringifyToolValue(rec.response)}` };
     case 'server_tool_call_response':
-      return `← ${stringifyToolValue(rec.server_tool_call_response)}`;
-    case 'blob':
-    case 'file':
+      return { text: `\u2190 ${stringifyToolValue(rec.server_tool_call_response)}` };
+    // The three attachment part types, worked through with examples at
+    // https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/non-normative/examples-llm-calls.md#multimodal-chat-completion
+    //
+    // A uri part reads as its URI, and carries it as a source when a browser could
+    // actually fetch it. A file part has only an opaque provider id, which is worth
+    // showing and impossible to load.
     case 'uri': {
-      const modality = typeof rec.modality === 'string' ? rec.modality : 'file';
-      return `[${modality} attached]`;
+      if (typeof rec.uri !== 'string') return { text: stringifyValue(rec) };
+      const uri = rec.uri.trim();
+      if (!LOADABLE_SCHEME.test(uri)) return { text: uri };
+      const type = attachmentMediaType(rec, uri);
+      return type ? { text: uri, media: { src: uri, type } } : { text: uri };
+    }
+    case 'file':
+      return {
+        text:
+          typeof rec.file_id === 'string'
+            ? describeAttachment(rec, `file ${rec.file_id}`)
+            : stringifyValue(rec),
+      };
+    // A blob is the one part whose bytes cannot be read in place: thousands of base64
+    // characters would bury the rest of the message. So its text describes it while its
+    // source carries the payload, and the media view renders the image either way.
+    case 'blob': {
+      const mimeType = typeof rec.mime_type === 'string' ? rec.mime_type : '';
+      const content = base64Payload(rec.content);
+      if (!content || !MEDIA_MIME_TYPE.test(mimeType)) return { text: blobSummary(rec) };
+      return {
+        text: blobSummary(rec),
+        media: {
+          src: `data:${mimeType};base64,${content}`,
+          type: mimeType.split('/')[0].toLowerCase() as MediaType,
+        },
+      };
     }
     default:
-      return stringifyValue(rec);
+      return { text: stringifyValue(rec) };
   }
 }
 
-function renderParts(parts: unknown): string {
-  if (!Array.isArray(parts)) return stringifyValue(parts);
-  return parts.map(renderPart).join('\n\n');
+function toParts(parts: unknown): GenAiPart[] {
+  if (!Array.isArray(parts)) return [textPart(stringifyValue(parts))];
+  return parts.map(toPart);
+}
+
+function message(role: GenAiRole, parts: GenAiPart[]): GenAiMessage {
+  return { role, content: parts.map(part => part.text).join('\n\n'), parts };
 }
 
 /**
@@ -200,10 +340,16 @@ function renderParts(parts: unknown): string {
  * array preserves it instead of silently returning no messages for it.
  *
  * Current spec (gen_ai.input.messages/output.messages): each ChatMessage is
- * `{ role, parts: [...] }` - there is no top-level `content` field, message
- * text/tool-calls/media all live inside `parts`. The deprecated
- * gen_ai.prompt/gen_ai.completion attributes instead used a flat
- * `{ role, content }` shape - kept as a fallback for older instrumentation.
+ * `{ role, parts: [...] }` - `role` and `parts` are the required properties and
+ * there is no top-level `content` field, so message text, tool calls and media
+ * all live inside `parts`. The deprecated gen_ai.prompt/gen_ai.completion
+ * attributes instead used a flat `{ role, content }` shape - kept as a fallback
+ * for older instrumentation.
+ *
+ * The GenAI conventions now live in their own repository, which has yet to cut a release
+ * and has no rendered docs site, so these link to markdown on its main branch:
+ * https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/registry/attributes/gen-ai.md#gen-ai-input-messages
+ * https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-spans.md#capturing-instructions-inputs-and-outputs
  */
 function parseMessages(value: AttributeValue | undefined): GenAiMessage[] {
   if (value == null) return [];
@@ -213,19 +359,17 @@ function parseMessages(value: AttributeValue | undefined): GenAiMessage[] {
       parsed = JSON.parse(value);
     } catch {
       // Not JSON - treat the whole string as a single message with no role.
-      return [{ role: undefined, content: value }];
+      return [message(undefined, [textPart(value)])];
     }
   }
   const entries = Array.isArray(parsed) ? parsed : [parsed];
   return entries.map((entry): GenAiMessage => {
     if (typeof entry !== 'object' || entry === null) {
-      return { role: undefined, content: String(entry) };
+      return message(undefined, [textPart(String(entry))]);
     }
     const rec = entry as Record<string, unknown>;
     const role = asRole(rec.role);
-    if (Array.isArray(rec.parts)) {
-      return { role, content: renderParts(rec.parts) };
-    }
+    if (Array.isArray(rec.parts)) return message(role, toParts(rec.parts));
     const content = rec.content;
     const contentStr =
       typeof content === 'string'
@@ -233,7 +377,7 @@ function parseMessages(value: AttributeValue | undefined): GenAiMessage[] {
         : content !== undefined
           ? stringifyValue(content)
           : stringifyValue(rec);
-    return { role, content: contentStr };
+    return message(role, [textPart(contentStr)]);
   });
 }
 
@@ -271,6 +415,11 @@ const REGISTRY: SectionBuilder[] = [
       : undefined;
   },
   get => {
+    // Every GenAI span carries gen_ai.operation.name ("chat", "execute_tool", ...), so
+    // leaving it unclaimed gave most spans an "Other GenAI Attributes" section holding
+    // nothing else. It says what the span did, which belongs beside the model that did it.
+    const operation = asString(get('gen_ai.operation.name'));
+
     // gen_ai.provider.name/gen_ai.system is a genuine current/deprecated pair -
     // `||` short-circuits so gen_ai.system is only read (and claimed) when
     // gen_ai.provider.name is absent/empty, leaving a disagreeing legacy value
@@ -291,7 +440,9 @@ const REGISTRY: SectionBuilder[] = [
         ? `${responseModel} (requested: ${requestModel})`
         : responseModel || requestModel;
 
-    return provider || model ? { type: 'meta', data: { provider, model } } : undefined;
+    return operation || provider || model
+      ? { type: 'meta', data: { operation, provider, model } }
+      : undefined;
   },
   get => {
     const usage: GenAiTokenUsage = {

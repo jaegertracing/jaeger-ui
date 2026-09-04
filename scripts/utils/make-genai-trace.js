@@ -97,6 +97,93 @@ const llmAttrs = (model, prompt, reply, inputTokens, outputTokens) => ({
   ]),
 });
 
+// These two URLs resolve, so a manual check of the media views shows a real picture and
+// plays a real sound. The tab requests them only when the reader asks it to.
+const MEDIA_IMAGE_URL = 'https://www.jaegertracing.io/img/jaeger-icon-reverse-color.svg';
+const MEDIA_AUDIO_URL = 'https://github.com/rafaelreis-hotmart/Audio-Sample-files/raw/master/sample.mp3';
+
+// Base64 of a 320x160 SVG, the form a blob part carries. Cases built from it render with
+// the network switched off.
+const MEDIA_BLOB_BASE64 =
+  'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMjAiIGhlaWdodD0iMTYwIj48cmVjdCB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE2MCIgZmlsbD0iIzI2NDY1MyIvPjxjaXJjbGUgY3g9IjgwIiBjeT0iODAiIHI9IjQ1IiBmaWxsPSIjZTljNDZhIi8+PHRleHQgeD0iMTUwIiB5PSI4OCIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjIwIj5lbWJlZGRlZCBibG9iPC90ZXh0Pjwvc3ZnPg==';
+
+// Carries one message per media shape the GenAI tab has to handle, so the conversation is
+// a manual check of every state: offered and loaded on request, rendered on sight, failed
+// to load, and the parts that name nothing renderable and so keep the placeholder.
+const mediaAttrs = () => ({
+  'gen_ai.provider.name': 'example-ai',
+  'gen_ai.response.model': 'model-multimodal',
+  'gen_ai.usage.input_tokens': 210,
+  'gen_ai.usage.output_tokens': 480,
+  'gen_ai.input.messages': JSON.stringify([
+    {
+      role: 'user',
+      parts: [{ type: 'text', content: 'Chart the checkout latency and read the summary out loud.' }],
+    },
+  ]),
+  'gen_ai.output.messages': JSON.stringify([
+    // A text part whose whole content is a link, which is how a plain media URL reaches the
+    // tab under the current spec.
+    { role: 'assistant', parts: [{ type: 'text', content: MEDIA_IMAGE_URL }] },
+    { role: 'assistant', parts: [{ type: 'text', content: MEDIA_AUDIO_URL }] },
+    // An embedded payload as a plain value: no request, so it renders on sight.
+    {
+      role: 'assistant',
+      parts: [{ type: 'text', content: `data:image/svg+xml;base64,${MEDIA_BLOB_BASE64}` }],
+    },
+    // A link that resolves to nothing, so the load-failure path is reachable.
+    { role: 'assistant', parts: [{ type: 'text', content: 'https://example.invalid/missing-chart.png' }] },
+    // The rest are the spec's multimodal part types. These first two name something a
+    // browser can render; the three after them do not.
+    {
+      role: 'assistant',
+      parts: [{ type: 'uri', modality: 'image', mime_type: 'image/svg+xml', uri: MEDIA_IMAGE_URL }],
+    },
+    {
+      role: 'assistant',
+      parts: [{ type: 'blob', modality: 'image', mime_type: 'image/svg+xml', content: MEDIA_BLOB_BASE64 }],
+    },
+    // A URL with no file extension, where the part's own modality is the only thing that
+    // says it is an image. The query string makes it look like a rendering endpoint,
+    // which is how a provider hands one back.
+    {
+      role: 'assistant',
+      parts: [{ type: 'uri', modality: 'image', uri: `${MEDIA_IMAGE_URL}?render=1` }],
+    },
+    // The spec allows a uri part to use a provider scheme, which no browser can fetch.
+    {
+      role: 'assistant',
+      parts: [{ type: 'uri', modality: 'image', uri: 'gs://example-ai-outputs/chart-a1b2.png' }],
+    },
+    // mime_type is optional, and a modality of "audio" does not name a type, so there is
+    // nothing to build a data: URI from.
+    { role: 'assistant', parts: [{ type: 'blob', modality: 'audio', content: MEDIA_BLOB_BASE64 }] },
+    // A file part carries an opaque provider id rather than a location.
+    {
+      role: 'assistant',
+      parts: [{ type: 'file', modality: 'image', mime_type: 'image/png', file_id: 'provider_fileid_123' }],
+    },
+    // Attachments sharing a message with text, which is what the spec's own multimodal
+    // example looks like. Each part is rendered in place, so neither the text nor the
+    // attachment is lost to the other.
+    {
+      role: 'assistant',
+      parts: [
+        { type: 'text', content: 'Here is the chart you asked for:' },
+        { type: 'uri', modality: 'image', mime_type: 'image/svg+xml', uri: MEDIA_IMAGE_URL },
+      ],
+    },
+    {
+      role: 'assistant',
+      parts: [
+        { type: 'text', content: 'And the same chart embedded rather than linked:' },
+        { type: 'blob', modality: 'image', mime_type: 'image/svg+xml', content: MEDIA_BLOB_BASE64 },
+        { type: 'text', content: 'Both show the same latency regression.' },
+      ],
+    },
+  ]),
+});
+
 // Feeds the GenAI detail tab's tool-call section.
 const toolCallAttrs = (name, callID, args, result) => ({
   'gen_ai.tool.name': name,
@@ -346,6 +433,26 @@ function buildTrace(turns) {
   llmCallIn(span, nestedAgent);
 
   llmCall(agent, 'model-a');
+
+  // A multimodal turn, so the tab's media views have something to render.
+  const mediaLlm = span({
+    name: 'chat model-multimodal',
+    proc: 'p3',
+    parent: agent,
+    kind: 'client',
+    genAIOp: 'chat',
+    model: 'model-multimodal',
+    duration: 2100000,
+    attrs: mediaAttrs(),
+  });
+  span({
+    name: 'POST /v1/messages',
+    proc: 'p3',
+    parent: mediaLlm,
+    kind: 'client',
+    duration: 2050000,
+    attrs: httpClient('POST', 'https://api.example-ai.test/v1/messages', 200),
+  });
 
   return spans;
 }

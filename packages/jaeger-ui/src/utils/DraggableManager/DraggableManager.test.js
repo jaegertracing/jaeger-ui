@@ -246,6 +246,13 @@ describe('DraggableManager', () => {
         expect(instance.isDragging()).toBe(false);
       });
 
+      it('lets the document be selected again', () => {
+        startDragging(instance);
+        expect(document.body.style.userSelect).toBe('none');
+        instance._handleDragEvent({ ...baseMouseEvt, type: 'mouseup' });
+        expect(document.body.style.userSelect).toBe('');
+      });
+
       it('removes the window mouse listener events', () => {
         startDragging(instance);
         expect(window.removeEventListener).not.toHaveBeenCalled();
