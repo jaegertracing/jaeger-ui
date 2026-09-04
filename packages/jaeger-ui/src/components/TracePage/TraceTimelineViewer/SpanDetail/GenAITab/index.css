@@ -118,6 +118,36 @@ SPDX-License-Identifier: Apache-2.0
   margin-bottom: 0;
 }
 
+/* One row per part, divided the same way the message box is bounded, so a message
+   carrying text and an attachment reads as one message in several rows rather than as
+   several messages. */
+.GenAITab--messagePart + .GenAITab--messagePart {
+  border-top: 1px solid var(--border-default);
+}
+
+/* A part's own controls: on the message's header line when it is the only part, and
+   right-aligned above the content when a message has several. */
+.GenAITab--partControls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.GenAITab--messagePart > .GenAITab--partControls {
+  padding: 2px 8px;
+}
+
+.GenAITab--copyContainer {
+  white-space: nowrap;
+}
+
+/* Copy stays out of the way until the row is pointed at, as in the attribute table. */
+.GenAITab--messageHeader:not(:hover) .GenAITab--copyIcon,
+.GenAITab--messagePart:not(:hover) .GenAITab--copyIcon {
+  visibility: hidden;
+}
+
 .GenAITab--messageContent-plain {
   margin: 0;
   white-space: pre-wrap;

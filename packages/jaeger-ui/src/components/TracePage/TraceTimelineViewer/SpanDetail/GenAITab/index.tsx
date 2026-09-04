@@ -3,7 +3,7 @@
 
 import React, { useMemo, useState } from 'react';
 import Markdown from 'markdown-to-jsx/react';
-import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
+import { IoChevronDown, IoChevronForward, IoCopyOutline } from 'react-icons/io5';
 import { JsonView, allExpanded, collapseAllNested } from 'react-json-view-lite';
 
 import {
@@ -223,6 +223,132 @@ function MediaBlock({
   );
 }
 
+type RenderedPart = { text: string; src: string | null; mediaType: MediaType | null };
+
+/**
+ * Which views can show a part, and which one it lands on.
+ *
+ * The format belongs to the part rather than to the message around it: a turn carrying a
+ * paragraph and an image has no single answer to "render this as what".
+ */
+function partView(part: RenderedPart, chosen: MessageFormat | null) {
+  const parsedJson = tryParseJson(part.text);
+  // Each view can only render content it supports; a requested view that can't falls back to plain.
+  const canRender: Record<MessageFormat, boolean> = {
+    plain: true,
+    markdown: true,
+    json: parsedJson !== null && typeof parsedJson === 'object',
+    media: part.mediaType !== null,
+  };
+  // With nothing chosen, media defaults to the Media view and JSON-parseable content to
+  // the tree view, else plain text (Markdown is only opt-in).
+  const defaultFormat: MessageFormat = canRender.media ? 'media' : canRender.json ? 'json' : 'plain';
+  const requested = chosen ?? defaultFormat;
+  return { parsedJson, canRender, format: canRender[requested] ? requested : ('plain' as MessageFormat) };
+}
+
+/**
+ * The view dropdown for one part, plus the copy buttons for its own value.
+ *
+ * Copy is hidden until the row is hovered, and sits beside a JSON copy, the same pair the
+ * attribute table offers. A media part's value is the URL or the data: URI its text only
+ * describes, so copying the part is how those bytes are reached.
+ */
+function PartControls({
+  part,
+  view,
+  onFormatChange,
+  controlName,
+  copyJson,
+}: {
+  part: RenderedPart;
+  view: ReturnType<typeof partView>;
+  onFormatChange: (format: MessageFormat) => void;
+  controlName: string;
+  copyJson: string;
+}) {
+  return (
+    <div className="GenAITab--partControls">
+      <select
+        className="GenAITab--formatSelect"
+        aria-label={controlName}
+        value={view.format}
+        onChange={e => onFormatChange(e.target.value as MessageFormat)}
+      >
+        <option value="plain">Plain text</option>
+        <option value="markdown">Markdown</option>
+        <option
+          value="json"
+          disabled={!view.canRender.json}
+          title={view.canRender.json ? undefined : 'JSON is disabled - this content is not valid JSON'}
+        >
+          JSON{view.canRender.json ? '' : ' (not JSON)'}
+        </option>
+        <option
+          value="media"
+          disabled={!view.canRender.media}
+          title={
+            view.canRender.media
+              ? 'Detected from the value alone, so it may not be media at all - a remote link is not fetched until you ask'
+              : 'Media is disabled - this content is not an image or audio link'
+          }
+        >
+          {part.mediaType === 'audio' ? 'Maybe audio' : part.mediaType === 'image' ? 'Maybe image' : 'Media'}
+          {view.canRender.media ? '' : ' (not media)'}
+        </option>
+      </select>
+      <span className="GenAITab--copyContainer">
+        <CopyIcon
+          className="GenAITab--copyIcon"
+          copyText={part.src ?? part.text}
+          tooltipTitle="Copy value"
+          buttonText="Copy"
+        />
+        <CopyIcon
+          className="GenAITab--copyIcon"
+          icon={<IoCopyOutline />}
+          copyText={copyJson}
+          tooltipTitle="Copy JSON"
+          buttonText="JSON"
+        />
+      </span>
+    </div>
+  );
+}
+
+function PartContent({
+  part,
+  view,
+  label,
+  revealed,
+  onReveal,
+  onShowText,
+}: {
+  part: RenderedPart;
+  view: ReturnType<typeof partView>;
+  label: string;
+  revealed: boolean;
+  onReveal: () => void;
+  onShowText: () => void;
+}) {
+  if (view.format === 'media' && part.src && part.mediaType) {
+    return (
+      <MediaBlock
+        src={part.src}
+        mediaType={part.mediaType}
+        label={label}
+        // An embedded payload costs no request, so it needs no permission to render.
+        shown={isEmbeddedMedia(part.src) || revealed}
+        onShow={onReveal}
+        onShowText={onShowText}
+      />
+    );
+  }
+  if (view.format === 'json') return <JsonBlock value={view.parsedJson} />;
+  if (view.format === 'markdown') return <MarkdownBlock content={part.text} onShowText={onShowText} />;
+  return <pre className="GenAITab--messageContent GenAITab--messageContent-plain">{part.text}</pre>;
+}
+
 function MessageBlock({
   message,
   formatOverride,
@@ -230,22 +356,17 @@ function MessageBlock({
   messageNumber,
 }: {
   message: GenAiMessage;
-  // Remembered format for this message's attribute, seeding its initial view; null to use
-  // the content-derived default.
+  // Remembered format for this message's attribute, seeding each part's initial view; null
+  // to use the content-derived default.
   formatOverride: MessageFormat | null;
   onFormatChange: (format: MessageFormat) => void;
   messageNumber: number;
 }) {
-  const parsedJson = useMemo(() => tryParseJson(message.content), [message.content]);
-  // This message's own view. The stored preference seeds it at mount and is recorded again
-  // whenever the dropdown is used, so the next span opens the way the reader last left it.
-  // Choosing a format for one message does not change how the other messages render.
-  const [chosenFormat, setChosenFormat] = useState<MessageFormat | null>(formatOverride);
   const [isCollapsed, setIsCollapsed] = useState(false);
   // What each part renders as. A part brings its own src when the spec gave it one (a uri
   // part, or a blob's payload); a text part earns one when the whole of it is a media
   // link, which is how a plain URL in a message becomes an image.
-  const renderedParts = useMemo(
+  const renderedParts: RenderedPart[] = useMemo(
     () =>
       message.parts.map(part => {
         const src = part.src ?? part.text.trim();
@@ -254,27 +375,39 @@ function MessageBlock({
       }),
     [message.parts]
   );
-  const mediaType = renderedParts.find(part => part.mediaType)?.mediaType ?? null;
-  // The sources the reader has asked to load, by value. Held here rather than in
-  // MediaBlock, which unmounts whenever the view switches away from Media: without this,
-  // going to Plain text and back would ask again for an image that was on screen a moment
-  // ago. Keyed by value, so content arriving later in this position is never shown on a
-  // previous message's say-so.
+  // Chosen view per part, and the sources the reader has asked to load. Both are held here
+  // rather than in the rows, which unmount whenever a view switches away from Media:
+  // without that, going to Plain text and back would ask again for an image that was on
+  // screen a moment ago. Revealed sources are compared by value, so content arriving later
+  // in this position is never shown on a previous part's say-so.
+  const [formats, setFormats] = useState<Record<number, MessageFormat>>({});
+  // The stored preference seeds this message once, at mount. Read live it would be a
+  // subscription shared with every other message on the same attribute, so using one
+  // dropdown would move all of them.
+  const [seededFormat] = useState(formatOverride);
   const [revealed, setRevealed] = useState<ReadonlySet<string>>(new Set());
-  // Each view can only render content it supports; a requested view that can't falls back to plain.
-  const canRender: Record<MessageFormat, boolean> = {
-    plain: true,
-    markdown: true,
-    json: parsedJson !== null && typeof parsedJson === 'object',
-    media: mediaType !== null,
-  };
-  // With nothing chosen, a media link defaults to the Media view and JSON-parseable
-  // content to the tree view, else plain text (Markdown is only opt-in).
-  const defaultFormat: MessageFormat = canRender.media ? 'media' : canRender.json ? 'json' : 'plain';
-  const requestedFormat: MessageFormat = chosenFormat ?? defaultFormat;
-  const effectiveFormat: MessageFormat = canRender[requestedFormat] ? requestedFormat : 'plain';
-  const mediaLabel = (partType: MediaType) =>
-    `${partType === 'audio' ? 'Audio' : 'Image'} in message ${messageNumber} (${message.role || 'message'})`;
+  const role = message.role || 'message';
+  const isSinglePart = renderedParts.length === 1;
+  const messageJson = JSON.stringify({ role: message.role, parts: message.parts }, null, 2);
+
+  const controlsFor = (part: RenderedPart, i: number) => (
+    <PartControls
+      part={part}
+      view={partView(part, formats[i] ?? seededFormat)}
+      onFormatChange={format => {
+        setFormats({ ...formats, [i]: format });
+        onFormatChange(format);
+      }}
+      // A single-part message has one thing to name, so its control is named for the
+      // message; several parts each need naming apart for a screen reader.
+      controlName={
+        isSinglePart
+          ? `Content format for message ${messageNumber} (${role})`
+          : `Content format for part ${i + 1} of message ${messageNumber} (${role})`
+      }
+      copyJson={isSinglePart ? messageJson : JSON.stringify(message.parts[i], null, 2)}
+    />
+  );
 
   return (
     <div className={`GenAITab--message GenAITab--message-${message.role || 'unknown'}`}>
@@ -283,7 +416,7 @@ function MessageBlock({
           type="button"
           className="GenAITab--messageToggle"
           aria-expanded={!isCollapsed}
-          aria-label={`Message ${messageNumber} (${message.role || 'message'})`}
+          aria-label={`Message ${messageNumber} (${role})`}
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
           {isCollapsed ? (
@@ -291,75 +424,37 @@ function MessageBlock({
           ) : (
             <IoChevronDown className="GenAITab--messageToggleIcon" />
           )}
-          <span className="GenAITab--messageRole">{message.role || 'message'}</span>
+          <span className="GenAITab--messageRole">{role}</span>
         </button>
-        <div className="GenAITab--messageHeaderActions">
-          <select
-            className="GenAITab--formatSelect"
-            aria-label={`Content format for message ${messageNumber} (${message.role || 'message'})`}
-            value={effectiveFormat}
-            onChange={e => {
-              const format = e.target.value as MessageFormat;
-              setChosenFormat(format);
-              onFormatChange(format);
-            }}
-          >
-            <option value="plain">Plain text</option>
-            <option value="markdown">Markdown</option>
-            <option
-              value="json"
-              disabled={!canRender.json}
-              title={canRender.json ? undefined : 'JSON is disabled - this content is not valid JSON'}
-            >
-              JSON{canRender.json ? '' : ' (not JSON)'}
-            </option>
-            <option
-              value="media"
-              disabled={!canRender.media}
-              title={
-                canRender.media
-                  ? 'Detected from the value alone, so it may not be media at all - a remote link is not fetched until you ask'
-                  : 'Media is disabled - this content is not an image or audio link'
-              }
-            >
-              {mediaType === 'audio' ? 'Maybe audio' : mediaType === 'image' ? 'Maybe image' : 'Media'}
-              {canRender.media ? '' : ' (not media)'}
-            </option>
-          </select>
-          <CopyIcon copyText={message.content} tooltipTitle="Copy message" buttonText="Copy" />
-        </div>
+        {/* One part means one set of controls, which belong on the message's own line
+            rather than taking a row of their own. Several parts each carry their own. */}
+        {isSinglePart && !isCollapsed && controlsFor(renderedParts[0], 0)}
       </div>
       {isCollapsed ? (
         // A folded message still has to be identifiable, so it keeps its first line.
         // The whole value stays in the DOM for browser find-in-page, clipped in CSS.
         <div className="GenAITab--messagePreview">{message.content}</div>
-      ) : effectiveFormat === 'media' && mediaType ? (
-        // Every part in order, so an attachment is rendered where it sits and the text
-        // sharing its message is still read.
-        renderedParts.map((part, i) =>
-          part.src && part.mediaType ? (
-            <MediaBlock
-              key={`${i}-${part.src}`}
-              src={part.src}
-              mediaType={part.mediaType}
-              label={mediaLabel(part.mediaType)}
-              // An embedded payload costs no request, so it needs no permission to render.
-              shown={isEmbeddedMedia(part.src) || revealed.has(part.src)}
-              onShow={() => setRevealed(new Set(revealed).add(part.src as string))}
-              onShowText={() => setChosenFormat('plain')}
-            />
-          ) : (
-            <pre key={`${i}-text`} className="GenAITab--messageContent GenAITab--messageContent-plain">
-              {part.text}
-            </pre>
-          )
-        )
-      ) : effectiveFormat === 'json' ? (
-        <JsonBlock value={parsedJson} />
-      ) : effectiveFormat === 'markdown' ? (
-        <MarkdownBlock content={message.content} onShowText={() => setChosenFormat('plain')} />
       ) : (
-        <pre className="GenAITab--messageContent GenAITab--messageContent-plain">{message.content}</pre>
+        <div className="GenAITab--messageParts">
+          {renderedParts.map((part, i) => {
+            const view = partView(part, formats[i] ?? seededFormat);
+            return (
+              <div className="GenAITab--messagePart" key={part.src ? `${i}-${part.src}` : `${i}-text`}>
+                {!isSinglePart && controlsFor(part, i)}
+                <PartContent
+                  part={part}
+                  view={view}
+                  label={`${part.mediaType === 'audio' ? 'Audio' : 'Image'} in ${
+                    isSinglePart ? '' : `part ${i + 1} of `
+                  }message ${messageNumber} (${role})`}
+                  revealed={part.src !== null && revealed.has(part.src)}
+                  onReveal={() => setRevealed(new Set(revealed).add(part.src as string))}
+                  onShowText={() => setFormats({ ...formats, [i]: 'plain' })}
+                />
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );
