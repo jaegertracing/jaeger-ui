@@ -29,6 +29,10 @@ export default function readJsonFile(fileList: { file: File }): Promise<string> 
         reject(new Error('Invalid result type'));
         return;
       }
+      if (reader.result.trim() === '') {
+        reject(new Error('The JSON file is empty'));
+        return;
+      }
       let traceObj;
       try {
         traceObj = JSON.parse(reader.result);
@@ -40,13 +44,21 @@ export default function readJsonFile(fileList: { file: File }): Promise<string> 
           return;
         }
       }
-      if (Array.isArray(traceObj) && traceObj.every(obj => 'resourceSpans' in obj)) {
+      if (
+        Array.isArray(traceObj) &&
+        traceObj.every(obj => obj !== null && typeof obj === 'object' && 'resourceSpans' in obj)
+      ) {
         const mergedResourceSpans = traceObj.reduce((acc, obj) => {
           acc.push(...obj.resourceSpans);
           return acc;
         }, []);
 
         traceObj = { resourceSpans: mergedResourceSpans };
+      }
+
+      if (traceObj === null || typeof traceObj !== 'object') {
+        reject(new Error('Invalid JSON trace format'));
+        return;
       }
 
       if ('resourceSpans' in traceObj) {
