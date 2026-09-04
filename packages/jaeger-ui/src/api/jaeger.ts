@@ -126,6 +126,11 @@ const JaegerAPI = {
   fetchTrace(id: string): Promise<any> {
     return getJSON(`${this.apiRoot}traces/${encodeURIComponent(id)}`);
   },
+  fetchTagValues(tagName: string, service?: string): Promise<string[]> {
+    const query: Record<string, string> = { key: tagName };
+    if (service) query.service = service;
+    return getJSON(`${this.apiRoot}metrics/attributes`, { query }).then(response => response.data || []);
+  },
   fetchMetrics(metricType: string, serviceNameList: string[], query: Record<string, any>): Promise<any> {
     const servicesName = serviceNameList.map((serviceName: string) => `service=${serviceName}`).join(',');
 

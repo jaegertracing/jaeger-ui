@@ -37,6 +37,9 @@ SPDX-License-Identifier: Apache-2.0
   vertical-align: middle;
   text-align: center;
   display: table-cell;
+  font-size: 16px;
+  color: #888;
+  font-weight: 500;
 }
 
 .crosshair-value {

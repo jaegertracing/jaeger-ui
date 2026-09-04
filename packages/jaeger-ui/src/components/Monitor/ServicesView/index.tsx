@@ -37,6 +37,7 @@ import {
   trackSelectService,
   trackSelectSpanKind,
   trackSelectTimeframe,
+  trackSelectTags,
   trackViewAllTraces,
 } from './index.track';
 import withRouteProps from '../../../utils/withRouteProps';
@@ -44,6 +45,7 @@ import withRouteProps from '../../../utils/withRouteProps';
 import SearchableSelect from '../../common/SearchableSelect';
 import { useServices } from '../../../hooks/useTraceDiscovery';
 import { getUrl, getUrlState } from '../url';
+import MultiTagSelector from '../MultiTagSelector/MultiTagSelector.jsx';
 
 type TReduxProps = {
   metrics: MetricsReduxState;
@@ -145,6 +147,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   const [selectedService, setSelectedService] = useState<string | undefined>(initialFilters.selectedService);
   const [selectedSpanKind, setSelectedSpanKind] = useState<spanKinds>(initialFilters.selectedSpanKind);
   const [selectedTimeFrame, setSelectedTimeFrame] = useState<number>(initialFilters.selectedTimeFrame);
+  const [selectedTags, setSelectedTags] = useState<string | undefined>(store.getString('lastAtmSearchTags'));
 
   const urlOwned = useRef(initialFilters.urlOwned);
   const isInternalUrlSync = useRef(false);
@@ -223,6 +226,10 @@ export function MonitorATMServicesViewImpl(props: TProps) {
     [selectedService, selectedSpanKind, services, syncFiltersToUrl]
   );
 
+  const handleTagsChange = useCallback((value: string | undefined) => {
+    setSelectedTags(value);
+    trackSelectTags(value || 'None');
+  }, []);
   const fetchMetrics = useCallback(() => {
     const currentService = resolveService(selectedService, services);
 
@@ -232,14 +239,16 @@ export function MonitorATMServicesViewImpl(props: TProps) {
       if (!urlOwned.current.spanKind) store.set('lastAtmSearchSpanKind', selectedSpanKind);
       if (!urlOwned.current.timeframe) store.set('lastAtmSearchTimeframe', selectedTimeFrame);
       if (!urlOwned.current.service) store.set('lastAtmSearchService', currentService);
+      store.set('lastAtmSearchTags', selectedTags);
 
-      const metricQueryPayload = {
+      const metricQueryPayload: MetricsAPIQueryParams = {
         quantile: 0.95,
         endTs: newEndTime,
         lookback: selectedTimeFrame,
         step: 60 * 1000,
         ratePer: 10 * 60 * 1000,
         spanKind: selectedSpanKind,
+        ...(selectedTags && { tags: selectedTags }),
       };
 
       fetchAllServiceMetrics(currentService, metricQueryPayload);
@@ -255,6 +264,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
     selectedService,
     selectedSpanKind,
     selectedTimeFrame,
+    selectedTags,
   ]);
 
   // componentDidMount equivalent
@@ -350,6 +360,14 @@ export function MonitorATMServicesViewImpl(props: TProps) {
                 </Option>
               ))}
             </SearchableSelect>
+          </Col>
+          <Col span={10}>
+            <MultiTagSelector
+              service={getSelectedService()}
+              onChange={handleTagsChange}
+              disabled={metrics.operationMetricsLoading}
+              value={selectedTags}
+            />
           </Col>
         </Row>
         <Row align="middle">
