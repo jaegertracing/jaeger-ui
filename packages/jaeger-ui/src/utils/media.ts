@@ -13,6 +13,8 @@ const AUDIO_EXTENSION = /\.(mp3|wav|ogg|oga|flac|m4a|aac|opus|weba)(?:[?#].*)?$/
 // image until its error event fires.
 const DATA_URI = /^data:(image|audio)\/[^;,\s]+(?:;[^;,]*)*,/i;
 
+// Exported because genAiData.ts applies the same test to a uri part, whose scheme the
+// GenAI spec allows to be provider-internal rather than fetchable.
 export const HTTP_URL = /^https?:\/\//i;
 
 /**
@@ -31,6 +33,17 @@ export const HTTP_URL = /^https?:\/\//i;
  * Detection is on the value alone. No attribute key is privileged, so this works for any
  * attribute carrying a link, whether or not it is part of the GenAI conventions.
  */
+/**
+ * Whether a media value carries its own payload rather than pointing at a host.
+ *
+ * An embedded payload costs no request, so rendering it tells no third party that someone
+ * is reading this trace - the distinction the GenAI tab uses to decide what it may show
+ * without being asked.
+ */
+export function isEmbeddedMedia(value: string): boolean {
+  return /^data:/i.test(value.trim());
+}
+
 export function detectMediaType(value: unknown): MediaType | null {
   if (typeof value !== 'string') return null;
   const trimmed = value.trim();

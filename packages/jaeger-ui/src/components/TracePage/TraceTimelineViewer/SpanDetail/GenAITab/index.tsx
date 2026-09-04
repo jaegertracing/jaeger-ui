@@ -3,6 +3,7 @@
 
 import React, { useMemo, useState } from 'react';
 import Markdown from 'markdown-to-jsx/react';
+import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
 import { JsonView, allExpanded, collapseAllNested } from 'react-json-view-lite';
 
 import {
@@ -17,7 +18,7 @@ import {
 import { MessageFormat, useMessageFormatStore } from './message-format-store';
 import AccordionAttributes from '../AccordionAttributes';
 import { sharedMarkdownOptions } from '../../../../../utils/markdownOptions';
-import { detectMediaType, MediaType } from '../../../../../utils/media';
+import { detectMediaType, isEmbeddedMedia, MediaType } from '../../../../../utils/media';
 import jsonViewStyles from '../../../../../utils/jsonViewStyles';
 import CopyIcon from '../../../../common/CopyIcon';
 import { makeAttributes } from '../../../../../model/attributes';
@@ -27,7 +28,7 @@ import './index.css';
 
 type Props = { span: IOtelSpan };
 
-// Above this length, Markdown parsing is skipped even if selected - avoids pathological
+// Above this length the Markdown view asks before parsing - avoids pathological
 // reflow/parse cost on huge attributes. Plain text and the JSON tree view have no such
 // cap since neither does Markdown's block-level reparsing.
 const MARKDOWN_SIZE_LIMIT = 150_000;
@@ -66,61 +67,159 @@ function JsonBlock({ value }: { value: unknown }) {
 }
 
 /**
- * Renders a message whose entire content is a link to an image or audio clip.
+ * Stands in for content a view will not render until asked, saying why and offering the
+ * way forward.
  *
- * The raw URL is never replaced, only re-presented: the format dropdown still offers
- * Plain/Markdown/JSON, and the Copy button still copies the underlying value. If the
- * resource fails to load, onLoadError lets the caller drop back to text rather than
- * leaving a broken element behind.
+ * A view withholds content when rendering it costs something the reader has not agreed
+ * to pay - parse time for a huge message, a request to a third-party host for a remote
+ * link. Withholding it silently, or disabling the view outright, leaves the reader with
+ * no way to get at their own data, so every such view says what it is holding back and
+ * offers both the render and the plain text.
+ *
+ * Every caller words it the same way - what the content appears to be, then Show <view>
+ * beside Show text - so the reader learns one shape rather than one per view.
+ *
+ * With no onReveal there is nothing left to try, and the plain text is the only way on.
+ */
+function RevealPrompt({
+  notice,
+  value,
+  actionLabel,
+  onReveal,
+  onShowText,
+}: {
+  notice: string;
+  value?: string;
+  actionLabel?: string;
+  onReveal?: () => void;
+  onShowText: () => void;
+}) {
+  return (
+    <div className="GenAITab--revealBlock">
+      <div className="GenAITab--revealNotice">
+        <span className="GenAITab--revealNoticeText">{notice}</span>
+        {value && (
+          <span className="GenAITab--revealValue" title={value}>
+            {value}
+          </span>
+        )}
+      </div>
+      <div className="GenAITab--revealActions">
+        {onReveal && actionLabel && (
+          <button type="button" className="GenAITab--revealButton" onClick={onReveal}>
+            {actionLabel}
+          </button>
+        )}
+        <button type="button" className="GenAITab--revealButton" onClick={onShowText}>
+          Show text
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * A message rendered as Markdown, withheld above MARKDOWN_SIZE_LIMIT.
+ *
+ * Markdown's block-level reparsing is what makes a huge message expensive, so a message
+ * over the limit is not parsed until the reader says to. Offering the render beats
+ * disabling the view, which left the formatted text of a large message unreachable.
+ *
+ * The confirmation lives with the component instance, so content arriving later in the
+ * same position is parsed without asking again. That costs one large parse the reader did
+ * not explicitly request, and nothing leaves the browser either way.
+ */
+function MarkdownBlock({ content, onShowText }: { content: string; onShowText: () => void }) {
+  const [renderAnyway, setRenderAnyway] = useState(false);
+
+  if (content.length > MARKDOWN_SIZE_LIMIT && !renderAnyway) {
+    return (
+      <RevealPrompt
+        notice={`Content appears to be Markdown (${Math.round(content.length / 1000)}KB).`}
+        actionLabel="Show Markdown"
+        onReveal={() => setRenderAnyway(true)}
+        onShowText={onShowText}
+      />
+    );
+  }
+
+  return (
+    <Markdown className="GenAITab--messageContent" options={genAiMarkdownOptions}>
+      {content}
+    </Markdown>
+  );
+}
+
+/**
+ * The Media view of a message whose whole content is a link to an image or audio clip.
+ *
+ * A remote URL comes from trace data, so whoever instrumented the service chooses what the
+ * browser connects to. Loading it on sight would make opening a span enough to reach a
+ * third-party host and confirm who is reading which trace, so a remote link is offered
+ * rather than fetched. An embedded payload needs no request and so tells no one anything;
+ * the caller shows it immediately.
+ *
+ * The prompt shows the start of the link so the reader can see where it points before
+ * deciding, elided to one line so a data: URI cannot fill the pane. Plain text shows the
+ * value in full, and Copy always copies it.
  */
 function MediaBlock({
   src,
   mediaType,
   label,
-  onLoadError,
+  shown,
+  onShow,
+  onShowText,
 }: {
   src: string;
   mediaType: MediaType;
   label: string;
-  onLoadError: () => void;
+  shown: boolean;
+  onShow: () => void;
+  onShowText: () => void;
 }) {
-  if (mediaType === 'audio') {
-    // preload=none is the audio counterpart to loading=lazy below: with controls alone a
-    // browser is free to fetch the clip, or at least its metadata, as soon as the element
-    // mounts, including for messages scrolled out of view.
+  const [loadFailed, setLoadFailed] = useState(false);
+  const noun = mediaType === 'audio' ? 'audio clip' : 'image';
+
+  if (!shown) {
     return (
-      <audio
-        className="GenAITab--media"
-        src={src}
-        controls
-        preload="none"
-        aria-label={label}
-        onError={onLoadError}
-      >
-        {/*
-          Fallback for a browser that cannot play the source at all, which fires no error
-          event. It carries the same no-referrer policy as the image below, since following
-          it must not hand the trace ID to the remote host either, and opens in a new tab so
-          leaving for the audio does not discard the reader's place in the trace.
-        */}
-        <a href={src} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">
-          {label}
-        </a>
-      </audio>
+      <RevealPrompt
+        notice={`Content appears to be an ${noun} link:`}
+        value={src}
+        actionLabel={`Show ${noun}`}
+        onReveal={onShow}
+        onShowText={onShowText}
+      />
     );
   }
-  // referrerPolicy: the URL comes from trace data and may point at a third party, so the
-  // Jaeger URL (which contains the trace ID) must not leak to it. loading=lazy keeps an
-  // off-screen message in a long conversation from issuing a request at all.
+
+  if (loadFailed) {
+    return <RevealPrompt notice={`This ${noun} could not be loaded:`} value={src} onShowText={onShowText} />;
+  }
+
   return (
-    <img
-      className="GenAITab--media"
-      src={src}
-      alt={label}
-      referrerPolicy="no-referrer"
-      loading="lazy"
-      onError={onLoadError}
-    />
+    <div className="GenAITab--revealBlock">
+      {mediaType === 'audio' ? (
+        <audio
+          className="GenAITab--media"
+          src={src}
+          controls
+          aria-label={label}
+          onError={() => setLoadFailed(true)}
+        />
+      ) : (
+        // referrerPolicy: the remote host must not receive the Jaeger URL, which contains
+        // the trace ID. <audio> has no such attribute, so an audio clip cannot be hidden
+        // from its host the same way - one more reason the fetch waits for a click.
+        <img
+          className="GenAITab--media"
+          src={src}
+          alt={label}
+          referrerPolicy="no-referrer"
+          onError={() => setLoadFailed(true)}
+        />
+      )}
+    </div>
   );
 }
 
@@ -131,38 +230,38 @@ function MessageBlock({
   messageNumber,
 }: {
   message: GenAiMessage;
-  // User's chosen format that overrides the content-derived default; null to use the default.
+  // Remembered format for this message's attribute, seeding its initial view; null to use
+  // the content-derived default.
   formatOverride: MessageFormat | null;
   onFormatChange: (format: MessageFormat) => void;
   messageNumber: number;
 }) {
   const parsedJson = useMemo(() => tryParseJson(message.content), [message.content]);
+  // This message's own view. The stored preference seeds it at mount and is recorded again
+  // whenever the dropdown is used, so the next span opens the way the reader last left it.
+  // Choosing a format for one message does not change how the other messages render.
+  const [chosenFormat, setChosenFormat] = useState<MessageFormat | null>(formatOverride);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const mediaType = useMemo(() => detectMediaType(message.content), [message.content]);
-  // Set once the resource itself fails to load. Detection only inspects the string, so a
-  // well-formed URL that 404s or is blocked by CSP is only discoverable at render time.
-  const [mediaLoadFailed, setMediaLoadFailed] = useState(false);
-  // The flag describes one specific URL, so it has to be dropped when the content changes
-  // or an unrelated message inherits it - messages are keyed by position, not content, so
-  // nothing else forces a remount when the content behind this component changes. Adjusted
-  // during render rather than in an effect so the new content never renders once with the
-  // previous message's flag still set.
-  const [renderedContent, setRenderedContent] = useState(message.content);
-  if (renderedContent !== message.content) {
-    setRenderedContent(message.content);
-    setMediaLoadFailed(false);
-  }
+  // The URL the reader has asked to load. Held here rather than in MediaBlock, which
+  // unmounts whenever the view switches away from Media: without this, going to Plain text
+  // and back would ask again for a link that was on screen a moment ago. Compared by
+  // value, so content arriving later in this position is never shown on a previous
+  // message's say-so.
+  const [revealedSrc, setRevealedSrc] = useState<string | null>(null);
   // Each view can only render content it supports; a requested view that can't falls back to plain.
   const canRender: Record<MessageFormat, boolean> = {
     plain: true,
-    markdown: message.content.length <= MARKDOWN_SIZE_LIMIT,
+    markdown: true,
     json: parsedJson !== null && typeof parsedJson === 'object',
-    media: mediaType !== null && !mediaLoadFailed,
+    media: mediaType !== null,
   };
-  // If no user override passed then a media link defaults to its preview and
-  // JSON-parseable content to the tree view, else plain text (Markdown is only opt-in).
+  // With nothing chosen, a media link defaults to the Media view and JSON-parseable
+  // content to the tree view, else plain text (Markdown is only opt-in).
   const defaultFormat: MessageFormat = canRender.media ? 'media' : canRender.json ? 'json' : 'plain';
-  const requestedFormat: MessageFormat = formatOverride ?? defaultFormat;
+  const requestedFormat: MessageFormat = chosenFormat ?? defaultFormat;
   const effectiveFormat: MessageFormat = canRender[requestedFormat] ? requestedFormat : 'plain';
+  const src = message.content.trim();
   const mediaLabel = `${mediaType === 'audio' ? 'Audio' : 'Image'} in message ${messageNumber} (${
     message.role || 'message'
   })`;
@@ -170,22 +269,33 @@ function MessageBlock({
   return (
     <div className={`GenAITab--message GenAITab--message-${message.role || 'unknown'}`}>
       <div className="GenAITab--messageHeader">
-        <span className="GenAITab--messageRole">{message.role || 'message'}</span>
+        <button
+          type="button"
+          className="GenAITab--messageToggle"
+          aria-expanded={!isCollapsed}
+          aria-label={`Message ${messageNumber} (${message.role || 'message'})`}
+          onClick={() => setIsCollapsed(!isCollapsed)}
+        >
+          {isCollapsed ? (
+            <IoChevronForward className="GenAITab--messageToggleIcon" />
+          ) : (
+            <IoChevronDown className="GenAITab--messageToggleIcon" />
+          )}
+          <span className="GenAITab--messageRole">{message.role || 'message'}</span>
+        </button>
         <div className="GenAITab--messageHeaderActions">
           <select
             className="GenAITab--formatSelect"
             aria-label={`Content format for message ${messageNumber} (${message.role || 'message'})`}
             value={effectiveFormat}
-            onChange={e => onFormatChange(e.target.value as MessageFormat)}
+            onChange={e => {
+              const format = e.target.value as MessageFormat;
+              setChosenFormat(format);
+              onFormatChange(format);
+            }}
           >
-            <option value="plain">Plain</option>
-            <option
-              value="markdown"
-              disabled={!canRender.markdown}
-              title={canRender.markdown ? undefined : 'Markdown is disabled for messages over 150KB'}
-            >
-              Markdown{canRender.markdown ? '' : ' (too large)'}
-            </option>
+            <option value="plain">Plain text</option>
+            <option value="markdown">Markdown</option>
             <option
               value="json"
               disabled={!canRender.json}
@@ -198,32 +308,35 @@ function MessageBlock({
               disabled={!canRender.media}
               title={
                 canRender.media
-                  ? undefined
-                  : mediaLoadFailed
-                    ? 'Media is disabled - this link could not be loaded'
-                    : 'Media is disabled - this content is not an image or audio link'
+                  ? 'Detected from the value alone, so it may not be media at all - a remote link is not fetched until you ask'
+                  : 'Media is disabled - this content is not an image or audio link'
               }
             >
-              Media
-              {canRender.media ? '' : mediaLoadFailed ? ' (failed to load)' : ' (not media)'}
+              {mediaType === 'audio' ? 'Maybe audio' : mediaType === 'image' ? 'Maybe image' : 'Media'}
+              {canRender.media ? '' : ' (not media)'}
             </option>
           </select>
           <CopyIcon copyText={message.content} tooltipTitle="Copy message" buttonText="Copy" />
         </div>
       </div>
-      {effectiveFormat === 'media' && mediaType ? (
+      {isCollapsed ? (
+        // A folded message still has to be identifiable, so it keeps its first line.
+        // The whole value stays in the DOM for browser find-in-page, clipped in CSS.
+        <div className="GenAITab--messagePreview">{message.content}</div>
+      ) : effectiveFormat === 'media' && mediaType ? (
         <MediaBlock
-          src={message.content.trim()}
+          src={src}
           mediaType={mediaType}
           label={mediaLabel}
-          onLoadError={() => setMediaLoadFailed(true)}
+          // An embedded payload costs no request, so it needs no permission to render.
+          shown={isEmbeddedMedia(src) || revealedSrc === src}
+          onShow={() => setRevealedSrc(src)}
+          onShowText={() => setChosenFormat('plain')}
         />
       ) : effectiveFormat === 'json' ? (
         <JsonBlock value={parsedJson} />
       ) : effectiveFormat === 'markdown' ? (
-        <Markdown className="GenAITab--messageContent" options={genAiMarkdownOptions}>
-          {message.content}
-        </Markdown>
+        <MarkdownBlock content={message.content} onShowText={() => setChosenFormat('plain')} />
       ) : (
         <pre className="GenAITab--messageContent GenAITab--messageContent-plain">{message.content}</pre>
       )}
@@ -290,9 +403,10 @@ function AgentDetails({
   const data = useMemo(
     () =>
       makeAttributes(
-        AGENT_FIELD_ORDER.filter(key => agent[key] != null).map(
-          (key): IAttribute => ({ key: AGENT_LABELS[key] ?? key, value: agent[key] as AttributeValue })
-        )
+        AGENT_FIELD_ORDER.filter(key => agent[key] != null).map((key): IAttribute => ({
+          key: AGENT_LABELS[key] ?? key,
+          value: agent[key] as AttributeValue,
+        }))
       ),
     [agent]
   );
@@ -345,10 +459,10 @@ function ConversationDetails({
   inputMessages: GenAiMessage[];
   outputMessages: GenAiMessage[];
 }) {
-  // Format overrides are store subscribers, not local state - a choice for an attribute
-  // name applies to every currently-rendered message from that attribute immediately, and
-  // useMessageFormatStore.overrides already merges in-memory and persisted state, so there's
-  // no separate read-then-merge step here.
+  // The store remembers the last format chosen for each attribute name and seeds every
+  // message of that attribute as it mounts; each message owns its view from then on.
+  // useMessageFormatStore.overrides already merges in-memory and persisted state, so
+  // there's no separate read-then-merge step here.
   const overrides = useMessageFormatStore(state => state.overrides);
   const setFormat = useMessageFormatStore(state => state.setFormat);
 
@@ -461,13 +575,14 @@ function UnknownDetails({
 
 export default function GenAITab({ span }: Props): React.ReactElement {
   const sections = useMemo(() => extractGenAiSections(span.attributes), [span.attributes]);
+  const hasOnlyOtherSection = sections.length === 1 && sections[0].type === 'other';
   // LLM/Agent/Tool Call/Unknown default open since they're primary content for the
   // span, unlike Other GenAI Attributes which is genuinely secondary overflow data.
   const [isLlmOpen, setIsLlmOpen] = useState(true);
   const [isAgentOpen, setIsAgentOpen] = useState(true);
   const [isToolCallOpen, setIsToolCallOpen] = useState(true);
   const [isUnknownOpen, setIsUnknownOpen] = useState(true);
-  const [isOtherOpen, setIsOtherOpen] = useState(false);
+  const [isOtherOpen, setIsOtherOpen] = useState(hasOnlyOtherSection);
 
   if (sections.length === 0) {
     return <div className="GenAITab--empty">No GenAI-specific attributes found on this span.</div>;

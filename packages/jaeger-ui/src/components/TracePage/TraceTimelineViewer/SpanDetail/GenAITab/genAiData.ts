@@ -210,13 +210,18 @@ function renderParts(parts: unknown): string {
  * - Only 'uri' and 'blob' are recoverable. 'file' carries a provider-assigned
  *   file_id, not a fetchable location - there is nothing here to render, so it
  *   keeps the placeholder too.
- * - A 'uri' part's uri is only used when it's http(s). The OTel spec explicitly
- *   allows provider-internal schemes there (e.g. gs://bucket/object.png), which
- *   no browser can fetch; passing one through unfiltered would swap readable
- *   text for a silently broken <img>, worse than the placeholder it replaced.
+ * - A 'uri' part's uri is only used when it's http(s). The spec says of that
+ *   field: "The URI may use a scheme known to the provider api (e.g.
+ *   gs://bucket/object.png), or be a publicly accessible location", and no
+ *   browser can fetch the former; passing one through unfiltered would swap
+ *   readable text for a silently broken <img>, worse than the placeholder it
+ *   replaced.
  * - A 'blob' part is only used when mime_type is present and is image/* or
- *   audio/* - the same value detectMediaType() itself requires. Guessing a MIME
- *   type from modality alone risks the same silently-broken-preview outcome.
+ *   audio/* - the same value detectMediaType() itself requires. The spec makes
+ *   mime_type optional and only `modality` required, so a spec-compliant blob
+ *   can arrive with nothing to build a data: URI from, and a modality of
+ *   "image" alone does not name a type; such a part keeps the placeholder
+ *   rather than being guessed at.
  */
 function singleMediaPartSrc(parts: unknown[]): string | null {
   if (parts.length !== 1) return null;
@@ -246,10 +251,15 @@ function singleMediaPartSrc(parts: unknown[]): string | null {
  * array preserves it instead of silently returning no messages for it.
  *
  * Current spec (gen_ai.input.messages/output.messages): each ChatMessage is
- * `{ role, parts: [...] }` - there is no top-level `content` field, message
- * text/tool-calls/media all live inside `parts`. The deprecated
- * gen_ai.prompt/gen_ai.completion attributes instead used a flat
- * `{ role, content }` shape - kept as a fallback for older instrumentation.
+ * `{ role, parts: [...] }` - `role` and `parts` are the required properties and
+ * there is no top-level `content` field, so message text, tool calls and media
+ * all live inside `parts`. The deprecated gen_ai.prompt/gen_ai.completion
+ * attributes instead used a flat `{ role, content }` shape - kept as a fallback
+ * for older instrumentation.
+ *
+ * The GenAI conventions moved out of the semantic-conventions repository into
+ * their own, which has no tagged release yet, so this cites a pinned commit:
+ * https://github.com/open-telemetry/semantic-conventions-genai/blob/94f432d7126f5884d30a2cdde6f4e89908ebb6fd/model/gen-ai/gen-ai-input-messages.json
  */
 function parseMessages(value: AttributeValue | undefined): GenAiMessage[] {
   if (value == null) return [];

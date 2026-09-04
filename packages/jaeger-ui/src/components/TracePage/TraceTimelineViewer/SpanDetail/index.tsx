@@ -11,6 +11,7 @@ import AccordionLinks from './AccordionLinks';
 import AccordionText from './AccordionText';
 import DetailState from './DetailState';
 import GenAITab from './GenAITab';
+import { extractGenAiSections } from './GenAITab/genAiData';
 import { formatDuration, formatDurationCompact } from '../utils';
 import CopyIcon from '../../../common/CopyIcon';
 import LabeledList from '../../../common/LabeledList';
@@ -88,7 +89,8 @@ export default function SpanDetail(props: SpanDetailProps) {
   ];
   const deepLinkCopyText = `${window.location.origin}${window.location.pathname}?uiFind=${span.spanID}`;
 
-  const showGenAITab = isGenAISpan(span);
+  const showGenAITab =
+    isGenAISpan(span) && extractGenAiSections(span.attributes).some(section => section.type !== 'other');
 
   const detailsContent = (
     <div>
