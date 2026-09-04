@@ -114,6 +114,37 @@ export function getSortedServiceNames(
   return services.map(s => s.name).sort();
 }
 
+/**
+ * Sanitize a pruned set against root service protection rules:
+ * - If there's a single root service, it must not be pruned.
+ * - If all root services would be pruned, discard the filter entirely.
+ *
+ * Shared by the manual service filter (useServiceFilter.tsx) and any filter that
+ * derives a pruned set programmatically (e.g. the hide-non-GenAI-services toggle),
+ * so both apply the same "never orphan the trace" guarantee.
+ */
+export function sanitizePrunedServices(pruned: Set<string>, rootServiceNames: Set<string>): Set<string> {
+  if (pruned.size === 0) return pruned;
+  if (rootServiceNames.size === 1) {
+    const rootName = rootServiceNames.values().next().value as string;
+    if (pruned.has(rootName)) {
+      const sanitized = new Set(pruned);
+      sanitized.delete(rootName);
+      return sanitized;
+    }
+    return pruned;
+  }
+  // Multiple roots: ensure at least one root remains visible.
+  let anyRootVisible = false;
+  for (const name of rootServiceNames) {
+    if (!pruned.has(name)) {
+      anyRootVisible = true;
+      break;
+    }
+  }
+  return anyRootVisible ? pruned : new Set();
+}
+
 /** localStorage key for persisted service filter defaults. */
 export const SVC_FILTER_DEFAULTS_KEY = 'svcFilter.defaults';
 

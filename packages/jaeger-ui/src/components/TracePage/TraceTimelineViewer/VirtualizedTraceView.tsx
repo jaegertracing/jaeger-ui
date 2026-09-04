@@ -34,7 +34,12 @@ import { TNil, ReduxState } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan, IOtelTrace, IAttributes, IEvent } from '../../../types/otel';
 import TTraceTimeline from '../../../types/TTraceTimeline';
-import { getSelectedSpanID, useLayoutPrefsStore, useTraceTimelineStore } from './store';
+import {
+  getSelectedSpanID,
+  selectEffectivePrunedServices,
+  useLayoutPrefsStore,
+  useTraceTimelineStore,
+} from './store';
 
 import './VirtualizedTraceView.css';
 import updateUiFind from '../../../utils/update-ui-find';
@@ -592,7 +597,7 @@ function VirtualizedTraceViewWrapper(
   const childrenHiddenIDs = useTraceTimelineStore(s => s.childrenHiddenIDs);
   const detailStates = useTraceTimelineStore(s => s.detailStates);
   const shouldScrollToFirstUiFindMatch = useTraceTimelineStore(s => s.shouldScrollToFirstUiFindMatch);
-  const prunedServices = useTraceTimelineStore(s => s.prunedServices);
+  const prunedServices = useTraceTimelineStore(selectEffectivePrunedServices);
   const selectedSpanID = detailPanelMode === 'sidepanel' ? getSelectedSpanID(detailStates) : null;
 
   const zustandSetTrace = useTraceTimelineStore(s => s.setTrace);

@@ -9,6 +9,7 @@ import colorGenerator from '../../../../utils/color-generator';
 import { IOtelTrace } from '../../../../types/otel';
 import { SVC_FILTER_DEFAULTS_KEY, SvcFilterDefaults } from '../../url/svcFilter';
 
+import '../HeaderIconButton.css';
 import './ServiceFilter.css';
 import storage from '../../../../utils/storage';
 
@@ -188,7 +189,7 @@ export default function ServiceFilter({ trace, prunedServices, onApply }: Servic
     >
       <Tooltip title="Filter services">
         <span
-          className={`ServiceFilter--button ${isFilterActive ? 'is-active' : ''}`}
+          className={`TimelineHeaderIconButton ${isFilterActive ? 'is-active' : ''}`}
           role="button"
           tabIndex={0}
           aria-label={isFilterActive ? 'Service filter active' : 'Filter services'}
