@@ -20,15 +20,21 @@ export function AttributesSummary({ data }: { data: IAttributes }) {
   }
   return (
     <ul className="AccordionAttributes--summary">
-      {data.entries().map((item, i) => (
+      {data.entries().map((item, i) => {
         // `i` is necessary in the key because item.key can repeat
-
-        <li className="AccordionAttributes--summaryItem" key={`${item.key}-${i}`}>
-          <span className="AccordionAttributes--summaryLabel">{item.key}</span>
-          <span className="AccordionAttributes--summaryDelim">=</span>
-          {String(item.value)}
-        </li>
-      ))}
+        // Truncate the summary value so multi-kilobyte strings (e.g. GenAI
+        // prompts) are not injected into the DOM while the accordion is
+        // collapsed; the full value is visible when expanded.
+        const value = String(item.value);
+        const displayValue = value.length > 60 ? `${value.slice(0, 60)}...` : value;
+        return (
+          <li className="AccordionAttributes--summaryItem" key={`${item.key}-${i}`}>
+            <span className="AccordionAttributes--summaryLabel">{item.key}</span>
+            <span className="AccordionAttributes--summaryDelim">=</span>
+            {displayValue}
+          </li>
+        );
+      })}
     </ul>
   );
 }
