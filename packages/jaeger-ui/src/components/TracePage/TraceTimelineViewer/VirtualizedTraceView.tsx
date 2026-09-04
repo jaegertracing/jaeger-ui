@@ -8,11 +8,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import _isEqual from 'lodash/isEqual';
 
 import memoizeOne from 'memoize-one';
+import _groupBy from 'lodash/groupBy';
 import type { Location, NavigateFunction } from 'react-router-dom';
 import { actions } from './duck';
 import { makeCriticalPathContext } from './criticalPath';
 import generateRowStates, { RowState } from './generateRowStates';
-import ListView from './ListView';
+import ListView, { ListViewRef } from './ListView';
 import PrunedSpanRow from './PrunedSpanRow';
 import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
@@ -118,12 +119,58 @@ function getCssClasses(currentViewRange: [number, number]) {
 const memoizedGenerateRowStates = memoizeOne(generateRowStatesFromTrace);
 const memoizedViewBoundsFunc = memoizeOne(createViewedBoundsFunc, _isEqual);
 const memoizedGetCssClasses = memoizeOne(getCssClasses, _isEqual);
+const memoizedCriticalPathsBySpanID = memoizeOne((criticalPath: CriticalPathSection[]) =>
+  _groupBy(criticalPath, x => x.spanID)
+);
+
+/**
+ * Precompute bubbled critical path sections for all parents with pruned children.
+ * Returns a map from parent spanID → merged critical path sections from pruned subtrees.
+ * Memoized so it runs once per render cycle (when criticalPath/prunedServices/spans change).
+ */
+const _memoizedPrunedCriticalPaths = memoizeOne(
+  (
+    criticalPath: CriticalPathSection[],
+    prunedServices: Set<string>,
+    spans: ReadonlyArray<IOtelSpan>
+  ): Map<string, CriticalPathSection[]> => {
+    if (prunedServices.size === 0) return new Map();
+    const pathBySpanID = memoizedCriticalPathsBySpanID(criticalPath);
+    const result = new Map<string, CriticalPathSection[]>();
+
+    const collectFromSubtree = (s: IOtelSpan, sections: CriticalPathSection[]) => {
+      const spanSections = pathBySpanID[s.spanID];
+      if (spanSections) {
+        for (const section of spanSections) {
+          sections.push({ ...section });
+        }
+      }
+      for (const child of s.childSpans) {
+        collectFromSubtree(child, sections);
+      }
+    };
+
+    for (const span of spans) {
+      if (!span.hasChildren) continue;
+      const prunedSections: CriticalPathSection[] = [];
+      for (const child of span.childSpans) {
+        if (prunedServices.has(child.resource.serviceName)) {
+          collectFromSubtree(child, prunedSections);
+        }
+      }
+      if (prunedSections.length > 0) {
+        result.set(span.spanID, prunedSections);
+      }
+    }
+    return result;
+  }
+);
 
 // export for tests
 export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceViewImpl(
   props: VirtualizedTraceViewProps
 ) {
-  const listViewRef = useRef<ListView | TNil>(null);
+  const listViewRef = useRef<ListViewRef | TNil>(null);
 
   // TODO: React documents writing a ref during render as unsafe, because a render that gets
   // discarded leaves the ref holding props that never committed. Nothing in this subtree uses
@@ -237,7 +284,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
   ]);
 
   const setListView = useCallback(
-    (listView: ListView | TNil) => {
+    (listView: ListViewRef | TNil) => {
       const isChanged = listViewRef.current !== listView;
       listViewRef.current = listView;
       if (listView && isChanged) {
