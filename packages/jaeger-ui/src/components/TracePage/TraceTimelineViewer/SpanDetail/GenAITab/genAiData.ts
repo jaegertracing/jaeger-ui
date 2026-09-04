@@ -3,6 +3,7 @@
 
 import type { IAttributes, AttributeValue } from '../../../../../types/otel';
 import { makeAttributes } from '../../../../../model/attributes';
+import { detectMediaType, MediaType } from '../../../../../utils/media';
 
 type GenAiRole = 'system' | 'user' | 'assistant' | 'tool' | undefined;
 
@@ -20,13 +21,16 @@ function asRole(value: unknown): GenAiRole {
  * image it asks about. So each part is kept separate and rendered in place, which is what
  * lets an attachment be shown without the text around it being lost.
  */
-type GenAiPart = {
+export type GenAiPart = {
   // What this part reads as. For an attachment whose bytes cannot be shown in place, a
   // description of it - see blobSummary.
   text: string;
-  // Where the part's media can be loaded from, if anywhere: a uri part's URI, or a data:
-  // URI built from a blob's payload.
+  // Where the part's media can be loaded from, if anywhere: a uri part's URI, a data:
+  // URI built from a blob's payload, or the whole text of a part that is itself a link.
   src?: string;
+  // What that source is, when it is an image or an audio clip. Set together with src, so a
+  // part carries both what to load and how to show it, and the view never has to guess.
+  mediaType?: MediaType;
 };
 
 export type GenAiMessage = {
@@ -169,6 +173,18 @@ function stringifyToolValue(value: unknown): string {
   }
 }
 
+/**
+ * Makes a part out of text alone, and notices when the whole of that text is a media link.
+ *
+ * This is how a plain URL sent as message text becomes an image: nothing in the message
+ * declares a type, so the value itself is all there is to go on.
+ */
+function textPart(text: string): GenAiPart {
+  const src = text.trim();
+  const mediaType = detectMediaType(src);
+  return mediaType ? { text, src, mediaType } : { text };
+}
+
 function asModality(rec: Record<string, unknown>): string {
   return typeof rec.modality === 'string' ? rec.modality : 'file';
 }
@@ -184,6 +200,22 @@ const BASE64 = /^[A-Za-z0-9+/]+={0,2}$/;
 // A uri part may name a location only the provider can resolve - the spec's own example is
 // gs://bucket/object.png - so only these two schemes give the browser something to load.
 const LOADABLE_SCHEME = /^(?:https?|data):/i;
+
+/**
+ * What an attachment part says it carries, or null if nothing renderable is named.
+ *
+ * The part is asked before its URL is: a uri part is required to carry a `modality` and
+ * may carry a `mime_type`, so an instrumentation that says "image" is believed even when
+ * the URL has no extension to read, as `/render?id=5` does not. Sniffing the URL is the
+ * last resort, for a part that declares neither.
+ */
+function attachmentMediaType(rec: Record<string, unknown>, uri: string): MediaType | null {
+  const mimeType = typeof rec.mime_type === 'string' ? rec.mime_type : '';
+  if (MEDIA_MIME_TYPE.test(mimeType)) return mimeType.split('/')[0].toLowerCase() as MediaType;
+  const modality = typeof rec.modality === 'string' ? rec.modality.toLowerCase() : '';
+  if (modality === 'image' || modality === 'audio') return modality;
+  return detectMediaType(uri);
+}
 
 /**
  * Returns a blob part's content as base64 with any wrapping whitespace removed, or an
@@ -223,13 +255,13 @@ function blobSummary(rec: Record<string, unknown>): string {
  * a JSON dump so nothing is silently dropped.
  */
 function toPart(part: unknown): GenAiPart {
-  if (typeof part !== 'object' || part === null) return { text: String(part) };
+  if (typeof part !== 'object' || part === null) return textPart(String(part));
   const rec = part as Record<string, unknown>;
   switch (rec.type) {
     case 'text':
     case 'reasoning':
     case 'compaction':
-      return { text: typeof rec.content === 'string' ? rec.content : stringifyValue(rec.content ?? rec) };
+      return textPart(typeof rec.content === 'string' ? rec.content : stringifyValue(rec.content ?? rec));
     case 'tool_call':
     case 'server_tool_call': {
       const name = typeof rec.name === 'string' ? rec.name : 'unknown_tool';
@@ -253,7 +285,9 @@ function toPart(part: unknown): GenAiPart {
     case 'uri': {
       if (typeof rec.uri !== 'string') return { text: stringifyValue(rec) };
       const uri = rec.uri.trim();
-      return LOADABLE_SCHEME.test(uri) ? { text: uri, src: uri } : { text: uri };
+      if (!LOADABLE_SCHEME.test(uri)) return { text: uri };
+      const mediaType = attachmentMediaType(rec, uri);
+      return mediaType ? { text: uri, src: uri, mediaType } : { text: uri };
     }
     case 'file':
       return {
@@ -266,9 +300,12 @@ function toPart(part: unknown): GenAiPart {
     case 'blob': {
       const mimeType = typeof rec.mime_type === 'string' ? rec.mime_type : '';
       const content = base64Payload(rec.content);
-      const src =
-        content && MEDIA_MIME_TYPE.test(mimeType) ? `data:${mimeType};base64,${content}` : undefined;
-      return { text: blobSummary(rec), src };
+      if (!content || !MEDIA_MIME_TYPE.test(mimeType)) return { text: blobSummary(rec) };
+      return {
+        text: blobSummary(rec),
+        src: `data:${mimeType};base64,${content}`,
+        mediaType: mimeType.split('/')[0].toLowerCase() as MediaType,
+      };
     }
     default:
       return { text: stringifyValue(rec) };
@@ -276,7 +313,7 @@ function toPart(part: unknown): GenAiPart {
 }
 
 function toParts(parts: unknown): GenAiPart[] {
-  if (!Array.isArray(parts)) return [{ text: stringifyValue(parts) }];
+  if (!Array.isArray(parts)) return [textPart(stringifyValue(parts))];
   return parts.map(toPart);
 }
 
@@ -315,13 +352,13 @@ function parseMessages(value: AttributeValue | undefined): GenAiMessage[] {
       parsed = JSON.parse(value);
     } catch {
       // Not JSON - treat the whole string as a single message with no role.
-      return [message(undefined, [{ text: value }])];
+      return [message(undefined, [textPart(value)])];
     }
   }
   const entries = Array.isArray(parsed) ? parsed : [parsed];
   return entries.map((entry): GenAiMessage => {
     if (typeof entry !== 'object' || entry === null) {
-      return message(undefined, [{ text: String(entry) }]);
+      return message(undefined, [textPart(String(entry))]);
     }
     const rec = entry as Record<string, unknown>;
     const role = asRole(rec.role);
@@ -333,7 +370,7 @@ function parseMessages(value: AttributeValue | undefined): GenAiMessage[] {
         : content !== undefined
           ? stringifyValue(content)
           : stringifyValue(rec);
-    return message(role, [{ text: contentStr }]);
+    return message(role, [textPart(contentStr)]);
   });
 }
 

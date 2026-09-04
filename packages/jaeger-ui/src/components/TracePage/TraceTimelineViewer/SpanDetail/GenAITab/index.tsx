@@ -12,13 +12,14 @@ import {
   tryParseJson,
   GenAiAgent,
   GenAiMessage,
+  GenAiPart,
   GenAiTokenUsage,
   GenAiToolCall,
 } from './genAiData';
 import { MessageFormat, useMessageFormatStore } from './message-format-store';
 import AccordionAttributes from '../AccordionAttributes';
 import { sharedMarkdownOptions } from '../../../../../utils/markdownOptions';
-import { detectMediaType, isEmbeddedMedia, MediaType } from '../../../../../utils/media';
+import { isEmbeddedMedia, MediaType } from '../../../../../utils/media';
 import jsonViewStyles from '../../../../../utils/jsonViewStyles';
 import CopyIcon from '../../../../common/CopyIcon';
 import { makeAttributes } from '../../../../../model/attributes';
@@ -223,22 +224,20 @@ function MediaBlock({
   );
 }
 
-type RenderedPart = { text: string; src: string | null; mediaType: MediaType | null };
-
 /**
  * Which views can show a part, and which one it lands on.
  *
  * The format belongs to the part rather than to the message around it: a turn carrying a
  * paragraph and an image has no single answer to "render this as what".
  */
-function partView(part: RenderedPart, chosen: MessageFormat | null) {
+function partView(part: GenAiPart, chosen: MessageFormat | null) {
   const parsedJson = tryParseJson(part.text);
   // Each view can only render content it supports; a requested view that can't falls back to plain.
   const canRender: Record<MessageFormat, boolean> = {
     plain: true,
     markdown: true,
     json: parsedJson !== null && typeof parsedJson === 'object',
-    media: part.mediaType !== null,
+    media: part.mediaType !== undefined,
   };
   // With nothing chosen, media defaults to the Media view and JSON-parseable content to
   // the tree view, else plain text (Markdown is only opt-in).
@@ -258,7 +257,7 @@ function PartControls({
   controlName,
   position,
 }: {
-  part: RenderedPart;
+  part: GenAiPart;
   view: ReturnType<typeof partView>;
   onFormatChange: (format: MessageFormat) => void;
   controlName: string;
@@ -316,7 +315,7 @@ function PartBody({
   onReveal,
   onShowText,
 }: {
-  part: RenderedPart;
+  part: GenAiPart;
   view: ReturnType<typeof partView>;
   label: string;
   copyJson: string;
@@ -361,7 +360,7 @@ function PartContent({
   onReveal,
   onShowText,
 }: {
-  part: RenderedPart;
+  part: GenAiPart;
   view: ReturnType<typeof partView>;
   label: string;
   revealed: boolean;
@@ -400,18 +399,6 @@ function MessageBlock({
   messageNumber: number;
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  // What each part renders as. A part brings its own src when the spec gave it one (a uri
-  // part, or a blob's payload); a text part earns one when the whole of it is a media
-  // link, which is how a plain URL in a message becomes an image.
-  const renderedParts: RenderedPart[] = useMemo(
-    () =>
-      message.parts.map(part => {
-        const src = part.src ?? part.text.trim();
-        const mediaType = detectMediaType(src);
-        return { text: part.text, src: mediaType ? src : null, mediaType };
-      }),
-    [message.parts]
-  );
   // Chosen view per part, and the sources the reader has asked to load. Both are held here
   // rather than in the rows, which unmount whenever a view switches away from Media:
   // without that, going to Plain text and back would ask again for an image that was on
@@ -424,10 +411,10 @@ function MessageBlock({
   const [seededFormat] = useState(formatOverride);
   const [revealed, setRevealed] = useState<ReadonlySet<string>>(new Set());
   const role = message.role || 'message';
-  const isSinglePart = renderedParts.length === 1;
+  const isSinglePart = message.parts.length === 1;
   const messageJson = JSON.stringify({ role: message.role, parts: message.parts }, null, 2);
 
-  const controlsFor = (part: RenderedPart, i: number) => (
+  const controlsFor = (part: GenAiPart, i: number) => (
     <PartControls
       part={part}
       view={partView(part, formats[i] ?? seededFormat)}
@@ -442,7 +429,7 @@ function MessageBlock({
           ? `Content format for message ${messageNumber} (${role})`
           : `Content format for part ${i + 1} of message ${messageNumber} (${role})`
       }
-      position={isSinglePart ? null : `Part ${i + 1} of ${renderedParts.length}`}
+      position={isSinglePart ? null : `Part ${i + 1} of ${message.parts.length}`}
     />
   );
 
@@ -465,7 +452,7 @@ function MessageBlock({
         </button>
         {/* One part means one set of controls, which belong on the message's own line
             rather than taking a row of their own. Several parts each carry their own. */}
-        {isSinglePart && !isCollapsed && controlsFor(renderedParts[0], 0)}
+        {isSinglePart && !isCollapsed && controlsFor(message.parts[0], 0)}
       </div>
       {isCollapsed ? (
         // A folded message still has to be identifiable, so it keeps its first line.
@@ -473,7 +460,7 @@ function MessageBlock({
         <div className="GenAITab--messagePreview">{message.content}</div>
       ) : (
         <div className="GenAITab--messageParts">
-          {renderedParts.map((part, i) => {
+          {message.parts.map((part, i) => {
             const view = partView(part, formats[i] ?? seededFormat);
             return (
               <div className="GenAITab--messagePart" key={part.src ? `${i}-${part.src}` : `${i}-text`}>
@@ -485,7 +472,7 @@ function MessageBlock({
                     isSinglePart ? '' : `part ${i + 1} of `
                   }message ${messageNumber} (${role})`}
                   copyJson={isSinglePart ? messageJson : JSON.stringify(message.parts[i], null, 2)}
-                  revealed={part.src !== null && revealed.has(part.src)}
+                  revealed={part.src !== undefined && revealed.has(part.src)}
                   onReveal={() => setRevealed(new Set(revealed).add(part.src as string))}
                   onShowText={() => setFormats({ ...formats, [i]: 'plain' })}
                 />

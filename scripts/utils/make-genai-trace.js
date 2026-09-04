@@ -143,6 +143,13 @@ const mediaAttrs = () => ({
       role: 'assistant',
       parts: [{ type: 'blob', modality: 'image', mime_type: 'image/svg+xml', content: MEDIA_BLOB_BASE64 }],
     },
+    // A URL with no file extension, where the part's own modality is the only thing that
+    // says it is an image. The query string makes it look like a rendering endpoint,
+    // which is how a provider hands one back.
+    {
+      role: 'assistant',
+      parts: [{ type: 'uri', modality: 'image', uri: `${MEDIA_IMAGE_URL}?render=1` }],
+    },
     // The spec allows a uri part to use a provider scheme, which no browser can fetch.
     {
       role: 'assistant',

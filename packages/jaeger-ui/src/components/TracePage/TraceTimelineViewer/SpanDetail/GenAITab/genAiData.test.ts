@@ -310,6 +310,68 @@ describe('extractGenAiSections', () => {
       );
     });
 
+    it('believes the modality a uri part declares, even when its URL names no type', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.output.messages': [
+            {
+              role: 'assistant',
+              parts: [{ type: 'uri', modality: 'image', uri: 'https://example.com/render?id=5' }],
+            },
+          ],
+        })
+      );
+      expect(section(sections, 'conversation')?.outputMessages[0].parts).toEqual([
+        {
+          text: 'https://example.com/render?id=5',
+          src: 'https://example.com/render?id=5',
+          mediaType: 'image',
+        },
+      ]);
+    });
+
+    it("takes a uri part's mime_type over its modality", () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.output.messages': [
+            {
+              role: 'assistant',
+              parts: [
+                {
+                  type: 'uri',
+                  modality: 'image',
+                  mime_type: 'audio/mpeg',
+                  uri: 'https://example.com/clip',
+                },
+              ],
+            },
+          ],
+        })
+      );
+      expect(section(sections, 'conversation')?.outputMessages[0].parts[0].mediaType).toBe('audio');
+    });
+
+    it('reads the URL of a uri part that declares nothing renderable', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.output.messages': [
+            {
+              role: 'assistant',
+              parts: [
+                { type: 'uri', modality: 'unknown', uri: 'https://example.com/chart.png' },
+                { type: 'uri', modality: 'unknown', uri: 'https://example.com/report' },
+              ],
+            },
+          ],
+        })
+      );
+      const parts = section(sections, 'conversation')?.outputMessages[0].parts;
+      expect(parts?.[0].mediaType).toBe('image');
+      // Nothing says it is media and nothing about the URL suggests it, so no view offers
+      // to render it and the reader still gets the link.
+      expect(parts?.[1]).toEqual({ text: 'https://example.com/report' });
+    });
+
     it('shows a uri part among text parts too, not only when it stands alone', () => {
       const sections = extractGenAiSections(
         attrs({
@@ -352,7 +414,11 @@ describe('extractGenAiSections', () => {
         })
       );
       expect(section(sections, 'conversation')?.outputMessages[0].parts).toEqual([
-        { text: 'image/png attachment, 8 B', src: 'data:image/png;base64,iVBORw0KGgo=' },
+        {
+          text: 'image/png attachment, 8 B',
+          src: 'data:image/png;base64,iVBORw0KGgo=',
+          mediaType: 'image',
+        },
       ]);
     });
 
@@ -373,8 +439,12 @@ describe('extractGenAiSections', () => {
       // Both survive: the text is not lost to the attachment, and the attachment still
       // has somewhere to render from.
       expect(section(sections, 'conversation')?.outputMessages[0].parts).toEqual([
-        { text: 'Here is the chart you asked for:', src: undefined },
-        { text: 'image/png attachment, 8 B', src: 'data:image/png;base64,iVBORw0KGgo=' },
+        { text: 'Here is the chart you asked for:' },
+        {
+          text: 'image/png attachment, 8 B',
+          src: 'data:image/png;base64,iVBORw0KGgo=',
+          mediaType: 'image',
+        },
       ]);
     });
 
