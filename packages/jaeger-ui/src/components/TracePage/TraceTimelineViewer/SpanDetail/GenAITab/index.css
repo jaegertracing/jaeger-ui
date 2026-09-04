@@ -125,12 +125,13 @@ SPDX-License-Identifier: Apache-2.0
   border-top: 1px solid var(--border-default);
 }
 
-/* A part's own controls: on the message's header line when it is the only part, and
-   right-aligned above the content when a message has several. */
+/* A part's view selector: on the message's header line when it is the only part, and on a
+   line of its own when a message has several, where "Part 2 of 3" holds the left end so
+   the selector can sit against the right edge instead of floating mid-row. */
 .GenAITab--partControls {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 8px;
 }
 
@@ -138,12 +139,26 @@ SPDX-License-Identifier: Apache-2.0
   padding: 2px 8px;
 }
 
-.GenAITab--copyContainer {
-  white-space: nowrap;
+.GenAITab--partLabel {
+  color: var(--text-muted);
+  font-size: 11px;
 }
 
-/* Copy stays out of the way until the row is pointed at, as in the attribute table. */
-.GenAITab--messageHeader:not(:hover) .GenAITab--copyIcon,
+.GenAITab--partBody {
+  position: relative;
+}
+
+/* Copy sits over the top right of the content it copies and stays out of the way until
+   the part is pointed at, as in the attribute table. The background keeps the first line
+   of text legible underneath. */
+.GenAITab--copyContainer {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  white-space: nowrap;
+  background: var(--surface-primary);
+}
+
 .GenAITab--messagePart:not(:hover) .GenAITab--copyIcon {
   visibility: hidden;
 }

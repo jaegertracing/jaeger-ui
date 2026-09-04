@@ -248,27 +248,25 @@ function partView(part: RenderedPart, chosen: MessageFormat | null) {
 }
 
 /**
- * The view dropdown for one part, plus the copy buttons for its own value.
- *
- * Copy is hidden until the row is hovered, and sits beside a JSON copy, the same pair the
- * attribute table offers. A media part's value is the URL or the data: URI its text only
- * describes, so copying the part is how those bytes are reached.
+ * The view selector for one part, with the part's position beside it when a message holds
+ * several. Its copy buttons sit over the content, in PartBody.
  */
 function PartControls({
   part,
   view,
   onFormatChange,
   controlName,
-  copyJson,
+  position,
 }: {
   part: RenderedPart;
   view: ReturnType<typeof partView>;
   onFormatChange: (format: MessageFormat) => void;
   controlName: string;
-  copyJson: string;
+  position: string | null;
 }) {
   return (
     <div className="GenAITab--partControls">
+      {position !== null && <span className="GenAITab--partLabel">{position}</span>}
       <select
         className="GenAITab--formatSelect"
         aria-label={controlName}
@@ -297,6 +295,37 @@ function PartControls({
           {view.canRender.media ? '' : ' (not media)'}
         </option>
       </select>
+    </div>
+  );
+}
+
+/**
+ * A part's content with its copy buttons over the top-right of it.
+ *
+ * The buttons overlay the content rather than sitting in the control line, as in the
+ * attribute table, so they cost no space while reading and appear only where the value
+ * they copy is. A media part's value is the URL or the data: URI its text only describes,
+ * which is how those bytes are reached.
+ */
+function PartBody({
+  part,
+  view,
+  label,
+  copyJson,
+  revealed,
+  onReveal,
+  onShowText,
+}: {
+  part: RenderedPart;
+  view: ReturnType<typeof partView>;
+  label: string;
+  copyJson: string;
+  revealed: boolean;
+  onReveal: () => void;
+  onShowText: () => void;
+}) {
+  return (
+    <div className="GenAITab--partBody">
       <span className="GenAITab--copyContainer">
         <CopyIcon
           className="GenAITab--copyIcon"
@@ -312,6 +341,14 @@ function PartControls({
           buttonText="JSON"
         />
       </span>
+      <PartContent
+        part={part}
+        view={view}
+        label={label}
+        revealed={revealed}
+        onReveal={onReveal}
+        onShowText={onShowText}
+      />
     </div>
   );
 }
@@ -405,7 +442,7 @@ function MessageBlock({
           ? `Content format for message ${messageNumber} (${role})`
           : `Content format for part ${i + 1} of message ${messageNumber} (${role})`
       }
-      copyJson={isSinglePart ? messageJson : JSON.stringify(message.parts[i], null, 2)}
+      position={isSinglePart ? null : `Part ${i + 1} of ${renderedParts.length}`}
     />
   );
 
@@ -441,12 +478,13 @@ function MessageBlock({
             return (
               <div className="GenAITab--messagePart" key={part.src ? `${i}-${part.src}` : `${i}-text`}>
                 {!isSinglePart && controlsFor(part, i)}
-                <PartContent
+                <PartBody
                   part={part}
                   view={view}
                   label={`${part.mediaType === 'audio' ? 'Audio' : 'Image'} in ${
                     isSinglePart ? '' : `part ${i + 1} of `
                   }message ${messageNumber} (${role})`}
+                  copyJson={isSinglePart ? messageJson : JSON.stringify(message.parts[i], null, 2)}
                   revealed={part.src !== null && revealed.has(part.src)}
                   onReveal={() => setRevealed(new Set(revealed).add(part.src as string))}
                   onShowText={() => setFormats({ ...formats, [i]: 'plain' })}
