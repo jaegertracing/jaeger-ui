@@ -13,6 +13,12 @@
  *
  * ServiceSummary: name is required per the IDL; span counts are optional with
  * fallbacks applied in client.ts.
+ *
+ * For OTLP trace/span wire types, re-export the qualified schemas from
+ * generated-client.ts via the schemas bundle so consumers use ergonomic names
+ * without reaching into the generated file's internals. This survives codegen
+ * renames (e.g. AnyValue → opentelemetry_proto_common_v1_AnyValue) because the
+ * bundle key is the stable one.
  */
 
 import { z } from 'zod';
@@ -24,11 +30,37 @@ const {
   jaeger_api_v3_Operation,
   jaeger_api_v3_TraceSummary,
   jaeger_api_v3_FindTraceSummariesResponse,
+  opentelemetry_proto_trace_v1_TracesData,
+  opentelemetry_proto_trace_v1_ResourceSpans,
+  opentelemetry_proto_trace_v1_ScopeSpans,
+  opentelemetry_proto_trace_v1_Span,
+  opentelemetry_proto_trace_v1_Span_Event,
+  opentelemetry_proto_trace_v1_Span_Link,
+  opentelemetry_proto_resource_v1_Resource,
+  opentelemetry_proto_common_v1_InstrumentationScope,
+  opentelemetry_proto_common_v1_KeyValue,
+  opentelemetry_proto_common_v1_AnyValue,
+  opentelemetry_proto_common_v1_ArrayValue,
+  opentelemetry_proto_common_v1_KeyValueList,
+  opentelemetry_proto_trace_v1_Status,
 } = schemas;
 
 export const ServicesResponseSchema = jaeger_api_v3_GetServicesResponse;
 export const OperationsResponseSchema = jaeger_api_v3_GetOperationsResponse;
 export const OperationSchema = jaeger_api_v3_Operation;
+export const TracesDataSchema = opentelemetry_proto_trace_v1_TracesData;
+export const ResourceSpansSchema = opentelemetry_proto_trace_v1_ResourceSpans;
+export const ScopeSpansSchema = opentelemetry_proto_trace_v1_ScopeSpans;
+export const SpanSchema = opentelemetry_proto_trace_v1_Span;
+export const SpanEventSchema = opentelemetry_proto_trace_v1_Span_Event;
+export const SpanLinkSchema = opentelemetry_proto_trace_v1_Span_Link;
+export const ResourceSchema = opentelemetry_proto_resource_v1_Resource;
+export const InstrumentationScopeSchema = opentelemetry_proto_common_v1_InstrumentationScope;
+export const KeyValueSchema = opentelemetry_proto_common_v1_KeyValue;
+export const AnyValueSchema = opentelemetry_proto_common_v1_AnyValue;
+export const ArrayValueSchema = opentelemetry_proto_common_v1_ArrayValue;
+export const KeyValueListSchema = opentelemetry_proto_common_v1_KeyValueList;
+export const StatusSchema = opentelemetry_proto_trace_v1_Status;
 
 export const traceIdHex = z.string().regex(/^[0-9a-f]{32}$/i, 'Invalid trace ID: must be 32-char hex string');
 
