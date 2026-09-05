@@ -87,6 +87,15 @@ export default class ZoomManager {
     this.resetZoom();
   }
 
+  public dispose() {
+    if (this.selection) {
+      this.selection.on('.zoom', null);
+    }
+    this.selection = null;
+    this.elem = null;
+    this.contentSize = null;
+  }
+
   public zoomIn = () => {
     const selection = this.selection;
     if (!selection) {
