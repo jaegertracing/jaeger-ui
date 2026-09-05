@@ -624,6 +624,34 @@ describe('GenAITab', () => {
     expect(screen.queryByText('Other GenAI Attributes')).not.toBeInTheDocument();
   });
 
+  it('renders a document field that is explicitly null instead of crashing (#4437)', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.retrieval.documents',
+            value: JSON.stringify([{ content: 'doc one', score: null }]),
+          },
+        ])}
+      />
+    );
+    expect(screen.getByText('doc one')).toBeInTheDocument();
+    expect(screen.getByText('score')).toBeInTheDocument();
+    expect(screen.getByText('null')).toBeInTheDocument();
+  });
+
+  it('renders a Retrieved documents section for an explicitly empty documents array (#4437)', () => {
+    render(<GenAITab span={makeSpan([{ key: 'gen_ai.retrieval.documents', value: [] }])} />);
+    expect(screen.getByText('Retrieved documents')).toBeInTheDocument();
+    expect(screen.queryByText('Other GenAI Attributes')).not.toBeInTheDocument();
+  });
+
+  it('renders a Memory section for an explicitly empty records array (#4437)', () => {
+    render(<GenAITab span={makeSpan([{ key: 'gen_ai.memory.records', value: [] }])} />);
+    expect(screen.getByText('Memory')).toBeInTheDocument();
+    expect(screen.queryByText('Other GenAI Attributes')).not.toBeInTheDocument();
+  });
+
   it('renders a Memory section with its meta fields and one card per record (#4434)', () => {
     render(
       <GenAITab

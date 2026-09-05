@@ -727,7 +727,9 @@ function ContentEntryCard({ label, entry }: { label: string; entry: GenAiContent
       makeAttributes(
         Object.entries(entry.rest).map(([key, value]): IAttribute => ({
           key,
-          value: value as AttributeValue,
+          // A direct null (id, score, ... may legitimately be null) must not reach
+          // AttributesTable as-is: it treats null as an object and crashes rendering it.
+          value: value === null ? 'null' : (value as AttributeValue),
         }))
       ),
     [entry]

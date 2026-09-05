@@ -548,8 +548,12 @@ const REGISTRY: SectionBuilder[] = [
     const queryText = asString(get('gen_ai.retrieval.query.text'));
     const topK = asNumber(get('gen_ai.retrieval.top_k'));
     const dataSourceId = asString(get('gen_ai.data_source.id'));
-    const documents = parseContentEntries(get('gen_ai.retrieval.documents'));
-    return queryText !== undefined || topK !== undefined || dataSourceId !== undefined || documents.length
+    const documentsAttr = get('gen_ai.retrieval.documents');
+    const documents = parseContentEntries(documentsAttr);
+    return queryText !== undefined ||
+      topK !== undefined ||
+      dataSourceId !== undefined ||
+      documentsAttr !== undefined
       ? { type: 'retrieval', data: { queryText, topK, dataSourceId, documents } }
       : undefined;
   },
@@ -557,8 +561,12 @@ const REGISTRY: SectionBuilder[] = [
     const queryText = asString(get('gen_ai.memory.query.text'));
     const storeId = asString(get('gen_ai.memory.store.id'));
     const recordCount = asNumber(get('gen_ai.memory.record.count'));
-    const records = parseContentEntries(get('gen_ai.memory.records'));
-    return queryText !== undefined || storeId !== undefined || recordCount !== undefined || records.length
+    const recordsAttr = get('gen_ai.memory.records');
+    const records = parseContentEntries(recordsAttr);
+    return queryText !== undefined ||
+      storeId !== undefined ||
+      recordCount !== undefined ||
+      recordsAttr !== undefined
       ? { type: 'memory', data: { queryText, storeId, recordCount, records } }
       : undefined;
   },

@@ -801,6 +801,16 @@ describe('extractGenAiSections', () => {
       });
     });
 
+    it('builds a retrieval section for an explicitly empty documents array, distinct from no attribute at all (#4437)', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.retrieval.documents': [] }));
+      expect(section(sections, 'retrieval')).toEqual({
+        queryText: undefined,
+        topK: undefined,
+        dataSourceId: undefined,
+        documents: [],
+      });
+    });
+
     it('excludes claimed gen_ai.retrieval.*/gen_ai.data_source.id attributes from the other section', () => {
       const sections = extractGenAiSections(
         attrs({
@@ -849,6 +859,16 @@ describe('extractGenAiSections', () => {
             },
           },
         ],
+      });
+    });
+
+    it('builds a memory section for an explicitly empty records array, distinct from no attribute at all (#4437)', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.memory.records': [] }));
+      expect(section(sections, 'memory')).toEqual({
+        queryText: undefined,
+        storeId: undefined,
+        recordCount: undefined,
+        records: [],
       });
     });
 
