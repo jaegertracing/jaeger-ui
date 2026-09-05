@@ -76,14 +76,18 @@ export default function TraceSpanView(props: Props) {
       return props.trace.spans;
     }
 
+    // Build set lookups once so each span costs O(1) per filter instead of scanning the arrays
+    const serviceNameFilter = new Set(filters.serviceName);
+    const operationNameFilter = new Set(filters.operationName);
+
     // Filter spans: a span passes if it matches all active filters
     return props.trace.spans.filter(span => {
-      if (filters.serviceName.length > 0 && !filters.serviceName.includes(span.resource.serviceName)) {
+      if (serviceNameFilter.size > 0 && !serviceNameFilter.has(span.resource.serviceName)) {
         return false;
       }
 
       // Check operationName filter (if active)
-      if (filters.operationName.length > 0 && !filters.operationName.includes(span.name)) {
+      if (operationNameFilter.size > 0 && !operationNameFilter.has(span.name)) {
         return false;
       }
       return true;
