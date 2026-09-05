@@ -280,10 +280,11 @@ describe('ID Validators', () => {
   });
 });
 
-// Minimal-but-valid OTLP wire objects used as building blocks below.
-// Each helper returns an object satisfying every required field of the
-// corresponding schema; tests then either pass it through or perturb a
-// single field to exercise a rejection path.
+// Minimal objects satisfying every required field of the strict schemas below,
+// used as building blocks (pass through, then perturb a single field to exercise
+// a rejection path). Note these are stricter than real wire payloads, which may
+// send `status: {}` or omit dropped-count fields — that permissiveness belongs to
+// the follow-up validated-contract layer, not this expose-only PR.
 const minimalStatus = () => ({ code: 0, message: '', details: [] });
 const minimalResource = () => ({ attributes: [], droppedAttributesCount: 0 });
 const minimalScope = () => ({
