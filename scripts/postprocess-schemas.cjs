@@ -49,7 +49,7 @@ if (!content.includes("Copyright (c)")) {
 // they must stay .partial() while everything else becomes required.
 const beforeCountPartial = (content.match(/\.partial\(\)/g) || []).length;
 content = content.replace(/\.partial\(\)\s*/g, "");
-const UNION_TYPES = ["AnyValue", "ArrayValue", "KeyValue", "KeyValueList"];
+const UNION_TYPES = ["AnyValue", "ArrayValue", "KeyValueList"];
 let restoredCountPartial = 0;
 for (const name of UNION_TYPES) {
   const re = new RegExp(`(const \\w*${name}: z\\.ZodType<\\w*${name}>[\\s\\S]+?\\.object\\([\\s\\S]+?\\}\\)\\s*)(\\.passthrough\\(\\))`);
