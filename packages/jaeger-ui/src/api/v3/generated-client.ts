@@ -18,10 +18,10 @@ type opentelemetry_proto_common_v1_AnyValue = Partial<{
 type opentelemetry_proto_common_v1_ArrayValue = Partial<{
   values: Array<opentelemetry_proto_common_v1_AnyValue>;
 }>;
-type opentelemetry_proto_common_v1_KeyValue = Partial<{
+export type opentelemetry_proto_common_v1_KeyValue = {
   key: string;
   value: opentelemetry_proto_common_v1_AnyValue;
-}>;
+};
 type opentelemetry_proto_common_v1_KeyValueList = Partial<{
   values: Array<opentelemetry_proto_common_v1_KeyValue>;
 }>;

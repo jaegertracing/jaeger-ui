@@ -10,18 +10,21 @@ The main API client with methods for fetching data from Jaeger's v3 endpoints:
 
 - `fetchServices()` - Get list of service names
 - `fetchSpanNames(service)` - Get list of span names for a service
+- `fetchTraceSummaries(query)` - Search traces via `/api/v3/trace-summaries`
 
 All responses are validated at runtime using Zod schemas.
 
 ### `schemas.ts`
 
-**Imports** Zod schemas from `generated-client.ts` for API response validation:
+**Imports** Zod schemas from `generated-client.ts` via its `schemas` bundle for API response validation:
 
 - `ServicesResponseSchema` - Validates `/api/v3/services` responses
 - `OperationsResponseSchema` - Validates `/api/v3/operations` responses
+- `TraceSummariesResponseSchema` - Validates `/api/v3/trace-summaries` with hex ID and decimal-timestamp refinements
+- `TracesDataSchema`, `ResourceSpansSchema`, `ScopeSpansSchema`, `SpanSchema`, `SpanEventSchema`, `SpanLinkSchema`, `ResourceSchema`, `InstrumentationScopeSchema`, `KeyValueSchema`, `AnyValueSchema`, `ArrayValueSchema`, `KeyValueListSchema`, `StatusSchema` - Full OTLP trace/span surface for `/api/v3/traces/{trace_id}` consumers
 - `traceIdHex`, `spanIdHex` - Helper validators (manually added)
 
-**Note:** These schemas are **automatically post-processed** to enforce strict validation (removing optionality from Proto3/OpenAPI).
+**Note:** These schemas are **automatically post-processed** to enforce strict validation (removing the blanket `.partial()` Proto3/OpenAPI optionality, then restoring it only on the `AnyValue`/`ArrayValue`/`KeyValueList` oneof unions; `KeyValue` stays strict with an exact exported TS alias to match).
 
 ### `generated-client.ts`
 
@@ -29,7 +32,7 @@ All responses are validated at runtime using Zod schemas.
 
 - Complete Zod schemas for ALL v3 endpoints
 - Full OTLP type definitions (Span, Resource, etc.)
-- Zodios client setup (commented out until needed)
+- A `schemas` bundle object holding every schema by its qualified codegen name (e.g. `opentelemetry_proto_trace_v1_Span`) — consumers import via `schemas.ts`, never this file directly
 
 Run from the project root:
 
@@ -40,8 +43,8 @@ pnpm run generate:api-types
 This file is the source of truth for the full API schema. It is automatically processed by `scripts/postprocess-schemas.cjs` to:
 
 1. Prepend copyright header
-2. Enforce strict validation (remove `.partial()`)
-3. Disable unused runtime dependencies
+2. Enforce strict validation (strip blanket `.partial()`, restore it on the `AnyValue`/`ArrayValue`/`KeyValueList` unions by suffix match, unwrap + export the `KeyValue` alias to match its strict schema)
+3. Remove unused Zodios runtime code (we only use the Zod schemas, not the Zodios client)
 
 ## Schema Strategy
 
@@ -49,9 +52,9 @@ We use **Automated Schema Generation with Strict Validation**:
 
 1. **`generated-client.ts`** - Auto-generated from OpenAPI
 2. **`postprocess-schemas.cjs`** - Automatically cleans up schema:
-   - Enforces strictness (fixes Proto3 optionality)
+   - Enforces strictness (fixes Proto3 optionality, keeps unions partial via suffix match)
    - Removes runtime dependencies
-3. **`schemas.ts`** - Simply re-exports the generated schemas
+3. **`schemas.ts`** - Re-exports the generated schemas via the `schemas` bundle under stable ergonomic names, plus `TraceSummary` refinements and hex ID helpers
 
 This gives us:
 
