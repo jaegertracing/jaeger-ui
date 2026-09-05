@@ -12,13 +12,17 @@ import {
   formatTokenCount,
   tryParseJson,
   GenAiAgent,
+  GenAiContentEntry,
+  GenAiMemory,
   GenAiMessage,
   GenAiPart,
+  GenAiRetrieval,
   GenAiTokenUsage,
   GenAiToolCall,
 } from './genAiData';
 import { MessageFormat, useMessageFormatStore } from './message-format-store';
 import AccordionAttributes from '../AccordionAttributes';
+import AttributesTable from '../AttributesTable';
 import { sharedMarkdownOptions } from '../../../../../utils/markdownOptions';
 import { isEmbeddedMedia, MediaType } from '../../../../../utils/media';
 import jsonViewStyles from '../../../../../utils/jsonViewStyles';
@@ -711,6 +715,76 @@ function ConversationDetails({
   );
 }
 
+/**
+ * One retrieved document or memory record: its content shown prominently, sharing the
+ * message box styling so it reads consistently with the rest of the tab, followed by
+ * whatever other fields it carries (score, metadata, id, ...) in an attributes table -
+ * present only when there is at least one such field, per neither schema fixing a set.
+ */
+function ContentEntryCard({ label, entry }: { label: string; entry: GenAiContentEntry }) {
+  const restAttributes = useMemo(
+    () =>
+      makeAttributes(
+        Object.entries(entry.rest).map(([key, value]): IAttribute => ({
+          key,
+          value: value as AttributeValue,
+        }))
+      ),
+    [entry]
+  );
+  return (
+    <div className="GenAITab--message">
+      <div className="GenAITab--messageHeader">
+        <span className="GenAITab--messageRole">{label}</span>
+      </div>
+      {entry.content && (
+        <pre className="GenAITab--messageContent GenAITab--messageContent-plain">{entry.content}</pre>
+      )}
+      {restAttributes.size > 0 && <AttributesTable data={restAttributes} linksGetter={null} />}
+    </div>
+  );
+}
+
+function RetrievalDetails({ queryText, topK, dataSourceId, documents }: GenAiRetrieval) {
+  const metaData = useMemo(() => {
+    const entries: IAttribute[] = [];
+    if (dataSourceId !== undefined) entries.push({ key: 'Data source', value: dataSourceId });
+    if (queryText !== undefined) entries.push({ key: 'Query', value: queryText });
+    if (topK !== undefined) entries.push({ key: 'Top K', value: topK });
+    return makeAttributes(entries);
+  }, [queryText, topK, dataSourceId]);
+
+  return (
+    <div className="GenAITab--section">
+      <h3 className="GenAITab--sectionTitle">Retrieved documents</h3>
+      {metaData.size > 0 && <AttributesTable data={metaData} linksGetter={null} />}
+      {documents.map((doc, i) => (
+        <ContentEntryCard key={i} label={`Document ${i + 1}`} entry={doc} />
+      ))}
+    </div>
+  );
+}
+
+function MemoryDetails({ queryText, storeId, recordCount, records }: GenAiMemory) {
+  const metaData = useMemo(() => {
+    const entries: IAttribute[] = [];
+    if (storeId !== undefined) entries.push({ key: 'Store', value: storeId });
+    if (queryText !== undefined) entries.push({ key: 'Query', value: queryText });
+    if (recordCount !== undefined) entries.push({ key: 'Record count', value: recordCount });
+    return makeAttributes(entries);
+  }, [queryText, storeId, recordCount]);
+
+  return (
+    <div className="GenAITab--section">
+      <h3 className="GenAITab--sectionTitle">Memory</h3>
+      {metaData.size > 0 && <AttributesTable data={metaData} linksGetter={null} />}
+      {records.map((record, i) => (
+        <ContentEntryCard key={i} label={`Record ${i + 1}`} entry={record} />
+      ))}
+    </div>
+  );
+}
+
 function ToolCallDetails({
   id,
   name,
@@ -817,6 +891,10 @@ export default function GenAITab({ span }: Props): React.ReactElement {
             return <TokenDetails key="tokens" usage={section.data} />;
           case 'conversation':
             return <ConversationDetails key="conversation" {...section.data} />;
+          case 'retrieval':
+            return <RetrievalDetails key="retrieval" {...section.data} />;
+          case 'memory':
+            return <MemoryDetails key="memory" {...section.data} />;
           case 'toolCall':
             return (
               <ToolCallDetails
