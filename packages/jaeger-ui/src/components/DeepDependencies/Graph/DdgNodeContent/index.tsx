@@ -4,30 +4,21 @@
 import * as React from 'react';
 import { Popover } from 'antd';
 import cx from 'classnames';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import type { NavigateFunction } from 'react-router-dom';
 import { TLayoutVertex } from '@jaegertracing/plexus/lib/types';
-import { IoLocate, IoEyeOff } from 'react-icons/io5';
+import { IoLocate, IoEyeOff, IoSearch } from 'react-icons/io5';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
-import { bindActionCreators, Dispatch } from 'redux';
+import { Dispatch } from 'redux';
 
 import calcPositioning from './calc-positioning';
-import {
-  MAX_LENGTH,
-  MAX_LINKED_TRACES,
-  MIN_LENGTH,
-  OP_PADDING_TOP,
-  PARAM_NAME_LENGTH,
-  PROGRESS_BAR_STROKE_WIDTH,
-  RADIUS,
-  WORD_RX,
-} from './constants';
+import { OP_PADDING_TOP, PROGRESS_BAR_STROKE_WIDTH, RADIUS, WORD_RX } from './constants';
 import { setFocusIcon } from './node-icons';
 import { trackSetFocus, trackViewTraces, trackVertexSetOperation } from '../../index.track';
 import { getUrl } from '../../url';
 import BreakableText from '../../../common/BreakableText';
 import FilteredList from '../../../common/FilteredList';
-import NewWindowIcon from '../../../common/NewWindowIcon';
-import { getUrl as getSearchUrl } from '../../../SearchTracePage/url';
+import { getUrl as getSearchUrl, getUrlState } from '../../../SearchTracePage/url';
 import padActions from '../../../../actions/path-agnostic-decorations';
 import {
   ECheckedStatus,
@@ -66,6 +57,8 @@ type TProps = TDispatchProps &
     updateGenerationVisibility: (vertexKey: string, direction: EDirection) => void;
     vertex: TDdgVertex;
     vertexKey: string;
+    search: string;
+    navigate: NavigateFunction;
   };
 
 type TState = {
@@ -160,6 +153,8 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
     updateGenerationVisibility,
     vertex,
     vertexKey,
+    search,
+    navigate,
   } = props;
 
   React.useEffect(() => {
@@ -227,34 +222,25 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
 
   const viewTraces = React.useCallback(() => {
     trackViewTraces();
-    const elems = getVisiblePathElems(vertexKey);
-    if (elems) {
-      const urlIds: Set<string> = new Set();
-      let currLength = MIN_LENGTH;
-      // Because there is a limit on traceIDs, attempt to get some from each elem rather than all from one.
-      const allIDs = elems.map(({ memberOf }) => memberOf.traceIDs.slice());
-      while (allIDs.length) {
-        const ids = allIDs.shift();
-        if (ids && ids.length) {
-          const id = ids.pop();
-          if (id && !urlIds.has(id)) {
-            // Keep track of the length, then break if it is too long, to avoid opening a tab with a URL that
-            // the backend cannot process, even if there are more traceIDs
-            currLength += PARAM_NAME_LENGTH + id.length;
-            if (currLength > MAX_LENGTH) {
-              break;
-            }
-            urlIds.add(id);
-            if (urlIds.size >= MAX_LINKED_TRACES) {
-              break;
-            }
-          }
-          allIDs.push(ids);
-        }
-      }
-      window.open(getSearchUrl({ traceID: Array.from(urlIds) }), '_blank');
-    }
-  }, [getVisiblePathElems, vertexKey]);
+    const { traceID: _traceID, spanLinks: _spanLinks, start, end, lookback } = getUrlState(search);
+
+    // Only pass params that are meaningful on the Search page.
+    // DDG-specific params (density, showOp, visEncoding, etc.) are intentionally excluded.
+    const query = {
+      ...(start && { start }),
+      ...(end && { end }),
+      ...(lookback && { lookback }),
+      service,
+      operation: typeof operation === 'string' ? operation : undefined,
+    };
+
+    const url = getSearchUrl(query);
+    const qIdx = url.indexOf('?');
+    navigate({
+      pathname: qIdx >= 0 ? url.slice(0, qIdx) : url,
+      search: qIdx >= 0 ? url.slice(qIdx) : '',
+    });
+  }, [navigate, operation, search, service]);
 
   const onMouseUx = React.useCallback(
     (event: React.MouseEvent<HTMLElement>) => {
@@ -305,7 +291,7 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
     {
       id: 'view-traces',
       label: 'View traces',
-      icon: <NewWindowIcon />,
+      icon: <IoSearch />,
       onClick: viewTraces,
     },
     {
@@ -401,20 +387,15 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
   );
 });
 
-export function mapDispatchToProps(dispatch: Dispatch): TDispatchProps {
-  const { getDecoration } = bindActionCreators(padActions, dispatch);
-
-  return {
-    getDecoration,
-  };
-}
-
-type DdgNodeContentProps = Omit<TProps, keyof TDispatchProps | keyof TDecorationFromState | 'search'>;
+type DdgNodeContentProps = Omit<
+  TProps,
+  keyof TDispatchProps | keyof TDecorationFromState | 'search' | 'navigate'
+>;
 
 function DdgNodeContent(props: DdgNodeContentProps) {
   const { search } = useLocation();
-  const dispatch = useDispatch<Dispatch>();
-  const dispatchProps = React.useMemo(() => mapDispatchToProps(dispatch), [dispatch]);
+  const navigate = useNavigate();
+  const dispatch = useDispatch<Dispatch<any>>();
   const decorationProps = useSelector(
     (state: ReduxState) =>
       extractDecorationFromState(state, {
@@ -425,7 +406,22 @@ function DdgNodeContent(props: DdgNodeContentProps) {
     shallowEqual
   );
 
-  return <UnconnectedDdgNodeContent {...props} {...dispatchProps} {...decorationProps} />;
+  const getDecoration = React.useCallback(
+    (id: string, svc: string, op?: string) => {
+      dispatch(padActions.getDecoration(id, svc, op));
+    },
+    [dispatch]
+  );
+
+  return (
+    <UnconnectedDdgNodeContent
+      {...props}
+      search={search}
+      navigate={navigate}
+      getDecoration={getDecoration}
+      {...decorationProps}
+    />
+  );
 }
 
 export default DdgNodeContent;
