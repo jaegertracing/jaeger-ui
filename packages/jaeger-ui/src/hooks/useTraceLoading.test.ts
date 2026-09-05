@@ -15,14 +15,10 @@ import { queryClient as appQueryClient } from '../query/app-query-client';
 
 const mockFetchTrace = vi.mocked(JaegerAPI.fetchTrace);
 
-// Build a real transformed trace for use in tests
 const rawTrace = traceGenerator.trace({});
 const legacyTrace = transformTraceData(rawTrace)!;
 const otelTrace = legacyTrace.asOtelTrace();
 
-// Each test gets a fresh QueryClient to avoid cross-test cache pollution.
-// getCachedTrace/populateTraceCache use the singleton appQueryClient, so we
-// reset it in beforeEach instead.
 function makeWrapper(client: QueryClient) {
   return ({ children }: { children: React.ReactNode }) =>
     React.createElement(QueryClientProvider, { client }, children);
@@ -115,14 +111,10 @@ describe('useTrace', () => {
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    // The canonical ID is seeded in the singleton appQueryClient
     expect(appQueryClient.getQueryData(['trace', otelTrace.traceID])).toBeDefined();
   });
 
   it('serves data from cache without fetching when already populated', async () => {
-    // populateTraceCache writes into the singleton appQueryClient.
-    // useTrace also uses the same singleton, so pre-populating it means the
-    // query is already fresh (staleTime: Infinity in the hook) and no fetch occurs.
     populateTraceCache(otelTrace);
 
     const client = appQueryClient;
@@ -133,6 +125,72 @@ describe('useTrace', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(mockFetchTrace).not.toHaveBeenCalled();
     expect(result.current.data).toBe(otelTrace);
+  });
+
+  it('polls again after 60 seconds', async () => {
+    vi.useFakeTimers();
+
+    const client = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    });
+
+    mockFetchTrace.mockResolvedValue({
+      data: [rawTrace],
+    } as any);
+
+    renderHook(() => useTrace(otelTrace.traceID), {
+      wrapper: makeWrapper(client),
+    });
+
+    await waitFor(() => {
+      expect(mockFetchTrace).toHaveBeenCalledTimes(1);
+    });
+
+    await vi.advanceTimersByTimeAsync(60_000);
+
+    await waitFor(() => {
+      expect(mockFetchTrace).toHaveBeenCalledTimes(2);
+    });
+
+    vi.useRealTimers();
+  });
+
+  it('stops polling after five minutes', async () => {
+    vi.useFakeTimers();
+
+    const client = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    });
+
+    mockFetchTrace.mockResolvedValue({
+      data: [rawTrace],
+    } as any);
+
+    renderHook(() => useTrace(otelTrace.traceID), {
+      wrapper: makeWrapper(client),
+    });
+
+    await waitFor(() => {
+      expect(mockFetchTrace).toHaveBeenCalledTimes(1);
+    });
+
+    await vi.advanceTimersByTimeAsync(5 * 60 * 1000);
+
+    const callsAfterFiveMinutes = mockFetchTrace.mock.calls.length;
+
+    await vi.advanceTimersByTimeAsync(60_000);
+
+    expect(mockFetchTrace).toHaveBeenCalledTimes(callsAfterFiveMinutes);
+
+    vi.useRealTimers();
   });
 });
 
@@ -146,7 +204,7 @@ describe('useTraces', () => {
 
   it('returns LOADING state while fetches are pending', () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    mockFetchTrace.mockReturnValue(new Promise(() => {})); // never resolves
+    mockFetchTrace.mockReturnValue(new Promise(() => {}));
 
     const { result } = renderHook(() => useTraces([otelTrace.traceID]), {
       wrapper: makeWrapper(client),
@@ -229,15 +287,12 @@ describe('useTraces', () => {
       wrapper: makeWrapper(client),
     });
 
-    // Wait until the fetch has settled so the map is stable
     await waitFor(() => {
       expect(result.current.get(otelTrace.traceID)?.state).toBe(fetchedState.DONE);
     });
 
     const mapBefore = result.current;
-    // Force a re-render with no change to query data
     rerender();
-    // The Map identity should not change since no query result changed
     expect(result.current).toBe(mapBefore);
   });
 });
