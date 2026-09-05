@@ -1,3 +1,4 @@
+// Copyright (c) 2026 The Jaeger Authors.
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -13,12 +14,9 @@ import {
   TRACE_NAME_ASC,
   TRACE_NAME_DESC,
 } from './order-by';
-import type { OrderBy, TraceOrderBy } from './order-by';
+import type { OrderBy } from './order-by';
 
-import type { IOtelTrace } from '../types/otel';
-import type { TraceSummary } from '../types/trace-summary';
-
-type ISortableTrace = Pick<IOtelTrace, 'startTime' | 'duration' | 'spans'>;
+import type { TraceSummary } from '../../../types/trace-summary';
 
 function getDisplayedTraceName(summary: TraceSummary) {
   return summary.traceName || summary.traceID;
@@ -26,33 +24,6 @@ function getDisplayedTraceName(summary: TraceSummary) {
 
 function assertNever(value: never): never {
   throw new Error(`Unhandled OrderBy value: ${String(value)}`);
-}
-
-const comparators: Record<TraceOrderBy, (a: ISortableTrace, b: ISortableTrace) => number> = {
-  [MOST_RECENT]: (a, b) => b.startTime - a.startTime,
-  [OLDEST_FIRST]: (a, b) => a.startTime - b.startTime,
-  [SHORTEST_FIRST]: (a, b) => a.duration - b.duration,
-  [LONGEST_FIRST]: (a, b) => b.duration - a.duration,
-  [MOST_SPANS]: (a, b) => b.spans.length - a.spans.length,
-  [LEAST_SPANS]: (a, b) => a.spans.length - b.spans.length,
-};
-
-function getTraceComparator(sortBy: TraceOrderBy) {
-  if (Object.hasOwn(comparators, sortBy)) {
-    return comparators[sortBy];
-  }
-  return comparators[LONGEST_FIRST];
-}
-
-/**
- * Sorts traces in place.
- *
- * @param  {ISortableTrace[]} traces The trace array to sort.
- * @param  {TraceOrderBy} sortBy A sort specification, see ./order-by.ts.
- */
-export function sortTraces(traces: ISortableTrace[], sortBy: TraceOrderBy) {
-  const comparator = getTraceComparator(sortBy);
-  traces.sort(comparator);
 }
 
 const summaryComparators: Record<OrderBy, (a: TraceSummary, b: TraceSummary) => number> = {
