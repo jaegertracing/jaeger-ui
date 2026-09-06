@@ -2,14 +2,31 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, fireEvent, act, waitFor, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { message } from 'antd';
 
 import DownloadResults, { createBlob } from './DownloadResults';
 import readJsonFile from '../../../utils/readJsonFile';
 
 const mockFetchTrace = jest.fn();
 vi.mock('../../../api/jaeger', () => ({ default: { fetchTrace: (...args) => mockFetchTrace(...args) } }));
+
+// A real antd message renders into a React root of its own that Testing Library does not
+// track, so nothing unmounts it and its animation and auto-dismiss timer keep committing
+// updates after the test ends. React defers each commit's passive-effect flush to a
+// scheduler callback that reads window.event, which throws once Vitest has torn the jsdom
+// window down. FileLoader.test.jsx and ArchiveNotifier/index.test.jsx mock antd the same way.
+vi.mock('antd', async () => {
+  const antd = await vi.importActual('antd');
+  return {
+    ...antd,
+    message: {
+      error: jest.fn(),
+      warning: jest.fn(),
+    },
+  };
+});
 
 const baseTraces = [
   {
@@ -43,9 +60,7 @@ const baseRawTraces = [
   { traceID: 'b', spans: [], durationMicros: 1000, startTimeUnixMicros: 0, endTimeUnixMicros: 1000 },
 ];
 
-afterEach(async () => {
-  cleanup();
-  await new Promise(resolve => setImmediate(() => setImmediate(resolve)));
+afterEach(() => {
   vi.clearAllMocks();
 });
 
@@ -174,6 +189,7 @@ describe('DownloadResults', () => {
 
     // Button remains idle; no progressbar visible
     expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    expect(message.error).toHaveBeenCalledWith('Failed to retrieve traces: network error');
   });
 
   it('blob can be read back as JSON', async () => {
