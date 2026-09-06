@@ -23,13 +23,13 @@
     "@types/react-dom": "19.2.3",
     "@types/redux-actions": "2.6.5",
     "@vitejs/plugin-react": "6.1.0",
-    "@vitest/coverage-v8": "4.1.11",
+    "@vitest/coverage-v8": "5.0.0",
     "babel-plugin-react-remove-properties": "0.3.1",
     "identity-obj-proxy": "3.0.0",
     "less": "4.9.0",
     "terser": "5.51.2",
     "vite": "8.2.0",
-    "vitest": "4.1.11"
+    "vitest": "5.0.0"
   },
   "dependencies": {
     "@ag-ui/client": "0.0.54",
