@@ -279,8 +279,8 @@ importers:
         specifier: 2.0.1
         version: 2.0.1
       zod:
-        specifier: 4.4.2
-        version: 4.4.2
+        specifier: 4.5.4
+        version: 4.5.4
       zustand:
         specifier: ^5.0.12
         version: 5.0.14(@types/react@19.2.7)(immer@11.1.8)(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))
@@ -5278,11 +5278,8 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
-  zod@4.4.2:
-    resolution: {integrity: sha512-IynmDyxsEsb9RKzO3J9+4SxXnl2FTFSzNBaKKaMV6tsSk0rw9gYw9gs+JFCq/qk2LCZ78KDwyj+Z289TijSkUw==}
-
-  zod@4.4.3:
-    resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
+  zod@4.5.4:
+    resolution: {integrity: sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA==}
 
   zustand@5.0.14:
     resolution: {integrity: sha512-/8tAspM5LMPr28b3fwLYrtdj77ECpfZviaP75CMTnwO8ISyaE4GDIG/9rDDYq/cH9D2Xw2A2RXglLInmVBQB/g==}
@@ -5469,7 +5466,7 @@ snapshots:
       react-dom: 19.2.0(react@19.2.0)
       react-textarea-autosize: 8.5.9(@types/react@19.2.7)(react@19.2.0)
       safe-content-frame: 0.0.25
-      zod: 4.4.3
+      zod: 4.5.4
       zustand: 5.0.14(@types/react@19.2.7)(immer@11.1.8)(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))
     optionalDependencies:
       '@types/react': 19.2.7
@@ -5802,7 +5799,7 @@ snapshots:
       eslint: 10.5.0(jiti@2.7.0)(supports-color@7.2.0)
       ts-pattern: 5.9.0
       typescript: '@typescript/typescript6@6.0.2'
-      zod: 4.4.2
+      zod: 4.5.4
     transitivePeerDependencies:
       - supports-color
 
@@ -8858,7 +8855,7 @@ snapshots:
       tinyglobby: 0.2.17
       unbash: 4.0.10
       yaml: 2.9.0
-      zod: 4.4.3
+      zod: 4.5.4
 
   less@4.9.0(supports-color@7.2.0):
     dependencies:
@@ -10039,9 +10036,7 @@ snapshots:
 
   zod@3.25.76: {}
 
-  zod@4.4.2: {}
-
-  zod@4.4.3: {}
+  zod@4.5.4: {}
 
   zustand@5.0.14(@types/react@19.2.7)(immer@11.1.8)(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0)):
     optionalDependencies:
