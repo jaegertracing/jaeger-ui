@@ -12,20 +12,23 @@ import type { IOtelTrace } from '../types/otel';
 
 const TRACE_QUERY_KEY = (id: string) => ['trace', id] as const;
 
+const pollingStartTimes = new Map<string, number>();
+
 // TODO: remove once callers (duck.track.ts, TraceDiff) are migrated off Redux/non-hook paths
 export function getCachedTrace(id: string): IOtelTrace | undefined {
   return queryClient.getQueryData<IOtelTrace>(TRACE_QUERY_KEY(id));
 }
 
 export function populateTraceCache(trace: IOtelTrace): void {
+  // Mark trace as uploaded so we don't attempt to poll the backend for it
+  (trace as any).isUploaded = true;
   queryClient.setQueryData(TRACE_QUERY_KEY(trace.traceID), trace);
 }
 
 // TODO: staleTime: Infinity is incorrect — Jaeger returns partial traces if spans are still arriving
 // (availability over consistency). Instead, poll every 60s for up to 5 minutes after first load,
-// then stop. Use meta.firstFetchedAt (stamped at query creation, not updated on refetch) to track
-// elapsed time: refetchInterval: q => Date.now() - (q.meta.firstFetchedAt as number) < 5*60*1000 ? 60_000 : false
-// gcTime controls eviction from memory once no component is using the trace.
+// then stop. Track elapsed time per-query to avoid resetting on render, and disable polling for
+// local/uploaded traces. gcTime controls eviction from memory once no component is using the trace.
 export function useTrace(traceId: string): UseQueryResult<IOtelTrace> {
   return useQuery({
     queryKey: TRACE_QUERY_KEY(traceId),
@@ -42,13 +45,24 @@ export function useTrace(traceId: string): UseQueryResult<IOtelTrace> {
       return otel;
     },
     staleTime: 60_000,
-    meta: {
-      firstFetchedAt: Date.now(),
-    },
     refetchInterval: query => {
-      const firstFetchedAt = query.meta?.firstFetchedAt as number | undefined;
-      if (!firstFetchedAt) return false;
-      return Date.now() - firstFetchedAt < 5 * 60 * 1000 ? 60_000 : false;
+      // Don't poll for uploaded traces that don't exist on the backend
+      if ((query.state.data as any)?.isUploaded) {
+        return false;
+      }
+
+      const id = query.queryKey[1] as string;
+      if (!pollingStartTimes.has(id)) {
+        pollingStartTimes.set(id, Date.now());
+      }
+
+      const firstFetchedAt = pollingStartTimes.get(id)!;
+      if (Date.now() - firstFetchedAt < 5 * 60 * 1000) {
+        return 60_000;
+      }
+
+      pollingStartTimes.delete(id);
+      return false;
     },
   });
 }
