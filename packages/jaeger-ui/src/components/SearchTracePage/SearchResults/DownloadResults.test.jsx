@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import DownloadResults, { createBlob } from './DownloadResults';
@@ -43,7 +43,15 @@ const baseRawTraces = [
   { traceID: 'b', spans: [], durationMicros: 1000, startTimeUnixMicros: 0, endTimeUnixMicros: 1000 },
 ];
 
-afterEach(() => {
+// React's scheduler defers the passive-effect flush that unmounting queues to a
+// setImmediate callback which reads window.event. Left pending, it runs after Vitest
+// has torn the jsdom window down and throws "window is not defined" as an uncaught
+// exception, failing the run. Unmount here rather than relying on hook ordering
+// against Testing Library's own cleanup, then yield once so the callback runs while
+// the window still exists.
+afterEach(async () => {
+  cleanup();
+  await new Promise(resolve => setImmediate(resolve));
   vi.clearAllMocks();
 });
 
