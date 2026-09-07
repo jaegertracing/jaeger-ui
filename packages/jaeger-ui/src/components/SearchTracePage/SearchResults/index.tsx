@@ -116,9 +116,11 @@ export function UnconnectedSearchResults({
     [traceSummaries, sortBy]
   );
 
+  // Keyed by traceID, so the sort order cannot affect it. Building it from the unsorted
+  // results keeps both the map and toggleComparison below stable when the sort changes.
   const traceSummaryById = useMemo(
-    () => new Map(sortedTraceSummaries.map(summary => [summary.traceID, summary])),
-    [sortedTraceSummaries]
+    () => new Map(traceSummaries.map(summary => [summary.traceID, summary])),
+    [traceSummaries]
   );
 
   const toggleComparison = useCallback(

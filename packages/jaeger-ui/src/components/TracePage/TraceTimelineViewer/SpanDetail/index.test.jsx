@@ -12,6 +12,7 @@ import SpanDetail from './index';
 import { formatDuration } from '../utils';
 import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
+import { makeAttributes } from '../../../../model/attributes';
 
 vi.mock('./AccordionAttributes', () => {
   return mockDefault(function MockAccordionAttributes({ label, onToggle }) {
@@ -309,10 +310,23 @@ describe('<SpanDetail>', () => {
       expect(screen.queryByRole('tab')).not.toBeInTheDocument();
     });
 
-    it('shows the GenAI tab when the span has gen_ai.* attributes', () => {
+    it('shows the GenAI tab when the span has recognized gen_ai.* attributes', () => {
       isGenAISpanMock.mockReturnValue(true);
+      Object.defineProperty(span, 'attributes', {
+        value: makeAttributes([{ key: 'gen_ai.provider.name', value: 'openai' }]),
+      });
       render(<SpanDetail {...props} />);
       expect(screen.getByRole('tab', { name: 'GenAI' })).toBeInTheDocument();
+    });
+
+    it('does not show the GenAI tab when all gen_ai.* attributes are unrecognized', () => {
+      isGenAISpanMock.mockReturnValue(true);
+      Object.defineProperty(span, 'attributes', {
+        value: makeAttributes([{ key: 'gen_ai.unrecognized', value: 'low signal' }]),
+      });
+      render(<SpanDetail {...props} />);
+      expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+      expect(screen.getByTestId('accordian-keyvalues-tags')).toBeInTheDocument();
     });
 
     it('renders no tab bar for a non-GenAI span — content is shown directly', () => {
@@ -324,6 +338,9 @@ describe('<SpanDetail>', () => {
 
     it('defaults to the GenAI tab for a GenAI span, now that it has real content', () => {
       isGenAISpanMock.mockReturnValue(true);
+      Object.defineProperty(span, 'attributes', {
+        value: makeAttributes([{ key: 'gen_ai.provider.name', value: 'openai' }]),
+      });
       render(<SpanDetail {...props} />);
       expect(screen.getByRole('tab', { name: 'GenAI' })).toHaveAttribute('aria-selected', 'true');
       expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute('aria-selected', 'false');
