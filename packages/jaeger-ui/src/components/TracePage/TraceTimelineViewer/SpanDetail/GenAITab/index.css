@@ -283,109 +283,126 @@ audio.GenAITab--media {
   width: 100%;
 }
 
-.GenAITab--toolDefinitionBlock {
+.GenAITab--toolsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 12px;
+  margin-top: 8px;
+}
+
+.GenAITab--toolsSummary {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin-left: 8px;
+  font-weight: normal;
+}
+
+.GenAITab--toolItem {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 8px 10px;
+}
+
+.GenAITab--toolItem + .GenAITab--toolItem {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 2px solid var(--border-strong, #e8e8e8);
+}
+
+.GenAITab--toolParametersWrapper {
+  margin-top: 2px;
+  padding: 0;
+}
+
+.GenAITab--paramTableContainer {
   border: 1px solid var(--border-default);
   border-radius: 4px;
+  overflow-x: auto;
   background: var(--surface-primary);
 }
 
-.GenAITab--toolDefinitionHeader {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
+.GenAITab--paramTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  text-align: left;
 }
 
-.GenAITab--toolDefinitionName {
-  font-size: 13px;
+.GenAITab--paramTable th {
+  background: var(--surface-secondary);
+  color: var(--text-secondary);
+  font-family: monospace;
   font-weight: 600;
-  color: var(--text-primary);
-}
-
-.GenAITab--toolDefinitionType {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border-default);
   font-size: 11px;
-  color: var(--text-secondary);
-  background: var(--surface-secondary);
-  border: 1px solid var(--border-default);
-  border-radius: 3px;
-  padding: 0 5px;
-  font-family: monospace;
-}
-
-.GenAITab--toolDefinitionDescription {
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin: 0;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.GenAITab--toolParamList {
-  display: flex;
-  flex-direction: column;
-  background: var(--surface-secondary);
-  border: 1px solid var(--border-default);
-  border-radius: 4px;
-  padding: 12px;
-}
-
-.GenAITab--toolParamItem {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding-bottom: 12px;
-  margin-bottom: 12px;
-  border-bottom: 1px solid var(--border-component-subtle);
-}
-
-.GenAITab--toolParamItem:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-  margin-bottom: 0;
-}
-
-.GenAITab--toolParamHeader {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
-}
-
-.GenAITab--toolParamName {
-  font-weight: 600;
-  font-family: monospace;
-  color: var(--text-primary);
-  font-size: 13px;
-}
-
-.GenAITab--toolParamType {
-  font-size: 11px;
-  color: var(--text-secondary);
-  background: var(--surface-secondary);
-  padding: 2px 4px;
-  border-radius: 3px;
-  font-family: monospace;
-}
-
-.GenAITab--toolParamRequired {
-  font-size: 11px;
-  color: var(--feedback-error);
   text-transform: uppercase;
-  font-weight: 600;
   letter-spacing: 0.03em;
 }
 
-.GenAITab--toolParamDesc {
-  font-size: 13px;
-  color: var(--text-secondary);
+.GenAITab--paramTable td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border-default);
+  color: var(--text-primary);
+  vertical-align: top;
 }
 
-.GenAITab--toolParamEnum {
+.GenAITab--paramTable tr:last-child td {
+  border-bottom: none;
+}
+
+.GenAITab--paramNameColumn {
+  font-family: monospace;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.GenAITab--paramTypeBadge {
   font-size: 12px;
+  color: var(--text-primary);
+  font-weight: 400;
+}
+
+.GenAITab--paramRequiredBadge {
+  font-size: 12px;
+  color: var(--text-primary);
+  font-weight: 400;
+}
+
+.GenAITab--paramOptionalBadge {
+  font-size: 12px;
+  color: var(--text-primary);
+  font-weight: 400;
+}
+
+.GenAITab--paramDescColumn {
   color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.GenAITab--paramEnum {
+  font-size: 11px;
+  color: var(--text-muted);
   margin-top: 4px;
-  font-style: italic;
+}
+
+.GenAITab--paramEnum code {
+  font-family: monospace;
+  background: var(--surface-secondary);
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+
+.GenAITab--toolCallSection {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.GenAITab--toolCallHeader {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  padding: 6px 0 4px;
 }
