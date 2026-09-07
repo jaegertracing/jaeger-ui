@@ -282,3 +282,110 @@ img.GenAITab--media {
 audio.GenAITab--media {
   width: 100%;
 }
+
+.GenAITab--toolDefinitionBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  background: var(--surface-primary);
+}
+
+.GenAITab--toolDefinitionHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.GenAITab--toolDefinitionName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.GenAITab--toolDefinitionType {
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 3px;
+  padding: 0 5px;
+  font-family: monospace;
+}
+
+.GenAITab--toolDefinitionDescription {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.GenAITab--toolParamList {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  padding: 12px;
+}
+
+.GenAITab--toolParamItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border-component-subtle);
+}
+
+.GenAITab--toolParamItem:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+.GenAITab--toolParamHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.GenAITab--toolParamName {
+  font-weight: 600;
+  font-family: monospace;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.GenAITab--toolParamType {
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: var(--surface-secondary);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+.GenAITab--toolParamRequired {
+  font-size: 11px;
+  color: var(--feedback-error);
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.GenAITab--toolParamDesc {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.GenAITab--toolParamEnum {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  font-style: italic;
+}

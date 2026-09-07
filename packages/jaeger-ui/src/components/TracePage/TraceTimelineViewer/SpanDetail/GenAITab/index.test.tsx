@@ -7,7 +7,7 @@ import { vi } from 'vitest';
 
 import GenAITab from '.';
 import { useMessageFormatStore } from './message-format-store';
-import type { IAttribute, IOtelSpan } from '../../../../../types/otel';
+import type { IAttribute, IOtelSpan, AttributeValue } from '../../../../../types/otel';
 import { makeAttributes } from '../../../../../model/attributes';
 import { classifySpan } from '../../../../../utils/genai/detect';
 
@@ -612,6 +612,168 @@ describe('GenAITab', () => {
       'aria-checked',
       'true'
     );
+  });
+
+  describe('ToolsSection', () => {
+    it('renders a Tools heading and the tool name for a flat OTel FunctionToolDefinition', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [{ type: 'function', name: 'get_weather', description: 'Get the current weather.' }],
+            },
+          ])}
+        />
+      );
+      expect(screen.getByText('Tools')).toBeInTheDocument();
+      expect(screen.getByText('get_weather')).toBeInTheDocument();
+      expect(screen.getByText('function')).toBeInTheDocument();
+      expect(screen.getByText('Get the current weather.')).toBeInTheDocument();
+    });
+
+    it('renders the Parameters label and a JSON tree when parameters are present', () => {
+      const { container } = render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [
+                {
+                  type: 'function',
+                  name: 'get_weather',
+                  parameters: { type: 'object', properties: { location: { type: 'string' } } },
+                },
+              ],
+            },
+          ])}
+        />
+      );
+      expect(screen.getByText('Parameters')).toBeInTheDocument();
+      expect(container.querySelector('.GenAITab--toolParamList')).toBeInTheDocument();
+      expect(screen.getByText('location')).toBeInTheDocument();
+    });
+
+    it('renders tool name and parameters for the OpenAI nested-function format', () => {
+      const { container } = render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [
+                {
+                  type: 'function',
+                  function: {
+                    name: 'get_weather',
+                    description: 'Get the current weather',
+                    parameters: { type: 'object', properties: { location: { type: 'string' } } },
+                  },
+                },
+              ],
+            },
+          ])}
+        />
+      );
+      expect(screen.getByText('get_weather')).toBeInTheDocument();
+      expect(screen.getByText('Get the current weather')).toBeInTheDocument();
+      expect(container.querySelector('.GenAITab--toolParamList')).toBeInTheDocument();
+    });
+
+    it('renders a tool with no type badge when the type field is absent (Google ADK style)', () => {
+      const { container } = render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [{ name: 'get_weather', description: 'Get weather.', parameters: { type: 'OBJECT' } }],
+            },
+          ])}
+        />
+      );
+      expect(screen.getByText('get_weather')).toBeInTheDocument();
+      // No type badge element expected.
+      expect(container.querySelector('.GenAITab--toolDefinitionType')).not.toBeInTheDocument();
+    });
+
+    it('renders multiple tools as separate blocks', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [
+                { type: 'function', name: 'get_weather' },
+                { type: 'function', name: 'send_email' },
+              ],
+            },
+          ])}
+        />
+      );
+      expect(screen.getByText('get_weather')).toBeInTheDocument();
+      expect(screen.getByText('send_email')).toBeInTheDocument();
+    });
+
+    it('renders an unrecognised tool entry as a raw JSON tree without a name/type header', () => {
+      const { container } = render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [{ something_custom: 'opaque_value' }],
+            },
+          ])}
+        />
+      );
+      // No name span expected for a raw entry.
+      expect(container.querySelector('.GenAITab--toolDefinitionName')).not.toBeInTheDocument();
+      // The raw entry itself should still be rendered as a JSON block.
+      expect(container.querySelector('.GenAITab--toolDefinitionBlock')).toBeInTheDocument();
+    });
+
+    it('does not show gen_ai.tool.definitions in Other GenAI Attributes, proving it is claimed', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [{ type: 'function', name: 'ping' }],
+            },
+          ])}
+        />
+      );
+      // The overflow accordion must not exist when the only unhandled attribute is claimed.
+      expect(
+        screen.queryByText((_, element) => element?.textContent === 'Other GenAI Attributes:')
+      ).not.toBeInTheDocument();
+    });
+
+    it('renders a JSON-encoded string value of gen_ai.tool.definitions by parsing it first', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: JSON.stringify([{ type: 'function', name: 'get_weather', description: 'Get weather.' }]),
+            },
+          ])}
+        />
+      );
+      expect(screen.getByText('get_weather')).toBeInTheDocument();
+    });
+
+    it('omits the description element when description is null', () => {
+      const { container } = render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [{ type: 'function', name: 'ping', description: null }] as unknown as AttributeValue,
+            },
+          ])}
+        />
+      );
+      expect(container.querySelector('.GenAITab--toolDefinitionDescription')).not.toBeInTheDocument();
+    });
   });
 });
 

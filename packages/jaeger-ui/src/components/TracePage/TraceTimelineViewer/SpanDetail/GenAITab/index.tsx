@@ -16,6 +16,7 @@ import {
   GenAiPart,
   GenAiTokenUsage,
   GenAiToolCall,
+  GenAiToolDefinition,
 } from './genAiData';
 import { MessageFormat, useMessageFormatStore } from './message-format-store';
 import AccordionAttributes from '../AccordionAttributes';
@@ -596,10 +597,12 @@ function AgentDetails({
   const data = useMemo(
     () =>
       makeAttributes(
-        AGENT_FIELD_ORDER.filter(key => agent[key] != null).map((key): IAttribute => ({
-          key: AGENT_LABELS[key] ?? key,
-          value: agent[key] as AttributeValue,
-        }))
+        AGENT_FIELD_ORDER.filter(key => agent[key] != null).map(
+          (key): IAttribute => ({
+            key: AGENT_LABELS[key] ?? key,
+            value: agent[key] as AttributeValue,
+          })
+        )
       ),
     [agent]
   );
@@ -711,6 +714,86 @@ function ConversationDetails({
   );
 }
 
+function ToolParameters({ parameters }: { parameters: unknown }) {
+  const parsed = typeof parameters === 'string' ? tryParseJson(parameters) : parameters;
+
+  if (
+    typeof parsed === 'object' &&
+    parsed !== null &&
+    'type' in parsed &&
+    parsed.type === 'object' &&
+    'properties' in parsed &&
+    typeof parsed.properties === 'object' &&
+    parsed.properties !== null
+  ) {
+    const props = parsed.properties as Record<string, unknown>;
+    const parsedObj = parsed as Record<string, unknown>;
+    const required = Array.isArray(parsedObj.required) ? parsedObj.required : [];
+
+    return (
+      <div className="GenAITab--toolParamList">
+        {Object.entries(props).map(([key, propDef]) => {
+          const isRequired = required.includes(key);
+          const def =
+            typeof propDef === 'object' && propDef !== null ? (propDef as Record<string, unknown>) : {};
+          return (
+            <div key={key} className="GenAITab--toolParamItem">
+              <div className="GenAITab--toolParamHeader">
+                <span className="GenAITab--toolParamName">{key}</span>
+                {typeof def.type === 'string' && <span className="GenAITab--toolParamType">{def.type}</span>}
+                {isRequired && <span className="GenAITab--toolParamRequired">required</span>}
+              </div>
+              {typeof def.description === 'string' && (
+                <div className="GenAITab--toolParamDesc">{def.description}</div>
+              )}
+              {Array.isArray(def.enum) && (
+                <div className="GenAITab--toolParamEnum">Allowed values: {def.enum.join(', ')}</div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  return <JsonBlock value={parsed} />;
+}
+
+function ToolsSection({ tools }: { tools: GenAiToolDefinition[] }) {
+  return (
+    <div className="GenAITab--section">
+      <h3 className="GenAITab--sectionTitle">Tools</h3>
+      {tools.map((tool, i) => {
+        // Unrecognised entry — show whatever the instrumentation emitted.
+        if (tool.raw !== undefined) {
+          return (
+            <div key={i} className="GenAITab--toolDefinitionBlock">
+              <JsonBlock value={tool.raw} />
+            </div>
+          );
+        }
+        return (
+          <div key={tool.name ?? i} className="GenAITab--toolDefinitionBlock">
+            <div className="GenAITab--toolDefinitionHeader">
+              {tool.name && <span className="GenAITab--toolDefinitionName">{tool.name}</span>}
+              {tool.type && <span className="GenAITab--toolDefinitionType">{tool.type}</span>}
+            </div>
+            {tool.description != null && tool.description !== '' && (
+              <p className="GenAITab--toolDefinitionDescription">{tool.description}</p>
+            )}
+            {tool.parameters !== undefined && (
+              <div className="GenAITab--toolSubsection">
+                <span className="GenAITab--toolLabel">Parameters</span>
+                <ToolParameters parameters={tool.parameters} />
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function ToolCallDetails({
   id,
   name,
@@ -817,6 +900,8 @@ export default function GenAITab({ span }: Props): React.ReactElement {
             return <TokenDetails key="tokens" usage={section.data} />;
           case 'conversation':
             return <ConversationDetails key="conversation" {...section.data} />;
+          case 'tools':
+            return <ToolsSection key="tools" tools={section.data.tools} />;
           case 'toolCall':
             return (
               <ToolCallDetails
