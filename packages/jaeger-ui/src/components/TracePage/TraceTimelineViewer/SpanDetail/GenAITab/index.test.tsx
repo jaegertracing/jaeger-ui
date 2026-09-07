@@ -741,7 +741,7 @@ describe('GenAITab', () => {
         ])}
       />
     );
-    expect(screen.getByText('Tool Call: get_weather')).toBeInTheDocument();
+    expect(screen.getByText('get_weather')).toBeInTheDocument();
     expect(screen.getByText('Arguments')).toBeInTheDocument();
     expect(screen.getByText('Result')).toBeInTheDocument();
   });
@@ -812,7 +812,7 @@ describe('GenAITab', () => {
   });
 
   describe('ToolsSection', () => {
-    it('renders a Tools heading and the tool name for a flat OTel FunctionToolDefinition', () => {
+    it('renders a Tools section and sub-table for a flat OTel FunctionToolDefinition', () => {
       render(
         <GenAITab
           span={makeSpan([
@@ -825,11 +825,13 @@ describe('GenAITab', () => {
       );
       expect(screen.getByText('Tools')).toBeInTheDocument();
       expect(screen.getByText('get_weather')).toBeInTheDocument();
+      expect(screen.getByText('Type')).toBeInTheDocument();
       expect(screen.getByText('function')).toBeInTheDocument();
+      expect(screen.getByText('Description')).toBeInTheDocument();
       expect(screen.getByText('Get the current weather.')).toBeInTheDocument();
     });
 
-    it('renders the Parameters label and a JSON tree when parameters are present', () => {
+    it('renders the Parameters label and a parameter table when parameters are present', () => {
       const { container } = render(
         <GenAITab
           span={makeSpan([
@@ -846,8 +848,8 @@ describe('GenAITab', () => {
           ])}
         />
       );
-      expect(screen.getByText('Parameters')).toBeInTheDocument();
-      expect(container.querySelector('.GenAITab--toolParamList')).toBeInTheDocument();
+      expect(screen.getByText('Parameter')).toBeInTheDocument();
+      expect(container.querySelector('.GenAITab--paramTableContainer')).toBeInTheDocument();
       expect(screen.getByText('location')).toBeInTheDocument();
     });
 
@@ -873,11 +875,11 @@ describe('GenAITab', () => {
       );
       expect(screen.getByText('get_weather')).toBeInTheDocument();
       expect(screen.getByText('Get the current weather')).toBeInTheDocument();
-      expect(container.querySelector('.GenAITab--toolParamList')).toBeInTheDocument();
+      expect(container.querySelector('.GenAITab--paramTableContainer')).toBeInTheDocument();
     });
 
-    it('renders a tool with no type badge when the type field is absent (Google ADK style)', () => {
-      const { container } = render(
+    it('renders a tool with no Type row when the type field is absent', () => {
+      render(
         <GenAITab
           span={makeSpan([
             {
@@ -888,11 +890,10 @@ describe('GenAITab', () => {
         />
       );
       expect(screen.getByText('get_weather')).toBeInTheDocument();
-      // No type badge element expected.
-      expect(container.querySelector('.GenAITab--toolDefinitionType')).not.toBeInTheDocument();
+      expect(screen.queryByText('Type')).not.toBeInTheDocument();
     });
 
-    it('renders multiple tools as separate blocks', () => {
+    it('renders multiple tools as separate sub-tables', () => {
       render(
         <GenAITab
           span={makeSpan([
@@ -910,8 +911,8 @@ describe('GenAITab', () => {
       expect(screen.getByText('send_email')).toBeInTheDocument();
     });
 
-    it('renders an unrecognised tool entry as a raw JSON tree without a name/type header', () => {
-      const { container } = render(
+    it('renders an unrecognised tool entry as key/value rows under a generic Tool header', () => {
+      render(
         <GenAITab
           span={makeSpan([
             {
@@ -921,10 +922,9 @@ describe('GenAITab', () => {
           ])}
         />
       );
-      // No name span expected for a raw entry.
-      expect(container.querySelector('.GenAITab--toolDefinitionName')).not.toBeInTheDocument();
-      // The raw entry itself should still be rendered as a JSON block.
-      expect(container.querySelector('.GenAITab--toolDefinitionBlock')).toBeInTheDocument();
+      expect(screen.getByText('Tool')).toBeInTheDocument();
+      expect(screen.getByText('something_custom')).toBeInTheDocument();
+      expect(screen.getByText('opaque_value')).toBeInTheDocument();
     });
 
     it('does not show gen_ai.tool.definitions in Other GenAI Attributes, proving it is claimed', () => {
@@ -938,7 +938,6 @@ describe('GenAITab', () => {
           ])}
         />
       );
-      // The overflow accordion must not exist when the only unhandled attribute is claimed.
       expect(
         screen.queryByText((_, element) => element?.textContent === 'Other GenAI Attributes:')
       ).not.toBeInTheDocument();
@@ -958,8 +957,8 @@ describe('GenAITab', () => {
       expect(screen.getByText('get_weather')).toBeInTheDocument();
     });
 
-    it('omits the description element when description is null', () => {
-      const { container } = render(
+    it('omits the Description row when description is null', () => {
+      render(
         <GenAITab
           span={makeSpan([
             {
@@ -969,7 +968,7 @@ describe('GenAITab', () => {
           ])}
         />
       );
-      expect(container.querySelector('.GenAITab--toolDefinitionDescription')).not.toBeInTheDocument();
+      expect(screen.queryByText('Description')).not.toBeInTheDocument();
     });
   });
 });
