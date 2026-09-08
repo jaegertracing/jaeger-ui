@@ -30,8 +30,8 @@ const DEFAULT_PILL_SOURCES: readonly IPillSource[] = [
     label: 'http.method',
     attrKeys: ['http.method', 'http.request.method'],
   },
-  { label: 'db.system', attrKeys: ['db.system'] },
-  { label: 'rpc.system', attrKeys: ['rpc.system'] },
+  { label: 'db.system', attrKeys: ['db.system.name', 'db.system'] },
+  { label: 'rpc.system', attrKeys: ['rpc.system.name', 'rpc.system'] },
   { label: GEN_AI_REQUEST_MODEL, attrKeys: [GEN_AI_REQUEST_MODEL] },
 ];
 

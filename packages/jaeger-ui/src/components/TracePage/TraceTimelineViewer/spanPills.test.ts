@@ -107,6 +107,32 @@ describe('spanPills', () => {
       ]);
     });
 
+    it('maps db.system.name and db.system to pills', () => {
+      expect(getSpanPillsForSpan(makeSpan([{ key: 'db.system.name', value: 'postgresql' }]))).toEqual([
+        { label: 'db.system', value: 'postgresql' },
+      ]);
+      expect(getSpanPillsForSpan(makeSpan([{ key: 'db.system', value: 'mysql' }]))).toEqual([
+        { label: 'db.system', value: 'mysql' },
+      ]);
+    });
+
+    it('prefers db.system.name when both database attributes are present', () => {
+      const span = makeSpan([
+        { key: 'db.system.name', value: 'postgresql' },
+        { key: 'db.system', value: 'mysql' },
+      ]);
+      expect(getSpanPillsForSpan(span)).toEqual([{ label: 'db.system', value: 'postgresql' }]);
+    });
+
+    it('maps rpc.system.name and rpc.system to pills', () => {
+      expect(getSpanPillsForSpan(makeSpan([{ key: 'rpc.system.name', value: 'grpc' }]))).toEqual([
+        { label: 'rpc.system', value: 'grpc' },
+      ]);
+      expect(getSpanPillsForSpan(makeSpan([{ key: 'rpc.system', value: 'grpc' }]))).toEqual([
+        { label: 'rpc.system', value: 'grpc' },
+      ]);
+    });
+
     it('maps gen_ai.request.model to a pill', () => {
       const span = makeSpan([{ key: GEN_AI_REQUEST_MODEL, value: 'gpt-4o' }]);
       expect(getSpanPillsForSpan(span)).toEqual([{ label: 'gen_ai.request.model', value: 'gpt-4o' }]);

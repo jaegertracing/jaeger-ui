@@ -12,6 +12,7 @@ import { Hyperlink } from '../../../../types/hyperlink';
 import { IAttributes } from '../../../../types/otel';
 
 import './AccordionAttributes.css';
+import accordionToggle from './accordionToggle';
 
 // export for tests
 export function AttributesSummary({ data }: { data: IAttributes }) {
@@ -60,7 +61,7 @@ export default function AccordionAttributes({
     arrow = isOpen ? <IoChevronDown className={iconCls} /> : <IoChevronForward className={iconCls} />;
     headerProps = {
       'aria-checked': isOpen,
-      onClick: onToggle,
+      onClick: accordionToggle(onToggle),
       role: 'switch',
     };
   }

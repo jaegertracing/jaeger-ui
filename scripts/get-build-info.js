@@ -4,8 +4,12 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// This script is run during the build and generates strings used to identify
-// the application to Google Analytics tracking (or any tracking).
+// This script runs during the build and describes the bundle being produced: its version and the git
+// state it was built from. The result is injected as REACT_APP_VSN_STATE and read back by
+// getVersionInfo(), which feeds two things — the identity reported to analytics, and the UI version and
+// commit shown in the About menu.
+//
+// It has to run at build time because nothing at runtime can know which commit a bundle came from.
 //
 // See the comment on `getVersion(..)` function below for details.
 // See also packages/jaeger-ui/src/utils/tracking/README.md
@@ -15,7 +19,7 @@ import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 
 const require = createRequire(import.meta.url);
-const version = require('../package.json').version;
+const version = require('../packages/jaeger-ui/package.json').version;
 
 function cleanRemoteUrl(url) {
   return url.replace(/^(.*?@|.*?\/\/)|\.git\s*$/gi, '').replace(/:/g, '/');
@@ -74,7 +78,7 @@ function getChanged(shortstat, status) {
 // The output is along the lines of the following:
 //
 //     {
-//       "version": "0.0.1",
+//       "version": "2.20.0",
 //       "remote": "github.com/jaegertracing/jaeger-ui",
 //       "objName": "64fbc13",
 //       "changed": {
@@ -86,10 +90,10 @@ function getChanged(shortstat, status) {
 //         "pretty": "1f +21"
 //       },
 //       "refName": "issue-39-track-js-errors",
-//       "pretty": "0.0.1 | github.com/jaegertracing/jaeger-ui | 64fbc13 | 1f +21 | issue-39-track-js-errors"
+//       "pretty": "2.20.0 | github.com/jaegertracing/jaeger-ui | 64fbc13 | 1f +21 | issue-39-track-js-errors"
 //     }
 //
-// * version: The package.json version
+// * version: The jaeger-ui package version
 // * remote: The git remote URL (normalized)
 // * objName: The short SHA
 // * changed: Indicates any changes in the repo
