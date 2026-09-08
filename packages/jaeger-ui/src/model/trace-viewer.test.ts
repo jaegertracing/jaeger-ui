@@ -18,4 +18,15 @@ describe('getIncompleteTraceTooltip', () => {
     const result = getIncompleteTraceTooltip(1);
     expect(result).toContain('opening or reloading the trace');
   });
+
+  it('names the causes that reloading cannot fix', () => {
+    const result = getIncompleteTraceTooltip(1);
+    expect(result).toContain('dropped by sampling');
+    expect(result).toContain('aged out of retention');
+  });
+
+  it('makes the reload suggestion conditional', () => {
+    const result = getIncompleteTraceTooltip(1);
+    expect(result).toContain('in which case opening or reloading the trace');
+  });
 });
