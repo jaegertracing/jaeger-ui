@@ -41,7 +41,8 @@ SPDX-License-Identifier: Apache-2.0
   margin-right: auto;
   width: 80%;
   height: 60%;
-  color: var(--interactive-primary);
+  background: var(--surface-primary);
+  color: var(--text-primary);
   font-family: monospace;
   font-size: 13px;
   outline-color: var(--interactive-primary);
