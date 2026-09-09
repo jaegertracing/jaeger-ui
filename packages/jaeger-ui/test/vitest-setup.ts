@@ -12,6 +12,55 @@ rafPolyfill();
 // TextEncoder is not provided by JSDOM
 global.TextEncoder = TextEncoder as typeof global.TextEncoder;
 
+// Node 25+ defines localStorage/sessionStorage as globals, so Vitest keeps those
+// over jsdom's, and Node's are undefined without --localstorage-file (vitest#10867).
+if (!globalThis.localStorage || !globalThis.sessionStorage) {
+  const backings = new WeakMap<Storage, Map<string, string>>();
+  const backing = (self: Storage) => {
+    let map = backings.get(self);
+    if (!map) {
+      map = new Map();
+      backings.set(self, map);
+    }
+    return map;
+  };
+
+  // On the prototype, not the instance, because tests spy on Storage.prototype.
+  const def = (name: string, value: unknown) =>
+    Object.defineProperty(Storage.prototype, name, { value, configurable: true, writable: true });
+
+  Object.defineProperty(Storage.prototype, 'length', {
+    configurable: true,
+    get(this: Storage) {
+      return backing(this).size;
+    },
+  });
+  def('key', function (this: Storage, index: number) {
+    return [...backing(this).keys()][index] ?? null;
+  });
+  def('getItem', function (this: Storage, key: string) {
+    const map = backing(this);
+    return map.has(String(key)) ? (map.get(String(key)) as string) : null;
+  });
+  def('setItem', function (this: Storage, key: string, value: string) {
+    backing(this).set(String(key), String(value));
+  });
+  def('removeItem', function (this: Storage, key: string) {
+    backing(this).delete(String(key));
+  });
+  def('clear', function (this: Storage) {
+    backing(this).clear();
+  });
+
+  for (const key of ['localStorage', 'sessionStorage'] as const) {
+    Object.defineProperty(globalThis, key, {
+      value: Object.create(Storage.prototype) as Storage,
+      configurable: true,
+      writable: true,
+    });
+  }
+}
+
 // Alias jest → vi so existing test files work without modification.
 // Note: jest.mock() calls are NOT covered by this alias — they are renamed to
 // vi.mock() so Vitest's transform can hoist them. See PR H3 for details.
