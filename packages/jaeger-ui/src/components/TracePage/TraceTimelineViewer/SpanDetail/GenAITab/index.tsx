@@ -721,8 +721,9 @@ function ToolParameters({ parameters }: { parameters: unknown }) {
   if (
     typeof parsed === 'object' &&
     parsed !== null &&
-    'type' in parsed &&
-    parsed.type === 'object' &&
+'type' in parsed &&
+typeof parsed.type === 'string' &&
+parsed.type.toLowerCase() === 'object' &&
     'properties' in parsed &&
     typeof parsed.properties === 'object' &&
     parsed.properties !== null
@@ -786,14 +787,15 @@ function SingleToolDetails({ tool }: { tool: GenAiToolDefinition }) {
   const data = useMemo(() => {
     const entries: IAttribute[] = [];
     const label = tool.name || 'Tool';
-    if (tool.raw !== undefined) {
-      entries.push({ key: 'Name', value: label });
-      if (typeof tool.raw === 'object' && tool.raw !== null) {
-        Object.entries(tool.raw as Record<string, unknown>).forEach(([k, v]) => {
-          entries.push({ key: k, value: v as AttributeValue });
-        });
-      } else {
-        entries.push({ key: 'Value', value: tool.raw as AttributeValue });
+if ('raw' in tool) {
+  entries.push({ key: 'Name', value: label });
+  if (typeof tool.raw === 'object' && tool.raw !== null) {
+    Object.entries(tool.raw as Record<string, unknown>).forEach(([k, v]) => {
+      entries.push({ key: k, value: v == null ? String(v) : (v as AttributeValue) });
+    });
+  } else {
+    entries.push({ key: 'Value', value: tool.raw == null ? String(tool.raw) : (tool.raw as AttributeValue) });
+  }
       }
     } else {
       entries.push({ key: 'Name', value: label });
