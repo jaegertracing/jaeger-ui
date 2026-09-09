@@ -223,7 +223,7 @@ export function parseToolDefinitions(value: AttributeValue | undefined): GenAiTo
   if (typeof value === 'string') {
     parsed = tryParseJson(value);
     // tryParseJson returns the original string when it cannot parse.
-if (typeof parsed === 'string') return [{ raw: parsed }];
+    if (typeof parsed === 'string') return undefined;
   }
   const entries = Array.isArray(parsed) ? parsed : [parsed];
   const tools = entries.map(normaliseToolEntry);
