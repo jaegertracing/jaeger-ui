@@ -41,11 +41,38 @@ SPDX-License-Identifier: Apache-2.0
   gap: 8px;
 }
 
+.GenAITab--sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .GenAITab--sectionTitle {
   font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
+}
+
+.GenAITab--sectionActions {
+  display: flex;
+  gap: 8px;
+}
+
+.GenAITab--sectionAction {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+
+.GenAITab--sectionAction:hover {
+  color: var(--text-primary);
+  text-decoration: underline;
 }
 
 .GenAITab--message {
