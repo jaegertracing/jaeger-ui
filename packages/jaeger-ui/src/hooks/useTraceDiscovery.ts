@@ -89,7 +89,18 @@ export type TraceSummariesResult = {
  * **gcTime: Infinity** — prevents eviction while SearchTracePage is unmounted (e.g. user is
  * on a trace detail page). Safe because the single-slot invariant bounds memory to one entry.
  */
-export function useSearchTraces(query: SearchQuery | null): UseQueryResult<TraceSummariesResult> {
+/**
+ * useSearchTraces subscribes to the trace-summaries query for `query`.
+ *
+ * `skip` suppresses the fetch for a query the caller knows the deployment cannot serve.
+ * It is distinct from passing `null`: null means "no query in the URL", which restores
+ * the most recent cached search so the caller can rebuild the URL from it, whereas skip
+ * means "this query exists and must not run", leaving the cache untouched.
+ */
+export function useSearchTraces(
+  query: SearchQuery | null,
+  { skip = false }: { skip?: boolean } = {}
+): UseQueryResult<TraceSummariesResult> {
   const queryClient = useQueryClient();
 
   // When query is null (bare /search after TopNav click), find the most recently updated
@@ -97,6 +108,7 @@ export function useSearchTraces(query: SearchQuery | null): UseQueryResult<Trace
   // useMemo is used for idiomatic derived-cache reads; queryClient is stable across renders.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const effectiveQuery = useMemo(() => {
+    if (skip) return null;
     if (query) return query;
     const entries = queryClient
       .getQueryCache()
@@ -108,7 +120,7 @@ export function useSearchTraces(query: SearchQuery | null): UseQueryResult<Trace
     // Prefer queryKey[1] over state.data?.query so the entry is found even while
     // still fetching (data is undefined until the first successful response).
     return (mostRecent.queryKey[1] as SearchQuery | undefined) ?? null;
-  }, [query, queryClient]);
+  }, [query, queryClient, skip]);
 
   // Keep at most one cache entry: evict entries that don't match the effective query.
   useEffect(() => {

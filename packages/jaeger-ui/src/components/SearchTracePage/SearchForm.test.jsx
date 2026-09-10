@@ -1,33 +1,41 @@
+// Copyright (c) 2026 The Jaeger Authors.
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-const { mockUseIsSearchFetching } = vi.hoisted(() => ({
+const { mockUseIsSearchFetching, mockUseConfig } = vi.hoisted(() => ({
   mockUseIsSearchFetching: jest.fn().mockReturnValue(false),
+  mockUseConfig: jest.fn(),
 }));
 
 vi.mock('../common/SearchableSelect', () => {
-  const MockSearchableSelect = ({ onChange, 'data-testid': testId, disabled, value }) => {
+  const MockSearchableSelect = ({
+    onChange,
+    'data-testid': testId,
+    disabled,
+    value,
+    children,
+    allowCustomValue,
+  }) => {
     if (onChange && testId) {
       MockSearchableSelect.onChangeFns[testId] = onChange;
     }
     if (testId) {
       MockSearchableSelect.disabled[testId] = disabled;
+      MockSearchableSelect.children[testId] = children;
+      MockSearchableSelect.values[testId] = value;
+      MockSearchableSelect.allowCustomValue[testId] = allowCustomValue;
     }
     return <div data-testid={`mock-select-${testId}`} data-disabled={disabled} data-value={value} />;
   };
   MockSearchableSelect.onChangeFns = {};
   MockSearchableSelect.disabled = {};
+  MockSearchableSelect.children = {};
+  MockSearchableSelect.values = {};
+  MockSearchableSelect.allowCustomValue = {};
   return mockDefault(MockSearchableSelect);
 });
 vi.mock('../../hooks/useConfig', () => ({
-  useConfig: () => ({
-    useOpenTelemetryTerms: false,
-    search: {
-      maxLookback: { label: '2 days', value: '2d' },
-      adjustEndTime: '1m',
-      maxLimit: 1500,
-    },
-  }),
+  useConfig: mockUseConfig,
 }));
 vi.mock('../../hooks/useTraceDiscovery', () => ({
   useServices: jest.fn(() => ({
@@ -53,7 +61,7 @@ vi.mock('../../utils/config/get-config', () => ({
 
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
-import { render, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { render, fireEvent, waitFor, cleanup, screen } from '@testing-library/react';
 import { act } from 'react';
 import '@testing-library/jest-dom';
 import dayjs from 'dayjs';
@@ -74,6 +82,7 @@ import {
   validateDurationFields,
 } from './SearchForm';
 import * as markers from './SearchForm.markers';
+import { ALL_SERVICES, ALL_OPERATIONS } from '../../constants/search-form';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 import { AppQueryClientProvider } from '../../query/app-query-client';
 import getConfig from '../../utils/config/get-config';
@@ -100,6 +109,20 @@ const defaultProps = {
   handleSubmit: () => {},
   submitFormHandler: jest.fn().mockReturnValue('/search'),
 };
+
+const baseUiConfig = {
+  useOpenTelemetryTerms: false,
+  search: {
+    maxLookback: { label: '2 days', value: '2d' },
+    adjustEndTime: '1m',
+    maxLimit: 1500,
+  },
+  backendCapabilities: {},
+};
+
+// The default backend advertises no capabilities, which is what an older query service
+// or a Cassandra-backed one reports; individual tests override backendCapabilities.
+mockUseConfig.mockImplementation(() => baseUiConfig);
 
 describe('conversion utils', () => {
   describe('getUnixTimeStampInMSFromForm()', () => {
@@ -302,8 +325,8 @@ describe('submitForm()', () => {
     };
   });
 
-  it('ignores `fields.operation` when it is "all"', () => {
-    fields.operation = 'all';
+  it('ignores `fields.operation` when it is the reserved any-operation value', () => {
+    fields.operation = ALL_OPERATIONS;
     const url = submitForm(fields);
     const { operation } = getUrlParams(url);
     expect(operation).toBe(undefined);
@@ -416,6 +439,10 @@ describe('<SearchForm>', () => {
     jest.clearAllMocks();
     SearchableSelect.onChangeFns = {};
     SearchableSelect.disabled = {};
+    SearchableSelect.children = {};
+    SearchableSelect.values = {};
+    SearchableSelect.allowCustomValue = {};
+    mockUseConfig.mockImplementation(() => baseUiConfig);
   });
 
   it('enables operations only when a service is selected', async () => {
@@ -433,6 +460,99 @@ describe('<SearchForm>', () => {
     renderForm(<SearchForm {...defaultProps} />);
 
     expect(SearchableSelect.disabled.operation).toBe(true);
+  });
+
+  // Both reserved dropdown entries read the same way, and the operation one follows the
+  // Operation/Span Name toggle like its field label does.
+  it.each([
+    [false, 'All Operations'],
+    [true, 'All Span Names'],
+  ])('labels the any-operation entry for useOpenTelemetryTerms=%s', (useOpenTelemetryTerms, expected) => {
+    mockUseConfig.mockImplementation(() => ({ ...baseUiConfig, useOpenTelemetryTerms }));
+
+    renderForm(<SearchForm key={`op-label-${useOpenTelemetryTerms}`} {...defaultProps} />);
+
+    const labelOf = value =>
+      React.Children.toArray(SearchableSelect.children.operation).find(child => child.props.value === value)
+        ?.props.children;
+    expect(labelOf(ALL_OPERATIONS)).toBe(expected);
+  });
+
+  it('says a name outside the list may be typed', async () => {
+    const { container } = renderForm(
+      <SearchForm key="op-hint" {...defaultProps} initialValues={{ service: 'svcA' }} />
+    );
+
+    const operationField = container
+      .querySelector('[data-testid="mock-select-operation"]')
+      .closest('.ant-form-item');
+    fireEvent.mouseEnter(operationField.querySelector('.SearchForm--hintTrigger'));
+
+    expect(await screen.findByText(/type a name that is not in the list/)).toBeInTheDocument();
+  });
+
+  describe('All Services option', () => {
+    const serviceOptionValues = () =>
+      React.Children.toArray(SearchableSelect.children.service).map(child => child.props.value);
+
+    const withAllServicesSupport = () =>
+      mockUseConfig.mockImplementation(() => ({
+        ...baseUiConfig,
+        backendCapabilities: { searchWithoutServiceName: true },
+      }));
+
+    it('is offered when the backend advertises searchWithoutServiceName', () => {
+      withAllServicesSupport();
+
+      renderForm(<SearchForm key="all-svc-on" {...defaultProps} />);
+
+      expect(serviceOptionValues()).toEqual([ALL_SERVICES, 'svcA', 'svcB']);
+    });
+
+    it('is withheld when the backend does not advertise the capability', () => {
+      renderForm(<SearchForm key="all-svc-off" {...defaultProps} />);
+
+      expect(serviceOptionValues()).toEqual(['svcA', 'svcB']);
+    });
+
+    it('enables submission once selected, and offers no name to pick from', async () => {
+      withAllServicesSupport();
+      const { container } = renderForm(
+        <SearchForm key="all-svc-selected" {...defaultProps} initialValues={{ service: ALL_SERVICES }} />
+      );
+
+      const submitButton = container.querySelector(`[data-test="${markers.SUBMIT_BTN}"]`);
+      expect(submitButton).not.toBeDisabled();
+      // Names are enumerated per service, so there is no list to offer across all of them,
+      // but the field stays open for a typed one.
+      await waitFor(() => expect(useSpanNames).toHaveBeenCalledWith(null));
+      expect(SearchableSelect.disabled.operation).toBe(false);
+      expect(SearchableSelect.allowCustomValue.operation).toBe(true);
+    });
+
+    it('keeps an operation carried alongside it', () => {
+      withAllServicesSupport();
+
+      renderForm(
+        <SearchForm
+          key="all-svc-with-op"
+          {...defaultProps}
+          initialValues={{ service: ALL_SERVICES, operation: 'someOperation' }}
+        />
+      );
+
+      expect(SearchableSelect.values.operation).toBe('someOperation');
+    });
+
+    it('falls back to no selection when the backend cannot search without a service', () => {
+      const { container } = renderForm(
+        <SearchForm key="all-svc-unsupported" {...defaultProps} initialValues={{ service: ALL_SERVICES }} />
+      );
+
+      expect(SearchableSelect.values.service).toBeUndefined();
+      const submitButton = container.querySelector(`[data-test="${markers.SUBMIT_BTN}"]`);
+      expect(submitButton).toBeDisabled();
+    });
   });
 
   it('shows custom date inputs when lookback is set to "custom"', () => {
@@ -637,6 +757,10 @@ describe('SearchForm onChange handlers', () => {
     jest.clearAllMocks();
     SearchableSelect.onChangeFns = {};
     SearchableSelect.disabled = {};
+    SearchableSelect.children = {};
+    SearchableSelect.values = {};
+    SearchableSelect.allowCustomValue = {};
+    mockUseConfig.mockImplementation(() => baseUiConfig);
   });
 
   it('updates form data when onChange handlers are triggered', async () => {
@@ -784,7 +908,7 @@ describe('submitting state from useIsSearchFetching', () => {
       );
       expect(container.querySelector('[data-testid="mock-select-operation"]')).toHaveAttribute(
         'data-value',
-        'all'
+        ALL_OPERATIONS
       );
       expect(container.querySelector('[data-testid="mock-select-lookback"]')).toHaveAttribute(
         'data-value',
@@ -867,6 +991,22 @@ describe('mapStateToProps()', () => {
     const { service, operation } = callMapStateToProps().initialValues;
     expect(operation).toBe(op);
     expect(service).toBe(svc);
+  });
+
+  // The any-operation sentinel used to be the plain word "all". A bookmarked URL or a
+  // last-search stored by an earlier build still carries it, and must keep meaning "any
+  // operation" rather than becoming a filter for an operation of that name.
+  it('reads the legacy any-operation value from the URL as the current sentinel', () => {
+    const { operation } = callMapStateToProps('operation=all').initialValues;
+    expect(operation).toBe(ALL_OPERATIONS);
+  });
+
+  it('reads the legacy any-operation value from lastSearch as the current sentinel', () => {
+    const svc = 'some-svc';
+    state.services = { services: [svc], operationsForService: { [svc]: [] } };
+    localStorage.setItem('lastSearch', JSON.stringify({ operation: 'all', service: svc }));
+    const { operation } = callMapStateToProps().initialValues;
+    expect(operation).toBe(ALL_OPERATIONS);
   });
 
   describe('deriving values from the URL search string (ownProps.search)', () => {
@@ -1011,7 +1151,7 @@ describe('mapStateToProps()', () => {
       service: '-',
       resultsLimit: '20',
       lookback: '1h',
-      operation: 'all',
+      operation: ALL_OPERATIONS,
       tags: undefined,
       minDuration: undefined,
       maxDuration: undefined,
@@ -1041,7 +1181,7 @@ describe('mapStateToProps()', () => {
 describe('submitForm() adjustEndTime toggle', () => {
   const fields = {
     lookback: '1h',
-    operation: 'all',
+    operation: ALL_OPERATIONS,
     resultsLimit: 20,
     service: 'svcA',
   };

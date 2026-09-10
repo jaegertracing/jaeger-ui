@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 
@@ -15,6 +15,7 @@ import {
   TracePageImpl as TracePage,
   VIEW_MIN_RANGE,
 } from './index';
+import memoizedTraceCriticalPath from './CriticalPath/index';
 import * as track from './index.track';
 import * as keyboardShortcutsMod from './keyboard-shortcuts';
 import { merge as mergeShortcuts } from './keyboard-shortcuts';
@@ -583,6 +584,17 @@ describe('<TracePage>', () => {
     });
 
     describe('calculates hideMap correctly', () => {
+      afterEach(() => {
+        mockLayoutPrefsStore.timelineBarsVisible = true;
+      });
+
+      it('is false on the timeline view', () => {
+        renderWithRouter(<TracePage {...defaultProps} />);
+
+        const spanGraph = screen.queryByTestId('span-graph');
+        expect(spanGraph).toBeInTheDocument();
+      });
+
       it('is true if on traceGraphView', () => {
         renderWithRouter(<TracePage {...defaultProps} />);
 
@@ -600,6 +612,14 @@ describe('<TracePage>', () => {
           searchHideGraph: false,
           timeline: { collapseTitle: false, hideMinimap: true, hideSummary: false },
         });
+        renderWithRouter(<TracePage {...defaultProps} />);
+
+        const spanGraph = screen.queryByTestId('span-graph');
+        expect(spanGraph).not.toBeInTheDocument();
+      });
+
+      it('is true if timeline bars are hidden', () => {
+        mockLayoutPrefsStore.timelineBarsVisible = false;
         renderWithRouter(<TracePage {...defaultProps} />);
 
         const spanGraph = screen.queryByTestId('span-graph');
@@ -1125,6 +1145,51 @@ describe('<TracePage>', () => {
 
       render(<TracePage {...defaultProps} id={otelTrace.traceID} />);
       expect(capturedHeaderProps.viewType).toBe(ETraceViewType.GenAITimelineViewer);
+    });
+  });
+
+  describe('critical path error banner', () => {
+    const sampleErrors = ["Root span abc123: Cannot read properties of null (reading 'forEach')"];
+
+    it('shows the error banner when criticalPathEnabled is true and computation fails', () => {
+      memoizedTraceCriticalPath.mockReturnValue({ sections: [], failed: true, errors: sampleErrors });
+      render(<TracePage {...defaultProps} criticalPathEnabled />);
+      expect(screen.getByText('Critical path could not be computed for this trace.')).toBeInTheDocument();
+    });
+
+    it('shows the actual captured error message rather than a generic guess', () => {
+      memoizedTraceCriticalPath.mockReturnValue({ sections: [], failed: true, errors: sampleErrors });
+      render(<TracePage {...defaultProps} criticalPathEnabled />);
+      expect(screen.getByText(sampleErrors[0])).toBeInTheDocument();
+    });
+
+    it('joins multiple root-span errors into the banner description', () => {
+      const twoErrors = ['Root span a: boom', 'Root span b: kaboom'];
+      memoizedTraceCriticalPath.mockReturnValue({ sections: [], failed: true, errors: twoErrors });
+      render(<TracePage {...defaultProps} criticalPathEnabled />);
+      expect(screen.getByText(twoErrors.join('; '))).toBeInTheDocument();
+    });
+
+    it('dismisses the error banner when the close button is clicked', () => {
+      memoizedTraceCriticalPath.mockReturnValue({ sections: [], failed: true, errors: sampleErrors });
+      render(<TracePage {...defaultProps} criticalPathEnabled />);
+      expect(screen.getByText('Critical path could not be computed for this trace.')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: /close/i }));
+      expect(
+        screen.queryByText('Critical path could not be computed for this trace.')
+      ).not.toBeInTheDocument();
+    });
+
+    it('re-shows the banner for a different trace after being dismissed on a prior one, since TracePage is not remounted per trace id', () => {
+      memoizedTraceCriticalPath.mockReturnValue({ sections: [], failed: true, errors: sampleErrors });
+      const { rerender } = render(<TracePage {...defaultProps} criticalPathEnabled />);
+      fireEvent.click(screen.getByRole('button', { name: /close/i }));
+      expect(
+        screen.queryByText('Critical path could not be computed for this trace.')
+      ).not.toBeInTheDocument();
+
+      rerender(<TracePage {...defaultProps} params={{ id: 'a-different-trace-id' }} criticalPathEnabled />);
+      expect(screen.getByText('Critical path could not be computed for this trace.')).toBeInTheDocument();
     });
   });
 });
