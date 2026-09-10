@@ -66,6 +66,10 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
     updateNextViewRangeTime,
     viewRangeTime,
   } = props;
+  const onSidePanelPositionChange = React.useCallback(
+    (newPosition: number) => onSidePanelWidthChange(1 - newPosition),
+    [onSidePanelWidthChange]
+  );
   const [viewStart, viewEnd] = viewRangeTime.current;
   const startTime = (viewStart * duration) as IOtelSpan['startTime'];
   const endTime = (viewEnd * duration) as IOtelSpan['endTime'];
@@ -95,6 +99,11 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
           <Ticks numTicks={numTicks} startTime={startTime} endTime={endTime} showLabels />
         </TimelineRow.Cell>
       )}
+      {sidePanelVisible && (
+        <TimelineRow.Cell className="ub-flex ub-px2 TimelineHeaderRow--sidePanelCell" width={sidePanelWidth}>
+          <h3 className="TimelineHeaderRow--title">{sidePanelLabel}</h3>
+        </TimelineRow.Cell>
+      )}
       {(timelineBarsVisible || sidePanelVisible) && (
         <VerticalResizer
           position={nameColumnWidth}
@@ -106,16 +115,10 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
       {sidePanelVisible && timelineBarsVisible && (
         <VerticalResizer
           position={1 - sidePanelWidth}
-          onChange={onSidePanelWidthChange}
+          onChange={onSidePanelPositionChange}
           min={1 - Math.min(SIDE_PANEL_WIDTH_MAX, 1 - nameColumnWidth - MIN_TIMELINE_COLUMN_WIDTH)}
           max={1 - SIDE_PANEL_WIDTH_MIN}
-          rightSide
         />
-      )}
-      {sidePanelVisible && (
-        <TimelineRow.Cell className="ub-flex ub-px2 TimelineHeaderRow--sidePanelCell" width={sidePanelWidth}>
-          <h3 className="TimelineHeaderRow--title">{sidePanelLabel}</h3>
-        </TimelineRow.Cell>
       )}
     </TimelineRow>
   );

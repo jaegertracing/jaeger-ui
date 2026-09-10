@@ -9,7 +9,6 @@ import { actions } from './duck';
 import {
   getSelectedSpanID,
   MIN_TIMELINE_COLUMN_WIDTH,
-  SIDE_PANEL_WIDTH_MAX,
   SIDE_PANEL_WIDTH_MIN,
   SPAN_NAME_COLUMN_WIDTH_MAX,
   SPAN_NAME_COLUMN_WIDTH_MIN,
@@ -21,7 +20,6 @@ import TimelineHeaderRow from './TimelineHeaderRow';
 import { useServiceFilter } from './useServiceFilter';
 import { useSpanPillsEnabled } from './spanPills';
 import VirtualizedTraceView from './VirtualizedTraceView';
-import VerticalResizer from '../../common/VerticalResizer';
 import { merge as mergeShortcuts } from '../keyboard-shortcuts';
 import { Accessors } from '../ScrollManager';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '../types';
@@ -259,14 +257,6 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
           <div className="TraceTimelineViewer--main" style={{ width: `${mainWidth}%` }}>
             {virtualizedView}
           </div>
-          {timelineBarsVisible && (
-            <VerticalResizer
-              position={1 - sidePanelWidth}
-              min={1 - Math.min(SIDE_PANEL_WIDTH_MAX, 1 - spanNameColumnWidth - MIN_TIMELINE_COLUMN_WIDTH)}
-              max={1 - SIDE_PANEL_WIDTH_MIN}
-              onChange={newPosition => setSidePanelWidth(1 - newPosition)}
-            />
-          )}
           <div className="TraceTimelineViewer--sidePanel" style={sidePanelStyle}>
             <SpanDetailSidePanel
               trace={trace}
