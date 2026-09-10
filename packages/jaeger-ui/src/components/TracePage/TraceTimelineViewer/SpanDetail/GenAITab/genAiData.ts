@@ -48,6 +48,31 @@ export type GenAiToolCall = {
   result?: unknown;
 };
 
+/**
+ * One entry of a retrieval-documents or memory-records list: `content` pulled out so a
+ * renderer can show it prominently, everything else (score, source_id, metadata, id, ...)
+ * kept as-is so a field neither schema fixes in advance is still reachable.
+ */
+export type GenAiContentEntry = { content: string; rest: Record<string, unknown> };
+
+// Fields per the gen_ai.retrieval.* / gen_ai.data_source.* registry (retrieval spans):
+// query text, top_k, the data source queried, and the documents it returned.
+export type GenAiRetrieval = {
+  queryText?: string;
+  topK?: number;
+  dataSourceId?: string;
+  documents: GenAiContentEntry[];
+};
+
+// Fields per the gen_ai.memory.* registry (search_memory/upsert_memory spans): the
+// memory store, the query, how many records it reports, and the records themselves.
+export type GenAiMemory = {
+  queryText?: string;
+  storeId?: string;
+  recordCount?: number;
+  records: GenAiContentEntry[];
+};
+
 // Fields per the gen_ai.agent.* registry (create_agent/invoke_agent spans): id, name,
 // version, description. All are individually optional/conditionally-required per spec,
 // so a span can carry any subset.
@@ -94,6 +119,8 @@ export type GenAiSection =
       data: { systemInstructions?: string; inputMessages: GenAiMessage[]; outputMessages: GenAiMessage[] };
     }
   | { type: 'toolCall'; data: GenAiToolCall }
+  | { type: 'retrieval'; data: GenAiRetrieval }
+  | { type: 'memory'; data: GenAiMemory }
   | { type: 'other'; data: { attributes: IAttributes } };
 
 function asString(value: AttributeValue | undefined): string | undefined {
@@ -403,6 +430,38 @@ function parseMessages(value: AttributeValue | undefined): GenAiMessage[] {
   });
 }
 
+/**
+ * Parses gen_ai.retrieval.documents / gen_ai.memory.records: a JSON-encoded string or an
+ * already-parsed array/object, each entry a `{content, ...}` object per the retrieval-documents
+ * and memory-records schemas (a document may also carry a score, a record an id and
+ * metadata, and either may carry fields neither schema anticipates). `content` is split out
+ * so a renderer can show it prominently; every other field is kept under `rest` rather than
+ * assumed away, so nothing about an entry is silently dropped.
+ */
+function parseContentEntries(value: AttributeValue | undefined): GenAiContentEntry[] {
+  if (value == null) return [];
+  let parsed: unknown = value;
+  if (typeof value === 'string') {
+    try {
+      parsed = JSON.parse(value);
+    } catch {
+      // Not JSON - treat the whole string as a single entry with no other fields.
+      return [{ content: value, rest: {} }];
+    }
+  }
+  const entries = Array.isArray(parsed) ? parsed : [parsed];
+  return entries.map((entry): GenAiContentEntry => {
+    if (typeof entry !== 'object' || entry === null) {
+      return { content: stringifyValue(entry), rest: {} };
+    }
+    const { content, ...rest } = entry as Record<string, unknown>;
+    return {
+      content: content === undefined ? '' : typeof content === 'string' ? content : stringifyValue(content),
+      rest,
+    };
+  });
+}
+
 export function hasAnyTokenUsage(usage: GenAiTokenUsage): boolean {
   return Object.values(usage).some(v => v != null);
 }
@@ -484,6 +543,32 @@ const REGISTRY: SectionBuilder[] = [
       audioCacheReadInputTokens: asNumber(get('gen_ai.usage.audio.cache_read.input_tokens')),
     };
     return hasAnyTokenUsage(usage) ? { type: 'tokens', data: usage } : undefined;
+  },
+  get => {
+    const queryText = asString(get('gen_ai.retrieval.query.text'));
+    const topK = asNumber(get('gen_ai.retrieval.top_k'));
+    const dataSourceId = asString(get('gen_ai.data_source.id'));
+    const documentsAttr = get('gen_ai.retrieval.documents');
+    const documents = parseContentEntries(documentsAttr);
+    return queryText !== undefined ||
+      topK !== undefined ||
+      dataSourceId !== undefined ||
+      documentsAttr !== undefined
+      ? { type: 'retrieval', data: { queryText, topK, dataSourceId, documents } }
+      : undefined;
+  },
+  get => {
+    const queryText = asString(get('gen_ai.memory.query.text'));
+    const storeId = asString(get('gen_ai.memory.store.id'));
+    const recordCount = asNumber(get('gen_ai.memory.record.count'));
+    const recordsAttr = get('gen_ai.memory.records');
+    const records = parseContentEntries(recordsAttr);
+    return queryText !== undefined ||
+      storeId !== undefined ||
+      recordCount !== undefined ||
+      recordsAttr !== undefined
+      ? { type: 'memory', data: { queryText, storeId, recordCount, records } }
+      : undefined;
   },
   get => {
     // Same short-circuit-on-purpose rule as the meta builder above: only fall
