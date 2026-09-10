@@ -175,6 +175,13 @@ describe('google analytics tracking', () => {
     expect(window.dataLayer[1][2].event_value).toBe(9);
   });
 
+  it('sets event_value when value is zero', () => {
+    tracking.trackEvent('jaeger/cat', 'act', 0);
+    tracking.trackEvent('jaeger/cat', 'act', 'lbl', 0);
+    expect(window.dataLayer[0][2].event_value).toBe(0);
+    expect(window.dataLayer[1][2].event_value).toBe(0);
+  });
+
   it('init() exits when isEnabled() is false', () => {
     getAppEnvironment.mockReturnValueOnce('production');
     const noGA = GA.default({ tracking: {} }, 'vS', 'vL');
