@@ -46,15 +46,15 @@ export default class OtelSpanFacade implements IOtelSpan {
       }
     }
 
-    // Find parent span ID according to the following priority:
-    // 1. Earliest CHILD_OF reference with the same traceID
-    // 2. Otherwise, earliest FOLLOWS_FROM reference with the same traceID
-    // 3. If no reference with same traceID exists, parent is undefined
-    const { references, traceID } = this.legacySpan;
-    const parentSpanRef =
-      references.find(r => r.traceID === traceID && r.refType === 'CHILD_OF') ??
-      references.find(r => r.traceID === traceID && r.refType === 'FOLLOWS_FROM');
-    this._parentSpanID = parentSpanRef?.spanID;
+    // The tree parent is already resolved once, authoritatively, by transformTraceData - the
+    // same resolution that builds childSpans/rootSpans - and stored on the legacy span as
+    // `parentID`. Re-deriving it here independently (e.g. preferring CHILD_OF over
+    // FOLLOWS_FROM regardless of reference order, without checking the target actually
+    // exists in this trace) could disagree with that tree: a span's parentSpan would then
+    // not actually list it in parentSpan.childSpans.
+    // See https://github.com/jaegertracing/jaeger-ui/issues/4460.
+    const { references } = this.legacySpan;
+    this._parentSpanID = this.legacySpan.parentID;
 
     this._attributes = makeAttributes(OtelSpanFacade.toOtelAttributes(this.legacySpan.tags));
     this._genAIKind = classifySpan({ attributes: this._attributes });
@@ -65,8 +65,23 @@ export default class OtelSpanFacade implements IOtelSpan {
       attributes: makeAttributes(OtelSpanFacade.toOtelAttributes(log.fields)),
     }));
 
-    this._links = this.legacySpan.references
-      .filter(ref => ref !== parentSpanRef)
+    // Links are every reference except the one used as the tree parent above. Find that one
+    // reference the same way transformTraceData did (first CHILD_OF/FOLLOWS_FROM reference
+    // targeting parentID) rather than by object identity, since parentID is now the only
+    // thing carried over from that resolution.
+    let parentRefExcluded = this._parentSpanID === undefined;
+    this._links = references
+      .filter(ref => {
+        if (
+          !parentRefExcluded &&
+          (ref.refType === 'CHILD_OF' || ref.refType === 'FOLLOWS_FROM') &&
+          ref.spanID === this._parentSpanID
+        ) {
+          parentRefExcluded = true;
+          return false;
+        }
+        return true;
+      })
       .map(ref => ({
         traceID: ref.traceID,
         spanID: ref.spanID,
