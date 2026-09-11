@@ -1,6 +1,9 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Offsets the label to the right so it clears the physical radius of the node circle
+const SELF_LOOP_LABEL_X_OFFSET = 35;
+
 import * as React from 'react';
 
 import { TAnyProps, TRendererUtils, TSetProps } from './types';
@@ -35,14 +38,20 @@ function makePathD(points: [number, number][]) {
   }
   return dArr.join(' ');
 }
-
-function computeLabelCoord(pathPoints: [number, number][], label?: string | undefined) {
+function computeLabelCoord(pathPoints: [number, number][], label?: string | undefined, isSelfLoop?: boolean) {
   const [startX, startY] = pathPoints[0];
   const [endX, endY] = pathPoints[pathPoints.length - 1];
 
   const xOffset = (label?.length ?? 0) * 5;
   const labelX = (startX + endX) / 2 - xOffset;
   const labelY = (startY + endY) / 2;
+
+  if (isSelfLoop) {
+    return {
+      labelX: labelX + SELF_LOOP_LABEL_X_OFFSET,
+      labelY: labelY,
+    };
+  }
 
   return { labelX, labelY };
 }
@@ -62,7 +71,10 @@ function SvgEdge<U = {}>(props: TProps<U>) {
     getProps(setOnEdge, layoutEdge, renderUtils)
   );
 
-  const { labelX, labelY } = computeLabelCoord(pathPoints, label);
+  // Detect self-referencing loops to offset the label so it doesn't overlap the node icon.
+  const isSelfLoop = Boolean(layoutEdge.edge && layoutEdge.edge.from === layoutEdge.edge.to);
+
+  const { labelX, labelY } = computeLabelCoord(pathPoints, label, isSelfLoop);
 
   return (
     <g>
