@@ -7,6 +7,10 @@ import React from 'react';
 import JaegerAPI, { DEFAULT_DEPENDENCY_LOOKBACK } from '../api/jaeger';
 import { useDependenciesQuery } from './useDependenciesQuery';
 
+vi.mock('../components/DependencyGraph/sample_data/large.json', () => ({
+  default: [{ parent: 'A', child: 'B', callCount: 1 }],
+}));
+
 describe('useDependenciesQuery', () => {
   let queryClient: QueryClient;
 
