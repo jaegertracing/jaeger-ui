@@ -2,11 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { z } from 'zod';
+import otlpFixture from '../../utils/fixtures/otlp2jaeger-in.json';
 import {
   ServicesResponseSchema,
   OperationsResponseSchema,
   OperationSchema,
   TraceSummariesResponseSchema,
+  TracesDataSchema,
+  AnyValueSchema,
   traceIdHex,
   spanIdHex,
 } from './schemas';
@@ -264,5 +267,56 @@ describe('ID Validators', () => {
     it('rejects empty string', () => {
       expect(() => spanIdHex.parse('')).toThrow('must be 16-char hex string');
     });
+  });
+});
+
+// Real-wire coverage for the OTLP re-exports above. Real payloads omit
+// default-valued Proto3 JSON fields (empty `status: {}`, no traceState/flags,
+// events, links, or dropped-count fields), so these pin properties a codegen
+// bump could actually break rather than every field of the generated definitions.
+describe('TracesDataSchema', () => {
+  it('parses a real OTLP payload with sparse fields', () => {
+    const parsed = TracesDataSchema.parse(otlpFixture);
+    expect(parsed.resourceSpans).toHaveLength(1);
+    const spans = parsed.resourceSpans![0]!.scopeSpans![0]!.spans!;
+    expect(spans).toHaveLength(2);
+    expect(spans[0]!.name).toBe('okey-dokey-0');
+    // Empty status is UNSET on the wire, not a validation failure.
+    expect(spans[0]!.status).toEqual({});
+  });
+});
+
+describe('AnyValueSchema (recursive)', () => {
+  it('validates a scalar stringValue', () => {
+    const v = { stringValue: 'hello' };
+    expect(AnyValueSchema.parse(v)).toEqual(v);
+  });
+
+  it('validates a nested kvlistValue containing AnyValue children', () => {
+    const v = {
+      kvlistValue: {
+        values: [
+          { key: 'inner.key', value: { stringValue: 'inner-string' } },
+          { key: 'inner.bool', value: { boolValue: true } },
+        ],
+      },
+    };
+    expect(AnyValueSchema.parse(v)).toEqual(v);
+  });
+
+  it('validates a deeply nested arrayValue of arrayValue', () => {
+    const v = {
+      arrayValue: {
+        values: [{ arrayValue: { values: [{ stringValue: 'leaf' }] } }, { intValue: '42' }],
+      },
+    };
+    expect(AnyValueSchema.parse(v)).toEqual(v);
+  });
+
+  it('passes through (does not reject) unknown extra keys per .passthrough()', () => {
+    // Forward-compatibility: schemas use .passthrough() so future OTLP additions
+    // do not break validation. This test pins that behavior.
+    const v = { stringValue: 'hello', someFutureField: 123 };
+    expect(AnyValueSchema.parse(v)).toEqual(v);
   });
 });

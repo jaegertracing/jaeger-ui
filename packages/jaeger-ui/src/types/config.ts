@@ -249,9 +249,10 @@ export type Config = {
     spanPillsEnabled?: boolean;
   };
 
-  // useOpenTelemetryTerms determines whether the UI uses legacy Jaeger terminology
-  // (tags, logs, process, operation name) or OpenTelemetry terminology
-  // (attributes, events, resource, name).
+  // useOpenTelemetryTerms determines whether the UI uses OpenTelemetry terminology
+  // (attributes, events, resource, name) or legacy Jaeger terminology
+  // (tags, logs, process, operation name).
+  // Default: true. Set to false to keep the legacy Jaeger labels.
   useOpenTelemetryTerms: boolean;
 
   // tracing controls in-browser OpenTelemetry instrumentation. When enabled,

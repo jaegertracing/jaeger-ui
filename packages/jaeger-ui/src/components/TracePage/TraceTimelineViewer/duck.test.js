@@ -117,7 +117,10 @@ describe('TraceTimelineViewer/duck', () => {
     let focusUiFindMatchesStore;
     let state;
 
-    beforeAll(() => {
+    // Dispatching per test rather than once for the suite, because Vitest clears
+    // mock call history before each test and the assertions below read the calls
+    // the dispatch makes.
+    beforeEach(() => {
       filterSpansSpy.mockReturnValue(uiFindMatches);
       spanAncestorIdsSpy.mockImplementation(({ spanID }) => uiFindAncestorIdsMockSchema[spanID]);
       focusUiFindMatchesStore = createStore(reducer, newInitialState());
@@ -660,6 +663,22 @@ describe('TraceTimelineViewer/duck', () => {
       getConfig.mockReturnValue({ traceTimeline: { enableSidePanel: false } });
       localStorage.setItem('detailPanelMode', 'sidepanel');
       expect(newInitialState().detailPanelMode).toBe('inline');
+    });
+
+    // newInitialState() is the reducer's initial state, evaluated when this module is
+    // imported, so a throw here would take down the whole app rather than one preference.
+    it('falls back to defaults when the browser blocks storage', () => {
+      const getItem = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+        throw new DOMException('SecurityError');
+      });
+      try {
+        const state = newInitialState();
+        expect(state.detailPanelMode).toBe('inline');
+        expect(state.timelineBarsVisible).toBe(true);
+        expect(state.spanNameColumnWidth).toBe(0.25);
+      } finally {
+        getItem.mockRestore();
+      }
     });
   });
 

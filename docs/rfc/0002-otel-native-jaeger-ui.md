@@ -356,7 +356,7 @@ In the legacy model reference types `CHILD_OF` | `FOLLOWS_FROM` were used to ind
 
 > **What was built instead.** The selectors and hooks sketched in 1.3 and 1.4 do not exist, and neither does a `src/selectors/` directory — they became unnecessary once trace state moved out of Redux into TanStack Query ([ADR-0004](../adr/0004-state-management-strategy.md)). The facade is applied at the point where a trace enters the Query cache: `transformTraceData(json)` returns a legacy trace whose `asOtelTrace()` method yields the `IOtelTrace` that components consume, called from `hooks/useTraceLoading.ts` (API route) and `SearchTracePage/FileLoader.tsx` (uploaded files). Components receive `IOtelTrace` / `IOtelSpan` as plain data and never construct a facade themselves. The sketches above are kept as the record of what was proposed; [ADR-0002](../adr/0002-otlp-api-v3-migration.md) describes the design that shipped.
 
-#### 1.6 Terminology Toggle Feature Flag
+#### 1.6 Terminology Toggle Feature Flag ✅
 Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to `false`) to control the display terminology.
 
 - When `false`: Use legacy terminology (Tags, Logs, Processes, References, Operation Name).
@@ -365,6 +365,8 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 **Implementation Guidelines**:
 - Components MUST check this flag before rendering labels or choosing which properties of the facade to display.
 - Prefer using the `OtelSpanFacade` even when the flag is `false`, as the facade provides a unified interface, but use the flag to decide which terminology to present to the user.
+
+**Status**: ✅ The flag now defaults to `true`, so OpenTelemetry terminology is what the UI shows out of the box. Every component in the Phase 2 breakdown below reads the flag, so an operator who sets it to `false` still gets the legacy Jaeger labels throughout.
 
 #### 1.7 Testing ✅
 - ✅ Test all property mappings
