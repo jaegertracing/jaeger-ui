@@ -13,8 +13,13 @@ vi.mock('antd', async () => {
   const originalModule = await vi.importActual('antd');
   return {
     ...originalModule,
-    Dropdown: ({ children, menu }) => (
-      <div data-testid="dropdown">
+    Dropdown: ({ children, menu, onOpenChange }) => (
+      <div
+        data-testid="dropdown"
+        onClick={() => {
+          if (onOpenChange) onOpenChange(true);
+        }}
+      >
         {children}
         <div data-testid="dropdown-menu">
           {menu.items.map(item => (
@@ -174,5 +179,27 @@ describe('AltViewOptions', () => {
       renderComponent({ viewType: type });
       expect(screen.queryByTestId(testId)).not.toBeInTheDocument();
     });
+  });
+
+  it('focuses the first menu item when dropdown is opened', () => {
+    const requestAnimationFrameSpy = jest
+      .spyOn(window, 'requestAnimationFrame')
+      .mockImplementation(cb => cb());
+    const mockMenuItem = { focus: jest.fn() };
+    const querySelectorSpy = jest.spyOn(document, 'querySelector').mockReturnValue(mockMenuItem);
+
+    renderComponent();
+
+    const dropdown = screen.getByTestId('dropdown');
+    fireEvent.click(dropdown);
+
+    expect(requestAnimationFrameSpy).toHaveBeenCalled();
+    expect(querySelectorSpy).toHaveBeenCalledWith(
+      '.ant-dropdown:not(.ant-dropdown-hidden) .ant-dropdown-menu-item'
+    );
+    expect(mockMenuItem.focus).toHaveBeenCalled();
+
+    requestAnimationFrameSpy.mockRestore();
+    querySelectorSpy.mockRestore();
   });
 });

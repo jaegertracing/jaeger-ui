@@ -134,6 +134,10 @@ export const shortcutConfig: { [name: string]: [number, number] } = {
 export function makeShortcutCallbacks(adjRange: (start: number, end: number) => void): ShortcutCallbacks {
   function getHandler([startChange, endChange]: [number, number]): CombokeysHandler {
     return function combokeyHandler(event: React.KeyboardEvent<HTMLElement>) {
+      const target = event.target as HTMLElement;
+      if (target?.closest?.('[role="menu"], .ant-dropdown, .ant-popover, .ant-modal')) {
+        return;
+      }
       event.preventDefault();
       adjRange(startChange, endChange);
     };
