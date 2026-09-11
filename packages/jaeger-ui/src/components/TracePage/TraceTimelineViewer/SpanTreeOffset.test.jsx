@@ -1,11 +1,8 @@
-// Copyright (c) 2018 Uber Technologies, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
-import { mapDispatchToProps, mapStateToProps, UnconnectedSpanTreeOffset } from './SpanTreeOffset';
+import { UnconnectedSpanTreeOffset } from './SpanTreeOffset';
 vi.mock('../../../utils/span-ancestor-ids');
 
 describe('SpanTreeOffset', () => {
@@ -44,9 +41,6 @@ describe('SpanTreeOffset', () => {
     parentSpan.childSpans = [ownSpan];
 
     props = {
-      addHoverIndentGuideId: jest.fn(),
-      hoverIndentGuideIds: new Set(),
-      removeHoverIndentGuideId: jest.fn(),
       color: '#000000',
       span: ownSpan,
     };
@@ -66,52 +60,6 @@ describe('SpanTreeOffset', () => {
       expect(indentGuides.length).toBe(2); // rootSpan and parentSpan
       expect(indentGuides[0].getAttribute('data-ancestor-id')).toBe(rootSpanID);
       expect(indentGuides[1].getAttribute('data-ancestor-id')).toBe(parentSpanID);
-    });
-
-    it('calls props.addHoverIndentGuideId on mouse enter', () => {
-      const { container } = render(<UnconnectedSpanTreeOffset {...props} />);
-      const indentGuide = container.querySelector(`[data-ancestor-id="${parentSpanID}"]`);
-      fireEvent.mouseEnter(indentGuide, {});
-      expect(props.addHoverIndentGuideId).toHaveBeenCalledTimes(1);
-      expect(props.addHoverIndentGuideId).toHaveBeenCalledWith(parentSpanID);
-    });
-
-    it('does not call props.addHoverIndentGuideId on mouse enter if mouse came from a indentGuide with the same ancestorId', () => {
-      const { container } = render(<UnconnectedSpanTreeOffset {...props} />);
-      const indentGuide = container.querySelector(`[data-ancestor-id="${parentSpanID}"]`);
-      const relatedTarget = document.createElement('span');
-      relatedTarget.dataset.ancestorId = parentSpanID;
-
-      const event = new MouseEvent('mouseenter', {
-        bubbles: true,
-        relatedTarget,
-      });
-      fireEvent(indentGuide, event);
-
-      expect(props.addHoverIndentGuideId).not.toHaveBeenCalled();
-    });
-
-    it('calls props.removeHoverIndentGuideId on mouse leave', () => {
-      const { container } = render(<UnconnectedSpanTreeOffset {...props} />);
-      const indentGuide = container.querySelector(`[data-ancestor-id="${parentSpanID}"]`);
-      fireEvent.mouseLeave(indentGuide, {});
-      expect(props.removeHoverIndentGuideId).toHaveBeenCalledTimes(1);
-      expect(props.removeHoverIndentGuideId).toHaveBeenCalledWith(parentSpanID);
-    });
-
-    it('does not call props.removeHoverIndentGuideId on mouse leave if mouse leaves to a indentGuide with the same ancestorId', () => {
-      const { container } = render(<UnconnectedSpanTreeOffset {...props} />);
-      const indentGuide = container.querySelector(`[data-ancestor-id="${parentSpanID}"]`);
-      const relatedTarget = document.createElement('span');
-      relatedTarget.dataset.ancestorId = parentSpanID;
-
-      const event = new MouseEvent('mouseleave', {
-        bubbles: true,
-        relatedTarget,
-      });
-      fireEvent(indentGuide, event);
-
-      expect(props.removeHoverIndentGuideId).not.toHaveBeenCalled();
     });
 
     describe('is-last class (last-child span)', () => {
@@ -257,22 +205,6 @@ describe('SpanTreeOffset', () => {
       expect(container.querySelector('.SpanTreeOffset--iconWrapper')).not.toBeNull();
     });
 
-    it('calls props.addHoverIndentGuideId on mouse enter', () => {
-      const { container } = renderResult;
-      const iconWrapper = container.querySelector('.SpanTreeOffset--iconWrapper');
-      fireEvent.mouseEnter(iconWrapper, {});
-      expect(props.addHoverIndentGuideId).toHaveBeenCalledTimes(1);
-      expect(props.addHoverIndentGuideId).toHaveBeenCalledWith(ownSpanID);
-    });
-
-    it('calls props.removeHoverIndentGuideId on mouse leave', () => {
-      const { container } = renderResult;
-      const iconWrapper = container.querySelector('.SpanTreeOffset--iconWrapper');
-      fireEvent.mouseLeave(iconWrapper, {});
-      expect(props.removeHoverIndentGuideId).toHaveBeenCalledTimes(1);
-      expect(props.removeHoverIndentGuideId).toHaveBeenCalledWith(ownSpanID);
-    });
-
     it('calls onClick when Enter is pressed on the span wrapper', () => {
       const onClick = jest.fn();
       const { container } = render(
@@ -312,29 +244,5 @@ describe('SpanTreeOffset', () => {
       expect(wrapper).toHaveAttribute('tabindex', '0');
     });
   });
-
-  describe('mapDispatchToProps()', () => {
-    it('creates the actions correctly', () => {
-      expect(mapDispatchToProps(() => {})).toEqual({
-        addHoverIndentGuideId: expect.any(Function),
-        removeHoverIndentGuideId: expect.any(Function),
-      });
-    });
-  });
-
-  describe('mapStateToProps()', () => {
-    it('maps state to props correctly', () => {
-      const hoverIndentGuideIds = new Set([parentSpanID]);
-      const state = {
-        traceTimeline: {
-          hoverIndentGuideIds,
-        },
-      };
-      const mappedProps = mapStateToProps(state);
-      expect(mappedProps).toEqual({
-        hoverIndentGuideIds,
-      });
-      expect(mappedProps.hoverIndentGuideIds).toBe(hoverIndentGuideIds);
-    });
-  });
 });
+
