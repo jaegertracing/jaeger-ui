@@ -6,6 +6,43 @@
 
 import { z } from 'zod';
 
+type jaeger_api_v3_Call = Partial<{
+  op:
+    | 'and'
+    | 'or'
+    | 'not'
+    | 'eq'
+    | 'ne'
+    | 'gt'
+    | 'lt'
+    | 'gte'
+    | 'lte'
+    | 'regex'
+    | 'exists'
+    | 'in'
+    | 'not_in'
+    | 'some';
+  args: Array<jaeger_api_v3_Expression>;
+}>;
+type jaeger_api_v3_Reference = Partial<{
+  name: string;
+  level: 'span' | 'resource' | 'instrumentation' | 'event' | 'link';
+  attr: boolean;
+}>;
+type jaeger_api_v3_Scalar = Partial<{
+  value: string;
+  type: 'string' | 'int' | 'double' | 'bool';
+}>;
+type jaeger_api_v3_List = Partial<{
+  values: Array<string>;
+  type: 'string' | 'int' | 'double' | 'bool';
+}>;
+type jaeger_api_v3_Expression = Partial<{
+  ref: jaeger_api_v3_Reference;
+  scalar: jaeger_api_v3_Scalar;
+  list: jaeger_api_v3_List;
+  call: jaeger_api_v3_Call;
+}>;
 type opentelemetry_proto_common_v1_AnyValue = Partial<{
   stringValue: string;
   boolValue: boolean;
@@ -70,6 +107,63 @@ const jaeger_api_v3_FindTraceSummariesResponse = z
   .object({ summaries: z.array(jaeger_api_v3_TraceSummary) })
   .partial()
   .passthrough();
+const jaeger_api_v3_Reference = z
+  .object({
+    name: z.string(),
+    level: z.enum(['span', 'resource', 'instrumentation', 'event', 'link']),
+    attr: z.boolean(),
+  })
+  .partial()
+  .passthrough();
+const jaeger_api_v3_Scalar = z
+  .object({
+    value: z.string(),
+    type: z.enum(['string', 'int', 'double', 'bool']),
+  })
+  .partial()
+  .passthrough();
+const jaeger_api_v3_List = z
+  .object({
+    values: z.array(z.string()),
+    type: z.enum(['string', 'int', 'double', 'bool']),
+  })
+  .partial()
+  .passthrough();
+const jaeger_api_v3_Expression: z.ZodType<jaeger_api_v3_Expression> = z.lazy(() =>
+  z
+    .object({
+      ref: jaeger_api_v3_Reference,
+      scalar: jaeger_api_v3_Scalar,
+      list: jaeger_api_v3_List,
+      call: jaeger_api_v3_Call,
+    })
+    .partial()
+    .passthrough()
+);
+const jaeger_api_v3_Call: z.ZodType<jaeger_api_v3_Call> = z.lazy(() =>
+  z
+    .object({
+      op: z.enum([
+        'and',
+        'or',
+        'not',
+        'eq',
+        'ne',
+        'gt',
+        'lt',
+        'gte',
+        'lte',
+        'regex',
+        'exists',
+        'in',
+        'not_in',
+        'some',
+      ]),
+      args: z.array(jaeger_api_v3_Expression),
+    })
+    .partial()
+    .passthrough()
+);
 const jaeger_api_v3_TraceQueryParameters = z
   .object({
     serviceName: z.string(),
@@ -81,6 +175,7 @@ const jaeger_api_v3_TraceQueryParameters = z
     durationMax: z.string().regex(/^-?(?:0|[1-9][0-9]{0,11})(?:\.[0-9]{1,9})?s$/),
     searchDepth: z.number().int(),
     rawTraces: z.boolean(),
+    filter: jaeger_api_v3_Call,
   })
   .partial()
   .passthrough();
@@ -224,6 +319,11 @@ export const schemas = {
   jaeger_api_v3_ServiceSummary,
   jaeger_api_v3_TraceSummary,
   jaeger_api_v3_FindTraceSummariesResponse,
+  jaeger_api_v3_Reference,
+  jaeger_api_v3_Scalar,
+  jaeger_api_v3_List,
+  jaeger_api_v3_Expression,
+  jaeger_api_v3_Call,
   jaeger_api_v3_TraceQueryParameters,
   jaeger_api_v3_FindTraceSummariesRequest,
   opentelemetry_proto_common_v1_ArrayValue,
