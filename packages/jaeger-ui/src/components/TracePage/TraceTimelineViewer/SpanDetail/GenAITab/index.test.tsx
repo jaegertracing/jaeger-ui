@@ -7,7 +7,7 @@ import { vi } from 'vitest';
 
 import GenAITab from '.';
 import { useMessageFormatStore } from './message-format-store';
-import type { IAttribute, IOtelSpan } from '../../../../../types/otel';
+import type { IAttribute, IOtelSpan, AttributeValue } from '../../../../../types/otel';
 import { makeAttributes } from '../../../../../model/attributes';
 import { classifySpan } from '../../../../../utils/genai/detect';
 
@@ -544,7 +544,7 @@ describe('GenAITab', () => {
         ])}
       />
     );
-    expect(screen.getByText('Tool Call: get_weather')).toBeInTheDocument();
+    expect(screen.getByText('get_weather')).toBeInTheDocument();
     expect(screen.getByText('Arguments')).toBeInTheDocument();
     expect(screen.getByText('Result')).toBeInTheDocument();
   });
@@ -612,6 +612,167 @@ describe('GenAITab', () => {
       'aria-checked',
       'true'
     );
+  });
+
+  describe('ToolsSection', () => {
+    it('renders a Tools section and sub-table for a flat OTel FunctionToolDefinition', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [{ type: 'function', name: 'get_weather', description: 'Get the current weather.' }],
+            },
+          ])}
+        />
+      );
+      expect(screen.getByText('Tools')).toBeInTheDocument();
+      expect(screen.getByText('get_weather')).toBeInTheDocument();
+      expect(screen.getByText('Type')).toBeInTheDocument();
+      expect(screen.getByText('function')).toBeInTheDocument();
+      expect(screen.getByText('Description')).toBeInTheDocument();
+      expect(screen.getByText('Get the current weather.')).toBeInTheDocument();
+    });
+
+    it('renders the Parameters label and a parameter table when parameters are present', () => {
+      const { container } = render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [
+                {
+                  type: 'function',
+                  name: 'get_weather',
+                  parameters: { type: 'object', properties: { location: { type: 'string' } } },
+                },
+              ],
+            },
+          ])}
+        />
+      );
+      expect(screen.getByText('Parameter')).toBeInTheDocument();
+      expect(container.querySelector('.GenAITab--paramTableContainer')).toBeInTheDocument();
+      expect(screen.getByText('location')).toBeInTheDocument();
+    });
+
+    it('renders tool name and parameters for the OpenAI nested-function format', () => {
+      const { container } = render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [
+                {
+                  type: 'function',
+                  function: {
+                    name: 'get_weather',
+                    description: 'Get the current weather',
+                    parameters: { type: 'object', properties: { location: { type: 'string' } } },
+                  },
+                },
+              ],
+            },
+          ])}
+        />
+      );
+      expect(screen.getByText('get_weather')).toBeInTheDocument();
+      expect(screen.getByText('Get the current weather')).toBeInTheDocument();
+      expect(container.querySelector('.GenAITab--paramTableContainer')).toBeInTheDocument();
+    });
+
+    it('renders a tool with no Type row when the type field is absent', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [{ name: 'get_weather', description: 'Get weather.', parameters: { type: 'OBJECT' } }],
+            },
+          ])}
+        />
+      );
+      expect(screen.getByText('get_weather')).toBeInTheDocument();
+      expect(screen.queryByText('Type')).not.toBeInTheDocument();
+    });
+
+    it('renders multiple tools as separate sub-tables', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [
+                { type: 'function', name: 'get_weather' },
+                { type: 'function', name: 'send_email' },
+              ],
+            },
+          ])}
+        />
+      );
+      expect(screen.getByText('get_weather')).toBeInTheDocument();
+      expect(screen.getByText('send_email')).toBeInTheDocument();
+    });
+
+    it('renders an unrecognised tool entry as key/value rows under a generic Tool header', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [{ something_custom: 'opaque_value' }],
+            },
+          ])}
+        />
+      );
+      expect(screen.getByText('Tool')).toBeInTheDocument();
+      expect(screen.getByText('something_custom')).toBeInTheDocument();
+      expect(screen.getByText('opaque_value')).toBeInTheDocument();
+    });
+
+    it('does not show gen_ai.tool.definitions in Other GenAI Attributes, proving it is claimed', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [{ type: 'function', name: 'ping' }],
+            },
+          ])}
+        />
+      );
+      expect(
+        screen.queryByText((_, element) => element?.textContent === 'Other GenAI Attributes:')
+      ).not.toBeInTheDocument();
+    });
+
+    it('renders a JSON-encoded string value of gen_ai.tool.definitions by parsing it first', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: JSON.stringify([{ type: 'function', name: 'get_weather', description: 'Get weather.' }]),
+            },
+          ])}
+        />
+      );
+      expect(screen.getByText('get_weather')).toBeInTheDocument();
+    });
+
+    it('omits the Description row when description is null', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [{ type: 'function', name: 'ping', description: null }] as unknown as AttributeValue,
+            },
+          ])}
+        />
+      );
+      expect(screen.queryByText('Description')).not.toBeInTheDocument();
+    });
   });
 });
 

@@ -16,9 +16,11 @@ import {
   GenAiPart,
   GenAiTokenUsage,
   GenAiToolCall,
+  GenAiToolDefinition,
 } from './genAiData';
 import { MessageFormat, useMessageFormatStore } from './message-format-store';
 import AccordionAttributes from '../AccordionAttributes';
+import AttributesTable from '../AttributesTable';
 import { sharedMarkdownOptions } from '../../../../../utils/markdownOptions';
 import { isEmbeddedMedia, MediaType } from '../../../../../utils/media';
 import jsonViewStyles from '../../../../../utils/jsonViewStyles';
@@ -596,10 +598,12 @@ function AgentDetails({
   const data = useMemo(
     () =>
       makeAttributes(
-        AGENT_FIELD_ORDER.filter(key => agent[key] != null).map((key): IAttribute => ({
-          key: AGENT_LABELS[key] ?? key,
-          value: agent[key] as AttributeValue,
-        }))
+        AGENT_FIELD_ORDER.filter(key => agent[key] != null).map(
+          (key): IAttribute => ({
+            key: AGENT_LABELS[key] ?? key,
+            value: agent[key] as AttributeValue,
+          })
+        )
       ),
     [agent]
   );
@@ -711,14 +715,140 @@ function ConversationDetails({
   );
 }
 
-function ToolCallDetails({
-  id,
-  name,
-  arguments: args,
-  result,
+function ToolParameters({ parameters }: { parameters: unknown }) {
+  const parsed = typeof parameters === 'string' ? tryParseJson(parameters) : parameters;
+
+  if (
+    typeof parsed === 'object' &&
+    parsed !== null &&
+    'type' in parsed &&
+    typeof parsed.type === 'string' &&
+    parsed.type.toLowerCase() === 'object' &&
+    'properties' in parsed &&
+    typeof parsed.properties === 'object' &&
+    parsed.properties !== null
+  ) {
+    const props = parsed.properties as Record<string, unknown>;
+    const parsedObj = parsed as Record<string, unknown>;
+    const required = Array.isArray(parsedObj.required) ? parsedObj.required : [];
+
+    return (
+      <div className="GenAITab--paramTableContainer">
+        <table className="GenAITab--paramTable">
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Type</th>
+              <th>Required</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            {Object.entries(props).map(([key, propDef]) => {
+              const isRequired = required.includes(key);
+              const def =
+                typeof propDef === 'object' && propDef !== null ? (propDef as Record<string, unknown>) : {};
+              return (
+                <tr key={key}>
+                  <td className="GenAITab--paramNameColumn">{key}</td>
+                  <td>
+                    {typeof def.type === 'string' && (
+                      <span className="GenAITab--paramTypeBadge">{def.type}</span>
+                    )}
+                  </td>
+                  <td>
+                    {isRequired ? (
+                      <span className="GenAITab--paramRequiredBadge">Yes</span>
+                    ) : (
+                      <span className="GenAITab--paramOptionalBadge">No</span>
+                    )}
+                  </td>
+                  <td className="GenAITab--paramDescColumn">
+                    {typeof def.description === 'string' && <div>{def.description}</div>}
+                    {Array.isArray(def.enum) && (
+                      <div className="GenAITab--paramEnum">
+                        Allowed values: <code>{def.enum.join(', ')}</code>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+
+  return <JsonBlock value={parsed} />;
+}
+
+function SingleToolDetails({ tool }: { tool: GenAiToolDefinition }) {
+  const data = useMemo(() => {
+    const entries: IAttribute[] = [];
+    const label = tool.name || 'Tool';
+    if ('raw' in tool) {
+      entries.push({ key: 'Name', value: label });
+      if (typeof tool.raw === 'object' && tool.raw !== null) {
+        Object.entries(tool.raw as Record<string, unknown>).forEach(([k, v]) => {
+          entries.push({ key: k, value: v == null ? String(v) : (v as AttributeValue) });
+        });
+      } else {
+        entries.push({
+          key: 'Value',
+          value: tool.raw == null ? String(tool.raw) : (tool.raw as AttributeValue),
+        });
+      }
+    } else {
+      entries.push({ key: 'Name', value: label });
+      if (tool.type) entries.push({ key: 'Type', value: tool.type });
+      if (tool.description) entries.push({ key: 'Description', value: tool.description });
+    }
+    return makeAttributes(entries);
+  }, [tool]);
+
+  return (
+    <div className="GenAITab--toolItem">
+      <AttributesTable data={data} linksGetter={null} />
+      {tool.parameters !== undefined && (
+        <div className="GenAITab--toolParametersWrapper">
+          <ToolParameters parameters={tool.parameters} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ToolsSection({
+  tools,
   isOpen,
   onToggle,
-}: GenAiToolCall & { isOpen: boolean; onToggle: () => void }) {
+}: {
+  tools: GenAiToolDefinition[];
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div className="GenAITab--section u-tx-ellipsis">
+      <div className="AccordionAttributes--header" aria-checked={isOpen} onClick={onToggle} role="switch">
+        {isOpen ? <IoChevronDown className="u-align-icon" /> : <IoChevronForward className="u-align-icon" />}
+        <strong>Tools{isOpen || ':'}</strong>
+        {!isOpen && (
+          <span className="GenAITab--toolsSummary">{tools.map(t => t.name || 'Tool').join(', ')}</span>
+        )}
+      </div>
+      {isOpen && (
+        <div className="GenAITab--toolsContainer">
+          {tools.map((tool, i) => (
+            <SingleToolDetails key={tool.name || i} tool={tool} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ToolCallDetails({ id, name, arguments: args, result }: GenAiToolCall) {
   const data = useMemo(() => {
     const entries: IAttribute[] = [];
     if (id) entries.push({ key: 'ID', value: id });
@@ -727,14 +857,12 @@ function ToolCallDetails({
     return makeAttributes(entries);
   }, [id, args, result]);
   return (
-    <AccordionAttributes
-      className="GenAITab--section"
-      label={`Tool Call${name ? `: ${name}` : ''}`}
-      data={data}
-      linksGetter={null}
-      isOpen={isOpen}
-      onToggle={onToggle}
-    />
+    <div className="GenAITab--section GenAITab--toolCallSection">
+      <div className="GenAITab--toolCallHeader">
+        <strong>{name || 'Tool Call'}</strong>
+      </div>
+      {data.size > 0 && <AttributesTable data={data} linksGetter={null} />}
+    </div>
   );
 }
 
@@ -778,11 +906,11 @@ function UnknownDetails({
 export default function GenAITab({ span }: Props): React.ReactElement {
   const sections = useMemo(() => extractGenAiSections(span.attributes), [span.attributes]);
   const hasOnlyOtherSection = sections.length === 1 && sections[0].type === 'other';
-  // LLM/Agent/Tool Call/Unknown default open since they're primary content for the
+  // LLM/Agent/Tools/Tool Call/Unknown default open since they're primary content for the
   // span, unlike Other GenAI Attributes which is genuinely secondary overflow data.
   const [isLlmOpen, setIsLlmOpen] = useState(true);
   const [isAgentOpen, setIsAgentOpen] = useState(true);
-  const [isToolCallOpen, setIsToolCallOpen] = useState(true);
+  const [isToolsOpen, setIsToolsOpen] = useState(true);
   const [isUnknownOpen, setIsUnknownOpen] = useState(true);
   const [isOtherOpen, setIsOtherOpen] = useState(hasOnlyOtherSection);
 
@@ -817,15 +945,17 @@ export default function GenAITab({ span }: Props): React.ReactElement {
             return <TokenDetails key="tokens" usage={section.data} />;
           case 'conversation':
             return <ConversationDetails key="conversation" {...section.data} />;
-          case 'toolCall':
+          case 'tools':
             return (
-              <ToolCallDetails
-                key="toolCall"
-                {...section.data}
-                isOpen={isToolCallOpen}
-                onToggle={() => setIsToolCallOpen(o => !o)}
+              <ToolsSection
+                key="tools"
+                tools={section.data.tools}
+                isOpen={isToolsOpen}
+                onToggle={() => setIsToolsOpen(o => !o)}
               />
             );
+          case 'toolCall':
+            return <ToolCallDetails key="toolCall" {...section.data} />;
           case 'other':
             return (
               <AccordionAttributes
