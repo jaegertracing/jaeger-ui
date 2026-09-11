@@ -7,7 +7,6 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LayoutManager } from '@jaegertracing/plexus';
 import transformTraceData from '../../../model/transform-trace-data';
-import calculateTraceDagEV from './calculateTraceDagEV';
 import TraceGraph, { setOnEdgePath } from './TraceGraph';
 import { MODE_SERVICE, MODE_TIME, MODE_SELFTIME } from './OpNode';
 import testTrace from './testTrace.json';
@@ -66,7 +65,6 @@ vi.mock('@jaegertracing/plexus', () => {
 });
 
 const transformedTrace = transformTraceData(testTrace);
-const ev = calculateTraceDagEV(transformedTrace.asOtelTrace());
 
 describe('<TraceGraph>', () => {
   let props;
@@ -74,7 +72,8 @@ describe('<TraceGraph>', () => {
   beforeEach(() => {
     props = {
       headerHeight: 60,
-      ev,
+      trace: transformedTrace.asOtelTrace(),
+      onSearchResults: vi.fn(),
     };
   });
 
@@ -83,11 +82,6 @@ describe('<TraceGraph>', () => {
     expect(screen.getByTestId('mock-digraph')).toBeInTheDocument();
     expect(document.querySelectorAll('.TraceGraph--menu').length).toBe(1);
     expect(screen.getAllByRole('button').length).toBe(3);
-  });
-
-  it('may show no traces', () => {
-    render(<TraceGraph />);
-    expect(screen.getByText('No trace found')).toBeInTheDocument();
   });
 
   it('switches node mode when clicking mode buttons', async () => {
@@ -192,11 +186,52 @@ describe('<TraceGraph>', () => {
     expect(setOnEdgePath(edge2)).toEqual({});
   });
 
+  describe('onSearchResults', () => {
+    // Vertex keys for testTrace.json: service1/op1 root with service1 and service2 descendants.
+    const service1Keys = [
+      'service1\top1',
+      'service1\top1\vservice1\top2\t__LEAF__',
+      'service1\top1\vservice1\top3',
+      'service1\top1\vservice1\top4',
+      'service1\top1\vservice1\top6',
+      'service1\top1\vservice1\top6\vservice1\top7\t__LEAF__',
+    ];
+
+    it('calls onSearchResults with null when uiFind is not provided', () => {
+      const onSearchResults = vi.fn();
+      render(
+        <TraceGraph {...props} uiFind={undefined} useOtelTerms={false} onSearchResults={onSearchResults} />
+      );
+
+      expect(onSearchResults).toHaveBeenCalledWith(null);
+    });
+
+    it('calls onSearchResults with the matching vertex keys when uiFind is provided', () => {
+      const onSearchResults = vi.fn();
+      render(
+        <TraceGraph {...props} uiFind="service1" useOtelTerms={false} onSearchResults={onSearchResults} />
+      );
+
+      const lastCall = onSearchResults.mock.calls[onSearchResults.mock.calls.length - 1][0];
+      expect(lastCall).toBeInstanceOf(Set);
+      expect([...lastCall].sort()).toEqual([...service1Keys].sort());
+    });
+
+    it('excludes vertices without matching members', () => {
+      const onSearchResults = vi.fn();
+      render(<TraceGraph {...props} uiFind="op1" useOtelTerms={false} onSearchResults={onSearchResults} />);
+
+      const lastCall = onSearchResults.mock.calls[onSearchResults.mock.calls.length - 1][0];
+      expect([...lastCall].sort()).toEqual(
+        ['service1\top1', 'service1\top1\vservice1\top3\vservice2\top1'].sort()
+      );
+    });
+  });
+
   it('handles uiFind mode correctly', () => {
     const propsWithUiFind = {
       ...props,
       uiFind: 'test-service',
-      uiFindVertexKeys: new Set(['key1', 'key2']),
     };
     render(<TraceGraph {...propsWithUiFind} />);
     const wrapper = screen.getByTestId('mock-digraph').parentElement;
