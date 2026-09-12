@@ -236,6 +236,7 @@ SPDX-License-Identifier: Apache-2.0
 
 .SpanBarRow--rpcColorMarker {
   border-radius: 6.5px;
+  box-shadow: 0 0 0 1px var(--border-strong);
   display: inline-block;
   font-size: 0.85em;
   height: 1em;

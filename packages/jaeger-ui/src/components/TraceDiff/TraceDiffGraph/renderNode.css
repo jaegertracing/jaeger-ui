@@ -16,25 +16,39 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .DiffNode.is-more {
-  background: #78d539;
-  border-color: #2a8f04;
+  background: var(--diff-more-bg);
+  border: 2px dashed var(--diff-more-border);
 }
 
 .DiffNode.is-added {
-  background: #2a8f04;
-  border: none;
-  color: #fff;
+  background: var(--diff-added-bg);
+  border: 2px solid var(--diff-added-border);
+  color: var(--diff-added-text);
 }
 
 .DiffNode.is-less {
-  border-color: #cc1616;
-  background: #ffa39e;
+  border: 2px dotted var(--diff-less-border);
+  background: var(--diff-less-bg);
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 4px,
+    rgba(213, 94, 0, 0.08) 4px,
+    rgba(213, 94, 0, 0.08) 8px
+  );
 }
 
 .DiffNode.is-removed {
-  background: #cc1616;
-  border: none;
-  color: #fff;
+  background: var(--diff-removed-bg);
+  border: 2px solid var(--diff-removed-border);
+  color: var(--diff-removed-text);
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 5px,
+    rgba(0, 0, 0, 0.15) 5px,
+    rgba(0, 0, 0, 0.15) 10px
+  );
 }
 
 .TraceDiffGraph--dag.is-small .DiffNode--body {
@@ -84,10 +98,10 @@ SPDX-License-Identifier: Apache-2.0
 
 .DiffNode--popover.is-more .ant-popover-arrow,
 .DiffNode--popover.is-added .ant-popover-arrow {
-  background: #2a8f04;
+  background: var(--diff-added-bg);
 }
 
 .DiffNode--popover.is-less .ant-popover-arrow,
 .DiffNode--popover.is-removed .ant-popover-arrow {
-  background: #cc1616;
+  background: var(--diff-removed-bg);
 }
