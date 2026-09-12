@@ -593,7 +593,10 @@ describe('<DdgNodeContent>', () => {
           service: props.service,
           operation: props.operation,
         });
-        expect(mockNavigate).toHaveBeenCalledWith(`mock-search-url-for-${props.service}`);
+        expect(mockNavigate).toHaveBeenCalledWith({
+          pathname: `mock-search-url-for-${props.service}`,
+          search: '',
+        });
       });
 
       it('navigates to search URL omitting operation when operation is an array', () => {
