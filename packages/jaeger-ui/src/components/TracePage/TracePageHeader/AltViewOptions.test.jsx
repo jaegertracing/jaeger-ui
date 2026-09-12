@@ -14,7 +14,7 @@ vi.mock('antd', async () => {
   return {
     ...originalModule,
     Dropdown: ({ children, menu }) => (
-      <div data-testid="dropdown">
+      <div data-testid="dropdown" onKeyDown={menu.onKeyDown}>
         {children}
         <div data-testid="dropdown-menu">
           {menu.items.map(item => (
@@ -174,5 +174,13 @@ describe('AltViewOptions', () => {
       renderComponent({ viewType: type });
       expect(screen.queryByTestId(testId)).not.toBeInTheDocument();
     });
+  });
+  it('stops keydown event propagation from the dropdown menu', () => {
+    renderComponent();
+    const dropdown = screen.getByTestId('dropdown');
+    const event = new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true });
+    Object.defineProperty(event, 'stopPropagation', { value: jest.fn() });
+    dropdown.dispatchEvent(event);
+    expect(event.stopPropagation).toHaveBeenCalled();
   });
 });
