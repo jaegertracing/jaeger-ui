@@ -358,6 +358,11 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
     [spanNamesData]
   );
 
+  const { search: locationSearch } = useLocation();
+  const hasUrlSearch = Boolean(locationSearch && locationSearch.length > 1);
+  const [hasSubmitted, setHasSubmitted] = useState<boolean>(false);
+  const showErrors = hasSubmitted || submitting || hasUrlSearch;
+
   const [adjustTimeEnabled, setAdjustTimeEnabled] = useState<boolean>(() => {
     return store.getBool(ADJUST_TIME_ENABLED_KEY, Boolean(searchAdjustEndTime));
   });
@@ -380,6 +385,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   const handleSubmit = useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
+      setHasSubmitted(true);
       const fields = formData as ISearchFormFields;
       const url = submitFormHandler(fields, searchAdjustEndTime, adjustTimeEnabled);
       clearUploadedTraces();
@@ -389,6 +395,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   );
 
   const handleReset = useCallback(() => {
+    setHasSubmitted(false);
     setFormData(prev =>
       defaultFormData({ service: prev.service }, searchConfig?.defaultLookback, allowAllServices)
     );
@@ -412,8 +419,12 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
             Service <span className="SearchForm--labelCount">({services.length})</span>
           </span>
         }
-        validateStatus={servicesError ? 'error' : undefined}
-        help={servicesError ? `Error loading services: ${(servicesError as Error).message}` : undefined}
+        validateStatus={showErrors && servicesError ? 'error' : undefined}
+        help={
+          showErrors && servicesError
+            ? `Error loading services: ${(servicesError as Error).message}`
+            : undefined
+        }
       >
         <SearchableSelect
           data-testid="service"
@@ -452,8 +463,12 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
             </Tooltip>
           </span>
         }
-        validateStatus={spanNamesError ? 'error' : undefined}
-        help={spanNamesError ? `Error loading operations: ${(spanNamesError as Error).message}` : undefined}
+        validateStatus={showErrors && spanNamesError ? 'error' : undefined}
+        help={
+          showErrors && spanNamesError
+            ? `Error loading operations: ${(spanNamesError as Error).message}`
+            : undefined
+        }
       >
         <SearchableSelect
           data-testid="operation"

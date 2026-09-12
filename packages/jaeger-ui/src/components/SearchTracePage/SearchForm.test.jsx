@@ -665,7 +665,7 @@ describe('<SearchForm>', () => {
       expect(container.querySelector('form')).not.toBeInTheDocument();
     });
 
-    it('displays error message when services fetch fails', () => {
+    it('renders form cleanly on initial load when services fetch fails', () => {
       useServices.mockReturnValue({
         data: undefined,
         isLoading: false,
@@ -677,11 +677,11 @@ describe('<SearchForm>', () => {
       // Should still render the form
       expect(container.querySelector('form')).toBeInTheDocument();
 
-      // Should display error message for services
-      expect(container.textContent).toContain('Error loading services: Failed to fetch services');
+      // Should not display error message on initial load
+      expect(container.textContent).not.toContain('Error loading services');
     });
 
-    it('displays error message when span names fetch fails', async () => {
+    it('renders form cleanly on initial load when span names fetch fails', async () => {
       useServices.mockReturnValue({
         data: ['svcA', 'svcB'],
         isLoading: false,
@@ -699,7 +699,32 @@ describe('<SearchForm>', () => {
       // Should still render the form
       expect(container.querySelector('form')).toBeInTheDocument();
 
-      // Should display error message for operations
+      // Should not display error message on initial load
+      await waitFor(() => {
+        expect(container.textContent).not.toContain('Error loading operations');
+      });
+    });
+
+    it('displays error message after submitting when span names fetch fails', async () => {
+      useServices.mockReturnValue({
+        data: ['svcA', 'svcB'],
+        isLoading: false,
+        error: null,
+      });
+
+      useSpanNames.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: new Error('Failed to fetch span names'),
+      });
+
+      const { container } = renderForm(<SearchForm {...defaultProps} initialValues={{ service: 'svcA' }} />);
+
+      // Click submit
+      const submitButton = container.querySelector(`[data-test="${markers.SUBMIT_BTN}"]`);
+      fireEvent.click(submitButton);
+
+      // Should display error message after submit
       await waitFor(() => {
         expect(container.textContent).toContain('Error loading operations: Failed to fetch span names');
       });
