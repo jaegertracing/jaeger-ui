@@ -568,6 +568,11 @@ describe('<DdgNodeContent>', () => {
         vi.spyOn(getSearchUrl, 'getUrlState').mockReturnValue({
           start: '123',
           end: '456',
+          lookback: '1h',
+          limit: '50',
+          minDuration: '100ms',
+          maxDuration: '1s',
+          tags: 'http.status_code=500',
           traceID: ['t1'],
           spanLinks: { t1: 's1' },
         });
@@ -590,6 +595,11 @@ describe('<DdgNodeContent>', () => {
         expect(getSearchUrl.getUrl).toHaveBeenCalledWith({
           start: '123',
           end: '456',
+          lookback: '1h',
+          limit: '50',
+          minDuration: '100ms',
+          maxDuration: '1s',
+          tags: 'http.status_code=500',
           service: props.service,
           operation: props.operation,
         });
@@ -612,6 +622,11 @@ describe('<DdgNodeContent>', () => {
         expect(getSearchUrl.getUrl).toHaveBeenCalledWith({
           start: '123',
           end: '456',
+          lookback: '1h',
+          limit: '50',
+          minDuration: '100ms',
+          maxDuration: '1s',
+          tags: 'http.status_code=500',
           service: props.service,
           operation: undefined,
         });

@@ -222,7 +222,17 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
 
   const viewTraces = React.useCallback(() => {
     trackViewTraces();
-    const { traceID: _traceID, spanLinks: _spanLinks, start, end, lookback } = getUrlState(search);
+    const {
+      traceID: _traceID,
+      spanLinks: _spanLinks,
+      start,
+      end,
+      lookback,
+      limit,
+      minDuration,
+      maxDuration,
+      tags,
+    } = getUrlState(search);
 
     // Only pass params that are meaningful on the Search page.
     // DDG-specific params (density, showOp, visEncoding, etc.) are intentionally excluded.
@@ -230,6 +240,10 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
       ...(start && { start }),
       ...(end && { end }),
       ...(lookback && { lookback }),
+      ...(limit && { limit }),
+      ...(minDuration && { minDuration }),
+      ...(maxDuration && { maxDuration }),
+      ...(tags && { tags }),
       service,
       operation: typeof operation === 'string' ? operation : undefined,
     };
