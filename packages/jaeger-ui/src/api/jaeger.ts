@@ -1,7 +1,6 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import fetch from 'isomorphic-fetch';
 import dayjs from 'dayjs';
 import _duration from 'dayjs/plugin/duration';
 import queryString from 'query-string';
