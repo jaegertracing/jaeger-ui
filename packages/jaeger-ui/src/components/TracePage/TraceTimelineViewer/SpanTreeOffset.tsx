@@ -11,6 +11,7 @@ import { actions } from './duck';
 import { ReduxState } from '../../../types';
 import { IOtelSpan } from '../../../types/otel';
 import colorGenerator from '../../../utils/color-generator';
+import { useTraceTimelineStore } from './store';
 
 import './SpanTreeOffset.css';
 
@@ -41,16 +42,24 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
   removeHoverIndentGuideId,
   color,
 }) => {
-  // Build ancestor chain directly from span.parentSpan
+  const focusedSubtreeSpanID = useTraceTimelineStore(s => s.focusedSubtreeSpanID);
+
+  // Build ancestor chain directly from span.parentSpan, stopping at focusedSubtreeSpanID if active
   const ancestors = useMemo(() => {
     const chain: IOtelSpan[] = [];
+    if (focusedSubtreeSpanID && span.spanID === focusedSubtreeSpanID) {
+      return chain;
+    }
     let current = span.parentSpan;
     while (current) {
       chain.unshift(current);
+      if (focusedSubtreeSpanID && current.spanID === focusedSubtreeSpanID) {
+        break;
+      }
       current = current.parentSpan;
     }
     return chain;
-  }, [span]);
+  }, [span, focusedSubtreeSpanID]);
 
   /**
    * If the mouse leaves to anywhere except another span with the same ancestor id, this span's ancestor id is

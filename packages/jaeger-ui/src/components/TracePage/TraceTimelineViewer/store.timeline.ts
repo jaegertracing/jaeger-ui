@@ -9,18 +9,22 @@ import { IOtelSpan, IOtelTrace, IEvent } from '../../../types/otel';
 import {
   applyDetailSubsectionToggle,
   calculateFocusedFindRowStates,
+  getDescendantParentSpanIDs,
   shouldDisableCollapse,
   trimFocusedDetailStatesForSidePanel,
 } from './timeline-utils';
 
 type TraceTimelineInteractionStore = {
   traceID: string | null;
+  focusedSubtreeSpanID: string | null;
   childrenHiddenIDs: Set<string>;
   detailStates: Map<string, DetailState>;
   shouldScrollToFirstUiFindMatch: boolean;
   prunedServices: Set<string>;
   setPrunedServices: (pruned: Set<string>) => void;
   clearServiceFilter: () => void;
+  setFocusedSubtreeSpanID: (spanID: string | null) => void;
+  toggleSubtreeCollapse: (span: IOtelSpan) => void;
   // Resets ephemeral fields for a new trace and optionally pre-apply a uiFind filter
   setTrace: (trace: IOtelTrace, uiFind?: string | TNil) => void;
   childrenToggle: (spanID: string) => void;
@@ -41,6 +45,7 @@ type TraceTimelineInteractionStore = {
 
 export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((set, get) => ({
   traceID: null,
+  focusedSubtreeSpanID: null,
   childrenHiddenIDs: new Set<string>(),
   detailStates: new Map<string, DetailState>(),
   shouldScrollToFirstUiFindMatch: false,
@@ -50,6 +55,25 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
 
   clearServiceFilter: () => set({ prunedServices: new Set<string>() }),
 
+  setFocusedSubtreeSpanID: (spanID: string | null) => set({ focusedSubtreeSpanID: spanID }),
+
+  toggleSubtreeCollapse: (span: IOtelSpan) => {
+    const { childrenHiddenIDs: current } = get();
+    const subtreeParentIDs = getDescendantParentSpanIDs(span);
+    const isCurrentlyCollapsed = current.has(span.spanID);
+    const next = new Set(current);
+    if (isCurrentlyCollapsed) {
+      for (const id of subtreeParentIDs) {
+        next.delete(id);
+      }
+    } else {
+      for (const id of subtreeParentIDs) {
+        next.add(id);
+      }
+    }
+    set({ childrenHiddenIDs: next });
+  },
+
   setTrace: (trace: IOtelTrace, uiFind?: string | TNil) => {
     const { traceID: currentTraceID } = get();
     if (trace.traceID === currentTraceID) return;
@@ -58,6 +82,7 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
 
     const base: Partial<TraceTimelineInteractionStore> = {
       traceID: trace.traceID,
+      focusedSubtreeSpanID: null,
       childrenHiddenIDs: new Set<string>(),
       detailStates: new Map<string, DetailState>(),
       shouldScrollToFirstUiFindMatch: false,
