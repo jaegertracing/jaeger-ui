@@ -46,8 +46,8 @@ The legacy core of the application, now reduced to a residue. The full schema of
 
 - **Location**: `src/reducers/` (`metrics`, `pathAgnosticDecorations`), `src/actions/path-agnostic-decorations.ts`, and `src/components/TracePage/TraceTimelineViewer/duck.ts`; assembled in `src/utils/configure-store.ts`. There is no `src/selectors/`.
 - **Access**:
-    - **Functional Components**: `useSelector` / `useDispatch` — `DdgNodeContent`, `VirtualizedTraceView` (for `hoverIndentGuideIds`), `SpanDetailSidePanel`.
-    - **Class Components**: `connect(mapStateToProps, mapDispatchToProps)` — `Monitor/ServicesView`, `DeepDependencies/SidePanel/DetailsPanel`, `SpanTreeOffset`, `TracePage`, `TraceTimelineViewer`. `SearchForm` and `TraceDiff` are also still wrapped, but their `mapStateToProps` ignores state entirely and the wrapper is vestigial.
+    - **Functional Components**: `useSelector` / `useDispatch` — `DdgNodeContent`, `SpanDetailSidePanel`.
+    - **Class Components**: `connect(mapStateToProps, mapDispatchToProps)` — `Monitor/ServicesView`, `DeepDependencies/SidePanel/DetailsPanel`, `TracePage`, `TraceTimelineViewer`. `SearchForm` and `TraceDiff` are also still wrapped, but their `mapStateToProps` ignores state entirely and the wrapper is vestigial.
 - **Timeline dual write**: timeline interactions dispatch a Redux action *and* call the equivalent Zustand action, Redux first so the tracking middleware observes pre-update state. The duck exists to feed `src/middlewares/track.ts`, not to serve the UI.
 - **Do not add new state here.** Per [ADR-0004](./0004-state-management-strategy.md), everything above has a scheduled removal; new shared UI state goes to Zustand and new server data to TanStack Query.
 
