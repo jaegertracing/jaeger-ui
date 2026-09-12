@@ -292,11 +292,21 @@ describe('<SpanDetail>', () => {
   it('renders copy icon with deep link URL containing the span ID parameter', () => {
     render(<SpanDetail {...props} />);
 
-    const copyIcon = screen.getByTestId('copy-icon');
-    const copyText = copyIcon.getAttribute('data-copy-text');
+    const copyIcons = screen.getAllByTestId('copy-icon');
+    const copyText = copyIcons[0].getAttribute('data-copy-text');
 
-    expect(copyIcon).toBeInTheDocument();
+    expect(copyIcons[0]).toBeInTheDocument();
     expect(copyText).toContain(`?uiFind=${props.span.spanID}`);
+  });
+
+  it('renders a span summary copy button with service, operation and spanID', () => {
+    render(<SpanDetail {...props} />);
+    const copyIcons = screen.getAllByTestId('copy-icon');
+    expect(copyIcons).toHaveLength(2);
+    const summaryText = copyIcons[1].getAttribute('data-copy-text');
+    expect(summaryText).toContain(span.resource.serviceName);
+    expect(summaryText).toContain(span.name);
+    expect(summaryText).toContain(span.spanID);
   });
 
   describe('GenAI tab', () => {
