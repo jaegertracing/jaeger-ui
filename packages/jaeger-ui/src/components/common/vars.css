@@ -298,7 +298,7 @@ SPDX-License-Identifier: Apache-2.0
   --diff-added-text: #ffffff;
   --diff-more-bg: color-mix(in srgb, #56b4e9 30%, var(--surface-primary));
   --diff-more-border: #56b4e9;
-  --diff-removed-bg: #d55e00;
+  --diff-removed-bg: #aa4b00;
   --diff-removed-border: #ff832b;
   --diff-removed-text: #ffffff;
   --diff-less-bg: color-mix(in srgb, #d55e00 30%, var(--surface-primary));
