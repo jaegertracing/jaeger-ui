@@ -114,9 +114,6 @@ export const UnconnectedTraceDiffGraph: React.FC<Props> = React.memo(props => {
   return (
     <div className="TraceDiffGraph--graphWrapper">
       <Digraph
-        // `key` is necessary to see updates to the graph when a or b changes
-        // TODO(joe): debug this issue in Digraph
-        key={`${a.id} vs ${b.id}`}
         minimap
         zoom
         className={dagClassName}

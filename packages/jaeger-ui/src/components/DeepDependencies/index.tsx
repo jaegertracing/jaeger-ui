@@ -256,11 +256,9 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
       );
       if (vertices.length > 1) {
         wrapperClassName = 'is-horizontal';
-        // TODO: using `key` here is a hack, debug digraph to fix the underlying issue
         content = (
           <>
             <Graph
-              key={JSON.stringify({ density, showOp, service, operation, visEncoding })}
               baseUrl={baseUrl}
               density={density}
               edges={edges}
