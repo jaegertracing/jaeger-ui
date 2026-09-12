@@ -33,6 +33,7 @@ import './TracePageHeader.css';
 import ExternalLinks from '../../common/ExternalLinks';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import TraceId from '../../common/TraceId';
+import GenAIExecutionSummary from './GenAIExecutionSummary';
 
 type TracePageHeaderEmbedProps = {
   canCollapse: boolean;
@@ -170,7 +171,19 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     HEADER_ITEMS.map(item => {
       const { renderer, ...rest } = item;
       return { ...rest, value: renderer(trace) };
-    }).filter(item => item.value !== null);
+    })
+      .filter(item => item.value !== null)
+      .concat(
+        trace.isGenAITrace
+          ? [
+              {
+                key: 'genai-operations',
+                label: null,
+                value: <GenAIExecutionSummary spans={trace.spans} />,
+              },
+            ]
+          : []
+      );
 
   const traceShortID = trace.traceID.slice(0, 7);
 
