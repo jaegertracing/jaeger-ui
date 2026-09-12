@@ -58,6 +58,12 @@ SPDX-License-Identifier: Apache-2.0
   --interactive-primary-rgb: 17, 147, 154;
   --interactive-primary-opaque: rgba(var(--interactive-primary-rgb), 0.6);
 
+  /* Detail-table filter actions retain their distinct, high-contrast roles. */
+  --action-apply-background: #4c21ce;
+  --action-apply-text: #fff;
+  --action-cancel-background: #007272;
+  --action-cancel-text: #fff;
+
   /* ============================================
     FEEDBACK TOKENS (Alerts, Notifications)
     ============================================ */
@@ -226,7 +232,7 @@ SPDX-License-Identifier: Apache-2.0
   /* centered, strong glow effect on components */
   --shadow-component-focus: 0px 0px 5px rgba(255, 255, 255, 0.3);
   /* left-facing shadow for side panels */
-  --shadow-sidepanel: -3px 0 3px rgba(0, 0, 0, 0.3);
+  --shadow-sidepanel: -3px 0 3px rgba(255, 255, 255, 0.16);
 
   /* ============================================
     SPECIAL PURPOSE TOKENS - Dark Mode

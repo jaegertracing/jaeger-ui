@@ -32,12 +32,13 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .DetailTableDropdown--Btn.Apply {
-  background: var(--interactive-primary);
+  background: var(--action-apply-background);
+  color: var(--action-apply-text);
 }
 
 .DetailTableDropdown--Btn.Cancel {
-  background: var(--surface-component-background);
-  color: var(--text-primary);
+  background: var(--action-cancel-background);
+  color: var(--action-cancel-text);
 }
 
 .DetailTableDropdown--Btn.Clear {
