@@ -12,7 +12,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .OpNode--popoverContent {
-  border: 1px solid #bbb;
+  border: 1px solid var(--border-default);
 }
 
 .OpNode--vectorBorder {
@@ -28,11 +28,11 @@ SPDX-License-Identifier: Apache-2.0
 
 .OpNode.is-ui-find-match {
   outline: inherit;
-  outline-color: #fff3d7;
+  outline-color: var(--trace-emphasis-highlight);
 }
 
 .OpNode--popover .OpNode.is-ui-find-match {
-  outline: #fff3d7 solid 3px;
+  outline: var(--trace-emphasis-highlight) solid 3px;
 }
 
 .OpNode--legendNode {
@@ -40,7 +40,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .OpNode--mode-time {
-  background: #eee;
+  background: var(--surface-secondary);
 }
 
 .OpNode--metricCell {
