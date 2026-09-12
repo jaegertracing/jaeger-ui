@@ -110,3 +110,57 @@ SPDX-License-Identifier: Apache-2.0
   margin-top: -0.2em;
   vertical-align: middle;
 }
+
+.TracePageHeader--genAIExecutionButton {
+  color: var(--text-primary);
+  font-weight: 600;
+  height: auto;
+  padding: 0;
+}
+
+.TracePageHeader--genAIExecutionButton:hover,
+.TracePageHeader--genAIExecutionButton:focus-visible {
+  color: var(--interactive-primary);
+}
+
+.TracePageHeader--genAIExecutionLabel {
+  color: var(--text-muted);
+  margin-right: 0.25rem;
+}
+
+.TracePageHeader--genAIExecutionButton:hover .TracePageHeader--genAIExecutionLabel,
+.TracePageHeader--genAIExecutionButton:focus-visible .TracePageHeader--genAIExecutionLabel {
+  color: inherit;
+}
+
+.TracePageHeader--genAIExecutionContent {
+  min-width: 14rem;
+}
+
+.TracePageHeader--genAIExecutionHeading {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.TracePageHeader--genAIExecutionHeading:not(:first-child) {
+  border-top: 1px solid var(--border-default);
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+.TracePageHeader--genAIExecutionList {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  margin: 0;
+}
+
+.TracePageHeader--genAIExecutionList dd {
+  margin-left: 1rem;
+  text-align: right;
+}
+
+.TracePageHeader--genAIExecutionFailures {
+  border-top: 1px solid var(--border-default);
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+}
