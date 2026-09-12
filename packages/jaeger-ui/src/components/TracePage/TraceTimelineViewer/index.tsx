@@ -16,6 +16,7 @@ import {
   useLayoutPrefsStore,
   useTraceTimelineStore,
 } from './store';
+import HideNonGenAIServicesToggle from './HideNonGenAIServicesToggle';
 import SpanDetailSidePanel from './SpanDetailSidePanel';
 import TimelineHeaderRow from './TimelineHeaderRow';
 import { useServiceFilter } from './useServiceFilter';
@@ -218,6 +219,9 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       onExpandOne={expandOne}
       resizerMax={resizerMax}
       serviceFilterNode={serviceFilterNode}
+      hideNonGenAIServicesToggleNode={
+        <HideNonGenAIServicesToggle trace={trace} detailPanelMode={detailPanelMode} />
+      }
       sidePanelVisible={sidePanelActive}
       sidePanelWidth={effectiveSidePanelWidth}
       sidePanelLabel={sidePanelLabel}

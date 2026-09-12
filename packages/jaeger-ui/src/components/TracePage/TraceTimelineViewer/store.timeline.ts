@@ -1,17 +1,33 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+import memoizeOne from 'memoize-one';
 import { create } from 'zustand';
 import DetailState from './SpanDetail/DetailState';
+import { getServicesWithoutGenAIDescendants } from './generateRowStates';
 import { useLayoutPrefsStore } from './store.layout';
 import { TNil } from '../../../types';
 import { IOtelSpan, IOtelTrace, IEvent } from '../../../types/otel';
+import { sanitizePrunedServices } from '../url/svcFilter';
 import {
   applyDetailSubsectionToggle,
   calculateFocusedFindRowStates,
   shouldDisableCollapse,
   trimFocusedDetailStatesForSidePanel,
 } from './timeline-utils';
+
+/**
+ * Computes which services in a trace have no GenAI span at or below them, sanitized
+ * against the same root-service-protection rule the manual service filter uses (never
+ * orphan the tree). Called once per trace load; the result is cached on the store, not
+ * recomputed on every render or every toggle flip.
+ */
+function computeNonGenAIServicesToHide(trace: IOtelTrace, rootServiceNames: Set<string>): Set<string> {
+  if (!trace.isGenAITrace) return new Set();
+  const candidate = getServicesWithoutGenAIDescendants(trace.spans);
+  if (candidate.size === 0) return candidate;
+  return sanitizePrunedServices(candidate, rootServiceNames);
+}
 
 type TraceTimelineInteractionStore = {
   traceID: string | null;
@@ -21,6 +37,17 @@ type TraceTimelineInteractionStore = {
   prunedServices: Set<string>;
   setPrunedServices: (pruned: Set<string>) => void;
   clearServiceFilter: () => void;
+  // Services with no GenAI span at or below them, computed once per trace load (see
+  // setTrace). Not itself the visible filter - only applied when hideNonGenAIServicesEnabled
+  // is true, via selectEffectivePrunedServices below.
+  nonGenAIServicesToHide: Set<string>;
+  hideNonGenAIServicesEnabled: boolean;
+  setHideNonGenAIServicesEnabled: (enabled: boolean) => void;
+  // The trace's root-span service names, computed once per trace load (see setTrace).
+  // Used to re-sanitize the union in selectEffectivePrunedServices: the manual filter and
+  // nonGenAIServicesToHide are each sanitized individually against this, but two
+  // individually-legal sets can still together prune every root once unioned.
+  rootServiceNames: Set<string>;
   // Resets ephemeral fields for a new trace and optionally pre-apply a uiFind filter
   setTrace: (trace: IOtelTrace, uiFind?: string | TNil) => void;
   childrenToggle: (spanID: string) => void;
@@ -50,11 +77,22 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
 
   clearServiceFilter: () => set({ prunedServices: new Set<string>() }),
 
+  nonGenAIServicesToHide: new Set<string>(),
+  hideNonGenAIServicesEnabled: false,
+  rootServiceNames: new Set<string>(),
+
+  setHideNonGenAIServicesEnabled: (enabled: boolean) => set({ hideNonGenAIServicesEnabled: enabled }),
+
   setTrace: (trace: IOtelTrace, uiFind?: string | TNil) => {
     const { traceID: currentTraceID } = get();
     if (trace.traceID === currentTraceID) return;
 
     const detailPanelMode = useLayoutPrefsStore.getState().detailPanelMode;
+
+    const rootServiceNames = new Set<string>();
+    for (const span of trace.rootSpans) {
+      rootServiceNames.add(span.resource.serviceName);
+    }
 
     const base: Partial<TraceTimelineInteractionStore> = {
       traceID: trace.traceID,
@@ -62,6 +100,9 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
       detailStates: new Map<string, DetailState>(),
       shouldScrollToFirstUiFindMatch: false,
       prunedServices: new Set<string>(),
+      nonGenAIServicesToHide: computeNonGenAIServicesToHide(trace, rootServiceNames),
+      hideNonGenAIServicesEnabled: false,
+      rootServiceNames,
     };
 
     if (uiFind) {
@@ -215,3 +256,31 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
     set(focused);
   },
 }));
+
+/**
+ * Selector for the pruned-service set that should actually drive row visibility and uiFind
+ * match filtering: the manual service filter, unioned with the auto-hidden non-GenAI
+ * services when that's enabled, and re-sanitized since two individually-legal prunes can
+ * together orphan every root. Memoized on the three input references so unrelated
+ * re-renders don't churn.
+ */
+function unionPrunedServices(
+  prunedServices: Set<string>,
+  nonGenAIServicesToHide: Set<string>,
+  rootServiceNames: Set<string>
+): Set<string> {
+  const union = new Set([...prunedServices, ...nonGenAIServicesToHide]);
+  return sanitizePrunedServices(union, rootServiceNames);
+}
+const memoizedUnionPrunedServices = memoizeOne(unionPrunedServices);
+
+export function selectEffectivePrunedServices(state: TraceTimelineInteractionStore): Set<string> {
+  const { prunedServices, hideNonGenAIServicesEnabled, nonGenAIServicesToHide, rootServiceNames } = state;
+  if (!hideNonGenAIServicesEnabled || nonGenAIServicesToHide.size === 0) {
+    return prunedServices;
+  }
+  if (prunedServices.size === 0) {
+    return nonGenAIServicesToHide;
+  }
+  return memoizedUnionPrunedServices(prunedServices, nonGenAIServicesToHide, rootServiceNames);
+}
