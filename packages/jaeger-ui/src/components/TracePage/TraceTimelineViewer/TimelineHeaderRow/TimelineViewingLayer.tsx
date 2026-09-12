@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Uber Technologies, Inc.
+﻿// Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
@@ -38,7 +38,7 @@ function isOutOfView(layout: TDraggingLeftLayout | TOutOfViewLayout): layout is 
 
 /**
  * Map from a sub range to the greater view range, e.g, when the view range is
- * the middle half ([0.25, 0.75]), a value of 0.25 befomes 3/8.
+ * the middle half ([0.25, 0.75]), a value of 0.25 becomes 3/8.
  * @returns {number}
  */
 function mapFromViewSubRange(viewStart: number, viewEnd: number, value: number) {
