@@ -65,3 +65,33 @@ SPDX-License-Identifier: Apache-2.0
 .KeyValueTable--valueColumn-full {
   width: auto;
 }
+
+.KeyValueTable--filterRow {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border-default);
+  background: var(--surface-secondary);
+}
+
+.KeyValueTable--filter {
+  flex: 1;
+  padding: 4px 8px;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  font-size: 12px;
+  outline: none;
+  background: var(--surface-primary);
+  color: var(--text-primary);
+}
+
+.KeyValueTable--filter:focus {
+  border-color: var(--color-secondary);
+}
+
+.KeyValueTable--filterCount {
+  margin-left: 8px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
