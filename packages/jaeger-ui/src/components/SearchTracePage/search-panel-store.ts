@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { create } from 'zustand';
+import storage from '../../utils/storage';
 
 export const PANEL_WIDTH_MIN = 0.15;
 export const PANEL_WIDTH_MAX = 0.55;
@@ -17,32 +18,12 @@ type SearchPanelStore = {
   setCollapsed: (collapsed: boolean) => void;
 };
 
-function readLocalStorage(key: string): string | null {
-  /* c8 ignore next */
-  if (typeof window === 'undefined') return null;
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-
-function writeLocalStorage(key: string, value: string): void {
-  /* c8 ignore next */
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(key, value);
-  } catch {
-    // Ignore SecurityError or QuotaExceededError
-  }
-}
-
 export function getInitialState(): Pick<SearchPanelStore, 'panelWidth' | 'collapsed'> {
-  const parsedWidth = parseFloat(readLocalStorage(LS_WIDTH_KEY) ?? '');
+  const parsedWidth = parseFloat(storage.getItem(LS_WIDTH_KEY) ?? '');
   const panelWidth = Number.isFinite(parsedWidth)
     ? Math.min(Math.max(parsedWidth, PANEL_WIDTH_MIN), PANEL_WIDTH_MAX)
     : PANEL_WIDTH_DEFAULT;
-  const collapsed = readLocalStorage(LS_COLLAPSED_KEY) === 'true';
+  const collapsed = storage.getItem(LS_COLLAPSED_KEY) === 'true';
   return { panelWidth, collapsed };
 }
 
@@ -53,11 +34,11 @@ export const useSearchPanelStore = create<SearchPanelStore>()(set => ({
   setPanelWidth: (width: number) => {
     if (!Number.isFinite(width)) return;
     const panelWidth = Math.min(Math.max(width, PANEL_WIDTH_MIN), PANEL_WIDTH_MAX);
-    writeLocalStorage(LS_WIDTH_KEY, panelWidth.toString());
+    storage.setItem(LS_WIDTH_KEY, panelWidth.toString());
     set({ panelWidth });
   },
   setCollapsed: (collapsed: boolean) => {
-    writeLocalStorage(LS_COLLAPSED_KEY, String(collapsed));
+    storage.setItem(LS_COLLAPSED_KEY, String(collapsed));
     set({ collapsed });
   },
 }));

@@ -6,7 +6,8 @@ import { renderHook } from '@testing-library/react';
 import { GEN_AI_REQUEST_MODEL } from '../../../constants/span-attributes';
 import transformTraceData from '../../../model/transform-trace-data';
 import { AttributeValue, IOtelSpan } from '../../../types/otel';
-import { getSpanPillsForSpan, useSpanPillsEnabled } from './spanPills';
+import { getSpanPillsForSpan } from './spanDecorations';
+import { useSpanPillsEnabled } from './spanPills';
 import { makeAttributes } from '../../../model/attributes';
 
 const mockUseConfig = vi.hoisted(() => vi.fn(() => ({ traceTimeline: {} })));
@@ -169,16 +170,16 @@ describe('spanPills', () => {
       ]);
     });
 
-    it('returns multiple default pills in source order', () => {
+    it('returns multiple default pills in SPAN_DECORATIONS list order (db before http)', () => {
       const span = makeSpan([
         { key: 'http.method', value: 'GET' },
         { key: 'http.status_code', value: '200' },
         { key: 'db.system', value: 'mysql' },
       ]);
       expect(getSpanPillsForSpan(span)).toEqual([
+        { label: 'db.system', value: 'mysql' },
         { label: 'http.status_code', value: '200' },
         { label: 'http.method', value: 'GET' },
-        { label: 'db.system', value: 'mysql' },
       ]);
     });
 
