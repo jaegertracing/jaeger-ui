@@ -53,6 +53,13 @@ describe('<AttributesSummary />', () => {
     const expectedTexts = tagsArray.map(tag => `${tag.key}=${tag.value}`);
     expect(texts).toEqual(expectedTexts);
   });
+
+  it('truncates values longer than 60 characters in the summary', () => {
+    const longValue = 'x'.repeat(100);
+    const data = makeAttributes([{ key: 'long', value: longValue }]);
+    const { container } = render(<AttributesSummary data={data} />);
+    expect(container.querySelector('li').textContent).toBe(`long=${'x'.repeat(60)}...`);
+  });
 });
 
 describe('<AccordionAttributes />', () => {
