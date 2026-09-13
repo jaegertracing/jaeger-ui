@@ -340,7 +340,7 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
     gtag('event', event.action, {
       event_category: event.category,
       ...(event.label && { event_label: event.label }),
-      ...(event.value && { event_value: event.value }),
+      ...(event.value != null && { event_value: event.value }),
     });
   };
 
