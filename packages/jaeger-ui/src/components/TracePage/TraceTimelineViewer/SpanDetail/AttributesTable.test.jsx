@@ -180,11 +180,11 @@ describe('<AttributesTable>', () => {
         linksGetter={(array, i) =>
           array.entries()[i].key === 'span.kind'
             ? [
-                {
-                  url: `http://example.com/?kind=${encodeURIComponent(array.entries()[i].value)}`,
-                  text: `More info about ${array.entries()[i].value}`,
-                },
-              ]
+              {
+                url: `http://example.com/?kind=${encodeURIComponent(array.entries()[i].value)}`,
+                text: `More info about ${array.entries()[i].value}`,
+              },
+            ]
             : []
         }
       />
@@ -206,15 +206,15 @@ describe('<AttributesTable>', () => {
         linksGetter={(array, i) =>
           array.entries()[i].key === 'span.kind'
             ? [
-                {
-                  url: `http://example.com/1?kind=${encodeURIComponent(array.entries()[i].value)}`,
-                  text: 'Example 1',
-                },
-                {
-                  url: `http://example.com/2?kind=${encodeURIComponent(array.entries()[i].value)}`,
-                  text: 'Example 2',
-                },
-              ]
+              {
+                url: `http://example.com/1?kind=${encodeURIComponent(array.entries()[i].value)}`,
+                text: 'Example 1',
+              },
+              {
+                url: `http://example.com/2?kind=${encodeURIComponent(array.entries()[i].value)}`,
+                text: 'Example 2',
+              },
+            ]
             : []
         }
       />
