@@ -4,6 +4,6 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .value-is-invalid {
-  background: #fff9f8;
-  border: 1px solid #c00;
+  background: var(--ant-color-error-bg);
+  border: 1px solid var(--feedback-error);
 }
