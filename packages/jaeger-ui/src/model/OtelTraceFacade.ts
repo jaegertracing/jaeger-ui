@@ -10,7 +10,6 @@ export default class OtelTraceFacade implements IOtelTrace {
   private _spans: IOtelSpan[];
   private _spanMap: Map<string, IOtelSpan>;
   private _rootSpans: IOtelSpan[];
-  private _orphanSpanCount: number;
   readonly isGenAITrace: boolean;
 
   constructor(legacyTrace: Trace) {
@@ -31,12 +30,6 @@ export default class OtelTraceFacade implements IOtelTrace {
       if (!otelSpan) throw new Error(`Root span ${s.spanID} not found in spanMap`);
       return otelSpan;
     });
-
-    // Calculate orphan span count
-    // A span is orphaned if it has a parentSpanID but the parent is not in the trace
-    this._orphanSpanCount = this._spans.filter(
-      s => s.parentSpanID && !this._spanMap.has(s.parentSpanID)
-    ).length;
 
     // Each span's genAIKind is already computed once in OtelSpanFacade's
     // constructor, so this reads cached values instead of re-scanning attributes.
@@ -114,7 +107,11 @@ export default class OtelTraceFacade implements IOtelTrace {
   }
 
   get orphanSpanCount(): number {
-    return this._orphanSpanCount;
+    // transformTraceData already counts this while resolving the same parent/child tree
+    // that childSpans/parentSpan are built from below, so it's the authoritative count -
+    // recomputing it independently from parentSpanID would now always read 0, since
+    // parentSpanID is only ever set to a spanID that resolution already found in this trace.
+    return this.legacyTrace.orphanSpanCount ?? 0;
   }
 
   hasErrors(): boolean {
