@@ -46,10 +46,18 @@ Run `make changelog` to generate content.
 * Feat(genai): classify tool spans and ignore bare gen_ai.tool.call.id ([@u7k4rs6](https://github.com/u7k4rs6) in [#4053](https://github.com/jaegertracing/jaeger-ui/pull/4053))
 * Fix(genai): use the trace's own isgenaitrace for view auto-activation ([@u7k4rs6](https://github.com/u7k4rs6) in [#4271](https://github.com/jaegertracing/jaeger-ui/pull/4271))
 * Fix(tracegraph): add aria-labels to mode toggle buttons ([@shubhtrek](https://github.com/shubhtrek) in [#4130](https://github.com/jaegertracing/jaeger-ui/pull/4130))
+* Feat(SpanBarRow): show gen_ai.request.model as a span pill for LLM spans ([@swetalin-10](https://github.com/swetalin-10) in [#3896](https://github.com/jaegertracing/jaeger-ui/pull/3896))
+* Fix(search): Render search latency in smaller, muted text ([@ysh-bot](https://github.com/ysh-bot) in [#4253](https://github.com/jaegertracing/jaeger-ui/pull/4253))
+* Fix(about): Abbreviate only full SHA in commit label, preserving prefixes ([@ysh-bot](https://github.com/ysh-bot) in [#4251](https://github.com/jaegertracing/jaeger-ui/pull/4251))
+* Fix(search): Swap Min/Max Duration field order in search form ([@rishabhkumar92](https://github.com/rishabhkumar92) in [#4249](https://github.com/jaegertracing/jaeger-ui/pull/4249))
+* Fix(TracePage): Repair spans with no usable startTime instead of dropping them ([@ysh-bot](https://github.com/ysh-bot) in [#4245](https://github.com/jaegertracing/jaeger-ui/pull/4245))
+* Fix(stringSupplant): Return formatted value when no encoder is provided ([@gkhulbe4](https://github.com/gkhulbe4) in [#3902](https://github.com/jaegertracing/jaeger-ui/pull/3902))
+* Fix(SearchTracePage): Improve duration unit regex validation ([@vibhor-5](https://github.com/vibhor-5) in [#3940](https://github.com/jaegertracing/jaeger-ui/pull/3940))
 
 #### 👷 CI Improvements
 
 * Ci: provision pnpm with corepack, not npm ([@ysh-bot](https://github.com/ysh-bot) in [#4428](https://github.com/jaegertracing/jaeger-ui/pull/4428))
+* Chore(deps): Retire depcheck in favor of knip ([@ysh-bot](https://github.com/ysh-bot) in [#4259](https://github.com/jaegertracing/jaeger-ui/pull/4259))
 * Chore(ci): drop action digest pinning from renovate ([@ysh-bot](https://github.com/ysh-bot) in [#4370](https://github.com/jaegertracing/jaeger-ui/pull/4370))
 * Chore(ci): pin action digests to full semver ([@ysh-bot](https://github.com/ysh-bot) in [#4367](https://github.com/jaegertracing/jaeger-ui/pull/4367))
 * Feat(dev): read backend capabilities from the query service ([@ysh-bot](https://github.com/ysh-bot) in [#4349](https://github.com/jaegertracing/jaeger-ui/pull/4349))
