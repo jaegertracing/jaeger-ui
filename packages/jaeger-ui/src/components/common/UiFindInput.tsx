@@ -86,7 +86,29 @@ export const UnconnectedUiFindInput = React.forwardRef<InputRef, TProps>((props,
   const suffix = (
     <>
       {allowClear && inputValue && inputValue.length > 0 && (
-        <IoClose data-testid="clear-icon" onClick={clearUiFind} />
+        <button
+          type="button"
+          aria-label="Clear input"
+          onMouseDown={e => e.preventDefault()}
+          onClick={e => {
+            clearUiFind();
+            const input = e.currentTarget
+              .closest('.ant-input-affix-wrapper')
+              ?.querySelector('input') as HTMLInputElement | null;
+            input?.focus();
+          }}
+          style={{
+            background: 'none',
+            border: 'none',
+            padding: 0,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            color: 'inherit',
+          }}
+        >
+          <IoClose data-testid="clear-icon" />
+        </button>
       )}
       {inputProps?.suffix}
     </>
@@ -101,7 +123,6 @@ export const UnconnectedUiFindInput = React.forwardRef<InputRef, TProps>((props,
       ref={ref}
       suffix={suffix}
       value={inputValue}
-      allowClear
     />
   );
 });
