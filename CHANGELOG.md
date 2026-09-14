@@ -9,6 +9,59 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v2.21.0 (2026-09-14)
+
+#### ✨ New Features
+
+* Feat(config): enable otel terminology by default ([@ysh-bot](https://github.com/ysh-bot) in [#4359](https://github.com/jaegertracing/jaeger-ui/pull/4359))
+* Feat(search): offer an all services option when the backend supports it ([@ysh-bot](https://github.com/ysh-bot) in [#4342](https://github.com/jaegertracing/jaeger-ui/pull/4342))
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Fix(ddg): navigate to search page on view traces ([@Harizz076](https://github.com/Harizz076) in [#4021](https://github.com/jaegertracing/jaeger-ui/pull/4021))
+* Chore(model): make deduplicatetags linear instead of o(n^2) in tag count ([@iammdzaidalam](https://github.com/iammdzaidalam) in [#4110](https://github.com/jaegertracing/jaeger-ui/pull/4110))
+* Feat(api/v3): expose zod schemas for otlp trace/span types ([@sksingh2005](https://github.com/sksingh2005) in [#4438](https://github.com/jaegertracing/jaeger-ui/pull/4438))
+* Fix(genai): read what real instrumentation emits ([@ysh-bot](https://github.com/ysh-bot) in [#4432](https://github.com/jaegertracing/jaeger-ui/pull/4432))
+* Feat(genai): render a message as the parts it carries ([@swetalin-10](https://github.com/swetalin-10) in [#4399](https://github.com/jaegertracing/jaeger-ui/pull/4399))
+* Feat(genai): show images and audio on request ([@u7k4rs6](https://github.com/u7k4rs6) in [#4313](https://github.com/jaegertracing/jaeger-ui/pull/4313))
+* Feat(genai): collapse conversation messages ([@ysh-bot](https://github.com/ysh-bot) in [#4425](https://github.com/jaegertracing/jaeger-ui/pull/4425))
+* Fix(genai): offer large markdown on request ([@ysh-bot](https://github.com/ysh-bot) in [#4424](https://github.com/jaegertracing/jaeger-ui/pull/4424))
+* Fix(genai): scope format choice to one message ([@ysh-bot](https://github.com/ysh-bot) in [#4423](https://github.com/jaegertracing/jaeger-ui/pull/4423))
+* Fix(genai): expand the only section ([@Rukafuu](https://github.com/Rukafuu) in [#4419](https://github.com/jaegertracing/jaeger-ui/pull/4419))
+* Fix(genai): keep details for unknown attributes ([@conradmr94](https://github.com/conradmr94) in [#4417](https://github.com/jaegertracing/jaeger-ui/pull/4417))
+* Fix(storage): route every localstorage access through the safe wrapper ([@ysh-bot](https://github.com/ysh-bot) in [#4398](https://github.com/jaegertracing/jaeger-ui/pull/4398))
+* Feat(search): persist sort order across sessions ([@swetalin-10](https://github.com/swetalin-10) in [#3986](https://github.com/jaegertracing/jaeger-ui/pull/3986))
+* Feat(genai-tab): add llm caption to the meta row and elevate agent attributes ([@swetalin-10](https://github.com/swetalin-10) in [#4244](https://github.com/jaegertracing/jaeger-ui/pull/4244))
+* Hide minimap when timeline is hidden ([@okxint](https://github.com/okxint) in [#3764](https://github.com/jaegertracing/jaeger-ui/pull/3764))
+* Fix(timeline): realign side panel after view switch ([@ysh-bot](https://github.com/ysh-bot) in [#4381](https://github.com/jaegertracing/jaeger-ui/pull/4381))
+* Test(genai): add sample genai trace fixture and generator ([@ysh-bot](https://github.com/ysh-bot) in [#4372](https://github.com/jaegertracing/jaeger-ui/pull/4372))
+* Fix(about): show the commit a ui build came from ([@ysh-bot](https://github.com/ysh-bot) in [#4364](https://github.com/jaegertracing/jaeger-ui/pull/4364))
+* Feat(search): accept a free-form span name for any service ([@ysh-bot](https://github.com/ysh-bot) in [#4346](https://github.com/jaegertracing/jaeger-ui/pull/4346))
+* Fix(search): hide spans column when no summary reports a span count ([@ysh-bot](https://github.com/ysh-bot) in [#4325](https://github.com/jaegertracing/jaeger-ui/pull/4325))
+* Fix(critical-path): surface computation errors instead of silently returning empty ([@swetalin-10](https://github.com/swetalin-10) in [#3916](https://github.com/jaegertracing/jaeger-ui/pull/3916))
+* Fix(date): prevent incorrect partial rounding-up of durations ([@thisis-manan](https://github.com/thisis-manan) in [#4247](https://github.com/jaegertracing/jaeger-ui/pull/4247))
+* Fix(theme): track theme changes in trace graph and flamegraph colors ([@ysh-bot](https://github.com/ysh-bot) in [#4287](https://github.com/jaegertracing/jaeger-ui/pull/4287))
+* Fix(timeline): tokenize span tree chrome and correct the collapsed box ([@ysh-bot](https://github.com/ysh-bot) in [#4285](https://github.com/jaegertracing/jaeger-ui/pull/4285))
+* Fix(theme): correct dark-mode span colors in canvas and graph views ([@ysh-bot](https://github.com/ysh-bot) in [#4277](https://github.com/jaegertracing/jaeger-ui/pull/4277))
+* Feat(genai): classify tool spans and ignore bare gen_ai.tool.call.id ([@u7k4rs6](https://github.com/u7k4rs6) in [#4053](https://github.com/jaegertracing/jaeger-ui/pull/4053))
+* Fix(genai): use the trace's own isgenaitrace for view auto-activation ([@u7k4rs6](https://github.com/u7k4rs6) in [#4271](https://github.com/jaegertracing/jaeger-ui/pull/4271))
+* Fix(tracegraph): add aria-labels to mode toggle buttons ([@shubhtrek](https://github.com/shubhtrek) in [#4130](https://github.com/jaegertracing/jaeger-ui/pull/4130))
+
+#### 👷 CI Improvements
+
+* Ci: provision pnpm with corepack, not npm ([@ysh-bot](https://github.com/ysh-bot) in [#4428](https://github.com/jaegertracing/jaeger-ui/pull/4428))
+* Chore(ci): drop action digest pinning from renovate ([@ysh-bot](https://github.com/ysh-bot) in [#4370](https://github.com/jaegertracing/jaeger-ui/pull/4370))
+* Chore(ci): pin action digests to full semver ([@ysh-bot](https://github.com/ysh-bot) in [#4367](https://github.com/jaegertracing/jaeger-ui/pull/4367))
+* Feat(dev): read backend capabilities from the query service ([@ysh-bot](https://github.com/ysh-bot) in [#4349](https://github.com/jaegertracing/jaeger-ui/pull/4349))
+* Ci: use the shared pr quota action instead of curling the script ([@ysh-bot](https://github.com/ysh-bot) in [#4344](https://github.com/jaegertracing/jaeger-ui/pull/4344))
+* Ci: use github_token and pin github-script in pr quota workflow ([@ysh-bot](https://github.com/ysh-bot) in [#4343](https://github.com/jaegertracing/jaeger-ui/pull/4343))
+
+#### ⚙️ Refactoring
+
+* Refactor(ui): standardize css colors using design tokens ([@Harizz076](https://github.com/Harizz076) in [#3886](https://github.com/jaegertracing/jaeger-ui/pull/3886))
+* Refactor(trace): combine span decoration matching into one registry ([@udita-0707](https://github.com/udita-0707) in [#4254](https://github.com/jaegertracing/jaeger-ui/pull/4254))
+* Refactor(search): key the trace map off unsorted results ([@ysh-bot](https://github.com/ysh-bot) in [#4435](https://github.com/jaegertracing/jaeger-ui/pull/4435))
+
 ## v2.20.0 (2026-07-19)
 
 #### ✨ New Features
