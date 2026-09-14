@@ -5,7 +5,7 @@ import * as React from 'react';
 import { Upload, message } from 'antd';
 import { IoDocumentAttachOutline } from 'react-icons/io5';
 
-import readJsonFile from '../../utils/readJsonFile';
+import readJsonFile, { OtlpTransformError } from '../../utils/readJsonFile';
 import transformTraceData from '../../model/transform-trace-data';
 import { traceToTraceSummary } from '../../model/trace-summary';
 import { populateTraceCache } from '../../hooks/useTraceLoading';
@@ -90,6 +90,14 @@ export default function FileLoader(props: FileLoaderProps) {
             }
           })
           .catch((err: unknown) => {
+            // The OTLP transform call reaching the backend is a network/availability
+            // failure, not a parse error - the file's JSON was already valid by the
+            // time this rejects. Report it distinctly so the message doesn't blame
+            // the file for a backend that wasn't reachable.
+            if (err instanceof OtlpTransformError) {
+              message.error(`${file.name}: ${err.message}`);
+              return;
+            }
             message.error(
               `Failed to parse ${file.name}: ${err instanceof Error ? err.message : String(err)}`
             );
