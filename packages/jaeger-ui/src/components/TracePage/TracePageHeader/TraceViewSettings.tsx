@@ -65,7 +65,7 @@ export default function TraceViewSettings(props: Props) {
 
   return (
     <>
-      <Dropdown menu={{ items }} trigger={['click']}>
+      <Dropdown menu={{ items, onKeyDown: e => e.stopPropagation() }} trigger={['click']}>
         <Button
           className={`TraceViewSettings ${className || ''}`}
           htmlType="button"
