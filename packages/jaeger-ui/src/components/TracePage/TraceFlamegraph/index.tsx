@@ -162,7 +162,6 @@ const TraceFlamegraph = ({ trace }: any) => {
           }
           return;
         }
-        if (target === hoveredFrameRef.current) return;
         hoveredFrameRef.current = target;
         const d3Data = (target as any).__data__;
         const name = d3Data?.data?.name || '';
