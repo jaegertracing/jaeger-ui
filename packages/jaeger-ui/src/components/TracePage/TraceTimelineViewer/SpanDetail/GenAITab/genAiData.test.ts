@@ -741,6 +741,150 @@ describe('extractGenAiSections', () => {
     });
   });
 
+  describe('retrieval section', () => {
+    it('extracts query, top_k, data source and documents from the langchain reference scenario shape', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.operation.name': 'retrieval',
+          'gen_ai.data_source.id': 'weather-knowledge-base',
+          'gen_ai.retrieval.query.text': 'What is the weather in Seattle?',
+          'gen_ai.retrieval.top_k': 3,
+          'gen_ai.retrieval.documents': JSON.stringify([
+            { content: 'Seattle weather is rainy and cool.', source_id: 'weather-knowledge-base' },
+          ]),
+        })
+      );
+      expect(section(sections, 'retrieval')).toEqual({
+        queryText: 'What is the weather in Seattle?',
+        topK: 3,
+        dataSourceId: 'weather-knowledge-base',
+        documents: [
+          { content: 'Seattle weather is rainy and cool.', rest: { source_id: 'weather-knowledge-base' } },
+        ],
+      });
+    });
+
+    it('accepts documents already parsed into an array, and keeps an unrecognized field (e.g. score) reachable', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.retrieval.documents': [
+            { content: 'first doc', score: 0.92 },
+            { content: 'second doc', score: 0.81 },
+          ],
+        })
+      );
+      expect(section(sections, 'retrieval')?.documents).toEqual([
+        { content: 'first doc', rest: { score: 0.92 } },
+        { content: 'second doc', rest: { score: 0.81 } },
+      ]);
+    });
+
+    it('wraps a single, non-array-wrapped document object instead of dropping it', () => {
+      const sections = extractGenAiSections(
+        attrs({ 'gen_ai.retrieval.documents': { content: 'lone document' } })
+      );
+      expect(section(sections, 'retrieval')?.documents).toEqual([{ content: 'lone document', rest: {} }]);
+    });
+
+    it('falls back to the raw string as content when a document is not valid JSON', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.retrieval.documents': 'not json' }));
+      expect(section(sections, 'retrieval')?.documents).toEqual([{ content: 'not json', rest: {} }]);
+    });
+
+    it('produces a retrieval section from the query text alone, with an empty documents list', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.retrieval.query.text': 'find docs' }));
+      expect(section(sections, 'retrieval')).toEqual({
+        queryText: 'find docs',
+        topK: undefined,
+        dataSourceId: undefined,
+        documents: [],
+      });
+    });
+
+    it('builds a retrieval section for an explicitly empty documents array, distinct from no attribute at all (#4437)', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.retrieval.documents': [] }));
+      expect(section(sections, 'retrieval')).toEqual({
+        queryText: undefined,
+        topK: undefined,
+        dataSourceId: undefined,
+        documents: [],
+      });
+    });
+
+    it('excludes claimed gen_ai.retrieval.*/gen_ai.data_source.id attributes from the other section', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.retrieval.query.text': 'q',
+          'gen_ai.retrieval.top_k': 3,
+          'gen_ai.data_source.id': 'kb-1',
+          'gen_ai.retrieval.documents': [{ content: 'doc' }],
+        })
+      );
+      expect(section(sections, 'other')).toBeUndefined();
+    });
+
+    it('produces no retrieval section when no retrieval attributes are present', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.provider.name': 'openai' }));
+      expect(section(sections, 'retrieval')).toBeUndefined();
+    });
+  });
+
+  describe('memory section', () => {
+    it('extracts store, query, record count and records from the google-adk reference scenario shape', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.operation.name': 'search_memory',
+          'gen_ai.memory.store.id': 'memory-store-1',
+          'gen_ai.memory.query.text': "What are the user's food preferences?",
+          'gen_ai.memory.record.count': 1,
+          'gen_ai.memory.records': JSON.stringify([
+            {
+              content: 'User prefers vegetarian meals and dark mode.',
+              id: '90f1f094-8013-4318-9fae-ea944187d51c',
+              metadata: { author: 'user', session_id: 'session_memory_1' },
+            },
+          ]),
+        })
+      );
+      expect(section(sections, 'memory')).toEqual({
+        queryText: "What are the user's food preferences?",
+        storeId: 'memory-store-1',
+        recordCount: 1,
+        records: [
+          {
+            content: 'User prefers vegetarian meals and dark mode.',
+            rest: {
+              id: '90f1f094-8013-4318-9fae-ea944187d51c',
+              metadata: { author: 'user', session_id: 'session_memory_1' },
+            },
+          },
+        ],
+      });
+    });
+
+    it('builds a memory section for an explicitly empty records array, distinct from no attribute at all (#4437)', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.memory.records': [] }));
+      expect(section(sections, 'memory')).toEqual({
+        queryText: undefined,
+        storeId: undefined,
+        recordCount: undefined,
+        records: [],
+      });
+    });
+
+    it('produces no memory section when no memory attributes are present', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.provider.name': 'openai' }));
+      expect(section(sections, 'memory')).toBeUndefined();
+    });
+
+    it('excludes claimed gen_ai.memory.* attributes from the other section', () => {
+      const sections = extractGenAiSections(
+        attrs({ 'gen_ai.memory.store.id': 'store-1', 'gen_ai.memory.records': [{ content: 'r' }] })
+      );
+      expect(section(sections, 'other')).toBeUndefined();
+    });
+  });
+
   describe('toolCall section', () => {
     it('extracts a tool call when any tool attribute is present', () => {
       const sections = extractGenAiSections(
