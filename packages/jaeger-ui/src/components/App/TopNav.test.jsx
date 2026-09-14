@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, cleanup } from '@testing-library/react/pure';
 import { BrowserRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
 import { TopNavImpl as TopNav } from './TopNav';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
+
 
 vi.mock('antd', async () => {
   const actual = await vi.importActual('antd');
@@ -118,15 +119,14 @@ describe('<TopNav>', () => {
     pathname: '/search',
   };
 
-  beforeEach(() => {
-    useTraceDiffStore.setState({ a: null, b: null, cohort: [] });
-    useConfigMock.mockReset();
-    useConfigMock.mockReturnValue(defaultProps.config);
-  });
+  
 
   describe('renders the default menu options', () => {
     let component;
-    beforeEach(() => {
+    beforeAll(() => {
+      useTraceDiffStore.setState({ a: null, b: null, cohort: [] });
+    useConfigMock.mockReset();
+    useConfigMock.mockReturnValue(defaultProps.config);
       component = render(
         <BrowserRouter>
           <TopNav {...defaultProps} />
@@ -134,8 +134,9 @@ describe('<TopNav>', () => {
       );
     });
 
-    afterEach(() => {
+    afterAll(() => {
       component.unmount();
+      cleanup();
     });
 
     it('renders the "Jaeger" link', () => {
@@ -171,7 +172,10 @@ describe('<TopNav>', () => {
 
   describe('renders the custom menu', () => {
     let component;
-    beforeEach(() => {
+    beforeAll(() => {
+    useTraceDiffStore.setState({ a: null, b: null, cohort: [] });
+    useConfigMock.mockReset();
+    useConfigMock.mockReturnValue(defaultProps.config);
       component = render(
         <BrowserRouter>
           <TopNav {...defaultProps} />
@@ -179,8 +183,9 @@ describe('<TopNav>', () => {
       );
     });
 
-    afterEach(() => {
+    afterAll(() => {
       component.unmount();
+      cleanup();
     });
 
     it('renders the top-level item', () => {
@@ -224,52 +229,61 @@ describe('<TopNav>', () => {
     });
   });
 
-  it('highlights the nav item matching the current pathname', () => {
-    render(
-      <BrowserRouter>
-        <TopNav {...defaultProps} />
-      </BrowserRouter>
-    );
-
-    const navMenu = screen.getAllByTestId('mock-menu')[0];
-    expect(navMenu).toHaveAttribute('data-selectedkeys', JSON.stringify(['/search']));
+  describe('standalone renders', () => {
+beforeEach(() => {                         
+    useTraceDiffStore.setState({ a: null, b: null, cohort: [] });
+    useConfigMock.mockReset();
+    useConfigMock.mockReturnValue(defaultProps.config);
   });
 
-  it('builds the Compare link using the trace diff cohort state', () => {
-    useTraceDiffStore.setState({
-      a: 'trace-a',
-      b: 'trace-b',
-      cohort: ['trace-a', 'trace-b'],
+
+    afterEach(() => {
+      cleanup();
     });
-    render(
-      <BrowserRouter>
-        <TopNav {...defaultProps} />
-      </BrowserRouter>
-    );
 
-    const compareLink = screen.getByRole('link', { name: 'Compare' });
-    expect(compareLink.href).toContain('/trace/trace-a...trace-b');
-    expect(compareLink.href).toContain('cohort=trace-a');
-    expect(compareLink.href).toContain('cohort=trace-b');
-  });
+    it('highlights the nav item matching the current pathname', () => {
+      render(
+        <BrowserRouter>
+          <TopNav {...defaultProps} />
+        </BrowserRouter>
+      );
+      const navMenu = screen.getAllByTestId('mock-menu')[0];
+      expect(navMenu).toHaveAttribute('data-selectedkeys', JSON.stringify(['/search']));
+    });
 
-  it('renders the Monitor navigation link when enabled', () => {
-    render(
-      <BrowserRouter>
-        <TopNav {...defaultProps} />
-      </BrowserRouter>
-    );
+    it('builds the Compare link using the trace diff cohort state', () => {
+      useTraceDiffStore.setState({
+        a: 'trace-a',
+        b: 'trace-b',
+        cohort: ['trace-a', 'trace-b'],
+      });
+      render(
+        <BrowserRouter>
+          <TopNav {...defaultProps} />
+        </BrowserRouter>
+      );
+      const compareLink = screen.getByRole('link', { name: 'Compare' });
+      expect(compareLink.href).toContain('/trace/trace-a...trace-b');
+      expect(compareLink.href).toContain('cohort=trace-a');
+      expect(compareLink.href).toContain('cohort=trace-b');
+    });
 
-    expect(screen.getByRole('link', { name: 'Monitor' })).toBeInTheDocument();
-  });
+    it('renders the Monitor navigation link when enabled', () => {
+      render(
+        <BrowserRouter>
+          <TopNav {...defaultProps} />
+        </BrowserRouter>
+      );
+      expect(screen.getByRole('link', { name: 'Monitor' })).toBeInTheDocument();
+    });
 
-  it('includes the Trace ID search control in the right-side menu', () => {
-    render(
-      <BrowserRouter>
-        <TopNav {...defaultProps} />
-      </BrowserRouter>
-    );
-
-    expect(screen.getByTestId('TraceIDSearchInput--form')).toBeInTheDocument();
+    it('includes the Trace ID search control in the right-side menu', () => {
+      render(
+        <BrowserRouter>
+          <TopNav {...defaultProps} />
+        </BrowserRouter>
+      );
+      expect(screen.getByTestId('TraceIDSearchInput--form')).toBeInTheDocument();
+    });
   });
 });
