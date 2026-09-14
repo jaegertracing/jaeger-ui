@@ -125,6 +125,10 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
 ) {
   const listViewRef = useRef<ListView | TNil>(null);
 
+  // TODO: React documents writing a ref during render as unsafe, because a render that gets
+  // discarded leaves the ref holding props that never committed. Nothing in this subtree uses
+  // StrictMode, startTransition or useDeferredValue today, so adopting any of them means first
+  // giving the callbacks below real dependencies instead of reading through this ref.
   const propsRef = useRef(props);
   propsRef.current = props;
 
