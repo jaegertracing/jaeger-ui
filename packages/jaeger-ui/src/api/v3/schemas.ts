@@ -143,6 +143,7 @@ type AnyValueWire = {
   doubleValue?: number;
   arrayValue?: { values?: AnyValueWire[] };
   kvlistValue?: { values?: { key: string; value: AnyValueWire }[] };
+  // base64 on the wire; z.string().base64() checks alphabet and keeps base64
   bytesValue?: string;
 };
 
