@@ -3,9 +3,8 @@
 
 import { useMemo } from 'react';
 import { useQuery, useQueries, UseQueryResult } from '@tanstack/react-query';
-import JaegerAPI from '../api/jaeger';
+import { jaegerClient } from '../api/v3/client';
 import { fetchedState } from '../constants';
-import transformTraceData from '../model/transform-trace-data';
 import { queryClient } from '../query/app-query-client';
 import { FetchedTrace } from '../types';
 import type { IOtelTrace } from '../types/otel';
