@@ -522,7 +522,7 @@ describe('<TracePage>', () => {
   });
 
   it('uses matches reported by TraceGraph via onSearchResults for findCount when viewType is TraceGraph', () => {
-    jest.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(100);
+    const clientHeightSpy = jest.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(100);
     render(<TracePage {...defaultProps} uiFind="some-search" />);
 
     act(() => {
@@ -533,7 +533,7 @@ describe('<TracePage>', () => {
     expect(capturedGraphProps.onSearchResults).toEqual(expect.any(Function));
     expect(capturedHeaderProps.resultCount).toBe(1);
 
-    jest.restoreAllMocks();
+    clientHeightSpy.mockRestore();
   });
 
   describe('TracePageHeader props', () => {
@@ -873,14 +873,14 @@ describe('<TracePage>', () => {
 
   describe('manages various UI state', () => {
     it('propagates headerHeight changes', () => {
-      jest.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(100);
+      const clientHeightSpy = jest.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(100);
       render(<TracePage {...defaultProps} />);
 
       const section = document.querySelector('section');
       expect(section).toBeInTheDocument();
       expect(section.style.paddingTop).toBe('100px');
 
-      jest.restoreAllMocks();
+      clientHeightSpy.mockRestore();
     });
 
     it('initializes slimView correctly', () => {
@@ -913,7 +913,7 @@ describe('<TracePage>', () => {
     });
 
     it('propagates traceView changes', () => {
-      jest.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(100);
+      const clientHeightSpy = jest.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(100);
       render(<TracePage {...defaultProps} />);
 
       act(() => {
@@ -933,7 +933,7 @@ describe('<TracePage>', () => {
       });
       expect(capturedHeaderProps.viewType).toBe(ETraceViewType.TraceStatistics);
 
-      jest.restoreAllMocks();
+      clientHeightSpy.mockRestore();
     });
 
     it('updates viewRange', () => {

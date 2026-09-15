@@ -388,7 +388,7 @@ export function TracePageImpl(props: TProps) {
   let findCount = 0;
   let spanFindMatches: Set<string> | null | undefined;
   if (viewType === ETraceViewType.TraceGraph) {
-    findCount = findMatches ? findMatches.size : 0;
+    findCount = uiFind && findMatches ? findMatches.size : 0;
   } else if (uiFind) {
     const allMatches = filterSpansMemo(uiFind, _get(traceData, 'spans'));
     const otelTrace = traceData;
