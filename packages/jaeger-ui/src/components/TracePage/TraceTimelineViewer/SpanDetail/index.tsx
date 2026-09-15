@@ -4,7 +4,7 @@
 import React from 'react';
 import { Divider, Tabs } from 'antd';
 
-import { IoLinkOutline } from 'react-icons/io5';
+import { IoLinkOutline, IoDocumentTextOutline } from 'react-icons/io5';
 import AccordionAttributes from './AccordionAttributes';
 import AccordionEvents from './AccordionEvents';
 import AccordionLinks from './AccordionLinks';
@@ -88,6 +88,9 @@ export default function SpanDetail(props: SpanDetailProps) {
     },
   ];
   const deepLinkCopyText = `${window.location.origin}${window.location.pathname}?uiFind=${span.spanID}`;
+  const spanSummaryText =
+    `${span.resource.serviceName} | ${span.name} | ` +
+    `${formatDurationCompact(span.duration)} | spanID: ${span.spanID}`;
 
   const showGenAITab =
     isGenAISpan(span) && extractGenAiSections(span.attributes).some(section => section.type !== 'other');
@@ -156,6 +159,13 @@ export default function SpanDetail(props: SpanDetailProps) {
           placement="topRight"
           tooltipTitle="Copy deep link to this span"
           buttonText="Copy"
+        />
+        <CopyIcon
+          copyText={spanSummaryText}
+          icon={<IoDocumentTextOutline />}
+          placement="topRight"
+          tooltipTitle="Copy span summary to clipboard"
+          buttonText="Summary"
         />
       </small>
     </div>
