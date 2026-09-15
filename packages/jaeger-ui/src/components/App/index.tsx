@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { Provider } from 'react-redux';
+import { Provider, type Store } from 'react-redux';
 import { Route, Routes, Navigate } from 'react-router-dom';
 import { AppQueryClientProvider } from '../../query/app-query-client';
 
@@ -27,11 +27,18 @@ import { JaegerAssistantProvider } from './JaegerAssistantContext';
 JaegerAPI.apiRoot = DEFAULT_API_ROOT;
 processScripts();
 
+// Typed wrapper for Redux Provider to satisfy React 19's stricter types.
+// The store is typed as Store<any> because the Redux reducers use legacy patterns.
+// This wrapper avoids the need for `as any` cast on the store prop.
+function TypedReduxProvider({ store, children }: { store: Store; children: React.ReactNode }) {
+  return <Provider store={store}>{children}</Provider>;
+}
+
 export default function JaegerUIApp() {
   return (
     <AppQueryClientProvider>
       <ThemeProvider>
-        <Provider store={store as any}>
+        <TypedReduxProvider store={store}>
           <JaegerAssistantProvider>
             <Page>
               <Routes>
@@ -45,7 +52,7 @@ export default function JaegerUIApp() {
               </Routes>
             </Page>
           </JaegerAssistantProvider>
-        </Provider>
+        </TypedReduxProvider>
       </ThemeProvider>
     </AppQueryClientProvider>
   );
