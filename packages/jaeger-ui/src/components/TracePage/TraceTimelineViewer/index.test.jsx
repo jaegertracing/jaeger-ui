@@ -68,9 +68,6 @@ vi.mock('./spanPills', () => ({
 }));
 vi.mock('./VirtualizedTraceView', () => mockDefault(() => <div data-testid="virtualized-trace-view-mock" />));
 vi.mock('./SpanDetailSidePanel', () => mockDefault(() => <div data-testid="span-detail-side-panel-mock" />));
-vi.mock('../../common/VerticalResizer', () => ({
-  default: () => <div data-testid="vertical-resizer-mock" />,
-}));
 vi.mock('./TimelineHeaderRow', () =>
   mockDefault(props => (
     <div data-testid="timeline-header-row-mock" data-side-panel-label={props.sidePanelLabel}>
@@ -274,8 +271,6 @@ describe('<TraceTimelineViewer>', () => {
           expect(screen.queryByTestId('span-detail-side-panel-mock')).not.toBeInTheDocument();
         }
 
-        expect(screen.queryByTestId('vertical-resizer-mock')).not.toBeInTheDocument();
-
         // VirtualizedTraceView is always rendered.
         expect(screen.getByTestId('virtualized-trace-view-mock')).toBeInTheDocument();
       });
@@ -292,17 +287,6 @@ describe('<TraceTimelineViewer>', () => {
       render(<TraceTimelineViewerImpl {...props} />);
       expect(screen.getByTestId('span-detail-side-panel-mock')).toBeInTheDocument();
       expect(screen.getByTestId('virtualized-trace-view-mock')).toBeInTheDocument();
-    });
-
-    it('does not render a second body resizer when timeline bars are visible', () => {
-      render(<TraceTimelineViewerImpl {...props} />);
-      expect(screen.queryByTestId('vertical-resizer-mock')).not.toBeInTheDocument();
-    });
-
-    it('does not render a VerticalResizer when timeline bars are hidden', () => {
-      mockLayoutPrefsStore.timelineBarsVisible = false;
-      render(<TraceTimelineViewerImpl {...props} />);
-      expect(screen.queryByTestId('vertical-resizer-mock')).not.toBeInTheDocument();
     });
 
     it('calls setSidePanelWidth (Zustand + Redux) when the header width changes', () => {
