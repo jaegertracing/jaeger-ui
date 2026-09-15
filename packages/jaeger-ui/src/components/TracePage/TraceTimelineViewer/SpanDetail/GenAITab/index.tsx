@@ -437,6 +437,8 @@ function MessageBlock({
   formatOverride,
   onFormatChange,
   messageNumber,
+  isCollapsed,
+  onCollapsedChange,
 }: {
   message: GenAiMessage;
   // Remembered format for this message's attribute, seeding each part's initial view; null
@@ -444,8 +446,12 @@ function MessageBlock({
   formatOverride: MessageFormat | null;
   onFormatChange: (format: MessageFormat) => void;
   messageNumber: number;
+  // Folded state lives in ConversationDetails, which is the only place that can act on
+  // every message at once. A message still owns its own toggle; it just no longer owns
+  // the answer, so the section's Collapse all and this button cannot disagree.
+  isCollapsed: boolean;
+  onCollapsedChange: (isCollapsed: boolean) => void;
 }) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
   // Chosen view per part, and the sources the reader has asked to load. Both are held here
   // rather than in the rows, which unmount whenever a view switches away from Media:
   // without that, going to Plain text and back would ask again for an image that was on
@@ -487,7 +493,7 @@ function MessageBlock({
           className="GenAITab--messageToggle"
           aria-expanded={!isCollapsed}
           aria-label={`Message ${messageNumber} (${role})`}
-          onClick={() => setIsCollapsed(!isCollapsed)}
+          onClick={() => onCollapsedChange(!isCollapsed)}
         >
           {isCollapsed ? (
             <IoChevronForward className="GenAITab--messageToggleIcon" />
@@ -695,9 +701,46 @@ function ConversationDetails({
     });
   });
 
+  // Folded state for every message, keyed the same way the rows are. `messages` is rebuilt
+  // on every render, so this is seeded in a lazy initializer rather than an effect: an
+  // effect keyed on that array would refire on each new array identity and throw away
+  // whatever the reader had folded.
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(messages.map(({ key }) => [key, false]))
+  );
+
+  // Collapse all and Expand all are absolute: they write every message, so the section
+  // afterwards is entirely folded or entirely open rather than partly either.
+  const setAllCollapsed = (isCollapsed: boolean) =>
+    setCollapsed(Object.fromEntries(messages.map(({ key }) => [key, isCollapsed])));
+
   return (
     <div className="GenAITab--section">
-      <h3 className="GenAITab--sectionTitle">Conversation</h3>
+      <div className="GenAITab--sectionHeader">
+        <h3 className="GenAITab--sectionTitle">Conversation</h3>
+        {/* Acting on the section as a whole only means anything once there are two
+            messages to act on; below that the message's own toggle already is the pair. */}
+        {messages.length > 1 && (
+          <div className="GenAITab--sectionActions">
+            <button
+              type="button"
+              className="GenAITab--sectionAction"
+              aria-label="Collapse all messages"
+              onClick={() => setAllCollapsed(true)}
+            >
+              Collapse all
+            </button>
+            <button
+              type="button"
+              className="GenAITab--sectionAction"
+              aria-label="Expand all messages"
+              onClick={() => setAllCollapsed(false)}
+            >
+              Expand all
+            </button>
+          </div>
+        )}
+      </div>
       {messages.map(({ key, message, attributeKey }, i) => (
         <MessageBlock
           key={key}
@@ -705,6 +748,11 @@ function ConversationDetails({
           formatOverride={getFormatOverride(attributeKey)}
           onFormatChange={f => setFormat(attributeKey, f)}
           messageNumber={i + 1}
+          // A key absent from the record is a message that arrived after the record was
+          // built, which reads as expanded rather than as folded by something the reader
+          // never did.
+          isCollapsed={collapsed[key] ?? false}
+          onCollapsedChange={next => setCollapsed(current => ({ ...current, [key]: next }))}
         />
       ))}
     </div>
