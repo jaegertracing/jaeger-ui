@@ -230,3 +230,53 @@ export function filterPrunedSpanIDs(
   }
   return filtered.size > 0 ? filtered : null;
 }
+
+/**
+ * Returns the services safe to auto-prune: those with no GenAI span anywhere at or below
+ * them, since pruning removes a service's whole subtree (a plain gateway *above* an agent
+ * must stay visible even though it owns no GenAI span itself). Single O(n) pass over the
+ * pre-order DFS span list with a depth stack, propagating a "has GenAI descendant" flag to
+ * each parent frame on close, rather than an O(n*depth) ancestor walk per GenAI span.
+ */
+export function getServicesWithoutGenAIDescendants(spans: ReadonlyArray<IOtelSpan>): Set<string> {
+  const allServices = new Set<string>();
+  const servicesWithGenAIDescendant = new Set<string>();
+  const stack: Array<{ depth: number; serviceName: string; hasGenAI: boolean }> = [];
+
+  const closeFrame = () => {
+    const closed = stack.pop()!;
+    if (closed.hasGenAI) {
+      servicesWithGenAIDescendant.add(closed.serviceName);
+      if (stack.length) stack[stack.length - 1].hasGenAI = true;
+    }
+  };
+
+  for (const span of spans) {
+    const { depth } = span;
+    const serviceName = span.resource.serviceName;
+    allServices.add(serviceName);
+
+    while (stack.length && stack[stack.length - 1].depth >= depth) {
+      closeFrame();
+    }
+
+    const isGenAI = span.genAIKind !== undefined;
+    if (isGenAI) {
+      servicesWithGenAIDescendant.add(serviceName);
+      if (stack.length) stack[stack.length - 1].hasGenAI = true;
+    }
+
+    stack.push({ depth, serviceName, hasGenAI: isGenAI });
+  }
+  while (stack.length) {
+    closeFrame();
+  }
+
+  const withoutGenAIDescendants = new Set<string>();
+  for (const serviceName of allServices) {
+    if (!servicesWithGenAIDescendant.has(serviceName)) {
+      withoutGenAIDescendants.add(serviceName);
+    }
+  }
+  return withoutGenAIDescendants;
+}

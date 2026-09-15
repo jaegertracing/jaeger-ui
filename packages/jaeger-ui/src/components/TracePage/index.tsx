@@ -18,6 +18,7 @@ import ArchiveNotifier from './ArchiveNotifier';
 import { useArchiveStore } from '../../stores/archive-store';
 import { useEmbeddedState } from '../../stores/embedded-store';
 import {
+  selectEffectivePrunedServices,
   setDetailPanelMode as setDetailPanelModeZustand,
   useLayoutPrefsStore,
   useTraceTimelineStore,
@@ -173,7 +174,7 @@ export function TracePageImpl(props: TProps) {
   const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
   const zustandSetTimelineBarsVisible = useLayoutPrefsStore(s => s.setTimelineBarsVisible);
   const zustandFocusUiFindMatches = useTraceTimelineStore(s => s.focusUiFindMatches);
-  const prunedServices = useTraceTimelineStore(s => s.prunedServices);
+  const prunedServices = useTraceTimelineStore(selectEffectivePrunedServices);
 
   const setDetailPanelMode = useCallback(
     (mode: SpanDetailPanelMode) => {

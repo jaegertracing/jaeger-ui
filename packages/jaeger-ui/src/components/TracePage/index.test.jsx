@@ -155,6 +155,9 @@ vi.mock('../../hooks/useTraceLoading', () => ({
 vi.mock('./TraceTimelineViewer/store', () => ({
   useLayoutPrefsStore: jest.fn(selector => selector(mockLayoutPrefsStore)),
   useTraceTimelineStore: jest.fn(selector => selector(mockTraceTimelineStore)),
+  // Mirrors the real selector's "hide non-GenAI services off" branch - this file doesn't
+  // exercise the union itself, that's covered by store.test.ts.
+  selectEffectivePrunedServices: state => state.prunedServices,
   setDetailPanelMode: (...args) => mockSetDetailPanelMode(...args),
   SPAN_NAME_COLUMN_WIDTH_MIN: 0.15,
   SPAN_NAME_COLUMN_WIDTH_MAX: 0.85,
