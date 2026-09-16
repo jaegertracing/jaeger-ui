@@ -178,6 +178,47 @@ describe('fetchTrace', () => {
     expect(err.httpStatus).toBe(status);
     expect(err.httpStatusText).toBe(statusText);
   });
+
+  // Asking for a trace ID that does not exist answers 200 with an empty `data`
+  // array and an `errors` entry that has no `code`. Left as a success, the empty
+  // body reaches the caller and fails there as an opaque internal error.
+  it('fetchTrace() throws when a 200 carries errors and no data', async () => {
+    const msg = 'trace not found';
+    const body = {
+      data: [],
+      errors: [{ msg, traceID: 'trace-id' }],
+      limit: 0,
+      offset: 0,
+      total: 0,
+    };
+
+    fetchMock.mockReturnValue(
+      Promise.resolve({
+        status: 200,
+        statusText: 'OK',
+        json: () => Promise.resolve(body),
+      })
+    );
+    const err = await JaegerAPI.fetchTrace('trace-id').catch(e => e);
+    expect(err).toBeInstanceOf(Error);
+    expect(err.message).toMatch(msg);
+    expect(err.httpStatus).toBe(200);
+    expect(err.httpBody).toMatch(msg);
+  });
+
+  it('fetchTrace() resolves a 200 that carries both data and errors', async () => {
+    const body = { data: generatedTraces, errors: [{ msg: 'a partial failure' }] };
+
+    fetchMock.mockReturnValue(
+      Promise.resolve({
+        status: 200,
+        statusText: 'OK',
+        json: () => Promise.resolve(body),
+      })
+    );
+    const resp = await JaegerAPI.fetchTrace('trace-id');
+    expect(resp.data).toBe(generatedTraces);
+  });
 });
 
 describe('getMessageFromError()', () => {
@@ -191,6 +232,12 @@ describe('getMessageFromError()', () => {
     it('returns`$code - $msg` when code is novel', () => {
       const rv = getMessageFromError(data, -1);
       expect(rv).toBe(`${data.code} - ${data.msg}`);
+    });
+  });
+  describe('{ msg } error data without a code', () => {
+    it('returns the message rather than the stringified object', () => {
+      const data = { msg: 'trace not found', traceID: 'abc' };
+      expect(getMessageFromError(data, 200)).toBe(data.msg);
     });
   });
   describe('other data formats', () => {
