@@ -11,100 +11,19 @@ import {
   traceIdHex,
   spanIdHex,
 } from './schemas';
+import capture from './v3-trace-local-2.21.0.json';
 
-const validEnvelope = {
-  result: {
-    resourceSpans: [
-      {
-        resource: { attributes: [{ key: 'service.name', value: { stringValue: 'lfx-wire-probe' } }] },
-        scopeSpans: [
-          {
-            scope: { name: 'lfx-proposal', version: '1.0.0' },
-            spans: [
-              {
-                traceId: '0123456789abcdef0123456789abcdef',
-                spanId: '0123456789abcdef',
-                name: 'root-with-any-values',
-                startTimeUnixNano: '1786934400000000000',
-                endTimeUnixNano: '1786934400001000000',
-                attributes: [
-                  {
-                    key: 'array',
-                    value: {
-                      arrayValue: {
-                        values: [
-                          { stringValue: 'first' },
-                          { boolValue: false },
-                          { intValue: '9223372036854775807' },
-                        ],
-                      },
-                    },
-                  },
-                  { key: 'bytes', value: { bytesValue: 'AQID' } },
-                  { key: 'empty', value: { stringValue: '' } },
-                  { key: 'false', value: { boolValue: false } },
-                  { key: 'float', value: { doubleValue: 1.5 } },
-                  { key: 'integer', value: { intValue: '0' } },
-                  {
-                    key: 'nested',
-                    value: {
-                      kvlistValue: {
-                        values: [
-                          { key: 'child', value: { arrayValue: { values: [{ stringValue: 'value' }] } } },
-                        ],
-                      },
-                    },
-                  },
-                ],
-                events: [
-                  {
-                    timeUnixNano: '1786934400000500000',
-                    name: 'retry',
-                    attributes: [{ key: 'attempt', value: { intValue: '1' } }],
-                  },
-                ],
-                links: [
-                  {
-                    traceId: 'fedcba9876543210fedcba9876543210',
-                    spanId: 'fedcba9876543210',
-                    traceState: 'vendor=example',
-                    flags: 1,
-                  },
-                ],
-                status: { message: 'probe error status', code: 2 },
-              },
-              {
-                traceId: '0123456789abcdef0123456789abcdef',
-                spanId: '1111111111111111',
-                parentSpanId: '0123456789abcdef',
-                name: 'unset-kind-and-status',
-                startTimeUnixNano: '1786934400000100000',
-                endTimeUnixNano: '1786934400000200000',
-                status: {},
-              },
-              {
-                traceId: '0123456789abcdef0123456789abcdef',
-                spanId: '2222222222222222',
-                parentSpanId: '0123456789abcdef',
-                name: 'numeric-kind-and-status',
-                kind: 2,
-                startTimeUnixNano: '1786934400000200000',
-                endTimeUnixNano: '1786934400000300000',
-                status: { code: 1 },
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  },
-} as const;
+// The 2.21.0 capture is the valid case, aliased so the references below read unchanged.
+const validEnvelope = capture;
 
 describe('GetTrace wire contract', () => {
-  it('accepts the captured v3-trace-local-2.13.0 envelope', () => {
+  it('accepts the captured v3-trace-local-2.21.0 envelope', () => {
     const parsed = GetTraceResponseSchema.parse(validEnvelope);
     expect(parsed.result.resourceSpans).toHaveLength(1);
-    expect(parsed.result.resourceSpans![0].scopeSpans![0].spans).toHaveLength(3);
+    const spans = parsed.result.resourceSpans![0].scopeSpans![0].spans!;
+    expect(spans).toHaveLength(3);
+    expect(spans[0].traceId).toBe('0123456789abcdef0123456789abcdef');
+    expect(spans[0].spanId).toBe('0123456789abcdef');
   });
 
   it('preserves falsy AnyValues: empty string, false, zero, max int64', () => {

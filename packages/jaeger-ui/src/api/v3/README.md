@@ -47,6 +47,19 @@ This file is the source of truth for the full API schema. It is automatically pr
 
 As a rule, post-processing the generated file is a liability: new requirements belong in `jaeger-idl`, or as refinements layered in `schemas.ts` — not as regexes over generated text.
 
+### `v3-trace-local-2.21.0.json`
+
+A real `GET /api/v3/traces/{trace_id}` response, vendored so the contract tests parse genuine backend output instead of a hand-written imitation. It is the single valid case the `*.trace-contract.test.ts` files build every malformed case from, so drift between the server and the schemas surfaces as a test failure.
+
+Provenance:
+
+- Server: `jaegertracing/jaeger:2.21.0`, run locally with in-memory storage.
+- Request: `GET /api/v3/traces/0123456789abcdef0123456789abcdef`.
+- Response: 1670 bytes of `text/plain; charset=utf-8`, stored here pretty-printed. Parsed content is unchanged from the earlier 2.13.0 capture of the same probe.
+- Payload under test: a 3-span trace submitted via OTLP covering all seven `AnyValue` variants, plus an omitted `kind`, an empty `status` object, a numeric `kind`/`status.code`, nested `kvlistValue`, and one span carrying `events` and `links`.
+
+To refresh it, submit the same probe to a local collector and re-capture the response. Keep the span names and IDs stable — the tests index spans by position and assert the IDs.
+
 ## Schema Strategy
 
 We use **Automated Schema Generation with Strict Validation**:
