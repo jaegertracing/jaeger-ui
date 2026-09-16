@@ -536,6 +536,19 @@ describe('<TracePage>', () => {
     clientHeightSpy.mockRestore();
   });
 
+  it('header count is 0 in graph view when uiFind is empty, whatever TraceGraph reports', () => {
+    const clientHeightSpy = jest.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(100);
+    render(<TracePage {...defaultProps} />);
+
+    act(() => {
+      capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceGraph);
+    });
+
+    expect(capturedHeaderProps.resultCount).toBe(0);
+
+    clientHeightSpy.mockRestore();
+  });
+
   describe('TracePageHeader props', () => {
     it('canCollapse is true if !embedded', () => {
       renderWithRouter(<TracePage {...defaultProps} />);
