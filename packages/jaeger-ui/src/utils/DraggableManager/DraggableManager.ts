@@ -1,7 +1,6 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import _get from 'lodash/get';
 import type React from 'react';
 
 import EUpdateTypes from './EUpdateTypes';
@@ -100,7 +99,7 @@ export default class DraggableManager {
   _stopDragging() {
     window.removeEventListener('mousemove', this._handleDragEvent);
     window.removeEventListener('mouseup', this._handleDragEvent);
-    const style = _get(document, 'body.style');
+    const style = document.body?.style;
     if (style) {
       // The CSS name, not the JS one: removeProperty ignores a camelCase name, so this
       // used to remove nothing and left the whole document unselectable after a drag.
@@ -176,7 +175,7 @@ export default class DraggableManager {
       }
       window.addEventListener('mousemove', this._handleDragEvent);
       window.addEventListener('mouseup', this._handleDragEvent);
-      const style = _get(document, 'body.style');
+      const style = document.body?.style;
       if (style) {
         style.userSelect = 'none';
       }
