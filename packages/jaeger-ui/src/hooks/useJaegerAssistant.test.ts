@@ -23,6 +23,9 @@ const baseConfig = {
   useOpenTelemetryTerms: false,
   menu: [],
   backendCapabilities: { aiAssistant: false },
+  api: {
+    requestTimeoutMs: 10000,
+  },
 };
 
 describe('useJaegerAssistant', () => {
