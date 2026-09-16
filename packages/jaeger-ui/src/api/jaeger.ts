@@ -70,12 +70,12 @@ function getJSON(url: string, options: FetchOptions = {}): Promise<any> {
   }
 
   return fetch(`${url}${queryStr}`, init as RequestInit).then((response: Response) => {
-    const makeError = (rawMessage: string, bodyText: string, bodyTextFmt: string | null): IApiError => {
+    const makeError = (rawMessage: string, body: string): IApiError => {
       const errorMessage = typeof rawMessage === 'string' ? rawMessage.trim() : rawMessage;
       const error: IApiError = new Error(`HTTP Error: ${errorMessage}`);
       error.httpStatus = response.status;
       error.httpStatusText = response.statusText;
-      error.httpBody = bodyTextFmt || bodyText;
+      error.httpBody = body;
       error.httpUrl = url;
       error.httpQuery = typeof query === 'string' ? query : queryString.stringify(query || {});
       return error;
@@ -85,7 +85,7 @@ function getJSON(url: string, options: FetchOptions = {}): Promise<any> {
       return response.json().then((body: unknown) => {
         if (isErrorOnlyPayload(body)) {
           const errorMessage = body.errors.map(err => getMessageFromError(err, response.status)).join('; ');
-          throw makeError(errorMessage, JSON.stringify(body), JSON.stringify(body, null, 2));
+          throw makeError(errorMessage, JSON.stringify(body, null, 2));
         }
         return body;
       });
@@ -106,7 +106,7 @@ function getJSON(url: string, options: FetchOptions = {}): Promise<any> {
       } else {
         errorMessage = bodyText || `${response.status} - ${response.statusText}`;
       }
-      throw makeError(errorMessage, bodyText, bodyTextFmt);
+      throw makeError(errorMessage, bodyTextFmt ?? bodyText);
     });
   });
 }
