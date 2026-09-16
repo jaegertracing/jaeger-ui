@@ -521,32 +521,39 @@ describe('<TracePage>', () => {
     expect(track.trackRange).toHaveBeenCalledWith('kbd', expect.any(Array), [0, 1]);
   });
 
-  it('header count follows the matches reported by TraceGraph', () => {
-    // TracePage renders no view until the header has a measured height, which jsdom reports as 0.
-    const clientHeightSpy = jest.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(100);
-    render(<TracePage {...defaultProps} uiFind="some-search" />);
+  describe('graph view header count', () => {
+    let clientHeightSpy;
 
-    act(() => {
-      capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceGraph);
+    beforeEach(() => {
+      // TracePage renders no view until the header has a measured height, which jsdom reports as 0.
+      clientHeightSpy = jest.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(100);
     });
 
-    expect(capturedGraphProps.uiFind).toBe('some-search');
-    expect(capturedHeaderProps.resultCount).toBe(1);
-
-    clientHeightSpy.mockRestore();
-  });
-
-  it('header count is 0 in graph view when uiFind is empty, whatever TraceGraph reports', () => {
-    const clientHeightSpy = jest.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(100);
-    render(<TracePage {...defaultProps} />);
-
-    act(() => {
-      capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceGraph);
+    afterEach(() => {
+      clientHeightSpy.mockRestore();
     });
 
-    expect(capturedHeaderProps.resultCount).toBe(0);
+    it('follows the matches reported by TraceGraph', () => {
+      render(<TracePage {...defaultProps} uiFind="some-search" />);
 
-    clientHeightSpy.mockRestore();
+      act(() => {
+        capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceGraph);
+      });
+
+      expect(capturedGraphProps.uiFind).toBe('some-search');
+      expect(capturedHeaderProps.resultCount).toBe(1);
+    });
+
+    it.each([undefined, ''])('is 0 when uiFind is %j, whatever TraceGraph reports', uiFind => {
+      render(<TracePage {...defaultProps} uiFind={uiFind} />);
+
+      act(() => {
+        capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceGraph);
+      });
+
+      expect(screen.getByTestId('mock-trace-graph')).toBeInTheDocument();
+      expect(capturedHeaderProps.resultCount).toBe(0);
+    });
   });
 
   describe('TracePageHeader props', () => {
