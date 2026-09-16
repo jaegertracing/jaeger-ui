@@ -197,31 +197,26 @@ describe('<TraceGraph>', () => {
       'service1\top1\vservice1\top6\vservice1\top7\t__LEAF__',
     ];
 
-    it('calls onSearchResults with null when uiFind is not provided', () => {
-      const onSearchResults = vi.fn();
-      render(
-        <TraceGraph {...props} uiFind={undefined} useOtelTerms={false} onSearchResults={onSearchResults} />
-      );
+    const lastReported = () => props.onSearchResults.mock.lastCall[0];
 
-      expect(onSearchResults).toHaveBeenCalledWith(null);
+    it('reports null when uiFind is not provided', () => {
+      render(<TraceGraph {...props} useOtelTerms={false} />);
+
+      expect(lastReported()).toBeNull();
     });
 
-    it('calls onSearchResults with the matching vertex keys when uiFind is provided', () => {
-      const onSearchResults = vi.fn();
-      render(
-        <TraceGraph {...props} uiFind="service1" useOtelTerms={false} onSearchResults={onSearchResults} />
-      );
+    it('reports the matching vertex keys when uiFind is provided', () => {
+      render(<TraceGraph {...props} uiFind="service1" useOtelTerms={false} />);
 
-      const lastCall = onSearchResults.mock.calls[onSearchResults.mock.calls.length - 1][0];
+      const lastCall = lastReported();
       expect(lastCall).toBeInstanceOf(Set);
       expect([...lastCall].sort()).toEqual([...service1Keys].sort());
     });
 
     it('excludes vertices without matching members', () => {
-      const onSearchResults = vi.fn();
-      render(<TraceGraph {...props} uiFind="op1" useOtelTerms={false} onSearchResults={onSearchResults} />);
+      render(<TraceGraph {...props} uiFind="op1" useOtelTerms={false} />);
 
-      const lastCall = onSearchResults.mock.calls[onSearchResults.mock.calls.length - 1][0];
+      const lastCall = lastReported();
       expect([...lastCall].sort()).toEqual(
         ['service1\top1', 'service1\top1\vservice1\top3\vservice2\top1'].sort()
       );

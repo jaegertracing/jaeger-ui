@@ -521,7 +521,8 @@ describe('<TracePage>', () => {
     expect(track.trackRange).toHaveBeenCalledWith('kbd', expect.any(Array), [0, 1]);
   });
 
-  it('uses matches reported by TraceGraph via onSearchResults for findCount when viewType is TraceGraph', () => {
+  it('header count follows the matches reported by TraceGraph', () => {
+    // TracePage renders no view until the header has a measured height, which jsdom reports as 0.
     const clientHeightSpy = jest.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(100);
     render(<TracePage {...defaultProps} uiFind="some-search" />);
 
@@ -530,7 +531,6 @@ describe('<TracePage>', () => {
     });
 
     expect(capturedGraphProps.uiFind).toBe('some-search');
-    expect(capturedGraphProps.onSearchResults).toEqual(expect.any(Function));
     expect(capturedHeaderProps.resultCount).toBe(1);
 
     clientHeightSpy.mockRestore();

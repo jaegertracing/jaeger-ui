@@ -141,7 +141,7 @@ function TraceGraph({ headerHeight, trace, uiFind, onSearchResults, traceGraphCo
 
   const ev = React.useMemo(() => calculateTraceDagEV(trace), [trace]);
   const uiFindVertexKeys = React.useMemo(() => {
-    return uiFind && ev ? getUiFindVertexKeys(uiFind, ev.vertices) : null;
+    return uiFind ? getUiFindVertexKeys(uiFind, ev.vertices) : null;
   }, [uiFind, ev]);
 
   React.useEffect(() => {

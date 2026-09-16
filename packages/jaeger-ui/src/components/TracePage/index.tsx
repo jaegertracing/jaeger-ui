@@ -201,8 +201,9 @@ export function TracePageImpl(props: TProps) {
   const [viewRange, setViewRange] = useState<IViewRange>({ time: { current: [0, 1] } });
   const [criticalPathErrorDismissed, setCriticalPathErrorDismissed] = useState(false);
 
-  // Matches reported by TraceGraph, which owns its DAG + vertex-key matching and pushes
-  // results up via onSearchResults. Every other view uses the parent-computed span matches below.
+  // TraceGraph owns its search (DAG + vertex-key matching) and reports matches through
+  // onSearchResults. Every other view uses the span matches computed below in this component,
+  // which keeps the header count working for views without search wiring (flamegraph, logs).
   const [findMatches, setFindMatches] = useState<Set<string> | TNil>(null);
 
   // Read the trace's own verdict rather than re-deriving it here. It is computed
@@ -382,9 +383,6 @@ export function TracePageImpl(props: TProps) {
     return <LoadingIndicator className="u-mt-vast" centered />;
   }
 
-  // TraceGraph owns its search (DAG + vertex-key matching) and reports matches via
-  // onSearchResults. Every other view shares the parent-computed span matches, which also
-  // keeps the header count working for views without search wiring (flamegraph, logs).
   let findCount = 0;
   let spanFindMatches: Set<string> | null | undefined;
   if (viewType === ETraceViewType.TraceGraph) {
