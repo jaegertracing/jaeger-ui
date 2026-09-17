@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import TimelineHeaderRow from './TimelineHeaderRow';
@@ -20,12 +20,6 @@ vi.mock('../TimelineRow', () => {
     default: TimelineRowMock,
   };
 });
-
-vi.mock('../../../common/VerticalResizer', () => ({
-  default: ({ position, min, max }) => (
-    <div data-testid="vertical-resizer" data-position={position} data-min={min} data-max={max} />
-  ),
-}));
 
 vi.mock('./TimelineViewingLayer', () => ({
   default: ({ boundsInvalidator, viewRangeTime }) => (
@@ -62,6 +56,7 @@ describe('<TimelineHeaderRow>', () => {
     onCollapseAll: jest.fn(),
     onCollapseOne: jest.fn(),
     onColummWidthChange: jest.fn(),
+    onSidePanelWidthChange: jest.fn(),
     onExpandAll: jest.fn(),
     onExpandOne: jest.fn(),
     resizerMax: 0.85,
@@ -122,9 +117,7 @@ describe('<TimelineHeaderRow>', () => {
     const resizer = screen.getByTestId('vertical-resizer');
 
     expect(resizer).toBeInTheDocument();
-    expect(resizer).toHaveAttribute('data-position', nameColumnWidth.toString());
-    expect(resizer).toHaveAttribute('data-min', '0.15');
-    expect(resizer).toHaveAttribute('data-max', '0.85');
+    expect(resizer.querySelector('.VerticalResizer--dragger')).toHaveStyle({ left: '25%' });
   });
 
   describe('side panel visible', () => {
@@ -142,16 +135,118 @@ describe('<TimelineHeaderRow>', () => {
       expect(screen.getByText('Span Details')).toBeInTheDocument();
     });
 
+    it.each([true, false])('places dividers after the side-panel header with bars visible=%s', visible => {
+      const { container } = render(<TimelineHeaderRow {...sidePanelProps} timelineBarsVisible={visible} />);
+      const cell = container.querySelector('.TimelineHeaderRow--sidePanelCell');
+      for (const resizer of screen.getAllByTestId('vertical-resizer')) {
+        expect(cell.compareDocumentPosition(resizer) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      }
+    });
+
     it('renders a custom side panel label when provided', () => {
       render(<TimelineHeaderRow {...sidePanelProps} sidePanelLabel="Trace Root" />);
       expect(screen.getByText('Trace Root')).toBeInTheDocument();
     });
 
-    it('sets resizer max to 1 - sidePanelWidth', () => {
-      render(<TimelineHeaderRow {...sidePanelProps} />);
-      const resizer = screen.getByTestId('vertical-resizer');
-      expect(resizer).toHaveAttribute('data-max', String(1 - sidePanelWidth));
+    it.each([0.3, 0.56])('places the side-panel divider on the column boundary at width %s', width => {
+      render(<TimelineHeaderRow {...sidePanelProps} sidePanelWidth={width} />);
+      const resizers = screen.getAllByTestId('vertical-resizer');
+      expect(resizers).toHaveLength(2);
+      expect(resizers[0]).not.toHaveClass('is-flipped');
+      expect(resizers[1]).not.toHaveClass('is-flipped');
+      expect(parseFloat(resizers[1].querySelector('.VerticalResizer--dragger').style.left)).toBeCloseTo(
+        (1 - width) * 100
+      );
     });
+
+    it('keeps an exact-boundary drag active across a header rerender', () => {
+      const onSidePanelWidthChange = vi.fn();
+      const { rerender } = render(
+        <TimelineHeaderRow {...sidePanelProps} onSidePanelWidthChange={onSidePanelWidthChange} />
+      );
+      const resizer = screen.getAllByTestId('vertical-resizer')[1];
+      resizer.getBoundingClientRect = () => ({ left: 0, width: 1000 });
+      const dragger = resizer.querySelector('.VerticalResizer--dragger');
+      fireEvent.mouseDown(dragger, { clientX: 700, button: 0 });
+      rerender(<TimelineHeaderRow {...sidePanelProps} onSidePanelWidthChange={onSidePanelWidthChange} />);
+      fireEvent.mouseMove(window, { clientX: 600 });
+      expect(resizer).toHaveClass('isDraggingLeft');
+      fireEvent.mouseUp(window, { clientX: 600 });
+      expect(onSidePanelWidthChange).toHaveBeenCalledTimes(1);
+      expect(onSidePanelWidthChange.mock.calls[0][0]).toBeCloseTo(0.4);
+    });
+
+    it.each([
+      [0.25, 0.6, 0.4],
+      [0.25, 0.1, 0.7],
+      [0.4, 0.1, 0.55],
+      [0.4, 0.95, 0.2],
+    ])(
+      'drags with name width %s to boundary %s and commits panel width %s',
+      (nameWidth, target, expected) => {
+        const onSidePanelWidthChange = vi.fn();
+        const { rerender } = render(
+          <TimelineHeaderRow
+            {...sidePanelProps}
+            nameColumnWidth={nameWidth}
+            sidePanelWidth={0.3}
+            onSidePanelWidthChange={onSidePanelWidthChange}
+          />
+        );
+        const resizer = screen.getAllByTestId('vertical-resizer')[1];
+        resizer.getBoundingClientRect = () => ({ left: 120, width: 1000 });
+        const dragger = resizer.querySelector('.VerticalResizer--dragger');
+        fireEvent.mouseDown(dragger, { clientX: 820, button: 0 });
+        fireEvent.mouseMove(window, { clientX: 120 + target * 1000 });
+        expect(onSidePanelWidthChange).not.toHaveBeenCalled();
+        const boundary = 1 - expected;
+        expect(parseFloat(dragger.style.left)).toBeCloseTo(Math.min(0.7, boundary) * 100);
+        fireEvent.mouseUp(window, { clientX: 120 + target * 1000 });
+        expect(onSidePanelWidthChange).toHaveBeenCalledTimes(1);
+        expect(onSidePanelWidthChange.mock.calls[0][0]).toBeCloseTo(expected);
+        rerender(
+          <TimelineHeaderRow
+            {...sidePanelProps}
+            nameColumnWidth={nameWidth}
+            sidePanelWidth={expected}
+            onSidePanelWidthChange={onSidePanelWidthChange}
+          />
+        );
+        expect(parseFloat(dragger.style.left)).toBeCloseTo(boundary * 100);
+      }
+    );
+
+    it.each([
+      [true, 0.3, 0.65],
+      [false, 0.75, 0.8],
+    ])(
+      'keeps name-column dragging active with bars visible=%s',
+      (timelineBarsVisible, sidePanelWidth, resizerMax) => {
+        const onColummWidthChange = vi.fn();
+        render(
+          <TimelineHeaderRow
+            {...sidePanelProps}
+            timelineBarsVisible={timelineBarsVisible}
+            sidePanelWidth={sidePanelWidth}
+            resizerMax={resizerMax}
+            onColummWidthChange={onColummWidthChange}
+          />
+        );
+        const resizer = screen.getAllByTestId('vertical-resizer')[0];
+        resizer.getBoundingClientRect = () => ({ left: 120, width: 1000 });
+        const dragger = resizer.querySelector('.VerticalResizer--dragger');
+        for (const [target, expected] of [
+          [0, 0.15],
+          [0.4, 0.4],
+          [1, resizerMax],
+        ]) {
+          fireEvent.mouseDown(dragger, { clientX: 370, button: 0 });
+          fireEvent.mouseMove(window, { clientX: 120 + target * 1000 });
+          fireEvent.mouseUp(window, { clientX: 120 + target * 1000 });
+          expect(onColummWidthChange).toHaveBeenLastCalledWith(expected);
+        }
+      }
+    );
   });
 
   it('renders the TimelineCollapser', () => {
@@ -189,16 +284,17 @@ describe('<TimelineHeaderRow>', () => {
       const treeOnlySidePanelProps = {
         ...barsHiddenProps,
         sidePanelVisible: true,
-        sidePanelWidth: 0.3,
+        nameColumnWidth: 0.25,
+        sidePanelWidth: 0.75,
         sidePanelLabel: 'Span Details',
         resizerMax: 0.8,
       };
 
-      it('renders the VerticalResizer', () => {
+      it('renders only the name-column resizer (the side-panel divider is gated on bars)', () => {
         render(<TimelineHeaderRow {...treeOnlySidePanelProps} />);
-        const resizer = screen.getByTestId('vertical-resizer');
-        expect(resizer).toBeInTheDocument();
-        expect(resizer).toHaveAttribute('data-max', '0.8');
+        const resizers = screen.getAllByTestId('vertical-resizer');
+        expect(resizers).toHaveLength(1);
+        expect(resizers[0]).not.toHaveClass('is-flipped');
       });
     });
   });

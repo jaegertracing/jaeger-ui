@@ -117,7 +117,10 @@ describe('TraceTimelineViewer/duck', () => {
     let focusUiFindMatchesStore;
     let state;
 
-    beforeAll(() => {
+    // Dispatching per test rather than once for the suite, because Vitest clears
+    // mock call history before each test and the assertions below read the calls
+    // the dispatch makes.
+    beforeEach(() => {
       filterSpansSpy.mockReturnValue(uiFindMatches);
       spanAncestorIdsSpy.mockImplementation(({ spanID }) => uiFindAncestorIdsMockSchema[spanID]);
       focusUiFindMatchesStore = createStore(reducer, newInitialState());

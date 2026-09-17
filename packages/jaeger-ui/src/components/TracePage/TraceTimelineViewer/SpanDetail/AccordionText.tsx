@@ -8,6 +8,7 @@ import TextList from './TextList';
 import { TNil } from '../../../../types';
 
 import './AccordionText.css';
+import accordionToggle from './accordionToggle';
 
 type AccordionTextProps = {
   className?: string | TNil;
@@ -40,7 +41,7 @@ export default function AccordionText({
     arrow = isOpen ? <IoChevronDown className={iconCls} /> : <IoChevronForward className={iconCls} />;
     headerProps = {
       'aria-checked': isOpen,
-      onClick: isEmpty ? null : onToggle,
+      onClick: isEmpty ? null : accordionToggle(onToggle),
       role: 'switch',
     };
   }
