@@ -6,15 +6,49 @@ description: 'Setup Node.js with a pinned pnpm and install dependencies'
 runs:
   using: 'composite'
   steps:
-    # pnpm must be installed before setup-node so that `cache: pnpm` can locate
-    # the pnpm store. The pnpm version is read from the "packageManager" field
-    # in package.json, keeping it deterministic.
-    - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6
     - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
       with:
-        cache: pnpm
         node-version-file: 'package.json'
-    - run: node --version && pnpm --version
+
+    # Keyed on the pinned pnpm version rather than the whole file, so a dependency
+    # bump does not throw away a perfectly good pnpm.
+    - name: Read the pinned pnpm version
+      id: pnpm-version
       shell: bash
+      run: echo "value=$(node -p 'require("./package.json").packageManager')" >> "$GITHUB_OUTPUT"
+
+    # Restored before pnpm runs for the first time, which is when corepack fetches it.
+    - name: Cache the pnpm binary
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.cache/node/corepack
+        key: corepack-${{ runner.os }}-${{ steps.pnpm-version.outputs.value }}
+
+    # corepack ships with Node, so it provisions the version pinned in the
+    # "packageManager" field without installing anything from the npm registry.
+    # The Dockerfile and the local setup in CLAUDE.md get pnpm the same way.
+    - name: Activate pnpm
+      shell: bash
+      env:
+        COREPACK_ENABLE_DOWNLOAD_PROMPT: 0
+      run: |
+        corepack enable pnpm
+        node --version && pnpm --version
+
+    # setup-node's own `cache: pnpm` cannot be used here: it looks for the pnpm
+    # store before it runs, while corepack only exists once it has installed Node.
+    - name: Locate the pnpm store
+      id: pnpm-store
+      shell: bash
+      run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+    - name: Cache the pnpm store
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ steps.pnpm-store.outputs.path }}
+        key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+        restore-keys: |
+          pnpm-store-${{ runner.os }}-
+
     - run: pnpm install --frozen-lockfile
       shell: bash

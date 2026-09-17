@@ -68,17 +68,15 @@ vi.mock('./spanPills', () => ({
 }));
 vi.mock('./VirtualizedTraceView', () => mockDefault(() => <div data-testid="virtualized-trace-view-mock" />));
 vi.mock('./SpanDetailSidePanel', () => mockDefault(() => <div data-testid="span-detail-side-panel-mock" />));
-vi.mock('../../common/VerticalResizer', () => ({
-  default: ({ onChange }) => (
-    <div data-testid="vertical-resizer-mock">
-      <button data-testid="vertical-resizer-change" type="button" onClick={() => onChange && onChange(0.7)} />
-    </div>
-  ),
-}));
 vi.mock('./TimelineHeaderRow', () =>
   mockDefault(props => (
     <div data-testid="timeline-header-row-mock" data-side-panel-label={props.sidePanelLabel}>
       {props.serviceFilterNode}
+      <button
+        data-testid="header-side-panel-change"
+        type="button"
+        onClick={() => props.onSidePanelWidthChange(0.3)}
+      />
       <button data-testid="collapse-all-button" type="button" onClick={props.onCollapseAll}>
         Collapse All
       </button>
@@ -178,6 +176,34 @@ describe('<TraceTimelineViewer>', () => {
     expect(screen.getByTestId('timeline-header-row-mock').dataset.sidePanelLabel).toBe('Trace Root');
   });
 
+  it('realigns the side panel when the page header changes height', () => {
+    mockLayoutPrefsStore.detailPanelMode = 'sidepanel';
+
+    // Stands in for the padding TracePage puts above this view: the layout container sits at the
+    // page header's height, which grows by the minimap when the timeline becomes the active view.
+    let layoutTop = 80;
+    const rectSpy = jest
+      .spyOn(Element.prototype, 'getBoundingClientRect')
+      .mockImplementation(() => ({ top: layoutTop, bottom: 0, left: 0, right: 0, height: 0, width: 0 }));
+
+    try {
+      const { container, rerender } = render(<TraceTimelineViewerImpl {...props} pageHeaderHeight={80} />);
+      const panel = container.querySelector('.TraceTimelineViewer--sidePanel');
+      // The header row height comes from the CSS variable, so the panel offsets the measured
+      // container top by it rather than by a number known to JS.
+      expect(panel.style.top).toBe('calc(80px + var(--timeline-header-row-height))');
+      expect(panel.style.height).toBe('calc(100vh - 80px - var(--timeline-header-row-height))');
+
+      layoutTop = 165;
+      rerender(<TraceTimelineViewerImpl {...props} pageHeaderHeight={165} />);
+
+      expect(panel.style.top).toBe('calc(165px + var(--timeline-header-row-height))');
+      expect(panel.style.height).toBe('calc(100vh - 165px - var(--timeline-header-row-height))');
+    } finally {
+      rectSpy.mockRestore();
+    }
+  });
+
   it('sets up actions', () => {
     render(<TraceTimelineViewerImpl {...props} />);
 
@@ -238,18 +264,11 @@ describe('<TraceTimelineViewer>', () => {
         render(<TraceTimelineViewerImpl {...props} />);
 
         const sidePanelActive = detailPanelMode === 'sidepanel';
-        const resizerExpected = sidePanelActive && timelineBarsVisible;
 
         if (sidePanelActive) {
           expect(screen.getByTestId('span-detail-side-panel-mock')).toBeInTheDocument();
         } else {
           expect(screen.queryByTestId('span-detail-side-panel-mock')).not.toBeInTheDocument();
-        }
-
-        if (resizerExpected) {
-          expect(screen.getByTestId('vertical-resizer-mock')).toBeInTheDocument();
-        } else {
-          expect(screen.queryByTestId('vertical-resizer-mock')).not.toBeInTheDocument();
         }
 
         // VirtualizedTraceView is always rendered.
@@ -270,21 +289,9 @@ describe('<TraceTimelineViewer>', () => {
       expect(screen.getByTestId('virtualized-trace-view-mock')).toBeInTheDocument();
     });
 
-    it('renders a VerticalResizer between main and side panel when timeline bars are visible', () => {
+    it('calls setSidePanelWidth (Zustand + Redux) when the header width changes', () => {
       render(<TraceTimelineViewerImpl {...props} />);
-      expect(screen.getByTestId('vertical-resizer-mock')).toBeInTheDocument();
-    });
-
-    it('does not render a VerticalResizer when timeline bars are hidden', () => {
-      mockLayoutPrefsStore.timelineBarsVisible = false;
-      render(<TraceTimelineViewerImpl {...props} />);
-      expect(screen.queryByTestId('vertical-resizer-mock')).not.toBeInTheDocument();
-    });
-
-    it('calls setSidePanelWidth (Zustand + Redux) when the VerticalResizer onChange fires', () => {
-      render(<TraceTimelineViewerImpl {...props} />);
-      fireEvent.click(screen.getByTestId('vertical-resizer-change'));
-      // onChange receives newPosition=0.7 → setSidePanelWidth(1 - 0.7 ≈ 0.3)
+      fireEvent.click(screen.getByTestId('header-side-panel-change'));
       expect(mockLayoutPrefsStore.setSidePanelWidth).toHaveBeenCalledTimes(1);
       expect(mockLayoutPrefsStore.setSidePanelWidth.mock.calls[0][0]).toBeCloseTo(0.3);
       expect(props.setSidePanelWidth).toHaveBeenCalledTimes(1);

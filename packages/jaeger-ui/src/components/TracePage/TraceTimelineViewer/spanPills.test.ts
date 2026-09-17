@@ -6,7 +6,8 @@ import { renderHook } from '@testing-library/react';
 import { GEN_AI_REQUEST_MODEL } from '../../../constants/span-attributes';
 import transformTraceData from '../../../model/transform-trace-data';
 import { AttributeValue, IOtelSpan } from '../../../types/otel';
-import { getSpanPillsForSpan, useSpanPillsEnabled } from './spanPills';
+import { getSpanPillsForSpan } from './spanDecorations';
+import { useSpanPillsEnabled } from './spanPills';
 import { makeAttributes } from '../../../model/attributes';
 
 const mockUseConfig = vi.hoisted(() => vi.fn(() => ({ traceTimeline: {} })));
@@ -107,6 +108,32 @@ describe('spanPills', () => {
       ]);
     });
 
+    it('maps db.system.name and db.system to pills', () => {
+      expect(getSpanPillsForSpan(makeSpan([{ key: 'db.system.name', value: 'postgresql' }]))).toEqual([
+        { label: 'db.system', value: 'postgresql' },
+      ]);
+      expect(getSpanPillsForSpan(makeSpan([{ key: 'db.system', value: 'mysql' }]))).toEqual([
+        { label: 'db.system', value: 'mysql' },
+      ]);
+    });
+
+    it('prefers db.system.name when both database attributes are present', () => {
+      const span = makeSpan([
+        { key: 'db.system.name', value: 'postgresql' },
+        { key: 'db.system', value: 'mysql' },
+      ]);
+      expect(getSpanPillsForSpan(span)).toEqual([{ label: 'db.system', value: 'postgresql' }]);
+    });
+
+    it('maps rpc.system.name and rpc.system to pills', () => {
+      expect(getSpanPillsForSpan(makeSpan([{ key: 'rpc.system.name', value: 'grpc' }]))).toEqual([
+        { label: 'rpc.system', value: 'grpc' },
+      ]);
+      expect(getSpanPillsForSpan(makeSpan([{ key: 'rpc.system', value: 'grpc' }]))).toEqual([
+        { label: 'rpc.system', value: 'grpc' },
+      ]);
+    });
+
     it('maps gen_ai.request.model to a pill', () => {
       const span = makeSpan([{ key: GEN_AI_REQUEST_MODEL, value: 'gpt-4o' }]);
       expect(getSpanPillsForSpan(span)).toEqual([{ label: 'gen_ai.request.model', value: 'gpt-4o' }]);
@@ -143,16 +170,16 @@ describe('spanPills', () => {
       ]);
     });
 
-    it('returns multiple default pills in source order', () => {
+    it('returns multiple default pills in SPAN_DECORATIONS list order (db before http)', () => {
       const span = makeSpan([
         { key: 'http.method', value: 'GET' },
         { key: 'http.status_code', value: '200' },
         { key: 'db.system', value: 'mysql' },
       ]);
       expect(getSpanPillsForSpan(span)).toEqual([
+        { label: 'db.system', value: 'mysql' },
         { label: 'http.status_code', value: '200' },
         { label: 'http.method', value: 'GET' },
-        { label: 'db.system', value: 'mysql' },
       ]);
     });
 
