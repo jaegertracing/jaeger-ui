@@ -3,7 +3,13 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { svcChecksum, encodeSvcFilter, decodeSvcFilter, getSortedServiceNames } from './svcFilter';
+import {
+  svcChecksum,
+  encodeSvcFilter,
+  decodeSvcFilter,
+  getSortedServiceNames,
+  sanitizePrunedServices,
+} from './svcFilter';
 
 describe('svcChecksum', () => {
   it('returns a hex string', () => {
@@ -168,5 +174,32 @@ describe('getSortedServiceNames', () => {
 
   it('returns empty array for empty input', () => {
     expect(getSortedServiceNames([])).toEqual([]);
+  });
+});
+
+describe('sanitizePrunedServices', () => {
+  it('returns the input unchanged when nothing is pruned', () => {
+    const pruned = new Set<string>();
+    expect(sanitizePrunedServices(pruned, new Set(['root']))).toBe(pruned);
+  });
+
+  it('un-prunes a single root service if it was pruned', () => {
+    const result = sanitizePrunedServices(new Set(['root', 'other']), new Set(['root']));
+    expect(result).toEqual(new Set(['other']));
+  });
+
+  it('leaves a single-root pruned set unchanged when the root is not pruned', () => {
+    const pruned = new Set(['other']);
+    expect(sanitizePrunedServices(pruned, new Set(['root']))).toBe(pruned);
+  });
+
+  it('keeps a multi-root pruned set as-is when at least one root remains visible', () => {
+    const pruned = new Set(['root-a', 'other']);
+    expect(sanitizePrunedServices(pruned, new Set(['root-a', 'root-b']))).toBe(pruned);
+  });
+
+  it('discards the entire filter when all multiple roots would be pruned', () => {
+    const result = sanitizePrunedServices(new Set(['root-a', 'root-b']), new Set(['root-a', 'root-b']));
+    expect(result).toEqual(new Set());
   });
 });
