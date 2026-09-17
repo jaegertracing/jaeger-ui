@@ -1,0 +1,77 @@
+/*
+Copyright (c) 2026 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.SpanRowControls {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 0.35rem;
+  margin-right: 0.25rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease-in-out;
+  position: relative;
+  z-index: 2;
+  vertical-align: middle;
+}
+
+/* Reveal controls on span row hover */
+.span-row:hover .SpanRowControls {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* If a span is focused, its controls remain visible so the reset button is always accessible */
+.SpanRowControls.is-focused {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.SpanRowControls--button {
+  background: var(--surface-component-background);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  height: 20px;
+  width: 20px;
+  padding: 0;
+  line-height: 1;
+  transition: all 0.15s ease;
+}
+
+.SpanRowControls--button:hover {
+  background: var(--surface-component-background-hover);
+  border-color: var(--interactive-primary);
+  color: var(--interactive-primary);
+}
+
+.SpanRowControls--button:focus-visible {
+  outline: 2px solid var(--interactive-primary);
+  outline-offset: 1px;
+}
+
+/* Active focus / reset button style */
+.SpanRowControls--button.is-active {
+  background: var(--interactive-primary);
+  border-color: var(--interactive-primary);
+  color: var(--text-inverse);
+}
+
+.SpanRowControls--button.is-active:hover {
+  background: var(--interactive-primary-hover);
+  border-color: var(--interactive-primary-hover);
+  color: var(--text-inverse);
+}
+
+.SpanRowControls--menuIcon {
+  font-size: 1rem;
+  vertical-align: -0.15em;
+  margin-right: 0.25rem;
+}
