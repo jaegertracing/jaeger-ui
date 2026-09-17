@@ -3,31 +3,10 @@
 
 import { z } from 'zod';
 import { JaegerClient } from './client';
+import capture from './v3-trace-local-2.21.0.json';
 
-const validEnvelope = {
-  result: {
-    resourceSpans: [
-      {
-        resource: { attributes: [{ key: 'service.name', value: { stringValue: 'svc' } }] },
-        scopeSpans: [
-          {
-            scope: { name: 'scope' },
-            spans: [
-              {
-                traceId: '0123456789abcdef0123456789abcdef',
-                spanId: '0123456789abcdef',
-                name: 'op',
-                startTimeUnixNano: '1000000',
-                endTimeUnixNano: '2000000',
-                status: {},
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  },
-};
+// The 2.21.0 capture is the valid case, aliased so the references below read unchanged.
+const validEnvelope = capture;
 
 describe('JaegerClient.fetchTrace wire contract', () => {
   let client: JaegerClient;
@@ -50,6 +29,10 @@ describe('JaegerClient.fetchTrace wire contract', () => {
     const promise = client.fetchTrace('0123456789abcdef0123456789abcdef');
     const data = await promise;
     expect(data.resourceSpans).toHaveLength(1);
+    expect(data.resourceSpans?.[0]?.scopeSpans?.[0]?.spans).toHaveLength(3);
+    expect(data.resourceSpans?.[0]?.scopeSpans?.[0]?.spans?.[0]?.traceId).toBe(
+      '0123456789abcdef0123456789abcdef'
+    );
     expect(mockFetch).toHaveBeenCalledWith(
       '/api/v3/traces/0123456789abcdef0123456789abcdef',
       expect.any(Object)
