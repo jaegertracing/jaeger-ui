@@ -116,7 +116,7 @@ export const searchInTable = (
   }
   if (typeof uiFindVertexKeys !== 'undefined') {
     uiFindVertexKeys!.forEach(function calc(value) {
-      const uiFindVertexKeysSplit = value.split('');
+      const uiFindVertexKeysSplit = value.split('\u000b');
 
       for (let i = 0; i < allTableSpansChange.length; i++) {
         if (
