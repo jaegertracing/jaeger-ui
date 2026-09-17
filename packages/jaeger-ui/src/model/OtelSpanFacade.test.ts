@@ -38,6 +38,9 @@ describe('OtelSpanFacade', () => {
       { refType: 'CHILD_OF', traceID: 'trace-1', spanID: 'parent-1', span: null },
       { refType: 'FOLLOWS_FROM', traceID: 'trace-1', spanID: 'link-1', span: null },
     ],
+    // Set by transformTraceData; OtelSpanFacade reads this rather than re-deriving a parent
+    // from `references` itself. See https://github.com/jaegertracing/jaeger-ui/issues/4460.
+    parentID: 'parent-1',
     depth: 1,
     hasChildren: true,
     relativeStartTime: 100,
@@ -65,109 +68,47 @@ describe('OtelSpanFacade', () => {
   });
 
   describe('parentSpanID calculation', () => {
-    it('uses CHILD_OF reference with same traceID', () => {
+    // transformTraceData is the one place that decides who a span's parent is - by walking
+    // `references` in array order and taking the first CHILD_OF/FOLLOWS_FROM reference whose
+    // target actually exists in the trace - and records that choice as `legacySpan.parentID`.
+    // OtelSpanFacade must read that value verbatim rather than re-deriving a parent from
+    // `references` itself; a second, independently-implemented resolution (e.g. one that
+    // always prefers CHILD_OF regardless of reference order) can disagree with the
+    // childSpans tree transformTraceData already built from its own resolution.
+    // See https://github.com/jaegertracing/jaeger-ui/issues/4460.
+    it('reads parentSpanID from legacySpan.parentID', () => {
+      const span: Span = { ...mockLegacySpan, parentID: 'resolved-parent' };
+      const spanFacade = new OtelSpanFacade(span);
+      expect(spanFacade.parentSpanID).toBe('resolved-parent');
+    });
+
+    it('is undefined when legacySpan.parentID is undefined, regardless of what references imply', () => {
+      // References alone must never drive parentSpanID: even though this span carries a
+      // CHILD_OF reference, parentID undefined means transformTraceData found no valid
+      // parent for it (a root, or every reference unresolvable) and it must stay undefined.
       const span: Span = {
         ...mockLegacySpan,
-        traceID: 'trace-1',
+        parentID: undefined,
         references: [{ refType: 'CHILD_OF', traceID: 'trace-1', spanID: 'parent-1', span: null }],
       };
       const spanFacade = new OtelSpanFacade(span);
-      expect(spanFacade.parentSpanID).toBe('parent-1');
-    });
-
-    it('ignores CHILD_OF reference with different traceID', () => {
-      const span: Span = {
-        ...mockLegacySpan,
-        traceID: 'trace-1',
-        references: [{ refType: 'CHILD_OF', traceID: 'trace-2', spanID: 'parent-1', span: null }],
-      };
-      const spanFacade = new OtelSpanFacade(span);
       expect(spanFacade.parentSpanID).toBeUndefined();
     });
 
-    it('uses earliest CHILD_OF reference when multiple exist with same traceID', () => {
+    it('follows parentID even when it names a reference that is not first in array order', () => {
+      // Regression case for #4460: a FOLLOWS_FROM reference listed before the CHILD_OF
+      // reference that transformTraceData actually picked as the tree parent. parentSpanID
+      // must match the tree, not fall back to a same-object reference scan.
       const span: Span = {
         ...mockLegacySpan,
-        traceID: 'trace-1',
+        parentID: 'tree-parent',
         references: [
-          { refType: 'CHILD_OF', traceID: 'trace-1', spanID: 'parent-1', span: null },
-          { refType: 'CHILD_OF', traceID: 'trace-1', spanID: 'parent-2', span: null },
+          { refType: 'FOLLOWS_FROM', traceID: 'trace-1', spanID: 'earlier-in-array', span: null },
+          { refType: 'CHILD_OF', traceID: 'trace-1', spanID: 'tree-parent', span: null },
         ],
       };
       const spanFacade = new OtelSpanFacade(span);
-      expect(spanFacade.parentSpanID).toBe('parent-1');
-    });
-
-    it('uses FOLLOWS_FROM reference with same traceID when no CHILD_OF exists', () => {
-      const span: Span = {
-        ...mockLegacySpan,
-        traceID: 'trace-1',
-        references: [{ refType: 'FOLLOWS_FROM', traceID: 'trace-1', spanID: 'link-1', span: null }],
-      };
-      const spanFacade = new OtelSpanFacade(span);
-      expect(spanFacade.parentSpanID).toBe('link-1');
-    });
-
-    it('uses earliest FOLLOWS_FROM reference when multiple exist with same traceID and no CHILD_OF', () => {
-      const span: Span = {
-        ...mockLegacySpan,
-        traceID: 'trace-1',
-        references: [
-          { refType: 'FOLLOWS_FROM', traceID: 'trace-1', spanID: 'link-1', span: null },
-          { refType: 'FOLLOWS_FROM', traceID: 'trace-1', spanID: 'link-2', span: null },
-        ],
-      };
-      const spanFacade = new OtelSpanFacade(span);
-      expect(spanFacade.parentSpanID).toBe('link-1');
-    });
-
-    it('prefers CHILD_OF with same traceID over FOLLOWS_FROM', () => {
-      const span: Span = {
-        ...mockLegacySpan,
-        traceID: 'trace-1',
-        references: [
-          { refType: 'FOLLOWS_FROM', traceID: 'trace-1', spanID: 'link-1', span: null },
-          { refType: 'CHILD_OF', traceID: 'trace-1', spanID: 'parent-1', span: null },
-        ],
-      };
-      const spanFacade = new OtelSpanFacade(span);
-      expect(spanFacade.parentSpanID).toBe('parent-1');
-    });
-
-    it('returns undefined when no references have same traceID', () => {
-      const span: Span = {
-        ...mockLegacySpan,
-        traceID: 'trace-1',
-        references: [
-          { refType: 'CHILD_OF', traceID: 'trace-2', spanID: 'parent-1', span: null },
-          { refType: 'FOLLOWS_FROM', traceID: 'trace-3', spanID: 'link-1', span: null },
-        ],
-      };
-      const spanFacade = new OtelSpanFacade(span);
-      expect(spanFacade.parentSpanID).toBeUndefined();
-    });
-
-    it('returns undefined when no references exist', () => {
-      const span: Span = {
-        ...mockLegacySpan,
-        traceID: 'trace-1',
-        references: [],
-      };
-      const spanFacade = new OtelSpanFacade(span);
-      expect(spanFacade.parentSpanID).toBeUndefined();
-    });
-
-    it('ignores CHILD_OF with different traceID but uses FOLLOWS_FROM with same traceID', () => {
-      const span: Span = {
-        ...mockLegacySpan,
-        traceID: 'trace-1',
-        references: [
-          { refType: 'CHILD_OF', traceID: 'trace-2', spanID: 'parent-1', span: null },
-          { refType: 'FOLLOWS_FROM', traceID: 'trace-1', spanID: 'link-1', span: null },
-        ],
-      };
-      const spanFacade = new OtelSpanFacade(span);
-      expect(spanFacade.parentSpanID).toBe('link-1');
+      expect(spanFacade.parentSpanID).toBe('tree-parent');
     });
   });
 
@@ -220,16 +161,17 @@ describe('OtelSpanFacade', () => {
   });
 
   describe('links calculation', () => {
-    it('excludes parentSpanID reference from links', () => {
-      // The mockLegacySpan has a CHILD_OF reference to 'parent-1' which is identified as parent
+    it('excludes the parentID reference from links', () => {
+      // The mockLegacySpan's parentID ('parent-1') matches its first CHILD_OF reference.
       expect(facade.parentSpanID).toBe('parent-1');
       expect(facade.links.find(l => l.spanID === 'parent-1')).toBeUndefined();
     });
 
-    it('includes other CHILD_OF references (different traceID) in links', () => {
+    it('includes other CHILD_OF references not matching parentID in links', () => {
       const span: Span = {
         ...mockLegacySpan,
         traceID: 'trace-1',
+        parentID: 'parent-1',
         references: [
           { refType: 'CHILD_OF', traceID: 'trace-1', spanID: 'parent-1', span: null },
           { refType: 'CHILD_OF', traceID: 'trace-2', spanID: 'other-parent', span: null },
@@ -242,11 +184,13 @@ describe('OtelSpanFacade', () => {
       expect(link?.traceID).toBe('trace-2');
     });
 
-    it('includes secondary CHILD_OF references (same traceID) in links', () => {
-      // First CHILD_OF is parent, subsequent ones should be links
+    it('includes secondary CHILD_OF references not matching parentID in links', () => {
+      // Only the reference matching parentID ('parent-1') is excluded; a second CHILD_OF to
+      // a different spanID is a genuine additional reference and stays a link.
       const span: Span = {
         ...mockLegacySpan,
         traceID: 'trace-1',
+        parentID: 'parent-1',
         references: [
           { refType: 'CHILD_OF', traceID: 'trace-1', spanID: 'parent-1', span: null },
           { refType: 'CHILD_OF', traceID: 'trace-1', spanID: 'secondary-parent', span: null },
@@ -266,19 +210,36 @@ describe('OtelSpanFacade', () => {
       expect(link?.traceID).toBe('trace-1');
     });
 
-    it('includes FOLLOWS_FROM reference even if it is used as parent (fallback)', () => {
-      // If no CHILD_OF exists, FOLLOWS_FROM might be used as parent,
-      // it would be standard for async spans like in producer/consumer.
-      // So if a FOLLOWS_FROM becomes the parent, it should be excluded from links.
-
+    it('excludes a FOLLOWS_FROM reference from links when parentID names it (fallback parent)', () => {
+      // Standard for async spans like producer/consumer: transformTraceData falls back to
+      // FOLLOWS_FROM as the tree parent when no CHILD_OF resolves, and records that in
+      // parentID. Links must exclude that FOLLOWS_FROM reference, not just CHILD_OF ones.
       const span: Span = {
         ...mockLegacySpan,
         traceID: 'trace-1',
+        parentID: 'parent-link',
         references: [{ refType: 'FOLLOWS_FROM', traceID: 'trace-1', spanID: 'parent-link', span: null }],
       };
       const spanFacade = new OtelSpanFacade(span);
       expect(spanFacade.parentSpanID).toBe('parent-link');
       expect(spanFacade.links.find(l => l.spanID === 'parent-link')).toBeUndefined();
+    });
+
+    it('excludes only the first reference matching parentID when references disagree with array order (#4460)', () => {
+      // The FOLLOWS_FROM reference is listed first, but parentID says the tree actually
+      // picked the CHILD_OF reference (e.g. because the FOLLOWS_FROM target was absent from
+      // this trace when transformTraceData ran). Links must follow parentID, not position.
+      const span: Span = {
+        ...mockLegacySpan,
+        traceID: 'trace-1',
+        parentID: 'tree-parent',
+        references: [
+          { refType: 'FOLLOWS_FROM', traceID: 'trace-1', spanID: 'earlier-in-array', span: null },
+          { refType: 'CHILD_OF', traceID: 'trace-1', spanID: 'tree-parent', span: null },
+        ],
+      };
+      const spanFacade = new OtelSpanFacade(span);
+      expect(spanFacade.links.map(l => l.spanID)).toEqual(['earlier-in-array']);
     });
   });
 
