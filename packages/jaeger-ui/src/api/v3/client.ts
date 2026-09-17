@@ -10,7 +10,14 @@
 
 import { ALL_SERVICES } from '../../constants/search-form';
 import prefixUrl from '../../utils/prefix-url';
-import { ServicesResponseSchema, OperationsResponseSchema, TraceSummariesResponseSchema } from './schemas';
+import {
+  ServicesResponseSchema,
+  OperationsResponseSchema,
+  TraceSummariesResponseSchema,
+  GetTraceResponseSchema,
+  traceIdHex,
+} from './schemas';
+import type { TracesDataWire } from './schemas';
 import type { SearchQuery } from '../../types/search';
 import type { TraceSummary, ServiceSummary } from '../../types/trace-summary';
 import type { Microseconds } from '../../types/units';
@@ -122,6 +129,23 @@ export class JaegerClient {
         services,
       };
     });
+  }
+
+  /**
+   * Fetch a single trace by ID from /api/v3/traces/{trace_id}.
+   * Validates the grpc-gateway envelope {"result": TracesData} and all nested
+   * OTLP fields at the network boundary. Envelope handling is kept separate from
+   * enrichment so future streaming can be added without touching the parser.
+   */
+  async fetchTrace(traceId: string): Promise<TracesDataWire> {
+    traceIdHex.parse(traceId);
+    const response = await this.fetchWithTimeout(`${this.apiRoot}/traces/${encodeURIComponent(traceId)}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch trace ${traceId}: ${response.status} ${response.statusText}`);
+    }
+    const data = await response.json();
+    const validated = GetTraceResponseSchema.parse(data);
+    return validated.result;
   }
 
   /**
