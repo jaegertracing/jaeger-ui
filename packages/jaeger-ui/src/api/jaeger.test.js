@@ -14,12 +14,7 @@ vi.stubGlobal('fetch', fetchMock);
 import queryString from 'query-string';
 
 import traceGenerator from '../demo/trace-generators';
-import JaegerAPI, {
-  getMessageFromError,
-  DEFAULT_API_ROOT,
-  DEFAULT_DEPENDENCY_LOOKBACK,
-  ANALYTICS_ROOT,
-} from './jaeger';
+import JaegerAPI, { getMessageFromError, DEFAULT_API_ROOT, DEFAULT_DEPENDENCY_LOOKBACK } from './jaeger';
 
 const defaultOptions = {
   credentials: 'same-origin',
@@ -48,7 +43,7 @@ describe('fetchDeepDependencyGraph', () => {
     const query = { service: 'serviceName', start: 400, end: 800 };
     JaegerAPI.fetchDeepDependencyGraph(query);
     expect(fetchMock).toHaveBeenLastCalledWith(
-      `${ANALYTICS_ROOT}v1/dependencies?${queryString.stringify(query)}`,
+      `${DEFAULT_API_ROOT}deep-dependencies?${queryString.stringify(query)}`,
       defaultOptions
     );
   });

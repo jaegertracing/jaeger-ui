@@ -97,7 +97,7 @@ const JaegerAPI = {
     return getJSON(url);
   },
   fetchDeepDependencyGraph(query: Record<string, any>): Promise<any> {
-    return getJSON(`${ANALYTICS_ROOT}v1/dependencies`, { query });
+    return getJSON(`${DEFAULT_API_ROOT}deep-dependencies`, { query });
   },
   fetchDependencies(endTs = new Date().getTime(), lookback = DEFAULT_DEPENDENCY_LOOKBACK): Promise<any> {
     return getJSON(`${this.apiRoot}dependencies`, { query: { endTs, lookback } });
