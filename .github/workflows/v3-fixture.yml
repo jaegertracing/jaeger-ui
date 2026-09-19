@@ -1,0 +1,52 @@
+name: 'Verify v3 Fixture'
+
+# The v3 contract tests parse a captured Jaeger response. Regenerating that
+# capture and diffing it here is what keeps the fixture an artifact the pipeline
+# can reproduce, rather than a file that is trusted because it is committed.
+#
+# The Jaeger image is pinned by digest, so the capture cannot drift on its own.
+# Only a change to the probe, the config, the script or the fixture itself can
+# cause drift, which is why this runs on those paths instead of every PR.
+# The path lists below are duplicated because GitHub Actions does not support
+# YAML anchors.
+
+on:
+  merge_group:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/generate-v3-fixture.sh'
+      - 'scripts/jaeger-fixture-config.yaml'
+      - 'packages/jaeger-ui/src/api/v3/v3-trace-probe.json'
+      - 'packages/jaeger-ui/src/api/v3/v3-trace-local-*.json'
+      - '.github/workflows/v3-fixture.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/generate-v3-fixture.sh'
+      - 'scripts/jaeger-fixture-config.yaml'
+      - 'packages/jaeger-ui/src/api/v3/v3-trace-probe.json'
+      - 'packages/jaeger-ui/src/api/v3/v3-trace-local-*.json'
+      - '.github/workflows/v3-fixture.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ (github.event.pull_request && github.event.pull_request.number) || github.ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify-v3-fixture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          submodules: false
+
+      - name: Regenerate the capture and diff it against the committed fixture
+        run: ./scripts/generate-v3-fixture.sh --check

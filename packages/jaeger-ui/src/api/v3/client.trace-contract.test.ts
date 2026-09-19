@@ -5,9 +5,6 @@ import { z } from 'zod';
 import { JaegerClient } from './client';
 import capture from './v3-trace-local-2.21.0.json';
 
-// The 2.21.0 capture is the valid case, aliased so the references below read unchanged.
-const validEnvelope = capture;
-
 describe('JaegerClient.fetchTrace wire contract', () => {
   let client: JaegerClient;
   let mockFetch: ReturnType<typeof vi.fn>;
@@ -25,7 +22,7 @@ describe('JaegerClient.fetchTrace wire contract', () => {
   });
 
   it('validates and returns result.resourceSpans on success', async () => {
-    mockFetch.mockResolvedValue({ ok: true, json: async () => validEnvelope });
+    mockFetch.mockResolvedValue({ ok: true, json: async () => capture });
     const promise = client.fetchTrace('0123456789abcdef0123456789abcdef');
     const data = await promise;
     expect(data.resourceSpans).toHaveLength(1);
@@ -40,7 +37,7 @@ describe('JaegerClient.fetchTrace wire contract', () => {
   });
 
   it('rejects when request traceId is not 32-char hex', async () => {
-    mockFetch.mockResolvedValue({ ok: true, json: async () => validEnvelope });
+    mockFetch.mockResolvedValue({ ok: true, json: async () => capture });
     const promise = client.fetchTrace('NOT_HEX' as any);
     await expect(promise).rejects.toThrow('must be 32-char hex string');
     expect(mockFetch).not.toHaveBeenCalled();
@@ -55,7 +52,7 @@ describe('JaegerClient.fetchTrace wire contract', () => {
   });
 
   it('rejects when response contains base64 traceId', async () => {
-    const bad = JSON.parse(JSON.stringify(validEnvelope));
+    const bad = JSON.parse(JSON.stringify(capture));
     bad.result.resourceSpans[0].scopeSpans[0].spans[0].traceId = 'AQIDBA==';
     mockFetch.mockResolvedValue({ ok: true, json: async () => bad });
     const promise = client.fetchTrace('0123456789abcdef0123456789abcdef');
@@ -63,7 +60,7 @@ describe('JaegerClient.fetchTrace wire contract', () => {
   });
 
   it('rejects when timestamps are numeric instead of quoted strings', async () => {
-    const bad = JSON.parse(JSON.stringify(validEnvelope));
+    const bad = JSON.parse(JSON.stringify(capture));
     bad.result.resourceSpans[0].scopeSpans[0].spans[0].startTimeUnixNano = 1000000;
     mockFetch.mockResolvedValue({ ok: true, json: async () => bad });
     const promise = client.fetchTrace('0123456789abcdef0123456789abcdef');

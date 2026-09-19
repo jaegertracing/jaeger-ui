@@ -13,22 +13,32 @@ import {
 } from './schemas';
 import capture from './v3-trace-local-2.21.0.json';
 
-// The 2.21.0 capture is the valid case, aliased so the references below read unchanged.
-const validEnvelope = capture;
+type ParsedTrace = ReturnType<typeof GetTraceResponseSchema.parse>;
+
+// Spans are located by name, not by position: nothing in OTLP or the v3 API
+// fixes the order of a scope's spans, and this capture comes from a real server.
+function spanNamed(parsed: ParsedTrace, name: string) {
+  const spans = parsed.result.resourceSpans![0].scopeSpans![0].spans!;
+  const found = spans.find(s => s.name === name);
+  if (!found) {
+    throw new Error(`the capture has no span named "${name}"`);
+  }
+  return found;
+}
 
 describe('GetTrace wire contract', () => {
   it('accepts the captured v3-trace-local-2.21.0 envelope', () => {
-    const parsed = GetTraceResponseSchema.parse(validEnvelope);
+    const parsed = GetTraceResponseSchema.parse(capture);
     expect(parsed.result.resourceSpans).toHaveLength(1);
-    const spans = parsed.result.resourceSpans![0].scopeSpans![0].spans!;
-    expect(spans).toHaveLength(3);
-    expect(spans[0].traceId).toBe('0123456789abcdef0123456789abcdef');
-    expect(spans[0].spanId).toBe('0123456789abcdef');
+    expect(parsed.result.resourceSpans![0].scopeSpans![0].spans).toHaveLength(3);
+    const root = spanNamed(parsed, 'root-with-any-values');
+    expect(root.traceId).toBe('0123456789abcdef0123456789abcdef');
+    expect(root.spanId).toBe('0123456789abcdef');
   });
 
   it('preserves falsy AnyValues: empty string, false, zero, max int64', () => {
-    const parsed = GetTraceResponseSchema.parse(validEnvelope);
-    const attrs = parsed.result.resourceSpans![0].scopeSpans![0].spans![0].attributes!;
+    const parsed = GetTraceResponseSchema.parse(capture);
+    const attrs = spanNamed(parsed, 'root-with-any-values').attributes!;
     const byKey = Object.fromEntries(attrs.map(a => [a.key, a.value])) as Record<string, any>;
     expect(byKey.empty.stringValue).toBe('');
     expect(byKey.false.boolValue).toBe(false);
@@ -38,30 +48,28 @@ describe('GetTrace wire contract', () => {
   });
 
   it('preserves nested kvlist and arrays inside AnyValue', () => {
-    const parsed = GetTraceResponseSchema.parse(validEnvelope);
-    const nested = parsed.result.resourceSpans![0].scopeSpans![0].spans![0].attributes!.find(
-      a => a.key === 'nested'
-    )!;
+    const parsed = GetTraceResponseSchema.parse(capture);
+    const nested = spanNamed(parsed, 'root-with-any-values').attributes!.find(a => a.key === 'nested')!;
     expect(nested.value.kvlistValue!.values![0].key).toBe('child');
   });
 
   it('accepts omitted kind (defaults to UNSPECIFIED) and empty status {}', () => {
-    const parsed = GetTraceResponseSchema.parse(validEnvelope);
-    const unset = parsed.result.resourceSpans![0].scopeSpans![0].spans![1];
+    const parsed = GetTraceResponseSchema.parse(capture);
+    const unset = spanNamed(parsed, 'unset-kind-and-status');
     expect(unset.kind).toBeUndefined();
     expect(unset.status).toEqual({});
   });
 
   it('accepts numeric kind and status.code when present', () => {
-    const parsed = GetTraceResponseSchema.parse(validEnvelope);
-    const numeric = parsed.result.resourceSpans![0].scopeSpans![0].spans![2];
+    const parsed = GetTraceResponseSchema.parse(capture);
+    const numeric = spanNamed(parsed, 'numeric-kind-and-status');
     expect(numeric.kind).toBe(2);
     expect(numeric.status!.code).toBe(1);
   });
 
   it('BigInt can parse 64-bit timestamps without precision loss', () => {
-    const parsed = GetTraceResponseSchema.parse(validEnvelope);
-    const s = parsed.result.resourceSpans![0].scopeSpans![0].spans![0];
+    const parsed = GetTraceResponseSchema.parse(capture);
+    const s = spanNamed(parsed, 'root-with-any-values');
     const dur = BigInt(s.endTimeUnixNano!) - BigInt(s.startTimeUnixNano!);
     expect(dur).toBe(1_000_000n);
     // Never use Number for 64-bit wire values
@@ -74,7 +82,7 @@ describe('GetTrace wire contract', () => {
   });
 
   it('rejects base64/non-hex trace/span IDs', () => {
-    const bad = JSON.parse(JSON.stringify(validEnvelope));
+    const bad = JSON.parse(JSON.stringify(capture));
     bad.result.resourceSpans[0].scopeSpans[0].spans[0].traceId = 'AQIDBAUG';
     expect(() => GetTraceResponseSchema.parse(bad)).toThrow(z.ZodError);
     bad.result.resourceSpans[0].scopeSpans[0].spans[0].traceId = '0123456789abcdef0123456789abcdef';
@@ -154,13 +162,13 @@ describe('GetTrace wire contract', () => {
 
   it('keeps envelope handling separable from TracesData', () => {
     // TracesData without envelope should also validate (for future streaming)
-    const tracesData = (validEnvelope as any).result;
+    const tracesData = capture.result;
     expect(() => refinedTracesData.parse(tracesData)).not.toThrow();
     expect(() => refinedTracesData.parse({ resourceSpans: [] })).not.toThrow();
   });
 
   it('silently ignores unknown fields (OTLP-JSON forward compatibility)', () => {
-    const future = JSON.parse(JSON.stringify(validEnvelope));
+    const future = JSON.parse(JSON.stringify(capture));
     future.futureTopLevelField = 'x';
     future.result.resourceSpans[0].scopeSpans[0].spans[0].someFutureSpanField = { nested: true };
     future.result.resourceSpans[0].scopeSpans[0].spans[0].status.unknownStatusField = 1;

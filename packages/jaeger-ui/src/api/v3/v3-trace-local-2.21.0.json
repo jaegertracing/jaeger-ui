@@ -3,12 +3,7 @@
     "resourceSpans": [
       {
         "resource": {
-          "attributes": [
-            {
-              "key": "service.name",
-              "value": { "stringValue": "lfx-wire-probe" }
-            }
-          ]
+          "attributes": [{ "key": "service.name", "value": { "stringValue": "lfx-wire-probe" } }]
         },
         "scopeSpans": [
           {
@@ -45,9 +40,7 @@
                         "values": [
                           {
                             "key": "child",
-                            "value": {
-                              "arrayValue": { "values": [{ "stringValue": "value" }] }
-                            }
+                            "value": { "arrayValue": { "values": [{ "stringValue": "value" }] } }
                           }
                         ]
                       }

@@ -47,18 +47,25 @@ This file is the source of truth for the full API schema. It is automatically pr
 
 As a rule, post-processing the generated file is a liability: new requirements belong in `jaeger-idl`, or as refinements layered in `schemas.ts` — not as regexes over generated text.
 
-### `v3-trace-local-2.21.0.json`
+### `v3-trace-probe.json` and `v3-trace-local-2.21.0.json`
 
-A real `GET /api/v3/traces/{trace_id}` response, vendored so the contract tests parse genuine backend output instead of a hand-written imitation. It is the single valid case the `*.trace-contract.test.ts` files build every malformed case from, so drift between the server and the schemas surfaces as a test failure.
+The probe is the OTLP payload submitted to a local Jaeger. The other file is the `GET /api/v3/traces/{trace_id}` response that came back, and it is the single valid case the `*.trace-contract.test.ts` files build every malformed case from. Parsing genuine backend output is how drift between the server and the schemas surfaces as a test failure.
 
-Provenance:
+The probe is hand-authored and is not generated. Recapture the response with `pnpm run generate:v3-fixture`, which needs Docker, `curl` and `python3`. To verify the committed fixture without overwriting it, run `./scripts/generate-v3-fixture.sh --check`, which recaptures into a temporary file, compares, and exits non-zero on drift.
 
-- Server: `jaegertracing/jaeger:2.21.0`, run locally with in-memory storage.
-- Request: `GET /api/v3/traces/0123456789abcdef0123456789abcdef`.
-- Response: 1670 bytes of `text/plain; charset=utf-8`, stored here pretty-printed. Parsed content is unchanged from the earlier 2.13.0 capture of the same probe.
-- Payload under test: a 3-span trace submitted via OTLP covering all seven `AnyValue` variants, plus an omitted `kind`, an empty `status` object, a numeric `kind`/`status.code`, nested `kvlistValue`, and one span carrying `events` and `links`.
+Every input that can change the shape of the response is pinned in that script rather than left to a default:
 
-To refresh it, submit the same probe to a local collector and re-capture the response. Keep the span names and IDs stable — the tests index spans by position and assert the IDs.
+- The image is pinned by digest, not tag, since a tag can be re-pushed.
+- Storage is declared rather than inherited. `scripts/jaeger-fixture-config.yaml` names in-memory storage explicitly, so the question "which storage produced this fixture" has a checked-in answer instead of depending on the default compiled into the binary. A capture taken with that config is identical to one taken with the image default, which is what confirms the default was in-memory.
+- The probe carries explicit trace and span IDs and explicit nanosecond timestamps, so the submitted trace is byte-identical on every run. It covers all seven `AnyValue` variants, an omitted `kind`, an empty `status`, a numeric `kind` and `status.code`, nested `kvlistValue`, and one span with `events` and `links`.
+- `raw_traces=false` is passed explicitly. It keeps Jaeger's enrichment, such as clock skew adjustment, which is what the UI receives in production. Flipping it returns a different document.
+- The capture is accepted only once every span in the probe has come back, rather than on the first HTTP 200. With this image the trace becomes visible atomically, so this is a guard rather than a fix for an observed failure: it keeps the guarantee if the probe ever grows past a single OTLP batch, or if the storage default behind the digest changes.
+- The version is read back from the image itself and checked against the tag the fixture is named after, so a digest that stops resolving to 2.21.0 fails instead of silently recapturing.
+- The response is first written exactly as it arrived and then handed to the repo formatter. In write mode, the deterministic response and formatter reproduce the committed bytes. In `--check` mode, parsed JSON is compared after normalising only the unordered collections below, so formatting and line endings do not count as drift.
+
+The backend may vary span order, attribute order and `kvlistValue` entry order without changing the contract. `--check` sorts those collections before comparing, and the contract assertions locate spans by name and attributes by key. `arrayValue` entries, events and links remain positional and are compared as received. Status representation is intentionally pinned: this fixture contains `status: {}` for an unset status, and both the contract test and `--check` report drift if a future backend omits it. The two forms encode `STATUS_CODE_UNSET`, but they are different parsed shapes at the validation boundary.
+
+The `Verify v3 Fixture` workflow runs `--check` on every pull request that touches the probe, the config, the script or the fixture, so the capture is verified by the pipeline rather than trusted because it is committed. It is path-filtered because the digest pin means nothing else can make the capture drift.
 
 ## Schema Strategy
 
