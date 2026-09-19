@@ -102,7 +102,9 @@ export default class DraggableManager {
     window.removeEventListener('mouseup', this._handleDragEvent);
     const style = _get(document, 'body.style');
     if (style) {
-      style.removeProperty('userSelect');
+      // The CSS name, not the JS one: removeProperty ignores a camelCase name, so this
+      // used to remove nothing and left the whole document unselectable after a drag.
+      style.removeProperty('user-select');
     }
     this._isDragging = false;
   }
