@@ -403,7 +403,7 @@ describe('useServiceMetricsQuery', () => {
     expect(result.current.data!.serviceError.service_latencies_50).toBeNull();
   });
 
-  it('passes quantile overrides for the three latency calls', async () => {
+  it('passes a quantile for every service metrics call', async () => {
     vi.mocked(JaegerAPI.fetchMetrics).mockResolvedValue({
       name: 'service_latencies',
       type: 'GAUGE',
@@ -421,6 +421,8 @@ describe('useServiceMetricsQuery', () => {
     expect(calls[0][2]).toMatchObject({ quantile: 0.5 });
     expect(calls[1][2]).toMatchObject({ quantile: 0.75 });
     expect(calls[2][2]).toMatchObject({ quantile: 0.95 });
+    expect(calls[3][2]).toMatchObject({ quantile: 0.95 });
+    expect(calls[4][2]).toMatchObject({ quantile: 0.95 });
   });
 
   it('passes endTs from params to all API calls', async () => {

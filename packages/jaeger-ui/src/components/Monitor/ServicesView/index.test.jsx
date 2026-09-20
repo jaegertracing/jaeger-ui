@@ -619,19 +619,30 @@ describe('<MonitorATMServicesView> URL query params', () => {
     expect(store.set).not.toHaveBeenCalledWith('lastAtmSearchService', expect.anything());
   });
 
-  it('updates filters when search changes without remounting', () => {
+  it('updates filters and the query timestamp when search changes without remounting', async () => {
     const { rerender } = renderWithRouter(<MonitorATMServicesView search="?service=service1" />);
 
     expect(screen.getByTestId('select-a-service-input').value).toBe('service1');
 
-    rerender(
-      <MemoryRouter>
-        <MonitorATMServicesView search="?service=service2&spanKind=client" />
-      </MemoryRouter>
-    );
+    try {
+      Date.now.mockReturnValue(1466424550000);
+      rerender(
+        <MemoryRouter>
+          <MonitorATMServicesView search="?service=service2&spanKind=client" />
+        </MemoryRouter>
+      );
 
-    expect(screen.getByTestId('select-a-service-input').value).toBe('service2');
-    expect(screen.getByTestId('span-kind-selector').value).toBe('client');
+      expect(screen.getByTestId('select-a-service-input').value).toBe('service2');
+      expect(screen.getByTestId('span-kind-selector').value).toBe('client');
+      await waitFor(() => {
+        expect(useServiceMetricsQuery).toHaveBeenLastCalledWith(
+          'service2',
+          expect.objectContaining({ endTs: 1466424550000 })
+        );
+      });
+    } finally {
+      Date.now.mockReturnValue(1466424490000);
+    }
   });
 
   it('does not surface an unrecognized URL service in the View all traces link', () => {

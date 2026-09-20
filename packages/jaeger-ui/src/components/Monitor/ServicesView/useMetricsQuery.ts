@@ -277,8 +277,14 @@ export function useServiceMetricsQuery(
           'service_latencies_95',
           JaegerAPI.fetchMetrics('latencies', [serviceName], { ...params, quantile: 0.95 })
         ),
-        settleMetric('service_call_rate', JaegerAPI.fetchMetrics('calls', [serviceName], params)),
-        settleMetric('service_error_rate', JaegerAPI.fetchMetrics('errors', [serviceName], params)),
+        settleMetric(
+          'service_call_rate',
+          JaegerAPI.fetchMetrics('calls', [serviceName], { ...params, quantile: 0.95 })
+        ),
+        settleMetric(
+          'service_error_rate',
+          JaegerAPI.fetchMetrics('errors', [serviceName], { ...params, quantile: 0.95 })
+        ),
       ]);
       return transformServiceMetrics(payload);
     },

@@ -122,13 +122,19 @@ export function MonitorATMServicesViewImpl({ search = '', navigate }: TOwnProps)
 
   const urlOwned = useRef(initialFilters.urlOwned);
   const isInternalUrlSync = useRef(false);
+  const previousSearch = useRef(search);
 
   useEffect(() => {
     const filters = getFiltersFromSearch(search);
+    const isExternalSearchChange = !isInternalUrlSync.current && previousSearch.current !== search;
     if (!isInternalUrlSync.current) {
       urlOwned.current = filters.urlOwned;
     }
+    if (isExternalSearchChange) {
+      setEndTime(previous => Math.max(Date.now(), previous + 1));
+    }
     isInternalUrlSync.current = false;
+    previousSearch.current = search;
     setSelectedService(filters.selectedService);
     setSelectedSpanKind(filters.selectedSpanKind);
     setSelectedTimeFrame(filters.selectedTimeFrame);
