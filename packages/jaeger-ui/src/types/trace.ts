@@ -56,6 +56,12 @@ export type Span = SpanData & {
   hasChildren: boolean;
   childSpans: ReadonlyArray<Span>;
   subsidiarilyReferencedBy: ReadonlyArray<SpanReference>;
+
+  // Set when transformTraceData had to sever this span's parent edge to break a cycle of
+  // parent references, leaving the span as a root. The reference that formed the cycle is
+  // still on the span, for display, but it is no longer read as a parent -- see
+  // OtelSpanFacade, which resolves the parent independently.
+  parentCycleBroken?: boolean;
 };
 
 export type TraceData = {
