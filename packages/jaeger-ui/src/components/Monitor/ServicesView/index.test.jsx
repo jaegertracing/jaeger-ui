@@ -235,6 +235,33 @@ describe('<MonitorATMServicesView>', () => {
     }
   });
 
+  it('uses the service resolution time for the first metrics query', async () => {
+    cleanup();
+    useServices.mockReturnValue({ data: [], isLoading: true });
+    const { rerender } = renderWithRouter(<MonitorATMServicesView />);
+
+    expect(useServiceMetricsQuery).toHaveBeenLastCalledWith(undefined, undefined);
+
+    try {
+      Date.now.mockReturnValue(1466424550000);
+      useServices.mockReturnValue({ data: ['apple'], isLoading: false });
+      rerender(
+        <MemoryRouter>
+          <MonitorATMServicesView />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(useServiceMetricsQuery).toHaveBeenLastCalledWith(
+          'apple',
+          expect.objectContaining({ endTs: 1466424550000 })
+        );
+      });
+    } finally {
+      Date.now.mockReturnValue(1466424490000);
+    }
+  });
+
   it('renders with one service latency', () => {
     cleanup();
     useServices.mockReturnValue({ data: ['apple'], isLoading: false });
