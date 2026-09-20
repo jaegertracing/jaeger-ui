@@ -3,11 +3,9 @@
 
 import { Reducer } from 'redux';
 import pathAgnosticDecorations from './path-agnostic-decorations';
-import trace from './trace';
 
 const reducers: Record<string, Reducer<any, any>> = {
   pathAgnosticDecorations,
-  trace,
 };
 
 export default reducers;

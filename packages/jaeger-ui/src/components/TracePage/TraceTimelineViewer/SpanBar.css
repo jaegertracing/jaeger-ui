@@ -51,8 +51,8 @@ SPDX-License-Identifier: Apache-2.0
   width: 10%;
   height: 100%;
   visibility: hidden;
-  background-color: white;
-  border: 1px solid white;
+  background-color: var(--critical-path-outline);
+  border: 1px solid var(--critical-path-outline);
 }
 
 .SpanBar--criticalPath:hover::before {

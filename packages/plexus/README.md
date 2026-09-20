@@ -54,7 +54,7 @@ A React component for directed graphs.
 
 ## Demo
 
-When running the Jaeger UI in development mode (`npm start` from the repository root), the Plexus demo is accessible at [http://localhost:5173/plexus-demo](http://localhost:5173/plexus-demo). The demo showcases various graph configurations and is not included in production builds.
+When running the Jaeger UI in development mode (`pnpm start` from the repository root), the Plexus demo is accessible at [http://localhost:5173/plexus-demo](http://localhost:5173/plexus-demo). The demo showcases various graph configurations and is not included in production builds.
 
 ## About
 
@@ -591,10 +591,10 @@ type TRenderDefEntryFn = (
 ```
 
 |  | Argument | Type and description |
-| :-: | :-- | :-- | --- |
+| :-: | :-- | :-- |
 | 0 | graphState | `TExposedGraphState` |
 |  |  | The current state of the graph. See [`TExposedGraphState`](#texposedgraphstate) for details.<br>&nbsp; |
-| 1 | entryProps | `Record<string, unknown> | null` |
+| 1 | entryProps | `Record<string, unknown> \| null` |
 |  |  | The the result of evaluating `setOnEntry`.<br>&nbsp; |
 | 2 | id | `string` |
 |  |  | An ID, unique within the document, to be applied to the root-most element being returned from `renderEntry`.<br>&nbsp; |
@@ -622,9 +622,7 @@ The type for `setOnNode` is similar to that of `setOnContainer` in that the valu
 
 ```tsx
 type TMeasurableNodePropsSetter =
-  | Record<string, unknown>
-  | TMeasurableNodePropsFn
-  | (TMeasurableNodePropsFn | Record<string, unknown>)[];
+  Record<string, unknown> | TMeasurableNodePropsFn | (TMeasurableNodePropsFn | Record<string, unknown>)[];
 
 type TMeasurableNodePropsFn = (
   vertex: TVertex,

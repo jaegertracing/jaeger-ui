@@ -110,7 +110,7 @@ describe('Tween', () => {
       try {
         current.done = !current.done;
         // eslint-disable-next-line no-empty
-      } catch (_) {}
+      } catch {}
       expect(current).toEqual(copy);
     });
 

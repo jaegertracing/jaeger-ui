@@ -13,10 +13,12 @@ type TProps<T = {}, U = {}> = Omit<TStandaloneEdgesLayer<T, U>, 'edges' | 'layer
   standalone?: boolean;
 };
 
-// Add the default black stroke on an outer <g> so CSS classes or styles
-// on the inner <g> can override it
-// TODO: A more configurable approach to setting a default stroke color
-const INHERIT_STROKE = { stroke: '#000' };
+// Apply the default stroke on the outer <g> so that CSS classes or styles on the
+// inner <g> can still override it per-edge. We use `currentColor` here instead of
+// a hardcoded color — it inherits the CSS `color` property from the nearest ancestor
+// that sets it, which Ant Design's theme engine handles correctly for both light and
+// dark modes (avoiding the invisible-black-on-dark-background bug).
+const DEFAULT_STROKE_STYLE = { stroke: 'currentColor' };
 
 const SvgEdgesLayer = <T = {}, U = {}>(props: TProps<T, U>) => {
   const { getClassName, graphState, markerEndId, markerStartId, setOnEdge } = props;
@@ -27,7 +29,7 @@ const SvgEdgesLayer = <T = {}, U = {}>(props: TProps<T, U>) => {
   }
 
   return (
-    <SvgLayer {...props} classNamePart="SvgEdgesLayer" extraWrapper={INHERIT_STROKE}>
+    <SvgLayer {...props} classNamePart="SvgEdgesLayer" extraWrapper={DEFAULT_STROKE_STYLE}>
       <SvgEdges
         getClassName={getClassName}
         layoutEdges={layoutEdges}

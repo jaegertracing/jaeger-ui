@@ -278,13 +278,14 @@ describe('<SidePanel>', () => {
     it('updates state', () => {
       const { container } = render(<DetailsPanel {...props} />);
 
-      const initialWidth = '30vw';
-      expect(container.querySelector('.Ddg--DetailsPanel')).toHaveStyle(`width: ${initialWidth}`);
+      // Assert the declared width rather than the computed one: jsdom resolves vw units
+      // against its own window width, which would make the assertion depend on that width.
+      expect(container.querySelector('.Ddg--DetailsPanel').style.width).toBe('30vw');
 
       const resizer = screen.getByTestId('vertical-resizer');
       fireEvent.click(resizer);
 
-      expect(container.querySelector('.Ddg--DetailsPanel')).toHaveStyle('width: 60vw');
+      expect(container.querySelector('.Ddg--DetailsPanel').style.width).toBe('60vw');
     });
   });
 

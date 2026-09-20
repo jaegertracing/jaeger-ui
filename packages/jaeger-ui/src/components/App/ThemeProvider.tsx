@@ -1,7 +1,15 @@
 // Copyright (c) 2025 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from 'react';
 import type { ThemeConfig } from 'antd';
 import { ConfigProvider, theme } from 'antd';
 
@@ -119,8 +127,19 @@ export default function AppThemeProvider({ children }: ThemeProviderProps) {
     setModeState((prev: ThemeMode) => (prev === 'dark' ? 'light' : 'dark'));
   }, []);
 
-  useEffect(() => {
+  // This must be a layout effect, not a passive one. `vars.css` selects the dark
+  // palette with `[data-theme='dark']`, and consumers that need a token's value
+  // as data rather than as CSS — `ColorGenerator.getRgbColorByKey`, for the
+  // canvas span graph — read it back off the DOM from their own `useEffect`.
+  // React runs a parent's passive effects *after* its descendants', so writing
+  // the attribute passively here would let those consumers observe the previous
+  // theme for one commit. Every layout effect runs before any passive effect,
+  // which puts the attribute in place first.
+  useLayoutEffect(() => {
     document.body.dataset.theme = mode;
+  }, [mode]);
+
+  useEffect(() => {
     // Don't persist when the host controls the theme — avoid overwriting the
     // user's standalone preference with an embed-injected value.
     if (!embeddedState?.theme) writeStoredTheme(mode);

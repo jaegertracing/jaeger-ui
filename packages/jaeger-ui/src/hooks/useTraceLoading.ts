@@ -14,10 +14,7 @@ const TRACE_QUERY_KEY = (id: string) => ['trace', id] as const;
 
 // TODO: remove once callers (duck.track.ts, TraceDiff) are migrated off Redux/non-hook paths
 export function getCachedTrace(id: string): IOtelTrace | undefined {
-  return (
-    queryClient.getQueryData<IOtelTrace>(TRACE_QUERY_KEY(id)) ||
-    queryClient.getQueryData<IOtelTrace>(TRACE_QUERY_KEY(id.replace(/^0+/, '')))
-  );
+  return queryClient.getQueryData<IOtelTrace>(TRACE_QUERY_KEY(id));
 }
 
 export function populateTraceCache(trace: IOtelTrace): void {
@@ -38,7 +35,11 @@ export function useTrace(traceId: string): UseQueryResult<IOtelTrace> {
       if (!data) {
         throw new Error('Invalid trace data received.');
       }
-      return data.asOtelTrace();
+      const otel = data.asOtelTrace();
+      if (otel.traceID !== traceId) {
+        queryClient.setQueryData(TRACE_QUERY_KEY(otel.traceID), otel);
+      }
+      return otel;
     },
     staleTime: Infinity,
   });
@@ -57,7 +58,11 @@ export function useTraces(ids: string[]): Map<string, FetchedTrace> {
         if (!data) {
           throw new Error('Invalid trace data received.');
         }
-        return data.asOtelTrace();
+        const otel = data.asOtelTrace();
+        if (otel.traceID !== id) {
+          queryClient.setQueryData(TRACE_QUERY_KEY(otel.traceID), otel);
+        }
+        return otel;
       },
       staleTime: Infinity,
     })),

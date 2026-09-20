@@ -17,7 +17,7 @@ describe('configureStore', () => {
     expect(typeof store.getState).toBe('function');
     expect(typeof store.subscribe).toBe('function');
     expect(typeof store.replaceReducer).toBe('function');
-    expect({}.hasOwnProperty.call(store.getState(), 'trace')).toBeTruthy();
+    expect({}.hasOwnProperty.call(store.getState(), 'traceTimeline')).toBeTruthy();
   });
 
   it('applies Redux DevTools enhancer when available in non-production', () => {

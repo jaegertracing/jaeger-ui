@@ -11,8 +11,6 @@ import EmphasizedNode from '../../common/EmphasizedNode';
 describe('drawNode', () => {
   const operation = 'operationName';
   const service = 'serviceName';
-  const defaultCount = 100;
-
   afterEach(cleanup);
 
   describe('diffNode', () => {

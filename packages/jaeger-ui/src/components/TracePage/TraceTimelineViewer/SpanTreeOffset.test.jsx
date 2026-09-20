@@ -2,12 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import { mapDispatchToProps, mapStateToProps, UnconnectedSpanTreeOffset } from './SpanTreeOffset';
-import spanAncestorIds from '../../../utils/span-ancestor-ids';
-
 vi.mock('../../../utils/span-ancestor-ids');
 
 describe('SpanTreeOffset', () => {

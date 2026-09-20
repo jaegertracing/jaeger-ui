@@ -7,7 +7,6 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LayoutManager } from '@jaegertracing/plexus';
 import transformTraceData from '../../../model/transform-trace-data';
-import calculateTraceDagEV from './calculateTraceDagEV';
 import TraceGraph, { setOnEdgePath } from './TraceGraph';
 import { MODE_SERVICE, MODE_TIME, MODE_SELFTIME } from './OpNode';
 import testTrace from './testTrace.json';
@@ -66,7 +65,6 @@ vi.mock('@jaegertracing/plexus', () => {
 });
 
 const transformedTrace = transformTraceData(testTrace);
-const ev = calculateTraceDagEV(transformedTrace.asOtelTrace());
 
 describe('<TraceGraph>', () => {
   let props;
@@ -74,7 +72,8 @@ describe('<TraceGraph>', () => {
   beforeEach(() => {
     props = {
       headerHeight: 60,
-      ev,
+      trace: transformedTrace.asOtelTrace(),
+      onSearchResults: vi.fn(),
     };
   });
 
@@ -85,37 +84,40 @@ describe('<TraceGraph>', () => {
     expect(screen.getAllByRole('button').length).toBe(3);
   });
 
-  it('may show no traces', () => {
-    render(<TraceGraph />);
-    expect(screen.getByText('No trace found')).toBeInTheDocument();
-  });
-
-  it('switches node mode when clicking mode buttons - with state verification', async () => {
-    const setStateSpy = jest.spyOn(TraceGraph.prototype, 'setState');
+  it('switches node mode when clicking mode buttons', async () => {
     render(<TraceGraph {...props} />);
 
     // Initial mode should be service
     expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SERVICE);
-    const timeButton = screen.getByRole('button', { name: 'T' });
-    const selftimeButton = screen.getByRole('button', { name: 'ST' });
-    const serviceButton = screen.getByRole('button', { name: 'S' });
+    const timeButton = screen.getByRole('button', { name: 'Color by total time' });
+    const selftimeButton = screen.getByRole('button', { name: 'Color by self time' });
+    const serviceButton = screen.getByRole('button', { name: 'Color by service' });
+
+    // Initial aria-pressed: only service is active
+    expect(serviceButton).toHaveAttribute('aria-pressed', 'true');
+    expect(timeButton).toHaveAttribute('aria-pressed', 'false');
+    expect(selftimeButton).toHaveAttribute('aria-pressed', 'false');
 
     // Switch to time
     await userEvent.click(timeButton);
-    expect(setStateSpy).toHaveBeenCalledWith({ mode: MODE_TIME }); // Verify state change
     expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_TIME);
+    expect(timeButton).toHaveAttribute('aria-pressed', 'true');
+    expect(serviceButton).toHaveAttribute('aria-pressed', 'false');
+    expect(selftimeButton).toHaveAttribute('aria-pressed', 'false');
 
     // Switch to selftime
     await userEvent.click(selftimeButton);
-    expect(setStateSpy).toHaveBeenCalledWith({ mode: MODE_SELFTIME });
     expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SELFTIME);
+    expect(selftimeButton).toHaveAttribute('aria-pressed', 'true');
+    expect(serviceButton).toHaveAttribute('aria-pressed', 'false');
+    expect(timeButton).toHaveAttribute('aria-pressed', 'false');
 
     // Switch back to service
     await userEvent.click(serviceButton);
-    expect(setStateSpy).toHaveBeenCalledWith({ mode: MODE_SERVICE });
     expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SERVICE);
-
-    setStateSpy.mockRestore();
+    expect(serviceButton).toHaveAttribute('aria-pressed', 'true');
+    expect(timeButton).toHaveAttribute('aria-pressed', 'false');
+    expect(selftimeButton).toHaveAttribute('aria-pressed', 'false');
   });
 
   it('shows help', async () => {
@@ -184,11 +186,47 @@ describe('<TraceGraph>', () => {
     expect(setOnEdgePath(edge2)).toEqual({});
   });
 
+  describe('onSearchResults', () => {
+    // Vertex keys for testTrace.json: service1/op1 root with service1 and service2 descendants.
+    const service1Keys = [
+      'service1\top1',
+      'service1\top1\vservice1\top2\t__LEAF__',
+      'service1\top1\vservice1\top3',
+      'service1\top1\vservice1\top4',
+      'service1\top1\vservice1\top6',
+      'service1\top1\vservice1\top6\vservice1\top7\t__LEAF__',
+    ];
+
+    const lastReported = () => props.onSearchResults.mock.lastCall[0];
+
+    it('reports null when uiFind is not provided', () => {
+      render(<TraceGraph {...props} useOtelTerms={false} />);
+
+      expect(lastReported()).toBeNull();
+    });
+
+    it('reports the matching vertex keys when uiFind is provided', () => {
+      render(<TraceGraph {...props} uiFind="service1" useOtelTerms={false} />);
+
+      const lastCall = lastReported();
+      expect(lastCall).toBeInstanceOf(Set);
+      expect([...lastCall].sort()).toEqual([...service1Keys].sort());
+    });
+
+    it('excludes vertices without matching members', () => {
+      render(<TraceGraph {...props} uiFind="op1" useOtelTerms={false} />);
+
+      const lastCall = lastReported();
+      expect([...lastCall].sort()).toEqual(
+        ['service1\top1', 'service1\top1\vservice1\top3\vservice2\top1'].sort()
+      );
+    });
+  });
+
   it('handles uiFind mode correctly', () => {
     const propsWithUiFind = {
       ...props,
       uiFind: 'test-service',
-      uiFindVertexKeys: new Set(['key1', 'key2']),
     };
     render(<TraceGraph {...propsWithUiFind} />);
     const wrapper = screen.getByTestId('mock-digraph').parentElement;

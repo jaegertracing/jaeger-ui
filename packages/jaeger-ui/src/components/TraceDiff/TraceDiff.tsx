@@ -96,16 +96,14 @@ export function TraceDiffImpl({ a, b, cohort }: TStateProps & TOwnProps) {
 
   const diffSetA = React.useCallback(
     (id: string) => {
-      const newA = id.toLowerCase();
-      diffSetUrl({ newA });
+      diffSetUrl({ newA: id });
     },
     [diffSetUrl]
   );
 
   const diffSetB = React.useCallback(
     (id: string) => {
-      const newB = id.toLowerCase();
-      diffSetUrl({ newB });
+      diffSetUrl({ newB: id });
     },
     [diffSetUrl]
   );

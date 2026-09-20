@@ -22,21 +22,18 @@ import JaegerAPI from '../api/jaeger';
 vi.mock('../api/jaeger', () => ({
   default: {
     fetchTrace: jest.fn(() => Promise.resolve()),
-    searchTraces: jest.fn(() => Promise.resolve()),
     archiveTrace: jest.fn(() => Promise.resolve()),
     fetchServices: jest.fn(() => Promise.resolve()),
     fetchServiceOperations: jest.fn(() => Promise.resolve()),
     fetchServiceServerOps: jest.fn(() => Promise.resolve()),
     fetchDeepDependencyGraph: jest.fn(() => Promise.resolve()),
     fetchDependencies: jest.fn(() => Promise.resolve()),
-    fetchMetrics: jest.fn(() => Promise.resolve()),
   },
 }));
 
 describe('actions/jaeger-api', () => {
   const query = { param: 'value' };
   const id = 'my-trace-id';
-  const ids = [id, id];
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -57,21 +54,6 @@ describe('actions/jaeger-api', () => {
     expect(meta.id).toBe(id);
   });
 
-  it('@JAEGER_API/FETCH_MULTIPLE_TRACES should fetch traces by ids', () => {
-    jaegerApiActions.fetchMultipleTraces(ids);
-    expect(JaegerAPI.searchTraces).toHaveBeenCalledWith(expect.objectContaining({ traceID: ids }));
-  });
-
-  it('@JAEGER_API/FETCH_MULTIPLE_TRACES should return the promise', () => {
-    const { payload } = jaegerApiActions.fetchMultipleTraces(ids);
-    expect(isPromise(payload)).toBeTruthy();
-  });
-
-  it('@JAEGER_API/FETCH_MULTIPLE_TRACES should attach the ids as meta', () => {
-    const { meta } = jaegerApiActions.fetchMultipleTraces(ids);
-    expect(meta.ids).toBe(ids);
-  });
-
   it('@JAEGER_API/ARCHIVE_TRACE should archive the trace by id', () => {
     jaegerApiActions.archiveTrace(id);
     expect(JaegerAPI.archiveTrace).toHaveBeenCalledWith(id);
@@ -85,21 +67,6 @@ describe('actions/jaeger-api', () => {
   it('@JAEGER_API/ARCHIVE_TRACE should attach the id as meta', () => {
     const { meta } = jaegerApiActions.archiveTrace(id);
     expect(meta.id).toBe(id);
-  });
-
-  it('@JAEGER_API/SEARCH_TRACES should fetch the trace by id', () => {
-    jaegerApiActions.searchTraces(query);
-    expect(JaegerAPI.searchTraces).toHaveBeenCalledWith(query);
-  });
-
-  it('@JAEGER_API/SEARCH_TRACES should return the promise', () => {
-    const { payload } = jaegerApiActions.searchTraces(query);
-    expect(isPromise(payload)).toBeTruthy();
-  });
-
-  it('@JAEGER_API/SEARCH_TRACES should attach the query as meta', () => {
-    const { meta } = jaegerApiActions.searchTraces(query);
-    expect(meta.query).toEqual(query);
   });
 
   it('@JAEGER_API/FETCH_DEEP_DEPENDENCY_GRAPH should fetch the graph by params', () => {
@@ -120,25 +87,5 @@ describe('actions/jaeger-api', () => {
   it('@JAEGER_API/FETCH_DEPENDENCIES should call the JaegerAPI', () => {
     jaegerApiActions.fetchDependencies();
     expect(JaegerAPI.fetchDependencies).toHaveBeenCalledTimes(1);
-  });
-
-  it('@JAEGER_API/FETCH_ALL_SERVICE_METRICS should return the promise', () => {
-    const { payload } = jaegerApiActions.fetchAllServiceMetrics('serviceName', query);
-    expect(isPromise(payload)).toBeTruthy();
-  });
-
-  it('@JAEGER_API/FETCH_ALL_SERVICE_METRICS should fetch service metrics by name', () => {
-    jaegerApiActions.fetchAllServiceMetrics('serviceName', query);
-    expect(JaegerAPI.fetchMetrics).toHaveBeenCalledTimes(5);
-  });
-
-  it('@JAEGER_API/FETCH_AGGREGATED_SERVICE_METRICS should return the promise', () => {
-    const { payload } = jaegerApiActions.fetchAggregatedServiceMetrics('serviceName', query);
-    expect(isPromise(payload)).toBeTruthy();
-  });
-
-  it('@JAEGER_API/FETCH_AGGREGATED_SERVICE_METRICS should fetch service metrics by name', () => {
-    jaegerApiActions.fetchAggregatedServiceMetrics('serviceName', query);
-    expect(JaegerAPI.fetchMetrics).toHaveBeenCalledTimes(3);
   });
 });

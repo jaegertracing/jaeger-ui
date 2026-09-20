@@ -21,6 +21,8 @@ import {
   SIDE_PANEL_WIDTH_MAX,
   MIN_TIMELINE_COLUMN_WIDTH,
 } from './store.constants';
+import { getMaxNameColumnWidth } from './store.layout';
+import storage from '../../../utils/storage';
 
 // payloads
 export type TSpanIdLogValue = { logItem: IEvent; spanID: string };
@@ -53,7 +55,7 @@ export function newInitialState(): TTraceTimeline {
   const { traceTimeline } = getConfig();
   let detailPanelMode: 'inline' | 'sidepanel' = 'inline';
   if (traceTimeline?.enableSidePanel) {
-    const stored = localStorage.getItem('detailPanelMode');
+    const stored = storage.getItem('detailPanelMode');
     if (stored === 'sidepanel') {
       detailPanelMode = 'sidepanel';
     } else if (traceTimeline.defaultDetailPanelMode === 'sidepanel' && stored === null) {
@@ -62,15 +64,15 @@ export function newInitialState(): TTraceTimeline {
   }
 
   // localStorage key kept as 'timelineVisible' for backward compatibility with stored user preferences.
-  const storedTimelineVisible = localStorage.getItem('timelineVisible');
+  const storedTimelineVisible = storage.getItem('timelineVisible');
   const timelineBarsVisible = storedTimelineVisible === null ? true : storedTimelineVisible !== 'false';
 
-  const parsedSpanNameColumnWidth = parseFloat(localStorage.getItem('spanNameColumnWidth') ?? '');
+  const parsedSpanNameColumnWidth = parseFloat(storage.getItem('spanNameColumnWidth') ?? '');
   let spanNameColumnWidth = Number.isNaN(parsedSpanNameColumnWidth)
     ? 0.25
     : Math.min(Math.max(parsedSpanNameColumnWidth, SPAN_NAME_COLUMN_WIDTH_MIN), SPAN_NAME_COLUMN_WIDTH_MAX);
 
-  const parsedSidePanelWidth = parseFloat(localStorage.getItem('sidePanelWidth') ?? '');
+  const parsedSidePanelWidth = parseFloat(storage.getItem('sidePanelWidth') ?? '');
   const sidePanelWidthExplicit = !Number.isNaN(parsedSidePanelWidth);
   // Default: equal split between timeline and span details columns, clamped to allowed range.
   const rawSidePanelWidth = sidePanelWidthExplicit ? parsedSidePanelWidth : (1 - spanNameColumnWidth) / 2;
@@ -243,11 +245,8 @@ function setTrace(state: TTraceTimeline, { uiFind, trace }: TTraceUiFindValue) {
 }
 
 function setColumnWidth(state: TTraceTimeline, { width }: TWidthValue): TTraceTimeline {
-  // In side-panel mode the name column must leave room for both the side panel and timeline bars.
-  const maxWidth =
-    state.detailPanelMode === 'sidepanel'
-      ? Math.min(SPAN_NAME_COLUMN_WIDTH_MAX, 1 - state.sidePanelWidth - MIN_TIMELINE_COLUMN_WIDTH)
-      : SPAN_NAME_COLUMN_WIDTH_MAX;
+  // In side-panel mode the name column must leave room for the side panel and, when visible, timeline bars.
+  const maxWidth = getMaxNameColumnWidth(state);
   const spanNameColumnWidth = Math.min(Math.max(width, SPAN_NAME_COLUMN_WIDTH_MIN), maxWidth);
   return { ...state, spanNameColumnWidth };
 }
@@ -352,15 +351,12 @@ function setDetailPanelMode(state: TTraceTimeline, { mode }: TDetailPanelModeVal
     const firstKey = detailStates.keys().next().value as string;
     detailStates = new Map([[firstKey, DetailState.forDetailPanelMode('sidepanel')]]);
   }
-  // When switching to sidepanel mode, ensure spanNameColumnWidth leaves room for the side panel and
-  // the minimum timeline column. A wide name column stored in inline mode would otherwise produce a
-  // zero/negative timeline column width as soon as the side panel is enabled.
+  // When switching to sidepanel mode, ensure spanNameColumnWidth leaves room for the side panel
+  // and, when visible, the minimum timeline column. A wide name column stored in inline mode would
+  // otherwise produce a zero/negative timeline column width as soon as the side panel is enabled.
   let { spanNameColumnWidth } = state;
   if (mode === 'sidepanel') {
-    const maxWidth = Math.min(
-      SPAN_NAME_COLUMN_WIDTH_MAX,
-      1 - state.sidePanelWidth - MIN_TIMELINE_COLUMN_WIDTH
-    );
+    const maxWidth = getMaxNameColumnWidth({ ...state, detailPanelMode: mode });
     spanNameColumnWidth = Math.min(spanNameColumnWidth, maxWidth);
   }
   return { ...state, detailPanelMode: mode, detailStates, spanNameColumnWidth };

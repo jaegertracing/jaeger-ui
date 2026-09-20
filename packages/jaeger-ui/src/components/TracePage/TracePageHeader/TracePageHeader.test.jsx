@@ -157,7 +157,7 @@ describe('<TracePageHeader>', () => {
   });
 
   it('renders the header items', () => {
-    HEADER_ITEMS.forEach((item, i) => {
+    HEADER_ITEMS.forEach(item => {
       const renderedValue = item.renderer(defaultProps.trace);
       if (renderedValue === null) return;
 

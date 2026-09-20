@@ -1,3 +1,4 @@
+// Copyright (c) 2026 The Jaeger Authors.
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -85,6 +86,10 @@ export type BackendCapabilities = {
   // aiAssistant indicates whether the in-app AI assistant should be available.
   // The backend advertises this when a live AI sidecar is reachable.
   aiAssistant?: boolean;
+  // searchWithoutServiceName indicates whether the trace storage backend accepts a
+  // search that omits the service name. The Service dropdown offers its "All Services"
+  // option only when this is true; Cassandra, for one, cannot answer such a query.
+  searchWithoutServiceName?: boolean;
 };
 
 // Default values are provided in packages/jaeger-ui/src/constants/default-config.tsx
@@ -238,10 +243,32 @@ export type Config = {
     // 'sidepanel' makes the side panel the default experience for new users.
     // Default: 'inline'.
     defaultDetailPanelMode?: SpanDetailPanelMode;
+
+    // spanPillsEnabled controls span pill overlays in the trace timeline.
+    // Default: true. Set to false to disable if needed.
+    spanPillsEnabled?: boolean;
   };
 
-  // useOpenTelemetryTerms determines whether the UI uses legacy Jaeger terminology
-  // (tags, logs, process, operation name) or OpenTelemetry terminology
-  // (attributes, events, resource, name).
+  // useOpenTelemetryTerms determines whether the UI uses OpenTelemetry terminology
+  // (attributes, events, resource, name) or legacy Jaeger terminology
+  // (tags, logs, process, operation name).
+  // Default: true. Set to false to keep the legacy Jaeger labels.
   useOpenTelemetryTerms: boolean;
+
+  // tracing controls in-browser OpenTelemetry instrumentation. When enabled,
+  // the UI exports spans via OTLP/HTTP to the same-origin path
+  // '/api/otlp/v1/traces', which the jaeger-query otlp_proxy extension
+  // forwards to the OTel Collector. The endpoint is intentionally not
+  // configurable — see docs/adr/0011-ui-emitted-trace-ingest.md.
+  // Disabled by default.
+  tracing?: {
+    enabled?: boolean;
+    serviceName?: string;
+    sampleRatio?: number;
+    // sessionInactivityMinutes controls how many minutes of inactivity end
+    // the current user session. The next span after the timeout starts a new
+    // `session.id` and stamps the prior one as `session.previous_id`,
+    // per OTel session semantics. Default: 30.
+    sessionInactivityMinutes?: number;
+  };
 };

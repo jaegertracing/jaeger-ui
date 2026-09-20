@@ -5,20 +5,24 @@ import * as React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 import { getUrl } from './url';
+import type { IOtelTrace } from '../../types/otel';
 
-// Custom hook that normalizes a trace ID to lowercase in the URL
-export function useNormalizeTraceId(traceID: string): string {
-  const normalizedTraceID = traceID.toLowerCase();
+/**
+ * After a trace is loaded, redirects the URL to the canonical trace ID
+ * returned by the backend if it differs from what is in the URL.
+ * This handles cases like uppercase hex, base64-encoded IDs, or any other
+ * alternate representation the backend accepts but normalizes on return.
+ */
+export function useNormalizeTraceId(urlTraceId: string, trace: IOtelTrace | undefined): void {
   const navigate = useNavigate();
   const location = useLocation();
 
   React.useEffect(() => {
-    if (traceID && traceID !== normalizedTraceID) {
-      const url = getUrl(normalizedTraceID);
+    if (!trace) return;
+    const canonicalId = trace.traceID;
+    if (canonicalId && canonicalId !== urlTraceId) {
+      const url = getUrl(canonicalId);
       navigate(`${url}${location.search}`, { replace: true, state: location.state });
     }
-    // eslint-disable-next-line react-x/exhaustive-deps
-  }, [traceID, normalizedTraceID]);
-
-  return normalizedTraceID;
+  }, [trace, urlTraceId, location.search, location.state, navigate]);
 }

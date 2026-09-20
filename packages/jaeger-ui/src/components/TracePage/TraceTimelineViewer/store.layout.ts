@@ -11,6 +11,21 @@ import {
   SPAN_NAME_COLUMN_WIDTH_MAX,
   SPAN_NAME_COLUMN_WIDTH_MIN,
 } from './store.constants';
+import storage from '../../../utils/storage';
+
+export function getMaxNameColumnWidth(opts: {
+  detailPanelMode: string;
+  timelineBarsVisible: boolean;
+  sidePanelWidth: number;
+}): number {
+  if (opts.detailPanelMode !== 'sidepanel') {
+    return SPAN_NAME_COLUMN_WIDTH_MAX;
+  }
+  const availableWidth = opts.timelineBarsVisible
+    ? 1 - opts.sidePanelWidth - MIN_TIMELINE_COLUMN_WIDTH
+    : 1 - SIDE_PANEL_WIDTH_MIN;
+  return Math.min(SPAN_NAME_COLUMN_WIDTH_MAX, availableWidth);
+}
 
 type TraceTimelineLayoutPrefsStore = {
   spanNameColumnWidth: number;
@@ -34,7 +49,7 @@ export function getInitialLayoutState(): Pick<
 
   let detailPanelMode: SpanDetailPanelMode = 'inline';
   if (traceTimeline?.enableSidePanel) {
-    const stored = localStorage.getItem('detailPanelMode');
+    const stored = storage.getItem('detailPanelMode');
     if (stored === 'sidepanel') {
       detailPanelMode = 'sidepanel';
     } else if (traceTimeline.defaultDetailPanelMode === 'sidepanel' && stored === null) {
@@ -43,15 +58,15 @@ export function getInitialLayoutState(): Pick<
   }
 
   // localStorage key kept as 'timelineVisible' for backward compatibility with stored user preferences.
-  const storedTimelineVisible = localStorage.getItem('timelineVisible');
+  const storedTimelineVisible = storage.getItem('timelineVisible');
   const timelineBarsVisible = storedTimelineVisible === null ? true : storedTimelineVisible !== 'false';
 
-  const parsedSpanNameColumnWidth = parseFloat(localStorage.getItem('spanNameColumnWidth') ?? '');
+  const parsedSpanNameColumnWidth = parseFloat(storage.getItem('spanNameColumnWidth') ?? '');
   let spanNameColumnWidth = Number.isNaN(parsedSpanNameColumnWidth)
     ? 0.25
     : Math.min(Math.max(parsedSpanNameColumnWidth, SPAN_NAME_COLUMN_WIDTH_MIN), SPAN_NAME_COLUMN_WIDTH_MAX);
 
-  const parsedSidePanelWidth = parseFloat(localStorage.getItem('sidePanelWidth') ?? '');
+  const parsedSidePanelWidth = parseFloat(storage.getItem('sidePanelWidth') ?? '');
   const sidePanelWidthExplicit = !Number.isNaN(parsedSidePanelWidth);
   const rawSidePanelWidth = sidePanelWidthExplicit ? parsedSidePanelWidth : (1 - spanNameColumnWidth) / 2;
   let sidePanelWidth = Math.min(Math.max(rawSidePanelWidth, SIDE_PANEL_WIDTH_MIN), SIDE_PANEL_WIDTH_MAX);
@@ -93,13 +108,10 @@ export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()((set,
   ...getInitialLayoutState(),
 
   setSpanNameColumnWidth: (width: number) => {
-    const { detailPanelMode, sidePanelWidth } = get();
-    const maxWidth =
-      detailPanelMode === 'sidepanel'
-        ? Math.min(SPAN_NAME_COLUMN_WIDTH_MAX, 1 - sidePanelWidth - MIN_TIMELINE_COLUMN_WIDTH)
-        : SPAN_NAME_COLUMN_WIDTH_MAX;
+    const { detailPanelMode, sidePanelWidth, timelineBarsVisible } = get();
+    const maxWidth = getMaxNameColumnWidth({ detailPanelMode, sidePanelWidth, timelineBarsVisible });
     const spanNameColumnWidth = Math.min(Math.max(width, SPAN_NAME_COLUMN_WIDTH_MIN), maxWidth);
-    localStorage.setItem('spanNameColumnWidth', spanNameColumnWidth.toString());
+    storage.setItem('spanNameColumnWidth', spanNameColumnWidth.toString());
     set({ spanNameColumnWidth });
   },
 
@@ -110,22 +122,22 @@ export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()((set,
       : 1 - spanNameColumnWidth;
     const maxWidth = Math.max(SIDE_PANEL_WIDTH_MIN, Math.min(SIDE_PANEL_WIDTH_MAX, availableWidth));
     const sidePanelWidth = Math.min(Math.max(width, SIDE_PANEL_WIDTH_MIN), maxWidth);
-    localStorage.setItem('sidePanelWidth', sidePanelWidth.toString());
+    storage.setItem('sidePanelWidth', sidePanelWidth.toString());
     set({ sidePanelWidth });
   },
 
   applyDetailPanelModeToLayout: (mode: SpanDetailPanelMode) => {
-    localStorage.setItem('detailPanelMode', mode);
-    let { spanNameColumnWidth, sidePanelWidth } = get();
+    storage.setItem('detailPanelMode', mode);
+    let { spanNameColumnWidth, sidePanelWidth, timelineBarsVisible } = get();
     if (mode === 'sidepanel') {
-      const maxWidth = Math.min(SPAN_NAME_COLUMN_WIDTH_MAX, 1 - sidePanelWidth - MIN_TIMELINE_COLUMN_WIDTH);
+      const maxWidth = getMaxNameColumnWidth({ detailPanelMode: mode, sidePanelWidth, timelineBarsVisible });
       spanNameColumnWidth = Math.min(spanNameColumnWidth, maxWidth);
     }
     set({ detailPanelMode: mode, spanNameColumnWidth });
   },
 
   setTimelineBarsVisible: (visible: boolean) => {
-    localStorage.setItem('timelineVisible', String(visible));
+    storage.setItem('timelineVisible', String(visible));
     set({ timelineBarsVisible: visible });
   },
 }));

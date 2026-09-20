@@ -155,7 +155,7 @@ describe('TraceDiff', () => {
 
     await user.click(screen.getByTestId('diff-set-a-btn'));
     expect(getUrlSpy).toHaveBeenLastCalledWith({
-      a: newAValue.toLowerCase(),
+      a: newAValue,
       b: defaultProps.b,
       cohort: defaultProps.cohort,
     });
@@ -163,7 +163,7 @@ describe('TraceDiff', () => {
     await user.click(screen.getByTestId('diff-set-b-btn'));
     expect(getUrlSpy).toHaveBeenLastCalledWith({
       a: defaultProps.a,
-      b: newBValue.toLowerCase(),
+      b: newBValue,
       cohort: defaultProps.cohort,
     });
 

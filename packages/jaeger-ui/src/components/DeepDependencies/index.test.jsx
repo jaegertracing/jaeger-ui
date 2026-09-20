@@ -10,18 +10,16 @@ import { Provider } from 'react-redux';
 import { createStore } from 'redux';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-vi.mock('isomorphic-fetch', () =>
-  mockDefault(
-    vi.fn(() =>
-      Promise.resolve({
-        status: 200,
-        ok: true,
-        json: () => Promise.resolve({}),
-        text: () => Promise.resolve(''),
-      })
-    )
-  )
+const mockFetch = vi.fn(() =>
+  Promise.resolve({
+    status: 200,
+    ok: true,
+    json: () => Promise.resolve({}),
+    text: () => Promise.resolve(''),
+  })
 );
+
+vi.stubGlobal('fetch', mockFetch);
 
 const mockUseLocationValue = {
   search: '?service=test-service&operation=test-op',
@@ -888,24 +886,6 @@ describe('DeepDependencyGraphPage', () => {
         operation,
       },
     };
-    const services = [service];
-    const serverOpsForService = {
-      [service]: ['some operation'],
-    };
-    const state = {
-      otherState: 'otherState',
-      router: {
-        location: {
-          search: 'search',
-        },
-      },
-      services: {
-        serverOpsForService,
-        otherState: 'otherState',
-        services,
-      },
-    };
-    const ownProps = { location: { search } };
     const mockGraph = { getVisible: () => ({}) };
     const hash = 'testHash';
     const doneGraphState = {
@@ -1026,19 +1006,6 @@ describe('DeepDependencyGraphPage', () => {
     const serviceTwo = 'svc-bridge-two';
     const keyOne = getStateEntryKey({ service: serviceOne, operation: '*', start: 0, end: 0 });
     const keyTwo = getStateEntryKey({ service: serviceTwo, operation: '*', start: 0, end: 0 });
-
-    function makeDoneEntry(hash) {
-      return {
-        state: fetchedState.DONE,
-        model: {
-          hash,
-          distanceToPathElems: new Map(),
-          paths: [],
-          services: new Map(),
-          visIdxToPathElem: [],
-        },
-      };
-    }
 
     function renderBridgeHook(initialOptions) {
       return renderHook(({ options }) => useDdgViewModifierBridgeProps(options), {

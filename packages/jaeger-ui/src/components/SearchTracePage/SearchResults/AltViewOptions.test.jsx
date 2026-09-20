@@ -14,7 +14,6 @@ describe('AltViewOptions', () => {
   let getConfigValueSpy;
   let getUrlSpy;
   let getUrlStateSpy;
-  let trackConversionsSpy;
 
   const props = {
     traceResultsView: true,
@@ -25,7 +24,7 @@ describe('AltViewOptions', () => {
     getUrlSpy = jest.spyOn(url, 'getUrl');
     getUrlStateSpy = jest.spyOn(url, 'getUrlState');
     getConfigValueSpy = jest.spyOn(getConfig, 'default');
-    trackConversionsSpy = jest.spyOn(trackingModule, 'trackConversions');
+    jest.spyOn(trackingModule, 'trackConversions');
   });
 
   beforeEach(() => {

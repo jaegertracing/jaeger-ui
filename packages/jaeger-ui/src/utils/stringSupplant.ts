@@ -15,7 +15,7 @@ export function encodedStringSupplant(
     const mapValue = map[parameterName];
     const formattedValue = formatFunction && mapValue ? formatFunction(mapValue) : mapValue;
 
-    const value = formattedValue != null && encodeFn ? encodeFn(formattedValue) : mapValue;
+    const value = formattedValue != null && encodeFn ? encodeFn(formattedValue) : formattedValue;
     return value == null ? '' : `${value}`;
   });
 }

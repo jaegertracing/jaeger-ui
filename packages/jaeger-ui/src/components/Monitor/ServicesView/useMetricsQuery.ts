@@ -3,7 +3,7 @@
 
 import { keepPreviousData, useQuery, UseQueryResult } from '@tanstack/react-query';
 import JaegerAPI from '../../../api/jaeger';
-import type { ApiError } from '../../../types/api-error';
+import { type ApiError, toApiError } from '../../../types/api-error';
 import type {
   FetchAggregatedServiceMetricsResponse,
   FetchedAllServiceMetricsResponse,
@@ -11,11 +11,12 @@ import type {
   MetricPointObject,
   MetricsAPIQueryParams,
   OpsDataPoints,
-  PromiseRejectedResult,
   ServiceMetrics,
   ServiceMetricsObject,
   ServiceOpsMetrics,
 } from '../../../types/metrics';
+
+export type MetricsQueryParams = Omit<MetricsAPIQueryParams, 'groupByOperation' | 'quantile'>;
 
 export type ServiceMetricsResult = {
   serviceMetrics: ServiceMetrics;
@@ -38,20 +39,41 @@ export type OperationMetricsResult = {
 };
 
 type OpsMap = Record<string, { name: string; metricPoints: OpsDataPoints }>;
+type ServiceErrorKey = keyof ServiceMetricsResult['serviceError'];
+type OperationErrorKey = keyof OperationMetricsResult['opsError'];
+type FulfilledValue<TResult> = TResult extends { value: infer TValue } ? TValue : never;
+type SettledMetricResult<TValue> =
+  | { status: 'fulfilled'; value: TValue }
+  | { status: 'rejected'; reason: ApiError };
+type NamedServiceMetricResult = {
+  errorKey: ServiceErrorKey;
+  result: SettledMetricResult<FulfilledValue<FetchedAllServiceMetricsResponse[number]>>;
+};
+type NamedOperationMetricResult = {
+  errorKey: OperationErrorKey;
+  result: SettledMetricResult<FulfilledValue<FetchAggregatedServiceMetricsResponse[number]>>;
+};
 
-// Module-private query keys
 function serviceMetricsQueryKey(
   serviceName: string | undefined,
-  params: MetricsAPIQueryParams
-): readonly ['serviceMetrics', string | undefined, MetricsAPIQueryParams] {
-  return ['serviceMetrics', serviceName, params] as const;
+  params: MetricsQueryParams | undefined
+): readonly ['serviceMetrics', string | undefined, MetricsQueryParams | null] {
+  return ['serviceMetrics', serviceName, params ?? null] as const;
 }
 
 function operationMetricsQueryKey(
   serviceName: string | undefined,
-  params: MetricsAPIQueryParams
-): readonly ['operationMetrics', string | undefined, MetricsAPIQueryParams] {
-  return ['operationMetrics', serviceName, params] as const;
+  params: MetricsQueryParams | undefined
+): readonly ['operationMetrics', string | undefined, MetricsQueryParams | null] {
+  return ['operationMetrics', serviceName, params ?? null] as const;
+}
+
+async function settleMetric<TKey extends string, TValue>(errorKey: TKey, request: Promise<TValue>) {
+  try {
+    return { errorKey, result: { status: 'fulfilled' as const, value: await request } };
+  } catch (reason) {
+    return { errorKey, result: { status: 'rejected' as const, reason: toApiError(reason) } };
+  }
 }
 
 function parseMetricPoints(rawPoints: MetricPointObject[]): { x: number; y: number | null }[] {
@@ -67,7 +89,7 @@ function parseMetricPoints(rawPoints: MetricPointObject[]): { x: number; y: numb
   });
 }
 
-export function transformServiceMetrics(payload: FetchedAllServiceMetricsResponse): ServiceMetricsResult {
+export function transformServiceMetrics(payload: NamedServiceMetricResult[]): ServiceMetricsResult {
   const serviceMetrics: ServiceMetrics = {
     service_latencies: null,
     service_call_rate: null,
@@ -81,7 +103,7 @@ export function transformServiceMetrics(payload: FetchedAllServiceMetricsRespons
     service_error_rate: null,
   };
 
-  payload.forEach((promiseResult, i) => {
+  payload.forEach(({ errorKey, result: promiseResult }) => {
     if (promiseResult.status === 'fulfilled') {
       const metrics = promiseResult.value;
       if (metrics.metrics[0]) {
@@ -103,33 +125,14 @@ export function transformServiceMetrics(payload: FetchedAllServiceMetricsRespons
         }
       }
     } else {
-      const reason = (promiseResult as PromiseRejectedResult).reason;
-      switch (i) {
-        case 0:
-          serviceError.service_latencies_50 = reason;
-          break;
-        case 1:
-          serviceError.service_latencies_75 = reason;
-          break;
-        case 2:
-          serviceError.service_latencies_95 = reason;
-          break;
-        case 3:
-          serviceError.service_call_rate = reason;
-          break;
-        case 4:
-          serviceError.service_error_rate = reason;
-          break;
-      }
+      serviceError[errorKey] = promiseResult.reason;
     }
   });
 
   return { serviceMetrics, serviceError };
 }
 
-export function transformOperationMetrics(
-  payload: FetchAggregatedServiceMetricsResponse
-): OperationMetricsResult {
+export function transformOperationMetrics(payload: NamedOperationMetricResult[]): OperationMetricsResult {
   const opsError: OperationMetricsResult['opsError'] = {
     opsLatencies: null,
     opsCalls: null,
@@ -138,7 +141,7 @@ export function transformOperationMetrics(
 
   let opsMetrics: OpsMap | null = null;
 
-  payload.forEach((promiseResult, i) => {
+  payload.forEach(({ errorKey, result: promiseResult }) => {
     if (promiseResult.status === 'fulfilled') {
       const metric = promiseResult.value;
       if (metric.metrics && Array.isArray(metric.metrics)) {
@@ -194,17 +197,7 @@ export function transformOperationMetrics(
         });
       }
     } else {
-      switch (i) {
-        case 0:
-          opsError.opsLatencies = (promiseResult as PromiseRejectedResult).reason;
-          break;
-        case 1:
-          opsError.opsCalls = (promiseResult as PromiseRejectedResult).reason;
-          break;
-        case 2:
-          opsError.opsErrors = (promiseResult as PromiseRejectedResult).reason;
-          break;
-      }
+      opsError[errorKey] = promiseResult.reason;
     }
   });
 
@@ -263,20 +256,30 @@ export function transformOperationMetrics(
  */
 export function useServiceMetricsQuery(
   serviceName: string | undefined,
-  params: MetricsAPIQueryParams | undefined
+  params: MetricsQueryParams | undefined
 ): UseQueryResult<ServiceMetricsResult, ApiError> {
   return useQuery({
-    queryKey: params
-      ? serviceMetricsQueryKey(serviceName, params)
-      : (['serviceMetrics', 'disabled'] as const),
+    queryKey: serviceMetricsQueryKey(serviceName, params),
     queryFn: async () => {
-      const payload = (await Promise.allSettled([
-        JaegerAPI.fetchMetrics('latencies', [serviceName!], { ...params!, quantile: 0.5 }),
-        JaegerAPI.fetchMetrics('latencies', [serviceName!], { ...params!, quantile: 0.75 }),
-        JaegerAPI.fetchMetrics('latencies', [serviceName!], { ...params!, quantile: 0.95 }),
-        JaegerAPI.fetchMetrics('calls', [serviceName!], { ...params! }),
-        JaegerAPI.fetchMetrics('errors', [serviceName!], { ...params! }),
-      ])) as FetchedAllServiceMetricsResponse;
+      if (!serviceName || !params) {
+        throw new Error('Service metrics require a service name and query parameters.');
+      }
+      const payload: NamedServiceMetricResult[] = await Promise.all([
+        settleMetric(
+          'service_latencies_50',
+          JaegerAPI.fetchMetrics('latencies', [serviceName], { ...params, quantile: 0.5 })
+        ),
+        settleMetric(
+          'service_latencies_75',
+          JaegerAPI.fetchMetrics('latencies', [serviceName], { ...params, quantile: 0.75 })
+        ),
+        settleMetric(
+          'service_latencies_95',
+          JaegerAPI.fetchMetrics('latencies', [serviceName], { ...params, quantile: 0.95 })
+        ),
+        settleMetric('service_call_rate', JaegerAPI.fetchMetrics('calls', [serviceName], params)),
+        settleMetric('service_error_rate', JaegerAPI.fetchMetrics('errors', [serviceName], params)),
+      ]);
       return transformServiceMetrics(payload);
     },
     enabled: Boolean(serviceName && params),
@@ -292,19 +295,20 @@ export function useServiceMetricsQuery(
  */
 export function useOperationMetricsQuery(
   serviceName: string | undefined,
-  params: MetricsAPIQueryParams | undefined
+  params: MetricsQueryParams | undefined
 ): UseQueryResult<OperationMetricsResult, ApiError> {
   return useQuery({
-    queryKey: params
-      ? operationMetricsQueryKey(serviceName, params)
-      : (['operationMetrics', 'disabled'] as const),
+    queryKey: operationMetricsQueryKey(serviceName, params),
     queryFn: async () => {
-      const query = { ...params!, groupByOperation: true };
-      const payload = (await Promise.allSettled([
-        JaegerAPI.fetchMetrics('latencies', [serviceName!], { ...query }),
-        JaegerAPI.fetchMetrics('calls', [serviceName!], { ...query }),
-        JaegerAPI.fetchMetrics('errors', [serviceName!], { ...query }),
-      ])) as FetchAggregatedServiceMetricsResponse;
+      if (!serviceName || !params) {
+        throw new Error('Operation metrics require a service name and query parameters.');
+      }
+      const query = { ...params, groupByOperation: true, quantile: 0.95 };
+      const payload: NamedOperationMetricResult[] = await Promise.all([
+        settleMetric('opsLatencies', JaegerAPI.fetchMetrics('latencies', [serviceName], query)),
+        settleMetric('opsCalls', JaegerAPI.fetchMetrics('calls', [serviceName], query)),
+        settleMetric('opsErrors', JaegerAPI.fetchMetrics('errors', [serviceName], query)),
+      ]);
       return transformOperationMetrics(payload);
     },
     enabled: Boolean(serviceName && params),

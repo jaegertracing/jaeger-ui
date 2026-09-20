@@ -5,8 +5,10 @@ import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
 
 export default defineConfig({
   root: __dirname,
@@ -63,6 +65,13 @@ export default defineConfig({
       // More-specific alias must come first
       '@jaegertracing/plexus/demo': path.resolve(__dirname, '../plexus/demo/src/index'),
       '@jaegertracing/plexus': path.resolve(__dirname, '../plexus/src'),
+      // d3-flame-graph doesn't export its CSS in package.json exports field, so
+      // resolve the package via Node resolution (works regardless of how the
+      // package manager lays out node_modules) and point at the CSS directly.
+      'd3-flame-graph/dist/d3-flamegraph.css': path.join(
+        path.dirname(require.resolve('d3-flame-graph')),
+        'd3-flamegraph.css'
+      ),
     },
   },
 });

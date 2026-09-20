@@ -9,17 +9,17 @@ import { actions } from './duck';
 import {
   getSelectedSpanID,
   MIN_TIMELINE_COLUMN_WIDTH,
-  SIDE_PANEL_WIDTH_MAX,
   SIDE_PANEL_WIDTH_MIN,
   SPAN_NAME_COLUMN_WIDTH_MAX,
+  SPAN_NAME_COLUMN_WIDTH_MIN,
   useLayoutPrefsStore,
   useTraceTimelineStore,
 } from './store';
 import SpanDetailSidePanel from './SpanDetailSidePanel';
 import TimelineHeaderRow from './TimelineHeaderRow';
 import { useServiceFilter } from './useServiceFilter';
+import { useSpanPillsEnabled } from './spanPills';
 import VirtualizedTraceView from './VirtualizedTraceView';
-import VerticalResizer from '../../common/VerticalResizer';
 import { merge as mergeShortcuts } from '../keyboard-shortcuts';
 import { Accessors } from '../ScrollManager';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '../types';
@@ -43,6 +43,9 @@ type TProps = TDispatchProps & {
   registerAccessors: (accessors: Accessors) => void;
   findMatchesIDs: Set<string> | TNil;
   scrollToFirstVisibleSpan: () => void;
+  // Height of the TracePage header, which pads this view down by that much. The side panel measures
+  // its own document offset, so it has to know when that padding changes.
+  pageHeaderHeight: number;
   trace: IOtelTrace;
   criticalPath: CriticalPathSection[];
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
@@ -71,6 +74,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     updateNextViewRangeTime,
     updateViewRangeTime,
     viewRange,
+    pageHeaderHeight,
     trace,
     useOtelTerms,
     ...rest
@@ -141,6 +145,8 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
 
   const { serviceFilterNode } = useServiceFilter(trace, detailPanelMode);
 
+  const spanPillsEnabled = useSpanPillsEnabled();
+
   // When timeline bars are hidden with the side panel active, the side panel expands to absorb
   // the timeline column so the Service/Operation column keeps its pixel width unchanged.
   const effectiveSidePanelWidth =
@@ -156,7 +162,15 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   // Equals spanNameColumnWidth when bars are visible (the round-trip through mainFraction cancels).
   // When bars are hidden with no side panel, the name column spans the full page.
   const headerNameWidth = nameColumnWidth * mainFraction;
-  const resizerMax = sidePanelActive ? mainFraction - MIN_TIMELINE_COLUMN_WIDTH : SPAN_NAME_COLUMN_WIDTH_MAX;
+  let resizerMax: number;
+  if (sidePanelActive && timelineBarsVisible) {
+    resizerMax = mainFraction - MIN_TIMELINE_COLUMN_WIDTH;
+  } else if (sidePanelActive && !timelineBarsVisible) {
+    resizerMax = 1 - SIDE_PANEL_WIDTH_MIN;
+  } else {
+    resizerMax = SPAN_NAME_COLUMN_WIDTH_MAX;
+  }
+  resizerMax = Math.max(SPAN_NAME_COLUMN_WIDTH_MIN, Math.min(resizerMax, 1));
 
   // Column header label: "Trace Root" when showing the root span (explicit or fallback),
   // "Span Details" for any other selected span.
@@ -165,13 +179,11 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     selectedSpanID === null || selectedSpanID === rootSpanID ? 'Trace Root' : 'Span Details';
 
   // TimelineHeaderRow is position:fixed (see TimelineHeaderRow.css), so it takes no space in the
-  // document flow. layoutRef is on the --sidePanelLayout div which starts at the same document
-  // position as the header row. We compute panelTop once:
-  //   top + scrollY = document-relative top of the layout area = the fixed viewport top of the header
-  //   + 38          = the fixed header height, so the panel starts just below the header
-  // Because the header is fixed, panelTop is constant — only a resize listener is needed.
+  // document flow. layoutRef is on the --sidePanelLayout div, which therefore starts at the same
+  // document position as the header row: top + scrollY is both the layout area's document offset
+  // and the header row's viewport top. The side panel starts one header row below that.
   const layoutRef = useRef<HTMLDivElement>(null);
-  const [panelTop, setPanelTop] = useState<number | null>(null);
+  const [layoutTop, setLayoutTop] = useState<number | null>(null);
 
   useLayoutEffect(() => {
     if (!sidePanelActive) return;
@@ -179,26 +191,18 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       /* istanbul ignore next */
       if (!layoutRef.current) return;
       const { top } = layoutRef.current.getBoundingClientRect();
-      const headerHeight = parseInt(
-        getComputedStyle(document.documentElement).getPropertyValue('--timeline-header-row-height'),
-        10
-      );
-      setPanelTop(top + window.scrollY + headerHeight);
+      setLayoutTop(top + window.scrollY);
     };
     measure();
     window.addEventListener('resize', measure);
-    // ResizeObserver catches layout shifts that window resize misses (e.g. slim-header toggle,
-    // archive notifier appearing), which would change the layout container's document offset.
-    /* istanbul ignore next */
-    const resizeObserver = new ResizeObserver(measure);
-    /* istanbul ignore next */
-    if (layoutRef.current) resizeObserver.observe(layoutRef.current);
     return () => {
       window.removeEventListener('resize', measure);
-      /* istanbul ignore next */
-      resizeObserver.disconnect();
     };
-  }, [sidePanelActive]);
+    // pageHeaderHeight is a dependency because TracePage pads this view down by it, so a change
+    // moves the layout container without resizing it. The header is taller in timeline view than in
+    // the others, since only the timeline shows the minimap, and its height reaches TracePage's
+    // state one commit after the view switches — too late for the measurement taken on mount.
+  }, [sidePanelActive, pageHeaderHeight]);
 
   const headerRow = (
     <TimelineHeaderRow
@@ -208,6 +212,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       onCollapseAll={collapseAll}
       onCollapseOne={collapseOne}
       onColummWidthChange={setSpanNameColumnWidth}
+      onSidePanelWidthChange={setSidePanelWidth}
       onExpandAll={expandAll}
       onExpandOne={expandOne}
       resizerMax={resizerMax}
@@ -230,16 +235,19 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       useOtelTerms={useOtelTerms}
       currentViewRangeTime={viewRange.time.current}
       nameColumnWidth={nameColumnWidth}
+      spanPillsEnabled={spanPillsEnabled}
     />
   );
 
   if (sidePanelActive) {
     const mainWidth = (1 - effectiveSidePanelWidth) * 100;
+    // The header row height stays in CSS so that vars.css remains its only definition.
+    const headerRowHeight = 'var(--timeline-header-row-height)';
     const sidePanelStyle: React.CSSProperties = {
       width: `${effectiveSidePanelWidth * 100}%`,
-      ...(panelTop !== null && {
-        top: panelTop,
-        height: `calc(100vh - ${panelTop}px)`,
+      ...(layoutTop !== null && {
+        top: `calc(${layoutTop}px + ${headerRowHeight})`,
+        height: `calc(100vh - ${layoutTop}px - ${headerRowHeight})`,
       }),
     };
     return (
@@ -249,14 +257,6 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
           <div className="TraceTimelineViewer--main" style={{ width: `${mainWidth}%` }}>
             {virtualizedView}
           </div>
-          {timelineBarsVisible && (
-            <VerticalResizer
-              position={1 - sidePanelWidth}
-              min={1 - Math.min(SIDE_PANEL_WIDTH_MAX, 1 - spanNameColumnWidth - MIN_TIMELINE_COLUMN_WIDTH)}
-              max={1 - SIDE_PANEL_WIDTH_MIN}
-              onChange={newPosition => setSidePanelWidth(1 - newPosition)}
-            />
-          )}
           <div className="TraceTimelineViewer--sidePanel" style={sidePanelStyle}>
             <SpanDetailSidePanel
               trace={trace}

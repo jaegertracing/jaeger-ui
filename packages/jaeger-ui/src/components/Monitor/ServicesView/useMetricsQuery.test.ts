@@ -117,9 +117,25 @@ const opsErrors = {
 
 const fullOpsPayload: FetchAggregatedServiceMetricsResponse = [opsLatencies, opsCalls, opsErrors];
 
+const nameServiceResults = (payload: FetchedAllServiceMetricsResponse) => {
+  const errorKeys = [
+    'service_latencies_50',
+    'service_latencies_75',
+    'service_latencies_95',
+    'service_call_rate',
+    'service_error_rate',
+  ] as const;
+  return payload.map((result, index) => ({ errorKey: errorKeys[index], result }));
+};
+
+const nameOperationResults = (payload: FetchAggregatedServiceMetricsResponse) => {
+  const errorKeys = ['opsLatencies', 'opsCalls', 'opsErrors'] as const;
+  return payload.map((result, index) => ({ errorKey: errorKeys[index], result }));
+};
+
 describe('transformServiceMetrics', () => {
   it('populates service_latencies array from fulfilled results', () => {
-    const result = transformServiceMetrics(fullServicePayload);
+    const result = transformServiceMetrics(nameServiceResults(fullServicePayload));
     expect(result.serviceMetrics.service_latencies).toHaveLength(3);
     expect(result.serviceMetrics.service_latencies![0].quantile).toBe(0.5);
     expect(result.serviceMetrics.service_latencies![1].quantile).toBe(0.75);
@@ -127,13 +143,13 @@ describe('transformServiceMetrics', () => {
   });
 
   it('populates service_call_rate and service_error_rate', () => {
-    const result = transformServiceMetrics(fullServicePayload);
+    const result = transformServiceMetrics(nameServiceResults(fullServicePayload));
     expect(result.serviceMetrics.service_call_rate).not.toBeNull();
     expect(result.serviceMetrics.service_error_rate).not.toBeNull();
   });
 
   it('clears all errors when all promises are fulfilled', () => {
-    const result = transformServiceMetrics(fullServicePayload);
+    const result = transformServiceMetrics(nameServiceResults(fullServicePayload));
     expect(result.serviceError.service_latencies_50).toBeNull();
     expect(result.serviceError.service_latencies_75).toBeNull();
     expect(result.serviceError.service_latencies_95).toBeNull();
@@ -141,21 +157,16 @@ describe('transformServiceMetrics', () => {
     expect(result.serviceError.service_error_rate).toBeNull();
   });
 
-  it('records per-slot errors when promises are rejected', () => {
-    const fakeErr = new Error('timeout') as any;
-    const mixed = [
-      { status: 'rejected', reason: fakeErr },
-      { status: 'rejected', reason: fakeErr },
-      { status: 'rejected', reason: fakeErr },
-      { status: 'rejected', reason: fakeErr },
-      { status: 'rejected', reason: fakeErr },
-    ] as any as FetchedAllServiceMetricsResponse;
-    const result = transformServiceMetrics(mixed);
-    expect(result.serviceError.service_latencies_50).toBe(fakeErr);
-    expect(result.serviceError.service_latencies_75).toBe(fakeErr);
-    expect(result.serviceError.service_latencies_95).toBe(fakeErr);
-    expect(result.serviceError.service_call_rate).toBe(fakeErr);
-    expect(result.serviceError.service_error_rate).toBe(fakeErr);
+  it('records rejected requests by label rather than position', () => {
+    const latencyError = new Error('latency timeout');
+    const callRateError = new Error('call-rate timeout');
+    const result = transformServiceMetrics([
+      { errorKey: 'service_call_rate', result: { status: 'rejected', reason: callRateError } },
+      { errorKey: 'service_latencies_50', result: { status: 'rejected', reason: latencyError } },
+    ] as any);
+    expect(result.serviceError.service_latencies_50).toBe(latencyError);
+    expect(result.serviceError.service_call_rate).toBe(callRateError);
+    expect(result.serviceError.service_error_rate).toBeNull();
     expect(result.serviceMetrics.service_latencies).toBeNull();
   });
 
@@ -177,7 +188,7 @@ describe('transformServiceMetrics', () => {
       callRate,
       errorRate,
     ] as any as FetchedAllServiceMetricsResponse;
-    const result = transformServiceMetrics(payload);
+    const result = transformServiceMetrics(nameServiceResults(payload));
     expect(result.serviceMetrics.service_latencies![0].metricPoints[0].y).toBeNull();
   });
 
@@ -202,7 +213,7 @@ describe('transformServiceMetrics', () => {
       callRate,
       errorRate,
     ] as any as FetchedAllServiceMetricsResponse;
-    const result = transformServiceMetrics(payload);
+    const result = transformServiceMetrics(nameServiceResults(payload));
     const latency = result.serviceMetrics.service_latencies![0];
     // NaN point becomes null, good point becomes 50
     expect(latency.metricPoints[0].y).toBeNull();
@@ -234,7 +245,7 @@ describe('transformServiceMetrics', () => {
         value: { name: 'service_error_rate', type: 'GAUGE', help: '', quantile: 0.95, metrics: [] },
       },
     ] as any as FetchedAllServiceMetricsResponse;
-    const result = transformServiceMetrics(empty);
+    const result = transformServiceMetrics(nameServiceResults(empty));
     expect(result.serviceMetrics.service_latencies).toBeNull();
     expect(result.serviceMetrics.service_call_rate).toBeNull();
   });
@@ -242,13 +253,13 @@ describe('transformServiceMetrics', () => {
 
 describe('transformOperationMetrics', () => {
   it('produces one ServiceOpsMetrics entry per operation', () => {
-    const result = transformOperationMetrics(fullOpsPayload);
+    const result = transformOperationMetrics(nameOperationResults(fullOpsPayload));
     expect(result.serviceOpsMetrics).toHaveLength(1);
     expect(result.serviceOpsMetrics![0].name).toBe('op1');
   });
 
   it('sets impact to 1 when there is exactly one operation', () => {
-    const result = transformOperationMetrics(fullOpsPayload);
+    const result = transformOperationMetrics(nameOperationResults(fullOpsPayload));
     expect(result.serviceOpsMetrics![0].impact).toBe(1);
   });
 
@@ -295,23 +306,22 @@ describe('transformOperationMetrics', () => {
         },
       },
     ] as any as FetchAggregatedServiceMetricsResponse;
-    const result = transformOperationMetrics(payload);
+    const result = transformOperationMetrics(nameOperationResults(payload));
     const impacts = result.serviceOpsMetrics!.map(m => m.impact);
     expect(Math.max(...impacts)).toBe(1);
     expect(Math.min(...impacts)).toBe(0);
   });
 
-  it('records per-slot errors when ops promises are rejected', () => {
-    const fakeErr = new Error('net') as any;
-    const payload = [
-      { status: 'rejected', reason: fakeErr },
-      { status: 'rejected', reason: fakeErr },
-      { status: 'rejected', reason: fakeErr },
-    ] as any as FetchAggregatedServiceMetricsResponse;
-    const result = transformOperationMetrics(payload);
-    expect(result.opsError.opsLatencies).toBe(fakeErr);
-    expect(result.opsError.opsCalls).toBe(fakeErr);
-    expect(result.opsError.opsErrors).toBe(fakeErr);
+  it('records rejected operation requests by label rather than position', () => {
+    const latencyError = new Error('latency timeout');
+    const errorRateError = new Error('error-rate timeout');
+    const result = transformOperationMetrics([
+      { errorKey: 'opsErrors', result: { status: 'rejected', reason: errorRateError } },
+      { errorKey: 'opsLatencies', result: { status: 'rejected', reason: latencyError } },
+    ] as any);
+    expect(result.opsError.opsLatencies).toBe(latencyError);
+    expect(result.opsError.opsCalls).toBeNull();
+    expect(result.opsError.opsErrors).toBe(errorRateError);
     expect(result.serviceOpsMetrics).toBeUndefined();
   });
 
@@ -330,7 +340,7 @@ describe('transformOperationMetrics', () => {
         value: { name: 'service_operation_error_rate', type: 'GAUGE', help: '', quantile: 0.95, metrics: [] },
       },
     ] as any as FetchAggregatedServiceMetricsResponse;
-    const result = transformOperationMetrics(empty);
+    const result = transformOperationMetrics(nameOperationResults(empty));
     expect(result.serviceOpsMetrics).toBeUndefined();
   });
 });
@@ -344,7 +354,6 @@ const makeWrapper = (client: QueryClient) => {
 };
 
 const baseParams = {
-  quantile: 0.95,
   endTs: 1_700_000_000_000,
   lookback: 3600000,
   step: 60000,

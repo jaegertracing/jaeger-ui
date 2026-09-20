@@ -21,16 +21,21 @@ import LoadingIndicator from '../../common/LoadingIndicator';
 import NewWindowIcon from '../../common/NewWindowIcon';
 import SearchResultsDDG from '../../DeepDependencies/traces';
 import { getTracePageLink } from '../../TracePage/url';
-import * as orderBy from '../../../model/order-by';
-import { getPercentageOfDuration } from '../../../utils/date';
+import * as orderBy from './order-by';
+import type { OrderBy } from './order-by';
+import { sortTraceSummaries } from './sort';
+import { formatDurationCompact, getPercentageOfDuration } from '../../../utils/date';
 
 import { TraceSummary } from '../../../types/trace-summary';
+import { Microseconds } from '../../../types/units';
 
 import './index.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import withRouteProps from '../../../utils/withRouteProps';
 import SearchableSelect from '../../common/SearchableSelect';
-import { useSearchResultsStore } from '../store.search-results';
+import { useSearchResultsStore } from './store.search-results';
+import { useSortBy } from './use-sort-by';
+import { useShallow } from 'zustand/react/shallow';
 
 type SearchResultsProps = {
   addTraceToCohort: (summary: TraceSummary) => void;
@@ -44,16 +49,15 @@ type SearchResultsProps = {
   showStandaloneLink: boolean;
   skipMessage?: boolean;
   spanLinks?: Record<string, string> | undefined;
+  searchLatency?: Microseconds;
   traceSummaries: TraceSummary[];
   uploadedTraceIDs: ReadonlySet<string>;
   rawTraces: unknown[];
-  sortBy: string;
-  handleSortChange: (sortBy: string) => void;
 };
 
 type SelectSortProps = {
-  sortBy: string;
-  handleSortChange: (sortBy: string) => void;
+  sortBy: OrderBy;
+  handleSortChange: (sortBy: OrderBy) => void;
 };
 
 const Option = Select.Option;
@@ -65,12 +69,17 @@ export function SelectSort({ sortBy, handleSortChange }: SelectSortProps) {
   return (
     <label>
       Sort:{' '}
-      <SearchableSelect value={sortBy} onChange={(value: string) => handleSortChange(value)}>
+      <SearchableSelect value={sortBy} onChange={(value: OrderBy) => handleSortChange(value)}>
         <Option value={orderBy.MOST_RECENT}>Most Recent</Option>
+        <Option value={orderBy.OLDEST_FIRST}>Oldest First</Option>
         <Option value={orderBy.LONGEST_FIRST}>Longest First</Option>
         <Option value={orderBy.SHORTEST_FIRST}>Shortest First</Option>
         <Option value={orderBy.MOST_SPANS}>Most Spans</Option>
         <Option value={orderBy.LEAST_SPANS}>Least Spans</Option>
+        <Option value={orderBy.MOST_ERRORS}>Most Errors</Option>
+        <Option value={orderBy.LEAST_ERRORS}>Least Errors</Option>
+        <Option value={orderBy.TRACE_NAME_ASC}>Trace Name A-Z</Option>
+        <Option value={orderBy.TRACE_NAME_DESC}>Trace Name Z-A</Option>
       </SearchableSelect>
     </label>
   );
@@ -86,18 +95,29 @@ export function UnconnectedSearchResults({
   showStandaloneLink,
   skipMessage = false,
   spanLinks,
+  searchLatency,
   traceSummaries,
   uploadedTraceIDs,
   rawTraces,
-  sortBy,
-  handleSortChange,
   addTraceToCohort,
   removeTraceFromCohort,
 }: SearchResultsProps) {
   const navigate = useNavigate();
-  const viewMode = useSearchResultsStore(s => s.viewMode);
-  const setViewMode = useSearchResultsStore(s => s.setViewMode);
+  const { viewMode, setViewMode } = useSearchResultsStore(
+    useShallow(s => ({
+      viewMode: s.viewMode,
+      setViewMode: s.setViewMode,
+    }))
+  );
+  const { sortBy, handleSortChange } = useSortBy();
 
+  const sortedTraceSummaries = useMemo(
+    () => sortTraceSummaries(traceSummaries, sortBy),
+    [traceSummaries, sortBy]
+  );
+
+  // Keyed by traceID, so the sort order cannot affect it. Building it from the unsorted
+  // results keeps both the map and toggleComparison below stable when the sort changes.
   const traceSummaryById = useMemo(
     () => new Map(traceSummaries.map(summary => [summary.traceID, summary])),
     [traceSummaries]
@@ -109,9 +129,9 @@ export function UnconnectedSearchResults({
         removeTraceFromCohort(traceID);
         return;
       }
-      const summary = traceSummaryById.get(traceID);
       // Defensive: every rendered row's traceID is a key in traceSummaryById,
       // so this lookup cannot miss in normal UI flow.
+      const summary = traceSummaryById.get(traceID);
       if (!summary) return;
       addTraceToCohort(summary);
     },
@@ -127,7 +147,7 @@ export function UnconnectedSearchResults({
       getTracePageLink(
         traceID,
         { fromSearch: location.pathname + location.search },
-        spanLinks && (spanLinks[traceID] || spanLinks[traceID.replace(/^0*/, '')])
+        spanLinks && spanLinks[traceID]
       ),
     [location, spanLinks]
   );
@@ -148,11 +168,11 @@ export function UnconnectedSearchResults({
     const view = urlState.view && urlState.view === 'ddg' ? EAltViewActions.Traces : EAltViewActions.Ddg;
     trackAltView(view);
     // When URL has lost search params (e.g. after TopNav navigation to bare /search),
-    // fall back to the root service of the first result so DDG can build the graph.
+    // fall back to the root service of the first result so DDG can build the graph
     const serviceFromUrl = typeof urlState.service === 'string' ? urlState.service : undefined;
-    const service = serviceFromUrl ?? traceSummaries[0]?.rootServiceName;
+    const service = serviceFromUrl ?? sortedTraceSummaries[0]?.rootServiceName;
     navigate(getUrl({ ...urlState, service, view }));
-  }, [location, navigate, traceSummaries]);
+  }, [location, navigate, sortedTraceSummaries]);
 
   const traceResultsView = queryString.parse(location.search).view !== 'ddg';
 
@@ -192,7 +212,7 @@ export function UnconnectedSearchResults({
         {!hideGraph && traceResultsView && (
           <div className="ub-p3 SearchResults--headerScatterPlot">
             <ScatterPlot
-              data={traceSummaries.map(t => {
+              data={sortedTraceSummaries.map(t => {
                 return {
                   x: t.startTime,
                   y: t.duration,
@@ -211,12 +231,20 @@ export function UnconnectedSearchResults({
         )}
         <div className="SearchResults--headerOverview">
           <h2 className="ub-m0 u-flex-1 SearchResults--resultCount">
-            {traceSummaries.length} Trace{traceSummaries.length > 1 && 's'}
+            {sortedTraceSummaries.length} trace{sortedTraceSummaries.length !== 1 && 's'}
+            {searchLatency != null && (
+              <span className="SearchResults--searchLatency">
+                {' '}
+                (in {formatDurationCompact(searchLatency)})
+              </span>
+            )}
           </h2>
           {traceResultsView && viewMode === 'list' && (
             <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />
           )}
-          {traceResultsView && <DownloadResults traceSummaries={traceSummaries} rawTraces={rawTraces} />}
+          {traceResultsView && (
+            <DownloadResults traceSummaries={sortedTraceSummaries} rawTraces={rawTraces} />
+          )}
           <AltViewOptions traceResultsView={traceResultsView} onDdgViewClicked={onDdgViewClicked} />
           {traceResultsView && (
             <Radio.Group
@@ -242,17 +270,15 @@ export function UnconnectedSearchResults({
       </div>
       {!traceResultsView && (
         <div className="SearchResults--ddg-container">
-          <SearchResultsDDG location={location} traceIDs={traceSummaries.map(s => s.traceID)} />
+          <SearchResultsDDG location={location} traceIDs={sortedTraceSummaries.map(s => s.traceID)} />
         </div>
       )}
       {traceResultsView && diffSelection}
       {traceResultsView && viewMode === 'table' && (
         <TraceTable
-          traceSummaries={traceSummaries}
+          traceSummaries={sortedTraceSummaries}
           maxTraceDuration={maxTraceDuration}
           getLink={getLink}
-          sortBy={sortBy}
-          handleSortChange={handleSortChange}
           disableComparisons={disableComparisons}
           cohortIds={cohortIds}
           toggleComparison={toggleComparison}
@@ -260,7 +286,7 @@ export function UnconnectedSearchResults({
       )}
       {traceResultsView && viewMode === 'list' && (
         <ul className="ub-list-reset">
-          {traceSummaries.map(traceSummary => (
+          {sortedTraceSummaries.map(traceSummary => (
             <li className="ub-my3" key={traceSummary.traceID}>
               <ResultItem
                 durationPercent={getPercentageOfDuration(traceSummary.duration, maxTraceDuration)}

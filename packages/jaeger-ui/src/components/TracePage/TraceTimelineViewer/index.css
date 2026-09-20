@@ -25,6 +25,7 @@ SPDX-License-Identifier: Apache-2.0
   overflow-y: auto;
   position: fixed;
   right: 0;
+  z-index: 3;
 }
 
 /* Show a permanent column divider for all VerticalResizers within the trace timeline,

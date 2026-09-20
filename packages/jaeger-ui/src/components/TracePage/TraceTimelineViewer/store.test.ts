@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import DetailState from './SpanDetail/DetailState';
 import {
@@ -178,6 +178,16 @@ describe('trace timeline zustand stores', () => {
         useLayoutPrefsStore.getState().setSpanNameColumnWidth(0.99);
         expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(0.65);
       });
+
+      it('clamps to leave room for side panel when timeline is hidden', () => {
+        useLayoutPrefsStore.setState({
+          detailPanelMode: 'sidepanel',
+          sidePanelWidth: 0.7,
+          timelineBarsVisible: false,
+        });
+        useLayoutPrefsStore.getState().setSpanNameColumnWidth(0.99);
+        expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(1 - SIDE_PANEL_WIDTH_MIN);
+      });
     });
 
     describe('setSidePanelWidth', () => {
@@ -236,6 +246,16 @@ describe('trace timeline zustand stores', () => {
       useLayoutPrefsStore.setState({ spanNameColumnWidth: 0.8, sidePanelWidth: 0.3 });
       setDetailPanelMode('sidepanel');
       expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(0.65);
+    });
+
+    it('clamps spanNameColumnWidth when switching to sidepanel with timeline hidden', () => {
+      useLayoutPrefsStore.setState({
+        spanNameColumnWidth: SPAN_NAME_COLUMN_WIDTH_MAX,
+        sidePanelWidth: 0.7,
+        timelineBarsVisible: false,
+      });
+      setDetailPanelMode('sidepanel');
+      expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(1 - SIDE_PANEL_WIDTH_MIN);
     });
 
     it('does not clamp spanNameColumnWidth when switching to inline', () => {
@@ -633,5 +653,37 @@ describe('getSelectedSpanID', () => {
       ['span-b', new DetailState()],
     ]);
     expect(getSelectedSpanID(map)).toBe('span-a');
+  });
+});
+
+describe('getInitialLayoutState() with storage blocked', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    vi.mocked(getConfig).mockReturnValue({} as ReturnType<typeof getConfig>);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  // getInitialLayoutState() seeds the zustand store when this module is imported, so a
+  // throw here would take down the trace page rather than lose one layout preference.
+  it('returns the defaults when reading is blocked', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new DOMException('SecurityError');
+    });
+    const state = getInitialLayoutState();
+    expect(state.spanNameColumnWidth).toBe(0.25);
+    expect(state.timelineBarsVisible).toBe(true);
+    expect(state.detailPanelMode).toBe('inline');
+    expect(state.sidePanelWidth).toBeCloseTo(0.375);
+  });
+
+  it('keeps the width setters working when writing is blocked', () => {
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('QuotaExceededError');
+    });
+    expect(() => useLayoutPrefsStore.getState().setSpanNameColumnWidth(0.4)).not.toThrow();
+    expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(0.4);
   });
 });

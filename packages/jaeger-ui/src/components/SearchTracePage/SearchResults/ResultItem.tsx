@@ -6,7 +6,6 @@ import { Col, Divider, Row, Tag, Tooltip } from 'antd';
 import { Link } from 'react-router-dom';
 
 import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
 
 import { IoWarning } from 'react-icons/io5';
 
@@ -14,15 +13,13 @@ import { trackConversions, EAltViewActions } from './index.track';
 import * as markers from './ResultItem.markers';
 import ResultItemTitle from './ResultItemTitle';
 import ServicePills from './ServicePills';
-import { formatRelativeDate } from '../../../utils/date';
+import { formatRelativeDate, formatRelativeTime } from '../../../utils/date';
 import { getIncompleteTraceTooltip } from '../../../model/trace-viewer';
 
 import type { TraceSummary } from '../../../types/trace-summary';
 import type { TracePageLink } from '../../TracePage/url';
 
 import './ResultItem.css';
-
-dayjs.extend(relativeTime);
 
 type Props = {
   durationPercent: number;
@@ -56,9 +53,8 @@ export default function ResultItem({
     orphanSpanCount,
   } = traceSummary;
 
-  const startTimeDayjs = dayjs(startTime / 1000);
-  const timeStr = startTimeDayjs.format('h:mm:ss a');
-  const fromNow = startTimeDayjs.fromNow();
+  const timeStr = dayjs(startTime / 1000).format('h:mm:ss a');
+  const fromNow = formatRelativeTime(startTime);
 
   return (
     <div className="ResultItem" onClick={trackTraceConversions} role="button">

@@ -153,6 +153,12 @@ export default class ListView extends React.Component<TListViewProps> {
    * HTMLElement holding the rendered items.
    */
   _itemHolderElm: HTMLElement | TNil;
+  /**
+   * The actual .length of the items array after rendering, used in tests to
+   * detect sparse arrays (array holes) that can occur when items.length is
+   * pre-allocated before push() calls.
+   */
+  _lastItemsLength: number;
 
   static defaultProps = {
     initialDraw: DEFAULT_INITIAL_DRAW,
@@ -177,6 +183,7 @@ export default class ListView extends React.Component<TListViewProps> {
 
     this._htmlTopOffset = -1;
     this._windowScrollListenerAdded = false;
+    this._lastItemsLength = 0;
     // _htmlElm is only relevant if props.windowScroller is true
     this._htmlElm = document.documentElement as any;
     this._wrapperElm = undefined;
@@ -419,7 +426,6 @@ export default class ListView extends React.Component<TListViewProps> {
     this._startIndexDrawn = start;
     this._endIndexDrawn = end;
 
-    items.length = end - start + 1;
     for (let i = start; i <= end; i++) {
       const { y: top, height } = this._yPositions.getRowPosition(i, heightGetter);
       const style = {
@@ -431,6 +437,7 @@ export default class ListView extends React.Component<TListViewProps> {
       const attrs = { 'data-item-key': itemKey };
       items.push(itemRenderer(itemKey, style, i, attrs));
     }
+    this._lastItemsLength = items.length;
     const wrapperProps: TWrapperProps = {
       style: { position: 'relative' },
       ref: this._initWrapper,

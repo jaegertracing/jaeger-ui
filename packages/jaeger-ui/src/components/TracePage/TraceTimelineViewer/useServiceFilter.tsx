@@ -17,6 +17,7 @@ import {
 } from '../url/svcFilter';
 import { IOtelTrace } from '../../../types/otel';
 import type { SpanDetailPanelMode } from '../../../types/config';
+import storage from '../../../utils/storage';
 
 function setsEqual(a: Set<string>, b: Set<string>): boolean {
   if (a.size !== b.size) return false;
@@ -101,20 +102,13 @@ export function resolveInitialFilter(
 
   // No valid URL param: try localStorage defaults (unless we just cleaned a stale URL).
   if (skipDefaults) return { pruned: new Set() };
-  try {
-    const stored = localStorage.getItem(SVC_FILTER_DEFAULTS_KEY);
-    if (stored) {
-      const defaults = JSON.parse(stored) as Partial<SvcFilterDefaults>;
-      if (Array.isArray(defaults.prunedServices)) {
-        const traceServiceSet = new Set(sortedServiceNames);
-        const pruned = new Set(defaults.prunedServices.filter(name => traceServiceSet.has(name)));
-        if (pruned.size > 0 && pruned.size < sortedServiceNames.length) {
-          return { pruned: sanitizePrunedServices(pruned, rootServiceNames) };
-        }
-      }
+  const defaults = storage.getJSON<Partial<SvcFilterDefaults>>(SVC_FILTER_DEFAULTS_KEY);
+  if (defaults && Array.isArray(defaults.prunedServices)) {
+    const traceServiceSet = new Set(sortedServiceNames);
+    const pruned = new Set(defaults.prunedServices.filter(name => traceServiceSet.has(name)));
+    if (pruned.size > 0 && pruned.size < sortedServiceNames.length) {
+      return { pruned: sanitizePrunedServices(pruned, rootServiceNames) };
     }
-  } catch {
-    // Ignore localStorage errors.
   }
 
   return { pruned: new Set() };
@@ -201,11 +195,15 @@ export function useServiceFilter(
     }
     if (cleanSearch != null && cleanSearch !== location.search) {
       skipDefaultsRef.current = true;
-      navigate({ pathname: location.pathname, search: cleanSearch }, { replace: true });
+      navigate(
+        { pathname: location.pathname, search: cleanSearch },
+        { replace: true, state: location.state }
+      );
     }
   }, [
     location.pathname,
     location.search,
+    location.state,
     navigate,
     rootServiceNames,
     sortedServiceNames,
@@ -235,7 +233,7 @@ export function useServiceFilter(
       }
 
       const search = buildFilterSearch(location.search, sortedServiceNames, nextPruned);
-      navigate({ pathname: location.pathname, search }, { replace: true });
+      navigate({ pathname: location.pathname, search }, { replace: true, state: location.state });
     },
     [
       zustandSetPrunedServices,
@@ -244,6 +242,7 @@ export function useServiceFilter(
       trace.spanMap,
       location.pathname,
       location.search,
+      location.state,
       sortedServiceNames,
       navigate,
     ]

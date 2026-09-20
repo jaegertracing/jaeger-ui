@@ -10,7 +10,7 @@ import type { LocationState } from '../../../types';
 export const ROUTE_PATH = prefixUrl('/trace/:id');
 
 export function getUrl(id: string, uiFind?: string): string {
-  const traceUrl = prefixUrl(`/trace/${id}`);
+  const traceUrl = prefixUrl(`/trace/${encodeURIComponent(id)}`);
   if (!uiFind) return traceUrl;
 
   return `${traceUrl}?${queryString.stringify({ uiFind })}`;

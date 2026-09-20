@@ -117,18 +117,18 @@ describe('DeepDependencyGraph/url', () => {
 
     it('handles absent values', () => {
       ['end', 'hash', 'operation', 'service', 'start', 'visEncoding'].forEach(param => {
-        const { [param]: unused, ...rest } = expectedParams;
+        const { [param]: _unused, ...rest } = expectedParams;
 
-        const { [param]: alsoUnused, ...rv } = acceptableParams;
+        const { [param]: _alsoUnused, ...rv } = acceptableParams;
         parseSpy.mockReturnValue(rv);
         expect(getUrlState(getSearch())).toEqual(rest);
       });
     });
 
     it("defaults `density` to 'ppe'", () => {
-      const { density: unused, ...rest } = expectedParams;
+      const { density: _unused, ...rest } = expectedParams;
 
-      const { density: alsoUnused, ...rv } = acceptableParams;
+      const { density: _alsoUnused, ...rv } = acceptableParams;
       parseSpy.mockReturnValue(rv);
       expect(getUrlState(getSearch())).toEqual({ ...rest, density: 'ppe' });
     });

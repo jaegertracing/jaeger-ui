@@ -8,8 +8,16 @@
  * and returns native OTLP data structures.
  */
 
+import { ALL_SERVICES } from '../../constants/search-form';
 import prefixUrl from '../../utils/prefix-url';
-import { ServicesResponseSchema, OperationsResponseSchema, TraceSummariesResponseSchema } from './schemas';
+import {
+  ServicesResponseSchema,
+  OperationsResponseSchema,
+  TraceSummariesResponseSchema,
+  GetTraceResponseSchema,
+  traceIdHex,
+} from './schemas';
+import type { TracesDataWire } from './schemas';
 import type { SearchQuery } from '../../types/search';
 import type { TraceSummary, ServiceSummary } from '../../types/trace-summary';
 import type { Microseconds } from '../../types/units';
@@ -60,7 +68,9 @@ export class JaegerClient {
    */
   async fetchTraceSummaries(query: SearchQuery): Promise<TraceSummary[]> {
     const params = new URLSearchParams();
-    if (query.service) params.set('query.serviceName', query.service);
+    // ALL_SERVICES is a UI-only value: the v3 search API reads an absent service name
+    // as "any service", so the parameter is left off rather than sent through.
+    if (query.service && query.service !== ALL_SERVICES) params.set('query.serviceName', query.service);
     if (query.operation) params.set('query.operationName', String(query.operation));
     // start/end are microsecond epoch integers from the URL; convert to ISO for the v3 API.
     // Guard with Number.isFinite to drop malformed URL params gracefully.
@@ -119,6 +129,23 @@ export class JaegerClient {
         services,
       };
     });
+  }
+
+  /**
+   * Fetch a single trace by ID from /api/v3/traces/{trace_id}.
+   * Validates the grpc-gateway envelope {"result": TracesData} and all nested
+   * OTLP fields at the network boundary. Envelope handling is kept separate from
+   * enrichment so future streaming can be added without touching the parser.
+   */
+  async fetchTrace(traceId: string): Promise<TracesDataWire> {
+    traceIdHex.parse(traceId);
+    const response = await this.fetchWithTimeout(`${this.apiRoot}/traces/${encodeURIComponent(traceId)}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch trace ${traceId}: ${response.status} ${response.statusText}`);
+    }
+    const data = await response.json();
+    const validated = GetTraceResponseSchema.parse(data);
+    return validated.result;
   }
 
   /**
