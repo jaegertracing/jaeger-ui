@@ -112,7 +112,6 @@ export function MonitorATMServicesViewImpl({ search = '', navigate }: TOwnProps)
   const graphDivWrapper = useRef<HTMLDivElement>(null);
   const initialFilters = getFiltersFromSearch(search);
   const [endTime, setEndTime] = useState<number>(Date.now());
-  const [hasInitialServiceTimestamp, setHasInitialServiceTimestamp] = useState(services.length > 0);
   const [graphWidth, setGraphWidth] = useState<number>(300);
   const [serviceOpsMetrics, setServiceOpsMetrics] = useState<ServiceOpsMetrics[] | undefined>(undefined);
   const [searchOps, setSearchOps] = useState<string>('');
@@ -142,16 +141,17 @@ export function MonitorATMServicesViewImpl({ search = '', navigate }: TOwnProps)
   }, [search]);
 
   const currentService = resolveService(selectedService, services);
+  const [timestampedService, setTimestampedService] = useState(currentService);
 
   useLayoutEffect(() => {
-    if (currentService && !hasInitialServiceTimestamp) {
-      setEndTime(Date.now());
-      setHasInitialServiceTimestamp(true);
+    if (currentService !== timestampedService) {
+      setEndTime(previous => Math.max(Date.now(), previous));
+      setTimestampedService(currentService);
     }
-  }, [currentService, hasInitialServiceTimestamp]);
+  }, [currentService, timestampedService]);
 
   const metricQueryParams: MetricsQueryParams | undefined = useMemo(() => {
-    if (!currentService || !hasInitialServiceTimestamp) return undefined;
+    if (!currentService || currentService !== timestampedService) return undefined;
     return {
       endTs: endTime,
       lookback: selectedTimeFrame,
@@ -159,7 +159,7 @@ export function MonitorATMServicesViewImpl({ search = '', navigate }: TOwnProps)
       ratePer: 10 * 60 * 1000,
       spanKind: selectedSpanKind,
     };
-  }, [currentService, endTime, hasInitialServiceTimestamp, selectedTimeFrame, selectedSpanKind]);
+  }, [currentService, endTime, selectedTimeFrame, selectedSpanKind, timestampedService]);
 
   const {
     data: serviceMetricsData,

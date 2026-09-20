@@ -262,6 +262,31 @@ describe('<MonitorATMServicesView>', () => {
     }
   });
 
+  it('refreshes the query timestamp when the resolved service changes', async () => {
+    cleanup();
+    useServices.mockReturnValue({ data: ['apple'], isLoading: false });
+    const { rerender } = renderWithRouter(<MonitorATMServicesView />);
+
+    try {
+      Date.now.mockReturnValue(1466424550000);
+      useServices.mockReturnValue({ data: ['banana'], isLoading: false });
+      rerender(
+        <MemoryRouter>
+          <MonitorATMServicesView />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(useServiceMetricsQuery).toHaveBeenLastCalledWith(
+          'banana',
+          expect.objectContaining({ endTs: 1466424550000 })
+        );
+      });
+    } finally {
+      Date.now.mockReturnValue(1466424490000);
+    }
+  });
+
   it('renders with one service latency', () => {
     cleanup();
     useServices.mockReturnValue({ data: ['apple'], isLoading: false });
