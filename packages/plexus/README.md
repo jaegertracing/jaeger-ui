@@ -622,9 +622,7 @@ The type for `setOnNode` is similar to that of `setOnContainer` in that the valu
 
 ```tsx
 type TMeasurableNodePropsSetter =
-  | Record<string, unknown>
-  | TMeasurableNodePropsFn
-  | (TMeasurableNodePropsFn | Record<string, unknown>)[];
+  Record<string, unknown> | TMeasurableNodePropsFn | (TMeasurableNodePropsFn | Record<string, unknown>)[];
 
 type TMeasurableNodePropsFn = (
   vertex: TVertex,
