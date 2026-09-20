@@ -11,7 +11,7 @@ import {
   traceIdHex,
   spanIdHex,
 } from './schemas';
-import capture from './v3-trace-local-2.21.0.json';
+import capture from './v3-trace-output.json';
 
 type ParsedTrace = ReturnType<typeof GetTraceResponseSchema.parse>;
 
@@ -27,8 +27,13 @@ function spanNamed(parsed: ParsedTrace, name: string) {
 }
 
 describe('GetTrace wire contract', () => {
-  it('accepts the captured v3-trace-local-2.21.0 envelope', () => {
-    const parsed = GetTraceResponseSchema.parse(capture);
+  let parsed: ParsedTrace;
+
+  beforeEach(() => {
+    parsed = GetTraceResponseSchema.parse(capture);
+  });
+
+  it('accepts the captured v3 trace envelope', () => {
     expect(parsed.result.resourceSpans).toHaveLength(1);
     expect(parsed.result.resourceSpans![0].scopeSpans![0].spans).toHaveLength(3);
     const root = spanNamed(parsed, 'root-with-any-values');
@@ -37,7 +42,6 @@ describe('GetTrace wire contract', () => {
   });
 
   it('preserves falsy AnyValues: empty string, false, zero, max int64', () => {
-    const parsed = GetTraceResponseSchema.parse(capture);
     const attrs = spanNamed(parsed, 'root-with-any-values').attributes!;
     const byKey = Object.fromEntries(attrs.map(a => [a.key, a.value])) as Record<string, any>;
     expect(byKey.empty.stringValue).toBe('');
@@ -48,27 +52,23 @@ describe('GetTrace wire contract', () => {
   });
 
   it('preserves nested kvlist and arrays inside AnyValue', () => {
-    const parsed = GetTraceResponseSchema.parse(capture);
     const nested = spanNamed(parsed, 'root-with-any-values').attributes!.find(a => a.key === 'nested')!;
     expect(nested.value.kvlistValue!.values![0].key).toBe('child');
   });
 
   it('accepts omitted kind (defaults to UNSPECIFIED) and empty status {}', () => {
-    const parsed = GetTraceResponseSchema.parse(capture);
     const unset = spanNamed(parsed, 'unset-kind-and-status');
     expect(unset.kind).toBeUndefined();
     expect(unset.status).toEqual({});
   });
 
   it('accepts numeric kind and status.code when present', () => {
-    const parsed = GetTraceResponseSchema.parse(capture);
     const numeric = spanNamed(parsed, 'numeric-kind-and-status');
     expect(numeric.kind).toBe(2);
     expect(numeric.status!.code).toBe(1);
   });
 
   it('BigInt can parse 64-bit timestamps without precision loss', () => {
-    const parsed = GetTraceResponseSchema.parse(capture);
     const s = spanNamed(parsed, 'root-with-any-values');
     const dur = BigInt(s.endTimeUnixNano!) - BigInt(s.startTimeUnixNano!);
     expect(dur).toBe(1_000_000n);

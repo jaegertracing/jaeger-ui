@@ -47,25 +47,23 @@ This file is the source of truth for the full API schema. It is automatically pr
 
 As a rule, post-processing the generated file is a liability: new requirements belong in `jaeger-idl`, or as refinements layered in `schemas.ts` — not as regexes over generated text.
 
-### `v3-trace-probe.json` and `v3-trace-local-2.21.0.json`
+### `v3-trace-input.json` and `v3-trace-output.json`
 
-The probe is the OTLP payload submitted to a local Jaeger. The other file is the `GET /api/v3/traces/{trace_id}` response that came back, and it is the single valid case the `*.trace-contract.test.ts` files build every malformed case from. Parsing genuine backend output is how drift between the server and the schemas surfaces as a test failure.
+The input is the OTLP payload submitted to a local Jaeger. The output is the `GET /api/v3/traces/{trace_id}` response, and it is the single valid case the `*.trace-contract.test.ts` files use to build malformed cases. Parsing genuine backend output exposes drift between the server and the schemas.
 
-The probe is hand-authored and is not generated. Recapture the response with `pnpm run generate:v3-fixture`, which needs Docker, `curl` and `python3`. To verify the committed fixture without overwriting it, run `./scripts/generate-v3-fixture.sh --check`, which recaptures into a temporary file, compares, and exits non-zero on drift.
+The input is hand-authored. Recapture the output with `pnpm run generate:v3-fixture`, which needs Docker. To verify the committed output without overwriting it, run `pnpm run generate:v3-fixture -- --check`.
 
-Every input that can change the shape of the response is pinned in that script rather than left to a default:
+The checked-in files make the capture reproducible:
 
-- The image is pinned by digest, not tag, since a tag can be re-pushed.
-- Storage is declared rather than inherited. `scripts/jaeger-fixture-config.yaml` names in-memory storage explicitly, so the question "which storage produced this fixture" has a checked-in answer instead of depending on the default compiled into the binary. A capture taken with that config is identical to one taken with the image default, which is what confirms the default was in-memory.
-- The probe carries explicit trace and span IDs and explicit nanosecond timestamps, so the submitted trace is byte-identical on every run. It covers all seven `AnyValue` variants, an omitted `kind`, an empty `status`, a numeric `kind` and `status.code`, nested `kvlistValue`, and one span with `events` and `links`.
+- `scripts/v3-fixture/docker-compose.yml` pins Jaeger by version and digest. Renovate can update both when Jaeger publishes a release.
+- The input carries explicit trace and span IDs and nanosecond timestamps. It covers all seven `AnyValue` variants, an omitted `kind`, an empty `status`, numeric `kind` and `status.code`, nested `kvlistValue`, and one span with `events` and `links`.
 - `raw_traces=false` is passed explicitly. It keeps Jaeger's enrichment, such as clock skew adjustment, which is what the UI receives in production. Flipping it returns a different document.
-- The capture is accepted only once every span in the probe has come back, rather than on the first HTTP 200. With this image the trace becomes visible atomically, so this is a guard rather than a fix for an observed failure: it keeps the guarantee if the probe ever grows past a single OTLP batch, or if the storage default behind the digest changes.
-- The version is read back from the image itself and checked against the tag the fixture is named after, so a digest that stops resolving to 2.21.0 fails instead of silently recapturing.
-- The response is first written exactly as it arrived and then handed to the repo formatter. In write mode, the deterministic response and formatter reproduce the committed bytes. In `--check` mode, parsed JSON is compared after normalising only the unordered collections below, so formatting and line endings do not count as drift.
+- The generator waits until every input span is queryable before accepting the output.
+- Write mode formats the output with the repository formatter. Check mode compares parsed JSON after normalising only unordered collections, so formatting and line endings do not count as drift.
 
 The backend may vary span order, attribute order and `kvlistValue` entry order without changing the contract. `--check` sorts those collections before comparing, and the contract assertions locate spans by name and attributes by key. `arrayValue` entries, events and links remain positional and are compared as received. Status representation is intentionally pinned: this fixture contains `status: {}` for an unset status, and both the contract test and `--check` report drift if a future backend omits it. The two forms encode `STATUS_CODE_UNSET`, but they are different parsed shapes at the validation boundary.
 
-The `Verify v3 Fixture` workflow runs `--check` on every pull request that touches the probe, the config, the script or the fixture, so the capture is verified by the pipeline rather than trusted because it is committed. It is path-filtered because the digest pin means nothing else can make the capture drift.
+The `Verify v3 Fixture` workflow runs `--check` when a pull request changes the input, output, generator, or Compose file. The pipeline therefore verifies the capture instead of trusting a committed file.
 
 ## Schema Strategy
 

@@ -3,7 +3,7 @@
 
 import { z } from 'zod';
 import { JaegerClient } from './client';
-import capture from './v3-trace-local-2.21.0.json';
+import capture from './v3-trace-output.json';
 
 describe('JaegerClient.fetchTrace wire contract', () => {
   let client: JaegerClient;
