@@ -27,7 +27,7 @@
     "npm-run-all2": "9.0.1",
     "openapi-zod-client": "1.18.3",
     "typescript": "npm:@typescript/typescript6@6.0.2",
-    "vite-plus": "0.3.0",
+    "vite-plus": "0.3.1",
     "@vitest/coverage-v8": "5.0.0",
     "vitest": "5.0.0"
   },
