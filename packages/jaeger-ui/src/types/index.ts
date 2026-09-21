@@ -5,7 +5,6 @@ import { ApiError } from './api-error';
 import tNil from './TNil';
 import { IOtelTrace } from './otel';
 import TTraceTimeline from './TTraceTimeline';
-import { MetricsReduxState } from './metrics';
 
 export type TNil = tNil;
 
@@ -30,5 +29,4 @@ export type LocationState = {
 export type ReduxState = {
   type: string;
   traceTimeline: TTraceTimeline;
-  metrics: MetricsReduxState;
 };
