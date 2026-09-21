@@ -6,6 +6,12 @@ import {
   createTestFunction,
   getParameterInAncestor,
   getParameterInTrace,
+  getParameterInSpanIntrinsic,
+  getParameterInResource,
+  getParameterInSpan,
+  getParameterInParent,
+  getParameterInAncestors,
+  resolveParameter,
   processLinkPattern,
   computeLinks,
   createGetLinks,
@@ -538,5 +544,532 @@ describe('getLinks()', () => {
       services: [],
     };
     expect(getTraceLinks(trace)).toBeInstanceOf(Array);
+  });
+});
+
+describe('Structured Scoping (Issue #1179)', () => {
+  const rootSpan = wrapSpanAttrs({
+    depth: 0,
+    spanID: 'root-span-id',
+    traceID: 'trace-xyz',
+    name: 'root-operation',
+    duration: 5000,
+    startTime: 1000,
+    endTime: 6000,
+    attributes: [
+      { key: 'rootAttr', value: 'root-val' },
+      { key: 'sharedAttr', value: 'shared-root' },
+    ],
+    resource: {
+      serviceName: 'root-service',
+      attributes: [
+        { key: 'rootResAttr', value: 'root-res-val' },
+        { key: 'cluster', value: 'us-east-1' },
+      ],
+    },
+  });
+
+  const parentSpan = wrapSpanAttrs({
+    depth: 1,
+    spanID: 'parent-span-id',
+    traceID: 'trace-xyz',
+    name: 'parent-operation',
+    duration: 3000,
+    startTime: 1500,
+    endTime: 4500,
+    parentSpan: rootSpan,
+    attributes: [
+      { key: 'parentAttr', value: 'parent-val' },
+      { key: 'sharedAttr', value: 'shared-parent' },
+    ],
+    resource: {
+      serviceName: 'parent-service',
+      attributes: [
+        { key: 'parentResAttr', value: 'parent-res-val' },
+        { key: 'zone', value: 'zone-b' },
+      ],
+    },
+  });
+
+  const childSpan = wrapSpanAttrs({
+    depth: 2,
+    spanID: 'child-span-id',
+    traceID: 'trace-xyz',
+    name: 'child-operation',
+    duration: 1000,
+    startTime: 2000,
+    endTime: 3000,
+    parentSpan,
+    attributes: [
+      { key: 'childAttr', value: 'child-val' },
+      { key: 'sharedAttr', value: 'shared-child' },
+      { key: 'span.literalKey', value: 'literal-span-val' },
+      { key: 'trace.literalTraceKey', value: 'literal-trace-val' },
+    ],
+    resource: {
+      serviceName: 'child-service',
+      attributes: [
+        { key: 'childResAttr', value: 'child-res-val' },
+        { key: 'env', value: 'prod' },
+      ],
+    },
+    events: [
+      {
+        attributes: [
+          { key: 'eventAttr', value: 'event-val' },
+          { key: 'sharedAttr', value: 'shared-event' },
+        ],
+      },
+    ],
+  });
+
+  const trace = {
+    resource: { attributes: [] },
+    traceName: 'theTrace',
+    traceID: 'trace-xyz',
+    spans: [rootSpan, parentSpan, childSpan],
+    startTime: 1000,
+    endTime: 7000,
+    duration: 6000,
+    services: [],
+  };
+
+  describe('getParameterInSpanIntrinsic()', () => {
+    it('returns intrinsic fields for a span', () => {
+      expect(getParameterInSpanIntrinsic('spanID', childSpan)).toEqual({
+        key: 'spanID',
+        value: 'child-span-id',
+      });
+      expect(getParameterInSpanIntrinsic('traceID', childSpan)).toEqual({
+        key: 'traceID',
+        value: 'trace-xyz',
+      });
+      expect(getParameterInSpanIntrinsic('operationName', childSpan)).toEqual({
+        key: 'operationName',
+        value: 'child-operation',
+      });
+      expect(getParameterInSpanIntrinsic('name', childSpan)).toEqual({
+        key: 'name',
+        value: 'child-operation',
+      });
+      expect(getParameterInSpanIntrinsic('duration', childSpan)).toEqual({
+        key: 'duration',
+        value: 1000,
+      });
+      expect(getParameterInSpanIntrinsic('startTime', childSpan)).toEqual({
+        key: 'startTime',
+        value: 2000,
+      });
+      expect(getParameterInSpanIntrinsic('endTime', childSpan)).toEqual({
+        key: 'endTime',
+        value: 3000,
+      });
+      expect(getParameterInSpanIntrinsic('serviceName', childSpan)).toEqual({
+        key: 'serviceName',
+        value: 'child-service',
+      });
+    });
+
+    it('returns undefined for non-intrinsic fields', () => {
+      expect(getParameterInSpanIntrinsic('customAttr', childSpan)).toBeUndefined();
+    });
+  });
+
+  describe('getParameterInResource()', () => {
+    it('returns resource attributes', () => {
+      expect(getParameterInResource('childResAttr', childSpan)).toEqual({
+        key: 'childResAttr',
+        value: 'child-res-val',
+      });
+      expect(getParameterInResource('env', childSpan)).toEqual({
+        key: 'env',
+        value: 'prod',
+      });
+    });
+
+    it('resolves serviceName and service.name from resource', () => {
+      expect(getParameterInResource('serviceName', childSpan)).toEqual({
+        key: 'serviceName',
+        value: 'child-service',
+      });
+    });
+
+    it('returns undefined for attributes not in resource', () => {
+      expect(getParameterInResource('childAttr', childSpan)).toBeUndefined();
+      expect(getParameterInResource('parentResAttr', childSpan)).toBeUndefined();
+    });
+  });
+
+  describe('getParameterInSpan()', () => {
+    it('returns intrinsic fields and span attributes without ascending', () => {
+      expect(getParameterInSpan('childAttr', childSpan)).toEqual({
+        key: 'childAttr',
+        value: 'child-val',
+      });
+      expect(getParameterInSpan('operationName', childSpan)).toEqual({
+        key: 'operationName',
+        value: 'child-operation',
+      });
+      // Does not ascend to parent span
+      expect(getParameterInSpan('parentAttr', childSpan)).toBeUndefined();
+    });
+  });
+
+  describe('getParameterInParent()', () => {
+    it('returns direct parent span attributes and intrinsics', () => {
+      expect(getParameterInParent('spanID', childSpan)).toEqual({
+        key: 'spanID',
+        value: 'parent-span-id',
+      });
+      expect(getParameterInParent('operationName', childSpan)).toEqual({
+        key: 'operationName',
+        value: 'parent-operation',
+      });
+      expect(getParameterInParent('parentAttr', childSpan)).toEqual({
+        key: 'parentAttr',
+        value: 'parent-val',
+      });
+      expect(getParameterInParent('serviceName', childSpan)).toEqual({
+        key: 'serviceName',
+        value: 'parent-service',
+      });
+    });
+
+    it('supports resource. and process. subscopes on parent', () => {
+      expect(getParameterInParent('resource.zone', childSpan)).toEqual({
+        key: 'zone',
+        value: 'zone-b',
+      });
+      expect(getParameterInParent('process.zone', childSpan)).toEqual({
+        key: 'zone',
+        value: 'zone-b',
+      });
+      expect(getParameterInParent('resource.serviceName', childSpan)).toEqual({
+        key: 'serviceName',
+        value: 'parent-service',
+      });
+    });
+
+    it('supports span. subscope on parent', () => {
+      expect(getParameterInParent('span.parentAttr', childSpan)).toEqual({
+        key: 'parentAttr',
+        value: 'parent-val',
+      });
+      expect(getParameterInParent('span.operationName', childSpan)).toEqual({
+        key: 'operationName',
+        value: 'parent-operation',
+      });
+    });
+
+    it('does not ascend past the immediate parent to grandparent', () => {
+      expect(getParameterInParent('rootAttr', childSpan)).toBeUndefined();
+    });
+
+    it('returns undefined if span has no parent', () => {
+      expect(getParameterInParent('spanID', rootSpan)).toBeUndefined();
+      expect(getParameterInParent('parentAttr', rootSpan)).toBeUndefined();
+    });
+  });
+
+  describe('getParameterInAncestors()', () => {
+    it('walks up ancestors to find attributes', () => {
+      // Direct parent
+      expect(getParameterInAncestors('parentAttr', childSpan)).toEqual({
+        key: 'parentAttr',
+        value: 'parent-val',
+      });
+      // Grandparent
+      expect(getParameterInAncestors('rootAttr', childSpan)).toEqual({
+        key: 'rootAttr',
+        value: 'root-val',
+      });
+      // Closest ancestor wins when shared
+      expect(getParameterInAncestors('sharedAttr', childSpan)).toEqual({
+        key: 'sharedAttr',
+        value: 'shared-parent',
+      });
+    });
+
+    it('supports resource. and process. subscopes on ancestors', () => {
+      expect(getParameterInAncestors('resource.cluster', childSpan)).toEqual({
+        key: 'cluster',
+        value: 'us-east-1',
+      });
+      expect(getParameterInAncestors('process.cluster', childSpan)).toEqual({
+        key: 'cluster',
+        value: 'us-east-1',
+      });
+      expect(getParameterInAncestors('resource.zone', childSpan)).toEqual({
+        key: 'zone',
+        value: 'zone-b',
+      });
+    });
+
+    it('supports span. subscope on ancestors', () => {
+      expect(getParameterInAncestors('span.rootAttr', childSpan)).toEqual({
+        key: 'rootAttr',
+        value: 'root-val',
+      });
+      expect(getParameterInAncestors('span.operationName', childSpan)).toEqual({
+        key: 'operationName',
+        value: 'parent-operation',
+      });
+    });
+
+    it('returns undefined when no ancestor has the attribute or on root span', () => {
+      expect(getParameterInAncestors('nonExistent', childSpan)).toBeUndefined();
+      expect(getParameterInAncestors('rootAttr', rootSpan)).toBeUndefined();
+    });
+  });
+
+  describe('resolveParameter()', () => {
+    it('resolves trace. scope', () => {
+      expect(resolveParameter('trace.traceID', childSpan, childSpan.attributes, 'attributes', trace)).toEqual(
+        {
+          key: 'traceID',
+          value: 'trace-xyz',
+        }
+      );
+      expect(
+        resolveParameter('trace.startTime', childSpan, childSpan.attributes, 'attributes', trace)
+      ).toEqual({
+        key: 'startTime',
+        value: 1000,
+      });
+      expect(
+        resolveParameter('trace.duration', childSpan, childSpan.attributes, 'attributes', trace)
+      ).toEqual({
+        key: 'duration',
+        value: 6000,
+      });
+      // Falls back to literal attribute if key exists literally on items/span
+      expect(
+        resolveParameter('trace.literalTraceKey', childSpan, childSpan.attributes, 'attributes', trace)
+      ).toEqual({
+        key: 'trace.literalTraceKey',
+        value: 'literal-trace-val',
+      });
+    });
+
+    it('resolves span. scope', () => {
+      expect(resolveParameter('span.childAttr', childSpan, childSpan.attributes, 'attributes')).toEqual({
+        key: 'childAttr',
+        value: 'child-val',
+      });
+      expect(resolveParameter('span.operationName', childSpan, childSpan.attributes, 'attributes')).toEqual({
+        key: 'operationName',
+        value: 'child-operation',
+      });
+      expect(resolveParameter('span.serviceName', childSpan, childSpan.attributes, 'attributes')).toEqual({
+        key: 'serviceName',
+        value: 'child-service',
+      });
+      // Does not ascend to parent
+      expect(
+        resolveParameter('span.parentAttr', childSpan, childSpan.attributes, 'attributes')
+      ).toBeUndefined();
+      // Falls back to literal attribute name if present
+      expect(resolveParameter('span.literalKey', childSpan, childSpan.attributes, 'attributes')).toEqual({
+        key: 'span.literalKey',
+        value: 'literal-span-val',
+      });
+    });
+
+    it('resolves process. and resource. scopes', () => {
+      expect(
+        resolveParameter('resource.childResAttr', childSpan, childSpan.attributes, 'attributes')
+      ).toEqual({
+        key: 'childResAttr',
+        value: 'child-res-val',
+      });
+      expect(resolveParameter('process.childResAttr', childSpan, childSpan.attributes, 'attributes')).toEqual(
+        {
+          key: 'childResAttr',
+          value: 'child-res-val',
+        }
+      );
+      expect(resolveParameter('resource.serviceName', childSpan, childSpan.attributes, 'attributes')).toEqual(
+        {
+          key: 'serviceName',
+          value: 'child-service',
+        }
+      );
+      expect(resolveParameter('process.serviceName', childSpan, childSpan.attributes, 'attributes')).toEqual({
+        key: 'serviceName',
+        value: 'child-service',
+      });
+      // span.resource. and span.process.
+      expect(
+        resolveParameter('span.resource.childResAttr', childSpan, childSpan.attributes, 'attributes')
+      ).toEqual({
+        key: 'childResAttr',
+        value: 'child-res-val',
+      });
+      expect(
+        resolveParameter('span.process.childResAttr', childSpan, childSpan.attributes, 'attributes')
+      ).toEqual({
+        key: 'childResAttr',
+        value: 'child-res-val',
+      });
+    });
+
+    it('resolves parent. and span.parent. scopes', () => {
+      expect(resolveParameter('parent.parentAttr', childSpan, childSpan.attributes, 'attributes')).toEqual({
+        key: 'parentAttr',
+        value: 'parent-val',
+      });
+      expect(
+        resolveParameter('span.parent.parentAttr', childSpan, childSpan.attributes, 'attributes')
+      ).toEqual({
+        key: 'parentAttr',
+        value: 'parent-val',
+      });
+      expect(resolveParameter('parent.spanID', childSpan, childSpan.attributes, 'attributes')).toEqual({
+        key: 'spanID',
+        value: 'parent-span-id',
+      });
+      expect(resolveParameter('parent.resource.zone', childSpan, childSpan.attributes, 'attributes')).toEqual(
+        {
+          key: 'zone',
+          value: 'zone-b',
+        }
+      );
+      expect(resolveParameter('parent.process.zone', childSpan, childSpan.attributes, 'attributes')).toEqual({
+        key: 'zone',
+        value: 'zone-b',
+      });
+      // Immediate parent only (not grandparent)
+      expect(
+        resolveParameter('parent.rootAttr', childSpan, childSpan.attributes, 'attributes')
+      ).toBeUndefined();
+    });
+
+    it('resolves ancestor. and span.ancestor. scopes', () => {
+      expect(resolveParameter('ancestor.parentAttr', childSpan, childSpan.attributes, 'attributes')).toEqual({
+        key: 'parentAttr',
+        value: 'parent-val',
+      });
+      expect(resolveParameter('ancestor.rootAttr', childSpan, childSpan.attributes, 'attributes')).toEqual({
+        key: 'rootAttr',
+        value: 'root-val',
+      });
+      expect(
+        resolveParameter('span.ancestor.rootAttr', childSpan, childSpan.attributes, 'attributes')
+      ).toEqual({
+        key: 'rootAttr',
+        value: 'root-val',
+      });
+      expect(
+        resolveParameter('ancestor.resource.cluster', childSpan, childSpan.attributes, 'attributes')
+      ).toEqual({
+        key: 'cluster',
+        value: 'us-east-1',
+      });
+      expect(
+        resolveParameter('ancestor.process.cluster', childSpan, childSpan.attributes, 'attributes')
+      ).toEqual({
+        key: 'cluster',
+        value: 'us-east-1',
+      });
+    });
+
+    it('falls back to backward-compatible unqualified resolution', () => {
+      // From event items first
+      expect(resolveParameter('eventAttr', childSpan, childSpan.events[0].attributes, 'events')).toEqual({
+        key: 'eventAttr',
+        value: 'event-val',
+      });
+      expect(resolveParameter('sharedAttr', childSpan, childSpan.events[0].attributes, 'events')).toEqual({
+        key: 'sharedAttr',
+        value: 'shared-event',
+      });
+      // From span attributes
+      expect(resolveParameter('childAttr', childSpan, childSpan.attributes, 'attributes')).toEqual({
+        key: 'childAttr',
+        value: 'child-val',
+      });
+      // From resource attributes
+      expect(resolveParameter('childResAttr', childSpan, childSpan.attributes, 'attributes')).toEqual({
+        key: 'childResAttr',
+        value: 'child-res-val',
+      });
+      // From parent span attributes
+      expect(resolveParameter('parentAttr', childSpan, childSpan.attributes, 'attributes')).toEqual({
+        key: 'parentAttr',
+        value: 'parent-val',
+      });
+      // From grandparent attributes
+      expect(resolveParameter('rootAttr', childSpan, childSpan.attributes, 'attributes')).toEqual({
+        key: 'rootAttr',
+        value: 'root-val',
+      });
+      // Unqualified intrinsic fields
+      expect(resolveParameter('serviceName', childSpan, childSpan.attributes, 'attributes')).toEqual({
+        key: 'serviceName',
+        value: 'child-service',
+      });
+      expect(resolveParameter('operationName', childSpan, childSpan.attributes, 'attributes')).toEqual({
+        key: 'operationName',
+        value: 'child-operation',
+      });
+    });
+  });
+
+  describe('computeLinks() with structured scopes', () => {
+    it('correctly resolves full URL and text using all structured scopes', () => {
+      const pattern = [
+        {
+          type: 'attributes',
+          key: 'childAttr',
+          url: 'http://example.com/?trace=#{trace.traceID}&span=#{span.spanID}&op=#{span.operationName}&parent=#{parent.spanID}&svc=#{resource.serviceName}&ancestor=#{ancestor.cluster}',
+          text: 'Link for #{span.name} (svc: #{process.serviceName}, parent: #{span.parent.operationName})',
+        },
+      ].map(processLinkPattern);
+
+      const links = computeLinks(pattern, childSpan, childSpan.attributes, 0, trace);
+      expect(links).toEqual([
+        {
+          url: 'http://example.com/?trace=trace-xyz&span=child-span-id&op=child-operation&parent=parent-span-id&svc=child-service&ancestor=us-east-1',
+          text: 'Link for child-operation (svc: child-service, parent: parent-operation)',
+        },
+      ]);
+    });
+
+    it('works with formatters on structured scoped parameters', () => {
+      const pattern = [
+        {
+          type: 'attributes',
+          key: 'childAttr',
+          url: 'http://example.com/?time=#{trace.startTime | epoch_micros_to_date_iso}&dur=#{span.duration | add 50}',
+          text: 'Formatted #{trace.startTime | epoch_micros_to_date_iso}',
+        },
+      ].map(processLinkPattern);
+
+      const links = computeLinks(pattern, childSpan, childSpan.attributes, 0, trace);
+      expect(links).toEqual([
+        {
+          url: 'http://example.com/?time=1970-01-01T00%3A00%3A00.001Z&dur=1050',
+          text: 'Formatted 1970-01-01T00:00:00.001Z',
+        },
+      ]);
+    });
+
+    it('supports trace. prefix in trace pattern links', () => {
+      const pattern = [
+        {
+          type: 'traces',
+          url: 'http://example.com/?trace=#{trace.traceID}&dur=#{trace.duration}',
+          text: 'Trace #{trace.traceID}',
+        },
+      ].map(processLinkPattern);
+
+      const links = computeTraceLink(pattern, trace);
+      expect(links).toEqual([
+        {
+          url: 'http://example.com/?trace=trace-xyz&dur=6000',
+          text: 'Trace trace-xyz',
+        },
+      ]);
+    });
   });
 });
