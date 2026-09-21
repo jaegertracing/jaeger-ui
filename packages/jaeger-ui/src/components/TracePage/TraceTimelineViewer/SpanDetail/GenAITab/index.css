@@ -9,7 +9,6 @@ SPDX-License-Identifier: Apache-2.0
   gap: 16px;
 }
 
-.GenAITab--meta,
 .GenAITab--tokens {
   display: flex;
   flex-wrap: wrap;
@@ -20,13 +19,11 @@ SPDX-License-Identifier: Apache-2.0
   border-radius: 4px;
 }
 
-.GenAITab--metaItem,
 .GenAITab--tokenItem {
   font-size: 13px;
   color: var(--text-primary);
 }
 
-.GenAITab--metaLabel,
 .GenAITab--tokenLabel {
   color: var(--text-secondary);
   margin-right: 4px;
@@ -96,13 +93,14 @@ SPDX-License-Identifier: Apache-2.0
   gap: 8px;
 }
 
+/* Narrow enough to sit on a message's header line, wide enough for "Plain text". */
 .GenAITab--formatSelect {
+  min-width: 104px;
   font-size: 11px;
-  color: var(--text-secondary);
-  background: var(--surface-primary);
-  border: 1px solid var(--border-default);
-  border-radius: 4px;
-  padding: 1px 4px;
+}
+
+.GenAITab--formatOption {
+  font-size: 12px;
 }
 
 .GenAITab--messageContent {
@@ -121,23 +119,54 @@ SPDX-License-Identifier: Apache-2.0
   margin-bottom: 0;
 }
 
+/* One row per part, divided the same way the message box is bounded, so a message
+   carrying text and an attachment reads as one message in several rows rather than as
+   several messages. */
+.GenAITab--messagePart + .GenAITab--messagePart {
+  border-top: 1px solid var(--border-default);
+}
+
+/* A part's view selector: on the message's header line when it is the only part, and on a
+   line of its own when a message has several, where "Part 2 of 3" holds the left end so
+   the selector can sit against the right edge instead of floating mid-row. */
+.GenAITab--partControls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.GenAITab--messagePart > .GenAITab--partControls {
+  padding: 2px 8px;
+}
+
+.GenAITab--partLabel {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.GenAITab--partBody {
+  position: relative;
+}
+
+/* Copy sits over the top right of the content it copies and stays out of the way until
+   the part is pointed at, as in the attribute table. The background keeps the first line
+   of text legible underneath. */
+.GenAITab--copyContainer {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  white-space: nowrap;
+  background: var(--surface-primary);
+}
+
+.GenAITab--messagePart:not(:hover) .GenAITab--copyIcon {
+  visibility: hidden;
+}
+
 .GenAITab--messageContent-plain {
   margin: 0;
   white-space: pre-wrap;
-}
-
-.GenAITab--toolSubsection {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.GenAITab--toolLabel {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
 }
 
 .GenAITab--json,
@@ -160,4 +189,96 @@ SPDX-License-Identifier: Apache-2.0
   color: var(--text-muted);
   font-size: 13px;
   padding: 8px 0;
+}
+
+/* Aligned with .GenAITab--messageContent so switching views does not shift the text. */
+.GenAITab--revealBlock {
+  padding: 8px;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--surface-primary);
+}
+
+.GenAITab--revealNotice {
+  display: flex;
+  gap: 4px;
+  color: var(--text-muted);
+}
+
+.GenAITab--revealNoticeText {
+  flex: none;
+}
+
+/* The value takes what the notice leaves and elides, like a collapsed message. */
+.GenAITab--revealValue {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.GenAITab--revealActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.GenAITab--revealButton {
+  padding: 2px 8px;
+  border: 1px solid var(--border-default);
+  border-radius: 3px;
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.GenAITab--messageToggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.GenAITab--messageToggleIcon {
+  color: var(--text-muted);
+  vertical-align: middle;
+}
+
+.GenAITab--messagePreview {
+  padding: 8px;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 13px;
+  /* One line however long the content is - the point of collapsing. */
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.GenAITab--media {
+  display: block;
+  max-width: 100%;
+}
+
+img.GenAITab--media {
+  /* An SVG that carries only a viewBox has no intrinsic size, so width:auto fills the
+     panel and the aspect ratio then sets an equally large height. The cap keeps any
+     preview, sized or not, from pushing the rest of the conversation off screen. */
+  max-height: 320px;
+  width: auto;
+  height: auto;
+  /* A ground colour so a transparent PNG stays visible in either theme. */
+  background-color: var(--surface-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 3px;
+  object-fit: contain;
+}
+
+audio.GenAITab--media {
+  width: 100%;
 }

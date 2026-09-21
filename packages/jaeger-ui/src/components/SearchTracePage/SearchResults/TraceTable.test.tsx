@@ -6,11 +6,10 @@ import { render, screen, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import TraceTable from './TraceTable';
-import * as orderBy from '../../../model/order-by';
-import type { OrderBy } from '../../../model/order-by';
-import { toOrderBy, fromOrderBy } from '../../../model/search';
+import * as orderBy from './order-by';
+import { toOrderBy, fromOrderBy } from './sort';
 import type { Microseconds } from '../../../types/units';
-import { useSearchResultsStore } from '../store.search-results';
+import { useSearchResultsStore } from './store.search-results';
 import { formatDatetime } from '../../../utils/date';
 
 const FIXED_START_TIME = 1700000000000000 as Microseconds;
@@ -34,8 +33,6 @@ const defaultProps = {
   traceSummaries: mockTraces,
   maxTraceDuration: 1000 as Microseconds,
   getLink: (traceID: string) => ({ pathname: `/trace/${traceID}` }),
-  sortBy: orderBy.MOST_RECENT as OrderBy,
-  handleSortChange: vi.fn(),
   disableComparisons: true,
   cohortIds: new Set<string>(),
   toggleComparison: vi.fn(),
@@ -45,7 +42,7 @@ describe('TraceTable', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
-    useSearchResultsStore.setState({ startTimeDisplay: 'absolute' });
+    useSearchResultsStore.setState({ startTimeDisplay: 'absolute', sortBy: orderBy.MOST_RECENT });
   });
 
   it('renders correct row count for a 5-trace fixture', () => {
@@ -144,7 +141,7 @@ describe('TraceTable', () => {
 describe('Start Time display toggle', () => {
   beforeEach(() => {
     localStorage.clear();
-    useSearchResultsStore.setState({ startTimeDisplay: 'absolute' });
+    useSearchResultsStore.setState({ startTimeDisplay: 'absolute', sortBy: orderBy.MOST_RECENT });
   });
 
   it('renders absolute formatted time by default', () => {
@@ -168,14 +165,13 @@ describe('Start Time display toggle', () => {
   });
 
   it('clicking the toggle does not trigger column sorting', () => {
-    const handleSortChange = vi.fn();
     render(
       <MemoryRouter>
-        <TraceTable {...defaultProps} handleSortChange={handleSortChange} />
+        <TraceTable {...defaultProps} />
       </MemoryRouter>
     );
     fireEvent.click(screen.getByRole('button', { name: 'Toggle start time format' }));
-    expect(handleSortChange).not.toHaveBeenCalled();
+    expect(useSearchResultsStore.getState().sortBy).toBe(orderBy.MOST_RECENT);
   });
 
   it('persists the preference to localStorage', () => {
@@ -191,30 +187,33 @@ describe('Start Time display toggle', () => {
 });
 
 describe('sort onChange wiring', () => {
-  it('calls handleSortChange when a sortable column header is clicked', () => {
-    const handleSortChange = vi.fn();
+  beforeEach(() => {
+    useSearchResultsStore.setState({ sortBy: orderBy.MOST_RECENT });
+  });
+
+  it('updates the store sortBy when a sortable column header is clicked', () => {
     render(
       <MemoryRouter>
-        <TraceTable {...defaultProps} handleSortChange={handleSortChange} />
+        <TraceTable {...defaultProps} />
       </MemoryRouter>
     );
     fireEvent.click(screen.getByText('Spans'));
-    expect(handleSortChange).toHaveBeenCalledWith(orderBy.LEAST_SPANS);
+    expect(useSearchResultsStore.getState().sortBy).toBe(orderBy.LEAST_SPANS);
   });
 
   it('flips sort direction instead of deactivating when AntD fires cancel', () => {
-    const handleSortChange = vi.fn();
     // Start with descend on spans (MOST_SPANS).
     // Clicking the active column triggers AntD's cancel event (order=undefined,
     // columnKey=undefined). Our onChange handler intercepts this and flips
     // descend→ascend, producing LEAST_SPANS instead of falling back to MOST_RECENT.
+    useSearchResultsStore.setState({ sortBy: orderBy.MOST_SPANS });
     render(
       <MemoryRouter>
-        <TraceTable {...defaultProps} sortBy={orderBy.MOST_SPANS} handleSortChange={handleSortChange} />
+        <TraceTable {...defaultProps} />
       </MemoryRouter>
     );
     fireEvent.click(screen.getByText('Spans'));
-    expect(handleSortChange).toHaveBeenCalledWith(orderBy.LEAST_SPANS);
+    expect(useSearchResultsStore.getState().sortBy).toBe(orderBy.LEAST_SPANS);
   });
 });
 

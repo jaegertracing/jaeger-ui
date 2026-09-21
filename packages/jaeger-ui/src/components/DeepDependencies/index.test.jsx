@@ -10,18 +10,16 @@ import { Provider } from 'react-redux';
 import { createStore } from 'redux';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-vi.mock('isomorphic-fetch', () =>
-  mockDefault(
-    vi.fn(() =>
-      Promise.resolve({
-        status: 200,
-        ok: true,
-        json: () => Promise.resolve({}),
-        text: () => Promise.resolve(''),
-      })
-    )
-  )
+const mockFetch = vi.fn(() =>
+  Promise.resolve({
+    status: 200,
+    ok: true,
+    json: () => Promise.resolve({}),
+    text: () => Promise.resolve(''),
+  })
 );
+
+vi.stubGlobal('fetch', mockFetch);
 
 const mockUseLocationValue = {
   search: '?service=test-service&operation=test-op',

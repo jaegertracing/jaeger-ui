@@ -12,6 +12,7 @@ import { EDdgDensity } from '../../../../model/ddg/types';
 import { trackDensityChange, trackToggleShowOp } from '../../index.track';
 
 import './index.css';
+import storage from '../../../../utils/storage';
 
 type TProps = {
   density: EDdgDensity;
@@ -67,7 +68,7 @@ export const densityOptions = [
 const LayoutSettings: React.FC<TProps> = ({ density, setDensity, showOperations, toggleShowOperations }) => {
   // Replicates componentDidMount to set density from localStorage on initial render
   useEffect(() => {
-    const storedDensity = localStorage.getItem(STORED_DENSITY_KEY);
+    const storedDensity = storage.getItem(STORED_DENSITY_KEY);
     if (storedDensity && densityOptions.some(option => option.option === storedDensity)) {
       setDensity(storedDensity as EDdgDensity);
     }
@@ -79,7 +80,7 @@ const LayoutSettings: React.FC<TProps> = ({ density, setDensity, showOperations,
       const { value: nextDensity } = event.target;
       if (density === nextDensity) return;
 
-      localStorage.setItem(STORED_DENSITY_KEY, nextDensity);
+      storage.setItem(STORED_DENSITY_KEY, nextDensity);
       trackDensityChange(density, nextDensity, densityOptions);
       setDensity(nextDensity);
     },
