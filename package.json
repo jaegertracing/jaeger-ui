@@ -11,7 +11,7 @@
   "engines": {
     "node": ">=24.16.0"
   },
-  "packageManager": "pnpm@12.1.0",
+  "packageManager": "pnpm@12.5.1",
   "devDependencies": {
     "@babel/core": "8.0.1",
     "@emnapi/core": "^1.9.1",
@@ -27,7 +27,7 @@
     "npm-run-all2": "9.0.1",
     "openapi-zod-client": "1.18.3",
     "typescript": "npm:@typescript/typescript6@6.0.2",
-    "vite-plus": "0.3.0",
+    "vite-plus": "0.3.3",
     "@vitest/coverage-v8": "5.0.0",
     "vitest": "5.0.0"
   },
