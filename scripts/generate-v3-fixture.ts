@@ -1,27 +1,21 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { execFileSync } from 'node:child_process';
 import { isDeepStrictEqual } from 'node:util';
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { DockerComposeEnvironment, Wait } from 'testcontainers';
 
 const API_DIR = path.resolve(import.meta.dirname, '../packages/jaeger-ui/src/api/v3');
 const INPUT_FILE = path.join(API_DIR, 'v3-trace-input.json');
 const OUTPUT_FILE = path.join(API_DIR, 'v3-trace-output.json');
-const COMPOSE_FILE = path.resolve(import.meta.dirname, 'v3-fixture/docker-compose.yml');
-const COMPOSE_PROJECT = 'jaeger-ui-v3-fixture';
+const COMPOSE_DIR = path.resolve(import.meta.dirname, 'v3-fixture');
+const COMPOSE_FILE = 'docker-compose.yml';
 
 type JsonObject = { [key: string]: JsonValue };
 type JsonValue = JsonObject | JsonValue[] | boolean | number | string | null;
 
 const delay = (milliseconds: number) => new Promise(resolve => setTimeout(resolve, milliseconds));
-
-function compose(...args: string[]) {
-  execFileSync('docker', ['compose', '--project-name', COMPOSE_PROJECT, '--file', COMPOSE_FILE, ...args], {
-    stdio: 'inherit',
-  });
-}
 
 function isObject(value: JsonValue | undefined): value is JsonObject {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -118,17 +112,14 @@ function normalise(node: JsonValue): JsonValue {
   );
 }
 
-async function captureTrace(input: JsonValue, traceId: string, expectedSpans: number) {
-  await waitFor('the Jaeger query API', 60, async () => {
-    try {
-      await request('http://localhost:16686/api/v3/services');
-      return true;
-    } catch {
-      return undefined;
-    }
-  });
-
-  await request('http://localhost:4318/v1/traces', {
+async function captureTrace(
+  input: JsonValue,
+  traceId: string,
+  expectedSpans: number,
+  queryUrl: string,
+  collectorUrl: string
+) {
+  await request(`${collectorUrl}/v1/traces`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
@@ -136,7 +127,7 @@ async function captureTrace(input: JsonValue, traceId: string, expectedSpans: nu
 
   return waitFor(`all ${expectedSpans} spans`, 30, async () => {
     try {
-      const response = await request(`http://localhost:16686/api/v3/traces/${traceId}?raw_traces=false`);
+      const response = await request(`${queryUrl}/api/v3/traces/${traceId}?raw_traces=false`);
       const document = (await response.json()) as JsonValue;
       return spansIn(document).length === expectedSpans ? document : undefined;
     } catch {
@@ -155,30 +146,28 @@ async function main() {
   const input = JSON.parse(await readFile(INPUT_FILE, 'utf8')) as JsonValue;
   const { expectedSpans, traceId } = inputDetails(input);
 
-  compose('down', '--volumes', '--remove-orphans');
-  try {
-    compose('up', '--detach');
-    const output = await captureTrace(input, traceId, expectedSpans);
-    if (checkOnly) {
-      const committed = JSON.parse(await readFile(OUTPUT_FILE, 'utf8')) as JsonValue;
-      if (!isDeepStrictEqual(normalise(committed), normalise(output))) {
-        process.stderr.write(`${JSON.stringify(normalise(output), null, 2)}\n`);
-        throw new Error('The v3 trace fixture differs from a fresh capture');
-      }
-      console.log('The v3 trace fixture is up to date.');
-      return;
-    }
+  await using environment = await new DockerComposeEnvironment(COMPOSE_DIR, COMPOSE_FILE)
+    .withWaitStrategy('jaeger-1', Wait.forHttp('/api/v3/services', 16686))
+    .up();
+  const jaeger = environment.getContainer('jaeger-1');
+  const host = jaeger.getHost();
+  const queryUrl = `http://${host}:${jaeger.getMappedPort(16686)}`;
+  const collectorUrl = `http://${host}:${jaeger.getMappedPort(4318)}`;
+  const output = await captureTrace(input, traceId, expectedSpans, queryUrl, collectorUrl);
 
-    await writeFile(OUTPUT_FILE, `${JSON.stringify(output, null, 2)}\n`);
-    execFileSync('pnpm', ['exec', 'vp', 'fmt', OUTPUT_FILE], {
-      cwd: path.resolve(import.meta.dirname, '..'),
-      shell: process.platform === 'win32',
-      stdio: 'inherit',
-    });
-    console.log(`Wrote ${OUTPUT_FILE}`);
-  } finally {
-    compose('down', '--volumes', '--remove-orphans');
+  if (checkOnly) {
+    const committed = JSON.parse(await readFile(OUTPUT_FILE, 'utf8')) as JsonValue;
+    // Jaeger may reorder spans, attributes and kvlist entries without changing their meaning.
+    if (!isDeepStrictEqual(normalise(committed), normalise(output))) {
+      process.stderr.write(`${JSON.stringify(normalise(output), null, 2)}\n`);
+      throw new Error('The v3 trace fixture differs from a fresh capture');
+    }
+    console.log('The v3 trace fixture is up to date.');
+    return;
   }
+
+  await writeFile(OUTPUT_FILE, `${JSON.stringify(output, null, 2)}\n`);
+  console.log(`Wrote ${OUTPUT_FILE}`);
 }
 
 await main();

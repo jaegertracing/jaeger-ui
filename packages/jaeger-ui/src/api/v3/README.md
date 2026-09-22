@@ -58,12 +58,13 @@ The checked-in files make the capture reproducible:
 - `scripts/v3-fixture/docker-compose.yml` pins Jaeger by version and digest. Renovate can update both when Jaeger publishes a release.
 - The input carries explicit trace and span IDs and nanosecond timestamps. It covers all seven `AnyValue` variants, an omitted `kind`, an empty `status`, numeric `kind` and `status.code`, nested `kvlistValue`, and one span with `events` and `links`.
 - `raw_traces=false` is passed explicitly. It keeps Jaeger's enrichment, such as clock skew adjustment, which is what the UI receives in production. Flipping it returns a different document.
+- Testcontainers waits for the API v3 service endpoint, assigns free host ports, and removes the Compose environment when the script exits.
 - The generator waits until every input span is queryable before accepting the output.
-- Write mode formats the output with the repository formatter. Check mode compares parsed JSON after normalising only unordered collections, so formatting and line endings do not count as drift.
+- Write mode emits stable two-space JSON. Check mode compares parsed JSON after normalising only unordered collections, so formatting and line endings do not count as drift.
 
 The backend may vary span order, attribute order and `kvlistValue` entry order without changing the contract. `--check` sorts those collections before comparing, and the contract assertions locate spans by name and attributes by key. `arrayValue` entries, events and links remain positional and are compared as received. Status representation is intentionally pinned: this fixture contains `status: {}` for an unset status, and both the contract test and `--check` report drift if a future backend omits it. The two forms encode `STATUS_CODE_UNSET`, but they are different parsed shapes at the validation boundary.
 
-The `Verify v3 Fixture` workflow runs `--check` when a pull request changes the input, output, generator, or Compose file. The pipeline therefore verifies the capture instead of trusting a committed file.
+The `Verify API v3 Fixtures` workflow runs `--check` when a pull request changes the input, output, generator, or Compose file. The pipeline therefore verifies the capture instead of trusting a committed file.
 
 ## Schema Strategy
 
