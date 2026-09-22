@@ -47,6 +47,21 @@ describe('fetchDeepDependencyGraph', () => {
       defaultOptions
     );
   });
+
+  it('uses the configured apiRoot', () => {
+    const originalApiRoot = JaegerAPI.apiRoot;
+    JaegerAPI.apiRoot = '/custom-api/';
+    const query = { service: 'serviceName' };
+
+    JaegerAPI.fetchDeepDependencyGraph(query);
+
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      `/custom-api/deep-dependencies?${queryString.stringify(query)}`,
+      defaultOptions
+    );
+
+    JaegerAPI.apiRoot = originalApiRoot;
+  });
 });
 
 describe('fetchDependencies', () => {
