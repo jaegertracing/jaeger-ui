@@ -2,6 +2,11 @@ packages:
   - 'packages/jaeger-ui'
   - 'packages/plexus'
 
+allowBuilds:
+  cpu-features: false
+  protobufjs: false
+  ssh2: false
+
 catalog:
   '@noble/hashes': 2.4.0
 

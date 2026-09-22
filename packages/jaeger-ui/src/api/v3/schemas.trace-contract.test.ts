@@ -11,105 +11,38 @@ import {
   traceIdHex,
   spanIdHex,
 } from './schemas';
+import capture from './v3-trace-output.json';
 
-const validEnvelope = {
-  result: {
-    resourceSpans: [
-      {
-        resource: { attributes: [{ key: 'service.name', value: { stringValue: 'lfx-wire-probe' } }] },
-        scopeSpans: [
-          {
-            scope: { name: 'lfx-proposal', version: '1.0.0' },
-            spans: [
-              {
-                traceId: '0123456789abcdef0123456789abcdef',
-                spanId: '0123456789abcdef',
-                name: 'root-with-any-values',
-                startTimeUnixNano: '1786934400000000000',
-                endTimeUnixNano: '1786934400001000000',
-                attributes: [
-                  {
-                    key: 'array',
-                    value: {
-                      arrayValue: {
-                        values: [
-                          { stringValue: 'first' },
-                          { boolValue: false },
-                          { intValue: '9223372036854775807' },
-                        ],
-                      },
-                    },
-                  },
-                  { key: 'bytes', value: { bytesValue: 'AQID' } },
-                  { key: 'empty', value: { stringValue: '' } },
-                  { key: 'false', value: { boolValue: false } },
-                  { key: 'float', value: { doubleValue: 1.5 } },
-                  { key: 'integer', value: { intValue: '0' } },
-                  {
-                    key: 'nested',
-                    value: {
-                      kvlistValue: {
-                        values: [
-                          { key: 'child', value: { arrayValue: { values: [{ stringValue: 'value' }] } } },
-                        ],
-                      },
-                    },
-                  },
-                ],
-                events: [
-                  {
-                    timeUnixNano: '1786934400000500000',
-                    name: 'retry',
-                    attributes: [{ key: 'attempt', value: { intValue: '1' } }],
-                  },
-                ],
-                links: [
-                  {
-                    traceId: 'fedcba9876543210fedcba9876543210',
-                    spanId: 'fedcba9876543210',
-                    traceState: 'vendor=example',
-                    flags: 1,
-                  },
-                ],
-                status: { message: 'probe error status', code: 2 },
-              },
-              {
-                traceId: '0123456789abcdef0123456789abcdef',
-                spanId: '1111111111111111',
-                parentSpanId: '0123456789abcdef',
-                name: 'unset-kind-and-status',
-                startTimeUnixNano: '1786934400000100000',
-                endTimeUnixNano: '1786934400000200000',
-                status: {},
-              },
-              {
-                traceId: '0123456789abcdef0123456789abcdef',
-                spanId: '2222222222222222',
-                parentSpanId: '0123456789abcdef',
-                name: 'numeric-kind-and-status',
-                kind: 2,
-                startTimeUnixNano: '1786934400000200000',
-                endTimeUnixNano: '1786934400000300000',
-                status: { code: 1 },
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  },
-} as const;
+type ParsedTrace = ReturnType<typeof GetTraceResponseSchema.parse>;
+
+// Spans are located by name, not by position: nothing in OTLP or the v3 API
+// fixes the order of a scope's spans, and this capture comes from a real server.
+function spanNamed(parsed: ParsedTrace, name: string) {
+  const spans = parsed.result.resourceSpans![0].scopeSpans![0].spans!;
+  const found = spans.find(s => s.name === name);
+  if (!found) {
+    throw new Error(`the capture has no span named "${name}"`);
+  }
+  return found;
+}
 
 describe('GetTrace wire contract', () => {
-  it('accepts the captured v3-trace-local-2.13.0 envelope', () => {
-    const parsed = GetTraceResponseSchema.parse(validEnvelope);
+  let parsed: ParsedTrace;
+
+  beforeEach(() => {
+    parsed = GetTraceResponseSchema.parse(capture);
+  });
+
+  it('accepts the captured v3 trace envelope', () => {
     expect(parsed.result.resourceSpans).toHaveLength(1);
     expect(parsed.result.resourceSpans![0].scopeSpans![0].spans).toHaveLength(3);
+    const root = spanNamed(parsed, 'root-with-any-values');
+    expect(root.traceId).toBe('0123456789abcdef0123456789abcdef');
+    expect(root.spanId).toBe('0123456789abcdef');
   });
 
   it('preserves falsy AnyValues: empty string, false, zero, max int64', () => {
-    const parsed = GetTraceResponseSchema.parse(validEnvelope);
-    const attrs = parsed.result.resourceSpans![0].scopeSpans![0].spans![0].attributes!;
+    const attrs = spanNamed(parsed, 'root-with-any-values').attributes!;
     const byKey = Object.fromEntries(attrs.map(a => [a.key, a.value])) as Record<string, any>;
     expect(byKey.empty.stringValue).toBe('');
     expect(byKey.false.boolValue).toBe(false);
@@ -119,30 +52,24 @@ describe('GetTrace wire contract', () => {
   });
 
   it('preserves nested kvlist and arrays inside AnyValue', () => {
-    const parsed = GetTraceResponseSchema.parse(validEnvelope);
-    const nested = parsed.result.resourceSpans![0].scopeSpans![0].spans![0].attributes!.find(
-      a => a.key === 'nested'
-    )!;
+    const nested = spanNamed(parsed, 'root-with-any-values').attributes!.find(a => a.key === 'nested')!;
     expect(nested.value.kvlistValue!.values![0].key).toBe('child');
   });
 
   it('accepts omitted kind (defaults to UNSPECIFIED) and empty status {}', () => {
-    const parsed = GetTraceResponseSchema.parse(validEnvelope);
-    const unset = parsed.result.resourceSpans![0].scopeSpans![0].spans![1];
+    const unset = spanNamed(parsed, 'unset-kind-and-status');
     expect(unset.kind).toBeUndefined();
     expect(unset.status).toEqual({});
   });
 
   it('accepts numeric kind and status.code when present', () => {
-    const parsed = GetTraceResponseSchema.parse(validEnvelope);
-    const numeric = parsed.result.resourceSpans![0].scopeSpans![0].spans![2];
+    const numeric = spanNamed(parsed, 'numeric-kind-and-status');
     expect(numeric.kind).toBe(2);
     expect(numeric.status!.code).toBe(1);
   });
 
   it('BigInt can parse 64-bit timestamps without precision loss', () => {
-    const parsed = GetTraceResponseSchema.parse(validEnvelope);
-    const s = parsed.result.resourceSpans![0].scopeSpans![0].spans![0];
+    const s = spanNamed(parsed, 'root-with-any-values');
     const dur = BigInt(s.endTimeUnixNano!) - BigInt(s.startTimeUnixNano!);
     expect(dur).toBe(1_000_000n);
     // Never use Number for 64-bit wire values
@@ -155,7 +82,7 @@ describe('GetTrace wire contract', () => {
   });
 
   it('rejects base64/non-hex trace/span IDs', () => {
-    const bad = JSON.parse(JSON.stringify(validEnvelope));
+    const bad = JSON.parse(JSON.stringify(capture));
     bad.result.resourceSpans[0].scopeSpans[0].spans[0].traceId = 'AQIDBAUG';
     expect(() => GetTraceResponseSchema.parse(bad)).toThrow(z.ZodError);
     bad.result.resourceSpans[0].scopeSpans[0].spans[0].traceId = '0123456789abcdef0123456789abcdef';
@@ -235,13 +162,13 @@ describe('GetTrace wire contract', () => {
 
   it('keeps envelope handling separable from TracesData', () => {
     // TracesData without envelope should also validate (for future streaming)
-    const tracesData = (validEnvelope as any).result;
+    const tracesData = capture.result;
     expect(() => refinedTracesData.parse(tracesData)).not.toThrow();
     expect(() => refinedTracesData.parse({ resourceSpans: [] })).not.toThrow();
   });
 
   it('silently ignores unknown fields (OTLP-JSON forward compatibility)', () => {
-    const future = JSON.parse(JSON.stringify(validEnvelope));
+    const future = JSON.parse(JSON.stringify(capture));
     future.futureTopLevelField = 'x';
     future.result.resourceSpans[0].scopeSpans[0].spans[0].someFutureSpanField = { nested: true };
     future.result.resourceSpans[0].scopeSpans[0].spans[0].status.unknownStatusField = 1;

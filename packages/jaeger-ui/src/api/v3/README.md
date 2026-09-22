@@ -47,6 +47,25 @@ This file is the source of truth for the full API schema. It is automatically pr
 
 As a rule, post-processing the generated file is a liability: new requirements belong in `jaeger-idl`, or as refinements layered in `schemas.ts` — not as regexes over generated text.
 
+### `v3-trace-input.json` and `v3-trace-output.json`
+
+The input is the OTLP payload submitted to a local Jaeger. The output is the `GET /api/v3/traces/{trace_id}` response, and it is the single valid case the `*.trace-contract.test.ts` files use to build malformed cases. Parsing genuine backend output exposes drift between the server and the schemas.
+
+The input is hand-authored. Recapture the output with `pnpm run generate:v3-fixture`, which needs Docker. To verify the committed output without overwriting it, run `pnpm run generate:v3-fixture -- --check`.
+
+The checked-in files make the capture reproducible:
+
+- `scripts/v3-fixture/docker-compose.yml` pins Jaeger by version and digest. Renovate can update both when Jaeger publishes a release.
+- The input carries explicit trace and span IDs and nanosecond timestamps. It covers all seven `AnyValue` variants, an omitted `kind`, an empty `status`, numeric `kind` and `status.code`, nested `kvlistValue`, and one span with `events` and `links`.
+- `raw_traces=false` is passed explicitly. It keeps Jaeger's enrichment, such as clock skew adjustment, which is what the UI receives in production. Flipping it returns a different document.
+- Testcontainers waits for the API v3 service endpoint, assigns free host ports, and removes the Compose environment when the script exits.
+- The generator waits until every input span is queryable before accepting the output.
+- Write mode emits stable two-space JSON. Check mode compares parsed JSON after normalising only unordered collections, so formatting and line endings do not count as drift.
+
+The backend may vary span order, attribute order and `kvlistValue` entry order without changing the contract. `--check` sorts those collections before comparing, and the contract assertions locate spans by name and attributes by key. `arrayValue` entries, events and links remain positional and are compared as received. Status representation is intentionally pinned: this fixture contains `status: {}` for an unset status, and both the contract test and `--check` report drift if a future backend omits it. The two forms encode `STATUS_CODE_UNSET`, but they are different parsed shapes at the validation boundary.
+
+The `Verify API v3 Fixtures` workflow runs `--check` when a pull request changes the input, output, generator, or Compose file. The pipeline therefore verifies the capture instead of trusting a committed file.
+
 ## Schema Strategy
 
 We use **Automated Schema Generation with Strict Validation**:
