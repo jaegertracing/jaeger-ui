@@ -1,8 +1,6 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-export const TOP_NAV_HEIGHT = 46;
-
 // Max number of services that "Hierarchical Layout" with "dot" layout engine can can render
 // Can be configured with "dependencies.dagMaxNumServices"
 export const FALLBACK_DAG_MAX_NUM_SERVICES = 500;
