@@ -7,6 +7,7 @@ import { parseOtelTrace } from './parser';
 import capture from './v3-trace-output.json';
 
 const TRACE_ID = 'abcdef0123456789abcdef0123456789';
+const OTHER_TRACE_ID = '0123456789abcdef0123456789abcdef';
 const ROOT_ID = '1111111111111111';
 const CHILD_ID = '2222222222222222';
 const ORPHAN_ID = '3333333333333333';
@@ -121,6 +122,23 @@ describe('parseOtelTrace', () => {
     });
   });
 
+  it('uses explicit fallbacks for missing names and unknown span kinds', () => {
+    const data = traces([
+      makeSpan({
+        name: undefined,
+        kind: 99,
+        events: [{ timeUnixNano: '1500000', name: '', attributes: [] }],
+      }),
+    ]);
+    data.resourceSpans![0].scopeSpans[0].scope = {};
+
+    const span = parseOtelTrace(data)!.spans[0];
+    expect(span.name).toBe('no-name');
+    expect(span.kind).toBe(SpanKind.UNSPECIFIED);
+    expect(span.instrumentationScope.name).toBe('no-name');
+    expect(span.events[0].name).toBe('no-name');
+  });
+
   it('builds sorted parent-child relationships, inbound links, and service counts', () => {
     const parent = makeSpan({ spanId: ROOT_ID, startTimeUnixNano: '1000000', endTimeUnixNano: '9000000' });
     const lateChild = makeSpan({
@@ -134,7 +152,10 @@ describe('parseOtelTrace', () => {
       parentSpanId: ROOT_ID,
       startTimeUnixNano: '2000000',
       endTimeUnixNano: '3000000',
-      links: [{ traceId: TRACE_ID, spanId: CHILD_ID, attributes: [] }],
+      links: [
+        { traceId: TRACE_ID, spanId: CHILD_ID, attributes: [] },
+        { traceId: OTHER_TRACE_ID, spanId: CHILD_ID, attributes: [] },
+      ],
     });
     const trace = parseOtelTrace(traces([parent, lateChild, earlyChild]))!;
 
@@ -144,6 +165,9 @@ describe('parseOtelTrace', () => {
     expect(trace.spans.map(span => span.spanID)).toEqual([ROOT_ID, ORPHAN_ID, CHILD_ID]);
     expect(trace.spanMap.get(ORPHAN_ID)!.depth).toBe(1);
     expect(trace.spanMap.get(CHILD_ID)!.inboundLinks[0].spanID).toBe(ORPHAN_ID);
+    expect(trace.spanMap.get(CHILD_ID)!.inboundLinks).toHaveLength(1);
+    expect(trace.spanMap.get(ORPHAN_ID)!.links[0].span?.spanID).toBe(CHILD_ID);
+    expect(trace.spanMap.get(ORPHAN_ID)!.links[1].span).toBeUndefined();
     expect(trace.services).toEqual([{ name: 'svc-a', numberOfSpans: 3 }]);
   });
 
@@ -164,7 +188,26 @@ describe('parseOtelTrace', () => {
     );
     expect(trace.rootSpans.map(span => span.spanID)).toContain(CYCLE_A_ID);
     expect(trace.spanMap.get(CYCLE_A_ID)!.parentSpan).toBeUndefined();
+    expect(trace.spanMap.get(CYCLE_A_ID)!.parentSpanID).toBeUndefined();
     expect(trace.spanMap.get(CYCLE_B_ID)!.parentSpan?.spanID).toBe(CYCLE_A_ID);
+  });
+
+  it('uses a genuine top-level span for trace metadata before an earlier orphan', () => {
+    const trace = parseOtelTrace(
+      traces([
+        makeSpan({ spanId: ROOT_ID, name: 'root', startTimeUnixNano: '2000000' }),
+        makeSpan({
+          spanId: ORPHAN_ID,
+          parentSpanId: 'deadbeefdeadbeef',
+          name: 'orphan',
+          startTimeUnixNano: '1000000',
+        }),
+      ])
+    )!;
+
+    expect(trace.rootSpans[0].spanID).toBe(ORPHAN_ID);
+    expect(trace.traceName).toBe('svc-a: root');
+    expect(trace.tracePageTitle).toBe('root (svc-a)');
   });
 
   it('uses an iterative traversal for deep hierarchies', () => {
