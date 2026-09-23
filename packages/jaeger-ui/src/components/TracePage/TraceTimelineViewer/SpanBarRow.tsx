@@ -18,6 +18,7 @@ import { SpanPill } from './spanPills';
 import { getSpanDecorationIcon, getSpanPillsForSpan } from './spanDecorations';
 
 import './SpanBarRow.css';
+import SpanActionMenu from './SpanActionMenu';
 
 type SpanBarRowProps = {
   className?: string;
@@ -56,6 +57,9 @@ type SpanBarRowProps = {
   traceDuration: number;
   spanPillsEnabled?: boolean;
   useOtelTerms: boolean;
+  onCollapseChildren?: (spanID: string) => void;
+  onFocusSubtree?: (spanID: string) => void;
+  isFocusedSubtree?: boolean;
 };
 
 /**
@@ -90,6 +94,9 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   onDetailToggled,
   onChildrenToggled,
   useOtelTerms,
+  onCollapseChildren,
+  onFocusSubtree,
+  isFocusedSubtree,
 }) => {
   const _detailToggle = useCallback(() => {
     onDetailToggled(span.spanID);
@@ -98,6 +105,18 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   const _childrenToggle = useCallback(() => {
     onChildrenToggled(span.spanID);
   }, [onChildrenToggled, span.spanID]);
+
+  const _collapseChildren = useCallback(() => {
+    if (onCollapseChildren) {
+      onCollapseChildren(span.spanID);
+    }
+  }, [onCollapseChildren, span.spanID]);
+
+  const _focusSubtree = useCallback(() => {
+    if (onFocusSubtree) {
+      onFocusSubtree(span.spanID);
+    }
+  }, [onFocusSubtree, span.spanID]);
 
   const _detailToggleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -218,6 +237,12 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
               <IoCloudUploadOutline />
             </ReferencesButton>
           )}
+          <SpanActionMenu
+            spanID={span.spanID}
+            onCollapseChildren={isParent ? _collapseChildren : undefined}
+            onFocusSubtree={_focusSubtree}
+            isFocusedSubtree={isFocusedSubtree}
+          />
         </div>
       </TimelineRow.Cell>
       {timelineBarsVisible && (

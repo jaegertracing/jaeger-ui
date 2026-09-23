@@ -128,6 +128,7 @@ export const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer
   'CLEAR_SHOULD_SCROLL_TO_FIRST_UI_FIND_MATCH',
   'COLLAPSE_ALL',
   'COLLAPSE_ONE',
+  'COLLAPSE_CHILDREN',
   'DETAIL_TOGGLE',
   'DETAIL_TAGS_TOGGLE',
   'DETAIL_PROCESS_TOGGLE',
@@ -152,6 +153,7 @@ const fullActions = createActions<TActionTypes>({
   [actionTypes.CLEAR_SHOULD_SCROLL_TO_FIRST_UI_FIND_MATCH]: () => ({}),
   [actionTypes.COLLAPSE_ALL]: (spans: IOtelSpan[]) => ({ spans }),
   [actionTypes.COLLAPSE_ONE]: (spans: IOtelSpan[]) => ({ spans }),
+  [actionTypes.COLLAPSE_CHILDREN]: (spanID: string, spans: IOtelSpan[]) => ({ spanID, spans }),
   [actionTypes.DETAIL_LOG_ITEM_TOGGLE]: (spanID: string, logItem: IEvent) => ({ logItem, spanID }),
   [actionTypes.DETAIL_LOGS_TOGGLE]: (spanID: string) => ({ spanID }),
   [actionTypes.EXPAND_ALL]: () => ({}),
@@ -302,6 +304,28 @@ export function collapseOne(state: TTraceTimeline, { spans }: TSpansValue) {
   return { ...state, childrenHiddenIDs };
 }
 
+export function collapseChildren(
+  state: TTraceTimeline,
+  { spanID, spans }: { spanID: string; spans: IOtelSpan[] }
+) {
+  const childrenHiddenIDs = new Set(state.childrenHiddenIDs);
+  let inSubtree = false;
+  let subtreeDepth = -1;
+  for (const span of spans) {
+    if (inSubtree && span.depth <= subtreeDepth) {
+      break;
+    }
+    if (inSubtree && span.hasChildren) {
+      childrenHiddenIDs.add(span.spanID);
+    }
+    if (span.spanID === spanID) {
+      inSubtree = true;
+      subtreeDepth = span.depth;
+    }
+  }
+  return { ...state, childrenHiddenIDs };
+}
+
 export function expandOne(state: TTraceTimeline, { spans }: TSpansValue) {
   if (state.childrenHiddenIDs.size === 0) {
     return state;
@@ -437,6 +461,7 @@ export default handleActions<TTraceTimeline, any>(
     ),
     [actionTypes.COLLAPSE_ALL]: guardReducer(collapseAll),
     [actionTypes.COLLAPSE_ONE]: guardReducer(collapseOne),
+    [actionTypes.COLLAPSE_CHILDREN]: guardReducer(collapseChildren),
     [actionTypes.DETAIL_LOGS_TOGGLE]: guardReducer(detailLogsToggle),
     [actionTypes.DETAIL_LOG_ITEM_TOGGLE]: guardReducer(detailLogItemToggle),
     [actionTypes.DETAIL_PROCESS_TOGGLE]: guardReducer(detailProcessToggle),

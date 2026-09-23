@@ -24,6 +24,7 @@ type TraceTimelineInteractionStore = {
   // Resets ephemeral fields for a new trace and optionally pre-apply a uiFind filter
   setTrace: (trace: IOtelTrace, uiFind?: string | TNil) => void;
   childrenToggle: (spanID: string) => void;
+  collapseChildren: (spanID: string, spans: ReadonlyArray<IOtelSpan>) => void;
   expandAll: () => void;
   expandOne: (spans: ReadonlyArray<IOtelSpan>) => void;
   collapseAll: (spans: ReadonlyArray<IOtelSpan>) => void;
@@ -79,6 +80,25 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
       childrenHiddenIDs.delete(spanID);
     } else {
       childrenHiddenIDs.add(spanID);
+    }
+    set({ childrenHiddenIDs });
+  },
+
+  collapseChildren: (spanID: string, spans: ReadonlyArray<IOtelSpan>) => {
+    const childrenHiddenIDs = new Set(get().childrenHiddenIDs);
+    let inSubtree = false;
+    let subtreeDepth = -1;
+    for (const span of spans) {
+      if (inSubtree && span.depth <= subtreeDepth) {
+        break;
+      }
+      if (inSubtree && span.hasChildren) {
+        childrenHiddenIDs.add(span.spanID);
+      }
+      if (span.spanID === spanID) {
+        inSubtree = true;
+        subtreeDepth = span.depth;
+      }
     }
     set({ childrenHiddenIDs });
   },

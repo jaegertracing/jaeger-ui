@@ -1,0 +1,30 @@
+.SpanActionMenu {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.1s ease-in-out;
+  margin-left: 8px;
+}
+
+.SpanActionMenu.is-focused,
+.span-name-wrapper:hover .SpanActionMenu {
+  opacity: 1;
+}
+
+.SpanActionMenu--btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 4px;
+  color: #999;
+  border-radius: 4px;
+}
+
+.SpanActionMenu--btn:hover {
+  background: #eee;
+  color: #333;
+}

@@ -55,6 +55,8 @@ type TVirtualizedTraceViewOwnProps = {
 
 type TDispatchProps = {
   childrenToggle: (spanID: string) => void;
+  collapseChildren?: (spanID: string) => void;
+  focusSubtree?: (spanID: string) => void;
   clearShouldScrollToFirstUiFindMatch: () => void;
   detailLogItemToggle: (spanID: string, log: IEvent) => void;
   detailLogsToggle: (spanID: string) => void;
@@ -75,6 +77,7 @@ type RouteProps = {
 
 type TDerivedStateProps = {
   selectedSpanID: string | null;
+  focusedSubtreeRootID?: string | null;
   prunedServices: Set<string>;
 };
 
@@ -347,9 +350,12 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
       const {
         childrenHiddenIDs,
         childrenToggle,
+        collapseChildren,
+        focusSubtree,
         detailStates,
         detailToggle,
         findMatchesIDs,
+        focusedSubtreeRootID,
         nameColumnWidth,
         prunedServices,
         selectedSpanID,
@@ -417,6 +423,9 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
             numTicks={NUM_TICKS}
             onDetailToggled={detailToggle}
             onChildrenToggled={childrenToggle}
+            onCollapseChildren={collapseChildren}
+            onFocusSubtree={focusSubtree}
+            isFocusedSubtree={focusedSubtreeRootID === spanID}
             rpc={rpc}
             noInstrumentedServer={noInstrumentedServer}
             hasOwnError={hasOwnError}
@@ -581,6 +590,41 @@ function VirtualizedTraceViewWrapper(
 ) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const dispatch = useDispatch<any>();
+  const [focusedSubtreeRootID, setFocusedSubtreeRootID] = React.useState<string | null>(null);
+
+  const activeTrace = React.useMemo(() => {
+    if (!ownProps.trace || !focusedSubtreeRootID) return ownProps.trace;
+    const trace = ownProps.trace;
+    let inSubtree = false;
+    let subtreeDepth = -1;
+    const subtreeSpans = [];
+    for (const span of trace.spans) {
+      if (inSubtree && span.depth <= subtreeDepth) break;
+      if (span.spanID === focusedSubtreeRootID) {
+        inSubtree = true;
+        subtreeDepth = span.depth;
+      }
+      if (inSubtree) {
+        subtreeSpans.push(span);
+      }
+    }
+    if (subtreeSpans.length === 0) return trace;
+
+    const rootDepth = subtreeSpans[0].depth;
+    const adjustedSpans = subtreeSpans.map(s => ({ ...s, depth: s.depth - rootDepth }));
+
+    const startTime = adjustedSpans.reduce((min, s) => Math.min(min, s.startTime), Infinity);
+    const endTime = adjustedSpans.reduce((max, s) => Math.max(max, s.startTime + s.duration), 0);
+
+    return {
+      ...trace,
+      spans: adjustedSpans,
+      startTime,
+      endTime,
+      duration: endTime - startTime,
+    };
+  }, [ownProps.trace, focusedSubtreeRootID]);
+
   const hoverIndentGuideIds = useSelector((state: ReduxState) => state.traceTimeline.hoverIndentGuideIds);
   const uiFind = parseUiFind(ownProps.search ?? ownProps.location.search ?? '');
 
@@ -621,6 +665,22 @@ function VirtualizedTraceViewWrapper(
       zustandChildrenToggle(spanID);
     },
     [dispatch, zustandChildrenToggle]
+  );
+
+  const collapseChildren = useCallback(
+    (spanID: string) => {
+      if (!ownProps.trace) return;
+      dispatch(actions.collapseChildren(spanID, ownProps.trace.spans));
+      useTraceTimelineStore.getState().collapseChildren(spanID, ownProps.trace.spans);
+    },
+    [dispatch, ownProps.trace]
+  );
+
+  const focusSubtree = useCallback(
+    (spanID: string) => {
+      setFocusedSubtreeRootID(prev => prev === spanID ? null : spanID);
+    },
+    []
   );
 
   const detailToggle = useCallback(
@@ -703,8 +763,10 @@ function VirtualizedTraceViewWrapper(
 
   const combinedProps: VirtualizedTraceViewProps = {
     ...ownProps,
+    trace: activeTrace,
     hoverIndentGuideIds,
     uiFind,
+    focusedSubtreeRootID,
     spanNameColumnWidth,
     sidePanelWidth,
     detailPanelMode,
@@ -717,6 +779,8 @@ function VirtualizedTraceViewWrapper(
     selectedSpanID,
     setTrace,
     childrenToggle,
+    collapseChildren,
+    focusSubtree,
     detailToggle,
     detailTagsToggle,
     detailProcessToggle,
