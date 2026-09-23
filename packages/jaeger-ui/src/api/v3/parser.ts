@@ -42,6 +42,8 @@ const MAX_SAFE_INTEGER = BigInt(Number.MAX_SAFE_INTEGER);
 
 function nanoToMicros(nanoseconds: string | undefined): Microseconds {
   if (!nanoseconds) return 0 as Microseconds;
+  // Divide before converting to Number so current Unix timestamps retain exact
+  // whole-microsecond precision in the numeric IOtelSpan model.
   return Number(BigInt(nanoseconds) / NANOS_PER_MICROSECOND) as Microseconds;
 }
 
@@ -64,8 +66,10 @@ function toSpanKind(kind: number | undefined): SpanKind {
       return SpanKind.PRODUCER;
     case 5:
       return SpanKind.CONSUMER;
-    default:
+    case 1:
       return SpanKind.INTERNAL;
+    default:
+      return SpanKind.UNSPECIFIED;
   }
 }
 
@@ -115,10 +119,10 @@ function serviceNameOf(attributes: IAttributes): string {
  * Removes one parent edge from every parent cycle. Each span has at most one
  * parent, so following the candidate edges detects every cycle in linear time.
  */
-function breakParentCycles(parentBySpan: Map<MutableOtelSpan, MutableOtelSpan | undefined>): void {
+function breakParentCycles(spans: MutableOtelSpan[], rootSpans: MutableOtelSpan[]): void {
   const state = new Map<MutableOtelSpan, 0 | 1 | 2>();
 
-  for (const start of parentBySpan.keys()) {
+  for (const start of spans) {
     if (state.get(start) !== undefined) continue;
 
     const path: MutableOtelSpan[] = [];
@@ -126,13 +130,15 @@ function breakParentCycles(parentBySpan: Map<MutableOtelSpan, MutableOtelSpan | 
     while (current && state.get(current) === undefined) {
       state.set(current, 1);
       path.push(current);
-      current = parentBySpan.get(current);
+      current = current.parentSpan as MutableOtelSpan | undefined;
     }
 
     if (current && state.get(current) === 1) {
-      // Make the first repeated span a root. Its former parent remains a child,
-      // preserving every span while producing a traversable tree.
-      parentBySpan.set(current, undefined);
+      const formerParent = current.parentSpan as MutableOtelSpan;
+      formerParent.childSpans.splice(formerParent.childSpans.indexOf(current), 1);
+      current.parentSpan = undefined;
+      current.parentSpanID = undefined;
+      rootSpans.push(current);
     }
 
     for (const span of path) state.set(span, 2);
@@ -140,11 +146,11 @@ function breakParentCycles(parentBySpan: Map<MutableOtelSpan, MutableOtelSpan | 
 }
 
 /**
- * Parses validated OTLP `TracesData` into an enriched trace. Returns null when
- * the payload has no spans that can be placed on the timeline.
+ * Converts validated OTLP wire spans into the UI span model. Graph-derived
+ * fields are initialized here and populated later by enrichTrace.
  */
-export function parseOtelTrace(data: TracesDataWire): IOtelTrace | null {
-  const flat: MutableOtelSpan[] = [];
+function parseSpans(data: TracesDataWire): MutableOtelSpan[] {
+  const spans: MutableOtelSpan[] = [];
 
   for (const resourceSpans of data.resourceSpans ?? []) {
     const resourceAttributes = toAttributes(resourceSpans.resource?.attributes);
@@ -153,14 +159,14 @@ export function parseOtelTrace(data: TracesDataWire): IOtelTrace | null {
       serviceName: serviceNameOf(resourceAttributes),
     };
 
-    for (const scopeSpans of resourceSpans.scopeSpans) {
+    for (const scopeSpans of resourceSpans.scopeSpans ?? []) {
       const scope: IScope = {
-        name: scopeSpans.scope?.name || 'unknown',
+        name: scopeSpans.scope?.name || 'no-name',
         version: scopeSpans.scope?.version,
         attributes: scopeSpans.scope?.attributes ? toAttributes(scopeSpans.scope.attributes) : undefined,
       };
 
-      for (const span of scopeSpans.spans) {
+      for (const span of scopeSpans.spans ?? []) {
         if (!span.startTimeUnixNano) continue;
 
         const startTime = nanoToMicros(span.startTimeUnixNano);
@@ -170,7 +176,7 @@ export function parseOtelTrace(data: TracesDataWire): IOtelTrace | null {
           traceID: span.traceId.toLowerCase(),
           spanID: span.spanId.toLowerCase(),
           parentSpanID: span.parentSpanId?.toLowerCase(),
-          name: span.name ?? '',
+          name: span.name || 'no-name',
           kind: toSpanKind(span.kind),
           startTime,
           endTime: (startTime + duration) as Microseconds,
@@ -178,7 +184,7 @@ export function parseOtelTrace(data: TracesDataWire): IOtelTrace | null {
           attributes,
           events: (span.events ?? []).map(event => ({
             timestamp: nanoToMicros(event.timeUnixNano),
-            name: event.name || 'log',
+            name: event.name || 'no-name',
             attributes: toAttributes(event.attributes),
           })),
           links: (span.links ?? []).map(link => ({
@@ -189,6 +195,8 @@ export function parseOtelTrace(data: TracesDataWire): IOtelTrace | null {
           status: toStatus(span.status),
           resource,
           instrumentationScope: scope,
+          genAIKind: classifySpan({ attributes }),
+          // Initialized here and populated during graph enrichment.
           parentSpan: undefined,
           depth: 0,
           hasChildren: false,
@@ -196,50 +204,46 @@ export function parseOtelTrace(data: TracesDataWire): IOtelTrace | null {
           relativeStartTime: 0 as Microseconds,
           inboundLinks: [],
           warnings: null,
-          genAIKind: classifySpan({ attributes }),
         };
-        flat.push(parsedSpan);
+        spans.push(parsedSpan);
       }
     }
   }
 
-  if (flat.length === 0) return null;
+  return spans;
+}
 
-  const traceID = flat[0].traceID;
-  const spanMap = new Map<string, MutableOtelSpan>();
-  for (const span of flat) spanMap.set(span.spanID, span);
+function enrichTrace(parsedSpans: MutableOtelSpan[]): IOtelTrace {
+  const traceID = parsedSpans[0].traceID;
+  const spanMap = new Map(parsedSpans.map(span => [span.spanID, span]));
+  const rootSpans: MutableOtelSpan[] = [];
+  const serviceCounts = Object.create(null) as Record<string, number>;
 
   let traceStartTime = Number.MAX_SAFE_INTEGER;
   let traceEndTime = 0;
-  for (const span of flat) {
-    if (span.startTime < traceStartTime) traceStartTime = span.startTime;
-    if (span.endTime > traceEndTime) traceEndTime = span.endTime;
-  }
-
-  const parentBySpan = new Map<MutableOtelSpan, MutableOtelSpan | undefined>();
   let orphanSpanCount = 0;
-  for (const span of flat) {
+  let headerSpan: MutableOtelSpan | undefined;
+  let isGenAITrace = false;
+
+  for (const span of parsedSpans) {
+    traceStartTime = Math.min(traceStartTime, span.startTime);
+    traceEndTime = Math.max(traceEndTime, span.endTime);
+    serviceCounts[span.resource.serviceName] = (serviceCounts[span.resource.serviceName] ?? 0) + 1;
+    isGenAITrace ||= span.genAIKind !== undefined;
+
+    if (!span.parentSpanID && (!headerSpan || span.startTime < headerSpan.startTime)) headerSpan = span;
+
     const parent = span.parentSpanID ? spanMap.get(span.parentSpanID) : undefined;
     if (!parent && span.parentSpanID) orphanSpanCount++;
-    parentBySpan.set(span, parent);
-  }
-  breakParentCycles(parentBySpan);
-
-  const rootSpans: MutableOtelSpan[] = [];
-  for (const span of flat) {
-    const parent = parentBySpan.get(span);
     if (parent) {
       span.parentSpan = parent;
       parent.childSpans.push(span);
     } else {
       rootSpans.push(span);
     }
-  }
-
-  for (const span of flat) {
     for (const link of span.links) {
       const target = spanMap.get(link.spanID);
-      if (!target) continue;
+      if (!target || target.traceID !== link.traceID) continue;
       link.span = target;
       target.inboundLinks.push({
         traceID: span.traceID,
@@ -250,9 +254,9 @@ export function parseOtelTrace(data: TracesDataWire): IOtelTrace | null {
     }
   }
 
+  breakParentCycles(parsedSpans, rootSpans);
   rootSpans.sort((left, right) => left.startTime - right.startTime);
   const spans: MutableOtelSpan[] = [];
-  const serviceCounts = Object.create(null) as Record<string, number>;
   const stack: Array<{ span: MutableOtelSpan; depth: number }> = [];
   for (let index = rootSpans.length - 1; index >= 0; index--) {
     stack.push({ span: rootSpans[index], depth: 0 });
@@ -264,7 +268,6 @@ export function parseOtelTrace(data: TracesDataWire): IOtelTrace | null {
     span.relativeStartTime = (span.startTime - traceStartTime) as Microseconds;
     span.childSpans.sort((left, right) => left.startTime - right.startTime);
     span.hasChildren = span.childSpans.length > 0;
-    serviceCounts[span.resource.serviceName] = (serviceCounts[span.resource.serviceName] ?? 0) + 1;
     spans.push(span);
 
     for (let index = span.childSpans.length - 1; index >= 0; index--) {
@@ -272,7 +275,7 @@ export function parseOtelTrace(data: TracesDataWire): IOtelTrace | null {
     }
   }
 
-  const headerSpan = rootSpans[0];
+  headerSpan ??= rootSpans[0];
   const traceName = `${headerSpan.resource.serviceName}: ${headerSpan.name}`;
   const tracePageTitle = `${headerSpan.name} (${headerSpan.resource.serviceName})`;
   const services = Object.keys(serviceCounts).map(name => ({ name, numberOfSpans: serviceCounts[name] }));
@@ -290,9 +293,18 @@ export function parseOtelTrace(data: TracesDataWire): IOtelTrace | null {
     spanMap,
     rootSpans,
     orphanSpanCount,
-    isGenAITrace: flat.some(span => span.genAIKind !== undefined),
+    isGenAITrace,
     hasErrors(): boolean {
       return spans.some(span => span.status.code === StatusCode.ERROR);
     },
   };
+}
+
+/**
+ * Parses validated OTLP `TracesData` into an enriched trace. Returns null when
+ * the payload has no spans that can be placed on the timeline.
+ */
+export function parseOtelTrace(data: TracesDataWire): IOtelTrace | null {
+  const spans = parseSpans(data);
+  return spans.length > 0 ? enrichTrace(spans) : null;
 }
