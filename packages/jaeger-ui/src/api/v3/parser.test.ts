@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { SpanKind, StatusCode } from '../../types/otel';
-import type { TracesDataWire } from './schemas';
+import { GetTraceResponseSchema, type TracesDataWire } from './schemas';
 import { parseOtelTrace } from './parser';
+import capture from './v3-trace-output.json';
 
 const TRACE_ID = 'abcdef0123456789abcdef0123456789';
 const ROOT_ID = '1111111111111111';
@@ -45,6 +46,28 @@ describe('parseOtelTrace', () => {
     expect(parseOtelTrace({})).toBeNull();
     expect(parseOtelTrace(traces([]))).toBeNull();
     expect(parseOtelTrace(traces([makeSpan({ startTimeUnixNano: undefined })]))).toBeNull();
+  });
+
+  it('parses the captured API v3 payload into an enriched trace', () => {
+    const parsed = GetTraceResponseSchema.parse(capture);
+    const trace = parseOtelTrace(parsed.result)!;
+
+    expect(trace.traceID).toBe('0123456789abcdef0123456789abcdef');
+    expect(trace.spans).toHaveLength(3);
+    expect(trace.services).toEqual([{ name: 'lfx-wire-probe', numberOfSpans: 3 }]);
+
+    const root = trace.spanMap.get('0123456789abcdef')!;
+    expect(root.resource.serviceName).toBe('lfx-wire-probe');
+    expect(root.instrumentationScope).toMatchObject({ name: 'lfx-proposal', version: '1.0.0' });
+    expect(root.status).toEqual({ code: StatusCode.ERROR, message: 'probe error status' });
+    expect(root.attributes.getValue('empty')).toBe('');
+    expect(root.attributes.getValue('false')).toBe(false);
+    expect(root.attributes.getValue('integer')).toBe(0);
+    expect(root.attributes.getValue('array')).toEqual(['first', false, '9223372036854775807']);
+    expect(root.childSpans.map(span => span.spanID)).toEqual(['1111111111111111', '2222222222222222']);
+
+    expect(trace.spanMap.get('1111111111111111')!.status.code).toBe(StatusCode.UNSET);
+    expect(trace.spanMap.get('2222222222222222')!.kind).toBe(SpanKind.SERVER);
   });
 
   it('maps OTLP fields, duration, attributes, events, status, and GenAI classification', () => {
