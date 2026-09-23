@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Select, Tooltip } from 'antd';
 import Markdown from 'markdown-to-jsx/react';
 import { IoChevronDown, IoChevronForward, IoCopyOutline } from 'react-icons/io5';
@@ -432,20 +432,42 @@ function PartContent({
   return <pre className="GenAITab--messageContent GenAITab--messageContent-plain">{part.text}</pre>;
 }
 
-function MessageBlock({
+/**
+ * One message of the conversation, re-rendered only when its own props change.
+ *
+ * The folded state lives in ConversationDetails, so every fold - one chevron or Collapse
+ * all - re-renders the whole section. Unmemoized, each sibling would then re-serialize its
+ * JSON and recompile its Markdown for a fold it had no part in: on a long conversation
+ * that is the entire transcript, twice over, per click. Every prop below is therefore
+ * stable across a re-render - `message` comes from a memoized list, and the callbacks take
+ * the message's key rather than being closed over it.
+ */
+const MessageBlock = React.memo(function MessageBlock({
   message,
+  messageKey,
+  attributeKey,
   formatOverride,
   onFormatChange,
   messageNumber,
+  isCollapsed,
+  onCollapsedChange,
 }: {
   message: GenAiMessage;
+  // This message's identity within the conversation, handed back to onCollapsedChange.
+  messageKey: string;
+  // The attribute this message came from, handed back to onFormatChange.
+  attributeKey: string;
   // Remembered format for this message's attribute, seeding each part's initial view; null
   // to use the content-derived default.
   formatOverride: MessageFormat | null;
-  onFormatChange: (format: MessageFormat) => void;
+  onFormatChange: (attributeKey: string, format: MessageFormat) => void;
   messageNumber: number;
+  // Folded state lives in ConversationDetails, which is the only place that can act on
+  // every message at once. A message still owns its own toggle; it just no longer owns
+  // the answer, so the section's Collapse all and this button cannot disagree.
+  isCollapsed: boolean;
+  onCollapsedChange: (messageKey: string, isCollapsed: boolean) => void;
 }) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
   // Chosen view per part, and the sources the reader has asked to load. Both are held here
   // rather than in the rows, which unmount whenever a view switches away from Media:
   // without that, going to Plain text and back would ask again for an image that was on
@@ -459,14 +481,20 @@ function MessageBlock({
   const [revealed, setRevealed] = useState<ReadonlySet<string>>(new Set());
   const role = message.role || 'message';
   const isSinglePart = message.parts.length === 1;
-  const messageJson = JSON.stringify({ role: message.role, parts: message.parts }, null, 2);
+  // Memoized because it runs whether or not this message is folded: recomputed per render
+  // it would re-serialize every message in the conversation on each fold, which is the cost
+  // the memo above exists to avoid.
+  const messageJson = useMemo(
+    () => JSON.stringify({ role: message.role, parts: message.parts }, null, 2),
+    [message]
+  );
 
   const controlsFor = (part: GenAiPart, i: number) => (
     <PartControls
       view={partView(part, formats[i] ?? seededFormat)}
       onFormatChange={format => {
         setFormats({ ...formats, [i]: format });
-        onFormatChange(format);
+        onFormatChange(attributeKey, format);
       }}
       // A single-part message has one thing to name, so its control is named for the
       // message; several parts each need naming apart for a screen reader.
@@ -487,7 +515,7 @@ function MessageBlock({
           className="GenAITab--messageToggle"
           aria-expanded={!isCollapsed}
           aria-label={`Message ${messageNumber} (${role})`}
-          onClick={() => setIsCollapsed(!isCollapsed)}
+          onClick={() => onCollapsedChange(messageKey, !isCollapsed)}
         >
           {isCollapsed ? (
             <IoChevronForward className="GenAITab--messageToggleIcon" />
@@ -532,7 +560,7 @@ function MessageBlock({
       )}
     </div>
   );
-}
+});
 
 function LLMDetails({
   operation,
@@ -676,35 +704,92 @@ function ConversationDetails({
   // to a screen reader when a conversation has multiple messages. Built via push
   // rather than spread so each pushed object literal stays contextually typed
   // against GenAiMessage's role union, instead of widening to a plain string.
-  const messages: Array<{ key: string; message: GenAiMessage; attributeKey: string }> = [];
-  if (systemInstructions) {
-    messages.push({
-      key: 'system',
-      message: { role: 'system', content: systemInstructions, parts: [{ text: systemInstructions }] },
-      attributeKey: 'gen_ai.system_instructions',
+  //
+  // Memoized so every message keeps its identity from one render to the next. Folding is
+  // section-wide state, so each fold re-renders this component; rebuilding the list here
+  // would hand every MessageBlock a new object and re-render the lot of them.
+  const messages = useMemo(() => {
+    const list: Array<{ key: string; message: GenAiMessage; attributeKey: string }> = [];
+    if (systemInstructions) {
+      list.push({
+        key: 'system',
+        message: { role: 'system', content: systemInstructions, parts: [{ text: systemInstructions }] },
+        attributeKey: 'gen_ai.system_instructions',
+      });
+    }
+    inputMessages.forEach((message, i) => {
+      list.push({ key: `input-${i}`, message, attributeKey: 'gen_ai.input.messages' });
     });
-  }
-  inputMessages.forEach((message, i) => {
-    messages.push({ key: `input-${i}`, message, attributeKey: 'gen_ai.input.messages' });
-  });
-  outputMessages.forEach((message, i) => {
-    messages.push({
-      key: `output-${i}`,
-      message: { ...message, role: message.role || 'assistant' },
-      attributeKey: 'gen_ai.output.messages',
+    outputMessages.forEach((message, i) => {
+      list.push({
+        key: `output-${i}`,
+        message: { ...message, role: message.role || 'assistant' },
+        attributeKey: 'gen_ai.output.messages',
+      });
     });
-  });
+    return list;
+  }, [systemInstructions, inputMessages, outputMessages]);
+
+  // Folded state for every message, keyed the same way the rows are. Seeded in a lazy
+  // initializer rather than an effect: an effect keyed on `messages` would refire whenever
+  // that list is rebuilt and throw away whatever the reader had folded.
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(messages.map(({ key }) => [key, false]))
+  );
+
+  // Stable, so folding one message re-renders that message alone; the key arrives with the
+  // call instead of a new closure per message defeating MessageBlock's memo.
+  const handleCollapsedChange = useCallback(
+    (key: string, isCollapsed: boolean) => setCollapsed(current => ({ ...current, [key]: isCollapsed })),
+    []
+  );
+
+  // Collapse all and Expand all are absolute: they write every message, so the section
+  // afterwards is entirely folded or entirely open rather than partly either.
+  const setAllCollapsed = (isCollapsed: boolean) =>
+    setCollapsed(Object.fromEntries(messages.map(({ key }) => [key, isCollapsed])));
 
   return (
     <div className="GenAITab--section">
-      <h3 className="GenAITab--sectionTitle">Conversation</h3>
+      <div className="GenAITab--sectionHeader">
+        <h3 className="GenAITab--sectionTitle">Conversation</h3>
+        {/* Acting on the section as a whole only means anything once there are two
+            messages to act on; below that the message's own toggle already is the pair. */}
+        {messages.length > 1 && (
+          <div className="GenAITab--sectionActions">
+            <button
+              type="button"
+              className="GenAITab--sectionAction"
+              aria-label="Collapse all messages"
+              onClick={() => setAllCollapsed(true)}
+            >
+              Collapse all
+            </button>
+            <button
+              type="button"
+              className="GenAITab--sectionAction"
+              aria-label="Expand all messages"
+              onClick={() => setAllCollapsed(false)}
+            >
+              Expand all
+            </button>
+          </div>
+        )}
+      </div>
       {messages.map(({ key, message, attributeKey }, i) => (
         <MessageBlock
           key={key}
           message={message}
+          messageKey={key}
+          attributeKey={attributeKey}
           formatOverride={getFormatOverride(attributeKey)}
-          onFormatChange={f => setFormat(attributeKey, f)}
+          onFormatChange={setFormat}
           messageNumber={i + 1}
+          // A key absent from the record is a message that arrived after the record was
+          // built, which reads as expanded rather than as folded by something the reader
+          // never did.
+          isCollapsed={collapsed[key] ?? false}
+          onCollapsedChange={handleCollapsedChange}
         />
       ))}
     </div>
