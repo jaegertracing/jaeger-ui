@@ -171,6 +171,53 @@ describe('parseOtelTrace', () => {
     expect(trace.services).toEqual([{ name: 'svc-a', numberOfSpans: 3 }]);
   });
 
+  it('rejects spans from different traces', () => {
+    expect(() =>
+      parseOtelTrace(
+        traces([
+          makeSpan({ spanId: ROOT_ID }),
+          makeSpan({ spanId: CHILD_ID, traceId: OTHER_TRACE_ID, parentSpanId: ROOT_ID }),
+        ])
+      )
+    ).toThrow(`Expected one trace ID, received ${TRACE_ID} and ${OTHER_TRACE_ID}`);
+  });
+
+  it('rejects timestamps outside the safe microsecond range', () => {
+    const timestamp = '9007199254740992000';
+    expect(() =>
+      parseOtelTrace(traces([makeSpan({ startTimeUnixNano: timestamp, endTimeUnixNano: timestamp })]))
+    ).toThrow('OTLP timestamp exceeds the safe integer range in microseconds');
+  });
+
+  it('assigns stable internal IDs to duplicate wire span IDs', () => {
+    const duplicateID = `${ROOT_ID}_1`;
+    const trace = parseOtelTrace(
+      traces([
+        makeSpan({ spanId: ROOT_ID, name: 'first', startTimeUnixNano: '1000000' }),
+        makeSpan({ spanId: ROOT_ID, name: 'duplicate', startTimeUnixNano: '3000000' }),
+        makeSpan({
+          spanId: CHILD_ID,
+          parentSpanId: ROOT_ID,
+          name: 'child',
+          startTimeUnixNano: '2000000',
+          links: [{ traceId: TRACE_ID, spanId: ROOT_ID, attributes: [] }],
+        }),
+      ])
+    )!;
+
+    const first = trace.spanMap.get(ROOT_ID)!;
+    const duplicate = trace.spanMap.get(duplicateID)!;
+    const child = trace.spanMap.get(CHILD_ID)!;
+
+    expect(trace.spans.map(span => span.spanID)).toEqual([ROOT_ID, CHILD_ID, duplicateID]);
+    expect(trace.spanMap.size).toBe(3);
+    expect(first.name).toBe('first');
+    expect(duplicate.name).toBe('duplicate');
+    expect(trace.rootSpans.map(span => span.spanID)).toEqual([ROOT_ID, duplicateID]);
+    expect(child.parentSpan).toBe(first);
+    expect(child.links[0].span).toBe(first);
+  });
+
   it('keeps orphan spans and breaks parent cycles into traversable roots', () => {
     const trace = parseOtelTrace(
       traces([
