@@ -84,10 +84,21 @@ describe('parseOtelTrace', () => {
             { key: 'false', value: { boolValue: false } },
             { key: 'zero', value: { intValue: '0' } },
             { key: 'large', value: { intValue: '9223372036854775807' } },
-            { key: 'array', value: { arrayValue: {} } },
+            { key: 'bytes', value: { bytesValue: 'AAEC/w==' } },
+            {
+              key: 'array',
+              value: { arrayValue: { values: [{ bytesValue: 'AQID' }] } },
+            },
             {
               key: 'object',
-              value: { kvlistValue: { values: [{ key: 'enabled', value: { boolValue: false } }] } },
+              value: {
+                kvlistValue: {
+                  values: [
+                    { key: 'enabled', value: { boolValue: false } },
+                    { key: 'bytes', value: { bytesValue: 'BAU=' } },
+                  ],
+                },
+              },
             },
             { key: 'gen_ai.operation.name', value: { stringValue: 'chat' } },
           ],
@@ -116,8 +127,9 @@ describe('parseOtelTrace', () => {
       false: false,
       zero: 0,
       large: '9223372036854775807',
-      array: [],
-      object: { enabled: false },
+      bytes: new Uint8Array([0, 1, 2, 255]),
+      array: [new Uint8Array([1, 2, 3])],
+      object: { enabled: false, bytes: new Uint8Array([4, 5]) },
       'gen_ai.operation.name': 'chat',
     });
   });
