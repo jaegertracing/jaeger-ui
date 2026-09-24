@@ -91,6 +91,13 @@ function toStatus(status: SpanWire['status']): IStatus {
   }
 }
 
+function decodeBase64Bytes(value: string): Uint8Array {
+  const binary = atob(value);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index);
+  return bytes;
+}
+
 function toAttributeValue(value: AnyValueWire): AttributeValue {
   if (value.stringValue !== undefined) return value.stringValue;
   if (value.boolValue !== undefined) return value.boolValue;
@@ -99,7 +106,7 @@ function toAttributeValue(value: AnyValueWire): AttributeValue {
     return integer > MAX_SAFE_INTEGER || integer < -MAX_SAFE_INTEGER ? value.intValue : Number(integer);
   }
   if (value.doubleValue !== undefined) return value.doubleValue;
-  if (value.bytesValue !== undefined) return value.bytesValue;
+  if (value.bytesValue !== undefined) return decodeBase64Bytes(value.bytesValue);
   if (value.arrayValue !== undefined) return (value.arrayValue.values ?? []).map(toAttributeValue);
   if (value.kvlistValue !== undefined) {
     const result = Object.create(null) as Record<string, AttributeValue>;
