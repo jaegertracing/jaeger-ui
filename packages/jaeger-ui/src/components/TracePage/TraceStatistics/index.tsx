@@ -114,8 +114,8 @@ export const searchInTable = (
       allTableSpansChange[i].searchColor = defaultGrayCollor;
     }
   }
-  if (typeof uiFindVertexKeys !== 'undefined') {
-    uiFindVertexKeys!.forEach(function calc(value) {
+  if (uiFindVertexKeys) {
+    uiFindVertexKeys.forEach(function calc(value) {
       const uiFindVertexKeysSplit = value.split('\u000b');
 
       for (let i = 0; i < allTableSpansChange.length; i++) {

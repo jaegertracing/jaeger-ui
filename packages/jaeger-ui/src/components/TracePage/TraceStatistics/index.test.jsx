@@ -290,4 +290,21 @@ describe('searchInTable', () => {
     expect(result[0].searchColor).toBe('rgb(248,248,248)');
     expect(result[1].searchColor).toBe('rgb(248,248,248)');
   });
+
+  it('treats a null uiFindVertexKeys the same as undefined, not as a Set to iterate', () => {
+    const rows = [
+      {
+        name: 'item1',
+        isDetail: false,
+        hasSubgroupValue: true,
+        parentElement: 'none',
+        searchColor: undefined,
+        key: '0',
+      },
+    ];
+
+    expect(() => searchInTable(null, rows, null)).not.toThrow();
+    const result = searchInTable(null, rows, null);
+    expect(result[0].searchColor).toBe('transparent');
+  });
 });
