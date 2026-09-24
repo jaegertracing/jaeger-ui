@@ -456,6 +456,52 @@ describe('JaegerClient', () => {
       expect(calledUrl).not.toContain('query.serviceName');
       expect(calledUrl).toContain('query.attributes=http.status%3D500');
     });
+
+    it('omits startTimeMin when start timestamp is out of JavaScript Date range', async () => {
+      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ summaries: [] }) });
+
+      const promise = client.fetchTraceSummaries({
+        ...query,
+        start: '100000000000000000000',
+      });
+      vi.runAllTimers();
+      await expect(promise).resolves.toEqual([]);
+
+      const calledUrl = mockFetch.mock.calls[0][0] as string;
+      expect(calledUrl).not.toContain('query.startTimeMin');
+      expect(calledUrl).toContain('query.startTimeMax');
+    });
+
+    it('omits startTimeMax when end timestamp is out of JavaScript Date range', async () => {
+      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ summaries: [] }) });
+
+      const promise = client.fetchTraceSummaries({
+        ...query,
+        end: '100000000000000000000',
+      });
+      vi.runAllTimers();
+      await expect(promise).resolves.toEqual([]);
+
+      const calledUrl = mockFetch.mock.calls[0][0] as string;
+      expect(calledUrl).toContain('query.startTimeMin');
+      expect(calledUrl).not.toContain('query.startTimeMax');
+    });
+
+    it('omits timestamps when values are non-numeric or non-positive', async () => {
+      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ summaries: [] }) });
+
+      const promise = client.fetchTraceSummaries({
+        ...query,
+        start: 'invalid-time',
+        end: '-100',
+      });
+      vi.runAllTimers();
+      await expect(promise).resolves.toEqual([]);
+
+      const calledUrl = mockFetch.mock.calls[0][0] as string;
+      expect(calledUrl).not.toContain('query.startTimeMin');
+      expect(calledUrl).not.toContain('query.startTimeMax');
+    });
   });
 
   describe('singleton instance', () => {
