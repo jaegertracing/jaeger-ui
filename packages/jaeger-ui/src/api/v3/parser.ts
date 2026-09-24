@@ -166,6 +166,10 @@ function breakParentCycles(
       formerParent.childSpans.splice(formerParent.childSpans.indexOf(current), 1);
       current.parentSpan = undefined;
       current.parentSpanID = undefined;
+      current.warnings = [
+        ...(current.warnings ?? []),
+        `Cyclic parent reference to ${formerParent.spanID} removed`,
+      ];
       rootSpans.push(current);
       onCycleRoot(current);
     }
@@ -225,6 +229,7 @@ function parseSpans(data: TracesDataWire): ParsedSpanData {
           if (!hasStartTime && !hasTimestamp) eventTimesToRepair.push(parsedEvent);
           return parsedEvent;
         });
+        if (hasStartTime) events.sort((left, right) => left.timestamp - right.timestamp);
         const attributes = toAttributes(span.attributes);
         const wireSpanID = span.spanId.toLowerCase();
         const duplicateCount = spanIdCounts.get(wireSpanID) ?? 0;
@@ -292,6 +297,7 @@ function repairMissingStartTime(
   span.endTime = (startTime + duration) as Microseconds;
 
   for (const event of parsed.eventsWithoutTimestamp.get(span) ?? []) event.timestamp = startTime;
+  span.events.sort((left, right) => left.timestamp - right.timestamp);
 }
 
 function enrichTrace(parsed: ParsedSpanData): IOtelTrace {
