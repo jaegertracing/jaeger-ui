@@ -58,7 +58,11 @@ describe('parseOtelTrace', () => {
           parentSpanId: ROOT_ID,
           startTimeUnixNano: undefined,
           endTimeUnixNano: '6000000',
-          events: [{ name: 'parent event', attributes: [] }],
+          events: [
+            { timeUnixNano: '3000000', name: 'late', attributes: [] },
+            { timeUnixNano: '2000000', name: 'early', attributes: [] },
+            { name: 'parent event', attributes: [] },
+          ],
         }),
         makeSpan({
           spanId: CHILD_ID,
@@ -78,7 +82,11 @@ describe('parseOtelTrace', () => {
     expect(parent.parentSpan).toBe(root);
     expect(parent.startTime).toBe(root.startTime);
     expect(parent.endTime).toBe(6000);
-    expect(parent.events[0].timestamp).toBe(parent.startTime);
+    expect(parent.events.map(event => [event.name, event.timestamp])).toEqual([
+      ['parent event', parent.startTime],
+      ['early', 2000],
+      ['late', 3000],
+    ]);
     expect(child.parentSpan).toBe(parent);
     expect(child.events[0].timestamp).toBe(child.startTime);
     expect(child.events[0].timestamp - trace.startTime).toBe(child.relativeStartTime);
@@ -95,6 +103,28 @@ describe('parseOtelTrace', () => {
     expect(traceWithOnlyEndTime.startTime).toBe(3000);
     expect(traceWithOnlyEndTime.endTime).toBe(3000);
     expect(traceWithOnlyEndTime.duration).toBe(0);
+  });
+
+  it('sorts events by timestamp even when the wire order is by name', () => {
+    const span = parseOtelTrace(
+      traces([
+        makeSpan({
+          events: [
+            { timeUnixNano: '1900000', name: 'alpha', attributes: [] },
+            { timeUnixNano: '1200000', name: 'beta', attributes: [] },
+            { timeUnixNano: '1200000', name: 'gamma', attributes: [] },
+            { name: 'zeta', attributes: [] },
+          ],
+        }),
+      ])
+    )!.spans[0];
+
+    expect(span.events.map(event => [event.name, event.timestamp])).toEqual([
+      ['zeta', 1000],
+      ['beta', 1200],
+      ['gamma', 1200],
+      ['alpha', 1900],
+    ]);
   });
 
   it('parses the captured API v3 payload into an enriched trace', () => {
@@ -297,6 +327,10 @@ describe('parseOtelTrace', () => {
     expect(trace.rootSpans.map(span => span.spanID)).toContain(CYCLE_A_ID);
     expect(trace.spanMap.get(CYCLE_A_ID)!.parentSpan).toBeUndefined();
     expect(trace.spanMap.get(CYCLE_A_ID)!.parentSpanID).toBeUndefined();
+    expect(trace.spanMap.get(CYCLE_A_ID)!.warnings).toEqual([
+      `Cyclic parent reference to ${CYCLE_B_ID} removed`,
+    ]);
+    expect(trace.spanMap.get(CYCLE_B_ID)!.warnings).toBeNull();
     expect(trace.spanMap.get(CYCLE_B_ID)!.parentSpan?.spanID).toBe(CYCLE_A_ID);
   });
 
