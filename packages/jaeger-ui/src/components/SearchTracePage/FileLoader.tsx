@@ -90,9 +90,9 @@ export default function FileLoader(props: FileLoaderProps) {
             }
           })
           .catch((err: unknown) => {
-            message.error(
-              `Failed to parse ${file.name}: ${err instanceof Error ? err.message : String(err)}`
-            );
+            // readJsonFile's errors already name the failure (parse, read, backend), so the
+            // wrapper must not assume the file itself was at fault.
+            message.error(`Failed to load ${file.name}: ${err instanceof Error ? err.message : String(err)}`);
           });
         return false;
       }}
