@@ -6,7 +6,8 @@ import type { IOtelTrace } from '../types/otel';
 import type { ServiceSummary, TraceSummary } from '../types/trace-summary';
 
 export function traceToTraceSummary(trace: IOtelTrace): TraceSummary {
-  const rootSpan = trace.rootSpans[0];
+  const rootSpan =
+    (trace.traceRootSpanID ? trace.spanMap.get(trace.traceRootSpanID) : undefined) ?? trace.rootSpans[0];
   const rootServiceName = rootSpan?.resource.serviceName ?? '';
   const rootOperationName = rootSpan?.name ?? '';
 
