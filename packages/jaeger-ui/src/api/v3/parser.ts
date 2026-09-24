@@ -40,11 +40,18 @@ type MutableOtelSpan = IOtelSpan & {
 const NANOS_PER_MICROSECOND = 1000n;
 const MAX_SAFE_INTEGER = BigInt(Number.MAX_SAFE_INTEGER);
 
+function toSafeMicroseconds(microseconds: bigint, field: string): Microseconds {
+  if (microseconds > MAX_SAFE_INTEGER || microseconds < -MAX_SAFE_INTEGER) {
+    throw new RangeError(`OTLP ${field} exceeds the safe integer range in microseconds`);
+  }
+  return Number(microseconds) as Microseconds;
+}
+
 function nanoToMicros(nanoseconds: string | undefined): Microseconds {
   if (!nanoseconds) return 0 as Microseconds;
-  // Divide before converting to Number so current Unix timestamps retain exact
-  // whole-microsecond precision in the numeric IOtelSpan model.
-  return Number(BigInt(nanoseconds) / NANOS_PER_MICROSECOND) as Microseconds;
+  // The UI model stores microseconds as numbers, so reject timestamps it cannot
+  // represent exactly rather than silently rounding them.
+  return toSafeMicroseconds(BigInt(nanoseconds) / NANOS_PER_MICROSECOND, 'timestamp');
 }
 
 function durationMicros(
@@ -53,7 +60,7 @@ function durationMicros(
 ): Microseconds {
   if (!startNanoseconds || !endNanoseconds) return 0 as Microseconds;
   const duration = BigInt(endNanoseconds) - BigInt(startNanoseconds);
-  return Number((duration > 0n ? duration : 0n) / NANOS_PER_MICROSECOND) as Microseconds;
+  return toSafeMicroseconds((duration > 0n ? duration : 0n) / NANOS_PER_MICROSECOND, 'duration');
 }
 
 function toSpanKind(kind: number | undefined): SpanKind {
@@ -151,6 +158,8 @@ function breakParentCycles(spans: MutableOtelSpan[], rootSpans: MutableOtelSpan[
  */
 function parseSpans(data: TracesDataWire): MutableOtelSpan[] {
   const spans: MutableOtelSpan[] = [];
+  const spanIdCounts = new Map<string, number>();
+  let traceID: string | undefined;
 
   for (const resourceSpans of data.resourceSpans ?? []) {
     const resourceAttributes = toAttributes(resourceSpans.resource?.attributes);
@@ -167,19 +176,32 @@ function parseSpans(data: TracesDataWire): MutableOtelSpan[] {
       };
 
       for (const span of scopeSpans.spans ?? []) {
+        const spanTraceID = span.traceId.toLowerCase();
+        if (traceID !== undefined && spanTraceID !== traceID) {
+          throw new Error(`Expected one trace ID, received ${traceID} and ${spanTraceID}`);
+        }
+        traceID ??= spanTraceID;
         if (!span.startTimeUnixNano) continue;
 
         const startTime = nanoToMicros(span.startTimeUnixNano);
         const duration = durationMicros(span.startTimeUnixNano, span.endTimeUnixNano);
+        const endTime = toSafeMicroseconds(BigInt(startTime) + BigInt(duration), 'end timestamp');
         const attributes = toAttributes(span.attributes);
+        const wireSpanID = span.spanId.toLowerCase();
+        const duplicateCount = spanIdCounts.get(wireSpanID) ?? 0;
+        spanIdCounts.set(wireSpanID, duplicateCount + 1);
+
+        // Keep the first wire ID unchanged so parent and link references resolve
+        // to it, and give later duplicates stable internal IDs for UI lookups.
+        const spanID = duplicateCount === 0 ? wireSpanID : `${wireSpanID}_${duplicateCount}`;
         const parsedSpan: MutableOtelSpan = {
-          traceID: span.traceId.toLowerCase(),
-          spanID: span.spanId.toLowerCase(),
+          traceID: spanTraceID,
+          spanID,
           parentSpanID: span.parentSpanId?.toLowerCase(),
           name: span.name || 'no-name',
           kind: toSpanKind(span.kind),
           startTime,
-          endTime: (startTime + duration) as Microseconds,
+          endTime,
           duration,
           attributes,
           events: (span.events ?? []).map(event => ({
@@ -219,8 +241,8 @@ function enrichTrace(parsedSpans: MutableOtelSpan[]): IOtelTrace {
   const rootSpans: MutableOtelSpan[] = [];
   const serviceCounts = Object.create(null) as Record<string, number>;
 
-  let traceStartTime = Number.MAX_SAFE_INTEGER;
-  let traceEndTime = 0;
+  let traceStartTime: number = parsedSpans[0].startTime;
+  let traceEndTime: number = parsedSpans[0].endTime;
   let orphanSpanCount = 0;
   let headerSpan: MutableOtelSpan | undefined;
   let isGenAITrace = false;
