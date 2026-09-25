@@ -12,7 +12,7 @@ import type { Location, NavigateFunction } from 'react-router-dom';
 import { actions } from './duck';
 import { makeCriticalPathContext } from './criticalPath';
 import generateRowStates, { RowState } from './generateRowStates';
-import ListView from './ListView';
+import ListView, { ListViewRef } from './ListView';
 import PrunedSpanRow from './PrunedSpanRow';
 import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
@@ -118,12 +118,11 @@ function getCssClasses(currentViewRange: [number, number]) {
 const memoizedGenerateRowStates = memoizeOne(generateRowStatesFromTrace);
 const memoizedViewBoundsFunc = memoizeOne(createViewedBoundsFunc, _isEqual);
 const memoizedGetCssClasses = memoizeOne(getCssClasses, _isEqual);
-
 // export for tests
 export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceViewImpl(
   props: VirtualizedTraceViewProps
 ) {
-  const listViewRef = useRef<ListView | TNil>(null);
+  const listViewRef = useRef<ListViewRef | TNil>(null);
 
   // TODO: React documents writing a ref during render as unsafe, because a render that gets
   // discarded leaves the ref holding props that never committed. Nothing in this subtree uses
@@ -237,7 +236,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
   ]);
 
   const setListView = useCallback(
-    (listView: ListView | TNil) => {
+    (listView: ListViewRef | TNil) => {
       const isChanged = listViewRef.current !== listView;
       listViewRef.current = listView;
       if (listView && isChanged) {
