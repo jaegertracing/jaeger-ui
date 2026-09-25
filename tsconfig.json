@@ -17,6 +17,5 @@
     "emitDeclarationOnly": true,
     "jsx": "react-jsx"
   },
-  "include": [],
-  "files": []
+  "include": ["packages/*/src/**/*.ts", "packages/*/src/**/*.tsx"]
 }
