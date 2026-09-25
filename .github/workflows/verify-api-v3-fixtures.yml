@@ -1,0 +1,47 @@
+name: 'Verify API v3 Fixtures'
+
+# The API v3 contract tests parse a captured Jaeger response. Regenerating that
+# capture and diffing it here is what keeps the fixture an artifact the pipeline
+# can reproduce, rather than a file that is trusted because it is committed.
+#
+# The Jaeger image is pinned by tag and digest in Docker Compose. Only a change
+# to the input, Compose file, generator, dependency lock or output can cause
+# drift, so this runs on those paths instead of every PR.
+
+on:
+  merge_group:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/generate-v3-fixture.ts'
+      - 'scripts/v3-fixture/docker-compose.yml'
+      - 'packages/jaeger-ui/src/api/v3/v3-trace-input.json'
+      - 'packages/jaeger-ui/src/api/v3/v3-trace-output.json'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/verify-api-v3-fixtures.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ (github.event.pull_request && github.event.pull_request.number) || github.ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify-api-v3-fixtures:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          submodules: false
+
+      - uses: ./.github/actions/setup-node-and-deps
+
+      - name: Regenerate the capture and diff it against the committed fixture
+        run: node scripts/generate-v3-fixture.ts --check

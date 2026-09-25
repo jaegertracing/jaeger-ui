@@ -52,7 +52,7 @@ export default function TraceStatisticsHeader(props: Props) {
       valueNameSelector1,
       null
     );
-    // eslint-disable-next-line react-x/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps
   }, []);
 
   /**

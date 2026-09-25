@@ -4,12 +4,6 @@
 import { createAction } from 'redux-actions';
 import JaegerAPI from '../api/jaeger';
 
-const metricType: Record<string, string> = {
-  latencies: 'latencies',
-  calls: 'calls',
-  errors: 'errors',
-};
-
 export const fetchTrace = createAction(
   '@JAEGER_API/FETCH_TRACE',
   (id: string) => JaegerAPI.fetchTrace(id),
@@ -30,29 +24,4 @@ export const fetchDeepDependencyGraph = createAction(
 
 export const fetchDependencies = createAction('@JAEGER_API/FETCH_DEPENDENCIES', () =>
   JaegerAPI.fetchDependencies()
-);
-
-export const fetchAllServiceMetrics = createAction(
-  '@JAEGER_API/FETCH_ALL_SERVICE_METRICS',
-  (serviceName?: string, query?: Record<string, any>) => {
-    return Promise.allSettled([
-      JaegerAPI.fetchMetrics(metricType.latencies, [serviceName!], { ...query, quantile: 0.5 }),
-      JaegerAPI.fetchMetrics(metricType.latencies, [serviceName!], { ...query, quantile: 0.75 }),
-      JaegerAPI.fetchMetrics(metricType.latencies, [serviceName!], { ...query }),
-      JaegerAPI.fetchMetrics(metricType.calls, [serviceName!], { ...query }),
-      JaegerAPI.fetchMetrics(metricType.errors, [serviceName!], { ...query }),
-    ]);
-  }
-);
-
-export const fetchAggregatedServiceMetrics = createAction(
-  '@JAEGER_API/FETCH_AGGREGATED_SERVICE_METRICS',
-  (serviceName?: string, queryParams?: Record<string, any>) => {
-    const query = { ...queryParams, groupByOperation: true };
-    return Promise.allSettled([
-      JaegerAPI.fetchMetrics(metricType.latencies, [serviceName!], { ...query }),
-      JaegerAPI.fetchMetrics(metricType.calls, [serviceName!], { ...query }),
-      JaegerAPI.fetchMetrics(metricType.errors, [serviceName!], { ...query }),
-    ]);
-  }
 );
