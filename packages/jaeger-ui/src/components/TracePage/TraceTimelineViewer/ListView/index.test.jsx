@@ -144,14 +144,14 @@ describe('<ListView /> functional', () => {
     });
   });
 
-  it('items array has no holes — rendered count matches items in DOM', () => {
-    const { container } = render(<ListView {...props} />);
-    const items = getItems(container);
-    // All rendered items should have a valid data-item-key (no holes)
-    items.forEach(node => {
-      expect(node.getAttribute('data-item-key')).not.toBeNull();
-    });
-    expect(items.length).toBeGreaterThan(0);
+  it('items array has no holes — item count matches the drawn range', () => {
+    const ref = React.createRef();
+    render(<ListView {...props} ref={ref} />);
+
+    const { start, end } = ref.current.getDrawnRange();
+    // Assert on the items array length, rather than DOM nodes: React skips array
+    // holes, so DOM assertions would not detect preallocation followed by push().
+    expect(ref.current.getDrawnItemCount()).toBe(end - start + 1);
   });
 
   it('applies data-item-key attribute to items', () => {

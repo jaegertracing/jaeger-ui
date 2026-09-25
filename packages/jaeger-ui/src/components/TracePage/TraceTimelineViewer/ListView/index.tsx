@@ -89,6 +89,8 @@ export interface ListViewRef {
   getBottomVisibleIndex: () => number;
   getTopVisibleIndex: () => number;
   getRowPosition: (index: number) => { height: number; y: number };
+  getDrawnRange: () => { start: number; end: number };
+  getDrawnItemCount: () => number;
   forceUpdate: () => void;
 }
 
@@ -105,6 +107,7 @@ const ListView = forwardRef<ListViewRef, TListViewProps>((props, ref) => {
 
   const startIndexDrawn = useRef(2 ** 20);
   const endIndexDrawn = useRef(-(2 ** 20));
+  const drawnItemCount = useRef(0);
   const startIndex = useRef(0);
   const endIndex = useRef(0);
   const viewHeight = useRef(-1);
@@ -155,6 +158,8 @@ const ListView = forwardRef<ListViewRef, TListViewProps>((props, ref) => {
       getBottomVisibleIndex,
       getTopVisibleIndex,
       getRowPosition,
+      getDrawnRange: () => ({ start: startIndexDrawn.current, end: endIndexDrawn.current }),
+      getDrawnItemCount: () => drawnItemCount.current,
       forceUpdate,
     }),
     [getBottomVisibleIndex, getRowPosition, getTopVisibleIndex, getViewHeight, forceUpdate]
@@ -345,7 +350,6 @@ const ListView = forwardRef<ListViewRef, TListViewProps>((props, ref) => {
   startIndexDrawn.current = start;
   endIndexDrawn.current = end;
 
-  items.length = end - start + 1;
   for (let i = start; i <= end; i++) {
     const { y: top, height } = yPositions.current.getRowPosition(i, heightGetter);
     const style = {
@@ -357,6 +361,7 @@ const ListView = forwardRef<ListViewRef, TListViewProps>((props, ref) => {
     const attrs = { 'data-item-key': itemKey };
     items.push(itemRenderer(itemKey, style, i, attrs));
   }
+  drawnItemCount.current = items.length;
 
   const wrapperProps: TWrapperProps = {
     style: { position: 'relative' },
