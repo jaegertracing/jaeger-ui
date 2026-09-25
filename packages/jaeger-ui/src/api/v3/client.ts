@@ -22,6 +22,22 @@ import type { SearchQuery } from '../../types/search';
 import type { TraceSummary, ServiceSummary } from '../../types/trace-summary';
 import type { Microseconds } from '../../types/units';
 
+/**
+ * Convert a microsecond epoch timestamp to an ISO-8601 string.
+ * Returns undefined if the timestamp is missing, non-positive, not finite,
+ * or outside JavaScript's representable Date range, so malformed URL parameters
+ * are dropped gracefully.
+ */
+function toIsoTimestamp(epochMicroseconds: number): string | undefined {
+  if (Number.isFinite(epochMicroseconds) && epochMicroseconds > 0) {
+    const date = new Date(epochMicroseconds / 1000);
+    if (!Number.isNaN(date.getTime())) {
+      return date.toISOString();
+    }
+  }
+  return undefined;
+}
+
 export class JaegerClient {
   private apiRoot = prefixUrl('/api/v3');
 
@@ -73,13 +89,11 @@ export class JaegerClient {
     if (query.service && query.service !== ALL_SERVICES) params.set('query.serviceName', query.service);
     if (query.operation) params.set('query.operationName', String(query.operation));
     // start/end are microsecond epoch integers from the URL; convert to ISO for the v3 API.
-    // Guard with Number.isFinite to drop malformed URL params gracefully.
-    const startUs = Number(query.start);
-    const endUs = Number(query.end);
-    if (Number.isFinite(startUs) && startUs > 0)
-      params.set('query.startTimeMin', new Date(startUs / 1000).toISOString());
-    if (Number.isFinite(endUs) && endUs > 0)
-      params.set('query.startTimeMax', new Date(endUs / 1000).toISOString());
+    // Drop malformed or out-of-range URL params gracefully.
+    const startTimeMin = toIsoTimestamp(Number(query.start));
+    if (startTimeMin) params.set('query.startTimeMin', startTimeMin);
+    const startTimeMax = toIsoTimestamp(Number(query.end));
+    if (startTimeMax) params.set('query.startTimeMax', startTimeMax);
     if (query.limit) params.set('query.searchDepth', String(query.limit));
     if (query.minDuration) params.set('query.durationMin', query.minDuration);
     if (query.maxDuration) params.set('query.durationMax', query.maxDuration);
