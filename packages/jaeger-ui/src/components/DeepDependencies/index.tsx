@@ -61,6 +61,41 @@ type TDdgViewModifierProps = {
   viewModifiers: ReadonlyMap<number, number>;
 };
 
+type TSetViewModifierArgs = Pick<
+  TDdgViewModifierProps,
+  'addViewModifier' | 'removeViewModifierFromIndices'
+> & {
+  enable: boolean;
+  graph: GraphModel | undefined;
+  operation: string | undefined;
+  service: string | undefined;
+  viewModifier: EViewModifier;
+  visibilityIndices: number[];
+};
+
+// Exported for tests.
+export function setGraphViewModifier({
+  addViewModifier,
+  enable,
+  graph,
+  operation,
+  removeViewModifierFromIndices,
+  service,
+  viewModifier,
+  visibilityIndices,
+}: TSetViewModifierArgs): void {
+  const fn = enable ? addViewModifier : removeViewModifierFromIndices;
+  if (!fn || !graph || !service) return;
+  fn({
+    operation,
+    service,
+    viewModifier,
+    visibilityIndices,
+    end: 0,
+    start: 0,
+  });
+}
+
 export type TReduxProps = TExtractUiFindFromStateReturn & {
   graph: GraphModel | undefined;
   graphState?: TDdgStateEntry;
@@ -219,19 +254,18 @@ export const DeepDependencyGraphPageImpl = memo(function DeepDependencyGraphPage
 
   const setViewModifier = useCallback(
     (visibilityIndices: number[], viewModifier: EViewModifier, enable: boolean) => {
-      if (!service) return;
-      const fn = enable ? addViewModifier : removeViewModifierFromIndices;
-      if (!fn) return;
-      fn({
+      setGraphViewModifier({
+        addViewModifier,
+        enable,
+        graph,
         operation,
+        removeViewModifierFromIndices,
         service,
         viewModifier,
         visibilityIndices,
-        end: 0,
-        start: 0,
       });
     },
-    [addViewModifier, removeViewModifierFromIndices, operation, service]
+    [addViewModifier, graph, removeViewModifierFromIndices, operation, service]
   );
 
   const selectVertex = useCallback((newSelectedVertex?: TDdgVertex) => {

@@ -55,7 +55,12 @@ vi.mock('../../hooks/useDeepDependencyGraphQuery', () => ({
   })),
 }));
 
-import { DeepDependencyGraphPageImpl, deriveDdgPageProps, useDdgViewModifierBridgeProps } from '.';
+import {
+  DeepDependencyGraphPageImpl,
+  deriveDdgPageProps,
+  setGraphViewModifier,
+  useDdgViewModifierBridgeProps,
+} from '.';
 import DefaultDeepDependencyGraphPage from '.';
 import * as track from './index.track';
 import * as url from './url';
@@ -679,6 +684,24 @@ describe('DeepDependencyGraphPage', () => {
           end: 0,
           start: 0,
         });
+      });
+
+      it('does not write view modifiers when graph is absent', () => {
+        const args = {
+          addViewModifier: props.addViewModifier,
+          graph: undefined,
+          operation: props.urlState.operation,
+          removeViewModifierFromIndices: props.removeViewModifierFromIndices,
+          service: props.urlState.service,
+          viewModifier: targetVM,
+          visibilityIndices,
+        };
+
+        setGraphViewModifier({ ...args, enable: true });
+        setGraphViewModifier({ ...args, enable: false });
+
+        expect(props.addViewModifier).not.toHaveBeenCalled();
+        expect(props.removeViewModifierFromIndices).not.toHaveBeenCalled();
       });
     });
 
