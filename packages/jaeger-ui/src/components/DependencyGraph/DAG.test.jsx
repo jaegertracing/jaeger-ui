@@ -466,14 +466,14 @@ describe('handleViewTraces', () => {
 
     handleViewTraces(hoveredNode);
 
-    expect(getSearchUrlSpy).toHaveBeenCalledWith({ service: 'test-service' });
+    expect(getSearchUrlSpy).toHaveBeenCalledWith({ service: 'test-service', lookback: '1h' });
     expect(windowOpenSpy).toHaveBeenCalledWith('http://test-url', '_blank');
   });
 
   it('should handle null node gracefully', () => {
     handleViewTraces(null);
 
-    expect(getSearchUrlSpy).toHaveBeenCalledWith({ service: undefined });
+    expect(getSearchUrlSpy).toHaveBeenCalledWith({ service: undefined, lookback: '1h' });
     expect(windowOpenSpy).toHaveBeenCalledWith('http://test-url', '_blank');
   });
 });
