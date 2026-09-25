@@ -76,10 +76,23 @@ export default function AltViewOptions(props: Props) {
     );
   }
 
+  const handleOpenChange = (open: boolean) => {
+    if (open) {
+      // Ant Design renders dropdown menus in a portal. Wait a frame for the DOM to update,
+      // then focus the first menu item so arrow keys work immediately.
+      requestAnimationFrame(() => {
+        const menuItem = document.querySelector<HTMLElement>(
+          '.ant-dropdown:not(.ant-dropdown-hidden) .ant-dropdown-menu-item'
+        );
+        menuItem?.focus();
+      });
+    }
+  };
+
   const currentItem = MENU_ITEMS.find(item => item.viewType === viewType);
   const dropdownText = currentItem ? currentItem.label : 'Alternate Views';
   return (
-    <Dropdown menu={{ items: dropdownItems }} trigger={['click']}>
+    <Dropdown menu={{ items: dropdownItems }} trigger={['click']} onOpenChange={handleOpenChange}>
       <Button className="AltViewOptions">
         {`${dropdownText} `}
         <IoChevronDown />
