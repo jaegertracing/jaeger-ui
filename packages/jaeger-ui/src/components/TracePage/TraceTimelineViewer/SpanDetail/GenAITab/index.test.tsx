@@ -580,6 +580,108 @@ describe('GenAITab', () => {
     expect(screen.getByText('not valid json')).toBeInTheDocument();
   });
 
+  it('renders a Retrieved documents section with its meta fields and one card per document (#4434)', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          { key: 'gen_ai.operation.name', value: 'retrieval' },
+          { key: 'gen_ai.data_source.id', value: 'weather-knowledge-base' },
+          { key: 'gen_ai.retrieval.query.text', value: 'What is the weather in Seattle?' },
+          { key: 'gen_ai.retrieval.top_k', value: 3 },
+          {
+            key: 'gen_ai.retrieval.documents',
+            value: JSON.stringify([
+              { content: 'Seattle weather is rainy and cool.', source_id: 'weather-knowledge-base' },
+            ]),
+          },
+        ])}
+      />
+    );
+    expect(screen.getByText('Retrieved documents')).toBeInTheDocument();
+    expect(screen.getByText('What is the weather in Seattle?')).toBeInTheDocument();
+    // "weather-knowledge-base" appears twice: as the data source and again as the
+    // document's own source_id, which must still surface even though it duplicates it.
+    expect(screen.getAllByText('weather-knowledge-base')).toHaveLength(2);
+    expect(screen.getByText('3')).toBeInTheDocument();
+    expect(screen.getByText('Document 1')).toBeInTheDocument();
+    expect(screen.getByText('Seattle weather is rainy and cool.')).toBeInTheDocument();
+    // source_id isn't a field the renderer fixes in advance - it must still surface.
+    expect(screen.getByText('source_id')).toBeInTheDocument();
+  });
+
+  it('does not hide retrieval documents behind Other GenAI Attributes (#4434)', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          { key: 'gen_ai.retrieval.documents', value: [{ content: 'doc one' }, { content: 'doc two' }] },
+        ])}
+      />
+    );
+    expect(screen.getByText('Document 1')).toBeInTheDocument();
+    expect(screen.getByText('doc one')).toBeInTheDocument();
+    expect(screen.getByText('Document 2')).toBeInTheDocument();
+    expect(screen.getByText('doc two')).toBeInTheDocument();
+    expect(screen.queryByText('Other GenAI Attributes')).not.toBeInTheDocument();
+  });
+
+  it('renders a document field that is explicitly null instead of crashing (#4437)', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.retrieval.documents',
+            value: JSON.stringify([{ content: 'doc one', score: null }]),
+          },
+        ])}
+      />
+    );
+    expect(screen.getByText('doc one')).toBeInTheDocument();
+    expect(screen.getByText('score')).toBeInTheDocument();
+    expect(screen.getByText('null')).toBeInTheDocument();
+  });
+
+  it('renders a Retrieved documents section for an explicitly empty documents array (#4437)', () => {
+    render(<GenAITab span={makeSpan([{ key: 'gen_ai.retrieval.documents', value: [] }])} />);
+    expect(screen.getByText('Retrieved documents')).toBeInTheDocument();
+    expect(screen.queryByText('Other GenAI Attributes')).not.toBeInTheDocument();
+  });
+
+  it('renders a Memory section for an explicitly empty records array (#4437)', () => {
+    render(<GenAITab span={makeSpan([{ key: 'gen_ai.memory.records', value: [] }])} />);
+    expect(screen.getByText('Memory')).toBeInTheDocument();
+    expect(screen.queryByText('Other GenAI Attributes')).not.toBeInTheDocument();
+  });
+
+  it('renders a Memory section with its meta fields and one card per record (#4434)', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          { key: 'gen_ai.operation.name', value: 'search_memory' },
+          { key: 'gen_ai.memory.store.id', value: 'memory-store-1' },
+          { key: 'gen_ai.memory.query.text', value: "What are the user's food preferences?" },
+          { key: 'gen_ai.memory.record.count', value: 1 },
+          {
+            key: 'gen_ai.memory.records',
+            value: JSON.stringify([
+              {
+                content: 'User prefers vegetarian meals and dark mode.',
+                id: '90f1f094',
+                metadata: { author: 'user' },
+              },
+            ]),
+          },
+        ])}
+      />
+    );
+    expect(screen.getByText('Memory')).toBeInTheDocument();
+    expect(screen.getByText('memory-store-1')).toBeInTheDocument();
+    expect(screen.getByText("What are the user's food preferences?")).toBeInTheDocument();
+    expect(screen.getByText('Record 1')).toBeInTheDocument();
+    expect(screen.getByText('User prefers vegetarian meals and dark mode.')).toBeInTheDocument();
+    // metadata isn't a field the renderer fixes in advance - it must still surface.
+    expect(screen.getByText('metadata')).toBeInTheDocument();
+  });
+
   it('shows an empty state when the span has no gen_ai attributes', () => {
     render(<GenAITab span={makeSpan([{ key: 'http.method', value: 'GET' }])} />);
     expect(screen.getByText('No GenAI-specific attributes found on this span.')).toBeInTheDocument();
