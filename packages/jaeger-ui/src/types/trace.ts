@@ -56,6 +56,15 @@ export type Span = SpanData & {
   hasChildren: boolean;
   childSpans: ReadonlyArray<Span>;
   subsidiarilyReferencedBy: ReadonlyArray<SpanReference>;
+
+  // The spanID transformTraceData resolved as this span's actual tree parent: the first
+  // CHILD_OF/FOLLOWS_FROM reference (in array order) whose target exists in this trace, i.e.
+  // the same resolution that places this span in that parent's childSpans. Undefined for a
+  // root or a reference that didn't resolve. This is the one source of truth for "this
+  // span's parent" - anything that re-derives a parent from `references` independently (as
+  // OtelSpanFacade used to) can disagree with the childSpans tree built from this same
+  // resolution. See https://github.com/jaegertracing/jaeger-ui/issues/4460.
+  parentID?: string;
 };
 
 export type TraceData = {
