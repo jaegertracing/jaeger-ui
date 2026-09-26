@@ -113,7 +113,6 @@ export function newInitialState(): TTraceTimeline {
     childrenHiddenIDs: new Set(),
     detailStates: new Map(),
     detailPanelMode,
-    hoverIndentGuideIds: new Set(),
     shouldScrollToFirstUiFindMatch: false,
     sidePanelWidth,
     spanNameColumnWidth,
@@ -123,7 +122,6 @@ export function newInitialState(): TTraceTimeline {
 }
 
 export const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer', [
-  'ADD_HOVER_INDENT_GUIDE_ID',
   'CHILDREN_TOGGLE',
   'CLEAR_SHOULD_SCROLL_TO_FIRST_UI_FIND_MATCH',
   'COLLAPSE_ALL',
@@ -138,7 +136,6 @@ export const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer
   'EXPAND_ALL',
   'EXPAND_ONE',
   'FOCUS_UI_FIND_MATCHES',
-  'REMOVE_HOVER_INDENT_GUIDE_ID',
   'SET_DETAIL_PANEL_MODE',
   'SET_SIDE_PANEL_WIDTH',
   'SET_SPAN_NAME_COLUMN_WIDTH',
@@ -147,7 +144,6 @@ export const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer
 ]);
 
 const fullActions = createActions<TActionTypes>({
-  [actionTypes.ADD_HOVER_INDENT_GUIDE_ID]: (spanID: string) => ({ spanID }),
   [actionTypes.CHILDREN_TOGGLE]: (spanID: string) => ({ spanID }),
   [actionTypes.CLEAR_SHOULD_SCROLL_TO_FIRST_UI_FIND_MATCH]: () => ({}),
   [actionTypes.COLLAPSE_ALL]: (spans: IOtelSpan[]) => ({ spans }),
@@ -166,7 +162,6 @@ const fullActions = createActions<TActionTypes>({
     uiFind,
     allowHide,
   }),
-  [actionTypes.REMOVE_HOVER_INDENT_GUIDE_ID]: (spanID: string) => ({ spanID }),
   [actionTypes.SET_DETAIL_PANEL_MODE]: (mode: 'inline' | 'sidepanel') => ({ mode }),
   [actionTypes.SET_SIDE_PANEL_WIDTH]: (width: number) => ({ width }),
   [actionTypes.SET_SPAN_NAME_COLUMN_WIDTH]: (width: number) => ({ width }),
@@ -414,23 +409,8 @@ function detailLogItemToggle(state: TTraceTimeline, { spanID, logItem }: TSpanId
   return { ...state, detailStates };
 }
 
-function addHoverIndentGuideId(state: TTraceTimeline, { spanID }: TSpanIdValue) {
-  const newHoverIndentGuideIds = new Set(state.hoverIndentGuideIds);
-  newHoverIndentGuideIds.add(spanID);
-
-  return { ...state, hoverIndentGuideIds: newHoverIndentGuideIds };
-}
-
-function removeHoverIndentGuideId(state: TTraceTimeline, { spanID }: TSpanIdValue) {
-  const newHoverIndentGuideIds = new Set(state.hoverIndentGuideIds);
-  newHoverIndentGuideIds.delete(spanID);
-
-  return { ...state, hoverIndentGuideIds: newHoverIndentGuideIds };
-}
-
 export default handleActions<TTraceTimeline, any>(
   {
-    [actionTypes.ADD_HOVER_INDENT_GUIDE_ID]: guardReducer(addHoverIndentGuideId),
     [actionTypes.CHILDREN_TOGGLE]: guardReducer(childrenToggle),
     [actionTypes.CLEAR_SHOULD_SCROLL_TO_FIRST_UI_FIND_MATCH]: guardReducer(
       clearShouldScrollToFirstUiFindMatch
@@ -447,7 +427,6 @@ export default handleActions<TTraceTimeline, any>(
     [actionTypes.EXPAND_ALL]: guardReducer(expandAll),
     [actionTypes.EXPAND_ONE]: guardReducer(expandOne),
     [actionTypes.FOCUS_UI_FIND_MATCHES]: guardReducer(focusUiFindMatches),
-    [actionTypes.REMOVE_HOVER_INDENT_GUIDE_ID]: guardReducer(removeHoverIndentGuideId),
     [actionTypes.SET_DETAIL_PANEL_MODE]: guardReducer(setDetailPanelMode),
     [actionTypes.SET_SIDE_PANEL_WIDTH]: guardReducer(setSidePanelWidth),
     [actionTypes.SET_SPAN_NAME_COLUMN_WIDTH]: guardReducer(setColumnWidth),
