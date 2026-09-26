@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import getConfig from '../../../utils/config/get-config';
 import storage from '../../../utils/storage';
 import {
   DEFAULT_TAG_KEYS,
@@ -33,6 +34,13 @@ describe('store.tags', () => {
     it('returns null when storage contains invalid JSON', () => {
       storage.setItem(SPAN_TAG_KEYS_STORAGE_KEY, '{invalid json');
       expect(getInitialSelectedTagKeys()).toBeNull();
+    });
+
+    it('returns defaultTagKeys from config when storage is empty', () => {
+      vi.mocked(getConfig).mockReturnValueOnce({
+        traceTimeline: { defaultTagKeys: ['config.tag'] },
+      } as unknown as ReturnType<typeof getConfig>);
+      expect(getInitialSelectedTagKeys()).toEqual(['config.tag']);
     });
   });
 

@@ -114,15 +114,63 @@ describe('<SpanTagFilter>', () => {
     expect(screen.getByText('dynamic.new.key')).toBeInTheDocument();
   });
 
-  it('selects all tags when Select All is clicked and clears when Clear is clicked', () => {
+  it('selects all tags when Select all is clicked and clears when Clear is clicked', () => {
     render(<SpanTagFilter trace={mockTrace} useOtelTerms={true} />);
     fireEvent.click(screen.getByTestId('span-tag-filter-button'));
+
+    fireEvent.click(screen.getByText('Select all'));
+    const methodCheckbox = screen.getByLabelText(/^http\.method/);
+    expect(methodCheckbox).toBeChecked();
+
+    // Toggle off http.method (covers next.delete(key))
+    fireEvent.click(methodCheckbox);
+    expect(methodCheckbox).not.toBeChecked();
 
     fireEvent.click(screen.getByText('Clear'));
     const applyBtn = screen.getByTestId('span-tag-filter-apply');
     fireEvent.click(applyBtn);
 
     expect(useSpanTagStore.getState().selectedTagKeys).toEqual([]);
+  });
+
+  it('resets to default tags when Default button is clicked', () => {
+    useSpanTagStore.setState({ selectedTagKeys: ['custom.tag'] });
+    render(<SpanTagFilter trace={mockTrace} useOtelTerms={true} />);
+    fireEvent.click(screen.getByTestId('span-tag-filter-button'));
+
+    fireEvent.click(screen.getByText('Default'));
+    fireEvent.click(screen.getByTestId('span-tag-filter-apply'));
+
+    expect(useSpanTagStore.getState().selectedTagKeys).toContain('http.status_code');
+  });
+
+  it('closes popover without applying when Cancel button is clicked', () => {
+    render(<SpanTagFilter trace={mockTrace} useOtelTerms={true} />);
+    fireEvent.click(screen.getByTestId('span-tag-filter-button'));
+
+    expect(screen.getByText('Show Attributes in Spans')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Cancel'));
+  });
+
+  it('shows empty message when search query does not match any tags', () => {
+    render(<SpanTagFilter trace={mockTrace} useOtelTerms={true} />);
+    fireEvent.click(screen.getByTestId('span-tag-filter-button'));
+
+    const searchInput = screen.getByTestId('span-tag-filter-search');
+    fireEvent.change(searchInput, { target: { value: 'nonexistent-query-xyz' } });
+
+    expect(screen.getByText('No matching attributes')).toBeInTheDocument();
+  });
+
+  it('ignores adding empty or whitespace custom keys', () => {
+    render(<SpanTagFilter trace={mockTrace} useOtelTerms={true} />);
+    fireEvent.click(screen.getByTestId('span-tag-filter-button'));
+
+    const customInput = screen.getByTestId('span-tag-filter-custom-input');
+    fireEvent.change(customInput, { target: { value: '   ' } });
+    fireEvent.keyDown(customInput, { key: 'Enter' });
+
+    expect(screen.queryByText('   ')).not.toBeInTheDocument();
   });
 
   it('applies selected tags and updates store state', () => {

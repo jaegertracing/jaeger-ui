@@ -426,6 +426,35 @@ describe('<SpanBarRow>', () => {
       expect(screen.getByLabelText('http.method: GET')).toHaveClass('is-http-method');
       expect(screen.getByLabelText('http.status_code: 200')).toHaveClass('is-status-2xx');
     });
+
+    it('applies is-status-3xx and is-status-4xx classes to matching status pills', () => {
+      const { unmount } = render(
+        <SpanBarRow
+          {...defaultProps}
+          spanPillsEnabled
+          selectedTagKeys={['http.status_code']}
+          span={{
+            ...defaultProps.span,
+            attributes: makeAttributes([{ key: 'http.status_code', value: '302' }]),
+          }}
+        />
+      );
+      expect(screen.getByLabelText('http.status_code: 302')).toHaveClass('is-status-3xx');
+      unmount();
+
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          spanPillsEnabled
+          selectedTagKeys={['http.status_code']}
+          span={{
+            ...defaultProps.span,
+            attributes: makeAttributes([{ key: 'http.status_code', value: '404' }]),
+          }}
+        />
+      );
+      expect(screen.getByLabelText('http.status_code: 404')).toHaveClass('is-status-4xx');
+    });
   });
 
   it('sets longLabel and hintSide to right when viewStart <= 1 - viewEnd', () => {
