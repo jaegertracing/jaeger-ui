@@ -76,7 +76,7 @@ export function getIncompleteTraceTooltip(orphanCount: number): string {
   );
 }
 
-export function getTraceEmoji(spans: ReadonlyArray<Span>): string {
+export function getTraceEmoji(spans: ReadonlyArray<Pick<Span, 'traceID'>>): string {
   if (!spans.length) return '';
 
   // prettier-ignore

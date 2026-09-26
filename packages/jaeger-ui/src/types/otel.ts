@@ -4,6 +4,7 @@
 import { Microseconds } from './units';
 
 export enum SpanKind {
+  UNSPECIFIED = 'UNSPECIFIED',
   INTERNAL = 'INTERNAL',
   SERVER = 'SERVER',
   CLIENT = 'CLIENT',
@@ -144,6 +145,8 @@ export interface IOtelTrace {
   tracePageTitle: string;
   traceEmoji: string;
   services: ReadonlyArray<{ name: string; numberOfSpans: number }>;
+  // Internal ID of the span used for traceName and tracePageTitle.
+  traceRootSpanID?: string;
 
   // Optimized data structures - created once during trace transformation
   spanMap: ReadonlyMap<string, IOtelSpan>;
