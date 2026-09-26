@@ -247,6 +247,9 @@ export type Config = {
     // spanPillsEnabled controls span pill overlays in the trace timeline.
     // Default: true. Set to false to disable if needed.
     spanPillsEnabled?: boolean;
+
+    // defaultTagKeys defines default tag/attribute keys to show in the span view.
+    defaultTagKeys?: readonly string[];
   };
 
   // useOpenTelemetryTerms determines whether the UI uses OpenTelemetry terminology

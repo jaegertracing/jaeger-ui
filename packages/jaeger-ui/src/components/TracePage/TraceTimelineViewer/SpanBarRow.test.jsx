@@ -386,6 +386,46 @@ describe('<SpanBarRow>', () => {
       fireEvent.mouseEnter(pill.parentElement);
       expect(await screen.findByRole('tooltip')).toHaveTextContent(`gen_ai.request.model: ${longModel}`);
     });
+
+    it('renders pills according to selectedTagKeys', () => {
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          spanPillsEnabled
+          selectedTagKeys={['custom.tag', 'http.method']}
+          span={{
+            ...defaultProps.span,
+            attributes: makeAttributes([
+              { key: 'custom.tag', value: 'my-value' },
+              { key: 'http.method', value: 'GET' },
+              { key: 'http.status_code', value: '200' },
+            ]),
+          }}
+        />
+      );
+      expect(screen.getByLabelText('custom.tag: my-value')).toBeInTheDocument();
+      expect(screen.getByLabelText('http.method: GET')).toBeInTheDocument();
+      expect(screen.queryByLabelText(/http\.status_code/)).not.toBeInTheDocument();
+    });
+
+    it('applies is-http-method and is-status-2xx classes to matching pills', () => {
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          spanPillsEnabled
+          selectedTagKeys={['http.method', 'http.status_code']}
+          span={{
+            ...defaultProps.span,
+            attributes: makeAttributes([
+              { key: 'http.method', value: 'GET' },
+              { key: 'http.status_code', value: '200' },
+            ]),
+          }}
+        />
+      );
+      expect(screen.getByLabelText('http.method: GET')).toHaveClass('is-http-method');
+      expect(screen.getByLabelText('http.status_code: 200')).toHaveClass('is-status-2xx');
+    });
   });
 
   it('sets longLabel and hintSide to right when viewStart <= 1 - viewEnd', () => {

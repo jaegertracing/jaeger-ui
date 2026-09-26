@@ -103,4 +103,38 @@ describe('getSpanPillsForSpan', () => {
       { label: 'http.method', value: 'GET' },
     ]);
   });
+
+  describe('with selectedTagKeys', () => {
+    it('returns custom selected tag keys in requested order', () => {
+      const span = makeSpan([
+        { key: 'http.method', value: 'GET' },
+        { key: 'http.status_code', value: '200' },
+        { key: 'custom.tag', value: 'hello' },
+      ]);
+      expect(getSpanPillsForSpan(span, ['custom.tag', 'http.method'])).toEqual([
+        { label: 'custom.tag', value: 'hello', isError: false },
+        { label: 'http.method', value: 'GET' },
+      ]);
+    });
+
+    it('returns empty array when selectedTagKeys is an empty array', () => {
+      const span = makeSpan([
+        { key: 'http.method', value: 'GET' },
+        { key: 'http.status_code', value: '200' },
+      ]);
+      expect(getSpanPillsForSpan(span, [])).toEqual([]);
+    });
+
+    it('detects error attribute as isError', () => {
+      const span = makeSpan([{ key: 'error', value: 'true' }]);
+      expect(getSpanPillsForSpan(span, ['error'])).toEqual([
+        { label: 'error', value: 'true', isError: true },
+      ]);
+    });
+
+    it('falls back to default decoration pills when selectedTagKeys is null', () => {
+      const span = makeSpan([{ key: 'http.method', value: 'GET' }]);
+      expect(getSpanPillsForSpan(span, null)).toEqual([{ label: 'http.method', value: 'GET' }]);
+    });
+  });
 });

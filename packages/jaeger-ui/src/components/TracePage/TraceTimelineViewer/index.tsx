@@ -13,9 +13,11 @@ import {
   SPAN_NAME_COLUMN_WIDTH_MAX,
   SPAN_NAME_COLUMN_WIDTH_MIN,
   useLayoutPrefsStore,
+  useSpanTagStore,
   useTraceTimelineStore,
 } from './store';
 import SpanDetailSidePanel from './SpanDetailSidePanel';
+import SpanTagFilter from './SpanTagFilter';
 import TimelineHeaderRow from './TimelineHeaderRow';
 import { useServiceFilter } from './useServiceFilter';
 import { useSpanPillsEnabled } from './spanPills';
@@ -145,6 +147,9 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
 
   const { serviceFilterNode } = useServiceFilter(trace, detailPanelMode);
 
+  const selectedTagKeys = useSpanTagStore(s => s.selectedTagKeys);
+  const tagFilterNode = <SpanTagFilter trace={trace} useOtelTerms={useOtelTerms} />;
+
   const spanPillsEnabled = useSpanPillsEnabled();
 
   // When timeline bars are hidden with the side panel active, the side panel expands to absorb
@@ -217,6 +222,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       onExpandOne={expandOne}
       resizerMax={resizerMax}
       serviceFilterNode={serviceFilterNode}
+      tagFilterNode={tagFilterNode}
       sidePanelVisible={sidePanelActive}
       sidePanelWidth={effectiveSidePanelWidth}
       sidePanelLabel={sidePanelLabel}
@@ -236,6 +242,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       currentViewRangeTime={viewRange.time.current}
       nameColumnWidth={nameColumnWidth}
       spanPillsEnabled={spanPillsEnabled}
+      selectedTagKeys={selectedTagKeys}
     />
   );
 
