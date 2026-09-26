@@ -10,6 +10,7 @@ import SpanTreeOffset from './SpanTreeOffset';
 import SpanBar from './SpanBar';
 import { SpanDecorationIcon } from './SpanDecorationIcon';
 import Ticks from './Ticks';
+import SpanRowControls from './SpanRowControls';
 
 import { TNil } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
@@ -218,6 +219,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
               <IoCloudUploadOutline />
             </ReferencesButton>
           )}
+          <SpanRowControls span={span} />
         </div>
       </TimelineRow.Cell>
       {timelineBarsVisible && (

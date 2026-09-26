@@ -26,6 +26,7 @@ import {
   isKindProducer,
   spanContainsErredSpan,
 } from './utils';
+import { getSubtreeSpans } from './timeline-utils';
 import { Accessors } from '../ScrollManager';
 import { parseUiFind, TExtractUiFindFromStateReturn } from '../../common/UiFindInput';
 import getLinks from '../../../model/link-patterns';
@@ -81,6 +82,7 @@ type RouteProps = {
 type TDerivedStateProps = {
   selectedSpanID: string | null;
   prunedServices: Set<string>;
+  focusedSubtreeSpanID?: string | null;
 };
 
 type VirtualizedTraceViewProps = TVirtualizedTraceViewOwnProps &
@@ -104,7 +106,8 @@ function generateRowStatesFromTrace(
   childrenHiddenIDs: Set<string>,
   detailStates: Map<string, DetailState | TNil>,
   detailPanelMode: 'inline' | 'sidepanel',
-  prunedServices: Set<string>
+  prunedServices: Set<string>,
+  focusedSubtreeSpanID?: string | null
 ): RowStateData {
   if (!trace) {
     return {
@@ -113,19 +116,40 @@ function generateRowStatesFromTrace(
     };
   }
 
+  let spans = trace.spans;
+  let effectivePrunedServices = prunedServices;
+  if (focusedSubtreeSpanID) {
+    const focusedSpan = trace.spanMap.get(focusedSubtreeSpanID);
+    if (focusedSpan) {
+      spans = getSubtreeSpans(focusedSpan);
+      // Protect the focused span's service from being pruned so the subtree
+      // root (and its reset button) is never silently removed by the service filter.
+      const focusedService = focusedSpan.resource.serviceName;
+      if (prunedServices.has(focusedService)) {
+        effectivePrunedServices = new Set(prunedServices);
+        effectivePrunedServices.delete(focusedService);
+      }
+    }
+  }
+
   const rows = generateRowStates(
-    trace.spans,
+    spans,
     childrenHiddenIDs,
     detailStates,
     detailPanelMode,
-    prunedServices
+    effectivePrunedServices
   );
 
   const spanIndexToRowIndex = new Map<number, number>();
+  const spanIDToTraceIndex = new Map<string, number>();
+  if (trace.spans) {
+    trace.spans.forEach((s, idx) => spanIDToTraceIndex.set(s.spanID, idx));
+  }
 
   rows.forEach((row, rowIndex) => {
-    if (!spanIndexToRowIndex.has(row.spanIndex)) {
-      spanIndexToRowIndex.set(row.spanIndex, rowIndex);
+    const traceSpanIndex = spanIDToTraceIndex.get(row.span.spanID) ?? row.spanIndex;
+    if (!spanIndexToRowIndex.has(traceSpanIndex)) {
+      spanIndexToRowIndex.set(traceSpanIndex, rowIndex);
     }
   });
 
@@ -165,10 +189,25 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
     [props.trace, props.criticalPath, props.prunedServices]
   );
 
+  const spanIDToTraceIndex = useMemo(() => {
+    const map = new Map<string, number>();
+    if (props.trace?.spans) {
+      props.trace.spans.forEach((s, idx) => map.set(s.spanID, idx));
+    }
+    return map;
+  }, [props.trace]);
+
   const getRowStates = useCallback((): RowState[] => {
-    const { trace, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices } = propsRef.current;
-    return memoizedGenerateRowStates(trace, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices)
-      .rows;
+    const { trace, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices, focusedSubtreeSpanID } =
+      propsRef.current;
+    return memoizedGenerateRowStates(
+      trace,
+      childrenHiddenIDs,
+      detailStates,
+      detailPanelMode,
+      prunedServices,
+      focusedSubtreeSpanID
+    ).rows;
   }, []);
 
   const getClippingCssClasses = useCallback((): string => {
@@ -222,17 +261,24 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
   const getCollapsedChildren = useCallback(() => propsRef.current.childrenHiddenIDs, []);
 
   const mapRowIndexToSpanIndex = useCallback(
-    (index: number) => getRowStates()[index].spanIndex,
-    [getRowStates]
+    (index: number) => {
+      const row = getRowStates()[index];
+      if (!row) return -1;
+      return spanIDToTraceIndex.get(row.span.spanID) ?? row.spanIndex;
+    },
+    [getRowStates, spanIDToTraceIndex]
   );
 
   const mapSpanIndexToRowIndex = useCallback((index: number) => {
+    const { trace, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices, focusedSubtreeSpanID } =
+      propsRef.current;
     const { spanIndexToRowIndex } = memoizedGenerateRowStates(
-      propsRef.current.trace,
-      propsRef.current.childrenHiddenIDs,
-      propsRef.current.detailStates,
-      propsRef.current.detailPanelMode,
-      propsRef.current.prunedServices
+      trace,
+      childrenHiddenIDs,
+      detailStates,
+      detailPanelMode,
+      prunedServices,
+      focusedSubtreeSpanID
     );
 
     const rowIndex = spanIndexToRowIndex.get(index);
@@ -403,15 +449,17 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
       const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
       const isSelected = selectedSpanID === spanID;
       const hasOwnError = isErrorSpan(span);
-      const hasChildError = isCollapsed && spanContainsErredSpan(spans, spanIndex);
+      // Find this span's position in the full trace array in O(1) time by spanID (safe under subtree focus).
+      const fullSpanIndex = spanIDToTraceIndex.get(spanID) ?? spanIndex;
+      const hasChildError = isCollapsed && fullSpanIndex >= 0 && spanContainsErredSpan(spans, fullSpanIndex);
       const hasPrunedChildren =
         prunedServices.size > 0 &&
         span.childSpans.some(child => prunedServices.has(child.resource.serviceName));
       const criticalPathSections = criticalPathContext.sectionsFor(span, isCollapsed, hasPrunedChildren);
       // Check for direct child "server" span if the span is a "client" span.
       let rpc = null;
-      if (isCollapsed) {
-        const rpcSpan = findServerChildSpan(spans.slice(spanIndex));
+      if (isCollapsed && fullSpanIndex >= 0) {
+        const rpcSpan = findServerChildSpan(spans.slice(fullSpanIndex));
         if (rpcSpan) {
           const rpcViewBounds = getViewedBounds()(rpcSpan.startTime, rpcSpan.endTime);
           rpc = {
@@ -464,7 +512,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         </div>
       );
     },
-    [getClippingCssClasses, getViewedBounds, focusSpan, criticalPathContext]
+    [getClippingCssClasses, getViewedBounds, focusSpan, criticalPathContext, spanIDToTraceIndex]
   );
 
   const renderSpanDetailRow = useCallback(
@@ -621,6 +669,7 @@ function VirtualizedTraceViewWrapper(
   const detailPanelMode = useLayoutPrefsStore(s => s.detailPanelMode);
   const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
   const traceID = useTraceTimelineStore(s => s.traceID);
+  const focusedSubtreeSpanID = useTraceTimelineStore(s => s.focusedSubtreeSpanID);
   const childrenHiddenIDs = useTraceTimelineStore(s => s.childrenHiddenIDs);
   const detailStates = useTraceTimelineStore(s => s.detailStates);
   const shouldScrollToFirstUiFindMatch = useTraceTimelineStore(s => s.shouldScrollToFirstUiFindMatch);
@@ -742,6 +791,7 @@ function VirtualizedTraceViewWrapper(
     detailPanelMode,
     timelineBarsVisible,
     traceID,
+    focusedSubtreeSpanID,
     childrenHiddenIDs,
     detailStates,
     shouldScrollToFirstUiFindMatch,
