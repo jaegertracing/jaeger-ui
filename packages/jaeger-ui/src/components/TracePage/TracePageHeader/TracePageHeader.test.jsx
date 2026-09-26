@@ -137,10 +137,14 @@ describe('<TracePageHeader>', () => {
   it('renders collapsible title and triggers onSlimViewClicked on click', () => {
     const onSlimViewClicked = jest.fn();
 
-    renderWithRouter(<TracePageHeader {...defaultProps} canCollapse onSlimViewClicked={onSlimViewClicked} />);
+    const { container } = renderWithRouter(
+      <TracePageHeader {...defaultProps} canCollapse onSlimViewClicked={onSlimViewClicked} />
+    );
 
-    const clickableTitle = screen.getByRole('switch');
+    const clickableTitle = container.querySelector('.TracePageHeader--titleLink');
     expect(clickableTitle).toBeInTheDocument();
+    expect(clickableTitle).toHaveAttribute('role', 'button');
+    expect(clickableTitle).toHaveAttribute('aria-expanded', 'true');
 
     clickableTitle.click();
     expect(onSlimViewClicked).toHaveBeenCalledTimes(1);

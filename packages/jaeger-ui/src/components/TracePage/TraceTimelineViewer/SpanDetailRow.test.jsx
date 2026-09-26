@@ -72,15 +72,15 @@ describe('<SpanDetailRow>', () => {
 
   it('renders without exploding', () => {
     render(<SpanDetailRow {...props} />);
-    expect(screen.getByRole('switch')).toBeInTheDocument();
+    expect(screen.getByRole('button')).toBeInTheDocument();
   });
 
-  it('calls onDetailToggled with the spanID when the switch is clicked', async () => {
+  it('calls onDetailToggled with the spanID when the button is clicked', async () => {
     const user = userEvent.setup();
     render(<SpanDetailRow {...props} />);
-    const toggleSwitch = screen.getByRole('switch');
+    const toggleButton = screen.getByRole('button');
     expect(props.onDetailToggled).not.toHaveBeenCalled();
-    await user.click(toggleSwitch);
+    await user.click(toggleButton);
     expect(props.onDetailToggled).toHaveBeenCalledTimes(1);
     expect(props.onDetailToggled).toHaveBeenCalledWith(props.span.spanID);
   });
@@ -98,10 +98,10 @@ describe('<SpanDetailRow>', () => {
 
   it('renders the "expanded accent"', () => {
     render(<SpanDetailRow {...props} />);
-    const accentSwitch = screen.getByRole('switch');
-    expect(accentSwitch).toBeInTheDocument();
-    expect(accentSwitch).toHaveClass('detail-row-expanded-accent');
-    expect(accentSwitch).toHaveStyle(`border-color: ${props.color}`);
+    const accentButton = screen.getByRole('button');
+    expect(accentButton).toBeInTheDocument();
+    expect(accentButton).toHaveClass('detail-row-expanded-accent');
+    expect(accentButton).toHaveStyle(`border-color: ${props.color}`);
   });
 
   it('renders the SpanDetail', () => {

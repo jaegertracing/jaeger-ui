@@ -101,9 +101,12 @@ describe('<SpanBarRow>', () => {
   });
 
   it('renders correctly with essential elements', () => {
-    render(<SpanBarRow {...defaultProps} />);
+    const { container } = render(<SpanBarRow {...defaultProps} />);
     expect(screen.getByTestId('span-tree-offset')).toBeVisible();
-    expect(screen.getByRole('switch')).toBeVisible();
+    const spanName = container.querySelector('.span-name');
+    expect(spanName).toBeVisible();
+    expect(spanName).toHaveAttribute('role', 'button');
+    expect(spanName).toHaveAttribute('aria-expanded', 'false');
   });
 
   it('triggers onDetailToggled when view area is clicked', () => {
@@ -115,24 +118,24 @@ describe('<SpanBarRow>', () => {
   });
 
   it('triggers onDetailToggled when Enter is pressed on span name', () => {
-    render(<SpanBarRow {...defaultProps} />);
-    const spanName = screen.getByRole('switch');
+    const { container } = render(<SpanBarRow {...defaultProps} />);
+    const spanName = container.querySelector('.span-name');
     fireEvent.keyDown(spanName, { key: 'Enter' });
     expect(defaultProps.onDetailToggled).toHaveBeenCalledTimes(1);
     expect(defaultProps.onDetailToggled).toHaveBeenCalledWith(spanID);
   });
 
   it('triggers onDetailToggled when Space is pressed on span name', () => {
-    render(<SpanBarRow {...defaultProps} />);
-    const spanName = screen.getByRole('switch');
+    const { container } = render(<SpanBarRow {...defaultProps} />);
+    const spanName = container.querySelector('.span-name');
     fireEvent.keyDown(spanName, { key: ' ' });
     expect(defaultProps.onDetailToggled).toHaveBeenCalledTimes(1);
     expect(defaultProps.onDetailToggled).toHaveBeenCalledWith(spanID);
   });
 
   it('does not trigger onDetailToggled for other keys on span name', () => {
-    render(<SpanBarRow {...defaultProps} />);
-    const spanName = screen.getByRole('switch');
+    const { container } = render(<SpanBarRow {...defaultProps} />);
+    const spanName = container.querySelector('.span-name');
     fireEvent.keyDown(spanName, { key: 'Tab' });
     expect(defaultProps.onDetailToggled).not.toHaveBeenCalled();
   });
@@ -212,8 +215,8 @@ describe('<SpanBarRow>', () => {
       ...defaultProps,
       isDetailExpanded: true,
     };
-    render(<SpanBarRow {...props} />);
-    const link = screen.getByRole('switch');
+    const { container } = render(<SpanBarRow {...props} />);
+    const link = container.querySelector('.span-name');
     expect(link).toHaveClass('span-name', 'is-detail-expanded');
   });
 
