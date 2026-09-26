@@ -1,0 +1,126 @@
+/*
+Copyright (c) 2026 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.SpanTagFilter--button {
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 1em;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.25rem;
+  vertical-align: middle;
+}
+
+.SpanTagFilter--button:hover,
+.SpanTagFilter--button:focus-visible {
+  color: var(--text-primary);
+  outline: none;
+}
+
+.SpanTagFilter--button:focus-visible {
+  box-shadow: 0 0 0 2px var(--interactive-primary);
+  border-radius: 3px;
+}
+
+.SpanTagFilter--button.is-active {
+  color: var(--interactive-primary);
+}
+
+.SpanTagFilter--popover {
+  min-width: 290px;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.SpanTagFilter--description {
+  color: var(--text-secondary);
+  font-size: 0.85em;
+  line-height: 1.3;
+}
+
+.SpanTagFilter--actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.SpanTagFilter--customRow {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.SpanTagFilter--list {
+  overflow-y: auto;
+  max-height: 220px;
+  border-top: 1px solid var(--border-default);
+  border-bottom: 1px solid var(--border-default);
+  padding: 0.25rem 0;
+}
+
+.SpanTagFilter--item {
+  padding: 2px 0;
+}
+
+.SpanTagFilter--item .ant-checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 0.35rem;
+  cursor: pointer;
+}
+
+.SpanTagFilter--item .ant-checkbox-wrapper > span:last-child {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  gap: 0.35rem;
+}
+
+.SpanTagFilter--item:hover {
+  background-color: var(--surface-component-background-hover);
+}
+
+.SpanTagFilter--tagName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+.SpanTagFilter--tagCount {
+  color: var(--text-muted);
+  font-size: 0.85em;
+  flex-shrink: 0;
+}
+
+.SpanTagFilter--empty {
+  color: var(--text-muted);
+  font-size: 0.85em;
+  padding: 0.5rem 0;
+  text-align: center;
+}
+
+.SpanTagFilter--footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+}
+
+.SpanTagFilter--saveDefault {
+  font-size: 0.85em;
+  color: var(--text-secondary);
+}
+
+.SpanTagFilter--footerButtons {
+  display: flex;
+  gap: 0.35rem;
+}

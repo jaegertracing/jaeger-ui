@@ -112,6 +112,18 @@ describe('<TimelineHeaderRow>', () => {
     expect(ticks).toHaveAttribute('data-show-labels', 'true');
   });
 
+  it('renders tagFilterNode and serviceFilterNode when provided', () => {
+    render(
+      <TimelineHeaderRow
+        {...props}
+        serviceFilterNode={<div data-testid="mock-service-filter" />}
+        tagFilterNode={<div data-testid="mock-tag-filter" />}
+      />
+    );
+    expect(screen.getByTestId('mock-service-filter')).toBeInTheDocument();
+    expect(screen.getByTestId('mock-tag-filter')).toBeInTheDocument();
+  });
+
   it('renders the VerticalResizer', () => {
     render(<TimelineHeaderRow {...props} />);
     const resizer = screen.getByTestId('vertical-resizer');

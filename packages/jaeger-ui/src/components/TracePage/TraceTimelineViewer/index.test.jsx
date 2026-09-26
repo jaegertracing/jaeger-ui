@@ -46,6 +46,7 @@ const { mockLayoutPrefsStore, mockTraceTimelineStore, mockUseTraceTimelineStore 
 vi.mock('./store', () => ({
   useLayoutPrefsStore: vi.fn(selector => selector(mockLayoutPrefsStore)),
   useTraceTimelineStore: mockUseTraceTimelineStore,
+  useSpanTagStore: vi.fn(selector => selector({ selectedTagKeys: null })),
   getSelectedSpanID: detailStatesArg =>
     detailStatesArg.size > 0 ? detailStatesArg.keys().next().value : null,
   SPAN_NAME_COLUMN_WIDTH_MIN: 0.15,

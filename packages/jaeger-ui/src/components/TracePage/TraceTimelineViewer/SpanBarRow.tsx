@@ -55,6 +55,7 @@ type SpanBarRowProps = {
   focusSpan: (spanID: string) => void;
   traceDuration: number;
   spanPillsEnabled?: boolean;
+  selectedTagKeys?: readonly string[] | null;
   useOtelTerms: boolean;
 };
 
@@ -87,6 +88,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   focusSpan,
   traceDuration,
   spanPillsEnabled,
+  selectedTagKeys,
   onDetailToggled,
   onChildrenToggled,
   useOtelTerms,
@@ -114,7 +116,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
     name: operationName,
     resource: { serviceName },
   } = span;
-  const pills = spanPillsEnabled ? getSpanPillsForSpan(span) : [];
+  const pills = spanPillsEnabled ? getSpanPillsForSpan(span, selectedTagKeys) : [];
   // One resolver for namespace + GenAI icons; GenAI wins when both match (#4217).
   const decoration = getSpanDecorationIcon(span);
   const label = formatDurationCompact(duration);
