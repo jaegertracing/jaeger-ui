@@ -101,8 +101,8 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
           onKeyDown: _childrenToggleKeyDown,
           tabIndex: 0,
         }),
-        role: 'switch',
-        'aria-checked': childrenVisible,
+        role: 'button',
+        'aria-expanded': childrenVisible,
         'aria-label': 'Expand or collapse child spans',
       }
     : null;

@@ -59,10 +59,11 @@ describe('<AccordionEvents>', () => {
   });
 
   it('renders without crashing', () => {
-    render(<AccordionEvents {...defaultProps} />);
-    const header = screen.getByRole('switch');
+    const { container } = render(<AccordionEvents {...defaultProps} />);
+    const header = container.querySelector('.AccordionEvents--header');
     expect(header).toHaveTextContent(`Logs (${defaultInRangeLogsCount} of ${defaultTotalCount})`);
-    expect(screen.getByRole('button', { name: /show all/i })).toBeInTheDocument();
+    expect(header).toHaveAttribute('role', 'button');
+    expect(screen.getByRole('button', { name: 'show all' })).toBeInTheDocument();
   });
 
   it('hides event items when not expanded', () => {
@@ -95,38 +96,43 @@ describe('<AccordionEvents>', () => {
   });
 
   it('calls onToggle when the header is clicked', () => {
-    render(<AccordionEvents {...defaultProps} />);
-    fireEvent.click(screen.getByRole('switch'));
+    const { container } = render(<AccordionEvents {...defaultProps} />);
+    const header = container.querySelector('.AccordionEvents--header');
+    fireEvent.click(header);
     expect(defaultProps.onToggle).toHaveBeenCalled();
   });
 
   it('shows all events when "show all" is clicked', () => {
-    render(<AccordionEvents {...defaultProps} isOpen />);
-    fireEvent.click(screen.getByRole('button', { name: /show all/i }));
-    expect(screen.getByRole('switch')).toHaveTextContent(`Logs (${defaultTotalCount})`);
+    const { container } = render(<AccordionEvents {...defaultProps} isOpen />);
+    fireEvent.click(screen.getByRole('button', { name: 'show all' }));
+    expect(container.querySelector('.AccordionEvents--header')).toHaveTextContent(
+      `Logs (${defaultTotalCount})`
+    );
     const items = screen.getAllByTestId('event-item');
     expect(items.length).toBe(defaultTotalCount);
-    expect(screen.getByRole('button', { name: /show in range/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'show in range' })).toBeInTheDocument();
   });
 
   it('displays in-range events again when "show in range" is clicked', () => {
-    render(<AccordionEvents {...defaultProps} isOpen />);
-    fireEvent.click(screen.getByRole('button', { name: /show all/i }));
-    fireEvent.click(screen.getByRole('button', { name: /show in range/i }));
-    expect(screen.getByRole('switch')).toHaveTextContent(
+    const { container } = render(<AccordionEvents {...defaultProps} isOpen />);
+    fireEvent.click(screen.getByRole('button', { name: 'show all' }));
+    fireEvent.click(screen.getByRole('button', { name: 'show in range' }));
+    expect(container.querySelector('.AccordionEvents--header')).toHaveTextContent(
       `Logs (${defaultInRangeLogsCount} of ${defaultTotalCount})`
     );
     const items = screen.getAllByTestId('event-item');
     expect(items.length).toBe(defaultInRangeLogsCount);
-    expect(screen.getByRole('button', { name: /show all/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'show all' })).toBeInTheDocument();
   });
 
   it('is interactive by default', () => {
     const { interactive: _unused, ...propsWithoutInteractive } = defaultProps;
-    render(<AccordionEvents {...propsWithoutInteractive} isOpen />);
+    const { container } = render(<AccordionEvents {...propsWithoutInteractive} isOpen />);
 
-    const header = screen.getByRole('switch');
+    const header = container.querySelector('.AccordionEvents--header');
     expect(header).toBeInTheDocument();
+    expect(header).toHaveAttribute('role', 'button');
+    expect(header).toHaveAttribute('aria-expanded', 'true');
     fireEvent.click(header);
     expect(propsWithoutInteractive.onToggle).toHaveBeenCalledTimes(1);
     expect(mockAccordionAttributes).toHaveBeenCalledTimes(defaultInRangeLogsCount);

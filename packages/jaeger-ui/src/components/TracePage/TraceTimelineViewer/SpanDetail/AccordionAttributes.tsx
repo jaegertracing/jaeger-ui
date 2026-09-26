@@ -60,9 +60,9 @@ export default function AccordionAttributes({
   if (interactive) {
     arrow = isOpen ? <IoChevronDown className={iconCls} /> : <IoChevronForward className={iconCls} />;
     headerProps = {
-      'aria-checked': isOpen,
+      'aria-expanded': isOpen,
       onClick: accordionToggle(onToggle),
-      role: 'switch',
+      role: 'button',
     };
   }
 
