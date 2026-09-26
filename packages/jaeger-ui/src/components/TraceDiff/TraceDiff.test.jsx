@@ -11,7 +11,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { mapStateToProps, TraceDiffImpl } from './TraceDiff';
 import * as TraceDiffUrl from './url';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
-import { fetchedState, TOP_NAV_HEIGHT } from '../../constants';
+import { fetchedState } from '../../constants';
 
 const mockNavigate = jest.fn();
 
@@ -208,80 +208,38 @@ describe('TraceDiff', () => {
     });
   });
 
-  describe('TraceDiff--graphWrapper top offset', () => {
-    it('applies top offset to graph wrapper based on header height', () => {
-      const originalResizeObserver = window.ResizeObserver;
-      window.ResizeObserver = jest.fn().mockImplementation(function () {
-        return { observe: jest.fn(), unobserve: jest.fn(), disconnect: jest.fn() };
-      });
-
-      const originalGetBoundingClientRect = Element.prototype.getBoundingClientRect;
-      Element.prototype.getBoundingClientRect = jest.fn().mockImplementation(function () {
-        if (
-          this.hasAttribute &&
-          this.hasAttribute('data-testid') &&
-          this.getAttribute('data-testid') === 'trace-diff-header'
-        ) {
-          return { height: 100 };
-        }
-        return originalGetBoundingClientRect.call(this);
-      });
-
-      renderWithRouter(<TraceDiffImpl {...defaultProps} />);
-
-      const graphWrapper = document.querySelector('.TraceDiff--graphWrapper');
-      expect(graphWrapper).toHaveStyle(`top: ${TOP_NAV_HEIGHT}px`);
-      window.ResizeObserver = originalResizeObserver;
-      Element.prototype.getBoundingClientRect = originalGetBoundingClientRect;
-    });
-
-    it('calls setGraphTopOffset and updates graphTopOffset state on header ref change', () => {
-      // This test verifies the component structure and initial behavior
-      // The actual height calculation is tested by the component's useEffect which runs when the ref is set during mount
+  describe('TraceDiff--graphWrapper header height', () => {
+    it('defaults to a zero header height', () => {
       const { container } = renderWithRouter(<TraceDiffImpl {...defaultProps} />);
       const headerWrapper = container.querySelector('[data-testid="trace-diff-header"]').parentElement;
       const graphWrapper = container.querySelector('.TraceDiff--graphWrapper');
+
       expect(headerWrapper).toBeInTheDocument();
       expect(graphWrapper).toBeInTheDocument();
-      expect(graphWrapper).toHaveStyle(`top: ${TOP_NAV_HEIGHT}px`);
+      expect(graphWrapper).toHaveStyle('--trace-diff-header-height: 0px');
     });
 
-    it('setGraphTopOffset with different height', () => {
+    it('sets the CSS header-height variable from the rendered header', () => {
       const mockHeight = 50;
-      const expectedTop = TOP_NAV_HEIGHT + mockHeight;
-
-      // Mock clientHeight to trigger the state update
-      Object.defineProperty(HTMLDivElement.prototype, 'clientHeight', {
-        configurable: true,
-        value: mockHeight,
-      });
-
-      const { container, rerender } = renderWithRouter(<TraceDiffImpl {...defaultProps} />);
-      rerender(<TraceDiffImpl {...defaultProps} />);
+      const clientHeight = jest
+        .spyOn(HTMLElement.prototype, 'clientHeight', 'get')
+        .mockReturnValue(mockHeight);
+      const { container } = renderWithRouter(<TraceDiffImpl {...defaultProps} />);
 
       const graphWrapper = container.querySelector('.TraceDiff--graphWrapper');
-      expect(graphWrapper).toHaveStyle(`top: ${expectedTop}px`);
-
-      Object.defineProperty(HTMLDivElement.prototype, 'clientHeight', {
-        configurable: true,
-        value: 0,
-      });
+      expect(graphWrapper).toHaveStyle(`--trace-diff-header-height: ${mockHeight}px`);
+      clientHeight.mockRestore();
     });
 
-    it('setGraphTopOffset when clientHeight is undefined', () => {
-      Object.defineProperty(HTMLDivElement.prototype, 'clientHeight', {
-        configurable: true,
-        value: undefined,
-      });
-
+    it('uses a zero header height when clientHeight is undefined', () => {
+      const clientHeight = jest
+        .spyOn(HTMLElement.prototype, 'clientHeight', 'get')
+        .mockReturnValue(undefined);
       const { container } = renderWithRouter(<TraceDiffImpl {...defaultProps} />);
       const graphWrapper = container.querySelector('.TraceDiff--graphWrapper');
-      expect(graphWrapper).toHaveStyle(`top: ${TOP_NAV_HEIGHT}px`);
 
-      Object.defineProperty(HTMLDivElement.prototype, 'clientHeight', {
-        configurable: true,
-        value: 0,
-      });
+      expect(graphWrapper).toHaveStyle('--trace-diff-header-height: 0px');
+      clientHeight.mockRestore();
     });
   });
 
