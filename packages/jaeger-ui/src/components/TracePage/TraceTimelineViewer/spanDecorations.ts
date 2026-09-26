@@ -174,14 +174,55 @@ export function getSpanDecorationIcon(span: {
   return { icon };
 }
 
-/** Builds pills for a single span from {@link SPAN_DECORATIONS} in list order. */
-export function getSpanPillsForSpan(span: IOtelSpan): ISpanPill[] {
+/**
+ * Builds pills for a single span. When `selectedTagKeys` is null or undefined,
+ * builds from {@link SPAN_DECORATIONS} in list order. When `selectedTagKeys` is provided,
+ * builds pills matching the requested keys.
+ */
+export function getSpanPillsForSpan(
+  span: IOtelSpan,
+  selectedTagKeys?: readonly string[] | null
+): ISpanPill[] {
+  if (selectedTagKeys === undefined || selectedTagKeys === null) {
+    const pills: ISpanPill[] = [];
+    for (const entry of SPAN_DECORATIONS) {
+      for (const source of entry.pills ?? []) {
+        const pill = pillFromSource(span, source);
+        if (pill) {
+          pills.push(pill);
+        }
+      }
+    }
+    return pills;
+  }
+
   const pills: ISpanPill[] = [];
-  for (const entry of SPAN_DECORATIONS) {
-    for (const source of entry.pills ?? []) {
-      const pill = pillFromSource(span, source);
+  for (const key of selectedTagKeys) {
+    let matchedSource: IPillSource | undefined;
+    for (const entry of SPAN_DECORATIONS) {
+      for (const source of entry.pills ?? []) {
+        if (source.label === key || source.attrKeys.includes(key)) {
+          matchedSource = source;
+          break;
+        }
+      }
+      if (matchedSource) break;
+    }
+
+    if (matchedSource) {
+      const pill = pillFromSource(span, matchedSource);
       if (pill) {
         pills.push(pill);
+      }
+    } else {
+      const attrValue = span.attributes?.getValue(key) ?? span.resource?.attributes?.getValue(key);
+      if (attrValue != null) {
+        const value = formatAttributeValue(attrValue).trim();
+        if (value) {
+          const isError =
+            key === 'error' && (value === 'true' || value === '1' || value.toLowerCase() === 'error');
+          pills.push({ label: key, value, isError });
+        }
       }
     }
   }

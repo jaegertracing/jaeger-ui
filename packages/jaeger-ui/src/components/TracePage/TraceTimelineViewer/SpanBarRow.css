@@ -43,6 +43,32 @@ SPDX-License-Identifier: Apache-2.0
   color: var(--feedback-error-text);
 }
 
+.SpanBarRow--pill.is-http-method {
+  background: color-mix(in srgb, var(--interactive-primary) 8%, var(--surface-primary));
+  border-color: color-mix(in srgb, var(--interactive-primary) 35%, var(--border-default));
+  color: var(--interactive-primary);
+  font-weight: 600;
+}
+
+.SpanBarRow--pill.is-status-2xx {
+  background: color-mix(in srgb, var(--feedback-success) 10%, var(--surface-primary));
+  border-color: color-mix(in srgb, var(--feedback-success) 35%, var(--border-default));
+  color: var(--feedback-success);
+  font-weight: 600;
+}
+
+.SpanBarRow--pill.is-status-3xx {
+  background: color-mix(in srgb, var(--feedback-info) 10%, var(--surface-primary));
+  border-color: color-mix(in srgb, var(--feedback-info) 35%, var(--border-default));
+  color: var(--feedback-info);
+}
+
+.SpanBarRow--pill.is-status-4xx {
+  background: color-mix(in srgb, var(--feedback-warning) 10%, var(--surface-primary));
+  border-color: color-mix(in srgb, var(--feedback-warning) 35%, var(--border-default));
+  color: var(--feedback-warning);
+}
+
 .span-row.is-matching-filter {
   background-color: var(--trace-emphasis-highlight);
 }
