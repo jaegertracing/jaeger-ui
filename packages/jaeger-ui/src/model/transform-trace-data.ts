@@ -11,6 +11,11 @@ import { IOtelTrace } from '../types/otel';
 import OtelTraceFacade from './OtelTraceFacade';
 
 // exported for tests
+export const CYCLIC_PARENT_WARNING =
+  'Cyclic parent reference detected; the parent reference was ignored and this span was promoted ' +
+  'to a root span so the trace can render';
+
+// exported for tests
 export function deduplicateTags(spanTags: ReadonlyArray<KeyValuePair>) {
   const warningsHash: Map<string, string> = new Map<string, string>();
   const tags: KeyValuePair[] = [];
@@ -130,19 +135,25 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   const rootSpans: Span[] = [];
   let orphanSpanCount = 0;
 
+  // The first CHILD_OF or FOLLOWS_FROM reference that exists in the spanMap. Shared with
+  // the cycle-breaking pass below, which climbs the same parent edges this pass links.
+  const findParent = (span: Span): Span | undefined => {
+    for (const ref of span.references) {
+      if (ref.refType === 'CHILD_OF' || ref.refType === 'FOLLOWS_FROM') {
+        const parent = spanMap.get(ref.spanID);
+        if (parent) {
+          return parent;
+        }
+      }
+    }
+    return undefined;
+  };
+
   // Second pass: link parents/children and identify roots
   for (const span of spanMap.values()) {
     let parent: Span | undefined;
     if (Array.isArray(span.references) && span.references.length > 0) {
-      // Find the first CHILD_OF or FOLLOWS_FROM reference that exists in the spanMap
-      for (const ref of span.references) {
-        if (ref.refType === 'CHILD_OF' || ref.refType === 'FOLLOWS_FROM') {
-          parent = spanMap.get(ref.spanID);
-          if (parent) {
-            break;
-          }
-        }
-      }
+      parent = findParent(span);
       if (!parent) {
         orphanSpanCount++;
       }
@@ -155,6 +166,74 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
       // It's a root
       rootSpans.push(span);
     }
+  }
+
+  // A span with no usable startTime orders last, so that a span carrying a real timestamp
+  // is preferred over it. Start times themselves are repaired further below.
+  const promotionOrder = (span: Span) =>
+    Number.isFinite(span.startTime) && span.startTime > 0 ? span.startTime : Infinity;
+
+  // `cycle` is a loop of parent references listed child first: cycle[i + 1] is the parent
+  // of cycle[i], and the parent of the last entry is cycle[0]. Cut its earliest member
+  // free of its parent and make it a root, which leaves the loop as a chain below it.
+  const promoteRootFrom = (cycle: Span[]) => {
+    let earliest = 0;
+    for (let i = 1; i < cycle.length; i++) {
+      if (promotionOrder(cycle[i]) < promotionOrder(cycle[earliest])) {
+        earliest = i;
+      }
+    }
+    const promoted = cycle[earliest];
+    const parent = cycle[(earliest + 1) % cycle.length];
+    parent.childSpans = parent.childSpans.filter(child => child !== promoted);
+    // OtelSpanFacade re-derives the parent from `references` under its own rule, so the
+    // cut has to be recorded on the span itself; dropping it from the parent's childSpans
+    // alone would leave the facade's parentSpan chain cyclic. The reference stays on the
+    // span and surfaces there as a link.
+    promoted.parentCycleBroken = true;
+    (promoted.warnings as string[]).push(CYCLIC_PARENT_WARNING);
+    rootSpans.push(promoted);
+  };
+
+  // Third pass: break cycles of parent references, so that what this phase hands on is a
+  // forest. A trace can arrive with every span holding a parent that resolves and still
+  // have no root at all, because each member of a cycle has its parent inside that cycle:
+  // none of them is a root, none is reachable from one, and the trace renders as an empty
+  // timeline. That comes from ordinary data, since the v1 rendering of an OTLP span link
+  // is a FOLLOWS_FROM reference and the parent search above accepts FOLLOWS_FROM, so a
+  // root span carrying a link to one of its own descendants becomes that descendant's
+  // child.
+  //
+  // Cutting the cycle, rather than merely tolerating it, is what the rest of the app
+  // needs: SpanTreeOffset climbs parentSpan to draw indent guides, the flamegraph and DDG
+  // descend childSpans, and none of those walks carries a visited set of its own.
+  //
+  // Each span has at most one parent, so climbing from any span either reaches a root or
+  // closes exactly one loop, and cutting one edge per loop leaves a tree. Spans hanging
+  // below a cycle keep their own parent and arrive as ordinary descendants of whichever
+  // member gets promoted. Every span is climbed from at most once, so a trace without
+  // cycles pays one set lookup per span.
+  const settled = new Set<Span>();
+  for (const span of spanMap.values()) {
+    if (settled.has(span)) {
+      continue;
+    }
+    const positionOnPath = new Map<Span, number>();
+    const path: Span[] = [];
+    let current: Span | undefined = span;
+    while (current && !settled.has(current)) {
+      const seenAt = positionOnPath.get(current);
+      if (seenAt !== undefined) {
+        // The walk came back to a span it had already stepped through: everything from
+        // there on is the cycle, and everything before it hangs below the cycle.
+        promoteRootFrom(path.slice(seenAt));
+        break;
+      }
+      positionOnPath.set(current, path.length);
+      path.push(current);
+      current = findParent(current);
+    }
+    path.forEach(stepped => settled.add(stepped));
   }
 
   const spans: Span[] = [];
@@ -227,10 +306,10 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   rootSpans.sort((a, b) => a.startTime - b.startTime);
   rootSpans.forEach(root => processSpan(root, 0));
 
-  // traceStartTime/traceEndTime are only updated while visiting spans reachable
-  // from a root. If the trace has spans but no root (e.g. every span is part of
-  // a reference cycle), nothing is visited and traceStartTime keeps its sentinel
-  // value, which would produce a negative duration. Collapse to a zero range.
+  // traceStartTime/traceEndTime are only updated while visiting spans. Every span is
+  // reachable from a root once the pass above has broken any cycles, so only a trace with
+  // no spans at all leaves traceStartTime at its sentinel value, which would produce a
+  // negative duration. Collapse to a zero range.
   if (spans.length === 0) {
     traceStartTime = 0;
     traceEndTime = 0;
