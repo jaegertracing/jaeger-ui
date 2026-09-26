@@ -907,4 +907,63 @@ describe('<VirtualizedTraceViewImpl>', () => {
       expect(result).toBeTruthy();
     });
   });
+
+  describe('focusedSubtreeSpanID filtering', () => {
+    it('filters rows to only the subtree when focusedSubtreeSpanID is set', () => {
+      const targetSpanID = trace.spans[1].spanID;
+      const expectedSubtreeCount = trace.spans[1].childSpans.length + 1;
+
+      const { listViewProps } = renderAndCapture({
+        ...mockProps,
+        focusedSubtreeSpanID: targetSpanID,
+      });
+
+      expect(listViewProps.dataLength).toBe(expectedSubtreeCount);
+      expect(listViewProps.getKeyFromIndex(0)).toContain(targetSpanID);
+    });
+
+    it('falls back to full trace spans when focusedSubtreeSpanID does not exist in trace', () => {
+      const { listViewProps } = renderAndCapture({
+        ...mockProps,
+        focusedSubtreeSpanID: 'non-existent-span-id',
+      });
+
+      expect(listViewProps.dataLength).toBe(trace.spans.length);
+    });
+
+    it('protects focused span service from being pruned when prunedServices contains its service', () => {
+      const targetSpan = trace.spans[1];
+      const targetSpanID = targetSpan.spanID;
+      const targetService = targetSpan.resource.serviceName;
+
+      const { listViewProps } = renderAndCapture({
+        ...mockProps,
+        focusedSubtreeSpanID: targetSpanID,
+        prunedServices: new Set([targetService]),
+      });
+
+      expect(listViewProps.dataLength).toBeGreaterThan(0);
+      expect(listViewProps.getKeyFromIndex(0)).toContain(targetSpanID);
+    });
+
+    it('maps row indices and span indices correctly via registered accessors', () => {
+      const registerAccessors = vi.fn();
+      const targetSpanID = trace.spans[1].spanID;
+
+      render(
+        <VirtualizedTraceViewImpl
+          {...mockProps}
+          registerAccessors={registerAccessors}
+          focusedSubtreeSpanID={targetSpanID}
+        />
+      );
+
+      expect(registerAccessors).toHaveBeenCalled();
+      const accessors = registerAccessors.mock.calls[0][0];
+
+      // Row 0 corresponds to targetSpanID (span index 1 in full trace)
+      expect(accessors.mapRowIndexToSpanIndex(0)).toBe(1);
+      expect(accessors.mapSpanIndexToRowIndex(1)).toBe(0);
+    });
+  });
 });
