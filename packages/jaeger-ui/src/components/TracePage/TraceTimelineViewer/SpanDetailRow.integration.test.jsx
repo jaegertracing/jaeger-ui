@@ -9,8 +9,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { Provider } from 'react-redux';
-import { createStore } from 'redux';
 
 import SpanDetailRow from './SpanDetailRow';
 import DetailState from './SpanDetail/DetailState';
@@ -18,13 +16,6 @@ import DetailState from './SpanDetail/DetailState';
 // Mock only SpanDetail, NOT SpanTreeOffset - we want to test real SpanTreeOffset behavior
 vi.mock('./SpanDetail', () => ({
   default: () => <div data-testid="mocked-span-detail" />,
-}));
-
-// Minimal Redux store for SpanTreeOffset's connected component
-const mockStore = createStore(() => ({
-  traceTimeline: {
-    hoverIndentGuideIds: new Set(),
-  },
 }));
 
 describe('<SpanDetailRow> icon behavior', () => {
@@ -74,11 +65,7 @@ describe('<SpanDetailRow> icon behavior', () => {
   };
 
   it('does not render expand/collapse icon even when span has children', () => {
-    render(
-      <Provider store={mockStore}>
-        <SpanDetailRow {...props} />
-      </Provider>
-    );
+    render(<SpanDetailRow {...props} />);
 
     // SpanTreeOffset renders the icon inside a span with data-testid="icon-wrapper"
     // In a detail row, this icon should NOT be rendered
