@@ -32,7 +32,7 @@
     "vitest": "5.0.1"
   },
   "dependencies": {
-    "@ag-ui/client": "0.0.54",
+    "@ag-ui/client": "1.0.0",
     "@assistant-ui/react": "0.15.2",
     "@assistant-ui/react-ag-ui": "0.0.35",
     "@jaegertracing/plexus": "workspace:*",
