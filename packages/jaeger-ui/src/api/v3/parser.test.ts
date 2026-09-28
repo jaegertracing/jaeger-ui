@@ -2,10 +2,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { traceToTraceSummary } from '../../model/trace-summary';
+import { spanIDForWire, toOtlpTrace } from '../../model/trace-contract-otlp';
+import { runTraceContractSuite } from '../../model/trace-contract-suite';
 import { SpanKind, StatusCode } from '../../types/otel';
-import { GetTraceResponseSchema, type TracesDataWire } from './schemas';
+import { GetTraceResponseSchema, refinedTracesData, type TracesDataWire } from './schemas';
 import { parseOtelTrace } from './parser';
 import capture from './v3-trace-output.json';
+
+runTraceContractSuite({
+  name: 'OTLP parser',
+  materialize: toOtlpTrace,
+  spanID: spanIDForWire,
+  parse: (wire: TracesDataWire) => parseOtelTrace(refinedTracesData.parse(wire))!,
+});
 
 const TRACE_ID = 'abcdef0123456789abcdef0123456789';
 const OTHER_TRACE_ID = '0123456789abcdef0123456789abcdef';
@@ -81,7 +90,8 @@ describe('parseOtelTrace', () => {
     expect(trace.orphanSpanCount).toBe(0);
     expect(parent.parentSpan).toBe(root);
     expect(parent.startTime).toBe(root.startTime);
-    expect(parent.endTime).toBe(6000);
+    expect(parent.duration).toBe(6000);
+    expect(parent.endTime).toBe(7000);
     expect(parent.events.map(event => [event.name, event.timestamp])).toEqual([
       ['parent event', parent.startTime],
       ['early', 2000],
@@ -100,9 +110,35 @@ describe('parseOtelTrace', () => {
     const traceWithOnlyEndTime = parseOtelTrace(
       traces([makeSpan({ startTimeUnixNano: undefined, endTimeUnixNano: '3000000' })])
     )!;
-    expect(traceWithOnlyEndTime.startTime).toBe(3000);
+    expect(traceWithOnlyEndTime.startTime).toBe(0);
     expect(traceWithOnlyEndTime.endTime).toBe(3000);
-    expect(traceWithOnlyEndTime.duration).toBe(0);
+    expect(traceWithOnlyEndTime.duration).toBe(3000);
+  });
+
+  it('repairs an explicit zero start time from its parent', () => {
+    const trace = parseOtelTrace(
+      traces([
+        makeSpan({
+          spanId: ROOT_ID,
+          startTimeUnixNano: '1784570820629325000',
+          endTimeUnixNano: '1784570820630325000',
+        }),
+        makeSpan({
+          spanId: CHILD_ID,
+          parentSpanId: ROOT_ID,
+          startTimeUnixNano: '0',
+          endTimeUnixNano: '200000',
+        }),
+      ])
+    )!;
+
+    const root = trace.spanMap.get(ROOT_ID)!;
+    const child = trace.spanMap.get(CHILD_ID)!;
+    expect(trace.startTime).toBe(1784570820629325);
+    expect(trace.duration).toBe(1000);
+    expect(child.startTime).toBe(root.startTime);
+    expect(child.duration).toBe(200);
+    expect(child.relativeStartTime).toBe(0);
   });
 
   it('sorts events by timestamp even when the wire order is by name', () => {
@@ -372,6 +408,43 @@ describe('parseOtelTrace', () => {
     expect(trace.tracePageTitle).toBe('root (root-service)');
     expect(summary.rootServiceName).toBe('root-service');
     expect(summary.rootOperationName).toBe('root');
+  });
+
+  it('prefers an orphan over a synthetic cycle root for trace metadata', () => {
+    const orphan = makeSpan({
+      spanId: ORPHAN_ID,
+      parentSpanId: 'deadbeefdeadbeef',
+      name: 'orphan',
+      startTimeUnixNano: '1000000',
+    });
+    const cycleA = makeSpan({
+      spanId: CYCLE_A_ID,
+      parentSpanId: CYCLE_B_ID,
+      name: 'cycle-a',
+      startTimeUnixNano: '500000',
+      endTimeUnixNano: '800000',
+    });
+    const cycleB = makeSpan({
+      spanId: CYCLE_B_ID,
+      parentSpanId: CYCLE_A_ID,
+      name: 'cycle-b',
+      startTimeUnixNano: '600000',
+      endTimeUnixNano: '900000',
+    });
+    const trace = parseOtelTrace({
+      resourceSpans: [
+        ...traces([orphan], 'orphan-service').resourceSpans!,
+        ...traces([cycleA, cycleB], 'cycle-service').resourceSpans!,
+      ],
+    })!;
+    const summary = traceToTraceSummary(trace);
+
+    expect(trace.rootSpans[0].spanID).toBe(CYCLE_A_ID);
+    expect(trace.traceRootSpanID).toBe(ORPHAN_ID);
+    expect(trace.traceName).toBe('orphan-service: orphan');
+    expect(trace.tracePageTitle).toBe('orphan (orphan-service)');
+    expect(summary.rootServiceName).toBe('orphan-service');
+    expect(summary.rootOperationName).toBe('orphan');
   });
 
   it('falls back to the earliest root when no span declared a parentless root', () => {

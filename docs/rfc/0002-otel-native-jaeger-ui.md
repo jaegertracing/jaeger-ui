@@ -2,12 +2,12 @@
 
 * **Status**: Partially Implemented — Phases 1–2 done; the facade design has graduated into [ADR-0002](../adr/0002-otlp-api-v3-migration.md)
 * **Created**: 2025-12-29
-* **Last Updated**: 2026-07-28
+* **Last Updated**: 2026-10-05
 * **Tracking Issue**: [#3265](https://github.com/jaegertracing/jaeger-ui/issues/3265)
 
 > Originally filed as ADR-0002. It is a proposal with a phased implementation plan, so it now lives here and remains the plan of record for the outstanding milestones; [ADR-0002](../adr/0002-otlp-api-v3-migration.md) records the OTEL facade and `api/v3` client that resulted.
 
-**Where this stands**: Phases 1–2 are complete. On Phase 3, service/span-name discovery (3.1) and trace search (3.3) run on `/api/v3/`. On `main`, single trace loading (3.2) does not — every trace still arrives over the legacy `/api/traces/:id` route and through `transformTraceData` — but an implementation is open for review in [#4129](https://github.com/jaegertracing/jaeger-ui/pull/4129). Milestone 3.2 is the keystone for the rest: 3.4 and Phase 4 are blocked behind it.
+**Where this stands**: Phases 1–2 are complete. On Phase 3, service/span-name discovery (3.1) and trace search (3.3) run on `/api/v3/`. The validated `fetchTrace` boundary and captured wire-contract tests have landed in [#4455](https://github.com/jaegertracing/jaeger-ui/pull/4455) and [#4480](https://github.com/jaegertracing/jaeger-ui/pull/4480). The enriched parser and its run of the shared behavior tests are in review in [#4503](https://github.com/jaegertracing/jaeger-ui/pull/4503). On `main`, single-trace loading still uses `/api/traces/:id` and `transformTraceData`; the UI switch and visual parity check remain open.
 
 ---
 
@@ -491,16 +491,17 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 #### Milestone 3.2: Single Trace Loading
 **Goal**: Load a full trace by ID using the new OTLP parser.
 
-**In review, not yet on `main`.** [#4129](https://github.com/jaegertracing/jaeger-ui/pull/4129) implements `getTrace()`, `api/v3/parser.ts`, and the rewiring of `hooks/useTraceLoading.ts`, which today still fetches via `JaegerAPI.fetchTrace` → `transformTraceData(...).asOtelTrace()`. The checkboxes below stay open until it merges. This milestone replaces the transport and the transformer beneath `useTrace` / `useTraces`; their public surface can stay.
+**Partially implemented.** `JaegerClient.fetchTrace()` and its boundary tests have landed in #4455 and #4480. The earlier [#4129](https://github.com/jaegertracing/jaeger-ui/pull/4129) combined a parser with native hook rewiring; its parser work is being carried forward in [#4503](https://github.com/jaegertracing/jaeger-ui/pull/4503), now in review with shared behavior tests. The hook rewire and TracePage integration remain Week 4 work. `hooks/useTraceLoading.ts` still uses `JaegerAPI.fetchTrace` → `transformTraceData(...).asOtelTrace()`. The transport and transformer must be switched beneath the existing `useTrace` / `useTraces` hooks before this milestone is complete.
 
-**The typing question is the substance of this milestone.** Every integration so far (services, operations, trace summaries) consumed a small, flat, Jaeger-defined message, and the generated Zod schema for it was cheap. A full trace is the first payload where the UI takes on the *whole* OTLP model — nested `resourceSpans` / `scopeSpans`, the recursive `AnyValue` union for attributes, events, links, status — and it is the reason this milestone is harder than the three before it. The two viable answers are to validate against the generated schemas from §3.6.1, or to hand-write a narrow structural type in the parser and accept no runtime validation. §3.5 chose the former, and the [3.7](#37-integration-testing-strategy) checklist item for full trace/span Zod coverage is that decision's other half; a parser that declares its own private wire interface should be treated as incomplete against this RFC rather than as an alternative design.
+**The typing choice is implemented at the network boundary.** A full trace contains nested `resourceSpans` / `scopeSpans`, recursive `AnyValue` attributes, events, links, and status. `schemas.ts` refines the generated Zod schemas for the observed wire encodings; `JaegerClient.fetchTrace` validates the response envelope and returns `TracesDataWire`. The parser consumes that validated type rather than defining a private wire interface.
 
 **Backend response shape** (`jaeger-query`, `apiv3.HTTPGateway.returnTrace`): `GET /api/v3/traces/{trace_id}` returns a **single** JSON object wrapping the payload in a grpc-gateway envelope, `{"result": {"resourceSpans": [...]}}`, serialised with jsonpb. The proto declares `GetTrace` as a server-streaming RPC, but the HTTP gateway buffers and concatenates all chunks before writing ([jaeger#6467](https://github.com/jaegertracing/jaeger/issues/6467) tracks making it a real stream). A client may therefore assume one document today, but should keep envelope handling separable so incremental parsing can be added without touching the enrichment logic.
 
-- [ ] Implement `getTrace(traceId)` in `JaegerClient` (`src/api/v3/client.ts`) with unit tests.
-- [ ] Implement the OTLP parser (`src/api/v3/parser.ts`) converting OTLP wire JSON → enriched `IOtelTrace` (depth, parent/child refs, relative timing, critical path — equivalent of `transformTraceData` for the v3 route).
-- [ ] Create `useTrace(traceId)` hook (React Query) in `src/hooks/useTraceDiscovery.ts`.
-- [ ] Update `TracePage` to use the new hook.
+- [x] Implement `fetchTrace(traceId)` in `JaegerClient` (`src/api/v3/client.ts`) with validated response-envelope and wire-contract tests (#4455, #4480).
+- [x] Implement the OTLP parser (`src/api/v3/parser.ts`) to convert validated OTLP wire data to enriched `IOtelTrace` (depth, parent/child refs, relative timing; #4503 in review).
+- [x] Run the shared behavior tests through `transformTraceData(...).asOtelTrace()` and `parseOtelTrace()` using inline span specs (#4503 in review).
+- [ ] Switch the existing React Query `useTrace` / `useTraces` hooks in `src/hooks/useTraceLoading.ts` to `JaegerClient.fetchTrace` and `parseOtelTrace`.
+- [ ] Route `TracePage` through the native loader.
 - [ ] Verify visual parity (trace loaded from `/api/v3/` looks identical to legacy).
 - **Verification**: Opening a trace (e.g., via direct URL) loads data from `/api/v3/`.
 
@@ -546,19 +547,18 @@ To maintain a clean separation between the backend's wire format and the UI's do
 
 The new parser replaces the role of `transformTraceData` for the OTLP route. Covered by Milestone 3.2.
 
-- [ ] Create `src/api/v3/parser.ts`:
+- [x] Implement `src/api/v3/parser.ts` (#4503 in review; the client validates the wire data before calling `parseOtelTrace`):
   ```typescript
   /**
-   * Transforms raw OTLP wire data into the enriched domain model.
+   * Transforms validated OTLP wire data into the enriched domain model.
    * This is equivalent to transformTraceData for the native route.
    */
-  export function parseOtlpTrace(wireData: IOtlpTraceData): IOtelTrace {
-    // 1. Validate wireData (optionally with Zod)
-    // 2. Map OTLP properties to IOtelTrace
+  export function parseOtelTrace(data: TracesDataWire): IOtelTrace | null {
+    // 1. Map validated OTLP properties to IOtelTrace
     //    - span.kind arrives as a JSON number (for example, 2 for server);
     //      map it to the SpanKind enum.
-    // 3. ENRICH: Calculate derived properties (depth, parent/child refs, etc.)
-    // 4. Return enriched IOtelTrace
+    // 2. Calculate derived properties (depth, parent/child refs, etc.)
+    // 3. Return the enriched trace, or null when there are no spans.
   }
   ```
 
@@ -655,9 +655,9 @@ Correct OpenAPI generation in the jaeger-idl repository, either in gnostic or th
 **Status** (jaeger-idl repository):
 - [x] **OpenAPI v3 spec available** at `swagger/api_v3/query_service.openapi.yaml` (generated by gnostic/`protoc-gen-openapi`).
 - [x] `trace_id`/`span_id` fields in `TraceSummary` and `ServiceSummary.name` annotated with `field_behavior = REQUIRED` (jaeger-idl PR #204), causing `required:` arrays to be emitted in the OpenAPI YAML.
-- [ ] `format: bytes` still used for raw OTLP span/trace IDs in the spec — these are not yet used by the UI (pending Milestone 3.2).
+- [ ] Correct `format: bytes` for raw OTLP span/trace IDs in the OpenAPI spec. The UI's landed boundary refinement already validates their actual hex encoding (#4455); the spec remains inaccurate.
 - [ ] The leading comment on the `GetTrace` RPC is copied verbatim into the `GET /api/v3/traces/{traceId}` description and correctly states that HTTP responses use a `{"result": ...}` envelope. Its `200` response schema instead references `opentelemetry.proto.trace.v1.TracesData`, which is the envelope's contents rather than the HTTP response itself. The server builds the envelope with `GRPCGatewayWrapper`, which is already declared in the IDL. The generated response should reference that wrapper so clients can type the envelope instead of hand-rolling it.
-- [ ] No `opentelemetry.proto.*` schema in the spec declares a `required:` array — not `Span`, not `AnyValue`, not `Status`. Only the Jaeger-defined messages do (`Operation` → `name`, `spanKind`; `TraceSummary` → `traceId`). So a generated schema makes `traceId`, `spanId` and `name` optional despite each field's description reading "This field is required." Any required-field enforcement on the OTLP types has to be added on top of generation until the IDL carries `field_behavior = REQUIRED` there too.
+- [ ] Add required-field declarations for the OTLP trace model in the OpenAPI spec. Generated `opentelemetry.proto.*` schemas still leave fields such as `Span.traceId`, `spanId`, and `name` optional; #4455 enforces required span IDs at the UI boundary in the meantime.
 
 **Benefits**:
 - Swagger spec becomes the true source of truth for REST API contract
@@ -787,22 +787,21 @@ describe('ID Validation', () => {
 
 #### 3.7 Integration Testing Strategy
 
-To ensure `JaegerClient` successfully interfaces with the Jaeger backend before UI integration, a multi-layered testing approach will be adopted:
+The client validates captured backend responses at the network boundary. The native parser is compared with the legacy transformer before the UI switches routes.
 
-##### 1. Service-Level Mocking (MSW)
-Instead of mocking `fetch` directly, use **Mock Service Worker (MSW)** to intercept network requests at the service layer.
-- **Goal**: Test parsing logic, error handling, and URL construction using the real `fetch` API against realistic mocked OTLP payloads.
-- [ ] Add MSW harness and integration tests for all `JaegerClient` methods (can be done as a standalone PR independently of other milestones).
+##### 1. Captured Client Contract Tests
+The `JaegerClient.fetchTrace` tests mock `fetch` with captured v3 JSON and malformed variants. A full-page fetch harness belongs with the native loader integration work.
+- [x] Cover response-envelope validation, trace ID checks, URL construction, and failed requests with captured wire data (#4455, #4480).
+- [ ] Add native-loader integration tests for valid traces, rejected payloads, alias caching, and partial-trace polling.
 
 ##### 2. Contract Validation (Zod)
-Use a runtime validation library (e.g., `zod`) in the parser to validate the incoming OTLP JSON.
-- **Goal**: Catch backend breaking changes at the network boundary. Ensures `wireData` strictly matches our generated types.
-- [ ] Extend Zod schema coverage to full trace/span wire types (currently only services, operations, and trace summaries are validated). Two competing implementations are open: [#3890](https://github.com/jaegertracing/jaeger-ui/pull/3890) and [#3977](https://github.com/jaegertracing/jaeger-ui/pull/3977) — pick one before either is reviewed in depth.
+Layer refinements over the generated OTLP schemas at the network boundary, then pass the validated `TracesDataWire` to the parser.
+- [x] Validate the full trace/span wire shape, including hex IDs, quoted decimal int64 values, enums, recursive `AnyValue`, and the `{"result": ...}` envelope (#4455).
 
-##### 3. Backend Smoke Tests (Real Jaeger)
-A standalone integration test script that runs against a live Jaeger instance.
-- **Workflow**: Start `jaegertracing/jaeger` via Docker, send sample OTLP data, and verify the client can fetch and parse it correctly.
-- [ ] Create smoke-test script.
+##### 3. Backend capture and parser contract
+The pinned backend generator ingests OTLP data, captures the v3 response, and checks the committed fixture for drift. The parser runs the shared behavior tests with inline span specs rendered as OTLP by #4527. Comparing legacy and v3 routes for the same stored trace belongs with native loader integration.
+- [x] Capture a reproducible v3 wire response and run its drift check separately from backend-free unit tests (#4480).
+- [x] Run the shared behavior tests through `parseOtelTrace()` (#4503 in review).
 
 #### 3.8 Facade Coexistence & Cache Transition
 
