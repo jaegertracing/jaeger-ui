@@ -1,0 +1,12 @@
+# Copyright (c) 2026 The Jaeger Authors.
+# SPDX-License-Identifier: Apache-2.0
+
+services:
+  jaeger:
+    extends:
+      file: ../docker-compose.yml
+      service: jaeger
+  converter:
+    build: .
+    ports:
+      - '8080'

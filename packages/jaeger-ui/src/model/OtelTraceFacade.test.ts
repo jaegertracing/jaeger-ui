@@ -4,6 +4,7 @@
 import OtelTraceFacade from './OtelTraceFacade';
 import { Trace, Span, Process } from '../types/trace';
 import { IOtelTrace } from '../types/otel';
+import { assertTraceIdentity } from './trace-contract.test-utils';
 
 describe('OtelTraceFacade', () => {
   const mockProcess: Process = {
@@ -132,6 +133,7 @@ describe('OtelTraceFacade', () => {
       expect(childFacade.parentSpan).toBe(parentFacade);
       expect(parentFacade.childSpans).toContain(childFacade);
       expect(parentFacade.hasChildren).toBe(true);
+      assertTraceIdentity(complexFacade);
     });
 
     it('wires up link span references correctly', () => {
