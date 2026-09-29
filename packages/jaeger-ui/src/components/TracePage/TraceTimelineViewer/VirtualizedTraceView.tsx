@@ -41,6 +41,11 @@ import updateUiFind from '../../../utils/update-ui-find';
 import { PEER_SERVICE } from '../../../constants/tag-keys';
 import withRouteProps from '../../../utils/withRouteProps';
 
+type RowStateData = {
+  rows: RowState[];
+  spanIndexToRowIndex: Map<number, number>;
+};
+
 type TVirtualizedTraceViewOwnProps = {
   currentViewRangeTime: [number, number];
   findMatchesIDs: Set<string> | TNil;
@@ -100,11 +105,34 @@ function generateRowStatesFromTrace(
   detailStates: Map<string, DetailState | TNil>,
   detailPanelMode: 'inline' | 'sidepanel',
   prunedServices: Set<string>
-): RowState[] {
+): RowStateData {
   if (!trace) {
-    return [];
+    return {
+      rows: [],
+      spanIndexToRowIndex: new Map(),
+    };
   }
-  return generateRowStates(trace.spans, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices);
+
+  const rows = generateRowStates(
+    trace.spans,
+    childrenHiddenIDs,
+    detailStates,
+    detailPanelMode,
+    prunedServices
+  );
+
+  const spanIndexToRowIndex = new Map<number, number>();
+
+  rows.forEach((row, rowIndex) => {
+    if (!spanIndexToRowIndex.has(row.spanIndex)) {
+      spanIndexToRowIndex.set(row.spanIndex, rowIndex);
+    }
+  });
+
+  return {
+    rows,
+    spanIndexToRowIndex,
+  };
 }
 
 function getCssClasses(currentViewRange: [number, number]) {
@@ -139,7 +167,8 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
 
   const getRowStates = useCallback((): RowState[] => {
     const { trace, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices } = propsRef.current;
-    return memoizedGenerateRowStates(trace, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices);
+    return memoizedGenerateRowStates(trace, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices)
+      .rows;
   }, []);
 
   const getClippingCssClasses = useCallback((): string => {
@@ -197,20 +226,23 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
     [getRowStates]
   );
 
-  const mapSpanIndexToRowIndex = useCallback(
-    (index: number) => {
-      const rows = getRowStates();
-      const max = rows.length;
-      for (let i = 0; i < max; i++) {
-        const { spanIndex } = rows[i];
-        if (spanIndex === index) {
-          return i;
-        }
-      }
+  const mapSpanIndexToRowIndex = useCallback((index: number) => {
+    const { spanIndexToRowIndex } = memoizedGenerateRowStates(
+      propsRef.current.trace,
+      propsRef.current.childrenHiddenIDs,
+      propsRef.current.detailStates,
+      propsRef.current.detailPanelMode,
+      propsRef.current.prunedServices
+    );
+
+    const rowIndex = spanIndexToRowIndex.get(index);
+
+    if (rowIndex == null) {
       throw new Error(`unable to find row for span index: ${index}`);
-    },
-    [getRowStates]
-  );
+    }
+
+    return rowIndex;
+  }, []);
 
   const getAccessors = useCallback(() => {
     const lv = listViewRef.current;
