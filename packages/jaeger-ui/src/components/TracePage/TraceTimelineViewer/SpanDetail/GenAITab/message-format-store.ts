@@ -7,14 +7,17 @@ import storage from '../../../../../utils/storage';
 // Message text has no declared format in the OTel GenAI conventions - it can be prose,
 // Markdown, JSON, code, or a template. Per review discussion, the format is not assumed:
 // content that parses as JSON defaults to the tree view, everything else defaults to
-// plain text, and the user can override per attribute via the dropdown. The override is
-// remembered per attribute name (not globally, and not per-message), so e.g. a user's
-// choice for gen_ai.output.messages applies to every output message.
-export type MessageFormat = 'plain' | 'markdown' | 'json';
+// plain text, and the user can override it per message via the dropdown. The choice is
+// remembered per attribute name (not globally), and seeds each message of that attribute
+// as it mounts - so e.g. choosing Markdown for gen_ai.output.messages is how the next
+// span's output messages open, while messages already on screen keep their own view.
+export type MessageFormat = 'plain' | 'markdown' | 'json' | 'image' | 'audio';
+
+const MESSAGE_FORMATS: readonly string[] = ['plain', 'markdown', 'json', 'image', 'audio'];
 
 const MESSAGE_FORMAT_STORAGE_PREFIX = 'jaeger.spanDetail.attributeFormat.';
 
-// The closed set of attribute names ConversationSection assigns a format preference to.
+// The closed set of attribute names ConversationDetails assigns a format preference to.
 // Listed here (rather than derived at runtime) so the store can hydrate synchronously at
 // creation, matching search-panel-store.ts / store.layout.ts.
 const MESSAGE_FORMAT_ATTRIBUTE_KEYS = [
@@ -25,7 +28,7 @@ const MESSAGE_FORMAT_ATTRIBUTE_KEYS = [
 
 function readStoredFormat(attributeKey: string): MessageFormat | null {
   const stored = storage.getString(MESSAGE_FORMAT_STORAGE_PREFIX + attributeKey);
-  return stored === 'plain' || stored === 'markdown' || stored === 'json' ? stored : null;
+  return stored !== undefined && MESSAGE_FORMATS.includes(stored) ? (stored as MessageFormat) : null;
 }
 
 type MessageFormatStore = {

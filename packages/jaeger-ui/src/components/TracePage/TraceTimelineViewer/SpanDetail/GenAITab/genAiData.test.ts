@@ -17,6 +17,11 @@ function attrs(pairs: Record<string, unknown>): IAttributes {
 
 type SectionDataMap = { [S in GenAiSection as S['type']]: S['data'] };
 
+// These tests assert role and text; the parts array is asserted where parts are the point.
+function roleAndText(messages: { role: unknown; content: string }[] | undefined) {
+  return (messages ?? []).map(({ role, content }) => ({ role, content }));
+}
+
 function section<T extends keyof SectionDataMap>(
   sections: GenAiSection[],
   type: T
@@ -25,6 +30,60 @@ function section<T extends keyof SectionDataMap>(
 }
 
 describe('extractGenAiSections', () => {
+  describe('agent section', () => {
+    it('extracts all four gen_ai.agent.* fields', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.agent.id': 'asst_5j66UpCpwteGg4YSxUnt7lPY',
+          'gen_ai.agent.name': 'Math Tutor',
+          'gen_ai.agent.version': '1.0.0',
+          'gen_ai.agent.description': 'Helps with math problems',
+        })
+      );
+      expect(section(sections, 'agent')).toEqual({
+        id: 'asst_5j66UpCpwteGg4YSxUnt7lPY',
+        name: 'Math Tutor',
+        version: '1.0.0',
+        description: 'Helps with math problems',
+      });
+    });
+
+    it('extracts an agent section from gen_ai.agent.name alone', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.agent.name': 'Math Tutor' }));
+      expect(section(sections, 'agent')).toEqual({
+        id: undefined,
+        name: 'Math Tutor',
+        version: undefined,
+        description: undefined,
+      });
+    });
+
+    it('produces no agent section when no gen_ai.agent.* attribute is present', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.provider.name': 'openai' }));
+      expect(section(sections, 'agent')).toBeUndefined();
+    });
+
+    it('excludes claimed gen_ai.agent.* attributes from the other section', () => {
+      const sections = extractGenAiSections(
+        attrs({ 'gen_ai.agent.name': 'Math Tutor', 'gen_ai.conversation.id': 'conv-1' })
+      );
+      expect(section(sections, 'other')?.attributes.entries()).toEqual([
+        { key: 'gen_ai.conversation.id', value: 'conv-1' },
+      ]);
+    });
+
+    it('still produces an agent section for a legitimate empty-string field, instead of silently dropping it', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.agent.name': '' }));
+      expect(section(sections, 'agent')).toEqual({
+        id: undefined,
+        name: '',
+        version: undefined,
+        description: undefined,
+      });
+      expect(section(sections, 'other')).toBeUndefined();
+    });
+  });
+
   describe('meta section (provider/model)', () => {
     it('prefers current provider attribute names over deprecated one when they disagree', () => {
       const sections = extractGenAiSections(
@@ -79,23 +138,43 @@ describe('extractGenAiSections', () => {
   });
 
   describe('tokens section', () => {
-    it('extracts all token usage categories including cache and reasoning tokens', () => {
+    it('extracts every token count the conventions define, totals and per-modality alike', () => {
       const sections = extractGenAiSections(
         attrs({
           'gen_ai.usage.input_tokens': 100,
           'gen_ai.usage.output_tokens': 50,
-          'gen_ai.usage.cache_read.input_tokens': 80,
-          'gen_ai.usage.cache_creation.input_tokens': 20,
           'gen_ai.usage.reasoning.output_tokens': 30,
+          'gen_ai.usage.cache_read.input_tokens': 80,
+          'gen_ai.usage.cache_write.input_tokens': 20,
+          'gen_ai.usage.text.input_tokens': 60,
+          'gen_ai.usage.image.input_tokens': 25,
+          'gen_ai.usage.audio.input_tokens': 15,
+          'gen_ai.usage.text.output_tokens': 40,
+          'gen_ai.usage.image.output_tokens': 6,
+          'gen_ai.usage.audio.output_tokens': 4,
+          'gen_ai.usage.text.cache_read.input_tokens': 50,
+          'gen_ai.usage.image.cache_read.input_tokens': 20,
+          'gen_ai.usage.audio.cache_read.input_tokens': 10,
         })
       );
       expect(section(sections, 'tokens')).toEqual({
         inputTokens: 100,
         outputTokens: 50,
-        cacheReadInputTokens: 80,
-        cacheCreationInputTokens: 20,
         reasoningOutputTokens: 30,
+        cacheReadInputTokens: 80,
+        cacheWriteInputTokens: 20,
+        textInputTokens: 60,
+        imageInputTokens: 25,
+        audioInputTokens: 15,
+        textOutputTokens: 40,
+        imageOutputTokens: 6,
+        audioOutputTokens: 4,
+        textCacheReadInputTokens: 50,
+        imageCacheReadInputTokens: 20,
+        audioCacheReadInputTokens: 10,
       });
+      // Nothing about token usage is left to the overflow section.
+      expect(section(sections, 'other')).toBeUndefined();
     });
 
     it('parses numeric-string token counts, and ignores non-numeric strings', () => {
@@ -136,7 +215,7 @@ describe('extractGenAiSections', () => {
           ],
         })
       );
-      expect(section(sections, 'conversation')?.inputMessages).toEqual([
+      expect(roleAndText(section(sections, 'conversation')?.inputMessages)).toEqual([
         { role: 'system', content: 'You are helpful.' },
         { role: 'user', content: 'Hi' },
       ]);
@@ -150,7 +229,7 @@ describe('extractGenAiSections', () => {
           ]),
         })
       );
-      expect(section(sections, 'conversation')?.outputMessages).toEqual([
+      expect(roleAndText(section(sections, 'conversation')?.outputMessages)).toEqual([
         { role: 'assistant', content: 'Hello!' },
       ]);
     });
@@ -215,7 +294,7 @@ describe('extractGenAiSections', () => {
       expect(section(sections, 'conversation')?.inputMessages[0].content).toBe('← {"tempF":57}');
     });
 
-    it('renders media parts (blob/file/uri) as a placeholder instead of dropping them', () => {
+    it('shows a uri part whose scheme no browser can fetch, rather than hiding it', () => {
       const sections = extractGenAiSections(
         attrs({
           'gen_ai.input.messages': [
@@ -223,7 +302,222 @@ describe('extractGenAiSections', () => {
           ],
         })
       );
-      expect(section(sections, 'conversation')?.inputMessages[0].content).toBe('[image attached]');
+      // detectMediaType will decline this, so it renders as text - which is the whole
+      // value, and more than the reader had when it read "[image attached]".
+      expect(section(sections, 'conversation')?.inputMessages[0].content).toBe('gs://bucket/photo.png');
+    });
+
+    it('shows a uri part as its URI, so a media view can offer to render it', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.output.messages': [
+            {
+              role: 'assistant',
+              parts: [
+                {
+                  type: 'uri',
+                  modality: 'image',
+                  mime_type: 'image/png',
+                  uri: 'https://example.com/chart.png',
+                },
+              ],
+            },
+          ],
+        })
+      );
+      expect(section(sections, 'conversation')?.outputMessages[0].content).toBe(
+        'https://example.com/chart.png'
+      );
+    });
+
+    it('believes the modality a uri part declares, even when its URL names no type', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.output.messages': [
+            {
+              role: 'assistant',
+              parts: [{ type: 'uri', modality: 'image', uri: 'https://example.com/render?id=5' }],
+            },
+          ],
+        })
+      );
+      expect(section(sections, 'conversation')?.outputMessages[0].parts).toEqual([
+        {
+          text: 'https://example.com/render?id=5',
+          media: { src: 'https://example.com/render?id=5', type: 'image' },
+        },
+      ]);
+    });
+
+    it("takes a uri part's mime_type over its modality", () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.output.messages': [
+            {
+              role: 'assistant',
+              parts: [
+                {
+                  type: 'uri',
+                  modality: 'image',
+                  mime_type: 'audio/mpeg',
+                  uri: 'https://example.com/clip',
+                },
+              ],
+            },
+          ],
+        })
+      );
+      expect(section(sections, 'conversation')?.outputMessages[0].parts[0].media?.type).toBe('audio');
+    });
+
+    it('reads the URL of a uri part that declares nothing renderable', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.output.messages': [
+            {
+              role: 'assistant',
+              parts: [
+                { type: 'uri', modality: 'unknown', uri: 'https://example.com/chart.png' },
+                { type: 'uri', modality: 'unknown', uri: 'https://example.com/report' },
+              ],
+            },
+          ],
+        })
+      );
+      const parts = section(sections, 'conversation')?.outputMessages[0].parts;
+      expect(parts?.[0].media?.type).toBe('image');
+      // Nothing says it is media and nothing about the URL suggests it, so no view offers
+      // to render it and the reader still gets the link.
+      expect(parts?.[1]).toEqual({ text: 'https://example.com/report' });
+    });
+
+    it('shows a uri part among text parts too, not only when it stands alone', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.output.messages': [
+            {
+              role: 'assistant',
+              parts: [
+                { type: 'text', content: 'Here is the chart you asked for:' },
+                { type: 'uri', modality: 'image', uri: 'https://example.com/chart.png' },
+              ],
+            },
+          ],
+        })
+      );
+      expect(section(sections, 'conversation')?.outputMessages[0].content).toBe(
+        'Here is the chart you asked for:\n\nhttps://example.com/chart.png'
+      );
+    });
+
+    it('names an attachment by whatever type it carries, and by neither when it has none', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.output.messages': [
+            {
+              role: 'assistant',
+              parts: [
+                // mime_type is the more precise of the two, so it wins over the modality.
+                { type: 'file', modality: 'image', mime_type: 'image/png', file_id: 'f1' },
+                // A part naming neither is still described by what it is.
+                { type: 'file', file_id: 'f2' },
+                { type: 'blob', content: 'iVBORw0KGgo=' },
+              ],
+            },
+          ],
+        })
+      );
+      expect(section(sections, 'conversation')?.outputMessages[0].parts.map(part => part.text)).toEqual([
+        'image/png file f1',
+        'file f2',
+        'attachment, 8 B',
+      ]);
+    });
+
+    it('shows a file part as its file_id, the reference a provider API takes', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.output.messages': [
+            { role: 'assistant', parts: [{ type: 'file', modality: 'image', file_id: 'file_abc123' }] },
+          ],
+        })
+      );
+      expect(section(sections, 'conversation')?.outputMessages[0].content).toBe('image file file_abc123');
+    });
+
+    it('gives a blob part a data URI to render from, and text that describes it', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.output.messages': [
+            {
+              role: 'assistant',
+              parts: [{ type: 'blob', modality: 'image', mime_type: 'image/png', content: 'iVBORw0KGgo=' }],
+            },
+          ],
+        })
+      );
+      expect(section(sections, 'conversation')?.outputMessages[0].parts).toEqual([
+        {
+          text: 'image/png attachment, 8 B',
+          media: { src: 'data:image/png;base64,iVBORw0KGgo=', type: 'image' },
+        },
+      ]);
+    });
+
+    it('keeps a blob and the text sharing its message as separate parts', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.output.messages': [
+            {
+              role: 'assistant',
+              parts: [
+                { type: 'text', content: 'Here is the chart you asked for:' },
+                { type: 'blob', modality: 'image', mime_type: 'image/png', content: 'iVBORw0KGgo=' },
+              ],
+            },
+          ],
+        })
+      );
+      // Both survive: the text is not lost to the attachment, and the attachment still
+      // has somewhere to render from.
+      expect(section(sections, 'conversation')?.outputMessages[0].parts).toEqual([
+        { text: 'Here is the chart you asked for:' },
+        {
+          text: 'image/png attachment, 8 B',
+          media: { src: 'data:image/png;base64,iVBORw0KGgo=', type: 'image' },
+        },
+      ]);
+    });
+
+    it('summarizes a blob with no mime type by its modality and size', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.output.messages': [
+            { role: 'assistant', parts: [{ type: 'blob', modality: 'image', content: 'iVBORw0KGgo=' }] },
+          ],
+        })
+      );
+      // No mime_type means no data: URI to build, and "image" alone does not name a type.
+      expect(section(sections, 'conversation')?.outputMessages[0].content).toBe('image attachment, 8 B');
+    });
+
+    it('summarizes a blob sharing a message with text, rather than burying the text in base64', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.output.messages': [
+            {
+              role: 'assistant',
+              parts: [
+                { type: 'text', content: 'Here is the chart you asked for:' },
+                { type: 'blob', modality: 'image', mime_type: 'image/png', content: 'a'.repeat(60000) },
+              ],
+            },
+          ],
+        })
+      );
+      expect(section(sections, 'conversation')?.outputMessages[0].content).toBe(
+        'Here is the chart you asked for:\n\nimage/png attachment, 44 KB'
+      );
     });
 
     it('falls back to a JSON dump for unrecognized/future part types', () => {
@@ -352,7 +646,7 @@ describe('extractGenAiSections', () => {
 
     it('treats a non-object entry in a messages array as a roleless message', () => {
       const sections = extractGenAiSections(attrs({ 'gen_ai.input.messages': ['just a string entry'] }));
-      expect(section(sections, 'conversation')?.inputMessages).toEqual([
+      expect(roleAndText(section(sections, 'conversation')?.inputMessages)).toEqual([
         { role: undefined, content: 'just a string entry' },
       ]);
     });
@@ -361,7 +655,9 @@ describe('extractGenAiSections', () => {
       const sections = extractGenAiSections(
         attrs({ 'gen_ai.input.messages': { role: 'user', parts: [{ type: 'text', content: 'Hi' }] } })
       );
-      expect(section(sections, 'conversation')?.inputMessages).toEqual([{ role: 'user', content: 'Hi' }]);
+      expect(roleAndText(section(sections, 'conversation')?.inputMessages)).toEqual([
+        { role: 'user', content: 'Hi' },
+      ]);
     });
 
     it('falls back to deprecated prompt/completion when input/output messages are absent', () => {
@@ -371,17 +667,17 @@ describe('extractGenAiSections', () => {
           'gen_ai.completion': JSON.stringify([{ role: 'assistant', content: 'legacy completion' }]),
         })
       );
-      expect(section(sections, 'conversation')?.inputMessages).toEqual([
+      expect(roleAndText(section(sections, 'conversation')?.inputMessages)).toEqual([
         { role: 'user', content: 'legacy prompt' },
       ]);
-      expect(section(sections, 'conversation')?.outputMessages).toEqual([
+      expect(roleAndText(section(sections, 'conversation')?.outputMessages)).toEqual([
         { role: 'assistant', content: 'legacy completion' },
       ]);
     });
 
     it('treats an unparseable message string as a single roleless message', () => {
       const sections = extractGenAiSections(attrs({ 'gen_ai.input.messages': 'not json' }));
-      expect(section(sections, 'conversation')?.inputMessages).toEqual([
+      expect(roleAndText(section(sections, 'conversation')?.inputMessages)).toEqual([
         { role: undefined, content: 'not json' },
       ]);
     });
@@ -476,6 +772,36 @@ describe('extractGenAiSections', () => {
       expect(section(sections, 'other')).toBeUndefined();
     });
 
+    it('shows the operation beside the model that performed it', () => {
+      const sections = extractGenAiSections(
+        attrs({ 'gen_ai.operation.name': 'chat', 'gen_ai.request.model': 'gpt-4o' })
+      );
+      expect(section(sections, 'meta')).toEqual({
+        operation: 'chat',
+        provider: undefined,
+        model: 'gpt-4o',
+      });
+      // The operation alone no longer leaves a section holding just it.
+      expect(section(sections, 'other')).toBeUndefined();
+    });
+
+    it('reads a compaction part as what happened to the conversation', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.output.messages': [
+            // The shape real instrumentation sends: the marker alone, no summary.
+            { role: 'assistant', parts: [{ type: 'compaction' }], finish_reason: 'compaction' },
+          ],
+          'gen_ai.input.messages': [
+            { role: 'assistant', parts: [{ type: 'compaction', content: 'Earlier turns, summarized.' }] },
+          ],
+        })
+      );
+      const conversation = section(sections, 'conversation');
+      expect(conversation?.outputMessages[0].content).toBe('Conversation compacted');
+      expect(conversation?.inputMessages[0].content).toBe('Earlier turns, summarized.');
+    });
+
     it('produces no toolCall section when no tool attributes are present', () => {
       const sections = extractGenAiSections(attrs({ 'gen_ai.usage.input_tokens': 10 }));
       expect(section(sections, 'toolCall')).toBeUndefined();
@@ -492,7 +818,6 @@ describe('extractGenAiSections', () => {
         })
       );
       expect(section(sections, 'other')?.attributes.entries()).toEqual([
-        { key: 'gen_ai.operation.name', value: 'chat' },
         { key: 'gen_ai.conversation.id', value: 'conv-1' },
       ]);
     });
@@ -523,6 +848,75 @@ describe('extractGenAiSections', () => {
       expect(section(sections, 'other')?.attributes.entries()).toEqual([
         { key: 'gen_ai.tool.name', value: 'second_call' },
       ]);
+    });
+  });
+
+  // Message attributes are instrumentation output, so any field can be missing or be of
+  // the wrong type. Every read in genAiData is typeof-guarded for that reason; these
+  // tests hold that line, and pin the two cases where a malformed value used to produce
+  // a data: URI that no browser could decode.
+  describe('malformed messages', () => {
+    const messageContent = (value: unknown) =>
+      section(extractGenAiSections(attrs({ 'gen_ai.output.messages': value })), 'conversation')
+        ?.outputMessages;
+
+    it.each([
+      ['parts is not an array', [{ role: 'assistant', parts: 'nope' }]],
+      ['parts is null', [{ role: 'assistant', parts: null }]],
+      ['parts is empty', [{ role: 'assistant', parts: [] }]],
+      ['a part is null', [{ role: 'assistant', parts: [null] }]],
+      ['a part is a number', [{ role: 'assistant', parts: [42] }]],
+      ['a part is an array', [{ role: 'assistant', parts: [[]] }]],
+      ['a part has no type', [{ role: 'assistant', parts: [{}] }]],
+      ['a message entry is null', [null]],
+      ['a message entry is a number', [7]],
+      ['the value is truncated JSON', '{"broken'],
+      ['the value is a number', 42],
+      [
+        'a part nests 200 deep',
+        [{ role: 'assistant', parts: [JSON.parse('['.repeat(200) + ']'.repeat(200))] }],
+      ],
+    ])('yields a string rather than throwing when %s', (_case, value) => {
+      const messages = messageContent(value);
+      (messages ?? []).forEach(m => expect(typeof m.content).toBe('string'));
+    });
+
+    it('shows the raw part when the field it renders from is the wrong type', () => {
+      // Falling back to the JSON dump keeps the part visible, which is the whole point
+      // of not stubbing these out.
+      expect(messageContent([{ role: 'assistant', parts: [{ type: 'uri', uri: null }] }])?.[0].content).toBe(
+        '{\n  "type": "uri",\n  "uri": null\n}'
+      );
+      expect(
+        messageContent([{ role: 'assistant', parts: [{ type: 'file', file_id: 3 }] }])?.[0].content
+      ).toBe('{\n  "type": "file",\n  "file_id": 3\n}');
+    });
+
+    it('refuses a mime_type carrying a comma, which would move where the payload starts', () => {
+      expect(
+        messageContent([
+          { role: 'assistant', parts: [{ type: 'blob', mime_type: 'image/png,x', content: 'AAAA' }] },
+        ])?.[0].content
+      ).toBe('image/png,x attachment, 3 B');
+    });
+
+    it('refuses base64 that is only padding, which decodes to nothing', () => {
+      expect(
+        messageContent([
+          { role: 'assistant', parts: [{ type: 'blob', mime_type: 'image/png', content: '====' }] },
+        ])?.[0].content
+      ).toBe('image/png attachment');
+    });
+
+    it('accepts line-wrapped base64, unwrapping it into the data URI', () => {
+      expect(
+        messageContent([
+          {
+            role: 'assistant',
+            parts: [{ type: 'blob', mime_type: 'image/png', content: 'iVBO\nRw0K\nGgo=' }],
+          },
+        ])?.[0].parts[0].media?.src
+      ).toBe('data:image/png;base64,iVBORw0KGgo=');
     });
   });
 
