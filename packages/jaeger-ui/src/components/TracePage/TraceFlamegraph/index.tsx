@@ -191,7 +191,9 @@ const TraceFlamegraph = ({ trace }: any) => {
     } else {
       chartRef.current.clear();
     }
-  }, [searchQuery, selectedItem, viewMode]);
+    // flameData is a dependency so the search is reapplied to the chart that the effect above
+    // recreates when the data changes (e.g. after "Collapse nodes above").
+  }, [searchQuery, selectedItem, viewMode, flameData]);
 
   // Re-fit the chart to its new width after the split is dragged (onChange fires once, on drag end).
   useEffect(() => {

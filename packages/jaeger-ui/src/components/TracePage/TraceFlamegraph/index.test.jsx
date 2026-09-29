@@ -349,6 +349,20 @@ describe('<TraceFlamegraph />', () => {
       // After collapse, the collapse button should be disabled (no longer zoomed)
       expect(screen.getByTestId('flamegraph-collapse')).toBeDisabled();
     });
+
+    it('reapplies the active search to the recreated chart after collapsing', () => {
+      render(<TraceFlamegraph trace={otelTrace} />);
+      fireEvent.change(screen.getByTestId('flamegraph-search'), { target: { value: 'load' } });
+      act(() => {
+        callbacks.onClick({
+          parent: {},
+          data: { name: 'load-generator: OrderVehicle', value: 100, duration: 100, children: [] },
+        });
+      });
+      mockChart.search.mockClear();
+      fireEvent.click(screen.getByTestId('flamegraph-collapse'));
+      expect(mockChart.search).toHaveBeenCalledWith('load');
+    });
   });
 
   describe('SVG event handlers', () => {
