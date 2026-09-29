@@ -6,9 +6,10 @@ import {
   hasAnyTokenUsage,
   formatTokenCount,
   tryParseJson,
+  parseToolDefinitions,
   GenAiSection,
 } from './genAiData';
-import type { IAttribute, IAttributes } from '../../../../../types/otel';
+import type { IAttribute, IAttributes, AttributeValue } from '../../../../../types/otel';
 import { makeAttributes } from '../../../../../model/attributes';
 
 function attrs(pairs: Record<string, unknown>): IAttributes {
@@ -923,6 +924,179 @@ describe('extractGenAiSections', () => {
   it('returns an empty section list for a span with no gen_ai attributes', () => {
     const sections = extractGenAiSections(attrs({ 'http.method': 'GET' }));
     expect(sections).toEqual([]);
+  });
+});
+
+describe('parseToolDefinitions', () => {
+  describe('OTel flat FunctionToolDefinition (LangChain / Google ADK)', () => {
+    it('extracts name, type, description, and parameters from a flat tool array', () => {
+      const tools = parseToolDefinitions([
+        {
+          type: 'function',
+          name: 'get_weather',
+          description: 'Get the current weather.',
+          parameters: { type: 'object', properties: { location: { type: 'string' } } },
+        },
+      ]);
+      expect(tools).toHaveLength(1);
+      expect(tools![0]).toEqual({
+        type: 'function',
+        name: 'get_weather',
+        description: 'Get the current weather.',
+        parameters: { type: 'object', properties: { location: { type: 'string' } } },
+      });
+    });
+
+    it('extracts a flat entry without a type field (Google ADK style)', () => {
+      const tools = parseToolDefinitions([
+        {
+          name: 'get_weather',
+          description: 'Get the current weather.',
+          parameters: {
+            type: 'OBJECT',
+            properties: { location: { type: 'STRING' } },
+            required: ['location'],
+          },
+        },
+      ]);
+      expect(tools![0].name).toBe('get_weather');
+      expect(tools![0].type).toBeUndefined();
+      expect(tools![0].parameters).toBeDefined();
+    });
+
+    it('handles null description without treating it as a missing field', () => {
+      const tools = parseToolDefinitions([
+        { type: 'function', name: 'ping', description: null },
+      ] as unknown as AttributeValue);
+      expect(tools![0].description).toBeNull();
+    });
+
+    it('handles a tool entry with no description (description field absent)', () => {
+      const tools = parseToolDefinitions([{ type: 'function', name: 'ping' }]);
+      expect(tools![0].description).toBeUndefined();
+      expect(tools![0].name).toBe('ping');
+    });
+  });
+
+  describe('OpenAI nested-function format', () => {
+    it('unwraps the nested function object and preserves the outer type field', () => {
+      const tools = parseToolDefinitions([
+        {
+          type: 'function',
+          function: {
+            name: 'get_weather',
+            description: 'Get the current weather',
+            parameters: {
+              type: 'object',
+              properties: { location: { type: 'string' } },
+              required: ['location'],
+            },
+          },
+        },
+      ]);
+      expect(tools).toHaveLength(1);
+      expect(tools![0].name).toBe('get_weather');
+      expect(tools![0].type).toBe('function');
+      expect(tools![0].description).toBe('Get the current weather');
+      expect(tools![0].parameters).toBeDefined();
+      // Ensure the raw field is not set for a recognised entry.
+      expect(tools![0].raw).toBeUndefined();
+    });
+
+    it('falls back to flat parsing when the nested function object has no name or parameters', () => {
+      // Degenerate case: function: {} — not a valid OpenAI tool but should not crash.
+      const tools = parseToolDefinitions([{ type: 'function', name: 'fallback', function: {} }]);
+      // The nested function has no name/parameters, so flat extraction runs and picks up the outer name.
+      expect(tools![0].name).toBe('fallback');
+    });
+  });
+
+  describe('JSON-encoded string input', () => {
+    it('parses a JSON-encoded string of the tool definitions array', () => {
+      const raw = JSON.stringify([
+        { type: 'function', name: 'get_weather', description: 'Get the weather.' },
+      ]);
+      const tools = parseToolDefinitions(raw);
+      expect(tools).toHaveLength(1);
+      expect(tools![0].name).toBe('get_weather');
+    });
+
+    it('returns undefined for a plain non-JSON string, not a crash', () => {
+      expect(parseToolDefinitions('not json at all')).toBeUndefined();
+    });
+
+    it('returns undefined for a JSON-encoded primitive (string literal), not a tool entry', () => {
+      expect(parseToolDefinitions('"just a string"')).toBeUndefined();
+    });
+  });
+
+  describe('single non-array-wrapped object', () => {
+    it('wraps a single tool object in an array instead of silently dropping it', () => {
+      const tools = parseToolDefinitions({ type: 'function', name: 'ping' });
+      expect(tools).toHaveLength(1);
+      expect(tools![0].name).toBe('ping');
+    });
+  });
+
+  describe('unrecognised / fallback entries', () => {
+    it('stores an entry with no name or parameters under raw for a JSON view fallback', () => {
+      const entry = { something_custom: 42 };
+      const tools = parseToolDefinitions([entry]);
+      expect(tools![0].raw).toEqual(entry);
+      expect(tools![0].name).toBeUndefined();
+    });
+
+    it('stores a non-object primitive entry under raw', () => {
+      const tools = parseToolDefinitions([42]);
+      expect(tools![0].raw).toBe(42);
+    });
+  });
+
+  describe('absence of attribute', () => {
+    it('returns undefined when the attribute value is undefined', () => {
+      expect(parseToolDefinitions(undefined)).toBeUndefined();
+    });
+
+    it('returns undefined when the attribute value is null', () => {
+      expect(parseToolDefinitions(null as unknown as undefined)).toBeUndefined();
+    });
+  });
+
+  describe('integration with extractGenAiSections', () => {
+    it('extracts a tools section and removes gen_ai.tool.definitions from Other GenAI Attributes', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.provider.name': 'openai',
+          'gen_ai.tool.definitions': [{ type: 'function', name: 'get_weather', description: 'Get weather.' }],
+        })
+      );
+      expect(section(sections, 'tools')?.tools).toHaveLength(1);
+      expect(section(sections, 'tools')?.tools[0].name).toBe('get_weather');
+      // Must be claimed — must not also appear in 'other'.
+      expect(section(sections, 'other')).toBeUndefined();
+    });
+
+    it('places tools after conversation and before toolCall in section order', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.input.messages': [{ role: 'user', parts: [{ type: 'text', content: 'Hi' }] }],
+          'gen_ai.tool.definitions': [{ type: 'function', name: 'ping' }],
+          'gen_ai.tool.name': 'ping',
+        })
+      );
+      const types = sections.map(s => s.type);
+      const convIdx = types.indexOf('conversation');
+      const toolsIdx = types.indexOf('tools');
+      const toolCallIdx = types.indexOf('toolCall');
+      expect(convIdx).toBeGreaterThanOrEqual(0);
+      expect(toolsIdx).toBeGreaterThan(convIdx);
+      expect(toolCallIdx).toBeGreaterThan(toolsIdx);
+    });
+
+    it('produces no tools section when gen_ai.tool.definitions is absent', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.provider.name': 'openai' }));
+      expect(section(sections, 'tools')).toBeUndefined();
+    });
   });
 });
 
