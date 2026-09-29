@@ -148,6 +148,12 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
       }
     }
 
+    // Record the resolved parent's spanID on the span itself so downstream code (e.g.
+    // OtelSpanFacade) can read the one authoritative parent instead of re-deriving it from
+    // `references` with different tie-break rules, which can disagree with the childSpans
+    // tree built right here. See https://github.com/jaegertracing/jaeger-ui/issues/4460.
+    span.parentID = parent?.spanID;
+
     if (parent) {
       // It's a child
       (parent.childSpans as Span[]).push(span);
