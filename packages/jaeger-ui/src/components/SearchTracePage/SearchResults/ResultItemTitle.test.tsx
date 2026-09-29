@@ -1,19 +1,23 @@
-// Copyright (c) 2019 Uber Technologies, Inc.
+// Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react';
+import * as React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, createMemoryRouter, RouterProvider, useLocation } from 'react-router-dom';
 import '@testing-library/jest-dom';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import ResultItemTitle from './ResultItemTitle';
 import { fetchedState } from '../../../constants';
 import { formatDurationCompact } from '../../../utils/date';
+import type { Microseconds } from '../../../types/units';
 
-const RouterWrapper = ({ children }) => <MemoryRouter>{children}</MemoryRouter>;
+const RouterWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <MemoryRouter>{children}</MemoryRouter>
+);
 
-const setup = props => {
+const setup = (props: React.ComponentProps<typeof ResultItemTitle>) => {
   const view = render(<ResultItemTitle {...props} />, {
     wrapper: RouterWrapper,
   });
@@ -24,30 +28,30 @@ const setup = props => {
 };
 
 describe('ResultItemTitle', () => {
-  const defaultProps = {
-    duration: 150000, // Using microseconds is more realistic for formatDuration
+  const defaultProps: React.ComponentProps<typeof ResultItemTitle> = {
+    duration: 150000 as Microseconds, // Using microseconds is more realistic for formatDuration
     durationPercent: 10,
     isInDiffCohort: true,
     linkTo: { pathname: '/trace/trace-id-longer-than-8' },
     state: fetchedState.DONE,
-    toggleComparison: jest.fn(),
+    toggleComparison: vi.fn(),
     traceID: 'trace-id-longer-than-8',
     traceName: 'traceNameValue',
   };
 
   beforeEach(() => {
-    defaultProps.toggleComparison.mockReset();
+    vi.clearAllMocks();
   });
 
   it('renders as expected', () => {
     const { container } = setup(defaultProps);
     // Test that the formatted duration is displayed correctly.
-    expect(screen.getByText(formatDurationCompact(defaultProps.duration))).toBeInTheDocument();
+    expect(screen.getByText(formatDurationCompact(defaultProps.duration!))).toBeInTheDocument();
 
     // Test that the link is rendered with the correct href and contains the title.
     const link = screen.getByRole('link', { name: /150ms traceNameValue ?trace-i/i });
     expect(link).toBeInTheDocument();
-    expect(link).toHaveAttribute('href', defaultProps.linkTo.pathname);
+    expect(link).toHaveAttribute('href', defaultProps.linkTo!.pathname);
 
     // Test that the checkbox is rendered and checked by default.
     const checkbox = screen.getByRole('checkbox');
@@ -128,7 +132,7 @@ describe('ResultItemTitle', () => {
       // Verify the link is still clickable and present
       const link = screen.getByRole('link');
       expect(link).toBeInTheDocument();
-      expect(link).toHaveAttribute('href', defaultProps.linkTo.pathname);
+      expect(link).toHaveAttribute('href', defaultProps.linkTo!.pathname);
     });
   });
 
@@ -182,7 +186,7 @@ describe('ResultItemTitle', () => {
       const titleElement = screen.getByText(/traceNameValue/i);
       const wrapper = titleElement.closest('.ResultItemTitle--item');
       expect(wrapper).toBeInTheDocument();
-      expect(wrapper.tagName).toBe('DIV');
+      expect(wrapper!.tagName).toBe('DIV');
     });
 
     it('<Link> targets _blank and sets rel when targetBlank is true', () => {
@@ -201,11 +205,11 @@ describe('ResultItemTitle', () => {
     it('hides formated duration when duration is not provided', () => {
       const { rerender, container } = setup(defaultProps);
       // Duration text is visible initially.
-      expect(screen.getByText(formatDurationCompact(defaultProps.duration))).toBeInTheDocument();
+      expect(screen.getByText(formatDurationCompact(defaultProps.duration!))).toBeInTheDocument();
 
-      rerender(<ResultItemTitle {...defaultProps} duration={null} />);
+      rerender(<ResultItemTitle {...defaultProps} duration={undefined} />);
       // Duration text is now hidden.
-      expect(screen.queryByText(formatDurationCompact(defaultProps.duration))).not.toBeInTheDocument();
+      expect(screen.queryByText(formatDurationCompact(defaultProps.duration!))).not.toBeInTheDocument();
 
       // Verify the rest of the component structure remains intact.
       // The link, title, and trace ID should still be rendered.
