@@ -6,16 +6,17 @@ import { render, screen, cleanup, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
-import { MonitorATMServicesViewImpl as MonitorATMServicesView, mapStateToProps, mapDispatchToProps } from '.';
+import { MonitorATMServicesViewImpl as MonitorATMServicesView } from '.';
 import { getLoopbackInterval, timeFrameOptions, yAxisTickFormat } from './timeFrameUtils';
 import { useServices } from '../../../hooks/useTraceDiscovery';
+import { useServiceMetricsQuery, useOperationMetricsQuery } from './useMetricsQuery';
 import { ONE_HOUR_MS, TIME_RANGE_OPTIONS } from '../../../utils/time-range-options';
 import store from '../../../utils/storage';
 import {
-  originInitialState,
   serviceMetrics,
   serviceOpsMetrics,
   serviceMetricsWithOneServiceLatency,
+  originInitialState,
 } from '../../../reducers/metrics.mock';
 import * as track from './index.track';
 
@@ -48,8 +49,31 @@ vi.mock('../../../hooks/useTraceDiscovery', async () => ({
   useServices: jest.fn(() => ({ data: ['service1', 'service2'], isLoading: false })),
 }));
 
+vi.mock('./useMetricsQuery', async () => ({
+  useServiceMetricsQuery: jest.fn(() => ({
+    data: { serviceMetrics, serviceError: originInitialState.serviceError },
+    isFetching: false,
+    isLoading: false,
+  })),
+  useOperationMetricsQuery: jest.fn(() => ({
+    data: { serviceOpsMetrics, opsError: originInitialState.opsError },
+    isFetching: false,
+    isLoading: false,
+  })),
+}));
+
 // Store the default mock implementation for reset in afterEach
 const defaultUseServicesImpl = () => ({ data: ['service1', 'service2'], isLoading: false });
+const defaultServiceMetricsImpl = () => ({
+  data: { serviceMetrics, serviceError: originInitialState.serviceError },
+  isFetching: false,
+  isLoading: false,
+});
+const defaultOperationMetricsImpl = () => ({
+  data: { serviceOpsMetrics, opsError: originInitialState.opsError },
+  isFetching: false,
+  isLoading: false,
+});
 
 vi.mock('lodash/debounce', async () => mockDefault(fn => fn));
 
@@ -137,14 +161,6 @@ vi.mock('antd', async () => {
   };
 });
 
-const state = {
-  services: {},
-  metrics: { ...originInitialState },
-  selectedService: undefined,
-};
-
-const props = mapStateToProps(state);
-
 Date.now = jest.fn(() => 1487076708000); // Tue, 14 Feb 2017 12:51:48 GMT'
 
 const renderWithRouter = component => {
@@ -152,30 +168,23 @@ const renderWithRouter = component => {
 };
 
 describe('<MonitorATMServicesView>', () => {
-  const mockFetchServices = jest.fn();
-  const mockFetchAllServiceMetrics = jest.fn();
-  const mockFetchAggregatedServiceMetrics = jest.fn();
-
   beforeAll(() => {
     Date.now = jest.fn(() => 1466424490000);
   });
 
   beforeEach(() => {
     cleanup();
-    const defaultProps = {
-      ...props,
-      fetchServices: mockFetchServices,
-      fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-      fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-    };
-    renderWithRouter(<MonitorATMServicesView {...defaultProps} />);
+    renderWithRouter(<MonitorATMServicesView />);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
-    // Reset useServices mock to default implementation to avoid test order-dependence
     useServices.mockReset();
     useServices.mockImplementation(defaultUseServicesImpl);
+    useServiceMetricsQuery.mockReset();
+    useServiceMetricsQuery.mockImplementation(defaultServiceMetricsImpl);
+    useOperationMetricsQuery.mockReset();
+    useOperationMetricsQuery.mockImplementation(defaultOperationMetricsImpl);
     cleanup();
   });
 
@@ -187,61 +196,36 @@ describe('<MonitorATMServicesView>', () => {
 
   it('shows a loading indicator when loading services list', () => {
     cleanup();
-    const loadingProps = {
-      ...props,
-      fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-      fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-    };
     useServices.mockReturnValue({ data: [], isLoading: true });
-    renderWithRouter(<MonitorATMServicesView {...loadingProps} />);
+    renderWithRouter(<MonitorATMServicesView />);
     expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
   });
 
   it('do not show a loading indicator once data loaded', () => {
     cleanup();
-    const loadedProps = {
-      ...props,
-      metrics: {
-        ...originInitialState,
-        serviceMetrics,
-        serviceOpsMetrics,
-        loading: false,
-      },
-      fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-      fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-    };
     useServices.mockReturnValue({ data: ['apple'], isLoading: false });
-    renderWithRouter(<MonitorATMServicesView {...loadedProps} />);
+    renderWithRouter(<MonitorATMServicesView />);
     expect(screen.queryByTestId('loading-indicator')).not.toBeInTheDocument();
     expect(screen.getByText('Service')).toBeInTheDocument();
   });
 
   it('recalculates graph width when services finish loading (#3539)', async () => {
     cleanup();
-    // jsdom always reports offsetWidth as 0; spy so the stub is safely restored
-    // even if the test throws, preventing order-dependent failures in later tests.
     const offsetWidthSpy = vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(800);
 
     try {
       useServices.mockReturnValue({ data: [], isLoading: true });
-      const loadingProps = {
-        ...props,
-        metrics: { ...originInitialState, serviceMetrics, serviceOpsMetrics, loading: false },
-        fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-        fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-      };
-      const { rerender } = renderWithRouter(<MonitorATMServicesView {...loadingProps} />);
+      const { rerender } = renderWithRouter(<MonitorATMServicesView />);
       expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
 
       useServices.mockReturnValue({ data: ['apple'], isLoading: false });
       rerender(
         <MemoryRouter>
-          <MonitorATMServicesView {...loadingProps} />
+          <MonitorATMServicesView />
         </MemoryRouter>
       );
 
       await waitFor(() => {
-        // graphWidth = offsetWidth - 24 = 800 - 24 = 776; the fallback is 300
         const graphs = screen.getAllByTestId(/^service-graph-/);
         expect(graphs.length).toBeGreaterThan(0);
         expect(Number(graphs[0].getAttribute('data-width'))).toBeGreaterThan(300);
@@ -251,84 +235,103 @@ describe('<MonitorATMServicesView>', () => {
     }
   });
 
+  it('uses the service resolution time for the first metrics query', async () => {
+    cleanup();
+    useServices.mockReturnValue({ data: [], isLoading: true });
+    const { rerender } = renderWithRouter(<MonitorATMServicesView />);
+
+    expect(useServiceMetricsQuery).toHaveBeenLastCalledWith(undefined, undefined);
+
+    try {
+      Date.now.mockReturnValue(1466424550000);
+      useServices.mockReturnValue({ data: ['apple'], isLoading: false });
+      rerender(
+        <MemoryRouter>
+          <MonitorATMServicesView />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(useServiceMetricsQuery).toHaveBeenLastCalledWith(
+          'apple',
+          expect.objectContaining({ endTs: 1466424550000 })
+        );
+      });
+    } finally {
+      Date.now.mockReturnValue(1466424490000);
+    }
+  });
+
+  it('refreshes the query timestamp when the resolved service changes', async () => {
+    cleanup();
+    useServices.mockReturnValue({ data: ['apple'], isLoading: false });
+    const { rerender } = renderWithRouter(<MonitorATMServicesView />);
+
+    try {
+      Date.now.mockReturnValue(1466424550000);
+      useServices.mockReturnValue({ data: ['banana'], isLoading: false });
+      rerender(
+        <MemoryRouter>
+          <MonitorATMServicesView />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(useServiceMetricsQuery).toHaveBeenLastCalledWith(
+          'banana',
+          expect.objectContaining({ endTs: 1466424550000 })
+        );
+      });
+    } finally {
+      Date.now.mockReturnValue(1466424490000);
+    }
+  });
+
   it('renders with one service latency', () => {
     cleanup();
-    const singleLatencyProps = {
-      ...props,
-      metrics: {
-        ...originInitialState,
-        serviceMetrics: serviceMetricsWithOneServiceLatency,
-        serviceOpsMetrics,
-        loading: false,
-      },
-      fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-      fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-    };
     useServices.mockReturnValue({ data: ['apple'], isLoading: false });
-    renderWithRouter(<MonitorATMServicesView {...singleLatencyProps} />);
+    useServiceMetricsQuery.mockReturnValue({
+      data: {
+        serviceMetrics: serviceMetricsWithOneServiceLatency,
+        serviceError: originInitialState.serviceError,
+      },
+      isFetching: false,
+    });
+    renderWithRouter(<MonitorATMServicesView />);
     expect(screen.getByTestId('service-graph-latency--ms-')).toBeInTheDocument();
     expect(screen.getByText(/Operations metrics under/)).toBeInTheDocument();
   });
 
-  it('fetches metrics only when services are available', () => {
-    // Clear mocks from beforeEach render
-    mockFetchAllServiceMetrics.mockClear();
-    mockFetchAggregatedServiceMetrics.mockClear();
-
-    // Render with no services
-    const propsNoServices = {
-      ...props,
-      metrics: {
-        ...originInitialState,
-        serviceMetrics,
-        serviceOpsMetrics,
-        loading: false,
-      },
-      fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-      fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-    };
+  it('does not query metrics when no services are available', () => {
+    cleanup();
     useServices.mockReturnValue({ data: [], isLoading: false });
-    cleanup();
-    renderWithRouter(<MonitorATMServicesView {...propsNoServices} />);
+    useServiceMetricsQuery.mockReturnValue({ data: undefined, isFetching: false });
+    useOperationMetricsQuery.mockReturnValue({ data: undefined, isFetching: false });
+    renderWithRouter(<MonitorATMServicesView />);
+    expect(useServiceMetricsQuery).toHaveBeenCalledWith(undefined, undefined);
+    expect(useOperationMetricsQuery).toHaveBeenCalledWith(undefined, undefined);
+  });
 
-    // Should not fetch when no services
-    expect(mockFetchAllServiceMetrics).not.toHaveBeenCalled();
-    expect(mockFetchAggregatedServiceMetrics).not.toHaveBeenCalled();
-
+  it('advances the query timestamp when consecutive refreshes share the same wall-clock time', async () => {
     cleanup();
-    const propsWithServices = {
-      ...props,
-      metrics: {
-        ...originInitialState,
-        serviceMetrics,
-        serviceOpsMetrics,
-        loading: false,
-      },
-      fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-      fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-    };
+    const user = userEvent.setup();
     useServices.mockReturnValue({ data: ['apple'], isLoading: false });
-    renderWithRouter(<MonitorATMServicesView {...propsWithServices} />);
-    expect(mockFetchAllServiceMetrics).toHaveBeenCalled();
-    expect(mockFetchAggregatedServiceMetrics).toHaveBeenCalled();
+    renderWithRouter(<MonitorATMServicesView />);
+
+    await user.click(screen.getByRole('button', { name: 'Refresh' }));
+
+    await waitFor(() => {
+      expect(useServiceMetricsQuery).toHaveBeenLastCalledWith(
+        'apple',
+        expect.objectContaining({ endTs: 1466424490001 })
+      );
+    });
   });
 
   it('ATM snapshot test (DOM)', () => {
     cleanup();
-    mockFetchServices.mockResolvedValue(['apple', 'orange']);
-    const snapshotProps = {
-      ...props,
-      metrics: {
-        ...originInitialState,
-        serviceMetrics,
-        serviceOpsMetrics,
-        loading: false,
-      },
-      fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-      fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-    };
     useServices.mockReturnValue({ data: ['apple', 'orange'], isLoading: false });
-    renderWithRouter(<MonitorATMServicesView {...snapshotProps} />);
+    renderWithRouter(<MonitorATMServicesView />);
     expect(screen.getAllByText('Service')[0]).toBeInTheDocument();
     expect(screen.getByText('apple')).toBeInTheDocument();
     expect(screen.getByText('orange')).toBeInTheDocument();
@@ -336,99 +339,90 @@ describe('<MonitorATMServicesView>', () => {
 
   it('ATM snapshot test with no metrics (DOM)', () => {
     cleanup();
-    mockFetchServices.mockResolvedValue([]);
-    const noMetricsProps = {
-      ...props,
-      metrics: {
-        ...originInitialState,
-        serviceMetrics: {
-          service_latencies: null,
-        },
-        serviceOpsMetrics,
-        loading: false,
+    useServiceMetricsQuery.mockReturnValue({
+      data: {
+        serviceMetrics: { service_latencies: null, service_call_rate: null, service_error_rate: null },
+        serviceError: originInitialState.serviceError,
       },
-      fetchServices: mockFetchServices,
-      fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-      fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-    };
-    renderWithRouter(<MonitorATMServicesView {...noMetricsProps} />);
+      isFetching: false,
+      isLoading: false,
+    });
+    renderWithRouter(<MonitorATMServicesView />);
     expect(screen.getAllByText(/No data yet!/)[0]).toBeInTheDocument();
     expect(screen.getByText(/instructions/)).toBeInTheDocument();
   });
 
+  it('does not show no-metrics alert while service metrics are loading', () => {
+    cleanup();
+    useServiceMetricsQuery.mockReturnValue({
+      data: undefined,
+      isFetching: true,
+      isLoading: true,
+    });
+    renderWithRouter(<MonitorATMServicesView />);
+    expect(screen.queryByText(/No data yet!/)).not.toBeInTheDocument();
+  });
+
+  it('does not show no-metrics alert while service metrics are refetching', () => {
+    cleanup();
+    useServiceMetricsQuery.mockReturnValue({
+      data: { serviceMetrics, serviceError: originInitialState.serviceError },
+      isFetching: true,
+      isLoading: false,
+    });
+    renderWithRouter(<MonitorATMServicesView />);
+    expect(screen.queryByText(/No data yet!/)).not.toBeInTheDocument();
+  });
+
   it('handles null error rate values in metrics', () => {
     cleanup();
-    const testMetrics = {
-      ...originInitialState,
-      serviceMetrics: {
-        service_latencies: serviceMetrics.service_latencies,
-        service_error_rate: {
-          metricPoints: [
-            { x: 1, y: null },
-            { x: 2, y: 0.25 },
-          ],
-          quantile: 0.5,
-          serviceName: 'cartservice',
-        },
-        service_call_rate: serviceMetrics.service_call_rate,
-      },
-      serviceOpsMetrics,
-      loading: false,
-    };
-
-    const errorRateProps = {
-      ...props,
-      metrics: testMetrics,
-      fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-      fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-    };
     useServices.mockReturnValue({ data: ['apple'], isLoading: false });
-
-    renderWithRouter(<MonitorATMServicesView {...errorRateProps} />);
+    useServiceMetricsQuery.mockReturnValue({
+      data: {
+        serviceMetrics: {
+          service_latencies: serviceMetrics.service_latencies,
+          service_error_rate: {
+            metricPoints: [
+              { x: 1, y: null },
+              { x: 2, y: 0.25 },
+            ],
+            quantile: 0.5,
+            serviceName: 'cartservice',
+          },
+          service_call_rate: serviceMetrics.service_call_rate,
+        },
+        serviceError: originInitialState.serviceError,
+      },
+      isFetching: false,
+    });
+    renderWithRouter(<MonitorATMServicesView />);
     expect(screen.getByTestId('service-graph-error-rate----')).toBeInTheDocument();
     expect(screen.getByText('Service')).toBeInTheDocument();
   });
 
   it('render one service latency', () => {
     cleanup();
-    const oneLatencyProps = {
-      ...props,
-      metrics: {
-        ...originInitialState,
+    useServiceMetricsQuery.mockReturnValue({
+      data: {
         serviceMetrics: serviceMetricsWithOneServiceLatency,
-        serviceOpsMetrics,
-        loading: false,
+        serviceError: originInitialState.serviceError,
       },
-      fetchServices: mockFetchServices,
-      fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-      fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-    };
-    renderWithRouter(<MonitorATMServicesView {...oneLatencyProps} />);
+      isFetching: false,
+    });
+    renderWithRouter(<MonitorATMServicesView />);
     expect(screen.getByTestId('service-graph-latency--ms-')).toBeInTheDocument();
     expect(screen.getByText('Span Kind')).toBeInTheDocument();
   });
 
   it('ComponentWillUnmount remove listener', () => {
     const remover = jest.spyOn(global, 'removeEventListener').mockImplementation(() => {});
-    const { unmount } = renderWithRouter(
-      <MonitorATMServicesView
-        {...props}
-        fetchAllServiceMetrics={mockFetchAllServiceMetrics}
-        fetchAggregatedServiceMetrics={mockFetchAggregatedServiceMetrics}
-      />
-    );
+    const { unmount } = renderWithRouter(<MonitorATMServicesView />);
     unmount();
     expect(remover).toHaveBeenCalled();
   });
 
   it('resize window test', () => {
-    const testProps = {
-      ...props,
-      fetchServices: mockFetchServices,
-      fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-      fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-    };
-    renderWithRouter(<MonitorATMServicesView {...testProps} />);
+    renderWithRouter(<MonitorATMServicesView />);
 
     global.dispatchEvent(new Event('resize'));
     const spanKindSelectors = screen.getAllByTestId('span-kind-selector');
@@ -462,21 +456,9 @@ describe('<MonitorATMServicesView>', () => {
     it('should handle service change and call tracking', async () => {
       cleanup();
       const user = userEvent.setup();
-
-      const serviceProps = {
-        ...props,
-        metrics: {
-          ...originInitialState,
-          serviceMetrics,
-          serviceOpsMetrics,
-          loading: false,
-        },
-        fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-        fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-      };
       useServices.mockReturnValue({ data: ['apple', 'orange'], isLoading: false });
 
-      renderWithRouter(<MonitorATMServicesView {...serviceProps} />);
+      renderWithRouter(<MonitorATMServicesView />);
 
       const serviceSelect = screen.getByTestId('select-a-service-input');
       await user.selectOptions(serviceSelect, 'orange');
@@ -484,29 +466,14 @@ describe('<MonitorATMServicesView>', () => {
       await waitFor(() => {
         expect(trackSelectServiceSpy).toHaveBeenCalledWith('orange');
       });
-
-      expect(mockFetchAllServiceMetrics).toHaveBeenCalled();
-      expect(mockFetchAggregatedServiceMetrics).toHaveBeenCalled();
     });
 
     it('should handle span kind change and call tracking', async () => {
       cleanup();
       const user = userEvent.setup();
-
-      const spanKindProps = {
-        ...props,
-        metrics: {
-          ...originInitialState,
-          serviceMetrics,
-          serviceOpsMetrics,
-          loading: false,
-        },
-        fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-        fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-      };
       useServices.mockReturnValue({ data: ['apple'], isLoading: false });
 
-      renderWithRouter(<MonitorATMServicesView {...spanKindProps} />);
+      renderWithRouter(<MonitorATMServicesView />);
 
       const spanKindSelect = screen.getByTestId('span-kind-selector');
       await user.selectOptions(spanKindSelect, 'client');
@@ -514,29 +481,14 @@ describe('<MonitorATMServicesView>', () => {
       await waitFor(() => {
         expect(trackSelectSpanKindSpy).toHaveBeenCalledWith('Client');
       });
-
-      expect(mockFetchAllServiceMetrics).toHaveBeenCalled();
-      expect(mockFetchAggregatedServiceMetrics).toHaveBeenCalled();
     });
 
     it('should handle timeframe change and call tracking', async () => {
       cleanup();
       const user = userEvent.setup();
-
-      const timeframeProps = {
-        ...props,
-        metrics: {
-          ...originInitialState,
-          serviceMetrics,
-          serviceOpsMetrics,
-          loading: false,
-        },
-        fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-        fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-      };
       useServices.mockReturnValue({ data: ['apple'], isLoading: false });
 
-      renderWithRouter(<MonitorATMServicesView {...timeframeProps} />);
+      renderWithRouter(<MonitorATMServicesView />);
 
       const timeframeSelect = screen.getByTestId('select-a-timeframe-input');
       await user.selectOptions(timeframeSelect, String(2 * 3600000));
@@ -544,27 +496,13 @@ describe('<MonitorATMServicesView>', () => {
       await waitFor(() => {
         expect(trackSelectTimeframeSpy).toHaveBeenCalledWith('2 hours');
       });
-
-      expect(mockFetchAllServiceMetrics).toHaveBeenCalled();
-      expect(mockFetchAggregatedServiceMetrics).toHaveBeenCalled();
     });
 
     it('should test yAxisTickFormat function through ServiceGraph', () => {
       cleanup();
-      const formatProps = {
-        ...props,
-        metrics: {
-          ...originInitialState,
-          serviceMetrics,
-          serviceOpsMetrics,
-          loading: false,
-        },
-        fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-        fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-      };
       useServices.mockReturnValue({ data: ['apple'], isLoading: false });
 
-      renderWithRouter(<MonitorATMServicesView {...formatProps} />);
+      renderWithRouter(<MonitorATMServicesView />);
 
       const tickFormatResult = screen.getAllByTestId('tick-format-result')[0];
       expect(tickFormatResult).toBeInTheDocument();
@@ -574,21 +512,9 @@ describe('<MonitorATMServicesView>', () => {
     it('search test', async () => {
       cleanup();
       const user = userEvent.setup();
-
-      const searchProps = {
-        ...props,
-        metrics: {
-          ...originInitialState,
-          serviceMetrics,
-          serviceOpsMetrics,
-          loading: false,
-        },
-        fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-        fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-      };
       useServices.mockReturnValue({ data: ['apple'], isLoading: false });
 
-      renderWithRouter(<MonitorATMServicesView {...searchProps} />);
+      renderWithRouter(<MonitorATMServicesView />);
 
       const searchInput = screen.getByTestId('select-operation-input');
 
@@ -607,166 +533,78 @@ describe('<MonitorATMServicesView>', () => {
 
     it('Error in serviceLatencies', () => {
       cleanup();
-      const errorProps = {
-        ...props,
-        services: ['apple', 'orange'],
-        selectedService: 'apple',
-        metrics: {
-          ...originInitialState,
-          serviceMetrics,
-          serviceOpsMetrics,
-          loading: false,
-          serviceError: {
-            ...originInitialState.serviceError,
-            service_latencies_50: new Error('some API error'),
-          },
-        },
-        fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-        fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-      };
+      const someError = new Error('some API error');
       useServices.mockReturnValue({ data: ['apple', 'orange'], isLoading: false });
 
-      renderWithRouter(<MonitorATMServicesView {...errorProps} />);
+      useServiceMetricsQuery.mockReturnValue({
+        data: {
+          serviceMetrics,
+          serviceError: {
+            ...originInitialState.serviceError,
+            service_latencies_50: someError,
+          },
+        },
+        isFetching: false,
+      });
+      renderWithRouter(<MonitorATMServicesView />);
       expect(screen.getByText('Service')).toBeInTheDocument();
 
       cleanup();
-      const partialErrorProps = {
-        ...props,
-        services: ['apple', 'orange'],
-        metrics: {
-          ...originInitialState,
+      useServiceMetricsQuery.mockReturnValue({
+        data: {
           serviceMetrics,
-          serviceOpsMetrics,
-          loading: false,
           serviceError: {
-            ...originInitialState.serviceError,
-            service_latencies_50: new Error('some API error'),
-            service_latencies_75: new Error('some API error'),
+            service_latencies_50: someError,
+            service_latencies_75: someError,
+            service_latencies_95: someError,
+            service_call_rate: null,
+            service_error_rate: null,
           },
         },
-        fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-        fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-      };
-      useServices.mockReturnValue({ data: ['apple', 'orange'], isLoading: false });
-
-      renderWithRouter(<MonitorATMServicesView {...partialErrorProps} />);
-      expect(screen.getByText('Service')).toBeInTheDocument();
-
-      cleanup();
-      const fullErrorProps = {
-        ...props,
-        metrics: {
-          ...originInitialState,
-          serviceMetrics,
-          serviceOpsMetrics,
-          loading: false,
-          serviceError: {
-            service_latencies_50: new Error('some API error'),
-            service_latencies_75: new Error('some API error'),
-            service_latencies_95: new Error('some API error'),
-          },
-        },
-        fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-        fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-      };
-      useServices.mockReturnValue({ data: ['apple', 'orange'], isLoading: false });
-
-      renderWithRouter(<MonitorATMServicesView {...fullErrorProps} />);
+        isFetching: false,
+      });
+      renderWithRouter(<MonitorATMServicesView />);
       expect(screen.getByTestId('graph-error')).toBeInTheDocument();
     });
 
     it('Should track view all traces', async () => {
       cleanup();
       const user = userEvent.setup();
-
-      const trackingProps = {
-        ...props,
-        metrics: {
-          ...originInitialState,
-          serviceOpsMetrics,
-          serviceMetrics,
-          loading: false,
-        },
-
-        fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-        fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-      };
       useServices.mockReturnValue({ data: ['apple', 'orange'], isLoading: false });
 
-      renderWithRouter(<MonitorATMServicesView {...trackingProps} />);
+      renderWithRouter(<MonitorATMServicesView />);
 
       const viewAllTracesLink = screen.getByText('View all traces');
       await user.click(viewAllTracesLink);
       expect(trackViewAllTracesSpy).toHaveBeenCalled();
     });
-
-    it('fetches metrics when services prop changes', () => {
-      const fetchAll = jest.fn();
-      const fetchAgg = jest.fn();
-      const baseProps = {
-        ...props,
-        fetchServices: jest.fn(),
-        fetchAllServiceMetrics: fetchAll,
-        fetchAggregatedServiceMetrics: fetchAgg,
-        services: [],
-        metrics: { ...originInitialState },
-      };
-
-      useServices.mockReturnValue({ data: [], isLoading: false });
-      const { rerender } = renderWithRouter(<MonitorATMServicesView {...baseProps} />);
-      expect(fetchAll).not.toHaveBeenCalled();
-
-      // Mock change in services data
-      useServices.mockReturnValue({ data: ['apple'], isLoading: false });
-
-      rerender(
-        <MemoryRouter>
-          <MonitorATMServicesView
-            {...baseProps}
-            metrics={{
-              ...baseProps.metrics,
-              serviceMetrics,
-              serviceOpsMetrics,
-            }}
-          />
-        </MemoryRouter>
-      );
-
-      expect(fetchAll).toHaveBeenCalled();
-      expect(fetchAgg).toHaveBeenCalled();
-    });
   });
 });
 
 describe('<MonitorATMServicesView> URL query params', () => {
-  const mockFetchAllServiceMetrics = jest.fn();
-  const mockFetchAggregatedServiceMetrics = jest.fn();
-
-  const baseProps = {
-    ...props,
-    fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-    fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-  };
-
   beforeEach(() => {
     cleanup();
     jest.clearAllMocks();
     store.getString.mockReturnValue(undefined);
     store.getNumber.mockReturnValue(undefined);
     useServices.mockReturnValue({ data: ['service1', 'service2'], isLoading: false });
+    useServiceMetricsQuery.mockImplementation(defaultServiceMetricsImpl);
+    useOperationMetricsQuery.mockImplementation(defaultOperationMetricsImpl);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
     useServices.mockReset();
     useServices.mockImplementation(defaultUseServicesImpl);
+    useServiceMetricsQuery.mockReset();
+    useServiceMetricsQuery.mockImplementation(defaultServiceMetricsImpl);
+    useOperationMetricsQuery.mockReset();
+    useOperationMetricsQuery.mockImplementation(defaultOperationMetricsImpl);
     cleanup();
   });
 
   it('seeds filters from URL query params', () => {
-    renderWithRouter(
-      <MonitorATMServicesView {...baseProps} search="?service=service2&spanKind=client&timeframe=3600000" />
-    );
+    renderWithRouter(<MonitorATMServicesView search="?service=service2&spanKind=client&timeframe=3600000" />);
 
     expect(screen.getByTestId('select-a-service-input').value).toBe('service2');
     expect(screen.getByTestId('span-kind-selector').value).toBe('client');
@@ -774,9 +612,7 @@ describe('<MonitorATMServicesView> URL query params', () => {
   });
 
   it('does not persist URL-sourced filters to localStorage', () => {
-    renderWithRouter(
-      <MonitorATMServicesView {...baseProps} search="?service=service2&spanKind=client&timeframe=3600000" />
-    );
+    renderWithRouter(<MonitorATMServicesView search="?service=service2&spanKind=client&timeframe=3600000" />);
 
     expect(store.set).not.toHaveBeenCalledWith('lastAtmSearchService', expect.anything());
     expect(store.set).not.toHaveBeenCalledWith('lastAtmSearchSpanKind', expect.anything());
@@ -784,14 +620,14 @@ describe('<MonitorATMServicesView> URL query params', () => {
   });
 
   it('falls back to defaults and persists them when no URL params are present', () => {
-    renderWithRouter(<MonitorATMServicesView {...baseProps} search="" />);
+    renderWithRouter(<MonitorATMServicesView search="" />);
 
     expect(store.set).toHaveBeenCalledWith('lastAtmSearchService', 'service1');
     expect(store.set).toHaveBeenCalledWith('lastAtmSearchSpanKind', 'server');
   });
 
   it('ignores invalid URL params and falls back to defaults', () => {
-    renderWithRouter(<MonitorATMServicesView {...baseProps} search="?spanKind=bogus&timeframe=notanumber" />);
+    renderWithRouter(<MonitorATMServicesView search="?spanKind=bogus&timeframe=notanumber" />);
 
     expect(screen.getByTestId('span-kind-selector').value).toBe('server');
     expect(store.set).toHaveBeenCalledWith('lastAtmSearchSpanKind', 'server');
@@ -801,7 +637,7 @@ describe('<MonitorATMServicesView> URL query params', () => {
     const trackSpy = jest.spyOn(track, 'trackSelectSpanKind').mockImplementation(() => {});
     const user = userEvent.setup();
 
-    renderWithRouter(<MonitorATMServicesView {...baseProps} search="?spanKind=client" />);
+    renderWithRouter(<MonitorATMServicesView search="?spanKind=client" />);
 
     expect(store.set).not.toHaveBeenCalledWith('lastAtmSearchSpanKind', expect.anything());
 
@@ -815,10 +651,10 @@ describe('<MonitorATMServicesView> URL query params', () => {
   });
 
   it('falls back to a loaded service when the URL service is not recognized', () => {
-    renderWithRouter(<MonitorATMServicesView {...baseProps} search="?service=evil%26foo=bar" />);
+    renderWithRouter(<MonitorATMServicesView search="?service=evil%26foo=bar" />);
 
-    expect(mockFetchAllServiceMetrics).toHaveBeenCalledWith('service1', expect.anything());
-    expect(mockFetchAggregatedServiceMetrics).toHaveBeenCalledWith('service1', expect.anything());
+    expect(useServiceMetricsQuery).toHaveBeenCalledWith('service1', expect.anything());
+    expect(useOperationMetricsQuery).toHaveBeenCalledWith('service1', expect.anything());
     expect(store.set).not.toHaveBeenCalledWith('lastAtmSearchService', expect.anything());
   });
 
@@ -828,51 +664,50 @@ describe('<MonitorATMServicesView> URL query params', () => {
       return undefined;
     });
 
-    renderWithRouter(<MonitorATMServicesView {...baseProps} search="?service=missing" />);
+    renderWithRouter(<MonitorATMServicesView search="?service=missing" />);
 
     expect(screen.getByTestId('select-a-service-input').value).toBe('service2');
-    expect(mockFetchAllServiceMetrics).toHaveBeenCalledWith('service2', expect.anything());
+    expect(useServiceMetricsQuery).toHaveBeenCalledWith('service2', expect.anything());
     expect(store.set).not.toHaveBeenCalledWith('lastAtmSearchService', expect.anything());
   });
 
-  it('updates filters when search changes without remounting', () => {
-    const { rerender } = renderWithRouter(
-      <MonitorATMServicesView {...baseProps} search="?service=service1" />
-    );
+  it('updates filters and the query timestamp when search changes without remounting', async () => {
+    const { rerender } = renderWithRouter(<MonitorATMServicesView search="?service=service1" />);
 
     expect(screen.getByTestId('select-a-service-input').value).toBe('service1');
 
-    rerender(
-      <MemoryRouter>
-        <MonitorATMServicesView {...baseProps} search="?service=service2&spanKind=client" />
-      </MemoryRouter>
-    );
+    try {
+      Date.now.mockReturnValue(1466424550000);
+      rerender(
+        <MemoryRouter>
+          <MonitorATMServicesView search="?service=service2&spanKind=client" />
+        </MemoryRouter>
+      );
 
-    expect(screen.getByTestId('select-a-service-input').value).toBe('service2');
-    expect(screen.getByTestId('span-kind-selector').value).toBe('client');
+      expect(screen.getByTestId('select-a-service-input').value).toBe('service2');
+      expect(screen.getByTestId('span-kind-selector').value).toBe('client');
+      await waitFor(() => {
+        expect(useServiceMetricsQuery).toHaveBeenLastCalledWith(
+          'service2',
+          expect.objectContaining({ endTs: 1466424550000 })
+        );
+      });
+    } finally {
+      Date.now.mockReturnValue(1466424490000);
+    }
   });
 
   it('does not surface an unrecognized URL service in the View all traces link', () => {
-    renderWithRouter(<MonitorATMServicesView {...baseProps} search="?service=evil%26foo=bar" />);
+    renderWithRouter(<MonitorATMServicesView search="?service=evil%26foo=bar" />);
 
-    const link = screen.getByText('View all traces');
-    const href = link.getAttribute('href');
+    const href = screen.getByText('View all traces').getAttribute('href');
     expect(href).toContain('service=service1');
     expect(href).not.toContain('evil');
   });
 });
 
 describe('<MonitorATMServicesView> URL write-back', () => {
-  const mockFetchAllServiceMetrics = jest.fn();
-  const mockFetchAggregatedServiceMetrics = jest.fn();
   const mockNavigate = jest.fn();
-
-  const baseProps = {
-    ...props,
-    fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-    fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-    navigate: mockNavigate,
-  };
 
   beforeEach(() => {
     cleanup();
@@ -880,18 +715,24 @@ describe('<MonitorATMServicesView> URL write-back', () => {
     store.getString.mockReturnValue(undefined);
     store.getNumber.mockReturnValue(undefined);
     useServices.mockReturnValue({ data: ['service1', 'service2'], isLoading: false });
+    useServiceMetricsQuery.mockImplementation(defaultServiceMetricsImpl);
+    useOperationMetricsQuery.mockImplementation(defaultOperationMetricsImpl);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
     useServices.mockReset();
     useServices.mockImplementation(defaultUseServicesImpl);
+    useServiceMetricsQuery.mockReset();
+    useServiceMetricsQuery.mockImplementation(defaultServiceMetricsImpl);
+    useOperationMetricsQuery.mockReset();
+    useOperationMetricsQuery.mockImplementation(defaultOperationMetricsImpl);
     cleanup();
   });
 
   it('updates the URL when the user changes the service filter', async () => {
     const user = userEvent.setup();
-    renderWithRouter(<MonitorATMServicesView {...baseProps} search="" />);
+    renderWithRouter(<MonitorATMServicesView navigate={mockNavigate} search="" />);
 
     await user.selectOptions(screen.getByTestId('select-a-service-input'), 'service2');
 
@@ -900,7 +741,7 @@ describe('<MonitorATMServicesView> URL write-back', () => {
 
   it('updates the URL when the user changes the span kind filter', async () => {
     const user = userEvent.setup();
-    renderWithRouter(<MonitorATMServicesView {...baseProps} search="?service=service1" />);
+    renderWithRouter(<MonitorATMServicesView navigate={mockNavigate} search="?service=service1" />);
 
     await user.selectOptions(screen.getByTestId('span-kind-selector'), 'client');
 
@@ -912,7 +753,7 @@ describe('<MonitorATMServicesView> URL write-back', () => {
 
   it('preserves unrelated query params when updating the URL', async () => {
     const user = userEvent.setup();
-    renderWithRouter(<MonitorATMServicesView {...baseProps} search="?uiEmbed=v0" />);
+    renderWithRouter(<MonitorATMServicesView navigate={mockNavigate} search="?uiEmbed=v0" />);
 
     await user.selectOptions(screen.getByTestId('select-a-service-input'), 'service2');
 
@@ -930,13 +771,13 @@ describe('<MonitorATMServicesView> URL write-back', () => {
       const nextSearch = url.includes('?') ? url.slice(url.indexOf('?')) : '';
       rerenderView(
         <MemoryRouter>
-          <MonitorATMServicesView {...baseProps} navigate={navigate} search={nextSearch} />
+          <MonitorATMServicesView navigate={navigate} search={nextSearch} />
         </MemoryRouter>
       );
     });
 
     const { rerender } = renderWithRouter(
-      <MonitorATMServicesView {...baseProps} navigate={navigate} search="?spanKind=client" />
+      <MonitorATMServicesView navigate={navigate} search="?spanKind=client" />
     );
     rerenderView = rerender;
 
@@ -951,55 +792,29 @@ describe('<MonitorATMServicesView> URL write-back', () => {
   });
 });
 
-describe('<MonitorATMServicesView> on page switch', () => {
-  const stateOnPageSwitch = {
-    services: {
-      services: [],
-    },
-    metrics: { ...originInitialState },
-    selectedService: undefined,
-  };
-
-  const propsOnPageSwitch = mapStateToProps(stateOnPageSwitch);
-  const mockFetchAllServiceMetrics = jest.fn();
-  const mockFetchAggregatedServiceMetrics = jest.fn();
-
+describe('<MonitorATMServicesView> on page load', () => {
   beforeEach(() => {
     cleanup();
     useServices.mockReturnValue({ data: ['apple'], isLoading: false });
-    renderWithRouter(
-      <MonitorATMServicesView
-        {...propsOnPageSwitch}
-        fetchAllServiceMetrics={mockFetchAllServiceMetrics}
-        fetchAggregatedServiceMetrics={mockFetchAggregatedServiceMetrics}
-      />
-    );
+    useServiceMetricsQuery.mockImplementation(defaultServiceMetricsImpl);
+    useOperationMetricsQuery.mockImplementation(defaultOperationMetricsImpl);
+    renderWithRouter(<MonitorATMServicesView />);
   });
 
   afterEach(() => {
     cleanup();
+    jest.clearAllMocks();
   });
 
-  it('metrics fetch invocation check on page load', () => {
-    expect(mockFetchAllServiceMetrics).toHaveBeenCalled();
-    expect(mockFetchAggregatedServiceMetrics).toHaveBeenCalled();
-  });
-});
-
-describe('mapStateToProps()', () => {
-  it('refines state to generate the props', () => {
-    expect(mapStateToProps(state)).toEqual({
-      metrics: { ...originInitialState },
-    });
-  });
-});
-
-describe('mapDispatchToProps()', () => {
-  it('providers the `fetchServices` , `fetchAllServiceMetrics` and `fetchAggregatedServiceMetrics` prop', () => {
-    expect(mapDispatchToProps({})).toEqual({
-      fetchAllServiceMetrics: expect.any(Function),
-      fetchAggregatedServiceMetrics: expect.any(Function),
-    });
+  it('calls metric hooks with the active service on mount', () => {
+    expect(useServiceMetricsQuery).toHaveBeenCalledWith(
+      'apple',
+      expect.objectContaining({ endTs: 1466424490000 })
+    );
+    expect(useOperationMetricsQuery).toHaveBeenCalledWith(
+      'apple',
+      expect.objectContaining({ endTs: 1466424490000 })
+    );
   });
 });
 
