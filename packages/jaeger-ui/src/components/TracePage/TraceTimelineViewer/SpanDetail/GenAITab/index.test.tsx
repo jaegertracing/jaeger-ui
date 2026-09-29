@@ -707,6 +707,77 @@ describe('GenAITab message collapsing', () => {
     expect(message.querySelector('.GenAITab--messagePreview')).toBeNull();
     expect(shownView(within(message).getByLabelText(/Content format/))).toBe('Markdown');
   });
+
+  // The section's own controls act on every message at once. They are deliberately not
+  // toggles: neither reports aria-expanded, since neither owns a region of its own, and a
+  // third expandable button would also make the per-message counts above ambiguous.
+  function collapseAll() {
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse all messages' }));
+  }
+
+  function expandAll() {
+    fireEvent.click(screen.getByRole('button', { name: 'Expand all messages' }));
+  }
+
+  it('folds every message when collapse all is used, not just the one last touched', () => {
+    const { container } = renderConversation();
+
+    collapseAll();
+
+    expect(container.querySelectorAll('.GenAITab--messagePreview')).toHaveLength(2);
+    expect(screen.queryAllByRole('button', { expanded: true })).toHaveLength(0);
+  });
+
+  it('opens every message when expand all is used, including ones folded individually', () => {
+    const { container } = renderConversation();
+    const messages = container.querySelectorAll('.GenAITab--message');
+    fireEvent.click(within(messages[0] as HTMLElement).getByRole('button', { expanded: true }));
+
+    expandAll();
+
+    expect(container.querySelectorAll('.GenAITab--messagePreview')).toHaveLength(0);
+    expect(screen.getAllByRole('button', { expanded: true })).toHaveLength(2);
+  });
+
+  it('leaves a single message still foldable on its own after expand all', () => {
+    const { container } = renderConversation();
+    collapseAll();
+
+    expandAll();
+    const messages = container.querySelectorAll('.GenAITab--message');
+    fireEvent.click(within(messages[1] as HTMLElement).getByRole('button', { expanded: true }));
+
+    expect(messages[1].querySelector('.GenAITab--messagePreview')?.textContent).toBe('Second message.');
+    expect(messages[0].querySelector('.GenAITab--messagePreview')).toBeNull();
+  });
+
+  it('leaves a single message still expandable on its own after collapse all', () => {
+    const { container } = renderConversation();
+
+    collapseAll();
+    const messages = container.querySelectorAll('.GenAITab--message');
+    fireEvent.click(within(messages[0] as HTMLElement).getByRole('button', { expanded: false }));
+
+    expect(messages[0].querySelector('.GenAITab--messagePreview')).toBeNull();
+    expect(messages[1].querySelector('.GenAITab--messagePreview')?.textContent).toBe('Second message.');
+  });
+
+  it('offers no section controls for a conversation of one message, which its own toggle already covers', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.output.messages',
+            value: [{ role: 'assistant', content: 'The only message.' }],
+          },
+        ])}
+      />
+    );
+
+    expect(screen.queryByRole('button', { name: 'Collapse all messages' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Expand all messages' })).toBeNull();
+    expect(screen.getAllByRole('button', { expanded: true })).toHaveLength(1);
+  });
 });
 
 describe('GenAITab media rendering', () => {
