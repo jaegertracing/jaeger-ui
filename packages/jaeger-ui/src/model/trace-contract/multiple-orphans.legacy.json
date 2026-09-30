@@ -45,7 +45,6 @@
       "traceID": "f77950feed55c1ce91dd8e8789662306",
       "spanID": "d4dcb46e95b781f5",
       "operationName": "rootOperation",
-      "references": [],
       "duration": 34000,
       "tags": [],
       "logs": [],
@@ -81,7 +80,6 @@
       ],
       "duration": 34000,
       "tags": [],
-      "logs": [],
       "processID": "p1",
       "startTime": 1586160015434200
     }

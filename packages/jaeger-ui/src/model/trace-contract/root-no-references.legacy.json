@@ -45,7 +45,6 @@
       "traceID": "f77950feed55c1ce91dd8e878966230a",
       "spanID": "d4dcb46e95b781f5",
       "operationName": "rootOperation",
-      "references": [],
       "duration": 34000,
       "tags": [],
       "logs": [],
