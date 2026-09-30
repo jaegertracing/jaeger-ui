@@ -1,3 +1,4 @@
+// Copyright (c) 2026 The Jaeger Authors.
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -24,10 +25,19 @@ export type OrderBy =
   | typeof MOST_ERRORS
   | typeof LEAST_ERRORS;
 
-export type TraceOrderBy =
-  | typeof MOST_RECENT
-  | typeof OLDEST_FIRST
-  | typeof SHORTEST_FIRST
-  | typeof LONGEST_FIRST
-  | typeof MOST_SPANS
-  | typeof LEAST_SPANS;
+const ORDER_BY_VALUES: ReadonlySet<string> = new Set([
+  MOST_RECENT,
+  LONGEST_FIRST,
+  SHORTEST_FIRST,
+  MOST_SPANS,
+  LEAST_SPANS,
+  OLDEST_FIRST,
+  TRACE_NAME_ASC,
+  TRACE_NAME_DESC,
+  MOST_ERRORS,
+  LEAST_ERRORS,
+]);
+
+export function isValidOrderBy(value: unknown): value is OrderBy {
+  return typeof value === 'string' && ORDER_BY_VALUES.has(value);
+}
