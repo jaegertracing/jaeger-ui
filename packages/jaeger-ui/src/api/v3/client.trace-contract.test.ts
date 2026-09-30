@@ -3,31 +3,7 @@
 
 import { z } from 'zod';
 import { JaegerClient } from './client';
-
-const validEnvelope = {
-  result: {
-    resourceSpans: [
-      {
-        resource: { attributes: [{ key: 'service.name', value: { stringValue: 'svc' } }] },
-        scopeSpans: [
-          {
-            scope: { name: 'scope' },
-            spans: [
-              {
-                traceId: '0123456789abcdef0123456789abcdef',
-                spanId: '0123456789abcdef',
-                name: 'op',
-                startTimeUnixNano: '1000000',
-                endTimeUnixNano: '2000000',
-                status: {},
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  },
-};
+import capture from './v3-trace-output.json';
 
 describe('JaegerClient.fetchTrace wire contract', () => {
   let client: JaegerClient;
@@ -46,10 +22,14 @@ describe('JaegerClient.fetchTrace wire contract', () => {
   });
 
   it('validates and returns result.resourceSpans on success', async () => {
-    mockFetch.mockResolvedValue({ ok: true, json: async () => validEnvelope });
+    mockFetch.mockResolvedValue({ ok: true, json: async () => capture });
     const promise = client.fetchTrace('0123456789abcdef0123456789abcdef');
     const data = await promise;
     expect(data.resourceSpans).toHaveLength(1);
+    expect(data.resourceSpans?.[0]?.scopeSpans?.[0]?.spans).toHaveLength(3);
+    expect(data.resourceSpans?.[0]?.scopeSpans?.[0]?.spans?.[0]?.traceId).toBe(
+      '0123456789abcdef0123456789abcdef'
+    );
     expect(mockFetch).toHaveBeenCalledWith(
       '/api/v3/traces/0123456789abcdef0123456789abcdef',
       expect.any(Object)
@@ -57,7 +37,7 @@ describe('JaegerClient.fetchTrace wire contract', () => {
   });
 
   it('rejects when request traceId is not 32-char hex', async () => {
-    mockFetch.mockResolvedValue({ ok: true, json: async () => validEnvelope });
+    mockFetch.mockResolvedValue({ ok: true, json: async () => capture });
     const promise = client.fetchTrace('NOT_HEX' as any);
     await expect(promise).rejects.toThrow('must be 32-char hex string');
     expect(mockFetch).not.toHaveBeenCalled();
@@ -72,7 +52,7 @@ describe('JaegerClient.fetchTrace wire contract', () => {
   });
 
   it('rejects when response contains base64 traceId', async () => {
-    const bad = JSON.parse(JSON.stringify(validEnvelope));
+    const bad = JSON.parse(JSON.stringify(capture));
     bad.result.resourceSpans[0].scopeSpans[0].spans[0].traceId = 'AQIDBA==';
     mockFetch.mockResolvedValue({ ok: true, json: async () => bad });
     const promise = client.fetchTrace('0123456789abcdef0123456789abcdef');
@@ -80,7 +60,7 @@ describe('JaegerClient.fetchTrace wire contract', () => {
   });
 
   it('rejects when timestamps are numeric instead of quoted strings', async () => {
-    const bad = JSON.parse(JSON.stringify(validEnvelope));
+    const bad = JSON.parse(JSON.stringify(capture));
     bad.result.resourceSpans[0].scopeSpans[0].spans[0].startTimeUnixNano = 1000000;
     mockFetch.mockResolvedValue({ ok: true, json: async () => bad });
     const promise = client.fetchTrace('0123456789abcdef0123456789abcdef');
