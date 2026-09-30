@@ -1,0 +1,33 @@
+{
+  "traceID": "f77950feed55c1ce91dd8e87896623a6",
+  "processes": {
+    "p1": {
+      "serviceName": "serviceName",
+      "tags": []
+    }
+  },
+  "spans": [
+    {
+      "traceID": "f77950feed55c1ce91dd8e87896623a6",
+      "spanID": "d4dcb46e95b781f5",
+      "operationName": "rootOperation",
+      "references": [],
+      "duration": 34000,
+      "tags": [],
+      "logs": [],
+      "processID": "p1",
+      "startTime": 1586160015434050
+    },
+    {
+      "traceID": "f77950feed55c1ce91dd8e87896623a6",
+      "spanID": "0000000000000009",
+      "operationName": "secondRootOp",
+      "references": [],
+      "duration": 34000,
+      "tags": [],
+      "logs": [],
+      "processID": "p1",
+      "startTime": 1586160015434100
+    }
+  ]
+}

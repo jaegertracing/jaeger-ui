@@ -1,0 +1,62 @@
+{
+  "traceID": "f77950feed55c1ce91dd8e87896623a6",
+  "processes": {
+    "p1": {
+      "serviceName": "serviceName",
+      "tags": []
+    }
+  },
+  "spans": [
+    {
+      "traceID": "f77950feed55c1ce91dd8e87896623a6",
+      "spanID": "41f71485ed2593e4",
+      "operationName": "someOperationName",
+      "references": [
+        {
+          "refType": "CHILD_OF",
+          "traceID": "f77950feed55c1ce91dd8e87896623a6",
+          "spanID": "d4dcb46e95b781f5"
+        }
+      ],
+      "duration": 34000,
+      "tags": [],
+      "logs": [],
+      "processID": "p1",
+      "startTime": 1586160015434000
+    },
+    {
+      "traceID": "f77950feed55c1ce91dd8e87896623a6",
+      "spanID": "4f623fd33c213cba",
+      "operationName": "anotherOperationName",
+      "references": [
+        {
+          "refType": "CHILD_OF",
+          "traceID": "f77950feed55c1ce91dd8e87896623a6",
+          "spanID": "d4dcb46e95b781f5"
+        }
+      ],
+      "duration": 34000,
+      "tags": [],
+      "logs": [],
+      "processID": "p1",
+      "startTime": 1586160015434100
+    },
+    {
+      "traceID": "f77950feed55c1ce91dd8e87896623a6",
+      "spanID": "d4dcb46e95b781f5",
+      "operationName": "rootOperation",
+      "references": [
+        {
+          "refType": "CHILD_OF",
+          "traceID": "f77950feed55c1ce91dd8e87896623a6",
+          "spanID": "aaaaaaaaaaaaaaaa"
+        }
+      ],
+      "duration": 34000,
+      "tags": [],
+      "logs": [],
+      "processID": "p1",
+      "startTime": 1586160015434050
+    }
+  ]
+}
