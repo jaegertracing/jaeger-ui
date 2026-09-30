@@ -1,5 +1,5 @@
 {
-  "traceID": "f77950feed55c1ce91dd8e87896623a6",
+  "traceID": "f77950feed55c1ce91dd8e8789662303",
   "processes": {
     "p1": {
       "serviceName": "serviceName",
@@ -8,7 +8,7 @@
   },
   "spans": [
     {
-      "traceID": "f77950feed55c1ce91dd8e87896623a6",
+      "traceID": "f77950feed55c1ce91dd8e8789662303",
       "spanID": "d4dcb46e95b781f5",
       "operationName": "rootOperation",
       "references": [],
@@ -18,13 +18,13 @@
       "processID": "p1"
     },
     {
-      "traceID": "f77950feed55c1ce91dd8e87896623a6",
+      "traceID": "f77950feed55c1ce91dd8e8789662303",
       "spanID": "0000000000000005",
       "operationName": "childOp",
       "references": [
         {
           "refType": "CHILD_OF",
-          "traceID": "f77950feed55c1ce91dd8e87896623a6",
+          "traceID": "f77950feed55c1ce91dd8e8789662303",
           "spanID": "d4dcb46e95b781f5"
         }
       ],

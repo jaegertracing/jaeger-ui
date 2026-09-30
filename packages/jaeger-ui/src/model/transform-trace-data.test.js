@@ -4,6 +4,14 @@
 import transformTraceData, { orderTags, deduplicateTags } from './transform-trace-data';
 import { runTraceContractSuite } from './trace-contract-suite';
 
+const legacyCases = import.meta.glob('./trace-contract/*.legacy.json', { eager: true, import: 'default' });
+
+function loadLegacyCase(caseName) {
+  const fixture = legacyCases[`./trace-contract/${caseName}.legacy.json`];
+  if (!fixture) throw new Error(`Missing legacy trace contract case: ${caseName}`);
+  return structuredClone(fixture);
+}
+
 describe('orderTags()', () => {
   it('correctly orders tags', () => {
     const orderedTags = orderTags(
@@ -22,6 +30,15 @@ describe('orderTags()', () => {
       { key: 'http.message', value: 'ok' },
       { key: 'http.Status_code', value: '200' },
       { key: 'b.ip', value: '8.8.4.4' },
+    ]);
+    expect(
+      orderTags([
+        { key: 'a', value: 1 },
+        { key: 'a', value: 2 },
+      ])
+    ).toEqual([
+      { key: 'a', value: 1 },
+      { key: 'a', value: 2 },
     ]);
   });
 });
@@ -173,17 +190,7 @@ describe('transformTraceData()', () => {
   });
 
   it('should not produce a negative duration for a trace with only a parent cycle', () => {
-    const spanA = {
-      ...spans[0],
-      spanID: '000000000000000a',
-      references: [{ refType: 'CHILD_OF', traceID, spanID: '000000000000000b' }],
-    };
-    const spanB = {
-      ...spans[1],
-      spanID: '000000000000000b',
-      references: [{ refType: 'CHILD_OF', traceID, spanID: '000000000000000a' }],
-    };
-    const result = transformTraceData({ traceID, processes, spans: [spanA, spanB] }).asOtelTrace();
+    const result = transformTraceData(loadLegacyCase('parent-cycle')).asOtelTrace();
     expect(result.spans).toHaveLength(0);
     expect(result.duration).toBe(0);
     expect(result.startTime).toBe(0);
@@ -281,15 +288,9 @@ describe('transformTraceData()', () => {
   });
 });
 
-const legacyCases = import.meta.glob('./trace-contract/*.legacy.json', { eager: true, import: 'default' });
-
 runTraceContractSuite({
   name: 'legacy transformer',
-  load(caseName) {
-    const fixture = legacyCases[`./trace-contract/${caseName}.legacy.json`];
-    if (!fixture) throw new Error(`Missing legacy trace contract case: ${caseName}`);
-    return structuredClone(fixture);
-  },
+  load: loadLegacyCase,
   parse(fixture) {
     return transformTraceData(fixture).asOtelTrace();
   },

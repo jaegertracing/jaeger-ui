@@ -1,0 +1,45 @@
+{
+  "traceID": "f77950feed55c1ce91dd8e878966230d",
+  "processes": {
+    "p1": {
+      "serviceName": "serviceName",
+      "tags": []
+    }
+  },
+  "spans": [
+    {
+      "traceID": "f77950feed55c1ce91dd8e878966230d",
+      "spanID": "000000000000000a",
+      "operationName": "someOperationName",
+      "references": [
+        {
+          "refType": "CHILD_OF",
+          "traceID": "f77950feed55c1ce91dd8e878966230d",
+          "spanID": "000000000000000b"
+        }
+      ],
+      "startTime": 1586160015434000,
+      "duration": 34000,
+      "tags": [],
+      "logs": [],
+      "processID": "p1"
+    },
+    {
+      "traceID": "f77950feed55c1ce91dd8e878966230d",
+      "spanID": "000000000000000b",
+      "operationName": "anotherOperationName",
+      "references": [
+        {
+          "refType": "CHILD_OF",
+          "traceID": "f77950feed55c1ce91dd8e878966230d",
+          "spanID": "000000000000000a"
+        }
+      ],
+      "startTime": 1586160015434100,
+      "duration": 34000,
+      "tags": [],
+      "logs": [],
+      "processID": "p1"
+    }
+  ]
+}

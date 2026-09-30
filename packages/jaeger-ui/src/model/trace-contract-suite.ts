@@ -132,6 +132,8 @@ export function runTraceContractSuite<T>(pipeline: ITraceContractPipeline<T>) {
 
     it('exposes secondary references as links and inbound links', () => {
       const trace = parse('multi-reference');
+      expect(trace.spans.filter(span => span.links.length > 0)).toHaveLength(1);
+      expect(trace.spans.filter(span => span.inboundLinks.length > 0)).toHaveLength(1);
       const linked = trace.spanMap.get('0000000000000023');
       expect(linked?.parentSpanID).toBe('0000000000000021');
       expect(linked?.links.map(link => link.spanID)).toEqual(['0000000000000022']);
