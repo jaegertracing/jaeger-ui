@@ -4,6 +4,7 @@
 import OtelSpanFacade from './OtelSpanFacade';
 import { Span, Process } from '../types/trace';
 import { SpanKind, StatusCode } from '../types/otel';
+import { assertSpanFields } from './trace-contract.test-utils';
 
 describe('OtelSpanFacade', () => {
   const mockProcess: Process = {
@@ -55,9 +56,7 @@ describe('OtelSpanFacade', () => {
   });
 
   it('maps basic identity fields', () => {
-    expect(facade.traceID).toBe('trace-1');
-    expect(facade.spanID).toBe('span-1');
-    expect(facade.name).toBe('test-op');
+    assertSpanFields(facade, { traceID: 'trace-1', spanID: 'span-1', name: 'test-op' });
   });
 
   it('maps parentSpanID from CHILD_OF reference', () => {
@@ -200,9 +199,11 @@ describe('OtelSpanFacade', () => {
   });
 
   it('maps timing fields', () => {
-    expect(facade.startTime).toBe(1000);
-    expect(facade.endTime).toBe(1500);
-    expect(facade.duration).toBe(500);
+    assertSpanFields(facade, {
+      startTime: 1000,
+      endTime: 1500,
+      duration: 500,
+    });
   });
 
   it('maps attributes from tags', () => {

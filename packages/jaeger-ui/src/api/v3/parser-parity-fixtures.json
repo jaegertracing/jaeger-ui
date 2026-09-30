@@ -1,0 +1,1910 @@
+[
+  {
+    "name": "field-mapping",
+    "legacy": {
+      "traceID": "f77950feed55c1ce91dd8e8789000001",
+      "processes": {
+        "p1": {
+          "serviceName": "test-service",
+          "tags": [
+            {
+              "key": "res-tag",
+              "value": "res-val"
+            }
+          ]
+        }
+      },
+      "spans": [
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000001",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1000,
+          "duration": 1000,
+          "tags": [
+            {
+              "key": "span.kind",
+              "value": "server"
+            },
+            {
+              "key": "error",
+              "value": "true"
+            },
+            {
+              "key": "http.method",
+              "value": "GET"
+            },
+            {
+              "key": "otel.library.name",
+              "value": "test-lib"
+            },
+            {
+              "key": "otel.library.version",
+              "value": "1.0"
+            },
+            {
+              "key": "gen_ai.operation.name",
+              "value": "chat"
+            }
+          ],
+          "logs": [
+            {
+              "timestamp": 1100,
+              "fields": [
+                {
+                  "key": "event",
+                  "value": "test-event"
+                },
+                {
+                  "key": "foo",
+                  "value": "bar"
+                }
+              ]
+            }
+          ],
+          "spanID": "d4dcb46e95b781f5"
+        },
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000001",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1010,
+          "duration": 100,
+          "tags": [],
+          "logs": [],
+          "spanID": "41f71485ed2593e4",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000001",
+              "spanID": "d4dcb46e95b781f5",
+              "span": null
+            }
+          ]
+        }
+      ]
+    },
+    "otlp": {
+      "resourceSpans": [
+        {
+          "resource": {
+            "attributes": [
+              {
+                "key": "service.name",
+                "value": {
+                  "stringValue": "test-service"
+                }
+              },
+              {
+                "key": "res-tag",
+                "value": {
+                  "stringValue": "res-val"
+                }
+              }
+            ]
+          },
+          "scopeSpans": [
+            {
+              "scope": {},
+              "spans": [
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000001",
+                  "spanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "kind": 2,
+                  "startTimeUnixNano": "1000000",
+                  "endTimeUnixNano": "2000000",
+                  "attributes": [
+                    {
+                      "key": "gen_ai.operation.name",
+                      "value": {
+                        "stringValue": "chat"
+                      }
+                    },
+                    {
+                      "key": "error",
+                      "value": {
+                        "stringValue": "true"
+                      }
+                    },
+                    {
+                      "key": "http.method",
+                      "value": {
+                        "stringValue": "GET"
+                      }
+                    },
+                    {
+                      "key": "otel.library.name",
+                      "value": {
+                        "stringValue": "test-lib"
+                      }
+                    },
+                    {
+                      "key": "otel.library.version",
+                      "value": {
+                        "stringValue": "1.0"
+                      }
+                    }
+                  ],
+                  "events": [
+                    {
+                      "timeUnixNano": "1100000",
+                      "name": "test-event",
+                      "attributes": [
+                        {
+                          "key": "foo",
+                          "value": {
+                            "stringValue": "bar"
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "status": {}
+                },
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000001",
+                  "spanId": "41f71485ed2593e4",
+                  "parentSpanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1010000",
+                  "endTimeUnixNano": "1110000",
+                  "status": {}
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "multi-service",
+    "legacy": {
+      "traceID": "f77950feed55c1ce91dd8e8789000002",
+      "processes": {
+        "p1": {
+          "serviceName": "test-service",
+          "tags": []
+        },
+        "p2": {
+          "serviceName": "second-service",
+          "tags": []
+        }
+      },
+      "spans": [
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000002",
+          "operationName": "test-op",
+          "processID": "p2",
+          "startTime": 1010,
+          "duration": 100,
+          "tags": [],
+          "logs": [],
+          "spanID": "41f71485ed2593e4",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000002",
+              "spanID": "d4dcb46e95b781f5",
+              "span": null
+            }
+          ]
+        },
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000002",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1000,
+          "duration": 1000,
+          "tags": [],
+          "logs": [],
+          "spanID": "d4dcb46e95b781f5"
+        },
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000002",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1020,
+          "duration": 100,
+          "tags": [],
+          "logs": [],
+          "spanID": "4f623fd33c213cba",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000002",
+              "spanID": "d4dcb46e95b781f5",
+              "span": null
+            }
+          ]
+        }
+      ]
+    },
+    "otlp": {
+      "resourceSpans": [
+        {
+          "resource": {
+            "attributes": [
+              {
+                "key": "service.name",
+                "value": {
+                  "stringValue": "second-service"
+                }
+              }
+            ]
+          },
+          "scopeSpans": [
+            {
+              "scope": {},
+              "spans": [
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000002",
+                  "spanId": "41f71485ed2593e4",
+                  "parentSpanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1010000",
+                  "endTimeUnixNano": "1110000",
+                  "status": {}
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "resource": {
+            "attributes": [
+              {
+                "key": "service.name",
+                "value": {
+                  "stringValue": "test-service"
+                }
+              }
+            ]
+          },
+          "scopeSpans": [
+            {
+              "scope": {},
+              "spans": [
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000002",
+                  "spanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1000000",
+                  "endTimeUnixNano": "2000000",
+                  "status": {}
+                },
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000002",
+                  "spanId": "4f623fd33c213cba",
+                  "parentSpanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1020000",
+                  "endTimeUnixNano": "1120000",
+                  "status": {}
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "shuffled-hierarchy",
+    "legacy": {
+      "traceID": "f77950feed55c1ce91dd8e8789000003",
+      "processes": {
+        "p1": {
+          "serviceName": "test-service",
+          "tags": []
+        }
+      },
+      "spans": [
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000003",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1020,
+          "duration": 100,
+          "tags": [],
+          "logs": [],
+          "spanID": "4f623fd33c213cba",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000003",
+              "spanID": "d4dcb46e95b781f5",
+              "span": null
+            }
+          ]
+        },
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000003",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1015,
+          "duration": 100,
+          "tags": [],
+          "logs": [],
+          "spanID": "5a6b7c8d9e0f1234",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000003",
+              "spanID": "41f71485ed2593e4",
+              "span": null
+            }
+          ]
+        },
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000003",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1010,
+          "duration": 100,
+          "tags": [],
+          "logs": [],
+          "spanID": "41f71485ed2593e4",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000003",
+              "spanID": "d4dcb46e95b781f5",
+              "span": null
+            }
+          ]
+        },
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000003",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1000,
+          "duration": 1000,
+          "tags": [],
+          "logs": [],
+          "spanID": "d4dcb46e95b781f5"
+        }
+      ]
+    },
+    "otlp": {
+      "resourceSpans": [
+        {
+          "resource": {
+            "attributes": [
+              {
+                "key": "service.name",
+                "value": {
+                  "stringValue": "test-service"
+                }
+              }
+            ]
+          },
+          "scopeSpans": [
+            {
+              "scope": {},
+              "spans": [
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000003",
+                  "spanId": "4f623fd33c213cba",
+                  "parentSpanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1020000",
+                  "endTimeUnixNano": "1120000",
+                  "status": {}
+                },
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000003",
+                  "spanId": "5a6b7c8d9e0f1234",
+                  "parentSpanId": "41f71485ed2593e4",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1015000",
+                  "endTimeUnixNano": "1115000",
+                  "status": {}
+                },
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000003",
+                  "spanId": "41f71485ed2593e4",
+                  "parentSpanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1010000",
+                  "endTimeUnixNano": "1110000",
+                  "status": {}
+                },
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000003",
+                  "spanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1000000",
+                  "endTimeUnixNano": "2000000",
+                  "status": {}
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "hierarchy",
+    "legacy": {
+      "traceID": "f77950feed55c1ce91dd8e8789000004",
+      "processes": {
+        "p1": {
+          "serviceName": "test-service",
+          "tags": []
+        }
+      },
+      "spans": [
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000004",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1000,
+          "duration": 1000,
+          "tags": [],
+          "logs": [],
+          "spanID": "d4dcb46e95b781f5"
+        },
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000004",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1010,
+          "duration": 100,
+          "tags": [],
+          "logs": [],
+          "spanID": "41f71485ed2593e4",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000004",
+              "spanID": "d4dcb46e95b781f5",
+              "span": null
+            }
+          ]
+        },
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000004",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1020,
+          "duration": 100,
+          "tags": [],
+          "logs": [],
+          "spanID": "4f623fd33c213cba",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000004",
+              "spanID": "d4dcb46e95b781f5",
+              "span": null
+            }
+          ]
+        },
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000004",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1015,
+          "duration": 100,
+          "tags": [],
+          "logs": [],
+          "spanID": "5a6b7c8d9e0f1234",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000004",
+              "spanID": "41f71485ed2593e4",
+              "span": null
+            }
+          ]
+        }
+      ]
+    },
+    "otlp": {
+      "resourceSpans": [
+        {
+          "resource": {
+            "attributes": [
+              {
+                "key": "service.name",
+                "value": {
+                  "stringValue": "test-service"
+                }
+              }
+            ]
+          },
+          "scopeSpans": [
+            {
+              "scope": {},
+              "spans": [
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000004",
+                  "spanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1000000",
+                  "endTimeUnixNano": "2000000",
+                  "status": {}
+                },
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000004",
+                  "spanId": "41f71485ed2593e4",
+                  "parentSpanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1010000",
+                  "endTimeUnixNano": "1110000",
+                  "status": {}
+                },
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000004",
+                  "spanId": "4f623fd33c213cba",
+                  "parentSpanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1020000",
+                  "endTimeUnixNano": "1120000",
+                  "status": {}
+                },
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000004",
+                  "spanId": "5a6b7c8d9e0f1234",
+                  "parentSpanId": "41f71485ed2593e4",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1015000",
+                  "endTimeUnixNano": "1115000",
+                  "status": {}
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "all-zero",
+    "legacy": {
+      "traceID": "f77950feed55c1ce91dd8e8789000005",
+      "processes": {
+        "p1": {
+          "serviceName": "test-service",
+          "tags": []
+        }
+      },
+      "spans": [
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000005",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 0,
+          "duration": 1000,
+          "tags": [],
+          "logs": [],
+          "spanID": "d4dcb46e95b781f5"
+        },
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000005",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 0,
+          "duration": 100,
+          "tags": [],
+          "logs": [],
+          "spanID": "41f71485ed2593e4",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000005",
+              "spanID": "d4dcb46e95b781f5",
+              "span": null
+            }
+          ]
+        },
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000005",
+          "operationName": "test-op",
+          "processID": "p1",
+          "duration": 100,
+          "tags": [],
+          "logs": [],
+          "spanID": "4f623fd33c213cba",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000005",
+              "spanID": "d4dcb46e95b781f5",
+              "span": null
+            }
+          ]
+        }
+      ]
+    },
+    "otlp": {
+      "resourceSpans": [
+        {
+          "resource": {
+            "attributes": [
+              {
+                "key": "service.name",
+                "value": {
+                  "stringValue": "test-service"
+                }
+              }
+            ]
+          },
+          "scopeSpans": [
+            {
+              "scope": {},
+              "spans": [
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000005",
+                  "spanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "endTimeUnixNano": "1000000",
+                  "status": {}
+                },
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000005",
+                  "spanId": "41f71485ed2593e4",
+                  "parentSpanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "endTimeUnixNano": "100000",
+                  "status": {}
+                },
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000005",
+                  "spanId": "4f623fd33c213cba",
+                  "parentSpanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "endTimeUnixNano": "100000",
+                  "status": {}
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "repaired-chain",
+    "legacy": {
+      "traceID": "f77950feed55c1ce91dd8e8789000006",
+      "processes": {
+        "p1": {
+          "serviceName": "test-service",
+          "tags": []
+        }
+      },
+      "spans": [
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000006",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1784570820629325,
+          "duration": 1000,
+          "tags": [],
+          "logs": [],
+          "spanID": "d4dcb46e95b781f5"
+        },
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000006",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 0,
+          "duration": 200,
+          "tags": [],
+          "logs": [],
+          "spanID": "41f71485ed2593e4",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000006",
+              "spanID": "d4dcb46e95b781f5",
+              "span": null
+            }
+          ]
+        },
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000006",
+          "operationName": "test-op",
+          "processID": "p1",
+          "duration": 50,
+          "tags": [],
+          "logs": [],
+          "spanID": "5a6b7c8d9e0f1234",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000006",
+              "spanID": "41f71485ed2593e4",
+              "span": null
+            }
+          ]
+        }
+      ]
+    },
+    "otlp": {
+      "resourceSpans": [
+        {
+          "resource": {
+            "attributes": [
+              {
+                "key": "service.name",
+                "value": {
+                  "stringValue": "test-service"
+                }
+              }
+            ]
+          },
+          "scopeSpans": [
+            {
+              "scope": {},
+              "spans": [
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000006",
+                  "spanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1784570820629325000",
+                  "endTimeUnixNano": "1784570820630325000",
+                  "status": {}
+                },
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000006",
+                  "spanId": "41f71485ed2593e4",
+                  "parentSpanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "endTimeUnixNano": "200000",
+                  "status": {}
+                },
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000006",
+                  "spanId": "5a6b7c8d9e0f1234",
+                  "parentSpanId": "41f71485ed2593e4",
+                  "name": "test-op",
+                  "endTimeUnixNano": "50000",
+                  "status": {}
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "repaired-siblings",
+    "legacy": {
+      "traceID": "f77950feed55c1ce91dd8e8789000007",
+      "processes": {
+        "p1": {
+          "serviceName": "test-service",
+          "tags": []
+        }
+      },
+      "spans": [
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000007",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1784570820629325,
+          "duration": 1000,
+          "tags": [],
+          "logs": [],
+          "spanID": "d4dcb46e95b781f5"
+        },
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000007",
+          "operationName": "test-op",
+          "processID": "p1",
+          "duration": 100,
+          "tags": [],
+          "logs": [],
+          "spanID": "41f71485ed2593e4",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000007",
+              "spanID": "d4dcb46e95b781f5",
+              "span": null
+            }
+          ]
+        },
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000007",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 0,
+          "duration": 100,
+          "tags": [],
+          "logs": [],
+          "spanID": "4f623fd33c213cba",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000007",
+              "spanID": "d4dcb46e95b781f5",
+              "span": null
+            }
+          ]
+        },
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000007",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1784570820629825,
+          "duration": 100,
+          "tags": [],
+          "logs": [],
+          "spanID": "5a6b7c8d9e0f1234",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000007",
+              "spanID": "d4dcb46e95b781f5",
+              "span": null
+            }
+          ]
+        }
+      ]
+    },
+    "otlp": {
+      "resourceSpans": [
+        {
+          "resource": {
+            "attributes": [
+              {
+                "key": "service.name",
+                "value": {
+                  "stringValue": "test-service"
+                }
+              }
+            ]
+          },
+          "scopeSpans": [
+            {
+              "scope": {},
+              "spans": [
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000007",
+                  "spanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1784570820629325000",
+                  "endTimeUnixNano": "1784570820630325000",
+                  "status": {}
+                },
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000007",
+                  "spanId": "41f71485ed2593e4",
+                  "parentSpanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "endTimeUnixNano": "100000",
+                  "status": {}
+                },
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000007",
+                  "spanId": "4f623fd33c213cba",
+                  "parentSpanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "endTimeUnixNano": "100000",
+                  "status": {}
+                },
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000007",
+                  "spanId": "5a6b7c8d9e0f1234",
+                  "parentSpanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1784570820629825000",
+                  "endTimeUnixNano": "1784570820629925000",
+                  "status": {}
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "missing-root",
+    "legacy": {
+      "traceID": "f77950feed55c1ce91dd8e8789000008",
+      "processes": {
+        "p1": {
+          "serviceName": "test-service",
+          "tags": []
+        }
+      },
+      "spans": [
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000008",
+          "operationName": "test-op",
+          "processID": "p1",
+          "duration": 1000,
+          "tags": [],
+          "logs": [],
+          "spanID": "d4dcb46e95b781f5"
+        },
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000008",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 0,
+          "duration": 100,
+          "tags": [],
+          "logs": [],
+          "spanID": "41f71485ed2593e4",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000008",
+              "spanID": "d4dcb46e95b781f5",
+              "span": null
+            }
+          ]
+        }
+      ]
+    },
+    "otlp": {
+      "resourceSpans": [
+        {
+          "resource": {
+            "attributes": [
+              {
+                "key": "service.name",
+                "value": {
+                  "stringValue": "test-service"
+                }
+              }
+            ]
+          },
+          "scopeSpans": [
+            {
+              "scope": {},
+              "spans": [
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000008",
+                  "spanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "endTimeUnixNano": "1000000",
+                  "status": {}
+                },
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000008",
+                  "spanId": "41f71485ed2593e4",
+                  "parentSpanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "endTimeUnixNano": "100000",
+                  "status": {}
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "orphan",
+    "legacy": {
+      "traceID": "f77950feed55c1ce91dd8e8789000009",
+      "processes": {
+        "p1": {
+          "serviceName": "test-service",
+          "tags": []
+        }
+      },
+      "spans": [
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000009",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1000,
+          "duration": 100,
+          "tags": [],
+          "logs": [],
+          "spanID": "d4dcb46e95b781f5",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000009",
+              "spanID": "eeeeeeeeeeeeeeee",
+              "span": null
+            }
+          ]
+        },
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000009",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1010,
+          "duration": 100,
+          "tags": [],
+          "logs": [],
+          "spanID": "41f71485ed2593e4",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000009",
+              "spanID": "d4dcb46e95b781f5",
+              "span": null
+            }
+          ]
+        }
+      ]
+    },
+    "otlp": {
+      "resourceSpans": [
+        {
+          "resource": {
+            "attributes": [
+              {
+                "key": "service.name",
+                "value": {
+                  "stringValue": "test-service"
+                }
+              }
+            ]
+          },
+          "scopeSpans": [
+            {
+              "scope": {},
+              "spans": [
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000009",
+                  "spanId": "d4dcb46e95b781f5",
+                  "parentSpanId": "eeeeeeeeeeeeeeee",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1000000",
+                  "endTimeUnixNano": "1100000",
+                  "status": {}
+                },
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000009",
+                  "spanId": "41f71485ed2593e4",
+                  "parentSpanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1010000",
+                  "endTimeUnixNano": "1110000",
+                  "status": {}
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "multiple-orphans",
+    "legacy": {
+      "traceID": "f77950feed55c1ce91dd8e8789000010",
+      "processes": {
+        "p1": {
+          "serviceName": "test-service",
+          "tags": []
+        }
+      },
+      "spans": [
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000010",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1000,
+          "duration": 100,
+          "tags": [],
+          "logs": [],
+          "spanID": "d4dcb46e95b781f5",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000010",
+              "spanID": "eeeeeeeeeeeeeeee",
+              "span": null
+            }
+          ]
+        },
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000010",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1020,
+          "duration": 100,
+          "tags": [],
+          "logs": [],
+          "spanID": "aaaaaaaaaaaaaaaa",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000010",
+              "spanID": "eeeeeeeeeeeeeeee",
+              "span": null
+            }
+          ]
+        }
+      ]
+    },
+    "otlp": {
+      "resourceSpans": [
+        {
+          "resource": {
+            "attributes": [
+              {
+                "key": "service.name",
+                "value": {
+                  "stringValue": "test-service"
+                }
+              }
+            ]
+          },
+          "scopeSpans": [
+            {
+              "scope": {},
+              "spans": [
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000010",
+                  "spanId": "d4dcb46e95b781f5",
+                  "parentSpanId": "eeeeeeeeeeeeeeee",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1000000",
+                  "endTimeUnixNano": "1100000",
+                  "status": {}
+                },
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000010",
+                  "spanId": "aaaaaaaaaaaaaaaa",
+                  "parentSpanId": "eeeeeeeeeeeeeeee",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1020000",
+                  "endTimeUnixNano": "1120000",
+                  "status": {}
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "multiple-roots",
+    "legacy": {
+      "traceID": "f77950feed55c1ce91dd8e8789000011",
+      "processes": {
+        "p1": {
+          "serviceName": "test-service",
+          "tags": []
+        }
+      },
+      "spans": [
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000011",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1000,
+          "duration": 1000,
+          "tags": [],
+          "logs": [],
+          "spanID": "d4dcb46e95b781f5"
+        },
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000011",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1100,
+          "duration": 100,
+          "tags": [],
+          "logs": [],
+          "spanID": "bbbbbbbbbbbbbbbb"
+        }
+      ]
+    },
+    "otlp": {
+      "resourceSpans": [
+        {
+          "resource": {
+            "attributes": [
+              {
+                "key": "service.name",
+                "value": {
+                  "stringValue": "test-service"
+                }
+              }
+            ]
+          },
+          "scopeSpans": [
+            {
+              "scope": {},
+              "spans": [
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000011",
+                  "spanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1000000",
+                  "endTimeUnixNano": "2000000",
+                  "status": {}
+                },
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000011",
+                  "spanId": "bbbbbbbbbbbbbbbb",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1100000",
+                  "endTimeUnixNano": "1200000",
+                  "status": {}
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "secondary-reference",
+    "legacy": {
+      "traceID": "f77950feed55c1ce91dd8e8789000012",
+      "processes": {
+        "p1": {
+          "serviceName": "test-service",
+          "tags": []
+        }
+      },
+      "spans": [
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000012",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1000,
+          "duration": 1000,
+          "tags": [],
+          "logs": [],
+          "spanID": "d4dcb46e95b781f5"
+        },
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000012",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1010,
+          "duration": 100,
+          "tags": [],
+          "logs": [],
+          "spanID": "41f71485ed2593e4",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000012",
+              "spanID": "d4dcb46e95b781f5",
+              "span": null
+            }
+          ]
+        },
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000012",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1020,
+          "duration": 100,
+          "tags": [],
+          "logs": [],
+          "spanID": "4f623fd33c213cba",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000012",
+              "spanID": "d4dcb46e95b781f5",
+              "span": null
+            },
+            {
+              "refType": "FOLLOWS_FROM",
+              "traceID": "f77950feed55c1ce91dd8e8789000012",
+              "spanID": "41f71485ed2593e4",
+              "span": null
+            }
+          ]
+        }
+      ]
+    },
+    "otlp": {
+      "resourceSpans": [
+        {
+          "resource": {
+            "attributes": [
+              {
+                "key": "service.name",
+                "value": {
+                  "stringValue": "test-service"
+                }
+              }
+            ]
+          },
+          "scopeSpans": [
+            {
+              "scope": {},
+              "spans": [
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000012",
+                  "spanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1000000",
+                  "endTimeUnixNano": "2000000",
+                  "status": {}
+                },
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000012",
+                  "spanId": "41f71485ed2593e4",
+                  "parentSpanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1010000",
+                  "endTimeUnixNano": "1110000",
+                  "status": {}
+                },
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000012",
+                  "spanId": "4f623fd33c213cba",
+                  "parentSpanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1020000",
+                  "endTimeUnixNano": "1120000",
+                  "links": [
+                    {
+                      "traceId": "f77950feed55c1ce91dd8e8789000012",
+                      "spanId": "41f71485ed2593e4",
+                      "attributes": [
+                        {
+                          "key": "opentracing.ref_type",
+                          "value": {
+                            "stringValue": "follows_from"
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "status": {}
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "secondary-child-of",
+    "legacy": {
+      "traceID": "f77950feed55c1ce91dd8e8789000013",
+      "processes": {
+        "p1": {
+          "serviceName": "test-service",
+          "tags": []
+        }
+      },
+      "spans": [
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000013",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1000,
+          "duration": 1000,
+          "tags": [],
+          "logs": [],
+          "spanID": "d4dcb46e95b781f5"
+        },
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000013",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1010,
+          "duration": 100,
+          "tags": [],
+          "logs": [],
+          "spanID": "41f71485ed2593e4",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000013",
+              "spanID": "d4dcb46e95b781f5",
+              "span": null
+            }
+          ]
+        },
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000013",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1020,
+          "duration": 100,
+          "tags": [],
+          "logs": [],
+          "spanID": "4f623fd33c213cba",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000013",
+              "spanID": "d4dcb46e95b781f5",
+              "span": null
+            },
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000013",
+              "spanID": "41f71485ed2593e4",
+              "span": null
+            }
+          ]
+        }
+      ]
+    },
+    "otlp": {
+      "resourceSpans": [
+        {
+          "resource": {
+            "attributes": [
+              {
+                "key": "service.name",
+                "value": {
+                  "stringValue": "test-service"
+                }
+              }
+            ]
+          },
+          "scopeSpans": [
+            {
+              "scope": {},
+              "spans": [
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000013",
+                  "spanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1000000",
+                  "endTimeUnixNano": "2000000",
+                  "status": {}
+                },
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000013",
+                  "spanId": "41f71485ed2593e4",
+                  "parentSpanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1010000",
+                  "endTimeUnixNano": "1110000",
+                  "status": {}
+                },
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000013",
+                  "spanId": "4f623fd33c213cba",
+                  "parentSpanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1020000",
+                  "endTimeUnixNano": "1120000",
+                  "links": [
+                    {
+                      "traceId": "f77950feed55c1ce91dd8e8789000013",
+                      "spanId": "41f71485ed2593e4",
+                      "attributes": [
+                        {
+                          "key": "opentracing.ref_type",
+                          "value": {
+                            "stringValue": "child_of"
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "status": {}
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "follows-from-parent",
+    "legacy": {
+      "traceID": "f77950feed55c1ce91dd8e8789000014",
+      "processes": {
+        "p1": {
+          "serviceName": "test-service",
+          "tags": []
+        }
+      },
+      "spans": [
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000014",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1000,
+          "duration": 1000,
+          "tags": [],
+          "logs": [],
+          "spanID": "d4dcb46e95b781f5"
+        },
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000014",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1010,
+          "duration": 100,
+          "tags": [],
+          "logs": [],
+          "spanID": "41f71485ed2593e4",
+          "references": [
+            {
+              "refType": "FOLLOWS_FROM",
+              "traceID": "f77950feed55c1ce91dd8e8789000014",
+              "spanID": "d4dcb46e95b781f5",
+              "span": null
+            }
+          ]
+        }
+      ]
+    },
+    "otlp": {
+      "resourceSpans": [
+        {
+          "resource": {
+            "attributes": [
+              {
+                "key": "service.name",
+                "value": {
+                  "stringValue": "test-service"
+                }
+              }
+            ]
+          },
+          "scopeSpans": [
+            {
+              "scope": {},
+              "spans": [
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000014",
+                  "spanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1000000",
+                  "endTimeUnixNano": "2000000",
+                  "status": {}
+                },
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000014",
+                  "spanId": "41f71485ed2593e4",
+                  "parentSpanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1010000",
+                  "endTimeUnixNano": "1110000",
+                  "links": [
+                    {
+                      "traceId": "f77950feed55c1ce91dd8e8789000014",
+                      "spanId": "d4dcb46e95b781f5",
+                      "attributes": [
+                        {
+                          "key": "opentracing.ref_type",
+                          "value": {
+                            "stringValue": "follows_from"
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "status": {}
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "duplicate-id",
+    "legacy": {
+      "traceID": "f77950feed55c1ce91dd8e8789000015",
+      "processes": {
+        "p1": {
+          "serviceName": "test-service",
+          "tags": []
+        }
+      },
+      "spans": [
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000015",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1000,
+          "duration": 1000,
+          "tags": [],
+          "logs": [],
+          "spanID": "d4dcb46e95b781f5"
+        },
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000015",
+          "operationName": "duplicate",
+          "processID": "p1",
+          "startTime": 1100,
+          "duration": 1000,
+          "tags": [],
+          "logs": [],
+          "spanID": "d4dcb46e95b781f5"
+        }
+      ]
+    },
+    "otlp": {
+      "resourceSpans": [
+        {
+          "resource": {
+            "attributes": [
+              {
+                "key": "service.name",
+                "value": {
+                  "stringValue": "test-service"
+                }
+              }
+            ]
+          },
+          "scopeSpans": [
+            {
+              "scope": {},
+              "spans": [
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000015",
+                  "spanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1000000",
+                  "endTimeUnixNano": "2000000",
+                  "status": {}
+                },
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000015",
+                  "spanId": "d4dcb46e95b781f5",
+                  "name": "duplicate",
+                  "startTimeUnixNano": "1100000",
+                  "endTimeUnixNano": "2100000",
+                  "status": {}
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "parent-cycle",
+    "legacy": {
+      "traceID": "f77950feed55c1ce91dd8e8789000004",
+      "processes": {
+        "p1": {
+          "serviceName": "test-service",
+          "tags": []
+        }
+      },
+      "spans": [
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000004",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1000,
+          "duration": 1000,
+          "tags": [],
+          "logs": [],
+          "spanID": "d4dcb46e95b781f5",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000004",
+              "spanID": "41f71485ed2593e4",
+              "span": null
+            }
+          ]
+        },
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000004",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1010,
+          "duration": 100,
+          "tags": [],
+          "logs": [],
+          "spanID": "41f71485ed2593e4",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000004",
+              "spanID": "d4dcb46e95b781f5",
+              "span": null
+            }
+          ]
+        }
+      ]
+    },
+    "otlp": {
+      "resourceSpans": [
+        {
+          "resource": {
+            "attributes": [
+              {
+                "key": "service.name",
+                "value": {
+                  "stringValue": "test-service"
+                }
+              }
+            ]
+          },
+          "scopeSpans": [
+            {
+              "scope": {},
+              "spans": [
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000004",
+                  "spanId": "d4dcb46e95b781f5",
+                  "parentSpanId": "41f71485ed2593e4",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1000000",
+                  "endTimeUnixNano": "2000000",
+                  "status": {}
+                },
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000004",
+                  "spanId": "41f71485ed2593e4",
+                  "parentSpanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1010000",
+                  "endTimeUnixNano": "1110000",
+                  "status": {}
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "cross-trace-link",
+    "legacy": {
+      "traceID": "f77950feed55c1ce91dd8e8789000012",
+      "processes": {
+        "p1": {
+          "serviceName": "test-service",
+          "tags": []
+        }
+      },
+      "spans": [
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000012",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1000,
+          "duration": 1000,
+          "tags": [],
+          "logs": [],
+          "spanID": "d4dcb46e95b781f5"
+        },
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000012",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1010,
+          "duration": 100,
+          "tags": [],
+          "logs": [],
+          "spanID": "41f71485ed2593e4",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000012",
+              "spanID": "d4dcb46e95b781f5",
+              "span": null
+            }
+          ]
+        },
+        {
+          "traceID": "f77950feed55c1ce91dd8e8789000012",
+          "operationName": "test-op",
+          "processID": "p1",
+          "startTime": 1020,
+          "duration": 100,
+          "tags": [],
+          "logs": [],
+          "spanID": "4f623fd33c213cba",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "f77950feed55c1ce91dd8e8789000012",
+              "spanID": "d4dcb46e95b781f5",
+              "span": null
+            },
+            {
+              "refType": "FOLLOWS_FROM",
+              "traceID": "0123456789abcdef0123456789abcdef",
+              "spanID": "41f71485ed2593e4",
+              "span": null
+            }
+          ]
+        }
+      ]
+    },
+    "otlp": {
+      "resourceSpans": [
+        {
+          "resource": {
+            "attributes": [
+              {
+                "key": "service.name",
+                "value": {
+                  "stringValue": "test-service"
+                }
+              }
+            ]
+          },
+          "scopeSpans": [
+            {
+              "scope": {},
+              "spans": [
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000012",
+                  "spanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1000000",
+                  "endTimeUnixNano": "2000000",
+                  "status": {}
+                },
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000012",
+                  "spanId": "41f71485ed2593e4",
+                  "parentSpanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1010000",
+                  "endTimeUnixNano": "1110000",
+                  "status": {}
+                },
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000012",
+                  "spanId": "4f623fd33c213cba",
+                  "parentSpanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1020000",
+                  "endTimeUnixNano": "1120000",
+                  "links": [
+                    {
+                      "traceId": "0123456789abcdef0123456789abcdef",
+                      "spanId": "41f71485ed2593e4",
+                      "attributes": [
+                        {
+                          "key": "opentracing.ref_type",
+                          "value": {
+                            "stringValue": "follows_from"
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "status": {}
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

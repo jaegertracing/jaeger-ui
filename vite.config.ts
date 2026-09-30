@@ -126,7 +126,18 @@ export default defineConfig({
       'jest/no-identical-title': 'error',
       'jest/valid-title': 'error',
       'jest/valid-expect': 'error',
-      'jest/expect-expect': 'error',
+      'jest/expect-expect': [
+        'error',
+        {
+          assertFunctionNames: [
+            'expect',
+            'assertTraceContract',
+            'assertTraceIdentity',
+            'assertSpanFields',
+            'expectMappedParity',
+          ],
+        },
+      ],
       // many data-driven tests use conditionals, this linter makes them unreadable
       'jest/no-conditional-expect': 'off',
       // no-shadow forces awkward renaming even when there's no real shadowing, e.g.,

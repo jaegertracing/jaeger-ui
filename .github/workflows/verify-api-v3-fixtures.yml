@@ -15,6 +15,10 @@ on:
     paths:
       - 'scripts/generate-v3-fixture.ts'
       - 'scripts/v3-fixture/docker-compose.yml'
+      - 'scripts/v3-fixture/parity/**'
+      - 'packages/jaeger-ui/src/model/trace-contract.fixtures.ts'
+      - 'packages/jaeger-ui/src/api/v3/parser-parity-fixtures.json'
+      - 'packages/jaeger-ui/src/api/v3/parser-parity-capture.json'
       - 'packages/jaeger-ui/src/api/v3/v3-trace-input.json'
       - 'packages/jaeger-ui/src/api/v3/v3-trace-output.json'
       - 'package.json'
@@ -45,3 +49,6 @@ jobs:
 
       - name: Regenerate the capture and diff it against the committed fixture
         run: node scripts/generate-v3-fixture.ts --check
+
+      - name: Verify legacy conversion fixtures and paired query responses
+        run: node scripts/generate-v3-fixture.ts --parity --check

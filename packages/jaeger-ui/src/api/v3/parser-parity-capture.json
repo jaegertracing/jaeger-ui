@@ -1,0 +1,200 @@
+{
+  "legacy": {
+    "data": [
+      {
+        "traceID": "f77950feed55c1ce91dd8e8789000001",
+        "spans": [
+          {
+            "traceID": "f77950feed55c1ce91dd8e8789000001",
+            "spanID": "d4dcb46e95b781f5",
+            "operationName": "test-op",
+            "references": [],
+            "startTime": 1000,
+            "duration": 1000,
+            "tags": [
+              {
+                "key": "error",
+                "type": "string",
+                "value": "true"
+              },
+              {
+                "key": "gen_ai.operation.name",
+                "type": "string",
+                "value": "chat"
+              },
+              {
+                "key": "http.method",
+                "type": "string",
+                "value": "GET"
+              },
+              {
+                "key": "otel.library.name",
+                "type": "string",
+                "value": "test-lib"
+              },
+              {
+                "key": "otel.library.version",
+                "type": "string",
+                "value": "1.0"
+              },
+              {
+                "key": "span.kind",
+                "type": "string",
+                "value": "server"
+              }
+            ],
+            "logs": [
+              {
+                "timestamp": 1100,
+                "fields": [
+                  {
+                    "key": "event",
+                    "type": "string",
+                    "value": "test-event"
+                  },
+                  {
+                    "key": "foo",
+                    "type": "string",
+                    "value": "bar"
+                  }
+                ]
+              }
+            ],
+            "processID": "p1",
+            "warnings": null
+          },
+          {
+            "traceID": "f77950feed55c1ce91dd8e8789000001",
+            "spanID": "41f71485ed2593e4",
+            "operationName": "test-op",
+            "references": [
+              {
+                "refType": "CHILD_OF",
+                "traceID": "f77950feed55c1ce91dd8e8789000001",
+                "spanID": "d4dcb46e95b781f5"
+              }
+            ],
+            "startTime": 1010,
+            "duration": 100,
+            "tags": [],
+            "logs": [],
+            "processID": "p1",
+            "warnings": null
+          }
+        ],
+        "processes": {
+          "p1": {
+            "serviceName": "test-service",
+            "tags": [
+              {
+                "key": "res-tag",
+                "type": "string",
+                "value": "res-val"
+              }
+            ]
+          }
+        },
+        "warnings": null
+      }
+    ],
+    "total": 0,
+    "limit": 0,
+    "offset": 0,
+    "errors": null
+  },
+  "v3": {
+    "result": {
+      "resourceSpans": [
+        {
+          "resource": {
+            "attributes": [
+              {
+                "key": "res-tag",
+                "value": {
+                  "stringValue": "res-val"
+                }
+              },
+              {
+                "key": "service.name",
+                "value": {
+                  "stringValue": "test-service"
+                }
+              }
+            ]
+          },
+          "scopeSpans": [
+            {
+              "scope": {},
+              "spans": [
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000001",
+                  "spanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "kind": 2,
+                  "startTimeUnixNano": "1000000",
+                  "endTimeUnixNano": "2000000",
+                  "attributes": [
+                    {
+                      "key": "error",
+                      "value": {
+                        "stringValue": "true"
+                      }
+                    },
+                    {
+                      "key": "gen_ai.operation.name",
+                      "value": {
+                        "stringValue": "chat"
+                      }
+                    },
+                    {
+                      "key": "http.method",
+                      "value": {
+                        "stringValue": "GET"
+                      }
+                    },
+                    {
+                      "key": "otel.library.name",
+                      "value": {
+                        "stringValue": "test-lib"
+                      }
+                    },
+                    {
+                      "key": "otel.library.version",
+                      "value": {
+                        "stringValue": "1.0"
+                      }
+                    }
+                  ],
+                  "events": [
+                    {
+                      "timeUnixNano": "1100000",
+                      "name": "test-event",
+                      "attributes": [
+                        {
+                          "key": "foo",
+                          "value": {
+                            "stringValue": "bar"
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "status": {}
+                },
+                {
+                  "traceId": "f77950feed55c1ce91dd8e8789000001",
+                  "spanId": "41f71485ed2593e4",
+                  "parentSpanId": "d4dcb46e95b781f5",
+                  "name": "test-op",
+                  "startTimeUnixNano": "1010000",
+                  "endTimeUnixNano": "1110000",
+                  "status": {}
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
