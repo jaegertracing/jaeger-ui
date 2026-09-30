@@ -12,6 +12,10 @@ function loadLegacyCase(caseName) {
   return structuredClone(fixture);
 }
 
+function parseLegacyTrace(fixture) {
+  return transformTraceData(fixture).asOtelTrace();
+}
+
 describe('orderTags()', () => {
   it('correctly orders tags', () => {
     const orderedTags = orderTags(
@@ -190,7 +194,7 @@ describe('transformTraceData()', () => {
   });
 
   it('should not produce a negative duration for a trace with only a parent cycle', () => {
-    const result = transformTraceData(loadLegacyCase('parent-cycle')).asOtelTrace();
+    const result = parseLegacyTrace(loadLegacyCase('parent-cycle'));
     expect(result.spans).toHaveLength(0);
     expect(result.duration).toBe(0);
     expect(result.startTime).toBe(0);
@@ -247,11 +251,11 @@ describe('transformTraceData()', () => {
       processID: 'p1',
     };
 
-    const result = transformTraceData({
+    const result = parseLegacyTrace({
       traceID,
       processes,
       spans: [realRoot, missingSibling1, nanSibling, realSibling],
-    }).asOtelTrace();
+    });
 
     // Every span is kept and has a finite startTime; none was lost or left NaN.
     expect(result.spans.length).toBe(4);
@@ -291,7 +295,5 @@ describe('transformTraceData()', () => {
 runTraceContractSuite({
   name: 'legacy transformer',
   load: loadLegacyCase,
-  parse(fixture) {
-    return transformTraceData(fixture).asOtelTrace();
-  },
+  parse: parseLegacyTrace,
 });
