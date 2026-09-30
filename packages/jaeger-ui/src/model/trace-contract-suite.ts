@@ -87,10 +87,12 @@ export function runTraceContractSuite<T>(pipeline: ITraceContractPipeline<T>) {
 
     it('identifies the root and its sorted children', () => {
       const trace = parse('root-no-references');
+      expect(trace.rootSpans).toBeInstanceOf(Array);
       expect(trace.rootSpans).toHaveLength(1);
       expect(trace.rootSpans[0].spanID).toBe('d4dcb46e95b781f5');
       expect(trace.rootSpans[0].name).toBe('rootOperation');
       const root = trace.spanMap.get('d4dcb46e95b781f5');
+      expect(root?.childSpans).toBeInstanceOf(Array);
       expect(root?.childSpans.map(child => child.spanID)).toEqual(['41f71485ed2593e4', '4f623fd33c213cba']);
       expect(root?.childSpans.every(child => child.childSpans.length === 0)).toBe(true);
       root?.childSpans.forEach(child => {
