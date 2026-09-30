@@ -94,7 +94,7 @@ describe('<MonitorATMPage>', () => {
         </MemoryRouter>
       );
 
-      expect(screen.getByAltText('jaeger-monitor-tab-preview')).toBeInTheDocument();
+      expect(screen.getByAltText('Preview of the Monitor tab')).toBeInTheDocument();
       expect(screen.queryByRole('heading', { name: /^Service$/i })).not.toBeInTheDocument();
       expect(screen.queryByRole('heading', { name: /Latency/i })).not.toBeInTheDocument();
       expect(screen.queryByRole('table')).not.toBeInTheDocument();
