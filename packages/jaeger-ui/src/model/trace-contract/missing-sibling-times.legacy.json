@@ -1,0 +1,55 @@
+{
+  "traceID": "f77950feed55c1ce91dd8e8789662304",
+  "processes": {
+    "p1": {
+      "serviceName": "serviceName",
+      "tags": []
+    }
+  },
+  "spans": [
+    {
+      "traceID": "f77950feed55c1ce91dd8e8789662304",
+      "spanID": "d4dcb46e95b781f5",
+      "operationName": "rootOperation",
+      "references": [],
+      "duration": 1000,
+      "tags": [],
+      "logs": [],
+      "processID": "p1",
+      "startTime": 1784570820629325
+    },
+    {
+      "traceID": "f77950feed55c1ce91dd8e8789662304",
+      "spanID": "0000000000000030",
+      "operationName": "missing1",
+      "references": [
+        {
+          "refType": "CHILD_OF",
+          "traceID": "f77950feed55c1ce91dd8e8789662304",
+          "spanID": "d4dcb46e95b781f5"
+        }
+      ],
+      "duration": 10,
+      "tags": [],
+      "logs": [],
+      "processID": "p1"
+    },
+    {
+      "traceID": "f77950feed55c1ce91dd8e8789662304",
+      "spanID": "0000000000000031",
+      "operationName": "real",
+      "references": [
+        {
+          "refType": "CHILD_OF",
+          "traceID": "f77950feed55c1ce91dd8e8789662304",
+          "spanID": "d4dcb46e95b781f5"
+        }
+      ],
+      "duration": 30,
+      "tags": [],
+      "logs": [],
+      "processID": "p1",
+      "startTime": 1784570820629825
+    }
+  ]
+}
