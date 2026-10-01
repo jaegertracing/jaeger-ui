@@ -3,11 +3,14 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import genaiTestTrace from './genaiTestTrace.json';
 import DetailState from './SpanDetail/DetailState';
+import transformTraceData from '../../../model/transform-trace-data';
 import {
   calculateFocusedFindRowStates,
   getInitialLayoutState,
   getSelectedSpanID,
+  selectEffectivePrunedServices,
   setDetailPanelMode,
   SIDE_PANEL_WIDTH_MAX,
   SIDE_PANEL_WIDTH_MIN,
@@ -131,10 +134,15 @@ const makeSpan = (overrides: Record<string, unknown> = {}) =>
     depth: 0,
     hasChildren: false,
     childSpans: [],
+    resource: { serviceName: 'default-svc' },
     ...overrides,
   }) as any;
 
-const makeTrace = (traceID = 'trace-1', spans: any[] = [makeSpan()]) => ({ traceID, spans }) as any;
+// rootSpans defaults to every passed span - fine for these generic tests, which don't
+// exercise multi-root behavior; the dedicated 'hide non-GenAI services' tests below build their own
+// traces with an explicit, meaningful rootSpans.
+const makeTrace = (traceID = 'trace-1', spans: any[] = [makeSpan()]) =>
+  ({ traceID, spans, rootSpans: spans }) as any;
 
 describe('trace timeline zustand stores', () => {
   beforeEach(() => {
@@ -560,6 +568,162 @@ describe('trace timeline zustand stores', () => {
         expect(useTraceTimelineStore.getState().prunedServices.size).toBe(1);
         useTraceTimelineStore.getState().clearServiceFilter();
         expect(useTraceTimelineStore.getState().prunedServices.size).toBe(0);
+      });
+    });
+
+    describe('hide non-GenAI services', () => {
+      // genaiTestTrace.json (from #4372) is a real 57-span trace: an agent reached through
+      // two plain tiers (api-edge, graphql-gateway), whose tool calls fan out through a
+      // plain mcp-gateway to a nested agent. Its root (api-edge) does have a GenAI
+      // descendant, so it's never a pruning candidate - it can't exercise the dedicated
+      // root-protection case below, which needs a root with *no* GenAI descendant at all.
+      const fixtureTrace = transformTraceData(genaiTestTrace as never)!.asOtelTrace();
+      const PLAIN_LEAF_SERVICES = new Set([
+        'auth-service',
+        'metrics-backend',
+        'trace-store',
+        'k8s-api',
+        'vector-store',
+      ]);
+
+      // depth is required (not defaulted) because this function builds parent/child
+      // topology for the depth-stack algorithm under test - a flat run of depth-0 spans
+      // would silently test sibling behavior instead of nesting.
+      const makeGenAISpan = (spanID: string, serviceName: string, depth: number, genAIKind?: string) =>
+        makeSpan({ spanID, depth, resource: { serviceName }, genAIKind });
+
+      const makeGenAITrace = (traceID: string, spans: any[], rootSpans: any[]) =>
+        ({ traceID, spans, rootSpans, isGenAITrace: spans.some(s => s.genAIKind !== undefined) }) as any;
+
+      describe('setHideNonGenAIServicesEnabled', () => {
+        it('sets the flag', () => {
+          useTraceTimelineStore.getState().setHideNonGenAIServicesEnabled(true);
+          expect(useTraceTimelineStore.getState().hideNonGenAIServicesEnabled).toBe(true);
+          useTraceTimelineStore.getState().setHideNonGenAIServicesEnabled(false);
+          expect(useTraceTimelineStore.getState().hideNonGenAIServicesEnabled).toBe(false);
+        });
+      });
+
+      describe('setTrace computing nonGenAIServicesToHide', () => {
+        it('is empty for a non-GenAI trace', () => {
+          // No fixture is non-GenAI by definition, so this stays a minimal synthetic trace.
+          const root = makeGenAISpan('root', 'gateway-svc', 0);
+          useTraceTimelineStore.getState().setTrace(makeGenAITrace('t-plain', [root], [root]));
+          expect(useTraceTimelineStore.getState().nonGenAIServicesToHide).toEqual(new Set());
+        });
+
+        it('contains services with zero GenAI spans, excluding a GenAI-owning service', () => {
+          // Root (api-edge) has a GenAI descendant via graphql-gateway -> coding-agent, so
+          // it's already excluded on that basis - root protection doesn't need to interfere
+          // with this assertion; see the dedicated root-protection test below for that.
+          useTraceTimelineStore.getState().setTrace(fixtureTrace);
+          expect(useTraceTimelineStore.getState().nonGenAIServicesToHide).toEqual(PLAIN_LEAF_SERVICES);
+        });
+
+        it('un-prunes the root service via sanitizePrunedServices, even if it has no GenAI spans', () => {
+          // Root is a plain gateway; the only GenAI span is on its child. Naive pruning
+          // would remove the root and orphan the tree. Not representable by the real
+          // fixture, whose root always has a GenAI descendant - kept synthetic.
+          const root = makeGenAISpan('root', 'gateway-svc', 0);
+          const agent = makeGenAISpan('agent', 'agent-svc', 1, 'AGENT');
+          useTraceTimelineStore.getState().setTrace(makeGenAITrace('t-root-pruned', [root, agent], [root]));
+          expect(useTraceTimelineStore.getState().nonGenAIServicesToHide).toEqual(new Set());
+        });
+
+        it('resets hideNonGenAIServicesEnabled to false on every new trace', () => {
+          useTraceTimelineStore.getState().setHideNonGenAIServicesEnabled(true);
+          useTraceTimelineStore.getState().setTrace(fixtureTrace);
+          expect(useTraceTimelineStore.getState().hideNonGenAIServicesEnabled).toBe(false);
+        });
+      });
+
+      describe('selectEffectivePrunedServices', () => {
+        it('returns prunedServices unchanged when hiding non-GenAI services is off', () => {
+          const pruned = new Set(['svc-a']);
+          useTraceTimelineStore.setState({
+            prunedServices: pruned,
+            hideNonGenAIServicesEnabled: false,
+            nonGenAIServicesToHide: new Set(['svc-b']),
+          });
+          expect(selectEffectivePrunedServices(useTraceTimelineStore.getState())).toBe(pruned);
+        });
+
+        it('returns nonGenAIServicesToHide unchanged when prunedServices is empty', () => {
+          const autoHidden = new Set(['svc-b']);
+          useTraceTimelineStore.setState({
+            prunedServices: new Set(),
+            hideNonGenAIServicesEnabled: true,
+            nonGenAIServicesToHide: autoHidden,
+          });
+          expect(selectEffectivePrunedServices(useTraceTimelineStore.getState())).toBe(autoHidden);
+        });
+
+        it('unions manual and auto-hidden non-GenAI pruned sets when both are non-empty', () => {
+          useTraceTimelineStore.setState({
+            prunedServices: new Set(['svc-a']),
+            hideNonGenAIServicesEnabled: true,
+            nonGenAIServicesToHide: new Set(['svc-b']),
+            rootServiceNames: new Set(['root-svc']),
+          });
+          expect(selectEffectivePrunedServices(useTraceTimelineStore.getState())).toEqual(
+            new Set(['svc-a', 'svc-b'])
+          );
+        });
+
+        it('memoizes the union so repeated calls with unchanged inputs return the same reference', () => {
+          useTraceTimelineStore.setState({
+            prunedServices: new Set(['svc-a']),
+            hideNonGenAIServicesEnabled: true,
+            nonGenAIServicesToHide: new Set(['svc-b']),
+            rootServiceNames: new Set(['root-svc']),
+          });
+          const state = useTraceTimelineStore.getState();
+          const first = selectEffectivePrunedServices(state);
+          const second = selectEffectivePrunedServices(state);
+          expect(second).toBe(first);
+        });
+
+        it('recomputes the union once either input Set reference actually changes', () => {
+          useTraceTimelineStore.setState({
+            prunedServices: new Set(['svc-a']),
+            hideNonGenAIServicesEnabled: true,
+            nonGenAIServicesToHide: new Set(['svc-b']),
+            rootServiceNames: new Set(['root-svc']),
+          });
+          const first = selectEffectivePrunedServices(useTraceTimelineStore.getState());
+
+          useTraceTimelineStore.setState({ prunedServices: new Set(['svc-a', 'svc-c']) });
+          const second = selectEffectivePrunedServices(useTraceTimelineStore.getState());
+
+          expect(second).not.toBe(first);
+          expect(second).toEqual(new Set(['svc-a', 'svc-c', 'svc-b']));
+        });
+
+        it('re-sanitizes the union: two individually-legal prunes that together orphan every root are discarded', () => {
+          // root-a and root-b are each a legal prune on their own (the other root stays
+          // visible), but the manual filter pruning root-a and the auto-hide-non-GenAI set
+          // pruning root-b, once unioned, would together remove every root - exactly the
+          // collision neither input's own, separate sanitization pass could have caught.
+          useTraceTimelineStore.setState({
+            prunedServices: new Set(['root-a']),
+            hideNonGenAIServicesEnabled: true,
+            nonGenAIServicesToHide: new Set(['root-b']),
+            rootServiceNames: new Set(['root-a', 'root-b']),
+          });
+          expect(selectEffectivePrunedServices(useTraceTimelineStore.getState())).toEqual(new Set());
+        });
+
+        it('keeps the union when at least one root survives it', () => {
+          useTraceTimelineStore.setState({
+            prunedServices: new Set(['root-a']),
+            hideNonGenAIServicesEnabled: true,
+            nonGenAIServicesToHide: new Set(['svc-b']),
+            rootServiceNames: new Set(['root-a', 'root-c']),
+          });
+          expect(selectEffectivePrunedServices(useTraceTimelineStore.getState())).toEqual(
+            new Set(['root-a', 'svc-b'])
+          );
+        });
       });
     });
 
