@@ -1,0 +1,73 @@
+{
+  "traceID": "f77950feed55c1ce91dd8e8789662302",
+  "processes": {
+    "p1": {
+      "serviceName": "serviceName",
+      "tags": []
+    }
+  },
+  "spans": [
+    {
+      "traceID": "f77950feed55c1ce91dd8e8789662302",
+      "spanID": "0000000000000010",
+      "operationName": "rootOperation",
+      "references": [],
+      "duration": 34000,
+      "tags": [],
+      "logs": [],
+      "processID": "p1",
+      "startTime": 1000
+    },
+    {
+      "traceID": "f77950feed55c1ce91dd8e8789662302",
+      "spanID": "0000000000000011",
+      "operationName": "someOperationName",
+      "references": [
+        {
+          "refType": "CHILD_OF",
+          "traceID": "f77950feed55c1ce91dd8e8789662302",
+          "spanID": "0000000000000010"
+        }
+      ],
+      "duration": 34000,
+      "tags": [],
+      "logs": [],
+      "processID": "p1",
+      "startTime": 1010
+    },
+    {
+      "traceID": "f77950feed55c1ce91dd8e8789662302",
+      "spanID": "0000000000000012",
+      "operationName": "anotherOperationName",
+      "references": [
+        {
+          "refType": "CHILD_OF",
+          "traceID": "f77950feed55c1ce91dd8e8789662302",
+          "spanID": "0000000000000010"
+        }
+      ],
+      "duration": 34000,
+      "tags": [],
+      "logs": [],
+      "processID": "p1",
+      "startTime": 1020
+    },
+    {
+      "traceID": "f77950feed55c1ce91dd8e8789662302",
+      "spanID": "0000000000000013",
+      "operationName": "someOperationName",
+      "references": [
+        {
+          "refType": "CHILD_OF",
+          "traceID": "f77950feed55c1ce91dd8e8789662302",
+          "spanID": "0000000000000011"
+        }
+      ],
+      "duration": 34000,
+      "tags": [],
+      "logs": [],
+      "processID": "p1",
+      "startTime": 1015
+    }
+  ]
+}

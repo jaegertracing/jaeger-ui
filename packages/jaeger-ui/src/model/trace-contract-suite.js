@@ -1,11 +1,12 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import traceGenerator from '../demo/trace-generators';
 import transformTraceData from './transform-trace-data';
 import getConfig from '../utils/config/get-config';
 
 export function runTraceContractSuite(pipeline) {
+  const load = caseName => pipeline.load(caseName);
+  const legacyIt = pipeline.isLegacy ? it : it.skip;
   // Tag deduplication and ordering run inside the pipeline, so these two
   // stand-ins keep the helper signatures and read the result back from the
   // parsed span. topTagPrefixes comes from the UI config, which is memoized.
@@ -185,24 +186,6 @@ export function runTraceContractSuite(pipeline) {
       },
     ];
 
-    const rootSpanWithMissingRef = {
-      traceID,
-      spanID: rootSpanID,
-      operationName: rootOperationName,
-      references: [
-        {
-          refType: 'CHILD_OF',
-          traceID,
-          spanID: 'missingSpanId',
-        },
-      ],
-      startTime: startTime + 50,
-      duration,
-      tags: [],
-      logs: [],
-      processID: 'p1',
-    };
-
     const rootSpanWithoutRefs = {
       traceID,
       spanID: rootSpanID,
@@ -232,68 +215,27 @@ export function runTraceContractSuite(pipeline) {
     });
 
     it('should return trace data with correct traceName based on root span with missing ref', () => {
-      const traceData = {
-        traceID,
-        processes,
-        spans: [...spans, rootSpanWithMissingRef],
-      };
+      const traceData = load('root-missing-reference');
 
       expect(pipeline.parse(traceData).traceName).toEqual(`${serviceName}: ${rootOperationName}`);
     });
 
     it('should return trace data with correct traceName based on root span without any refs', () => {
-      const traceData = {
-        traceID,
-        processes,
-        spans: [...spans, rootSpanWithoutRefs],
-      };
+      const traceData = load('root-no-references');
 
       expect(pipeline.parse(traceData).traceName).toEqual(`${serviceName}: ${rootOperationName}`);
     });
 
     it('should render the whole tree when every span reports startTime 0', () => {
-      const zeroRoot = {
-        traceID,
-        spanID: rootSpanID,
-        operationName: rootOperationName,
-        references: [],
-        startTime: 0,
-        duration: 100,
-        tags: [],
-        logs: [],
-        processID: 'p1',
-      };
-      const zeroChild = {
-        traceID,
-        spanID: 'zeroChild',
-        operationName: 'childOp',
-        references: [{ refType: 'CHILD_OF', traceID, spanID: rootSpanID }],
-        startTime: 0,
-        duration: 50,
-        tags: [],
-        logs: [],
-        processID: 'p1',
-      };
-      const noStartTimeChild = {
-        traceID,
-        spanID: 'missingStartTime',
-        operationName: 'missingStartOp',
-        references: [{ refType: 'CHILD_OF', traceID, spanID: rootSpanID }],
-        duration: 10,
-        tags: [],
-        logs: [],
-        processID: 'p1',
-      };
-
-      const result = pipeline.parse({
-        traceID,
-        processes,
-        spans: [zeroRoot, zeroChild, noStartTimeChild],
-      });
+      const result = pipeline.parse(load('zero-start-times'));
 
       // No span is dropped: startTime 0 (epoch) and a missing startTime are both
       // treated as "no usable timestamp" and repaired rather than filtered out.
-      expect(result.spans.map(span => span.spanID)).toEqual([rootSpanID, 'zeroChild', 'missingStartTime']);
+      expect(result.spans.map(span => span.spanID)).toEqual([
+        rootSpanID,
+        '0000000000000001',
+        '0000000000000002',
+      ]);
       expect(result.startTime).toBe(0);
       expect(result.spans.every(span => span.startTime === 0)).toBe(true);
       expect(result.spanMap.get(rootSpanID).hasChildren).toBe(true);
@@ -304,51 +246,14 @@ export function runTraceContractSuite(pipeline) {
       // would otherwise pin the trace start ~56 years earlier and squash the real
       // spans into an invisible sliver.
       const realStart = 1784570820629325;
-      const realRoot = {
-        traceID,
-        spanID: rootSpanID,
-        operationName: rootOperationName,
-        references: [],
-        startTime: realStart,
-        duration: 1000,
-        tags: [],
-        logs: [],
-        processID: 'p1',
-      };
-      const zeroChild = {
-        traceID,
-        spanID: 'zeroChild',
-        operationName: 'childOp',
-        references: [{ refType: 'CHILD_OF', traceID, spanID: rootSpanID }],
-        startTime: 0,
-        duration: 200,
-        tags: [],
-        logs: [],
-        processID: 'p1',
-      };
-      const missingChild = {
-        traceID,
-        spanID: 'missingChild',
-        operationName: 'missingOp',
-        references: [{ refType: 'CHILD_OF', traceID, spanID: rootSpanID }],
-        duration: 300,
-        tags: [],
-        logs: [],
-        processID: 'p1',
-      };
-
-      const result = pipeline.parse({
-        traceID,
-        processes,
-        spans: [realRoot, zeroChild, missingChild],
-      });
+      const result = pipeline.parse(load('parent-time-repair'));
 
       expect(result.startTime).toBe(realStart);
       // The broken children inherit the parent's startTime, so they sit at the
       // start of the trace rather than 56 years before it.
-      expect(result.spanMap.get('zeroChild').startTime).toBe(realStart);
-      expect(result.spanMap.get('missingChild').startTime).toBe(realStart);
-      expect(result.spanMap.get('zeroChild').relativeStartTime).toBe(0);
+      expect(result.spanMap.get('0000000000000001').startTime).toBe(realStart);
+      expect(result.spanMap.get('0000000000000002').startTime).toBe(realStart);
+      expect(result.spanMap.get('0000000000000001').relativeStartTime).toBe(0);
       // Trace duration reflects the real root span, not an epoch-wide range.
       expect(result.duration).toBe(1000);
     });
@@ -359,85 +264,21 @@ export function runTraceContractSuite(pipeline) {
       // value, not undefined/0. This exercises the DFS ordering invariant that
       // lets processSpan read an already-fixed parent.startTime.
       const realStart = 1784570820629325;
-      const realRoot = {
-        traceID,
-        spanID: rootSpanID,
-        operationName: rootOperationName,
-        references: [],
-        startTime: realStart,
-        duration: 1000,
-        tags: [],
-        logs: [],
-        processID: 'p1',
-      };
-      const brokenMiddle = {
-        traceID,
-        spanID: 'brokenMiddle',
-        operationName: 'middleOp',
-        references: [{ refType: 'CHILD_OF', traceID, spanID: rootSpanID }],
-        startTime: 0,
-        duration: 400,
-        tags: [],
-        logs: [],
-        processID: 'p1',
-      };
-      const brokenLeaf = {
-        traceID,
-        spanID: 'brokenLeaf',
-        operationName: 'leafOp',
-        references: [{ refType: 'CHILD_OF', traceID, spanID: 'brokenMiddle' }],
-        duration: 100,
-        tags: [],
-        logs: [],
-        processID: 'p1',
-      };
-
-      const result = pipeline.parse({
-        traceID,
-        processes,
-        spans: [realRoot, brokenMiddle, brokenLeaf],
-      });
+      const result = pipeline.parse(load('transitive-time-repair'));
 
       expect(result.startTime).toBe(realStart);
-      expect(result.spanMap.get('brokenMiddle').startTime).toBe(realStart);
+      expect(result.spanMap.get('0000000000000003').startTime).toBe(realStart);
       // The leaf inherits the middle span's repaired startTime, not undefined.
-      expect(result.spanMap.get('brokenLeaf').startTime).toBe(realStart);
-      expect(result.spanMap.get('brokenLeaf').relativeStartTime).toBe(0);
+      expect(result.spanMap.get('0000000000000004').startTime).toBe(realStart);
+      expect(result.spanMap.get('0000000000000004').relativeStartTime).toBe(0);
       expect(result.duration).toBe(1000);
     });
 
-    it('should not produce a negative duration for a trace with spans but no root', () => {
+    legacyIt('should not produce a negative duration for a trace with spans but no root', () => {
       // Two spans referencing each other form a cycle, so neither is a root and
       // nothing is reachable by the traversal. The time range must not be left at
       // its sentinel value, which would yield a negative duration.
-      const spanA = {
-        traceID,
-        spanID: 'a',
-        operationName: 'a',
-        references: [{ refType: 'CHILD_OF', traceID, spanID: 'b' }],
-        startTime,
-        duration,
-        tags: [],
-        logs: [],
-        processID: 'p1',
-      };
-      const spanB = {
-        traceID,
-        spanID: 'b',
-        operationName: 'b',
-        references: [{ refType: 'CHILD_OF', traceID, spanID: 'a' }],
-        startTime,
-        duration,
-        tags: [],
-        logs: [],
-        processID: 'p1',
-      };
-
-      const result = pipeline.parse({
-        traceID,
-        processes,
-        spans: [spanA, spanB],
-      });
+      const result = pipeline.parse(load('parent-cycle'));
 
       expect(result.spans.length).toBe(0);
       expect(result.duration).toBe(0);
@@ -445,7 +286,7 @@ export function runTraceContractSuite(pipeline) {
       expect(result.endTime).toBe(0);
     });
 
-    it('should keep and repair sibling spans that have no usable startTime', () => {
+    legacyIt('should keep and repair sibling spans that have no usable startTime', () => {
       // NB: this asserts the observable outcome (no span dropped, all startTimes
       // finite, real sibling ordered last). It does NOT prove the NaN-comparator
       // ordering issue is gone — that divergence is engine-defined (V8 leaves a
@@ -511,115 +352,49 @@ export function runTraceContractSuite(pipeline) {
       expect(result.spans[result.spans.length - 1].spanID).toBe('real');
     });
 
-    it('should fall back to 0 for a root with no usable startTime and propagate it to children', () => {
-      const brokenRoot = {
-        traceID,
-        spanID: rootSpanID,
-        operationName: rootOperationName,
-        references: [],
-        duration: 500,
-        tags: [],
-        logs: [],
-        processID: 'p1',
-      };
-      const child = {
-        traceID,
-        spanID: 'child',
-        operationName: 'childOp',
-        references: [{ refType: 'CHILD_OF', traceID, spanID: rootSpanID }],
-        startTime: 0,
-        duration: 100,
-        tags: [],
-        logs: [],
-        processID: 'p1',
-      };
+    it('should retain siblings with missing startTime and keep the real sibling last', () => {
+      const result = pipeline.parse(load('missing-sibling-times'));
+      expect(result.spans).toHaveLength(3);
+      expect(result.spans.every(span => Number.isFinite(span.startTime))).toBe(true);
+      expect(result.spanMap.get('0000000000000031').startTime).toBe(1784570820629825);
+      expect(result.spans.at(-1).spanID).toBe('0000000000000031');
+    });
 
-      const result = pipeline.parse({
-        traceID,
-        processes,
-        spans: [brokenRoot, child],
-      });
+    it('should fall back to 0 for a root with no usable startTime and propagate it to children', () => {
+      const result = pipeline.parse(load('missing-root-start'));
 
       // A root with no parent to inherit from falls back to 0; the child inherits
       // that finite 0 rather than becoming undefined.
       expect(result.spanMap.get(rootSpanID).startTime).toBe(0);
-      expect(result.spanMap.get('child').startTime).toBe(0);
+      expect(result.spanMap.get('0000000000000005').startTime).toBe(0);
       expect(result.startTime).toBe(0);
     });
 
     it('should detect orphan spans when parent span is missing', () => {
-      const traceData = {
-        traceID,
-        processes,
-        spans: [...spans, rootSpanWithMissingRef],
-      };
+      const traceData = load('root-missing-reference');
 
       const result = pipeline.parse(traceData);
-      // rootSpanWithMissingRef references 'missingSpanId' which doesn't exist,
+      // The fixture's root references a parent that does not exist,
       // and the two other spans reference rootSpanID which exists
       expect(result.orphanSpanCount).toBe(1);
     });
 
     it('should detect multiple orphan spans', () => {
-      const orphanSpan1 = {
-        traceID,
-        spanID: 'orphan1',
-        operationName: 'orphanOp1',
-        references: [{ refType: 'CHILD_OF', traceID, spanID: 'nonexistent1' }],
-        startTime,
-        duration,
-        tags: [],
-        processID: 'p1',
-      };
-      const orphanSpan2 = {
-        traceID,
-        spanID: 'orphan2',
-        operationName: 'orphanOp2',
-        references: [{ refType: 'CHILD_OF', traceID, spanID: 'nonexistent2' }],
-        startTime: startTime + 200,
-        duration,
-        tags: [],
-        processID: 'p1',
-      };
-
-      const traceData = {
-        traceID,
-        processes,
-        spans: [...spans, rootSpanWithoutRefs, orphanSpan1, orphanSpan2],
-      };
+      const traceData = load('multiple-orphans');
 
       const result = pipeline.parse(traceData);
       expect(result.orphanSpanCount).toBe(2);
     });
 
     it('should not flag orphan spans when all parents exist', () => {
-      const traceData = {
-        traceID,
-        processes,
-        spans: [...spans, rootSpanWithoutRefs],
-      };
+      const traceData = load('root-no-references');
 
       const result = pipeline.parse(traceData);
       expect(result.orphanSpanCount).toBe(0);
     });
 
     it('should handle FOLLOWS_FROM references for orphan detection', () => {
-      const followsFromOrphan = {
-        traceID,
-        spanID: 'followsOrphan',
-        operationName: 'followsOrphanOp',
-        references: [{ refType: 'FOLLOWS_FROM', traceID, spanID: 'nonexistent' }],
-        startTime,
-        duration,
-        tags: [],
-        processID: 'p1',
-      };
-
-      const traceData = {
-        traceID,
-        processes,
-        spans: [rootSpanWithoutRefs, followsFromOrphan],
-      };
+      const traceData = load('follows-from-orphan');
 
       const result = pipeline.parse(traceData);
       expect(result.orphanSpanCount).toBe(1);
@@ -652,11 +427,7 @@ export function runTraceContractSuite(pipeline) {
 
     describe('spanMap, rootSpans, and childSpans collections', () => {
       it('should build spanMap with all spans', () => {
-        const traceData = {
-          traceID,
-          processes,
-          spans: [...spans, rootSpanWithoutRefs],
-        };
+        const traceData = load('root-no-references');
 
         const result = pipeline.parse(traceData);
 
@@ -669,15 +440,11 @@ export function runTraceContractSuite(pipeline) {
       });
 
       it('should identify root spans correctly', () => {
-        const traceData = {
-          traceID,
-          processes,
-          spans: [...spans, rootSpanWithoutRefs],
-        };
+        const traceData = load('root-no-references');
 
         const result = pipeline.parse(traceData);
 
-        // Should have one root span (rootSpanWithoutRefs)
+        // Should have one root span
         expect(result.rootSpans).toBeInstanceOf(Array);
         expect(result.rootSpans.length).toBe(1);
         expect(result.rootSpans[0].spanID).toBe(rootSpanID);
@@ -685,11 +452,7 @@ export function runTraceContractSuite(pipeline) {
       });
 
       it('should build childSpans arrays correctly', () => {
-        const traceData = {
-          traceID,
-          processes,
-          spans: [...spans, rootSpanWithoutRefs],
-        };
+        const traceData = load('root-no-references');
 
         const result = pipeline.parse(traceData);
 
@@ -710,15 +473,11 @@ export function runTraceContractSuite(pipeline) {
       });
 
       it('should handle orphan spans as root spans', () => {
-        const traceData = {
-          traceID,
-          processes,
-          spans: [...spans, rootSpanWithMissingRef],
-        };
+        const traceData = load('root-missing-reference');
 
         const result = pipeline.parse(traceData);
 
-        // rootSpanWithMissingRef references a missing parent, so it should be a root span
+        // The fixture's root references a missing parent, so it should be a root span
         expect(result.rootSpans.length).toBe(1);
         expect(result.rootSpans[0].spanID).toBe(rootSpanID);
 
@@ -728,37 +487,18 @@ export function runTraceContractSuite(pipeline) {
       });
 
       it('should handle multiple root spans', () => {
-        const secondRoot = {
-          traceID,
-          spanID: 'secondRoot',
-          operationName: 'secondRootOp',
-          startTime: startTime + 100,
-          duration,
-          tags: [],
-          logs: [],
-          processID: 'p1',
-        };
-
-        const traceData = {
-          traceID,
-          processes,
-          spans: [rootSpanWithoutRefs, secondRoot],
-        };
+        const traceData = load('multiple-roots');
 
         const result = pipeline.parse(traceData);
 
         // Should have two root spans
         expect(result.rootSpans.length).toBe(2);
         expect(result.rootSpans[0].spanID).toBe(rootSpanID);
-        expect(result.rootSpans[1].spanID).toBe(secondRoot.spanID);
+        expect(result.rootSpans[1].spanID).toBe('0000000000000009');
       });
 
       it('should maintain span references in childSpans array', () => {
-        const traceData = {
-          traceID,
-          processes,
-          spans: [...spans, rootSpanWithoutRefs],
-        };
+        const traceData = load('root-no-references');
 
         const result = pipeline.parse(traceData);
 
@@ -773,79 +513,32 @@ export function runTraceContractSuite(pipeline) {
       });
 
       it('should calculate depth and sort spans in DFS order', () => {
-        // Create a linear trace: Root -> Child -> GrandChild
-        // spans[0] is 'someOperationName', referencing rootSpanID
-        // rootSpanWithoutRefs is the root (start + 50)
-        // spans[0] starts at startTime (0 relative to trace start? No, trace start is startTime).
-
-        // Let's use a fresh set of spans to be clear about order
-        const tStart = 1000;
-        const root = { ...rootSpanWithoutRefs, spanID: 'root', startTime: tStart, references: [] };
-        const child1 = {
-          ...spans[0],
-          spanID: 'child1',
-          startTime: tStart + 10,
-          references: [{ refType: 'CHILD_OF', traceID, spanID: 'root' }],
-        };
-        const child2 = {
-          ...spans[1],
-          spanID: 'child2',
-          startTime: tStart + 20,
-          references: [{ refType: 'CHILD_OF', traceID, spanID: 'root' }],
-        };
-        const grandChild1 = {
-          ...spans[0],
-          spanID: 'grandChild1',
-          startTime: tStart + 15,
-          references: [{ refType: 'CHILD_OF', traceID, spanID: 'child1' }],
-        };
-
-        // Tree structure:
-        // root (0)
-        //   -> child1 (10)
-        //      -> grandChild1 (15)
-        //   -> child2 (20)
-
-        // Expected DFS order: root, child1, grandChild1, child2
-
-        const traceData = {
-          traceID,
-          processes,
-          spans: [root, child1, child2, grandChild1],
-        };
-
-        const result = pipeline.parse(traceData);
+        const result = pipeline.parse(load('hierarchy'));
 
         // Check depth
         const map = result.spanMap;
-        expect(map.get('root').depth).toBe(0);
-        expect(map.get('child1').depth).toBe(1);
-        expect(map.get('grandChild1').depth).toBe(2);
-        expect(map.get('child2').depth).toBe(1);
+        expect(map.get('0000000000000010').depth).toBe(0);
+        expect(map.get('0000000000000011').depth).toBe(1);
+        expect(map.get('0000000000000013').depth).toBe(2);
+        expect(map.get('0000000000000012').depth).toBe(1);
 
         // Check hasChildren
-        expect(map.get('root').hasChildren).toBe(true);
-        expect(map.get('child1').hasChildren).toBe(true);
-        expect(map.get('grandChild1').hasChildren).toBe(false);
-        expect(map.get('child2').hasChildren).toBe(false);
+        expect(map.get('0000000000000010').hasChildren).toBe(true);
+        expect(map.get('0000000000000011').hasChildren).toBe(true);
+        expect(map.get('0000000000000013').hasChildren).toBe(false);
+        expect(map.get('0000000000000012').hasChildren).toBe(false);
 
         // Check flat spans order (DFS)
         const ids = result.spans.map(s => s.spanID);
-        expect(ids).toEqual(['root', 'child1', 'grandChild1', 'child2']);
+        expect(ids).toEqual(['0000000000000010', '0000000000000011', '0000000000000013', '0000000000000012']);
       });
     });
 
     it('exposes parent and secondary references as links on spans with multiple references', () => {
-      const multiRefTrace = traceGenerator.trace({ numberOfSpans: 7, maxDepth: 3, spansPerLevel: 4 });
-      const { traceID, spanID: rootSpanId } = multiRefTrace.spans[0];
-      const candidates = multiRefTrace.spans.filter(
-        span => span.references.length > 0 && span.references[0].spanID !== rootSpanId
-      );
-      const [willGainRef, willNotChange] = candidates;
+      const multiRefTrace = load('multi-reference');
+      const willGainRef = multiRefTrace.spans.find(span => span.references.length > 1);
       const { spanID: existingRefID } = willGainRef.references[0];
-      const { spanID: willBeReferencedID } = willNotChange.references[0];
-
-      willGainRef.references.push({ refType: 'CHILD_OF', traceID, spanID: willBeReferencedID });
+      const { spanID: willBeReferencedID } = willGainRef.references[1];
 
       const tTrace = pipeline.parse(multiRefTrace);
       const multiReference = tTrace.spans.filter(span => span.links.length > 0);
