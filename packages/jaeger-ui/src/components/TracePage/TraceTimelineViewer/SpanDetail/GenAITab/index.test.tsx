@@ -388,6 +388,35 @@ describe('GenAITab', () => {
     expect(shownView(screen.getByLabelText(/Content format/))).toBe('JSON');
   });
 
+  it('unwraps JSON strings inside the JSON once the user switches to the JSON (nested) view', () => {
+    const nested = JSON.stringify({ message: JSON.stringify({ verdict: 'true' }) });
+    const { container } = render(
+      <GenAITab
+        span={makeSpan([{ key: 'gen_ai.output.messages', value: [{ role: 'assistant', content: nested }] }])}
+      />
+    );
+    const keys = () =>
+      Array.from(container.querySelectorAll('.GenAITab--json .json-markup-key')).map(k => k.textContent);
+    expect(keys()).toEqual(['message:']);
+    chooseView(viewControl(), 'JSON (nested)');
+    expect(shownView(viewControl())).toBe('JSON (nested)');
+    expect(keys()).toEqual(['message:', 'verdict:']);
+  });
+
+  it('disables the JSON (nested) option, like JSON, on a message whose content does not parse as JSON', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.output.messages',
+            value: [{ role: 'assistant', content: 'Just a plain sentence, no JSON here.' }],
+          },
+        ])}
+      />
+    );
+    expect(viewItem(viewControl(), 'JSON (nested)')).toHaveAttribute('aria-disabled', 'true');
+  });
+
   it('disables the JSON option on a message whose content does not parse as JSON', () => {
     render(
       <GenAITab

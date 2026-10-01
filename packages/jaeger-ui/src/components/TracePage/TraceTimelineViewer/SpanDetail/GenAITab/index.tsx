@@ -11,6 +11,7 @@ import {
   extractGenAiSections,
   formatTokenCount,
   tryParseJson,
+  deepParseJson,
   GenAiAgent,
   GenAiMessage,
   GenAiPart,
@@ -241,6 +242,7 @@ function partView(part: GenAiPart, chosen: MessageFormat | null) {
     plain: true,
     markdown: true,
     json: parsedJson !== null && typeof parsedJson === 'object',
+    'json-nested': parsedJson !== null && typeof parsedJson === 'object',
     image: part.media?.type === 'image',
     audio: part.media?.type === 'audio',
   };
@@ -257,13 +259,14 @@ function partView(part: GenAiPart, chosen: MessageFormat | null) {
   return { parsedJson, canRender, format: canRender[requested] ? requested : ('plain' as MessageFormat) };
 }
 
-// Every view the tab has, in the order they are offered. All five are listed for every
+// Every view the tab has, in the order they are offered. All six are listed for every
 // part, so the list never changes shape and a reader can see what the tab can do; one
 // that cannot show this part is disabled and says why.
 const VIEWS: { format: MessageFormat; label: string }[] = [
   { format: 'plain', label: 'Plain text' },
   { format: 'markdown', label: 'Markdown' },
   { format: 'json', label: 'JSON' },
+  { format: 'json-nested', label: 'JSON (nested)' },
   { format: 'image', label: 'Image' },
   { format: 'audio', label: 'Audio' },
 ];
@@ -280,6 +283,10 @@ function viewHint(format: MessageFormat, canRender: Record<MessageFormat, boolea
   switch (format) {
     case 'json':
       return available ? '' : 'This part is not JSON, so there is no tree to show';
+    case 'json-nested':
+      return available
+        ? 'Strings inside the JSON that are themselves JSON are unwrapped into the tree. A string that only looks like JSON is unwrapped too; Copy still gives the original text.'
+        : 'This part is not JSON, so there is no tree to show';
     case 'image':
       return available
         ? 'Image (maybe): recognized from the value alone, so it may not be one. A remote link is not fetched until you ask.'
@@ -428,6 +435,7 @@ function PartContent({
     );
   }
   if (view.format === 'json') return <JsonBlock value={view.parsedJson} />;
+  if (view.format === 'json-nested') return <JsonBlock value={deepParseJson(view.parsedJson)} />;
   if (view.format === 'markdown') return <MarkdownBlock content={part.text} onShowText={onShowText} />;
   return <pre className="GenAITab--messageContent GenAITab--messageContent-plain">{part.text}</pre>;
 }

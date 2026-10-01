@@ -11,9 +11,9 @@ import storage from '../../../../../utils/storage';
 // remembered per attribute name (not globally), and seeds each message of that attribute
 // as it mounts - so e.g. choosing Markdown for gen_ai.output.messages is how the next
 // span's output messages open, while messages already on screen keep their own view.
-export type MessageFormat = 'plain' | 'markdown' | 'json' | 'image' | 'audio';
+export type MessageFormat = 'plain' | 'markdown' | 'json' | 'json-nested' | 'image' | 'audio';
 
-const MESSAGE_FORMATS: readonly string[] = ['plain', 'markdown', 'json', 'image', 'audio'];
+const MESSAGE_FORMATS: readonly string[] = ['plain', 'markdown', 'json', 'json-nested', 'image', 'audio'];
 
 const MESSAGE_FORMAT_STORAGE_PREFIX = 'jaeger.spanDetail.attributeFormat.';
 

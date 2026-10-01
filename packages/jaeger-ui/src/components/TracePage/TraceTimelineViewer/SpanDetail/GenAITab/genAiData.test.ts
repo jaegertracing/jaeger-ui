@@ -6,6 +6,7 @@ import {
   hasAnyTokenUsage,
   formatTokenCount,
   tryParseJson,
+  deepParseJson,
   GenAiSection,
 } from './genAiData';
 import type { IAttribute, IAttributes } from '../../../../../types/otel';
@@ -985,6 +986,27 @@ describe('tryParseJson', () => {
 
   it('returns the original string unchanged when it looks like JSON but fails to parse', () => {
     expect(tryParseJson('{not valid json')).toBe('{not valid json');
+  });
+});
+
+describe('deepParseJson', () => {
+  it('unwraps JSON strings nested several levels deep, including inside arrays', () => {
+    const inner = { verdict: { v: 'true', r: 'brief and generic' } };
+    const middle = { role: 'assistant', parts: [{ type: 'text', content: JSON.stringify(inner) }] };
+    const outer = { index: 0, message: JSON.stringify(middle) };
+    expect(deepParseJson(outer)).toEqual({
+      index: 0,
+      message: { role: 'assistant', parts: [{ type: 'text', content: inner }] },
+    });
+  });
+
+  it('unwraps a top-level JSON string', () => {
+    expect(deepParseJson('{"a":"[1,2]"}')).toEqual({ a: [1, 2] });
+  });
+
+  it('leaves strings that are not JSON, and non-string scalars, unchanged', () => {
+    const value = { text: 'hello {world}', n: 1, ok: true, none: null, broken: '{not json' };
+    expect(deepParseJson(value)).toEqual(value);
   });
 });
 
