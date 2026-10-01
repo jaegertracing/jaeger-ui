@@ -197,7 +197,9 @@ describe('transformTraceData()', () => {
       spans: [...spans, rootSpanWithMissingRef],
     };
 
-    expect(transformTraceData(traceData).traceName).toEqual(`${serviceName}: ${rootOperationName}`);
+    expect(transformTraceData(traceData).asOtelTrace().traceName).toEqual(
+      `${serviceName}: ${rootOperationName}`
+    );
   });
 
   it('should return trace data with correct traceName based on root span without any refs', () => {
@@ -207,7 +209,9 @@ describe('transformTraceData()', () => {
       spans: [...spans, rootSpanWithoutRefs],
     };
 
-    expect(transformTraceData(traceData).traceName).toEqual(`${serviceName}: ${rootOperationName}`);
+    expect(transformTraceData(traceData).asOtelTrace().traceName).toEqual(
+      `${serviceName}: ${rootOperationName}`
+    );
   });
 
   it('should render the whole tree when every span reports startTime 0', () => {
@@ -248,7 +252,7 @@ describe('transformTraceData()', () => {
       traceID,
       processes,
       spans: [zeroRoot, zeroChild, noStartTimeChild],
-    });
+    }).asOtelTrace();
 
     // No span is dropped: startTime 0 (epoch) and a missing startTime are both
     // treated as "no usable timestamp" and repaired rather than filtered out.
@@ -300,7 +304,7 @@ describe('transformTraceData()', () => {
       traceID,
       processes,
       spans: [realRoot, zeroChild, missingChild],
-    });
+    }).asOtelTrace();
 
     expect(result.startTime).toBe(realStart);
     // The broken children inherit the parent's startTime, so they sit at the
@@ -355,7 +359,7 @@ describe('transformTraceData()', () => {
       traceID,
       processes,
       spans: [realRoot, brokenMiddle, brokenLeaf],
-    });
+    }).asOtelTrace();
 
     expect(result.startTime).toBe(realStart);
     expect(result.spanMap.get('brokenMiddle').startTime).toBe(realStart);
@@ -396,7 +400,7 @@ describe('transformTraceData()', () => {
       traceID,
       processes,
       spans: [spanA, spanB],
-    });
+    }).asOtelTrace();
 
     expect(result.spans.length).toBe(0);
     expect(result.duration).toBe(0);
@@ -459,7 +463,7 @@ describe('transformTraceData()', () => {
       traceID,
       processes,
       spans: [realRoot, missingSibling1, nanSibling, realSibling],
-    });
+    }).asOtelTrace();
 
     // Every span is kept and has a finite startTime; none was lost or left NaN.
     expect(result.spans.length).toBe(4);
@@ -497,7 +501,7 @@ describe('transformTraceData()', () => {
       traceID,
       processes,
       spans: [brokenRoot, child],
-    });
+    }).asOtelTrace();
 
     // A root with no parent to inherit from falls back to 0; the child inherits
     // that finite 0 rather than becoming undefined.
@@ -513,7 +517,7 @@ describe('transformTraceData()', () => {
       spans: [...spans, rootSpanWithMissingRef],
     };
 
-    const result = transformTraceData(traceData);
+    const result = transformTraceData(traceData).asOtelTrace();
     // rootSpanWithMissingRef references 'missingSpanId' which doesn't exist,
     // and the two other spans reference rootSpanID which exists
     expect(result.orphanSpanCount).toBe(1);
@@ -547,7 +551,7 @@ describe('transformTraceData()', () => {
       spans: [...spans, rootSpanWithoutRefs, orphanSpan1, orphanSpan2],
     };
 
-    const result = transformTraceData(traceData);
+    const result = transformTraceData(traceData).asOtelTrace();
     expect(result.orphanSpanCount).toBe(2);
   });
 
@@ -558,7 +562,7 @@ describe('transformTraceData()', () => {
       spans: [...spans, rootSpanWithoutRefs],
     };
 
-    const result = transformTraceData(traceData);
+    const result = transformTraceData(traceData).asOtelTrace();
     expect(result.orphanSpanCount).toBe(0);
   });
 
@@ -580,7 +584,7 @@ describe('transformTraceData()', () => {
       spans: [rootSpanWithoutRefs, followsFromOrphan],
     };
 
-    const result = transformTraceData(traceData);
+    const result = transformTraceData(traceData).asOtelTrace();
     expect(result.orphanSpanCount).toBe(1);
   });
 
@@ -617,7 +621,7 @@ describe('transformTraceData()', () => {
         spans: [...spans, rootSpanWithoutRefs],
       };
 
-      const result = transformTraceData(traceData);
+      const result = transformTraceData(traceData).asOtelTrace();
 
       // spanMap should contain all spans
       expect(result.spanMap).toBeInstanceOf(Map);
@@ -634,13 +638,13 @@ describe('transformTraceData()', () => {
         spans: [...spans, rootSpanWithoutRefs],
       };
 
-      const result = transformTraceData(traceData);
+      const result = transformTraceData(traceData).asOtelTrace();
 
       // Should have one root span (rootSpanWithoutRefs)
       expect(result.rootSpans).toBeInstanceOf(Array);
       expect(result.rootSpans.length).toBe(1);
       expect(result.rootSpans[0].spanID).toBe(rootSpanID);
-      expect(result.rootSpans[0].operationName).toBe(rootOperationName);
+      expect(result.rootSpans[0].name).toBe(rootOperationName);
     });
 
     it('should build childSpans arrays correctly', () => {
@@ -650,7 +654,7 @@ describe('transformTraceData()', () => {
         spans: [...spans, rootSpanWithoutRefs],
       };
 
-      const result = transformTraceData(traceData);
+      const result = transformTraceData(traceData).asOtelTrace();
 
       // Root span should have two children
       const rootSpan = result.spanMap.get(rootSpanID);
@@ -675,7 +679,7 @@ describe('transformTraceData()', () => {
         spans: [...spans, rootSpanWithMissingRef],
       };
 
-      const result = transformTraceData(traceData);
+      const result = transformTraceData(traceData).asOtelTrace();
 
       // rootSpanWithMissingRef references a missing parent, so it should be a root span
       expect(result.rootSpans.length).toBe(1);
@@ -704,7 +708,7 @@ describe('transformTraceData()', () => {
         spans: [rootSpanWithoutRefs, secondRoot],
       };
 
-      const result = transformTraceData(traceData);
+      const result = transformTraceData(traceData).asOtelTrace();
 
       // Should have two root spans
       expect(result.rootSpans.length).toBe(2);
@@ -719,14 +723,14 @@ describe('transformTraceData()', () => {
         spans: [...spans, rootSpanWithoutRefs],
       };
 
-      const result = transformTraceData(traceData);
+      const result = transformTraceData(traceData).asOtelTrace();
 
       const rootSpan = result.spanMap.get(rootSpanID);
 
       // childSpans should contain actual span objects, not IDs
       rootSpan.childSpans.forEach(child => {
         expect(child.spanID).toBeDefined();
-        expect(child.operationName).toBeDefined();
+        expect(child.name).toBeDefined();
         expect(child).toBe(result.spanMap.get(child.spanID));
       });
     });
@@ -773,7 +777,7 @@ describe('transformTraceData()', () => {
         spans: [root, child1, child2, grandChild1],
       };
 
-      const result = transformTraceData(traceData);
+      const result = transformTraceData(traceData).asOtelTrace();
 
       // Check depth
       const map = result.spanMap;
@@ -794,35 +798,27 @@ describe('transformTraceData()', () => {
     });
   });
 
-  it('populates subsidiarilyReferencedBy for spans with multiple references', () => {
+  it('exposes parent and secondary references as links on spans with multiple references', () => {
     const multiRefTrace = traceGenerator.trace({ numberOfSpans: 7, maxDepth: 3, spansPerLevel: 4 });
     const { traceID, spanID: rootSpanId } = multiRefTrace.spans[0];
     const candidates = multiRefTrace.spans.filter(
       span => span.references.length > 0 && span.references[0].spanID !== rootSpanId
     );
-    expect(candidates.length).toBeGreaterThanOrEqual(2);
     const [willGainRef, willNotChange] = candidates;
     const { spanID: existingRefID } = willGainRef.references[0];
     const { spanID: willBeReferencedID } = willNotChange.references[0];
 
     willGainRef.references.push({ refType: 'CHILD_OF', traceID, spanID: willBeReferencedID });
 
-    const tTrace = transformTraceData(multiRefTrace);
-    const multiReference = tTrace.spans.filter(span => span.references && span.references.length > 1);
+    const tTrace = transformTraceData(multiRefTrace).asOtelTrace();
+    const multiReference = tTrace.spans.filter(span => span.links.length > 0);
 
     expect(multiReference.length).toEqual(1);
-    expect(new Set(multiReference[0].references)).toEqual(
-      new Set([
-        expect.objectContaining({ spanID: willBeReferencedID }),
-        expect.objectContaining({ spanID: existingRefID }),
-      ])
-    );
-    const hasReferral = tTrace.spans.filter(
-      span => span.subsidiarilyReferencedBy && span.subsidiarilyReferencedBy.length > 0
-    );
+    expect(multiReference[0].parentSpanID).toBe(existingRefID);
+    expect(multiReference[0].links).toEqual([expect.objectContaining({ spanID: willBeReferencedID })]);
+    const hasReferral = tTrace.spans.filter(span => span.inboundLinks.length > 0);
     expect(hasReferral.length).toEqual(1);
-    expect(new Set(hasReferral[0].subsidiarilyReferencedBy)).toEqual(
-      new Set([expect.objectContaining({ spanID: willGainRef.spanID })])
-    );
+    expect(hasReferral[0].spanID).toBe(willBeReferencedID);
+    expect(hasReferral[0].inboundLinks).toEqual([expect.objectContaining({ spanID: willGainRef.spanID })]);
   });
 });
