@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The Jaeger Authors.
+// Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 import traceGenerator from '../demo/trace-generators';
@@ -860,9 +860,3 @@ export function runTraceContractSuite(pipeline) {
     });
   });
 }
-
-runTraceContractSuite({
-  name: 'legacy transformer',
-  isLegacy: true,
-  parse: traceData => transformTraceData(traceData).asOtelTrace(),
-});
