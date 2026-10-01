@@ -487,12 +487,22 @@ const REGISTRY: SectionBuilder[] = [
   },
   get => {
     // Same short-circuit-on-purpose rule as the meta builder above: only fall
-    // back to gen_ai.prompt/gen_ai.completion when the current key is absent,
-    // so a legacy value that disagrees with the current one is left unclaimed
-    // and surfaces in "Other GenAI Attributes" instead of being silently
-    // dropped.
-    const inputMessages = parseMessages(get('gen_ai.input.messages') ?? get('gen_ai.prompt'));
-    const outputMessages = parseMessages(get('gen_ai.output.messages') ?? get('gen_ai.completion'));
+    // back to the next key when the preferred one is absent, so a value that
+    // disagrees with the preferred one is left unclaimed and surfaces in
+    // "Other GenAI Attributes" instead of being silently dropped.
+    //
+    // gen_ai.prompt/gen_ai.completion are the deprecated spec names. Bare
+    // gen_ai.input/gen_ai.output are not in any spec version; some
+    // instrumentations emit them on a single LLM call span, holding the one
+    // input and the one output rather than a message array. parseMessages
+    // wraps such a scalar or object into a one-element list, so the value
+    // renders as the span's only message.
+    const inputMessages = parseMessages(
+      get('gen_ai.input.messages') ?? get('gen_ai.prompt') ?? get('gen_ai.input')
+    );
+    const outputMessages = parseMessages(
+      get('gen_ai.output.messages') ?? get('gen_ai.completion') ?? get('gen_ai.output')
+    );
     const systemInstructions = parseSystemInstructions(get('gen_ai.system_instructions'));
     return inputMessages.length || outputMessages.length || systemInstructions
       ? { type: 'conversation', data: { inputMessages, outputMessages, systemInstructions } }

@@ -675,6 +675,36 @@ describe('extractGenAiSections', () => {
       ]);
     });
 
+    it('falls back to bare gen_ai.input/gen_ai.output, rendering each as a single message', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.input': 'What is the capital of France?',
+          'gen_ai.output': { role: 'assistant', content: 'Paris.' },
+        })
+      );
+      expect(roleAndText(section(sections, 'conversation')?.inputMessages)).toEqual([
+        { role: undefined, content: 'What is the capital of France?' },
+      ]);
+      expect(roleAndText(section(sections, 'conversation')?.outputMessages)).toEqual([
+        { role: 'assistant', content: 'Paris.' },
+      ]);
+    });
+
+    it('leaves a bare gen_ai.input unclaimed when gen_ai.input.messages is present', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.input.messages': [{ role: 'user', parts: [{ type: 'text', content: 'current' }] }],
+          'gen_ai.input': 'stale',
+        })
+      );
+      expect(roleAndText(section(sections, 'conversation')?.inputMessages)).toEqual([
+        { role: 'user', content: 'current' },
+      ]);
+      expect(section(sections, 'other')?.attributes.entries()).toEqual([
+        { key: 'gen_ai.input', value: 'stale' },
+      ]);
+    });
+
     it('treats an unparseable message string as a single roleless message', () => {
       const sections = extractGenAiSections(attrs({ 'gen_ai.input.messages': 'not json' }));
       expect(roleAndText(section(sections, 'conversation')?.inputMessages)).toEqual([
