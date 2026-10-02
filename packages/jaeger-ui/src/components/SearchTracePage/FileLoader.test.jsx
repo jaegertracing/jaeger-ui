@@ -249,6 +249,23 @@ describe('<FileLoader />', () => {
     expect(mockOnTracesLoaded).not.toHaveBeenCalled();
   });
 
+  it('surfaces backend error message when converting traces fails', async () => {
+    const { message } = await import('antd');
+    readJsonFile.mockRejectedValue(
+      new Error('Error converting traces to OTLP: cannot unmarshal OTLP : readUint32: unexpected character')
+    );
+
+    render(<FileLoader onTracesLoaded={mockOnTracesLoaded} />);
+    await act(async () => {
+      global.mockBeforeUpload(makeFile('bad-otlp.json'));
+    });
+
+    expect(message.error).toHaveBeenCalledWith(
+      expect.stringContaining('cannot unmarshal OTLP : readUint32: unexpected character')
+    );
+    expect(mockOnTracesLoaded).not.toHaveBeenCalled();
+  });
+
   it('each beforeUpload call processes only its own file (no N² duplication)', async () => {
     const rawTrace = { traceID: 'a', spans: [] };
     readJsonFile.mockResolvedValue({ data: [rawTrace] });
