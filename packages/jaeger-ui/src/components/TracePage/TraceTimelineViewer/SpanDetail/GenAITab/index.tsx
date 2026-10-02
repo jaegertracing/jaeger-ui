@@ -230,12 +230,6 @@ function MediaBlock({
 }
 
 /**
- * Which views can show a part, and which one it lands on.
- *
- * The format belongs to the part rather than to the message around it: a turn carrying a
- * paragraph and an image has no single answer to "render this as what".
- */
-/**
  * What a part's text parses to and which views can therefore show it. Depends on the part
  * alone, so a message memoizes it once and resolves the chosen view separately.
  */
@@ -257,6 +251,12 @@ function parsePart(part: GenAiPart) {
   return { parsedJson, deepJson, canRender };
 }
 
+/**
+ * Which view a part lands on, given what it parses to and what the reader chose.
+ *
+ * The format belongs to the part rather than to the message around it: a turn carrying a
+ * paragraph and an image has no single answer to "render this as what".
+ */
 function partView(parsed: ReturnType<typeof parsePart>, chosen: MessageFormat | null) {
   const { canRender } = parsed;
   // With nothing chosen, a part carrying media opens on it, JSON with JSON strings inside

@@ -8,10 +8,10 @@ import storage from '../../../../../utils/storage';
 // Markdown, JSON, code, or a template. Per review discussion, the format is not assumed:
 // content that parses as JSON defaults to the tree view (unwrapped when it holds JSON
 // strings inside), everything else defaults to plain text, and the user can override it
-// per message via the dropdown. The choice is
-// remembered per attribute name (not globally), and seeds each message of that attribute
-// as it mounts - so e.g. choosing Markdown for gen_ai.output.messages is how the next
-// span's output messages open, while messages already on screen keep their own view.
+// per message via the dropdown. The choice is remembered per attribute name (not
+// globally), and seeds each message of that attribute as it mounts - so e.g. choosing
+// Markdown for gen_ai.output.messages is how the next span's output messages open, while
+// messages already on screen keep their own view.
 export type MessageFormat = 'plain' | 'markdown' | 'json' | 'json-deep' | 'image' | 'audio';
 
 const MESSAGE_FORMATS: readonly string[] = ['plain', 'markdown', 'json', 'json-deep', 'image', 'audio'];
