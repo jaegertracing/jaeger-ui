@@ -6,6 +6,7 @@ import {
   hasAnyTokenUsage,
   formatTokenCount,
   tryParseJson,
+  deepParseJson,
   GenAiSection,
 } from './genAiData';
 import type { IAttribute, IAttributes } from '../../../../../types/otel';
@@ -985,6 +986,48 @@ describe('tryParseJson', () => {
 
   it('returns the original string unchanged when it looks like JSON but fails to parse', () => {
     expect(tryParseJson('{not valid json')).toBe('{not valid json');
+  });
+});
+
+describe('deepParseJson', () => {
+  it('unwraps JSON strings nested several levels deep, including inside arrays', () => {
+    const inner = { verdict: { v: 'true', r: 'brief and generic' } };
+    const middle = { role: 'assistant', parts: [{ type: 'text', content: JSON.stringify(inner) }] };
+    const outer = { index: 0, message: JSON.stringify(middle) };
+    expect(deepParseJson(outer)).toEqual({
+      index: 0,
+      message: { role: 'assistant', parts: [{ type: 'text', content: inner }] },
+    });
+  });
+
+  it('unwraps a top-level JSON string', () => {
+    expect(deepParseJson('{"a":"[1,2]"}')).toEqual({ a: [1, 2] });
+  });
+
+  it('returns the very same object when nothing inside it was unwrapped, so callers can detect a no-op by identity', () => {
+    const value = {
+      text: 'hello {world}',
+      n: 1,
+      ok: true,
+      none: null,
+      broken: '{not json',
+      list: [1, 'two'],
+    };
+    expect(deepParseJson(value)).toBe(value);
+  });
+
+  it('treats a value nested too deeply to walk as having nothing to unwrap, instead of overflowing the stack', () => {
+    const depth = 100000;
+    const value = { payload: `${'['.repeat(depth)}0${']'.repeat(depth)}` };
+    expect(deepParseJson(value)).toBe(value);
+  });
+
+  it('returns a new object when something inside it was unwrapped, leaving the input untouched', () => {
+    const value = { a: '{"b":1}' };
+    const result = deepParseJson(value);
+    expect(result).not.toBe(value);
+    expect(result).toEqual({ a: { b: 1 } });
+    expect(value).toEqual({ a: '{"b":1}' });
   });
 });
 
