@@ -59,6 +59,7 @@ export default function ResultItemTitle({
   const isErred = state === fetchedState.ERROR;
   // Separate propagation management and toggle manegement due to ant-design#16400
   const checkboxProps = {
+    'aria-label': `Select trace ${traceName || traceID} for comparison`,
     className: 'ResultItemTitle--item ub-flex-none',
     checked: !isErred && isInDiffCohort,
     disabled: isErred,
