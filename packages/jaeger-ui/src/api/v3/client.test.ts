@@ -4,6 +4,15 @@
 import { JaegerClient, jaegerClient } from './client';
 import { ZodError } from 'zod';
 import { ALL_SERVICES } from '../../constants/search-form';
+import getConfig from '../../utils/config/get-config';
+
+vi.mock('../../utils/config/get-config', () => ({
+  default: vi.fn(() => ({
+    api: {
+      requestTimeoutMs: 10000,
+    },
+  })),
+}));
 
 describe('JaegerClient', () => {
   let client: JaegerClient;
@@ -12,6 +21,11 @@ describe('JaegerClient', () => {
 
   beforeEach(() => {
     client = new JaegerClient();
+    vi.mocked(getConfig).mockReturnValue({
+      api: {
+        requestTimeoutMs: 10000,
+      },
+    } as ReturnType<typeof getConfig>);
     originalFetch = globalThis.fetch;
     mockFetch = vi.fn();
     (global as any).fetch = mockFetch;
@@ -217,6 +231,32 @@ describe('JaegerClient', () => {
       vi.advanceTimersByTime(10000);
 
       await expect(promise).rejects.toThrow('Request timeout after 10000ms');
+    });
+
+    it('uses configured timeout from UI config', async () => {
+      vi.mocked(getConfig).mockReturnValue({
+        api: {
+          requestTimeoutMs: 30000,
+        },
+      } as ReturnType<typeof getConfig>);
+
+      mockFetch.mockImplementation((url: string, options?: { signal?: AbortSignal }) => {
+        return new Promise((resolve, reject) => {
+          if (options?.signal) {
+            options.signal.addEventListener('abort', () => {
+              const abortError = new Error('The operation was aborted');
+              abortError.name = 'AbortError';
+              reject(abortError);
+            });
+          }
+        });
+      });
+
+      const promise = client.fetchServices();
+
+      vi.advanceTimersByTime(30000);
+
+      await expect(promise).rejects.toThrow('Request timeout after 30000ms');
     });
 
     it('clears timeout after successful request', async () => {
