@@ -42,6 +42,7 @@ describe('OTLP trace contract materializer', () => {
       endTimeUnixNano: '10000',
     });
     expect(spans[1]).not.toHaveProperty('startTimeUnixNano');
+    expect(spans[1].links).toEqual([]);
     expect(spans[2]).toMatchObject({
       parentSpanId: spanIDForWire('child'),
       links: [
@@ -85,6 +86,28 @@ describe('OTLP trace contract materializer', () => {
     expect(() => toOtlpTrace({ ...spec, spans: [{ ...spec.spans[0], startTime: NaN }] })).toThrow(
       'Invalid OTLP startTime'
     );
+  });
+
+  it('encodes typed and repeated tags for the shared tag tests', () => {
+    const wire = toOtlpTrace({
+      ...spec,
+      spans: [
+        {
+          ...spec.spans[0],
+          tags: [
+            { key: 'x', value: 1 },
+            { key: 'x', value: '1' },
+            { key: 'x', value: false },
+          ],
+        },
+      ],
+    });
+    expect(refinedTracesData.safeParse(wire).success).toBe(true);
+    expect(wire.resourceSpans![0].scopeSpans[0].spans[0].attributes).toEqual([
+      { key: 'x', value: { intValue: '1' } },
+      { key: 'x', value: { stringValue: '1' } },
+      { key: 'x', value: { boolValue: false } },
+    ]);
   });
 
   it('maps labels deterministically and returns fresh wire objects', () => {

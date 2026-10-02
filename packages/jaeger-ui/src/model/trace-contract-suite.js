@@ -1,12 +1,11 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import traceGenerator from '../demo/trace-generators';
 import transformTraceData from './transform-trace-data';
 import getConfig from '../utils/config/get-config';
 
 export function runTraceContractSuite(pipeline) {
-  // Raw legacy span inputs and intentionally different parser behavior stay on the legacy pipeline.
+  // Intentionally different parser behavior and inputs OTLP cannot encode stay on the legacy pipeline.
   const legacyIt = pipeline.isLegacy ? it : it.skip;
   // Tag deduplication and ordering run inside the pipeline, so these two
   // stand-ins keep the helper signatures and read the result back from the
@@ -17,18 +16,12 @@ export function runTraceContractSuite(pipeline) {
     try {
       // getTraceName() memoizes by trace ID, so this trace must not share one with the tests below.
       const traceID = '0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f';
-      const span = {
+      const input = pipeline.materialize({
         traceID,
-        spanID: 'd4dcb46e95b781f5',
-        operationName: 'op',
-        startTime: 1,
-        duration: 1,
-        tags,
-        logs: [],
-        processID: 'p1',
-      };
-      const processes = { p1: { serviceName: 'svc', tags: [] } };
-      return pipeline.parse({ traceID, processes, spans: [span] }).spans[0];
+        serviceName: 'svc',
+        spans: [{ spanID: 'd4dcb46e95b781f5', operationName: 'op', startTime: 1, duration: 1, tags }],
+      });
+      return pipeline.parse(input).spans[0];
     } finally {
       window.getJaegerUiConfig = undefined;
       getConfig.clear();
@@ -44,7 +37,7 @@ export function runTraceContractSuite(pipeline) {
     return { tags: deduplicated, warnings: span.warnings };
   };
 
-  describe.skipIf(!pipeline.isLegacy)('orderTags()', () => {
+  describe('orderTags()', () => {
     it('correctly orders tags', () => {
       const orderedTags = orderTags(
         [
@@ -66,7 +59,7 @@ export function runTraceContractSuite(pipeline) {
     });
   });
 
-  describe.skipIf(!pipeline.isLegacy)('deduplicateTags()', () => {
+  describe('deduplicateTags()', () => {
     it('deduplicates tags', () => {
       const tagsInfo = deduplicateTags([
         { key: 'b.ip', value: '8.8.4.4' },
@@ -186,6 +179,7 @@ export function runTraceContractSuite(pipeline) {
       duration,
     };
 
+    // OTLP validation rejects a missing trace ID before parseOtelTrace receives the input.
     it.skipIf(!pipeline.isLegacy)('should return null for trace without traceID', () => {
       const traceData = { ...trace(...spans), traceID: undefined };
 
@@ -312,6 +306,7 @@ export function runTraceContractSuite(pipeline) {
       expect(result.duration).toBe(1000);
     });
 
+    // TODO(parser): Assert the parser's repaired cycle as an intentional difference in #4503.
     legacyIt('should not produce a negative duration for a trace with spans but no root', () => {
       // Two spans referencing each other form a cycle, so neither is a root and
       // nothing is reachable by the traversal. The time range must not be left at
@@ -327,6 +322,7 @@ export function runTraceContractSuite(pipeline) {
       expect(result.endTime).toBe(0);
     });
 
+    // TODO(parser): Cover missing sibling times separately; NaN cannot be represented in OTLP JSON.
     legacyIt('should keep and repair sibling spans that have no usable startTime', () => {
       // NB: this asserts the observable outcome (no span dropped, all startTimes
       // finite, real sibling ordered last). It does NOT prove the NaN-comparator
@@ -448,6 +444,7 @@ export function runTraceContractSuite(pipeline) {
       expect(result.orphanSpanCount).toBe(1);
     });
 
+    // asOtelTrace() belongs to the legacy transformer; the parser returns IOtelTrace directly.
     describe.skipIf(!pipeline.isLegacy)('asOtelTrace()', () => {
       it('should implement IOtelTrace interface and memoize the instance', () => {
         const traceData = trace(...spans, rootSpanWithoutRefs);
@@ -612,19 +609,23 @@ export function runTraceContractSuite(pipeline) {
       });
     });
 
-    legacyIt('exposes parent and secondary references as links on spans with multiple references', () => {
-      const multiRefTrace = traceGenerator.trace({ numberOfSpans: 7, maxDepth: 3, spansPerLevel: 4 });
-      const { traceID, spanID: rootSpanId } = multiRefTrace.spans[0];
-      const candidates = multiRefTrace.spans.filter(
-        span => span.references.length > 0 && span.references[0].spanID !== rootSpanId
-      );
-      const [willGainRef, willNotChange] = candidates;
-      const { spanID: existingRefID } = willGainRef.references[0];
-      const { spanID: willBeReferencedID } = willNotChange.references[0];
+    it('exposes parent and secondary references as links on spans with multiple references', () => {
+      // The legacy input omits logs here to retain the transformer's missing-logs coverage.
+      const root = { spanID: 'root', operationName: 'root', startTime, duration, omitLogs: true };
+      const parent = { spanID: 'parent', operationName: 'parent', parentSpanID: 'root', startTime, duration };
+      const other = { spanID: 'other', operationName: 'other', parentSpanID: 'root', startTime, duration };
+      const linked = {
+        spanID: 'linked',
+        operationName: 'linked',
+        parentSpanID: 'parent',
+        references: [{ refType: 'CHILD_OF', spanID: 'other' }],
+        startTime,
+        duration,
+      };
+      const existingRefID = id('parent');
+      const willBeReferencedID = id('other');
 
-      willGainRef.references.push({ refType: 'CHILD_OF', traceID, spanID: willBeReferencedID });
-
-      const tTrace = pipeline.parse(multiRefTrace);
+      const tTrace = pipeline.parse(trace(root, parent, other, linked));
       const multiReference = tTrace.spans.filter(span => span.links.length > 0);
 
       expect(multiReference.length).toEqual(1);
@@ -633,7 +634,7 @@ export function runTraceContractSuite(pipeline) {
       const hasReferral = tTrace.spans.filter(span => span.inboundLinks.length > 0);
       expect(hasReferral.length).toEqual(1);
       expect(hasReferral[0].spanID).toBe(willBeReferencedID);
-      expect(hasReferral[0].inboundLinks).toEqual([expect.objectContaining({ spanID: willGainRef.spanID })]);
+      expect(hasReferral[0].inboundLinks).toEqual([expect.objectContaining({ spanID: id(linked.spanID) })]);
     });
   });
 }
