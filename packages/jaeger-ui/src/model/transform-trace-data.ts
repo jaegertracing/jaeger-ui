@@ -180,8 +180,10 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     }
   };
 
-  // Depth-first traversal to order spans, populate the flat array, and compute
-  // the trace's time range from the (already-repaired) start times.
+  // Pre-order depth-first traversal to order spans, populate the flat array, and
+  // compute the trace's time range from the (already-repaired) start times.
+  // Implemented iteratively with an explicit stack (rather than recursion) so
+  // that deeply nested traces do not overflow the call stack.
   const processSpan = (span: Span, depth: number) => {
     span.depth = depth;
     span.hasChildren = span.childSpans.length > 0;
@@ -216,16 +218,30 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     spans.push(span);
 
     // Repair children against this (already-repaired) span, then sort them by
-    // startTime before recursing.
+    // startTime before they are visited.
     const children = span.childSpans as Span[];
     children.forEach(child => repairStartTime(child, span));
     children.sort((a, b) => a.startTime - b.startTime);
-    children.forEach(child => processSpan(child, depth + 1));
   };
 
   rootSpans.forEach(root => repairStartTime(root));
   rootSpans.sort((a, b) => a.startTime - b.startTime);
-  rootSpans.forEach(root => processSpan(root, 0));
+
+  // Stack of spans pending traversal. Children are pushed in reverse order so
+  // they are popped (and thus visited) in ascending startTime order, matching
+  // the order a recursive pre-order traversal would produce.
+  const stack: { span: Span; depth: number }[] = [];
+  for (let i = rootSpans.length - 1; i >= 0; i--) {
+    stack.push({ span: rootSpans[i], depth: 0 });
+  }
+
+  while (stack.length > 0) {
+    const { span, depth } = stack.pop()!;
+    processSpan(span, depth);
+    for (let i = span.childSpans.length - 1; i >= 0; i--) {
+      stack.push({ span: span.childSpans[i], depth: depth + 1 });
+    }
+  }
 
   // traceStartTime/traceEndTime are only updated while visiting spans reachable
   // from a root. If the trace has spans but no root (e.g. every span is part of
