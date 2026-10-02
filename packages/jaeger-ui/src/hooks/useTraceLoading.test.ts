@@ -134,6 +134,56 @@ describe('useTrace', () => {
     expect(mockFetchTrace).not.toHaveBeenCalled();
     expect(result.current.data).toBe(otelTrace);
   });
+
+  it('stops polling after 5 minutes', async () => {
+    vi.useFakeTimers();
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    mockFetchTrace.mockResolvedValue({ data: [rawTrace] } as any);
+
+    renderHook(() => useTrace(otelTrace.traceID), {
+      wrapper: makeWrapper(client),
+    });
+
+    // initial fetch
+    await waitFor(() => expect(mockFetchTrace).toHaveBeenCalledTimes(1));
+
+    // advance by 1 minute
+    vi.advanceTimersByTime(60_000);
+    await waitFor(() => expect(mockFetchTrace).toHaveBeenCalledTimes(2));
+
+    // advance another 4 minutes to hit the 5 min cutoff
+    vi.advanceTimersByTime(4 * 60 * 1000);
+    await waitFor(() => expect(mockFetchTrace).toHaveBeenCalledTimes(6));
+
+    // advance beyond 5 minutes
+    vi.advanceTimersByTime(60_000);
+    // Should NOT have been called again
+    expect(mockFetchTrace).toHaveBeenCalledTimes(6);
+
+    vi.useRealTimers();
+  });
+
+  it('does not poll for uploaded traces', async () => {
+    vi.useFakeTimers();
+    // populateTraceCache writes into the singleton appQueryClient
+    populateTraceCache(otelTrace);
+
+    const client = appQueryClient;
+    renderHook(() => useTrace(otelTrace.traceID), {
+      wrapper: makeWrapper(client),
+    });
+
+    // The data is already in cache
+    expect(mockFetchTrace).not.toHaveBeenCalled();
+
+    // Advance time to when a poll would normally happen
+    vi.advanceTimersByTime(60_000);
+
+    // Still shouldn't have fetched because it's marked as uploaded
+    expect(mockFetchTrace).not.toHaveBeenCalled();
+
+    vi.useRealTimers();
+  });
 });
 
 describe('useTraces', () => {
