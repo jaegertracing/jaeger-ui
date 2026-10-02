@@ -50,6 +50,18 @@ const mockChart = {
   destroy: vi.fn(),
 };
 
+const { mockCall, mockDatum } = vi.hoisted(() => {
+  const datum = vi.fn();
+  const call = vi.fn();
+  const selection = {
+    datum,
+    call,
+  };
+  datum.mockReturnValue(selection);
+  call.mockReturnValue(selection);
+  return { mockCall: call, mockDatum: datum };
+});
+
 vi.mock('d3-flame-graph', () => ({
   default: () => mockChart,
 }));
@@ -62,8 +74,8 @@ vi.mock('d3-selection', () => ({
       container.appendChild(svg);
     }
     return {
-      datum: vi.fn().mockReturnThis(),
-      call: vi.fn().mockReturnThis(),
+      datum: mockDatum,
+      call: mockCall,
     };
   }),
 }));
@@ -73,6 +85,8 @@ const otelTrace = transformTraceData(testTrace.data).asOtelTrace();
 describe('<TraceFlamegraph />', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockCall.mockClear();
+    mockDatum.mockClear();
     callbacks.onClick = null;
     callbacks.colorMapper = null;
     callbacks.getName = null;
@@ -348,6 +362,85 @@ describe('<TraceFlamegraph />', () => {
       fireEvent.click(screen.getByTestId('flamegraph-collapse'));
       // After collapse, the collapse button should be disabled (no longer zoomed)
       expect(screen.getByTestId('flamegraph-collapse')).toBeDisabled();
+    });
+
+    it('re-applies active search query when collapsing nodes above after chart redraw', () => {
+      render(<TraceFlamegraph trace={otelTrace} />);
+      const searchInput = screen.getByTestId('flamegraph-search');
+      fireEvent.change(searchInput, { target: { value: 'order' } });
+      expect(mockChart.search).toHaveBeenCalledWith('order');
+
+      // Zoom into a node
+      act(() => {
+        callbacks.onClick({
+          parent: {},
+          data: { name: 'load-generator: OrderVehicle', value: 100, duration: 100, children: [] },
+        });
+      });
+
+      mockCall.mockClear();
+      mockChart.search.mockClear();
+
+      // Click collapse
+      fireEvent.click(screen.getByTestId('flamegraph-collapse'));
+
+      // Active search query should be re-applied to the new chart after the redraw
+      expect(mockCall).toHaveBeenCalled();
+      expect(mockChart.search).toHaveBeenCalledWith('order');
+      const lastSearchOrder = Math.max(...mockChart.search.mock.invocationCallOrder);
+      const lastCallOrder = Math.max(...mockCall.mock.invocationCallOrder);
+      expect(lastSearchOrder).toBeGreaterThan(lastCallOrder);
+    });
+
+    it('re-applies active selected item when collapsing nodes above after chart redraw', () => {
+      render(<TraceFlamegraph trace={otelTrace} />);
+      // Click a table row to set selectedItem
+      fireEvent.click(screen.getByText('OrderVehicle').closest('tr'));
+      expect(mockChart.search).toHaveBeenCalledWith('load-generator: OrderVehicle');
+
+      // Zoom into a node
+      act(() => {
+        callbacks.onClick({
+          parent: {},
+          data: { name: 'load-generator: OrderVehicle', value: 100, duration: 100, children: [] },
+        });
+      });
+
+      mockCall.mockClear();
+      mockChart.search.mockClear();
+
+      // Click collapse
+      fireEvent.click(screen.getByTestId('flamegraph-collapse'));
+
+      // Active selectedItem should be re-applied to the new chart after the redraw
+      expect(mockCall).toHaveBeenCalled();
+      expect(mockChart.search).toHaveBeenCalledWith('load-generator: OrderVehicle');
+      const lastSearchOrder = Math.max(...mockChart.search.mock.invocationCallOrder);
+      const lastCallOrder = Math.max(...mockCall.mock.invocationCallOrder);
+      expect(lastSearchOrder).toBeGreaterThan(lastCallOrder);
+    });
+
+    it('re-applies active search query when resizing table width after chart redraw', () => {
+      render(<TraceFlamegraph trace={otelTrace} />);
+      const searchInput = screen.getByTestId('flamegraph-search');
+      fireEvent.change(searchInput, { target: { value: 'order' } });
+      expect(mockChart.search).toHaveBeenCalledWith('order');
+
+      mockCall.mockClear();
+      mockChart.search.mockClear();
+
+      const resizer = screen.getByTestId('vertical-resizer');
+      resizer.getBoundingClientRect = () => ({ left: 0, width: 1000 });
+      const dragger = resizer.querySelector('.VerticalResizer--dragger');
+      fireEvent.mouseDown(dragger, { clientX: 500, button: 0 });
+      fireEvent.mouseMove(window, { clientX: 600 });
+      fireEvent.mouseUp(window, { clientX: 600 });
+
+      expect(mockCall).toHaveBeenCalled();
+      expect(mockChart.search).toHaveBeenCalledWith('order');
+      const lastSearchOrder = Math.max(...mockChart.search.mock.invocationCallOrder);
+      const lastCallOrder = Math.max(...mockCall.mock.invocationCallOrder);
+      expect(lastSearchOrder).toBeGreaterThan(lastCallOrder);
     });
   });
 
