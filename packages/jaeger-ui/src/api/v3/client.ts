@@ -8,7 +8,7 @@
  * and returns native OTLP data structures.
  */
 
-import { ALL_SERVICES } from '../../constants/search-form';
+import { ALL_OPERATIONS, ALL_SERVICES, normalizeOperation } from '../../constants/search-form';
 import prefixUrl from '../../utils/prefix-url';
 import {
   ServicesResponseSchema,
@@ -84,10 +84,11 @@ export class JaegerClient {
    */
   async fetchTraceSummaries(query: SearchQuery): Promise<TraceSummary[]> {
     const params = new URLSearchParams();
-    // ALL_SERVICES is a UI-only value: the v3 search API reads an absent service name
-    // as "any service", so the parameter is left off rather than sent through.
+    // ALL_SERVICES and ALL_OPERATIONS are UI-only values: the v3 search API reads absent service
+    // or operation names as "any", so the parameters are left off rather than sent through.
     if (query.service && query.service !== ALL_SERVICES) params.set('query.serviceName', query.service);
-    if (query.operation) params.set('query.operationName', String(query.operation));
+    const operation = normalizeOperation(query.operation);
+    if (operation && operation !== ALL_OPERATIONS) params.set('query.operationName', operation);
     // start/end are microsecond epoch integers from the URL; convert to ISO for the v3 API.
     // Drop malformed or out-of-range URL params gracefully.
     const startTimeMin = toIsoTimestamp(Number(query.start));
