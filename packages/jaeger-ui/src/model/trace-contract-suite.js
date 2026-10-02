@@ -148,8 +148,11 @@ export function runTraceContractSuite(pipeline) {
     const rootOperationName = 'rootOperation';
     const serviceName = 'serviceName';
 
-    // Each test describes its trace as span specs (see trace-contract-spec.ts)
-    // and the pipeline renders them into the wire format it parses.
+    // Tests describe their traces as span specs (see trace-contract-spec.ts)
+    // and the pipeline renders them into the wire format it parses. The tag
+    // helpers above and the generator-based multiple-references test at the end
+    // still build legacy spans directly, so a pipeline for another format also
+    // needs those two inputs rendered for it.
     const trace = (...spans) => pipeline.materialize({ traceID, serviceName, spans });
 
     const spans = [
