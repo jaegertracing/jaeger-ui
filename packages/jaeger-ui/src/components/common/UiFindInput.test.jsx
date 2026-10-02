@@ -250,6 +250,47 @@ describe('UiFind', () => {
       // Now the assertion will find only one input
       expect(screen.getByPlaceholderText('Find...')).toHaveValue('');
     });
+
+    it.each([
+      ['Enter', '{Enter}'],
+      ['Space', ' '],
+    ])(
+      'clears value and restores focus to the input when %s is pressed on the clear icon',
+      async (_label, key) => {
+        const { rerender } = render(<UnconnectedUiFindInput {...props} allowClear uiFind={uiFind} />);
+        const clearIcon = screen.getByTestId('clear-icon');
+        clearIcon.focus();
+
+        await userEvent.keyboard(key);
+
+        expect(updateUiFindSpy).toHaveBeenLastCalledWith({
+          navigate: mockNavigate,
+          location: mockLocation,
+          uiFind: undefined,
+        });
+        expect(flushMock).toHaveBeenCalledTimes(1);
+
+        const updatedProps = { ...props, uiFind: undefined };
+        rerender(<UnconnectedUiFindInput {...updatedProps} allowClear />);
+
+        const input = screen.getByPlaceholderText('Find...');
+        expect(input).toHaveValue('');
+        // Focus must return to the input so keyboard users can keep typing
+        // after the clear icon is removed from the DOM.
+        expect(input).toHaveFocus();
+      }
+    );
+
+    it('renders the clear icon by default (allowClear defaults to true)', () => {
+      render(<UnconnectedUiFindInput {...props} uiFind={uiFind} />);
+      expect(screen.getByTestId('clear-icon')).toBeInTheDocument();
+    });
+
+    it("does not render AntD's built-in clear icon (custom keyboard-accessible icon is the only clear affordance)", () => {
+      const { container } = render(<UnconnectedUiFindInput {...props} allowClear uiFind={uiFind} />);
+      // AntD renders its built-in clear button with class `ant-input-clear-icon`.
+      expect(container.querySelector('.ant-input-clear-icon')).not.toBeInTheDocument();
+    });
   });
 
   describe('parseUiFind', () => {
