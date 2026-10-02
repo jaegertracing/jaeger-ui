@@ -3,7 +3,7 @@
 
 import { JaegerClient, jaegerClient } from './client';
 import { ZodError } from 'zod';
-import { ALL_SERVICES } from '../../constants/search-form';
+import { ALL_OPERATIONS, ALL_SERVICES } from '../../constants/search-form';
 
 describe('JaegerClient', () => {
   let client: JaegerClient;
@@ -455,6 +455,36 @@ describe('JaegerClient', () => {
       const calledUrl = mockFetch.mock.calls[0][0] as string;
       expect(calledUrl).not.toContain('query.serviceName');
       expect(calledUrl).toContain('query.attributes=http.status%3D500');
+    });
+
+    it('omits the operation name for an all-operations search', async () => {
+      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ summaries: [] }) });
+
+      const promise = client.fetchTraceSummaries({
+        ...query,
+        operation: ALL_OPERATIONS,
+      });
+      vi.runAllTimers();
+      await promise;
+
+      // ALL_OPERATIONS is a UI-only value; the API reads an absent operation name as
+      // "any operation", so it must not travel to the backend as a literal filter.
+      const calledUrl = mockFetch.mock.calls[0][0] as string;
+      expect(calledUrl).not.toContain('query.operationName');
+    });
+
+    it('omits the operation name when given legacy "all"', async () => {
+      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ summaries: [] }) });
+
+      const promise = client.fetchTraceSummaries({
+        ...query,
+        operation: 'all',
+      });
+      vi.runAllTimers();
+      await promise;
+
+      const calledUrl = mockFetch.mock.calls[0][0] as string;
+      expect(calledUrl).not.toContain('query.operationName');
     });
 
     it('omits startTimeMin when start timestamp is out of JavaScript Date range', async () => {

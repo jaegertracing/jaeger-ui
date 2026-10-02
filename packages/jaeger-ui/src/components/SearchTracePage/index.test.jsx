@@ -64,7 +64,7 @@ import '@testing-library/jest-dom';
 import { Provider } from 'react-redux';
 import { SearchTracePageImpl as SearchTracePage } from './index';
 import { useServices } from '../../hooks/useTraceDiscovery';
-import { ALL_SERVICES } from '../../constants/search-form';
+import { ALL_OPERATIONS, ALL_SERVICES } from '../../constants/search-form';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { useSearchPanelStore, LS_WIDTH_KEY, LS_COLLAPSED_KEY } from './search-panel-store';
 import { store as globalStore } from '../../utils/configure-store';
@@ -124,6 +124,29 @@ describe('<SearchTracePage>', () => {
     const [query] = useSearchTracesMock.mock.calls[0];
     expect(query).not.toBeNull();
     expect(query.service).toBe('svc-a');
+  });
+
+  it('calls useSearchTraces with operation undefined when URL contains an all-operations sentinel', () => {
+    render(
+      <AllProvider initialEntries={[`/search?service=svc-a&operation=all`]}>
+        <SearchTracePage />
+      </AllProvider>
+    );
+    expect(useSearchTracesMock).toHaveBeenCalled();
+    const [queryLegacy] = useSearchTracesMock.mock.calls[0];
+    expect(queryLegacy.service).toBe('svc-a');
+    expect(queryLegacy.operation).toBeUndefined();
+
+    useSearchTracesMock.mockClear();
+    render(
+      <AllProvider initialEntries={[`/search?service=svc-a&operation=${ALL_OPERATIONS}`]}>
+        <SearchTracePage />
+      </AllProvider>
+    );
+    expect(useSearchTracesMock).toHaveBeenCalled();
+    const [querySentinel] = useSearchTracesMock.mock.calls[0];
+    expect(querySentinel.service).toBe('svc-a');
+    expect(querySentinel.operation).toBeUndefined();
   });
 
   describe('an all-services link on a backend that cannot serve it', () => {
