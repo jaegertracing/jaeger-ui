@@ -30,8 +30,11 @@ jest.spyOn(JaegerAPI, 'transformOTLP').mockImplementation(APICallRequest => {
     return Promise.resolve(jaegerTraceMulti);
   }
 
-  // This defines case where API call errors out even after detecting a `resourceSpan` in the request
-  return Promise.reject(new Error('backend transform failed'));
+  // This defines case where API call errors out even after detecting a `resourceSpan` in the request.
+  // getJSON only builds an error once it has a response, so it always carries an httpStatus.
+  const err = new Error('backend transform failed');
+  err.httpStatus = 500;
+  return Promise.reject(err);
 });
 
 describe('fileReader.readJsonFile', () => {
@@ -74,6 +77,17 @@ describe('fileReader.readJsonFile', () => {
     const file = new File([JSON.stringify(inObj)], 'foo.json');
     const p = readJsonFile({ file });
     return expect(p).rejects.toThrow(/Error converting OTLP trace to Jaeger: backend transform failed/);
+  });
+
+  it('rejects an OTLP trace by naming the backend when the transform endpoint is unreachable', () => {
+    // fetch rejects with a TypeError before any response exists, so getJSON has no httpStatus to attach
+    JaegerAPI.transformOTLP.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    const inObj = JSON.parse(
+      fs.readFileSync(path.resolve(fixturesDir, 'otlp2jaeger-in-error.json'), 'utf-8')
+    );
+    const file = new File([JSON.stringify(inObj)], 'foo.json');
+    const p = readJsonFile({ file });
+    return expect(p).rejects.toThrow(/POST \/api\/transform could not be reached/);
   });
 
   it('rejects malformed JSON', () => {
