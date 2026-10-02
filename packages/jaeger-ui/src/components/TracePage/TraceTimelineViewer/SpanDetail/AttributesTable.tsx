@@ -16,13 +16,12 @@ import { IAttributes } from '../../../../types/otel';
 
 import './AttributesTable.css';
 
-// .length counts UTF-16 code units, not bytes. Non-ASCII strings may be larger
-// in memory than this number suggests, but this threshold is a reasonable proxy
-// for "expensive to render synchronously".
+// This sits well above the 200-character collapsed-summary limit, preserving
+// normal attributes while deferring JSON.parse and JsonView for large GenAI
+// payloads until the user asks to see them.
 const LARGE_VALUE_THRESHOLD_CHARS = 10_000;
 
-// Allow leading whitespace so indented/pretty-printed JSON is also detected
-const jsonObjectOrArrayStartRegex = /^\s*[{[]/;
+const jsonObjectOrArrayStartRegex = /^(\[|\{)/;
 
 function tryParseJson(value: string) {
   // if the value is a string representing actual json object or array, then use json-markup
@@ -105,44 +104,7 @@ function formatValue(key: string, value: any): { node: React.ReactNode; isJsonTr
 }
 
 function formatSize(chars: number) {
-  if (chars < 1024) return `${chars} chars`;
-  return `${(chars / 1024).toFixed(1)} KB`;
-}
-
-/**
- * LargeValueCell renders a collapsed placeholder for large attribute values and
- * expands them lazily on click. Keeping state in a dedicated component (rather
- * than a closure inside .map) is required by the Rules of Hooks.
- */
-function LargeValueCell({ attrKey, value }: { attrKey: string; value: string }) {
-  const [isExpanded, setIsExpanded] = React.useState(false);
-  const [isDeferredLoaded, setIsDeferredLoaded] = React.useState(false);
-
-  // useEffect (not a click-handler return) so the timeout is properly cleaned up
-  // if the component unmounts or the user collapses before 50 ms elapses.
-  React.useEffect(() => {
-    if (!isExpanded || isDeferredLoaded) return undefined;
-    const t = setTimeout(() => setIsDeferredLoaded(true), 50);
-    return () => clearTimeout(t);
-  }, [isExpanded, isDeferredLoaded]);
-
-  if (!isExpanded) {
-    return (
-      <button
-        type="button"
-        className="KeyValueTable--largeValuePlaceholder"
-        onClick={() => setIsExpanded(true)}
-      >
-        {formatSize(value.length)} — click to expand
-      </button>
-    );
-  }
-
-  if (!isDeferredLoaded) {
-    return <span className="KeyValueTable--largeValueLoading">Parsing…</span>;
-  }
-
-  return <div className="ub-inline-block">{formatValue(attrKey, value).node}</div>;
+  return `${chars.toLocaleString()} chars`;
 }
 
 export const LinkValue = (props: { href: string; title?: string; children: React.ReactNode }) => (
@@ -167,6 +129,19 @@ type AttributesTableProps = {
 // Example: https://github.com/jaegertracing/jaeger-ui/assets/94157520/b518cad9-cb37-4775-a3d6-b667a1235f89
 export default function AttributesTable(props: AttributesTableProps) {
   const { data, linksGetter } = props;
+  // Attribute entries are stable for a given IAttributes collection. Keeping
+  // them in the set means a replacement entry starts collapsed automatically.
+  const [expandedRows, setExpandedRows] = React.useState<Set<object>>(() => new Set());
+  const [, startTransition] = React.useTransition();
+
+  const expandRow = React.useCallback(
+    (row: object) => {
+      startTransition(() => {
+        setExpandedRows(currentRows => new Set(currentRows).add(row));
+      });
+    },
+    [startTransition]
+  );
 
   return (
     <div className="KeyValueTable u-simple-scrollbars">
@@ -174,17 +149,23 @@ export default function AttributesTable(props: AttributesTableProps) {
         <tbody className="KeyValueTable--body">
           {data.entries().map((row, i) => {
             const isLarge = typeof row.value === 'string' && row.value.length >= LARGE_VALUE_THRESHOLD_CHARS;
-            const { node: jsonTableNode, isJsonTree } = isLarge
+            const shouldDeferValue = isLarge && !expandedRows.has(row);
+            const { node: jsonTable, isJsonTree } = shouldDeferValue
               ? { node: null, isJsonTree: false }
               : formatValue(row.key, row.value);
-            const jsonTable = jsonTableNode;
-            const links = linksGetter ? linksGetter(data, i) : null;
+            const links = shouldDeferValue || !linksGetter ? null : linksGetter(data, i);
 
             let valueMarkup;
-            if (isLarge) {
-              // Render lazily inline — preserves ordering, count, and linksGetter is still
-              // available in the same row if needed in the future.
-              valueMarkup = <LargeValueCell attrKey={row.key} value={row.value as string} />;
+            if (shouldDeferValue) {
+              valueMarkup = (
+                <button
+                  type="button"
+                  className="KeyValueTable--largeValuePlaceholder"
+                  onClick={() => expandRow(row)}
+                >
+                  {formatSize((row.value as string).length)} — click to expand
+                </button>
+              );
             } else if (links?.length === 1) {
               valueMarkup = (
                 <div>
@@ -223,7 +204,7 @@ export default function AttributesTable(props: AttributesTableProps) {
             ) : (
               row.key
             );
-            const copyButtons = (
+            const copyButtons = !shouldDeferValue && (
               <div className="KeyValueTable--copyContainer">
                 <CopyIcon
                   className="KeyValueTable--copyIcon"
@@ -270,7 +251,7 @@ export default function AttributesTable(props: AttributesTableProps) {
               <tr className="KeyValueTable--row" key={rowKey}>
                 <td className="KeyValueTable--keyColumn">{keyMarkup}</td>
                 <td className="KeyValueTable--valueColumn">
-                  {!isLarge && copyButtons}
+                  {copyButtons}
                   {valueMarkup}
                 </td>
               </tr>

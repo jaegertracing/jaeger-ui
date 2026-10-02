@@ -81,9 +81,3 @@ SPDX-License-Identifier: Apache-2.0
   border-color: var(--interactive-primary);
   color: var(--interactive-primary);
 }
-
-.KeyValueTable--largeValueLoading {
-  color: var(--text-secondary);
-  font-style: italic;
-  font-size: 0.85em;
-}

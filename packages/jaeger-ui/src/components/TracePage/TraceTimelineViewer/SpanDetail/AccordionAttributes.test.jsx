@@ -53,6 +53,14 @@ describe('<AttributesSummary />', () => {
     const expectedTexts = tagsArray.map(tag => `${tag.key}=${tag.value}`);
     expect(texts).toEqual(expectedTexts);
   });
+
+  it('keeps large values out of the collapsed summary', () => {
+    const value = 'x'.repeat(10_001);
+    render(<AttributesSummary data={makeAttributes([{ key: 'large', value }])} />);
+
+    expect(screen.getByText('10,001 chars')).toBeInTheDocument();
+    expect(screen.queryByText(value)).not.toBeInTheDocument();
+  });
 });
 
 describe('<AccordionAttributes />', () => {

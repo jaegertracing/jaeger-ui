@@ -95,7 +95,7 @@ export default function SpanDetail(props: SpanDetailProps) {
     <div>
       <div>
         <AccordionAttributes
-          data={span.attributes || []}
+          data={span.attributes}
           label={attributesLabel}
           linksGetter={linksGetter}
           isOpen={isAttributesOpen}
