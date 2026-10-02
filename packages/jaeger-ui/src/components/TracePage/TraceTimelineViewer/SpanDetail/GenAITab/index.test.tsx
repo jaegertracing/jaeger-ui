@@ -388,7 +388,7 @@ describe('GenAITab', () => {
     expect(shownView(screen.getByLabelText(/Content format/))).toBe('JSON');
   });
 
-  it('unwraps JSON strings inside the JSON once the user switches to the JSON (nested) view', () => {
+  it('unwraps JSON strings inside the JSON once the user switches to the JSON (deep) view', () => {
     const nested = JSON.stringify({ message: JSON.stringify({ verdict: 'true' }) });
     const { container } = render(
       <GenAITab
@@ -398,12 +398,12 @@ describe('GenAITab', () => {
     const keys = () =>
       Array.from(container.querySelectorAll('.GenAITab--json .json-markup-key')).map(k => k.textContent);
     expect(keys()).toEqual(['message:']);
-    chooseView(viewControl(), 'JSON (nested)');
-    expect(shownView(viewControl())).toBe('JSON (nested)');
+    chooseView(viewControl(), 'JSON (deep)');
+    expect(shownView(viewControl())).toBe('JSON (deep)');
     expect(keys()).toEqual(['message:', 'verdict:']);
   });
 
-  it('disables the JSON (nested) option, like JSON, on a message whose content does not parse as JSON', () => {
+  it('disables the JSON (deep) option, like JSON, on a message whose content does not parse as JSON', () => {
     render(
       <GenAITab
         span={makeSpan([
@@ -414,7 +414,7 @@ describe('GenAITab', () => {
         ])}
       />
     );
-    expect(viewItem(viewControl(), 'JSON (nested)')).toHaveAttribute('aria-disabled', 'true');
+    expect(viewItem(viewControl(), 'JSON (deep)')).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('disables the JSON option on a message whose content does not parse as JSON', () => {
