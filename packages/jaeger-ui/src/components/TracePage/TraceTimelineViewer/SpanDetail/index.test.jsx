@@ -9,7 +9,7 @@ import '@testing-library/jest-dom';
 
 import DetailState from './DetailState';
 import SpanDetail from './index';
-import { formatDuration } from '../utils';
+import { formatDuration, formatDurationCompact } from '../utils';
 import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
 import { makeAttributes } from '../../../../model/attributes';
@@ -80,10 +80,10 @@ vi.mock('../../../common/LabeledList', () => {
 });
 
 vi.mock('../../../common/CopyIcon', () => {
-  return mockDefault(function MockCopyIcon({ copyText }) {
+  return mockDefault(function MockCopyIcon({ copyText, buttonText }) {
     return (
       <button type="button" data-testid="copy-icon" data-copy-text={copyText}>
-        Copy
+        {buttonText}
       </button>
     );
   });
@@ -111,6 +111,8 @@ describe('<SpanDetail>', () => {
   beforeEach(() => {
     formatDuration.mockReset();
     formatDuration.mockImplementation(duration => `${duration}ms`);
+    formatDurationCompact.mockReset();
+    formatDurationCompact.mockImplementation(duration => `${duration}ms`);
 
     const rawTrace = traceGenerator.trace({ numberOfSpans: 1 });
     spanData = rawTrace.spans[0];
@@ -292,11 +294,23 @@ describe('<SpanDetail>', () => {
   it('renders copy icon with deep link URL containing the span ID parameter', () => {
     render(<SpanDetail {...props} />);
 
-    const copyIcon = screen.getByTestId('copy-icon');
-    const copyText = copyIcon.getAttribute('data-copy-text');
+    const copyButton = screen.getByRole('button', { name: 'Copy' });
+    expect(copyButton).toBeInTheDocument();
+    expect(copyButton).toHaveAttribute(
+      'data-copy-text',
+      `${window.location.origin}${window.location.pathname}?uiFind=${props.span.spanID}`
+    );
+  });
 
-    expect(copyIcon).toBeInTheDocument();
-    expect(copyText).toContain(`?uiFind=${props.span.spanID}`);
+  it('renders a span summary copy button with service, operation, duration, and spanID', () => {
+    render(<SpanDetail {...props} />);
+
+    const summaryButton = screen.getByRole('button', { name: 'Summary' });
+    expect(summaryButton).toBeInTheDocument();
+    expect(summaryButton).toHaveAttribute(
+      'data-copy-text',
+      `${span.resource.serviceName} | ${span.name} | ${formatDurationCompact(span.duration)} | spanID: ${span.spanID}`
+    );
   });
 
   describe('GenAI tab', () => {
