@@ -4,10 +4,12 @@
 import { useEffect, useMemo } from 'react';
 import { useQuery, useIsFetching, useQueryClient, skipToken, UseQueryResult } from '@tanstack/react-query';
 import { jaegerClient } from '../api/v3/client';
+import { trackSearchLatency } from '../components/SearchTracePage/SearchResults/index.track';
 import { localeStringComparator } from '../utils/sort';
 import { isSameQuery } from '../utils/search-query';
 import type { SearchQuery } from '../types/search';
 import type { TraceSummary } from '../types/trace-summary';
+import type { Microseconds } from '../types/units';
 
 // Module-private query keys — not exported; other code should use the hooks/accessors below.
 const SERVICES_QUERY_KEY = ['services'] as const;
@@ -60,6 +62,8 @@ export function useSpanNames(
 export type TraceSummariesResult = {
   results: TraceSummary[];
   query: SearchQuery;
+  /** Wall-clock latency of the search request (network + backend). */
+  searchLatency: Microseconds;
 };
 
 /**
@@ -85,7 +89,18 @@ export type TraceSummariesResult = {
  * **gcTime: Infinity** — prevents eviction while SearchTracePage is unmounted (e.g. user is
  * on a trace detail page). Safe because the single-slot invariant bounds memory to one entry.
  */
-export function useSearchTraces(query: SearchQuery | null): UseQueryResult<TraceSummariesResult> {
+/**
+ * useSearchTraces subscribes to the trace-summaries query for `query`.
+ *
+ * `skip` suppresses the fetch for a query the caller knows the deployment cannot serve.
+ * It is distinct from passing `null`: null means "no query in the URL", which restores
+ * the most recent cached search so the caller can rebuild the URL from it, whereas skip
+ * means "this query exists and must not run", leaving the cache untouched.
+ */
+export function useSearchTraces(
+  query: SearchQuery | null,
+  { skip = false }: { skip?: boolean } = {}
+): UseQueryResult<TraceSummariesResult> {
   const queryClient = useQueryClient();
 
   // When query is null (bare /search after TopNav click), find the most recently updated
@@ -93,6 +108,7 @@ export function useSearchTraces(query: SearchQuery | null): UseQueryResult<Trace
   // useMemo is used for idiomatic derived-cache reads; queryClient is stable across renders.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const effectiveQuery = useMemo(() => {
+    if (skip) return null;
     if (query) return query;
     const entries = queryClient
       .getQueryCache()
@@ -104,7 +120,7 @@ export function useSearchTraces(query: SearchQuery | null): UseQueryResult<Trace
     // Prefer queryKey[1] over state.data?.query so the entry is found even while
     // still fetching (data is undefined until the first successful response).
     return (mostRecent.queryKey[1] as SearchQuery | undefined) ?? null;
-  }, [query, queryClient]);
+  }, [query, queryClient, skip]);
 
   // Keep at most one cache entry: evict entries that don't match the effective query.
   useEffect(() => {
@@ -123,11 +139,14 @@ export function useSearchTraces(query: SearchQuery | null): UseQueryResult<Trace
   return useQuery({
     queryKey: [TRACE_SUMMARIES_QUERY_KEY, effectiveQuery],
     queryFn: effectiveQuery
-      ? async () =>
-          ({
-            results: await jaegerClient.fetchTraceSummaries(effectiveQuery),
-            query: effectiveQuery,
-          }) satisfies TraceSummariesResult
+      ? async () => {
+          const startedAt = performance.now();
+          const results = await jaegerClient.fetchTraceSummaries(effectiveQuery);
+          // performance.now() is in milliseconds; convert to the domain-wide Microseconds unit.
+          const searchLatency = ((performance.now() - startedAt) * 1000) as Microseconds;
+          trackSearchLatency(searchLatency);
+          return { results, query: effectiveQuery, searchLatency } satisfies TraceSummariesResult;
+        }
       : skipToken,
     staleTime: Infinity,
     gcTime: Infinity,

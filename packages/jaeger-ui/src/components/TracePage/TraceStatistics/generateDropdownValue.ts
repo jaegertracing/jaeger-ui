@@ -1,7 +1,6 @@
 // Copyright (c) 2020 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import _flatten from 'lodash/flatten';
 import _uniq from 'lodash/uniq';
 import { IOtelTrace } from '../../../types/otel';
 
@@ -19,16 +18,8 @@ function getValueAttributeIsPicked(
   const attributeKeys = new Set<string>();
 
   for (let j = 0; j < allSpans.length; j++) {
-    let spanContainsAttributeFromFirstDropdown = false;
-    for (let l = 0; l < allSpans[j].attributes.length; l++) {
-      if (attributeKeyFromFirstDropdown === allSpans[j].attributes[l].key) {
-        spanContainsAttributeFromFirstDropdown = true;
-        break;
-      }
-    }
-
-    if (spanContainsAttributeFromFirstDropdown) {
-      allSpans[j].attributes.forEach(x => attributeKeys.add(x.key));
+    if (allSpans[j].attributes.has(attributeKeyFromFirstDropdown)) {
+      allSpans[j].attributes.keys().forEach(key => attributeKeys.add(key));
     }
   }
 
@@ -52,17 +43,14 @@ function getValueNoAttributeIsPicked(trace: IOtelTrace, nameSelectorTitle: strin
     availableAttributes.push(serviceName);
   }
   for (let i = 0; i < allSpans.length; i++) {
-    for (let j = 0; j < allSpans[i].attributes.length; j++) {
-      availableAttributes.push(allSpans[i].attributes[j].key);
-    }
+    availableAttributes.push(...allSpans[i].attributes.keys());
   }
   return _uniq(availableAttributes);
 }
 
 export function generateDropdownValue(trace: IOtelTrace, useOtelTerms: boolean) {
   const allSpans = trace.spans;
-  const attributes = _flatten(allSpans.map(o => o.attributes));
-  const attributeKeys = _uniq(attributes.map(o => o.key));
+  const attributeKeys = _uniq(allSpans.flatMap(o => o.attributes.keys()));
   const values = [getServiceName(), getOperationName(useOtelTerms), ...attributeKeys];
   return values;
 }

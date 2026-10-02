@@ -124,7 +124,7 @@ type PromiseFulfilledResult<T> = {
   value: T;
 };
 
-export type PromiseRejectedResult = {
+type PromiseRejectedResult = {
   status: PromiseStatus.rejected;
   reason: ApiError;
 };

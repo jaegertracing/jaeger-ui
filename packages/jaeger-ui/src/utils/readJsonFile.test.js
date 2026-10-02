@@ -46,7 +46,7 @@ describe('fileReader.readJsonFile', () => {
       const p = readJsonFile({ rando: true });
       // prevent the unhandled rejection warning
       p.catch(() => {});
-    } catch (_) {
+    } catch {
       threw = true;
     }
     return expect(threw).toBe(false);

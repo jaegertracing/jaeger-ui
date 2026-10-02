@@ -32,7 +32,7 @@ import getLinks from '../../../model/link-patterns';
 import colorGenerator from '../../../utils/color-generator';
 import { TNil, ReduxState } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
-import { IOtelSpan, IOtelTrace, IAttribute, IEvent } from '../../../types/otel';
+import { IOtelSpan, IOtelTrace, IAttributes, IEvent } from '../../../types/otel';
 import TTraceTimeline from '../../../types/TTraceTimeline';
 import { getSelectedSpanID, useLayoutPrefsStore, useTraceTimelineStore } from './store';
 
@@ -40,6 +40,11 @@ import './VirtualizedTraceView.css';
 import updateUiFind from '../../../utils/update-ui-find';
 import { PEER_SERVICE } from '../../../constants/tag-keys';
 import withRouteProps from '../../../utils/withRouteProps';
+
+type RowStateData = {
+  rows: RowState[];
+  spanIndexToRowIndex: Map<number, number>;
+};
 
 type TVirtualizedTraceViewOwnProps = {
   currentViewRangeTime: [number, number];
@@ -49,6 +54,7 @@ type TVirtualizedTraceViewOwnProps = {
   registerAccessors: (accesors: Accessors) => void;
   trace: IOtelTrace;
   criticalPath: CriticalPathSection[];
+  spanPillsEnabled: boolean;
   useOtelTerms: boolean;
 };
 
@@ -99,11 +105,34 @@ function generateRowStatesFromTrace(
   detailStates: Map<string, DetailState | TNil>,
   detailPanelMode: 'inline' | 'sidepanel',
   prunedServices: Set<string>
-): RowState[] {
+): RowStateData {
   if (!trace) {
-    return [];
+    return {
+      rows: [],
+      spanIndexToRowIndex: new Map(),
+    };
   }
-  return generateRowStates(trace.spans, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices);
+
+  const rows = generateRowStates(
+    trace.spans,
+    childrenHiddenIDs,
+    detailStates,
+    detailPanelMode,
+    prunedServices
+  );
+
+  const spanIndexToRowIndex = new Map<number, number>();
+
+  rows.forEach((row, rowIndex) => {
+    if (!spanIndexToRowIndex.has(row.spanIndex)) {
+      spanIndexToRowIndex.set(row.spanIndex, rowIndex);
+    }
+  });
+
+  return {
+    rows,
+    spanIndexToRowIndex,
+  };
 }
 
 function getCssClasses(currentViewRange: [number, number]) {
@@ -124,6 +153,10 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
 ) {
   const listViewRef = useRef<ListView | TNil>(null);
 
+  // TODO: React documents writing a ref during render as unsafe, because a render that gets
+  // discarded leaves the ref holding props that never committed. Nothing in this subtree uses
+  // StrictMode, startTransition or useDeferredValue today, so adopting any of them means first
+  // giving the callbacks below real dependencies instead of reading through this ref.
   const propsRef = useRef(props);
   propsRef.current = props;
 
@@ -134,7 +167,8 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
 
   const getRowStates = useCallback((): RowState[] => {
     const { trace, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices } = propsRef.current;
-    return memoizedGenerateRowStates(trace, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices);
+    return memoizedGenerateRowStates(trace, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices)
+      .rows;
   }, []);
 
   const getClippingCssClasses = useCallback((): string => {
@@ -160,7 +194,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
     }
   }, []);
 
-  const linksGetter = useCallback((span: IOtelSpan, items: ReadonlyArray<IAttribute>, itemIndex: number) => {
+  const linksGetter = useCallback((span: IOtelSpan, items: IAttributes, itemIndex: number) => {
     const { trace } = propsRef.current;
     if (!trace) return [];
     return getLinks(span, items, itemIndex, trace);
@@ -168,7 +202,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
 
   // Adapter for OTEL components that need links from attributes
   const linksGetterFromAttributes = useCallback(
-    (span: IOtelSpan) => (attributes: ReadonlyArray<IAttribute>, index: number) => {
+    (span: IOtelSpan) => (attributes: IAttributes, index: number) => {
       return linksGetter(span, attributes, index);
     },
     [linksGetter]
@@ -192,20 +226,23 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
     [getRowStates]
   );
 
-  const mapSpanIndexToRowIndex = useCallback(
-    (index: number) => {
-      const rows = getRowStates();
-      const max = rows.length;
-      for (let i = 0; i < max; i++) {
-        const { spanIndex } = rows[i];
-        if (spanIndex === index) {
-          return i;
-        }
-      }
+  const mapSpanIndexToRowIndex = useCallback((index: number) => {
+    const { spanIndexToRowIndex } = memoizedGenerateRowStates(
+      propsRef.current.trace,
+      propsRef.current.childrenHiddenIDs,
+      propsRef.current.detailStates,
+      propsRef.current.detailPanelMode,
+      propsRef.current.prunedServices
+    );
+
+    const rowIndex = spanIndexToRowIndex.get(index);
+
+    if (rowIndex == null) {
       throw new Error(`unable to find row for span index: ${index}`);
-    },
-    [getRowStates]
-  );
+    }
+
+    return rowIndex;
+  }, []);
 
   const getAccessors = useCallback(() => {
     const lv = listViewRef.current;
@@ -351,6 +388,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         timelineBarsVisible,
         trace,
         useOtelTerms,
+        spanPillsEnabled,
       } = propsRef.current;
       // to avert flow error
       if (!trace) {
@@ -385,14 +423,14 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
           };
         }
       }
-      const peerServiceAttr = span.attributes.find(attr => attr.key === PEER_SERVICE);
+      const peerServiceValue = span.attributes.getValue(PEER_SERVICE);
       // Leaf, kind == client and has peer.service tag, is likely a client span that does a request
       // to an uninstrumented/external service
       let noInstrumentedServer = null;
-      if (!span.hasChildren && peerServiceAttr && (isKindClient(span) || isKindProducer(span))) {
+      if (!span.hasChildren && peerServiceValue != null && (isKindClient(span) || isKindProducer(span))) {
         noInstrumentedServer = {
-          serviceName: String(peerServiceAttr.value),
-          color: colorGenerator.getColorByKey(String(peerServiceAttr.value)),
+          serviceName: String(peerServiceValue),
+          color: colorGenerator.getColorByKey(String(peerServiceValue)),
         };
       }
 
@@ -420,6 +458,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
             span={span}
             focusSpan={focusSpan}
             traceDuration={trace.duration}
+            spanPillsEnabled={spanPillsEnabled}
             useOtelTerms={useOtelTerms}
           />
         </div>

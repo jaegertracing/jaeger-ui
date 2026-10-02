@@ -52,3 +52,16 @@ SPDX-License-Identifier: Apache-2.0
   vertical-align: middle;
   font-weight: bold;
 }
+
+.KeyValueTable--row-jsonKey > td {
+  padding-bottom: 0;
+  font-weight: 600;
+}
+
+.KeyValueTable--row-jsonValue > td {
+  padding-top: 0.1rem;
+}
+
+.KeyValueTable--valueColumn-full {
+  width: auto;
+}

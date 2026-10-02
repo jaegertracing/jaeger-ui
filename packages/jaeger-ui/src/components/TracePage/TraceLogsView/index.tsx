@@ -8,7 +8,7 @@ import _sortBy from 'lodash/sortBy';
 import './index.css';
 
 import AccordionAttributes from '../TraceTimelineViewer/SpanDetail/AccordionAttributes';
-import { IOtelTrace, IOtelSpan, IEvent, IAttribute } from '../../../types/otel';
+import { IOtelTrace, IOtelSpan, IEvent, IAttributes } from '../../../types/otel';
 import { Microseconds } from '../../../types/units';
 import { formatDuration } from '../../../utils/date';
 import prefixUrl from '../../../utils/prefix-url';
@@ -19,7 +19,7 @@ type TraceLogEntry = {
   timestamp: Microseconds;
   relativeTime: Microseconds;
   eventName: string;
-  attributes: IAttribute[];
+  attributes: IAttributes;
   spanID: string;
   spanName: string;
   serviceName: string;
@@ -114,8 +114,8 @@ export default function TraceLogsView({ trace, useOtelTerms }: Props) {
     {
       title: attributesLabel,
       dataIndex: 'attributes',
-      render: (attributes: IAttribute[], record: TraceLogEntry) => {
-        if (!attributes || attributes.length === 0) {
+      render: (attributes: IAttributes, record: TraceLogEntry) => {
+        if (!attributes || attributes.size === 0) {
           return <span className="TraceLogsView--no-attrs">—</span>;
         }
         return (

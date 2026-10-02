@@ -1,3 +1,4 @@
+// Copyright (c) 2026 The Jaeger Authors.
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -27,7 +28,7 @@ export function trackFormInput(
   lookback: string,
   serviceName: string
 ) {
-  trackEvent(CATEGORY_OPERATION, operation === constants.DEFAULT_OPERATION ? ACTION_DEFAULT : ACTION_SET);
+  trackEvent(CATEGORY_OPERATION, operation === constants.ALL_OPERATIONS ? ACTION_DEFAULT : ACTION_SET);
   trackEvent(CATEGORY_LIMIT, resultsLimit === String(constants.DEFAULT_LIMIT) ? ACTION_DEFAULT : ACTION_SET);
   trackEvent(CATEGORY_MAX_DURATION, maxDuration ? ACTION_SET : ACTION_CLEAR);
   trackEvent(CATEGORY_MIN_DURATION, minDuration ? ACTION_SET : ACTION_CLEAR);

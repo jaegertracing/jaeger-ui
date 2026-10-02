@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .DetailTraceTableTbody--TraceStatistics {
-  border-bottom: 1px solid rgb(204, 204, 204);
+  border-bottom: 1px solid var(--border-default);
 }
 
 .ant-select-dropdown--multiple {

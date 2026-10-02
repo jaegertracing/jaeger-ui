@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import filterSpans from './filter-spans';
+import { makeAttributes } from '../model/attributes';
 
 describe('filterSpans', () => {
   // span0 contains strings that end in 0 or 1
@@ -234,5 +235,51 @@ describe('filterSpans', () => {
   // This test may false positive if other tests are failing
   it('should return an empty set if no spans match the filter', () => {
     expect(filterSpans('-processTagKey1', spans)).toEqual(new Set());
+  });
+
+  describe('object and array attribute values (OTel spans)', () => {
+    const makeOtelSpan = (spanID, attrs) => ({
+      spanID,
+      name: 'op',
+      resource: { serviceName: 'svc', attributes: makeAttributes() },
+      attributes: makeAttributes(attrs),
+      events: [],
+    });
+
+    it('matches text inside an object attribute value', () => {
+      const span = makeOtelSpan('obj-span', [
+        { key: 'gen_ai.message', value: { role: 'user', content: 'hello world' } },
+      ]);
+      expect(filterSpans('hello', [span])).toEqual(new Set(['obj-span']));
+      expect(filterSpans('user', [span])).toEqual(new Set(['obj-span']));
+      expect(filterSpans('notfound', [span])).toEqual(new Set([]));
+    });
+
+    it('matches text inside an array attribute value', () => {
+      const span = makeOtelSpan('arr-span', [
+        { key: 'http.request.header.accept', value: ['application/json', 'text/html'] },
+      ]);
+      expect(filterSpans('application/json', [span])).toEqual(new Set(['arr-span']));
+      expect(filterSpans('text/html', [span])).toEqual(new Set(['arr-span']));
+      expect(filterSpans('notfound', [span])).toEqual(new Set([]));
+    });
+
+    it('does not confuse object values with "[object Object]"', () => {
+      const span = makeOtelSpan('obj-span', [{ key: 'meta', value: { foo: 'bar' } }]);
+      expect(filterSpans('[object Object]', [span])).toEqual(new Set([]));
+      expect(filterSpans('bar', [span])).toEqual(new Set(['obj-span']));
+    });
+
+    it('supports key=value search for object attribute values', () => {
+      const span = makeOtelSpan('obj-span', [{ key: 'payload', value: { status: 'ok' } }]);
+      expect(filterSpans('payload={"status":"ok"}', [span])).toEqual(new Set(['obj-span']));
+    });
+
+    it('does not throw on circular reference values, falls back to String()', () => {
+      const circular = {};
+      circular.self = circular;
+      const span = makeOtelSpan('circ-span', [{ key: 'meta', value: circular }]);
+      expect(() => filterSpans('meta', [span])).not.toThrow();
+    });
   });
 });

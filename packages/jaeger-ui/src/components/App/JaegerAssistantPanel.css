@@ -4,9 +4,7 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .JaegerAssistantPanel {
-  flex: 0 0 min(100%, 26rem);
-  max-width: 26rem;
-  min-width: 20rem;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   border-left: 1px solid var(--border-default);
@@ -18,6 +16,27 @@ SPDX-License-Identifier: Apache-2.0
   max-height: calc(100vh - var(--nav-height));
   min-height: 0;
   overflow: hidden;
+}
+
+.JaegerAssistantPanel-resizeHandle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 4px;
+  height: 100%;
+  cursor: ew-resize;
+  z-index: 10;
+}
+
+.JaegerAssistantPanel-resizeHandle:hover,
+.JaegerAssistantPanel-resizeHandle:focus-visible {
+  background-color: var(--interactive-primary);
+  opacity: 0.4;
+}
+
+.JaegerAssistantPanel-resizeHandle:focus-visible {
+  outline: 2px solid var(--interactive-primary);
+  outline-offset: -1px;
 }
 
 .JaegerAssistantPanel-topBar {
@@ -109,6 +128,83 @@ SPDX-License-Identifier: Apache-2.0
 
 .JaegerAssistantPanel-messageText {
   white-space: pre-wrap;
+}
+
+/* Markdown-rendered replies must collapse soft line breaks (LLMs hard-wrap
+   paragraphs); pre/code inside keep their own whitespace handling. */
+.JaegerAssistantPanel-md {
+  white-space: normal;
+}
+
+.JaegerAssistantPanel-toolCall {
+  padding: 0.3rem 0.5rem;
+  margin: 0.25rem 0;
+  border-radius: 6px;
+  border: 1px solid var(--border-default);
+  background-color: var(--surface-secondary);
+  font-size: 0.8rem;
+}
+
+.JaegerAssistantPanel-toolCall--error {
+  border-color: var(--status-error);
+}
+
+.JaegerAssistantPanel-toolCallName {
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-family: monospace;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.JaegerAssistantPanel-toolCallStatus {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.JaegerAssistantPanel-toolCallBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: 0.25rem;
+}
+
+.JaegerAssistantPanel-toolCallSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.JaegerAssistantPanel-toolCallLabel {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+
+.JaegerAssistantPanel-toolCallPre {
+  margin: 0;
+  padding: 0.3rem 0.4rem;
+  border-radius: 4px;
+  background-color: var(--surface-primary);
+  color: var(--text-primary);
+  font-family: monospace;
+  font-size: 0.7rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 10rem;
+  overflow-y: auto;
+}
+
+.JaegerAssistantPanel-toolCallSection .json-markup {
+  padding: 0.3rem 0.4rem;
+  border-radius: 4px;
+  background-color: var(--surface-primary);
+  font-size: 0.7rem;
+  max-height: 10rem;
+  overflow: auto;
+  white-space: nowrap;
 }
 
 .JaegerAssistantPanel-composer {

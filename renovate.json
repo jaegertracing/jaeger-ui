@@ -4,9 +4,11 @@
   "labels": ["changelog:dependencies"],
   "suppressNotifications": ["prEditedNotification"],
   "schedule": ["on sunday"],
+  "minimumReleaseAge": "7 days",
   "vulnerabilityAlerts": {
     "enabled": true,
-    "labels": ["security"]
+    "labels": ["security"],
+    "minimumReleaseAge": "0 days"
   },
   "packageRules": [
     {
@@ -20,7 +22,14 @@
       "matchManagers": ["npm"],
       "matchPackageNames": ["/^@assistant-ui//", "/^@ag-ui//"],
       "rangeStrategy": "pin",
-      "description": "@assistant-ui/* and @ag-ui/* share peer types (AssistantRuntime, HttpAgent); bumping them independently produces duplicate copies in node_modules and tsc errors. Pin exact versions (no ^) so npm dedupes a single copy."
+      "description": "@assistant-ui/* and @ag-ui/* share peer types (AssistantRuntime, HttpAgent); bumping them independently produces duplicate copies in node_modules and tsc errors. Pin exact versions (no ^) so pnpm dedupes a single copy."
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["@ag-ui/client"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false,
+      "description": "Block major upgrades of @ag-ui/client until @assistant-ui/react-ag-ui supports @ag-ui/client 1.x"
     },
     {
       "groupName": "opentelemetry",

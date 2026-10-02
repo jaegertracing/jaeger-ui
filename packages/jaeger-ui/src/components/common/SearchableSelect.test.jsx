@@ -73,6 +73,68 @@ describe('SearchableSelect', () => {
     expect(screen.getAllByText('my-service').length).toBeGreaterThan(0);
     expect(screen.queryByText('other')).not.toBeInTheDocument();
   });
+
+  describe('allowCustomValue', () => {
+    // Ant Design mirrors every option into an accessibility-only listbox, so the option
+    // text appears twice; the titles of the visible items are the unambiguous list.
+    const offeredOptions = () =>
+      [...document.querySelectorAll('.ant-select-item-option')].map(option => option.title);
+
+    const renderWithApple = props => {
+      const onChange = jest.fn();
+      render(
+        <SearchableSelect onChange={onChange} {...props}>
+          <Select.Option value="apple">Apple</Select.Option>
+        </SearchableSelect>
+      );
+      return onChange;
+    };
+
+    const openAndType = async text => {
+      const select = screen.getByRole('combobox');
+      await userEvent.click(select);
+      await userEvent.type(select, text);
+      return select;
+    };
+
+    it('offers the typed text as an option and reports it when picked', async () => {
+      const onChange = renderWithApple({ allowCustomValue: true });
+
+      await openAndType('cherry');
+      expect(offeredOptions()).toEqual(['cherry']);
+      await userEvent.click(screen.getByTitle('cherry'));
+
+      expect(onChange).toHaveBeenCalledWith('cherry', expect.objectContaining({ value: 'cherry' }));
+    });
+
+    it('offers nothing beyond the given options without the prop', async () => {
+      renderWithApple({});
+
+      await openAndType('cherry');
+
+      expect(offeredOptions()).toEqual([]);
+    });
+
+    // The typed text would otherwise linger as a phantom option the next time the dropdown
+    // opens, since Ant Design has already cleared the text itself.
+    it('withdraws the typed option once the dropdown closes', async () => {
+      renderWithApple({ allowCustomValue: true });
+
+      const select = await openAndType('cherry');
+      await userEvent.click(document.body);
+      await userEvent.click(select);
+
+      expect(offeredOptions()).toEqual(['Apple']);
+    });
+
+    it('does not duplicate an option the typed text already matches', async () => {
+      renderWithApple({ allowCustomValue: true });
+
+      await openAndType('apple');
+
+      expect(offeredOptions()).toEqual(['Apple']);
+    });
+  });
 });
 
 describe('filterOptionsByLabel', () => {

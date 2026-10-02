@@ -1,7 +1,7 @@
 # ADR-0006: Side Panel Span Details and Tree-Only Mode for Trace Timeline
 
-**Status**: Implemented
-**Date**: 2026-03-07
+* **Status**: Implemented
+* **Date**: 2026-03-07
 
 ## Context
 

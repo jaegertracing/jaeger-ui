@@ -8,7 +8,6 @@ import userEvent from '@testing-library/user-event';
 
 import SpanDetailRow from './SpanDetailRow';
 import DetailState from './SpanDetail/DetailState';
-import SpanTreeOffset from './SpanTreeOffset';
 
 const MockSpanDetail = jest.fn(() => <div data-testid="mocked-span-detail" />);
 vi.mock('./SpanDetail', () => ({
