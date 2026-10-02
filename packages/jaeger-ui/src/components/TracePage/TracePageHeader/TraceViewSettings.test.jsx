@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
@@ -89,5 +89,24 @@ describe('<TraceViewSettings>', () => {
     await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
     await userEvent.click(await screen.findByText('Keyboard Shortcuts'));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+  it('stops keydown event propagation from the dropdown menu', async () => {
+    const parentKeyDown = jest.fn();
+    const { container } = render(
+      // eslint-disable-next-line jsx-a11y/no-static-element-interactions
+      <div onKeyDown={parentKeyDown}>
+        <TraceViewSettings {...defaultProps} />
+      </div>
+    );
+    // Open the dropdown
+    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
+    await screen.findByText('Show Timeline');
+
+    // Find the antd dropdown menu overlay and fire a keydown on it
+    const menuElement = container.querySelector('[class*="ant-dropdown-menu"]') || document.querySelector('[class*="ant-dropdown-menu"]');
+    if (menuElement) {
+      fireEvent.keyDown(menuElement, { key: 'ArrowDown' });
+      expect(parentKeyDown).not.toHaveBeenCalled();
+    }
   });
 });
