@@ -10,7 +10,7 @@ import { getUrl, TDiffRouteParams } from './url';
 import TraceDiffGraph from './TraceDiffGraph';
 import TraceDiffHeader from './TraceDiffHeader';
 import { TOP_NAV_HEIGHT } from '../../constants';
-import { FetchedTrace, TNil, ReduxState } from '../../types';
+import { TNil, ReduxState } from '../../types';
 import TTraceDiffState from '../../types/TTraceDiffState';
 import pluckTruthy from '../../utils/ts/pluckTruthy';
 import { useTraces } from '../../hooks/useTraceLoading';
@@ -116,9 +116,12 @@ export function TraceDiffImpl({ a, b, cohort }: TStateProps & TOwnProps) {
     setGraphTopOffsetCallback();
   }, [setGraphTopOffsetCallback]);
 
-  const traceA = a ? tracesData.get(a) || { id: a } : null;
-  const traceB = b ? tracesData.get(b) || { id: b } : null;
-  const cohortData: FetchedTrace[] = cohort.map(id => tracesData.get(id) || { id });
+  const { traceA, traceB, cohortData } = React.useMemo(() => {
+    const tA = a ? tracesData.get(a) || { id: a } : null;
+    const tB = b ? tracesData.get(b) || { id: b } : null;
+    const cData = cohort.map(id => tracesData.get(id) || { id });
+    return { traceA: tA, traceB: tB, cohortData: cData };
+  }, [a, b, cohort, tracesData]);
 
   return (
     <React.Fragment>
