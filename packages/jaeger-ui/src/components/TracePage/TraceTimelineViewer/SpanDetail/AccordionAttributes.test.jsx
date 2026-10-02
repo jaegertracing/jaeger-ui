@@ -61,6 +61,19 @@ describe('<AttributesSummary />', () => {
     expect(screen.getByText('10,001 chars')).toBeInTheDocument();
     expect(screen.queryByText(value)).not.toBeInTheDocument();
   });
+
+  it('uses bounded summaries for byte arrays and attribute arrays', () => {
+    const data = makeAttributes([
+      { key: 'bytes', value: new Uint8Array(2_048) },
+      { key: 'array', value: ['one', 'two'] },
+      { key: 'number', value: 42 },
+    ]);
+    render(<AttributesSummary data={data} />);
+
+    expect(screen.getByText('2,048 bytes')).toBeInTheDocument();
+    expect(screen.getByText('2 items')).toBeInTheDocument();
+    expect(screen.getByText('42')).toBeInTheDocument();
+  });
 });
 
 describe('<AccordionAttributes />', () => {
