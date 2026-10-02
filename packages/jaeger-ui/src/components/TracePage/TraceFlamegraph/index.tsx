@@ -10,8 +10,9 @@ import { IoHelp } from 'react-icons/io5';
 import OtelTraceFacade from '../../../model/OtelTraceFacade';
 import colorGenerator from '../../../utils/color-generator';
 import { formatDuration, formatDurationCompact } from '../../../utils/date';
+import { IOtelTrace } from '../../../types/otel';
 import { Microseconds } from '../../../types/units';
-import { convertOtelTraceToFlameData } from './convertOtelTraceToFlameData';
+import { convertOtelTraceToFlameData, IFlameNode } from './convertOtelTraceToFlameData';
 import { generateTableData } from './generateTableData';
 import FlamegraphToolbar, { ViewMode } from './FlamegraphToolbar';
 import FlamegraphTable from './FlamegraphTable';
@@ -42,12 +43,16 @@ const HIGHLIGHT_COLOR = '#E600E6';
 // minimum width, so a sliver of the scrollable columns stays visible.
 const TABLE_MIN_GUTTER_PX = 16;
 
-const TraceFlamegraph = ({ trace }: any) => {
+interface TraceFlamegraphProps {
+  trace: IOtelTrace | null;
+}
+
+const TraceFlamegraph = ({ trace }: TraceFlamegraphProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<ReturnType<typeof flamegraph> | null>(null);
   const searchActiveRef = useRef(false);
-  const zoomedNodeRef = useRef<any>(null);
+  const zoomedNodeRef = useRef<IFlameNode | null>(null);
   const hoveredFrameRef = useRef<Element | null>(null);
 
   const [viewMode, setViewMode] = useState<ViewMode>('both');
@@ -59,7 +64,7 @@ const TraceFlamegraph = ({ trace }: any) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [chartZoomed, setChartZoomed] = useState(false);
-  const [collapsedRoot, setCollapsedRoot] = useState<any>(null);
+  const [collapsedRoot, setCollapsedRoot] = useState<IFlameNode | null>(null);
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
