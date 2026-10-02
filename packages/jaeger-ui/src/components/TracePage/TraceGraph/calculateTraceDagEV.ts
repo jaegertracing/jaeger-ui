@@ -11,8 +11,6 @@ import { TDenseSpanMembers } from '../../../model/trace-dag/types';
 import { IOtelSpan, IOtelTrace, SpanKind, StatusCode } from '../../../types/otel';
 import { TSumSpan, TEv } from './types';
 
-let parentChildOfMap: Record<string, IOtelSpan[]>;
-
 export function mapNonBlocking(
   edges: TEdge[],
   nodes: TDagNode<TSumSpan & TDenseSpanMembers>[]
@@ -32,39 +30,27 @@ export function mapNonBlocking(
   });
 }
 
-/**
- * Gets blocking child spans (children that contribute to parent's critical path).
- * In OTEL, CONSUMER children of PRODUCER parents are non-blocking and should be excluded
- * from critical path calculations, similar to how FOLLOWS_FROM was excluded in legacy code.
- */
-function getBlockingChildSpans(parentID: string, trace: IOtelTrace): IOtelSpan[] {
-  if (!parentChildOfMap) {
-    parentChildOfMap = {};
-    trace.spans.forEach(s => {
-      if (s.parentSpanID) {
-        const pID = s.parentSpanID;
-        // Only include blocking children (not CONSUMER spans)
-        // CONSUMER spans are non-blocking in PRODUCER-CONSUMER pairs
-        if (s.kind !== SpanKind.CONSUMER) {
-          parentChildOfMap[pID] = parentChildOfMap[pID] || [];
-          parentChildOfMap[pID].push(s);
-        }
-      }
-    });
-  }
-  return parentChildOfMap[parentID] || [];
-}
-
-function getChildOfDrange(parentID: string, trace: IOtelTrace) {
-  const childrenDrange = new DRange();
-  getBlockingChildSpans(parentID, trace).forEach(s => {
-    // -1 otherwise it will take for each child a micro (incluse,exclusive)
-    childrenDrange.add(s.startTime, s.startTime + (s.duration <= 0 ? 0 : s.duration - 1));
-  });
-  return childrenDrange;
-}
-
 function calculateTraceDag(trace: IOtelTrace): TraceDag<TSumSpan & TDenseSpanMembers> {
+  // Build the parent→blocking-children map once per trace invocation so it is
+  // never stale when the user navigates between traces in the same session.
+  const blockingChildMap: Record<string, IOtelSpan[]> = {};
+  trace.spans.forEach(s => {
+    if (s.parentSpanID && s.kind !== SpanKind.CONSUMER) {
+      // Only include blocking children (not CONSUMER spans)
+      // CONSUMER spans are non-blocking in PRODUCER-CONSUMER pairs
+      (blockingChildMap[s.parentSpanID] ??= []).push(s);
+    }
+  });
+
+  const getChildOfDrange = (parentID: string) => {
+    const childrenDrange = new DRange();
+    (blockingChildMap[parentID] || []).forEach(s => {
+      // -1 otherwise it will take for each child a micro (incluse,exclusive)
+      childrenDrange.add(s.startTime, s.startTime + (s.duration <= 0 ? 0 : s.duration - 1));
+    });
+    return childrenDrange;
+  };
+
   const baseDag = TraceDag.newFromTrace(trace);
   const dag = new TraceDag<TSumSpan & TDenseSpanMembers>();
 
@@ -73,9 +59,7 @@ function calculateTraceDag(trace: IOtelTrace): TraceDag<TSumSpan & TDenseSpanMem
     const numErrors = node.members.reduce((p, m) => p + (m.span.status.code === StatusCode.ERROR ? 1 : 0), 0);
     const childDurationsDRange = node.members.reduce((p, m) => {
       // Using DRange to handle overlapping spans (fork-join)
-      const cdr = new DRange(m.span.startTime, m.span.endTime).intersect(
-        getChildOfDrange(m.span.spanID, trace)
-      );
+      const cdr = new DRange(m.span.startTime, m.span.endTime).intersect(getChildOfDrange(m.span.spanID));
       return p + cdr.length;
     }, 0);
     const stime = ntime - childDurationsDRange;
