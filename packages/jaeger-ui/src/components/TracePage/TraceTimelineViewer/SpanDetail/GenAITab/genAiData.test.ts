@@ -1016,6 +1016,12 @@ describe('deepParseJson', () => {
     expect(deepParseJson(value)).toBe(value);
   });
 
+  it('treats a value nested too deeply to walk as having nothing to unwrap, instead of overflowing the stack', () => {
+    const depth = 100000;
+    const value = { payload: `${'['.repeat(depth)}0${']'.repeat(depth)}` };
+    expect(deepParseJson(value)).toBe(value);
+  });
+
   it('returns a new object when something inside it was unwrapped, leaving the input untouched', () => {
     const value = { a: '{"b":1}' };
     const result = deepParseJson(value);

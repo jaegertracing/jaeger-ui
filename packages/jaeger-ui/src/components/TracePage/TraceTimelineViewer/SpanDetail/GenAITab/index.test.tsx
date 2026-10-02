@@ -433,6 +433,22 @@ describe('GenAITab', () => {
     expect(viewItem(viewControl(), 'JSON (deep)')).toHaveAttribute('aria-disabled', 'true');
   });
 
+  it('shows the JSON tree, not plain text, when the remembered preference is JSON (deep) but this JSON has nothing to unwrap', () => {
+    useMessageFormatStore.setState({ overrides: { 'gen_ai.output.messages': 'json-deep' } });
+    const { container } = render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.output.messages',
+            value: [{ role: 'assistant', content: JSON.stringify({ answer: 42 }) }],
+          },
+        ])}
+      />
+    );
+    expect(shownView(viewControl())).toBe('JSON');
+    expect(container.querySelector('.GenAITab--json .json-markup-key')?.textContent).toContain('answer');
+  });
+
   it('disables the JSON option on a message whose content does not parse as JSON', () => {
     render(
       <GenAITab

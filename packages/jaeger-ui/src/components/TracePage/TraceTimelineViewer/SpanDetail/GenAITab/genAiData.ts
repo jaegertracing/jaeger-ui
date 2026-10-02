@@ -176,20 +176,31 @@ export function tryParseJson(value: string): unknown {
  * the plain tree.
  *
  * Returns the input itself (same reference) when no string was unwrapped, so a caller can
- * tell by identity whether the walk found anything, without a second traversal.
+ * tell by identity whether the walk found anything, without a second traversal. The same
+ * happens for a value nested too deeply to walk: JSON.parse accepts thousands of levels,
+ * and a recursive walk over them would overflow the stack, so the overflow is caught and
+ * the value is treated as having nothing to unwrap rather than failing the render.
  */
 export function deepParseJson(value: unknown): unknown {
+  try {
+    return walkJson(value);
+  } catch {
+    return value;
+  }
+}
+
+function walkJson(value: unknown): unknown {
   if (typeof value === 'string') {
     const parsed = tryParseJson(value);
-    return parsed === value ? value : deepParseJson(parsed);
+    return parsed === value ? value : walkJson(parsed);
   }
   if (Array.isArray(value)) {
-    const items = value.map(deepParseJson);
+    const items = value.map(walkJson);
     return items.some((item, i) => item !== value[i]) ? items : value;
   }
   if (typeof value === 'object' && value !== null) {
     const entries = Object.entries(value);
-    const walked = entries.map(([k, v]) => [k, deepParseJson(v)] as const);
+    const walked = entries.map(([k, v]) => [k, walkJson(v)] as const);
     return walked.some(([, v], i) => v !== entries[i][1]) ? Object.fromEntries(walked) : value;
   }
   return value;
