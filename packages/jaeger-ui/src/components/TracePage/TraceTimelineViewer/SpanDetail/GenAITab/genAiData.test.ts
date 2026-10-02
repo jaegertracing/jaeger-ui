@@ -1004,9 +1004,24 @@ describe('deepParseJson', () => {
     expect(deepParseJson('{"a":"[1,2]"}')).toEqual({ a: [1, 2] });
   });
 
-  it('leaves strings that are not JSON, and non-string scalars, unchanged', () => {
-    const value = { text: 'hello {world}', n: 1, ok: true, none: null, broken: '{not json' };
-    expect(deepParseJson(value)).toEqual(value);
+  it('returns the very same object when nothing inside it was unwrapped, so callers can detect a no-op by identity', () => {
+    const value = {
+      text: 'hello {world}',
+      n: 1,
+      ok: true,
+      none: null,
+      broken: '{not json',
+      list: [1, 'two'],
+    };
+    expect(deepParseJson(value)).toBe(value);
+  });
+
+  it('returns a new object when something inside it was unwrapped, leaving the input untouched', () => {
+    const value = { a: '{"b":1}' };
+    const result = deepParseJson(value);
+    expect(result).not.toBe(value);
+    expect(result).toEqual({ a: { b: 1 } });
+    expect(value).toEqual({ a: '{"b":1}' });
   });
 });
 

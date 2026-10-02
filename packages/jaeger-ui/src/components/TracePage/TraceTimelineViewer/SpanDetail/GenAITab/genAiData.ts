@@ -172,16 +172,25 @@ export function tryParseJson(value: string): unknown {
  * (a chat message whose `content` is itself a serialized `{role, parts}` message, whose
  * `content` is in turn a serialized tool result, and so on) produces values that the tree
  * view otherwise shows as one escaped string per level. The walk is lossy by design: a
- * string that merely looks like JSON is unwrapped too, so the view that uses it is opt-in.
+ * string that merely looks like JSON is unwrapped too, so the reader can switch back to
+ * the plain tree.
+ *
+ * Returns the input itself (same reference) when no string was unwrapped, so a caller can
+ * tell by identity whether the walk found anything, without a second traversal.
  */
 export function deepParseJson(value: unknown): unknown {
   if (typeof value === 'string') {
     const parsed = tryParseJson(value);
     return parsed === value ? value : deepParseJson(parsed);
   }
-  if (Array.isArray(value)) return value.map(deepParseJson);
+  if (Array.isArray(value)) {
+    const items = value.map(deepParseJson);
+    return items.some((item, i) => item !== value[i]) ? items : value;
+  }
   if (typeof value === 'object' && value !== null) {
-    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, deepParseJson(v)]));
+    const entries = Object.entries(value);
+    const walked = entries.map(([k, v]) => [k, deepParseJson(v)] as const);
+    return walked.some(([, v], i) => v !== entries[i][1]) ? Object.fromEntries(walked) : value;
   }
   return value;
 }

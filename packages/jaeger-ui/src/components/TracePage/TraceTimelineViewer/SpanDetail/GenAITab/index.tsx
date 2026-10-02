@@ -237,26 +237,38 @@ function MediaBlock({
  */
 function partView(part: GenAiPart, chosen: MessageFormat | null) {
   const parsedJson = tryParseJson(part.text);
+  const isJson = parsedJson !== null && typeof parsedJson === 'object';
+  // deepParseJson hands back the same object when there was nothing to unwrap, so the
+  // deep view is offered exactly when it would show something the plain tree does not.
+  const deepJson = isJson ? deepParseJson(parsedJson) : parsedJson;
   // Each view can only render content it supports; a requested view that can't falls back to plain.
   const canRender: Record<MessageFormat, boolean> = {
     plain: true,
     markdown: true,
-    json: parsedJson !== null && typeof parsedJson === 'object',
-    'json-deep': parsedJson !== null && typeof parsedJson === 'object',
+    json: isJson,
+    'json-deep': isJson && deepJson !== parsedJson,
     image: part.media?.type === 'image',
     audio: part.media?.type === 'audio',
   };
-  // With nothing chosen, a part carrying media opens on it and JSON-parseable content on
-  // the tree view, else plain text (Markdown is only opt-in).
+  // With nothing chosen, a part carrying media opens on it, JSON with JSON strings inside
+  // opens unwrapped, other JSON-parseable content on the plain tree, else plain text
+  // (Markdown is only opt-in).
   const defaultFormat: MessageFormat = canRender.image
     ? 'image'
     : canRender.audio
       ? 'audio'
-      : canRender.json
-        ? 'json'
-        : 'plain';
+      : canRender['json-deep']
+        ? 'json-deep'
+        : canRender.json
+          ? 'json'
+          : 'plain';
   const requested = chosen ?? defaultFormat;
-  return { parsedJson, canRender, format: canRender[requested] ? requested : ('plain' as MessageFormat) };
+  return {
+    parsedJson,
+    deepJson,
+    canRender,
+    format: canRender[requested] ? requested : ('plain' as MessageFormat),
+  };
 }
 
 // Every view the tab has, in the order they are offered. All six are listed for every
@@ -284,8 +296,11 @@ function viewHint(format: MessageFormat, canRender: Record<MessageFormat, boolea
     case 'json':
       return available ? '' : 'This part is not JSON, so there is no tree to show';
     case 'json-deep':
-      return available
-        ? 'Strings inside the JSON that are themselves JSON are unwrapped into the tree. A string that only looks like JSON is unwrapped too; Copy still gives the original text.'
+      if (available) {
+        return 'Strings inside the JSON that are themselves JSON are unwrapped into the tree. A string that only looks like JSON is unwrapped too; Copy still gives the original text.';
+      }
+      return canRender.json
+        ? 'No string inside this JSON is itself JSON, so there is nothing to unwrap'
         : 'This part is not JSON, so there is no tree to show';
     case 'image':
       return available
@@ -435,7 +450,7 @@ function PartContent({
     );
   }
   if (view.format === 'json') return <JsonBlock value={view.parsedJson} />;
-  if (view.format === 'json-deep') return <JsonBlock value={deepParseJson(view.parsedJson)} />;
+  if (view.format === 'json-deep') return <JsonBlock value={view.deepJson} />;
   if (view.format === 'markdown') return <MarkdownBlock content={part.text} onShowText={onShowText} />;
   return <pre className="GenAITab--messageContent GenAITab--messageContent-plain">{part.text}</pre>;
 }
@@ -467,11 +482,24 @@ function MessageBlock({
   const [revealed, setRevealed] = useState<ReadonlySet<string>>(new Set());
   const role = message.role || 'message';
   const isSinglePart = message.parts.length === 1;
-  const messageJson = JSON.stringify({ role: message.role, parts: message.parts }, null, 2);
+  // A view parses the part's text (and, for JSON, walks the result), and the copy string
+  // restringifies the message, so both are kept across renders that only toggle state on
+  // this message rather than redone for every part on every render.
+  const views = useMemo(
+    () => message.parts.map((part, i) => partView(part, formats[i] ?? seededFormat)),
+    [message.parts, formats, seededFormat]
+  );
+  const copyJsons = useMemo(
+    () =>
+      isSinglePart
+        ? [JSON.stringify({ role: message.role, parts: message.parts }, null, 2)]
+        : message.parts.map(part => JSON.stringify(part, null, 2)),
+    [message.role, message.parts, isSinglePart]
+  );
 
   const controlsFor = (part: GenAiPart, i: number) => (
     <PartControls
-      view={partView(part, formats[i] ?? seededFormat)}
+      view={views[i]}
       onFormatChange={format => {
         setFormats({ ...formats, [i]: format });
         onFormatChange(format);
@@ -515,7 +543,7 @@ function MessageBlock({
       ) : (
         <div className="GenAITab--messageParts">
           {message.parts.map((part, i) => {
-            const view = partView(part, formats[i] ?? seededFormat);
+            const view = views[i];
             return (
               <div
                 className="GenAITab--messagePart"
@@ -528,7 +556,7 @@ function MessageBlock({
                   label={`${part.media?.type === 'audio' ? 'Audio' : 'Image'} in ${
                     isSinglePart ? '' : `part ${i + 1} of `
                   }message ${messageNumber} (${role})`}
-                  copyJson={isSinglePart ? messageJson : JSON.stringify(message.parts[i], null, 2)}
+                  copyJson={copyJsons[i]}
                   revealed={part.media !== undefined && revealed.has(part.media.src)}
                   onReveal={() => part.media && setRevealed(new Set(revealed).add(part.media.src))}
                   onShowText={() => setFormats({ ...formats, [i]: 'plain' })}

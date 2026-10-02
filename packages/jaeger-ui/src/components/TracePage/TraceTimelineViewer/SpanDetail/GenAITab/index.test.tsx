@@ -388,7 +388,7 @@ describe('GenAITab', () => {
     expect(shownView(screen.getByLabelText(/Content format/))).toBe('JSON');
   });
 
-  it('unwraps JSON strings inside the JSON once the user switches to the JSON (deep) view', () => {
+  it('defaults JSON that holds JSON strings to the JSON (deep) view, and switching to JSON shows them escaped', () => {
     const nested = JSON.stringify({ message: JSON.stringify({ verdict: 'true' }) });
     const { container } = render(
       <GenAITab
@@ -397,10 +397,26 @@ describe('GenAITab', () => {
     );
     const keys = () =>
       Array.from(container.querySelectorAll('.GenAITab--json .json-markup-key')).map(k => k.textContent);
-    expect(keys()).toEqual(['message:']);
-    chooseView(viewControl(), 'JSON (deep)');
     expect(shownView(viewControl())).toBe('JSON (deep)');
     expect(keys()).toEqual(['message:', 'verdict:']);
+    chooseView(viewControl(), 'JSON');
+    expect(shownView(viewControl())).toBe('JSON');
+    expect(keys()).toEqual(['message:']);
+  });
+
+  it('disables the JSON (deep) option on JSON with no JSON strings inside, keeping JSON as the default', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.output.messages',
+            value: [{ role: 'assistant', content: JSON.stringify({ answer: 42 }) }],
+          },
+        ])}
+      />
+    );
+    expect(shownView(viewControl())).toBe('JSON');
+    expect(viewItem(viewControl(), 'JSON (deep)')).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('disables the JSON (deep) option, like JSON, on a message whose content does not parse as JSON', () => {
