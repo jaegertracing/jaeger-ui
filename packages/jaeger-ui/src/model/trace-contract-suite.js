@@ -216,6 +216,7 @@ export function runTraceContractSuite(pipeline) {
         spanID: 'missingStartTime',
         operationName: 'missingStartOp',
         parentSpanID: rootSpanID,
+        startTime: undefined,
         duration: 10,
       };
 
@@ -255,6 +256,7 @@ export function runTraceContractSuite(pipeline) {
         spanID: 'missingChild',
         operationName: 'missingOp',
         parentSpanID: rootSpanID,
+        startTime: undefined,
         duration: 300,
       };
 
@@ -293,6 +295,7 @@ export function runTraceContractSuite(pipeline) {
         spanID: 'brokenLeaf',
         operationName: 'leafOp',
         parentSpanID: 'brokenMiddle',
+        startTime: undefined,
         duration: 100,
       };
 
@@ -340,6 +343,7 @@ export function runTraceContractSuite(pipeline) {
         spanID: 'missing1',
         operationName: 'missing1',
         parentSpanID: rootSpanID,
+        startTime: undefined,
         duration: 10,
       };
       const nanSibling = {
@@ -372,6 +376,7 @@ export function runTraceContractSuite(pipeline) {
       const brokenRoot = {
         spanID: rootSpanID,
         operationName: rootOperationName,
+        startTime: undefined,
         duration: 500,
       };
       const child = {
@@ -610,16 +615,14 @@ export function runTraceContractSuite(pipeline) {
     });
 
     it('exposes parent and secondary references as links on spans with multiple references', () => {
-      const root = { spanID: 'root', operationName: 'root', startTime, duration };
-      const parent = { spanID: 'parent', operationName: 'parent', parentSpanID: 'root', startTime, duration };
-      const other = { spanID: 'other', operationName: 'other', parentSpanID: 'root', startTime, duration };
+      const root = { spanID: 'root', operationName: 'root' };
+      const parent = { spanID: 'parent', operationName: 'parent', parentSpanID: 'root' };
+      const other = { spanID: 'other', operationName: 'other', parentSpanID: 'root' };
       const willGainRef = {
         spanID: 'linked',
         operationName: 'linked',
         parentSpanID: 'parent',
         references: [{ refType: 'CHILD_OF', spanID: 'other' }],
-        startTime,
-        duration,
       };
       const existingRefID = id('parent');
       const willBeReferencedID = id('other');
