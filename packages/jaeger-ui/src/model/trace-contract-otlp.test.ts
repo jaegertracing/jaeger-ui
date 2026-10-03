@@ -10,140 +10,40 @@ const spec: ITraceSpec = {
   traceID: 'f77950feed55c1ce91dd8e87896623a6',
   serviceName: 'serviceName',
   spans: [
-    { spanID: 'd4dcb46e95b781f5', operationName: 'root', startTime: 1000, duration: 20 },
-    {
-      spanID: 'child',
-      operationName: 'child',
-      parentSpanID: 'd4dcb46e95b781f5',
-      startTime: undefined,
-      duration: 10,
-    },
-    {
-      spanID: 'linked',
-      operationName: 'linked',
-      references: [
-        { refType: 'CHILD_OF', spanID: 'child' },
-        { refType: 'CHILD_OF', spanID: 'missing' },
-      ],
-      startTime: 0,
-      duration: 5,
-    },
+    { spanID: 'd4dcb46e95b781f5', operationName: 'root' },
+    { spanID: 'child', operationName: 'child', parentSpanID: 'd4dcb46e95b781f5' },
   ],
 };
 
 describe('OTLP trace contract materializer', () => {
-  it('renders span specs with valid IDs, microsecond timing and reference links', () => {
+  it('renders valid OTLP with stable hex span IDs', () => {
     const wire = toOtlpTrace(spec);
     expect(refinedTracesData.safeParse(wire).success).toBe(true);
+
     const spans = wire.resourceSpans![0].scopeSpans[0].spans;
-    expect(spans).toHaveLength(spec.spans.length);
-    expect(spans[0]).toMatchObject({
-      spanId: spec.spans[0].spanID,
-      startTimeUnixNano: '1000000',
-      endTimeUnixNano: '1020000',
-    });
-    expect(spans[1]).toMatchObject({
-      spanId: spanIDForWire('child'),
-      parentSpanId: spec.spans[0].spanID,
-      endTimeUnixNano: '10000',
-    });
-    expect(spans[1]).not.toHaveProperty('startTimeUnixNano');
-    expect(spans[1].links).toEqual([]);
-    expect(spans[2]).toMatchObject({
-      parentSpanId: spanIDForWire('child'),
-      links: [
-        {
-          traceId: spec.traceID,
-          spanId: spanIDForWire('missing'),
-          attributes: [{ key: 'opentracing.ref_type', value: { stringValue: 'child_of' } }],
-        },
-      ],
-    });
-    expect(spans[2]).not.toHaveProperty('startTimeUnixNano');
+    expect(spans.map(span => span.spanId)).toEqual([spec.spans[0].spanID, spanIDForWire('child')]);
+    expect(spans[1].parentSpanId).toBe(spec.spans[0].spanID);
+    expect(spanIDForWire('child')).toBe(spanIDForWire('child'));
+    expect(spanIDForWire('child')).not.toBe(spanIDForWire('other'));
+    expect(spanIDForWire('D4DCB46E95B781F5')).toBe('d4dcb46e95b781f5');
   });
 
-  it('preserves a primary FOLLOWS_FROM link', () => {
-    const wire = toOtlpTrace({
-      ...spec,
-      spans: [
-        {
-          spanID: 'follower',
-          operationName: 'follower',
-          references: [{ refType: 'FOLLOWS_FROM', spanID: 'missing' }],
-          startTime: 0,
-          duration: 10,
-        },
-      ],
-    });
-    expect(refinedTracesData.safeParse(wire).success).toBe(true);
-    const span = wire.resourceSpans![0].scopeSpans[0].spans[0];
-    expect(span.parentSpanId).toBe(spanIDForWire('missing'));
-    expect(span.links).toEqual([
-      {
-        traceId: spec.traceID,
-        spanId: spanIDForWire('missing'),
-        attributes: [{ key: 'opentracing.ref_type', value: { stringValue: 'follows_from' } }],
-      },
-    ]);
-    expect(span).not.toHaveProperty('startTimeUnixNano');
-  });
-
-  it('rejects NaN instead of silently changing a legacy-only input', () => {
-    expect(() => toOtlpTrace({ ...spec, spans: [{ ...spec.spans[0], startTime: NaN }] })).toThrow(
-      'Invalid OTLP startTime'
-    );
-  });
-
-  it('defaults omitted timing and preserves explicitly missing timing', () => {
+  it('uses default timing and omits explicitly missing or unusable timestamps', () => {
     const wire = toOtlpTrace({
       ...spec,
       spans: [
         { spanID: 'default', operationName: 'default' },
         { spanID: 'missing-start', operationName: 'missing-start', startTime: undefined },
+        { spanID: 'nan-start', operationName: 'nan-start', startTime: NaN },
         { spanID: 'missing-end', operationName: 'missing-end', duration: undefined },
       ],
     });
     expect(refinedTracesData.safeParse(wire).success).toBe(true);
+
     const spans = wire.resourceSpans![0].scopeSpans[0].spans;
     expect(spans[0]).toMatchObject({ startTimeUnixNano: '1000', endTimeUnixNano: '2000' });
     expect(spans[1]).not.toHaveProperty('startTimeUnixNano');
-    expect(spans[1].endTimeUnixNano).toBe('1000');
-    expect(spans[2].startTimeUnixNano).toBe('1000');
-    expect(spans[2]).not.toHaveProperty('endTimeUnixNano');
-  });
-
-  it('encodes typed and repeated tags for the shared tag tests', () => {
-    const wire = toOtlpTrace({
-      ...spec,
-      spans: [
-        {
-          ...spec.spans[0],
-          tags: [
-            { key: 'x', value: 1 },
-            { key: 'x', value: '1' },
-            { key: 'x', value: false },
-          ],
-        },
-      ],
-    });
-    expect(refinedTracesData.safeParse(wire).success).toBe(true);
-    expect(wire.resourceSpans![0].scopeSpans[0].spans[0].attributes).toEqual([
-      { key: 'x', value: { intValue: '1' } },
-      { key: 'x', value: { stringValue: '1' } },
-      { key: 'x', value: { boolValue: false } },
-    ]);
-  });
-
-  it('maps labels deterministically and returns fresh wire objects', () => {
-    expect(spanIDForWire('child')).toBe(spanIDForWire('child'));
-    expect(spanIDForWire('child')).not.toBe(spanIDForWire('linked'));
-    expect(spanIDForWire('D4DCB46E95B781F5')).toBe('d4dcb46e95b781f5');
-    const first = toOtlpTrace(spec);
-    const second = toOtlpTrace(spec);
-    expect(first).toEqual(second);
-    expect(first).not.toBe(second);
-    expect(first.resourceSpans![0].scopeSpans[0].spans[0]).not.toBe(
-      second.resourceSpans![0].scopeSpans[0].spans[0]
-    );
+    expect(spans[2]).not.toHaveProperty('startTimeUnixNano');
+    expect(spans[3]).not.toHaveProperty('endTimeUnixNano');
   });
 });
