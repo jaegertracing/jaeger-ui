@@ -16,6 +16,11 @@ import { IAttributes } from '../../../../types/otel';
 
 import './AttributesTable.css';
 
+// This sits well above the 200-character collapsed-summary limit, preserving
+// normal attributes while deferring JSON.parse and JsonView for large GenAI
+// payloads until the user asks to see them.
+const LARGE_VALUE_THRESHOLD_CHARS = 10_000;
+
 const jsonObjectOrArrayStartRegex = /^(\[|\{)/;
 
 function tryParseJson(value: string) {
@@ -98,6 +103,10 @@ function formatValue(key: string, value: any): { node: React.ReactNode; isJsonTr
   return { node: <div className="ub-inline-block">{content}</div>, isJsonTree };
 }
 
+function formatSize(chars: number) {
+  return `${chars.toLocaleString()} chars`;
+}
+
 export const LinkValue = (props: { href: string; title?: string; children: React.ReactNode }) => (
   <a href={props.href} title={props.title || ''} target="_blank" rel="noopener noreferrer">
     {props.children} <IoOpenOutline className="KeyValueTable--linkIcon" />
@@ -120,16 +129,44 @@ type AttributesTableProps = {
 // Example: https://github.com/jaegertracing/jaeger-ui/assets/94157520/b518cad9-cb37-4775-a3d6-b667a1235f89
 export default function AttributesTable(props: AttributesTableProps) {
   const { data, linksGetter } = props;
+  // Attribute entries are stable for a given IAttributes collection. Keeping
+  // them in the set means a replacement entry starts collapsed automatically.
+  const [expandedRows, setExpandedRows] = React.useState<Set<object>>(() => new Set());
+  const [, startTransition] = React.useTransition();
+
+  const expandRow = React.useCallback(
+    (row: object) => {
+      startTransition(() => {
+        setExpandedRows(currentRows => new Set(currentRows).add(row));
+      });
+    },
+    [startTransition]
+  );
 
   return (
     <div className="KeyValueTable u-simple-scrollbars">
       <table className="u-width-100">
         <tbody className="KeyValueTable--body">
           {data.entries().map((row, i) => {
-            const { node: jsonTable, isJsonTree } = formatValue(row.key, row.value);
-            const links = linksGetter ? linksGetter(data, i) : null;
+            const isLarge = typeof row.value === 'string' && row.value.length >= LARGE_VALUE_THRESHOLD_CHARS;
+            const shouldDeferValue = isLarge && !expandedRows.has(row);
+            const { node: jsonTable, isJsonTree } = shouldDeferValue
+              ? { node: null, isJsonTree: false }
+              : formatValue(row.key, row.value);
+            const links = shouldDeferValue || !linksGetter ? null : linksGetter(data, i);
+
             let valueMarkup;
-            if (links?.length === 1) {
+            if (shouldDeferValue) {
+              valueMarkup = (
+                <button
+                  type="button"
+                  className="KeyValueTable--largeValuePlaceholder"
+                  onClick={() => expandRow(row)}
+                >
+                  {formatSize((row.value as string).length)} — click to expand
+                </button>
+              );
+            } else if (links?.length === 1) {
               valueMarkup = (
                 <div>
                   <LinkValue href={links[0].url} title={links[0].text}>
@@ -167,7 +204,7 @@ export default function AttributesTable(props: AttributesTableProps) {
             ) : (
               row.key
             );
-            const copyButtons = (
+            const copyButtons = !shouldDeferValue && (
               <div className="KeyValueTable--copyContainer">
                 <CopyIcon
                   className="KeyValueTable--copyIcon"
