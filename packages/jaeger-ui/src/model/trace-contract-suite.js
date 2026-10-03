@@ -4,8 +4,6 @@
 import getConfig from '../utils/config/get-config';
 
 export function runTraceContractSuite(pipeline) {
-  // Intentionally different parser behavior and inputs OTLP cannot encode stay on the legacy pipeline.
-  const legacyIt = pipeline.isLegacy ? it : it.skip;
   // Tag deduplication and ordering run inside the pipeline, so these two
   // stand-ins keep the helper signatures and read the result back from the
   // parsed span. topTagPrefixes comes from the UI config, which is memoized.
@@ -301,8 +299,7 @@ export function runTraceContractSuite(pipeline) {
       expect(result.duration).toBe(1000);
     });
 
-    // TODO(parser): Assert the parser's repaired cycle as an intentional difference in #4503.
-    legacyIt('should not produce a negative duration for a trace with spans but no root', () => {
+    it('should not produce a negative duration for a trace with spans but no root', () => {
       // Two spans referencing each other form a cycle, so neither is a root and
       // nothing is reachable by the traversal. The time range must not be left at
       // its sentinel value, which would yield a negative duration.
@@ -317,8 +314,7 @@ export function runTraceContractSuite(pipeline) {
       expect(result.endTime).toBe(0);
     });
 
-    // TODO(parser): Cover missing sibling times separately; NaN cannot be represented in OTLP JSON.
-    legacyIt('should keep and repair sibling spans that have no usable startTime', () => {
+    it('should keep and repair sibling spans that have no usable startTime', () => {
       // NB: this asserts the observable outcome (no span dropped, all startTimes
       // finite, real sibling ordered last). It does NOT prove the NaN-comparator
       // ordering issue is gone — that divergence is engine-defined (V8 leaves a

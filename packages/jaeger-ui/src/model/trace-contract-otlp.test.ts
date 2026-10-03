@@ -11,7 +11,13 @@ const spec: ITraceSpec = {
   serviceName: 'serviceName',
   spans: [
     { spanID: 'd4dcb46e95b781f5', operationName: 'root', startTime: 1000, duration: 20 },
-    { spanID: 'child', operationName: 'child', parentSpanID: 'd4dcb46e95b781f5', duration: 10 },
+    {
+      spanID: 'child',
+      operationName: 'child',
+      parentSpanID: 'd4dcb46e95b781f5',
+      startTime: undefined,
+      duration: 10,
+    },
     {
       spanID: 'linked',
       operationName: 'linked',
@@ -86,6 +92,24 @@ describe('OTLP trace contract materializer', () => {
     expect(() => toOtlpTrace({ ...spec, spans: [{ ...spec.spans[0], startTime: NaN }] })).toThrow(
       'Invalid OTLP startTime'
     );
+  });
+
+  it('defaults omitted timing and preserves explicitly missing timing', () => {
+    const wire = toOtlpTrace({
+      ...spec,
+      spans: [
+        { spanID: 'default', operationName: 'default' },
+        { spanID: 'missing-start', operationName: 'missing-start', startTime: undefined },
+        { spanID: 'missing-end', operationName: 'missing-end', duration: undefined },
+      ],
+    });
+    expect(refinedTracesData.safeParse(wire).success).toBe(true);
+    const spans = wire.resourceSpans![0].scopeSpans[0].spans;
+    expect(spans[0]).toMatchObject({ startTimeUnixNano: '1000', endTimeUnixNano: '2000' });
+    expect(spans[1]).not.toHaveProperty('startTimeUnixNano');
+    expect(spans[1].endTimeUnixNano).toBe('1000');
+    expect(spans[2].startTimeUnixNano).toBe('1000');
+    expect(spans[2]).not.toHaveProperty('endTimeUnixNano');
   });
 
   it('encodes typed and repeated tags for the shared tag tests', () => {

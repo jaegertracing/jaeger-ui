@@ -15,7 +15,6 @@ interface ISpanSpec {
   startTime?: number;
   duration?: number;
   tags?: { key: string; value: string | number | boolean }[];
-  omitLogs?: true;
 }
 
 export interface ITraceSpec {

@@ -36,50 +36,63 @@ export function toOtlpTrace({ traceID, serviceName, spans }: ITraceSpec): Traces
         scopeSpans: [
           {
             scope: {},
-            spans: spans.map(
-              ({ spanID, operationName, parentSpanID, references = [], startTime, duration, tags = [] }) => {
-                if (startTime !== undefined && (!Number.isSafeInteger(startTime) || startTime < 0)) {
-                  throw new Error(`Invalid OTLP startTime for span ${spanID}`);
-                }
-                if (!Number.isSafeInteger(duration) || duration < 0) {
-                  throw new Error(`Invalid OTLP duration for span ${spanID}`);
-                }
-                const refs = [
-                  ...(parentSpanID ? [{ refType: 'CHILD_OF' as const, spanID: parentSpanID }] : []),
-                  ...references,
-                ];
-                const parent = refs[0];
-                // The first CHILD_OF is represented by parentSpanId. The v1 adapter keeps
-                // FOLLOWS_FROM and any secondary references as links.
-                const links = refs
-                  .filter((ref, index) => index > 0 || ref.refType === 'FOLLOWS_FROM')
-                  .map(ref => ({
-                    traceId: traceID,
-                    spanId: spanIDForWire(ref.spanID),
-                    attributes: [
-                      {
-                        key: 'opentracing.ref_type',
-                        value: {
-                          stringValue: ref.refType === 'FOLLOWS_FROM' ? 'follows_from' : 'child_of',
-                        },
-                      },
-                    ],
-                  }));
-                const start = BigInt(startTime ?? 0);
-                const end = start + BigInt(duration);
-                return {
-                  traceId: traceID,
-                  spanId: spanIDForWire(spanID),
-                  ...(parent ? { parentSpanId: spanIDForWire(parent.spanID) } : {}),
-                  name: operationName,
-                  ...(start === 0n ? {} : { startTimeUnixNano: (start * 1000n).toString() }),
-                  ...(end === 0n ? {} : { endTimeUnixNano: (end * 1000n).toString() }),
-                  attributes: tags.map(tag => ({ key: tag.key, value: attributeValue(tag.value) })),
-                  links,
-                  status: {},
-                };
+            spans: spans.map(span => {
+              const {
+                spanID,
+                operationName,
+                parentSpanID,
+                references = [],
+                startTime,
+                duration,
+                tags = [],
+              } = {
+                startTime: 1,
+                duration: 1,
+                ...span,
+              };
+              if (startTime !== undefined && (!Number.isSafeInteger(startTime) || startTime < 0)) {
+                throw new Error(`Invalid OTLP startTime for span ${spanID}`);
               }
-            ),
+              if (duration !== undefined && (!Number.isSafeInteger(duration) || duration < 0)) {
+                throw new Error(`Invalid OTLP duration for span ${spanID}`);
+              }
+              const refs = [
+                ...(parentSpanID ? [{ refType: 'CHILD_OF' as const, spanID: parentSpanID }] : []),
+                ...references,
+              ];
+              const parent = refs[0];
+              // The first CHILD_OF is represented by parentSpanId. The v1 adapter keeps
+              // FOLLOWS_FROM and any secondary references as links.
+              const links = refs
+                .filter((ref, index) => index > 0 || ref.refType === 'FOLLOWS_FROM')
+                .map(ref => ({
+                  traceId: traceID,
+                  spanId: spanIDForWire(ref.spanID),
+                  attributes: [
+                    {
+                      key: 'opentracing.ref_type',
+                      value: {
+                        stringValue: ref.refType === 'FOLLOWS_FROM' ? 'follows_from' : 'child_of',
+                      },
+                    },
+                  ],
+                }));
+              const start = BigInt(startTime ?? 0);
+              const end = duration === undefined ? undefined : start + BigInt(duration);
+              return {
+                traceId: traceID,
+                spanId: spanIDForWire(spanID),
+                ...(parent ? { parentSpanId: spanIDForWire(parent.spanID) } : {}),
+                name: operationName,
+                ...(startTime === undefined || start === 0n
+                  ? {}
+                  : { startTimeUnixNano: (start * 1000n).toString() }),
+                ...(end === undefined || end === 0n ? {} : { endTimeUnixNano: (end * 1000n).toString() }),
+                attributes: tags.map(tag => ({ key: tag.key, value: attributeValue(tag.value) })),
+                links,
+                status: {},
+              };
+            }),
           },
         ],
       },
