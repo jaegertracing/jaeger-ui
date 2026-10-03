@@ -10,5 +10,6 @@ runTraceContractSuite({
   name: 'legacy transformer',
   isLegacy: true,
   materialize: toLegacyTrace,
+  spanID: (label: string) => label,
   parse: (traceData: TraceData & { spans: SpanData[] }) => transformTraceData(traceData)!.asOtelTrace(),
 });

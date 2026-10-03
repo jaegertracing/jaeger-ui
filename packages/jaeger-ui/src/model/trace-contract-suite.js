@@ -1,7 +1,6 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import traceGenerator from '../demo/trace-generators';
 import transformTraceData from './transform-trace-data';
 import getConfig from '../utils/config/get-config';
 
@@ -15,18 +14,12 @@ export function runTraceContractSuite(pipeline) {
     try {
       // getTraceName() memoizes by trace ID, so this trace must not share one with the tests below.
       const traceID = '0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f';
-      const span = {
+      const input = pipeline.materialize({
         traceID,
-        spanID: 'd4dcb46e95b781f5',
-        operationName: 'op',
-        startTime: 1,
-        duration: 1,
-        tags,
-        logs: [],
-        processID: 'p1',
-      };
-      const processes = { p1: { serviceName: 'svc', tags: [] } };
-      return pipeline.parse({ traceID, processes, spans: [span] }).spans[0];
+        serviceName: 'svc',
+        spans: [{ spanID: 'd4dcb46e95b781f5', operationName: 'op', startTime: 1, duration: 1, tags }],
+      });
+      return pipeline.parse(input).spans[0];
     } finally {
       window.getJaegerUiConfig = undefined;
       getConfig.clear();
@@ -148,12 +141,9 @@ export function runTraceContractSuite(pipeline) {
     const rootOperationName = 'rootOperation';
     const serviceName = 'serviceName';
 
-    // Tests describe their traces as span specs (see trace-contract-spec.ts)
-    // and the pipeline renders them into the wire format it parses. The tag
-    // helpers above and the generator-based multiple-references test at the end
-    // still build legacy spans directly, so a pipeline for another format also
-    // needs those two inputs rendered for it.
+    // Each pipeline renders the span specs into the wire format it parses.
     const trace = (...spans) => pipeline.materialize({ traceID, serviceName, spans });
+    const id = pipeline.spanID;
 
     const spans = [
       {
@@ -230,10 +220,14 @@ export function runTraceContractSuite(pipeline) {
 
       // No span is dropped: startTime 0 (epoch) and a missing startTime are both
       // treated as "no usable timestamp" and repaired rather than filtered out.
-      expect(result.spans.map(span => span.spanID)).toEqual([rootSpanID, 'zeroChild', 'missingStartTime']);
+      expect(result.spans.map(span => span.spanID)).toEqual([
+        id(rootSpanID),
+        id('zeroChild'),
+        id('missingStartTime'),
+      ]);
       expect(result.startTime).toBe(0);
       expect(result.spans.every(span => span.startTime === 0)).toBe(true);
-      expect(result.spanMap.get(rootSpanID).hasChildren).toBe(true);
+      expect(result.spanMap.get(id(rootSpanID)).hasChildren).toBe(true);
     });
 
     it('should clamp spans with no usable startTime to their parent instead of stretching the timeline', () => {
@@ -266,9 +260,9 @@ export function runTraceContractSuite(pipeline) {
       expect(result.startTime).toBe(realStart);
       // The broken children inherit the parent's startTime, so they sit at the
       // start of the trace rather than 56 years before it.
-      expect(result.spanMap.get('zeroChild').startTime).toBe(realStart);
-      expect(result.spanMap.get('missingChild').startTime).toBe(realStart);
-      expect(result.spanMap.get('zeroChild').relativeStartTime).toBe(0);
+      expect(result.spanMap.get(id('zeroChild')).startTime).toBe(realStart);
+      expect(result.spanMap.get(id('missingChild')).startTime).toBe(realStart);
+      expect(result.spanMap.get(id('zeroChild')).relativeStartTime).toBe(0);
       // Trace duration reflects the real root span, not an epoch-wide range.
       expect(result.duration).toBe(1000);
     });
@@ -302,10 +296,10 @@ export function runTraceContractSuite(pipeline) {
       const result = pipeline.parse(trace(realRoot, brokenMiddle, brokenLeaf));
 
       expect(result.startTime).toBe(realStart);
-      expect(result.spanMap.get('brokenMiddle').startTime).toBe(realStart);
+      expect(result.spanMap.get(id('brokenMiddle')).startTime).toBe(realStart);
       // The leaf inherits the middle span's repaired startTime, not undefined.
-      expect(result.spanMap.get('brokenLeaf').startTime).toBe(realStart);
-      expect(result.spanMap.get('brokenLeaf').relativeStartTime).toBe(0);
+      expect(result.spanMap.get(id('brokenLeaf')).startTime).toBe(realStart);
+      expect(result.spanMap.get(id('brokenLeaf')).relativeStartTime).toBe(0);
       expect(result.duration).toBe(1000);
     });
 
@@ -365,8 +359,8 @@ export function runTraceContractSuite(pipeline) {
       expect(result.spans.every(span => Number.isFinite(span.startTime))).toBe(true);
       // Repaired siblings inherit the root's start (realStart), so they sort ahead
       // of the real sibling (realStart + 500), which remains last.
-      expect(result.spanMap.get('real').startTime).toBe(realStart + 500);
-      expect(result.spans[result.spans.length - 1].spanID).toBe('real');
+      expect(result.spanMap.get(id('real')).startTime).toBe(realStart + 500);
+      expect(result.spans[result.spans.length - 1].spanID).toBe(id('real'));
     });
 
     it('should fall back to 0 for a root with no usable startTime and propagate it to children', () => {
@@ -387,8 +381,8 @@ export function runTraceContractSuite(pipeline) {
 
       // A root with no parent to inherit from falls back to 0; the child inherits
       // that finite 0 rather than becoming undefined.
-      expect(result.spanMap.get(rootSpanID).startTime).toBe(0);
-      expect(result.spanMap.get('child').startTime).toBe(0);
+      expect(result.spanMap.get(id(rootSpanID)).startTime).toBe(0);
+      expect(result.spanMap.get(id('child')).startTime).toBe(0);
       expect(result.startTime).toBe(0);
     });
 
@@ -475,9 +469,9 @@ export function runTraceContractSuite(pipeline) {
         // spanMap should contain all spans
         expect(result.spanMap).toBeInstanceOf(Map);
         expect(result.spanMap.size).toBe(3);
-        expect(result.spanMap.get(rootSpanID)).toBeDefined();
-        expect(result.spanMap.get(spans[0].spanID)).toBeDefined();
-        expect(result.spanMap.get(spans[1].spanID)).toBeDefined();
+        expect(result.spanMap.get(id(rootSpanID))).toBeDefined();
+        expect(result.spanMap.get(id(spans[0].spanID))).toBeDefined();
+        expect(result.spanMap.get(id(spans[1].spanID))).toBeDefined();
       });
 
       it('should identify root spans correctly', () => {
@@ -488,7 +482,7 @@ export function runTraceContractSuite(pipeline) {
         // Should have one root span (rootSpanWithoutRefs)
         expect(result.rootSpans).toBeInstanceOf(Array);
         expect(result.rootSpans.length).toBe(1);
-        expect(result.rootSpans[0].spanID).toBe(rootSpanID);
+        expect(result.rootSpans[0].spanID).toBe(id(rootSpanID));
         expect(result.rootSpans[0].name).toBe(rootOperationName);
       });
 
@@ -498,17 +492,17 @@ export function runTraceContractSuite(pipeline) {
         const result = pipeline.parse(traceData);
 
         // Root span should have two children
-        const rootSpan = result.spanMap.get(rootSpanID);
+        const rootSpan = result.spanMap.get(id(rootSpanID));
         expect(rootSpan.childSpans).toBeInstanceOf(Array);
         expect(rootSpan.childSpans.length).toBe(2);
 
         // Children should be sorted by start time
-        expect(rootSpan.childSpans[0].spanID).toBe(spans[0].spanID);
-        expect(rootSpan.childSpans[1].spanID).toBe(spans[1].spanID);
+        expect(rootSpan.childSpans[0].spanID).toBe(id(spans[0].spanID));
+        expect(rootSpan.childSpans[1].spanID).toBe(id(spans[1].spanID));
 
         // Child spans should have no children
-        const childSpan1 = result.spanMap.get(spans[0].spanID);
-        const childSpan2 = result.spanMap.get(spans[1].spanID);
+        const childSpan1 = result.spanMap.get(id(spans[0].spanID));
+        const childSpan2 = result.spanMap.get(id(spans[1].spanID));
         expect(childSpan1.childSpans).toEqual([]);
         expect(childSpan2.childSpans).toEqual([]);
       });
@@ -520,10 +514,10 @@ export function runTraceContractSuite(pipeline) {
 
         // rootSpanWithMissingRef references a missing parent, so it should be a root span
         expect(result.rootSpans.length).toBe(1);
-        expect(result.rootSpans[0].spanID).toBe(rootSpanID);
+        expect(result.rootSpans[0].spanID).toBe(id(rootSpanID));
 
         // The root span should still have its two children
-        const rootSpan = result.spanMap.get(rootSpanID);
+        const rootSpan = result.spanMap.get(id(rootSpanID));
         expect(rootSpan.childSpans.length).toBe(2);
       });
 
@@ -541,8 +535,8 @@ export function runTraceContractSuite(pipeline) {
 
         // Should have two root spans
         expect(result.rootSpans.length).toBe(2);
-        expect(result.rootSpans[0].spanID).toBe(rootSpanID);
-        expect(result.rootSpans[1].spanID).toBe(secondRoot.spanID);
+        expect(result.rootSpans[0].spanID).toBe(id(rootSpanID));
+        expect(result.rootSpans[1].spanID).toBe(id(secondRoot.spanID));
       });
 
       it('should maintain span references in childSpans array', () => {
@@ -550,7 +544,7 @@ export function runTraceContractSuite(pipeline) {
 
         const result = pipeline.parse(traceData);
 
-        const rootSpan = result.spanMap.get(rootSpanID);
+        const rootSpan = result.spanMap.get(id(rootSpanID));
 
         // childSpans should contain actual span objects, not IDs
         rootSpan.childSpans.forEach(child => {
@@ -592,36 +586,39 @@ export function runTraceContractSuite(pipeline) {
 
         // Check depth
         const map = result.spanMap;
-        expect(map.get('root').depth).toBe(0);
-        expect(map.get('child1').depth).toBe(1);
-        expect(map.get('grandChild1').depth).toBe(2);
-        expect(map.get('child2').depth).toBe(1);
+        expect(map.get(id('root')).depth).toBe(0);
+        expect(map.get(id('child1')).depth).toBe(1);
+        expect(map.get(id('grandChild1')).depth).toBe(2);
+        expect(map.get(id('child2')).depth).toBe(1);
 
         // Check hasChildren
-        expect(map.get('root').hasChildren).toBe(true);
-        expect(map.get('child1').hasChildren).toBe(true);
-        expect(map.get('grandChild1').hasChildren).toBe(false);
-        expect(map.get('child2').hasChildren).toBe(false);
+        expect(map.get(id('root')).hasChildren).toBe(true);
+        expect(map.get(id('child1')).hasChildren).toBe(true);
+        expect(map.get(id('grandChild1')).hasChildren).toBe(false);
+        expect(map.get(id('child2')).hasChildren).toBe(false);
 
         // Check flat spans order (DFS)
         const ids = result.spans.map(s => s.spanID);
-        expect(ids).toEqual(['root', 'child1', 'grandChild1', 'child2']);
+        expect(ids).toEqual([id('root'), id('child1'), id('grandChild1'), id('child2')]);
       });
     });
 
     it('exposes parent and secondary references as links on spans with multiple references', () => {
-      const multiRefTrace = traceGenerator.trace({ numberOfSpans: 7, maxDepth: 3, spansPerLevel: 4 });
-      const { traceID, spanID: rootSpanId } = multiRefTrace.spans[0];
-      const candidates = multiRefTrace.spans.filter(
-        span => span.references.length > 0 && span.references[0].spanID !== rootSpanId
-      );
-      const [willGainRef, willNotChange] = candidates;
-      const { spanID: existingRefID } = willGainRef.references[0];
-      const { spanID: willBeReferencedID } = willNotChange.references[0];
+      const root = { spanID: 'root', operationName: 'root', startTime, duration };
+      const parent = { spanID: 'parent', operationName: 'parent', parentSpanID: 'root', startTime, duration };
+      const other = { spanID: 'other', operationName: 'other', parentSpanID: 'root', startTime, duration };
+      const willGainRef = {
+        spanID: 'linked',
+        operationName: 'linked',
+        parentSpanID: 'parent',
+        references: [{ refType: 'CHILD_OF', spanID: 'other' }],
+        startTime,
+        duration,
+      };
+      const existingRefID = id('parent');
+      const willBeReferencedID = id('other');
 
-      willGainRef.references.push({ refType: 'CHILD_OF', traceID, spanID: willBeReferencedID });
-
-      const tTrace = pipeline.parse(multiRefTrace);
+      const tTrace = pipeline.parse(trace(root, parent, other, willGainRef));
       const multiReference = tTrace.spans.filter(span => span.links.length > 0);
 
       expect(multiReference.length).toEqual(1);
@@ -630,7 +627,9 @@ export function runTraceContractSuite(pipeline) {
       const hasReferral = tTrace.spans.filter(span => span.inboundLinks.length > 0);
       expect(hasReferral.length).toEqual(1);
       expect(hasReferral[0].spanID).toBe(willBeReferencedID);
-      expect(hasReferral[0].inboundLinks).toEqual([expect.objectContaining({ spanID: willGainRef.spanID })]);
+      expect(hasReferral[0].inboundLinks).toEqual([
+        expect.objectContaining({ spanID: id(willGainRef.spanID) }),
+      ]);
     });
   });
 }
