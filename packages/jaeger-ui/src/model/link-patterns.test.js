@@ -6,10 +6,12 @@ import {
   createTestFunction,
   getParameterInAncestor,
   getParameterInTrace,
+  getParameterInSpan,
   processLinkPattern,
   computeLinks,
   createGetLinks,
   computeTraceLink,
+  computeSpanLink,
   getTraceLinks,
 } from './link-patterns';
 import { makeAttributes } from './attributes';
@@ -349,6 +351,77 @@ describe('computeTraceLink()', () => {
       {
         text: 'third link (1970-01-01T00:00:00.001Z, 1970-02-04T17:20:00.000Z)',
         url: 'http://example.com/?startTime=1970-01-01T00%3A00%3A00.001Z&endTime=1970-02-04T17%3A20%3A00.000Z',
+      },
+    ]);
+  });
+});
+
+describe('getParameterInSpan()', () => {
+  const span = {
+    traceID: 'trc1',
+    spanID: 'spn1',
+    name: 'GET /api/orders',
+    duration: 2500,
+    startTime: 3000000000000,
+  };
+
+  it('returns span-scoped values', () => {
+    expect(getParameterInSpan('traceID', span)).toEqual({ key: 'traceID', value: 'trc1' });
+    expect(getParameterInSpan('spanID', span)).toEqual({ key: 'spanID', value: 'spn1' });
+    expect(getParameterInSpan('operationName', span)).toEqual({
+      key: 'operationName',
+      value: 'GET /api/orders',
+    });
+    expect(getParameterInSpan('duration', span)).toEqual({ key: 'duration', value: 2500 });
+    expect(getParameterInSpan('startTime', span)).toEqual({ key: 'startTime', value: 3000000000000 });
+  });
+
+  it('returns undefined for values outside the span link scope', () => {
+    expect(getParameterInSpan('unknown', span)).toBeUndefined();
+  });
+});
+
+describe('computeSpanLink()', () => {
+  const linkPatterns = [
+    {
+      type: 'spans',
+      url: 'http://example.com/?traceID=#{traceID}&spanID=#{spanID}',
+      text: 'span link (#{operationName})',
+    },
+    {
+      type: 'spans',
+      url: 'http://example.com/?startTime=#{startTime | epoch_micros_to_date_iso}',
+      text: 'formatted span start',
+    },
+    {
+      type: 'spans',
+      url: 'http://example.com/?missing=#{missing}',
+      text: 'missing parameter should not render',
+    },
+    {
+      type: 'traces',
+      url: 'http://example.com/?traceID=#{traceID}',
+      text: 'trace link should not render at span level',
+    },
+  ].map(processLinkPattern);
+
+  const span = {
+    traceID: 'trc1',
+    spanID: 'spn1',
+    name: 'GET /api/orders',
+    duration: 2500,
+    startTime: 3000000000000,
+  };
+
+  it('correctly computes span-scoped links', () => {
+    expect(computeSpanLink(linkPatterns, span)).toEqual([
+      {
+        url: 'http://example.com/?traceID=trc1&spanID=spn1',
+        text: 'span link (GET /api/orders)',
+      },
+      {
+        url: 'http://example.com/?startTime=1970-02-04T17%3A20%3A00.000Z',
+        text: 'formatted span start',
       },
     ]);
   });
