@@ -5,10 +5,9 @@ import { SpanData, TraceData } from '../types/trace';
 
 /**
  * A span spec describes identity, parentage, timing, and attributes under test.
- * The pipeline adds wire-format boilerplate (process, empty logs unless omitted,
- * and the traceID on every reference) when it materializes
- * the spec. startTime is copied as given, so a spec can omit it or set it
- * to 0 or NaN to exercise the timestamp repair paths.
+ * The pipeline adds wire-format boilerplate (process, empty logs, and the traceID
+ * on every reference) when it materializes the spec. startTime is copied as given,
+ * so a spec can omit it or set it to 0 or NaN to exercise the timestamp repair paths.
  */
 interface ISpanSpec {
   spanID: string;
@@ -18,7 +17,6 @@ interface ISpanSpec {
   startTime?: number;
   duration: number;
   tags?: { key: string; value: string | number | boolean }[];
-  omitLogs?: true;
 }
 
 export interface ITraceSpec {
@@ -39,7 +37,7 @@ export function toLegacyTrace({
     traceID,
     processes: { [PROCESS_ID]: { serviceName, tags: [] } },
     spans: spans.map(
-      ({ spanID, operationName, parentSpanID, references = [], startTime, duration, tags, omitLogs }) => {
+      ({ spanID, operationName, parentSpanID, references = [], startTime, duration, tags }) => {
         const parentRef = parentSpanID ? [{ refType: 'CHILD_OF' as const, spanID: parentSpanID }] : [];
         return {
           traceID,
@@ -51,7 +49,7 @@ export function toLegacyTrace({
           ...(startTime === undefined ? {} : { startTime }),
           duration,
           tags: tags ?? [],
-          ...(omitLogs ? {} : { logs: [] }),
+          logs: [],
           processID: PROCESS_ID,
         } as SpanData;
       }

@@ -599,8 +599,7 @@ export function runTraceContractSuite(pipeline) {
     });
 
     it('exposes parent and secondary references as links on spans with multiple references', () => {
-      // The legacy input omits logs here to retain the transformer's missing-logs coverage.
-      const root = { spanID: 'root', operationName: 'root', startTime, duration, omitLogs: true };
+      const root = { spanID: 'root', operationName: 'root', startTime, duration };
       const parent = { spanID: 'parent', operationName: 'parent', parentSpanID: 'root', startTime, duration };
       const other = { spanID: 'other', operationName: 'other', parentSpanID: 'root', startTime, duration };
       const willGainRef = {
