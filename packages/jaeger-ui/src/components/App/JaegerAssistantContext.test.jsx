@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { act, render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import { HttpAgent } from '@ag-ui/client';
@@ -18,6 +18,55 @@ const agUiMock = vi.hoisted(() => ({
 }));
 
 const capturedAgUiOnError = vi.hoisted(() => ({ fn: /** @type {null | ((e: unknown) => void)} */ (null) }));
+
+const runtimeMock = vi.hoisted(() => {
+  const state = {
+    isRunning: false,
+    listener: /** @type {null | (() => void)} */ (null),
+  };
+  const thread = {
+    getState: () => ({ isRunning: state.isRunning }),
+    subscribe: listener => {
+      state.listener = listener;
+      return () => {
+        if (state.listener === listener) state.listener = null;
+      };
+    },
+  };
+  return { state, thread, runtime: { mockRuntime: true, thread } };
+});
+
+const otelMock = vi.hoisted(() => {
+  const state = {
+    spans: [],
+    activeContext: {},
+    contextWith: vi.fn((_ctx, fn) => fn()),
+    setSpan: vi.fn((ctx, span) => ({ ctx, span })),
+    startSpan: null,
+  };
+  state.startSpan = vi.fn(() => {
+    const span = {
+      end: vi.fn(),
+      recordException: vi.fn(),
+      setStatus: vi.fn(),
+    };
+    state.spans.push(span);
+    return span;
+  });
+  return state;
+});
+
+vi.mock('@opentelemetry/api', () => ({
+  context: {
+    active: () => otelMock.activeContext,
+    with: otelMock.contextWith,
+  },
+  trace: {
+    getTracer: () => ({ startSpan: otelMock.startSpan }),
+    setSpan: otelMock.setSpan,
+  },
+  SpanStatusCode: { ERROR: 2 },
+}));
 
 vi.mock('./jaegerAgUi', () => ({
   getJaegerAgUiUrl: () => agUiMock.url,
@@ -35,7 +84,7 @@ vi.mock('@ag-ui/client', () => ({
 vi.mock('@assistant-ui/react-ag-ui', () => ({
   useAgUiRuntime: opts => {
     capturedAgUiOnError.fn = opts?.onError ?? null;
-    return { mockRuntime: true };
+    return runtimeMock.runtime;
   },
 }));
 
@@ -73,6 +122,10 @@ describe('JaegerAssistantContext', () => {
   beforeEach(() => {
     agUiMock.configured = false;
     capturedAgUiOnError.fn = null;
+    runtimeMock.state.isRunning = false;
+    runtimeMock.state.listener = null;
+    runtimeMock.runtime.thread = runtimeMock.thread;
+    otelMock.spans.length = 0;
     vi.clearAllMocks();
   });
 
@@ -109,6 +162,19 @@ describe('JaegerAssistantContext', () => {
     );
     expect(screen.getByTestId('AssistantRuntimeProvider')).toBeInTheDocument();
     expect(screen.getByTestId('child')).toBeInTheDocument();
+  });
+
+  it('does not instrument partial runtimes without a thread API', () => {
+    agUiMock.configured = true;
+    runtimeMock.runtime.thread = undefined;
+    expect(() =>
+      render(
+        <JaegerAssistantProvider>
+          <span />
+        </JaegerAssistantProvider>
+      )
+    ).not.toThrow();
+    expect(otelMock.startSpan).not.toHaveBeenCalled();
   });
 
   it('requestAskJaeger sets bootstrap text and opens panel', () => {
@@ -158,6 +224,91 @@ describe('JaegerAssistantContext', () => {
     await receiver.fetch('/x', { method: 'POST' });
     expect(fetchSpy).toHaveBeenCalledWith('/x', { method: 'POST' });
     fetchSpy.mockRestore();
+  });
+
+  it('creates one assistant turn span and parents the AG-UI fetch under it', async () => {
+    agUiMock.configured = true;
+    render(
+      <JaegerAssistantProvider>
+        <span />
+      </JaegerAssistantProvider>
+    );
+
+    expect(otelMock.startSpan).not.toHaveBeenCalled();
+
+    act(() => {
+      runtimeMock.state.isRunning = true;
+      runtimeMock.state.listener?.();
+    });
+
+    expect(otelMock.startSpan).toHaveBeenCalledWith('assistant.turn');
+    expect(otelMock.spans).toHaveLength(1);
+
+    const opts = HttpAgent.mock.calls[0][0];
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(undefined);
+    await opts.fetch('/x', { method: 'POST' });
+
+    expect(otelMock.setSpan).toHaveBeenCalledWith(otelMock.activeContext, otelMock.spans[0]);
+    expect(otelMock.contextWith).toHaveBeenCalledTimes(1);
+    expect(fetchSpy).toHaveBeenCalledWith('/x', { method: 'POST' });
+
+    act(() => {
+      runtimeMock.state.isRunning = false;
+      runtimeMock.state.listener?.();
+      runtimeMock.state.listener?.();
+    });
+
+    expect(otelMock.spans[0].end).toHaveBeenCalledTimes(1);
+    fetchSpy.mockRestore();
+  });
+
+  it('records an AG-UI failure before ending the assistant turn span', () => {
+    agUiMock.configured = true;
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    render(
+      <JaegerAssistantProvider>
+        <span />
+      </JaegerAssistantProvider>
+    );
+
+    act(() => {
+      runtimeMock.state.isRunning = true;
+      runtimeMock.state.listener?.();
+    });
+
+    const err = new Error('ag-ui-failure');
+    capturedAgUiOnError.fn(err);
+    expect(otelMock.spans[0].recordException).toHaveBeenCalledWith(err);
+    expect(otelMock.spans[0].setStatus).toHaveBeenCalledWith({
+      code: 2,
+      message: 'ag-ui-failure',
+    });
+
+    act(() => {
+      runtimeMock.state.isRunning = false;
+      runtimeMock.state.listener?.();
+    });
+
+    expect(otelMock.spans[0].end).toHaveBeenCalledTimes(1);
+    spy.mockRestore();
+  });
+
+  it('ends an active assistant turn span when the runtime unsubscribes', () => {
+    agUiMock.configured = true;
+    const { unmount } = render(
+      <JaegerAssistantProvider>
+        <span />
+      </JaegerAssistantProvider>
+    );
+
+    act(() => {
+      runtimeMock.state.isRunning = true;
+      runtimeMock.state.listener?.();
+    });
+
+    unmount();
+    expect(otelMock.spans[0].end).toHaveBeenCalledTimes(1);
+    expect(runtimeMock.state.listener).toBeNull();
   });
 
   it('useAgUiRuntime onError logs AG-UI errors (lines 29–30)', () => {
