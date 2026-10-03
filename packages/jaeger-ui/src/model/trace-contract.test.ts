@@ -3,8 +3,61 @@
 
 import transformTraceData from './transform-trace-data';
 import { SpanData, TraceData } from '../types/trace';
-import { toLegacyTrace } from './trace-contract-spec';
+import { ITraceSpec } from './trace-contract-spec';
 import { runTraceContractSuite } from './trace-contract-suite';
+
+const PROCESS_ID = 'p1';
+
+/** Renders a trace spec as the legacy /api/traces JSON that transformTraceData() reads. */
+function toLegacyTrace({ traceID, serviceName, spans }: ITraceSpec): TraceData & { spans: SpanData[] } {
+  return {
+    traceID,
+    processes: { [PROCESS_ID]: { serviceName, tags: [] } },
+    spans: spans.map(span => {
+      const {
+        spanID,
+        operationName,
+        parentSpanID,
+        references = [],
+        startTime,
+        duration = 1,
+        tags,
+      } = {
+        startTime: 1,
+        ...span,
+      };
+      const parentRef = parentSpanID ? [{ refType: 'CHILD_OF' as const, spanID: parentSpanID }] : [];
+      return {
+        traceID,
+        spanID,
+        operationName,
+        references: [...parentRef, ...references].map(ref => ({ ...ref, traceID, span: undefined })),
+        // SpanData requires startTime, but an explicit undefined exercises timestamp repair.
+        ...(startTime === undefined ? {} : { startTime }),
+        duration,
+        tags: tags ?? [],
+        logs: [],
+        processID: PROCESS_ID,
+      } as SpanData;
+    }),
+  };
+}
+
+it.each([
+  { timing: {}, expected: { startTime: 1, duration: 1 } },
+  { timing: { startTime: undefined }, expected: { duration: 1 } },
+  { timing: { startTime: 0, duration: 0 }, expected: { startTime: 0, duration: 0 } },
+  { timing: { startTime: NaN }, expected: { startTime: NaN, duration: 1 } },
+])('materializes timing $timing as $expected', ({ timing, expected }) => {
+  const trace = toLegacyTrace({
+    traceID: 'trace',
+    serviceName: 'service',
+    spans: [{ spanID: 'span', operationName: 'op', ...timing }],
+  });
+  expect(trace.spans[0].duration).toBe(expected.duration);
+  expect(trace.spans[0].startTime).toBe(expected.startTime);
+  expect(Object.hasOwn(trace.spans[0], 'startTime')).toBe(Object.hasOwn(expected, 'startTime'));
+});
 
 runTraceContractSuite({
   name: 'legacy transformer',
