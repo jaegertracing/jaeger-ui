@@ -90,6 +90,12 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
     if ((e.key === 'Enter' || e.key === ' ') && onClick) {
       e.preventDefault();
       onClick();
+    } else if (e.key === 'ArrowRight' && !childrenVisible && onClick) {
+      e.preventDefault();
+      onClick();
+    } else if (e.key === 'ArrowLeft' && childrenVisible && onClick) {
+      e.preventDefault();
+      onClick();
     }
   };
 
@@ -100,9 +106,9 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
           onKeyDown: _childrenToggleKeyDown,
           tabIndex: 0,
         }),
-        role: 'switch',
-        'aria-checked': childrenVisible,
-        'aria-label': 'Expand or collapse child spans',
+        role: 'button',
+        'aria-expanded': childrenVisible,
+        'aria-label': `${childrenVisible ? 'Collapse' : 'Expand'} child spans`,
       }
     : null;
 
