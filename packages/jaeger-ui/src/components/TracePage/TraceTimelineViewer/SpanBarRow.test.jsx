@@ -229,6 +229,15 @@ describe('<SpanBarRow>', () => {
     expect(wrapper).toHaveClass('span-name-wrapper', 'is-matching-filter');
   });
 
+  it('applies is-current-find-match class only when isCurrentFindMatch is true', () => {
+    const { rerender } = render(<SpanBarRow {...defaultProps} isMatchingFilter />);
+    const row = screen.getByTestId('span-bar').closest('.span-row');
+    expect(row).not.toHaveClass('is-current-find-match');
+
+    rerender(<SpanBarRow {...defaultProps} isMatchingFilter isCurrentFindMatch />);
+    expect(row).toHaveClass('is-matching-filter', 'is-current-find-match');
+  });
+
   it('applies is-children-collapsed class when isParent is true and isChildrenExpanded is false', () => {
     const props = {
       ...defaultProps,
