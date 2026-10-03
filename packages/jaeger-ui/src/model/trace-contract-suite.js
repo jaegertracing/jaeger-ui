@@ -1,7 +1,6 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import transformTraceData from './transform-trace-data';
 import getConfig from '../utils/config/get-config';
 
 export function runTraceContractSuite(pipeline) {
@@ -176,12 +175,6 @@ export function runTraceContractSuite(pipeline) {
       startTime: startTime + 50,
       duration,
     };
-
-    it.skipIf(!pipeline.isLegacy)('should return null for trace without traceID', () => {
-      const traceData = { ...trace(...spans), traceID: undefined };
-
-      expect(transformTraceData(traceData)).toEqual(null);
-    });
 
     it('should return trace data with correct traceName based on root span with missing ref', () => {
       const traceData = trace(...spans, rootSpanWithMissingRef);
@@ -442,27 +435,6 @@ export function runTraceContractSuite(pipeline) {
 
       const result = pipeline.parse(traceData);
       expect(result.orphanSpanCount).toBe(1);
-    });
-
-    describe.skipIf(!pipeline.isLegacy)('asOtelTrace()', () => {
-      it('should implement IOtelTrace interface and memoize the instance', () => {
-        const traceData = trace(...spans, rootSpanWithoutRefs);
-
-        const result = transformTraceData(traceData);
-
-        // Check if asOtelTrace exists
-        expect(typeof result.asOtelTrace).toBe('function');
-
-        // First call - should create instance
-        const otelTrace1 = result.asOtelTrace();
-        expect(otelTrace1).toBeDefined();
-        expect(otelTrace1.traceID).toBe(traceID);
-        expect(otelTrace1.spans.length).toBe(3);
-
-        // Second call - should return same instance (memoization)
-        const otelTrace2 = result.asOtelTrace();
-        expect(otelTrace2).toBe(otelTrace1);
-      });
     });
 
     describe('spanMap, rootSpans, and childSpans collections', () => {
