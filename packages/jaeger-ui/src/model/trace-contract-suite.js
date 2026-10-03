@@ -143,7 +143,7 @@ export function runTraceContractSuite(pipeline) {
     const rootOperationName = 'rootOperation';
     const serviceName = 'serviceName';
 
-    // Each pipeline renders the same span specs and maps readable IDs to its wire format.
+    // Each pipeline renders the span specs into the wire format it parses.
     const trace = (...spans) => pipeline.materialize({ traceID, serviceName, spans });
     const id = pipeline.spanID;
 
@@ -364,8 +364,8 @@ export function runTraceContractSuite(pipeline) {
       expect(result.spans.every(span => Number.isFinite(span.startTime))).toBe(true);
       // Repaired siblings inherit the root's start (realStart), so they sort ahead
       // of the real sibling (realStart + 500), which remains last.
-      expect(result.spanMap.get('real').startTime).toBe(realStart + 500);
-      expect(result.spans[result.spans.length - 1].spanID).toBe('real');
+      expect(result.spanMap.get(id('real')).startTime).toBe(realStart + 500);
+      expect(result.spans[result.spans.length - 1].spanID).toBe(id('real'));
     });
 
     it('should fall back to 0 for a root with no usable startTime and propagate it to children', () => {
@@ -386,7 +386,7 @@ export function runTraceContractSuite(pipeline) {
 
       // A root with no parent to inherit from falls back to 0; the child inherits
       // that finite 0 rather than becoming undefined.
-      expect(result.spanMap.get(rootSpanID).startTime).toBe(0);
+      expect(result.spanMap.get(id(rootSpanID)).startTime).toBe(0);
       expect(result.spanMap.get(id('child')).startTime).toBe(0);
       expect(result.startTime).toBe(0);
     });
@@ -610,11 +610,10 @@ export function runTraceContractSuite(pipeline) {
     });
 
     it('exposes parent and secondary references as links on spans with multiple references', () => {
-      // The legacy input omits logs here to retain the transformer's missing-logs coverage.
-      const root = { spanID: 'root', operationName: 'root', startTime, duration, omitLogs: true };
+      const root = { spanID: 'root', operationName: 'root', startTime, duration };
       const parent = { spanID: 'parent', operationName: 'parent', parentSpanID: 'root', startTime, duration };
       const other = { spanID: 'other', operationName: 'other', parentSpanID: 'root', startTime, duration };
-      const linked = {
+      const willGainRef = {
         spanID: 'linked',
         operationName: 'linked',
         parentSpanID: 'parent',
@@ -625,7 +624,7 @@ export function runTraceContractSuite(pipeline) {
       const existingRefID = id('parent');
       const willBeReferencedID = id('other');
 
-      const tTrace = pipeline.parse(trace(root, parent, other, linked));
+      const tTrace = pipeline.parse(trace(root, parent, other, willGainRef));
       const multiReference = tTrace.spans.filter(span => span.links.length > 0);
 
       expect(multiReference.length).toEqual(1);
@@ -634,7 +633,9 @@ export function runTraceContractSuite(pipeline) {
       const hasReferral = tTrace.spans.filter(span => span.inboundLinks.length > 0);
       expect(hasReferral.length).toEqual(1);
       expect(hasReferral[0].spanID).toBe(willBeReferencedID);
-      expect(hasReferral[0].inboundLinks).toEqual([expect.objectContaining({ spanID: id(linked.spanID) })]);
+      expect(hasReferral[0].inboundLinks).toEqual([
+        expect.objectContaining({ spanID: id(willGainRef.spanID) }),
+      ]);
     });
   });
 }

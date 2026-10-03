@@ -4,11 +4,10 @@
 import { SpanData, TraceData } from '../types/trace';
 
 /**
- * A span as a trace contract test describes it: identity, parentage, and
- * timing, and any attributes under test. The wire-format boilerplate
- * (process, empty logs unless omitted, the traceID on every reference) is added by the pipeline that materializes
- * the spec. startTime is copied as given, so a spec can omit it or set it
- * to 0 or NaN to exercise the timestamp repair paths.
+ * A span spec describes identity, parentage, timing, and attributes under test.
+ * The pipeline adds wire-format boilerplate (process, empty logs, and the traceID
+ * on every reference) when it materializes the spec. startTime is copied as given,
+ * so a spec can omit it or set it to 0 or NaN to exercise the timestamp repair paths.
  */
 interface ISpanSpec {
   spanID: string;
