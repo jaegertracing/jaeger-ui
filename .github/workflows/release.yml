@@ -5,44 +5,28 @@ on:
     types:
       - published
 
-# The workflow grants write access only to the job that uploads release assets.
-# The permissions policy is discussed at https://github.com/jaegertracing/jaeger/issues/4017.
-# See https://github.com/ossf/scorecard/blob/main/docs/checks.md#token-permissions.
+# See https://github.com/jaegertracing/jaeger/issues/4017
+# and https://github.com/ossf/scorecard/blob/main/docs/checks.md#token-permissions
 permissions:
   contents: read
 
 jobs:
-  build-release:
+  publish-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - uses: ./.github/actions/setup-node-and-deps
       - run: make lint
       - run: make build
+        id: npm-build
 
       - name: Package artifacts
+        id: package-artifacts
         run: tar -czvf ./assets.tar.gz --strip-components=3  packages/jaeger-ui/build/
-
-      - name: Store release artifacts
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        with:
-          name: release-assets
-          path: assets.tar.gz
-          if-no-files-found: error
-          retention-days: 1
-
-  publish-release:
-    needs: build-release
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-      - name: Download release artifacts
-        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
-        with:
-          name: release-assets
+        if: steps.npm-build.outcome == 'success'
 
       - name: Upload artifacts
         uses: svenstaro/upload-release-action@1beeb572c19a9242f4361f4cee78f8e0d9aec5df
@@ -51,3 +35,4 @@ jobs:
           overwrite: true
           tag: ${{ github.ref }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
+        if: steps.package-artifacts.outcome == 'success'
