@@ -47,6 +47,21 @@ SPDX-License-Identifier: Apache-2.0
   background-color: var(--trace-emphasis-highlight);
 }
 
+/* The match that the search bar's previous / next buttons last navigated to. The border is drawn
+   by a pseudo-element so that it sits above .span-name-column, which has its own stacking order. */
+.span-row.is-current-find-match {
+  position: relative;
+}
+
+.span-row.is-current-find-match::after {
+  border: 2px solid var(--feedback-warning);
+  content: '';
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+}
+
 .span-row.is-selected .span-name-wrapper {
   background-color: var(--interactive-primary-light);
 }
