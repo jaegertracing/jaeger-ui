@@ -46,4 +46,66 @@ describe('OTLP trace contract materializer', () => {
     expect(spans[2]).not.toHaveProperty('startTimeUnixNano');
     expect(spans[3]).not.toHaveProperty('endTimeUnixNano');
   });
+
+  it('encodes OTLP attribute types and reference links', () => {
+    const wire = toOtlpTrace({
+      ...spec,
+      spans: [
+        {
+          spanID: 'linked',
+          operationName: 'linked',
+          references: [
+            { refType: 'CHILD_OF', spanID: 'child' },
+            { refType: 'CHILD_OF', spanID: 'other' },
+          ],
+          tags: [
+            { key: 'string', value: 'value' },
+            { key: 'bool', value: false },
+            { key: 'int', value: 0 },
+            { key: 'double', value: 1.5 },
+          ],
+        },
+        {
+          spanID: 'follower',
+          operationName: 'follower',
+          references: [{ refType: 'FOLLOWS_FROM', spanID: 'other' }],
+        },
+      ],
+    });
+    expect(refinedTracesData.safeParse(wire).success).toBe(true);
+
+    const spans = wire.resourceSpans![0].scopeSpans[0].spans;
+    expect(spans[0].attributes).toEqual([
+      { key: 'string', value: { stringValue: 'value' } },
+      { key: 'bool', value: { boolValue: false } },
+      { key: 'int', value: { intValue: '0' } },
+      { key: 'double', value: { doubleValue: 1.5 } },
+    ]);
+    expect(spans[0].parentSpanId).toBe(spanIDForWire('child'));
+    expect(spans[0].links).toEqual([
+      {
+        traceId: spec.traceID,
+        spanId: spanIDForWire('other'),
+        attributes: [{ key: 'opentracing.ref_type', value: { stringValue: 'child_of' } }],
+      },
+    ]);
+    expect(spans[1].links).toEqual([
+      {
+        traceId: spec.traceID,
+        spanId: spanIDForWire('other'),
+        attributes: [{ key: 'opentracing.ref_type', value: { stringValue: 'follows_from' } }],
+      },
+    ]);
+  });
+
+  it.each([
+    { timing: { startTime: -1 }, field: 'startTime' },
+    { timing: { startTime: 1.5 }, field: 'startTime' },
+    { timing: { duration: -1 }, field: 'duration' },
+    { timing: { duration: 1.5 }, field: 'duration' },
+  ])('rejects an invalid $field', ({ timing, field }) => {
+    expect(() => toOtlpTrace({ ...spec, spans: [{ ...spec.spans[0], ...timing }] })).toThrow(
+      `Invalid OTLP ${field}`
+    );
+  });
 });
