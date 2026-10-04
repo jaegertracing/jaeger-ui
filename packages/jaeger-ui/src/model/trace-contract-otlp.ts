@@ -62,33 +62,24 @@ export function toOtlpTrace({ traceID, serviceName, spans }: ITraceSpec): Traces
               if (duration !== undefined && (!Number.isSafeInteger(duration) || duration < 0)) {
                 throw new Error(`Invalid OTLP duration for span ${spanID}`);
               }
-              const refs = [
-                ...(parentSpanID ? [{ refType: 'CHILD_OF' as const, spanID: parentSpanID }] : []),
-                ...references,
-              ];
-              const parent = refs[0];
-              // The first CHILD_OF is represented by parentSpanId. The v1 adapter keeps
-              // FOLLOWS_FROM and any secondary references as links.
-              const links = refs
-                .filter((ref, index) => index > 0 || ref.refType === 'FOLLOWS_FROM')
-                .map(ref => ({
-                  traceId: traceID,
-                  spanId: spanIDForWire(ref.spanID),
-                  attributes: [
-                    {
-                      key: 'opentracing.ref_type',
-                      value: {
-                        stringValue: ref.refType === 'FOLLOWS_FROM' ? 'follows_from' : 'child_of',
-                      },
+              const links = references.map(ref => ({
+                traceId: traceID,
+                spanId: spanIDForWire(ref.spanID),
+                attributes: [
+                  {
+                    key: 'opentracing.ref_type',
+                    value: {
+                      stringValue: ref.refType === 'FOLLOWS_FROM' ? 'follows_from' : 'child_of',
                     },
-                  ],
-                }));
+                  },
+                ],
+              }));
               const start = BigInt(wireStartTime ?? 0);
               const end = duration === undefined ? undefined : start + BigInt(duration);
               return {
                 traceId: traceID,
                 spanId: spanIDForWire(spanID),
-                ...(parent ? { parentSpanId: spanIDForWire(parent.spanID) } : {}),
+                ...(parentSpanID ? { parentSpanId: spanIDForWire(parentSpanID) } : {}),
                 name: operationName,
                 ...(wireStartTime === undefined || start === 0n
                   ? {}

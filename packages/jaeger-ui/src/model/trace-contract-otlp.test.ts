@@ -81,19 +81,67 @@ describe('OTLP trace contract materializer', () => {
       { key: 'int', value: { intValue: '0' } },
       { key: 'double', value: { doubleValue: 1.5 } },
     ]);
-    expect(spans[0].parentSpanId).toBe(spanIDForWire('child'));
+    expect(spans[0]).not.toHaveProperty('parentSpanId');
     expect(spans[0].links).toEqual([
+      {
+        traceId: spec.traceID,
+        spanId: spanIDForWire('child'),
+        attributes: [{ key: 'opentracing.ref_type', value: { stringValue: 'child_of' } }],
+      },
       {
         traceId: spec.traceID,
         spanId: spanIDForWire('other'),
         attributes: [{ key: 'opentracing.ref_type', value: { stringValue: 'child_of' } }],
       },
     ]);
+    expect(spans[1]).not.toHaveProperty('parentSpanId');
     expect(spans[1].links).toEqual([
       {
         traceId: spec.traceID,
         spanId: spanIDForWire('other'),
         attributes: [{ key: 'opentracing.ref_type', value: { stringValue: 'follows_from' } }],
+      },
+    ]);
+  });
+
+  it.each([undefined, 'explicit-parent'])('uses only parentSpanID=%s for parentage', parentSpanID => {
+    const wire = toOtlpTrace({
+      ...spec,
+      spans: [
+        {
+          spanID: 'linked',
+          operationName: 'linked',
+          parentSpanID,
+          references: [
+            { refType: 'FOLLOWS_FROM', spanID: 'follower-target' },
+            { refType: 'CHILD_OF', spanID: 'parent-target' },
+            { refType: 'CHILD_OF', spanID: 'other-target' },
+          ],
+        },
+      ],
+    });
+
+    const span = wire.resourceSpans![0].scopeSpans[0].spans[0];
+    if (parentSpanID === undefined) {
+      expect(span).not.toHaveProperty('parentSpanId');
+    } else {
+      expect(span.parentSpanId).toBe(spanIDForWire(parentSpanID));
+    }
+    expect(span.links).toEqual([
+      {
+        traceId: spec.traceID,
+        spanId: spanIDForWire('follower-target'),
+        attributes: [{ key: 'opentracing.ref_type', value: { stringValue: 'follows_from' } }],
+      },
+      {
+        traceId: spec.traceID,
+        spanId: spanIDForWire('parent-target'),
+        attributes: [{ key: 'opentracing.ref_type', value: { stringValue: 'child_of' } }],
+      },
+      {
+        traceId: spec.traceID,
+        spanId: spanIDForWire('other-target'),
+        attributes: [{ key: 'opentracing.ref_type', value: { stringValue: 'child_of' } }],
       },
     ]);
   });
