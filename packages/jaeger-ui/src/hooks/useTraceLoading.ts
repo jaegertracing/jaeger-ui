@@ -11,6 +11,26 @@ import { FetchedTrace } from '../types';
 import type { IOtelTrace } from '../types/otel';
 
 const TRACE_QUERY_KEY = (id: string) => ['trace', id] as const;
+const POLL_INTERVAL_MS = 60_000;
+const POLL_WINDOW_MS = 5 * 60_000;
+
+// Query objects are shared across hook instances and discarded when their cache entry expires.
+const firstFetchedAt = new WeakMap<object, number>();
+const uploadedQueries = new WeakSet<object>();
+
+function traceRefetchInterval(query: { state: { data: unknown; dataUpdatedAt: number } }): number | false {
+  if (uploadedQueries.has(query) || query.state.data === undefined) {
+    return false;
+  }
+
+  let startedAt = firstFetchedAt.get(query);
+  if (startedAt === undefined) {
+    startedAt = query.state.dataUpdatedAt;
+    firstFetchedAt.set(query, startedAt);
+  }
+
+  return Date.now() - startedAt < POLL_WINDOW_MS ? POLL_INTERVAL_MS : false;
+}
 
 // TODO: remove once callers (duck.track.ts, TraceDiff) are migrated off Redux/non-hook paths
 export function getCachedTrace(id: string): IOtelTrace | undefined {
@@ -18,14 +38,20 @@ export function getCachedTrace(id: string): IOtelTrace | undefined {
 }
 
 export function populateTraceCache(trace: IOtelTrace): void {
-  queryClient.setQueryData(TRACE_QUERY_KEY(trace.traceID), trace);
+  const key = TRACE_QUERY_KEY(trace.traceID);
+  const query = queryClient.getQueryCache().find({ queryKey: key, exact: true });
+  if (query) {
+    uploadedQueries.add(query);
+  }
+  queryClient.setQueryData(key, trace);
+  const createdQuery = queryClient.getQueryCache().find({ queryKey: key, exact: true });
+  if (createdQuery) {
+    uploadedQueries.add(createdQuery);
+  }
 }
 
-// TODO: staleTime: Infinity is incorrect — Jaeger returns partial traces if spans are still arriving
-// (availability over consistency). Instead, poll every 60s for up to 5 minutes after first load,
-// then stop. Use meta.firstFetchedAt (stamped at query creation, not updated on refetch) to track
-// elapsed time: refetchInterval: q => Date.now() - (q.meta.firstFetchedAt as number) < 5*60*1000 ? 60_000 : false
-// gcTime controls eviction from memory once no component is using the trace.
+// Jaeger may return a partial trace while spans are still arriving. Poll backend traces for
+// five minutes after the first successful load. gcTime controls later cache eviction.
 export function useTrace(traceId: string): UseQueryResult<IOtelTrace> {
   return useQuery({
     queryKey: TRACE_QUERY_KEY(traceId),
@@ -42,6 +68,7 @@ export function useTrace(traceId: string): UseQueryResult<IOtelTrace> {
       return otel;
     },
     staleTime: Infinity,
+    refetchInterval: traceRefetchInterval,
   });
 }
 
@@ -65,6 +92,7 @@ export function useTraces(ids: string[]): Map<string, FetchedTrace> {
         return otel;
       },
       staleTime: Infinity,
+      refetchInterval: traceRefetchInterval,
     })),
   });
 

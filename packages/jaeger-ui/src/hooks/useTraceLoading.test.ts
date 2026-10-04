@@ -4,7 +4,7 @@
 vi.mock('../api/jaeger');
 
 import React from 'react';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import JaegerAPI from '../api/jaeger';
 import { fetchedState } from '../constants';
@@ -32,6 +32,27 @@ beforeEach(() => {
   appQueryClient.clear();
   mockFetchTrace.mockReset();
 });
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+function startPollingClock() {
+  vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
+  vi.setSystemTime(new Date('2026-10-04T00:00:00Z'));
+}
+
+async function advancePollingTime(milliseconds: number) {
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(milliseconds);
+  });
+}
+
+async function settlePollingQuery() {
+  await act(async () => {
+    await new Promise(resolve => setTimeout(resolve, 20));
+  });
+}
 
 describe('getCachedTrace', () => {
   it('returns undefined when nothing is cached', () => {
@@ -134,6 +155,57 @@ describe('useTrace', () => {
     expect(mockFetchTrace).not.toHaveBeenCalled();
     expect(result.current.data).toBe(otelTrace);
   });
+
+  it('polls every minute and stops five minutes after the first load across remounts', async () => {
+    startPollingClock();
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    mockFetchTrace.mockResolvedValue({ data: [rawTrace] } as any);
+
+    const first = renderHook(() => useTrace(otelTrace.traceID), { wrapper: makeWrapper(client) });
+    await settlePollingQuery();
+    expect(first.result.current.isSuccess).toBe(true);
+
+    await advancePollingTime(2 * 60_000);
+    expect(mockFetchTrace).toHaveBeenCalledTimes(3);
+
+    first.unmount();
+    const second = renderHook(() => useTrace(otelTrace.traceID), { wrapper: makeWrapper(client) });
+    await settlePollingQuery();
+    expect(second.result.current.isSuccess).toBe(true);
+
+    await advancePollingTime(4 * 60_000);
+    expect(mockFetchTrace).toHaveBeenCalledTimes(6);
+  });
+
+  it('never polls a trace loaded from a file', async () => {
+    startPollingClock();
+    populateTraceCache(otelTrace);
+
+    const { result } = renderHook(() => useTrace(otelTrace.traceID), {
+      wrapper: makeWrapper(appQueryClient),
+    });
+    await settlePollingQuery();
+    expect(result.current.isSuccess).toBe(true);
+
+    await advancePollingTime(6 * 60_000);
+    expect(mockFetchTrace).not.toHaveBeenCalled();
+    expect(result.current.data).toBe(otelTrace);
+  });
+
+  it('stops an active backend poll when a file replaces the cached trace', async () => {
+    startPollingClock();
+    mockFetchTrace.mockResolvedValue({ data: [rawTrace] } as any);
+
+    const { result } = renderHook(() => useTrace(otelTrace.traceID), {
+      wrapper: makeWrapper(appQueryClient),
+    });
+    await settlePollingQuery();
+    expect(result.current.isSuccess).toBe(true);
+
+    populateTraceCache(otelTrace);
+    await advancePollingTime(60_000);
+    expect(mockFetchTrace).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('useTraces', () => {
@@ -169,6 +241,36 @@ describe('useTraces', () => {
     });
     const entry = result.current.get(otelTrace.traceID);
     expect(entry?.data?.traceID).toBe(otelTrace.traceID);
+  });
+
+  it('polls backend traces while preserving the Map return shape', async () => {
+    startPollingClock();
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    mockFetchTrace.mockResolvedValue({ data: [rawTrace] } as any);
+
+    const { result } = renderHook(() => useTraces([otelTrace.traceID]), {
+      wrapper: makeWrapper(client),
+    });
+    await settlePollingQuery();
+    expect(result.current.get(otelTrace.traceID)?.state).toBe(fetchedState.DONE);
+
+    await advancePollingTime(6 * 60_000);
+    expect(mockFetchTrace).toHaveBeenCalledTimes(6);
+    expect(result.current.get(otelTrace.traceID)?.state).toBe(fetchedState.DONE);
+  });
+
+  it('does not poll uploaded traces in the multi-trace hook', async () => {
+    startPollingClock();
+    populateTraceCache(otelTrace);
+
+    const { result } = renderHook(() => useTraces([otelTrace.traceID]), {
+      wrapper: makeWrapper(appQueryClient),
+    });
+    await settlePollingQuery();
+    expect(result.current.get(otelTrace.traceID)?.state).toBe(fetchedState.DONE);
+
+    await advancePollingTime(6 * 60_000);
+    expect(mockFetchTrace).not.toHaveBeenCalled();
   });
 
   it('returns ERROR state when fetch fails', async () => {
