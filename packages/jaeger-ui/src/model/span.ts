@@ -16,7 +16,7 @@ export function getParentSpanID(span: SpanData): string | undefined {
   return getParentSpanReference(span)?.spanID;
 }
 
-export function getSpanLinks(span: SpanData) {
+export function getNonParentReferences(span: SpanData): SpanReference[] {
   const references = span.references ?? [];
   const parentRef = getParentSpanReference(span);
   return references.filter(ref => ref !== parentRef);

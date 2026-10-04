@@ -9,7 +9,7 @@ import { KeyValuePair, Span, SpanData, SpanReference, Trace, TraceData } from '.
 import { IOtelTrace } from '../types/otel';
 
 import OtelTraceFacade from './OtelTraceFacade';
-import { getParentSpanID, getSpanLinks } from './span';
+import { getParentSpanID, getNonParentReferences } from './span';
 
 // exported for tests
 function deduplicateTags(spanTags: ReadonlyArray<KeyValuePair>) {
@@ -190,7 +190,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     span.references.forEach(ref => {
       ref.span = ref.traceID === traceID ? spanMap.get(ref.spanID) : undefined;
     });
-    getSpanLinks(span).forEach(ref => {
+    getNonParentReferences(span).forEach(ref => {
       const refSpan = ref.span;
       if (refSpan) {
         (refSpan.subsidiarilyReferencedBy as SpanReference[]).push({

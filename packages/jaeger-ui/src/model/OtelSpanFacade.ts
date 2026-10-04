@@ -18,7 +18,7 @@ import {
 } from '../types/otel';
 import { classifySpan } from '../utils/genai/detect';
 import { makeAttributes } from './attributes';
-import { getParentSpanID, getSpanLinks } from './span';
+import { getParentSpanID, getNonParentReferences } from './span';
 
 export default class OtelSpanFacade implements IOtelSpan {
   private legacySpan: Span;
@@ -62,7 +62,7 @@ export default class OtelSpanFacade implements IOtelSpan {
       attributes: makeAttributes(OtelSpanFacade.toOtelAttributes(log.fields)),
     }));
 
-    this._links = getSpanLinks(this.legacySpan).map(ref => ({
+    this._links = getNonParentReferences(this.legacySpan).map(ref => ({
       traceID: ref.traceID,
       spanID: ref.spanID,
       attributes: makeAttributes(), // Legacy references don't have attributes
