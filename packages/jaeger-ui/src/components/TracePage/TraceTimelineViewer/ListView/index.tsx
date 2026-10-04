@@ -299,7 +299,7 @@ const ListView = forwardRef<ListViewRef, TListViewProps>((props, ref) => {
   // mirroring the old class component's componentDidUpdate.
   // _scanItemHeights is optimized to bail out early if item heights haven't changed.
   // We skip the very first run because _initItemHolder already triggers a scan on mount.
-  useEffect(() => {
+  React.useLayoutEffect(() => {
     if (!didMount.current) {
       didMount.current = true;
       return;
