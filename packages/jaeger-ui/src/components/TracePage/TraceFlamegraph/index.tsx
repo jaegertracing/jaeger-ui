@@ -182,6 +182,13 @@ const TraceFlamegraph = ({ trace }: any) => {
     };
   }, [flameData, showChart, viewMode]);
 
+  // Re-fit the chart to its new width after the split is dragged (onChange fires once, on drag end).
+  useEffect(() => {
+    if (!showChart || !chartRef.current || !containerRef.current || !flameData) return;
+    chartRef.current.width(containerRef.current.clientWidth || 800);
+    select(containerRef.current).datum(flameData).call(chartRef.current);
+  }, [tableWidth, showChart, flameData]);
+
   useEffect(() => {
     const query = selectedItem || searchQuery;
     searchActiveRef.current = Boolean(query);
@@ -191,14 +198,7 @@ const TraceFlamegraph = ({ trace }: any) => {
     } else {
       chartRef.current.clear();
     }
-  }, [searchQuery, selectedItem, viewMode]);
-
-  // Re-fit the chart to its new width after the split is dragged (onChange fires once, on drag end).
-  useEffect(() => {
-    if (!showChart || !chartRef.current || !containerRef.current || !flameData) return;
-    chartRef.current.width(containerRef.current.clientWidth || 800);
-    select(containerRef.current).datum(flameData).call(chartRef.current);
-  }, [tableWidth, showChart, flameData]);
+  }, [searchQuery, selectedItem, viewMode, flameData, tableWidth]);
 
   // Keep the resizer's minimum tied to the fixed first column's width, recomputing on layout
   // changes (mode switch, data change, window resize). Without this the table could be dragged

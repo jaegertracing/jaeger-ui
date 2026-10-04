@@ -11,7 +11,7 @@ import { IOtelTrace } from '../types/otel';
 import OtelTraceFacade from './OtelTraceFacade';
 
 // exported for tests
-export function deduplicateTags(spanTags: ReadonlyArray<KeyValuePair>) {
+function deduplicateTags(spanTags: ReadonlyArray<KeyValuePair>) {
   const warningsHash: Map<string, string> = new Map<string, string>();
   const tags: KeyValuePair[] = [];
   const seen = new Map<string, Set<KeyValuePair['value']>>();
@@ -36,7 +36,7 @@ export function deduplicateTags(spanTags: ReadonlyArray<KeyValuePair>) {
 }
 
 // exported for tests
-export function orderTags(spanTags: KeyValuePair[], topPrefixes?: readonly string[]) {
+function orderTags(spanTags: KeyValuePair[], topPrefixes?: readonly string[]) {
   const orderedTags: KeyValuePair[] = spanTags.slice();
   const tp = (topPrefixes || []).map((p: string) => p.toLowerCase());
 
