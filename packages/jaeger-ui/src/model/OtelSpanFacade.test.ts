@@ -266,7 +266,7 @@ describe('OtelSpanFacade', () => {
       expect(link?.traceID).toBe('trace-1');
     });
 
-    it('includes FOLLOWS_FROM reference even if it is used as parent (fallback)', () => {
+    it('consumes the FOLLOWS_FROM reference selected as the parent', () => {
       const span: Span = {
         ...mockLegacySpan,
         traceID: 'trace-1',
@@ -274,7 +274,7 @@ describe('OtelSpanFacade', () => {
       };
       const spanFacade = new OtelSpanFacade(span);
       expect(spanFacade.parentSpanID).toBe('parent-link');
-      expect(spanFacade.links.find(l => l.spanID === 'parent-link')).toBeDefined();
+      expect(spanFacade.links.find(l => l.spanID === 'parent-link')).toBeUndefined();
     });
   });
 

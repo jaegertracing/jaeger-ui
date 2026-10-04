@@ -80,16 +80,28 @@ describe('transformTraceData()', () => {
         links: ['b'],
       },
       {
-        name: 'falls back to the first same-trace FOLLOWS_FROM and keeps it as a link',
+        name: 'consumes the first same-trace FOLLOWS_FROM as the parent',
         references: [reference('FOLLOWS_FROM', 'a'), reference('FOLLOWS_FROM', 'b')],
         parent: 'a',
-        links: ['a', 'b'],
+        links: ['b'],
       },
       {
         name: 'ignores cross-trace CHILD_OF when choosing a parent',
         references: [reference('CHILD_OF', 'a', 'other-trace'), reference('FOLLOWS_FROM', 'b')],
         parent: 'b',
-        links: ['a', 'b'],
+        links: ['a'],
+      },
+      {
+        name: 'consumes only the selected CHILD_OF reference',
+        references: [reference('CHILD_OF', 'a'), reference('CHILD_OF', 'a')],
+        parent: 'a',
+        links: ['a'],
+      },
+      {
+        name: 'preserves a cross-trace link with the selected parent span ID',
+        references: [reference('CHILD_OF', 'a', 'other-trace'), reference('CHILD_OF', 'a')],
+        parent: 'a',
+        links: ['a'],
       },
       {
         name: 'keeps cross-trace references as links without choosing a parent',

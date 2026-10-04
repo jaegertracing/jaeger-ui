@@ -3,22 +3,25 @@
 
 import { Span, SpanData } from '../types/trace';
 
-export function getParentSpanID(span: SpanData): string | undefined {
-  if (Object.hasOwn(span, 'parentSpanID')) return span.parentSpanID;
+function getParentSpanReference(span: SpanData) {
   const references = span.references ?? [];
   // Legacy spans prefer the first same-trace CHILD_OF, then the first same-trace FOLLOWS_FROM.
   return (
     references.find(ref => ref.traceID === span.traceID && ref.refType === 'CHILD_OF') ??
     references.find(ref => ref.traceID === span.traceID && ref.refType === 'FOLLOWS_FROM')
-  )?.spanID;
+  );
+}
+
+export function getParentSpanID(span: SpanData): string | undefined {
+  if (Object.hasOwn(span, 'parentSpanID')) return span.parentSpanID;
+  return getParentSpanReference(span)?.spanID;
 }
 
 export function getSpanLinks(span: SpanData) {
   const references = span.references ?? [];
   if (Object.hasOwn(span, 'parentSpanID')) return references;
-  const parentSpanID = getParentSpanID(span);
-  // The backend retains FOLLOWS_FROM references as links even when they select the parent.
-  return references.filter(ref => ref.refType !== 'CHILD_OF' || ref.spanID !== parentSpanID);
+  const parentRef = getParentSpanReference(span);
+  return references.filter(ref => ref !== parentRef);
 }
 
 /**
