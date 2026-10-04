@@ -31,6 +31,9 @@ export type SpanReference = {
 };
 
 export type SpanData = {
+  // An explicit parent bypasses legacy reference selection; undefined denotes a root.
+  // When this field is present, references contain only links.
+  parentSpanID?: string;
   spanID: string;
   traceID: string;
   processID: string;

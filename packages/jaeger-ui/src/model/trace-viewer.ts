@@ -4,6 +4,7 @@
 import _memoize from 'lodash/memoize';
 
 import { Span } from '../types/trace';
+import { getParentSpanID } from './span';
 
 type TracePageHeaderParts = {
   serviceName: string;
@@ -11,17 +12,13 @@ type TracePageHeaderParts = {
 };
 
 export function _getTracePageHeaderPartsImpl(spans: ReadonlyArray<Span>): TracePageHeaderParts | null {
-  // Use a span with no references to another span in given array
-  // prefering the span with the fewest references
-  // using start time as a tie breaker
+  // The header uses a root span, preferring fewer references and then an earlier start time.
   let candidateSpan: Span | undefined;
   const allIDs: Set<string> = new Set(spans.map(({ spanID }) => spanID));
 
   for (let i = 0; i < spans.length; i++) {
-    const hasInternalRef =
-      spans[i].references &&
-      spans[i].references.some(({ traceID, spanID }) => traceID === spans[i].traceID && allIDs.has(spanID));
-    if (hasInternalRef) continue;
+    const parentSpanID = getParentSpanID(spans[i]);
+    if (parentSpanID && allIDs.has(parentSpanID)) continue;
 
     if (!candidateSpan) {
       candidateSpan = spans[i];

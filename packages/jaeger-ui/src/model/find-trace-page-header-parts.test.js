@@ -26,6 +26,7 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: secondSpanId,
           traceID: currentTraceId,
         },
@@ -38,6 +39,7 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: thirdSpanId,
           traceID: currentTraceId,
         },
@@ -50,6 +52,7 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: firstSpanId,
           traceID: currentTraceId,
         },
@@ -64,6 +67,7 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: thirdSpanId,
           traceID: currentTraceId,
         },
@@ -76,6 +80,7 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: missingSpanId,
           traceID: currentTraceId,
         },
@@ -91,6 +96,7 @@ describe('getTracePageHeaderParts', () => {
       },
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: missingSpanId,
           traceID: currentTraceId,
         },
@@ -105,6 +111,7 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: thirdSpanId,
           traceID: currentTraceId,
         },
@@ -126,6 +133,7 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: missingSpanId,
           traceID: currentTraceId,
         },
@@ -140,6 +148,7 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: secondSpanId,
           traceID: currentTraceId,
         },
@@ -152,6 +161,7 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: thirdSpanId,
           traceID: currentTraceId,
         },
@@ -167,6 +177,7 @@ describe('getTracePageHeaderParts', () => {
       },
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: missingSpanId,
           traceID: currentTraceId,
         },
@@ -181,6 +192,7 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: thirdSpanId,
           traceID: currentTraceId,
         },
@@ -202,6 +214,7 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: secondSpanId,
           traceID: currentTraceId,
         },

@@ -3,8 +3,8 @@
 
 /**
  * A span spec describes identity, parentage, timing, and attributes under test.
- * The pipeline adds wire-format boilerplate (process, empty logs, and the traceID
- * on every reference) when it materializes the spec. Timing defaults to 1 microsecond;
+ * Parentage is explicit; references describe links and never select a parent.
+ * The pipeline adds wire-format boilerplate. Timing defaults to 1 microsecond;
  * explicit undefined omits either timing field, and explicit numeric values are preserved.
  */
 interface ISpanSpec {

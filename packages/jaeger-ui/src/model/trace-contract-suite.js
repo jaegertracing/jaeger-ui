@@ -422,11 +422,11 @@ export function runTraceContractSuite(pipeline) {
       expect(result.orphanSpanCount).toBe(0);
     });
 
-    it('should handle FOLLOWS_FROM references for orphan detection', () => {
+    it('should detect an orphan with an explicit missing parent', () => {
       const followsFromOrphan = {
         spanID: 'followsOrphan',
         operationName: 'followsOrphanOp',
-        references: [{ refType: 'FOLLOWS_FROM', spanID: 'nonexistent' }],
+        parentSpanID: 'nonexistent',
         startTime: startTime,
         duration,
       };
@@ -578,6 +578,43 @@ export function runTraceContractSuite(pipeline) {
         const ids = result.spans.map(s => s.spanID);
         expect(ids).toEqual([id('root'), id('child1'), id('grandChild1'), id('child2')]);
       });
+    });
+
+    it('keeps references as links when the span has no parent', () => {
+      const source = {
+        spanID: 'source',
+        operationName: 'source',
+        references: [{ refType: 'CHILD_OF', spanID: 'target' }],
+      };
+      const target = { spanID: 'target', operationName: 'target' };
+      const result = pipeline.parse(trace(source, target));
+      const sourceSpan = result.spanMap.get(id('source'));
+      const targetSpan = result.spanMap.get(id('target'));
+
+      expect(sourceSpan.parentSpanID).toBeUndefined();
+      expect(sourceSpan.parentSpan).toBeUndefined();
+      expect(result.rootSpans.map(span => span.spanID)).toEqual([id('source'), id('target')]);
+      expect(targetSpan.childSpans).toEqual([]);
+      expect(sourceSpan.links).toEqual([expect.objectContaining({ spanID: id('target') })]);
+      expect(targetSpan.inboundLinks).toEqual([expect.objectContaining({ spanID: id('source') })]);
+      expect(result.orphanSpanCount).toBe(0);
+    });
+
+    it('preserves a link to the explicit parent', () => {
+      const root = { spanID: 'root', operationName: 'root' };
+      const child = {
+        spanID: 'child',
+        operationName: 'child',
+        parentSpanID: 'root',
+        references: [{ refType: 'CHILD_OF', spanID: 'root' }],
+      };
+      const result = pipeline.parse(trace(root, child));
+      const childSpan = result.spanMap.get(id('child'));
+      expect(childSpan.parentSpanID).toBe(id('root'));
+      expect(childSpan.links).toEqual([expect.objectContaining({ spanID: id('root') })]);
+      expect(result.spanMap.get(id('root')).inboundLinks).toEqual([
+        expect.objectContaining({ spanID: id('child') }),
+      ]);
     });
 
     it('exposes parent and secondary references as links on spans with multiple references', () => {
