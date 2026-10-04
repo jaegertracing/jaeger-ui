@@ -4,7 +4,7 @@
 import _isEqual from 'lodash/isEqual';
 
 import getConfig from '../utils/config/get-config';
-import { getTraceEmoji, getTraceName, getTracePageTitle } from './trace-viewer';
+import { getTraceEmoji, getTraceName, getTracePageTitle } from './trace-display-helpers';
 import { KeyValuePair, Span, SpanData, SpanReference, Trace, TraceData } from '../types/trace';
 import { IOtelTrace } from '../types/otel';
 
