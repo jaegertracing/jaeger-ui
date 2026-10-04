@@ -3,7 +3,6 @@
 
 /**
  * A span spec describes identity, parentage, timing, and attributes under test.
- * Shared cases specify parentage with parentSpanID and use references only for additional links.
  * The pipeline adds wire-format boilerplate (process, empty logs, and the traceID
  * on every reference) when it materializes the spec. Timing defaults to 1 microsecond;
  * explicit undefined omits either timing field, and explicit numeric values are preserved.
@@ -11,7 +10,9 @@
 interface ISpanSpec {
   spanID: string;
   operationName: string;
+  /** This field identifies the parent; an omitted value means the spec declares no parent. */
   parentSpanID?: string;
+  /** These references describe links, not parentage, even when refType is CHILD_OF. */
   references?: { refType: 'CHILD_OF' | 'FOLLOWS_FROM'; spanID: string }[];
   startTime?: number;
   duration?: number;
