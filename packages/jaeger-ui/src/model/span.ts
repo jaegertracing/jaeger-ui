@@ -13,13 +13,11 @@ function getParentSpanReference(span: SpanData) {
 }
 
 export function getParentSpanID(span: SpanData): string | undefined {
-  if (Object.hasOwn(span, 'parentSpanID')) return span.parentSpanID;
   return getParentSpanReference(span)?.spanID;
 }
 
 export function getSpanLinks(span: SpanData) {
   const references = span.references ?? [];
-  if (Object.hasOwn(span, 'parentSpanID')) return references;
   const parentRef = getParentSpanReference(span);
   return references.filter(ref => ref !== parentRef);
 }

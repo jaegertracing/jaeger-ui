@@ -580,26 +580,6 @@ export function runTraceContractSuite(pipeline) {
       });
     });
 
-    it('keeps references as links when the span has no parent', () => {
-      const source = {
-        spanID: 'source',
-        operationName: 'source',
-        references: [{ refType: 'CHILD_OF', spanID: 'target' }],
-      };
-      const target = { spanID: 'target', operationName: 'target' };
-      const result = pipeline.parse(trace(source, target));
-      const sourceSpan = result.spanMap.get(id('source'));
-      const targetSpan = result.spanMap.get(id('target'));
-
-      expect(sourceSpan.parentSpanID).toBeUndefined();
-      expect(sourceSpan.parentSpan).toBeUndefined();
-      expect(result.rootSpans.map(span => span.spanID)).toEqual([id('source'), id('target')]);
-      expect(targetSpan.childSpans).toEqual([]);
-      expect(sourceSpan.links).toEqual([expect.objectContaining({ spanID: id('target') })]);
-      expect(targetSpan.inboundLinks).toEqual([expect.objectContaining({ spanID: id('source') })]);
-      expect(result.orphanSpanCount).toBe(0);
-    });
-
     it('exposes parent and secondary references as links on spans with multiple references', () => {
       const root = { spanID: 'root', operationName: 'root' };
       const parent = { spanID: 'parent', operationName: 'parent', parentSpanID: 'root' };

@@ -6,10 +6,7 @@ import { SpanData, TraceData } from '../types/trace';
 import { ITraceSpec } from './trace-contract-spec';
 import { runTraceContractSuite } from './trace-contract-suite';
 
-/**
- * The materializer renders a trace spec as legacy trace data for transformTraceData().
- * Explicit parentage lets the shared tests bypass legacy reference selection.
- */
+/** Renders a trace spec as the legacy /api/traces JSON that transformTraceData() reads. */
 function toLegacyTrace({ traceID, serviceName, spans }: ITraceSpec): TraceData & { spans: SpanData[] } {
   const PROCESS_ID = 'p1';
   return {
@@ -29,12 +26,12 @@ function toLegacyTrace({ traceID, serviceName, spans }: ITraceSpec): TraceData &
         duration: 1,
         ...span,
       };
+      const parentRef = parentSpanID ? [{ refType: 'CHILD_OF' as const, spanID: parentSpanID }] : [];
       return {
         traceID,
         spanID,
         operationName,
-        parentSpanID,
-        references: references.map(ref => ({ ...ref, traceID, span: undefined })),
+        references: [...parentRef, ...references].map(ref => ({ ...ref, traceID, span: undefined })),
         // SpanData requires timing fields, but explicit undefined values exercise missing-field handling.
         ...(startTime === undefined ? {} : { startTime }),
         ...(duration === undefined ? {} : { duration }),
