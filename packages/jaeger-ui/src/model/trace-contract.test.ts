@@ -6,7 +6,10 @@ import { SpanData, TraceData } from '../types/trace';
 import { ITraceSpec } from './trace-contract-spec';
 import { runTraceContractSuite } from './trace-contract-suite';
 
-/** The materializer supplies explicit parentage to bypass legacy reference selection. */
+/**
+ * The materializer renders a trace spec as legacy trace data for transformTraceData().
+ * Explicit parentage lets the shared tests bypass legacy reference selection.
+ */
 function toLegacyTrace({ traceID, serviceName, spans }: ITraceSpec): TraceData & { spans: SpanData[] } {
   const PROCESS_ID = 'p1';
   return {
