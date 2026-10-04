@@ -12,7 +12,7 @@ type TracePageHeaderParts = {
 };
 
 export function _getTracePageHeaderPartsImpl(spans: ReadonlyArray<Span>): TracePageHeaderParts | null {
-  // The header uses a root span, preferring fewer references and then an earlier start time.
+  // The header chooses the span with the earliest start time among those with no resolvable parent.
   let candidateSpan: Span | undefined;
   const allIDs: Set<string> = new Set(spans.map(({ spanID }) => spanID));
 
@@ -20,18 +20,7 @@ export function _getTracePageHeaderPartsImpl(spans: ReadonlyArray<Span>): TraceP
     const parentSpanID = getParentSpanID(spans[i]);
     if (parentSpanID && allIDs.has(parentSpanID)) continue;
 
-    if (!candidateSpan) {
-      candidateSpan = spans[i];
-      continue;
-    }
-
-    const thisRefLength = (spans[i].references && spans[i].references.length) || 0;
-    const candidateRefLength = (candidateSpan.references && candidateSpan.references.length) || 0;
-
-    if (
-      thisRefLength < candidateRefLength ||
-      (thisRefLength === candidateRefLength && spans[i].startTime < candidateSpan.startTime)
-    ) {
+    if (!candidateSpan || spans[i].startTime < candidateSpan.startTime) {
       candidateSpan = spans[i];
     }
   }
