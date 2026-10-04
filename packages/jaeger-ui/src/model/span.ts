@@ -1,9 +1,9 @@
 // Copyright (c) 2017 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { Span, SpanData } from '../types/trace';
+import { Span, SpanData, SpanReference } from '../types/trace';
 
-function getParentSpanReference(span: SpanData) {
+function getParentSpanReference(span: SpanData): SpanReference | undefined {
   const references = span.references ?? [];
   // Legacy spans prefer the first same-trace CHILD_OF, then the first same-trace FOLLOWS_FROM.
   return (
