@@ -600,23 +600,6 @@ export function runTraceContractSuite(pipeline) {
       expect(result.orphanSpanCount).toBe(0);
     });
 
-    it('preserves a link to the explicit parent', () => {
-      const root = { spanID: 'root', operationName: 'root' };
-      const child = {
-        spanID: 'child',
-        operationName: 'child',
-        parentSpanID: 'root',
-        references: [{ refType: 'CHILD_OF', spanID: 'root' }],
-      };
-      const result = pipeline.parse(trace(root, child));
-      const childSpan = result.spanMap.get(id('child'));
-      expect(childSpan.parentSpanID).toBe(id('root'));
-      expect(childSpan.links).toEqual([expect.objectContaining({ spanID: id('root') })]);
-      expect(result.spanMap.get(id('root')).inboundLinks).toEqual([
-        expect.objectContaining({ spanID: id('child') }),
-      ]);
-    });
-
     it('exposes parent and secondary references as links on spans with multiple references', () => {
       const root = { spanID: 'root', operationName: 'root' };
       const parent = { spanID: 'parent', operationName: 'parent', parentSpanID: 'root' };

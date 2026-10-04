@@ -92,10 +92,16 @@ describe('transformTraceData()', () => {
         links: ['a'],
       },
       {
-        name: 'consumes only the selected CHILD_OF reference',
-        references: [reference('CHILD_OF', 'a'), reference('CHILD_OF', 'a')],
+        name: 'consumes the selected CHILD_OF reference without creating a link',
+        references: [reference('CHILD_OF', 'a')],
         parent: 'a',
-        links: ['a'],
+        links: [],
+      },
+      {
+        name: 'consumes the selected FOLLOWS_FROM reference without creating a link',
+        references: [reference('FOLLOWS_FROM', 'a')],
+        parent: 'a',
+        links: [],
       },
       {
         name: 'preserves a cross-trace link with the selected parent span ID',
