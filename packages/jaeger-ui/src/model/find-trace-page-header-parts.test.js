@@ -26,6 +26,7 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: secondSpanId,
           traceID: currentTraceId,
         },
@@ -38,6 +39,7 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: thirdSpanId,
           traceID: currentTraceId,
         },
@@ -50,6 +52,7 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: firstSpanId,
           traceID: currentTraceId,
         },
@@ -64,6 +67,7 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: thirdSpanId,
           traceID: currentTraceId,
         },
@@ -76,6 +80,7 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: missingSpanId,
           traceID: currentTraceId,
         },
@@ -91,6 +96,7 @@ describe('getTracePageHeaderParts', () => {
       },
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: missingSpanId,
           traceID: currentTraceId,
         },
@@ -105,13 +111,14 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: thirdSpanId,
           traceID: currentTraceId,
         },
       ],
     },
     {
-      spanID: secondSpanId, // root span (as a span without any refs)
+      spanID: secondSpanId,
       traceID: currentTraceId,
       startTime: t + 100,
       operationName,
@@ -120,12 +127,14 @@ describe('getTracePageHeaderParts', () => {
       },
     },
     {
-      spanID: thirdSpanId, // may be a root span
+      spanID: thirdSpanId,
       traceID: currentTraceId,
       startTime: t,
-      process: {},
+      operationName: 'earlier-root',
+      process: { serviceName: 'earlier-service' },
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: missingSpanId,
           traceID: currentTraceId,
         },
@@ -140,6 +149,7 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: secondSpanId,
           traceID: currentTraceId,
         },
@@ -152,6 +162,7 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: thirdSpanId,
           traceID: currentTraceId,
         },
@@ -167,6 +178,7 @@ describe('getTracePageHeaderParts', () => {
       },
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: missingSpanId,
           traceID: currentTraceId,
         },
@@ -181,6 +193,7 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: thirdSpanId,
           traceID: currentTraceId,
         },
@@ -202,6 +215,7 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: secondSpanId,
           traceID: currentTraceId,
         },
@@ -221,9 +235,11 @@ describe('getTracePageHeaderParts', () => {
     );
   });
 
-  it('returns an id of root span without any refs', () => {
-    expect(getTracePageHeaderParts(spansWithMultipleRootsWithOneWithoutRefs)).toEqual(
-      fullTracePageHeaderParts
+  it('chooses the earliest root even when a later root has no references', () => {
+    const expected = { serviceName: 'earlier-service', operationName: 'earlier-root' };
+    expect(getTracePageHeaderParts(spansWithMultipleRootsWithOneWithoutRefs)).toEqual(expected);
+    expect(getTracePageHeaderParts([...spansWithMultipleRootsWithOneWithoutRefs].reverse())).toEqual(
+      expected
     );
   });
 
