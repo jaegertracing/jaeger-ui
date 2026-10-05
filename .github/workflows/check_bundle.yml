@@ -28,7 +28,7 @@ jobs:
 
       - name: Restore previous bundle size
         id: cache-bundle-size
-        uses: actions/cache/restore@v6
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: bundle_size.txt
           key: jaeger-ui-bundle-size
@@ -58,7 +58,7 @@ jobs:
 
       - name: Save new bundle size
         if: ${{ (github.event_name == 'push') && (github.ref == 'refs/heads/main') }}
-        uses: actions/cache/save@v6
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: bundle_size.txt
           key: jaeger-ui-bundle-size-${{ github.run_id }}
