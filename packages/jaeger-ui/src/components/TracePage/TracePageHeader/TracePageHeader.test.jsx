@@ -10,7 +10,7 @@ import TracePageHeaderWithRef, {
   HEADER_ITEMS,
 } from './TracePageHeader';
 import traceGenerator from '../../../demo/trace-generators';
-import { getTraceName } from '../../../model/trace-viewer';
+import { getTraceName } from '../../../model/trace-display-helpers';
 import transformTraceData from '../../../model/transform-trace-data';
 import { ETraceViewType } from '../types';
 

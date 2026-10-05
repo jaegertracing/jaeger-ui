@@ -18,6 +18,7 @@ import {
 } from '../types/otel';
 import { classifySpan } from '../utils/genai/detect';
 import { makeAttributes } from './attributes';
+import { getParentSpanID, getNonParentReferences } from './span';
 
 export default class OtelSpanFacade implements IOtelSpan {
   private legacySpan: Span;
@@ -37,7 +38,6 @@ export default class OtelSpanFacade implements IOtelSpan {
     this.legacySpan = legacySpan;
 
     const tags = this.legacySpan.tags ?? [];
-    const references = this.legacySpan.references ?? [];
     const logs = this.legacySpan.logs ?? [];
     const subsidiarilyReferencedBy = this.legacySpan.subsidiarilyReferencedBy ?? [];
 
@@ -51,15 +51,7 @@ export default class OtelSpanFacade implements IOtelSpan {
       }
     }
 
-    // Find parent span ID according to the following priority:
-    // 1. Earliest CHILD_OF reference with the same traceID
-    // 2. Otherwise, earliest FOLLOWS_FROM reference with the same traceID
-    // 3. If no reference with same traceID exists, parent is undefined
-    const traceID = this.legacySpan.traceID;
-    const parentSpanRef =
-      references.find(r => r.traceID === traceID && r.refType === 'CHILD_OF') ??
-      references.find(r => r.traceID === traceID && r.refType === 'FOLLOWS_FROM');
-    this._parentSpanID = parentSpanRef?.spanID;
+    this._parentSpanID = getParentSpanID(this.legacySpan);
 
     this._attributes = makeAttributes(OtelSpanFacade.toOtelAttributes(tags));
     this._genAIKind = classifySpan({ attributes: this._attributes });
@@ -70,13 +62,11 @@ export default class OtelSpanFacade implements IOtelSpan {
       attributes: makeAttributes(OtelSpanFacade.toOtelAttributes(log.fields)),
     }));
 
-    this._links = references
-      .filter(ref => ref !== parentSpanRef)
-      .map(ref => ({
-        traceID: ref.traceID,
-        spanID: ref.spanID,
-        attributes: makeAttributes(), // Legacy references don't have attributes
-      }));
+    this._links = getNonParentReferences(this.legacySpan).map(ref => ({
+      traceID: ref.traceID,
+      spanID: ref.spanID,
+      attributes: makeAttributes(), // Legacy references don't have attributes
+    }));
 
     const errorTag = tags.find(t => t.key === 'error');
     this._status =

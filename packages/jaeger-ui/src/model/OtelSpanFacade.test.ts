@@ -266,11 +266,7 @@ describe('OtelSpanFacade', () => {
       expect(link?.traceID).toBe('trace-1');
     });
 
-    it('includes FOLLOWS_FROM reference even if it is used as parent (fallback)', () => {
-      // If no CHILD_OF exists, FOLLOWS_FROM might be used as parent,
-      // it would be standard for async spans like in producer/consumer.
-      // So if a FOLLOWS_FROM becomes the parent, it should be excluded from links.
-
+    it('consumes the FOLLOWS_FROM reference selected as the parent', () => {
       const span: Span = {
         ...mockLegacySpan,
         traceID: 'trace-1',
