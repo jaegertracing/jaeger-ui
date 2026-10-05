@@ -127,6 +127,13 @@ describe('<ListView /> functional', () => {
     expect(items.length).toBeGreaterThanOrEqual(props.initialDraw);
   });
 
+  it('reports the wrapper client height', () => {
+    const ref = React.createRef();
+    const { container } = render(<ListView {...props} ref={ref} />);
+
+    expect(ref.current.getViewHeight()).toBe(getWrapper(container).clientHeight);
+  });
+
   it('applies wrapper class name', () => {
     const { container } = render(<ListView {...props} />);
     expect(container.querySelector('.SomeClassName')).toBeInTheDocument();
@@ -259,6 +266,36 @@ describe('<ListView /> functional', () => {
     spy.mockRestore();
   });
 
+  it('uses the wrapper offset when calculating the window viewport height', () => {
+    const ref = React.createRef();
+    const rectSpy = jest.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({ top: 120 });
+
+    render(<ListView {...props} ref={ref} windowScroller />);
+
+    expect(ref.current.getViewHeight()).toBe(window.innerHeight - 120);
+    rectSpy.mockRestore();
+  });
+
+  it('positions the list after a window scroll', async () => {
+    const ref = React.createRef();
+    const scrollY = Object.getOwnPropertyDescriptor(window, 'scrollY');
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 400 });
+
+    render(<ListView {...props} ref={ref} windowScroller />);
+
+    fireEvent.scroll(window);
+
+    await waitFor(() => {
+      expect(ref.current.getTopVisibleIndex()).toBeGreaterThan(0);
+    });
+
+    if (scrollY) {
+      Object.defineProperty(window, 'scrollY', scrollY);
+    } else {
+      delete window.scrollY;
+    }
+  });
+
   it('removes window scroll listener on unmount', () => {
     const addSpy = jest.spyOn(window, 'addEventListener');
     const removeSpy = jest.spyOn(window, 'removeEventListener');
@@ -271,9 +308,9 @@ describe('<ListView /> functional', () => {
 
     unmount();
 
-    // Verify removeEventListener was called
+    // Verify the listener callback removed is the one that was registered.
     const removeCalls = removeSpy.mock.calls.filter(call => call[0] === 'scroll');
-    expect(removeCalls.length).toBeGreaterThan(0);
+    expect(removeCalls).toContainEqual(['scroll', addCalls[0][1]]);
 
     addSpy.mockRestore();
     removeSpy.mockRestore();

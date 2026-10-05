@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 
-const { useRef, useReducer, useEffect, useCallback, useImperativeHandle, forwardRef } = React;
+const { useRef, useReducer, useCallback, useImperativeHandle, forwardRef } = React;
 
 import Positions from './Positions';
 import { TNil } from '../../../../types';
@@ -279,7 +279,7 @@ const ListView = forwardRef<ListViewRef, TListViewProps>((props, ref) => {
     [_scanItemHeights]
   );
 
-  useEffect(() => {
+  React.useLayoutEffect(() => {
     if (props.windowScroller) {
       if (wrapperElm.current) {
         const { top } = wrapperElm.current.getBoundingClientRect();
