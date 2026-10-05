@@ -181,11 +181,13 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   };
 
   // Pre-order depth-first traversal to order spans, populate the flat array, and
-  // compute the trace's time range from the (already-repaired) start times.
-  // Implemented iteratively with an explicit stack (rather than recursion) so
-  // that deeply nested traces do not overflow the call stack.
-  const processSpan = (span: Span, depth: number) => {
-    span.depth = depth;
+  // compute the trace's time range from the (already-repaired) start times. The
+  // traversal uses an explicit stack rather than recursion so that deeply nested
+  // traces do not overflow the call stack. A span's depth is assigned by its
+  // parent before the span is pushed; roots are seeded with depth 0.
+  const stack: Span[] = [];
+  const processSpan = (span: Span) => {
+    const { depth } = span;
     span.hasChildren = span.childSpans.length > 0;
 
     if (span.startTime < traceStartTime) {
@@ -218,29 +220,25 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     spans.push(span);
 
     // Repair children against this (already-repaired) span, then sort them by
-    // startTime before they are visited.
+    // startTime. They are pushed in reverse so that popping visits them in
+    // ascending startTime order, each subtree before the next sibling.
     const children = span.childSpans as Span[];
     children.forEach(child => repairStartTime(child, span));
     children.sort((a, b) => a.startTime - b.startTime);
+    for (let i = children.length - 1; i >= 0; i--) {
+      children[i].depth = depth + 1;
+      stack.push(children[i]);
+    }
   };
 
   rootSpans.forEach(root => repairStartTime(root));
   rootSpans.sort((a, b) => a.startTime - b.startTime);
-
-  // Stack of spans pending traversal. Children are pushed in reverse order so
-  // they are popped (and thus visited) in ascending startTime order, matching
-  // the order a recursive pre-order traversal would produce.
-  const stack: { span: Span; depth: number }[] = [];
   for (let i = rootSpans.length - 1; i >= 0; i--) {
-    stack.push({ span: rootSpans[i], depth: 0 });
+    rootSpans[i].depth = 0;
+    stack.push(rootSpans[i]);
   }
-
   while (stack.length > 0) {
-    const { span, depth } = stack.pop()!;
-    processSpan(span, depth);
-    for (let i = span.childSpans.length - 1; i >= 0; i--) {
-      stack.push({ span: span.childSpans[i], depth: depth + 1 });
-    }
+    processSpan(stack.pop()!);
   }
 
   // traceStartTime/traceEndTime are only updated while visiting spans reachable
