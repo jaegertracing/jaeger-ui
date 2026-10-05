@@ -72,6 +72,38 @@ describe('DiffSelection', () => {
     expect(screen.getByRole('button', { name: /Deselect All/i })).toBeInTheDocument();
   });
 
+  it('keeps the upload source on a selected trace link', () => {
+    render(
+      <MemoryRouter>
+        <DiffSelection
+          traces={[{ ...traces[0], source: 'upload' }]}
+          toggleComparison={mockToggleComparison}
+        />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole('link', { name: /trace-name-0/i })).toHaveAttribute(
+      'href',
+      '/trace/trace-id-0?source=upload'
+    );
+  });
+
+  it('keeps the upload source in the comparison link', () => {
+    render(
+      <MemoryRouter>
+        <DiffSelection
+          traces={[{ ...traces[0], source: 'upload' }, traces[1]]}
+          toggleComparison={mockToggleComparison}
+        />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole('link', { name: /Compare Traces/i })).toHaveAttribute(
+      'href',
+      '/trace/trace-id-0...trace-id-1?cohort=trace-id-0&cohort=trace-id-1&upload=trace-id-0'
+    );
+  });
+
   it('renders multiple traces as expected', () => {
     render(
       <MemoryRouter>

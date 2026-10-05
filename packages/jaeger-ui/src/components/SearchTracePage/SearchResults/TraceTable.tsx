@@ -30,7 +30,8 @@ const BOTH_DIRECTIONS: SortOrder[] = ['ascend', 'descend'];
 type TraceTableProps = {
   traceSummaries: TraceSummary[];
   maxTraceDuration: number;
-  getLink: (traceID: string) => TracePageLink;
+  getLink: (traceID: string, uploadedCopy?: boolean) => TracePageLink;
+  uploadedDuplicateIDs?: ReadonlySet<string>;
   disableComparisons: boolean;
   cohortIds: Set<string>;
   toggleComparison: (traceID: string, isInDiffCohort: boolean) => void;
@@ -68,6 +69,7 @@ export default function TraceTable({
   traceSummaries,
   maxTraceDuration,
   getLink,
+  uploadedDuplicateIDs = new Set(),
   disableComparisons,
   cohortIds,
   toggleComparison,
@@ -94,23 +96,35 @@ export default function TraceTable({
         onCell: () => ({ style: { overflow: 'hidden' } }),
         render: (name: string, trace: TraceSummary) => {
           const link = getLink(trace.traceID);
+          const uploadedLink = uploadedDuplicateIDs.has(trace.traceID) ? getLink(trace.traceID, true) : null;
           const label = name || trace.traceID;
           return (
-            <Tooltip title={label}>
-              <Link
-                to={link.pathname + (link.search ? `?${link.search}` : '')}
-                state={link.state}
-                onClick={e => e.stopPropagation()}
-                style={{
-                  display: 'block',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {label}
-              </Link>
-            </Tooltip>
+            <>
+              <Tooltip title={label}>
+                <Link
+                  to={link.pathname + (link.search ? `?${link.search}` : '')}
+                  state={link.state}
+                  onClick={e => e.stopPropagation()}
+                  style={{
+                    display: 'block',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {label}
+                </Link>
+              </Tooltip>
+              {uploadedLink && (
+                <Link
+                  to={uploadedLink.pathname + (uploadedLink.search ? `?${uploadedLink.search}` : '')}
+                  state={uploadedLink.state}
+                  onClick={e => e.stopPropagation()}
+                >
+                  View uploaded copy
+                </Link>
+              )}
+            </>
           );
         },
         sorter: true,
@@ -265,6 +279,7 @@ export default function TraceTable({
     sortOrder,
     maxTraceDuration,
     getLink,
+    uploadedDuplicateIDs,
     disableComparisons,
     cohortIds,
     toggleComparison,

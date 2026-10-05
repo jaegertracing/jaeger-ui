@@ -10,6 +10,8 @@ export type ServiceSummary = {
 };
 
 export type TraceSummary = {
+  // Set only for traces loaded from a local file. Absent summaries come from the backend.
+  source?: 'upload';
   traceID: string;
   traceName: string;
   rootServiceName: string;

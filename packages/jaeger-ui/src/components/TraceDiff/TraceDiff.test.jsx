@@ -146,7 +146,12 @@ describe('TraceDiff', () => {
 
   it('calls useTraces with the full cohort', () => {
     renderWithRouter(<TraceDiffImpl {...defaultProps} />);
-    expect(useTracesMock).toHaveBeenCalledWith(defaultCohort);
+    expect(useTracesMock).toHaveBeenCalledWith(defaultCohort, new Map());
+  });
+
+  it('loads an uploaded cohort member from the source named in the URL', () => {
+    renderWithRouter(<TraceDiffImpl {...defaultProps} search={`?upload=${defaultA}`} />);
+    expect(useTracesMock).toHaveBeenCalledWith(defaultCohort, new Map([[defaultA, 'upload']]));
   });
 
   it('updates url when TraceDiffHeader sets a or b', async () => {
@@ -154,32 +159,44 @@ describe('TraceDiff', () => {
     renderWithRouter(<TraceDiffImpl {...defaultProps} />);
 
     await user.click(screen.getByTestId('diff-set-a-btn'));
-    expect(getUrlSpy).toHaveBeenLastCalledWith({
-      a: newAValue,
-      b: defaultProps.b,
-      cohort: defaultProps.cohort,
-    });
+    expect(getUrlSpy).toHaveBeenLastCalledWith(
+      {
+        a: newAValue,
+        b: defaultProps.b,
+        cohort: defaultProps.cohort,
+      },
+      []
+    );
 
     await user.click(screen.getByTestId('diff-set-b-btn'));
-    expect(getUrlSpy).toHaveBeenLastCalledWith({
-      a: defaultProps.a,
-      b: newBValue,
-      cohort: defaultProps.cohort,
-    });
+    expect(getUrlSpy).toHaveBeenLastCalledWith(
+      {
+        a: defaultProps.a,
+        b: newBValue,
+        cohort: defaultProps.cohort,
+      },
+      []
+    );
 
     await user.click(screen.getByTestId('diff-set-a-empty-btn'));
-    expect(getUrlSpy).toHaveBeenLastCalledWith({
-      a: defaultProps.a,
-      b: defaultProps.b,
-      cohort: defaultProps.cohort,
-    });
+    expect(getUrlSpy).toHaveBeenLastCalledWith(
+      {
+        a: defaultProps.a,
+        b: defaultProps.b,
+        cohort: defaultProps.cohort,
+      },
+      []
+    );
 
     await user.click(screen.getByTestId('diff-set-b-empty-btn'));
-    expect(getUrlSpy).toHaveBeenLastCalledWith({
-      a: defaultProps.a,
-      b: defaultProps.b,
-      cohort: defaultProps.cohort,
-    });
+    expect(getUrlSpy).toHaveBeenLastCalledWith(
+      {
+        a: defaultProps.a,
+        b: defaultProps.b,
+        cohort: defaultProps.cohort,
+      },
+      []
+    );
 
     expect(mockNavigate).toHaveBeenCalledTimes(4);
   });

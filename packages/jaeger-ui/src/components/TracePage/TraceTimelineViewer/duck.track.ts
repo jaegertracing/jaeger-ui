@@ -15,6 +15,7 @@ import {
 import DetailState from './SpanDetail/DetailState';
 import { ReduxState } from '../../../types';
 import { getCachedTrace } from '../../../hooks/useTraceLoading';
+import { getTraceSource } from '../url';
 import { trackEvent } from '../../../utils/tracking';
 import { getToggleValue } from '../../../utils/tracking/common';
 
@@ -67,7 +68,7 @@ function trackParent(store: Store<ReduxState>, { payload }: Action<TSpanIdValue>
   }
   const { spanID } = payload;
   const isHidden = st.traceTimeline.childrenHiddenIDs.has(spanID);
-  const traceData = getCachedTrace(traceID);
+  const traceData = getCachedTrace(traceID, getTraceSource(window.location.search));
   if (!traceData) {
     return;
   }

@@ -24,8 +24,14 @@ export function matches(path: string) {
   return match.params?.id?.includes('...') ?? false;
 }
 
-export function getUrl(state: TTraceDiffState) {
+export function getUploadedTraceIds(search: string): string[] {
+  return new URLSearchParams(search).getAll('upload');
+}
+
+export function getUrl(state: TTraceDiffState, uploadedTraceIDs: readonly string[] = []) {
   const { a = undefined, b = undefined, cohort } = getValidState(state);
-  const search = queryString.stringify({ cohort });
+  const cohortSet = new Set(cohort);
+  const upload = uploadedTraceIDs.filter(id => cohortSet.has(id));
+  const search = queryString.stringify({ cohort, upload: upload.length ? upload : undefined });
   return prefixUrl(`/trace/${a || ''}...${b || ''}${search ? '?' : ''}${search}`);
 }

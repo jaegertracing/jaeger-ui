@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { useShallow } from 'zustand/react/shallow';
 
-import { getUrl, TDiffRouteParams } from './url';
+import { getUploadedTraceIds, getUrl, TDiffRouteParams } from './url';
 import TraceDiffGraph from './TraceDiffGraph';
 import TraceDiffHeader from './TraceDiffHeader';
 import { TOP_NAV_HEIGHT } from '../../constants';
@@ -54,8 +54,13 @@ function syncStates(
   }
 }
 
-export function TraceDiffImpl({ a, b, cohort }: TStateProps & TOwnProps) {
-  const tracesData = useTraces(cohort);
+export function TraceDiffImpl({ a, b, cohort, search = '' }: TStateProps & TOwnProps) {
+  const uploadedTraceIDs = React.useMemo(() => getUploadedTraceIds(search), [search]);
+  const traceSources = React.useMemo(
+    () => new Map(uploadedTraceIDs.map(id => [id, 'upload' as const])),
+    [uploadedTraceIDs]
+  );
+  const tracesData = useTraces(cohort, traceSources);
   const traceDiffState = useTraceDiffStore(
     useShallow(s => ({
       a: s.a,
@@ -88,10 +93,10 @@ export function TraceDiffImpl({ a, b, cohort }: TStateProps & TOwnProps) {
   const diffSetUrl = React.useCallback(
     (change: { newA?: string | TNil; newB?: string | TNil }) => {
       const { newA, newB } = change;
-      const url = getUrl({ a: newA || a, b: newB || b, cohort });
+      const url = getUrl({ a: newA || a, b: newB || b, cohort }, uploadedTraceIDs);
       navigate(url);
     },
-    [a, b, cohort, navigate]
+    [a, b, cohort, navigate, uploadedTraceIDs]
   );
 
   const diffSetA = React.useCallback(

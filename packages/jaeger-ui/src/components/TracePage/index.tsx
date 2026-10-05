@@ -3,15 +3,15 @@
 
 import * as React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, InputRef } from 'antd';
+import { Alert, Button, InputRef } from 'antd';
 import { useNormalizeTraceId } from './useNormalizeTraceId';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
 import _memoize from 'lodash/memoize';
-import { connect } from 'react-redux';
+import { connect, useDispatch } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
 import ArchiveNotifier from './ArchiveNotifier';
@@ -22,6 +22,7 @@ import {
   useLayoutPrefsStore,
   useTraceTimelineStore,
 } from './TraceTimelineViewer/store';
+import { actions as traceTimelineActions } from './TraceTimelineViewer/duck';
 import { trackFilter, trackFocusMatches, trackNextMatch, trackPrevMatch, trackRange } from './index.track';
 import {
   CombokeysHandler,
@@ -45,12 +46,12 @@ import {
   ETraceViewType,
   viewTypeShowsMinimap,
 } from './types';
-import { getUrl } from './url';
+import { getTraceSource, getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { parseUiFind } from '../common/UiFindInput';
 import { LocationState, ReduxState, TNil } from '../../types';
-import { useTrace } from '../../hooks/useTraceLoading';
+import { reloadBackendTrace, useTrace } from '../../hooks/useTraceLoading';
 import { IOtelTrace } from '../../types/otel';
 import filterSpans from '../../utils/filter-spans';
 import updateUiFind from '../../utils/update-ui-find';
@@ -80,6 +81,7 @@ type TOwnProps = {
   disableJsonView: boolean;
   traceGraphConfig?: TraceGraphConfig;
   useOtelTerms: boolean;
+  onReloadTrace?: () => void;
 };
 
 type TReduxProps = {
@@ -156,15 +158,18 @@ export function TracePageImpl(props: TProps) {
     traceGraphConfig,
     uiFind,
     useOtelTerms,
+    onReloadTrace,
   } = props;
 
   const id = params.id;
+  const traceSource = getTraceSource(location.search);
   const {
     data: traceData,
     isPending: traceLoading,
     isError: traceError,
     error: traceQueryError,
-  } = useTrace(id);
+    refetch: refetchTrace,
+  } = useTrace(id, traceSource);
 
   // Layout preferences are owned by Zustand; Redux setters are also called for the tracking middleware.
   const detailPanelMode = useLayoutPrefsStore(s => s.detailPanelMode);
@@ -377,7 +382,17 @@ export function TracePageImpl(props: TProps) {
   }, [setTimelineBarsVisible, timelineBarsVisible]);
 
   if (traceError) {
-    return <ErrorMessage className="ub-m3" error={traceQueryError || 'Unknown error'} />;
+    return (
+      <div className="ub-m3">
+        <ErrorMessage error={traceQueryError || 'Unknown error'} />
+        {traceSource === 'backend' && (
+          <Button htmlType="button" onClick={() => void refetchTrace()}>
+            Retry
+          </Button>
+        )}
+        {location.state?.fromSearch && <Link to={location.state.fromSearch}>Back to search</Link>}
+      </div>
+    );
   }
   if (traceLoading || !traceData) {
     return <LoadingIndicator className="u-mt-vast" centered />;
@@ -413,9 +428,10 @@ export function TracePageImpl(props: TProps) {
     hideMap:
       !viewTypeShowsMinimap(viewType) || Boolean(embedded?.timeline?.hideMinimap) || !timelineBarsVisible,
     hideSummary: Boolean(embedded?.timeline?.hideSummary),
-    linkToStandalone: getUrl(id),
+    linkToStandalone: getUrl(id, undefined, traceSource),
     nextResult,
     onArchiveClicked: archiveTrace,
+    onReloadTrace,
     onDetailPanelModeToggle,
     onSlimViewClicked: toggleSlimView,
     onTimelineToggle,
@@ -430,6 +446,7 @@ export function TracePageImpl(props: TProps) {
     timelineBarsVisible,
     toSearch: (locationState && locationState.fromSearch) || null,
     trace: traceData,
+    traceSource,
     updateNextViewRangeTime,
     updateViewRangeTime,
     useOtelTerms,
@@ -559,15 +576,30 @@ type TracePageProps = {
   params: { id: string };
 };
 
-const TracePage = (props: TracePageProps) => {
+export const TracePageRoute = (props: TracePageProps) => {
   const config = useConfig();
+  const dispatch = useDispatch<Dispatch<ReturnType<typeof traceTimelineActions.resetTraceView>>>();
+  const [reloadVersion, setReloadVersion] = useState(0);
   const traceID = props.params.id;
-  const { data: traceData } = useTrace(traceID);
+  const traceSource = getTraceSource(props.location.search);
+  const { data: traceData } = useTrace(traceID, traceSource);
   useNormalizeTraceId(traceID, traceData);
+
+  const onReloadTrace = useCallback(() => {
+    if (traceSource !== 'backend') return;
+    dispatch(traceTimelineActions.resetTraceView());
+    useTraceTimelineStore.getState().resetTraceView();
+    cancelScroll();
+    window.scrollTo(0, 0);
+    setReloadVersion(version => version + 1);
+    void reloadBackendTrace(traceID);
+  }, [dispatch, traceID, traceSource]);
 
   return (
     <ConnectedTracePage
+      key={`${traceSource}:${traceID}:${reloadVersion}`}
       {...props}
+      onReloadTrace={onReloadTrace}
       params={{ ...props.params, id: traceID }}
       archiveEnabled={Boolean(config.archiveEnabled)}
       enableSidePanel={Boolean(config.traceTimeline?.enableSidePanel)}
@@ -580,4 +612,4 @@ const TracePage = (props: TracePageProps) => {
   );
 };
 
-export default withRouteProps(TracePage);
+export default withRouteProps(TracePageRoute);

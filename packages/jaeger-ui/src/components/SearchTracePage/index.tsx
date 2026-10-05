@@ -102,17 +102,24 @@ export function SearchTracePageImpl() {
   // uploadedTraceIDs is derived from uniqueUploaded (not all uploadedSummaries) so that
   // traces present in both API results and uploads are not incorrectly badged as "Uploaded"
   // — the API result takes precedence and the badge should not appear on it.
-  const { traceSummaries, uploadedTraceIDs } = useMemo(() => {
+  const { traceSummaries, uploadedTraceIDs, uploadedDuplicateIDs } = useMemo(() => {
     const apiTraceSummaries = searchData?.results ?? [];
-    const seen = new Set(apiTraceSummaries.map(s => s.traceID));
+    const backendIDs = new Set(apiTraceSummaries.map(s => s.traceID));
+    const seen = new Set(backendIDs);
+    const uploadedDuplicateIDs = new Set<string>();
     const uniqueUploaded = uploadedSummaries.filter(s => {
+      if (backendIDs.has(s.traceID)) uploadedDuplicateIDs.add(s.traceID);
       if (seen.has(s.traceID)) return false;
       seen.add(s.traceID);
       return true;
     });
     return {
-      traceSummaries: [...apiTraceSummaries, ...uniqueUploaded],
+      traceSummaries: [
+        ...apiTraceSummaries,
+        ...uniqueUploaded.map(summary => ({ ...summary, source: 'upload' as const })),
+      ],
       uploadedTraceIDs: new Set(uniqueUploaded.map(s => s.traceID)),
+      uploadedDuplicateIDs,
     };
   }, [searchData, uploadedSummaries]);
 
@@ -299,6 +306,7 @@ export function SearchTracePageImpl() {
               searchLatency: searchData?.searchLatency,
               traceSummaries,
               uploadedTraceIDs,
+              uploadedDuplicateIDs,
               rawTraces: uploadedRawTraces,
             } as any)}
           />
