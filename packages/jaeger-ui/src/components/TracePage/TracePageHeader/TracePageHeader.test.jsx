@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 import TracePageHeaderWithRef, {
@@ -180,6 +180,36 @@ describe('<TracePageHeader>', () => {
     const incompleteItem = getByTestId('header-item-incomplete');
     expect(incompleteItem).toBeInTheDocument();
     expect(incompleteItem).toHaveTextContent('Incomplete');
+  });
+
+  it('keeps the reload action visible when the summary is collapsed', () => {
+    const incompleteTrace = Object.create(defaultProps.trace);
+    Object.defineProperty(incompleteTrace, 'orphanSpanCount', { value: 3 });
+    const onReloadTrace = jest.fn();
+    const { container } = renderWithRouter(
+      <TracePageHeader {...defaultProps} trace={incompleteTrace} slimView onReloadTrace={onReloadTrace} />
+    );
+
+    expect(container.querySelector('.TracePageHeader--overviewItems')).toBeNull();
+    const button = screen.getByRole('button', { name: 'Reload trace' });
+    fireEvent.click(button);
+    expect(onReloadTrace).toHaveBeenCalledOnce();
+  });
+
+  it('does not offer backend reload for an uploaded trace', () => {
+    const incompleteTrace = Object.create(defaultProps.trace);
+    Object.defineProperty(incompleteTrace, 'orphanSpanCount', { value: 3 });
+    renderWithRouter(
+      <TracePageHeader
+        {...defaultProps}
+        trace={incompleteTrace}
+        traceSource="upload"
+        onReloadTrace={jest.fn()}
+      />
+    );
+
+    expect(screen.getByTestId('header-item-incomplete')).toHaveTextContent('Incomplete');
+    expect(screen.queryByRole('button', { name: 'Reload trace' })).not.toBeInTheDocument();
   });
 
   it('does not render the incomplete item when the trace has no orphan spans', () => {

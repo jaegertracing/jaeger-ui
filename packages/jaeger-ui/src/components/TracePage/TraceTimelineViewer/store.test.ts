@@ -290,6 +290,27 @@ describe('trace timeline zustand stores', () => {
   });
 
   describe('useTraceTimelineStore', () => {
+    it('resets the same trace view while retaining layout preferences', () => {
+      useLayoutPrefsStore.setState({ spanNameColumnWidth: 0.5 });
+      useTraceTimelineStore.setState({
+        traceID: 'same-trace',
+        childrenHiddenIDs: new Set(['span-x']),
+        detailStates: new Map([['span-x', new DetailState()]]),
+        prunedServices: new Set(['service']),
+        shouldScrollToFirstUiFindMatch: true,
+      });
+
+      useTraceTimelineStore.getState().resetTraceView();
+
+      const state = useTraceTimelineStore.getState();
+      expect(state.traceID).toBeNull();
+      expect(state.childrenHiddenIDs.size).toBe(0);
+      expect(state.detailStates.size).toBe(0);
+      expect(state.prunedServices.size).toBe(0);
+      expect(state.shouldScrollToFirstUiFindMatch).toBe(false);
+      expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBe(0.5);
+    });
+
     describe('setTrace', () => {
       it('resets ephemeral state when traceID changes', () => {
         useTraceTimelineStore.setState({

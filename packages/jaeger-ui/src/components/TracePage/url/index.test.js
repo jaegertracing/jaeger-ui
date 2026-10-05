@@ -1,7 +1,7 @@
 // Copyright (c) 2020 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { getTracePageLink, getUrl } from '.';
+import { getTracePageLink, getTraceSource, getUrl } from '.';
 
 describe('TracePage/url', () => {
   const traceID = 'trace-id';
@@ -14,6 +14,12 @@ describe('TracePage/url', () => {
 
     it('includes traceID and uiFind', () => {
       expect(getUrl(traceID, uiFind)).toBe(`/trace/${traceID}?uiFind=${uiFind}`);
+    });
+
+    it('marks an uploaded trace without losing the span filter', () => {
+      expect(getUrl(traceID, uiFind, 'upload')).toBe(`/trace/${traceID}?source=upload&uiFind=${uiFind}`);
+      expect(getTraceSource('?source=upload&uiFind=foo')).toBe('upload');
+      expect(getTraceSource('?uiFind=foo')).toBe('backend');
     });
   });
 
@@ -34,6 +40,14 @@ describe('TracePage/url', () => {
         state,
         pathname: getUrl(traceID),
         search: `uiFind=${uiFind}`,
+      });
+    });
+
+    it('keeps the search destination and source choice in an uploaded link', () => {
+      expect(getTracePageLink(traceID, state, uiFind, 'upload')).toEqual({
+        state,
+        pathname: getUrl(traceID),
+        search: 'source=upload&uiFind=ui-find',
       });
     });
   });

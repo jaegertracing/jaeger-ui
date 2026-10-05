@@ -104,6 +104,13 @@ SPDX-License-Identifier: Apache-2.0
   font-weight: 500;
 }
 
+.TracePageHeader--incompleteActions {
+  align-items: center;
+  display: inline-flex;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .TracePageHeader--incompleteIcon {
   font-size: 1em;
   margin-right: 0.25em;

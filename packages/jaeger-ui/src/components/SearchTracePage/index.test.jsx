@@ -458,8 +458,38 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
     // With controlled tabs, the tab switch causes a component re-render before onTracesLoaded
     // is called; the React Query cache update may settle in a subsequent render cycle.
     await waitFor(() => {
-      expect(lastSearchResultsProps.traceSummaries).toContainEqual(summary);
+      expect(lastSearchResultsProps.traceSummaries).toContainEqual({ ...summary, source: 'upload' });
       expect(lastSearchResultsProps.rawTraces).toContainEqual({ traceID: 'uploaded-1' });
+    });
+  });
+
+  it('keeps a way to open an uploaded copy when the backend returns the same ID', async () => {
+    const summary = {
+      traceID: 'shared-id',
+      traceName: 'uploaded copy',
+      rootServiceName: 'svc',
+      rootOperationName: 'op',
+      startTime: 0,
+      duration: 100,
+      services: [],
+    };
+    useSearchTracesMock.mockReturnValue({
+      data: { results: [{ ...summary, traceName: 'backend copy' }] },
+      isFetching: false,
+      error: null,
+    });
+    render(
+      <AllProvider>
+        <SearchTracePage />
+      </AllProvider>
+    );
+    await act(async () => fireEvent.click(screen.getByText('Upload')));
+    await act(async () => lastFileLoaderProps.onTracesLoaded([summary], [{ traceID: 'shared-id' }]));
+
+    await waitFor(() => {
+      expect(lastSearchResultsProps.traceSummaries).toHaveLength(1);
+      expect(lastSearchResultsProps.traceSummaries[0].traceName).toBe('backend copy');
+      expect(lastSearchResultsProps.uploadedDuplicateIDs.has('shared-id')).toBe(true);
     });
   });
 

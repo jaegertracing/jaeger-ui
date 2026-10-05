@@ -5,6 +5,8 @@ import React from 'react';
 import { render, screen, act, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
+import { Provider } from 'react-redux';
+import { createStore } from 'redux';
 
 import {
   computeAdjustedRange,
@@ -13,6 +15,7 @@ import {
   mapStateToProps,
   shortcutConfig,
   TracePageImpl as TracePage,
+  TracePageRoute,
   VIEW_MIN_RANGE,
 } from './index';
 import memoizedTraceCriticalPath from './CriticalPath/index';
@@ -124,6 +127,7 @@ const {
   mockTraceTimelineStore,
   useEmbeddedStateMock,
   useTraceMock,
+  mockReloadBackendTrace,
 } = vi.hoisted(() => ({
   mockSubmitTraceToArchive: jest.fn(),
   mockAcknowledge: jest.fn(),
@@ -136,9 +140,11 @@ const {
   mockTraceTimelineStore: {
     focusUiFindMatches: jest.fn(),
     prunedServices: new Set(),
+    resetTraceView: jest.fn(),
   },
   useEmbeddedStateMock: jest.fn().mockReturnValue(null),
   useTraceMock: jest.fn(),
+  mockReloadBackendTrace: jest.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../../stores/archive-store', () => ({
@@ -153,18 +159,25 @@ vi.mock('../../stores/embedded-store', () => ({
 
 vi.mock('../../hooks/useTraceLoading', () => ({
   useTrace: (...args) => useTraceMock(...args),
+  reloadBackendTrace: (...args) => mockReloadBackendTrace(...args),
 }));
 
-vi.mock('./TraceTimelineViewer/store', () => ({
-  useLayoutPrefsStore: jest.fn(selector => selector(mockLayoutPrefsStore)),
-  useTraceTimelineStore: jest.fn(selector => selector(mockTraceTimelineStore)),
-  setDetailPanelMode: (...args) => mockSetDetailPanelMode(...args),
-  SPAN_NAME_COLUMN_WIDTH_MIN: 0.15,
-  SPAN_NAME_COLUMN_WIDTH_MAX: 0.85,
-  SIDE_PANEL_WIDTH_MIN: 0.2,
-  SIDE_PANEL_WIDTH_MAX: 0.7,
-  MIN_TIMELINE_COLUMN_WIDTH: 0.05,
-}));
+vi.mock('../../hooks/useConfig', () => ({ useConfig: () => ({}) }));
+
+vi.mock('./TraceTimelineViewer/store', () => {
+  const useTraceTimelineStore = jest.fn(selector => selector(mockTraceTimelineStore));
+  useTraceTimelineStore.getState = () => mockTraceTimelineStore;
+  return {
+    useLayoutPrefsStore: jest.fn(selector => selector(mockLayoutPrefsStore)),
+    useTraceTimelineStore,
+    setDetailPanelMode: (...args) => mockSetDetailPanelMode(...args),
+    SPAN_NAME_COLUMN_WIDTH_MIN: 0.15,
+    SPAN_NAME_COLUMN_WIDTH_MAX: 0.85,
+    SIDE_PANEL_WIDTH_MIN: 0.2,
+    SIDE_PANEL_WIDTH_MAX: 0.7,
+    MIN_TIMELINE_COLUMN_WIDTH: 0.05,
+  };
+});
 
 vi.mock('./TracePageHeader', async () => {
   const { forwardRef } = require('react');
@@ -183,9 +196,9 @@ vi.mock('./TracePageHeader', async () => {
 
 const mockNavigate = jest.fn();
 vi.mock('react-router-dom', async () => {
-  const { MemoryRouter: ActualMemoryRouter } = await vi.importActual('react-router-dom');
+  const actual = await vi.importActual('react-router-dom');
   return {
-    MemoryRouter: ActualMemoryRouter,
+    ...actual,
     useNavigate: () => mockNavigate,
   };
 });
@@ -246,6 +259,36 @@ describe('<TracePage>', () => {
     capturedGraphProps = {};
     defaultProps.focusUiFindMatches.mockClear();
     mockTraceTimelineStore.focusUiFindMatches.mockClear();
+  });
+
+  it('reloads the same trace with a fresh view and keeps search navigation', () => {
+    const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    const store = createStore(() => ({ traceTimeline: {} }));
+    const location = {
+      pathname: `/trace/${trace.traceID}`,
+      search: '?uiFind=error',
+      state: { fromSearch: '/search?service=frontend' },
+    };
+    render(
+      <Provider store={store}>
+        <MemoryRouter initialEntries={[`${location.pathname}${location.search}`]}>
+          <TracePageRoute params={{ id: trace.traceID }} location={location} />
+        </MemoryRouter>
+      </Provider>
+    );
+
+    act(() => capturedHeaderProps.updateViewRangeTime(0.2, 0.8));
+    expect(capturedHeaderProps.viewRange.time.current).toEqual([0.2, 0.8]);
+
+    act(() => capturedHeaderProps.onReloadTrace());
+
+    expect(mockReloadBackendTrace).toHaveBeenCalledWith(trace.traceID);
+    expect(mockTraceTimelineStore.resetTraceView).toHaveBeenCalledOnce();
+    expect(scrollTo).toHaveBeenCalledWith(0, 0);
+    expect(capturedHeaderProps.viewRange.time.current).toEqual([0, 1]);
+    expect(capturedHeaderProps.toSearch).toBe('/search?service=frontend');
+    expect(mockNavigate).not.toHaveBeenCalled();
+    scrollTo.mockRestore();
   });
 
   describe('clearSearch', () => {
@@ -380,14 +423,40 @@ describe('<TracePage>', () => {
   });
 
   it('renders an error message when given an error', () => {
+    const refetch = jest.fn();
     useTraceMock.mockReturnValue({
       data: undefined,
       isPending: false,
       isError: true,
       error: new Error('some-error'),
+      refetch,
     });
-    render(<TracePage {...defaultProps} />);
+    renderWithRouter(
+      <TracePage
+        {...defaultProps}
+        location={{ search: '', state: { fromSearch: '/search?service=frontend' } }}
+      />
+    );
     expect(screen.getByTestId('error-message')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(refetch).toHaveBeenCalledOnce();
+    expect(screen.getByRole('link', { name: 'Back to search' })).toHaveAttribute(
+      'href',
+      '/search?service=frontend'
+    );
+  });
+
+  it('does not retry a missing uploaded trace against the backend', () => {
+    useTraceMock.mockReturnValue({
+      data: undefined,
+      isPending: false,
+      isError: true,
+      error: new Error('Upload the file again.'),
+      refetch: jest.fn(),
+    });
+    renderWithRouter(<TracePage {...defaultProps} location={{ search: '?source=upload', state: null }} />);
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+    expect(useTraceMock).toHaveBeenCalledWith(trace.traceID, 'upload');
   });
 
   it('renders a loading indicator when loading', () => {

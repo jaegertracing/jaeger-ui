@@ -28,6 +28,7 @@ import { IOtelTrace } from '../../../types/otel';
 import { formatDatetime, formatDurationCompact } from '../../../utils/date';
 import { getTraceLinks } from '../../../model/link-patterns';
 import { getIncompleteTraceTooltip } from '../../../model/trace-display-helpers';
+import type { TraceSource } from '../../../hooks/useTraceLoading';
 
 import './TracePageHeader.css';
 import ExternalLinks from '../../common/ExternalLinks';
@@ -46,6 +47,7 @@ type TracePageHeaderEmbedProps = {
   linkToStandalone: string;
   nextResult: () => void;
   onArchiveClicked: () => void;
+  onReloadTrace?: () => void;
   onDetailPanelModeToggle: () => void;
   onSlimViewClicked: () => void;
   onTimelineToggle: () => void;
@@ -61,6 +63,7 @@ type TracePageHeaderEmbedProps = {
   timelineBarsVisible: boolean;
   toSearch: string | null;
   trace: IOtelTrace;
+  traceSource?: TraceSource;
   viewType: ETraceViewType;
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
@@ -106,23 +109,6 @@ export const HEADER_ITEMS = [
     renderer: (trace: IOtelTrace) => trace.spans.length,
   },
   {
-    key: 'incomplete',
-    label: null,
-    renderer: (trace: IOtelTrace) => {
-      const orphanCount = trace.orphanSpanCount ?? 0;
-      if (orphanCount === 0) return null;
-      const tooltipText = getIncompleteTraceTooltip(orphanCount);
-      return (
-        <Tooltip title={tooltipText}>
-          <span className="TracePageHeader--incompleteTag">
-            <IoWarning className="TracePageHeader--incompleteIcon" />
-            Incomplete
-          </span>
-        </Tooltip>
-      );
-    },
-  },
-  {
     key: 'genai-calls',
     label: null,
     renderer: (trace: IOtelTrace) =>
@@ -143,6 +129,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     linkToStandalone,
     nextResult,
     onArchiveClicked,
+    onReloadTrace,
     onDetailPanelModeToggle,
     onSlimViewClicked,
     onTimelineToggle,
@@ -158,6 +145,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     timelineBarsVisible,
     toSearch,
     trace,
+    traceSource,
     viewType,
     updateNextViewRangeTime,
     updateViewRangeTime,
@@ -180,6 +168,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     }).filter(item => item.value !== null);
 
   const traceShortID = trace.traceID.slice(0, 7);
+  const orphanCount = trace.orphanSpanCount ?? 0;
 
   const title = (
     <h1 className={`TracePageHeader--title ${canCollapse ? 'is-collapsible' : ''}`}>
@@ -209,6 +198,27 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           </a>
         ) : (
           title
+        )}
+        {orphanCount > 0 && (
+          <span className="TracePageHeader--incompleteActions" data-testid="header-item-incomplete">
+            <Tooltip
+              title={
+                traceSource === 'upload'
+                  ? 'This uploaded trace has missing parent spans. Upload a newer file to view more spans.'
+                  : getIncompleteTraceTooltip(orphanCount)
+              }
+            >
+              <span className="TracePageHeader--incompleteTag">
+                <IoWarning className="TracePageHeader--incompleteIcon" />
+                Incomplete
+              </span>
+            </Tooltip>
+            {traceSource !== 'upload' && onReloadTrace && (
+              <Button type="link" size="small" htmlType="button" onClick={onReloadTrace}>
+                Reload trace
+              </Button>
+            )}
+          </span>
         )}
         <TracePageSearchBar
           clearSearch={clearSearch}

@@ -27,10 +27,11 @@ const svcOp = memoizeOne((service, operation) => ({ service, operation }));
 type TOwnProps = {
   location: Location;
   traceIDs: string[];
+  uploadedTraceIDs?: ReadonlySet<string>;
 };
 
 const TracesDdgImpl: React.FC<TOwnProps> = React.memo(props => {
-  const { location, traceIDs } = props;
+  const { location, traceIDs, uploadedTraceIDs } = props;
   const navigate = useNavigate();
   const { end, start, limit, lookback, maxDuration, minDuration, view } = queryString.parse(location.search);
   const extraArgs = { end, start, limit, lookback, maxDuration, minDuration, view };
@@ -39,7 +40,11 @@ const TracesDdgImpl: React.FC<TOwnProps> = React.memo(props => {
   const { density, operation, service, showOp: urlStateShowOp } = urlState;
   const showOp = urlStateShowOp !== undefined ? urlStateShowOp : operation !== undefined;
 
-  const tracesData = useTraces(traceIDs);
+  const traceSources = useMemo(
+    () => new Map(Array.from(uploadedTraceIDs ?? [], id => [id, 'upload' as const])),
+    [uploadedTraceIDs]
+  );
+  const tracesData = useTraces(traceIDs, traceSources);
 
   const { graphState, graph } = useMemo(() => {
     if (!service) return { graphState: undefined, graph: undefined };
