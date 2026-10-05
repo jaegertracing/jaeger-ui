@@ -141,6 +141,31 @@ describe('parseOtelTrace', () => {
     expect(child.relativeStartTime).toBe(0);
   });
 
+  it('uses the span start for zero event timestamps, including repaired spans', () => {
+    const data = traces([
+      makeSpan({
+        spanId: ROOT_ID,
+        startTimeUnixNano: '1784570820629325000',
+        endTimeUnixNano: '1784570820630325000',
+        events: [{ timeUnixNano: '0', name: 'root event', attributes: [] }],
+      }),
+      makeSpan({
+        spanId: CHILD_ID,
+        parentSpanId: ROOT_ID,
+        startTimeUnixNano: '0',
+        endTimeUnixNano: '200000',
+        events: [{ timeUnixNano: '0', name: 'child event', attributes: [] }],
+      }),
+    ]);
+    const trace = parseOtelTrace(refinedTracesData.parse(data))!;
+    const root = trace.spanMap.get(ROOT_ID)!;
+    const child = trace.spanMap.get(CHILD_ID)!;
+
+    expect(root.events[0].timestamp).toBe(root.startTime);
+    expect(child.events[0].timestamp).toBe(child.startTime);
+    expect(child.startTime).toBe(root.startTime);
+  });
+
   it('sorts events by timestamp even when the wire order is by name', () => {
     const span = parseOtelTrace(
       traces([

@@ -218,13 +218,13 @@ function parseSpans(data: TracesDataWire): ParsedSpanData {
         const endTime = toSafeMicroseconds(BigInt(startTime) + BigInt(duration), 'end timestamp');
         const eventTimesToRepair: IEvent[] = [];
         const events = (span.events ?? []).map(event => {
-          const hasTimestamp = event.timeUnixNano !== undefined;
+          const hasUsableTimestamp = event.timeUnixNano !== undefined && BigInt(event.timeUnixNano) > 0n;
           const parsedEvent: IEvent = {
-            timestamp: hasTimestamp ? nanoToMicros(event.timeUnixNano) : startTime,
+            timestamp: hasUsableTimestamp ? nanoToMicros(event.timeUnixNano) : startTime,
             name: event.name || 'no-name',
             attributes: toAttributes(event.attributes),
           };
-          if (!hasUsableStartTime && !hasTimestamp) eventTimesToRepair.push(parsedEvent);
+          if (!hasUsableStartTime && !hasUsableTimestamp) eventTimesToRepair.push(parsedEvent);
           return parsedEvent;
         });
         if (hasUsableStartTime) events.sort((left, right) => left.timestamp - right.timestamp);
