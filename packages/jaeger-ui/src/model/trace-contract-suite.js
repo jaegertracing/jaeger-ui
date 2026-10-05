@@ -422,11 +422,11 @@ export function runTraceContractSuite(pipeline) {
       expect(result.orphanSpanCount).toBe(0);
     });
 
-    it('should handle FOLLOWS_FROM references for orphan detection', () => {
+    it('should detect an orphan with an explicit missing parent', () => {
       const followsFromOrphan = {
         spanID: 'followsOrphan',
         operationName: 'followsOrphanOp',
-        references: [{ refType: 'FOLLOWS_FROM', spanID: 'nonexistent' }],
+        parentSpanID: 'nonexistent',
         startTime: startTime,
         duration,
       };

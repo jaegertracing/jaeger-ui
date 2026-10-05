@@ -4,11 +4,12 @@
 import _isEqual from 'lodash/isEqual';
 
 import getConfig from '../utils/config/get-config';
-import { getTraceEmoji, getTraceName, getTracePageTitle } from './trace-viewer';
+import { getTraceEmoji, getTraceName, getTracePageTitle } from './trace-display-helpers';
 import { KeyValuePair, Span, SpanData, SpanReference, Trace, TraceData } from '../types/trace';
 import { IOtelTrace } from '../types/otel';
 
 import OtelTraceFacade from './OtelTraceFacade';
+import { getParentSpanID, getNonParentReferences } from './span';
 
 // exported for tests
 function deduplicateTags(spanTags: ReadonlyArray<KeyValuePair>) {
@@ -132,20 +133,10 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
 
   // Second pass: link parents/children and identify roots
   for (const span of spanMap.values()) {
-    let parent: Span | undefined;
-    if (Array.isArray(span.references) && span.references.length > 0) {
-      // Find the first CHILD_OF or FOLLOWS_FROM reference that exists in the spanMap
-      for (const ref of span.references) {
-        if (ref.refType === 'CHILD_OF' || ref.refType === 'FOLLOWS_FROM') {
-          parent = spanMap.get(ref.spanID);
-          if (parent) {
-            break;
-          }
-        }
-      }
-      if (!parent) {
-        orphanSpanCount++;
-      }
+    const parentSpanID = getParentSpanID(span);
+    const parent = parentSpanID ? spanMap.get(parentSpanID) : undefined;
+    if (parentSpanID && !parent) {
+      orphanSpanCount++;
     }
 
     if (parent) {
@@ -196,20 +187,18 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     const { serviceName } = span.process;
     svcCounts[serviceName] = (svcCounts[serviceName] || 0) + 1;
 
-    span.references.forEach((ref, index) => {
-      const refSpan = spanMap.get(ref.spanID);
+    span.references.forEach(ref => {
+      ref.span = ref.traceID === traceID ? spanMap.get(ref.spanID) : undefined;
+    });
+    getNonParentReferences(span).forEach(ref => {
+      const refSpan = ref.span;
       if (refSpan) {
-        ref.span = refSpan;
-        if (index > 0) {
-          // Don't take into account the parent, just other references.
-          refSpan.subsidiarilyReferencedBy = refSpan.subsidiarilyReferencedBy || [];
-          (refSpan.subsidiarilyReferencedBy as SpanReference[]).push({
-            spanID: span.spanID,
-            traceID,
-            span,
-            refType: ref.refType,
-          });
-        }
+        (refSpan.subsidiarilyReferencedBy as SpanReference[]).push({
+          spanID: span.spanID,
+          traceID,
+          span,
+          refType: ref.refType,
+        });
       }
     });
 
