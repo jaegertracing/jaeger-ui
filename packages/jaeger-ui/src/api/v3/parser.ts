@@ -313,8 +313,6 @@ function enrichTrace(parsed: ParsedSpanData): IOtelTrace {
 
   let orphanSpanCount = 0;
   let isGenAITrace = false;
-  let headerSpan: MutableOtelSpan | undefined;
-  let orphanHeaderSpan: MutableOtelSpan | undefined;
 
   for (const span of parsedSpans) {
     const parent = span.parentSpanID ? spanMap.get(span.parentSpanID) : undefined;
@@ -324,11 +322,6 @@ function enrichTrace(parsed: ParsedSpanData): IOtelTrace {
       parent.childSpans.push(span);
     } else {
       repairMissingStartTime(span, undefined, parsed);
-      if (!span.parentSpanID) {
-        if (!headerSpan || span.startTime < headerSpan.startTime) headerSpan = span;
-      } else if (!orphanHeaderSpan || span.startTime < orphanHeaderSpan.startTime) {
-        orphanHeaderSpan = span;
-      }
       rootSpans.push(span);
     }
     for (const link of span.links) {
@@ -346,7 +339,7 @@ function enrichTrace(parsed: ParsedSpanData): IOtelTrace {
 
   breakParentCycles(parsedSpans, rootSpans, span => repairMissingStartTime(span, undefined, parsed));
   rootSpans.sort((left, right) => left.startTime - right.startTime);
-  headerSpan ??= orphanHeaderSpan ?? rootSpans[0];
+  const headerSpan = rootSpans[0];
   let traceStartTime = Number.POSITIVE_INFINITY;
   let traceEndTime = Number.NEGATIVE_INFINITY;
   const spans: MutableOtelSpan[] = [];
@@ -388,7 +381,6 @@ function enrichTrace(parsed: ParsedSpanData): IOtelTrace {
     tracePageTitle,
     traceEmoji: getTraceEmoji(spans),
     services,
-    traceRootSpanID: headerSpan.spanID,
     spanMap,
     rootSpans,
     orphanSpanCount,
