@@ -653,9 +653,9 @@ export function runTraceContractSuite(pipeline) {
 
         expect(result.spans.length).toBe(depth);
         // Pre-order traversal keeps the chain in order, with depth matching position.
-        expect(result.spans[0].spanID).toBe('span-0');
+        expect(result.spans[0].spanID).toBe(id('span-0'));
         expect(result.spans[0].depth).toBe(0);
-        expect(result.spans[depth - 1].spanID).toBe(`span-${depth - 1}`);
+        expect(result.spans[depth - 1].spanID).toBe(id(`span-${depth - 1}`));
         expect(result.spans[depth - 1].depth).toBe(depth - 1);
       });
     });

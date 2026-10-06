@@ -395,7 +395,7 @@ describe('parseOtelTrace', () => {
     expect(trace.spanMap.get(CYCLE_B_ID)!.parentSpan?.spanID).toBe(CYCLE_A_ID);
   });
 
-  it('uses the same genuine top-level span for trace metadata and summaries', () => {
+  it('uses the earliest root for metadata and summaries when genuine, orphan, and repaired roots coexist', () => {
     const root = makeSpan({ spanId: ROOT_ID, name: 'root', startTimeUnixNano: '2000000' });
     const orphan = makeSpan({
       spanId: ORPHAN_ID,
@@ -428,14 +428,13 @@ describe('parseOtelTrace', () => {
     const summary = traceToTraceSummary(trace);
 
     expect(trace.rootSpans[0].spanID).toBe(CYCLE_A_ID);
-    expect(trace.traceRootSpanID).toBe(ROOT_ID);
-    expect(trace.traceName).toBe('root-service: root');
-    expect(trace.tracePageTitle).toBe('root (root-service)');
-    expect(summary.rootServiceName).toBe('root-service');
-    expect(summary.rootOperationName).toBe('root');
+    expect(trace.traceName).toBe('cycle-service: cycle-a');
+    expect(trace.tracePageTitle).toBe('cycle-a (cycle-service)');
+    expect(summary.rootServiceName).toBe('cycle-service');
+    expect(summary.rootOperationName).toBe('cycle-a');
   });
 
-  it('prefers an orphan over a synthetic cycle root for trace metadata', () => {
+  it('uses an earlier repaired cycle root over a later orphan for metadata and summaries', () => {
     const orphan = makeSpan({
       spanId: ORPHAN_ID,
       parentSpanId: 'deadbeefdeadbeef',
@@ -465,14 +464,36 @@ describe('parseOtelTrace', () => {
     const summary = traceToTraceSummary(trace);
 
     expect(trace.rootSpans[0].spanID).toBe(CYCLE_A_ID);
-    expect(trace.traceRootSpanID).toBe(ORPHAN_ID);
+    expect(trace.traceName).toBe('cycle-service: cycle-a');
+    expect(trace.tracePageTitle).toBe('cycle-a (cycle-service)');
+    expect(summary.rootServiceName).toBe('cycle-service');
+    expect(summary.rootOperationName).toBe('cycle-a');
+  });
+
+  it('uses an earlier orphan instead of a later parentless root for metadata and summaries', () => {
+    const root = makeSpan({ spanId: ROOT_ID, name: 'root', startTimeUnixNano: '2000000' });
+    const orphan = makeSpan({
+      spanId: ORPHAN_ID,
+      parentSpanId: 'deadbeefdeadbeef',
+      name: 'orphan',
+      startTimeUnixNano: '1000000',
+    });
+    const trace = parseOtelTrace({
+      resourceSpans: [
+        ...traces([root], 'root-service').resourceSpans!,
+        ...traces([orphan], 'orphan-service').resourceSpans!,
+      ],
+    })!;
+    const summary = traceToTraceSummary(trace);
+
+    expect(trace.rootSpans.map(span => span.spanID)).toEqual([ORPHAN_ID, ROOT_ID]);
     expect(trace.traceName).toBe('orphan-service: orphan');
     expect(trace.tracePageTitle).toBe('orphan (orphan-service)');
     expect(summary.rootServiceName).toBe('orphan-service');
     expect(summary.rootOperationName).toBe('orphan');
   });
 
-  it('falls back to the earliest root when no span declared a parentless root', () => {
+  it('uses the earliest orphan when no span declared a parentless root', () => {
     const laterOrphan = makeSpan({
       spanId: CHILD_ID,
       parentSpanId: 'aaaaaaaaaaaaaaaa',
@@ -494,7 +515,6 @@ describe('parseOtelTrace', () => {
     const summary = traceToTraceSummary(trace);
 
     expect(trace.rootSpans[0].spanID).toBe(ORPHAN_ID);
-    expect(trace.traceRootSpanID).toBe(ORPHAN_ID);
     expect(trace.traceName).toBe('earlier-service: earlier orphan');
     expect(summary.rootServiceName).toBe('earlier-service');
     expect(summary.rootOperationName).toBe('earlier orphan');
