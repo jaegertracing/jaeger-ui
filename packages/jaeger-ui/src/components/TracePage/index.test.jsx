@@ -28,6 +28,8 @@ import traceGenerator from '../../demo/trace-generators';
 import transformTraceData from '../../model/transform-trace-data';
 import filterSpansSpy from '../../utils/filter-spans';
 import updateUiFindSpy from '../../utils/update-ui-find';
+import { queryClient } from '../../query/app-query-client';
+import { UPLOADED_SUMMARIES_QUERY_KEY } from '../SearchTracePage/useUploadedTraces';
 import { ETraceViewType } from './types';
 import ScrollManager from './ScrollManager';
 
@@ -263,6 +265,7 @@ describe('<TracePage>', () => {
 
   it('reloads the same trace with a fresh view and keeps search navigation', () => {
     const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    queryClient.setQueryData(UPLOADED_SUMMARIES_QUERY_KEY, []);
     const store = createStore(() => ({ traceTimeline: {} }));
     const location = {
       pathname: `/trace/${trace.traceID}`,
@@ -280,15 +283,57 @@ describe('<TracePage>', () => {
     act(() => capturedHeaderProps.updateViewRangeTime(0.2, 0.8));
     expect(capturedHeaderProps.viewRange.time.current).toEqual([0.2, 0.8]);
 
+    scrollPageMod.cancel.mockClear();
     act(() => capturedHeaderProps.onReloadTrace());
 
     expect(mockReloadBackendTrace).toHaveBeenCalledWith(trace.traceID);
     expect(mockTraceTimelineStore.resetTraceView).toHaveBeenCalledOnce();
+    // The handler cancels once; the remount it triggers fires the shortcuts
+    // effect cleanup, which cancels again.
+    expect(scrollPageMod.cancel).toHaveBeenCalled();
     expect(scrollTo).toHaveBeenCalledWith(0, 0);
     expect(capturedHeaderProps.viewRange.time.current).toEqual([0, 1]);
     expect(capturedHeaderProps.toSearch).toBe('/search?service=frontend');
     expect(mockNavigate).not.toHaveBeenCalled();
     scrollTo.mockRestore();
+  });
+
+  it('hides the reload action for an uploaded trace', () => {
+    const store = createStore(() => ({ traceTimeline: {} }));
+    queryClient.setQueryData(UPLOADED_SUMMARIES_QUERY_KEY, [{ traceID: trace.traceID }]);
+    const location = { pathname: `/trace/${trace.traceID}`, search: '', state: null };
+    render(
+      <Provider store={store}>
+        <MemoryRouter initialEntries={[location.pathname]}>
+          <TracePageRoute params={{ id: trace.traceID }} location={location} />
+        </MemoryRouter>
+      </Provider>
+    );
+
+    expect(capturedHeaderProps.onReloadTrace).toBeUndefined();
+    queryClient.setQueryData(UPLOADED_SUMMARIES_QUERY_KEY, []);
+  });
+
+  it('ignores a reload issued after the trace was uploaded', () => {
+    const store = createStore(() => ({ traceTimeline: {} }));
+    queryClient.setQueryData(UPLOADED_SUMMARIES_QUERY_KEY, []);
+    const location = { pathname: `/trace/${trace.traceID}`, search: '', state: null };
+    render(
+      <Provider store={store}>
+        <MemoryRouter initialEntries={[location.pathname]}>
+          <TracePageRoute params={{ id: trace.traceID }} location={location} />
+        </MemoryRouter>
+      </Provider>
+    );
+
+    const { onReloadTrace } = capturedHeaderProps;
+    expect(onReloadTrace).toBeDefined();
+    queryClient.setQueryData(UPLOADED_SUMMARIES_QUERY_KEY, [{ traceID: trace.traceID }]);
+    act(() => onReloadTrace());
+
+    expect(mockReloadBackendTrace).not.toHaveBeenCalled();
+    expect(mockTraceTimelineStore.resetTraceView).not.toHaveBeenCalled();
+    queryClient.setQueryData(UPLOADED_SUMMARIES_QUERY_KEY, []);
   });
 
   describe('clearSearch', () => {
@@ -423,40 +468,14 @@ describe('<TracePage>', () => {
   });
 
   it('renders an error message when given an error', () => {
-    const refetch = jest.fn();
     useTraceMock.mockReturnValue({
       data: undefined,
       isPending: false,
       isError: true,
       error: new Error('some-error'),
-      refetch,
     });
-    renderWithRouter(
-      <TracePage
-        {...defaultProps}
-        location={{ search: '', state: { fromSearch: '/search?service=frontend' } }}
-      />
-    );
+    render(<TracePage {...defaultProps} />);
     expect(screen.getByTestId('error-message')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(refetch).toHaveBeenCalledOnce();
-    expect(screen.getByRole('link', { name: 'Back to search' })).toHaveAttribute(
-      'href',
-      '/search?service=frontend'
-    );
-  });
-
-  it('does not retry a missing uploaded trace against the backend', () => {
-    useTraceMock.mockReturnValue({
-      data: undefined,
-      isPending: false,
-      isError: true,
-      error: new Error('Upload the file again.'),
-      refetch: jest.fn(),
-    });
-    renderWithRouter(<TracePage {...defaultProps} location={{ search: '?source=upload', state: null }} />);
-    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
-    expect(useTraceMock).toHaveBeenCalledWith(trace.traceID, 'upload');
   });
 
   it('renders a loading indicator when loading', () => {

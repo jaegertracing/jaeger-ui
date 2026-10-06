@@ -196,17 +196,10 @@ describe('<TracePageHeader>', () => {
     expect(onReloadTrace).toHaveBeenCalledOnce();
   });
 
-  it('does not offer backend reload for an uploaded trace', () => {
+  it('hides the reload action when no reload handler is provided', () => {
     const incompleteTrace = Object.create(defaultProps.trace);
     Object.defineProperty(incompleteTrace, 'orphanSpanCount', { value: 3 });
-    renderWithRouter(
-      <TracePageHeader
-        {...defaultProps}
-        trace={incompleteTrace}
-        traceSource="upload"
-        onReloadTrace={jest.fn()}
-      />
-    );
+    renderWithRouter(<TracePageHeader {...defaultProps} trace={incompleteTrace} />);
 
     expect(screen.getByTestId('header-item-incomplete')).toHaveTextContent('Incomplete');
     expect(screen.queryByRole('button', { name: 'Reload trace' })).not.toBeInTheDocument();

@@ -52,7 +52,6 @@ type SearchResultsProps = {
   searchLatency?: Microseconds;
   traceSummaries: TraceSummary[];
   uploadedTraceIDs: ReadonlySet<string>;
-  uploadedDuplicateIDs?: ReadonlySet<string>;
   rawTraces: unknown[];
 };
 
@@ -99,7 +98,6 @@ export function UnconnectedSearchResults({
   searchLatency,
   traceSummaries,
   uploadedTraceIDs,
-  uploadedDuplicateIDs = new Set(),
   rawTraces,
   addTraceToCohort,
   removeTraceFromCohort,
@@ -145,24 +143,24 @@ export function UnconnectedSearchResults({
   }, [diffCohort, removeTraceFromCohort]);
 
   const getLink = useCallback(
-    (traceID: string, uploadedCopy = false) =>
+    (traceID: string) =>
       getTracePageLink(
         traceID,
         { fromSearch: location.pathname + location.search },
-        spanLinks && spanLinks[traceID],
-        uploadedCopy || uploadedTraceIDs.has(traceID) ? 'upload' : 'backend'
+        spanLinks && spanLinks[traceID]
       ),
-    [location, spanLinks, uploadedTraceIDs]
+    [location, spanLinks]
   );
 
   const goToTrace = useCallback(
     (traceID: string) => {
-      const locationObj = getLink(traceID);
+      const searchUrl = location.pathname + location.search;
+      const locationObj = getTracePageLink(traceID, { fromSearch: searchUrl });
       navigate(locationObj.pathname + (locationObj.search ? `?${locationObj.search}` : ''), {
         state: locationObj.state,
       });
     },
-    [getLink, navigate]
+    [location, navigate]
   );
 
   const onDdgViewClicked = useCallback(() => {
@@ -272,11 +270,7 @@ export function UnconnectedSearchResults({
       </div>
       {!traceResultsView && (
         <div className="SearchResults--ddg-container">
-          <SearchResultsDDG
-            location={location}
-            traceIDs={sortedTraceSummaries.map(s => s.traceID)}
-            uploadedTraceIDs={uploadedTraceIDs}
-          />
+          <SearchResultsDDG location={location} traceIDs={sortedTraceSummaries.map(s => s.traceID)} />
         </div>
       )}
       {traceResultsView && diffSelection}
@@ -285,7 +279,6 @@ export function UnconnectedSearchResults({
           traceSummaries={sortedTraceSummaries}
           maxTraceDuration={maxTraceDuration}
           getLink={getLink}
-          uploadedDuplicateIDs={uploadedDuplicateIDs}
           disableComparisons={disableComparisons}
           cohortIds={cohortIds}
           toggleComparison={toggleComparison}
@@ -300,11 +293,6 @@ export function UnconnectedSearchResults({
                 isInDiffCohort={cohortIds.has(traceSummary.traceID)}
                 isUploaded={uploadedTraceIDs.has(traceSummary.traceID)}
                 linkTo={getLink(traceSummary.traceID)}
-                uploadedCopyLink={
-                  uploadedDuplicateIDs.has(traceSummary.traceID)
-                    ? getLink(traceSummary.traceID, true)
-                    : undefined
-                }
                 toggleComparison={toggleComparison}
                 traceSummary={traceSummary}
                 disableComparision={disableComparisons}

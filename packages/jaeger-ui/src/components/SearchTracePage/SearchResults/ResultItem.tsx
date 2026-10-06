@@ -26,7 +26,6 @@ type Props = {
   isInDiffCohort: boolean;
   isUploaded?: boolean;
   linkTo: TracePageLink;
-  uploadedCopyLink?: TracePageLink;
   toggleComparison: (traceID: string) => void;
   traceSummary: TraceSummary;
   disableComparision: boolean;
@@ -39,7 +38,6 @@ export default function ResultItem({
   isInDiffCohort,
   isUploaded,
   linkTo,
-  uploadedCopyLink,
   toggleComparison,
   traceSummary,
   disableComparision,
@@ -111,15 +109,6 @@ export default function ResultItem({
           </Col>
         </Row>
       </Link>
-      {uploadedCopyLink && (
-        <Link
-          to={uploadedCopyLink.pathname + (uploadedCopyLink.search ? `?${uploadedCopyLink.search}` : '')}
-          state={uploadedCopyLink.state}
-          className="ub-m2"
-        >
-          View uploaded copy
-        </Link>
-      )}
     </div>
   );
 }

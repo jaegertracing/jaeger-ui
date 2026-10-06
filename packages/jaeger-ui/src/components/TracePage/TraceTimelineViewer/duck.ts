@@ -139,7 +139,6 @@ export const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer
   'EXPAND_ONE',
   'FOCUS_UI_FIND_MATCHES',
   'REMOVE_HOVER_INDENT_GUIDE_ID',
-  'RESET_TRACE_VIEW',
   'SET_DETAIL_PANEL_MODE',
   'SET_SIDE_PANEL_WIDTH',
   'SET_SPAN_NAME_COLUMN_WIDTH',
@@ -168,7 +167,6 @@ const fullActions = createActions<TActionTypes>({
     allowHide,
   }),
   [actionTypes.REMOVE_HOVER_INDENT_GUIDE_ID]: (spanID: string) => ({ spanID }),
-  [actionTypes.RESET_TRACE_VIEW]: () => ({}),
   [actionTypes.SET_DETAIL_PANEL_MODE]: (mode: 'inline' | 'sidepanel') => ({ mode }),
   [actionTypes.SET_SIDE_PANEL_WIDTH]: (width: number) => ({ width }),
   [actionTypes.SET_SPAN_NAME_COLUMN_WIDTH]: (width: number) => ({ width }),
@@ -244,17 +242,6 @@ function setTrace(state: TTraceTimeline, { uiFind, trace }: TTraceUiFindValue) {
     },
     uiFind ? calculateFocusedFindRowStates(uiFind, spans) : null
   );
-}
-
-function resetTraceView(state: TTraceTimeline): TTraceTimeline {
-  const { spanNameColumnWidth, detailPanelMode, timelineBarsVisible, sidePanelWidth } = state;
-  return {
-    ...newInitialState(),
-    spanNameColumnWidth,
-    detailPanelMode,
-    timelineBarsVisible,
-    sidePanelWidth,
-  };
 }
 
 function setColumnWidth(state: TTraceTimeline, { width }: TWidthValue): TTraceTimeline {
@@ -461,7 +448,6 @@ export default handleActions<TTraceTimeline, any>(
     [actionTypes.EXPAND_ONE]: guardReducer(expandOne),
     [actionTypes.FOCUS_UI_FIND_MATCHES]: guardReducer(focusUiFindMatches),
     [actionTypes.REMOVE_HOVER_INDENT_GUIDE_ID]: guardReducer(removeHoverIndentGuideId),
-    [actionTypes.RESET_TRACE_VIEW]: resetTraceView,
     [actionTypes.SET_DETAIL_PANEL_MODE]: guardReducer(setDetailPanelMode),
     [actionTypes.SET_SIDE_PANEL_WIDTH]: guardReducer(setSidePanelWidth),
     [actionTypes.SET_SPAN_NAME_COLUMN_WIDTH]: guardReducer(setColumnWidth),

@@ -29,7 +29,7 @@ import './TopNav.css';
 import withRouteProps, { IWithRouteProps } from '../../utils/withRouteProps';
 
 type Props = IWithRouteProps;
-type PropsWithTraceDiff = Props & { traceDiff: TTraceDiffState; uploadedTraceIDs: string[] };
+type PropsWithTraceDiff = Props & { traceDiff: TTraceDiffState };
 
 const NAV_LINKS = [
   {
@@ -38,7 +38,7 @@ const NAV_LINKS = [
     text: 'Search',
   },
   {
-    to: (props: PropsWithTraceDiff) => diffUrl.getUrl(props.traceDiff, props.uploadedTraceIDs),
+    to: (props: PropsWithTraceDiff) => diffUrl.getUrl(props.traceDiff),
     matches: diffUrl.matches,
     text: 'Compare',
   },
@@ -119,11 +119,7 @@ export function TopNavImpl(props: Props) {
       cohort: s.cohort,
     }))
   );
-  const cohortSummaries = useTraceDiffStore(s => s.cohortSummaries);
-  const uploadedTraceIDs = diffUrl.matches(pathname)
-    ? diffUrl.getUploadedTraceIds(props.search)
-    : traceDiff.cohort.filter(id => cohortSummaries.get(id)?.source === 'upload');
-  const propsWithDiff: PropsWithTraceDiff = { ...props, traceDiff, uploadedTraceIDs };
+  const propsWithDiff: PropsWithTraceDiff = { ...props, traceDiff };
   const menuItems = Array.isArray(config.menu) ? config.menu : [];
   const assistantConfigured = useJaegerAssistantConfigured();
   const embedded = useEmbeddedState();
