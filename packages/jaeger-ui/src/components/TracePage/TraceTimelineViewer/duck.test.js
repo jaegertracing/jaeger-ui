@@ -56,21 +56,6 @@ describe('TraceTimelineViewer/duck', () => {
     expect(state.detailStates).toEqual(new Map());
   });
 
-  it('resets the same trace view without changing layout preferences', () => {
-    store.dispatch(actions.setTrace(trace, null));
-    store.dispatch(actions.setSpanNameColumnWidth(0.5));
-    store.dispatch(actions.detailToggle(trace.spans[0].spanID));
-    store.dispatch(actions.childrenToggle(trace.spans[0].spanID));
-
-    store.dispatch(actions.resetTraceView());
-
-    const state = store.getState();
-    expect(state.traceID).toBeNull();
-    expect(state.detailStates.size).toBe(0);
-    expect(state.childrenHiddenIDs.size).toBe(0);
-    expect(state.spanNameColumnWidth).toBe(0.5);
-  });
-
   it('sets the span column width', () => {
     const n = 0.5;
     const action = actions.setSpanNameColumnWidth(n);

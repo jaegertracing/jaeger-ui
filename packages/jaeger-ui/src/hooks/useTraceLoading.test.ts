@@ -126,11 +126,13 @@ describe('useTrace', () => {
   });
 
   it('serves data from cache without fetching when already populated', async () => {
-    // Uploaded traces use their own cache key and never fetch from the backend.
+    // populateTraceCache writes into the singleton appQueryClient.
+    // useTrace also uses the same singleton, so pre-populating it means the
+    // query is already fresh (staleTime: Infinity in the hook) and no fetch occurs.
     populateTraceCache(otelTrace);
 
     const client = appQueryClient;
-    const { result } = renderHook(() => useTrace(otelTrace.traceID, 'upload'), {
+    const { result } = renderHook(() => useTrace(otelTrace.traceID), {
       wrapper: makeWrapper(client),
     });
 
@@ -138,65 +140,25 @@ describe('useTrace', () => {
     expect(mockFetchTrace).not.toHaveBeenCalled();
     expect(result.current.data).toBe(otelTrace);
   });
-
-  it('keeps backend and uploaded traces with the same ID separate', async () => {
-    const backendTrace = { ...otelTrace, traceName: 'backend copy' };
-    appQueryClient.setQueryData(['trace', otelTrace.traceID], backendTrace);
-    populateTraceCache(otelTrace);
-
-    const backend = renderHook(() => useTrace(otelTrace.traceID), {
-      wrapper: makeWrapper(appQueryClient),
-    });
-    const upload = renderHook(() => useTrace(otelTrace.traceID, 'upload'), {
-      wrapper: makeWrapper(appQueryClient),
-    });
-
-    expect(backend.result.current.data).toBe(backendTrace);
-    expect(upload.result.current.data).toBe(otelTrace);
-    expect(mockFetchTrace).not.toHaveBeenCalled();
-  });
-
-  it('reports an unavailable upload without fetching the backend', async () => {
-    const { result } = renderHook(() => useTrace('missing-upload', 'upload'), {
-      wrapper: makeWrapper(appQueryClient),
-    });
-
-    await waitFor(() => expect(result.current.isError).toBe(true));
-    expect(result.current.error?.message).toMatch(/Upload the file again/);
-    expect(mockFetchTrace).not.toHaveBeenCalled();
-  });
 });
 
 describe('reloadBackendTrace', () => {
-  it('clears the current trace and its aliases without clearing uploads or search', async () => {
+  it('clears the current trace and its aliases without clearing search', async () => {
     appQueryClient.setQueryData(['trace', 'alias'], otelTrace);
     appQueryClient.setQueryData(['trace', otelTrace.traceID], otelTrace);
     appQueryClient.setQueryData(['trace', 'other'], { ...otelTrace, traceID: 'other' });
     appQueryClient.setQueryData(['search', 'results'], ['existing result']);
-    populateTraceCache(otelTrace);
 
     await reloadBackendTrace(otelTrace.traceID);
 
     expect(appQueryClient.getQueryData(['trace', 'alias'])).toBeUndefined();
     expect(appQueryClient.getQueryData(['trace', otelTrace.traceID])).toBeUndefined();
     expect(appQueryClient.getQueryData(['trace', 'other'])).toBeDefined();
-    expect(appQueryClient.getQueryData(['uploaded-trace', otelTrace.traceID])).toBe(otelTrace);
     expect(appQueryClient.getQueryData(['search', 'results'])).toEqual(['existing result']);
   });
 });
 
 describe('useTraces', () => {
-  it('loads a selected upload from its own cache without calling the backend', async () => {
-    populateTraceCache(otelTrace);
-    const sources = new Map([[otelTrace.traceID, 'upload' as const]]);
-    const { result } = renderHook(() => useTraces([otelTrace.traceID], sources), {
-      wrapper: makeWrapper(appQueryClient),
-    });
-
-    await waitFor(() => expect(result.current.get(otelTrace.traceID)?.data).toBe(otelTrace));
-    expect(mockFetchTrace).not.toHaveBeenCalled();
-  });
-
   it('returns an empty Map for an empty ids array', () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const { result } = renderHook(() => useTraces([]), { wrapper: makeWrapper(client) });

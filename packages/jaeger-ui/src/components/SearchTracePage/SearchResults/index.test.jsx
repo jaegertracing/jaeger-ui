@@ -370,15 +370,6 @@ describe('<SearchResults>', () => {
       const [first, second] = ResultItem.mock.calls;
       expect(first[0].isUploaded).toBe(true);
       expect(second[0].isUploaded).toBe(false);
-      expect(first[0].linkTo.search).toBe('source=upload');
-    });
-
-    it('offers the uploaded copy when a backend result has the same ID', () => {
-      renderWithRouter(<SearchResults {...baseProps} uploadedDuplicateIDs={new Set(['a'])} />);
-      const [first] = ResultItem.mock.calls;
-      expect(first[0].linkTo.search).toBeUndefined();
-      expect(first[0].uploadedCopyLink.search).toBe('source=upload');
-      expect(first[0].uploadedCopyLink.state).toEqual(first[0].linkTo.state);
     });
 
     it('deep links traces', () => {

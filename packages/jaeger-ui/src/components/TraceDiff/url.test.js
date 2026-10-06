@@ -3,7 +3,7 @@
 
 import * as ReactRouterDom from 'react-router-dom';
 
-import { ROUTE_PATH, matches, getUrl, getUploadedTraceIds } from './url';
+import { ROUTE_PATH, matches, getUrl } from './url';
 
 vi.mock('react-router-dom', () => ({
   matchPath: vi.fn(),
@@ -55,11 +55,6 @@ describe('TraceDiff/url', () => {
       cohort.forEach(cohortEntry => {
         expect(result).toMatch(`cohort=${cohortEntry}`);
       });
-    });
-
-    it('keeps uploaded cohort IDs in the comparison URL', () => {
-      const result = getUrl({ cohort: ['first', 'second'] }, ['second', 'outside']);
-      expect(getUploadedTraceIds(result.split('?')[1])).toEqual(['second']);
     });
   });
 });

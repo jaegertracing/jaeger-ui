@@ -31,8 +31,7 @@ export default function DiffSelection({
   onClearAll,
 }: Props) {
   const cohort = traces.map(t => t.traceID);
-  const uploadedTraceIDs = traces.filter(t => t.source === 'upload').map(t => t.traceID);
-  const compareHref = cohort.length > 1 ? getUrl({ cohort }, uploadedTraceIDs) : null;
+  const compareHref = cohort.length > 1 ? getUrl({ cohort }) : null;
 
   const compareBtn = (
     <Button disabled={cohort.length < 2} htmlType="button" type="primary">
@@ -50,7 +49,7 @@ export default function DiffSelection({
               duration={summary.duration}
               error={undefined}
               isInDiffCohort
-              linkTo={getTracePageLink(summary.traceID, undefined, undefined, summary.source)}
+              linkTo={getTracePageLink(summary.traceID)}
               state={undefined}
               targetBlank
               toggleComparison={toggleComparison}

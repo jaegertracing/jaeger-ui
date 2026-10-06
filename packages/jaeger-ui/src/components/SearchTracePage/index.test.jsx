@@ -59,13 +59,14 @@ vi.mock('../../hooks/useTraceDiscovery', () => ({
 }));
 
 import React from 'react';
-import { render, act, fireEvent, screen, waitFor } from '@testing-library/react';
+import { render, act, fireEvent, screen, waitFor, renderHook } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Provider } from 'react-redux';
 import { SearchTracePageImpl as SearchTracePage } from './index';
 import { useServices } from '../../hooks/useTraceDiscovery';
 import { ALL_SERVICES } from '../../constants/search-form';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
+import { useClearUploadedTraces } from './useUploadedTraces';
 import { useSearchPanelStore, LS_WIDTH_KEY, LS_COLLAPSED_KEY } from './search-panel-store';
 import { store as globalStore } from '../../utils/configure-store';
 
@@ -458,38 +459,8 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
     // With controlled tabs, the tab switch causes a component re-render before onTracesLoaded
     // is called; the React Query cache update may settle in a subsequent render cycle.
     await waitFor(() => {
-      expect(lastSearchResultsProps.traceSummaries).toContainEqual({ ...summary, source: 'upload' });
+      expect(lastSearchResultsProps.traceSummaries).toContainEqual(summary);
       expect(lastSearchResultsProps.rawTraces).toContainEqual({ traceID: 'uploaded-1' });
-    });
-  });
-
-  it('keeps a way to open an uploaded copy when the backend returns the same ID', async () => {
-    const summary = {
-      traceID: 'shared-id',
-      traceName: 'uploaded copy',
-      rootServiceName: 'svc',
-      rootOperationName: 'op',
-      startTime: 0,
-      duration: 100,
-      services: [],
-    };
-    useSearchTracesMock.mockReturnValue({
-      data: { results: [{ ...summary, traceName: 'backend copy' }] },
-      isFetching: false,
-      error: null,
-    });
-    render(
-      <AllProvider>
-        <SearchTracePage />
-      </AllProvider>
-    );
-    await act(async () => fireEvent.click(screen.getByText('Upload')));
-    await act(async () => lastFileLoaderProps.onTracesLoaded([summary], [{ traceID: 'shared-id' }]));
-
-    await waitFor(() => {
-      expect(lastSearchResultsProps.traceSummaries).toHaveLength(1);
-      expect(lastSearchResultsProps.traceSummaries[0].traceName).toBe('backend copy');
-      expect(lastSearchResultsProps.uploadedDuplicateIDs.has('shared-id')).toBe(true);
     });
   });
 
@@ -545,14 +516,21 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
     const summary = { traceID: 'uploaded-1' };
     queryClient.setQueryData(['uploadedSummaries'], [summary]);
     queryClient.setQueryData(['uploadedRawTraces'], [{ traceID: 'uploaded-1' }]);
+    queryClient.setQueryData(['trace', 'uploaded-1'], { traceID: 'uploaded-1' });
+    queryClient.setQueryData(['trace', 'backend-1'], { traceID: 'backend-1' });
+
+    const { result } = renderHook(() => useClearUploadedTraces(), {
+      wrapper: ({ children }) => <AllProvider>{children}</AllProvider>,
+    });
 
     // Simulate what SearchForm does: invoke the callback returned by useClearUploadedTraces
     await act(async () => {
-      queryClient.setQueryData(['uploadedSummaries'], []);
-      queryClient.setQueryData(['uploadedRawTraces'], []);
+      result.current();
     });
 
     expect(queryClient.getQueryData(['uploadedSummaries'])).toEqual([]);
     expect(queryClient.getQueryData(['uploadedRawTraces'])).toEqual([]);
+    expect(queryClient.getQueryData(['trace', 'uploaded-1'])).toBeUndefined();
+    expect(queryClient.getQueryData(['trace', 'backend-1'])).toBeDefined();
   });
 });

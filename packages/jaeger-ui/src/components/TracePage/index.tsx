@@ -3,15 +3,15 @@
 
 import * as React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, Button, InputRef } from 'antd';
+import { Alert, InputRef } from 'antd';
 import { useNormalizeTraceId } from './useNormalizeTraceId';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
 import _memoize from 'lodash/memoize';
-import { connect, useDispatch } from 'react-redux';
+import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
 import ArchiveNotifier from './ArchiveNotifier';
@@ -22,7 +22,6 @@ import {
   useLayoutPrefsStore,
   useTraceTimelineStore,
 } from './TraceTimelineViewer/store';
-import { actions as traceTimelineActions } from './TraceTimelineViewer/duck';
 import { trackFilter, trackFocusMatches, trackNextMatch, trackPrevMatch, trackRange } from './index.track';
 import {
   CombokeysHandler,
@@ -46,12 +45,15 @@ import {
   ETraceViewType,
   viewTypeShowsMinimap,
 } from './types';
-import { getTraceSource, getUrl } from './url';
+import { getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { parseUiFind } from '../common/UiFindInput';
 import { LocationState, ReduxState, TNil } from '../../types';
+import type { TraceSummary } from '../../types/trace-summary';
+import { queryClient } from '../../query/app-query-client';
 import { reloadBackendTrace, useTrace } from '../../hooks/useTraceLoading';
+import { UPLOADED_SUMMARIES_QUERY_KEY } from '../SearchTracePage/useUploadedTraces';
 import { IOtelTrace } from '../../types/otel';
 import filterSpans from '../../utils/filter-spans';
 import updateUiFind from '../../utils/update-ui-find';
@@ -162,14 +164,12 @@ export function TracePageImpl(props: TProps) {
   } = props;
 
   const id = params.id;
-  const traceSource = getTraceSource(location.search);
   const {
     data: traceData,
     isPending: traceLoading,
     isError: traceError,
     error: traceQueryError,
-    refetch: refetchTrace,
-  } = useTrace(id, traceSource);
+  } = useTrace(id);
 
   // Layout preferences are owned by Zustand; Redux setters are also called for the tracking middleware.
   const detailPanelMode = useLayoutPrefsStore(s => s.detailPanelMode);
@@ -382,17 +382,7 @@ export function TracePageImpl(props: TProps) {
   }, [setTimelineBarsVisible, timelineBarsVisible]);
 
   if (traceError) {
-    return (
-      <div className="ub-m3">
-        <ErrorMessage error={traceQueryError || 'Unknown error'} />
-        {traceSource === 'backend' && (
-          <Button htmlType="button" onClick={() => void refetchTrace()}>
-            Retry
-          </Button>
-        )}
-        {location.state?.fromSearch && <Link to={location.state.fromSearch}>Back to search</Link>}
-      </div>
-    );
+    return <ErrorMessage className="ub-m3" error={traceQueryError || 'Unknown error'} />;
   }
   if (traceLoading || !traceData) {
     return <LoadingIndicator className="u-mt-vast" centered />;
@@ -428,7 +418,7 @@ export function TracePageImpl(props: TProps) {
     hideMap:
       !viewTypeShowsMinimap(viewType) || Boolean(embedded?.timeline?.hideMinimap) || !timelineBarsVisible,
     hideSummary: Boolean(embedded?.timeline?.hideSummary),
-    linkToStandalone: getUrl(id, undefined, traceSource),
+    linkToStandalone: getUrl(id),
     nextResult,
     onArchiveClicked: archiveTrace,
     onReloadTrace,
@@ -446,7 +436,6 @@ export function TracePageImpl(props: TProps) {
     timelineBarsVisible,
     toSearch: (locationState && locationState.fromSearch) || null,
     trace: traceData,
-    traceSource,
     updateNextViewRangeTime,
     updateViewRangeTime,
     useOtelTerms,
@@ -576,30 +565,42 @@ type TracePageProps = {
   params: { id: string };
 };
 
+// The upload registry lives in the shared query client, so the trace route can
+// read it without mounting the search page hook.
+function isUploadedTrace(traceID: string): boolean {
+  const summaries = queryClient.getQueryData<TraceSummary[]>(UPLOADED_SUMMARIES_QUERY_KEY);
+  return summaries?.some(summary => summary.traceID === traceID) ?? false;
+}
+
 export const TracePageRoute = (props: TracePageProps) => {
   const config = useConfig();
-  const dispatch = useDispatch<Dispatch<ReturnType<typeof traceTimelineActions.resetTraceView>>>();
   const [reloadVersion, setReloadVersion] = useState(0);
   const traceID = props.params.id;
-  const traceSource = getTraceSource(props.location.search);
-  const { data: traceData } = useTrace(traceID, traceSource);
+  const { data: traceData } = useTrace(traceID);
   useNormalizeTraceId(traceID, traceData);
+  // Uploaded traces share the single trace cache key, so resetting it for one
+  // would drop its only copy and refetch a 404. Read the upload registry here
+  // to hide Reload, and check again in the handler so a stale render cannot
+  // clear an uploaded trace.
+  const isUploaded = isUploadedTrace(traceID);
 
   const onReloadTrace = useCallback(() => {
-    if (traceSource !== 'backend') return;
-    dispatch(traceTimelineActions.resetTraceView());
+    if (isUploadedTrace(traceID)) return;
     useTraceTimelineStore.getState().resetTraceView();
+    // A key bump remounts the page but preserves window scroll position, and an
+    // in-flight smooth scroll keeps writing window.scrollTo after the remount,
+    // so cancel it before scrolling to the top.
     cancelScroll();
     window.scrollTo(0, 0);
     setReloadVersion(version => version + 1);
     void reloadBackendTrace(traceID);
-  }, [dispatch, traceID, traceSource]);
+  }, [traceID]);
 
   return (
     <ConnectedTracePage
-      key={`${traceSource}:${traceID}:${reloadVersion}`}
+      key={`${traceID}:${reloadVersion}`}
       {...props}
-      onReloadTrace={onReloadTrace}
+      onReloadTrace={isUploaded ? undefined : onReloadTrace}
       params={{ ...props.params, id: traceID }}
       archiveEnabled={Boolean(config.archiveEnabled)}
       enableSidePanel={Boolean(config.traceTimeline?.enableSidePanel)}

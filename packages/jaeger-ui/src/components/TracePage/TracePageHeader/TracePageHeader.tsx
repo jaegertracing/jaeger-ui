@@ -28,7 +28,6 @@ import { IOtelTrace } from '../../../types/otel';
 import { formatDatetime, formatDurationCompact } from '../../../utils/date';
 import { getTraceLinks } from '../../../model/link-patterns';
 import { getIncompleteTraceTooltip } from '../../../model/trace-display-helpers';
-import type { TraceSource } from '../../../hooks/useTraceLoading';
 
 import './TracePageHeader.css';
 import ExternalLinks from '../../common/ExternalLinks';
@@ -63,7 +62,6 @@ type TracePageHeaderEmbedProps = {
   timelineBarsVisible: boolean;
   toSearch: string | null;
   trace: IOtelTrace;
-  traceSource?: TraceSource;
   viewType: ETraceViewType;
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
@@ -145,7 +143,6 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     timelineBarsVisible,
     toSearch,
     trace,
-    traceSource,
     viewType,
     updateNextViewRangeTime,
     updateViewRangeTime,
@@ -201,19 +198,13 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
         )}
         {orphanCount > 0 && (
           <span className="TracePageHeader--incompleteActions" data-testid="header-item-incomplete">
-            <Tooltip
-              title={
-                traceSource === 'upload'
-                  ? 'This uploaded trace has missing parent spans. Upload a newer file to view more spans.'
-                  : getIncompleteTraceTooltip(orphanCount)
-              }
-            >
+            <Tooltip title={getIncompleteTraceTooltip(orphanCount)}>
               <span className="TracePageHeader--incompleteTag">
                 <IoWarning className="TracePageHeader--incompleteIcon" />
                 Incomplete
               </span>
             </Tooltip>
-            {traceSource !== 'upload' && onReloadTrace && (
+            {onReloadTrace && (
               <Button type="link" size="small" htmlType="button" onClick={onReloadTrace}>
                 Reload trace
               </Button>
