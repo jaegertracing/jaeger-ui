@@ -101,4 +101,32 @@ describe('inline base-path detection script', () => {
     it('/jaeger/search/trace/abc → /jaeger/search/', () =>
       expect(detectBasePath('/jaeger/search/trace/abc')).toBe('/jaeger/search/'));
   });
+
+  describe('when <base> already exists in document', () => {
+    it('updates existing <base> element and does not duplicate it', () => {
+      let updatedHref = '';
+      let inserted = false;
+      const mockBase = {
+        setAttribute: (attr: string, val: string) => {
+          if (attr === 'href') updatedHref = val;
+        },
+      };
+      const mockDoc = {
+        querySelector: (sel: string) => {
+          if (sel.includes('base')) return mockBase;
+          return null;
+        },
+        currentScript: {
+          insertAdjacentHTML: () => {
+            inserted = true;
+          },
+        },
+        addEventListener: () => {},
+        getElementById: () => null,
+      };
+      scriptFn(mockDoc, { location: { pathname: '/trace/abc123' } });
+      expect(updatedHref).toBe('/');
+      expect(inserted).toBe(false);
+    });
+  });
 });

@@ -11,6 +11,7 @@
     <meta http-equiv="pragma" content="no-cache" />
 
     <!-- The document MUST have a <base> element, see ./README.md -->
+    <base href="/" data-inject-target="BASE_URL" />
     <script>
       (function () {
         var knownSubPaths = [
@@ -35,10 +36,18 @@
             : path.slice(0, path.lastIndexOf('/') + 1) || '/';
         if (prefix[prefix.length - 1] !== '/') prefix += '/';
         var safe = prefix.replace(/[&"<>]/g, '');
-        document.currentScript.insertAdjacentHTML(
-          'afterend',
-          '<base href="' + safe + '" data-inject-target="BASE_URL" />'
-        );
+        var existingBase =
+          typeof document.querySelector === 'function'
+            ? document.querySelector('base[data-inject-target="BASE_URL"]') || document.querySelector('base')
+            : null;
+        if (existingBase) {
+          existingBase.setAttribute('href', safe);
+        } else if (document.currentScript && document.currentScript.insertAdjacentHTML) {
+          document.currentScript.insertAdjacentHTML(
+            'afterend',
+            ['<ba', 'se href="', safe, '" data-inject-target="BASE_URL" />'].join('')
+          );
+        }
         // Delay the check: React 18 createRoot().render() is async (concurrent mode),
         // so the root is empty at DOMContentLoaded even when the app loaded successfully.
         // Only show the error if the root is still empty after a generous timeout.
