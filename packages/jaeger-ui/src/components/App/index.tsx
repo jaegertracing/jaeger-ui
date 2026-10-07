@@ -20,6 +20,7 @@ import 'antd/dist/reset.css';
 import './index.css';
 import { store } from '../../utils/configure-store';
 import ThemeProvider from './ThemeProvider';
+import TimeZoneProvider from './TimeZoneProvider';
 import { JaegerAssistantProvider } from './JaegerAssistantContext';
 
 // Initialize API configuration and process configuration scripts at module level
@@ -33,17 +34,19 @@ export default function JaegerUIApp() {
       <ThemeProvider>
         <Provider store={store}>
           <JaegerAssistantProvider>
-            <Page>
-              <Routes>
-                {ROUTES.map(({ path, element }) => (
-                  <Route key={path} path={path} element={element} />
-                ))}
-                <Route path="/" element={<Navigate to={searchPath} replace />} />
-                <Route path={prefixUrl()} element={<Navigate to={searchPath} replace />} />
-                <Route path={prefixUrl('/')} element={<Navigate to={searchPath} replace />} />
-                <Route path="*" element={<NotFound error="Page not found" />} />
-              </Routes>
-            </Page>
+            <TimeZoneProvider>
+              <Page>
+                <Routes>
+                  {ROUTES.map(({ path, element }) => (
+                    <Route key={path} path={path} element={element} />
+                  ))}
+                  <Route path="/" element={<Navigate to={searchPath} replace />} />
+                  <Route path={prefixUrl()} element={<Navigate to={searchPath} replace />} />
+                  <Route path={prefixUrl('/')} element={<Navigate to={searchPath} replace />} />
+                  <Route path="*" element={<NotFound error="Page not found" />} />
+                </Routes>
+              </Page>
+            </TimeZoneProvider>
           </JaegerAssistantProvider>
         </Provider>
       </ThemeProvider>

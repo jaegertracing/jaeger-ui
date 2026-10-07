@@ -14,6 +14,12 @@ import {
   formatMillisecondTime,
   formatSecondTime,
   formatDurationCompact,
+  formatTimeZoneLabel,
+  formatTimeZoneOffset,
+  getDisplayTimeZone,
+  parseDisplayTime,
+  setDisplayTimeZone,
+  toDisplayTime,
 } from './date';
 
 const ONE_SECOND = 1000 * ONE_MILLISECOND;
@@ -298,5 +304,68 @@ describe('formatDurationCompact', () => {
       expect(formatDurationCompact(999999)).toBe('1000ms');
       expect(formatDurationCompact(1000000)).toBe('1.0s');
     });
+  });
+});
+
+describe('display time zone', () => {
+  afterEach(() => {
+    setDisplayTimeZone('browser');
+    jest.useRealTimers();
+  });
+
+  it('uses the browser zone by default and for "browser"', () => {
+    expect(getDisplayTimeZone()).toBeNull();
+    setDisplayTimeZone('utc');
+    setDisplayTimeZone('browser');
+    expect(getDisplayTimeZone()).toBeNull();
+  });
+
+  it('formats timestamps in UTC', () => {
+    setDisplayTimeZone('UTC');
+    expect(getDisplayTimeZone()).toBe('UTC');
+    expect(formatDatetime(0)).toBe('January 1 1970, 00:00:00.000');
+    expect(formatTimeZoneOffset(0)).toBe('UTC');
+    expect(formatTimeZoneLabel(0)).toBe('UTC');
+  });
+
+  it('formats timestamps in an IANA zone', () => {
+    setDisplayTimeZone('Asia/Kolkata');
+    expect(getDisplayTimeZone()).toBe('Asia/Kolkata');
+    expect(formatDate(0)).toBe('1970-01-01');
+    expect(formatTime(0)).toBe('05:30');
+    expect(formatDatetime(0)).toBe('January 1 1970, 05:30:00.000');
+    expect(formatTimeZoneOffset(0)).toBe('UTC+05:30');
+    expect(formatTimeZoneLabel(0)).toBe('Asia/Kolkata (UTC+05:30)');
+  });
+
+  it('parses wall-clock times in the display zone', () => {
+    setDisplayTimeZone('utc');
+    expect(parseDisplayTime('1970-01-01 01:00').valueOf()).toBe(3600 * 1000);
+    setDisplayTimeZone('Asia/Kolkata');
+    expect(parseDisplayTime('1970-01-01 05:30').valueOf()).toBe(0);
+  });
+
+  it('falls back to the browser zone for unknown names', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    setDisplayTimeZone('Not/A_Zone');
+    expect(getDisplayTimeZone()).toBeNull();
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('converts values to the display zone', () => {
+    setDisplayTimeZone('Asia/Kolkata');
+    expect(toDisplayTime(0).hour()).toBe(5);
+  });
+
+  it('computes Today and Yesterday in the display zone', () => {
+    jest.useFakeTimers();
+    // 20:00 UTC is already the next day in Asia/Kolkata (01:30).
+    jest.setSystemTime(Date.UTC(2023, 7, 19, 20, 0));
+    setDisplayTimeZone('Asia/Kolkata');
+    expect(formatRelativeDate(Date.UTC(2023, 7, 19, 19, 0))).toBe('Today');
+    expect(formatRelativeDate(Date.UTC(2023, 7, 19, 12, 0))).toBe('Yesterday');
+    setDisplayTimeZone('utc');
+    expect(formatRelativeDate(Date.UTC(2023, 7, 19, 12, 0))).toBe('Today');
   });
 });

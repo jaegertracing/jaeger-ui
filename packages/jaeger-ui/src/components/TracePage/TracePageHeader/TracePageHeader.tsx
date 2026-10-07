@@ -25,7 +25,7 @@ import NewWindowIcon from '../../common/NewWindowIcon';
 import TraceName from '../../common/TraceName';
 import { TNil } from '../../../types';
 import { IOtelTrace } from '../../../types/otel';
-import { formatDatetime, formatDurationCompact } from '../../../utils/date';
+import { formatDatetime, formatDurationCompact, formatTimeZoneOffset } from '../../../utils/date';
 import { getTraceLinks } from '../../../model/link-patterns';
 import { getIncompleteTraceTooltip } from '../../../model/trace-display-helpers';
 
@@ -73,14 +73,17 @@ export const HEADER_ITEMS = [
     label: 'Trace Start',
     renderer: (trace: IOtelTrace) => {
       const dateStr = formatDatetime(trace.startTime);
+      const zone = formatTimeZoneOffset(trace.startTime / 1000);
       const match = dateStr.match(/^(.+)(\.\d+)$/);
       return match ? (
         <span className="TracePageHeader--overviewItem--value">
           {match[1]}
-          <span className="TracePageHeader--overviewItem--valueDetail">{match[2]}</span>
+          <span className="TracePageHeader--overviewItem--valueDetail">
+            {match[2]} {zone}
+          </span>
         </span>
       ) : (
-        dateStr
+        `${dateStr} ${zone}`
       );
     },
   },

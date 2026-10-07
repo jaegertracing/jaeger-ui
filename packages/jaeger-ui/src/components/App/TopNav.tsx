@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom';
 import JaegerAskSearchInput, { JaegerAssistantToggle } from './JaegerAskSearchInput';
 import { useJaegerAssistantConfigured } from '../../hooks/useJaegerAssistant';
 import ThemeToggleButton from './ThemeToggleButton';
+import TimeZoneSelect from './TimeZoneSelect';
 import Branding from './Branding';
 import * as dependencyGraph from '../DependencyGraph/url';
 import * as deepDependencies from '../DeepDependencies/url';
@@ -142,6 +143,10 @@ export function TopNavImpl(props: Props) {
       }
       return { label: <CustomNavDropdown key={m.label} {...m} />, key: m.label };
     }),
+    {
+      label: <TimeZoneSelect />,
+      key: 'TimeZoneSelect',
+    },
     ...(config.themes?.enabled && !embedded?.theme
       ? [
           {
