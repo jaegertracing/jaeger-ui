@@ -122,6 +122,11 @@ export const HEADER_ITEMS = [
       );
     },
   },
+  {
+    key: 'genai-calls',
+    label: null,
+    renderer: (trace: IOtelTrace) => <GenAIExecutionSummary spans={trace.spans} />,
+  },
 ];
 
 export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwardedRef: React.Ref<InputRef> }) {
@@ -171,19 +176,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     HEADER_ITEMS.map(item => {
       const { renderer, ...rest } = item;
       return { ...rest, value: renderer(trace) };
-    })
-      .filter(item => item.value !== null)
-      .concat(
-        trace.isGenAITrace
-          ? [
-              {
-                key: 'genai-operations',
-                label: null,
-                value: <GenAIExecutionSummary spans={trace.spans} />,
-              },
-            ]
-          : []
-      );
+    }).filter(item => item.value !== null);
 
   const traceShortID = trace.traceID.slice(0, 7);
 

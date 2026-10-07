@@ -82,6 +82,24 @@ export type GenAiTokenUsage = {
   audioCacheReadInputTokens?: number;
 };
 
+// Cosmetic only - a key missing from here still renders under its raw field name.
+export const TOKEN_LABELS: Partial<Record<keyof GenAiTokenUsage, string>> = {
+  inputTokens: 'Input',
+  outputTokens: 'Output',
+  reasoningOutputTokens: 'Reasoning',
+  cacheReadInputTokens: 'Cached (read)',
+  cacheWriteInputTokens: 'Cached (write)',
+  textInputTokens: 'Input (text)',
+  imageInputTokens: 'Input (image)',
+  audioInputTokens: 'Input (audio)',
+  textOutputTokens: 'Output (text)',
+  imageOutputTokens: 'Output (image)',
+  audioOutputTokens: 'Output (audio)',
+  textCacheReadInputTokens: 'Cached (read, text)',
+  imageCacheReadInputTokens: 'Cached (read, image)',
+  audioCacheReadInputTokens: 'Cached (read, audio)',
+};
+
 // Every variant separates its discriminant (`type`) from its payload (`data`)
 // so a generic fallback renderer can walk `Object.entries(data)` for a
 // section type it doesn't have a specific case for.
@@ -448,6 +466,31 @@ export function hasAnyTokenUsage(usage: GenAiTokenUsage): boolean {
   return Object.values(usage).some(v => v != null);
 }
 
+function getGenAiTokenUsageFromGetter(get: GetAttr): GenAiTokenUsage | undefined {
+  const usage: GenAiTokenUsage = {
+    inputTokens: asNumber(get('gen_ai.usage.input_tokens')),
+    outputTokens: asNumber(get('gen_ai.usage.output_tokens')),
+    reasoningOutputTokens: asNumber(get('gen_ai.usage.reasoning.output_tokens')),
+    cacheReadInputTokens: asNumber(get('gen_ai.usage.cache_read.input_tokens')),
+    cacheWriteInputTokens: asNumber(get('gen_ai.usage.cache_write.input_tokens')),
+    textInputTokens: asNumber(get('gen_ai.usage.text.input_tokens')),
+    imageInputTokens: asNumber(get('gen_ai.usage.image.input_tokens')),
+    audioInputTokens: asNumber(get('gen_ai.usage.audio.input_tokens')),
+    textOutputTokens: asNumber(get('gen_ai.usage.text.output_tokens')),
+    imageOutputTokens: asNumber(get('gen_ai.usage.image.output_tokens')),
+    audioOutputTokens: asNumber(get('gen_ai.usage.audio.output_tokens')),
+    textCacheReadInputTokens: asNumber(get('gen_ai.usage.text.cache_read.input_tokens')),
+    imageCacheReadInputTokens: asNumber(get('gen_ai.usage.image.cache_read.input_tokens')),
+    audioCacheReadInputTokens: asNumber(get('gen_ai.usage.audio.cache_read.input_tokens')),
+  };
+  return hasAnyTokenUsage(usage) ? usage : undefined;
+}
+
+/** Extracts the token-usage attributes shared by the GenAI tab and trace summary. */
+export function getGenAiTokenUsage(attributes: IAttributes): GenAiTokenUsage | undefined {
+  return getGenAiTokenUsageFromGetter(key => attributes.getValue(key));
+}
+
 export function formatTokenCount(value: number | undefined): string | undefined {
   if (value == null) return undefined;
   return new Intl.NumberFormat('en-US').format(value);
@@ -508,23 +551,8 @@ const REGISTRY: SectionBuilder[] = [
       : undefined;
   },
   get => {
-    const usage: GenAiTokenUsage = {
-      inputTokens: asNumber(get('gen_ai.usage.input_tokens')),
-      outputTokens: asNumber(get('gen_ai.usage.output_tokens')),
-      reasoningOutputTokens: asNumber(get('gen_ai.usage.reasoning.output_tokens')),
-      cacheReadInputTokens: asNumber(get('gen_ai.usage.cache_read.input_tokens')),
-      cacheWriteInputTokens: asNumber(get('gen_ai.usage.cache_write.input_tokens')),
-      textInputTokens: asNumber(get('gen_ai.usage.text.input_tokens')),
-      imageInputTokens: asNumber(get('gen_ai.usage.image.input_tokens')),
-      audioInputTokens: asNumber(get('gen_ai.usage.audio.input_tokens')),
-      textOutputTokens: asNumber(get('gen_ai.usage.text.output_tokens')),
-      imageOutputTokens: asNumber(get('gen_ai.usage.image.output_tokens')),
-      audioOutputTokens: asNumber(get('gen_ai.usage.audio.output_tokens')),
-      textCacheReadInputTokens: asNumber(get('gen_ai.usage.text.cache_read.input_tokens')),
-      imageCacheReadInputTokens: asNumber(get('gen_ai.usage.image.cache_read.input_tokens')),
-      audioCacheReadInputTokens: asNumber(get('gen_ai.usage.audio.cache_read.input_tokens')),
-    };
-    return hasAnyTokenUsage(usage) ? { type: 'tokens', data: usage } : undefined;
+    const usage = getGenAiTokenUsageFromGetter(get);
+    return usage ? { type: 'tokens', data: usage } : undefined;
   },
   get => {
     // Same short-circuit-on-purpose rule as the meta builder above: only fall

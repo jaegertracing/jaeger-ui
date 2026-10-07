@@ -2,22 +2,30 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { IOtelSpan, StatusCode } from '../../types/otel';
+import { getGenAiTokenUsage } from '../../components/TracePage/TraceTimelineViewer/SpanDetail/GenAITab/genAiData';
 
 export interface IGenAIExecutionSummary {
+  callCount: number;
   agentCount: number;
-  failedOperationCount: number;
+  modelCallCount: number;
+  toolCallCount: number;
+  retrievalCallCount: number;
+  otherGenAICallCount: number;
   inputTokens?: number;
-  modelOperationCount: number;
-  operationCount: number;
-  otherGenAIOperationCount: number;
   outputTokens?: number;
-  retrievalOperationCount: number;
-  toolOperationCount: number;
+  failedCallCount: number;
 }
 
-function addTokenCount(total: number | undefined, value: unknown): number | undefined {
-  return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? (total ?? 0) + value : total;
-}
+export const GEN_AI_CALL_ROWS = [
+  { key: 'agentCount', label: 'Agents' },
+  { key: 'modelCallCount', label: 'Model calls' },
+  { key: 'toolCallCount', label: 'Tool calls' },
+  { key: 'retrievalCallCount', label: 'Retrieval calls' },
+  { key: 'otherGenAICallCount', label: 'Other GenAI' },
+] as const satisfies ReadonlyArray<{
+  key: 'agentCount' | 'modelCallCount' | 'toolCallCount' | 'retrievalCallCount' | 'otherGenAICallCount';
+  label: string;
+}>;
 
 /**
  * Produces a trace-wide GenAI summary from the cached span classification.
@@ -28,56 +36,56 @@ export function getGenAIExecutionSummary(
   spans: ReadonlyArray<IOtelSpan>
 ): IGenAIExecutionSummary | undefined {
   let agentCount = 0;
-  let modelOperationCount = 0;
-  let toolOperationCount = 0;
-  let retrievalOperationCount = 0;
-  let otherGenAIOperationCount = 0;
-  let failedOperationCount = 0;
+  let modelCallCount = 0;
+  let toolCallCount = 0;
+  let retrievalCallCount = 0;
+  let otherGenAICallCount = 0;
+  let failedCallCount = 0;
   let inputTokens: number | undefined;
   let outputTokens: number | undefined;
 
   for (const span of spans) {
     if (span.genAIKind === undefined) continue;
 
-    if (span.status.code === StatusCode.ERROR) failedOperationCount++;
+    if (span.status.code === StatusCode.ERROR) failedCallCount++;
 
     switch (span.genAIKind) {
       case 'AGENT':
         agentCount++;
         break;
       case 'LLM_CALL':
-        modelOperationCount++;
-        inputTokens = addTokenCount(inputTokens, span.attributes.getValue('gen_ai.usage.input_tokens'));
-        outputTokens = addTokenCount(outputTokens, span.attributes.getValue('gen_ai.usage.output_tokens'));
+        modelCallCount++;
+        {
+          const tokenUsage = getGenAiTokenUsage(span.attributes);
+          if (tokenUsage?.inputTokens !== undefined)
+            inputTokens = (inputTokens ?? 0) + tokenUsage.inputTokens;
+          if (tokenUsage?.outputTokens !== undefined)
+            outputTokens = (outputTokens ?? 0) + tokenUsage.outputTokens;
+        }
         break;
       case 'TOOL_CALL':
-        toolOperationCount++;
+        toolCallCount++;
         break;
       case 'RETRIEVAL':
-        retrievalOperationCount++;
+        retrievalCallCount++;
         break;
       default:
-        otherGenAIOperationCount++;
+        otherGenAICallCount++;
     }
   }
 
-  const operationCount =
-    agentCount +
-    modelOperationCount +
-    toolOperationCount +
-    retrievalOperationCount +
-    otherGenAIOperationCount;
-  if (operationCount === 0) return undefined;
+  const callCount = agentCount + modelCallCount + toolCallCount + retrievalCallCount + otherGenAICallCount;
+  if (callCount === 0) return undefined;
 
   return {
+    callCount,
     agentCount,
-    failedOperationCount,
+    modelCallCount,
+    toolCallCount,
+    retrievalCallCount,
+    otherGenAICallCount,
     inputTokens,
-    modelOperationCount,
-    operationCount,
-    otherGenAIOperationCount,
     outputTokens,
-    retrievalOperationCount,
-    toolOperationCount,
+    failedCallCount,
   };
 }

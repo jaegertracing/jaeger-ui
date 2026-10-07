@@ -164,7 +164,7 @@ describe('<TracePageHeader>', () => {
       const headerItem = screen.getByTestId(`header-item-${item.key}`);
       expect(headerItem).toHaveClass('horizontal');
       expect(headerItem).toHaveClass('item');
-      expect(headerItem).toHaveTextContent(item.label);
+      if (item.label !== null) expect(headerItem).toHaveTextContent(item.label);
 
       if (typeof renderedValue === 'string' || typeof renderedValue === 'number') {
         expect(headerItem).toHaveTextContent(renderedValue.toString());
