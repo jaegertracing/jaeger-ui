@@ -5,7 +5,7 @@ import * as React from 'react';
 import { Button, Popover } from 'antd';
 
 import { IOtelSpan } from '../../../types/otel';
-import { formatTokenCount, TOKEN_LABELS } from '../TraceTimelineViewer/SpanDetail/GenAITab/genAiData';
+import { formatTokenCount } from '../TraceTimelineViewer/SpanDetail/GenAITab/genAiData';
 import { GEN_AI_CALL_ROWS, getGenAIExecutionSummary } from './execution-summary';
 
 type GenAIExecutionSummaryProps = { spans: ReadonlyArray<IOtelSpan> };
@@ -29,9 +29,9 @@ function GenAIExecutionSummaryFn({ spans }: GenAIExecutionSummaryProps) {
       </dl>
       <div className="TracePageHeader--genAIExecutionHeading">Recorded tokens</div>
       <dl className="TracePageHeader--genAIExecutionList">
-        <dt>{TOKEN_LABELS.inputTokens}</dt>
+        <dt>Input</dt>
         <dd>{formatTokenCount(summary.inputTokens) ?? '—'}</dd>
-        <dt>{TOKEN_LABELS.outputTokens}</dt>
+        <dt>Output</dt>
         <dd>{formatTokenCount(summary.outputTokens) ?? '—'}</dd>
       </dl>
       <dl className="TracePageHeader--genAIExecutionList TracePageHeader--genAIExecutionFailures">

@@ -82,25 +82,6 @@ export type GenAiTokenUsage = {
   audioCacheReadInputTokens?: number;
 };
 
-// Cosmetic only - a key missing from here still renders under its raw field name, so a
-// future token-usage field shows up automatically without needing a matching entry here.
-export const TOKEN_LABELS: Partial<Record<keyof GenAiTokenUsage, string>> = {
-  inputTokens: 'Input',
-  outputTokens: 'Output',
-  reasoningOutputTokens: 'Reasoning',
-  cacheReadInputTokens: 'Cached (read)',
-  cacheWriteInputTokens: 'Cached (write)',
-  textInputTokens: 'Input (text)',
-  imageInputTokens: 'Input (image)',
-  audioInputTokens: 'Input (audio)',
-  textOutputTokens: 'Output (text)',
-  imageOutputTokens: 'Output (image)',
-  audioOutputTokens: 'Output (audio)',
-  textCacheReadInputTokens: 'Cached (read, text)',
-  imageCacheReadInputTokens: 'Cached (read, image)',
-  audioCacheReadInputTokens: 'Cached (read, audio)',
-};
-
 // Every variant separates its discriminant (`type`) from its payload (`data`)
 // so a generic fallback renderer can walk `Object.entries(data)` for a
 // section type it doesn't have a specific case for.

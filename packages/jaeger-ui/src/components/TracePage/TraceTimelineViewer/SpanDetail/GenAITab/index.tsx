@@ -17,7 +17,6 @@ import {
   GenAiPart,
   GenAiTokenUsage,
   GenAiToolCall,
-  TOKEN_LABELS,
 } from './genAiData';
 import { MessageFormat, useMessageFormatStore } from './message-format-store';
 import AccordionAttributes from '../AccordionAttributes';
@@ -661,6 +660,26 @@ function AgentDetails({
     />
   );
 }
+
+// Cosmetic only - a key missing from here still renders, just under its raw
+// field name instead of a friendly label, so a future token-usage field
+// shows up automatically without needing a matching entry added here.
+const TOKEN_LABELS: Partial<Record<keyof GenAiTokenUsage, string>> = {
+  inputTokens: 'Input',
+  outputTokens: 'Output',
+  reasoningOutputTokens: 'Reasoning',
+  cacheReadInputTokens: 'Cached (read)',
+  cacheWriteInputTokens: 'Cached (write)',
+  textInputTokens: 'Input (text)',
+  imageInputTokens: 'Input (image)',
+  audioInputTokens: 'Input (audio)',
+  textOutputTokens: 'Output (text)',
+  imageOutputTokens: 'Output (image)',
+  audioOutputTokens: 'Output (audio)',
+  textCacheReadInputTokens: 'Cached (read, text)',
+  imageCacheReadInputTokens: 'Cached (read, image)',
+  audioCacheReadInputTokens: 'Cached (read, audio)',
+};
 
 function TokenDetails({ usage }: { usage: GenAiTokenUsage }) {
   return (
