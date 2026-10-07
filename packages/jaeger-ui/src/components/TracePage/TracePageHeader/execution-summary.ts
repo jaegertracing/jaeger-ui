@@ -1,8 +1,8 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { IOtelSpan, StatusCode } from '../../types/otel';
-import { getGenAiTokenUsage } from '../../components/TracePage/TraceTimelineViewer/SpanDetail/GenAITab/genAiData';
+import { IOtelSpan, StatusCode } from '../../../types/otel';
+import { GenAiTokenUsage, getGenAiTokenUsage } from '../TraceTimelineViewer/SpanDetail/GenAITab/genAiData';
 
 export interface IGenAIExecutionSummary {
   callCount: number;
@@ -22,10 +22,19 @@ export const GEN_AI_CALL_ROWS = [
   { key: 'toolCallCount', label: 'Tool calls' },
   { key: 'retrievalCallCount', label: 'Retrieval calls' },
   { key: 'otherGenAICallCount', label: 'Other GenAI' },
-] as const satisfies ReadonlyArray<{
-  key: 'agentCount' | 'modelCallCount' | 'toolCallCount' | 'retrievalCallCount' | 'otherGenAICallCount';
-  label: string;
-}>;
+] as const satisfies ReadonlyArray<{ key: keyof IGenAIExecutionSummary; label: string }>;
+
+function addTokens(
+  totals: Pick<IGenAIExecutionSummary, 'inputTokens' | 'outputTokens'>,
+  usage: GenAiTokenUsage | undefined
+): void {
+  if (usage?.inputTokens !== undefined) {
+    totals.inputTokens = (totals.inputTokens ?? 0) + usage.inputTokens;
+  }
+  if (usage?.outputTokens !== undefined) {
+    totals.outputTokens = (totals.outputTokens ?? 0) + usage.outputTokens;
+  }
+}
 
 /**
  * Produces a trace-wide GenAI summary from the cached span classification.
@@ -41,8 +50,7 @@ export function getGenAIExecutionSummary(
   let retrievalCallCount = 0;
   let otherGenAICallCount = 0;
   let failedCallCount = 0;
-  let inputTokens: number | undefined;
-  let outputTokens: number | undefined;
+  const tokenTotals: Pick<IGenAIExecutionSummary, 'inputTokens' | 'outputTokens'> = {};
 
   for (const span of spans) {
     if (span.genAIKind === undefined) continue;
@@ -55,13 +63,7 @@ export function getGenAIExecutionSummary(
         break;
       case 'LLM_CALL':
         modelCallCount++;
-        {
-          const tokenUsage = getGenAiTokenUsage(span.attributes);
-          if (tokenUsage?.inputTokens !== undefined)
-            inputTokens = (inputTokens ?? 0) + tokenUsage.inputTokens;
-          if (tokenUsage?.outputTokens !== undefined)
-            outputTokens = (outputTokens ?? 0) + tokenUsage.outputTokens;
-        }
+        addTokens(tokenTotals, getGenAiTokenUsage(span.attributes));
         break;
       case 'TOOL_CALL':
         toolCallCount++;
@@ -84,8 +86,8 @@ export function getGenAIExecutionSummary(
     toolCallCount,
     retrievalCallCount,
     otherGenAICallCount,
-    inputTokens,
-    outputTokens,
+    inputTokens: tokenTotals.inputTokens,
+    outputTokens: tokenTotals.outputTokens,
     failedCallCount,
   };
 }

@@ -4,7 +4,7 @@
 import { makeAttributes } from '../../model/attributes';
 import { IOtelSpan, StatusCode } from '../../types/otel';
 
-export function makeGenAISpan(overrides: Partial<IOtelSpan> = {}): IOtelSpan {
+export function makeOtelSpan(overrides: Partial<IOtelSpan> = {}): IOtelSpan {
   const zero = 0 as IOtelSpan['startTime'];
   return {
     attributes: makeAttributes(),

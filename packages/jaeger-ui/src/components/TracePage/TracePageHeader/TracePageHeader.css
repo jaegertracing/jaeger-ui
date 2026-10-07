@@ -112,8 +112,6 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .TracePageHeader--genAIExecutionButton {
-  color: var(--text-primary);
-  font-weight: 600;
   height: auto;
   padding: 0;
 }
@@ -125,11 +123,20 @@ SPDX-License-Identifier: Apache-2.0
 
 .TracePageHeader--genAIExecutionLabel {
   color: var(--text-muted);
-  margin-right: 0.25rem;
+}
+
+.TracePageHeader--genAIExecutionCount {
+  color: var(--text-primary);
+  font-weight: 600;
 }
 
 .TracePageHeader--genAIExecutionButton:hover .TracePageHeader--genAIExecutionLabel,
 .TracePageHeader--genAIExecutionButton:focus-visible .TracePageHeader--genAIExecutionLabel {
+  color: inherit;
+}
+
+.TracePageHeader--genAIExecutionButton:hover .TracePageHeader--genAIExecutionCount,
+.TracePageHeader--genAIExecutionButton:focus-visible .TracePageHeader--genAIExecutionCount {
   color: inherit;
 }
 

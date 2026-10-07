@@ -7,12 +7,12 @@ import userEvent from '@testing-library/user-event';
 
 import { StatusCode } from '../../../types/otel';
 import { makeAttributes } from '../../../model/attributes';
-import { makeGenAISpan } from '../../../utils/genai/test-utils';
+import { makeOtelSpan } from '../../../utils/test/makeOtelSpan';
 import GenAIExecutionSummary from './GenAIExecutionSummary';
 
 describe('<GenAIExecutionSummary>', () => {
   it('is absent when the trace has no GenAI spans', () => {
-    const { container } = render(<GenAIExecutionSummary spans={[makeGenAISpan()]} />);
+    const { container } = render(<GenAIExecutionSummary spans={[makeOtelSpan()]} />);
     expect(container).toBeEmptyDOMElement();
   });
 
@@ -21,15 +21,15 @@ describe('<GenAIExecutionSummary>', () => {
     render(
       <GenAIExecutionSummary
         spans={[
-          makeGenAISpan({ genAIKind: 'AGENT' }),
-          makeGenAISpan({
+          makeOtelSpan({ genAIKind: 'AGENT' }),
+          makeOtelSpan({
             genAIKind: 'LLM_CALL',
             attributes: makeAttributes([
               { key: 'gen_ai.usage.input_tokens', value: 1840 },
               { key: 'gen_ai.usage.output_tokens', value: 260 },
             ]),
           }),
-          makeGenAISpan({ genAIKind: 'TOOL_CALL', status: { code: StatusCode.ERROR } }),
+          makeOtelSpan({ genAIKind: 'TOOL_CALL', status: { code: StatusCode.ERROR } }),
         ]}
       />
     );

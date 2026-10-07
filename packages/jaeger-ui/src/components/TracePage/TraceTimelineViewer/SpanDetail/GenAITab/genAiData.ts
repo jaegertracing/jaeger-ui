@@ -82,7 +82,8 @@ export type GenAiTokenUsage = {
   audioCacheReadInputTokens?: number;
 };
 
-// Cosmetic only - a key missing from here still renders under its raw field name.
+// Cosmetic only - a key missing from here still renders under its raw field name, so a
+// future token-usage field shows up automatically without needing a matching entry here.
 export const TOKEN_LABELS: Partial<Record<keyof GenAiTokenUsage, string>> = {
   inputTokens: 'Input',
   outputTokens: 'Output',

@@ -6,7 +6,7 @@ import { Button, Popover } from 'antd';
 
 import { IOtelSpan } from '../../../types/otel';
 import { formatTokenCount, TOKEN_LABELS } from '../TraceTimelineViewer/SpanDetail/GenAITab/genAiData';
-import { GEN_AI_CALL_ROWS, getGenAIExecutionSummary } from '../../../utils/genai/execution-summary';
+import { GEN_AI_CALL_ROWS, getGenAIExecutionSummary } from './execution-summary';
 
 type GenAIExecutionSummaryProps = { spans: ReadonlyArray<IOtelSpan> };
 
@@ -14,7 +14,7 @@ function GenAIExecutionSummaryFn({ spans }: GenAIExecutionSummaryProps) {
   const summary = React.useMemo(() => getGenAIExecutionSummary(spans), [spans]);
   if (!summary) return null;
 
-  const callRows = GEN_AI_CALL_ROWS.filter(({ key }) => summary[key] > 0);
+  const callRows = GEN_AI_CALL_ROWS.filter(({ key }) => (summary[key] ?? 0) > 0);
 
   const content = (
     <div className="TracePageHeader--genAIExecutionContent">
@@ -44,7 +44,9 @@ function GenAIExecutionSummaryFn({ spans }: GenAIExecutionSummaryProps) {
   return (
     <Popover content={content} placement="bottomLeft" trigger="click">
       <Button className="TracePageHeader--genAIExecutionButton" type="link">
-        <span className="TracePageHeader--genAIExecutionLabel">GenAI calls: {summary.callCount}</span>
+        <span className="TracePageHeader--genAIExecutionLabel">
+          GenAI calls: <span className="TracePageHeader--genAIExecutionCount">{summary.callCount}</span>
+        </span>
       </Button>
     </Popover>
   );

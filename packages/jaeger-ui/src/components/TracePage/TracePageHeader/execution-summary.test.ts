@@ -1,23 +1,23 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { StatusCode } from '../../types/otel';
-import { makeAttributes } from '../../model/attributes';
+import { StatusCode } from '../../../types/otel';
+import { makeAttributes } from '../../../model/attributes';
+import { makeOtelSpan } from '../../../utils/test/makeOtelSpan';
 import { getGenAIExecutionSummary } from './execution-summary';
-import { makeGenAISpan } from './test-utils';
 
 describe('getGenAIExecutionSummary', () => {
   it('returns undefined when no spans have a recognized GenAI classification', () => {
-    expect(getGenAIExecutionSummary([makeGenAISpan()])).toBeUndefined();
+    expect(getGenAIExecutionSummary([makeOtelSpan()])).toBeUndefined();
   });
 
   it('counts call kinds and normalized failures', () => {
     const spans = [
-      makeGenAISpan({ genAIKind: 'AGENT' }),
-      makeGenAISpan({ genAIKind: 'LLM_CALL' }),
-      makeGenAISpan({ genAIKind: 'TOOL_CALL', status: { code: StatusCode.ERROR } }),
-      makeGenAISpan({ genAIKind: 'RETRIEVAL' }),
-      makeGenAISpan({ genAIKind: 'UNKNOWN_GENAI' }),
+      makeOtelSpan({ genAIKind: 'AGENT' }),
+      makeOtelSpan({ genAIKind: 'LLM_CALL' }),
+      makeOtelSpan({ genAIKind: 'TOOL_CALL', status: { code: StatusCode.ERROR } }),
+      makeOtelSpan({ genAIKind: 'RETRIEVAL' }),
+      makeOtelSpan({ genAIKind: 'UNKNOWN_GENAI' }),
     ];
 
     expect(getGenAIExecutionSummary(spans)).toMatchObject({
@@ -33,25 +33,25 @@ describe('getGenAIExecutionSummary', () => {
 
   it('aggregates standard token usage from model calls only and preserves zero', () => {
     const spans = [
-      makeGenAISpan({
+      makeOtelSpan({
         genAIKind: 'AGENT',
         attributes: makeAttributes([
           { key: 'gen_ai.usage.input_tokens', value: 999 },
           { key: 'gen_ai.usage.output_tokens', value: 999 },
         ]),
       }),
-      makeGenAISpan({
+      makeOtelSpan({
         genAIKind: 'LLM_CALL',
         attributes: makeAttributes([
           { key: 'gen_ai.usage.input_tokens', value: 100 },
           { key: 'gen_ai.usage.output_tokens', value: 0 },
         ]),
       }),
-      makeGenAISpan({
+      makeOtelSpan({
         genAIKind: 'LLM_CALL',
         attributes: makeAttributes([{ key: 'gen_ai.usage.input_tokens', value: 40 }]),
       }),
-      makeGenAISpan({
+      makeOtelSpan({
         genAIKind: 'LLM_CALL',
         attributes: makeAttributes([
           { key: 'gen_ai.usage.input_tokens', value: '60' },
@@ -64,7 +64,7 @@ describe('getGenAIExecutionSummary', () => {
   });
 
   it('leaves token totals unavailable when model spans do not record them', () => {
-    expect(getGenAIExecutionSummary([makeGenAISpan({ genAIKind: 'LLM_CALL' })])).toMatchObject({
+    expect(getGenAIExecutionSummary([makeOtelSpan({ genAIKind: 'LLM_CALL' })])).toMatchObject({
       inputTokens: undefined,
       outputTokens: undefined,
     });
