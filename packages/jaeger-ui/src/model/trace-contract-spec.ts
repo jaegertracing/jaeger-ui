@@ -10,7 +10,9 @@
 interface ISpanSpec {
   spanID: string;
   operationName: string;
+  /** This field identifies the parent; an omitted value means the spec declares no parent. */
   parentSpanID?: string;
+  /** These references describe links, not parentage, even when refType is CHILD_OF. */
   references?: { refType: 'CHILD_OF' | 'FOLLOWS_FROM'; spanID: string }[];
   startTime?: number;
   duration?: number;
