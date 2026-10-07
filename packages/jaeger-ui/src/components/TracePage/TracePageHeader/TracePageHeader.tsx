@@ -125,7 +125,8 @@ export const HEADER_ITEMS = [
   {
     key: 'genai-calls',
     label: null,
-    renderer: (trace: IOtelTrace) => <GenAIExecutionSummary spans={trace.spans} />,
+    renderer: (trace: IOtelTrace) =>
+      trace.isGenAITrace ? <GenAIExecutionSummary spans={trace.spans} /> : null,
   },
 ];
 

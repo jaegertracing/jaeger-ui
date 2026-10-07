@@ -186,6 +186,18 @@ describe('<TracePageHeader>', () => {
     expect(screen.queryByTestId('header-item-incomplete')).not.toBeInTheDocument();
   });
 
+  it('renders the GenAI calls item when the trace has GenAI spans', () => {
+    const genAITrace = Object.create(defaultProps.trace);
+    Object.defineProperty(genAITrace, 'isGenAITrace', { value: true });
+    const { getByTestId } = renderWithRouter(<TracePageHeader {...defaultProps} trace={genAITrace} />);
+
+    expect(getByTestId('header-item-genai-calls')).toBeInTheDocument();
+  });
+
+  it('does not render the GenAI calls item when the trace has no GenAI spans', () => {
+    expect(screen.queryByTestId('header-item-genai-calls')).not.toBeInTheDocument();
+  });
+
   it('renders a <SpanGraph>', () => {
     const spanGraphs = screen.getAllByTestId('span-graph');
     expect(spanGraphs).toHaveLength(1);
