@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useMemo } from 'react';
-import { useQuery, useQueries, UseQueryResult } from '@tanstack/react-query';
+import { useQuery, useQueries, UseQueryResult, Query } from '@tanstack/react-query';
 import JaegerAPI from '../api/jaeger';
 import { fetchedState } from '../constants';
 import transformTraceData from '../model/transform-trace-data';
@@ -11,8 +11,9 @@ import { FetchedTrace } from '../types';
 import type { IOtelTrace } from '../types/otel';
 
 const TRACE_QUERY_KEY = (id: string) => ['trace', id] as const;
-
-const pollingStartTimes = new Map<string, number>();
+const POLL_INTERVAL_MS = 60_000;
+const POLL_WINDOW_MS = 5 * 60_000;
+const uploadedTraceIds = new Set<string>();
 
 // TODO: remove once callers (duck.track.ts, TraceDiff) are migrated off Redux/non-hook paths
 export function getCachedTrace(id: string): IOtelTrace | undefined {
@@ -20,51 +21,51 @@ export function getCachedTrace(id: string): IOtelTrace | undefined {
 }
 
 export function populateTraceCache(trace: IOtelTrace): void {
-  // Mark trace as uploaded so we don't attempt to poll the backend for it
-  (trace as any).isUploaded = true;
+  uploadedTraceIds.add(trace.traceID);
   queryClient.setQueryData(TRACE_QUERY_KEY(trace.traceID), trace);
 }
+
+async function fetchOtelTrace(id: string): Promise<IOtelTrace> {
+  const response = await JaegerAPI.fetchTrace(id);
+  const data = transformTraceData(response.data[0]);
+  if (!data) {
+    throw new Error('Invalid trace data received.');
+  }
+  const otel = data.asOtelTrace();
+  if (otel.traceID !== id) {
+    queryClient.setQueryData(TRACE_QUERY_KEY(otel.traceID), otel);
+  }
+  return otel;
+}
+
+function traceRefetchInterval(query: Query<IOtelTrace, Error>): number | false {
+  const { status, data } = query.state;
+  if (status !== 'success' || !data || uploadedTraceIds.has(data.traceID)) return false;
+  // endTime is in microseconds. Stop once no span has ended in the last 5 minutes.
+  return Date.now() - data.endTime / 1000 < POLL_WINDOW_MS ? POLL_INTERVAL_MS : false;
+}
+
+// Keep the old object when nothing changed, so a poll doesn't re-render the page.
+function keepIfUnchanged(prev: unknown, next: unknown) {
+  const a = prev as IOtelTrace | undefined;
+  const b = next as IOtelTrace;
+  return a && a.spans.length === b.spans.length && a.endTime === b.endTime ? a : b;
+}
+
+const traceQueryOptions = (id: string) => ({
+  queryKey: TRACE_QUERY_KEY(id),
+  queryFn: () => fetchOtelTrace(id), // shared by useTrace and useTraces
+  staleTime: Infinity, // refetchInterval still fires, focus and remount don't refetch
+  refetchInterval: traceRefetchInterval,
+  structuralSharing: keepIfUnchanged,
+});
 
 // TODO: staleTime: Infinity is incorrect — Jaeger returns partial traces if spans are still arriving
 // (availability over consistency). Instead, poll every 60s for up to 5 minutes after first load,
 // then stop. Track elapsed time per-query to avoid resetting on render, and disable polling for
 // local/uploaded traces. gcTime controls eviction from memory once no component is using the trace.
 export function useTrace(traceId: string): UseQueryResult<IOtelTrace> {
-  return useQuery({
-    queryKey: TRACE_QUERY_KEY(traceId),
-    queryFn: async () => {
-      const response = await JaegerAPI.fetchTrace(traceId);
-      const data = transformTraceData(response.data[0]);
-      if (!data) {
-        throw new Error('Invalid trace data received.');
-      }
-      const otel = data.asOtelTrace();
-      if (otel.traceID !== traceId) {
-        queryClient.setQueryData(TRACE_QUERY_KEY(otel.traceID), otel);
-      }
-      return otel;
-    },
-    staleTime: 60_000,
-    refetchInterval: query => {
-      // Don't poll for uploaded traces that don't exist on the backend
-      if ((query.state.data as any)?.isUploaded) {
-        return false;
-      }
-
-      const id = query.queryKey[1] as string;
-      if (!pollingStartTimes.has(id)) {
-        pollingStartTimes.set(id, Date.now());
-      }
-
-      const firstFetchedAt = pollingStartTimes.get(id)!;
-      if (Date.now() - firstFetchedAt < 5 * 60 * 1000) {
-        return 60_000;
-      }
-
-      pollingStartTimes.delete(id);
-      return false;
-    },
-  });
+  return useQuery(traceQueryOptions(traceId));
 }
 
 // TODO: useTraces returns Map<string, FetchedTrace> (legacy shape) while useTrace returns
@@ -72,22 +73,7 @@ export function useTrace(traceId: string): UseQueryResult<IOtelTrace> {
 // both hooks to return UseQueryResult<IOtelTrace> once those callers are migrated.
 export function useTraces(ids: string[]): Map<string, FetchedTrace> {
   const results = useQueries({
-    queries: ids.map(id => ({
-      queryKey: TRACE_QUERY_KEY(id),
-      queryFn: async () => {
-        const response = await JaegerAPI.fetchTrace(id);
-        const data = transformTraceData(response.data[0]);
-        if (!data) {
-          throw new Error('Invalid trace data received.');
-        }
-        const otel = data.asOtelTrace();
-        if (otel.traceID !== id) {
-          queryClient.setQueryData(TRACE_QUERY_KEY(otel.traceID), otel);
-        }
-        return otel;
-      },
-      staleTime: Infinity,
-    })),
+    queries: ids.map(id => traceQueryOptions(id)),
   });
 
   // useQueries returns a new array reference every render. Key the memo on the stable
@@ -103,7 +89,7 @@ export function useTraces(ids: string[]): Map<string, FetchedTrace> {
           if (!r || r.isPending) {
             return [id, { id, state: fetchedState.LOADING }] as [string, FetchedTrace];
           }
-          if (r.isError) {
+          if (r.isError && !r.data) {
             return [id, { id, state: fetchedState.ERROR, error: r.error as any }] as [string, FetchedTrace];
           }
           if (r.data) {

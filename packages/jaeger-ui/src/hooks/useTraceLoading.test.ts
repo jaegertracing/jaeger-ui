@@ -33,6 +33,10 @@ beforeEach(() => {
   mockFetchTrace.mockReset();
 });
 
+afterEach(() => {
+  vi.useRealTimers();
+});
+
 describe('getCachedTrace', () => {
   it('returns undefined when nothing is cached', () => {
     expect(getCachedTrace('does-not-exist')).toBeUndefined();
@@ -135,12 +139,23 @@ describe('useTrace', () => {
     expect(result.current.data).toBe(otelTrace);
   });
 
-  it('stops polling after 5 minutes', async () => {
+  it('a recent trace polls and then stops', async () => {
     vi.useFakeTimers();
+    vi.setSystemTime(new Date('2024-01-01T00:00:00Z'));
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    mockFetchTrace.mockResolvedValue({ data: [rawTrace] } as any);
+    const recentTrace = { ...rawTrace, traceID: 'recent-trace' };
+    const nowMicro = Date.now() * 1000;
+    recentTrace.spans = recentTrace.spans.map((span: any) => ({
+      ...span,
+      traceID: 'recent-trace',
+      startTime: nowMicro - 1000,
+      duration: 1000,
+    }));
+    const transformed = transformTraceData(recentTrace)!.asOtelTrace();
 
-    renderHook(() => useTrace(otelTrace.traceID), {
+    mockFetchTrace.mockResolvedValue({ data: [recentTrace] } as any);
+
+    renderHook(() => useTrace(transformed.traceID), {
       wrapper: makeWrapper(client),
     });
 
@@ -152,20 +167,46 @@ describe('useTrace', () => {
     await waitFor(() => expect(mockFetchTrace).toHaveBeenCalledTimes(2));
 
     // advance another 4 minutes to hit the 5 min cutoff
-    vi.advanceTimersByTime(4 * 60 * 1000);
-    await waitFor(() => expect(mockFetchTrace).toHaveBeenCalledTimes(6));
+    for (let i = 0; i < 4; i++) {
+      vi.advanceTimersByTime(60 * 1000);
+      await waitFor(() => expect(mockFetchTrace).toHaveBeenCalledTimes(i + 3));
+    }
 
     // advance beyond 5 minutes
     vi.advanceTimersByTime(60_000);
     // Should NOT have been called again
     expect(mockFetchTrace).toHaveBeenCalledTimes(6);
-
-    vi.useRealTimers();
   });
 
-  it('does not poll for uploaded traces', async () => {
+  it('an old trace never polls', async () => {
     vi.useFakeTimers();
-    // populateTraceCache writes into the singleton appQueryClient
+    vi.setSystemTime(new Date('2024-01-01T00:00:00Z'));
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const oldTrace = { ...rawTrace, traceID: 'old-trace' };
+    // 10 minutes ago
+    const oldMicro = (Date.now() - 10 * 60_000) * 1000;
+    oldTrace.spans = oldTrace.spans.map((span: any) => ({
+      ...span,
+      traceID: 'old-trace',
+      startTime: oldMicro - 1000,
+      duration: 1000,
+    }));
+    const transformed = transformTraceData(oldTrace)!.asOtelTrace();
+
+    mockFetchTrace.mockResolvedValue({ data: [oldTrace] } as any);
+
+    renderHook(() => useTrace(transformed.traceID), {
+      wrapper: makeWrapper(client),
+    });
+
+    await waitFor(() => expect(mockFetchTrace).toHaveBeenCalledTimes(1));
+
+    vi.advanceTimersByTime(60_000);
+    expect(mockFetchTrace).toHaveBeenCalledTimes(1);
+  });
+
+  it("an uploaded trace doesn't fetch on focus after 60s", async () => {
+    vi.useFakeTimers();
     populateTraceCache(otelTrace);
 
     const client = appQueryClient;
@@ -173,16 +214,15 @@ describe('useTrace', () => {
       wrapper: makeWrapper(client),
     });
 
-    // The data is already in cache
     expect(mockFetchTrace).not.toHaveBeenCalled();
 
-    // Advance time to when a poll would normally happen
-    vi.advanceTimersByTime(60_000);
+    vi.advanceTimersByTime(61_000);
 
-    // Still shouldn't have fetched because it's marked as uploaded
+    // Simulate window focus
+    window.dispatchEvent(new Event('focus'));
+
+    // Should not have fetched
     expect(mockFetchTrace).not.toHaveBeenCalled();
-
-    vi.useRealTimers();
   });
 });
 
@@ -289,5 +329,45 @@ describe('useTraces', () => {
     rerender();
     // The Map identity should not change since no query result changed
     expect(result.current).toBe(mapBefore);
+  });
+
+  it('a poll that fails after a good load keeps the trace on screen', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2024-01-01T00:00:00Z'));
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
+    const recentTrace = { ...rawTrace, traceID: 'failed-poll-trace' };
+    const nowMicro = Date.now() * 1000;
+    recentTrace.spans = recentTrace.spans.map((span: any) => ({
+      ...span,
+      traceID: 'failed-poll-trace',
+      startTime: nowMicro - 1000,
+      duration: 1000,
+    }));
+    const transformed = transformTraceData(recentTrace)!.asOtelTrace();
+
+    // First fetch succeeds
+    mockFetchTrace.mockResolvedValueOnce({ data: [recentTrace] } as any);
+
+    const { result } = renderHook(() => useTraces([transformed.traceID]), {
+      wrapper: makeWrapper(client),
+    });
+
+    await waitFor(() => {
+      expect(result.current.get(transformed.traceID)?.state).toBe(fetchedState.DONE);
+    });
+
+    // Next fetch (poll) fails
+    mockFetchTrace.mockRejectedValueOnce(new Error('fail'));
+
+    vi.advanceTimersByTime(60_000);
+
+    // Wait for the poll to happen and fail
+    await waitFor(() => expect(mockFetchTrace).toHaveBeenCalledTimes(2));
+
+    // The state should remain DONE because it still has previous data
+    expect(result.current.get(transformed.traceID)?.state).toBe(fetchedState.DONE);
+    // And trace data should still be there
+    expect(result.current.get(transformed.traceID)?.data).toBeTruthy();
   });
 });
