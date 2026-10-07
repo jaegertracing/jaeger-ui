@@ -16,6 +16,50 @@ const spec: ITraceSpec = {
 };
 
 describe('OTLP trace contract materializer', () => {
+  it('preserves span order when instrumentation scopes alternate', () => {
+    const spans = [
+      { spanID: 'a', operationName: 'a', scope: { name: 'first' } },
+      { spanID: 'b', operationName: 'b', scope: { name: 'second' } },
+      { spanID: 'c', operationName: 'c', scope: { name: 'first' } },
+    ];
+    const wire = toOtlpTrace({ ...spec, spans });
+    expect(wire.resourceSpans![0].scopeSpans.flatMap(group => group.spans.map(span => span.spanId))).toEqual(
+      spans.map(span => spanIDForWire(span.spanID))
+    );
+  });
+
+  it('renders kinds, per-span scopes, and events without inventing missing names', () => {
+    const wire = toOtlpTrace({
+      ...spec,
+      spans: [
+        { spanID: 'missing', operationName: 'missing', events: [{ timestamp: 2 }] },
+        { spanID: 'empty-scope', operationName: 'empty-scope', scope: {} },
+        {
+          spanID: 'named',
+          operationName: 'named',
+          kind: 2,
+          scope: { name: 'library', version: '1' },
+          events: [{ name: 'event', timestamp: 3, attributes: [{ key: 'value', value: false }] }],
+        },
+      ],
+    });
+    expect(refinedTracesData.safeParse(wire).success).toBe(true);
+    const groups = wire.resourceSpans![0].scopeSpans;
+    expect(groups).toHaveLength(3);
+    expect(groups[0]).not.toHaveProperty('scope');
+    expect(groups[0].spans[0]).not.toHaveProperty('kind');
+    expect(groups[0].spans[0].events![0]).not.toHaveProperty('name');
+    expect(groups[0].spans[0].events![0].timeUnixNano).toBe('2000');
+    expect(groups[1].scope).toEqual({});
+    expect(groups[2].scope).toEqual({ name: 'library', version: '1' });
+    expect(groups[2].spans[0]).toMatchObject({
+      kind: 2,
+      events: [
+        { name: 'event', timeUnixNano: '3000', attributes: [{ key: 'value', value: { boolValue: false } }] },
+      ],
+    });
+  });
+
   it('renders valid OTLP with stable hex span IDs', () => {
     const wire = toOtlpTrace(spec);
     expect(refinedTracesData.safeParse(wire).success).toBe(true);

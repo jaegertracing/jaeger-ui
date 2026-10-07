@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import getConfig from '../utils/config/get-config';
+import { SpanKind } from '../types/otel';
 
 export function runTraceContractSuite(pipeline) {
   // Tag deduplication and ordering run inside the pipeline, so these two
@@ -143,6 +144,62 @@ export function runTraceContractSuite(pipeline) {
     // Each pipeline renders the span specs into the wire format it parses.
     const trace = (...spans) => pipeline.materialize({ traceID, serviceName, spans });
     const id = pipeline.spanID;
+
+    it('uses UNSPECIFIED for a missing span kind', () => {
+      const result = pipeline.parse(trace({ spanID: rootSpanID, operationName: rootOperationName }));
+      expect(result.spans[0].kind).toBe(SpanKind.UNSPECIFIED);
+    });
+
+    it.each([
+      [0, SpanKind.UNSPECIFIED],
+      [1, SpanKind.INTERNAL],
+      [2, SpanKind.SERVER],
+      [3, SpanKind.CLIENT],
+      [4, SpanKind.PRODUCER],
+      [5, SpanKind.CONSUMER],
+      [99, SpanKind.UNSPECIFIED],
+    ])('maps span kind %s to %s', (kind, expected) => {
+      const result = pipeline.parse(trace({ spanID: rootSpanID, operationName: rootOperationName, kind }));
+      expect(result.spans[0].kind).toBe(expected);
+    });
+
+    it.each([undefined, {}, { name: '' }])('uses unknown for a missing scope name in %s', scope => {
+      const result = pipeline.parse(trace({ spanID: rootSpanID, operationName: rootOperationName, scope }));
+      expect(result.spans[0].instrumentationScope.name).toBe('unknown');
+    });
+
+    it.each([undefined, ''])('uses log for a missing event name %s', name => {
+      const result = pipeline.parse(
+        trace({
+          spanID: rootSpanID,
+          operationName: rootOperationName,
+          events: [{ name, timestamp: startTime }],
+        })
+      );
+      expect(result.spans[0].events[0].name).toBe('log');
+    });
+
+    it('preserves explicit scope and event names', () => {
+      const result = pipeline.parse(
+        trace({
+          spanID: rootSpanID,
+          operationName: rootOperationName,
+          scope: { name: 'instrumentation', version: '1.2.3' },
+          events: [{ name: 'message', timestamp: startTime, attributes: [{ key: 'answer', value: 0 }] }],
+        })
+      );
+      expect(result.spans[0].instrumentationScope).toMatchObject({
+        name: 'instrumentation',
+        version: '1.2.3',
+      });
+      expect(result.spans[0].events[0]).toMatchObject({ name: 'message', timestamp: startTime });
+      expect(result.spans[0].events[0].attributes.getValue('answer')).toBe(0);
+    });
+
+    it('uses an empty warnings array when a span has no attributes', () => {
+      const result = pipeline.parse(trace({ spanID: rootSpanID, operationName: rootOperationName }));
+      expect(result.spans[0].warnings).toEqual([]);
+    });
 
     const spans = [
       {

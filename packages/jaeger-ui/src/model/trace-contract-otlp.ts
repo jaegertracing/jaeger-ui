@@ -4,6 +4,8 @@
 import type { TracesDataWire } from '../api/v3/schemas';
 import type { ITraceSpec } from './trace-contract-spec';
 
+type ScopeSpansWire = NonNullable<TracesDataWire['resourceSpans']>[number]['scopeSpans'][number];
+
 /** Convert readable span IDs in test specs to stable, valid OTLP span IDs. */
 export function spanIDForWire(spanID: string): string {
   if (/^(?!0+$)[0-9a-f]{16}$/i.test(spanID)) {
@@ -27,71 +29,90 @@ export function toOtlpTrace({ traceID, serviceName, spans }: ITraceSpec): Traces
     return Number.isSafeInteger(value) ? { intValue: String(value) } : { doubleValue: value };
   };
 
+  const renderedSpans = spans.map(span => {
+    const {
+      spanID,
+      operationName,
+      parentSpanID,
+      references = [],
+      startTime,
+      duration,
+      tags = [],
+      kind,
+      events = [],
+    } = {
+      startTime: 1,
+      duration: 1,
+      ...span,
+    };
+    // A shared contract case uses NaN for an unusable start time. OTLP
+    // represents that case by omitting the start timestamp.
+    const wireStartTime = Number.isNaN(startTime) ? undefined : startTime;
+    if (wireStartTime !== undefined && (!Number.isSafeInteger(wireStartTime) || wireStartTime < 0)) {
+      throw new Error(`Invalid OTLP startTime for span ${spanID}`);
+    }
+    if (duration !== undefined && (!Number.isSafeInteger(duration) || duration < 0)) {
+      throw new Error(`Invalid OTLP duration for span ${spanID}`);
+    }
+    const links = references.map(ref => ({
+      traceId: traceID,
+      spanId: spanIDForWire(ref.spanID),
+      attributes: [
+        {
+          key: 'opentracing.ref_type',
+          value: {
+            stringValue: ref.refType === 'FOLLOWS_FROM' ? 'follows_from' : 'child_of',
+          },
+        },
+      ],
+    }));
+    const start = BigInt(wireStartTime ?? 0);
+    const end = duration === undefined ? undefined : start + BigInt(duration);
+    return {
+      traceId: traceID,
+      spanId: spanIDForWire(spanID),
+      ...(parentSpanID ? { parentSpanId: spanIDForWire(parentSpanID) } : {}),
+      name: operationName,
+      ...(kind === undefined ? {} : { kind }),
+      events: events.map(event => ({
+        ...(event.name === undefined ? {} : { name: event.name }),
+        timeUnixNano: (BigInt(event.timestamp) * 1000n).toString(),
+        attributes: (event.attributes ?? []).map(attribute => ({
+          key: attribute.key,
+          value: attributeValue(attribute.value),
+        })),
+      })),
+      ...(wireStartTime === undefined || start === 0n
+        ? {}
+        : { startTimeUnixNano: (start * 1000n).toString() }),
+      ...(end === undefined || end === 0n ? {} : { endTimeUnixNano: (end * 1000n).toString() }),
+      attributes: tags.map(tag => ({ key: tag.key, value: attributeValue(tag.value) })),
+      links,
+      status: {},
+    };
+  });
+
+  // Keep the input order even when a scope reappears after another scope.
+  const scopes: ScopeSpansWire[] = [];
+  let previousScopeKey: string | undefined;
+  spans.forEach((span, index) => {
+    const key = JSON.stringify(span.scope ?? null);
+    let scopeSpans = scopes.at(-1);
+    if (!scopeSpans || key !== previousScopeKey) {
+      scopeSpans = { ...(span.scope === undefined ? {} : { scope: span.scope }), spans: [] };
+      scopes.push(scopeSpans);
+      previousScopeKey = key;
+    }
+    scopeSpans.spans.push(renderedSpans[index]);
+  });
+
   return {
     resourceSpans: [
       {
         resource: {
           attributes: [{ key: 'service.name', value: { stringValue: serviceName } }],
         },
-        scopeSpans: [
-          {
-            scope: {},
-            spans: spans.map(span => {
-              const {
-                spanID,
-                operationName,
-                parentSpanID,
-                references = [],
-                startTime,
-                duration,
-                tags = [],
-              } = {
-                startTime: 1,
-                duration: 1,
-                ...span,
-              };
-              // A shared contract case uses NaN for an unusable start time. OTLP
-              // represents that case by omitting the start timestamp.
-              const wireStartTime = Number.isNaN(startTime) ? undefined : startTime;
-              if (
-                wireStartTime !== undefined &&
-                (!Number.isSafeInteger(wireStartTime) || wireStartTime < 0)
-              ) {
-                throw new Error(`Invalid OTLP startTime for span ${spanID}`);
-              }
-              if (duration !== undefined && (!Number.isSafeInteger(duration) || duration < 0)) {
-                throw new Error(`Invalid OTLP duration for span ${spanID}`);
-              }
-              const links = references.map(ref => ({
-                traceId: traceID,
-                spanId: spanIDForWire(ref.spanID),
-                attributes: [
-                  {
-                    key: 'opentracing.ref_type',
-                    value: {
-                      stringValue: ref.refType === 'FOLLOWS_FROM' ? 'follows_from' : 'child_of',
-                    },
-                  },
-                ],
-              }));
-              const start = BigInt(wireStartTime ?? 0);
-              const end = duration === undefined ? undefined : start + BigInt(duration);
-              return {
-                traceId: traceID,
-                spanId: spanIDForWire(spanID),
-                ...(parentSpanID ? { parentSpanId: spanIDForWire(parentSpanID) } : {}),
-                name: operationName,
-                ...(wireStartTime === undefined || start === 0n
-                  ? {}
-                  : { startTimeUnixNano: (start * 1000n).toString() }),
-                ...(end === undefined || end === 0n ? {} : { endTimeUnixNano: (end * 1000n).toString() }),
-                attributes: tags.map(tag => ({ key: tag.key, value: attributeValue(tag.value) })),
-                links,
-                status: {},
-              };
-            }),
-          },
-        ],
+        scopeSpans: scopes,
       },
     ],
   };
