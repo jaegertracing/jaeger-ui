@@ -1,9 +1,11 @@
-// Copyright (c) 2020 Uber Technologies, Inc.
+// Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react';
+import * as React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { describe, it, expect } from 'vitest';
+
 import ScoreCard from './ScoreCard';
 
 describe('ScoreCard', () => {
@@ -11,11 +13,12 @@ describe('ScoreCard', () => {
   const label = 'Test Score';
   const max = 108;
 
-  const renderScoreCard = value => {
+  const renderScoreCard = (value: number) => {
     render(
       <ScoreCard
         link={link}
         score={{
+          key: 'test-score',
           label,
           max,
           value,
