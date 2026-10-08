@@ -9,6 +9,41 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v2.22.0 (2026-10-05)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Fix(trace): prevent call-stack overflow on deeply nested traces ([@jkowall](https://github.com/jkowall) in [#4554](https://github.com/jaegertracing/jaeger-ui/pull/4554))
+* Fix(model): align parentage with the backend ([@ysh-bot](https://github.com/ysh-bot) in [#4569](https://github.com/jaegertracing/jaeger-ui/pull/4569))
+* Fix(jaeger-ui): guard missing array fields in otelspanfacade ([@abhayrajjais01](https://github.com/abhayrajjais01) in [#4323](https://github.com/jaegertracing/jaeger-ui/pull/4323))
+* Fix(dependencygraph): include lookback in view traces url to prevent 400 error. ([@kams19-ops](https://github.com/kams19-ops) in [#4151](https://github.com/jaegertracing/jaeger-ui/pull/4151))
+* Feat(genai): add a json (deep) view that unwraps embedded json ([@ysh-bot](https://github.com/ysh-bot) in [#4544](https://github.com/jaegertracing/jaeger-ui/pull/4544))
+* Fix(genai): accept bare gen_ai.input and gen_ai.output ([@ysh-bot](https://github.com/ysh-bot) in [#4542](https://github.com/jaegertracing/jaeger-ui/pull/4542))
+* Fix(flamegraph): preserve search highlighting when collapsing nodes above ([@padmasri-web](https://github.com/padmasri-web) in [#4529](https://github.com/jaegertracing/jaeger-ui/pull/4529))
+* Fix(api/v3): drop out-of-range search timestamps gracefully ([@padmasri-web](https://github.com/padmasri-web) in [#4508](https://github.com/jaegertracing/jaeger-ui/pull/4508))
+* Fix: improve image alt text ([@Piyush4801](https://github.com/Piyush4801) in [#4524](https://github.com/jaegertracing/jaeger-ui/pull/4524))
+* Fix: optimize span index to row index lookup ([@Safian62](https://github.com/Safian62) in [#4500](https://github.com/jaegertracing/jaeger-ui/pull/4500))
+* Fix: correct deep dependencies endpoint ([@Safian62](https://github.com/Safian62) in [#4484](https://github.com/jaegertracing/jaeger-ui/pull/4484))
+* Feat(api/v3): validate v3 trace wire contract at boundary ([@sksingh2005](https://github.com/sksingh2005) in [#4455](https://github.com/jaegertracing/jaeger-ui/pull/4455))
+* Fix(trace-timeline): make span-details divider draggable from the header ([@KKamJi98](https://github.com/KKamJi98) in [#4412](https://github.com/jaegertracing/jaeger-ui/pull/4412))
+
+#### 👷 CI Improvements
+
+* Feat(release): draft the github release when the prepare pr merges ([@albertteoh](https://github.com/albertteoh) in [#4571](https://github.com/jaegertracing/jaeger-ui/pull/4571))
+* Ci(security): resolve scorecard alerts ([@ysh-bot](https://github.com/ysh-bot) in [#4557](https://github.com/jaegertracing/jaeger-ui/pull/4557))
+* Ci: check formatting across platforms ([@ysh-bot](https://github.com/ysh-bot) in [#4495](https://github.com/jaegertracing/jaeger-ui/pull/4495))
+
+#### ⚙️ Refactoring
+
+* Test(model): materialize otlp trace specs ([@sksingh2005](https://github.com/sksingh2005) in [#4527](https://github.com/jaegertracing/jaeger-ui/pull/4527))
+* Refactor(model): rename trace display helpers ([@ysh-bot](https://github.com/ysh-bot) in [#4573](https://github.com/jaegertracing/jaeger-ui/pull/4573))
+* Refactor(ui): convert deepdependencies to functional component ([@Harizz076](https://github.com/Harizz076) in [#3970](https://github.com/jaegertracing/jaeger-ui/pull/3970))
+* Chore: drop _get from spantreeoffset hover handlers ([@Priyanshu-byte-coder](https://github.com/Priyanshu-byte-coder) in [#4358](https://github.com/jaegertracing/jaeger-ui/pull/4358))
+* Chore(lint): replace react-x plugin with oxlint's native versions ([@akashchamp](https://github.com/akashchamp) in [#4463](https://github.com/jaegertracing/jaeger-ui/pull/4463))
+* Chore: eliminate as any cast on redux store in app provider (#4333) ([@Kartikupadhyay44](https://github.com/Kartikupadhyay44) in [#4456](https://github.com/jaegertracing/jaeger-ui/pull/4456))
+* Feat(monitor): migrate metrics fetching from redux to react query ([@parshipcy](https://github.com/parshipcy) in [#4048](https://github.com/jaegertracing/jaeger-ui/pull/4048))
+* Refactor(tracepage): decouple graph search logic ([@sksingh2005](https://github.com/sksingh2005) in [#4176](https://github.com/jaegertracing/jaeger-ui/pull/4176))
+
 ## v2.21.0 (2026-09-14)
 
 #### ✨ New Features
