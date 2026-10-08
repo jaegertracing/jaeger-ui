@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import transformTraceData from './transform-trace-data';
-import { SpanData, SpanReference } from '../types/trace';
+import { SpanData, SpanReference, TraceData } from '../types/trace';
+import { toLegacyTrace } from './test/materializer-legacy';
+import { runTraceContractSuite } from './test/trace-contract-suite';
 
 describe('transformTraceData()', () => {
   const startTime = 1586160015434000;
@@ -187,4 +189,11 @@ describe('transformTraceData()', () => {
       expect(otelTrace2).toBe(otelTrace1);
     });
   });
+});
+
+runTraceContractSuite({
+  name: 'legacy transformer',
+  materialize: toLegacyTrace,
+  spanID: (label: string) => label,
+  parse: (traceData: TraceData & { spans: SpanData[] }) => transformTraceData(traceData)!.asOtelTrace(),
 });
