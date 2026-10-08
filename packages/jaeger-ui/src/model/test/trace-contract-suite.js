@@ -133,7 +133,7 @@ export function runTraceContractSuite(pipeline) {
     });
   });
 
-  describe('transformTraceData()', () => {
+  describe(pipeline.name, () => {
     const startTime = 1586160015434000;
     const duration = 34000;
     // This trace ID differs from the one in transform-trace-data.test.ts because getTraceName() memoizes by trace ID.
