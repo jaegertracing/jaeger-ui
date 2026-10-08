@@ -39,6 +39,8 @@ const config: KnipConfig = {
         // Declared as a workspace-level dep so a single copy is hoisted; used internally
         // by react-router-dom (which re-exports from it).
         'react-side-effect',
+        // Used by husky git pre-commit hook via lint-staged section in package.json
+        'lint-staged',
       ],
     },
     'packages/jaeger-ui': {
