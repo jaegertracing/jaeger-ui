@@ -1,8 +1,8 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import getConfig from '../utils/config/get-config';
-import { SpanKind } from '../types/otel';
+import getConfig from '../../utils/config/get-config';
+import { SpanKind } from '../../types/otel';
 
 export function runTraceContractSuite(pipeline) {
   // Tag deduplication and ordering run inside the pipeline, so these two
@@ -133,10 +133,11 @@ export function runTraceContractSuite(pipeline) {
     });
   });
 
-  describe('transformTraceData()', () => {
+  describe(pipeline.name, () => {
     const startTime = 1586160015434000;
     const duration = 34000;
-    const traceID = 'f77950feed55c1ce91dd8e87896623a6';
+    // This trace ID differs from the one in transform-trace-data.test.ts because getTraceName() memoizes by trace ID.
+    const traceID = 'a1b2c3d4e5f60718293a4b5c6d7e8f90';
     const rootSpanID = 'd4dcb46e95b781f5';
     const rootOperationName = 'rootOperation';
     const serviceName = 'serviceName';

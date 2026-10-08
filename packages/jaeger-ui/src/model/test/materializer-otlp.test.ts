@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it } from 'vitest';
-import { refinedTracesData } from '../api/v3/schemas';
+import { refinedTracesData } from '../../api/v3/schemas';
 import type { ITraceSpec } from './trace-contract-spec';
-import { spanIDForWire, toOtlpTrace } from './trace-contract-otlp';
+import { spanIDForWire, toOtlpTrace } from './materializer-otlp';
 
 const spec: ITraceSpec = {
   traceID: 'f77950feed55c1ce91dd8e87896623a6',

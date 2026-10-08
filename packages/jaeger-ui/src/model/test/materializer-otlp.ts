@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import type { TracesDataWire } from '../api/v3/schemas';
+import type { TracesDataWire } from '../../api/v3/schemas';
 import type { ITraceSpec } from './trace-contract-spec';
 
 /** Convert readable span IDs in test specs to stable, valid OTLP span IDs. */
