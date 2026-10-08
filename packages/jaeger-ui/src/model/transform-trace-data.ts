@@ -11,6 +11,9 @@ import { deduplicateAttributes, orderAttributes } from './trace-attributes';
 
 import OtelTraceFacade from './OtelTraceFacade';
 import { getParentSpanID, getNonParentReferences } from './span';
+import { breakParentCycles } from './trace-parent-cycles';
+
+type MutableLegacySpan = Span & { childSpans: MutableLegacySpan[] };
 
 /**
  * NOTE: Mutates `data` - Transform the HTTP response data into the form the app
@@ -25,7 +28,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   let traceEndTime = 0;
   let traceStartTime = Number.MAX_SAFE_INTEGER;
   const spanIdCounts = new Map<string, number>();
-  const spanMap = new Map<string, Span>();
+  const spanMap = new Map<string, MutableLegacySpan>();
 
   // Spans with no usable startTime (missing/NaN, or 0 — the Unix epoch, which no
   // real span emits) are kept rather than dropped, so the span tree still renders
@@ -36,7 +39,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   for (let i = 0; i < numSpans; i++) {
     // Unsafe cast to avoid memory allocations.
     // We populate/fix all properties below.
-    const span: Span = data.spans[i] as Span;
+    const span = data.spans[i] as MutableLegacySpan;
     const { processID } = span;
     let spanID = span.spanID;
     // make sure span IDs are unique
@@ -61,6 +64,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     });
     span.references = span.references || [];
     span.childSpans = [];
+    span.parentCycleBroken = false;
     span.subsidiarilyReferencedBy = [];
 
     const attributesInfo = deduplicateAttributes(span.tags);
@@ -73,7 +77,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     spanMap.set(spanID, span);
   }
 
-  const rootSpans: Span[] = [];
+  const rootSpans: MutableLegacySpan[] = [];
   let orphanSpanCount = 0;
 
   // Second pass: link parents/children and identify roots
@@ -86,12 +90,24 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
 
     if (parent) {
       // It's a child
-      (parent.childSpans as Span[]).push(span);
+      parent.childSpans.push(span);
     } else {
       // It's a root
       rootSpans.push(span);
     }
   }
+
+  const cycleRoots = breakParentCycles(
+    [...spanMap.values()],
+    span => {
+      const parentSpanID = getParentSpanID(span);
+      return parentSpanID ? spanMap.get(parentSpanID) : undefined;
+    },
+    span => {
+      span.parentCycleBroken = true;
+    }
+  );
+  for (const root of cycleRoots) rootSpans.push(root);
 
   const spans: Span[] = [];
   const svcCounts: Record<string, number> = {};
@@ -121,8 +137,8 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   // traversal uses an explicit stack rather than recursion so that deeply nested
   // traces do not overflow the call stack. A span's depth is assigned by its
   // parent before the span is pushed; roots are seeded with depth 0.
-  const stack: Span[] = [];
-  const processSpan = (span: Span) => {
+  const stack: MutableLegacySpan[] = [];
+  const processSpan = (span: MutableLegacySpan) => {
     const { depth } = span;
     span.hasChildren = span.childSpans.length > 0;
 
@@ -156,7 +172,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     // Repair children against this (already-repaired) span, then sort them by
     // startTime. They are pushed in reverse so that popping visits them in
     // ascending startTime order, each subtree before the next sibling.
-    const children = span.childSpans as Span[];
+    const children = span.childSpans;
     children.forEach(child => repairStartTime(child, span));
     children.sort((a, b) => a.startTime - b.startTime);
     for (let i = children.length - 1; i >= 0; i--) {
@@ -175,10 +191,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     processSpan(stack.pop()!);
   }
 
-  // traceStartTime/traceEndTime are only updated while visiting spans reachable
-  // from a root. If the trace has spans but no root (e.g. every span is part of
-  // a reference cycle), nothing is visited and traceStartTime keeps its sentinel
-  // value, which would produce a negative duration. Collapse to a zero range.
+  // An empty trace leaves the time range at its sentinel values. Collapse it to zero.
   if (spans.length === 0) {
     traceStartTime = 0;
     traceEndTime = 0;

@@ -44,6 +44,8 @@ export type SpanData = {
 };
 
 export type Span = SpanData & {
+  /** Ignore parentage after cycle repair; keep the selected parent reference out of links. */
+  parentCycleBroken?: boolean;
   tags: NonNullable<SpanData['tags']>;
   logs: NonNullable<SpanData['logs']>;
   references: NonNullable<SpanData['references']>;

@@ -13,6 +13,7 @@ function getParentSpanReference(span: SpanData): SpanReference | undefined {
 }
 
 export function getParentSpanID(span: SpanData): string | undefined {
+  if ('parentCycleBroken' in span && span.parentCycleBroken) return undefined;
   return getParentSpanReference(span)?.spanID;
 }
 
@@ -29,6 +30,7 @@ export function getNonParentReferences(span: SpanData): SpanReference[] {
  */
 
 export function getParent(span: Span) {
+  if (span.parentCycleBroken) return null;
   const parentRef = span.references ? span.references.find(ref => ref.refType === 'CHILD_OF') : null;
   return parentRef ? parentRef.span : null;
 }

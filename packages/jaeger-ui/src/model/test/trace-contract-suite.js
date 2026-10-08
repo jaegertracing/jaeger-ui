@@ -358,18 +358,24 @@ export function runTraceContractSuite(pipeline) {
     });
 
     it('should not produce a negative duration for a trace with spans but no root', () => {
-      // Two spans referencing each other form a cycle, so neither is a root and
-      // nothing is reachable by the traversal. The time range must not be left at
-      // its sentinel value, which would yield a negative duration.
+      // Repair one parent edge so both spans remain reachable from a warned root.
       const spanA = { spanID: 'a', operationName: 'a', parentSpanID: 'b', startTime, duration };
       const spanB = { spanID: 'b', operationName: 'b', parentSpanID: 'a', startTime, duration };
 
       const result = pipeline.parse(trace(spanA, spanB));
 
-      expect(result.spans.length).toBe(0);
-      expect(result.duration).toBe(0);
-      expect(result.startTime).toBe(0);
-      expect(result.endTime).toBe(0);
+      expect(result.spans.map(span => span.spanID).sort()).toEqual([id('a'), id('b')].sort());
+      expect(result.rootSpans).toHaveLength(1);
+      const root = result.rootSpans[0];
+      expect(root.parentSpanID).toBeUndefined();
+      expect(root.parentSpan).toBeUndefined();
+      expect(root.links).toEqual([]);
+      expect(root.warnings).toEqual([`Cyclic parent reference to ${id('b')} removed`]);
+      expect(root.childSpans).toHaveLength(1);
+      expect(root.childSpans[0].parentSpan).toBe(root);
+      expect(result.duration).toBe(duration);
+      expect(result.startTime).toBe(startTime);
+      expect(result.endTime).toBe(startTime + duration);
     });
 
     it('should keep and repair sibling spans that have no usable startTime', () => {
