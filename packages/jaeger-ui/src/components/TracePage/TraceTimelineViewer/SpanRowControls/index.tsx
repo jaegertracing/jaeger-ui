@@ -54,14 +54,14 @@ export const SpanRowControls: React.FC<SpanRowControlsProps> = ({ span }) => {
       key: 'copy-deep-link',
       icon: <LuLink className="SpanRowControls--menuIcon" />,
       label: 'Copy deep link',
-      onClick: ({ domEvent }) => {
+      onClick: async ({ domEvent }) => {
         domEvent.stopPropagation();
         const parsed = queryString.parse(window.location.search);
         parsed.uiFind = span.spanID;
         const search = queryString.stringify(parsed);
         const hash = window.location.hash || '';
         const deepLink = `${window.location.origin}${window.location.pathname}?${search}${hash}`;
-        const success = copy(deepLink);
+        const success = await copy(deepLink);
         if (success) {
           message.success('Deep link copied to clipboard');
         } else {
@@ -73,9 +73,9 @@ export const SpanRowControls: React.FC<SpanRowControlsProps> = ({ span }) => {
       key: 'copy-span-id',
       icon: <LuCopy className="SpanRowControls--menuIcon" />,
       label: 'Copy span ID',
-      onClick: ({ domEvent }) => {
+      onClick: async ({ domEvent }) => {
         domEvent.stopPropagation();
-        const success = copy(span.spanID);
+        const success = await copy(span.spanID);
         if (success) {
           message.success('Span ID copied to clipboard');
         } else {
