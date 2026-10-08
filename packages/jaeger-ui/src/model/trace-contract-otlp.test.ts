@@ -16,7 +16,7 @@ const spec: ITraceSpec = {
 };
 
 describe('OTLP trace contract materializer', () => {
-  it('renders kinds, per-span scopes, and events without inventing missing names', () => {
+  it('renders kinds, scopes, and events, omitting what the spec omits', () => {
     const wire = toOtlpTrace({
       ...spec,
       spans: [
