@@ -196,7 +196,7 @@ export function runTraceContractSuite(pipeline) {
       expect(result.spans[0].events[0].attributes.getValue('answer')).toBe(0);
     });
 
-    it('uses an empty warnings array when a span has no attributes', () => {
+    it('uses an empty warnings array for a span without warnings', () => {
       const result = pipeline.parse(trace({ spanID: rootSpanID, operationName: rootOperationName }));
       expect(result.spans[0].warnings).toEqual([]);
     });

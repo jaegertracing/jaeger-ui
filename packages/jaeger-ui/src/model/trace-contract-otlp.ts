@@ -33,12 +33,12 @@ export function toOtlpTrace({ traceID, serviceName, spans }: ITraceSpec): Traces
     const {
       spanID,
       operationName,
+      kind,
       parentSpanID,
       references = [],
       startTime,
       duration,
       tags = [],
-      kind,
       events = [],
     } = {
       startTime: 1,

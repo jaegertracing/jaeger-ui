@@ -46,7 +46,7 @@ export default class OtelSpanFacade implements IOtelSpan {
     this._kind = SpanKind.UNSPECIFIED;
     if (kindTag) {
       const val = String(kindTag.value).toUpperCase();
-      if (Object.hasOwn(SpanKind, val)) {
+      if (val in SpanKind) {
         this._kind = SpanKind[val as keyof typeof SpanKind];
       }
     }

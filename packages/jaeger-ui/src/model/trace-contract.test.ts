@@ -16,14 +16,14 @@ function toLegacyTrace({ traceID, serviceName, spans }: ITraceSpec): TraceData &
       const {
         spanID,
         operationName,
+        kind,
         parentSpanID,
         references = [],
         startTime,
         duration,
         tags,
-        kind,
-        scope,
         events = [],
+        scope,
       } = {
         startTime: 1,
         duration: 1,
