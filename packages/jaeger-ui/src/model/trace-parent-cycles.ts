@@ -1,7 +1,11 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-/** Remove one parent edge per cycle before traversal, returning the new roots. */
+/**
+ * Remove one parent edge per cycle before traversal, returning the new roots.
+ * unlinkParent must only clear the span's parent relationship; it must not modify
+ * childSpans, which this helper updates before calling unlinkParent.
+ */
 export function breakParentCycles<
   T extends { spanID: string; childSpans: T[]; warnings: ReadonlyArray<string> | null },
 >(spans: ReadonlyArray<T>, getParent: (span: T) => T | undefined, unlinkParent: (span: T) => void): T[] {
