@@ -171,6 +171,36 @@ describe('transformTraceData()', () => {
   });
 
   describe('parent-cycle repair', () => {
+    it('clears stale cycle state before rebuilding parent edges', () => {
+      const data = toLegacyTrace({
+        traceID: 'rebuilt-cycle',
+        serviceName,
+        spans: [
+          { spanID: 'root', operationName: 'root' },
+          { spanID: 'a', operationName: 'a', parentSpanID: 'b' },
+          { spanID: 'b', operationName: 'b', parentSpanID: 'a' },
+        ],
+      });
+      const first = transformTraceData(data)!;
+      expect(first.spanMap.get('a')!.parentCycleBroken).toBe(true);
+      expect(first.spanMap.get('root')).not.toHaveProperty('parentCycleBroken');
+      expect(first.spanMap.get('b')).not.toHaveProperty('parentCycleBroken');
+
+      const repeated = transformTraceData(data)!;
+      expect(repeated.spans).toHaveLength(3);
+      expect(repeated.rootSpans.map(span => span.spanID)).toEqual(['root', 'a']);
+      expect(repeated.spanMap.get('a')!.childSpans.map(span => span.spanID)).toEqual(['b']);
+
+      data.spans[1].references = [
+        { refType: 'CHILD_OF', spanID: 'root', traceID: data.traceID, span: undefined },
+      ];
+      const rebuilt = transformTraceData(data)!.asOtelTrace();
+      expect(rebuilt.rootSpans.map(span => span.spanID)).toEqual(['root']);
+      expect(rebuilt.spanMap.get('a')!.parentSpan).toBe(rebuilt.spanMap.get('root'));
+      expect(rebuilt.spanMap.get('b')!.parentSpan).toBe(rebuilt.spanMap.get('a'));
+      for (const span of data.spans) expect(span).not.toHaveProperty('parentCycleBroken');
+    });
+
     const cases: {
       name: string;
       spans: { id: string; parent?: string; start?: number; extraParent?: string }[];

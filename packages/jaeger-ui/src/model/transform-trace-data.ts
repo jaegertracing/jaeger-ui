@@ -64,7 +64,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     });
     span.references = span.references || [];
     span.childSpans = [];
-    span.parentCycleBroken = false;
+    if ('parentCycleBroken' in span) delete span.parentCycleBroken;
     span.subsidiarilyReferencedBy = [];
 
     const attributesInfo = deduplicateAttributes(span.tags);
