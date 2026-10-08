@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { traceToTraceSummary } from '../../model/trace-summary';
-import { spanIDForWire, toOtlpTrace } from '../../model/trace-contract-otlp';
-import { runTraceContractSuite } from '../../model/trace-contract-suite';
+import { spanIDForWire, toOtlpTrace } from '../../model/test/materializer-otlp';
+import { runTraceContractSuite } from '../../model/test/trace-contract-suite';
 import { SpanKind, StatusCode } from '../../types/otel';
 import { GetTraceResponseSchema, refinedTracesData, type TracesDataWire } from './schemas';
 import { parseOtelTrace } from './parser';
@@ -287,8 +287,8 @@ describe('parseOtelTrace', () => {
     const span = parseOtelTrace(data)!.spans[0];
     expect(span.name).toBe('no-name');
     expect(span.kind).toBe(SpanKind.UNSPECIFIED);
-    expect(span.instrumentationScope.name).toBe('no-name');
-    expect(span.events[0].name).toBe('no-name');
+    expect(span.instrumentationScope.name).toBe('unknown');
+    expect(span.events[0].name).toBe('log');
   });
 
   it('builds sorted parent-child relationships, inbound links, and service counts', () => {
@@ -391,7 +391,7 @@ describe('parseOtelTrace', () => {
     expect(trace.spanMap.get(CYCLE_A_ID)!.warnings).toEqual([
       `Cyclic parent reference to ${CYCLE_B_ID} removed`,
     ]);
-    expect(trace.spanMap.get(CYCLE_B_ID)!.warnings).toBeNull();
+    expect(trace.spanMap.get(CYCLE_B_ID)!.warnings).toEqual([]);
     expect(trace.spanMap.get(CYCLE_B_ID)!.parentSpan?.spanID).toBe(CYCLE_A_ID);
   });
 
