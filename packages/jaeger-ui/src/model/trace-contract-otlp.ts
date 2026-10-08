@@ -45,6 +45,7 @@ export function toOtlpTrace({ traceID, serviceName, spans }: ITraceSpec): Traces
             duration,
             tags = [],
             events = [],
+            scope,
           } = {
             startTime: 1,
             duration: 1,
@@ -95,7 +96,7 @@ export function toOtlpTrace({ traceID, serviceName, spans }: ITraceSpec): Traces
             links,
             status: {},
           };
-          return { ...(span.scope === undefined ? {} : { scope: span.scope }), spans: [wireSpan] };
+          return { ...(scope === undefined ? {} : { scope }), spans: [wireSpan] };
         }),
       },
     ],
