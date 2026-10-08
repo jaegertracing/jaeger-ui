@@ -193,6 +193,47 @@ export function tryParseJson(value: string): unknown {
 }
 
 /**
+ * Walks an already-parsed JSON value and replaces every string that itself parses as a
+ * JSON object or array with the parsed value, repeating until no such string remains.
+ * Instrumentation that stringifies a payload before putting it inside another payload
+ * (a chat message whose `content` is itself a serialized `{role, parts}` message, whose
+ * `content` is in turn a serialized tool result, and so on) produces values that the tree
+ * view otherwise shows as one escaped string per level. The walk is lossy by design: a
+ * string that merely looks like JSON is unwrapped too, so the reader can switch back to
+ * the plain tree.
+ *
+ * Returns the input itself (same reference) when no string was unwrapped, so a caller can
+ * tell by identity whether the walk found anything, without a second traversal. The same
+ * happens for a value nested too deeply to walk: JSON.parse accepts thousands of levels,
+ * and a recursive walk over them would overflow the stack, so the overflow is caught and
+ * the value is treated as having nothing to unwrap rather than failing the render.
+ */
+export function deepParseJson(value: unknown): unknown {
+  try {
+    return walkJson(value);
+  } catch {
+    return value;
+  }
+}
+
+function walkJson(value: unknown): unknown {
+  if (typeof value === 'string') {
+    const parsed = tryParseJson(value);
+    return parsed === value ? value : walkJson(parsed);
+  }
+  if (Array.isArray(value)) {
+    const items = value.map(walkJson);
+    return items.some((item, i) => item !== value[i]) ? items : value;
+  }
+  if (typeof value === 'object' && value !== null) {
+    const entries = Object.entries(value);
+    const walked = entries.map(([k, v]) => [k, walkJson(v)] as const);
+    return walked.some(([, v], i) => v !== entries[i][1]) ? Object.fromEntries(walked) : value;
+  }
+  return value;
+}
+
+/**
  * Instrumentation commonly emits tool-call arguments/results as an
  * already-JSON-encoded string rather than a parsed object. Parse-then-restringify
  * so the output isn't double-encoded (`"{\"city\":\"Paris\"}"` instead of
@@ -466,6 +507,31 @@ export function hasAnyTokenUsage(usage: GenAiTokenUsage): boolean {
   return Object.values(usage).some(v => v != null);
 }
 
+function getGenAiTokenUsageFromGetter(get: GetAttr): GenAiTokenUsage | undefined {
+  const usage: GenAiTokenUsage = {
+    inputTokens: asNumber(get('gen_ai.usage.input_tokens')),
+    outputTokens: asNumber(get('gen_ai.usage.output_tokens')),
+    reasoningOutputTokens: asNumber(get('gen_ai.usage.reasoning.output_tokens')),
+    cacheReadInputTokens: asNumber(get('gen_ai.usage.cache_read.input_tokens')),
+    cacheWriteInputTokens: asNumber(get('gen_ai.usage.cache_write.input_tokens')),
+    textInputTokens: asNumber(get('gen_ai.usage.text.input_tokens')),
+    imageInputTokens: asNumber(get('gen_ai.usage.image.input_tokens')),
+    audioInputTokens: asNumber(get('gen_ai.usage.audio.input_tokens')),
+    textOutputTokens: asNumber(get('gen_ai.usage.text.output_tokens')),
+    imageOutputTokens: asNumber(get('gen_ai.usage.image.output_tokens')),
+    audioOutputTokens: asNumber(get('gen_ai.usage.audio.output_tokens')),
+    textCacheReadInputTokens: asNumber(get('gen_ai.usage.text.cache_read.input_tokens')),
+    imageCacheReadInputTokens: asNumber(get('gen_ai.usage.image.cache_read.input_tokens')),
+    audioCacheReadInputTokens: asNumber(get('gen_ai.usage.audio.cache_read.input_tokens')),
+  };
+  return hasAnyTokenUsage(usage) ? usage : undefined;
+}
+
+/** Extracts the token-usage attributes shared by the GenAI tab and trace summary. */
+export function getGenAiTokenUsage(attributes: IAttributes): GenAiTokenUsage | undefined {
+  return getGenAiTokenUsageFromGetter(key => attributes.getValue(key));
+}
+
 export function formatTokenCount(value: number | undefined): string | undefined {
   if (value == null) return undefined;
   return new Intl.NumberFormat('en-US').format(value);
@@ -526,23 +592,8 @@ const REGISTRY: SectionBuilder[] = [
       : undefined;
   },
   get => {
-    const usage: GenAiTokenUsage = {
-      inputTokens: asNumber(get('gen_ai.usage.input_tokens')),
-      outputTokens: asNumber(get('gen_ai.usage.output_tokens')),
-      reasoningOutputTokens: asNumber(get('gen_ai.usage.reasoning.output_tokens')),
-      cacheReadInputTokens: asNumber(get('gen_ai.usage.cache_read.input_tokens')),
-      cacheWriteInputTokens: asNumber(get('gen_ai.usage.cache_write.input_tokens')),
-      textInputTokens: asNumber(get('gen_ai.usage.text.input_tokens')),
-      imageInputTokens: asNumber(get('gen_ai.usage.image.input_tokens')),
-      audioInputTokens: asNumber(get('gen_ai.usage.audio.input_tokens')),
-      textOutputTokens: asNumber(get('gen_ai.usage.text.output_tokens')),
-      imageOutputTokens: asNumber(get('gen_ai.usage.image.output_tokens')),
-      audioOutputTokens: asNumber(get('gen_ai.usage.audio.output_tokens')),
-      textCacheReadInputTokens: asNumber(get('gen_ai.usage.text.cache_read.input_tokens')),
-      imageCacheReadInputTokens: asNumber(get('gen_ai.usage.image.cache_read.input_tokens')),
-      audioCacheReadInputTokens: asNumber(get('gen_ai.usage.audio.cache_read.input_tokens')),
-    };
-    return hasAnyTokenUsage(usage) ? { type: 'tokens', data: usage } : undefined;
+    const usage = getGenAiTokenUsageFromGetter(get);
+    return usage ? { type: 'tokens', data: usage } : undefined;
   },
   get => {
     const queryText = asString(get('gen_ai.retrieval.query.text'));
@@ -572,12 +623,22 @@ const REGISTRY: SectionBuilder[] = [
   },
   get => {
     // Same short-circuit-on-purpose rule as the meta builder above: only fall
-    // back to gen_ai.prompt/gen_ai.completion when the current key is absent,
-    // so a legacy value that disagrees with the current one is left unclaimed
-    // and surfaces in "Other GenAI Attributes" instead of being silently
-    // dropped.
-    const inputMessages = parseMessages(get('gen_ai.input.messages') ?? get('gen_ai.prompt'));
-    const outputMessages = parseMessages(get('gen_ai.output.messages') ?? get('gen_ai.completion'));
+    // back to the next key when the preferred one is absent, so a value that
+    // disagrees with the preferred one is left unclaimed and surfaces in
+    // "Other GenAI Attributes" instead of being silently dropped.
+    //
+    // gen_ai.prompt/gen_ai.completion are the deprecated spec names. Bare
+    // gen_ai.input/gen_ai.output are not in any spec version; some
+    // instrumentations emit them on a single LLM call span, holding the one
+    // input and the one output rather than a message array. parseMessages
+    // wraps such a scalar or object into a one-element list, so the value
+    // renders as the span's only message.
+    const inputMessages = parseMessages(
+      get('gen_ai.input.messages') ?? get('gen_ai.prompt') ?? get('gen_ai.input')
+    );
+    const outputMessages = parseMessages(
+      get('gen_ai.output.messages') ?? get('gen_ai.completion') ?? get('gen_ai.output')
+    );
     const systemInstructions = parseSystemInstructions(get('gen_ai.system_instructions'));
     return inputMessages.length || outputMessages.length || systemInstructions
       ? { type: 'conversation', data: { inputMessages, outputMessages, systemInstructions } }

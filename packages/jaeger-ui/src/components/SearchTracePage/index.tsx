@@ -304,12 +304,7 @@ export function SearchTracePageImpl() {
           />
         )}
         {showLogo && (
-          <img
-            className="SearchTracePage--logo js-test-logo"
-            alt="presentation"
-            src={JaegerLogo}
-            width="400"
-          />
+          <img className="SearchTracePage--logo js-test-logo" alt="" src={JaegerLogo} width="400" />
         )}
       </div>
     </div>
