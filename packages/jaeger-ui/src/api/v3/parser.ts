@@ -200,7 +200,7 @@ function parseSpans(data: TracesDataWire): ParsedSpanData {
 
     for (const scopeSpans of resourceSpans.scopeSpans ?? []) {
       const scope: IScope = {
-        name: scopeSpans.scope?.name || 'no-name',
+        name: scopeSpans.scope?.name || 'unknown',
         version: scopeSpans.scope?.version,
         attributes: scopeSpans.scope?.attributes ? toAttributes(scopeSpans.scope.attributes) : undefined,
       };
@@ -221,7 +221,7 @@ function parseSpans(data: TracesDataWire): ParsedSpanData {
           const hasUsableTimestamp = event.timeUnixNano !== undefined && BigInt(event.timeUnixNano) > 0n;
           const parsedEvent: IEvent = {
             timestamp: hasUsableTimestamp ? nanoToMicros(event.timeUnixNano) : startTime,
-            name: event.name || 'no-name',
+            name: event.name || 'log',
             attributes: toAttributes(event.attributes),
           };
           if (!hasUsableStartTime && !hasUsableTimestamp) eventTimesToRepair.push(parsedEvent);
@@ -270,7 +270,7 @@ function parseSpans(data: TracesDataWire): ParsedSpanData {
           childSpans: [],
           relativeStartTime: 0 as Microseconds,
           inboundLinks: [],
-          warnings: decodedAttributes.length > 0 ? attributesInfo.warnings : null,
+          warnings: attributesInfo.warnings,
         };
         spans.push(parsedSpan);
         if (!hasUsableStartTime) {
