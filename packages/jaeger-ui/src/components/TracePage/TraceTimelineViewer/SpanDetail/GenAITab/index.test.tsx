@@ -7,20 +7,21 @@ import { vi } from 'vitest';
 
 import GenAITab from '.';
 import { useMessageFormatStore } from './message-format-store';
-import type { IAttribute, IOtelSpan } from '../../../../../types/otel';
+import type { IAttribute } from '../../../../../types/otel';
 import { makeAttributes } from '../../../../../model/attributes';
 import { classifySpan } from '../../../../../utils/genai/detect';
+import { makeOtelSpan } from '../../../../../utils/test/makeOtelSpan';
 
 // genAIKind is always attribute-derived in production (OtelSpanFacade computes it via
 // classifySpan, never set independently) - deriving it here the same way keeps these
 // tests from silently diverging from real span behavior.
-function makeSpan(attributes: IAttribute[]): IOtelSpan {
+function makeSpan(attributes: IAttribute[]) {
   const spanAttributes = makeAttributes(attributes);
-  return {
+  return makeOtelSpan({
     spanID: 'abc123',
     attributes: spanAttributes,
     genAIKind: classifySpan({ attributes: spanAttributes }),
-  } as unknown as IOtelSpan;
+  });
 }
 
 // The view control is an antd Select, so it shows the chosen view as text rather than
