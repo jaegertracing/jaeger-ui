@@ -16,11 +16,14 @@ function toLegacyTrace({ traceID, serviceName, spans }: ITraceSpec): TraceData &
       const {
         spanID,
         operationName,
+        kind,
         parentSpanID,
         references = [],
         startTime,
         duration,
         tags,
+        events = [],
+        scope,
       } = {
         startTime: 1,
         duration: 1,
@@ -35,8 +38,28 @@ function toLegacyTrace({ traceID, serviceName, spans }: ITraceSpec): TraceData &
         // SpanData requires timing fields, but explicit undefined values exercise missing-field handling.
         ...(startTime === undefined ? {} : { startTime }),
         ...(duration === undefined ? {} : { duration }),
-        tags: tags ?? [],
-        logs: [],
+        tags: [
+          ...(tags ?? []),
+          ...(kind === undefined
+            ? []
+            : [
+                {
+                  key: 'span.kind',
+                  value:
+                    ['unspecified', 'internal', 'server', 'client', 'producer', 'consumer'][kind] ??
+                    String(kind),
+                },
+              ]),
+          ...(scope?.name === undefined ? [] : [{ key: 'otel.library.name', value: scope.name }]),
+          ...(scope?.version === undefined ? [] : [{ key: 'otel.library.version', value: scope.version }]),
+        ],
+        logs: events.map(event => ({
+          timestamp: event.timestamp,
+          fields: [
+            ...(event.attributes ?? []),
+            ...(event.name === undefined ? [] : [{ key: 'event', value: event.name }]),
+          ],
+        })),
         processID: PROCESS_ID,
       } as SpanData;
     }),

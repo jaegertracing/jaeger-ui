@@ -33,65 +33,71 @@ export function toOtlpTrace({ traceID, serviceName, spans }: ITraceSpec): Traces
         resource: {
           attributes: [{ key: 'service.name', value: { stringValue: serviceName } }],
         },
-        scopeSpans: [
-          {
-            scope: {},
-            spans: spans.map(span => {
-              const {
-                spanID,
-                operationName,
-                parentSpanID,
-                references = [],
-                startTime,
-                duration,
-                tags = [],
-              } = {
-                startTime: 1,
-                duration: 1,
-                ...span,
-              };
-              // A shared contract case uses NaN for an unusable start time. OTLP
-              // represents that case by omitting the start timestamp.
-              const wireStartTime = Number.isNaN(startTime) ? undefined : startTime;
-              if (
-                wireStartTime !== undefined &&
-                (!Number.isSafeInteger(wireStartTime) || wireStartTime < 0)
-              ) {
-                throw new Error(`Invalid OTLP startTime for span ${spanID}`);
-              }
-              if (duration !== undefined && (!Number.isSafeInteger(duration) || duration < 0)) {
-                throw new Error(`Invalid OTLP duration for span ${spanID}`);
-              }
-              const links = references.map(ref => ({
-                traceId: traceID,
-                spanId: spanIDForWire(ref.spanID),
-                attributes: [
-                  {
-                    key: 'opentracing.ref_type',
-                    value: {
-                      stringValue: ref.refType === 'FOLLOWS_FROM' ? 'follows_from' : 'child_of',
-                    },
-                  },
-                ],
-              }));
-              const start = BigInt(wireStartTime ?? 0);
-              const end = duration === undefined ? undefined : start + BigInt(duration);
-              return {
-                traceId: traceID,
-                spanId: spanIDForWire(spanID),
-                ...(parentSpanID ? { parentSpanId: spanIDForWire(parentSpanID) } : {}),
-                name: operationName,
-                ...(wireStartTime === undefined || start === 0n
-                  ? {}
-                  : { startTimeUnixNano: (start * 1000n).toString() }),
-                ...(end === undefined || end === 0n ? {} : { endTimeUnixNano: (end * 1000n).toString() }),
-                attributes: tags.map(tag => ({ key: tag.key, value: attributeValue(tag.value) })),
-                links,
-                status: {},
-              };
-            }),
-          },
-        ],
+        // Each span gets its own scopeSpans entry so that the wire keeps the spec's span order.
+        scopeSpans: spans.map(span => {
+          const {
+            spanID,
+            operationName,
+            kind,
+            parentSpanID,
+            references = [],
+            startTime,
+            duration,
+            tags = [],
+            events = [],
+            scope,
+          } = {
+            startTime: 1,
+            duration: 1,
+            ...span,
+          };
+          // A shared contract case uses NaN for an unusable start time. OTLP
+          // represents that case by omitting the start timestamp.
+          const wireStartTime = Number.isNaN(startTime) ? undefined : startTime;
+          if (wireStartTime !== undefined && (!Number.isSafeInteger(wireStartTime) || wireStartTime < 0)) {
+            throw new Error(`Invalid OTLP startTime for span ${spanID}`);
+          }
+          if (duration !== undefined && (!Number.isSafeInteger(duration) || duration < 0)) {
+            throw new Error(`Invalid OTLP duration for span ${spanID}`);
+          }
+          const links = references.map(ref => ({
+            traceId: traceID,
+            spanId: spanIDForWire(ref.spanID),
+            attributes: [
+              {
+                key: 'opentracing.ref_type',
+                value: {
+                  stringValue: ref.refType === 'FOLLOWS_FROM' ? 'follows_from' : 'child_of',
+                },
+              },
+            ],
+          }));
+          const start = BigInt(wireStartTime ?? 0);
+          const end = duration === undefined ? undefined : start + BigInt(duration);
+          const wireSpan = {
+            traceId: traceID,
+            spanId: spanIDForWire(spanID),
+            ...(parentSpanID ? { parentSpanId: spanIDForWire(parentSpanID) } : {}),
+            name: operationName,
+            ...(kind === undefined ? {} : { kind }),
+            events: events.map(event => ({
+              ...(event.name === undefined ? {} : { name: event.name }),
+              timeUnixNano: (BigInt(event.timestamp) * 1000n).toString(),
+              attributes: (event.attributes ?? []).map(attribute => ({
+                key: attribute.key,
+                value: attributeValue(attribute.value),
+              })),
+            })),
+            ...(wireStartTime === undefined || start === 0n
+              ? {}
+              : { startTimeUnixNano: (start * 1000n).toString() }),
+            ...(end === undefined || end === 0n ? {} : { endTimeUnixNano: (end * 1000n).toString() }),
+            attributes: tags.map(tag => ({ key: tag.key, value: attributeValue(tag.value) })),
+            links,
+            status: {},
+          };
+          return { ...(scope === undefined ? {} : { scope }), spans: [wireSpan] };
+        }),
       },
     ],
   };

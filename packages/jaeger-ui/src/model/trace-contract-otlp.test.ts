@@ -16,11 +16,43 @@ const spec: ITraceSpec = {
 };
 
 describe('OTLP trace contract materializer', () => {
+  it('renders kinds, scopes, and events, omitting what the spec omits', () => {
+    const wire = toOtlpTrace({
+      ...spec,
+      spans: [
+        { spanID: 'missing', operationName: 'missing', events: [{ timestamp: 2 }] },
+        { spanID: 'empty-scope', operationName: 'empty-scope', scope: {} },
+        {
+          spanID: 'named',
+          operationName: 'named',
+          kind: 2,
+          scope: { name: 'library', version: '1' },
+          events: [{ name: 'event', timestamp: 3, attributes: [{ key: 'value', value: false }] }],
+        },
+      ],
+    });
+    expect(refinedTracesData.safeParse(wire).success).toBe(true);
+    const groups = wire.resourceSpans![0].scopeSpans;
+    expect(groups).toHaveLength(3);
+    expect(groups[0]).not.toHaveProperty('scope');
+    expect(groups[0].spans[0]).not.toHaveProperty('kind');
+    expect(groups[0].spans[0].events![0]).not.toHaveProperty('name');
+    expect(groups[0].spans[0].events![0].timeUnixNano).toBe('2000');
+    expect(groups[1].scope).toEqual({});
+    expect(groups[2].scope).toEqual({ name: 'library', version: '1' });
+    expect(groups[2].spans[0]).toMatchObject({
+      kind: 2,
+      events: [
+        { name: 'event', timeUnixNano: '3000', attributes: [{ key: 'value', value: { boolValue: false } }] },
+      ],
+    });
+  });
+
   it('renders valid OTLP with stable hex span IDs', () => {
     const wire = toOtlpTrace(spec);
     expect(refinedTracesData.safeParse(wire).success).toBe(true);
 
-    const spans = wire.resourceSpans![0].scopeSpans[0].spans;
+    const spans = wire.resourceSpans![0].scopeSpans.flatMap(group => group.spans);
     expect(spans.map(span => span.spanId)).toEqual([spec.spans[0].spanID, spanIDForWire('child')]);
     expect(spans[1].parentSpanId).toBe(spec.spans[0].spanID);
     expect(spanIDForWire('child')).toBe(spanIDForWire('child'));
@@ -40,7 +72,7 @@ describe('OTLP trace contract materializer', () => {
     });
     expect(refinedTracesData.safeParse(wire).success).toBe(true);
 
-    const spans = wire.resourceSpans![0].scopeSpans[0].spans;
+    const spans = wire.resourceSpans![0].scopeSpans.flatMap(group => group.spans);
     expect(spans[0]).toMatchObject({ startTimeUnixNano: '1000', endTimeUnixNano: '2000' });
     expect(spans[1]).not.toHaveProperty('startTimeUnixNano');
     expect(spans[2]).not.toHaveProperty('startTimeUnixNano');
@@ -74,7 +106,7 @@ describe('OTLP trace contract materializer', () => {
     });
     expect(refinedTracesData.safeParse(wire).success).toBe(true);
 
-    const spans = wire.resourceSpans![0].scopeSpans[0].spans;
+    const spans = wire.resourceSpans![0].scopeSpans.flatMap(group => group.spans);
     expect(spans[0].attributes).toEqual([
       { key: 'string', value: { stringValue: 'value' } },
       { key: 'bool', value: { boolValue: false } },
