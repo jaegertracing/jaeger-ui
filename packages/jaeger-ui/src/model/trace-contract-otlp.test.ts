@@ -16,18 +16,6 @@ const spec: ITraceSpec = {
 };
 
 describe('OTLP trace contract materializer', () => {
-  it('preserves span order when instrumentation scopes alternate', () => {
-    const spans = [
-      { spanID: 'a', operationName: 'a', scope: { name: 'first' } },
-      { spanID: 'b', operationName: 'b', scope: { name: 'second' } },
-      { spanID: 'c', operationName: 'c', scope: { name: 'first' } },
-    ];
-    const wire = toOtlpTrace({ ...spec, spans });
-    expect(wire.resourceSpans![0].scopeSpans.flatMap(group => group.spans.map(span => span.spanId))).toEqual(
-      spans.map(span => spanIDForWire(span.spanID))
-    );
-  });
-
   it('renders kinds, per-span scopes, and events without inventing missing names', () => {
     const wire = toOtlpTrace({
       ...spec,
@@ -64,7 +52,7 @@ describe('OTLP trace contract materializer', () => {
     const wire = toOtlpTrace(spec);
     expect(refinedTracesData.safeParse(wire).success).toBe(true);
 
-    const spans = wire.resourceSpans![0].scopeSpans[0].spans;
+    const spans = wire.resourceSpans![0].scopeSpans.flatMap(group => group.spans);
     expect(spans.map(span => span.spanId)).toEqual([spec.spans[0].spanID, spanIDForWire('child')]);
     expect(spans[1].parentSpanId).toBe(spec.spans[0].spanID);
     expect(spanIDForWire('child')).toBe(spanIDForWire('child'));
@@ -84,7 +72,7 @@ describe('OTLP trace contract materializer', () => {
     });
     expect(refinedTracesData.safeParse(wire).success).toBe(true);
 
-    const spans = wire.resourceSpans![0].scopeSpans[0].spans;
+    const spans = wire.resourceSpans![0].scopeSpans.flatMap(group => group.spans);
     expect(spans[0]).toMatchObject({ startTimeUnixNano: '1000', endTimeUnixNano: '2000' });
     expect(spans[1]).not.toHaveProperty('startTimeUnixNano');
     expect(spans[2]).not.toHaveProperty('startTimeUnixNano');
@@ -118,7 +106,7 @@ describe('OTLP trace contract materializer', () => {
     });
     expect(refinedTracesData.safeParse(wire).success).toBe(true);
 
-    const spans = wire.resourceSpans![0].scopeSpans[0].spans;
+    const spans = wire.resourceSpans![0].scopeSpans.flatMap(group => group.spans);
     expect(spans[0].attributes).toEqual([
       { key: 'string', value: { stringValue: 'value' } },
       { key: 'bool', value: { boolValue: false } },

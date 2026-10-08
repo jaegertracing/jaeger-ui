@@ -4,8 +4,6 @@
 import type { TracesDataWire } from '../api/v3/schemas';
 import type { ITraceSpec } from './trace-contract-spec';
 
-type ScopeSpansWire = NonNullable<TracesDataWire['resourceSpans']>[number]['scopeSpans'][number];
-
 /** Convert readable span IDs in test specs to stable, valid OTLP span IDs. */
 export function spanIDForWire(spanID: string): string {
   if (/^(?!0+$)[0-9a-f]{16}$/i.test(spanID)) {
@@ -29,7 +27,8 @@ export function toOtlpTrace({ traceID, serviceName, spans }: ITraceSpec): Traces
     return Number.isSafeInteger(value) ? { intValue: String(value) } : { doubleValue: value };
   };
 
-  const renderedSpans = spans.map(span => {
+  // Each span gets its own scopeSpans entry so that the wire keeps the spec's span order.
+  const scopeSpans = spans.map(span => {
     const {
       spanID,
       operationName,
@@ -68,7 +67,7 @@ export function toOtlpTrace({ traceID, serviceName, spans }: ITraceSpec): Traces
     }));
     const start = BigInt(wireStartTime ?? 0);
     const end = duration === undefined ? undefined : start + BigInt(duration);
-    return {
+    const wireSpan = {
       traceId: traceID,
       spanId: spanIDForWire(spanID),
       ...(parentSpanID ? { parentSpanId: spanIDForWire(parentSpanID) } : {}),
@@ -90,20 +89,7 @@ export function toOtlpTrace({ traceID, serviceName, spans }: ITraceSpec): Traces
       links,
       status: {},
     };
-  });
-
-  // Keep the input order even when a scope reappears after another scope.
-  const scopes: ScopeSpansWire[] = [];
-  let previousScopeKey: string | undefined;
-  spans.forEach((span, index) => {
-    const key = JSON.stringify(span.scope ?? null);
-    let scopeSpans = scopes.at(-1);
-    if (!scopeSpans || key !== previousScopeKey) {
-      scopeSpans = { ...(span.scope === undefined ? {} : { scope: span.scope }), spans: [] };
-      scopes.push(scopeSpans);
-      previousScopeKey = key;
-    }
-    scopeSpans.spans.push(renderedSpans[index]);
+    return { ...(span.scope === undefined ? {} : { scope: span.scope }), spans: [wireSpan] };
   });
 
   return {
@@ -112,7 +98,7 @@ export function toOtlpTrace({ traceID, serviceName, spans }: ITraceSpec): Traces
         resource: {
           attributes: [{ key: 'service.name', value: { stringValue: serviceName } }],
         },
-        scopeSpans: scopes,
+        scopeSpans,
       },
     ],
   };
