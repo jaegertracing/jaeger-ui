@@ -4,6 +4,7 @@
 import { Microseconds } from './units';
 
 export enum SpanKind {
+  UNSPECIFIED = 'UNSPECIFIED',
   INTERNAL = 'INTERNAL',
   SERVER = 'SERVER',
   CLIENT = 'CLIENT',
