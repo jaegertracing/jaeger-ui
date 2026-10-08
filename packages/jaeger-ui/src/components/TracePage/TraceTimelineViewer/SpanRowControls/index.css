@@ -10,6 +10,7 @@ SPDX-License-Identifier: Apache-2.0
   margin-left: 0.35rem;
   margin-right: 0.25rem;
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
   transition: opacity 0.15s ease-in-out;
   position: relative;
@@ -22,12 +23,14 @@ SPDX-License-Identifier: Apache-2.0
 .span-row:focus-within .SpanRowControls,
 .SpanRowControls:focus-within {
   opacity: 1;
+  visibility: visible;
   pointer-events: auto;
 }
 
 /* If a span is focused, its controls remain visible so the reset button is always accessible */
 .SpanRowControls.is-focused {
   opacity: 1;
+  visibility: visible;
   pointer-events: auto;
 }
 
