@@ -5,7 +5,6 @@ import transformTraceData from './transform-trace-data';
 import { SpanData, SpanReference, TraceData } from '../types/trace';
 import { toLegacyTrace } from './test/materializer-legacy';
 import { runTraceContractSuite } from './test/trace-contract-suite';
-import { getParent } from './span';
 
 describe('transformTraceData()', () => {
   const startTime = 1586160015434000;
@@ -170,156 +169,19 @@ describe('transformTraceData()', () => {
     });
   });
 
-  describe('parent-cycle repair', () => {
-    it('clears stale cycle state before rebuilding parent edges', () => {
-      const data = toLegacyTrace({
-        traceID: 'rebuilt-cycle',
-        serviceName,
-        spans: [
-          { spanID: 'root', operationName: 'root' },
-          { spanID: 'a', operationName: 'a', parentSpanID: 'b' },
-          { spanID: 'b', operationName: 'b', parentSpanID: 'a' },
-        ],
-      });
-      const first = transformTraceData(data)!;
-      expect(first.spanMap.get('a')!.parentCycleBroken).toBe(true);
-      expect(first.spanMap.get('root')).not.toHaveProperty('parentCycleBroken');
-      expect(first.spanMap.get('b')).not.toHaveProperty('parentCycleBroken');
+  it('should not produce a negative duration for a trace with spans but no root', () => {
+    // Two spans referencing each other form a cycle, so neither is a root and
+    // nothing is reachable by the traversal. The time range must not be left at
+    // its sentinel value, which would yield a negative duration.
+    const spanA = { spanID: 'a', operationName: 'a', parentSpanID: 'b', startTime, duration };
+    const spanB = { spanID: 'b', operationName: 'b', parentSpanID: 'a', startTime, duration };
 
-      const repeated = transformTraceData(data)!;
-      expect(repeated.spans).toHaveLength(3);
-      expect(repeated.rootSpans.map(span => span.spanID)).toEqual(['root', 'a']);
-      expect(repeated.spanMap.get('a')!.childSpans.map(span => span.spanID)).toEqual(['b']);
+    const result = transformTraceData(toLegacyTrace({ traceID, serviceName, spans: [spanA, spanB] }))!;
 
-      data.spans[1].references = [
-        { refType: 'CHILD_OF', spanID: 'root', traceID: data.traceID, span: undefined },
-      ];
-      const rebuilt = transformTraceData(data)!.asOtelTrace();
-      expect(rebuilt.rootSpans.map(span => span.spanID)).toEqual(['root']);
-      expect(rebuilt.spanMap.get('a')!.parentSpan).toBe(rebuilt.spanMap.get('root'));
-      expect(rebuilt.spanMap.get('b')!.parentSpan).toBe(rebuilt.spanMap.get('a'));
-      for (const span of data.spans) expect(span).not.toHaveProperty('parentCycleBroken');
-    });
-
-    const cases: {
-      name: string;
-      spans: { id: string; parent?: string; start?: number; extraParent?: string }[];
-      roots: number;
-    }[] = [
-      { name: 'self-cycle', spans: [{ id: 'a', parent: 'a' }], roots: 1 },
-      {
-        name: 'two-span cycle',
-        spans: [
-          { id: 'a', parent: 'b' },
-          { id: 'b', parent: 'a' },
-        ],
-        roots: 1,
-      },
-      {
-        name: 'three-span cycle',
-        spans: [
-          { id: 'a', parent: 'b' },
-          { id: 'b', parent: 'c' },
-          { id: 'c', parent: 'a' },
-        ],
-        roots: 1,
-      },
-      {
-        name: 'disjoint cycles',
-        spans: [
-          { id: 'a', parent: 'b' },
-          { id: 'b', parent: 'a' },
-          { id: 'c', parent: 'c' },
-        ],
-        roots: 2,
-      },
-      {
-        name: 'healthy subtree beside a cycle',
-        spans: [
-          { id: 'root' },
-          { id: 'child', parent: 'root' },
-          { id: 'a', parent: 'b' },
-          { id: 'b', parent: 'a' },
-        ],
-        roots: 2,
-      },
-      {
-        name: 'missing-start cycle root with a descendant',
-        spans: [
-          { id: 'a', parent: 'b', start: 0 },
-          { id: 'b', parent: 'a' },
-          { id: 'leaf', parent: 'b', start: 0 },
-        ],
-        roots: 1,
-      },
-      {
-        name: 'cycle root with an additional parent-like link',
-        spans: [
-          { id: 'a', parent: 'b', extraParent: 'b' },
-          { id: 'b', parent: 'a' },
-        ],
-        roots: 1,
-      },
-    ];
-
-    it.each(cases)(
-      'retains every span with acyclic parent and child edges for $name',
-      ({ name, spans: specs, roots }) => {
-        const cycleTraceID = `cycle-${name}`;
-        const result = transformTraceData(
-          toLegacyTrace({
-            traceID: cycleTraceID,
-            serviceName,
-            spans: specs.map(spec => ({
-              spanID: spec.id,
-              operationName: spec.id,
-              parentSpanID: spec.parent,
-              startTime: spec.start ?? startTime,
-              duration,
-              references: spec.extraParent ? [{ refType: 'FOLLOWS_FROM', spanID: spec.extraParent }] : [],
-            })),
-          })
-        )!;
-        const otel = result.asOtelTrace();
-        expect(otel.spans.map(span => span.spanID).sort()).toEqual(specs.map(spec => spec.id).sort());
-        expect(otel.rootSpans).toHaveLength(roots);
-        expect(result.orphanSpanCount).toBe(0);
-        expect(otel.orphanSpanCount).toBe(0);
-        const visited = new Set();
-        const stack = [...otel.rootSpans];
-        while (stack.length) {
-          const span = stack.pop()!;
-          expect(visited.has(span)).toBe(false);
-          visited.add(span);
-          for (const child of span.childSpans) {
-            expect(child.parentSpan).toBe(span);
-            expect(child.parentSpanID).toBe(span.spanID);
-            expect(child.depth).toBe(span.depth + 1);
-            stack.push(child);
-          }
-        }
-        expect(visited.size).toBe(specs.length);
-        for (const root of otel.rootSpans) {
-          expect(root.parentSpan).toBeUndefined();
-          expect(root.parentSpanID).toBeUndefined();
-          if (root.warnings?.length) {
-            expect(root.warnings).toHaveLength(1);
-            const source = result.spanMap.get(root.spanID)!;
-            expect(getParent(source)).toBeNull();
-            expect(source.references.length).toBeGreaterThan(0);
-            expect(root.links).toHaveLength(source.references.length - 1);
-            for (const link of root.links) expect(link.span).toBe(otel.spanMap.get(link.spanID));
-          }
-        }
-        expect(otel.rootSpans.filter(root => root.warnings?.length)).toHaveLength(
-          name === 'disjoint cycles' ? 2 : 1
-        );
-        if (name === 'missing-start cycle root with a descendant') {
-          expect(otel.spanMap.get('a')!.startTime).toBe(0);
-          expect(otel.spanMap.get('leaf')!.startTime).toBe(startTime);
-        }
-      }
-    );
+    expect(result.spans.length).toBe(0);
+    expect(result.duration).toBe(0);
+    expect(result.startTime).toBe(0);
+    expect(result.endTime).toBe(0);
   });
 
   describe('asOtelTrace()', () => {

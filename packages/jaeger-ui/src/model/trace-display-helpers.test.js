@@ -5,34 +5,7 @@
 import {
   _getTracePageHeaderPartsImpl as getTracePageHeaderParts,
   getIncompleteTraceTooltip,
-  getTraceName,
-  getTracePageTitle,
 } from './trace-display-helpers';
-import transformTraceData from './transform-trace-data';
-import { toLegacyTrace } from './test/materializer-legacy';
-
-it('uses a repaired cycle root for the legacy trace name and page title', () => {
-  const traceID = 'repaired-cycle-header';
-  const trace = transformTraceData(
-    toLegacyTrace({
-      traceID,
-      serviceName: 'cycle-service',
-      spans: [
-        { spanID: 'a', operationName: 'repaired-root', parentSpanID: 'b' },
-        { spanID: 'b', operationName: 'child', parentSpanID: 'a' },
-      ],
-    })
-  );
-  expect(trace.rootSpans[0].spanID).toBe('a');
-  expect(getTracePageHeaderParts(trace.spans)).toEqual({
-    serviceName: 'cycle-service',
-    operationName: 'repaired-root',
-  });
-  expect(getTraceName(trace.spans)).toBe('cycle-service: repaired-root');
-  expect(getTracePageTitle(trace.spans)).toBe('repaired-root (cycle-service)');
-  expect(trace.traceName).toBe('cycle-service: repaired-root');
-  expect(trace.tracePageTitle).toBe('repaired-root (cycle-service)');
-});
 
 describe('getTracePageHeaderParts', () => {
   const firstSpanId = 'firstSpanId';

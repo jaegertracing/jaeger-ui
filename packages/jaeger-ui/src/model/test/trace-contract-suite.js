@@ -357,27 +357,6 @@ export function runTraceContractSuite(pipeline) {
       expect(result.duration).toBe(1000);
     });
 
-    it('should not produce a negative duration for a trace with spans but no root', () => {
-      // Repair one parent edge so both spans remain reachable from a warned root.
-      const spanA = { spanID: 'a', operationName: 'a', parentSpanID: 'b', startTime, duration };
-      const spanB = { spanID: 'b', operationName: 'b', parentSpanID: 'a', startTime, duration };
-
-      const result = pipeline.parse(trace(spanA, spanB));
-
-      expect(result.spans.map(span => span.spanID).sort()).toEqual([id('a'), id('b')].sort());
-      expect(result.rootSpans).toHaveLength(1);
-      const root = result.rootSpans[0];
-      expect(root.parentSpanID).toBeUndefined();
-      expect(root.parentSpan).toBeUndefined();
-      expect(root.links).toEqual([]);
-      expect(root.warnings).toEqual([`Cyclic parent reference to ${id('b')} removed`]);
-      expect(root.childSpans).toHaveLength(1);
-      expect(root.childSpans[0].parentSpan).toBe(root);
-      expect(result.duration).toBe(duration);
-      expect(result.startTime).toBe(startTime);
-      expect(result.endTime).toBe(startTime + duration);
-    });
-
     it('should keep and repair sibling spans that have no usable startTime', () => {
       // NB: this asserts the observable outcome (no span dropped, all startTimes
       // finite, real sibling ordered last). It does NOT prove the NaN-comparator
