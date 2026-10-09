@@ -28,7 +28,6 @@ vi.mock('../api/jaeger', () => ({
     fetchServiceServerOps: jest.fn(() => Promise.resolve()),
     fetchDeepDependencyGraph: jest.fn(() => Promise.resolve()),
     fetchDependencies: jest.fn(() => Promise.resolve()),
-    fetchMetrics: jest.fn(() => Promise.resolve()),
   },
 }));
 
@@ -88,25 +87,5 @@ describe('actions/jaeger-api', () => {
   it('@JAEGER_API/FETCH_DEPENDENCIES should call the JaegerAPI', () => {
     jaegerApiActions.fetchDependencies();
     expect(JaegerAPI.fetchDependencies).toHaveBeenCalledTimes(1);
-  });
-
-  it('@JAEGER_API/FETCH_ALL_SERVICE_METRICS should return the promise', () => {
-    const { payload } = jaegerApiActions.fetchAllServiceMetrics('serviceName', query);
-    expect(isPromise(payload)).toBeTruthy();
-  });
-
-  it('@JAEGER_API/FETCH_ALL_SERVICE_METRICS should fetch service metrics by name', () => {
-    jaegerApiActions.fetchAllServiceMetrics('serviceName', query);
-    expect(JaegerAPI.fetchMetrics).toHaveBeenCalledTimes(5);
-  });
-
-  it('@JAEGER_API/FETCH_AGGREGATED_SERVICE_METRICS should return the promise', () => {
-    const { payload } = jaegerApiActions.fetchAggregatedServiceMetrics('serviceName', query);
-    expect(isPromise(payload)).toBeTruthy();
-  });
-
-  it('@JAEGER_API/FETCH_AGGREGATED_SERVICE_METRICS should fetch service metrics by name', () => {
-    jaegerApiActions.fetchAggregatedServiceMetrics('serviceName', query);
-    expect(JaegerAPI.fetchMetrics).toHaveBeenCalledTimes(3);
   });
 });

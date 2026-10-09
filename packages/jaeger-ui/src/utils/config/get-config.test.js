@@ -1,3 +1,4 @@
+// Copyright (c) 2026 The Jaeger Authors.
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -57,11 +58,27 @@ describe('getConfig()', () => {
         archiveStorage: true,
         metricsStorage: true,
         aiAssistant: true,
+        searchWithoutServiceName: true,
       }));
       expect(getConfig().backendCapabilities).toEqual({
         archiveStorage: true,
         metricsStorage: true,
         aiAssistant: true,
+        searchWithoutServiceName: true,
+      });
+    });
+
+    it('fills in capabilities the backend did not send', () => {
+      // An older query service knows nothing of newer capabilities and omits them. The
+      // missing ones must read as "unsupported" rather than undefined, which is what keeps
+      // a newer UI usable against it.
+      window.getJaegerUiConfig = jest.fn(() => ({}));
+      window.getJaegerBackendCapabilities = jest.fn(() => ({ archiveStorage: true }));
+      expect(getConfig().backendCapabilities).toEqual({
+        archiveStorage: true,
+        metricsStorage: false,
+        aiAssistant: false,
+        searchWithoutServiceName: false,
       });
     });
 
@@ -77,17 +94,24 @@ describe('getConfig()', () => {
       // backendCapabilities in the main UI config object is always overridden by
       // getJaegerBackendCapabilities so the backend remains authoritative.
       window.getJaegerUiConfig = jest.fn(() => ({
-        backendCapabilities: { archiveStorage: true, metricsStorage: true, aiAssistant: true },
+        backendCapabilities: {
+          archiveStorage: true,
+          metricsStorage: true,
+          aiAssistant: true,
+          searchWithoutServiceName: true,
+        },
       }));
       window.getJaegerBackendCapabilities = jest.fn(() => ({
         archiveStorage: false,
         metricsStorage: false,
         aiAssistant: false,
+        searchWithoutServiceName: false,
       }));
       expect(getConfig().backendCapabilities).toEqual({
         archiveStorage: false,
         metricsStorage: false,
         aiAssistant: false,
+        searchWithoutServiceName: false,
       });
     });
   });
@@ -111,7 +135,12 @@ describe('getConfig()', () => {
 
     it('merges the defaultConfig with the embedded config and backend capabilities', () => {
       embedded = { novel: 'prop' };
-      capabilities = { archiveStorage: true, metricsStorage: false, aiAssistant: false };
+      capabilities = {
+        archiveStorage: true,
+        metricsStorage: false,
+        aiAssistant: false,
+        searchWithoutServiceName: false,
+      };
       expect(getConfig()).toEqual({ ...defaultConfig, ...embedded, backendCapabilities: capabilities });
     });
 
