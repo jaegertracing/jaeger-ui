@@ -4,7 +4,7 @@
 import fs from 'fs';
 import path from 'path';
 import lodash from 'lodash';
-import readJsonFile from './readJsonFile';
+import readJsonFile, { OtlpTransformError } from './readJsonFile';
 import JaegerAPI from '../api/jaeger';
 
 let OTLPTrace;
@@ -67,13 +67,24 @@ describe('fileReader.readJsonFile', () => {
     return expect(p).resolves.toMatchObject(outObj);
   });
 
-  it('rejects an OTLP trace with a message that includes the backend error', () => {
+  it('rejects an OTLP trace with a message that explains the backend transform failed, not a parse error', () => {
     const inObj = JSON.parse(
       fs.readFileSync(path.resolve(fixturesDir, 'otlp2jaeger-in-error.json'), 'utf-8')
     );
     const file = new File([JSON.stringify(inObj)], 'foo.json');
     const p = readJsonFile({ file });
-    return expect(p).rejects.toThrow(/Error converting OTLP trace to Jaeger: backend transform failed/);
+    return expect(p).rejects.toThrow(
+      /OTLP import requires a reachable Jaeger backend \(POST \/api\/transform\): backend transform failed/
+    );
+  });
+
+  it('rejects an OTLP transform failure with an OtlpTransformError, distinguishable from a parse error', async () => {
+    const inObj = JSON.parse(
+      fs.readFileSync(path.resolve(fixturesDir, 'otlp2jaeger-in-error.json'), 'utf-8')
+    );
+    const file = new File([JSON.stringify(inObj)], 'foo.json');
+
+    await expect(readJsonFile({ file })).rejects.toBeInstanceOf(OtlpTransformError);
   });
 
   it('rejects malformed JSON', () => {

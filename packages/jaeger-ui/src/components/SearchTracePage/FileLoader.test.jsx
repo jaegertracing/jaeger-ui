@@ -5,9 +5,13 @@ import React from 'react';
 import { render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
-vi.mock('../../utils/readJsonFile', () => ({
-  default: jest.fn(),
-}));
+vi.mock('../../utils/readJsonFile', async () => {
+  const actual = await vi.importActual('../../utils/readJsonFile');
+  return {
+    ...actual,
+    default: jest.fn(),
+  };
+});
 
 vi.mock('../../model/transform-trace-data', () => ({
   default: jest.fn(),
@@ -48,7 +52,7 @@ vi.mock('antd', async () => {
 });
 
 import FileLoader, { loadTracesFromFile } from './FileLoader';
-import readJsonFile from '../../utils/readJsonFile';
+import readJsonFile, { OtlpTransformError } from '../../utils/readJsonFile';
 import transformTraceData from '../../model/transform-trace-data';
 import { traceToTraceSummary } from '../../model/trace-summary';
 import { populateTraceCache } from '../../hooks/useTraceLoading';
@@ -246,6 +250,25 @@ describe('<FileLoader />', () => {
     });
 
     expect(message.error).toHaveBeenCalledWith(expect.stringContaining('not valid JSON'));
+    expect(mockOnTracesLoaded).not.toHaveBeenCalled();
+  });
+
+  it('shows a backend-required message, not "Failed to parse", when OTLP transform fails', async () => {
+    const { message } = await import('antd');
+    readJsonFile.mockRejectedValue(
+      new OtlpTransformError(
+        'OTLP import requires a reachable Jaeger backend (POST /api/transform): Failed to fetch'
+      )
+    );
+
+    render(<FileLoader onTracesLoaded={mockOnTracesLoaded} />);
+    await act(async () => {
+      global.mockBeforeUpload(makeFile('otel-file-exporter-output.json'));
+    });
+
+    expect(message.error).toHaveBeenCalledWith(
+      'otel-file-exporter-output.json: OTLP import requires a reachable Jaeger backend (POST /api/transform): Failed to fetch'
+    );
     expect(mockOnTracesLoaded).not.toHaveBeenCalled();
   });
 
