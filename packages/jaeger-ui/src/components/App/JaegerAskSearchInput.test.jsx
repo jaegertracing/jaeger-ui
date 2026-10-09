@@ -7,7 +7,7 @@ import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 
 import JaegerAskSearchInput, { JaegerAssistantToggle } from './JaegerAskSearchInput';
-import { JaegerAssistantProvider } from './JaegerAssistantContext';
+import { JaegerAssistantProvider, useJaegerAssistantOptional } from './JaegerAssistantContext';
 
 const mockNavigate = vi.fn();
 
@@ -26,6 +26,13 @@ vi.mock('../../hooks/useJaegerAssistant', () => ({
   useJaegerAssistantConfigured: () => agUiMock.configured,
   useJaegerAssistantEnabled: () => agUiMock.configured,
 }));
+
+// Surfaces the text handed to the assistant so tests can assert the query was
+// forwarded rather than turned into a /trace/... navigation.
+function AssistantProbe() {
+  const assistant = useJaegerAssistantOptional();
+  return <div data-testid="assistant-bootstrap">{assistant?.bootstrapUserText ?? ''}</div>;
+}
 
 function openAssistantTextarea() {
   const textarea = screen.getByTestId('JaegerAskSearchInput--textarea');
@@ -124,6 +131,50 @@ describe('<JaegerAskSearchInput /> assistant mode', () => {
     fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false });
 
     expect(mockNavigate).not.toHaveBeenCalled();
+    expect(textarea).toHaveValue('');
+  });
+
+  // Regression tests for #4531: single words and hyphenated service names are valid
+  // base64, and used to be routed to /trace/<word>, landing the user on "trace not found".
+  it.each(['checkout-service', 'authentication', 'performance', 'frontend', 'payment-service'])(
+    'sends %j to the assistant instead of navigating to a trace page',
+    query => {
+      render(
+        <MemoryRouter>
+          <JaegerAssistantProvider>
+            <JaegerAskSearchInput />
+            <AssistantProbe />
+          </JaegerAssistantProvider>
+        </MemoryRouter>
+      );
+
+      const textarea = openAssistantTextarea();
+      fireEvent.change(textarea, { target: { value: query } });
+      fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false });
+
+      expect(mockNavigate).not.toHaveBeenCalled();
+      expect(screen.getByTestId('assistant-bootstrap')).toHaveTextContent(query);
+      expect(textarea).toHaveValue('');
+    }
+  );
+
+  it('navigates to the trace page for a 32-char hex trace id without asking the assistant', () => {
+    render(
+      <MemoryRouter>
+        <JaegerAssistantProvider>
+          <JaegerAskSearchInput />
+          <AssistantProbe />
+        </JaegerAssistantProvider>
+      </MemoryRouter>
+    );
+
+    const traceId = '4bf92f3577b34da6a3ce929d0e0e4736';
+    const textarea = openAssistantTextarea();
+    fireEvent.change(textarea, { target: { value: traceId } });
+    fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false });
+
+    expect(mockNavigate).toHaveBeenCalledWith(`/trace/${traceId}`);
+    expect(screen.getByTestId('assistant-bootstrap')).toBeEmptyDOMElement();
     expect(textarea).toHaveValue('');
   });
 
