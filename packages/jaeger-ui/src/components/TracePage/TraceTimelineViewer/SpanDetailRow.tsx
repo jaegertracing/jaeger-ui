@@ -66,9 +66,9 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
           <span>
             <span
               className="detail-row-expanded-accent"
-              aria-checked="true"
+              aria-expanded={true}
               onClick={_detailToggle}
-              role="switch"
+              role="button"
               style={{ borderColor: color }}
             />
           </span>

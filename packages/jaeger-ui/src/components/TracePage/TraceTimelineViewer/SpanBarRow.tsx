@@ -158,10 +158,10 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
           />
           <a
             className={`span-name ${isDetailExpanded ? 'is-detail-expanded' : ''}`}
-            aria-checked={isDetailExpanded}
+            aria-expanded={isDetailExpanded}
             onClick={_detailToggle}
             onKeyDown={_detailToggleKeyDown}
-            role="switch"
+            role="button"
             style={{ borderColor: color }}
             tabIndex={0}
           >
