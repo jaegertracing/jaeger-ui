@@ -42,6 +42,7 @@ type TDispatchProps = {
 type TProps = TDispatchProps & {
   registerAccessors: (accessors: Accessors) => void;
   findMatchesIDs: Set<string> | TNil;
+  currentFindMatchID: string | null;
   scrollToFirstVisibleSpan: () => void;
   // Height of the TracePage header, which pads this view down by that much. The side panel measures
   // its own document offset, so it has to know when that padding changes.
