@@ -1,7 +1,6 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import fetch from 'isomorphic-fetch';
 import dayjs from 'dayjs';
 import _duration from 'dayjs/plugin/duration';
 import queryString from 'query-string';
@@ -85,7 +84,6 @@ function getJSON(url: string, options: FetchOptions = {}): Promise<any> {
 }
 
 export const DEFAULT_API_ROOT = prefixUrl('/api/');
-export const ANALYTICS_ROOT = prefixUrl('/analytics/');
 const QUALITY_METRICS_ROOT = prefixUrl(getConfig().qualityMetrics?.apiEndpoint || '');
 export const DEFAULT_DEPENDENCY_LOOKBACK = dayjs.duration(1, 'weeks').asMilliseconds();
 
@@ -98,7 +96,7 @@ const JaegerAPI = {
     return getJSON(url);
   },
   fetchDeepDependencyGraph(query: Record<string, any>): Promise<any> {
-    return getJSON(`${ANALYTICS_ROOT}v1/dependencies`, { query });
+    return getJSON(`${this.apiRoot}deep-dependencies`, { query });
   },
   fetchDependencies(endTs = new Date().getTime(), lookback = DEFAULT_DEPENDENCY_LOOKBACK): Promise<any> {
     return getJSON(`${this.apiRoot}dependencies`, { query: { endTs, lookback } });

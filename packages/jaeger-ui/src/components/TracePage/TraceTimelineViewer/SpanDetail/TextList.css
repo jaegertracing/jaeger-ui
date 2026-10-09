@@ -16,7 +16,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .TextList--List > li:nth-child(2n) {
-  background: #f5f5f5;
+  background: var(--surface-tertiary);
 }
 
 .TextList--List > li {

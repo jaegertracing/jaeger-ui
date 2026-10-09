@@ -356,7 +356,7 @@ In the legacy model reference types `CHILD_OF` | `FOLLOWS_FROM` were used to ind
 
 > **What was built instead.** The selectors and hooks sketched in 1.3 and 1.4 do not exist, and neither does a `src/selectors/` directory — they became unnecessary once trace state moved out of Redux into TanStack Query ([ADR-0004](../adr/0004-state-management-strategy.md)). The facade is applied at the point where a trace enters the Query cache: `transformTraceData(json)` returns a legacy trace whose `asOtelTrace()` method yields the `IOtelTrace` that components consume, called from `hooks/useTraceLoading.ts` (API route) and `SearchTracePage/FileLoader.tsx` (uploaded files). Components receive `IOtelTrace` / `IOtelSpan` as plain data and never construct a facade themselves. The sketches above are kept as the record of what was proposed; [ADR-0002](../adr/0002-otlp-api-v3-migration.md) describes the design that shipped.
 
-#### 1.6 Terminology Toggle Feature Flag
+#### 1.6 Terminology Toggle Feature Flag ✅
 Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to `false`) to control the display terminology.
 
 - When `false`: Use legacy terminology (Tags, Logs, Processes, References, Operation Name).
@@ -365,6 +365,8 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 **Implementation Guidelines**:
 - Components MUST check this flag before rendering labels or choosing which properties of the facade to display.
 - Prefer using the `OtelSpanFacade` even when the flag is `false`, as the facade provides a unified interface, but use the flag to decide which terminology to present to the user.
+
+**Status**: ✅ The flag now defaults to `true`, so OpenTelemetry terminology is what the UI shows out of the box. Every component in the Phase 2 breakdown below reads the flag, so an operator who sets it to `false` still gets the legacy Jaeger labels throughout.
 
 #### 1.7 Testing ✅
 - ✅ Test all property mappings
@@ -477,7 +479,7 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 #### Milestone 3.1: Metadata Exploration (Search Page)
 **Goal**: Implement the simplest OTLP endpoints and integrate them into the Search page.
 
-> **Note**: The `/api/v3/operations` endpoint returns `span_kind` as a **lowercase** string (e.g. `"server"`, `"client"`). This is a Jaeger-specific serialization, not the OTLP-JSON proto enum name. `useSpanNames` already normalizes with `.toLowerCase()` when filtering.
+> **Note**: The `/api/v3/operations` endpoint returns the field as `spanKind` (proto3 camelCase), holding a **lowercase** string value (e.g. `"server"`, `"client"`). This is a Jaeger-specific serialization, not the OTLP-JSON proto enum name. `useSpanNames` already normalizes with `.toLowerCase()` when filtering.
 
 - [x] Implement `fetchServices()` and `fetchSpanNames(service)` in `JaegerClient` (`src/api/v3/client.ts`).
 - [x] Setup `QueryClient` and `QueryClientProvider` (`src/query/app-query-client.tsx`).
@@ -553,8 +555,8 @@ The new parser replaces the role of `transformTraceData` for the OTLP route. Cov
   export function parseOtlpTrace(wireData: IOtlpTraceData): IOtelTrace {
     // 1. Validate wireData (optionally with Zod)
     // 2. Map OTLP properties to IOtelTrace
-    //    - span.kind arrives as "SPAN_KIND_SERVER" (protojson enum name);
-    //      strip the "SPAN_KIND_" prefix to map to the SpanKind enum.
+    //    - span.kind arrives as a JSON number (for example, 2 for server);
+    //      map it to the SpanKind enum.
     // 3. ENRICH: Calculate derived properties (depth, parent/child refs, etc.)
     // 4. Return enriched IOtelTrace
   }
@@ -568,8 +570,6 @@ The new parser replaces the role of `transformTraceData` for the OTLP route. Cov
 | `startTimeUnixNano`, `endTimeUnixNano` | **quoted decimal string** | per the proto3 JSON rule for 64-bit ints; parse with `BigInt`, never `Number` |
 | `kind` | **JSON number** (`2` = server) | pdata writes the enum as int32 and **omits the field entirely when `0`** (`UNSPECIFIED`) |
 | `status.code` | JSON number | same enum treatment |
-
-Do not expect the protojson enum *name* (`"SPAN_KIND_SERVER"`) on this endpoint, as the sketch's comment above assumed. That form would come from gogo protojson, which is not what serialises this response. Note the contrast with `/api/v3/operations` (see Milestone 3.1), which is a Jaeger-defined message rather than OTLP and does return `span_kind` as a lower-case string — the two endpoints genuinely differ, so a shared `SpanKind` mapper needs to handle both.
 
 #### 3.6.1 Wire Format Type Generation & Validation ✅
 
@@ -640,20 +640,24 @@ export const schemas = {
 
 ##### Handling OTEL-JSON vs. Swagger Spec Mismatch
 
-**The Mismatch**: Swagger spec currently defines IDs as `type: "string", format: "byte"` (OpenAPI convention for base64), but OTEL-JSON wire format uses hex encoding per OTLP specification.
+**The Mismatch**: Swagger spec currently defines IDs as `type: "string", format: "bytes"`, but OTEL-JSON wire format uses hex encoding per OTLP specification.
+
+The OpenAPI `format` field accepts arbitrary strings, so `bytes` is legal but inert: tools that do not recognise it fall back to the base string type. `byte` (singular) is the registered format for base64. `protoc-gen-openapi` sets `bytes` explicitly in `NewBytesSchema()`; it does not pass the protobuf type name through. This also explains why the generated client works today: `openapi-zod-client` does not recognise `bytes`, so it produces a plain `z.string()` and does not attempt base64 decoding.
 
 | Protobuf | Swagger Spec (Current) | Actual Wire Format |
 |----------|------------------------|-------------------|
-| `bytes trace_id` | `type: string, format: byte` | `"0102030405060708090a0b0c0d0e0f10"` (hex) |
+| `bytes trace_id` | `type: string, format: bytes` | `"0102030405060708090a0b0c0d0e0f10"` (hex) |
 
 **Chosen Approach: Fix Swagger Spec (Option A)**
 
-Correct the Swagger spec post-generation in the jaeger-idl repository to accurately represent OTEL-JSON wire format.
+Correct OpenAPI generation in the jaeger-idl repository, either in gnostic or through a new override, to accurately represent OTEL-JSON wire format.
 
 **Status** (jaeger-idl repository):
 - [x] **OpenAPI v3 spec available** at `swagger/api_v3/query_service.openapi.yaml` (generated by gnostic/`protoc-gen-openapi`).
 - [x] `trace_id`/`span_id` fields in `TraceSummary` and `ServiceSummary.name` annotated with `field_behavior = REQUIRED` (jaeger-idl PR #204), causing `required:` arrays to be emitted in the OpenAPI YAML.
 - [ ] `format: bytes` still used for raw OTLP span/trace IDs in the spec — these are not yet used by the UI (pending Milestone 3.2).
+- [ ] The leading comment on the `GetTrace` RPC is copied verbatim into the `GET /api/v3/traces/{traceId}` description and correctly states that HTTP responses use a `{"result": ...}` envelope. Its `200` response schema instead references `opentelemetry.proto.trace.v1.TracesData`, which is the envelope's contents rather than the HTTP response itself. The server builds the envelope with `GRPCGatewayWrapper`, which is already declared in the IDL. The generated response should reference that wrapper so clients can type the envelope instead of hand-rolling it.
+- [ ] No `opentelemetry.proto.*` schema in the spec declares a `required:` array — not `Span`, not `AnyValue`, not `Status`. Only the Jaeger-defined messages do (`Operation` → `name`, `spanKind`; `TraceSummary` → `traceId`). So a generated schema makes `traceId`, `spanId` and `name` optional despite each field's description reading "This field is required." Any required-field enforcement on the OTLP types has to be added on top of generation until the IDL carries `field_behavior = REQUIRED` there too.
 
 **Benefits**:
 - Swagger spec becomes the true source of truth for REST API contract
@@ -662,7 +666,7 @@ Correct the Swagger spec post-generation in the jaeger-idl repository to accurat
 - Generated TypeScript types remain `string` (no change to Jaeger UI)
 
 **Alternative Considered (Not Chosen): Accept Mismatch**
-- Live with `format: "byte"` in Swagger spec
+- Live with `format: bytes` in Swagger spec
 - Use custom Zod validation to enforce hex format
 - **Trade-off**: Spec doesn't accurately document wire format
 

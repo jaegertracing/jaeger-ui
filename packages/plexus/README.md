@@ -594,7 +594,7 @@ type TRenderDefEntryFn = (
 | :-: | :-- | :-- |
 | 0 | graphState | `TExposedGraphState` |
 |  |  | The current state of the graph. See [`TExposedGraphState`](#texposedgraphstate) for details.<br>&nbsp; |
-| 1 | entryProps | `Record<string, unknown> | null` |
+| 1 | entryProps | `Record<string, unknown> \| null` |
 |  |  | The the result of evaluating `setOnEntry`.<br>&nbsp; |
 | 2 | id | `string` |
 |  |  | An ID, unique within the document, to be applied to the root-most element being returned from `renderEntry`.<br>&nbsp; |

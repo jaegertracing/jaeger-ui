@@ -8,7 +8,7 @@ changelog:
 draft-release:
 	wget https://raw.githubusercontent.com/jaegertracing/jaeger/main/scripts/release/draft.py -O ./scripts/draft-release.py -q
 	chmod 755 ./scripts/draft-release.py
-	./scripts/draft-release.py --title "Jaeger UI" --repo jaeger-ui
+	./scripts/draft-release.py --title "Jaeger UI" --repo jaeger-ui $(if $(TARGET),--target $(TARGET))
 
 .PHONY: prepare-release
 prepare-release:

@@ -41,6 +41,25 @@ describe('<OpNode>', () => {
     expect(container).toHaveTextContent('service1');
   });
 
+  // The service color must stay a token reference rather than resolved numbers:
+  // OpNode is memoized on props that do not include the theme, so a resolved
+  // value would survive a theme switch as the previous theme's color.
+  it('backs MODE_SERVICE with color-mix over the palette token', () => {
+    const { container } = render(<OpNode {...baseProps} mode={MODE_SERVICE} />);
+    const body = container.querySelector('.OpNode--body');
+    expect(body.getAttribute('style')).toMatch(
+      /^background:\s*color-mix\(in srgb, var\(--span-color-\d+\) 80%, transparent\);?$/
+    );
+  });
+
+  it('keeps the theme-independent red for MODE_TIME and MODE_SELFTIME', () => {
+    const time = render(<OpNode {...baseProps} mode={MODE_TIME} />);
+    expect(time.container.querySelector('.OpNode--body').getAttribute('style')).toContain('rgba(255, 0, 0,');
+    cleanup();
+    const self = render(<OpNode {...baseProps} mode={MODE_SELFTIME} />);
+    expect(self.container.querySelector('.OpNode--body').getAttribute('style')).toContain('rgba(255, 0, 0,');
+  });
+
   it('renders correctly in MODE_TIME', () => {
     const { container } = render(<OpNode {...baseProps} mode={MODE_TIME} />);
     expect(container.querySelector('.OpNode--mode-time')).toBeInTheDocument();
