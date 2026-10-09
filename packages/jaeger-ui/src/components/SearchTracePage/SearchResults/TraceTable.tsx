@@ -5,7 +5,7 @@ import * as React from 'react';
 import { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button, Checkbox, Table, Tag, Tooltip } from 'antd';
-import type { ColumnsType, TableProps } from 'antd/es/table';
+import type { ColumnsType, ColumnType, TableProps } from 'antd/es/table';
 import type { SorterResult, SortOrder } from 'antd/es/table/interface';
 import Overflow from '@rc-component/overflow';
 import _sortBy from 'lodash/sortBy';
@@ -18,12 +18,12 @@ import {
   formatRelativeTime,
 } from '../../../utils/date';
 import RelativeBar from '../../common/RelativeBar';
-import { toOrderBy, fromOrderBy } from '../../../model/search';
-import type { SortableColumnKey, SortDirection } from '../../../model/search';
-import type { OrderBy } from '../../../model/order-by';
+import { toOrderBy, fromOrderBy } from './sort';
+import type { SortableColumnKey, SortDirection } from './sort';
 import type { TracePageLink } from '../../TracePage/url';
 import { ServicePill, type ServiceEntry } from './ServicePills';
-import { useSearchResultsStore } from '../store.search-results';
+import { useSearchResultsStore } from './store.search-results';
+import { useSortBy } from './use-sort-by';
 
 const BOTH_DIRECTIONS: SortOrder[] = ['ascend', 'descend'];
 
@@ -31,8 +31,6 @@ type TraceTableProps = {
   traceSummaries: TraceSummary[];
   maxTraceDuration: number;
   getLink: (traceID: string) => TracePageLink;
-  sortBy: OrderBy;
-  handleSortChange: (sortBy: OrderBy) => void;
   disableComparisons: boolean;
   cohortIds: Set<string>;
   toggleComparison: (traceID: string, isInDiffCohort: boolean) => void;
@@ -70,13 +68,12 @@ export default function TraceTable({
   traceSummaries,
   maxTraceDuration,
   getLink,
-  sortBy,
-  handleSortChange,
   disableComparisons,
   cohortIds,
   toggleComparison,
 }: TraceTableProps) {
   const navigate = useNavigate();
+  const { sortBy, handleSortChange } = useSortBy();
   const { key: sortKey, order: sortOrder } = fromOrderBy(sortBy);
   const startTimeDisplay = useSearchResultsStore(s => s.startTimeDisplay);
   const setStartTimeDisplay = useSearchResultsStore(s => s.setStartTimeDisplay);
@@ -85,6 +82,7 @@ export default function TraceTable({
   // A backend that omits errorSpanCount/spanCount leaves those fields undefined;
   // a backend that genuinely returned 0 will have a numeric value.
   const showServicesColumn = traceSummaries.some(t => t.services.length > 0);
+  const showSpansColumn = traceSummaries.some(t => t.spanCount !== undefined);
   const showErrorsColumn = traceSummaries.some(t => t.errorSpanCount !== undefined);
 
   const columns: ColumnsType<TraceSummary> = useMemo(() => {
@@ -131,16 +129,20 @@ export default function TraceTable({
             } as const,
           ]
         : []),
-      {
-        title: 'Spans',
-        key: 'spans',
-        width: '5rem',
-        align: 'center',
-        render: (_: unknown, trace: TraceSummary) => trace.spanCount,
-        sorter: true,
-        sortOrder: sortKey === 'spans' ? sortOrder : undefined,
-        sortDirections: BOTH_DIRECTIONS,
-      },
+      ...(showSpansColumn
+        ? [
+            {
+              title: 'Spans',
+              key: 'spans',
+              width: '5rem',
+              align: 'center',
+              render: (_: unknown, trace: TraceSummary) => trace.spanCount ?? '-',
+              sorter: true,
+              sortOrder: sortKey === 'spans' ? sortOrder : undefined,
+              sortDirections: BOTH_DIRECTIONS,
+            } satisfies ColumnType<TraceSummary>,
+          ]
+        : []),
       ...(showErrorsColumn
         ? [
             {
@@ -267,6 +269,7 @@ export default function TraceTable({
     cohortIds,
     toggleComparison,
     showServicesColumn,
+    showSpansColumn,
     showErrorsColumn,
     startTimeDisplay,
     setStartTimeDisplay,

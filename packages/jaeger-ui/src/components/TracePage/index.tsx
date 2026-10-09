@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { InputRef } from 'antd';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Alert, InputRef } from 'antd';
 import { useNormalizeTraceId } from './useNormalizeTraceId';
 import { useNavigate } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
@@ -31,7 +31,6 @@ import {
 } from './keyboard-shortcuts';
 import { cancel as cancelScroll, scrollBy, scrollTo } from './scroll-page';
 import ScrollManager from './ScrollManager';
-import calculateTraceDagEV from './TraceGraph/calculateTraceDagEV';
 import TraceGraph from './TraceGraph/TraceGraph';
 import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
 import { useConfig } from '../../hooks/useConfig';
@@ -50,7 +49,6 @@ import { getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { parseUiFind } from '../common/UiFindInput';
-import { getUiFindVertexKeys } from '../TraceDiff/TraceDiffGraph/traceDiffGraphUtils';
 import { LocationState, ReduxState, TNil } from '../../types';
 import { useTrace } from '../../hooks/useTraceLoading';
 import { IOtelTrace } from '../../types/otel';
@@ -201,10 +199,12 @@ export function TracePageImpl(props: TProps) {
   const [slimView, setSlimView] = useState(() => Boolean(embedded?.timeline?.collapseTitle));
   const [viewType, setViewType] = useState<ETraceViewType>(ETraceViewType.TraceTimelineViewer);
   const [viewRange, setViewRange] = useState<IViewRange>({ time: { current: [0, 1] } });
-  const traceDagEV = useMemo(
-    () => (viewType === ETraceViewType.TraceGraph && traceData ? calculateTraceDagEV(traceData) : null),
-    [traceData, viewType]
-  );
+  const [criticalPathErrorDismissed, setCriticalPathErrorDismissed] = useState(false);
+
+  // TraceGraph owns its search (DAG + vertex-key matching) and reports matches through
+  // onSearchResults. Every other view uses the span matches computed below in this component,
+  // which keeps the header count working for views without search wiring (flamegraph, logs).
+  const [findMatches, setFindMatches] = useState<Set<string> | TNil>(null);
 
   // Read the trace's own verdict rather than re-deriving it here. It is computed
   // once from each span's cached genAIKind, so re-scanning attributes is both
@@ -294,6 +294,7 @@ export function TracePageImpl(props: TProps) {
       prevIdRef.current = id;
       updateViewRangeTime(0, 1);
       clearSearch();
+      setCriticalPathErrorDismissed(false);
     }
   }, [id, updateViewRangeTime, clearSearch]);
 
@@ -328,6 +329,7 @@ export function TracePageImpl(props: TProps) {
 
   const setTraceView = useCallback((newViewType: ETraceViewType) => {
     setViewType(newViewType);
+    setFindMatches(null);
   }, []);
 
   useEffect(() => {
@@ -382,21 +384,17 @@ export function TracePageImpl(props: TProps) {
   }
 
   let findCount = 0;
-  let graphFindMatches: Set<string> | null | undefined;
   let spanFindMatches: Set<string> | null | undefined;
-  if (uiFind) {
-    if (viewType === ETraceViewType.TraceGraph) {
-      graphFindMatches = getUiFindVertexKeys(uiFind, _get(traceDagEV, 'vertices', []));
-      findCount = graphFindMatches ? graphFindMatches.size : 0;
-    } else {
-      const allMatches = filterSpansMemo(uiFind, _get(traceData, 'spans'));
-      const otelTrace = traceData;
-      spanFindMatches =
-        otelTrace && prunedServices.size > 0
-          ? filterPrunedSpanIDs(allMatches, otelTrace.spanMap, prunedServices)
-          : allMatches;
-      findCount = spanFindMatches ? spanFindMatches.size : 0;
-    }
+  if (viewType === ETraceViewType.TraceGraph) {
+    findCount = uiFind && findMatches ? findMatches.size : 0;
+  } else if (uiFind) {
+    const allMatches = filterSpansMemo(uiFind, _get(traceData, 'spans'));
+    const otelTrace = traceData;
+    spanFindMatches =
+      otelTrace && prunedServices.size > 0
+        ? filterPrunedSpanIDs(allMatches, otelTrace.spanMap, prunedServices)
+        : allMatches;
+    findCount = spanFindMatches ? spanFindMatches.size : 0;
   }
 
   const locationState = location.state;
@@ -412,7 +410,8 @@ export function TracePageImpl(props: TProps) {
     clearSearch,
     detailPanelMode,
     enableSidePanel,
-    hideMap: !viewTypeShowsMinimap(viewType) || Boolean(embedded?.timeline?.hideMinimap),
+    hideMap:
+      !viewTypeShowsMinimap(viewType) || Boolean(embedded?.timeline?.hideMinimap) || !timelineBarsVisible,
     hideSummary: Boolean(embedded?.timeline?.hideSummary),
     linkToStandalone: getUrl(id),
     nextResult,
@@ -438,13 +437,17 @@ export function TracePageImpl(props: TProps) {
 
   const sm = scrollManagerRef.current;
   let view;
-  const criticalPath = criticalPathEnabled ? memoizedTraceCriticalPath(traceData) : [];
+  const cpResult = criticalPathEnabled
+    ? memoizedTraceCriticalPath(traceData)
+    : { sections: [], failed: false, errors: [] };
+  const criticalPath = cpResult.sections;
   if (ETraceViewType.TraceTimelineViewer === viewType && headerHeight) {
     view = (
       <TraceTimelineViewer
         registerAccessors={sm.setAccessors}
         scrollToFirstVisibleSpan={sm.scrollToFirstVisibleSpan}
         findMatchesIDs={spanFindMatches}
+        pageHeaderHeight={headerHeight}
         trace={traceData}
         criticalPath={criticalPath}
         updateNextViewRangeTime={updateNextViewRangeTime}
@@ -459,6 +462,7 @@ export function TracePageImpl(props: TProps) {
         registerAccessors={sm.setAccessors}
         scrollToFirstVisibleSpan={sm.scrollToFirstVisibleSpan}
         findMatchesIDs={spanFindMatches}
+        pageHeaderHeight={headerHeight}
         trace={traceData}
         criticalPath={criticalPath}
         updateNextViewRangeTime={updateNextViewRangeTime}
@@ -471,9 +475,9 @@ export function TracePageImpl(props: TProps) {
     view = (
       <TraceGraph
         headerHeight={headerHeight}
-        ev={traceDagEV}
+        trace={traceData}
         uiFind={uiFind}
-        uiFindVertexKeys={graphFindMatches}
+        onSearchResults={setFindMatches}
         traceGraphConfig={traceGraphConfig}
         useOtelTerms={useOtelTerms}
       />
@@ -507,6 +511,16 @@ export function TracePageImpl(props: TProps) {
     <div>
       {archiveEnabled && (
         <ArchiveNotifier acknowledge={acknowledgeArchive} archivedState={archiveTraceState} />
+      )}
+      {cpResult.failed && !criticalPathErrorDismissed && (
+        <Alert
+          type="warning"
+          closable
+          onClose={() => setCriticalPathErrorDismissed(true)}
+          message="Critical path could not be computed for this trace."
+          description={cpResult.errors.join('; ')}
+          style={{ margin: '8px 16px' }}
+        />
       )}
       <div className="Tracepage--headerSection" ref={headerRefCallback}>
         <TracePageHeader {...headerProps} />

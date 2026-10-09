@@ -6,17 +6,22 @@ import { render } from '@testing-library/react';
 import queryString from 'query-string';
 import '@testing-library/jest-dom';
 
+const { useTracesMock } = vi.hoisted(() => ({
+  useTracesMock: jest.fn(),
+}));
+
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
 }));
 
 vi.mock('../../hooks/useTraceLoading', () => ({
-  useTraces: () => new Map(),
+  useTraces: (...args) => useTracesMock(...args),
 }));
 
 import { DeepDependencyGraphPageImpl } from '.';
 import TracesDdgImpl from './traces';
 import { ROUTE_PATH } from '../SearchTracePage/url';
+import { fetchedState } from '../../constants';
 import * as url from './url';
 import * as GraphModel from '../../model/ddg/GraphModel';
 import * as transformDdgData from '../../model/ddg/transformDdgData';
@@ -32,6 +37,10 @@ vi.mock('.', () => ({
 }));
 
 describe('TracesDdgImpl', () => {
+  beforeEach(() => {
+    useTracesMock.mockReturnValue(new Map());
+  });
+
   it('renders DeepDependencyGraphPageImpl with specific props', () => {
     const extraUrlArgs = ['end', 'start', 'limit', 'lookback', 'maxDuration', 'minDuration', 'view'].reduce(
       (acc, key) => ({ ...acc, [key]: `test ${key}` }),
@@ -100,5 +109,37 @@ describe('TracesDdgImpl', () => {
     const [withoutService] = DeepDependencyGraphPageImpl.mock.calls[0];
     expect(withoutService.graph).toBeUndefined();
     expect(withoutService.graphState).toBeUndefined();
+  });
+
+  it.each([
+    ['the trace error', 'Trace could not be loaded'],
+    ['an absent trace error', undefined],
+  ])('passes an error graphState when useTraces returns %s', (_description, error) => {
+    useTracesMock.mockReturnValue(
+      new Map([['trace-id', { id: 'trace-id', state: fetchedState.ERROR, error }]])
+    );
+    jest.spyOn(url, 'getUrlState').mockReturnValue({ service: 'svc' });
+    DeepDependencyGraphPageImpl.mockClear();
+
+    render(<TracesDdgImpl location={{ search: '' }} traceIDs={['trace-id']} />);
+
+    const [props] = DeepDependencyGraphPageImpl.mock.calls[0];
+    expect(props.graph).toBeUndefined();
+    expect(props.graphState).toEqual({
+      state: fetchedState.ERROR,
+      error: error || 'Unknown error',
+    });
+  });
+
+  it('passes a loading graphState when useTraces returns a loading trace', () => {
+    useTracesMock.mockReturnValue(new Map([['trace-id', { id: 'trace-id', state: fetchedState.LOADING }]]));
+    jest.spyOn(url, 'getUrlState').mockReturnValue({ service: 'svc' });
+    DeepDependencyGraphPageImpl.mockClear();
+
+    render(<TracesDdgImpl location={{ search: '' }} traceIDs={['trace-id']} />);
+
+    const [props] = DeepDependencyGraphPageImpl.mock.calls[0];
+    expect(props.graph).toBeUndefined();
+    expect(props.graphState).toEqual({ state: fetchedState.LOADING });
   });
 });
