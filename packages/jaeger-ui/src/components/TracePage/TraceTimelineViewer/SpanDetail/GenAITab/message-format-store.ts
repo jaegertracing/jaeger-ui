@@ -6,12 +6,15 @@ import storage from '../../../../../utils/storage';
 
 // Message text has no declared format in the OTel GenAI conventions - it can be prose,
 // Markdown, JSON, code, or a template. Per review discussion, the format is not assumed:
-// content that parses as JSON defaults to the tree view, everything else defaults to
-// plain text, and the user can override it per message via the dropdown. The choice is
-// remembered per attribute name (not globally), and seeds each message of that attribute
-// as it mounts - so e.g. choosing Markdown for gen_ai.output.messages is how the next
-// span's output messages open, while messages already on screen keep their own view.
-export type MessageFormat = 'plain' | 'markdown' | 'json' | 'media';
+// content that parses as JSON defaults to the tree view (unwrapped when it holds JSON
+// strings inside), everything else defaults to plain text, and the user can override it
+// per message via the dropdown. The choice is remembered per attribute name (not
+// globally), and seeds each message of that attribute as it mounts - so e.g. choosing
+// Markdown for gen_ai.output.messages is how the next span's output messages open, while
+// messages already on screen keep their own view.
+export type MessageFormat = 'plain' | 'markdown' | 'json' | 'json-deep' | 'image' | 'audio';
+
+const MESSAGE_FORMATS: readonly string[] = ['plain', 'markdown', 'json', 'json-deep', 'image', 'audio'];
 
 const MESSAGE_FORMAT_STORAGE_PREFIX = 'jaeger.spanDetail.attributeFormat.';
 
@@ -26,9 +29,7 @@ const MESSAGE_FORMAT_ATTRIBUTE_KEYS = [
 
 function readStoredFormat(attributeKey: string): MessageFormat | null {
   const stored = storage.getString(MESSAGE_FORMAT_STORAGE_PREFIX + attributeKey);
-  return stored === 'plain' || stored === 'markdown' || stored === 'json' || stored === 'media'
-    ? stored
-    : null;
+  return stored !== undefined && MESSAGE_FORMATS.includes(stored) ? (stored as MessageFormat) : null;
 }
 
 type MessageFormatStore = {
