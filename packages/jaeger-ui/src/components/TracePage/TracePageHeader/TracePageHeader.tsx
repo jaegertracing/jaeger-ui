@@ -27,12 +27,13 @@ import { TNil } from '../../../types';
 import { IOtelTrace } from '../../../types/otel';
 import { formatDatetime, formatDurationCompact } from '../../../utils/date';
 import { getTraceLinks } from '../../../model/link-patterns';
-import { getIncompleteTraceTooltip } from '../../../model/trace-viewer';
+import { getIncompleteTraceTooltip } from '../../../model/trace-display-helpers';
 
 import './TracePageHeader.css';
 import ExternalLinks from '../../common/ExternalLinks';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import TraceId from '../../common/TraceId';
+import GenAIExecutionSummary from './GenAIExecutionSummary';
 
 type TracePageHeaderEmbedProps = {
   canCollapse: boolean;
@@ -120,6 +121,12 @@ export const HEADER_ITEMS = [
         </Tooltip>
       );
     },
+  },
+  {
+    key: 'genai-calls',
+    label: null,
+    renderer: (trace: IOtelTrace) =>
+      trace.isGenAITrace ? <GenAIExecutionSummary spans={trace.spans} /> : null,
   },
 ];
 

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import filterSpans from './filter-spans';
+import { makeAttributes } from '../model/attributes';
 
 describe('filterSpans', () => {
   // span0 contains strings that end in 0 or 1
@@ -240,8 +241,8 @@ describe('filterSpans', () => {
     const makeOtelSpan = (spanID, attrs) => ({
       spanID,
       name: 'op',
-      resource: { serviceName: 'svc', attributes: [] },
-      attributes: attrs,
+      resource: { serviceName: 'svc', attributes: makeAttributes() },
+      attributes: makeAttributes(attrs),
       events: [],
     });
 

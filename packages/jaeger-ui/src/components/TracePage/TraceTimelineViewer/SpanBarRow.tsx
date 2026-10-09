@@ -8,13 +8,14 @@ import TimelineRow from './TimelineRow';
 import { formatDurationCompact, ViewedBoundsFunctionType } from './utils';
 import SpanTreeOffset from './SpanTreeOffset';
 import SpanBar from './SpanBar';
+import { SpanDecorationIcon } from './SpanDecorationIcon';
 import Ticks from './Ticks';
 
 import { TNil } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan } from '../../../types/otel';
-
-import { getSpanIconComponent } from './span-icons';
+import { SpanPill } from './spanPills';
+import { getSpanDecorationIcon, getSpanPillsForSpan } from './spanDecorations';
 
 import './SpanBarRow.css';
 
@@ -53,6 +54,7 @@ type SpanBarRowProps = {
   span: IOtelSpan;
   focusSpan: (spanID: string) => void;
   traceDuration: number;
+  spanPillsEnabled?: boolean;
   useOtelTerms: boolean;
 };
 
@@ -84,6 +86,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   span,
   focusSpan,
   traceDuration,
+  spanPillsEnabled,
   onDetailToggled,
   onChildrenToggled,
   useOtelTerms,
@@ -109,10 +112,11 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
     duration,
     hasChildren: isParent,
     name: operationName,
-    attributes,
     resource: { serviceName },
   } = span;
-  const SpanTypeIcon = getSpanIconComponent(attributes);
+  const pills = spanPillsEnabled ? getSpanPillsForSpan(span) : [];
+  // One resolver for namespace + GenAI icons; GenAI wins when both match (#4217).
+  const decoration = getSpanDecorationIcon(span);
   const label = formatDurationCompact(duration);
   const viewBounds = getViewedBounds(span.startTime, span.endTime);
   const viewStart = viewBounds.start;
@@ -164,7 +168,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
             <span
               className={`span-svc-name ${isParent && !isChildrenExpanded ? 'is-children-collapsed' : ''}`}
             >
-              {SpanTypeIcon && <SpanTypeIcon className="SpanBarRow--spanTypeIcon" aria-hidden="true" />}
+              {decoration && <SpanDecorationIcon decoration={decoration} />}
               {hasOwnError && <IoAlert className="SpanBarRow--errorIcon" />}
               {!hasOwnError && hasChildError && (
                 <IoAlert className="SpanBarRow--errorIcon SpanBarRow--errorIcon--hollow" />
@@ -189,6 +193,9 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
               )}
             </span>
             <small className="endpoint-name">{rpc ? rpc.operationName : operationName}</small>
+            {pills.map(pill => (
+              <SpanPill key={pill.label} pill={pill} />
+            ))}
           </a>
           {hasLinks && (
             <ReferencesButton

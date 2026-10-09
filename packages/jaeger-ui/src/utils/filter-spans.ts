@@ -74,9 +74,10 @@ export default function filterSpans(textFilter: string, spans: ReadonlyArray<Spa
     return (
       isTextInFilters(includeFilters, span.name) ||
       isTextInFilters(includeFilters, span.resource.serviceName) ||
-      isTextInKeyValues(span.attributes) ||
-      (Array.isArray(span.events) && span.events.some(event => isTextInKeyValues(event.attributes))) ||
-      isTextInKeyValues(span.resource.attributes) ||
+      isTextInKeyValues(span.attributes.entries()) ||
+      (Array.isArray(span.events) &&
+        span.events.some(event => isTextInKeyValues(event.attributes.entries()))) ||
+      isTextInKeyValues(span.resource.attributes.entries()) ||
       includeFilters.some(filter => filter === span.spanID)
     );
   };

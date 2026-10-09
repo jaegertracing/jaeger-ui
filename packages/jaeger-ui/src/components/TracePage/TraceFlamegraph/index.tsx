@@ -7,11 +7,11 @@ import flamegraph from 'd3-flame-graph';
 import { select } from 'd3-selection';
 import { IoHelp } from 'react-icons/io5';
 
-import OtelTraceFacade from '../../../model/OtelTraceFacade';
 import colorGenerator from '../../../utils/color-generator';
 import { formatDuration, formatDurationCompact } from '../../../utils/date';
+import { IOtelTrace } from '../../../types/otel';
 import { Microseconds } from '../../../types/units';
-import { convertOtelTraceToFlameData } from './convertOtelTraceToFlameData';
+import { convertOtelTraceToFlameData, IFlameNode } from './convertOtelTraceToFlameData';
 import { generateTableData } from './generateTableData';
 import FlamegraphToolbar, { ViewMode } from './FlamegraphToolbar';
 import FlamegraphTable from './FlamegraphTable';
@@ -42,12 +42,16 @@ const HIGHLIGHT_COLOR = '#E600E6';
 // minimum width, so a sliver of the scrollable columns stays visible.
 const TABLE_MIN_GUTTER_PX = 16;
 
-const TraceFlamegraph = ({ trace }: any) => {
+interface TraceFlamegraphProps {
+  trace: IOtelTrace | null;
+}
+
+const TraceFlamegraph = ({ trace }: TraceFlamegraphProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<ReturnType<typeof flamegraph> | null>(null);
   const searchActiveRef = useRef(false);
-  const zoomedNodeRef = useRef<any>(null);
+  const zoomedNodeRef = useRef<IFlameNode | null>(null);
   const hoveredFrameRef = useRef<Element | null>(null);
 
   const [viewMode, setViewMode] = useState<ViewMode>('both');
@@ -59,18 +63,13 @@ const TraceFlamegraph = ({ trace }: any) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [chartZoomed, setChartZoomed] = useState(false);
-  const [collapsedRoot, setCollapsedRoot] = useState<any>(null);
+  const [collapsedRoot, setCollapsedRoot] = useState<IFlameNode | null>(null);
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
-  const otelTrace = trace instanceof OtelTraceFacade ? trace : null;
-
-  const fullFlameData = useMemo(
-    () => (otelTrace ? convertOtelTraceToFlameData(otelTrace) : null),
-    [otelTrace]
-  );
+  const fullFlameData = useMemo(() => (trace ? convertOtelTraceToFlameData(trace) : null), [trace]);
   const flameData = collapsedRoot || fullFlameData;
-  const tableData = useMemo(() => (otelTrace ? generateTableData(otelTrace) : []), [otelTrace]);
+  const tableData = useMemo(() => (trace ? generateTableData(trace) : []), [trace]);
   const maxSelf = useMemo(() => Math.max(...tableData.map(r => r.self), 1), [tableData]);
   const maxTotal = useMemo(() => Math.max(...tableData.map(r => r.total), 1), [tableData]);
 
@@ -114,8 +113,10 @@ const TraceFlamegraph = ({ trace }: any) => {
         if (!d || !d.data || !d.data.serviceName) return rootFrameColor;
         const { serviceName } = d.data;
         if (searchActiveRef.current) {
-          const [r, g, b] = colorGenerator.getRgbColorByKey(serviceName);
-          return `rgba(${r}, ${g}, ${b}, 0.3)`;
+          // Dim via color-mix over the token rather than resolving to numbers: the
+          // chart only redraws when its own data or search changes, so a resolved
+          // value would keep the previous theme's color after a theme switch.
+          return `color-mix(in srgb, ${colorGenerator.getColorByKey(serviceName)} 30%, transparent)`;
         }
         return colorGenerator.getColorByKey(serviceName);
       })
@@ -180,6 +181,13 @@ const TraceFlamegraph = ({ trace }: any) => {
     };
   }, [flameData, showChart, viewMode]);
 
+  // Re-fit the chart to its new width after the split is dragged (onChange fires once, on drag end).
+  useEffect(() => {
+    if (!showChart || !chartRef.current || !containerRef.current || !flameData) return;
+    chartRef.current.width(containerRef.current.clientWidth || 800);
+    select(containerRef.current).datum(flameData).call(chartRef.current);
+  }, [tableWidth, showChart, flameData]);
+
   useEffect(() => {
     const query = selectedItem || searchQuery;
     searchActiveRef.current = Boolean(query);
@@ -189,14 +197,7 @@ const TraceFlamegraph = ({ trace }: any) => {
     } else {
       chartRef.current.clear();
     }
-  }, [searchQuery, selectedItem, viewMode]);
-
-  // Re-fit the chart to its new width after the split is dragged (onChange fires once, on drag end).
-  useEffect(() => {
-    if (!showChart || !chartRef.current || !containerRef.current || !flameData) return;
-    chartRef.current.width(containerRef.current.clientWidth || 800);
-    select(containerRef.current).datum(flameData).call(chartRef.current);
-  }, [tableWidth, showChart, flameData]);
+  }, [searchQuery, selectedItem, viewMode, flameData, tableWidth]);
 
   // Keep the resizer's minimum tied to the fixed first column's width, recomputing on layout
   // changes (mode switch, data change, window resize). Without this the table could be dragged
@@ -273,7 +274,7 @@ const TraceFlamegraph = ({ trace }: any) => {
     setContextMenu(null);
   }, [contextMenu]);
 
-  if (!otelTrace) {
+  if (!trace) {
     return (
       <div className="Flamegraph-wrapper" data-testid="flamegraph-wrapper">
         <div data-testid="flamegraph-empty">No data</div>
