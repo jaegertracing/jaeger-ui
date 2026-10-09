@@ -221,6 +221,23 @@ describe('useTraces', () => {
     expect(result.current.get(rawTrace2.traceID)?.state).toBe(fetchedState.ERROR);
   });
 
+  it('picks up traces added after starting with an empty ids array', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    mockFetchTrace.mockResolvedValue({ data: [rawTrace] } as any);
+
+    const { result, rerender } = renderHook(({ ids }) => useTraces(ids), {
+      wrapper: makeWrapper(client),
+      initialProps: { ids: [] as string[] },
+    });
+    expect(result.current.size).toBe(0);
+
+    rerender({ ids: [otelTrace.traceID] });
+
+    await waitFor(() => {
+      expect(result.current.get(otelTrace.traceID)?.state).toBe(fetchedState.DONE);
+    });
+  });
+
   it('returns a stable Map reference when query results have not changed', async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     mockFetchTrace.mockResolvedValue({ data: [rawTrace] } as any);
