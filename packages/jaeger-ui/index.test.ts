@@ -22,7 +22,10 @@ if (!scriptMatch) throw new Error('No base-path detection script found in index.
 // eslint-disable-next-line no-new-func
 const scriptFn = new Function('document', 'window', scriptMatch[1]);
 
-function detectBasePath(pathname: string): string {
+// runScript runs the base-path script against a mock document and returns the HTML
+// it inserted, or '' when it inserted nothing. existingBase stands for a <base>
+// already in the markup, as the Jaeger backend serves it.
+function runScript(pathname: string, existingBase = false): string {
   let insertedHtml = '';
   const mockDoc = {
     currentScript: {
@@ -30,10 +33,16 @@ function detectBasePath(pathname: string): string {
         insertedHtml = html;
       },
     },
+    querySelector: (selector: string) => (selector === 'base' && existingBase ? {} : null),
     addEventListener: () => {},
     getElementById: () => null,
   };
   scriptFn(mockDoc, { location: { pathname } });
+  return insertedHtml;
+}
+
+function detectBasePath(pathname: string): string {
+  const insertedHtml = runScript(pathname);
   const m = insertedHtml.match(/href="([^"]*)"/);
   if (!m) throw new Error(`Script produced no <base href>. Output: ${insertedHtml}`);
   return m[1];
@@ -100,5 +109,12 @@ describe('inline base-path detection script', () => {
       expect(detectBasePath('/a/trace/trace/abc')).toBe('/a/trace/'));
     it('/jaeger/search/trace/abc → /jaeger/search/', () =>
       expect(detectBasePath('/jaeger/search/trace/abc')).toBe('/jaeger/search/'));
+  });
+
+  describe('when the backend already put a <base> in the markup', () => {
+    it('does not add a second one', () => {
+      expect(runScript('/trace/abc123', true)).toBe('');
+      expect(runScript('/jaeger/search', true)).toBe('');
+    });
   });
 });
