@@ -4,7 +4,16 @@
 import * as ReactRouterDom from 'react-router-dom';
 
 import { MAX_LENGTH } from '../DeepDependencies/Graph/DdgNodeContent/constants';
-import { ROUTE_PATH, getUrl, getUrlState, isSameQuery, matches, searchQueryFromUrl } from './url';
+import { ALL_OPERATIONS } from '../../constants/search-form';
+import {
+  ROUTE_PATH,
+  getUrl,
+  getUrlState,
+  isSameQuery,
+  matches,
+  searchQueryFromUrl,
+  searchQueryToUrlState,
+} from './url';
 
 vi.mock('react-router-dom', () => ({
   matchPath: vi.fn(),
@@ -296,6 +305,57 @@ describe('SearchTracePage/url', () => {
       expect(endUs).toBeLessThanOrEqual(after * 1000 + 1000 * 1000);
       // start should be 1 hour before end
       expect(endUs - startUs).toBeCloseTo(60 * 60 * 1_000_000, -6);
+    });
+
+    it('omits operation when operation is "all" or ALL_OPERATIONS', () => {
+      const resultLegacy = searchQueryFromUrl('?service=svc&operation=all&start=1000000000&end=4600000000');
+      expect(resultLegacy?.operation).toBeUndefined();
+
+      const resultSentinel = searchQueryFromUrl(
+        `?service=svc&operation=${ALL_OPERATIONS}&start=1000000000&end=4600000000`
+      );
+      expect(resultSentinel?.operation).toBeUndefined();
+    });
+
+    it('retains operation when operation is a specific name', () => {
+      const result = searchQueryFromUrl('?service=svc&operation=get_user&start=1000000000&end=4600000000');
+      expect(result?.operation).toBe('get_user');
+    });
+  });
+
+  describe('searchQueryToUrlState', () => {
+    it('omits operation when operation is "all" or ALL_OPERATIONS', () => {
+      const stateLegacy = searchQueryToUrlState({
+        service: 'svc',
+        operation: 'all',
+        start: '1000',
+        end: '2000',
+        limit: 20,
+        lookback: '1h',
+      });
+      expect(stateLegacy.operation).toBeUndefined();
+
+      const stateSentinel = searchQueryToUrlState({
+        service: 'svc',
+        operation: ALL_OPERATIONS,
+        start: '1000',
+        end: '2000',
+        limit: 20,
+        lookback: '1h',
+      });
+      expect(stateSentinel.operation).toBeUndefined();
+    });
+
+    it('retains operation when operation is a specific name', () => {
+      const state = searchQueryToUrlState({
+        service: 'svc',
+        operation: 'get_user',
+        start: '1000',
+        end: '2000',
+        limit: 20,
+        lookback: '1h',
+      });
+      expect(state.operation).toBe('get_user');
     });
   });
 });
