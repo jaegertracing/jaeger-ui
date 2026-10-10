@@ -9,7 +9,10 @@ import type { TraceSummary } from '../../types/trace-summary';
  * Similar to useSearchTraces() from hooks/useTraceDiscovery.ts,
  * uploaded traces also use a **singleton cache design**.
  */
-const UPLOADED_SUMMARIES_QUERY_KEY = ['uploadedSummaries'] as const;
+// Exported so the trace page can hide its reload action for uploaded traces;
+// their data lives in the trace cache under the shared key and a backend
+// refetch would drop the only copy.
+export const UPLOADED_SUMMARIES_QUERY_KEY = ['uploadedSummaries'] as const;
 const UPLOADED_RAW_TRACES_QUERY_KEY = ['uploadedRawTraces'] as const;
 
 type UploadedTraces = {
@@ -22,6 +25,13 @@ type UploadedTraces = {
 export function useClearUploadedTraces(): () => void {
   const queryClient = useQueryClient();
   return useCallback(() => {
+    // Uploaded traces share the ['trace', id] cache key with backend traces.
+    // Evict their cached copies alongside the registry so a later visit
+    // refetches instead of showing a guard-less upload.
+    const summaries = queryClient.getQueryData<TraceSummary[]>(UPLOADED_SUMMARIES_QUERY_KEY) ?? [];
+    summaries.forEach(summary => {
+      queryClient.removeQueries({ queryKey: ['trace', summary.traceID], exact: true });
+    });
     queryClient.setQueryData(UPLOADED_SUMMARIES_QUERY_KEY, []);
     queryClient.setQueryData(UPLOADED_RAW_TRACES_QUERY_KEY, []);
   }, [queryClient]);

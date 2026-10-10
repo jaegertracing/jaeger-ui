@@ -12,7 +12,8 @@ export function runTraceContractSuite(pipeline) {
     window.getJaegerUiConfig = () => ({ topTagPrefixes });
     getConfig.clear();
     try {
-      // getTraceName() memoizes by trace ID, so this trace must not share one with the tests below.
+      // The header cache keys on spans-array identity, so this fixed trace ID
+      // is safe to reuse across cases.
       const traceID = '0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f';
       const input = pipeline.materialize({
         traceID,

@@ -10,7 +10,13 @@ import JaegerAPI from '../api/jaeger';
 import { fetchedState } from '../constants';
 import traceGenerator from '../demo/trace-generators';
 import transformTraceData from '../model/transform-trace-data';
-import { getCachedTrace, populateTraceCache, useTrace, useTraces } from './useTraceLoading';
+import {
+  getCachedTrace,
+  populateTraceCache,
+  reloadBackendTrace,
+  useTrace,
+  useTraces,
+} from './useTraceLoading';
 import { queryClient as appQueryClient } from '../query/app-query-client';
 
 const mockFetchTrace = vi.mocked(JaegerAPI.fetchTrace);
@@ -133,6 +139,22 @@ describe('useTrace', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(mockFetchTrace).not.toHaveBeenCalled();
     expect(result.current.data).toBe(otelTrace);
+  });
+});
+
+describe('reloadBackendTrace', () => {
+  it('clears the current trace and its aliases without clearing search', async () => {
+    appQueryClient.setQueryData(['trace', 'alias'], otelTrace);
+    appQueryClient.setQueryData(['trace', otelTrace.traceID], otelTrace);
+    appQueryClient.setQueryData(['trace', 'other'], { ...otelTrace, traceID: 'other' });
+    appQueryClient.setQueryData(['search', 'results'], ['existing result']);
+
+    await reloadBackendTrace(otelTrace.traceID);
+
+    expect(appQueryClient.getQueryData(['trace', 'alias'])).toBeUndefined();
+    expect(appQueryClient.getQueryData(['trace', otelTrace.traceID])).toBeUndefined();
+    expect(appQueryClient.getQueryData(['trace', 'other'])).toBeDefined();
+    expect(appQueryClient.getQueryData(['search', 'results'])).toEqual(['existing result']);
   });
 });
 

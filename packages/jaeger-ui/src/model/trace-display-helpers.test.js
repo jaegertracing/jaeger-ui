@@ -5,6 +5,7 @@
 import {
   _getTracePageHeaderPartsImpl as getTracePageHeaderParts,
   getIncompleteTraceTooltip,
+  getTraceName,
 } from './trace-display-helpers';
 
 describe('getTracePageHeaderParts', () => {
@@ -253,6 +254,54 @@ describe('getTracePageHeaderParts', () => {
 
   it('returns an id of root span with no refs', () => {
     expect(getTracePageHeaderParts(spansWithOneRootWithNoRefs)).toEqual(fullTracePageHeaderParts);
+  });
+});
+
+describe('getTraceName', () => {
+  it('recomputes the title when a reload adds the missing root span', () => {
+    const traceID = 'reloaded-trace';
+    const child = {
+      spanID: 'child',
+      traceID,
+      startTime: 200,
+      operationName: 'child-op',
+      process: { serviceName: 'child-svc' },
+      references: [{ refType: 'CHILD_OF', spanID: 'root', traceID }],
+    };
+    expect(getTraceName([child])).toBe('child-svc: child-op');
+
+    const root = {
+      spanID: 'root',
+      traceID,
+      startTime: 100,
+      operationName: 'root-op',
+      process: { serviceName: 'root-svc' },
+      references: [],
+    };
+    expect(getTraceName([child, root])).toBe('root-svc: root-op');
+  });
+
+  it('recomputes the title when a reload swaps spans without changing the count', () => {
+    const traceID = 'swapped-trace';
+    const first = {
+      spanID: 'first',
+      traceID,
+      startTime: 100,
+      operationName: 'first-op',
+      process: { serviceName: 'first-svc' },
+      references: [],
+    };
+    expect(getTraceName([first])).toBe('first-svc: first-op');
+
+    const second = {
+      spanID: 'second',
+      traceID,
+      startTime: 100,
+      operationName: 'second-op',
+      process: { serviceName: 'second-svc' },
+      references: [],
+    };
+    expect(getTraceName([second])).toBe('second-svc: second-op');
   });
 });
 

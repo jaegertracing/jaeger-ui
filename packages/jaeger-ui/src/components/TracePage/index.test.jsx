@@ -5,6 +5,8 @@ import React from 'react';
 import { render, screen, act, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
+import { Provider } from 'react-redux';
+import { createStore } from 'redux';
 
 import {
   computeAdjustedRange,
@@ -13,6 +15,7 @@ import {
   mapStateToProps,
   shortcutConfig,
   TracePageImpl as TracePage,
+  TracePageRoute,
   VIEW_MIN_RANGE,
 } from './index';
 import memoizedTraceCriticalPath from './CriticalPath/index';
@@ -25,6 +28,8 @@ import traceGenerator from '../../demo/trace-generators';
 import transformTraceData from '../../model/transform-trace-data';
 import filterSpansSpy from '../../utils/filter-spans';
 import updateUiFindSpy from '../../utils/update-ui-find';
+import { queryClient } from '../../query/app-query-client';
+import { UPLOADED_SUMMARIES_QUERY_KEY } from '../SearchTracePage/useUploadedTraces';
 import { ETraceViewType } from './types';
 import ScrollManager from './ScrollManager';
 
@@ -124,6 +129,7 @@ const {
   mockTraceTimelineStore,
   useEmbeddedStateMock,
   useTraceMock,
+  mockReloadBackendTrace,
 } = vi.hoisted(() => ({
   mockSubmitTraceToArchive: jest.fn(),
   mockAcknowledge: jest.fn(),
@@ -136,9 +142,11 @@ const {
   mockTraceTimelineStore: {
     focusUiFindMatches: jest.fn(),
     prunedServices: new Set(),
+    resetTraceView: jest.fn(),
   },
   useEmbeddedStateMock: jest.fn().mockReturnValue(null),
   useTraceMock: jest.fn(),
+  mockReloadBackendTrace: jest.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../../stores/archive-store', () => ({
@@ -153,18 +161,25 @@ vi.mock('../../stores/embedded-store', () => ({
 
 vi.mock('../../hooks/useTraceLoading', () => ({
   useTrace: (...args) => useTraceMock(...args),
+  reloadBackendTrace: (...args) => mockReloadBackendTrace(...args),
 }));
 
-vi.mock('./TraceTimelineViewer/store', () => ({
-  useLayoutPrefsStore: jest.fn(selector => selector(mockLayoutPrefsStore)),
-  useTraceTimelineStore: jest.fn(selector => selector(mockTraceTimelineStore)),
-  setDetailPanelMode: (...args) => mockSetDetailPanelMode(...args),
-  SPAN_NAME_COLUMN_WIDTH_MIN: 0.15,
-  SPAN_NAME_COLUMN_WIDTH_MAX: 0.85,
-  SIDE_PANEL_WIDTH_MIN: 0.2,
-  SIDE_PANEL_WIDTH_MAX: 0.7,
-  MIN_TIMELINE_COLUMN_WIDTH: 0.05,
-}));
+vi.mock('../../hooks/useConfig', () => ({ useConfig: () => ({}) }));
+
+vi.mock('./TraceTimelineViewer/store', () => {
+  const useTraceTimelineStore = jest.fn(selector => selector(mockTraceTimelineStore));
+  useTraceTimelineStore.getState = () => mockTraceTimelineStore;
+  return {
+    useLayoutPrefsStore: jest.fn(selector => selector(mockLayoutPrefsStore)),
+    useTraceTimelineStore,
+    setDetailPanelMode: (...args) => mockSetDetailPanelMode(...args),
+    SPAN_NAME_COLUMN_WIDTH_MIN: 0.15,
+    SPAN_NAME_COLUMN_WIDTH_MAX: 0.85,
+    SIDE_PANEL_WIDTH_MIN: 0.2,
+    SIDE_PANEL_WIDTH_MAX: 0.7,
+    MIN_TIMELINE_COLUMN_WIDTH: 0.05,
+  };
+});
 
 vi.mock('./TracePageHeader', async () => {
   const { forwardRef } = require('react');
@@ -183,9 +198,9 @@ vi.mock('./TracePageHeader', async () => {
 
 const mockNavigate = jest.fn();
 vi.mock('react-router-dom', async () => {
-  const { MemoryRouter: ActualMemoryRouter } = await vi.importActual('react-router-dom');
+  const actual = await vi.importActual('react-router-dom');
   return {
-    MemoryRouter: ActualMemoryRouter,
+    ...actual,
     useNavigate: () => mockNavigate,
   };
 });
@@ -246,6 +261,79 @@ describe('<TracePage>', () => {
     capturedGraphProps = {};
     defaultProps.focusUiFindMatches.mockClear();
     mockTraceTimelineStore.focusUiFindMatches.mockClear();
+  });
+
+  it('reloads the same trace with a fresh view and keeps search navigation', () => {
+    const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    queryClient.setQueryData(UPLOADED_SUMMARIES_QUERY_KEY, []);
+    const store = createStore(() => ({ traceTimeline: {} }));
+    const location = {
+      pathname: `/trace/${trace.traceID}`,
+      search: '?uiFind=error',
+      state: { fromSearch: '/search?service=frontend' },
+    };
+    render(
+      <Provider store={store}>
+        <MemoryRouter initialEntries={[`${location.pathname}${location.search}`]}>
+          <TracePageRoute params={{ id: trace.traceID }} location={location} />
+        </MemoryRouter>
+      </Provider>
+    );
+
+    act(() => capturedHeaderProps.updateViewRangeTime(0.2, 0.8));
+    expect(capturedHeaderProps.viewRange.time.current).toEqual([0.2, 0.8]);
+
+    scrollPageMod.cancel.mockClear();
+    act(() => capturedHeaderProps.onReloadTrace());
+
+    expect(mockReloadBackendTrace).toHaveBeenCalledWith(trace.traceID);
+    expect(mockTraceTimelineStore.resetTraceView).toHaveBeenCalledOnce();
+    // The handler cancels once; the remount it triggers fires the shortcuts
+    // effect cleanup, which cancels again.
+    expect(scrollPageMod.cancel).toHaveBeenCalled();
+    expect(scrollTo).toHaveBeenCalledWith(0, 0);
+    expect(capturedHeaderProps.viewRange.time.current).toEqual([0, 1]);
+    expect(capturedHeaderProps.toSearch).toBe('/search?service=frontend');
+    expect(mockNavigate).not.toHaveBeenCalled();
+    scrollTo.mockRestore();
+  });
+
+  it('hides the reload action for an uploaded trace', () => {
+    const store = createStore(() => ({ traceTimeline: {} }));
+    queryClient.setQueryData(UPLOADED_SUMMARIES_QUERY_KEY, [{ traceID: trace.traceID }]);
+    const location = { pathname: `/trace/${trace.traceID}`, search: '', state: null };
+    render(
+      <Provider store={store}>
+        <MemoryRouter initialEntries={[location.pathname]}>
+          <TracePageRoute params={{ id: trace.traceID }} location={location} />
+        </MemoryRouter>
+      </Provider>
+    );
+
+    expect(capturedHeaderProps.onReloadTrace).toBeUndefined();
+    queryClient.setQueryData(UPLOADED_SUMMARIES_QUERY_KEY, []);
+  });
+
+  it('ignores a reload issued after the trace was uploaded', () => {
+    const store = createStore(() => ({ traceTimeline: {} }));
+    queryClient.setQueryData(UPLOADED_SUMMARIES_QUERY_KEY, []);
+    const location = { pathname: `/trace/${trace.traceID}`, search: '', state: null };
+    render(
+      <Provider store={store}>
+        <MemoryRouter initialEntries={[location.pathname]}>
+          <TracePageRoute params={{ id: trace.traceID }} location={location} />
+        </MemoryRouter>
+      </Provider>
+    );
+
+    const { onReloadTrace } = capturedHeaderProps;
+    expect(onReloadTrace).toBeDefined();
+    queryClient.setQueryData(UPLOADED_SUMMARIES_QUERY_KEY, [{ traceID: trace.traceID }]);
+    act(() => onReloadTrace());
+
+    expect(mockReloadBackendTrace).not.toHaveBeenCalled();
+    expect(mockTraceTimelineStore.resetTraceView).not.toHaveBeenCalled();
+    queryClient.setQueryData(UPLOADED_SUMMARIES_QUERY_KEY, []);
   });
 
   describe('clearSearch', () => {

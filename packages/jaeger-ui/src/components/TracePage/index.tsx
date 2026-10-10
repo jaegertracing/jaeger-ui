@@ -50,7 +50,10 @@ import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { parseUiFind } from '../common/UiFindInput';
 import { LocationState, ReduxState, TNil } from '../../types';
-import { useTrace } from '../../hooks/useTraceLoading';
+import type { TraceSummary } from '../../types/trace-summary';
+import { queryClient } from '../../query/app-query-client';
+import { reloadBackendTrace, useTrace } from '../../hooks/useTraceLoading';
+import { UPLOADED_SUMMARIES_QUERY_KEY } from '../SearchTracePage/useUploadedTraces';
 import { IOtelTrace } from '../../types/otel';
 import filterSpans from '../../utils/filter-spans';
 import updateUiFind from '../../utils/update-ui-find';
@@ -80,6 +83,7 @@ type TOwnProps = {
   disableJsonView: boolean;
   traceGraphConfig?: TraceGraphConfig;
   useOtelTerms: boolean;
+  onReloadTrace?: () => void;
 };
 
 type TReduxProps = {
@@ -156,6 +160,7 @@ export function TracePageImpl(props: TProps) {
     traceGraphConfig,
     uiFind,
     useOtelTerms,
+    onReloadTrace,
   } = props;
 
   const id = params.id;
@@ -416,6 +421,7 @@ export function TracePageImpl(props: TProps) {
     linkToStandalone: getUrl(id),
     nextResult,
     onArchiveClicked: archiveTrace,
+    onReloadTrace,
     onDetailPanelModeToggle,
     onSlimViewClicked: toggleSlimView,
     onTimelineToggle,
@@ -559,15 +565,42 @@ type TracePageProps = {
   params: { id: string };
 };
 
-const TracePage = (props: TracePageProps) => {
+// The upload registry lives in the shared query client, so the trace route can
+// read it without mounting the search page hook.
+function isUploadedTrace(traceID: string): boolean {
+  const summaries = queryClient.getQueryData<TraceSummary[]>(UPLOADED_SUMMARIES_QUERY_KEY);
+  return summaries?.some(summary => summary.traceID === traceID) ?? false;
+}
+
+export const TracePageRoute = (props: TracePageProps) => {
   const config = useConfig();
+  const [reloadVersion, setReloadVersion] = useState(0);
   const traceID = props.params.id;
   const { data: traceData } = useTrace(traceID);
   useNormalizeTraceId(traceID, traceData);
+  // Uploaded traces share the single trace cache key, so resetting it for one
+  // would drop its only copy and refetch a 404. Read the upload registry here
+  // to hide Reload, and check again in the handler so a stale render cannot
+  // clear an uploaded trace.
+  const isUploaded = isUploadedTrace(traceID);
+
+  const onReloadTrace = useCallback(() => {
+    if (isUploadedTrace(traceID)) return;
+    useTraceTimelineStore.getState().resetTraceView();
+    // A key bump remounts the page but preserves window scroll position, and an
+    // in-flight smooth scroll keeps writing window.scrollTo after the remount,
+    // so cancel it before scrolling to the top.
+    cancelScroll();
+    window.scrollTo(0, 0);
+    setReloadVersion(version => version + 1);
+    void reloadBackendTrace(traceID);
+  }, [traceID]);
 
   return (
     <ConnectedTracePage
+      key={`${traceID}:${reloadVersion}`}
       {...props}
+      onReloadTrace={isUploaded ? undefined : onReloadTrace}
       params={{ ...props.params, id: traceID }}
       archiveEnabled={Boolean(config.archiveEnabled)}
       enableSidePanel={Boolean(config.traceTimeline?.enableSidePanel)}
@@ -580,4 +613,4 @@ const TracePage = (props: TracePageProps) => {
   );
 };
 
-export default withRouteProps(TracePage);
+export default withRouteProps(TracePageRoute);
