@@ -277,8 +277,8 @@ describe('<VirtualizedTraceViewImpl>', () => {
       const accessors = props.registerAccessors.mock.calls[0][0];
       expect(accessors.mapSpanIndexToRowIndex(0)).toBe(0);
       expect(accessors.mapSpanIndexToRowIndex(1)).toBe(1);
-      expect(() => accessors.mapSpanIndexToRowIndex(2)).toThrow(/unable to find row for span index/);
-      expect(() => accessors.mapSpanIndexToRowIndex(3)).toThrow(/unable to find row for span index/);
+      expect(accessors.mapSpanIndexToRowIndex(2)).toBe(-1);
+      expect(accessors.mapSpanIndexToRowIndex(3)).toBe(-1);
       expect(accessors.mapSpanIndexToRowIndex(4)).toBe(2);
     });
   });
@@ -757,64 +757,66 @@ describe('<VirtualizedTraceViewImpl>', () => {
     });
   });
 
-  describe('service filter pruning', () => {
-    function makeSpansWithServices() {
-      // Build a small trace with known services:
-      //   span-0: svc-a (depth 0, root)
-      //     span-1: svc-b (depth 1)
-      //       span-2: svc-b (depth 2)
-      //     span-3: svc-c (depth 1)
-      const base = trace.spans[0];
-      const spans = [
-        {
-          ...base,
-          spanID: 'span-0',
-          depth: 0,
-          hasChildren: true,
-          childSpans: [],
-          resource: { ...base.resource, serviceName: 'svc-a' },
-          status: { code: 'UNSET' },
-        },
-        {
-          ...base,
-          spanID: 'span-1',
-          depth: 1,
-          hasChildren: true,
-          childSpans: [],
-          parentSpan: null,
-          resource: { ...base.resource, serviceName: 'svc-b' },
-          status: { code: 'UNSET' },
-        },
-        {
-          ...base,
-          spanID: 'span-2',
-          depth: 2,
-          hasChildren: false,
-          childSpans: [],
-          parentSpan: null,
-          resource: { ...base.resource, serviceName: 'svc-b' },
-          status: { code: 'ERROR' }, // StatusCode.ERROR is the string 'ERROR' (see types/otel.ts)
-        },
-        {
-          ...base,
-          spanID: 'span-3',
-          depth: 1,
-          hasChildren: false,
-          childSpans: [],
-          parentSpan: null,
-          resource: { ...base.resource, serviceName: 'svc-c' },
-          status: { code: 'UNSET' },
-        },
-      ];
-      // Wire up childSpans for error counting
-      spans[1].childSpans = [spans[2]];
-      spans[0].childSpans = [spans[1], spans[3]];
-      spans[1].parentSpan = spans[0];
-      spans[2].parentSpan = spans[1];
-      spans[3].parentSpan = spans[0];
-      return { ...trace, spans };
-    }
+  function makeSpansWithServices() {
+    // Build a small trace with known services:
+    //   span-0: svc-a (depth 0, root)
+    //     span-1: svc-b (depth 1)
+    //       span-2: svc-b (depth 2)
+    //     span-3: svc-c (depth 1)
+    const base = trace.spans[0];
+    const spans = [
+      {
+        ...base,
+        spanID: 'span-0',
+        depth: 0,
+        hasChildren: true,
+        childSpans: [],
+        resource: { ...base.resource, serviceName: 'svc-a' },
+        status: { code: 'UNSET' },
+      },
+      {
+        ...base,
+        spanID: 'span-1',
+        depth: 1,
+        hasChildren: true,
+        childSpans: [],
+        parentSpan: null,
+        resource: { ...base.resource, serviceName: 'svc-b' },
+        status: { code: 'UNSET' },
+      },
+      {
+        ...base,
+        spanID: 'span-2',
+        depth: 2,
+        hasChildren: false,
+        childSpans: [],
+        parentSpan: null,
+        resource: { ...base.resource, serviceName: 'svc-b' },
+        status: { code: 'ERROR' }, // StatusCode.ERROR is the string 'ERROR' (see types/otel.ts)
+      },
+      {
+        ...base,
+        spanID: 'span-3',
+        depth: 1,
+        hasChildren: false,
+        childSpans: [],
+        parentSpan: null,
+        resource: { ...base.resource, serviceName: 'svc-c' },
+        status: { code: 'UNSET' },
+      },
+    ];
+    // Wire up childSpans for error counting
+    spans[1].childSpans = [spans[2]];
+    spans[0].childSpans = [spans[1], spans[3]];
+    spans[1].parentSpan = spans[0];
+    spans[2].parentSpan = spans[1];
+    spans[3].parentSpan = spans[0];
+    const spanMap = new Map();
+    spans.forEach(s => spanMap.set(s.spanID, s));
+    return { ...trace, spans, spanMap };
+  }
 
+  describe('service filter pruning', () => {
     // generateRowStates.test.ts covers the pruning computation itself (subtree
     // removal, placeholder counts, error counting). These tests cover the rows
     // VirtualizedTraceView actually hands to ListView as a result.
@@ -905,6 +907,90 @@ describe('<VirtualizedTraceViewImpl>', () => {
       // renderRow should not throw for pruned placeholder
       const result = listViewProps.itemRenderer('key', {}, prunedIdx, {});
       expect(result).toBeTruthy();
+    });
+  });
+
+  describe('focusedSubtreeSpanID filtering', () => {
+    it('filters rows to only the subtree when focusedSubtreeSpanID is set', () => {
+      const targetSpanID = trace.spans[1].spanID;
+      const expectedSubtreeCount = trace.spans[1].childSpans.length + 1;
+
+      const { listViewProps } = renderAndCapture({
+        ...mockProps,
+        focusedSubtreeSpanID: targetSpanID,
+      });
+
+      expect(listViewProps.dataLength).toBe(expectedSubtreeCount);
+      expect(listViewProps.getKeyFromIndex(0)).toContain(targetSpanID);
+    });
+
+    it('falls back to full trace spans when focusedSubtreeSpanID does not exist in trace', () => {
+      const { listViewProps } = renderAndCapture({
+        ...mockProps,
+        focusedSubtreeSpanID: 'non-existent-span-id',
+      });
+
+      expect(listViewProps.dataLength).toBe(trace.spans.length);
+    });
+
+    it('honors service filter when focusedSubtreeSpanID service is pruned', () => {
+      const customTrace = makeSpansWithServices();
+      const targetSpan = customTrace.spans[1]; // svc-b
+      const targetSpanID = targetSpan.spanID;
+      const targetService = targetSpan.resource.serviceName;
+
+      const { listViewProps } = renderAndCapture({
+        ...mockProps,
+        trace: customTrace,
+        focusedSubtreeSpanID: targetSpanID,
+        prunedServices: new Set([targetService]),
+      });
+
+      // Service filter takes precedence over subtree focus; targetService spans are pruned
+      expect(listViewProps.dataLength).toBeGreaterThan(0);
+      expect(listViewProps.getKeyFromIndex(0)).not.toContain(targetSpanID);
+    });
+
+    it('maps row indices and span indices correctly via registered accessors', () => {
+      const registerAccessors = vi.fn();
+      const targetSpanID = trace.spans[1].spanID;
+
+      render(
+        <VirtualizedTraceViewImpl
+          {...mockProps}
+          registerAccessors={registerAccessors}
+          focusedSubtreeSpanID={targetSpanID}
+        />
+      );
+
+      expect(registerAccessors).toHaveBeenCalled();
+      const accessors = registerAccessors.mock.calls[0][0];
+
+      // Row 0 corresponds to targetSpanID (span index 1 in full trace)
+      expect(accessors.mapRowIndexToSpanIndex(0)).toBe(1);
+      expect(accessors.mapSpanIndexToRowIndex(1)).toBe(0);
+      // Accessor returns -1 safely for a span index outside the focused subtree
+      expect(accessors.mapSpanIndexToRowIndex(0)).toBe(-1);
+    });
+
+    it('filters getSearchedSpanIDs to the focused subtree when search and focus are both active', () => {
+      const registerAccessors = vi.fn();
+      const targetSpanID = trace.spans[1].spanID;
+      const findMatchesIDs = new Set([trace.spans[0].spanID, trace.spans[1].spanID]);
+
+      render(
+        <VirtualizedTraceViewImpl
+          {...mockProps}
+          findMatchesIDs={findMatchesIDs}
+          registerAccessors={registerAccessors}
+          focusedSubtreeSpanID={targetSpanID}
+        />
+      );
+
+      const accessors = registerAccessors.mock.calls[0][0];
+      const searchedIDs = accessors.getSearchedSpanIDs();
+      expect(searchedIDs.has(trace.spans[1].spanID)).toBe(true);
+      expect(searchedIDs.has(trace.spans[0].spanID)).toBe(false);
     });
   });
 });
