@@ -221,7 +221,7 @@ describe('QualityMetrics', () => {
           rej(error);
           try {
             await promise;
-          } catch (e) {
+          } catch {
             // intentionally left blank
           }
         });
@@ -380,7 +380,7 @@ describe('QualityMetrics', () => {
           rej({ message });
           try {
             await promise;
-          } catch (e) {
+          } catch {
             // intentionally left blank
           }
         });

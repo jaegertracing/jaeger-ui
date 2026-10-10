@@ -26,7 +26,7 @@ When the config file has `.js` extension, the `jaeger` binary looks for the comm
 
 ### Configuration for Local Development
 
-When running the UI in development mode via `npm start`, you can provide custom configuration without running the Jaeger backend. Create one of the following files in the `packages/jaeger-ui` directory:
+When running the UI in development mode via `pnpm start`, you can provide custom configuration without running the Jaeger backend. Create one of the following files in the `packages/jaeger-ui` directory:
 
 1. **`jaeger-ui.config.json`** - A JSON file containing your config object:
 
@@ -75,6 +75,22 @@ When running the UI in development mode via `npm start`, you can provide custom 
 An example JSON config file is provided at [jaeger-ui.config.example.json](./jaeger-ui.config.example.json). You can copy it to `jaeger-ui.config.json` and modify it as needed.
 
 These local config files are ignored by git (see `.gitignore`).
+
+#### Backend capabilities in development
+
+The query service reports what its storage supports — archive storage, metrics storage, searching without a service name — by search-replacing a capability blob into the `index.html` it serves. `pnpm start` serves this repository's `index.html` instead and proxies only the API paths, so that blob does not arrive on its own. The dev server therefore asks the proxied query service for its `index.html` and reads the blob out of it, which makes the UI behave as it would when the same backend serves it.
+
+A `backendCapabilities` block in your local config file overrides what the backend reports, so you can exercise a capability the backend at hand does not have:
+
+```json
+{
+  "backendCapabilities": {
+    "searchWithoutServiceName": true
+  }
+}
+```
+
+With no backend running, capabilities fall back to the compile-time defaults in `src/constants/default-config.ts`.
 
 ### Ask Jaeger assistant
 

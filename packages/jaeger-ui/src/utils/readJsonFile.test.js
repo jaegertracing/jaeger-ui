@@ -46,7 +46,7 @@ describe('fileReader.readJsonFile', () => {
       const p = readJsonFile({ rando: true });
       // prevent the unhandled rejection warning
       p.catch(() => {});
-    } catch (_) {
+    } catch {
       threw = true;
     }
     return expect(threw).toBe(false);
@@ -80,6 +80,18 @@ describe('fileReader.readJsonFile', () => {
     const file = new File(['not-json'], 'foo.json');
     const p = readJsonFile({ file });
     return expect(p).rejects.toMatchObject(expect.any(Error));
+  });
+
+  it.each(['null', 'true', '42', '"trace"'])('rejects valid JSON primitive %s', content => {
+    const file = new File([content], 'foo.json');
+    const p = readJsonFile({ file });
+    return expect(p).rejects.toThrow('Invalid JSON trace format');
+  });
+
+  it.each(['', ' \n\t '])('rejects an empty or whitespace-only file', content => {
+    const file = new File([content], 'empty.json');
+    const p = readJsonFile({ file });
+    return expect(p).rejects.toThrow('The JSON file is empty');
   });
 
   it('loads JSON-per-line data', () => {

@@ -39,7 +39,16 @@ export default function filterSpans(textFilter: string, spans: ReadonlyArray<Spa
           if (isTextInFilters(excludeKeys, kv.key)) return false;
           const value = (kv as any).value; // handle legacy KeyValuePair and IAttribute
           if (value === null || value === undefined) return false;
-          const valueString = String(value);
+          let valueString: string;
+          if (typeof value === 'object' && !(value instanceof Uint8Array)) {
+            try {
+              valueString = JSON.stringify(value);
+            } catch {
+              valueString = String(value);
+            }
+          } else {
+            valueString = String(value);
+          }
           // match if key, value or key=value string matches an item in includeFilters
           return (
             isTextInFilters(includeFilters, kv.key) ||
@@ -65,9 +74,10 @@ export default function filterSpans(textFilter: string, spans: ReadonlyArray<Spa
     return (
       isTextInFilters(includeFilters, span.name) ||
       isTextInFilters(includeFilters, span.resource.serviceName) ||
-      isTextInKeyValues(span.attributes) ||
-      (Array.isArray(span.events) && span.events.some(event => isTextInKeyValues(event.attributes))) ||
-      isTextInKeyValues(span.resource.attributes) ||
+      isTextInKeyValues(span.attributes.entries()) ||
+      (Array.isArray(span.events) &&
+        span.events.some(event => isTextInKeyValues(event.attributes.entries()))) ||
+      isTextInKeyValues(span.resource.attributes.entries()) ||
       includeFilters.some(filter => filter === span.spanID)
     );
   };

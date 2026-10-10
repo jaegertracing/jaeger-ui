@@ -51,7 +51,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
   beforeEach(() => {
     legacyTrace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 }));
-    criticalPath = memoizedTraceCriticalPath(legacyTrace);
+    criticalPath = memoizedTraceCriticalPath(legacyTrace).sections;
     trace = legacyTrace.asOtelTrace();
     focusUiFindMatchesMock = jest.fn();
 
@@ -80,6 +80,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       prunedServices: new Set(),
       trace,
       criticalPath,
+      spanPillsEnabled: true,
       uiFind: 'uiFind',
       navigate: jest.fn(),
       location: {
@@ -676,8 +677,8 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
     it('linksGetter is expected to receive url and text for a given link pattern', () => {
       const span = trace.spans[1];
-      const key = span.attributes[0].key;
-      const value = span.attributes[0].value;
+      const key = span.attributes.entries()[0].key;
+      const value = span.attributes.entries()[0].value;
       const val = encodeURIComponent(value);
 
       const linkPatternConfig = [
@@ -814,8 +815,27 @@ describe('<VirtualizedTraceViewImpl>', () => {
       return { ...trace, spans };
     }
 
-    // Pure pruning logic (subtree removal, placeholder counts, error counting)
-    // is tested in generateRowStates.test.ts.
+    // generateRowStates.test.ts covers the pruning computation itself (subtree
+    // removal, placeholder counts, error counting). These tests cover the rows
+    // VirtualizedTraceView actually hands to ListView as a result.
+
+    it('leaves the pruned service and its subtree out of the rendered rows', () => {
+      const customTrace = makeSpansWithServices();
+      const { listViewProps } = renderAndCapture({
+        ...mockProps,
+        trace: customTrace,
+        prunedServices: new Set(['svc-b']),
+      });
+      const renderedSpanIDs = [];
+      for (let i = 0; i < listViewProps.dataLength; i++) {
+        const key = listViewProps.getKeyFromIndex(i);
+        if (key.endsWith('--bar')) renderedSpanIDs.push(key.slice(0, -'--bar'.length));
+      }
+      // span-2 is a child of the pruned span-1, so pruning svc-b drops both.
+      expect(renderedSpanIDs).not.toContain('span-1');
+      expect(renderedSpanIDs).not.toContain('span-2');
+      expect(renderedSpanIDs).toEqual(expect.arrayContaining(['span-0', 'span-3']));
+    });
 
     it('generates correct keys for pruned placeholder rows', () => {
       const customTrace = makeSpansWithServices();

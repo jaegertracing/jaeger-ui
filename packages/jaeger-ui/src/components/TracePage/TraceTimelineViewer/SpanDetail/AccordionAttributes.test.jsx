@@ -6,22 +6,28 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import AccordionAttributes, { AttributesSummary } from './AccordionAttributes';
 import * as markers from './AccordionAttributes.markers';
+import { makeAttributes } from '../../../../model/attributes';
+
+// Test-only: serialize an IAttributes collection so the mock can record what
+// it received. There is no production need to stringify a whole collection.
+const stringifyAttrs = attrs => JSON.stringify(attrs.entries());
 
 vi.mock('./AttributesTable', () => {
   const MockAttributesTable = ({ data, linksGetter }) => (
     <table
       data-testid="key-values-table"
-      data-data={JSON.stringify(data)}
+      data-data={stringifyAttrs(data)}
       data-has-links-getter={!!linksGetter}
     />
   );
   return mockDefault(MockAttributesTable);
 });
 
-const tags = [
+const tagsArray = [
   { key: 'span.kind', value: 'client' },
   { key: 'omg', value: 'mos-def' },
 ];
+const tags = makeAttributes(tagsArray);
 
 describe('<AttributesSummary />', () => {
   it('renders summary list when valid data is provided', () => {
@@ -29,22 +35,22 @@ describe('<AttributesSummary />', () => {
     expect(container.firstChild).toBeInTheDocument();
   });
 
-  it('returns null when data is null or empty', () => {
-    const { container } = render(<AttributesSummary data={null} />);
+  it('returns null when data is empty', () => {
+    const { container } = render(<AttributesSummary data={makeAttributes([])} />);
     expect(container.firstChild).toBeNull();
   });
 
   it('renders the correct number of list items', () => {
     const { container } = render(<AttributesSummary data={tags} />);
     const listItems = container.querySelectorAll('li');
-    expect(listItems.length).toBe(tags.length);
+    expect(listItems.length).toBe(tagsArray.length);
   });
 
   it('displays each key-value pair correctly', () => {
     const { container } = render(<AttributesSummary data={tags} />);
     const listItems = container.querySelectorAll('li');
     const texts = Array.from(listItems).map(node => node.textContent);
-    const expectedTexts = tags.map(tag => `${tag.key}=${tag.value}`);
+    const expectedTexts = tagsArray.map(tag => `${tag.key}=${tag.value}`);
     expect(texts).toEqual(expectedTexts);
   });
 });
@@ -110,13 +116,13 @@ describe('<AccordionAttributes />', () => {
     expect(container.querySelector('.AccordionAttributes--summary')).not.toBeInTheDocument();
     const table = container.querySelector('[data-testid="key-values-table"]');
     expect(table).toBeInTheDocument();
-    expect(table).toHaveAttribute('data-data', JSON.stringify(tags));
+    expect(table).toHaveAttribute('data-data', stringifyAttrs(tags));
   });
 
   it('calls onToggle when data is empty and interactive is true', () => {
     const propsWithEmptyData = {
       ...defaultProps,
-      data: [],
+      data: makeAttributes([]),
     };
     render(<AccordionAttributes {...propsWithEmptyData} />);
     const header = screen.getByText('le-label:').closest('div');

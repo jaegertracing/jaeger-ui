@@ -2,11 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { ApiError } from './api-error';
-import { SearchQuery } from './search';
 import tNil from './TNil';
 import { IOtelTrace } from './otel';
 import TTraceTimeline from './TTraceTimeline';
-import { MetricsReduxState } from './metrics';
 
 export type TNil = tNil;
 
@@ -30,15 +28,5 @@ export type LocationState = {
 
 export type ReduxState = {
   type: string;
-  trace: {
-    search: {
-      error?: ApiError;
-      results: string[];
-      state?: FetchedState;
-      query?: SearchQuery;
-    };
-    rawTraces?: unknown[];
-  };
   traceTimeline: TTraceTimeline;
-  metrics: MetricsReduxState;
 };
