@@ -5,67 +5,12 @@ import _isEqual from 'lodash/isEqual';
 
 import getConfig from '../utils/config/get-config';
 import { getTraceEmoji, getTraceName, getTracePageTitle } from './trace-display-helpers';
-import { KeyValuePair, Span, SpanData, SpanReference, Trace, TraceData } from '../types/trace';
+import { Span, SpanData, SpanReference, Trace, TraceData } from '../types/trace';
 import { IOtelTrace } from '../types/otel';
+import { deduplicateAttributes, orderAttributes } from './trace-attributes';
 
 import OtelTraceFacade from './OtelTraceFacade';
 import { getParentSpanID, getNonParentReferences } from './span';
-
-// exported for tests
-function deduplicateTags(spanTags: ReadonlyArray<KeyValuePair>) {
-  const warningsHash: Map<string, string> = new Map<string, string>();
-  const tags: KeyValuePair[] = [];
-  const seen = new Map<string, Set<KeyValuePair['value']>>();
-  for (const tag of spanTags) {
-    const values = seen.get(tag.key);
-    if (!values || !values.has(tag.value)) {
-      if (values) {
-        values.add(tag.value);
-      } else {
-        seen.set(tag.key, new Set([tag.value]));
-      }
-      tags.push(tag);
-    } else {
-      warningsHash.set(
-        `${tag.key}\0${typeof tag.value}\0${String(tag.value)}`,
-        `Duplicate tag key="${tag.key}" value="${String(tag.value)}"`
-      );
-    }
-  }
-  const warnings = Array.from(warningsHash.values());
-  return { tags, warnings };
-}
-
-// exported for tests
-function orderTags(spanTags: KeyValuePair[], topPrefixes?: readonly string[]) {
-  const orderedTags: KeyValuePair[] = spanTags.slice();
-  const tp = (topPrefixes || []).map((p: string) => p.toLowerCase());
-
-  orderedTags.sort((a, b) => {
-    const aKey = a.key.toLowerCase();
-    const bKey = b.key.toLowerCase();
-
-    for (let i = 0; i < tp.length; i++) {
-      const p = tp[i];
-      if (aKey.startsWith(p) && !bKey.startsWith(p)) {
-        return -1;
-      }
-      if (!aKey.startsWith(p) && bKey.startsWith(p)) {
-        return 1;
-      }
-    }
-
-    if (aKey > bKey) {
-      return 1;
-    }
-    if (aKey < bKey) {
-      return -1;
-    }
-    return 0;
-  });
-
-  return orderedTags;
-}
 
 /**
  * NOTE: Mutates `data` - Transform the HTTP response data into the form the app
@@ -118,11 +63,11 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     span.childSpans = [];
     span.subsidiarilyReferencedBy = [];
 
-    const tagsInfo = deduplicateTags(span.tags);
-    span.tags = orderTags(tagsInfo.tags, getConfig().topTagPrefixes);
+    const attributesInfo = deduplicateAttributes(span.tags);
+    span.tags = orderAttributes(attributesInfo.attributes, getConfig().topTagPrefixes);
     span.warnings = span.warnings || [];
-    if (tagsInfo.warnings && tagsInfo.warnings.length > 0) {
-      (span.warnings as string[]).push(...tagsInfo.warnings);
+    if (attributesInfo.warnings && attributesInfo.warnings.length > 0) {
+      (span.warnings as string[]).push(...attributesInfo.warnings);
     }
 
     spanMap.set(spanID, span);

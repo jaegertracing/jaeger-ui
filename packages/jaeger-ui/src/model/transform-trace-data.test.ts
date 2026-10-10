@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import transformTraceData from './transform-trace-data';
-import { SpanData, SpanReference } from '../types/trace';
+import { SpanData, SpanReference, TraceData } from '../types/trace';
+import { toLegacyTrace } from './test/materializer-legacy';
+import { runTraceContractSuite } from './test/trace-contract-suite';
 
 describe('transformTraceData()', () => {
   const startTime = 1586160015434000;
@@ -167,6 +169,21 @@ describe('transformTraceData()', () => {
     });
   });
 
+  it('should not produce a negative duration for a trace with spans but no root', () => {
+    // Two spans referencing each other form a cycle, so neither is a root and
+    // nothing is reachable by the traversal. The time range must not be left at
+    // its sentinel value, which would yield a negative duration.
+    const spanA = { spanID: 'a', operationName: 'a', parentSpanID: 'b', startTime, duration };
+    const spanB = { spanID: 'b', operationName: 'b', parentSpanID: 'a', startTime, duration };
+
+    const result = transformTraceData(toLegacyTrace({ traceID, serviceName, spans: [spanA, spanB] }))!;
+
+    expect(result.spans.length).toBe(0);
+    expect(result.duration).toBe(0);
+    expect(result.startTime).toBe(0);
+    expect(result.endTime).toBe(0);
+  });
+
   describe('asOtelTrace()', () => {
     it('should implement IOtelTrace interface and memoize the instance', () => {
       const traceData = trace(...spans, rootSpanWithoutRefs);
@@ -187,4 +204,11 @@ describe('transformTraceData()', () => {
       expect(otelTrace2).toBe(otelTrace1);
     });
   });
+});
+
+runTraceContractSuite({
+  name: 'legacy transformer',
+  materialize: toLegacyTrace,
+  spanID: (label: string) => label,
+  parse: (traceData: TraceData & { spans: SpanData[] }) => transformTraceData(traceData)!.asOtelTrace(),
 });

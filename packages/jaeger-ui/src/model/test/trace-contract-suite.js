@@ -1,7 +1,8 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import getConfig from '../utils/config/get-config';
+import getConfig from '../../utils/config/get-config';
+import { SpanKind } from '../../types/otel';
 
 export function runTraceContractSuite(pipeline) {
   // Tag deduplication and ordering run inside the pipeline, so these two
@@ -132,10 +133,11 @@ export function runTraceContractSuite(pipeline) {
     });
   });
 
-  describe('transformTraceData()', () => {
+  describe(pipeline.name, () => {
     const startTime = 1586160015434000;
     const duration = 34000;
-    const traceID = 'f77950feed55c1ce91dd8e87896623a6';
+    // This trace ID differs from the one in transform-trace-data.test.ts because getTraceName() memoizes by trace ID.
+    const traceID = 'a1b2c3d4e5f60718293a4b5c6d7e8f90';
     const rootSpanID = 'd4dcb46e95b781f5';
     const rootOperationName = 'rootOperation';
     const serviceName = 'serviceName';
@@ -143,6 +145,62 @@ export function runTraceContractSuite(pipeline) {
     // Each pipeline renders the span specs into the wire format it parses.
     const trace = (...spans) => pipeline.materialize({ traceID, serviceName, spans });
     const id = pipeline.spanID;
+
+    it('uses UNSPECIFIED for a missing span kind', () => {
+      const result = pipeline.parse(trace({ spanID: rootSpanID, operationName: rootOperationName }));
+      expect(result.spans[0].kind).toBe(SpanKind.UNSPECIFIED);
+    });
+
+    it.each([
+      [0, SpanKind.UNSPECIFIED],
+      [1, SpanKind.INTERNAL],
+      [2, SpanKind.SERVER],
+      [3, SpanKind.CLIENT],
+      [4, SpanKind.PRODUCER],
+      [5, SpanKind.CONSUMER],
+      [99, SpanKind.UNSPECIFIED],
+    ])('maps span kind %s to %s', (kind, expected) => {
+      const result = pipeline.parse(trace({ spanID: rootSpanID, operationName: rootOperationName, kind }));
+      expect(result.spans[0].kind).toBe(expected);
+    });
+
+    it.each([undefined, {}, { name: '' }])('uses unknown for a missing scope name in %s', scope => {
+      const result = pipeline.parse(trace({ spanID: rootSpanID, operationName: rootOperationName, scope }));
+      expect(result.spans[0].instrumentationScope.name).toBe('unknown');
+    });
+
+    it.each([undefined, ''])('uses log for a missing event name %s', name => {
+      const result = pipeline.parse(
+        trace({
+          spanID: rootSpanID,
+          operationName: rootOperationName,
+          events: [{ name, timestamp: startTime }],
+        })
+      );
+      expect(result.spans[0].events[0].name).toBe('log');
+    });
+
+    it('preserves explicit scope and event names', () => {
+      const result = pipeline.parse(
+        trace({
+          spanID: rootSpanID,
+          operationName: rootOperationName,
+          scope: { name: 'instrumentation', version: '1.2.3' },
+          events: [{ name: 'message', timestamp: startTime, attributes: [{ key: 'answer', value: 0 }] }],
+        })
+      );
+      expect(result.spans[0].instrumentationScope).toMatchObject({
+        name: 'instrumentation',
+        version: '1.2.3',
+      });
+      expect(result.spans[0].events[0]).toMatchObject({ name: 'message', timestamp: startTime });
+      expect(result.spans[0].events[0].attributes.getValue('answer')).toBe(0);
+    });
+
+    it('uses an empty warnings array for a span without warnings', () => {
+      const result = pipeline.parse(trace({ spanID: rootSpanID, operationName: rootOperationName }));
+      expect(result.spans[0].warnings).toEqual([]);
+    });
 
     const spans = [
       {
@@ -297,21 +355,6 @@ export function runTraceContractSuite(pipeline) {
       expect(result.spanMap.get(id('brokenLeaf')).startTime).toBe(realStart);
       expect(result.spanMap.get(id('brokenLeaf')).relativeStartTime).toBe(0);
       expect(result.duration).toBe(1000);
-    });
-
-    it('should not produce a negative duration for a trace with spans but no root', () => {
-      // Two spans referencing each other form a cycle, so neither is a root and
-      // nothing is reachable by the traversal. The time range must not be left at
-      // its sentinel value, which would yield a negative duration.
-      const spanA = { spanID: 'a', operationName: 'a', parentSpanID: 'b', startTime, duration };
-      const spanB = { spanID: 'b', operationName: 'b', parentSpanID: 'a', startTime, duration };
-
-      const result = pipeline.parse(trace(spanA, spanB));
-
-      expect(result.spans.length).toBe(0);
-      expect(result.duration).toBe(0);
-      expect(result.startTime).toBe(0);
-      expect(result.endTime).toBe(0);
     });
 
     it('should keep and repair sibling spans that have no usable startTime', () => {
