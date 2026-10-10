@@ -7,6 +7,7 @@ import LoadingIndicator from '../../common/LoadingIndicator';
 import { ServiceMetricsObject } from '../../../types/metrics';
 import './serviceGraph.css';
 import { ApiError } from '../../../types/api-error';
+import { getDisplayTimeZone, toDisplayTime } from '../../../utils/date';
 
 type TProps = {
   width: number;
@@ -28,13 +29,7 @@ type MetricDataPoint = {
   [key: string]: number | null;
 };
 
-export const tickFormat = (v: number): string => {
-  const dateObj = new Date(v);
-  const hours = dateObj.getHours().toString();
-  const minutes = dateObj.getMinutes().toString();
-
-  return `${hours.length === 1 ? `0${hours}` : hours}:${minutes.length === 1 ? `0${minutes}` : minutes}`;
-};
+export const tickFormat = (v: number): string => toDisplayTime(v).format('HH:mm');
 
 type TPlaceholder = {
   name: string;
@@ -296,7 +291,12 @@ function ServiceGraphImpl({
 
           <Tooltip
             contentStyle={{ fontSize: '0.625rem' }}
-            labelFormatter={((value: string | number) => new Date(Number(value)).toLocaleString()) as never}
+            labelFormatter={
+              ((value: string | number) =>
+                new Date(Number(value)).toLocaleString(undefined, {
+                  timeZone: getDisplayTimeZone() ?? undefined,
+                })) as never
+            }
             formatter={tooltipFormatter as never}
           />
 

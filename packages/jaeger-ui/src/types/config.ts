@@ -230,6 +230,12 @@ export type Config = {
   themes: {
     enabled: boolean;
   };
+  // timeZone sets the default time zone for displaying timestamps:
+  // 'browser' (the viewer's local zone), 'utc', or an IANA zone name such as
+  // 'Europe/Berlin'. Users can override it with the time zone picker in the
+  // top navigation, which is remembered in localStorage.
+  // Default: 'browser'.
+  timeZone?: string;
   // traceTimeline controls the trace timeline viewer layout options.
   traceTimeline?: {
     // enableSidePanel enables the side panel layout option in the trace timeline.
