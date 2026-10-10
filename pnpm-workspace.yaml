@@ -14,7 +14,7 @@ overrides:
   react: 19.3.0
   react-dom: 19.3.0
   yaml: 2.9.0
-  '@types/node': 24.13.1
+  '@types/node': 24.19.1
   '@exodus/bytes>@noble/hashes': 'catalog:'
   '@assistant-ui/core': 0.3.3
   '@assistant-ui/store': 0.3.2
