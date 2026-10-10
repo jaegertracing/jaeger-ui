@@ -293,6 +293,7 @@ function buildDetail(
  */
 function generateDetailRest(
   allColumnValues: ITableSpan[],
+  selectedAttributeKey: string,
   selectedAttributeKeySecond: string,
   trace: IOtelTrace,
   useOtelTerms: boolean
@@ -306,8 +307,8 @@ function generateDetailRest(
 
       for (let j = 0; j < allSpans.length; j++) {
         if (
-          allColumnValues[i].name === allSpans[j].resource.serviceName ||
-          allColumnValues[i].name === allSpans[j].name
+          allColumnValues[i].name ===
+          getAttributeValueFromSpan(selectedAttributeKey, allSpans[j], useOtelTerms)
         ) {
           const rest = !allSpans[j].attributes.has(selectedAttributeKeySecond);
           if (rest) {
@@ -413,7 +414,13 @@ function valueSecondDropdown(
 
   // if second dropdown is an attribute a rest must be created
   if (isSecondDropdownAttribute) {
-    return generateDetailRest(allTableValues, selectedAttributeKeySecond, trace, useOtelTerms);
+    return generateDetailRest(
+      allTableValues,
+      selectedAttributeKey,
+      selectedAttributeKeySecond,
+      trace,
+      useOtelTerms
+    );
     // if no attribute is selected the values can be returned
   }
   return allTableValues;

@@ -657,8 +657,56 @@ describe('check self time', () => {
     );
 
     const detailsWithAppTestTag = resultArraySecondGroupBy.filter(x => x.isDetail);
-    expect(detailsWithAppTestTag.length).toBe(1);
-    expect(detailsWithAppTestTag[0].count).toBe(1);
-    expect(resultArraySecondGroupBy.length).toBe(3);
+    expect(detailsWithAppTestTag.map(x => x.name)).toEqual(['Without Tag: app.test-group2', 'group2']);
+    expect(detailsWithAppTestTag.map(x => x.count)).toEqual([1, 1]);
+    expect(resultArraySecondGroupBy.length).toBe(4);
+  });
+
+  it('second dropdown with tag ignores spans of other groups named like the group', () => {
+    const trace = transformTraceData({
+      traceID: 'trace-1',
+      spans: [
+        {
+          traceID: 'trace-1',
+          spanID: 'span-1',
+          operationName: 'query',
+          references: [],
+          startTime: 100,
+          duration: 40,
+          tags: [],
+          logs: [],
+          processID: 'p1',
+        },
+        {
+          traceID: 'trace-1',
+          spanID: 'span-2',
+          operationName: 'service-one',
+          references: [],
+          startTime: 110,
+          duration: 10,
+          tags: [],
+          logs: [],
+          processID: 'p2',
+        },
+      ],
+      processes: {
+        p1: { serviceName: 'service-one', tags: [] },
+        p2: { serviceName: 'service-two', tags: [] },
+      },
+    }).asOtelTrace();
+
+    const resultArray = getColumnValues('Service Name', trace, false);
+    const resultArraySecondGroupBy = getColumnValuesSecondDropdown(
+      resultArray,
+      'Service Name',
+      'http.method',
+      trace,
+      false
+    );
+
+    const detailsOfServiceOne = resultArraySecondGroupBy.filter(
+      x => x.isDetail && x.parentElement === 'service-one'
+    );
+    expect(detailsOfServiceOne.map(x => x.count)).toEqual([1]);
   });
 });
