@@ -7,7 +7,7 @@
 
 > Originally filed as ADR-0002. It is a proposal with a phased implementation plan, so it now lives here and remains the plan of record for the outstanding milestones; [ADR-0002](../adr/0002-otlp-api-v3-migration.md) records the OTEL facade and `api/v3` client that resulted.
 
-**Where this stands**: Phases 1–2 are complete. On Phase 3, service/span-name discovery (3.1) and trace search (3.3) run on `/api/v3/`. The validated `fetchTrace` boundary and captured wire-contract tests have landed in [#4455](https://github.com/jaegertracing/jaeger-ui/pull/4455) and [#4480](https://github.com/jaegertracing/jaeger-ui/pull/4480). The enriched parser and its run of the shared behavior tests are in review in [#4503](https://github.com/jaegertracing/jaeger-ui/pull/4503). On `main`, single-trace loading still uses `/api/traces/:id` and `transformTraceData`; the UI switch and visual parity check remain open.
+**Where this stands**: Phases 1–2 are complete. On Phase 3, service/span-name discovery (3.1) and trace search (3.3) run on `/api/v3/`. The validated `fetchTrace` boundary and captured wire-contract tests have landed in [#4455](https://github.com/jaegertracing/jaeger-ui/pull/4455) and [#4480](https://github.com/jaegertracing/jaeger-ui/pull/4480). The enriched parser and its shared behavior tests are implemented in [#4503](https://github.com/jaegertracing/jaeger-ui/pull/4503). On `main`, single-trace loading still uses `/api/traces/:id` and `transformTraceData`; the UI switch and visual parity check remain open.
 
 ---
 
@@ -491,15 +491,15 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 #### Milestone 3.2: Single Trace Loading
 **Goal**: Load a full trace by ID using the new OTLP parser.
 
-**Partially implemented.** `JaegerClient.fetchTrace()` and its boundary tests have landed in #4455 and #4480. The earlier [#4129](https://github.com/jaegertracing/jaeger-ui/pull/4129) combined a parser with native hook rewiring; its parser work is being carried forward in [#4503](https://github.com/jaegertracing/jaeger-ui/pull/4503), now in review with shared behavior tests. The hook rewire and TracePage integration remain Week 4 work. `hooks/useTraceLoading.ts` still uses `JaegerAPI.fetchTrace` → `transformTraceData(...).asOtelTrace()`. The transport and transformer must be switched beneath the existing `useTrace` / `useTraces` hooks before this milestone is complete.
+**Partially implemented.** `JaegerClient.fetchTrace()` and its boundary tests have landed in #4455 and #4480. The earlier [#4129](https://github.com/jaegertracing/jaeger-ui/pull/4129) combined a parser with native hook rewiring; its parser work and shared behavior tests are implemented in [#4503](https://github.com/jaegertracing/jaeger-ui/pull/4503). The hook rewire and TracePage integration remain Week 4 work. `hooks/useTraceLoading.ts` still uses `JaegerAPI.fetchTrace` → `transformTraceData(...).asOtelTrace()`. The transport and transformer must be switched beneath the existing `useTrace` / `useTraces` hooks before this milestone is complete.
 
 **The typing choice is implemented at the network boundary.** A full trace contains nested `resourceSpans` / `scopeSpans`, recursive `AnyValue` attributes, events, links, and status. `schemas.ts` refines the generated Zod schemas for the observed wire encodings; `JaegerClient.fetchTrace` validates the response envelope and returns `TracesDataWire`. The parser consumes that validated type rather than defining a private wire interface.
 
 **Backend response shape** (`jaeger-query`, `apiv3.HTTPGateway.returnTrace`): `GET /api/v3/traces/{trace_id}` returns a **single** JSON object wrapping the payload in a grpc-gateway envelope, `{"result": {"resourceSpans": [...]}}`, serialised with jsonpb. The proto declares `GetTrace` as a server-streaming RPC, but the HTTP gateway buffers and concatenates all chunks before writing ([jaeger#6467](https://github.com/jaegertracing/jaeger/issues/6467) tracks making it a real stream). A client may therefore assume one document today, but should keep envelope handling separable so incremental parsing can be added without touching the enrichment logic.
 
 - [x] Implement `fetchTrace(traceId)` in `JaegerClient` (`src/api/v3/client.ts`) with validated response-envelope and wire-contract tests (#4455, #4480).
-- [x] Implement the OTLP parser (`src/api/v3/parser.ts`) to convert validated OTLP wire data to enriched `IOtelTrace` (depth, parent/child refs, relative timing; #4503 in review).
-- [x] Run the shared behavior tests through `transformTraceData(...).asOtelTrace()` and `parseOtelTrace()` using inline span specs (#4503 in review).
+- [x] Implement the OTLP parser (`src/api/v3/parser.ts`) to convert validated OTLP wire data to enriched `IOtelTrace` (depth, parent/child refs, relative timing; #4503).
+- [x] Run the shared behavior tests through `transformTraceData(...).asOtelTrace()` and `parseOtelTrace()` using inline span specs (#4503).
 - [ ] Switch the existing React Query `useTrace` / `useTraces` hooks in `src/hooks/useTraceLoading.ts` to `JaegerClient.fetchTrace` and `parseOtelTrace`.
 - [ ] Route `TracePage` through the native loader.
 - [ ] Verify visual parity (trace loaded from `/api/v3/` looks identical to legacy).
@@ -547,7 +547,7 @@ To maintain a clean separation between the backend's wire format and the UI's do
 
 The new parser replaces the role of `transformTraceData` for the OTLP route. Covered by Milestone 3.2.
 
-- [x] Implement `src/api/v3/parser.ts` (#4503 in review; the client validates the wire data before calling `parseOtelTrace`):
+- [x] Implement `src/api/v3/parser.ts` (#4503; the client validates the wire data before calling `parseOtelTrace`):
   ```typescript
   /**
    * Transforms validated OTLP wire data into the enriched domain model.
@@ -801,7 +801,7 @@ Layer refinements over the generated OTLP schemas at the network boundary, then 
 ##### 3. Backend capture and parser contract
 The pinned backend generator ingests OTLP data, captures the v3 response, and checks the committed fixture for drift. The parser runs the shared behavior tests with inline span specs rendered as OTLP by #4527. Comparing legacy and v3 routes for the same stored trace belongs with native loader integration.
 - [x] Capture a reproducible v3 wire response and run its drift check separately from backend-free unit tests (#4480).
-- [x] Run the shared behavior tests through `parseOtelTrace()` (#4503 in review).
+- [x] Run the shared behavior tests through `parseOtelTrace()` (#4503).
 
 #### 3.8 Facade Coexistence & Cache Transition
 
