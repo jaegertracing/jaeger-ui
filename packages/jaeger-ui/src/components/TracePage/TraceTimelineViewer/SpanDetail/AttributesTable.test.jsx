@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import AttributesTable, { LinkValue } from './AttributesTable';
@@ -254,6 +254,53 @@ describe('<AttributesTable>', () => {
         expect(copyIcon).toHaveAttribute('data-copy-text', JSON.stringify(datum, null, 2));
         expect(copyIcon).toHaveAttribute('data-tooltip-title', 'Copy JSON');
       }
+    });
+  });
+
+  describe('large values', () => {
+    const LARGE_VALUE = 'x'.repeat(10_001);
+
+    it('renders a placeholder button instead of full content for large string values', () => {
+      const largeData = makeAttributes([{ key: 'big_attr', value: LARGE_VALUE }]);
+      render(<AttributesTable data={largeData} />);
+
+      // Should show a collapsed placeholder, not the full value
+      expect(screen.getByRole('button', { name: /click to expand/i })).toBeInTheDocument();
+      // Full value should not be in the DOM
+      expect(screen.queryByText(LARGE_VALUE)).not.toBeInTheDocument();
+    });
+
+    it('uses the normal JSON, copy, and link layout after expansion', () => {
+      const largeJson = JSON.stringify({ hello: 'world', message: LARGE_VALUE });
+      const largeData = makeAttributes([{ key: 'big_attr', value: largeJson }]);
+      render(
+        <AttributesTable
+          data={largeData}
+          linksGetter={() => [{ url: 'https://example.com', text: 'More info' }]}
+        />
+      );
+
+      expect(screen.queryByTestId('copy-icon')).not.toBeInTheDocument();
+      expect(screen.queryByTitle('More info')).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: /click to expand/i }));
+
+      const keyRow = screen.getByText('big_attr').closest('tr');
+      expect(keyRow).toHaveClass('KeyValueTable--row-jsonKey');
+      expect(keyRow.nextElementSibling).toHaveClass('KeyValueTable--row-jsonValue');
+      expect(screen.getByTitle('More info')).toHaveAttribute('href', 'https://example.com');
+      expect(screen.getAllByTestId('copy-icon')).toHaveLength(2);
+    });
+
+    it('keeps replacement attributes collapsed', () => {
+      const initialData = makeAttributes([{ key: 'first', value: LARGE_VALUE }]);
+      const { rerender } = render(<AttributesTable data={initialData} />);
+
+      fireEvent.click(screen.getByRole('button', { name: /click to expand/i }));
+      expect(screen.queryByRole('button', { name: /click to expand/i })).not.toBeInTheDocument();
+
+      rerender(<AttributesTable data={makeAttributes([{ key: 'second', value: LARGE_VALUE }])} />);
+      expect(screen.getByRole('button', { name: /click to expand/i })).toBeInTheDocument();
     });
   });
 });
