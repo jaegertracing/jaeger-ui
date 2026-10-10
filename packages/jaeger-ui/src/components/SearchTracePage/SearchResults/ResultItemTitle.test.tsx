@@ -134,6 +134,25 @@ describe('ResultItemTitle', () => {
       expect(link).toBeInTheDocument();
       expect(link).toHaveAttribute('href', defaultProps.linkTo!.pathname);
     });
+
+    it('renders checkbox with accessible aria-label containing traceName', () => {
+      setup(defaultProps);
+      const checkbox = screen.getByRole('checkbox', {
+        name: `Select trace ${defaultProps.traceName} for comparison`,
+      });
+      expect(checkbox).toBeInTheDocument();
+      expect(checkbox).toHaveAttribute('aria-label', `Select trace ${defaultProps.traceName} for comparison`);
+    });
+
+    it('falls back to short traceID in aria-label when traceName is not provided', () => {
+      setup({ ...defaultProps, traceName: undefined });
+      const shortId = defaultProps.traceID.slice(0, 7);
+      const checkbox = screen.getByRole('checkbox', {
+        name: `Select trace ${shortId} for comparison`,
+      });
+      expect(checkbox).toBeInTheDocument();
+      expect(checkbox).toHaveAttribute('aria-label', `Select trace ${shortId} for comparison`);
+    });
   });
 
   describe('router state propagation', () => {
