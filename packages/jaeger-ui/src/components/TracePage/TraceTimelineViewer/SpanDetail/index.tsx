@@ -15,7 +15,9 @@ import { extractGenAiSections } from './GenAITab/genAiData';
 import { formatDuration, formatDurationCompact } from '../utils';
 import CopyIcon from '../../../common/CopyIcon';
 import LabeledList from '../../../common/LabeledList';
+import NewWindowIcon from '../../../common/NewWindowIcon';
 import { isGenAISpan } from '../../../../utils/genai';
+import { getSpanLinks } from '../../../../model/link-patterns';
 
 import { TNil } from '../../../../types';
 import { Hyperlink } from '../../../../types/hyperlink';
@@ -88,6 +90,7 @@ export default function SpanDetail(props: SpanDetailProps) {
     },
   ];
   const deepLinkCopyText = `${window.location.origin}${window.location.pathname}?uiFind=${span.spanID}`;
+  const spanLinks = getSpanLinks(span);
 
   const showGenAITab =
     isGenAISpan(span) && extractGenAiSections(span.attributes).some(section => section.type !== 'other');
@@ -157,6 +160,18 @@ export default function SpanDetail(props: SpanDetailProps) {
           tooltipTitle="Copy deep link to this span"
           buttonText="Copy"
         />
+        {spanLinks.map(({ url, text }, index) => (
+          <a
+            key={`${url}-${index}`}
+            className="ub-ml1"
+            href={url}
+            title={text}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {text} <NewWindowIcon />
+          </a>
+        ))}
       </small>
     </div>
   );
