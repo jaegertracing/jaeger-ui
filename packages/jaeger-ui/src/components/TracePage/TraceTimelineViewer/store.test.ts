@@ -147,6 +147,7 @@ describe('trace timeline zustand stores', () => {
     });
     useTraceTimelineStore.setState({
       traceID: null,
+      traceSpans: null,
       childrenHiddenIDs: new Set(),
       detailStates: new Map(),
       shouldScrollToFirstUiFindMatch: false,
@@ -294,6 +295,7 @@ describe('trace timeline zustand stores', () => {
       useLayoutPrefsStore.setState({ spanNameColumnWidth: 0.5 });
       useTraceTimelineStore.setState({
         traceID: 'same-trace',
+        traceSpans: [makeSpan()],
         childrenHiddenIDs: new Set(['span-x']),
         detailStates: new Map([['span-x', new DetailState()]]),
         prunedServices: new Set(['service']),
@@ -304,6 +306,7 @@ describe('trace timeline zustand stores', () => {
 
       const state = useTraceTimelineStore.getState();
       expect(state.traceID).toBeNull();
+      expect(state.traceSpans).toBeNull();
       expect(state.childrenHiddenIDs.size).toBe(0);
       expect(state.detailStates.size).toBe(0);
       expect(state.prunedServices.size).toBe(0);
@@ -334,14 +337,76 @@ describe('trace timeline zustand stores', () => {
         expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBe(0.5);
       });
 
-      it('is a no-op when traceID is the same', () => {
+      it('is a no-op when traceID and spans are unchanged', () => {
+        const trace = makeTrace('same');
+        useTraceTimelineStore.getState().setTrace(trace);
         useTraceTimelineStore.setState({
-          traceID: 'same',
           childrenHiddenIDs: new Set(['span-x']),
         });
-        useTraceTimelineStore.getState().setTrace(makeTrace('same'));
+        const state = useTraceTimelineStore.getState();
+        useTraceTimelineStore.getState().setTrace({ ...trace });
+        expect(useTraceTimelineStore.getState()).toBe(state);
         expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('span-x')).toBe(true);
       });
+
+      it.each(['inline', 'sidepanel'] as const)(
+        'reveals a matching child arriving on same-ID reload in %s mode',
+        async detailPanelMode => {
+          const actualFilter = await vi.importActual<typeof import('../../../utils/filter-spans')>(
+            '../../../utils/filter-spans'
+          );
+          const actualAncestors = await vi.importActual<typeof import('../../../utils/span-ancestor-ids')>(
+            '../../../utils/span-ancestor-ids'
+          );
+          vi.mocked(filterSpans).mockImplementation(actualFilter.default);
+          vi.mocked(spanAncestorIds).mockImplementation(actualAncestors.default);
+          const attributes = { entries: () => [] };
+          const resource = { serviceName: 'service', attributes };
+          const root = makeSpan({ spanID: 'root', name: 'root', hasChildren: true, attributes, resource });
+          const parent = makeSpan({
+            spanID: 'parent',
+            name: 'parent',
+            hasChildren: true,
+            parentSpan: root,
+            attributes,
+            resource,
+          });
+          const existing = makeSpan({
+            spanID: 'existing',
+            name: 'existing',
+            parentSpan: parent,
+            attributes,
+            resource,
+          });
+          const arrived = makeSpan({
+            spanID: 'arrived',
+            name: 'late-match',
+            parentSpan: parent,
+            attributes,
+            resource,
+          });
+          useLayoutPrefsStore.setState({ detailPanelMode, spanNameColumnWidth: 0.5 });
+          useTraceTimelineStore.getState().resetTraceView();
+          useTraceTimelineStore
+            .getState()
+            .setTrace(makeTrace('same', [root, parent, existing]), 'late-match');
+          expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('root')).toBe(true);
+          expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('parent')).toBe(true);
+          expect(useTraceTimelineStore.getState().detailStates.size).toBe(0);
+
+          useTraceTimelineStore
+            .getState()
+            .setTrace(makeTrace('same', [root, parent, existing, arrived]), 'late-match');
+
+          const state = useTraceTimelineStore.getState();
+          expect(state.childrenHiddenIDs.has('root')).toBe(false);
+          expect(state.childrenHiddenIDs.has('parent')).toBe(false);
+          expect(state.detailStates.has('arrived')).toBe(true);
+          expect(state.shouldScrollToFirstUiFindMatch).toBe(true);
+          expect(useLayoutPrefsStore.getState().detailPanelMode).toBe(detailPanelMode);
+          expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBe(0.5);
+        }
+      );
 
       it('applies uiFind filter when provided', () => {
         vi.mocked(filterSpans).mockReturnValue(new Set(['span-1']));
