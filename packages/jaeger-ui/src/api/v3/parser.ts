@@ -298,9 +298,9 @@ function repairMissingStartTime(
 
   const startTime = parent?.startTime ?? (0 as Microseconds);
   const wireEndTime = parsed.spansWithoutStartTime.get(span)!;
-  // OTLP ends are absolute. Preserve the legacy duration fallback only when
-  // the wire end cannot follow the inherited start.
-  const duration = wireEndTime > startTime ? wireEndTime - startTime : span.duration;
+  // OTLP ends are absolute. An end before the inherited start cannot provide
+  // a usable duration, so clamp it instead of retaining an epoch-based interval.
+  const duration = Math.max(0, wireEndTime - startTime);
   span.startTime = startTime;
   span.duration = duration as Microseconds;
   span.endTime = toSafeMicroseconds(BigInt(startTime) + BigInt(duration), 'repaired end timestamp');

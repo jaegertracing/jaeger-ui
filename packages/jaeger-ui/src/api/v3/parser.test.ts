@@ -137,7 +137,8 @@ describe('parseOtelTrace', () => {
     expect(trace.startTime).toBe(1784570820629325);
     expect(trace.duration).toBe(1000);
     expect(child.startTime).toBe(root.startTime);
-    expect(child.duration).toBe(200);
+    expect(child.duration).toBe(0);
+    expect(child.endTime).toBe(child.startTime);
     expect(child.relativeStartTime).toBe(0);
   });
 
@@ -197,6 +198,41 @@ describe('parseOtelTrace', () => {
     expect(trace.spans[0].endTime).toBe(2000);
     expect(trace.duration).toBe(0);
   });
+
+  it.each([undefined, '0'])(
+    'clamps ends at or before the inherited start for start %s',
+    startTimeUnixNano => {
+      const trace = parseOtelTrace(
+        traces([
+          makeSpan({
+            spanId: ROOT_ID,
+            startTimeUnixNano: '1784570820629325000',
+            endTimeUnixNano: '1784570820630325000',
+          }),
+          makeSpan({
+            spanId: CHILD_ID,
+            parentSpanId: ROOT_ID,
+            startTimeUnixNano,
+            endTimeUnixNano: '1784570820629225000',
+          }),
+          makeSpan({
+            spanId: ORPHAN_ID,
+            parentSpanId: ROOT_ID,
+            startTimeUnixNano,
+            endTimeUnixNano: '1784570820629325000',
+          }),
+        ])
+      )!;
+      expect(trace.startTime).toBe(1784570820629325);
+      expect(trace.duration).toBe(1000);
+      for (const spanID of [CHILD_ID, ORPHAN_ID]) {
+        const span = trace.spanMap.get(spanID)!;
+        expect(span.startTime).toBe(trace.startTime);
+        expect(span.duration).toBe(0);
+        expect(span.endTime).toBe(span.startTime);
+      }
+    }
+  );
 
   it('uses the span start for zero event timestamps, including repaired spans', () => {
     const data = traces([
