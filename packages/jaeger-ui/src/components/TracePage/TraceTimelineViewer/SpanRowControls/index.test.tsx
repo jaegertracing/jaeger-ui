@@ -12,10 +12,14 @@ import { useTraceTimelineStore } from '../store';
 import { actions } from '../duck';
 import { IOtelSpan } from '../../../../types/otel';
 
-const mockDispatch = vi.fn();
-vi.mock('react-redux', () => ({
-  useDispatch: () => mockDispatch,
-}));
+const { mockDispatch } = vi.hoisted(() => ({ mockDispatch: vi.fn() }));
+vi.mock('react-redux', async () => {
+  const actual = await vi.importActual<typeof import('react-redux')>('react-redux');
+  return {
+    ...actual,
+    ReactReduxContext: React.createContext({ store: { dispatch: mockDispatch } }),
+  };
+});
 
 vi.mock('copy-to-clipboard', () => ({
   default: vi.fn().mockResolvedValue(true),
