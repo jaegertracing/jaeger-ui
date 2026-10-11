@@ -992,5 +992,51 @@ describe('<VirtualizedTraceViewImpl>', () => {
       expect(searchedIDs.has(trace.spans[1].spanID)).toBe(true);
       expect(searchedIDs.has(trace.spans[0].spanID)).toBe(false);
     });
+
+    it('preserves placeholder row indices without jumping backwards to parent in mapRowIndexToSpanIndex', () => {
+      const registerAccessors = vi.fn();
+      const customTrace = makeSpansWithServices();
+
+      render(
+        <VirtualizedTraceViewImpl
+          {...mockProps}
+          trace={customTrace}
+          prunedServices={new Set(['svc-b'])}
+          registerAccessors={registerAccessors}
+        />
+      );
+
+      const accessors = registerAccessors.mock.calls[0][0];
+      // Row 0 is span-0 (index 0)
+      expect(accessors.mapRowIndexToSpanIndex(0)).toBe(0);
+      // Row 1 is span-3 (index 3 in customTrace)
+      expect(accessors.mapRowIndexToSpanIndex(1)).toBe(3);
+      // Row 2 is pruned placeholder; spanIndex preserves placeholder's max-descendant index (3) instead of jumping back to parent (0)
+      expect(accessors.mapRowIndexToSpanIndex(2)).toBe(3);
+    });
+
+    it('ignores subtree focus and does not filter search when focused span has a pruned ancestor', () => {
+      const registerAccessors = vi.fn();
+      const customTrace = makeSpansWithServices();
+      // span-2 is under span-1. If svc-b is pruned, both span-1 and span-2 are pruned.
+      // Focusing span-2 should be ignored because its ancestor (and itself) is pruned.
+      const findMatchesIDs = new Set(['span-0', 'span-3']);
+
+      const { listViewProps } = renderAndCapture({
+        ...mockProps,
+        trace: customTrace,
+        prunedServices: new Set(['svc-b']),
+        focusedSubtreeSpanID: 'span-2',
+        findMatchesIDs,
+        registerAccessors,
+      });
+
+      // Rows are not restricted to span-2 subtree; span-0 remains visible
+      expect(listViewProps.dataLength).toBe(3); // span-0, placeholder, span-3
+      const accessors = registerAccessors.mock.calls[0][0];
+      const searchedIDs = accessors.getSearchedSpanIDs();
+      expect(searchedIDs.has('span-0')).toBe(true);
+      expect(searchedIDs.has('span-3')).toBe(true);
+    });
   });
 });

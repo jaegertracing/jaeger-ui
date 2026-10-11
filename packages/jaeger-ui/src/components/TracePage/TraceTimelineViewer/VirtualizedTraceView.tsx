@@ -11,7 +11,7 @@ import memoizeOne from 'memoize-one';
 import type { Location, NavigateFunction } from 'react-router-dom';
 import { actions } from './duck';
 import { makeCriticalPathContext } from './criticalPath';
-import generateRowStates, { RowState } from './generateRowStates';
+import generateRowStates, { RowState, isSpanPruned } from './generateRowStates';
 import ListView, { ListViewRef } from './ListView';
 import PrunedSpanRow from './PrunedSpanRow';
 import SpanBarRow from './SpanBarRow';
@@ -120,8 +120,8 @@ function generateRowStatesFromTrace(
   if (focusedSubtreeSpanID) {
     const focusedSpan = trace.spanMap.get(focusedSubtreeSpanID);
     if (focusedSpan) {
-      // If the focused span's service is pruned, ignore focus so service filtering takes precedence
-      if (!prunedServices.has(focusedSpan.resource.serviceName)) {
+      // If the focused span or any ancestor is pruned, ignore focus so service filtering takes precedence
+      if (!isSpanPruned(focusedSpan, prunedServices)) {
         spans = getSubtreeSpans(focusedSpan);
       }
     }
@@ -135,14 +135,20 @@ function generateRowStatesFromTrace(
     trace.spans.forEach((s, idx) => spanIDToTraceIndex.set(s.spanID, idx));
   }
 
+  if (spans !== trace.spans) {
+    rows.forEach(row => {
+      const targetSpan =
+        'isPrunedPlaceholder' in row && spans[row.spanIndex] ? spans[row.spanIndex] : row.span;
+      const fullTraceIndex = spanIDToTraceIndex.get(targetSpan.spanID);
+      if (fullTraceIndex !== undefined) {
+        row.spanIndex = fullTraceIndex;
+      }
+    });
+  }
+
   rows.forEach((row, rowIndex) => {
-    // For normal rows, spans[row.spanIndex] is row.span.
-    // For pruned placeholder rows, row.span is the parent span but row.spanIndex is the descendant span's index in `spans`.
-    // Looking up spans[row.spanIndex] correctly retrieves the represented descendant span rather than the parent.
-    const targetSpan = spans[row.spanIndex] ?? row.span;
-    const traceSpanIndex = spanIDToTraceIndex.get(targetSpan.spanID) ?? row.spanIndex;
-    if (!spanIndexToRowIndex.has(traceSpanIndex)) {
-      spanIndexToRowIndex.set(traceSpanIndex, rowIndex);
+    if (!spanIndexToRowIndex.has(row.spanIndex)) {
+      spanIndexToRowIndex.set(row.spanIndex, rowIndex);
     }
   });
 
@@ -248,35 +254,42 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
     []
   );
 
+  const focusedSubtreeSpanIDs = useMemo(() => {
+    if (!props.focusedSubtreeSpanID || !props.trace) {
+      return null;
+    }
+    const focusedSpan = props.trace.spanMap.get(props.focusedSubtreeSpanID);
+    if (!focusedSpan || isSpanPruned(focusedSpan, props.prunedServices)) {
+      return null;
+    }
+    const subtreeSpans = getSubtreeSpans(focusedSpan);
+    return new Set(subtreeSpans.map(s => s.spanID));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.focusedSubtreeSpanID, props.trace, props.prunedServices]);
+
   const getViewRange = useCallback(() => propsRef.current.currentViewRangeTime, []);
   const getSearchedSpanIDs = useCallback(() => {
-    const { findMatchesIDs, focusedSubtreeSpanID, trace } = propsRef.current;
+    const { findMatchesIDs } = propsRef.current;
     if (!findMatchesIDs) return findMatchesIDs;
-    if (focusedSubtreeSpanID && trace) {
-      const focusedSpan = trace.spanMap.get(focusedSubtreeSpanID);
-      if (focusedSpan) {
-        const subtreeSpans = getSubtreeSpans(focusedSpan);
-        const subtreeSet = new Set(subtreeSpans.map(s => s.spanID));
-        const filteredMatches = new Set<string>();
-        findMatchesIDs.forEach(id => {
-          if (subtreeSet.has(id)) {
-            filteredMatches.add(id);
-          }
-        });
-        return filteredMatches;
-      }
+    if (focusedSubtreeSpanIDs) {
+      const filteredMatches = new Set<string>();
+      findMatchesIDs.forEach(id => {
+        if (focusedSubtreeSpanIDs.has(id)) {
+          filteredMatches.add(id);
+        }
+      });
+      return filteredMatches;
     }
     return findMatchesIDs;
-  }, []);
+  }, [focusedSubtreeSpanIDs]);
   const getCollapsedChildren = useCallback(() => propsRef.current.childrenHiddenIDs, []);
 
   const mapRowIndexToSpanIndex = useCallback(
     (index: number) => {
       const row = getRowStates()[index];
-      if (!row) return -1;
-      return spanIDToTraceIndex.get(row.span.spanID) ?? row.spanIndex;
+      return row ? row.spanIndex : -1;
     },
-    [getRowStates, spanIDToTraceIndex]
+    [getRowStates]
   );
 
   const mapSpanIndexToRowIndex = useCallback((index: number) => {

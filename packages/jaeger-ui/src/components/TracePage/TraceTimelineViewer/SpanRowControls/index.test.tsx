@@ -2,13 +2,20 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import copy from 'copy-to-clipboard';
+import { message } from 'antd';
 
 import { SpanRowControls } from './index';
 import { useTraceTimelineStore } from '../store';
+import { actions } from '../duck';
 import { IOtelSpan } from '../../../../types/otel';
+
+const mockDispatch = vi.fn();
+vi.mock('react-redux', () => ({
+  useDispatch: () => mockDispatch,
+}));
 
 vi.mock('copy-to-clipboard', () => ({
   default: vi.fn().mockResolvedValue(true),
@@ -53,10 +60,16 @@ describe('<SpanRowControls>', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(message, 'success').mockImplementation(() => Promise.resolve(true) as any);
+    vi.spyOn(message, 'error').mockImplementation(() => Promise.resolve(true) as any);
     useTraceTimelineStore.setState({
       focusedSubtreeSpanID: null,
       childrenHiddenIDs: new Set<string>(),
     });
+  });
+
+  afterEach(() => {
+    message.destroy();
   });
 
   it('renders collapse, focus, and more actions buttons for parent span', () => {
@@ -75,7 +88,7 @@ describe('<SpanRowControls>', () => {
     expect(screen.getByTestId('more-actions-btn')).toBeInTheDocument();
   });
 
-  it('toggles subtree collapse when collapse button is clicked', () => {
+  it('toggles subtree collapse when collapse button is clicked and dual-writes to Redux', () => {
     const toggleSubtreeCollapse = vi.fn();
     useTraceTimelineStore.setState({ toggleSubtreeCollapse });
 
@@ -83,6 +96,7 @@ describe('<SpanRowControls>', () => {
     const collapseBtn = screen.getByTestId('collapse-subtree-btn');
 
     fireEvent.click(collapseBtn);
+    expect(mockDispatch).toHaveBeenCalledWith(actions.childrenToggle('span-1'));
     expect(toggleSubtreeCollapse).toHaveBeenCalledWith(mockParentSpan);
   });
 
@@ -102,7 +116,7 @@ describe('<SpanRowControls>', () => {
     expect(useTraceTimelineStore.getState().focusedSubtreeSpanID).toBeNull();
   });
 
-  it('copies deep link to clipboard preserving existing query parameters and hash', () => {
+  it('copies deep link to clipboard preserving existing query parameters and hash', async () => {
     Object.defineProperty(window, 'location', {
       value: new URL('https://example.com/trace/trace-1?svcFilter=service-x#details'),
       writable: true,
@@ -117,15 +131,19 @@ describe('<SpanRowControls>', () => {
     const copyDeepLinkItem = screen.getByText('Copy deep link');
     expect(copyDeepLinkItem).toBeInTheDocument();
 
-    fireEvent.click(copyDeepLinkItem);
+    await act(async () => {
+      fireEvent.click(copyDeepLinkItem);
+    });
+
     expect(copy).toHaveBeenCalledWith(
       expect.stringMatching(
         /^https:\/\/example\.com\/trace\/trace-1\?.*svcFilter=service-x.*uiFind=span-1.*#details$/
       )
     );
+    expect(message.success).toHaveBeenCalledWith('Deep link copied to clipboard');
   });
 
-  it('copies span ID to clipboard on menu item click', () => {
+  it('copies span ID to clipboard on menu item click', async () => {
     render(<SpanRowControls span={mockParentSpan} />);
     const moreBtn = screen.getByTestId('more-actions-btn');
 
@@ -134,11 +152,15 @@ describe('<SpanRowControls>', () => {
     const copySpanIdItem = screen.getByText('Copy span ID');
     expect(copySpanIdItem).toBeInTheDocument();
 
-    fireEvent.click(copySpanIdItem);
+    await act(async () => {
+      fireEvent.click(copySpanIdItem);
+    });
+
     expect(copy).toHaveBeenCalledWith('span-1');
+    expect(message.success).toHaveBeenCalledWith('Span ID copied to clipboard');
   });
 
-  it('handles copy failure gracefully', () => {
+  it('handles copy failure gracefully and displays message.error', async () => {
     vi.mocked(copy).mockResolvedValueOnce(false);
     render(<SpanRowControls span={mockParentSpan} />);
     const moreBtn = screen.getByTestId('more-actions-btn');
@@ -146,9 +168,12 @@ describe('<SpanRowControls>', () => {
     fireEvent.click(moreBtn);
 
     const copySpanIdItem = screen.getByText('Copy span ID');
-    fireEvent.click(copySpanIdItem);
+    await act(async () => {
+      fireEvent.click(copySpanIdItem);
+    });
 
     expect(copy).toHaveBeenCalledWith('span-1');
+    expect(message.error).toHaveBeenCalledWith('Failed to copy span ID to clipboard');
   });
 
   it('renders expand subtree label when subtree is already collapsed', () => {

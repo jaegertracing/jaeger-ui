@@ -45,6 +45,28 @@ describe('timeline-utils subtree helpers', () => {
       const result = getSubtreeSpans(standaloneLeaf);
       expect(result).toEqual([standaloneLeaf]);
     });
+
+    it('does not overflow call stack on deeply nested traces', () => {
+      let current: IOtelSpan = {
+        spanID: 'deep-0',
+        hasChildren: true,
+        childSpans: [],
+      } as unknown as IOtelSpan;
+      const root = current;
+      for (let i = 1; i <= 5000; i++) {
+        const next: IOtelSpan = {
+          spanID: `deep-${i}`,
+          hasChildren: i < 5000,
+          childSpans: [],
+        } as unknown as IOtelSpan;
+        current.childSpans = [next];
+        current = next;
+      }
+      const result = getSubtreeSpans(root);
+      expect(result.length).toBe(5001);
+      expect(result[0].spanID).toBe('deep-0');
+      expect(result[5000].spanID).toBe('deep-5000');
+    });
   });
 
   describe('getDescendantParentSpanIDs', () => {
@@ -60,6 +82,29 @@ describe('timeline-utils subtree helpers', () => {
     it('handles a leaf span with no childSpans property safely', () => {
       const result = getDescendantParentSpanIDs(standaloneLeaf);
       expect(result.size).toBe(0);
+    });
+
+    it('does not overflow call stack on deeply nested traces', () => {
+      let current: IOtelSpan = {
+        spanID: 'deep-0',
+        hasChildren: true,
+        childSpans: [],
+      } as unknown as IOtelSpan;
+      const root = current;
+      for (let i = 1; i <= 5000; i++) {
+        const next: IOtelSpan = {
+          spanID: `deep-${i}`,
+          hasChildren: i < 5000,
+          childSpans: [],
+        } as unknown as IOtelSpan;
+        current.childSpans = [next];
+        current = next;
+      }
+      const result = getDescendantParentSpanIDs(root);
+      expect(result.size).toBe(5000);
+      expect(result.has('deep-0')).toBe(true);
+      expect(result.has('deep-4999')).toBe(true);
+      expect(result.has('deep-5000')).toBe(false);
     });
   });
 });

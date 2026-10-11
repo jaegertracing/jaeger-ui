@@ -169,8 +169,10 @@ export default class ScrollManager {
         let isFallbackHidden: boolean;
         do {
           const { isHidden, parentIDs } = isSpanHidden(spans[nextSpanIndex], childrenAreHidden);
-          if (isHidden || xrs.mapSpanIndexToRowIndex(nextSpanIndex) === -1) {
+          if (isHidden) {
             parentIDs.forEach(id => childrenAreHidden.add(id));
+            nextSpanIndex += direction < 0 ? 1 : -1;
+          } else if (xrs.mapSpanIndexToRowIndex(nextSpanIndex) === -1) {
             nextSpanIndex += direction < 0 ? 1 : -1;
           }
           isFallbackHidden = isHidden || xrs.mapSpanIndexToRowIndex(nextSpanIndex) === -1;

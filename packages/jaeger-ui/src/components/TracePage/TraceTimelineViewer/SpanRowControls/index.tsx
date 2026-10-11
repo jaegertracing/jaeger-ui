@@ -9,8 +9,11 @@ import copy from 'copy-to-clipboard';
 import queryString from 'query-string';
 import cx from 'classnames';
 
+import { useDispatch } from 'react-redux';
 import { IOtelSpan } from '../../../../types/otel';
 import { useTraceTimelineStore } from '../store';
+import { actions } from '../duck';
+import { getDescendantParentSpanIDs } from '../timeline-utils';
 
 import './index.css';
 
@@ -19,6 +22,7 @@ type SpanRowControlsProps = {
 };
 
 export const SpanRowControls: React.FC<SpanRowControlsProps> = ({ span }) => {
+  const dispatch = useDispatch<any>();
   const focusedSubtreeSpanID = useTraceTimelineStore(s => s.focusedSubtreeSpanID);
   const setFocusedSubtreeSpanID = useTraceTimelineStore(s => s.setFocusedSubtreeSpanID);
   const childrenHiddenIDs = useTraceTimelineStore(s => s.childrenHiddenIDs);
@@ -31,9 +35,16 @@ export const SpanRowControls: React.FC<SpanRowControlsProps> = ({ span }) => {
     (e: React.MouseEvent) => {
       e.stopPropagation();
       e.preventDefault();
+      // Dual-write to Redux first for tracking and store synchronization
+      const subtreeParentIDs = getDescendantParentSpanIDs(span);
+      for (const id of subtreeParentIDs) {
+        if (isSubtreeCollapsed ? childrenHiddenIDs.has(id) : !childrenHiddenIDs.has(id)) {
+          dispatch(actions.childrenToggle(id));
+        }
+      }
       toggleSubtreeCollapse(span);
     },
-    [toggleSubtreeCollapse, span]
+    [dispatch, span, isSubtreeCollapsed, childrenHiddenIDs, toggleSubtreeCollapse]
   );
 
   const handleFocusToggle = useCallback(

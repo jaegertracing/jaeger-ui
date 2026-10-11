@@ -105,36 +105,40 @@ export function applyDetailSubsectionToggle(
 
 /**
  * Traverses childSpans in pre-order DFS and collects all descendant spans including rootSpan.
+ * Uses an explicit stack to avoid stack overflow on deep traces.
  */
 export function getSubtreeSpans(rootSpan: IOtelSpan): IOtelSpan[] {
   const result: IOtelSpan[] = [];
-  function walk(s: IOtelSpan) {
+  const stack: IOtelSpan[] = [rootSpan];
+  while (stack.length > 0) {
+    const s = stack.pop()!;
     result.push(s);
-    if (s.childSpans) {
-      for (const child of s.childSpans) {
-        walk(child);
+    if (s.childSpans && s.childSpans.length > 0) {
+      for (let i = s.childSpans.length - 1; i >= 0; i--) {
+        stack.push(s.childSpans[i]);
       }
     }
   }
-  walk(rootSpan);
   return result;
 }
 
 /**
  * Returns all span IDs in the subtree (including rootSpan.spanID) that have hasChildren: true.
+ * Uses an explicit stack to avoid stack overflow on deep traces.
  */
 export function getDescendantParentSpanIDs(rootSpan: IOtelSpan): Set<string> {
   const ids = new Set<string>();
-  function walk(s: IOtelSpan) {
+  const stack: IOtelSpan[] = [rootSpan];
+  while (stack.length > 0) {
+    const s = stack.pop()!;
     if (s.hasChildren) {
       ids.add(s.spanID);
     }
-    if (s.childSpans) {
-      for (const child of s.childSpans) {
-        walk(child);
+    if (s.childSpans && s.childSpans.length > 0) {
+      for (let i = s.childSpans.length - 1; i >= 0; i--) {
+        stack.push(s.childSpans[i]);
       }
     }
   }
-  walk(rootSpan);
   return ids;
 }
