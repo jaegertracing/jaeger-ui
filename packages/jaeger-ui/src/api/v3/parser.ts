@@ -35,14 +35,15 @@ type SpanWire = ScopeSpansWire['spans'][number];
 type KeyValueWire = NonNullable<SpanWire['attributes']>[number];
 type AnyValueWire = KeyValueWire['value'];
 
-type MutableOtelSpan = IOtelSpan & {
-  childSpans: IOtelSpan[];
+type MutableOtelSpan = Omit<IOtelSpan, 'childSpans' | 'parentSpan'> & {
+  parentSpan?: MutableOtelSpan;
+  childSpans: MutableOtelSpan[];
   inboundLinks: ILink[];
 };
 
 type ParsedSpanData = {
   spans: MutableOtelSpan[];
-  spansWithoutStartTime: Set<MutableOtelSpan>;
+  spansWithoutStartTime: Map<MutableOtelSpan, Microseconds>;
   eventsWithoutTimestamp: Map<MutableOtelSpan, IEvent[]>;
 };
 
@@ -159,11 +160,15 @@ function breakParentCycles(
     while (current && state.get(current) === undefined) {
       state.set(current, 1);
       path.push(current);
-      current = current.parentSpan as MutableOtelSpan | undefined;
+      current = current.parentSpan;
     }
 
     if (current && state.get(current) === 1) {
-      const formerParent = current.parentSpan as MutableOtelSpan;
+      // Prefer a clock-bearing root so missing starts inherit a real timestamp.
+      if (current.startTime <= 0) {
+        current = path.slice(path.indexOf(current)).find(span => span.startTime > 0) ?? current;
+      }
+      const formerParent = current.parentSpan!;
       const childIndex = formerParent.childSpans.indexOf(current);
       if (childIndex >= 0) formerParent.childSpans.splice(childIndex, 1);
       current.parentSpan = undefined;
@@ -186,7 +191,7 @@ function breakParentCycles(
  */
 function parseSpans(data: TracesDataWire): ParsedSpanData {
   const spans: MutableOtelSpan[] = [];
-  const spansWithoutStartTime = new Set<MutableOtelSpan>();
+  const spansWithoutStartTime = new Map<MutableOtelSpan, Microseconds>();
   const eventsWithoutTimestamp = new Map<MutableOtelSpan, IEvent[]>();
   const spanIdCounts = new Map<string, number>();
   let traceID: string | undefined;
@@ -211,16 +216,16 @@ function parseSpans(data: TracesDataWire): ParsedSpanData {
           throw new Error(`Expected one trace ID, received ${traceID} and ${spanTraceID}`);
         }
         traceID ??= spanTraceID;
-        const hasUsableStartTime =
-          span.startTimeUnixNano !== undefined && BigInt(span.startTimeUnixNano) > 0n;
-        const startTime = hasUsableStartTime ? nanoToMicros(span.startTimeUnixNano) : (0 as Microseconds);
+        const startTime = nanoToMicros(span.startTimeUnixNano);
+        const hasUsableStartTime = startTime > 0;
         const duration = durationMicros(span.startTimeUnixNano ?? '0', span.endTimeUnixNano);
         const endTime = toSafeMicroseconds(BigInt(startTime) + BigInt(duration), 'end timestamp');
         const eventTimesToRepair: IEvent[] = [];
         const events = (span.events ?? []).map(event => {
-          const hasUsableTimestamp = event.timeUnixNano !== undefined && BigInt(event.timeUnixNano) > 0n;
+          const timestamp = nanoToMicros(event.timeUnixNano);
+          const hasUsableTimestamp = timestamp > 0;
           const parsedEvent: IEvent = {
-            timestamp: hasUsableTimestamp ? nanoToMicros(event.timeUnixNano) : startTime,
+            timestamp: hasUsableTimestamp ? timestamp : startTime,
             name: event.name || 'log',
             attributes: toAttributes(event.attributes),
           };
@@ -274,7 +279,7 @@ function parseSpans(data: TracesDataWire): ParsedSpanData {
         };
         spans.push(parsedSpan);
         if (!hasUsableStartTime) {
-          spansWithoutStartTime.add(parsedSpan);
+          spansWithoutStartTime.set(parsedSpan, nanoToMicros(span.endTimeUnixNano));
         }
         if (eventTimesToRepair.length > 0) eventsWithoutTimestamp.set(parsedSpan, eventTimesToRepair);
       }
@@ -292,10 +297,10 @@ function repairMissingStartTime(
   if (!parsed.spansWithoutStartTime.has(span)) return;
 
   const startTime = parent?.startTime ?? (0 as Microseconds);
-  // ProtoJSON may omit a zero timestamp. In either representation the wire
-  // still encodes duration as end-start. Preserve it when repairing the start,
-  // matching the legacy transformer, and recompute the canonical UI end.
-  const duration = span.duration;
+  const wireEndTime = parsed.spansWithoutStartTime.get(span)!;
+  // OTLP ends are absolute. Preserve the legacy duration fallback only when
+  // the wire end cannot follow the inherited start.
+  const duration = wireEndTime > startTime ? wireEndTime - startTime : span.duration;
   span.startTime = startTime;
   span.duration = duration as Microseconds;
   span.endTime = toSafeMicroseconds(BigInt(startTime) + BigInt(duration), 'repaired end timestamp');
@@ -355,13 +360,13 @@ function enrichTrace(parsed: ParsedSpanData): IOtelTrace {
     span.depth = depth;
     traceStartTime = Math.min(traceStartTime, span.startTime);
     traceEndTime = Math.max(traceEndTime, span.endTime);
-    for (const child of span.childSpans) repairMissingStartTime(child as MutableOtelSpan, span, parsed);
+    for (const child of span.childSpans) repairMissingStartTime(child, span, parsed);
     span.childSpans.sort((left, right) => left.startTime - right.startTime);
     span.hasChildren = span.childSpans.length > 0;
     spans.push(span);
 
     for (let index = span.childSpans.length - 1; index >= 0; index--) {
-      stack.push({ span: span.childSpans[index] as MutableOtelSpan, depth: depth + 1 });
+      stack.push({ span: span.childSpans[index], depth: depth + 1 });
     }
   }
 

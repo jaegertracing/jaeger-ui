@@ -2,7 +2,7 @@
 
 * **Status**: Partially Implemented — Phases 1–2 done; the facade design has graduated into [ADR-0002](../adr/0002-otlp-api-v3-migration.md)
 * **Created**: 2025-12-29
-* **Last Updated**: 2026-10-05
+* **Last Updated**: 2026-10-11
 * **Tracking Issue**: [#3265](https://github.com/jaegertracing/jaeger-ui/issues/3265)
 
 > Originally filed as ADR-0002. It is a proposal with a phased implementation plan, so it now lives here and remains the plan of record for the outstanding milestones; [ADR-0002](../adr/0002-otlp-api-v3-migration.md) records the OTEL facade and `api/v3` client that resulted.
@@ -491,7 +491,7 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 #### Milestone 3.2: Single Trace Loading
 **Goal**: Load a full trace by ID using the new OTLP parser.
 
-**Partially implemented.** `JaegerClient.fetchTrace()` and its boundary tests have landed in #4455 and #4480. The earlier [#4129](https://github.com/jaegertracing/jaeger-ui/pull/4129) combined a parser with native hook rewiring; its parser work and shared behavior tests are implemented in [#4503](https://github.com/jaegertracing/jaeger-ui/pull/4503). The hook rewire and TracePage integration remain Week 4 work. `hooks/useTraceLoading.ts` still uses `JaegerAPI.fetchTrace` → `transformTraceData(...).asOtelTrace()`. The transport and transformer must be switched beneath the existing `useTrace` / `useTraces` hooks before this milestone is complete.
+**Partially implemented.** `JaegerClient.fetchTrace()` and its boundary tests have landed in #4455 and #4480. The earlier [#4129](https://github.com/jaegertracing/jaeger-ui/pull/4129) combined a parser with native hook rewiring; its parser work and shared behavior tests are implemented in [#4503](https://github.com/jaegertracing/jaeger-ui/pull/4503). The hook rewire and TracePage integration remain follow-up work. `hooks/useTraceLoading.ts` still uses `JaegerAPI.fetchTrace` → `transformTraceData(...).asOtelTrace()`. The transport and transformer must be switched beneath the existing `useTrace` / `useTraces` hooks before this milestone is complete.
 
 **The typing choice is implemented at the network boundary.** A full trace contains nested `resourceSpans` / `scopeSpans`, recursive `AnyValue` attributes, events, links, and status. `schemas.ts` refines the generated Zod schemas for the observed wire encodings; `JaegerClient.fetchTrace` validates the response envelope and returns `TracesDataWire`. The parser consumes that validated type rather than defining a private wire interface.
 

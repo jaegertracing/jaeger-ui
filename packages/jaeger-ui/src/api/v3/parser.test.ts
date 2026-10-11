@@ -90,8 +90,8 @@ describe('parseOtelTrace', () => {
     expect(trace.orphanSpanCount).toBe(0);
     expect(parent.parentSpan).toBe(root);
     expect(parent.startTime).toBe(root.startTime);
-    expect(parent.duration).toBe(6000);
-    expect(parent.endTime).toBe(7000);
+    expect(parent.duration).toBe(5000);
+    expect(parent.endTime).toBe(6000);
     expect(parent.events.map(event => [event.name, event.timestamp])).toEqual([
       ['parent event', parent.startTime],
       ['early', 2000],
@@ -139,6 +139,63 @@ describe('parseOtelTrace', () => {
     expect(child.startTime).toBe(root.startTime);
     expect(child.duration).toBe(200);
     expect(child.relativeStartTime).toBe(0);
+  });
+
+  it.each([undefined, '0', '1', '999'])(
+    'preserves an absolute end when repairing start %s',
+    startTimeUnixNano => {
+      const trace = parseOtelTrace(
+        traces([
+          makeSpan({
+            spanId: ROOT_ID,
+            startTimeUnixNano: '1784570820629325000',
+            endTimeUnixNano: '1784570820631325000',
+          }),
+          makeSpan({
+            spanId: CHILD_ID,
+            parentSpanId: ROOT_ID,
+            startTimeUnixNano,
+            endTimeUnixNano: '1784570820630325000',
+          }),
+        ])
+      )!;
+      const child = trace.spanMap.get(CHILD_ID)!;
+      expect(trace.startTime).toBe(1784570820629325);
+      expect(trace.duration).toBe(2000);
+      expect(child.startTime).toBe(trace.startTime);
+      expect(child.duration).toBe(1000);
+      expect(child.endTime).toBe(1784570820630325);
+    }
+  );
+
+  it.each(['1', '999'])('repairs submicrosecond event timestamp %s', timeUnixNano => {
+    const trace = parseOtelTrace(
+      traces([
+        makeSpan({
+          spanId: ROOT_ID,
+          events: [{ timeUnixNano, name: 'root event', attributes: [] }],
+        }),
+        makeSpan({
+          spanId: CHILD_ID,
+          parentSpanId: ROOT_ID,
+          startTimeUnixNano: timeUnixNano,
+          events: [{ timeUnixNano, name: 'child event', attributes: [] }],
+        }),
+      ])
+    )!;
+    for (const span of trace.spans) {
+      expect(span.startTime).toBe(1000);
+      expect(span.events[0].timestamp).toBe(span.startTime);
+    }
+  });
+
+  it('clamps a duration to zero when the wire end precedes a usable start', () => {
+    const trace = parseOtelTrace(
+      traces([makeSpan({ startTimeUnixNano: '2000000', endTimeUnixNano: '1000000' })])
+    )!;
+    expect(trace.spans[0].duration).toBe(0);
+    expect(trace.spans[0].endTime).toBe(2000);
+    expect(trace.duration).toBe(0);
   });
 
   it('uses the span start for zero event timestamps, including repaired spans', () => {
@@ -203,6 +260,7 @@ describe('parseOtelTrace', () => {
     expect(root.attributes.getValue('empty')).toBe('');
     expect(root.attributes.getValue('false')).toBe(false);
     expect(root.attributes.getValue('integer')).toBe(0);
+    expect(root.attributes.getValue('float')).toBe(1.5);
     expect(root.attributes.getValue('array')).toEqual(['first', false, '9223372036854775807']);
     expect(root.childSpans.map(span => span.spanID)).toEqual(['1111111111111111', '2222222222222222']);
 
@@ -393,6 +451,59 @@ describe('parseOtelTrace', () => {
     ]);
     expect(trace.spanMap.get(CYCLE_B_ID)!.warnings).toEqual([]);
     expect(trace.spanMap.get(CYCLE_B_ID)!.parentSpan?.spanID).toBe(CYCLE_A_ID);
+  });
+
+  it('breaks a self-cycle without losing the span', () => {
+    const trace = parseOtelTrace(traces([makeSpan({ parentSpanId: ROOT_ID })]))!;
+    const root = trace.spans[0];
+    expect(trace.rootSpans).toEqual([root]);
+    expect(root.parentSpan).toBeUndefined();
+    expect(root.childSpans).toEqual([]);
+    expect(root.warnings).toEqual([`Cyclic parent reference to ${ROOT_ID} removed`]);
+  });
+
+  it('retains all spans in a three-span cycle', () => {
+    const trace = parseOtelTrace(
+      traces([
+        makeSpan({ spanId: ROOT_ID, parentSpanId: CHILD_ID }),
+        makeSpan({ spanId: CHILD_ID, parentSpanId: ORPHAN_ID }),
+        makeSpan({ spanId: ORPHAN_ID, parentSpanId: ROOT_ID }),
+      ])
+    )!;
+    expect(trace.rootSpans.map(span => span.spanID)).toEqual([ROOT_ID]);
+    expect(trace.spans.map(span => [span.spanID, span.depth])).toEqual([
+      [ROOT_ID, 0],
+      [ORPHAN_ID, 1],
+      [CHILD_ID, 2],
+    ]);
+    expect(trace.rootSpans[0].warnings).toEqual([`Cyclic parent reference to ${CHILD_ID} removed`]);
+  });
+
+  it('uses a timestamped cycle member as the root for missing-start inheritance', () => {
+    const trace = parseOtelTrace(
+      traces([
+        makeSpan({
+          spanId: CYCLE_A_ID,
+          parentSpanId: CYCLE_B_ID,
+          startTimeUnixNano: undefined,
+          endTimeUnixNano: '1784570820630325000',
+        }),
+        makeSpan({
+          spanId: CYCLE_B_ID,
+          parentSpanId: CYCLE_A_ID,
+          startTimeUnixNano: '1784570820629325000',
+          endTimeUnixNano: '1784570820631325000',
+        }),
+      ])
+    )!;
+    const root = trace.rootSpans[0];
+    const child = trace.spanMap.get(CYCLE_A_ID)!;
+    expect(root.spanID).toBe(CYCLE_B_ID);
+    expect(root.warnings).toEqual([`Cyclic parent reference to ${CYCLE_A_ID} removed`]);
+    expect(trace.startTime).toBe(1784570820629325);
+    expect(trace.duration).toBe(2000);
+    expect(child.startTime).toBe(root.startTime);
+    expect(child.duration).toBe(1000);
   });
 
   it('uses the earliest root for metadata and summaries when genuine, orphan, and repaired roots coexist', () => {
