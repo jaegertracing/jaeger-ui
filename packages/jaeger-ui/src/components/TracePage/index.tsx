@@ -10,7 +10,7 @@ import type { Location } from 'react-router-dom';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
-import _memoize from 'lodash/memoize';
+import memoizeOne from 'memoize-one';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
@@ -221,12 +221,7 @@ export function TracePageImpl(props: TProps) {
   const viewRangeRef = useRef(viewRange);
   viewRangeRef.current = viewRange;
   const prevIdRef = useRef(id);
-  const idRef = useRef(id);
-  idRef.current = id;
-
-  const filterSpansMemo = useRef(
-    _memoize(filterSpans, (textFilter: string) => `${textFilter} ${idRef.current}`)
-  ).current;
+  const filterSpansMemo = useRef(memoizeOne(filterSpans)).current;
 
   const scrollManagerRef = useRef<ScrollManager>(new ScrollManager(traceData, { scrollBy, scrollTo }));
 

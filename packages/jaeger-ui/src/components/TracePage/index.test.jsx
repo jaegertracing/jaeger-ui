@@ -440,7 +440,7 @@ describe('<TracePage>', () => {
     });
   });
 
-  it('uses uiFind and params.id to compute memo cache key for filterSpans', () => {
+  it('memoizes search matches by uiFind and spans', () => {
     const uiFind = 'uiFind';
     const localTrace = transformTraceData(traceGenerator.trace({})).asOtelTrace();
     useTraceMock.mockReturnValue({ data: localTrace, isPending: false, isError: false, error: null });
@@ -456,12 +456,39 @@ describe('<TracePage>', () => {
     expect(filterSpansSpy).toHaveBeenCalledTimes(1);
     expect(filterSpansSpy).toHaveBeenLastCalledWith(uiFind, localTrace.spans);
 
-    // Changing the trace id invalidates the cache
+    // Changing the spans invalidates the cache
     const otherTrace = transformTraceData(traceGenerator.trace({})).asOtelTrace();
     useTraceMock.mockReturnValue({ data: otherTrace, isPending: false, isError: false, error: null });
     rerender(<TracePage {...defaultProps} params={{ id: 'different-trace-id' }} uiFind={uiFind} />);
     expect(filterSpansSpy).toHaveBeenCalledTimes(2);
     expect(filterSpansSpy).toHaveBeenLastCalledWith(uiFind, otherTrace.spans);
+  });
+
+  it('updates search matches when a same-ID reload adds a matching span', async () => {
+    const { default: realFilterSpans } = await vi.importActual('../../utils/filter-spans');
+    filterSpansSpy.mockImplementation(realFilterSpans);
+    const raw = traceGenerator.trace({});
+    raw.spans[0].operationName = 'arrived-on-reload';
+    const partialRaw = structuredClone(raw);
+    partialRaw.spans = partialRaw.spans.slice(1);
+    const partialTrace = transformTraceData(partialRaw).asOtelTrace();
+    const completeTrace = transformTraceData(structuredClone(raw)).asOtelTrace();
+    useTraceMock.mockReturnValue({ data: partialTrace, isPending: false, isError: false, error: null });
+
+    const props = { ...defaultProps, params: { id: raw.traceID }, uiFind: 'arrived-on-reload' };
+    const { rerender } = render(<TracePage {...props} />);
+    expect(capturedHeaderProps.resultCount).toBe(0);
+    filterSpansSpy.mockClear();
+
+    useTraceMock.mockReturnValue({ data: completeTrace, isPending: false, isError: false, error: null });
+    rerender(<TracePage {...props} />);
+
+    expect(capturedHeaderProps.resultCount).toBe(1);
+    expect(filterSpansSpy).toHaveBeenCalledOnce();
+    expect(filterSpansSpy).toHaveBeenLastCalledWith(props.uiFind, completeTrace.spans);
+    rerender(<TracePage {...props} />);
+    expect(filterSpansSpy).toHaveBeenCalledOnce();
+    filterSpansSpy.mockImplementation(() => new Set());
   });
 
   it('renders a loading indicator when trace is not loaded', () => {
