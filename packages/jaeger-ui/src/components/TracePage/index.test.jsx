@@ -282,6 +282,8 @@ describe('<TracePage>', () => {
 
     act(() => capturedHeaderProps.updateViewRangeTime(0.2, 0.8));
     expect(capturedHeaderProps.viewRange.time.current).toEqual([0.2, 0.8]);
+    act(() => capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceGraph));
+    expect(capturedHeaderProps.viewType).toBe(ETraceViewType.TraceGraph);
 
     scrollPageMod.cancel.mockClear();
     act(() => capturedHeaderProps.onReloadTrace());
@@ -293,6 +295,7 @@ describe('<TracePage>', () => {
     expect(scrollPageMod.cancel).toHaveBeenCalled();
     expect(scrollTo).toHaveBeenCalledWith(0, 0);
     expect(capturedHeaderProps.viewRange.time.current).toEqual([0, 1]);
+    expect(capturedHeaderProps.viewType).toBe(ETraceViewType.TraceTimelineViewer);
     expect(capturedHeaderProps.toSearch).toBe('/search?service=frontend');
     expect(mockNavigate).not.toHaveBeenCalled();
     scrollTo.mockRestore();
@@ -476,6 +479,31 @@ describe('<TracePage>', () => {
     });
     render(<TracePage {...defaultProps} />);
     expect(screen.getByTestId('error-message')).toBeInTheDocument();
+  });
+
+  it('keeps the partial trace and reload action visible after a failed reload', () => {
+    const raw = traceGenerator.trace({});
+    const partialTrace = transformTraceData({ ...raw, spans: raw.spans.slice(1) }).asOtelTrace();
+    const onReloadTrace = jest.fn();
+    const clientHeightSpy = jest.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(100);
+    useTraceMock.mockReturnValue({
+      data: partialTrace,
+      isPending: false,
+      isError: true,
+      error: new Error('reload failed'),
+    });
+
+    render(
+      <TracePage {...defaultProps} params={{ id: partialTrace.traceID }} onReloadTrace={onReloadTrace} />
+    );
+
+    expect(screen.queryByTestId('error-message')).not.toBeInTheDocument();
+    expect(screen.getByTestId('mock-timeline-viewer')).toBeInTheDocument();
+    expect(capturedHeaderProps.trace).toBe(partialTrace);
+    expect(capturedHeaderProps.onReloadTrace).toBe(onReloadTrace);
+    act(() => capturedHeaderProps.onReloadTrace());
+    expect(onReloadTrace).toHaveBeenCalledOnce();
+    clientHeightSpy.mockRestore();
   });
 
   it('renders a loading indicator when loading', () => {

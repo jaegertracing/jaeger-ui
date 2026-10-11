@@ -4,7 +4,7 @@
 vi.mock('../api/v3/client');
 
 import React from 'react';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { jaegerClient } from '../api/v3/client';
 import type { TracesDataWire } from '../api/v3/schemas';
@@ -163,19 +163,65 @@ describe('useTrace', () => {
 });
 
 describe('reloadBackendTrace', () => {
-  it('clears the current trace and its aliases without clearing search', async () => {
-    appQueryClient.setQueryData(['trace', 'alias'], otelTrace);
-    appQueryClient.setQueryData(['trace', otelTrace.traceID], otelTrace);
-    appQueryClient.setQueryData(['trace', 'other'], { ...otelTrace, traceID: 'other' });
-    appQueryClient.setQueryData(['search', 'results'], ['existing result']);
-
-    await reloadBackendTrace(otelTrace.traceID);
-
-    expect(appQueryClient.getQueryData(['trace', 'alias'])).toBeUndefined();
-    expect(appQueryClient.getQueryData(['trace', otelTrace.traceID])).toBeUndefined();
-    expect(appQueryClient.getQueryData(['trace', 'other'])).toBeDefined();
-    expect(appQueryClient.getQueryData(['search', 'results'])).toEqual(['existing result']);
+  afterEach(() => {
+    appQueryClient.setQueryDefaults(['trace'], {});
   });
+
+  it.each([otelTrace.traceID, 'alias'])(
+    'invalidates the trace and its aliases via %s without clearing search',
+    async traceId => {
+      appQueryClient.setQueryData(['trace', 'alias'], otelTrace);
+      appQueryClient.setQueryData(['trace', otelTrace.traceID], otelTrace);
+      appQueryClient.setQueryData(['trace', 'other'], { ...otelTrace, traceID: 'other' });
+      appQueryClient.setQueryData(['search', 'results'], ['existing result']);
+
+      await reloadBackendTrace(traceId);
+
+      expect(getCachedTrace('alias')).toBe(otelTrace);
+      expect(getCachedTrace(otelTrace.traceID)).toBe(otelTrace);
+      expect(appQueryClient.getQueryState(['trace', 'alias'])?.isInvalidated).toBe(true);
+      expect(appQueryClient.getQueryState(['trace', otelTrace.traceID])?.isInvalidated).toBe(true);
+      expect(appQueryClient.getQueryState(['trace', 'other'])?.isInvalidated).toBe(false);
+      expect(appQueryClient.getQueryData(['trace', 'other'])).toBeDefined();
+      expect(appQueryClient.getQueryData(['search', 'results'])).toEqual(['existing result']);
+    }
+  );
+
+  it.each([otelTrace.traceID, 'alias'])(
+    'keeps the partial trace after a failed reload via %s and allows another reload',
+    async traceId => {
+      const partialRawTrace = { ...rawTrace, spans: rawTrace.spans.slice(1) };
+      const partialTrace = transformTraceData(partialRawTrace)!.asOtelTrace();
+      appQueryClient.setQueryDefaults(['trace'], { retry: 1, retryDelay: 0 });
+      populateTraceCache(partialTrace);
+      appQueryClient.setQueryData(['trace', 'alias'], partialTrace);
+      mockFetchTrace.mockRejectedValue(new Error('network error'));
+      const { result } = renderHook(() => useTrace(traceId), {
+        wrapper: makeWrapper(appQueryClient),
+      });
+
+      expect(result.current.data).toBe(partialTrace);
+      expect(result.current.isRefetchError).toBe(false);
+      await act(async () => {
+        await reloadBackendTrace(traceId);
+      });
+
+      await waitFor(() => expect(result.current.isRefetchError).toBe(true));
+      expect(mockFetchTrace).toHaveBeenCalledTimes(2);
+      expect(result.current.data).toBe(partialTrace);
+      expect(getCachedTrace(otelTrace.traceID)).toBe(partialTrace);
+      expect(appQueryClient.getQueryState(['trace', otelTrace.traceID])?.isInvalidated).toBe(true);
+
+      mockFetchTrace.mockResolvedValue({ data: [rawTrace] } as any);
+      await act(async () => {
+        await reloadBackendTrace(traceId);
+      });
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      expect(result.current.data?.spans).toHaveLength(rawTrace.spans.length);
+      expect(getCachedTrace(otelTrace.traceID)?.spans).toHaveLength(rawTrace.spans.length);
+    }
+  );
 });
 
 describe('useTraces', () => {

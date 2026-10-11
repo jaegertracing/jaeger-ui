@@ -25,10 +25,14 @@ export function populateTraceCache(trace: IOtelTrace): void {
 // Jaeger may return a partial trace. The user can reload it from the Incomplete warning;
 // replacing trace data automatically would disrupt the current trace view.
 export function reloadBackendTrace(traceId: string): Promise<void> {
-  return queryClient.resetQueries({
+  const canonicalId = getCachedTrace(traceId)?.traceID ?? traceId;
+  return queryClient.invalidateQueries({
+    refetchType: 'active',
     predicate: query =>
       query.queryKey[0] === 'trace' &&
-      (query.queryKey[1] === traceId || (query.state.data as IOtelTrace | undefined)?.traceID === traceId),
+      (query.queryKey[1] === traceId ||
+        query.queryKey[1] === canonicalId ||
+        (query.state.data as IOtelTrace | undefined)?.traceID === canonicalId),
   });
 }
 
