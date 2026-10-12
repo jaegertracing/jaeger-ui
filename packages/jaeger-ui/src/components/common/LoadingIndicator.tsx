@@ -28,5 +28,5 @@ export default function LoadingIndicator({
     ${className}
   `;
 
-  return <LuLoaderCircle className={cls} {...rest} style={style} />;
+  return <LuLoaderCircle role="status" aria-label="Loading" className={cls} {...rest} style={style} />;
 }
