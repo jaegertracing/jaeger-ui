@@ -258,6 +258,7 @@ export function UnconnectedSearchResults({
           )}
           {showStandaloneLink && (
             <Link
+              aria-label="Open search results in a new window"
               className="u-tx-inherit ub-nowrap ub-ml3"
               to={searchUrl}
               target={getTargetEmptyOrBlank()}

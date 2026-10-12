@@ -555,10 +555,11 @@ describe('<SearchResults>', () => {
   });
 
   describe('showStandaloneLink', () => {
-    it('renders Link when showStandaloneLink is true', () => {
+    it('renders Link with accessible aria-label when showStandaloneLink is true', () => {
       renderWithRouter(<SearchResults {...baseProps} showStandaloneLink />);
-      const link = screen.getByRole('link');
+      const link = screen.getByRole('link', { name: 'Open search results in a new window' });
       expect(link).toBeInTheDocument();
+      expect(link).toHaveAttribute('aria-label', 'Open search results in a new window');
       expect(screen.getByTestId('new-window-icon')).toBeInTheDocument();
     });
 
