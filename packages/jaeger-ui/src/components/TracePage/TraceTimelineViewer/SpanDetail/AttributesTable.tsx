@@ -120,14 +120,44 @@ type AttributesTableProps = {
 // Example: https://github.com/jaegertracing/jaeger-ui/assets/94157520/b518cad9-cb37-4775-a3d6-b667a1235f89
 export default function AttributesTable(props: AttributesTableProps) {
   const { data, linksGetter } = props;
+  const [filterQuery, setFilterQuery] = React.useState('');
+
+  const entries = data.entries();
+  const filteredEntries = React.useMemo(() => {
+    if (!filterQuery) return entries.map((row, i) => ({ row, originalIndex: i }));
+    const query = filterQuery.toLowerCase();
+    return entries
+      .map((row, i) => ({ row, originalIndex: i }))
+      .filter(
+        ({ row }) => row.key.toLowerCase().includes(query) || String(row.value).toLowerCase().includes(query)
+      );
+  }, [entries, filterQuery]);
+
+  const showFilter = entries.length > 10;
 
   return (
     <div className="KeyValueTable u-simple-scrollbars">
+      {showFilter && (
+        <div className="KeyValueTable--filterRow">
+          <input
+            className="KeyValueTable--filter"
+            placeholder="Filter attributes..."
+            value={filterQuery}
+            onChange={e => setFilterQuery(e.target.value)}
+            aria-label="Filter span attributes"
+          />
+          {filterQuery && (
+            <span className="KeyValueTable--filterCount">
+              {filteredEntries.length} of {entries.length}
+            </span>
+          )}
+        </div>
+      )}
       <table className="u-width-100">
         <tbody className="KeyValueTable--body">
-          {data.entries().map((row, i) => {
+          {filteredEntries.map(({ row, originalIndex }, i) => {
             const { node: jsonTable, isJsonTree } = formatValue(row.key, row.value);
-            const links = linksGetter ? linksGetter(data, i) : null;
+            const links = linksGetter ? linksGetter(data, originalIndex) : null;
             let valueMarkup;
             if (links?.length === 1) {
               valueMarkup = (
