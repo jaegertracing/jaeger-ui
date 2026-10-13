@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
-import { vi } from 'vitest';
+import { vi } from 'vite-plus/test';
 
 import GenAITab from '.';
 import { useMessageFormatStore } from './message-format-store';

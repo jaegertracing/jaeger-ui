@@ -5,7 +5,7 @@ import * as React from 'react';
 import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { message } from 'antd';
-import { vi, describe, it, expect, afterEach } from 'vitest';
+import { vi, describe, it, expect, afterEach } from 'vite-plus/test';
 
 import DownloadResults, { createBlob } from './DownloadResults';
 import readJsonFile from '../../../utils/readJsonFile';

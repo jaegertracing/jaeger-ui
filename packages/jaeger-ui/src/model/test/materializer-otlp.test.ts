@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { refinedTracesData } from '../../api/v3/schemas';
 import type { ITraceSpec } from './trace-contract-spec';
 import { spanIDForWire, toOtlpTrace } from './materializer-otlp';

@@ -6,7 +6,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, createMemoryRouter, RouterProvider, useLocation } from 'react-router-dom';
 import '@testing-library/jest-dom';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vite-plus/test';
 
 import ResultItemTitle from './ResultItemTitle';
 import { fetchedState } from '../../../constants';
