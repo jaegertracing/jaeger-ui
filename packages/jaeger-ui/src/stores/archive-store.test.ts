@@ -1,17 +1,17 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import JaegerAPI from '../api/jaeger';
+import { jaegerClient } from '../api/v3/client';
 import { useArchiveStore } from './archive-store';
 
-vi.mock('../api/jaeger', () => ({
-  default: {
+vi.mock('../api/v3/client', () => ({
+  jaegerClient: {
     archiveTrace: vi.fn(),
   },
 }));
 
 describe('archive-store', () => {
-  const mockArchiveTrace = vi.mocked(JaegerAPI.archiveTrace);
+  const mockArchiveTrace = vi.mocked(jaegerClient.archiveTrace);
 
   beforeEach(() => {
     useArchiveStore.setState({ archives: {} });
