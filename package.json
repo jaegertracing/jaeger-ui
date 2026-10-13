@@ -26,7 +26,7 @@
     "lint-staged": "17.6.0",
     "npm-run-all2": "9.0.1",
     "openapi-zod-client": "1.18.3",
-    "testcontainers": "12.1.0",
+    "testcontainers": "12.2.0",
     "typescript": "npm:@typescript/typescript6@6.0.2",
     "vite-plus": "0.3.3",
     "vitest": "5.0.3"
