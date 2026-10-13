@@ -844,6 +844,48 @@ describe('SearchForm onChange handlers', () => {
     });
     await waitFor(() => expect(maxDurationInput.value).toBe('5s'));
   });
+
+  it('keeps the selected operation when the new service provides it', async () => {
+    useSpanNames.mockImplementation(service => ({
+      data:
+        service === 'svcB'
+          ? [
+              { name: 'A', spanKind: 'server' },
+              { name: 'C', spanKind: 'client' },
+            ]
+          : [{ name: 'A', spanKind: 'server' }],
+      isLoading: false,
+      isSuccess: true,
+      error: null,
+    }));
+
+    renderForm(<SearchForm {...defaultProps} initialValues={{ service: 'svcA', operation: 'A' }} />);
+
+    await act(async () => {
+      SearchableSelect.onChangeFns.service('svcB');
+    });
+
+    await waitFor(() => expect(SearchableSelect.values.service).toBe('svcB'));
+    expect(SearchableSelect.values.operation).toBe('A');
+  });
+
+  it('resets the selected operation when the new service does not provide it', async () => {
+    useSpanNames.mockImplementation(service => ({
+      data: service === 'svcB' ? [{ name: 'C', spanKind: 'server' }] : [{ name: 'A', spanKind: 'server' }],
+      isLoading: false,
+      isSuccess: true,
+      error: null,
+    }));
+
+    renderForm(<SearchForm {...defaultProps} initialValues={{ service: 'svcA', operation: 'A' }} />);
+
+    await act(async () => {
+      SearchableSelect.onChangeFns.service('svcB');
+    });
+
+    await waitFor(() => expect(SearchableSelect.values.service).toBe('svcB'));
+    await waitFor(() => expect(SearchableSelect.values.operation).toBe(ALL_OPERATIONS));
+  });
 });
 
 describe('submitting state from useIsSearchFetching', () => {
