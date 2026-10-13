@@ -7,6 +7,9 @@ import queryString from 'query-string';
 
 import getConfig from '../utils/config/get-config';
 import prefixUrl from '../utils/prefix-url';
+import { apiConfig } from './config';
+
+export { DEFAULT_API_ROOT } from './config';
 
 dayjs.extend(_duration);
 
@@ -83,17 +86,15 @@ function getJSON(url: string, options: FetchOptions = {}): Promise<any> {
   });
 }
 
-export const DEFAULT_API_ROOT = prefixUrl('/api/');
 const QUALITY_METRICS_ROOT = prefixUrl(getConfig().qualityMetrics?.apiEndpoint || '');
 export const DEFAULT_DEPENDENCY_LOOKBACK = dayjs.duration(1, 'weeks').asMilliseconds();
 
 const JaegerAPI = {
-  apiRoot: DEFAULT_API_ROOT,
-  archiveTrace(id: string): Promise<any> {
-    return getJSON(`${this.apiRoot}archive/${id}`, { method: 'POST' });
+  get apiRoot(): string {
+    return apiConfig.apiRoot;
   },
-  fetchDecoration(url: string): Promise<any> {
-    return getJSON(url);
+  set apiRoot(root: string) {
+    apiConfig.apiRoot = root;
   },
   fetchDeepDependencyGraph(query: Record<string, any>): Promise<any> {
     return getJSON(`${this.apiRoot}deep-dependencies`, { query });

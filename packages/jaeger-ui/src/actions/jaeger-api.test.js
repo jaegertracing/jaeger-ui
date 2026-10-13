@@ -17,18 +17,22 @@ function isPromise(p) {
 
 import * as jaegerApiActions from './jaeger-api';
 import JaegerAPI from '../api/jaeger';
+import { jaegerClient } from '../api/v3/client';
 
 // Mock the JaegerAPI module
 vi.mock('../api/jaeger', () => ({
   default: {
     fetchTrace: jest.fn(() => Promise.resolve()),
-    archiveTrace: jest.fn(() => Promise.resolve()),
     fetchServices: jest.fn(() => Promise.resolve()),
     fetchServiceOperations: jest.fn(() => Promise.resolve()),
     fetchServiceServerOps: jest.fn(() => Promise.resolve()),
     fetchDeepDependencyGraph: jest.fn(() => Promise.resolve()),
     fetchDependencies: jest.fn(() => Promise.resolve()),
   },
+}));
+
+vi.mock('../api/v3/client', () => ({
+  jaegerClient: { archiveTrace: vi.fn(() => Promise.resolve()) },
 }));
 
 describe('actions/jaeger-api', () => {
@@ -56,7 +60,7 @@ describe('actions/jaeger-api', () => {
 
   it('@JAEGER_API/ARCHIVE_TRACE should archive the trace by id', () => {
     jaegerApiActions.archiveTrace(id);
-    expect(JaegerAPI.archiveTrace).toHaveBeenCalledWith(id);
+    expect(jaegerClient.archiveTrace).toHaveBeenCalledWith(id);
   });
 
   it('@JAEGER_API/ARCHIVE_TRACE should return the promise', () => {

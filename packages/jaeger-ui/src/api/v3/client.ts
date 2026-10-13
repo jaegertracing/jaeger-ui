@@ -2,14 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /**
- * Jaeger API v3 Client
+ * Jaeger API Client
  *
- * This client interacts with the Jaeger backend's /api/v3/ endpoints
- * and returns native OTLP data structures.
+ * Uses /api/v3/ where available and retains existing routes for operations
+ * without a v3 counterpart.
  */
 
 import { ALL_SERVICES } from '../../constants/search-form';
 import prefixUrl from '../../utils/prefix-url';
+import { apiConfig } from '../config';
 import {
   ServicesResponseSchema,
   OperationsResponseSchema,
@@ -40,6 +41,22 @@ function toIsoTimestamp(epochMicroseconds: number): string | undefined {
 
 export class JaegerClient {
   private apiRoot = prefixUrl('/api/v3');
+
+  async archiveTrace(id: string): Promise<unknown> {
+    const response = await this.fetchWithTimeout(`${apiConfig.apiRoot}archive/${id}`, { method: 'POST' });
+    if (!response.ok) {
+      throw new Error(`Failed to archive trace ${id}: ${response.status} ${response.statusText}`);
+    }
+    return response.json();
+  }
+
+  async fetchDecoration(url: string): Promise<unknown> {
+    const response = await this.fetchWithTimeout(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch decoration: ${response.status} ${response.statusText}`);
+    }
+    return response.json();
+  }
 
   /**
    * Fetch the list of services from the Jaeger API.
@@ -165,16 +182,17 @@ export class JaegerClient {
   /**
    * Fetch with timeout support using AbortController.
    * @param url - The URL to fetch
+   * @param options - Fetch request options
    * @param timeout - Timeout in milliseconds (default: 10 seconds)
    * @returns Promise<Response>
    * @throws Error if request times out or network error occurs
    */
-  private async fetchWithTimeout(url: string, timeout = 10000): Promise<Response> {
+  private async fetchWithTimeout(url: string, options: RequestInit = {}, timeout = 10000): Promise<Response> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
     try {
-      const response = await fetch(url, { signal: controller.signal });
+      const response = await fetch(url, { ...options, signal: controller.signal });
       return response;
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
