@@ -1,34 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { getJSON, getMessageFromError } from './http';
-
-describe('getMessageFromError()', () => {
-  describe('{ code, msg } error data', () => {
-    const data = { code: 1, msg: 'some-message' };
-
-    it('ignores code if it is the same as `status` arg', () => {
-      expect(getMessageFromError(data, 1)).toBe(data.msg);
-    });
-
-    it('returns`$code - $msg` when code is novel', () => {
-      const rv = getMessageFromError(data, -1);
-      expect(rv).toBe(`${data.code} - ${data.msg}`);
-    });
-  });
-  describe('other data formats', () => {
-    it('stringifies the value, when possible', () => {
-      const data = ['abc'];
-      expect(getMessageFromError(data, 0)).toBe(JSON.stringify(data));
-    });
-
-    it('returns the string, otherwise', () => {
-      const data: Record<string, unknown> = {};
-      data.data = data;
-      expect(getMessageFromError(data, 0)).toBe(String(data));
-    });
-  });
-});
+import { getJSON } from './http';
 
 describe('getJSON', () => {
   const mockFetch = vi.fn();

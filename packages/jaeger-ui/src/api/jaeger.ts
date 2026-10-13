@@ -11,6 +11,7 @@ import { getJSON } from './http';
 import { apiConfig } from './config';
 
 export { DEFAULT_API_ROOT } from './config';
+export { getMessageFromError } from './http';
 
 dayjs.extend(_duration);
 
