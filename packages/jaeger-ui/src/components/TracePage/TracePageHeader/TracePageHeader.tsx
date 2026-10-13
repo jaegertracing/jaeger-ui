@@ -33,6 +33,7 @@ import './TracePageHeader.css';
 import ExternalLinks from '../../common/ExternalLinks';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import TraceId from '../../common/TraceId';
+import GenAIExecutionSummary from './GenAIExecutionSummary';
 
 type TracePageHeaderEmbedProps = {
   canCollapse: boolean;
@@ -123,6 +124,12 @@ export const HEADER_ITEMS = [
         </Tooltip>
       );
     },
+  },
+  {
+    key: 'genai-calls',
+    label: null,
+    renderer: (trace: IOtelTrace) =>
+      trace.isGenAITrace ? <GenAIExecutionSummary spans={trace.spans} /> : null,
   },
 ];
 

@@ -43,7 +43,7 @@ export default class OtelSpanFacade implements IOtelSpan {
 
     // Pre-compute expensive fields
     const kindTag = tags.find(t => t.key === 'span.kind');
-    this._kind = SpanKind.INTERNAL;
+    this._kind = SpanKind.UNSPECIFIED;
     if (kindTag) {
       const val = String(kindTag.value).toUpperCase();
       if (val in SpanKind) {
