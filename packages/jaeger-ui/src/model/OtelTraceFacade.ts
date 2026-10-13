@@ -17,7 +17,7 @@ export default class OtelTraceFacade implements IOtelTrace {
     this.legacyTrace = legacyTrace;
 
     // Pre-compute spans
-    this._spans = this.legacyTrace.spans.map(s => new OtelSpanFacade(s));
+    this._spans = (this.legacyTrace.spans ?? []).map(s => new OtelSpanFacade(s));
 
     // Build spanMap
     this._spanMap = new Map();
@@ -26,11 +26,9 @@ export default class OtelTraceFacade implements IOtelTrace {
     });
 
     // Build rootSpans from legacy trace rootSpans
-    this._rootSpans = this.legacyTrace.rootSpans.map(s => {
-      const otelSpan = this._spanMap.get(s.spanID);
-      if (!otelSpan) throw new Error(`Root span ${s.spanID} not found in spanMap`);
-      return otelSpan;
-    });
+    this._rootSpans = (this.legacyTrace.rootSpans ?? [])
+      .map(s => this._spanMap.get(s.spanID))
+      .filter((span): span is IOtelSpan => Boolean(span));
 
     // Calculate orphan span count
     // A span is orphaned if it has a parentSpanID but the parent is not in the trace
@@ -98,19 +96,19 @@ export default class OtelTraceFacade implements IOtelTrace {
   }
 
   get traceName(): string {
-    return this.legacyTrace.traceName;
+    return this.legacyTrace.traceName ?? '';
   }
 
   get tracePageTitle(): string {
-    return this.legacyTrace.tracePageTitle;
+    return this.legacyTrace.tracePageTitle ?? '';
   }
 
   get traceEmoji(): string {
-    return this.legacyTrace.traceEmoji;
+    return this.legacyTrace.traceEmoji ?? '';
   }
 
   get services(): ReadonlyArray<{ name: string; numberOfSpans: number }> {
-    return this.legacyTrace.services;
+    return this.legacyTrace.services ?? [];
   }
 
   get orphanSpanCount(): number {
@@ -118,7 +116,7 @@ export default class OtelTraceFacade implements IOtelTrace {
   }
 
   hasErrors(): boolean {
-    return this._spans.some(sp => sp.status.code === 'ERROR');
+    return this._spans.some(sp => sp.status?.code === 'ERROR');
   }
 
   // Escape hatch for code that still requires the legacy Jaeger Trace shape.

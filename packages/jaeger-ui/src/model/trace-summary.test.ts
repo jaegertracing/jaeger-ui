@@ -145,4 +145,26 @@ describe('traceToTraceSummary', () => {
       expect(s.spanCount).toBe(otelTrace.services[i].numberOfSpans);
     });
   });
+
+  describe('handling missing or undefined fields in trace', () => {
+    it('gracefully handles missing resource on root/child spans, and missing services/spans', () => {
+      const spanWithoutResource = {
+        ...makeSpan('test-svc', 's1'),
+        resource: undefined as any,
+      };
+      const partialTrace = {
+        traceID: 'trace-partial',
+        traceName: 'partial',
+        startTime: us(1000),
+        duration: us(500),
+        rootSpans: [spanWithoutResource],
+        spans: [spanWithoutResource],
+      } as unknown as IOtelTrace;
+
+      const summary = traceToTraceSummary(partialTrace);
+      expect(summary.rootServiceName).toBe('');
+      expect(summary.services).toEqual([]);
+      expect(summary.spanCount).toBe(1);
+    });
+  });
 });

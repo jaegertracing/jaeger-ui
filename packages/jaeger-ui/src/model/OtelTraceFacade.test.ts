@@ -146,4 +146,38 @@ describe('OtelTraceFacade', () => {
       expect(childFacade.inboundLinks[0].span).toBe(linkFacade);
     });
   });
+
+  describe('handling missing or undefined fields in legacy trace', () => {
+    it('gracefully handles missing spans, rootSpans, and services', () => {
+      const minimalTrace = {
+        traceID: 'trace-minimal',
+        startTime: 1000 as IOtelTrace['startTime'],
+        duration: 500 as IOtelTrace['duration'],
+        endTime: 1500 as IOtelTrace['endTime'],
+      } as unknown as Trace;
+
+      const traceFacade = new OtelTraceFacade(minimalTrace);
+      expect(traceFacade.traceID).toBe('trace-minimal');
+      expect(traceFacade.spans).toEqual([]);
+      expect(traceFacade.rootSpans).toEqual([]);
+      expect(traceFacade.services).toEqual([]);
+      expect(traceFacade.orphanSpanCount).toBe(0);
+      expect(traceFacade.isGenAITrace).toBe(false);
+      expect(traceFacade.hasErrors()).toBe(false);
+      expect(traceFacade.traceName).toBe('');
+      expect(traceFacade.tracePageTitle).toBe('');
+      expect(traceFacade.traceEmoji).toBe('');
+    });
+
+    it('gracefully ignores rootSpans that are not found in spanMap', () => {
+      const traceWithMissingRoot = {
+        traceID: 'trace-missing-root',
+        spans: [mockSpan],
+        rootSpans: [{ spanID: 'non-existent-root' } as Span],
+      } as unknown as Trace;
+
+      const traceFacade = new OtelTraceFacade(traceWithMissingRoot);
+      expect(traceFacade.rootSpans).toEqual([]);
+    });
+  });
 });
