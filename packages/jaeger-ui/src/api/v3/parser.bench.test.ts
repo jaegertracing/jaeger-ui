@@ -1,8 +1,8 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { parseOtelTrace } from '../api/v3/parser';
-import type { TracesDataWire } from '../api/v3/schemas';
+import { parseOtelTrace } from './parser';
+import type { TracesDataWire } from './schemas';
 
 describe('OTLP parser benchmarks', () => {
   const numSpans = 10000;

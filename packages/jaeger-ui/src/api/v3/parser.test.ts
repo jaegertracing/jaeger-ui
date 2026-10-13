@@ -5,7 +5,7 @@ import { traceToTraceSummary } from '../../model/trace-summary';
 import { spanIDForWire, toOtlpTrace } from '../../model/test/materializer-otlp';
 import { runTraceContractSuite } from '../../model/test/trace-contract-suite';
 import { SpanKind, StatusCode } from '../../types/otel';
-import { GetTraceResponseSchema, refinedTracesData, type TracesDataWire } from './schemas';
+import { GetTraceResponseSchema, refinedTracesData, type SpanWire, type TracesDataWire } from './schemas';
 import { parseOtelTrace } from './parser';
 import capture from './v3-trace-output.json';
 
@@ -23,11 +23,6 @@ const CHILD_ID = '2222222222222222';
 const ORPHAN_ID = '3333333333333333';
 const CYCLE_A_ID = '4444444444444444';
 const CYCLE_B_ID = '5555555555555555';
-
-type ResourceSpansWire = NonNullable<TracesDataWire['resourceSpans']>;
-type ResourceSpanWire = ResourceSpansWire[number];
-type ScopeSpansWire = ResourceSpanWire['scopeSpans'][number];
-type SpanWire = ScopeSpansWire['spans'][number];
 
 function makeSpan(overrides: Partial<SpanWire> = {}): SpanWire {
   return {
@@ -100,19 +95,23 @@ describe('parseOtelTrace', () => {
     expect(child.parentSpan).toBe(parent);
     expect(child.events[0].timestamp).toBe(child.startTime);
     expect(child.events[0].timestamp - trace.startTime).toBe(child.relativeStartTime);
+  });
 
-    const traceWithNoTimestamps = parseOtelTrace(
+  it('keeps a root with no timestamps at all and starts the trace at zero', () => {
+    const trace = parseOtelTrace(
       traces([makeSpan({ startTimeUnixNano: undefined, endTimeUnixNano: undefined })])
     )!;
-    expect(traceWithNoTimestamps.spans).toHaveLength(1);
-    expect(traceWithNoTimestamps.startTime).toBe(0);
+    expect(trace.spans).toHaveLength(1);
+    expect(trace.startTime).toBe(0);
+  });
 
-    const traceWithOnlyEndTime = parseOtelTrace(
+  it('keeps the absolute end of a root that has only an end time', () => {
+    const trace = parseOtelTrace(
       traces([makeSpan({ startTimeUnixNano: undefined, endTimeUnixNano: '3000000' })])
     )!;
-    expect(traceWithOnlyEndTime.startTime).toBe(0);
-    expect(traceWithOnlyEndTime.endTime).toBe(3000);
-    expect(traceWithOnlyEndTime.duration).toBe(3000);
+    expect(trace.startTime).toBe(0);
+    expect(trace.endTime).toBe(3000);
+    expect(trace.duration).toBe(3000);
   });
 
   it('repairs an explicit zero start time from its parent', () => {

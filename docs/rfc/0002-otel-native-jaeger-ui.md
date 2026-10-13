@@ -7,7 +7,7 @@
 
 > Originally filed as ADR-0002. It is a proposal with a phased implementation plan, so it now lives here and remains the plan of record for the outstanding milestones; [ADR-0002](../adr/0002-otlp-api-v3-migration.md) records the OTEL facade and `api/v3` client that resulted.
 
-**Where this stands**: Phases 1–2 are complete. On Phase 3, service/span-name discovery (3.1) and trace search (3.3) run on `/api/v3/`. The validated `fetchTrace` boundary and captured wire-contract tests have landed in [#4455](https://github.com/jaegertracing/jaeger-ui/pull/4455) and [#4480](https://github.com/jaegertracing/jaeger-ui/pull/4480). The enriched parser and its shared behavior tests are implemented in [#4503](https://github.com/jaegertracing/jaeger-ui/pull/4503). On `main`, single-trace loading still uses `/api/traces/:id` and `transformTraceData`; the UI switch and visual parity check remain open.
+**Where this stands**: Phases 1–2 are complete. On Phase 3, service/span-name discovery (3.1) and trace search (3.3) run on `/api/v3/`. The validated `fetchTrace` boundary and captured wire-contract tests have landed in [#4455](https://github.com/jaegertracing/jaeger-ui/pull/4455) and [#4480](https://github.com/jaegertracing/jaeger-ui/pull/4480). `parseOtelTrace()` in `src/api/v3/parser.ts` converts the validated wire data into the enriched `IOtelTrace`, and the shared behavior tests run through both it and the legacy transformer ([#4503](https://github.com/jaegertracing/jaeger-ui/pull/4503)). Single-trace loading still uses `/api/traces/:id` and `transformTraceData`; the UI switch and visual parity check remain open.
 
 ---
 
@@ -491,7 +491,7 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 #### Milestone 3.2: Single Trace Loading
 **Goal**: Load a full trace by ID using the new OTLP parser.
 
-**Partially implemented.** `JaegerClient.fetchTrace()` and its boundary tests have landed in #4455 and #4480. The earlier [#4129](https://github.com/jaegertracing/jaeger-ui/pull/4129) combined a parser with native hook rewiring; its parser work and shared behavior tests are implemented in [#4503](https://github.com/jaegertracing/jaeger-ui/pull/4503). The hook rewire and TracePage integration remain follow-up work. `hooks/useTraceLoading.ts` still uses `JaegerAPI.fetchTrace` → `transformTraceData(...).asOtelTrace()`. The transport and transformer must be switched beneath the existing `useTrace` / `useTraces` hooks before this milestone is complete.
+**Partially implemented.** `JaegerClient.fetchTrace()` and its boundary tests have landed in #4455 and #4480. `parseOtelTrace()` converts that validated data into the enriched `IOtelTrace` and runs the shared behavior tests alongside the legacy transformer ([#4503](https://github.com/jaegertracing/jaeger-ui/pull/4503)); the earlier [#4129](https://github.com/jaegertracing/jaeger-ui/pull/4129) had combined the parser with the hook rewiring. The hook rewire and TracePage integration remain open. `hooks/useTraceLoading.ts` still uses `JaegerAPI.fetchTrace` → `transformTraceData(...).asOtelTrace()`. The transport and transformer must be switched beneath the existing `useTrace` / `useTraces` hooks before this milestone is complete.
 
 **The typing choice is implemented at the network boundary.** A full trace contains nested `resourceSpans` / `scopeSpans`, recursive `AnyValue` attributes, events, links, and status. `schemas.ts` refines the generated Zod schemas for the observed wire encodings; `JaegerClient.fetchTrace` validates the response envelope and returns `TracesDataWire`. The parser consumes that validated type rather than defining a private wire interface.
 
@@ -547,7 +547,7 @@ To maintain a clean separation between the backend's wire format and the UI's do
 
 The new parser replaces the role of `transformTraceData` for the OTLP route. Covered by Milestone 3.2.
 
-- [x] Implement `src/api/v3/parser.ts` (#4503; the client validates the wire data before calling `parseOtelTrace`):
+- [x] `src/api/v3/parser.ts` converts validated wire data; the client validates it before calling `parseOtelTrace` (#4503):
   ```typescript
   /**
    * Transforms validated OTLP wire data into the enriched domain model.

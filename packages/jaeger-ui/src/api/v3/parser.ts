@@ -15,7 +15,6 @@ import {
   AttributeValue,
   IAttributes,
   IEvent,
-  ILink,
   IOtelSpan,
   IOtelTrace,
   IResource,
@@ -26,19 +25,11 @@ import {
 } from '../../types/otel';
 import { Microseconds } from '../../types/units';
 import { classifySpan } from '../../utils/genai/detect';
-import type { TracesDataWire } from './schemas';
-
-type ResourceSpansWire = NonNullable<TracesDataWire['resourceSpans']>;
-type ResourceSpanWire = ResourceSpansWire[number];
-type ScopeSpansWire = ResourceSpanWire['scopeSpans'][number];
-type SpanWire = ScopeSpansWire['spans'][number];
-type KeyValueWire = NonNullable<SpanWire['attributes']>[number];
-type AnyValueWire = KeyValueWire['value'];
+import type { AnyValueWire, KeyValueWire, SpanWire, TracesDataWire } from './schemas';
 
 type MutableOtelSpan = Omit<IOtelSpan, 'childSpans' | 'parentSpan'> & {
   parentSpan?: MutableOtelSpan;
   childSpans: MutableOtelSpan[];
-  inboundLinks: ILink[];
 };
 
 type ParsedSpanData = {
@@ -126,8 +117,8 @@ function toAttributeValue(value: AnyValueWire): AttributeValue {
     return result;
   }
 
-  // refinedAnyValue rejects this shape at the API boundary.
-  return '';
+  // refinedAnyValue rejects every other shape at the API boundary.
+  throw new Error(`Unsupported OTLP attribute value: ${JSON.stringify(value)}`);
 }
 
 function toAttributes(attributes: ReadonlyArray<KeyValueWire> | undefined): IAttributes {
@@ -194,6 +185,7 @@ function parseSpans(data: TracesDataWire): ParsedSpanData {
   const spansWithoutStartTime = new Map<MutableOtelSpan, Microseconds>();
   const eventsWithoutTimestamp = new Map<MutableOtelSpan, IEvent[]>();
   const spanIdCounts = new Map<string, number>();
+  const { topTagPrefixes } = getConfig();
   let traceID: string | undefined;
 
   for (const resourceSpans of data.resourceSpans ?? []) {
@@ -238,9 +230,7 @@ function parseSpans(data: TracesDataWire): ParsedSpanData {
           value: toAttributeValue(attribute.value),
         }));
         const attributesInfo = deduplicateAttributes(decodedAttributes);
-        const attributes = makeAttributes(
-          orderAttributes(attributesInfo.attributes, getConfig().topTagPrefixes)
-        );
+        const attributes = makeAttributes(orderAttributes(attributesInfo.attributes, topTagPrefixes));
         const wireSpanID = span.spanId.toLowerCase();
         const duplicateCount = spanIdCounts.get(wireSpanID) ?? 0;
         spanIdCounts.set(wireSpanID, duplicateCount + 1);
