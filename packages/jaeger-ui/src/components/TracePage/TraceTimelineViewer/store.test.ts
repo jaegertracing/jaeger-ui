@@ -291,26 +291,29 @@ describe('trace timeline zustand stores', () => {
   });
 
   describe('useTraceTimelineStore', () => {
-    it('resets the same trace view while retaining layout preferences', () => {
+    it('preserves manual interactions and layout preferences on same-ID reload', () => {
+      const trace = makeTrace('same-trace');
+      useTraceTimelineStore.getState().setTrace(trace);
       useLayoutPrefsStore.setState({ spanNameColumnWidth: 0.5 });
       useTraceTimelineStore.setState({
-        traceID: 'same-trace',
-        traceSpans: [makeSpan()],
         childrenHiddenIDs: new Set(['span-x']),
         detailStates: new Map([['span-x', new DetailState()]]),
         prunedServices: new Set(['service']),
         shouldScrollToFirstUiFindMatch: true,
       });
 
-      useTraceTimelineStore.getState().resetTraceView();
+      const previous = useTraceTimelineStore.getState();
+      const refreshed = { ...trace, spans: [...trace.spans, makeSpan({ spanID: 'arrived' })] };
+      useTraceTimelineStore.getState().setTrace(refreshed);
 
       const state = useTraceTimelineStore.getState();
-      expect(state.traceID).toBeNull();
-      expect(state.traceSpans).toBeNull();
-      expect(state.childrenHiddenIDs.size).toBe(0);
-      expect(state.detailStates.size).toBe(0);
-      expect(state.prunedServices.size).toBe(0);
-      expect(state.shouldScrollToFirstUiFindMatch).toBe(false);
+      expect(state.traceID).toBe(trace.traceID);
+      expect(state.traceSpans).toBe(refreshed.spans);
+      expect(state.childrenHiddenIDs).toBe(previous.childrenHiddenIDs);
+      expect(state.childrenHiddenIDs.has('arrived')).toBe(false);
+      expect(state.detailStates).toBe(previous.detailStates);
+      expect(state.prunedServices).toBe(previous.prunedServices);
+      expect(state.shouldScrollToFirstUiFindMatch).toBe(true);
       expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBe(0.5);
     });
 
@@ -386,13 +389,13 @@ describe('trace timeline zustand stores', () => {
             resource,
           });
           useLayoutPrefsStore.setState({ detailPanelMode, spanNameColumnWidth: 0.5 });
-          useTraceTimelineStore.getState().resetTraceView();
           useTraceTimelineStore
             .getState()
             .setTrace(makeTrace('same', [root, parent, existing]), 'late-match');
           expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('root')).toBe(true);
           expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('parent')).toBe(true);
           expect(useTraceTimelineStore.getState().detailStates.size).toBe(0);
+          useTraceTimelineStore.getState().setPrunedServices(new Set(['other-service']));
 
           useTraceTimelineStore
             .getState()
@@ -403,6 +406,7 @@ describe('trace timeline zustand stores', () => {
           expect(state.childrenHiddenIDs.has('parent')).toBe(false);
           expect(state.detailStates.has('arrived')).toBe(true);
           expect(state.shouldScrollToFirstUiFindMatch).toBe(true);
+          expect(state.prunedServices).toEqual(new Set(['other-service']));
           expect(useLayoutPrefsStore.getState().detailPanelMode).toBe(detailPanelMode);
           expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBe(0.5);
         }

@@ -15,7 +15,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { getUrl as getSearchUrl, lookbackFromUrl } from './url';
 import type { Dispatch } from 'redux';
 import { useIsSearchFetching } from '../../hooks/useTraceDiscovery';
-import { useClearUploadedTraces } from './useUploadedTraces';
+import { useClearUploadedTraces } from '../../hooks/useUploadedTraces';
 import store from '../../utils/storage';
 import getConfig from '../../utils/config/get-config';
 

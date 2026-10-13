@@ -50,10 +50,8 @@ import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { parseUiFind } from '../common/UiFindInput';
 import { LocationState, ReduxState, TNil } from '../../types';
-import type { TraceSummary } from '../../types/trace-summary';
-import { queryClient } from '../../query/app-query-client';
 import { reloadBackendTrace, useTrace } from '../../hooks/useTraceLoading';
-import { UPLOADED_SUMMARIES_QUERY_KEY } from '../SearchTracePage/useUploadedTraces';
+import { isUploadedTrace } from '../../hooks/useUploadedTraces';
 import { IOtelTrace } from '../../types/otel';
 import filterSpans from '../../utils/filter-spans';
 import updateUiFind from '../../utils/update-ui-find';
@@ -221,6 +219,7 @@ export function TracePageImpl(props: TProps) {
   const viewRangeRef = useRef(viewRange);
   viewRangeRef.current = viewRange;
   const prevIdRef = useRef(id);
+  const autoViewTraceIdRef = useRef<string | null>(null);
   const filterSpansMemo = useRef(memoizeOne(filterSpans)).current;
 
   const scrollManagerRef = useRef<ScrollManager>(new ScrollManager(traceData, { scrollBy, scrollTo }));
@@ -333,6 +332,10 @@ export function TracePageImpl(props: TProps) {
   }, []);
 
   useEffect(() => {
+    // Choose the default view once per trace. A same-ID reload can discover
+    // GenAI spans, but must not override the user's current view.
+    if (!traceData || autoViewTraceIdRef.current === traceData.traceID) return;
+    autoViewTraceIdRef.current = traceData.traceID;
     if (traceIsGenAI) {
       setTraceView(ETraceViewType.GenAITimelineViewer);
     } else {
@@ -340,7 +343,7 @@ export function TracePageImpl(props: TProps) {
         vt === ETraceViewType.GenAITimelineViewer ? ETraceViewType.TraceTimelineViewer : vt
       );
     }
-  }, [traceIsGenAI, setTraceView]);
+  }, [traceData, traceIsGenAI, setTraceView]);
 
   const archiveTrace = useCallback(() => {
     submitTraceToArchiveFn(id);
@@ -525,6 +528,14 @@ export function TracePageImpl(props: TProps) {
       )}
       <div className="Tracepage--headerSection" ref={headerRefCallback}>
         <TracePageHeader {...headerProps} />
+        {traceError && (
+          <Alert
+            type="warning"
+            showIcon
+            message="Trace reload failed. Showing the previously loaded trace."
+            description={traceQueryError?.message || 'Unknown error'}
+          />
+        )}
       </div>
       {headerHeight ? <section style={{ paddingTop: headerHeight }}>{view}</section> : null}
     </div>
@@ -560,40 +571,23 @@ type TracePageProps = {
   params: { id: string };
 };
 
-// The upload registry lives in the shared query client, so the trace route can
-// read it without mounting the search page hook.
-function isUploadedTrace(traceID: string): boolean {
-  const summaries = queryClient.getQueryData<TraceSummary[]>(UPLOADED_SUMMARIES_QUERY_KEY);
-  return summaries?.some(summary => summary.traceID === traceID) ?? false;
-}
-
 export const TracePageRoute = (props: TracePageProps) => {
   const config = useConfig();
-  const [reloadVersion, setReloadVersion] = useState(0);
   const traceID = props.params.id;
   const { data: traceData } = useTrace(traceID);
   useNormalizeTraceId(traceID, traceData);
-  // Uploaded traces share the single trace cache key, so resetting it for one
-  // would drop its only copy and refetch a 404. Read the upload registry here
-  // to hide Reload, and check again in the handler so a stale render cannot
-  // clear an uploaded trace.
+  // Uploads change only on the search page, which is unmounted on this route,
+  // so the registry needs no subscription here. Recheck in the handler before
+  // refetching to protect against a stale render.
   const isUploaded = isUploadedTrace(traceID);
 
   const onReloadTrace = useCallback(() => {
     if (isUploadedTrace(traceID)) return;
-    useTraceTimelineStore.getState().resetTraceView();
-    // A key bump remounts the page but preserves window scroll position, and an
-    // in-flight smooth scroll keeps writing window.scrollTo after the remount,
-    // so cancel it before scrolling to the top.
-    cancelScroll();
-    window.scrollTo(0, 0);
-    setReloadVersion(version => version + 1);
     void reloadBackendTrace(traceID);
   }, [traceID]);
 
   return (
     <ConnectedTracePage
-      key={`${traceID}:${reloadVersion}`}
       {...props}
       onReloadTrace={isUploaded ? undefined : onReloadTrace}
       params={{ ...props.params, id: traceID }}

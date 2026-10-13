@@ -170,6 +170,29 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
   const title = (
     <h1 className={`TracePageHeader--title ${canCollapse ? 'is-collapsible' : ''}`}>
       <TraceName traceName={trace.traceName} /> <TraceId traceId={trace.traceID} />
+      {orphanCount > 0 && (
+        <span className="TracePageHeader--incompleteActions" data-testid="header-item-incomplete">
+          <Tooltip title={getIncompleteTraceTooltip(orphanCount)}>
+            <span className="TracePageHeader--incompleteTag">
+              <IoWarning className="TracePageHeader--incompleteIcon" />
+              Incomplete
+            </span>
+          </Tooltip>
+          {onReloadTrace && (
+            <Button
+              type="link"
+              size="small"
+              htmlType="button"
+              onClick={event => {
+                event.stopPropagation();
+                onReloadTrace();
+              }}
+            >
+              Reload trace
+            </Button>
+          )}
+        </span>
+      )}
     </h1>
   );
 
@@ -195,21 +218,6 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           </a>
         ) : (
           title
-        )}
-        {orphanCount > 0 && (
-          <span className="TracePageHeader--incompleteActions" data-testid="header-item-incomplete">
-            <Tooltip title={getIncompleteTraceTooltip(orphanCount)}>
-              <span className="TracePageHeader--incompleteTag">
-                <IoWarning className="TracePageHeader--incompleteIcon" />
-                Incomplete
-              </span>
-            </Tooltip>
-            {onReloadTrace && (
-              <Button type="link" size="small" htmlType="button" onClick={onReloadTrace}>
-                Reload trace
-              </Button>
-            )}
-          </span>
         )}
         <TracePageSearchBar
           clearSearch={clearSearch}

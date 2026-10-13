@@ -29,7 +29,7 @@ import transformTraceData from '../../model/transform-trace-data';
 import filterSpansSpy from '../../utils/filter-spans';
 import updateUiFindSpy from '../../utils/update-ui-find';
 import { queryClient } from '../../query/app-query-client';
-import { UPLOADED_SUMMARIES_QUERY_KEY } from '../SearchTracePage/useUploadedTraces';
+import * as configHook from '../../hooks/useConfig';
 import { ETraceViewType } from './types';
 import ScrollManager from './ScrollManager';
 
@@ -142,7 +142,6 @@ const {
   mockTraceTimelineStore: {
     focusUiFindMatches: jest.fn(),
     prunedServices: new Set(),
-    resetTraceView: jest.fn(),
   },
   useEmbeddedStateMock: jest.fn().mockReturnValue(null),
   useTraceMock: jest.fn(),
@@ -163,8 +162,6 @@ vi.mock('../../hooks/useTraceLoading', () => ({
   useTrace: (...args) => useTraceMock(...args),
   reloadBackendTrace: (...args) => mockReloadBackendTrace(...args),
 }));
-
-vi.mock('../../hooks/useConfig', () => ({ useConfig: () => ({}) }));
 
 vi.mock('./TraceTimelineViewer/store', () => {
   const useTraceTimelineStore = jest.fn(selector => selector(mockTraceTimelineStore));
@@ -263,47 +260,70 @@ describe('<TracePage>', () => {
     mockTraceTimelineStore.focusUiFindMatches.mockClear();
   });
 
-  it('reloads the same trace with a fresh view and keeps search navigation', () => {
-    const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
-    queryClient.setQueryData(UPLOADED_SUMMARIES_QUERY_KEY, []);
-    const store = createStore(() => ({ traceTimeline: {} }));
-    const location = {
-      pathname: `/trace/${trace.traceID}`,
-      search: '?uiFind=error',
-      state: { fromSearch: '/search?service=frontend' },
-    };
-    render(
-      <Provider store={store}>
-        <MemoryRouter initialEntries={[`${location.pathname}${location.search}`]}>
-          <TracePageRoute params={{ id: trace.traceID }} location={location} />
-        </MemoryRouter>
-      </Provider>
-    );
+  it.each([ETraceViewType.TraceGraph, ETraceViewType.TraceStatistics, ETraceViewType.TraceFlamegraph])(
+    'reloads the same trace while preserving view %s and search navigation',
+    viewType => {
+      const configSpy = vi
+        .spyOn(configHook, 'useConfig')
+        .mockReturnValue({ archiveEnabled: true, traceTimeline: { enableSidePanel: true } });
+      const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+      queryClient.setQueryData(['uploadedSummaries'], []);
+      const store = createStore(() => ({ traceTimeline: {} }));
+      const location = {
+        pathname: `/trace/${trace.traceID}`,
+        search: '?uiFind=error',
+        state: { fromSearch: '/search?service=frontend' },
+      };
+      const { rerender } = render(
+        <Provider store={store}>
+          <MemoryRouter initialEntries={[`${location.pathname}${location.search}`]}>
+            <TracePageRoute params={{ id: trace.traceID }} location={location} />
+          </MemoryRouter>
+        </Provider>
+      );
+      expect(screen.getByTestId('archive-notifier')).toBeInTheDocument();
+      expect(capturedHeaderProps.enableSidePanel).toBe(true);
 
-    act(() => capturedHeaderProps.updateViewRangeTime(0.2, 0.8));
-    expect(capturedHeaderProps.viewRange.time.current).toEqual([0.2, 0.8]);
-    act(() => capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceGraph));
-    expect(capturedHeaderProps.viewType).toBe(ETraceViewType.TraceGraph);
+      act(() => capturedHeaderProps.updateViewRangeTime(0.2, 0.8));
+      expect(capturedHeaderProps.viewRange.time.current).toEqual([0.2, 0.8]);
+      act(() => capturedHeaderProps.onTraceViewChange(viewType));
+      expect(capturedHeaderProps.viewType).toBe(viewType);
 
-    scrollPageMod.cancel.mockClear();
-    act(() => capturedHeaderProps.onReloadTrace());
+      scrollPageMod.cancel.mockClear();
+      act(() => capturedHeaderProps.onReloadTrace());
 
-    expect(mockReloadBackendTrace).toHaveBeenCalledWith(trace.traceID);
-    expect(mockTraceTimelineStore.resetTraceView).toHaveBeenCalledOnce();
-    // The handler cancels once; the remount it triggers fires the shortcuts
-    // effect cleanup, which cancels again.
-    expect(scrollPageMod.cancel).toHaveBeenCalled();
-    expect(scrollTo).toHaveBeenCalledWith(0, 0);
-    expect(capturedHeaderProps.viewRange.time.current).toEqual([0, 1]);
-    expect(capturedHeaderProps.viewType).toBe(ETraceViewType.TraceTimelineViewer);
-    expect(capturedHeaderProps.toSearch).toBe('/search?service=frontend');
-    expect(mockNavigate).not.toHaveBeenCalled();
-    scrollTo.mockRestore();
-  });
+      expect(mockReloadBackendTrace).toHaveBeenCalledWith(trace.traceID);
+      expect(scrollPageMod.cancel).not.toHaveBeenCalled();
+      expect(scrollTo).not.toHaveBeenCalled();
+      expect(capturedHeaderProps.viewRange.time.current).toEqual([0.2, 0.8]);
+      expect(capturedHeaderProps.viewType).toBe(viewType);
+      expect(capturedHeaderProps.toSearch).toBe('/search?service=frontend');
+      expect(mockNavigate).not.toHaveBeenCalled();
+      const refreshedTrace = Object.create(trace);
+      Object.defineProperties(refreshedTrace, {
+        spans: { value: [...trace.spans] },
+        isGenAITrace: { value: true },
+      });
+      useTraceMock.mockReturnValue({ data: refreshedTrace, isPending: false, isError: false, error: null });
+      rerender(
+        <Provider store={store}>
+          <MemoryRouter initialEntries={[`${location.pathname}${location.search}`]}>
+            <TracePageRoute params={{ id: trace.traceID }} location={location} />
+          </MemoryRouter>
+        </Provider>
+      );
+      expect(capturedHeaderProps.trace).toBe(refreshedTrace);
+      expect(capturedHeaderProps.viewRange.time.current).toEqual([0.2, 0.8]);
+      expect(capturedHeaderProps.viewType).toBe(viewType);
+      scrollTo.mockRestore();
+      configSpy.mockRestore();
+    }
+  );
 
   it('hides the reload action for an uploaded trace', () => {
+    const configSpy = vi.spyOn(configHook, 'useConfig').mockReturnValue({});
     const store = createStore(() => ({ traceTimeline: {} }));
-    queryClient.setQueryData(UPLOADED_SUMMARIES_QUERY_KEY, [{ traceID: trace.traceID }]);
+    queryClient.setQueryData(['uploadedSummaries'], [{ traceID: trace.traceID }]);
     const location = { pathname: `/trace/${trace.traceID}`, search: '', state: null };
     render(
       <Provider store={store}>
@@ -314,12 +334,14 @@ describe('<TracePage>', () => {
     );
 
     expect(capturedHeaderProps.onReloadTrace).toBeUndefined();
-    queryClient.setQueryData(UPLOADED_SUMMARIES_QUERY_KEY, []);
+    queryClient.setQueryData(['uploadedSummaries'], []);
+    configSpy.mockRestore();
   });
 
   it('ignores a reload issued after the trace was uploaded', () => {
+    const configSpy = vi.spyOn(configHook, 'useConfig').mockReturnValue({});
     const store = createStore(() => ({ traceTimeline: {} }));
-    queryClient.setQueryData(UPLOADED_SUMMARIES_QUERY_KEY, []);
+    queryClient.setQueryData(['uploadedSummaries'], []);
     const location = { pathname: `/trace/${trace.traceID}`, search: '', state: null };
     render(
       <Provider store={store}>
@@ -331,12 +353,12 @@ describe('<TracePage>', () => {
 
     const { onReloadTrace } = capturedHeaderProps;
     expect(onReloadTrace).toBeDefined();
-    queryClient.setQueryData(UPLOADED_SUMMARIES_QUERY_KEY, [{ traceID: trace.traceID }]);
+    queryClient.setQueryData(['uploadedSummaries'], [{ traceID: trace.traceID }]);
     act(() => onReloadTrace());
 
     expect(mockReloadBackendTrace).not.toHaveBeenCalled();
-    expect(mockTraceTimelineStore.resetTraceView).not.toHaveBeenCalled();
-    queryClient.setQueryData(UPLOADED_SUMMARIES_QUERY_KEY, []);
+    queryClient.setQueryData(['uploadedSummaries'], []);
+    configSpy.mockRestore();
   });
 
   describe('clearSearch', () => {
@@ -520,7 +542,7 @@ describe('<TracePage>', () => {
       error: new Error('reload failed'),
     });
 
-    render(
+    const { rerender } = render(
       <TracePage {...defaultProps} params={{ id: partialTrace.traceID }} onReloadTrace={onReloadTrace} />
     );
 
@@ -528,8 +550,17 @@ describe('<TracePage>', () => {
     expect(screen.getByTestId('mock-timeline-viewer')).toBeInTheDocument();
     expect(capturedHeaderProps.trace).toBe(partialTrace);
     expect(capturedHeaderProps.onReloadTrace).toBe(onReloadTrace);
+    expect(screen.getByText('Trace reload failed. Showing the previously loaded trace.')).toBeInTheDocument();
+    expect(screen.getByText('reload failed')).toBeInTheDocument();
     act(() => capturedHeaderProps.onReloadTrace());
     expect(onReloadTrace).toHaveBeenCalledOnce();
+    useTraceMock.mockReturnValue({ data: partialTrace, isPending: false, isError: false, error: null });
+    rerender(
+      <TracePage {...defaultProps} params={{ id: partialTrace.traceID }} onReloadTrace={onReloadTrace} />
+    );
+    expect(
+      screen.queryByText('Trace reload failed. Showing the previously loaded trace.')
+    ).not.toBeInTheDocument();
     clientHeightSpy.mockRestore();
   });
 
@@ -1231,6 +1262,26 @@ describe('<TracePage>', () => {
 
     it('auto-switches to GenAITimelineViewer when trace has gen_ai.* attributes', () => {
       render(<TracePage {...genAiProps} />);
+      expect(capturedHeaderProps.viewType).toBe(ETraceViewType.GenAITimelineViewer);
+    });
+
+    it('selects the GenAI view when the initial trace fetch completes', () => {
+      useTraceMock.mockReturnValue({ data: undefined, isPending: true, isError: false, error: null });
+      const { rerender } = render(<TracePage {...genAiProps} />);
+      expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
+
+      useTraceMock.mockReturnValue({ data: genAiOtelTrace, isPending: false, isError: false, error: null });
+      rerender(<TracePage {...genAiProps} />);
+      expect(capturedHeaderProps.viewType).toBe(ETraceViewType.GenAITimelineViewer);
+    });
+
+    it('selects the default view when a different GenAI trace loads', () => {
+      useTraceMock.mockReturnValue({ data: trace, isPending: false, isError: false, error: null });
+      const { rerender } = render(<TracePage {...defaultProps} />);
+      act(() => capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceGraph));
+
+      useTraceMock.mockReturnValue({ data: genAiOtelTrace, isPending: false, isError: false, error: null });
+      rerender(<TracePage {...defaultProps} params={{ id: genAiOtelTrace.traceID }} />);
       expect(capturedHeaderProps.viewType).toBe(ETraceViewType.GenAITimelineViewer);
     });
 

@@ -105,10 +105,15 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .TracePageHeader--incompleteActions {
-  align-items: center;
-  display: inline-flex;
-  flex-shrink: 0;
-  white-space: nowrap;
+  display: inline-block;
+  font-size: 16px;
+  margin-left: 0.5em;
+  vertical-align: middle;
+}
+
+.TracePageHeader--incompleteActions .ant-btn {
+  font-size: inherit;
+  vertical-align: middle;
 }
 
 .TracePageHeader--incompleteIcon {

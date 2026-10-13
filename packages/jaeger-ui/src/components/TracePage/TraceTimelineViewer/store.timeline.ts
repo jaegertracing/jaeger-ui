@@ -22,7 +22,6 @@ type TraceTimelineInteractionStore = {
   prunedServices: Set<string>;
   setPrunedServices: (pruned: Set<string>) => void;
   clearServiceFilter: () => void;
-  resetTraceView: () => void;
   // Resets ephemeral fields for a new trace and optionally pre-apply a uiFind filter
   setTrace: (trace: IOtelTrace, uiFind?: string | TNil) => void;
   childrenToggle: (spanID: string) => void;
@@ -52,16 +51,6 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
   setPrunedServices: (pruned: Set<string>) => set({ prunedServices: new Set(pruned) }),
 
   clearServiceFilter: () => set({ prunedServices: new Set<string>() }),
-  resetTraceView: () =>
-    set({
-      traceID: null,
-      traceSpans: null,
-      childrenHiddenIDs: new Set<string>(),
-      detailStates: new Map<string, DetailState>(),
-      shouldScrollToFirstUiFindMatch: false,
-      prunedServices: new Set<string>(),
-    }),
-
   setTrace: (trace: IOtelTrace, uiFind?: string | TNil) => {
     const { traceID: currentTraceID, traceSpans } = get();
     // Reload keeps the cached partial trace visible while fetching. Reapply
@@ -73,11 +62,18 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
     const base: Partial<TraceTimelineInteractionStore> = {
       traceID: trace.traceID,
       traceSpans: trace.spans,
-      childrenHiddenIDs: new Set<string>(),
-      detailStates: new Map<string, DetailState>(),
-      shouldScrollToFirstUiFindMatch: false,
-      prunedServices: new Set<string>(),
     };
+
+    // Span IDs and service names remain stable on same-ID reloads. Keep manual
+    // interactions; only a different trace starts with empty view state.
+    if (trace.traceID !== currentTraceID) {
+      Object.assign(base, {
+        childrenHiddenIDs: new Set<string>(),
+        detailStates: new Map<string, DetailState>(),
+        shouldScrollToFirstUiFindMatch: false,
+        prunedServices: new Set<string>(),
+      });
+    }
 
     if (uiFind) {
       let focused = calculateFocusedFindRowStates(uiFind, trace.spans);

@@ -186,14 +186,24 @@ describe('<TracePageHeader>', () => {
     const incompleteTrace = Object.create(defaultProps.trace);
     Object.defineProperty(incompleteTrace, 'orphanSpanCount', { value: 3 });
     const onReloadTrace = jest.fn();
+    const onSlimViewClicked = jest.fn();
     const { container } = renderWithRouter(
-      <TracePageHeader {...defaultProps} trace={incompleteTrace} slimView onReloadTrace={onReloadTrace} />
+      <TracePageHeader
+        {...defaultProps}
+        trace={incompleteTrace}
+        slimView
+        onReloadTrace={onReloadTrace}
+        onSlimViewClicked={onSlimViewClicked}
+      />
     );
 
     expect(container.querySelector('.TracePageHeader--overviewItems')).toBeNull();
     const button = screen.getByRole('button', { name: 'Reload trace' });
+    expect(button.closest('h1')).not.toBeNull();
+    expect(screen.getByTestId('header-item-incomplete').closest('h1')).toBe(button.closest('h1'));
     fireEvent.click(button);
     expect(onReloadTrace).toHaveBeenCalledOnce();
+    expect(onSlimViewClicked).not.toHaveBeenCalled();
   });
 
   it('hides the reload action when no reload handler is provided', () => {

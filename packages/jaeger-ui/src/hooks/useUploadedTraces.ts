@@ -3,17 +3,20 @@
 
 import { useCallback } from 'react';
 import { useQuery, useQueryClient, skipToken } from '@tanstack/react-query';
-import type { TraceSummary } from '../../types/trace-summary';
+import type { TraceSummary } from '../types/trace-summary';
+import { queryClient as appQueryClient } from '../query/app-query-client';
 
 /**
  * Similar to useSearchTraces() from hooks/useTraceDiscovery.ts,
  * uploaded traces also use a **singleton cache design**.
  */
-// Exported so the trace page can hide its reload action for uploaded traces;
-// their data lives in the trace cache under the shared key and a backend
-// refetch would drop the only copy.
-export const UPLOADED_SUMMARIES_QUERY_KEY = ['uploadedSummaries'] as const;
+const UPLOADED_SUMMARIES_QUERY_KEY = ['uploadedSummaries'] as const;
 const UPLOADED_RAW_TRACES_QUERY_KEY = ['uploadedRawTraces'] as const;
+
+export function isUploadedTrace(traceID: string): boolean {
+  const summaries = appQueryClient.getQueryData<TraceSummary[]>(UPLOADED_SUMMARIES_QUERY_KEY);
+  return summaries?.some(summary => summary.traceID === traceID) ?? false;
+}
 
 type UploadedTraces = {
   uploadedSummaries: TraceSummary[];
