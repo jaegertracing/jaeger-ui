@@ -1,24 +1,44 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-vi.mock('../api/jaeger');
+vi.mock('../api/v3/client');
 
 import React from 'react';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import JaegerAPI from '../api/jaeger';
+import { jaegerClient } from '../api/v3/client';
+import type { TracesDataWire } from '../api/v3/schemas';
 import { fetchedState } from '../constants';
 import traceGenerator from '../demo/trace-generators';
 import transformTraceData from '../model/transform-trace-data';
 import { getCachedTrace, populateTraceCache, useTrace, useTraces } from './useTraceLoading';
 import { queryClient as appQueryClient } from '../query/app-query-client';
 
-const mockFetchTrace = vi.mocked(JaegerAPI.fetchTrace);
+const mockFetchTrace = vi.mocked(jaegerClient.fetchTrace);
 
 // Build a real transformed trace for use in tests
 const rawTrace = traceGenerator.trace({});
 const legacyTrace = transformTraceData(rawTrace)!;
 const otelTrace = legacyTrace.asOtelTrace();
+const wireTrace: TracesDataWire = {
+  resourceSpans: [
+    {
+      scopeSpans: [
+        {
+          spans: [
+            {
+              traceId: otelTrace.traceID,
+              spanId: '1111111111111111',
+              name: 'operation',
+              startTimeUnixNano: '1000000',
+              endTimeUnixNano: '2000000',
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
 
 // Each test gets a fresh QueryClient to avoid cross-test cache pollution.
 // getCachedTrace/populateTraceCache use the singleton appQueryClient, so we
@@ -71,7 +91,7 @@ describe('populateTraceCache', () => {
 describe('useTrace', () => {
   it('returns data after a successful fetch', async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    mockFetchTrace.mockResolvedValue({ data: [rawTrace] } as any);
+    mockFetchTrace.mockResolvedValue(wireTrace);
 
     const { result } = renderHook(() => useTrace(otelTrace.traceID), {
       wrapper: makeWrapper(client),
@@ -93,9 +113,9 @@ describe('useTrace', () => {
     expect(result.current.error).toBeInstanceOf(Error);
   });
 
-  it('returns an error when transformTraceData returns null', async () => {
+  it('returns an error when the response has no spans', async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    mockFetchTrace.mockResolvedValue({ data: [null] } as any);
+    mockFetchTrace.mockResolvedValue({ resourceSpans: [] });
 
     const { result } = renderHook(() => useTrace('null-trace'), {
       wrapper: makeWrapper(client),
@@ -107,8 +127,8 @@ describe('useTrace', () => {
   it('seeds cache under canonical ID when response traceID differs from request', async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const altId = 'UPPERCASE_VERSION';
-    const responseTrace = { ...rawTrace, traceID: otelTrace.traceID };
-    mockFetchTrace.mockResolvedValue({ data: [responseTrace] } as any);
+    const responseTrace = wireTrace;
+    mockFetchTrace.mockResolvedValue(responseTrace);
 
     const { result } = renderHook(() => useTrace(altId), {
       wrapper: makeWrapper(client),
@@ -158,7 +178,7 @@ describe('useTraces', () => {
 
   it('returns DONE state with data after successful fetch', async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    mockFetchTrace.mockResolvedValue({ data: [rawTrace] } as any);
+    mockFetchTrace.mockResolvedValue(wireTrace);
 
     const { result } = renderHook(() => useTraces([otelTrace.traceID]), {
       wrapper: makeWrapper(client),
@@ -188,8 +208,8 @@ describe('useTraces', () => {
   it('seeds cache under canonical ID when response traceID differs from request', async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const altId = 'BASE64_ENCODED_ID';
-    const responseTrace = { ...rawTrace, traceID: otelTrace.traceID };
-    mockFetchTrace.mockResolvedValue({ data: [responseTrace] } as any);
+    const responseTrace = wireTrace;
+    mockFetchTrace.mockResolvedValue(responseTrace);
 
     const { result } = renderHook(() => useTraces([altId]), {
       wrapper: makeWrapper(client),
@@ -204,9 +224,7 @@ describe('useTraces', () => {
   it('handles multiple IDs independently', async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const rawTrace2 = traceGenerator.trace({});
-    mockFetchTrace
-      .mockResolvedValueOnce({ data: [rawTrace] } as any)
-      .mockRejectedValueOnce(new Error('fail'));
+    mockFetchTrace.mockResolvedValueOnce(wireTrace).mockRejectedValueOnce(new Error('fail'));
 
     const { result } = renderHook(() => useTraces([otelTrace.traceID, rawTrace2.traceID]), {
       wrapper: makeWrapper(client),
@@ -223,7 +241,7 @@ describe('useTraces', () => {
 
   it('returns a stable Map reference when query results have not changed', async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    mockFetchTrace.mockResolvedValue({ data: [rawTrace] } as any);
+    mockFetchTrace.mockResolvedValue(wireTrace);
 
     const { result, rerender } = renderHook(() => useTraces([otelTrace.traceID]), {
       wrapper: makeWrapper(client),
