@@ -9,6 +9,10 @@ allowBuilds:
 
 catalog:
   '@noble/hashes': 2.4.0
+  vite: npm:@voidzero-dev/vite-plus-core@1.1.0
+  vitest: 5.0.3
+  vite-plus: 1.1.0
+  '@vitest/coverage-v8': 5.0.3
 
 overrides:
   react: 19.3.0
@@ -22,3 +26,12 @@ overrides:
   brace-expansion: 5.0.9
   browserslist: 4.29.0
   fast-uri: 4.2.1
+  vite@*: 'catalog:'
+  vitest@*: 'catalog:'
+peerDependencyRules:
+  allowAny:
+    - vite
+    - vitest
+  allowedVersions:
+    vite: '*'
+    vitest: '*'

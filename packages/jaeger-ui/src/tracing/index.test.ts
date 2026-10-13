@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { vi } from 'vitest';
+import { vi } from 'vite-plus/test';
 
 const registerSpy = vi.fn();
 const webTracerProviderCtor = vi.fn(function (this: any, opts: unknown) {

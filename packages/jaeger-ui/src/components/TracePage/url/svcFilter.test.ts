@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { svcChecksum, encodeSvcFilter, decodeSvcFilter, getSortedServiceNames } from './svcFilter';
 
