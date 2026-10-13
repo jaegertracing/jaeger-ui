@@ -3,6 +3,7 @@
 
 const fetchMock = vi.fn(() =>
   Promise.resolve({
+    ok: true,
     status: 200,
     data: () => Promise.resolve({ data: null }),
     json: () => Promise.resolve({ data: null }),
@@ -22,20 +23,20 @@ const defaultOptions = {
 };
 
 describe('archiveTrace', () => {
-  it('POSTs the specified id', () => {
-    jaegerClient.archiveTrace('trace-id');
+  it('POSTs the specified id', async () => {
+    await jaegerClient.archiveTrace('trace-id');
     expect(fetchMock).toHaveBeenLastCalledWith(`${DEFAULT_API_ROOT}archive/trace-id`, {
-      ...defaultOptions,
       method: 'POST',
+      signal: expect.any(AbortSignal),
     });
   });
 });
 
 describe('fetchDecoration', () => {
-  it('GETs the specified url', () => {
+  it('GETs the specified url', async () => {
     const url = 'foo.bar.baz';
-    jaegerClient.fetchDecoration(url);
-    expect(fetchMock).toHaveBeenLastCalledWith(url, defaultOptions);
+    await jaegerClient.fetchDecoration(url);
+    expect(fetchMock).toHaveBeenLastCalledWith(url, { signal: expect.any(AbortSignal) });
   });
 });
 

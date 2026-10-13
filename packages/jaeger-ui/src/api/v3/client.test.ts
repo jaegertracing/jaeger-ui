@@ -27,64 +27,61 @@ describe('JaegerClient', () => {
   describe('archiveTrace', () => {
     it('honors legacy API-root overrides after clients have been initialized', async () => {
       const originalRoot = JaegerAPI.apiRoot;
-      mockFetch.mockResolvedValue({ status: 200, json: async () => ({ data: [] }) });
+      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ data: [] }) });
 
       try {
         JaegerAPI.apiRoot = '/custom-api/';
         await client.archiveTrace('trace-id');
         expect(mockFetch).toHaveBeenLastCalledWith('/custom-api/archive/trace-id', {
           method: 'POST',
-          credentials: 'same-origin',
+          signal: expect.any(AbortSignal),
         });
 
         JaegerAPI.apiRoot = '/another-api/';
         await jaegerClient.archiveTrace('another-trace');
         expect(mockFetch).toHaveBeenLastCalledWith('/another-api/archive/another-trace', {
           method: 'POST',
-          credentials: 'same-origin',
+          signal: expect.any(AbortSignal),
         });
       } finally {
         JaegerAPI.apiRoot = originalRoot;
       }
     });
 
-    it('POSTs to the existing archive endpoint with same-origin credentials', async () => {
+    it('POSTs to the existing archive endpoint through the timeout transport', async () => {
       const data = { data: [] };
-      mockFetch.mockResolvedValue({ status: 200, json: async () => data });
+      mockFetch.mockResolvedValue({ ok: true, json: async () => data });
 
       await expect(client.archiveTrace('trace-id')).resolves.toBe(data);
       expect(mockFetch).toHaveBeenCalledWith('/api/archive/trace-id', {
         method: 'POST',
-        credentials: 'same-origin',
+        signal: expect.any(AbortSignal),
       });
     });
 
-    it('retains backend archive error details', async () => {
-      const body = { errors: [{ code: 403, msg: 'Archive disabled' }] };
+    it('reports archive HTTP failures with the v3 error style', async () => {
       mockFetch.mockResolvedValue({
+        ok: false,
         status: 403,
         statusText: 'Forbidden',
-        text: async () => JSON.stringify(body),
       });
 
-      await expect(client.archiveTrace('trace-id')).rejects.toMatchObject({
-        message: 'HTTP Error: Archive disabled',
-        httpStatus: 403,
-        httpUrl: '/api/archive/trace-id',
-      });
+      await expect(client.archiveTrace('trace-id')).rejects.toThrow(
+        'Failed to archive trace trace-id: 403 Forbidden'
+      );
     });
   });
 
   describe('fetchDecoration', () => {
     it.each([null, false, 0, ''])('preserves arbitrary JSON response %j', async data => {
-      mockFetch.mockResolvedValue({ status: 200, json: async () => data });
+      mockFetch.mockResolvedValue({ ok: true, json: async () => data });
 
       await expect(client.fetchDecoration('/details')).resolves.toBe(data);
     });
 
     it('preserves array-valued decoration responses', async () => {
       const data = ['decoration'];
-      mockFetch.mockResolvedValue({ status: 200, json: async () => data });
+      mockFetch.mockResolvedValue({ ok: true, json: async () => data });
 
       await expect(client.fetchDecoration('/details')).resolves.toBe(data);
     });
@@ -93,25 +90,69 @@ describe('JaegerClient', () => {
       'GETs the configured URL unchanged: %s',
       async url => {
         const data = { details: { calls: 42 } };
-        mockFetch.mockResolvedValue({ status: 200, json: async () => data });
+        mockFetch.mockResolvedValue({ ok: true, json: async () => data });
 
         await expect(client.fetchDecoration(url)).resolves.toBe(data);
-        expect(mockFetch).toHaveBeenCalledWith(url, { credentials: 'same-origin' });
+        expect(mockFetch).toHaveBeenCalledWith(url, { signal: expect.any(AbortSignal) });
       }
     );
 
-    it('retains plain-text decoration errors', async () => {
+    it('reports decoration HTTP failures with the v3 error style', async () => {
       mockFetch.mockResolvedValue({
+        ok: false,
         status: 502,
         statusText: 'Bad Gateway',
-        text: async () => 'Decoration service unavailable',
       });
 
-      await expect(client.fetchDecoration('/details')).rejects.toMatchObject({
-        message: 'HTTP Error: Decoration service unavailable',
-        httpStatus: 502,
-        httpBody: 'Decoration service unavailable',
+      await expect(client.fetchDecoration('/details')).rejects.toThrow(
+        'Failed to fetch decoration: 502 Bad Gateway'
+      );
+    });
+  });
+
+  describe.each(['archiveTrace', 'fetchDecoration'] as const)('%s transport failures', method => {
+    it('aborts after the shared 10-second timeout and clears the timer', async () => {
+      let requestSignal: AbortSignal | undefined;
+      mockFetch.mockImplementation(
+        (_url: string, { signal }: RequestInit) =>
+          new Promise((_resolve, reject) => {
+            requestSignal = signal!;
+            signal!.addEventListener('abort', () => {
+              const error = new Error('Aborted');
+              error.name = 'AbortError';
+              reject(error);
+            });
+          })
+      );
+
+      const promise = client[method]('/details').catch((error: unknown) => error);
+      await vi.advanceTimersByTimeAsync(9999);
+      expect(requestSignal?.aborted).toBe(false);
+      await vi.advanceTimersByTimeAsync(1);
+      expect(await promise).toMatchObject({ message: 'Request timeout after 10000ms' });
+      expect(requestSignal?.aborted).toBe(true);
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it('propagates network failures and clears the timer', async () => {
+      const failure = new TypeError('Failed to fetch');
+      mockFetch.mockRejectedValue(failure);
+
+      await expect(client[method]('/details')).rejects.toBe(failure);
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it('propagates invalid JSON responses', async () => {
+      const failure = new SyntaxError('Unexpected token');
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => {
+          throw failure;
+        },
       });
+
+      await expect(client[method]('/details')).rejects.toBe(failure);
+      expect(vi.getTimerCount()).toBe(0);
     });
   });
 
