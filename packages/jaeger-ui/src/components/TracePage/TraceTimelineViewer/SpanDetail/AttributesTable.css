@@ -65,7 +65,7 @@ SPDX-License-Identifier: Apache-2.0
 .KeyValueTable--valueColumn-full {
   width: auto;
 }
-/* Large value placeholder button — blends with the table's dark surface */
+/* The placeholder stands in for a large value until the user expands it. */
 .KeyValueTable--largeValuePlaceholder {
   display: inline-block;
   background: transparent;
@@ -77,7 +77,11 @@ SPDX-License-Identifier: Apache-2.0
   padding: 2px 8px;
 }
 
-.KeyValueTable--largeValuePlaceholder:hover {
+.KeyValueTable--largeValuePlaceholder:hover:enabled {
   border-color: var(--interactive-primary);
   color: var(--interactive-primary);
+}
+
+.KeyValueTable--largeValuePlaceholder:disabled {
+  cursor: progress;
 }

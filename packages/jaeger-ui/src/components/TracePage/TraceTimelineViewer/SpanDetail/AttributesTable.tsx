@@ -103,10 +103,6 @@ function formatValue(key: string, value: any): { node: React.ReactNode; isJsonTr
   return { node: <div className="ub-inline-block">{content}</div>, isJsonTree };
 }
 
-function formatSize(chars: number) {
-  return `${chars.toLocaleString()} chars`;
-}
-
 export const LinkValue = (props: { href: string; title?: string; children: React.ReactNode }) => (
   <a href={props.href} title={props.title || ''} target="_blank" rel="noopener noreferrer">
     {props.children} <IoOpenOutline className="KeyValueTable--linkIcon" />
@@ -132,10 +128,15 @@ export default function AttributesTable(props: AttributesTableProps) {
   // Attribute entries are stable for a given IAttributes collection. Keeping
   // them in the set means a replacement entry starts collapsed automatically.
   const [expandedRows, setExpandedRows] = React.useState<Set<object>>(() => new Set());
-  const [, startTransition] = React.useTransition();
+  // The expansion renders as a transition so the click stays responsive while
+  // JSON.parse and JsonView run. The rows being expanded are tracked outside
+  // the transition so their buttons can show that the click was received.
+  const [pendingRows, setPendingRows] = React.useState<Set<object>>(() => new Set());
+  const [isPending, startTransition] = React.useTransition();
 
   const expandRow = React.useCallback(
     (row: object) => {
+      setPendingRows(currentRows => new Set(currentRows).add(row));
       startTransition(() => {
         setExpandedRows(currentRows => new Set(currentRows).add(row));
       });
@@ -157,13 +158,16 @@ export default function AttributesTable(props: AttributesTableProps) {
 
             let valueMarkup;
             if (shouldDeferValue) {
+              const isExpanding = isPending && pendingRows.has(row);
               valueMarkup = (
                 <button
                   type="button"
                   className="KeyValueTable--largeValuePlaceholder"
+                  disabled={isExpanding}
                   onClick={() => expandRow(row)}
                 >
-                  {formatSize((row.value as string).length)} — click to expand
+                  {(row.value as string).length.toLocaleString()} chars —{' '}
+                  {isExpanding ? 'expanding…' : 'click to expand'}
                 </button>
               );
             } else if (links?.length === 1) {

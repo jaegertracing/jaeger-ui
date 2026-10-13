@@ -24,7 +24,16 @@ function formatSummaryValue(value: AttributeValue) {
     return value.length > SUMMARY_VALUE_MAX_CHARS ? `${value.length.toLocaleString()} chars` : value;
   }
   if (value instanceof Uint8Array) return `${value.byteLength.toLocaleString()} bytes`;
-  if (Array.isArray(value)) return `${value.length.toLocaleString()} items`;
+  if (Array.isArray(value)) {
+    // The loop stops as soon as the joined text would exceed the bound, so a
+    // large array is never stringified.
+    let textLength = 0;
+    for (const item of value) {
+      textLength += String(item).length + 1;
+      if (textLength > SUMMARY_VALUE_MAX_CHARS) return `${value.length.toLocaleString()} items`;
+    }
+    return String(value);
+  }
   return String(value);
 }
 
