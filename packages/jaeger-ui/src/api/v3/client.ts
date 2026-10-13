@@ -43,6 +43,9 @@ function toIsoTimestamp(epochMicroseconds: number): string | undefined {
 export class JaegerClient {
   private apiRoot = prefixUrl('/api/v3');
 
+  // Keep getJSON for non-v3 requests to preserve credentials and backend error
+  // details without introducing fetchWithTimeout's timeout behavior. Unify the
+  // transports separately when the remaining legacy methods have migrated.
   archiveTrace(id: string): Promise<unknown> {
     return getJSON(`${apiConfig.apiRoot}archive/${id}`, { method: 'POST' });
   }
