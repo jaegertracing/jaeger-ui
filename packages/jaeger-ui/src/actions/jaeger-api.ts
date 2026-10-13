@@ -3,6 +3,7 @@
 
 import { createAction } from 'redux-actions';
 import JaegerAPI from '../api/jaeger';
+import { jaegerClient } from '../api/v3/client';
 
 export const fetchTrace = createAction(
   '@JAEGER_API/FETCH_TRACE',
@@ -12,7 +13,7 @@ export const fetchTrace = createAction(
 
 export const archiveTrace = createAction(
   '@JAEGER_API/ARCHIVE_TRACE',
-  (id: string) => JaegerAPI.archiveTrace(id),
+  (id: string) => jaegerClient.archiveTrace(id),
   (id: string) => ({ id })
 );
 

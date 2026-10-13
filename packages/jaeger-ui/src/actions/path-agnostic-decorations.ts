@@ -7,14 +7,14 @@ import _set from 'lodash/set';
 import memoize from 'lru-memoize';
 import { createActions, ActionFunctionAny, Action } from 'redux-actions';
 
-import JaegerAPI from '../api/jaeger';
+import { jaegerClient } from '../api/v3/client';
 import { TNewData, TPathAgnosticDecorationSchema } from '../model/path-agnostic-decorations/types';
 import getConfig from '../utils/config/get-config';
 import generateActionTypes from '../utils/generate-action-types';
 import stringSupplant from '../utils/stringSupplant';
 
-// wrapping JaegerAPI.fetchDecoration is necessary for tests to properly mock inside memoization
-const fetchDecoration = memoize(10)((url: string) => JaegerAPI.fetchDecoration(url));
+// wrapping jaegerClient.fetchDecoration is necessary for tests to properly mock inside memoization
+const fetchDecoration = memoize(10)((url: string) => jaegerClient.fetchDecoration(url));
 
 export const actionTypes = generateActionTypes('@jaeger-ui/PATH_AGNOSTIC_DECORATIONS', ['GET_DECORATION']);
 
@@ -62,7 +62,7 @@ export function getDecoration(
 
   pendingCount = pendingCount ? pendingCount + 1 : 1;
   const { summaryUrl, opSummaryUrl, summaryPath, opSummaryPath } = schema;
-  let promise: Promise<Record<string, unknown>>;
+  let promise: Promise<unknown>;
   let getPath: string;
   let setPath: string;
   if (opSummaryPath && opSummaryUrl && operation) {

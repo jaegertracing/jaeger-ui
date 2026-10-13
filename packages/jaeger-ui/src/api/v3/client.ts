@@ -2,14 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /**
- * Jaeger API v3 Client
+ * Jaeger API Client
  *
- * This client interacts with the Jaeger backend's /api/v3/ endpoints
- * and returns native OTLP data structures.
+ * Uses /api/v3/ where available and retains existing routes for operations
+ * without a v3 counterpart.
  */
 
 import { ALL_SERVICES } from '../../constants/search-form';
 import prefixUrl from '../../utils/prefix-url';
+import { getJSON } from '../http';
+import { apiConfig } from '../config';
 import {
   ServicesResponseSchema,
   OperationsResponseSchema,
@@ -40,6 +42,14 @@ function toIsoTimestamp(epochMicroseconds: number): string | undefined {
 
 export class JaegerClient {
   private apiRoot = prefixUrl('/api/v3');
+
+  archiveTrace(id: string): Promise<unknown> {
+    return getJSON(`${apiConfig.apiRoot}archive/${id}`, { method: 'POST' });
+  }
+
+  fetchDecoration(url: string): Promise<unknown> {
+    return getJSON(url);
+  }
 
   /**
    * Fetch the list of services from the Jaeger API.
