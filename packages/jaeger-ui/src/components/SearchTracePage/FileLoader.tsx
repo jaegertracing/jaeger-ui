@@ -90,10 +90,9 @@ export default function FileLoader(props: FileLoaderProps) {
             }
           })
           .catch((err: unknown) => {
-            // The OTLP transform call reaching the backend is a network/availability
-            // failure, not a parse error - the file's JSON was already valid by the
-            // time this rejects. Report it distinctly so the message doesn't blame
-            // the file for a backend that wasn't reachable.
+            // The OTLP transform call to the backend failed, not the file's JSON parse -
+            // the JSON was already valid by the time this rejects. Report it distinctly
+            // so the message doesn't blame the file's JSON for a failed conversion.
             if (err instanceof OtlpTransformError) {
               message.error(`${file.name}: ${err.message}`);
               return;

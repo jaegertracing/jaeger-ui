@@ -74,7 +74,7 @@ describe('fileReader.readJsonFile', () => {
     const file = new File([JSON.stringify(inObj)], 'foo.json');
     const p = readJsonFile({ file });
     return expect(p).rejects.toThrow(
-      /OTLP import requires a reachable Jaeger backend \(POST \/api\/transform\): backend transform failed/
+      /OTLP conversion via the Jaeger backend \(POST \/api\/transform\) failed: backend transform failed/
     );
   });
 
@@ -85,6 +85,23 @@ describe('fileReader.readJsonFile', () => {
     const file = new File([JSON.stringify(inObj)], 'foo.json');
 
     await expect(readJsonFile({ file })).rejects.toBeInstanceOf(OtlpTransformError);
+  });
+
+  it('rejects a backend 400 (unparseable OTLP payload) without claiming the backend was unreachable', async () => {
+    const httpError = Object.assign(new Error('HTTP Error: cannot unmarshal OTLP traces'), {
+      httpStatus: 400,
+    });
+    JaegerAPI.transformOTLP.mockImplementationOnce(() => Promise.reject(httpError));
+    const file = new File([JSON.stringify({ resourceSpans: [{}] })], 'foo.json');
+
+    const err = await readJsonFile({ file }).catch(e => e);
+
+    expect(err).toBeInstanceOf(OtlpTransformError);
+    expect(err.message).toBe(
+      'OTLP conversion via the Jaeger backend (POST /api/transform) failed: HTTP Error: cannot unmarshal OTLP traces'
+    );
+    expect(err.message).not.toMatch(/reachable/);
+    expect(err.cause).toBe(httpError);
   });
 
   it('rejects malformed JSON', () => {

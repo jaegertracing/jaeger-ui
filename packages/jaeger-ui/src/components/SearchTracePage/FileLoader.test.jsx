@@ -253,11 +253,11 @@ describe('<FileLoader />', () => {
     expect(mockOnTracesLoaded).not.toHaveBeenCalled();
   });
 
-  it('shows a backend-required message, not "Failed to parse", when OTLP transform fails', async () => {
+  it('shows an OTLP conversion message, not "Failed to parse", when OTLP transform fails', async () => {
     const { message } = await import('antd');
     readJsonFile.mockRejectedValue(
       new OtlpTransformError(
-        'OTLP import requires a reachable Jaeger backend (POST /api/transform): Failed to fetch'
+        'OTLP conversion via the Jaeger backend (POST /api/transform) failed: Failed to fetch'
       )
     );
 
@@ -267,8 +267,28 @@ describe('<FileLoader />', () => {
     });
 
     expect(message.error).toHaveBeenCalledWith(
-      'otel-file-exporter-output.json: OTLP import requires a reachable Jaeger backend (POST /api/transform): Failed to fetch'
+      'otel-file-exporter-output.json: OTLP conversion via the Jaeger backend (POST /api/transform) failed: Failed to fetch'
     );
+    expect(mockOnTracesLoaded).not.toHaveBeenCalled();
+  });
+
+  it('does not say the backend was unreachable when it rejects the OTLP payload with a 400', async () => {
+    const { message } = await import('antd');
+    readJsonFile.mockRejectedValue(
+      new OtlpTransformError(
+        'OTLP conversion via the Jaeger backend (POST /api/transform) failed: HTTP Error: cannot unmarshal OTLP traces'
+      )
+    );
+
+    render(<FileLoader onTracesLoaded={mockOnTracesLoaded} />);
+    await act(async () => {
+      global.mockBeforeUpload(makeFile('bad-otlp.json'));
+    });
+
+    expect(message.error).toHaveBeenCalledWith(
+      'bad-otlp.json: OTLP conversion via the Jaeger backend (POST /api/transform) failed: HTTP Error: cannot unmarshal OTLP traces'
+    );
+    expect(message.error).not.toHaveBeenCalledWith(expect.stringMatching(/reachable|Failed to parse/));
     expect(mockOnTracesLoaded).not.toHaveBeenCalled();
   });
 

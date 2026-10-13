@@ -6,8 +6,10 @@ import JaegerAPI from '../api/jaeger';
 // Distinguishes "the OTLP-to-Jaeger backend conversion failed" from every other
 // rejection readJsonFile can produce (malformed JSON, a bad FileReader result, etc).
 // Unlike those, this file's JSON was valid - the failure happened after parsing,
-// in the network call to POST /api/transform, so callers should not describe it
-// as a parse error.
+// in the call to POST /api/transform, so callers should not describe it as a parse
+// error. It covers every way that call can fail (backend unreachable, a 4xx/5xx such
+// as a 400 when the backend can't unmarshal the OTLP payload, or a 2xx with an
+// unreadable body), so its message must not assume which one happened.
 export class OtlpTransformError extends Error {
   constructor(message: string, options?: ErrorOptions) {
     super(message, options);
@@ -70,7 +72,7 @@ export default function readJsonFile(fileList: { file: File }): Promise<string> 
             const cause = err instanceof Error ? `: ${err.message}` : '';
             reject(
               new OtlpTransformError(
-                `OTLP import requires a reachable Jaeger backend (POST /api/transform)${cause}`,
+                `OTLP conversion via the Jaeger backend (POST /api/transform) failed${cause}`,
                 { cause: err }
               )
             );
