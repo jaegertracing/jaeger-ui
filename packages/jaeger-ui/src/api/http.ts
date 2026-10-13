@@ -18,6 +18,7 @@ type FetchOptions = {
   credentials?: RequestCredentials;
 };
 
+// export for tests
 export function getMessageFromError(errData: any, status: number): string {
   if (errData.code != null && errData.msg != null) {
     if (errData.code === status) {

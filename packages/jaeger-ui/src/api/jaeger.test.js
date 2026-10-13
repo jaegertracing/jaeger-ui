@@ -14,11 +14,30 @@ vi.stubGlobal('fetch', fetchMock);
 import queryString from 'query-string';
 
 import traceGenerator from '../demo/trace-generators';
-import JaegerAPI, { DEFAULT_API_ROOT, DEFAULT_DEPENDENCY_LOOKBACK } from './jaeger';
+import JaegerAPI, { getMessageFromError, DEFAULT_API_ROOT, DEFAULT_DEPENDENCY_LOOKBACK } from './jaeger';
+import { jaegerClient } from './v3/client';
 
 const defaultOptions = {
   credentials: 'same-origin',
 };
+
+describe('archiveTrace', () => {
+  it('POSTs the specified id', () => {
+    jaegerClient.archiveTrace('trace-id');
+    expect(fetchMock).toHaveBeenLastCalledWith(`${DEFAULT_API_ROOT}archive/trace-id`, {
+      ...defaultOptions,
+      method: 'POST',
+    });
+  });
+});
+
+describe('fetchDecoration', () => {
+  it('GETs the specified url', () => {
+    const url = 'foo.bar.baz';
+    jaegerClient.fetchDecoration(url);
+    expect(fetchMock).toHaveBeenLastCalledWith(url, defaultOptions);
+  });
+});
 
 describe('fetchDeepDependencyGraph', () => {
   it('GETs the specified query', () => {
@@ -166,6 +185,33 @@ describe('fetchTrace', () => {
     expect(err.message).toMatch(errorData);
     expect(err.httpStatus).toBe(status);
     expect(err.httpStatusText).toBe(statusText);
+  });
+});
+
+describe('getMessageFromError()', () => {
+  describe('{ code, msg } error data', () => {
+    const data = { code: 1, msg: 'some-message' };
+
+    it('ignores code if it is the same as `status` arg', () => {
+      expect(getMessageFromError(data, 1)).toBe(data.msg);
+    });
+
+    it('returns`$code - $msg` when code is novel', () => {
+      const rv = getMessageFromError(data, -1);
+      expect(rv).toBe(`${data.code} - ${data.msg}`);
+    });
+  });
+  describe('other data formats', () => {
+    it('stringifies the value, when possible', () => {
+      const data = ['abc'];
+      expect(getMessageFromError(data)).toBe(JSON.stringify(data));
+    });
+
+    it('returns the string, otherwise', () => {
+      const data = {};
+      data.data = data;
+      expect(getMessageFromError(data)).toBe(String(data));
+    });
   });
 });
 
