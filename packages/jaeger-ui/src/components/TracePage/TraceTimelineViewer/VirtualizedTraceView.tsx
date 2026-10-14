@@ -49,6 +49,7 @@ type RowStateData = {
 type TVirtualizedTraceViewOwnProps = {
   currentViewRangeTime: [number, number];
   findMatchesIDs: Set<string> | TNil;
+  currentFindMatchID: string | null;
   nameColumnWidth: number;
   scrollToFirstVisibleSpan: () => void;
   registerAccessors: (accesors: Accessors) => void;
@@ -378,6 +379,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
       const {
         childrenHiddenIDs,
         childrenToggle,
+        currentFindMatchID,
         detailStates,
         detailToggle,
         findMatchesIDs,
@@ -400,6 +402,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
       const isCollapsed = childrenHiddenIDs.has(spanID);
       const isDetailExpanded = detailStates.has(spanID);
       const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
+      const isCurrentFindMatch = isMatchingFilter && currentFindMatchID === spanID;
       const isSelected = selectedSpanID === spanID;
       const hasOwnError = isErrorSpan(span);
       const hasChildError = isCollapsed && spanContainsErredSpan(spans, spanIndex);
@@ -443,6 +446,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
             isChildrenExpanded={!isCollapsed}
             isDetailExpanded={isDetailExpanded}
             isMatchingFilter={isMatchingFilter}
+            isCurrentFindMatch={isCurrentFindMatch}
             isSelected={isSelected}
             timelineBarsVisible={timelineBarsVisible}
             numTicks={NUM_TICKS}

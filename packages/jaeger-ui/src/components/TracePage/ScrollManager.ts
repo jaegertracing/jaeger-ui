@@ -93,7 +93,7 @@ export default class ScrollManager {
     this._scroller?.scrollTo(y);
   }
 
-  _scrollToVisibleSpan(direction: 1 | -1, startRow?: number) {
+  _scrollToVisibleSpan(direction: 1 | -1, startRow?: number): string | undefined {
     const xrs = this._accessors;
     /* istanbul ignore next */
     if (!xrs) {
@@ -157,6 +157,8 @@ export default class ScrollManager {
       nextSpanIndex = i;
       break;
     }
+    const findMatchSpanID =
+      findMatches && nextSpanIndex !== undefined ? spans[nextSpanIndex].spanID : undefined;
     if (nextSpanIndex === undefined || nextSpanIndex === boundary) {
       // might as well scroll to the top or bottom
       nextSpanIndex = boundary - direction;
@@ -176,6 +178,7 @@ export default class ScrollManager {
     }
     const nextRow = xrs.mapSpanIndexToRowIndex(nextSpanIndex);
     this._scrollPast(nextRow, direction);
+    return findMatchSpanID;
   }
 
   /**
@@ -219,20 +222,18 @@ export default class ScrollManager {
   /**
    * Scrolls to the next visible span, ignoring spans that do not match the
    * text filter, if there is one. It is bounds in the ctor, so it can
-   * be used as a keyboard shortcut handler.
+   * be used as a keyboard shortcut handler. Returns the ID of the matching
+   * span scrolled to, if any.
    */
-  scrollToNextVisibleSpan = () => {
-    this._scrollToVisibleSpan(1);
-  };
+  scrollToNextVisibleSpan = () => this._scrollToVisibleSpan(1);
 
   /**
    * Scrolls to the previous visible span, ignoring spans that do not match the
    * text filter, if there is one. It is bounds in the ctor, so it can
-   * be used as a keyboard shortcut handler.
+   * be used as a keyboard shortcut handler. Returns the ID of the matching
+   * span scrolled to, if any.
    */
-  scrollToPrevVisibleSpan = () => {
-    this._scrollToVisibleSpan(-1);
-  };
+  scrollToPrevVisibleSpan = () => this._scrollToVisibleSpan(-1);
 
   scrollToFirstVisibleSpan = () => {
     this._scrollToVisibleSpan(1, 0);
