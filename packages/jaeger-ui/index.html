@@ -35,10 +35,16 @@
             : path.slice(0, path.lastIndexOf('/') + 1) || '/';
         if (prefix[prefix.length - 1] !== '/') prefix += '/';
         var safe = prefix.replace(/[&"<>]/g, '');
-        document.currentScript.insertAdjacentHTML(
-          'afterend',
-          '<base href="' + safe + '" data-inject-target="BASE_URL" />'
-        );
+        // The Jaeger backend puts a relative <base> ahead of this script, because the
+        // browser's preload scanner resolves the asset URLs below before this script
+        // runs (jaegertracing/jaeger#9781). Only add one when it is missing, e.g. in
+        // the Vite dev server or behind an older backend.
+        if (!document.querySelector('base')) {
+          document.currentScript.insertAdjacentHTML(
+            'afterend',
+            '<base href="' + safe + '" data-inject-target="BASE_URL" />'
+          );
+        }
         // Delay the check: React 18 createRoot().render() is async (concurrent mode),
         // so the root is empty at DOMContentLoaded even when the app loaded successfully.
         // Only show the error if the root is still empty after a generous timeout.
