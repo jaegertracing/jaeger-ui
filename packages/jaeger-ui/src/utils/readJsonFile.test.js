@@ -4,7 +4,7 @@
 import fs from 'fs';
 import path from 'path';
 import lodash from 'lodash';
-import readJsonFile from './readJsonFile';
+import readJsonFile, { extractServerErrorMessage, formatConvertErrorMessage } from './readJsonFile';
 import JaegerAPI from '../api/jaeger';
 
 let OTLPTrace;
@@ -73,7 +73,56 @@ describe('fileReader.readJsonFile', () => {
     );
     const file = new File([JSON.stringify(inObj)], 'foo.json');
     const p = readJsonFile({ file });
-    return expect(p).rejects.toThrow(/Error converting OTLP trace to Jaeger: backend transform failed/);
+    return expect(p).rejects.toThrow(/Error converting traces to OTLP: backend transform failed/);
+  });
+
+  it('rejects an OTLP trace with structured backend error message from response.data.errors', () => {
+    jest.spyOn(JaegerAPI, 'transformOTLP').mockImplementationOnce(() =>
+      Promise.reject({
+        response: {
+          data: {
+            errors: [{ code: 400, msg: 'cannot unmarshal OTLP : readUint32: unexpected character' }],
+          },
+        },
+      })
+    );
+    const inObj = JSON.parse(
+      fs.readFileSync(path.resolve(fixturesDir, 'otlp2jaeger-in-error.json'), 'utf-8')
+    );
+    const file = new File([JSON.stringify(inObj)], 'foo.json');
+    const p = readJsonFile({ file });
+    return expect(p).rejects.toThrow(
+      /Error converting traces to OTLP: cannot unmarshal OTLP : readUint32: unexpected character/
+    );
+  });
+
+  it('rejects an OTLP trace when transform resolves with backend errors', () => {
+    jest.spyOn(JaegerAPI, 'transformOTLP').mockImplementationOnce(() =>
+      Promise.resolve({
+        data: null,
+        errors: [{ code: 400, msg: 'cannot unmarshal OTLP : readUint32: unexpected character' }],
+      })
+    );
+    const inObj = JSON.parse(
+      fs.readFileSync(path.resolve(fixturesDir, 'otlp2jaeger-in-error.json'), 'utf-8')
+    );
+    const file = new File([JSON.stringify(inObj)], 'foo.json');
+    const p = readJsonFile({ file });
+    return expect(p).rejects.toThrow(
+      /Error converting traces to OTLP: cannot unmarshal OTLP : readUint32: unexpected character/
+    );
+  });
+
+  it('falls back safely to default error message if server message is absent or malformed', () => {
+    jest
+      .spyOn(JaegerAPI, 'transformOTLP')
+      .mockImplementationOnce(() => Promise.reject({ response: { data: { errors: [] } } }));
+    const inObj = JSON.parse(
+      fs.readFileSync(path.resolve(fixturesDir, 'otlp2jaeger-in-error.json'), 'utf-8')
+    );
+    const file = new File([JSON.stringify(inObj)], 'foo.json');
+    const p = readJsonFile({ file });
+    return expect(p).rejects.toThrow('Error converting traces to OTLP');
   });
 
   it('rejects malformed JSON', () => {
@@ -157,5 +206,84 @@ describe('fileReader.readJsonFile', () => {
 
       return expect(promise).rejects.toThrow(/Invalid result type/);
     });
+  });
+});
+
+describe('extractServerErrorMessage', () => {
+  it('extracts msg from response.data.errors', () => {
+    expect(
+      extractServerErrorMessage({
+        response: { data: { errors: [{ code: 400, msg: 'error from response.data' }] } },
+      })
+    ).toBe('error from response.data');
+  });
+
+  it('extracts msg from response.errors', () => {
+    expect(
+      extractServerErrorMessage({
+        response: { errors: [{ code: 400, msg: 'error from response.errors' }] },
+      })
+    ).toBe('error from response.errors');
+  });
+
+  it('extracts msg from data.errors', () => {
+    expect(
+      extractServerErrorMessage({
+        data: { errors: [{ code: 400, msg: 'error from data' }] },
+      })
+    ).toBe('error from data');
+  });
+
+  it('extracts msg from errors directly', () => {
+    expect(
+      extractServerErrorMessage({
+        errors: [{ code: 400, msg: 'error from errors' }],
+      })
+    ).toBe('error from errors');
+  });
+
+  it('extracts msg from httpBody JSON string', () => {
+    expect(
+      extractServerErrorMessage({
+        httpBody: JSON.stringify({ errors: [{ code: 400, msg: 'error from httpBody' }] }),
+      })
+    ).toBe('error from httpBody');
+  });
+
+  it('extracts msg from Error message stripping HTTP Error prefix', () => {
+    expect(extractServerErrorMessage(new Error('HTTP Error: server failed'))).toBe('server failed');
+  });
+
+  it('returns null for absent or malformed errors', () => {
+    expect(extractServerErrorMessage(null)).toBeNull();
+    expect(extractServerErrorMessage(undefined)).toBeNull();
+    expect(extractServerErrorMessage({})).toBeNull();
+    expect(extractServerErrorMessage({ errors: [] })).toBeNull();
+    expect(extractServerErrorMessage({ errors: [{ code: 400 }] })).toBeNull();
+    expect(extractServerErrorMessage({ errors: [{ code: 400, msg: '   ' }] })).toBeNull();
+    expect(extractServerErrorMessage(new Error(''))).toBeNull();
+  });
+});
+
+describe('formatConvertErrorMessage', () => {
+  it('formats message with default prefix when server message is present', () => {
+    expect(formatConvertErrorMessage(new Error('backend failed'))).toBe(
+      'Error converting traces to OTLP: backend failed'
+    );
+  });
+
+  it('returns default message when server message is absent or malformed', () => {
+    expect(formatConvertErrorMessage(null)).toBe('Error converting traces to OTLP');
+    expect(formatConvertErrorMessage({})).toBe('Error converting traces to OTLP');
+    expect(formatConvertErrorMessage({ errors: [] })).toBe('Error converting traces to OTLP');
+  });
+
+  it('does not duplicate default prefix if already present', () => {
+    expect(formatConvertErrorMessage(new Error('Error converting traces to OTLP: backend failed'))).toBe(
+      'Error converting traces to OTLP: backend failed'
+    );
+    expect(formatConvertErrorMessage(new Error('Error converting traces to OTLP'))).toBe(
+      'Error converting traces to OTLP'
+    );
   });
 });
