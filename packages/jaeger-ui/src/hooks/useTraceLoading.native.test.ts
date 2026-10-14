@@ -6,7 +6,9 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { fetchedState } from '../constants';
 import { queryClient } from '../query/app-query-client';
-import { getCachedTrace, useTrace, useTraces } from './useTraceLoading';
+import { getCachedTrace, populateTraceCache, useTrace, useTraces } from './useTraceLoading';
+import { parseOtelTrace } from '../api/v3/parser';
+import type { IOtelTrace } from '../types/otel';
 
 const traceID = 'abcdef0123456789abcdef0123456789';
 const aliasID = traceID.toUpperCase();
@@ -59,6 +61,28 @@ function respond(body: unknown, status = 200) {
   fetchMock.mockResolvedValue(new Response(JSON.stringify(body), { status }));
 }
 
+function branchingResponse() {
+  const response = structuredClone(payload);
+  const spans = response.result.resourceSpans[0].scopeSpans[0].spans;
+  for (const childID of ['2222222222222222', '3333333333333333']) {
+    const child = { ...spans[0], spanId: childID, parentSpanId: spanID };
+    spans.push(child);
+  }
+  return response;
+}
+
+function guardDeepComparison(trace: IOtelTrace) {
+  const root = trace.spans[0];
+  const children = root.childSpans;
+  // Bound recursion so a structural-sharing regression fails instead of hanging the test runner.
+  const readChildren = vi.fn(() => {
+    if (readChildren.mock.calls.length > 200) throw new Error('Recursive trace comparison');
+    return children;
+  });
+  Object.defineProperty(root, 'childSpans', { get: readChildren, enumerable: true, configurable: true });
+  return readChildren;
+}
+
 function useSingleResult(id: string) {
   const result = useTrace(id);
   return { data: result.data, error: result.error, done: result.isSuccess, failed: result.isError };
@@ -76,6 +100,40 @@ function useMultipleResult(id: string) {
 
 describe.each(['useTrace', 'useTraces'] as const)('%s native loading', hook => {
   const useResult = hook === 'useTrace' ? useSingleResult : useMultipleResult;
+
+  it('replaces an unobserved canonical branching trace when an alias loads', async () => {
+    const response = branchingResponse();
+    const oldTrace = parseOtelTrace(response.result)!;
+    populateTraceCache(oldTrace);
+    const readChildren = guardDeepComparison(oldTrace);
+    respond(response);
+    const { result } = renderHook(() => useResult(aliasID), { wrapper });
+    await waitFor(() => expect(result.current.done).toBe(true));
+    const fresh = result.current.data!;
+    expect(getCachedTrace(traceID)).toBe(fresh);
+    expect(getCachedTrace(aliasID)).toBe(fresh);
+    expect(readChildren).not.toHaveBeenCalled();
+    expect(fresh.spans[0].childSpans).toHaveLength(2);
+    expect(fresh.spans[0].childSpans[0].parentSpan).toBe(fresh.spans[0]);
+  });
+
+  it('refetches a cached branching trace without comparing its cyclic graph', async () => {
+    const response = branchingResponse();
+    respond(response);
+    const { result } = renderHook(() => useResult(traceID), { wrapper });
+    await waitFor(() => expect(result.current.done).toBe(true));
+    const oldTrace = result.current.data!;
+    const readChildren = guardDeepComparison(oldTrace);
+    respond(response);
+    await queryClient.invalidateQueries({ queryKey: ['trace', traceID], exact: true });
+    await waitFor(() => {
+      expect(result.current.done).toBe(true);
+      expect(result.current.data).not.toBe(oldTrace);
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(readChildren).not.toHaveBeenCalled();
+    expect(result.current.data?.spans[0].childSpans[0].parentSpan).toBe(result.current.data?.spans[0]);
+  });
 
   it('validates and parses the v3 response, preserving GenAI detection', async () => {
     respond(payload);
@@ -186,4 +244,16 @@ describe.each(['useTrace', 'useTraces'] as const)('%s native loading', hook => {
     await waitFor(() => expect(result.current.failed).toBe(true));
     expect(result.current.error).toBe(error);
   });
+});
+
+it('replaces uploaded branching traces without comparing their cyclic graphs', () => {
+  const response = branchingResponse();
+  const oldTrace = parseOtelTrace(response.result)!;
+  const fresh = parseOtelTrace(response.result)!;
+  populateTraceCache(oldTrace);
+  const readChildren = guardDeepComparison(oldTrace);
+  populateTraceCache(fresh);
+  expect(getCachedTrace(traceID)).toBe(fresh);
+  expect(readChildren).not.toHaveBeenCalled();
+  expect(fresh.spans[0].childSpans[0].parentSpan).toBe(fresh.spans[0]);
 });

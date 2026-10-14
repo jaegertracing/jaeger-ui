@@ -42,6 +42,7 @@ export function useTrace(traceId: string): UseQueryResult<IOtelTrace> {
       return otel;
     },
     staleTime: Infinity,
+    structuralSharing: false,
   });
 }
 
@@ -64,6 +65,7 @@ export function useTraces(ids: string[]): Map<string, FetchedTrace> {
         return otel;
       },
       staleTime: Infinity,
+      structuralSharing: false,
     })),
   });
 
