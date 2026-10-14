@@ -169,7 +169,21 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
 
   const title = (
     <h1 className={`TracePageHeader--title ${canCollapse ? 'is-collapsible' : ''}`}>
-      <TraceName traceName={trace.traceName} /> <TraceId traceId={trace.traceID} />
+      {canCollapse ? (
+        <button
+          className="TracePageHeader--titleLink"
+          type="button"
+          onClick={onSlimViewClicked}
+          role="switch"
+          aria-checked={!slimView}
+        >
+          <IoChevronForward className={`TracePageHeader--detailToggle ${!slimView ? 'is-expanded' : ''}`} />
+          <TraceName traceName={trace.traceName} />
+        </button>
+      ) : (
+        <TraceName traceName={trace.traceName} />
+      )}{' '}
+      <TraceId traceId={trace.traceID} />
       {orphanCount > 0 && (
         <span className="TracePageHeader--incompleteActions" data-testid="header-item-incomplete">
           <Tooltip title={getIncompleteTraceTooltip(orphanCount)}>
@@ -206,19 +220,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           </Link>
         )}
         {links && links.length > 0 && <ExternalLinks links={links} />}
-        {canCollapse ? (
-          <a
-            className="TracePageHeader--titleLink"
-            onClick={onSlimViewClicked}
-            role="switch"
-            aria-checked={!slimView}
-          >
-            <IoChevronForward className={`TracePageHeader--detailToggle ${!slimView ? 'is-expanded' : ''}`} />
-            {title}
-          </a>
-        ) : (
-          title
-        )}
+        {title}
         <TracePageSearchBar
           clearSearch={clearSearch}
           focusUiFindMatches={focusUiFindMatches}

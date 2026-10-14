@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 import TracePageHeaderWithRef, {
@@ -192,6 +193,7 @@ describe('<TracePageHeader>', () => {
         {...defaultProps}
         trace={incompleteTrace}
         slimView
+        canCollapse
         onReloadTrace={onReloadTrace}
         onSlimViewClicked={onSlimViewClicked}
       />
@@ -200,10 +202,43 @@ describe('<TracePageHeader>', () => {
     expect(container.querySelector('.TracePageHeader--overviewItems')).toBeNull();
     const button = screen.getByRole('button', { name: 'Reload trace' });
     expect(button.closest('h1')).not.toBeNull();
+    expect(screen.getByRole('switch')).not.toContainElement(button);
     expect(screen.getByTestId('header-item-incomplete').closest('h1')).toBe(button.closest('h1'));
     fireEvent.click(button);
     expect(onReloadTrace).toHaveBeenCalledOnce();
     expect(onSlimViewClicked).not.toHaveBeenCalled();
+  });
+
+  it.each(['{Enter}', ' '])('activates the title switch and reload independently with %s', async key => {
+    const user = userEvent.setup();
+    const incompleteTrace = Object.create(defaultProps.trace);
+    Object.defineProperty(incompleteTrace, 'orphanSpanCount', { value: 3 });
+    const onReloadTrace = jest.fn();
+    const onSlimViewClicked = jest.fn();
+    renderWithRouter(
+      <TracePageHeader
+        {...defaultProps}
+        canCollapse
+        trace={incompleteTrace}
+        onReloadTrace={onReloadTrace}
+        onSlimViewClicked={onSlimViewClicked}
+      />
+    );
+
+    const titleSwitch = screen.getByRole('switch');
+    const reloadButton = screen.getByRole('button', { name: 'Reload trace' });
+    expect(titleSwitch.tagName).toBe('BUTTON');
+    expect(titleSwitch).not.toContainElement(reloadButton);
+    expect(titleSwitch.querySelector('button, a, [role="button"], [tabindex]')).toBeNull();
+    titleSwitch.focus();
+    await user.keyboard(key);
+    expect(onSlimViewClicked).toHaveBeenCalledOnce();
+    expect(onReloadTrace).not.toHaveBeenCalled();
+
+    reloadButton.focus();
+    await user.keyboard(key);
+    expect(onReloadTrace).toHaveBeenCalledOnce();
+    expect(onSlimViewClicked).toHaveBeenCalledOnce();
   });
 
   it('hides the reload action when no reload handler is provided', () => {
