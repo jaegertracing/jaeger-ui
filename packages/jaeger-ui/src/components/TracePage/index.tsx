@@ -376,7 +376,7 @@ export function TracePageImpl(props: TProps) {
     setTimelineBarsVisible(!timelineBarsVisible);
   }, [setTimelineBarsVisible, timelineBarsVisible]);
 
-  if (traceError) {
+  if (traceError && !traceData) {
     return <ErrorMessage className="ub-m3" error={traceQueryError || 'Unknown error'} />;
   }
   if (traceLoading || !traceData) {
