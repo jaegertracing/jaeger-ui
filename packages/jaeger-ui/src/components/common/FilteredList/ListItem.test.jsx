@@ -35,20 +35,21 @@ describe('<ListItem>', () => {
 
   it('is focused when index matches focusedIndex', () => {
     renderItem({ data: { ...defaultProps.data, focusedIndex: 0 } });
-    const item = screen.getByRole('switch');
+    const item = screen.getByRole('button');
     expect(item).toHaveClass('is-focused');
-    expect(item).toHaveAttribute('aria-checked', 'true');
+    expect(item).toHaveAttribute('aria-pressed', 'false');
   });
 
   it('is selected when option equals selectedValue', () => {
     renderItem({ data: { ...defaultProps.data, selectedValue: 'apple' } });
-    const item = screen.getByRole('switch');
+    const item = screen.getByRole('button');
     expect(item).toHaveClass('is-selected');
+    expect(item).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('calls setValue when clicked (single mode)', () => {
     renderItem();
-    fireEvent.click(screen.getByRole('switch'));
+    fireEvent.click(screen.getByRole('button'));
     expect(defaultProps.data.setValue).toHaveBeenCalledWith('apple');
   });
 
@@ -74,8 +75,9 @@ describe('<ListItem>', () => {
           selectedValue: 'apple',
         },
       });
-      const item = screen.getByRole('switch');
+      const item = screen.getByRole('button');
       expect(item).toHaveClass('is-selected');
+      expect(item).toHaveAttribute('aria-pressed', 'true');
       expect(screen.getByRole('checkbox')).toBeChecked();
     });
 
@@ -97,7 +99,7 @@ describe('<ListItem>', () => {
         })
       ).not.toThrow();
 
-      fireEvent.click(screen.getByRole('switch'));
+      fireEvent.click(screen.getByRole('button'));
       expect(addValues).not.toHaveBeenCalled();
     });
 
@@ -110,7 +112,7 @@ describe('<ListItem>', () => {
           removeValues,
         },
       });
-      fireEvent.click(screen.getByRole('switch'));
+      fireEvent.click(screen.getByRole('button'));
       expect(addValues).toHaveBeenCalledWith(['apple']);
       expect(removeValues).not.toHaveBeenCalled();
     });
@@ -125,7 +127,7 @@ describe('<ListItem>', () => {
           removeValues,
         },
       });
-      fireEvent.click(screen.getByRole('switch'));
+      fireEvent.click(screen.getByRole('button'));
       expect(removeValues).toHaveBeenCalledWith(['apple']);
       expect(addValues).not.toHaveBeenCalled();
     });

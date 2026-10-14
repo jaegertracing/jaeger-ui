@@ -35,14 +35,14 @@ describe('<AccordionText>', () => {
   it('disables onClick if data is empty', () => {
     const mockToggle = jest.fn();
     render(<AccordionText {...baseProps} data={[]} onToggle={mockToggle} />);
-    const header = screen.getByRole('switch');
+    const header = screen.getByRole('button');
     fireEvent.click(header);
     expect(mockToggle).not.toHaveBeenCalled();
   });
 
-  it('has role="switch" when interactive is true', () => {
+  it('has role="button" when interactive is true', () => {
     render(<AccordionText {...baseProps} isOpen />);
-    expect(screen.getByRole('switch')).toBeInTheDocument();
+    expect(screen.getByRole('button')).toBeInTheDocument();
   });
 
   it('has class "is-empty" if data is empty', () => {

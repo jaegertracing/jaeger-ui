@@ -193,18 +193,18 @@ describe('<TraceLogsView>', () => {
 
   it('toggles attribute accordion open and closed on click', () => {
     const trace = transformTraceData(baseTrace).asOtelTrace();
-    render(<TraceLogsView trace={trace} useOtelTerms={false} />);
+    const { container } = render(<TraceLogsView trace={trace} useOtelTerms={false} />);
 
-    // AccordionAttributes renders a div with role="switch" as the clickable toggle
-    const switches = screen.getAllByRole('switch');
-    expect(switches.length).toBeGreaterThan(0);
+    // AccordionAttributes renders a div with role="button" as the clickable toggle
+    const toggles = container.querySelectorAll('.AccordionAttributes--header');
+    expect(toggles.length).toBeGreaterThan(0);
 
     // Click to expand (triggers toggleAttributes -> adds key to openAttributes set)
-    fireEvent.click(switches[0]);
+    fireEvent.click(toggles[0]);
 
     // After expanding, the accordion should show the AttributesTable
     // Click again to collapse (triggers toggleAttributes -> removes key from set)
-    fireEvent.click(switches[0]);
+    fireEvent.click(toggles[0]);
   });
 
   it('renders em dash for log entries with no attributes', () => {

@@ -59,13 +59,7 @@ const ListItem: React.FC<IListItemProps> = React.memo(props => {
   });
 
   return (
-    <div
-      className={cls}
-      style={style}
-      onClick={onClicked}
-      role="switch"
-      aria-checked={index === focusedIndex ? 'true' : 'false'}
-    >
+    <div className={cls} style={style} onClick={onClicked} role="button" aria-pressed={isSelected}>
       {multi && <Checkbox className="FilteredList--ListItem--Checkbox" checked={isSelected} />}
       {highlightMatches(highlightQuery, value)}
     </div>
