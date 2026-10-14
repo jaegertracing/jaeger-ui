@@ -36,18 +36,14 @@ export const SpanRowControls: React.FC<SpanRowControlsProps> = ({ span }) => {
     (e: React.MouseEvent) => {
       e.stopPropagation();
       e.preventDefault();
+      const subtreeParentIDs = getDescendantParentSpanIDs(span);
       // Dual-write to Redux first for tracking and store synchronization (if Provider is present)
       if (dispatch) {
-        const subtreeParentIDs = getDescendantParentSpanIDs(span);
-        for (const id of subtreeParentIDs) {
-          if (isSubtreeCollapsed ? childrenHiddenIDs.has(id) : !childrenHiddenIDs.has(id)) {
-            dispatch(actions.childrenToggle(id));
-          }
-        }
+        dispatch(actions.childrenToggleSubtree(span.spanID, subtreeParentIDs));
       }
       toggleSubtreeCollapse(span);
     },
-    [dispatch, span, isSubtreeCollapsed, childrenHiddenIDs, toggleSubtreeCollapse]
+    [dispatch, span, toggleSubtreeCollapse]
   );
 
   const handleFocusToggle = useCallback(

@@ -7,19 +7,13 @@ import '@testing-library/jest-dom';
 import copy from 'copy-to-clipboard';
 import { message } from 'antd';
 
+import { Provider } from 'react-redux';
+import { createStore } from 'redux';
+
 import { SpanRowControls } from './index';
 import { useTraceTimelineStore } from '../store';
-import { actions } from '../duck';
+import reducer, { actions } from '../duck';
 import { IOtelSpan } from '../../../../types/otel';
-
-const { mockDispatch } = vi.hoisted(() => ({ mockDispatch: vi.fn() }));
-vi.mock('react-redux', async () => {
-  const actual = await vi.importActual<typeof import('react-redux')>('react-redux');
-  return {
-    ...actual,
-    ReactReduxContext: React.createContext({ store: { dispatch: mockDispatch } }),
-  };
-});
 
 vi.mock('copy-to-clipboard', () => ({
   default: vi.fn().mockResolvedValue(true),
@@ -93,15 +87,20 @@ describe('<SpanRowControls>', () => {
   });
 
   it('toggles subtree collapse when collapse button is clicked and dual-writes to Redux', () => {
-    const toggleSubtreeCollapse = vi.fn();
-    useTraceTimelineStore.setState({ toggleSubtreeCollapse });
+    const store = createStore(reducer);
+    const dispatchSpy = vi.spyOn(store, 'dispatch');
 
-    render(<SpanRowControls span={mockParentSpan} />);
+    render(
+      <Provider store={store}>
+        <SpanRowControls span={mockParentSpan} />
+      </Provider>
+    );
     const collapseBtn = screen.getByTestId('collapse-subtree-btn');
 
     fireEvent.click(collapseBtn);
-    expect(mockDispatch).toHaveBeenCalledWith(actions.childrenToggle('span-1'));
-    expect(toggleSubtreeCollapse).toHaveBeenCalledWith(mockParentSpan);
+    expect(dispatchSpy).toHaveBeenCalledWith(actions.childrenToggleSubtree('span-1', new Set(['span-1'])));
+    expect(store.getState().childrenHiddenIDs.has('span-1')).toBe(true);
+    expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('span-1')).toBe(true);
   });
 
   it('toggles subtree focus when focus button is clicked', () => {

@@ -205,6 +205,18 @@ describe('ScrollManager', () => {
       expect(scrollPastMock).toHaveBeenLastCalledWith(2, 1);
     });
 
+    it('does not scroll backward to parent when stepping down from a placeholder row', () => {
+      // Row 0: parent span 0 (index 0)
+      // Row 1: placeholder row with its own index (index 1)
+      // If placeholder mistakenly had parent index 0, stepping from row 1 would resolve to row 0 (scrolling backward).
+      accessors.mapRowIndexToSpanIndex.mockImplementation(r => r);
+      accessors.mapSpanIndexToRowIndex.mockImplementation(s => s);
+
+      manager._scrollToVisibleSpan(1, 1);
+      // Resolves to placeholder row 1, not parent row 0
+      expect(scrollPastMock).toHaveBeenLastCalledWith(1, 1);
+    });
+
     it('scrolls to index 0 when scrolling up and index 0 is the only match', () => {
       accessors.getTopRowIndexVisible.mockReturnValue(1);
       accessors.getBottomRowIndexVisible.mockReturnValue(1);

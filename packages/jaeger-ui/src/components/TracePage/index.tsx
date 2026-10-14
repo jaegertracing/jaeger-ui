@@ -36,7 +36,8 @@ import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
 import { useConfig } from '../../hooks/useConfig';
 import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
-import { filterPrunedSpanIDs } from './TraceTimelineViewer/generateRowStates';
+import { filterPrunedSpanIDs, isSpanPruned } from './TraceTimelineViewer/generateRowStates';
+import { getSubtreeSpans } from './TraceTimelineViewer/timeline-utils';
 import { actions as timelineActions } from './TraceTimelineViewer/duck';
 import {
   TUpdateViewRangeTimeFunction,
@@ -172,6 +173,7 @@ export function TracePageImpl(props: TProps) {
   const zustandSetTimelineBarsVisible = useLayoutPrefsStore(s => s.setTimelineBarsVisible);
   const zustandFocusUiFindMatches = useTraceTimelineStore(s => s.focusUiFindMatches);
   const prunedServices = useTraceTimelineStore(s => s.prunedServices);
+  const focusedSubtreeSpanID = useTraceTimelineStore(s => s.focusedSubtreeSpanID);
 
   const setDetailPanelMode = useCallback(
     (mode: SpanDetailPanelMode) => {
@@ -390,10 +392,25 @@ export function TracePageImpl(props: TProps) {
   } else if (uiFind) {
     const allMatches = filterSpansMemo(uiFind, _get(traceData, 'spans'));
     const otelTrace = traceData;
-    spanFindMatches =
+    let matches =
       otelTrace && prunedServices.size > 0
         ? filterPrunedSpanIDs(allMatches, otelTrace.spanMap, prunedServices)
         : allMatches;
+    if (matches && focusedSubtreeSpanID && otelTrace) {
+      const focusedSpan = otelTrace.spanMap.get(focusedSubtreeSpanID);
+      if (focusedSpan && !isSpanPruned(focusedSpan, prunedServices)) {
+        const subtreeSpans = getSubtreeSpans(focusedSpan);
+        const subtreeIDs = new Set(subtreeSpans.map(s => s.spanID));
+        const focusedMatches = new Set<string>();
+        matches.forEach(id => {
+          if (subtreeIDs.has(id)) {
+            focusedMatches.add(id);
+          }
+        });
+        matches = focusedMatches;
+      }
+    }
+    spanFindMatches = matches;
     findCount = spanFindMatches ? spanFindMatches.size : 0;
   }
 
