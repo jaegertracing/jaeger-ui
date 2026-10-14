@@ -495,9 +495,9 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 
 **The typing choice is implemented at the network boundary.** A full trace contains nested `resourceSpans` / `scopeSpans`, recursive `AnyValue` attributes, events, links, and status. `schemas.ts` refines the generated Zod schemas for the observed wire encodings; `JaegerClient.fetchTrace` validates the response envelope and returns `TracesDataWire`. The parser consumes that validated type rather than defining a private wire interface.
 
-The hooks preserve `UseQueryResult<IOtelTrace>` and `Map<string, FetchedTrace>`, their `['trace', id]` cache keys, canonical-ID alias caching, and GenAI classification. Supported short hex and base64 IDs are converted to the request format by `utils/trace-id.ts`; the original ID remains the query key.
+> **Implementation note (#4605):** The hooks preserve `UseQueryResult<IOtelTrace>` and `Map<string, FetchedTrace>`, their `['trace', id]` cache keys, canonical-ID alias caching, and GenAI classification. Supported short hex and base64 IDs are converted to the request format by `utils/trace-id.ts`; the original ID remains the query key.
 
-Both hooks and the shared client's trace query defaults disable structural sharing because native traces contain cyclic parent/child references. Manual reload is separate work in #4574 and must be verified through the native path after both changes land.
+> Both hooks and the shared client's trace query defaults disable structural sharing because native traces contain cyclic parent/child references. Manual reload is separate work in #4574 and must be verified through the native path after both changes land.
 
 **Backend response shape** (`jaeger-query`, `apiv3.HTTPGateway.returnTrace`): `GET /api/v3/traces/{trace_id}` returns a **single** JSON object wrapping the payload in a grpc-gateway envelope, `{"result": {"resourceSpans": [...]}}`, serialised with jsonpb. The proto declares `GetTrace` as a server-streaming RPC, but the HTTP gateway buffers and concatenates all chunks before writing ([jaeger#6467](https://github.com/jaegertracing/jaeger/issues/6467) tracks making it a real stream). A client may therefore assume one document today, but should keep envelope handling separable so incremental parsing can be added without touching the enrichment logic.
 
@@ -791,15 +791,15 @@ describe('ID Validation', () => {
 
 #### 3.7 Integration Testing Strategy
 
-The client validates backend responses at the network boundary. Shared behavior tests compare the native parser with the legacy transformer. Same-stored-trace visual and performance comparisons remain open before legacy deletion.
+The client validates captured backend responses at the network boundary. The native parser is compared with the legacy transformer before the UI switches routes.
 
 ##### 1. Captured Client Contract Tests
-The `JaegerClient.fetchTrace` tests mock `fetch` with captured v3 JSON and malformed variants. Hook integration tests exercise the real client and parser with mocked HTTP responses.
+The `JaegerClient.fetchTrace` tests mock `fetch` with captured v3 JSON and malformed variants. A full-page fetch harness belongs with the native loader integration work.
 - [x] Cover response-envelope validation, trace ID checks, URL construction, and failed requests with captured wire data (#4455, #4480).
 - [x] Add native-loader integration tests for valid, empty, and rejected responses, supported ID aliases, cache reuse, and cyclic branching-trace cache replacement (#4605).
 - [ ] Verify user-initiated reload through the native loader with search/view state preserved and refetch failures visible (#4574).
 
-Basic browser checks cover Timeline, Graph, Statistics, Flamegraph, GenAI detection, TraceDiff, Search-results DDG, ID normalization, error feedback, and uploaded-cache reuse on small seeded traces. These checks do not establish same-trace visual parity or 50k–80k-span performance parity.
+> **Implementation note (#4605):** Hook tests exercise the real client and parser with mocked HTTP responses. Basic browser checks cover Timeline, Graph, Statistics, Flamegraph, GenAI detection, TraceDiff, Search-results DDG, ID normalization, error feedback, and uploaded-cache reuse on small seeded traces. These checks do not establish same-trace visual parity or 50k–80k-span performance parity.
 
 ##### 2. Contract Validation (Zod)
 Layer refinements over the generated OTLP schemas at the network boundary, then pass the validated `TracesDataWire` to the parser.
@@ -831,7 +831,9 @@ We will move towards a model where the Search page only fetches **Trace Summarie
 
 **Goal**: Remove facade layer and legacy code.
 
-Native loading removes the transformer and facade bridge from `hooks/useTraceLoading.ts`. `SearchTracePage/FileLoader.tsx` still calls `transformTraceData(...).asOtelTrace()`, and `utils/readJsonFile.ts` still sends uploaded OTLP to `/api/transform`. Test fixtures, including `generateRowStates` and critical-path cases, also retain the legacy path. Audit and migrate all remaining callers after native uploads and visual/performance parity are complete; the parser's availability alone does not permit deletion.
+The blast radius is already small: outside tests, the facade classes have three importers (`model/transform-trace-data.ts`, `components/TracePage/TraceFlamegraph/index.tsx`, and each other) and `transform-trace-data` has three (`hooks/useTraceLoading.ts`, `SearchTracePage/FileLoader.tsx`, `TraceTimelineViewer/generateRowStates.ts`). Once the parser from Milestone 3.2 produces `IOtelTrace` natively, all six call sites lose their reason to exist.
+
+> **Implementation note (#4605):** Native loading removes the transformer and facade bridge from `hooks/useTraceLoading.ts`. Uploads and test fixtures still use them. The historical caller inventory above is no longer current: `generateRowStates` retains transformer use in tests, and Flamegraph no longer imports a facade. Native uploads, a fresh caller audit, and visual/performance parity remain prerequisites for deletion.
 
 - [ ] Remove `OtelSpanFacade`, `OtelTraceFacade` classes and the `asOtelTrace()` bridge on the legacy trace type
 - [ ] Parse uploaded OTLP files client-side in `utils/readJsonFile.ts`, dropping its `/api/transform` round trip (an OTLP file is already in the parser's input format)
