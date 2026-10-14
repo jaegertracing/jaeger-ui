@@ -9,6 +9,7 @@ import { fetchedState } from '../constants';
 import { queryClient } from '../query/app-query-client';
 import { FetchedTrace } from '../types';
 import type { IOtelTrace } from '../types/otel';
+import { toTraceIdHex } from '../utils/trace-id';
 
 const TRACE_QUERY_KEY = (id: string) => ['trace', id] as const;
 
@@ -30,7 +31,7 @@ export function useTrace(traceId: string): UseQueryResult<IOtelTrace> {
   return useQuery({
     queryKey: TRACE_QUERY_KEY(traceId),
     queryFn: async () => {
-      const response = await jaegerClient.fetchTrace(traceId);
+      const response = await jaegerClient.fetchTrace(toTraceIdHex(traceId));
       const otel = parseOtelTrace(response);
       if (!otel) {
         throw new Error('Invalid trace data received.');
@@ -52,7 +53,7 @@ export function useTraces(ids: string[]): Map<string, FetchedTrace> {
     queries: ids.map(id => ({
       queryKey: TRACE_QUERY_KEY(id),
       queryFn: async () => {
-        const response = await jaegerClient.fetchTrace(id);
+        const response = await jaegerClient.fetchTrace(toTraceIdHex(id));
         const otel = parseOtelTrace(response);
         if (!otel) {
           throw new Error('Invalid trace data received.');

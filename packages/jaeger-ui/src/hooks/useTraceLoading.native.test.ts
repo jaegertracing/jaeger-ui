@@ -107,6 +107,42 @@ describe.each(['useTrace', 'useTraces'] as const)('%s native loading', hook => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  it.each([
+    ['a1b2c3d4e5f67890', '0000000000000000a1b2c3d4e5f67890'],
+    ['s23gbclyqrBxrBGcUEygfA==', 'b36de06dc972aab071ac119c504ca07c'],
+    ['s23gbclyqrBxrBGcUEygfA', 'b36de06dc972aab071ac119c504ca07c'],
+    ['s23gbclyqrBxrBGc-Eyg_A==', 'b36de06dc972aab071ac119cf84ca0fc'],
+    ['obLD1OX2eJA=', '0000000000000000a1b2c3d4e5f67890'],
+  ])('loads supported ID alias %s and caches both IDs', async (alias, canonical) => {
+    const response = structuredClone(payload);
+    response.result.resourceSpans[0].scopeSpans[0].spans[0].traceId = canonical;
+    respond(response);
+    const first = renderHook(() => useResult(alias), { wrapper });
+    await waitFor(() => expect(first.result.current.done).toBe(true));
+    expect(fetchMock).toHaveBeenCalledWith(`/api/v3/traces/${canonical}`, {
+      signal: expect.any(AbortSignal),
+    });
+    const trace = first.result.current.data;
+    expect(trace?.traceID).toBe(canonical);
+    expect(getCachedTrace(alias)).toBe(trace);
+    expect(getCachedTrace(canonical)).toBe(trace);
+    first.unmount();
+    const second = renderHook(() => useResult(canonical), { wrapper });
+    expect(second.result.current.data).toBe(trace);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(['bad-id', 'a1b2', 'AAAAAAAAAAA=', 'AAAAAAAAAAAAAAAAAAAAAA==', 'AQIDBAUGBwgJCgsMDQ4PEBE='])(
+    'rejects invalid or reserved ID %s before fetching',
+    async id => {
+      const { result } = renderHook(() => useResult(id), { wrapper });
+      await waitFor(() => expect(result.current.failed).toBe(true));
+      expect(result.current.error).toMatchObject({ name: 'ZodError' });
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(getCachedTrace(id)).toBeUndefined();
+    }
+  );
+
   it('keeps ordinary traces out of the GenAI view', async () => {
     const ordinary = structuredClone(payload);
     ordinary.result.resourceSpans[0].scopeSpans[0].spans[0].attributes = [];
