@@ -3,7 +3,11 @@
 
 import { describe, expect, it } from 'vitest';
 
-import generateRowStates, { isSpanPruned, filterPrunedSpanIDs } from './generateRowStates';
+import generateRowStates, {
+  isSpanPruned,
+  filterPrunedSpanIDs,
+  getServicesWithoutGenAIDescendants,
+} from './generateRowStates';
 import genaiTestTrace from './genaiTestTrace.json';
 import DetailState from './SpanDetail/DetailState';
 import { IOtelSpan, StatusCode } from '../../../types/otel';
@@ -302,5 +306,37 @@ describe('service filter pruning on the GenAI sample trace', () => {
     )!;
     expect(isSpanPruned(nestedLlm, new Set(['mcp-gateway']))).toBe(true);
     expect(isSpanPruned(nestedLlm, PLAIN_LEAF_SERVICES)).toBe(false);
+  });
+
+  describe('getServicesWithoutGenAIDescendants', () => {
+    it('only includes the plain leaf services - not the plain tiers above or between GenAI spans', () => {
+      // api-edge and graphql-gateway sit above coding-agent; mcp-gateway sits above the
+      // nested summarizer-agent. None of the three owns a GenAI span itself, but all three
+      // have one at or below them, so none may be auto-pruned - only the true leaves can.
+      expect(getServicesWithoutGenAIDescendants(trace.spans)).toEqual(PLAIN_LEAF_SERVICES);
+    });
+
+    it('never includes a service that owns a GenAI span directly', () => {
+      const result = getServicesWithoutGenAIDescendants(trace.spans);
+      expect(result.has('coding-agent')).toBe(false);
+      expect(result.has('summarizer-agent')).toBe(false);
+    });
+
+    it('excludes a plain tier that sits directly above a GenAI span', () => {
+      const result = getServicesWithoutGenAIDescendants(trace.spans);
+      expect(result.has('api-edge')).toBe(false);
+      expect(result.has('graphql-gateway')).toBe(false);
+    });
+
+    it('excludes a plain tier that sits above a nested agent, not just the outer one', () => {
+      expect(getServicesWithoutGenAIDescendants(trace.spans).has('mcp-gateway')).toBe(false);
+    });
+
+    it('pruning its own result keeps every GenAI span visible, unlike the flat owns-a-GenAI-span rule', () => {
+      const candidate = getServicesWithoutGenAIDescendants(trace.spans);
+      const visible = visibleSpans(candidate);
+      const genAICount = trace.spans.filter(s => s.genAIKind !== undefined).length;
+      expect(visible.filter(r => r.span.genAIKind !== undefined)).toHaveLength(genAICount);
+    });
   });
 });

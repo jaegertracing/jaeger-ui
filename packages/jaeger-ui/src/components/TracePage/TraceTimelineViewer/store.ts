@@ -16,7 +16,7 @@ export {
 
 export { getInitialLayoutState, useLayoutPrefsStore } from './store.layout';
 
-export { useTraceTimelineStore } from './store.timeline';
+export { useTraceTimelineStore, selectEffectivePrunedServices } from './store.timeline';
 
 export { calculateFocusedFindRowStates, getSelectedSpanID } from './timeline-utils';
 

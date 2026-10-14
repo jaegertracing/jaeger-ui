@@ -1,0 +1,31 @@
+/*
+Copyright (c) 2026 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+/* Shared by ServiceFilter and HideNonGenAIServicesToggle - both render a small icon-button
+   trigger in the timeline header with identical idle/hover/focus/active styling. */
+.TimelineHeaderIconButton {
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 1em;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.25rem;
+  vertical-align: middle;
+}
+
+.TimelineHeaderIconButton:hover,
+.TimelineHeaderIconButton:focus-visible {
+  color: var(--text-primary);
+  outline: none;
+}
+
+.TimelineHeaderIconButton:focus-visible {
+  box-shadow: 0 0 0 2px var(--interactive-primary);
+  border-radius: 3px;
+}
+
+.TimelineHeaderIconButton.is-active {
+  color: var(--interactive-primary);
+}

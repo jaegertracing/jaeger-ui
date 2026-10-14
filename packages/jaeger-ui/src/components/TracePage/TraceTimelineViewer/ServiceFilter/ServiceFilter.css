@@ -3,30 +3,8 @@ Copyright (c) 2026 The Jaeger Authors.
 SPDX-License-Identifier: Apache-2.0
 */
 
-.ServiceFilter--button {
-  cursor: pointer;
-  color: var(--text-secondary);
-  font-size: 1em;
-  display: inline-flex;
-  align-items: center;
-  padding: 0 0.25rem;
-  vertical-align: middle;
-}
-
-.ServiceFilter--button:hover,
-.ServiceFilter--button:focus-visible {
-  color: var(--text-primary);
-  outline: none;
-}
-
-.ServiceFilter--button:focus-visible {
-  box-shadow: 0 0 0 2px var(--interactive-primary);
-  border-radius: 3px;
-}
-
-.ServiceFilter--button.is-active {
-  color: var(--interactive-primary);
-}
+/* The trigger button's idle/hover/focus/active styling lives in the shared
+   .TimelineHeaderIconButton class (../HeaderIconButton.css). */
 
 .ServiceFilter--popover {
   min-width: 260px;
