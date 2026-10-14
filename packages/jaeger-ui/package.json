@@ -73,7 +73,6 @@
     "react-json-view-lite": "2.5.0",
     "react-router-dom": "7.18.2",
     "recharts": "3.10.0",
-    "tween-functions": "1.2.0",
     "u-basscss": "2.0.1",
     "zod": "catalog:",
     "zustand": "^5.0.12"
