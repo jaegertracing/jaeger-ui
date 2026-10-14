@@ -32,7 +32,7 @@ type TTraceUiFindValue = { trace: IOtelTrace; uiFind: string | TNil; allowHide?:
 export type TWidthValue = { width: number };
 export type TDetailPanelModeValue = { mode: SpanDetailPanelMode };
 export type TTimelineVisibleValue = { visible: boolean };
-export type TChildrenToggleSubtreeValue = { spanID: string; subtreeParentIDs: Set<string> | string[] };
+type TChildrenToggleSubtreeValue = { spanID: string; subtreeParentIDs: Set<string> | string[] };
 type TActionTypes =
   | TSpanIdLogValue
   | TSpanIdValue

@@ -1011,8 +1011,8 @@ describe('<VirtualizedTraceViewImpl>', () => {
       expect(accessors.mapRowIndexToSpanIndex(0)).toBe(0);
       // Row 1 is span-3 (index 3 in customTrace)
       expect(accessors.mapRowIndexToSpanIndex(1)).toBe(3);
-      // Row 2 is pruned placeholder; spanIndex preserves placeholder's max-descendant index (3) instead of jumping back to parent (0)
-      expect(accessors.mapRowIndexToSpanIndex(2)).toBe(3);
+      // Row 2 is pruned placeholder; spanIndex preserves placeholder's own pruned-descendant index (2) instead of colliding with sibling span-3 (3) or jumping back to parent (0)
+      expect(accessors.mapRowIndexToSpanIndex(2)).toBe(2);
     });
 
     it('ignores subtree focus and does not filter search when focused span has a pruned ancestor', () => {
