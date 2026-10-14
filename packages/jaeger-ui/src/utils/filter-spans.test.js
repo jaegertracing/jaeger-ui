@@ -3,6 +3,7 @@
 
 import filterSpans from './filter-spans';
 import { makeAttributes } from '../model/attributes';
+import { StatusCode, SpanKind } from '../types/otel';
 
 describe('filterSpans', () => {
   // span0 contains strings that end in 0 or 1
@@ -280,6 +281,106 @@ describe('filterSpans', () => {
       circular.self = circular;
       const span = makeOtelSpan('circ-span', [{ key: 'meta', value: circular }]);
       expect(() => filterSpans('meta', [span])).not.toThrow();
+    });
+  });
+  describe('status, instrumentation scope, and span kind (OTel spans)', () => {
+    const makeOtelSpan = (spanID, { status, scope, kind, attrs } = {}) => ({
+      spanID,
+      name: 'operation-name',
+      kind: kind ?? SpanKind.INTERNAL,
+      status: status ?? { code: StatusCode.UNSET },
+      instrumentationScope: scope ?? { name: 'default-scope' },
+      resource: { serviceName: 'service-a', attributes: makeAttributes() },
+      attributes: makeAttributes(attrs),
+      events: [],
+    });
+
+    describe('status filtering', () => {
+      const errorSpan = makeOtelSpan('err-span', {
+        status: { code: StatusCode.ERROR, message: 'connection timed out' },
+      });
+      const okSpan = makeOtelSpan('ok-span', {
+        status: { code: StatusCode.OK },
+      });
+      const unsetSpan = makeOtelSpan('unset-span', {
+        status: { code: StatusCode.UNSET },
+      });
+
+      it('matches spans by error status using various key-value syntax', () => {
+        expect(filterSpans('status=error', [errorSpan, okSpan])).toEqual(new Set(['err-span']));
+        expect(filterSpans('status:error', [errorSpan, okSpan])).toEqual(new Set(['err-span']));
+        expect(filterSpans('status_code=error', [errorSpan, okSpan])).toEqual(new Set(['err-span']));
+        expect(filterSpans('status.code=error', [errorSpan, okSpan])).toEqual(new Set(['err-span']));
+        expect(filterSpans('error', [errorSpan, okSpan])).toEqual(new Set(['err-span']));
+        expect(filterSpans('status=2', [errorSpan, okSpan])).toEqual(new Set(['err-span']));
+      });
+
+      it('matches spans by ok status', () => {
+        expect(filterSpans('status=ok', [errorSpan, okSpan])).toEqual(new Set(['ok-span']));
+        expect(filterSpans('status:ok', [errorSpan, okSpan])).toEqual(new Set(['ok-span']));
+        expect(filterSpans('status=1', [errorSpan, okSpan])).toEqual(new Set(['ok-span']));
+      });
+
+      it('matches spans by unset status', () => {
+        expect(filterSpans('status=unset', [unsetSpan, okSpan])).toEqual(new Set(['unset-span']));
+        expect(filterSpans('status=0', [unsetSpan, okSpan])).toEqual(new Set(['unset-span']));
+      });
+
+      it('matches spans by status message text', () => {
+        expect(filterSpans('timed out', [errorSpan, okSpan])).toEqual(new Set(['err-span']));
+      });
+
+      it('respects -status and -status_code exclude filters', () => {
+        expect(filterSpans('status=error -status', [errorSpan])).toEqual(new Set([]));
+        expect(filterSpans('status=error -status_code', [errorSpan])).toEqual(new Set([]));
+      });
+    });
+
+    describe('instrumentation scope filtering', () => {
+      const httpSpan = makeOtelSpan('http-span', {
+        scope: { name: '@opentelemetry/instrumentation-http', version: '0.45.0' },
+      });
+      const grpcSpan = makeOtelSpan('grpc-span', {
+        scope: { name: 'io.opentelemetry.grpc', version: '1.20.0' },
+      });
+
+      it('matches spans by scope name directly or with scope= prefix', () => {
+        expect(filterSpans('instrumentation-http', [httpSpan, grpcSpan])).toEqual(new Set(['http-span']));
+        expect(filterSpans('scope=@opentelemetry/instrumentation-http', [httpSpan, grpcSpan])).toEqual(
+          new Set(['http-span'])
+        );
+        expect(filterSpans('scope:grpc', [httpSpan, grpcSpan])).toEqual(new Set(['grpc-span']));
+        expect(filterSpans('instrumentation_scope=grpc', [httpSpan, grpcSpan])).toEqual(
+          new Set(['grpc-span'])
+        );
+      });
+
+      it('matches spans by scope version', () => {
+        expect(filterSpans('0.45.0', [httpSpan, grpcSpan])).toEqual(new Set(['http-span']));
+        expect(filterSpans('scope.version=0.45.0', [httpSpan, grpcSpan])).toEqual(new Set(['http-span']));
+      });
+
+      it('respects -scope exclude filters', () => {
+        expect(filterSpans('instrumentation-http -scope', [httpSpan])).toEqual(new Set([]));
+      });
+    });
+
+    describe('span kind filtering', () => {
+      const serverSpan = makeOtelSpan('server-span', { kind: SpanKind.SERVER });
+      const clientSpan = makeOtelSpan('client-span', { kind: SpanKind.CLIENT });
+      const producerSpan = makeOtelSpan('producer-span', { kind: SpanKind.PRODUCER });
+
+      it('matches spans by kind prefix or direct term', () => {
+        expect(filterSpans('kind=server', [serverSpan, clientSpan])).toEqual(new Set(['server-span']));
+        expect(filterSpans('kind:client', [serverSpan, clientSpan])).toEqual(new Set(['client-span']));
+        expect(filterSpans('span.kind=producer', [producerSpan, serverSpan])).toEqual(
+          new Set(['producer-span'])
+        );
+      });
+
+      it('respects -kind exclude filters', () => {
+        expect(filterSpans('kind=server -kind', [serverSpan])).toEqual(new Set([]));
+      });
     });
   });
 });
