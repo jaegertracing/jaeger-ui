@@ -21,7 +21,7 @@ import getConfig from '../../utils/config/get-config';
 
 import * as markers from './SearchForm.markers';
 import { trackFormInput } from './SearchForm.track';
-import { formatDate, formatTime } from '../../utils/date';
+import { formatDate, formatTime, formatTimeZoneLabel, parseDisplayTime } from '../../utils/date';
 import {
   ALL_OPERATIONS,
   ALL_SERVICES,
@@ -69,8 +69,8 @@ export function getUnixTimeStampInMSFromForm({
   const start = `${startDate} ${startDateTime}`;
   const end = `${endDate} ${endDateTime}`;
   return {
-    start: `${dayjs(start, 'YYYY-MM-DD HH:mm').valueOf()}000`,
-    end: `${dayjs(end, 'YYYY-MM-DD HH:mm').valueOf()}000`,
+    start: `${parseDisplayTime(start).valueOf()}000`,
+    end: `${parseDisplayTime(end).valueOf()}000`,
   };
 }
 
@@ -396,7 +396,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
 
   const { service: selectedService, lookback: selectedLookback } = formData;
   const noSelectedService = selectedService === '-' || !selectedService;
-  const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
+  const tz = selectedLookback === 'custom' ? formatTimeZoneLabel() : null;
   const invalidDuration =
     validateDurationFields(formData.minDuration) || validateDurationFields(formData.maxDuration);
 
