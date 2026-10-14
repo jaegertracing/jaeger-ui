@@ -68,10 +68,13 @@ export function useTraces(ids: string[]): Map<string, FetchedTrace> {
     })),
   });
 
-  // useQueries returns a new array reference every render. Key the memo on the stable
-  // signals for each result: the data object reference (stable when unchanged), the
-  // error reference, and the status string. This avoids rebuilding the Map on renders
-  // where no query result actually changed.
+  // useQueries returns a new array reference every render. Key the memo on one string
+  // built from each id, status and update times, so the Map is rebuilt only when a
+  // result changes. The deps array must keep a fixed size: React only compares deps up
+  // to the shorter array's length, so deps that grow from [] never trigger a rebuild.
+  const resultsKey = ids
+    .map((id, i) => `${id}:${results[i]?.status}:${results[i]?.dataUpdatedAt}:${results[i]?.errorUpdatedAt}`)
+    .join('|');
   // oxlint-disable-next-line react/exhaustive-deps
   return useMemo(
     () =>
@@ -91,6 +94,6 @@ export function useTraces(ids: string[]): Map<string, FetchedTrace> {
         })
       ),
     // oxlint-disable-next-line react/exhaustive-deps
-    [...ids, ...results.map(r => r.status), ...results.map(r => r.data), ...results.map(r => r.error)]
+    [resultsKey]
   );
 }
