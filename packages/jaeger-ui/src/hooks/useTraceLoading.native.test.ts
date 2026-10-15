@@ -166,6 +166,12 @@ describe.each(['useTrace', 'useTraces'] as const)('%s native loading', hook => {
   });
 
   it.each([
+    ['1', '00000000000000000000000000000001'],
+    ['a1b2', '0000000000000000000000000000a1b2'],
+    ['abcdefabcdef', '00000000000000000000abcdefabcdef'],
+    ['abcdefabcdef0', '0000000000000000000abcdefabcdef0'],
+    ['abcdefabcdef01', '000000000000000000abcdefabcdef01'],
+    ['abcdefabcdef012', '00000000000000000abcdefabcdef012'],
     ['a1b2c3d4e5f67890', '0000000000000000a1b2c3d4e5f67890'],
     ['s23gbclyqrBxrBGcUEygfA==', 'b36de06dc972aab071ac119c504ca07c'],
     ['s23gbclyqrBxrBGcUEygfA', 'b36de06dc972aab071ac119c504ca07c'],
@@ -190,16 +196,20 @@ describe.each(['useTrace', 'useTraces'] as const)('%s native loading', hook => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it.each(['bad-id', 'a1b2', 'AAAAAAAAAAA=', 'AAAAAAAAAAAAAAAAAAAAAA==', 'AQIDBAUGBwgJCgsMDQ4PEBE='])(
-    'rejects invalid or reserved ID %s before fetching',
-    async id => {
-      const { result } = renderHook(() => useResult(id), { wrapper });
-      await waitFor(() => expect(result.current.failed).toBe(true));
-      expect(result.current.error).toMatchObject({ name: 'ZodError' });
-      expect(fetchMock).not.toHaveBeenCalled();
-      expect(getCachedTrace(id)).toBeUndefined();
-    }
-  );
+  it.each([
+    'bad-id',
+    '0',
+    'AAAAAAAAAAA=',
+    'AAAAAAAAAAAAAAAAAAAAAA==',
+    'AQIDBAUGBwgJCgsMDQ4PEBE=',
+    ...Array.from({ length: 7 }, (_, i) => btoa('g'.repeat(i + 9))),
+  ])('rejects invalid or reserved ID %s before fetching', async id => {
+    const { result } = renderHook(() => useResult(id), { wrapper });
+    await waitFor(() => expect(result.current.failed).toBe(true));
+    expect(result.current.error).toMatchObject({ name: 'ZodError' });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(getCachedTrace(id)).toBeUndefined();
+  });
 
   it('keeps ordinary traces out of the GenAI view', async () => {
     const ordinary = structuredClone(payload);

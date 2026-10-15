@@ -495,7 +495,7 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 
 **The typing choice is implemented at the network boundary.** A full trace contains nested `resourceSpans` / `scopeSpans`, recursive `AnyValue` attributes, events, links, and status. `schemas.ts` refines the generated Zod schemas for the observed wire encodings; `JaegerClient.fetchTrace` validates the response envelope and returns `TracesDataWire`. The parser consumes that validated type rather than defining a private wire interface.
 
-> **Implementation note (#4605):** The hooks preserve `UseQueryResult<IOtelTrace>` and `Map<string, FetchedTrace>`, their `['trace', id]` cache keys, canonical-ID alias caching, and GenAI classification. Supported short hex and base64 IDs are converted to the request format by `utils/trace-id.ts`; the original ID remains the query key.
+> **Implementation note (#4605):** The hooks preserve `UseQueryResult<IOtelTrace>` and `Map<string, FetchedTrace>`, their `['trace', id]` cache keys, canonical-ID alias caching, and GenAI classification. `utils/trace-id.ts` matches the server by trying 1–32 hex digits first, then standard or URL-safe base64 decoding to exactly 8 or 16 bytes. The original ID remains the query key.
 
 > Both hooks and the shared client's trace query defaults disable structural sharing because native traces contain cyclic parent/child references. Manual reload is separate work in #4574 and must be verified through the native path after both changes land.
 

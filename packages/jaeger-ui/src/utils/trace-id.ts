@@ -17,10 +17,11 @@ function isValidBase64(v: string): boolean {
 /** Converts supported URL aliases to the v3 request format; the client validates the result. */
 export function toTraceIdHex(value: string): string {
   const v = value.trim();
-  if (HEX_16_OR_32_RE.test(v)) return v.padStart(32, '0');
+  // The server parses hex before base64, including IDs shorter than the search heuristic accepts.
+  if (/^[0-9a-fA-F]{1,32}$/.test(v)) return v.padStart(32, '0');
   try {
     const bytes = atob(v.replace(/-/g, '+').replace(/_/g, '/'));
-    if (bytes.length >= MIN_TRACE_ID_BYTES && bytes.length <= 16) {
+    if (bytes.length === 8 || bytes.length === 16) {
       return Array.from(bytes, byte => byte.charCodeAt(0).toString(16).padStart(2, '0'))
         .join('')
         .padStart(32, '0');
