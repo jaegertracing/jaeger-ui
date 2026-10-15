@@ -188,6 +188,20 @@ ComponentName/
 - **Vite** for build tooling
 - **Vitest** for testing
 
+## Moving Code and Deleting Tests
+
+A pull request that relocates code or tests between files, or that deletes a large block of tests, clears a higher bar than an ordinary change, because the reviewer cannot tell from the diff whether the content survived. GitHub renders a move as a deletion plus an addition and shows no correspondence between them, and the equivalence of a rewritten test to the one it replaces cannot be checked by reading the diff at all. Avoid such changes unless the task cannot be done any other way.
+
+When a relocation is unavoidable, structure the pull requests so that each diff proves what it claims:
+
+- Change content in place first, in a pull request that touches no file names. A test that must call a different function keeps its name, inputs, and assertions, and the diff shows the one line that changed.
+- Rename or move the file in a separate pull request with no content edits beyond what the move requires, so that git reports a rename at near full similarity and the diff is a few lines.
+- Never combine a file rename with a re-indentation, a wrapper, or any other change that touches every line. Git's rename detection is line-based, and the result renders as a full delete plus a full add.
+- Never rewrite a test in the pull request that moves it. Renaming tests, rephrasing assertions, merging tests, converting them to `it.each`, or swapping inline inputs for fixtures all change what is being asserted, and each of those changes is reviewed as new content in its own pull request.
+- State in the pull request description how the reviewer can verify that nothing was lost, for example by reviewing with whitespace changes hidden, or by naming the git rename similarity.
+
+A pull request that deletes more test lines than it adds, or that shows a test file as deleted and a new file as added, is not merged without a maintainer confirming the correspondence by hand.
+
 ## Commits
 
 - Sign all commits with DCO (`git commit -s`)

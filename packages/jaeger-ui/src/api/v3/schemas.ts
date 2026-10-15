@@ -136,7 +136,7 @@ const ANY_VALUE_KEYS = [
   'bytesValue',
 ] as const;
 
-type AnyValueWire = {
+export type AnyValueWire = {
   stringValue?: string;
   boolValue?: boolean;
   intValue?: string;
@@ -290,6 +290,10 @@ export const GetTraceResponseSchema = z.object({ result: refinedTracesData }).pa
 
 export type GetTraceResponse = z.infer<typeof GetTraceResponseSchema>;
 export type TracesDataWire = z.infer<typeof refinedTracesData>;
+export type ResourceSpansWire = NonNullable<TracesDataWire['resourceSpans']>[number];
+export type ScopeSpansWire = ResourceSpansWire['scopeSpans'][number];
+export type SpanWire = ScopeSpansWire['spans'][number];
+export type KeyValueWire = { key: string; value: AnyValueWire };
 
 // ServiceSummary: name is required (per IDL); counts are optional, nonnegative with 0 fallbacks.
 const permissiveServiceSummary = z.object({

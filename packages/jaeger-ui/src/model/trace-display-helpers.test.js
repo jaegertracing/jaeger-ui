@@ -1,7 +1,11 @@
 // Copyright (c) 2020 The Jaeger Authors
+// Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { _getTracePageHeaderPartsImpl as getTracePageHeaderParts } from './trace-viewer';
+import {
+  _getTracePageHeaderPartsImpl as getTracePageHeaderParts,
+  getIncompleteTraceTooltip,
+} from './trace-display-helpers';
 
 describe('getTracePageHeaderParts', () => {
   const firstSpanId = 'firstSpanId';
@@ -26,6 +30,7 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: secondSpanId,
           traceID: currentTraceId,
         },
@@ -38,6 +43,7 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: thirdSpanId,
           traceID: currentTraceId,
         },
@@ -50,6 +56,7 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: firstSpanId,
           traceID: currentTraceId,
         },
@@ -64,6 +71,7 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: thirdSpanId,
           traceID: currentTraceId,
         },
@@ -76,6 +84,7 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: missingSpanId,
           traceID: currentTraceId,
         },
@@ -91,6 +100,7 @@ describe('getTracePageHeaderParts', () => {
       },
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: missingSpanId,
           traceID: currentTraceId,
         },
@@ -105,13 +115,14 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: thirdSpanId,
           traceID: currentTraceId,
         },
       ],
     },
     {
-      spanID: secondSpanId, // root span (as a span without any refs)
+      spanID: secondSpanId,
       traceID: currentTraceId,
       startTime: t + 100,
       operationName,
@@ -120,12 +131,14 @@ describe('getTracePageHeaderParts', () => {
       },
     },
     {
-      spanID: thirdSpanId, // may be a root span
+      spanID: thirdSpanId,
       traceID: currentTraceId,
       startTime: t,
-      process: {},
+      operationName: 'earlier-root',
+      process: { serviceName: 'earlier-service' },
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: missingSpanId,
           traceID: currentTraceId,
         },
@@ -140,6 +153,7 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: secondSpanId,
           traceID: currentTraceId,
         },
@@ -152,6 +166,7 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: thirdSpanId,
           traceID: currentTraceId,
         },
@@ -167,6 +182,7 @@ describe('getTracePageHeaderParts', () => {
       },
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: missingSpanId,
           traceID: currentTraceId,
         },
@@ -181,6 +197,7 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: thirdSpanId,
           traceID: currentTraceId,
         },
@@ -202,6 +219,7 @@ describe('getTracePageHeaderParts', () => {
       process: {},
       references: [
         {
+          refType: 'CHILD_OF',
           spanID: secondSpanId,
           traceID: currentTraceId,
         },
@@ -221,9 +239,11 @@ describe('getTracePageHeaderParts', () => {
     );
   });
 
-  it('returns an id of root span without any refs', () => {
-    expect(getTracePageHeaderParts(spansWithMultipleRootsWithOneWithoutRefs)).toEqual(
-      fullTracePageHeaderParts
+  it('chooses the earliest root even when a later root has no references', () => {
+    const expected = { serviceName: 'earlier-service', operationName: 'earlier-root' };
+    expect(getTracePageHeaderParts(spansWithMultipleRootsWithOneWithoutRefs)).toEqual(expected);
+    expect(getTracePageHeaderParts([...spansWithMultipleRootsWithOneWithoutRefs].reverse())).toEqual(
+      expected
     );
   });
 
@@ -233,5 +253,22 @@ describe('getTracePageHeaderParts', () => {
 
   it('returns an id of root span with no refs', () => {
     expect(getTracePageHeaderParts(spansWithOneRootWithNoRefs)).toEqual(fullTracePageHeaderParts);
+  });
+});
+
+describe('getIncompleteTraceTooltip', () => {
+  it('uses singular noun and verb for count of 1', () => {
+    const result = getIncompleteTraceTooltip(1);
+    expect(result).toContain('1 span has missing parent span.');
+  });
+
+  it('uses plural noun and verb for count > 1', () => {
+    const result = getIncompleteTraceTooltip(3);
+    expect(result).toContain('3 spans have missing parent spans.');
+  });
+
+  it('includes the reload suggestion', () => {
+    const result = getIncompleteTraceTooltip(1);
+    expect(result).toContain('opening or reloading the trace');
   });
 });

@@ -10,7 +10,7 @@ import TracePageHeaderWithRef, {
   HEADER_ITEMS,
 } from './TracePageHeader';
 import traceGenerator from '../../../demo/trace-generators';
-import { getTraceName } from '../../../model/trace-viewer';
+import { getTraceName } from '../../../model/trace-display-helpers';
 import transformTraceData from '../../../model/transform-trace-data';
 import { ETraceViewType } from '../types';
 
@@ -164,7 +164,7 @@ describe('<TracePageHeader>', () => {
       const headerItem = screen.getByTestId(`header-item-${item.key}`);
       expect(headerItem).toHaveClass('horizontal');
       expect(headerItem).toHaveClass('item');
-      expect(headerItem).toHaveTextContent(item.label);
+      if (item.label !== null) expect(headerItem).toHaveTextContent(item.label);
 
       if (typeof renderedValue === 'string' || typeof renderedValue === 'number') {
         expect(headerItem).toHaveTextContent(renderedValue.toString());
@@ -184,6 +184,18 @@ describe('<TracePageHeader>', () => {
 
   it('does not render the incomplete item when the trace has no orphan spans', () => {
     expect(screen.queryByTestId('header-item-incomplete')).not.toBeInTheDocument();
+  });
+
+  it('renders the GenAI calls item when the trace has GenAI spans', () => {
+    const genAITrace = Object.create(defaultProps.trace);
+    Object.defineProperty(genAITrace, 'isGenAITrace', { value: true });
+    const { getByTestId } = renderWithRouter(<TracePageHeader {...defaultProps} trace={genAITrace} />);
+
+    expect(getByTestId('header-item-genai-calls')).toBeInTheDocument();
+  });
+
+  it('does not render the GenAI calls item when the trace has no GenAI spans', () => {
+    expect(screen.queryByTestId('header-item-genai-calls')).not.toBeInTheDocument();
   });
 
   it('renders a <SpanGraph>', () => {
