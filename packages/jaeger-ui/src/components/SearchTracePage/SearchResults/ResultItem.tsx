@@ -1,3 +1,4 @@
+// Copyright (c) 2026 The Jaeger Authors.
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -5,15 +6,13 @@ import * as React from 'react';
 import { Col, Divider, Row, Tag, Tooltip } from 'antd';
 import { Link } from 'react-router-dom';
 
-import dayjs from 'dayjs';
-
 import { IoWarning } from 'react-icons/io5';
 
 import { trackConversions, EAltViewActions } from './index.track';
 import * as markers from './ResultItem.markers';
 import ResultItemTitle from './ResultItemTitle';
 import ServicePills from './ServicePills';
-import { formatRelativeDate, formatRelativeTime } from '../../../utils/date';
+import { formatDisplayTime, formatRelativeDate, formatRelativeTime } from '../../../utils/date';
 import { getIncompleteTraceTooltip } from '../../../model/trace-display-helpers';
 
 import type { TraceSummary } from '../../../types/trace-summary';
@@ -53,7 +52,7 @@ export default function ResultItem({
     orphanSpanCount,
   } = traceSummary;
 
-  const timeStr = dayjs(startTime / 1000).format('h:mm:ss a');
+  const timeStr = formatDisplayTime(startTime);
   const fromNow = formatRelativeTime(startTime);
 
   return (
@@ -103,7 +102,7 @@ export default function ResultItem({
           <Col xs={24} sm={4} className="ub-p3 ub-tx-right-align">
             {formatRelativeDate(startTime / 1000)}
             <Divider vertical />
-            {timeStr.slice(0, -3)}&nbsp;{timeStr.slice(-2)}
+            {timeStr.replace(' ', '\u00a0')}
             <br />
             <small>{fromNow}</small>
           </Col>

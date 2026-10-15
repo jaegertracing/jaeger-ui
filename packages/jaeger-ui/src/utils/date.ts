@@ -1,3 +1,4 @@
+// Copyright (c) 2026 The Jaeger Authors.
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -9,6 +10,7 @@ import _relativeTime from 'dayjs/plugin/relativeTime';
 
 import { toFloatPrecision } from './number';
 import { Microseconds } from '../types/units';
+import getConfig from './config/get-config';
 
 dayjs.extend(_duration);
 dayjs.extend(_relativeTime);
@@ -18,7 +20,7 @@ const YESTERDAY = 'Yesterday';
 
 export const STANDARD_DATE_FORMAT = 'YYYY-MM-DD';
 export const STANDARD_TIME_FORMAT = 'HH:mm';
-export const STANDARD_DATETIME_FORMAT = 'MMMM D YYYY, HH:mm:ss.SSS';
+export const STANDARD_DATETIME_FORMAT = 'MMMM D YYYY, h:mm:ss.SSS a';
 
 /** @constant 1ms as the number of microseconds, which is the precision of Jaeger timestamps */
 export const ONE_MILLISECOND = 1000 * 1;
@@ -92,17 +94,30 @@ export function formatTime(duration: number): string {
   return dayjs(duration / ONE_MILLISECOND).format(STANDARD_TIME_FORMAT);
 }
 
+/** Formats a Unix timestamp in microseconds using the configured display clock. */
+export function formatDisplayTime(timestamp: number): string {
+  const format = getConfig().timeFormat === '24h' ? 'HH:mm:ss' : 'h:mm:ss a';
+  return dayjs(timestamp / ONE_MILLISECOND).format(format);
+}
+
+/** Formats a Unix timestamp in microseconds for minute-precision chart labels. */
+export function formatDisplayTimeShort(timestamp: number): string {
+  const format = getConfig().timeFormat === '24h' ? STANDARD_TIME_FORMAT : 'h:mm a';
+  return dayjs(timestamp / ONE_MILLISECOND).format(format);
+}
+
 /**
  * @param {number} duration - Unix Time
  * @return {string} formatted, unit-labelled string with time in milliseconds
  *
  * @example
  * ```
- * formatDatetime(0) // => January 1 1970, 00:00:00.000
+ * formatDatetime(0) // => January 1 1970, 12:00:00.000 am
  * ```
  */
 export function formatDatetime(duration: number): string {
-  return dayjs(duration / ONE_MILLISECOND).format(STANDARD_DATETIME_FORMAT);
+  const format = getConfig().timeFormat === '24h' ? 'MMMM D YYYY, HH:mm:ss.SSS' : STANDARD_DATETIME_FORMAT;
+  return dayjs(duration / ONE_MILLISECOND).format(format);
 }
 
 /**
