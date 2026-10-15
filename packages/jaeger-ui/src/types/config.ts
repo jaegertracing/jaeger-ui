@@ -158,6 +158,10 @@ export type Config = {
   // traceIdDisplayLength controls the length of the trace ID displayed in the UI.
   traceIdDisplayLength?: number;
 
+  // timeFormat controls the clock used for displayed timestamps.
+  // Defaults to '12h'. Search form time inputs always use HH:mm.
+  timeFormat?: '12h' | '24h';
+
   // backendCapabilities is the capability blob advertised by the backend
   // (overlaid on top of any embedded UI config at index.html boot). Internal
   // UI code reads this field.
