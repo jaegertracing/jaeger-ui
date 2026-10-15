@@ -46,14 +46,18 @@ export default function TraceStatisticsHeader(props: Props) {
   const [checkboxStatus, setCheckboxStatus] = useState<boolean>(false);
 
   useLayoutEffect(() => {
-    handler(
-      getColumnValues(valueNameSelector1, trace, useOtelTerms),
-      getColumnValues(valueNameSelector1, trace, useOtelTerms),
-      valueNameSelector1,
-      null
-    );
+    const buildTable = () => {
+      const grouped = getColumnValues(valueNameSelector1, trace, useOtelTerms);
+      const rows = valueNameSelector2
+        ? getColumnValuesSecondDropdown(grouped, valueNameSelector1, valueNameSelector2, trace, useOtelTerms)
+        : grouped;
+      return generateColor(rows, optionsNameSelector3.get(valueNameSelector3) ?? '', checkboxStatus);
+    };
+    // Reload preserves the header's selections. Rebuild both independent table
+    // copies from the new response; selection handlers own updates between reloads.
+    handler(buildTable(), buildTable(), valueNameSelector1, valueNameSelector2);
     // oxlint-disable-next-line react/exhaustive-deps
-  }, []);
+  }, [trace]);
 
   /**
    * Returns the value of optionsNameSelector3.
