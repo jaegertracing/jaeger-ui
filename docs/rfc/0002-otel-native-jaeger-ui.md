@@ -499,6 +499,8 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 
 > Both hooks and the shared client's trace query defaults disable structural sharing because native traces contain cyclic parent/child references. Manual reload is separate work in #4574 and must be verified through the native path after both changes land.
 
+> Trace fetches use the existing transport without a fixed client deadline because storage and archive reads may take longer than 10 seconds before response headers arrive. Smaller v3 requests retain the transport's 10-second default.
+
 **Backend response shape** (`jaeger-query`, `apiv3.HTTPGateway.returnTrace`): `GET /api/v3/traces/{trace_id}` returns a **single** JSON object wrapping the payload in a grpc-gateway envelope, `{"result": {"resourceSpans": [...]}}`, serialised with jsonpb. The proto declares `GetTrace` as a server-streaming RPC, but the HTTP gateway buffers and concatenates all chunks before writing ([jaeger#6467](https://github.com/jaegertracing/jaeger/issues/6467) tracks making it a real stream). A client may therefore assume one document today, but should keep envelope handling separable so incremental parsing can be added without touching the enrichment logic.
 
 - [x] Implement `fetchTrace(traceId)` in `JaegerClient` (`src/api/v3/client.ts`) with validated response-envelope and wire-contract tests (#4455, #4480).
