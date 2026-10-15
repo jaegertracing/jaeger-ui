@@ -18,6 +18,7 @@ import {
 } from '../types/otel';
 import { classifySpan } from '../utils/genai/detect';
 import { makeAttributes } from './attributes';
+import { getParentSpanID, getNonParentReferences } from './span';
 
 export default class OtelSpanFacade implements IOtelSpan {
   private legacySpan: Span;
@@ -36,8 +37,12 @@ export default class OtelSpanFacade implements IOtelSpan {
   constructor(legacySpan: Span) {
     this.legacySpan = legacySpan;
 
+    const tags = this.legacySpan.tags ?? [];
+    const logs = this.legacySpan.logs ?? [];
+    const subsidiarilyReferencedBy = this.legacySpan.subsidiarilyReferencedBy ?? [];
+
     // Pre-compute expensive fields
-    const kindTag = this.legacySpan.tags.find(t => t.key === 'span.kind');
+    const kindTag = tags.find(t => t.key === 'span.kind');
     this._kind = SpanKind.INTERNAL;
     if (kindTag) {
       const val = String(kindTag.value).toUpperCase();
@@ -46,34 +51,24 @@ export default class OtelSpanFacade implements IOtelSpan {
       }
     }
 
-    // Find parent span ID according to the following priority:
-    // 1. Earliest CHILD_OF reference with the same traceID
-    // 2. Otherwise, earliest FOLLOWS_FROM reference with the same traceID
-    // 3. If no reference with same traceID exists, parent is undefined
-    const { references, traceID } = this.legacySpan;
-    const parentSpanRef =
-      references.find(r => r.traceID === traceID && r.refType === 'CHILD_OF') ??
-      references.find(r => r.traceID === traceID && r.refType === 'FOLLOWS_FROM');
-    this._parentSpanID = parentSpanRef?.spanID;
+    this._parentSpanID = getParentSpanID(this.legacySpan);
 
-    this._attributes = makeAttributes(OtelSpanFacade.toOtelAttributes(this.legacySpan.tags));
+    this._attributes = makeAttributes(OtelSpanFacade.toOtelAttributes(tags));
     this._genAIKind = classifySpan({ attributes: this._attributes });
 
-    this._events = this.legacySpan.logs.map(log => ({
+    this._events = logs.map(log => ({
       timestamp: log.timestamp as IEvent['timestamp'],
-      name: (log.fields.find(f => f.key === 'event')?.value as string) || 'log',
+      name: (log.fields?.find(f => f.key === 'event')?.value as string) || 'log',
       attributes: makeAttributes(OtelSpanFacade.toOtelAttributes(log.fields)),
     }));
 
-    this._links = this.legacySpan.references
-      .filter(ref => ref !== parentSpanRef)
-      .map(ref => ({
-        traceID: ref.traceID,
-        spanID: ref.spanID,
-        attributes: makeAttributes(), // Legacy references don't have attributes
-      }));
+    this._links = getNonParentReferences(this.legacySpan).map(ref => ({
+      traceID: ref.traceID,
+      spanID: ref.spanID,
+      attributes: makeAttributes(), // Legacy references don't have attributes
+    }));
 
-    const errorTag = this.legacySpan.tags.find(t => t.key === 'error');
+    const errorTag = tags.find(t => t.key === 'error');
     this._status =
       errorTag && errorTag.value ? { code: StatusCode.ERROR, message: 'error' } : { code: StatusCode.OK };
 
@@ -83,16 +78,17 @@ export default class OtelSpanFacade implements IOtelSpan {
       serviceName: process ? process.serviceName : 'unknown-service',
     };
 
-    this._inboundLinks = this.legacySpan.subsidiarilyReferencedBy.map(ref => ({
+    this._inboundLinks = subsidiarilyReferencedBy.map(ref => ({
       traceID: ref.traceID,
       spanID: ref.spanID,
       attributes: makeAttributes(),
     }));
   }
 
-  private static toOtelAttributes(tags: ReadonlyArray<{ key: string; value: any }>): IAttribute[] {
+  private static toOtelAttributes(tags?: ReadonlyArray<{ key: string; value: any }>): IAttribute[] {
+    if (!tags) return [];
     return tags
-      .filter(kv => kv.value !== null && kv.value !== undefined)
+      .filter(kv => kv && kv.value !== null && kv.value !== undefined)
       .map(kv => ({
         key: kv.key,
         value: kv.value as AttributeValue,
@@ -166,9 +162,9 @@ export default class OtelSpanFacade implements IOtelSpan {
   get instrumentationScope(): IScope {
     // Legacy Jaeger doesn't have explicit instrumentation scope,
     // but we can look for it in tags if it was mapped there by exporters.
-    const name =
-      (this.legacySpan.tags.find(t => t.key === 'otel.library.name')?.value as string) || 'unknown';
-    const version = this.legacySpan.tags.find(t => t.key === 'otel.library.version')?.value as string;
+    const tags = this.legacySpan.tags ?? [];
+    const name = (tags.find(t => t.key === 'otel.library.name')?.value as string) || 'unknown';
+    const version = tags.find(t => t.key === 'otel.library.version')?.value as string;
     return { name, version };
   }
 

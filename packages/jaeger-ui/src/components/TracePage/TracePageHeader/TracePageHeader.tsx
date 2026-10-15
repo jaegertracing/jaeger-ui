@@ -27,7 +27,7 @@ import { TNil } from '../../../types';
 import { IOtelTrace } from '../../../types/otel';
 import { formatDatetime, formatDurationCompact } from '../../../utils/date';
 import { getTraceLinks } from '../../../model/link-patterns';
-import { getIncompleteTraceTooltip } from '../../../model/trace-viewer';
+import { getIncompleteTraceTooltip } from '../../../model/trace-display-helpers';
 
 import './TracePageHeader.css';
 import ExternalLinks from '../../common/ExternalLinks';
