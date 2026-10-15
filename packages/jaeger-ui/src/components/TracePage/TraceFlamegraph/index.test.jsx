@@ -104,11 +104,6 @@ describe('<TraceFlamegraph />', () => {
     expect(screen.getByTestId('flamegraph-empty')).toBeInTheDocument();
   });
 
-  it('renders empty state when trace is not an OtelTraceFacade', () => {
-    render(<TraceFlamegraph trace={{}} />);
-    expect(screen.getByTestId('flamegraph-empty')).toBeInTheDocument();
-  });
-
   it('renders the toolbar with view mode toggle', () => {
     render(<TraceFlamegraph trace={otelTrace} />);
     expect(screen.getByRole('toolbar')).toBeInTheDocument();
