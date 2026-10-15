@@ -1,10 +1,11 @@
+// Copyright (c) 2026 The Jaeger Authors.
 // Copyright (c) 2021 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
 import { render, screen, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { Legend, Tooltip } from 'recharts';
+import { Legend, Tooltip, XAxis } from 'recharts';
 import ServiceGraph, {
   tickFormat,
   Placeholder,
@@ -18,6 +19,13 @@ import ServiceGraph, {
   COLORS,
 } from './serviceGraph';
 import { serviceMetrics } from '../../../reducers/metrics.mock';
+import getConfig from '../../../utils/config/get-config';
+
+vi.mock('../../../utils/config/get-config', () => mockDefault(vi.fn(() => ({}))));
+
+beforeEach(() => {
+  getConfig.mockReturnValue({});
+});
 
 const ServiceGraphImpl = ServiceGraph;
 
@@ -65,6 +73,21 @@ const defaultProps = {
 
 describe('<ServiceGraph>', () => {
   afterEach(cleanup);
+
+  it.each([
+    ['12h', '3:04 pm', 'October 15 2026, 3:04:05.123 pm'],
+    ['24h', '15:04', 'October 15 2026, 15:04:05.123'],
+  ])('formats millisecond axis and tooltip timestamps in %s', (timeFormat, tick, tooltip) => {
+    getConfig.mockReturnValue({ timeFormat });
+    const timestamp = new Date(2026, 9, 15, 15, 4, 5, 123).getTime();
+    const graph = ServiceGraphImpl({ ...defaultProps, loading: false, metricsData: mockMetricsData });
+    const children = graph.props.children.props.children.props.children;
+
+    expect(children.find(child => child.type === XAxis).props.tickFormatter(timestamp)).toBe(tick);
+    const { labelFormatter } = children.find(child => child.type === Tooltip).props;
+    expect(labelFormatter(timestamp)).toBe(tooltip);
+    expect(labelFormatter(String(timestamp))).toBe(tooltip);
+  });
 
   it('renders loading indicator when loading', () => {
     const { container } = render(<ServiceGraph {...defaultProps} />);
@@ -311,9 +334,8 @@ describe('<ServiceGraph>', () => {
     ]);
 
     // Test tooltip label formatter
-    const timestamp = 1631271783806;
-    const formattedDate = new Date(timestamp).toLocaleString();
-    expect(tooltipProps.labelFormatter(timestamp)).toBe(formattedDate);
+    const timestamp = new Date(2026, 9, 15, 15, 4, 5, 123).getTime();
+    expect(tooltipProps.labelFormatter(timestamp)).toBe('October 15 2026, 3:04:05.123 pm');
   });
 
   it('formats legend values correctly', () => {
@@ -387,9 +409,8 @@ describe('<ServiceGraph>', () => {
       expect(valueOnly).toBe(formatYAxisTick(1000, 'Test Graph'));
 
       // Test label formatter
-      const timestamp = 1631271783806;
-      const formattedDate = new Date(timestamp).toLocaleString();
-      expect(tooltipProps.labelFormatter(timestamp)).toBe(formattedDate);
+      const timestamp = new Date(2026, 9, 15, 15, 4, 5, 123).getTime();
+      expect(tooltipProps.labelFormatter(timestamp)).toBe('October 15 2026, 3:04:05.123 pm');
     });
 
     it('formats legend values correctly', () => {
@@ -440,11 +461,23 @@ describe('<ServiceGraph>', () => {
 
 describe('tickFormat utility', () => {
   it('formats time correctly for single digits', () => {
-    expect(tickFormat(Date.UTC(2017, 1, 14, 4, 4))).toBe('04:04');
+    expect(tickFormat(new Date(2017, 1, 14, 4, 4).getTime())).toBe('4:04 am');
   });
 
   it('formats time correctly for double digits', () => {
-    expect(tickFormat(Date.UTC(2017, 1, 14, 15, 19))).toBe('15:19');
+    expect(tickFormat(new Date(2017, 1, 14, 15, 19).getTime())).toBe('3:19 pm');
+  });
+
+  it.each([
+    [0, '12:04 am', '00:04'],
+    [12, '12:04 pm', '12:04'],
+    [15, '3:04 pm', '15:04'],
+  ])('formats hour %s using the configured clock', (hour, twelve, twentyFour) => {
+    const timestamp = new Date(2026, 9, 15, hour, 4).getTime();
+    getConfig.mockReturnValue({ timeFormat: '12h' });
+    expect(tickFormat(timestamp)).toBe(twelve);
+    getConfig.mockReturnValue({ timeFormat: '24h' });
+    expect(tickFormat(timestamp)).toBe(twentyFour);
   });
 });
 
