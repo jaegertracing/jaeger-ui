@@ -164,7 +164,7 @@ describe('useTrace', () => {
 
 describe('reloadBackendTrace', () => {
   afterEach(() => {
-    appQueryClient.setQueryDefaults(['trace'], {});
+    appQueryClient.setQueryDefaults(['trace'], { structuralSharing: false });
   });
 
   it.each([otelTrace.traceID, 'alias'])(
@@ -192,7 +192,7 @@ describe('reloadBackendTrace', () => {
     async traceId => {
       const partialRawTrace = { ...rawTrace, spans: rawTrace.spans.slice(1) };
       const partialTrace = transformTraceData(partialRawTrace)!.asOtelTrace();
-      appQueryClient.setQueryDefaults(['trace'], { retry: 1, retryDelay: 0 });
+      appQueryClient.setQueryDefaults(['trace'], { structuralSharing: false, retry: 1, retryDelay: 0 });
       populateTraceCache(partialTrace);
       appQueryClient.setQueryData(['trace', 'alias'], partialTrace);
       mockFetchTrace.mockRejectedValue(new Error('network error'));
@@ -212,14 +212,27 @@ describe('reloadBackendTrace', () => {
       expect(getCachedTrace(otelTrace.traceID)).toBe(partialTrace);
       expect(appQueryClient.getQueryState(['trace', otelTrace.traceID])?.isInvalidated).toBe(true);
 
-      mockFetchTrace.mockResolvedValue({ data: [rawTrace] } as any);
+      const [resourceSpans] = wireTrace.resourceSpans!;
+      const [scopeSpans] = resourceSpans.scopeSpans!;
+      const [root] = scopeSpans.spans!;
+      const spans = [
+        root,
+        ...Array.from({ length: partialTrace.spans.length }, (_, i) => ({
+          ...root,
+          spanId: (i + 2).toString(16).padStart(16, '0'),
+          parentSpanId: root.spanId,
+        })),
+      ];
+      mockFetchTrace.mockResolvedValue({
+        resourceSpans: [{ ...resourceSpans, scopeSpans: [{ ...scopeSpans, spans }] }],
+      });
       await act(async () => {
         await reloadBackendTrace(traceId);
       });
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
-      expect(result.current.data?.spans).toHaveLength(rawTrace.spans.length);
-      expect(getCachedTrace(otelTrace.traceID)?.spans).toHaveLength(rawTrace.spans.length);
+      expect(result.current.data?.spans).toHaveLength(spans.length);
+      expect(getCachedTrace(otelTrace.traceID)?.spans).toHaveLength(spans.length);
     }
   );
 });
