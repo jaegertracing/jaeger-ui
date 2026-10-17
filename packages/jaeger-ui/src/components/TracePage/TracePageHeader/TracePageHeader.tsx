@@ -245,6 +245,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
         )}
         {showStandaloneLink && (
           <Link
+            aria-label="Open trace in a new window"
             className="u-tx-inherit ub-nowrap ub-mx2"
             to={linkToStandalone}
             target={getTargetEmptyOrBlank()}
