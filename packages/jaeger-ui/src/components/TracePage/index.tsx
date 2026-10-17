@@ -10,7 +10,7 @@ import type { Location } from 'react-router-dom';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
-import _memoize from 'lodash/memoize';
+import memoizeOne from 'memoize-one';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
@@ -50,7 +50,8 @@ import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { parseUiFind } from '../common/UiFindInput';
 import { LocationState, ReduxState, TNil } from '../../types';
-import { useTrace } from '../../hooks/useTraceLoading';
+import { reloadBackendTrace, useTrace } from '../../hooks/useTraceLoading';
+import { isUploadedTrace } from '../../hooks/useUploadedTraces';
 import { IOtelTrace } from '../../types/otel';
 import filterSpans from '../../utils/filter-spans';
 import updateUiFind from '../../utils/update-ui-find';
@@ -80,6 +81,7 @@ type TOwnProps = {
   disableJsonView: boolean;
   traceGraphConfig?: TraceGraphConfig;
   useOtelTerms: boolean;
+  onReloadTrace?: () => void;
 };
 
 type TReduxProps = {
@@ -156,6 +158,7 @@ export function TracePageImpl(props: TProps) {
     traceGraphConfig,
     uiFind,
     useOtelTerms,
+    onReloadTrace,
   } = props;
 
   const id = params.id;
@@ -216,12 +219,8 @@ export function TracePageImpl(props: TProps) {
   const viewRangeRef = useRef(viewRange);
   viewRangeRef.current = viewRange;
   const prevIdRef = useRef(id);
-  const idRef = useRef(id);
-  idRef.current = id;
-
-  const filterSpansMemo = useRef(
-    _memoize(filterSpans, (textFilter: string) => `${textFilter} ${idRef.current}`)
-  ).current;
+  const autoViewTraceIdRef = useRef<string | null>(null);
+  const filterSpansMemo = useRef(memoizeOne(filterSpans)).current;
 
   const scrollManagerRef = useRef<ScrollManager>(new ScrollManager(traceData, { scrollBy, scrollTo }));
 
@@ -333,6 +332,10 @@ export function TracePageImpl(props: TProps) {
   }, []);
 
   useEffect(() => {
+    // Choose the default view once per trace. A same-ID reload can discover
+    // GenAI spans, but must not override the user's current view.
+    if (!traceData || autoViewTraceIdRef.current === traceData.traceID) return;
+    autoViewTraceIdRef.current = traceData.traceID;
     if (traceIsGenAI) {
       setTraceView(ETraceViewType.GenAITimelineViewer);
     } else {
@@ -340,7 +343,7 @@ export function TracePageImpl(props: TProps) {
         vt === ETraceViewType.GenAITimelineViewer ? ETraceViewType.TraceTimelineViewer : vt
       );
     }
-  }, [traceIsGenAI, setTraceView]);
+  }, [traceData, traceIsGenAI, setTraceView]);
 
   const archiveTrace = useCallback(() => {
     submitTraceToArchiveFn(id);
@@ -376,7 +379,7 @@ export function TracePageImpl(props: TProps) {
     setTimelineBarsVisible(!timelineBarsVisible);
   }, [setTimelineBarsVisible, timelineBarsVisible]);
 
-  if (traceError) {
+  if (traceError && !traceData) {
     return <ErrorMessage className="ub-m3" error={traceQueryError || 'Unknown error'} />;
   }
   if (traceLoading || !traceData) {
@@ -416,6 +419,7 @@ export function TracePageImpl(props: TProps) {
     linkToStandalone: getUrl(id),
     nextResult,
     onArchiveClicked: archiveTrace,
+    onReloadTrace,
     onDetailPanelModeToggle,
     onSlimViewClicked: toggleSlimView,
     onTimelineToggle,
@@ -524,6 +528,14 @@ export function TracePageImpl(props: TProps) {
       )}
       <div className="Tracepage--headerSection" ref={headerRefCallback}>
         <TracePageHeader {...headerProps} />
+        {traceError && (
+          <Alert
+            type="warning"
+            showIcon
+            message="Trace reload failed. Showing the previously loaded trace."
+            description={traceQueryError?.message || 'Unknown error'}
+          />
+        )}
       </div>
       {headerHeight ? <section style={{ paddingTop: headerHeight }}>{view}</section> : null}
     </div>
@@ -559,15 +571,25 @@ type TracePageProps = {
   params: { id: string };
 };
 
-const TracePage = (props: TracePageProps) => {
+export const TracePageRoute = (props: TracePageProps) => {
   const config = useConfig();
   const traceID = props.params.id;
   const { data: traceData } = useTrace(traceID);
   useNormalizeTraceId(traceID, traceData);
+  // Uploads change only on the search page, which is unmounted on this route,
+  // so the registry needs no subscription here. Recheck in the handler before
+  // refetching to protect against a stale render.
+  const isUploaded = isUploadedTrace(traceID);
+
+  const onReloadTrace = useCallback(() => {
+    if (isUploadedTrace(traceID)) return;
+    void reloadBackendTrace(traceID);
+  }, [traceID]);
 
   return (
     <ConnectedTracePage
       {...props}
+      onReloadTrace={isUploaded ? undefined : onReloadTrace}
       params={{ ...props.params, id: traceID }}
       archiveEnabled={Boolean(config.archiveEnabled)}
       enableSidePanel={Boolean(config.traceTimeline?.enableSidePanel)}
@@ -580,4 +602,4 @@ const TracePage = (props: TracePageProps) => {
   );
 };
 
-export default withRouteProps(TracePage);
+export default withRouteProps(TracePageRoute);

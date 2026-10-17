@@ -15,6 +15,7 @@ import {
 
 type TraceTimelineInteractionStore = {
   traceID: string | null;
+  traceSpans: IOtelTrace['spans'] | null;
   childrenHiddenIDs: Set<string>;
   detailStates: Map<string, DetailState>;
   shouldScrollToFirstUiFindMatch: boolean;
@@ -41,6 +42,7 @@ type TraceTimelineInteractionStore = {
 
 export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((set, get) => ({
   traceID: null,
+  traceSpans: null,
   childrenHiddenIDs: new Set<string>(),
   detailStates: new Map<string, DetailState>(),
   shouldScrollToFirstUiFindMatch: false,
@@ -49,20 +51,29 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
   setPrunedServices: (pruned: Set<string>) => set({ prunedServices: new Set(pruned) }),
 
   clearServiceFilter: () => set({ prunedServices: new Set<string>() }),
-
   setTrace: (trace: IOtelTrace, uiFind?: string | TNil) => {
-    const { traceID: currentTraceID } = get();
-    if (trace.traceID === currentTraceID) return;
+    const { traceID: currentTraceID, traceSpans } = get();
+    // Reload keeps the cached partial trace visible while fetching. Reapply
+    // find-focus state when fresh spans arrive, even if the ID is unchanged.
+    if (trace.traceID === currentTraceID && trace.spans === traceSpans) return;
 
     const detailPanelMode = useLayoutPrefsStore.getState().detailPanelMode;
 
     const base: Partial<TraceTimelineInteractionStore> = {
       traceID: trace.traceID,
-      childrenHiddenIDs: new Set<string>(),
-      detailStates: new Map<string, DetailState>(),
-      shouldScrollToFirstUiFindMatch: false,
-      prunedServices: new Set<string>(),
+      traceSpans: trace.spans,
     };
+
+    // Span IDs and service names remain stable on same-ID reloads. Keep manual
+    // interactions; only a different trace starts with empty view state.
+    if (trace.traceID !== currentTraceID) {
+      Object.assign(base, {
+        childrenHiddenIDs: new Set<string>(),
+        detailStates: new Map<string, DetailState>(),
+        shouldScrollToFirstUiFindMatch: false,
+        prunedServices: new Set<string>(),
+      });
+    }
 
     if (uiFind) {
       let focused = calculateFocusedFindRowStates(uiFind, trace.spans);
