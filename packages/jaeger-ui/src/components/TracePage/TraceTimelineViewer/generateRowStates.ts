@@ -24,6 +24,7 @@ export type RowState =
 type PrunedStats = {
   childCounts: number[];
   errorCounts: number[];
+  placeholderSpanIndices: number[];
 };
 
 /**
@@ -48,6 +49,7 @@ function buildVisibleRows(
   const parentByDepth: (number | undefined)[] = [];
   const childCounts: number[] = [];
   const errorCounts: number[] = [];
+  const placeholderSpanIndices: number[] = [];
 
   for (let i = 0; i < spans.length; i++) {
     const span = spans[i];
@@ -83,6 +85,7 @@ function buildVisibleRows(
           if (prunedErrors > 0) {
             errorCounts[parentIdx] = (errorCounts[parentIdx] || 0) + prunedErrors;
           }
+          placeholderSpanIndices[parentIdx] = Math.max(placeholderSpanIndices[parentIdx] || 0, i);
         }
       }
       continue;
@@ -104,7 +107,7 @@ function buildVisibleRows(
 
   return {
     rows,
-    prunedStats: hasPruning ? { childCounts, errorCounts } : null,
+    prunedStats: hasPruning ? { childCounts, errorCounts, placeholderSpanIndices } : null,
   };
 }
 
@@ -117,7 +120,7 @@ function buildVisibleRows(
  * it keeps the visible children contiguous and avoids mid-list synthetic rows.
  */
 function insertPrunedPlaceholders(rows: RowState[], stats: PrunedStats): RowState[] {
-  const { childCounts, errorCounts } = stats;
+  const { childCounts, errorCounts, placeholderSpanIndices } = stats;
   const result: RowState[] = [];
   // Track the max spanIndex seen within each open subtree so placeholders
   // get a non-decreasing spanIndex (avoids confusing ScrollManager navigation).
@@ -127,10 +130,11 @@ function insertPrunedPlaceholders(rows: RowState[], stats: PrunedStats): RowStat
     const count = childCounts[entry.rowIndex];
     if (!count) return;
     const parentRow = rows[entry.rowIndex];
+    const placeholderSpanIndex = placeholderSpanIndices[entry.rowIndex] ?? entry.maxSpanIndex;
     result.push({
       span: parentRow.span,
       isDetail: false,
-      spanIndex: entry.maxSpanIndex,
+      spanIndex: placeholderSpanIndex,
       isPrunedPlaceholder: true,
       prunedChildrenCount: count,
       prunedErrorCount: errorCounts[entry.rowIndex] || 0,
@@ -146,7 +150,8 @@ function insertPrunedPlaceholders(rows: RowState[], stats: PrunedStats): RowStat
         // Propagate max spanIndex to the parent entry on the stack.
         if (openStack.length) {
           const parent = openStack[openStack.length - 1];
-          parent.maxSpanIndex = Math.max(parent.maxSpanIndex, closed.maxSpanIndex);
+          const placeholderIdx = placeholderSpanIndices[closed.rowIndex] ?? closed.maxSpanIndex;
+          parent.maxSpanIndex = Math.max(parent.maxSpanIndex, closed.maxSpanIndex, placeholderIdx);
         }
       }
     }
@@ -166,7 +171,8 @@ function insertPrunedPlaceholders(rows: RowState[], stats: PrunedStats): RowStat
     maybeAppendPlaceholder(closed);
     if (openStack.length) {
       const parent = openStack[openStack.length - 1];
-      parent.maxSpanIndex = Math.max(parent.maxSpanIndex, closed.maxSpanIndex);
+      const placeholderIdx = placeholderSpanIndices[closed.rowIndex] ?? closed.maxSpanIndex;
+      parent.maxSpanIndex = Math.max(parent.maxSpanIndex, closed.maxSpanIndex, placeholderIdx);
     }
   }
 

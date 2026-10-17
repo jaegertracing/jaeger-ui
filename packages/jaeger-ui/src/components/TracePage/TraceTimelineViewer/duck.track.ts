@@ -102,6 +102,7 @@ const trackTags = (detail: DetailState) => trackEvent(CATEGORY_TAGS, getToggleVa
 
 const hooks: TSpanIdHooks = {
   [types.CHILDREN_TOGGLE]: trackParent,
+  [types.CHILDREN_TOGGLE_SUBTREE]: trackParent,
   [types.DETAIL_TOGGLE]: (store, action) => trackDetailRow(Boolean(getDetail(store, action))),
   [types.DETAIL_TAGS_TOGGLE]: (store, action) => trackDetailState(store, action, trackTags),
   [types.DETAIL_PROCESS_TOGGLE]: (store, action) => trackDetailState(store, action, trackProcess),

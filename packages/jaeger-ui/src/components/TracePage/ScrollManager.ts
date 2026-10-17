@@ -154,6 +154,9 @@ export default class ScrollManager {
           continue;
         }
       }
+      if (xrs.mapSpanIndexToRowIndex(i) === -1) {
+        continue;
+      }
       nextSpanIndex = i;
       break;
     }
@@ -168,14 +171,18 @@ export default class ScrollManager {
           const { isHidden, parentIDs } = isSpanHidden(spans[nextSpanIndex], childrenAreHidden);
           if (isHidden) {
             parentIDs.forEach(id => childrenAreHidden.add(id));
-            nextSpanIndex--;
+            nextSpanIndex += direction < 0 ? 1 : -1;
+          } else if (xrs.mapSpanIndexToRowIndex(nextSpanIndex) === -1) {
+            nextSpanIndex += direction < 0 ? 1 : -1;
           }
-          isFallbackHidden = isHidden;
-        } while (isFallbackHidden);
+          isFallbackHidden = isHidden || xrs.mapSpanIndexToRowIndex(nextSpanIndex) === -1;
+        } while (isFallbackHidden && nextSpanIndex >= 0 && nextSpanIndex < spans.length);
       }
     }
     const nextRow = xrs.mapSpanIndexToRowIndex(nextSpanIndex);
-    this._scrollPast(nextRow, direction);
+    if (nextRow !== -1) {
+      this._scrollPast(nextRow, direction);
+    }
   }
 
   /**

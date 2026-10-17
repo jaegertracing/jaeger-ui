@@ -35,6 +35,11 @@ vi.mock('./SpanBar', () => ({
   default: jest.fn(() => <div data-testid="span-bar">SpanBar</div>),
 }));
 
+vi.mock('./SpanRowControls', () => ({
+  default: jest.fn(() => <div data-testid="span-row-controls" />),
+  SpanRowControls: jest.fn(() => <div data-testid="span-row-controls" />),
+}));
+
 vi.mock('./utils', async importOriginal => {
   const actual = await importOriginal();
   return {

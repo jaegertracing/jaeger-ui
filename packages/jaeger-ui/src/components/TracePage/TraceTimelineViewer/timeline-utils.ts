@@ -102,3 +102,43 @@ export function applyDetailSubsectionToggle(
   next.set(spanID, detailState);
   return next;
 }
+
+/**
+ * Traverses childSpans in pre-order DFS and collects all descendant spans including rootSpan.
+ * Uses an explicit stack to avoid stack overflow on deep traces.
+ */
+export function getSubtreeSpans(rootSpan: IOtelSpan): IOtelSpan[] {
+  const result: IOtelSpan[] = [];
+  const stack: IOtelSpan[] = [rootSpan];
+  while (stack.length > 0) {
+    const s = stack.pop()!;
+    result.push(s);
+    if (s.childSpans && s.childSpans.length > 0) {
+      for (let i = s.childSpans.length - 1; i >= 0; i--) {
+        stack.push(s.childSpans[i]);
+      }
+    }
+  }
+  return result;
+}
+
+/**
+ * Returns all span IDs in the subtree (including rootSpan.spanID) that have hasChildren: true.
+ * Uses an explicit stack to avoid stack overflow on deep traces.
+ */
+export function getDescendantParentSpanIDs(rootSpan: IOtelSpan): Set<string> {
+  const ids = new Set<string>();
+  const stack: IOtelSpan[] = [rootSpan];
+  while (stack.length > 0) {
+    const s = stack.pop()!;
+    if (s.hasChildren) {
+      ids.add(s.spanID);
+    }
+    if (s.childSpans && s.childSpans.length > 0) {
+      for (let i = s.childSpans.length - 1; i >= 0; i--) {
+        stack.push(s.childSpans[i]);
+      }
+    }
+  }
+  return ids;
+}

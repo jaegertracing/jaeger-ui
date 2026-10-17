@@ -141,6 +141,18 @@ describe('generateRowStates', () => {
       const lastVisible = visibleSpanRows[visibleSpanRows.length - 1];
       expect(placeholder.spanIndex).toBeGreaterThanOrEqual(lastVisible.spanIndex);
     });
+
+    it('assigns its own unique spanIndex to placeholder row instead of parent index', () => {
+      const spans = makeTestSpans();
+      // Prune svc-b (span-1 at index 1 and span-2 at index 2); parent span-0 is at index 0
+      const rows = generateRowStates(spans, new Set(), new Map(), 'inline', new Set(['svc-b']));
+      const parentRow = rows.find(r => r.span.spanID === 'span-0' && !('isPrunedPlaceholder' in r))!;
+      const placeholder = rows.find(r => 'isPrunedPlaceholder' in r)!;
+      // Placeholder must have its own index distinct from parent row index (0)
+      expect(parentRow.spanIndex).toBe(0);
+      expect(placeholder.spanIndex).toBe(2);
+      expect(placeholder.spanIndex).not.toBe(parentRow.spanIndex);
+    });
   });
 });
 

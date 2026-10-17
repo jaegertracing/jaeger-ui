@@ -687,3 +687,81 @@ describe('getInitialLayoutState() with storage blocked', () => {
     expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(0.4);
   });
 });
+
+describe('useTraceTimelineStore: subtree focus and collapse', () => {
+  const mockChild: any = {
+    spanID: 'child-1',
+    hasChildren: false,
+    childSpans: [],
+  };
+  const mockRoot: any = {
+    spanID: 'root-1',
+    hasChildren: true,
+    childSpans: [mockChild],
+  };
+
+  beforeEach(() => {
+    useTraceTimelineStore.setState({
+      focusedSubtreeSpanID: null,
+      childrenHiddenIDs: new Set<string>(),
+    });
+  });
+
+  it('sets and clears focusedSubtreeSpanID', () => {
+    useTraceTimelineStore.getState().setFocusedSubtreeSpanID('span-xyz');
+    expect(useTraceTimelineStore.getState().focusedSubtreeSpanID).toBe('span-xyz');
+
+    useTraceTimelineStore.getState().setFocusedSubtreeSpanID(null);
+    expect(useTraceTimelineStore.getState().focusedSubtreeSpanID).toBeNull();
+  });
+
+  it('toggles subtree collapse: collapses when expanded, expands when collapsed', () => {
+    expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('root-1')).toBe(false);
+
+    // First call: collapses subtree (adds root-1)
+    useTraceTimelineStore.getState().toggleSubtreeCollapse(mockRoot);
+    expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('root-1')).toBe(true);
+
+    // Second call: expands subtree (removes root-1)
+    useTraceTimelineStore.getState().toggleSubtreeCollapse(mockRoot);
+    expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('root-1')).toBe(false);
+  });
+
+  it('satisfies the nested collapse contract for deeply nested parents', () => {
+    const leaf: any = { spanID: 'leaf-3', hasChildren: false, childSpans: [] };
+    const nestedParent: any = { spanID: 'nested-2', hasChildren: true, childSpans: [leaf] };
+    const rootParent: any = { spanID: 'root-1', hasChildren: true, childSpans: [nestedParent] };
+
+    // Sibling parent outside the subtree
+    useTraceTimelineStore.setState({ childrenHiddenIDs: new Set(['sibling-4']) });
+
+    // Collapse rootParent: should add root-1 and nested-2, exclude leaf-3, preserve sibling-4
+    useTraceTimelineStore.getState().toggleSubtreeCollapse(rootParent);
+    const hiddenAfterCollapse = useTraceTimelineStore.getState().childrenHiddenIDs;
+    expect(hiddenAfterCollapse.has('root-1')).toBe(true);
+    expect(hiddenAfterCollapse.has('nested-2')).toBe(true);
+    expect(hiddenAfterCollapse.has('leaf-3')).toBe(false);
+    expect(hiddenAfterCollapse.has('sibling-4')).toBe(true);
+
+    // Expand rootParent: should remove root-1 and nested-2, preserve sibling-4
+    useTraceTimelineStore.getState().toggleSubtreeCollapse(rootParent);
+    const hiddenAfterExpand = useTraceTimelineStore.getState().childrenHiddenIDs;
+    expect(hiddenAfterExpand.has('root-1')).toBe(false);
+    expect(hiddenAfterExpand.has('nested-2')).toBe(false);
+    expect(hiddenAfterExpand.has('sibling-4')).toBe(true);
+
+    // If nested parent was already collapsed beforehand, toggling root collapses both
+    useTraceTimelineStore.setState({ childrenHiddenIDs: new Set(['nested-2']) });
+    useTraceTimelineStore.getState().toggleSubtreeCollapse(rootParent);
+    const hiddenWhenChildWasCollapsed = useTraceTimelineStore.getState().childrenHiddenIDs;
+    expect(hiddenWhenChildWasCollapsed.has('root-1')).toBe(true);
+    expect(hiddenWhenChildWasCollapsed.has('nested-2')).toBe(true);
+  });
+
+  it('resets focusedSubtreeSpanID when setTrace is called for a new trace', () => {
+    useTraceTimelineStore.setState({ focusedSubtreeSpanID: 'span-xyz' });
+    const trace: any = { traceID: 'new-trace-id', spans: [] };
+    useTraceTimelineStore.getState().setTrace(trace);
+    expect(useTraceTimelineStore.getState().focusedSubtreeSpanID).toBeNull();
+  });
+});
