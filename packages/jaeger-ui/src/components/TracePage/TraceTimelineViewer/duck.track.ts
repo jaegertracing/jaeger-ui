@@ -13,6 +13,7 @@ import {
   TWidthValue,
 } from './duck';
 import DetailState from './SpanDetail/DetailState';
+import { useTraceTimelineStore } from './store.timeline';
 import { ReduxState } from '../../../types';
 import { getCachedTrace } from '../../../hooks/useTraceLoading';
 import { trackEvent } from '../../../utils/tracking';
@@ -41,8 +42,28 @@ export const CATEGORY_TAGS = `${CATEGORY_BASE}/tags`;
 export const CATEGORY_PANEL_MODE = `${CATEGORY_BASE}/panel-mode`;
 export const CATEGORY_TIMELINE_VISIBLE = `${CATEGORY_BASE}/timeline-visible`;
 
+function getTimelineState(store: Store<ReduxState>) {
+  const zustandState = useTraceTimelineStore.getState();
+  const reduxState = store?.getState?.()?.traceTimeline;
+  const traceID = zustandState.traceID ?? reduxState?.traceID;
+
+  if (zustandState.traceID && zustandState.traceID === traceID) {
+    return {
+      traceID,
+      childrenHiddenIDs: zustandState.childrenHiddenIDs,
+      detailStates: zustandState.detailStates,
+    };
+  }
+
+  return {
+    traceID,
+    childrenHiddenIDs: reduxState?.childrenHiddenIDs ?? zustandState.childrenHiddenIDs,
+    detailStates: reduxState?.detailStates ?? zustandState.detailStates,
+  };
+}
+
 function getDetail(store: Store<ReduxState>, { payload }: Action<TSpanIdValue | TSpanIdLogValue>) {
-  return payload ? store.getState().traceTimeline.detailStates.get(payload.spanID) : undefined;
+  return payload ? getTimelineState(store).detailStates.get(payload.spanID) : undefined;
 }
 
 function trackDetailState(
@@ -60,13 +81,12 @@ function trackParent(store: Store<ReduxState>, { payload }: Action<TSpanIdValue>
   if (!payload) {
     return;
   }
-  const st = store.getState();
-  const traceID = st.traceTimeline.traceID;
+  const { traceID, childrenHiddenIDs } = getTimelineState(store);
   if (!traceID) {
     return;
   }
   const { spanID } = payload;
-  const isHidden = st.traceTimeline.childrenHiddenIDs.has(spanID);
+  const isHidden = childrenHiddenIDs.has(spanID);
   const traceData = getCachedTrace(traceID);
   if (!traceData) {
     return;
