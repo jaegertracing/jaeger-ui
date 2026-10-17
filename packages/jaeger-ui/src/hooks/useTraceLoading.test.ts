@@ -4,7 +4,7 @@
 vi.mock('../api/v3/client');
 
 import React from 'react';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { jaegerClient } from '../api/v3/client';
 import type { TracesDataWire } from '../api/v3/schemas';
@@ -203,6 +203,40 @@ describe('useTraces', () => {
       expect(result.current.get('err-id')?.state).toBe(fetchedState.ERROR);
     });
     expect(result.current.get('err-id')?.error).toBeInstanceOf(Error);
+  });
+
+  it('returns cached data when a refetch fails', async () => {
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    client.setQueryData(['trace', otelTrace.traceID], otelTrace);
+
+    const { result } = renderHook(() => useTraces([otelTrace.traceID]), {
+      wrapper: makeWrapper(client),
+    });
+
+    await waitFor(() => {
+      expect(result.current.get(otelTrace.traceID)?.state).toBe(fetchedState.DONE);
+    });
+
+    mockFetchTrace.mockRejectedValue(new Error('network error'));
+
+    await act(async () => {
+      try {
+        await client.refetchQueries({
+          queryKey: ['trace', otelTrace.traceID],
+          exact: true,
+        });
+      } catch {
+        // The failed refetch is intentional for this regression test.
+      }
+    });
+
+    const entry = result.current.get(otelTrace.traceID);
+
+    expect(entry?.state).toBe(fetchedState.DONE);
+    expect(entry?.data).toBe(otelTrace);
   });
 
   it('seeds cache under canonical ID when response traceID differs from request', async () => {
