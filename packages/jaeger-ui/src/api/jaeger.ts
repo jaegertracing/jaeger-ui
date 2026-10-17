@@ -27,7 +27,12 @@ type FetchOptions = {
 
 // export for tests
 export function getMessageFromError(errData: any, status: number): string {
-  if (errData.code != null && errData.msg != null) {
+  if (errData.msg != null) {
+    if (errData.code == null) {
+      // Some responses carry `msg` with no `code` at all, which is how a missing
+      // trace is reported. Show that message rather than dumping the raw object.
+      return errData.msg;
+    }
     if (errData.code === status) {
       return errData.msg;
     }
@@ -40,6 +45,20 @@ export function getMessageFromError(errData: any, status: number): string {
   }
 }
 
+// Jaeger answers 200 with an `errors` array and no payload when the query was
+// fine but produced nothing, such as a trace ID that does not exist. A response
+// carrying both data and errors is a partial success and flows through untouched.
+function isErrorOnlyPayload(body: unknown): body is { errors: unknown[] } {
+  if (!body || typeof body !== 'object') {
+    return false;
+  }
+  const { errors, data } = body as { errors?: unknown; data?: unknown };
+  if (!Array.isArray(errors) || errors.length === 0) {
+    return false;
+  }
+  return data == null || (Array.isArray(data) && data.length === 0);
+}
+
 function getJSON(url: string, options: FetchOptions = {}): Promise<any> {
   const { query = null, ...init } = options;
   (init as any).credentials = 'same-origin';
@@ -50,8 +69,25 @@ function getJSON(url: string, options: FetchOptions = {}): Promise<any> {
   }
 
   return fetch(`${url}${queryStr}`, init as RequestInit).then((response: Response) => {
+    const makeError = (rawMessage: string, body: string): IApiError => {
+      const errorMessage = typeof rawMessage === 'string' ? rawMessage.trim() : rawMessage;
+      const error: IApiError = new Error(`HTTP Error: ${errorMessage}`);
+      error.httpStatus = response.status;
+      error.httpStatusText = response.statusText;
+      error.httpBody = body;
+      error.httpUrl = url;
+      error.httpQuery = typeof query === 'string' ? query : queryString.stringify(query || {});
+      return error;
+    };
+
     if (response.status < 400) {
-      return response.json();
+      return response.json().then((body: unknown) => {
+        if (isErrorOnlyPayload(body)) {
+          const errorMessage = body.errors.map(err => getMessageFromError(err, response.status)).join('; ');
+          throw makeError(errorMessage, JSON.stringify(body, null, 2));
+        }
+        return body;
+      });
     }
     return response.text().then((bodyText: string) => {
       let data: any;
@@ -69,16 +105,7 @@ function getJSON(url: string, options: FetchOptions = {}): Promise<any> {
       } else {
         errorMessage = bodyText || `${response.status} - ${response.statusText}`;
       }
-      if (typeof errorMessage === 'string') {
-        errorMessage = errorMessage.trim();
-      }
-      const error: IApiError = new Error(`HTTP Error: ${errorMessage}`);
-      error.httpStatus = response.status;
-      error.httpStatusText = response.statusText;
-      error.httpBody = bodyTextFmt || bodyText;
-      error.httpUrl = url;
-      error.httpQuery = typeof query === 'string' ? query : queryString.stringify(query || {});
-      throw error;
+      throw makeError(errorMessage, bodyTextFmt ?? bodyText);
     });
   });
 }
