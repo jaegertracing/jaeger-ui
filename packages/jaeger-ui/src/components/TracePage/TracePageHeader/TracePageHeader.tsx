@@ -1,3 +1,4 @@
+// Copyright (c) 2026 The Jaeger Authors.
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -74,11 +75,12 @@ export const HEADER_ITEMS = [
     label: 'Trace Start',
     renderer: (trace: IOtelTrace) => {
       const dateStr = formatDatetime(trace.startTime);
-      const match = dateStr.match(/^(.+)(\.\d+)$/);
+      const match = dateStr.match(/^(.+)(\.\d+)( [ap]m)?$/);
       return match ? (
         <span className="TracePageHeader--overviewItem--value">
           {match[1]}
           <span className="TracePageHeader--overviewItem--valueDetail">{match[2]}</span>
+          {match[3]}
         </span>
       ) : (
         dateStr
