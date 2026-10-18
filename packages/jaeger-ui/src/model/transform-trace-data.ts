@@ -5,67 +5,12 @@ import _isEqual from 'lodash/isEqual';
 
 import getConfig from '../utils/config/get-config';
 import { getTraceEmoji, getTraceName, getTracePageTitle } from './trace-display-helpers';
-import { KeyValuePair, Span, SpanData, SpanReference, Trace, TraceData } from '../types/trace';
+import { Span, SpanData, SpanReference, Trace, TraceData } from '../types/trace';
 import { IOtelTrace } from '../types/otel';
+import { deduplicateAttributes, orderAttributes } from './trace-attributes';
 
 import OtelTraceFacade from './OtelTraceFacade';
 import { getParentSpanID, getNonParentReferences } from './span';
-
-// exported for tests
-function deduplicateTags(spanTags: ReadonlyArray<KeyValuePair>) {
-  const warningsHash: Map<string, string> = new Map<string, string>();
-  const tags: KeyValuePair[] = [];
-  const seen = new Map<string, Set<KeyValuePair['value']>>();
-  for (const tag of spanTags) {
-    const values = seen.get(tag.key);
-    if (!values || !values.has(tag.value)) {
-      if (values) {
-        values.add(tag.value);
-      } else {
-        seen.set(tag.key, new Set([tag.value]));
-      }
-      tags.push(tag);
-    } else {
-      warningsHash.set(
-        `${tag.key}\0${typeof tag.value}\0${String(tag.value)}`,
-        `Duplicate tag key="${tag.key}" value="${String(tag.value)}"`
-      );
-    }
-  }
-  const warnings = Array.from(warningsHash.values());
-  return { tags, warnings };
-}
-
-// exported for tests
-function orderTags(spanTags: KeyValuePair[], topPrefixes?: readonly string[]) {
-  const orderedTags: KeyValuePair[] = spanTags.slice();
-  const tp = (topPrefixes || []).map((p: string) => p.toLowerCase());
-
-  orderedTags.sort((a, b) => {
-    const aKey = a.key.toLowerCase();
-    const bKey = b.key.toLowerCase();
-
-    for (let i = 0; i < tp.length; i++) {
-      const p = tp[i];
-      if (aKey.startsWith(p) && !bKey.startsWith(p)) {
-        return -1;
-      }
-      if (!aKey.startsWith(p) && bKey.startsWith(p)) {
-        return 1;
-      }
-    }
-
-    if (aKey > bKey) {
-      return 1;
-    }
-    if (aKey < bKey) {
-      return -1;
-    }
-    return 0;
-  });
-
-  return orderedTags;
-}
 
 /**
  * NOTE: Mutates `data` - Transform the HTTP response data into the form the app
@@ -118,11 +63,11 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     span.childSpans = [];
     span.subsidiarilyReferencedBy = [];
 
-    const tagsInfo = deduplicateTags(span.tags);
-    span.tags = orderTags(tagsInfo.tags, getConfig().topTagPrefixes);
+    const attributesInfo = deduplicateAttributes(span.tags);
+    span.tags = orderAttributes(attributesInfo.attributes, getConfig().topTagPrefixes);
     span.warnings = span.warnings || [];
-    if (tagsInfo.warnings && tagsInfo.warnings.length > 0) {
-      (span.warnings as string[]).push(...tagsInfo.warnings);
+    if (attributesInfo.warnings && attributesInfo.warnings.length > 0) {
+      (span.warnings as string[]).push(...attributesInfo.warnings);
     }
 
     spanMap.set(spanID, span);
@@ -171,10 +116,14 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     }
   };
 
-  // Depth-first traversal to order spans, populate the flat array, and compute
-  // the trace's time range from the (already-repaired) start times.
-  const processSpan = (span: Span, depth: number) => {
-    span.depth = depth;
+  // Pre-order depth-first traversal to order spans, populate the flat array, and
+  // compute the trace's time range from the (already-repaired) start times. The
+  // traversal uses an explicit stack rather than recursion so that deeply nested
+  // traces do not overflow the call stack. A span's depth is assigned by its
+  // parent before the span is pushed; roots are seeded with depth 0.
+  const stack: Span[] = [];
+  const processSpan = (span: Span) => {
+    const { depth } = span;
     span.hasChildren = span.childSpans.length > 0;
 
     if (span.startTime < traceStartTime) {
@@ -205,16 +154,26 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     spans.push(span);
 
     // Repair children against this (already-repaired) span, then sort them by
-    // startTime before recursing.
+    // startTime. They are pushed in reverse so that popping visits them in
+    // ascending startTime order, each subtree before the next sibling.
     const children = span.childSpans as Span[];
     children.forEach(child => repairStartTime(child, span));
     children.sort((a, b) => a.startTime - b.startTime);
-    children.forEach(child => processSpan(child, depth + 1));
+    for (let i = children.length - 1; i >= 0; i--) {
+      children[i].depth = depth + 1;
+      stack.push(children[i]);
+    }
   };
 
   rootSpans.forEach(root => repairStartTime(root));
   rootSpans.sort((a, b) => a.startTime - b.startTime);
-  rootSpans.forEach(root => processSpan(root, 0));
+  for (let i = rootSpans.length - 1; i >= 0; i--) {
+    rootSpans[i].depth = 0;
+    stack.push(rootSpans[i]);
+  }
+  while (stack.length > 0) {
+    processSpan(stack.pop()!);
+  }
 
   // traceStartTime/traceEndTime are only updated while visiting spans reachable
   // from a root. If the trace has spans but no root (e.g. every span is part of
