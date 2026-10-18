@@ -3,12 +3,13 @@
 
 import { useMemo } from 'react';
 import { useQuery, useQueries, UseQueryResult } from '@tanstack/react-query';
-import JaegerAPI from '../api/jaeger';
+import { jaegerClient } from '../api/v3/client';
+import { parseOtelTrace } from '../api/v3/parser';
 import { fetchedState } from '../constants';
-import transformTraceData from '../model/transform-trace-data';
 import { queryClient } from '../query/app-query-client';
 import { FetchedTrace } from '../types';
 import type { IOtelTrace } from '../types/otel';
+import { toTraceIdHex } from '../utils/trace-id';
 
 const TRACE_QUERY_KEY = (id: string) => ['trace', id] as const;
 
@@ -30,18 +31,18 @@ export function useTrace(traceId: string): UseQueryResult<IOtelTrace> {
   return useQuery({
     queryKey: TRACE_QUERY_KEY(traceId),
     queryFn: async () => {
-      const response = await JaegerAPI.fetchTrace(traceId);
-      const data = transformTraceData(response.data[0]);
-      if (!data) {
+      const response = await jaegerClient.fetchTrace(toTraceIdHex(traceId));
+      const otel = parseOtelTrace(response);
+      if (!otel) {
         throw new Error('Invalid trace data received.');
       }
-      const otel = data.asOtelTrace();
       if (otel.traceID !== traceId) {
         queryClient.setQueryData(TRACE_QUERY_KEY(otel.traceID), otel);
       }
       return otel;
     },
     staleTime: Infinity,
+    structuralSharing: false,
   });
 }
 
@@ -53,18 +54,18 @@ export function useTraces(ids: string[]): Map<string, FetchedTrace> {
     queries: ids.map(id => ({
       queryKey: TRACE_QUERY_KEY(id),
       queryFn: async () => {
-        const response = await JaegerAPI.fetchTrace(id);
-        const data = transformTraceData(response.data[0]);
-        if (!data) {
+        const response = await jaegerClient.fetchTrace(toTraceIdHex(id));
+        const otel = parseOtelTrace(response);
+        if (!otel) {
           throw new Error('Invalid trace data received.');
         }
-        const otel = data.asOtelTrace();
         if (otel.traceID !== id) {
           queryClient.setQueryData(TRACE_QUERY_KEY(otel.traceID), otel);
         }
         return otel;
       },
       staleTime: Infinity,
+      structuralSharing: false,
     })),
   });
 

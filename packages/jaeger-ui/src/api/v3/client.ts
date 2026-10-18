@@ -153,7 +153,11 @@ export class JaegerClient {
    */
   async fetchTrace(traceId: string): Promise<TracesDataWire> {
     traceIdHex.parse(traceId);
-    const response = await this.fetchWithTimeout(`${this.apiRoot}/traces/${encodeURIComponent(traceId)}`);
+    // Trace queries buffer storage and archive reads before sending headers and can exceed 10 seconds.
+    const response = await this.fetchWithTimeout(
+      `${this.apiRoot}/traces/${encodeURIComponent(traceId)}`,
+      null
+    );
     if (!response.ok) {
       throw new Error(`Failed to fetch trace ${traceId}: ${response.status} ${response.statusText}`);
     }
@@ -165,13 +169,13 @@ export class JaegerClient {
   /**
    * Fetch with timeout support using AbortController.
    * @param url - The URL to fetch
-   * @param timeout - Timeout in milliseconds (default: 10 seconds)
+   * @param timeout - Timeout in milliseconds (default: 10 seconds), or null for no deadline
    * @returns Promise<Response>
    * @throws Error if request times out or network error occurs
    */
-  private async fetchWithTimeout(url: string, timeout = 10000): Promise<Response> {
+  private async fetchWithTimeout(url: string, timeout: number | null = 10000): Promise<Response> {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    const timeoutId = timeout === null ? undefined : setTimeout(() => controller.abort(), timeout);
 
     try {
       const response = await fetch(url, { signal: controller.signal });
