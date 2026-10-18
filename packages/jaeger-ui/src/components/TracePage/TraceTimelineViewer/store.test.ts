@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import DetailState from './SpanDetail/DetailState';
 import {
   calculateFocusedFindRowStates,
+  findNewlyRevealedAncestors,
   getInitialLayoutState,
   getSelectedSpanID,
   setDetailPanelMode,
@@ -405,12 +406,102 @@ describe('trace timeline zustand stores', () => {
           expect(state.childrenHiddenIDs.has('root')).toBe(false);
           expect(state.childrenHiddenIDs.has('parent')).toBe(false);
           expect(state.detailStates.has('arrived')).toBe(true);
-          expect(state.shouldScrollToFirstUiFindMatch).toBe(true);
+          expect(state.shouldScrollToFirstUiFindMatch).toBe(false);
           expect(state.prunedServices).toEqual(new Set(['other-service']));
           expect(useLayoutPrefsStore.getState().detailPanelMode).toBe(detailPanelMode);
           expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBe(0.5);
         }
       );
+
+      it('same-ID reload with uiFind keeps manual collapses and does not scroll', async () => {
+        const actualFilter = await vi.importActual<typeof import('../../../utils/filter-spans')>(
+          '../../../utils/filter-spans'
+        );
+        const actualAncestors = await vi.importActual<typeof import('../../../utils/span-ancestor-ids')>(
+          '../../../utils/span-ancestor-ids'
+        );
+        vi.mocked(filterSpans).mockImplementation(actualFilter.default);
+        vi.mocked(spanAncestorIds).mockImplementation(actualAncestors.default);
+
+        const attributes = { entries: () => [] };
+        const resource = { serviceName: 'service', attributes };
+        const root = makeSpan({ spanID: 'root', name: 'root', hasChildren: true, attributes, resource });
+        const matchParent = makeSpan({
+          spanID: 'match-parent',
+          name: 'match-parent',
+          hasChildren: true,
+          parentSpan: root,
+          attributes,
+          resource,
+        });
+        const matchChild = makeSpan({
+          spanID: 'match-child',
+          name: 'target-match',
+          parentSpan: matchParent,
+          attributes,
+          resource,
+        });
+        const otherParent = makeSpan({
+          spanID: 'other-parent',
+          name: 'other-parent',
+          hasChildren: true,
+          parentSpan: root,
+          attributes,
+          resource,
+        });
+        const otherChild = makeSpan({
+          spanID: 'other-child',
+          name: 'other',
+          parentSpan: otherParent,
+          attributes,
+          resource,
+        });
+
+        const trace = makeTrace('same-trace', [root, matchParent, matchChild, otherParent, otherChild]);
+        useTraceTimelineStore.getState().setTrace(trace, 'target-match');
+
+        // Initially, match-parent is expanded (ancestor of matchChild) and other-parent is collapsed (no matches)
+        expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('match-parent')).toBe(false);
+        expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('other-parent')).toBe(true);
+
+        // User manually collapses match-parent
+        useTraceTimelineStore.getState().childrenToggle('match-parent');
+        expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('match-parent')).toBe(true);
+
+        // User manually expands other-parent
+        useTraceTimelineStore.getState().childrenToggle('other-parent');
+        expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('other-parent')).toBe(false);
+
+        // Clear scroll flag (simulating timeline view has rendered and scrolled)
+        useTraceTimelineStore.getState().clearShouldScrollToFirstUiFindMatch();
+        expect(useTraceTimelineStore.getState().shouldScrollToFirstUiFindMatch).toBe(false);
+
+        // Reload the same trace with an unrelated new span arriving
+        const newChild = makeSpan({
+          spanID: 'new-child',
+          name: 'unrelated',
+          parentSpan: root,
+          attributes,
+          resource,
+        });
+        const refreshed = makeTrace('same-trace', [
+          root,
+          matchParent,
+          matchChild,
+          otherParent,
+          otherChild,
+          newChild,
+        ]);
+        useTraceTimelineStore.getState().setTrace(refreshed, 'target-match');
+
+        const state = useTraceTimelineStore.getState();
+        // Manual collapse of match-parent is preserved
+        expect(state.childrenHiddenIDs.has('match-parent')).toBe(true);
+        // Manual expansion of other-parent is preserved
+        expect(state.childrenHiddenIDs.has('other-parent')).toBe(false);
+        // Does not scroll on reload
+        expect(state.shouldScrollToFirstUiFindMatch).toBe(false);
+      });
 
       it('applies uiFind filter when provided', () => {
         vi.mocked(filterSpans).mockReturnValue(new Set(['span-1']));
@@ -729,6 +820,26 @@ describe('calculateFocusedFindRowStates', () => {
     const result = calculateFocusedFindRowStates('find', spans);
     expect(result.detailStates.size).toBe(2);
     expect(result.shouldScrollToFirstUiFindMatch).toBe(true);
+  });
+
+  describe('findNewlyRevealedAncestors', () => {
+    it('returns ancestor IDs of newly arrived matching spans', () => {
+      vi.mocked(filterSpans).mockReturnValue(new Set(['leaf']));
+      vi.mocked(spanAncestorIds).mockReturnValue(['root', 'parent']);
+      const root = makeSpan({ spanID: 'root', hasChildren: true });
+      const parent = makeSpan({ spanID: 'parent', hasChildren: true });
+      const leaf = makeSpan({ spanID: 'leaf' });
+      const revealed = findNewlyRevealedAncestors('find', [leaf], [root, parent, leaf]);
+      expect(revealed).toEqual(new Set(['root', 'parent']));
+    });
+
+    it('returns an empty set when no new spans match', () => {
+      vi.mocked(filterSpans).mockReturnValue(new Set());
+      const root = makeSpan({ spanID: 'root', hasChildren: true });
+      const leaf = makeSpan({ spanID: 'leaf' });
+      const revealed = findNewlyRevealedAncestors('find', [leaf], [root, leaf]);
+      expect(revealed.size).toBe(0);
+    });
   });
 });
 
