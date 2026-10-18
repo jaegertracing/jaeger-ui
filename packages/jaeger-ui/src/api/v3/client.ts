@@ -10,7 +10,6 @@
 
 import { ALL_SERVICES } from '../../constants/search-form';
 import prefixUrl from '../../utils/prefix-url';
-import { apiConfig } from '../config';
 import {
   ServicesResponseSchema,
   OperationsResponseSchema,
@@ -41,9 +40,11 @@ function toIsoTimestamp(epochMicroseconds: number): string | undefined {
 
 export class JaegerClient {
   private apiRoot = prefixUrl('/api/v3');
+  // Archival has no v3 endpoint and stays on the legacy route.
+  private legacyApiRoot = prefixUrl('/api/');
 
   async archiveTrace(id: string): Promise<unknown> {
-    const response = await this.fetchWithTimeout(`${apiConfig.apiRoot}archive/${id}`, { method: 'POST' });
+    const response = await this.fetchWithTimeout(`${this.legacyApiRoot}archive/${id}`, { method: 'POST' });
     if (!response.ok) {
       throw new Error(`Failed to archive trace ${id}: ${response.status} ${response.statusText}`);
     }
@@ -171,11 +172,9 @@ export class JaegerClient {
   async fetchTrace(traceId: string): Promise<TracesDataWire> {
     traceIdHex.parse(traceId);
     // Trace queries buffer storage and archive reads before sending headers and can exceed 10 seconds.
-    const response = await this.fetchWithTimeout(
-      `${this.apiRoot}/traces/${encodeURIComponent(traceId)}`,
-      {},
-      null
-    );
+    const response = await this.fetchWithTimeout(`${this.apiRoot}/traces/${encodeURIComponent(traceId)}`, {
+      timeout: null,
+    });
     if (!response.ok) {
       throw new Error(`Failed to fetch trace ${traceId}: ${response.status} ${response.statusText}`);
     }
@@ -187,15 +186,13 @@ export class JaegerClient {
   /**
    * Fetch with timeout support using AbortController.
    * @param url - The URL to fetch
-   * @param options - Fetch request options
-   * @param timeout - Timeout in milliseconds (default: 10 seconds), or null for no deadline
+   * @param options - Fetch request options, plus a timeout in milliseconds (default: 10 seconds) or null for no deadline
    * @returns Promise<Response>
    * @throws Error if request times out or network error occurs
    */
   private async fetchWithTimeout(
     url: string,
-    options: RequestInit = {},
-    timeout: number | null = 10000
+    { timeout = 10000, ...options }: RequestInit & { timeout?: number | null } = {}
   ): Promise<Response> {
     const controller = new AbortController();
     const timeoutId = timeout === null ? undefined : setTimeout(() => controller.abort(), timeout);

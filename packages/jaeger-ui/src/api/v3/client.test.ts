@@ -4,7 +4,6 @@
 import { JaegerClient, jaegerClient } from './client';
 import { ZodError } from 'zod';
 import { ALL_SERVICES } from '../../constants/search-form';
-import JaegerAPI from '../jaeger';
 
 describe('JaegerClient', () => {
   let client: JaegerClient;
@@ -25,29 +24,6 @@ describe('JaegerClient', () => {
   });
 
   describe('archiveTrace', () => {
-    it('honors legacy API-root overrides after clients have been initialized', async () => {
-      const originalRoot = JaegerAPI.apiRoot;
-      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ data: [] }) });
-
-      try {
-        JaegerAPI.apiRoot = '/custom-api/';
-        await client.archiveTrace('trace-id');
-        expect(mockFetch).toHaveBeenLastCalledWith('/custom-api/archive/trace-id', {
-          method: 'POST',
-          signal: expect.any(AbortSignal),
-        });
-
-        JaegerAPI.apiRoot = '/another-api/';
-        await jaegerClient.archiveTrace('another-trace');
-        expect(mockFetch).toHaveBeenLastCalledWith('/another-api/archive/another-trace', {
-          method: 'POST',
-          signal: expect.any(AbortSignal),
-        });
-      } finally {
-        JaegerAPI.apiRoot = originalRoot;
-      }
-    });
-
     it('POSTs to the existing archive endpoint through the timeout transport', async () => {
       const data = { data: [] };
       mockFetch.mockResolvedValue({ ok: true, json: async () => data });

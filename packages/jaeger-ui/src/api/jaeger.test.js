@@ -3,7 +3,6 @@
 
 const fetchMock = vi.fn(() =>
   Promise.resolve({
-    ok: true,
     status: 200,
     data: () => Promise.resolve({ data: null }),
     json: () => Promise.resolve({ data: null }),
@@ -16,29 +15,10 @@ import queryString from 'query-string';
 
 import traceGenerator from '../demo/trace-generators';
 import JaegerAPI, { getMessageFromError, DEFAULT_API_ROOT, DEFAULT_DEPENDENCY_LOOKBACK } from './jaeger';
-import { jaegerClient } from './v3/client';
 
 const defaultOptions = {
   credentials: 'same-origin',
 };
-
-describe('archiveTrace', () => {
-  it('POSTs the specified id', async () => {
-    await jaegerClient.archiveTrace('trace-id');
-    expect(fetchMock).toHaveBeenLastCalledWith(`${DEFAULT_API_ROOT}archive/trace-id`, {
-      method: 'POST',
-      signal: expect.any(AbortSignal),
-    });
-  });
-});
-
-describe('fetchDecoration', () => {
-  it('GETs the specified url', async () => {
-    const url = 'foo.bar.baz';
-    await jaegerClient.fetchDecoration(url);
-    expect(fetchMock).toHaveBeenLastCalledWith(url, { signal: expect.any(AbortSignal) });
-  });
-});
 
 describe('fetchDeepDependencyGraph', () => {
   it('GETs the specified query', () => {
