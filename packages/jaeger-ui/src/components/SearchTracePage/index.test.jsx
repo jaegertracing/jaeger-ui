@@ -66,7 +66,7 @@ import { SearchTracePageImpl as SearchTracePage } from './index';
 import { useServices } from '../../hooks/useTraceDiscovery';
 import { ALL_SERVICES } from '../../constants/search-form';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
-import { useClearUploadedTraces } from '../../hooks/useUploadedTraces';
+import { useClearUploadedTraces } from './useUploadedTraces';
 import { useSearchPanelStore, LS_WIDTH_KEY, LS_COLLAPSED_KEY } from './search-panel-store';
 import { store as globalStore } from '../../utils/configure-store';
 

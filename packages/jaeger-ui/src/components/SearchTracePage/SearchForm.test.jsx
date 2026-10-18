@@ -52,7 +52,7 @@ vi.mock('../../hooks/useTraceDiscovery', () => ({
   })),
   useIsSearchFetching: mockUseIsSearchFetching,
 }));
-vi.mock('../../hooks/useUploadedTraces', () => ({
+vi.mock('./useUploadedTraces', () => ({
   useClearUploadedTraces: jest.fn(() => jest.fn()),
 }));
 vi.mock('../../utils/config/get-config', () => ({

@@ -24,7 +24,7 @@ import {
 } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import FileLoader from './FileLoader';
-import { useUploadedTraces } from '../../hooks/useUploadedTraces';
+import { useUploadedTraces } from './useUploadedTraces';
 import VerticalResizer from '../common/VerticalResizer';
 import { useSearchPanelStore, PANEL_WIDTH_MIN, PANEL_WIDTH_MAX } from './search-panel-store';
 

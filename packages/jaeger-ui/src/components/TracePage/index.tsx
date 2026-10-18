@@ -51,7 +51,7 @@ import LoadingIndicator from '../common/LoadingIndicator';
 import { parseUiFind } from '../common/UiFindInput';
 import { LocationState, ReduxState, TNil } from '../../types';
 import { reloadBackendTrace, useTrace } from '../../hooks/useTraceLoading';
-import { isUploadedTrace } from '../../hooks/useUploadedTraces';
+import { isUploadedTrace } from '../SearchTracePage/useUploadedTraces';
 import { IOtelTrace } from '../../types/otel';
 import filterSpans from '../../utils/filter-spans';
 import updateUiFind from '../../utils/update-ui-find';

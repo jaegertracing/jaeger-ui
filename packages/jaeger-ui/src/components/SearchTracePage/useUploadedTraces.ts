@@ -3,8 +3,8 @@
 
 import { useCallback } from 'react';
 import { useQuery, useQueryClient, skipToken } from '@tanstack/react-query';
-import type { TraceSummary } from '../types/trace-summary';
-import { queryClient as appQueryClient } from '../query/app-query-client';
+import type { TraceSummary } from '../../types/trace-summary';
+import { queryClient as appQueryClient } from '../../query/app-query-client';
 
 /**
  * Similar to useSearchTraces() from hooks/useTraceDiscovery.ts,
