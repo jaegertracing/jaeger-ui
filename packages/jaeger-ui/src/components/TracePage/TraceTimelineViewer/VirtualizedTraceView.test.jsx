@@ -69,6 +69,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       detailWarningsToggle: jest.fn(),
       detailReferencesToggle: jest.fn(),
       findMatchesIDs: null,
+      currentFindMatchID: null,
       registerAccessors: jest.fn(),
       scrollToFirstVisibleSpan: jest.fn(),
       setSpanNameColumnWidth: jest.fn(),
@@ -469,6 +470,29 @@ describe('<VirtualizedTraceViewImpl>', () => {
       const { listViewProps } = renderAndCapture({ ...mockProps, selectedSpanID: selectedSpan.spanID });
       const result = listViewProps.itemRenderer('key', {}, 0, {});
       expect(result.props.children.props.isSelected).toBe(true);
+    });
+
+    it('renderSpanBarRow passes isCurrentFindMatch=true only for the current find match', () => {
+      const { listViewProps } = renderAndCapture({
+        ...mockProps,
+        findMatchesIDs: new Set([trace.spans[0].spanID, trace.spans[1].spanID]),
+        currentFindMatchID: trace.spans[1].spanID,
+      });
+      const isCurrentFindMatch = row =>
+        listViewProps.itemRenderer('key', {}, row, {}).props.children.props.isCurrentFindMatch;
+      expect(isCurrentFindMatch(0)).toBe(false);
+      expect(isCurrentFindMatch(1)).toBe(true);
+    });
+
+    it('renderSpanBarRow passes isCurrentFindMatch=false when the current find match no longer matches', () => {
+      const { listViewProps } = renderAndCapture({
+        ...mockProps,
+        findMatchesIDs: new Set([trace.spans[0].spanID]),
+        currentFindMatchID: trace.spans[1].spanID,
+      });
+      expect(listViewProps.itemRenderer('key', {}, 1, {}).props.children.props.isCurrentFindMatch).toBe(
+        false
+      );
     });
 
     it('renderSpanDetailRow returns null if detailState is missing', () => {

@@ -157,6 +157,31 @@ describe('ScrollManager', () => {
       expect(scrollPastMock).toHaveBeenLastCalledWith(4, -1);
     });
 
+    it('returns the ID of the matching span it scrolls to', () => {
+      accessors.getTopRowIndexVisible.mockReturnValue(trace.spans.length - 1);
+      accessors.getBottomRowIndexVisible.mockReturnValue(0);
+      accessors.getSearchedSpanIDs = () => new Set([trace.spans[4].spanID]);
+      expect(manager._scrollToVisibleSpan(1)).toBe(trace.spans[4].spanID);
+      expect(manager._scrollToVisibleSpan(-1)).toBe(trace.spans[4].spanID);
+    });
+
+    it('returns undefined when there is no search', () => {
+      accessors.getTopRowIndexVisible.mockReturnValue(5);
+      accessors.getBottomRowIndexVisible.mockReturnValue(5);
+      expect(manager._scrollToVisibleSpan(1)).toBeUndefined();
+      expect(scrollPastMock).toHaveBeenLastCalledWith(5, 1);
+    });
+
+    it('returns undefined when there is no further match and it scrolls to the boundary', () => {
+      accessors.getTopRowIndexVisible.mockReturnValue(3);
+      accessors.getBottomRowIndexVisible.mockReturnValue(5);
+      accessors.getSearchedSpanIDs = () => new Set([trace.spans[4].spanID]);
+      expect(manager._scrollToVisibleSpan(1)).toBeUndefined();
+      expect(scrollPastMock).toHaveBeenLastCalledWith(trace.spans.length - 1, 1);
+      expect(manager._scrollToVisibleSpan(-1)).toBeUndefined();
+      expect(scrollPastMock).toHaveBeenLastCalledWith(0, -1);
+    });
+
     it('scrolls to boundary when scrolling away from closest spanID in findMatches', () => {
       const closetFindMatchesSpanID = 4;
       accessors.getTopRowIndexVisible.mockReturnValue(closetFindMatchesSpanID - 1);
@@ -242,6 +267,12 @@ describe('ScrollManager', () => {
         expect(scrollPastMock).toHaveBeenLastCalledWith(4, 1);
         manager.scrollToPrevVisibleSpan();
         expect(scrollPastMock).toHaveBeenLastCalledWith(4, -1);
+      });
+
+      it('returns the ID of the matching span scrolled to', () => {
+        accessors.getSearchedSpanIDs = () => new Set([trace.spans[4].spanID]);
+        expect(manager.scrollToNextVisibleSpan()).toBe(trace.spans[4].spanID);
+        expect(manager.scrollToPrevVisibleSpan()).toBe(trace.spans[4].spanID);
       });
 
       it('handles more than one level of ancestry', () => {

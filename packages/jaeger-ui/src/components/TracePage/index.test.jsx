@@ -31,9 +31,11 @@ import ScrollManager from './ScrollManager';
 let capturedHeaderProps = {};
 let capturedArchiveNotifierProps = {};
 let capturedGraphProps = {};
+let capturedTimelineProps = {};
 
 vi.mock('./TraceTimelineViewer', async () => {
-  return mockDefault(function MockTraceTimelineViewer() {
+  return mockDefault(function MockTraceTimelineViewer(props) {
+    capturedTimelineProps = props;
     return <div data-testid="mock-timeline-viewer">TraceTimelineViewer</div>;
   });
 });
@@ -244,6 +246,7 @@ describe('<TracePage>', () => {
     capturedHeaderProps = {};
     capturedArchiveNotifierProps = {};
     capturedGraphProps = {};
+    capturedTimelineProps = {};
     defaultProps.focusUiFindMatches.mockClear();
     mockTraceTimelineStore.focusUiFindMatches.mockClear();
   });
@@ -345,6 +348,74 @@ describe('<TracePage>', () => {
         capturedHeaderProps.prevResult();
         expect(trackPrevSpy).toHaveBeenCalledTimes(1);
         expect(ScrollManager.mock.results[0].value.scrollToPrevVisibleSpan).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('current find match', () => {
+      let clientHeightSpy;
+      let sm;
+
+      beforeEach(() => {
+        clientHeightSpy = jest.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(100);
+      });
+
+      afterEach(() => {
+        clientHeightSpy.mockRestore();
+      });
+
+      const renderWithSearch = (uiFind = 'jdbc') => {
+        const result = render(<TracePage {...defaultProps} uiFind={uiFind} />);
+        sm = ScrollManager.mock.results[0].value;
+        return result;
+      };
+
+      it('is null until the search bar navigates to a match', () => {
+        renderWithSearch();
+        expect(capturedTimelineProps.currentFindMatchID).toBeNull();
+      });
+
+      it('follows the match that next and previous navigate to', () => {
+        renderWithSearch();
+        sm.scrollToNextVisibleSpan.mockReturnValueOnce('span-b');
+        act(() => capturedHeaderProps.nextResult());
+        expect(capturedTimelineProps.currentFindMatchID).toBe('span-b');
+
+        sm.scrollToPrevVisibleSpan.mockReturnValueOnce('span-a');
+        act(() => capturedHeaderProps.prevResult());
+        expect(capturedTimelineProps.currentFindMatchID).toBe('span-a');
+      });
+
+      it('keeps the current match when there is no further match to navigate to', () => {
+        renderWithSearch();
+        sm.scrollToNextVisibleSpan.mockReturnValueOnce('span-b');
+        act(() => capturedHeaderProps.nextResult());
+        sm.scrollToNextVisibleSpan.mockReturnValueOnce(undefined);
+        act(() => capturedHeaderProps.nextResult());
+        expect(capturedTimelineProps.currentFindMatchID).toBe('span-b');
+      });
+
+      it('resets when the search changes or is cleared', () => {
+        const { rerender } = renderWithSearch();
+        sm.scrollToNextVisibleSpan.mockReturnValueOnce('span-b');
+        act(() => capturedHeaderProps.nextResult());
+
+        rerender(<TracePage {...defaultProps} uiFind="component=jdbc" />);
+        expect(capturedTimelineProps.currentFindMatchID).toBeNull();
+
+        sm.scrollToNextVisibleSpan.mockReturnValueOnce('span-c');
+        act(() => capturedHeaderProps.nextResult());
+        rerender(<TracePage {...defaultProps} uiFind={undefined} />);
+        expect(capturedTimelineProps.currentFindMatchID).toBeNull();
+      });
+
+      it('resets when the trace view changes', () => {
+        renderWithSearch();
+        sm.scrollToNextVisibleSpan.mockReturnValueOnce('span-b');
+        act(() => capturedHeaderProps.nextResult());
+
+        act(() => capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceStatistics));
+        act(() => capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceTimelineViewer));
+        expect(capturedTimelineProps.currentFindMatchID).toBeNull();
       });
     });
   });

@@ -205,6 +205,8 @@ export function TracePageImpl(props: TProps) {
   // onSearchResults. Every other view uses the span matches computed below in this component,
   // which keeps the header count working for views without search wiring (flamegraph, logs).
   const [findMatches, setFindMatches] = useState<Set<string> | TNil>(null);
+  // The span that the search bar's previous / next buttons last navigated to.
+  const [currentFindMatchID, setCurrentFindMatchID] = useState<string | null>(null);
 
   // Read the trace's own verdict rather than re-deriving it here. It is computed
   // once from each span's cached genAIKind, so re-scanning attributes is both
@@ -330,7 +332,12 @@ export function TracePageImpl(props: TProps) {
   const setTraceView = useCallback((newViewType: ETraceViewType) => {
     setViewType(newViewType);
     setFindMatches(null);
+    setCurrentFindMatchID(null);
   }, []);
+
+  useEffect(() => {
+    setCurrentFindMatchID(null);
+  }, [uiFind]);
 
   useEffect(() => {
     if (traceIsGenAI) {
@@ -360,12 +367,14 @@ export function TracePageImpl(props: TProps) {
 
   const nextResult = useCallback(() => {
     trackNextMatch();
-    scrollManagerRef.current.scrollToNextVisibleSpan();
+    const spanID = scrollManagerRef.current.scrollToNextVisibleSpan();
+    if (spanID) setCurrentFindMatchID(spanID);
   }, []);
 
   const prevResult = useCallback(() => {
     trackPrevMatch();
-    scrollManagerRef.current.scrollToPrevVisibleSpan();
+    const spanID = scrollManagerRef.current.scrollToPrevVisibleSpan();
+    if (spanID) setCurrentFindMatchID(spanID);
   }, []);
 
   const onDetailPanelModeToggle = useCallback(() => {
@@ -447,6 +456,7 @@ export function TracePageImpl(props: TProps) {
         registerAccessors={sm.setAccessors}
         scrollToFirstVisibleSpan={sm.scrollToFirstVisibleSpan}
         findMatchesIDs={spanFindMatches}
+        currentFindMatchID={currentFindMatchID}
         pageHeaderHeight={headerHeight}
         trace={traceData}
         criticalPath={criticalPath}
@@ -462,6 +472,7 @@ export function TracePageImpl(props: TProps) {
         registerAccessors={sm.setAccessors}
         scrollToFirstVisibleSpan={sm.scrollToFirstVisibleSpan}
         findMatchesIDs={spanFindMatches}
+        currentFindMatchID={currentFindMatchID}
         pageHeaderHeight={headerHeight}
         trace={traceData}
         criticalPath={criticalPath}
