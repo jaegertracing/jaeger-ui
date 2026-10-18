@@ -71,8 +71,6 @@ const TraceFlamegraph = ({ trace }: TraceFlamegraphProps) => {
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
   const fullFlameData = useMemo(() => (trace ? convertOtelTraceToFlameData(trace) : null), [trace]);
-  // Collapsed nodes belong to one response. On reload, show the fresh graph
-  // without changing the selected display mode or search query.
   const collapsedRoot = collapsedSelection?.trace === trace ? collapsedSelection.node : null;
   const flameData = collapsedRoot || fullFlameData;
   const tableData = useMemo(() => (trace ? generateTableData(trace) : []), [trace]);

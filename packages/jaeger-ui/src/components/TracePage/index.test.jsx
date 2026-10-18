@@ -1291,6 +1291,21 @@ describe('<TracePage>', () => {
       expect(capturedHeaderProps.viewType).toBe(ETraceViewType.GenAITimelineViewer);
     });
 
+    it('switches to the GenAI view when a reload adds GenAI spans and no view was picked', () => {
+      useTraceMock.mockReturnValue({ data: trace, isPending: false, isError: false, error: null });
+      const { rerender } = render(<TracePage {...defaultProps} />);
+      expect(capturedHeaderProps.viewType).toBe(ETraceViewType.TraceTimelineViewer);
+
+      const refreshedTrace = Object.create(trace);
+      Object.defineProperties(refreshedTrace, {
+        spans: { value: [...trace.spans] },
+        isGenAITrace: { value: true },
+      });
+      useTraceMock.mockReturnValue({ data: refreshedTrace, isPending: false, isError: false, error: null });
+      rerender(<TracePage {...defaultProps} />);
+      expect(capturedHeaderProps.viewType).toBe(ETraceViewType.GenAITimelineViewer);
+    });
+
     it('selects the default view when a different GenAI trace loads', () => {
       useTraceMock.mockReturnValue({ data: trace, isPending: false, isError: false, error: null });
       const { rerender } = render(<TracePage {...defaultProps} />);

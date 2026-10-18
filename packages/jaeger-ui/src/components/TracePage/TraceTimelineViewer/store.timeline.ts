@@ -53,8 +53,6 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
   clearServiceFilter: () => set({ prunedServices: new Set<string>() }),
   setTrace: (trace: IOtelTrace, uiFind?: string | TNil) => {
     const { traceID: currentTraceID, traceSpans } = get();
-    // Reload keeps the cached partial trace visible while fetching. Reapply
-    // find-focus state when fresh spans arrive, even if the ID is unchanged.
     if (trace.traceID === currentTraceID && trace.spans === traceSpans) return;
 
     const detailPanelMode = useLayoutPrefsStore.getState().detailPanelMode;
@@ -64,8 +62,8 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
       traceSpans: trace.spans,
     };
 
-    // Span IDs and service names remain stable on same-ID reloads. Keep manual
-    // interactions; only a different trace starts with empty view state.
+    // Span IDs and service names are stable across refetches of the same trace,
+    // so the user's collapse, detail and filter selections stay valid.
     if (trace.traceID !== currentTraceID) {
       Object.assign(base, {
         childrenHiddenIDs: new Set<string>(),

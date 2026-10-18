@@ -35,9 +35,6 @@ export function _getTracePageHeaderPartsImpl(spans: ReadonlyArray<Span>): TraceP
   };
 }
 
-// Cache the last call only, compared by spans-array identity. Each fetch builds
-// a new spans array, so a reload always recomputes the header instead of
-// reusing the previous result for the same trace ID.
 const getTracePageHeaderParts = memoizeOne(_getTracePageHeaderPartsImpl);
 
 export function getTraceName(spans: ReadonlyArray<Span>): string {

@@ -220,7 +220,7 @@ export function TracePageImpl(props: TProps) {
   const viewRangeRef = useRef(viewRange);
   viewRangeRef.current = viewRange;
   const prevIdRef = useRef(id);
-  const autoViewTraceIdRef = useRef<string | null>(null);
+  const userPickedViewRef = useRef(false);
   const filterSpansMemo = useRef(memoizeOne(filterSpans)).current;
 
   const scrollManagerRef = useRef<ScrollManager>(new ScrollManager(traceData, { scrollBy, scrollTo }));
@@ -292,6 +292,7 @@ export function TracePageImpl(props: TProps) {
   useEffect(() => {
     if (prevIdRef.current !== id) {
       prevIdRef.current = id;
+      userPickedViewRef.current = false;
       updateViewRangeTime(0, 1);
       clearSearch();
       setCriticalPathErrorDismissed(false);
@@ -332,11 +333,17 @@ export function TracePageImpl(props: TProps) {
     setFindMatches(null);
   }, []);
 
+  const onUserViewChange = useCallback(
+    (newViewType: ETraceViewType) => {
+      userPickedViewRef.current = true;
+      setTraceView(newViewType);
+    },
+    [setTraceView]
+  );
+
   useEffect(() => {
-    // Choose the default view once per trace. A same-ID reload can discover
-    // GenAI spans, but must not override the user's current view.
-    if (!traceData || autoViewTraceIdRef.current === traceData.traceID) return;
-    autoViewTraceIdRef.current = traceData.traceID;
+    // A view the user picked from the dropdown is not overridden by the default.
+    if (userPickedViewRef.current) return;
     if (traceIsGenAI) {
       setTraceView(ETraceViewType.GenAITimelineViewer);
     } else {
@@ -344,7 +351,7 @@ export function TracePageImpl(props: TProps) {
         vt === ETraceViewType.GenAITimelineViewer ? ETraceViewType.TraceTimelineViewer : vt
       );
     }
-  }, [traceData, traceIsGenAI, setTraceView]);
+  }, [traceIsGenAI, setTraceView]);
 
   const archiveTrace = useCallback(() => {
     submitTraceToArchiveFn(id);
@@ -425,7 +432,7 @@ export function TracePageImpl(props: TProps) {
     onDetailPanelModeToggle,
     onSlimViewClicked: toggleSlimView,
     onTimelineToggle,
-    onTraceViewChange: setTraceView,
+    onTraceViewChange: onUserViewChange,
     prevResult,
     ref: searchBarRef,
     resultCount: findCount,

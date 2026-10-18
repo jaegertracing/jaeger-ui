@@ -53,9 +53,9 @@ export default function TraceStatisticsHeader(props: Props) {
         : grouped;
       return generateColor(rows, optionsNameSelector3.get(valueNameSelector3) ?? '', checkboxStatus);
     };
-    // Reload preserves the header's selections. Rebuild both independent table
-    // copies from the new response; selection handlers own updates between reloads.
     handler(buildTable(), buildTable(), valueNameSelector1, valueNameSelector2);
+    // The selectors are read here but are not dependencies: their change
+    // handlers rebuild the table themselves.
     // oxlint-disable-next-line react/exhaustive-deps
   }, [trace]);
 
