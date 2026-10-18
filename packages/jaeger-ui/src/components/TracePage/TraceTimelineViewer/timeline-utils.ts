@@ -15,7 +15,7 @@ export function shouldDisableCollapse(
   return allSpans.filter(s => s.hasChildren).every(p => hiddenSpansIds.has(p.spanID));
 }
 
-type FocusedFindRowStates = {
+export type FocusedFindRowStates = {
   childrenHiddenIDs: Set<string>;
   detailStates: Map<string, DetailState>;
   shouldScrollToFirstUiFindMatch: boolean;
@@ -69,6 +69,28 @@ export function calculateFocusedFindRowStates(
   }
 
   return { childrenHiddenIDs, detailStates, shouldScrollToFirstUiFindMatch };
+}
+
+// Computes the ancestor IDs of newly arrived matching spans that need to be revealed on same-ID reload.
+export function findNewlyRevealedAncestors(
+  uiFind: string,
+  newSpans: ReadonlyArray<IOtelSpan>,
+  allSpans: ReadonlyArray<IOtelSpan>
+): Set<string> {
+  const spansMap = new Map<string, IOtelSpan>();
+  allSpans.forEach(span => spansMap.set(span.spanID, span));
+
+  const revealed = new Set<string>();
+  const matchedNewIds = filterSpans(uiFind, newSpans);
+  if (matchedNewIds && matchedNewIds.size) {
+    matchedNewIds.forEach(spanID => {
+      const span = spansMap.get(spanID);
+      if (span) {
+        spanAncestorIds(span).forEach(ancestorID => revealed.add(ancestorID));
+      }
+    });
+  }
+  return revealed;
 }
 
 // Returns the currently selected span ID in side-panel mode (first key of detailStates), or null.
