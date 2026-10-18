@@ -20,24 +20,6 @@ const defaultOptions = {
   credentials: 'same-origin',
 };
 
-describe('archiveTrace', () => {
-  it('POSTs the specified id', () => {
-    JaegerAPI.archiveTrace('trace-id');
-    expect(fetchMock).toHaveBeenLastCalledWith(`${DEFAULT_API_ROOT}archive/trace-id`, {
-      ...defaultOptions,
-      method: 'POST',
-    });
-  });
-});
-
-describe('fetchDecoration', () => {
-  it('GETs the specified url', () => {
-    const url = 'foo.bar.baz';
-    JaegerAPI.fetchDecoration(url);
-    expect(fetchMock).toHaveBeenLastCalledWith(url, defaultOptions);
-  });
-});
-
 describe('fetchDeepDependencyGraph', () => {
   it('GETs the specified query', () => {
     const query = { service: 'serviceName', start: 400, end: 800 };
