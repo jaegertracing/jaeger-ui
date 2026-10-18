@@ -231,6 +231,7 @@ function parseSpans(data: TracesDataWire): ParsedSpanData {
         }));
         const attributesInfo = deduplicateAttributes(decodedAttributes);
         const attributes = makeAttributes(orderAttributes(attributesInfo.attributes, topTagPrefixes));
+        const backendWarnings = attributes.getValue('@jaeger@warnings');
         const wireSpanID = span.spanId.toLowerCase();
         const duplicateCount = spanIdCounts.get(wireSpanID) ?? 0;
         spanIdCounts.set(wireSpanID, duplicateCount + 1);
@@ -265,7 +266,12 @@ function parseSpans(data: TracesDataWire): ParsedSpanData {
           childSpans: [],
           relativeStartTime: 0 as Microseconds,
           inboundLinks: [],
-          warnings: attributesInfo.warnings,
+          warnings: [
+            ...(Array.isArray(backendWarnings)
+              ? backendWarnings.filter((warning): warning is string => typeof warning === 'string')
+              : []),
+            ...attributesInfo.warnings,
+          ],
         };
         spans.push(parsedSpan);
         if (!hasUsableStartTime) {

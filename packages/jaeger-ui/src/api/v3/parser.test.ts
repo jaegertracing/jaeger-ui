@@ -48,6 +48,54 @@ function traces(spans: SpanWire[], serviceName = 'svc-a'): TracesDataWire {
 }
 
 describe('parseOtelTrace', () => {
+  it('exposes backend diagnostics alongside parser warnings without changing the wire attributes', () => {
+    const trace = parseOtelTrace(
+      refinedTracesData.parse(
+        traces([
+          makeSpan({
+            attributes: [
+              {
+                key: '@jaeger@warnings',
+                value: {
+                  arrayValue: {
+                    values: [
+                      { stringValue: 'Clock skew adjustment disabled' },
+                      { stringValue: 'Clock skew adjustment disabled' },
+                      { intValue: '42' },
+                    ],
+                  },
+                },
+              },
+              { key: 'duplicate', value: { stringValue: 'value' } },
+              { key: 'duplicate', value: { stringValue: 'value' } },
+            ],
+          }),
+        ])
+      )
+    )!;
+    expect(trace.spans[0].warnings).toEqual([
+      'Clock skew adjustment disabled',
+      'Clock skew adjustment disabled',
+      'Duplicate tag key="duplicate" value="value"',
+    ]);
+    expect(trace.spans[0].attributes.getValue('@jaeger@warnings')).toEqual([
+      'Clock skew adjustment disabled',
+      'Clock skew adjustment disabled',
+      42,
+    ]);
+  });
+
+  it('ignores non-array backend diagnostics', () => {
+    const trace = parseOtelTrace(
+      traces([
+        makeSpan({
+          attributes: [{ key: '@jaeger@warnings', value: { stringValue: 'not a warning list' } }],
+        }),
+      ])
+    )!;
+    expect(trace.spans[0].warnings).toEqual([]);
+  });
+
   it('returns null when the payload has no spans', () => {
     expect(parseOtelTrace({})).toBeNull();
     expect(parseOtelTrace(traces([]))).toBeNull();
