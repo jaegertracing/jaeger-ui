@@ -293,6 +293,22 @@ describe('<TracePage>', () => {
       act(() => capturedHeaderProps.onReloadTrace());
 
       expect(mockReloadBackendTrace).toHaveBeenCalledWith(trace.traceID);
+      expect(capturedHeaderProps.reloadingTrace).toBeFalsy();
+      useTraceMock.mockReturnValue({
+        data: trace,
+        isPending: false,
+        isError: false,
+        isFetching: true,
+        error: null,
+      });
+      rerender(
+        <Provider store={store}>
+          <MemoryRouter initialEntries={[`${location.pathname}${location.search}`]}>
+            <TracePageRoute params={{ id: trace.traceID }} location={location} />
+          </MemoryRouter>
+        </Provider>
+      );
+      expect(capturedHeaderProps.reloadingTrace).toBe(true);
       expect(scrollPageMod.cancel).not.toHaveBeenCalled();
       expect(scrollTo).not.toHaveBeenCalled();
       expect(capturedHeaderProps.viewRange.time.current).toEqual([0.2, 0.8]);

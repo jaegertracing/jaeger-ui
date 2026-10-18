@@ -47,6 +47,7 @@ type TracePageHeaderEmbedProps = {
   nextResult: () => void;
   onArchiveClicked: () => void;
   onReloadTrace?: () => void;
+  reloadingTrace?: boolean;
   onDetailPanelModeToggle: () => void;
   onSlimViewClicked: () => void;
   onTimelineToggle: () => void;
@@ -128,6 +129,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     nextResult,
     onArchiveClicked,
     onReloadTrace,
+    reloadingTrace,
     onDetailPanelModeToggle,
     onSlimViewClicked,
     onTimelineToggle,
@@ -197,6 +199,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
               type="link"
               size="small"
               htmlType="button"
+              loading={reloadingTrace}
               onClick={event => {
                 event.stopPropagation();
                 onReloadTrace();

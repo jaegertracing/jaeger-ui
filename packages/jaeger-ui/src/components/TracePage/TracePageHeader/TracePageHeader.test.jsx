@@ -241,6 +241,25 @@ describe('<TracePageHeader>', () => {
     expect(onSlimViewClicked).toHaveBeenCalledOnce();
   });
 
+  it('disables the reload action while a reload is in flight', () => {
+    const incompleteTrace = Object.create(defaultProps.trace);
+    Object.defineProperty(incompleteTrace, 'orphanSpanCount', { value: 3 });
+    const onReloadTrace = jest.fn();
+    renderWithRouter(
+      <TracePageHeader
+        {...defaultProps}
+        trace={incompleteTrace}
+        onReloadTrace={onReloadTrace}
+        reloadingTrace
+      />
+    );
+
+    const button = screen.getByRole('button', { name: /Reload trace/ });
+    expect(button).toHaveClass('ant-btn-loading');
+    fireEvent.click(button);
+    expect(onReloadTrace).not.toHaveBeenCalled();
+  });
+
   it('hides the reload action when no reload handler is provided', () => {
     const incompleteTrace = Object.create(defaultProps.trace);
     Object.defineProperty(incompleteTrace, 'orphanSpanCount', { value: 3 });

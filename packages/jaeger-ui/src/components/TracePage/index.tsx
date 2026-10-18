@@ -166,6 +166,7 @@ export function TracePageImpl(props: TProps) {
     data: traceData,
     isPending: traceLoading,
     isError: traceError,
+    isFetching: traceFetching,
     error: traceQueryError,
   } = useTrace(id);
 
@@ -420,6 +421,7 @@ export function TracePageImpl(props: TProps) {
     nextResult,
     onArchiveClicked: archiveTrace,
     onReloadTrace,
+    reloadingTrace: traceFetching,
     onDetailPanelModeToggle,
     onSlimViewClicked: toggleSlimView,
     onTimelineToggle,
