@@ -48,6 +48,11 @@ export default function readJsonFile(fileList: { file: File }): Promise<string> 
         Array.isArray(traceObj) &&
         traceObj.every(obj => obj !== null && typeof obj === 'object' && 'resourceSpans' in obj)
       ) {
+        if (!traceObj.every(obj => Array.isArray(obj.resourceSpans))) {
+          reject(new Error('Invalid OTLP trace format: resourceSpans must be an array'));
+          return;
+        }
+
         const mergedResourceSpans = traceObj.reduce((acc, obj) => {
           acc.push(...obj.resourceSpans);
           return acc;
@@ -62,6 +67,11 @@ export default function readJsonFile(fileList: { file: File }): Promise<string> 
       }
 
       if ('resourceSpans' in traceObj) {
+        if (!Array.isArray(traceObj.resourceSpans)) {
+          reject(new Error('Invalid OTLP trace format: resourceSpans must be an array'));
+          return;
+        }
+
         JaegerAPI.transformOTLP(traceObj)
           .then((result: string) => {
             resolve(result);
