@@ -102,4 +102,21 @@ describe('JaegerClient.fetchTrace wire contract', () => {
       vi.useRealTimers();
     }
   });
+
+  it('aborts a pending trace request when the caller cancels it', async () => {
+    const controller = new AbortController();
+    const abortError = new DOMException('Caller cancelled request', 'AbortError');
+    mockFetch.mockImplementation(
+      (_url: string, options: RequestInit) =>
+        new Promise((_resolve, reject) => {
+          options.signal?.addEventListener('abort', () => reject(options.signal?.reason));
+        })
+    );
+
+    const pending = client.fetchTrace('0123456789abcdef0123456789abcdef', controller.signal);
+    controller.abort(abortError);
+
+    await expect(pending).rejects.toBe(abortError);
+    expect(mockFetch.mock.calls[0][1].signal.aborted).toBe(true);
+  });
 });

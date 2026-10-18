@@ -151,12 +151,13 @@ export class JaegerClient {
    * OTLP fields at the network boundary. Envelope handling is kept separate from
    * enrichment so future streaming can be added without touching the parser.
    */
-  async fetchTrace(traceId: string): Promise<TracesDataWire> {
+  async fetchTrace(traceId: string, signal?: AbortSignal): Promise<TracesDataWire> {
     traceIdHex.parse(traceId);
     // Trace queries buffer storage and archive reads before sending headers and can exceed 10 seconds.
     const response = await this.fetchWithTimeout(
       `${this.apiRoot}/traces/${encodeURIComponent(traceId)}`,
-      null
+      null,
+      signal
     );
     if (!response.ok) {
       throw new Error(`Failed to fetch trace ${traceId}: ${response.status} ${response.statusText}`);
@@ -170,18 +171,25 @@ export class JaegerClient {
    * Fetch with timeout support using AbortController.
    * @param url - The URL to fetch
    * @param timeout - Timeout in milliseconds (default: 10 seconds), or null for no deadline
+   * @param signal - Optional caller signal used to cancel the request
    * @returns Promise<Response>
    * @throws Error if request times out or network error occurs
    */
-  private async fetchWithTimeout(url: string, timeout: number | null = 10000): Promise<Response> {
+  private async fetchWithTimeout(
+    url: string,
+    timeout: number | null = 10000,
+    signal?: AbortSignal
+  ): Promise<Response> {
     const controller = new AbortController();
     const timeoutId = timeout === null ? undefined : setTimeout(() => controller.abort(), timeout);
+    const requestSignal = signal ? AbortSignal.any([signal, controller.signal]) : controller.signal;
 
     try {
-      const response = await fetch(url, { signal: controller.signal });
+      const response = await fetch(url, { signal: requestSignal });
       return response;
     } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
+      const timedOut = controller.signal.aborted && requestSignal.reason === controller.signal.reason;
+      if (error instanceof Error && error.name === 'AbortError' && timedOut) {
         throw new Error(`Request timeout after ${timeout}ms`, { cause: error });
       }
       throw error;

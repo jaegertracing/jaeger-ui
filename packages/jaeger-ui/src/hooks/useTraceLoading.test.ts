@@ -99,6 +99,7 @@ describe('useTrace', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data?.traceID).toBe(otelTrace.traceID);
+    expect(mockFetchTrace).toHaveBeenCalledWith(otelTrace.traceID, expect.any(AbortSignal));
   });
 
   it('returns an error when the API rejects', async () => {
@@ -189,6 +190,7 @@ describe('useTraces', () => {
     });
     const entry = result.current.get(otelTrace.traceID);
     expect(entry?.data?.traceID).toBe(otelTrace.traceID);
+    expect(mockFetchTrace).toHaveBeenCalledWith(otelTrace.traceID, expect.any(AbortSignal));
   });
 
   it('returns ERROR state when fetch fails', async () => {
