@@ -6,7 +6,7 @@ import _set from 'lodash/set';
 import { _processed, getDecoration as getDecorationImpl } from './path-agnostic-decorations';
 import * as getConfig from '../utils/config/get-config';
 import stringSupplant from '../utils/stringSupplant';
-import JaegerAPI from '../api/jaeger';
+import { jaegerClient } from '../api/v3/client';
 
 vi.mock('lru-memoize', () => mockDefault(() => x => x));
 
@@ -58,7 +58,7 @@ describe('getDecoration', () => {
         },
       ],
     });
-    fetchDecorationSpy = jest.spyOn(JaegerAPI, 'fetchDecoration').mockImplementation(
+    fetchDecorationSpy = jest.spyOn(jaegerClient, 'fetchDecoration').mockImplementation(
       () =>
         new Promise((res, rej) => {
           resolves.push(res);
