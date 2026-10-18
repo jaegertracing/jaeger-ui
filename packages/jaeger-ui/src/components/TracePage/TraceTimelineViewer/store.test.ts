@@ -352,6 +352,42 @@ describe('trace timeline zustand stores', () => {
         expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('span-x')).toBe(true);
       });
 
+      it('clears selected span on same-ID reload when dropped in side-panel mode', () => {
+        useLayoutPrefsStore.setState({ detailPanelMode: 'sidepanel' });
+        const spanA = makeSpan({ spanID: 'span-a' });
+        const spanB = makeSpan({ spanID: 'span-b' });
+        const trace = makeTrace('same', [spanA, spanB]);
+        useTraceTimelineStore.getState().setTrace(trace);
+        useTraceTimelineStore.setState({
+          detailStates: new Map([['span-b', DetailState.forDetailPanelMode('sidepanel')]]),
+        });
+        expect(useTraceTimelineStore.getState().detailStates.has('span-b')).toBe(true);
+
+        // Reload without span-b
+        const refreshed = makeTrace('same', [spanA]);
+        useTraceTimelineStore.getState().setTrace(refreshed);
+
+        expect(useTraceTimelineStore.getState().detailStates.size).toBe(0);
+      });
+
+      it('preserves selected span on same-ID reload when still present in side-panel mode', () => {
+        useLayoutPrefsStore.setState({ detailPanelMode: 'sidepanel' });
+        const spanA = makeSpan({ spanID: 'span-a' });
+        const spanB = makeSpan({ spanID: 'span-b' });
+        const trace = makeTrace('same', [spanA, spanB]);
+        useTraceTimelineStore.getState().setTrace(trace);
+        useTraceTimelineStore.setState({
+          detailStates: new Map([['span-b', DetailState.forDetailPanelMode('sidepanel')]]),
+        });
+
+        // Reload with span-b still present plus span-c added
+        const spanC = makeSpan({ spanID: 'span-c' });
+        const refreshed = makeTrace('same', [spanA, spanB, spanC]);
+        useTraceTimelineStore.getState().setTrace(refreshed);
+
+        expect(useTraceTimelineStore.getState().detailStates.has('span-b')).toBe(true);
+      });
+
       it.each(['inline', 'sidepanel'] as const)(
         'reveals a matching child arriving on same-ID reload in %s mode',
         async detailPanelMode => {
