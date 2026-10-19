@@ -33,6 +33,7 @@ import './TracePageHeader.css';
 import ExternalLinks from '../../common/ExternalLinks';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import TraceId from '../../common/TraceId';
+import GenAIExecutionSummary from './GenAIExecutionSummary';
 
 type TracePageHeaderEmbedProps = {
   canCollapse: boolean;
@@ -45,6 +46,8 @@ type TracePageHeaderEmbedProps = {
   linkToStandalone: string;
   nextResult: () => void;
   onArchiveClicked: () => void;
+  onReloadTrace?: () => void;
+  reloadingTrace?: boolean;
   onDetailPanelModeToggle: () => void;
   onSlimViewClicked: () => void;
   onTimelineToggle: () => void;
@@ -105,21 +108,10 @@ export const HEADER_ITEMS = [
     renderer: (trace: IOtelTrace) => trace.spans.length,
   },
   {
-    key: 'incomplete',
+    key: 'genai-calls',
     label: null,
-    renderer: (trace: IOtelTrace) => {
-      const orphanCount = trace.orphanSpanCount ?? 0;
-      if (orphanCount === 0) return null;
-      const tooltipText = getIncompleteTraceTooltip(orphanCount);
-      return (
-        <Tooltip title={tooltipText}>
-          <span className="TracePageHeader--incompleteTag">
-            <IoWarning className="TracePageHeader--incompleteIcon" />
-            Incomplete
-          </span>
-        </Tooltip>
-      );
-    },
+    renderer: (trace: IOtelTrace) =>
+      trace.isGenAITrace ? <GenAIExecutionSummary spans={trace.spans} /> : null,
   },
 ];
 
@@ -136,6 +128,8 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     linkToStandalone,
     nextResult,
     onArchiveClicked,
+    onReloadTrace,
+    reloadingTrace,
     onDetailPanelModeToggle,
     onSlimViewClicked,
     onTimelineToggle,
@@ -173,10 +167,49 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     }).filter(item => item.value !== null);
 
   const traceShortID = trace.traceID.slice(0, 7);
+  const orphanCount = trace.orphanSpanCount ?? 0;
 
   const title = (
     <h1 className={`TracePageHeader--title ${canCollapse ? 'is-collapsible' : ''}`}>
-      <TraceName traceName={trace.traceName} /> <TraceId traceId={trace.traceID} />
+      {canCollapse ? (
+        <button
+          className="TracePageHeader--titleLink"
+          type="button"
+          onClick={onSlimViewClicked}
+          role="switch"
+          aria-checked={!slimView}
+        >
+          <IoChevronForward className={`TracePageHeader--detailToggle ${!slimView ? 'is-expanded' : ''}`} />
+          <TraceName traceName={trace.traceName} />
+        </button>
+      ) : (
+        <TraceName traceName={trace.traceName} />
+      )}{' '}
+      <TraceId traceId={trace.traceID} />
+      {orphanCount > 0 && (
+        <span className="TracePageHeader--incompleteActions" data-testid="header-item-incomplete">
+          <Tooltip title={getIncompleteTraceTooltip(orphanCount)}>
+            <span className="TracePageHeader--incompleteTag">
+              <IoWarning className="TracePageHeader--incompleteIcon" />
+              Incomplete
+            </span>
+          </Tooltip>
+          {onReloadTrace && (
+            <Button
+              type="link"
+              size="small"
+              htmlType="button"
+              loading={reloadingTrace}
+              onClick={event => {
+                event.stopPropagation();
+                onReloadTrace();
+              }}
+            >
+              Reload trace
+            </Button>
+          )}
+        </span>
+      )}
     </h1>
   );
 
@@ -190,19 +223,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           </Link>
         )}
         {links && links.length > 0 && <ExternalLinks links={links} />}
-        {canCollapse ? (
-          <a
-            className="TracePageHeader--titleLink"
-            onClick={onSlimViewClicked}
-            role="switch"
-            aria-checked={!slimView}
-          >
-            <IoChevronForward className={`TracePageHeader--detailToggle ${!slimView ? 'is-expanded' : ''}`} />
-            {title}
-          </a>
-        ) : (
-          title
-        )}
+        {title}
         <TracePageSearchBar
           clearSearch={clearSearch}
           focusUiFindMatches={focusUiFindMatches}

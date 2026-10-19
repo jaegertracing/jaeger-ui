@@ -72,4 +72,34 @@ describe('JaegerClient.fetchTrace wire contract', () => {
     const promise = client.fetchTrace('0123456789abcdef0123456789abcdef');
     await expect(promise).rejects.toThrow('Failed to fetch trace');
   });
+
+  it('allows slow trace headers and body without applying the metadata timeout', async () => {
+    vi.useFakeTimers();
+    try {
+      mockFetch.mockImplementation(
+        (_url: string, options: RequestInit) =>
+          new Promise((resolve, reject) => {
+            options.signal?.addEventListener('abort', () =>
+              reject(new DOMException('Aborted', 'AbortError'))
+            );
+            setTimeout(
+              () =>
+                resolve({
+                  ok: true,
+                  json: () => new Promise(body => setTimeout(() => body(capture), 15000)),
+                }),
+              15000
+            );
+          })
+      );
+      const pending = client.fetchTrace('0123456789abcdef0123456789abcdef');
+      await vi.advanceTimersByTimeAsync(10000);
+      expect(mockFetch.mock.calls[0][1].signal.aborted).toBe(false);
+      await vi.advanceTimersByTimeAsync(20000);
+      await expect(pending).resolves.toEqual(capture.result);
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

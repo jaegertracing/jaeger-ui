@@ -43,29 +43,30 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .TracePageHeader--titleLink {
-  align-items: center;
+  background: none;
+  border: 0;
   color: var(--text-primary);
-  display: flex;
-  flex: 1;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  text-align: left;
 }
 
 .TracePageHeader--titleLink:hover * {
   text-decoration: underline;
 }
 
-.TracePageHeader--titleLink:hover > *,
-.TracePageHeader--titleLink:hover small {
-  text-decoration: none;
-}
-
 .TracePageHeader--detailToggle {
   font-size: 2rem;
-  margin: 0 12px;
+  left: 12px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
   transition: transform 0.07s ease-out;
 }
 
 .TracePageHeader--detailToggle.is-expanded {
-  transform: rotate(90deg);
+  transform: translateY(-50%) rotate(90deg);
 }
 
 .TracePageHeader--title {
@@ -79,6 +80,8 @@ SPDX-License-Identifier: Apache-2.0
 
 .TracePageHeader--title.is-collapsible {
   margin-left: 0;
+  padding-left: 56px;
+  position: relative;
 }
 
 .TracePageHeader--overviewItems {
@@ -104,9 +107,82 @@ SPDX-License-Identifier: Apache-2.0
   font-weight: 500;
 }
 
+.TracePageHeader--incompleteActions {
+  display: inline-block;
+  font-size: 16px;
+  margin-left: 0.5em;
+  vertical-align: middle;
+}
+
+.TracePageHeader--incompleteActions .ant-btn {
+  font-size: inherit;
+  vertical-align: middle;
+}
+
 .TracePageHeader--incompleteIcon {
   font-size: 1em;
   margin-right: 0.25em;
   margin-top: -0.2em;
   vertical-align: middle;
+}
+
+.TracePageHeader--genAIExecutionButton {
+  height: auto;
+  padding: 0;
+}
+
+.TracePageHeader--genAIExecutionButton:hover,
+.TracePageHeader--genAIExecutionButton:focus-visible {
+  color: var(--interactive-primary);
+}
+
+.TracePageHeader--genAIExecutionLabel {
+  color: var(--text-muted);
+}
+
+.TracePageHeader--genAIExecutionCount {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.TracePageHeader--genAIExecutionButton:hover .TracePageHeader--genAIExecutionLabel,
+.TracePageHeader--genAIExecutionButton:focus-visible .TracePageHeader--genAIExecutionLabel {
+  color: inherit;
+}
+
+.TracePageHeader--genAIExecutionButton:hover .TracePageHeader--genAIExecutionCount,
+.TracePageHeader--genAIExecutionButton:focus-visible .TracePageHeader--genAIExecutionCount {
+  color: inherit;
+}
+
+.TracePageHeader--genAIExecutionContent {
+  min-width: 14rem;
+}
+
+.TracePageHeader--genAIExecutionHeading {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.TracePageHeader--genAIExecutionHeading:not(:first-child) {
+  border-top: 1px solid var(--border-default);
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+.TracePageHeader--genAIExecutionList {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  margin: 0;
+}
+
+.TracePageHeader--genAIExecutionList dd {
+  margin-left: 1rem;
+  text-align: right;
+}
+
+.TracePageHeader--genAIExecutionFailures {
+  border-top: 1px solid var(--border-default);
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
 }
