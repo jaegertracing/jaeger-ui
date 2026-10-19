@@ -169,11 +169,12 @@ export class JaegerClient {
    * OTLP fields at the network boundary. Envelope handling is kept separate from
    * enrichment so future streaming can be added without touching the parser.
    */
-  async fetchTrace(traceId: string): Promise<TracesDataWire> {
+  async fetchTrace(traceId: string, signal?: AbortSignal): Promise<TracesDataWire> {
     traceIdHex.parse(traceId);
     // Trace queries buffer storage and archive reads before sending headers and can exceed 10 seconds.
     const response = await this.fetchWithTimeout(`${this.apiRoot}/traces/${encodeURIComponent(traceId)}`, {
       timeout: null,
+      signal,
     });
     if (!response.ok) {
       throw new Error(`Failed to fetch trace ${traceId}: ${response.status} ${response.statusText}`);
@@ -192,21 +193,38 @@ export class JaegerClient {
    */
   private async fetchWithTimeout(
     url: string,
-    { timeout = 10000, ...options }: RequestInit & { timeout?: number | null } = {}
+    { timeout = 10000, signal, ...options }: RequestInit & { timeout?: number | null } = {}
   ): Promise<Response> {
+    if (timeout === null) {
+      return fetch(url, { ...options, signal });
+    }
+
     const controller = new AbortController();
-    const timeoutId = timeout === null ? undefined : setTimeout(() => controller.abort(), timeout);
+    const forwardAbort = () => controller.abort(signal?.reason);
+    if (signal?.aborted) {
+      forwardAbort();
+    } else {
+      signal?.addEventListener('abort', forwardAbort, { once: true });
+    }
+    let timedOut = false;
+    const timeoutId = setTimeout(() => {
+      if (!controller.signal.aborted) {
+        timedOut = true;
+        controller.abort();
+      }
+    }, timeout);
 
     try {
       const response = await fetch(url, { ...options, signal: controller.signal });
       return response;
     } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
+      if (error instanceof Error && error.name === 'AbortError' && timedOut) {
         throw new Error(`Request timeout after ${timeout}ms`, { cause: error });
       }
       throw error;
     } finally {
       clearTimeout(timeoutId);
+      signal?.removeEventListener('abort', forwardAbort);
     }
   }
 }
