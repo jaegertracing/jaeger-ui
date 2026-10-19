@@ -32,6 +32,43 @@ describe('stringSupplant', () => {
     );
   });
 
+  it('formats zero with an add formatter', () => {
+    expect(stringSupplant('n: #{count | add 5}', { count: 0 })).toBe('n: 5');
+  });
+
+  it('formats zero with epoch_micros_to_date_iso', () => {
+    expect(stringSupplant('iso: #{startTime | epoch_micros_to_date_iso}', { startTime: 0 })).toBe(
+      'iso: 1970-01-01T00:00:00.000Z'
+    );
+  });
+
+  it('preserves numeric zero without formatters', () => {
+    expect(stringSupplant('n: #{count}', { count: 0 })).toBe('n: 0');
+  });
+
+  it('supports negative offsets with add formatter', () => {
+    expect(stringSupplant('n: #{count | add -5}', { count: 10 })).toBe('n: 5');
+    expect(stringSupplant('n: #{count | add -5}', { count: 0 })).toBe('n: -5');
+  });
+
+  it('formats empty string when applicable and preserves empty string without formatters', () => {
+    expect(stringSupplant('val: #{emptyStr}', { emptyStr: '' })).toBe('val: ');
+    expect(stringSupplant('val: #{emptyStr | pad_start 3 x}', { emptyStr: '' })).toBe('val: xxx');
+  });
+
+  it('omits null values without formatting', () => {
+    expect(stringSupplant('key: #{val}', { val: null })).toBe('key: ');
+    expect(stringSupplant('key: #{val | add 5}', { val: null })).toBe('key: ');
+  });
+
+  it('handles multiple independently formatted placeholders for the same parameter', () => {
+    expect(stringSupplant('from=#{time | add -10}&to=#{time | add 10}', { time: 50 })).toBe('from=40&to=60');
+  });
+
+  it('preserves unformatted value when invalid formatter is provided', () => {
+    expect(stringSupplant('val: #{count | invalid_formatter}', { count: 42 })).toBe('val: 42');
+  });
+
   describe('encodedStringSupplant', () => {
     it('encodes present values', () => {
       const reverse = str => str.split('').reverse().join('');
@@ -43,6 +80,18 @@ describe('stringSupplant', () => {
       const callCount = encodeFn.mock.calls.length;
       encodedStringSupplant('key0: #{value0}; key1: #{value1}', encodeFn, { value0 });
       expect(encodeFn.mock.calls.length).toBe(callCount + 1);
+    });
+
+    it('formats numeric zero and encodes it', () => {
+      const encodeFn = jest.fn(val => `[${val}]`);
+      expect(encodedStringSupplant('count: #{n | add 5}', encodeFn, { n: 0 })).toBe('count: [5]');
+      expect(encodedStringSupplant('count: #{n}', encodeFn, { n: 0 })).toBe('count: [0]');
+    });
+
+    it('does not encode null or missing values', () => {
+      const encodeFn = jest.fn(val => `[${val}]`);
+      expect(encodedStringSupplant('a: #{a}; b: #{b}', encodeFn, { a: null })).toBe('a: ; b: ');
+      expect(encodeFn).not.toHaveBeenCalled();
     });
 
     it('applies the formatter before encoding when both are provided', () => {
