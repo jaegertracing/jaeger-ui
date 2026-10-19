@@ -48,43 +48,9 @@ function traces(spans: SpanWire[], serviceName = 'svc-a'): TracesDataWire {
 }
 
 describe('parseOtelTrace', () => {
-  it('exposes backend diagnostics alongside parser warnings without changing the wire attributes', () => {
-    const trace = parseOtelTrace(
-      refinedTracesData.parse(
-        traces([
-          makeSpan({
-            attributes: [
-              {
-                key: '@jaeger@warnings',
-                value: {
-                  arrayValue: {
-                    values: [
-                      { stringValue: 'Clock skew adjustment disabled' },
-                      { stringValue: 'Clock skew adjustment disabled' },
-                      { intValue: '42' },
-                    ],
-                  },
-                },
-              },
-              { key: 'duplicate', value: { stringValue: 'value' } },
-              { key: 'duplicate', value: { stringValue: 'value' } },
-            ],
-          }),
-        ])
-      )
-    )!;
-    expect(trace.spans[0].warnings).toEqual([
-      'Clock skew adjustment disabled',
-      'Clock skew adjustment disabled',
-      'Duplicate tag key="duplicate" value="value"',
-    ]);
-    expect(trace.spans[0].attributes.getValue('@jaeger@warnings')).toEqual([
-      'Clock skew adjustment disabled',
-      'Clock skew adjustment disabled',
-      42,
-    ]);
-  });
-
+  // /api/traces returns this span with warnings: [message], because the backend's
+  // jptrace.GetWarnings reads a non-slice value as one warning. ClickHouse can
+  // store the attribute as a plain string, which legacy JSON has no form for.
   it('reads a string backend diagnostic as one warning', () => {
     const trace = parseOtelTrace(
       traces([
@@ -96,6 +62,7 @@ describe('parseOtelTrace', () => {
       ])
     )!;
     expect(trace.spans[0].warnings).toEqual(['failed to marshal slice attribute']);
+    expect(trace.spans[0].attributes.has('@jaeger@warnings')).toBe(false);
   });
 
   it('returns null when the payload has no spans', () => {

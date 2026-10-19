@@ -229,9 +229,13 @@ function parseSpans(data: TracesDataWire): ParsedSpanData {
           key: attribute.key,
           value: toAttributeValue(attribute.value),
         }));
-        const attributesInfo = deduplicateAttributes(decodedAttributes);
+        // Like the backend's v1 conversion, move the reserved warnings attribute
+        // into span.warnings so the UI doesn't show the messages twice.
+        const backendWarnings = decodedAttributes.find(({ key }) => key === '@jaeger@warnings')?.value;
+        const attributesInfo = deduplicateAttributes(
+          decodedAttributes.filter(({ key }) => key !== '@jaeger@warnings')
+        );
         const attributes = makeAttributes(orderAttributes(attributesInfo.attributes, topTagPrefixes));
-        const backendWarnings = attributes.getValue('@jaeger@warnings');
         const wireSpanID = span.spanId.toLowerCase();
         const duplicateCount = spanIdCounts.get(wireSpanID) ?? 0;
         spanIdCounts.set(wireSpanID, duplicateCount + 1);
