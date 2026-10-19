@@ -130,7 +130,10 @@ function insertPrunedPlaceholders(rows: RowState[], stats: PrunedStats): RowStat
     const count = childCounts[entry.rowIndex];
     if (!count) return;
     const parentRow = rows[entry.rowIndex];
-    const placeholderSpanIndex = placeholderSpanIndices[entry.rowIndex] ?? entry.maxSpanIndex;
+    const placeholderSpanIndex = Math.max(
+      placeholderSpanIndices[entry.rowIndex] ?? entry.maxSpanIndex,
+      entry.maxSpanIndex
+    );
     result.push({
       span: parentRow.span,
       isDetail: false,

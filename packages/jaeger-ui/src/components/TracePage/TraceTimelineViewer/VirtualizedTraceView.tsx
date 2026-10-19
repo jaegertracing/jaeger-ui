@@ -101,6 +101,20 @@ export const DEFAULT_HEIGHTS = {
 
 const NUM_TICKS = 5;
 
+const spanIDToTraceIndexCache = new WeakMap<IOtelTrace, Map<string, number>>();
+
+function getSpanIDToTraceIndex(trace: IOtelTrace): Map<string, number> {
+  let map = spanIDToTraceIndexCache.get(trace);
+  if (!map) {
+    map = new Map<string, number>();
+    if (trace.spans) {
+      trace.spans.forEach((s, idx) => map!.set(s.spanID, idx));
+    }
+    spanIDToTraceIndexCache.set(trace, map);
+  }
+  return map;
+}
+
 function generateRowStatesFromTrace(
   trace: IOtelTrace | TNil,
   childrenHiddenIDs: Set<string>,
@@ -130,12 +144,9 @@ function generateRowStatesFromTrace(
   const rows = generateRowStates(spans, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices);
 
   const spanIndexToRowIndex = new Map<number, number>();
-  const spanIDToTraceIndex = new Map<string, number>();
-  if (trace.spans) {
-    trace.spans.forEach((s, idx) => spanIDToTraceIndex.set(s.spanID, idx));
-  }
 
   if (spans !== trace.spans) {
+    const spanIDToTraceIndex = getSpanIDToTraceIndex(trace);
     rows.forEach(row => {
       const targetSpan =
         'isPrunedPlaceholder' in row && spans[row.spanIndex] ? spans[row.spanIndex] : row.span;
@@ -187,13 +198,10 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
     [props.trace, props.criticalPath, props.prunedServices]
   );
 
-  const spanIDToTraceIndex = useMemo(() => {
-    const map = new Map<string, number>();
-    if (props.trace?.spans) {
-      props.trace.spans.forEach((s, idx) => map.set(s.spanID, idx));
-    }
-    return map;
-  }, [props.trace]);
+  const spanIDToTraceIndex = useMemo(
+    () => (props.trace ? getSpanIDToTraceIndex(props.trace) : new Map<string, number>()),
+    [props.trace]
+  );
 
   const getRowStates = useCallback((): RowState[] => {
     const { trace, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices, focusedSubtreeSpanID } =

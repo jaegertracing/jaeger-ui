@@ -150,7 +150,7 @@ describe('generateRowStates', () => {
       const placeholder = rows.find(r => 'isPrunedPlaceholder' in r)!;
       // Placeholder must have its own index distinct from parent row index (0)
       expect(parentRow.spanIndex).toBe(0);
-      expect(placeholder.spanIndex).toBe(2);
+      expect(placeholder.spanIndex).toBe(3);
       expect(placeholder.spanIndex).not.toBe(parentRow.spanIndex);
     });
   });

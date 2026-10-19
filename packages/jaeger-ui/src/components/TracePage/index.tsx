@@ -45,6 +45,7 @@ import {
   ViewRangeTimeUpdate,
   ETraceViewType,
   viewTypeShowsMinimap,
+  viewTypeIsNavigable,
 } from './types';
 import { getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
@@ -407,7 +408,7 @@ export function TracePageImpl(props: TProps) {
       otelTrace && prunedServices.size > 0
         ? filterPrunedSpanIDs(allMatches, otelTrace.spanMap, prunedServices)
         : allMatches;
-    if (matches && focusedSubtreeSpanID && otelTrace) {
+    if (matches && focusedSubtreeSpanID && otelTrace && viewTypeIsNavigable(viewType)) {
       const focusedSpan = otelTrace.spanMap.get(focusedSubtreeSpanID);
       if (focusedSpan && !isSpanPruned(focusedSpan, prunedServices)) {
         const subtreeSpans = getSubtreeSpans(focusedSpan);
