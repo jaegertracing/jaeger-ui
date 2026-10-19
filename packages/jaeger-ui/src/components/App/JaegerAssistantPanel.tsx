@@ -14,10 +14,11 @@ import { IoClose } from 'react-icons/io5';
 import { JsonView, collapseAllNested } from 'react-json-view-lite';
 import Markdown from 'markdown-to-jsx/react';
 
+import { formatToolDisplayName, isInternalAgentTool } from './assistantText';
 import { useJaegerAssistant, useJaegerAssistantOptional } from './JaegerAssistantContext';
 import { useJaegerAssistantConfigured } from '../../hooks/useJaegerAssistant';
 import jsonViewStyles from '../../utils/jsonViewStyles';
-import { sharedMarkdownOptions } from '../../utils/markdownOptions';
+import { literalizeIdentifierUnderscores, sharedMarkdownOptions } from '../../utils/markdownOptions';
 
 import './JaegerAssistantPanel.css';
 
@@ -82,18 +83,21 @@ function JaegerToolCallIndicator({
   status?: { type: string };
   isError?: boolean;
 }) {
+  if (isInternalAgentTool(toolName)) return null;
+
+  const displayName = formatToolDisplayName(toolName);
   const isRunning = status?.type === 'running' || status?.type === 'requires-action';
   const isFailed = status?.type === 'incomplete' || isError;
 
   if (isRunning) {
     return (
       <div className="JaegerAssistantPanel-toolCall">
-        <span className="JaegerAssistantPanel-toolCallStatus">Calling {toolName}…</span>
+        <span className="JaegerAssistantPanel-toolCallStatus">Calling {displayName}…</span>
       </div>
     );
   }
 
-  const label = isFailed ? `Failed ${toolName}` : `Called ${toolName}`;
+  const label = isFailed ? `Failed ${displayName}` : `Called ${displayName}`;
   const className = isFailed
     ? 'JaegerAssistantPanel-toolCall JaegerAssistantPanel-toolCall--error'
     : 'JaegerAssistantPanel-toolCall';
@@ -125,7 +129,7 @@ function AssistantMarkdownText({ text }: { text: string }) {
       className="JaegerAssistantPanel-messageText JaegerAssistantPanel-md"
       options={sharedMarkdownOptions}
     >
-      {text}
+      {literalizeIdentifierUnderscores(text)}
     </Markdown>
   );
 }

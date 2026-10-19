@@ -5,7 +5,7 @@ import { render } from '@testing-library/react';
 import Markdown from 'markdown-to-jsx/react';
 import { expect, it, describe } from 'vitest';
 
-import { sharedMarkdownOptions } from './markdownOptions';
+import { literalizeIdentifierUnderscores, sharedMarkdownOptions } from './markdownOptions';
 
 describe('sharedMarkdownOptions', () => {
   it('enables optimizeForStreaming for every caller, not just streamed chat replies', () => {
@@ -93,6 +93,43 @@ describe('sharedMarkdownOptions', () => {
       const link = container.querySelector('a');
       expect(link).not.toBeNull();
       expect(link).toHaveAttribute('href', 'https://example.com');
+    });
+  });
+
+  describe('identifier underscores', () => {
+    function renderMarkdown(markdown: string) {
+      return render(
+        <Markdown options={sharedMarkdownOptions}>{literalizeIdentifierUnderscores(markdown)}</Markdown>
+      );
+    }
+
+    it('renders snake_case identifiers literally instead of eating the underscore', () => {
+      const { container } = renderMarkdown('WHERE customer_id=392');
+      expect(container.textContent).toContain('customer_id');
+      expect(container.querySelector('em')).toBeNull();
+    });
+
+    it('renders underscores inside inline code literally', () => {
+      const { container } = renderMarkdown('column `customer_id` is the key');
+      expect(container.querySelector('code')).toHaveTextContent('customer_id');
+      expect(container.textContent).toContain('customer_id');
+    });
+
+    it('renders underscores inside fenced code literally', () => {
+      const { container } = renderMarkdown('```sql\nSELECT customer_id\n```');
+      expect(container.querySelector('pre code')?.textContent).toContain('customer_id');
+    });
+
+    it('still renders intentional underscore emphasis', () => {
+      const { container } = renderMarkdown('snake_case and _italic_');
+      expect(container.textContent).toContain('snake_case');
+      expect(container.querySelector('em')).toHaveTextContent('italic');
+    });
+
+    it('keeps streaming suppression of an unclosed strong marker', () => {
+      const { container } = renderMarkdown('unclosed **bold and customer_id');
+      expect(container.textContent).not.toContain('**');
+      expect(container.textContent).toContain('customer_id');
     });
   });
 

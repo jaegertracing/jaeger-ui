@@ -412,6 +412,14 @@ describe('JaegerThreadMessageBody', () => {
     expect(container.querySelector('[data-testid="message-part-text"]')).not.toBeInTheDocument();
   });
 
+  it('renders snake_case identifiers and inline code literally', () => {
+    partsMock.parts = [{ type: 'text', text: 'WHERE customer_id=392 and `customer_id` is the key' }];
+    const { container } = render(<JaegerThreadMessageBody variant="assistant" />);
+    expect(container.textContent).toContain('customer_id');
+    expect(container.textContent).not.toContain('customerid');
+    expect(container.querySelector('code')).toHaveTextContent('customer_id');
+  });
+
   it('routes an assistant text part with no text field at all through the markdown path', () => {
     partsMock.parts = [{ type: 'text' }];
     const { container } = render(<JaegerThreadMessageBody variant="assistant" />);
@@ -577,6 +585,65 @@ describe('tool-call part rendering', () => {
     ];
     render(<JaegerThreadMessageBody variant="assistant" />);
     expect(screen.getByText('Failed bad_tool')).toBeInTheDocument();
+  });
+
+  it('strips the mcp__<server>__ prefix from the tool label', () => {
+    partsMock.parts = [
+      {
+        type: 'tool-call',
+        toolName: 'mcp__jaeger__search_traces',
+        status: { type: 'complete' },
+        result: 'ok',
+      },
+    ];
+    render(<JaegerThreadMessageBody variant="assistant" />);
+    expect(screen.getByText('Called search_traces')).toBeInTheDocument();
+    expect(screen.queryByText(/mcp__jaeger__/)).not.toBeInTheDocument();
+  });
+
+  it('uses the stripped name while a tool is still running', () => {
+    partsMock.parts = [
+      {
+        type: 'tool-call',
+        toolName: 'mcp__jaeger__get_span_details',
+        status: { type: 'running' },
+      },
+    ];
+    render(<JaegerThreadMessageBody variant="assistant" />);
+    expect(screen.getByText('Calling get_span_details…')).toBeInTheDocument();
+  });
+
+  it('does not render agent-internal ToolSearch rows', () => {
+    partsMock.parts = [
+      { type: 'tool-call', toolName: 'ToolSearch', status: { type: 'complete' }, result: 'found' },
+      {
+        type: 'tool-call',
+        toolName: 'mcp__jaeger__search_traces',
+        status: { type: 'complete' },
+        result: 'ok',
+      },
+    ];
+    render(<JaegerThreadMessageBody variant="assistant" />);
+    expect(screen.queryByText(/ToolSearch/)).not.toBeInTheDocument();
+    expect(screen.getByText('Called search_traces')).toBeInTheDocument();
+  });
+
+  it('renders text, tool-call, text in event order', () => {
+    partsMock.parts = [
+      { type: 'text', text: 'critical path.' },
+      {
+        type: 'tool-call',
+        toolName: 'mcp__jaeger__search_traces',
+        status: { type: 'complete' },
+        result: 'ok',
+      },
+      { type: 'text', text: 'MySQL' },
+    ];
+    const { container } = render(<JaegerThreadMessageBody variant="assistant" />);
+    const text = container.textContent ?? '';
+    expect(text.indexOf('critical path.')).toBeLessThan(text.indexOf('Called search_traces'));
+    expect(text.indexOf('Called search_traces')).toBeLessThan(text.indexOf('MySQL'));
+    expect(text).not.toContain('critical path.MySQL');
   });
 
   it('renders text parts correctly alongside tool-call parts', () => {

@@ -20,7 +20,7 @@ import {
 } from './genAiData';
 import { MessageFormat, useMessageFormatStore } from './message-format-store';
 import AccordionAttributes from '../AccordionAttributes';
-import { sharedMarkdownOptions } from '../../../../../utils/markdownOptions';
+import { literalizeIdentifierUnderscores, sharedMarkdownOptions } from '../../../../../utils/markdownOptions';
 import { isEmbeddedMedia, MediaType } from '../../../../../utils/media';
 import jsonViewStyles from '../../../../../utils/jsonViewStyles';
 import CopyIcon from '../../../../common/CopyIcon';
@@ -148,7 +148,7 @@ function MarkdownBlock({ content, onShowText }: { content: string; onShowText: (
 
   return (
     <Markdown className="GenAITab--messageContent" options={genAiMarkdownOptions}>
-      {content}
+      {literalizeIdentifierUnderscores(content)}
     </Markdown>
   );
 }
