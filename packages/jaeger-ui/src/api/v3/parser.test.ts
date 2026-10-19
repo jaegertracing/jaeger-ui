@@ -85,15 +85,17 @@ describe('parseOtelTrace', () => {
     ]);
   });
 
-  it('ignores non-array backend diagnostics', () => {
+  it('reads a string backend diagnostic as one warning', () => {
     const trace = parseOtelTrace(
       traces([
         makeSpan({
-          attributes: [{ key: '@jaeger@warnings', value: { stringValue: 'not a warning list' } }],
+          attributes: [
+            { key: '@jaeger@warnings', value: { stringValue: 'failed to marshal slice attribute' } },
+          ],
         }),
       ])
     )!;
-    expect(trace.spans[0].warnings).toEqual([]);
+    expect(trace.spans[0].warnings).toEqual(['failed to marshal slice attribute']);
   });
 
   it('returns null when the payload has no spans', () => {

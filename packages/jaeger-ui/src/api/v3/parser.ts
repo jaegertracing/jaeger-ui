@@ -267,9 +267,13 @@ function parseSpans(data: TracesDataWire): ParsedSpanData {
           relativeStartTime: 0 as Microseconds,
           inboundLinks: [],
           warnings: [
+            // Storage without slice-typed attributes can return a single string,
+            // which the backend's GetWarnings also reads as one warning.
             ...(Array.isArray(backendWarnings)
               ? backendWarnings.filter((warning): warning is string => typeof warning === 'string')
-              : []),
+              : typeof backendWarnings === 'string'
+                ? [backendWarnings]
+                : []),
             ...attributesInfo.warnings,
           ],
         };
