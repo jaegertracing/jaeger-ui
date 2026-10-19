@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /**
- * Jaeger API v3 Client
+ * Jaeger API Client
  *
- * This client interacts with the Jaeger backend's /api/v3/ endpoints
- * and returns native OTLP data structures.
+ * Uses /api/v3/ where available and retains existing routes for operations
+ * without a v3 counterpart.
  */
 
 import { ALL_SERVICES } from '../../constants/search-form';
@@ -40,6 +40,24 @@ function toIsoTimestamp(epochMicroseconds: number): string | undefined {
 
 export class JaegerClient {
   private apiRoot = prefixUrl('/api/v3');
+  // Archival has no v3 endpoint and stays on the legacy route.
+  private legacyApiRoot = prefixUrl('/api/');
+
+  async archiveTrace(id: string): Promise<unknown> {
+    const response = await this.fetchWithTimeout(`${this.legacyApiRoot}archive/${id}`, { method: 'POST' });
+    if (!response.ok) {
+      throw new Error(`Failed to archive trace ${id}: ${response.status} ${response.statusText}`);
+    }
+    return response.json();
+  }
+
+  async fetchDecoration(url: string): Promise<unknown> {
+    const response = await this.fetchWithTimeout(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch decoration: ${response.status} ${response.statusText}`);
+    }
+    return response.json();
+  }
 
   /**
    * Fetch the list of services from the Jaeger API.
@@ -153,7 +171,10 @@ export class JaegerClient {
    */
   async fetchTrace(traceId: string): Promise<TracesDataWire> {
     traceIdHex.parse(traceId);
-    const response = await this.fetchWithTimeout(`${this.apiRoot}/traces/${encodeURIComponent(traceId)}`);
+    // Trace queries buffer storage and archive reads before sending headers and can exceed 10 seconds.
+    const response = await this.fetchWithTimeout(`${this.apiRoot}/traces/${encodeURIComponent(traceId)}`, {
+      timeout: null,
+    });
     if (!response.ok) {
       throw new Error(`Failed to fetch trace ${traceId}: ${response.status} ${response.statusText}`);
     }
@@ -165,16 +186,19 @@ export class JaegerClient {
   /**
    * Fetch with timeout support using AbortController.
    * @param url - The URL to fetch
-   * @param timeout - Timeout in milliseconds (default: 10 seconds)
+   * @param options - Fetch request options, plus a timeout in milliseconds (default: 10 seconds) or null for no deadline
    * @returns Promise<Response>
    * @throws Error if request times out or network error occurs
    */
-  private async fetchWithTimeout(url: string, timeout = 10000): Promise<Response> {
+  private async fetchWithTimeout(
+    url: string,
+    { timeout = 10000, ...options }: RequestInit & { timeout?: number | null } = {}
+  ): Promise<Response> {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    const timeoutId = timeout === null ? undefined : setTimeout(() => controller.abort(), timeout);
 
     try {
-      const response = await fetch(url, { signal: controller.signal });
+      const response = await fetch(url, { ...options, signal: controller.signal });
       return response;
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {

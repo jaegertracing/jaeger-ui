@@ -89,12 +89,6 @@ export const DEFAULT_DEPENDENCY_LOOKBACK = dayjs.duration(1, 'weeks').asMillisec
 
 const JaegerAPI = {
   apiRoot: DEFAULT_API_ROOT,
-  archiveTrace(id: string): Promise<any> {
-    return getJSON(`${this.apiRoot}archive/${id}`, { method: 'POST' });
-  },
-  fetchDecoration(url: string): Promise<any> {
-    return getJSON(url);
-  },
   fetchDeepDependencyGraph(query: Record<string, any>): Promise<any> {
     return getJSON(`${this.apiRoot}deep-dependencies`, { query });
   },

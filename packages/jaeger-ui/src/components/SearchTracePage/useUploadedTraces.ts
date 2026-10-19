@@ -4,6 +4,7 @@
 import { useCallback } from 'react';
 import { useQuery, useQueryClient, skipToken } from '@tanstack/react-query';
 import type { TraceSummary } from '../../types/trace-summary';
+import { queryClient as appQueryClient } from '../../query/app-query-client';
 
 /**
  * Similar to useSearchTraces() from hooks/useTraceDiscovery.ts,
@@ -11,6 +12,11 @@ import type { TraceSummary } from '../../types/trace-summary';
  */
 const UPLOADED_SUMMARIES_QUERY_KEY = ['uploadedSummaries'] as const;
 const UPLOADED_RAW_TRACES_QUERY_KEY = ['uploadedRawTraces'] as const;
+
+export function isUploadedTrace(traceID: string): boolean {
+  const summaries = appQueryClient.getQueryData<TraceSummary[]>(UPLOADED_SUMMARIES_QUERY_KEY);
+  return summaries?.some(summary => summary.traceID === traceID) ?? false;
+}
 
 type UploadedTraces = {
   uploadedSummaries: TraceSummary[];
@@ -22,6 +28,13 @@ type UploadedTraces = {
 export function useClearUploadedTraces(): () => void {
   const queryClient = useQueryClient();
   return useCallback(() => {
+    // Uploaded traces share the ['trace', id] cache key with backend traces.
+    // Evict their cached copies alongside the registry so a later visit
+    // refetches instead of showing a guard-less upload.
+    const summaries = queryClient.getQueryData<TraceSummary[]>(UPLOADED_SUMMARIES_QUERY_KEY) ?? [];
+    summaries.forEach(summary => {
+      queryClient.removeQueries({ queryKey: ['trace', summary.traceID], exact: true });
+    });
     queryClient.setQueryData(UPLOADED_SUMMARIES_QUERY_KEY, []);
     queryClient.setQueryData(UPLOADED_RAW_TRACES_QUERY_KEY, []);
   }, [queryClient]);
