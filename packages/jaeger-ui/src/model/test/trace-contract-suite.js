@@ -12,7 +12,8 @@ export function runTraceContractSuite(pipeline) {
     window.getJaegerUiConfig = () => ({ topTagPrefixes });
     getConfig.clear();
     try {
-      // getTraceName() memoizes by trace ID, so this trace must not share one with the tests below.
+      // The header cache keys on spans-array identity, so this fixed trace ID
+      // is safe to reuse across cases.
       const traceID = '0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f';
       const input = pipeline.materialize({
         traceID,
@@ -136,7 +137,6 @@ export function runTraceContractSuite(pipeline) {
   describe(pipeline.name, () => {
     const startTime = 1586160015434000;
     const duration = 34000;
-    // This trace ID differs from the one in transform-trace-data.test.ts because getTraceName() memoizes by trace ID.
     const traceID = 'a1b2c3d4e5f60718293a4b5c6d7e8f90';
     const rootSpanID = 'd4dcb46e95b781f5';
     const rootOperationName = 'rootOperation';
@@ -627,7 +627,6 @@ export function runTraceContractSuite(pipeline) {
         // traversal was recursive. This depth exceeds typical call-stack limits in
         // our test runtime (V8), so the old recursive code reliably threw here.
         const depth = 15000;
-        // Unique trace ID: getTraceName() memoizes by trace ID.
         const deepTraceID = 'dee9e570000000000000000000004111';
         const deepSpans = [];
         for (let i = 0; i < depth; i++) {

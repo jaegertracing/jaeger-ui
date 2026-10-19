@@ -92,7 +92,8 @@ describe('JaegerClient.fetchTrace wire contract', () => {
             );
           })
       );
-      const pending = client.fetchTrace('0123456789abcdef0123456789abcdef');
+      const controller = new AbortController();
+      const pending = client.fetchTrace('0123456789abcdef0123456789abcdef', controller.signal);
       await vi.advanceTimersByTimeAsync(10000);
       expect(mockFetch.mock.calls[0][1].signal.aborted).toBe(false);
       await vi.advanceTimersByTimeAsync(20000);
@@ -118,5 +119,24 @@ describe('JaegerClient.fetchTrace wire contract', () => {
 
     await expect(pending).rejects.toBe(abortError);
     expect(mockFetch.mock.calls[0][1].signal.aborted).toBe(true);
+  });
+
+  it('fetches a trace when AbortSignal.any is unavailable', async () => {
+    const descriptor = Object.getOwnPropertyDescriptor(AbortSignal, 'any');
+    const controller = new AbortController();
+    mockFetch.mockResolvedValue({ ok: true, json: async () => capture });
+    try {
+      Reflect.deleteProperty(AbortSignal, 'any');
+      expect(AbortSignal.any).toBeUndefined();
+      await expect(client.fetchTrace('0123456789abcdef0123456789abcdef', controller.signal)).resolves.toEqual(
+        capture.result
+      );
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/v3/traces/0123456789abcdef0123456789abcdef',
+        expect.objectContaining({ signal: controller.signal })
+      );
+    } finally {
+      if (descriptor) Object.defineProperty(AbortSignal, 'any', descriptor);
+    }
   });
 });

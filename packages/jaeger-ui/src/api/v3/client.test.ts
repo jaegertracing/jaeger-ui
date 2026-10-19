@@ -23,6 +23,115 @@ describe('JaegerClient', () => {
     vi.useRealTimers();
   });
 
+  describe('archiveTrace', () => {
+    it('POSTs to the existing archive endpoint through the timeout transport', async () => {
+      const data = { data: [] };
+      mockFetch.mockResolvedValue({ ok: true, json: async () => data });
+
+      await expect(client.archiveTrace('trace-id')).resolves.toBe(data);
+      expect(mockFetch).toHaveBeenCalledWith('/api/archive/trace-id', {
+        method: 'POST',
+        signal: expect.any(AbortSignal),
+      });
+    });
+
+    it('reports archive HTTP failures with the v3 error style', async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 403,
+        statusText: 'Forbidden',
+      });
+
+      await expect(client.archiveTrace('trace-id')).rejects.toThrow(
+        'Failed to archive trace trace-id: 403 Forbidden'
+      );
+    });
+  });
+
+  describe('fetchDecoration', () => {
+    it.each([null, false, 0, ''])('preserves arbitrary JSON response %j', async data => {
+      mockFetch.mockResolvedValue({ ok: true, json: async () => data });
+
+      await expect(client.fetchDecoration('/details')).resolves.toBe(data);
+    });
+
+    it('preserves array-valued decoration responses', async () => {
+      const data = ['decoration'];
+      mockFetch.mockResolvedValue({ ok: true, json: async () => data });
+
+      await expect(client.fetchDecoration('/details')).resolves.toBe(data);
+    });
+
+    it.each(['foo.bar.baz', 'https://decorations.example/details?service=frontend'])(
+      'GETs the configured URL unchanged: %s',
+      async url => {
+        const data = { details: { calls: 42 } };
+        mockFetch.mockResolvedValue({ ok: true, json: async () => data });
+
+        await expect(client.fetchDecoration(url)).resolves.toBe(data);
+        expect(mockFetch).toHaveBeenCalledWith(url, { signal: expect.any(AbortSignal) });
+      }
+    );
+
+    it('reports decoration HTTP failures with the v3 error style', async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 502,
+        statusText: 'Bad Gateway',
+      });
+
+      await expect(client.fetchDecoration('/details')).rejects.toThrow(
+        'Failed to fetch decoration: 502 Bad Gateway'
+      );
+    });
+  });
+
+  describe.each(['archiveTrace', 'fetchDecoration'] as const)('%s transport failures', method => {
+    it('aborts after the shared 10-second timeout and clears the timer', async () => {
+      let requestSignal: AbortSignal | undefined;
+      mockFetch.mockImplementation(
+        (_url: string, { signal }: RequestInit) =>
+          new Promise((_resolve, reject) => {
+            requestSignal = signal!;
+            signal!.addEventListener('abort', () => {
+              const error = new Error('Aborted');
+              error.name = 'AbortError';
+              reject(error);
+            });
+          })
+      );
+
+      const promise = client[method]('/details').catch((error: unknown) => error);
+      await vi.advanceTimersByTimeAsync(9999);
+      expect(requestSignal?.aborted).toBe(false);
+      await vi.advanceTimersByTimeAsync(1);
+      expect(await promise).toMatchObject({ message: 'Request timeout after 10000ms' });
+      expect(requestSignal?.aborted).toBe(true);
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it('propagates network failures and clears the timer', async () => {
+      const failure = new TypeError('Failed to fetch');
+      mockFetch.mockRejectedValue(failure);
+
+      await expect(client[method]('/details')).rejects.toBe(failure);
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it('propagates invalid JSON responses', async () => {
+      const failure = new SyntaxError('Unexpected token');
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => {
+          throw failure;
+        },
+      });
+
+      await expect(client[method]('/details')).rejects.toBe(failure);
+      expect(vi.getTimerCount()).toBe(0);
+    });
+  });
+
   describe('fetchServices', () => {
     it('successfully fetches and returns service list', async () => {
       const mockServices = ['service-a', 'service-b', 'service-c'];
@@ -217,6 +326,51 @@ describe('JaegerClient', () => {
       vi.advanceTimersByTime(10000);
 
       await expect(promise).rejects.toThrow('Request timeout after 10000ms');
+    });
+
+    it('reports a timeout when a request with a caller signal exceeds its deadline', async () => {
+      const caller = new AbortController();
+      mockFetch.mockImplementation((_url: string, options: RequestInit) => {
+        return new Promise((_resolve, reject) => {
+          options.signal?.addEventListener('abort', () => reject(options.signal?.reason));
+        });
+      });
+
+      const promise = client['fetchWithTimeout']('/test', { timeout: 1000, signal: caller.signal });
+      vi.advanceTimersByTime(1000);
+
+      await expect(promise).rejects.toThrow('Request timeout after 1000ms');
+      expect(caller.signal.aborted).toBe(false);
+    });
+
+    it('preserves caller cancellation for a request with a deadline', async () => {
+      const caller = new AbortController();
+      const abortError = new DOMException('Caller cancelled request', 'AbortError');
+      mockFetch.mockImplementation((_url: string, options: RequestInit) => {
+        return new Promise((_resolve, reject) => {
+          options.signal?.addEventListener('abort', () => reject(options.signal?.reason));
+        });
+      });
+
+      const promise = client['fetchWithTimeout']('/test', { timeout: 1000, signal: caller.signal });
+      caller.abort(abortError);
+      vi.advanceTimersByTime(1000);
+
+      await expect(promise).rejects.toBe(abortError);
+    });
+
+    it('forwards an already cancelled caller signal to a request with a deadline', async () => {
+      const caller = new AbortController();
+      const abortError = new DOMException('Caller cancelled request', 'AbortError');
+      caller.abort(abortError);
+      mockFetch.mockImplementation((_url: string, options: RequestInit) => {
+        expect(options.signal?.aborted).toBe(true);
+        return Promise.reject(options.signal?.reason);
+      });
+
+      await expect(
+        client['fetchWithTimeout']('/test', { timeout: 1000, signal: caller.signal })
+      ).rejects.toBe(abortError);
     });
 
     it('clears timeout after successful request', async () => {
