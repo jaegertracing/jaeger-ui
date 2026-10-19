@@ -4,13 +4,21 @@
 /**
  * AG-UI events as the assistant panel sees them.
  *
- * @assistant-ui/react-ag-ui 0.0.35 keeps one text part per `messageId` and
- * appends later deltas to that part even after a tool call. Jaeger's gateway
- * uses a single message id for the whole run, so every text chunk collapses
- * into one block and tool calls render in a group before or after it.
- * Rewriting the id after each tool call (and after a text message ends) makes
- * the same aggregator emit parts in arrival order. Deltas are copied through
- * unchanged, including leading, trailing, and whitespace-only chunks.
+ * `@assistant-ui/react-ag-ui` 0.0.35 keeps one text part per `messageId`.
+ * A tool call clears only the *anonymous* text cursor; a later
+ * `TEXT_MESSAGE_CONTENT` with the same id is appended to the earlier part.
+ * Jaeger v2.22 holds one message id open for the whole run, so text that
+ * arrived around a tool call collapses into one block and the tool is drawn
+ * outside it. assistant-ui documents this as intentional for agents that
+ * reuse a message id across tool calls:
+ * https://github.com/assistant-ui/assistant-ui/pull/4066
+ *
+ * `attachAgUiEventNormalizer` rewrites that id after each tool call and after
+ * `TEXT_MESSAGE_END`, which is what 0.0.35's subscriber (`onTextMessage*Event`
+ * / `onToolCallStartEvent`) feeds to `RunAggregator`. Deltas are copied
+ * through unchanged. `agUiRuntimeOrder.test.tsx` drives the real
+ * `useAgUiRuntime` so a subscriber or grouping change in a dependency bump
+ * fails that test instead of only the isolated normalizer.
  */
 export interface IAgUiStreamEvent {
   type: string;
@@ -19,6 +27,9 @@ export interface IAgUiStreamEvent {
   toolCallId?: string;
   toolCallName?: string;
   parentMessageId?: string;
+  content?: string;
+  runId?: string;
+  outcome?: { type: string };
 }
 
 interface INormalizerState {

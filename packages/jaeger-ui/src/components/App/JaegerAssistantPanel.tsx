@@ -18,7 +18,7 @@ import { formatToolDisplayName, isInternalAgentTool } from './assistantText';
 import { useJaegerAssistant, useJaegerAssistantOptional } from './JaegerAssistantContext';
 import { useJaegerAssistantConfigured } from '../../hooks/useJaegerAssistant';
 import jsonViewStyles from '../../utils/jsonViewStyles';
-import { literalizeIdentifierUnderscores, sharedMarkdownOptions } from '../../utils/markdownOptions';
+import { sharedMarkdownOptions } from '../../utils/markdownOptions';
 
 import './JaegerAssistantPanel.css';
 
@@ -129,7 +129,7 @@ function AssistantMarkdownText({ text }: { text: string }) {
       className="JaegerAssistantPanel-messageText JaegerAssistantPanel-md"
       options={sharedMarkdownOptions}
     >
-      {literalizeIdentifierUnderscores(text)}
+      {text}
     </Markdown>
   );
 }

@@ -5,14 +5,14 @@ import { render } from '@testing-library/react';
 import Markdown from 'markdown-to-jsx/react';
 import { expect, it, describe } from 'vitest';
 
-import { literalizeIdentifierUnderscores, sharedMarkdownOptions } from './markdownOptions';
+import { sharedMarkdownOptions } from './markdownOptions';
 
 describe('sharedMarkdownOptions', () => {
-  it('enables optimizeForStreaming for every caller, not just streamed chat replies', () => {
-    // Span attributes rendered in the (future) GenAI span detail tab can be
-    // truncated at ingestion, so tolerating unclosed tags is desirable there
-    // too -- this is not a streaming-only concern.
-    expect(sharedMarkdownOptions.optimizeForStreaming).toBe(true);
+  it('does not enable optimizeForStreaming, which deletes unpaired emphasis markers', () => {
+    // The streaming optimizer strips the last unpaired *, _, or ~ before
+    // parsing. That deletes SQL wildcards, multiplication, and snake_case,
+    // not only an unfinished **bold**.
+    expect(sharedMarkdownOptions.optimizeForStreaming).toBe(false);
   });
 
   describe('wrapper element', () => {
@@ -96,40 +96,61 @@ describe('sharedMarkdownOptions', () => {
     });
   });
 
-  describe('identifier underscores', () => {
+  describe('literal emphasis markers', () => {
     function renderMarkdown(markdown: string) {
-      return render(
-        <Markdown options={sharedMarkdownOptions}>{literalizeIdentifierUnderscores(markdown)}</Markdown>
-      );
+      return render(<Markdown options={sharedMarkdownOptions}>{markdown}</Markdown>);
     }
 
-    it('renders snake_case identifiers literally instead of eating the underscore', () => {
-      const { container } = renderMarkdown('WHERE customer_id=392');
-      expect(container.textContent).toContain('customer_id');
-      expect(container.querySelector('em')).toBeNull();
+    it('keeps an unpaired asterisk in SQL and arithmetic instead of deleting it', () => {
+      const sql = renderMarkdown('SELECT * FROM customer WHERE customer_id=392');
+      expect(sql.container.textContent).toContain('SELECT * FROM customer WHERE customer_id=392');
+
+      const product = renderMarkdown('5 * 3');
+      expect(product.container.textContent).toContain('5 * 3');
+
+      const intraword = renderMarkdown('x*y');
+      expect(intraword.container.textContent).toContain('x*y');
     });
 
-    it('renders underscores inside inline code literally', () => {
-      const { container } = renderMarkdown('column `customer_id` is the key');
-      expect(container.querySelector('code')).toHaveTextContent('customer_id');
-      expect(container.textContent).toContain('customer_id');
-    });
-
-    it('renders underscores inside fenced code literally', () => {
-      const { container } = renderMarkdown('```sql\nSELECT customer_id\n```');
-      expect(container.querySelector('pre code')?.textContent).toContain('customer_id');
-    });
-
-    it('still renders intentional underscore emphasis', () => {
-      const { container } = renderMarkdown('snake_case and _italic_');
-      expect(container.textContent).toContain('snake_case');
+    it('still renders paired emphasis', () => {
+      const { container } = renderMarkdown('**bold** and _italic_ and snake_case');
+      expect(container.querySelector('strong')).toHaveTextContent('bold');
       expect(container.querySelector('em')).toHaveTextContent('italic');
+      expect(container.textContent).toContain('snake_case');
     });
 
-    it('keeps streaming suppression of an unclosed strong marker', () => {
-      const { container } = renderMarkdown('unclosed **bold and customer_id');
-      expect(container.textContent).not.toContain('**');
-      expect(container.textContent).toContain('customer_id');
+    it('keeps a bare URL underscore in both the href and the link text', () => {
+      const { container } = renderMarkdown('https://example.com/customer_id');
+      const link = container.querySelector('a');
+      expect(link).not.toBeNull();
+      expect(link).toHaveAttribute('href', 'https://example.com/customer_id');
+      expect(link?.textContent).toBe('https://example.com/customer_id');
+      expect(container.textContent).not.toContain('&#95;');
+    });
+
+    it('keeps underscores in an indented code block', () => {
+      const { container } = renderMarkdown('    SELECT customer_id');
+      const code = container.querySelector('pre code');
+      expect(code).not.toBeNull();
+      expect(code?.textContent).toContain('SELECT customer_id');
+      expect(code?.textContent).not.toContain('&#95;');
+    });
+
+    it('closes a fence when the closing run is longer than the opening run', () => {
+      const { container } = renderMarkdown('before\n```\nSELECT customer_id\n````\nafter_customer_id');
+      expect(container.querySelector('pre code')?.textContent).toContain('SELECT customer_id');
+      expect(container.textContent).toContain('after_customer_id');
+      expect(container.textContent).not.toContain('&#95;');
+    });
+
+    it('does not let a stray backtick swallow a later fence or the text after it', () => {
+      const partial = renderMarkdown('Here is a stray `');
+      expect(partial.container.textContent).toContain('Here is a stray `');
+
+      const { container } = renderMarkdown('stray ` then\n```\nSELECT customer_id\n```\nafter_id');
+      expect(container.textContent).toContain('stray ` then');
+      expect(container.querySelector('pre code')?.textContent).toContain('SELECT customer_id');
+      expect(container.textContent).toContain('after_id');
     });
   });
 

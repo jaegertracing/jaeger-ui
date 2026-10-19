@@ -420,6 +420,12 @@ describe('JaegerThreadMessageBody', () => {
     expect(container.querySelector('code')).toHaveTextContent('customer_id');
   });
 
+  it('keeps unpaired asterisks in assistant text', () => {
+    partsMock.parts = [{ type: 'text', text: 'SELECT * FROM customer WHERE customer_id=392' }];
+    const { container } = render(<JaegerThreadMessageBody variant="assistant" />);
+    expect(container.textContent).toContain('SELECT * FROM customer WHERE customer_id=392');
+  });
+
   it('routes an assistant text part with no text field at all through the markdown path', () => {
     partsMock.parts = [{ type: 'text' }];
     const { container } = render(<JaegerThreadMessageBody variant="assistant" />);
