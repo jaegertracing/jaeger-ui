@@ -9,10 +9,10 @@ function mergeChildrenCriticalPath(
   spanID: string,
   criticalPath: CriticalPathSection[]
 ): CriticalPathSection[] {
-  if (!criticalPath) {
+  if (!criticalPath || criticalPath.length === 0) {
     return [];
   }
-  // Define an array to store the IDs of the span and its descendants (if the span is collapsed)
+  // Define a set to store the IDs of the span and its descendants (if the span is collapsed)
   const allRequiredSpanIds = new Set<string>([spanID]);
 
   // Use pre-built spanMap
@@ -34,19 +34,21 @@ function mergeChildrenCriticalPath(
     findAllDescendants(startingSpan);
   }
 
-  const criticalPathSections: CriticalPathSection[] = [];
-  criticalPath.forEach(each => {
+  // Use push + reverse to avoid O(M^2) unshift array reallocation when collecting matching sections
+  const result: CriticalPathSection[] = [];
+  for (let i = 0; i < criticalPath.length; i++) {
+    const each = criticalPath[i];
     if (allRequiredSpanIds.has(each.spanID)) {
-      if (criticalPathSections.length !== 0 && each.sectionEnd === criticalPathSections[0].sectionStart) {
+      if (result.length > 0 && each.sectionEnd === result[result.length - 1].sectionStart) {
         // Merge Critical Paths if they are consecutive
-        criticalPathSections[0].sectionStart = each.sectionStart;
+        result[result.length - 1].sectionStart = each.sectionStart;
       } else {
-        criticalPathSections.unshift({ ...each });
+        result.push({ ...each });
       }
     }
-  });
+  }
 
-  return criticalPathSections;
+  return result.reverse();
 }
 
 function buildCriticalPathIndex(criticalPath: CriticalPathSection[]) {
@@ -100,42 +102,6 @@ function buildPrunedCriticalPaths(
   return result;
 }
 
-/**
- * Critical path display invariant: a span's bar shows the critical path sections of
- * itself and all spans hidden beneath it, whether hidden by collapse or service filter.
- * - Collapsed: mergeChildrenCriticalPath collects the full subtree (pruning-unaware,
- *   which is correct — a collapsed subtree is entirely hidden regardless of filter).
- * - Expanded with pruned direct children: own sections + pruned subtree sections bubbled
- *   up via memoizedPrunedCriticalPaths. Only direct-child pruning needs handling because
- *   the service filter prunes entire subtrees, so the direct parent is always the nearest
- *   visible ancestor of a pruned span.
- */
-function getVisibleCriticalPathSections(
-  isCollapsed: boolean,
-  hasPrunedChildren: boolean,
-  trace: IOtelTrace,
-  span: IOtelSpan,
-  criticalPath: CriticalPathSection[],
-  pathBySpanID: ReturnType<typeof buildCriticalPathIndex>,
-  prunedPaths: Map<string, CriticalPathSection[]>
-) {
-  if (isCollapsed) {
-    return mergeChildrenCriticalPath(trace, span.spanID, criticalPath);
-  }
-
-  const ownSections = pathBySpanID.get(span.spanID) ?? [];
-
-  if (hasPrunedChildren) {
-    // Precomputed map of parent spanID → critical path sections from pruned subtrees.
-    const prunedSections = prunedPaths.get(span.spanID);
-    if (prunedSections && prunedSections.length > 0) {
-      return [...ownSections, ...prunedSections];
-    }
-  }
-
-  return ownSections;
-}
-
 export type CriticalPathContext = {
   sectionsFor(span: IOtelSpan, isCollapsed: boolean, hasPrunedChildren: boolean): CriticalPathSection[];
 };
@@ -147,18 +113,37 @@ export function makeCriticalPathContext(
 ): CriticalPathContext {
   const index = buildCriticalPathIndex(criticalPath);
   const pruned = buildPrunedCriticalPaths(index, prunedServices, trace.spans);
+  const collapsedCache = new Map<string, CriticalPathSection[]>();
+  const prunedCombinedCache = new Map<string, CriticalPathSection[]>();
 
   return {
     sectionsFor(span, isCollapsed, hasPrunedChildren) {
-      return getVisibleCriticalPathSections(
-        isCollapsed,
-        hasPrunedChildren,
-        trace,
-        span,
-        criticalPath,
-        index,
-        pruned
-      );
+      if (isCollapsed) {
+        let cached = collapsedCache.get(span.spanID);
+        if (!cached) {
+          cached = mergeChildrenCriticalPath(trace, span.spanID, criticalPath);
+          collapsedCache.set(span.spanID, cached);
+        }
+        return cached;
+      }
+
+      const ownSections = index.get(span.spanID) ?? [];
+
+      if (hasPrunedChildren) {
+        let cachedCombined = prunedCombinedCache.get(span.spanID);
+        if (!cachedCombined) {
+          const prunedSections = pruned.get(span.spanID);
+          if (prunedSections && prunedSections.length > 0) {
+            cachedCombined = [...ownSections, ...prunedSections];
+          } else {
+            cachedCombined = ownSections;
+          }
+          prunedCombinedCache.set(span.spanID, cachedCombined);
+        }
+        return cachedCombined;
+      }
+
+      return ownSections;
     },
   };
 }
