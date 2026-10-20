@@ -4,6 +4,7 @@
 import * as React from 'react';
 import { render, screen, fireEvent, createEvent } from '@testing-library/react';
 
+import * as getTargetModule from '../../../utils/config/get-target';
 import TraceTimelineLink from './TraceTimelineLink';
 
 describe('TraceTimelineLink', () => {
@@ -30,5 +31,27 @@ describe('TraceTimelineLink', () => {
 
     fireEvent(screen.getByRole('link'), propogatedEvent);
     expect(propogatedEvent.stopPropagation).toHaveBeenCalled();
+  });
+
+  it('has an accessible name', () => {
+    expect(screen.getByRole('link', { name: 'Open trace in a new window' })).toBeTruthy();
+  });
+});
+
+describe('TraceTimelineLink when new pages are forbidden', () => {
+  let getTargetSpy;
+
+  beforeEach(() => {
+    getTargetSpy = jest.spyOn(getTargetModule, 'getTargetEmptyOrBlank').mockReturnValue('');
+    render(<TraceTimelineLink traceID="test-trace-id" />);
+  });
+
+  afterEach(() => {
+    getTargetSpy.mockRestore();
+  });
+
+  it('does not mention a new window in the accessible name', () => {
+    const link = screen.getByRole('link', { name: 'Open trace' });
+    expect(link.getAttribute('target')).toBe('');
   });
 });
