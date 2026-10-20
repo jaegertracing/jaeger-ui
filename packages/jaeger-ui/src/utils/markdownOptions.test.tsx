@@ -125,7 +125,16 @@ describe('sharedMarkdownOptions', () => {
       expect(link).not.toBeNull();
       expect(link).toHaveAttribute('href', 'https://example.com/customer_id');
       expect(link?.textContent).toBe('https://example.com/customer_id');
-      expect(container.textContent).not.toContain('&#95;');
+      // textContent decodes entities, so only the markup shows a leaked &#95;.
+      expect(container.innerHTML).toContain('customer_id');
+      expect(container.innerHTML).not.toContain('&#95;');
+    });
+
+    it('keeps two snake_case identifiers on one line without emphasizing either', () => {
+      const { container } = renderMarkdown('user_id and order_id');
+      expect(container.querySelector('em')).toBeNull();
+      expect(container.textContent).toContain('user_id');
+      expect(container.textContent).toContain('order_id');
     });
   });
 
