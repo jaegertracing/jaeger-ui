@@ -116,9 +116,12 @@ export function TraceDiffImpl({ a, b, cohort }: TStateProps & TOwnProps) {
     setGraphTopOffsetCallback();
   }, [setGraphTopOffsetCallback]);
 
-  const traceA = a ? tracesData.get(a) || { id: a } : null;
-  const traceB = b ? tracesData.get(b) || { id: b } : null;
-  const cohortData: FetchedTrace[] = cohort.map(id => tracesData.get(id) || { id });
+  const traceA = React.useMemo(() => (a ? tracesData.get(a) || { id: a } : null), [a, tracesData]);
+  const traceB = React.useMemo(() => (b ? tracesData.get(b) || { id: b } : null), [b, tracesData]);
+  const cohortData: FetchedTrace[] = React.useMemo(
+    () => cohort.map(id => tracesData.get(id) || { id }),
+    [cohort, tracesData]
+  );
 
   return (
     <React.Fragment>
