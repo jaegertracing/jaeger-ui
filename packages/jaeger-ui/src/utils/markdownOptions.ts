@@ -37,15 +37,10 @@ function SafeImage({ alt, title }: React.ImgHTMLAttributes<HTMLImageElement>) {
 // parser on the options reference, so a fresh literal built on every render
 // would defeat that memoization and re-run the compiler on every streamed
 // token.
-//
-// optimizeForStreaming is left off. That mode deletes the last unpaired
-// emphasis marker (`*`, `_`, or `~`) before parsing, which is not limited to
-// unfinished markdown: `SELECT * FROM`, `5 * 3`, `x*y`, and `customer_id`
-// all lose the marker, including inside autolinks and inline code. Real
-// emphasis (`**bold**`, `_italic_`) still parses. An unclosed `**` stays
-// visible until its closer arrives instead of being deleted.
 export const sharedMarkdownOptions: MarkdownToJSX.Options = {
   disableParsingRawHTML: true,
+  // Workaround for https://github.com/quantizor/markdown-to-jsx/issues/905
+  // (lone `_`/`*` dropped in 9.10.2-9.10.3). Remove once fixed upstream.
   optimizeForStreaming: false,
   // Without this, markdown-to-jsx drops the wrapper element (and with it the
   // className carrying our styling) whenever the parsed output is a single

@@ -6,7 +6,6 @@ import { HttpAgent } from '@ag-ui/client';
 import { useAgUiRuntime } from '@assistant-ui/react-ag-ui';
 import { AssistantRuntimeProvider } from '@assistant-ui/react';
 
-import { attachAgUiEventNormalizer } from './agUiEventNormalizer';
 import { getJaegerAGUIUrl } from './jaeger-AG-UI';
 import { useJaegerAssistantConfigured } from '../../hooks/useJaegerAssistant';
 
@@ -27,10 +26,10 @@ function JaegerAssistantRuntimeProvider({ children }: { children: React.ReactNod
   // HttpAgent stores the supplied fetch as `this.fetch` and later invokes it as a method,
   // so the bare global `fetch` would be called with `this === HttpAgent` and throw
   // "Illegal invocation". Wrap it to detach the receiver.
-  const agent = React.useMemo(() => {
-    const httpAgent = new HttpAgent({ url, fetch: (input, init) => fetch(input, init) });
-    return attachAgUiEventNormalizer(httpAgent);
-  }, [url]);
+  const agent = React.useMemo(
+    () => new HttpAgent({ url, fetch: (input, init) => fetch(input, init) }),
+    [url]
+  );
   const runtime = useAgUiRuntime({
     agent,
     showThinking: true,

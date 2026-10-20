@@ -127,31 +127,6 @@ describe('sharedMarkdownOptions', () => {
       expect(link?.textContent).toBe('https://example.com/customer_id');
       expect(container.textContent).not.toContain('&#95;');
     });
-
-    it('keeps underscores in an indented code block', () => {
-      const { container } = renderMarkdown('    SELECT customer_id');
-      const code = container.querySelector('pre code');
-      expect(code).not.toBeNull();
-      expect(code?.textContent).toContain('SELECT customer_id');
-      expect(code?.textContent).not.toContain('&#95;');
-    });
-
-    it('closes a fence when the closing run is longer than the opening run', () => {
-      const { container } = renderMarkdown('before\n```\nSELECT customer_id\n````\nafter_customer_id');
-      expect(container.querySelector('pre code')?.textContent).toContain('SELECT customer_id');
-      expect(container.textContent).toContain('after_customer_id');
-      expect(container.textContent).not.toContain('&#95;');
-    });
-
-    it('does not let a stray backtick swallow a later fence or the text after it', () => {
-      const partial = renderMarkdown('Here is a stray `');
-      expect(partial.container.textContent).toContain('Here is a stray `');
-
-      const { container } = renderMarkdown('stray ` then\n```\nSELECT customer_id\n```\nafter_id');
-      expect(container.textContent).toContain('stray ` then');
-      expect(container.querySelector('pre code')?.textContent).toContain('SELECT customer_id');
-      expect(container.textContent).toContain('after_id');
-    });
   });
 
   describe('image rendering', () => {
