@@ -16,7 +16,7 @@ import queryString from 'query-string';
 
 import traceGenerator from '../demo/trace-generators';
 import JaegerAPI, { getMessageFromError, DEFAULT_API_ROOT } from './jaeger';
-import { JaegerClient, jaegerClient, DEFAULT_DEPENDENCY_LOOKBACK } from './v3/client';
+import { jaegerClient, DEFAULT_DEPENDENCY_LOOKBACK } from './v3/client';
 
 const defaultOptions = {
   credentials: 'same-origin',
@@ -28,18 +28,6 @@ describe('fetchDeepDependencyGraph', () => {
     await jaegerClient.fetchDeepDependencyGraph(query);
     expect(fetchMock).toHaveBeenLastCalledWith(
       `${DEFAULT_API_ROOT}deep-dependencies?${queryString.stringify(query)}`,
-      { signal: undefined }
-    );
-  });
-
-  it('uses the configured apiRoot', async () => {
-    const client = new JaegerClient('/custom-api/');
-    const query = { service: 'serviceName', start: 400, end: 800 };
-
-    await client.fetchDeepDependencyGraph(query);
-
-    expect(fetchMock).toHaveBeenLastCalledWith(
-      `/custom-api/deep-dependencies?${queryString.stringify(query)}`,
       { signal: undefined }
     );
   });

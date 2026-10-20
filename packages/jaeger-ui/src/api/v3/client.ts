@@ -8,8 +8,9 @@
  * without a v3 counterpart.
  */
 
-import { ALL_SERVICES } from '../../constants/search-form';
 import queryString from 'query-string';
+
+import { ALL_SERVICES } from '../../constants/search-form';
 import prefixUrl from '../../utils/prefix-url';
 import {
   ServicesResponseSchema,
@@ -44,8 +45,8 @@ function toIsoTimestamp(epochMicroseconds: number): string | undefined {
 
 export class JaegerClient {
   private apiRoot = prefixUrl('/api/v3');
-  // These operations retain their existing routes while their callers migrate.
-  constructor(private legacyApiRoot = prefixUrl('/api/')) {}
+  // Archive and dependency-graph requests retain their existing /api/ routes.
+  private legacyApiRoot = prefixUrl('/api/');
 
   async fetchDependencies(endTs = Date.now(), lookback = DEFAULT_DEPENDENCY_LOOKBACK): Promise<unknown> {
     const query = queryString.stringify({ endTs, lookback });
