@@ -6,7 +6,6 @@ import _dropWhile from 'lodash/dropWhile';
 import _round from 'lodash/round';
 import _duration, { DurationUnitType } from 'dayjs/plugin/duration';
 import _relativeTime from 'dayjs/plugin/relativeTime';
-import _timezone from 'dayjs/plugin/timezone';
 import _utc from 'dayjs/plugin/utc';
 
 import { toFloatPrecision } from './number';
@@ -15,53 +14,24 @@ import { Microseconds } from '../types/units';
 dayjs.extend(_duration);
 dayjs.extend(_relativeTime);
 dayjs.extend(_utc);
-dayjs.extend(_timezone);
 
-/** Time zone setting values: 'browser', 'utc', or an IANA name such as 'Europe/Berlin'. */
+/** Time zone setting values: the browser's local zone, or UTC. */
 export const BROWSER_TIME_ZONE = 'browser';
 export const UTC_TIME_ZONE = 'utc';
+export type TTimeZoneSetting = typeof BROWSER_TIME_ZONE | typeof UTC_TIME_ZONE;
 
-// The zone timestamps are displayed in. null means the browser's local zone,
+// Whether timestamps are displayed in UTC rather than the browser's local zone,
 // which is what dayjs uses by default.
-let displayTimeZone: string | null = null;
+let displayInUtc = false;
 
-export function isValidTimeZone(zone: string): boolean {
-  try {
-    // eslint-disable-next-line no-new
-    new Intl.DateTimeFormat('en-US', { timeZone: zone });
-    return true;
-  } catch {
-    return false;
-  }
+/** Sets the zone used by all timestamp formatting helpers. */
+export function setDisplayTimeZone(setting: TTimeZoneSetting): void {
+  displayInUtc = setting === UTC_TIME_ZONE;
 }
 
-/**
- * Sets the zone used by all timestamp formatting helpers. Unknown zone names
- * fall back to the browser's local zone.
- */
-export function setDisplayTimeZone(setting?: string | null): void {
-  const normalized = setting?.trim().toLowerCase();
-  if (!normalized || normalized === BROWSER_TIME_ZONE) {
-    displayTimeZone = null;
-  } else if (normalized === UTC_TIME_ZONE) {
-    displayTimeZone = 'UTC';
-  } else if (setting && isValidTimeZone(setting.trim())) {
-    displayTimeZone = setting.trim();
-  } else {
-    // eslint-disable-next-line no-console
-    console.warn(`Unknown time zone "${setting}", using the browser's time zone`);
-    displayTimeZone = null;
-  }
-}
-
-/** @return the IANA name of the display zone, or null for the browser's local zone */
-export function getDisplayTimeZone(): string | null {
-  return displayTimeZone;
-}
-
-/** @return the browser's local IANA zone name, e.g. 'Europe/Berlin' */
-export function getBrowserTimeZone(): string {
-  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+/** @return 'UTC' when displaying in UTC, or null for the browser's local zone */
+export function getDisplayTimeZone(): 'UTC' | null {
+  return displayInUtc ? 'UTC' : null;
 }
 
 /**
@@ -70,24 +40,12 @@ export function getBrowserTimeZone(): string {
  */
 export function toDisplayTime(value?: ConfigType): Dayjs {
   const m = dayjs.isDayjs(value) ? value : dayjs(value);
-  if (displayTimeZone === null) {
-    return m;
-  }
-  if (displayTimeZone === 'UTC') {
-    return m.utc();
-  }
-  return m.tz(displayTimeZone);
+  return displayInUtc ? m.utc() : m;
 }
 
 /** Parses a wall-clock string such as '2026-10-07 13:45' as a time in the display time zone. */
 export function parseDisplayTime(text: string): Dayjs {
-  if (displayTimeZone === null) {
-    return dayjs(text);
-  }
-  if (displayTimeZone === 'UTC') {
-    return dayjs.utc(text);
-  }
-  return dayjs.tz(text, displayTimeZone);
+  return displayInUtc ? dayjs.utc(text) : dayjs(text);
 }
 
 /**
@@ -95,21 +53,18 @@ export function parseDisplayTime(text: string): Dayjs {
  * @return the display zone's UTC offset, e.g. 'UTC' or 'UTC+05:30'
  */
 export function formatTimeZoneOffset(value?: ConfigType): string {
-  if (displayTimeZone === 'UTC') {
-    return 'UTC';
-  }
-  return `UTC${toDisplayTime(value).format('Z')}`;
+  return displayInUtc ? 'UTC' : `UTC${toDisplayTime(value).format('Z')}`;
 }
 
 /**
  * @param value - timestamp in milliseconds, defaults to now
- * @return the display zone's name and offset, e.g. 'Asia/Kolkata (UTC+05:30)'
+ * @return the display zone's name and offset, e.g. 'Asia/Kolkata (UTC+05:30)' or 'UTC'
  */
 export function formatTimeZoneLabel(value?: ConfigType): string {
-  if (displayTimeZone === 'UTC') {
+  if (displayInUtc) {
     return 'UTC';
   }
-  return `${displayTimeZone ?? getBrowserTimeZone()} (${formatTimeZoneOffset(value)})`;
+  return `${Intl.DateTimeFormat().resolvedOptions().timeZone} (${formatTimeZoneOffset(value)})`;
 }
 
 const TODAY = 'Today';

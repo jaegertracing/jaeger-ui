@@ -7,14 +7,9 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import TimeZoneProvider from './TimeZoneProvider';
 import TimeZoneSelect from './TimeZoneSelect';
 import { TIME_ZONE_STORAGE_KEY } from './TimeZoneStorage';
-import getConfig from '../../utils/config/get-config';
 import { formatDatetime, getDisplayTimeZone, setDisplayTimeZone } from '../../utils/date';
 
-vi.mock('../../utils/config/get-config', () => ({
-  default: vi.fn(() => ({})),
-}));
-
-const getConfigMock = getConfig as unknown as ReturnType<typeof vi.fn>;
+const BROWSER_LABEL = `Browser time (${Intl.DateTimeFormat().resolvedOptions().timeZone})`;
 
 function Timestamp() {
   return <span data-testid="timestamp">{formatDatetime(0)}</span>;
@@ -40,47 +35,43 @@ async function choose(label: string) {
 describe('TimeZoneSelect', () => {
   beforeEach(() => {
     localStorage.clear();
-    getConfigMock.mockReturnValue({});
   });
 
   afterEach(() => {
     setDisplayTimeZone('browser');
   });
 
-  it('applies the configured time zone on load', () => {
-    getConfigMock.mockReturnValue({ timeZone: 'Asia/Kolkata' });
+  it('uses browser time by default', () => {
     renderSelect();
-    expect(getDisplayTimeZone()).toBe('Asia/Kolkata');
-    expect(screen.getByRole('button', { name: /select time zone/i })).toHaveTextContent('UTC+05:30');
-    expect(screen.getByTestId('timestamp')).toHaveTextContent('January 1 1970, 05:30:00.000');
+    expect(getDisplayTimeZone()).toBeNull();
+  });
+
+  it('offers only browser time and UTC', async () => {
+    renderSelect();
+    fireEvent.click(screen.getByRole('button', { name: /select time zone/i }));
+    expect(await screen.findByText(BROWSER_LABEL)).toBeInTheDocument();
+    expect(screen.getAllByRole('menuitem')).toHaveLength(2);
   });
 
   it('switches to UTC, re-renders timestamps, and remembers the choice', async () => {
-    getConfigMock.mockReturnValue({ timeZone: 'Asia/Kolkata' });
     renderSelect();
 
     await choose('UTC');
 
     expect(getDisplayTimeZone()).toBe('UTC');
+    expect(screen.getByRole('button', { name: /select time zone/i })).toHaveTextContent('UTC');
     expect(screen.getByTestId('timestamp')).toHaveTextContent('January 1 1970, 00:00:00.000');
     expect(localStorage.getItem(TIME_ZONE_STORAGE_KEY)).toBe('"utc"');
   });
 
-  it('switches back to the browser time zone', async () => {
+  it('switches back to browser time', async () => {
     localStorage.setItem(TIME_ZONE_STORAGE_KEY, '"utc"');
     renderSelect();
     expect(getDisplayTimeZone()).toBe('UTC');
 
-    await choose(`Browser time (${Intl.DateTimeFormat().resolvedOptions().timeZone})`);
+    await choose(BROWSER_LABEL);
 
     expect(getDisplayTimeZone()).toBeNull();
     expect(localStorage.getItem(TIME_ZONE_STORAGE_KEY)).toBe('"browser"');
-  });
-
-  it('lists the configured IANA zone as an option', async () => {
-    getConfigMock.mockReturnValue({ timeZone: 'Europe/Berlin' });
-    renderSelect();
-    fireEvent.click(screen.getByRole('button', { name: /select time zone/i }));
-    expect(await screen.findByText('Europe/Berlin')).toBeInTheDocument();
   });
 });

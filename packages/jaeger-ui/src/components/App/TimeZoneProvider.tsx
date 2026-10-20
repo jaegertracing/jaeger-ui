@@ -4,11 +4,11 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
 import { getInitialTimeZone, writeStoredTimeZone } from './TimeZoneStorage';
-import { BROWSER_TIME_ZONE, setDisplayTimeZone } from '../../utils/date';
+import { BROWSER_TIME_ZONE, setDisplayTimeZone, TTimeZoneSetting } from '../../utils/date';
 
 type TimeZoneContextValue = {
-  timeZone: string;
-  setTimeZone: (timeZone: string) => void;
+  timeZone: TTimeZoneSetting;
+  setTimeZone: (timeZone: TTimeZoneSetting) => void;
 };
 
 const TimeZoneContext = createContext<TimeZoneContextValue>({
@@ -21,13 +21,13 @@ export function useTimeZone() {
 }
 
 export default function TimeZoneProvider({ children }: { children: React.ReactNode }) {
-  const [timeZone, setTimeZoneState] = useState<string>(() => {
+  const [timeZone, setTimeZoneState] = useState<TTimeZoneSetting>(() => {
     const initial = getInitialTimeZone();
     setDisplayTimeZone(initial);
     return initial;
   });
 
-  const setTimeZone = useCallback((value: string) => {
+  const setTimeZone = useCallback((value: TTimeZoneSetting) => {
     setDisplayTimeZone(value);
     writeStoredTimeZone(value);
     setTimeZoneState(value);
