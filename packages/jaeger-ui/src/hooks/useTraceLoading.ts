@@ -22,16 +22,25 @@ export function populateTraceCache(trace: IOtelTrace): void {
   queryClient.setQueryData(TRACE_QUERY_KEY(trace.traceID), trace);
 }
 
-// TODO: staleTime: Infinity is incorrect — Jaeger returns partial traces if spans are still arriving
-// (availability over consistency). Instead, poll every 60s for up to 5 minutes after first load,
-// then stop. Use meta.firstFetchedAt (stamped at query creation, not updated on refetch) to track
-// elapsed time: refetchInterval: q => Date.now() - (q.meta.firstFetchedAt as number) < 5*60*1000 ? 60_000 : false
-// gcTime controls eviction from memory once no component is using the trace.
+// Jaeger may return a partial trace. The user can reload it from the Incomplete warning;
+// replacing trace data automatically would disrupt the current trace view.
+export function reloadBackendTrace(traceId: string): Promise<void> {
+  const canonicalId = getCachedTrace(traceId)?.traceID ?? traceId;
+  return queryClient.invalidateQueries({
+    refetchType: 'active',
+    predicate: query =>
+      query.queryKey[0] === 'trace' &&
+      (query.queryKey[1] === traceId ||
+        query.queryKey[1] === canonicalId ||
+        (query.state.data as IOtelTrace | undefined)?.traceID === canonicalId),
+  });
+}
+
 export function useTrace(traceId: string): UseQueryResult<IOtelTrace> {
   return useQuery({
     queryKey: TRACE_QUERY_KEY(traceId),
-    queryFn: async () => {
-      const response = await jaegerClient.fetchTrace(toTraceIdHex(traceId));
+    queryFn: async ({ signal }) => {
+      const response = await jaegerClient.fetchTrace(toTraceIdHex(traceId), signal);
       const otel = parseOtelTrace(response);
       if (!otel) {
         throw new Error('Invalid trace data received.');
@@ -53,8 +62,8 @@ export function useTraces(ids: string[]): Map<string, FetchedTrace> {
   const results = useQueries({
     queries: ids.map(id => ({
       queryKey: TRACE_QUERY_KEY(id),
-      queryFn: async () => {
-        const response = await jaegerClient.fetchTrace(toTraceIdHex(id));
+      queryFn: async ({ signal }) => {
+        const response = await jaegerClient.fetchTrace(toTraceIdHex(id), signal);
         const otel = parseOtelTrace(response);
         if (!otel) {
           throw new Error('Invalid trace data received.');
