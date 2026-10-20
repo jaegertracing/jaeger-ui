@@ -4,6 +4,7 @@
 const fetchMock = vi.fn(() =>
   Promise.resolve({
     status: 200,
+    ok: true,
     data: () => Promise.resolve({ data: null }),
     json: () => Promise.resolve({ data: null }),
   })
@@ -14,56 +15,54 @@ vi.stubGlobal('fetch', fetchMock);
 import queryString from 'query-string';
 
 import traceGenerator from '../demo/trace-generators';
-import JaegerAPI, { getMessageFromError, DEFAULT_API_ROOT, DEFAULT_DEPENDENCY_LOOKBACK } from './jaeger';
+import JaegerAPI, { getMessageFromError, DEFAULT_API_ROOT } from './jaeger';
+import { JaegerClient, jaegerClient, DEFAULT_DEPENDENCY_LOOKBACK } from './v3/client';
 
 const defaultOptions = {
   credentials: 'same-origin',
 };
 
 describe('fetchDeepDependencyGraph', () => {
-  it('GETs the specified query', () => {
+  it('GETs the specified query', async () => {
     const query = { service: 'serviceName', start: 400, end: 800 };
-    JaegerAPI.fetchDeepDependencyGraph(query);
+    await jaegerClient.fetchDeepDependencyGraph(query);
     expect(fetchMock).toHaveBeenLastCalledWith(
       `${DEFAULT_API_ROOT}deep-dependencies?${queryString.stringify(query)}`,
-      defaultOptions
+      { signal: undefined }
     );
   });
 
-  it('uses the configured apiRoot', () => {
-    const originalApiRoot = JaegerAPI.apiRoot;
-    JaegerAPI.apiRoot = '/custom-api/';
-    const query = { service: 'serviceName' };
+  it('uses the configured apiRoot', async () => {
+    const client = new JaegerClient('/custom-api/');
+    const query = { service: 'serviceName', start: 400, end: 800 };
 
-    JaegerAPI.fetchDeepDependencyGraph(query);
+    await client.fetchDeepDependencyGraph(query);
 
     expect(fetchMock).toHaveBeenLastCalledWith(
       `/custom-api/deep-dependencies?${queryString.stringify(query)}`,
-      defaultOptions
+      { signal: undefined }
     );
-
-    JaegerAPI.apiRoot = originalApiRoot;
   });
 });
 
 describe('fetchDependencies', () => {
-  it('GETs the specified query', () => {
-    const endTs = 'end time stamp';
-    const lookback = 'test lookback';
-    JaegerAPI.fetchDependencies(endTs, lookback);
+  it('GETs the specified query', async () => {
+    const endTs = 12345;
+    const lookback = 3600000;
+    await jaegerClient.fetchDependencies(endTs, lookback);
     expect(fetchMock).toHaveBeenLastCalledWith(
       `${DEFAULT_API_ROOT}dependencies?${queryString.stringify({ endTs, lookback })}`,
-      defaultOptions
+      { signal: undefined }
     );
   });
 
-  it('has default query values', () => {
-    JaegerAPI.fetchDependencies();
+  it('has default query values', async () => {
+    await jaegerClient.fetchDependencies();
     expect(fetchMock).toHaveBeenLastCalledWith(
       expect.stringMatching(
         new RegExp(`${DEFAULT_API_ROOT}dependencies\\?endTs=\\d+&lookback=${DEFAULT_DEPENDENCY_LOOKBACK}`)
       ),
-      defaultOptions
+      { signal: undefined }
     );
   });
 });

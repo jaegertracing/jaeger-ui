@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
-import JaegerAPI from '../api/jaeger';
+import { jaegerClient } from '../api/v3/client';
 import transformDdgData from '../model/ddg/transformDdgData';
 import type { TDdgModel, TDdgModelParams, TDdgPayload } from '../model/ddg/types';
 import type { ApiError } from '../types/api-error';
@@ -22,7 +22,7 @@ function normalizeDdgPayload(response: unknown): TDdgPayload {
 }
 
 /**
- * React Query hook for the Deep Dependencies graph (`GET /api/v1/dependencies` analytics API).
+ * React Query hook for the Deep Dependencies graph (`GET /api/deep-dependencies`).
  * Returns a transformed `TDdgModel` for the focal service/operation and time window.
  */
 export function useDeepDependencyGraphQuery(
@@ -32,7 +32,7 @@ export function useDeepDependencyGraphQuery(
     queryKey: params ? deepDependencyGraphQueryKey(params) : (['ddg', 'disabled'] as const),
     queryFn: async () => {
       const { service, operation, start, end } = params!;
-      const response = await JaegerAPI.fetchDeepDependencyGraph({
+      const response = await jaegerClient.fetchDeepDependencyGraph({
         service,
         operation,
         start,
