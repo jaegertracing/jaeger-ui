@@ -89,15 +89,6 @@ describe('fetchServiceOperations', () => {
   });
 });
 
-describe('transformOTLP', () => {
-  it('GETs the transformed trace of Jaeger kind when provided with OTLP', () => {
-    const trace = JSON.parse('{"test" : true}');
-    const body = { ...defaultOptions, body: JSON.stringify(trace), method: 'POST' };
-    JaegerAPI.transformOTLP(trace);
-    expect(fetchMock).toHaveBeenLastCalledWith(`${DEFAULT_API_ROOT}transform`, body);
-  });
-});
-
 describe('fetchTrace', () => {
   const generatedTraces = traceGenerator.traces({ numberOfTraces: 5 });
 

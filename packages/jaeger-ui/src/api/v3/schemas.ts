@@ -244,7 +244,8 @@ export const refinedSpan = z
     traceId: traceIdHex,
     spanId: spanIdHex,
     traceState: z.string().optional(),
-    parentSpanId: spanIdHex.optional(),
+    // OTLP/JSON exporters may write an empty parentSpanId for a root span.
+    parentSpanId: z.union([z.literal(''), spanIdHex]).optional(),
     flags: z.number().int().min(0).optional(),
     name: z.string().optional(),
     kind: spanKindEnum.optional(),

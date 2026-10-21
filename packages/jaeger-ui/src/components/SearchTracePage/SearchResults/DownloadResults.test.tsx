@@ -73,6 +73,20 @@ afterEach(() => {
 });
 
 describe('DownloadResults', () => {
+  it('downloads locally uploaded OTLP data without retrieving it from the backend', async () => {
+    const raw = baseTraces.map(trace => ({
+      resourceSpans: [{ scopeSpans: [{ spans: [{ traceId: trace.traceID }] }] }],
+    }));
+    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob://url');
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+    render(<DownloadResults traceSummaries={baseTraces} rawTraces={raw} />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Download Results/i }));
+    });
+    expect(createObjectURL).toHaveBeenCalledWith(expect.any(Blob));
+    expect(mockFetchTrace).not.toHaveBeenCalled();
+  });
+
   it('renders the button with correct label', () => {
     render(<DownloadResults traceSummaries={baseTraces} rawTraces={baseRawTraces} />);
     expect(screen.getByRole('button', { name: /Download Results/i })).toBeInTheDocument();

@@ -11,6 +11,9 @@ import { traceToTraceSummary } from '../../model/trace-summary';
 import { populateTraceCache } from '../../hooks/useTraceLoading';
 import type { SpanData, TraceData } from '../../types/trace';
 import type { TraceSummary } from '../../types/trace-summary';
+import { parseOtelTrace } from '../../api/v3/parser';
+import { isOtelUpload, splitOtelUpload, validateOtelUpload } from '../../utils/otel-upload';
+import type { TracesDataWire } from '../../api/v3/schemas';
 
 import './FileLoader.css';
 
@@ -45,7 +48,38 @@ export async function loadTracesFromFile(file: File): Promise<LoadResult> {
   const rawTraces: unknown[] = [];
   let errorCount = 0;
 
+  const otelDocuments: TracesDataWire[] = [];
+  const legacyDocuments: unknown[] = [];
   for (const raw of traces) {
+    if (isOtelUpload(raw)) {
+      try {
+        otelDocuments.push(validateOtelUpload(raw));
+      } catch {
+        errorCount++;
+      }
+    } else {
+      legacyDocuments.push(raw);
+    }
+  }
+
+  // A trace may span several JSONL envelopes or array entries. Publish it only
+  // after grouping every valid document, so later entries cannot overwrite spans.
+  for (const data of splitOtelUpload(otelDocuments)) {
+    try {
+      const otel = parseOtelTrace(data);
+      if (!otel) {
+        errorCount++;
+        continue;
+      }
+      populateTraceCache(otel);
+      summaries.push(traceToTraceSummary(otel));
+      rawTraces.push(data);
+    } catch {
+      errorCount++;
+    }
+  }
+
+  for (const raw of legacyDocuments) {
     try {
       // Clone before transforming: transformTraceData mutates the input in place
       // (adds childSpans, ref.span backlinks, etc.), so we must preserve a clean copy

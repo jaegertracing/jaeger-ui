@@ -90,9 +90,6 @@ const JaegerAPI = {
   fetchServiceOperations(serviceName: string): Promise<any> {
     return getJSON(`${this.apiRoot}services/${encodeURIComponent(serviceName)}/operations`);
   },
-  transformOTLP(traces: any): Promise<any> {
-    return getJSON(`${this.apiRoot}transform`, { method: 'POST', body: JSON.stringify(traces) });
-  },
   fetchServiceServerOps(service: string): Promise<any> {
     return getJSON(`${this.apiRoot}operations`, {
       query: {
