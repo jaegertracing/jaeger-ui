@@ -52,8 +52,22 @@ import readJsonFile from '../../utils/readJsonFile';
 import transformTraceData from '../../model/transform-trace-data';
 import { traceToTraceSummary } from '../../model/trace-summary';
 import { populateTraceCache } from '../../hooks/useTraceLoading';
+import * as otelParser from '../../api/v3/parser';
 
 const makeFile = (name = 'trace.json') => new File(['{}'], name, { type: 'application/json' });
+const makeOtlpDocument = traceId => ({
+  resourceSpans: [
+    {
+      scopeSpans: [
+        {
+          spans: [
+            { traceId, spanId: '1111111111111111', startTimeUnixNano: '1000', endTimeUnixNano: '2000' },
+          ],
+        },
+      ],
+    },
+  ],
+});
 
 beforeEach(() => {
   readJsonFile.mockClear();
@@ -63,7 +77,53 @@ beforeEach(() => {
   global.mockBeforeUpload = null;
 });
 
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 describe('loadTracesFromFile', () => {
+  it('keeps other OTLP traces when the native parser returns no trace', async () => {
+    const empty = makeOtlpDocument('abcdef0123456789abcdef0123456789');
+    const good = makeOtlpDocument('1234567890abcdef1234567890abcdef');
+    const summary = { traceID: '1234567890abcdef1234567890abcdef' };
+    readJsonFile.mockResolvedValue([empty, good]);
+    vi.spyOn(otelParser, 'parseOtelTrace').mockReturnValueOnce(null);
+    traceToTraceSummary.mockReturnValueOnce(summary);
+
+    const result = await loadTracesFromFile(makeFile());
+
+    expect(result).toEqual({ summaries: [summary], rawTraces: [good], errorCount: 1 });
+    expect(populateTraceCache).toHaveBeenCalledTimes(1);
+    expect(populateTraceCache).toHaveBeenCalledWith(expect.objectContaining({ traceID: summary.traceID }));
+    expect(transformTraceData).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['Error', new Error('Native parser failed')],
+    ['string', 'Native parser failed'],
+  ])('reports a thrown %s and keeps other OTLP traces', async (_kind, error) => {
+    const bad = makeOtlpDocument('abcdef0123456789abcdef0123456789');
+    const good = makeOtlpDocument('1234567890abcdef1234567890abcdef');
+    const summary = { traceID: '1234567890abcdef1234567890abcdef' };
+    readJsonFile.mockResolvedValue([bad, good]);
+    vi.spyOn(otelParser, 'parseOtelTrace').mockImplementationOnce(() => {
+      throw error;
+    });
+    traceToTraceSummary.mockReturnValueOnce(summary);
+
+    const result = await loadTracesFromFile(makeFile());
+
+    expect(result).toEqual({
+      summaries: [summary],
+      rawTraces: [good],
+      errorCount: 1,
+      errorDetail: 'Native parser failed',
+    });
+    expect(populateTraceCache).toHaveBeenCalledTimes(1);
+    expect(populateTraceCache).toHaveBeenCalledWith(expect.objectContaining({ traceID: summary.traceID }));
+    expect(transformTraceData).not.toHaveBeenCalled();
+  });
+
   it('returns summaries and raw traces for a valid { data: [...] } file', async () => {
     const rawTrace = { traceID: 'abc', spans: [] };
     const otelTrace = { traceID: 'abc' };

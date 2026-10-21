@@ -106,8 +106,10 @@ it('reloads downloaded native uploads without serializing enriched parent/child 
 it('counts invalid OTLP documents and still loads valid documents', async () => {
   const invalid = structuredClone(payload);
   invalid.resourceSpans[0].scopeSpans[0].spans[0].spanId = 'invalid';
-  const result = await loadTracesFromFile(file({ data: [invalid, payload] }));
-  expect(result.errorCount).toBe(1);
+  const secondInvalid = structuredClone(payload);
+  secondInvalid.resourceSpans[0].scopeSpans[0].spans[0].traceId = 'invalid';
+  const result = await loadTracesFromFile(file({ data: [invalid, secondInvalid, payload] }));
+  expect(result.errorCount).toBe(2);
   expect(result.errorDetail).toBe(
     'Invalid span ID: must be 16-char hex string and not all zeros (at resourceSpans.0.scopeSpans.0.spans.0.spanId)'
   );

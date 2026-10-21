@@ -73,6 +73,27 @@ afterEach(() => {
 });
 
 describe('DownloadResults', () => {
+  it('fetches missing traces when cached upload documents have no usable trace ID', async () => {
+    const raw = [null, {}, { resourceSpans: null }, { resourceSpans: [{}, { scopeSpans: [{ spans: [] }] }] }];
+    mockFetchTrace
+      .mockResolvedValueOnce({ data: [baseRawTraces[0]] })
+      .mockResolvedValueOnce({ data: [baseRawTraces[1]] });
+    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob://url');
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+
+    render(<DownloadResults traceSummaries={baseTraces} rawTraces={raw} />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Download Results/i }));
+    });
+
+    expect(mockFetchTrace).toHaveBeenCalledTimes(2);
+    expect(mockFetchTrace).toHaveBeenCalledWith('a');
+    expect(mockFetchTrace).toHaveBeenCalledWith('b');
+    expect(createObjectURL).toHaveBeenCalledTimes(1);
+    const blob = createObjectURL.mock.calls[0][0] as Blob;
+    expect(await readJsonFile({ file: new File([blob], 'download.json') })).toEqual({ data: baseRawTraces });
+  });
+
   it('downloads locally uploaded OTLP data without retrieving it from the backend', async () => {
     const raw = baseTraces.map(trace => ({
       resourceSpans: [{ scopeSpans: [{ spans: [{ traceId: trace.traceID }] }] }],
