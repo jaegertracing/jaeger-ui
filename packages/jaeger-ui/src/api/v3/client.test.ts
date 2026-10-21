@@ -23,6 +23,99 @@ describe('JaegerClient', () => {
     vi.useRealTimers();
   });
 
+  describe.each(['fetchDependencies', 'fetchDeepDependencyGraph'] as const)('%s', method => {
+    const fetchGraph = (signal?: AbortSignal) =>
+      method === 'fetchDependencies'
+        ? client.fetchDependencies(100, 200, signal)
+        : client.fetchDeepDependencyGraph({ service: 'frontend', start: 100, end: 200 }, signal);
+
+    it.each([{ data: [] }, [], null, { dependencies: [] }])(
+      'preserves the JSON response for hook normalization: %j',
+      async data => {
+        mockFetch.mockResolvedValue({ ok: true, json: async () => data });
+
+        await expect(fetchGraph()).resolves.toBe(data);
+      }
+    );
+
+    it('reports HTTP failures with the client error style', async () => {
+      const json = vi.fn();
+      mockFetch.mockResolvedValue({ ok: false, status: 503, statusText: 'Service Unavailable', json });
+      const operation = method === 'fetchDependencies' ? 'dependencies' : 'deep dependencies';
+
+      await expect(fetchGraph()).rejects.toThrow(`Failed to fetch ${operation}: 503 Service Unavailable`);
+      expect(json).not.toHaveBeenCalled();
+    });
+
+    it('propagates network failures', async () => {
+      const failure = new TypeError('Failed to fetch');
+      mockFetch.mockRejectedValue(failure);
+
+      await expect(fetchGraph()).rejects.toBe(failure);
+    });
+
+    it('propagates invalid JSON responses', async () => {
+      const failure = new SyntaxError('Unexpected token');
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => {
+          throw failure;
+        },
+      });
+
+      await expect(fetchGraph()).rejects.toBe(failure);
+    });
+
+    it('preserves graph reads that take longer than the default transport deadline', async () => {
+      const data = { dependencies: [] };
+      let finishRequest!: (response: unknown) => void;
+      mockFetch.mockImplementation(
+        () =>
+          new Promise(resolve => {
+            finishRequest = resolve;
+          })
+      );
+
+      const promise = fetchGraph();
+      await vi.advanceTimersByTimeAsync(11000);
+      expect(mockFetch).toHaveBeenCalledWith(expect.any(String), { signal: undefined });
+      expect(vi.getTimerCount()).toBe(0);
+      finishRequest({ ok: true, json: async () => data });
+      await expect(promise).resolves.toBe(data);
+    });
+
+    it('forwards the caller signal without adding a deadline', async () => {
+      const controller = new AbortController();
+      mockFetch.mockResolvedValue({ ok: true, json: async () => ({}) });
+
+      await fetchGraph(controller.signal);
+
+      expect(mockFetch).toHaveBeenCalledWith(expect.any(String), { signal: controller.signal });
+      expect(vi.getTimerCount()).toBe(0);
+    });
+  });
+
+  it('uses a one-week default lookback for dependency requests', async () => {
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({ data: [] }) });
+
+    await client.fetchDependencies(100);
+
+    expect(mockFetch).toHaveBeenCalledWith('/api/dependencies?endTs=100&lookback=604800000', {
+      signal: undefined,
+    });
+  });
+
+  it('preserves deep-dependency query encoding and omits an absent operation', async () => {
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({ dependencies: [] }) });
+
+    await client.fetchDeepDependencyGraph({ service: 'frontend /?&=!', start: 0, end: 200 });
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/api/deep-dependencies?end=200&service=frontend%20%2F%3F%26%3D%21&start=0',
+      { signal: undefined }
+    );
+  });
+
   describe('archiveTrace', () => {
     it('POSTs to the existing archive endpoint through the timeout transport', async () => {
       const data = { data: [] };
@@ -683,6 +776,7 @@ describe('JaegerClient with non-default base path', () => {
 
   afterEach(() => {
     (global as any).fetch = originalFetch;
+    vi.doUnmock('../../site-prefix');
   });
 
   it('calls services endpoint with base path prefix from site-prefix', async () => {
@@ -702,6 +796,26 @@ describe('JaegerClient with non-default base path', () => {
     expect(mockFetch).toHaveBeenCalledWith(
       '/jaeger/api/v3/services',
       expect.objectContaining({ signal: expect.any(AbortSignal) })
+    );
+  });
+
+  it('keeps both dependency routes under the deployment base path', async () => {
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({}) });
+    vi.resetModules();
+    vi.doMock('../../site-prefix', () => ({ default: `${global.location.origin}/jaeger/` }));
+    const { JaegerClient: IsolatedClient } = await import('./client');
+    const client = new IsolatedClient();
+
+    await client.fetchDependencies(100, 200);
+    await client.fetchDeepDependencyGraph({ service: 'frontend', operation: '*', start: 100, end: 200 });
+
+    expect(mockFetch).toHaveBeenNthCalledWith(1, '/jaeger/api/dependencies?endTs=100&lookback=200', {
+      signal: undefined,
+    });
+    expect(mockFetch).toHaveBeenNthCalledWith(
+      2,
+      '/jaeger/api/deep-dependencies?end=200&operation=%2A&service=frontend&start=100',
+      { signal: undefined }
     );
   });
 });
