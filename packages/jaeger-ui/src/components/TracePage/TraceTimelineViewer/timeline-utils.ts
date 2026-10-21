@@ -151,7 +151,7 @@ export function getDescendantParentSpanIDs(rootSpan: IOtelSpan): Set<string> {
  * or if the focused span is pruned. Memoized across callers (TracePage and VirtualizedTraceView)
  * to avoid repeated tree traversals and set allocations during high-frequency updates.
  */
-export function getFocusedSpanIDs(
+function getFocusedSpanIDs(
   trace: IOtelTrace | TNil,
   focusedSubtreeSpanID?: string | null,
   prunedServices?: Set<string>
