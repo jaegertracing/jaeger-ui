@@ -82,6 +82,18 @@ describe('fileReader.readJsonFile', () => {
     return expect(p).rejects.toMatchObject(expect.any(Error));
   });
 
+  it('rejects OTLP traces with invalid resourceSpans before merging', () => {
+    const file = new File(['[{"resourceSpans":[]},{"resourceSpans":null}]'], 'invalid-otlp.json');
+    const p = readJsonFile({ file });
+    return expect(p).rejects.toThrow('Invalid OTLP trace format: resourceSpans must be an array');
+  });
+
+  it('rejects an OTLP trace with invalid resourceSpans', () => {
+    const file = new File(['{"resourceSpans":null}'], 'invalid-otlp.json');
+    const p = readJsonFile({ file });
+    return expect(p).rejects.toThrow('Invalid OTLP trace format: resourceSpans must be an array');
+  });
+
   it.each(['null', 'true', '42', '"trace"'])('rejects valid JSON primitive %s', content => {
     const file = new File([content], 'foo.json');
     const p = readJsonFile({ file });
