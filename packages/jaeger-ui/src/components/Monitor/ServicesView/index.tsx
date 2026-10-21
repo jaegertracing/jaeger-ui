@@ -318,7 +318,7 @@ export function MonitorATMServicesViewImpl({ search = '', navigate }: TOwnProps)
     !serviceMetricsFetching && !serviceMetricsInitialLoading && _isEmpty(serviceMetrics?.service_latencies);
 
   if (servicesLoading) {
-    return <LoadingIndicator vcentered centered />;
+    return <LoadingIndicator vcentered centered label="Loading services" />;
   }
 
   return (

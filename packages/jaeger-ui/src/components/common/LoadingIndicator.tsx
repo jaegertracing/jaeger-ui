@@ -10,6 +10,7 @@ export default function LoadingIndicator({
   centered = false,
   vcentered,
   className = '',
+  label,
   small = false,
   style,
   ...rest
@@ -17,6 +18,8 @@ export default function LoadingIndicator({
   centered?: boolean;
   vcentered?: boolean;
   className?: string;
+  /** Announced to screen readers as a live status; leave unset when the surrounding UI already conveys loading. */
+  label?: string;
   small?: boolean;
   style?: React.CSSProperties;
 }) {
@@ -28,5 +31,15 @@ export default function LoadingIndicator({
     ${className}
   `;
 
-  return <LuLoaderCircle role="status" aria-label="Loading" className={cls} {...rest} style={style} />;
+  const icon = <LuLoaderCircle aria-hidden="true" className={cls} {...rest} style={style} />;
+  if (!label) return icon;
+
+  return (
+    <>
+      {icon}
+      <span role="status" className="LoadingIndicator--label">
+        {label}
+      </span>
+    </>
+  );
 }

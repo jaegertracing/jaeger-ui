@@ -74,6 +74,11 @@ describe('<ServiceGraph>', () => {
     expect(screen.getByRole('heading', { name: 'Hello Graph' })).toBeInTheDocument();
   });
 
+  it('does not announce a loading status for the per-graph placeholder', () => {
+    render(<ServiceGraph {...defaultProps} />);
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
   it('renders loading indicator when xDomain is empty or undefined', () => {
     cleanup();
     const { container: container1 } = render(<ServiceGraph {...defaultProps} xDomain={[]} loading={false} />);

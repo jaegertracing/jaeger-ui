@@ -78,8 +78,13 @@ const defaultOperationMetricsImpl = () => ({
 vi.mock('lodash/debounce', async () => mockDefault(fn => fn));
 
 vi.mock('../../common/LoadingIndicator', async () => {
-  return mockDefault(function LoadingIndicator() {
-    return <div data-testid="loading-indicator">Loading...</div>;
+  const { default: ActualLoadingIndicator } = await vi.importActual('../../common/LoadingIndicator');
+  return mockDefault(function LoadingIndicator(props) {
+    return (
+      <div data-testid="loading-indicator">
+        <ActualLoadingIndicator {...props} />
+      </div>
+    );
   });
 });
 
@@ -199,6 +204,14 @@ describe('<MonitorATMServicesView>', () => {
     useServices.mockReturnValue({ data: [], isLoading: true });
     renderWithRouter(<MonitorATMServicesView />);
     expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
+  });
+
+  it('announces a single loading status when loading services list', () => {
+    cleanup();
+    useServices.mockReturnValue({ data: [], isLoading: true });
+    renderWithRouter(<MonitorATMServicesView />);
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+    expect(screen.getByRole('status')).toHaveTextContent('Loading services');
   });
 
   it('do not show a loading indicator once data loaded', () => {
