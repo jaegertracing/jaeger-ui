@@ -17,7 +17,10 @@ export function toApiError(caught: unknown): ApiError {
     return caught;
   }
   if (caught instanceof Error) {
-    return { message: caught.message };
+    // Keep the HTTP details JaegerClient attaches, so ErrorMessage can render them.
+    const { httpStatus, httpStatusText, httpUrl, httpQuery, httpBody } = caught as Error &
+      Exclude<ApiError, string>;
+    return { message: caught.message, httpStatus, httpStatusText, httpUrl, httpQuery, httpBody };
   }
   if (
     caught !== null &&

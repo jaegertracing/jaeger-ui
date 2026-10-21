@@ -751,6 +751,99 @@ describe('JaegerClient', () => {
     });
   });
 
+  describe('HTTP error details', () => {
+    const traceId = '0123456789abcdef0123456789abcdef';
+    const failure = (text: () => Promise<string>) => ({
+      ok: false,
+      status: 400,
+      statusText: 'Bad Request',
+      text,
+    });
+
+    it.each([
+      {
+        method: 'fetchDependencies',
+        call: () => client.fetchDependencies(100, 200),
+        httpUrl: '/api/dependencies',
+        httpQuery: 'endTs=100&lookback=200',
+      },
+      {
+        method: 'fetchDeepDependencyGraph',
+        call: () => client.fetchDeepDependencyGraph({ service: 'frontend', start: 100, end: 200 }),
+        httpUrl: '/api/deep-dependencies',
+        httpQuery: 'end=200&service=frontend&start=100',
+      },
+      {
+        method: 'archiveTrace',
+        call: () => client.archiveTrace(traceId),
+        httpUrl: `/api/archive/${traceId}`,
+      },
+      {
+        method: 'fetchDecoration',
+        call: () => client.fetchDecoration('/details?id=1'),
+        httpUrl: '/details',
+        httpQuery: 'id=1',
+      },
+      { method: 'fetchServices', call: () => client.fetchServices(), httpUrl: '/api/v3/services' },
+      {
+        method: 'fetchSpanNames',
+        call: () => client.fetchSpanNames('my svc'),
+        httpUrl: '/api/v3/operations',
+        httpQuery: 'service=my%20svc',
+      },
+      {
+        method: 'fetchTraceSummaries',
+        call: () =>
+          client.fetchTraceSummaries({ service: 'my-svc' } as Parameters<
+            JaegerClient['fetchTraceSummaries']
+          >[0]),
+        httpUrl: '/api/v3/trace-summaries',
+        httpQuery: 'query.serviceName=my-svc',
+      },
+      { method: 'fetchTrace', call: () => client.fetchTrace(traceId), httpUrl: `/api/v3/traces/${traceId}` },
+    ])(
+      '$method attaches the status, URL, query, and formatted JSON body',
+      async ({ call, httpUrl, httpQuery }) => {
+        mockFetch.mockResolvedValue(failure(async () => '{"code":3,"message":"invalid service name"}'));
+
+        const error = await call().catch((caught: unknown) => caught);
+
+        expect(error).toBeInstanceOf(Error);
+        expect((error as Error).message).toMatch(/: 400 Bad Request$/);
+        expect({ ...(error as object) }).toEqual({
+          httpStatus: 400,
+          httpStatusText: 'Bad Request',
+          httpUrl,
+          ...(httpQuery && { httpQuery }),
+          httpBody: JSON.stringify({ code: 3, message: 'invalid service name' }, null, 2),
+        });
+      }
+    );
+
+    it('keeps a non-JSON body as text', async () => {
+      mockFetch.mockResolvedValue(failure(async () => 'storage unavailable'));
+
+      await expect(client.fetchServices()).rejects.toMatchObject({ httpBody: 'storage unavailable' });
+    });
+
+    it.each([
+      { case: 'an empty body', text: async () => '' },
+      {
+        case: 'an unreadable body',
+        text: async () => {
+          throw new TypeError('body stream already read');
+        },
+      },
+    ])('omits the body for $case', async ({ text }) => {
+      mockFetch.mockResolvedValue(failure(text));
+
+      const error = await client.fetchServices().catch((caught: unknown) => caught);
+
+      expect(error).toMatchObject({ message: 'Failed to fetch services: 400 Bad Request', httpStatus: 400 });
+      expect(error).not.toHaveProperty('httpBody');
+    });
+  });
+
   describe('singleton instance', () => {
     it('exports a singleton jaegerClient instance', () => {
       expect(jaegerClient).toBeInstanceOf(JaegerClient);

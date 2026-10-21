@@ -22,6 +22,7 @@ import {
 import type { TracesDataWire } from './schemas';
 import type { SearchQuery } from '../../types/search';
 import type { TraceSummary, ServiceSummary } from '../../types/trace-summary';
+import type { ApiError } from '../../types/api-error';
 import type { Microseconds } from '../../types/units';
 import type { TDdgModelParams } from '../../model/ddg/types';
 
@@ -43,6 +44,35 @@ function toIsoTimestamp(epochMicroseconds: number): string | undefined {
   return undefined;
 }
 
+/**
+ * Build the error for a failed response, keeping the HTTP details and response body
+ * that ErrorMessage renders. An unreadable body is reported as absent.
+ */
+async function httpError(message: string, url: string, response: Response): Promise<Error> {
+  const error: Error & Exclude<ApiError, string> = new Error(
+    `${message}: ${response.status} ${response.statusText}`
+  );
+  const queryStart = url.indexOf('?');
+  error.httpStatus = response.status;
+  error.httpStatusText = response.statusText;
+  error.httpUrl = queryStart === -1 ? url : url.slice(0, queryStart);
+  if (queryStart !== -1) error.httpQuery = url.slice(queryStart + 1);
+  let body = '';
+  try {
+    body = await response.text();
+  } catch {
+    // The status still describes the failure.
+  }
+  if (body) {
+    try {
+      error.httpBody = JSON.stringify(JSON.parse(body), null, 2);
+    } catch {
+      error.httpBody = body;
+    }
+  }
+  return error;
+}
+
 export class JaegerClient {
   private apiRoot = prefixUrl('/api/v3');
   // Archive and dependency-graph requests retain their existing /api/ routes.
@@ -54,33 +84,30 @@ export class JaegerClient {
     signal?: AbortSignal
   ): Promise<unknown> {
     const query = queryString.stringify({ endTs, lookback });
+    const url = `${this.legacyApiRoot}dependencies?${query}`;
     // Preserve deadline-free graph reads, which can wait on storage queries.
-    const response = await this.fetchWithTimeout(`${this.legacyApiRoot}dependencies?${query}`, {
-      timeout: null,
-      signal,
-    });
+    const response = await this.fetchWithTimeout(url, { timeout: null, signal });
     if (!response.ok) {
-      throw new Error(`Failed to fetch dependencies: ${response.status} ${response.statusText}`);
+      throw await httpError('Failed to fetch dependencies', url, response);
     }
     return response.json();
   }
 
   async fetchDeepDependencyGraph(params: TDdgModelParams, signal?: AbortSignal): Promise<unknown> {
     const query = queryString.stringify(params);
-    const response = await this.fetchWithTimeout(`${this.legacyApiRoot}deep-dependencies?${query}`, {
-      timeout: null,
-      signal,
-    });
+    const url = `${this.legacyApiRoot}deep-dependencies?${query}`;
+    const response = await this.fetchWithTimeout(url, { timeout: null, signal });
     if (!response.ok) {
-      throw new Error(`Failed to fetch deep dependencies: ${response.status} ${response.statusText}`);
+      throw await httpError('Failed to fetch deep dependencies', url, response);
     }
     return response.json();
   }
 
   async archiveTrace(id: string): Promise<unknown> {
-    const response = await this.fetchWithTimeout(`${this.legacyApiRoot}archive/${id}`, { method: 'POST' });
+    const url = `${this.legacyApiRoot}archive/${id}`;
+    const response = await this.fetchWithTimeout(url, { method: 'POST' });
     if (!response.ok) {
-      throw new Error(`Failed to archive trace ${id}: ${response.status} ${response.statusText}`);
+      throw await httpError(`Failed to archive trace ${id}`, url, response);
     }
     return response.json();
   }
@@ -88,7 +115,7 @@ export class JaegerClient {
   async fetchDecoration(url: string): Promise<unknown> {
     const response = await this.fetchWithTimeout(url);
     if (!response.ok) {
-      throw new Error(`Failed to fetch decoration: ${response.status} ${response.statusText}`);
+      throw await httpError('Failed to fetch decoration', url, response);
     }
     return response.json();
   }
@@ -98,9 +125,10 @@ export class JaegerClient {
    * @returns Promise<string[]> - Array of service names
    */
   async fetchServices(): Promise<string[]> {
-    const response = await this.fetchWithTimeout(`${this.apiRoot}/services`);
+    const url = `${this.apiRoot}/services`;
+    const response = await this.fetchWithTimeout(url);
     if (!response.ok) {
-      throw new Error(`Failed to fetch services: ${response.status} ${response.statusText}`);
+      throw await httpError('Failed to fetch services', url, response);
     }
     const data = await response.json();
 
@@ -115,13 +143,10 @@ export class JaegerClient {
    * @returns Promise<{ name: string; spanKind: string }[]> - Array of span name objects
    */
   async fetchSpanNames(service: string): Promise<{ name: string; spanKind: string }[]> {
-    const response = await this.fetchWithTimeout(
-      `${this.apiRoot}/operations?service=${encodeURIComponent(service)}`
-    );
+    const url = `${this.apiRoot}/operations?service=${encodeURIComponent(service)}`;
+    const response = await this.fetchWithTimeout(url);
     if (!response.ok) {
-      throw new Error(
-        `Failed to fetch span names for service "${service}": ${response.status} ${response.statusText}`
-      );
+      throw await httpError(`Failed to fetch span names for service "${service}"`, url, response);
     }
     const data = await response.json();
 
@@ -154,7 +179,7 @@ export class JaegerClient {
     const url = `${this.apiRoot}/trace-summaries?${params.toString()}`;
     const response = await this.fetchWithTimeout(url);
     if (!response.ok) {
-      throw new Error(`Failed to fetch trace summaries: ${response.status} ${response.statusText}`);
+      throw await httpError('Failed to fetch trace summaries', url, response);
     }
     const data = await response.json();
     const validated = TraceSummariesResponseSchema.parse(data);
@@ -205,13 +230,11 @@ export class JaegerClient {
    */
   async fetchTrace(traceId: string, signal?: AbortSignal): Promise<TracesDataWire> {
     traceIdHex.parse(traceId);
+    const url = `${this.apiRoot}/traces/${encodeURIComponent(traceId)}`;
     // Trace queries buffer storage and archive reads before sending headers and can exceed 10 seconds.
-    const response = await this.fetchWithTimeout(`${this.apiRoot}/traces/${encodeURIComponent(traceId)}`, {
-      timeout: null,
-      signal,
-    });
+    const response = await this.fetchWithTimeout(url, { timeout: null, signal });
     if (!response.ok) {
-      throw new Error(`Failed to fetch trace ${traceId}: ${response.status} ${response.statusText}`);
+      throw await httpError(`Failed to fetch trace ${traceId}`, url, response);
     }
     const data = await response.json();
     const validated = GetTraceResponseSchema.parse(data);

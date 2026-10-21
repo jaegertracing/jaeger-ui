@@ -25,6 +25,26 @@ describe('toApiError', () => {
     });
   });
 
+  describe('Error with HTTP details', () => {
+    it('keeps the details JaegerClient attaches', () => {
+      const error = Object.assign(new Error('Failed to fetch services: 400 Bad Request'), {
+        httpStatus: 400,
+        httpStatusText: 'Bad Request',
+        httpUrl: '/api/v3/services',
+        httpQuery: 'id=1',
+        httpBody: 'invalid service name',
+      });
+      expect(toApiError(error)).toEqual({
+        message: 'Failed to fetch services: 400 Bad Request',
+        httpStatus: 400,
+        httpStatusText: 'Bad Request',
+        httpUrl: '/api/v3/services',
+        httpQuery: 'id=1',
+        httpBody: 'invalid service name',
+      });
+    });
+  });
+
   describe('object with a string message property', () => {
     it('returns the object when it has a string message', () => {
       const payload = { message: 'from API', httpStatus: 500, httpStatusText: 'Internal Error' };
