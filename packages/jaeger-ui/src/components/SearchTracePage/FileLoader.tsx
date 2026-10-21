@@ -3,6 +3,7 @@
 
 import * as React from 'react';
 import { Upload, message } from 'antd';
+import { z } from 'zod';
 import { IoDocumentAttachOutline } from 'react-icons/io5';
 
 import readJsonFile from '../../utils/readJsonFile';
@@ -27,7 +28,17 @@ export type LoadResult = {
   summaries: TraceSummary[];
   rawTraces: unknown[];
   errorCount: number;
+  // Reason for the first rejected OTLP document, shown alongside the error count.
+  errorDetail?: string;
 };
+
+function describeUploadError(err: unknown): string {
+  if (err instanceof z.ZodError) {
+    const [issue] = err.issues;
+    return issue.path.length ? `${issue.message} (at ${issue.path.join('.')})` : issue.message;
+  }
+  return err instanceof Error ? err.message : String(err);
+}
 
 export async function loadTracesFromFile(file: File): Promise<LoadResult> {
   const parsed: unknown = await readJsonFile({ file });
@@ -47,6 +58,7 @@ export async function loadTracesFromFile(file: File): Promise<LoadResult> {
   const summaries: TraceSummary[] = [];
   const rawTraces: unknown[] = [];
   let errorCount = 0;
+  let errorDetail: string | undefined;
 
   const otelDocuments: TracesDataWire[] = [];
   const legacyDocuments: unknown[] = [];
@@ -54,8 +66,9 @@ export async function loadTracesFromFile(file: File): Promise<LoadResult> {
     if (isOtelUpload(raw)) {
       try {
         otelDocuments.push(validateOtelUpload(raw));
-      } catch {
+      } catch (err) {
         errorCount++;
+        errorDetail ??= describeUploadError(err);
       }
     } else {
       legacyDocuments.push(raw);
@@ -74,8 +87,9 @@ export async function loadTracesFromFile(file: File): Promise<LoadResult> {
       populateTraceCache(otel);
       summaries.push(traceToTraceSummary(otel));
       rawTraces.push(data);
-    } catch {
+    } catch (err) {
       errorCount++;
+      errorDetail ??= describeUploadError(err);
     }
   }
 
@@ -99,7 +113,7 @@ export async function loadTracesFromFile(file: File): Promise<LoadResult> {
     }
   }
 
-  return { summaries, rawTraces, errorCount };
+  return { summaries, rawTraces, errorCount, errorDetail };
 }
 
 export default function FileLoader(props: FileLoaderProps) {
@@ -111,10 +125,11 @@ export default function FileLoader(props: FileLoaderProps) {
         // receives the full fileList, so iterating fileList here would process N files
         // N times (N²). We process only the current `file` argument to avoid that.
         loadTracesFromFile(file)
-          .then(({ summaries, rawTraces, errorCount }) => {
+          .then(({ summaries, rawTraces, errorCount, errorDetail }) => {
             if (errorCount > 0) {
+              const detail = errorDetail ? `: ${errorDetail}` : '.';
               message.error(
-                `${errorCount} trace${errorCount > 1 ? 's' : ''} could not be loaded from ${file.name}.`
+                `${errorCount} trace${errorCount > 1 ? 's' : ''} could not be loaded from ${file.name}${detail}`
               );
             }
             if (summaries.length > 0) {

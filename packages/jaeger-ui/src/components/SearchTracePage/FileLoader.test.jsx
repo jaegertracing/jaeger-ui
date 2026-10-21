@@ -223,6 +223,38 @@ describe('<FileLoader />', () => {
     expect(mockOnTracesLoaded).not.toHaveBeenCalled();
   });
 
+  it('includes the validation reason when an OTLP upload is rejected', async () => {
+    const { message } = await import('antd');
+    readJsonFile.mockResolvedValue({
+      resourceSpans: [
+        {
+          scopeSpans: [
+            {
+              spans: [
+                {
+                  traceId: 'abcdef0123456789abcdef0123456789',
+                  spanId: 'invalid',
+                  startTimeUnixNano: '1000000',
+                  endTimeUnixNano: '2000000',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    render(<FileLoader onTracesLoaded={mockOnTracesLoaded} />);
+    await act(async () => {
+      global.mockBeforeUpload(makeFile('otlp.json'));
+    });
+
+    expect(message.error).toHaveBeenCalledWith(
+      '1 trace could not be loaded from otlp.json: Invalid span ID: must be 16-char hex string and not all zeros (at resourceSpans.0.scopeSpans.0.spans.0.spanId)'
+    );
+    expect(mockOnTracesLoaded).not.toHaveBeenCalled();
+  });
+
   it('shows warning when file contains no traces', async () => {
     const { message } = await import('antd');
     readJsonFile.mockResolvedValue({ data: [] });

@@ -108,6 +108,9 @@ it('counts invalid OTLP documents and still loads valid documents', async () => 
   invalid.resourceSpans[0].scopeSpans[0].spans[0].spanId = 'invalid';
   const result = await loadTracesFromFile(file({ data: [invalid, payload] }));
   expect(result.errorCount).toBe(1);
+  expect(result.errorDetail).toBe(
+    'Invalid span ID: must be 16-char hex string and not all zeros (at resourceSpans.0.scopeSpans.0.spans.0.spanId)'
+  );
   expect(result.summaries.map(s => s.traceID)).toEqual([traceId]);
   expect(fetchMock).not.toHaveBeenCalled();
 });
