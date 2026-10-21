@@ -30,14 +30,17 @@ export function useDeepDependencyGraphQuery(
 ): UseQueryResult<TDdgModel, ApiError> {
   return useQuery({
     queryKey: params ? deepDependencyGraphQueryKey(params) : (['ddg', 'disabled'] as const),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const { service, operation, start, end } = params!;
-      const response = await jaegerClient.fetchDeepDependencyGraph({
-        service,
-        operation,
-        start,
-        end,
-      });
+      const response = await jaegerClient.fetchDeepDependencyGraph(
+        {
+          service,
+          operation,
+          start,
+          end,
+        },
+        signal
+      );
       const payload = normalizeDdgPayload(response);
       return transformDdgData(payload, { service, operation });
     },

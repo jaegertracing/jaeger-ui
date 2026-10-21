@@ -47,7 +47,8 @@ describe('useDependenciesQuery', () => {
     expect(result.current.data).toEqual(deps);
     expect(jaegerClient.fetchDependencies).toHaveBeenCalledWith(
       expect.any(Number),
-      DEFAULT_DEPENDENCY_LOOKBACK
+      DEFAULT_DEPENDENCY_LOOKBACK,
+      expect.any(AbortSignal)
     );
   });
 
@@ -74,7 +75,7 @@ describe('useDependenciesQuery', () => {
     );
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(jaegerClient.fetchDependencies).toHaveBeenCalledWith(12345, 3600000);
+    expect(jaegerClient.fetchDependencies).toHaveBeenCalledWith(12345, 3600000, expect.any(AbortSignal));
   });
 
   it('returns a raw array response unchanged (no `data` envelope)', async () => {
@@ -120,12 +121,21 @@ describe('useDependenciesQuery', () => {
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(jaegerClient.fetchDependencies).toHaveBeenNthCalledWith(1, 1000, DEFAULT_DEPENDENCY_LOOKBACK);
+    expect(jaegerClient.fetchDependencies).toHaveBeenNthCalledWith(
+      1,
+      1000,
+      DEFAULT_DEPENDENCY_LOOKBACK,
+      expect.any(AbortSignal)
+    );
 
     nowSpy.mockReturnValue(2000);
     await result.current.refetch();
 
-    expect(jaegerClient.fetchDependencies).toHaveBeenLastCalledWith(2000, DEFAULT_DEPENDENCY_LOOKBACK);
+    expect(jaegerClient.fetchDependencies).toHaveBeenLastCalledWith(
+      2000,
+      DEFAULT_DEPENDENCY_LOOKBACK,
+      expect.any(AbortSignal)
+    );
   });
 
   it('reuses fresh data cached under the existing query key', () => {

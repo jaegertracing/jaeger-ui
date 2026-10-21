@@ -24,10 +24,10 @@ describe('JaegerClient', () => {
   });
 
   describe.each(['fetchDependencies', 'fetchDeepDependencyGraph'] as const)('%s', method => {
-    const fetchGraph = () =>
+    const fetchGraph = (signal?: AbortSignal) =>
       method === 'fetchDependencies'
-        ? client.fetchDependencies(100, 200)
-        : client.fetchDeepDependencyGraph({ service: 'frontend', start: 100, end: 200 });
+        ? client.fetchDependencies(100, 200, signal)
+        : client.fetchDeepDependencyGraph({ service: 'frontend', start: 100, end: 200 }, signal);
 
     it.each([{ data: [] }, [], null, { dependencies: [] }])(
       'preserves the JSON response for hook normalization: %j',
@@ -82,6 +82,26 @@ describe('JaegerClient', () => {
       expect(vi.getTimerCount()).toBe(0);
       finishRequest({ ok: true, json: async () => data });
       await expect(promise).resolves.toBe(data);
+    });
+
+    it('forwards the caller signal without adding a deadline', async () => {
+      const controller = new AbortController();
+      mockFetch.mockResolvedValue({ ok: true, json: async () => ({}) });
+
+      await fetchGraph(controller.signal);
+
+      expect(mockFetch).toHaveBeenCalledWith(expect.any(String), { signal: controller.signal });
+      expect(vi.getTimerCount()).toBe(0);
+    });
+  });
+
+  it('uses a one-week default lookback for dependency requests', async () => {
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({ data: [] }) });
+
+    await client.fetchDependencies(100);
+
+    expect(mockFetch).toHaveBeenCalledWith('/api/dependencies?endTs=100&lookback=604800000', {
+      signal: undefined,
     });
   });
 
@@ -756,6 +776,7 @@ describe('JaegerClient with non-default base path', () => {
 
   afterEach(() => {
     (global as any).fetch = originalFetch;
+    vi.doUnmock('../../site-prefix');
   });
 
   it('calls services endpoint with base path prefix from site-prefix', async () => {
@@ -796,6 +817,5 @@ describe('JaegerClient with non-default base path', () => {
       '/jaeger/api/deep-dependencies?end=200&operation=%2A&service=frontend&start=100',
       { signal: undefined }
     );
-    vi.doUnmock('../../site-prefix');
   });
 });

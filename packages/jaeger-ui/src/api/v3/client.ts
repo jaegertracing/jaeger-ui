@@ -48,11 +48,16 @@ export class JaegerClient {
   // Archive and dependency-graph requests retain their existing /api/ routes.
   private legacyApiRoot = prefixUrl('/api/');
 
-  async fetchDependencies(endTs = Date.now(), lookback = DEFAULT_DEPENDENCY_LOOKBACK): Promise<unknown> {
+  async fetchDependencies(
+    endTs = Date.now(),
+    lookback = DEFAULT_DEPENDENCY_LOOKBACK,
+    signal?: AbortSignal
+  ): Promise<unknown> {
     const query = queryString.stringify({ endTs, lookback });
     // Preserve deadline-free graph reads, which can wait on storage queries.
     const response = await this.fetchWithTimeout(`${this.legacyApiRoot}dependencies?${query}`, {
       timeout: null,
+      signal,
     });
     if (!response.ok) {
       throw new Error(`Failed to fetch dependencies: ${response.status} ${response.statusText}`);
@@ -60,10 +65,11 @@ export class JaegerClient {
     return response.json();
   }
 
-  async fetchDeepDependencyGraph(params: TDdgModelParams): Promise<unknown> {
+  async fetchDeepDependencyGraph(params: TDdgModelParams, signal?: AbortSignal): Promise<unknown> {
     const query = queryString.stringify(params);
     const response = await this.fetchWithTimeout(`${this.legacyApiRoot}deep-dependencies?${query}`, {
       timeout: null,
+      signal,
     });
     if (!response.ok) {
       throw new Error(`Failed to fetch deep dependencies: ${response.status} ${response.statusText}`);

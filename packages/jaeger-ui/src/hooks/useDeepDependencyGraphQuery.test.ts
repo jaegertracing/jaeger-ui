@@ -71,12 +71,15 @@ describe('useDeepDependencyGraphQuery', () => {
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(jaegerClient.fetchDeepDependencyGraph).toHaveBeenCalledWith({
-      service: 'svc',
-      operation: 'op',
-      start: 0,
-      end: 0,
-    });
+    expect(jaegerClient.fetchDeepDependencyGraph).toHaveBeenCalledWith(
+      {
+        service: 'svc',
+        operation: 'op',
+        start: 0,
+        end: 0,
+      },
+      expect.any(AbortSignal)
+    );
     expect(transformDdgData).toHaveBeenCalledWith(payload, { service: 'svc', operation: 'op' });
     expect(result.current.data?.hash).toBe('h1');
   });
@@ -94,6 +97,7 @@ describe('useDeepDependencyGraphQuery', () => {
 
   it('reuses fresh data cached under the existing query key', () => {
     const wrapper = createWrapper();
+    const paramsWithTimeRange = { ...params, start: 100, end: 200 };
     const model = {
       hash: 'cached',
       distanceToPathElems: new Map(),
@@ -101,9 +105,9 @@ describe('useDeepDependencyGraphQuery', () => {
       services: new Map(),
       visIdxToPathElem: [],
     };
-    queryClient.setQueryData(['ddg', 'svc', 'op', 0, 0], model);
+    queryClient.setQueryData(['ddg', 'svc', 'op', 100, 200], model);
 
-    const { result } = renderHook(() => useDeepDependencyGraphQuery(params), { wrapper });
+    const { result } = renderHook(() => useDeepDependencyGraphQuery(paramsWithTimeRange), { wrapper });
 
     expect(result.current.data).toEqual(model);
     expect(jaegerClient.fetchDeepDependencyGraph).not.toHaveBeenCalled();
@@ -173,12 +177,15 @@ describe('useDeepDependencyGraphQueryFromUrl', () => {
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(jaegerClient.fetchDeepDependencyGraph).toHaveBeenCalledWith({
-      service: 'svc',
-      operation: 'op',
-      start: 0,
-      end: 0,
-    });
+    expect(jaegerClient.fetchDeepDependencyGraph).toHaveBeenCalledWith(
+      {
+        service: 'svc',
+        operation: 'op',
+        start: 0,
+        end: 0,
+      },
+      expect.any(AbortSignal)
+    );
   });
 
   it('forwards custom start and end to the API', async () => {
@@ -187,11 +194,14 @@ describe('useDeepDependencyGraphQueryFromUrl', () => {
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(jaegerClient.fetchDeepDependencyGraph).toHaveBeenCalledWith({
-      service: 'svc',
-      operation: undefined,
-      start: 100,
-      end: 200,
-    });
+    expect(jaegerClient.fetchDeepDependencyGraph).toHaveBeenCalledWith(
+      {
+        service: 'svc',
+        operation: undefined,
+        start: 100,
+        end: 200,
+      },
+      expect.any(AbortSignal)
+    );
   });
 });
