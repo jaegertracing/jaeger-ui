@@ -77,7 +77,7 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
   },
 
   setTrace: (trace: IOtelTrace, uiFind?: string | TNil) => {
-    const { traceID: currentTraceID, traceSpans } = get();
+    const { traceID: currentTraceID, traceSpans, focusedSubtreeSpanID: currentFocusedID } = get();
     if (trace.traceID === currentTraceID && trace.spans === traceSpans) return;
 
     const detailPanelMode = useLayoutPrefsStore.getState().detailPanelMode;
@@ -85,7 +85,6 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
     const base: Partial<TraceTimelineInteractionStore> = {
       traceID: trace.traceID,
       traceSpans: trace.spans,
-      focusedSubtreeSpanID: null,
     };
 
     if (trace.traceID !== currentTraceID) {
@@ -94,7 +93,15 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
         detailStates: new Map<string, DetailState>(),
         shouldScrollToFirstUiFindMatch: false,
         prunedServices: new Set<string>(),
+        focusedSubtreeSpanID: null,
       });
+    } else if (
+      currentFocusedID &&
+      (trace.spanMap
+        ? !trace.spanMap.has(currentFocusedID)
+        : !trace.spans.some(s => s.spanID === currentFocusedID))
+    ) {
+      base.focusedSubtreeSpanID = null;
     }
 
     if (uiFind) {

@@ -854,4 +854,58 @@ describe('useTraceTimelineStore: subtree focus and collapse', () => {
     useTraceTimelineStore.getState().setTrace(trace);
     expect(useTraceTimelineStore.getState().focusedSubtreeSpanID).toBeNull();
   });
+
+  it('preserves focusedSubtreeSpanID across trace reload when the focused span still exists', () => {
+    const spanA = makeSpan({ spanID: 'span-a' });
+    const spanB = makeSpan({ spanID: 'span-b' });
+    const trace1: any = {
+      traceID: 'trace-1',
+      spans: [spanA, spanB],
+      spanMap: new Map([
+        ['span-a', spanA],
+        ['span-b', spanB],
+      ]),
+    };
+    useTraceTimelineStore.getState().setTrace(trace1);
+    useTraceTimelineStore.setState({ focusedSubtreeSpanID: 'span-b' });
+
+    // Reload with a new spans array for the same traceID
+    const refreshedSpanA = makeSpan({ spanID: 'span-a' });
+    const refreshedSpanB = makeSpan({ spanID: 'span-b' });
+    const reloadedTrace: any = {
+      traceID: 'trace-1',
+      spans: [refreshedSpanA, refreshedSpanB],
+      spanMap: new Map([
+        ['span-a', refreshedSpanA],
+        ['span-b', refreshedSpanB],
+      ]),
+    };
+    useTraceTimelineStore.getState().setTrace(reloadedTrace);
+    expect(useTraceTimelineStore.getState().focusedSubtreeSpanID).toBe('span-b');
+  });
+
+  it('clears focusedSubtreeSpanID across trace reload when the focused span is gone', () => {
+    const spanA = makeSpan({ spanID: 'span-a' });
+    const spanB = makeSpan({ spanID: 'span-b' });
+    const trace1: any = {
+      traceID: 'trace-1',
+      spans: [spanA, spanB],
+      spanMap: new Map([
+        ['span-a', spanA],
+        ['span-b', spanB],
+      ]),
+    };
+    useTraceTimelineStore.getState().setTrace(trace1);
+    useTraceTimelineStore.setState({ focusedSubtreeSpanID: 'span-b' });
+
+    // Reload trace without span-b
+    const refreshedSpanA = makeSpan({ spanID: 'span-a' });
+    const reloadedTrace: any = {
+      traceID: 'trace-1',
+      spans: [refreshedSpanA],
+      spanMap: new Map([['span-a', refreshedSpanA]]),
+    };
+    useTraceTimelineStore.getState().setTrace(reloadedTrace);
+    expect(useTraceTimelineStore.getState().focusedSubtreeSpanID).toBeNull();
+  });
 });

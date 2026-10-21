@@ -1,9 +1,12 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+import _isEqual from 'lodash/isEqual';
+import memoizeOne from 'memoize-one';
 import DetailState from './SpanDetail/DetailState';
+import { isSpanPruned } from './generateRowStates';
 import { TNil } from '../../../types';
-import { IOtelSpan } from '../../../types/otel';
+import { IOtelSpan, IOtelTrace } from '../../../types/otel';
 import type { SpanDetailPanelMode } from '../../../types/config';
 import filterSpans from '../../../utils/filter-spans';
 import spanAncestorIds from '../../../utils/span-ancestor-ids';
@@ -142,3 +145,30 @@ export function getDescendantParentSpanIDs(rootSpan: IOtelSpan): Set<string> {
   }
   return ids;
 }
+
+/**
+ * Returns a Set of span IDs belonging to the focused subtree, or null if no focus
+ * or if the focused span is pruned. Memoized across callers (TracePage and VirtualizedTraceView)
+ * to avoid repeated tree traversals and set allocations during high-frequency updates.
+ */
+export function getFocusedSpanIDs(
+  trace: IOtelTrace | TNil,
+  focusedSubtreeSpanID?: string | null,
+  prunedServices?: Set<string>
+): Set<string> | null {
+  if (!focusedSubtreeSpanID || !trace) {
+    return null;
+  }
+  const focusedSpan = trace.spanMap.get(focusedSubtreeSpanID);
+  if (!focusedSpan || (prunedServices && isSpanPruned(focusedSpan, prunedServices))) {
+    return null;
+  }
+  const subtreeSpans = getSubtreeSpans(focusedSpan);
+  return new Set(subtreeSpans.map(s => s.spanID));
+}
+
+export const focusedSpanIDs = memoizeOne(
+  getFocusedSpanIDs,
+  (newArgs, lastArgs) =>
+    newArgs[0] === lastArgs[0] && newArgs[1] === lastArgs[1] && _isEqual(newArgs[2], lastArgs[2])
+);

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it } from 'vitest';
-import { getDescendantParentSpanIDs, getSubtreeSpans } from './timeline-utils';
+import { focusedSpanIDs, getDescendantParentSpanIDs, getSubtreeSpans } from './timeline-utils';
 import { IOtelSpan } from '../../../types/otel';
 
 describe('timeline-utils subtree helpers', () => {
@@ -105,6 +105,40 @@ describe('timeline-utils subtree helpers', () => {
       expect(result.has('deep-0')).toBe(true);
       expect(result.has('deep-4999')).toBe(true);
       expect(result.has('deep-5000')).toBe(false);
+    });
+  });
+
+  describe('focusedSpanIDs', () => {
+    const spanTreeTrace = {
+      traceID: 't1',
+      spans: [rootSpan, leaf1, middleParent, leaf2],
+      spanMap: new Map([
+        ['root-1', rootSpan],
+        ['leaf-1', leaf1],
+        ['middle-1', middleParent],
+        ['leaf-2', leaf2],
+      ]),
+    } as any;
+
+    it('returns null when no focusedSubtreeSpanID or trace is null', () => {
+      expect(focusedSpanIDs(null, 'root-1')).toBeNull();
+      expect(focusedSpanIDs(spanTreeTrace, null)).toBeNull();
+      expect(focusedSpanIDs(spanTreeTrace, undefined)).toBeNull();
+    });
+
+    it('returns null when focused span is not in trace', () => {
+      expect(focusedSpanIDs(spanTreeTrace, 'non-existent')).toBeNull();
+    });
+
+    it('returns Set of subtree span IDs for a valid focused span', () => {
+      const result = focusedSpanIDs(spanTreeTrace, 'middle-1');
+      expect(result).toEqual(new Set(['middle-1', 'leaf-2']));
+    });
+
+    it('memoizes output when arguments match', () => {
+      const res1 = focusedSpanIDs(spanTreeTrace, 'middle-1', new Set(['svc-other']));
+      const res2 = focusedSpanIDs(spanTreeTrace, 'middle-1', new Set(['svc-other']));
+      expect(res1).toBe(res2);
     });
   });
 });

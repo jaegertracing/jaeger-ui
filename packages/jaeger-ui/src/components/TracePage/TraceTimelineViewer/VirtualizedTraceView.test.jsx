@@ -1011,8 +1011,14 @@ describe('<VirtualizedTraceViewImpl>', () => {
       expect(accessors.mapRowIndexToSpanIndex(0)).toBe(0);
       // Row 1 is span-3 (index 3 in customTrace)
       expect(accessors.mapRowIndexToSpanIndex(1)).toBe(3);
-      // Row 2 is pruned placeholder; spanIndex preserves non-decreasing navigation ordering
-      expect(accessors.mapRowIndexToSpanIndex(2)).toBe(3);
+      // Row 2 is pruned placeholder for span-0
+      expect(accessors.mapRowIndexToSpanIndex(2)).toBe(0);
+      // accessors provides getRows returning visible row states
+      const rows = accessors.getRows();
+      expect(rows).toHaveLength(3);
+      expect(rows[0].span.spanID).toBe('span-0');
+      expect(rows[1].span.spanID).toBe('span-3');
+      expect(rows[2].isPrunedPlaceholder).toBe(true);
     });
 
     it('ignores subtree focus and does not filter search when focused span has a pruned ancestor', () => {

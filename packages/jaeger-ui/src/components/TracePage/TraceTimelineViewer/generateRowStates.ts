@@ -24,7 +24,6 @@ export type RowState =
 type PrunedStats = {
   childCounts: number[];
   errorCounts: number[];
-  placeholderSpanIndices: number[];
 };
 
 /**
@@ -49,7 +48,6 @@ function buildVisibleRows(
   const parentByDepth: (number | undefined)[] = [];
   const childCounts: number[] = [];
   const errorCounts: number[] = [];
-  const placeholderSpanIndices: number[] = [];
 
   for (let i = 0; i < spans.length; i++) {
     const span = spans[i];
@@ -85,7 +83,6 @@ function buildVisibleRows(
           if (prunedErrors > 0) {
             errorCounts[parentIdx] = (errorCounts[parentIdx] || 0) + prunedErrors;
           }
-          placeholderSpanIndices[parentIdx] = Math.max(placeholderSpanIndices[parentIdx] || 0, i);
         }
       }
       continue;
@@ -107,7 +104,7 @@ function buildVisibleRows(
 
   return {
     rows,
-    prunedStats: hasPruning ? { childCounts, errorCounts, placeholderSpanIndices } : null,
+    prunedStats: hasPruning ? { childCounts, errorCounts } : null,
   };
 }
 
@@ -120,24 +117,18 @@ function buildVisibleRows(
  * it keeps the visible children contiguous and avoids mid-list synthetic rows.
  */
 function insertPrunedPlaceholders(rows: RowState[], stats: PrunedStats): RowState[] {
-  const { childCounts, errorCounts, placeholderSpanIndices } = stats;
+  const { childCounts, errorCounts } = stats;
   const result: RowState[] = [];
-  // Track the max spanIndex seen within each open subtree so placeholders
-  // get a non-decreasing spanIndex (avoids confusing ScrollManager navigation).
-  const openStack: Array<{ rowIndex: number; depth: number; maxSpanIndex: number }> = [];
+  const openStack: Array<{ rowIndex: number; depth: number }> = [];
 
-  const maybeAppendPlaceholder = (entry: { rowIndex: number; maxSpanIndex: number }) => {
+  const maybeAppendPlaceholder = (entry: { rowIndex: number }) => {
     const count = childCounts[entry.rowIndex];
     if (!count) return;
     const parentRow = rows[entry.rowIndex];
-    const placeholderSpanIndex = Math.max(
-      placeholderSpanIndices[entry.rowIndex] ?? entry.maxSpanIndex,
-      entry.maxSpanIndex
-    );
     result.push({
       span: parentRow.span,
       isDetail: false,
-      spanIndex: placeholderSpanIndex,
+      spanIndex: parentRow.spanIndex,
       isPrunedPlaceholder: true,
       prunedChildrenCount: count,
       prunedErrorCount: errorCounts[entry.rowIndex] || 0,
@@ -150,33 +141,16 @@ function insertPrunedPlaceholders(rows: RowState[], stats: PrunedStats): RowStat
       while (openStack.length && openStack[openStack.length - 1].depth >= row.span.depth) {
         const closed = openStack.pop()!;
         maybeAppendPlaceholder(closed);
-        // Propagate max spanIndex to the parent entry on the stack.
-        if (openStack.length) {
-          const parent = openStack[openStack.length - 1];
-          const placeholderIdx = placeholderSpanIndices[closed.rowIndex] ?? closed.maxSpanIndex;
-          parent.maxSpanIndex = Math.max(parent.maxSpanIndex, closed.maxSpanIndex, placeholderIdx);
-        }
       }
     }
     result.push(row);
     if (!row.isDetail) {
-      const spanIndex = row.spanIndex;
-      // Update the current top-of-stack's max with this row's spanIndex.
-      if (openStack.length) {
-        const top = openStack[openStack.length - 1];
-        top.maxSpanIndex = Math.max(top.maxSpanIndex, spanIndex);
-      }
-      openStack.push({ rowIndex: i, depth: row.span.depth, maxSpanIndex: spanIndex });
+      openStack.push({ rowIndex: i, depth: row.span.depth });
     }
   }
   while (openStack.length) {
     const closed = openStack.pop()!;
     maybeAppendPlaceholder(closed);
-    if (openStack.length) {
-      const parent = openStack[openStack.length - 1];
-      const placeholderIdx = placeholderSpanIndices[closed.rowIndex] ?? closed.maxSpanIndex;
-      parent.maxSpanIndex = Math.max(parent.maxSpanIndex, closed.maxSpanIndex, placeholderIdx);
-    }
   }
 
   return result;
@@ -214,7 +188,7 @@ export function isSpanPruned(span: IOtelSpan, prunedServices: Set<string>): bool
   if (prunedServices.size === 0) return false;
   let current: IOtelSpan | undefined = span;
   while (current) {
-    if (prunedServices.has(current.resource.serviceName)) return true;
+    if (current.resource?.serviceName && prunedServices.has(current.resource.serviceName)) return true;
     current = current.parentSpan;
   }
   return false;

@@ -26,7 +26,7 @@ import {
   isKindProducer,
   spanContainsErredSpan,
 } from './utils';
-import { getSubtreeSpans } from './timeline-utils';
+import { focusedSpanIDs, getSubtreeSpans } from './timeline-utils';
 import { Accessors } from '../ScrollManager';
 import { parseUiFind, TExtractUiFindFromStateReturn } from '../../common/UiFindInput';
 import getLinks from '../../../model/link-patterns';
@@ -262,18 +262,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
     []
   );
 
-  const focusedSubtreeSpanIDs = useMemo(() => {
-    if (!props.focusedSubtreeSpanID || !props.trace) {
-      return null;
-    }
-    const focusedSpan = props.trace.spanMap.get(props.focusedSubtreeSpanID);
-    if (!focusedSpan || isSpanPruned(focusedSpan, props.prunedServices)) {
-      return null;
-    }
-    const subtreeSpans = getSubtreeSpans(focusedSpan);
-    return new Set(subtreeSpans.map(s => s.spanID));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.focusedSubtreeSpanID, props.trace, props.prunedServices]);
+  const focusedSubtreeSpanIDs = focusedSpanIDs(props.trace, props.focusedSubtreeSpanID, props.prunedServices);
 
   const getViewRange = useCallback(() => propsRef.current.currentViewRangeTime, []);
   const getSearchedSpanIDs = useCallback(() => {
@@ -334,6 +323,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
       getBottomRowIndexVisible: lv.getBottomVisibleIndex,
       getTopRowIndexVisible: lv.getTopVisibleIndex,
       getRowPosition: lv.getRowPosition,
+      getRows: getRowStates,
       mapRowIndexToSpanIndex,
       mapSpanIndexToRowIndex,
     };
@@ -341,6 +331,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
     getViewRange,
     getSearchedSpanIDs,
     getCollapsedChildren,
+    getRowStates,
     mapRowIndexToSpanIndex,
     mapSpanIndexToRowIndex,
   ]);
