@@ -328,6 +328,51 @@ describe('JaegerClient', () => {
       await expect(promise).rejects.toThrow('Request timeout after 10000ms');
     });
 
+    it('reports a timeout when a request with a caller signal exceeds its deadline', async () => {
+      const caller = new AbortController();
+      mockFetch.mockImplementation((_url: string, options: RequestInit) => {
+        return new Promise((_resolve, reject) => {
+          options.signal?.addEventListener('abort', () => reject(options.signal?.reason));
+        });
+      });
+
+      const promise = client['fetchWithTimeout']('/test', { timeout: 1000, signal: caller.signal });
+      vi.advanceTimersByTime(1000);
+
+      await expect(promise).rejects.toThrow('Request timeout after 1000ms');
+      expect(caller.signal.aborted).toBe(false);
+    });
+
+    it('preserves caller cancellation for a request with a deadline', async () => {
+      const caller = new AbortController();
+      const abortError = new DOMException('Caller cancelled request', 'AbortError');
+      mockFetch.mockImplementation((_url: string, options: RequestInit) => {
+        return new Promise((_resolve, reject) => {
+          options.signal?.addEventListener('abort', () => reject(options.signal?.reason));
+        });
+      });
+
+      const promise = client['fetchWithTimeout']('/test', { timeout: 1000, signal: caller.signal });
+      caller.abort(abortError);
+      vi.advanceTimersByTime(1000);
+
+      await expect(promise).rejects.toBe(abortError);
+    });
+
+    it('forwards an already cancelled caller signal to a request with a deadline', async () => {
+      const caller = new AbortController();
+      const abortError = new DOMException('Caller cancelled request', 'AbortError');
+      caller.abort(abortError);
+      mockFetch.mockImplementation((_url: string, options: RequestInit) => {
+        expect(options.signal?.aborted).toBe(true);
+        return Promise.reject(options.signal?.reason);
+      });
+
+      await expect(
+        client['fetchWithTimeout']('/test', { timeout: 1000, signal: caller.signal })
+      ).rejects.toBe(abortError);
+    });
+
     it('clears timeout after successful request', async () => {
       const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout');
       mockFetch.mockResolvedValue({

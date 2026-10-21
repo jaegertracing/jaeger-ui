@@ -39,8 +39,8 @@ export function reloadBackendTrace(traceId: string): Promise<void> {
 export function useTrace(traceId: string): UseQueryResult<IOtelTrace> {
   return useQuery({
     queryKey: TRACE_QUERY_KEY(traceId),
-    queryFn: async () => {
-      const response = await jaegerClient.fetchTrace(toTraceIdHex(traceId));
+    queryFn: async ({ signal }) => {
+      const response = await jaegerClient.fetchTrace(toTraceIdHex(traceId), signal);
       const otel = parseOtelTrace(response);
       if (!otel) {
         throw new Error('Invalid trace data received.');
@@ -62,8 +62,8 @@ export function useTraces(ids: string[]): Map<string, FetchedTrace> {
   const results = useQueries({
     queries: ids.map(id => ({
       queryKey: TRACE_QUERY_KEY(id),
-      queryFn: async () => {
-        const response = await jaegerClient.fetchTrace(toTraceIdHex(id));
+      queryFn: async ({ signal }) => {
+        const response = await jaegerClient.fetchTrace(toTraceIdHex(id), signal);
         const otel = parseOtelTrace(response);
         if (!otel) {
           throw new Error('Invalid trace data received.');
