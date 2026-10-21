@@ -9,7 +9,6 @@ import { IOtelSpan, IOtelTrace, IEvent } from '../../../types/otel';
 import {
   applyDetailSubsectionToggle,
   calculateFocusedFindRowStates,
-  getSelectedSpanID,
   shouldDisableCollapse,
   trimFocusedDetailStatesForSidePanel,
 } from './timeline-utils';
@@ -72,10 +71,24 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
         shouldScrollToFirstUiFindMatch: false,
         prunedServices: new Set<string>(),
       });
-    } else if (detailPanelMode === 'sidepanel') {
-      const selectedSpanID = getSelectedSpanID(get().detailStates);
-      if (selectedSpanID && !trace.spans.some(s => s.spanID === selectedSpanID)) {
-        base.detailStates = new Map<string, DetailState>();
+    } else {
+      const validSpanIDs = trace.spanMap ?? new Set(trace.spans.map(s => s.spanID));
+      const currentDetailStates = get().detailStates;
+      let hasDropped = false;
+      for (const id of currentDetailStates.keys()) {
+        if (!validSpanIDs.has(id)) {
+          hasDropped = true;
+          break;
+        }
+      }
+      if (hasDropped) {
+        const prunedDetailStates = new Map<string, DetailState>();
+        for (const [id, state] of currentDetailStates) {
+          if (validSpanIDs.has(id)) {
+            prunedDetailStates.set(id, state);
+          }
+        }
+        base.detailStates = prunedDetailStates;
       }
     }
 
