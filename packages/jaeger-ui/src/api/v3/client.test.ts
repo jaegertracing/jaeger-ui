@@ -378,7 +378,7 @@ describe('JaegerClient', () => {
     });
   });
 
-  describe('fetchWithTimeout', () => {
+  describe('fetchJson', () => {
     it('successfully completes requests within timeout', async () => {
       const mockResponse = { ok: true, json: async () => ({ services: [] }) };
       mockFetch.mockResolvedValue(mockResponse);
@@ -429,7 +429,7 @@ describe('JaegerClient', () => {
         });
       });
 
-      const promise = client['fetchWithTimeout']('/test', { timeout: 1000, signal: caller.signal });
+      const promise = client['fetchJson']('/test', 'Failed', { timeout: 1000, signal: caller.signal });
       vi.advanceTimersByTime(1000);
 
       await expect(promise).rejects.toThrow('Request timeout after 1000ms');
@@ -445,7 +445,7 @@ describe('JaegerClient', () => {
         });
       });
 
-      const promise = client['fetchWithTimeout']('/test', { timeout: 1000, signal: caller.signal });
+      const promise = client['fetchJson']('/test', 'Failed', { timeout: 1000, signal: caller.signal });
       caller.abort(abortError);
       vi.advanceTimersByTime(1000);
 
@@ -462,7 +462,7 @@ describe('JaegerClient', () => {
       });
 
       await expect(
-        client['fetchWithTimeout']('/test', { timeout: 1000, signal: caller.signal })
+        client['fetchJson']('/test', 'Failed', { timeout: 1000, signal: caller.signal })
       ).rejects.toBe(abortError);
     });
 
@@ -753,12 +753,7 @@ describe('JaegerClient', () => {
 
   describe('HTTP error details', () => {
     const traceId = '0123456789abcdef0123456789abcdef';
-    const failure = (text: () => Promise<string>) => ({
-      ok: false,
-      status: 400,
-      statusText: 'Bad Request',
-      text,
-    });
+    const failure = (body: BodyInit | null) => new Response(body, { status: 400, statusText: 'Bad Request' });
 
     it.each([
       {
@@ -804,7 +799,7 @@ describe('JaegerClient', () => {
     ])(
       '$method attaches the status, URL, query, and formatted JSON body',
       async ({ call, httpUrl, httpQuery }) => {
-        mockFetch.mockResolvedValue(failure(async () => '{"code":3,"message":"invalid service name"}'));
+        mockFetch.mockResolvedValue(failure('{"code":3,"message":"invalid service name"}'));
 
         const error = await call().catch((caught: unknown) => caught);
 
@@ -821,26 +816,124 @@ describe('JaegerClient', () => {
     );
 
     it('keeps a non-JSON body as text', async () => {
-      mockFetch.mockResolvedValue(failure(async () => 'storage unavailable'));
+      mockFetch.mockResolvedValue(failure('storage unavailable'));
 
       await expect(client.fetchServices()).rejects.toMatchObject({ httpBody: 'storage unavailable' });
     });
 
     it.each([
-      { case: 'an empty body', text: async () => '' },
+      { case: 'an empty body', body: () => '' },
+      { case: 'a missing body', body: () => null },
       {
         case: 'an unreadable body',
-        text: async () => {
-          throw new TypeError('body stream already read');
-        },
+        body: () =>
+          new ReadableStream({
+            pull(controller) {
+              controller.error(new TypeError('network error'));
+            },
+          }),
       },
-    ])('omits the body for $case', async ({ text }) => {
-      mockFetch.mockResolvedValue(failure(text));
+    ])('omits the body for $case', async ({ body }) => {
+      mockFetch.mockResolvedValue(failure(body()));
 
       const error = await client.fetchServices().catch((caught: unknown) => caught);
 
       expect(error).toMatchObject({ message: 'Failed to fetch services: 400 Bad Request', httpStatus: 400 });
       expect(error).not.toHaveProperty('httpBody');
+    });
+
+    it('reads at most 4 KB of the body and cancels the rest', async () => {
+      const cancel = vi.fn();
+      const chunk = new TextEncoder().encode('x'.repeat(1000));
+      // An endless body: every pull enqueues another chunk.
+      const body = new ReadableStream<Uint8Array>({
+        pull(controller) {
+          controller.enqueue(chunk);
+        },
+        cancel,
+      });
+      mockFetch.mockResolvedValue(failure(body));
+
+      const error = await client.fetchServices().catch((caught: unknown) => caught);
+
+      expect((error as { httpBody: string }).httpBody).toBe('x'.repeat(4096));
+      expect(cancel).toHaveBeenCalled();
+    });
+
+    // The body stream errors with the request's abort reason, as fetch's body does.
+    const stalledFailure = (signal: AbortSignal | null | undefined) =>
+      failure(
+        new ReadableStream({
+          start(controller) {
+            signal?.addEventListener('abort', () => controller.error(signal.reason));
+          },
+        })
+      );
+
+    it('reports a timeout when the error body outlasts the deadline', async () => {
+      mockFetch.mockImplementation(async (_url: string, options: RequestInit) =>
+        stalledFailure(options.signal)
+      );
+
+      const promise = client.fetchServices().catch((caught: unknown) => caught);
+      await vi.advanceTimersByTimeAsync(10000);
+
+      const error = await promise;
+      expect(error).toEqual(expect.objectContaining({ message: 'Request timeout after 10000ms' }));
+      expect(error).not.toHaveProperty('httpStatus');
+    });
+
+    it('rethrows caller cancellation during the error body read', async () => {
+      const caller = new AbortController();
+      const abortError = new DOMException('Caller cancelled request', 'AbortError');
+      mockFetch.mockImplementation(async (_url: string, options: RequestInit) =>
+        stalledFailure(options.signal)
+      );
+
+      const promise = client.fetchTrace(traceId, caller.signal).catch((caught: unknown) => caught);
+      await vi.advanceTimersByTimeAsync(0);
+      caller.abort(abortError);
+
+      await expect(promise).resolves.toBe(abortError);
+    });
+
+    it.each([
+      { path: 'without a deadline', call: (signal: AbortSignal) => client.fetchTrace(traceId, signal) },
+      {
+        path: 'with a deadline',
+        call: (signal: AbortSignal) => client['fetchJson']('/test', 'Failed', { timeout: 1000, signal }),
+      },
+    ])('rethrows a custom cancellation reason during the error body read $path', async ({ call }) => {
+      const caller = new AbortController();
+      const reason = new Error('navigated away');
+      mockFetch.mockImplementation(async (_url: string, options: RequestInit) =>
+        stalledFailure(options.signal)
+      );
+
+      const promise = call(caller.signal).catch((caught: unknown) => caught);
+      await vi.advanceTimersByTimeAsync(0);
+      caller.abort(reason);
+
+      await expect(promise).resolves.toBe(reason);
+    });
+
+    it('reports a timeout when a successful body outlasts the deadline', async () => {
+      mockFetch.mockImplementation(async (_url: string, options: RequestInit) => {
+        const signal = options.signal;
+        const body = new ReadableStream({
+          start(controller) {
+            signal?.addEventListener('abort', () => controller.error(signal.reason));
+          },
+        });
+        return new Response(body, { status: 200 });
+      });
+
+      const promise = client.fetchServices().catch((caught: unknown) => caught);
+      await vi.advanceTimersByTimeAsync(10000);
+
+      await expect(promise).resolves.toEqual(
+        expect.objectContaining({ message: 'Request timeout after 10000ms' })
+      );
     });
   });
 

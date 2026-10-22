@@ -16,12 +16,12 @@ describe('toApiError', () => {
 
   describe('Error instance', () => {
     it('returns { message } from a plain Error', () => {
-      expect(toApiError(new Error('boom'))).toEqual({ message: 'boom' });
+      expect(toApiError(new Error('boom'))).toStrictEqual({ message: 'boom' });
     });
 
     it('returns { message } from a subclass of Error', () => {
       class CustomError extends Error {}
-      expect(toApiError(new CustomError('custom'))).toEqual({ message: 'custom' });
+      expect(toApiError(new CustomError('custom'))).toStrictEqual({ message: 'custom' });
     });
   });
 
@@ -34,13 +34,27 @@ describe('toApiError', () => {
         httpQuery: 'id=1',
         httpBody: 'invalid service name',
       });
-      expect(toApiError(error)).toEqual({
+      expect(toApiError(error)).toStrictEqual({
         message: 'Failed to fetch services: 400 Bad Request',
         httpStatus: 400,
         httpStatusText: 'Bad Request',
         httpUrl: '/api/v3/services',
         httpQuery: 'id=1',
         httpBody: 'invalid service name',
+      });
+    });
+
+    it('copies only the details that are set', () => {
+      const error = Object.assign(new Error('Failed to fetch services: 503'), {
+        httpStatus: 503,
+        httpStatusText: '',
+        httpUrl: '/api/v3/services',
+      });
+      expect(toApiError(error)).toStrictEqual({
+        message: 'Failed to fetch services: 503',
+        httpStatus: 503,
+        httpStatusText: '',
+        httpUrl: '/api/v3/services',
       });
     });
   });
