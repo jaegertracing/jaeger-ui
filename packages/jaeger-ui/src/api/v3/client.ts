@@ -8,6 +8,8 @@
  * without a v3 counterpart.
  */
 
+import queryString from 'query-string';
+
 import { ALL_SERVICES } from '../../constants/search-form';
 import prefixUrl from '../../utils/prefix-url';
 import {
@@ -21,6 +23,9 @@ import type { TracesDataWire } from './schemas';
 import type { SearchQuery } from '../../types/search';
 import type { TraceSummary, ServiceSummary } from '../../types/trace-summary';
 import type { Microseconds } from '../../types/units';
+import type { TDdgModelParams } from '../../model/ddg/types';
+
+export const DEFAULT_DEPENDENCY_LOOKBACK = 7 * 24 * 60 * 60 * 1000;
 
 /**
  * Convert a microsecond epoch timestamp to an ISO-8601 string.
@@ -40,8 +45,37 @@ function toIsoTimestamp(epochMicroseconds: number): string | undefined {
 
 export class JaegerClient {
   private apiRoot = prefixUrl('/api/v3');
-  // Archival has no v3 endpoint and stays on the legacy route.
+  // Archive and dependency-graph requests retain their existing /api/ routes.
   private legacyApiRoot = prefixUrl('/api/');
+
+  async fetchDependencies(
+    endTs = Date.now(),
+    lookback = DEFAULT_DEPENDENCY_LOOKBACK,
+    signal?: AbortSignal
+  ): Promise<unknown> {
+    const query = queryString.stringify({ endTs, lookback });
+    // Preserve deadline-free graph reads, which can wait on storage queries.
+    const response = await this.fetchWithTimeout(`${this.legacyApiRoot}dependencies?${query}`, {
+      timeout: null,
+      signal,
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch dependencies: ${response.status} ${response.statusText}`);
+    }
+    return response.json();
+  }
+
+  async fetchDeepDependencyGraph(params: TDdgModelParams, signal?: AbortSignal): Promise<unknown> {
+    const query = queryString.stringify(params);
+    const response = await this.fetchWithTimeout(`${this.legacyApiRoot}deep-dependencies?${query}`, {
+      timeout: null,
+      signal,
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch deep dependencies: ${response.status} ${response.statusText}`);
+    }
+    return response.json();
+  }
 
   async archiveTrace(id: string): Promise<unknown> {
     const response = await this.fetchWithTimeout(`${this.legacyApiRoot}archive/${id}`, { method: 'POST' });
