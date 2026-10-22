@@ -7,6 +7,7 @@ import { Button, message } from 'antd';
 import JaegerAPI from '../../../api/jaeger';
 import { pooledMap } from '../../../utils/pooledMap';
 import type { TraceSummary } from '../../../types/trace-summary';
+import { uploadedTraceId } from '../../../utils/otel-upload';
 
 import './DownloadResults.css';
 
@@ -35,9 +36,10 @@ export default function DownloadResults({ traceSummaries, rawTraces }: Props) {
     // Build a lookup from traceID → raw trace for any locally held data (uploaded traces).
     // For summaries without a cached raw, we must fetch from the backend.
     const rawByID = new Map<string, unknown>(
-      rawTraces
-        .filter((r): r is Record<string, unknown> => r != null && typeof r === 'object')
-        .map(r => [String((r as Record<string, unknown>).traceID), r])
+      rawTraces.flatMap(raw => {
+        const id = uploadedTraceId(raw);
+        return id === undefined ? [] : [[id, raw] as [string, unknown]];
+      })
     );
     const missing = traceSummaries.filter(s => !rawByID.has(s.traceID));
     let traces: unknown[];

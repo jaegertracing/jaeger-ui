@@ -52,8 +52,22 @@ import readJsonFile from '../../utils/readJsonFile';
 import transformTraceData from '../../model/transform-trace-data';
 import { traceToTraceSummary } from '../../model/trace-summary';
 import { populateTraceCache } from '../../hooks/useTraceLoading';
+import * as otelParser from '../../api/v3/parser';
 
 const makeFile = (name = 'trace.json') => new File(['{}'], name, { type: 'application/json' });
+const makeOtlpDocument = traceId => ({
+  resourceSpans: [
+    {
+      scopeSpans: [
+        {
+          spans: [
+            { traceId, spanId: '1111111111111111', startTimeUnixNano: '1000', endTimeUnixNano: '2000' },
+          ],
+        },
+      ],
+    },
+  ],
+});
 
 beforeEach(() => {
   readJsonFile.mockClear();
@@ -63,7 +77,53 @@ beforeEach(() => {
   global.mockBeforeUpload = null;
 });
 
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 describe('loadTracesFromFile', () => {
+  it('keeps other OTLP traces when the native parser returns no trace', async () => {
+    const empty = makeOtlpDocument('abcdef0123456789abcdef0123456789');
+    const good = makeOtlpDocument('1234567890abcdef1234567890abcdef');
+    const summary = { traceID: '1234567890abcdef1234567890abcdef' };
+    readJsonFile.mockResolvedValue([empty, good]);
+    vi.spyOn(otelParser, 'parseOtelTrace').mockReturnValueOnce(null);
+    traceToTraceSummary.mockReturnValueOnce(summary);
+
+    const result = await loadTracesFromFile(makeFile());
+
+    expect(result).toEqual({ summaries: [summary], rawTraces: [good], errorCount: 1 });
+    expect(populateTraceCache).toHaveBeenCalledTimes(1);
+    expect(populateTraceCache).toHaveBeenCalledWith(expect.objectContaining({ traceID: summary.traceID }));
+    expect(transformTraceData).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['Error', new Error('Native parser failed')],
+    ['string', 'Native parser failed'],
+  ])('reports a thrown %s and keeps other OTLP traces', async (_kind, error) => {
+    const bad = makeOtlpDocument('abcdef0123456789abcdef0123456789');
+    const good = makeOtlpDocument('1234567890abcdef1234567890abcdef');
+    const summary = { traceID: '1234567890abcdef1234567890abcdef' };
+    readJsonFile.mockResolvedValue([bad, good]);
+    vi.spyOn(otelParser, 'parseOtelTrace').mockImplementationOnce(() => {
+      throw error;
+    });
+    traceToTraceSummary.mockReturnValueOnce(summary);
+
+    const result = await loadTracesFromFile(makeFile());
+
+    expect(result).toEqual({
+      summaries: [summary],
+      rawTraces: [good],
+      errorCount: 1,
+      errorDetail: 'Native parser failed',
+    });
+    expect(populateTraceCache).toHaveBeenCalledTimes(1);
+    expect(populateTraceCache).toHaveBeenCalledWith(expect.objectContaining({ traceID: summary.traceID }));
+    expect(transformTraceData).not.toHaveBeenCalled();
+  });
+
   it('returns summaries and raw traces for a valid { data: [...] } file', async () => {
     const rawTrace = { traceID: 'abc', spans: [] };
     const otelTrace = { traceID: 'abc' };
@@ -82,7 +142,7 @@ describe('loadTracesFromFile', () => {
   });
 
   it('normalizes a top-level array (no data wrapper)', async () => {
-    const rawTrace = { traceID: 'abc', spans: [] };
+    const rawTrace = { traceID: 'abc', spans: [], result: { unrelated: true } };
     const otelTrace = { traceID: 'abc' };
     const summary = { traceID: 'abc', traceName: 'svc: op' };
 
@@ -220,6 +280,76 @@ describe('<FileLoader />', () => {
     });
 
     expect(message.error).toHaveBeenCalledWith(expect.stringContaining('2 traces'));
+    expect(mockOnTracesLoaded).not.toHaveBeenCalled();
+  });
+
+  it('includes the validation reason when an OTLP upload is rejected', async () => {
+    const { message } = await import('antd');
+    readJsonFile.mockResolvedValue({
+      resourceSpans: [
+        {
+          scopeSpans: [
+            {
+              spans: [
+                {
+                  traceId: 'abcdef0123456789abcdef0123456789',
+                  spanId: 'invalid',
+                  startTimeUnixNano: '1000000',
+                  endTimeUnixNano: '2000000',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    render(<FileLoader onTracesLoaded={mockOnTracesLoaded} />);
+    await act(async () => {
+      global.mockBeforeUpload(makeFile('otlp.json'));
+    });
+
+    expect(message.error).toHaveBeenCalledWith(
+      '1 OTLP document could not be loaded from otlp.json: Invalid span ID: must be 16-char hex string and not all zeros (at resourceSpans.0.scopeSpans.0.spans.0.spanId)'
+    );
+    expect(mockOnTracesLoaded).not.toHaveBeenCalled();
+  });
+
+  it('counts a rejected multi-trace OTLP document once and reports legacy failures separately', async () => {
+    const { message } = await import('antd');
+    const invalid = makeOtlpDocument('abcdef0123456789abcdef0123456789');
+    invalid.resourceSpans[0].scopeSpans[0].spans.push({
+      traceId: '1234567890abcdef1234567890abcdef',
+      spanId: 'invalid',
+      startTimeUnixNano: '1000',
+      endTimeUnixNano: '2000',
+    });
+    readJsonFile.mockResolvedValue([invalid, { traceID: 'bad' }]);
+    transformTraceData.mockReturnValueOnce(null);
+
+    render(<FileLoader onTracesLoaded={mockOnTracesLoaded} />);
+    await act(async () => {
+      global.mockBeforeUpload(makeFile('mixed.json'));
+    });
+
+    expect(message.error).toHaveBeenCalledWith(
+      '1 OTLP document and 1 trace could not be loaded from mixed.json. First rejected OTLP document: Invalid span ID: must be 16-char hex string and not all zeros (at resourceSpans.0.scopeSpans.0.spans.1.spanId)'
+    );
+    expect(mockOnTracesLoaded).not.toHaveBeenCalled();
+  });
+
+  it('reports multiple rejected OTLP documents without counting their spans as traces', async () => {
+    const { message } = await import('antd');
+    readJsonFile.mockResolvedValue([{ resourceSpans: null }, { resourceSpans: null }]);
+
+    render(<FileLoader onTracesLoaded={mockOnTracesLoaded} />);
+    await act(async () => {
+      global.mockBeforeUpload(makeFile('invalid.json'));
+    });
+
+    expect(message.error).toHaveBeenCalledWith(
+      expect.stringMatching(/^2 OTLP documents could not be loaded/)
+    );
     expect(mockOnTracesLoaded).not.toHaveBeenCalled();
   });
 
