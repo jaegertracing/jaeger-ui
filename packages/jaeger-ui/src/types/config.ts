@@ -95,6 +95,17 @@ export type BackendCapabilities = {
 // Default values are provided in packages/jaeger-ui/src/constants/default-config.tsx
 export type Config = {
   //
+  // api section controls how the UI calls the Jaeger Query API.
+  api?: {
+    // requestTimeoutMs sets the timeout, in milliseconds, for API requests that do not
+    // set their own deadline: services, operations, trace search, archive and decorations.
+    // Fetching a single trace and the dependency graphs is not affected, since those
+    // requests have no timeout. The value must be a positive integer no larger than
+    // 2147483647 (2^31 - 1); any other value falls back to the default of 10000 (10 seconds).
+    // See https://github.com/jaegertracing/jaeger-ui/issues/4147 for background.
+    requestTimeoutMs?: number;
+  };
+
   // archiveEnabled enables the Archive Trace button in the trace view.
   // Requires Query Service to be configured with "archive" storage backend.
   archiveEnabled?: boolean;

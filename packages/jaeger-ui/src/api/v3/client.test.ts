@@ -5,6 +5,16 @@ import { JaegerClient, jaegerClient } from './client';
 import { ZodError } from 'zod';
 import { ALL_SERVICES } from '../../constants/search-form';
 import { MAX_DETAIL_LENGTH } from '../../utils/error-message';
+import type { SearchQuery } from '../../types/search';
+
+// requestTimeoutMs is unknown so tests can supply the invalid values a user config may contain.
+type TApiConfig = { api?: { requestTimeoutMs?: unknown } };
+
+const mockGetConfig = vi.hoisted(() => vi.fn<() => TApiConfig>(() => ({})));
+
+vi.mock('../../utils/config/get-config', () => ({
+  default: mockGetConfig,
+}));
 
 describe('JaegerClient', () => {
   let client: JaegerClient;
@@ -12,6 +22,7 @@ describe('JaegerClient', () => {
   let originalFetch: typeof globalThis.fetch;
 
   beforeEach(() => {
+    mockGetConfig.mockReturnValue({});
     client = new JaegerClient();
     originalFetch = globalThis.fetch;
     mockFetch = vi.fn();
@@ -710,6 +721,125 @@ describe('JaegerClient', () => {
       await expect(promise).rejects.toThrow('Network error');
       expect(clearTimeoutSpy).toHaveBeenCalled();
       clearTimeoutSpy.mockRestore();
+    });
+
+    describe('api.requestTimeoutMs config', () => {
+      const fetchUntilAborted = (_url: string, options?: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          options?.signal?.addEventListener('abort', () => {
+            const abortError = new Error('The operation was aborted');
+            abortError.name = 'AbortError';
+            reject(abortError);
+          });
+        });
+
+      // Records how a request settles without awaiting it, so fake timers can advance first.
+      const track = (promise: Promise<unknown>) => {
+        const state: { settled: boolean; error?: unknown } = { settled: false };
+        promise.then(
+          () => {
+            state.settled = true;
+          },
+          (error: unknown) => {
+            state.settled = true;
+            state.error = error;
+          }
+        );
+        return state;
+      };
+
+      // Advances to 1ms before the deadline and then to the deadline, reporting the request state at each.
+      const advanceToDeadline = async (request: Promise<unknown>, timeoutMs: number) => {
+        const state = track(request);
+        await vi.advanceTimersByTimeAsync(timeoutMs - 1);
+        const settledBefore = state.settled;
+        await vi.advanceTimersByTimeAsync(1);
+        return { settledBefore, error: state.error };
+      };
+
+      beforeEach(() => {
+        mockFetch.mockImplementation(fetchUntilAborted);
+      });
+
+      it('uses the configured timeout instead of 10 seconds', async () => {
+        mockGetConfig.mockReturnValue({ api: { requestTimeoutMs: 30000 } });
+
+        const state = track(client.fetchServices());
+        await vi.advanceTimersByTimeAsync(10000);
+        expect(state.settled).toBe(false);
+        await vi.advanceTimersByTimeAsync(20000);
+        expect(state.error).toHaveProperty('message', 'Request timeout after 30000ms');
+      });
+
+      it('applies the configured timeout to trace search', async () => {
+        mockGetConfig.mockReturnValue({ api: { requestTimeoutMs: 30000 } });
+        const query: SearchQuery = {
+          service: 'my-svc',
+          operation: undefined,
+          start: '1700000000000000',
+          end: '1700000060000000',
+          lookback: '1h',
+          minDuration: undefined,
+          maxDuration: undefined,
+          tags: undefined,
+          limit: 20,
+        };
+
+        const { settledBefore, error } = await advanceToDeadline(client.fetchTraceSummaries(query), 30000);
+        expect(settledBefore).toBe(false);
+        expect(error).toHaveProperty('message', 'Request timeout after 30000ms');
+      });
+
+      it('reads the config on each request', async () => {
+        mockGetConfig.mockReturnValue({ api: { requestTimeoutMs: 20000 } });
+        const first = track(client.fetchServices());
+        mockGetConfig.mockReturnValue({ api: { requestTimeoutMs: 30000 } });
+        const second = track(client.fetchServices());
+
+        await vi.advanceTimersByTimeAsync(20000);
+        expect(first.error).toHaveProperty('message', 'Request timeout after 20000ms');
+        expect(second.settled).toBe(false);
+        await vi.advanceTimersByTimeAsync(10000);
+        expect(second.error).toHaveProperty('message', 'Request timeout after 30000ms');
+      });
+
+      it.each([0, -1, 1.5, NaN, Infinity, '30000', null, 2 ** 31])(
+        'falls back to 10 seconds when requestTimeoutMs is %s',
+        async requestTimeoutMs => {
+          mockGetConfig.mockReturnValue({ api: { requestTimeoutMs } });
+
+          const { settledBefore, error } = await advanceToDeadline(client.fetchServices(), 10000);
+          expect(settledBefore).toBe(false);
+          expect(error).toHaveProperty('message', 'Request timeout after 10000ms');
+        }
+      );
+
+      it('falls back to 10 seconds when the api section is empty', async () => {
+        mockGetConfig.mockReturnValue({ api: {} });
+
+        const { settledBefore, error } = await advanceToDeadline(client.fetchServices(), 10000);
+        expect(settledBefore).toBe(false);
+        expect(error).toHaveProperty('message', 'Request timeout after 10000ms');
+      });
+
+      it('gives an explicit per-request timeout precedence over the config', async () => {
+        mockGetConfig.mockReturnValue({ api: { requestTimeoutMs: 30000 } });
+
+        const request = client['fetchJson']('/test', 'Failed', { timeout: 5000 });
+        const { settledBefore, error } = await advanceToDeadline(request, 5000);
+        expect(settledBefore).toBe(false);
+        expect(error).toHaveProperty('message', 'Request timeout after 5000ms');
+      });
+
+      it('keeps requests with a null timeout free of a deadline', async () => {
+        mockGetConfig.mockReturnValue({ api: { requestTimeoutMs: 1000 } });
+
+        const state = track(client.fetchDependencies(100, 200));
+        await vi.advanceTimersByTimeAsync(60000);
+
+        expect(mockFetch).toHaveBeenCalledTimes(1);
+        expect(state.settled).toBe(false);
+      });
     });
   });
 

@@ -5,6 +5,10 @@
 // Can be configured with "dependencies.dagMaxNumServices"
 export const FALLBACK_DAG_MAX_NUM_SERVICES = 500;
 
+// Timeout for API requests that do not set their own deadline
+// Can be configured with "api.requestTimeoutMs"
+export const DEFAULT_API_REQUEST_TIMEOUT_MS = 10 * 1000;
+
 // Max number of services that layouts can render without selecting a focal service
 export const DAG_MAX_NUM_SERVICES = 1200;
 export const FALLBACK_TRACE_NAME = '<trace-without-root-span>';
