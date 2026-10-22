@@ -147,6 +147,11 @@ export type AnyValueWire = {
   bytesValue?: string;
 };
 
+// Proto3 JSON represents non-finite doubles as strings.
+const doubleValue = z
+  .union([z.number(), z.literal('NaN'), z.literal('Infinity'), z.literal('-Infinity')])
+  .transform(Number);
+
 // Circular AnyValue: lazy defers evaluation so forward refs are safe.
 // oxlint-disable-next-line no-use-before-define
 export const refinedAnyValue: z.ZodType<AnyValueWire> = z.lazy(() =>
@@ -155,7 +160,7 @@ export const refinedAnyValue: z.ZodType<AnyValueWire> = z.lazy(() =>
       stringValue: z.string().optional(),
       boolValue: z.boolean().optional(),
       intValue: decimalInt64String.optional(),
-      doubleValue: z.number().optional(),
+      doubleValue: doubleValue.optional(),
       // oxlint-disable-next-line no-use-before-define
       arrayValue: refinedArrayValue.optional(),
       // oxlint-disable-next-line no-use-before-define
