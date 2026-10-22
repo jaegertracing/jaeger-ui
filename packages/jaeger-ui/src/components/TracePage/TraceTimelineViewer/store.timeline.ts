@@ -9,7 +9,7 @@ import { IOtelSpan, IOtelTrace, IEvent } from '../../../types/otel';
 import {
   applyDetailSubsectionToggle,
   calculateFocusedFindRowStates,
-  findNewlyRevealedAncestors,
+  findNewlyMatchedSpanInfo,
   FocusedFindRowStates,
   shouldDisableCollapse,
   trimFocusedDetailStatesForSidePanel,
@@ -98,16 +98,24 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
 
     if (uiFind) {
       if (isSameTrace) {
-        const prevSpanIDs = new Set(traceSpans?.map(s => s.spanID));
-        const newSpans = trace.spans.filter(s => !prevSpanIDs.has(s.spanID));
-        const revealedAncestors = findNewlyRevealedAncestors(uiFind, newSpans, trace.spans);
+        const { newlyMatchedIDs, revealedAncestors } = findNewlyMatchedSpanInfo(
+          uiFind,
+          traceSpans,
+          trace.spans
+        );
 
         const childrenHiddenIDs = new Set(get().childrenHiddenIDs);
         revealedAncestors.forEach(id => childrenHiddenIDs.delete(id));
 
-        const detailStates = new Map(get().detailStates);
-        const newMatchedFocused = calculateFocusedFindRowStates(uiFind, newSpans, false);
-        newMatchedFocused.detailStates.forEach((state, id) => detailStates.set(id, state));
+        const detailStates = new Map(base.detailStates ?? get().detailStates);
+        for (const id of detailStates.keys()) {
+          if (!trace.spanMap.has(id)) {
+            detailStates.delete(id);
+          }
+        }
+        for (const id of newlyMatchedIDs) {
+          detailStates.set(id, new DetailState());
+        }
 
         let focused: FocusedFindRowStates = {
           childrenHiddenIDs,
