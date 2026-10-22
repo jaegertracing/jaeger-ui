@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { LuLoaderCircle } from 'react-icons/lu';
 
 import './LoadingIndicator.css';
@@ -31,6 +31,13 @@ export default function LoadingIndicator({
     ${className}
   `;
 
+  // A live region is only announced reliably when its text changes after it is in the DOM, so mount it
+  // empty and fill it in the next commit.
+  const [announced, setAnnounced] = useState('');
+  useEffect(() => {
+    setAnnounced(label || '');
+  }, [label]);
+
   const icon = <LuLoaderCircle aria-hidden="true" className={cls} {...rest} style={style} />;
   if (!label) return icon;
 
@@ -38,7 +45,7 @@ export default function LoadingIndicator({
     <>
       {icon}
       <span role="status" className="LoadingIndicator--label">
-        {label}
+        {announced}
       </span>
     </>
   );
