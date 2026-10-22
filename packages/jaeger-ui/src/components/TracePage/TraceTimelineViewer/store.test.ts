@@ -134,7 +134,12 @@ const makeSpan = (overrides: Record<string, unknown> = {}) =>
     ...overrides,
   }) as any;
 
-const makeTrace = (traceID = 'trace-1', spans: any[] = [makeSpan()]) => ({ traceID, spans }) as any;
+const makeTrace = (traceID = 'trace-1', spans: any[] = [makeSpan()]) =>
+  ({
+    traceID,
+    spans,
+    spanMap: new Map(spans.map(s => [s.spanID, s])),
+  }) as any;
 
 describe('trace timeline zustand stores', () => {
   beforeEach(() => {

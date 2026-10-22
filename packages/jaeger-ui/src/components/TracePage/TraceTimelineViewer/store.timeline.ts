@@ -62,8 +62,8 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
       traceSpans: trace.spans,
     };
 
-    // Span IDs and service names are stable across refetches of the same trace,
-    // so the user's collapse, detail and filter selections stay valid.
+    // Across refetches of the same trace, collapse and filter selections persist,
+    // while detail states are pruned for spans that no longer exist.
     if (trace.traceID !== currentTraceID) {
       Object.assign(base, {
         childrenHiddenIDs: new Set<string>(),
@@ -72,7 +72,7 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
         prunedServices: new Set<string>(),
       });
     } else {
-      const validSpanIDs = trace.spanMap ?? new Set(trace.spans.map(s => s.spanID));
+      const validSpanIDs = trace.spanMap;
       const currentDetailStates = get().detailStates;
       let hasDropped = false;
       for (const id of currentDetailStates.keys()) {
