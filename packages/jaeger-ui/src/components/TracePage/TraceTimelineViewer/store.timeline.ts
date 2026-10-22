@@ -9,7 +9,7 @@ import { IOtelSpan, IOtelTrace, IEvent } from '../../../types/otel';
 import {
   applyDetailSubsectionToggle,
   calculateFocusedFindRowStates,
-  findNewlyRevealedAncestors,
+  findNewlyMatchedSpanInfo,
   FocusedFindRowStates,
   shouldDisableCollapse,
   trimFocusedDetailStatesForSidePanel,
@@ -66,8 +66,8 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
 
     const isSameTrace = trace.traceID === currentTraceID;
 
-    // Span IDs and service names are stable across refetches of the same trace,
-    // so the user's collapse, detail and filter selections stay valid.
+    // Across refetches of the same trace, collapse and filter selections persist,
+    // while detail states are pruned for spans that no longer exist.
     if (!isSameTrace) {
       Object.assign(base, {
         childrenHiddenIDs: new Set<string>(),
@@ -75,20 +75,47 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
         shouldScrollToFirstUiFindMatch: false,
         prunedServices: new Set<string>(),
       });
+    } else {
+      const validSpanIDs = trace.spanMap;
+      const currentDetailStates = get().detailStates;
+      let hasDropped = false;
+      for (const id of currentDetailStates.keys()) {
+        if (!validSpanIDs.has(id)) {
+          hasDropped = true;
+          break;
+        }
+      }
+      if (hasDropped) {
+        const prunedDetailStates = new Map<string, DetailState>();
+        for (const [id, state] of currentDetailStates) {
+          if (validSpanIDs.has(id)) {
+            prunedDetailStates.set(id, state);
+          }
+        }
+        base.detailStates = prunedDetailStates;
+      }
     }
 
     if (uiFind) {
       if (isSameTrace) {
-        const prevSpanIDs = new Set(traceSpans?.map(s => s.spanID));
-        const newSpans = trace.spans.filter(s => !prevSpanIDs.has(s.spanID));
-        const revealedAncestors = findNewlyRevealedAncestors(uiFind, newSpans, trace.spans);
+        const { newlyMatchedIDs, revealedAncestors } = findNewlyMatchedSpanInfo(
+          uiFind,
+          traceSpans,
+          trace.spans
+        );
 
         const childrenHiddenIDs = new Set(get().childrenHiddenIDs);
         revealedAncestors.forEach(id => childrenHiddenIDs.delete(id));
 
-        const detailStates = new Map(get().detailStates);
-        const newMatchedFocused = calculateFocusedFindRowStates(uiFind, newSpans, false);
-        newMatchedFocused.detailStates.forEach((state, id) => detailStates.set(id, state));
+        const detailStates = new Map(base.detailStates ?? get().detailStates);
+        for (const id of detailStates.keys()) {
+          if (!trace.spanMap.has(id)) {
+            detailStates.delete(id);
+          }
+        }
+        for (const id of newlyMatchedIDs) {
+          detailStates.set(id, new DetailState());
+        }
 
         let focused: FocusedFindRowStates = {
           childrenHiddenIDs,
