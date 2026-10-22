@@ -832,16 +832,17 @@ We will move towards a model where the Search page only fetches **Trace Summarie
 
 ### Phase 4: Cleanup & Optimization
 
-**Goal**: Remove legacy API code; keep the legacy model only for Jaeger JSON uploads.
+**Goal**: Remove facade layer and legacy code.
 
 The blast radius is already small: outside tests, the facade classes have three importers (`model/transform-trace-data.ts`, `components/TracePage/TraceFlamegraph/index.tsx`, and each other) and `transform-trace-data` has three (`hooks/useTraceLoading.ts`, `SearchTracePage/FileLoader.tsx`, `TraceTimelineViewer/generateRowStates.ts`). Once the parser from Milestone 3.2 produces `IOtelTrace` natively, all six call sites lose their reason to exist.
 
-> **Implementation note (#4605):** Native loading removes the transformer and facade bridge from `hooks/useTraceLoading.ts`, and OTLP uploads now parse natively in `SearchTracePage/FileLoader.tsx`. Legacy Jaeger JSON uploads and test fixtures still use them. The historical caller inventory above is no longer current: `generateRowStates` retains transformer use in tests, and Flamegraph no longer imports a facade.
+> **Implementation note (#4605):** Native loading removes the transformer and facade bridge from `hooks/useTraceLoading.ts`. Uploads and test fixtures still use them. The historical caller inventory above is no longer current: `generateRowStates` retains transformer use in tests, and Flamegraph no longer imports a facade. Native uploads, a fresh caller audit, and visual/performance parity remain prerequisites for deletion.
 
-> **Decision (#4278):** Keep `transformTraceData`, the `OtelSpanFacade` / `OtelTraceFacade` classes, the `asOtelTrace()` bridge, and the legacy types so legacy Jaeger JSON uploads keep working. The UI consumes `IOtelTrace` throughout and does not depend on the legacy model directly, so keeping it costs no component work.
-
+- [ ] Remove `OtelSpanFacade`, `OtelTraceFacade` classes and the `asOtelTrace()` bridge on the legacy trace type
 - [x] Parse uploaded OTLP files client-side in `SearchTracePage/FileLoader.tsx`, dropping the `/api/transform` round trip in `utils/readJsonFile.ts` (an OTLP file is already in the parser's input format)
+- [ ] Remove legacy types (mark as deprecated first)
 - [ ] Remove `src/api/jaeger.ts` (old REST API)
+- [ ] Remove `transformTraceData` (old transformer)
 - [ ] Documentation updates
 
 **Backend follow-through (jaeger repo).** This migration is not finished when the UI stops calling `/api/traces`, `/api/services`, and `/api/transform` — it is finished when `jaeger-query` stops serving what nothing consumes. Those v1 HTTP handlers exist largely for the UI, and leaving them in place indefinitely means the backend carries two query paths and two serialisation formats forever, which is the cost this RFC set out to remove.

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
+import { render, renderHook, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { message } from 'antd';
 import { vi, describe, it, expect, afterEach } from 'vitest';
@@ -11,6 +11,10 @@ import DownloadResults, { createBlob } from './DownloadResults';
 import readJsonFile from '../../../utils/readJsonFile';
 import type { TraceSummary } from '../../../types/trace-summary';
 import type { Microseconds } from '../../../types/units';
+import { AppQueryClientProvider, queryClient } from '../../../query/app-query-client';
+import { useUploadedTraces } from '../useUploadedTraces';
+import { loadTracesFromFile } from '../FileLoader';
+import numericUpload from '../../../utils/fixtures/otlp-upload-numeric.json';
 
 const mockFetchTrace = vi.fn();
 vi.mock('../../../api/jaeger', () => ({
@@ -288,5 +292,82 @@ describe('DownloadResults', () => {
     const file = new File([blobText], 'test.json');
     const contentFile = await readJsonFile({ file });
     expect(JSON.stringify(contentFile)).toBe(content);
+  });
+});
+
+describe('uploaded trace registry and offline downloads', () => {
+  beforeEach(() => {
+    queryClient.clear();
+  });
+
+  afterEach(() => {
+    queryClient.clear();
+  });
+
+  it.each(['one file', 'separate files'])(
+    'preserves distinct OTLP traces from %s through the registry and download/re-upload',
+    async mode => {
+      const second = structuredClone(numericUpload);
+      second.resourceSpans[0].scopeSpans[0].spans[0].traceId = '1234567890abcdef1234567890abcdef';
+      const documents = [numericUpload, second];
+      const { result } = renderHook(() => useUploadedTraces(), { wrapper: AppQueryClientProvider });
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Backend offline'));
+      mockFetchTrace.mockRejectedValue(new Error('Backend offline'));
+      const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob://url');
+      vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+
+      for (const input of mode === 'one file' ? [documents] : documents) {
+        const loaded = await loadTracesFromFile(new File([JSON.stringify(input)], 'upload.json'));
+        expect(loaded.errorCount).toBe(0);
+        act(() => result.current.handleTracesLoaded(loaded.summaries, loaded.rawTraces));
+      }
+      await waitFor(() => {
+        expect(result.current.uploadedSummaries).toHaveLength(2);
+        expect(result.current.uploadedRawTraces).toHaveLength(2);
+      });
+      // Re-uploading either trace must not add another registry entry.
+      const duplicate = await loadTracesFromFile(new File([JSON.stringify(second)], 'duplicate.json'));
+      act(() => result.current.handleTracesLoaded(duplicate.summaries, duplicate.rawTraces));
+      await waitFor(() => expect(result.current.uploadedRawTraces).toHaveLength(2));
+
+      render(
+        <DownloadResults
+          traceSummaries={result.current.uploadedSummaries}
+          rawTraces={result.current.uploadedRawTraces}
+        />
+      );
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: /Download Results/i }));
+      });
+      expect(createObjectURL).toHaveBeenCalledTimes(1);
+      const blob = createObjectURL.mock.calls[0][0] as Blob;
+      const exported = await readJsonFile({ file: new File([blob], 'download.json') });
+      expect(exported).toEqual({ data: result.current.uploadedRawTraces });
+      queryClient.clear();
+      const roundTrip = await loadTracesFromFile(new File([blob], 'download.json'));
+      expect(roundTrip.errorCount).toBe(0);
+      expect(roundTrip.summaries.map(summary => summary.traceID)).toEqual(
+        documents.map(document => document.resourceSpans[0].scopeSpans[0].spans[0].traceId)
+      );
+      expect(mockFetchTrace).not.toHaveBeenCalled();
+      expect(fetchSpy).not.toHaveBeenCalled();
+    }
+  );
+
+  it('deduplicates legacy and OTLP raw documents by their own trace IDs', async () => {
+    const loaded = await loadTracesFromFile(new File([JSON.stringify(numericUpload)], 'upload.json'));
+    const legacy = { ...baseRawTraces[0], result: { unrelated: true } };
+    const { result } = renderHook(() => useUploadedTraces(), { wrapper: AppQueryClientProvider });
+    act(() => {
+      result.current.handleTracesLoaded([...loaded.summaries, baseTraces[0]], [...loaded.rawTraces, legacy]);
+      result.current.handleTracesLoaded(
+        [...loaded.summaries, baseTraces[0]],
+        [...loaded.rawTraces, legacy, {}]
+      );
+    });
+    await waitFor(() => {
+      expect(result.current.uploadedSummaries).toHaveLength(2);
+      expect(result.current.uploadedRawTraces).toEqual([...loaded.rawTraces, legacy]);
+    });
   });
 });

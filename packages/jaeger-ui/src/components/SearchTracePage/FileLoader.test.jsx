@@ -142,7 +142,7 @@ describe('loadTracesFromFile', () => {
   });
 
   it('normalizes a top-level array (no data wrapper)', async () => {
-    const rawTrace = { traceID: 'abc', spans: [] };
+    const rawTrace = { traceID: 'abc', spans: [], result: { unrelated: true } };
     const otelTrace = { traceID: 'abc' };
     const summary = { traceID: 'abc', traceName: 'svc: op' };
 
@@ -310,7 +310,45 @@ describe('<FileLoader />', () => {
     });
 
     expect(message.error).toHaveBeenCalledWith(
-      '1 trace could not be loaded from otlp.json: Invalid span ID: must be 16-char hex string and not all zeros (at resourceSpans.0.scopeSpans.0.spans.0.spanId)'
+      '1 OTLP document could not be loaded from otlp.json: Invalid span ID: must be 16-char hex string and not all zeros (at resourceSpans.0.scopeSpans.0.spans.0.spanId)'
+    );
+    expect(mockOnTracesLoaded).not.toHaveBeenCalled();
+  });
+
+  it('counts a rejected multi-trace OTLP document once and reports legacy failures separately', async () => {
+    const { message } = await import('antd');
+    const invalid = makeOtlpDocument('abcdef0123456789abcdef0123456789');
+    invalid.resourceSpans[0].scopeSpans[0].spans.push({
+      traceId: '1234567890abcdef1234567890abcdef',
+      spanId: 'invalid',
+      startTimeUnixNano: '1000',
+      endTimeUnixNano: '2000',
+    });
+    readJsonFile.mockResolvedValue([invalid, { traceID: 'bad' }]);
+    transformTraceData.mockReturnValueOnce(null);
+
+    render(<FileLoader onTracesLoaded={mockOnTracesLoaded} />);
+    await act(async () => {
+      global.mockBeforeUpload(makeFile('mixed.json'));
+    });
+
+    expect(message.error).toHaveBeenCalledWith(
+      '1 OTLP document and 1 trace could not be loaded from mixed.json. First rejected OTLP document: Invalid span ID: must be 16-char hex string and not all zeros (at resourceSpans.0.scopeSpans.0.spans.1.spanId)'
+    );
+    expect(mockOnTracesLoaded).not.toHaveBeenCalled();
+  });
+
+  it('reports multiple rejected OTLP documents without counting their spans as traces', async () => {
+    const { message } = await import('antd');
+    readJsonFile.mockResolvedValue([{ resourceSpans: null }, { resourceSpans: null }]);
+
+    render(<FileLoader onTracesLoaded={mockOnTracesLoaded} />);
+    await act(async () => {
+      global.mockBeforeUpload(makeFile('invalid.json'));
+    });
+
+    expect(message.error).toHaveBeenCalledWith(
+      expect.stringMatching(/^2 OTLP documents could not be loaded/)
     );
     expect(mockOnTracesLoaded).not.toHaveBeenCalled();
   });

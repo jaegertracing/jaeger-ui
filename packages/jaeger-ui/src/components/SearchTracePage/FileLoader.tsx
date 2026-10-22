@@ -28,6 +28,7 @@ export type LoadResult = {
   summaries: TraceSummary[];
   rawTraces: unknown[];
   errorCount: number;
+  rejectedOtelDocumentCount?: number;
   // Reason for the first rejected OTLP document, shown alongside the error count.
   errorDetail?: string;
 };
@@ -58,6 +59,7 @@ export async function loadTracesFromFile(file: File): Promise<LoadResult> {
   const summaries: TraceSummary[] = [];
   const rawTraces: unknown[] = [];
   let errorCount = 0;
+  let rejectedOtelDocumentCount = 0;
   let errorDetail: string | undefined;
 
   const otelDocuments: TracesDataWire[] = [];
@@ -68,6 +70,7 @@ export async function loadTracesFromFile(file: File): Promise<LoadResult> {
         otelDocuments.push(validateOtelUpload(raw));
       } catch (err) {
         errorCount++;
+        rejectedOtelDocumentCount++;
         errorDetail ??= describeUploadError(err);
       }
     } else {
@@ -113,7 +116,13 @@ export async function loadTracesFromFile(file: File): Promise<LoadResult> {
     }
   }
 
-  return { summaries, rawTraces, errorCount, errorDetail };
+  return {
+    summaries,
+    rawTraces,
+    errorCount,
+    errorDetail,
+    ...(rejectedOtelDocumentCount > 0 ? { rejectedOtelDocumentCount } : {}),
+  };
 }
 
 export default function FileLoader(props: FileLoaderProps) {
@@ -125,12 +134,20 @@ export default function FileLoader(props: FileLoaderProps) {
         // receives the full fileList, so iterating fileList here would process N files
         // N times (N²). We process only the current `file` argument to avoid that.
         loadTracesFromFile(file)
-          .then(({ summaries, rawTraces, errorCount, errorDetail }) => {
+          .then(({ summaries, rawTraces, errorCount, errorDetail, rejectedOtelDocumentCount = 0 }) => {
             if (errorCount > 0) {
-              const detail = errorDetail ? `: ${errorDetail}` : '.';
-              message.error(
-                `${errorCount} trace${errorCount > 1 ? 's' : ''} could not be loaded from ${file.name}${detail}`
-              );
+              const traceErrors = errorCount - rejectedOtelDocumentCount;
+              const detailPrefix =
+                rejectedOtelDocumentCount > 0 && traceErrors > 0 ? '. First rejected OTLP document: ' : ': ';
+              const detail = errorDetail ? `${detailPrefix}${errorDetail}` : '.';
+              const failures = [];
+              if (rejectedOtelDocumentCount > 0) {
+                failures.push(
+                  `${rejectedOtelDocumentCount} OTLP document${rejectedOtelDocumentCount > 1 ? 's' : ''}`
+                );
+              }
+              if (traceErrors > 0) failures.push(`${traceErrors} trace${traceErrors > 1 ? 's' : ''}`);
+              message.error(`${failures.join(' and ')} could not be loaded from ${file.name}${detail}`);
             }
             if (summaries.length > 0) {
               props.onTracesLoaded(summaries, rawTraces);

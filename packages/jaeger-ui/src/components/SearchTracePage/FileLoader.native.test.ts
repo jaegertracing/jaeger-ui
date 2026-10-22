@@ -8,6 +8,7 @@ import { createBlob } from './SearchResults/DownloadResults';
 import { getCachedTrace } from '../../hooks/useTraceLoading';
 import { queryClient } from '../../query/app-query-client';
 import { uploadedTraceId } from '../../utils/otel-upload';
+import numericUpload from '../../utils/fixtures/otlp-upload-numeric.json';
 
 const traceId = 'abcdef0123456789abcdef0123456789';
 const secondId = '1234567890abcdef1234567890abcdef';
@@ -39,6 +40,40 @@ afterEach(() => {
   queryClient.clear();
   vi.unstubAllGlobals();
 });
+
+it('loads and re-uploads a numeric OTLP fixture offline', async () => {
+  const first = await loadTracesFromFile(file(numericUpload));
+  expect(first.errorCount).toBe(0);
+  expect(first.summaries.map(summary => summary.traceID)).toEqual([traceId]);
+  const trace = getCachedTrace(traceId)!;
+  expect(trace.spans).toHaveLength(1);
+  expect(trace.spans[0].startTime).toBe(1000);
+  expect(trace.spans[0].attributes.getValue('count')).toBe(0);
+  expect(trace.spans[0].events[0].timestamp).toBe(1500);
+  queryClient.clear();
+  const second = await loadTracesFromFile(new File([createBlob(first.rawTraces)], 'numeric-download.json'));
+  expect(second.summaries).toEqual(first.summaries);
+  expect(second.rawTraces).toEqual(first.rawTraces);
+  expect(fetchMock).not.toHaveBeenCalled();
+});
+
+it('loads valid spans beside omitted empty scope/span arrays', async () => {
+  const input = {
+    resourceSpans: [{}, { scopeSpans: [{}, payload.resourceSpans[0].scopeSpans[0]] }],
+  };
+  const result = await loadTracesFromFile(file(input));
+  expect(result.errorCount).toBe(0);
+  expect(getCachedTrace(traceId)!.spans).toHaveLength(1);
+  expect(fetchMock).not.toHaveBeenCalled();
+});
+
+it.each([{}, { result: {} }, { resourceSpans: [{}] }, { resourceSpans: [{ scopeSpans: [{}] }] }])(
+  'returns no traces or errors for empty OTLP data with omitted repeated fields',
+  async input => {
+    expect(await loadTracesFromFile(file(input))).toEqual({ summaries: [], rawTraces: [], errorCount: 0 });
+    expect(fetchMock).not.toHaveBeenCalled();
+  }
+);
 
 it.each(['document', 'array', 'jsonl', 'envelope'] as const)(
   'loads an OTLP %s with no backend',

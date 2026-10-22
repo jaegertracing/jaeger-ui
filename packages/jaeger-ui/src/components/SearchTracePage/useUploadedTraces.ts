@@ -5,6 +5,7 @@ import { useCallback } from 'react';
 import { useQuery, useQueryClient, skipToken } from '@tanstack/react-query';
 import type { TraceSummary } from '../../types/trace-summary';
 import { queryClient as appQueryClient } from '../../query/app-query-client';
+import { uploadedTraceId } from '../../utils/otel-upload';
 
 /**
  * Similar to useSearchTraces() from hooks/useTraceDiscovery.ts,
@@ -78,12 +79,10 @@ export function useUploadedTraces(): UploadedTraces {
       });
       queryClient.setQueryData<unknown[]>(UPLOADED_RAW_TRACES_QUERY_KEY, prev => {
         const existing = prev ?? [];
-        const traceIDOf = (r: unknown) =>
-          r != null && typeof r === 'object' ? String((r as Record<string, unknown>).traceID) : '';
-        const seen = new Set(existing.map(traceIDOf));
+        const seen = new Set(existing.map(uploadedTraceId));
         const incoming = rawTraces.filter(r => {
-          const id = traceIDOf(r);
-          if (seen.has(id)) return false;
+          const id = uploadedTraceId(r);
+          if (id === undefined || seen.has(id)) return false;
           seen.add(id);
           return true;
         });

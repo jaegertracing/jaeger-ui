@@ -261,12 +261,12 @@ export const refinedSpan = z
   })
   .passthrough();
 
-// `spans` / `scopeSpans` are required arrays (empty allowed): without them the rest of
-// the envelope is meaningless. This matches the generated base, which declares both required.
+// ProtoJSON omits empty repeated fields. Restore their empty-array defaults
+// before the parser walks resources and scopes.
 export const refinedScopeSpans = z
   .object({
     scope: refinedScope.optional(),
-    spans: z.array(refinedSpan),
+    spans: z.array(refinedSpan).default([]),
     schemaUrl: z.string().optional(),
   })
   .passthrough();
@@ -274,7 +274,7 @@ export const refinedScopeSpans = z
 export const refinedResourceSpans = z
   .object({
     resource: refinedResource.optional(),
-    scopeSpans: z.array(refinedScopeSpans),
+    scopeSpans: z.array(refinedScopeSpans).default([]),
     schemaUrl: z.string().optional(),
   })
   .passthrough();
