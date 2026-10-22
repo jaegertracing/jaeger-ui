@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import DetailState from './SpanDetail/DetailState';
 import {
   calculateFocusedFindRowStates,
+  findNewlyRevealedAncestors,
   getInitialLayoutState,
   getSelectedSpanID,
   setDetailPanelMode,
@@ -134,7 +135,12 @@ const makeSpan = (overrides: Record<string, unknown> = {}) =>
     ...overrides,
   }) as any;
 
-const makeTrace = (traceID = 'trace-1', spans: any[] = [makeSpan()]) => ({ traceID, spans }) as any;
+const makeTrace = (traceID = 'trace-1', spans: any[] = [makeSpan()]) =>
+  ({
+    traceID,
+    spans,
+    spanMap: new Map(spans.map(s => [s.spanID, s])),
+  }) as any;
 
 describe('trace timeline zustand stores', () => {
   beforeEach(() => {
@@ -292,7 +298,7 @@ describe('trace timeline zustand stores', () => {
 
   describe('useTraceTimelineStore', () => {
     it('preserves manual interactions and layout preferences on same-ID reload', () => {
-      const trace = makeTrace('same-trace');
+      const trace = makeTrace('same-trace', [makeSpan({ spanID: 'span-x' })]);
       useTraceTimelineStore.getState().setTrace(trace);
       useLayoutPrefsStore.setState({ spanNameColumnWidth: 0.5 });
       useTraceTimelineStore.setState({
@@ -303,7 +309,7 @@ describe('trace timeline zustand stores', () => {
       });
 
       const previous = useTraceTimelineStore.getState();
-      const refreshed = { ...trace, spans: [...trace.spans, makeSpan({ spanID: 'arrived' })] };
+      const refreshed = makeTrace('same-trace', [...trace.spans, makeSpan({ spanID: 'arrived' })]);
       useTraceTimelineStore.getState().setTrace(refreshed);
 
       const state = useTraceTimelineStore.getState();
@@ -405,10 +411,242 @@ describe('trace timeline zustand stores', () => {
           expect(state.childrenHiddenIDs.has('root')).toBe(false);
           expect(state.childrenHiddenIDs.has('parent')).toBe(false);
           expect(state.detailStates.has('arrived')).toBe(true);
-          expect(state.shouldScrollToFirstUiFindMatch).toBe(true);
+          expect(state.shouldScrollToFirstUiFindMatch).toBe(false);
           expect(state.prunedServices).toEqual(new Set(['other-service']));
           expect(useLayoutPrefsStore.getState().detailPanelMode).toBe(detailPanelMode);
           expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBe(0.5);
+        }
+      );
+
+      it('same-ID reload with uiFind keeps manual collapses and does not scroll', async () => {
+        const actualFilter = await vi.importActual<typeof import('../../../utils/filter-spans')>(
+          '../../../utils/filter-spans'
+        );
+        const actualAncestors = await vi.importActual<typeof import('../../../utils/span-ancestor-ids')>(
+          '../../../utils/span-ancestor-ids'
+        );
+        vi.mocked(filterSpans).mockImplementation(actualFilter.default);
+        vi.mocked(spanAncestorIds).mockImplementation(actualAncestors.default);
+
+        const attributes = { entries: () => [] };
+        const resource = { serviceName: 'service', attributes };
+        const root = makeSpan({ spanID: 'root', name: 'root', hasChildren: true, attributes, resource });
+        const matchParent = makeSpan({
+          spanID: 'match-parent',
+          name: 'match-parent',
+          hasChildren: true,
+          parentSpan: root,
+          attributes,
+          resource,
+        });
+        const matchChild = makeSpan({
+          spanID: 'match-child',
+          name: 'target-match',
+          parentSpan: matchParent,
+          attributes,
+          resource,
+        });
+        const otherParent = makeSpan({
+          spanID: 'other-parent',
+          name: 'other-parent',
+          hasChildren: true,
+          parentSpan: root,
+          attributes,
+          resource,
+        });
+        const otherChild = makeSpan({
+          spanID: 'other-child',
+          name: 'other',
+          parentSpan: otherParent,
+          attributes,
+          resource,
+        });
+
+        const trace = makeTrace('same-trace', [root, matchParent, matchChild, otherParent, otherChild]);
+        useTraceTimelineStore.getState().setTrace(trace, 'target-match');
+
+        // Initially, match-parent is expanded (ancestor of matchChild) and other-parent is collapsed (no matches)
+        expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('match-parent')).toBe(false);
+        expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('other-parent')).toBe(true);
+
+        // User manually collapses match-parent
+        useTraceTimelineStore.getState().childrenToggle('match-parent');
+        expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('match-parent')).toBe(true);
+
+        // User manually expands other-parent
+        useTraceTimelineStore.getState().childrenToggle('other-parent');
+        expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('other-parent')).toBe(false);
+
+        // Clear scroll flag (simulating timeline view has rendered and scrolled)
+        useTraceTimelineStore.getState().clearShouldScrollToFirstUiFindMatch();
+        expect(useTraceTimelineStore.getState().shouldScrollToFirstUiFindMatch).toBe(false);
+
+        // Reload the same trace with an unrelated new span arriving
+        const newChild = makeSpan({
+          spanID: 'new-child',
+          name: 'unrelated',
+          parentSpan: root,
+          attributes,
+          resource,
+        });
+        const refreshed = makeTrace('same-trace', [
+          root,
+          matchParent,
+          matchChild,
+          otherParent,
+          otherChild,
+          newChild,
+        ]);
+        useTraceTimelineStore.getState().setTrace(refreshed, 'target-match');
+
+        const state = useTraceTimelineStore.getState();
+        // Manual collapse of match-parent is preserved
+        expect(state.childrenHiddenIDs.has('match-parent')).toBe(true);
+        // Manual expansion of other-parent is preserved
+        expect(state.childrenHiddenIDs.has('other-parent')).toBe(false);
+        // Does not scroll on reload
+        expect(state.shouldScrollToFirstUiFindMatch).toBe(false);
+      });
+
+      it('reveals an existing span when its name changes to match on same-ID reload while preserving manual collapse for prior matches', async () => {
+        const actualFilter = await vi.importActual<typeof import('../../../utils/filter-spans')>(
+          '../../../utils/filter-spans'
+        );
+        const actualAncestors = await vi.importActual<typeof import('../../../utils/span-ancestor-ids')>(
+          '../../../utils/span-ancestor-ids'
+        );
+        vi.mocked(filterSpans).mockImplementation(actualFilter.default);
+        vi.mocked(spanAncestorIds).mockImplementation(actualAncestors.default);
+
+        const attributes = { entries: () => [] };
+        const resource = { serviceName: 'service', attributes };
+        const root = makeSpan({ spanID: 'root', name: 'root', hasChildren: true, attributes, resource });
+        const priorMatchParent = makeSpan({
+          spanID: 'prior-parent',
+          name: 'prior-parent',
+          hasChildren: true,
+          parentSpan: root,
+          attributes,
+          resource,
+        });
+        const priorMatchChild = makeSpan({
+          spanID: 'prior-child',
+          name: 'match-keyword',
+          parentSpan: priorMatchParent,
+          attributes,
+          resource,
+        });
+        const newMatchParent = makeSpan({
+          spanID: 'new-parent',
+          name: 'new-parent',
+          hasChildren: true,
+          parentSpan: root,
+          attributes,
+          resource,
+        });
+        const existingChild = makeSpan({
+          spanID: 'existing-child',
+          name: 'unmatched',
+          parentSpan: newMatchParent,
+          attributes,
+          resource,
+        });
+
+        const trace = makeTrace('same', [
+          root,
+          priorMatchParent,
+          priorMatchChild,
+          newMatchParent,
+          existingChild,
+        ]);
+        useTraceTimelineStore.getState().setTrace(trace, 'match-keyword');
+
+        // Initially, priorMatchParent is expanded (ancestor of priorMatchChild) and newMatchParent is collapsed
+        expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('prior-parent')).toBe(false);
+        expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('new-parent')).toBe(true);
+
+        // User manually collapses priorMatchParent
+        useTraceTimelineStore.getState().childrenToggle('prior-parent');
+        expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('prior-parent')).toBe(true);
+
+        // Reload where existingChild's name changes to 'match-keyword'
+        const updatedChild = makeSpan({
+          spanID: 'existing-child',
+          name: 'match-keyword',
+          parentSpan: newMatchParent,
+          attributes,
+          resource,
+        });
+        const refreshed = makeTrace('same', [
+          root,
+          priorMatchParent,
+          priorMatchChild,
+          newMatchParent,
+          updatedChild,
+        ]);
+        useTraceTimelineStore.getState().setTrace(refreshed, 'match-keyword');
+
+        const state = useTraceTimelineStore.getState();
+        // Ancestor of the newly matched existing span is revealed
+        expect(state.childrenHiddenIDs.has('new-parent')).toBe(false);
+        // Manual collapse for the span that already matched is preserved
+        expect(state.childrenHiddenIDs.has('prior-parent')).toBe(true);
+        // Newly matched span is added to detailStates
+        expect(state.detailStates.has('existing-child')).toBe(true);
+      });
+
+      it.each(['sidepanel', 'inline'] as const)(
+        'prunes dropped selected span on same-ID reload with uiFind active in %s mode',
+        detailPanelMode => {
+          const attributes = { entries: () => [] };
+          const resource = { serviceName: 'service', attributes };
+          const root = makeSpan({ spanID: 'root', name: 'root', hasChildren: true, attributes, resource });
+          const spanA = makeSpan({
+            spanID: 'span-a',
+            name: 'span-a',
+            parentSpan: root,
+            attributes,
+            resource,
+          });
+          const spanB = makeSpan({
+            spanID: 'span-b',
+            name: 'span-b',
+            parentSpan: root,
+            attributes,
+            resource,
+          });
+
+          useLayoutPrefsStore.setState({ detailPanelMode });
+          useTraceTimelineStore.getState().setTrace(makeTrace('same', [root, spanA, spanB]));
+
+          // Select spanB in side panel or expand both in inline
+          if (detailPanelMode === 'sidepanel') {
+            useTraceTimelineStore.setState({
+              detailStates: new Map([['span-b', DetailState.forDetailPanelMode('sidepanel')]]),
+            });
+          } else {
+            useTraceTimelineStore.setState({
+              detailStates: new Map([
+                ['span-a', new DetailState()],
+                ['span-b', new DetailState()],
+              ]),
+            });
+          }
+
+          // Reload same trace where spanB was dropped and uiFind is active
+          vi.mocked(filterSpans).mockReturnValue(new Set());
+          const refreshed = makeTrace('same', [root, spanA]);
+          useTraceTimelineStore.getState().setTrace(refreshed, 'some-query');
+
+          const state = useTraceTimelineStore.getState();
+          expect(state.detailStates.has('span-b')).toBe(false);
+          if (detailPanelMode === 'sidepanel') {
+            // Falls back to empty detailStates so side panel defaults to root
+            expect(state.detailStates.size).toBe(0);
+          } else {
+            // Surviving span remains open
+            expect(state.detailStates.has('span-a')).toBe(true);
+          }
         }
       );
 
@@ -729,6 +967,41 @@ describe('calculateFocusedFindRowStates', () => {
     const result = calculateFocusedFindRowStates('find', spans);
     expect(result.detailStates.size).toBe(2);
     expect(result.shouldScrollToFirstUiFindMatch).toBe(true);
+  });
+
+  describe('findNewlyRevealedAncestors', () => {
+    it('returns ancestor IDs of newly matching spans comparing prev and current matches', () => {
+      vi.mocked(filterSpans).mockImplementation((_query, spans) =>
+        spans?.some(s => s.spanID === 'leaf' && (s as any).name === 'match') ? new Set(['leaf']) : new Set()
+      );
+      vi.mocked(spanAncestorIds).mockReturnValue(['root', 'parent']);
+      const root = makeSpan({ spanID: 'root', hasChildren: true });
+      const parent = makeSpan({ spanID: 'parent', hasChildren: true });
+      const prevLeaf = makeSpan({ spanID: 'leaf', name: 'unmatched' });
+      const currentLeaf = makeSpan({ spanID: 'leaf', name: 'match' });
+      const revealed = findNewlyRevealedAncestors(
+        'find',
+        [root, parent, prevLeaf],
+        [root, parent, currentLeaf]
+      );
+      expect(revealed).toEqual(new Set(['root', 'parent']));
+    });
+
+    it('returns an empty set when no spans match', () => {
+      vi.mocked(filterSpans).mockReturnValue(new Set());
+      const root = makeSpan({ spanID: 'root', hasChildren: true });
+      const leaf = makeSpan({ spanID: 'leaf' });
+      const revealed = findNewlyRevealedAncestors('find', [root, leaf], [root, leaf]);
+      expect(revealed.size).toBe(0);
+    });
+
+    it('returns an empty set when span was already matching before reload', () => {
+      vi.mocked(filterSpans).mockReturnValue(new Set(['leaf']));
+      const root = makeSpan({ spanID: 'root', hasChildren: true });
+      const leaf = makeSpan({ spanID: 'leaf' });
+      const revealed = findNewlyRevealedAncestors('find', [root, leaf], [root, leaf]);
+      expect(revealed.size).toBe(0);
+    });
   });
 });
 

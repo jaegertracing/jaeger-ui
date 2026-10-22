@@ -15,7 +15,7 @@ export function shouldDisableCollapse(
   return allSpans.filter(s => s.hasChildren).every(p => hiddenSpansIds.has(p.spanID));
 }
 
-type FocusedFindRowStates = {
+export type FocusedFindRowStates = {
   childrenHiddenIDs: Set<string>;
   detailStates: Map<string, DetailState>;
   shouldScrollToFirstUiFindMatch: boolean;
@@ -69,6 +69,46 @@ export function calculateFocusedFindRowStates(
   }
 
   return { childrenHiddenIDs, detailStates, shouldScrollToFirstUiFindMatch };
+}
+
+// Computes ancestor IDs and newly matched span IDs by comparing previous and current matches on same-ID reload.
+export function findNewlyMatchedSpanInfo(
+  uiFind: string,
+  prevSpans: ReadonlyArray<IOtelSpan> | null | undefined,
+  currentSpans: ReadonlyArray<IOtelSpan>
+): {
+  newlyMatchedIDs: Set<string>;
+  revealedAncestors: Set<string>;
+} {
+  const spansMap = new Map<string, IOtelSpan>();
+  currentSpans.forEach(span => spansMap.set(span.spanID, span));
+
+  const prevMatched = (prevSpans && filterSpans(uiFind, prevSpans)) || new Set<string>();
+  const currentMatched = filterSpans(uiFind, currentSpans) || new Set<string>();
+
+  const newlyMatchedIDs = new Set<string>();
+  const revealedAncestors = new Set<string>();
+
+  currentMatched.forEach(spanID => {
+    if (!prevMatched.has(spanID)) {
+      newlyMatchedIDs.add(spanID);
+      const span = spansMap.get(spanID);
+      if (span) {
+        spanAncestorIds(span).forEach(ancestorID => revealedAncestors.add(ancestorID));
+      }
+    }
+  });
+
+  return { newlyMatchedIDs, revealedAncestors };
+}
+
+// Computes the ancestor IDs of newly matching spans that need to be revealed on same-ID reload.
+export function findNewlyRevealedAncestors(
+  uiFind: string,
+  prevSpans: ReadonlyArray<IOtelSpan> | null | undefined,
+  currentSpans: ReadonlyArray<IOtelSpan>
+): Set<string> {
+  return findNewlyMatchedSpanInfo(uiFind, prevSpans, currentSpans).revealedAncestors;
 }
 
 // Returns the currently selected span ID in side-panel mode (first key of detailStates), or null.
