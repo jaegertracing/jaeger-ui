@@ -839,7 +839,7 @@ The blast radius is already small: outside tests, the facade classes have three 
 > **Implementation note (#4605):** Native loading removes the transformer and facade bridge from `hooks/useTraceLoading.ts`. Uploads and test fixtures still use them. The historical caller inventory above is no longer current: `generateRowStates` retains transformer use in tests, and Flamegraph no longer imports a facade. Native uploads, a fresh caller audit, and visual/performance parity remain prerequisites for deletion.
 
 - [ ] Remove `OtelSpanFacade`, `OtelTraceFacade` classes and the `asOtelTrace()` bridge on the legacy trace type
-- [ ] Parse uploaded OTLP files client-side in `utils/readJsonFile.ts`, dropping its `/api/transform` round trip (an OTLP file is already in the parser's input format)
+- [x] Parse uploaded OTLP files client-side in `SearchTracePage/FileLoader.tsx`, dropping the `/api/transform` round trip in `utils/readJsonFile.ts` (an OTLP file is already in the parser's input format)
 - [ ] Remove legacy types (mark as deprecated first)
 - [ ] Remove `src/api/jaeger.ts` (old REST API)
 - [ ] Remove `transformTraceData` (old transformer)

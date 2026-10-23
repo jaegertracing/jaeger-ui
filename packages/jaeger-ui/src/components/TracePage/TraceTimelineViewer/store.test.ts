@@ -134,7 +134,12 @@ const makeSpan = (overrides: Record<string, unknown> = {}) =>
     ...overrides,
   }) as any;
 
-const makeTrace = (traceID = 'trace-1', spans: any[] = [makeSpan()]) => ({ traceID, spans }) as any;
+const makeTrace = (traceID = 'trace-1', spans: any[] = [makeSpan()]) =>
+  ({
+    traceID,
+    spans,
+    spanMap: new Map(spans.map(s => [s.spanID, s])),
+  }) as any;
 
 describe('trace timeline zustand stores', () => {
   beforeEach(() => {
@@ -292,7 +297,7 @@ describe('trace timeline zustand stores', () => {
 
   describe('useTraceTimelineStore', () => {
     it('preserves manual interactions and layout preferences on same-ID reload', () => {
-      const trace = makeTrace('same-trace');
+      const trace = makeTrace('same-trace', [makeSpan({ spanID: 'span-x' })]);
       useTraceTimelineStore.getState().setTrace(trace);
       useLayoutPrefsStore.setState({ spanNameColumnWidth: 0.5 });
       useTraceTimelineStore.setState({
@@ -350,6 +355,95 @@ describe('trace timeline zustand stores', () => {
         useTraceTimelineStore.getState().setTrace({ ...trace });
         expect(useTraceTimelineStore.getState()).toBe(state);
         expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('span-x')).toBe(true);
+      });
+
+      it('prunes absent detailStates keys on same-ID reload in inline mode while retaining valid entries', () => {
+        useLayoutPrefsStore.setState({ detailPanelMode: 'inline' });
+        const spanA = makeSpan({ spanID: 'span-a' });
+        const spanB = makeSpan({ spanID: 'span-b' });
+        const spanC = makeSpan({ spanID: 'span-c' });
+        const trace = makeTrace('same', [spanA, spanB, spanC]);
+        useTraceTimelineStore.getState().setTrace(trace);
+        useTraceTimelineStore.setState({
+          detailStates: new Map([
+            ['span-b', new DetailState()],
+            ['span-c', new DetailState()],
+          ]),
+        });
+        expect(useTraceTimelineStore.getState().detailStates.size).toBe(2);
+
+        // Reload with span-b dropped
+        const refreshed = makeTrace('same', [spanA, spanC]);
+        useTraceTimelineStore.getState().setTrace(refreshed);
+
+        const { detailStates } = useTraceTimelineStore.getState();
+        expect(detailStates.size).toBe(1);
+        expect(detailStates.has('span-b')).toBe(false);
+        expect(detailStates.has('span-c')).toBe(true);
+      });
+
+      it('does not select removed span when switching to side-panel mode after inline reload (regression)', () => {
+        useLayoutPrefsStore.setState({ detailPanelMode: 'inline' });
+        const spanA = makeSpan({ spanID: 'span-a' });
+        const spanB = makeSpan({ spanID: 'span-b' });
+        const trace = makeTrace('same', [spanA, spanB]);
+        useTraceTimelineStore.getState().setTrace(trace);
+
+        // Open span-b details inline
+        useTraceTimelineStore.setState({
+          detailStates: new Map([['span-b', new DetailState()]]),
+        });
+        expect(useTraceTimelineStore.getState().detailStates.has('span-b')).toBe(true);
+
+        // Reload without span-b
+        const refreshed = makeTrace('same', [spanA]);
+        useTraceTimelineStore.getState().setTrace(refreshed);
+
+        // Verify span-b was pruned
+        expect(useTraceTimelineStore.getState().detailStates.has('span-b')).toBe(false);
+
+        // Switch to side-panel mode
+        setDetailPanelMode('sidepanel');
+
+        // Removed span should not be selected
+        expect(getSelectedSpanID(useTraceTimelineStore.getState().detailStates)).toBeNull();
+        expect(useTraceTimelineStore.getState().detailStates.size).toBe(0);
+      });
+
+      it('clears selected span on same-ID reload when dropped in side-panel mode', () => {
+        useLayoutPrefsStore.setState({ detailPanelMode: 'sidepanel' });
+        const spanA = makeSpan({ spanID: 'span-a' });
+        const spanB = makeSpan({ spanID: 'span-b' });
+        const trace = makeTrace('same', [spanA, spanB]);
+        useTraceTimelineStore.getState().setTrace(trace);
+        useTraceTimelineStore.setState({
+          detailStates: new Map([['span-b', DetailState.forDetailPanelMode('sidepanel')]]),
+        });
+        expect(useTraceTimelineStore.getState().detailStates.has('span-b')).toBe(true);
+
+        // Reload without span-b
+        const refreshed = makeTrace('same', [spanA]);
+        useTraceTimelineStore.getState().setTrace(refreshed);
+
+        expect(useTraceTimelineStore.getState().detailStates.size).toBe(0);
+      });
+
+      it('preserves selected span on same-ID reload when still present in side-panel mode', () => {
+        useLayoutPrefsStore.setState({ detailPanelMode: 'sidepanel' });
+        const spanA = makeSpan({ spanID: 'span-a' });
+        const spanB = makeSpan({ spanID: 'span-b' });
+        const trace = makeTrace('same', [spanA, spanB]);
+        useTraceTimelineStore.getState().setTrace(trace);
+        useTraceTimelineStore.setState({
+          detailStates: new Map([['span-b', DetailState.forDetailPanelMode('sidepanel')]]),
+        });
+
+        // Reload with span-b still present plus span-c added
+        const spanC = makeSpan({ spanID: 'span-c' });
+        const refreshed = makeTrace('same', [spanA, spanB, spanC]);
+        useTraceTimelineStore.getState().setTrace(refreshed);
+
+        expect(useTraceTimelineStore.getState().detailStates.has('span-b')).toBe(true);
       });
 
       it.each(['inline', 'sidepanel'] as const)(

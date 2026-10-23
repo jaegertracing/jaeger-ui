@@ -48,6 +48,30 @@ function traces(spans: SpanWire[], serviceName = 'svc-a'): TracesDataWire {
 }
 
 describe('parseOtelTrace', () => {
+  // /api/traces returns this span with warnings: [message], because the backend's
+  // jptrace.GetWarnings reads a non-slice value as one warning. ClickHouse can
+  // store the attribute as a plain string, which legacy JSON has no form for.
+  it('reads a string backend diagnostic as one warning', () => {
+    const trace = parseOtelTrace(
+      traces([
+        makeSpan({
+          attributes: [
+            { key: '@jaeger@warnings', value: { stringValue: 'failed to marshal slice attribute' } },
+          ],
+        }),
+      ])
+    )!;
+    expect(trace.spans[0].warnings).toEqual(['failed to marshal slice attribute']);
+    expect(trace.spans[0].attributes.has('@jaeger@warnings')).toBe(false);
+  });
+
+  it('treats an empty parentSpanId as a root span', () => {
+    const trace = parseOtelTrace(refinedTracesData.parse(traces([makeSpan({ parentSpanId: '' })])))!;
+    expect(trace.spans[0].parentSpanID).toBeUndefined();
+    expect(trace.rootSpans).toHaveLength(1);
+    expect(trace.orphanSpanCount).toBe(0);
+  });
+
   it('returns null when the payload has no spans', () => {
     expect(parseOtelTrace({})).toBeNull();
     expect(parseOtelTrace(traces([]))).toBeNull();

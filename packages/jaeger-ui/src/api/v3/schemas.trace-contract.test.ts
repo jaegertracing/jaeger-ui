@@ -192,6 +192,14 @@ describe('AnyValue recursive one-of', () => {
     ).not.toThrow();
   });
 
+  it.each([
+    ['NaN', Number.NaN],
+    ['Infinity', Number.POSITIVE_INFINITY],
+    ['-Infinity', Number.NEGATIVE_INFINITY],
+  ])('converts proto3 JSON %s doubleValue to a number', (wireValue, expected) => {
+    expect(refinedAnyValue.parse({ doubleValue: wireValue }).doubleValue).toBe(expected);
+  });
+
   it('rejects empty object (no value field)', () => {
     expect(() => refinedAnyValue.parse({})).toThrow(z.ZodError);
   });

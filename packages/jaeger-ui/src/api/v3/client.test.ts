@@ -23,6 +23,99 @@ describe('JaegerClient', () => {
     vi.useRealTimers();
   });
 
+  describe.each(['fetchDependencies', 'fetchDeepDependencyGraph'] as const)('%s', method => {
+    const fetchGraph = (signal?: AbortSignal) =>
+      method === 'fetchDependencies'
+        ? client.fetchDependencies(100, 200, signal)
+        : client.fetchDeepDependencyGraph({ service: 'frontend', start: 100, end: 200 }, signal);
+
+    it.each([{ data: [] }, [], null, { dependencies: [] }])(
+      'preserves the JSON response for hook normalization: %j',
+      async data => {
+        mockFetch.mockResolvedValue({ ok: true, json: async () => data });
+
+        await expect(fetchGraph()).resolves.toBe(data);
+      }
+    );
+
+    it('reports HTTP failures with the client error style', async () => {
+      const json = vi.fn();
+      mockFetch.mockResolvedValue({ ok: false, status: 503, statusText: 'Service Unavailable', json });
+      const operation = method === 'fetchDependencies' ? 'dependencies' : 'deep dependencies';
+
+      await expect(fetchGraph()).rejects.toThrow(`Failed to fetch ${operation}: 503 Service Unavailable`);
+      expect(json).not.toHaveBeenCalled();
+    });
+
+    it('propagates network failures', async () => {
+      const failure = new TypeError('Failed to fetch');
+      mockFetch.mockRejectedValue(failure);
+
+      await expect(fetchGraph()).rejects.toBe(failure);
+    });
+
+    it('propagates invalid JSON responses', async () => {
+      const failure = new SyntaxError('Unexpected token');
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => {
+          throw failure;
+        },
+      });
+
+      await expect(fetchGraph()).rejects.toBe(failure);
+    });
+
+    it('preserves graph reads that take longer than the default transport deadline', async () => {
+      const data = { dependencies: [] };
+      let finishRequest!: (response: unknown) => void;
+      mockFetch.mockImplementation(
+        () =>
+          new Promise(resolve => {
+            finishRequest = resolve;
+          })
+      );
+
+      const promise = fetchGraph();
+      await vi.advanceTimersByTimeAsync(11000);
+      expect(mockFetch).toHaveBeenCalledWith(expect.any(String), { signal: undefined });
+      expect(vi.getTimerCount()).toBe(0);
+      finishRequest({ ok: true, json: async () => data });
+      await expect(promise).resolves.toBe(data);
+    });
+
+    it('forwards the caller signal without adding a deadline', async () => {
+      const controller = new AbortController();
+      mockFetch.mockResolvedValue({ ok: true, json: async () => ({}) });
+
+      await fetchGraph(controller.signal);
+
+      expect(mockFetch).toHaveBeenCalledWith(expect.any(String), { signal: controller.signal });
+      expect(vi.getTimerCount()).toBe(0);
+    });
+  });
+
+  it('uses a one-week default lookback for dependency requests', async () => {
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({ data: [] }) });
+
+    await client.fetchDependencies(100);
+
+    expect(mockFetch).toHaveBeenCalledWith('/api/dependencies?endTs=100&lookback=604800000', {
+      signal: undefined,
+    });
+  });
+
+  it('preserves deep-dependency query encoding and omits an absent operation', async () => {
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({ dependencies: [] }) });
+
+    await client.fetchDeepDependencyGraph({ service: 'frontend /?&=!', start: 0, end: 200 });
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/api/deep-dependencies?end=200&service=frontend%20%2F%3F%26%3D%21&start=0',
+      { signal: undefined }
+    );
+  });
+
   describe('archiveTrace', () => {
     it('POSTs to the existing archive endpoint through the timeout transport', async () => {
       const data = { data: [] };
@@ -285,7 +378,7 @@ describe('JaegerClient', () => {
     });
   });
 
-  describe('fetchWithTimeout', () => {
+  describe('fetchJson', () => {
     it('successfully completes requests within timeout', async () => {
       const mockResponse = { ok: true, json: async () => ({ services: [] }) };
       mockFetch.mockResolvedValue(mockResponse);
@@ -326,6 +419,51 @@ describe('JaegerClient', () => {
       vi.advanceTimersByTime(10000);
 
       await expect(promise).rejects.toThrow('Request timeout after 10000ms');
+    });
+
+    it('reports a timeout when a request with a caller signal exceeds its deadline', async () => {
+      const caller = new AbortController();
+      mockFetch.mockImplementation((_url: string, options: RequestInit) => {
+        return new Promise((_resolve, reject) => {
+          options.signal?.addEventListener('abort', () => reject(options.signal?.reason));
+        });
+      });
+
+      const promise = client['fetchJson']('/test', 'Failed', { timeout: 1000, signal: caller.signal });
+      vi.advanceTimersByTime(1000);
+
+      await expect(promise).rejects.toThrow('Request timeout after 1000ms');
+      expect(caller.signal.aborted).toBe(false);
+    });
+
+    it('preserves caller cancellation for a request with a deadline', async () => {
+      const caller = new AbortController();
+      const abortError = new DOMException('Caller cancelled request', 'AbortError');
+      mockFetch.mockImplementation((_url: string, options: RequestInit) => {
+        return new Promise((_resolve, reject) => {
+          options.signal?.addEventListener('abort', () => reject(options.signal?.reason));
+        });
+      });
+
+      const promise = client['fetchJson']('/test', 'Failed', { timeout: 1000, signal: caller.signal });
+      caller.abort(abortError);
+      vi.advanceTimersByTime(1000);
+
+      await expect(promise).rejects.toBe(abortError);
+    });
+
+    it('forwards an already cancelled caller signal to a request with a deadline', async () => {
+      const caller = new AbortController();
+      const abortError = new DOMException('Caller cancelled request', 'AbortError');
+      caller.abort(abortError);
+      mockFetch.mockImplementation((_url: string, options: RequestInit) => {
+        expect(options.signal?.aborted).toBe(true);
+        return Promise.reject(options.signal?.reason);
+      });
+
+      await expect(
+        client['fetchJson']('/test', 'Failed', { timeout: 1000, signal: caller.signal })
+      ).rejects.toBe(abortError);
     });
 
     it('clears timeout after successful request', async () => {
@@ -613,6 +751,249 @@ describe('JaegerClient', () => {
     });
   });
 
+  describe('HTTP error details', () => {
+    const traceId = '0123456789abcdef0123456789abcdef';
+    const failure = (body: BodyInit | null) => new Response(body, { status: 400, statusText: 'Bad Request' });
+
+    it.each([
+      {
+        method: 'fetchDependencies',
+        call: () => client.fetchDependencies(100, 200),
+        httpUrl: '/api/dependencies',
+        httpQuery: 'endTs=100&lookback=200',
+      },
+      {
+        method: 'fetchDeepDependencyGraph',
+        call: () => client.fetchDeepDependencyGraph({ service: 'frontend', start: 100, end: 200 }),
+        httpUrl: '/api/deep-dependencies',
+        httpQuery: 'end=200&service=frontend&start=100',
+      },
+      {
+        method: 'archiveTrace',
+        call: () => client.archiveTrace(traceId),
+        httpUrl: `/api/archive/${traceId}`,
+      },
+      {
+        method: 'fetchDecoration',
+        call: () => client.fetchDecoration('/details?id=1'),
+        httpUrl: '/details',
+        httpQuery: 'id=1',
+      },
+      { method: 'fetchServices', call: () => client.fetchServices(), httpUrl: '/api/v3/services' },
+      {
+        method: 'fetchSpanNames',
+        call: () => client.fetchSpanNames('my svc'),
+        httpUrl: '/api/v3/operations',
+        httpQuery: 'service=my%20svc',
+      },
+      {
+        method: 'fetchTraceSummaries',
+        call: () =>
+          client.fetchTraceSummaries({ service: 'my-svc' } as Parameters<
+            JaegerClient['fetchTraceSummaries']
+          >[0]),
+        httpUrl: '/api/v3/trace-summaries',
+        httpQuery: 'query.serviceName=my-svc',
+      },
+      { method: 'fetchTrace', call: () => client.fetchTrace(traceId), httpUrl: `/api/v3/traces/${traceId}` },
+    ])(
+      '$method attaches the status, URL, query, and formatted JSON body',
+      async ({ call, httpUrl, httpQuery }) => {
+        mockFetch.mockResolvedValue(failure('{"code":3,"message":"invalid service name"}'));
+
+        const error = await call().catch((caught: unknown) => caught);
+
+        expect(error).toBeInstanceOf(Error);
+        expect((error as Error).message).toMatch(/: 400 Bad Request$/);
+        expect({ ...(error as object) }).toEqual({
+          httpStatus: 400,
+          httpStatusText: 'Bad Request',
+          httpUrl,
+          ...(httpQuery && { httpQuery }),
+          httpBody: JSON.stringify({ code: 3, message: 'invalid service name' }, null, 2),
+        });
+      }
+    );
+
+    it('keeps a non-JSON body as text', async () => {
+      mockFetch.mockResolvedValue(failure('storage unavailable'));
+
+      await expect(client.fetchServices()).rejects.toMatchObject({ httpBody: 'storage unavailable' });
+    });
+
+    it.each([
+      { case: 'an empty body', body: () => '' },
+      { case: 'a missing body', body: () => null },
+      {
+        case: 'an unreadable body',
+        body: () =>
+          new ReadableStream({
+            pull(controller) {
+              controller.error(new TypeError('network error'));
+            },
+          }),
+      },
+    ])('omits the body for $case', async ({ body }) => {
+      mockFetch.mockResolvedValue(failure(body()));
+
+      const error = await client.fetchServices().catch((caught: unknown) => caught);
+
+      expect(error).toMatchObject({ message: 'Failed to fetch services: 400 Bad Request', httpStatus: 400 });
+      expect(error).not.toHaveProperty('httpBody');
+    });
+
+    it('reads at most 4 KB of the body and cancels the rest', async () => {
+      const cancel = vi.fn();
+      const chunk = new TextEncoder().encode('x'.repeat(1000));
+      // An endless body: every pull enqueues another chunk.
+      const body = new ReadableStream<Uint8Array>({
+        pull(controller) {
+          controller.enqueue(chunk);
+        },
+        cancel,
+      });
+      mockFetch.mockResolvedValue(failure(body));
+
+      const error = await client.fetchServices().catch((caught: unknown) => caught);
+
+      expect((error as { httpBody: string }).httpBody).toBe('x'.repeat(4096));
+      expect(cancel).toHaveBeenCalled();
+    });
+
+    // The body stream errors with the request's abort reason, as fetch's body does.
+    const stalledFailure = (signal: AbortSignal | null | undefined) =>
+      failure(
+        new ReadableStream({
+          start(controller) {
+            signal?.addEventListener('abort', () => controller.error(signal.reason));
+          },
+        })
+      );
+
+    it('reports a timeout when the error body outlasts a shorter request deadline', async () => {
+      mockFetch.mockImplementation(async (_url: string, options: RequestInit) =>
+        stalledFailure(options.signal)
+      );
+
+      const promise = client['fetchJson']('/test', 'Failed', { timeout: 1000 }).catch(
+        (caught: unknown) => caught
+      );
+      await vi.advanceTimersByTimeAsync(1000);
+
+      const error = await promise;
+      expect(error).toEqual(expect.objectContaining({ message: 'Request timeout after 1000ms' }));
+      expect(error).not.toHaveProperty('httpStatus');
+    });
+
+    it.each([
+      {
+        path: 'without a deadline',
+        call: () => client.fetchTrace(traceId),
+        message: `Failed to fetch trace ${traceId}`,
+      },
+      {
+        path: 'without a deadline',
+        call: () => client.fetchDependencies(100, 200),
+        message: 'Failed to fetch dependencies',
+      },
+      { path: 'with a deadline', call: () => client.fetchServices(), message: 'Failed to fetch services' },
+    ])('reports the HTTP error when the error body stalls $path ($message)', async ({ call, message }) => {
+      const cancel = vi.fn();
+      // Sends part of the body, then stalls without closing or erroring.
+      const body = new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode('partial'));
+        },
+        cancel,
+      });
+      mockFetch.mockResolvedValue(failure(body));
+
+      let settled = false;
+      const promise = call()
+        .catch((caught: unknown) => caught)
+        .finally(() => {
+          settled = true;
+        });
+      await vi.advanceTimersByTimeAsync(1999);
+      expect(settled).toBe(false);
+      await vi.advanceTimersByTimeAsync(1);
+
+      const error = await promise;
+      expect(error).toMatchObject({
+        message: `${message}: 400 Bad Request`,
+        httpStatus: 400,
+        httpBody: 'partial',
+      });
+      expect(cancel).toHaveBeenCalled();
+    });
+
+    it('omits the body when nothing arrives before the error body deadline', async () => {
+      mockFetch.mockImplementation(async (_url: string, options: RequestInit) =>
+        stalledFailure(options.signal)
+      );
+
+      const promise = client.fetchTrace(traceId).catch((caught: unknown) => caught);
+      await vi.advanceTimersByTimeAsync(2000);
+
+      const error = await promise;
+      expect(error).toMatchObject({ httpStatus: 400 });
+      expect(error).not.toHaveProperty('httpBody');
+    });
+
+    it('rethrows caller cancellation during the error body read', async () => {
+      const caller = new AbortController();
+      const abortError = new DOMException('Caller cancelled request', 'AbortError');
+      mockFetch.mockImplementation(async (_url: string, options: RequestInit) =>
+        stalledFailure(options.signal)
+      );
+
+      const promise = client.fetchTrace(traceId, caller.signal).catch((caught: unknown) => caught);
+      await vi.advanceTimersByTimeAsync(0);
+      caller.abort(abortError);
+
+      await expect(promise).resolves.toBe(abortError);
+    });
+
+    it.each([
+      { path: 'without a deadline', call: (signal: AbortSignal) => client.fetchTrace(traceId, signal) },
+      {
+        path: 'with a deadline',
+        call: (signal: AbortSignal) => client['fetchJson']('/test', 'Failed', { timeout: 1000, signal }),
+      },
+    ])('rethrows a custom cancellation reason during the error body read $path', async ({ call }) => {
+      const caller = new AbortController();
+      const reason = new Error('navigated away');
+      mockFetch.mockImplementation(async (_url: string, options: RequestInit) =>
+        stalledFailure(options.signal)
+      );
+
+      const promise = call(caller.signal).catch((caught: unknown) => caught);
+      await vi.advanceTimersByTimeAsync(0);
+      caller.abort(reason);
+
+      await expect(promise).resolves.toBe(reason);
+    });
+
+    it('reports a timeout when a successful body outlasts the deadline', async () => {
+      mockFetch.mockImplementation(async (_url: string, options: RequestInit) => {
+        const signal = options.signal;
+        const body = new ReadableStream({
+          start(controller) {
+            signal?.addEventListener('abort', () => controller.error(signal.reason));
+          },
+        });
+        return new Response(body, { status: 200 });
+      });
+
+      const promise = client.fetchServices().catch((caught: unknown) => caught);
+      await vi.advanceTimersByTimeAsync(10000);
+
+      await expect(promise).resolves.toEqual(
+        expect.objectContaining({ message: 'Request timeout after 10000ms' })
+      );
+    });
+  });
+
   describe('singleton instance', () => {
     it('exports a singleton jaegerClient instance', () => {
       expect(jaegerClient).toBeInstanceOf(JaegerClient);
@@ -638,6 +1019,7 @@ describe('JaegerClient with non-default base path', () => {
 
   afterEach(() => {
     (global as any).fetch = originalFetch;
+    vi.doUnmock('../../site-prefix');
   });
 
   it('calls services endpoint with base path prefix from site-prefix', async () => {
@@ -657,6 +1039,26 @@ describe('JaegerClient with non-default base path', () => {
     expect(mockFetch).toHaveBeenCalledWith(
       '/jaeger/api/v3/services',
       expect.objectContaining({ signal: expect.any(AbortSignal) })
+    );
+  });
+
+  it('keeps both dependency routes under the deployment base path', async () => {
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({}) });
+    vi.resetModules();
+    vi.doMock('../../site-prefix', () => ({ default: `${global.location.origin}/jaeger/` }));
+    const { JaegerClient: IsolatedClient } = await import('./client');
+    const client = new IsolatedClient();
+
+    await client.fetchDependencies(100, 200);
+    await client.fetchDeepDependencyGraph({ service: 'frontend', operation: '*', start: 100, end: 200 });
+
+    expect(mockFetch).toHaveBeenNthCalledWith(1, '/jaeger/api/dependencies?endTs=100&lookback=200', {
+      signal: undefined,
+    });
+    expect(mockFetch).toHaveBeenNthCalledWith(
+      2,
+      '/jaeger/api/deep-dependencies?end=200&operation=%2A&service=frontend&start=100',
+      { signal: undefined }
     );
   });
 });

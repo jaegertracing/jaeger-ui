@@ -87,6 +87,8 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
       traceSpans: trace.spans,
     };
 
+    // Across refetches of the same trace, collapse and filter selections persist,
+    // while detail states are pruned for spans that no longer exist.
     if (trace.traceID !== currentTraceID) {
       Object.assign(base, {
         childrenHiddenIDs: new Set<string>(),
@@ -95,13 +97,34 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
         prunedServices: new Set<string>(),
         focusedSubtreeSpanID: null,
       });
-    } else if (
-      currentFocusedID &&
-      (trace.spanMap
-        ? !trace.spanMap.has(currentFocusedID)
-        : !trace.spans.some(s => s.spanID === currentFocusedID))
-    ) {
-      base.focusedSubtreeSpanID = null;
+    } else {
+      const validSpanIDs = trace.spanMap;
+      const currentDetailStates = get().detailStates;
+      let hasDropped = false;
+      for (const id of currentDetailStates.keys()) {
+        if (!validSpanIDs.has(id)) {
+          hasDropped = true;
+          break;
+        }
+      }
+      if (hasDropped) {
+        const prunedDetailStates = new Map<string, DetailState>();
+        for (const [id, state] of currentDetailStates) {
+          if (validSpanIDs.has(id)) {
+            prunedDetailStates.set(id, state);
+          }
+        }
+        base.detailStates = prunedDetailStates;
+      }
+
+      if (
+        currentFocusedID &&
+        (trace.spanMap
+          ? !trace.spanMap.has(currentFocusedID)
+          : !trace.spans.some(s => s.spanID === currentFocusedID))
+      ) {
+        base.focusedSubtreeSpanID = null;
+      }
     }
 
     if (uiFind) {
