@@ -427,9 +427,6 @@ importers:
       redux-promise-middleware:
         specifier: 6.2.0
         version: 6.2.0(redux@5.0.1)
-      tween-functions:
-        specifier: 1.2.0
-        version: 1.2.0
       u-basscss:
         specifier: 2.0.1
         version: 2.0.1
@@ -5200,9 +5197,6 @@ packages:
 
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
-
-  tween-functions@1.2.0:
-    resolution: {integrity: sha512-PZBtLYcCLtEcjL14Fzb1gSxPBeL7nWvGhO5ZFPGqziCcr8uvHp0NDmdjBchp6KHL+tExcg0m3NISmKxhU394dA==}
 
   tweetnacl@0.14.5:
     resolution: {integrity: sha512-KXXFFdAbFXY4geFIwoyNK+f5Z1b7swfXABfL7HXCmoIWMKU3dmS26672A4EeQtDzLKy7SXmfBu51JolvEKwtGA==}
@@ -10075,8 +10069,6 @@ snapshots:
   ts-toolbelt@9.6.0: {}
 
   tslib@2.8.1: {}
-
-  tween-functions@1.2.0: {}
 
   tweetnacl@0.14.5: {}
 
