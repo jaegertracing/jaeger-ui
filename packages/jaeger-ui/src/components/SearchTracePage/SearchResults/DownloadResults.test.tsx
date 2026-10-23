@@ -14,6 +14,7 @@ import type { Microseconds } from '../../../types/units';
 import { AppQueryClientProvider, queryClient } from '../../../query/app-query-client';
 import { useUploadedTraces } from '../useUploadedTraces';
 import { loadTracesFromFile } from '../FileLoader';
+import { getCachedTrace } from '../../../hooks/useTraceLoading';
 import numericUpload from '../../../utils/fixtures/otlp-upload-numeric.json';
 
 const mockFetchTrace = vi.fn();
@@ -353,6 +354,74 @@ describe('uploaded trace registry and offline downloads', () => {
       expect(fetchSpy).not.toHaveBeenCalled();
     }
   );
+
+  it('keeps the last upload of a trace ID in the cache, summaries, and download', async () => {
+    const traceId = numericUpload.resourceSpans[0].scopeSpans[0].spans[0].traceId;
+    const updated = structuredClone(numericUpload);
+    updated.resourceSpans[0].scopeSpans[0].spans[0].name = 'updated-operation';
+    const { result } = renderHook(() => useUploadedTraces(), { wrapper: AppQueryClientProvider });
+    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob://url');
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+
+    const first = await loadTracesFromFile(new File([JSON.stringify(numericUpload)], 'first.json'));
+    act(() => result.current.handleTracesLoaded(first.summaries, first.rawTraces));
+    const second = await loadTracesFromFile(new File([JSON.stringify(updated)], 'second.json'));
+    act(() => result.current.handleTracesLoaded(second.summaries, second.rawTraces));
+
+    expect(first.summaries).not.toEqual(second.summaries);
+    await waitFor(() => {
+      expect(result.current.uploadedSummaries).toEqual(second.summaries);
+      expect(result.current.uploadedRawTraces).toEqual(second.rawTraces);
+    });
+    expect(getCachedTrace(traceId)!.spans[0].name).toBe('updated-operation');
+
+    render(
+      <DownloadResults
+        traceSummaries={result.current.uploadedSummaries}
+        rawTraces={result.current.uploadedRawTraces}
+      />
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Download Results/i }));
+    });
+    const blob = createObjectURL.mock.calls[0][0] as Blob;
+    queryClient.clear();
+    const roundTrip = await loadTracesFromFile(new File([blob], 'download.json'));
+    expect(roundTrip.summaries).toEqual(second.summaries);
+    expect(getCachedTrace(traceId)!.spans[0].name).toBe('updated-operation');
+  });
+
+  it('keeps the last legacy document when one file repeats a trace ID', async () => {
+    const traceId = '0123456789abcdef';
+    const legacyTrace = (operationName: string) => ({
+      traceID: traceId,
+      spans: [
+        {
+          traceID: traceId,
+          spanID: '1111111111111111',
+          operationName,
+          references: [],
+          startTime: 1000,
+          duration: 10,
+          tags: [],
+          logs: [],
+          processID: 'p1',
+        },
+      ],
+      processes: { p1: { serviceName: 'svc', tags: [] } },
+    });
+    const upload = { data: [legacyTrace('first-operation'), legacyTrace('last-operation')] };
+    const loaded = await loadTracesFromFile(new File([JSON.stringify(upload)], 'repeated.json'));
+    expect(loaded.errorCount).toBe(0);
+    const { result } = renderHook(() => useUploadedTraces(), { wrapper: AppQueryClientProvider });
+    act(() => result.current.handleTracesLoaded(loaded.summaries, loaded.rawTraces));
+
+    await waitFor(() => {
+      expect(result.current.uploadedSummaries).toEqual([loaded.summaries[1]]);
+      expect(result.current.uploadedRawTraces).toEqual([loaded.rawTraces[1]]);
+    });
+    expect(getCachedTrace(traceId)!.spans[0].name).toBe('last-operation');
+  });
 
   it('deduplicates legacy and OTLP raw documents by their own trace IDs', async () => {
     const loaded = await loadTracesFromFile(new File([JSON.stringify(numericUpload)], 'upload.json'));

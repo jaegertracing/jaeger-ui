@@ -20,6 +20,11 @@ import './FileLoader.css';
 
 const Dragger = Upload.Dragger;
 
+// Reading and parsing hold several copies of a file in memory. An 80k-span trace is about
+// 25 MB as OTLP JSON and 45 MB as legacy Jaeger JSON, which leaves room for larger attributes.
+const MAX_UPLOAD_MB = 100;
+const MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024;
+
 type FileLoaderProps = {
   onTracesLoaded: (summaries: TraceSummary[], rawTraces: unknown[]) => void;
 };
@@ -133,6 +138,11 @@ export default function FileLoader(props: FileLoaderProps) {
         // beforeUpload(file, fileList) is called once per selected file. Each invocation
         // receives the full fileList, so iterating fileList here would process N files
         // N times (N²). We process only the current `file` argument to avoid that.
+        if (file.size > MAX_UPLOAD_BYTES) {
+          const sizeMb = (file.size / 1024 / 1024).toFixed(1);
+          message.error(`${file.name} is ${sizeMb} MB, which exceeds the ${MAX_UPLOAD_MB} MB upload limit.`);
+          return false;
+        }
         loadTracesFromFile(file)
           .then(({ summaries, rawTraces, errorCount, errorDetail, rejectedOtelDocumentCount = 0 }) => {
             if (errorCount > 0) {
