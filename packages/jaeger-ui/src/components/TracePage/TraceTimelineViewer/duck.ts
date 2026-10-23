@@ -32,9 +32,11 @@ type TTraceUiFindValue = { trace: IOtelTrace; uiFind: string | TNil; allowHide?:
 export type TWidthValue = { width: number };
 export type TDetailPanelModeValue = { mode: SpanDetailPanelMode };
 export type TTimelineVisibleValue = { visible: boolean };
+type TChildrenToggleSubtreeValue = { spanID: string; subtreeParentIDs: Set<string> | string[] };
 type TActionTypes =
   | TSpanIdLogValue
   | TSpanIdValue
+  | TChildrenToggleSubtreeValue
   | TSpansValue
   | TTraceUiFindValue
   | TWidthValue
@@ -125,6 +127,7 @@ export function newInitialState(): TTraceTimeline {
 export const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer', [
   'ADD_HOVER_INDENT_GUIDE_ID',
   'CHILDREN_TOGGLE',
+  'CHILDREN_TOGGLE_SUBTREE',
   'CLEAR_SHOULD_SCROLL_TO_FIRST_UI_FIND_MATCH',
   'COLLAPSE_ALL',
   'COLLAPSE_ONE',
@@ -149,6 +152,10 @@ export const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer
 const fullActions = createActions<TActionTypes>({
   [actionTypes.ADD_HOVER_INDENT_GUIDE_ID]: (spanID: string) => ({ spanID }),
   [actionTypes.CHILDREN_TOGGLE]: (spanID: string) => ({ spanID }),
+  [actionTypes.CHILDREN_TOGGLE_SUBTREE]: (spanID: string, subtreeParentIDs: Set<string> | string[]) => ({
+    spanID,
+    subtreeParentIDs,
+  }),
   [actionTypes.CLEAR_SHOULD_SCROLL_TO_FIRST_UI_FIND_MATCH]: () => ({}),
   [actionTypes.COLLAPSE_ALL]: (spans: IOtelSpan[]) => ({ spans }),
   [actionTypes.COLLAPSE_ONE]: (spans: IOtelSpan[]) => ({ spans }),
@@ -257,6 +264,24 @@ function childrenToggle(state: TTraceTimeline, { spanID }: TSpanIdValue): TTrace
     childrenHiddenIDs.delete(spanID);
   } else {
     childrenHiddenIDs.add(spanID);
+  }
+  return { ...state, childrenHiddenIDs };
+}
+
+function childrenToggleSubtree(
+  state: TTraceTimeline,
+  { spanID, subtreeParentIDs }: TChildrenToggleSubtreeValue
+): TTraceTimeline {
+  const childrenHiddenIDs = new Set(state.childrenHiddenIDs);
+  const isCurrentlyCollapsed = childrenHiddenIDs.has(spanID);
+  if (isCurrentlyCollapsed) {
+    for (const id of subtreeParentIDs) {
+      childrenHiddenIDs.delete(id);
+    }
+  } else {
+    for (const id of subtreeParentIDs) {
+      childrenHiddenIDs.add(id);
+    }
   }
   return { ...state, childrenHiddenIDs };
 }
@@ -432,6 +457,7 @@ export default handleActions<TTraceTimeline, any>(
   {
     [actionTypes.ADD_HOVER_INDENT_GUIDE_ID]: guardReducer(addHoverIndentGuideId),
     [actionTypes.CHILDREN_TOGGLE]: guardReducer(childrenToggle),
+    [actionTypes.CHILDREN_TOGGLE_SUBTREE]: guardReducer(childrenToggleSubtree),
     [actionTypes.CLEAR_SHOULD_SCROLL_TO_FIRST_UI_FIND_MATCH]: guardReducer(
       clearShouldScrollToFirstUiFindMatch
     ),

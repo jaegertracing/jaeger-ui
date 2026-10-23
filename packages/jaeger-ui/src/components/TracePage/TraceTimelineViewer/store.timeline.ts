@@ -9,6 +9,7 @@ import { IOtelSpan, IOtelTrace, IEvent } from '../../../types/otel';
 import {
   applyDetailSubsectionToggle,
   calculateFocusedFindRowStates,
+  getDescendantParentSpanIDs,
   shouldDisableCollapse,
   trimFocusedDetailStatesForSidePanel,
 } from './timeline-utils';
@@ -16,12 +17,15 @@ import {
 type TraceTimelineInteractionStore = {
   traceID: string | null;
   traceSpans: IOtelTrace['spans'] | null;
+  focusedSubtreeSpanID: string | null;
   childrenHiddenIDs: Set<string>;
   detailStates: Map<string, DetailState>;
   shouldScrollToFirstUiFindMatch: boolean;
   prunedServices: Set<string>;
   setPrunedServices: (pruned: Set<string>) => void;
   clearServiceFilter: () => void;
+  setFocusedSubtreeSpanID: (spanID: string | null) => void;
+  toggleSubtreeCollapse: (span: IOtelSpan) => void;
   // Resets ephemeral fields for a new trace and optionally pre-apply a uiFind filter
   setTrace: (trace: IOtelTrace, uiFind?: string | TNil) => void;
   childrenToggle: (spanID: string) => void;
@@ -43,6 +47,7 @@ type TraceTimelineInteractionStore = {
 export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((set, get) => ({
   traceID: null,
   traceSpans: null,
+  focusedSubtreeSpanID: null,
   childrenHiddenIDs: new Set<string>(),
   detailStates: new Map<string, DetailState>(),
   shouldScrollToFirstUiFindMatch: false,
@@ -51,8 +56,28 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
   setPrunedServices: (pruned: Set<string>) => set({ prunedServices: new Set(pruned) }),
 
   clearServiceFilter: () => set({ prunedServices: new Set<string>() }),
+
+  setFocusedSubtreeSpanID: (spanID: string | null) => set({ focusedSubtreeSpanID: spanID }),
+
+  toggleSubtreeCollapse: (span: IOtelSpan) => {
+    const { childrenHiddenIDs: current } = get();
+    const subtreeParentIDs = getDescendantParentSpanIDs(span);
+    const isCurrentlyCollapsed = current.has(span.spanID);
+    const next = new Set(current);
+    if (isCurrentlyCollapsed) {
+      for (const id of subtreeParentIDs) {
+        next.delete(id);
+      }
+    } else {
+      for (const id of subtreeParentIDs) {
+        next.add(id);
+      }
+    }
+    set({ childrenHiddenIDs: next });
+  },
+
   setTrace: (trace: IOtelTrace, uiFind?: string | TNil) => {
-    const { traceID: currentTraceID, traceSpans } = get();
+    const { traceID: currentTraceID, traceSpans, focusedSubtreeSpanID: currentFocusedID } = get();
     if (trace.traceID === currentTraceID && trace.spans === traceSpans) return;
 
     const detailPanelMode = useLayoutPrefsStore.getState().detailPanelMode;
@@ -70,6 +95,7 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
         detailStates: new Map<string, DetailState>(),
         shouldScrollToFirstUiFindMatch: false,
         prunedServices: new Set<string>(),
+        focusedSubtreeSpanID: null,
       });
     } else {
       const validSpanIDs = trace.spanMap;
@@ -89,6 +115,15 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
           }
         }
         base.detailStates = prunedDetailStates;
+      }
+
+      if (
+        currentFocusedID &&
+        (trace.spanMap
+          ? !trace.spanMap.has(currentFocusedID)
+          : !trace.spans.some(s => s.spanID === currentFocusedID))
+      ) {
+        base.focusedSubtreeSpanID = null;
       }
     }
 
