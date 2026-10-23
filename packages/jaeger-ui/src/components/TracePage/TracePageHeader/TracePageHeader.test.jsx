@@ -1,3 +1,4 @@
+// Copyright (c) 2026 The Jaeger Authors.
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -14,6 +15,9 @@ import traceGenerator from '../../../demo/trace-generators';
 import { getTraceName } from '../../../model/trace-display-helpers';
 import transformTraceData from '../../../model/transform-trace-data';
 import { ETraceViewType } from '../types';
+import getConfig from '../../../utils/config/get-config';
+
+vi.mock('../../../utils/config/get-config', () => mockDefault(vi.fn(() => ({}))));
 
 vi.mock('./AltViewOptions', () => {
   return mockDefault(function MockAltViewOptions(props) {
@@ -127,7 +131,20 @@ describe('<TracePageHeader>', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    getConfig.mockReturnValue({});
     wrapper = renderWithRouter(<TracePageHeader {...defaultProps} />);
+  });
+
+  it.each([
+    ['12h', 'October 15 2026, 3:04:05.123 pm'],
+    ['24h', 'October 15 2026, 15:04:05.123'],
+  ])('displays the %s trace start with millisecond detail', (timeFormat, expected) => {
+    getConfig.mockReturnValue({ timeFormat });
+    const startTime = new Date(2026, 9, 15, 15, 4, 5, 123).getTime() * 1000;
+    const { container } = render(HEADER_ITEMS.find(item => item.key === 'timestamp').renderer({ startTime }));
+
+    expect(container).toHaveTextContent(expected);
+    expect(container.querySelector('.TracePageHeader--overviewItem--valueDetail')).toHaveTextContent('.123');
   });
 
   it('renders a <header />', () => {
