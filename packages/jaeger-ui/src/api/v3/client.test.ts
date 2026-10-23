@@ -870,17 +870,74 @@ describe('JaegerClient', () => {
         })
       );
 
-    it('reports a timeout when the error body outlasts the deadline', async () => {
+    it('reports a timeout when the error body outlasts a shorter request deadline', async () => {
       mockFetch.mockImplementation(async (_url: string, options: RequestInit) =>
         stalledFailure(options.signal)
       );
 
-      const promise = client.fetchServices().catch((caught: unknown) => caught);
-      await vi.advanceTimersByTimeAsync(10000);
+      const promise = client['fetchJson']('/test', 'Failed', { timeout: 1000 }).catch(
+        (caught: unknown) => caught
+      );
+      await vi.advanceTimersByTimeAsync(1000);
 
       const error = await promise;
-      expect(error).toEqual(expect.objectContaining({ message: 'Request timeout after 10000ms' }));
+      expect(error).toEqual(expect.objectContaining({ message: 'Request timeout after 1000ms' }));
       expect(error).not.toHaveProperty('httpStatus');
+    });
+
+    it.each([
+      {
+        path: 'without a deadline',
+        call: () => client.fetchTrace(traceId),
+        message: `Failed to fetch trace ${traceId}`,
+      },
+      {
+        path: 'without a deadline',
+        call: () => client.fetchDependencies(100, 200),
+        message: 'Failed to fetch dependencies',
+      },
+      { path: 'with a deadline', call: () => client.fetchServices(), message: 'Failed to fetch services' },
+    ])('reports the HTTP error when the error body stalls $path ($message)', async ({ call, message }) => {
+      const cancel = vi.fn();
+      // Sends part of the body, then stalls without closing or erroring.
+      const body = new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode('partial'));
+        },
+        cancel,
+      });
+      mockFetch.mockResolvedValue(failure(body));
+
+      let settled = false;
+      const promise = call()
+        .catch((caught: unknown) => caught)
+        .finally(() => {
+          settled = true;
+        });
+      await vi.advanceTimersByTimeAsync(1999);
+      expect(settled).toBe(false);
+      await vi.advanceTimersByTimeAsync(1);
+
+      const error = await promise;
+      expect(error).toMatchObject({
+        message: `${message}: 400 Bad Request`,
+        httpStatus: 400,
+        httpBody: 'partial',
+      });
+      expect(cancel).toHaveBeenCalled();
+    });
+
+    it('omits the body when nothing arrives before the error body deadline', async () => {
+      mockFetch.mockImplementation(async (_url: string, options: RequestInit) =>
+        stalledFailure(options.signal)
+      );
+
+      const promise = client.fetchTrace(traceId).catch((caught: unknown) => caught);
+      await vi.advanceTimersByTimeAsync(2000);
+
+      const error = await promise;
+      expect(error).toMatchObject({ httpStatus: 400 });
+      expect(error).not.toHaveProperty('httpBody');
     });
 
     it('rethrows caller cancellation during the error body read', async () => {

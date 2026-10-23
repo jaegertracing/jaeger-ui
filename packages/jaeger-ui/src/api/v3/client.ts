@@ -46,11 +46,15 @@ function toIsoTimestamp(epochMicroseconds: number): string | undefined {
 
 // ErrorMessage shows at most 1024 characters, so a few KB covers a pretty-printed JSON error.
 const MAX_ERROR_BODY_BYTES = 4096;
+// The status is already known, so a stalled error body must not delay reporting it,
+// including on requests without a deadline.
+const ERROR_BODY_TIMEOUT_MS = 2000;
 
 /**
- * Read up to MAX_ERROR_BODY_BYTES of a failed response and cancel the rest, so a large
- * or endless error body is never buffered in full. A read that fails because the request
- * was aborted rethrows the abort reason; any other read failure is reported as an absent body.
+ * Read up to MAX_ERROR_BODY_BYTES of a failed response within ERROR_BODY_TIMEOUT_MS and
+ * cancel the rest, so a large, endless, or stalled error body never holds up the error.
+ * A read that fails because the request was aborted rethrows the abort reason; any other
+ * read failure is reported as an absent body.
  */
 async function readErrorBody(response: Response, signal: AbortSignal | null | undefined): Promise<string> {
   const reader = response.body?.getReader();
@@ -58,17 +62,25 @@ async function readErrorBody(response: Response, signal: AbortSignal | null | un
   const decoder = new TextDecoder();
   let body = '';
   let remaining = MAX_ERROR_BODY_BYTES;
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const expired = new Promise<null>(resolve => {
+    timeoutId = setTimeout(() => resolve(null), ERROR_BODY_TIMEOUT_MS);
+  });
   try {
     while (remaining > 0) {
-      const { done, value } = await reader.read();
-      if (done) return body + decoder.decode();
-      const chunk = value.subarray(0, remaining);
+      const result = await Promise.race([reader.read(), expired]);
+      // On expiry, keep the part of the body read so far.
+      if (!result) break;
+      if (result.done) return body + decoder.decode();
+      const chunk = result.value.subarray(0, remaining);
       remaining -= chunk.byteLength;
       body += decoder.decode(chunk, { stream: true });
     }
   } catch (error) {
     if (signal?.aborted) throw error;
     return '';
+  } finally {
+    clearTimeout(timeoutId);
   }
   reader.cancel().catch(() => undefined);
   return body + decoder.decode();
@@ -251,7 +263,8 @@ export class JaegerClient {
   /**
    * Fetch and parse a JSON response with timeout support using AbortController. The
    * timeout and caller signal cover the whole request, including the body read, and a
-   * failed response is turned into an httpError.
+   * failed response is turned into an httpError, whose body read also has its own
+   * short deadline.
    * @param url - The URL to fetch
    * @param errorMessage - Prefix for the error thrown on a failed response
    * @param options - Fetch request options, plus a timeout in milliseconds (default: 10 seconds) or null for no deadline

@@ -683,16 +683,22 @@ describe('<SearchForm>', () => {
     });
 
     it.each([
-      { field: 'services', hook: 'services', message: 'Failed to fetch services: 400 Bad Request' },
+      {
+        field: 'services',
+        hook: 'services',
+        message: 'Failed to fetch services: 400 Bad Request',
+        httpUrl: '/api/v3/services',
+      },
       {
         field: 'operations',
         hook: 'spanNames',
         message: 'Failed to fetch span names for service "svcA": 400 Bad Request',
+        httpUrl: '/api/v3/operations',
       },
-    ])('shows the response body when $field fail to load', async ({ field, hook, message }) => {
+    ])('shows the response body when $field fail to load', async ({ field, hook, message, httpUrl }) => {
       const error = Object.assign(new Error(message), {
         httpStatus: 400,
-        httpUrl: '/api/v3/services',
+        httpUrl,
         httpBody: 'invalid service name',
       });
       useServices.mockReturnValue(
