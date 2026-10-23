@@ -1,8 +1,6 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { z } from 'zod';
-
 import { GetTraceResponseSchema, refinedTracesData } from '../api/v3/schemas';
 import type { ResourceSpansWire, TracesDataWire } from '../api/v3/schemas';
 
@@ -104,7 +102,8 @@ const INT64_FIELDS = new Set(['startTimeUnixNano', 'endTimeUnixNano', 'timeUnixN
 
 // JSON.parse has already rounded integers beyond 2^53, so normalization keeps them as numbers
 // and the schemas reject them. Replace Zod's generic type error with the fix for the uploader.
-const uploadParseContext: z.core.ParseContext<z.core.$ZodIssue> = {
+// Upload-only error map; do not copy into JaegerClient, whose wire contract is string-only.
+const uploadParseContext: Parameters<typeof refinedTracesData.parse>[1] = {
   error: issue =>
     issue.code === 'invalid_type' &&
     Number.isInteger(issue.input) &&
