@@ -179,6 +179,22 @@ describe('<SpanRowControls>', () => {
     expect(message.error).toHaveBeenCalledWith('Failed to copy span ID to clipboard');
   });
 
+  it('handles deep link copy failure gracefully and displays message.error', async () => {
+    vi.mocked(copy).mockResolvedValueOnce(false);
+    render(<SpanRowControls span={mockParentSpan} />);
+    const moreBtn = screen.getByTestId('more-actions-btn');
+
+    fireEvent.click(moreBtn);
+
+    const copyDeepLinkItem = screen.getByText('Copy deep link');
+    await act(async () => {
+      fireEvent.click(copyDeepLinkItem);
+    });
+
+    expect(copy).toHaveBeenCalled();
+    expect(message.error).toHaveBeenCalledWith('Failed to copy deep link to clipboard');
+  });
+
   it('renders expand subtree label when subtree is already collapsed', () => {
     useTraceTimelineStore.setState({
       childrenHiddenIDs: new Set<string>(['span-1']),

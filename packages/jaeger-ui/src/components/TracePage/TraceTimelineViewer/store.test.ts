@@ -1002,4 +1002,23 @@ describe('useTraceTimelineStore: subtree focus and collapse', () => {
     useTraceTimelineStore.getState().setTrace(reloadedTrace);
     expect(useTraceTimelineStore.getState().focusedSubtreeSpanID).toBeNull();
   });
+
+  it('clears focusedSubtreeSpanID across trace reload when spanMap is absent and span is missing', () => {
+    const spanA = makeSpan({ spanID: 'span-a' });
+    const spanB = makeSpan({ spanID: 'span-b' });
+    const trace1: any = {
+      traceID: 'trace-1',
+      spans: [spanA, spanB],
+    };
+    useTraceTimelineStore.getState().setTrace(trace1);
+    useTraceTimelineStore.setState({ focusedSubtreeSpanID: 'span-b' });
+
+    const refreshedSpanA = makeSpan({ spanID: 'span-a' });
+    const reloadedTrace: any = {
+      traceID: 'trace-1',
+      spans: [refreshedSpanA],
+    };
+    useTraceTimelineStore.getState().setTrace(reloadedTrace);
+    expect(useTraceTimelineStore.getState().focusedSubtreeSpanID).toBeNull();
+  });
 });

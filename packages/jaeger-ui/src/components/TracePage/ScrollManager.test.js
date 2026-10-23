@@ -393,6 +393,103 @@ describe('ScrollManager', () => {
       expect(scrollPastMock).toHaveBeenLastCalledWith(1, -1);
     });
 
+    it('handles getRows edge cases including empty rows and boundaries', () => {
+      accessors.getRows = () => [];
+      manager._scrollToVisibleSpan(1);
+      expect(scrollPastMock).not.toHaveBeenCalled();
+
+      accessors.getRows = () => [{ span: trace.spans[0], isDetail: false }];
+      accessors.getTopRowIndexVisible.mockReturnValue(0);
+      manager._scrollToVisibleSpan(-1);
+      expect(scrollPastMock).not.toHaveBeenCalled();
+
+      accessors.getBottomRowIndexVisible.mockReturnValue(0);
+      manager._scrollToVisibleSpan(1);
+      expect(scrollPastMock).not.toHaveBeenCalled();
+    });
+
+    it('handles getRows fallback when search matches are absent ahead and boundary is a detail row', () => {
+      const rows = [
+        { span: trace.spans[0], isDetail: false },
+        { span: trace.spans[1], isDetail: false },
+        { span: trace.spans[1], isDetail: true },
+      ];
+      accessors.getRows = () => rows;
+      accessors.getBottomRowIndexVisible.mockReturnValue(0);
+      accessors.getSearchedSpanIDs = () => new Set([trace.spans[0].spanID]);
+
+      manager._scrollToVisibleSpan(1);
+      expect(scrollPastMock).toHaveBeenLastCalledWith(1, 1);
+    });
+
+    it('handles getRows fallback when boundary span has hidden ancestors', () => {
+      const span0 = { spanID: 's-0', depth: 0, startTime: 1000, duration: 1000 };
+      const span1 = { spanID: 's-1', depth: 1, parentSpan: span0, startTime: 1100, duration: 200 };
+      const span2 = { spanID: 's-2', depth: 2, parentSpan: span1, startTime: 1200, duration: 100 };
+      const rows = [
+        { span: span0, isDetail: false },
+        { span: span1, isDetail: false },
+        { span: span2, isDetail: false },
+      ];
+      manager.setTrace({ spans: [span0, span1, span2], duration: 1000, startTime: 1000 });
+      accessors.getRows = () => rows;
+      accessors.getBottomRowIndexVisible.mockReturnValue(0);
+      accessors.getCollapsedChildren = () => new Set(['s-1']);
+      accessors.getSearchedSpanIDs = () => new Set(['s-0']);
+
+      manager._scrollToVisibleSpan(1);
+      expect(scrollPastMock).toHaveBeenLastCalledWith(1, 1);
+    });
+
+    it('skips hidden child rows during forward row-based scan', () => {
+      const span0 = { spanID: 's-0', depth: 0, startTime: 1000, duration: 1000 };
+      const span1 = { spanID: 's-1', depth: 1, parentSpan: span0, startTime: 1100, duration: 200 };
+      const span2 = { spanID: 's-2', depth: 2, parentSpan: span1, startTime: 1200, duration: 100 };
+      const span3 = { spanID: 's-3', depth: 1, parentSpan: span0, startTime: 1500, duration: 200 };
+      const rows = [
+        { span: span0, isDetail: false },
+        { span: span1, isDetail: false },
+        { span: span2, isDetail: false },
+        { span: span3, isDetail: false },
+      ];
+      manager.setTrace({ spans: [span0, span1, span2, span3], duration: 1000, startTime: 1000 });
+      accessors.getRows = () => rows;
+      accessors.getBottomRowIndexVisible.mockReturnValue(0);
+      accessors.getCollapsedChildren = () => new Set(['s-1']);
+      accessors.getSearchedSpanIDs = () => new Set(['s-2', 's-3']);
+
+      manager._scrollToVisibleSpan(1);
+      expect(scrollPastMock).toHaveBeenLastCalledWith(3, 1);
+    });
+
+    it('filters rows by viewRange during row-based scan', () => {
+      const spanEarly = { spanID: 's-early', depth: 0, startTime: 1000, duration: 100 };
+      const spanLate = { spanID: 's-late', depth: 0, startTime: 2500, duration: 100 };
+      const spanInView = { spanID: 's-in', depth: 0, startTime: 1600, duration: 200 };
+      const rows = [
+        { span: spanEarly, isDetail: false },
+        { span: spanLate, isDetail: false },
+        { span: spanInView, isDetail: false },
+      ];
+      manager.setTrace({ spans: [spanEarly, spanLate, spanInView], duration: 1000, startTime: 1000 });
+      accessors.getRows = () => rows;
+      accessors.getViewRange = () => [0.5, 0.9];
+      accessors.getBottomRowIndexVisible.mockReturnValue(0);
+
+      manager._scrollToVisibleSpan(1);
+      expect(scrollPastMock).toHaveBeenLastCalledWith(2, 1);
+    });
+
+    it('handles startRow override when getRows is defined', () => {
+      const rows = [
+        { span: trace.spans[0], isDetail: false },
+        { span: trace.spans[1], isDetail: false },
+      ];
+      accessors.getRows = () => rows;
+      manager._scrollToVisibleSpan(1, 0);
+      expect(scrollPastMock).toHaveBeenLastCalledWith(0, 1);
+    });
+
     it('scrolls to index 0 when scrolling up and index 0 is the only match', () => {
       accessors.getTopRowIndexVisible.mockReturnValue(1);
       accessors.getBottomRowIndexVisible.mockReturnValue(1);
