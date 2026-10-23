@@ -200,6 +200,102 @@ describe('extractGenAiSections', () => {
       expect(section(sections, 'tokens')?.cacheReadInputTokens).toBe(0);
     });
 
+    it('falls back to the pre-1.27 prompt_tokens/completion_tokens names', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.usage.prompt_tokens': 100,
+          'gen_ai.usage.completion_tokens': 50,
+        })
+      );
+      expect(section(sections, 'tokens')).toEqual({ inputTokens: 100, outputTokens: 50 });
+      expect(section(sections, 'other')).toBeUndefined();
+    });
+
+    it('falls back to the pre-rename cache_creation.input_tokens name', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.usage.cache_creation.input_tokens': 20 }));
+      expect(section(sections, 'tokens')).toEqual({ cacheWriteInputTokens: 20 });
+      expect(section(sections, 'other')).toBeUndefined();
+    });
+
+    it('falls through to the legacy name when the spec value is not a number', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.usage.input_tokens': 'n/a',
+          'gen_ai.usage.prompt_tokens': 100,
+        })
+      );
+      expect(section(sections, 'tokens')).toEqual({ inputTokens: 100 });
+    });
+
+    it('falls back to the flat cache_read_input_tokens/cache_creation_input_tokens names', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.usage.cache_read_input_tokens': 80,
+          'gen_ai.usage.cache_creation_input_tokens': 20,
+        })
+      );
+      expect(section(sections, 'tokens')).toEqual({ cacheReadInputTokens: 80, cacheWriteInputTokens: 20 });
+      expect(section(sections, 'other')).toBeUndefined();
+    });
+
+    it('falls back to the Braintrust prompt_cached_tokens/prompt_cache_creation_tokens names', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.usage.prompt_cached_tokens': 80,
+          'gen_ai.usage.prompt_cache_creation_tokens': 20,
+        })
+      );
+      expect(section(sections, 'tokens')).toEqual({ cacheReadInputTokens: 80, cacheWriteInputTokens: 20 });
+      expect(section(sections, 'other')).toBeUndefined();
+    });
+
+    it('leaves a legacy token name unclaimed when the spec name is present', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.usage.input_tokens': 100,
+          'gen_ai.usage.prompt_tokens': 90,
+          'gen_ai.usage.cache_read.input_tokens': 80,
+          'gen_ai.usage.cache_read_input_tokens': 70,
+          'gen_ai.usage.prompt_cached_tokens': 60,
+          'gen_ai.usage.cache_write.input_tokens': 20,
+          'gen_ai.usage.cache_creation.input_tokens': 15,
+          'gen_ai.usage.cache_creation_input_tokens': 10,
+          'gen_ai.usage.prompt_cache_creation_tokens': 5,
+        })
+      );
+      expect(section(sections, 'tokens')).toEqual({
+        inputTokens: 100,
+        cacheReadInputTokens: 80,
+        cacheWriteInputTokens: 20,
+      });
+      expect(section(sections, 'other')?.attributes.entries()).toEqual([
+        { key: 'gen_ai.usage.prompt_tokens', value: 90 },
+        { key: 'gen_ai.usage.cache_read_input_tokens', value: 70 },
+        { key: 'gen_ai.usage.prompt_cached_tokens', value: 60 },
+        { key: 'gen_ai.usage.cache_creation.input_tokens', value: 15 },
+        { key: 'gen_ai.usage.cache_creation_input_tokens', value: 10 },
+        { key: 'gen_ai.usage.prompt_cache_creation_tokens', value: 5 },
+      ]);
+    });
+
+    it('prefers the pre-rename spec name, then the flat names, over the Braintrust metric names', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.usage.cache_read_input_tokens': 70,
+          'gen_ai.usage.prompt_cached_tokens': 60,
+          'gen_ai.usage.cache_creation.input_tokens': 15,
+          'gen_ai.usage.cache_creation_input_tokens': 10,
+          'gen_ai.usage.prompt_cache_creation_tokens': 5,
+        })
+      );
+      expect(section(sections, 'tokens')).toEqual({ cacheReadInputTokens: 70, cacheWriteInputTokens: 15 });
+      expect(section(sections, 'other')?.attributes.entries()).toEqual([
+        { key: 'gen_ai.usage.prompt_cached_tokens', value: 60 },
+        { key: 'gen_ai.usage.cache_creation_input_tokens', value: 10 },
+        { key: 'gen_ai.usage.prompt_cache_creation_tokens', value: 5 },
+      ]);
+    });
+
     it('produces no tokens section when no usage attributes are present', () => {
       const sections = extractGenAiSections(attrs({ 'gen_ai.provider.name': 'openai' }));
       expect(section(sections, 'tokens')).toBeUndefined();
@@ -688,6 +784,32 @@ describe('extractGenAiSections', () => {
       ]);
       expect(roleAndText(section(sections, 'conversation')?.outputMessages)).toEqual([
         { role: 'assistant', content: 'Paris.' },
+      ]);
+    });
+
+    it('falls back to braintrust.input_json/braintrust.output_json', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'braintrust.input_json': JSON.stringify({ question: 'What is the capital of France?' }),
+          'braintrust.output_json': JSON.stringify([{ role: 'assistant', content: 'Paris.' }]),
+        })
+      );
+      const conversation = section(sections, 'conversation');
+      expect(roleAndText(conversation?.inputMessages)).toEqual([
+        { role: undefined, content: JSON.stringify({ question: 'What is the capital of France?' }, null, 2) },
+      ]);
+      expect(roleAndText(conversation?.outputMessages)).toEqual([{ role: 'assistant', content: 'Paris.' }]);
+    });
+
+    it('prefers gen_ai.input over braintrust.input_json when both are present', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.input': 'current',
+          'braintrust.input_json': '"stale"',
+        })
+      );
+      expect(roleAndText(section(sections, 'conversation')?.inputMessages)).toEqual([
+        { role: undefined, content: 'current' },
       ]);
     });
 

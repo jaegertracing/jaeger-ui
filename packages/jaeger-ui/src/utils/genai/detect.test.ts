@@ -68,6 +68,18 @@ describe('classifySpan', () => {
     expect(classifySpan(makeSpan([{ key: 'http.method', value: 'GET' }]))).toBeUndefined();
   });
 
+  it('returns UNKNOWN_GENAI for a span carrying only braintrust.input_json', () => {
+    expect(classifySpan(makeSpan([{ key: 'braintrust.input_json', value: '"hi"' }]))).toBe('UNKNOWN_GENAI');
+  });
+
+  it('returns UNKNOWN_GENAI for a span carrying only braintrust.output_json', () => {
+    expect(classifySpan(makeSpan([{ key: 'braintrust.output_json', value: '"hi"' }]))).toBe('UNKNOWN_GENAI');
+  });
+
+  it('returns undefined for other braintrust.* keys', () => {
+    expect(classifySpan(makeSpan([{ key: 'braintrust.parent', value: 'project_id:abc' }]))).toBeUndefined();
+  });
+
   it('returns undefined for a span with empty attributes', () => {
     expect(classifySpan(makeSpan([]))).toBeUndefined();
   });
@@ -120,6 +132,10 @@ describe('isGenAISpan', () => {
 
   it('returns true for a span with gen_ai.operation.name', () => {
     expect(isGenAISpan(makeSpan([{ key: 'gen_ai.operation.name', value: 'chat' }]))).toBe(true);
+  });
+
+  it('returns true for a span with only braintrust.input_json', () => {
+    expect(isGenAISpan(makeSpan([{ key: 'braintrust.input_json', value: '"hi"' }]))).toBe(true);
   });
 
   it('returns false for a span with no gen_ai.* attribute', () => {

@@ -3,6 +3,7 @@
 
 import type { IAttributes, AttributeValue } from '../../../../../types/otel';
 import { makeAttributes } from '../../../../../model/attributes';
+import { BRAINTRUST_INPUT_JSON, BRAINTRUST_OUTPUT_JSON } from '../../../../../constants/span-attributes';
 import { detectMediaType, MediaType } from '../../../../../utils/media';
 
 type GenAiRole = 'system' | 'user' | 'assistant' | 'tool' | undefined;
@@ -448,13 +449,43 @@ export function hasAnyTokenUsage(usage: GenAiTokenUsage): boolean {
   return Object.values(usage).some(v => v != null);
 }
 
+/**
+ * Each list reads the current spec name first and falls back to older or vendor names
+ * only when it is absent or not a number, so a disagreeing legacy value stays unclaimed
+ * and surfaces in "Other GenAI Attributes" instead of being silently dropped.
+ *
+ * gen_ai.usage.prompt_tokens and completion_tokens are the names the conventions used
+ * before 1.27 renamed them to input_tokens and output_tokens, and
+ * gen_ai.usage.cache_creation.input_tokens is the name the conventions used before the
+ * GenAI repository renamed it to cache_write.input_tokens. The flat cache names
+ * (cache_read_input_tokens, cache_creation_input_tokens) and the Braintrust metric names
+ * (prompt_cached_tokens, prompt_cache_creation_tokens) have been observed under the
+ * gen_ai.usage. prefix on spans from instrumentation that also exports to Braintrust.
+ */
 function getGenAiTokenUsageFromGetter(get: GetAttr): GenAiTokenUsage | undefined {
+  // Reads the keys in order and stops at the first that holds a number.
+  const firstNumber = (...keys: string[]): number | undefined => {
+    for (const key of keys) {
+      const value = asNumber(get(key));
+      if (value !== undefined) return value;
+    }
+    return undefined;
+  };
   const usage: GenAiTokenUsage = {
-    inputTokens: asNumber(get('gen_ai.usage.input_tokens')),
-    outputTokens: asNumber(get('gen_ai.usage.output_tokens')),
+    inputTokens: firstNumber('gen_ai.usage.input_tokens', 'gen_ai.usage.prompt_tokens'),
+    outputTokens: firstNumber('gen_ai.usage.output_tokens', 'gen_ai.usage.completion_tokens'),
     reasoningOutputTokens: asNumber(get('gen_ai.usage.reasoning.output_tokens')),
-    cacheReadInputTokens: asNumber(get('gen_ai.usage.cache_read.input_tokens')),
-    cacheWriteInputTokens: asNumber(get('gen_ai.usage.cache_write.input_tokens')),
+    cacheReadInputTokens: firstNumber(
+      'gen_ai.usage.cache_read.input_tokens',
+      'gen_ai.usage.cache_read_input_tokens',
+      'gen_ai.usage.prompt_cached_tokens'
+    ),
+    cacheWriteInputTokens: firstNumber(
+      'gen_ai.usage.cache_write.input_tokens',
+      'gen_ai.usage.cache_creation.input_tokens',
+      'gen_ai.usage.cache_creation_input_tokens',
+      'gen_ai.usage.prompt_cache_creation_tokens'
+    ),
     textInputTokens: asNumber(get('gen_ai.usage.text.input_tokens')),
     imageInputTokens: asNumber(get('gen_ai.usage.image.input_tokens')),
     audioInputTokens: asNumber(get('gen_ai.usage.audio.input_tokens')),
@@ -548,11 +579,22 @@ const REGISTRY: SectionBuilder[] = [
     // input and the one output rather than a message array. parseMessages
     // wraps such a scalar or object into a one-element list, so the value
     // renders as the span's only message.
+    //
+    // braintrust.input_json/braintrust.output_json are Braintrust's generic
+    // span I/O fields, written as a JSON string holding one input or output
+    // value. They are not gen_ai.* keys, so an unclaimed one lands in the
+    // span's regular attributes table rather than in "Other GenAI Attributes".
     const inputMessages = parseMessages(
-      get('gen_ai.input.messages') ?? get('gen_ai.prompt') ?? get('gen_ai.input')
+      get('gen_ai.input.messages') ??
+        get('gen_ai.prompt') ??
+        get('gen_ai.input') ??
+        get(BRAINTRUST_INPUT_JSON)
     );
     const outputMessages = parseMessages(
-      get('gen_ai.output.messages') ?? get('gen_ai.completion') ?? get('gen_ai.output')
+      get('gen_ai.output.messages') ??
+        get('gen_ai.completion') ??
+        get('gen_ai.output') ??
+        get(BRAINTRUST_OUTPUT_JSON)
     );
     const systemInstructions = parseSystemInstructions(get('gen_ai.system_instructions'));
     return inputMessages.length || outputMessages.length || systemInstructions
