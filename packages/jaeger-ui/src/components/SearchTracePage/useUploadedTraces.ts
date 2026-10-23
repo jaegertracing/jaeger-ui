@@ -19,6 +19,27 @@ export function isUploadedTrace(traceID: string): boolean {
   return summaries?.some(summary => summary.traceID === traceID) ?? false;
 }
 
+/**
+ * FileLoader writes every upload to the ['trace', id] cache, so the last upload of an ID wins
+ * there. The registries follow the same rule: a later upload replaces the entry in place.
+ * Incoming items without an ID are dropped.
+ */
+function replaceById<T>(existing: T[], incoming: T[], getId: (item: T) => string | undefined): T[] {
+  const latest = new Map<string, T>();
+  incoming.forEach(item => {
+    const id = getId(item);
+    if (id !== undefined) latest.set(id, item);
+  });
+  const replaced = existing.map(item => {
+    const id = getId(item);
+    const next = id === undefined ? undefined : latest.get(id);
+    if (id === undefined || next === undefined) return item;
+    latest.delete(id);
+    return next;
+  });
+  return [...replaced, ...latest.values()];
+}
+
 type UploadedTraces = {
   uploadedSummaries: TraceSummary[];
   uploadedRawTraces: unknown[];
@@ -67,27 +88,12 @@ export function useUploadedTraces(): UploadedTraces {
 
   const handleTracesLoaded = useCallback(
     (summaries: TraceSummary[], rawTraces: unknown[]) => {
-      queryClient.setQueryData<TraceSummary[]>(UPLOADED_SUMMARIES_QUERY_KEY, prev => {
-        const existing = prev ?? [];
-        const seen = new Set(existing.map(s => s.traceID));
-        const incoming = summaries.filter(s => {
-          if (seen.has(s.traceID)) return false;
-          seen.add(s.traceID);
-          return true;
-        });
-        return [...existing, ...incoming];
-      });
-      queryClient.setQueryData<unknown[]>(UPLOADED_RAW_TRACES_QUERY_KEY, prev => {
-        const existing = prev ?? [];
-        const seen = new Set(existing.map(uploadedTraceId));
-        const incoming = rawTraces.filter(r => {
-          const id = uploadedTraceId(r);
-          if (id === undefined || seen.has(id)) return false;
-          seen.add(id);
-          return true;
-        });
-        return [...existing, ...incoming];
-      });
+      queryClient.setQueryData<TraceSummary[]>(UPLOADED_SUMMARIES_QUERY_KEY, prev =>
+        replaceById(prev ?? [], summaries, s => s.traceID)
+      );
+      queryClient.setQueryData<unknown[]>(UPLOADED_RAW_TRACES_QUERY_KEY, prev =>
+        replaceById(prev ?? [], rawTraces, uploadedTraceId)
+      );
     },
     [queryClient]
   );

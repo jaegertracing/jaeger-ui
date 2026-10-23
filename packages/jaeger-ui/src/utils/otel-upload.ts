@@ -98,12 +98,30 @@ function normalizeTracesData(value: unknown): unknown {
   });
 }
 
+const INT64_FIELDS = new Set(['startTimeUnixNano', 'endTimeUnixNano', 'timeUnixNano', 'intValue']);
+
+// JSON.parse has already rounded integers beyond 2^53, so normalization keeps them as numbers
+// and the schemas reject them. Replace Zod's generic type error with the fix for the uploader.
+// Upload-only error map; do not copy into JaegerClient, whose wire contract is string-only.
+const uploadParseContext: Parameters<typeof refinedTracesData.parse>[1] = {
+  error: issue =>
+    issue.code === 'invalid_type' &&
+    Number.isInteger(issue.input) &&
+    !Number.isSafeInteger(issue.input) &&
+    INT64_FIELDS.has(String(issue.path?.at(-1)))
+      ? 'Numeric int64 value exceeds 2^53 and lost precision; send int64 values as quoted decimal strings'
+      : undefined,
+};
+
 export function validateOtelUpload(input: Record<string, unknown>): TracesDataWire {
   // Normalize numeric int64s only at the upload boundary, preserving the input and unknown metadata.
   // Shared schemas default omitted scopeSpans/spans to [] for uploads and network responses.
   return !('resourceSpans' in input) && 'result' in input
-    ? GetTraceResponseSchema.parse(normalizeObject(input, { result: normalizeTracesData })).result
-    : refinedTracesData.parse(normalizeTracesData(input));
+    ? GetTraceResponseSchema.parse(
+        normalizeObject(input, { result: normalizeTracesData }),
+        uploadParseContext
+      ).result
+    : refinedTracesData.parse(normalizeTracesData(input), uploadParseContext);
 }
 
 /** Group all valid documents in a file before any trace is parsed or cached. */
