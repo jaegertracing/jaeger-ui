@@ -208,6 +208,28 @@ describe('<SearchTracePage>', () => {
     expect(container.querySelector('.js-test-error-message')).toBeInTheDocument();
   });
 
+  it('shows the HTTP details of a failed search', () => {
+    useSearchTracesMock.mockReturnValue({
+      data: undefined,
+      isFetching: false,
+      error: Object.assign(new Error('Failed to fetch trace summaries: 400 Bad Request'), {
+        httpStatus: 400,
+        httpUrl: '/api/v3/trace-summaries',
+        httpQuery: 'query.serviceName=svc-a',
+        httpBody: 'invalid duration',
+      }),
+    });
+    const { container } = render(
+      <AllProvider initialEntries={['/search?service=svc-a']}>
+        <SearchTracePage />
+      </AllProvider>
+    );
+    const details = container.querySelector('[data-testid="ErrorMessage--details"]');
+    expect(details).toHaveTextContent('/api/v3/trace-summaries');
+    expect(details).toHaveTextContent('query.serviceName=svc-a');
+    expect(details).toHaveTextContent('invalid duration');
+  });
+
   it('shows the logo on homepage (no URL params)', () => {
     const { container } = render(
       <AllProvider>
