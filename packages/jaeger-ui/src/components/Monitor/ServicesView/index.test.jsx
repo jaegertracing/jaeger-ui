@@ -352,6 +352,53 @@ describe('<MonitorATMServicesView>', () => {
     expect(screen.getByText(/instructions/)).toBeInTheDocument();
   });
 
+  it('shows the missing-latency alert when call rates exist but latencies are empty', () => {
+    cleanup();
+    useServiceMetricsQuery.mockReturnValue({
+      data: {
+        serviceMetrics: {
+          service_latencies: null,
+          service_call_rate: serviceMetrics.service_call_rate,
+          service_error_rate: null,
+        },
+        serviceError: originInitialState.serviceError,
+      },
+      isFetching: false,
+      isLoading: false,
+    });
+    renderWithRouter(<MonitorATMServicesView />);
+    expect(screen.getByText(/No latency data, although call rates were found/)).toBeInTheDocument();
+    expect(screen.getByText('normalize_duration')).toBeInTheDocument();
+    expect(screen.getByText('latency_unit')).toBeInTheDocument();
+    expect(screen.queryByText(/No data yet!/)).not.toBeInTheDocument();
+  });
+
+  it('does not show the missing-latency alert when no metrics exist', () => {
+    cleanup();
+    useServiceMetricsQuery.mockReturnValue({
+      data: {
+        serviceMetrics: { service_latencies: null, service_call_rate: null, service_error_rate: null },
+        serviceError: originInitialState.serviceError,
+      },
+      isFetching: false,
+      isLoading: false,
+    });
+    renderWithRouter(<MonitorATMServicesView />);
+    expect(screen.queryByText(/No latency data/)).not.toBeInTheDocument();
+  });
+
+  it('does not show the missing-latency alert when latencies exist', () => {
+    cleanup();
+    useServiceMetricsQuery.mockReturnValue({
+      data: { serviceMetrics, serviceError: originInitialState.serviceError },
+      isFetching: false,
+      isLoading: false,
+    });
+    renderWithRouter(<MonitorATMServicesView />);
+    expect(screen.queryByText(/No latency data/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No data yet!/)).not.toBeInTheDocument();
+  });
+
   it('does not show no-metrics alert while service metrics are loading', () => {
     cleanup();
     useServiceMetricsQuery.mockReturnValue({
