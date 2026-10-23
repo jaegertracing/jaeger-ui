@@ -438,7 +438,8 @@ describe('JaegerClient', () => {
 
     it('preserves caller cancellation for a request with a deadline', async () => {
       const caller = new AbortController();
-      const abortError = new DOMException('Caller cancelled request', 'AbortError');
+      const abortError = new Error('Caller cancelled request');
+      abortError.name = 'AbortError';
       mockFetch.mockImplementation((_url: string, options: RequestInit) => {
         return new Promise((_resolve, reject) => {
           options.signal?.addEventListener('abort', () => reject(options.signal?.reason));
@@ -454,7 +455,8 @@ describe('JaegerClient', () => {
 
     it('forwards an already cancelled caller signal to a request with a deadline', async () => {
       const caller = new AbortController();
-      const abortError = new DOMException('Caller cancelled request', 'AbortError');
+      const abortError = new Error('Caller cancelled request');
+      abortError.name = 'AbortError';
       caller.abort(abortError);
       mockFetch.mockImplementation((_url: string, options: RequestInit) => {
         expect(options.signal?.aborted).toBe(true);
@@ -464,6 +466,28 @@ describe('JaegerClient', () => {
       await expect(
         client['fetchWithTimeout']('/test', { timeout: 1000, signal: caller.signal })
       ).rejects.toBe(abortError);
+    });
+
+    it('supports a caller signal and deadline when AbortSignal.any is unavailable', async () => {
+      const descriptor = Object.getOwnPropertyDescriptor(AbortSignal, 'any');
+      const caller = new AbortController();
+      const abortError = new Error('Caller cancelled request');
+      abortError.name = 'AbortError';
+      mockFetch.mockImplementation((_url: string, options: RequestInit) => {
+        return new Promise((_resolve, reject) => {
+          options.signal?.addEventListener('abort', () => reject(options.signal?.reason));
+        });
+      });
+
+      try {
+        Reflect.deleteProperty(AbortSignal, 'any');
+        expect(AbortSignal.any).toBeUndefined();
+        const promise = client['fetchWithTimeout']('/test', { timeout: 1000, signal: caller.signal });
+        caller.abort(abortError);
+        await expect(promise).rejects.toBe(abortError);
+      } finally {
+        if (descriptor) Object.defineProperty(AbortSignal, 'any', descriptor);
+      }
     });
 
     it('clears timeout after successful request', async () => {
