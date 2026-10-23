@@ -68,6 +68,27 @@ it.each(['startTimeUnixNano', 'endTimeUnixNano', 'eventTime', 'intValue'])(
   }
 );
 
+it.each(['startTimeUnixNano', 'endTimeUnixNano', 'eventTime', 'intValue', 'envelope'])(
+  'asks for a quoted string when a numeric %s exceeds 2^53',
+  field => {
+    const document = structuredClone(numericUpload);
+    const span = document.resourceSpans[0].scopeSpans[0].spans[0];
+    const unsafe = 2 ** 60;
+    if (field === 'eventTime') Object.assign(span.events[0], { timeUnixNano: unsafe });
+    else if (field === 'intValue') Object.assign(span.attributes[0].value, { intValue: unsafe });
+    else Object.assign(span, { [field === 'envelope' ? 'startTimeUnixNano' : field]: unsafe });
+    expect(() => validateOtelUpload(field === 'envelope' ? { result: document } : document)).toThrow(
+      'send int64 values as quoted decimal strings'
+    );
+  }
+);
+
+it('keeps the generic type error for unsafe numbers outside int64 fields', () => {
+  const input = structuredClone(numericUpload);
+  Object.assign(input.resourceSpans[0].scopeSpans[0].spans[0], { name: 2 ** 60 });
+  expect(() => validateOtelUpload(input)).toThrow('expected string, received number');
+});
+
 it.each(['startTimeUnixNano', 'endTimeUnixNano', 'eventTime'])(
   'rejects negative numeric %s timestamps',
   field => {
