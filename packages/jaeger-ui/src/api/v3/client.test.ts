@@ -23,6 +23,99 @@ describe('JaegerClient', () => {
     vi.useRealTimers();
   });
 
+  describe('fetchMetrics', () => {
+    const query = {
+      endTs: 1_700_000_000_000,
+      lookback: 3600000,
+      step: 60000,
+      ratePer: 600000,
+      spanKind: 'server' as const,
+      quantile: 0.95,
+    };
+
+    it('encodes the service and preserves operation query parameters in milliseconds', async () => {
+      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ metrics: [] }) });
+
+      await client.fetchMetrics('latencies', 'frontend /?&=+#', { ...query, groupByOperation: true });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/metrics/latencies?service=frontend%20%2F%3F%26%3D%2B%23&endTs=1700000000000&groupByOperation=true&lookback=3600000&quantile=0.95&ratePer=600000&spanKind=server&step=60000',
+        { signal: undefined }
+      );
+    });
+
+    it.each(['latencies', 'calls', 'errors'] as const)(
+      'preserves the %s response and overrides its quantile with the requested value',
+      async metricType => {
+        const data = { name: 'service_latencies', metrics: [], quantile: 0.1, extra: 'retained' };
+        mockFetch.mockResolvedValue({ ok: true, json: async () => data });
+
+        await expect(client.fetchMetrics(metricType, 'frontend', query)).resolves.toEqual({
+          ...data,
+          quantile: 0.95,
+        });
+        expect(mockFetch).toHaveBeenCalledWith(
+          expect.stringContaining(`/api/metrics/${metricType}?service=frontend&`),
+          { signal: undefined }
+        );
+      }
+    );
+
+    it('preserves HTTP 501 details from the shared transport', async () => {
+      const body = { errors: [{ code: 501, msg: 'metrics querying is currently disabled' }] };
+      mockFetch.mockResolvedValue(
+        new Response(JSON.stringify(body), { status: 501, statusText: 'Not Implemented' })
+      );
+
+      await expect(client.fetchMetrics('calls', 'frontend', query)).rejects.toMatchObject({
+        message: 'Failed to fetch calls metrics: 501 Not Implemented',
+        httpStatus: 501,
+        httpStatusText: 'Not Implemented',
+        httpBody: JSON.stringify(body, null, 2),
+        httpUrl: '/api/metrics/calls',
+        httpQuery: expect.stringContaining('service=frontend&endTs=1700000000000'),
+      });
+    });
+
+    it('allows successful headers and bodies to arrive after the default transport deadline', async () => {
+      const data = { name: 'service_call_rate', metrics: [] };
+      mockFetch.mockImplementation(
+        () =>
+          new Promise(resolve => {
+            setTimeout(
+              () =>
+                resolve({ ok: true, json: () => new Promise(done => setTimeout(() => done(data), 11000)) }),
+              11000
+            );
+          })
+      );
+
+      const promise = client.fetchMetrics('calls', 'frontend', query);
+      await vi.advanceTimersByTimeAsync(22000);
+
+      await expect(promise).resolves.toEqual({ ...data, quantile: query.quantile });
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it('forwards cancellation and preserves the caller abort reason', async () => {
+      const controller = new AbortController();
+      const reason = new Error('metrics query abandoned');
+      mockFetch.mockImplementation(
+        (_url, { signal }) =>
+          new Promise((_resolve, reject) => {
+            signal.addEventListener('abort', () => reject(signal.reason), { once: true });
+          })
+      );
+
+      const promise = client.fetchMetrics('errors', 'frontend', query, controller.signal);
+      controller.abort(reason);
+
+      await expect(promise).rejects.toBe(reason);
+      expect(mockFetch).toHaveBeenCalledWith(expect.any(String), { signal: controller.signal });
+      expect(vi.getTimerCount()).toBe(0);
+    });
+  });
+
   describe.each(['fetchDependencies', 'fetchDeepDependencyGraph'] as const)('%s', method => {
     const fetchGraph = (signal?: AbortSignal) =>
       method === 'fetchDependencies'
@@ -1058,6 +1151,27 @@ describe('JaegerClient with non-default base path', () => {
     expect(mockFetch).toHaveBeenNthCalledWith(
       2,
       '/jaeger/api/deep-dependencies?end=200&operation=%2A&service=frontend&start=100',
+      { signal: undefined }
+    );
+  });
+
+  it('keeps metrics under the deployment base path', async () => {
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({ metrics: [] }) });
+    vi.resetModules();
+    vi.doMock('../../site-prefix', () => ({ default: `${global.location.origin}/jaeger/` }));
+    const { JaegerClient: IsolatedClient } = await import('./client');
+
+    await new IsolatedClient().fetchMetrics('calls', 'frontend', {
+      endTs: 100,
+      lookback: 200,
+      step: 60,
+      ratePer: 600,
+      spanKind: 'server',
+      quantile: 0.95,
+    });
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/jaeger/api/metrics/calls?service=frontend&endTs=100&lookback=200&quantile=0.95&ratePer=600&spanKind=server&step=60',
       { signal: undefined }
     );
   });

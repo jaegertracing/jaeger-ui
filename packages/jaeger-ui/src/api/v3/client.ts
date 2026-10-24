@@ -25,6 +25,7 @@ import type { TraceSummary, ServiceSummary } from '../../types/trace-summary';
 import type { ApiError } from '../../types/api-error';
 import type { Microseconds } from '../../types/units';
 import type { TDdgModelParams } from '../../model/ddg/types';
+import type { MetricsAPIQueryParams, MetricsAPIResponse } from '../../types/metrics';
 
 export const DEFAULT_DEPENDENCY_LOOKBACK = 7 * 24 * 60 * 60 * 1000;
 
@@ -117,8 +118,23 @@ async function httpError(
 
 export class JaegerClient {
   private apiRoot = prefixUrl('/api/v3');
-  // Archive and dependency-graph requests retain their existing /api/ routes.
+  // Archive, dependency-graph, and metrics requests retain their existing /api/ routes.
   private legacyApiRoot = prefixUrl('/api/');
+
+  async fetchMetrics<TGroupByOperation extends boolean = false>(
+    metricType: 'latencies' | 'calls' | 'errors',
+    service: string,
+    query: MetricsAPIQueryParams & { groupByOperation?: TGroupByOperation },
+    signal?: AbortSignal
+  ): Promise<MetricsAPIResponse<TGroupByOperation>> {
+    const url = `${this.legacyApiRoot}metrics/${metricType}?service=${encodeURIComponent(service)}&${queryString.stringify(query)}`;
+    // Preserve deadline-free metrics reads, which can wait on storage queries.
+    const data = (await this.fetchJson(url, `Failed to fetch ${metricType} metrics`, {
+      timeout: null,
+      signal,
+    })) as MetricsAPIResponse<TGroupByOperation>;
+    return { ...data, quantile: query.quantile };
+  }
 
   async fetchDependencies(
     endTs = Date.now(),
