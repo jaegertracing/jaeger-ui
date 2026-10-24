@@ -801,6 +801,47 @@ describe('extractGenAiSections', () => {
       expect(roleAndText(conversation?.outputMessages)).toEqual([{ role: 'assistant', content: 'Paris.' }]);
     });
 
+    it('falls back to unprefixed input/output', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          input: JSON.stringify([{ role: 'user', parts: [{ type: 'text', content: 'Capital of France?' }] }]),
+          output: JSON.stringify({ answer: 'Paris.' }),
+        })
+      );
+      const conversation = section(sections, 'conversation');
+      expect(roleAndText(conversation?.inputMessages)).toEqual([
+        { role: 'user', content: 'Capital of France?' },
+      ]);
+      expect(roleAndText(conversation?.outputMessages)).toEqual([
+        { role: undefined, content: JSON.stringify({ answer: 'Paris.' }, null, 2) },
+      ]);
+    });
+
+    it('prefers gen_ai.input.messages over unprefixed input when both are present', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.input.messages': [{ role: 'user', parts: [{ type: 'text', content: 'current' }] }],
+          input: '"copy"',
+        })
+      );
+      expect(roleAndText(section(sections, 'conversation')?.inputMessages)).toEqual([
+        { role: 'user', content: 'current' },
+      ]);
+      expect(section(sections, 'other')).toBeUndefined();
+    });
+
+    it('prefers unprefixed input over braintrust.input_json when both are present', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          input: '"current"',
+          'braintrust.input_json': '"stale"',
+        })
+      );
+      expect(roleAndText(section(sections, 'conversation')?.inputMessages)).toEqual([
+        { role: undefined, content: 'current' },
+      ]);
+    });
+
     it('prefers gen_ai.input over braintrust.input_json when both are present', () => {
       const sections = extractGenAiSections(
         attrs({

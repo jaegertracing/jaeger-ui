@@ -580,20 +580,25 @@ const REGISTRY: SectionBuilder[] = [
     // wraps such a scalar or object into a one-element list, so the value
     // renders as the span's only message.
     //
-    // braintrust.input_json/braintrust.output_json are Braintrust's generic
-    // span I/O fields, written as a JSON string holding one input or output
-    // value. They are not gen_ai.* keys, so an unclaimed one lands in the
-    // span's regular attributes table rather than in "Other GenAI Attributes".
+    // The unprefixed input/output keys are a span model's generic I/O fields.
+    // SDKs that use them write a JSON string there on every GenAI span, agent
+    // and task spans included, and copy gen_ai.input.messages into input when
+    // both are set, so the spec key keeps precedence. braintrust.input_json and
+    // braintrust.output_json are Braintrust's equivalent. None of these are
+    // gen_ai.* keys, so an unclaimed one lands in the span's regular attributes
+    // table rather than in "Other GenAI Attributes".
     const inputMessages = parseMessages(
       get('gen_ai.input.messages') ??
         get('gen_ai.prompt') ??
         get('gen_ai.input') ??
+        get('input') ??
         get(BRAINTRUST_INPUT_JSON)
     );
     const outputMessages = parseMessages(
       get('gen_ai.output.messages') ??
         get('gen_ai.completion') ??
         get('gen_ai.output') ??
+        get('output') ??
         get(BRAINTRUST_OUTPUT_JSON)
     );
     const systemInstructions = parseSystemInstructions(get('gen_ai.system_instructions'));
