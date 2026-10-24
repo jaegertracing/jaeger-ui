@@ -379,6 +379,41 @@ describe('<FileLoader />', () => {
     expect(mockOnTracesLoaded).not.toHaveBeenCalled();
   });
 
+  it.each([
+    [100 * 1024 * 1024 + 1, '100.1'],
+    [150 * 1024 * 1024, '150.0'],
+  ])('rejects a file of %d bytes before reading it and reports %s MB', async (size, sizeMb) => {
+    const { message } = await import('antd');
+    const file = makeFile('huge.json');
+    Object.defineProperty(file, 'size', { value: size });
+
+    render(<FileLoader onTracesLoaded={mockOnTracesLoaded} />);
+    let result;
+    await act(async () => {
+      result = global.mockBeforeUpload(file);
+    });
+
+    expect(result).toBe(false);
+    expect(message.error).toHaveBeenCalledWith(
+      `huge.json is ${sizeMb} MB, which exceeds the 100 MB upload limit.`
+    );
+    expect(readJsonFile).not.toHaveBeenCalled();
+    expect(mockOnTracesLoaded).not.toHaveBeenCalled();
+  });
+
+  it('reads a file of exactly 100 MB', async () => {
+    readJsonFile.mockResolvedValue({ data: [] });
+    const file = makeFile('limit.json');
+    Object.defineProperty(file, 'size', { value: 100 * 1024 * 1024 });
+
+    render(<FileLoader onTracesLoaded={mockOnTracesLoaded} />);
+    await act(async () => {
+      global.mockBeforeUpload(file);
+    });
+
+    expect(readJsonFile).toHaveBeenCalledWith({ file });
+  });
+
   it('each beforeUpload call processes only its own file (no N² duplication)', async () => {
     const rawTrace = { traceID: 'a', spans: [] };
     readJsonFile.mockResolvedValue({ data: [rawTrace] });
