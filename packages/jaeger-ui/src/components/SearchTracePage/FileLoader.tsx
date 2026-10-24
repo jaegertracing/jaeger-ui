@@ -22,6 +22,7 @@ const Dragger = Upload.Dragger;
 
 // Reading and parsing hold several copies of a file in memory. An 80k-span trace is about
 // 25 MB as OTLP JSON and 45 MB as legacy Jaeger JSON, which leaves room for larger attributes.
+// MB here means 1024 * 1024 bytes (MiB); the message keeps the familiar MB label.
 const MAX_UPLOAD_MB = 100;
 const MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024;
 
@@ -139,7 +140,8 @@ export default function FileLoader(props: FileLoaderProps) {
         // receives the full fileList, so iterating fileList here would process N files
         // N times (N²). We process only the current `file` argument to avoid that.
         if (file.size > MAX_UPLOAD_BYTES) {
-          const sizeMb = (file.size / 1024 / 1024).toFixed(1);
+          // Round up so a file just over the limit never reads as exactly the limit.
+          const sizeMb = (Math.ceil((file.size / 1024 / 1024) * 10) / 10).toFixed(1);
           message.error(`${file.name} is ${sizeMb} MB, which exceeds the ${MAX_UPLOAD_MB} MB upload limit.`);
           return false;
         }

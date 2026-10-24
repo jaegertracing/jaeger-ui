@@ -98,19 +98,33 @@ function normalizeTracesData(value: unknown): unknown {
   });
 }
 
-const INT64_FIELDS = new Set(['startTimeUnixNano', 'endTimeUnixNano', 'timeUnixNano', 'intValue']);
+// Ranges a quoted value can take: timestamps are uint64 and AnyValue.intValue is int64.
+// JSON.parse rounds the largest of each up to exactly 2^64 and 2^63, so the bounds are inclusive.
+const INT64_RANGES = new Map<unknown, readonly [number, number]>([
+  ['startTimeUnixNano', [0, 2 ** 64]],
+  ['endTimeUnixNano', [0, 2 ** 64]],
+  ['timeUnixNano', [0, 2 ** 64]],
+  ['intValue', [-(2 ** 63), 2 ** 63]],
+]);
 
 // JSON.parse has already rounded integers beyond 2^53, so normalization keeps them as numbers
-// and the schemas reject them. Replace Zod's generic type error with the fix for the uploader.
+// and the schemas reject them. Replace Zod's generic type error with the fix for the uploader,
+// but only when quoting would make the value valid.
 // Upload-only error map; do not copy into JaegerClient, whose wire contract is string-only.
 const uploadParseContext: Parameters<typeof refinedTracesData.parse>[1] = {
-  error: issue =>
-    issue.code === 'invalid_type' &&
-    Number.isInteger(issue.input) &&
-    !Number.isSafeInteger(issue.input) &&
-    INT64_FIELDS.has(String(issue.path?.at(-1)))
+  error: issue => {
+    const range = INT64_RANGES.get(issue.path?.at(-1));
+    const value = issue.input;
+    return issue.code === 'invalid_type' &&
+      range !== undefined &&
+      typeof value === 'number' &&
+      Number.isInteger(value) &&
+      !Number.isSafeInteger(value) &&
+      value >= range[0] &&
+      value <= range[1]
       ? 'Numeric int64 value exceeds 2^53 and lost precision; send int64 values as quoted decimal strings'
-      : undefined,
+      : undefined;
+  },
 };
 
 export function validateOtelUpload(input: Record<string, unknown>): TracesDataWire {

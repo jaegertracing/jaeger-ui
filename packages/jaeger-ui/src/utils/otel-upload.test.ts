@@ -83,6 +83,42 @@ it.each(['startTimeUnixNano', 'endTimeUnixNano', 'eventTime', 'intValue', 'envel
   }
 );
 
+function withNumber(field: string, value: number) {
+  const document = structuredClone(numericUpload);
+  const span = document.resourceSpans[0].scopeSpans[0].spans[0];
+  if (field === 'eventTime') Object.assign(span.events[0], { timeUnixNano: value });
+  else if (field === 'intValue') Object.assign(span.attributes[0].value, { intValue: value });
+  else Object.assign(span, { [field]: value });
+  return document;
+}
+
+// JSON.parse rounds the largest uint64 and int64 up to 2^64 and 2^63, and quoting still fixes them.
+it.each([
+  ['startTimeUnixNano', '18446744073709551615'],
+  ['endTimeUnixNano', '18446744073709551615'],
+  ['eventTime', '18446744073709551615'],
+  ['intValue', '9223372036854775807'],
+  ['intValue', '-9223372036854775808'],
+  ['intValue', '-1152921504606846976'],
+])('asks for a quoted string for a numeric %s of %s', (field, literal) => {
+  expect(() => validateOtelUpload(withNumber(field, JSON.parse(literal)))).toThrow(
+    'send int64 values as quoted decimal strings'
+  );
+});
+
+it.each([
+  ['startTimeUnixNano', -(2 ** 60)],
+  ['startTimeUnixNano', 2 ** 65],
+  ['endTimeUnixNano', -(2 ** 60)],
+  ['endTimeUnixNano', 2 ** 65],
+  ['eventTime', -(2 ** 60)],
+  ['eventTime', 2 ** 65],
+  ['intValue', -(2 ** 64)],
+  ['intValue', 2 ** 64],
+])('keeps the generic type error for a numeric %s of %d that quoting cannot fix', (field, value) => {
+  expect(() => validateOtelUpload(withNumber(field, value))).toThrow('expected string, received number');
+});
+
 it('keeps the generic type error for unsafe numbers outside int64 fields', () => {
   const input = structuredClone(numericUpload);
   Object.assign(input.resourceSpans[0].scopeSpans[0].spans[0], { name: 2 ** 60 });

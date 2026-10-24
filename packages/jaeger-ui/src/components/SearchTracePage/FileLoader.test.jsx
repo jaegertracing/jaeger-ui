@@ -379,10 +379,13 @@ describe('<FileLoader />', () => {
     expect(mockOnTracesLoaded).not.toHaveBeenCalled();
   });
 
-  it('rejects a file over 100 MB before reading it', async () => {
+  it.each([
+    [100 * 1024 * 1024 + 1, '100.1'],
+    [150 * 1024 * 1024, '150.0'],
+  ])('rejects a file of %d bytes before reading it and reports %s MB', async (size, sizeMb) => {
     const { message } = await import('antd');
     const file = makeFile('huge.json');
-    Object.defineProperty(file, 'size', { value: 100 * 1024 * 1024 + 1 });
+    Object.defineProperty(file, 'size', { value: size });
 
     render(<FileLoader onTracesLoaded={mockOnTracesLoaded} />);
     let result;
@@ -392,7 +395,7 @@ describe('<FileLoader />', () => {
 
     expect(result).toBe(false);
     expect(message.error).toHaveBeenCalledWith(
-      'huge.json is 100.0 MB, which exceeds the 100 MB upload limit.'
+      `huge.json is ${sizeMb} MB, which exceeds the 100 MB upload limit.`
     );
     expect(readJsonFile).not.toHaveBeenCalled();
     expect(mockOnTracesLoaded).not.toHaveBeenCalled();

@@ -391,6 +391,28 @@ describe('uploaded trace registry and offline downloads', () => {
     expect(getCachedTrace(traceId)!.spans[0].name).toBe('updated-operation');
   });
 
+  it('replaces a re-uploaded trace in its original position', async () => {
+    const other = structuredClone(numericUpload);
+    other.resourceSpans[0].scopeSpans[0].spans[0].traceId = '1234567890abcdef1234567890abcdef';
+    const updated = structuredClone(numericUpload);
+    updated.resourceSpans[0].scopeSpans[0].spans[0].name = 'updated-operation';
+    const load = (input: unknown) => loadTracesFromFile(new File([JSON.stringify(input)], 'upload.json'));
+    const a = await load(numericUpload);
+    const b = await load(other);
+    const aUpdated = await load(updated);
+    expect(aUpdated.rawTraces).not.toEqual(a.rawTraces);
+    const { result } = renderHook(() => useUploadedTraces(), { wrapper: AppQueryClientProvider });
+
+    act(() => result.current.handleTracesLoaded(a.summaries, a.rawTraces));
+    act(() => result.current.handleTracesLoaded(b.summaries, b.rawTraces));
+    act(() => result.current.handleTracesLoaded(aUpdated.summaries, aUpdated.rawTraces));
+
+    await waitFor(() => {
+      expect(result.current.uploadedSummaries).toEqual([...aUpdated.summaries, ...b.summaries]);
+      expect(result.current.uploadedRawTraces).toEqual([...aUpdated.rawTraces, ...b.rawTraces]);
+    });
+  });
+
   it('keeps the last legacy document when one file repeats a trace ID', async () => {
     const traceId = '0123456789abcdef';
     const legacyTrace = (operationName: string) => ({
