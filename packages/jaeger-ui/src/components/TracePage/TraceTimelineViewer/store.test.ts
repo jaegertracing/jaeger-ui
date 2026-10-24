@@ -785,7 +785,112 @@ describe('trace timeline zustand stores', () => {
         const s = useTraceTimelineStore.getState();
         expect(s.detailStates.size).toBe(1);
         expect(s.detailStates.has('span-a')).toBe(true);
-        expect(s.detailStates.get('span-a')!.isAttributesOpen).toBe(true);
+      });
+
+      it('preserves existing DetailState when an already-open span starts matching on same-ID reload', async () => {
+        const actualFilter = await vi.importActual<typeof import('../../../utils/filter-spans')>(
+          '../../../utils/filter-spans'
+        );
+        const actualAncestors = await vi.importActual<typeof import('../../../utils/span-ancestor-ids')>(
+          '../../../utils/span-ancestor-ids'
+        );
+        vi.mocked(filterSpans).mockImplementation(actualFilter.default);
+        vi.mocked(spanAncestorIds).mockImplementation(actualAncestors.default);
+
+        const attributes = { entries: () => [] };
+        const resource = { serviceName: 'service', attributes };
+        const root = makeSpan({ spanID: 'root', name: 'root', attributes, resource });
+        const spanA = makeSpan({
+          spanID: 'span-a',
+          name: 'unmatched',
+          parentSpan: root,
+          attributes,
+          resource,
+        });
+
+        useLayoutPrefsStore.setState({ detailPanelMode: 'inline' });
+        useTraceTimelineStore.getState().setTrace(makeTrace('same', [root, spanA]), 'match-target');
+
+        // User manually opens span-a and toggles tags/attributes and warnings
+        const customState = new DetailState().toggleAttributes().toggleWarnings();
+        useTraceTimelineStore.setState({
+          detailStates: new Map([['span-a', customState]]),
+        });
+        expect(useTraceTimelineStore.getState().detailStates.get('span-a')?.isWarningsOpen).toBe(true);
+        expect(useTraceTimelineStore.getState().detailStates.get('span-a')?.isAttributesOpen).toBe(true);
+
+        // Reload same trace where span-a now starts matching 'match-target'
+        const updatedSpanA = makeSpan({
+          spanID: 'span-a',
+          name: 'match-target',
+          parentSpan: root,
+          attributes,
+          resource,
+        });
+        useTraceTimelineStore.getState().setTrace(makeTrace('same', [root, updatedSpanA]), 'match-target');
+
+        const state = useTraceTimelineStore.getState();
+        expect(state.detailStates.has('span-a')).toBe(true);
+        expect(state.detailStates.get('span-a')).toBe(customState);
+        expect(state.detailStates.get('span-a')?.isWarningsOpen).toBe(true);
+        expect(state.detailStates.get('span-a')?.isAttributesOpen).toBe(true);
+      });
+
+      it('preserves existing DetailState in side-panel mode when another match arrives on same-ID reload', async () => {
+        const actualFilter = await vi.importActual<typeof import('../../../utils/filter-spans')>(
+          '../../../utils/filter-spans'
+        );
+        const actualAncestors = await vi.importActual<typeof import('../../../utils/span-ancestor-ids')>(
+          '../../../utils/span-ancestor-ids'
+        );
+        vi.mocked(filterSpans).mockImplementation(actualFilter.default);
+        vi.mocked(spanAncestorIds).mockImplementation(actualAncestors.default);
+
+        const attributes = { entries: () => [] };
+        const resource = { serviceName: 'service', attributes };
+        const root = makeSpan({ spanID: 'root', name: 'root', attributes, resource });
+        const spanA = makeSpan({
+          spanID: 'span-a',
+          name: 'keyword',
+          parentSpan: root,
+          attributes,
+          resource,
+        });
+        const spanB = makeSpan({
+          spanID: 'span-b',
+          name: 'other',
+          parentSpan: root,
+          attributes,
+          resource,
+        });
+
+        useLayoutPrefsStore.setState({ detailPanelMode: 'sidepanel' });
+        useTraceTimelineStore.getState().setTrace(makeTrace('same', [root, spanA, spanB]), 'keyword');
+
+        // Customize the selected span-a in side-panel mode (toggle tags closed and warnings open)
+        const customState = DetailState.forDetailPanelMode('sidepanel').toggleTags().toggleWarnings();
+        useTraceTimelineStore.setState({
+          detailStates: new Map([['span-a', customState]]),
+        });
+        expect(useTraceTimelineStore.getState().detailStates.get('span-a')?.isAttributesOpen).toBe(false);
+        expect(useTraceTimelineStore.getState().detailStates.get('span-a')?.isWarningsOpen).toBe(true);
+
+        // Reload where spanB also becomes a match for 'keyword'
+        const updatedSpanB = makeSpan({
+          spanID: 'span-b',
+          name: 'keyword',
+          parentSpan: root,
+          attributes,
+          resource,
+        });
+        useTraceTimelineStore.getState().setTrace(makeTrace('same', [root, spanA, updatedSpanB]), 'keyword');
+
+        const state = useTraceTimelineStore.getState();
+        expect(state.detailStates.size).toBe(1);
+        expect(state.detailStates.has('span-a')).toBe(true);
+        expect(state.detailStates.get('span-a')).toBe(customState);
+        expect(state.detailStates.get('span-a')?.isAttributesOpen).toBe(false);
+        expect(state.detailStates.get('span-a')?.isWarningsOpen).toBe(true);
       });
     });
 
@@ -1036,7 +1141,6 @@ describe('trace timeline zustand stores', () => {
         expect(s.detailStates.size).toBe(1);
         expect(s.detailStates.has('span-a')).toBe(true);
         expect(s.detailStates.has('span-b')).toBe(false);
-        expect(s.detailStates.get('span-a')!.isAttributesOpen).toBe(true);
       });
     });
   });

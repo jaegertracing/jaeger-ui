@@ -29,10 +29,10 @@ export function trimFocusedDetailStatesForSidePanel(
   if (detailPanelMode !== 'sidepanel' || focused.detailStates.size <= 1) {
     return focused;
   }
-  const firstKey = focused.detailStates.keys().next().value as string;
+  const [firstKey, firstState] = focused.detailStates.entries().next().value as [string, DetailState];
   return {
     ...focused,
-    detailStates: new Map([[firstKey, DetailState.forDetailPanelMode('sidepanel')]]),
+    detailStates: new Map([[firstKey, firstState]]),
   };
 }
 

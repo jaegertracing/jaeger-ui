@@ -20,7 +20,6 @@ export { useTraceTimelineStore } from './store.timeline';
 
 export {
   calculateFocusedFindRowStates,
-  findNewlyMatchedSpanInfo,
   findNewlyRevealedAncestors,
   getSelectedSpanID,
 } from './timeline-utils';

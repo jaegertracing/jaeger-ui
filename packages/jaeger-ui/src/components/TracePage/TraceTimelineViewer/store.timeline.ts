@@ -108,13 +108,10 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
         revealedAncestors.forEach(id => childrenHiddenIDs.delete(id));
 
         const detailStates = new Map(base.detailStates ?? get().detailStates);
-        for (const id of detailStates.keys()) {
-          if (!trace.spanMap.has(id)) {
-            detailStates.delete(id);
-          }
-        }
         for (const id of newlyMatchedIDs) {
-          detailStates.set(id, new DetailState());
+          if (!detailStates.has(id)) {
+            detailStates.set(id, new DetailState());
+          }
         }
 
         let focused: FocusedFindRowStates = {
