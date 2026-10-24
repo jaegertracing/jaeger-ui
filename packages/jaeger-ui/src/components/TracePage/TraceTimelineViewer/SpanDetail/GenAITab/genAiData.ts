@@ -455,12 +455,13 @@ export function hasAnyTokenUsage(usage: GenAiTokenUsage): boolean {
  * and surfaces in "Other GenAI Attributes" instead of being silently dropped.
  *
  * gen_ai.usage.prompt_tokens and completion_tokens are the names the conventions used
- * before 1.27 renamed them to input_tokens and output_tokens, and
- * gen_ai.usage.cache_creation.input_tokens is the name the conventions used before the
- * GenAI repository renamed it to cache_write.input_tokens. The flat cache names
- * (cache_read_input_tokens, cache_creation_input_tokens) and the Braintrust metric names
- * (prompt_cached_tokens, prompt_cache_creation_tokens) have been observed under the
- * gen_ai.usage. prefix on spans from instrumentation that also exports to Braintrust.
+ * before OTel semantic conventions v1.27.0 renamed them to input_tokens and
+ * output_tokens, and gen_ai.usage.cache_creation.input_tokens is the name the conventions
+ * used before the GenAI conventions repository renamed it to cache_write.input_tokens.
+ * The remaining names are in no spec version: some SDKs write Anthropic's API usage field
+ * names (cache_read_input_tokens, cache_creation_input_tokens) and Braintrust's metric
+ * names (prompt_cached_tokens, prompt_cache_creation_tokens) under the gen_ai.usage.
+ * prefix.
  */
 function getGenAiTokenUsageFromGetter(get: GetAttr): GenAiTokenUsage | undefined {
   // Reads the keys in order and stops at the first that holds a number.
