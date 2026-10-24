@@ -3,11 +3,23 @@
 
 import type { IAttributes, GenAISpanKind } from '../../types/otel';
 import {
+  BRAINTRUST_INPUT,
+  BRAINTRUST_INPUT_JSON,
+  BRAINTRUST_OUTPUT,
+  BRAINTRUST_OUTPUT_JSON,
   GEN_AI_NAMESPACE,
   GEN_AI_OPERATION_NAME,
   GEN_AI_TOOL_CALL_ID,
   GEN_AI_TOOL_NAME,
 } from '../../constants/span-attributes';
+
+// Keys outside the gen_ai.* namespace that still mark a span as a GenAI span.
+const VENDOR_GEN_AI_KEYS = new Set([
+  BRAINTRUST_INPUT_JSON,
+  BRAINTRUST_OUTPUT_JSON,
+  BRAINTRUST_INPUT,
+  BRAINTRUST_OUTPUT,
+]);
 
 type SpanAttrs = { attributes: IAttributes };
 
@@ -52,7 +64,9 @@ export function classifySpan(span: SpanAttrs): GenAISpanKind | undefined {
   // and is not itself a GenAI span.
   const hasGenAI = attributes
     .keys()
-    .some(key => key.startsWith(GEN_AI_NAMESPACE) && key !== GEN_AI_TOOL_CALL_ID);
+    .some(
+      key => (key.startsWith(GEN_AI_NAMESPACE) && key !== GEN_AI_TOOL_CALL_ID) || VENDOR_GEN_AI_KEYS.has(key)
+    );
   return hasGenAI ? 'UNKNOWN_GENAI' : undefined;
 }
 

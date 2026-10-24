@@ -4,7 +4,7 @@
 import React, { useMemo, useState } from 'react';
 import { Select, Tooltip } from 'antd';
 import Markdown from 'markdown-to-jsx/react';
-import { IoChevronDown, IoChevronForward, IoCopyOutline } from 'react-icons/io5';
+import { IoAlertCircleOutline, IoChevronDown, IoChevronForward, IoCopyOutline } from 'react-icons/io5';
 import { JsonView, allExpanded, collapseAllNested } from 'react-json-view-lite';
 
 import {
@@ -13,6 +13,7 @@ import {
   tryParseJson,
   deepParseJson,
   GenAiAgent,
+  GenAiAttributeSource,
   GenAiMessage,
   GenAiPart,
   GenAiTokenUsage,
@@ -45,6 +46,38 @@ const MARKDOWN_SIZE_LIMIT = 150_000;
 // compiler always parse content as a block (a <p>), which forceWrapper then always
 // wraps in a real <div>, giving every message the same block box our CSS assumes.
 const genAiMarkdownOptions = { ...sharedMarkdownOptions, forceBlock: true };
+
+/**
+ * Marks a value read from an attribute whose name is not the one the OTel GenAI
+ * conventions define, naming both so a reader can tell the instrumentation is off-spec and
+ * by how much. An exclamation mark rather than the usual "i": the span's data is shown,
+ * but its naming deserves attention.
+ */
+function NonStandardNameMark({ source }: { source: GenAiAttributeSource }) {
+  const heading = source.kind === 'deprecated' ? 'Deprecated attribute name' : 'Non-standard attribute name';
+  return (
+    <Tooltip
+      classNames={{ root: 'GenAITab--nonStandardTooltip' }}
+      title={
+        <div className="GenAITab--nonStandardHint">
+          <div>{heading}</div>
+          <div>
+            Read from <code>{source.key}</code>
+          </div>
+          <div>
+            OTel GenAI conventions: <code>{source.spec}</code>
+          </div>
+        </div>
+      }
+    >
+      <IoAlertCircleOutline
+        className="GenAITab--nonStandardMark"
+        role="img"
+        aria-label={`${heading} ${source.key}; the OTel GenAI conventions define ${source.spec}`}
+      />
+    </Tooltip>
+  );
+}
 
 function JsonBlock({ value }: { value: unknown }) {
   // Tool call arguments/results may arrive already parsed or as a JSON-encoded
@@ -468,11 +501,14 @@ function PartContent({
 
 function MessageBlock({
   message,
+  source,
   formatOverride,
   onFormatChange,
   messageNumber,
 }: {
   message: GenAiMessage;
+  // Set when the message was read from a non-spec attribute name, so the header can say so.
+  source?: GenAiAttributeSource;
   // Remembered format for this message's attribute, seeding each part's initial view; null
   // to use the content-derived default.
   formatOverride: MessageFormat | null;
@@ -528,20 +564,25 @@ function MessageBlock({
   return (
     <div className={`GenAITab--message GenAITab--message-${message.role || 'unknown'}`}>
       <div className="GenAITab--messageHeader">
-        <button
-          type="button"
-          className="GenAITab--messageToggle"
-          aria-expanded={!isCollapsed}
-          aria-label={`Message ${messageNumber} (${role})`}
-          onClick={() => setIsCollapsed(!isCollapsed)}
-        >
-          {isCollapsed ? (
-            <IoChevronForward className="GenAITab--messageToggleIcon" />
-          ) : (
-            <IoChevronDown className="GenAITab--messageToggleIcon" />
-          )}
-          <span className="GenAITab--messageRole">{role}</span>
-        </button>
+        <span className="GenAITab--messageHeaderLead">
+          <button
+            type="button"
+            className="GenAITab--messageToggle"
+            aria-expanded={!isCollapsed}
+            aria-label={`Message ${messageNumber} (${role})`}
+            onClick={() => setIsCollapsed(!isCollapsed)}
+          >
+            {isCollapsed ? (
+              <IoChevronForward className="GenAITab--messageToggleIcon" />
+            ) : (
+              <IoChevronDown className="GenAITab--messageToggleIcon" />
+            )}
+            <span className="GenAITab--messageRole">{role}</span>
+          </button>
+          {/* Beside the toggle, not inside it: a mark inside the button would join its
+              accessible name and collapse the message when clicked. */}
+          {source && <NonStandardNameMark source={source} />}
+        </span>
         {/* One part means one set of controls, which belong on the message's own line
             rather than taking a row of their own. Several parts each carry their own. */}
         {isSinglePart && !isCollapsed && controlsFor(message.parts[0], 0)}
@@ -681,16 +722,24 @@ const TOKEN_LABELS: Partial<Record<keyof GenAiTokenUsage, string>> = {
   audioCacheReadInputTokens: 'Cached (read, audio)',
 };
 
-function TokenDetails({ usage }: { usage: GenAiTokenUsage }) {
+function TokenDetails({
+  usage,
+  sources,
+}: {
+  usage: GenAiTokenUsage;
+  sources: Partial<Record<keyof GenAiTokenUsage, GenAiAttributeSource>>;
+}) {
   return (
     <div className="GenAITab--tokens">
       <span className="GenAITab--tokensPrefix">Tokens:</span>
       {(Object.keys(usage) as Array<keyof GenAiTokenUsage>).map(key => {
         const value = usage[key];
         if (value == null) return null;
+        const source = sources[key];
         return (
           <span key={key} className="GenAITab--tokenItem">
             <span className="GenAITab--tokenLabel">{TOKEN_LABELS[key] ?? key}</span> {formatTokenCount(value)}
+            {source && <NonStandardNameMark source={source} />}
           </span>
         );
       })}
@@ -702,10 +751,12 @@ function ConversationDetails({
   systemInstructions,
   inputMessages,
   outputMessages,
+  sources,
 }: {
   systemInstructions?: string;
   inputMessages: GenAiMessage[];
   outputMessages: GenAiMessage[];
+  sources: { input?: GenAiAttributeSource; output?: GenAiAttributeSource };
 }) {
   // The store remembers the last format chosen for each attribute name and seeds every
   // message of that attribute as it mounts; each message owns its view from then on.
@@ -722,7 +773,16 @@ function ConversationDetails({
   // to a screen reader when a conversation has multiple messages. Built via push
   // rather than spread so each pushed object literal stays contextually typed
   // against GenAiMessage's role union, instead of widening to a plain string.
-  const messages: Array<{ key: string; message: GenAiMessage; attributeKey: string }> = [];
+  //
+  // attributeKey is the spec name for the messages' side even when they were read from a
+  // fallback name: the remembered format is a preference for how to view input or output
+  // messages, and the store hydrates that closed set of names.
+  const messages: Array<{
+    key: string;
+    message: GenAiMessage;
+    attributeKey: string;
+    source?: GenAiAttributeSource;
+  }> = [];
   if (systemInstructions) {
     messages.push({
       key: 'system',
@@ -731,23 +791,38 @@ function ConversationDetails({
     });
   }
   inputMessages.forEach((message, i) => {
-    messages.push({ key: `input-${i}`, message, attributeKey: 'gen_ai.input.messages' });
+    messages.push({
+      key: `input-${i}`,
+      message,
+      attributeKey: 'gen_ai.input.messages',
+      source: sources.input,
+    });
   });
   outputMessages.forEach((message, i) => {
     messages.push({
       key: `output-${i}`,
-      message: { ...message, role: message.role || 'assistant' },
+      // An output under a gen_ai.* name is what the model said, so a missing role reads
+      // as assistant. A generic span I/O key may hold an agent's or task's result, which
+      // no model said, so its role stays unknown.
+      message: {
+        ...message,
+        role:
+          message.role ||
+          (sources.output && !sources.output.key.startsWith('gen_ai.') ? undefined : 'assistant'),
+      },
       attributeKey: 'gen_ai.output.messages',
+      source: sources.output,
     });
   });
 
   return (
     <div className="GenAITab--section">
       <h3 className="GenAITab--sectionTitle">Conversation</h3>
-      {messages.map(({ key, message, attributeKey }, i) => (
+      {messages.map(({ key, message, attributeKey, source }, i) => (
         <MessageBlock
           key={key}
           message={message}
+          source={source}
           formatOverride={getFormatOverride(attributeKey)}
           onFormatChange={f => setFormat(attributeKey, f)}
           messageNumber={i + 1}
@@ -762,9 +837,14 @@ function ToolCallDetails({
   name,
   arguments: args,
   result,
+  sources,
   isOpen,
   onToggle,
-}: GenAiToolCall & { isOpen: boolean; onToggle: () => void }) {
+}: GenAiToolCall & {
+  sources: { arguments?: GenAiAttributeSource; result?: GenAiAttributeSource };
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
   const data = useMemo(() => {
     const entries: IAttribute[] = [];
     if (id) entries.push({ key: 'ID', value: id });
@@ -772,15 +852,28 @@ function ToolCallDetails({
     if (result !== undefined) entries.push({ key: 'Result', value: result as AttributeValue });
     return makeAttributes(entries);
   }, [id, args, result]);
+  // The table's row labels are plain strings, so a row read from a non-spec name is
+  // called out on a line under the table instead of beside its label.
+  const marked = [
+    ['Arguments', sources.arguments],
+    ['Result', sources.result],
+  ].filter((entry): entry is [string, GenAiAttributeSource] => entry[1] !== undefined);
   return (
-    <AccordionAttributes
-      className="GenAITab--section"
-      label={`Tool Call${name ? `: ${name}` : ''}`}
-      data={data}
-      linksGetter={null}
-      isOpen={isOpen}
-      onToggle={onToggle}
-    />
+    <div className="GenAITab--section">
+      <AccordionAttributes
+        label={`Tool Call${name ? `: ${name}` : ''}`}
+        data={data}
+        linksGetter={null}
+        isOpen={isOpen}
+        onToggle={onToggle}
+      />
+      {isOpen &&
+        marked.map(([label, source]) => (
+          <div key={label} className="GenAITab--sectionNote">
+            <NonStandardNameMark source={source} /> {label} read from <code>{source.key}</code>
+          </div>
+        ))}
+    </div>
   );
 }
 
@@ -860,14 +953,15 @@ export default function GenAITab({ span }: Props): React.ReactElement {
               />
             );
           case 'tokens':
-            return <TokenDetails key="tokens" usage={section.data} />;
+            return <TokenDetails key="tokens" usage={section.data} sources={section.sources} />;
           case 'conversation':
-            return <ConversationDetails key="conversation" {...section.data} />;
+            return <ConversationDetails key="conversation" {...section.data} sources={section.sources} />;
           case 'toolCall':
             return (
               <ToolCallDetails
                 key="toolCall"
                 {...section.data}
+                sources={section.sources}
                 isOpen={isToolCallOpen}
                 onToggle={() => setIsToolCallOpen(o => !o)}
               />

@@ -35,6 +35,37 @@ SPDX-License-Identifier: Apache-2.0
   color: var(--text-primary);
 }
 
+/* Sits after the value it marks, in the muted color of a label: noticeable on a scan,
+   not a warning banner. */
+.GenAITab--nonStandardMark {
+  margin-left: 4px;
+  vertical-align: text-bottom;
+  color: var(--text-secondary);
+  cursor: help;
+}
+
+/* Wide enough that an attribute name is never broken across lines. */
+.GenAITab--nonStandardTooltip {
+  max-width: 480px;
+}
+
+.GenAITab--sectionNote {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.GenAITab--sectionNote .GenAITab--nonStandardMark {
+  margin-left: 0;
+}
+
+.GenAITab--nonStandardHint code {
+  color: inherit;
+  white-space: nowrap;
+}
+
 .GenAITab--section {
   display: flex;
   flex-direction: column;
@@ -78,6 +109,11 @@ SPDX-License-Identifier: Apache-2.0
   padding: 4px 8px;
   background: var(--surface-secondary);
   font-size: 12px;
+}
+
+.GenAITab--messageHeaderLead {
+  display: flex;
+  align-items: center;
 }
 
 .GenAITab--messageRole {

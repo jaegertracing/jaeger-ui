@@ -212,6 +212,136 @@ describe('GenAITab', () => {
     expect(screen.getByText('0')).toBeInTheDocument();
   });
 
+  describe('non-standard attribute names', () => {
+    const markName = (key: string, spec: string) =>
+      `Non-standard attribute name ${key}; the OTel GenAI conventions define ${spec}`;
+
+    it('marks a token count read from a non-spec name, and not one read from the spec name', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            { key: 'gen_ai.usage.input_tokens', value: 100 },
+            { key: 'gen_ai.usage.prompt_cached_tokens', value: 50 },
+          ])}
+        />
+      );
+      const marks = screen.getAllByRole('img', { name: /Non-standard attribute name/ });
+      expect(marks).toHaveLength(1);
+      expect(marks[0]).toHaveAccessibleName(
+        markName('gen_ai.usage.prompt_cached_tokens', 'gen_ai.usage.cache_read.input_tokens')
+      );
+      // The mark belongs to the item it describes, after that item's value.
+      expect(marks[0].closest('.GenAITab--tokenItem')).toHaveTextContent('Cached (read) 50');
+    });
+
+    it('names both attributes in the tooltip', async () => {
+      render(<GenAITab span={makeSpan([{ key: 'gen_ai.usage.prompt_cached_tokens', value: 100 }])} />);
+
+      fireEvent.mouseOver(screen.getByRole('img', { name: /Non-standard attribute name/ }));
+
+      const tooltip = await screen.findByRole('tooltip');
+      expect(tooltip).toHaveTextContent('Non-standard attribute name');
+      expect(tooltip).toHaveTextContent('Read from gen_ai.usage.prompt_cached_tokens');
+      expect(tooltip).toHaveTextContent('OTel GenAI conventions: gen_ai.usage.cache_read.input_tokens');
+    });
+
+    it('marks every message read from a non-spec name in its header', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.input.messages',
+              value: [{ role: 'user', content: 'What is the weather?' }],
+            },
+            {
+              key: 'output',
+              value: JSON.stringify([
+                { role: 'assistant', content: 'Sunny.' },
+                { role: 'assistant', content: 'Bring sunglasses.' },
+              ]),
+            },
+          ])}
+        />
+      );
+      const marks = screen.getAllByRole('img', { name: /Non-standard attribute name/ });
+      expect(marks).toHaveLength(2);
+      marks.forEach(mark => {
+        expect(mark).toHaveAccessibleName(markName('output', 'gen_ai.output.messages'));
+        expect(mark.closest('.GenAITab--messageHeader')).toHaveTextContent('assistant');
+      });
+      expect(screen.getByText('user').closest('.GenAITab--messageHeader')).not.toContainElement(marks[0]);
+    });
+
+    it('keeps the mark out of the toggle button, so clicking it does not collapse the message', () => {
+      render(<GenAITab span={makeSpan([{ key: 'output', value: JSON.stringify({ answer: 'Sunny.' }) }])} />);
+      const toggle = screen.getByRole('button', { name: 'Message 1 (message)' });
+      const mark = screen.getByRole('img', { name: /Non-standard attribute name/ });
+      expect(toggle).not.toContainElement(mark);
+      fireEvent.click(mark);
+      expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    it('leaves the role of a generic output unknown rather than calling it assistant', () => {
+      render(<GenAITab span={makeSpan([{ key: 'output', value: JSON.stringify({ answer: 'Sunny.' }) }])} />);
+      expect(screen.getByText('message')).toHaveClass('GenAITab--messageRole');
+      expect(screen.queryByText('assistant')).toBeNull();
+    });
+
+    it('still calls a role-less gen_ai.output the assistant', () => {
+      render(<GenAITab span={makeSpan([{ key: 'gen_ai.output', value: 'Sunny.' }])} />);
+      expect(screen.getByText('assistant')).toHaveClass('GenAITab--messageRole');
+    });
+
+    it('calls a name an earlier spec version defined deprecated, not non-standard', () => {
+      render(<GenAITab span={makeSpan([{ key: 'gen_ai.usage.prompt_tokens', value: 100 }])} />);
+      expect(screen.getByRole('img', { name: /Deprecated attribute name/ })).toHaveAccessibleName(
+        'Deprecated attribute name gen_ai.usage.prompt_tokens; the OTel GenAI conventions define gen_ai.usage.input_tokens'
+      );
+    });
+
+    it('notes under the tool call table which rows came from generic I/O keys', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            { key: 'gen_ai.operation.name', value: 'execute_tool' },
+            { key: 'gen_ai.tool.name', value: 'get_weather' },
+            { key: 'input', value: '{"city":"Paris"}' },
+            { key: 'output', value: '"sunny"' },
+          ])}
+        />
+      );
+      expect(screen.getByText('Arguments')).toBeInTheDocument();
+      expect(screen.getByText('Result')).toBeInTheDocument();
+      const notes = screen.getAllByRole('img', { name: /Non-standard attribute name/ });
+      expect(notes).toHaveLength(2);
+      expect(notes[0].closest('.GenAITab--sectionNote')).toHaveTextContent('Arguments read from input');
+      expect(notes[1].closest('.GenAITab--sectionNote')).toHaveTextContent('Result read from output');
+      expect(screen.queryByText('Conversation')).toBeNull();
+    });
+
+    it('shows no mark when every attribute carries its spec name', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            { key: 'gen_ai.usage.input_tokens', value: 100 },
+            { key: 'gen_ai.input.messages', value: [{ role: 'user', content: 'Hi' }] },
+          ])}
+        />
+      );
+      expect(screen.queryByRole('img', { name: /Non-standard attribute name/ })).toBeNull();
+    });
+
+    it('remembers a format under the spec name even for messages read from a fallback name', () => {
+      render(
+        <GenAITab
+          span={makeSpan([{ key: 'input', value: JSON.stringify([{ role: 'user', content: 'Hi' }]) }])}
+        />
+      );
+      chooseView(viewControl(), 'Markdown');
+      expect(useMessageFormatStore.getState().overrides).toEqual({ 'gen_ai.input.messages': 'markdown' });
+    });
+  });
+
   it('renders conversation messages with role labels, visible by default', () => {
     render(
       <GenAITab

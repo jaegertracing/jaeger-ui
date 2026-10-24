@@ -3,6 +3,7 @@
 
 import {
   extractGenAiSections,
+  getGenAiTokenUsage,
   hasAnyTokenUsage,
   formatTokenCount,
   tryParseJson,
@@ -28,6 +29,11 @@ function section<T extends keyof SectionDataMap>(
   type: T
 ): SectionDataMap[T] | undefined {
   return sections.find(s => s.type === type)?.data as SectionDataMap[T] | undefined;
+}
+
+function sources(sections: GenAiSection[], type: 'tokens' | 'conversation' | 'toolCall') {
+  const found = sections.find(s => s.type === type);
+  return found && 'sources' in found ? found.sources : undefined;
 }
 
 describe('extractGenAiSections', () => {
@@ -198,6 +204,138 @@ describe('extractGenAiSections', () => {
       );
       expect(section(sections, 'tokens')?.inputTokens).toBe(0);
       expect(section(sections, 'tokens')?.cacheReadInputTokens).toBe(0);
+    });
+
+    it('falls back to the pre-1.27 prompt_tokens/completion_tokens names', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.usage.prompt_tokens': 100,
+          'gen_ai.usage.completion_tokens': 50,
+        })
+      );
+      expect(section(sections, 'tokens')).toEqual({ inputTokens: 100, outputTokens: 50 });
+      expect(section(sections, 'other')).toBeUndefined();
+    });
+
+    it('falls back to the pre-rename cache_creation.input_tokens name', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.usage.cache_creation.input_tokens': 20 }));
+      expect(section(sections, 'tokens')).toEqual({ cacheWriteInputTokens: 20 });
+      expect(section(sections, 'other')).toBeUndefined();
+    });
+
+    it('falls through to the legacy name when the spec value is not a number', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.usage.input_tokens': 'n/a',
+          'gen_ai.usage.prompt_tokens': 100,
+        })
+      );
+      expect(section(sections, 'tokens')).toEqual({ inputTokens: 100 });
+      expect(sources(sections, 'tokens')).toEqual({
+        inputTokens: {
+          key: 'gen_ai.usage.prompt_tokens',
+          spec: 'gen_ai.usage.input_tokens',
+          kind: 'deprecated',
+        },
+      });
+    });
+
+    it('falls back to the flat cache_read_input_tokens/cache_creation_input_tokens names', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.usage.cache_read_input_tokens': 80,
+          'gen_ai.usage.cache_creation_input_tokens': 20,
+        })
+      );
+      expect(section(sections, 'tokens')).toEqual({ cacheReadInputTokens: 80, cacheWriteInputTokens: 20 });
+      expect(section(sections, 'other')).toBeUndefined();
+    });
+
+    it("falls back to Braintrust's metric field names under the gen_ai.usage prefix", () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.usage.prompt_cached_tokens': 80,
+          'gen_ai.usage.prompt_cache_creation_tokens': 20,
+        })
+      );
+      expect(section(sections, 'tokens')).toEqual({ cacheReadInputTokens: 80, cacheWriteInputTokens: 20 });
+      expect(section(sections, 'other')).toBeUndefined();
+    });
+
+    it('leaves a legacy token name unclaimed when the spec name is present', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.usage.input_tokens': 100,
+          'gen_ai.usage.prompt_tokens': 90,
+          'gen_ai.usage.cache_read.input_tokens': 80,
+          'gen_ai.usage.cache_read_input_tokens': 70,
+          'gen_ai.usage.prompt_cached_tokens': 60,
+          'gen_ai.usage.cache_write.input_tokens': 20,
+          'gen_ai.usage.cache_creation.input_tokens': 15,
+          'gen_ai.usage.cache_creation_input_tokens': 10,
+          'gen_ai.usage.prompt_cache_creation_tokens': 5,
+        })
+      );
+      expect(section(sections, 'tokens')).toEqual({
+        inputTokens: 100,
+        cacheReadInputTokens: 80,
+        cacheWriteInputTokens: 20,
+      });
+      expect(section(sections, 'other')?.attributes.entries()).toEqual([
+        { key: 'gen_ai.usage.prompt_tokens', value: 90 },
+        { key: 'gen_ai.usage.cache_read_input_tokens', value: 70 },
+        { key: 'gen_ai.usage.prompt_cached_tokens', value: 60 },
+        { key: 'gen_ai.usage.cache_creation.input_tokens', value: 15 },
+        { key: 'gen_ai.usage.cache_creation_input_tokens', value: 10 },
+        { key: 'gen_ai.usage.prompt_cache_creation_tokens', value: 5 },
+      ]);
+    });
+
+    it('prefers the pre-rename spec name, then the flat names, over the Braintrust metric names', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.usage.cache_read_input_tokens': 70,
+          'gen_ai.usage.prompt_cached_tokens': 60,
+          'gen_ai.usage.cache_creation.input_tokens': 15,
+          'gen_ai.usage.cache_creation_input_tokens': 10,
+          'gen_ai.usage.prompt_cache_creation_tokens': 5,
+        })
+      );
+      expect(section(sections, 'tokens')).toEqual({ cacheReadInputTokens: 70, cacheWriteInputTokens: 15 });
+      expect(section(sections, 'other')?.attributes.entries()).toEqual([
+        { key: 'gen_ai.usage.prompt_cached_tokens', value: 60 },
+        { key: 'gen_ai.usage.cache_creation_input_tokens', value: 10 },
+        { key: 'gen_ai.usage.prompt_cache_creation_tokens', value: 5 },
+      ]);
+    });
+
+    it('records the attribute a count was read from when it is not the spec name', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.usage.input_tokens': 100,
+          'gen_ai.usage.completion_tokens': 50,
+          'gen_ai.usage.prompt_cached_tokens': 80,
+        })
+      );
+      expect(sources(sections, 'tokens')).toEqual({
+        outputTokens: {
+          key: 'gen_ai.usage.completion_tokens',
+          spec: 'gen_ai.usage.output_tokens',
+          kind: 'deprecated',
+        },
+        cacheReadInputTokens: {
+          key: 'gen_ai.usage.prompt_cached_tokens',
+          spec: 'gen_ai.usage.cache_read.input_tokens',
+          kind: 'vendor',
+        },
+      });
+    });
+
+    it('records no source for counts read under their spec names', () => {
+      const sections = extractGenAiSections(
+        attrs({ 'gen_ai.usage.input_tokens': 100, 'gen_ai.usage.cache_write.input_tokens': 20 })
+      );
+      expect(sources(sections, 'tokens')).toEqual({});
     });
 
     it('produces no tokens section when no usage attributes are present', () => {
@@ -691,6 +829,263 @@ describe('extractGenAiSections', () => {
       ]);
     });
 
+    it('falls back to braintrust.input_json/braintrust.output_json', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'braintrust.input_json': JSON.stringify({ question: 'What is the capital of France?' }),
+          'braintrust.output_json': JSON.stringify([{ role: 'assistant', content: 'Paris.' }]),
+        })
+      );
+      const conversation = section(sections, 'conversation');
+      expect(roleAndText(conversation?.inputMessages)).toEqual([
+        { role: undefined, content: JSON.stringify({ question: 'What is the capital of France?' }, null, 2) },
+      ]);
+      expect(roleAndText(conversation?.outputMessages)).toEqual([{ role: 'assistant', content: 'Paris.' }]);
+    });
+
+    it('falls back to unprefixed input/output', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          input: JSON.stringify([{ role: 'user', parts: [{ type: 'text', content: 'Capital of France?' }] }]),
+          output: JSON.stringify({ answer: 'Paris.' }),
+        })
+      );
+      const conversation = section(sections, 'conversation');
+      expect(roleAndText(conversation?.inputMessages)).toEqual([
+        { role: 'user', content: 'Capital of France?' },
+      ]);
+      expect(roleAndText(conversation?.outputMessages)).toEqual([
+        { role: undefined, content: JSON.stringify({ answer: 'Paris.' }, null, 2) },
+      ]);
+    });
+
+    it('falls back to the plain braintrust.input/braintrust.output', () => {
+      const sections = extractGenAiSections(
+        attrs({ 'braintrust.input': 'Capital of France?', 'braintrust.output': 'Paris.' })
+      );
+      const conversation = section(sections, 'conversation');
+      expect(roleAndText(conversation?.inputMessages)).toEqual([
+        { role: undefined, content: 'Capital of France?' },
+      ]);
+      expect(roleAndText(conversation?.outputMessages)).toEqual([{ role: undefined, content: 'Paris.' }]);
+    });
+
+    it('prefers gen_ai.input.messages over unprefixed input when both are present', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.input.messages': [{ role: 'user', parts: [{ type: 'text', content: 'current' }] }],
+          input: '"copy"',
+        })
+      );
+      expect(roleAndText(section(sections, 'conversation')?.inputMessages)).toEqual([
+        { role: 'user', content: 'current' },
+      ]);
+    });
+
+    it('prefers unprefixed input over the Braintrust keys, and the JSON one over the plain one', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          input: '"current"',
+          'braintrust.input_json': '"stale"',
+          'braintrust.input': 'staler',
+        })
+      );
+      expect(roleAndText(section(sections, 'conversation')?.inputMessages)).toEqual([
+        { role: undefined, content: 'current' },
+      ]);
+      expect(
+        roleAndText(
+          section(
+            extractGenAiSections(attrs({ 'braintrust.input_json': '"stale"', 'braintrust.input': 'staler' })),
+            'conversation'
+          )?.inputMessages
+        )
+      ).toEqual([{ role: undefined, content: 'stale' }]);
+    });
+
+    it('falls through an empty spec value to the next name', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.input.messages': '', input: '"fallback"' }));
+      expect(roleAndText(section(sections, 'conversation')?.inputMessages)).toEqual([
+        { role: undefined, content: 'fallback' },
+      ]);
+    });
+
+    it('leaves the generic I/O keys alone on a tool span, whose tool call section shows them', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.operation.name': 'execute_tool',
+          'gen_ai.tool.name': 'get_weather',
+          'gen_ai.tool.call.arguments': '{"city":"Paris"}',
+          'gen_ai.tool.call.result': 'sunny',
+          input: '{"city":"Paris"}',
+          output: '"sunny"',
+          'braintrust.input_json': '{"city":"Paris"}',
+        })
+      );
+      expect(section(sections, 'conversation')).toBeUndefined();
+      expect(section(sections, 'toolCall')).toEqual({
+        id: undefined,
+        name: 'get_weather',
+        arguments: '{"city":"Paris"}',
+        result: 'sunny',
+      });
+    });
+
+    it('shows generic I/O on a tool span as the tool call arguments and result, with their sources', () => {
+      const byOperation = extractGenAiSections(
+        attrs({ 'gen_ai.operation.name': 'execute_tool', input: '{"city":"Paris"}', output: '"sunny"' })
+      );
+      expect(section(byOperation, 'conversation')).toBeUndefined();
+      expect(section(byOperation, 'toolCall')).toEqual({
+        id: undefined,
+        name: undefined,
+        arguments: '{"city":"Paris"}',
+        result: '"sunny"',
+      });
+      expect(sources(byOperation, 'toolCall')).toEqual({
+        arguments: { key: 'input', spec: 'gen_ai.tool.call.arguments', kind: 'vendor' },
+        result: { key: 'output', spec: 'gen_ai.tool.call.result', kind: 'vendor' },
+      });
+
+      const byToolName = extractGenAiSections(
+        attrs({ 'gen_ai.tool.name': 'get_weather', 'braintrust.output_json': '"sunny"' })
+      );
+      expect(section(byToolName, 'conversation')).toBeUndefined();
+      expect(section(byToolName, 'toolCall')).toEqual({
+        id: undefined,
+        name: 'get_weather',
+        arguments: undefined,
+        result: '"sunny"',
+      });
+      expect(sources(byToolName, 'toolCall')).toEqual({
+        arguments: undefined,
+        result: { key: 'braintrust.output_json', spec: 'gen_ai.tool.call.result', kind: 'vendor' },
+      });
+    });
+
+    it('claims an empty spec value that no fallback replaces, as before', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.output.messages': '[]' }));
+      expect(sections).toEqual([]);
+    });
+
+    it('lets a recognized operation name outrank gen_ai.tool.name, as classifySpan does', () => {
+      const sections = extractGenAiSections(
+        attrs({ 'gen_ai.operation.name': 'chat', 'gen_ai.tool.name': 'get_weather', output: '"hi"' })
+      );
+      expect(section(sections, 'toolCall')).toEqual({
+        id: undefined,
+        name: 'get_weather',
+        arguments: undefined,
+        result: undefined,
+      });
+      expect(roleAndText(section(sections, 'conversation')?.outputMessages)).toEqual([
+        { role: undefined, content: 'hi' },
+      ]);
+    });
+
+    it('keeps generic output in the conversation of a chat span that also records a tool result', () => {
+      const sections = extractGenAiSections(
+        attrs({ 'gen_ai.operation.name': 'chat', 'gen_ai.tool.call.result': 'sunny', output: '"hi"' })
+      );
+      expect(roleAndText(section(sections, 'conversation')?.outputMessages)).toEqual([
+        { role: undefined, content: 'hi' },
+      ]);
+      expect(section(sections, 'toolCall')?.result).toBe('sunny');
+    });
+
+    it('shows an assistant turn whole when its content is null and it holds tool calls', () => {
+      const turn = { role: 'assistant', content: null, tool_calls: [{ id: 'call_1', name: 'get_weather' }] };
+      const sections = extractGenAiSections(attrs({ 'gen_ai.output.messages': [turn] }));
+      expect(roleAndText(section(sections, 'conversation')?.outputMessages)).toEqual([
+        { role: 'assistant', content: JSON.stringify(turn, null, 2) },
+      ]);
+    });
+
+    it('shows an object whole when it carries more than a message would', () => {
+      const sections = extractGenAiSections(
+        attrs({ 'braintrust.output_json': JSON.stringify({ content: 'Paris', score: 0.9 }) })
+      );
+      expect(roleAndText(section(sections, 'conversation')?.outputMessages)).toEqual([
+        { role: undefined, content: JSON.stringify({ content: 'Paris', score: 0.9 }, null, 2) },
+      ]);
+    });
+
+    it('does not read generic I/O into the tool call section of a non-tool span', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.operation.name': 'chat', output: '"hi"' }));
+      expect(section(sections, 'toolCall')).toBeUndefined();
+      expect(roleAndText(section(sections, 'conversation')?.outputMessages)).toEqual([
+        { role: undefined, content: 'hi' },
+      ]);
+    });
+
+    it('leaves a rejected spec value unclaimed when a fallback replaces it', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.input.messages': '[]',
+          input: '"fallback"',
+          'gen_ai.usage.input_tokens': 'n/a',
+          'gen_ai.usage.prompt_tokens': 100,
+        })
+      );
+      expect(section(sections, 'other')?.attributes.entries()).toEqual([
+        { key: 'gen_ai.input.messages', value: '[]' },
+        { key: 'gen_ai.usage.input_tokens', value: 'n/a' },
+      ]);
+    });
+
+    it('falls through an empty spec array or object to the next name', () => {
+      expect(
+        roleAndText(
+          section(
+            extractGenAiSections(attrs({ 'gen_ai.input.messages': [], input: '"fallback"' })),
+            'conversation'
+          )?.inputMessages
+        )
+      ).toEqual([{ role: undefined, content: 'fallback' }]);
+      expect(
+        roleAndText(
+          section(
+            extractGenAiSections(attrs({ 'gen_ai.input.messages': '{}', input: '"fallback"' })),
+            'conversation'
+          )?.inputMessages
+        )
+      ).toEqual([{ role: undefined, content: 'fallback' }]);
+    });
+
+    it('records the attribute each side was read from when it is not the spec name', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.input.messages': [{ role: 'user', parts: [{ type: 'text', content: 'Hi' }] }],
+          'braintrust.output': 'Hello',
+        })
+      );
+      expect(sources(sections, 'conversation')).toEqual({
+        input: undefined,
+        output: { key: 'braintrust.output', spec: 'gen_ai.output.messages', kind: 'vendor' },
+      });
+    });
+
+    it('still reads gen_ai.input/gen_ai.output on a tool span', () => {
+      const sections = extractGenAiSections(
+        attrs({ 'gen_ai.tool.call.result': 'sunny', 'gen_ai.input': 'What is the weather?' })
+      );
+      expect(roleAndText(section(sections, 'conversation')?.inputMessages)).toEqual([
+        { role: undefined, content: 'What is the weather?' },
+      ]);
+    });
+
+    it('prefers gen_ai.input over braintrust.input_json when both are present', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.input': 'current',
+          'braintrust.input_json': '"stale"',
+        })
+      );
+      expect(roleAndText(section(sections, 'conversation')?.inputMessages)).toEqual([
+        { role: undefined, content: 'current' },
+      ]);
+    });
+
     it('leaves a bare gen_ai.input unclaimed when gen_ai.input.messages is present', () => {
       const sections = extractGenAiSections(
         attrs({
@@ -954,6 +1349,20 @@ describe('extractGenAiSections', () => {
   it('returns an empty section list for a span with no gen_ai attributes', () => {
     const sections = extractGenAiSections(attrs({ 'http.method': 'GET' }));
     expect(sections).toEqual([]);
+  });
+});
+
+describe('getGenAiTokenUsage', () => {
+  it('reads the same fallback names as the tab, so the trace summary counts them too', () => {
+    expect(
+      getGenAiTokenUsage(
+        attrs({ 'gen_ai.usage.prompt_tokens': 100, 'gen_ai.usage.prompt_cache_creation_tokens': 5 })
+      )
+    ).toEqual({ inputTokens: 100, cacheWriteInputTokens: 5 });
+  });
+
+  it('returns undefined when no usage attribute is present', () => {
+    expect(getGenAiTokenUsage(attrs({ 'gen_ai.provider.name': 'openai' }))).toBeUndefined();
   });
 });
 

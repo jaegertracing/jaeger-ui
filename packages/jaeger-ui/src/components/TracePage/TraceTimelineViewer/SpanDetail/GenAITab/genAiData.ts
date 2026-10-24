@@ -3,6 +3,15 @@
 
 import type { IAttributes, AttributeValue } from '../../../../../types/otel';
 import { makeAttributes } from '../../../../../model/attributes';
+import {
+  BRAINTRUST_INPUT,
+  BRAINTRUST_INPUT_JSON,
+  BRAINTRUST_OUTPUT,
+  BRAINTRUST_OUTPUT_JSON,
+  SPAN_INPUT,
+  SPAN_OUTPUT,
+} from '../../../../../constants/span-attributes';
+import { classifySpan } from '../../../../../utils/genai/detect';
 import { detectMediaType, MediaType } from '../../../../../utils/media';
 
 type GenAiRole = 'system' | 'user' | 'assistant' | 'tool' | undefined;
@@ -82,18 +91,45 @@ export type GenAiTokenUsage = {
   audioCacheReadInputTokens?: number;
 };
 
+/**
+ * The attribute a displayed value was read from when that is not the name the OTel GenAI
+ * conventions define for it. The view marks such a value with both names, so a reader can
+ * see which name the span uses and which name the conventions expect. A `deprecated` key
+ * is a name an earlier version of the conventions defined; a `vendor` key never was one.
+ */
+export type GenAiAttributeSource = { key: string; spec: string; kind: 'deprecated' | 'vendor' };
+
+// Names that earlier versions of the conventions defined and a later version replaced.
+const DEPRECATED_SPEC_NAMES = new Set([
+  'gen_ai.prompt',
+  'gen_ai.completion',
+  'gen_ai.usage.prompt_tokens',
+  'gen_ai.usage.completion_tokens',
+  'gen_ai.usage.cache_creation.input_tokens',
+]);
+
 // Every variant separates its discriminant (`type`) from its payload (`data`)
 // so a generic fallback renderer can walk `Object.entries(data)` for a
-// section type it doesn't have a specific case for.
+// section type it doesn't have a specific case for. `sources` sits beside
+// `data` because it describes where the data came from, not the data itself.
 export type GenAiSection =
   | { type: 'agent'; data: GenAiAgent }
   | { type: 'meta'; data: { operation?: string; provider?: string; model?: string } }
-  | { type: 'tokens'; data: GenAiTokenUsage }
+  | {
+      type: 'tokens';
+      data: GenAiTokenUsage;
+      sources: Partial<Record<keyof GenAiTokenUsage, GenAiAttributeSource>>;
+    }
   | {
       type: 'conversation';
       data: { systemInstructions?: string; inputMessages: GenAiMessage[]; outputMessages: GenAiMessage[] };
+      sources: { input?: GenAiAttributeSource; output?: GenAiAttributeSource };
     }
-  | { type: 'toolCall'; data: GenAiToolCall }
+  | {
+      type: 'toolCall';
+      data: GenAiToolCall;
+      sources: { arguments?: GenAiAttributeSource; result?: GenAiAttributeSource };
+    }
   | { type: 'other'; data: { attributes: IAttributes } };
 
 function asString(value: AttributeValue | undefined): string | undefined {
@@ -433,14 +469,17 @@ function parseMessages(value: AttributeValue | undefined): GenAiMessage[] {
     const rec = entry as Record<string, unknown>;
     const role = asRole(rec.role);
     if (Array.isArray(rec.parts)) return message(role, toParts(rec.parts));
-    const content = rec.content;
-    const contentStr =
-      typeof content === 'string'
-        ? content
-        : content !== undefined
-          ? stringifyValue(content)
-          : stringifyValue(rec);
-    return message(role, [textPart(contentStr)]);
+    // An object is a flat message only when its content holds something and it has a role
+    // or nothing but content. Any other object, such as a task result that also carries a
+    // score, or an assistant turn whose content is null because it holds tool calls
+    // instead, is shown whole. A flat message with a role still shows only its content,
+    // so a field beside role and content, such as a tool_call_id, is not shown.
+    const isFlatMessage =
+      rec.content != null && ('role' in rec || Object.keys(rec).every(key => key === 'content'));
+    if (!isFlatMessage) return message(role, [textPart(stringifyValue(rec))]);
+    return message(role, [
+      textPart(typeof rec.content === 'string' ? rec.content : stringifyValue(rec.content)),
+    ]);
   });
 }
 
@@ -448,29 +487,106 @@ export function hasAnyTokenUsage(usage: GenAiTokenUsage): boolean {
   return Object.values(usage).some(v => v != null);
 }
 
-function getGenAiTokenUsageFromGetter(get: GetAttr): GenAiTokenUsage | undefined {
-  const usage: GenAiTokenUsage = {
-    inputTokens: asNumber(get('gen_ai.usage.input_tokens')),
-    outputTokens: asNumber(get('gen_ai.usage.output_tokens')),
-    reasoningOutputTokens: asNumber(get('gen_ai.usage.reasoning.output_tokens')),
-    cacheReadInputTokens: asNumber(get('gen_ai.usage.cache_read.input_tokens')),
-    cacheWriteInputTokens: asNumber(get('gen_ai.usage.cache_write.input_tokens')),
-    textInputTokens: asNumber(get('gen_ai.usage.text.input_tokens')),
-    imageInputTokens: asNumber(get('gen_ai.usage.image.input_tokens')),
-    audioInputTokens: asNumber(get('gen_ai.usage.audio.input_tokens')),
-    textOutputTokens: asNumber(get('gen_ai.usage.text.output_tokens')),
-    imageOutputTokens: asNumber(get('gen_ai.usage.image.output_tokens')),
-    audioOutputTokens: asNumber(get('gen_ai.usage.audio.output_tokens')),
-    textCacheReadInputTokens: asNumber(get('gen_ai.usage.text.cache_read.input_tokens')),
-    imageCacheReadInputTokens: asNumber(get('gen_ai.usage.image.cache_read.input_tokens')),
-    audioCacheReadInputTokens: asNumber(get('gen_ai.usage.audio.cache_read.input_tokens')),
-  };
-  return hasAnyTokenUsage(usage) ? usage : undefined;
+/**
+ * The attribute names each token count is read from: the current spec name first, then
+ * older or vendor names. Array order is the render order of the token row.
+ *
+ * gen_ai.usage.prompt_tokens and completion_tokens are the names the conventions used
+ * before OTel semantic conventions v1.27.0 renamed them to input_tokens and
+ * output_tokens, and gen_ai.usage.cache_creation.input_tokens is the name the conventions
+ * used before the GenAI conventions repository renamed it to cache_write.input_tokens.
+ * The remaining names are in no spec version: SDKs have been observed to write Anthropic's
+ * API usage field names (cache_read_input_tokens, cache_creation_input_tokens) and
+ * Braintrust's metric names (prompt_cached_tokens, prompt_cache_creation_tokens) under
+ * the gen_ai.usage. prefix.
+ */
+const TOKEN_ATTRIBUTES: ReadonlyArray<[field: keyof GenAiTokenUsage, spec: string, ...fallbacks: string[]]> =
+  [
+    ['inputTokens', 'gen_ai.usage.input_tokens', 'gen_ai.usage.prompt_tokens'],
+    ['outputTokens', 'gen_ai.usage.output_tokens', 'gen_ai.usage.completion_tokens'],
+    ['reasoningOutputTokens', 'gen_ai.usage.reasoning.output_tokens'],
+    [
+      'cacheReadInputTokens',
+      'gen_ai.usage.cache_read.input_tokens',
+      'gen_ai.usage.cache_read_input_tokens',
+      'gen_ai.usage.prompt_cached_tokens',
+    ],
+    [
+      'cacheWriteInputTokens',
+      'gen_ai.usage.cache_write.input_tokens',
+      'gen_ai.usage.cache_creation.input_tokens',
+      'gen_ai.usage.cache_creation_input_tokens',
+      'gen_ai.usage.prompt_cache_creation_tokens',
+    ],
+    ['textInputTokens', 'gen_ai.usage.text.input_tokens'],
+    ['imageInputTokens', 'gen_ai.usage.image.input_tokens'],
+    ['audioInputTokens', 'gen_ai.usage.audio.input_tokens'],
+    ['textOutputTokens', 'gen_ai.usage.text.output_tokens'],
+    ['imageOutputTokens', 'gen_ai.usage.image.output_tokens'],
+    ['audioOutputTokens', 'gen_ai.usage.audio.output_tokens'],
+    ['textCacheReadInputTokens', 'gen_ai.usage.text.cache_read.input_tokens'],
+    ['imageCacheReadInputTokens', 'gen_ai.usage.image.cache_read.input_tokens'],
+    ['audioCacheReadInputTokens', 'gen_ai.usage.audio.cache_read.input_tokens'],
+  ];
+
+type TokenUsageWithSources = {
+  usage: GenAiTokenUsage;
+  sources: Partial<Record<keyof GenAiTokenUsage, GenAiAttributeSource>>;
+};
+
+/**
+ * Reads `spec` and then each fallback name until `accept` yields a value, returning that
+ * value and, when it came from a fallback name, its source. Only the name that yields the
+ * value is claimed, so a spec value that `accept` rejects stays visible in "Other GenAI
+ * Attributes" beside the fallback that replaced it, and every name after the one chosen
+ * stays visible too. When no name yields a value, the spec name is claimed anyway: a
+ * rejected value with nothing to disagree with is not worth a section of its own, which
+ * is also how the single-name reads behaved before the fallbacks existed.
+ *
+ * `attributes` is read for the value and `get` only to claim it, so a key that appears
+ * twice on a span would be read from its first occurrence and claimed at its first
+ * unclaimed one; no builder reads the same key twice, so the two coincide.
+ */
+function readFirst<T>(
+  get: GetAttr,
+  attributes: IAttributes,
+  spec: string,
+  fallbacks: readonly string[],
+  accept: (value: AttributeValue | undefined) => T | undefined
+): { value: T; source?: GenAiAttributeSource } | undefined {
+  for (const key of [spec, ...fallbacks]) {
+    const value = accept(attributes.getValue(key));
+    if (value === undefined) continue;
+    get(key);
+    if (key === spec) return { value };
+    return { value, source: { key, spec, kind: DEPRECATED_SPEC_NAMES.has(key) ? 'deprecated' : 'vendor' } };
+  }
+  get(spec);
+  return undefined;
+}
+
+/**
+ * Reads each count from the first of its names that holds a number. A count read under a
+ * non-spec name is recorded in `sources`.
+ */
+function getGenAiTokenUsageFromGetter(
+  get: GetAttr,
+  attributes: IAttributes
+): TokenUsageWithSources | undefined {
+  const usage: GenAiTokenUsage = {};
+  const sources: TokenUsageWithSources['sources'] = {};
+  TOKEN_ATTRIBUTES.forEach(([field, spec, ...fallbacks]) => {
+    const read = readFirst(get, attributes, spec, fallbacks, asNumber);
+    if (!read) return;
+    usage[field] = read.value;
+    if (read.source) sources[field] = read.source;
+  });
+  return Object.keys(usage).length ? { usage, sources } : undefined;
 }
 
 /** Extracts the token-usage attributes shared by the GenAI tab and trace summary. */
 export function getGenAiTokenUsage(attributes: IAttributes): GenAiTokenUsage | undefined {
-  return getGenAiTokenUsageFromGetter(key => attributes.getValue(key));
+  return getGenAiTokenUsageFromGetter(key => attributes.getValue(key), attributes)?.usage;
 }
 
 export function formatTokenCount(value: number | undefined): string | undefined {
@@ -483,7 +599,43 @@ export function formatTokenCount(value: number | undefined): string | undefined 
 // happens to call get() on - nothing is declared twice, so there is no
 // separate allowlist that can drift out of sync with what's actually read.
 type GetAttr = (key: string) => AttributeValue | undefined;
-type SectionBuilder = (get: GetAttr) => GenAiSection | undefined;
+// `attributes` is the whole span, read without claiming, for a builder that needs to
+// know whether a key is present, including one another builder has already taken, before
+// deciding what to read itself.
+type SectionBuilder = (get: GetAttr, attributes: IAttributes) => GenAiSection | undefined;
+
+/**
+ * The generic span I/O keys some SDKs write beside, or instead of, the gen_ai.* names:
+ * the unprefixed input/output of span models whose every span has an input and an
+ * output, and Braintrust's braintrust.input_json/braintrust.output_json (a JSON string)
+ * and braintrust.input/braintrust.output (a plain value). None of these are gen_ai.*
+ * keys, so an unclaimed one lands in the span's regular attributes table rather than in
+ * "Other GenAI Attributes".
+ */
+const GENERIC_INPUT_KEYS = [SPAN_INPUT, BRAINTRUST_INPUT_JSON, BRAINTRUST_INPUT];
+const GENERIC_OUTPUT_KEYS = [SPAN_OUTPUT, BRAINTRUST_OUTPUT_JSON, BRAINTRUST_OUTPUT];
+
+// A message attribute is usable when it holds something. null, an empty string and an
+// empty JSON array or object fall through to the next name the same way a non-number
+// does for a token count.
+const EMPTY_JSON = /^\s*(\[\s*\]|\{\s*\})\s*$/;
+function asPresent(value: AttributeValue | undefined): AttributeValue | undefined {
+  if (value == null) return undefined;
+  if (typeof value === 'string') return value.trim() === '' || EMPTY_JSON.test(value) ? undefined : value;
+  if (Array.isArray(value)) return value.length ? value : undefined;
+  if (typeof value === 'object') return Object.keys(value).length ? value : undefined;
+  return value;
+}
+
+// A tool span, as classifySpan decides it: a recognized gen_ai.operation.name settles the
+// kind either way, and only a span of no known kind is taken as a tool span for carrying
+// a tool call's arguments or result.
+function isToolCallSpan(attributes: IAttributes): boolean {
+  const kind = classifySpan({ attributes });
+  if (kind === 'TOOL_CALL') return true;
+  if (kind !== undefined && kind !== 'UNKNOWN_GENAI') return false;
+  return attributes.has('gen_ai.tool.call.arguments') || attributes.has('gen_ai.tool.call.result');
+}
 
 // Array order IS render order - no separate rank field to keep in sync with
 // position; the loop below walks this array (developer-controlled, fixed
@@ -532,15 +684,14 @@ const REGISTRY: SectionBuilder[] = [
       ? { type: 'meta', data: { operation, provider, model } }
       : undefined;
   },
-  get => {
-    const usage = getGenAiTokenUsageFromGetter(get);
-    return usage ? { type: 'tokens', data: usage } : undefined;
+  (get, attributes) => {
+    const tokens = getGenAiTokenUsageFromGetter(get, attributes);
+    return tokens ? { type: 'tokens', data: tokens.usage, sources: tokens.sources } : undefined;
   },
-  get => {
-    // Same short-circuit-on-purpose rule as the meta builder above: only fall
-    // back to the next key when the preferred one is absent, so a value that
-    // disagrees with the preferred one is left unclaimed and surfaces in
-    // "Other GenAI Attributes" instead of being silently dropped.
+  (get, attributes) => {
+    // Each side reads the spec name first and falls back only when it is absent or
+    // empty, so a value that disagrees with the spec value is left unclaimed and
+    // surfaces in "Other GenAI Attributes" instead of being silently dropped.
     //
     // gen_ai.prompt/gen_ai.completion are the deprecated spec names. Bare
     // gen_ai.input/gen_ai.output are not in any spec version; some
@@ -548,24 +699,66 @@ const REGISTRY: SectionBuilder[] = [
     // input and the one output rather than a message array. parseMessages
     // wraps such a scalar or object into a one-element list, so the value
     // renders as the span's only message.
-    const inputMessages = parseMessages(
-      get('gen_ai.input.messages') ?? get('gen_ai.prompt') ?? get('gen_ai.input')
+    //
+    // The generic I/O keys are read last. SDKs that write them on every span have
+    // been observed to keep gen_ai.input.messages beside them when they have it,
+    // so the spec key still wins. On a tool span they hold the tool call's
+    // arguments and result, so the tool call builder below reads them instead.
+    const isToolCall = isToolCallSpan(attributes);
+    const genericInput = isToolCall ? [] : GENERIC_INPUT_KEYS;
+    const genericOutput = isToolCall ? [] : GENERIC_OUTPUT_KEYS;
+    const input = readFirst(
+      get,
+      attributes,
+      'gen_ai.input.messages',
+      ['gen_ai.prompt', 'gen_ai.input', ...genericInput],
+      asPresent
     );
-    const outputMessages = parseMessages(
-      get('gen_ai.output.messages') ?? get('gen_ai.completion') ?? get('gen_ai.output')
+    const output = readFirst(
+      get,
+      attributes,
+      'gen_ai.output.messages',
+      ['gen_ai.completion', 'gen_ai.output', ...genericOutput],
+      asPresent
     );
+    const inputMessages = parseMessages(input?.value);
+    const outputMessages = parseMessages(output?.value);
     const systemInstructions = parseSystemInstructions(get('gen_ai.system_instructions'));
     return inputMessages.length || outputMessages.length || systemInstructions
-      ? { type: 'conversation', data: { inputMessages, outputMessages, systemInstructions } }
+      ? {
+          type: 'conversation',
+          data: { inputMessages, outputMessages, systemInstructions },
+          sources: { input: input?.source, output: output?.source },
+        }
       : undefined;
   },
-  get => {
+  (get, attributes) => {
     const id = asString(get('gen_ai.tool.call.id'));
     const name = asString(get('gen_ai.tool.name'));
-    const args = get('gen_ai.tool.call.arguments');
-    const result = get('gen_ai.tool.call.result');
-    return id || name || args !== undefined || result !== undefined
-      ? { type: 'toolCall', data: { id, name, arguments: args, result } }
+    // On a tool span the generic I/O keys hold the arguments and the result, which the
+    // conversation builder above left for this one. Any present value counts, `{}` and
+    // `''` included, because a tool can take no arguments and return nothing.
+    const generic = isToolCallSpan(attributes);
+    const args = readFirst(
+      get,
+      attributes,
+      'gen_ai.tool.call.arguments',
+      generic ? GENERIC_INPUT_KEYS : [],
+      value => value
+    );
+    const result = readFirst(
+      get,
+      attributes,
+      'gen_ai.tool.call.result',
+      generic ? GENERIC_OUTPUT_KEYS : [],
+      value => value
+    );
+    return id || name || args || result
+      ? {
+          type: 'toolCall',
+          data: { id, name, arguments: args?.value, result: result?.value },
+          sources: { arguments: args?.source, result: result?.source },
+        }
       : undefined;
   },
 ];
@@ -606,8 +799,9 @@ export function extractGenAiSections(attributes: IAttributes): GenAiSection[] {
     claimed.add(index);
     return entries[index].value;
   };
-
-  const sections = REGISTRY.map(build => build(get)).filter((s): s is GenAiSection => s !== undefined);
+  const sections = REGISTRY.map(build => build(get, attributes)).filter(
+    (s): s is GenAiSection => s !== undefined
+  );
 
   const other = entries
     .filter((a, i) => !claimed.has(i) && a.key.startsWith('gen_ai.'))
