@@ -76,6 +76,11 @@ describe('classifySpan', () => {
     expect(classifySpan(makeSpan([{ key: 'braintrust.output_json', value: '"hi"' }]))).toBe('UNKNOWN_GENAI');
   });
 
+  it('returns UNKNOWN_GENAI for a span carrying only the plain braintrust.input/braintrust.output', () => {
+    expect(classifySpan(makeSpan([{ key: 'braintrust.input', value: 'hi' }]))).toBe('UNKNOWN_GENAI');
+    expect(classifySpan(makeSpan([{ key: 'braintrust.output', value: 'hi' }]))).toBe('UNKNOWN_GENAI');
+  });
+
   it('returns undefined for other braintrust.* keys', () => {
     expect(classifySpan(makeSpan([{ key: 'braintrust.parent', value: 'project_id:abc' }]))).toBeUndefined();
   });

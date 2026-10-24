@@ -3,7 +3,9 @@
 
 import type { IAttributes, GenAISpanKind } from '../../types/otel';
 import {
+  BRAINTRUST_INPUT,
   BRAINTRUST_INPUT_JSON,
+  BRAINTRUST_OUTPUT,
   BRAINTRUST_OUTPUT_JSON,
   GEN_AI_NAMESPACE,
   GEN_AI_OPERATION_NAME,
@@ -12,7 +14,12 @@ import {
 } from '../../constants/span-attributes';
 
 // Keys outside the gen_ai.* namespace that still mark a span as a GenAI span.
-const VENDOR_GEN_AI_KEYS = new Set([BRAINTRUST_INPUT_JSON, BRAINTRUST_OUTPUT_JSON]);
+const VENDOR_GEN_AI_KEYS = new Set([
+  BRAINTRUST_INPUT_JSON,
+  BRAINTRUST_OUTPUT_JSON,
+  BRAINTRUST_INPUT,
+  BRAINTRUST_OUTPUT,
+]);
 
 type SpanAttrs = { attributes: IAttributes };
 
