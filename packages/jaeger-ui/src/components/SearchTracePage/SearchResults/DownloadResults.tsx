@@ -49,7 +49,6 @@ export default function DownloadResults({ traceSummaries, rawTraces }: Props) {
       })
     );
     const missing = traceSummaries.filter(s => !rawByID.has(s.traceID));
-    let traces: unknown[];
     if (missing.length > 0) {
       // Fetch missing traces with bounded concurrency so we report progress as responses
       // arrive without overwhelming the backend. Cap at 6 — the HTTP/1.1 per-host limit,
@@ -84,14 +83,8 @@ export default function DownloadResults({ traceSummaries, rawTraces }: Props) {
         if (isMountedRef.current) setProgress(undefined);
       }
     }
-    traces = traceSummaries.map(s => rawByID.get(s.traceID)).filter(Boolean);
-    const missingCount = traceSummaries.length - traces.length;
-    if (missingCount > 0) {
-      message.warning(
-        `${missingCount} trace${missingCount > 1 ? 's' : ''} could not be retrieved and will be omitted from the download.`
-      );
-    }
-    const file = createBlob(traces);
+    // Every summary now has a raw trace: uploads are cached and fetches resolve or throw.
+    const file = createBlob(traceSummaries.map(s => rawByID.get(s.traceID)));
     const element = document.createElement('a');
     element.href = URL.createObjectURL(file);
     element.download = `traces-${Date.now()}.json`;
