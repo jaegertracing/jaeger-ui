@@ -5,9 +5,11 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { Button, message } from 'antd';
 
 import { jaegerClient } from '../../../api/v3/client';
+import { MAX_DETAIL_LENGTH } from '../../common/ErrorMessage';
 import { pooledMap } from '../../../utils/pooledMap';
 import type { TraceSummary } from '../../../types/trace-summary';
 import { uploadedTraceId } from '../../../utils/otel-upload';
+import { toTraceIdHex } from '../../../utils/trace-id';
 
 import './DownloadResults.css';
 
@@ -16,10 +18,10 @@ type Props = {
   rawTraces: unknown[];
 };
 
-// The v3 schema parses proto3's "NaN", "Infinity", and "-Infinity" doubles into numbers,
+// The v3 schema parses proto3's "NaN", "Infinity", and "-Infinity" doubleValues into numbers,
 // which JSON.stringify writes as null. Write them back as proto3 strings.
-const proto3Doubles = (_key: string, value: unknown) =>
-  typeof value === 'number' && !Number.isFinite(value) ? String(value) : value;
+const proto3Doubles = (key: string, value: unknown) =>
+  key === 'doubleValue' && typeof value === 'number' && !Number.isFinite(value) ? String(value) : value;
 
 export function createBlob(traces: unknown[]) {
   return new Blob([`{"data":${JSON.stringify(traces, proto3Doubles)}}`], { type: 'application/json' });
@@ -57,7 +59,7 @@ export default function DownloadResults({ traceSummaries, rawTraces }: Props) {
       try {
         const fetched = await pooledMap(
           missing,
-          s => jaegerClient.fetchTrace(s.traceID),
+          s => jaegerClient.fetchTrace(toTraceIdHex(s.traceID)),
           6,
           done => {
             if (!cancelled.current && isMountedRef.current)
@@ -67,7 +69,15 @@ export default function DownloadResults({ traceSummaries, rawTraces }: Props) {
         fetched.forEach((raw, i) => rawByID.set(missing[i].traceID, raw));
       } catch (err) {
         cancelled.current = true;
-        message.error(`Failed to retrieve traces: ${err instanceof Error ? err.message : String(err)}`);
+        // JaegerClient keeps the server's error response on httpBody.
+        const body = err instanceof Error ? (err as Error & { httpBody?: string }).httpBody : undefined;
+        const detail =
+          body && body.length > MAX_DETAIL_LENGTH
+            ? `${body.slice(0, MAX_DETAIL_LENGTH - 3).trim()}...`
+            : body;
+        message.error(
+          `Failed to retrieve traces: ${err instanceof Error ? err.message : String(err)}${detail ? `: ${detail}` : ''}`
+        );
         return;
       } finally {
         cancelled.current = true;

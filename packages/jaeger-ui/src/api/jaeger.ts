@@ -101,6 +101,7 @@ const JaegerAPI = {
   fetchServices(): Promise<any> {
     return getJSON(`${this.apiRoot}services`);
   },
+  // TODO: Delete with jaeger.ts; DownloadResults now uses jaegerClient.fetchTrace (#4649).
   fetchTrace(id: string): Promise<any> {
     return getJSON(`${this.apiRoot}traces/${encodeURIComponent(id)}`);
   },

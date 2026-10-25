@@ -17,6 +17,7 @@ import { loadTracesFromFile } from '../FileLoader';
 import { getCachedTrace } from '../../../hooks/useTraceLoading';
 import numericUpload from '../../../utils/fixtures/otlp-upload-numeric.json';
 import { GetTraceResponseSchema } from '../../../api/v3/schemas';
+import { MAX_DETAIL_LENGTH } from '../../common/ErrorMessage';
 import capture from '../../../api/v3/v3-trace-output.json';
 
 const mockFetchTrace = vi.fn();
@@ -79,6 +80,10 @@ const fetchedTraces = baseTraces.map(trace => ({
   resourceSpans: [{ scopeSpans: [{ spans: [{ traceId: trace.traceID }] }] }],
 }));
 
+// toTraceIdHex pads the short summary IDs to the 32-hex v3 request format.
+const requestIdA = '0000000000000000000000000000000a';
+const requestIdB = '0000000000000000000000000000000b';
+
 afterEach(() => {
   vi.clearAllMocks();
   vi.restoreAllMocks();
@@ -97,8 +102,8 @@ describe('DownloadResults', () => {
     });
 
     expect(mockFetchTrace).toHaveBeenCalledTimes(2);
-    expect(mockFetchTrace).toHaveBeenCalledWith('a');
-    expect(mockFetchTrace).toHaveBeenCalledWith('b');
+    expect(mockFetchTrace).toHaveBeenCalledWith(requestIdA);
+    expect(mockFetchTrace).toHaveBeenCalledWith(requestIdB);
     expect(createObjectURL).toHaveBeenCalledTimes(1);
     const blob = createObjectURL.mock.calls[0][0] as Blob;
     expect(await readJsonFile({ file: new File([blob], 'download.json') })).toEqual({ data: fetchedTraces });
@@ -161,8 +166,8 @@ describe('DownloadResults', () => {
     });
 
     await waitFor(() => expect(createObjectURLSpy).toHaveBeenCalledTimes(1));
-    expect(mockFetchTrace).toHaveBeenCalledWith('a');
-    expect(mockFetchTrace).toHaveBeenCalledWith('b');
+    expect(mockFetchTrace).toHaveBeenCalledWith(requestIdA);
+    expect(mockFetchTrace).toHaveBeenCalledWith(requestIdB);
     expect(revokeObjectURLSpy).toHaveBeenCalledTimes(1);
   });
 
@@ -179,8 +184,8 @@ describe('DownloadResults', () => {
     });
 
     await waitFor(() => expect(createObjectURLSpy).toHaveBeenCalledTimes(1));
-    expect(mockFetchTrace).not.toHaveBeenCalledWith('a');
-    expect(mockFetchTrace).toHaveBeenCalledWith('b');
+    expect(mockFetchTrace).not.toHaveBeenCalledWith(requestIdA);
+    expect(mockFetchTrace).toHaveBeenCalledWith(requestIdB);
     expect(revokeObjectURLSpy).toHaveBeenCalledTimes(1);
   });
 
@@ -266,23 +271,22 @@ describe('DownloadResults', () => {
     expect(message.error).toHaveBeenCalledWith('Failed to retrieve traces: network error');
   });
 
-  it('shows a warning message when some traces could not be retrieved', async () => {
-    mockFetchTrace.mockResolvedValueOnce(fetchedTraces[0]);
-    // Second trace returns null (trace not found/empty)
-    mockFetchTrace.mockResolvedValueOnce(null);
-    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob://url');
-    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+  it.each([
+    ['the server response', '{ "error": { "message": "trace not found" } }'],
+    ['a truncated long server response', `${'x'.repeat(MAX_DETAIL_LENGTH - 3)}...`, 'x'.repeat(2000)],
+  ])('adds %s to the error toast', async (_, shown, httpBody = shown) => {
+    const error = Object.assign(new Error(`Failed to fetch trace ${requestIdA}: 404 Not Found`), {
+      httpBody,
+    });
+    mockFetchTrace.mockRejectedValueOnce(error);
 
-    render(<DownloadResults traceSummaries={baseTraces} rawTraces={[]} />);
-
+    render(<DownloadResults traceSummaries={[baseTraces[0]]} rawTraces={[]} />);
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: /Download Results/i }));
     });
 
-    await waitFor(() =>
-      expect(message.warning).toHaveBeenCalledWith(
-        '1 trace could not be retrieved and will be omitted from the download.'
-      )
+    expect(message.error).toHaveBeenCalledWith(
+      `Failed to retrieve traces: Failed to fetch trace ${requestIdA}: 404 Not Found: ${shown}`
     );
   });
 
@@ -418,7 +422,12 @@ describe('uploaded trace registry and offline downloads', () => {
     (response.result.resourceSpans[0].scopeSpans[0].spans[0].attributes as unknown[]).push(
       { key: 'nan', value: { doubleValue: 'NaN' } },
       { key: 'infinity', value: { doubleValue: 'Infinity' } },
-      { key: 'negative-infinity', value: { doubleValue: '-Infinity' } }
+      { key: 'negative-infinity', value: { doubleValue: '-Infinity' } },
+      { key: 'array', value: { arrayValue: { values: [{ doubleValue: 'NaN' }] } } },
+      {
+        key: 'kvlist',
+        value: { kvlistValue: { values: [{ key: 'nested', value: { doubleValue: 'Infinity' } }] } },
+      }
     );
     mockFetchTrace.mockResolvedValue(GetTraceResponseSchema.parse(response).result);
     const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob://url');
