@@ -4,7 +4,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Button, message } from 'antd';
 
-import JaegerAPI from '../../../api/jaeger';
+import { jaegerClient } from '../../../api/v3/client';
 import { pooledMap } from '../../../utils/pooledMap';
 import type { TraceSummary } from '../../../types/trace-summary';
 import { uploadedTraceId } from '../../../utils/otel-upload';
@@ -16,8 +16,13 @@ type Props = {
   rawTraces: unknown[];
 };
 
+// The v3 schema parses proto3's "NaN", "Infinity", and "-Infinity" doubles into numbers,
+// which JSON.stringify writes as null. Write them back as proto3 strings.
+const proto3Doubles = (_key: string, value: unknown) =>
+  typeof value === 'number' && !Number.isFinite(value) ? String(value) : value;
+
 export function createBlob(traces: unknown[]) {
-  return new Blob([`{"data":${JSON.stringify(traces)}}`], { type: 'application/json' });
+  return new Blob([`{"data":${JSON.stringify(traces, proto3Doubles)}}`], { type: 'application/json' });
 }
 
 export default function DownloadResults({ traceSummaries, rawTraces }: Props) {
@@ -52,10 +57,7 @@ export default function DownloadResults({ traceSummaries, rawTraces }: Props) {
       try {
         const fetched = await pooledMap(
           missing,
-          async s => {
-            const r = await JaegerAPI.fetchTrace(s.traceID);
-            return r?.data?.[0] ?? r;
-          },
+          s => jaegerClient.fetchTrace(s.traceID),
           6,
           done => {
             if (!cancelled.current && isMountedRef.current)
