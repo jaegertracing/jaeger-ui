@@ -2,7 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it } from 'vitest';
-import { focusedSpanIDs, getDescendantParentSpanIDs, getSubtreeSpans } from './timeline-utils';
+import {
+  filterMatchesBySubtree,
+  focusedSpanIDs,
+  getDescendantParentSpanIDs,
+  getSubtreeSpans,
+} from './timeline-utils';
 import { IOtelSpan } from '../../../types/otel';
 
 describe('timeline-utils subtree helpers', () => {
@@ -138,6 +143,30 @@ describe('timeline-utils subtree helpers', () => {
     it('memoizes output when arguments match', () => {
       const res1 = focusedSpanIDs(spanTreeTrace, 'middle-1', new Set(['svc-other']));
       const res2 = focusedSpanIDs(spanTreeTrace, 'middle-1', new Set(['svc-other']));
+      expect(res1).toBe(res2);
+    });
+  });
+
+  describe('filterMatchesBySubtree', () => {
+    it('returns matches unchanged when matches or subtreeIDs is null or undefined', () => {
+      const matches = new Set(['s1', 's2']);
+      expect(filterMatchesBySubtree(null, new Set(['s1']))).toBeNull();
+      expect(filterMatchesBySubtree(undefined, new Set(['s1']))).toBeUndefined();
+      expect(filterMatchesBySubtree(matches, null)).toBe(matches);
+    });
+
+    it('filters matches to only span IDs present in subtree', () => {
+      const matches = new Set(['s1', 's2', 's3']);
+      const subtreeIDs = new Set(['s2', 's3', 's4']);
+      const filtered = filterMatchesBySubtree(matches, subtreeIDs);
+      expect(filtered).toEqual(new Set(['s2', 's3']));
+    });
+
+    it('memoizes output when arguments match', () => {
+      const matches = new Set(['s1', 's2']);
+      const subtreeIDs = new Set(['s1']);
+      const res1 = filterMatchesBySubtree(matches, subtreeIDs);
+      const res2 = filterMatchesBySubtree(matches, subtreeIDs);
       expect(res1).toBe(res2);
     });
   });

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, InputRef } from 'antd';
 import { useNormalizeTraceId } from './useNormalizeTraceId';
 import { useNavigate } from 'react-router-dom';
@@ -37,7 +37,7 @@ import { useConfig } from '../../hooks/useConfig';
 import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import { filterPrunedSpanIDs } from './TraceTimelineViewer/generateRowStates';
-import { focusedSpanIDs } from './TraceTimelineViewer/timeline-utils';
+import { filterMatchesBySubtree, focusedSpanIDs } from './TraceTimelineViewer/timeline-utils';
 import { actions as timelineActions } from './TraceTimelineViewer/duck';
 import {
   TUpdateViewRangeTimeFunction,
@@ -390,18 +390,10 @@ export function TracePageImpl(props: TProps) {
     setTimelineBarsVisible(!timelineBarsVisible);
   }, [setTimelineBarsVisible, timelineBarsVisible]);
 
-  if (traceError && !traceData) {
-    return <ErrorMessage className="ub-m3" error={traceQueryError || 'Unknown error'} />;
-  }
-  if (traceLoading || !traceData) {
-    return <LoadingIndicator className="u-mt-vast" centered />;
-  }
-
-  let findCount = 0;
-  let spanFindMatches: Set<string> | null | undefined;
-  if (viewType === ETraceViewType.TraceGraph) {
-    findCount = uiFind && findMatches ? findMatches.size : 0;
-  } else if (uiFind) {
+  const spanFindMatches = useMemo(() => {
+    if (!uiFind || !traceData || viewType === ETraceViewType.TraceGraph) {
+      return null;
+    }
     const allMatches = filterSpansMemo(uiFind, _get(traceData, 'spans'));
     const otelTrace = traceData;
     let matches =
@@ -411,18 +403,27 @@ export function TracePageImpl(props: TProps) {
     if (matches && focusedSubtreeSpanID && otelTrace && viewTypeIsNavigable(viewType)) {
       const subtreeIDs = focusedSpanIDs(otelTrace, focusedSubtreeSpanID, prunedServices);
       if (subtreeIDs) {
-        const focusedMatches = new Set<string>();
-        matches.forEach(id => {
-          if (subtreeIDs.has(id)) {
-            focusedMatches.add(id);
-          }
-        });
-        matches = focusedMatches;
+        matches = filterMatchesBySubtree(matches, subtreeIDs);
       }
     }
-    spanFindMatches = matches;
-    findCount = spanFindMatches ? spanFindMatches.size : 0;
+    return matches;
+  }, [uiFind, viewType, traceData, prunedServices, focusedSubtreeSpanID, filterSpansMemo]);
+
+  if (traceError && !traceData) {
+    return <ErrorMessage className="ub-m3" error={traceQueryError || 'Unknown error'} />;
   }
+  if (traceLoading || !traceData) {
+    return <LoadingIndicator className="u-mt-vast" centered />;
+  }
+
+  const findCount =
+    viewType === ETraceViewType.TraceGraph
+      ? uiFind && findMatches
+        ? findMatches.size
+        : 0
+      : spanFindMatches
+        ? spanFindMatches.size
+        : 0;
 
   const locationState = location.state;
   const isEmbedded = Boolean(embedded);

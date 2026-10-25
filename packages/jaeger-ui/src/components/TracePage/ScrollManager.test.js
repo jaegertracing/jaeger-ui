@@ -250,9 +250,19 @@ describe('ScrollManager', () => {
         parentSpan: span0,
         childSpans: [],
       };
+      const span4 = {
+        spanID: 'span-4',
+        depth: 0,
+        hasChildren: false,
+        startTime: 1800,
+        duration: 200,
+        resource: { serviceName: 'svc-c' },
+        status: { code: 0 },
+        childSpans: [],
+      };
       span0.childSpans = [span1, span3];
       span1.childSpans = [span2];
-      const spans = [span0, span1, span2, span3];
+      const spans = [span0, span1, span2, span3, span4];
       const fixtureTrace = {
         spans,
         duration: 2000,
@@ -262,10 +272,11 @@ describe('ScrollManager', () => {
 
       // Prune svc-b (span-1 and span-2 are pruned)
       const realRows = generateRowStates(spans, new Set(), new Map(), 'inline', new Set(['svc-b']));
-      expect(realRows).toHaveLength(3);
+      expect(realRows).toHaveLength(4);
       expect(realRows[0].span.spanID).toBe('span-0');
       expect(realRows[1].span.spanID).toBe('span-3');
       expect(realRows[2].isPrunedPlaceholder).toBe(true);
+      expect(realRows[3].span.spanID).toBe('span-4');
 
       manager.setTrace(fixtureTrace);
       accessors.getRows = () => realRows;
@@ -277,23 +288,35 @@ describe('ScrollManager', () => {
       manager.scrollToNextVisibleSpan();
       expect(scrollPastMock).toHaveBeenLastCalledWith(1, 1);
 
-      // Step forward from span-3 (row 1) -> placeholder (row 2)
+      // Step forward from span-3 (row 1): boundary row 1 is centered into view first
       accessors.getTopRowIndexVisible.mockReturnValue(1);
       accessors.getBottomRowIndexVisible.mockReturnValue(1);
       manager.scrollToNextVisibleSpan();
+      expect(scrollPastMock).toHaveBeenLastCalledWith(1, 1);
+
+      // Step forward from span-3 (row 1) -> placeholder (row 2)
+      accessors.getTopRowIndexVisible.mockReturnValue(2);
+      accessors.getBottomRowIndexVisible.mockReturnValue(2);
+      manager.scrollToNextVisibleSpan();
       expect(scrollPastMock).toHaveBeenLastCalledWith(2, 1);
 
-      // Step backward from placeholder (row 2) -> span-3 (row 1)
+      // Step backward from span-4 (row 3) -> placeholder (row 2)
+      accessors.getTopRowIndexVisible.mockReturnValue(3);
+      accessors.getBottomRowIndexVisible.mockReturnValue(3);
+      manager.scrollToPrevVisibleSpan();
+      expect(scrollPastMock).toHaveBeenLastCalledWith(2, -1);
+
+      // Step backward from placeholder (row 2): boundary row 2 is centered into view first
       accessors.getTopRowIndexVisible.mockReturnValue(2);
       accessors.getBottomRowIndexVisible.mockReturnValue(2);
       manager.scrollToPrevVisibleSpan();
-      expect(scrollPastMock).toHaveBeenLastCalledWith(1, -1);
+      expect(scrollPastMock).toHaveBeenLastCalledWith(2, -1);
 
-      // Step backward from span-3 (row 1) -> root (row 0)
+      // Step backward from span-3 (row 1): boundary row 1 is centered into view first
       accessors.getTopRowIndexVisible.mockReturnValue(1);
       accessors.getBottomRowIndexVisible.mockReturnValue(1);
       manager.scrollToPrevVisibleSpan();
-      expect(scrollPastMock).toHaveBeenLastCalledWith(0, -1);
+      expect(scrollPastMock).toHaveBeenLastCalledWith(1, -1);
     });
 
     it('navigates correctly across collapse-all-then-expand-subtree sequence', () => {
@@ -340,18 +363,29 @@ describe('ScrollManager', () => {
         parentSpan: span1,
         childSpans: [],
       };
+      const span4 = {
+        spanID: 'span-4',
+        depth: 2,
+        hasChildren: false,
+        startTime: 2000,
+        duration: 200,
+        resource: { serviceName: 'svc-a' },
+        status: { code: 0 },
+        parentSpan: span1,
+        childSpans: [],
+      };
       span0.childSpans = [span1];
-      span1.childSpans = [span2, span3];
-      const allSpans = [span0, span1, span2, span3];
+      span1.childSpans = [span2, span3, span4];
+      const allSpans = [span0, span1, span2, span3, span4];
       const traceObj = {
         spans: allSpans,
-        duration: 2000,
+        duration: 2200,
         startTime: 1000,
         spanMap: new Map(allSpans.map(s => [s.spanID, s])),
       };
 
       // Focus on non-root span-1:
-      const focusedSpans = [span1, span2, span3];
+      const focusedSpans = [span1, span2, span3, span4];
 
       // "Collapse all": all parent IDs in childrenHiddenIDs
       const collapsedAll = new Set(['span-0', 'span-1']);
@@ -365,10 +399,11 @@ describe('ScrollManager', () => {
 
       // generateRowStates builds visible rows for focused subtree:
       const rows = generateRowStates(focusedSpans, childrenHiddenIDs, new Map(), 'inline', new Set());
-      expect(rows).toHaveLength(3);
+      expect(rows).toHaveLength(4);
       expect(rows[0].span.spanID).toBe('span-1');
       expect(rows[1].span.spanID).toBe('span-2');
       expect(rows[2].span.spanID).toBe('span-3');
+      expect(rows[3].span.spanID).toBe('span-4');
 
       manager.setTrace(traceObj);
       accessors.getRows = () => rows;
@@ -380,15 +415,33 @@ describe('ScrollManager', () => {
       manager.scrollToNextVisibleSpan();
       expect(scrollPastMock).toHaveBeenLastCalledWith(1, 1);
 
-      // Navigate Next from span-2 (row 1) -> span-3 (row 2)
+      // Navigate Next from span-2 (row 1): brings row 1 into full view first
       accessors.getTopRowIndexVisible.mockReturnValue(1);
       accessors.getBottomRowIndexVisible.mockReturnValue(1);
       manager.scrollToNextVisibleSpan();
-      expect(scrollPastMock).toHaveBeenLastCalledWith(2, 1);
+      expect(scrollPastMock).toHaveBeenLastCalledWith(1, 1);
 
-      // Navigate Prev from span-3 (row 2) -> span-2 (row 1)
+      // Navigate Next to span-3 (row 2)
       accessors.getTopRowIndexVisible.mockReturnValue(2);
       accessors.getBottomRowIndexVisible.mockReturnValue(2);
+      manager.scrollToNextVisibleSpan();
+      expect(scrollPastMock).toHaveBeenLastCalledWith(2, 1);
+
+      // Navigate Prev from span-4 (row 3) -> span-3 (row 2)
+      accessors.getTopRowIndexVisible.mockReturnValue(3);
+      accessors.getBottomRowIndexVisible.mockReturnValue(3);
+      manager.scrollToPrevVisibleSpan();
+      expect(scrollPastMock).toHaveBeenLastCalledWith(2, -1);
+
+      // Navigate Prev from span-3 (row 2): brings row 2 into full view first
+      accessors.getTopRowIndexVisible.mockReturnValue(2);
+      accessors.getBottomRowIndexVisible.mockReturnValue(2);
+      manager.scrollToPrevVisibleSpan();
+      expect(scrollPastMock).toHaveBeenLastCalledWith(2, -1);
+
+      // Navigate Prev from span-2 (row 1): brings row 1 into full view first
+      accessors.getTopRowIndexVisible.mockReturnValue(1);
+      accessors.getBottomRowIndexVisible.mockReturnValue(1);
       manager.scrollToPrevVisibleSpan();
       expect(scrollPastMock).toHaveBeenLastCalledWith(1, -1);
     });
@@ -488,6 +541,55 @@ describe('ScrollManager', () => {
       accessors.getRows = () => rows;
       manager._scrollToVisibleSpan(1, 0);
       expect(scrollPastMock).toHaveBeenLastCalledWith(0, 1);
+    });
+
+    it('preserves boundary-row adjustment when startRow is absent to bring partially visible edge match into view', () => {
+      const rows = [
+        { span: trace.spans[0], isDetail: false },
+        { span: trace.spans[1], isDetail: false },
+        { span: trace.spans[2], isDetail: false },
+        { span: trace.spans[3], isDetail: false },
+        { span: trace.spans[4], isDetail: false },
+      ];
+      accessors.getRows = () => rows;
+      accessors.getBottomRowIndexVisible.mockReturnValue(2);
+      accessors.getTopRowIndexVisible.mockReturnValue(2);
+      accessors.getSearchedSpanIDs = () => new Set([trace.spans[2].spanID]);
+
+      manager._scrollToVisibleSpan(1);
+      expect(scrollPastMock).toHaveBeenLastCalledWith(2, 1);
+
+      manager._scrollToVisibleSpan(-1);
+      expect(scrollPastMock).toHaveBeenLastCalledWith(2, -1);
+    });
+
+    it('skips pruned placeholders during match navigation while retaining them for ordinary navigation', () => {
+      const spanA = trace.spans[0];
+      const spanB = trace.spans[1];
+      const rows = [
+        { span: spanA, isDetail: false, spanIndex: 0 },
+        {
+          span: spanA,
+          isDetail: false,
+          spanIndex: 0,
+          isPrunedPlaceholder: true,
+          prunedChildrenCount: 3,
+          prunedErrorCount: 0,
+        },
+        { span: spanB, isDetail: false, spanIndex: 1 },
+      ];
+      accessors.getRows = () => rows;
+      accessors.getBottomRowIndexVisible.mockReturnValue(0);
+
+      // With search active matching both spans, the placeholder carrying spanA must be skipped
+      accessors.getSearchedSpanIDs = () => new Set([spanA.spanID, spanB.spanID]);
+      manager._scrollToVisibleSpan(1);
+      expect(scrollPastMock).toHaveBeenLastCalledWith(2, 1);
+
+      // Without search (ordinary navigation), placeholder row 1 is retained
+      accessors.getSearchedSpanIDs = () => null;
+      manager._scrollToVisibleSpan(1);
+      expect(scrollPastMock).toHaveBeenLastCalledWith(1, 1);
     });
 
     it('scrolls to index 0 when scrolling up and index 0 is the only match', () => {

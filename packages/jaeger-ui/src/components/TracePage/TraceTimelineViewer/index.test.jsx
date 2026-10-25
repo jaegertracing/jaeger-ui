@@ -16,6 +16,7 @@ const { mockLayoutPrefsStore, mockTraceTimelineStore, mockUseTraceTimelineStore 
     detailStates: new Map(),
     prunedServices: new Set(),
     setPrunedServices: vi.fn(),
+    focusedSubtreeSpanID: null,
     collapseAll: vi.fn(),
     collapseOne: vi.fn(),
     expandAll: vi.fn(),
@@ -222,6 +223,31 @@ describe('<TraceTimelineViewer>', () => {
     fireEvent.click(screen.getByTestId('expand-one-button'));
     expect(props.expandOne).toHaveBeenCalledWith(props.trace.spans);
     expect(mockTraceTimelineStore.expandOne).toHaveBeenCalledWith(props.trace.spans);
+  });
+
+  it('scopes collapse and expand actions to focused subtree when focusedSubtreeSpanID is set', () => {
+    // Select a non-root span to focus
+    const focusedSpan = props.trace.spans[1];
+    mockTraceTimelineStore.focusedSubtreeSpanID = focusedSpan.spanID;
+
+    render(<TraceTimelineViewerImpl {...props} />);
+
+    fireEvent.click(screen.getByTestId('collapse-all-button'));
+    expect(props.collapseAll).toHaveBeenCalledWith(expect.arrayContaining([focusedSpan]));
+    expect(mockTraceTimelineStore.collapseAll).toHaveBeenCalledWith(expect.arrayContaining([focusedSpan]));
+    expect(props.collapseAll.mock.calls[0][0]).not.toEqual(props.trace.spans);
+
+    fireEvent.click(screen.getByTestId('collapse-one-button'));
+    expect(props.collapseOne).toHaveBeenCalledWith(expect.arrayContaining([focusedSpan]));
+    expect(mockTraceTimelineStore.collapseOne).toHaveBeenCalledWith(expect.arrayContaining([focusedSpan]));
+    expect(props.collapseOne.mock.calls[0][0]).not.toEqual(props.trace.spans);
+
+    fireEvent.click(screen.getByTestId('expand-one-button'));
+    expect(props.expandOne).toHaveBeenCalledWith(expect.arrayContaining([focusedSpan]));
+    expect(mockTraceTimelineStore.expandOne).toHaveBeenCalledWith(expect.arrayContaining([focusedSpan]));
+    expect(props.expandOne.mock.calls[0][0]).not.toEqual(props.trace.spans);
+
+    mockTraceTimelineStore.focusedSubtreeSpanID = null;
   });
 
   it('should call mergeShortcuts with the correct callbacks on mount', () => {

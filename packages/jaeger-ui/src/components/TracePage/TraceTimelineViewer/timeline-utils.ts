@@ -172,3 +172,28 @@ export const focusedSpanIDs = memoizeOne(
   (newArgs, lastArgs) =>
     newArgs[0] === lastArgs[0] && newArgs[1] === lastArgs[1] && _isEqual(newArgs[2], lastArgs[2])
 );
+
+/**
+ * Scopes search matches to the focused subtree.
+ * Memoized to avoid re-allocating a Set on every render when inputs haven't changed.
+ */
+function scopeMatchesToSubtree(
+  matches: Set<string> | TNil,
+  subtreeIDs: Set<string> | null
+): Set<string> | TNil {
+  if (!matches || !subtreeIDs) {
+    return matches;
+  }
+  const focusedMatches = new Set<string>();
+  matches.forEach(id => {
+    if (subtreeIDs.has(id)) {
+      focusedMatches.add(id);
+    }
+  });
+  return focusedMatches;
+}
+
+export const filterMatchesBySubtree = memoizeOne(
+  scopeMatchesToSubtree,
+  (newArgs, lastArgs) => newArgs[0] === lastArgs[0] && newArgs[1] === lastArgs[1]
+);

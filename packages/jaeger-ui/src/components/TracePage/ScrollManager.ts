@@ -129,6 +129,8 @@ export default class ScrollManager {
       let fullViewRowIndex = boundaryRow;
       if (startRow != null) {
         fullViewRowIndex = boundaryRow - direction;
+      } else if (boundaryRow !== 0 && boundaryRow !== totalRows - 1) {
+        fullViewRowIndex -= direction;
       }
 
       const { duration, startTime: traceStartTime } = this._trace;
@@ -147,6 +149,9 @@ export default class ScrollManager {
       for (let i = fullViewRowIndex + direction; i !== boundary; i += direction) {
         const row = rows[i];
         if (row.isDetail) {
+          continue;
+        }
+        if (findMatches && 'isPrunedPlaceholder' in row && row.isPrunedPlaceholder) {
           continue;
         }
         const span = row.span;
@@ -172,11 +177,18 @@ export default class ScrollManager {
       if (nextRowIndex === undefined || nextRowIndex === boundary) {
         nextRowIndex = boundary - direction;
 
-        if (childrenAreHidden || rows.some(r => r.isDetail)) {
+        if (
+          childrenAreHidden ||
+          rows.some(r => r.isDetail || (findMatches && 'isPrunedPlaceholder' in r && r.isPrunedPlaceholder))
+        ) {
           let isFallbackHidden: boolean;
           do {
             const row = rows[nextRowIndex];
-            if (!row || row.isDetail) {
+            if (
+              !row ||
+              row.isDetail ||
+              (findMatches && 'isPrunedPlaceholder' in row && row.isPrunedPlaceholder)
+            ) {
               isFallbackHidden = true;
               nextRowIndex += direction < 0 ? 1 : -1;
               continue;

@@ -26,7 +26,7 @@ import {
   isKindProducer,
   spanContainsErredSpan,
 } from './utils';
-import { focusedSpanIDs, getSubtreeSpans } from './timeline-utils';
+import { filterMatchesBySubtree, focusedSpanIDs, getSubtreeSpans } from './timeline-utils';
 import { Accessors } from '../ScrollManager';
 import { parseUiFind, TExtractUiFindFromStateReturn } from '../../common/UiFindInput';
 import getLinks from '../../../model/link-patterns';
@@ -267,17 +267,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
   const getViewRange = useCallback(() => propsRef.current.currentViewRangeTime, []);
   const getSearchedSpanIDs = useCallback(() => {
     const { findMatchesIDs } = propsRef.current;
-    if (!findMatchesIDs) return findMatchesIDs;
-    if (focusedSubtreeSpanIDs) {
-      const filteredMatches = new Set<string>();
-      findMatchesIDs.forEach(id => {
-        if (focusedSubtreeSpanIDs.has(id)) {
-          filteredMatches.add(id);
-        }
-      });
-      return filteredMatches;
-    }
-    return findMatchesIDs;
+    return filterMatchesBySubtree(findMatchesIDs, focusedSubtreeSpanIDs);
   }, [focusedSubtreeSpanIDs]);
   const getCollapsedChildren = useCallback(() => propsRef.current.childrenHiddenIDs, []);
 

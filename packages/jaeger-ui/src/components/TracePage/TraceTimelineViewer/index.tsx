@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
@@ -20,6 +20,8 @@ import TimelineHeaderRow from './TimelineHeaderRow';
 import { useServiceFilter } from './useServiceFilter';
 import { useSpanPillsEnabled } from './spanPills';
 import VirtualizedTraceView from './VirtualizedTraceView';
+import { getSubtreeSpans } from './timeline-utils';
+import { isSpanPruned } from './generateRowStates';
 import { merge as mergeShortcuts } from '../keyboard-shortcuts';
 import { Accessors } from '../ScrollManager';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '../types';
@@ -114,15 +116,28 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   // Side panel is permanently visible whenever side panel mode is active.
   const sidePanelActive = detailPanelMode === 'sidepanel';
 
+  const focusedSubtreeSpanID = useTraceTimelineStore(s => s.focusedSubtreeSpanID);
+  const prunedServices = useTraceTimelineStore(s => s.prunedServices);
+
+  const effectiveSpans = useMemo(() => {
+    if (focusedSubtreeSpanID) {
+      const focusedSpan = trace.spanMap.get(focusedSubtreeSpanID);
+      if (focusedSpan && !isSpanPruned(focusedSpan, prunedServices)) {
+        return getSubtreeSpans(focusedSpan);
+      }
+    }
+    return trace.spans;
+  }, [trace, focusedSubtreeSpanID, prunedServices]);
+
   const collapseAll = useCallback(() => {
-    collapseAllAction(trace.spans);
-    zustandCollapseAll(trace.spans);
-  }, [collapseAllAction, trace.spans, zustandCollapseAll]);
+    collapseAllAction(effectiveSpans);
+    zustandCollapseAll(effectiveSpans);
+  }, [collapseAllAction, effectiveSpans, zustandCollapseAll]);
 
   const collapseOne = useCallback(() => {
-    collapseOneAction(trace.spans);
-    zustandCollapseOne(trace.spans);
-  }, [collapseOneAction, trace.spans, zustandCollapseOne]);
+    collapseOneAction(effectiveSpans);
+    zustandCollapseOne(effectiveSpans);
+  }, [collapseOneAction, effectiveSpans, zustandCollapseOne]);
 
   const expandAll = useCallback(() => {
     expandAllAction();
@@ -130,9 +145,9 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   }, [expandAllAction, zustandExpandAll]);
 
   const expandOne = useCallback(() => {
-    expandOneAction(trace.spans);
-    zustandExpandOne(trace.spans);
-  }, [expandOneAction, trace.spans, zustandExpandOne]);
+    expandOneAction(effectiveSpans);
+    zustandExpandOne(effectiveSpans);
+  }, [expandOneAction, effectiveSpans, zustandExpandOne]);
 
   useEffect(() => {
     mergeShortcuts({
