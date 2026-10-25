@@ -41,11 +41,41 @@ SPDX-License-Identifier: Apache-2.0
   gap: 8px;
 }
 
+.GenAITab--sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .GenAITab--sectionTitle {
   font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
+}
+
+.GenAITab--sectionActions {
+  display: flex;
+  gap: 8px;
+}
+
+/* --text-secondary rather than the --text-muted used by the labels around it: muted is
+   half-transparent text, which at this size lands under the 4.5:1 contrast an interactive
+   control needs, and :hover is not a state a keyboard or touch reader ever reaches. */
+.GenAITab--sectionAction {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+
+.GenAITab--sectionAction:hover {
+  color: var(--text-primary);
+  text-decoration: underline;
 }
 
 .GenAITab--message {
