@@ -32,40 +32,10 @@ export const PageImpl: React.FC<TProps> = props => {
   const assistantPanelOpen = Boolean(assistant?.panelOpen);
   const assistantEnvOn = !embedded && assistantConfigured;
   const assistantDockOpen = assistantEnvOn && assistantPanelOpen;
-  const pageRef = React.useRef<HTMLDivElement | null>(null);
-  const headerRef = React.useRef<HTMLElement | null>(null);
 
   React.useEffect(() => {
     trackPageView(pathname, search);
   }, [pathname, search]);
-
-  React.useLayoutEffect(() => {
-    if (embedded) {
-      pageRef.current?.style.removeProperty('--nav-height');
-      return undefined;
-    }
-
-    const header = headerRef.current;
-    if (!header) return undefined;
-
-    const updateNavHeight = () => {
-      const height = Math.ceil(header.getBoundingClientRect().height);
-      if (height > 0) {
-        pageRef.current?.style.setProperty('--nav-height', `${height}px`);
-      }
-    };
-
-    updateNavHeight();
-
-    if (typeof ResizeObserver === 'function') {
-      const observer = new ResizeObserver(updateNavHeight);
-      observer.observe(header);
-      return () => observer.disconnect();
-    }
-
-    window.addEventListener('resize', updateNavHeight);
-    return () => window.removeEventListener('resize', updateNavHeight);
-  }, [embedded]);
 
   const contentCls = cx({
     'Page--content': true,
@@ -73,11 +43,11 @@ export const PageImpl: React.FC<TProps> = props => {
   });
 
   return (
-    <div ref={pageRef}>
+    <div>
       <DocumentTitle title="Jaeger UI" />
       <Layout>
         {!embedded && (
-          <Header className="Page--topNav" ref={headerRef}>
+          <Header className="Page--topNav">
             <TopNav />
           </Header>
         )}
