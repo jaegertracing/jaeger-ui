@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
-import JaegerAPI, { DEFAULT_DEPENDENCY_LOOKBACK } from '../api/jaeger';
+import { jaegerClient, DEFAULT_DEPENDENCY_LOOKBACK } from '../api/v3/client';
 import type { ApiError } from '../types/api-error';
 
 export type IServiceDependency = {
@@ -57,7 +57,7 @@ export function useDependenciesQuery(
 
   return useQuery({
     queryKey: ['dependencies', source, keyEndTs, lookback],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       if (import.meta.env.DEV && source === 'Small Graph') {
         const mod = await import('../components/DependencyGraph/sample_data/small.json');
         return mod.default as IServiceDependency[];
@@ -67,7 +67,7 @@ export function useDependenciesQuery(
         return mod.default as IServiceDependency[];
       }
       const endTs = params.endTs ?? Date.now();
-      return normalizeDependenciesResponse(await JaegerAPI.fetchDependencies(endTs, lookback));
+      return normalizeDependenciesResponse(await jaegerClient.fetchDependencies(endTs, lookback, signal));
     },
     staleTime: 60 * 1000,
     refetchOnWindowFocus: true,
