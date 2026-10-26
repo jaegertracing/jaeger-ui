@@ -212,6 +212,98 @@ describe('GenAITab', () => {
     expect(screen.getByText('0')).toBeInTheDocument();
   });
 
+  describe('non-standard attribute names', () => {
+    const markName = (key: string, spec: string) =>
+      `Non-standard attribute name ${key}; the OTel GenAI conventions define ${spec}`;
+
+    it('marks a token count read from a deprecated name, and not one read from the spec name', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            { key: 'gen_ai.usage.input_tokens', value: 100 },
+            { key: 'gen_ai.usage.completion_tokens', value: 50 },
+          ])}
+        />
+      );
+      const marks = screen.getAllByRole('img', { name: /attribute name/ });
+      expect(marks).toHaveLength(1);
+      expect(marks[0]).toHaveAccessibleName(
+        'Deprecated attribute name gen_ai.usage.completion_tokens; the OTel GenAI conventions define gen_ai.usage.output_tokens'
+      );
+      // The mark belongs to the item it describes, after that item's value.
+      expect(marks[0].closest('.GenAITab--tokenItem')).toHaveTextContent('Output 50');
+    });
+
+    it('names both attributes in the tooltip', async () => {
+      render(<GenAITab span={makeSpan([{ key: 'output', value: 'Sunny.' }])} />);
+
+      fireEvent.mouseOver(screen.getByRole('img', { name: /Non-standard attribute name/ }));
+
+      const tooltip = await screen.findByRole('tooltip');
+      expect(tooltip).toHaveTextContent('Non-standard attribute name');
+      expect(tooltip).toHaveTextContent('Read from output');
+      expect(tooltip).toHaveTextContent('OTel GenAI conventions: gen_ai.output.messages');
+    });
+
+    it('marks every message read from a non-spec name in its header', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.input.messages',
+              value: [{ role: 'user', content: 'What is the weather?' }],
+            },
+            {
+              key: 'output',
+              value: JSON.stringify([
+                { role: 'assistant', content: 'Sunny.' },
+                { role: 'assistant', content: 'Bring sunglasses.' },
+              ]),
+            },
+          ])}
+        />
+      );
+      const marks = screen.getAllByRole('img', { name: /Non-standard attribute name/ });
+      expect(marks).toHaveLength(2);
+      marks.forEach(mark => {
+        expect(mark).toHaveAccessibleName(markName('output', 'gen_ai.output.messages'));
+        expect(mark.closest('.GenAITab--messageHeader')).toHaveTextContent('assistant');
+      });
+      expect(screen.getByText('user').closest('.GenAITab--messageHeader')).not.toContainElement(marks[0]);
+    });
+
+    it('keeps the mark out of the toggle button, so clicking it does not collapse the message', () => {
+      render(<GenAITab span={makeSpan([{ key: 'output', value: 'Sunny.' }])} />);
+      const toggle = screen.getByRole('button', { name: 'Message 1 (assistant)' });
+      const mark = screen.getByRole('img', { name: /Non-standard attribute name/ });
+      expect(toggle).not.toContainElement(mark);
+      fireEvent.click(mark);
+      expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    it('shows no mark when every attribute carries its spec name', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            { key: 'gen_ai.usage.input_tokens', value: 100 },
+            { key: 'gen_ai.input.messages', value: [{ role: 'user', content: 'Hi' }] },
+          ])}
+        />
+      );
+      expect(screen.queryByRole('img', { name: /attribute name/ })).toBeNull();
+    });
+
+    it('remembers a format under the spec name even for messages read from a fallback name', () => {
+      render(
+        <GenAITab
+          span={makeSpan([{ key: 'input', value: JSON.stringify([{ role: 'user', content: 'Hi' }]) }])}
+        />
+      );
+      chooseView(viewControl(), 'Markdown');
+      expect(useMessageFormatStore.getState().overrides).toEqual({ 'gen_ai.input.messages': 'markdown' });
+    });
+  });
+
   it('renders conversation messages with role labels, visible by default', () => {
     render(
       <GenAITab
