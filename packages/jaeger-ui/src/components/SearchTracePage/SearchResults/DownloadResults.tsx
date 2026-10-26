@@ -4,10 +4,12 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Button, message } from 'antd';
 
-import JaegerAPI from '../../../api/jaeger';
+import { jaegerClient } from '../../../api/v3/client';
+import { MAX_DETAIL_LENGTH } from '../../common/ErrorMessage';
 import { pooledMap } from '../../../utils/pooledMap';
 import type { TraceSummary } from '../../../types/trace-summary';
 import { uploadedTraceId } from '../../../utils/otel-upload';
+import { toTraceIdHex } from '../../../utils/trace-id';
 
 import './DownloadResults.css';
 
@@ -16,8 +18,13 @@ type Props = {
   rawTraces: unknown[];
 };
 
+// The v3 schema parses proto3's "NaN", "Infinity", and "-Infinity" doubleValues into numbers,
+// which JSON.stringify writes as null. Write them back as proto3 strings.
+const proto3Doubles = (key: string, value: unknown) =>
+  key === 'doubleValue' && typeof value === 'number' && !Number.isFinite(value) ? String(value) : value;
+
 export function createBlob(traces: unknown[]) {
-  return new Blob([`{"data":${JSON.stringify(traces)}}`], { type: 'application/json' });
+  return new Blob([`{"data":${JSON.stringify(traces, proto3Doubles)}}`], { type: 'application/json' });
 }
 
 export default function DownloadResults({ traceSummaries, rawTraces }: Props) {
@@ -42,7 +49,6 @@ export default function DownloadResults({ traceSummaries, rawTraces }: Props) {
       })
     );
     const missing = traceSummaries.filter(s => !rawByID.has(s.traceID));
-    let traces: unknown[];
     if (missing.length > 0) {
       // Fetch missing traces with bounded concurrency so we report progress as responses
       // arrive without overwhelming the backend. Cap at 6 — the HTTP/1.1 per-host limit,
@@ -52,10 +58,7 @@ export default function DownloadResults({ traceSummaries, rawTraces }: Props) {
       try {
         const fetched = await pooledMap(
           missing,
-          async s => {
-            const r = await JaegerAPI.fetchTrace(s.traceID);
-            return r?.data?.[0] ?? r;
-          },
+          s => jaegerClient.fetchTrace(toTraceIdHex(s.traceID)),
           6,
           done => {
             if (!cancelled.current && isMountedRef.current)
@@ -65,21 +68,23 @@ export default function DownloadResults({ traceSummaries, rawTraces }: Props) {
         fetched.forEach((raw, i) => rawByID.set(missing[i].traceID, raw));
       } catch (err) {
         cancelled.current = true;
-        message.error(`Failed to retrieve traces: ${err instanceof Error ? err.message : String(err)}`);
+        // JaegerClient keeps the server's error response on httpBody.
+        const body = err instanceof Error ? (err as Error & { httpBody?: string }).httpBody : undefined;
+        const detail =
+          body && body.length > MAX_DETAIL_LENGTH
+            ? `${body.slice(0, MAX_DETAIL_LENGTH - 3).trim()}...`
+            : body;
+        message.error(
+          `Failed to retrieve traces: ${err instanceof Error ? err.message : String(err)}${detail ? `: ${detail}` : ''}`
+        );
         return;
       } finally {
         cancelled.current = true;
         if (isMountedRef.current) setProgress(undefined);
       }
     }
-    traces = traceSummaries.map(s => rawByID.get(s.traceID)).filter(Boolean);
-    const missingCount = traceSummaries.length - traces.length;
-    if (missingCount > 0) {
-      message.warning(
-        `${missingCount} trace${missingCount > 1 ? 's' : ''} could not be retrieved and will be omitted from the download.`
-      );
-    }
-    const file = createBlob(traces);
+    // Every summary now has a raw trace: uploads are cached and fetches resolve or throw.
+    const file = createBlob(traceSummaries.map(s => rawByID.get(s.traceID)));
     const element = document.createElement('a');
     element.href = URL.createObjectURL(file);
     element.download = `traces-${Date.now()}.json`;
