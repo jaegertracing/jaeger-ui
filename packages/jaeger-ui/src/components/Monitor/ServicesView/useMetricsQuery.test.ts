@@ -4,7 +4,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
-import JaegerAPI from '../../../api/jaeger';
+import { jaegerClient } from '../../../api/v3/client';
 import {
   transformServiceMetrics,
   transformOperationMetrics,
@@ -16,8 +16,8 @@ import type {
   FetchAggregatedServiceMetricsResponse,
 } from '../../../types/metrics';
 
-vi.mock('../../../api/jaeger', () => ({
-  default: {
+vi.mock('../../../api/v3/client', () => ({
+  jaegerClient: {
     fetchMetrics: vi.fn(),
   },
 }));
@@ -374,7 +374,7 @@ describe('useServiceMetricsQuery', () => {
       wrapper: makeWrapper(qc),
     });
     expect(result.current.fetchStatus).toBe('idle');
-    expect(JaegerAPI.fetchMetrics).not.toHaveBeenCalled();
+    expect(jaegerClient.fetchMetrics).not.toHaveBeenCalled();
   });
 
   it('does not call the API when params are undefined', () => {
@@ -382,11 +382,11 @@ describe('useServiceMetricsQuery', () => {
       wrapper: makeWrapper(qc),
     });
     expect(result.current.fetchStatus).toBe('idle');
-    expect(JaegerAPI.fetchMetrics).not.toHaveBeenCalled();
+    expect(jaegerClient.fetchMetrics).not.toHaveBeenCalled();
   });
 
   it('fetches and transforms service metrics', async () => {
-    vi.mocked(JaegerAPI.fetchMetrics)
+    vi.mocked(jaegerClient.fetchMetrics)
       .mockResolvedValueOnce({ ...(latency50 as any).value })
       .mockResolvedValueOnce({ ...(latency75 as any).value })
       .mockResolvedValueOnce({ ...(latency95 as any).value })
@@ -398,13 +398,47 @@ describe('useServiceMetricsQuery', () => {
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(JaegerAPI.fetchMetrics).toHaveBeenCalledTimes(5);
+    expect(jaegerClient.fetchMetrics).toHaveBeenCalledTimes(5);
     expect(result.current.data!.serviceMetrics.service_latencies).toHaveLength(3);
     expect(result.current.data!.serviceError.service_latencies_50).toBeNull();
   });
 
+  it('keeps successful metrics when one request fails with HTTP 501 details', async () => {
+    const failure = Object.assign(new Error('Failed to fetch latencies metrics: 501 Not Implemented'), {
+      httpStatus: 501,
+      httpBody: 'metrics querying is currently disabled',
+    });
+    vi.mocked(jaegerClient.fetchMetrics)
+      .mockRejectedValueOnce(failure)
+      .mockResolvedValueOnce({ ...(latency75 as any).value })
+      .mockResolvedValueOnce({ ...(latency95 as any).value })
+      .mockResolvedValueOnce({ ...(callRate as any).value })
+      .mockResolvedValueOnce({ ...(errorRate as any).value });
+
+    const { result } = renderHook(() => useServiceMetricsQuery('svc', baseParams), {
+      wrapper: makeWrapper(qc),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data!.serviceMetrics.service_latencies).toHaveLength(2);
+    expect(result.current.data!.serviceMetrics.service_call_rate).not.toBeNull();
+    expect(result.current.data!.serviceMetrics.service_error_rate).not.toBeNull();
+    expect(result.current.data!.serviceError).toEqual({
+      service_latencies_50: {
+        message: failure.message,
+        httpStatus: 501,
+        httpBody: failure.httpBody,
+      },
+      service_latencies_75: null,
+      service_latencies_95: null,
+      service_call_rate: null,
+      service_error_rate: null,
+    });
+    expect(jaegerClient.fetchMetrics).toHaveBeenCalledTimes(5);
+  });
+
   it('passes a quantile for every service metrics call', async () => {
-    vi.mocked(JaegerAPI.fetchMetrics).mockResolvedValue({
+    vi.mocked(jaegerClient.fetchMetrics).mockResolvedValue({
       name: 'service_latencies',
       type: 'GAUGE',
       help: '',
@@ -417,7 +451,7 @@ describe('useServiceMetricsQuery', () => {
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    const calls = vi.mocked(JaegerAPI.fetchMetrics).mock.calls;
+    const calls = vi.mocked(jaegerClient.fetchMetrics).mock.calls;
     expect(calls[0][2]).toMatchObject({ quantile: 0.5 });
     expect(calls[1][2]).toMatchObject({ quantile: 0.75 });
     expect(calls[2][2]).toMatchObject({ quantile: 0.95 });
@@ -426,7 +460,7 @@ describe('useServiceMetricsQuery', () => {
   });
 
   it('passes endTs from params to all API calls', async () => {
-    vi.mocked(JaegerAPI.fetchMetrics).mockResolvedValue({
+    vi.mocked(jaegerClient.fetchMetrics).mockResolvedValue({
       name: 'service_latencies',
       type: 'GAUGE',
       help: '',
@@ -439,7 +473,7 @@ describe('useServiceMetricsQuery', () => {
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    for (const call of vi.mocked(JaegerAPI.fetchMetrics).mock.calls) {
+    for (const call of vi.mocked(jaegerClient.fetchMetrics).mock.calls) {
       expect(call[2]).toMatchObject({ endTs: baseParams.endTs });
     }
   });
@@ -458,11 +492,11 @@ describe('useOperationMetricsQuery', () => {
       wrapper: makeWrapper(qc),
     });
     expect(result.current.fetchStatus).toBe('idle');
-    expect(JaegerAPI.fetchMetrics).not.toHaveBeenCalled();
+    expect(jaegerClient.fetchMetrics).not.toHaveBeenCalled();
   });
 
   it('fetches and transforms operation metrics', async () => {
-    vi.mocked(JaegerAPI.fetchMetrics)
+    vi.mocked(jaegerClient.fetchMetrics)
       .mockResolvedValueOnce({ ...(opsLatencies as any).value })
       .mockResolvedValueOnce({ ...(opsCalls as any).value })
       .mockResolvedValueOnce({ ...(opsErrors as any).value });
@@ -472,13 +506,34 @@ describe('useOperationMetricsQuery', () => {
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(JaegerAPI.fetchMetrics).toHaveBeenCalledTimes(3);
+    expect(jaegerClient.fetchMetrics).toHaveBeenCalledTimes(3);
     expect(result.current.data!.serviceOpsMetrics).toHaveLength(1);
     expect(result.current.data!.serviceOpsMetrics![0].name).toBe('op1');
   });
 
+  it('keeps successful operation metrics when the latency request fails', async () => {
+    const failure = new Error('latency query failed');
+    vi.mocked(jaegerClient.fetchMetrics)
+      .mockRejectedValueOnce(failure)
+      .mockResolvedValueOnce({ ...(opsCalls as any).value })
+      .mockResolvedValueOnce({ ...(opsErrors as any).value });
+
+    const { result } = renderHook(() => useOperationMetricsQuery('svc', baseParams), {
+      wrapper: makeWrapper(qc),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data!.serviceOpsMetrics![0].requests).toBe(100);
+    expect(result.current.data!.opsError).toEqual({
+      opsLatencies: { message: failure.message },
+      opsCalls: null,
+      opsErrors: null,
+    });
+    expect(jaegerClient.fetchMetrics).toHaveBeenCalledTimes(3);
+  });
+
   it('passes groupByOperation: true and endTs from params for all three calls', async () => {
-    vi.mocked(JaegerAPI.fetchMetrics).mockResolvedValue({
+    vi.mocked(jaegerClient.fetchMetrics).mockResolvedValue({
       name: 'service_operation_latencies',
       type: 'GAUGE',
       help: '',
@@ -491,8 +546,84 @@ describe('useOperationMetricsQuery', () => {
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    for (const call of vi.mocked(JaegerAPI.fetchMetrics).mock.calls) {
+    for (const call of vi.mocked(jaegerClient.fetchMetrics).mock.calls) {
       expect(call[2]).toMatchObject({ groupByOperation: true, endTs: baseParams.endTs });
     }
+  });
+});
+
+describe.each([
+  { queryKey: 'serviceMetrics', useMetrics: useServiceMetricsQuery, count: 5 },
+  { queryKey: 'operationMetrics', useMetrics: useOperationMetricsQuery, count: 3 },
+])('$queryKey cancellation and caching', ({ queryKey, useMetrics, count }) => {
+  let qc: QueryClient;
+
+  beforeEach(() => {
+    qc = makeQueryClient();
+    vi.mocked(jaegerClient.fetchMetrics).mockReset();
+    vi.mocked(jaegerClient.fetchMetrics).mockImplementation(
+      (_type, _service, _query, signal) =>
+        new Promise((_resolve, reject) => {
+          signal?.addEventListener('abort', () => reject(signal.reason), { once: true });
+        })
+    );
+  });
+
+  afterEach(() => qc.clear());
+
+  it('keeps previous data while a key change aborts the abandoned request group', async () => {
+    const cached =
+      queryKey === 'serviceMetrics'
+        ? transformServiceMetrics(nameServiceResults(fullServicePayload))
+        : transformOperationMetrics(nameOperationResults(fullOpsPayload));
+    qc.setQueryData([queryKey, 'svc', baseParams], cached);
+    const { result, rerender, unmount } = renderHook(({ params }) => useMetrics('svc', params), {
+      wrapper: makeWrapper(qc),
+      initialProps: { params: baseParams },
+    });
+
+    expect(result.current.data).toEqual(cached);
+    expect(jaegerClient.fetchMetrics).not.toHaveBeenCalled();
+
+    rerender({ params: { ...baseParams, endTs: baseParams.endTs + 1 } });
+    expect(result.current.isPlaceholderData).toBe(true);
+    expect(result.current.data).toEqual(cached);
+    expect(jaegerClient.fetchMetrics).toHaveBeenCalledTimes(count);
+    const signals = vi.mocked(jaegerClient.fetchMetrics).mock.calls.map(call => call[3]);
+    expect(signals[0]).toBeInstanceOf(AbortSignal);
+    expect(signals.every(signal => signal === signals[0] && !signal?.aborted)).toBe(true);
+
+    rerender({ params: { ...baseParams, endTs: baseParams.endTs + 2 } });
+    expect(signals.every(signal => signal?.aborted)).toBe(true);
+    expect(result.current.isPlaceholderData).toBe(true);
+    expect(result.current.data).toEqual(cached);
+    expect(result.current.isError).toBe(false);
+    expect(jaegerClient.fetchMetrics).toHaveBeenCalledTimes(count * 2);
+    const currentSignals = vi
+      .mocked(jaegerClient.fetchMetrics)
+      .mock.calls.slice(count)
+      .map(call => call[3]);
+    expect(currentSignals.every(signal => signal && !signal.aborted)).toBe(true);
+
+    unmount();
+    expect(currentSignals.every(signal => signal?.aborted)).toBe(true);
+    await waitFor(() =>
+      expect(
+        qc.getQueryData([queryKey, 'svc', { ...baseParams, endTs: baseParams.endTs + 2 }])
+      ).toBeUndefined()
+    );
+  });
+
+  it('keeps shared requests alive until the last observer unmounts', () => {
+    const first = renderHook(() => useMetrics('svc', baseParams), { wrapper: makeWrapper(qc) });
+    const second = renderHook(() => useMetrics('svc', baseParams), { wrapper: makeWrapper(qc) });
+    expect(jaegerClient.fetchMetrics).toHaveBeenCalledTimes(count);
+    const signals = vi.mocked(jaegerClient.fetchMetrics).mock.calls.map(call => call[3]);
+    expect(signals.every(signal => signal instanceof AbortSignal && !signal.aborted)).toBe(true);
+
+    first.unmount();
+    expect(signals.every(signal => signal && !signal.aborted)).toBe(true);
+    second.unmount();
+    expect(signals.every(signal => signal?.aborted)).toBe(true);
   });
 });

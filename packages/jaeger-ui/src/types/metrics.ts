@@ -54,6 +54,10 @@ type MetricsAPIOpsResponseData<T = AvailableOpsMetrics> = {
   quantile: number;
 };
 
+export type MetricsAPIResponse<TGroupByOperation extends boolean = false> = TGroupByOperation extends true
+  ? MetricsAPIOpsResponseData
+  : MetricsAPIServiceResponseData<AvailableServiceMetrics, number>;
+
 export type Points = {
   x: number;
   y: number | null;
