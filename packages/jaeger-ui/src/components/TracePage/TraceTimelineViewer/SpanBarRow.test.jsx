@@ -554,4 +554,112 @@ describe('<SpanBarRow>', () => {
       expect(screen.queryByTestId('hidden-errors')).toBeNull();
     });
   });
+
+  describe('showServiceName', () => {
+    it('renders the service name by default', () => {
+      render(<SpanBarRow {...defaultProps} rpc={null} />);
+      expect(screen.getByText('service-name')).toBeInTheDocument();
+    });
+
+    it('renders the service name when showServiceName is true', () => {
+      render(<SpanBarRow {...defaultProps} rpc={null} showServiceName />);
+      expect(screen.getByText('service-name')).toBeInTheDocument();
+    });
+
+    it('hides the service name when showServiceName is false', () => {
+      render(<SpanBarRow {...defaultProps} rpc={null} showServiceName={false} />);
+      expect(screen.queryByText('service-name')).not.toBeInTheDocument();
+    });
+
+    it('still shows the operation name when service name is hidden', () => {
+      render(<SpanBarRow {...defaultProps} rpc={null} showServiceName={false} />);
+      expect(screen.getByText('op-name')).toBeInTheDocument();
+    });
+
+    it('always includes service name in the SpanBar longLabel tooltip regardless of showServiceName', () => {
+      render(<SpanBarRow {...defaultProps} rpc={null} showServiceName={false} />);
+      expect(SpanBar).toHaveBeenCalledWith(
+        expect.objectContaining({
+          longLabel: expect.stringContaining('service-name'),
+        }),
+        undefined
+      );
+    });
+
+    it('sets aria-label on the switch link with full service and operation name when showServiceName is false', () => {
+      render(<SpanBarRow {...defaultProps} rpc={null} showServiceName={false} />);
+      expect(screen.getByRole('switch')).toHaveAttribute('aria-label', 'service-name op-name');
+    });
+
+    it('includes decoration label and span pills in aria-label when showServiceName is false', () => {
+      const span = {
+        ...defaultProps.span,
+        genAIKind: 'LLM_CALL',
+        attributes: makeAttributes([{ key: 'http.status_code', value: '200' }]),
+      };
+      render(
+        <SpanBarRow {...defaultProps} span={span} rpc={null} showServiceName={false} spanPillsEnabled />
+      );
+      expect(screen.getByRole('switch')).toHaveAttribute(
+        'aria-label',
+        'service-name op-name LLM call http.status_code: 200'
+      );
+    });
+
+    it('keeps service name visible when rpc is present even if showServiceName is false', () => {
+      const rpc = {
+        color: '#f00',
+        operationName: 'rpc-op',
+        serviceName: 'rpc-service',
+        viewEnd: 1,
+        viewStart: 0,
+      };
+      render(<SpanBarRow {...defaultProps} rpc={rpc} showServiceName={false} />);
+      expect(screen.getByText('service-name')).toBeInTheDocument();
+      expect(screen.getByText('rpc-service')).toBeInTheDocument();
+      expect(screen.getByRole('switch')).not.toHaveAttribute('aria-label');
+    });
+
+    it('keeps service name visible when noInstrumentedServer is present even if showServiceName is false', () => {
+      const noInstrumentedServer = {
+        serviceName: 'peer-service',
+        color: '#0f0',
+      };
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          rpc={null}
+          noInstrumentedServer={noInstrumentedServer}
+          showServiceName={false}
+        />
+      );
+      expect(screen.getByText('service-name')).toBeInTheDocument();
+      expect(screen.getByText('peer-service')).toBeInTheDocument();
+    });
+
+    it('keeps service name visible when operationName is empty even if showServiceName is false', () => {
+      const span = { ...defaultProps.span, name: '' };
+      render(<SpanBarRow {...defaultProps} span={span} rpc={null} showServiceName={false} />);
+      expect(screen.getByText('service-name')).toBeInTheDocument();
+    });
+
+    it('does not set aria-label on the switch link when showServiceName is true', () => {
+      render(<SpanBarRow {...defaultProps} rpc={null} showServiceName />);
+      expect(screen.getByRole('switch')).not.toHaveAttribute('aria-label');
+    });
+
+    it('applies is-children-collapsed to endpoint-name when showServiceName is false and children are collapsed', () => {
+      render(
+        <SpanBarRow
+          {...defaultProps}
+          rpc={null}
+          showServiceName={false}
+          isParent
+          isChildrenExpanded={false}
+        />
+      );
+      const endpoint = screen.getByText('op-name');
+      expect(endpoint).toHaveClass('endpoint-name', 'is-children-collapsed');
+    });
+  });
 });

@@ -538,6 +538,118 @@ describe('<VirtualizedTraceViewImpl>', () => {
       expect(result.props.children.props.isSelected).toBe(true);
     });
 
+    describe('showServiceName prop passed to SpanBarRow', () => {
+      it('passes showServiceName=true for root spans without a parentSpan', () => {
+        const { listViewProps } = renderAndCapture();
+        const rowResult = listViewProps.itemRenderer('key-0', {}, 0, {});
+        expect(rowResult.props.children.props.showServiceName).toBe(true);
+      });
+
+      it('passes showServiceName=false when child span has the same serviceName as its parent', () => {
+        const newProcesses = {};
+        Object.entries(legacyTrace.processes).forEach(([id, proc]) => {
+          newProcesses[id] = { ...proc, serviceName: 'service-alpha' };
+        });
+        const altTrace = transformTraceData({ ...legacyTrace, processes: newProcesses }).asOtelTrace();
+        const { listViewProps } = renderAndCapture({ ...mockProps, trace: altTrace });
+        const rowResult = listViewProps.itemRenderer('key-1', {}, 1, {});
+        expect(rowResult.props.children.props.showServiceName).toBe(false);
+      });
+
+      it('passes showServiceName=true when child span has a different serviceName from its parent', () => {
+        const newProcesses = {
+          ...legacyTrace.processes,
+          p_root: { serviceName: 'service-alpha' },
+          p_child: { serviceName: 'service-beta' },
+        };
+        const newLegacySpans = legacyTrace.spans.map((s, index) => ({
+          ...s,
+          processID: index === 0 ? 'p_root' : 'p_child',
+        }));
+        const altTrace = transformTraceData({
+          ...legacyTrace,
+          spans: newLegacySpans,
+          processes: newProcesses,
+        }).asOtelTrace();
+        const { listViewProps } = renderAndCapture({ ...mockProps, trace: altTrace });
+        const rowResult = listViewProps.itemRenderer('key-1', {}, 1, {});
+        expect(rowResult.props.children.props.showServiceName).toBe(true);
+      });
+
+      it('passes showServiceName=true when child span has an empty operation name', () => {
+        const newProcesses = {};
+        Object.entries(legacyTrace.processes).forEach(([id, proc]) => {
+          newProcesses[id] = { ...proc, serviceName: 'service-alpha' };
+        });
+        const newLegacySpans = legacyTrace.spans.map((s, index) => ({
+          ...s,
+          operationName: index === 1 ? '' : s.operationName,
+        }));
+        const altTrace = transformTraceData({
+          ...legacyTrace,
+          spans: newLegacySpans,
+          processes: newProcesses,
+        }).asOtelTrace();
+        const { listViewProps } = renderAndCapture({ ...mockProps, trace: altTrace });
+        const rowResult = listViewProps.itemRenderer('key-1', {}, 1, {});
+        expect(rowResult.props.children.props.showServiceName).toBe(true);
+      });
+
+      it('passes showServiceName=true when same-service child is a collapsed client with an RPC server child', () => {
+        const newProcesses = {};
+        Object.entries(legacyTrace.processes).forEach(([id, proc]) => {
+          newProcesses[id] = { ...proc, serviceName: 'service-alpha' };
+        });
+        const clientTags = [{ key: 'span.kind', value: 'client' }, ...legacyTrace.spans[0].tags];
+        const serverTags = [{ key: 'span.kind', value: 'server' }, ...legacyTrace.spans[1].tags];
+        const newLegacySpans = [...legacyTrace.spans];
+        newLegacySpans[0] = { ...newLegacySpans[0], tags: clientTags };
+        newLegacySpans[1] = { ...newLegacySpans[1], tags: serverTags };
+
+        const altTrace = transformTraceData({
+          ...legacyTrace,
+          spans: newLegacySpans,
+          processes: newProcesses,
+        }).asOtelTrace();
+        const childrenHiddenIDs = new Set([altTrace.spans[0].spanID]);
+        const { listViewProps } = renderAndCapture({
+          ...mockProps,
+          childrenHiddenIDs,
+          trace: altTrace,
+        });
+        const rowResult = listViewProps.itemRenderer('key-0', {}, 0, {});
+        expect(rowResult.props.children.props.showServiceName).toBe(true);
+      });
+
+      it('passes showServiceName=true when same-service leaf span has peer.service', () => {
+        const newProcesses = {};
+        Object.entries(legacyTrace.processes).forEach(([id, proc]) => {
+          newProcesses[id] = { ...proc, serviceName: 'service-alpha' };
+        });
+        const leafIndex = legacyTrace.spans.findIndex(s => {
+          return !legacyTrace.spans.some(other =>
+            other.references?.some(r => r.refType === 'CHILD_OF' && r.spanID === s.spanID)
+          );
+        });
+        const peerTags = [
+          { key: 'span.kind', value: 'client' },
+          { key: 'peer.service', value: 'externalServiceTest' },
+        ];
+        const newLegacySpans = legacyTrace.spans.map((s, index) => ({
+          ...s,
+          tags: index === leafIndex ? [...s.tags, ...peerTags] : s.tags,
+        }));
+        const altTrace = transformTraceData({
+          ...legacyTrace,
+          spans: newLegacySpans,
+          processes: newProcesses,
+        }).asOtelTrace();
+        const { listViewProps } = renderAndCapture({ ...mockProps, trace: altTrace });
+        const rowResult = listViewProps.itemRenderer(`key-${leafIndex}`, {}, leafIndex, {});
+        expect(rowResult.props.children.props.showServiceName).toBe(true);
+      });
+    });
+
     it('renderSpanDetailRow returns null if detailState is missing', () => {
       // Expand row 1 to create a detail row, but remove the detail state for that span
       const { props } = expandRow(1);
