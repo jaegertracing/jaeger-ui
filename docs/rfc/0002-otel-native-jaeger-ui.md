@@ -529,7 +529,8 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 
 **Not everything has a v3 counterpart.** `jaeger-idl`'s api_v3 service defines only `traces/{trace_id}`, `traces`, `services`, `operations`, `dependencies`, and `trace-summaries`. Trace archival (`/api/archive/:id`), SPM metrics (`/api/metrics/*`), DDG (`/analytics/v1/dependencies`), OTLP file transform (`/api/transform`), and config-driven decoration URLs have no v3 endpoint, so they legitimately stay on their current routes. Removing `src/api/jaeger.ts` therefore means folding those calls into `JaegerClient` (or a sibling module) rather than migrating them to `/api/v3/`.
 
-- [ ] Implement `archiveTrace` and `fetchDependencies` (`/api/v3/dependencies`) in `JaegerClient`; carry `fetchMetrics` over unchanged.
+- [x] Implement `archiveTrace` and `fetchDecoration` in `JaegerClient` and migrate their callers.
+- [ ] Implement `fetchDependencies` (`/api/v3/dependencies`) in `JaegerClient`; carry `fetchMetrics` over unchanged.
 - [ ] Update remaining components to use the new client.
 - [ ] Gradually decommission Redux actions/reducers for trace data.
 - [ ] Remove legacy `src/api/jaeger.ts`.
@@ -838,7 +839,7 @@ The blast radius is already small: outside tests, the facade classes have three 
 > **Implementation note (#4605):** Native loading removes the transformer and facade bridge from `hooks/useTraceLoading.ts`. Uploads and test fixtures still use them. The historical caller inventory above is no longer current: `generateRowStates` retains transformer use in tests, and Flamegraph no longer imports a facade. Native uploads, a fresh caller audit, and visual/performance parity remain prerequisites for deletion.
 
 - [ ] Remove `OtelSpanFacade`, `OtelTraceFacade` classes and the `asOtelTrace()` bridge on the legacy trace type
-- [ ] Parse uploaded OTLP files client-side in `utils/readJsonFile.ts`, dropping its `/api/transform` round trip (an OTLP file is already in the parser's input format)
+- [x] Parse uploaded OTLP files client-side in `SearchTracePage/FileLoader.tsx`, dropping the `/api/transform` round trip in `utils/readJsonFile.ts` (an OTLP file is already in the parser's input format)
 - [ ] Remove legacy types (mark as deprecated first)
 - [ ] Remove `src/api/jaeger.ts` (old REST API)
 - [ ] Remove `transformTraceData` (old transformer)
