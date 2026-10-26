@@ -31,7 +31,7 @@ function Nodes<T = {}>(props: TProps<T>) {
   ));
 }
 
-function areEqual<T>(prevProps: TProps<T>, nextProps: TProps<T>) {
+export const areEqual = <T,>(prevProps: TProps<T>, nextProps: TProps<T>) => {
   return (
     prevProps.renderNode === nextProps.renderNode &&
     prevProps.getClassName === nextProps.getClassName &&
@@ -40,6 +40,6 @@ function areEqual<T>(prevProps: TProps<T>, nextProps: TProps<T>) {
     prevProps.renderUtils === nextProps.renderUtils &&
     isSamePropSetter(prevProps.setOnNode, nextProps.setOnNode)
   );
-}
+};
 
 export default React.memo(Nodes, areEqual) as unknown as typeof Nodes;
