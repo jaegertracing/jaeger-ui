@@ -119,7 +119,7 @@ function valueFirstDropdown(selectedAttributeKey: string, trace: IOtelTrace, use
 
   const uniqueValuesForSelectedAttribute = new Set<string>();
 
-  const statsPerAttributeValue = {} as Record<string, StatsPerTag>;
+  const statsPerAttributeValue = Object.create(null) as Record<string, StatsPerTag>;
   const spanIdsWithSelectedAttribute = new Set<string>();
 
   for (let i = 0; i < allSpans.length; i++) {
@@ -232,7 +232,7 @@ function buildDetail(
 ) {
   const newColumnValues = [];
 
-  const statsPerAttributeValue = {} as Record<string, StatsPerTag>;
+  const statsPerAttributeValue = Object.create(null) as Record<string, StatsPerTag>;
   const uniqueValuesForSelectedAttribute = new Set<string>();
 
   for (let i = 0; i < tempArray.length; i++) {
@@ -363,7 +363,7 @@ function valueSecondDropdown(
     selectedAttributeKeySecond !== getServiceName() &&
     selectedAttributeKeySecond !== getOperationName(useOtelTerms);
 
-  const spansMatchingAttributeValueFromFirstDropdown = {} as Record<string, IOtelSpan[]>;
+  const spansMatchingAttributeValueFromFirstDropdown = Object.create(null) as Record<string, IOtelSpan[]>;
   for (let i = 0; i < allSpans.length; i++) {
     const attributeValue = getAttributeValueFromSpan(selectedAttributeKey, allSpans[i], useOtelTerms);
 
