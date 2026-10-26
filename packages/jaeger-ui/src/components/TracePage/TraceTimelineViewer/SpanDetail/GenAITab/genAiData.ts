@@ -449,12 +449,18 @@ export function hasAnyTokenUsage(usage: GenAiTokenUsage): boolean {
 }
 
 function getGenAiTokenUsageFromGetter(get: GetAttr): GenAiTokenUsage | undefined {
+  // The deprecated names on the right are the ones the OTel semantic conventions
+  // used before v1.27.0 renamed prompt_tokens/completion_tokens, and before the
+  // GenAI conventions renamed cache_creation.input_tokens to cache_write. Each is
+  // read, and claimed, only when the current name is absent.
   const usage: GenAiTokenUsage = {
-    inputTokens: asNumber(get('gen_ai.usage.input_tokens')),
-    outputTokens: asNumber(get('gen_ai.usage.output_tokens')),
+    inputTokens: asNumber(get('gen_ai.usage.input_tokens') ?? get('gen_ai.usage.prompt_tokens')),
+    outputTokens: asNumber(get('gen_ai.usage.output_tokens') ?? get('gen_ai.usage.completion_tokens')),
     reasoningOutputTokens: asNumber(get('gen_ai.usage.reasoning.output_tokens')),
     cacheReadInputTokens: asNumber(get('gen_ai.usage.cache_read.input_tokens')),
-    cacheWriteInputTokens: asNumber(get('gen_ai.usage.cache_write.input_tokens')),
+    cacheWriteInputTokens: asNumber(
+      get('gen_ai.usage.cache_write.input_tokens') ?? get('gen_ai.usage.cache_creation.input_tokens')
+    ),
     textInputTokens: asNumber(get('gen_ai.usage.text.input_tokens')),
     imageInputTokens: asNumber(get('gen_ai.usage.image.input_tokens')),
     audioInputTokens: asNumber(get('gen_ai.usage.audio.input_tokens')),
@@ -545,14 +551,16 @@ const REGISTRY: SectionBuilder[] = [
     // gen_ai.prompt/gen_ai.completion are the deprecated spec names. Bare
     // gen_ai.input/gen_ai.output are not in any spec version; some
     // instrumentations emit them on a single LLM call span, holding the one
-    // input and the one output rather than a message array. parseMessages
-    // wraps such a scalar or object into a one-element list, so the value
-    // renders as the span's only message.
+    // input and the one output rather than a message array. Unprefixed
+    // input/output come from span models in which every GenAI span carries
+    // its input and output under those two names. parseMessages wraps a
+    // scalar or object into a one-element list, so the value renders as the
+    // span's only message.
     const inputMessages = parseMessages(
-      get('gen_ai.input.messages') ?? get('gen_ai.prompt') ?? get('gen_ai.input')
+      get('gen_ai.input.messages') ?? get('gen_ai.prompt') ?? get('gen_ai.input') ?? get('input')
     );
     const outputMessages = parseMessages(
-      get('gen_ai.output.messages') ?? get('gen_ai.completion') ?? get('gen_ai.output')
+      get('gen_ai.output.messages') ?? get('gen_ai.completion') ?? get('gen_ai.output') ?? get('output')
     );
     const systemInstructions = parseSystemInstructions(get('gen_ai.system_instructions'));
     return inputMessages.length || outputMessages.length || systemInstructions
