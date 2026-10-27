@@ -71,17 +71,26 @@ interface TimeStampResult {
   end: string;
 }
 
+export function isValidCustomTimeRange(fields?: Partial<TimeStampParams> | null): boolean {
+  if (!fields) {
+    return false;
+  }
+  const { startDate, startDateTime, endDate, endDateTime } = fields;
+  return Boolean(startDate?.trim() && startDateTime?.trim() && endDate?.trim() && endDateTime?.trim());
+}
+
 export function getUnixTimeStampInMSFromForm({
   startDate,
   startDateTime,
   endDate,
   endDateTime,
 }: TimeStampParams): TimeStampResult {
-  const start = `${startDate} ${startDateTime}`;
-  const end = `${endDate} ${endDateTime}`;
+  const isStartValid = Boolean(startDate?.trim() && startDateTime?.trim());
+  const isEndValid = Boolean(endDate?.trim() && endDateTime?.trim());
+
   return {
-    start: `${dayjs(start, 'YYYY-MM-DD HH:mm').valueOf()}000`,
-    end: `${dayjs(end, 'YYYY-MM-DD HH:mm').valueOf()}000`,
+    start: isStartValid ? `${dayjs(`${startDate} ${startDateTime}`, 'YYYY-MM-DD HH:mm').valueOf()}000` : '',
+    end: isEndValid ? `${dayjs(`${endDate} ${endDateTime}`, 'YYYY-MM-DD HH:mm').valueOf()}000` : '',
   };
 }
 
@@ -240,11 +249,14 @@ function buildSearchQuery(
   } = fields;
 
   let start: string | number;
-  let end: number;
+  let end: number | string;
   if (lookback !== 'custom') {
     const now = new Date();
     start = String(lookbackToTimestamp(lookback, now));
     end = now.valueOf() * 1000;
+  } else if (!isValidCustomTimeRange(fields)) {
+    start = '';
+    end = '';
   } else {
     const times = getUnixTimeStampInMSFromForm({
       startDate,
@@ -256,7 +268,7 @@ function buildSearchQuery(
     end = parseInt(times.end, 10);
   }
 
-  if (adjustTimeEnabled) {
+  if (adjustTimeEnabled && typeof end === 'number' && !Number.isNaN(end)) {
     end = applyAdjustTime(end, adjustTime);
   }
 
@@ -388,15 +400,43 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
     store.set(ADJUST_TIME_ENABLED_KEY, checked);
   }, []);
 
+  const { service: selectedService, lookback: selectedLookback } = formData;
+  const noSelectedService = selectedService === '-' || !selectedService;
+  const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
+  const invalidDuration =
+    validateDurationFields(formData.minDuration) || validateDurationFields(formData.maxDuration);
+  const invalidCustomTimeRange = selectedLookback === 'custom' && !isValidCustomTimeRange(formData);
+
   const handleSubmit = useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
+      if (
+        submitting ||
+        noSelectedService ||
+        invalid ||
+        invalidDuration !== undefined ||
+        invalidCustomTimeRange
+      ) {
+        return;
+      }
       const fields = formData as ISearchFormFields;
       const url = submitFormHandler(fields, searchAdjustEndTime, adjustTimeEnabled);
       clearUploadedTraces();
       navigate(url);
     },
-    [formData, searchAdjustEndTime, adjustTimeEnabled, submitFormHandler, navigate, clearUploadedTraces]
+    [
+      submitting,
+      noSelectedService,
+      invalid,
+      invalidDuration,
+      invalidCustomTimeRange,
+      formData,
+      searchAdjustEndTime,
+      adjustTimeEnabled,
+      submitFormHandler,
+      navigate,
+      clearUploadedTraces,
+    ]
   );
 
   const handleReset = useCallback(() => {
@@ -404,12 +444,6 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
       defaultFormData({ service: prev.service }, searchConfig?.defaultLookback, allowAllServices)
     );
   }, [searchConfig?.defaultLookback, allowAllServices]);
-
-  const { service: selectedService, lookback: selectedLookback } = formData;
-  const noSelectedService = selectedService === '-' || !selectedService;
-  const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
-  const invalidDuration =
-    validateDurationFields(formData.minDuration) || validateDurationFields(formData.maxDuration);
 
   if (isLoadingServices && services.length === 0 && !servicesError) {
     return <LoadingIndicator />;
@@ -727,7 +761,13 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
       <Button
         htmlType="submit"
         className="SearchForm--submit"
-        disabled={submitting || noSelectedService || invalid || invalidDuration !== undefined}
+        disabled={
+          submitting ||
+          noSelectedService ||
+          invalid ||
+          invalidDuration !== undefined ||
+          invalidCustomTimeRange
+        }
         data-test={markers.SUBMIT_BTN}
       >
         Find Traces
