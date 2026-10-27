@@ -82,16 +82,30 @@ export type GenAiTokenUsage = {
   audioCacheReadInputTokens?: number;
 };
 
+/**
+ * The attribute a value was read from when that is not the name the OTel GenAI
+ * conventions define.
+ */
+export type GenAiAttributeSource = { key: string; spec: string };
+
 // Every variant separates its discriminant (`type`) from its payload (`data`)
 // so a generic fallback renderer can walk `Object.entries(data)` for a
 // section type it doesn't have a specific case for.
+//
+// `sources` records, per value read from a name other than the one the OTel GenAI
+// conventions define, which attribute it came from, so the view can say so.
 export type GenAiSection =
   | { type: 'agent'; data: GenAiAgent }
   | { type: 'meta'; data: { operation?: string; provider?: string; model?: string } }
-  | { type: 'tokens'; data: GenAiTokenUsage }
+  | {
+      type: 'tokens';
+      data: GenAiTokenUsage;
+      sources: GenAiTokenSources;
+    }
   | {
       type: 'conversation';
       data: { systemInstructions?: string; inputMessages: GenAiMessage[]; outputMessages: GenAiMessage[] };
+      sources: { input?: GenAiAttributeSource; output?: GenAiAttributeSource };
     }
   | { type: 'toolCall'; data: GenAiToolCall }
   | { type: 'other'; data: { attributes: IAttributes } };
@@ -448,35 +462,65 @@ export function hasAnyTokenUsage(usage: GenAiTokenUsage): boolean {
   return Object.values(usage).some(v => v != null);
 }
 
-function getGenAiTokenUsageFromGetter(get: GetAttr): GenAiTokenUsage | undefined {
-  // The deprecated names on the right are the ones the OTel semantic conventions
-  // used before v1.27.0 renamed prompt_tokens/completion_tokens, and before the
-  // GenAI conventions renamed cache_creation.input_tokens to cache_write. Each is
-  // read, and claimed, only when the current name is absent.
-  const usage: GenAiTokenUsage = {
-    inputTokens: asNumber(get('gen_ai.usage.input_tokens') ?? get('gen_ai.usage.prompt_tokens')),
-    outputTokens: asNumber(get('gen_ai.usage.output_tokens') ?? get('gen_ai.usage.completion_tokens')),
-    reasoningOutputTokens: asNumber(get('gen_ai.usage.reasoning.output_tokens')),
-    cacheReadInputTokens: asNumber(get('gen_ai.usage.cache_read.input_tokens')),
-    cacheWriteInputTokens: asNumber(
-      get('gen_ai.usage.cache_write.input_tokens') ?? get('gen_ai.usage.cache_creation.input_tokens')
-    ),
-    textInputTokens: asNumber(get('gen_ai.usage.text.input_tokens')),
-    imageInputTokens: asNumber(get('gen_ai.usage.image.input_tokens')),
-    audioInputTokens: asNumber(get('gen_ai.usage.audio.input_tokens')),
-    textOutputTokens: asNumber(get('gen_ai.usage.text.output_tokens')),
-    imageOutputTokens: asNumber(get('gen_ai.usage.image.output_tokens')),
-    audioOutputTokens: asNumber(get('gen_ai.usage.audio.output_tokens')),
-    textCacheReadInputTokens: asNumber(get('gen_ai.usage.text.cache_read.input_tokens')),
-    imageCacheReadInputTokens: asNumber(get('gen_ai.usage.image.cache_read.input_tokens')),
-    audioCacheReadInputTokens: asNumber(get('gen_ai.usage.audio.cache_read.input_tokens')),
+type Read = { value: AttributeValue | undefined; source?: GenAiAttributeSource };
+
+/**
+ * Reads the spec name, then each fallback in turn, stopping at the first one that is
+ * present, so a fallback is read, and claimed, only when every name before it is absent.
+ * The result names the fallback it came from, if any.
+ */
+function readFirst(get: GetAttr, spec: string, ...fallbacks: string[]): Read {
+  const value = get(spec);
+  if (value !== undefined) return { value };
+  for (const key of fallbacks) {
+    const fallback = get(key);
+    if (fallback !== undefined) {
+      return { value: fallback, source: { key, spec } };
+    }
+  }
+  return { value: undefined };
+}
+
+export type GenAiTokenSources = Partial<Record<keyof GenAiTokenUsage, GenAiAttributeSource>>;
+
+function getGenAiTokenUsageFromGetter(
+  get: GetAttr
+): { usage: GenAiTokenUsage; sources: GenAiTokenSources } | undefined {
+  const usage: GenAiTokenUsage = {};
+  const sources: GenAiTokenSources = {};
+  const read = (field: keyof GenAiTokenUsage, spec: string, ...fallbacks: string[]) => {
+    const { value, source } = readFirst(get, spec, ...fallbacks);
+    usage[field] = asNumber(value);
+    if (source) sources[field] = source;
   };
-  return hasAnyTokenUsage(usage) ? usage : undefined;
+  // The fallback names are the ones the OTel semantic conventions used before
+  // v1.27.0 renamed prompt_tokens/completion_tokens, and before the GenAI
+  // conventions renamed cache_creation.input_tokens to cache_write.
+  read('inputTokens', 'gen_ai.usage.input_tokens', 'gen_ai.usage.prompt_tokens');
+  read('outputTokens', 'gen_ai.usage.output_tokens', 'gen_ai.usage.completion_tokens');
+  read('reasoningOutputTokens', 'gen_ai.usage.reasoning.output_tokens');
+  read('cacheReadInputTokens', 'gen_ai.usage.cache_read.input_tokens');
+  read(
+    'cacheWriteInputTokens',
+    'gen_ai.usage.cache_write.input_tokens',
+    'gen_ai.usage.cache_creation.input_tokens'
+  );
+  read('textInputTokens', 'gen_ai.usage.text.input_tokens');
+  read('imageInputTokens', 'gen_ai.usage.image.input_tokens');
+  read('audioInputTokens', 'gen_ai.usage.audio.input_tokens');
+  read('textOutputTokens', 'gen_ai.usage.text.output_tokens');
+  read('imageOutputTokens', 'gen_ai.usage.image.output_tokens');
+  read('audioOutputTokens', 'gen_ai.usage.audio.output_tokens');
+  read('textCacheReadInputTokens', 'gen_ai.usage.text.cache_read.input_tokens');
+  read('imageCacheReadInputTokens', 'gen_ai.usage.image.cache_read.input_tokens');
+  read('audioCacheReadInputTokens', 'gen_ai.usage.audio.cache_read.input_tokens');
+  if (!hasAnyTokenUsage(usage)) return undefined;
+  return { usage, sources };
 }
 
 /** Extracts the token-usage attributes shared by the GenAI tab and trace summary. */
 export function getGenAiTokenUsage(attributes: IAttributes): GenAiTokenUsage | undefined {
-  return getGenAiTokenUsageFromGetter(key => attributes.getValue(key));
+  return getGenAiTokenUsageFromGetter(key => attributes.getValue(key))?.usage;
 }
 
 export function formatTokenCount(value: number | undefined): string | undefined {
@@ -540,7 +584,7 @@ const REGISTRY: SectionBuilder[] = [
   },
   get => {
     const usage = getGenAiTokenUsageFromGetter(get);
-    return usage ? { type: 'tokens', data: usage } : undefined;
+    return usage ? { type: 'tokens', data: usage.usage, sources: usage.sources } : undefined;
   },
   get => {
     // Same short-circuit-on-purpose rule as the meta builder above: only fall
@@ -556,15 +600,17 @@ const REGISTRY: SectionBuilder[] = [
     // its input and output under those two names. parseMessages wraps a
     // scalar or object into a one-element list, so the value renders as the
     // span's only message.
-    const inputMessages = parseMessages(
-      get('gen_ai.input.messages') ?? get('gen_ai.prompt') ?? get('gen_ai.input') ?? get('input')
-    );
-    const outputMessages = parseMessages(
-      get('gen_ai.output.messages') ?? get('gen_ai.completion') ?? get('gen_ai.output') ?? get('output')
-    );
+    const input = readFirst(get, 'gen_ai.input.messages', 'gen_ai.prompt', 'gen_ai.input', 'input');
+    const output = readFirst(get, 'gen_ai.output.messages', 'gen_ai.completion', 'gen_ai.output', 'output');
+    const inputMessages = parseMessages(input.value);
+    const outputMessages = parseMessages(output.value);
     const systemInstructions = parseSystemInstructions(get('gen_ai.system_instructions'));
     return inputMessages.length || outputMessages.length || systemInstructions
-      ? { type: 'conversation', data: { inputMessages, outputMessages, systemInstructions } }
+      ? {
+          type: 'conversation',
+          data: { inputMessages, outputMessages, systemInstructions },
+          sources: { input: input.source, output: output.source },
+        }
       : undefined;
   },
   get => {
