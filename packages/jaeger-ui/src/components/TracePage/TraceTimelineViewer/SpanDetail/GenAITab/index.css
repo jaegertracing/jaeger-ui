@@ -50,7 +50,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .GenAITab--nonStandardHint code {
-  color: inherit;
+  color: var(--interactive-primary);
   white-space: nowrap;
 }
 
