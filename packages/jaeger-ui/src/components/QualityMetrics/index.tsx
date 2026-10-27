@@ -6,7 +6,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 import { useServices } from '../../hooks/useTraceDiscovery';
 
-import JaegerAPI from '../../api/jaeger';
+import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import DetailsCard from '../common/DetailsCard';
 import ExamplesLink from '../common/ExamplesLink';
@@ -15,8 +15,7 @@ import Header from './Header';
 import MetricCard from './MetricCard';
 import ScoreCard from './ScoreCard';
 import { getUrl, getUrlState } from './url';
-
-import { TQualityMetrics } from './types';
+import { useQualityMetricsQuery } from './useQualityMetricsQuery';
 
 import './index.css';
 
@@ -24,27 +23,9 @@ function QualityMetricsImpl() {
   const navigate = useNavigate();
   const location = useLocation();
   const { lookback, service } = React.useMemo(() => getUrlState(location.search), [location.search]);
-  const [qualityMetrics, setQualityMetrics] = React.useState<TQualityMetrics | undefined>();
-  const [error, setError] = React.useState<Error | undefined>();
-  const [loading, setLoading] = React.useState<boolean>(false);
 
   const { data: services = [] } = useServices();
-
-  React.useEffect(() => {
-    if (!service) return;
-
-    setLoading(true);
-
-    JaegerAPI.fetchQualityMetrics(service, lookback)
-      .then((metrics: TQualityMetrics) => {
-        setQualityMetrics(metrics);
-        setLoading(false);
-      })
-      .catch((err: Error) => {
-        setError(err);
-        setLoading(false);
-      });
-  }, [service, lookback]);
+  const { data: qualityMetrics, error, isLoading: loading } = useQualityMetricsQuery(service, lookback);
 
   const setLookback = React.useCallback(
     (newLookback: number | null) => {
@@ -130,7 +111,7 @@ function QualityMetricsImpl() {
         </>
       )}
       {loading && <LoadingIndicator centered />}
-      {error && <div className="QualityMetrics--Error">{error.message}</div>}
+      {error && <ErrorMessage className="QualityMetrics--Error" error={error} />}
     </div>
   );
 }

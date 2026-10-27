@@ -59,10 +59,10 @@ describe('fetchQualityMetrics', () => {
   it('GETs the specified service and lookback', () => {
     const hours = '108';
     const service = 'test-service';
-    JaegerAPI.fetchQualityMetrics(service, hours);
+    jaegerClient.fetchQualityMetrics(service, hours);
     expect(fetchMock).toHaveBeenLastCalledWith(
       `/api/quality-metrics?${queryString.stringify({ service, hours })}`,
-      defaultOptions
+      { signal: undefined }
     );
   });
 });
