@@ -2,14 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { keepPreviousData, useQuery, UseQueryResult } from '@tanstack/react-query';
-import JaegerAPI from '../../../api/jaeger';
+import { jaegerClient } from '../../../api/v3/client';
 import { type ApiError, toApiError } from '../../../types/api-error';
 import type {
-  FetchAggregatedServiceMetricsResponse,
-  FetchedAllServiceMetricsResponse,
   MetricObject,
   MetricPointObject,
   MetricsAPIQueryParams,
+  MetricsAPIResponse,
   OpsDataPoints,
   ServiceMetrics,
   ServiceMetricsObject,
@@ -41,17 +40,16 @@ export type OperationMetricsResult = {
 type OpsMap = Record<string, { name: string; metricPoints: OpsDataPoints }>;
 type ServiceErrorKey = keyof ServiceMetricsResult['serviceError'];
 type OperationErrorKey = keyof OperationMetricsResult['opsError'];
-type FulfilledValue<TResult> = TResult extends { value: infer TValue } ? TValue : never;
 type SettledMetricResult<TValue> =
   | { status: 'fulfilled'; value: TValue }
   | { status: 'rejected'; reason: ApiError };
 type NamedServiceMetricResult = {
   errorKey: ServiceErrorKey;
-  result: SettledMetricResult<FulfilledValue<FetchedAllServiceMetricsResponse[number]>>;
+  result: SettledMetricResult<MetricsAPIResponse>;
 };
 type NamedOperationMetricResult = {
   errorKey: OperationErrorKey;
-  result: SettledMetricResult<FulfilledValue<FetchAggregatedServiceMetricsResponse[number]>>;
+  result: SettledMetricResult<MetricsAPIResponse<true>>;
 };
 
 function serviceMetricsQueryKey(
@@ -260,30 +258,30 @@ export function useServiceMetricsQuery(
 ): UseQueryResult<ServiceMetricsResult, ApiError> {
   return useQuery({
     queryKey: serviceMetricsQueryKey(serviceName, params),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       if (!serviceName || !params) {
         throw new Error('Service metrics require a service name and query parameters.');
       }
       const payload: NamedServiceMetricResult[] = await Promise.all([
         settleMetric(
           'service_latencies_50',
-          JaegerAPI.fetchMetrics('latencies', [serviceName], { ...params, quantile: 0.5 })
+          jaegerClient.fetchMetrics('latencies', serviceName, { ...params, quantile: 0.5 }, signal)
         ),
         settleMetric(
           'service_latencies_75',
-          JaegerAPI.fetchMetrics('latencies', [serviceName], { ...params, quantile: 0.75 })
+          jaegerClient.fetchMetrics('latencies', serviceName, { ...params, quantile: 0.75 }, signal)
         ),
         settleMetric(
           'service_latencies_95',
-          JaegerAPI.fetchMetrics('latencies', [serviceName], { ...params, quantile: 0.95 })
+          jaegerClient.fetchMetrics('latencies', serviceName, { ...params, quantile: 0.95 }, signal)
         ),
         settleMetric(
           'service_call_rate',
-          JaegerAPI.fetchMetrics('calls', [serviceName], { ...params, quantile: 0.95 })
+          jaegerClient.fetchMetrics('calls', serviceName, { ...params, quantile: 0.95 }, signal)
         ),
         settleMetric(
           'service_error_rate',
-          JaegerAPI.fetchMetrics('errors', [serviceName], { ...params, quantile: 0.95 })
+          jaegerClient.fetchMetrics('errors', serviceName, { ...params, quantile: 0.95 }, signal)
         ),
       ]);
       return transformServiceMetrics(payload);
@@ -305,15 +303,15 @@ export function useOperationMetricsQuery(
 ): UseQueryResult<OperationMetricsResult, ApiError> {
   return useQuery({
     queryKey: operationMetricsQueryKey(serviceName, params),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       if (!serviceName || !params) {
         throw new Error('Operation metrics require a service name and query parameters.');
       }
-      const query = { ...params, groupByOperation: true, quantile: 0.95 };
+      const query = { ...params, groupByOperation: true as const, quantile: 0.95 };
       const payload: NamedOperationMetricResult[] = await Promise.all([
-        settleMetric('opsLatencies', JaegerAPI.fetchMetrics('latencies', [serviceName], query)),
-        settleMetric('opsCalls', JaegerAPI.fetchMetrics('calls', [serviceName], query)),
-        settleMetric('opsErrors', JaegerAPI.fetchMetrics('errors', [serviceName], query)),
+        settleMetric('opsLatencies', jaegerClient.fetchMetrics('latencies', serviceName, query, signal)),
+        settleMetric('opsCalls', jaegerClient.fetchMetrics('calls', serviceName, query, signal)),
+        settleMetric('opsErrors', jaegerClient.fetchMetrics('errors', serviceName, query, signal)),
       ]);
       return transformOperationMetrics(payload);
     },

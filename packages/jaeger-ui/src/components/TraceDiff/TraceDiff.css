@@ -9,5 +9,5 @@ SPDX-License-Identifier: Apache-2.0
   left: 0;
   position: fixed;
   right: 0;
-  top: 0;
+  top: calc(var(--page-nav-offset, var(--nav-height)) + var(--trace-diff-header-height, 0px));
 }
