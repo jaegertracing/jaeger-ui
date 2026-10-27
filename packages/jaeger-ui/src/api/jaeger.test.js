@@ -186,7 +186,7 @@ describe('fetchMetrics', () => {
       Promise.resolve({
         status: 200,
         ok: true,
-        json: () => Promise.resolve({ someObj: {} }),
+        json: () => Promise.resolve({ name: 'service_latencies', type: 'GAUGE', metrics: [] }),
       })
     );
 
@@ -208,7 +208,7 @@ describe('fetchMetrics', () => {
       Promise.resolve({
         status: 200,
         ok: true,
-        json: () => Promise.resolve({ someObj: {} }),
+        json: () => Promise.resolve({ name: 'service_latencies', type: 'GAUGE', metrics: [] }),
       })
     );
 

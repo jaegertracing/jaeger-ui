@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import { jaegerClient } from '../../../api/v3/client';
@@ -11,10 +11,7 @@ import {
   useServiceMetricsQuery,
   useOperationMetricsQuery,
 } from './useMetricsQuery';
-import type {
-  FetchedAllServiceMetricsResponse,
-  FetchAggregatedServiceMetricsResponse,
-} from '../../../types/metrics';
+import type { MetricsAPIResponse } from '../../../types/metrics';
 
 vi.mock('../../../api/v3/client', () => ({
   jaegerClient: {
@@ -24,7 +21,6 @@ vi.mock('../../../api/v3/client', () => ({
 
 const metricPoint = { gaugeValue: { doubleValue: 100 }, timestamp: '2021-09-10T11:00:00.000Z' };
 
-// PromiseStatus is an unexported enum, so cast via `any` to avoid string-vs-enum errors.
 const latency50 = {
   status: 'fulfilled',
   value: {
@@ -34,7 +30,7 @@ const latency50 = {
     quantile: 0.5,
     metrics: [{ labels: [{ name: 'service_name', value: 'svc' }], metricPoints: [metricPoint] }],
   },
-} as any as FetchedAllServiceMetricsResponse[0];
+} satisfies PromiseFulfilledResult<MetricsAPIResponse>;
 const latency75 = {
   status: 'fulfilled',
   value: {
@@ -44,7 +40,7 @@ const latency75 = {
     quantile: 0.75,
     metrics: [{ labels: [{ name: 'service_name', value: 'svc' }], metricPoints: [metricPoint] }],
   },
-} as any as FetchedAllServiceMetricsResponse[1];
+} satisfies PromiseFulfilledResult<MetricsAPIResponse>;
 const latency95 = {
   status: 'fulfilled',
   value: {
@@ -54,7 +50,7 @@ const latency95 = {
     quantile: 0.95,
     metrics: [{ labels: [{ name: 'service_name', value: 'svc' }], metricPoints: [metricPoint] }],
   },
-} as any as FetchedAllServiceMetricsResponse[2];
+} satisfies PromiseFulfilledResult<MetricsAPIResponse>;
 const callRate = {
   status: 'fulfilled',
   value: {
@@ -64,7 +60,7 @@ const callRate = {
     quantile: 0.95,
     metrics: [{ labels: [{ name: 'service_name', value: 'svc' }], metricPoints: [metricPoint] }],
   },
-} as any as FetchedAllServiceMetricsResponse[3];
+} satisfies PromiseFulfilledResult<MetricsAPIResponse>;
 const errorRate = {
   status: 'fulfilled',
   value: {
@@ -74,9 +70,9 @@ const errorRate = {
     quantile: 0.95,
     metrics: [{ labels: [{ name: 'service_name', value: 'svc' }], metricPoints: [metricPoint] }],
   },
-} as any as FetchedAllServiceMetricsResponse[4];
+} satisfies PromiseFulfilledResult<MetricsAPIResponse>;
 
-const fullServicePayload: FetchedAllServiceMetricsResponse = [
+const fullServicePayload: PromiseSettledResult<MetricsAPIResponse>[] = [
   latency50,
   latency75,
   latency95,
@@ -93,7 +89,7 @@ const opsLatencies = {
     quantile: 0.95,
     metrics: [{ labels: [{ name: 'operation', value: 'op1' }], metricPoints: [metricPoint] }],
   },
-} as any as FetchAggregatedServiceMetricsResponse[0];
+} satisfies PromiseFulfilledResult<MetricsAPIResponse<true>>;
 const opsCalls = {
   status: 'fulfilled',
   value: {
@@ -103,7 +99,7 @@ const opsCalls = {
     quantile: 0.95,
     metrics: [{ labels: [{ name: 'operation', value: 'op1' }], metricPoints: [metricPoint] }],
   },
-} as any as FetchAggregatedServiceMetricsResponse[1];
+} satisfies PromiseFulfilledResult<MetricsAPIResponse<true>>;
 const opsErrors = {
   status: 'fulfilled',
   value: {
@@ -113,11 +109,11 @@ const opsErrors = {
     quantile: 0.95,
     metrics: [{ labels: [{ name: 'operation', value: 'op1' }], metricPoints: [metricPoint] }],
   },
-} as any as FetchAggregatedServiceMetricsResponse[2];
+} satisfies PromiseFulfilledResult<MetricsAPIResponse<true>>;
 
-const fullOpsPayload: FetchAggregatedServiceMetricsResponse = [opsLatencies, opsCalls, opsErrors];
+const fullOpsPayload: PromiseSettledResult<MetricsAPIResponse<true>>[] = [opsLatencies, opsCalls, opsErrors];
 
-const nameServiceResults = (payload: FetchedAllServiceMetricsResponse) => {
+const nameServiceResults = (payload: PromiseSettledResult<MetricsAPIResponse>[]) => {
   const errorKeys = [
     'service_latencies_50',
     'service_latencies_75',
@@ -128,7 +124,7 @@ const nameServiceResults = (payload: FetchedAllServiceMetricsResponse) => {
   return payload.map((result, index) => ({ errorKey: errorKeys[index], result }));
 };
 
-const nameOperationResults = (payload: FetchAggregatedServiceMetricsResponse) => {
+const nameOperationResults = (payload: PromiseSettledResult<MetricsAPIResponse<true>>[]) => {
   const errorKeys = ['opsLatencies', 'opsCalls', 'opsErrors'] as const;
   return payload.map((result, index) => ({ errorKey: errorKeys[index], result }));
 };
@@ -187,7 +183,7 @@ describe('transformServiceMetrics', () => {
       latency95,
       callRate,
       errorRate,
-    ] as any as FetchedAllServiceMetricsResponse;
+    ] as PromiseSettledResult<MetricsAPIResponse>[];
     const result = transformServiceMetrics(nameServiceResults(payload));
     expect(result.serviceMetrics.service_latencies![0].metricPoints[0].y).toBeNull();
   });
@@ -212,7 +208,7 @@ describe('transformServiceMetrics', () => {
       latency95,
       callRate,
       errorRate,
-    ] as any as FetchedAllServiceMetricsResponse;
+    ] as PromiseSettledResult<MetricsAPIResponse>[];
     const result = transformServiceMetrics(nameServiceResults(payload));
     const latency = result.serviceMetrics.service_latencies![0];
     // NaN point becomes null, good point becomes 50
@@ -220,6 +216,26 @@ describe('transformServiceMetrics', () => {
     expect(latency.metricPoints[1].y).toBe(50);
     // max should reflect only the valid point, not NaN
     expect(latency.max).toBe(50);
+  });
+
+  it.each([Infinity, -Infinity])('renders a non-finite metric %s as a gap', doubleValue => {
+    const result = transformServiceMetrics(
+      nameServiceResults([
+        {
+          status: 'fulfilled',
+          value: {
+            ...latency50.value,
+            metrics: [
+              {
+                labels: latency50.value.metrics[0].labels,
+                metricPoints: [{ gaugeValue: { doubleValue }, timestamp: metricPoint.timestamp }],
+              },
+            ],
+          },
+        },
+      ])
+    );
+    expect(result.serviceMetrics.service_latencies![0].metricPoints[0].y).toBeNull();
   });
 
   it('returns empty metrics when payload has no metric entries', () => {
@@ -244,7 +260,7 @@ describe('transformServiceMetrics', () => {
         status: 'fulfilled',
         value: { name: 'service_error_rate', type: 'GAUGE', help: '', quantile: 0.95, metrics: [] },
       },
-    ] as any as FetchedAllServiceMetricsResponse;
+    ] as PromiseSettledResult<MetricsAPIResponse>[];
     const result = transformServiceMetrics(nameServiceResults(empty));
     expect(result.serviceMetrics.service_latencies).toBeNull();
     expect(result.serviceMetrics.service_call_rate).toBeNull();
@@ -305,7 +321,7 @@ describe('transformOperationMetrics', () => {
           ],
         },
       },
-    ] as any as FetchAggregatedServiceMetricsResponse;
+    ] as PromiseSettledResult<MetricsAPIResponse<true>>[];
     const result = transformOperationMetrics(nameOperationResults(payload));
     const impacts = result.serviceOpsMetrics!.map(m => m.impact);
     expect(Math.max(...impacts)).toBe(1);
@@ -339,7 +355,7 @@ describe('transformOperationMetrics', () => {
         status: 'fulfilled',
         value: { name: 'service_operation_error_rate', type: 'GAUGE', help: '', quantile: 0.95, metrics: [] },
       },
-    ] as any as FetchAggregatedServiceMetricsResponse;
+    ] as PromiseSettledResult<MetricsAPIResponse<true>>[];
     const result = transformOperationMetrics(nameOperationResults(empty));
     expect(result.serviceOpsMetrics).toBeUndefined();
   });
@@ -387,11 +403,11 @@ describe('useServiceMetricsQuery', () => {
 
   it('fetches and transforms service metrics', async () => {
     vi.mocked(jaegerClient.fetchMetrics)
-      .mockResolvedValueOnce({ ...(latency50 as any).value })
-      .mockResolvedValueOnce({ ...(latency75 as any).value })
-      .mockResolvedValueOnce({ ...(latency95 as any).value })
-      .mockResolvedValueOnce({ ...(callRate as any).value })
-      .mockResolvedValueOnce({ ...(errorRate as any).value });
+      .mockResolvedValueOnce({ ...latency50.value })
+      .mockResolvedValueOnce({ ...latency75.value })
+      .mockResolvedValueOnce({ ...latency95.value })
+      .mockResolvedValueOnce({ ...callRate.value })
+      .mockResolvedValueOnce({ ...errorRate.value });
 
     const { result } = renderHook(() => useServiceMetricsQuery('svc', baseParams), {
       wrapper: makeWrapper(qc),
@@ -410,10 +426,10 @@ describe('useServiceMetricsQuery', () => {
     });
     vi.mocked(jaegerClient.fetchMetrics)
       .mockRejectedValueOnce(failure)
-      .mockResolvedValueOnce({ ...(latency75 as any).value })
-      .mockResolvedValueOnce({ ...(latency95 as any).value })
-      .mockResolvedValueOnce({ ...(callRate as any).value })
-      .mockResolvedValueOnce({ ...(errorRate as any).value });
+      .mockResolvedValueOnce({ ...latency75.value })
+      .mockResolvedValueOnce({ ...latency95.value })
+      .mockResolvedValueOnce({ ...callRate.value })
+      .mockResolvedValueOnce({ ...errorRate.value });
 
     const { result } = renderHook(() => useServiceMetricsQuery('svc', baseParams), {
       wrapper: makeWrapper(qc),
@@ -497,9 +513,9 @@ describe('useOperationMetricsQuery', () => {
 
   it('fetches and transforms operation metrics', async () => {
     vi.mocked(jaegerClient.fetchMetrics)
-      .mockResolvedValueOnce({ ...(opsLatencies as any).value })
-      .mockResolvedValueOnce({ ...(opsCalls as any).value })
-      .mockResolvedValueOnce({ ...(opsErrors as any).value });
+      .mockResolvedValueOnce({ ...opsLatencies.value })
+      .mockResolvedValueOnce({ ...opsCalls.value })
+      .mockResolvedValueOnce({ ...opsErrors.value });
 
     const { result } = renderHook(() => useOperationMetricsQuery('svc', baseParams), {
       wrapper: makeWrapper(qc),
@@ -515,8 +531,8 @@ describe('useOperationMetricsQuery', () => {
     const failure = new Error('latency query failed');
     vi.mocked(jaegerClient.fetchMetrics)
       .mockRejectedValueOnce(failure)
-      .mockResolvedValueOnce({ ...(opsCalls as any).value })
-      .mockResolvedValueOnce({ ...(opsErrors as any).value });
+      .mockResolvedValueOnce({ ...opsCalls.value })
+      .mockResolvedValueOnce({ ...opsErrors.value });
 
     const { result } = renderHook(() => useOperationMetricsQuery('svc', baseParams), {
       wrapper: makeWrapper(qc),
@@ -559,7 +575,7 @@ describe.each([
   let qc: QueryClient;
 
   beforeEach(() => {
-    qc = makeQueryClient();
+    qc = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } });
     vi.mocked(jaegerClient.fetchMetrics).mockReset();
     vi.mocked(jaegerClient.fetchMetrics).mockImplementation(
       (_type, _service, _query, signal) =>
@@ -605,13 +621,37 @@ describe.each([
       .map(call => call[3]);
     expect(currentSignals.every(signal => signal && !signal.aborted)).toBe(true);
 
+    const currentKey = [queryKey, 'svc', { ...baseParams, endTs: baseParams.endTs + 2 }];
+    const query = qc.getQueryCache().find({ queryKey: currentKey });
+    expect(query?.state.fetchStatus).toBe('fetching');
+    const pending = query?.promise;
     unmount();
     expect(currentSignals.every(signal => signal?.aborted)).toBe(true);
-    await waitFor(() =>
-      expect(
-        qc.getQueryData([queryKey, 'svc', { ...baseParams, endTs: baseParams.endTs + 2 }])
-      ).toBeUndefined()
-    );
+    await act(async () => {
+      await pending?.catch(() => undefined);
+    });
+    // Retain the query so garbage collection cannot hide an all-error payload.
+    expect(qc.getQueryCache().find({ queryKey: currentKey })).toBe(query);
+    expect(qc.getQueryState(currentKey)).toMatchObject({ fetchStatus: 'idle', data: undefined });
+  });
+
+  it('rejects an aborted query function with the original reason', async () => {
+    const { unmount } = renderHook(() => useMetrics('svc', baseParams), { wrapper: makeWrapper(qc) });
+    const query = qc.getQueryCache().find({ queryKey: [queryKey, 'svc', baseParams] });
+    const queryFn = query?.options.queryFn;
+    if (!query || typeof queryFn !== 'function') throw new Error('Expected a metrics query function');
+    const controller = new AbortController();
+    const reason = new Error('metrics group abandoned');
+    // Exercise the function itself, before React Query can discard its result.
+    const pending = queryFn({
+      client: qc,
+      queryKey: query.queryKey,
+      signal: controller.signal,
+      meta: undefined,
+    });
+    controller.abort(reason);
+    await expect(pending).rejects.toBe(reason);
+    unmount();
   });
 
   it('keeps shared requests alive until the last observer unmounts', () => {

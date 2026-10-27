@@ -17,6 +17,8 @@ import {
   OperationsResponseSchema,
   TraceSummariesResponseSchema,
   GetTraceResponseSchema,
+  ServiceMetricsResponseSchema,
+  OperationMetricsResponseSchema,
   traceIdHex,
 } from './schemas';
 import type { TracesDataWire } from './schemas';
@@ -126,14 +128,21 @@ export class JaegerClient {
     service: string,
     query: MetricsAPIQueryParams & { groupByOperation?: TGroupByOperation },
     signal?: AbortSignal
-  ): Promise<MetricsAPIResponse<TGroupByOperation>> {
+  ): Promise<MetricsAPIResponse<TGroupByOperation>>;
+  async fetchMetrics(
+    metricType: 'latencies' | 'calls' | 'errors',
+    service: string,
+    query: MetricsAPIQueryParams,
+    signal?: AbortSignal
+  ): Promise<MetricsAPIResponse<boolean>> {
     const url = `${this.legacyApiRoot}metrics/${metricType}?service=${encodeURIComponent(service)}&${queryString.stringify(query)}`;
     // Preserve deadline-free metrics reads, which can wait on storage queries.
-    const data = (await this.fetchJson(url, `Failed to fetch ${metricType} metrics`, {
+    const data = await this.fetchJson(url, `Failed to fetch ${metricType} metrics`, {
       timeout: null,
       signal,
-    })) as MetricsAPIResponse<TGroupByOperation>;
-    return { ...data, quantile: query.quantile };
+    });
+    const schema = query.groupByOperation ? OperationMetricsResponseSchema : ServiceMetricsResponseSchema;
+    return { ...schema.parse(data), quantile: query.quantile };
   }
 
   async fetchDependencies(
