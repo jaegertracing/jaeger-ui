@@ -55,13 +55,12 @@ const genAiMarkdownOptions = { ...sharedMarkdownOptions, forceBlock: true };
  * but its naming deserves attention.
  */
 function NonStandardNameMark({ source }: { source: GenAiAttributeSource }) {
-  const heading = source.kind === 'deprecated' ? 'Deprecated attribute name' : 'Non-standard attribute name';
   return (
     <Tooltip
       classNames={{ root: 'GenAITab--nonStandardTooltip' }}
       title={
         <div className="GenAITab--nonStandardHint">
-          <div>{heading}</div>
+          <div>Non-standard attribute name</div>
           <div>
             Read from <code>{source.key}</code>
           </div>
@@ -75,7 +74,7 @@ function NonStandardNameMark({ source }: { source: GenAiAttributeSource }) {
         className="GenAITab--nonStandardMark"
         role="img"
         tabIndex={0}
-        aria-label={`${heading} ${source.key}; the OTel GenAI conventions define ${source.spec}`}
+        aria-label={`Non-standard attribute name ${source.key}; the OTel GenAI conventions define ${source.spec}`}
       />
     </Tooltip>
   );

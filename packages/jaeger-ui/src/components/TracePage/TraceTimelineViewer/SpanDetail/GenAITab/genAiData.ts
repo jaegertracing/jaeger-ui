@@ -84,18 +84,9 @@ export type GenAiTokenUsage = {
 
 /**
  * The attribute a value was read from when that is not the name the OTel GenAI
- * conventions define. `deprecated` names were defined by an earlier version of the
- * conventions; `vendor` names were never in any version.
+ * conventions define.
  */
-export type GenAiAttributeSource = { key: string; spec: string; kind: 'deprecated' | 'vendor' };
-
-const DEPRECATED_SPEC_NAMES = new Set([
-  'gen_ai.prompt',
-  'gen_ai.completion',
-  'gen_ai.usage.prompt_tokens',
-  'gen_ai.usage.completion_tokens',
-  'gen_ai.usage.cache_creation.input_tokens',
-]);
+export type GenAiAttributeSource = { key: string; spec: string };
 
 // Every variant separates its discriminant (`type`) from its payload (`data`)
 // so a generic fallback renderer can walk `Object.entries(data)` for a
@@ -484,10 +475,7 @@ function readFirst(get: GetAttr, spec: string, ...fallbacks: string[]): Read {
   for (const key of fallbacks) {
     const fallback = get(key);
     if (fallback !== undefined) {
-      return {
-        value: fallback,
-        source: { key, spec, kind: DEPRECATED_SPEC_NAMES.has(key) ? 'deprecated' : 'vendor' },
-      };
+      return { value: fallback, source: { key, spec } };
     }
   }
   return { value: undefined };

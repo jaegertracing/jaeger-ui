@@ -252,15 +252,10 @@ describe('extractGenAiSections', () => {
         })
       );
       expect(sources(sections, 'tokens')).toEqual({
-        outputTokens: {
-          key: 'gen_ai.usage.completion_tokens',
-          spec: 'gen_ai.usage.output_tokens',
-          kind: 'deprecated',
-        },
+        outputTokens: { key: 'gen_ai.usage.completion_tokens', spec: 'gen_ai.usage.output_tokens' },
         cacheWriteInputTokens: {
           key: 'gen_ai.usage.cache_creation.input_tokens',
           spec: 'gen_ai.usage.cache_write.input_tokens',
-          kind: 'deprecated',
         },
       });
     });
@@ -799,7 +794,7 @@ describe('extractGenAiSections', () => {
       );
       expect(sources(sections, 'conversation')).toEqual({
         input: undefined,
-        output: { key: 'output', spec: 'gen_ai.output.messages', kind: 'vendor' },
+        output: { key: 'output', spec: 'gen_ai.output.messages' },
       });
     });
 

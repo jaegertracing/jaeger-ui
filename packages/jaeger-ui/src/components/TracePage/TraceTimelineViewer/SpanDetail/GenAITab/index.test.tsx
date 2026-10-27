@@ -228,7 +228,7 @@ describe('GenAITab', () => {
       const marks = screen.getAllByRole('img', { name: /attribute name/ });
       expect(marks).toHaveLength(1);
       expect(marks[0]).toHaveAccessibleName(
-        'Deprecated attribute name gen_ai.usage.completion_tokens; the OTel GenAI conventions define gen_ai.usage.output_tokens'
+        markName('gen_ai.usage.completion_tokens', 'gen_ai.usage.output_tokens')
       );
       // The mark belongs to the item it describes, after that item's value.
       expect(marks[0].closest('.GenAITab--tokenItem')).toHaveTextContent('Output 50');
