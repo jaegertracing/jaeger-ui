@@ -79,18 +79,19 @@ describe('SvgEdge', () => {
     expect(Number(text.getAttribute('y'))).toBe(40);
   });
 
-  it('shifts the label right by SELF_LOOP_LABEL_X_OFFSET for a self-referencing edge', () => {
-    const label = '42';
-    const normal = renderEdge(makeLayoutEdge('a', 'b'), label);
-    const selfLoop = renderEdge(makeLayoutEdge('a', 'a'), label);
+  it('places the label at midpoint + SELF_LOOP_LABEL_X_OFFSET for a self-referencing edge regardless of count length', () => {
+    const expectedX = 30 + SELF_LOOP_LABEL_X_OFFSET;
+    const expectedY = 40;
 
-    const normalText = normal.container.querySelector('text')!;
-    const selfLoopText = selfLoop.container.querySelector('text')!;
+    const shortCount = renderEdge(makeLayoutEdge('a', 'a'), '42');
+    const shortText = shortCount.container.querySelector('text')!;
+    expect(Number(shortText.getAttribute('x'))).toBe(expectedX);
+    expect(Number(shortText.getAttribute('y'))).toBe(expectedY);
 
-    expect(Number(selfLoopText.getAttribute('x'))).toBe(
-      Number(normalText.getAttribute('x')) + SELF_LOOP_LABEL_X_OFFSET
-    );
-    expect(selfLoopText.getAttribute('y')).toBe(normalText.getAttribute('y'));
+    const longCount = renderEdge(makeLayoutEdge('a', 'a'), '1000000000');
+    const longText = longCount.container.querySelector('text')!;
+    expect(Number(longText.getAttribute('x'))).toBe(expectedX);
+    expect(Number(longText.getAttribute('y'))).toBe(expectedY);
   });
 
   it('does not treat an edge without edge data as a self-loop', () => {
