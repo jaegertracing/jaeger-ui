@@ -58,6 +58,7 @@ function NonStandardNameMark({ source }: { source: GenAiAttributeSource }) {
   return (
     <Tooltip
       classNames={{ root: 'GenAITab--nonStandardTooltip' }}
+      trigger={['hover', 'focus']}
       title={
         <div className="GenAITab--nonStandardHint">
           <div>Non-standard attribute name</div>

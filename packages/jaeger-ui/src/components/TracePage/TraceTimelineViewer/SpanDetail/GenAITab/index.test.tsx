@@ -245,6 +245,14 @@ describe('GenAITab', () => {
       expect(tooltip).toHaveTextContent('OTel GenAI conventions: gen_ai.output.messages');
     });
 
+    it('opens the tooltip on keyboard focus as well as on hover', async () => {
+      render(<GenAITab span={makeSpan([{ key: 'output', value: 'Sunny.' }])} />);
+
+      fireEvent.focus(screen.getByRole('img', { name: /Non-standard attribute name/ }));
+
+      expect(await screen.findByRole('tooltip')).toHaveTextContent('Read from output');
+    });
+
     it('marks every message read from a non-spec name in its header', () => {
       render(
         <GenAITab
