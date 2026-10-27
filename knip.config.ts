@@ -36,11 +36,6 @@ const config: KnipConfig = {
         // directly by any source file so knip cannot detect it.
         '@babel/core',
 
-        // Referenced by Oxlint via the `jsPlugins` field in the `lint` section of vite.config.ts to provide
-        // React hooks rules (react-x/rules-of-hooks, react-x/exhaustive-deps).
-        // Oxlint delegates to this ESLint plugin rather than having a native implementation.
-        'eslint-plugin-react-x',
-
         // Declared as a workspace-level dep so a single copy is hoisted; used internally
         // by react-router-dom (which re-exports from it).
         'react-side-effect',

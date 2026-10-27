@@ -136,7 +136,7 @@ const ANY_VALUE_KEYS = [
   'bytesValue',
 ] as const;
 
-type AnyValueWire = {
+export type AnyValueWire = {
   stringValue?: string;
   boolValue?: boolean;
   intValue?: string;
@@ -147,6 +147,11 @@ type AnyValueWire = {
   bytesValue?: string;
 };
 
+// Proto3 JSON represents non-finite doubles as strings.
+const doubleValue = z
+  .union([z.number(), z.literal('NaN'), z.literal('Infinity'), z.literal('-Infinity')])
+  .transform(Number);
+
 // Circular AnyValue: lazy defers evaluation so forward refs are safe.
 // oxlint-disable-next-line no-use-before-define
 export const refinedAnyValue: z.ZodType<AnyValueWire> = z.lazy(() =>
@@ -155,7 +160,7 @@ export const refinedAnyValue: z.ZodType<AnyValueWire> = z.lazy(() =>
       stringValue: z.string().optional(),
       boolValue: z.boolean().optional(),
       intValue: decimalInt64String.optional(),
-      doubleValue: z.number().optional(),
+      doubleValue: doubleValue.optional(),
       // oxlint-disable-next-line no-use-before-define
       arrayValue: refinedArrayValue.optional(),
       // oxlint-disable-next-line no-use-before-define
@@ -244,7 +249,8 @@ export const refinedSpan = z
     traceId: traceIdHex,
     spanId: spanIdHex,
     traceState: z.string().optional(),
-    parentSpanId: spanIdHex.optional(),
+    // OTLP/JSON exporters may write an empty parentSpanId for a root span.
+    parentSpanId: z.union([z.literal(''), spanIdHex]).optional(),
     flags: z.number().int().min(0).optional(),
     name: z.string().optional(),
     kind: spanKindEnum.optional(),
@@ -260,12 +266,12 @@ export const refinedSpan = z
   })
   .passthrough();
 
-// `spans` / `scopeSpans` are required arrays (empty allowed): without them the rest of
-// the envelope is meaningless. This matches the generated base, which declares both required.
+// ProtoJSON omits empty repeated fields. Restore their empty-array defaults
+// before the parser walks resources and scopes.
 export const refinedScopeSpans = z
   .object({
     scope: refinedScope.optional(),
-    spans: z.array(refinedSpan),
+    spans: z.array(refinedSpan).default([]),
     schemaUrl: z.string().optional(),
   })
   .passthrough();
@@ -273,7 +279,7 @@ export const refinedScopeSpans = z
 export const refinedResourceSpans = z
   .object({
     resource: refinedResource.optional(),
-    scopeSpans: z.array(refinedScopeSpans),
+    scopeSpans: z.array(refinedScopeSpans).default([]),
     schemaUrl: z.string().optional(),
   })
   .passthrough();
@@ -290,6 +296,10 @@ export const GetTraceResponseSchema = z.object({ result: refinedTracesData }).pa
 
 export type GetTraceResponse = z.infer<typeof GetTraceResponseSchema>;
 export type TracesDataWire = z.infer<typeof refinedTracesData>;
+export type ResourceSpansWire = NonNullable<TracesDataWire['resourceSpans']>[number];
+export type ScopeSpansWire = ResourceSpansWire['scopeSpans'][number];
+export type SpanWire = ScopeSpansWire['spans'][number];
+export type KeyValueWire = { key: string; value: AnyValueWire };
 
 // ServiceSummary: name is required (per IDL); counts are optional, nonnegative with 0 fallbacks.
 const permissiveServiceSummary = z.object({

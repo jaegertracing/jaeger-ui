@@ -4,16 +4,19 @@
 import React, { useMemo, useState } from 'react';
 import { Select, Tooltip } from 'antd';
 import Markdown from 'markdown-to-jsx/react';
-import { IoChevronDown, IoChevronForward, IoCopyOutline } from 'react-icons/io5';
+import { IoAlertCircleOutline, IoChevronDown, IoChevronForward, IoCopyOutline } from 'react-icons/io5';
 import { JsonView, allExpanded, collapseAllNested } from 'react-json-view-lite';
 
 import {
   extractGenAiSections,
   formatTokenCount,
   tryParseJson,
+  deepParseJson,
   GenAiAgent,
+  GenAiAttributeSource,
   GenAiMessage,
   GenAiPart,
+  GenAiTokenSources,
   GenAiTokenUsage,
   GenAiToolCall,
 } from './genAiData';
@@ -44,6 +47,39 @@ const MARKDOWN_SIZE_LIMIT = 150_000;
 // compiler always parse content as a block (a <p>), which forceWrapper then always
 // wraps in a real <div>, giving every message the same block box our CSS assumes.
 const genAiMarkdownOptions = { ...sharedMarkdownOptions, forceBlock: true };
+
+/**
+ * Marks a value read from an attribute whose name is not the one the OTel GenAI
+ * conventions define, naming both so a reader can tell the instrumentation is off-spec and
+ * by how much. An exclamation mark rather than the usual "i": the span's data is shown,
+ * but its naming deserves attention.
+ */
+function NonStandardNameMark({ source }: { source: GenAiAttributeSource }) {
+  return (
+    <Tooltip
+      classNames={{ root: 'GenAITab--nonStandardTooltip' }}
+      trigger={['hover', 'focus']}
+      title={
+        <div className="GenAITab--nonStandardHint">
+          <div>Non-standard attribute name</div>
+          <div>
+            Read from <code>{source.key}</code>
+          </div>
+          <div>
+            OTel GenAI conventions: <code>{source.spec}</code>
+          </div>
+        </div>
+      }
+    >
+      <IoAlertCircleOutline
+        className="GenAITab--nonStandardMark"
+        role="img"
+        tabIndex={0}
+        aria-label={`Non-standard attribute name ${source.key}; the OTel GenAI conventions define ${source.spec}`}
+      />
+    </Tooltip>
+  );
+}
 
 function JsonBlock({ value }: { value: unknown }) {
   // Tool call arguments/results may arrive already parsed or as a JSON-encoded
@@ -229,41 +265,66 @@ function MediaBlock({
 }
 
 /**
- * Which views can show a part, and which one it lands on.
+ * What a part's text parses to and which views can therefore show it. Depends on the part
+ * alone, so a message memoizes it once and resolves the chosen view separately.
+ */
+function parsePart(part: GenAiPart) {
+  const parsedJson = tryParseJson(part.text);
+  const isJson = parsedJson !== null && typeof parsedJson === 'object';
+  // deepParseJson hands back the same object when there was nothing to unwrap, so the
+  // deep view is offered exactly when it would show something the plain tree does not.
+  const deepJson = isJson ? deepParseJson(parsedJson) : parsedJson;
+  // Each view can only render content it supports; a requested view that can't falls back.
+  const canRender: Record<MessageFormat, boolean> = {
+    plain: true,
+    markdown: true,
+    json: isJson,
+    'json-deep': isJson && deepJson !== parsedJson,
+    image: part.media?.type === 'image',
+    audio: part.media?.type === 'audio',
+  };
+  return { parsedJson, deepJson, canRender };
+}
+
+/**
+ * Which view a part lands on, given what it parses to and what the reader chose.
  *
  * The format belongs to the part rather than to the message around it: a turn carrying a
  * paragraph and an image has no single answer to "render this as what".
  */
-function partView(part: GenAiPart, chosen: MessageFormat | null) {
-  const parsedJson = tryParseJson(part.text);
-  // Each view can only render content it supports; a requested view that can't falls back to plain.
-  const canRender: Record<MessageFormat, boolean> = {
-    plain: true,
-    markdown: true,
-    json: parsedJson !== null && typeof parsedJson === 'object',
-    image: part.media?.type === 'image',
-    audio: part.media?.type === 'audio',
-  };
-  // With nothing chosen, a part carrying media opens on it and JSON-parseable content on
-  // the tree view, else plain text (Markdown is only opt-in).
+function partView(parsed: ReturnType<typeof parsePart>, chosen: MessageFormat | null) {
+  const { canRender } = parsed;
+  // With nothing chosen, a part carrying media opens on it, JSON with JSON strings inside
+  // opens unwrapped, other JSON-parseable content on the plain tree, else plain text
+  // (Markdown is only opt-in).
   const defaultFormat: MessageFormat = canRender.image
     ? 'image'
     : canRender.audio
       ? 'audio'
-      : canRender.json
-        ? 'json'
-        : 'plain';
+      : canRender['json-deep']
+        ? 'json-deep'
+        : canRender.json
+          ? 'json'
+          : 'plain';
   const requested = chosen ?? defaultFormat;
-  return { parsedJson, canRender, format: canRender[requested] ? requested : ('plain' as MessageFormat) };
+  // A remembered JSON (deep) on JSON with nothing to unwrap still gets the tree the reader
+  // asked for, one step down, rather than dropping all the way to raw text.
+  const format: MessageFormat = canRender[requested]
+    ? requested
+    : requested === 'json-deep' && canRender.json
+      ? 'json'
+      : 'plain';
+  return { ...parsed, format };
 }
 
-// Every view the tab has, in the order they are offered. All five are listed for every
+// Every view the tab has, in the order they are offered. All six are listed for every
 // part, so the list never changes shape and a reader can see what the tab can do; one
 // that cannot show this part is disabled and says why.
 const VIEWS: { format: MessageFormat; label: string }[] = [
   { format: 'plain', label: 'Plain text' },
   { format: 'markdown', label: 'Markdown' },
   { format: 'json', label: 'JSON' },
+  { format: 'json-deep', label: 'JSON (deep)' },
   { format: 'image', label: 'Image' },
   { format: 'audio', label: 'Audio' },
 ];
@@ -280,6 +341,13 @@ function viewHint(format: MessageFormat, canRender: Record<MessageFormat, boolea
   switch (format) {
     case 'json':
       return available ? '' : 'This part is not JSON, so there is no tree to show';
+    case 'json-deep':
+      if (available) {
+        return 'Strings inside the JSON that are themselves JSON are unwrapped into the tree. A string that only looks like JSON is unwrapped too; Copy still gives the original text.';
+      }
+      return canRender.json
+        ? 'No string inside this JSON is itself JSON, so there is nothing to unwrap'
+        : 'This part is not JSON, so there is no tree to show';
     case 'image':
       return available
         ? 'Image (maybe): recognized from the value alone, so it may not be one. A remote link is not fetched until you ask.'
@@ -428,17 +496,21 @@ function PartContent({
     );
   }
   if (view.format === 'json') return <JsonBlock value={view.parsedJson} />;
+  if (view.format === 'json-deep') return <JsonBlock value={view.deepJson} />;
   if (view.format === 'markdown') return <MarkdownBlock content={part.text} onShowText={onShowText} />;
   return <pre className="GenAITab--messageContent GenAITab--messageContent-plain">{part.text}</pre>;
 }
 
 function MessageBlock({
   message,
+  source,
   formatOverride,
   onFormatChange,
   messageNumber,
 }: {
   message: GenAiMessage;
+  // Set when the message was read from a non-spec attribute name, so the header can say so.
+  source?: GenAiAttributeSource;
   // Remembered format for this message's attribute, seeding each part's initial view; null
   // to use the content-derived default.
   formatOverride: MessageFormat | null;
@@ -459,11 +531,23 @@ function MessageBlock({
   const [revealed, setRevealed] = useState<ReadonlySet<string>>(new Set());
   const role = message.role || 'message';
   const isSinglePart = message.parts.length === 1;
-  const messageJson = JSON.stringify({ role: message.role, parts: message.parts }, null, 2);
+  // Parsing a part's text (and, for JSON, walking the result) and restringifying the
+  // message for its copy button depend on the parts alone, so both are done once per
+  // message rather than for every part on every render; choosing a view only re-resolves
+  // the format against the parsed result.
+  const parsedParts = useMemo(() => message.parts.map(parsePart), [message.parts]);
+  const copyJsons = useMemo(
+    () =>
+      message.parts.length === 1
+        ? [JSON.stringify({ role: message.role, parts: message.parts }, null, 2)]
+        : message.parts.map(part => JSON.stringify(part, null, 2)),
+    [message.role, message.parts]
+  );
+  const views = parsedParts.map((parsed, i) => partView(parsed, formats[i] ?? seededFormat));
 
   const controlsFor = (part: GenAiPart, i: number) => (
     <PartControls
-      view={partView(part, formats[i] ?? seededFormat)}
+      view={views[i]}
       onFormatChange={format => {
         setFormats({ ...formats, [i]: format });
         onFormatChange(format);
@@ -482,20 +566,25 @@ function MessageBlock({
   return (
     <div className={`GenAITab--message GenAITab--message-${message.role || 'unknown'}`}>
       <div className="GenAITab--messageHeader">
-        <button
-          type="button"
-          className="GenAITab--messageToggle"
-          aria-expanded={!isCollapsed}
-          aria-label={`Message ${messageNumber} (${role})`}
-          onClick={() => setIsCollapsed(!isCollapsed)}
-        >
-          {isCollapsed ? (
-            <IoChevronForward className="GenAITab--messageToggleIcon" />
-          ) : (
-            <IoChevronDown className="GenAITab--messageToggleIcon" />
-          )}
-          <span className="GenAITab--messageRole">{role}</span>
-        </button>
+        <span className="GenAITab--messageHeaderLead">
+          <button
+            type="button"
+            className="GenAITab--messageToggle"
+            aria-expanded={!isCollapsed}
+            aria-label={`Message ${messageNumber} (${role})`}
+            onClick={() => setIsCollapsed(!isCollapsed)}
+          >
+            {isCollapsed ? (
+              <IoChevronForward className="GenAITab--messageToggleIcon" />
+            ) : (
+              <IoChevronDown className="GenAITab--messageToggleIcon" />
+            )}
+            <span className="GenAITab--messageRole">{role}</span>
+          </button>
+          {/* Beside the toggle, not inside it: a mark inside the button would join its
+              accessible name and collapse the message when clicked. */}
+          {source && <NonStandardNameMark source={source} />}
+        </span>
         {/* One part means one set of controls, which belong on the message's own line
             rather than taking a row of their own. Several parts each carry their own. */}
         {isSinglePart && !isCollapsed && controlsFor(message.parts[0], 0)}
@@ -507,7 +596,7 @@ function MessageBlock({
       ) : (
         <div className="GenAITab--messageParts">
           {message.parts.map((part, i) => {
-            const view = partView(part, formats[i] ?? seededFormat);
+            const view = views[i];
             return (
               <div
                 className="GenAITab--messagePart"
@@ -520,7 +609,7 @@ function MessageBlock({
                   label={`${part.media?.type === 'audio' ? 'Audio' : 'Image'} in ${
                     isSinglePart ? '' : `part ${i + 1} of `
                   }message ${messageNumber} (${role})`}
-                  copyJson={isSinglePart ? messageJson : JSON.stringify(message.parts[i], null, 2)}
+                  copyJson={copyJsons[i]}
                   revealed={part.media !== undefined && revealed.has(part.media.src)}
                   onReveal={() => part.media && setRevealed(new Set(revealed).add(part.media.src))}
                   onShowText={() => setFormats({ ...formats, [i]: 'plain' })}
@@ -635,16 +724,18 @@ const TOKEN_LABELS: Partial<Record<keyof GenAiTokenUsage, string>> = {
   audioCacheReadInputTokens: 'Cached (read, audio)',
 };
 
-function TokenDetails({ usage }: { usage: GenAiTokenUsage }) {
+function TokenDetails({ usage, sources }: { usage: GenAiTokenUsage; sources: GenAiTokenSources }) {
   return (
     <div className="GenAITab--tokens">
       <span className="GenAITab--tokensPrefix">Tokens:</span>
       {(Object.keys(usage) as Array<keyof GenAiTokenUsage>).map(key => {
         const value = usage[key];
         if (value == null) return null;
+        const source = sources[key];
         return (
           <span key={key} className="GenAITab--tokenItem">
             <span className="GenAITab--tokenLabel">{TOKEN_LABELS[key] ?? key}</span> {formatTokenCount(value)}
+            {source && <NonStandardNameMark source={source} />}
           </span>
         );
       })}
@@ -656,10 +747,12 @@ function ConversationDetails({
   systemInstructions,
   inputMessages,
   outputMessages,
+  sources,
 }: {
   systemInstructions?: string;
   inputMessages: GenAiMessage[];
   outputMessages: GenAiMessage[];
+  sources: { input?: GenAiAttributeSource; output?: GenAiAttributeSource };
 }) {
   // The store remembers the last format chosen for each attribute name and seeds every
   // message of that attribute as it mounts; each message owns its view from then on.
@@ -676,7 +769,16 @@ function ConversationDetails({
   // to a screen reader when a conversation has multiple messages. Built via push
   // rather than spread so each pushed object literal stays contextually typed
   // against GenAiMessage's role union, instead of widening to a plain string.
-  const messages: Array<{ key: string; message: GenAiMessage; attributeKey: string }> = [];
+  //
+  // attributeKey stays the spec name when the messages were read from a fallback name:
+  // the remembered format is a preference for how to view input or output messages, and
+  // the store hydrates that closed set of names.
+  const messages: Array<{
+    key: string;
+    message: GenAiMessage;
+    attributeKey: string;
+    source?: GenAiAttributeSource;
+  }> = [];
   if (systemInstructions) {
     messages.push({
       key: 'system',
@@ -685,23 +787,30 @@ function ConversationDetails({
     });
   }
   inputMessages.forEach((message, i) => {
-    messages.push({ key: `input-${i}`, message, attributeKey: 'gen_ai.input.messages' });
+    messages.push({
+      key: `input-${i}`,
+      message,
+      attributeKey: 'gen_ai.input.messages',
+      source: sources.input,
+    });
   });
   outputMessages.forEach((message, i) => {
     messages.push({
       key: `output-${i}`,
       message: { ...message, role: message.role || 'assistant' },
       attributeKey: 'gen_ai.output.messages',
+      source: sources.output,
     });
   });
 
   return (
     <div className="GenAITab--section">
       <h3 className="GenAITab--sectionTitle">Conversation</h3>
-      {messages.map(({ key, message, attributeKey }, i) => (
+      {messages.map(({ key, message, attributeKey, source }, i) => (
         <MessageBlock
           key={key}
           message={message}
+          source={source}
           formatOverride={getFormatOverride(attributeKey)}
           onFormatChange={f => setFormat(attributeKey, f)}
           messageNumber={i + 1}
@@ -814,9 +923,9 @@ export default function GenAITab({ span }: Props): React.ReactElement {
               />
             );
           case 'tokens':
-            return <TokenDetails key="tokens" usage={section.data} />;
+            return <TokenDetails key="tokens" usage={section.data} sources={section.sources} />;
           case 'conversation':
-            return <ConversationDetails key="conversation" {...section.data} />;
+            return <ConversationDetails key="conversation" {...section.data} sources={section.sources} />;
           case 'toolCall':
             return (
               <ToolCallDetails

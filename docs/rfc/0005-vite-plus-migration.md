@@ -59,7 +59,7 @@ Prettier, and Jest with a single dependency that has built-in TypeScript support
 toolchain that wraps:
 
 - **Vite / Rolldown** — dev server and production builds (already in use)
-- **Oxlint** — replaces ESLint; native TypeScript rules, plus React hooks via `eslint-plugin-react-x` (jsPlugin)
+- **Oxlint** — replaces ESLint; native TypeScript rules, plus native React hooks rules (`react/rules-of-hooks`, `react/exhaustive-deps`)
 - **Oxfmt** — replaces Prettier; native formatting
 - **Vitest** — replaces Jest; shares the Vite transform pipeline
 
@@ -219,8 +219,8 @@ Rather than replacing ESLint in a single step, PR C1 is split into two phases:
    current ~250 warnings. A significantly lower count is a signal that rules are missing, not that
    the code improved. The bulk of current warnings are `@typescript-eslint/no-explicit-any`;
    the Oxlint equivalent `typescript/no-explicit-any` must fire on the same sites.
-3. **Error parity**: the rules currently set to `error` — `react-x/rules-of-hooks`,
-   `react-x/exhaustive-deps`, `jest/no-focused-tests`, `jest/no-identical-title`,
+3. **Error parity**: the rules currently set to `error` — `react/rules-of-hooks`,
+   `react/exhaustive-deps`, `jest/no-focused-tests`, `jest/no-identical-title`,
    `@typescript-eslint/no-empty-object-type` — must all be caught by Oxlint equivalents.
 4. **No significant false positives**: Oxlint should not flag substantially more than ESLint;
    a much higher count signals the config needs tuning before cutover.
@@ -443,8 +443,8 @@ transpilation, so the tsconfig value has no effect on builds or the dev server.
 
 | ESLint rule | Severity | Oxlint equivalent | Status |
 |-------------|----------|-------------------|--------|
-| `react-x/rules-of-hooks` | error | `react-x/rules-of-hooks` (via jsPlugin) | ✅ |
-| `react-x/exhaustive-deps` | error | `react-x/exhaustive-deps` (via jsPlugin) | ✅ |
+| `react-x/rules-of-hooks` | error | `react/rules-of-hooks` (native) | ✅ |
+| `react-x/exhaustive-deps` | error | `react/exhaustive-deps` (native) | ✅ |
 | `jest/no-focused-tests` | error | `jest/no-focused-tests` | ✅ |
 | `jest/no-identical-title` | error | `jest/no-identical-title` | ✅ |
 | `jest/no-disabled-tests` | warn | `jest/no-disabled-tests` | ✅ |

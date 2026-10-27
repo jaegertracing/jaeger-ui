@@ -1,9 +1,10 @@
 // Copyright (c) 2020 The Jaeger Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import _memoize from 'lodash/memoize';
+import memoizeOne from 'memoize-one';
 
 import { Span } from '../types/trace';
+import { getParentSpanID } from './span';
 
 type TracePageHeaderParts = {
   serviceName: string;
@@ -11,30 +12,15 @@ type TracePageHeaderParts = {
 };
 
 export function _getTracePageHeaderPartsImpl(spans: ReadonlyArray<Span>): TracePageHeaderParts | null {
-  // Use a span with no references to another span in given array
-  // prefering the span with the fewest references
-  // using start time as a tie breaker
+  // The header chooses the span with the earliest start time among those with no resolvable parent.
   let candidateSpan: Span | undefined;
   const allIDs: Set<string> = new Set(spans.map(({ spanID }) => spanID));
 
   for (let i = 0; i < spans.length; i++) {
-    const hasInternalRef =
-      spans[i].references &&
-      spans[i].references.some(({ traceID, spanID }) => traceID === spans[i].traceID && allIDs.has(spanID));
-    if (hasInternalRef) continue;
+    const parentSpanID = getParentSpanID(spans[i]);
+    if (parentSpanID && allIDs.has(parentSpanID)) continue;
 
-    if (!candidateSpan) {
-      candidateSpan = spans[i];
-      continue;
-    }
-
-    const thisRefLength = (spans[i].references && spans[i].references.length) || 0;
-    const candidateRefLength = (candidateSpan.references && candidateSpan.references.length) || 0;
-
-    if (
-      thisRefLength < candidateRefLength ||
-      (thisRefLength === candidateRefLength && spans[i].startTime < candidateSpan.startTime)
-    ) {
+    if (!candidateSpan || spans[i].startTime < candidateSpan.startTime) {
       candidateSpan = spans[i];
     }
   }
@@ -49,10 +35,7 @@ export function _getTracePageHeaderPartsImpl(spans: ReadonlyArray<Span>): TraceP
   };
 }
 
-const getTracePageHeaderParts = _memoize(_getTracePageHeaderPartsImpl, (spans: ReadonlyArray<Span>) => {
-  if (!spans.length) return 0;
-  return spans[0].traceID;
-});
+const getTracePageHeaderParts = memoizeOne(_getTracePageHeaderPartsImpl);
 
 export function getTraceName(spans: ReadonlyArray<Span>): string {
   const parts = getTracePageHeaderParts(spans);
@@ -76,7 +59,7 @@ export function getIncompleteTraceTooltip(orphanCount: number): string {
   );
 }
 
-export function getTraceEmoji(spans: ReadonlyArray<Span>): string {
+export function getTraceEmoji(spans: ReadonlyArray<Pick<Span, 'traceID'>>): string {
   if (!spans.length) return '';
 
   // prettier-ignore

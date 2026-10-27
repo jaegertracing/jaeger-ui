@@ -12,7 +12,7 @@ import type { Location, NavigateFunction } from 'react-router-dom';
 import { actions } from './duck';
 import { makeCriticalPathContext } from './criticalPath';
 import generateRowStates, { RowState } from './generateRowStates';
-import ListView from './ListView';
+import ListView, { ListViewRef } from './ListView';
 import PrunedSpanRow from './PrunedSpanRow';
 import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
@@ -40,6 +40,11 @@ import './VirtualizedTraceView.css';
 import updateUiFind from '../../../utils/update-ui-find';
 import { PEER_SERVICE } from '../../../constants/tag-keys';
 import withRouteProps from '../../../utils/withRouteProps';
+
+type RowStateData = {
+  rows: RowState[];
+  spanIndexToRowIndex: Map<number, number>;
+};
 
 type TVirtualizedTraceViewOwnProps = {
   currentViewRangeTime: [number, number];
@@ -100,11 +105,34 @@ function generateRowStatesFromTrace(
   detailStates: Map<string, DetailState | TNil>,
   detailPanelMode: 'inline' | 'sidepanel',
   prunedServices: Set<string>
-): RowState[] {
+): RowStateData {
   if (!trace) {
-    return [];
+    return {
+      rows: [],
+      spanIndexToRowIndex: new Map(),
+    };
   }
-  return generateRowStates(trace.spans, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices);
+
+  const rows = generateRowStates(
+    trace.spans,
+    childrenHiddenIDs,
+    detailStates,
+    detailPanelMode,
+    prunedServices
+  );
+
+  const spanIndexToRowIndex = new Map<number, number>();
+
+  rows.forEach((row, rowIndex) => {
+    if (!spanIndexToRowIndex.has(row.spanIndex)) {
+      spanIndexToRowIndex.set(row.spanIndex, rowIndex);
+    }
+  });
+
+  return {
+    rows,
+    spanIndexToRowIndex,
+  };
 }
 
 function getCssClasses(currentViewRange: [number, number]) {
@@ -118,12 +146,11 @@ function getCssClasses(currentViewRange: [number, number]) {
 const memoizedGenerateRowStates = memoizeOne(generateRowStatesFromTrace);
 const memoizedViewBoundsFunc = memoizeOne(createViewedBoundsFunc, _isEqual);
 const memoizedGetCssClasses = memoizeOne(getCssClasses, _isEqual);
-
 // export for tests
 export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceViewImpl(
   props: VirtualizedTraceViewProps
 ) {
-  const listViewRef = useRef<ListView | TNil>(null);
+  const listViewRef = useRef<ListViewRef | TNil>(null);
 
   // TODO: React documents writing a ref during render as unsafe, because a render that gets
   // discarded leaves the ref holding props that never committed. Nothing in this subtree uses
@@ -139,7 +166,8 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
 
   const getRowStates = useCallback((): RowState[] => {
     const { trace, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices } = propsRef.current;
-    return memoizedGenerateRowStates(trace, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices);
+    return memoizedGenerateRowStates(trace, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices)
+      .rows;
   }, []);
 
   const getClippingCssClasses = useCallback((): string => {
@@ -197,20 +225,23 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
     [getRowStates]
   );
 
-  const mapSpanIndexToRowIndex = useCallback(
-    (index: number) => {
-      const rows = getRowStates();
-      const max = rows.length;
-      for (let i = 0; i < max; i++) {
-        const { spanIndex } = rows[i];
-        if (spanIndex === index) {
-          return i;
-        }
-      }
+  const mapSpanIndexToRowIndex = useCallback((index: number) => {
+    const { spanIndexToRowIndex } = memoizedGenerateRowStates(
+      propsRef.current.trace,
+      propsRef.current.childrenHiddenIDs,
+      propsRef.current.detailStates,
+      propsRef.current.detailPanelMode,
+      propsRef.current.prunedServices
+    );
+
+    const rowIndex = spanIndexToRowIndex.get(index);
+
+    if (rowIndex == null) {
       throw new Error(`unable to find row for span index: ${index}`);
-    },
-    [getRowStates]
-  );
+    }
+
+    return rowIndex;
+  }, []);
 
   const getAccessors = useCallback(() => {
     const lv = listViewRef.current;
@@ -237,7 +268,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
   ]);
 
   const setListView = useCallback(
-    (listView: ListView | TNil) => {
+    (listView: ListViewRef | TNil) => {
       const isChanged = listViewRef.current !== listView;
       listViewRef.current = listView;
       if (listView && isChanged) {
