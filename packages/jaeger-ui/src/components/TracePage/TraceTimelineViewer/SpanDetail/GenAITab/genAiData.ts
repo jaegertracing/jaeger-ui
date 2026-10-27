@@ -486,37 +486,35 @@ export type GenAiTokenSources = Partial<Record<keyof GenAiTokenUsage, GenAiAttri
 function getGenAiTokenUsageFromGetter(
   get: GetAttr
 ): { usage: GenAiTokenUsage; sources: GenAiTokenSources } | undefined {
-  // The deprecated names are the ones the OTel semantic conventions used before
+  const usage: GenAiTokenUsage = {};
+  const sources: GenAiTokenSources = {};
+  const read = (field: keyof GenAiTokenUsage, spec: string, ...fallbacks: string[]) => {
+    const { value, source } = readFirst(get, spec, ...fallbacks);
+    usage[field] = asNumber(value);
+    if (source) sources[field] = source;
+  };
+  // The fallback names are the ones the OTel semantic conventions used before
   // v1.27.0 renamed prompt_tokens/completion_tokens, and before the GenAI
   // conventions renamed cache_creation.input_tokens to cache_write.
-  const inputTokens = readFirst(get, 'gen_ai.usage.input_tokens', 'gen_ai.usage.prompt_tokens');
-  const outputTokens = readFirst(get, 'gen_ai.usage.output_tokens', 'gen_ai.usage.completion_tokens');
-  const cacheWriteInputTokens = readFirst(
-    get,
+  read('inputTokens', 'gen_ai.usage.input_tokens', 'gen_ai.usage.prompt_tokens');
+  read('outputTokens', 'gen_ai.usage.output_tokens', 'gen_ai.usage.completion_tokens');
+  read('reasoningOutputTokens', 'gen_ai.usage.reasoning.output_tokens');
+  read('cacheReadInputTokens', 'gen_ai.usage.cache_read.input_tokens');
+  read(
+    'cacheWriteInputTokens',
     'gen_ai.usage.cache_write.input_tokens',
     'gen_ai.usage.cache_creation.input_tokens'
   );
-  const usage: GenAiTokenUsage = {
-    inputTokens: asNumber(inputTokens.value),
-    outputTokens: asNumber(outputTokens.value),
-    reasoningOutputTokens: asNumber(get('gen_ai.usage.reasoning.output_tokens')),
-    cacheReadInputTokens: asNumber(get('gen_ai.usage.cache_read.input_tokens')),
-    cacheWriteInputTokens: asNumber(cacheWriteInputTokens.value),
-    textInputTokens: asNumber(get('gen_ai.usage.text.input_tokens')),
-    imageInputTokens: asNumber(get('gen_ai.usage.image.input_tokens')),
-    audioInputTokens: asNumber(get('gen_ai.usage.audio.input_tokens')),
-    textOutputTokens: asNumber(get('gen_ai.usage.text.output_tokens')),
-    imageOutputTokens: asNumber(get('gen_ai.usage.image.output_tokens')),
-    audioOutputTokens: asNumber(get('gen_ai.usage.audio.output_tokens')),
-    textCacheReadInputTokens: asNumber(get('gen_ai.usage.text.cache_read.input_tokens')),
-    imageCacheReadInputTokens: asNumber(get('gen_ai.usage.image.cache_read.input_tokens')),
-    audioCacheReadInputTokens: asNumber(get('gen_ai.usage.audio.cache_read.input_tokens')),
-  };
+  read('textInputTokens', 'gen_ai.usage.text.input_tokens');
+  read('imageInputTokens', 'gen_ai.usage.image.input_tokens');
+  read('audioInputTokens', 'gen_ai.usage.audio.input_tokens');
+  read('textOutputTokens', 'gen_ai.usage.text.output_tokens');
+  read('imageOutputTokens', 'gen_ai.usage.image.output_tokens');
+  read('audioOutputTokens', 'gen_ai.usage.audio.output_tokens');
+  read('textCacheReadInputTokens', 'gen_ai.usage.text.cache_read.input_tokens');
+  read('imageCacheReadInputTokens', 'gen_ai.usage.image.cache_read.input_tokens');
+  read('audioCacheReadInputTokens', 'gen_ai.usage.audio.cache_read.input_tokens');
   if (!hasAnyTokenUsage(usage)) return undefined;
-  const sources: GenAiTokenSources = {};
-  if (inputTokens.source) sources.inputTokens = inputTokens.source;
-  if (outputTokens.source) sources.outputTokens = outputTokens.source;
-  if (cacheWriteInputTokens.source) sources.cacheWriteInputTokens = cacheWriteInputTokens.source;
   return { usage, sources };
 }
 
