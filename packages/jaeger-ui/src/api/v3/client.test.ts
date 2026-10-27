@@ -34,7 +34,10 @@ describe('JaegerClient', () => {
     };
 
     it('encodes the service and preserves operation query parameters in milliseconds', async () => {
-      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ metrics: [] }) });
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ name: 'service_operation_latencies', type: 'GAUGE', help: '', metrics: [] }),
+      });
 
       await client.fetchMetrics('latencies', 'frontend /?&=+#', { ...query, groupByOperation: true });
 
@@ -47,7 +50,14 @@ describe('JaegerClient', () => {
     it.each(['latencies', 'calls', 'errors'] as const)(
       'preserves the %s response and overrides its quantile with the requested value',
       async metricType => {
-        const data = { name: 'service_latencies', metrics: [], quantile: 0.1, extra: 'retained' };
+        const data = {
+          name: 'service_latencies',
+          type: 'GAUGE',
+          help: '',
+          metrics: [],
+          quantile: 0.1,
+          extra: 'retained',
+        };
         mockFetch.mockResolvedValue({ ok: true, json: async () => data });
 
         await expect(client.fetchMetrics(metricType, 'frontend', query)).resolves.toEqual({
@@ -77,8 +87,113 @@ describe('JaegerClient', () => {
       });
     });
 
+    it('accepts omitted empty protobuf fields and retains unknown metadata', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ name: 'service_call_rate', type: 'GAUGE', extra: 'retained' }),
+      });
+      await expect(client.fetchMetrics('calls', 'frontend', query)).resolves.toEqual({
+        name: 'service_call_rate',
+        type: 'GAUGE',
+        help: '',
+        metrics: [],
+        extra: 'retained',
+        quantile: 0.95,
+      });
+    });
+
+    it('validates operation points and decodes protobuf non-finite doubles', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          name: 'service_operation_latencies',
+          type: 'GAUGE',
+          metrics: [
+            {
+              labels: [{ name: 'operation' }],
+              metricPoints: ['NaN', 'Infinity', '-Infinity', 0].map(doubleValue => ({
+                gaugeValue: { doubleValue, extra: 'retained' },
+                timestamp: '2026-10-27T00:00:00Z',
+              })),
+            },
+            {},
+          ],
+        }),
+      });
+      const response = await client.fetchMetrics('latencies', 'frontend', {
+        ...query,
+        groupByOperation: true,
+      });
+      expect(response.metrics[0].labels).toEqual([{ name: 'operation', value: '' }]);
+      expect(response.metrics[0].metricPoints.map(point => point.gaugeValue.doubleValue)).toEqual([
+        NaN,
+        Infinity,
+        -Infinity,
+        0,
+      ]);
+      expect(response.metrics[0].metricPoints[0].gaugeValue).toHaveProperty('extra', 'retained');
+      expect(response.metrics[1]).toEqual({ labels: [], metricPoints: [] });
+    });
+
+    it('validates populated service metrics without requiring a server quantile', async () => {
+      const data = {
+        name: 'service_latencies',
+        type: 'GAUGE',
+        metrics: [
+          {
+            labels: [{ name: 'service_name', value: 'frontend' }],
+            metricPoints: [{ gaugeValue: { doubleValue: 0 }, timestamp: '2026-10-27T00:00:00Z' }],
+          },
+        ],
+      };
+      mockFetch.mockResolvedValue({ ok: true, json: async () => data });
+      await expect(client.fetchMetrics('latencies', 'frontend', query)).resolves.toEqual({
+        ...data,
+        help: '',
+        quantile: query.quantile,
+      });
+    });
+
+    it.each([
+      null,
+      { type: 'GAUGE' },
+      { name: 'service_call_rate', type: 'GAUGE', metrics: 'invalid' },
+      { name: 'service_call_rate', type: 'COUNTER', metrics: [] },
+      { name: 'service_call_rate', type: 'GAUGE', metrics: [{}] },
+      { name: 'service_call_rate', type: 'GAUGE', metrics: [{ labels: [{ name: 1, value: 'svc' }] }] },
+      {
+        name: 'service_call_rate',
+        type: 'GAUGE',
+        metrics: [
+          {
+            labels: [{ name: 'service_name', value: 'svc' }],
+            metricPoints: [
+              {
+                gaugeValue: { doubleValue: 'invalid' },
+                timestamp: '2026-10-27T00:00:00Z',
+              },
+            ],
+          },
+        ],
+      },
+      { name: 'service_operation_call_rate', type: 'GAUGE', metrics: [] },
+    ])('rejects malformed or incorrectly grouped service metrics: %j', async data => {
+      mockFetch.mockResolvedValue({ ok: true, json: async () => data });
+      await expect(client.fetchMetrics('calls', 'frontend', query)).rejects.toThrow(ZodError);
+    });
+
+    it('rejects service metrics for an operation query', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ name: 'service_call_rate', type: 'GAUGE' }),
+      });
+      await expect(
+        client.fetchMetrics('calls', 'frontend', { ...query, groupByOperation: true })
+      ).rejects.toThrow(ZodError);
+    });
+
     it('allows successful headers and bodies to arrive after the default transport deadline', async () => {
-      const data = { name: 'service_call_rate', metrics: [] };
+      const data = { name: 'service_call_rate', type: 'GAUGE', help: '', metrics: [] };
       mockFetch.mockImplementation(
         () =>
           new Promise(resolve => {
@@ -1156,7 +1271,10 @@ describe('JaegerClient with non-default base path', () => {
   });
 
   it('keeps metrics under the deployment base path', async () => {
-    mockFetch.mockResolvedValue({ ok: true, json: async () => ({ metrics: [] }) });
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ name: 'service_call_rate', type: 'GAUGE', help: '', metrics: [] }),
+    });
     vi.resetModules();
     vi.doMock('../../site-prefix', () => ({ default: `${global.location.origin}/jaeger/` }));
     const { JaegerClient: IsolatedClient } = await import('./client');
