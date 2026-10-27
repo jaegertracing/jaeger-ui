@@ -48,7 +48,7 @@ function computeLabelCoord(pathPoints: [number, number][], label?: string | unde
 
   if (isSelfLoop) {
     return {
-      labelX: labelX + SELF_LOOP_LABEL_X_OFFSET,
+      labelX: (startX + endX) / 2 + SELF_LOOP_LABEL_X_OFFSET,
       labelY: labelY,
     };
   }
