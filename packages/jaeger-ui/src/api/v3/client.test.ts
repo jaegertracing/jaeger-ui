@@ -4,6 +4,7 @@
 import { JaegerClient, jaegerClient } from './client';
 import { ZodError } from 'zod';
 import { ALL_SERVICES } from '../../constants/search-form';
+import { MAX_DETAIL_LENGTH } from '../../utils/error-message';
 
 describe('JaegerClient', () => {
   let client: JaegerClient;
@@ -78,7 +79,7 @@ describe('JaegerClient', () => {
       );
 
       await expect(client.fetchMetrics('calls', 'frontend', query)).rejects.toMatchObject({
-        message: 'Failed to fetch calls metrics: 501 Not Implemented',
+        message: 'Failed to fetch calls metrics: 501 Not Implemented: metrics querying is currently disabled',
         httpStatus: 501,
         httpStatusText: 'Not Implemented',
         httpBody: JSON.stringify(body, null, 2),
@@ -1012,7 +1013,7 @@ describe('JaegerClient', () => {
         const error = await call().catch((caught: unknown) => caught);
 
         expect(error).toBeInstanceOf(Error);
-        expect((error as Error).message).toMatch(/: 400 Bad Request$/);
+        expect((error as Error).message).toMatch(/: 400 Bad Request: invalid service name$/);
         expect({ ...(error as object) }).toEqual({
           httpStatus: 400,
           httpStatusText: 'Bad Request',
@@ -1026,7 +1027,47 @@ describe('JaegerClient', () => {
     it('keeps a non-JSON body as text', async () => {
       mockFetch.mockResolvedValue(failure('storage unavailable'));
 
-      await expect(client.fetchServices()).rejects.toMatchObject({ httpBody: 'storage unavailable' });
+      await expect(client.fetchServices()).rejects.toMatchObject({
+        message: 'Failed to fetch services: 400 Bad Request',
+        httpBody: 'storage unavailable',
+      });
+    });
+
+    it.each([
+      { case: 'a v3 message', body: '{"code":5,"message":"trace not found"}', detail: 'trace not found' },
+      {
+        case: 'legacy errors',
+        body: '{"data":null,"errors":[{"code":400,"msg":"bad start time"},{"code":400,"msg":"bad end time"}]}',
+        detail: 'bad start time; bad end time',
+      },
+      {
+        case: 'both envelopes, preferring the v3 message',
+        body: '{"message":"trace not found","errors":[{"code":5,"msg":"legacy"}]}',
+        detail: 'trace not found',
+      },
+      { case: 'a padded message', body: '{"message":"  trace not found\\n"}', detail: 'trace not found' },
+      {
+        case: 'a long message, truncated',
+        body: JSON.stringify({ message: 'x'.repeat(2000) }),
+        detail: `${'x'.repeat(MAX_DETAIL_LENGTH - 3)}...`,
+      },
+      {
+        case: 'a message at the length limit, intact',
+        body: JSON.stringify({ message: 'x'.repeat(MAX_DETAIL_LENGTH) }),
+        detail: 'x'.repeat(MAX_DETAIL_LENGTH),
+      },
+      { case: 'JSON without a message', body: '{"code":5}' },
+      { case: 'a non-string message', body: '{"message":404}' },
+      { case: 'an empty message', body: '{"message":""}' },
+      { case: 'a blank message', body: '{"message":"  "}' },
+      { case: 'legacy errors without msg', body: '{"errors":[{"code":400}]}' },
+      { case: 'a JSON primitive', body: 'null' },
+    ])('appends the server message from $case', async ({ body, detail }) => {
+      mockFetch.mockResolvedValue(failure(body));
+
+      await expect(client.fetchServices()).rejects.toMatchObject({
+        message: `Failed to fetch services: 400 Bad Request${detail ? `: ${detail}` : ''}`,
+      });
     });
 
     it.each([
