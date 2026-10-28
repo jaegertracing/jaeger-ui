@@ -12,6 +12,7 @@ import queryString from 'query-string';
 
 import { ALL_SERVICES } from '../../constants/search-form';
 import prefixUrl from '../../utils/prefix-url';
+import { truncateErrorDetail } from '../../utils/error-message';
 import {
   ServicesResponseSchema,
   OperationsResponseSchema,
@@ -90,8 +91,26 @@ async function readErrorBody(response: Response, signal: AbortSignal | null | un
 }
 
 /**
- * Build the error for a failed response, keeping the HTTP details and response body
- * that ErrorMessage renders.
+ * Read the human-readable message from a parsed JSON error body. The v3 API returns
+ * `{ code, message }`; the legacy /api/ routes return `{ errors: [{ code, msg }] }`.
+ */
+function serverMessage(data: unknown): string | undefined {
+  if (!data || typeof data !== 'object') return undefined;
+  const { message, errors } = data as { message?: unknown; errors?: unknown };
+  if (typeof message === 'string' && message.trim()) return message.trim();
+  if (Array.isArray(errors)) {
+    const messages = errors
+      .map((e: unknown) => (e && typeof e === 'object' ? (e as { msg?: unknown }).msg : undefined))
+      .filter((m): m is string => typeof m === 'string' && m.trim() !== '')
+      .map(m => m.trim());
+    if (messages.length) return messages.join('; ');
+  }
+  return undefined;
+}
+
+/**
+ * Build the error for a failed response. The message carries the server's own
+ * message when the body has one; the HTTP details and body are kept for ErrorMessage.
  */
 async function httpError(
   message: string,
@@ -110,7 +129,10 @@ async function httpError(
   const body = await readErrorBody(response, signal);
   if (body) {
     try {
-      error.httpBody = JSON.stringify(JSON.parse(body), null, 2);
+      const data: unknown = JSON.parse(body);
+      error.httpBody = JSON.stringify(data, null, 2);
+      const detail = truncateErrorDetail(serverMessage(data));
+      if (detail) error.message += `: ${detail}`;
     } catch {
       error.httpBody = body;
     }

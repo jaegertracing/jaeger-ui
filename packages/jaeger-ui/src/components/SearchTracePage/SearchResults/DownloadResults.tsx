@@ -5,7 +5,6 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { Button, message } from 'antd';
 
 import { jaegerClient } from '../../../api/v3/client';
-import { getErrorBodyMessage, truncateErrorDetail } from '../../../utils/error-message';
 import { pooledMap } from '../../../utils/pooledMap';
 import type { TraceSummary } from '../../../types/trace-summary';
 import { uploadedTraceId } from '../../../utils/otel-upload';
@@ -68,12 +67,8 @@ export default function DownloadResults({ traceSummaries, rawTraces }: Props) {
         fetched.forEach((raw, i) => rawByID.set(missing[i].traceID, raw));
       } catch (err) {
         cancelled.current = true;
-        // JaegerClient keeps the server's error response on httpBody.
-        const body = err instanceof Error ? (err as Error & { httpBody?: string }).httpBody : undefined;
-        const detail = truncateErrorDetail(getErrorBodyMessage(body));
-        message.error(
-          `Failed to retrieve traces: ${err instanceof Error ? err.message : String(err)}${detail ? `: ${detail}` : ''}`
-        );
+        // JaegerClient appends the server's own message to the error, so it needs no body handling here.
+        message.error(`Failed to retrieve traces: ${err instanceof Error ? err.message : String(err)}`);
         return;
       } finally {
         cancelled.current = true;
