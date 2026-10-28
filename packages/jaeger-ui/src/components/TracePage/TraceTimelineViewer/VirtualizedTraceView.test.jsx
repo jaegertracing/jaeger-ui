@@ -71,7 +71,6 @@ describe('<VirtualizedTraceViewImpl>', () => {
       findMatchesIDs: null,
       registerAccessors: jest.fn(),
       scrollToFirstVisibleSpan: jest.fn(),
-      setSpanNameColumnWidth: jest.fn(),
       focusUiFindMatches: focusUiFindMatchesMock,
       setTrace: jest.fn(),
       shouldScrollToFirstUiFindMatch: false,
