@@ -117,32 +117,3 @@ export type MetricsReduxState = {
   serviceMetrics: ServiceMetrics | null;
   serviceOpsMetrics: ServiceOpsMetrics[] | undefined;
 };
-
-enum PromiseStatus {
-  fulfilled = 'fulfilled',
-  rejected = 'rejected',
-}
-
-type PromiseFulfilledResult<T> = {
-  status: PromiseStatus.fulfilled;
-  value: T;
-};
-
-type PromiseRejectedResult = {
-  status: PromiseStatus.rejected;
-  reason: ApiError;
-};
-
-export type FetchedAllServiceMetricsResponse = [
-  PromiseFulfilledResult<MetricsAPIServiceResponseData<'service_latencies', 0.5>> | PromiseRejectedResult,
-  PromiseFulfilledResult<MetricsAPIServiceResponseData<'service_latencies', 0.75>> | PromiseRejectedResult,
-  PromiseFulfilledResult<MetricsAPIServiceResponseData<'service_latencies'>> | PromiseRejectedResult,
-  PromiseFulfilledResult<MetricsAPIServiceResponseData<'service_call_rate'>> | PromiseRejectedResult,
-  PromiseFulfilledResult<MetricsAPIServiceResponseData<'service_error_rate'>> | PromiseRejectedResult,
-];
-
-export type FetchAggregatedServiceMetricsResponse = [
-  PromiseFulfilledResult<MetricsAPIOpsResponseData<'service_operation_latencies'>> | PromiseRejectedResult,
-  PromiseFulfilledResult<MetricsAPIOpsResponseData<'service_operation_call_rate'>> | PromiseRejectedResult,
-  PromiseFulfilledResult<MetricsAPIOpsResponseData<'service_operation_error_rate'>> | PromiseRejectedResult,
-];

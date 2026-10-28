@@ -79,7 +79,7 @@ function parseMetricPoints(rawPoints: MetricPointObject[]): { x: number; y: numb
     let y: number | null;
     try {
       y = parseFloat(p.gaugeValue.doubleValue.toFixed(2));
-      if (Number.isNaN(y)) y = null;
+      if (!Number.isFinite(y)) y = null;
     } catch {
       y = null;
     }
@@ -250,7 +250,7 @@ export function transformOperationMetrics(payload: NamedOperationMetricResult[])
 
 /**
  * Fetches service-level latency, error-rate, and call-rate metrics
- * (`Promise.allSettled` across 5 `GET /api/metrics/*` calls).
+ * Runs 5 `GET /api/metrics/*` calls, preserving partial results on ordinary failures.
  */
 export function useServiceMetricsQuery(
   serviceName: string | undefined,
@@ -284,6 +284,7 @@ export function useServiceMetricsQuery(
           jaegerClient.fetchMetrics('errors', serviceName, { ...params, quantile: 0.95 }, signal)
         ),
       ]);
+      if (signal.aborted) throw signal.reason;
       return transformServiceMetrics(payload);
     },
     enabled: Boolean(serviceName && params),
@@ -295,7 +296,7 @@ export function useServiceMetricsQuery(
 
 /**
  * Fetches per-operation latency, call-rate, and error-rate metrics
- * (`Promise.allSettled` across 3 `GET /api/metrics/*` calls with `groupByOperation=true`).
+ * Runs 3 `GET /api/metrics/*` calls with `groupByOperation=true`, preserving partial results on ordinary failures.
  */
 export function useOperationMetricsQuery(
   serviceName: string | undefined,
@@ -313,6 +314,7 @@ export function useOperationMetricsQuery(
         settleMetric('opsCalls', jaegerClient.fetchMetrics('calls', serviceName, query, signal)),
         settleMetric('opsErrors', jaegerClient.fetchMetrics('errors', serviceName, query, signal)),
       ]);
+      if (signal.aborted) throw signal.reason;
       return transformOperationMetrics(payload);
     },
     enabled: Boolean(serviceName && params),

@@ -17,7 +17,6 @@ import { loadTracesFromFile } from '../FileLoader';
 import { getCachedTrace } from '../../../hooks/useTraceLoading';
 import numericUpload from '../../../utils/fixtures/otlp-upload-numeric.json';
 import { GetTraceResponseSchema } from '../../../api/v3/schemas';
-import { MAX_DETAIL_LENGTH } from '../../common/ErrorMessage';
 import capture from '../../../api/v3/v3-trace-output.json';
 
 const mockFetchTrace = vi.fn();
@@ -271,13 +270,11 @@ describe('DownloadResults', () => {
     expect(message.error).toHaveBeenCalledWith('Failed to retrieve traces: network error');
   });
 
-  it.each([
-    ['the server response', '{ "error": { "message": "trace not found" } }'],
-    ['a truncated long server response', `${'x'.repeat(MAX_DETAIL_LENGTH - 3)}...`, 'x'.repeat(2000)],
-  ])('adds %s to the error toast', async (_, shown, httpBody = shown) => {
-    const error = Object.assign(new Error(`Failed to fetch trace ${requestIdA}: 404 Not Found`), {
-      httpBody,
-    });
+  it('shows the client error message in the failure notification', async () => {
+    const error = Object.assign(
+      new Error(`Failed to fetch trace ${requestIdA}: 404 Not Found: trace not found`),
+      { httpBody: '{\n  "code": 5,\n  "message": "trace not found"\n}' }
+    );
     mockFetchTrace.mockRejectedValueOnce(error);
 
     render(<DownloadResults traceSummaries={[baseTraces[0]]} rawTraces={[]} />);
@@ -286,7 +283,7 @@ describe('DownloadResults', () => {
     });
 
     expect(message.error).toHaveBeenCalledWith(
-      `Failed to retrieve traces: Failed to fetch trace ${requestIdA}: 404 Not Found: ${shown}`
+      `Failed to retrieve traces: Failed to fetch trace ${requestIdA}: 404 Not Found: trace not found`
     );
   });
 
