@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import spanAncestorIds from './span-ancestor-ids';
+import { makeOtelSpan } from './test/makeOtelSpan';
 
 describe('spanAncestorIds', () => {
   const rootSpanId = 'root-span-id';
@@ -9,32 +10,33 @@ describe('spanAncestorIds', () => {
   const parentSpanId = 'parent-span-id';
   const childSpanId = 'child-span-id';
 
-  const rootSpan = {
+  const rootSpan = makeOtelSpan({
     spanID: rootSpanId,
-    parentSpanId: undefined,
+    parentSpanID: undefined,
     parentSpan: undefined,
-  };
+  });
 
-  const grandparentSpan = {
+  const grandparentSpan = makeOtelSpan({
     spanID: grandparentSpanId,
-    parentSpanId: rootSpanId,
+    parentSpanID: rootSpanId,
     parentSpan: rootSpan,
-  };
+  });
 
-  const parentSpan = {
+  const parentSpan = makeOtelSpan({
     spanID: parentSpanId,
-    parentSpanId: grandparentSpanId,
+    parentSpanID: grandparentSpanId,
     parentSpan: grandparentSpan,
-  };
+  });
 
-  const childSpan = {
+  const childSpan = makeOtelSpan({
     spanID: childSpanId,
-    parentSpanId: parentSpanId,
+    parentSpanID: parentSpanId,
     parentSpan: parentSpan,
-  };
+  });
 
   it('returns an empty array if given falsy span', () => {
     expect(spanAncestorIds(null)).toEqual([]);
+    expect(spanAncestorIds(undefined)).toEqual([]);
   });
 
   it('returns an empty array if span has no parentSpan', () => {
@@ -46,11 +48,11 @@ describe('spanAncestorIds', () => {
   });
 
   it('stops traversal when parent span is not available', () => {
-    const isolatedChild = {
+    const isolatedChild = makeOtelSpan({
       spanID: childSpanId,
-      parentSpanId: parentSpanId,
+      parentSpanID: parentSpanId,
       parentSpan: undefined, // No parent span available
-    };
+    });
 
     expect(spanAncestorIds(isolatedChild)).toEqual([]);
   });
