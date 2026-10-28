@@ -210,9 +210,8 @@ export class JaegerClient {
   }
 
   async fetchQualityMetrics(service: string, hours: number, signal?: AbortSignal): Promise<unknown> {
-    const root = prefixUrl(getConfig().qualityMetrics?.apiEndpoint || '');
+    const root = prefixUrl(getConfig().qualityMetrics?.apiEndpoint);
     const url = `${root}?${queryString.stringify({ hours, service })}`;
-    // Preserve deadline-free quality-metrics reads from the configured endpoint.
     return this.fetchJson(url, 'Failed to fetch quality metrics', { timeout: null, signal });
   }
 

@@ -435,6 +435,27 @@ describe('JaegerClient', () => {
   });
 
   describe('fetchQualityMetrics', () => {
+    it('keeps the default endpoint when the UI config only enables quality metrics', async () => {
+      const configSpy = vi.spyOn(window, 'getJaegerUiConfig').mockReturnValue({
+        qualityMetrics: { menuEnabled: true },
+      });
+      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ scores: [], metrics: [] }) });
+      vi.resetModules();
+
+      try {
+        const { JaegerClient: IsolatedClient } = await import('./client');
+
+        await new IsolatedClient().fetchQualityMetrics('frontend', 48);
+
+        expect(mockFetch).toHaveBeenCalledWith('/api/quality-metrics?hours=48&service=frontend', {
+          signal: undefined,
+        });
+      } finally {
+        configSpy.mockRestore();
+        vi.resetModules();
+      }
+    });
+
     it('GETs the configured endpoint with the encoded service and lookback hours', async () => {
       const data = { scores: [], metrics: [], extra: 'retained' };
       mockFetch.mockResolvedValue({ ok: true, json: async () => data });
