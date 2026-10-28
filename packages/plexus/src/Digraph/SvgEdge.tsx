@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Offsets the label to the right so it clears the physical radius of the node circle
-const SELF_LOOP_LABEL_X_OFFSET = 35;
+export const SELF_LOOP_LABEL_X_OFFSET = 35;
 
 import * as React from 'react';
 

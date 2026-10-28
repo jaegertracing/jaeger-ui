@@ -1,16 +1,13 @@
-// Copyright (c) 2026 Uber Technologies, Inc.
+// Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
 import { render } from '@testing-library/react';
 import { zoomIdentity } from 'd3-zoom';
 
-import SvgEdge from './SvgEdge';
+import SvgEdge, { SELF_LOOP_LABEL_X_OFFSET } from './SvgEdge';
 import { TLayoutEdge } from '../types';
 import { TRendererUtils } from './types';
-
-// Keep in sync with SELF_LOOP_LABEL_X_OFFSET in SvgEdge.tsx
-const SELF_LOOP_LABEL_X_OFFSET = 35;
 
 type TMarkerProps = {
   markerEndId?: string;
@@ -83,15 +80,17 @@ describe('SvgEdge', () => {
     const expectedX = 30 + SELF_LOOP_LABEL_X_OFFSET;
     const expectedY = 40;
 
-    const shortCount = renderEdge(makeLayoutEdge('a', 'a'), '42');
+    const shortCount = renderEdge(makeLayoutEdge('a', 'a'), '5');
     const shortText = shortCount.container.querySelector('text')!;
     expect(Number(shortText.getAttribute('x'))).toBe(expectedX);
     expect(Number(shortText.getAttribute('y'))).toBe(expectedY);
 
-    const longCount = renderEdge(makeLayoutEdge('a', 'a'), '1000000000');
+    const longCount = renderEdge(makeLayoutEdge('a', 'a'), '1234567890');
     const longText = longCount.container.querySelector('text')!;
     expect(Number(longText.getAttribute('x'))).toBe(expectedX);
     expect(Number(longText.getAttribute('y'))).toBe(expectedY);
+
+    expect(shortText.getAttribute('x')).toBe(longText.getAttribute('x'));
   });
 
   it('does not treat an edge without edge data as a self-loop', () => {
