@@ -5,10 +5,14 @@ import { applyMiddleware, combineReducers, createStore, Middleware, Reducer } fr
 import { Action } from 'redux-actions';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+const mockAnalytics = vi.hoisted(() => ({ enabled: true }));
+
 vi.mock('../../../utils/tracking', async importOriginal => ({
   ...(await importOriginal<typeof import('../../../utils/tracking')>()),
-  // The legacy middleware is only installed when web analytics is enabled.
-  isWaEnabled: true,
+  // The legacy middleware is only installed when web analytics is enabled at import time.
+  get isWaEnabled() {
+    return mockAnalytics.enabled;
+  },
   trackEvent: vi.fn(),
 }));
 
@@ -263,6 +267,17 @@ describe('timeline analytics adapter', () => {
     resetStores();
     track.trackChildrenToggle('parent');
     expect(trackEvent).not.toHaveBeenCalled();
+  });
+
+  // Mirrors the middleware, which is not installed when the reporter's isEnabled() is false.
+  it('emits nothing when web analytics is disabled', () => {
+    mockAnalytics.enabled = false;
+    try {
+      runAdapter();
+      expect(trackEvent).not.toHaveBeenCalled();
+    } finally {
+      mockAnalytics.enabled = true;
+    }
   });
 
   // Redux `setTrace` ignores a same-ID reload, while Zustand refocuses the uiFind matches. The
