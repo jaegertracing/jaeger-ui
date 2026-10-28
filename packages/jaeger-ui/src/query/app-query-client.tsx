@@ -7,7 +7,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 // Default TanStack Query client for Jaeger UI. Centralize the cache timing
 //  so new query hooks stay consistent.
 function createAppQueryClient(): QueryClient {
-  return new QueryClient({
+  const client = new QueryClient({
     defaultOptions: {
       queries: {
         staleTime: 5 * 60 * 1000,
@@ -15,6 +15,9 @@ function createAppQueryClient(): QueryClient {
       },
     },
   });
+  // Enriched traces have cyclic parent/child references and cannot use JSON structural sharing.
+  client.setQueryDefaults(['trace'], { structuralSharing: false });
+  return client;
 }
 
 export const queryClient = createAppQueryClient();

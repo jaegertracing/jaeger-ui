@@ -36,11 +36,6 @@ const config: KnipConfig = {
         // directly by any source file so knip cannot detect it.
         '@babel/core',
 
-        // Referenced by Oxlint via the `jsPlugins` field in the `lint` section of vite.config.ts to provide
-        // React hooks rules (react-x/rules-of-hooks, react-x/exhaustive-deps).
-        // Oxlint delegates to this ESLint plugin rather than having a native implementation.
-        'eslint-plugin-react-x',
-
         // Declared as a workspace-level dep so a single copy is hoisted; used internally
         // by react-router-dom (which re-exports from it).
         'react-side-effect',
@@ -61,9 +56,9 @@ const config: KnipConfig = {
         // AUTO-GENERATED from the Jaeger OpenAPI spec (`pnpm run generate:api-types`).
         // Treat as an entry point so knip considers all its exports intentionally public.
         'src/api/v3/generated-client.ts',
-        // Public schema boundary for the v3 trace route: the OTLP re-exports are
-        // intentionally public for future consumers (e.g. the getTrace hook),
-        // even though no production importer exists yet.
+        // Public schema boundary for the v3 trace route: the OTLP re-exports and
+        // boundary refinements are intentionally public for future consumers
+        // (e.g. the getTrace hook), even though no production importer exists yet.
         'src/api/v3/schemas.ts',
         // Example UI config file; not imported by source but consumed directly by the
         // jaeger binary and the Vite dev server.

@@ -20,7 +20,7 @@ import { Provider } from 'react-redux';
 
 import extractDecorationFromState from '../../../model/path-agnostic-decorations';
 import stringSupplant from '../../../utils/stringSupplant';
-import JaegerAPI from '../../../api/jaeger';
+import { jaegerClient } from '../../../api/v3/client';
 import { UnconnectedDetailsPanel as DetailsPanel } from './DetailsPanel';
 import DefaultDetailsPanel from './DetailsPanel';
 
@@ -70,7 +70,7 @@ describe('<SidePanel>', () => {
   let rej;
 
   beforeAll(() => {
-    fetchDecorationSpy = jest.spyOn(JaegerAPI, 'fetchDecoration').mockImplementation(() => {
+    fetchDecorationSpy = jest.spyOn(jaegerClient, 'fetchDecoration').mockImplementation(() => {
       promise = new Promise((resolve, reject) => {
         res = resolve;
         rej = reject;

@@ -1162,11 +1162,21 @@ queryKey: ['ddg', service, operation, start, end]
 
 **Components using hook**: `DeepDependencies` (default export); traces embed passes `modelHash` to the bridge only.
 
-#### ⬜ 2f. Monitor metrics
+#### ✅ 2f. Monitor metrics ([#4048](https://github.com/jaegertracing/jaeger-ui/pull/4048))
 
-**Redux removed**: `src/reducers/metrics.ts`.
+**Redux removed**: `src/reducers/metrics.ts` and the metrics action creators in `src/actions/jaeger-api.ts`.
 
-**New hooks**: one hook per metric dimension, mirroring current loading/error shapes.
+**New hooks** (in `src/components/Monitor/ServicesView/useMetricsQuery.ts`):
+
+- `useServiceMetricsQuery(serviceName, params)` fetches the latency p50/p75/p95, call-rate, and error-rate series concurrently and returns `{ serviceMetrics, serviceError }`.
+- `useOperationMetricsQuery(serviceName, params)` fetches three operation-grouped series concurrently and returns `{ serviceOpsMetrics, opsError }`.
+
+```typescript
+queryKey: ['serviceMetrics', serviceName, params]
+queryKey: ['operationMetrics', serviceName, params]
+```
+
+Both hooks stay disabled until `serviceName` and `params` are defined. `MonitorATMServicesViewImpl` reads the hooks directly, and the transformation helpers preserve partial results when an individual metrics request fails.
 
 #### ⬜ 2g. Path-agnostic decorations
 

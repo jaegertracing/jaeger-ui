@@ -23,6 +23,8 @@ import {
   isQueryEmpty,
 } from './url';
 import ErrorMessage from '../common/ErrorMessage';
+import { toApiError } from '../../types/api-error';
+import type { ApiError } from '../../types/api-error';
 import FileLoader from './FileLoader';
 import { useUploadedTraces } from './useUploadedTraces';
 import VerticalResizer from '../common/VerticalResizer';
@@ -170,7 +172,7 @@ export function SearchTracePageImpl() {
   // navigation, before the new keyed-cache fetch completes and searchData is updated.
   const isStale = Boolean(searchQuery && searchData?.query && !isSameQuery(searchQuery, searchData.query));
 
-  const errors: Array<{ message: string }> = [];
+  const errors: ApiError[] = [];
   if (allServicesUnsupported) {
     errors.push({
       message:
@@ -178,7 +180,8 @@ export function SearchTracePageImpl() {
         'deployment does not support. Select a service to search.',
     });
   } else if (searchError) {
-    errors.push({ message: searchError instanceof Error ? searchError.message : String(searchError) });
+    // Keep the HTTP details so ErrorMessage shows the Status, URL, Query, and body rows.
+    errors.push(toApiError(searchError));
   }
 
   const hasTraceResults = traceSummaries.length > 0;
@@ -278,7 +281,7 @@ export function SearchTracePageImpl() {
           <div className="js-test-error-message">
             <h2>There was an error loading traces: </h2>
             {errors.map(err => (
-              <ErrorMessage key={err.message} error={err} />
+              <ErrorMessage key={typeof err === 'string' ? err : err.message} error={err} />
             ))}
           </div>
         )}
@@ -304,12 +307,7 @@ export function SearchTracePageImpl() {
           />
         )}
         {showLogo && (
-          <img
-            className="SearchTracePage--logo js-test-logo"
-            alt="presentation"
-            src={JaegerLogo}
-            width="400"
-          />
+          <img className="SearchTracePage--logo js-test-logo" alt="" src={JaegerLogo} width="400" />
         )}
       </div>
     </div>

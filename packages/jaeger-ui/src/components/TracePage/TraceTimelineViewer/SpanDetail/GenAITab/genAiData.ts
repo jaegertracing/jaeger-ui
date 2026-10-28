@@ -82,16 +82,30 @@ export type GenAiTokenUsage = {
   audioCacheReadInputTokens?: number;
 };
 
+/**
+ * The attribute a value was read from when that is not the name the OTel GenAI
+ * conventions define.
+ */
+export type GenAiAttributeSource = { key: string; spec: string };
+
 // Every variant separates its discriminant (`type`) from its payload (`data`)
 // so a generic fallback renderer can walk `Object.entries(data)` for a
 // section type it doesn't have a specific case for.
+//
+// `sources` records, per value read from a name other than the one the OTel GenAI
+// conventions define, which attribute it came from, so the view can say so.
 export type GenAiSection =
   | { type: 'agent'; data: GenAiAgent }
   | { type: 'meta'; data: { operation?: string; provider?: string; model?: string } }
-  | { type: 'tokens'; data: GenAiTokenUsage }
+  | {
+      type: 'tokens';
+      data: GenAiTokenUsage;
+      sources: GenAiTokenSources;
+    }
   | {
       type: 'conversation';
       data: { systemInstructions?: string; inputMessages: GenAiMessage[]; outputMessages: GenAiMessage[] };
+      sources: { input?: GenAiAttributeSource; output?: GenAiAttributeSource };
     }
   | { type: 'toolCall'; data: GenAiToolCall }
   | { type: 'other'; data: { attributes: IAttributes } };
@@ -163,6 +177,47 @@ export function tryParseJson(value: string): unknown {
   } catch {
     return value;
   }
+}
+
+/**
+ * Walks an already-parsed JSON value and replaces every string that itself parses as a
+ * JSON object or array with the parsed value, repeating until no such string remains.
+ * Instrumentation that stringifies a payload before putting it inside another payload
+ * (a chat message whose `content` is itself a serialized `{role, parts}` message, whose
+ * `content` is in turn a serialized tool result, and so on) produces values that the tree
+ * view otherwise shows as one escaped string per level. The walk is lossy by design: a
+ * string that merely looks like JSON is unwrapped too, so the reader can switch back to
+ * the plain tree.
+ *
+ * Returns the input itself (same reference) when no string was unwrapped, so a caller can
+ * tell by identity whether the walk found anything, without a second traversal. The same
+ * happens for a value nested too deeply to walk: JSON.parse accepts thousands of levels,
+ * and a recursive walk over them would overflow the stack, so the overflow is caught and
+ * the value is treated as having nothing to unwrap rather than failing the render.
+ */
+export function deepParseJson(value: unknown): unknown {
+  try {
+    return walkJson(value);
+  } catch {
+    return value;
+  }
+}
+
+function walkJson(value: unknown): unknown {
+  if (typeof value === 'string') {
+    const parsed = tryParseJson(value);
+    return parsed === value ? value : walkJson(parsed);
+  }
+  if (Array.isArray(value)) {
+    const items = value.map(walkJson);
+    return items.some((item, i) => item !== value[i]) ? items : value;
+  }
+  if (typeof value === 'object' && value !== null) {
+    const entries = Object.entries(value);
+    const walked = entries.map(([k, v]) => [k, walkJson(v)] as const);
+    return walked.some(([, v], i) => v !== entries[i][1]) ? Object.fromEntries(walked) : value;
+  }
+  return value;
 }
 
 /**
@@ -407,6 +462,67 @@ export function hasAnyTokenUsage(usage: GenAiTokenUsage): boolean {
   return Object.values(usage).some(v => v != null);
 }
 
+type Read = { value: AttributeValue | undefined; source?: GenAiAttributeSource };
+
+/**
+ * Reads the spec name, then each fallback in turn, stopping at the first one that is
+ * present, so a fallback is read, and claimed, only when every name before it is absent.
+ * The result names the fallback it came from, if any.
+ */
+function readFirst(get: GetAttr, spec: string, ...fallbacks: string[]): Read {
+  const value = get(spec);
+  if (value !== undefined) return { value };
+  for (const key of fallbacks) {
+    const fallback = get(key);
+    if (fallback !== undefined) {
+      return { value: fallback, source: { key, spec } };
+    }
+  }
+  return { value: undefined };
+}
+
+export type GenAiTokenSources = Partial<Record<keyof GenAiTokenUsage, GenAiAttributeSource>>;
+
+function getGenAiTokenUsageFromGetter(
+  get: GetAttr
+): { usage: GenAiTokenUsage; sources: GenAiTokenSources } | undefined {
+  const usage: GenAiTokenUsage = {};
+  const sources: GenAiTokenSources = {};
+  const read = (field: keyof GenAiTokenUsage, spec: string, ...fallbacks: string[]) => {
+    const { value, source } = readFirst(get, spec, ...fallbacks);
+    usage[field] = asNumber(value);
+    if (source) sources[field] = source;
+  };
+  // The fallback names are the ones the OTel semantic conventions used before
+  // v1.27.0 renamed prompt_tokens/completion_tokens, and before the GenAI
+  // conventions renamed cache_creation.input_tokens to cache_write.
+  read('inputTokens', 'gen_ai.usage.input_tokens', 'gen_ai.usage.prompt_tokens');
+  read('outputTokens', 'gen_ai.usage.output_tokens', 'gen_ai.usage.completion_tokens');
+  read('reasoningOutputTokens', 'gen_ai.usage.reasoning.output_tokens');
+  read('cacheReadInputTokens', 'gen_ai.usage.cache_read.input_tokens');
+  read(
+    'cacheWriteInputTokens',
+    'gen_ai.usage.cache_write.input_tokens',
+    'gen_ai.usage.cache_creation.input_tokens'
+  );
+  read('textInputTokens', 'gen_ai.usage.text.input_tokens');
+  read('imageInputTokens', 'gen_ai.usage.image.input_tokens');
+  read('audioInputTokens', 'gen_ai.usage.audio.input_tokens');
+  read('textOutputTokens', 'gen_ai.usage.text.output_tokens');
+  read('imageOutputTokens', 'gen_ai.usage.image.output_tokens');
+  read('audioOutputTokens', 'gen_ai.usage.audio.output_tokens');
+  read('textCacheReadInputTokens', 'gen_ai.usage.text.cache_read.input_tokens');
+  read('imageCacheReadInputTokens', 'gen_ai.usage.image.cache_read.input_tokens');
+  read('audioCacheReadInputTokens', 'gen_ai.usage.audio.cache_read.input_tokens');
+  if (!hasAnyTokenUsage(usage)) return undefined;
+  return { usage, sources };
+}
+
+/** Extracts the token-usage attributes shared by the GenAI tab and trace summary. */
+export function getGenAiTokenUsage(attributes: IAttributes): GenAiTokenUsage | undefined {
+  return getGenAiTokenUsageFromGetter(key => attributes.getValue(key))?.usage;
+}
+
 export function formatTokenCount(value: number | undefined): string | undefined {
   if (value == null) return undefined;
   return new Intl.NumberFormat('en-US').format(value);
@@ -467,35 +583,34 @@ const REGISTRY: SectionBuilder[] = [
       : undefined;
   },
   get => {
-    const usage: GenAiTokenUsage = {
-      inputTokens: asNumber(get('gen_ai.usage.input_tokens')),
-      outputTokens: asNumber(get('gen_ai.usage.output_tokens')),
-      reasoningOutputTokens: asNumber(get('gen_ai.usage.reasoning.output_tokens')),
-      cacheReadInputTokens: asNumber(get('gen_ai.usage.cache_read.input_tokens')),
-      cacheWriteInputTokens: asNumber(get('gen_ai.usage.cache_write.input_tokens')),
-      textInputTokens: asNumber(get('gen_ai.usage.text.input_tokens')),
-      imageInputTokens: asNumber(get('gen_ai.usage.image.input_tokens')),
-      audioInputTokens: asNumber(get('gen_ai.usage.audio.input_tokens')),
-      textOutputTokens: asNumber(get('gen_ai.usage.text.output_tokens')),
-      imageOutputTokens: asNumber(get('gen_ai.usage.image.output_tokens')),
-      audioOutputTokens: asNumber(get('gen_ai.usage.audio.output_tokens')),
-      textCacheReadInputTokens: asNumber(get('gen_ai.usage.text.cache_read.input_tokens')),
-      imageCacheReadInputTokens: asNumber(get('gen_ai.usage.image.cache_read.input_tokens')),
-      audioCacheReadInputTokens: asNumber(get('gen_ai.usage.audio.cache_read.input_tokens')),
-    };
-    return hasAnyTokenUsage(usage) ? { type: 'tokens', data: usage } : undefined;
+    const usage = getGenAiTokenUsageFromGetter(get);
+    return usage ? { type: 'tokens', data: usage.usage, sources: usage.sources } : undefined;
   },
   get => {
     // Same short-circuit-on-purpose rule as the meta builder above: only fall
-    // back to gen_ai.prompt/gen_ai.completion when the current key is absent,
-    // so a legacy value that disagrees with the current one is left unclaimed
-    // and surfaces in "Other GenAI Attributes" instead of being silently
-    // dropped.
-    const inputMessages = parseMessages(get('gen_ai.input.messages') ?? get('gen_ai.prompt'));
-    const outputMessages = parseMessages(get('gen_ai.output.messages') ?? get('gen_ai.completion'));
+    // back to the next key when the preferred one is absent, so a value that
+    // disagrees with the preferred one is left unclaimed and surfaces in
+    // "Other GenAI Attributes" instead of being silently dropped.
+    //
+    // gen_ai.prompt/gen_ai.completion are the deprecated spec names. Bare
+    // gen_ai.input/gen_ai.output are not in any spec version; some
+    // instrumentations emit them on a single LLM call span, holding the one
+    // input and the one output rather than a message array. Unprefixed
+    // input/output come from span models in which every GenAI span carries
+    // its input and output under those two names. parseMessages wraps a
+    // scalar or object into a one-element list, so the value renders as the
+    // span's only message.
+    const input = readFirst(get, 'gen_ai.input.messages', 'gen_ai.prompt', 'gen_ai.input', 'input');
+    const output = readFirst(get, 'gen_ai.output.messages', 'gen_ai.completion', 'gen_ai.output', 'output');
+    const inputMessages = parseMessages(input.value);
+    const outputMessages = parseMessages(output.value);
     const systemInstructions = parseSystemInstructions(get('gen_ai.system_instructions'));
     return inputMessages.length || outputMessages.length || systemInstructions
-      ? { type: 'conversation', data: { inputMessages, outputMessages, systemInstructions } }
+      ? {
+          type: 'conversation',
+          data: { inputMessages, outputMessages, systemInstructions },
+          sources: { input: input.source, output: output.source },
+        }
       : undefined;
   },
   get => {

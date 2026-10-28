@@ -25,6 +25,13 @@
       "description": "@assistant-ui/* and @ag-ui/* share peer types (AssistantRuntime, HttpAgent); bumping them independently produces duplicate copies in node_modules and tsc errors. Pin exact versions (no ^) so pnpm dedupes a single copy."
     },
     {
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["@ag-ui/client"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false,
+      "description": "Block major upgrades of @ag-ui/client until @assistant-ui/react-ag-ui supports @ag-ui/client 1.x"
+    },
+    {
       "groupName": "opentelemetry",
       "matchManagers": ["npm"],
       "matchPackageNames": ["/^@opentelemetry//"],

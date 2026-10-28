@@ -248,7 +248,7 @@ describe('ID Validators', () => {
     });
 
     it('accepts valid 16-char uppercase hex span ID', () => {
-      const id = '0102030405060708';
+      const id = '010203040506ABCD';
       expect(spanIdHex.parse(id)).toBe(id);
     });
 

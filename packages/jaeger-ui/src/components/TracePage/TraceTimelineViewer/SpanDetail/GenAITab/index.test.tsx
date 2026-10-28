@@ -7,20 +7,21 @@ import { vi } from 'vitest';
 
 import GenAITab from '.';
 import { useMessageFormatStore } from './message-format-store';
-import type { IAttribute, IOtelSpan } from '../../../../../types/otel';
+import type { IAttribute } from '../../../../../types/otel';
 import { makeAttributes } from '../../../../../model/attributes';
 import { classifySpan } from '../../../../../utils/genai/detect';
+import { makeOtelSpan } from '../../../../../utils/test/makeOtelSpan';
 
 // genAIKind is always attribute-derived in production (OtelSpanFacade computes it via
 // classifySpan, never set independently) - deriving it here the same way keeps these
 // tests from silently diverging from real span behavior.
-function makeSpan(attributes: IAttribute[]): IOtelSpan {
+function makeSpan(attributes: IAttribute[]) {
   const spanAttributes = makeAttributes(attributes);
-  return {
+  return makeOtelSpan({
     spanID: 'abc123',
     attributes: spanAttributes,
     genAIKind: classifySpan({ attributes: spanAttributes }),
-  } as unknown as IOtelSpan;
+  });
 }
 
 // The view control is an antd Select, so it shows the chosen view as text rather than
@@ -211,6 +212,106 @@ describe('GenAITab', () => {
     expect(screen.getByText('0')).toBeInTheDocument();
   });
 
+  describe('non-standard attribute names', () => {
+    const markName = (key: string, spec: string) =>
+      `Non-standard attribute name ${key}; the OTel GenAI conventions define ${spec}`;
+
+    it('marks a token count read from a deprecated name, and not one read from the spec name', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            { key: 'gen_ai.usage.input_tokens', value: 100 },
+            { key: 'gen_ai.usage.completion_tokens', value: 50 },
+          ])}
+        />
+      );
+      const marks = screen.getAllByRole('img', { name: /attribute name/ });
+      expect(marks).toHaveLength(1);
+      expect(marks[0]).toHaveAccessibleName(
+        markName('gen_ai.usage.completion_tokens', 'gen_ai.usage.output_tokens')
+      );
+      // The mark belongs to the item it describes, after that item's value.
+      expect(marks[0].closest('.GenAITab--tokenItem')).toHaveTextContent('Output 50');
+    });
+
+    it('names both attributes in the tooltip', async () => {
+      render(<GenAITab span={makeSpan([{ key: 'output', value: 'Sunny.' }])} />);
+
+      fireEvent.mouseOver(screen.getByRole('img', { name: /Non-standard attribute name/ }));
+
+      const tooltip = await screen.findByRole('tooltip');
+      expect(tooltip).toHaveTextContent('Non-standard attribute name');
+      expect(tooltip).toHaveTextContent('Read from output');
+      expect(tooltip).toHaveTextContent('OTel GenAI conventions: gen_ai.output.messages');
+    });
+
+    it('opens the tooltip on keyboard focus as well as on hover', async () => {
+      render(<GenAITab span={makeSpan([{ key: 'output', value: 'Sunny.' }])} />);
+
+      fireEvent.focus(screen.getByRole('img', { name: /Non-standard attribute name/ }));
+
+      expect(await screen.findByRole('tooltip')).toHaveTextContent('Read from output');
+    });
+
+    it('marks every message read from a non-spec name in its header', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.input.messages',
+              value: [{ role: 'user', content: 'What is the weather?' }],
+            },
+            {
+              key: 'output',
+              value: JSON.stringify([
+                { role: 'assistant', content: 'Sunny.' },
+                { role: 'assistant', content: 'Bring sunglasses.' },
+              ]),
+            },
+          ])}
+        />
+      );
+      const marks = screen.getAllByRole('img', { name: /Non-standard attribute name/ });
+      expect(marks).toHaveLength(2);
+      marks.forEach(mark => {
+        expect(mark).toHaveAccessibleName(markName('output', 'gen_ai.output.messages'));
+        expect(mark.closest('.GenAITab--messageHeader')).toHaveTextContent('assistant');
+      });
+      expect(screen.getByText('user').closest('.GenAITab--messageHeader')).not.toContainElement(marks[0]);
+    });
+
+    it('keeps the mark out of the toggle button, so clicking it does not collapse the message', () => {
+      render(<GenAITab span={makeSpan([{ key: 'output', value: 'Sunny.' }])} />);
+      const toggle = screen.getByRole('button', { name: 'Message 1 (assistant)' });
+      const mark = screen.getByRole('img', { name: /Non-standard attribute name/ });
+      expect(toggle).not.toContainElement(mark);
+      fireEvent.click(mark);
+      expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    it('shows no mark when every attribute carries its spec name', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            { key: 'gen_ai.usage.input_tokens', value: 100 },
+            { key: 'gen_ai.input.messages', value: [{ role: 'user', content: 'Hi' }] },
+          ])}
+        />
+      );
+      expect(screen.queryByRole('img', { name: /attribute name/ })).toBeNull();
+    });
+
+    it('remembers a format under the spec name even for messages read from a fallback name', () => {
+      render(
+        <GenAITab
+          span={makeSpan([{ key: 'input', value: JSON.stringify([{ role: 'user', content: 'Hi' }]) }])}
+        />
+      );
+      chooseView(viewControl(), 'Markdown');
+      expect(useMessageFormatStore.getState().overrides).toEqual({ 'gen_ai.input.messages': 'markdown' });
+    });
+  });
+
   it('renders conversation messages with role labels, visible by default', () => {
     render(
       <GenAITab
@@ -386,6 +487,81 @@ describe('GenAITab', () => {
     );
     expect(container.querySelector('.GenAITab--json .json-markup-key')?.textContent).toContain('answer');
     expect(shownView(screen.getByLabelText(/Content format/))).toBe('JSON');
+  });
+
+  it('defaults JSON that holds JSON strings to the JSON (deep) view, and switching to JSON shows them escaped', () => {
+    const nested = JSON.stringify({ message: JSON.stringify({ verdict: 'true' }) });
+    const { container } = render(
+      <GenAITab
+        span={makeSpan([{ key: 'gen_ai.output.messages', value: [{ role: 'assistant', content: nested }] }])}
+      />
+    );
+    const keys = () =>
+      Array.from(container.querySelectorAll('.GenAITab--json .json-markup-key')).map(k => k.textContent);
+    expect(shownView(viewControl())).toBe('JSON (deep)');
+    expect(keys()).toEqual(['message:', 'verdict:']);
+    chooseView(viewControl(), 'JSON');
+    expect(shownView(viewControl())).toBe('JSON');
+    expect(keys()).toEqual(['message:']);
+  });
+
+  it('disables the JSON (deep) option on JSON with no JSON strings inside, keeping JSON as the default', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.output.messages',
+            value: [{ role: 'assistant', content: JSON.stringify({ answer: 42 }) }],
+          },
+        ])}
+      />
+    );
+    expect(shownView(viewControl())).toBe('JSON');
+    expect(viewItem(viewControl(), 'JSON (deep)')).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('disables the JSON (deep) option, like JSON, on a message whose content does not parse as JSON', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.output.messages',
+            value: [{ role: 'assistant', content: 'Just a plain sentence, no JSON here.' }],
+          },
+        ])}
+      />
+    );
+    expect(viewItem(viewControl(), 'JSON (deep)')).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('keeps a remembered JSON preference on JSON that could unwrap, instead of upgrading it to JSON (deep)', () => {
+    useMessageFormatStore.setState({ overrides: { 'gen_ai.output.messages': 'json' } });
+    const nested = JSON.stringify({ message: JSON.stringify({ verdict: 'true' }) });
+    const { container } = render(
+      <GenAITab
+        span={makeSpan([{ key: 'gen_ai.output.messages', value: [{ role: 'assistant', content: nested }] }])}
+      />
+    );
+    expect(shownView(viewControl())).toBe('JSON');
+    expect(
+      Array.from(container.querySelectorAll('.GenAITab--json .json-markup-key')).map(k => k.textContent)
+    ).toEqual(['message:']);
+  });
+
+  it('shows the JSON tree, not plain text, when the remembered preference is JSON (deep) but this JSON has nothing to unwrap', () => {
+    useMessageFormatStore.setState({ overrides: { 'gen_ai.output.messages': 'json-deep' } });
+    const { container } = render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.output.messages',
+            value: [{ role: 'assistant', content: JSON.stringify({ answer: 42 }) }],
+          },
+        ])}
+      />
+    );
+    expect(shownView(viewControl())).toBe('JSON');
+    expect(container.querySelector('.GenAITab--json .json-markup-key')?.textContent).toContain('answer');
   });
 
   it('disables the JSON option on a message whose content does not parse as JSON', () => {

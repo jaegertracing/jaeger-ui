@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, InputRef } from 'antd';
 import { useNormalizeTraceId } from './useNormalizeTraceId';
 import { useNavigate } from 'react-router-dom';
@@ -10,7 +10,7 @@ import type { Location } from 'react-router-dom';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
-import _memoize from 'lodash/memoize';
+import memoizeOne from 'memoize-one';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
@@ -31,7 +31,6 @@ import {
 } from './keyboard-shortcuts';
 import { cancel as cancelScroll, scrollBy, scrollTo } from './scroll-page';
 import ScrollManager from './ScrollManager';
-import calculateTraceDagEV from './TraceGraph/calculateTraceDagEV';
 import TraceGraph from './TraceGraph/TraceGraph';
 import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
 import { useConfig } from '../../hooks/useConfig';
@@ -50,9 +49,9 @@ import { getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { parseUiFind } from '../common/UiFindInput';
-import { getUiFindVertexKeys } from '../TraceDiff/TraceDiffGraph/traceDiffGraphUtils';
 import { LocationState, ReduxState, TNil } from '../../types';
-import { useTrace } from '../../hooks/useTraceLoading';
+import { reloadBackendTrace, useTrace } from '../../hooks/useTraceLoading';
+import { isUploadedTrace } from '../SearchTracePage/useUploadedTraces';
 import { IOtelTrace } from '../../types/otel';
 import filterSpans from '../../utils/filter-spans';
 import updateUiFind from '../../utils/update-ui-find';
@@ -82,6 +81,7 @@ type TOwnProps = {
   disableJsonView: boolean;
   traceGraphConfig?: TraceGraphConfig;
   useOtelTerms: boolean;
+  onReloadTrace?: () => void;
 };
 
 type TReduxProps = {
@@ -158,6 +158,7 @@ export function TracePageImpl(props: TProps) {
     traceGraphConfig,
     uiFind,
     useOtelTerms,
+    onReloadTrace,
   } = props;
 
   const id = params.id;
@@ -165,6 +166,7 @@ export function TracePageImpl(props: TProps) {
     data: traceData,
     isPending: traceLoading,
     isError: traceError,
+    isFetching: traceFetching,
     error: traceQueryError,
   } = useTrace(id);
 
@@ -203,10 +205,10 @@ export function TracePageImpl(props: TProps) {
   const [viewRange, setViewRange] = useState<IViewRange>({ time: { current: [0, 1] } });
   const [criticalPathErrorDismissed, setCriticalPathErrorDismissed] = useState(false);
 
-  const traceDagEV = useMemo(
-    () => (viewType === ETraceViewType.TraceGraph && traceData ? calculateTraceDagEV(traceData) : null),
-    [traceData, viewType]
-  );
+  // TraceGraph owns its search (DAG + vertex-key matching) and reports matches through
+  // onSearchResults. Every other view uses the span matches computed below in this component,
+  // which keeps the header count working for views without search wiring (flamegraph, logs).
+  const [findMatches, setFindMatches] = useState<Set<string> | TNil>(null);
 
   // Read the trace's own verdict rather than re-deriving it here. It is computed
   // once from each span's cached genAIKind, so re-scanning attributes is both
@@ -218,12 +220,8 @@ export function TracePageImpl(props: TProps) {
   const viewRangeRef = useRef(viewRange);
   viewRangeRef.current = viewRange;
   const prevIdRef = useRef(id);
-  const idRef = useRef(id);
-  idRef.current = id;
-
-  const filterSpansMemo = useRef(
-    _memoize(filterSpans, (textFilter: string) => `${textFilter} ${idRef.current}`)
-  ).current;
+  const userPickedViewRef = useRef(false);
+  const filterSpansMemo = useRef(memoizeOne(filterSpans)).current;
 
   const scrollManagerRef = useRef<ScrollManager>(new ScrollManager(traceData, { scrollBy, scrollTo }));
 
@@ -294,6 +292,7 @@ export function TracePageImpl(props: TProps) {
   useEffect(() => {
     if (prevIdRef.current !== id) {
       prevIdRef.current = id;
+      userPickedViewRef.current = false;
       updateViewRangeTime(0, 1);
       clearSearch();
       setCriticalPathErrorDismissed(false);
@@ -331,9 +330,20 @@ export function TracePageImpl(props: TProps) {
 
   const setTraceView = useCallback((newViewType: ETraceViewType) => {
     setViewType(newViewType);
+    setFindMatches(null);
   }, []);
 
+  const onUserViewChange = useCallback(
+    (newViewType: ETraceViewType) => {
+      userPickedViewRef.current = true;
+      setTraceView(newViewType);
+    },
+    [setTraceView]
+  );
+
   useEffect(() => {
+    // A view the user picked from the dropdown is not overridden by the default.
+    if (userPickedViewRef.current) return;
     if (traceIsGenAI) {
       setTraceView(ETraceViewType.GenAITimelineViewer);
     } else {
@@ -377,7 +387,7 @@ export function TracePageImpl(props: TProps) {
     setTimelineBarsVisible(!timelineBarsVisible);
   }, [setTimelineBarsVisible, timelineBarsVisible]);
 
-  if (traceError) {
+  if (traceError && !traceData) {
     return <ErrorMessage className="ub-m3" error={traceQueryError || 'Unknown error'} />;
   }
   if (traceLoading || !traceData) {
@@ -385,21 +395,17 @@ export function TracePageImpl(props: TProps) {
   }
 
   let findCount = 0;
-  let graphFindMatches: Set<string> | null | undefined;
   let spanFindMatches: Set<string> | null | undefined;
-  if (uiFind) {
-    if (viewType === ETraceViewType.TraceGraph) {
-      graphFindMatches = getUiFindVertexKeys(uiFind, _get(traceDagEV, 'vertices', []));
-      findCount = graphFindMatches ? graphFindMatches.size : 0;
-    } else {
-      const allMatches = filterSpansMemo(uiFind, _get(traceData, 'spans'));
-      const otelTrace = traceData;
-      spanFindMatches =
-        otelTrace && prunedServices.size > 0
-          ? filterPrunedSpanIDs(allMatches, otelTrace.spanMap, prunedServices)
-          : allMatches;
-      findCount = spanFindMatches ? spanFindMatches.size : 0;
-    }
+  if (viewType === ETraceViewType.TraceGraph) {
+    findCount = uiFind && findMatches ? findMatches.size : 0;
+  } else if (uiFind) {
+    const allMatches = filterSpansMemo(uiFind, _get(traceData, 'spans'));
+    const otelTrace = traceData;
+    spanFindMatches =
+      otelTrace && prunedServices.size > 0
+        ? filterPrunedSpanIDs(allMatches, otelTrace.spanMap, prunedServices)
+        : allMatches;
+    findCount = spanFindMatches ? spanFindMatches.size : 0;
   }
 
   const locationState = location.state;
@@ -421,10 +427,12 @@ export function TracePageImpl(props: TProps) {
     linkToStandalone: getUrl(id),
     nextResult,
     onArchiveClicked: archiveTrace,
+    onReloadTrace,
+    reloadingTrace: traceFetching,
     onDetailPanelModeToggle,
     onSlimViewClicked: toggleSlimView,
     onTimelineToggle,
-    onTraceViewChange: setTraceView,
+    onTraceViewChange: onUserViewChange,
     prevResult,
     ref: searchBarRef,
     resultCount: findCount,
@@ -480,9 +488,9 @@ export function TracePageImpl(props: TProps) {
     view = (
       <TraceGraph
         headerHeight={headerHeight}
-        ev={traceDagEV}
+        trace={traceData}
         uiFind={uiFind}
-        uiFindVertexKeys={graphFindMatches}
+        onSearchResults={setFindMatches}
         traceGraphConfig={traceGraphConfig}
         useOtelTerms={useOtelTerms}
       />
@@ -529,6 +537,14 @@ export function TracePageImpl(props: TProps) {
       )}
       <div className="Tracepage--headerSection" ref={headerRefCallback}>
         <TracePageHeader {...headerProps} />
+        {traceError && (
+          <Alert
+            type="warning"
+            showIcon
+            message="Trace reload failed. Showing the previously loaded trace."
+            description={traceQueryError?.message || 'Unknown error'}
+          />
+        )}
       </div>
       {headerHeight ? <section style={{ paddingTop: headerHeight }}>{view}</section> : null}
     </div>
@@ -564,15 +580,25 @@ type TracePageProps = {
   params: { id: string };
 };
 
-const TracePage = (props: TracePageProps) => {
+export const TracePageRoute = (props: TracePageProps) => {
   const config = useConfig();
   const traceID = props.params.id;
   const { data: traceData } = useTrace(traceID);
   useNormalizeTraceId(traceID, traceData);
+  // Uploads change only on the search page, which is unmounted on this route,
+  // so the registry needs no subscription here. Recheck in the handler before
+  // refetching to protect against a stale render.
+  const isUploaded = isUploadedTrace(traceID);
+
+  const onReloadTrace = useCallback(() => {
+    if (isUploadedTrace(traceID)) return;
+    void reloadBackendTrace(traceID);
+  }, [traceID]);
 
   return (
     <ConnectedTracePage
       {...props}
+      onReloadTrace={isUploaded ? undefined : onReloadTrace}
       params={{ ...props.params, id: traceID }}
       archiveEnabled={Boolean(config.archiveEnabled)}
       enableSidePanel={Boolean(config.traceTimeline?.enableSidePanel)}
@@ -585,4 +611,4 @@ const TracePage = (props: TracePageProps) => {
   );
 };
 
-export default withRouteProps(TracePage);
+export default withRouteProps(TracePageRoute);

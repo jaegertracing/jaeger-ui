@@ -32,7 +32,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .DdgNodeContent--core.is-missingDecoration {
-  background-color: #e58c33;
+  background-color: var(--feedback-warning);
 }
 
 .DdgNodeContent--core.is-positioned {
