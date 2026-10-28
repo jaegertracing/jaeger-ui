@@ -10,10 +10,11 @@ import SpanBar from './SpanBar';
 import { makeAttributes } from '../../../model/attributes';
 import { GEN_AI_REQUEST_MODEL } from '../../../constants/span-attributes';
 
-vi.mock('./SpanTreeOffset', () => ({
-  default: jest.fn(({ span, childrenVisible, onClick }) => (
+vi.mock('./SpanTreeOffset', async importOriginal => ({
+  ...(await importOriginal()),
+  default: jest.fn(({ childrenVisible, onClick }) => (
     <div data-testid="span-tree-offset" onClick={onClick}>
-      SpanTreeOffset: {span.spanID} - {childrenVisible ? 'expanded' : 'collapsed'}
+      SpanTreeOffset: {childrenVisible ? 'expanded' : 'collapsed'}
     </div>
   )),
 }));
@@ -83,6 +84,7 @@ describe('<SpanBarRow>', () => {
       instrumentationScope: { name: 'scope' },
       depth: 0,
       hasChildren: true,
+      childSpans: [],
       relativeStartTime: 100,
       inboundLinks: [],
       warnings: null,
