@@ -40,6 +40,7 @@ describe('getConfig()', () => {
 
     it('returns the default config', () => {
       expect(getConfig()).toEqual(defaultConfig);
+      expect(getConfig().timeFormat).toBe('12h');
     });
   });
 
@@ -131,6 +132,11 @@ describe('getConfig()', () => {
     it('returns the default config when the embedded config is `null`', () => {
       embedded = null;
       expect(getConfig()).toEqual(defaultConfig);
+    });
+
+    it('uses the configured time format', () => {
+      embedded = { timeFormat: '24h' };
+      expect(getConfig().timeFormat).toBe('24h');
     });
 
     it('merges the defaultConfig with the embedded config and backend capabilities', () => {

@@ -76,6 +76,7 @@ const defaultConfig: Config = {
     maxLimit: 1500,
   },
   traceIdDisplayLength: 7,
+  timeFormat: '12h',
   backendCapabilities: {
     archiveStorage: false,
     metricsStorage: false,
