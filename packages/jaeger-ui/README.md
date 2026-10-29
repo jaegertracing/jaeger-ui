@@ -14,7 +14,7 @@
 
 The UI supports customization via custom configuration as either JSON or Javascript file. Refer to [documentation](https://www.jaegertracing.io/docs/latest/deployment/frontend-ui/) for the full syntax.
 
-The configuration is loaded into a `Config` object (see [src/types/config.tsx](./src/types/config.tsx) for the complete schema). This object is returned by the top-level function `getJaegerUiConfig` defined in [index.html](./index.html). By default this function just returns null, but its source is manipulated by the Jaeger backend such that the values are injected dynamically via search-replace. The returned value is then merged with [defaults](./src/utils/config/get-config.tsx) into the redux `state.config`.
+The configuration is loaded into a `Config` object (see [src/types/config.ts](./src/types/config.ts) for the complete schema). This object is returned by the top-level function `getJaegerUiConfig` defined in [index.html](./index.html). By default this function just returns null, but its source is manipulated by the Jaeger backend such that the values are injected dynamically via search-replace. The returned value is then merged with the defaults by `getConfig` in [src/utils/config/get-config.ts](./src/utils/config/get-config.ts), which also applies the backend capabilities from `getJaegerBackendCapabilities` and memoizes the result. Components read the resulting config through the `useConfig()` hook ([src/hooks/useConfig.ts](./src/hooks/useConfig.ts)).
 
 ### Configuration as JSON
 
