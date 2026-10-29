@@ -1,7 +1,7 @@
 // Copyright (c) 2020 The Jaeger Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import _memoize from 'lodash/memoize';
+import memoizeOne from 'memoize-one';
 
 import { Span } from '../types/trace';
 import { getParentSpanID } from './span';
@@ -35,10 +35,7 @@ export function _getTracePageHeaderPartsImpl(spans: ReadonlyArray<Span>): TraceP
   };
 }
 
-const getTracePageHeaderParts = _memoize(_getTracePageHeaderPartsImpl, (spans: ReadonlyArray<Span>) => {
-  if (!spans.length) return 0;
-  return spans[0].traceID;
-});
+const getTracePageHeaderParts = memoizeOne(_getTracePageHeaderPartsImpl);
 
 export function getTraceName(spans: ReadonlyArray<Span>): string {
   const parts = getTracePageHeaderParts(spans);
@@ -62,7 +59,7 @@ export function getIncompleteTraceTooltip(orphanCount: number): string {
   );
 }
 
-export function getTraceEmoji(spans: ReadonlyArray<Span>): string {
+export function getTraceEmoji(spans: ReadonlyArray<Pick<Span, 'traceID'>>): string {
   if (!spans.length) return '';
 
   // prettier-ignore

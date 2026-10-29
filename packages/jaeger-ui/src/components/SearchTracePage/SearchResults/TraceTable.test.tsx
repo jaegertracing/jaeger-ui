@@ -94,6 +94,31 @@ describe('TraceTable', () => {
     expect(checkboxes).toHaveLength(mockTraces.length);
   });
 
+  it('renders comparison checkboxes with accessible aria-label', () => {
+    render(
+      <MemoryRouter>
+        <TraceTable {...defaultProps} disableComparisons={false} />
+      </MemoryRouter>
+    );
+    mockTraces.forEach(trace => {
+      expect(
+        screen.getByRole('checkbox', { name: `Select trace ${trace.traceName} for comparison` })
+      ).toBeInTheDocument();
+    });
+  });
+
+  it('renders comparison checkbox aria-label with traceID when traceName is empty', () => {
+    const traces = [{ ...mockTraces[0], traceID: '1234567890abcdef', traceName: '' }];
+    render(
+      <MemoryRouter>
+        <TraceTable {...defaultProps} traceSummaries={traces} disableComparisons={false} />
+      </MemoryRouter>
+    );
+    expect(
+      screen.getByRole('checkbox', { name: 'Select trace 1234567890abcdef for comparison' })
+    ).toBeInTheDocument();
+  });
+
   it('does not render comparison checkboxes when comparisons are disabled', () => {
     const { container } = render(
       <MemoryRouter>
