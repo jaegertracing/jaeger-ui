@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
@@ -12,11 +12,12 @@ import { useTraceDiffStore } from '../../stores/trace-diff-store';
 vi.mock('antd', async () => {
   const actual = await vi.importActual('antd');
 
-  const Menu = ({ items = [], selectedKeys = [] }) => (
-    <nav data-testid="mock-menu" data-selectedkeys={JSON.stringify(selectedKeys)}>
+  const Menu = ({ items = [], selectedKeys = [], className }) => (
+    <nav data-testid="mock-menu" className={className} data-selectedkeys={JSON.stringify(selectedKeys)}>
       {items.map(item => (
         <div data-testid="mock-menu-item" key={item?.key || item?.label} data-key={item?.key || item?.label}>
           {item?.label}
+          {item?.children && <Menu items={item.children} />}
         </div>
       ))}
     </nav>
@@ -271,5 +272,85 @@ describe('<TopNav>', () => {
     );
 
     expect(screen.getByTestId('TraceIDSearchInput--form')).toBeInTheDocument();
+  });
+
+  it('applies the layout classes to the left and right menus', () => {
+    render(
+      <BrowserRouter>
+        <TopNav {...defaultProps} />
+      </BrowserRouter>
+    );
+
+    const [leftMenu, rightMenu] = screen.getAllByTestId('mock-menu');
+    expect(leftMenu).toHaveClass('Menu--item--left');
+    expect(rightMenu).toHaveClass('Menu--item--right');
+  });
+
+  describe('"More options" panel', () => {
+    const openPanel = () => {
+      fireEvent.click(screen.getByRole('button', { name: 'More options' }));
+      return document.querySelector('.TopNav--morePanel');
+    };
+
+    it('is closed by default', () => {
+      render(
+        <BrowserRouter>
+          <TopNav {...defaultProps} />
+        </BrowserRouter>
+      );
+
+      expect(screen.getByRole('button', { name: 'More options' })).toHaveAttribute('aria-expanded', 'false');
+      expect(document.querySelector('.TopNav--morePanel')).not.toBeInTheDocument();
+    });
+
+    it('holds the right menu items when opened', () => {
+      render(
+        <BrowserRouter>
+          <TopNav {...defaultProps} />
+        </BrowserRouter>
+      );
+
+      const panel = openPanel();
+      expect(screen.getByRole('button', { name: 'More options' })).toHaveAttribute('aria-expanded', 'true');
+      expect(within(panel).getByTestId('TraceIDSearchInput--form')).toBeInTheDocument();
+      expect(within(panel).getByRole('link', { name: labelGitHub })).toHaveAttribute('href', githubUrl);
+      expect(within(panel).getByRole('link', { name: 'Blog' })).toHaveAttribute('href', blogUrl);
+      expect(within(panel).getByRole('button', { name: /toggle color mode/i })).toBeInTheDocument();
+    });
+
+    it('lists the items of a menu group in place of its dropdown', () => {
+      render(
+        <BrowserRouter>
+          <TopNav {...defaultProps} />
+        </BrowserRouter>
+      );
+
+      const panel = openPanel();
+      expect(within(panel).queryByTestId('mock-dropdown')).not.toBeInTheDocument();
+      const group = within(panel).getByText(labelAbout).closest('[data-testid="mock-menu-item"]');
+      expect(within(group).getByText('Version 1')).toBeInTheDocument();
+      expect(within(group).getByRole('link', { name: 'Twitter' })).toHaveAttribute('target', '_self');
+      // Keyed under the group, so they don't clash with a top-level item of the same label
+      expect(within(group).getByRole('link', { name: 'Docs' }).closest('[data-key]')).toHaveAttribute(
+        'data-key',
+        `${labelAbout}/Docs`
+      );
+    });
+
+    it('closes when the page changes', () => {
+      const { rerender } = render(
+        <BrowserRouter>
+          <TopNav {...defaultProps} />
+        </BrowserRouter>
+      );
+
+      openPanel();
+      rerender(
+        <BrowserRouter>
+          <TopNav {...defaultProps} pathname="/trace/abc123" />
+        </BrowserRouter>
+      );
+      expect(screen.getByRole('button', { name: 'More options' })).toHaveAttribute('aria-expanded', 'false');
+    });
   });
 });

@@ -64,3 +64,50 @@ SPDX-License-Identifier: Apache-2.0
   flex: 0 1 auto;
   min-width: 0;
 }
+
+/* Replaces the right menu on narrow screens, see the breakpoint below */
+.TopNav .TopNav--more {
+  display: none;
+}
+
+.TopNav--more.ant-btn {
+  flex: 0 0 var(--nav-height);
+  height: var(--nav-height);
+  border-radius: 0;
+  color: var(--nav-text);
+  font-size: 20px;
+}
+
+/* !important because antd's own button hover rule is more specific, as in ThemeToggleButton.css */
+.TopNav--more.ant-btn:hover,
+.TopNav--more.ant-btn[aria-expanded='true'] {
+  background: var(--nav-background-hover) !important;
+  color: var(--nav-text-hover) !important;
+}
+
+.TopNav--morePanel .ant-popover-container {
+  padding: 0;
+  width: min(20rem, calc(100vw - 2rem));
+}
+
+.TopNav--morePanel .ant-menu {
+  border-radius: inherit;
+}
+
+/* Let the Ask Jaeger textarea expand past its row, as it does in the right menu */
+.TopNav--morePanel .ant-menu-root .TopNav--moreAsk.ant-menu-item,
+.TopNav--morePanel .ant-menu-root .TopNav--moreAsk.ant-menu-item > .ant-menu-title-content {
+  overflow: visible;
+}
+
+/* Same breakpoint as the Search page layout. Below it the right menu no longer fits beside the nav
+   links and would wrap onto a second row, so its items move into the "more" panel instead. */
+@media (max-width: 768px) {
+  .TopNav .Menu--item--right {
+    display: none;
+  }
+
+  .TopNav .TopNav--more {
+    display: inline-flex;
+  }
+}
