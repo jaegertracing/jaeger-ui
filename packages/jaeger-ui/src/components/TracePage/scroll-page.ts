@@ -1,13 +1,18 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import Tween from './Tween';
+// The browser animates the scroll (`behavior: 'smooth'`). There is no way to ask it where a smooth scroll is
+// headed, so the last target is remembered here to let repeated key presses add up. It is only trusted for
+// `APPEND_WINDOW_MS`, roughly how long a smooth scroll takes.
+const APPEND_WINDOW_MS = 500;
 
-const DURATION_MS = 350;
+type TLastScroll = {
+  container: Element | Window;
+  startedAt: number;
+  to: number;
+};
 
-let lastTween: Tween | void;
-let lastTweenContainer: Element | Window | void;
-let tweenGeneration = 0;
+let lastScroll: TLastScroll | undefined;
 
 // TODO(joe): this util can be modified a bit to be generalized (e.g. take in
 // an element as a parameter and use scrollTop instead of window.scrollTo)
@@ -19,66 +24,55 @@ function getScrollTop(container: Element | Window): number {
   return (container as Element).scrollTop;
 }
 
-function setScrollTop(container: Element | Window, value: number) {
+function scrollToPosition(container: Element | Window, top: number, behavior: ScrollBehavior) {
   if (container === window) {
-    window.scrollTo(window.scrollX, value);
+    window.scrollTo({ top, behavior });
   } else {
-    (container as Element).scrollTop = value;
+    (container as Element).scrollTo({ top, behavior });
   }
 }
 
-function _onTweenUpdate(
-  container: Element | Window,
-  { done, value }: { done: boolean; value: number },
-  gen: number
-) {
-  if (gen !== tweenGeneration) {
-    return;
+function prefersReducedMotion(): boolean {
+  return (
+    typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
+}
+
+function startScroll(container: Element | Window, to: number) {
+  lastScroll = { container, startedAt: Date.now(), to };
+  scrollToPosition(container, to, prefersReducedMotion() ? 'auto' : 'smooth');
+}
+
+function getInProgressScroll(): TLastScroll | undefined {
+  if (lastScroll && Date.now() - lastScroll.startedAt < APPEND_WINDOW_MS) {
+    return lastScroll;
   }
-  setScrollTop(container, value);
-  if (done) {
-    lastTween = undefined;
-    lastTweenContainer = undefined;
-  }
+  return undefined;
 }
 
 export function scrollBy(yDelta: number, appendToLast = false, container: Element | Window = window) {
   const scrollY = getScrollTop(container);
   let targetFrom = scrollY;
-  if (appendToLast && lastTween && lastTweenContainer === container) {
-    const currentDirection = lastTween.to < scrollY ? 'up' : 'down';
+  const inProgress = getInProgressScroll();
+  if (appendToLast && inProgress && inProgress.container === container) {
+    const currentDirection = inProgress.to < scrollY ? 'up' : 'down';
     const nextDirection = yDelta < 0 ? 'up' : 'down';
     if (currentDirection === nextDirection) {
-      targetFrom = lastTween.to;
+      targetFrom = inProgress.to;
     }
   }
-  const to = targetFrom + yDelta;
-  const gen = ++tweenGeneration;
-  lastTween = new Tween({
-    to,
-    duration: DURATION_MS,
-    from: scrollY,
-    onUpdate: state => _onTweenUpdate(container, state, gen),
-  });
-  lastTweenContainer = container;
+  startScroll(container, targetFrom + yDelta);
 }
 
 export function scrollTo(y: number, container: Element | Window = window) {
-  const scrollY = getScrollTop(container);
-  const gen = ++tweenGeneration;
-  lastTween = new Tween({
-    duration: DURATION_MS,
-    from: scrollY,
-    to: y,
-    onUpdate: state => _onTweenUpdate(container, state, gen),
-  });
-  lastTweenContainer = container;
+  startScroll(container, y);
 }
 
 export function cancel() {
-  if (lastTween) {
-    lastTween.cancel();
-    lastTween = undefined;
-    lastTweenContainer = undefined;
+  const inProgress = getInProgressScroll();
+  lastScroll = undefined;
+  if (inProgress) {
+    // A new scroll to the current position replaces the smooth scroll that is still running.
+    scrollToPosition(inProgress.container, getScrollTop(inProgress.container), 'instant');
   }
 }
