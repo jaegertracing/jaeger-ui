@@ -216,6 +216,9 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     </h1>
   );
 
+  const target = getTargetEmptyOrBlank();
+  const suffix = target === '_blank' ? ' in a new window' : '';
+
   return (
     <header className="TracePageHeader">
       <DocumentTitle title={`${trace.traceEmoji} ${traceShortID}: ${trace.tracePageTitle} — Jaeger UI`} />
@@ -262,9 +265,10 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
         )}
         {showStandaloneLink && (
           <Link
+            aria-label={`Open trace${suffix}`}
             className="u-tx-inherit ub-nowrap ub-mx2"
             to={linkToStandalone}
-            target={getTargetEmptyOrBlank()}
+            target={target}
             rel="noopener noreferrer"
           >
             <NewWindowIcon isLarge />
