@@ -4,7 +4,7 @@
 
 import deepFreeze from 'deep-freeze';
 
-import { FALLBACK_DAG_MAX_NUM_SERVICES } from './index';
+import { DEFAULT_API_REQUEST_TIMEOUT_MS, FALLBACK_DAG_MAX_NUM_SERVICES } from './index';
 import getVersion, { VersionInfo } from '../utils/version/get-version';
 import shortenCommit from '../utils/version/shorten-commit';
 
@@ -19,6 +19,9 @@ function frontendBuild({ commit, modified }: VersionInfo['frontend']): string {
 }
 
 const defaultConfig: Config = {
+  api: {
+    requestTimeoutMs: DEFAULT_API_REQUEST_TIMEOUT_MS,
+  },
   archiveEnabled: true,
   criticalPathEnabled: true,
   dependencies: {

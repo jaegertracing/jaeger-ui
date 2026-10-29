@@ -10,7 +10,9 @@
 
 import queryString from 'query-string';
 
+import { DEFAULT_API_REQUEST_TIMEOUT_MS } from '../../constants';
 import { ALL_SERVICES } from '../../constants/search-form';
+import getConfig from '../../utils/config/get-config';
 import prefixUrl from '../../utils/prefix-url';
 import { truncateErrorDetail } from '../../utils/error-message';
 import {
@@ -31,6 +33,21 @@ import type { TDdgModelParams } from '../../model/ddg/types';
 import type { MetricsAPIQueryParams, MetricsAPIResponse } from '../../types/metrics';
 
 export const DEFAULT_DEPENDENCY_LOOKBACK = 7 * 24 * 60 * 60 * 1000;
+
+const MAX_TIMEOUT_MS = 2 ** 31 - 1;
+
+/**
+ * Read the default request timeout from `api.requestTimeoutMs`.
+ * Returns DEFAULT_API_REQUEST_TIMEOUT_MS unless the configured value is a positive
+ * integer that setTimeout accepts without overflowing (at most 2^31 - 1 ms).
+ */
+function getRequestTimeoutMs(): number {
+  const timeout = getConfig().api?.requestTimeoutMs;
+  if (typeof timeout === 'number' && Number.isInteger(timeout) && timeout > 0 && timeout <= MAX_TIMEOUT_MS) {
+    return timeout;
+  }
+  return DEFAULT_API_REQUEST_TIMEOUT_MS;
+}
 
 /**
  * Convert a microsecond epoch timestamp to an ISO-8601 string.
@@ -314,14 +331,15 @@ export class JaegerClient {
    * short deadline.
    * @param url - The URL to fetch
    * @param errorMessage - Prefix for the error thrown on a failed response
-   * @param options - Fetch request options, plus a timeout in milliseconds (default: 10 seconds) or null for no deadline
+   * @param options - Fetch request options, plus a timeout in milliseconds (default: `api.requestTimeoutMs`
+   *   config, or 10 seconds) or null for no deadline
    * @returns Promise<unknown> - The parsed JSON body of a successful response
    * @throws Error if the response fails, the request times out, or a network error occurs
    */
   private async fetchJson(
     url: string,
     errorMessage: string,
-    { timeout = 10000, signal, ...options }: RequestInit & { timeout?: number | null } = {}
+    { timeout = getRequestTimeoutMs(), signal, ...options }: RequestInit & { timeout?: number | null } = {}
   ): Promise<unknown> {
     if (timeout === null) {
       const response = await fetch(url, { ...options, signal });
