@@ -101,15 +101,9 @@ const JaegerAPI = {
   fetchServices(): Promise<any> {
     return getJSON(`${this.apiRoot}services`);
   },
+  // TODO: Delete with jaeger.ts; DownloadResults now uses jaegerClient.fetchTrace (#4649).
   fetchTrace(id: string): Promise<any> {
     return getJSON(`${this.apiRoot}traces/${encodeURIComponent(id)}`);
-  },
-  fetchMetrics(metricType: string, serviceNameList: string[], query: Record<string, any>): Promise<any> {
-    const servicesName = serviceNameList.map((serviceName: string) => `service=${serviceName}`).join(',');
-
-    return getJSON(`${this.apiRoot}metrics/${metricType}`, {
-      query: `${servicesName}&${queryString.stringify(query)}`,
-    }).then((d: any) => ({ ...d, quantile: query.quantile }));
   },
 };
 

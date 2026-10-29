@@ -23,6 +23,11 @@ function roleAndText(messages: { role: unknown; content: string }[] | undefined)
   return (messages ?? []).map(({ role, content }) => ({ role, content }));
 }
 
+function sources(sections: GenAiSection[], type: 'tokens' | 'conversation') {
+  const found = sections.find(s => s.type === type);
+  return found && 'sources' in found ? found.sources : undefined;
+}
+
 function section<T extends keyof SectionDataMap>(
   sections: GenAiSection[],
   type: T
@@ -203,6 +208,56 @@ describe('extractGenAiSections', () => {
     it('produces no tokens section when no usage attributes are present', () => {
       const sections = extractGenAiSections(attrs({ 'gen_ai.provider.name': 'openai' }));
       expect(section(sections, 'tokens')).toBeUndefined();
+    });
+
+    it('falls back to the deprecated token count names', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.usage.prompt_tokens': 100,
+          'gen_ai.usage.completion_tokens': 50,
+          'gen_ai.usage.cache_creation.input_tokens': 20,
+        })
+      );
+      expect(section(sections, 'tokens')).toEqual({
+        inputTokens: 100,
+        outputTokens: 50,
+        cacheWriteInputTokens: 20,
+      });
+      expect(section(sections, 'other')).toBeUndefined();
+    });
+
+    it.each([
+      ['inputTokens', 'gen_ai.usage.input_tokens', 'gen_ai.usage.prompt_tokens'],
+      ['outputTokens', 'gen_ai.usage.output_tokens', 'gen_ai.usage.completion_tokens'],
+      [
+        'cacheWriteInputTokens',
+        'gen_ai.usage.cache_write.input_tokens',
+        'gen_ai.usage.cache_creation.input_tokens',
+      ],
+    ] as const)(
+      'leaves %s read from the current name, with the deprecated name unclaimed',
+      (field, current, deprecated) => {
+        const sections = extractGenAiSections(attrs({ [current]: 100, [deprecated]: 7 }));
+        expect(section(sections, 'tokens')?.[field]).toBe(100);
+        expect(section(sections, 'other')?.attributes.entries()).toEqual([{ key: deprecated, value: 7 }]);
+      }
+    );
+
+    it('records the attribute a count was read from when it is not the spec name', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.usage.input_tokens': 100,
+          'gen_ai.usage.completion_tokens': 50,
+          'gen_ai.usage.cache_creation.input_tokens': 20,
+        })
+      );
+      expect(sources(sections, 'tokens')).toEqual({
+        outputTokens: { key: 'gen_ai.usage.completion_tokens', spec: 'gen_ai.usage.output_tokens' },
+        cacheWriteInputTokens: {
+          key: 'gen_ai.usage.cache_creation.input_tokens',
+          spec: 'gen_ai.usage.cache_write.input_tokens',
+        },
+      });
     });
   });
 
@@ -704,6 +759,43 @@ describe('extractGenAiSections', () => {
       expect(section(sections, 'other')?.attributes.entries()).toEqual([
         { key: 'gen_ai.input', value: 'stale' },
       ]);
+    });
+
+    it('falls back to unprefixed input/output, rendering each as a single message', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.operation.name': 'chat',
+          input: 'What is the capital of France?',
+          output: { role: 'assistant', content: 'Paris.' },
+        })
+      );
+      expect(roleAndText(section(sections, 'conversation')?.inputMessages)).toEqual([
+        { role: undefined, content: 'What is the capital of France?' },
+      ]);
+      expect(roleAndText(section(sections, 'conversation')?.outputMessages)).toEqual([
+        { role: 'assistant', content: 'Paris.' },
+      ]);
+    });
+
+    it.each([
+      ['inputMessages', 'gen_ai.input', 'input'],
+      ['outputMessages', 'gen_ai.output', 'output'],
+    ] as const)('shows %s from the gen_ai.* name rather than the unprefixed one', (side, prefixed, bare) => {
+      const sections = extractGenAiSections(attrs({ [prefixed]: 'current', [bare]: 'stale' }));
+      expect(section(sections, 'conversation')?.[side].map(m => m.content)).toEqual(['current']);
+    });
+
+    it('records the attribute each side was read from when it is not the spec name', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.input.messages': [{ role: 'user', parts: [{ type: 'text', content: 'Hi' }] }],
+          output: 'Hello.',
+        })
+      );
+      expect(sources(sections, 'conversation')).toEqual({
+        input: undefined,
+        output: { key: 'output', spec: 'gen_ai.output.messages' },
+      });
     });
 
     it('treats an unparseable message string as a single roleless message', () => {

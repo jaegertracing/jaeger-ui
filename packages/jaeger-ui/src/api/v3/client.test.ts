@@ -4,6 +4,7 @@
 import { JaegerClient, jaegerClient } from './client';
 import { ZodError } from 'zod';
 import { ALL_SERVICES } from '../../constants/search-form';
+import { MAX_DETAIL_LENGTH } from '../../utils/error-message';
 
 describe('JaegerClient', () => {
   let client: JaegerClient;
@@ -21,6 +22,214 @@ describe('JaegerClient', () => {
   afterEach(() => {
     (global as any).fetch = originalFetch;
     vi.useRealTimers();
+  });
+
+  describe('fetchMetrics', () => {
+    const query = {
+      endTs: 1_700_000_000_000,
+      lookback: 3600000,
+      step: 60000,
+      ratePer: 600000,
+      spanKind: 'server' as const,
+      quantile: 0.95,
+    };
+
+    it('encodes the service and preserves operation query parameters in milliseconds', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ name: 'service_operation_latencies', type: 'GAUGE', help: '', metrics: [] }),
+      });
+
+      await client.fetchMetrics('latencies', 'frontend /?&=+#', { ...query, groupByOperation: true });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/metrics/latencies?service=frontend%20%2F%3F%26%3D%2B%23&endTs=1700000000000&groupByOperation=true&lookback=3600000&quantile=0.95&ratePer=600000&spanKind=server&step=60000',
+        { signal: undefined }
+      );
+    });
+
+    it.each(['latencies', 'calls', 'errors'] as const)(
+      'preserves the %s response and overrides its quantile with the requested value',
+      async metricType => {
+        const data = {
+          name: 'service_latencies',
+          type: 'GAUGE',
+          help: '',
+          metrics: [],
+          quantile: 0.1,
+          extra: 'retained',
+        };
+        mockFetch.mockResolvedValue({ ok: true, json: async () => data });
+
+        await expect(client.fetchMetrics(metricType, 'frontend', query)).resolves.toEqual({
+          ...data,
+          quantile: 0.95,
+        });
+        expect(mockFetch).toHaveBeenCalledWith(
+          expect.stringContaining(`/api/metrics/${metricType}?service=frontend&`),
+          { signal: undefined }
+        );
+      }
+    );
+
+    it('preserves HTTP 501 details from the shared transport', async () => {
+      const body = { errors: [{ code: 501, msg: 'metrics querying is currently disabled' }] };
+      mockFetch.mockResolvedValue(
+        new Response(JSON.stringify(body), { status: 501, statusText: 'Not Implemented' })
+      );
+
+      await expect(client.fetchMetrics('calls', 'frontend', query)).rejects.toMatchObject({
+        message: 'Failed to fetch calls metrics: 501 Not Implemented: metrics querying is currently disabled',
+        httpStatus: 501,
+        httpStatusText: 'Not Implemented',
+        httpBody: JSON.stringify(body, null, 2),
+        httpUrl: '/api/metrics/calls',
+        httpQuery: expect.stringContaining('service=frontend&endTs=1700000000000'),
+      });
+    });
+
+    it('accepts omitted empty protobuf fields and retains unknown metadata', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ name: 'service_call_rate', type: 'GAUGE', extra: 'retained' }),
+      });
+      await expect(client.fetchMetrics('calls', 'frontend', query)).resolves.toEqual({
+        name: 'service_call_rate',
+        type: 'GAUGE',
+        help: '',
+        metrics: [],
+        extra: 'retained',
+        quantile: 0.95,
+      });
+    });
+
+    it('validates operation points and decodes protobuf non-finite doubles', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          name: 'service_operation_latencies',
+          type: 'GAUGE',
+          metrics: [
+            {
+              labels: [{ name: 'operation' }],
+              metricPoints: ['NaN', 'Infinity', '-Infinity', 0].map(doubleValue => ({
+                gaugeValue: { doubleValue, extra: 'retained' },
+                timestamp: '2026-10-27T00:00:00Z',
+              })),
+            },
+            {},
+          ],
+        }),
+      });
+      const response = await client.fetchMetrics('latencies', 'frontend', {
+        ...query,
+        groupByOperation: true,
+      });
+      expect(response.metrics[0].labels).toEqual([{ name: 'operation', value: '' }]);
+      expect(response.metrics[0].metricPoints.map(point => point.gaugeValue.doubleValue)).toEqual([
+        NaN,
+        Infinity,
+        -Infinity,
+        0,
+      ]);
+      expect(response.metrics[0].metricPoints[0].gaugeValue).toHaveProperty('extra', 'retained');
+      expect(response.metrics[1]).toEqual({ labels: [], metricPoints: [] });
+    });
+
+    it('validates populated service metrics without requiring a server quantile', async () => {
+      const data = {
+        name: 'service_latencies',
+        type: 'GAUGE',
+        metrics: [
+          {
+            labels: [{ name: 'service_name', value: 'frontend' }],
+            metricPoints: [{ gaugeValue: { doubleValue: 0 }, timestamp: '2026-10-27T00:00:00Z' }],
+          },
+        ],
+      };
+      mockFetch.mockResolvedValue({ ok: true, json: async () => data });
+      await expect(client.fetchMetrics('latencies', 'frontend', query)).resolves.toEqual({
+        ...data,
+        help: '',
+        quantile: query.quantile,
+      });
+    });
+
+    it.each([
+      null,
+      { type: 'GAUGE' },
+      { name: 'service_call_rate', type: 'GAUGE', metrics: 'invalid' },
+      { name: 'service_call_rate', type: 'COUNTER', metrics: [] },
+      { name: 'service_call_rate', type: 'GAUGE', metrics: [{}] },
+      { name: 'service_call_rate', type: 'GAUGE', metrics: [{ labels: [{ name: 1, value: 'svc' }] }] },
+      {
+        name: 'service_call_rate',
+        type: 'GAUGE',
+        metrics: [
+          {
+            labels: [{ name: 'service_name', value: 'svc' }],
+            metricPoints: [
+              {
+                gaugeValue: { doubleValue: 'invalid' },
+                timestamp: '2026-10-27T00:00:00Z',
+              },
+            ],
+          },
+        ],
+      },
+      { name: 'service_operation_call_rate', type: 'GAUGE', metrics: [] },
+    ])('rejects malformed or incorrectly grouped service metrics: %j', async data => {
+      mockFetch.mockResolvedValue({ ok: true, json: async () => data });
+      await expect(client.fetchMetrics('calls', 'frontend', query)).rejects.toThrow(ZodError);
+    });
+
+    it('rejects service metrics for an operation query', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ name: 'service_call_rate', type: 'GAUGE' }),
+      });
+      await expect(
+        client.fetchMetrics('calls', 'frontend', { ...query, groupByOperation: true })
+      ).rejects.toThrow(ZodError);
+    });
+
+    it('allows successful headers and bodies to arrive after the default transport deadline', async () => {
+      const data = { name: 'service_call_rate', type: 'GAUGE', help: '', metrics: [] };
+      mockFetch.mockImplementation(
+        () =>
+          new Promise(resolve => {
+            setTimeout(
+              () =>
+                resolve({ ok: true, json: () => new Promise(done => setTimeout(() => done(data), 11000)) }),
+              11000
+            );
+          })
+      );
+
+      const promise = client.fetchMetrics('calls', 'frontend', query);
+      await vi.advanceTimersByTimeAsync(22000);
+
+      await expect(promise).resolves.toEqual({ ...data, quantile: query.quantile });
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it('forwards cancellation and preserves the caller abort reason', async () => {
+      const controller = new AbortController();
+      const reason = new Error('metrics query abandoned');
+      mockFetch.mockImplementation(
+        (_url, { signal }) =>
+          new Promise((_resolve, reject) => {
+            signal.addEventListener('abort', () => reject(signal.reason), { once: true });
+          })
+      );
+
+      const promise = client.fetchMetrics('errors', 'frontend', query, controller.signal);
+      controller.abort(reason);
+
+      await expect(promise).rejects.toBe(reason);
+      expect(mockFetch).toHaveBeenCalledWith(expect.any(String), { signal: controller.signal });
+      expect(vi.getTimerCount()).toBe(0);
+    });
   });
 
   describe.each(['fetchDependencies', 'fetchDeepDependencyGraph'] as const)('%s', method => {
@@ -804,7 +1013,7 @@ describe('JaegerClient', () => {
         const error = await call().catch((caught: unknown) => caught);
 
         expect(error).toBeInstanceOf(Error);
-        expect((error as Error).message).toMatch(/: 400 Bad Request$/);
+        expect((error as Error).message).toMatch(/: 400 Bad Request: invalid service name$/);
         expect({ ...(error as object) }).toEqual({
           httpStatus: 400,
           httpStatusText: 'Bad Request',
@@ -818,7 +1027,47 @@ describe('JaegerClient', () => {
     it('keeps a non-JSON body as text', async () => {
       mockFetch.mockResolvedValue(failure('storage unavailable'));
 
-      await expect(client.fetchServices()).rejects.toMatchObject({ httpBody: 'storage unavailable' });
+      await expect(client.fetchServices()).rejects.toMatchObject({
+        message: 'Failed to fetch services: 400 Bad Request',
+        httpBody: 'storage unavailable',
+      });
+    });
+
+    it.each([
+      { case: 'a v3 message', body: '{"code":5,"message":"trace not found"}', detail: 'trace not found' },
+      {
+        case: 'legacy errors',
+        body: '{"data":null,"errors":[{"code":400,"msg":"bad start time"},{"code":400,"msg":"bad end time"}]}',
+        detail: 'bad start time; bad end time',
+      },
+      {
+        case: 'both envelopes, preferring the v3 message',
+        body: '{"message":"trace not found","errors":[{"code":5,"msg":"legacy"}]}',
+        detail: 'trace not found',
+      },
+      { case: 'a padded message', body: '{"message":"  trace not found\\n"}', detail: 'trace not found' },
+      {
+        case: 'a long message, truncated',
+        body: JSON.stringify({ message: 'x'.repeat(2000) }),
+        detail: `${'x'.repeat(MAX_DETAIL_LENGTH - 3)}...`,
+      },
+      {
+        case: 'a message at the length limit, intact',
+        body: JSON.stringify({ message: 'x'.repeat(MAX_DETAIL_LENGTH) }),
+        detail: 'x'.repeat(MAX_DETAIL_LENGTH),
+      },
+      { case: 'JSON without a message', body: '{"code":5}' },
+      { case: 'a non-string message', body: '{"message":404}' },
+      { case: 'an empty message', body: '{"message":""}' },
+      { case: 'a blank message', body: '{"message":"  "}' },
+      { case: 'legacy errors without msg', body: '{"errors":[{"code":400}]}' },
+      { case: 'a JSON primitive', body: 'null' },
+    ])('appends the server message from $case', async ({ body, detail }) => {
+      mockFetch.mockResolvedValue(failure(body));
+
+      await expect(client.fetchServices()).rejects.toMatchObject({
+        message: `Failed to fetch services: 400 Bad Request${detail ? `: ${detail}` : ''}`,
+      });
     });
 
     it.each([
@@ -1058,6 +1307,30 @@ describe('JaegerClient with non-default base path', () => {
     expect(mockFetch).toHaveBeenNthCalledWith(
       2,
       '/jaeger/api/deep-dependencies?end=200&operation=%2A&service=frontend&start=100',
+      { signal: undefined }
+    );
+  });
+
+  it('keeps metrics under the deployment base path', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ name: 'service_call_rate', type: 'GAUGE', help: '', metrics: [] }),
+    });
+    vi.resetModules();
+    vi.doMock('../../site-prefix', () => ({ default: `${global.location.origin}/jaeger/` }));
+    const { JaegerClient: IsolatedClient } = await import('./client');
+
+    await new IsolatedClient().fetchMetrics('calls', 'frontend', {
+      endTs: 100,
+      lookback: 200,
+      step: 60,
+      ratePer: 600,
+      spanKind: 'server',
+      quantile: 0.95,
+    });
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/jaeger/api/metrics/calls?service=frontend&endTs=100&lookback=200&quantile=0.95&ratePer=600&spanKind=server&step=60',
       { signal: undefined }
     );
   });
