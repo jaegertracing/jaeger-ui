@@ -1024,6 +1024,20 @@ describe('JaegerClient', () => {
       }
     );
 
+    it('includes the v3 gateway reason when a trace is not found', async () => {
+      const body = { error: { httpCode: 404, message: 'No traces found' } };
+      mockFetch.mockResolvedValue(
+        new Response(JSON.stringify(body), { status: 404, statusText: 'Not Found' })
+      );
+
+      await expect(client.fetchTrace(traceId)).rejects.toMatchObject({
+        message: `Failed to fetch trace ${traceId}: 404 Not Found: No traces found`,
+        httpStatus: 404,
+        httpUrl: `/api/v3/traces/${traceId}`,
+        httpBody: JSON.stringify(body, null, 2),
+      });
+    });
+
     it('keeps a non-JSON body as text', async () => {
       mockFetch.mockResolvedValue(failure('storage unavailable'));
 
@@ -1034,7 +1048,26 @@ describe('JaegerClient', () => {
     });
 
     it.each([
-      { case: 'a v3 message', body: '{"code":5,"message":"trace not found"}', detail: 'trace not found' },
+      {
+        case: 'a top-level message',
+        body: '{"code":5,"message":"trace not found"}',
+        detail: 'trace not found',
+      },
+      {
+        case: 'a padded nested gateway message',
+        body: JSON.stringify({ error: { httpCode: 404, message: '  No traces found\n' } }),
+        detail: 'No traces found',
+      },
+      {
+        case: 'a long nested gateway message, truncated',
+        body: JSON.stringify({ error: { message: 'x'.repeat(2000) } }),
+        detail: `${'x'.repeat(MAX_DETAIL_LENGTH - 3)}...`,
+      },
+      {
+        case: 'top-level and nested messages, preferring the top-level message',
+        body: JSON.stringify({ message: 'top-level reason', error: { message: 'nested reason' } }),
+        detail: 'top-level reason',
+      },
       {
         case: 'legacy errors',
         body: '{"data":null,"errors":[{"code":400,"msg":"bad start time"},{"code":400,"msg":"bad end time"}]}',
@@ -1060,6 +1093,9 @@ describe('JaegerClient', () => {
       { case: 'a non-string message', body: '{"message":404}' },
       { case: 'an empty message', body: '{"message":""}' },
       { case: 'a blank message', body: '{"message":"  "}' },
+      { case: 'a non-string nested message', body: '{"error":{"message":404}}' },
+      { case: 'a blank nested message', body: '{"error":{"message":"  "}}' },
+      { case: 'a null nested error', body: '{"error":null}' },
       { case: 'legacy errors without msg', body: '{"errors":[{"code":400}]}' },
       { case: 'a JSON primitive', body: 'null' },
     ])('appends the server message from $case', async ({ body, detail }) => {
