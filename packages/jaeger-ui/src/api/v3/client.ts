@@ -90,23 +90,25 @@ async function readErrorBody(response: Response, signal: AbortSignal | null | un
   return body + decoder.decode();
 }
 
+function nonBlankString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+}
+
 /**
  * Read the human-readable message from a parsed JSON error body. The v3 HTTP gateway
- * returns `{ error: { httpCode, message } }`; top-level `{ code, message }` errors are
- * also supported. The legacy /api/ routes return `{ errors: [{ code, msg }] }`.
+ * returns `{ error: { httpCode, message } }`; the legacy /api/ routes return
+ * `{ errors: [{ code, msg }] }`.
  */
 function serverMessage(data: unknown): string | undefined {
   if (!data || typeof data !== 'object') return undefined;
-  const { message, error, errors } = data as { message?: unknown; error?: unknown; errors?: unknown };
-  if (typeof message === 'string' && message.trim()) return message.trim();
-  const nestedMessage =
-    error && typeof error === 'object' ? (error as { message?: unknown }).message : undefined;
-  if (typeof nestedMessage === 'string' && nestedMessage.trim()) return nestedMessage.trim();
-  if (Array.isArray(errors)) {
-    const messages = errors
-      .map((e: unknown) => (e && typeof e === 'object' ? (e as { msg?: unknown }).msg : undefined))
-      .filter((m): m is string => typeof m === 'string' && m.trim() !== '')
-      .map(m => m.trim());
+  if ('error' in data && data.error && typeof data.error === 'object' && 'message' in data.error) {
+    const message = nonBlankString(data.error.message);
+    if (message) return message;
+  }
+  if ('errors' in data && Array.isArray(data.errors)) {
+    const messages = data.errors
+      .map((e: unknown) => (e && typeof e === 'object' && 'msg' in e ? nonBlankString(e.msg) : undefined))
+      .filter((m): m is string => m !== undefined);
     if (messages.length) return messages.join('; ');
   }
   return undefined;

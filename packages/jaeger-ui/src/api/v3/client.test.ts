@@ -1008,7 +1008,7 @@ describe('JaegerClient', () => {
     ])(
       '$method attaches the status, URL, query, and formatted JSON body',
       async ({ call, httpUrl, httpQuery }) => {
-        mockFetch.mockResolvedValue(failure('{"code":3,"message":"invalid service name"}'));
+        mockFetch.mockResolvedValue(failure('{"error":{"httpCode":400,"message":"invalid service name"}}'));
 
         const error = await call().catch((caught: unknown) => caught);
 
@@ -1019,7 +1019,7 @@ describe('JaegerClient', () => {
           httpStatusText: 'Bad Request',
           httpUrl,
           ...(httpQuery && { httpQuery }),
-          httpBody: JSON.stringify({ code: 3, message: 'invalid service name' }, null, 2),
+          httpBody: JSON.stringify({ error: { httpCode: 400, message: 'invalid service name' } }, null, 2),
         });
       }
     );
@@ -1049,11 +1049,6 @@ describe('JaegerClient', () => {
 
     it.each([
       {
-        case: 'a top-level message',
-        body: '{"code":5,"message":"trace not found"}',
-        detail: 'trace not found',
-      },
-      {
         case: 'a padded nested gateway message',
         body: JSON.stringify({ error: { httpCode: 404, message: '  No traces found\n' } }),
         detail: 'No traces found',
@@ -1064,35 +1059,17 @@ describe('JaegerClient', () => {
         detail: `${'x'.repeat(MAX_DETAIL_LENGTH - 3)}...`,
       },
       {
-        case: 'top-level and nested messages, preferring the top-level message',
-        body: JSON.stringify({ message: 'top-level reason', error: { message: 'nested reason' } }),
-        detail: 'top-level reason',
-      },
-      {
         case: 'legacy errors',
         body: '{"data":null,"errors":[{"code":400,"msg":"bad start time"},{"code":400,"msg":"bad end time"}]}',
         detail: 'bad start time; bad end time',
       },
       {
-        case: 'both envelopes, preferring the v3 message',
-        body: '{"message":"trace not found","errors":[{"code":5,"msg":"legacy"}]}',
-        detail: 'trace not found',
-      },
-      { case: 'a padded message', body: '{"message":"  trace not found\\n"}', detail: 'trace not found' },
-      {
-        case: 'a long message, truncated',
-        body: JSON.stringify({ message: 'x'.repeat(2000) }),
-        detail: `${'x'.repeat(MAX_DETAIL_LENGTH - 3)}...`,
-      },
-      {
-        case: 'a message at the length limit, intact',
-        body: JSON.stringify({ message: 'x'.repeat(MAX_DETAIL_LENGTH) }),
+        case: 'a nested message at the length limit, intact',
+        body: JSON.stringify({ error: { message: 'x'.repeat(MAX_DETAIL_LENGTH) } }),
         detail: 'x'.repeat(MAX_DETAIL_LENGTH),
       },
       { case: 'JSON without a message', body: '{"code":5}' },
-      { case: 'a non-string message', body: '{"message":404}' },
-      { case: 'an empty message', body: '{"message":""}' },
-      { case: 'a blank message', body: '{"message":"  "}' },
+      { case: 'an empty nested message', body: '{"error":{"message":""}}' },
       { case: 'a non-string nested message', body: '{"error":{"message":404}}' },
       { case: 'a blank nested message', body: '{"error":{"message":"  "}}' },
       { case: 'a null nested error', body: '{"error":null}' },
