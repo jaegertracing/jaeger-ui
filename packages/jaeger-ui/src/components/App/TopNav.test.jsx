@@ -39,8 +39,9 @@ vi.mock('antd', async () => {
   return { ...actual, Menu, Dropdown };
 });
 
-const { useConfigMock } = vi.hoisted(() => ({
+const { useConfigMock, useJaegerAssistantConfiguredMock } = vi.hoisted(() => ({
   useConfigMock: jest.fn(),
+  useJaegerAssistantConfiguredMock: jest.fn(),
 }));
 
 vi.mock('../../hooks/useConfig', () => ({
@@ -48,7 +49,7 @@ vi.mock('../../hooks/useConfig', () => ({
 }));
 
 vi.mock('../../hooks/useJaegerAssistant', () => ({
-  useJaegerAssistantConfigured: () => false,
+  useJaegerAssistantConfigured: () => useJaegerAssistantConfiguredMock(),
   useJaegerAssistantEnabled: () => false,
 }));
 
@@ -123,6 +124,8 @@ describe('<TopNav>', () => {
     useTraceDiffStore.setState({ a: null, b: null, cohort: [] });
     useConfigMock.mockReset();
     useConfigMock.mockReturnValue(defaultProps.config);
+    useJaegerAssistantConfiguredMock.mockReset();
+    useJaegerAssistantConfiguredMock.mockReturnValue(false);
   });
 
   describe('renders the default menu options', () => {
@@ -274,6 +277,33 @@ describe('<TopNav>', () => {
     expect(screen.getByTestId('TraceIDSearchInput--form')).toBeInTheDocument();
   });
 
+  it('includes the Ask Jaeger area in the right-side menu when the assistant is configured', () => {
+    useJaegerAssistantConfiguredMock.mockReturnValue(true);
+    render(
+      <BrowserRouter>
+        <TopNav {...defaultProps} />
+      </BrowserRouter>
+    );
+
+    const rightMenu = screen.getAllByTestId('mock-menu')[1];
+    const askArea = rightMenu.querySelector('[data-key="JaegerAskArea"] .TopNav--askArea');
+    expect(within(askArea).getByTestId('JaegerAskSearchInput--textarea')).toBeInTheDocument();
+    expect(screen.queryByTestId('TraceIDSearchInput--form')).not.toBeInTheDocument();
+  });
+
+  it('omits the theme toggle from both menus when themes are disabled', () => {
+    useConfigMock.mockReturnValue({ ...defaultProps.config, themes: { enabled: false } });
+    render(
+      <BrowserRouter>
+        <TopNav {...defaultProps} />
+      </BrowserRouter>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'More options' }));
+    expect(document.querySelector('.TopNav--morePanel')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /toggle color mode/i })).not.toBeInTheDocument();
+  });
+
   it('applies the layout classes to the left and right menus', () => {
     render(
       <BrowserRouter>
@@ -316,6 +346,18 @@ describe('<TopNav>', () => {
       expect(within(panel).getByRole('link', { name: labelGitHub })).toHaveAttribute('href', githubUrl);
       expect(within(panel).getByRole('link', { name: 'Blog' })).toHaveAttribute('href', blogUrl);
       expect(within(panel).getByRole('button', { name: /toggle color mode/i })).toBeInTheDocument();
+    });
+
+    it('closes when the button is clicked again', () => {
+      render(
+        <BrowserRouter>
+          <TopNav {...defaultProps} />
+        </BrowserRouter>
+      );
+
+      openPanel();
+      fireEvent.click(screen.getByRole('button', { name: 'More options' }));
+      expect(screen.getByRole('button', { name: 'More options' })).toHaveAttribute('aria-expanded', 'false');
     });
 
     it('lists the items of a menu group in place of its dropdown', () => {
