@@ -964,34 +964,40 @@ describe('JaegerClient', () => {
     const traceId = '0123456789abcdef0123456789abcdef';
     const failure = (body: BodyInit | null) => new Response(body, { status: 400, statusText: 'Bad Request' });
 
+    const v3Body = { error: { httpCode: 400, message: 'invalid service name' } };
+    const legacyBody = { data: null, errors: [{ code: 400, msg: 'invalid service name' }] };
+
     it.each([
       {
         method: 'fetchDependencies',
         call: () => client.fetchDependencies(100, 200),
+        body: legacyBody,
         httpUrl: '/api/dependencies',
         httpQuery: 'endTs=100&lookback=200',
       },
       {
         method: 'fetchDeepDependencyGraph',
         call: () => client.fetchDeepDependencyGraph({ service: 'frontend', start: 100, end: 200 }),
+        body: legacyBody,
         httpUrl: '/api/deep-dependencies',
         httpQuery: 'end=200&service=frontend&start=100',
       },
       {
         method: 'archiveTrace',
         call: () => client.archiveTrace(traceId),
+        body: legacyBody,
         httpUrl: `/api/archive/${traceId}`,
       },
       {
-        method: 'fetchDecoration',
-        call: () => client.fetchDecoration('/details?id=1'),
-        httpUrl: '/details',
-        httpQuery: 'id=1',
+        method: 'fetchServices',
+        call: () => client.fetchServices(),
+        body: v3Body,
+        httpUrl: '/api/v3/services',
       },
-      { method: 'fetchServices', call: () => client.fetchServices(), httpUrl: '/api/v3/services' },
       {
         method: 'fetchSpanNames',
         call: () => client.fetchSpanNames('my svc'),
+        body: v3Body,
         httpUrl: '/api/v3/operations',
         httpQuery: 'service=my%20svc',
       },
@@ -1001,14 +1007,20 @@ describe('JaegerClient', () => {
           client.fetchTraceSummaries({ service: 'my-svc' } as Parameters<
             JaegerClient['fetchTraceSummaries']
           >[0]),
+        body: v3Body,
         httpUrl: '/api/v3/trace-summaries',
         httpQuery: 'query.serviceName=my-svc',
       },
-      { method: 'fetchTrace', call: () => client.fetchTrace(traceId), httpUrl: `/api/v3/traces/${traceId}` },
+      {
+        method: 'fetchTrace',
+        call: () => client.fetchTrace(traceId),
+        body: v3Body,
+        httpUrl: `/api/v3/traces/${traceId}`,
+      },
     ])(
       '$method attaches the status, URL, query, and formatted JSON body',
-      async ({ call, httpUrl, httpQuery }) => {
-        mockFetch.mockResolvedValue(failure('{"error":{"httpCode":400,"message":"invalid service name"}}'));
+      async ({ call, body, httpUrl, httpQuery }) => {
+        mockFetch.mockResolvedValue(failure(JSON.stringify(body)));
 
         const error = await call().catch((caught: unknown) => caught);
 
@@ -1019,10 +1031,26 @@ describe('JaegerClient', () => {
           httpStatusText: 'Bad Request',
           httpUrl,
           ...(httpQuery && { httpQuery }),
-          httpBody: JSON.stringify({ error: { httpCode: 400, message: 'invalid service name' } }, null, 2),
+          httpBody: JSON.stringify(body, null, 2),
         });
       }
     );
+
+    it('fetchDecoration attaches the status, URL, query, and body without a server message', async () => {
+      mockFetch.mockResolvedValue(failure(JSON.stringify(v3Body)));
+
+      const error = await client.fetchDecoration('/details?id=1').catch((caught: unknown) => caught);
+
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toBe('Failed to fetch decoration: 400 Bad Request');
+      expect({ ...(error as object) }).toEqual({
+        httpStatus: 400,
+        httpStatusText: 'Bad Request',
+        httpUrl: '/details',
+        httpQuery: 'id=1',
+        httpBody: JSON.stringify(v3Body, null, 2),
+      });
+    });
 
     it('includes the v3 gateway reason when a trace is not found', async () => {
       const body = { error: { httpCode: 404, message: 'No traces found' } };
@@ -1049,37 +1077,58 @@ describe('JaegerClient', () => {
 
     it.each([
       {
-        case: 'a padded nested gateway message',
+        case: 'a padded gateway message',
         body: JSON.stringify({ error: { httpCode: 404, message: '  No traces found\n' } }),
         detail: 'No traces found',
       },
       {
-        case: 'a long nested gateway message, truncated',
+        case: 'a long gateway message, truncated',
         body: JSON.stringify({ error: { message: 'x'.repeat(2000) } }),
         detail: `${'x'.repeat(MAX_DETAIL_LENGTH - 3)}...`,
       },
+      {
+        case: 'a gateway message at the length limit, intact',
+        body: JSON.stringify({ error: { message: 'x'.repeat(MAX_DETAIL_LENGTH) } }),
+        detail: 'x'.repeat(MAX_DETAIL_LENGTH),
+      },
+      { case: 'JSON without a message', body: '{"code":5}' },
+      { case: 'an empty gateway message', body: '{"error":{"message":""}}' },
+      { case: 'a non-string gateway message', body: '{"error":{"message":404}}' },
+      { case: 'a blank gateway message', body: '{"error":{"message":"  "}}' },
+      { case: 'a null gateway error', body: '{"error":null}' },
+      { case: 'a string gateway error', body: '{"error":"not found"}' },
+      { case: 'a legacy envelope on a v3 route', body: '{"errors":[{"code":400,"msg":"legacy"}]}' },
+      { case: 'a JSON primitive', body: 'null' },
+    ])('appends the v3 gateway message from $case', async ({ body, detail }) => {
+      mockFetch.mockResolvedValue(failure(body));
+
+      await expect(client.fetchServices()).rejects.toMatchObject({
+        message: `Failed to fetch services: 400 Bad Request${detail ? `: ${detail}` : ''}`,
+      });
+    });
+
+    it.each([
       {
         case: 'legacy errors',
         body: '{"data":null,"errors":[{"code":400,"msg":"bad start time"},{"code":400,"msg":"bad end time"}]}',
         detail: 'bad start time; bad end time',
       },
       {
-        case: 'a nested message at the length limit, intact',
-        body: JSON.stringify({ error: { message: 'x'.repeat(MAX_DETAIL_LENGTH) } }),
-        detail: 'x'.repeat(MAX_DETAIL_LENGTH),
+        case: 'a padded legacy error',
+        body: JSON.stringify({ errors: [{ msg: '  bad start time\n' }] }),
+        detail: 'bad start time',
       },
-      { case: 'JSON without a message', body: '{"code":5}' },
-      { case: 'an empty nested message', body: '{"error":{"message":""}}' },
-      { case: 'a non-string nested message', body: '{"error":{"message":404}}' },
-      { case: 'a blank nested message', body: '{"error":{"message":"  "}}' },
-      { case: 'a null nested error', body: '{"error":null}' },
       { case: 'legacy errors without msg', body: '{"errors":[{"code":400}]}' },
+      { case: 'legacy errors with a blank msg', body: '{"errors":[{"msg":"  "}]}' },
+      { case: 'a null legacy error', body: '{"errors":[null]}' },
+      { case: 'a non-array errors field', body: '{"errors":"bad"}' },
+      { case: 'a gateway envelope on a legacy route', body: '{"error":{"message":"gateway"}}' },
       { case: 'a JSON primitive', body: 'null' },
-    ])('appends the server message from $case', async ({ body, detail }) => {
+    ])('appends the legacy message from $case', async ({ body, detail }) => {
       mockFetch.mockResolvedValue(failure(body));
 
-      await expect(client.fetchServices()).rejects.toMatchObject({
-        message: `Failed to fetch services: 400 Bad Request${detail ? `: ${detail}` : ''}`,
+      await expect(client.archiveTrace(traceId)).rejects.toMatchObject({
+        message: `Failed to archive trace ${traceId}: 400 Bad Request${detail ? `: ${detail}` : ''}`,
       });
     });
 
