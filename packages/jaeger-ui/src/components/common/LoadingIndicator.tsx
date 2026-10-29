@@ -38,7 +38,7 @@ export default function LoadingIndicator({
     setAnnounced(label || '');
   }, [label]);
 
-  const icon = <LuLoaderCircle aria-hidden="true" className={cls} {...rest} style={style} />;
+  const icon = <LuLoaderCircle className={cls} {...rest} style={style} aria-hidden="true" />;
   if (!label) return icon;
 
   return (

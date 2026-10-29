@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
@@ -17,6 +17,31 @@ describe('<LoadingIndicator />', () => {
   it('announces the label as a status when one is given', () => {
     render(<LoadingIndicator label="Loading traces" />);
     expect(screen.getByRole('status')).toHaveTextContent('Loading traces');
+  });
+
+  it('mounts the status empty and fills it after the first commit', () => {
+    let firstCommitText: string | null = null;
+    function Probe() {
+      const ref = useRef<HTMLDivElement>(null);
+      // Layout effects run after the DOM is built but before LoadingIndicator's passive effect.
+      useLayoutEffect(() => {
+        firstCommitText = ref.current!.querySelector('[role="status"]')!.textContent;
+      }, []);
+      return (
+        <div ref={ref}>
+          <LoadingIndicator label="Loading traces" />
+        </div>
+      );
+    }
+    render(<Probe />);
+    expect(firstCommitText).toBe('');
+    expect(screen.getByRole('status')).toHaveTextContent('Loading traces');
+  });
+
+  it('does not let callers override the decorative aria-hidden', () => {
+    const props = { 'aria-hidden': 'false' } as React.ComponentProps<typeof LoadingIndicator>;
+    const { container } = render(<LoadingIndicator {...props} />);
+    expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('keeps the icon hidden from assistive technology when labelled', () => {
