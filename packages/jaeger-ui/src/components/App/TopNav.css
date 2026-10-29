@@ -111,3 +111,11 @@ SPDX-License-Identifier: Apache-2.0
     display: inline-flex;
   }
 }
+
+/* The panel renders outside .TopNav, so hiding the button above the breakpoint doesn't hide an open
+   panel, for example when a phone is rotated. "not all and" is the exact complement of the query above. */
+@media not all and (max-width: 768px) {
+  .TopNav--morePanel {
+    display: none;
+  }
+}

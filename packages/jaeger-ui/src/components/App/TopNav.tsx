@@ -125,6 +125,8 @@ export function TopNavImpl(props: Props) {
   const embedded = useEmbeddedState();
   // The page the "more" panel was opened on, so that navigating away closes it
   const [moreOpenOn, setMoreOpenOn] = React.useState<string | null>(null);
+  // Forget that page once it is left, so that going back to it doesn't reopen the panel
+  if (moreOpenOn !== null && moreOpenOn !== pathname) setMoreOpenOn(null);
   const moreOpen = moreOpenOn === pathname;
 
   const askItem = {

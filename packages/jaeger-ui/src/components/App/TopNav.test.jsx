@@ -352,5 +352,26 @@ describe('<TopNav>', () => {
       );
       expect(screen.getByRole('button', { name: 'More options' })).toHaveAttribute('aria-expanded', 'false');
     });
+
+    it('stays closed when returning to the page it was opened on', () => {
+      const { rerender } = render(
+        <BrowserRouter>
+          <TopNav {...defaultProps} />
+        </BrowserRouter>
+      );
+
+      openPanel();
+      rerender(
+        <BrowserRouter>
+          <TopNav {...defaultProps} pathname="/trace/abc123" />
+        </BrowserRouter>
+      );
+      rerender(
+        <BrowserRouter>
+          <TopNav {...defaultProps} />
+        </BrowserRouter>
+      );
+      expect(screen.getByRole('button', { name: 'More options' })).toHaveAttribute('aria-expanded', 'false');
+    });
   });
 });
