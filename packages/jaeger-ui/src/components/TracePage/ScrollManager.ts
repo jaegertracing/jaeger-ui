@@ -3,6 +3,7 @@
 
 import { TNil } from '../../types';
 import { IOtelSpan, IOtelTrace } from '../../types/otel';
+import type { RowState } from './TraceTimelineViewer/generateRowStates';
 
 /**
  * `Accessors` is necessary because `ScrollManager` needs to be created by
@@ -22,8 +23,9 @@ export type Accessors = {
   getBottomRowIndexVisible: () => number;
   getTopRowIndexVisible: () => number;
   getRowPosition: (rowIndex: number) => { height: number; y: number };
-  mapRowIndexToSpanIndex: (rowIndex: number) => number;
-  mapSpanIndexToRowIndex: (spanIndex: number) => number;
+  getRows?: () => RowState[];
+  mapRowIndexToSpanIndex?: (rowIndex: number) => number;
+  mapSpanIndexToRowIndex?: (spanIndex: number) => number;
 };
 
 interface IScroller {
@@ -39,13 +41,14 @@ interface IScroller {
  * @param {Set<string>} childrenAreHidden The set of Spans known to have hidden
  *                                        children, either because it is
  *                                        collapsed or has a collapsed parent.
+ * @param {number} rootDepth Stop checking ancestor collapse above this depth.
  * @returns {{ isHidden: boolean, parentIds: Set<string> }}
  */
-function isSpanHidden(span: IOtelSpan, childrenAreHidden: Set<string>) {
+function isSpanHidden(span: IOtelSpan, childrenAreHidden: Set<string>, rootDepth = 0) {
   const parentIDs = new Set<string>();
   let current: IOtelSpan | undefined = span.parentSpan;
 
-  while (current) {
+  while (current && (current.depth === undefined || current.depth >= rootDepth)) {
     parentIDs.add(current.spanID);
     if (childrenAreHidden.has(current.spanID)) {
       return { isHidden: true, parentIDs };
@@ -102,6 +105,119 @@ export default class ScrollManager {
     if (!this._trace) {
       return;
     }
+
+    if (xrs.getRows) {
+      const rows = xrs.getRows();
+      const totalRows = rows.length;
+      if (totalRows === 0) {
+        return;
+      }
+      const isUp = direction < 0;
+      let boundaryRow: number;
+      if (startRow != null) {
+        boundaryRow = startRow;
+      } else if (isUp) {
+        boundaryRow = xrs.getTopRowIndexVisible();
+      } else {
+        boundaryRow = xrs.getBottomRowIndexVisible();
+      }
+
+      if ((boundaryRow === 0 && isUp) || (boundaryRow === totalRows - 1 && !isUp)) {
+        return;
+      }
+
+      let fullViewRowIndex = boundaryRow;
+      if (startRow != null) {
+        fullViewRowIndex = boundaryRow - direction;
+      } else if (boundaryRow !== 0 && boundaryRow !== totalRows - 1) {
+        fullViewRowIndex -= direction;
+      }
+
+      const { duration, startTime: traceStartTime } = this._trace;
+      const [viewStart, viewEnd] = xrs.getViewRange();
+      const checkVisibility = viewStart !== 0 || viewEnd !== 1;
+      const startTime = checkVisibility ? traceStartTime + duration * viewStart : NaN;
+      const endTime = checkVisibility ? traceStartTime + duration * viewEnd : NaN;
+      const findMatches = xrs.getSearchedSpanIDs();
+      const _collapsed = xrs.getCollapsedChildren();
+      const childrenAreHidden = _collapsed ? new Set(_collapsed) : null;
+      const rootDepth = rows[0]?.span?.depth ?? 0;
+
+      const boundary = direction < 0 ? -1 : totalRows;
+      let nextRowIndex: number | undefined;
+
+      for (let i = fullViewRowIndex + direction; i !== boundary; i += direction) {
+        const row = rows[i];
+        if (row.isDetail) {
+          continue;
+        }
+        if (findMatches && 'isPrunedPlaceholder' in row && row.isPrunedPlaceholder) {
+          continue;
+        }
+        const span = row.span;
+        const { duration: spanDuration, spanID, startTime: spanStartTime } = span;
+        const spanEndTime = spanStartTime + spanDuration;
+        if (checkVisibility && (spanStartTime > endTime || spanEndTime < startTime)) {
+          continue;
+        }
+        if (findMatches && !findMatches.has(spanID)) {
+          continue;
+        }
+        if (childrenAreHidden) {
+          const { isHidden, parentIDs } = isSpanHidden(span, childrenAreHidden, rootDepth);
+          if (isHidden) {
+            parentIDs.forEach(id => childrenAreHidden.add(id));
+            continue;
+          }
+        }
+        nextRowIndex = i;
+        break;
+      }
+
+      if (nextRowIndex === undefined || nextRowIndex === boundary) {
+        nextRowIndex = boundary - direction;
+
+        if (
+          childrenAreHidden ||
+          rows.some(r => r.isDetail || (findMatches && 'isPrunedPlaceholder' in r && r.isPrunedPlaceholder))
+        ) {
+          let isFallbackHidden: boolean;
+          do {
+            const row = rows[nextRowIndex];
+            if (
+              !row ||
+              row.isDetail ||
+              (findMatches && 'isPrunedPlaceholder' in row && row.isPrunedPlaceholder)
+            ) {
+              isFallbackHidden = true;
+              nextRowIndex += direction < 0 ? 1 : -1;
+              continue;
+            }
+            if (childrenAreHidden) {
+              const { isHidden, parentIDs } = isSpanHidden(row.span, childrenAreHidden, rootDepth);
+              if (isHidden) {
+                parentIDs.forEach(id => childrenAreHidden.add(id));
+                nextRowIndex += direction < 0 ? 1 : -1;
+              }
+              isFallbackHidden = isHidden;
+            } else {
+              isFallbackHidden = false;
+            }
+          } while (isFallbackHidden && nextRowIndex >= 0 && nextRowIndex < totalRows);
+        }
+      }
+
+      if (
+        nextRowIndex != null &&
+        nextRowIndex >= 0 &&
+        nextRowIndex < totalRows &&
+        !rows[nextRowIndex]?.isDetail
+      ) {
+        this._scrollPast(nextRowIndex, direction);
+      }
+      return;
+    }
+
     const { duration, spans, startTime: traceStartTime } = this._trace;
     const isUp = direction < 0;
     let boundaryRow: number;
@@ -112,7 +228,7 @@ export default class ScrollManager {
     } else {
       boundaryRow = xrs.getBottomRowIndexVisible();
     }
-    const spanIndex = xrs.mapRowIndexToSpanIndex(boundaryRow);
+    const spanIndex = xrs.mapRowIndexToSpanIndex ? xrs.mapRowIndexToSpanIndex(boundaryRow) : boundaryRow;
     if ((spanIndex === 0 && isUp) || (spanIndex === spans.length - 1 && !isUp)) {
       return;
     }
@@ -168,14 +284,16 @@ export default class ScrollManager {
           const { isHidden, parentIDs } = isSpanHidden(spans[nextSpanIndex], childrenAreHidden);
           if (isHidden) {
             parentIDs.forEach(id => childrenAreHidden.add(id));
-            nextSpanIndex--;
+            nextSpanIndex += direction < 0 ? 1 : -1;
           }
           isFallbackHidden = isHidden;
-        } while (isFallbackHidden);
+        } while (isFallbackHidden && nextSpanIndex >= 0 && nextSpanIndex < spans.length);
       }
     }
-    const nextRow = xrs.mapSpanIndexToRowIndex(nextSpanIndex);
-    this._scrollPast(nextRow, direction);
+    const nextRow = xrs.mapSpanIndexToRowIndex ? xrs.mapSpanIndexToRowIndex(nextSpanIndex) : nextSpanIndex;
+    if (nextRow !== -1) {
+      this._scrollPast(nextRow, direction);
+    }
   }
 
   /**

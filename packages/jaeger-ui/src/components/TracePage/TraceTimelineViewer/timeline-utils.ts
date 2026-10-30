@@ -1,9 +1,12 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+import _isEqual from 'lodash/isEqual';
+import memoizeOne from 'memoize-one';
 import DetailState from './SpanDetail/DetailState';
+import { isSpanPruned } from './generateRowStates';
 import { TNil } from '../../../types';
-import { IOtelSpan } from '../../../types/otel';
+import { IOtelSpan, IOtelTrace } from '../../../types/otel';
 import type { SpanDetailPanelMode } from '../../../types/config';
 import filterSpans from '../../../utils/filter-spans';
 import spanAncestorIds from '../../../utils/span-ancestor-ids';
@@ -102,3 +105,95 @@ export function applyDetailSubsectionToggle(
   next.set(spanID, detailState);
   return next;
 }
+
+/**
+ * Traverses childSpans in pre-order DFS and collects all descendant spans including rootSpan.
+ * Uses an explicit stack to avoid stack overflow on deep traces.
+ */
+export function getSubtreeSpans(rootSpan: IOtelSpan): IOtelSpan[] {
+  const result: IOtelSpan[] = [];
+  const stack: IOtelSpan[] = [rootSpan];
+  while (stack.length > 0) {
+    const s = stack.pop()!;
+    result.push(s);
+    if (s.childSpans && s.childSpans.length > 0) {
+      for (let i = s.childSpans.length - 1; i >= 0; i--) {
+        stack.push(s.childSpans[i]);
+      }
+    }
+  }
+  return result;
+}
+
+/**
+ * Returns all span IDs in the subtree (including rootSpan.spanID) that have hasChildren: true.
+ * Uses an explicit stack to avoid stack overflow on deep traces.
+ */
+export function getDescendantParentSpanIDs(rootSpan: IOtelSpan): Set<string> {
+  const ids = new Set<string>();
+  const stack: IOtelSpan[] = [rootSpan];
+  while (stack.length > 0) {
+    const s = stack.pop()!;
+    if (s.hasChildren) {
+      ids.add(s.spanID);
+    }
+    if (s.childSpans && s.childSpans.length > 0) {
+      for (let i = s.childSpans.length - 1; i >= 0; i--) {
+        stack.push(s.childSpans[i]);
+      }
+    }
+  }
+  return ids;
+}
+
+/**
+ * Returns a Set of span IDs belonging to the focused subtree, or null if no focus
+ * or if the focused span is pruned. Memoized across callers (TracePage and VirtualizedTraceView)
+ * to avoid repeated tree traversals and set allocations during high-frequency updates.
+ */
+function getFocusedSpanIDs(
+  trace: IOtelTrace | TNil,
+  focusedSubtreeSpanID?: string | null,
+  prunedServices?: Set<string>
+): Set<string> | null {
+  if (!focusedSubtreeSpanID || !trace) {
+    return null;
+  }
+  const focusedSpan = trace.spanMap.get(focusedSubtreeSpanID);
+  if (!focusedSpan || (prunedServices && isSpanPruned(focusedSpan, prunedServices))) {
+    return null;
+  }
+  const subtreeSpans = getSubtreeSpans(focusedSpan);
+  return new Set(subtreeSpans.map(s => s.spanID));
+}
+
+export const focusedSpanIDs = memoizeOne(
+  getFocusedSpanIDs,
+  (newArgs, lastArgs) =>
+    newArgs[0] === lastArgs[0] && newArgs[1] === lastArgs[1] && _isEqual(newArgs[2], lastArgs[2])
+);
+
+/**
+ * Scopes search matches to the focused subtree.
+ * Memoized to avoid re-allocating a Set on every render when inputs haven't changed.
+ */
+function scopeMatchesToSubtree(
+  matches: Set<string> | TNil,
+  subtreeIDs: Set<string> | null
+): Set<string> | TNil {
+  if (!matches || !subtreeIDs) {
+    return matches;
+  }
+  const focusedMatches = new Set<string>();
+  matches.forEach(id => {
+    if (subtreeIDs.has(id)) {
+      focusedMatches.add(id);
+    }
+  });
+  return focusedMatches;
+}
+
+export const filterMatchesBySubtree = memoizeOne(
+  scopeMatchesToSubtree,
+  (newArgs, lastArgs) => newArgs[0] === lastArgs[0] && newArgs[1] === lastArgs[1]
+);

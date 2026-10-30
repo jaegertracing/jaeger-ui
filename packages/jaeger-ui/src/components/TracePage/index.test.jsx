@@ -142,6 +142,7 @@ const {
   mockTraceTimelineStore: {
     focusUiFindMatches: jest.fn(),
     prunedServices: new Set(),
+    focusedSubtreeSpanID: null,
   },
   useEmbeddedStateMock: jest.fn().mockReturnValue(null),
   useTraceMock: jest.fn(),
@@ -258,6 +259,7 @@ describe('<TracePage>', () => {
     capturedGraphProps = {};
     defaultProps.focusUiFindMatches.mockClear();
     mockTraceTimelineStore.focusUiFindMatches.mockClear();
+    mockTraceTimelineStore.focusedSubtreeSpanID = null;
   });
 
   it.each([ETraceViewType.TraceGraph, ETraceViewType.TraceStatistics, ETraceViewType.TraceFlamegraph])(
@@ -940,6 +942,21 @@ describe('<TracePage>', () => {
         }
 
         expect(resultCount).toBe(0);
+      });
+
+      it('scopes matches to focusedSubtreeSpanID in timeline view but searches all spans in non-timeline views', () => {
+        const targetSpan = trace.spans[1];
+        mockTraceTimelineStore.focusedSubtreeSpanID = targetSpan.spanID;
+        filterSpansSpy.mockReturnValue(new Set(trace.spans.map(s => s.spanID)));
+
+        render(<TracePage {...defaultProps} uiFind="test" />);
+        const subtreeMatchCount = capturedHeaderProps.resultCount;
+        expect(subtreeMatchCount).toBeLessThan(trace.spans.length);
+
+        act(() => {
+          capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceStatistics);
+        });
+        expect(capturedHeaderProps.resultCount).toBe(trace.spans.length);
       });
     });
 

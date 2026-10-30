@@ -859,4 +859,29 @@ describe('TraceTimelineViewer/duck', () => {
       expect(getSelectedSpanID(detailStates)).toBe('span-a');
     });
   });
+
+  describe('childrenToggleSubtree', () => {
+    it('collapses all descendant parent IDs when root is expanded', () => {
+      const store = createStore(reducer);
+      const subtreeParentIDs = ['parent-1', 'nested-2'];
+      store.dispatch(actions.childrenToggleSubtree('parent-1', subtreeParentIDs));
+
+      expect(store.getState().childrenHiddenIDs.has('parent-1')).toBe(true);
+      expect(store.getState().childrenHiddenIDs.has('nested-2')).toBe(true);
+    });
+
+    it('expands all descendant parent IDs when root is collapsed', () => {
+      const store = createStore(reducer, {
+        ...newInitialState(),
+        childrenHiddenIDs: new Set(['parent-1', 'nested-2', 'other-3']),
+      });
+      const subtreeParentIDs = ['parent-1', 'nested-2'];
+      store.dispatch(actions.childrenToggleSubtree('parent-1', subtreeParentIDs));
+
+      expect(store.getState().childrenHiddenIDs.has('parent-1')).toBe(false);
+      expect(store.getState().childrenHiddenIDs.has('nested-2')).toBe(false);
+      // Parent outside subtree is preserved
+      expect(store.getState().childrenHiddenIDs.has('other-3')).toBe(true);
+    });
+  });
 });
