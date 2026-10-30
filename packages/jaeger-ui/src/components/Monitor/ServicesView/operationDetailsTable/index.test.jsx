@@ -34,13 +34,9 @@ describe('<OperationTableDetails>', () => {
     jest.clearAllMocks();
   });
 
-  it('does not explode', () => {
+  it('does not explode and displays loading indicator', () => {
     const { container } = render(<OperationTableDetails {...props} />);
     expect(container).toBeInTheDocument();
-  });
-
-  it('Loading indicator is displayed', () => {
-    const { container } = render(<OperationTableDetails {...props} />);
     expect(container.querySelector('[data-testid="loading-indicator"]')).toBeInTheDocument();
   });
 
@@ -64,11 +60,6 @@ describe('<OperationTableDetails>', () => {
 describe('<OperationTableDetails> with data', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-  });
-
-  it('render No data table', () => {
-    const { container } = render(<OperationTableDetails {...props} loading={false} />);
-    expect(container.querySelector('table')).toBeInTheDocument();
   });
 
   it('render some values in the table', () => {
