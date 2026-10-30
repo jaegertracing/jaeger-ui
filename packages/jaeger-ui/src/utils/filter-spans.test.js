@@ -282,4 +282,11 @@ describe('filterSpans', () => {
       expect(() => filterSpans('meta', [span])).not.toThrow();
     });
   });
+
+  it('should ignore a bare "-" instead of excluding every key', () => {
+    expect(filterSpans('tagValue0', spans)).toEqual(new Set([spanID0]));
+    expect(filterSpans('tagValue0 -', spans)).toEqual(new Set([spanID0]));
+    expect(filterSpans('- logFieldValue0', spans)).toEqual(filterSpans('logFieldValue0', spans));
+    expect(filterSpans('-', spans)).toEqual(new Set());
+  });
 });
