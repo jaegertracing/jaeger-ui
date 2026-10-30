@@ -13,7 +13,7 @@ export function encodedStringSupplant(
   return str.replace(PARAMETER_REG_EXP, (_, name) => {
     const { parameterName, formatFunction } = getParameterAndFormatter<string | number | undefined>(name);
     const mapValue = map[parameterName];
-    const formattedValue = formatFunction && mapValue ? formatFunction(mapValue) : mapValue;
+    const formattedValue = formatFunction && mapValue != null ? formatFunction(mapValue) : mapValue;
 
     const value = formattedValue != null && encodeFn ? encodeFn(formattedValue) : formattedValue;
     return value == null ? '' : `${value}`;
