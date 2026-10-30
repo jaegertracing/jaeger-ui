@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vite-plus/test';
 import TraceTable from './TraceTable';
 import * as orderBy from './order-by';
 import { toOrderBy, fromOrderBy } from './sort';

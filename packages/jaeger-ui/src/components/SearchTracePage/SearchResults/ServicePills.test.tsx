@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vite-plus/test';
 import colorGenerator from '../../../utils/color-generator';
 import ServicePills, { ServicePill, type ServiceEntry } from './ServicePills';
 

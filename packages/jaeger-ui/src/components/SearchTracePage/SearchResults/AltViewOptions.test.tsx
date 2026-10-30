@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { describe, it, expect, vi, beforeEach, beforeAll, type MockInstance } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll, type MockInstance } from 'vite-plus/test';
 
 import AltViewOptions from './AltViewOptions';
 import * as url from '../../DeepDependencies/url';
