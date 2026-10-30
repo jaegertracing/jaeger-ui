@@ -14,6 +14,12 @@ import {
   formatMillisecondTime,
   formatSecondTime,
   formatDurationCompact,
+  formatTimeZoneLabel,
+  formatTimeZoneOffset,
+  getDisplayTimeZone,
+  parseDisplayTime,
+  setDisplayTimeZone,
+  toDisplayTime,
 } from './date';
 
 const ONE_SECOND = 1000 * ONE_MILLISECOND;
@@ -298,5 +304,50 @@ describe('formatDurationCompact', () => {
       expect(formatDurationCompact(999999)).toBe('1000ms');
       expect(formatDurationCompact(1000000)).toBe('1.0s');
     });
+  });
+});
+
+describe('display time zone', () => {
+  afterEach(() => {
+    setDisplayTimeZone('browser');
+    jest.useRealTimers();
+  });
+
+  it('uses the browser zone by default', () => {
+    expect(getDisplayTimeZone()).toBeNull();
+    setDisplayTimeZone('utc');
+    setDisplayTimeZone('browser');
+    expect(getDisplayTimeZone()).toBeNull();
+  });
+
+  it('formats timestamps in UTC', () => {
+    setDisplayTimeZone('utc');
+    expect(getDisplayTimeZone()).toBe('UTC');
+    expect(formatDate(0)).toBe('1970-01-01');
+    expect(formatTime(0)).toBe('00:00');
+    expect(formatDatetime(0)).toBe('January 1 1970, 00:00:00.000');
+    expect(toDisplayTime(Date.UTC(2023, 7, 19, 20, 15)).hour()).toBe(20);
+  });
+
+  it('labels the zone', () => {
+    setDisplayTimeZone('utc');
+    expect(formatTimeZoneOffset(0)).toBe('UTC');
+    expect(formatTimeZoneLabel(0)).toBe('UTC');
+    setDisplayTimeZone('browser');
+    expect(formatTimeZoneOffset(0)).toMatch(/^UTC[+-]\d{2}:\d{2}$/);
+    expect(formatTimeZoneLabel(0)).toContain(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  });
+
+  it('parses wall-clock times in UTC', () => {
+    setDisplayTimeZone('utc');
+    expect(parseDisplayTime('1970-01-01 01:00').valueOf()).toBe(3600 * 1000);
+  });
+
+  it('computes Today and Yesterday in UTC', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(Date.UTC(2023, 7, 19, 0, 30));
+    setDisplayTimeZone('utc');
+    expect(formatRelativeDate(Date.UTC(2023, 7, 19, 0, 10))).toBe('Today');
+    expect(formatRelativeDate(Date.UTC(2023, 7, 18, 23, 50))).toBe('Yesterday');
   });
 });
