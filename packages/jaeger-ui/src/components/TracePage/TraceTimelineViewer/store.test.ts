@@ -785,6 +785,7 @@ describe('trace timeline zustand stores', () => {
         const s = useTraceTimelineStore.getState();
         expect(s.detailStates.size).toBe(1);
         expect(s.detailStates.has('span-a')).toBe(true);
+        expect(s.detailStates.get('span-a')!.isAttributesOpen).toBe(true);
       });
 
       it('preserves existing DetailState when an already-open span starts matching on same-ID reload', async () => {
@@ -1141,6 +1142,7 @@ describe('trace timeline zustand stores', () => {
         expect(s.detailStates.size).toBe(1);
         expect(s.detailStates.has('span-a')).toBe(true);
         expect(s.detailStates.has('span-b')).toBe(false);
+        expect(s.detailStates.get('span-a')!.isAttributesOpen).toBe(true);
       });
     });
   });

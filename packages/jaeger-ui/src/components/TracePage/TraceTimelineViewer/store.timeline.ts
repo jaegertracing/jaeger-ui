@@ -10,7 +10,6 @@ import {
   applyDetailSubsectionToggle,
   calculateFocusedFindRowStates,
   findNewlyMatchedSpanInfo,
-  FocusedFindRowStates,
   shouldDisableCollapse,
   trimFocusedDetailStatesForSidePanel,
 } from './timeline-utils';
@@ -114,14 +113,16 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
           }
         }
 
-        let focused: FocusedFindRowStates = {
+        if (detailPanelMode === 'sidepanel' && detailStates.size > 1) {
+          const [firstKey, firstState] = detailStates.entries().next().value as [string, DetailState];
+          detailStates.clear();
+          detailStates.set(firstKey, firstState);
+        }
+
+        Object.assign(base, {
           childrenHiddenIDs,
           detailStates,
-          shouldScrollToFirstUiFindMatch: false,
-        };
-        focused = trimFocusedDetailStatesForSidePanel(focused, detailPanelMode);
-        const { shouldScrollToFirstUiFindMatch: _ignored, ...rest } = focused;
-        Object.assign(base, rest);
+        });
       } else {
         let focused = calculateFocusedFindRowStates(uiFind, trace.spans);
         focused = trimFocusedDetailStatesForSidePanel(focused, detailPanelMode);
