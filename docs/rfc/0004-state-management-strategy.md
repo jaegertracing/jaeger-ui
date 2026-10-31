@@ -979,11 +979,11 @@ This is the **largest and most performance-sensitive** slice. Split across multi
 1. ✅ Layout prefs: `spanNameColumnWidth`, `sidePanelWidth`, `detailPanelMode`, `timelineBarsVisible`.
 2. ✅ Collapse/expand + detail: `childrenHiddenIDs`, `detailStates`, `shouldScrollToFirstUiFindMatch`.
 3. ⬜ Hover: `hoverIndentGuideIds` still lives only in the duck. `VirtualizedTraceView` reads it with `useSelector`, and `SpanTreeOffset` is still a `connect()`ed component whose `mapStateToProps` reads `state.traceTimeline`.
-4. ⬜ Rewire the Redux **tracking middleware** hooks that listen to timeline action types.
+4. ✅ Timeline analytics: the handlers call the trackers in `TraceTimelineViewer/store.track.ts` before each Zustand action, so every event still reads pre-update state. `store.track.test.ts` replays a scripted session through the old middleware and through the trackers and asserts identical events.
 
-**Why the duck is still alive**: `duck.track.ts` supplies `middlewareHooks` to `src/middlewares/track.ts`, so analytics for timeline interactions are emitted by a Redux middleware keyed on action types. Every migrated interaction therefore **dual-writes** — the components dispatch the Redux action *first*, so the middleware observes the pre-update state, then call the Zustand action. Severing that dual write requires relocating the analytics call sites off the middleware, and until then neither the duck nor `configure-store.ts` can be deleted.
+**Why the duck is still alive**: it holds `hoverIndentGuideIds` (step 3). `SpanTreeOffset` writes that field and `VirtualizedTraceView` reads it; no timeline interaction dispatches any other Redux action. `duck.track.ts` and `src/middlewares/track.ts` are still installed through `configure-store.ts` but no longer receive any action with a tracking hook. The parity test uses them as the reference, and they go with the duck.
 
-**Components to rewire**: `TraceTimelineViewer`, `SpanBarRow`, `SpanDetailRow`, `TimelineHeaderRow`. Rewired so far, all still dual-writing to Redux: `TracePage`, `TraceTimelineViewer`, `VirtualizedTraceView`, `SpanTreeOffset`, `SpanDetailSidePanel`.
+**Components rewired off the dual write**: `TracePage`, `TraceTimelineViewer`, `VirtualizedTraceView`, `SpanDetailSidePanel`. `SpanTreeOffset` still uses Redux for hover state.
 
 #### ✅ 1d. Deep Dependencies view modifiers (`ddg` duck - client-only fields)
 
@@ -1222,11 +1222,11 @@ The residual surface is now small enough to enumerate:
 | :--- | :--- | :--- |
 | `reducers/metrics.ts` | `Monitor/ServicesView` (`connect`) | Phase 2f — implementation open in [#4048](https://github.com/jaegertracing/jaeger-ui/pull/4048) |
 | `reducers/path-agnostic-decorations.ts`, `actions/path-agnostic-decorations.ts` | `DdgNodeContent`, `DeepDependencies/SidePanel/DetailsPanel` | Phase 2g |
-| `TraceTimelineViewer/duck.ts`, `duck.track.ts`, `middlewares/track.ts` | `TracePage`, `TraceTimelineViewer`, `VirtualizedTraceView`, `SpanTreeOffset`, `SpanDetailSidePanel` | Phase 1c steps 3–4 |
+| `TraceTimelineViewer/duck.ts`, `duck.track.ts`, `middlewares/track.ts` | `VirtualizedTraceView`, `SpanTreeOffset` (hover state); `store.track.test.ts` (parity reference) | Phase 1c step 3 |
 | Vestigial `connect()` wrappers whose `mapStateToProps` ignores state entirely | `SearchTracePage/SearchForm.tsx`, `TraceDiff/TraceDiff.tsx` | Phase 4b (mechanical) |
 | `utils/configure-store.ts`, `<Provider>` in `components/App/index.tsx`, `ReduxState` in `types/index.ts`, `types/TTraceTimeline.ts` | app shell, ~14 test files | Phase 4b/4c |
 
-Removing the timeline duck is the only item here with a non-mechanical design question in it (where the analytics call sites go), so it is the one worth sequencing first.
+Removing the timeline duck was the only item here with a non-mechanical design question in it (where the analytics call sites go). Phase 1c step 4 settled it, so the duck now waits only on the hover state.
 
 #### ⬜ 4b. Remove packages
 
@@ -1435,7 +1435,7 @@ const trace = {
 ---
 
 **Status**: Partially Implemented  
-**Next Steps**: Complete Phase 1c steps 3–4, then Phases 2f–2g and 4
+**Next Steps**: Complete Phase 1c step 3, then Phases 2f–2g and 4
 
 ---
 

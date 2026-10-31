@@ -9,7 +9,7 @@
 
 Jaeger UI uses a multi-layered state management architecture. **TanStack Query (React Query)** owns server data, **Zustand** owns shared client UI state, **URL State** is the intended source of truth for the current view (deep linking, though completeness varies by page), and **Local Storage** provides multi-session persistence for user preferences.
 
-**Redux is nearly gone.** It no longer holds traces, search results, services, config, dependencies, or the DDG graph. What remains is two reducers (`metrics`, `pathAgnosticDecorations`), the `traceTimeline` duck that survives only because analytics tracking is implemented as a Redux middleware, and a few `connect()` wrappers that no longer read state at all. **Do not add state to Redux** — see the roadmap below. [RFC 0006](../rfc/0006-target-state-management-architecture.md) describes the target; [RFC 0004](../rfc/0004-state-management-strategy.md) tracks what is left.
+**Redux is nearly gone.** It no longer holds traces, search results, services, config, dependencies, or the DDG graph. What remains is two reducers (`metrics`, `pathAgnosticDecorations`), the `traceTimeline` duck that survives only for the hover-guide state, and a few `connect()` wrappers that no longer read state at all. **Do not add state to Redux** — see the roadmap below. [RFC 0006](../rfc/0006-target-state-management-architecture.md) describes the target; [RFC 0004](../rfc/0004-state-management-strategy.md) tracks what is left.
 
 ---
 
@@ -46,9 +46,9 @@ The legacy core of the application, now reduced to a residue. The full schema of
 
 - **Location**: `src/reducers/` (`metrics`, `pathAgnosticDecorations`), `src/actions/path-agnostic-decorations.ts`, and `src/components/TracePage/TraceTimelineViewer/duck.ts`; assembled in `src/utils/configure-store.ts`. There is no `src/selectors/`.
 - **Access**:
-    - **Functional Components**: `useSelector` / `useDispatch` — `DdgNodeContent`, `VirtualizedTraceView` (for `hoverIndentGuideIds`), `SpanDetailSidePanel`.
-    - **Class Components**: `connect(mapStateToProps, mapDispatchToProps)` — `Monitor/ServicesView`, `DeepDependencies/SidePanel/DetailsPanel`, `SpanTreeOffset`, `TracePage`, `TraceTimelineViewer`. `SearchForm` and `TraceDiff` are also still wrapped, but their `mapStateToProps` ignores state entirely and the wrapper is vestigial.
-- **Timeline dual write**: timeline interactions dispatch a Redux action *and* call the equivalent Zustand action, Redux first so the tracking middleware observes pre-update state. The duck exists to feed `src/middlewares/track.ts`, not to serve the UI.
+    - **Functional Components**: `useSelector` / `useDispatch` — `DdgNodeContent`, `VirtualizedTraceView` (for `hoverIndentGuideIds`).
+    - **Class Components**: `connect(mapStateToProps, mapDispatchToProps)` — `Monitor/ServicesView`, `DeepDependencies/SidePanel/DetailsPanel`, `SpanTreeOffset`. `TracePage` connects only `mapStateToProps`, for `uiFind`. `SearchForm` and `TraceDiff` are also still wrapped, but their `mapStateToProps` ignores state entirely and the wrapper is vestigial.
+- **Timeline analytics**: timeline handlers call the trackers in `TraceTimelineViewer/store.track.ts` and then the Zustand action, so each event reads pre-update state. Only `SpanTreeOffset`'s hover changes still dispatch to Redux.
 - **Do not add new state here.** Per [ADR-0004](./0004-state-management-strategy.md), everything above has a scheduled removal; new shared UI state goes to Zustand and new server data to TanStack Query.
 
 ### 1a. Zustand (shared client UI state)
