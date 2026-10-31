@@ -8,7 +8,7 @@ import DetailState from './SpanDetail/DetailState';
 import SpanTreeOffset from './SpanTreeOffset';
 import TimelineRow from './TimelineRow';
 
-import { IOtelSpan, IAttribute, IEvent } from '../../../types/otel';
+import { IOtelSpan, IAttributes, IEvent } from '../../../types/otel';
 import { Hyperlink } from '../../../types/hyperlink';
 
 import './SpanDetailRow.css';
@@ -19,7 +19,7 @@ type SpanDetailRowProps = {
   timelineBarsVisible: boolean;
   detailState: DetailState;
   onDetailToggled: (spanID: string) => void;
-  linksGetter: (attributes: ReadonlyArray<IAttribute>, index: number) => Hyperlink[];
+  linksGetter: (attributes: IAttributes, index: number) => Hyperlink[];
   eventItemToggle: (spanID: string, event: IEvent) => void;
   eventsToggle: (spanID: string) => void;
   resourceToggle: (spanID: string) => void;

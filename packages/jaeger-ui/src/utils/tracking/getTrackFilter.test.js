@@ -11,16 +11,16 @@ import { trackEvent } from '.';
 
 describe('getTrackFilter', () => {
   const CATEGORY_FILTER = 'test category filter';
-  const trackFilter = getTrackFilter(CATEGORY_FILTER);
+  let trackFilter;
 
+  // Vitest clears mock call history before each test, so the tracker has to be
+  // built inside a hook for the throttle calls it makes to stay observable.
   beforeEach(() => {
-    trackEvent.mockClear();
+    trackFilter = getTrackFilter(CATEGORY_FILTER);
   });
 
   it('uses lodash throttle with 750ms and leading: false', () => {
-    const calls = _throttle.mock.calls;
-    expect(calls.length).toBe(2);
-    expect(calls).toEqual([
+    expect(_throttle.mock.calls).toEqual([
       [expect.any(Function), 750, { leading: false }],
       [expect.any(Function), 750, { leading: false }],
     ]);

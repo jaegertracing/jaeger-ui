@@ -7,6 +7,7 @@ import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
 import './AccordionLinks.css';
 import { ILink } from '../../../../types/otel';
 import ReferenceLink from '../../url/ReferenceLink';
+import accordionToggle from './accordionToggle';
 
 type AccordionLinksProps = {
   data: ReadonlyArray<ILink>;
@@ -77,7 +78,7 @@ function AccordionLinks({
     arrow = isOpen ? <IoChevronDown className={iconCls} /> : <IoChevronForward className={iconCls} />;
     headerProps = {
       'aria-checked': isOpen,
-      onClick: isEmpty ? null : onToggle,
+      onClick: isEmpty ? null : accordionToggle(onToggle),
       role: 'switch',
     };
   }

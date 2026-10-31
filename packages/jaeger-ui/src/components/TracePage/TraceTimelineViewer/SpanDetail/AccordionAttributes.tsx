@@ -9,24 +9,48 @@ import * as markers from './AccordionAttributes.markers';
 import AttributesTable from './AttributesTable';
 import { TNil } from '../../../../types';
 import { Hyperlink } from '../../../../types/hyperlink';
-import { IAttribute } from '../../../../types/otel';
+import { AttributeValue, IAttributes } from '../../../../types/otel';
 
 import './AccordionAttributes.css';
+import accordionToggle from './accordionToggle';
+
+// The summary is displayed on the initial, collapsed render. It must stay
+// bounded independently of CSS ellipsis, which only hides a value after React
+// has already converted it to text.
+const SUMMARY_VALUE_MAX_CHARS = 200;
+
+function formatSummaryValue(value: AttributeValue) {
+  if (typeof value === 'string') {
+    return value.length > SUMMARY_VALUE_MAX_CHARS ? `${value.length.toLocaleString()} chars` : value;
+  }
+  if (value instanceof Uint8Array) return `${value.byteLength.toLocaleString()} bytes`;
+  if (Array.isArray(value)) {
+    // The loop stops as soon as the joined text would exceed the bound, so a
+    // large array is never stringified.
+    let textLength = 0;
+    for (const item of value) {
+      textLength += String(item).length + 1;
+      if (textLength > SUMMARY_VALUE_MAX_CHARS) return `${value.length.toLocaleString()} items`;
+    }
+    return String(value);
+  }
+  return String(value);
+}
 
 // export for tests
-export function AttributesSummary({ data }: { data: ReadonlyArray<IAttribute> }) {
-  if (!Array.isArray(data) || !data.length) {
+export function AttributesSummary({ data }: { data: IAttributes }) {
+  if (data.size === 0) {
     return null;
   }
   return (
     <ul className="AccordionAttributes--summary">
-      {data.map((item, i) => (
+      {data.entries().map((item, i) => (
         // `i` is necessary in the key because item.key can repeat
 
         <li className="AccordionAttributes--summaryItem" key={`${item.key}-${i}`}>
           <span className="AccordionAttributes--summaryLabel">{item.key}</span>
           <span className="AccordionAttributes--summaryDelim">=</span>
-          {String(item.value)}
+          {formatSummaryValue(item.value)}
         </li>
       ))}
     </ul>
@@ -44,15 +68,15 @@ export default function AccordionAttributes({
   onToggle = null,
 }: {
   className?: string | TNil;
-  data: ReadonlyArray<IAttribute>;
+  data: IAttributes;
   highContrast?: boolean;
   interactive?: boolean;
   isOpen: boolean;
   label: string;
-  linksGetter: ((pairs: ReadonlyArray<IAttribute>, index: number) => Hyperlink[]) | TNil;
+  linksGetter: ((pairs: IAttributes, index: number) => Hyperlink[]) | TNil;
   onToggle?: null | (() => void);
 }) {
-  const isEmpty = !Array.isArray(data) || !data.length;
+  const isEmpty = data.size === 0;
   const iconCls = cx('u-align-icon', { 'AccordionAttributes--emptyIcon': isEmpty });
   let arrow: React.ReactNode | null = null;
   let headerProps: object | null = null;
@@ -60,7 +84,7 @@ export default function AccordionAttributes({
     arrow = isOpen ? <IoChevronDown className={iconCls} /> : <IoChevronForward className={iconCls} />;
     headerProps = {
       'aria-checked': isOpen,
-      onClick: onToggle,
+      onClick: accordionToggle(onToggle),
       role: 'switch',
     };
   }

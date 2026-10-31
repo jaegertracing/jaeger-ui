@@ -65,6 +65,20 @@ describe('formatDuration', () => {
     const input = 0;
     expect(formatDuration(input)).toBe('0μs');
   });
+
+  it('carries a rounded-up secondary unit into the primary unit', () => {
+    expect(formatDuration(ONE_HOUR + 59 * ONE_MINUTE + 36 * ONE_SECOND)).toBe('2h');
+    expect(formatDuration(ONE_MINUTE + 59 * ONE_SECOND + 600 * ONE_MILLISECOND)).toBe('2m');
+  });
+
+  it('does not carry when the secondary unit rounds down', () => {
+    expect(formatDuration(ONE_HOUR + 59 * ONE_MINUTE + 29 * ONE_SECOND)).toBe('1h 59m');
+    expect(formatDuration(ONE_MINUTE + 59 * ONE_SECOND + 400 * ONE_MILLISECOND)).toBe('1m 59s');
+  });
+
+  it('carries across the day boundary', () => {
+    expect(formatDuration(ONE_DAY - 20 * ONE_SECOND)).toBe('1d');
+  });
 });
 
 describe('getSuitableTimeUnit', () => {

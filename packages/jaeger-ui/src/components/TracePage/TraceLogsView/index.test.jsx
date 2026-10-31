@@ -6,6 +6,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import TraceLogsView from './index';
 import transformTraceData from '../../../model/transform-trace-data';
+import { makeAttributes } from '../../../model/attributes';
 
 // Test trace with logs/events on some spans
 const baseTrace = {
@@ -234,7 +235,7 @@ describe('<TraceLogsView>', () => {
     };
     const trace = transformTraceData(traceWithEmptyAttrs).asOtelTrace();
     // Remove attributes from events to trigger the empty branch
-    trace.spans[0].events[0].attributes = [];
+    trace.spans[0].events[0].attributes = makeAttributes([]);
     render(<TraceLogsView trace={trace} useOtelTerms={false} />);
 
     // Should render the em dash for empty attributes

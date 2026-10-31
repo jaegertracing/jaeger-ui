@@ -20,7 +20,7 @@ import { Provider } from 'react-redux';
 
 import extractDecorationFromState from '../../../model/path-agnostic-decorations';
 import stringSupplant from '../../../utils/stringSupplant';
-import JaegerAPI from '../../../api/jaeger';
+import { jaegerClient } from '../../../api/v3/client';
 import { UnconnectedDetailsPanel as DetailsPanel } from './DetailsPanel';
 import DefaultDetailsPanel from './DetailsPanel';
 
@@ -70,7 +70,7 @@ describe('<SidePanel>', () => {
   let rej;
 
   beforeAll(() => {
-    fetchDecorationSpy = jest.spyOn(JaegerAPI, 'fetchDecoration').mockImplementation(() => {
+    fetchDecorationSpy = jest.spyOn(jaegerClient, 'fetchDecoration').mockImplementation(() => {
       promise = new Promise((resolve, reject) => {
         res = resolve;
         rej = reject;
@@ -278,13 +278,14 @@ describe('<SidePanel>', () => {
     it('updates state', () => {
       const { container } = render(<DetailsPanel {...props} />);
 
-      const initialWidth = '30vw';
-      expect(container.querySelector('.Ddg--DetailsPanel')).toHaveStyle(`width: ${initialWidth}`);
+      // Assert the declared width rather than the computed one: jsdom resolves vw units
+      // against its own window width, which would make the assertion depend on that width.
+      expect(container.querySelector('.Ddg--DetailsPanel').style.width).toBe('30vw');
 
       const resizer = screen.getByTestId('vertical-resizer');
       fireEvent.click(resizer);
 
-      expect(container.querySelector('.Ddg--DetailsPanel')).toHaveStyle('width: 60vw');
+      expect(container.querySelector('.Ddg--DetailsPanel').style.width).toBe('60vw');
     });
   });
 

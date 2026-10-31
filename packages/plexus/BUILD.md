@@ -37,7 +37,7 @@ Note: `./tsconfig.json` does not extend `../../tsconfig.json`.
 ### Scripts
 
 - `build` — Generates the UMD bundle and ES module production builds
-- `prepublishOnly` — Executed after `npm install` is run in the project root; runs the `build` script
+- `prepublishOnly` — Executed after `pnpm install` is run in the project root; runs the `build` script
 
 The `_tasks/*` scripts are not intended to be run, directly.
 
