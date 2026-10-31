@@ -144,6 +144,7 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
 
   _getDraggingBounds = (tag: string | TNil): DraggableBounds => {
     if (!this._root) {
+      /* istanbul ignore next : unreachable */
       throw new Error('invalid state');
     }
     const { left: clientXLeft, width } = this._root.getBoundingClientRect();
@@ -207,6 +208,7 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
       update = [viewStart, value];
     } else {
       // to satisfy flow
+      /* istanbul ignore next : unreachable */
       throw new Error('bad state');
     }
     manager.resetBounds();
