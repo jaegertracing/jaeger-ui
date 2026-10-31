@@ -37,6 +37,7 @@ export default function ExportSpanButton({ span }: Props) {
   }
 
   async function handleExport(payload: Record<string, unknown>) {
+    // copy-to-clipboard v4 is async: it resolves to false when every copy path fails.
     const ok = await copy(JSON.stringify(payload, null, 2));
     setStatus(ok ? 'copied' : 'failed');
     scheduleReset();

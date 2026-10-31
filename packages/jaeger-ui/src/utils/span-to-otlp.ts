@@ -1,11 +1,12 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { IOtelSpan, IAttribute, AttributeValue, SpanKind, StatusCode } from '../types/otel';
+import { IOtelSpan, IAttributes, AttributeValue, SpanKind, StatusCode } from '../types/otel';
 
 // OTLP/JSON proto3 encoding: SpanKind integer values
 // https://opentelemetry.io/docs/specs/otlp/#json-payload
 const SPAN_KIND_INT: Record<SpanKind, number> = {
+  [SpanKind.UNSPECIFIED]: 0,
   [SpanKind.INTERNAL]: 1,
   [SpanKind.SERVER]: 2,
   [SpanKind.CLIENT]: 3,
@@ -29,13 +30,18 @@ function uint8ToBase64(bytes: Uint8Array): string {
 }
 
 // Encodes an AttributeValue as an OTLP AnyValue (proto3 JSON one-of).
-// Non-finite numbers (NaN, Infinity) are stringified — OTLP has no representation for them.
+//
+// The parser maps both intValue and doubleValue to a JS number, so the span
+// model no longer says which one a whole number was. Only safe integers are
+// written back as intValue; that is a best guess, and a doubleValue of 2.0
+// still exports as intValue "2". NaN and ±Infinity stay doubleValue and use the
+// proto3 JSON strings, the same encoding DownloadResults writes.
 export function toAnyValue(v: AttributeValue): Record<string, unknown> {
   if (typeof v === 'boolean') return { boolValue: v };
   if (typeof v === 'number') {
-    if (!Number.isFinite(v)) return { stringValue: String(v) };
+    if (!Number.isFinite(v)) return { doubleValue: String(v) };
     // intValue is proto3 int64, encoded as a decimal string per the JSON mapping spec
-    return Number.isInteger(v) ? { intValue: String(v) } : { doubleValue: v };
+    return Number.isSafeInteger(v) ? { intValue: String(v) } : { doubleValue: v };
   }
   if (v instanceof Uint8Array) return { bytesValue: uint8ToBase64(v) };
   if (Array.isArray(v)) {
@@ -54,11 +60,16 @@ export function toAnyValue(v: AttributeValue): Record<string, unknown> {
   return { stringValue: String(v ?? '') };
 }
 
-function toOtlpAttrs(attrs: ReadonlyArray<IAttribute>) {
-  return attrs.map(({ key, value }) => ({ key, value: toAnyValue(value) }));
+function toOtlpAttrs(attrs: IAttributes) {
+  return attrs.entries().map(({ key, value }) => ({ key, value: toAnyValue(value) }));
 }
 
-// Converts microseconds to a nanosecond decimal string.
+// An ordered list rather than an object, because attribute keys can repeat and
+// an object would silently keep only the last value.
+function toFlatAttrs(attrs: IAttributes) {
+  return attrs.entries().map(({ key, value }) => ({ key, value }));
+}
+
 // Converts whole-microsecond timestamps to nanosecond decimal strings.
 // Jaeger stores all times as integer µs; appending "000" (×1000) avoids the
 // floating-point precision loss that Math.round(us * 1000) causes for large
@@ -97,7 +108,7 @@ export function spanToOtlpJson(span: IOtelSpan): Record<string, unknown> {
             scope: {
               name: span.instrumentationScope.name,
               ...(span.instrumentationScope.version && { version: span.instrumentationScope.version }),
-              ...(span.instrumentationScope.attributes?.length && {
+              ...(span.instrumentationScope.attributes?.size && {
                 attributes: toOtlpAttrs(span.instrumentationScope.attributes),
               }),
             },
@@ -137,12 +148,10 @@ export function spanToOtlpJson(span: IOtelSpan): Record<string, unknown> {
 /**
  * Converts a Jaeger IOtelSpan to a flat, human-readable JSON object.
  * Useful for quick sharing, pasting into docs, or debugging without needing
- * an OTel-aware tool to parse the output.
+ * an OTel-aware tool to parse the output. Attribute lists keep duplicate keys.
  */
 export function spanToFlatJson(span: IOtelSpan): Record<string, unknown> {
-  const attrs: Record<string, unknown> = {};
-  for (const { key, value } of span.attributes) attrs[key] = value;
-
+  const scope = span.instrumentationScope;
   return {
     traceId: span.traceID,
     spanId: span.spanID,
@@ -156,11 +165,22 @@ export function spanToFlatJson(span: IOtelSpan): Record<string, unknown> {
       code: span.status.code,
       ...(span.status.message && { message: span.status.message }),
     },
-    attributes: attrs,
+    attributes: toFlatAttrs(span.attributes),
     events: span.events.map(ev => ({
       name: ev.name,
       timestampMs: Math.round(ev.timestamp / 1000),
-      attributes: Object.fromEntries(ev.attributes.map(({ key, value }) => [key, value])),
+      attributes: toFlatAttrs(ev.attributes),
     })),
+    links: span.links.map(lk => ({
+      traceId: lk.traceID,
+      spanId: lk.spanID,
+      attributes: toFlatAttrs(lk.attributes),
+    })),
+    resource: { attributes: toFlatAttrs(span.resource.attributes) },
+    scope: {
+      name: scope.name,
+      ...(scope.version && { version: scope.version }),
+      ...(scope.attributes?.size && { attributes: toFlatAttrs(scope.attributes) }),
+    },
   };
 }

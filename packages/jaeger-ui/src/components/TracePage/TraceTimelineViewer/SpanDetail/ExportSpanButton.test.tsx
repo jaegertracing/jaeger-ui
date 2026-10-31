@@ -16,6 +16,7 @@ vi.mock('../../../../utils/span-to-otlp', () => ({
 import copy from 'copy-to-clipboard';
 import { spanToOtlpJson, spanToFlatJson } from '../../../../utils/span-to-otlp';
 import ExportSpanButton from './ExportSpanButton';
+import { makeAttributes } from '../../../../model/attributes';
 import { IOtelSpan, SpanKind, StatusCode } from '../../../../types/otel';
 
 const mockSpan: IOtelSpan = {
@@ -26,11 +27,11 @@ const mockSpan: IOtelSpan = {
   startTime: 1_000_000 as any,
   endTime: 1_050_000 as any,
   duration: 50_000 as any,
-  attributes: [],
+  attributes: makeAttributes([]),
   events: [],
   links: [],
   status: { code: StatusCode.OK },
-  resource: { serviceName: 'svc', attributes: [] },
+  resource: { serviceName: 'svc', attributes: makeAttributes([]) },
   instrumentationScope: { name: 'test' },
   depth: 0,
   hasChildren: false,

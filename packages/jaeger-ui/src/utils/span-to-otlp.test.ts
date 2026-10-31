@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { IOtelSpan, SpanKind, StatusCode } from '../types/otel';
+import { makeAttributes } from '../model/attributes';
 import { toAnyValue, spanToOtlpJson, spanToFlatJson } from './span-to-otlp';
 
 // Minimal factory — only set fields relevant to the test under examination
@@ -15,16 +16,16 @@ function makeSpan(overrides: Partial<IOtelSpan> = {}): IOtelSpan {
     startTime: 1_700_000_000_000_000 as unknown as number,
     endTime: 1_700_000_000_050_000 as unknown as number,
     duration: 50_000 as unknown as number,
-    attributes: [
+    attributes: makeAttributes([
       { key: 'http.method', value: 'GET' },
       { key: 'http.status_code', value: 200 },
-    ],
+    ]),
     events: [],
     links: [],
     status: { code: StatusCode.OK },
     resource: {
       serviceName: 'frontend',
-      attributes: [{ key: 'service.name', value: 'frontend' }],
+      attributes: makeAttributes([{ key: 'service.name', value: 'frontend' }]),
     },
     instrumentationScope: { name: 'go.opentelemetry.io/otel', version: '1.21.0' },
     depth: 0,
@@ -67,12 +68,16 @@ describe('toAnyValue', () => {
     expect(toAnyValue(3.14)).toEqual({ doubleValue: 3.14 });
   });
 
-  it('encodes NaN as stringValue (no OTLP representation for NaN)', () => {
-    expect(toAnyValue(NaN)).toEqual({ stringValue: 'NaN' });
+  it.each([
+    [NaN, 'NaN'],
+    [Infinity, 'Infinity'],
+    [-Infinity, '-Infinity'],
+  ])('encodes %s as a proto3 JSON doubleValue string', (value, expected) => {
+    expect(toAnyValue(value)).toEqual({ doubleValue: expected });
   });
 
-  it('encodes Infinity as stringValue', () => {
-    expect(toAnyValue(Infinity)).toEqual({ stringValue: 'Infinity' });
+  it('encodes integers beyond the safe range as doubleValue, not a rounded intValue', () => {
+    expect(toAnyValue(2 ** 60)).toEqual({ doubleValue: 2 ** 60 });
   });
 
   it('encodes a flat array', () => {
@@ -163,6 +168,7 @@ describe('spanToOtlpJson', () => {
   });
 
   it.each([
+    [SpanKind.UNSPECIFIED, 0],
     [SpanKind.INTERNAL, 1],
     [SpanKind.SERVER, 2],
     [SpanKind.CLIENT, 3],
@@ -226,7 +232,7 @@ describe('spanToOtlpJson', () => {
           {
             timestamp: 1_700_000_000_010_000 as any,
             name: 'db.query.start',
-            attributes: [{ key: 'db.statement', value: 'SELECT 1' }],
+            attributes: makeAttributes([{ key: 'db.statement', value: 'SELECT 1' }]),
           },
         ],
       })
@@ -245,7 +251,7 @@ describe('spanToOtlpJson', () => {
           {
             traceID: 'linkedtrace001',
             spanID: 'linkedspan001',
-            attributes: [{ key: 'link.type', value: 'follows_from' }],
+            attributes: makeAttributes([{ key: 'link.type', value: 'follows_from' }]),
           },
         ],
       })
@@ -283,9 +289,63 @@ describe('spanToFlatJson', () => {
     expect(out.durationMs).toBe(50);
   });
 
-  it('flattens attributes into a plain object', () => {
+  it('lists attributes as key/value pairs', () => {
     const out = spanToFlatJson(makeSpan());
-    expect(out.attributes).toEqual({ 'http.method': 'GET', 'http.status_code': 200 });
+    expect(out.attributes).toEqual([
+      { key: 'http.method', value: 'GET' },
+      { key: 'http.status_code', value: 200 },
+    ]);
+  });
+
+  it('keeps duplicate attribute keys on spans and events', () => {
+    const duplicated = makeAttributes([
+      { key: 'retry', value: 1 },
+      { key: 'retry', value: 2 },
+    ]);
+    const out = spanToFlatJson(
+      makeSpan({
+        attributes: duplicated,
+        events: [{ timestamp: 2_000_000 as any, name: 'retry', attributes: duplicated }],
+      })
+    );
+    const expected = [
+      { key: 'retry', value: 1 },
+      { key: 'retry', value: 2 },
+    ];
+    expect(out.attributes).toEqual(expected);
+    expect((out.events as any[])[0].attributes).toEqual(expected);
+  });
+
+  it('includes links, resource attributes, and scope', () => {
+    const out = spanToFlatJson(
+      makeSpan({
+        links: [
+          {
+            traceID: 'linkedtrace001',
+            spanID: 'linkedspan001',
+            attributes: makeAttributes([{ key: 'link.type', value: 'follows_from' }]),
+          },
+        ],
+        instrumentationScope: {
+          name: 'my-lib',
+          version: '2.0.0',
+          attributes: makeAttributes([{ key: 'scope.attr', value: true }]),
+        },
+      })
+    );
+    expect(out.links).toEqual([
+      {
+        traceId: 'linkedtrace001',
+        spanId: 'linkedspan001',
+        attributes: [{ key: 'link.type', value: 'follows_from' }],
+      },
+    ]);
+    expect(out.resource).toEqual({ attributes: [{ key: 'service.name', value: 'frontend' }] });
+    expect(out.scope).toEqual({
+      name: 'my-lib',
+      version: '2.0.0',
+      attributes: [{ key: 'scope.attr', value: true }],
+    });
   });
 
   it('includes parentSpanId when parentSpanID is set', () => {
@@ -305,7 +365,7 @@ describe('spanToFlatJson', () => {
           {
             timestamp: 2_000_000 as any,
             name: 'cache.hit',
-            attributes: [{ key: 'cache.key', value: 'user:42' }],
+            attributes: makeAttributes([{ key: 'cache.key', value: 'user:42' }]),
           },
         ],
       })
@@ -314,7 +374,7 @@ describe('spanToFlatJson', () => {
     expect(events).toHaveLength(1);
     expect(events[0].name).toBe('cache.hit');
     expect(events[0].timestampMs).toBe(2000);
-    expect(events[0].attributes).toEqual({ 'cache.key': 'user:42' });
+    expect(events[0].attributes).toEqual([{ key: 'cache.key', value: 'user:42' }]);
   });
 
   it('includes status.message when present', () => {
