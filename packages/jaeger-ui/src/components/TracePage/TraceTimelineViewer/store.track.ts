@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useTraceTimelineStore } from './store.timeline';
+import { useTraceTimelineStore } from './store';
 import type { SpanDetailPanelMode } from '../../../types/config';
 import { IEvent } from '../../../types/otel';
 import { isWaEnabled, trackEvent } from '../../../utils/tracking';

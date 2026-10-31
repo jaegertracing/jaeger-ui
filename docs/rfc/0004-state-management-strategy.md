@@ -981,7 +981,7 @@ This is the **largest and most performance-sensitive** slice. Split across multi
 3. ⬜ Hover: `hoverIndentGuideIds` still lives only in the duck. `VirtualizedTraceView` reads it with `useSelector`, and `SpanTreeOffset` is still a `connect()`ed component whose `mapStateToProps` reads `state.traceTimeline`.
 4. ✅ Timeline analytics: the handlers call the trackers in `TraceTimelineViewer/store.track.ts` before each Zustand action, so every event still reads pre-update state. `store.track.test.ts` replays a scripted session through the old middleware and through the trackers and asserts identical events.
 
-**Why the duck is still alive**: it holds `hoverIndentGuideIds` (step 3). `SpanTreeOffset` writes that field and `VirtualizedTraceView` reads it; no timeline interaction dispatches any other Redux action. `duck.track.ts` and `src/middlewares/track.ts` no longer receive any action with a tracking hook; they remain only as the reference for the parity test and go with the duck.
+**Why the duck is still alive**: it holds `hoverIndentGuideIds` (step 3). `SpanTreeOffset` writes that field and `VirtualizedTraceView` reads it; no timeline interaction dispatches any other Redux action. `duck.track.ts` and `src/middlewares/track.ts` are still installed through `configure-store.ts` but no longer receive any action with a tracking hook. The parity test uses them as the reference, and they go with the duck.
 
 **Components rewired off the dual write**: `TracePage`, `TraceTimelineViewer`, `VirtualizedTraceView`, `SpanDetailSidePanel`. `SpanTreeOffset` still uses Redux for hover state.
 
