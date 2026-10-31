@@ -94,6 +94,12 @@ describe('getInitialLayoutState()', () => {
     expect(getInitialLayoutState().timelineBarsVisible).toBe(true);
   });
 
+  it('reads heatmapEnabled from localStorage and defaults it to false', () => {
+    expect(getInitialLayoutState().heatmapEnabled).toBe(false);
+    localStorage.setItem('heatmapEnabled', 'true');
+    expect(getInitialLayoutState().heatmapEnabled).toBe(true);
+  });
+
   it('defaults detailPanelMode to inline when enableSidePanel is false', () => {
     vi.mocked(getConfig).mockReturnValue({
       traceTimeline: { enableSidePanel: false },
@@ -162,6 +168,19 @@ describe('trace timeline zustand stores', () => {
   });
 
   describe('useLayoutPrefsStore', () => {
+    describe('toggleHeatmap', () => {
+      it('flips heatmapEnabled and persists it to localStorage', () => {
+        useLayoutPrefsStore.setState({ heatmapEnabled: false });
+        useLayoutPrefsStore.getState().toggleHeatmap();
+        expect(useLayoutPrefsStore.getState().heatmapEnabled).toBe(true);
+        expect(localStorage.getItem('heatmapEnabled')).toBe('true');
+
+        useLayoutPrefsStore.getState().toggleHeatmap();
+        expect(useLayoutPrefsStore.getState().heatmapEnabled).toBe(false);
+        expect(localStorage.getItem('heatmapEnabled')).toBe('false');
+      });
+    });
+
     describe('setSpanNameColumnWidth', () => {
       it('updates spanNameColumnWidth and persists to localStorage', () => {
         useLayoutPrefsStore.getState().setSpanNameColumnWidth(0.4);

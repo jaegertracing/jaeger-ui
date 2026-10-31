@@ -8,7 +8,7 @@
   padding: 4px 8px;
   font-size: 11px;
   line-height: 1.4;
-  color: var(--text-secondary, #666);
+  color: var(--text-secondary);
   user-select: none;
 }
 
@@ -18,6 +18,25 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+}
+
+.HeatmapLegend--scale {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.HeatmapLegend--noPeers {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+}
+
+.HeatmapLegend--swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
 }
 
 .HeatmapLegend--bar {

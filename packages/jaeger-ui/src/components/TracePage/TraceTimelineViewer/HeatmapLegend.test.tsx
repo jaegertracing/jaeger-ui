@@ -5,6 +5,7 @@ import * as React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import HeatmapLegend from './HeatmapLegend';
+import { HEATMAP_STEPS } from '../../../utils/span-latency-stats';
 
 describe('HeatmapLegend', () => {
   it('renders without crashing', () => {
@@ -32,26 +33,28 @@ describe('HeatmapLegend', () => {
     expect(screen.getByText('Median')).toBeInTheDocument();
   });
 
-  it('shows critical path hint', () => {
+  it('explains which spans are compared', () => {
     render(<HeatmapLegend />);
-    expect(screen.getByText(/critical path/i)).toBeInTheDocument();
+    expect(screen.getByText(/same service and operation/i)).toBeInTheDocument();
+  });
+
+  it('shows the no-peers swatch', () => {
+    const { container } = render(<HeatmapLegend />);
+    expect(screen.getByText('No peers')).toBeInTheDocument();
+    const swatch = container.querySelector('.HeatmapLegend--swatch') as HTMLElement;
+    expect(swatch.style.backgroundColor).toBe('var(--heatmap-no-peers)');
   });
 
   it('has aria-label for accessibility', () => {
     render(<HeatmapLegend />);
-    expect(screen.getByRole('generic', { name: /latency heatmap legend/i })).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: /latency heatmap legend/i })).toBeInTheDocument();
   });
 
-  it('renders 20 color segments', () => {
+  it('renders one segment per heatmap color token, in order', () => {
     const { container } = render(<HeatmapLegend />);
-    const segments = container.querySelectorAll('.HeatmapLegend--segment');
-    expect(segments.length).toBe(20);
-  });
-
-  it('first segment has a background color set', () => {
-    const { container } = render(<HeatmapLegend />);
-    const first = container.querySelector('.HeatmapLegend--segment') as HTMLElement;
-    // JSDOM normalizes hsl() to rgb(); just verify the style is non-empty
-    expect(first.style.backgroundColor).toBeTruthy();
+    const segments = [...container.querySelectorAll<HTMLElement>('.HeatmapLegend--segment')];
+    expect(segments.map(segment => segment.style.backgroundColor)).toEqual(
+      Array.from({ length: HEATMAP_STEPS }, (_, i) => `var(--heatmap-${i + 1})`)
+    );
   });
 });

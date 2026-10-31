@@ -31,7 +31,7 @@ import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '.
 import { TNil } from '../../../types';
 import { IOtelTrace } from '../../../types/otel';
 import { CriticalPathSection } from '../../../types/critical_path';
-import { computeLatencyStats, LatencyStats } from '../../../utils/span-latency-stats';
+import { computeLatencyRanks } from '../../../utils/span-latency-stats';
 
 import './index.css';
 
@@ -53,7 +53,7 @@ type TProps = {
 const NUM_TICKS = 5;
 
 // Stable reference so the heatmap-disabled case doesn't force a new Map identity on every render.
-const EMPTY_STATS_MAP: Map<string, LatencyStats> = new Map();
+const EMPTY_RANKS: Map<string, number> = new Map();
 
 /**
  * `TraceTimelineViewer` now renders the header row because it is sensitive to
@@ -82,10 +82,9 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   const zustandSetSpanNameColumnWidth = useLayoutPrefsStore(s => s.setSpanNameColumnWidth);
   const zustandSetSidePanelWidth = useLayoutPrefsStore(s => s.setSidePanelWidth);
 
-  const { criticalPath = [] } = props;
-  const statsMap = useMemo(
-    () => (heatmapEnabled ? computeLatencyStats(trace.spans, criticalPath) : EMPTY_STATS_MAP),
-    [heatmapEnabled, trace.spans, criticalPath]
+  const heatmapRanks = useMemo(
+    () => (heatmapEnabled ? computeLatencyRanks(trace.spans) : EMPTY_RANKS),
+    [heatmapEnabled, trace.spans]
   );
 
   const detailStates = useTraceTimelineStore(s => s.detailStates);
@@ -236,7 +235,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       currentViewRangeTime={viewRange.time.current}
       nameColumnWidth={nameColumnWidth}
       heatmapEnabled={heatmapEnabled}
-      heatmapStatsMap={statsMap}
+      heatmapRanks={heatmapRanks}
       spanPillsEnabled={spanPillsEnabled}
     />
   );

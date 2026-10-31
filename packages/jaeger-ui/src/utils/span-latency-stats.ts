@@ -1,43 +1,10 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { CriticalPathSection } from '../types/critical_path';
 import { IOtelSpan } from '../types/otel';
 
-export type LatencyStats = {
-  percentileRank: number; // 0–1, position in the operation's duration distribution
-  zScore: number; // NaN when groupSize < 2 or when stdDev is 0 (all durations in the group are identical)
-  p50Us: number;
-  p95Us: number;
-  mean: number;
-  stdDev: number;
-  groupSize: number;
-  weightedScore: number; // percentileRank × 1.5 if on critical path, capped at 1.0
-  onCriticalPath: boolean;
-};
-
-type WelfordState = {
-  count: number;
-  mean: number;
-  M2: number; // sum of squared deviations — Welford's online variance
-  durations: number[];
-};
-
-// Welford's single-pass online algorithm: numerically stable O(n) mean + variance.
-function welfordUpdate(state: WelfordState, x: number): void {
-  state.count += 1;
-  const delta = x - state.mean;
-  state.mean += delta / state.count;
-  const delta2 = x - state.mean;
-  state.M2 += delta * delta2;
-  state.durations.push(x);
-}
-
-function percentileByIndex(sorted: number[], p: number): number {
-  if (sorted.length === 0) return 0;
-  const idx = Math.floor(p * (sorted.length - 1));
-  return sorted[idx];
-}
+// Number of color steps in the heatmap scale, matching --heatmap-1 … --heatmap-6 in vars.css.
+export const HEATMAP_STEPS = 6;
 
 // Returns the count of elements in a sorted array that are <= target.
 // O(log n) binary search (upper bound).
@@ -65,84 +32,47 @@ function lowerBound(sorted: number[], target: number): number {
   return lo;
 }
 
+// Two services can share an operation name, so peers are matched on both.
+function operationKey(span: IOtelSpan): string {
+  return `${span.resource.serviceName}\u0000${span.name}`;
+}
+
 /**
- * Computes per-span latency statistics relative to same-operation peers in the trace.
- * Uses Welford's algorithm for O(n) single-pass mean/variance, then O(m log m) sort
- * per operation group to derive percentile ranks and P50/P95 thresholds.
+ * Ranks each span's duration among the other spans of the same service and operation
+ * in the trace. The result maps spanID to a rank in [0, 1]: the fastest peer is 0 and
+ * the slowest is 1. Spans whose operation occurs only once have no peers to compare
+ * against and are left out of the map.
  */
-export function computeLatencyStats(
-  spans: ReadonlyArray<IOtelSpan>,
-  criticalPath: CriticalPathSection[]
-): Map<string, LatencyStats> {
-  const criticalSpanIDs = new Set(criticalPath.map(s => s.spanID));
-
-  // Group spans by operation name (span.name), accumulating Welford state per group.
-  const groups = new Map<string, WelfordState>();
+export function computeLatencyRanks(spans: ReadonlyArray<IOtelSpan>): Map<string, number> {
+  const groups = new Map<string, number[]>();
   for (const span of spans) {
-    const key = span.name;
-    if (!groups.has(key)) {
-      groups.set(key, { count: 0, mean: 0, M2: 0, durations: [] });
-    }
-    welfordUpdate(groups.get(key)!, span.duration);
+    const key = operationKey(span);
+    const durations = groups.get(key);
+    if (durations) durations.push(span.duration);
+    else groups.set(key, [span.duration]);
   }
+  for (const durations of groups.values()) durations.sort((a, b) => a - b);
 
-  // Sort durations per group once — O(m log m) per group.
-  const sortedGroups = new Map<string, number[]>();
-  for (const [key, state] of groups) {
-    sortedGroups.set(
-      key,
-      [...state.durations].sort((a, b) => a - b)
-    );
-  }
-
-  const result = new Map<string, LatencyStats>();
+  const result = new Map<string, number>();
   for (const span of spans) {
-    const key = span.name;
-    const state = groups.get(key)!;
-    const sorted = sortedGroups.get(key)!;
-
-    const stdDev = state.count >= 2 ? Math.sqrt(state.M2 / (state.count - 1)) : 0;
-    const zScore = state.count >= 2 && stdDev > 0 ? (span.duration - state.mean) / stdDev : NaN;
-
-    // Percentile rank: tie-aware mid-rank normalized so the group's minimum duration
-    // maps to exactly 0 and its maximum maps to exactly 1 (mean-rank formula scaled to
-    // [0, 1] by (n - 1) rather than n). This keeps tied durations centered in the
-    // distribution while still letting the fastest/slowest span reach full green/red.
-    // A group of size 1 has no meaningful min/max, so it reports a neutral 0.5.
-    // Both bounds run in O(log m) vs the previous O(m) filter scan.
+    const sorted = groups.get(operationKey(span))!;
+    if (sorted.length < 2) continue;
+    // Tie-aware mid-rank scaled by (n - 1), so tied durations share a rank and the
+    // group's minimum and maximum reach exactly 0 and 1.
     const lower = lowerBound(sorted, span.duration);
     const upper = upperBound(sorted, span.duration);
-    const rank = sorted.length > 1 ? (lower + upper - 1) / (2 * (sorted.length - 1)) : 0.5;
-
-    const p50Us = percentileByIndex(sorted, 0.5);
-    const p95Us = percentileByIndex(sorted, 0.95);
-
-    const onCriticalPath = criticalSpanIDs.has(span.spanID);
-    const weightedScore = Math.min(rank * (onCriticalPath ? 1.5 : 1.0), 1.0);
-
-    result.set(span.spanID, {
-      percentileRank: rank,
-      zScore,
-      p50Us,
-      p95Us,
-      mean: state.mean,
-      stdDev,
-      groupSize: state.count,
-      weightedScore,
-      onCriticalPath,
-    });
+    result.set(span.spanID, (lower + upper - 1) / (2 * (sorted.length - 1)));
   }
-
   return result;
 }
 
 /**
- * Maps a weighted score (0–1) to an HSL color.
- * 0 → hue 120° (green, fast), 1 → hue 0° (red, slow).
- * HSL interpolation is perceptually uniform compared to RGB midpoints.
+ * Maps a latency rank to a heatmap color token. A missing rank means the span has no
+ * peers, which gets its own neutral color rather than a spot on the scale.
  */
-export function heatmapColor(weightedScore: number): string {
-  const clamped = Math.max(0, Math.min(1, weightedScore));
-  const hue = Math.round(120 * (1 - clamped));
-  return `hsl(${hue}, 80%, 45%)`;
+export function heatmapColor(rank: number | undefined): string {
+  if (rank === undefined) return 'var(--heatmap-no-peers)';
+  const clamped = Math.max(0, Math.min(1, rank));
+  const step = Math.min(HEATMAP_STEPS - 1, Math.floor(clamped * HEATMAP_STEPS)) + 1;
+  return `var(--heatmap-${step})`;
 }

@@ -103,7 +103,7 @@ export function getInitialLayoutState(): Pick<
     }
   }
 
-  const storedHeatmap = localStorage.getItem('heatmapEnabled');
+  const storedHeatmap = storage.getItem('heatmapEnabled');
   const heatmapEnabled = storedHeatmap === 'true';
 
   return { spanNameColumnWidth, sidePanelWidth, detailPanelMode, timelineBarsVisible, heatmapEnabled };
@@ -148,7 +148,7 @@ export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()((set,
 
   toggleHeatmap: () => {
     const next = !get().heatmapEnabled;
-    localStorage.setItem('heatmapEnabled', String(next));
+    storage.setItem('heatmapEnabled', String(next));
     set({ heatmapEnabled: next });
   },
 }));

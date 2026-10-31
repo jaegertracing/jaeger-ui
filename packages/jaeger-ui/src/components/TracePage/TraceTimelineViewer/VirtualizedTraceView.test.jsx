@@ -762,6 +762,38 @@ describe('<VirtualizedTraceViewImpl>', () => {
     });
   });
 
+  describe('latency heatmap', () => {
+    function rowColors() {
+      const { itemRenderer } = listViewPropsCapture.current;
+      return {
+        bar: itemRenderer('bar', {}, 1, {}).props.children.props.color,
+        detail: itemRenderer('detail', {}, 2, {}).props.children.props.color,
+      };
+    }
+
+    it('repaints already-rendered bar and detail rows when the heatmap is toggled', () => {
+      const { props } = expandRow(1);
+      const heatmapRanks = new Map([[trace.spans[1].spanID, 1]]);
+      const { rerender } = render(
+        <VirtualizedTraceViewImpl {...props} heatmapEnabled={false} heatmapRanks={heatmapRanks} />
+      );
+      const serviceColor = rowColors().bar;
+      expect(serviceColor).not.toMatch(/--heatmap-/);
+
+      rerender(<VirtualizedTraceViewImpl {...props} heatmapEnabled heatmapRanks={heatmapRanks} />);
+      expect(rowColors()).toEqual({ bar: 'var(--heatmap-6)', detail: 'var(--heatmap-6)' });
+
+      rerender(<VirtualizedTraceViewImpl {...props} heatmapEnabled={false} heatmapRanks={heatmapRanks} />);
+      expect(rowColors()).toEqual({ bar: serviceColor, detail: serviceColor });
+    });
+
+    it('uses the no-peers color for spans without a rank', () => {
+      render(<VirtualizedTraceViewImpl {...mockProps} heatmapEnabled heatmapRanks={new Map()} />);
+      const { itemRenderer } = listViewPropsCapture.current;
+      expect(itemRenderer('bar', {}, 1, {}).props.children.props.color).toBe('var(--heatmap-no-peers)');
+    });
+  });
+
   describe('service filter pruning', () => {
     function makeSpansWithServices() {
       // Build a small trace with known services:
