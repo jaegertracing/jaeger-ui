@@ -4,57 +4,13 @@
 import _isEqual from 'lodash/isEqual';
 
 import getConfig from '../utils/config/get-config';
-import { getTraceEmoji, getTraceName, getTracePageTitle } from './trace-viewer';
-import { KeyValuePair, Span, SpanData, SpanReference, Trace, TraceData } from '../types/trace';
+import { getTraceEmoji, getTraceName, getTracePageTitle } from './trace-display-helpers';
+import { Span, SpanData, SpanReference, Trace, TraceData } from '../types/trace';
 import { IOtelTrace } from '../types/otel';
+import { deduplicateAttributes, orderAttributes } from './trace-attributes';
 
 import OtelTraceFacade from './OtelTraceFacade';
-
-// exported for tests
-export function deduplicateTags(spanTags: ReadonlyArray<KeyValuePair>) {
-  const warningsHash: Map<string, string> = new Map<string, string>();
-  const tags: KeyValuePair[] = spanTags.reduce<KeyValuePair[]>((uniqueTags, tag) => {
-    if (!uniqueTags.some(t => t.key === tag.key && t.value === tag.value)) {
-      uniqueTags.push(tag);
-    } else {
-      warningsHash.set(`${tag.key}:${tag.value}`, `Duplicate tag "${tag.key}:${tag.value}"`);
-    }
-    return uniqueTags;
-  }, []);
-  const warnings = Array.from(warningsHash.values());
-  return { tags, warnings };
-}
-
-// exported for tests
-export function orderTags(spanTags: KeyValuePair[], topPrefixes?: readonly string[]) {
-  const orderedTags: KeyValuePair[] = spanTags.slice();
-  const tp = (topPrefixes || []).map((p: string) => p.toLowerCase());
-
-  orderedTags.sort((a, b) => {
-    const aKey = a.key.toLowerCase();
-    const bKey = b.key.toLowerCase();
-
-    for (let i = 0; i < tp.length; i++) {
-      const p = tp[i];
-      if (aKey.startsWith(p) && !bKey.startsWith(p)) {
-        return -1;
-      }
-      if (!aKey.startsWith(p) && bKey.startsWith(p)) {
-        return 1;
-      }
-    }
-
-    if (aKey > bKey) {
-      return 1;
-    }
-    if (aKey < bKey) {
-      return -1;
-    }
-    return 0;
-  });
-
-  return orderedTags;
-}
+import { getParentSpanID, getNonParentReferences } from './span';
 
 /**
  * NOTE: Mutates `data` - Transform the HTTP response data into the form the app
@@ -71,15 +27,17 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   const spanIdCounts = new Map<string, number>();
   const spanMap = new Map<string, Span>();
 
-  // Filter out spans with empty start times
-  data.spans = data.spans.filter(span => Boolean(span.startTime));
-
+  // Spans with no usable startTime (missing/NaN, or 0 — the Unix epoch, which no
+  // real span emits) are kept rather than dropped, so the span tree still renders
+  // in full. Their startTime is repaired during the depth-first traversal below
+  // by inheriting the parent's startTime; dropping them here would blank the
+  // whole timeline when every span reports startTime 0.
   const numSpans = data.spans.length;
   for (let i = 0; i < numSpans; i++) {
     // Unsafe cast to avoid memory allocations.
     // We populate/fix all properties below.
     const span: Span = data.spans[i] as Span;
-    const { startTime, duration, processID } = span;
+    const { processID } = span;
     let spanID = span.spanID;
     // make sure span IDs are unique
     const idCount = spanIdCounts.get(spanID);
@@ -105,22 +63,14 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     span.childSpans = [];
     span.subsidiarilyReferencedBy = [];
 
-    const tagsInfo = deduplicateTags(span.tags);
-    span.tags = orderTags(tagsInfo.tags, getConfig().topTagPrefixes);
+    const attributesInfo = deduplicateAttributes(span.tags);
+    span.tags = orderAttributes(attributesInfo.attributes, getConfig().topTagPrefixes);
     span.warnings = span.warnings || [];
-    if (tagsInfo.warnings && tagsInfo.warnings.length > 0) {
-      (span.warnings as string[]).push(...tagsInfo.warnings);
+    if (attributesInfo.warnings && attributesInfo.warnings.length > 0) {
+      (span.warnings as string[]).push(...attributesInfo.warnings);
     }
 
     spanMap.set(spanID, span);
-
-    // update trace's start / end time
-    if (startTime < traceStartTime) {
-      traceStartTime = startTime;
-    }
-    if (startTime + duration > traceEndTime) {
-      traceEndTime = startTime + duration;
-    }
   }
 
   const rootSpans: Span[] = [];
@@ -128,20 +78,10 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
 
   // Second pass: link parents/children and identify roots
   for (const span of spanMap.values()) {
-    let parent: Span | undefined;
-    if (Array.isArray(span.references) && span.references.length > 0) {
-      // Find the first CHILD_OF or FOLLOWS_FROM reference that exists in the spanMap
-      for (const ref of span.references) {
-        if (ref.refType === 'CHILD_OF' || ref.refType === 'FOLLOWS_FROM') {
-          parent = spanMap.get(ref.spanID);
-          if (parent) {
-            break;
-          }
-        }
-      }
-      if (!parent) {
-        orphanSpanCount++;
-      }
+    const parentSpanID = getParentSpanID(span);
+    const parent = parentSpanID ? spanMap.get(parentSpanID) : undefined;
+    if (parentSpanID && !parent) {
+      orphanSpanCount++;
     }
 
     if (parent) {
@@ -156,41 +96,99 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   const spans: Span[] = [];
   const svcCounts: Record<string, number> = {};
 
-  // Depth-first traversal to order spans and populate flat array
-  const processSpan = (span: Span, depth: number) => {
-    span.depth = depth;
+  // A startTime that is missing/NaN or 0 (the Unix epoch, which no real span
+  // emits) carries no usable timestamp. Repair it by inheriting the parent's
+  // already-repaired startTime so the span still renders in the tree without
+  // stretching the timeline back to ~1970; a root with no parent falls back to
+  // 0. Every span is repaired by its caller *before* being sorted or handed to
+  // processSpan, so the sort comparators below never see undefined/NaN (which
+  // would make ordering engine-dependent) and processSpan always reads a finite
+  // startTime.
+  //
+  // We deliberately do not special-case the pathological shape where a root with
+  // no usable startTime has children with real timestamps: there the trace range
+  // would still stretch back to the epoch. Inferring the root's start from its
+  // earliest descendant is possible but not worth the complexity for that rare,
+  // already-broken input.
+  const repairStartTime = (span: Span, parent?: Span) => {
+    if (!Number.isFinite(span.startTime) || span.startTime <= 0) {
+      span.startTime = parent?.startTime || 0;
+    }
+  };
+
+  // Pre-order depth-first traversal to order spans, populate the flat array, and
+  // compute the trace's time range from the (already-repaired) start times. The
+  // traversal uses an explicit stack rather than recursion so that deeply nested
+  // traces do not overflow the call stack. A span's depth is assigned by its
+  // parent before the span is pushed; roots are seeded with depth 0.
+  const stack: Span[] = [];
+  const processSpan = (span: Span) => {
+    const { depth } = span;
     span.hasChildren = span.childSpans.length > 0;
-    span.relativeStartTime = span.startTime - traceStartTime;
+
+    if (span.startTime < traceStartTime) {
+      traceStartTime = span.startTime;
+    }
+    if (span.startTime + span.duration > traceEndTime) {
+      traceEndTime = span.startTime + span.duration;
+    }
 
     const { serviceName } = span.process;
     svcCounts[serviceName] = (svcCounts[serviceName] || 0) + 1;
 
-    span.references.forEach((ref, index) => {
-      const refSpan = spanMap.get(ref.spanID);
+    span.references.forEach(ref => {
+      ref.span = ref.traceID === traceID ? spanMap.get(ref.spanID) : undefined;
+    });
+    getNonParentReferences(span).forEach(ref => {
+      const refSpan = ref.span;
       if (refSpan) {
-        ref.span = refSpan;
-        if (index > 0) {
-          // Don't take into account the parent, just other references.
-          refSpan.subsidiarilyReferencedBy = refSpan.subsidiarilyReferencedBy || [];
-          (refSpan.subsidiarilyReferencedBy as SpanReference[]).push({
-            spanID: span.spanID,
-            traceID,
-            span,
-            refType: ref.refType,
-          });
-        }
+        (refSpan.subsidiarilyReferencedBy as SpanReference[]).push({
+          spanID: span.spanID,
+          traceID,
+          span,
+          refType: ref.refType,
+        });
       }
     });
 
     spans.push(span);
 
-    // Sort children by startTime before processing them
-    (span.childSpans as Span[]).sort((a, b) => a.startTime - b.startTime);
-    span.childSpans.forEach(child => processSpan(child, depth + 1));
+    // Repair children against this (already-repaired) span, then sort them by
+    // startTime. They are pushed in reverse so that popping visits them in
+    // ascending startTime order, each subtree before the next sibling.
+    const children = span.childSpans as Span[];
+    children.forEach(child => repairStartTime(child, span));
+    children.sort((a, b) => a.startTime - b.startTime);
+    for (let i = children.length - 1; i >= 0; i--) {
+      children[i].depth = depth + 1;
+      stack.push(children[i]);
+    }
   };
 
+  rootSpans.forEach(root => repairStartTime(root));
   rootSpans.sort((a, b) => a.startTime - b.startTime);
-  rootSpans.forEach(root => processSpan(root, 0));
+  for (let i = rootSpans.length - 1; i >= 0; i--) {
+    rootSpans[i].depth = 0;
+    stack.push(rootSpans[i]);
+  }
+  while (stack.length > 0) {
+    processSpan(stack.pop()!);
+  }
+
+  // traceStartTime/traceEndTime are only updated while visiting spans reachable
+  // from a root. If the trace has spans but no root (e.g. every span is part of
+  // a reference cycle), nothing is visited and traceStartTime keeps its sentinel
+  // value, which would produce a negative duration. Collapse to a zero range.
+  if (spans.length === 0) {
+    traceStartTime = 0;
+    traceEndTime = 0;
+  }
+
+  // relativeStartTime depends on the final traceStartTime, which is only known
+  // once every span (including repaired ones) has been visited above.
+  for (const span of spans) {
+    span.relativeStartTime = span.startTime - traceStartTime;
+  }
 
   const traceName = getTraceName(spans);
   const tracePageTitle = getTracePageTitle(spans);

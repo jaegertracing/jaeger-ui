@@ -12,9 +12,14 @@ import CopyIcon from '../../../common/CopyIcon';
 
 import { TNil } from '../../../../types';
 import { Hyperlink } from '../../../../types/hyperlink';
-import { IAttribute } from '../../../../types/otel';
+import { IAttribute, IAttributes } from '../../../../types/otel';
 
 import './AttributesTable.css';
+
+// This sits well above the 200-character collapsed-summary limit, preserving
+// normal attributes while deferring JSON.parse and JsonView for large GenAI
+// payloads until the user asks to see them.
+const LARGE_VALUE_THRESHOLD_CHARS = 10_000;
 
 const jsonObjectOrArrayStartRegex = /^(\[|\{)/;
 
@@ -65,9 +70,15 @@ const scalarMarkup = (value: string | number | boolean) => {
   );
 };
 
-function formatValue(key: string, value: any) {
+// isJsonTree distinguishes a parsed object/array (rendered as an interactive JsonView
+// tree, which needs real width to be readable) from every other value shape (a scalar
+// or a short string list, both fine sharing a row with the key). Callers use it to give
+// JSON content its own full-width row instead of squeezing a tree into the narrow
+// key:value column layout.
+function formatValue(key: string, value: any): { node: React.ReactNode; isJsonTree: boolean } {
   let content;
   let parsed = value;
+  let isJsonTree = false;
 
   if (typeof value === 'string') {
     parsed = tryParseJson(value);
@@ -84,11 +95,12 @@ function formatValue(key: string, value: any) {
         style={jsonViewStyles}
       />
     );
+    isJsonTree = true;
   } else {
     content = scalarMarkup(parsed);
   }
 
-  return <div className="ub-inline-block">{content}</div>;
+  return { node: <div className="ub-inline-block">{content}</div>, isJsonTree };
 }
 
 export const LinkValue = (props: { href: string; title?: string; children: React.ReactNode }) => (
@@ -104,52 +116,87 @@ const linkValueList = (links: Hyperlink[]) => {
   }));
 };
 
+// The filter only appears once a table is long enough to be hard to scan.
 export const FILTER_THRESHOLD = 10;
 
-// Objects/arrays stringify to "[object Object]" via String(), which makes value
-// filtering silently fail for structured attribute values (common in GenAI/HTTP
-// header traces). JSON.stringify preserves the actual searchable content; Uint8Array
-// is kept on the String() path since JSON.stringify on a typed array yields "{}".
-function getFilterValue(value: IAttribute['value']): string {
+// Objects and arrays stringify to "[object Object]" via String(), so they go
+// through JSON.stringify to keep their content searchable. Uint8Array stays on
+// String() because JSON.stringify turns a typed array into an index map.
+function toSearchText(row: IAttribute): string {
+  const { value } = row;
+  let valueText;
   if (value !== null && typeof value === 'object' && !(value instanceof Uint8Array)) {
     try {
-      return JSON.stringify(value);
+      valueText = JSON.stringify(value);
     } catch {
-      return String(value);
+      valueText = String(value);
     }
+  } else {
+    valueText = String(value);
   }
-  return String(value);
+  return `${row.key}\n${valueText}`.toLowerCase();
 }
 
 type AttributesTableProps = {
-  data: ReadonlyArray<IAttribute>;
-  linksGetter: ((pairs: ReadonlyArray<IAttribute>, index: number) => Hyperlink[]) | TNil;
+  data: IAttributes;
+  linksGetter: ((pairs: IAttributes, index: number) => Hyperlink[]) | TNil;
 };
 
 // AttributesTable is displayed as a menu at span level.
 // Example: https://github.com/jaegertracing/jaeger-ui/assets/94157520/b518cad9-cb37-4775-a3d6-b667a1235f89
 export default function AttributesTable(props: AttributesTableProps) {
   const { data, linksGetter } = props;
-  const [query, setQuery] = React.useState('');
+  // Attribute entries are stable for a given IAttributes collection. Keeping
+  // them in the set means a replacement entry starts collapsed automatically.
+  const [expandedRows, setExpandedRows] = React.useState<Set<object>>(() => new Set());
+  // The expansion renders as a transition so the click stays responsive while
+  // JSON.parse and JsonView run. The rows being expanded are tracked outside
+  // the transition so their buttons can show that the click was received.
+  const [pendingRows, setPendingRows] = React.useState<Set<object>>(() => new Set());
+  const [isPending, startTransition] = React.useTransition();
 
+  const expandRow = React.useCallback(
+    (row: object) => {
+      setPendingRows(currentRows => new Set(currentRows).add(row));
+      startTransition(() => {
+        setExpandedRows(currentRows => new Set(currentRows).add(row));
+      });
+    },
+    [startTransition]
+  );
+
+  const [query, setQuery] = React.useState('');
+  // A different collection means a different span, so the old filter no longer applies.
+  const [queryData, setQueryData] = React.useState(data);
+  if (queryData !== data) {
+    setQueryData(data);
+    setQuery('');
+  }
+  // Filtering runs against the deferred query so typing stays responsive on
+  // spans with many or very large attributes.
+  const deferredQuery = React.useDeferredValue(query);
+  const showFilter = data.size > FILTER_THRESHOLD;
+  const normalizedQuery = showFilter ? deferredQuery.trim().toLowerCase() : '';
+
+  // Search text is built lazily, at most once per row, instead of re-stringifying
+  // every value on each keystroke. Keyed on the stable entry objects, like expandedRows.
+  const [searchTextCache] = React.useState(() => new WeakMap<IAttribute, string>());
   const visibleRows = React.useMemo(() => {
-    if (!query.trim() || data.length <= FILTER_THRESHOLD)
-      return data.map((attr, i) => ({ attr, originalIndex: i }));
-    const lower = query.trim().toLowerCase();
-    return data.reduce<{ attr: IAttribute; originalIndex: number }[]>((acc, attr, i) => {
-      if (
-        attr.key.toLowerCase().includes(lower) ||
-        getFilterValue(attr.value).toLowerCase().includes(lower)
-      ) {
-        acc.push({ attr, originalIndex: i });
+    const rows = data.entries().map((row, index) => ({ row, index }));
+    if (!normalizedQuery) return rows;
+    return rows.filter(({ row }) => {
+      let text = searchTextCache.get(row);
+      if (text === undefined) {
+        text = toSearchText(row);
+        searchTextCache.set(row, text);
       }
-      return acc;
-    }, []);
-  }, [data, query]);
+      return text.includes(normalizedQuery);
+    });
+  }, [data, normalizedQuery, searchTextCache]);
 
   return (
     <div className="KeyValueTable u-simple-scrollbars">
-      {data.length > FILTER_THRESHOLD && (
+      {showFilter && (
         <div className="KeyValueTable--filterRow">
           <input
             className="KeyValueTable--filter"
@@ -160,10 +207,10 @@ export default function AttributesTable(props: AttributesTableProps) {
             onKeyDown={e => e.key === 'Escape' && setQuery('')}
             aria-label="Filter span attributes"
           />
-          {query.trim() && (
+          {normalizedQuery && (
             <>
               <span className="KeyValueTable--filterCount" aria-live="polite">
-                {visibleRows.length} of {data.length}
+                {visibleRows.length} of {data.size}
               </span>
               <button
                 type="button"
@@ -179,19 +226,36 @@ export default function AttributesTable(props: AttributesTableProps) {
       )}
       <table className="u-width-100">
         <tbody className="KeyValueTable--body">
-          {visibleRows.length === 0 && data.length > FILTER_THRESHOLD && query.trim() && (
+          {normalizedQuery && visibleRows.length === 0 && (
             <tr className="KeyValueTable--row">
               <td className="KeyValueTable--emptyState" colSpan={2}>
-                No attributes match &ldquo;{query}&rdquo;
+                No attributes match &ldquo;{deferredQuery.trim()}&rdquo;
               </td>
             </tr>
           )}
-          {visibleRows.map(({ attr: row, originalIndex }) => {
-            const i = originalIndex;
-            const jsonTable = formatValue(row.key, row.value);
-            const links = linksGetter ? linksGetter(data, i) : null;
+          {visibleRows.map(({ row, index: i }) => {
+            const isLarge = typeof row.value === 'string' && row.value.length >= LARGE_VALUE_THRESHOLD_CHARS;
+            const shouldDeferValue = isLarge && !expandedRows.has(row);
+            const { node: jsonTable, isJsonTree } = shouldDeferValue
+              ? { node: null, isJsonTree: false }
+              : formatValue(row.key, row.value);
+            const links = shouldDeferValue || !linksGetter ? null : linksGetter(data, i);
+
             let valueMarkup;
-            if (links?.length === 1) {
+            if (shouldDeferValue) {
+              const isExpanding = isPending && pendingRows.has(row);
+              valueMarkup = (
+                <button
+                  type="button"
+                  className="KeyValueTable--largeValuePlaceholder"
+                  disabled={isExpanding}
+                  onClick={() => expandRow(row)}
+                >
+                  {(row.value as string).length.toLocaleString()} chars —{' '}
+                  {isExpanding ? 'expanding…' : 'click to expand'}
+                </button>
+              );
+            } else if (links?.length === 1) {
               valueMarkup = (
                 <div>
                   <LinkValue href={links[0].url} title={links[0].text}>
@@ -229,27 +293,54 @@ export default function AttributesTable(props: AttributesTableProps) {
             ) : (
               row.key
             );
+            const copyButtons = !shouldDeferValue && (
+              <div className="KeyValueTable--copyContainer">
+                <CopyIcon
+                  className="KeyValueTable--copyIcon"
+                  copyText={String(row.value)}
+                  tooltipTitle="Copy value"
+                  buttonText="Copy"
+                />
+                <CopyIcon
+                  className="KeyValueTable--copyIcon"
+                  icon={<IoCopyOutline />}
+                  copyText={JSON.stringify(row, null, 2)}
+                  tooltipTitle="Copy JSON"
+                  buttonText="JSON"
+                />
+              </div>
+            );
+
+            // `i` is necessary in the key because row.key can repeat
+            const rowKey = `${row.key}-${i}`;
+
+            // A JsonView tree needs real width to be readable - squeezed into the
+            // key:value column split, deep/wide objects force horizontal scrolling
+            // inside a narrow cell. Give it the key on its own row and the tree a
+            // full-width row below, instead of sharing one row with the key column.
+            if (isJsonTree) {
+              return (
+                <React.Fragment key={rowKey}>
+                  <tr className="KeyValueTable--row KeyValueTable--row-jsonKey">
+                    <td className="KeyValueTable--keyColumn" colSpan={2}>
+                      {keyMarkup}
+                    </td>
+                  </tr>
+                  <tr className="KeyValueTable--row KeyValueTable--row-jsonValue">
+                    <td className="KeyValueTable--valueColumn KeyValueTable--valueColumn-full" colSpan={2}>
+                      {copyButtons}
+                      {valueMarkup}
+                    </td>
+                  </tr>
+                </React.Fragment>
+              );
+            }
 
             return (
-              // originalIndex in key guards against duplicate row.key values across the full list
-              <tr className="KeyValueTable--row" key={`${row.key}-${i}`}>
+              <tr className="KeyValueTable--row" key={rowKey}>
                 <td className="KeyValueTable--keyColumn">{keyMarkup}</td>
                 <td className="KeyValueTable--valueColumn">
-                  <div className="KeyValueTable--copyContainer">
-                    <CopyIcon
-                      className="KeyValueTable--copyIcon"
-                      copyText={String(row.value)}
-                      tooltipTitle="Copy value"
-                      buttonText="Copy"
-                    />
-                    <CopyIcon
-                      className="KeyValueTable--copyIcon"
-                      icon={<IoCopyOutline />}
-                      copyText={JSON.stringify(row, null, 2)}
-                      tooltipTitle="Copy JSON"
-                      buttonText="JSON"
-                    />
-                  </div>
+                  {copyButtons}
                   {valueMarkup}
                 </td>
               </tr>

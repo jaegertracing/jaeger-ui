@@ -9,9 +9,10 @@ import '@testing-library/jest-dom';
 
 import DetailState from './DetailState';
 import SpanDetail from './index';
-import { formatDuration, formatDurationCompact } from '../utils';
+import { formatDuration } from '../utils';
 import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
+import { makeAttributes } from '../../../../model/attributes';
 
 vi.mock('./AccordionAttributes', () => {
   return mockDefault(function MockAccordionAttributes({ label, onToggle }) {
@@ -110,8 +111,6 @@ describe('<SpanDetail>', () => {
   beforeEach(() => {
     formatDuration.mockReset();
     formatDuration.mockImplementation(duration => `${duration}ms`);
-    formatDurationCompact.mockReset();
-    formatDurationCompact.mockImplementation(duration => `compact:${duration}`);
 
     const rawTrace = traceGenerator.trace({ numberOfSpans: 1 });
     spanData = rawTrace.spans[0];
@@ -290,12 +289,6 @@ describe('<SpanDetail>', () => {
     expect(props.linksToggle).toHaveBeenCalledWith(span.spanID);
   });
 
-  it('uses formatDurationCompact for the duration overview item', () => {
-    render(<SpanDetail {...props} />);
-    expect(formatDurationCompact).toHaveBeenCalledWith(span.duration);
-    expect(screen.getByTestId('item-duration')).toHaveTextContent(`compact:${span.duration}`);
-  });
-
   it('renders copy icon with deep link URL containing the span ID parameter', () => {
     render(<SpanDetail {...props} />);
 
@@ -317,10 +310,23 @@ describe('<SpanDetail>', () => {
       expect(screen.queryByRole('tab')).not.toBeInTheDocument();
     });
 
-    it('shows the GenAI tab when the span has gen_ai.* attributes', () => {
+    it('shows the GenAI tab when the span has recognized gen_ai.* attributes', () => {
       isGenAISpanMock.mockReturnValue(true);
+      Object.defineProperty(span, 'attributes', {
+        value: makeAttributes([{ key: 'gen_ai.provider.name', value: 'openai' }]),
+      });
       render(<SpanDetail {...props} />);
       expect(screen.getByRole('tab', { name: 'GenAI' })).toBeInTheDocument();
+    });
+
+    it('does not show the GenAI tab when all gen_ai.* attributes are unrecognized', () => {
+      isGenAISpanMock.mockReturnValue(true);
+      Object.defineProperty(span, 'attributes', {
+        value: makeAttributes([{ key: 'gen_ai.unrecognized', value: 'low signal' }]),
+      });
+      render(<SpanDetail {...props} />);
+      expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+      expect(screen.getByTestId('accordian-keyvalues-tags')).toBeInTheDocument();
     });
 
     it('renders no tab bar for a non-GenAI span — content is shown directly', () => {
@@ -332,6 +338,9 @@ describe('<SpanDetail>', () => {
 
     it('defaults to the GenAI tab for a GenAI span, now that it has real content', () => {
       isGenAISpanMock.mockReturnValue(true);
+      Object.defineProperty(span, 'attributes', {
+        value: makeAttributes([{ key: 'gen_ai.provider.name', value: 'openai' }]),
+      });
       render(<SpanDetail {...props} />);
       expect(screen.getByRole('tab', { name: 'GenAI' })).toHaveAttribute('aria-selected', 'true');
       expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute('aria-selected', 'false');

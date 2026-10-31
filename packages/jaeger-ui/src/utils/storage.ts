@@ -4,15 +4,41 @@
 /**
  * Simple localStorage wrapper with JSON serialization.
  * Replaces the 'store' npm package.
+ *
+ * Every read and write goes through getItem/setItem/removeItem below, which swallow
+ * the errors localStorage raises when the browser blocks storage: touching it at all
+ * throws SecurityError where site data is disabled, and writing throws
+ * QuotaExceededError when the store is full. A lost preference is an acceptable
+ * outcome; a preference that breaks the page is not. Use these instead of reaching
+ * for localStorage directly.
  */
 
-function getRaw(key: string): unknown {
-  let value: string | null;
+function getItem(key: string): string | null {
   try {
-    value = localStorage.getItem(key);
+    return localStorage.getItem(key);
   } catch {
-    return undefined;
+    return null;
   }
+}
+
+function setItem(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Ignore
+  }
+}
+
+function removeItem(key: string): void {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // Ignore
+  }
+}
+
+function getRaw(key: string): unknown {
+  const value = getItem(key);
   if (value === null) return undefined;
   try {
     return JSON.parse(value);
@@ -43,9 +69,9 @@ function getBool(key: string, defaultValue?: boolean): boolean | undefined {
 }
 
 function getJSON<T = unknown>(key: string): T | undefined {
+  const value = getItem(key);
+  if (value === null) return undefined;
   try {
-    const value = localStorage.getItem(key);
-    if (value === null) return undefined;
     return JSON.parse(value) as T;
   } catch {
     return undefined;
@@ -53,18 +79,20 @@ function getJSON<T = unknown>(key: string): T | undefined {
 }
 
 function set(key: string, value: unknown): void {
+  let serialized: string | undefined;
   try {
-    const serialized = JSON.stringify(value);
-    if (serialized === undefined) {
-      localStorage.removeItem(key);
-    } else {
-      localStorage.setItem(key, serialized);
-    }
+    serialized = JSON.stringify(value);
   } catch {
-    // Ignore quota errors or non-serializable values
+    // A value that cannot be serialized (a cycle, a BigInt) is not storable.
+    return;
+  }
+  if (serialized === undefined) {
+    removeItem(key);
+  } else {
+    setItem(key, serialized);
   }
 }
 
-const storage = { getString, getNumber, getBool, getJSON, set };
+const storage = { getItem, setItem, removeItem, getString, getNumber, getBool, getJSON, set };
 
 export default storage;

@@ -3,12 +3,13 @@
 
 import { useMemo } from 'react';
 import { useQuery, useQueries, UseQueryResult } from '@tanstack/react-query';
-import JaegerAPI from '../api/jaeger';
+import { jaegerClient } from '../api/v3/client';
+import { parseOtelTrace } from '../api/v3/parser';
 import { fetchedState } from '../constants';
-import transformTraceData from '../model/transform-trace-data';
 import { queryClient } from '../query/app-query-client';
 import { FetchedTrace } from '../types';
 import type { IOtelTrace } from '../types/otel';
+import { toTraceIdHex } from '../utils/trace-id';
 
 const TRACE_QUERY_KEY = (id: string) => ['trace', id] as const;
 
@@ -21,27 +22,36 @@ export function populateTraceCache(trace: IOtelTrace): void {
   queryClient.setQueryData(TRACE_QUERY_KEY(trace.traceID), trace);
 }
 
-// TODO: staleTime: Infinity is incorrect — Jaeger returns partial traces if spans are still arriving
-// (availability over consistency). Instead, poll every 60s for up to 5 minutes after first load,
-// then stop. Use meta.firstFetchedAt (stamped at query creation, not updated on refetch) to track
-// elapsed time: refetchInterval: q => Date.now() - (q.meta.firstFetchedAt as number) < 5*60*1000 ? 60_000 : false
-// gcTime controls eviction from memory once no component is using the trace.
+// Jaeger may return a partial trace. The user can reload it from the Incomplete warning;
+// replacing trace data automatically would disrupt the current trace view.
+export function reloadBackendTrace(traceId: string): Promise<void> {
+  const canonicalId = getCachedTrace(traceId)?.traceID ?? traceId;
+  return queryClient.invalidateQueries({
+    refetchType: 'active',
+    predicate: query =>
+      query.queryKey[0] === 'trace' &&
+      (query.queryKey[1] === traceId ||
+        query.queryKey[1] === canonicalId ||
+        (query.state.data as IOtelTrace | undefined)?.traceID === canonicalId),
+  });
+}
+
 export function useTrace(traceId: string): UseQueryResult<IOtelTrace> {
   return useQuery({
     queryKey: TRACE_QUERY_KEY(traceId),
-    queryFn: async () => {
-      const response = await JaegerAPI.fetchTrace(traceId);
-      const data = transformTraceData(response.data[0]);
-      if (!data) {
+    queryFn: async ({ signal }) => {
+      const response = await jaegerClient.fetchTrace(toTraceIdHex(traceId), signal);
+      const otel = parseOtelTrace(response);
+      if (!otel) {
         throw new Error('Invalid trace data received.');
       }
-      const otel = data.asOtelTrace();
       if (otel.traceID !== traceId) {
         queryClient.setQueryData(TRACE_QUERY_KEY(otel.traceID), otel);
       }
       return otel;
     },
     staleTime: Infinity,
+    structuralSharing: false,
   });
 }
 
@@ -52,19 +62,19 @@ export function useTraces(ids: string[]): Map<string, FetchedTrace> {
   const results = useQueries({
     queries: ids.map(id => ({
       queryKey: TRACE_QUERY_KEY(id),
-      queryFn: async () => {
-        const response = await JaegerAPI.fetchTrace(id);
-        const data = transformTraceData(response.data[0]);
-        if (!data) {
+      queryFn: async ({ signal }) => {
+        const response = await jaegerClient.fetchTrace(toTraceIdHex(id), signal);
+        const otel = parseOtelTrace(response);
+        if (!otel) {
           throw new Error('Invalid trace data received.');
         }
-        const otel = data.asOtelTrace();
         if (otel.traceID !== id) {
           queryClient.setQueryData(TRACE_QUERY_KEY(otel.traceID), otel);
         }
         return otel;
       },
       staleTime: Infinity,
+      structuralSharing: false,
     })),
   });
 
@@ -72,7 +82,7 @@ export function useTraces(ids: string[]): Map<string, FetchedTrace> {
   // signals for each result: the data object reference (stable when unchanged), the
   // error reference, and the status string. This avoids rebuilding the Map on renders
   // where no query result actually changed.
-  // eslint-disable-next-line react-x/exhaustive-deps
+  // oxlint-disable-next-line react/exhaustive-deps
   return useMemo(
     () =>
       new Map(
@@ -90,7 +100,7 @@ export function useTraces(ids: string[]): Map<string, FetchedTrace> {
           return [id, { id }] as [string, FetchedTrace];
         })
       ),
-    // eslint-disable-next-line react-x/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps
     [...ids, ...results.map(r => r.status), ...results.map(r => r.data), ...results.map(r => r.error)]
   );
 }

@@ -2,11 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, cleanup, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
-import AttributesTable, { LinkValue, FILTER_THRESHOLD } from './AttributesTable';
+import AttributesTable, { FILTER_THRESHOLD, LinkValue } from './AttributesTable';
+import { makeAttributes } from '../../../../model/attributes';
 
 vi.mock('../../../common/CopyIcon', () => {
   return mockDefault(function CopyIcon({ copyText, tooltipTitle, buttonText, icon, className }) {
@@ -108,7 +109,7 @@ describe('<AttributesTable>', () => {
   ];
 
   it('renders KeyValueTable container with correct structure', () => {
-    render(<AttributesTable data={data} />);
+    render(<AttributesTable data={makeAttributes(data)} />);
 
     const container = document.querySelector('.KeyValueTable.u-simple-scrollbars');
     expect(container).toBeInTheDocument();
@@ -118,10 +119,14 @@ describe('<AttributesTable>', () => {
   });
 
   it('renders table row for each data element with correct key columns', () => {
-    render(<AttributesTable data={data} />);
+    render(<AttributesTable data={makeAttributes(data)} />);
 
+    // A JsonView tree (the 'jsonkey' entry) renders as two rows - a key-only row and
+    // a full-width value row below it - instead of sharing one row with the key
+    // column, so the total is data.length plus one extra row for that single
+    // JSON-tree item.
     const rows = screen.getAllByRole('row');
-    expect(rows).toHaveLength(data.length);
+    expect(rows).toHaveLength(data.length + 1);
 
     data.forEach(item => {
       const keyCell = screen.getByText(item.key);
@@ -129,8 +134,34 @@ describe('<AttributesTable>', () => {
     });
   });
 
+  it('renders a JSON-tree value on its own full-width row, separate from the key row', () => {
+    render(<AttributesTable data={makeAttributes(data)} />);
+
+    const keyCell = screen.getByText('jsonkey');
+    const keyRow = keyCell.closest('tr');
+    expect(keyRow).toHaveClass('KeyValueTable--row-jsonKey');
+    expect(keyCell).toHaveAttribute('colSpan', '2');
+    // Only the key sits in this row - no value content alongside it.
+    expect(keyRow).not.toHaveTextContent('world');
+
+    const valueRow = keyRow.nextElementSibling;
+    expect(valueRow).toHaveClass('KeyValueTable--row-jsonValue');
+    const valueCell = valueRow.querySelector('.KeyValueTable--valueColumn-full');
+    expect(valueCell).toHaveAttribute('colSpan', '2');
+    expect(valueCell).toHaveTextContent('world');
+  });
+
+  it('keeps a non-JSON-tree value sharing one row with its key, unchanged from before', () => {
+    render(<AttributesTable data={makeAttributes(data)} />);
+
+    const keyCell = screen.getByText('span.kind');
+    const row = keyCell.closest('tr');
+    expect(row).not.toHaveClass('KeyValueTable--row-jsonKey');
+    expect(row).toHaveTextContent('client');
+  });
+
   it('renders expected text content for each span value', () => {
-    render(<AttributesTable data={data} />);
+    render(<AttributesTable data={makeAttributes(data)} />);
 
     const valueElements = document.querySelectorAll('.ub-inline-block');
     expect(valueElements).toHaveLength(data.length);
@@ -146,13 +177,13 @@ describe('<AttributesTable>', () => {
   it('renders single link with correct href and title when linksGetter returns one link', () => {
     render(
       <AttributesTable
-        data={data}
+        data={makeAttributes(data)}
         linksGetter={(array, i) =>
-          array[i].key === 'span.kind'
+          array.entries()[i].key === 'span.kind'
             ? [
                 {
-                  url: `http://example.com/?kind=${encodeURIComponent(array[i].value)}`,
-                  text: `More info about ${array[i].value}`,
+                  url: `http://example.com/?kind=${encodeURIComponent(array.entries()[i].value)}`,
+                  text: `More info about ${array.entries()[i].value}`,
                 },
               ]
             : []
@@ -172,12 +203,18 @@ describe('<AttributesTable>', () => {
   it('renders dropdown with multiple links when linksGetter returns multiple links', () => {
     const { container } = render(
       <AttributesTable
-        data={data}
+        data={makeAttributes(data)}
         linksGetter={(array, i) =>
-          array[i].key === 'span.kind'
+          array.entries()[i].key === 'span.kind'
             ? [
-                { url: `http://example.com/1?kind=${encodeURIComponent(array[i].value)}`, text: 'Example 1' },
-                { url: `http://example.com/2?kind=${encodeURIComponent(array[i].value)}`, text: 'Example 2' },
+                {
+                  url: `http://example.com/1?kind=${encodeURIComponent(array.entries()[i].value)}`,
+                  text: 'Example 1',
+                },
+                {
+                  url: `http://example.com/2?kind=${encodeURIComponent(array.entries()[i].value)}`,
+                  text: 'Example 2',
+                },
               ]
             : []
         }
@@ -197,181 +234,14 @@ describe('<AttributesTable>', () => {
 
   it('handles invalid JSON strings gracefully and returns raw value', () => {
     const brokenData = [{ key: 'brokenJSON', value: '{"complete": "test"' }];
-    render(<AttributesTable data={brokenData} />);
+    render(<AttributesTable data={makeAttributes(brokenData)} />);
 
     const valueCell = screen.getByText('{"complete": "test"');
     expect(valueCell).toBeInTheDocument();
   });
 
-  describe('attribute filter', () => {
-    const manyAttrs = Array.from({ length: 12 }, (_, i) => ({
-      key: `key.${i}`,
-      value: `value-${i}`,
-    }));
-
-    let user;
-
-    beforeEach(() => {
-      user = userEvent.setup();
-    });
-
-    afterEach(() => {
-      cleanup();
-    });
-
-    it(`does not render filter input when data has ${FILTER_THRESHOLD} or fewer attributes`, () => {
-      const fewAttrs = manyAttrs.slice(0, FILTER_THRESHOLD);
-      render(<AttributesTable data={fewAttrs} />);
-      expect(screen.queryByRole('textbox', { name: /filter span attributes/i })).not.toBeInTheDocument();
-    });
-
-    it(`renders filter input when data has more than ${FILTER_THRESHOLD} attributes`, () => {
-      render(<AttributesTable data={manyAttrs} />);
-      expect(screen.getByRole('textbox', { name: /filter span attributes/i })).toBeInTheDocument();
-    });
-
-    it('filters rows by key when query matches', async () => {
-      render(<AttributesTable data={manyAttrs} />);
-      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
-
-      await user.type(input, 'key.1');
-
-      // key.1, key.10, key.11 match
-      const rows = screen.getAllByRole('row');
-      expect(rows.length).toBe(3);
-    });
-
-    it('filters rows by value when query matches', async () => {
-      render(<AttributesTable data={manyAttrs} />);
-      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
-
-      await user.type(input, 'value-0');
-
-      const rows = screen.getAllByRole('row');
-      expect(rows.length).toBe(1);
-      expect(screen.getByText('key.0')).toBeInTheDocument();
-    });
-
-    it('filters rows by value when the value is an object (JSON-stringified, not "[object Object]")', async () => {
-      const attrsWithObject = [...manyAttrs, { key: 'gen_ai.tool.call.arguments', value: { city: 'Paris' } }];
-      render(<AttributesTable data={attrsWithObject} />);
-      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
-
-      await user.type(input, 'Paris');
-
-      const rows = screen.getAllByRole('row');
-      expect(rows.length).toBe(1);
-      expect(screen.getByText('gen_ai.tool.call.arguments')).toBeInTheDocument();
-    });
-
-    it('shows N of M count label when filter is active', async () => {
-      render(<AttributesTable data={manyAttrs} />);
-      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
-
-      await user.type(input, 'key.1');
-
-      expect(screen.getByText('3 of 12')).toBeInTheDocument();
-    });
-
-    it('hides count label when filter is empty', () => {
-      render(<AttributesTable data={manyAttrs} />);
-      expect(screen.queryByText(/of 12/)).not.toBeInTheDocument();
-    });
-
-    it('shows all rows when filter is cleared via the × button', async () => {
-      render(<AttributesTable data={manyAttrs} />);
-      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
-
-      await user.type(input, 'key.0');
-      expect(screen.getAllByRole('row')).toHaveLength(1);
-
-      await user.click(screen.getByRole('button', { name: /clear filter/i }));
-
-      expect(screen.getAllByRole('row')).toHaveLength(manyAttrs.length);
-      expect(input).toHaveValue('');
-    });
-
-    it('shows all rows when filter is cleared via the Escape key', async () => {
-      render(<AttributesTable data={manyAttrs} />);
-      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
-
-      await user.type(input, 'key.0');
-      expect(screen.getAllByRole('row')).toHaveLength(1);
-
-      await user.keyboard('{Escape}');
-
-      expect(screen.getAllByRole('row')).toHaveLength(manyAttrs.length);
-      expect(input).toHaveValue('');
-    });
-
-    it('renders an empty-state message when no attributes match the query', async () => {
-      render(<AttributesTable data={manyAttrs} />);
-      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
-
-      await user.type(input, 'zzz');
-
-      expect(screen.queryAllByRole('row')).toHaveLength(1);
-      expect(screen.getByText(/no attributes match/i)).toBeInTheDocument();
-      expect(screen.getByText(/zzz/)).toBeInTheDocument();
-    });
-
-    it('does not render the empty-state message when the filter input itself is not shown', () => {
-      // Simulates data.length dropping to/below FILTER_THRESHOLD (e.g. navigating to a span
-      // with few or zero attributes) while a query happens to be non-empty in local state --
-      // the filter input isn't rendered below the threshold, so there's no way to see or clear
-      // that query, and an empty-state message would be misleading for a span with 0 attributes.
-      const { rerender } = render(<AttributesTable data={manyAttrs} />);
-      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
-      fireEvent.change(input, { target: { value: 'zzz' } });
-
-      rerender(<AttributesTable data={[]} />);
-
-      expect(screen.queryByRole('textbox', { name: /filter span attributes/i })).not.toBeInTheDocument();
-      expect(screen.queryByText(/no attributes match/i)).not.toBeInTheDocument();
-    });
-
-    it('passes the original data index to linksGetter when rows are filtered', async () => {
-      const linksGetter = vi.fn().mockReturnValue([]);
-      render(<AttributesTable data={manyAttrs} linksGetter={linksGetter} />);
-      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
-
-      await user.type(input, 'value-5');
-
-      // After typing 'value-5', exactly one row is visible
-      expect(screen.getAllByRole('row')).toHaveLength(1);
-      // The final render's linksGetter call must pass originalIndex 5, not the filtered position
-      const lastCall = linksGetter.mock.calls.at(-1);
-      expect(lastCall[1]).toBe(5);
-    });
-
-    it('is case-insensitive', async () => {
-      render(<AttributesTable data={manyAttrs} />);
-      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
-
-      await user.type(input, 'KEY.0');
-
-      const rows = screen.getAllByRole('row');
-      expect(rows.length).toBe(1);
-    });
-
-    it('shows all rows when data shrinks below threshold while a query is active', async () => {
-      const { rerender } = render(<AttributesTable data={manyAttrs} />);
-      const input = screen.getByRole('textbox', { name: /filter span attributes/i });
-
-      await user.type(input, 'key.0');
-      expect(screen.getAllByRole('row')).toHaveLength(1);
-
-      // shrink data below threshold — filter input disappears, stale query must not hide rows
-      const fewAttrs = manyAttrs.slice(0, Math.floor(FILTER_THRESHOLD / 2));
-      rerender(<AttributesTable data={fewAttrs} />);
-
-      expect(screen.queryByRole('textbox', { name: /filter span attributes/i })).not.toBeInTheDocument();
-      expect(screen.getAllByRole('row')).toHaveLength(fewAttrs.length);
-    });
-  });
-
   it('renders CopyIcon components with correct copyText properties for each data element', () => {
-    render(<AttributesTable data={data} />);
+    render(<AttributesTable data={makeAttributes(data)} />);
 
     const copyIcons = screen.getAllByTestId('copy-icon');
     expect(copyIcons).toHaveLength(2 * data.length);
@@ -386,5 +256,218 @@ describe('<AttributesTable>', () => {
         expect(copyIcon).toHaveAttribute('data-tooltip-title', 'Copy JSON');
       }
     });
+  });
+
+  describe('large values', () => {
+    const LARGE_VALUE = 'x'.repeat(10_001);
+
+    it('renders a placeholder button instead of full content for large string values', () => {
+      const largeData = makeAttributes([{ key: 'big_attr', value: LARGE_VALUE }]);
+      render(<AttributesTable data={largeData} />);
+
+      // Should show a collapsed placeholder, not the full value
+      expect(screen.getByRole('button', { name: /click to expand/i })).toBeInTheDocument();
+      // Full value should not be in the DOM
+      expect(screen.queryByText(LARGE_VALUE)).not.toBeInTheDocument();
+    });
+
+    it('uses the normal JSON, copy, and link layout after expansion', () => {
+      const largeJson = JSON.stringify({ hello: 'world', message: LARGE_VALUE });
+      const largeData = makeAttributes([{ key: 'big_attr', value: largeJson }]);
+      render(
+        <AttributesTable
+          data={largeData}
+          linksGetter={() => [{ url: 'https://example.com', text: 'More info' }]}
+        />
+      );
+
+      expect(screen.queryByTestId('copy-icon')).not.toBeInTheDocument();
+      expect(screen.queryByTitle('More info')).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: /click to expand/i }));
+
+      const keyRow = screen.getByText('big_attr').closest('tr');
+      expect(keyRow).toHaveClass('KeyValueTable--row-jsonKey');
+      expect(keyRow.nextElementSibling).toHaveClass('KeyValueTable--row-jsonValue');
+      expect(screen.getByTitle('More info')).toHaveAttribute('href', 'https://example.com');
+      expect(screen.getAllByTestId('copy-icon')).toHaveLength(2);
+    });
+
+    it('keeps replacement attributes collapsed', () => {
+      const initialData = makeAttributes([{ key: 'first', value: LARGE_VALUE }]);
+      const { rerender } = render(<AttributesTable data={initialData} />);
+
+      fireEvent.click(screen.getByRole('button', { name: /click to expand/i }));
+      expect(screen.queryByRole('button', { name: /click to expand/i })).not.toBeInTheDocument();
+
+      rerender(<AttributesTable data={makeAttributes([{ key: 'second', value: LARGE_VALUE }])} />);
+      expect(screen.getByRole('button', { name: /click to expand/i })).toBeInTheDocument();
+    });
+  });
+});
+
+// AttributesTable's rich-JSON rendering is driven entirely by whether a value parses
+// as JSON - it has no notion of "span" vs "span event" vs "resource" (all three route
+// through this same component: span.attributes -> Tags, resource.attributes ->
+// Process, event.attributes -> Logs), and it has no notion of "gen_ai.*" either. Per
+// yurishkuro's review on #4335: a test that only exercises a gen_ai.* key would wrongly
+// suggest the rich rendering is conditional on the key being gen_ai.* content, when
+// it's actually unconditional - any key with a JSON-shaped value gets the same
+// treatment, gen_ai or not. The 'abcd'/unrelated-key case below is the control that
+// makes that explicit: identical JSON payload, unrelated key, same rendering.
+describe('<AttributesTable> - JSON-shaped values render richly regardless of key or level', () => {
+  const jsonPayload = [
+    {
+      role: 'user',
+      parts: [{ type: 'text', content: 'Hello, probe message' }],
+    },
+  ];
+
+  it('renders a gen_ai.* key with a JSON payload as a JSON tree, not raw text', () => {
+    const data = [{ key: 'gen_ai.input.messages', value: JSON.stringify(jsonPayload) }];
+    render(<AttributesTable data={makeAttributes(data)} />);
+
+    const keyCell = screen.getByText('gen_ai.input.messages');
+    const keyRow = keyCell.closest('tr');
+    expect(keyRow).toHaveClass('KeyValueTable--row-jsonKey');
+
+    const valueRow = keyRow.nextElementSibling;
+    expect(valueRow).toHaveClass('KeyValueTable--row-jsonValue');
+    expect(valueRow).toHaveTextContent('user');
+    expect(valueRow).toHaveTextContent('Hello, probe message');
+  });
+
+  it('renders an unrelated, non-gen_ai key with the same JSON payload identically - the rendering is not gen_ai-specific', () => {
+    const data = [{ key: 'abcd', value: JSON.stringify(jsonPayload) }];
+    render(<AttributesTable data={makeAttributes(data)} />);
+
+    const keyCell = screen.getByText('abcd');
+    const keyRow = keyCell.closest('tr');
+    expect(keyRow).toHaveClass('KeyValueTable--row-jsonKey');
+
+    const valueRow = keyRow.nextElementSibling;
+    expect(valueRow).toHaveClass('KeyValueTable--row-jsonValue');
+    expect(valueRow).toHaveTextContent('user');
+    expect(valueRow).toHaveTextContent('Hello, probe message');
+  });
+});
+
+describe('<AttributesTable> - attribute filter', () => {
+  const manyAttrs = Array.from({ length: 12 }, (_, i) => ({
+    key: `key.${i}`,
+    value: `value-${i}`,
+  }));
+  const getFilter = () => screen.getByRole('textbox', { name: /filter span attributes/i });
+  const queryFilter = () => screen.queryByRole('textbox', { name: /filter span attributes/i });
+
+  let user;
+
+  beforeEach(() => {
+    user = userEvent.setup();
+  });
+
+  it(`does not render the filter for ${FILTER_THRESHOLD} or fewer attributes`, () => {
+    render(<AttributesTable data={makeAttributes(manyAttrs.slice(0, FILTER_THRESHOLD))} />);
+    expect(queryFilter()).not.toBeInTheDocument();
+  });
+
+  it(`renders the filter for more than ${FILTER_THRESHOLD} attributes`, () => {
+    render(<AttributesTable data={makeAttributes(manyAttrs)} />);
+    expect(getFilter()).toBeInTheDocument();
+    expect(screen.queryByText(/of 12/)).not.toBeInTheDocument();
+  });
+
+  it('filters rows by key, case-insensitively, and shows the match count', async () => {
+    render(<AttributesTable data={makeAttributes(manyAttrs)} />);
+    await user.type(getFilter(), 'KEY.1');
+
+    // key.1, key.10 and key.11 match
+    expect(screen.getAllByRole('row')).toHaveLength(3);
+    expect(screen.getByText('3 of 12')).toBeInTheDocument();
+  });
+
+  it('filters rows by value', async () => {
+    render(<AttributesTable data={makeAttributes(manyAttrs)} />);
+    await user.type(getFilter(), 'value-0');
+
+    expect(screen.getAllByRole('row')).toHaveLength(1);
+    expect(screen.getByText('key.0')).toBeInTheDocument();
+  });
+
+  it('matches inside object values instead of "[object Object]"', async () => {
+    const data = [...manyAttrs, { key: 'gen_ai.tool.call.arguments', value: { city: 'Paris' } }];
+    render(<AttributesTable data={makeAttributes(data)} />);
+    await user.type(getFilter(), 'paris');
+
+    expect(screen.getByText('gen_ai.tool.call.arguments')).toBeInTheDocument();
+    expect(screen.queryByText('key.0')).not.toBeInTheDocument();
+  });
+
+  it('matches large values without expanding them', async () => {
+    const data = [...manyAttrs, { key: 'gen_ai.prompt', value: `${'x'.repeat(10_000)}needle` }];
+    render(<AttributesTable data={makeAttributes(data)} />);
+    await user.type(getFilter(), 'needle');
+
+    expect(screen.getByText('gen_ai.prompt')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /click to expand/i })).toBeInTheDocument();
+    expect(screen.getByText('1 of 13')).toBeInTheDocument();
+  });
+
+  it('clears the filter with the clear button and with Escape', async () => {
+    render(<AttributesTable data={makeAttributes(manyAttrs)} />);
+    const input = getFilter();
+
+    await user.type(input, 'key.0');
+    expect(screen.getAllByRole('row')).toHaveLength(1);
+    await user.click(screen.getByRole('button', { name: /clear filter/i }));
+    expect(screen.getAllByRole('row')).toHaveLength(manyAttrs.length);
+    expect(input).toHaveValue('');
+
+    await user.type(input, 'key.0');
+    expect(screen.getAllByRole('row')).toHaveLength(1);
+    await user.keyboard('{Escape}');
+    expect(screen.getAllByRole('row')).toHaveLength(manyAttrs.length);
+    expect(input).toHaveValue('');
+  });
+
+  it('shows an empty state when nothing matches', async () => {
+    render(<AttributesTable data={makeAttributes(manyAttrs)} />);
+    await user.type(getFilter(), 'zzz');
+
+    expect(screen.getAllByRole('row')).toHaveLength(1);
+    expect(screen.getByText(/no attributes match/i)).toHaveTextContent('zzz');
+  });
+
+  it('resets the filter when the attributes change to another span', async () => {
+    const { rerender } = render(<AttributesTable data={makeAttributes(manyAttrs)} />);
+    await user.type(getFilter(), 'key.0');
+    expect(screen.getAllByRole('row')).toHaveLength(1);
+
+    const otherSpanAttrs = manyAttrs.map(({ key }) => ({ key, value: 'other' }));
+    rerender(<AttributesTable data={makeAttributes(otherSpanAttrs)} />);
+
+    expect(getFilter()).toHaveValue('');
+    expect(screen.getAllByRole('row')).toHaveLength(otherSpanAttrs.length);
+  });
+
+  it('shows every row when the data drops below the threshold', async () => {
+    const { rerender } = render(<AttributesTable data={makeAttributes(manyAttrs)} />);
+    fireEvent.change(getFilter(), { target: { value: 'zzz' } });
+
+    rerender(<AttributesTable data={makeAttributes(manyAttrs.slice(0, 3))} />);
+
+    expect(queryFilter()).not.toBeInTheDocument();
+    expect(screen.queryByText(/no attributes match/i)).not.toBeInTheDocument();
+    expect(screen.getAllByRole('row')).toHaveLength(3);
+  });
+
+  it('passes the original index to linksGetter for filtered rows', async () => {
+    const data = makeAttributes(manyAttrs);
+    const linksGetter = vi.fn().mockReturnValue([]);
+    render(<AttributesTable data={data} linksGetter={linksGetter} />);
+    await user.type(getFilter(), 'value-5');
+
+    expect(screen.getAllByRole('row')).toHaveLength(1);
+    expect(linksGetter).toHaveBeenLastCalledWith(data, 5);
   });
 });

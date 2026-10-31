@@ -72,7 +72,6 @@ vi.mock('../common/utils.css', () => ({}));
 vi.mock('antd/dist/reset.css', () => ({}));
 vi.mock('./index.css', () => ({}));
 
-import JaegerAPI, { DEFAULT_API_ROOT } from '../../api/jaeger';
 import processScripts from '../../utils/config/process-scripts';
 
 // Module-level initialization happens at import time
@@ -92,11 +91,17 @@ describe('JaegerUIApp', () => {
     mockHistory = createMockHistory();
   });
 
-  // Module-level initialization tests - these run once when module is imported
-  it('should initialize API and process scripts at module load time', () => {
-    // Verify it was called exactly once during module initialization
-    expect(JaegerAPI.apiRoot).toBe(DEFAULT_API_ROOT);
-    expect(processScripts).toHaveBeenCalledTimes(1);
+  // Vitest clears mock call history before each test, so the calls made when
+  // this file first imported ./index are no longer visible. Reset the module
+  // registry and import it again to observe the initialization inside the test.
+  it('should initialize API and process scripts at module load time', async () => {
+    vi.resetModules();
+    const freshApi = await import('../../api/jaeger');
+    const freshProcessScripts = await import('../../utils/config/process-scripts');
+    await import('./index');
+
+    expect(freshApi.default.apiRoot).toBe(freshApi.DEFAULT_API_ROOT);
+    expect(freshProcessScripts.default).toHaveBeenCalledTimes(1);
   });
 
   it('should render Page wrapper', async () => {
@@ -164,8 +169,8 @@ describe('JaegerUIApp', () => {
         <JaegerUIApp />
       </MemoryRouter>
     );
-    // processScripts was called once at module load, not on each render
-    expect(processScripts).toHaveBeenCalledTimes(1);
+    // processScripts runs at module load, so rendering must not call it again
+    expect(processScripts).not.toHaveBeenCalled();
   });
 
   it('should render PlexusDemo for /plexus-demo (DEV mode is always true in Vitest)', async () => {

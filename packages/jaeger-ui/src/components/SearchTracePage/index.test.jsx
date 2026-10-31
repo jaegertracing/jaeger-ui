@@ -59,12 +59,14 @@ vi.mock('../../hooks/useTraceDiscovery', () => ({
 }));
 
 import React from 'react';
-import { render, act, fireEvent, screen, waitFor } from '@testing-library/react';
+import { render, act, fireEvent, screen, waitFor, renderHook } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Provider } from 'react-redux';
 import { SearchTracePageImpl as SearchTracePage } from './index';
 import { useServices } from '../../hooks/useTraceDiscovery';
+import { ALL_SERVICES } from '../../constants/search-form';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
+import { useClearUploadedTraces } from './useUploadedTraces';
 import { useSearchPanelStore, LS_WIDTH_KEY, LS_COLLAPSED_KEY } from './search-panel-store';
 import { store as globalStore } from '../../utils/configure-store';
 
@@ -125,6 +127,44 @@ describe('<SearchTracePage>', () => {
     expect(query.service).toBe('svc-a');
   });
 
+  describe('an all-services link on a backend that cannot serve it', () => {
+    const allServicesUrl = [`/search?service=${ALL_SERVICES}&start=1&end=2`];
+
+    it('skips the search and explains why', () => {
+      render(
+        <AllProvider initialEntries={allServicesUrl}>
+          <SearchTracePage />
+        </AllProvider>
+      );
+
+      // The query still reaches the hook — the URL is left intact so the link keeps
+      // working elsewhere — but the fetch is suppressed rather than going out unscoped.
+      const [query, options] = useSearchTracesMock.mock.calls[0];
+      expect(query.service).toBe(ALL_SERVICES);
+      expect(options).toEqual({ skip: true });
+      expect(screen.getByText(/does not support/)).toBeInTheDocument();
+    });
+
+    it('runs the search when the backend advertises the capability', () => {
+      getConfigMock.mockReturnValue({
+        disableFileUploadControl: false,
+        backendCapabilities: { searchWithoutServiceName: true },
+        tracking: { gaID: null, trackErrors: false, customWebAnalytics: null },
+      });
+
+      render(
+        <AllProvider initialEntries={allServicesUrl}>
+          <SearchTracePage />
+        </AllProvider>
+      );
+
+      const [query, options] = useSearchTracesMock.mock.calls[0];
+      expect(query.service).toBe(ALL_SERVICES);
+      expect(options).toEqual({ skip: false });
+      expect(screen.queryByText(/does not support/)).not.toBeInTheDocument();
+    });
+  });
+
   it('passes null query to useSearchTraces when no service is in URL params', () => {
     render(
       <AllProvider>
@@ -166,6 +206,28 @@ describe('<SearchTracePage>', () => {
       </AllProvider>
     );
     expect(container.querySelector('.js-test-error-message')).toBeInTheDocument();
+  });
+
+  it('shows the HTTP details of a failed search', () => {
+    useSearchTracesMock.mockReturnValue({
+      data: undefined,
+      isFetching: false,
+      error: Object.assign(new Error('Failed to fetch trace summaries: 400 Bad Request'), {
+        httpStatus: 400,
+        httpUrl: '/api/v3/trace-summaries',
+        httpQuery: 'query.serviceName=svc-a',
+        httpBody: 'invalid duration',
+      }),
+    });
+    const { container } = render(
+      <AllProvider initialEntries={['/search?service=svc-a']}>
+        <SearchTracePage />
+      </AllProvider>
+    );
+    const details = container.querySelector('[data-testid="ErrorMessage--details"]');
+    expect(details).toHaveTextContent('/api/v3/trace-summaries');
+    expect(details).toHaveTextContent('query.serviceName=svc-a');
+    expect(details).toHaveTextContent('invalid duration');
   });
 
   it('shows the logo on homepage (no URL params)', () => {
@@ -476,31 +538,21 @@ describe('<SearchTracePage> handleTracesLoaded and diffCohort', () => {
     const summary = { traceID: 'uploaded-1' };
     queryClient.setQueryData(['uploadedSummaries'], [summary]);
     queryClient.setQueryData(['uploadedRawTraces'], [{ traceID: 'uploaded-1' }]);
+    queryClient.setQueryData(['trace', 'uploaded-1'], { traceID: 'uploaded-1' });
+    queryClient.setQueryData(['trace', 'backend-1'], { traceID: 'backend-1' });
+
+    const { result } = renderHook(() => useClearUploadedTraces(), {
+      wrapper: ({ children }) => <AllProvider>{children}</AllProvider>,
+    });
 
     // Simulate what SearchForm does: invoke the callback returned by useClearUploadedTraces
     await act(async () => {
-      queryClient.setQueryData(['uploadedSummaries'], []);
-      queryClient.setQueryData(['uploadedRawTraces'], []);
+      result.current();
     });
 
     expect(queryClient.getQueryData(['uploadedSummaries'])).toEqual([]);
     expect(queryClient.getQueryData(['uploadedRawTraces'])).toEqual([]);
-  });
-
-  it('handleSortChange updates sortBy passed to SearchResults', async () => {
-    render(
-      <AllProvider>
-        <SearchTracePage />
-      </AllProvider>
-    );
-    expect(lastSearchResultsProps).not.toBeNull();
-    const initialSortBy = lastSearchResultsProps.sortBy;
-
-    await act(async () => {
-      lastSearchResultsProps.handleSortChange('SHORTEST_FIRST');
-    });
-
-    expect(lastSearchResultsProps.sortBy).toBe('SHORTEST_FIRST');
-    expect(lastSearchResultsProps.sortBy).not.toBe(initialSortBy);
+    expect(queryClient.getQueryData(['trace', 'uploaded-1'])).toBeUndefined();
+    expect(queryClient.getQueryData(['trace', 'backend-1'])).toBeDefined();
   });
 });
