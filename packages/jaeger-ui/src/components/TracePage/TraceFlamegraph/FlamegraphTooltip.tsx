@@ -6,6 +6,8 @@ import React from 'react';
 import { formatDuration } from '../../../utils/date';
 import { Microseconds } from '../../../types/units';
 
+export const TOOLTIP_CURSOR_OFFSET_PX = 10;
+
 type Props = {
   x: number;
   y: number;
@@ -13,14 +15,19 @@ type Props = {
   value: number;
   count: number;
   rootValue: number;
+  ref?: React.Ref<HTMLDivElement>;
 };
 
-const FlamegraphTooltip = ({ x, y, name, value, count, rootValue }: Props) => {
+const FlamegraphTooltip = ({ x, y, name, value, count, rootValue, ref }: Props) => {
   const pct = rootValue > 0 ? ((value / rootValue) * 100).toFixed(2) : '0';
   const dur = formatDuration(value as Microseconds);
 
   return (
-    <div className="Flamegraph-tooltip" style={{ left: x + 10, top: y + 10 }}>
+    <div
+      ref={ref}
+      className="Flamegraph-tooltip"
+      style={{ left: x + TOOLTIP_CURSOR_OFFSET_PX, top: y + TOOLTIP_CURSOR_OFFSET_PX }}
+    >
       <div className="Flamegraph-tooltip--title">{name}</div>
       <table className="Flamegraph-tooltip--table">
         <tbody>
