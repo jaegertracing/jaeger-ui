@@ -4,12 +4,11 @@
 import * as React from 'react';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import cx from 'classnames';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import _isEqual from 'lodash/isEqual';
 
 import memoizeOne from 'memoize-one';
 import type { Location, NavigateFunction } from 'react-router-dom';
-import { actions } from './duck';
 import { makeCriticalPathContext } from './criticalPath';
 import generateRowStates, { RowState } from './generateRowStates';
 import ListView, { ListViewRef } from './ListView';
@@ -35,6 +34,14 @@ import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan, IOtelTrace, IAttributes, IEvent } from '../../../types/otel';
 import TTraceTimeline from '../../../types/TTraceTimeline';
 import { getSelectedSpanID, useLayoutPrefsStore, useTraceTimelineStore } from './store';
+import {
+  trackChildrenToggle,
+  trackDetailLogItemToggle,
+  trackDetailLogsToggle,
+  trackDetailProcessToggle,
+  trackDetailTagsToggle,
+  trackDetailToggle,
+} from './store.track';
 
 import './VirtualizedTraceView.css';
 import updateUiFind from '../../../utils/update-ui-find';
@@ -68,7 +75,6 @@ type TDispatchProps = {
   detailProcessToggle: (spanID: string) => void;
   detailTagsToggle: (spanID: string) => void;
   detailToggle: (spanID: string) => void;
-  setSpanNameColumnWidth: (width: number) => void;
   setTrace: (trace: IOtelTrace | TNil, uiFind: string | TNil) => void;
   focusUiFindMatches: (trace: IOtelTrace, uiFind: string | TNil, allowHide?: boolean) => void;
 };
@@ -598,9 +604,9 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
 
 /**
  * Functional wrapper that reads Zustand (ephemeral timeline state + layout prefs) and the
- * remaining Redux slice (hoverIndentGuideIds, uiFind), creates dual-write action handlers
- * (Redux dispatch first so the tracking middleware sees the pre-update state, then Zustand),
- * and passes everything into the class component.
+ * remaining Redux slice (hoverIndentGuideIds, uiFind), creates action handlers that track
+ * analytics before the Zustand update, so the trackers see the pre-update state, and passes
+ * everything into the class component.
  */
 /* istanbul ignore next */
 function VirtualizedTraceViewWrapper(
@@ -610,8 +616,6 @@ function VirtualizedTraceViewWrapper(
     search?: string;
   }
 ) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const dispatch = useDispatch<any>();
   const hoverIndentGuideIds = useSelector((state: ReduxState) => state.traceTimeline.hoverIndentGuideIds);
   const uiFind = parseUiFind(ownProps.search ?? ownProps.location.search ?? '');
 
@@ -633,103 +637,66 @@ function VirtualizedTraceViewWrapper(
   const zustandDetailProcessToggle = useTraceTimelineStore(s => s.detailProcessToggle);
   const zustandDetailLogsToggle = useTraceTimelineStore(s => s.detailLogsToggle);
   const zustandDetailLogItemToggle = useTraceTimelineStore(s => s.detailLogItemToggle);
-  const zustandDetailWarningsToggle = useTraceTimelineStore(s => s.detailWarningsToggle);
-  const zustandDetailReferencesToggle = useTraceTimelineStore(s => s.detailReferencesToggle);
-  const zustandClearScroll = useTraceTimelineStore(s => s.clearShouldScrollToFirstUiFindMatch);
-  const zustandFocusUiFindMatches = useTraceTimelineStore(s => s.focusUiFindMatches);
+  const detailWarningsToggle = useTraceTimelineStore(s => s.detailWarningsToggle);
+  const detailReferencesToggle = useTraceTimelineStore(s => s.detailReferencesToggle);
+  const clearShouldScrollToFirstUiFindMatch = useTraceTimelineStore(
+    s => s.clearShouldScrollToFirstUiFindMatch
+  );
+  const focusUiFindMatches = useTraceTimelineStore(s => s.focusUiFindMatches);
 
   const setTrace = useCallback(
     (trace: IOtelTrace | TNil, uiFindValue: string | TNil) => {
-      dispatch(actions.setTrace(trace, uiFindValue));
       if (trace) zustandSetTrace(trace, uiFindValue);
     },
-    [dispatch, zustandSetTrace]
+    [zustandSetTrace]
   );
 
   const childrenToggle = useCallback(
     (spanID: string) => {
-      dispatch(actions.childrenToggle(spanID));
+      trackChildrenToggle(spanID);
       zustandChildrenToggle(spanID);
     },
-    [dispatch, zustandChildrenToggle]
+    [zustandChildrenToggle]
   );
 
   const detailToggle = useCallback(
     (spanID: string) => {
-      dispatch(actions.detailToggle(spanID));
+      trackDetailToggle(spanID);
       zustandDetailToggle(spanID);
     },
-    [dispatch, zustandDetailToggle]
+    [zustandDetailToggle]
   );
 
   const detailTagsToggle = useCallback(
     (spanID: string) => {
-      dispatch(actions.detailTagsToggle(spanID));
+      trackDetailTagsToggle(spanID);
       zustandDetailTagsToggle(spanID);
     },
-    [dispatch, zustandDetailTagsToggle]
+    [zustandDetailTagsToggle]
   );
 
   const detailProcessToggle = useCallback(
     (spanID: string) => {
-      dispatch(actions.detailProcessToggle(spanID));
+      trackDetailProcessToggle(spanID);
       zustandDetailProcessToggle(spanID);
     },
-    [dispatch, zustandDetailProcessToggle]
+    [zustandDetailProcessToggle]
   );
 
   const detailLogsToggle = useCallback(
     (spanID: string) => {
-      dispatch(actions.detailLogsToggle(spanID));
+      trackDetailLogsToggle(spanID);
       zustandDetailLogsToggle(spanID);
     },
-    [dispatch, zustandDetailLogsToggle]
+    [zustandDetailLogsToggle]
   );
 
   const detailLogItemToggle = useCallback(
     (spanID: string, logItem: IEvent) => {
-      dispatch(actions.detailLogItemToggle(spanID, logItem));
+      trackDetailLogItemToggle(spanID, logItem);
       zustandDetailLogItemToggle(spanID, logItem);
     },
-    [dispatch, zustandDetailLogItemToggle]
-  );
-
-  const detailWarningsToggle = useCallback(
-    (spanID: string) => {
-      dispatch(actions.detailWarningsToggle(spanID));
-      zustandDetailWarningsToggle(spanID);
-    },
-    [dispatch, zustandDetailWarningsToggle]
-  );
-
-  const detailReferencesToggle = useCallback(
-    (spanID: string) => {
-      dispatch(actions.detailReferencesToggle(spanID));
-      zustandDetailReferencesToggle(spanID);
-    },
-    [dispatch, zustandDetailReferencesToggle]
-  );
-
-  const clearShouldScrollToFirstUiFindMatch = useCallback(() => {
-    dispatch(actions.clearShouldScrollToFirstUiFindMatch());
-    zustandClearScroll();
-  }, [dispatch, zustandClearScroll]);
-
-  const focusUiFindMatches = useCallback(
-    (trace: IOtelTrace, uiFindValue: string | TNil, allowHide?: boolean) => {
-      dispatch(actions.focusUiFindMatches(trace, uiFindValue, allowHide));
-      zustandFocusUiFindMatches(trace, uiFindValue, allowHide);
-    },
-    [dispatch, zustandFocusUiFindMatches]
-  );
-
-  // setSpanNameColumnWidth: the parent TraceTimelineViewer/index.tsx owns the nameColumnWidth prop;
-  // this handler keeps Redux in sync (Zustand is updated by the parent via its own dual-write).
-  const setSpanNameColumnWidth = useCallback(
-    (width: number) => {
-      dispatch(actions.setSpanNameColumnWidth(width));
-    },
-    [dispatch]
+    [zustandDetailLogItemToggle]
   );
 
   const combinedProps: VirtualizedTraceViewProps = {
@@ -757,7 +724,6 @@ function VirtualizedTraceViewWrapper(
     detailReferencesToggle,
     clearShouldScrollToFirstUiFindMatch,
     focusUiFindMatches,
-    setSpanNameColumnWidth,
   };
 
   return <VirtualizedTraceViewImpl {...combinedProps} />;
