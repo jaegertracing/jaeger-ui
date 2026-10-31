@@ -7,16 +7,15 @@ SPDX-License-Identifier: Apache-2.0
   background: var(--border-default);
 }
 
-.SpanDetail--header {
-  flex-wrap: wrap;
-  gap: 0.125rem 0.5rem;
-}
-
 .SpanDetail--headerTitle {
-  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.SpanDetail--headerServiceName {
+  font-size: 0.7em;
+  font-weight: normal;
 }
 
 .SpanDetail--overviewTableCaption {
@@ -37,13 +36,14 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .SpanDetail--overviewTable {
-  border-spacing: 0;
   line-height: 1.5;
 }
 
 .SpanDetail--overviewTableKey {
   color: var(--text-secondary);
+  font-weight: normal;
   padding-right: 0.5rem;
+  text-align: left;
 }
 
 .SpanDetail--debugInfo {

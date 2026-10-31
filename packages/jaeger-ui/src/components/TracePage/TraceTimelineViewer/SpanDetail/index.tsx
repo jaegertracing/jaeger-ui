@@ -145,7 +145,7 @@ export default function SpanDetail(props: SpanDetailProps) {
 
   const header = (
     <div>
-      <div className="ub-flex ub-items-center SpanDetail--header">
+      <div className="ub-flex ub-items-center">
         <h2
           className="ub-flex-auto ub-m0 SpanDetail--headerTitle"
           title={`${span.resource.serviceName}::${span.name}`}
@@ -181,7 +181,6 @@ export default function SpanDetail(props: SpanDetailProps) {
         {header}
         <Tabs
           key={span.spanID}
-          destroyInactiveTabPane
           defaultActiveKey="genai"
           items={[
             {
