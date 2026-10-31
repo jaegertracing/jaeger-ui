@@ -11,6 +11,7 @@ import { trackViewChange, trackJsonView, trackRawJsonView } from './TracePageHea
 import prefixUrl from '../../../utils/prefix-url';
 import { ETraceViewType } from '../types';
 import { getTargetBlankOrTop } from '../../../utils/config/get-target';
+import { toTraceIdHex } from '../../../utils/trace-id';
 
 type Props = {
   onTraceViewChange: (viewType: ETraceViewType) => void;
@@ -46,12 +47,13 @@ export default function AltViewOptions(props: Props) {
     ),
   }));
   if (!disableJsonView) {
+    const traceUrl = prefixUrl(`/api/v3/traces/${toTraceIdHex(traceID)}`);
     dropdownItems.push(
       {
         key: 'trace-json',
         label: (
           <Link
-            to={prefixUrl(`/api/traces/${traceID}?prettyPrint=true`)}
+            to={`${traceUrl}?prettyPrint=true`}
             rel="noopener noreferrer"
             target={getTargetBlankOrTop()}
             onClick={trackJsonView}
@@ -64,7 +66,7 @@ export default function AltViewOptions(props: Props) {
         key: 'trace-json-unadjusted',
         label: (
           <Link
-            to={prefixUrl(`/api/traces/${traceID}?raw=true&prettyPrint=true`)}
+            to={`${traceUrl}?rawTraces=true&prettyPrint=true`}
             rel="noopener noreferrer"
             target={getTargetBlankOrTop()}
             onClick={trackRawJsonView}
