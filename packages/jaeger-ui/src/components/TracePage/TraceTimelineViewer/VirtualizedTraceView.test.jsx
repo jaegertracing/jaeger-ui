@@ -4,12 +4,17 @@
 import React from 'react';
 import { render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { Provider } from 'react-redux';
+import { MemoryRouter } from 'react-router-dom';
+import { legacy_createStore as createStore } from 'redux';
 import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
 
 import { makeCriticalPathContext } from './criticalPath';
-import { DEFAULT_HEIGHTS, VirtualizedTraceViewImpl } from './VirtualizedTraceView';
+import { useTraceTimelineStore } from './store';
+import * as track from './store.track';
+import VirtualizedTraceView, { DEFAULT_HEIGHTS, VirtualizedTraceViewImpl } from './VirtualizedTraceView';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
 import updateUiFindSpy from '../../../utils/update-ui-find';
@@ -19,6 +24,7 @@ import memoizedTraceCriticalPath from '../CriticalPath/index';
 import criticalPathTest from '../CriticalPath/testCases/test2';
 
 vi.mock('./SpanTreeOffset');
+vi.mock('./store.track');
 vi.mock('../../../utils/update-ui-find');
 
 const { mockListViewInstance, listViewPropsCapture } = vi.hoisted(() => ({
@@ -51,7 +57,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
   beforeEach(() => {
     legacyTrace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 }));
-    criticalPath = memoizedTraceCriticalPath(legacyTrace);
+    criticalPath = memoizedTraceCriticalPath(legacyTrace).sections;
     trace = legacyTrace.asOtelTrace();
     focusUiFindMatchesMock = jest.fn();
 
@@ -71,7 +77,6 @@ describe('<VirtualizedTraceViewImpl>', () => {
       findMatchesIDs: null,
       registerAccessors: jest.fn(),
       scrollToFirstVisibleSpan: jest.fn(),
-      setSpanNameColumnWidth: jest.fn(),
       focusUiFindMatches: focusUiFindMatchesMock,
       setTrace: jest.fn(),
       shouldScrollToFirstUiFindMatch: false,
@@ -80,6 +85,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       prunedServices: new Set(),
       trace,
       criticalPath,
+      spanPillsEnabled: true,
       uiFind: 'uiFind',
       navigate: jest.fn(),
       location: {
@@ -676,8 +682,8 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
     it('linksGetter is expected to receive url and text for a given link pattern', () => {
       const span = trace.spans[1];
-      const key = span.attributes[0].key;
-      const value = span.attributes[0].value;
+      const key = span.attributes.entries()[0].key;
+      const value = span.attributes.entries()[0].value;
       const val = encodeURIComponent(value);
 
       const linkPatternConfig = [
@@ -814,8 +820,27 @@ describe('<VirtualizedTraceViewImpl>', () => {
       return { ...trace, spans };
     }
 
-    // Pure pruning logic (subtree removal, placeholder counts, error counting)
-    // is tested in generateRowStates.test.ts.
+    // generateRowStates.test.ts covers the pruning computation itself (subtree
+    // removal, placeholder counts, error counting). These tests cover the rows
+    // VirtualizedTraceView actually hands to ListView as a result.
+
+    it('leaves the pruned service and its subtree out of the rendered rows', () => {
+      const customTrace = makeSpansWithServices();
+      const { listViewProps } = renderAndCapture({
+        ...mockProps,
+        trace: customTrace,
+        prunedServices: new Set(['svc-b']),
+      });
+      const renderedSpanIDs = [];
+      for (let i = 0; i < listViewProps.dataLength; i++) {
+        const key = listViewProps.getKeyFromIndex(i);
+        if (key.endsWith('--bar')) renderedSpanIDs.push(key.slice(0, -'--bar'.length));
+      }
+      // span-2 is a child of the pruned span-1, so pruning svc-b drops both.
+      expect(renderedSpanIDs).not.toContain('span-1');
+      expect(renderedSpanIDs).not.toContain('span-2');
+      expect(renderedSpanIDs).toEqual(expect.arrayContaining(['span-0', 'span-3']));
+    });
 
     it('generates correct keys for pruned placeholder rows', () => {
       const customTrace = makeSpansWithServices();
@@ -886,5 +911,75 @@ describe('<VirtualizedTraceViewImpl>', () => {
       const result = listViewProps.itemRenderer('key', {}, prunedIdx, {});
       expect(result).toBeTruthy();
     });
+  });
+});
+
+describe('<VirtualizedTraceView> wrapper', () => {
+  const trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 })).asOtelTrace();
+  const { spanID } = trace.spans[0];
+  const actionNames = [
+    'childrenToggle',
+    'detailToggle',
+    'detailTagsToggle',
+    'detailProcessToggle',
+    'detailLogsToggle',
+    'detailLogItemToggle',
+  ];
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    useTraceTimelineStore.setState(useTraceTimelineStore.getInitialState(), true);
+  });
+
+  it('tracks each toggle before updating the store', () => {
+    const storeActions = Object.fromEntries(
+      actionNames.map(name => [name, vi.spyOn(useTraceTimelineStore.getState(), name)])
+    );
+    const reduxStore = createStore(() => ({ traceTimeline: { hoverIndentGuideIds: new Set() } }));
+    render(
+      <Provider store={reduxStore}>
+        <MemoryRouter>
+          <VirtualizedTraceView
+            currentViewRangeTime={[0, 1]}
+            findMatchesIDs={null}
+            nameColumnWidth={0.25}
+            scrollToFirstVisibleSpan={jest.fn()}
+            registerAccessors={jest.fn()}
+            trace={trace}
+            criticalPath={[]}
+            spanPillsEnabled={false}
+            useOtelTerms={false}
+          />
+        </MemoryRouter>
+      </Provider>
+    );
+    const rowProps = index =>
+      listViewPropsCapture.current.itemRenderer('key', {}, index, {}).props.children.props;
+    const logItem = { name: 'log' };
+
+    // Collapse the root so its detail row directly follows it.
+    act(() => rowProps(0).onChildrenToggled(spanID));
+    act(() => rowProps(0).onDetailToggled(spanID));
+    const detail = rowProps(1);
+    act(() => detail.attributesToggle(spanID));
+    act(() => detail.resourceToggle(spanID));
+    act(() => detail.eventsToggle(spanID));
+    act(() => detail.eventItemToggle(spanID, logItem));
+
+    const trackers = {
+      childrenToggle: track.trackChildrenToggle,
+      detailToggle: track.trackDetailToggle,
+      detailTagsToggle: track.trackDetailTagsToggle,
+      detailProcessToggle: track.trackDetailProcessToggle,
+      detailLogsToggle: track.trackDetailLogsToggle,
+      detailLogItemToggle: track.trackDetailLogItemToggle,
+    };
+    actionNames.forEach(name => {
+      expect(trackers[name]).toHaveBeenCalledTimes(1);
+      expect(trackers[name].mock.invocationCallOrder[0]).toBeLessThan(
+        storeActions[name].mock.invocationCallOrder[0]
+      );
+    });
+    expect(track.trackDetailLogItemToggle).toHaveBeenCalledWith(spanID, logItem);
   });
 });
