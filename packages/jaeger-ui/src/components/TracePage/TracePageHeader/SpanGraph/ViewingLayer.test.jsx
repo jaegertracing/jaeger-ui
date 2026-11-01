@@ -2,270 +2,235 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react';
+import { fireEvent, render } from '@testing-library/react';
 import '@testing-library/jest-dom';
+
 import ViewingLayer, { dragTypes } from './ViewingLayer';
-import { EUpdateTypes } from '../../../../utils/DraggableManager';
 
 vi.mock('./Scrubber', () => mockDefault(props => <div data-testid="scrubber" {...props} />));
 
-function getViewRange(viewStart, viewEnd) {
-  return { time: { current: [viewStart, viewEnd] } };
+function getViewRange(viewStart, viewEnd, time = {}) {
+  return { time: { current: [viewStart, viewEnd], ...time } };
 }
 
-describe('<SpanGraph>', () => {
+describe('<ViewingLayer />', () => {
   let props;
-  let ref;
   let container;
   let rerender;
 
+  const getGraph = () => container.querySelector('.ViewingLayer--graph');
+  const getScrubbers = () => container.querySelectorAll('[data-testid="scrubber"]');
+
   beforeEach(() => {
-    ref = React.createRef();
     props = {
       height: 60,
       numTicks: 5,
-      updateNextViewRangeTime: jest.fn(),
-      updateViewRangeTime: jest.fn(),
+      updateNextViewRangeTime: vi.fn(),
+      updateViewRangeTime: vi.fn(),
       viewRange: getViewRange(0, 1),
     };
-    ({ container, rerender } = render(<ViewingLayer ref={ref} {...props} />));
+    vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue({ left: 10, width: 100 });
+    ({ container, rerender } = render(<ViewingLayer {...props} />));
   });
 
-  describe('_getDraggingBounds()', () => {
-    beforeEach(() => {
-      ref.current._setRoot({ getBoundingClientRect: () => ({ left: 10, width: 100 }) });
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('updates the cursor and clears it when the pointer leaves the graph', () => {
+    const graph = getGraph();
+
+    fireEvent.mouseMove(graph, { clientX: 60 });
+    fireEvent.mouseLeave(graph, { clientX: 60 });
+
+    expect(props.updateNextViewRangeTime).toHaveBeenNthCalledWith(1, { cursor: 0.5 });
+    expect(props.updateNextViewRangeTime).toHaveBeenNthCalledWith(2, { cursor: null });
+  });
+
+  it('reframes the view range through graph drag interactions', () => {
+    const graph = getGraph();
+
+    fireEvent.mouseDown(graph, { button: 0, clientX: 40 });
+    props.viewRange = getViewRange(0, 1, { reframe: { anchor: 0.3, shift: 0.3 } });
+    rerender(<ViewingLayer {...props} />);
+    fireEvent.mouseMove(window, { button: 0, clientX: 70 });
+    fireEvent.mouseUp(window, { button: 0, clientX: 70 });
+
+    expect(props.updateNextViewRangeTime).toHaveBeenNthCalledWith(1, {
+      reframe: { anchor: 0.3, shift: 0.3 },
+    });
+    expect(props.updateNextViewRangeTime).toHaveBeenNthCalledWith(2, {
+      reframe: { anchor: 0.3, shift: 0.6 },
+    });
+    expect(props.updateViewRangeTime).toHaveBeenCalledWith(0.3, 0.6, 'minimap');
+  });
+
+  it('orders endpoints when a reframe drag finishes left of its anchor', () => {
+    props.viewRange = getViewRange(0, 1, { reframe: { anchor: 0.75, shift: 0.5 } });
+    rerender(<ViewingLayer {...props} />);
+
+    const [shift, edge] = container.querySelectorAll(
+      '.ViewingLayer--draggedShift, .ViewingLayer--draggedEdge'
+    );
+    expect(shift).toHaveAttribute('x', '50%');
+    expect(shift).toHaveAttribute('width', '25%');
+    expect(edge).toHaveAttribute('x', '50%');
+
+    fireEvent.mouseDown(getGraph(), { button: 0, clientX: 85 });
+    fireEvent.mouseUp(window, { button: 0, clientX: 60 });
+
+    expect(props.updateViewRangeTime).toHaveBeenCalledWith(0.5, 0.75, 'minimap');
+  });
+
+  it('stops scrubber drag-start propagation before the graph can reframe', () => {
+    fireEvent.mouseDown(getScrubbers()[0], { button: 0, clientX: 10 });
+
+    expect(props.updateNextViewRangeTime).toHaveBeenCalledTimes(1);
+    expect(props.updateNextViewRangeTime).toHaveBeenCalledWith({ shiftStart: 0 });
+  });
+
+  it.each([
+    ['start', 0, 20, 110, { shiftStart: 0.9 }, [0.9, 0.9, 'minimap']],
+    ['end', 1, 100, 10, { shiftEnd: 0.1 }, [0.1, 0.1, 'minimap']],
+    ['start interior', 0, 20, 60, { shiftStart: 0.5 }, [0.5, 0.9, 'minimap']],
+    ['end interior', 1, 100, 60, { shiftEnd: 0.5 }, [0.1, 0.5, 'minimap']],
+  ])(
+    'keeps the %s scrubber within a narrowed view range',
+    (_, index, startClientX, endClientX, expectedUpdate, expectedRange) => {
       props.viewRange = getViewRange(0.1, 0.9);
-      rerender(<ViewingLayer ref={ref} {...props} />);
-    });
+      rerender(<ViewingLayer {...props} />);
 
-    it('throws if _root is not set', () => {
-      ref.current._root = null;
-      expect(() => ref.current._getDraggingBounds(dragTypes.REFRAME)).toThrow('invalid state');
-    });
+      fireEvent.mouseDown(getScrubbers()[index], { button: 0, clientX: startClientX });
+      fireEvent.mouseMove(window, { button: 0, clientX: endClientX });
+      fireEvent.mouseUp(window, { button: 0, clientX: endClientX });
 
-    it('returns the correct bounds for reframe', () => {
-      expect(ref.current._getDraggingBounds(dragTypes.REFRAME)).toEqual({
-        clientXLeft: 10,
-        width: 100,
-        maxValue: 1,
-        minValue: 0,
-      });
-    });
+      expect(props.updateNextViewRangeTime).toHaveBeenLastCalledWith(expectedUpdate);
+      expect(props.updateViewRangeTime).toHaveBeenCalledWith(...expectedRange);
+    }
+  );
 
-    it('returns the correct bounds for shiftStart', () => {
-      expect(ref.current._getDraggingBounds(dragTypes.SHIFT_START)).toEqual({
-        clientXLeft: 10,
-        width: 100,
-        maxValue: 0.9,
-        minValue: 0,
-      });
-    });
+  it('recalculates scrubber bounds after a drag ends', () => {
+    props.viewRange = getViewRange(0.1, 0.9);
+    rerender(<ViewingLayer {...props} />);
 
-    it('returns the correct bounds for shiftEnd', () => {
-      expect(ref.current._getDraggingBounds(dragTypes.SHIFT_END)).toEqual({
-        clientXLeft: 10,
-        width: 100,
-        maxValue: 1,
-        minValue: 0.1,
-      });
-    });
+    fireEvent.mouseDown(getScrubbers()[0], { button: 0, clientX: 20 });
+    fireEvent.mouseMove(window, { button: 0, clientX: 90 });
+    fireEvent.mouseUp(window, { button: 0, clientX: 90 });
 
-    it('calls getNextViewLayout via _getMarkers (from < to)', () => {
-      expect(ref.current._getMarkers(0.1, 0.9, false)).toBeInstanceOf(Array);
-    });
+    props.viewRange = getViewRange(0.1, 1);
+    rerender(<ViewingLayer {...props} />);
+    fireEvent.mouseDown(getScrubbers()[0], { button: 0, clientX: 20 });
+    fireEvent.mouseMove(window, { button: 0, clientX: 110 });
+    fireEvent.mouseUp(window, { button: 0, clientX: 110 });
 
-    it('calls getNextViewLayout via _getMarkers (from > to)', () => {
-      expect(ref.current._getMarkers(0.9, 0.1, false)).toBeInstanceOf(Array);
-    });
-
-    it('calls getNextViewLayout via _getMarkers (from == to)', () => {
-      expect(ref.current._getMarkers(0.5, 0.5, false)).toBeInstanceOf(Array);
-    });
-
-    it('throws in _handleScrubberDragEnd for unknown tag', () => {
-      expect(() =>
-        ref.current._handleScrubberDragEnd({ manager: { resetBounds: jest.fn() }, tag: 'random', value: 0.5 })
-      ).toThrow('bad state');
-    });
-
-    it('renders the cursor guide when cursor is present and not prevented', () => {
-      props.viewRange = {
-        time: {
-          current: [0, 1],
-          cursor: 0.5,
-        },
-      };
-      rerender(<ViewingLayer ref={ref} {...props} />);
-      const guide = container.querySelector('.ViewingLayer--cursorGuide');
-      expect(guide).toBeInTheDocument();
-      expect(guide.getAttribute('x1')).toBe('50%');
-    });
+    expect(props.updateNextViewRangeTime).toHaveBeenLastCalledWith({ shiftStart: 1 });
+    expect(props.updateViewRangeTime).toHaveBeenLastCalledWith(1, 1, 'minimap');
   });
 
-  describe('DraggableManager callbacks', () => {
-    describe('reframe', () => {
-      it('handles mousemove', () => {
-        ref.current._handleReframeMouseMove({ value: 0.5 });
-        expect(props.updateNextViewRangeTime).toHaveBeenLastCalledWith({ cursor: 0.5 });
-      });
+  it('recalculates reframe bounds after a drag ends', () => {
+    const graph = getGraph();
 
-      it('handles mouseleave', () => {
-        ref.current._handleReframeMouseLeave();
-        expect(props.updateNextViewRangeTime).toHaveBeenLastCalledWith({ cursor: null });
-      });
+    fireEvent.mouseDown(graph, { button: 0, clientX: 40 });
+    fireEvent.mouseUp(window, { button: 0, clientX: 40 });
+    SVGSVGElement.prototype.getBoundingClientRect.mockReturnValue({ left: 60, width: 100 });
+    fireEvent.mouseMove(graph, { clientX: 110 });
 
-      describe('drag update', () => {
-        it('handles sans anchor', () => {
-          ref.current._handleReframeDragUpdate({ value: 0.5 });
-          expect(props.updateNextViewRangeTime).toHaveBeenLastCalledWith({
-            reframe: { anchor: 0.5, shift: 0.5 },
-          });
-        });
+    expect(props.updateNextViewRangeTime).toHaveBeenLastCalledWith({ cursor: 0.5 });
+  });
 
-        it('handles the existing anchor', () => {
-          props.viewRange.time.reframe = { anchor: 0.1 };
-          rerender(<ViewingLayer ref={ref} {...props} />);
-          ref.current._handleReframeDragUpdate({ value: 0.5 });
-          expect(props.updateNextViewRangeTime).toHaveBeenLastCalledWith({
-            reframe: { anchor: 0.1, shift: 0.5 },
-          });
-        });
-      });
+  it('restores the cursor guide after a scrubber hover ends', () => {
+    props.viewRange = getViewRange(0, 1, { cursor: 0.5 });
+    rerender(<ViewingLayer {...props} />);
+    const scrubber = getScrubbers()[0];
 
-      describe('drag end', () => {
-        let manager;
-        beforeEach(() => {
-          manager = { resetBounds: jest.fn() };
-        });
+    fireEvent.mouseEnter(scrubber, { clientX: 10 });
+    expect(container.querySelector('.ViewingLayer--cursorGuide')).not.toBeInTheDocument();
+    fireEvent.mouseLeave(scrubber, { clientX: 10, relatedTarget: getGraph() });
 
-        it('handles sans anchor', () => {
-          ref.current._handleReframeDragEnd({ manager, value: 0.5 });
-          expect(manager.resetBounds).toHaveBeenCalled();
-          expect(props.updateViewRangeTime).toHaveBeenLastCalledWith(0.5, 0.5, 'minimap');
-        });
+    expect(container.querySelector('.ViewingLayer--cursorGuide')).toHaveAttribute('x1', '50%');
+  });
 
-        it('handles dragged left (anchor is greater)', () => {
-          props.viewRange.time.reframe = { anchor: 0.6 };
-          rerender(<ViewingLayer ref={ref} {...props} />);
-          ref.current._handleReframeDragEnd({ manager, value: 0.5 });
-          expect(props.updateViewRangeTime).toHaveBeenLastCalledWith(0.5, 0.6, 'minimap');
-        });
+  it('restores the cursor guide after a scrubber drag ends', () => {
+    props.viewRange = getViewRange(0, 1, { cursor: 0.5 });
+    rerender(<ViewingLayer {...props} />);
+    const scrubber = getScrubbers()[0];
 
-        it('handles dragged right (anchor is less)', () => {
-          props.viewRange.time.reframe = { anchor: 0.4 };
-          rerender(<ViewingLayer ref={ref} {...props} />);
-          ref.current._handleReframeDragEnd({ manager, value: 0.5 });
-          expect(props.updateViewRangeTime).toHaveBeenLastCalledWith(0.4, 0.5, 'minimap');
-        });
-      });
-    });
+    expect(container.querySelector('.ViewingLayer--cursorGuide')).toHaveAttribute('x1', '50%');
+    fireEvent.mouseEnter(scrubber, { clientX: 10 });
+    expect(container.querySelector('.ViewingLayer--cursorGuide')).not.toBeInTheDocument();
 
-    describe('scrubber', () => {
-      it('prevents the cursor from being drawn on scrubber mouseover', () => {
-        fireEvent.mouseEnter(container.querySelectorAll('[data-testid="scrubber"]')[0]);
-        expect(ref.current.state.preventCursorLine).toBe(true);
-      });
+    fireEvent.mouseDown(scrubber, { button: 0, clientX: 10 });
+    fireEvent.mouseLeave(scrubber, { clientX: 10 });
+    expect(container.querySelector('.ViewingLayer--cursorGuide')).not.toBeInTheDocument();
+    fireEvent.mouseUp(window, { button: 0, clientX: 10 });
 
-      it('prevents the cursor from being drawn on scrubber mouseleave', () => {
-        fireEvent.mouseLeave(container.querySelectorAll('[data-testid="scrubber"]')[0]);
-        expect(ref.current.state.preventCursorLine).toBe(false);
-      });
-
-      describe('drag start and update', () => {
-        it('stops propagation on drag start', () => {
-          const stopPropagation = jest.fn();
-          ref.current._handleScrubberDragUpdate({
-            event: { stopPropagation },
-            type: EUpdateTypes.DragStart,
-          });
-          expect(stopPropagation).toHaveBeenCalled();
-        });
-
-        it('updates the viewRange for shiftStart and shiftEnd', () => {
-          const moves = [
-            { value: 0.5, tag: dragTypes.SHIFT_START },
-            { value: 0.5, tag: dragTypes.SHIFT_END },
-          ];
-          moves.forEach(({ value, tag }) => {
-            ref.current._handleScrubberDragUpdate({ value, tag, type: EUpdateTypes.DragMove });
-            expect(props.updateNextViewRangeTime).toHaveBeenLastCalledWith(
-              tag === dragTypes.SHIFT_START ? { shiftStart: 0.5 } : { shiftEnd: 0.5 }
-            );
-          });
-        });
-      });
-
-      it('updates the view on drag end', () => {
-        const [start, end] = props.viewRange.time.current;
-        const cases = [
-          {
-            update: { value: 0.5, tag: dragTypes.SHIFT_START, manager: { resetBounds: jest.fn() } },
-            expectArgs: [0.5, end, 'minimap'],
-          },
-          {
-            update: { value: 0.5, tag: dragTypes.SHIFT_END, manager: { resetBounds: jest.fn() } },
-            expectArgs: [start, 0.5, 'minimap'],
-          },
-        ];
-        cases.forEach(({ update, expectArgs }) => {
-          ref.current.setState({ preventCursorLine: true });
-          ref.current._handleScrubberDragEnd(update);
-          expect(ref.current.state.preventCursorLine).toBe(false);
-          expect(update.manager.resetBounds).toHaveBeenCalled();
-          expect(props.updateViewRangeTime).toHaveBeenLastCalledWith(...expectArgs);
-        });
-      });
-    });
+    expect(container.querySelector('.ViewingLayer--cursorGuide')).toHaveAttribute('x1', '50%');
   });
 
   describe('.ViewingLayer--resetZoom', () => {
-    it('should not render .ViewingLayer--resetZoom if props.viewRange.time.current = [0,1]', () => {
+    it('does not render when fully zoomed out', () => {
       expect(container.querySelector('.ViewingLayer--resetZoom')).toBeNull();
     });
 
-    it('should render ViewingLayer--resetZoom if props.viewRange.time.current[0] !== 0', () => {
-      props.viewRange = getViewRange(0.1, 1);
-      rerender(<ViewingLayer ref={ref} {...props} />);
+    it.each([
+      [0.1, 1],
+      [0, 0.9],
+    ])('renders when the range is [%s, %s]', (start, end) => {
+      props.viewRange = getViewRange(start, end);
+      rerender(<ViewingLayer {...props} />);
       expect(container.querySelector('.ViewingLayer--resetZoom')).toBeInTheDocument();
     });
 
-    it('should render ViewingLayer--resetZoom if props.viewRange.time.current[1] !== 1', () => {
-      props.viewRange = getViewRange(0, 0.9);
-      rerender(<ViewingLayer ref={ref} {...props} />);
-      expect(container.querySelector('.ViewingLayer--resetZoom')).toBeInTheDocument();
-    });
-
-    it('should call props.updateViewRangeTime when clicked', () => {
+    it('resets the view range when clicked', () => {
       props.viewRange = getViewRange(0.1, 0.9);
-      rerender(<ViewingLayer ref={ref} {...props} />);
+      rerender(<ViewingLayer {...props} />);
+
       fireEvent.click(container.querySelector('.ViewingLayer--resetZoom'));
-      expect(props.updateViewRangeTime).toHaveBeenLastCalledWith(0, 1);
+
+      expect(props.updateViewRangeTime).toHaveBeenCalledWith(0, 1);
     });
   });
 
-  it('renders a <GraphTicks />', () => {
+  it('renders both inactive regions with their correct dimensions', () => {
+    props.viewRange = getViewRange(0.2, 0.8);
+    rerender(<ViewingLayer {...props} />);
+
+    const [left, right] = container.querySelectorAll('.ViewingLayer--inactive');
+    expect(left).toHaveAttribute('x', '0');
+    expect(left).toHaveAttribute('width', '20%');
+    expect(right).toHaveAttribute('x', '80%');
+    expect(right).toHaveAttribute('width', '20%');
+  });
+
+  it('renders the cursor guide at the cursor position', () => {
+    props.viewRange = getViewRange(0, 1, { cursor: 0.5 });
+    rerender(<ViewingLayer {...props} />);
+
+    expect(container.querySelector('.ViewingLayer--cursorGuide')).toHaveAttribute('x1', '50%');
+  });
+
+  it('renders the reframe marker edge at the shift position', () => {
+    props.viewRange = getViewRange(0, 1, { reframe: { anchor: 0.25, shift: 0.5 } });
+    rerender(<ViewingLayer {...props} />);
+
+    const [shift, edge] = container.querySelectorAll(
+      '.ViewingLayer--draggedShift, .ViewingLayer--draggedEdge'
+    );
+    expect(shift).toHaveAttribute('x', '25%');
+    expect(shift).toHaveAttribute('width', '25%');
+    expect(edge).toHaveAttribute('x', '50%');
+  });
+
+  it('renders graph ticks and two scrubbers', () => {
     expect(container.querySelector('svg g')).toBeInTheDocument();
+    expect(getScrubbers()).toHaveLength(2);
   });
 
-  it('renders a filtering box if leftBound exists', () => {
-    props.viewRange = getViewRange(0.2, 1);
-    rerender(<ViewingLayer ref={ref} {...props} />);
-    const box = container.querySelectorAll('.ViewingLayer--inactive')[0];
-    expect(box).toBeInTheDocument();
-    expect(Math.round(parseFloat(box.getAttribute('width')))).toBe(20);
-    expect(box.getAttribute('x')).toBe('0');
-  });
-
-  it('renders a filtering box if rightBound exists', () => {
-    props.viewRange = getViewRange(0, 0.8);
-    rerender(<ViewingLayer ref={ref} {...props} />);
-    const box = container.querySelectorAll('.ViewingLayer--inactive')[0];
-    expect(box).toBeInTheDocument();
-    expect(Math.round(parseFloat(box.getAttribute('width')))).toBe(20);
-    expect(Math.round(parseFloat(box.getAttribute('x')))).toBe(80);
-  });
-
-  it('renders handles for the timeRangeFilter', () => {
-    expect(container.querySelectorAll('[data-testid="scrubber"]').length).toBe(2);
+  it('exports the drag-manager tags', () => {
+    expect(dragTypes).toEqual({
+      REFRAME: 'REFRAME',
+      SHIFT_END: 'SHIFT_END',
+      SHIFT_START: 'SHIFT_START',
+    });
   });
 });
