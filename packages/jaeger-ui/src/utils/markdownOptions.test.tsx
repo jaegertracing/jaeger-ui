@@ -8,11 +8,11 @@ import { expect, it, describe } from 'vitest';
 import { sharedMarkdownOptions } from './markdownOptions';
 
 describe('sharedMarkdownOptions', () => {
-  it('does not enable optimizeForStreaming, which deletes unpaired emphasis markers', () => {
-    // The streaming optimizer strips the last unpaired *, _, or ~ before
-    // parsing. That deletes SQL wildcards, multiplication, and snake_case,
-    // not only an unfinished **bold**.
-    expect(sharedMarkdownOptions.optimizeForStreaming).toBe(false);
+  it('enables optimizeForStreaming for every caller, not just streamed chat replies', () => {
+    // Span attributes rendered in the GenAI span detail tab can be truncated
+    // at ingestion, so tolerating unclosed tags is desirable there too -- this
+    // is not a streaming-only concern.
+    expect(sharedMarkdownOptions.optimizeForStreaming).toBe(true);
   });
 
   describe('wrapper element', () => {
@@ -97,6 +97,9 @@ describe('sharedMarkdownOptions', () => {
   });
 
   describe('literal emphasis markers', () => {
+    // markdown-to-jsx 9.10.2 and 9.10.3 deleted a lone `_` or `*` from
+    // finished text under optimizeForStreaming; 9.10.4 fixed it. These tests
+    // keep the dependency from regressing.
     function renderMarkdown(markdown: string) {
       return render(<Markdown options={sharedMarkdownOptions}>{markdown}</Markdown>);
     }
