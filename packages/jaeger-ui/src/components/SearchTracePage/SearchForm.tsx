@@ -271,8 +271,10 @@ function buildSearchQuery(
     start: String(start),
     end: String(end),
     tags: convTagsLogfmt(tags) || undefined,
-    minDuration: minDuration || undefined,
-    maxDuration: maxDuration || undefined,
+    // Validation allows spaces, as in "100 ms", but the query service parses durations
+    // with Go's time.ParseDuration, which rejects them.
+    minDuration: minDuration?.replace(/\s/g, '') || undefined,
+    maxDuration: maxDuration?.replace(/\s/g, '') || undefined,
   };
 }
 
