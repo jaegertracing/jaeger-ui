@@ -126,16 +126,24 @@ describe('AltViewOptions', () => {
     expect(trackViewChange).toHaveBeenCalledWith(viewType);
   });
 
-  it('renders JSON links with correct URLs', () => {
-    renderComponent();
+  it('renders JSON links to the v3 trace endpoint', () => {
+    const traceID = '0123456789abcdef0123456789abcdef';
+    renderComponent({ traceID });
 
     const jsonMenuItem = screen.getByTestId('menu-item-trace-json');
     const jsonLink = jsonMenuItem.querySelector('a');
-    expect(jsonLink).toHaveAttribute('href', '/api/traces/test trace ID?prettyPrint=true');
+    expect(jsonLink).toHaveAttribute('href', `/api/v3/traces/${traceID}?prettyPrint=true`);
 
     const rawJsonMenuItem = screen.getByTestId('menu-item-trace-json-unadjusted');
     const rawJsonLink = rawJsonMenuItem.querySelector('a');
-    expect(rawJsonLink).toHaveAttribute('href', '/api/traces/test trace ID?raw=true&prettyPrint=true');
+    expect(rawJsonLink).toHaveAttribute('href', `/api/v3/traces/${traceID}?rawTraces=true&prettyPrint=true`);
+  });
+
+  it('pads short trace IDs to 32 hex characters in JSON links', () => {
+    renderComponent({ traceID: 'abc123' });
+
+    const jsonLink = screen.getByTestId('menu-item-trace-json').querySelector('a');
+    expect(jsonLink).toHaveAttribute('href', `/api/v3/traces/${'abc123'.padStart(32, '0')}?prettyPrint=true`);
   });
 
   it('updates dropdown text when view type changes', () => {

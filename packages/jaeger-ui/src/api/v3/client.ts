@@ -8,19 +8,30 @@
  * without a v3 counterpart.
  */
 
+import queryString from 'query-string';
+
 import { ALL_SERVICES } from '../../constants/search-form';
+import getConfig from '../../utils/config/get-config';
 import prefixUrl from '../../utils/prefix-url';
+import { truncateErrorDetail } from '../../utils/error-message';
 import {
   ServicesResponseSchema,
   OperationsResponseSchema,
   TraceSummariesResponseSchema,
   GetTraceResponseSchema,
+  ServiceMetricsResponseSchema,
+  OperationMetricsResponseSchema,
   traceIdHex,
 } from './schemas';
 import type { TracesDataWire } from './schemas';
 import type { SearchQuery } from '../../types/search';
 import type { TraceSummary, ServiceSummary } from '../../types/trace-summary';
+import type { ApiError } from '../../types/api-error';
 import type { Microseconds } from '../../types/units';
+import type { TDdgModelParams } from '../../model/ddg/types';
+import type { MetricsAPIQueryParams, MetricsAPIResponse } from '../../types/metrics';
+
+export const DEFAULT_DEPENDENCY_LOOKBACK = 7 * 24 * 60 * 60 * 1000;
 
 /**
  * Convert a microsecond epoch timestamp to an ISO-8601 string.
@@ -38,25 +49,187 @@ function toIsoTimestamp(epochMicroseconds: number): string | undefined {
   return undefined;
 }
 
+// ErrorMessage shows at most 1024 characters, so a few KB covers a pretty-printed JSON error.
+const MAX_ERROR_BODY_BYTES = 4096;
+// The status is already known, so a stalled error body must not delay reporting it,
+// including on requests without a deadline.
+const ERROR_BODY_TIMEOUT_MS = 2000;
+
+/**
+ * Read up to MAX_ERROR_BODY_BYTES of a failed response within ERROR_BODY_TIMEOUT_MS and
+ * cancel the rest, so a large, endless, or stalled error body never holds up the error.
+ * A read that fails because the request was aborted rethrows the abort reason; any other
+ * read failure is reported as an absent body.
+ */
+async function readErrorBody(response: Response, signal: AbortSignal | null | undefined): Promise<string> {
+  const reader = response.body?.getReader();
+  if (!reader) return '';
+  const decoder = new TextDecoder();
+  let body = '';
+  let remaining = MAX_ERROR_BODY_BYTES;
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const expired = new Promise<null>(resolve => {
+    timeoutId = setTimeout(() => resolve(null), ERROR_BODY_TIMEOUT_MS);
+  });
+  try {
+    while (remaining > 0) {
+      const result = await Promise.race([reader.read(), expired]);
+      // On expiry, keep the part of the body read so far.
+      if (!result) break;
+      if (result.done) return body + decoder.decode();
+      const chunk = result.value.subarray(0, remaining);
+      remaining -= chunk.byteLength;
+      body += decoder.decode(chunk, { stream: true });
+    }
+  } catch (error) {
+    if (signal?.aborted) throw error;
+    return '';
+  } finally {
+    clearTimeout(timeoutId);
+  }
+  reader.cancel().catch(() => undefined);
+  return body + decoder.decode();
+}
+
+function nonBlankString(value: unknown): string | undefined {
+  const trimmed = typeof value === 'string' ? value.trim() : '';
+  return trimmed || undefined;
+}
+
+/** Reads the human-readable detail from a parsed JSON error body. */
+type ErrorDetailFn = (data: unknown) => string | undefined;
+
+type FetchOptions = RequestInit & {
+  timeout?: number | null;
+  errorDetailFn?: ErrorDetailFn;
+};
+
+/** The v3 HTTP gateway returns `{ error: { httpCode, message } }`. */
+function v3ErrorDetail(data: unknown): string | undefined {
+  const { error } = (data ?? {}) as { error?: { message?: unknown } | null };
+  return nonBlankString(error?.message);
+}
+
+/** The legacy /api/ routes return `{ errors: [{ code, msg }] }`. */
+function legacyErrorDetail(data: unknown): string | undefined {
+  const { errors } = (data ?? {}) as { errors?: unknown };
+  if (!Array.isArray(errors)) return undefined;
+  const messages = errors
+    .map(e => nonBlankString((e as { msg?: unknown } | null)?.msg))
+    .filter((m): m is string => m !== undefined);
+  return messages.length ? messages.join('; ') : undefined;
+}
+
+/**
+ * Build the error for a failed response. The message carries the server's own
+ * message when the body has one; the HTTP details and body are kept for ErrorMessage.
+ */
+async function httpError(
+  message: string,
+  url: string,
+  response: Response,
+  signal: AbortSignal | null | undefined,
+  errorDetailFn?: ErrorDetailFn
+): Promise<Error> {
+  const error: Error & Exclude<ApiError, string> = new Error(
+    `${message}: ${response.status} ${response.statusText}`
+  );
+  const queryStart = url.indexOf('?');
+  error.httpStatus = response.status;
+  error.httpStatusText = response.statusText;
+  error.httpUrl = queryStart === -1 ? url : url.slice(0, queryStart);
+  if (queryStart !== -1) error.httpQuery = url.slice(queryStart + 1);
+  const body = await readErrorBody(response, signal);
+  if (body) {
+    try {
+      const data: unknown = JSON.parse(body);
+      error.httpBody = JSON.stringify(data, null, 2);
+      const detail = truncateErrorDetail(errorDetailFn?.(data));
+      if (detail) error.message += `: ${detail}`;
+    } catch {
+      error.httpBody = body;
+    }
+  }
+  return error;
+}
+
 export class JaegerClient {
   private apiRoot = prefixUrl('/api/v3');
-  // Archival has no v3 endpoint and stays on the legacy route.
+  // Archive, dependency-graph, and metrics requests retain their existing /api/ routes.
   private legacyApiRoot = prefixUrl('/api/');
 
+  async fetchMetrics<TGroupByOperation extends boolean = false>(
+    metricType: 'latencies' | 'calls' | 'errors',
+    service: string,
+    query: MetricsAPIQueryParams & { groupByOperation?: TGroupByOperation },
+    signal?: AbortSignal
+  ): Promise<MetricsAPIResponse<TGroupByOperation>>;
+  async fetchMetrics(
+    metricType: 'latencies' | 'calls' | 'errors',
+    service: string,
+    query: MetricsAPIQueryParams,
+    signal?: AbortSignal
+  ): Promise<MetricsAPIResponse<boolean>> {
+    const path = `metrics/${metricType}?service=${encodeURIComponent(service)}&${queryString.stringify(query)}`;
+    // Preserve deadline-free metrics reads, which can wait on storage queries.
+    const data = await this.fetchLegacy(path, `Failed to fetch ${metricType} metrics`, {
+      timeout: null,
+      signal,
+    });
+    const schema = query.groupByOperation ? OperationMetricsResponseSchema : ServiceMetricsResponseSchema;
+    return { ...schema.parse(data), quantile: query.quantile };
+  }
+
+  async fetchDependencies(
+    endTs = Date.now(),
+    lookback = DEFAULT_DEPENDENCY_LOOKBACK,
+    signal?: AbortSignal
+  ): Promise<unknown> {
+    const query = queryString.stringify({ endTs, lookback });
+    // Preserve deadline-free graph reads, which can wait on storage queries.
+    return this.fetchLegacy(`dependencies?${query}`, 'Failed to fetch dependencies', {
+      timeout: null,
+      signal,
+    });
+  }
+
+  async fetchDeepDependencyGraph(params: TDdgModelParams, signal?: AbortSignal): Promise<unknown> {
+    const query = queryString.stringify(params);
+    return this.fetchLegacy(`deep-dependencies?${query}`, 'Failed to fetch deep dependencies', {
+      timeout: null,
+      signal,
+    });
+  }
+
   async archiveTrace(id: string): Promise<unknown> {
-    const response = await this.fetchWithTimeout(`${this.legacyApiRoot}archive/${id}`, { method: 'POST' });
-    if (!response.ok) {
-      throw new Error(`Failed to archive trace ${id}: ${response.status} ${response.statusText}`);
-    }
-    return response.json();
+    return this.fetchLegacy(`archive/${id}`, `Failed to archive trace ${id}`, { method: 'POST' });
   }
 
   async fetchDecoration(url: string): Promise<unknown> {
-    const response = await this.fetchWithTimeout(url);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch decoration: ${response.status} ${response.statusText}`);
+    return this.fetchJson(url, 'Failed to fetch decoration');
+  }
+
+  async fetchQualityMetrics(service: string, hours: number, signal?: AbortSignal): Promise<unknown> {
+    const endpoint = getConfig().qualityMetrics?.apiEndpoint;
+    if (!endpoint) {
+      throw new Error('qualityMetrics.apiEndpoint is not set in the UI config');
     }
-    return response.json();
+    const url = `${prefixUrl(endpoint)}?${queryString.stringify({ hours, service })}`;
+    return this.fetchJson(url, 'Failed to fetch quality metrics', { timeout: null, signal });
+  }
+
+  private fetchV3(path: string, errorMessage: string, options?: FetchOptions): Promise<unknown> {
+    return this.fetchJson(`${this.apiRoot}/${path}`, errorMessage, {
+      ...options,
+      errorDetailFn: v3ErrorDetail,
+    });
+  }
+
+  private fetchLegacy(path: string, errorMessage: string, options?: FetchOptions): Promise<unknown> {
+    return this.fetchJson(`${this.legacyApiRoot}${path}`, errorMessage, {
+      ...options,
+      errorDetailFn: legacyErrorDetail,
+    });
   }
 
   /**
@@ -64,11 +237,7 @@ export class JaegerClient {
    * @returns Promise<string[]> - Array of service names
    */
   async fetchServices(): Promise<string[]> {
-    const response = await this.fetchWithTimeout(`${this.apiRoot}/services`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch services: ${response.status} ${response.statusText}`);
-    }
-    const data = await response.json();
+    const data = await this.fetchV3('services', 'Failed to fetch services');
 
     // Runtime validation with Zod
     const validated = ServicesResponseSchema.parse(data);
@@ -81,15 +250,8 @@ export class JaegerClient {
    * @returns Promise<{ name: string; spanKind: string }[]> - Array of span name objects
    */
   async fetchSpanNames(service: string): Promise<{ name: string; spanKind: string }[]> {
-    const response = await this.fetchWithTimeout(
-      `${this.apiRoot}/operations?service=${encodeURIComponent(service)}`
-    );
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch span names for service "${service}": ${response.status} ${response.statusText}`
-      );
-    }
-    const data = await response.json();
+    const path = `operations?service=${encodeURIComponent(service)}`;
+    const data = await this.fetchV3(path, `Failed to fetch span names for service "${service}"`);
 
     // Runtime validation with Zod
     const validated = OperationsResponseSchema.parse(data);
@@ -117,12 +279,10 @@ export class JaegerClient {
     if (query.maxDuration) params.set('query.durationMax', query.maxDuration);
     if (query.tags) params.set('query.attributes', query.tags);
 
-    const url = `${this.apiRoot}/trace-summaries?${params.toString()}`;
-    const response = await this.fetchWithTimeout(url);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch trace summaries: ${response.status} ${response.statusText}`);
-    }
-    const data = await response.json();
+    const data = await this.fetchV3(
+      `trace-summaries?${params.toString()}`,
+      'Failed to fetch trace summaries'
+    );
     const validated = TraceSummariesResponseSchema.parse(data);
 
     // Timestamps are decimal ns strings (proto3 JSON encoding for int64).
@@ -171,32 +331,37 @@ export class JaegerClient {
    */
   async fetchTrace(traceId: string, signal?: AbortSignal): Promise<TracesDataWire> {
     traceIdHex.parse(traceId);
+    const path = `traces/${encodeURIComponent(traceId)}`;
     // Trace queries buffer storage and archive reads before sending headers and can exceed 10 seconds.
-    const response = await this.fetchWithTimeout(`${this.apiRoot}/traces/${encodeURIComponent(traceId)}`, {
+    const data = await this.fetchV3(path, `Failed to fetch trace ${traceId}`, {
       timeout: null,
       signal,
     });
-    if (!response.ok) {
-      throw new Error(`Failed to fetch trace ${traceId}: ${response.status} ${response.statusText}`);
-    }
-    const data = await response.json();
     const validated = GetTraceResponseSchema.parse(data);
     return validated.result;
   }
 
   /**
-   * Fetch with timeout support using AbortController.
+   * Fetch and parse a JSON response with timeout support using AbortController. The
+   * timeout and caller signal cover the whole request, including the body read, and a
+   * failed response is turned into an httpError, whose body read also has its own
+   * short deadline.
    * @param url - The URL to fetch
-   * @param options - Fetch request options, plus a timeout in milliseconds (default: 10 seconds) or null for no deadline
-   * @returns Promise<Response>
-   * @throws Error if request times out or network error occurs
+   * @param errorMessage - Prefix for the error thrown on a failed response
+   * @param options - Fetch request options, plus a timeout in milliseconds (default: 10 seconds) or null
+   *   for no deadline, and the reader for the detail in an error body
+   * @returns Promise<unknown> - The parsed JSON body of a successful response
+   * @throws Error if the response fails, the request times out, or a network error occurs
    */
-  private async fetchWithTimeout(
+  private async fetchJson(
     url: string,
-    { timeout = 10000, signal, ...options }: RequestInit & { timeout?: number | null } = {}
-  ): Promise<Response> {
+    errorMessage: string,
+    { timeout = 10000, signal, errorDetailFn, ...options }: FetchOptions = {}
+  ): Promise<unknown> {
     if (timeout === null) {
-      return fetch(url, { ...options, signal });
+      const response = await fetch(url, { ...options, signal });
+      if (!response.ok) throw await httpError(errorMessage, url, response, signal, errorDetailFn);
+      return response.json();
     }
 
     const controller = new AbortController();
@@ -216,7 +381,8 @@ export class JaegerClient {
 
     try {
       const response = await fetch(url, { ...options, signal: controller.signal });
-      return response;
+      if (!response.ok) throw await httpError(errorMessage, url, response, controller.signal, errorDetailFn);
+      return await response.json();
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError' && timedOut) {
         throw new Error(`Request timeout after ${timeout}ms`, { cause: error });

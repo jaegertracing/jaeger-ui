@@ -46,6 +46,7 @@ export function toOtlpTrace({ traceID, serviceName, spans }: ITraceSpec): Traces
             tags = [],
             events = [],
             scope,
+            warnings,
           } = {
             startTime: 1,
             duration: 1,
@@ -92,7 +93,18 @@ export function toOtlpTrace({ traceID, serviceName, spans }: ITraceSpec): Traces
               ? {}
               : { startTimeUnixNano: (start * 1000n).toString() }),
             ...(end === undefined || end === 0n ? {} : { endTimeUnixNano: (end * 1000n).toString() }),
-            attributes: tags.map(tag => ({ key: tag.key, value: attributeValue(tag.value) })),
+            attributes: [
+              ...tags.map(tag => ({ key: tag.key, value: attributeValue(tag.value) })),
+              // The v3 API sends backend diagnostics in this reserved attribute.
+              ...(warnings === undefined
+                ? []
+                : [
+                    {
+                      key: '@jaeger@warnings',
+                      value: { arrayValue: { values: warnings.map(warning => ({ stringValue: warning })) } },
+                    },
+                  ]),
+            ],
             links,
             status: {},
           };

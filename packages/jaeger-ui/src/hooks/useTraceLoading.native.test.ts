@@ -244,7 +244,14 @@ describe.each(['useTrace', 'useTraces'] as const)('%s native loading', hook => {
     respond({ error: 'unavailable' }, 503);
     const { result } = renderHook(() => useResult(traceID), { wrapper });
     await waitFor(() => expect(result.current.failed).toBe(true));
-    expect(result.current.error).toEqual(new Error(`Failed to fetch trace ${traceID}: 503 `));
+    expect(result.current.error).toEqual(
+      Object.assign(new Error(`Failed to fetch trace ${traceID}: 503 `), {
+        httpStatus: 503,
+        httpStatusText: '',
+        httpUrl: `/api/v3/traces/${traceID}`,
+        httpBody: JSON.stringify({ error: 'unavailable' }, null, 2),
+      })
+    );
   });
 
   it('preserves a network rejection', async () => {
