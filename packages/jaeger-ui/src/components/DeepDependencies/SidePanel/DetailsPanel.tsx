@@ -143,6 +143,7 @@ function UnconnectedDetailsPanelImpl(props: TProps) {
         {detailLink && (
           <Tooltip arrow={{ pointAtCenter: true }} title="More Info">
             <a
+              aria-label="More info in a new window"
               className="Ddg--DetailsPanel--DetailLink"
               href={stringSupplant(detailLink, { service, operation })}
               target="_blank"
