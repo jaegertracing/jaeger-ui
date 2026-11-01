@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { Span } from '@opentelemetry/sdk-trace-base';
+import { Span } from '@opentelemetry/sdk-trace';
 import { PageAttributionProcessor } from './page-attribution';
 
 const SESSION_ID_KEY = 'jaeger.tracing.sessionId';

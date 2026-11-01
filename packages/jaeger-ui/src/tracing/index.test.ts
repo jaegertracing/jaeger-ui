@@ -3,16 +3,29 @@
 
 import { vi } from 'vitest';
 
-const registerSpy = vi.fn();
-const webTracerProviderCtor = vi.fn(function (this: any, opts: unknown) {
-  this.register = registerSpy;
+const setGlobalTracerProviderSpy = vi.fn();
+const setGlobalContextManagerSpy = vi.fn();
+const setGlobalPropagatorSpy = vi.fn();
+const tracerProviderCtor = vi.fn(function (this: any, opts: unknown) {
   this.opts = opts;
 });
+const enableSpy = vi.fn();
+const stackContextManagerCtor = vi.fn(function (this: any) {
+  this.enable = () => {
+    enableSpy();
+    return this;
+  };
+});
+const compositePropagatorCtor = vi.fn(function (this: any, opts: unknown) {
+  this.opts = opts;
+});
+const w3cBaggagePropagatorCtor = vi.fn();
+const w3cTraceContextPropagatorCtor = vi.fn();
 const otlpTraceExporterCtor = vi.fn(function (this: any, opts: unknown) {
   this.opts = opts;
 });
-const batchSpanProcessorCtor = vi.fn(function (this: any, exporter: unknown) {
-  this.exporter = exporter;
+const batchSpanProcessorCtor = vi.fn(function (this: any, opts: unknown) {
+  this.opts = opts;
 });
 const traceIdRatioBasedSamplerCtor = vi.fn(function (this: any, ratio: number) {
   this.ratio = ratio;
@@ -28,12 +41,21 @@ const pageAttributionProcessorCtor = vi.fn(function (this: any) {
   this.name = 'page-attribution';
 });
 
-vi.mock('@opentelemetry/sdk-trace-base', () => ({
-  BatchSpanProcessor: batchSpanProcessorCtor,
-  TraceIdRatioBasedSampler: traceIdRatioBasedSamplerCtor,
+vi.mock('@opentelemetry/api', () => ({
+  trace: { setGlobalTracerProvider: setGlobalTracerProviderSpy },
+  context: { setGlobalContextManager: setGlobalContextManagerSpy },
+  propagation: { setGlobalPropagator: setGlobalPropagatorSpy },
 }));
-vi.mock('@opentelemetry/sdk-trace-web', () => ({
-  WebTracerProvider: webTracerProviderCtor,
+vi.mock('@opentelemetry/core', () => ({
+  CompositePropagator: compositePropagatorCtor,
+  W3CBaggagePropagator: w3cBaggagePropagatorCtor,
+  W3CTraceContextPropagator: w3cTraceContextPropagatorCtor,
+}));
+vi.mock('@opentelemetry/sdk-trace', () => ({
+  BatchSpanProcessor: batchSpanProcessorCtor,
+  StackContextManager: stackContextManagerCtor,
+  TraceIdRatioBasedSampler: traceIdRatioBasedSamplerCtor,
+  TracerProvider: tracerProviderCtor,
 }));
 vi.mock('@opentelemetry/exporter-trace-otlp-http', () => ({
   OTLPTraceExporter: otlpTraceExporterCtor,
@@ -67,8 +89,15 @@ const mockGetConfig = getConfig as unknown as ReturnType<typeof vi.fn>;
 describe('initTracing', () => {
   beforeEach(() => {
     vi.resetModules();
-    registerSpy.mockClear();
-    webTracerProviderCtor.mockClear();
+    setGlobalTracerProviderSpy.mockClear();
+    setGlobalContextManagerSpy.mockClear();
+    setGlobalPropagatorSpy.mockClear();
+    tracerProviderCtor.mockClear();
+    stackContextManagerCtor.mockClear();
+    enableSpy.mockClear();
+    compositePropagatorCtor.mockClear();
+    w3cBaggagePropagatorCtor.mockClear();
+    w3cTraceContextPropagatorCtor.mockClear();
     otlpTraceExporterCtor.mockClear();
     batchSpanProcessorCtor.mockClear();
     traceIdRatioBasedSamplerCtor.mockClear();
@@ -88,7 +117,7 @@ describe('initTracing', () => {
     mockGetConfig.mockReturnValue({});
     const initTracing = await loadInitTracing();
     initTracing();
-    expect(webTracerProviderCtor).not.toHaveBeenCalled();
+    expect(tracerProviderCtor).not.toHaveBeenCalled();
     expect(registerInstrumentationsSpy).not.toHaveBeenCalled();
   });
 
@@ -96,7 +125,7 @@ describe('initTracing', () => {
     mockGetConfig.mockReturnValue({ tracing: { enabled: false } });
     const initTracing = await loadInitTracing();
     initTracing();
-    expect(webTracerProviderCtor).not.toHaveBeenCalled();
+    expect(tracerProviderCtor).not.toHaveBeenCalled();
   });
 
   it('initializes a provider when tracing.enabled is true', async () => {
@@ -104,12 +133,24 @@ describe('initTracing', () => {
     const initTracing = await loadInitTracing();
     initTracing();
 
-    expect(webTracerProviderCtor).toHaveBeenCalledTimes(1);
-    expect(registerSpy).toHaveBeenCalledTimes(1);
+    expect(tracerProviderCtor).toHaveBeenCalledTimes(1);
+    expect(setGlobalTracerProviderSpy).toHaveBeenCalledWith(tracerProviderCtor.mock.instances[0]);
+    expect(setGlobalContextManagerSpy).toHaveBeenCalledWith(stackContextManagerCtor.mock.instances[0]);
+    expect(enableSpy).toHaveBeenCalledTimes(1);
+    expect(setGlobalPropagatorSpy).toHaveBeenCalledWith(compositePropagatorCtor.mock.instances[0]);
+    expect(compositePropagatorCtor).toHaveBeenCalledWith({
+      propagators: [
+        w3cTraceContextPropagatorCtor.mock.instances[0],
+        w3cBaggagePropagatorCtor.mock.instances[0],
+      ],
+    });
     expect(registerInstrumentationsSpy).toHaveBeenCalledTimes(1);
     expect(pageAttributionProcessorCtor).toHaveBeenCalledTimes(1);
     expect(pageAttributionProcessorCtor).toHaveBeenCalledWith({ inactivityMs: undefined });
     expect(batchSpanProcessorCtor).toHaveBeenCalledTimes(1);
+    expect(batchSpanProcessorCtor).toHaveBeenCalledWith({
+      exporter: otlpTraceExporterCtor.mock.instances[0],
+    });
   });
 
   it('converts tracing.sessionInactivityMinutes to milliseconds for the page-attribution processor', async () => {
@@ -130,7 +171,7 @@ describe('initTracing', () => {
     expect(traceIdRatioBasedSamplerCtor).toHaveBeenCalledWith(1.0);
     expect(otlpTraceExporterCtor).toHaveBeenCalledWith({ url: '/jaeger/api/otlp/v1/traces' });
 
-    const providerArgs = webTracerProviderCtor.mock.calls[0][0] as any;
+    const providerArgs = tracerProviderCtor.mock.calls[0][0] as any;
     expect(providerArgs.resource.attrs).toMatchObject({
       'service.name': 'jaeger-ui',
       'service.version': expect.any(String),
@@ -145,7 +186,7 @@ describe('initTracing', () => {
     initTracing();
 
     expect(traceIdRatioBasedSamplerCtor).toHaveBeenCalledWith(0.25);
-    const providerArgs = webTracerProviderCtor.mock.calls[0][0] as any;
+    const providerArgs = tracerProviderCtor.mock.calls[0][0] as any;
     expect(providerArgs.resource.attrs['service.name']).toBe('my-ui');
   });
 
@@ -168,7 +209,7 @@ describe('initTracing', () => {
     const initTracing = await loadInitTracing();
     initTracing();
     initTracing();
-    expect(webTracerProviderCtor).toHaveBeenCalledTimes(1);
+    expect(tracerProviderCtor).toHaveBeenCalledTimes(1);
     expect(registerInstrumentationsSpy).toHaveBeenCalledTimes(1);
   });
 });
