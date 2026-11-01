@@ -144,6 +144,7 @@ describe('<TraceTimelineViewer>', () => {
     mockLayoutPrefsStore.detailPanelMode = 'inline';
     mockLayoutPrefsStore.timelineBarsVisible = true;
     mockTraceTimelineStore.detailStates = new Map();
+    mockTraceTimelineStore.focusedSubtreeSpanID = null;
     mockUseTraceTimelineStore.setState.mockClear();
     mockUseServiceFilter.prunedServices = new Set();
     mockUseServiceFilter.serviceFilterNode = null;
@@ -153,6 +154,7 @@ describe('<TraceTimelineViewer>', () => {
 
   afterEach(() => {
     KeyboardShortcuts.merge.mockRestore();
+    mockTraceTimelineStore.focusedSubtreeSpanID = null;
   });
 
   it('does not explode', () => {

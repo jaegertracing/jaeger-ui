@@ -6,11 +6,13 @@ import DetailState from './SpanDetail/DetailState';
 import { useLayoutPrefsStore } from './store.layout';
 import { TNil } from '../../../types';
 import { IOtelSpan, IOtelTrace, IEvent } from '../../../types/otel';
+import { isSpanPruned } from './generateRowStates';
 import {
   applyDetailSubsectionToggle,
   calculateFocusedFindRowStates,
   getDescendantParentSpanIDs,
   shouldDisableCollapse,
+  shouldDisableExpand,
   trimFocusedDetailStatesForSidePanel,
 } from './timeline-utils';
 
@@ -29,7 +31,7 @@ type TraceTimelineInteractionStore = {
   // Resets ephemeral fields for a new trace and optionally pre-apply a uiFind filter
   setTrace: (trace: IOtelTrace, uiFind?: string | TNil) => void;
   childrenToggle: (spanID: string) => void;
-  expandAll: () => void;
+  expandAll: (spans?: ReadonlyArray<IOtelSpan>) => void;
   expandOne: (spans: ReadonlyArray<IOtelSpan>) => void;
   collapseAll: (spans: ReadonlyArray<IOtelSpan>) => void;
   collapseOne: (spans: ReadonlyArray<IOtelSpan>) => void;
@@ -53,7 +55,17 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
   shouldScrollToFirstUiFindMatch: false,
   prunedServices: new Set<string>(),
 
-  setPrunedServices: (pruned: Set<string>) => set({ prunedServices: new Set(pruned) }),
+  setPrunedServices: (pruned: Set<string>) => {
+    const { focusedSubtreeSpanID, traceSpans } = get();
+    let nextFocusedID = focusedSubtreeSpanID;
+    if (focusedSubtreeSpanID && traceSpans) {
+      const focusedSpan = traceSpans.find(s => s.spanID === focusedSubtreeSpanID);
+      if (focusedSpan && isSpanPruned(focusedSpan, pruned)) {
+        nextFocusedID = null;
+      }
+    }
+    set({ prunedServices: new Set(pruned), focusedSubtreeSpanID: nextFocusedID });
+  },
 
   clearServiceFilter: () => set({ prunedServices: new Set<string>() }),
 
@@ -146,13 +158,23 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
     set({ childrenHiddenIDs });
   },
 
-  expandAll: () => {
+  expandAll: (spans?: ReadonlyArray<IOtelSpan>) => {
+    if (spans) {
+      const current = get().childrenHiddenIDs;
+      if (shouldDisableExpand(spans, current)) return;
+      const childrenHiddenIDs = new Set(current);
+      spans.forEach(s => {
+        if (s.hasChildren) childrenHiddenIDs.delete(s.spanID);
+      });
+      set({ childrenHiddenIDs });
+      return;
+    }
     set({ childrenHiddenIDs: new Set<string>() });
   },
 
   expandOne: (spans: ReadonlyArray<IOtelSpan>) => {
     const current = get().childrenHiddenIDs;
-    if (current.size === 0) return;
+    if (shouldDisableExpand(spans, current)) return;
     let prevExpandedDepth = -1;
     let expandNextHiddenSpan = true;
     const childrenHiddenIDs = spans.reduce((res, s) => {
@@ -172,10 +194,10 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
   collapseAll: (spans: ReadonlyArray<IOtelSpan>) => {
     const { childrenHiddenIDs: current } = get();
     if (shouldDisableCollapse(spans, current)) return;
-    const childrenHiddenIDs = spans.reduce((res, s) => {
-      if (s.hasChildren) res.add(s.spanID);
-      return res;
-    }, new Set<string>());
+    const childrenHiddenIDs = new Set(current);
+    spans.forEach(s => {
+      if (s.hasChildren) childrenHiddenIDs.add(s.spanID);
+    });
     set({ childrenHiddenIDs });
   },
 

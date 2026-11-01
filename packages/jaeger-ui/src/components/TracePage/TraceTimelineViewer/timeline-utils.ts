@@ -18,6 +18,13 @@ export function shouldDisableCollapse(
   return allSpans.filter(s => s.hasChildren).every(p => hiddenSpansIds.has(p.spanID));
 }
 
+export function shouldDisableExpand(
+  allSpans: ReadonlyArray<IOtelSpan>,
+  hiddenSpansIds: Set<string>
+): boolean {
+  return allSpans.filter(s => s.hasChildren).every(p => !hiddenSpansIds.has(p.spanID));
+}
+
 type FocusedFindRowStates = {
   childrenHiddenIDs: Set<string>;
   detailStates: Map<string, DetailState>;
@@ -147,23 +154,45 @@ export function getDescendantParentSpanIDs(rootSpan: IOtelSpan): Set<string> {
 }
 
 /**
+ * Returns an array of spans belonging to the focused subtree, or null if no focus
+ * or if the focused span is pruned. Memoized to avoid repeated tree traversals.
+ */
+function _getFocusedSubtree(
+  trace: IOtelTrace | TNil,
+  focusedSubtreeSpanID?: string | null,
+  prunedServices?: Set<string>
+): IOtelSpan[] | null {
+  if (!focusedSubtreeSpanID || !trace) {
+    return null;
+  }
+  const focusedSpan = trace.spanMap
+    ? trace.spanMap.get(focusedSubtreeSpanID)
+    : trace.spans.find(s => s.spanID === focusedSubtreeSpanID);
+  if (!focusedSpan || (prunedServices && isSpanPruned(focusedSpan, prunedServices))) {
+    return null;
+  }
+  return getSubtreeSpans(focusedSpan);
+}
+
+export const getFocusedSubtree = memoizeOne(
+  _getFocusedSubtree,
+  (newArgs, lastArgs) =>
+    newArgs[0] === lastArgs[0] && newArgs[1] === lastArgs[1] && _isEqual(newArgs[2], lastArgs[2])
+);
+
+/**
  * Returns a Set of span IDs belonging to the focused subtree, or null if no focus
- * or if the focused span is pruned. Memoized across callers (TracePage and VirtualizedTraceView)
- * to avoid repeated tree traversals and set allocations during high-frequency updates.
+ * or if the focused span is pruned.
  */
 function getFocusedSpanIDs(
   trace: IOtelTrace | TNil,
   focusedSubtreeSpanID?: string | null,
   prunedServices?: Set<string>
 ): Set<string> | null {
-  if (!focusedSubtreeSpanID || !trace) {
+  const subtreeSpans = getFocusedSubtree(trace, focusedSubtreeSpanID, prunedServices);
+  if (!subtreeSpans) {
     return null;
   }
-  const focusedSpan = trace.spanMap.get(focusedSubtreeSpanID);
-  if (!focusedSpan || (prunedServices && isSpanPruned(focusedSpan, prunedServices))) {
-    return null;
-  }
-  const subtreeSpans = getSubtreeSpans(focusedSpan);
   return new Set(subtreeSpans.map(s => s.spanID));
 }
 

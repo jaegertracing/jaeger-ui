@@ -48,10 +48,7 @@ type TTimelineViewerActions = {
   [actionName: string]: ActionFunctionAny<Action<TActionTypes>>;
 };
 
-function shouldDisableCollapse(allSpans: IOtelSpan[], hiddenSpansIds: Set<string>) {
-  const allParentSpans = allSpans.filter(s => s.hasChildren);
-  return allParentSpans.length === hiddenSpansIds.size;
-}
+import { shouldDisableCollapse, shouldDisableExpand } from './timeline-utils';
 
 export function newInitialState(): TTraceTimeline {
   const { traceTimeline } = getConfig();
@@ -161,7 +158,7 @@ const fullActions = createActions<TActionTypes>({
   [actionTypes.COLLAPSE_ONE]: (spans: IOtelSpan[]) => ({ spans }),
   [actionTypes.DETAIL_LOG_ITEM_TOGGLE]: (spanID: string, logItem: IEvent) => ({ logItem, spanID }),
   [actionTypes.DETAIL_LOGS_TOGGLE]: (spanID: string) => ({ spanID }),
-  [actionTypes.EXPAND_ALL]: () => ({}),
+  [actionTypes.EXPAND_ALL]: (spans?: IOtelSpan[]) => ({ spans }),
   [actionTypes.EXPAND_ONE]: (spans: IOtelSpan[]) => ({ spans }),
   [actionTypes.DETAIL_PROCESS_TOGGLE]: (spanID: string) => ({ spanID }),
   [actionTypes.DETAIL_WARNINGS_TOGGLE]: (spanID: string) => ({ spanID }),
@@ -286,7 +283,19 @@ function childrenToggleSubtree(
   return { ...state, childrenHiddenIDs };
 }
 
-export function expandAll(state: TTraceTimeline): TTraceTimeline {
+export function expandAll(state: TTraceTimeline, { spans }: { spans?: IOtelSpan[] } = {}): TTraceTimeline {
+  if (spans) {
+    if (shouldDisableExpand(spans, state.childrenHiddenIDs)) {
+      return state;
+    }
+    const childrenHiddenIDs = new Set(state.childrenHiddenIDs);
+    spans.forEach(s => {
+      if (s.hasChildren) {
+        childrenHiddenIDs.delete(s.spanID);
+      }
+    });
+    return { ...state, childrenHiddenIDs };
+  }
   const childrenHiddenIDs = new Set<string>();
   return { ...state, childrenHiddenIDs };
 }
@@ -295,12 +304,12 @@ export function collapseAll(state: TTraceTimeline, { spans }: TSpansValue) {
   if (shouldDisableCollapse(spans, state.childrenHiddenIDs)) {
     return state;
   }
-  const childrenHiddenIDs = spans.reduce((res, s) => {
+  const childrenHiddenIDs = new Set(state.childrenHiddenIDs);
+  spans.forEach(s => {
     if (s.hasChildren) {
-      res.add(s.spanID);
+      childrenHiddenIDs.add(s.spanID);
     }
-    return res;
-  }, new Set<string>());
+  });
   return { ...state, childrenHiddenIDs };
 }
 
@@ -328,7 +337,7 @@ export function collapseOne(state: TTraceTimeline, { spans }: TSpansValue) {
 }
 
 export function expandOne(state: TTraceTimeline, { spans }: TSpansValue) {
-  if (state.childrenHiddenIDs.size === 0) {
+  if (shouldDisableExpand(spans, state.childrenHiddenIDs)) {
     return state;
   }
   let prevExpandedDepth = -1;

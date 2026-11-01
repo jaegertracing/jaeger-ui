@@ -29,6 +29,8 @@ vi.mock('../../../../utils/update-ui-find');
 
 const mockZustandState = vi.hoisted(() => ({
   detailStates: new Map(),
+  focusedSubtreeSpanID: null,
+  setFocusedSubtreeSpanID: jest.fn(),
   detailLogItemToggle: jest.fn(),
   detailLogsToggle: jest.fn(),
   detailProcessToggle: jest.fn(),
@@ -42,7 +44,9 @@ vi.mock('../store', async importOriginal => {
   const actual = await importOriginal();
   return {
     ...actual,
-    useTraceTimelineStore: selector => selector(mockZustandState),
+    useTraceTimelineStore: Object.assign(selector => selector(mockZustandState), {
+      getState: () => mockZustandState,
+    }),
     getSelectedSpanID: detailStatesArg =>
       detailStatesArg.size > 0 ? detailStatesArg.keys().next().value : null,
   };
@@ -68,6 +72,7 @@ describe('<SpanDetailSidePanelImpl>', () => {
     };
     // reset Zustand mock state
     mockZustandState.detailStates = new Map();
+    mockZustandState.focusedSubtreeSpanID = null;
     mockDispatch.mockReset();
     Object.values(mockZustandState).forEach(v => typeof v === 'function' && v.mockReset?.());
   });
@@ -119,5 +124,13 @@ describe('<SpanDetailSidePanelImpl>', () => {
     const { detailState } = SpanDetail.mock.lastCall[0];
     expect(detailState.isAttributesOpen).toBe(true);
     expect(detailState.isResourceOpen).toBe(true);
+  });
+
+  it('clears focused subtree when focusSpan targets a span outside the subtree', () => {
+    mockZustandState.focusedSubtreeSpanID = trace.spans[1].spanID;
+    render(<SpanDetailSidePanelImpl {...baseProps} />);
+    fireEvent.click(screen.getByTestId('focus-span-button'));
+    // 'test-find' is not in span-1's subtree
+    expect(mockZustandState.setFocusedSubtreeSpanID).toHaveBeenCalledWith(null);
   });
 });

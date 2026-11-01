@@ -15,6 +15,7 @@ import transformTraceData from '../../../model/transform-trace-data';
 import updateUiFindSpy from '../../../utils/update-ui-find';
 import * as linkPatterns from '../../../model/link-patterns';
 import memoizedTraceCriticalPath from '../CriticalPath/index';
+import { getSubtreeSpans } from './timeline-utils';
 
 import criticalPathTest from '../CriticalPath/testCases/test2';
 
@@ -180,8 +181,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       expect(accessors).toHaveProperty('getViewRange');
       expect(accessors).toHaveProperty('getSearchedSpanIDs');
       expect(accessors).toHaveProperty('getCollapsedChildren');
-      expect(accessors).toHaveProperty('mapRowIndexToSpanIndex');
-      expect(accessors).toHaveProperty('mapSpanIndexToRowIndex');
+      expect(accessors).toHaveProperty('getRows');
     });
 
     it('invokes when registerAccessors changes', () => {
@@ -224,62 +224,28 @@ describe('<VirtualizedTraceViewImpl>', () => {
     expect(accessors.getCollapsedChildren()).toBe(childrenHiddenIDs);
   });
 
-  describe('mapRowIndexToSpanIndex() maps row index to span index', () => {
-    it('works when nothing is collapsed or expanded', () => {
+  describe('getRows() returns visible rows', () => {
+    it('returns rows when nothing is collapsed', () => {
       render(<VirtualizedTraceViewImpl {...mockProps} />);
       const accessors = mockProps.registerAccessors.mock.calls[0][0];
-      const i = trace.spans.length - 1;
-      expect(accessors.mapRowIndexToSpanIndex(i)).toBe(i);
+      const rows = accessors.getRows();
+      expect(rows.length).toBe(trace.spans.length);
     });
 
-    it('works when a span is expanded', () => {
+    it('returns rows including detail row when a span is expanded', () => {
       const { props } = expandRow(1);
       render(<VirtualizedTraceViewImpl {...props} />);
       const accessors = props.registerAccessors.mock.calls[0][0];
-      expect(accessors.mapRowIndexToSpanIndex(0)).toBe(0);
-      expect(accessors.mapRowIndexToSpanIndex(1)).toBe(1);
-      expect(accessors.mapRowIndexToSpanIndex(2)).toBe(1);
-      expect(accessors.mapRowIndexToSpanIndex(3)).toBe(2);
+      const rows = accessors.getRows();
+      expect(rows.some(r => r.isDetail)).toBe(true);
     });
 
-    it('works when a parent span is collapsed', () => {
+    it('returns fewer rows when a parent span is collapsed', () => {
       const { props } = addSpansAndCollapseTheirParent();
       render(<VirtualizedTraceViewImpl {...props} />);
       const accessors = props.registerAccessors.mock.calls[0][0];
-      expect(accessors.mapRowIndexToSpanIndex(0)).toBe(0);
-      expect(accessors.mapRowIndexToSpanIndex(1)).toBe(1);
-      expect(accessors.mapRowIndexToSpanIndex(2)).toBe(4);
-      expect(accessors.mapRowIndexToSpanIndex(3)).toBe(5);
-    });
-  });
-
-  describe('mapSpanIndexToRowIndex() maps span index to row index', () => {
-    it('works when nothing is collapsed or expanded', () => {
-      render(<VirtualizedTraceViewImpl {...mockProps} />);
-      const accessors = mockProps.registerAccessors.mock.calls[0][0];
-      const i = trace.spans.length - 1;
-      expect(accessors.mapSpanIndexToRowIndex(i)).toBe(i);
-    });
-
-    it('works when a span is expanded', () => {
-      const { props } = expandRow(1);
-      render(<VirtualizedTraceViewImpl {...props} />);
-      const accessors = props.registerAccessors.mock.calls[0][0];
-      expect(accessors.mapSpanIndexToRowIndex(0)).toBe(0);
-      expect(accessors.mapSpanIndexToRowIndex(1)).toBe(1);
-      expect(accessors.mapSpanIndexToRowIndex(2)).toBe(3);
-      expect(accessors.mapSpanIndexToRowIndex(3)).toBe(4);
-    });
-
-    it('works when a parent span is collapsed', () => {
-      const { props } = addSpansAndCollapseTheirParent();
-      render(<VirtualizedTraceViewImpl {...props} />);
-      const accessors = props.registerAccessors.mock.calls[0][0];
-      expect(accessors.mapSpanIndexToRowIndex(0)).toBe(0);
-      expect(accessors.mapSpanIndexToRowIndex(1)).toBe(1);
-      expect(accessors.mapSpanIndexToRowIndex(2)).toBe(-1);
-      expect(accessors.mapSpanIndexToRowIndex(3)).toBe(-1);
-      expect(accessors.mapSpanIndexToRowIndex(4)).toBe(2);
+      const rows = accessors.getRows();
+      expect(rows.length).toBeLessThan(props.trace.spans.length);
     });
   });
 
@@ -913,7 +879,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
   describe('focusedSubtreeSpanID filtering', () => {
     it('filters rows to only the subtree when focusedSubtreeSpanID is set', () => {
       const targetSpanID = trace.spans[1].spanID;
-      const expectedSubtreeCount = trace.spans[1].childSpans.length + 1;
+      const expectedSubtreeCount = getSubtreeSpans(trace.spans[1]).length;
 
       const { listViewProps } = renderAndCapture({
         ...mockProps,
@@ -951,7 +917,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       expect(listViewProps.getKeyFromIndex(0)).not.toContain(targetSpanID);
     });
 
-    it('maps row indices and span indices correctly via registered accessors', () => {
+    it('returns focused subtree rows via registered accessors getRows', () => {
       const registerAccessors = vi.fn();
       const targetSpanID = trace.spans[1].spanID;
 
@@ -965,12 +931,10 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
       expect(registerAccessors).toHaveBeenCalled();
       const accessors = registerAccessors.mock.calls[0][0];
-
-      // Row 0 corresponds to targetSpanID (span index 1 in full trace)
-      expect(accessors.mapRowIndexToSpanIndex(0)).toBe(1);
-      expect(accessors.mapSpanIndexToRowIndex(1)).toBe(0);
-      // Accessor returns -1 safely for a span index outside the focused subtree
-      expect(accessors.mapSpanIndexToRowIndex(0)).toBe(-1);
+      const rows = accessors.getRows();
+      const expectedSubtreeCount = getSubtreeSpans(trace.spans[1]).length;
+      expect(rows).toHaveLength(expectedSubtreeCount);
+      expect(rows[0].span.spanID).toBe(targetSpanID);
     });
 
     it('filters getSearchedSpanIDs to the focused subtree when search and focus are both active', () => {
@@ -993,7 +957,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       expect(searchedIDs.has(trace.spans[0].spanID)).toBe(false);
     });
 
-    it('preserves placeholder row indices without jumping backwards to parent in mapRowIndexToSpanIndex', () => {
+    it('provides getRows with placeholder rows for pruned services', () => {
       const registerAccessors = vi.fn();
       const customTrace = makeSpansWithServices();
 
@@ -1007,13 +971,6 @@ describe('<VirtualizedTraceViewImpl>', () => {
       );
 
       const accessors = registerAccessors.mock.calls[0][0];
-      // Row 0 is span-0 (index 0)
-      expect(accessors.mapRowIndexToSpanIndex(0)).toBe(0);
-      // Row 1 is span-3 (index 3 in customTrace)
-      expect(accessors.mapRowIndexToSpanIndex(1)).toBe(3);
-      // Row 2 is pruned placeholder for span-0
-      expect(accessors.mapRowIndexToSpanIndex(2)).toBe(0);
-      // accessors provides getRows returning visible row states
       const rows = accessors.getRows();
       expect(rows).toHaveLength(3);
       expect(rows[0].span.spanID).toBe('span-0');

@@ -11,7 +11,7 @@ import memoizeOne from 'memoize-one';
 import type { Location, NavigateFunction } from 'react-router-dom';
 import { actions } from './duck';
 import { makeCriticalPathContext } from './criticalPath';
-import generateRowStates, { RowState, isSpanPruned } from './generateRowStates';
+import generateRowStates, { RowState } from './generateRowStates';
 import ListView, { ListViewRef } from './ListView';
 import PrunedSpanRow from './PrunedSpanRow';
 import SpanBarRow from './SpanBarRow';
@@ -26,7 +26,7 @@ import {
   isKindProducer,
   spanContainsErredSpan,
 } from './utils';
-import { filterMatchesBySubtree, focusedSpanIDs, getSubtreeSpans } from './timeline-utils';
+import { filterMatchesBySubtree, focusedSpanIDs, getFocusedSubtree } from './timeline-utils';
 import { Accessors } from '../ScrollManager';
 import { parseUiFind, TExtractUiFindFromStateReturn } from '../../common/UiFindInput';
 import getLinks from '../../../model/link-patterns';
@@ -41,11 +41,6 @@ import './VirtualizedTraceView.css';
 import updateUiFind from '../../../utils/update-ui-find';
 import { PEER_SERVICE } from '../../../constants/tag-keys';
 import withRouteProps from '../../../utils/withRouteProps';
-
-type RowStateData = {
-  rows: RowState[];
-  spanIndexToRowIndex: Map<number, number>;
-};
 
 type TVirtualizedTraceViewOwnProps = {
   currentViewRangeTime: [number, number];
@@ -122,51 +117,13 @@ function generateRowStatesFromTrace(
   detailPanelMode: 'inline' | 'sidepanel',
   prunedServices: Set<string>,
   focusedSubtreeSpanID?: string | null
-): RowStateData {
+): RowState[] {
   if (!trace) {
-    return {
-      rows: [],
-      spanIndexToRowIndex: new Map(),
-    };
+    return [];
   }
 
-  let spans = trace.spans;
-  if (focusedSubtreeSpanID) {
-    const focusedSpan = trace.spanMap.get(focusedSubtreeSpanID);
-    if (focusedSpan) {
-      // If the focused span or any ancestor is pruned, ignore focus so service filtering takes precedence
-      if (!isSpanPruned(focusedSpan, prunedServices)) {
-        spans = getSubtreeSpans(focusedSpan);
-      }
-    }
-  }
-
-  const rows = generateRowStates(spans, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices);
-
-  const spanIndexToRowIndex = new Map<number, number>();
-
-  if (spans !== trace.spans) {
-    const spanIDToTraceIndex = getSpanIDToTraceIndex(trace);
-    rows.forEach(row => {
-      const targetSpan =
-        'isPrunedPlaceholder' in row && spans[row.spanIndex] ? spans[row.spanIndex] : row.span;
-      const fullTraceIndex = spanIDToTraceIndex.get(targetSpan.spanID);
-      if (fullTraceIndex !== undefined) {
-        row.spanIndex = fullTraceIndex;
-      }
-    });
-  }
-
-  rows.forEach((row, rowIndex) => {
-    if (!spanIndexToRowIndex.has(row.spanIndex)) {
-      spanIndexToRowIndex.set(row.spanIndex, rowIndex);
-    }
-  });
-
-  return {
-    rows,
-    spanIndexToRowIndex,
-  };
+  const spans = getFocusedSubtree(trace, focusedSubtreeSpanID, prunedServices) ?? trace.spans;
+  return generateRowStates(spans, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices);
 }
 
 function getCssClasses(currentViewRange: [number, number]) {
@@ -213,7 +170,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
       detailPanelMode,
       prunedServices,
       focusedSubtreeSpanID
-    ).rows;
+    );
   }, []);
 
   const getClippingCssClasses = useCallback((): string => {
@@ -234,6 +191,13 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
   const focusSpan = useCallback((uiFind: string) => {
     const { trace, focusUiFindMatches, location, navigate } = propsRef.current;
     if (trace) {
+      const { focusedSubtreeSpanID, setFocusedSubtreeSpanID } = useTraceTimelineStore.getState();
+      if (focusedSubtreeSpanID) {
+        const subtreeIDs = focusedSpanIDs(trace, focusedSubtreeSpanID);
+        if (subtreeIDs && !subtreeIDs.has(uiFind)) {
+          setFocusedSubtreeSpanID(null);
+        }
+      }
       updateUiFind({ location, navigate, uiFind });
       focusUiFindMatches(trace, uiFind, false);
     }
@@ -271,35 +235,6 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
   }, [focusedSubtreeSpanIDs]);
   const getCollapsedChildren = useCallback(() => propsRef.current.childrenHiddenIDs, []);
 
-  const mapRowIndexToSpanIndex = useCallback(
-    (index: number) => {
-      const row = getRowStates()[index];
-      return row ? row.spanIndex : -1;
-    },
-    [getRowStates]
-  );
-
-  const mapSpanIndexToRowIndex = useCallback((index: number) => {
-    const { trace, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices, focusedSubtreeSpanID } =
-      propsRef.current;
-    const { spanIndexToRowIndex } = memoizedGenerateRowStates(
-      trace,
-      childrenHiddenIDs,
-      detailStates,
-      detailPanelMode,
-      prunedServices,
-      focusedSubtreeSpanID
-    );
-
-    const rowIndex = spanIndexToRowIndex.get(index);
-
-    if (rowIndex == null) {
-      return -1;
-    }
-
-    return rowIndex;
-  }, []);
-
   const getAccessors = useCallback(() => {
     const lv = listViewRef.current;
     if (!lv) {
@@ -314,17 +249,8 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
       getTopRowIndexVisible: lv.getTopVisibleIndex,
       getRowPosition: lv.getRowPosition,
       getRows: getRowStates,
-      mapRowIndexToSpanIndex,
-      mapSpanIndexToRowIndex,
     };
-  }, [
-    getViewRange,
-    getSearchedSpanIDs,
-    getCollapsedChildren,
-    getRowStates,
-    mapRowIndexToSpanIndex,
-    mapSpanIndexToRowIndex,
-  ]);
+  }, [getViewRange, getSearchedSpanIDs, getCollapsedChildren, getRowStates]);
 
   const setListView = useCallback(
     (listView: ListViewRef | TNil) => {

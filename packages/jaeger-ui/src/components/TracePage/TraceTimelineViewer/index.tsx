@@ -20,7 +20,7 @@ import TimelineHeaderRow from './TimelineHeaderRow';
 import { useServiceFilter } from './useServiceFilter';
 import { useSpanPillsEnabled } from './spanPills';
 import VirtualizedTraceView from './VirtualizedTraceView';
-import { getSubtreeSpans } from './timeline-utils';
+import { getFocusedSubtree } from './timeline-utils';
 import { isSpanPruned } from './generateRowStates';
 import { merge as mergeShortcuts } from '../keyboard-shortcuts';
 import { Accessors } from '../ScrollManager';
@@ -37,7 +37,7 @@ type TDispatchProps = {
   setSidePanelWidth: (width: number) => void;
   collapseAll: (spans: ReadonlyArray<IOtelSpan>) => void;
   collapseOne: (spans: ReadonlyArray<IOtelSpan>) => void;
-  expandAll: () => void;
+  expandAll: (spans?: ReadonlyArray<IOtelSpan>) => void;
   expandOne: (spans: ReadonlyArray<IOtelSpan>) => void;
 };
 
@@ -120,13 +120,12 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   const prunedServices = useTraceTimelineStore(s => s.prunedServices);
 
   const effectiveSpans = useMemo(() => {
-    if (focusedSubtreeSpanID) {
-      const focusedSpan = trace.spanMap.get(focusedSubtreeSpanID);
-      if (focusedSpan && !isSpanPruned(focusedSpan, prunedServices)) {
-        return getSubtreeSpans(focusedSpan);
-      }
+    const subtree = getFocusedSubtree(trace, focusedSubtreeSpanID, prunedServices);
+    const base = subtree ?? trace.spans;
+    if (prunedServices.size === 0) {
+      return base;
     }
-    return trace.spans;
+    return base.filter(s => !isSpanPruned(s, prunedServices));
   }, [trace, focusedSubtreeSpanID, prunedServices]);
 
   const collapseAll = useCallback(() => {
@@ -140,9 +139,9 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   }, [collapseOneAction, effectiveSpans, zustandCollapseOne]);
 
   const expandAll = useCallback(() => {
-    expandAllAction();
-    zustandExpandAll();
-  }, [expandAllAction, zustandExpandAll]);
+    expandAllAction(effectiveSpans);
+    zustandExpandAll(effectiveSpans);
+  }, [expandAllAction, effectiveSpans, zustandExpandAll]);
 
   const expandOne = useCallback(() => {
     expandOneAction(effectiveSpans);

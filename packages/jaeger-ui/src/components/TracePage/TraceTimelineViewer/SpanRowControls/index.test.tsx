@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import copy from 'copy-to-clipboard';
 import { message } from 'antd';
@@ -16,10 +16,11 @@ import reducer, { actions } from '../duck';
 import { IOtelSpan } from '../../../../types/otel';
 
 vi.mock('copy-to-clipboard', () => ({
-  default: vi.fn().mockResolvedValue(true),
+  default: vi.fn().mockReturnValue(true),
 }));
 
 describe('<SpanRowControls>', () => {
+  const originalLocation = window.location;
   const mockParentSpan: IOtelSpan = {
     spanID: 'span-1',
     traceID: 'trace-1',
@@ -58,6 +59,7 @@ describe('<SpanRowControls>', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(copy).mockReturnValue(true as unknown as Promise<boolean>);
     vi.spyOn(message, 'success').mockImplementation(() => Promise.resolve(true) as any);
     vi.spyOn(message, 'error').mockImplementation(() => Promise.resolve(true) as any);
     useTraceTimelineStore.setState({
@@ -68,13 +70,22 @@ describe('<SpanRowControls>', () => {
 
   afterEach(() => {
     message.destroy();
+    Object.defineProperty(window, 'location', {
+      value: originalLocation,
+      writable: true,
+      configurable: true,
+    });
   });
 
   it('renders collapse, focus, and more actions buttons for parent span', () => {
     render(<SpanRowControls span={mockParentSpan} />);
 
-    expect(screen.getByTestId('collapse-subtree-btn')).toBeInTheDocument();
-    expect(screen.getByTestId('focus-subtree-btn')).toBeInTheDocument();
+    const collapseBtn = screen.getByTestId('collapse-subtree-btn');
+    const focusBtn = screen.getByTestId('focus-subtree-btn');
+    expect(collapseBtn).toBeInTheDocument();
+    expect(collapseBtn).toHaveAttribute('aria-expanded', 'true');
+    expect(focusBtn).toBeInTheDocument();
+    expect(focusBtn).toHaveAttribute('aria-pressed', 'false');
     expect(screen.getByTestId('more-actions-btn')).toBeInTheDocument();
   });
 
@@ -107,19 +118,23 @@ describe('<SpanRowControls>', () => {
     render(<SpanRowControls span={mockParentSpan} />);
     const focusBtn = screen.getByTestId('focus-subtree-btn');
 
+    expect(focusBtn).toHaveAttribute('aria-pressed', 'false');
+
     // Click to focus
     fireEvent.click(focusBtn);
     expect(useTraceTimelineStore.getState().focusedSubtreeSpanID).toBe('span-1');
 
-    // Now it should have is-active class
+    // Now it should have is-active class and aria-pressed=true
     expect(focusBtn).toHaveClass('is-active');
+    expect(focusBtn).toHaveAttribute('aria-pressed', 'true');
 
     // Click again to reset focus
     fireEvent.click(focusBtn);
     expect(useTraceTimelineStore.getState().focusedSubtreeSpanID).toBeNull();
+    expect(focusBtn).toHaveAttribute('aria-pressed', 'false');
   });
 
-  it('copies deep link to clipboard preserving existing query parameters and hash', async () => {
+  it('copies deep link to clipboard preserving existing query parameters and hash', () => {
     Object.defineProperty(window, 'location', {
       value: new URL('https://example.com/trace/trace-1?svcFilter=service-x#details'),
       writable: true,
@@ -134,9 +149,7 @@ describe('<SpanRowControls>', () => {
     const copyDeepLinkItem = screen.getByText('Copy deep link');
     expect(copyDeepLinkItem).toBeInTheDocument();
 
-    await act(async () => {
-      fireEvent.click(copyDeepLinkItem);
-    });
+    fireEvent.click(copyDeepLinkItem);
 
     expect(copy).toHaveBeenCalledWith(
       expect.stringMatching(
@@ -146,7 +159,7 @@ describe('<SpanRowControls>', () => {
     expect(message.success).toHaveBeenCalledWith('Deep link copied to clipboard');
   });
 
-  it('copies span ID to clipboard on menu item click', async () => {
+  it('copies span ID to clipboard on menu item click', () => {
     render(<SpanRowControls span={mockParentSpan} />);
     const moreBtn = screen.getByTestId('more-actions-btn');
 
@@ -155,47 +168,41 @@ describe('<SpanRowControls>', () => {
     const copySpanIdItem = screen.getByText('Copy span ID');
     expect(copySpanIdItem).toBeInTheDocument();
 
-    await act(async () => {
-      fireEvent.click(copySpanIdItem);
-    });
+    fireEvent.click(copySpanIdItem);
 
     expect(copy).toHaveBeenCalledWith('span-1');
     expect(message.success).toHaveBeenCalledWith('Span ID copied to clipboard');
   });
 
-  it('handles copy failure gracefully and displays message.error', async () => {
-    vi.mocked(copy).mockResolvedValueOnce(false);
+  it('handles copy failure gracefully and displays message.error', () => {
+    vi.mocked(copy).mockReturnValueOnce(false as unknown as Promise<boolean>);
     render(<SpanRowControls span={mockParentSpan} />);
     const moreBtn = screen.getByTestId('more-actions-btn');
 
     fireEvent.click(moreBtn);
 
     const copySpanIdItem = screen.getByText('Copy span ID');
-    await act(async () => {
-      fireEvent.click(copySpanIdItem);
-    });
+    fireEvent.click(copySpanIdItem);
 
     expect(copy).toHaveBeenCalledWith('span-1');
     expect(message.error).toHaveBeenCalledWith('Failed to copy span ID to clipboard');
   });
 
-  it('handles deep link copy failure gracefully and displays message.error', async () => {
-    vi.mocked(copy).mockResolvedValueOnce(false);
+  it('handles deep link copy failure gracefully and displays message.error', () => {
+    vi.mocked(copy).mockReturnValueOnce(false as unknown as Promise<boolean>);
     render(<SpanRowControls span={mockParentSpan} />);
     const moreBtn = screen.getByTestId('more-actions-btn');
 
     fireEvent.click(moreBtn);
 
     const copyDeepLinkItem = screen.getByText('Copy deep link');
-    await act(async () => {
-      fireEvent.click(copyDeepLinkItem);
-    });
+    fireEvent.click(copyDeepLinkItem);
 
     expect(copy).toHaveBeenCalled();
     expect(message.error).toHaveBeenCalledWith('Failed to copy deep link to clipboard');
   });
 
-  it('renders expand subtree label when subtree is already collapsed', () => {
+  it('renders expand subtree label and aria-expanded when subtree is already collapsed', () => {
     useTraceTimelineStore.setState({
       childrenHiddenIDs: new Set<string>(['span-1']),
     });
@@ -203,6 +210,7 @@ describe('<SpanRowControls>', () => {
     render(<SpanRowControls span={mockParentSpan} />);
     const collapseBtn = screen.getByTestId('collapse-subtree-btn');
     expect(collapseBtn).toHaveAttribute('aria-label', 'Expand subtree');
+    expect(collapseBtn).toHaveAttribute('aria-expanded', 'false');
   });
 
   it('stops event propagation when clicking more actions button', () => {

@@ -26,11 +26,12 @@ export const SpanRowControls: React.FC<SpanRowControlsProps> = ({ span }) => {
   const dispatch = reduxContext?.store?.dispatch as React.Dispatch<any> | undefined;
   const focusedSubtreeSpanID = useTraceTimelineStore(s => s.focusedSubtreeSpanID);
   const setFocusedSubtreeSpanID = useTraceTimelineStore(s => s.setFocusedSubtreeSpanID);
-  const childrenHiddenIDs = useTraceTimelineStore(s => s.childrenHiddenIDs);
+  const isSubtreeCollapsed = useTraceTimelineStore(
+    useCallback(s => s.childrenHiddenIDs.has(span.spanID), [span.spanID])
+  );
   const toggleSubtreeCollapse = useTraceTimelineStore(s => s.toggleSubtreeCollapse);
 
   const isFocused = focusedSubtreeSpanID === span.spanID;
-  const isSubtreeCollapsed = childrenHiddenIDs.has(span.spanID);
 
   const handleCollapseToggle = useCallback(
     (e: React.MouseEvent) => {
@@ -64,14 +65,14 @@ export const SpanRowControls: React.FC<SpanRowControlsProps> = ({ span }) => {
       key: 'copy-deep-link',
       icon: <LuLink className="SpanRowControls--menuIcon" />,
       label: 'Copy deep link',
-      onClick: async ({ domEvent }) => {
+      onClick: ({ domEvent }) => {
         domEvent.stopPropagation();
         const parsed = queryString.parse(window.location.search);
         parsed.uiFind = span.spanID;
         const search = queryString.stringify(parsed);
         const hash = window.location.hash || '';
         const deepLink = `${window.location.origin}${window.location.pathname}?${search}${hash}`;
-        const success = await copy(deepLink);
+        const success = copy(deepLink) as unknown as boolean;
         if (success) {
           message.success('Deep link copied to clipboard');
         } else {
@@ -83,9 +84,9 @@ export const SpanRowControls: React.FC<SpanRowControlsProps> = ({ span }) => {
       key: 'copy-span-id',
       icon: <LuCopy className="SpanRowControls--menuIcon" />,
       label: 'Copy span ID',
-      onClick: async ({ domEvent }) => {
+      onClick: ({ domEvent }) => {
         domEvent.stopPropagation();
-        const success = await copy(span.spanID);
+        const success = copy(span.spanID) as unknown as boolean;
         if (success) {
           message.success('Span ID copied to clipboard');
         } else {
@@ -114,6 +115,7 @@ export const SpanRowControls: React.FC<SpanRowControlsProps> = ({ span }) => {
             className="SpanRowControls--button"
             onClick={handleCollapseToggle}
             aria-label={isSubtreeCollapsed ? 'Expand subtree' : 'Collapse subtree'}
+            aria-expanded={!isSubtreeCollapsed}
             data-testid="collapse-subtree-btn"
           >
             <LuListCollapse />
@@ -133,6 +135,7 @@ export const SpanRowControls: React.FC<SpanRowControlsProps> = ({ span }) => {
           })}
           onClick={handleFocusToggle}
           aria-label={isFocused ? 'Reset subtree focus' : 'Focus subtree'}
+          aria-pressed={isFocused}
           data-testid="focus-subtree-btn"
         >
           <LuFocus />
