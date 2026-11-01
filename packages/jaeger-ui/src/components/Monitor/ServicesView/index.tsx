@@ -316,6 +316,9 @@ export function MonitorATMServicesViewImpl({ search = '', navigate }: TOwnProps)
   const refreshLoading = refreshRequested && (serviceMetricsFetching || operationMetricsFetching);
   const showNoMetricsAlert =
     !serviceMetricsFetching && !serviceMetricsInitialLoading && _isEmpty(serviceMetrics?.service_latencies);
+  // Call rates without latencies usually means the latency histogram name Jaeger queries
+  // does not match the one exported by the span metrics pipeline.
+  const showNoLatencyAlert = showNoMetricsAlert && serviceMetrics?.service_call_rate != null;
 
   if (servicesLoading) {
     return <LoadingIndicator vcentered centered />;
@@ -323,7 +326,25 @@ export function MonitorATMServicesViewImpl({ search = '', navigate }: TOwnProps)
 
   return (
     <>
-      {showNoMetricsAlert && (
+      {showNoLatencyAlert && (
+        <Alert
+          message={
+            <>
+              No latency data, although call rates were found. Check that the <code>normalize_duration</code>{' '}
+              and <code>latency_unit</code> settings of the Prometheus metrics storage match the duration
+              histogram exported by your span metrics pipeline (for example,{' '}
+              <code>traces_span_metrics_duration_milliseconds_bucket</code>). See these
+              <Link to={{ pathname: docsLink }} target="_blank">
+                &nbsp;instructions&nbsp;
+              </Link>
+              for details.
+            </>
+          }
+          type="warning"
+          showIcon
+        />
+      )}
+      {showNoMetricsAlert && !showNoLatencyAlert && (
         <Alert
           message={
             <>
