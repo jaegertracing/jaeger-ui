@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import {
   getSelectedSpanID,
@@ -12,6 +12,7 @@ import {
   useLayoutPrefsStore,
   useTraceTimelineStore,
 } from './store';
+import HeatmapLegend from './HeatmapLegend';
 import {
   trackCollapseAll,
   trackCollapseOne,
@@ -30,6 +31,7 @@ import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '.
 import { TNil } from '../../../types';
 import { IOtelTrace } from '../../../types/otel';
 import { CriticalPathSection } from '../../../types/critical_path';
+import { computeLatencyRanks } from '../../../utils/span-latency-stats';
 
 import './index.css';
 
@@ -49,6 +51,9 @@ type TProps = {
 };
 
 const NUM_TICKS = 5;
+
+// Stable reference so the heatmap-disabled case doesn't force a new Map identity on every render.
+const EMPTY_RANKS: Map<string, number> = new Map();
 
 /**
  * `TraceTimelineViewer` now renders the header row because it is sensitive to
@@ -73,8 +78,14 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   const sidePanelWidth = useLayoutPrefsStore(s => s.sidePanelWidth);
   const spanNameColumnWidth = useLayoutPrefsStore(s => s.spanNameColumnWidth);
   const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
+  const heatmapEnabled = useLayoutPrefsStore(s => s.heatmapEnabled);
   const zustandSetSpanNameColumnWidth = useLayoutPrefsStore(s => s.setSpanNameColumnWidth);
   const zustandSetSidePanelWidth = useLayoutPrefsStore(s => s.setSidePanelWidth);
+
+  const heatmapRanks = useMemo(
+    () => (heatmapEnabled ? computeLatencyRanks(trace.spans) : EMPTY_RANKS),
+    [heatmapEnabled, trace.spans]
+  );
 
   const detailStates = useTraceTimelineStore(s => s.detailStates);
   const selectedSpanID = detailPanelMode === 'sidepanel' ? getSelectedSpanID(detailStates) : null;
@@ -223,6 +234,8 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       useOtelTerms={useOtelTerms}
       currentViewRangeTime={viewRange.time.current}
       nameColumnWidth={nameColumnWidth}
+      heatmapEnabled={heatmapEnabled}
+      heatmapRanks={heatmapRanks}
       spanPillsEnabled={spanPillsEnabled}
     />
   );
@@ -241,6 +254,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     return (
       <div className="TraceTimelineViewer">
         {headerRow}
+        {heatmapEnabled && <HeatmapLegend />}
         <div className="TraceTimelineViewer--sidePanelLayout" ref={layoutRef}>
           <div className="TraceTimelineViewer--main" style={{ width: `${mainWidth}%` }}>
             {virtualizedView}
@@ -260,6 +274,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   return (
     <div className="TraceTimelineViewer">
       {headerRow}
+      {heatmapEnabled && <HeatmapLegend />}
       {virtualizedView}
     </div>
   );
