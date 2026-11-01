@@ -9,14 +9,44 @@ vi.mock('./calc-positioning', async () =>
     svcMarginTop: 10,
   }))
 );
+vi.mock('antd', () => ({
+  Checkbox: ({ checked, className, indeterminate }) => (
+    <input
+      checked={checked}
+      className={className}
+      data-indeterminate={indeterminate}
+      readOnly
+      type="checkbox"
+    />
+  ),
+  Popover: ({ children, content }) => (
+    <>
+      {children}
+      {content}
+    </>
+  ),
+}));
 
 // Mutable object so individual tests can control the location without re-creating the mock.
 const mockLocation = { search: '' };
+const mockNavigate = vi.fn();
 
-vi.mock('../../../../model/path-agnostic-decorations', () => mockDefault(jest.fn(() => ({}))));
+vi.mock('../../../../model/path-agnostic-decorations', () => mockDefault(vi.fn(() => ({}))));
 vi.mock('react-router-dom', () => ({
   useLocation: () => mockLocation,
+  useNavigate: () => mockNavigate,
 }));
+vi.mock('../../../common/FilteredList', () =>
+  mockDefault(({ options, setValue }) => (
+    <div>
+      {options.map(option => (
+        <button key={option} type="button" onClick={() => setValue(option)}>
+          {option}
+        </button>
+      ))}
+    </div>
+  ))
+);
 
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -26,10 +56,9 @@ import extractDecorationFromState from '../../../../model/path-agnostic-decorati
 import DdgNodeContentWrapper, {
   getNodeRenderer,
   measureNode,
-  mapDispatchToProps,
   UnconnectedDdgNodeContent as DdgNodeContent,
 } from '.';
-import { MAX_LENGTH, MAX_LINKED_TRACES, MIN_LENGTH, PARAM_NAME_LENGTH, RADIUS } from './constants';
+import { RADIUS } from './constants';
 import * as track from '../../index.track';
 import * as getSearchUrl from '../../../SearchTracePage/url';
 
@@ -44,23 +73,25 @@ describe('<DdgNodeContent>', () => {
   const vertexKey = 'some-key';
   const props = {
     focalNodeUrl: 'some-url',
-    focusPathsThroughVertex: jest.fn(),
-    getDecoration: jest.fn(),
-    getGenerationVisibility: jest.fn(),
-    getVisiblePathElems: jest.fn(),
-    hideVertex: jest.fn(),
+    focusPathsThroughVertex: vi.fn(),
+    getDecoration: vi.fn(),
+    getGenerationVisibility: vi.fn(),
+    getVisiblePathElems: vi.fn(),
+    hideVertex: vi.fn(),
     isFocalNode: false,
     isPositioned: true,
     operation,
-    selectVertex: jest.fn(),
-    setOperation: jest.fn(),
-    setViewModifier: jest.fn(),
+    selectVertex: vi.fn(),
+    setOperation: vi.fn(),
+    setViewModifier: vi.fn(),
     service,
-    updateGenerationVisibility: jest.fn(),
+    updateGenerationVisibility: vi.fn(),
     vertex: {
       key: vertexKey,
     },
     vertexKey,
+    navigate: mockNavigate,
+    search: '',
   };
 
   beforeEach(() => {
@@ -289,7 +320,7 @@ describe('<DdgNodeContent>', () => {
     let mockQuerySelector;
 
     beforeEach(() => {
-      mockGetBoundingClientRect = jest.fn(() => ({
+      mockGetBoundingClientRect = vi.fn(() => ({
         top: 100,
         bottom: 200,
         left: 50,
@@ -298,7 +329,7 @@ describe('<DdgNodeContent>', () => {
         height: 100,
       }));
 
-      mockQuerySelector = jest.fn(selector => {
+      mockQuerySelector = vi.fn(selector => {
         if (selector === '.DdgHeader--controlHeader') {
           return {
             getBoundingClientRect: () => ({
@@ -317,11 +348,11 @@ describe('<DdgNodeContent>', () => {
       Element.prototype.getBoundingClientRect = mockGetBoundingClientRect;
       document.querySelector = mockQuerySelector;
 
-      jest.spyOn(global, 'setTimeout').mockImplementation(fn => fn());
+      vi.spyOn(global, 'setTimeout').mockImplementation(fn => fn());
     });
 
     afterEach(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     it('positions tooltip below when node is near header', () => {
@@ -364,46 +395,12 @@ describe('<DdgNodeContent>', () => {
       expect(tooltip).not.toBeInTheDocument();
     });
 
-    it('handles case when node ref is not available', () => {
-      const instance = new DdgNodeContent(props);
-      instance.nodeRef = { current: null };
+    it('does not check position before the node is hovered', () => {
       mockQuerySelector.mockClear();
 
-      expect(() => {
-        instance.checkTooltipPosition();
-      }).not.toThrow();
+      render(<DdgNodeContent {...props} />);
 
       expect(mockQuerySelector).not.toHaveBeenCalled();
-    });
-
-    it('does not update state when tooltip position has not changed', () => {
-      const instance = new DdgNodeContent(props);
-      instance.nodeRef = {
-        current: {
-          getBoundingClientRect: () => ({
-            top: 100,
-            bottom: 200,
-            left: 50,
-            right: 150,
-            width: 100,
-            height: 100,
-          }),
-        },
-      };
-
-      // set initial state directly (not using setState on unmounted component)
-      instance.state = { shouldPositionTooltipBelow: true };
-
-      // Spy on setState
-      const setStateSpy = jest.spyOn(instance, 'setState');
-
-      // call checkTooltipPosition with same conditions that would result in true
-      instance.checkTooltipPosition();
-
-      // setState should not be called since position hasn't changed (still true)
-      expect(setStateSpy).not.toHaveBeenCalled();
-
-      setStateSpy.mockRestore();
     });
 
     it('does not check position when already determined on subsequent hovers', () => {
@@ -483,25 +480,16 @@ describe('<DdgNodeContent>', () => {
     });
   });
 
-  describe('mapDispatchToProps()', () => {
-    it('creates the actions correctly', () => {
-      expect(mapDispatchToProps(() => {})).toEqual({
-        getDecoration: expect.any(Function),
-      });
-    });
-  });
-
   describe('event handlers', () => {
     beforeEach(() => {
-      jest.spyOn(track, 'trackSetFocus');
-      jest.spyOn(track, 'trackViewTraces');
-      jest.spyOn(track, 'trackVertexSetOperation');
-      jest.spyOn(getSearchUrl, 'getUrl');
-      jest.spyOn(window, 'open').mockImplementation();
+      vi.spyOn(track, 'trackSetFocus');
+      vi.spyOn(track, 'trackViewTraces');
+      vi.spyOn(track, 'trackVertexSetOperation');
+      vi.spyOn(getSearchUrl, 'getUrl');
     });
 
     afterEach(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     describe('focusPaths', () => {
@@ -534,9 +522,10 @@ describe('<DdgNodeContent>', () => {
 
     describe('setOperation', () => {
       it('calls setOperation with the provided operation and tracks the event', () => {
-        const instance = new DdgNodeContent(props);
         const newOperation = 'op1';
-        instance.setOperation(newOperation);
+        render(<DdgNodeContent {...props} operation={operationArray} />);
+
+        fireEvent.click(screen.getByText(newOperation));
 
         expect(props.setOperation).toHaveBeenCalledWith(newOperation);
         expect(track.trackVertexSetOperation).toHaveBeenCalled();
@@ -545,8 +534,14 @@ describe('<DdgNodeContent>', () => {
 
     describe('updateChildren', () => {
       it('calls updateGenerationVisibility with vertexKey and Downstream direction', () => {
-        const instance = new DdgNodeContent(props);
-        instance.updateChildren();
+        props.getGenerationVisibility.mockImplementation((_key, direction) =>
+          direction === EDirection.Downstream ? ECheckedStatus.Full : null
+        );
+        const { container } = render(<DdgNodeContent {...props} />);
+        const nodeContent = container.querySelector('.DdgNodeContent');
+
+        fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
+        fireEvent.click(screen.getByText('View Children'));
 
         expect(props.updateGenerationVisibility).toHaveBeenCalledWith(vertexKey, EDirection.Downstream);
       });
@@ -554,27 +549,37 @@ describe('<DdgNodeContent>', () => {
 
     describe('updateParents', () => {
       it('calls updateGenerationVisibility with vertexKey and Upstream direction', () => {
-        const instance = new DdgNodeContent(props);
-        instance.updateParents();
+        props.getGenerationVisibility.mockImplementation((_key, direction) =>
+          direction === EDirection.Upstream ? ECheckedStatus.Full : null
+        );
+        const { container } = render(<DdgNodeContent {...props} />);
+        const nodeContent = container.querySelector('.DdgNodeContent');
+
+        fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
+        fireEvent.click(screen.getByText('View Parents'));
 
         expect(props.updateGenerationVisibility).toHaveBeenCalledWith(vertexKey, EDirection.Upstream);
       });
     });
 
     describe('viewTraces', () => {
-      const mockTraceIds = ['trace1', 'trace2', 'trace3'];
-      const mockPathElems = [
-        { memberOf: { traceIDs: ['trace1'] } },
-        { memberOf: { traceIDs: ['trace2'] } },
-        { memberOf: { traceIDs: ['trace3'] } },
-      ];
-
       beforeEach(() => {
-        props.getVisiblePathElems.mockReturnValue(mockPathElems);
-        getSearchUrl.getUrl.mockImplementation(params => `mock-search-url-${params.traceID.join('-')}`);
+        mockNavigate.mockClear();
+        vi.spyOn(getSearchUrl, 'getUrlState').mockReturnValue({
+          start: '123',
+          end: '456',
+          lookback: '1h',
+          limit: '50',
+          minDuration: '100ms',
+          maxDuration: '1s',
+          tags: 'http.status_code=500',
+          traceID: ['t1'],
+          spanLinks: { t1: 's1' },
+        });
+        getSearchUrl.getUrl.mockImplementation(params => `mock-search-url-for-${params.service}`);
       });
 
-      it('opens search URL with trace IDs and tracks the event', () => {
+      it('navigates to search URL with the node service and operation, preserving original time/filters but without trace IDs', () => {
         const { container } = render(<DdgNodeContent {...props} />);
 
         const actionItems = container.querySelectorAll('.NodeContent--actionsItem');
@@ -585,69 +590,27 @@ describe('<DdgNodeContent>', () => {
         fireEvent.click(viewTracesAction);
 
         expect(track.trackViewTraces).toHaveBeenCalled();
-        expect(getSearchUrl.getUrl).toHaveBeenCalledWith({ traceID: mockTraceIds });
-        expect(window.open).toHaveBeenCalledWith('mock-search-url-trace1-trace2-trace3', '_blank');
-      });
-
-      it('handles case when getVisiblePathElems returns undefined', () => {
-        props.getVisiblePathElems.mockReturnValue(undefined);
-
-        const { container } = render(<DdgNodeContent {...props} />);
-
-        const actionItems = container.querySelectorAll('.NodeContent--actionsItem');
-        const viewTracesAction = Array.from(actionItems).find(item =>
-          item.textContent.includes('View traces')
-        );
-
-        fireEvent.click(viewTracesAction);
-
-        expect(track.trackViewTraces).toHaveBeenCalled();
-        expect(getSearchUrl.getUrl).not.toHaveBeenCalled();
-        expect(window.open).not.toHaveBeenCalled();
-      });
-
-      it('respects MAX_LINKED_TRACES limit', () => {
-        const mockElems = [];
-        for (let i = 0; i < MAX_LINKED_TRACES + 5; i++) {
-          mockElems.push({
-            memberOf: {
-              traceIDs: [`trace-${i}`],
-            },
-          });
-        }
-        props.getVisiblePathElems.mockReturnValue(mockElems);
-
-        const { container } = render(<DdgNodeContent {...props} />);
-
-        const actionItems = container.querySelectorAll('.NodeContent--actionsItem');
-        const viewTracesAction = Array.from(actionItems).find(item =>
-          item.textContent.includes('View traces')
-        );
-
-        fireEvent.click(viewTracesAction);
-
-        const expectedTraceIds = [];
-        for (let i = 0; i < MAX_LINKED_TRACES; i++) {
-          expectedTraceIds.push(`trace-${i}`);
-        }
+        expect(getSearchUrl.getUrlState).toHaveBeenCalledWith(props.search);
 
         expect(getSearchUrl.getUrl).toHaveBeenCalledWith({
-          traceID: expectedTraceIds,
+          start: '123',
+          end: '456',
+          lookback: '1h',
+          limit: '50',
+          minDuration: '100ms',
+          maxDuration: '1s',
+          tags: 'http.status_code=500',
+          service: props.service,
+          operation: props.operation,
         });
-        expect(window.open).toHaveBeenCalledWith(`mock-search-url-${expectedTraceIds.join('-')}`, '_blank');
+        expect(mockNavigate).toHaveBeenCalledWith({
+          pathname: `mock-search-url-for-${props.service}`,
+          search: '',
+        });
       });
 
-      it('respects MAX_LENGTH limit', () => {
-        const longTraceId = 'a'.repeat(MAX_LENGTH - MIN_LENGTH - PARAM_NAME_LENGTH);
-        const shortTraceId = 'b'.repeat(10);
-
-        const mockElems = [
-          { memberOf: { traceIDs: [longTraceId] } },
-          { memberOf: { traceIDs: [shortTraceId] } },
-        ];
-        props.getVisiblePathElems.mockReturnValue(mockElems);
-
-        const { container } = render(<DdgNodeContent {...props} />);
+      it('navigates to search URL omitting operation when operation is an array', () => {
+        const { container } = render(<DdgNodeContent {...props} operation={['op1', 'op2']} />);
 
         const actionItems = container.querySelectorAll('.NodeContent--actionsItem');
         const viewTracesAction = Array.from(actionItems).find(item =>
@@ -657,33 +620,16 @@ describe('<DdgNodeContent>', () => {
         fireEvent.click(viewTracesAction);
 
         expect(getSearchUrl.getUrl).toHaveBeenCalledWith({
-          traceID: [longTraceId],
+          start: '123',
+          end: '456',
+          lookback: '1h',
+          limit: '50',
+          minDuration: '100ms',
+          maxDuration: '1s',
+          tags: 'http.status_code=500',
+          service: props.service,
+          operation: undefined,
         });
-        expect(window.open).toHaveBeenCalledWith(`mock-search-url-${longTraceId}`, '_blank');
-      });
-
-      it('handles duplicate trace IDs', () => {
-        const traceId = 'duplicate-trace';
-        const mockElems = [
-          { memberOf: { traceIDs: [traceId] } },
-          { memberOf: { traceIDs: [traceId] } },
-          { memberOf: { traceIDs: [null, traceId] } },
-        ];
-        props.getVisiblePathElems.mockReturnValue(mockElems);
-
-        const { container } = render(<DdgNodeContent {...props} />);
-
-        const actionItems = container.querySelectorAll('.NodeContent--actionsItem');
-        const viewTracesAction = Array.from(actionItems).find(item =>
-          item.textContent.includes('View traces')
-        );
-
-        fireEvent.click(viewTracesAction);
-
-        expect(getSearchUrl.getUrl).toHaveBeenCalledWith({
-          traceID: [traceId],
-        });
-        expect(window.open).toHaveBeenCalledWith(`mock-search-url-${traceId}`, '_blank');
       });
     });
   });
@@ -691,8 +637,8 @@ describe('<DdgNodeContent>', () => {
   describe('DdgNodeContentWrapper (default export)', () => {
     const store = {
       getState: () => ({}),
-      dispatch: jest.fn(),
-      subscribe: jest.fn(() => jest.fn()),
+      dispatch: vi.fn(),
+      subscribe: vi.fn(() => vi.fn()),
     };
 
     beforeEach(() => {

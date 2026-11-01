@@ -72,7 +72,6 @@ vi.mock('../common/utils.css', () => ({}));
 vi.mock('antd/dist/reset.css', () => ({}));
 vi.mock('./index.css', () => ({}));
 
-import JaegerAPI, { DEFAULT_API_ROOT } from '../../api/jaeger';
 import processScripts from '../../utils/config/process-scripts';
 
 // Module-level initialization happens at import time
@@ -92,69 +91,86 @@ describe('JaegerUIApp', () => {
     mockHistory = createMockHistory();
   });
 
-  // Module-level initialization tests - these run once when module is imported
-  it('should initialize API and process scripts at module load time', () => {
-    // Verify it was called exactly once during module initialization
-    expect(JaegerAPI.apiRoot).toBe(DEFAULT_API_ROOT);
-    expect(processScripts).toHaveBeenCalledTimes(1);
+  // Vitest clears mock call history before each test, so the calls made when
+  // this file first imported ./index are no longer visible. Reset the module
+  // registry and import it again to observe the initialization inside the test.
+  it('should initialize API and process scripts at module load time', async () => {
+    vi.resetModules();
+    const freshApi = await import('../../api/jaeger');
+    const freshProcessScripts = await import('../../utils/config/process-scripts');
+    await import('./index');
+
+    expect(freshApi.default.apiRoot).toBe(freshApi.DEFAULT_API_ROOT);
+    expect(freshProcessScripts.default).toHaveBeenCalledTimes(1);
   });
 
-  it('should render Page wrapper', () => {
-    const { getByTestId } = renderWithPath('/search');
-    expect(getByTestId('page')).toBeInTheDocument();
+  it('should render Page wrapper', async () => {
+    const { findByTestId } = renderWithPath('/search');
+    expect(await findByTestId('page')).toBeInTheDocument();
   });
 
   it('should render without throwing errors', () => {
     expect(() => renderWithPath('/search')).not.toThrow();
   });
 
-  const routes = [
+  // SearchTracePage and TraceRouter are eagerly imported — synchronous render.
+  const eagerRoutes = [
     ['/search', 'search-trace'],
     // TraceDiff is now routed under /trace/:id - when id contains "...", TraceRouter renders TraceDiff
     ['/trace/abc...def', 'trace-diff'],
     ['/trace/123', 'trace-page'],
-    ['/dependencies', 'dependency-graph'],
-    ['/deep-dependencies', 'deep-dependencies'],
-    ['/quality-metrics', 'quality-metrics'],
-    ['/monitor', 'monitor'],
   ];
 
-  routes.forEach(([path, testId]) => {
+  eagerRoutes.forEach(([path, testId]) => {
     it(`should render correct component for ${path}`, () => {
       const { getByTestId } = renderWithPath(path);
       expect(getByTestId(testId)).toBeInTheDocument();
     });
   });
 
-  it('should render NotFound for unknown routes', () => {
-    const { getByTestId } = renderWithPath('/unknown');
-    expect(getByTestId('not-found')).toBeInTheDocument();
+  // Secondary pages are lazy-loaded — must wait for Suspense to resolve.
+  const lazyRoutes = [
+    ['/dependencies', 'dependency-graph'],
+    ['/deep-dependencies', 'deep-dependencies'],
+    ['/quality-metrics', 'quality-metrics'],
+    ['/monitor', 'monitor'],
+  ];
+
+  lazyRoutes.forEach(([path, testId]) => {
+    it(`should render correct component for ${path}`, async () => {
+      const { findByTestId } = renderWithPath(path);
+      expect(await findByTestId(testId)).toBeInTheDocument();
+    });
   });
 
-  it('should handle root path redirect', () => {
-    // Test that when accessing root path, the SearchTracePage component is rendered
-    // This verifies that the Navigate component is working correctly
-    const { getByTestId } = renderWithPath('/');
-    expect(getByTestId('search-trace')).toBeInTheDocument();
+  it('should render NotFound for unknown routes', async () => {
+    const { findByTestId } = renderWithPath('/unknown');
+    expect(await findByTestId('not-found')).toBeInTheDocument();
   });
 
-  it('should have complete render method coverage', () => {
-    const { container } = renderWithPath('/search');
+  it('should handle root path redirect', async () => {
+    const { findByTestId } = renderWithPath('/');
+    expect(await findByTestId('search-trace')).toBeInTheDocument();
+  });
+
+  it('should have complete render method coverage', async () => {
+    const { container, findByTestId } = renderWithPath('/search');
 
     expect(container.firstChild).toBeDefined();
-    expect(container.querySelector('[data-testid="page"]')).toBeInTheDocument();
-    expect(container.querySelector('[data-testid="search-trace"]')).toBeInTheDocument();
+    expect(await findByTestId('page')).toBeInTheDocument();
+    expect(await findByTestId('search-trace')).toBeInTheDocument();
   });
 
-  it('should not re-initialize on component re-renders (module-level init is one-time)', () => {
-    const { rerender } = renderWithPath('/search');
+  it('should not re-initialize on component re-renders (module-level init is one-time)', async () => {
+    const { rerender, findByTestId } = renderWithPath('/search');
+    await findByTestId('search-trace');
     rerender(
       <MemoryRouter initialEntries={['/trace/abc...def']}>
         <JaegerUIApp />
       </MemoryRouter>
     );
-    // processScripts was called once at module load, not on each render
-    expect(processScripts).toHaveBeenCalledTimes(1);
+    // processScripts runs at module load, so rendering must not call it again
+    expect(processScripts).not.toHaveBeenCalled();
   });
 
   it('should render PlexusDemo for /plexus-demo (DEV mode is always true in Vitest)', async () => {

@@ -3,7 +3,8 @@
 
 import React from 'react';
 import { screen, render } from '@testing-library/react';
-import ErrorMessage, { Details, MAX_DETAIL_LENGTH } from './ErrorMessage';
+import ErrorMessage, { Details } from './ErrorMessage';
+import { MAX_DETAIL_LENGTH } from '../../utils/error-message';
 
 import '@testing-library/jest-dom';
 
@@ -86,6 +87,18 @@ describe('<ErrorMessage>', () => {
     Object.keys(error).forEach(key => {
       expect(screen.getByText(error[key])).toBeInTheDocument();
     });
+  });
+
+  it('keeps the JSON response body in diagnostic details', () => {
+    const httpBody = JSON.stringify({ message: 'trace not found', code: 5 });
+    render(<Details error={{ message: '404 Not Found', httpBody }} />);
+    expect(screen.getByText(httpBody)).toBeInTheDocument();
+  });
+
+  it('keeps a response at the excerpt length limit intact', () => {
+    const httpBody = 'x'.repeat(MAX_DETAIL_LENGTH);
+    render(<Details error={{ message: 'error', httpBody }} />);
+    expect(screen.getByText(httpBody)).toBeInTheDocument();
   });
 
   it('renders truncated body excerpt on large body', () => {

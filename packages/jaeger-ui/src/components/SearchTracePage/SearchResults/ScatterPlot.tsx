@@ -24,12 +24,9 @@ type TScatterPlotPoint = {
   x: number;
   y: number;
   traceID: string;
-  size: number;
+  spanCount: number;
+  serviceCount: number;
   name?: string;
-  services?: ReadonlyArray<{
-    name: string;
-    numberOfSpans: number;
-  }>;
   color?: string;
 };
 
@@ -50,17 +47,15 @@ export const CustomTooltip = ({
 }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
-    const numServices = data.services ? data.services.length : 0;
-
     return (
       <div className="scatter-plot-hint">
         <h4>{data.name || FALLBACK_TRACE_NAME}</h4>
         <div className="scatter-plot-hint-stats">
           <div>
-            <strong>Spans:</strong> {data.size}
+            <strong>Spans:</strong> {data.spanCount}
           </div>
           <div>
-            <strong>Services:</strong> {numServices}
+            <strong>Services:</strong> {data.serviceCount}
           </div>
         </div>
       </div>
@@ -181,7 +176,7 @@ export default function ScatterPlot({
                 angle={-90}
               />
             </YAxis>
-            <ZAxis dataKey="size" type="number" range={[1, 300]} />
+            <ZAxis dataKey="spanCount" type="number" range={[1, 300]} />
             <Tooltip content={<CustomTooltip />} cursor={false} isAnimationActive={false} />
             <Scatter
               data={data.map(point => {

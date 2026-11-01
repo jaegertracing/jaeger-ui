@@ -71,25 +71,29 @@ const sampleData = [
     x: generateTimestamp(22, 10, 17),
     y: 1,
     traceID: '576b0c2330db100b',
-    size: 1,
+    spanCount: 1,
+    serviceCount: 1,
   },
   {
     x: generateTimestamp(22, 10, 22),
     y: 2,
     traceID: '6fb42ddd88f4b4f2',
-    size: 1,
+    spanCount: 1,
+    serviceCount: 1,
   },
   {
     x: generateTimestamp(22, 10, 46),
     y: 77707,
     traceID: '1f7185d56ef5dc07',
-    size: 3,
+    spanCount: 3,
+    serviceCount: 2,
   },
   {
     x: generateTimestamp(22, 11, 6),
     y: 80509,
     traceID: '21ba1f993ceddd8f',
-    size: 3,
+    spanCount: 3,
+    serviceCount: 2,
   },
 ];
 
@@ -275,8 +279,8 @@ describe('CustomTooltip', () => {
   it('renders stats information when active and payload is provided', () => {
     const payload = {
       name: 'Test Trace',
-      size: 42,
-      services: [{ name: 'service1' }, { name: 'service2' }],
+      spanCount: 42,
+      serviceCount: 2,
     };
     const { container } = render(<CustomTooltip active payload={[{ payload }]} />);
 
@@ -289,27 +293,26 @@ describe('CustomTooltip', () => {
     expect(statsElement.textContent).toContain('Services: 2');
   });
 
-  it('handles missing services data', () => {
-    const payload = {
-      name: 'Test Trace',
-      size: 10,
-    };
+  it('handles missing counts', () => {
+    const payload = { name: 'Test Trace' };
     const { container } = render(<CustomTooltip active payload={[{ payload }]} />);
 
     const statsElement = container.querySelector('.scatter-plot-hint-stats');
-    expect(statsElement.textContent).toContain('Services: 0');
+    expect(statsElement.textContent).toContain('Spans:');
+    expect(statsElement.textContent).toContain('Services:');
   });
 
-  it('handles services data', () => {
+  it('renders correct spanCount and serviceCount', () => {
     const payload = {
       name: 'Test Trace',
-      size: 15,
-      services: [{ name: 'service1' }, { name: 'service2' }],
+      spanCount: 15,
+      serviceCount: 3,
     };
     const { container } = render(<CustomTooltip active payload={[{ payload }]} />);
 
     const statsElement = container.querySelector('.scatter-plot-hint-stats');
-    expect(statsElement.textContent).toContain('Services: 2');
+    expect(statsElement.textContent).toContain('Spans: 15');
+    expect(statsElement.textContent).toContain('Services: 3');
   });
 
   it('returns null when not active', () => {

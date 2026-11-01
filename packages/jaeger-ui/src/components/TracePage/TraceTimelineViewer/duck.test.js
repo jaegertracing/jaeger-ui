@@ -80,6 +80,13 @@ describe('TraceTimelineViewer/duck', () => {
     expect(store.getState().spanNameColumnWidth).toBeCloseTo(0.575);
   });
 
+  it('clamps spanNameColumnWidth to leave room for side panel when timeline is hidden', () => {
+    store.dispatch(actions.setTimelineBarsVisible(false));
+    store.dispatch(actions.setDetailPanelMode('sidepanel'));
+    store.dispatch(actions.setSpanNameColumnWidth(0.99));
+    expect(store.getState().spanNameColumnWidth).toBeCloseTo(1 - SIDE_PANEL_WIDTH_MIN);
+  });
+
   describe('focusUiFindMatches', () => {
     const uiFind = 'uiFind';
     const action = actions.focusUiFindMatches(trace, uiFind);
@@ -110,7 +117,10 @@ describe('TraceTimelineViewer/duck', () => {
     let focusUiFindMatchesStore;
     let state;
 
-    beforeAll(() => {
+    // Dispatching per test rather than once for the suite, because Vitest clears
+    // mock call history before each test and the assertions below read the calls
+    // the dispatch makes.
+    beforeEach(() => {
       filterSpansSpy.mockReturnValue(uiFindMatches);
       spanAncestorIdsSpy.mockImplementation(({ spanID }) => uiFindAncestorIdsMockSchema[spanID]);
       focusUiFindMatchesStore = createStore(reducer, newInitialState());
@@ -357,6 +367,25 @@ describe('TraceTimelineViewer/duck', () => {
       });
     });
 
+    // Pins the fix for the two divergent shouldDisableCollapse implementations: the old
+    // duck.ts copy compared sizes (allParentSpans.length === hiddenSpansIds.size), so a set
+    // the same size as the parent count but holding the wrong IDs was mistaken for "every
+    // parent already hidden" and the reducer no-opped instead of collapsing.
+    const wrongIdsSameSize = new Set([0, 1, 99]);
+
+    it('collapseAll collapses when the hidden set is the right size but the wrong spans', () => {
+      const { childrenHiddenIDs } = collapseAll({ childrenHiddenIDs: wrongIdsSameSize }, { spans });
+      expect(childrenHiddenIDs).toEqual(allSpansCollapsed);
+    });
+
+    it('collapseOne collapses when the hidden set is the right size but the wrong spans', () => {
+      const { childrenHiddenIDs } = collapseOne({ childrenHiddenIDs: wrongIdsSameSize }, { spans });
+      // collapseOne layers onto the existing set rather than rebuilding it, so the stray id
+      // from the malformed input survives; what the guard being right actually buys is that
+      // span 3, the parent collapseOne should have found and hidden, is no longer skipped.
+      expect(childrenHiddenIDs.has(3)).toBe(true);
+    });
+
     // Tests to verify correct behaviour of actions
     const dispatchTests = [
       {
@@ -565,6 +594,13 @@ describe('TraceTimelineViewer/duck', () => {
       expect(retained.isResourceOpen).toBe(true);
     });
 
+    it('clamps spanNameColumnWidth to leave room for side panel when timeline is hidden', () => {
+      store.dispatch(actions.setSpanNameColumnWidth(SPAN_NAME_COLUMN_WIDTH_MAX));
+      store.dispatch(actions.setTimelineBarsVisible(false));
+      store.dispatch(actions.setDetailPanelMode('sidepanel'));
+      expect(store.getState().spanNameColumnWidth).toBeCloseTo(1 - SIDE_PANEL_WIDTH_MIN);
+    });
+
     it('does not persist mode to localStorage (persistence moved to useTraceTimelineStore)', () => {
       store.dispatch(actions.setDetailPanelMode('sidepanel'));
       expect(localStorage.getItem('detailPanelMode')).toBeNull();
@@ -646,6 +682,22 @@ describe('TraceTimelineViewer/duck', () => {
       getConfig.mockReturnValue({ traceTimeline: { enableSidePanel: false } });
       localStorage.setItem('detailPanelMode', 'sidepanel');
       expect(newInitialState().detailPanelMode).toBe('inline');
+    });
+
+    // newInitialState() is the reducer's initial state, evaluated when this module is
+    // imported, so a throw here would take down the whole app rather than one preference.
+    it('falls back to defaults when the browser blocks storage', () => {
+      const getItem = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+        throw new DOMException('SecurityError');
+      });
+      try {
+        const state = newInitialState();
+        expect(state.detailPanelMode).toBe('inline');
+        expect(state.timelineBarsVisible).toBe(true);
+        expect(state.spanNameColumnWidth).toBe(0.25);
+      } finally {
+        getItem.mockRestore();
+      }
     });
   });
 

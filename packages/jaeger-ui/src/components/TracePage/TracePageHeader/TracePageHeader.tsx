@@ -13,7 +13,13 @@ import AltViewOptions from './AltViewOptions';
 import SpanGraph from './SpanGraph';
 import TraceViewSettings from './TraceViewSettings';
 import TracePageSearchBar from './TracePageSearchBar';
-import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, ETraceViewType } from '../types';
+import {
+  TUpdateViewRangeTimeFunction,
+  IViewRange,
+  ViewRangeTimeUpdate,
+  ETraceViewType,
+  viewTypeIsNavigable,
+} from '../types';
 import LabeledList from '../../common/LabeledList';
 import NewWindowIcon from '../../common/NewWindowIcon';
 import TraceName from '../../common/TraceName';
@@ -21,12 +27,13 @@ import { TNil } from '../../../types';
 import { IOtelTrace } from '../../../types/otel';
 import { formatDatetime, formatDurationCompact } from '../../../utils/date';
 import { getTraceLinks } from '../../../model/link-patterns';
-import { getIncompleteTraceTooltip } from '../../../model/trace-viewer';
+import { getIncompleteTraceTooltip } from '../../../model/trace-display-helpers';
 
 import './TracePageHeader.css';
 import ExternalLinks from '../../common/ExternalLinks';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import TraceId from '../../common/TraceId';
+import GenAIExecutionSummary from './GenAIExecutionSummary';
 
 type TracePageHeaderEmbedProps = {
   canCollapse: boolean;
@@ -39,6 +46,8 @@ type TracePageHeaderEmbedProps = {
   linkToStandalone: string;
   nextResult: () => void;
   onArchiveClicked: () => void;
+  onReloadTrace?: () => void;
+  reloadingTrace?: boolean;
   onDetailPanelModeToggle: () => void;
   onSlimViewClicked: () => void;
   onTimelineToggle: () => void;
@@ -99,21 +108,10 @@ export const HEADER_ITEMS = [
     renderer: (trace: IOtelTrace) => trace.spans.length,
   },
   {
-    key: 'incomplete',
+    key: 'genai-calls',
     label: null,
-    renderer: (trace: IOtelTrace) => {
-      const orphanCount = trace.orphanSpanCount ?? 0;
-      if (orphanCount === 0) return null;
-      const tooltipText = getIncompleteTraceTooltip(orphanCount);
-      return (
-        <Tooltip title={tooltipText}>
-          <span className="TracePageHeader--incompleteTag">
-            <IoWarning className="TracePageHeader--incompleteIcon" />
-            Incomplete
-          </span>
-        </Tooltip>
-      );
-    },
+    renderer: (trace: IOtelTrace) =>
+      trace.isGenAITrace ? <GenAIExecutionSummary spans={trace.spans} /> : null,
   },
 ];
 
@@ -130,6 +128,8 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     linkToStandalone,
     nextResult,
     onArchiveClicked,
+    onReloadTrace,
+    reloadingTrace,
     onDetailPanelModeToggle,
     onSlimViewClicked,
     onTimelineToggle,
@@ -167,12 +167,57 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     }).filter(item => item.value !== null);
 
   const traceShortID = trace.traceID.slice(0, 7);
+  const orphanCount = trace.orphanSpanCount ?? 0;
 
   const title = (
     <h1 className={`TracePageHeader--title ${canCollapse ? 'is-collapsible' : ''}`}>
-      <TraceName traceName={trace.traceName} /> <TraceId traceId={trace.traceID} />
+      {canCollapse ? (
+        <button
+          className="TracePageHeader--titleLink"
+          type="button"
+          onClick={onSlimViewClicked}
+          role="switch"
+          aria-checked={!slimView}
+          title={trace.traceName || undefined}
+        >
+          <IoChevronForward className={`TracePageHeader--detailToggle ${!slimView ? 'is-expanded' : ''}`} />
+          <TraceName traceName={trace.traceName} />
+        </button>
+      ) : (
+        <span className="TracePageHeader--titleText" title={trace.traceName || undefined}>
+          <TraceName traceName={trace.traceName} />
+        </span>
+      )}{' '}
+      <TraceId traceId={trace.traceID} />
+      {orphanCount > 0 && (
+        <span className="TracePageHeader--incompleteActions" data-testid="header-item-incomplete">
+          <Tooltip title={getIncompleteTraceTooltip(orphanCount)}>
+            <span className="TracePageHeader--incompleteTag">
+              <IoWarning className="TracePageHeader--incompleteIcon" />
+              Incomplete
+            </span>
+          </Tooltip>
+          {onReloadTrace && (
+            <Button
+              type="link"
+              size="small"
+              htmlType="button"
+              loading={reloadingTrace}
+              onClick={event => {
+                event.stopPropagation();
+                onReloadTrace();
+              }}
+            >
+              Reload trace
+            </Button>
+          )}
+        </span>
+      )}
     </h1>
   );
+
+  const target = getTargetEmptyOrBlank();
+  const suffix = target === '_blank' ? ' in a new window' : '';
 
   return (
     <header className="TracePageHeader">
@@ -184,19 +229,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           </Link>
         )}
         {links && links.length > 0 && <ExternalLinks links={links} />}
-        {canCollapse ? (
-          <a
-            className="TracePageHeader--titleLink"
-            onClick={onSlimViewClicked}
-            role="switch"
-            aria-checked={!slimView}
-          >
-            <IoChevronForward className={`TracePageHeader--detailToggle ${!slimView ? 'is-expanded' : ''}`} />
-            {title}
-          </a>
-        ) : (
-          title
-        )}
+        {title}
         <TracePageSearchBar
           clearSearch={clearSearch}
           focusUiFindMatches={focusUiFindMatches}
@@ -205,7 +238,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           ref={forwardedRef}
           resultCount={resultCount}
           textFilter={textFilter}
-          navigable={viewType === ETraceViewType.TraceTimelineViewer}
+          navigable={viewTypeIsNavigable(viewType)}
           useOtelTerms={useOtelTerms}
         />
         <TraceViewSettings
@@ -232,9 +265,10 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
         )}
         {showStandaloneLink && (
           <Link
+            aria-label={`Open trace${suffix}`}
             className="u-tx-inherit ub-nowrap ub-mx2"
             to={linkToStandalone}
-            target={getTargetEmptyOrBlank()}
+            target={target}
             rel="noopener noreferrer"
           >
             <NewWindowIcon isLarge />

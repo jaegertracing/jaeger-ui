@@ -1,0 +1,344 @@
+// Copyright (c) 2026 The Jaeger Authors.
+// SPDX-License-Identifier: Apache-2.0
+
+vi.mock('../api/v3/client');
+
+import React from 'react';
+import { act, renderHook, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { jaegerClient } from '../api/v3/client';
+import type { TracesDataWire } from '../api/v3/schemas';
+import { fetchedState } from '../constants';
+import traceGenerator from '../demo/trace-generators';
+import transformTraceData from '../model/transform-trace-data';
+import {
+  getCachedTrace,
+  populateTraceCache,
+  reloadBackendTrace,
+  useTrace,
+  useTraces,
+} from './useTraceLoading';
+import { queryClient as appQueryClient } from '../query/app-query-client';
+
+const mockFetchTrace = vi.mocked(jaegerClient.fetchTrace);
+
+// Build a real transformed trace for use in tests
+const rawTrace = traceGenerator.trace({});
+const legacyTrace = transformTraceData(rawTrace)!;
+const otelTrace = legacyTrace.asOtelTrace();
+const wireTrace: TracesDataWire = {
+  resourceSpans: [
+    {
+      scopeSpans: [
+        {
+          spans: [
+            {
+              traceId: otelTrace.traceID,
+              spanId: '1111111111111111',
+              name: 'operation',
+              startTimeUnixNano: '1000000',
+              endTimeUnixNano: '2000000',
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+// Each test gets a fresh QueryClient to avoid cross-test cache pollution.
+// getCachedTrace/populateTraceCache use the singleton appQueryClient, so we
+// reset it in beforeEach instead.
+function makeWrapper(client: QueryClient) {
+  return ({ children }: { children: React.ReactNode }) =>
+    React.createElement(QueryClientProvider, { client }, children);
+}
+
+beforeEach(() => {
+  appQueryClient.clear();
+  mockFetchTrace.mockReset();
+});
+
+describe('getCachedTrace', () => {
+  it('returns undefined when nothing is cached', () => {
+    expect(getCachedTrace('does-not-exist')).toBeUndefined();
+  });
+
+  it('returns the trace after populateTraceCache', () => {
+    populateTraceCache(otelTrace);
+    expect(getCachedTrace(otelTrace.traceID)).toBe(otelTrace);
+  });
+
+  it('does not strip leading zeros — IDs are opaque strings', () => {
+    const fixedId = 'abc123';
+    const paddedId = `000${fixedId}`;
+    const fakeTrace = { ...otelTrace, traceID: fixedId };
+    populateTraceCache(fakeTrace);
+    expect(getCachedTrace(paddedId)).toBeUndefined();
+  });
+});
+
+describe('populateTraceCache', () => {
+  it('writes the trace into the shared query client', () => {
+    populateTraceCache(otelTrace);
+    expect(getCachedTrace(otelTrace.traceID)).toBe(otelTrace);
+  });
+
+  it('overwrites a previously cached trace with the same ID', () => {
+    populateTraceCache(otelTrace);
+    const rawTrace2 = traceGenerator.trace({});
+    const legacy2 = transformTraceData({ ...rawTrace2, traceID: otelTrace.traceID })!;
+    const otelTrace2 = legacy2.asOtelTrace();
+    populateTraceCache(otelTrace2);
+    expect(getCachedTrace(otelTrace.traceID)).toBe(otelTrace2);
+  });
+});
+
+describe('useTrace', () => {
+  it('returns data after a successful fetch', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    mockFetchTrace.mockResolvedValue(wireTrace);
+
+    const { result } = renderHook(() => useTrace(otelTrace.traceID), {
+      wrapper: makeWrapper(client),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.traceID).toBe(otelTrace.traceID);
+    expect(mockFetchTrace).toHaveBeenCalledWith(otelTrace.traceID, expect.any(AbortSignal));
+  });
+
+  it('returns an error when the API rejects', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    mockFetchTrace.mockRejectedValue(new Error('network error'));
+
+    const { result } = renderHook(() => useTrace('bad-id'), {
+      wrapper: makeWrapper(client),
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error).toBeInstanceOf(Error);
+  });
+
+  it('returns an error when the response has no spans', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    mockFetchTrace.mockResolvedValue({ resourceSpans: [] });
+
+    const { result } = renderHook(() => useTrace('null-trace'), {
+      wrapper: makeWrapper(client),
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+  });
+
+  it('seeds cache under canonical ID when response traceID differs from request', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const altId = 'UPPERCASE_VERSION';
+    const responseTrace = wireTrace;
+    mockFetchTrace.mockResolvedValue(responseTrace);
+
+    const { result } = renderHook(() => useTrace(altId), {
+      wrapper: makeWrapper(client),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    // The canonical ID is seeded in the singleton appQueryClient
+    expect(appQueryClient.getQueryData(['trace', otelTrace.traceID])).toBeDefined();
+  });
+
+  it('serves data from cache without fetching when already populated', async () => {
+    // populateTraceCache writes into the singleton appQueryClient.
+    // useTrace also uses the same singleton, so pre-populating it means the
+    // query is already fresh (staleTime: Infinity in the hook) and no fetch occurs.
+    populateTraceCache(otelTrace);
+
+    const client = appQueryClient;
+    const { result } = renderHook(() => useTrace(otelTrace.traceID), {
+      wrapper: makeWrapper(client),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(mockFetchTrace).not.toHaveBeenCalled();
+    expect(result.current.data).toBe(otelTrace);
+  });
+});
+
+describe('reloadBackendTrace', () => {
+  afterEach(() => {
+    appQueryClient.setQueryDefaults(['trace'], { structuralSharing: false });
+  });
+
+  it.each([otelTrace.traceID, 'alias'])(
+    'invalidates the trace and its aliases via %s without clearing search',
+    async traceId => {
+      appQueryClient.setQueryData(['trace', 'alias'], otelTrace);
+      appQueryClient.setQueryData(['trace', otelTrace.traceID], otelTrace);
+      appQueryClient.setQueryData(['trace', 'other'], { ...otelTrace, traceID: 'other' });
+      appQueryClient.setQueryData(['search', 'results'], ['existing result']);
+
+      await reloadBackendTrace(traceId);
+
+      expect(getCachedTrace('alias')).toBe(otelTrace);
+      expect(getCachedTrace(otelTrace.traceID)).toBe(otelTrace);
+      expect(appQueryClient.getQueryState(['trace', 'alias'])?.isInvalidated).toBe(true);
+      expect(appQueryClient.getQueryState(['trace', otelTrace.traceID])?.isInvalidated).toBe(true);
+      expect(appQueryClient.getQueryState(['trace', 'other'])?.isInvalidated).toBe(false);
+      expect(appQueryClient.getQueryData(['trace', 'other'])).toBeDefined();
+      expect(appQueryClient.getQueryData(['search', 'results'])).toEqual(['existing result']);
+    }
+  );
+
+  it.each([otelTrace.traceID, 'alias'])(
+    'keeps the partial trace after a failed reload via %s and allows another reload',
+    async traceId => {
+      const partialRawTrace = { ...rawTrace, spans: rawTrace.spans.slice(1) };
+      const partialTrace = transformTraceData(partialRawTrace)!.asOtelTrace();
+      appQueryClient.setQueryDefaults(['trace'], { structuralSharing: false, retry: 1, retryDelay: 0 });
+      populateTraceCache(partialTrace);
+      appQueryClient.setQueryData(['trace', 'alias'], partialTrace);
+      mockFetchTrace.mockRejectedValue(new Error('network error'));
+      const { result } = renderHook(() => useTrace(traceId), {
+        wrapper: makeWrapper(appQueryClient),
+      });
+
+      expect(result.current.data).toBe(partialTrace);
+      expect(result.current.isRefetchError).toBe(false);
+      await act(async () => {
+        await reloadBackendTrace(traceId);
+      });
+
+      await waitFor(() => expect(result.current.isRefetchError).toBe(true));
+      expect(mockFetchTrace).toHaveBeenCalledTimes(2);
+      expect(result.current.data).toBe(partialTrace);
+      expect(getCachedTrace(otelTrace.traceID)).toBe(partialTrace);
+      expect(appQueryClient.getQueryState(['trace', otelTrace.traceID])?.isInvalidated).toBe(true);
+
+      const [resourceSpans] = wireTrace.resourceSpans!;
+      const [scopeSpans] = resourceSpans.scopeSpans!;
+      const [root] = scopeSpans.spans!;
+      const spans = [
+        root,
+        ...Array.from({ length: partialTrace.spans.length }, (_, i) => ({
+          ...root,
+          spanId: (i + 2).toString(16).padStart(16, '0'),
+          parentSpanId: root.spanId,
+        })),
+      ];
+      mockFetchTrace.mockResolvedValue({
+        resourceSpans: [{ ...resourceSpans, scopeSpans: [{ ...scopeSpans, spans }] }],
+      });
+      await act(async () => {
+        await reloadBackendTrace(traceId);
+      });
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      expect(result.current.data?.spans).toHaveLength(spans.length);
+      expect(getCachedTrace(otelTrace.traceID)?.spans).toHaveLength(spans.length);
+    }
+  );
+});
+
+describe('useTraces', () => {
+  it('returns an empty Map for an empty ids array', () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const { result } = renderHook(() => useTraces([]), { wrapper: makeWrapper(client) });
+    expect(result.current).toBeInstanceOf(Map);
+    expect(result.current.size).toBe(0);
+  });
+
+  it('returns LOADING state while fetches are pending', () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    mockFetchTrace.mockReturnValue(new Promise(() => {})); // never resolves
+
+    const { result } = renderHook(() => useTraces([otelTrace.traceID]), {
+      wrapper: makeWrapper(client),
+    });
+
+    const entry = result.current.get(otelTrace.traceID);
+    expect(entry?.state).toBe(fetchedState.LOADING);
+  });
+
+  it('returns DONE state with data after successful fetch', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    mockFetchTrace.mockResolvedValue(wireTrace);
+
+    const { result } = renderHook(() => useTraces([otelTrace.traceID]), {
+      wrapper: makeWrapper(client),
+    });
+
+    await waitFor(() => {
+      expect(result.current.get(otelTrace.traceID)?.state).toBe(fetchedState.DONE);
+    });
+    const entry = result.current.get(otelTrace.traceID);
+    expect(entry?.data?.traceID).toBe(otelTrace.traceID);
+    expect(mockFetchTrace).toHaveBeenCalledWith(otelTrace.traceID, expect.any(AbortSignal));
+  });
+
+  it('returns ERROR state when fetch fails', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    mockFetchTrace.mockRejectedValue(new Error('fail'));
+
+    const { result } = renderHook(() => useTraces(['err-id']), {
+      wrapper: makeWrapper(client),
+    });
+
+    await waitFor(() => {
+      expect(result.current.get('err-id')?.state).toBe(fetchedState.ERROR);
+    });
+    expect(result.current.get('err-id')?.error).toBeInstanceOf(Error);
+  });
+
+  it('seeds cache under canonical ID when response traceID differs from request', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const altId = 'BASE64_ENCODED_ID';
+    const responseTrace = wireTrace;
+    mockFetchTrace.mockResolvedValue(responseTrace);
+
+    const { result } = renderHook(() => useTraces([altId]), {
+      wrapper: makeWrapper(client),
+    });
+
+    await waitFor(() => {
+      expect(result.current.get(altId)?.state).toBe(fetchedState.DONE);
+    });
+    expect(appQueryClient.getQueryData(['trace', otelTrace.traceID])).toBeDefined();
+  });
+
+  it('handles multiple IDs independently', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const rawTrace2 = traceGenerator.trace({});
+    mockFetchTrace.mockResolvedValueOnce(wireTrace).mockRejectedValueOnce(new Error('fail'));
+
+    const { result } = renderHook(() => useTraces([otelTrace.traceID, rawTrace2.traceID]), {
+      wrapper: makeWrapper(client),
+    });
+
+    await waitFor(() => {
+      expect(result.current.get(otelTrace.traceID)?.state).toBe(fetchedState.DONE);
+      expect(result.current.get(rawTrace2.traceID)?.state).toBe(fetchedState.ERROR);
+    });
+
+    expect(result.current.get(otelTrace.traceID)?.state).toBe(fetchedState.DONE);
+    expect(result.current.get(rawTrace2.traceID)?.state).toBe(fetchedState.ERROR);
+  });
+
+  it('returns a stable Map reference when query results have not changed', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    mockFetchTrace.mockResolvedValue(wireTrace);
+
+    const { result, rerender } = renderHook(() => useTraces([otelTrace.traceID]), {
+      wrapper: makeWrapper(client),
+    });
+
+    // Wait until the fetch has settled so the map is stable
+    await waitFor(() => {
+      expect(result.current.get(otelTrace.traceID)?.state).toBe(fetchedState.DONE);
+    });
+
+    const mapBefore = result.current;
+    // Force a re-render with no change to query data
+    rerender();
+    // The Map identity should not change since no query result changed
+    expect(result.current).toBe(mapBefore);
+  });
+});

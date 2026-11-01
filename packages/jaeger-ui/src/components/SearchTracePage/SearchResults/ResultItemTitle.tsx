@@ -11,15 +11,16 @@ import { fetchedState } from '../../../constants';
 import { formatDurationCompact } from '../../../utils/date';
 
 import { FetchedState, TNil } from '../../../types';
-import { IOtelTrace } from '../../../types/otel';
 import { ApiError } from '../../../types/api-error';
+import type { TraceSummary } from '../../../types/trace-summary';
 import type { TracePageLink } from '../../TracePage/url';
 
 import './ResultItemTitle.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
+import { getTraceComparisonLabel } from './trace-comparison';
 
 type Props = {
-  duration?: IOtelTrace['duration'];
+  duration?: TraceSummary['duration'];
   durationPercent?: number;
   error?: ApiError;
   isInDiffCohort: boolean;
@@ -59,6 +60,7 @@ export default function ResultItemTitle({
   const isErred = state === fetchedState.ERROR;
   // Separate propagation management and toggle manegement due to ant-design#16400
   const checkboxProps = {
+    'aria-label': getTraceComparisonLabel(traceID, traceName),
     className: 'ResultItemTitle--item ub-flex-none',
     checked: !isErred && isInDiffCohort,
     disabled: isErred,

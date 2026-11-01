@@ -7,6 +7,8 @@ import PathElem from './PathElem';
 
 export { default as PathElem } from './PathElem';
 
+import type { KeyValuePair } from '../../types/trace';
+
 export enum EViewModifier {
   None,
   Hovered,
@@ -41,11 +43,7 @@ export type TDdgPayloadEntry = {
 
 export type TDdgPayloadPath = {
   path: TDdgPayloadEntry[];
-  // TODO: Everett Tech Debt: Fix KeyValuePair types
-  attributes: {
-    key: 'exemplar_trace_id';
-    value: string;
-  }[];
+  attributes: (KeyValuePair & { key: 'exemplar_trace_id'; value: string })[];
 };
 
 export type TDdgPayload = {
@@ -105,10 +103,6 @@ export type TDdgModelParams = {
   operation?: string;
   start: number;
   end: number;
-};
-
-export type TDdgActionMeta = {
-  query: TDdgModelParams;
 };
 
 export type TDdgAddViewModifierPayload = TDdgModelParams & {

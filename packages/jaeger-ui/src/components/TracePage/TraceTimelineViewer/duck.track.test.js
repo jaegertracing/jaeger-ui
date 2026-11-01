@@ -9,8 +9,9 @@ import _cloneDeep from 'lodash/cloneDeep';
 import DetailState from './SpanDetail/DetailState';
 import * as track from './duck.track';
 import { actionTypes as types } from './duck';
-import { fetchedState } from '../../../constants';
 import { trackEvent } from '../../../utils/tracking';
+import { queryClient } from '../../../query/app-query-client';
+import { useTraceTimelineStore } from './store.timeline';
 
 describe('middlewareHooks', () => {
   const traceID = 'ABC';
@@ -18,16 +19,8 @@ describe('middlewareHooks', () => {
   const spanDepth = 123;
   const columnWidth = { real: 0.15, tracked: 150 };
   const payload = { spanID };
+  const traceData = { spans: [{ spanID, depth: spanDepth }] };
   const state = {
-    trace: {
-      traces: {
-        [traceID]: {
-          id: traceID,
-          data: { spans: [{ spanID, depth: spanDepth }] },
-          state: fetchedState.DONE,
-        },
-      },
-    },
     traceTimeline: {
       traceID,
       childrenHiddenIDs: new Map(),
@@ -44,6 +37,20 @@ describe('middlewareHooks', () => {
   beforeEach(() => {
     trackEvent.mockClear();
     stateClone = _cloneDeep(state);
+    // Seed the React Query cache so trackParent can find the trace by ID.
+    queryClient.setQueryData(['trace', traceID], traceData);
+  });
+
+  afterEach(() => {
+    queryClient.removeQueries({ queryKey: ['trace'] });
+    useTraceTimelineStore.setState({
+      traceID: null,
+      traceSpans: null,
+      childrenHiddenIDs: new Set(),
+      detailStates: new Map(),
+      shouldScrollToFirstUiFindMatch: false,
+      prunedServices: new Set(),
+    });
   });
 
   const cases = [
@@ -101,11 +108,11 @@ describe('middlewareHooks', () => {
       noOp: true,
     },
     {
-      msg: 'handles leading 0s in traceID in trackParent',
+      msg: 'handles unknown traceID (no cache match) in trackParent',
       type: types.CHILDREN_TOGGLE,
       stateOverrides: new Map([['traceTimeline.traceID', `00${traceID}`]]),
       category: track.CATEGORY_PARENT,
-      extraTrackArgs: [123],
+      noOp: true,
     },
     {
       action: track.ACTION_EXPAND_ALL,
@@ -244,5 +251,130 @@ describe('middlewareHooks', () => {
         types.SET_TIMELINE_BARS_VISIBLE,
       ].sort()
     );
+  });
+
+  describe('same-ID reload expand/collapse analytics regression tests', () => {
+    it('records the actual UI toggle value for parent span after same-ID reload with search', () => {
+      const reloadTraceID = 'trace-reload-id';
+      const attributes = { entries: () => [] };
+      const resource = { serviceName: 'service', attributes };
+      const rootSpan = { spanID: 'root', name: 'root', depth: 0, hasChildren: true, attributes, resource };
+      const parentSpan = {
+        spanID: 'parent',
+        name: 'parent',
+        depth: 1,
+        hasChildren: true,
+        parentSpan: rootSpan,
+        attributes,
+        resource,
+      };
+      const child1 = {
+        spanID: 'child-1',
+        name: 'other',
+        depth: 2,
+        parentSpan,
+        attributes,
+        resource,
+      };
+      const child2 = {
+        spanID: 'child-2',
+        name: 'late-match',
+        depth: 2,
+        parentSpan,
+        attributes,
+        resource,
+      };
+
+      const partialTrace = {
+        traceID: reloadTraceID,
+        spans: [rootSpan, parentSpan, child1],
+      };
+      const reloadedTrace = {
+        traceID: reloadTraceID,
+        spans: [rootSpan, parentSpan, child1, child2],
+      };
+
+      // 1. Open partial trace and cache it
+      queryClient.setQueryData(['trace', reloadTraceID], partialTrace);
+
+      // 2. Enter search term 'late-match'. In partial trace, no spans match, so root & parent are collapsed.
+      useTraceTimelineStore.getState().setTrace(partialTrace, 'late-match');
+      expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('parent')).toBe(true);
+
+      // In Redux, state was also initialized with the partial trace and collapsed parent
+      const reduxStore = {
+        getState: () => ({
+          traceTimeline: {
+            traceID: reloadTraceID,
+            childrenHiddenIDs: new Set(['root', 'parent']),
+            detailStates: new Map(),
+          },
+        }),
+      };
+
+      // 3. Reload the same trace ID with new matching span (child2 matches 'late-match')
+      queryClient.setQueryData(['trace', reloadTraceID], reloadedTrace);
+      // Redux setTrace returns early on same-ID reload, leaving stale collapsed parent in Redux.
+      // Zustand recomputes find-focus row states and unhides (expands) root & parent:
+      useTraceTimelineStore.getState().setTrace(reloadedTrace, 'late-match');
+
+      // Ensure the Zustand state differs from the stale Redux state:
+      expect(reduxStore.getState().traceTimeline.childrenHiddenIDs.has('parent')).toBe(true);
+      expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('parent')).toBe(false);
+
+      // 4. User clicks to collapse the parent span in the UI
+      track.middlewareHooks[types.CHILDREN_TOGGLE](reduxStore, {
+        type: types.CHILDREN_TOGGLE,
+        payload: { spanID: 'parent' },
+      });
+
+      // 5. Verify that the analytics event records 'close' (matching actual UI state) rather than 'open' from stale Redux
+      expect(trackEvent).toHaveBeenCalledTimes(1);
+      expect(trackEvent).toHaveBeenCalledWith(track.CATEGORY_PARENT, 'close', parentSpan.depth);
+    });
+
+    it('records open when toggling a span that is collapsed in UI but not in Redux', () => {
+      const reloadTraceID = 'trace-reload-id-2';
+      const attributes = { entries: () => [] };
+      const resource = { serviceName: 'service', attributes };
+      const rootSpan = { spanID: 'root', name: 'root', depth: 0, hasChildren: true, attributes, resource };
+      const parentSpan = {
+        spanID: 'parent',
+        name: 'parent',
+        depth: 1,
+        hasChildren: true,
+        parentSpan: rootSpan,
+        attributes,
+        resource,
+      };
+      const child = { spanID: 'child', name: 'child', depth: 2, parentSpan, attributes, resource };
+      const traceDataForTest = { traceID: reloadTraceID, spans: [rootSpan, parentSpan, child] };
+
+      queryClient.setQueryData(['trace', reloadTraceID], traceDataForTest);
+      useTraceTimelineStore.getState().setTrace(traceDataForTest);
+      // Collapse parent in Zustand
+      useTraceTimelineStore.setState({
+        childrenHiddenIDs: new Set(['parent']),
+      });
+
+      // Stale Redux where parent is not in childrenHiddenIDs
+      const reduxStore = {
+        getState: () => ({
+          traceTimeline: {
+            traceID: reloadTraceID,
+            childrenHiddenIDs: new Set(),
+            detailStates: new Map(),
+          },
+        }),
+      };
+
+      track.middlewareHooks[types.CHILDREN_TOGGLE](reduxStore, {
+        type: types.CHILDREN_TOGGLE,
+        payload: { spanID: 'parent' },
+      });
+
+      expect(trackEvent).toHaveBeenCalledTimes(1);
+      expect(trackEvent).toHaveBeenCalledWith(track.CATEGORY_PARENT, 'open', parentSpan.depth);
+    });
   });
 });

@@ -13,13 +13,8 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .span-kind-selector-header {
-  padding-left: 10px;
   font-size: 18px;
   font-weight: 800;
-}
-
-.span-kind-selector {
-  padding-left: 10px;
 }
 
 .dimension-selector-header {
@@ -28,8 +23,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .dimension-selector {
-  padding-left: 10px;
-  width: 50%;
+  width: 100%;
 }
 
 .operations-metrics-text {
@@ -71,6 +65,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .select-operation-column {
+  align-items: flex-end;
   display: inline-flex;
   justify-content: flex-end;
 }
@@ -78,4 +73,23 @@ SPDX-License-Identifier: Apache-2.0
 .select-operation-input {
   font-size: 14px;
   width: 218px;
+}
+
+.service-span-kind-row {
+  flex-wrap: wrap;
+}
+
+.service-filter-col {
+  flex: 1 1 auto;
+  max-width: 420px;
+}
+
+.span-kind-filter-col {
+  flex: 0 0 auto;
+  width: 200px;
+}
+
+.dimension-filter-col {
+  flex: 0 0 auto;
+  width: 200px;
 }

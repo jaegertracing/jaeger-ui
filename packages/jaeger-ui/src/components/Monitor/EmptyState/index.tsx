@@ -17,7 +17,7 @@ const MonitorATMEmptyState: React.FC = () => {
         <Col span={8}>
           <img
             className="monitor-preview-image-empty-state"
-            alt="jaeger-monitor-tab-preview"
+            alt="Preview of the Monitor tab"
             src={monitorImg}
           />
         </Col>

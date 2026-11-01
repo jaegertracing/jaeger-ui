@@ -59,13 +59,13 @@ describe('TraceDiffGraph', () => {
 
   const baseProps = {
     a: {
-      data: transformTraceData(traceFixtureA),
+      data: transformTraceData(traceFixtureA).asOtelTrace(),
       error: null,
       id: 'trace-id-a',
       state: fetchedState.DONE,
     },
     b: {
-      data: transformTraceData(traceFixtureB),
+      data: transformTraceData(traceFixtureB).asOtelTrace(),
       error: null,
       id: 'trace-id-b',
       state: fetchedState.DONE,
@@ -210,7 +210,7 @@ describe('TraceDiffGraph', () => {
     };
 
     const matchedTrace = {
-      data: transformTraceData(traceWithSpan),
+      data: transformTraceData(traceWithSpan).asOtelTrace(),
       error: null,
       id: 't-id',
       state: fetchedState.DONE,

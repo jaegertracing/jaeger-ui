@@ -20,7 +20,9 @@ npm-debug.log
 .eslintcache
 .envrc
 .vscode
+.playwright-mcp/
 
 # scripts
 scripts/release-notes.py
 scripts/draft-release.py
+.claude/settings.local.json

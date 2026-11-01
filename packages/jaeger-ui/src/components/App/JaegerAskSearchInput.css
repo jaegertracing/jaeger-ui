@@ -1,0 +1,179 @@
+/*
+Copyright (c) 2026 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+/* Trace ID lookup */
+.TraceIDSearchInput--form {
+  line-height: inherit;
+}
+
+.TraceIDSearchInput--input.ant-input-affix-wrapper {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.TraceIDSearchInput--input.ant-input-affix-wrapper:hover,
+.TraceIDSearchInput--input.ant-input-affix-wrapper:focus,
+.TraceIDSearchInput--input.ant-input-affix-wrapper-focused {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.TraceIDSearchInput--input .ant-input {
+  background-color: transparent;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.TraceIDSearchInput--input .ant-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.TraceIDSearchInput--input .ant-input-prefix {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.TraceIDSearchInput--input .ant-input-clear-icon {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.TraceIDSearchInput--input .ant-input-clear-icon:hover {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Expanding Ask Jaeger search input */
+.JaegerAskSearchInput--wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 220px;
+  height: 32px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 0 8px;
+  gap: 6px;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+  /* Let the expanded textarea overflow without clipping */
+  overflow: visible;
+}
+
+.JaegerAskSearchInput--wrap:hover,
+.JaegerAskSearchInput--wrap:focus-within {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.JaegerAskSearchInput--icon {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+  pointer-events: none;
+  /* keep icon above the absolutely-positioned expanded textarea */
+  position: relative;
+  z-index: 2;
+}
+
+.JaegerAskSearchInput--textarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  /* vertical padding centers text within the 32px wrap */
+  padding: 6px 0;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: inherit;
+  font-family: inherit;
+  line-height: 1.4;
+  resize: none;
+  outline: none;
+  overflow: hidden;
+  height: 100%;
+  transition: none;
+}
+
+.JaegerAskSearchInput--textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Rich placeholder overlay shown in expanded state when textarea is empty */
+.JaegerAskSearchInput--placeholder {
+  position: absolute;
+  top: 6px;
+  left: 28px;
+  right: 8px;
+  z-index: 2;
+  color: rgba(255, 255, 255, 0.38);
+  font-size: inherit;
+  font-family: inherit;
+  line-height: 1.4;
+  pointer-events: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.JaegerAskSearchInput--placeholder-icon {
+  display: inline-block;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+}
+
+/* When expanded: detach from flow and grow downward, aligned to wrap border */
+.JaegerAskSearchInput--wrap--expanded .JaegerAskSearchInput--textarea {
+  position: absolute;
+  /* align outer edge of expanded box with outer edge of wrap border */
+  top: -1px;
+  /* offset right of icon + gap + wrap padding */
+  left: -1px;
+  width: calc(100% + 2px);
+  /* text content starts after icon space */
+  padding: 6px 8px 7px 28px;
+  height: auto;
+  min-height: calc(4 * 1.5em + 14px);
+  overflow: auto;
+  background: #1a4767;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 6px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+  z-index: 1;
+  line-height: 1.5;
+  font-size: inherit;
+}
+
+/* Toggle button */
+.JaegerAssistantToggle--btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.65);
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+  vertical-align: middle;
+}
+
+.JaegerAssistantToggle--btn:hover,
+.JaegerAssistantToggle--btn:focus {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.95);
+  outline: none;
+}
+
+.JaegerAssistantToggle--btn--active {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: #fff;
+}

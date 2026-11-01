@@ -25,7 +25,6 @@ export default defineConfig({
   },
   lint: {
     plugins: ['oxc', 'typescript', 'unicorn', 'react', 'jest', 'import'],
-    jsPlugins: ['eslint-plugin-react-x'],
     categories: {
       correctness: 'warn',
     },
@@ -47,6 +46,9 @@ export default defineConfig({
       '**/demo/**',
       'packages/jaeger-ui/src/api/v3/generated-client.ts',
       '**/*.cjs',
+      // Example config file: injected as a browser script or run in a vm sandbox,
+      // neither of which has CommonJS module; UIConfig is a global, not an export.
+      'packages/jaeger-ui/jaeger-ui.config.console-analytics.js',
     ],
     rules: {
       'constructor-super': 'error',
@@ -117,8 +119,8 @@ export default defineConfig({
       'react/no-children-prop': 'error',
       'unicorn/no-useless-spread': 'error',
       'unicorn/no-new-array': 'error',
-      'react-x/rules-of-hooks': 'error',
-      'react-x/exhaustive-deps': 'error',
+      'react/rules-of-hooks': 'error',
+      'react/exhaustive-deps': 'error',
       'jest/no-disabled-tests': 'warn',
       'jest/no-focused-tests': 'error',
       'jest/no-identical-title': 'error',
@@ -163,13 +165,13 @@ export default defineConfig({
       {
         files: ['**/*.{js,jsx}'],
         rules: {
-          // JavaScript/JSX files: fully disable rules that TypeScript handles for .ts files.
-          // This override applies to all matched JS/JSX files in the repo, which tsc does not check.
-          'no-unused-vars': 'off',
-          'no-redeclare': 'off',
+          // JS/JSX files are not checked by tsc, so lint rules are the only safety net here.
+          // Rules that cannot be enforced cleanly are listed below with an explanation.
+          //
+          // no-shadow is off because vi.mock() factory functions must re-require('react')
+          // inside the factory (factories cannot close over outer variables), which
+          // unavoidably shadows the top-level React import.
           'no-shadow': 'off',
-          'no-use-before-define': 'off',
-          'no-useless-constructor': 'off',
         },
       },
     ],

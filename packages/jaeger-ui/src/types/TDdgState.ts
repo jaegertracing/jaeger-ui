@@ -17,7 +17,3 @@ export type TDdgStateEntry =
       model: TDdgModel;
       state: typeof fetchedState.DONE;
     };
-
-type TDdgState = Record<string, TDdgStateEntry>;
-
-export default TDdgState;

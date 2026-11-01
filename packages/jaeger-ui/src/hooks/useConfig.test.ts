@@ -27,7 +27,7 @@ beforeEach(() => {
 describe('useConfig', () => {
   it('returns config from getConfig()', () => {
     const menu = [{ label: 'About Jaeger', items: [{ label: 'Docs', url: 'https://jaegertracing.io' }] }];
-    const search = { maxLookback: { label: '2 Days', value: '2d' }, maxLimit: 1500 };
+    const search = { maxLookback: { label: '2 days', value: '2d' }, maxLimit: 1500 };
     mockGetConfig.mockReturnValue({ ...baseConfig, menu, search } as any);
 
     const { result } = renderHook(() => useConfig());

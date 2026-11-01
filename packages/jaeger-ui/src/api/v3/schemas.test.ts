@@ -2,10 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { z } from 'zod';
+import otlpFixture from '../../utils/fixtures/otlp2jaeger-in.json';
 import {
   ServicesResponseSchema,
   OperationsResponseSchema,
   OperationSchema,
+  TraceSummariesResponseSchema,
+  TracesDataSchema,
+  AnyValueSchema,
   traceIdHex,
   spanIdHex,
 } from './schemas';
@@ -95,6 +99,106 @@ describe('OperationsResponseSchema', () => {
   });
 });
 
+describe('TraceSummariesResponseSchema', () => {
+  const fullSummary = {
+    traceId: 'aaaabbbbccccdddd0000111122223333',
+    rootServiceName: 'svc',
+    rootOperationName: 'op',
+    minStartTimeUnixNano: '1700000001000000000',
+    maxEndTimeUnixNano: '1700000001000500000',
+    spanCount: 5,
+    errorSpanCount: 1,
+    orphanSpanCount: 0,
+    services: [{ name: 'svc', spanCount: 5, errorSpanCount: 1 }],
+  };
+
+  it('accepts a fully-populated summary with traceId (spec field name)', () => {
+    const result = TraceSummariesResponseSchema.parse({ summaries: [fullSummary] });
+    expect(result.summaries!).toHaveLength(1);
+    expect(result.summaries![0].traceId).toBe(fullSummary.traceId);
+  });
+
+  it('accepts traceID (uppercase D) and normalizes it to traceId', () => {
+    const { traceId, ...rest } = fullSummary;
+    const withUpperD = { traceID: traceId, ...rest };
+    const result = TraceSummariesResponseSchema.parse({ summaries: [withUpperD] });
+    expect(result.summaries![0].traceId).toBe(traceId);
+  });
+
+  it('accepts a minimal summary with only traceId', () => {
+    const minimal = { traceId: 'aaaabbbbccccdddd0000111122223333' };
+    const result = TraceSummariesResponseSchema.parse({ summaries: [minimal] });
+    expect(result.summaries![0].traceId).toBe(minimal.traceId);
+    expect(result.summaries![0].spanCount).toBeUndefined();
+    expect(result.summaries![0].minStartTimeUnixNano).toBeUndefined();
+  });
+
+  it('accepts a summary with timestamps present', () => {
+    const withTimestamps = {
+      traceId: 'aaaabbbbccccdddd0000111122223333',
+      minStartTimeUnixNano: '1000000',
+      maxEndTimeUnixNano: '2000000',
+    };
+    const result = TraceSummariesResponseSchema.parse({ summaries: [withTimestamps] });
+    expect(result.summaries![0].minStartTimeUnixNano).toBe('1000000');
+  });
+
+  it('rejects a summary missing traceId', () => {
+    const { traceId: _omit, ...noTraceId } = fullSummary;
+    expect(() => TraceSummariesResponseSchema.parse({ summaries: [noTraceId] })).toThrow(z.ZodError);
+  });
+
+  it('rejects a traceId that is not a 32-char hex string', () => {
+    expect(() =>
+      TraceSummariesResponseSchema.parse({ summaries: [{ ...fullSummary, traceId: 'not-hex' }] })
+    ).toThrow(z.ZodError);
+  });
+
+  it('rejects a non-decimal minStartTimeUnixNano when present', () => {
+    expect(() =>
+      TraceSummariesResponseSchema.parse({
+        summaries: [{ ...fullSummary, minStartTimeUnixNano: 'not-a-number' }],
+      })
+    ).toThrow(z.ZodError);
+  });
+
+  it('rejects a numeric (non-string) minStartTimeUnixNano', () => {
+    expect(() =>
+      TraceSummariesResponseSchema.parse({ summaries: [{ ...fullSummary, minStartTimeUnixNano: 12345 }] })
+    ).toThrow(z.ZodError);
+  });
+
+  it('accepts an empty summaries array', () => {
+    const result = TraceSummariesResponseSchema.parse({ summaries: [] });
+    expect(result.summaries).toEqual([]);
+  });
+
+  it('accepts response with no summaries field (treats as absent)', () => {
+    const result = TraceSummariesResponseSchema.parse({});
+    expect(result.summaries).toBeUndefined();
+  });
+
+  it('prefers traceId over traceID when both are present', () => {
+    const both = { ...fullSummary, traceID: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' };
+    const result = TraceSummariesResponseSchema.parse({ summaries: [both] });
+    expect(result.summaries![0].traceId).toBe(fullSummary.traceId);
+  });
+
+  it('rejects negative spanCount', () => {
+    expect(() =>
+      TraceSummariesResponseSchema.parse({ summaries: [{ ...fullSummary, spanCount: -1 }] })
+    ).toThrow(z.ZodError);
+  });
+
+  it('rejects negative errorSpanCount in services', () => {
+    expect(() =>
+      TraceSummariesResponseSchema.parse({
+        summaries: [{ ...fullSummary, services: [{ name: 'svc', errorSpanCount: -1 }] }],
+      })
+    ).toThrow(z.ZodError);
+  });
+});
+
 describe('ID Validators', () => {
   describe('traceIdHex', () => {
     it('accepts valid 32-char lowercase hex trace ID', () => {
@@ -144,7 +248,7 @@ describe('ID Validators', () => {
     });
 
     it('accepts valid 16-char uppercase hex span ID', () => {
-      const id = '0102030405060708';
+      const id = '010203040506ABCD';
       expect(spanIdHex.parse(id)).toBe(id);
     });
 
@@ -163,5 +267,56 @@ describe('ID Validators', () => {
     it('rejects empty string', () => {
       expect(() => spanIdHex.parse('')).toThrow('must be 16-char hex string');
     });
+  });
+});
+
+// Real-wire coverage for the OTLP re-exports above. Real payloads omit
+// default-valued Proto3 JSON fields (empty `status: {}`, no traceState/flags,
+// events, links, or dropped-count fields), so these pin properties a codegen
+// bump could actually break rather than every field of the generated definitions.
+describe('TracesDataSchema', () => {
+  it('parses a real OTLP payload with sparse fields', () => {
+    const parsed = TracesDataSchema.parse(otlpFixture);
+    expect(parsed.resourceSpans).toHaveLength(1);
+    const spans = parsed.resourceSpans![0]!.scopeSpans![0]!.spans!;
+    expect(spans).toHaveLength(2);
+    expect(spans[0]!.name).toBe('okey-dokey-0');
+    // Empty status is UNSET on the wire, not a validation failure.
+    expect(spans[0]!.status).toEqual({});
+  });
+});
+
+describe('AnyValueSchema (recursive)', () => {
+  it('validates a scalar stringValue', () => {
+    const v = { stringValue: 'hello' };
+    expect(AnyValueSchema.parse(v)).toEqual(v);
+  });
+
+  it('validates a nested kvlistValue containing AnyValue children', () => {
+    const v = {
+      kvlistValue: {
+        values: [
+          { key: 'inner.key', value: { stringValue: 'inner-string' } },
+          { key: 'inner.bool', value: { boolValue: true } },
+        ],
+      },
+    };
+    expect(AnyValueSchema.parse(v)).toEqual(v);
+  });
+
+  it('validates a deeply nested arrayValue of arrayValue', () => {
+    const v = {
+      arrayValue: {
+        values: [{ arrayValue: { values: [{ stringValue: 'leaf' }] } }, { intValue: '42' }],
+      },
+    };
+    expect(AnyValueSchema.parse(v)).toEqual(v);
+  });
+
+  it('passes through (does not reject) unknown extra keys per .passthrough()', () => {
+    // Forward-compatibility: schemas use .passthrough() so future OTLP additions
+    // do not break validation. This test pins that behavior.
+    const v = { stringValue: 'hello', someFutureField: 123 };
+    expect(AnyValueSchema.parse(v)).toEqual(v);
   });
 });

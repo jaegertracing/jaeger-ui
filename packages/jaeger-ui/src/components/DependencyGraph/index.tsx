@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
-import { bindActionCreators, Dispatch } from 'redux';
-import { connect } from 'react-redux';
 import memoizeOne from 'memoize-one';
 import debounce from 'lodash/debounce';
 import { useLocation } from 'react-router-dom';
@@ -13,60 +11,24 @@ import DAG from './DAG';
 import DAGOptions from './DAGOptions';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
-import * as jaegerApiActions from '../../actions/jaeger-api';
 import { FALLBACK_DAG_MAX_NUM_SERVICES } from '../../constants';
 import getConfig from '../../utils/config/get-config';
 import { parseUiFind } from '../common/UiFindInput';
+import { useDependenciesQuery, DATA_SOURCES } from '../../hooks/useDependenciesQuery';
+import type { IServiceDependency, DataSource } from '../../hooks/useDependenciesQuery';
 
 import './index.css';
-import { getAppEnvironment } from '../../utils/constants';
 import { ApiError } from '../../types/api-error';
-import { ReduxState } from '../../types';
-
-const sampleDatasetTypes = ['Backend', 'Small Graph', 'Large Graph'];
 
 const dagMaxNumServices = getConfig().dependencies?.dagMaxNumServices ?? FALLBACK_DAG_MAX_NUM_SERVICES;
 
-type TServiceCall = {
-  parent: string;
-  child: string;
-  callCount: number;
-};
-
-type TProps = {
-  dependencies: TServiceCall[];
-  fetchDependencies: () => void;
-  nodes: TVertex[] | null;
-  links: TEdge[] | null;
-  loading: boolean;
-  error: ApiError | null | undefined;
-};
-
-const createSampleDataManager = () => {
-  let sampleDAGDataset: TServiceCall[] = [];
-  return {
-    getSampleData: () => sampleDAGDataset,
-    loadSampleData: async (type: string) => {
-      let module = {};
-      const isDev = getAppEnvironment() === 'development';
-      if (isDev && type === 'Small Graph') {
-        module = await import('./sample_data/small.json');
-      } else if (isDev && type === 'Large Graph') {
-        module = await import('./sample_data/large.json');
-      }
-      sampleDAGDataset = (module as { default: TServiceCall[] }).default ?? [];
-      return sampleDAGDataset;
-    },
-  };
-};
-
 const findConnectedServices = (
-  serviceCalls: TServiceCall[],
+  serviceCalls: IServiceDependency[],
   startService: string,
   maxDepth: number | null | undefined
 ) => {
   const nodes = new Set([startService]);
-  const edges: TServiceCall[] = [];
+  const edges: IServiceDependency[] = [];
   const queue = [{ service: startService, depth: 0 }];
 
   const maxDepthValue = maxDepth ?? Number.MAX_SAFE_INTEGER;
@@ -93,7 +55,7 @@ const findConnectedServices = (
 };
 
 const formatServiceCalls = (
-  serviceCalls: TServiceCall[],
+  serviceCalls: IServiceDependency[],
   selectedService: string | null,
   selectedDepth: number | null | undefined
 ): { nodes: TVertex[]; edges: TEdge[] } => {
@@ -141,23 +103,22 @@ const formatServiceCalls = (
   };
 };
 
-const { getSampleData, loadSampleData } = createSampleDataManager();
-export { loadSampleData };
-
-// export for tests
-export function DependencyGraphPageImpl(props: TProps) {
-  const { nodes, links, error, loading, dependencies, fetchDependencies } = props;
+export default function DependencyGraphPage() {
+  const [selectedDataSource, setSelectedDataSource] = useState<DataSource>('Backend');
+  const { data, isLoading, error } = useDependenciesQuery(selectedDataSource);
+  // Stabilise so the `data ?? []` fresh-array doesn't make the updateLayout
+  // effect below re-fire every render when there's no data yet.
+  const dependencies = useMemo(() => data ?? [], [data]);
   const { search } = useLocation();
   const uiFind = parseUiFind(search);
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [selectedLayout, setSelectedLayout] = useState<string | null>(null);
   const [selectedDepth, setSelectedDepth] = useState<number | null>(5);
   const [debouncedDepth, setDebouncedDepth] = useState<number | null>(5);
-  const [selectedSampleDatasetType, setSelectedSampleDatasetType] = useState<string>('Backend');
 
   const getMemoizedGraphData = useMemo(
     () =>
-      memoizeOne((deps: TServiceCall[], svc: string | null, depth: number | null) =>
+      memoizeOne((deps: IServiceDependency[], svc: string | null, depth: number | null) =>
         formatServiceCalls(deps ?? [], svc, depth)
       ),
     []
@@ -182,9 +143,7 @@ export function DependencyGraphPageImpl(props: TProps) {
   const selectedLayoutRef = useRef(selectedLayout);
   selectedLayoutRef.current = selectedLayout;
 
-  const dependenciesRef = useRef(dependencies);
-  const updateLayout = useCallback(() => {
-    const dataset: TServiceCall[] = getSampleData().length > 0 ? getSampleData() : dependenciesRef.current;
+  const updateLayout = useCallback((dataset: IServiceDependency[]) => {
     const layout: 'dot' | 'sfdp' = dataset.length > dagMaxNumServices ? 'sfdp' : 'dot';
     if (layout !== selectedLayoutRef.current) {
       setSelectedLayout(layout);
@@ -195,22 +154,14 @@ export function DependencyGraphPageImpl(props: TProps) {
   }, []);
 
   useEffect(() => {
-    fetchDependencies();
-    updateLayout();
-  }, [fetchDependencies, updateLayout]);
+    updateLayout(dependencies);
+  }, [dependencies, updateLayout]);
 
   useEffect(() => {
     return () => {
       debouncedDepthChange.cancel();
     };
   }, [debouncedDepthChange]);
-
-  useEffect(() => {
-    if (dependenciesRef.current !== dependencies) {
-      dependenciesRef.current = dependencies;
-      updateLayout();
-    }
-  }, [dependencies, updateLayout]);
 
   const handleServiceSelect = (service: string | null) => setSelectedService(service);
   const handleLayoutSelect = (layout: string) => setSelectedLayout(layout);
@@ -228,27 +179,20 @@ export function DependencyGraphPageImpl(props: TProps) {
     }
   };
 
-  const handleSampleDatasetTypeChange = (type: string) => {
-    setSelectedSampleDatasetType(type);
-    loadSampleData(type).then(() => {
-      fetchDependencies();
-    });
-  };
-
   const handleReset = () => {
     setSelectedService(null);
     setSelectedDepth(5);
     setDebouncedDepth(5);
   };
 
-  if (loading) {
+  if (isLoading) {
     return <LoadingIndicator className="u-mt-vast" centered />;
   }
   if (error) {
-    return <ErrorMessage className="ub-m3" error={error} />;
+    return <ErrorMessage className="ub-m3" error={error as ApiError} />;
   }
 
-  if (!nodes || !links) {
+  if (dependencies.length === 0) {
     return (
       <div className="u-simple-card ub-m3">
         No service dependencies found.{' '}
@@ -281,9 +225,9 @@ export function DependencyGraphPageImpl(props: TProps) {
           selectedDepth={selectedDepth ?? undefined}
           onReset={handleReset}
           isHierarchicalDisabled={isHierarchicalDisabled}
-          selectedSampleDatasetType={selectedSampleDatasetType}
-          onSampleDatasetTypeChange={handleSampleDatasetTypeChange}
-          sampleDatasetTypes={sampleDatasetTypes}
+          selectedDataSource={selectedDataSource}
+          onDataSourceChange={setSelectedDataSource}
+          dataSources={DATA_SOURCES}
           uiFind={uiFind}
           matchCount={matchCount}
         />
@@ -301,82 +245,3 @@ export function DependencyGraphPageImpl(props: TProps) {
     </div>
   );
 }
-
-type TFormattedLink = {
-  source: string;
-  target: string;
-  callCount: number;
-  value: number;
-  target_node_size: number;
-};
-
-const formatDependenciesAsNodesAndLinks = memoizeOne(dependencies => {
-  const data = dependencies.reduce(
-    (response: { nodeMap: Record<string, number>; links: TFormattedLink[] }, link: TServiceCall) => {
-      const { nodeMap } = response;
-      let { links } = response;
-
-      // add both the parent and child to the node map, or increment their
-      // call count.
-      nodeMap[link.parent] = nodeMap[link.parent] ? nodeMap[link.parent] + link.callCount : link.callCount;
-      nodeMap[link.child] = nodeMap[link.child]
-        ? response.nodeMap[link.child] + link.callCount
-        : link.callCount;
-
-      // filter out self-dependent
-      if (link.parent !== link.child) {
-        links = links.concat([
-          {
-            source: link.parent,
-            target: link.child,
-            callCount: link.callCount,
-            value: Math.max(Math.sqrt(link.callCount / 10000), 1),
-            target_node_size: Math.max(Math.log(nodeMap[link.child] / 1000), 3),
-          },
-        ]);
-      }
-
-      return { nodeMap, links };
-    },
-    { nodeMap: {}, links: [] as TFormattedLink[] }
-  );
-
-  data.nodes = Object.keys(data.nodeMap).map(id => ({
-    callCount: data.nodeMap[id],
-    radius: Math.max(Math.log(data.nodeMap[id] / 1000), 3),
-    orphan: data.links.findIndex((link: TFormattedLink) => id === link.source || id === link.target) === -1,
-    id,
-  }));
-
-  const { nodes, links } = data;
-
-  return { nodes, links };
-});
-
-// export for tests
-export function mapStateToProps(state: ReduxState): Omit<TProps, 'fetchDependencies'> {
-  const { dependencies, error, loading } = state.dependencies;
-  let links: TEdge[] | null = null;
-  let nodes: TVertex[] | null = null;
-  if (dependencies && dependencies.length > 0) {
-    const formatted = formatDependenciesAsNodesAndLinks(dependencies);
-    links = formatted.links;
-    nodes = formatted.nodes;
-  }
-  const dataset: TServiceCall[] = getSampleData().length > 0 ? getSampleData() : dependencies;
-  return {
-    loading,
-    error,
-    nodes,
-    links,
-    dependencies: dataset,
-  };
-}
-
-// export for tests
-export function mapDispatchToProps(dispatch: Dispatch): Pick<TProps, 'fetchDependencies'> {
-  const { fetchDependencies } = bindActionCreators(jaegerApiActions, dispatch);
-  return { fetchDependencies };
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(DependencyGraphPageImpl);

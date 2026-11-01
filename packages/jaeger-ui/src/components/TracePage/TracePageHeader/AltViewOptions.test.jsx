@@ -43,13 +43,7 @@ vi.mock('antd', async () => {
 });
 
 describe('AltViewOptions', () => {
-  let trackGanttView;
-  let trackGraphView;
-  let trackJsonView;
-  let trackRawJsonView;
-  let trackStatisticsView;
-  let trackTraceSpansView;
-  let trackTraceLogsView;
+  let trackViewChange;
 
   const props = {
     viewType: ETraceViewType.TraceTimelineViewer,
@@ -59,13 +53,7 @@ describe('AltViewOptions', () => {
   };
 
   beforeAll(() => {
-    trackGanttView = jest.spyOn(track, 'trackGanttView');
-    trackGraphView = jest.spyOn(track, 'trackGraphView');
-    trackJsonView = jest.spyOn(track, 'trackJsonView');
-    trackRawJsonView = jest.spyOn(track, 'trackRawJsonView');
-    trackStatisticsView = jest.spyOn(track, 'trackStatisticsView');
-    trackTraceSpansView = jest.spyOn(track, 'trackTraceSpansView');
-    trackTraceLogsView = jest.spyOn(track, 'trackTraceLogsView');
+    trackViewChange = jest.spyOn(track, 'trackViewChange');
   });
 
   afterEach(() => {
@@ -104,8 +92,14 @@ describe('AltViewOptions', () => {
     expect(screen.getByTestId('menu-item-TraceSpansView')).toBeInTheDocument();
     expect(screen.getByTestId('menu-item-TraceFlamegraph')).toBeInTheDocument();
     expect(screen.getByTestId('menu-item-TraceLogs')).toBeInTheDocument();
+    expect(screen.getByTestId('menu-item-GenAITimelineViewer')).toBeInTheDocument();
     expect(screen.getByTestId('menu-item-trace-json')).toBeInTheDocument();
     expect(screen.getByTestId('menu-item-trace-json-unadjusted')).toBeInTheDocument();
+  });
+
+  it('always shows GenAI View regardless of trace type', () => {
+    renderComponent();
+    expect(screen.getByTestId('menu-item-GenAITimelineViewer')).toBeInTheDocument();
   });
 
   it('hides json links when disableJsonView is true', () => {
@@ -118,81 +112,38 @@ describe('AltViewOptions', () => {
     expect(screen.getByTestId('menu-item-TraceStatistics')).toBeInTheDocument();
   });
 
-  it('tracks and changes view for Trace Graph', () => {
+  it.each([
+    [ETraceViewType.TraceGraph, 'menu-item-TraceGraph'],
+    [ETraceViewType.TraceStatistics, 'menu-item-TraceStatistics'],
+    [ETraceViewType.TraceSpansView, 'menu-item-TraceSpansView'],
+    [ETraceViewType.TraceFlamegraph, 'menu-item-TraceFlamegraph'],
+    [ETraceViewType.TraceLogs, 'menu-item-TraceLogs'],
+    [ETraceViewType.GenAITimelineViewer, 'menu-item-GenAITimelineViewer'],
+  ])('tracks and changes view for %s', (viewType, testId) => {
     renderComponent({ viewType: ETraceViewType.TraceTimelineViewer });
-    const menuItem = screen.getByTestId('menu-item-TraceGraph');
-
-    fireEvent.click(menuItem);
-
-    expect(props.onTraceViewChange).toHaveBeenCalledWith(ETraceViewType.TraceGraph);
-    expect(trackGraphView).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByTestId(testId));
+    expect(props.onTraceViewChange).toHaveBeenCalledWith(viewType);
+    expect(trackViewChange).toHaveBeenCalledWith(viewType);
   });
 
-  it('tracks and changes view for Trace Statistics', () => {
-    renderComponent({ viewType: ETraceViewType.TraceGraph });
-    const menuItem = screen.getByTestId('menu-item-TraceStatistics');
-
-    fireEvent.click(menuItem);
-
-    expect(props.onTraceViewChange).toHaveBeenCalledWith(ETraceViewType.TraceStatistics);
-    expect(trackStatisticsView).toHaveBeenCalledTimes(1);
-  });
-
-  it('tracks and changes view for Trace Timeline', () => {
-    renderComponent({ viewType: ETraceViewType.TraceStatistics });
-    const menuItem = screen.getByTestId('menu-item-TraceTimelineViewer');
-
-    fireEvent.click(menuItem);
-
-    expect(props.onTraceViewChange).toHaveBeenCalledWith(ETraceViewType.TraceTimelineViewer);
-    expect(trackGanttView).toHaveBeenCalledTimes(1);
-  });
-
-  it('tracks and changes view for Trace Spans Table', () => {
-    renderComponent({ viewType: ETraceViewType.TraceTimelineViewer });
-    const menuItem = screen.getByTestId('menu-item-TraceSpansView');
-
-    fireEvent.click(menuItem);
-
-    expect(props.onTraceViewChange).toHaveBeenCalledWith(ETraceViewType.TraceSpansView);
-    expect(trackTraceSpansView).toHaveBeenCalledTimes(1);
-  });
-
-  it('does not track or change view for Trace Flamegraph', () => {
-    renderComponent({ viewType: ETraceViewType.TraceTimelineViewer });
-    const menuItem = screen.getByTestId('menu-item-TraceFlamegraph');
-
-    fireEvent.click(menuItem);
-
-    expect(props.onTraceViewChange).toHaveBeenCalledWith(ETraceViewType.TraceFlamegraph);
-
-    expect(trackGanttView).not.toHaveBeenCalled();
-    expect(trackGraphView).not.toHaveBeenCalled();
-    expect(trackStatisticsView).not.toHaveBeenCalled();
-    expect(trackTraceSpansView).not.toHaveBeenCalled();
-    expect(trackTraceLogsView).not.toHaveBeenCalled();
-  });
-
-  it('tracks and changes view for Trace Logs', () => {
-    renderComponent({ viewType: ETraceViewType.TraceTimelineViewer });
-    const menuItem = screen.getByTestId('menu-item-TraceLogs');
-
-    fireEvent.click(menuItem);
-
-    expect(props.onTraceViewChange).toHaveBeenCalledWith(ETraceViewType.TraceLogs);
-    expect(trackTraceLogsView).toHaveBeenCalledTimes(1);
-  });
-
-  it('renders JSON links with correct URLs', () => {
-    renderComponent();
+  it('renders JSON links to the v3 trace endpoint', () => {
+    const traceID = '0123456789abcdef0123456789abcdef';
+    renderComponent({ traceID });
 
     const jsonMenuItem = screen.getByTestId('menu-item-trace-json');
     const jsonLink = jsonMenuItem.querySelector('a');
-    expect(jsonLink).toHaveAttribute('href', '/api/traces/test trace ID?prettyPrint=true');
+    expect(jsonLink).toHaveAttribute('href', `/api/v3/traces/${traceID}?prettyPrint=true`);
 
     const rawJsonMenuItem = screen.getByTestId('menu-item-trace-json-unadjusted');
     const rawJsonLink = rawJsonMenuItem.querySelector('a');
-    expect(rawJsonLink).toHaveAttribute('href', '/api/traces/test trace ID?raw=true&prettyPrint=true');
+    expect(rawJsonLink).toHaveAttribute('href', `/api/v3/traces/${traceID}?rawTraces=true&prettyPrint=true`);
+  });
+
+  it('pads short trace IDs to 32 hex characters in JSON links', () => {
+    renderComponent({ traceID: 'abc123' });
+
+    const jsonLink = screen.getByTestId('menu-item-trace-json').querySelector('a');
+    expect(jsonLink).toHaveAttribute('href', `/api/v3/traces/${'abc123'.padStart(32, '0')}?prettyPrint=true`);
   });
 
   it('updates dropdown text when view type changes', () => {
@@ -223,6 +174,7 @@ describe('AltViewOptions', () => {
       { type: ETraceViewType.TraceSpansView, testId: 'menu-item-TraceSpansView' },
       { type: ETraceViewType.TraceFlamegraph, testId: 'menu-item-TraceFlamegraph' },
       { type: ETraceViewType.TraceLogs, testId: 'menu-item-TraceLogs' },
+      { type: ETraceViewType.GenAITimelineViewer, testId: 'menu-item-GenAITimelineViewer' },
     ];
 
     viewTypes.forEach(({ type, testId }) => {

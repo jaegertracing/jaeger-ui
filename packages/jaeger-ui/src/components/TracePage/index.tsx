@@ -2,17 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { InputRef } from 'antd';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Alert, InputRef } from 'antd';
 import { useNormalizeTraceId } from './useNormalizeTraceId';
 import { useNavigate } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
-import _memoize from 'lodash/memoize';
+import memoizeOne from 'memoize-one';
 import { connect } from 'react-redux';
-import { bindActionCreators, Dispatch } from 'redux';
 
 import ArchiveNotifier from './ArchiveNotifier';
 import { useArchiveStore } from '../../stores/archive-store';
@@ -31,62 +30,57 @@ import {
 } from './keyboard-shortcuts';
 import { cancel as cancelScroll, scrollBy, scrollTo } from './scroll-page';
 import ScrollManager from './ScrollManager';
-import calculateTraceDagEV from './TraceGraph/calculateTraceDagEV';
 import TraceGraph from './TraceGraph/TraceGraph';
 import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
 import { useConfig } from '../../hooks/useConfig';
 import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import { filterPrunedSpanIDs } from './TraceTimelineViewer/generateRowStates';
-import { actions as timelineActions } from './TraceTimelineViewer/duck';
-import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, ETraceViewType } from './types';
+import { trackDetailPanelMode, trackTimelineBarsVisible } from './TraceTimelineViewer/store.track';
+import {
+  TUpdateViewRangeTimeFunction,
+  IViewRange,
+  ViewRangeTimeUpdate,
+  ETraceViewType,
+  viewTypeShowsMinimap,
+} from './types';
 import { getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
-import { extractUiFindFromState } from '../common/UiFindInput';
-import * as jaegerApiActions from '../../actions/jaeger-api';
-import { getUiFindVertexKeys } from '../TraceDiff/TraceDiffGraph/traceDiffGraphUtils';
-import { fetchedState } from '../../constants';
-import { FetchedTrace, LocationState, ReduxState, TNil } from '../../types';
-import { IOtelTrace } from '../../types/otel';
+import { parseUiFind } from '../common/UiFindInput';
+import { LocationState, ReduxState, TNil } from '../../types';
+import { reloadBackendTrace, useTrace } from '../../hooks/useTraceLoading';
+import { isUploadedTrace } from '../SearchTracePage/useUploadedTraces';
 import filterSpans from '../../utils/filter-spans';
 import updateUiFind from '../../utils/update-ui-find';
 import TraceStatistics from './TraceStatistics/index';
 import TraceSpanView from './TraceSpanView/index';
 import TraceFlamegraph from './TraceFlamegraph/index';
 import TraceLogsView from './TraceLogsView/index';
-import type { SpanDetailPanelMode, StorageCapabilities, TraceGraphConfig } from '../../types/config';
+import type { BackendCapabilities, SpanDetailPanelMode, TraceGraphConfig } from '../../types/config';
 
 import './index.css';
 import memoizedTraceCriticalPath from './CriticalPath/index';
 import withRouteProps from '../../utils/withRouteProps';
-
-type TDispatchProps = {
-  fetchTrace: (id: string) => void;
-  focusUiFindMatches: (trace: IOtelTrace, uiFind: string | TNil) => void;
-  setDetailPanelMode: (mode: SpanDetailPanelMode) => void;
-  setTimelineBarsVisible: (visible: boolean) => void;
-};
 
 type TOwnProps = {
   location: Location<LocationState>;
   params: { id: string };
   archiveEnabled: boolean;
   enableSidePanel: boolean;
-  storageCapabilities: StorageCapabilities | TNil;
+  backendCapabilities: BackendCapabilities | TNil;
   criticalPathEnabled: boolean;
   disableJsonView: boolean;
   traceGraphConfig?: TraceGraphConfig;
   useOtelTerms: boolean;
+  onReloadTrace?: () => void;
 };
 
 type TReduxProps = {
-  id: string;
-  trace: FetchedTrace | TNil;
   uiFind: string | TNil;
 };
 
-type TProps = TDispatchProps & TOwnProps & TReduxProps;
+type TProps = TOwnProps & TReduxProps;
 
 // export for tests
 export const VIEW_MIN_RANGE = 0.01;
@@ -147,40 +141,42 @@ export function TracePageImpl(props: TProps) {
     criticalPathEnabled,
     disableJsonView,
     enableSidePanel,
-    fetchTrace,
-    focusUiFindMatches: focusUiFindMatchesProp,
-    id,
     location,
-    setDetailPanelMode: reduxSetDetailPanelMode,
-    setTimelineBarsVisible: reduxSetTimelineBarsVisible,
-    storageCapabilities,
-    trace,
+    params,
+    backendCapabilities,
     traceGraphConfig,
     uiFind,
     useOtelTerms,
+    onReloadTrace,
   } = props;
 
-  // Layout preferences are owned by Zustand; Redux setters are also called for the tracking middleware.
+  const id = params.id;
+  const {
+    data: traceData,
+    isPending: traceLoading,
+    isError: traceError,
+    isFetching: traceFetching,
+    error: traceQueryError,
+  } = useTrace(id);
+
+  // Layout preferences are owned by Zustand. Each setter tracks before it updates the store.
   const detailPanelMode = useLayoutPrefsStore(s => s.detailPanelMode);
   const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
   const zustandSetTimelineBarsVisible = useLayoutPrefsStore(s => s.setTimelineBarsVisible);
   const zustandFocusUiFindMatches = useTraceTimelineStore(s => s.focusUiFindMatches);
   const prunedServices = useTraceTimelineStore(s => s.prunedServices);
 
-  const setDetailPanelMode = useCallback(
-    (mode: SpanDetailPanelMode) => {
-      setDetailPanelModeZustand(mode);
-      reduxSetDetailPanelMode(mode);
-    },
-    [reduxSetDetailPanelMode]
-  );
+  const setDetailPanelMode = useCallback((mode: SpanDetailPanelMode) => {
+    trackDetailPanelMode(mode);
+    setDetailPanelModeZustand(mode);
+  }, []);
 
   const setTimelineBarsVisible = useCallback(
     (visible: boolean) => {
+      trackTimelineBarsVisible(visible);
       zustandSetTimelineBarsVisible(visible);
-      reduxSetTimelineBarsVisible(visible);
     },
-    [zustandSetTimelineBarsVisible, reduxSetTimelineBarsVisible]
+    [zustandSetTimelineBarsVisible]
   );
 
   const navigate = useNavigate();
@@ -193,30 +189,27 @@ export function TracePageImpl(props: TProps) {
   const [slimView, setSlimView] = useState(() => Boolean(embedded?.timeline?.collapseTitle));
   const [viewType, setViewType] = useState<ETraceViewType>(ETraceViewType.TraceTimelineViewer);
   const [viewRange, setViewRange] = useState<IViewRange>({ time: { current: [0, 1] } });
+  const [criticalPathErrorDismissed, setCriticalPathErrorDismissed] = useState(false);
 
-  const traceDagEV = useMemo(
-    () =>
-      viewType === ETraceViewType.TraceGraph && trace?.data
-        ? calculateTraceDagEV(trace.data.asOtelTrace())
-        : null,
-    [trace, viewType]
-  );
+  // TraceGraph owns its search (DAG + vertex-key matching) and reports matches through
+  // onSearchResults. Every other view uses the span matches computed below in this component,
+  // which keeps the header count working for views without search wiring (flamegraph, logs).
+  const [findMatches, setFindMatches] = useState<Set<string> | TNil>(null);
+
+  // Read the trace's own verdict rather than re-deriving it here. It is computed
+  // once from each span's cached genAIKind, so re-scanning attributes is both
+  // redundant and free to drift away from classifySpan as the detector evolves.
+  const traceIsGenAI = traceData?.isGenAITrace ?? false;
 
   const searchBarRef = useRef<InputRef>(null);
   const headerElmRef = useRef<HTMLElement | TNil>(null);
   const viewRangeRef = useRef(viewRange);
   viewRangeRef.current = viewRange;
   const prevIdRef = useRef(id);
-  const idRef = useRef(id);
-  idRef.current = id;
+  const userPickedViewRef = useRef(false);
+  const filterSpansMemo = useRef(memoizeOne(filterSpans)).current;
 
-  const filterSpansMemo = useRef(
-    _memoize(filterSpans, (textFilter: string) => `${textFilter} ${idRef.current}`)
-  ).current;
-
-  const scrollManagerRef = useRef<ScrollManager>(
-    new ScrollManager(trace && trace.data ? trace.data.asOtelTrace() : undefined, { scrollBy, scrollTo })
-  );
+  const scrollManagerRef = useRef<ScrollManager>(new ScrollManager(traceData, { scrollBy, scrollTo }));
 
   const updateViewRangeTime: TUpdateViewRangeTimeFunction = useCallback(
     (start: number, end: number, trackSrc?: string) => {
@@ -279,22 +272,18 @@ export function TracePageImpl(props: TProps) {
   }, [adjustViewRange]);
 
   useEffect(() => {
-    scrollManagerRef.current.setTrace(trace?.data?.asOtelTrace());
-  }, [trace]);
+    scrollManagerRef.current.setTrace(traceData);
+  }, [traceData]);
 
   useEffect(() => {
     if (prevIdRef.current !== id) {
       prevIdRef.current = id;
-      if (!trace) {
-        fetchTrace(id);
-      }
+      userPickedViewRef.current = false;
       updateViewRangeTime(0, 1);
       clearSearch();
-    } else if (!trace) {
-      fetchTrace(id);
-      updateViewRangeTime(0, 1);
+      setCriticalPathErrorDismissed(false);
     }
-  }, [id, trace, fetchTrace, updateViewRangeTime, clearSearch]);
+  }, [id, updateViewRangeTime, clearSearch]);
 
   const headerResizeObserverRef = useRef<ResizeObserver | TNil>(null);
 
@@ -327,7 +316,28 @@ export function TracePageImpl(props: TProps) {
 
   const setTraceView = useCallback((newViewType: ETraceViewType) => {
     setViewType(newViewType);
+    setFindMatches(null);
   }, []);
+
+  const onUserViewChange = useCallback(
+    (newViewType: ETraceViewType) => {
+      userPickedViewRef.current = true;
+      setTraceView(newViewType);
+    },
+    [setTraceView]
+  );
+
+  useEffect(() => {
+    // A view the user picked from the dropdown is not overridden by the default.
+    if (userPickedViewRef.current) return;
+    if (traceIsGenAI) {
+      setTraceView(ETraceViewType.GenAITimelineViewer);
+    } else {
+      setViewType(vt =>
+        vt === ETraceViewType.GenAITimelineViewer ? ETraceViewType.TraceTimelineViewer : vt
+      );
+    }
+  }, [traceIsGenAI, setTraceView]);
 
   const archiveTrace = useCallback(() => {
     submitTraceToArchiveFn(id);
@@ -338,12 +348,11 @@ export function TracePageImpl(props: TProps) {
   }, [acknowledgeArchiveFn, id]);
 
   const focusUiFindMatches = useCallback(() => {
-    if (trace && trace.data) {
+    if (traceData) {
       trackFocusMatches();
-      focusUiFindMatchesProp(trace.data.asOtelTrace(), uiFind);
-      zustandFocusUiFindMatches(trace.data.asOtelTrace(), uiFind);
+      zustandFocusUiFindMatches(traceData, uiFind);
     }
-  }, [focusUiFindMatchesProp, zustandFocusUiFindMatches, trace, uiFind]);
+  }, [zustandFocusUiFindMatches, traceData, uiFind]);
 
   const nextResult = useCallback(() => {
     trackNextMatch();
@@ -363,35 +372,30 @@ export function TracePageImpl(props: TProps) {
     setTimelineBarsVisible(!timelineBarsVisible);
   }, [setTimelineBarsVisible, timelineBarsVisible]);
 
-  if (!trace || trace.state === fetchedState.LOADING) {
-    return <LoadingIndicator className="u-mt-vast" centered />;
+  if (traceError && !traceData) {
+    return <ErrorMessage className="ub-m3" error={traceQueryError || 'Unknown error'} />;
   }
-  const { data } = trace;
-  if (trace.state === fetchedState.ERROR || !data) {
-    return <ErrorMessage className="ub-m3" error={trace.error || 'Unknown error'} />;
+  if (traceLoading || !traceData) {
+    return <LoadingIndicator className="u-mt-vast" centered />;
   }
 
   let findCount = 0;
-  let graphFindMatches: Set<string> | null | undefined;
   let spanFindMatches: Set<string> | null | undefined;
-  if (uiFind) {
-    if (viewType === ETraceViewType.TraceGraph) {
-      graphFindMatches = getUiFindVertexKeys(uiFind, _get(traceDagEV, 'vertices', []));
-      findCount = graphFindMatches ? graphFindMatches.size : 0;
-    } else {
-      const allMatches = filterSpansMemo(uiFind, _get(trace, 'data.spans'));
-      const otelTrace = trace?.data?.asOtelTrace?.();
-      spanFindMatches =
-        otelTrace && prunedServices.size > 0
-          ? filterPrunedSpanIDs(allMatches, otelTrace.spanMap, prunedServices)
-          : allMatches;
-      findCount = spanFindMatches ? spanFindMatches.size : 0;
-    }
+  if (viewType === ETraceViewType.TraceGraph) {
+    findCount = uiFind && findMatches ? findMatches.size : 0;
+  } else if (uiFind) {
+    const allMatches = filterSpansMemo(uiFind, _get(traceData, 'spans'));
+    const otelTrace = traceData;
+    spanFindMatches =
+      otelTrace && prunedServices.size > 0
+        ? filterPrunedSpanIDs(allMatches, otelTrace.spanMap, prunedServices)
+        : allMatches;
+    findCount = spanFindMatches ? spanFindMatches.size : 0;
   }
 
   const locationState = location.state;
   const isEmbedded = Boolean(embedded);
-  const hasArchiveStorage = Boolean(storageCapabilities?.archiveStorage);
+  const hasArchiveStorage = Boolean(backendCapabilities?.archiveStorage);
   const headerProps = {
     focusUiFindMatches,
     slimView,
@@ -402,17 +406,18 @@ export function TracePageImpl(props: TProps) {
     clearSearch,
     detailPanelMode,
     enableSidePanel,
-    hideMap: Boolean(
-      viewType !== ETraceViewType.TraceTimelineViewer || Boolean(embedded?.timeline?.hideMinimap)
-    ),
+    hideMap:
+      !viewTypeShowsMinimap(viewType) || Boolean(embedded?.timeline?.hideMinimap) || !timelineBarsVisible,
     hideSummary: Boolean(embedded?.timeline?.hideSummary),
     linkToStandalone: getUrl(id),
     nextResult,
     onArchiveClicked: archiveTrace,
+    onReloadTrace,
+    reloadingTrace: traceFetching,
     onDetailPanelModeToggle,
     onSlimViewClicked: toggleSlimView,
     onTimelineToggle,
-    onTraceViewChange: setTraceView,
+    onTraceViewChange: onUserViewChange,
     prevResult,
     ref: searchBarRef,
     resultCount: findCount,
@@ -422,7 +427,7 @@ export function TracePageImpl(props: TProps) {
     showViewOptions: !isEmbedded,
     timelineBarsVisible,
     toSearch: (locationState && locationState.fromSearch) || null,
-    trace: data.asOtelTrace(),
+    trace: traceData,
     updateNextViewRangeTime,
     updateViewRangeTime,
     useOtelTerms,
@@ -430,14 +435,33 @@ export function TracePageImpl(props: TProps) {
 
   const sm = scrollManagerRef.current;
   let view;
-  const criticalPath = criticalPathEnabled ? memoizedTraceCriticalPath(data.asOtelTrace()) : [];
+  const cpResult = criticalPathEnabled
+    ? memoizedTraceCriticalPath(traceData)
+    : { sections: [], failed: false, errors: [] };
+  const criticalPath = cpResult.sections;
   if (ETraceViewType.TraceTimelineViewer === viewType && headerHeight) {
     view = (
       <TraceTimelineViewer
         registerAccessors={sm.setAccessors}
         scrollToFirstVisibleSpan={sm.scrollToFirstVisibleSpan}
         findMatchesIDs={spanFindMatches}
-        trace={data.asOtelTrace()}
+        pageHeaderHeight={headerHeight}
+        trace={traceData}
+        criticalPath={criticalPath}
+        updateNextViewRangeTime={updateNextViewRangeTime}
+        updateViewRangeTime={updateViewRangeTime}
+        viewRange={viewRange}
+        useOtelTerms={useOtelTerms}
+      />
+    );
+  } else if (ETraceViewType.GenAITimelineViewer === viewType && headerHeight) {
+    view = (
+      <TraceTimelineViewer
+        registerAccessors={sm.setAccessors}
+        scrollToFirstVisibleSpan={sm.scrollToFirstVisibleSpan}
+        findMatchesIDs={spanFindMatches}
+        pageHeaderHeight={headerHeight}
+        trace={traceData}
         criticalPath={criticalPath}
         updateNextViewRangeTime={updateNextViewRangeTime}
         updateViewRangeTime={updateViewRangeTime}
@@ -449,9 +473,9 @@ export function TracePageImpl(props: TProps) {
     view = (
       <TraceGraph
         headerHeight={headerHeight}
-        ev={traceDagEV}
+        trace={traceData}
         uiFind={uiFind}
-        uiFindVertexKeys={graphFindMatches}
+        onSearchResults={setFindMatches}
         traceGraphConfig={traceGraphConfig}
         useOtelTerms={useOtelTerms}
       />
@@ -459,7 +483,7 @@ export function TracePageImpl(props: TProps) {
   } else if (ETraceViewType.TraceStatistics === viewType && headerHeight) {
     view = (
       <TraceStatistics
-        trace={data.asOtelTrace()}
+        trace={traceData}
         uiFindVertexKeys={spanFindMatches}
         uiFind={uiFind}
         useOtelTerms={useOtelTerms}
@@ -468,17 +492,17 @@ export function TracePageImpl(props: TProps) {
   } else if (ETraceViewType.TraceSpansView === viewType && headerHeight) {
     view = (
       <TraceSpanView
-        key={data.asOtelTrace().traceID}
-        trace={data.asOtelTrace()}
+        key={traceData.traceID}
+        trace={traceData}
         uiFindVertexKeys={spanFindMatches}
         uiFind={uiFind}
         useOtelTerms={useOtelTerms}
       />
     );
   } else if (ETraceViewType.TraceFlamegraph === viewType && headerHeight) {
-    view = <TraceFlamegraph trace={trace} />;
+    view = <TraceFlamegraph trace={traceData} />;
   } else if (ETraceViewType.TraceLogs === viewType && headerHeight) {
-    view = <TraceLogsView trace={data.asOtelTrace()} useOtelTerms={useOtelTerms} />;
+    view = <TraceLogsView trace={traceData} useOtelTerms={useOtelTerms} />;
   }
 
   return (
@@ -486,8 +510,26 @@ export function TracePageImpl(props: TProps) {
       {archiveEnabled && (
         <ArchiveNotifier acknowledge={acknowledgeArchive} archivedState={archiveTraceState} />
       )}
+      {cpResult.failed && !criticalPathErrorDismissed && (
+        <Alert
+          type="warning"
+          closable
+          onClose={() => setCriticalPathErrorDismissed(true)}
+          message="Critical path could not be computed for this trace."
+          description={cpResult.errors.join('; ')}
+          style={{ margin: '8px 16px' }}
+        />
+      )}
       <div className="Tracepage--headerSection" ref={headerRefCallback}>
         <TracePageHeader {...headerProps} />
+        {traceError && (
+          <Alert
+            type="warning"
+            showIcon
+            message="Trace reload failed. Showing the previously loaded trace."
+            description={traceQueryError?.message || 'Unknown error'}
+          />
+        )}
       </div>
       {headerHeight ? <section style={{ paddingTop: headerHeight }}>{view}</section> : null}
     </div>
@@ -495,52 +537,44 @@ export function TracePageImpl(props: TProps) {
 }
 
 // export for tests
-export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
-  const { id } = ownProps.params;
-  const { traces } = state.trace;
-  const trace = id ? traces[id] : null;
-
+export function mapStateToProps(_state: ReduxState, ownProps: { search?: string }): TReduxProps {
+  // uiFind must come from the router search string, not window.location: connect() only re-runs a
+  // one-argument mapStateToProps when Redux state changes, so URL-only updates would leave uiFind stale.
   return {
-    ...extractUiFindFromState(state),
-    id,
-    trace,
+    uiFind: parseUiFind(ownProps.search ?? ''),
   };
 }
 
-// export for tests
-export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  const { fetchTrace } = bindActionCreators(jaegerApiActions, dispatch);
-  const { focusUiFindMatches, setDetailPanelMode, setTimelineBarsVisible } = bindActionCreators(
-    timelineActions,
-    dispatch
-  );
-  return {
-    fetchTrace,
-    focusUiFindMatches,
-    setDetailPanelMode,
-    setTimelineBarsVisible,
-  };
-}
-
-const ConnectedTracePage = connect(mapStateToProps, mapDispatchToProps)(TracePageImpl);
+const ConnectedTracePage = connect(mapStateToProps)(TracePageImpl);
 
 type TracePageProps = {
   location: Location<LocationState>;
   params: { id: string };
 };
 
-const TracePage = (props: TracePageProps) => {
+export const TracePageRoute = (props: TracePageProps) => {
   const config = useConfig();
   const traceID = props.params.id;
-  const normalizedTraceID = useNormalizeTraceId(traceID);
+  const { data: traceData } = useTrace(traceID);
+  useNormalizeTraceId(traceID, traceData);
+  // Uploads change only on the search page, which is unmounted on this route,
+  // so the registry needs no subscription here. Recheck in the handler before
+  // refetching to protect against a stale render.
+  const isUploaded = isUploadedTrace(traceID);
+
+  const onReloadTrace = useCallback(() => {
+    if (isUploadedTrace(traceID)) return;
+    void reloadBackendTrace(traceID);
+  }, [traceID]);
 
   return (
     <ConnectedTracePage
       {...props}
-      params={{ ...props.params, id: normalizedTraceID }}
+      onReloadTrace={isUploaded ? undefined : onReloadTrace}
+      params={{ ...props.params, id: traceID }}
       archiveEnabled={Boolean(config.archiveEnabled)}
       enableSidePanel={Boolean(config.traceTimeline?.enableSidePanel)}
-      storageCapabilities={config.storageCapabilities}
+      backendCapabilities={config.backendCapabilities}
       criticalPathEnabled={config.criticalPathEnabled}
       disableJsonView={config.disableJsonView}
       traceGraphConfig={config.traceGraph}
@@ -549,4 +583,4 @@ const TracePage = (props: TracePageProps) => {
   );
 };
 
-export default withRouteProps(TracePage);
+export default withRouteProps(TracePageRoute);

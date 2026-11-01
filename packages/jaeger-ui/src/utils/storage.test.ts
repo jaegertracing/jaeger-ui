@@ -1,6 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+import { vi } from 'vitest';
 import storage from './storage';
 
 beforeEach(() => {
@@ -91,5 +92,51 @@ describe('storage.set', () => {
     expect(localStorage.getItem('k')).not.toBeNull();
     storage.set('k', undefined);
     expect(localStorage.getItem('k')).toBeNull();
+  });
+});
+
+describe('storage raw accessors', () => {
+  it('round-trips a string without JSON encoding it', () => {
+    storage.setItem('k', 'plain');
+    expect(localStorage.getItem('k')).toBe('plain');
+    expect(storage.getItem('k')).toBe('plain');
+  });
+
+  it('returns null for a missing key', () => {
+    expect(storage.getItem('missing')).toBeNull();
+  });
+
+  it('removes a key', () => {
+    storage.setItem('k', 'v');
+    storage.removeItem('k');
+    expect(storage.getItem('k')).toBeNull();
+  });
+
+  it('returns null instead of throwing when reading is blocked', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementationOnce(() => {
+      throw new DOMException('SecurityError');
+    });
+    expect(storage.getItem('k')).toBeNull();
+  });
+
+  it('does not throw when writing is blocked', () => {
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementationOnce(() => {
+      throw new DOMException('QuotaExceededError');
+    });
+    expect(() => storage.setItem('k', 'v')).not.toThrow();
+  });
+
+  it('does not throw when removing is blocked', () => {
+    vi.spyOn(Storage.prototype, 'removeItem').mockImplementationOnce(() => {
+      throw new DOMException('SecurityError');
+    });
+    expect(() => storage.removeItem('k')).not.toThrow();
+  });
+
+  it('does not throw on a value JSON cannot serialize', () => {
+    const cyclic: Record<string, unknown> = {};
+    cyclic.self = cyclic;
+    expect(() => storage.set('k', cyclic)).not.toThrow();
+    expect(storage.getItem('k')).toBeNull();
   });
 });

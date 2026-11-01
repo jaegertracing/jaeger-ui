@@ -7,7 +7,8 @@ import { IoChevronDown } from 'react-icons/io5';
 import _has from 'lodash/has';
 import { Link } from 'react-router-dom';
 
-import TraceIDSearchInput from './TraceIDSearchInput';
+import JaegerAskSearchInput, { JaegerAssistantToggle } from './JaegerAskSearchInput';
+import { useJaegerAssistantConfigured } from '../../hooks/useJaegerAssistant';
 import ThemeToggleButton from './ThemeToggleButton';
 import Branding from './Branding';
 import * as dependencyGraph from '../DependencyGraph/url';
@@ -22,6 +23,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { ConfigMenuItem, ConfigMenuGroup } from '../../types/config';
 import getConfig from '../../utils/config/get-config';
 import { useConfig } from '../../hooks/useConfig';
+import { useEmbeddedState } from '../../stores/embedded-store';
 
 import './TopNav.css';
 import withRouteProps, { IWithRouteProps } from '../../utils/withRouteProps';
@@ -66,7 +68,7 @@ if (getConfig().qualityMetrics?.menuEnabled) {
   });
 }
 
-if (getConfig().storageCapabilities?.metricsStorage) {
+if (getConfig().backendCapabilities?.metricsStorage) {
   NAV_LINKS.push({
     to: monitorATMUrl.getUrl(),
     matches: monitorATMUrl.matches,
@@ -119,11 +121,20 @@ export function TopNavImpl(props: Props) {
   );
   const propsWithDiff: PropsWithTraceDiff = { ...props, traceDiff };
   const menuItems = Array.isArray(config.menu) ? config.menu : [];
+  const assistantConfigured = useJaegerAssistantConfigured();
+  const embedded = useEmbeddedState();
 
   const itemsGlobalRight: MenuProps['items'] = [
     {
-      label: <TraceIDSearchInput />,
-      key: 'TraceIDSearchInput',
+      label: assistantConfigured ? (
+        <span className="TopNav--askArea">
+          <JaegerAskSearchInput />
+          <JaegerAssistantToggle />
+        </span>
+      ) : (
+        <JaegerAskSearchInput />
+      ),
+      key: assistantConfigured ? 'JaegerAskArea' : 'TraceIDSearchInput',
     },
     ...menuItems.map((m: ConfigMenuItem | ConfigMenuGroup) => {
       if (isItem(m)) {
@@ -131,7 +142,7 @@ export function TopNavImpl(props: Props) {
       }
       return { label: <CustomNavDropdown key={m.label} {...m} />, key: m.label };
     }),
-    ...(config.themes?.enabled
+    ...(config.themes?.enabled && !embedded?.theme
       ? [
           {
             label: <ThemeToggleButton />,
@@ -142,7 +153,7 @@ export function TopNavImpl(props: Props) {
   ];
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+    <div className="TopNav">
       <Menu
         theme="dark"
         items={itemsGlobalLeft?.concat(
@@ -159,21 +170,19 @@ export function TopNavImpl(props: Props) {
             };
           })
         )}
-        className="Menu--item"
+        className="Menu--item Menu--item--left"
         mode="horizontal"
         selectable={false}
         selectedKeys={[pathname]}
-        style={{ flex: '1 1 0', minWidth: '3rem' }}
       />
       <Menu
         theme="dark"
         items={itemsGlobalRight}
-        className="Menu--item"
+        className="Menu--item Menu--item--right"
         mode="horizontal"
         selectable={false}
         disabledOverflow
         selectedKeys={[pathname]}
-        style={{ flex: '0 1 auto', minWidth: 0 }}
       />
     </div>
   );

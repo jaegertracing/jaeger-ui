@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { TVertexKey } from '@jaegertracing/plexus/lib/types';
-import _get from 'lodash/get';
 import _map from 'lodash/map';
 import memoizeOne from 'memoize-one';
 
@@ -20,7 +19,7 @@ function getUiFindVertexKeysFn(
   if (!uiFind) return new Set<TVertexKey>();
   const newVertexKeys: Set<TVertexKey> = new Set();
   vertices.forEach(({ key, data: { members } }) => {
-    if (_get(filterSpans(uiFind, _map(members, 'span')), 'size')) {
+    if (filterSpans(uiFind, _map(members, 'span'))?.size) {
       newVertexKeys.add(key);
     }
   });
