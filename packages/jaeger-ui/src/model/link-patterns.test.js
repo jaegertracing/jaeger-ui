@@ -352,6 +352,49 @@ describe('computeTraceLink()', () => {
       },
     ]);
   });
+
+  it('applies a formatter only once', () => {
+    const patterns = [
+      {
+        type: 'traces',
+        url: 'http://example.com/?from=#{startTime | add 1000000}',
+        text: 'from #{startTime | add 1000000}',
+      },
+    ].map(processLinkPattern);
+
+    expect(computeTraceLink(patterns, { ...trace, startTime: 5000000 })).toEqual([
+      {
+        url: 'http://example.com/?from=6000000',
+        text: 'from 6000000',
+      },
+    ]);
+  });
+
+  it('applies different formatters to the same parameter independently', () => {
+    const patterns = [
+      {
+        type: 'traces',
+        url: 'http://example.com/?from=#{startTime | add -1000000}&to=#{startTime | add 1000000}',
+        text: 'window',
+      },
+    ].map(processLinkPattern);
+
+    expect(computeTraceLink(patterns, { ...trace, startTime: 5000000 })).toEqual([
+      {
+        url: 'http://example.com/?from=4000000&to=6000000',
+        text: 'window',
+      },
+    ]);
+  });
+
+  it('does not log a formatter error for date formatting', () => {
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    computeTraceLink(linkPatterns, trace);
+
+    expect(errorSpy).not.toHaveBeenCalled();
+    errorSpy.mockRestore();
+  });
 });
 
 describe('computeLinks()', () => {
@@ -470,6 +513,30 @@ describe('computeLinks()', () => {
       {
         url: 'http://example.com/?logKey=logVal',
         text: 'legacy log link (logVal)',
+      },
+    ]);
+  });
+
+  it('applies formatters in span links', () => {
+    const patterns = [
+      {
+        type: 'attributes',
+        key: 'http.status_code',
+        url: 'http://example.com/?code=#{http.status_code | add 1}&from=#{trace.startTime | add 1000}',
+        text: 'status #{http.status_code | add 1}',
+      },
+    ].map(processLinkPattern);
+
+    const span = wrapSpanAttrs({
+      depth: 0,
+      resource: { attributes: [] },
+      attributes: [{ key: 'http.status_code', value: 200 }],
+    });
+
+    expect(computeLinks(patterns, span, span.attributes, 0, trace)).toEqual([
+      {
+        url: 'http://example.com/?code=201&from=2000',
+        text: 'status 201',
       },
     ]);
   });
