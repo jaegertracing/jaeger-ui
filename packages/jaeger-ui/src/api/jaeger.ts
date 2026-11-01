@@ -3,7 +3,6 @@
 
 import queryString from 'query-string';
 
-import getConfig from '../utils/config/get-config';
 import prefixUrl from '../utils/prefix-url';
 
 interface IApiError extends Error {
@@ -80,13 +79,9 @@ function getJSON(url: string, options: FetchOptions = {}): Promise<any> {
 }
 
 export const DEFAULT_API_ROOT = prefixUrl('/api/');
-const QUALITY_METRICS_ROOT = prefixUrl(getConfig().qualityMetrics?.apiEndpoint || '');
 
 const JaegerAPI = {
   apiRoot: DEFAULT_API_ROOT,
-  fetchQualityMetrics(service: string, hours: number): Promise<any> {
-    return getJSON(QUALITY_METRICS_ROOT, { query: { hours, service } });
-  },
   fetchServiceOperations(serviceName: string): Promise<any> {
     return getJSON(`${this.apiRoot}services/${encodeURIComponent(serviceName)}/operations`);
   },

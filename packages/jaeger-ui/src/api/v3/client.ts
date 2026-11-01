@@ -11,6 +11,7 @@
 import queryString from 'query-string';
 
 import { ALL_SERVICES } from '../../constants/search-form';
+import getConfig from '../../utils/config/get-config';
 import prefixUrl from '../../utils/prefix-url';
 import { truncateErrorDetail } from '../../utils/error-message';
 import {
@@ -206,6 +207,15 @@ export class JaegerClient {
 
   async fetchDecoration(url: string): Promise<unknown> {
     return this.fetchJson(url, 'Failed to fetch decoration');
+  }
+
+  async fetchQualityMetrics(service: string, hours: number, signal?: AbortSignal): Promise<unknown> {
+    const endpoint = getConfig().qualityMetrics?.apiEndpoint;
+    if (!endpoint) {
+      throw new Error('qualityMetrics.apiEndpoint is not set in the UI config');
+    }
+    const url = `${prefixUrl(endpoint)}?${queryString.stringify({ hours, service })}`;
+    return this.fetchJson(url, 'Failed to fetch quality metrics', { timeout: null, signal });
   }
 
   private fetchV3(path: string, errorMessage: string, options?: FetchOptions): Promise<unknown> {
