@@ -12,7 +12,7 @@ import CopyIcon from '../../../common/CopyIcon';
 
 import { TNil } from '../../../../types';
 import { Hyperlink } from '../../../../types/hyperlink';
-import { IAttributes } from '../../../../types/otel';
+import { IAttribute, IAttributes } from '../../../../types/otel';
 
 import './AttributesTable.css';
 
@@ -116,6 +116,27 @@ const linkValueList = (links: Hyperlink[]) => {
   }));
 };
 
+// The filter only appears once a table is long enough to be hard to scan.
+export const FILTER_THRESHOLD = 10;
+
+// Objects and arrays stringify to "[object Object]" via String(), so they go
+// through JSON.stringify to keep their content searchable. Uint8Array stays on
+// String() because JSON.stringify turns a typed array into an index map.
+function toSearchText(row: IAttribute): string {
+  const { value } = row;
+  let valueText;
+  if (value !== null && typeof value === 'object' && !(value instanceof Uint8Array)) {
+    try {
+      valueText = JSON.stringify(value);
+    } catch {
+      valueText = String(value);
+    }
+  } else {
+    valueText = String(value);
+  }
+  return `${row.key}\n${valueText}`.toLowerCase();
+}
+
 type AttributesTableProps = {
   data: IAttributes;
   linksGetter: ((pairs: IAttributes, index: number) => Hyperlink[]) | TNil;
@@ -144,11 +165,75 @@ export default function AttributesTable(props: AttributesTableProps) {
     [startTransition]
   );
 
+  const [query, setQuery] = React.useState('');
+  // A different collection means a different span, so the old filter no longer applies.
+  const [queryData, setQueryData] = React.useState(data);
+  if (queryData !== data) {
+    setQueryData(data);
+    setQuery('');
+  }
+  // Filtering runs against the deferred query so typing stays responsive on
+  // spans with many or very large attributes.
+  const deferredQuery = React.useDeferredValue(query);
+  const showFilter = data.size > FILTER_THRESHOLD;
+  const normalizedQuery = showFilter ? deferredQuery.trim().toLowerCase() : '';
+
+  // Search text is built lazily, at most once per row, instead of re-stringifying
+  // every value on each keystroke. Keyed on the stable entry objects, like expandedRows.
+  const [searchTextCache] = React.useState(() => new WeakMap<IAttribute, string>());
+  const visibleRows = React.useMemo(() => {
+    const rows = data.entries().map((row, index) => ({ row, index }));
+    if (!normalizedQuery) return rows;
+    return rows.filter(({ row }) => {
+      let text = searchTextCache.get(row);
+      if (text === undefined) {
+        text = toSearchText(row);
+        searchTextCache.set(row, text);
+      }
+      return text.includes(normalizedQuery);
+    });
+  }, [data, normalizedQuery, searchTextCache]);
+
   return (
     <div className="KeyValueTable u-simple-scrollbars">
+      {showFilter && (
+        <div className="KeyValueTable--filterRow">
+          <input
+            className="KeyValueTable--filter"
+            type="text"
+            placeholder="Filter attributes…"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onKeyDown={e => e.key === 'Escape' && setQuery('')}
+            aria-label="Filter span attributes"
+          />
+          {normalizedQuery && (
+            <>
+              <span className="KeyValueTable--filterCount" aria-live="polite">
+                {visibleRows.length} of {data.size}
+              </span>
+              <button
+                type="button"
+                className="KeyValueTable--clearButton"
+                aria-label="Clear filter"
+                onClick={() => setQuery('')}
+              >
+                ×
+              </button>
+            </>
+          )}
+        </div>
+      )}
       <table className="u-width-100">
         <tbody className="KeyValueTable--body">
-          {data.entries().map((row, i) => {
+          {normalizedQuery && visibleRows.length === 0 && (
+            <tr className="KeyValueTable--row">
+              <td className="KeyValueTable--emptyState" colSpan={2}>
+                No attributes match &ldquo;{deferredQuery.trim()}&rdquo;
+              </td>
+            </tr>
+          )}
+          {visibleRows.map(({ row, index: i }) => {
             const isLarge = typeof row.value === 'string' && row.value.length >= LARGE_VALUE_THRESHOLD_CHARS;
             const shouldDeferValue = isLarge && !expandedRows.has(row);
             const { node: jsonTable, isJsonTree } = shouldDeferValue

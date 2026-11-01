@@ -3,9 +3,10 @@
 
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
-import AttributesTable, { LinkValue } from './AttributesTable';
+import AttributesTable, { FILTER_THRESHOLD, LinkValue } from './AttributesTable';
 import { makeAttributes } from '../../../../model/attributes';
 
 vi.mock('../../../common/CopyIcon', () => {
@@ -348,5 +349,125 @@ describe('<AttributesTable> - JSON-shaped values render richly regardless of key
     expect(valueRow).toHaveClass('KeyValueTable--row-jsonValue');
     expect(valueRow).toHaveTextContent('user');
     expect(valueRow).toHaveTextContent('Hello, probe message');
+  });
+});
+
+describe('<AttributesTable> - attribute filter', () => {
+  const manyAttrs = Array.from({ length: 12 }, (_, i) => ({
+    key: `key.${i}`,
+    value: `value-${i}`,
+  }));
+  const getFilter = () => screen.getByRole('textbox', { name: /filter span attributes/i });
+  const queryFilter = () => screen.queryByRole('textbox', { name: /filter span attributes/i });
+
+  let user;
+
+  beforeEach(() => {
+    user = userEvent.setup();
+  });
+
+  it(`does not render the filter for ${FILTER_THRESHOLD} or fewer attributes`, () => {
+    render(<AttributesTable data={makeAttributes(manyAttrs.slice(0, FILTER_THRESHOLD))} />);
+    expect(queryFilter()).not.toBeInTheDocument();
+  });
+
+  it(`renders the filter for more than ${FILTER_THRESHOLD} attributes`, () => {
+    render(<AttributesTable data={makeAttributes(manyAttrs)} />);
+    expect(getFilter()).toBeInTheDocument();
+    expect(screen.queryByText(/of 12/)).not.toBeInTheDocument();
+  });
+
+  it('filters rows by key, case-insensitively, and shows the match count', async () => {
+    render(<AttributesTable data={makeAttributes(manyAttrs)} />);
+    await user.type(getFilter(), 'KEY.1');
+
+    // key.1, key.10 and key.11 match
+    expect(screen.getAllByRole('row')).toHaveLength(3);
+    expect(screen.getByText('3 of 12')).toBeInTheDocument();
+  });
+
+  it('filters rows by value', async () => {
+    render(<AttributesTable data={makeAttributes(manyAttrs)} />);
+    await user.type(getFilter(), 'value-0');
+
+    expect(screen.getAllByRole('row')).toHaveLength(1);
+    expect(screen.getByText('key.0')).toBeInTheDocument();
+  });
+
+  it('matches inside object values instead of "[object Object]"', async () => {
+    const data = [...manyAttrs, { key: 'gen_ai.tool.call.arguments', value: { city: 'Paris' } }];
+    render(<AttributesTable data={makeAttributes(data)} />);
+    await user.type(getFilter(), 'paris');
+
+    expect(screen.getByText('gen_ai.tool.call.arguments')).toBeInTheDocument();
+    expect(screen.queryByText('key.0')).not.toBeInTheDocument();
+  });
+
+  it('matches large values without expanding them', async () => {
+    const data = [...manyAttrs, { key: 'gen_ai.prompt', value: `${'x'.repeat(10_000)}needle` }];
+    render(<AttributesTable data={makeAttributes(data)} />);
+    await user.type(getFilter(), 'needle');
+
+    expect(screen.getByText('gen_ai.prompt')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /click to expand/i })).toBeInTheDocument();
+    expect(screen.getByText('1 of 13')).toBeInTheDocument();
+  });
+
+  it('clears the filter with the clear button and with Escape', async () => {
+    render(<AttributesTable data={makeAttributes(manyAttrs)} />);
+    const input = getFilter();
+
+    await user.type(input, 'key.0');
+    expect(screen.getAllByRole('row')).toHaveLength(1);
+    await user.click(screen.getByRole('button', { name: /clear filter/i }));
+    expect(screen.getAllByRole('row')).toHaveLength(manyAttrs.length);
+    expect(input).toHaveValue('');
+
+    await user.type(input, 'key.0');
+    expect(screen.getAllByRole('row')).toHaveLength(1);
+    await user.keyboard('{Escape}');
+    expect(screen.getAllByRole('row')).toHaveLength(manyAttrs.length);
+    expect(input).toHaveValue('');
+  });
+
+  it('shows an empty state when nothing matches', async () => {
+    render(<AttributesTable data={makeAttributes(manyAttrs)} />);
+    await user.type(getFilter(), 'zzz');
+
+    expect(screen.getAllByRole('row')).toHaveLength(1);
+    expect(screen.getByText(/no attributes match/i)).toHaveTextContent('zzz');
+  });
+
+  it('resets the filter when the attributes change to another span', async () => {
+    const { rerender } = render(<AttributesTable data={makeAttributes(manyAttrs)} />);
+    await user.type(getFilter(), 'key.0');
+    expect(screen.getAllByRole('row')).toHaveLength(1);
+
+    const otherSpanAttrs = manyAttrs.map(({ key }) => ({ key, value: 'other' }));
+    rerender(<AttributesTable data={makeAttributes(otherSpanAttrs)} />);
+
+    expect(getFilter()).toHaveValue('');
+    expect(screen.getAllByRole('row')).toHaveLength(otherSpanAttrs.length);
+  });
+
+  it('shows every row when the data drops below the threshold', async () => {
+    const { rerender } = render(<AttributesTable data={makeAttributes(manyAttrs)} />);
+    fireEvent.change(getFilter(), { target: { value: 'zzz' } });
+
+    rerender(<AttributesTable data={makeAttributes(manyAttrs.slice(0, 3))} />);
+
+    expect(queryFilter()).not.toBeInTheDocument();
+    expect(screen.queryByText(/no attributes match/i)).not.toBeInTheDocument();
+    expect(screen.getAllByRole('row')).toHaveLength(3);
+  });
+
+  it('passes the original index to linksGetter for filtered rows', async () => {
+    const data = makeAttributes(manyAttrs);
+    const linksGetter = vi.fn().mockReturnValue([]);
+    render(<AttributesTable data={data} linksGetter={linksGetter} />);
+    await user.type(getFilter(), 'value-5');
+
+    expect(screen.getAllByRole('row')).toHaveLength(1);
+    expect(linksGetter).toHaveBeenLastCalledWith(data, 5);
   });
 });
