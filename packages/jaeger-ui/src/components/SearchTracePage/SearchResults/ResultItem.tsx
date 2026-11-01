@@ -5,15 +5,13 @@ import * as React from 'react';
 import { Col, Divider, Row, Tag, Tooltip } from 'antd';
 import { Link } from 'react-router-dom';
 
-import dayjs from 'dayjs';
-
 import { IoWarning } from 'react-icons/io5';
 
 import { trackConversions, EAltViewActions } from './index.track';
 import * as markers from './ResultItem.markers';
 import ResultItemTitle from './ResultItemTitle';
 import ServicePills from './ServicePills';
-import { formatRelativeDate, formatRelativeTime } from '../../../utils/date';
+import { formatRelativeDate, formatRelativeTime, toDisplayTime } from '../../../utils/date';
 import { getIncompleteTraceTooltip } from '../../../model/trace-display-helpers';
 
 import type { TraceSummary } from '../../../types/trace-summary';
@@ -53,7 +51,7 @@ export default function ResultItem({
     orphanSpanCount,
   } = traceSummary;
 
-  const timeStr = dayjs(startTime / 1000).format('h:mm:ss a');
+  const timeStr = toDisplayTime(startTime / 1000).format('h:mm:ss a');
   const fromNow = formatRelativeTime(startTime);
 
   return (
