@@ -398,8 +398,7 @@ describe('GenAITab', () => {
 
   it('renders truncated markdown with an unclosed emphasis marker without swallowing the text after it', () => {
     // Span attributes can be cut off at ingestion. The Markdown view uses
-    // sharedMarkdownOptions, whose optimizeForStreaming hides the dangling
-    // ** instead of emphasizing or dropping the text that follows it.
+    // sharedMarkdownOptions, so an unclosed ** must not throw or hide the rest.
     const { container } = render(
       <GenAITab
         span={makeSpan([
@@ -414,9 +413,8 @@ describe('GenAITab', () => {
     const content = container.querySelector('.GenAITab--messageContent');
     expect(content).not.toBeNull();
     expect(content?.querySelector('strong')).toBeNull();
-    expect(content?.textContent).toContain('span attribute cut at bold');
+    expect(content?.textContent).toContain('**bold');
     expect(content?.textContent).toContain('following text stays');
-    expect(content?.textContent).not.toContain('**');
   });
 
   it('renders a fenced code block once switched to Markdown, with the shared code styling', () => {

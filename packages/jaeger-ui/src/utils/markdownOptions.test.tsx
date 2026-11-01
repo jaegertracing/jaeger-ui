@@ -8,11 +8,11 @@ import { expect, it, describe } from 'vitest';
 import { sharedMarkdownOptions } from './markdownOptions';
 
 describe('sharedMarkdownOptions', () => {
-  it('enables optimizeForStreaming for every caller, not just streamed chat replies', () => {
-    // Span attributes rendered in the GenAI span detail tab can be truncated
-    // at ingestion, so tolerating unclosed tags is desirable there too -- this
-    // is not a streaming-only concern.
-    expect(sharedMarkdownOptions.optimizeForStreaming).toBe(true);
+  it('does not enable optimizeForStreaming, which deletes unpaired emphasis markers', () => {
+    // The streaming pre-pass removes `_` and `*` that it takes for unclosed
+    // emphasis, and the removal stays after the text is complete. That costs
+    // SQL wildcards, snake_case and Python *args, not only an unfinished bold.
+    expect(sharedMarkdownOptions.optimizeForStreaming).toBe(false);
   });
 
   describe('wrapper element', () => {
@@ -97,9 +97,10 @@ describe('sharedMarkdownOptions', () => {
   });
 
   describe('literal emphasis markers', () => {
-    // markdown-to-jsx 9.10.2 and 9.10.3 deleted a lone `_` or `*` from
-    // finished text under optimizeForStreaming; 9.10.4 fixed it. These tests
-    // keep the dependency from regressing.
+    // Under optimizeForStreaming, markdown-to-jsx 9.10.2 deleted a lone `_`
+    // or `*` from finished text and 9.10.4 deletes two unpaired openers from
+    // the last paragraph. These tests fail if the option is turned back on
+    // before upstream leaves finished text alone.
     function renderMarkdown(markdown: string) {
       return render(<Markdown options={sharedMarkdownOptions}>{markdown}</Markdown>);
     }
@@ -131,6 +132,16 @@ describe('sharedMarkdownOptions', () => {
       // textContent decodes entities, so only the markup shows a leaked &#95;.
       expect(container.innerHTML).toContain('customer_id');
       expect(container.innerHTML).not.toContain('&#95;');
+    });
+
+    it('keeps two unpaired openers in the last paragraph', () => {
+      const underscores = renderMarkdown('Use _trace and _span');
+      expect(underscores.container.querySelector('em')).toBeNull();
+      expect(underscores.container.textContent).toBe('Use _trace and _span');
+
+      const asterisks = renderMarkdown('*args and *kwargs');
+      expect(asterisks.container.querySelector('em')).toBeNull();
+      expect(asterisks.container.textContent).toBe('*args and *kwargs');
     });
 
     it('keeps two snake_case identifiers on one line without emphasizing either', () => {
