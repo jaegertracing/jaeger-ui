@@ -456,6 +456,26 @@ describe('JaegerClient', () => {
       }
     });
 
+    it.each([
+      ['qualityMetrics is null', { qualityMetrics: null }],
+      ['apiEndpoint is empty', { qualityMetrics: { apiEndpoint: '' } }],
+    ])('rejects without a request when %s in the UI config', async (_case, uiConfig) => {
+      const configSpy = vi.spyOn(window, 'getJaegerUiConfig').mockReturnValue(uiConfig);
+      vi.resetModules();
+
+      try {
+        const { JaegerClient: IsolatedClient } = await import('./client');
+
+        await expect(new IsolatedClient().fetchQualityMetrics('frontend', 48)).rejects.toThrow(
+          'qualityMetrics.apiEndpoint is not set in the UI config'
+        );
+        expect(mockFetch).not.toHaveBeenCalled();
+      } finally {
+        configSpy.mockRestore();
+        vi.resetModules();
+      }
+    });
+
     it('GETs the configured endpoint with the encoded service and lookback hours', async () => {
       const data = { scores: [], metrics: [], extra: 'retained' };
       mockFetch.mockResolvedValue({ ok: true, json: async () => data });

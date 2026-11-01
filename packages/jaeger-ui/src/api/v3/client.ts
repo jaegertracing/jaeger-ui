@@ -210,8 +210,11 @@ export class JaegerClient {
   }
 
   async fetchQualityMetrics(service: string, hours: number, signal?: AbortSignal): Promise<unknown> {
-    const root = prefixUrl(getConfig().qualityMetrics?.apiEndpoint);
-    const url = `${root}?${queryString.stringify({ hours, service })}`;
+    const endpoint = getConfig().qualityMetrics?.apiEndpoint;
+    if (!endpoint) {
+      throw new Error('qualityMetrics.apiEndpoint is not set in the UI config');
+    }
+    const url = `${prefixUrl(endpoint)}?${queryString.stringify({ hours, service })}`;
     return this.fetchJson(url, 'Failed to fetch quality metrics', { timeout: null, signal });
   }
 
