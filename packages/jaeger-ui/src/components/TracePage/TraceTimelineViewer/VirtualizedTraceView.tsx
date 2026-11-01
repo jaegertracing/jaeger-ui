@@ -439,6 +439,11 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         };
       }
 
+      // Hide the service name label when the span belongs to the same service as its parent,
+      // to reduce visual clutter in traces with many same-service spans (issue #4652).
+      const parentServiceName = span.parentSpan?.resource.serviceName;
+      const showServiceName = serviceName !== parentServiceName;
+
       return (
         <div className="VirtualizedTraceView--row" key={key} style={style} {...attrs}>
           <SpanBarRow
@@ -464,6 +469,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
             focusSpan={focusSpan}
             traceDuration={trace.duration}
             spanPillsEnabled={spanPillsEnabled}
+            showServiceName={showServiceName}
             useOtelTerms={useOtelTerms}
           />
         </div>
