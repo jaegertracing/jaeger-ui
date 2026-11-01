@@ -14,11 +14,14 @@ import type { Microseconds } from '../../../types/units';
 import { AppQueryClientProvider, queryClient } from '../../../query/app-query-client';
 import { useUploadedTraces } from '../useUploadedTraces';
 import { loadTracesFromFile } from '../FileLoader';
+import { getCachedTrace } from '../../../hooks/useTraceLoading';
 import numericUpload from '../../../utils/fixtures/otlp-upload-numeric.json';
+import { GetTraceResponseSchema } from '../../../api/v3/schemas';
+import capture from '../../../api/v3/v3-trace-output.json';
 
 const mockFetchTrace = vi.fn();
-vi.mock('../../../api/jaeger', () => ({
-  default: {
+vi.mock('../../../api/v3/client', () => ({
+  jaegerClient: {
     fetchTrace: (...args: unknown[]) => mockFetchTrace(...args),
   },
 }));
@@ -71,6 +74,15 @@ const baseRawTraces = [
   { traceID: 'b', spans: [], durationMicros: 1000, startTimeUnixMicros: 0, endTimeUnixMicros: 1000 },
 ];
 
+// jaegerClient.fetchTrace resolves to the TracesData inside the /api/v3 response envelope.
+const fetchedTraces = baseTraces.map(trace => ({
+  resourceSpans: [{ scopeSpans: [{ spans: [{ traceId: trace.traceID }] }] }],
+}));
+
+// toTraceIdHex pads the short summary IDs to the 32-hex v3 request format.
+const requestIdA = '0000000000000000000000000000000a';
+const requestIdB = '0000000000000000000000000000000b';
+
 afterEach(() => {
   vi.clearAllMocks();
   vi.restoreAllMocks();
@@ -79,9 +91,7 @@ afterEach(() => {
 describe('DownloadResults', () => {
   it('fetches missing traces when cached upload documents have no usable trace ID', async () => {
     const raw = [null, {}, { resourceSpans: null }, { resourceSpans: [{}, { scopeSpans: [{ spans: [] }] }] }];
-    mockFetchTrace
-      .mockResolvedValueOnce({ data: [baseRawTraces[0]] })
-      .mockResolvedValueOnce({ data: [baseRawTraces[1]] });
+    mockFetchTrace.mockResolvedValueOnce(fetchedTraces[0]).mockResolvedValueOnce(fetchedTraces[1]);
     const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob://url');
     vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
 
@@ -91,11 +101,11 @@ describe('DownloadResults', () => {
     });
 
     expect(mockFetchTrace).toHaveBeenCalledTimes(2);
-    expect(mockFetchTrace).toHaveBeenCalledWith('a');
-    expect(mockFetchTrace).toHaveBeenCalledWith('b');
+    expect(mockFetchTrace).toHaveBeenCalledWith(requestIdA);
+    expect(mockFetchTrace).toHaveBeenCalledWith(requestIdB);
     expect(createObjectURL).toHaveBeenCalledTimes(1);
     const blob = createObjectURL.mock.calls[0][0] as Blob;
-    expect(await readJsonFile({ file: new File([blob], 'download.json') })).toEqual({ data: baseRawTraces });
+    expect(await readJsonFile({ file: new File([blob], 'download.json') })).toEqual({ data: fetchedTraces });
   });
 
   it('downloads locally uploaded OTLP data without retrieving it from the backend', async () => {
@@ -144,7 +154,7 @@ describe('DownloadResults', () => {
   });
 
   it('fetches traces from backend when rawTraces is empty', async () => {
-    mockFetchTrace.mockResolvedValue({ data: [{ traceID: 'a', spans: [] }] });
+    mockFetchTrace.mockResolvedValue(fetchedTraces[0]);
     const createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob://url');
     const revokeObjectURLSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
 
@@ -155,13 +165,13 @@ describe('DownloadResults', () => {
     });
 
     await waitFor(() => expect(createObjectURLSpy).toHaveBeenCalledTimes(1));
-    expect(mockFetchTrace).toHaveBeenCalledWith('a');
-    expect(mockFetchTrace).toHaveBeenCalledWith('b');
+    expect(mockFetchTrace).toHaveBeenCalledWith(requestIdA);
+    expect(mockFetchTrace).toHaveBeenCalledWith(requestIdB);
     expect(revokeObjectURLSpy).toHaveBeenCalledTimes(1);
   });
 
   it('fetches only the missing trace when one raw is already present', async () => {
-    mockFetchTrace.mockResolvedValue({ data: [{ traceID: 'b', spans: [] }] });
+    mockFetchTrace.mockResolvedValue(fetchedTraces[1]);
     const createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob://url');
     const revokeObjectURLSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
 
@@ -173,8 +183,8 @@ describe('DownloadResults', () => {
     });
 
     await waitFor(() => expect(createObjectURLSpy).toHaveBeenCalledTimes(1));
-    expect(mockFetchTrace).not.toHaveBeenCalledWith('a');
-    expect(mockFetchTrace).toHaveBeenCalledWith('b');
+    expect(mockFetchTrace).not.toHaveBeenCalledWith(requestIdA);
+    expect(mockFetchTrace).toHaveBeenCalledWith(requestIdB);
     expect(revokeObjectURLSpy).toHaveBeenCalledTimes(1);
   });
 
@@ -186,7 +196,7 @@ describe('DownloadResults', () => {
           resolveA = r;
         })
     );
-    mockFetchTrace.mockResolvedValue({ data: [{}] });
+    mockFetchTrace.mockResolvedValue(fetchedTraces[1]);
     vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob://url');
     vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
 
@@ -196,7 +206,7 @@ describe('DownloadResults', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: /Retrieving traces/i })).toBeDisabled());
 
     await act(async () => {
-      resolveA?.({ data: [{}] });
+      resolveA?.(fetchedTraces[0]);
     });
     await waitFor(() => expect(screen.getByRole('button', { name: /Download Results/i })).not.toBeDisabled());
   });
@@ -209,7 +219,7 @@ describe('DownloadResults', () => {
           resolveA = r;
         })
     );
-    mockFetchTrace.mockResolvedValue({ data: [{}] });
+    mockFetchTrace.mockResolvedValue(fetchedTraces[1]);
     vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob://url');
     vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
 
@@ -222,7 +232,7 @@ describe('DownloadResults', () => {
     expect(bar).toHaveAttribute('aria-valuemax', '100');
 
     await act(async () => {
-      resolveA?.({ data: [{}] });
+      resolveA?.(fetchedTraces[0]);
     });
     await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
   });
@@ -252,7 +262,7 @@ describe('DownloadResults', () => {
 
     // Resolve the late fetch — should not crash or update state
     await act(async () => {
-      resolveB?.({ data: [{}] });
+      resolveB?.(fetchedTraces[1]);
     });
 
     // Button remains idle; no progressbar visible
@@ -260,23 +270,20 @@ describe('DownloadResults', () => {
     expect(message.error).toHaveBeenCalledWith('Failed to retrieve traces: network error');
   });
 
-  it('shows a warning message when some traces could not be retrieved', async () => {
-    mockFetchTrace.mockResolvedValueOnce({ data: [{ traceID: 'a', spans: [] }] });
-    // Second trace returns null (trace not found/empty)
-    mockFetchTrace.mockResolvedValueOnce(null);
-    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob://url');
-    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+  it('shows the client error message in the failure notification', async () => {
+    const error = Object.assign(
+      new Error(`Failed to fetch trace ${requestIdA}: 404 Not Found: trace not found`),
+      { httpBody: '{\n  "code": 5,\n  "message": "trace not found"\n}' }
+    );
+    mockFetchTrace.mockRejectedValueOnce(error);
 
-    render(<DownloadResults traceSummaries={baseTraces} rawTraces={[]} />);
-
+    render(<DownloadResults traceSummaries={[baseTraces[0]]} rawTraces={[]} />);
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: /Download Results/i }));
     });
 
-    await waitFor(() =>
-      expect(message.warning).toHaveBeenCalledWith(
-        '1 trace could not be retrieved and will be omitted from the download.'
-      )
+    expect(message.error).toHaveBeenCalledWith(
+      `Failed to retrieve traces: Failed to fetch trace ${requestIdA}: 404 Not Found: trace not found`
     );
   });
 
@@ -353,6 +360,182 @@ describe('uploaded trace registry and offline downloads', () => {
       expect(fetchSpy).not.toHaveBeenCalled();
     }
   );
+
+  it('re-uploads fetched OTLP traces and legacy uploads from one download', async () => {
+    const fetched = GetTraceResponseSchema.parse(capture).result;
+    const fetchedId = capture.result.resourceSpans[0].scopeSpans[0].spans[0].traceId;
+    const legacyId = '0123456789abcdef';
+    const legacyUpload = {
+      traceID: legacyId,
+      spans: [
+        {
+          traceID: legacyId,
+          spanID: '1111111111111111',
+          operationName: 'legacy-operation',
+          references: [],
+          startTime: 1000,
+          duration: 10,
+          tags: [],
+          logs: [],
+          processID: 'p1',
+        },
+      ],
+      processes: { p1: { serviceName: 'svc', tags: [] } },
+    };
+    const legacy = await loadTracesFromFile(new File([JSON.stringify(legacyUpload)], 'legacy.json'));
+    expect(legacy.errorCount).toBe(0);
+    mockFetchTrace.mockResolvedValue(fetched);
+    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob://url');
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+
+    render(
+      <DownloadResults
+        traceSummaries={[{ ...baseTraces[0], traceID: fetchedId }, ...legacy.summaries]}
+        rawTraces={legacy.rawTraces}
+      />
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Download Results/i }));
+    });
+
+    expect(mockFetchTrace).toHaveBeenCalledTimes(1);
+    expect(mockFetchTrace).toHaveBeenCalledWith(fetchedId);
+    const blob = createObjectURL.mock.calls[0][0] as Blob;
+    expect(await readJsonFile({ file: new File([blob], 'download.json') })).toEqual({
+      data: [fetched, ...legacy.rawTraces],
+    });
+    queryClient.clear();
+    const roundTrip = await loadTracesFromFile(new File([blob], 'download.json'));
+    expect(roundTrip.errorCount).toBe(0);
+    expect(roundTrip.summaries.map(summary => [summary.traceID, summary.spanCount])).toEqual([
+      [fetchedId, 3],
+      [legacyId, 1],
+    ]);
+  });
+
+  it('re-uploads fetched non-finite double attributes as proto3 strings', async () => {
+    const response = structuredClone(capture);
+    const fetchedId = response.result.resourceSpans[0].scopeSpans[0].spans[0].traceId;
+    (response.result.resourceSpans[0].scopeSpans[0].spans[0].attributes as unknown[]).push(
+      { key: 'nan', value: { doubleValue: 'NaN' } },
+      { key: 'infinity', value: { doubleValue: 'Infinity' } },
+      { key: 'negative-infinity', value: { doubleValue: '-Infinity' } },
+      { key: 'array', value: { arrayValue: { values: [{ doubleValue: 'NaN' }] } } },
+      {
+        key: 'kvlist',
+        value: { kvlistValue: { values: [{ key: 'nested', value: { doubleValue: 'Infinity' } }] } },
+      }
+    );
+    mockFetchTrace.mockResolvedValue(GetTraceResponseSchema.parse(response).result);
+    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob://url');
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+
+    render(<DownloadResults traceSummaries={[{ ...baseTraces[0], traceID: fetchedId }]} rawTraces={[]} />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Download Results/i }));
+    });
+
+    const blob = createObjectURL.mock.calls[0][0] as Blob;
+    expect(await readJsonFile({ file: new File([blob], 'download.json') })).toEqual({
+      data: [response.result],
+    });
+    queryClient.clear();
+    const roundTrip = await loadTracesFromFile(new File([blob], 'download.json'));
+    expect(roundTrip.errorCount).toBe(0);
+    expect(roundTrip.summaries.map(summary => [summary.traceID, summary.spanCount])).toEqual([
+      [fetchedId, 3],
+    ]);
+  });
+
+  it('keeps the last upload of a trace ID in the cache, summaries, and download', async () => {
+    const traceId = numericUpload.resourceSpans[0].scopeSpans[0].spans[0].traceId;
+    const updated = structuredClone(numericUpload);
+    updated.resourceSpans[0].scopeSpans[0].spans[0].name = 'updated-operation';
+    const { result } = renderHook(() => useUploadedTraces(), { wrapper: AppQueryClientProvider });
+    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob://url');
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+
+    const first = await loadTracesFromFile(new File([JSON.stringify(numericUpload)], 'first.json'));
+    act(() => result.current.handleTracesLoaded(first.summaries, first.rawTraces));
+    const second = await loadTracesFromFile(new File([JSON.stringify(updated)], 'second.json'));
+    act(() => result.current.handleTracesLoaded(second.summaries, second.rawTraces));
+
+    expect(first.summaries).not.toEqual(second.summaries);
+    await waitFor(() => {
+      expect(result.current.uploadedSummaries).toEqual(second.summaries);
+      expect(result.current.uploadedRawTraces).toEqual(second.rawTraces);
+    });
+    expect(getCachedTrace(traceId)!.spans[0].name).toBe('updated-operation');
+
+    render(
+      <DownloadResults
+        traceSummaries={result.current.uploadedSummaries}
+        rawTraces={result.current.uploadedRawTraces}
+      />
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Download Results/i }));
+    });
+    const blob = createObjectURL.mock.calls[0][0] as Blob;
+    queryClient.clear();
+    const roundTrip = await loadTracesFromFile(new File([blob], 'download.json'));
+    expect(roundTrip.summaries).toEqual(second.summaries);
+    expect(getCachedTrace(traceId)!.spans[0].name).toBe('updated-operation');
+  });
+
+  it('replaces a re-uploaded trace in its original position', async () => {
+    const other = structuredClone(numericUpload);
+    other.resourceSpans[0].scopeSpans[0].spans[0].traceId = '1234567890abcdef1234567890abcdef';
+    const updated = structuredClone(numericUpload);
+    updated.resourceSpans[0].scopeSpans[0].spans[0].name = 'updated-operation';
+    const load = (input: unknown) => loadTracesFromFile(new File([JSON.stringify(input)], 'upload.json'));
+    const a = await load(numericUpload);
+    const b = await load(other);
+    const aUpdated = await load(updated);
+    expect(aUpdated.rawTraces).not.toEqual(a.rawTraces);
+    const { result } = renderHook(() => useUploadedTraces(), { wrapper: AppQueryClientProvider });
+
+    act(() => result.current.handleTracesLoaded(a.summaries, a.rawTraces));
+    act(() => result.current.handleTracesLoaded(b.summaries, b.rawTraces));
+    act(() => result.current.handleTracesLoaded(aUpdated.summaries, aUpdated.rawTraces));
+
+    await waitFor(() => {
+      expect(result.current.uploadedSummaries).toEqual([...aUpdated.summaries, ...b.summaries]);
+      expect(result.current.uploadedRawTraces).toEqual([...aUpdated.rawTraces, ...b.rawTraces]);
+    });
+  });
+
+  it('keeps the last legacy document when one file repeats a trace ID', async () => {
+    const traceId = '0123456789abcdef';
+    const legacyTrace = (operationName: string) => ({
+      traceID: traceId,
+      spans: [
+        {
+          traceID: traceId,
+          spanID: '1111111111111111',
+          operationName,
+          references: [],
+          startTime: 1000,
+          duration: 10,
+          tags: [],
+          logs: [],
+          processID: 'p1',
+        },
+      ],
+      processes: { p1: { serviceName: 'svc', tags: [] } },
+    });
+    const upload = { data: [legacyTrace('first-operation'), legacyTrace('last-operation')] };
+    const loaded = await loadTracesFromFile(new File([JSON.stringify(upload)], 'repeated.json'));
+    expect(loaded.errorCount).toBe(0);
+    const { result } = renderHook(() => useUploadedTraces(), { wrapper: AppQueryClientProvider });
+    act(() => result.current.handleTracesLoaded(loaded.summaries, loaded.rawTraces));
+
+    await waitFor(() => {
+      expect(result.current.uploadedSummaries).toEqual([loaded.summaries[1]]);
+      expect(result.current.uploadedRawTraces).toEqual([loaded.rawTraces[1]]);
+    });
+    expect(getCachedTrace(traceId)!.spans[0].name).toBe('last-operation');
+  });
 
   it('deduplicates legacy and OTLP raw documents by their own trace IDs', async () => {
     const loaded = await loadTracesFromFile(new File([JSON.stringify(numericUpload)], 'upload.json'));

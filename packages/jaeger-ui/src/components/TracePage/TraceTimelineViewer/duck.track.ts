@@ -13,6 +13,7 @@ import {
   TWidthValue,
 } from './duck';
 import DetailState from './SpanDetail/DetailState';
+import { useTraceTimelineStore } from './store.timeline';
 import { ReduxState } from '../../../types';
 import { getCachedTrace } from '../../../hooks/useTraceLoading';
 import { trackEvent } from '../../../utils/tracking';
@@ -66,7 +67,11 @@ function trackParent(store: Store<ReduxState>, { payload }: Action<TSpanIdValue>
     return;
   }
   const { spanID } = payload;
-  const isHidden = st.traceTimeline.childrenHiddenIDs.has(spanID);
+  const zustandState = useTraceTimelineStore.getState();
+  const isHidden =
+    zustandState.traceID === traceID
+      ? zustandState.childrenHiddenIDs.has(spanID)
+      : st.traceTimeline.childrenHiddenIDs.has(spanID);
   const traceData = getCachedTrace(traceID);
   if (!traceData) {
     return;

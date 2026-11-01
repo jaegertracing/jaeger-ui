@@ -2,10 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators, Dispatch } from 'redux';
 
-import { actions } from './duck';
 import {
   getSelectedSpanID,
   MIN_TIMELINE_COLUMN_WIDTH,
@@ -15,6 +12,13 @@ import {
   useLayoutPrefsStore,
   useTraceTimelineStore,
 } from './store';
+import {
+  trackCollapseAll,
+  trackCollapseOne,
+  trackColumnWidth,
+  trackExpandAll,
+  trackExpandOne,
+} from './store.track';
 import SpanDetailSidePanel from './SpanDetailSidePanel';
 import TimelineHeaderRow from './TimelineHeaderRow';
 import { useServiceFilter } from './useServiceFilter';
@@ -25,23 +29,13 @@ import { isSpanPruned } from './generateRowStates';
 import { merge as mergeShortcuts } from '../keyboard-shortcuts';
 import { Accessors } from '../ScrollManager';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '../types';
-import { TNil, ReduxState } from '../../../types';
-import { IOtelSpan, IOtelTrace } from '../../../types/otel';
+import { TNil } from '../../../types';
+import { IOtelTrace } from '../../../types/otel';
 import { CriticalPathSection } from '../../../types/critical_path';
 
 import './index.css';
 
-type TDispatchProps = {
-  // These Redux dispatchers are kept for the tracking middleware only.
-  setSpanNameColumnWidth: (width: number) => void;
-  setSidePanelWidth: (width: number) => void;
-  collapseAll: (spans: ReadonlyArray<IOtelSpan>) => void;
-  collapseOne: (spans: ReadonlyArray<IOtelSpan>) => void;
-  expandAll: (spans?: ReadonlyArray<IOtelSpan>) => void;
-  expandOne: (spans: ReadonlyArray<IOtelSpan>) => void;
-};
-
-type TProps = TDispatchProps & {
+type TProps = {
   registerAccessors: (accessors: Accessors) => void;
   findMatchesIDs: Set<string> | TNil;
   scrollToFirstVisibleSpan: () => void;
@@ -67,12 +61,6 @@ const NUM_TICKS = 5;
 
 export const TraceTimelineViewerImpl = (props: TProps) => {
   const {
-    collapseAll: collapseAllAction,
-    collapseOne: collapseOneAction,
-    expandAll: expandAllAction,
-    expandOne: expandOneAction,
-    setSpanNameColumnWidth: reduxSetSpanNameColumnWidth,
-    setSidePanelWidth: reduxSetSidePanelWidth,
     updateNextViewRangeTime,
     updateViewRangeTime,
     viewRange,
@@ -82,7 +70,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     ...rest
   } = props;
 
-  // Layout preferences are owned by Zustand; Redux setters are also called for the tracking middleware.
+  // Layout preferences are owned by Zustand. Each handler tracks before it updates the store.
   const detailPanelMode = useLayoutPrefsStore(s => s.detailPanelMode);
   const sidePanelWidth = useLayoutPrefsStore(s => s.sidePanelWidth);
   const spanNameColumnWidth = useLayoutPrefsStore(s => s.spanNameColumnWidth);
@@ -99,18 +87,18 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
 
   const setSpanNameColumnWidth = useCallback(
     (width: number) => {
+      trackColumnWidth(width);
       zustandSetSpanNameColumnWidth(width);
-      reduxSetSpanNameColumnWidth(width);
     },
-    [zustandSetSpanNameColumnWidth, reduxSetSpanNameColumnWidth]
+    [zustandSetSpanNameColumnWidth]
   );
 
   const setSidePanelWidth = useCallback(
     (width: number) => {
+      trackColumnWidth(width);
       zustandSetSidePanelWidth(width);
-      reduxSetSidePanelWidth(width);
     },
-    [zustandSetSidePanelWidth, reduxSetSidePanelWidth]
+    [zustandSetSidePanelWidth]
   );
 
   // Side panel is permanently visible whenever side panel mode is active.
@@ -129,24 +117,24 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   }, [trace, focusedSubtreeSpanID, prunedServices]);
 
   const collapseAll = useCallback(() => {
-    collapseAllAction(effectiveSpans);
+    trackCollapseAll();
     zustandCollapseAll(effectiveSpans);
-  }, [collapseAllAction, effectiveSpans, zustandCollapseAll]);
+  }, [effectiveSpans, zustandCollapseAll]);
 
   const collapseOne = useCallback(() => {
-    collapseOneAction(effectiveSpans);
+    trackCollapseOne();
     zustandCollapseOne(effectiveSpans);
-  }, [collapseOneAction, effectiveSpans, zustandCollapseOne]);
+  }, [effectiveSpans, zustandCollapseOne]);
 
   const expandAll = useCallback(() => {
-    expandAllAction(effectiveSpans);
+    trackExpandAll();
     zustandExpandAll(effectiveSpans);
-  }, [expandAllAction, effectiveSpans, zustandExpandAll]);
+  }, [effectiveSpans, zustandExpandAll]);
 
   const expandOne = useCallback(() => {
-    expandOneAction(effectiveSpans);
+    trackExpandOne();
     zustandExpandOne(effectiveSpans);
-  }, [expandOneAction, effectiveSpans, zustandExpandOne]);
+  }, [effectiveSpans, zustandExpandOne]);
 
   useEffect(() => {
     mergeShortcuts({
@@ -291,15 +279,5 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   );
 };
 
-// selectedSpanID is now computed inside TraceTimelineViewerImpl from the Zustand store.
-function mapStateToProps(_state: ReduxState) {
-  return {};
-}
-
-function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  const { setSpanNameColumnWidth, setSidePanelWidth, expandAll, expandOne, collapseAll, collapseOne } =
-    bindActionCreators(actions, dispatch);
-  return { setSpanNameColumnWidth, setSidePanelWidth, expandAll, expandOne, collapseAll, collapseOne };
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(TraceTimelineViewerImpl);
+// Keeps connect()'s shallow-prop render bailout now that no Redux props are injected.
+export default React.memo(TraceTimelineViewerImpl);

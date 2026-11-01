@@ -178,27 +178,28 @@ describe('fetchMetrics', () => {
   it('GETs metrics query', () => {
     fetchMock.mockReset();
     const metricsType = 'latencies';
-    const serviceName = ['serviceName'];
+    const serviceName = 'serviceName';
     const query = {
       quantile: 95,
     };
     fetchMock.mockReturnValue(
       Promise.resolve({
         status: 200,
-        json: () => Promise.resolve({ someObj: {} }),
+        ok: true,
+        json: () => Promise.resolve({ name: 'service_latencies', type: 'GAUGE', metrics: [] }),
       })
     );
 
-    JaegerAPI.fetchMetrics(metricsType, serviceName, query);
+    jaegerClient.fetchMetrics(metricsType, serviceName, query);
     expect(fetchMock).toHaveBeenLastCalledWith(
       `${DEFAULT_API_ROOT}metrics/${metricsType}?service=${serviceName}&${queryString.stringify(query)}`,
-      defaultOptions
+      { signal: undefined }
     );
   });
 
   it('fetchMetrics() should add quantile to response', async () => {
     const metricsType = 'latencies';
-    const serviceName = ['serviceName'];
+    const serviceName = 'serviceName';
     const query = {
       quantile: 95,
     };
@@ -206,11 +207,12 @@ describe('fetchMetrics', () => {
     fetchMock.mockReturnValue(
       Promise.resolve({
         status: 200,
-        json: () => Promise.resolve({ someObj: {} }),
+        ok: true,
+        json: () => Promise.resolve({ name: 'service_latencies', type: 'GAUGE', metrics: [] }),
       })
     );
 
-    const resp = await JaegerAPI.fetchMetrics(metricsType, serviceName, query);
+    const resp = await jaegerClient.fetchMetrics(metricsType, serviceName, query);
     expect(resp.quantile).toBe(query.quantile);
   });
 });

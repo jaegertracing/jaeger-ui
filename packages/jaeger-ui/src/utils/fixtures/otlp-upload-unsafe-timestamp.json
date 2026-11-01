@@ -1,0 +1,22 @@
+{
+  "resourceSpans": [
+    {
+      "resource": {
+        "attributes": [{ "key": "service.name", "value": { "stringValue": "numeric-exporter" } }]
+      },
+      "scopeSpans": [
+        {
+          "spans": [
+            {
+              "traceId": "abcdef0123456789abcdef0123456789",
+              "spanId": "1111111111111111",
+              "name": "checkout",
+              "startTimeUnixNano": 1761177600123456789,
+              "endTimeUnixNano": "1761177600223456789"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

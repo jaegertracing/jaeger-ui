@@ -23,6 +23,7 @@ import {
 } from './store.constants';
 import { getMaxNameColumnWidth } from './store.layout';
 import storage from '../../../utils/storage';
+import { shouldDisableCollapse, shouldDisableExpand } from './timeline-utils';
 
 // payloads
 export type TSpanIdLogValue = { logItem: IEvent; spanID: string };
@@ -47,9 +48,6 @@ type TActionTypes =
 type TTimelineViewerActions = {
   [actionName: string]: ActionFunctionAny<Action<TActionTypes>>;
 };
-
-import { shouldDisableCollapse, shouldDisableExpand } from './timeline-utils';
-
 export function newInitialState(): TTraceTimeline {
   const { traceTimeline } = getConfig();
   let detailPanelMode: 'inline' | 'sidepanel' = 'inline';

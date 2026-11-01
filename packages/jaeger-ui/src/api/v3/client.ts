@@ -12,11 +12,14 @@ import queryString from 'query-string';
 
 import { ALL_SERVICES } from '../../constants/search-form';
 import prefixUrl from '../../utils/prefix-url';
+import { truncateErrorDetail } from '../../utils/error-message';
 import {
   ServicesResponseSchema,
   OperationsResponseSchema,
   TraceSummariesResponseSchema,
   GetTraceResponseSchema,
+  ServiceMetricsResponseSchema,
+  OperationMetricsResponseSchema,
   traceIdHex,
 } from './schemas';
 import type { TracesDataWire } from './schemas';
@@ -25,6 +28,7 @@ import type { TraceSummary, ServiceSummary } from '../../types/trace-summary';
 import type { ApiError } from '../../types/api-error';
 import type { Microseconds } from '../../types/units';
 import type { TDdgModelParams } from '../../model/ddg/types';
+import type { MetricsAPIQueryParams, MetricsAPIResponse } from '../../types/metrics';
 
 export const DEFAULT_DEPENDENCY_LOOKBACK = 7 * 24 * 60 * 60 * 1000;
 
@@ -86,15 +90,45 @@ async function readErrorBody(response: Response, signal: AbortSignal | null | un
   return body + decoder.decode();
 }
 
+function nonBlankString(value: unknown): string | undefined {
+  const trimmed = typeof value === 'string' ? value.trim() : '';
+  return trimmed || undefined;
+}
+
+/** Reads the human-readable detail from a parsed JSON error body. */
+type ErrorDetailFn = (data: unknown) => string | undefined;
+
+type FetchOptions = RequestInit & {
+  timeout?: number | null;
+  errorDetailFn?: ErrorDetailFn;
+};
+
+/** The v3 HTTP gateway returns `{ error: { httpCode, message } }`. */
+function v3ErrorDetail(data: unknown): string | undefined {
+  const { error } = (data ?? {}) as { error?: { message?: unknown } | null };
+  return nonBlankString(error?.message);
+}
+
+/** The legacy /api/ routes return `{ errors: [{ code, msg }] }`. */
+function legacyErrorDetail(data: unknown): string | undefined {
+  const { errors } = (data ?? {}) as { errors?: unknown };
+  if (!Array.isArray(errors)) return undefined;
+  const messages = errors
+    .map(e => nonBlankString((e as { msg?: unknown } | null)?.msg))
+    .filter((m): m is string => m !== undefined);
+  return messages.length ? messages.join('; ') : undefined;
+}
+
 /**
- * Build the error for a failed response, keeping the HTTP details and response body
- * that ErrorMessage renders.
+ * Build the error for a failed response. The message carries the server's own
+ * message when the body has one; the HTTP details and body are kept for ErrorMessage.
  */
 async function httpError(
   message: string,
   url: string,
   response: Response,
-  signal: AbortSignal | null | undefined
+  signal: AbortSignal | null | undefined,
+  errorDetailFn?: ErrorDetailFn
 ): Promise<Error> {
   const error: Error & Exclude<ApiError, string> = new Error(
     `${message}: ${response.status} ${response.statusText}`
@@ -107,7 +141,10 @@ async function httpError(
   const body = await readErrorBody(response, signal);
   if (body) {
     try {
-      error.httpBody = JSON.stringify(JSON.parse(body), null, 2);
+      const data: unknown = JSON.parse(body);
+      error.httpBody = JSON.stringify(data, null, 2);
+      const detail = truncateErrorDetail(errorDetailFn?.(data));
+      if (detail) error.message += `: ${detail}`;
     } catch {
       error.httpBody = body;
     }
@@ -117,8 +154,30 @@ async function httpError(
 
 export class JaegerClient {
   private apiRoot = prefixUrl('/api/v3');
-  // Archive and dependency-graph requests retain their existing /api/ routes.
+  // Archive, dependency-graph, and metrics requests retain their existing /api/ routes.
   private legacyApiRoot = prefixUrl('/api/');
+
+  async fetchMetrics<TGroupByOperation extends boolean = false>(
+    metricType: 'latencies' | 'calls' | 'errors',
+    service: string,
+    query: MetricsAPIQueryParams & { groupByOperation?: TGroupByOperation },
+    signal?: AbortSignal
+  ): Promise<MetricsAPIResponse<TGroupByOperation>>;
+  async fetchMetrics(
+    metricType: 'latencies' | 'calls' | 'errors',
+    service: string,
+    query: MetricsAPIQueryParams,
+    signal?: AbortSignal
+  ): Promise<MetricsAPIResponse<boolean>> {
+    const path = `metrics/${metricType}?service=${encodeURIComponent(service)}&${queryString.stringify(query)}`;
+    // Preserve deadline-free metrics reads, which can wait on storage queries.
+    const data = await this.fetchLegacy(path, `Failed to fetch ${metricType} metrics`, {
+      timeout: null,
+      signal,
+    });
+    const schema = query.groupByOperation ? OperationMetricsResponseSchema : ServiceMetricsResponseSchema;
+    return { ...schema.parse(data), quantile: query.quantile };
+  }
 
   async fetchDependencies(
     endTs = Date.now(),
@@ -126,9 +185,8 @@ export class JaegerClient {
     signal?: AbortSignal
   ): Promise<unknown> {
     const query = queryString.stringify({ endTs, lookback });
-    const url = `${this.legacyApiRoot}dependencies?${query}`;
     // Preserve deadline-free graph reads, which can wait on storage queries.
-    return this.fetchJson(url, 'Failed to fetch dependencies', {
+    return this.fetchLegacy(`dependencies?${query}`, 'Failed to fetch dependencies', {
       timeout: null,
       signal,
     });
@@ -136,20 +194,32 @@ export class JaegerClient {
 
   async fetchDeepDependencyGraph(params: TDdgModelParams, signal?: AbortSignal): Promise<unknown> {
     const query = queryString.stringify(params);
-    const url = `${this.legacyApiRoot}deep-dependencies?${query}`;
-    return this.fetchJson(url, 'Failed to fetch deep dependencies', {
+    return this.fetchLegacy(`deep-dependencies?${query}`, 'Failed to fetch deep dependencies', {
       timeout: null,
       signal,
     });
   }
 
   async archiveTrace(id: string): Promise<unknown> {
-    const url = `${this.legacyApiRoot}archive/${id}`;
-    return this.fetchJson(url, `Failed to archive trace ${id}`, { method: 'POST' });
+    return this.fetchLegacy(`archive/${id}`, `Failed to archive trace ${id}`, { method: 'POST' });
   }
 
   async fetchDecoration(url: string): Promise<unknown> {
     return this.fetchJson(url, 'Failed to fetch decoration');
+  }
+
+  private fetchV3(path: string, errorMessage: string, options?: FetchOptions): Promise<unknown> {
+    return this.fetchJson(`${this.apiRoot}/${path}`, errorMessage, {
+      ...options,
+      errorDetailFn: v3ErrorDetail,
+    });
+  }
+
+  private fetchLegacy(path: string, errorMessage: string, options?: FetchOptions): Promise<unknown> {
+    return this.fetchJson(`${this.legacyApiRoot}${path}`, errorMessage, {
+      ...options,
+      errorDetailFn: legacyErrorDetail,
+    });
   }
 
   /**
@@ -157,8 +227,7 @@ export class JaegerClient {
    * @returns Promise<string[]> - Array of service names
    */
   async fetchServices(): Promise<string[]> {
-    const url = `${this.apiRoot}/services`;
-    const data = await this.fetchJson(url, 'Failed to fetch services');
+    const data = await this.fetchV3('services', 'Failed to fetch services');
 
     // Runtime validation with Zod
     const validated = ServicesResponseSchema.parse(data);
@@ -171,8 +240,8 @@ export class JaegerClient {
    * @returns Promise<{ name: string; spanKind: string }[]> - Array of span name objects
    */
   async fetchSpanNames(service: string): Promise<{ name: string; spanKind: string }[]> {
-    const url = `${this.apiRoot}/operations?service=${encodeURIComponent(service)}`;
-    const data = await this.fetchJson(url, `Failed to fetch span names for service "${service}"`);
+    const path = `operations?service=${encodeURIComponent(service)}`;
+    const data = await this.fetchV3(path, `Failed to fetch span names for service "${service}"`);
 
     // Runtime validation with Zod
     const validated = OperationsResponseSchema.parse(data);
@@ -200,8 +269,10 @@ export class JaegerClient {
     if (query.maxDuration) params.set('query.durationMax', query.maxDuration);
     if (query.tags) params.set('query.attributes', query.tags);
 
-    const url = `${this.apiRoot}/trace-summaries?${params.toString()}`;
-    const data = await this.fetchJson(url, 'Failed to fetch trace summaries');
+    const data = await this.fetchV3(
+      `trace-summaries?${params.toString()}`,
+      'Failed to fetch trace summaries'
+    );
     const validated = TraceSummariesResponseSchema.parse(data);
 
     // Timestamps are decimal ns strings (proto3 JSON encoding for int64).
@@ -250,9 +321,9 @@ export class JaegerClient {
    */
   async fetchTrace(traceId: string, signal?: AbortSignal): Promise<TracesDataWire> {
     traceIdHex.parse(traceId);
-    const url = `${this.apiRoot}/traces/${encodeURIComponent(traceId)}`;
+    const path = `traces/${encodeURIComponent(traceId)}`;
     // Trace queries buffer storage and archive reads before sending headers and can exceed 10 seconds.
-    const data = await this.fetchJson(url, `Failed to fetch trace ${traceId}`, {
+    const data = await this.fetchV3(path, `Failed to fetch trace ${traceId}`, {
       timeout: null,
       signal,
     });
@@ -267,18 +338,19 @@ export class JaegerClient {
    * short deadline.
    * @param url - The URL to fetch
    * @param errorMessage - Prefix for the error thrown on a failed response
-   * @param options - Fetch request options, plus a timeout in milliseconds (default: 10 seconds) or null for no deadline
+   * @param options - Fetch request options, plus a timeout in milliseconds (default: 10 seconds) or null
+   *   for no deadline, and the reader for the detail in an error body
    * @returns Promise<unknown> - The parsed JSON body of a successful response
    * @throws Error if the response fails, the request times out, or a network error occurs
    */
   private async fetchJson(
     url: string,
     errorMessage: string,
-    { timeout = 10000, signal, ...options }: RequestInit & { timeout?: number | null } = {}
+    { timeout = 10000, signal, errorDetailFn, ...options }: FetchOptions = {}
   ): Promise<unknown> {
     if (timeout === null) {
       const response = await fetch(url, { ...options, signal });
-      if (!response.ok) throw await httpError(errorMessage, url, response, signal);
+      if (!response.ok) throw await httpError(errorMessage, url, response, signal, errorDetailFn);
       return response.json();
     }
 
@@ -299,7 +371,7 @@ export class JaegerClient {
 
     try {
       const response = await fetch(url, { ...options, signal: controller.signal });
-      if (!response.ok) throw await httpError(errorMessage, url, response, controller.signal);
+      if (!response.ok) throw await httpError(errorMessage, url, response, controller.signal, errorDetailFn);
       return await response.json();
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError' && timedOut) {

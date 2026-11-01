@@ -446,6 +446,36 @@ describe('trace timeline zustand stores', () => {
         expect(useTraceTimelineStore.getState().detailStates.has('span-b')).toBe(true);
       });
 
+      it('is a no-op when traceID and spans reference are identical', () => {
+        const spans = [makeSpan({ spanID: 'span-1' })];
+        const trace = makeTrace('same', spans);
+        useTraceTimelineStore.getState().setTrace(trace);
+        useTraceTimelineStore.setState({
+          childrenHiddenIDs: new Set(['span-x']),
+        });
+        vi.mocked(filterSpans).mockClear();
+        useTraceTimelineStore.getState().setTrace(trace, 'myFind');
+        expect(filterSpans).not.toHaveBeenCalled();
+        expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('span-x')).toBe(true);
+      });
+
+      it('recomputes find-focus on same-ID reload when spans change and uiFind is provided', () => {
+        vi.mocked(filterSpans).mockReturnValue(new Set(['span-1']));
+        vi.mocked(spanAncestorIds).mockReturnValue([]);
+        const spans1 = [makeSpan({ spanID: 'span-1' })];
+        const trace1 = makeTrace('t1', spans1);
+        useTraceTimelineStore.getState().setTrace(trace1, 'myFind');
+
+        expect(useTraceTimelineStore.getState().shouldScrollToFirstUiFindMatch).toBe(true);
+
+        vi.mocked(filterSpans).mockReturnValue(new Set(['span-1', 'span-2']));
+        const spans2 = [makeSpan({ spanID: 'span-1' }), makeSpan({ spanID: 'span-2' })];
+        const trace2 = makeTrace('t1', spans2);
+        useTraceTimelineStore.getState().setTrace(trace2, 'myFind');
+
+        expect(filterSpans).toHaveBeenCalledWith('myFind', spans2);
+      });
+
       it.each(['inline', 'sidepanel'] as const)(
         'reveals a matching child arriving on same-ID reload in %s mode',
         async detailPanelMode => {
