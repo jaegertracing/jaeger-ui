@@ -97,6 +97,11 @@ SPDX-License-Identifier: Apache-2.0
   --nav-height: 48px;
   --timeline-header-row-height: 38px;
 
+  /* Top navigation bar. It is navy in both themes, so these have no dark-mode values. */
+  --nav-text: rgba(255, 255, 255, 0.85);
+  --nav-text-hover: #fff;
+  --nav-background-hover: rgba(255, 255, 255, 0.1);
+
   /* 
      Span categorical colors (IBM Carbon Sequence)
      Reference: https://www.carbondesignsystem.com/data-visualization/color-palettes/#categorical-palettes
