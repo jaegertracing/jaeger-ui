@@ -14,7 +14,7 @@ import transformTraceData from '../../../../model/transform-trace-data';
 
 vi.mock('../SpanDetail', () =>
   mockDefault(
-    jest.fn(({ span, focusSpan, linksGetter }) => {
+    vi.fn(({ span, focusSpan, linksGetter }) => {
       linksGetter([], 0);
       return (
         <div data-testid="span-detail-mock" data-span-id={span.spanID}>
@@ -25,21 +25,21 @@ vi.mock('../SpanDetail', () =>
   )
 );
 
-vi.mock('../../../../model/link-patterns', () => mockDefault(jest.fn(() => [])));
+vi.mock('../../../../model/link-patterns', () => mockDefault(vi.fn(() => [])));
 vi.mock('../../../../utils/update-ui-find');
 vi.mock('../store.track');
 
 const mockZustandState = vi.hoisted(() => ({
   detailStates: new Map(),
   focusedSubtreeSpanID: null,
-  setFocusedSubtreeSpanID: jest.fn(),
-  detailLogItemToggle: jest.fn(),
-  detailLogsToggle: jest.fn(),
-  detailProcessToggle: jest.fn(),
-  detailReferencesToggle: jest.fn(),
-  detailTagsToggle: jest.fn(),
-  detailWarningsToggle: jest.fn(),
-  focusUiFindMatches: jest.fn(),
+  setFocusedSubtreeSpanID: vi.fn(),
+  detailLogItemToggle: vi.fn(),
+  detailLogsToggle: vi.fn(),
+  detailProcessToggle: vi.fn(),
+  detailReferencesToggle: vi.fn(),
+  detailTagsToggle: vi.fn(),
+  detailWarningsToggle: vi.fn(),
+  focusUiFindMatches: vi.fn(),
 }));
 
 vi.mock('../store', async importOriginal => {
@@ -65,7 +65,7 @@ describe('<SpanDetailSidePanelImpl>', () => {
       currentViewRangeTime: [0, 1],
       useOtelTerms: false,
       location: { pathname: '/', search: '', hash: '', state: undefined },
-      navigate: jest.fn(),
+      navigate: vi.fn(),
     };
     // reset Zustand mock state
     mockZustandState.detailStates = new Map();
