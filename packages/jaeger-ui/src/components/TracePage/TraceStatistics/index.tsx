@@ -285,11 +285,19 @@ export default function TraceStatistics(props: Props) {
 
   const columns: ColumnProps<ITableSpan>[] = columnsArray.map(val => {
     const renderFunction = (cell: string, row: ITableSpan) => {
-      if (val.attribute === 'name')
+      if (val.attribute === 'name') {
+        const canOpenSql = valueNameSelector1 === 'sql.query' && row.hasSubgroupValue;
         return (
           <span
-            role="button"
+            role={canOpenSql ? 'button' : undefined}
+            tabIndex={canOpenSql ? 0 : undefined}
             onClick={() => onClickOption(row.hasSubgroupValue, row.name)}
+            onKeyDown={event => {
+              if (canOpenSql && (event.key === 'Enter' || event.key === ' ')) {
+                event.preventDefault();
+                onClickOption(row.hasSubgroupValue, row.name);
+              }
+            }}
             style={{
               borderLeft: `4px solid ${row.color || `transparent`}`,
               padding: '7px 0px 7px 10px',
@@ -299,6 +307,7 @@ export default function TraceStatistics(props: Props) {
             {cell}
           </span>
         );
+      }
       return `${cell}${val.suffix}`;
     };
     const ele = {
