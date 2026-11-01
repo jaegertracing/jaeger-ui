@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
+import { context, SpanStatusCode, trace, type Span } from '@opentelemetry/api';
 import { HttpAgent } from '@ag-ui/client';
 import { useAgUiRuntime } from '@assistant-ui/react-ag-ui';
 import { AssistantRuntimeProvider } from '@assistant-ui/react';
@@ -23,20 +24,59 @@ const JaegerAssistantContext = React.createContext<IJaegerAssistantContextValue 
 /** Inner provider that creates the long-lived AG-UI runtime (only mounted when the assistant capability is on). */
 function JaegerAssistantRuntimeProvider({ children }: { children: React.ReactNode }) {
   const url = getJaegerAGUIUrl();
+  const turnSpanRef = React.useRef<Span | null>(null);
+
   // HttpAgent stores the supplied fetch as `this.fetch` and later invokes it as a method,
   // so the bare global `fetch` would be called with `this === HttpAgent` and throw
-  // "Illegal invocation". Wrap it to detach the receiver.
+  // "Illegal invocation". Wrap it to detach the receiver and attach the existing fetch
+  // instrumentation to the active assistant turn.
   const agent = React.useMemo(
-    () => new HttpAgent({ url, fetch: (input, init) => fetch(input, init) }),
+    () =>
+      new HttpAgent({
+        url,
+        fetch: (input, init) => {
+          const span = turnSpanRef.current;
+          const runFetch = () => fetch(input, init);
+          return span ? context.with(trace.setSpan(context.active(), span), runFetch) : runFetch();
+        },
+      }),
     [url]
   );
   const runtime = useAgUiRuntime({
     agent,
     showThinking: true,
     onError: e => {
+      const span = turnSpanRef.current;
+      if (span) {
+        span.recordException(e);
+        span.setStatus({ code: SpanStatusCode.ERROR, message: e.message });
+      }
       console.error('[jaeger-assistant] AG-UI error', e);
     },
   });
+
+  React.useEffect(() => {
+    const thread = runtime.thread;
+    if (!thread) return undefined;
+
+    const syncTurnSpan = () => {
+      const isRunning = thread.getState().isRunning;
+      if (isRunning && !turnSpanRef.current) {
+        turnSpanRef.current = trace.getTracer('jaeger-ui').startSpan('assistant.turn');
+      } else if (!isRunning && turnSpanRef.current) {
+        turnSpanRef.current.end();
+        turnSpanRef.current = null;
+      }
+    };
+
+    syncTurnSpan();
+    const unsubscribe = thread.subscribe(syncTurnSpan);
+    return () => {
+      unsubscribe();
+      turnSpanRef.current?.end();
+      turnSpanRef.current = null;
+    };
+  }, [runtime]);
 
   return <AssistantRuntimeProvider runtime={runtime}>{children}</AssistantRuntimeProvider>;
 }
