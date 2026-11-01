@@ -73,6 +73,7 @@ import {
   convertQueryParamsToFormDates,
   convTagsLogfmt,
   getUnixTimeStampInMSFromForm,
+  isValidCustomTimeRange,
   mapDispatchToProps,
   mapStateToProps,
   optionsWithinMaxLookback,
@@ -137,6 +138,123 @@ describe('conversion utils', () => {
       });
       expect(start).toBe(`${startSrc.valueOf()}000`);
       expect(end).toBe(`${endSrc.valueOf()}000`);
+    });
+
+    it('returns empty string for start when startDate is blank and never produces NaN000', () => {
+      const { date: endSrc, dateStr: endDate, dateTimeStr: endDateTime } = makeDateParams(0);
+      const { start, end } = getUnixTimeStampInMSFromForm({
+        startDate: '',
+        startDateTime: '10:00',
+        endDate,
+        endDateTime,
+      });
+      expect(start).toBe('');
+      expect(start).not.toContain('NaN');
+      expect(end).toBe(`${endSrc.valueOf()}000`);
+    });
+
+    it('returns empty string for start when startDateTime is blank and never produces NaN000', () => {
+      const { dateStr: startDate } = makeDateParams(-1);
+      const { date: endSrc, dateStr: endDate, dateTimeStr: endDateTime } = makeDateParams(0);
+      const { start, end } = getUnixTimeStampInMSFromForm({
+        startDate,
+        startDateTime: '',
+        endDate,
+        endDateTime,
+      });
+      expect(start).toBe('');
+      expect(start).not.toContain('NaN');
+      expect(end).toBe(`${endSrc.valueOf()}000`);
+    });
+
+    it('returns empty string for end when endDate is blank and never produces NaN000', () => {
+      const { date: startSrc, dateStr: startDate, dateTimeStr: startDateTime } = makeDateParams(-1);
+      const { start, end } = getUnixTimeStampInMSFromForm({
+        startDate,
+        startDateTime,
+        endDate: '',
+        endDateTime: '10:00',
+      });
+      expect(start).toBe(`${startSrc.valueOf()}000`);
+      expect(end).toBe('');
+      expect(end).not.toContain('NaN');
+    });
+
+    it('returns empty string for end when endDateTime is blank and never produces NaN000', () => {
+      const { date: startSrc, dateStr: startDate, dateTimeStr: startDateTime } = makeDateParams(-1);
+      const { dateStr: endDate } = makeDateParams(0);
+      const { start, end } = getUnixTimeStampInMSFromForm({
+        startDate,
+        startDateTime,
+        endDate,
+        endDateTime: '',
+      });
+      expect(start).toBe(`${startSrc.valueOf()}000`);
+      expect(end).toBe('');
+      expect(end).not.toContain('NaN');
+    });
+  });
+
+  describe('isValidCustomTimeRange()', () => {
+    it('returns true when all custom date and time fields are valid', () => {
+      const { dateStr: startDate, dateTimeStr: startDateTime } = makeDateParams(-1);
+      const { dateStr: endDate, dateTimeStr: endDateTime } = makeDateParams(0);
+      expect(isValidCustomTimeRange({ startDate, startDateTime, endDate, endDateTime })).toBe(true);
+    });
+
+    it('returns false when fields is undefined or null', () => {
+      expect(isValidCustomTimeRange(undefined)).toBe(false);
+      expect(isValidCustomTimeRange(null)).toBe(false);
+    });
+
+    it.each([
+      [
+        'startDate is empty',
+        { startDate: '', startDateTime: '10:00', endDate: '2026-10-27', endDateTime: '11:00' },
+      ],
+      [
+        'startDate is whitespace',
+        { startDate: '   ', startDateTime: '10:00', endDate: '2026-10-27', endDateTime: '11:00' },
+      ],
+      [
+        'startDateTime is empty',
+        { startDate: '2026-10-27', startDateTime: '', endDate: '2026-10-27', endDateTime: '11:00' },
+      ],
+      [
+        'startDateTime is whitespace',
+        { startDate: '2026-10-27', startDateTime: '   ', endDate: '2026-10-27', endDateTime: '11:00' },
+      ],
+      [
+        'endDate is empty',
+        { startDate: '2026-10-27', startDateTime: '10:00', endDate: '', endDateTime: '11:00' },
+      ],
+      [
+        'endDate is whitespace',
+        { startDate: '2026-10-27', startDateTime: '10:00', endDate: '   ', endDateTime: '11:00' },
+      ],
+      [
+        'endDateTime is empty',
+        { startDate: '2026-10-27', startDateTime: '10:00', endDate: '2026-10-27', endDateTime: '' },
+      ],
+      [
+        'endDateTime is whitespace',
+        { startDate: '2026-10-27', startDateTime: '10:00', endDate: '2026-10-27', endDateTime: '   ' },
+      ],
+      [
+        'startDate is invalid date',
+        { startDate: 'invalid-date', startDateTime: '10:00', endDate: '2026-10-27', endDateTime: '11:00' },
+      ],
+      [
+        'startDateTime is invalid time',
+        {
+          startDate: '2026-10-27',
+          startDateTime: 'invalid-time',
+          endDate: '2026-10-27',
+          endDateTime: '11:00',
+        },
+      ],
+    ])('returns false when %s', (_desc, fields) => {
+      expect(isValidCustomTimeRange(fields)).toBe(false);
     });
   });
 
@@ -380,6 +498,50 @@ describe('submitForm()', () => {
       expect(start).toBe(`${startSrc.valueOf()}000`);
       expect(end).toBe(`${endSrc.valueOf()}000`);
     });
+
+    it.each([
+      [
+        'startDate is blank',
+        { startDate: '', startDateTime: '10:00', endDate: '2026-10-27', endDateTime: '11:00' },
+      ],
+      [
+        'startDateTime is blank',
+        { startDate: '2026-10-27', startDateTime: '', endDate: '2026-10-27', endDateTime: '11:00' },
+      ],
+      [
+        'endDate is blank',
+        { startDate: '2026-10-27', startDateTime: '10:00', endDate: '', endDateTime: '11:00' },
+      ],
+      [
+        'endDateTime is blank',
+        { startDate: '2026-10-27', startDateTime: '10:00', endDate: '2026-10-27', endDateTime: '' },
+      ],
+    ])('does not produce NaN in the generated URL when custom %s', (_desc, dateFields) => {
+      fields = {
+        ...fields,
+        ...dateFields,
+        lookback: 'custom',
+      };
+      const url = submitForm(fields);
+      expect(url).not.toContain('NaN');
+      expect(url).not.toContain('NaN000');
+    });
+
+    it('leaves non-custom lookback unaffected', () => {
+      fields = {
+        ...fields,
+        lookback: '1h',
+        startDate: '',
+        startDateTime: '',
+        endDate: '',
+        endDateTime: '',
+      };
+      const url = submitForm(fields);
+      const { start, end } = getUrlParams(url);
+      expect(start).not.toContain('NaN');
+      expect(end).not.toContain('NaN');
+      expect(Number(end) - Number(start)).toBeGreaterThan(0);
+    });
   });
 
   describe('`fields.tags`', () => {
@@ -597,6 +759,128 @@ describe('<SearchForm>', () => {
 
     const submitButton = container.querySelector(`[data-test="${markers.SUBMIT_BTN}"]`);
     expect(submitButton).toBeDisabled();
+  });
+
+  describe('custom date/time validation', () => {
+    it.each([
+      [
+        'startDate is blank',
+        { startDate: '', startDateTime: '00:00', endDate: '2020-01-02', endDateTime: '00:00' },
+      ],
+      [
+        'startDateTime is blank',
+        { startDate: '2020-01-01', startDateTime: '', endDate: '2020-01-02', endDateTime: '00:00' },
+      ],
+      [
+        'endDate is blank',
+        { startDate: '2020-01-01', startDateTime: '00:00', endDate: '', endDateTime: '00:00' },
+      ],
+      [
+        'endDateTime is blank',
+        { startDate: '2020-01-01', startDateTime: '00:00', endDate: '2020-01-02', endDateTime: '' },
+      ],
+    ])('disables Find Traces when %s', (_desc, initialValues) => {
+      const { container } = renderForm(
+        <SearchForm
+          {...defaultProps}
+          initialValues={{
+            service: 'svcA',
+            lookback: 'custom',
+            ...initialValues,
+          }}
+        />
+      );
+
+      const submitButton = container.querySelector(`[data-test="${markers.SUBMIT_BTN}"]`);
+      expect(submitButton).toBeDisabled();
+    });
+
+    it('enables Find Traces when custom range is valid', () => {
+      const { container } = renderForm(
+        <SearchForm
+          {...defaultProps}
+          initialValues={{
+            service: 'svcA',
+            lookback: 'custom',
+            startDate: '2020-01-01',
+            startDateTime: '00:00',
+            endDate: '2020-01-02',
+            endDateTime: '00:00',
+          }}
+        />
+      );
+
+      const submitButton = container.querySelector(`[data-test="${markers.SUBMIT_BTN}"]`);
+      expect(submitButton).not.toBeDisabled();
+    });
+
+    it('disables Find Traces dynamically when clearing a custom date or time input', async () => {
+      const { container } = renderForm(
+        <SearchForm
+          {...defaultProps}
+          initialValues={{
+            service: 'svcA',
+            lookback: 'custom',
+            startDate: '2020-01-01',
+            startDateTime: '00:00',
+            endDate: '2020-01-02',
+            endDateTime: '00:00',
+          }}
+        />
+      );
+
+      const submitButton = container.querySelector(`[data-test="${markers.SUBMIT_BTN}"]`);
+      expect(submitButton).not.toBeDisabled();
+
+      const startDateInput = container.querySelector('input[name="startDate"]');
+      fireEvent.change(startDateInput, { target: { value: '' } });
+
+      await waitFor(() => {
+        expect(submitButton).toBeDisabled();
+      });
+    });
+
+    it('blocks submission and does not call submitFormHandler when custom date is blank', () => {
+      const mockSubmitHandler = jest.fn();
+      const { container } = renderForm(
+        <SearchForm
+          {...defaultProps}
+          submitFormHandler={mockSubmitHandler}
+          initialValues={{
+            service: 'svcA',
+            lookback: 'custom',
+            startDate: '',
+            startDateTime: '00:00',
+            endDate: '2020-01-02',
+            endDateTime: '00:00',
+          }}
+        />
+      );
+
+      const form = container.querySelector('form');
+      fireEvent.submit(form);
+
+      expect(mockSubmitHandler).not.toHaveBeenCalled();
+    });
+
+    it('non-custom lookback is unaffected by custom date inputs', () => {
+      const { container } = renderForm(
+        <SearchForm
+          {...defaultProps}
+          initialValues={{
+            service: 'svcA',
+            lookback: '1h',
+            startDate: '',
+            startDateTime: '',
+            endDate: '',
+            endDateTime: '',
+          }}
+        />
+      );
+
+      const submitButton = container.querySelector(`[data-test="${markers.SUBMIT_BTN}"]`);
+      expect(submitButton).not.toBeDisabled();
+    });
   });
 
   it('disables the submit button when duration is invalid', () => {
