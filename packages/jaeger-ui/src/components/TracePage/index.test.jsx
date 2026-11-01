@@ -82,14 +82,14 @@ vi.mock('./TraceLogsView/index', async () => {
 
 vi.mock('./ScrollManager', async () => {
   return mockDefault(
-    jest.fn().mockImplementation(function () {
+    vi.fn().mockImplementation(function () {
       return {
-        scrollToNextVisibleSpan: jest.fn(),
-        scrollToPrevVisibleSpan: jest.fn(),
-        setTrace: jest.fn(),
-        destroy: jest.fn(),
-        setAccessors: jest.fn(),
-        scrollToFirstVisibleSpan: jest.fn(),
+        scrollToNextVisibleSpan: vi.fn(),
+        scrollToPrevVisibleSpan: vi.fn(),
+        setTrace: vi.fn(),
+        destroy: vi.fn(),
+        setAccessors: vi.fn(),
+        scrollToFirstVisibleSpan: vi.fn(),
       };
     })
   );
@@ -131,25 +131,26 @@ const {
   useTraceMock,
   mockReloadBackendTrace,
 } = vi.hoisted(() => ({
-  mockSubmitTraceToArchive: jest.fn(),
-  mockAcknowledge: jest.fn(),
-  mockSetDetailPanelMode: jest.fn(),
+  mockSubmitTraceToArchive: vi.fn(),
+  mockAcknowledge: vi.fn(),
+  mockSetDetailPanelMode: vi.fn(),
   mockLayoutPrefsStore: {
     detailPanelMode: 'inline',
     timelineBarsVisible: true,
-    setTimelineBarsVisible: jest.fn(),
+    setTimelineBarsVisible: vi.fn(),
   },
   mockTraceTimelineStore: {
-    focusUiFindMatches: jest.fn(),
+    focusUiFindMatches: vi.fn(),
     prunedServices: new Set(),
+    focusedSubtreeSpanID: null,
   },
-  useEmbeddedStateMock: jest.fn().mockReturnValue(null),
-  useTraceMock: jest.fn(),
-  mockReloadBackendTrace: jest.fn().mockResolvedValue(undefined),
+  useEmbeddedStateMock: vi.fn().mockReturnValue(null),
+  useTraceMock: vi.fn(),
+  mockReloadBackendTrace: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../../stores/archive-store', () => ({
-  useArchiveStore: jest.fn(selector =>
+  useArchiveStore: vi.fn(selector =>
     selector({ archives: {}, submitTraceToArchive: mockSubmitTraceToArchive, acknowledge: mockAcknowledge })
   ),
 }));
@@ -166,10 +167,10 @@ vi.mock('../../hooks/useTraceLoading', () => ({
 vi.mock('./TraceTimelineViewer/store.track');
 
 vi.mock('./TraceTimelineViewer/store', () => {
-  const useTraceTimelineStore = jest.fn(selector => selector(mockTraceTimelineStore));
+  const useTraceTimelineStore = vi.fn(selector => selector(mockTraceTimelineStore));
   useTraceTimelineStore.getState = () => mockTraceTimelineStore;
   return {
-    useLayoutPrefsStore: jest.fn(selector => selector(mockLayoutPrefsStore)),
+    useLayoutPrefsStore: vi.fn(selector => selector(mockLayoutPrefsStore)),
     useTraceTimelineStore,
     setDetailPanelMode: (...args) => mockSetDetailPanelMode(...args),
     SPAN_NAME_COLUMN_WIDTH_MIN: 0.15,
@@ -195,7 +196,7 @@ vi.mock('./TracePageHeader', async () => {
   };
 });
 
-const mockNavigate = jest.fn();
+const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
@@ -212,7 +213,7 @@ describe('makeShortcutCallbacks()', () => {
   let adjRange;
 
   beforeEach(() => {
-    adjRange = jest.fn();
+    adjRange = vi.fn();
   });
 
   it('has props from `shortcutConfig`', () => {
@@ -256,6 +257,7 @@ describe('<TracePage>', () => {
     capturedArchiveNotifierProps = {};
     capturedGraphProps = {};
     mockTraceTimelineStore.focusUiFindMatches.mockClear();
+    mockTraceTimelineStore.focusedSubtreeSpanID = null;
   });
 
   it.each([ETraceViewType.TraceGraph, ETraceViewType.TraceStatistics, ETraceViewType.TraceFlamegraph])(
@@ -389,7 +391,7 @@ describe('<TracePage>', () => {
     });
 
     it('blurs _searchBar.current when _searchBar.current exists', () => {
-      const blur = jest.fn();
+      const blur = vi.fn();
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.ref.current = { blur };
       capturedHeaderProps.clearSearch();
@@ -544,7 +546,7 @@ describe('<TracePage>', () => {
   it('keeps the partial trace and reload action visible after a failed reload', () => {
     const raw = traceGenerator.trace({});
     const partialTrace = transformTraceData({ ...raw, spans: raw.spans.slice(1) }).asOtelTrace();
-    const onReloadTrace = jest.fn();
+    const onReloadTrace = vi.fn();
     const clientHeightSpy = jest.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(100);
     useTraceMock.mockReturnValue({
       data: partialTrace,
@@ -593,7 +595,7 @@ describe('<TracePage>', () => {
   });
 
   it('focuses on search bar when there is a search bar and focusOnSearchBar is called', () => {
-    const focus = jest.fn();
+    const focus = vi.fn();
     render(<TracePage {...defaultProps} />);
     capturedHeaderProps.ref.current = { focus };
     const shortcutCallbacks = mergeShortcuts.mock.calls[0][0];
@@ -642,15 +644,15 @@ describe('<TracePage>', () => {
   });
 
   it('calls scrollManager.setTrace when trace data changes', () => {
-    const setTraceMock = jest.fn();
+    const setTraceMock = vi.fn();
 
     ScrollManager.mockImplementation(function () {
       return {
-        scrollToNextVisibleSpan: jest.fn(),
-        scrollToPrevVisibleSpan: jest.fn(),
-        setAccessors: jest.fn(),
-        scrollToFirstVisibleSpan: jest.fn(),
-        destroy: jest.fn(),
+        scrollToNextVisibleSpan: vi.fn(),
+        scrollToPrevVisibleSpan: vi.fn(),
+        setAccessors: vi.fn(),
+        scrollToFirstVisibleSpan: vi.fn(),
+        destroy: vi.fn(),
         setTrace: setTraceMock,
       };
     });
@@ -664,14 +666,14 @@ describe('<TracePage>', () => {
   });
 
   it('calls resetShortcuts, cancelScroll, and scrollManager.destroy on unmount', () => {
-    const destroyMock = jest.fn();
+    const destroyMock = vi.fn();
     const scrollManagerMock = {
-      scrollToNextVisibleSpan: jest.fn(),
-      scrollToPrevVisibleSpan: jest.fn(),
-      setAccessors: jest.fn(),
-      scrollToFirstVisibleSpan: jest.fn(),
+      scrollToNextVisibleSpan: vi.fn(),
+      scrollToPrevVisibleSpan: vi.fn(),
+      setAccessors: vi.fn(),
+      scrollToFirstVisibleSpan: vi.fn(),
       destroy: destroyMock,
-      setTrace: jest.fn(),
+      setTrace: vi.fn(),
     };
 
     ScrollManager.mockImplementation(function () {
@@ -698,7 +700,7 @@ describe('<TracePage>', () => {
     expect(mergeShortcuts).toHaveBeenCalledTimes(1);
     const callbacks = mergeShortcuts.mock.calls[0][0];
 
-    const mockEvent = { preventDefault: jest.fn() };
+    const mockEvent = { preventDefault: vi.fn() };
     act(() => {
       callbacks.panLeft(mockEvent);
     });
@@ -935,6 +937,21 @@ describe('<TracePage>', () => {
         }
 
         expect(resultCount).toBe(0);
+      });
+
+      it('scopes matches to focusedSubtreeSpanID in timeline view but searches all spans in non-timeline views', () => {
+        const targetSpan = trace.spans[1];
+        mockTraceTimelineStore.focusedSubtreeSpanID = targetSpan.spanID;
+        filterSpansSpy.mockReturnValue(new Set(trace.spans.map(s => s.spanID)));
+
+        render(<TracePage {...defaultProps} uiFind="test" />);
+        const subtreeMatchCount = capturedHeaderProps.resultCount;
+        expect(subtreeMatchCount).toBeLessThan(trace.spans.length);
+
+        act(() => {
+          capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceStatistics);
+        });
+        expect(capturedHeaderProps.resultCount).toBe(trace.spans.length);
       });
     });
 

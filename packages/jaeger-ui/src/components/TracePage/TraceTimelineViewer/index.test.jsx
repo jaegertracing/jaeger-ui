@@ -17,6 +17,7 @@ const { mockLayoutPrefsStore, mockTraceTimelineStore, mockUseTraceTimelineStore 
     detailStates: new Map(),
     prunedServices: new Set(),
     setPrunedServices: vi.fn(),
+    focusedSubtreeSpanID: null,
     collapseAll: vi.fn(),
     collapseOne: vi.fn(),
     expandAll: vi.fn(),
@@ -139,6 +140,7 @@ describe('<TraceTimelineViewer>', () => {
     mockLayoutPrefsStore.detailPanelMode = 'inline';
     mockLayoutPrefsStore.timelineBarsVisible = true;
     mockTraceTimelineStore.detailStates = new Map();
+    mockTraceTimelineStore.focusedSubtreeSpanID = null;
     mockUseTraceTimelineStore.setState.mockClear();
     mockUseServiceFilter.prunedServices = new Set();
     mockUseServiceFilter.serviceFilterNode = null;
@@ -148,6 +150,7 @@ describe('<TraceTimelineViewer>', () => {
 
   afterEach(() => {
     KeyboardShortcuts.merge.mockRestore();
+    mockTraceTimelineStore.focusedSubtreeSpanID = null;
   });
 
   it('does not explode', () => {
@@ -218,6 +221,28 @@ describe('<TraceTimelineViewer>', () => {
     fireEvent.click(screen.getByTestId('expand-one-button'));
     expect(track.trackExpandOne).toHaveBeenCalledTimes(1);
     expect(mockTraceTimelineStore.expandOne).toHaveBeenCalledWith(props.trace.spans);
+  });
+
+  it('scopes collapse and expand actions to focused subtree when focusedSubtreeSpanID is set', () => {
+    // Select a non-root span to focus
+    const focusedSpan = props.trace.spans[1];
+    mockTraceTimelineStore.focusedSubtreeSpanID = focusedSpan.spanID;
+
+    render(<TraceTimelineViewerImpl {...props} />);
+
+    fireEvent.click(screen.getByTestId('collapse-all-button'));
+    expect(mockTraceTimelineStore.collapseAll).toHaveBeenCalledWith(expect.arrayContaining([focusedSpan]));
+    expect(mockTraceTimelineStore.collapseAll.mock.calls[0][0]).not.toEqual(props.trace.spans);
+
+    fireEvent.click(screen.getByTestId('collapse-one-button'));
+    expect(mockTraceTimelineStore.collapseOne).toHaveBeenCalledWith(expect.arrayContaining([focusedSpan]));
+    expect(mockTraceTimelineStore.collapseOne.mock.calls[0][0]).not.toEqual(props.trace.spans);
+
+    fireEvent.click(screen.getByTestId('expand-one-button'));
+    expect(mockTraceTimelineStore.expandOne).toHaveBeenCalledWith(expect.arrayContaining([focusedSpan]));
+    expect(mockTraceTimelineStore.expandOne.mock.calls[0][0]).not.toEqual(props.trace.spans);
+
+    mockTraceTimelineStore.focusedSubtreeSpanID = null;
   });
 
   it('tracks each header action before updating the store', () => {

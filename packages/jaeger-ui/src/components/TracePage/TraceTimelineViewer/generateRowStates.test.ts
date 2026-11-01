@@ -126,20 +126,22 @@ describe('generateRowStates', () => {
       expect(lastRow.span.spanID).toBe('span-0');
     });
 
-    it('assigns non-decreasing spanIndex to placeholder rows', () => {
+    it('places placeholder row with parent spanIndex after visible children', () => {
       const spans = makeTestSpans();
       // Prune svc-c (span-3, index 3 in the spans array)
       const rows = generateRowStates(spans, new Set(), new Map(), 'inline', new Set(['svc-c']));
-      // Collect spanIndex values from non-detail rows (span bars + placeholders).
-      const spanIndices = rows.filter(r => !r.isDetail).map(r => r.spanIndex);
-      // Verify monotonically non-decreasing.
-      const isSorted = spanIndices.every((val, i) => i === 0 || val >= spanIndices[i - 1]);
-      expect(isSorted).toBe(true);
-      // The placeholder's spanIndex should be >= the last visible child's spanIndex.
       const placeholder = rows.find(r => 'isPrunedPlaceholder' in r)!;
-      const visibleSpanRows = rows.filter(r => !r.isDetail && !('isPrunedPlaceholder' in r));
-      const lastVisible = visibleSpanRows[visibleSpanRows.length - 1];
-      expect(placeholder.spanIndex).toBeGreaterThanOrEqual(lastVisible.spanIndex);
+      expect(placeholder.spanIndex).toBe(0);
+    });
+
+    it('assigns parent spanIndex to placeholder row', () => {
+      const spans = makeTestSpans();
+      // Prune svc-b (span-1 at index 1 and span-2 at index 2); parent span-0 is at index 0
+      const rows = generateRowStates(spans, new Set(), new Map(), 'inline', new Set(['svc-b']));
+      const parentRow = rows.find(r => r.span.spanID === 'span-0' && !('isPrunedPlaceholder' in r))!;
+      const placeholder = rows.find(r => 'isPrunedPlaceholder' in r)!;
+      expect(parentRow.spanIndex).toBe(0);
+      expect(placeholder.spanIndex).toBe(parentRow.spanIndex);
     });
   });
 });

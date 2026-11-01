@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import {
   getSelectedSpanID,
@@ -24,6 +24,8 @@ import TimelineHeaderRow from './TimelineHeaderRow';
 import { useServiceFilter } from './useServiceFilter';
 import { useSpanPillsEnabled } from './spanPills';
 import VirtualizedTraceView from './VirtualizedTraceView';
+import { getFocusedSubtree } from './timeline-utils';
+import { isSpanPruned } from './generateRowStates';
 import { merge as mergeShortcuts } from '../keyboard-shortcuts';
 import { Accessors } from '../ScrollManager';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '../types';
@@ -102,25 +104,37 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   // Side panel is permanently visible whenever side panel mode is active.
   const sidePanelActive = detailPanelMode === 'sidepanel';
 
+  const focusedSubtreeSpanID = useTraceTimelineStore(s => s.focusedSubtreeSpanID);
+  const prunedServices = useTraceTimelineStore(s => s.prunedServices);
+
+  const effectiveSpans = useMemo(() => {
+    const subtree = getFocusedSubtree(trace, focusedSubtreeSpanID, prunedServices);
+    const base = subtree ?? trace.spans;
+    if (prunedServices.size === 0) {
+      return base;
+    }
+    return base.filter(s => !isSpanPruned(s, prunedServices));
+  }, [trace, focusedSubtreeSpanID, prunedServices]);
+
   const collapseAll = useCallback(() => {
     trackCollapseAll();
-    zustandCollapseAll(trace.spans);
-  }, [trace.spans, zustandCollapseAll]);
+    zustandCollapseAll(effectiveSpans);
+  }, [effectiveSpans, zustandCollapseAll]);
 
   const collapseOne = useCallback(() => {
     trackCollapseOne();
-    zustandCollapseOne(trace.spans);
-  }, [trace.spans, zustandCollapseOne]);
+    zustandCollapseOne(effectiveSpans);
+  }, [effectiveSpans, zustandCollapseOne]);
 
   const expandAll = useCallback(() => {
     trackExpandAll();
-    zustandExpandAll();
-  }, [zustandExpandAll]);
+    zustandExpandAll(effectiveSpans);
+  }, [effectiveSpans, zustandExpandAll]);
 
   const expandOne = useCallback(() => {
     trackExpandOne();
-    zustandExpandOne(trace.spans);
-  }, [trace.spans, zustandExpandOne]);
+    zustandExpandOne(effectiveSpans);
+  }, [effectiveSpans, zustandExpandOne]);
 
   useEffect(() => {
     mergeShortcuts({

@@ -80,6 +80,13 @@ describe('middlewareHooks', () => {
       extraTrackArgs: [123],
     },
     {
+      msg: 'tracks a single GA event for subtree collapse',
+      type: types.CHILDREN_TOGGLE_SUBTREE,
+      payloadCustom: { spanID, subtreeParentIDs: [spanID] },
+      category: track.CATEGORY_PARENT,
+      extraTrackArgs: [123],
+    },
+    {
       msg: 'handles no payload in trackParent',
       type: types.CHILDREN_TOGGLE,
       payloadCustom: null,
@@ -236,6 +243,7 @@ describe('middlewareHooks', () => {
     expect(Object.keys(track.middlewareHooks).sort()).toEqual(
       [
         types.CHILDREN_TOGGLE,
+        types.CHILDREN_TOGGLE_SUBTREE,
         types.COLLAPSE_ALL,
         types.COLLAPSE_ONE,
         types.DETAIL_TOGGLE,
