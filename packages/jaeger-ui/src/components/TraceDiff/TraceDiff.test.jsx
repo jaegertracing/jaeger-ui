@@ -23,8 +23,9 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-const { useTracesMock } = vi.hoisted(() => ({
-  useTracesMock: jest.fn(),
+const { useTracesMock, mockTraceDiffHeaderSpy } = vi.hoisted(() => ({
+  useTracesMock: vi.fn(),
+  mockTraceDiffHeaderSpy: vi.fn(),
 }));
 
 vi.mock('../../hooks/useTraceLoading', () => ({
@@ -33,6 +34,7 @@ vi.mock('../../hooks/useTraceLoading', () => ({
 
 vi.mock('./TraceDiffHeader', async () => {
   return mockDefault(function MockTraceDiffHeader(props) {
+    mockTraceDiffHeaderSpy(props);
     return (
       <div data-testid="trace-diff-header">
         <button type="button" data-testid="diff-set-a-btn" onClick={() => props.diffSetA('newAValue')}>
@@ -71,7 +73,9 @@ describe('TraceDiff', () => {
 
   // Helper function to render with router context
   const renderWithRouter = component => {
-    return render(<BrowserRouter>{component}</BrowserRouter>);
+    return render(component, {
+      wrapper: ({ children }) => <BrowserRouter>{children}</BrowserRouter>,
+    });
   };
   const newAValue = 'newAValue';
   const newBValue = 'newBValue';
@@ -87,6 +91,7 @@ describe('TraceDiff', () => {
     useTracesMock.mockReturnValue(new Map(defaultCohort.map(id => [id, { id, state: fetchedState.DONE }])));
     getUrlSpy.mockClear();
     mockNavigate.mockClear();
+    mockTraceDiffHeaderSpy.mockClear();
     useTraceDiffStore.setState({
       a: defaultA,
       b: defaultB,
@@ -205,6 +210,35 @@ describe('TraceDiff', () => {
 
       expect(screen.getByTestId('trace-diff-header')).toBeInTheDocument();
       expect(screen.getByTestId('trace-diff-graph')).toBeInTheDocument();
+    });
+
+    it('memoizes traceA, traceB, and cohortData across re-renders when comparison data is unchanged', () => {
+      const { rerender } = renderWithRouter(<TraceDiffImpl {...defaultProps} />);
+      const firstCallProps = mockTraceDiffHeaderSpy.mock.calls[0][0];
+
+      rerender(<TraceDiffImpl {...defaultProps} />);
+      const secondCallProps = mockTraceDiffHeaderSpy.mock.calls[1][0];
+
+      expect(secondCallProps.a).toBe(firstCallProps.a);
+      expect(secondCallProps.b).toBe(firstCallProps.b);
+      expect(secondCallProps.cohort).toBe(firstCallProps.cohort);
+    });
+
+    it('updates memoized cohortData when tracesData changes', () => {
+      const { rerender } = renderWithRouter(<TraceDiffImpl {...defaultProps} />);
+      const firstCallProps = mockTraceDiffHeaderSpy.mock.calls[0][0];
+
+      useTracesMock.mockReturnValue(
+        new Map([
+          ...defaultCohort.map(id => [id, { id, state: fetchedState.DONE }]),
+          ['new-trace', { id: 'new-trace', state: fetchedState.DONE }],
+        ])
+      );
+
+      rerender(<TraceDiffImpl {...defaultProps} />);
+      const secondCallProps = mockTraceDiffHeaderSpy.mock.calls[1][0];
+
+      expect(secondCallProps.cohort).not.toBe(firstCallProps.cohort);
     });
   });
 
