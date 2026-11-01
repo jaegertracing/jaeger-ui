@@ -12,7 +12,14 @@ import OperationTableDetails from './operationDetailsTable';
 import ServiceGraph from './serviceGraph';
 import LoadingIndicator from '../../common/LoadingIndicator';
 
-import { Points, ServiceMetricsObject, ServiceOpsMetrics, spanKinds } from '../../../types/metrics';
+import {
+  MetricDimension,
+  Points,
+  ServiceMetricsObject,
+  ServiceOpsMetrics,
+  spanKinds,
+} from '../../../types/metrics';
+import JaegerAPI from '../../../api/jaeger';
 import prefixUrl from '../../../utils/prefix-url';
 import { convertTimeUnitToShortTerm, getSuitableTimeUnit } from '../../../utils/date';
 import { ONE_HOUR_MS, timeFrameOptions, getLoopbackInterval, yAxisTickFormat } from './timeFrameUtils';
@@ -120,6 +127,14 @@ export function MonitorATMServicesViewImpl({ search = '', navigate }: TOwnProps)
   const [selectedSpanKind, setSelectedSpanKind] = useState<spanKinds>(initialFilters.selectedSpanKind);
   const [selectedTimeFrame, setSelectedTimeFrame] = useState<number>(initialFilters.selectedTimeFrame);
 
+  const [dimensions, setDimensions] = useState<MetricDimension[]>([]);
+  const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>(() => {
+    const stored = store.getJSON('lastAtmSearchFilters');
+    return stored && typeof stored === 'object' && !Array.isArray(stored)
+      ? (stored as Record<string, string>)
+      : {};
+  });
+
   const urlOwned = useRef(initialFilters.urlOwned);
   const isInternalUrlSync = useRef(false);
   const previousSearch = useRef(search);
@@ -152,14 +167,31 @@ export function MonitorATMServicesViewImpl({ search = '', navigate }: TOwnProps)
 
   const metricQueryParams: MetricsQueryParams | undefined = useMemo(() => {
     if (!currentService || currentService !== timestampedService) return undefined;
+    // Build the repeated `filter=key:value` list. We only send filters for
+    // dimensions still advertised by the backend, so stale localStorage
+    // entries from removed dimensions are silently ignored.
+    const advertised = new Set(dimensions.map(d => d.name));
+    const filter = Object.entries(selectedFilters)
+      .filter(([k, v]) => v && advertised.has(k))
+      .map(([k, v]) => `${k}:${v}`);
+
     return {
       endTs: endTime,
       lookback: selectedTimeFrame,
       step: 60 * 1000,
       ratePer: 10 * 60 * 1000,
       spanKind: selectedSpanKind,
+      ...(filter.length > 0 ? { filter } : {}),
     };
-  }, [currentService, endTime, selectedTimeFrame, selectedSpanKind, timestampedService]);
+  }, [
+    currentService,
+    endTime,
+    selectedTimeFrame,
+    selectedSpanKind,
+    timestampedService,
+    dimensions,
+    selectedFilters,
+  ]);
 
   const {
     data: serviceMetricsData,
@@ -218,6 +250,23 @@ export function MonitorATMServicesViewImpl({ search = '', navigate }: TOwnProps)
     [navigate, search]
   );
 
+  const handleFilterChange = useCallback(
+    (dimensionName: string, value: string) => {
+      setSelectedFilters(prev => {
+        const next = { ...prev };
+        // Empty value = "All" = no filter on this dimension.
+        if (value === '') {
+          delete next[dimensionName];
+        } else {
+          next[dimensionName] = value;
+        }
+        return next;
+      });
+      advanceEndTime();
+    },
+    [advanceEndTime]
+  );
+
   const handleServiceChange = useCallback(
     (value: string) => {
       urlOwned.current.service = false;
@@ -268,6 +317,28 @@ export function MonitorATMServicesViewImpl({ search = '', navigate }: TOwnProps)
     };
   }, [updateDimensions]);
 
+  // Fetch the operator-configured filterable dimensions on mount. A backend
+  // without dimension support (or older Jaeger) returns [] or 5xx; in both
+  // cases we just render no dropdowns and the rest of the page is unaffected.
+  useEffect(() => {
+    let cancelled = false;
+    JaegerAPI.fetchMetricDimensions()
+      .then((response: unknown) => {
+        if (cancelled) return;
+        if (Array.isArray(response)) {
+          setDimensions(response as MetricDimension[]);
+        } else {
+          setDimensions([]);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setDimensions([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Measure the graph container width after every servicesLoading → false
   // transition. useLayoutEffect ensures the measurement happens before paint,
   // avoiding a visible half-width flash. The mount effect above no longer calls
@@ -308,6 +379,10 @@ export function MonitorATMServicesViewImpl({ search = '', navigate }: TOwnProps)
       store.set('lastAtmSearchTimeframe', selectedTimeFrame);
     }
   }, [currentService, selectedSpanKind, selectedTimeFrame]);
+
+  useEffect(() => {
+    store.set('lastAtmSearchFilters', selectedFilters);
+  }, [selectedFilters]);
 
   const serviceLatencies = serviceMetrics ? serviceMetrics.service_latencies : null;
   const displayTimeUnit = calcDisplayTimeUnit(serviceLatencies);
@@ -374,6 +449,29 @@ export function MonitorATMServicesViewImpl({ search = '', navigate }: TOwnProps)
               ))}
             </SearchableSelect>
           </Col>
+          {dimensions
+            .filter(dim => dim.values && dim.values.length > 0)
+            .map(dim => (
+              <Col className="dimension-filter-col" key={dim.name}>
+                <h2 className="dimension-selector-header">{dim.displayName || dim.name}</h2>
+                <SearchableSelect
+                  value={selectedFilters[dim.name] || ''}
+                  onChange={(value: string) => handleFilterChange(dim.name, value)}
+                  placeholder="All"
+                  className="dimension-selector"
+                  data-testid={`dimension-selector-${dim.name}`}
+                  disabled={controlsInitialLoading}
+                  loading={controlsInitialLoading}
+                >
+                  <Option value="">All</Option>
+                  {dim.values!.map(value => (
+                    <Option key={value} value={value}>
+                      {value}
+                    </Option>
+                  ))}
+                </SearchableSelect>
+              </Col>
+            ))}
           <Col span={4} className="refresh-col">
             <Button
               className="refresh-btn"

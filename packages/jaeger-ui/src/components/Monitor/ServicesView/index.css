@@ -17,6 +17,15 @@ SPDX-License-Identifier: Apache-2.0
   font-weight: 800;
 }
 
+.dimension-selector-header {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.dimension-selector {
+  width: 100%;
+}
+
 .operations-metrics-text {
   margin-top: 17px;
   margin-bottom: 14px;
@@ -67,7 +76,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .service-span-kind-row {
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 }
 
 .service-filter-col {
@@ -76,6 +85,11 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .span-kind-filter-col {
+  flex: 0 0 auto;
+  width: 200px;
+}
+
+.dimension-filter-col {
   flex: 0 0 auto;
   width: 200px;
 }

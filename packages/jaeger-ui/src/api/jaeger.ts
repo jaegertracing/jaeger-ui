@@ -100,6 +100,9 @@ const JaegerAPI = {
   fetchTrace(id: string): Promise<any> {
     return getJSON(`${this.apiRoot}traces/${encodeURIComponent(id)}`);
   },
+  fetchMetricDimensions(): Promise<any> {
+    return getJSON(`${this.apiRoot}metrics/dimensions`);
+  },
 };
 
 export default JaegerAPI;
