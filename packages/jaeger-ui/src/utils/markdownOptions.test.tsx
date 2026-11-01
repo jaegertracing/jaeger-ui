@@ -3,7 +3,7 @@
 
 import { render } from '@testing-library/react';
 import Markdown from 'markdown-to-jsx/react';
-import { expect, it, describe } from 'vitest';
+import { expect, it, describe } from 'vite-plus/test';
 
 import { sharedMarkdownOptions } from './markdownOptions';
 

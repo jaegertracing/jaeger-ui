@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { vi } from 'vitest';
+import { vi } from 'vite-plus/test';
 import { useSearchResultsStore } from './store.search-results';
 import {
   MOST_RECENT,
