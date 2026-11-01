@@ -381,7 +381,7 @@ export const DeepDependencyGraphPageImpl = memo(function DeepDependencyGraphPage
       );
     }
   } else if (graphState.state === fetchedState.LOADING) {
-    content = <LoadingIndicator centered className="u-mt-vast" />;
+    content = <LoadingIndicator centered className="u-mt-vast" label="Loading dependency graph" />;
   } else if (graphState.state === fetchedState.ERROR) {
     content = (
       <>

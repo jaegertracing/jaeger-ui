@@ -186,7 +186,7 @@ export default function DependencyGraphPage() {
   };
 
   if (isLoading) {
-    return <LoadingIndicator className="u-mt-vast" centered />;
+    return <LoadingIndicator className="u-mt-vast" centered label="Loading dependency graph" />;
   }
   if (error) {
     return <ErrorMessage className="ub-m3" error={error as ApiError} />;
