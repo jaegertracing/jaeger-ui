@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Context } from '@opentelemetry/api';
-import { ReadableSpan, Span, SpanProcessor } from '@opentelemetry/sdk-trace-base';
+import { ReadableSpan, Span, SpanProcessor } from '@opentelemetry/sdk-trace';
 import { ATTR_SESSION_ID, ATTR_SESSION_PREVIOUS_ID } from '@opentelemetry/semantic-conventions/incubating';
 
 const SESSION_ID_KEY = 'jaeger.tracing.sessionId';
