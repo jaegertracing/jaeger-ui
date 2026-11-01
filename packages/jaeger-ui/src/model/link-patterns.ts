@@ -23,7 +23,16 @@ type LegacyLinkPatternType = 'tags' | 'process' | 'logs';
 
 const VALID_TRACE_KEYS = ['traceID', 'traceName', 'duration', 'startTime', 'endTime'];
 
-const VALID_SPAN_KEYS = ['spanID', 'operationName', 'duration', 'startTime'];
+const VALID_SPAN_KEYS = [
+  'spanID',
+  'traceID',
+  'operationName',
+  'name',
+  'duration',
+  'startTime',
+  'endTime',
+  'serviceName',
+];
 
 type ProcessedLinkPattern = {
   object: any;
@@ -94,36 +103,110 @@ function getParameterInAttributes(name: string, attributes: IAttributes | undefi
   return value === undefined ? undefined : { key: name, value };
 }
 
+export function getParameterInSpanIntrinsic(name: string, span: IOtelSpan): IAttribute | undefined {
+  if (!VALID_SPAN_KEYS.includes(name)) {
+    return undefined;
+  }
+  let value: any;
+  switch (name) {
+    case 'spanID':
+      value = span.spanID;
+      break;
+    case 'traceID':
+      value = span.traceID;
+      break;
+    case 'operationName':
+    case 'name':
+      value = span.name;
+      break;
+    case 'duration':
+      value = span.duration;
+      break;
+    case 'startTime':
+      value = span.startTime;
+      break;
+    case 'endTime':
+      value = span.endTime;
+      break;
+    case 'serviceName':
+      value = span.resource?.serviceName ?? span.resource?.attributes?.getValue('service.name');
+      break;
+    default:
+      break;
+  }
+  return value !== undefined ? { key: name, value } : undefined;
+}
+
+export function getParameterInResource(name: string, span: IOtelSpan): IAttribute | undefined {
+  if (name === 'serviceName' || name === 'service.name') {
+    const serviceName = span.resource?.serviceName ?? span.resource?.attributes?.getValue('service.name');
+    if (serviceName !== undefined) {
+      return { key: name, value: serviceName };
+    }
+  }
+  return getParameterInAttributes(name, span.resource?.attributes);
+}
+
+export function getParameterInSpan(name: string, span: IOtelSpan): IAttribute | undefined {
+  return getParameterInSpanIntrinsic(name, span) || getParameterInAttributes(name, span.attributes);
+}
+
+export function getParameterInParent(name: string, span: IOtelSpan): IAttribute | undefined {
+  const parent = span.parentSpan;
+  if (!parent) {
+    return undefined;
+  }
+  if (name.startsWith('resource.')) {
+    return getParameterInResource(name.slice(9), parent);
+  }
+  if (name.startsWith('process.')) {
+    return getParameterInResource(name.slice(8), parent);
+  }
+  if (name.startsWith('span.')) {
+    return getParameterInSpan(name.slice(5), parent);
+  }
+  return (
+    getParameterInSpanIntrinsic(name, parent) ||
+    getParameterInAttributes(name, parent.attributes) ||
+    getParameterInResource(name, parent)
+  );
+}
+
+export function getParameterInAncestors(name: string, span: IOtelSpan): IAttribute | undefined {
+  let currentSpan = span.parentSpan;
+  while (currentSpan) {
+    let result: IAttribute | undefined;
+    if (name.startsWith('resource.')) {
+      result = getParameterInResource(name.slice(9), currentSpan);
+    } else if (name.startsWith('process.')) {
+      result = getParameterInResource(name.slice(8), currentSpan);
+    } else if (name.startsWith('span.')) {
+      result = getParameterInSpan(name.slice(5), currentSpan);
+    } else {
+      result =
+        getParameterInSpanIntrinsic(name, currentSpan) ||
+        getParameterInAttributes(name, currentSpan.attributes) ||
+        getParameterInResource(name, currentSpan);
+    }
+    if (result) {
+      return result;
+    }
+    currentSpan = currentSpan.parentSpan;
+  }
+  return undefined;
+}
+
 export function getParameterInAncestor(name: string, span: IOtelSpan): IAttribute | undefined {
   let currentSpan: IOtelSpan | undefined = span;
   while (currentSpan) {
-    if (VALID_SPAN_KEYS.includes(name)) {
-      let value: any;
-      switch (name) {
-        case 'spanID':
-          value = currentSpan.spanID;
-          break;
-        case 'operationName':
-          value = currentSpan.name;
-          break;
-        case 'duration':
-          value = currentSpan.duration;
-          break;
-        case 'startTime':
-          value = currentSpan.startTime;
-          break;
-        default:
-          // If it's a valid span key but no value found, continue to check attributes
-          break;
-      }
-      if (value !== undefined) {
-        return { key: name, value };
-      }
+    const intrinsic = getParameterInSpanIntrinsic(name, currentSpan);
+    if (intrinsic) {
+      return intrinsic;
     }
 
     const result =
       getParameterInAttributes(name, currentSpan.attributes) ||
-      getParameterInAttributes(name, currentSpan.resource.attributes);
+      getParameterInAttributes(name, currentSpan.resource?.attributes);
     if (result) {
       return result;
     }
@@ -137,9 +220,10 @@ export function getParameterInTrace(
   name: string,
   trace: IOtelTrace
 ): { key: string; value: any } | undefined {
-  if (VALID_TRACE_KEYS.includes(name)) {
+  const key = name.startsWith('trace.') ? name.slice(6) : name;
+  if (VALID_TRACE_KEYS.includes(key)) {
     let value: any;
-    switch (name) {
+    switch (key) {
       case 'traceID':
         value = trace.traceID;
         break;
@@ -158,10 +242,104 @@ export function getParameterInTrace(
       default:
         return undefined;
     }
-    return { key: name, value };
+    return { key, value };
   }
 
   return undefined;
+}
+
+export function resolveParameter(
+  parameterName: string,
+  span: IOtelSpan,
+  items: IAttributes,
+  type: LinkPatternType,
+  trace?: IOtelTrace
+): IAttribute | undefined {
+  if (parameterName.startsWith('trace.')) {
+    const subKey = parameterName.slice(6);
+    let entry = trace ? getParameterInTrace(subKey, trace) : undefined;
+    if (!entry) {
+      entry =
+        getParameterInAttributes(parameterName, items) ||
+        getParameterInAttributes(parameterName, span.attributes);
+    }
+    return entry;
+  }
+
+  if (parameterName.startsWith('span.')) {
+    const remainder = parameterName.slice(5);
+    if (remainder.startsWith('process.')) {
+      return getParameterInResource(remainder.slice(8), span);
+    }
+    if (remainder.startsWith('resource.')) {
+      return getParameterInResource(remainder.slice(9), span);
+    }
+    if (remainder.startsWith('parent.')) {
+      return getParameterInParent(remainder.slice(7), span);
+    }
+    if (remainder.startsWith('ancestor.')) {
+      return getParameterInAncestors(remainder.slice(9), span);
+    }
+    let entry = getParameterInSpan(remainder, span);
+    if (!entry) {
+      entry = getParameterInAttributes(parameterName, items);
+    }
+    return entry;
+  }
+
+  if (parameterName.startsWith('process.')) {
+    const subKey = parameterName.slice(8);
+    let entry = getParameterInResource(subKey, span);
+    if (!entry) {
+      entry = getParameterInAttributes(parameterName, items);
+    }
+    return entry;
+  }
+
+  if (parameterName.startsWith('resource.')) {
+    const subKey = parameterName.slice(9);
+    let entry = getParameterInResource(subKey, span);
+    if (!entry) {
+      entry = getParameterInAttributes(parameterName, items);
+    }
+    return entry;
+  }
+
+  if (parameterName.startsWith('parent.')) {
+    const remainder = parameterName.slice(7);
+    let entry = getParameterInParent(remainder, span);
+    if (!entry) {
+      entry = getParameterInAttributes(parameterName, items);
+    }
+    return entry;
+  }
+
+  if (parameterName.startsWith('ancestor.')) {
+    const remainder = parameterName.slice(9);
+    let entry = getParameterInAncestors(remainder, span);
+    if (!entry) {
+      entry = getParameterInAttributes(parameterName, items);
+    }
+    return entry;
+  }
+
+  // Unqualified resolution with backward compatibility
+  let entry = getParameterInAttributes(parameterName, items);
+
+  if (!entry && type !== 'resource') {
+    entry = getParameterInAncestor(parameterName, span);
+  }
+
+  if (!entry && type === 'resource') {
+    if (parameterName === 'serviceName' || parameterName === 'service.name') {
+      const serviceName = span.resource?.serviceName ?? span.resource?.attributes?.getValue('service.name');
+      if (serviceName !== undefined) {
+        entry = { key: parameterName, value: serviceName };
+      }
+    }
+  }
+
+  return entry;
 }
 
 function callTemplate(template: ProcessedTemplate, data: any): string {
@@ -180,9 +358,9 @@ export function computeTraceLink(linkPatterns: ProcessedLinkPattern[], trace: IO
         const traceKV = getParameterInTrace(parameterName, trace);
 
         if (traceKV) {
-          // At this point is safe to access to trace object using parameter variable because
-          // we validated parameter against validKeys, this implies that parameter a keyof IOtelTrace.
-          parameterValues[parameterName] = formatFunction ? formatFunction(traceKV.value) : traceKV.value;
+          const formatted = formatFunction ? formatFunction(traceKV.value) : traceKV.value;
+          parameterValues[parameterName] = formatted;
+          parameterValues[parameter] = formatted;
 
           return true;
         }
@@ -200,23 +378,25 @@ export function computeTraceLink(linkPatterns: ProcessedLinkPattern[], trace: IO
   return result;
 }
 
-// computeLinks generates {url, text} link pairs by applying link patterms
+// computeLinks generates {url, text} link pairs by applying link patterns
 // to the element `itemIndex` of `items` array. The values for template
-// variables used in the patterns are looked up first in `items`, then
-// in `span.attributes` and `span.resource.attributes`, and then in ancestor spans
-// recursively via `span.parentSpan`.
+// variables used in the patterns are resolved using structured scopes
+// (trace., span., process./resource., parent., ancestor.) or fallback
+// to looking up first in `items`, then in `span.attributes` and
+// `span.resource.attributes`, and then in ancestor spans recursively
+// via `span.parentSpan`.
 export function computeLinks(
   linkPatterns: ProcessedLinkPattern[],
   span: IOtelSpan,
   items: IAttributes,
   itemIndex: number,
-  trace: IOtelTrace
+  trace?: IOtelTrace
 ): Hyperlink[] {
   const item = items.entries()[itemIndex];
   let type: LinkPatternType = 'events';
   let legacyType: LegacyLinkPatternType = 'logs';
 
-  if (span.resource.attributes === items) {
+  if (span.resource?.attributes === items) {
     type = 'resource';
     legacyType = 'process';
   } else if (span.attributes === items) {
@@ -234,21 +414,11 @@ export function computeLinks(
     if (typeMatches && pattern.key(item.key) && pattern.value(item.value)) {
       const parameterValues: Record<string, any> = {};
       const allParameters = pattern.parameters.every(parameter => {
-        let entry;
-
-        if (parameter.startsWith('trace.')) {
-          entry = getParameterInTrace(parameter.split('trace.')[1], trace);
-        } else {
-          entry = getParameterInAttributes(parameter, items);
-
-          if (!entry && type !== 'resource') {
-            // do not look in ancestors for resource attributes because the same object may appear in different places in the hierarchy
-            // and the cache in getLinks uses that object as a key
-            entry = getParameterInAncestor(parameter, span);
-          }
-        }
+        const { parameterName } = getParameterAndFormatter(parameter);
+        const entry = resolveParameter(parameterName, span, items, type, trace);
 
         if (entry) {
+          parameterValues[parameterName] = entry.value;
           parameterValues[parameter] = entry.value;
           return true;
         }
@@ -273,8 +443,8 @@ export function computeLinks(
 export function createGetLinks(
   linkPatterns: ProcessedLinkPattern[],
   cache: WeakMap<IAttribute, Hyperlink[]>
-): (span: IOtelSpan, items: IAttributes, itemIndex: number, trace: IOtelTrace) => Hyperlink[] {
-  return (span: IOtelSpan, items: IAttributes, itemIndex: number, trace: IOtelTrace) => {
+): (span: IOtelSpan, items: IAttributes, itemIndex: number, trace?: IOtelTrace) => Hyperlink[] {
+  return (span: IOtelSpan, items: IAttributes, itemIndex: number, trace?: IOtelTrace) => {
     if (linkPatterns.length === 0) {
       return [];
     }
