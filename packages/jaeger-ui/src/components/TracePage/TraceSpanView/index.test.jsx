@@ -101,6 +101,20 @@ describe('<TraceSpanView>', () => {
     expect(operationSelect.value).toBe('op2');
   });
 
+  it('filters the table rows by the selected service and operation', () => {
+    const { container } = render(<TraceSpanView {...defaultProps} />);
+    const renderedServiceNames = () =>
+      Array.from(container.querySelectorAll('.ant-table-row')).map(
+        row => row.querySelector('td').textContent
+      );
+
+    fireEvent.change(screen.getByTestId('select-service'), { target: { value: 'service2' } });
+    expect(renderedServiceNames()).toEqual(['service2', 'service2', 'service2']);
+
+    fireEvent.change(screen.getByTestId('select-operation'), { target: { value: 'op3' } });
+    expect(renderedServiceNames()).toEqual(['service2']);
+  });
+
   it('check handler', () => {
     render(<TraceSpanView {...defaultProps} />);
 

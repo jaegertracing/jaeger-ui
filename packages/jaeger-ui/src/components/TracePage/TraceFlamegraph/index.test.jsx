@@ -104,11 +104,6 @@ describe('<TraceFlamegraph />', () => {
     expect(screen.getByTestId('flamegraph-empty')).toBeInTheDocument();
   });
 
-  it('renders empty state when trace is not an OtelTraceFacade', () => {
-    render(<TraceFlamegraph trace={{}} />);
-    expect(screen.getByTestId('flamegraph-empty')).toBeInTheDocument();
-  });
-
   it('renders the toolbar with view mode toggle', () => {
     render(<TraceFlamegraph trace={otelTrace} />);
     expect(screen.getByRole('toolbar')).toBeInTheDocument();
@@ -349,6 +344,41 @@ describe('<TraceFlamegraph />', () => {
   });
 
   describe('handleCollapseAbove', () => {
+    it('replaces a stale collapsed subtree on same-ID reload while retaining search and view mode', () => {
+      const { rerender } = render(<TraceFlamegraph trace={otelTrace} />);
+      const fullGraph = mockDatum.mock.lastCall[0];
+      const collapsedNode = fullGraph.children[0];
+      fireEvent.change(screen.getByTestId('flamegraph-search'), { target: { value: 'Vehicle' } });
+      act(() => callbacks.onClick({ parent: {}, data: collapsedNode }));
+      fireEvent.click(screen.getByTestId('flamegraph-collapse'));
+      expect(mockDatum.mock.lastCall[0]).toBe(collapsedNode);
+
+      const data = structuredClone(testTrace.data);
+      const root = data.spans[0];
+      root.duration += 100000;
+      data.spans.push({
+        ...root,
+        spanID: '0000000000004574',
+        operationName: 'VehicleLateChild',
+        startTime: root.startTime + 1000,
+        duration: 2000,
+        references: [{ refType: 'CHILD_OF', traceID: root.traceID, spanID: root.spanID }],
+      });
+      const refreshed = transformTraceData(data).asOtelTrace();
+      expect(refreshed.traceID).toBe(otelTrace.traceID);
+      rerender(<TraceFlamegraph trace={refreshed} />);
+
+      const refreshedGraph = mockDatum.mock.lastCall[0];
+      expect(refreshedGraph.name).toBe('total');
+      expect(refreshedGraph.duration).toBeGreaterThan(fullGraph.duration);
+      expect(JSON.stringify(refreshedGraph)).toContain('VehicleLateChild');
+      expect(screen.getByText('VehicleLateChild')).toBeInTheDocument();
+      expect(screen.getByTestId('flamegraph-search')).toHaveValue('Vehicle');
+      expect(mockChart.search).toHaveBeenLastCalledWith('Vehicle');
+      expect(screen.getByRole('table')).toBeInTheDocument();
+      expect(screen.getByTestId('flamegraph-chart')).toBeInTheDocument();
+    });
+
     it('collapse button triggers re-render with collapsed root', () => {
       render(<TraceFlamegraph trace={otelTrace} />);
       // Zoom into a node first

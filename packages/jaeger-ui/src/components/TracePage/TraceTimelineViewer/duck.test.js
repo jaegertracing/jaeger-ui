@@ -367,6 +367,25 @@ describe('TraceTimelineViewer/duck', () => {
       });
     });
 
+    // Pins the fix for the two divergent shouldDisableCollapse implementations: the old
+    // duck.ts copy compared sizes (allParentSpans.length === hiddenSpansIds.size), so a set
+    // the same size as the parent count but holding the wrong IDs was mistaken for "every
+    // parent already hidden" and the reducer no-opped instead of collapsing.
+    const wrongIdsSameSize = new Set([0, 1, 99]);
+
+    it('collapseAll collapses when the hidden set is the right size but the wrong spans', () => {
+      const { childrenHiddenIDs } = collapseAll({ childrenHiddenIDs: wrongIdsSameSize }, { spans });
+      expect(childrenHiddenIDs).toEqual(allSpansCollapsed);
+    });
+
+    it('collapseOne collapses when the hidden set is the right size but the wrong spans', () => {
+      const { childrenHiddenIDs } = collapseOne({ childrenHiddenIDs: wrongIdsSameSize }, { spans });
+      // collapseOne layers onto the existing set rather than rebuilding it, so the stray id
+      // from the malformed input survives; what the guard being right actually buys is that
+      // span 3, the parent collapseOne should have found and hidden, is no longer skipped.
+      expect(childrenHiddenIDs.has(3)).toBe(true);
+    });
+
     // Tests to verify correct behaviour of actions
     const dispatchTests = [
       {

@@ -14,7 +14,7 @@ import * as markers from './ResultItem.markers';
 import ResultItemTitle from './ResultItemTitle';
 import ServicePills from './ServicePills';
 import { formatRelativeDate, formatRelativeTime } from '../../../utils/date';
-import { getIncompleteTraceTooltip } from '../../../model/trace-viewer';
+import { getIncompleteTraceTooltip } from '../../../model/trace-display-helpers';
 
 import type { TraceSummary } from '../../../types/trace-summary';
 import type { TracePageLink } from '../../TracePage/url';

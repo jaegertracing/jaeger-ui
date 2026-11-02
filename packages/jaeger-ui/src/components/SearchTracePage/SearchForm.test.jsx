@@ -679,6 +679,47 @@ describe('<SearchForm>', () => {
 
       // Should display error message for services
       expect(container.textContent).toContain('Error loading services: Failed to fetch services');
+      expect(container.querySelector('[data-testid="ErrorMessage--details"]')).not.toBeInTheDocument();
+    });
+
+    it.each([
+      {
+        field: 'services',
+        hook: 'services',
+        message: 'Failed to fetch services: 400 Bad Request',
+        httpUrl: '/api/v3/services',
+      },
+      {
+        field: 'operations',
+        hook: 'spanNames',
+        message: 'Failed to fetch span names for service "svcA": 400 Bad Request',
+        httpUrl: '/api/v3/operations',
+      },
+    ])('shows the response body when $field fail to load', async ({ field, hook, message, httpUrl }) => {
+      const error = Object.assign(new Error(message), {
+        httpStatus: 400,
+        httpUrl,
+        httpBody: 'invalid service name',
+      });
+      useServices.mockReturnValue(
+        hook === 'services'
+          ? { data: undefined, isLoading: false, error }
+          : { data: ['svcA'], isLoading: false, error: null }
+      );
+      useSpanNames.mockReturnValue(
+        hook === 'spanNames'
+          ? { data: undefined, isLoading: false, error }
+          : { data: [], isLoading: false, error: null }
+      );
+
+      const { container } = renderForm(<SearchForm {...defaultProps} initialValues={{ service: 'svcA' }} />);
+
+      await waitFor(() => {
+        expect(container.textContent).toContain(`Error loading ${field}: ${message}`);
+      });
+      expect(container.querySelector('[data-testid="ErrorMessage--details"]')).toHaveTextContent(
+        'invalid service name'
+      );
     });
 
     it('displays error message when span names fetch fails', async () => {

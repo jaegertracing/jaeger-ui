@@ -12,7 +12,7 @@ import DetailsCard from '../../common/DetailsCard';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import NewWindowIcon from '../../common/NewWindowIcon';
 import VerticalResizer from '../../common/VerticalResizer';
-import JaegerAPI from '../../../api/jaeger';
+import { jaegerClient } from '../../../api/v3/client';
 import extractDecorationFromState, { TDecorationFromState } from '../../../model/path-agnostic-decorations';
 import stringSupplant from '../../../utils/stringSupplant';
 
@@ -64,7 +64,8 @@ function UnconnectedDetailsPanelImpl(props: TProps) {
 
     setState(prev => ({ ...prev, detailsLoading: true }));
 
-    JaegerAPI.fetchDecoration(fetchUrl)
+    jaegerClient
+      .fetchDecoration(fetchUrl)
       .then((res: unknown) => {
         let detailsErred = false;
         let details = _get(res, getDetailPath as string);

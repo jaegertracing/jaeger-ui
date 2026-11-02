@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 import TracePageHeaderWithRef, {
@@ -10,9 +11,10 @@ import TracePageHeaderWithRef, {
   HEADER_ITEMS,
 } from './TracePageHeader';
 import traceGenerator from '../../../demo/trace-generators';
-import { getTraceName } from '../../../model/trace-viewer';
+import { getTraceName } from '../../../model/trace-display-helpers';
 import transformTraceData from '../../../model/transform-trace-data';
 import { ETraceViewType } from '../types';
+import * as getConfigModule from '../../../utils/config/get-config';
 
 vi.mock('./AltViewOptions', () => {
   return mockDefault(function MockAltViewOptions(props) {
@@ -129,6 +131,10 @@ describe('<TracePageHeader>', () => {
     wrapper = renderWithRouter(<TracePageHeader {...defaultProps} />);
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('renders a <header />', () => {
     const headers = document.querySelectorAll('header');
     expect(headers).toHaveLength(1);
@@ -164,7 +170,7 @@ describe('<TracePageHeader>', () => {
       const headerItem = screen.getByTestId(`header-item-${item.key}`);
       expect(headerItem).toHaveClass('horizontal');
       expect(headerItem).toHaveClass('item');
-      expect(headerItem).toHaveTextContent(item.label);
+      if (item.label !== null) expect(headerItem).toHaveTextContent(item.label);
 
       if (typeof renderedValue === 'string' || typeof renderedValue === 'number') {
         expect(headerItem).toHaveTextContent(renderedValue.toString());
@@ -182,8 +188,106 @@ describe('<TracePageHeader>', () => {
     expect(incompleteItem).toHaveTextContent('Incomplete');
   });
 
+  it('keeps the reload action visible when the summary is collapsed', () => {
+    const incompleteTrace = Object.create(defaultProps.trace);
+    Object.defineProperty(incompleteTrace, 'orphanSpanCount', { value: 3 });
+    const onReloadTrace = jest.fn();
+    const onSlimViewClicked = jest.fn();
+    const { container } = renderWithRouter(
+      <TracePageHeader
+        {...defaultProps}
+        trace={incompleteTrace}
+        slimView
+        canCollapse
+        onReloadTrace={onReloadTrace}
+        onSlimViewClicked={onSlimViewClicked}
+      />
+    );
+
+    expect(container.querySelector('.TracePageHeader--overviewItems')).toBeNull();
+    const button = screen.getByRole('button', { name: 'Reload trace' });
+    expect(button.closest('h1')).not.toBeNull();
+    expect(screen.getByRole('switch')).not.toContainElement(button);
+    expect(screen.getByTestId('header-item-incomplete').closest('h1')).toBe(button.closest('h1'));
+    fireEvent.click(button);
+    expect(onReloadTrace).toHaveBeenCalledOnce();
+    expect(onSlimViewClicked).not.toHaveBeenCalled();
+  });
+
+  it.each(['{Enter}', ' '])('activates the title switch and reload independently with %s', async key => {
+    const user = userEvent.setup();
+    const incompleteTrace = Object.create(defaultProps.trace);
+    Object.defineProperty(incompleteTrace, 'orphanSpanCount', { value: 3 });
+    const onReloadTrace = jest.fn();
+    const onSlimViewClicked = jest.fn();
+    renderWithRouter(
+      <TracePageHeader
+        {...defaultProps}
+        canCollapse
+        trace={incompleteTrace}
+        onReloadTrace={onReloadTrace}
+        onSlimViewClicked={onSlimViewClicked}
+      />
+    );
+
+    const titleSwitch = screen.getByRole('switch');
+    const reloadButton = screen.getByRole('button', { name: 'Reload trace' });
+    expect(titleSwitch.tagName).toBe('BUTTON');
+    expect(titleSwitch).not.toContainElement(reloadButton);
+    expect(titleSwitch.querySelector('button, a, [role="button"], [tabindex]')).toBeNull();
+    titleSwitch.focus();
+    await user.keyboard(key);
+    expect(onSlimViewClicked).toHaveBeenCalledOnce();
+    expect(onReloadTrace).not.toHaveBeenCalled();
+
+    reloadButton.focus();
+    await user.keyboard(key);
+    expect(onReloadTrace).toHaveBeenCalledOnce();
+    expect(onSlimViewClicked).toHaveBeenCalledOnce();
+  });
+
+  it('disables the reload action while a reload is in flight', () => {
+    const incompleteTrace = Object.create(defaultProps.trace);
+    Object.defineProperty(incompleteTrace, 'orphanSpanCount', { value: 3 });
+    const onReloadTrace = jest.fn();
+    renderWithRouter(
+      <TracePageHeader
+        {...defaultProps}
+        trace={incompleteTrace}
+        onReloadTrace={onReloadTrace}
+        reloadingTrace
+      />
+    );
+
+    const button = screen.getByRole('button', { name: /Reload trace/ });
+    expect(button).toHaveClass('ant-btn-loading');
+    fireEvent.click(button);
+    expect(onReloadTrace).not.toHaveBeenCalled();
+  });
+
+  it('hides the reload action when no reload handler is provided', () => {
+    const incompleteTrace = Object.create(defaultProps.trace);
+    Object.defineProperty(incompleteTrace, 'orphanSpanCount', { value: 3 });
+    renderWithRouter(<TracePageHeader {...defaultProps} trace={incompleteTrace} />);
+
+    expect(screen.getByTestId('header-item-incomplete')).toHaveTextContent('Incomplete');
+    expect(screen.queryByRole('button', { name: 'Reload trace' })).not.toBeInTheDocument();
+  });
+
   it('does not render the incomplete item when the trace has no orphan spans', () => {
     expect(screen.queryByTestId('header-item-incomplete')).not.toBeInTheDocument();
+  });
+
+  it('renders the GenAI calls item when the trace has GenAI spans', () => {
+    const genAITrace = Object.create(defaultProps.trace);
+    Object.defineProperty(genAITrace, 'isGenAITrace', { value: true });
+    const { getByTestId } = renderWithRouter(<TracePageHeader {...defaultProps} trace={genAITrace} />);
+
+    expect(getByTestId('header-item-genai-calls')).toBeInTheDocument();
+  });
+
+  it('does not render the GenAI calls item when the trace has no GenAI spans', () => {
+    expect(screen.queryByTestId('header-item-genai-calls')).not.toBeInTheDocument();
   });
 
   it('renders a <SpanGraph>', () => {
@@ -267,7 +371,7 @@ describe('<TracePageHeader>', () => {
       expect(links[0]).toHaveAttribute('href', `/${toSearch}`);
     });
 
-    it('toggles the standalone link', () => {
+    it('toggles the standalone link with accessible aria-label', () => {
       const linkToStandalone = 'some-link';
       wrapper.rerender(
         <MemoryRouter>
@@ -275,9 +379,11 @@ describe('<TracePageHeader>', () => {
         </MemoryRouter>
       );
 
-      const links = screen.getAllByRole('link');
-      expect(links).toHaveLength(1);
-      expect(links[0]).toHaveAttribute('href', `/${linkToStandalone}`);
+      const link = screen.getByRole('link', { name: 'Open trace in a new window' });
+      expect(link).toBeInTheDocument();
+      expect(screen.getAllByRole('link')).toHaveLength(1);
+      expect(link).toHaveAttribute('href', `/${linkToStandalone}`);
+      expect(link).toHaveAttribute('aria-label', 'Open trace in a new window');
 
       wrapper.rerender(
         <MemoryRouter>
@@ -285,6 +391,23 @@ describe('<TracePageHeader>', () => {
         </MemoryRouter>
       );
       expect(screen.queryAllByRole('link')).toHaveLength(0);
+    });
+
+    it('renders standalone link without "in a new window" when forbidNewPage is true', () => {
+      vi.spyOn(getConfigModule, 'default').mockReturnValue({ forbidNewPage: true });
+      const linkToStandalone = 'some-link';
+      wrapper.rerender(
+        <MemoryRouter>
+          <TracePageHeader {...defaultProps} linkToStandalone={linkToStandalone} showStandaloneLink />
+        </MemoryRouter>
+      );
+
+      const link = screen.getByRole('link', { name: 'Open trace' });
+      expect(link).toBeInTheDocument();
+      expect(screen.getAllByRole('link')).toHaveLength(1);
+      expect(link).toHaveAttribute('href', `/${linkToStandalone}`);
+      expect(link).toHaveAttribute('aria-label', 'Open trace');
+      expect(link).toHaveAttribute('target', '');
     });
   });
   describe('<TracePageHeaderWithRef>', () => {

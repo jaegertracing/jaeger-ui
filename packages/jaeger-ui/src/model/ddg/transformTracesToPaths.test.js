@@ -65,7 +65,11 @@ describe('transform traces to ddg paths', () => {
     const traceData = {
       traceID,
       processes,
-      spans: spans.map(span => ({ ...span, traceID })),
+      spans: spans.map(span => ({
+        ...span,
+        traceID,
+        references: span.references.map(ref => ({ ...ref, traceID })),
+      })),
     };
 
     const transformedTrace = transformTraceData(traceData);

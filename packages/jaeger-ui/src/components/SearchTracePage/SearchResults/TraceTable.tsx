@@ -24,6 +24,7 @@ import type { TracePageLink } from '../../TracePage/url';
 import { ServicePill, type ServiceEntry } from './ServicePills';
 import { useSearchResultsStore } from './store.search-results';
 import { useSortBy } from './use-sort-by';
+import { getTraceComparisonLabel } from './trace-comparison';
 
 const BOTH_DIRECTIONS: SortOrder[] = ['ascend', 'descend'];
 
@@ -251,6 +252,7 @@ export default function TraceTable({
         }),
         render: (_: unknown, trace: TraceSummary) => (
           <Checkbox
+            aria-label={getTraceComparisonLabel(trace.traceID, trace.traceName)}
             checked={cohortIds.has(trace.traceID)}
             onChange={() => toggleComparison(trace.traceID, cohortIds.has(trace.traceID))}
             onClick={e => e.stopPropagation()}
