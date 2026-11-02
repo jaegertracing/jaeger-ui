@@ -163,8 +163,12 @@ export function searchQueryFromUrl(search: string): SearchQuery | null {
       return Number.isFinite(n) && n > 0 ? n : 20;
     })(),
     lookback,
-    minDuration: typeof q.minDuration === 'string' ? q.minDuration : undefined,
-    maxDuration: typeof q.maxDuration === 'string' ? q.maxDuration : undefined,
-    tags: typeof q.tags === 'string' ? q.tags : undefined,
+    minDuration: firstOf(q.minDuration),
+    maxDuration: firstOf(q.maxDuration),
+    tags: Array.isArray(q.tags)
+      ? q.tags.filter(Boolean).join(' ') || undefined
+      : typeof q.tags === 'string'
+        ? q.tags
+        : undefined,
   };
 }
