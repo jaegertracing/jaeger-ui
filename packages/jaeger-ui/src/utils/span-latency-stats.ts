@@ -3,47 +3,39 @@
 
 import { IOtelSpan } from '../types/otel';
 
-// Number of color steps in the heatmap scale, matching --heatmap-1 … --heatmap-6 in vars.css.
-export const HEATMAP_STEPS = 6;
+// Number of color steps in the heatmap scale, matching --heatmap-1 … --heatmap-7 in vars.css.
+// The count is odd so that the middle step is a neutral color for spans at the median.
+export const HEATMAP_STEPS = 7;
 
-// Returns the count of elements in a sorted array that are <= target.
-// O(log n) binary search (upper bound).
-function upperBound(sorted: number[], target: number): number {
-  let lo = 0;
-  let hi = sorted.length;
-  while (lo < hi) {
-    const mid = (lo + hi) >>> 1;
-    if (sorted[mid] <= target) lo = mid + 1;
-    else hi = mid;
-  }
-  return lo;
-}
+// Duration ratio to the group median at which the scale saturates: half the median or less is
+// the fastest step, twice the median or more is the slowest.
+export const HEATMAP_SATURATION_RATIO = 2;
 
-// Returns the count of elements in a sorted array that are < target.
-// O(log n) binary search (lower bound).
-function lowerBound(sorted: number[], target: number): number {
-  let lo = 0;
-  let hi = sorted.length;
-  while (lo < hi) {
-    const mid = (lo + hi) >>> 1;
-    if (sorted[mid] < target) lo = mid + 1;
-    else hi = mid;
-  }
-  return lo;
-}
+// Spans within this relative distance of the median stay neutral, so near-equal durations such
+// as a retry pair at 10ms and 10.1ms don't show up as one fast and one slow span.
+export const HEATMAP_NEUTRAL_SPREAD = 0.1;
+
+const NEUTRAL_LIMIT = Math.log(1 + HEATMAP_NEUTRAL_SPREAD) / Math.log(HEATMAP_SATURATION_RATIO);
+const SIDE_STEPS = (HEATMAP_STEPS - 1) / 2;
 
 // Two services can share an operation name, so peers are matched on both.
 function operationKey(span: IOtelSpan): string {
   return `${span.resource.serviceName}\u0000${span.name}`;
 }
 
+function median(sorted: number[]): number {
+  const mid = sorted.length >>> 1;
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
 /**
- * Ranks each span's duration among the other spans of the same service and operation
- * in the trace. The result maps spanID to a rank in [0, 1]: the fastest peer is 0 and
- * the slowest is 1. Spans whose operation occurs only once have no peers to compare
+ * Scores each span's duration against the median of the other spans with the same service
+ * and operation in the trace. The score is log(duration / median) on a base of
+ * HEATMAP_SATURATION_RATIO, clamped to [-1, 1]: 0 is the median, -1 is half of it or less,
+ * and 1 is twice it or more. Spans whose operation occurs only once have no peers to compare
  * against and are left out of the map.
  */
-export function computeLatencyRanks(spans: ReadonlyArray<IOtelSpan>): Map<string, number> {
+export function computeLatencyScores(spans: ReadonlyArray<IOtelSpan>): Map<string, number> {
   const groups = new Map<string, number[]>();
   for (const span of spans) {
     const key = operationKey(span);
@@ -51,28 +43,38 @@ export function computeLatencyRanks(spans: ReadonlyArray<IOtelSpan>): Map<string
     if (durations) durations.push(span.duration);
     else groups.set(key, [span.duration]);
   }
-  for (const durations of groups.values()) durations.sort((a, b) => a - b);
+  const medians = new Map<string, number>();
+  for (const [key, durations] of groups) {
+    if (durations.length < 2) continue;
+    durations.sort((a, b) => a - b);
+    medians.set(key, median(durations));
+  }
 
   const result = new Map<string, number>();
   for (const span of spans) {
-    const sorted = groups.get(operationKey(span))!;
-    if (sorted.length < 2) continue;
-    // Tie-aware mid-rank scaled by (n - 1), so tied durations share a rank and the
-    // group's minimum and maximum reach exactly 0 and 1.
-    const lower = lowerBound(sorted, span.duration);
-    const upper = upperBound(sorted, span.duration);
-    result.set(span.spanID, (lower + upper - 1) / (2 * (sorted.length - 1)));
+    const med = medians.get(operationKey(span));
+    if (med === undefined) continue;
+    let score: number;
+    if (span.duration === med) score = 0;
+    // A zero median or duration has no finite ratio, so it sits at the matching end of the scale.
+    else if (med <= 0) score = 1;
+    else if (span.duration <= 0) score = -1;
+    else score = Math.log(span.duration / med) / Math.log(HEATMAP_SATURATION_RATIO);
+    result.set(span.spanID, Math.max(-1, Math.min(1, score)));
   }
   return result;
 }
 
 /**
- * Maps a latency rank to a heatmap color token. A missing rank means the span has no
- * peers, which gets its own neutral color rather than a spot on the scale.
+ * Maps a latency score to a heatmap color token. Scores inside the neutral spread get the
+ * middle step, and the rest spread evenly over the fast and slow halves. A missing score
+ * means the span has no peers, which gets its own color rather than a spot on the scale.
  */
-export function heatmapColor(rank: number | undefined): string {
-  if (rank === undefined) return 'var(--heatmap-no-peers)';
-  const clamped = Math.max(0, Math.min(1, rank));
-  const step = Math.min(HEATMAP_STEPS - 1, Math.floor(clamped * HEATMAP_STEPS)) + 1;
-  return `var(--heatmap-${step})`;
+export function heatmapColor(score: number | undefined): string {
+  if (score === undefined) return 'var(--heatmap-no-peers)';
+  const middle = SIDE_STEPS + 1;
+  const magnitude = Math.min(1, Math.abs(score));
+  if (Number.isNaN(magnitude) || magnitude <= NEUTRAL_LIMIT) return `var(--heatmap-${middle})`;
+  const offset = Math.max(1, Math.ceil(magnitude * SIDE_STEPS));
+  return `var(--heatmap-${score < 0 ? middle - offset : middle + offset})`;
 }

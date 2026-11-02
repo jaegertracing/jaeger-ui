@@ -164,9 +164,10 @@ SPDX-License-Identifier: Apache-2.0
   --critical-path-outline: #fff;
 
   /*
-     Span latency heatmap, fastest (1) to slowest (6) among same-operation peers.
-     Carbon's cyan–red diverging scale, which stays distinguishable with red–green
-     color blindness, unlike a green–red ramp. No-peers marks operations seen once.
+     Span latency heatmap: duration against the median of same-operation peers, from half the
+     median or less (1) through the median (4, neutral) to twice the median or more (7).
+     Carbon's cyan–red diverging scale, which stays distinguishable with red–green color
+     blindness, unlike a green–red ramp. No-peers marks operations seen once.
   */
   --heatmap-1: #00539a;
   /* Cyan 70 */
@@ -174,14 +175,16 @@ SPDX-License-Identifier: Apache-2.0
   /* Cyan 50 */
   --heatmap-3: #82cfff;
   /* Cyan 30 */
-  --heatmap-4: #ffb3b8;
+  --heatmap-4: #c6c6c6;
+  /* Gray 30 */
+  --heatmap-5: #ffb3b8;
   /* Red 30 */
-  --heatmap-5: #fa4d56;
+  --heatmap-6: #fa4d56;
   /* Red 50 */
-  --heatmap-6: #a2191f;
+  --heatmap-7: #a2191f;
   /* Red 70 */
-  --heatmap-no-peers: #a8a8a8;
-  /* Gray 40 */
+  --heatmap-no-peers: #6f6f6f;
+  /* Gray 60 */
 
   /* ============================================
     TRACE TIMELINE TOKENS
@@ -314,22 +317,24 @@ SPDX-License-Identifier: Apache-2.0
   --critical-path-color: #fff;
   --critical-path-outline: #000;
 
-  /* Span latency heatmap - Dark Mode: the light-mode steps with lightness mirrored, so
-     the ends of the scale stay the most prominent against a dark surface. */
+  /* Span latency heatmap - Dark Mode: the light-mode steps with lightness mirrored, so the
+     ends of the scale stay the most prominent and the neutral middle recedes. */
   --heatmap-1: #82cfff;
   /* Cyan 30 */
   --heatmap-2: #1192e8;
   /* Cyan 50 */
   --heatmap-3: #00539a;
   /* Cyan 70 */
-  --heatmap-4: #a2191f;
+  --heatmap-4: #525252;
+  /* Gray 70 */
+  --heatmap-5: #a2191f;
   /* Red 70 */
-  --heatmap-5: #fa4d56;
+  --heatmap-6: #fa4d56;
   /* Red 50 */
-  --heatmap-6: #ffb3b8;
+  --heatmap-7: #ffb3b8;
   /* Red 30 */
-  --heatmap-no-peers: #6f6f6f;
-  /* Gray 60 */
+  --heatmap-no-peers: #a8a8a8;
+  /* Gray 40 */
 
   /* ============================================
     TRACE TIMELINE TOKENS - Dark Mode

@@ -65,8 +65,8 @@ type TVirtualizedTraceViewOwnProps = {
   spanPillsEnabled: boolean;
   useOtelTerms: boolean;
   heatmapEnabled?: boolean;
-  // Latency rank per spanID; spans missing from the map have no same-operation peers.
-  heatmapRanks?: Map<string, number>;
+  // Latency score per spanID; spans missing from the map have no same-operation peers.
+  heatmapScores?: Map<string, number>;
 };
 
 type TDispatchProps = {
@@ -385,9 +385,9 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
   // Read through propsRef like the other row inputs: ListView re-renders its visible rows
   // whenever this component renders, so toggling the heatmap repaints them.
   const getSpanColor = useCallback((span: IOtelSpan): string => {
-    const { heatmapEnabled, heatmapRanks } = propsRef.current;
-    return heatmapEnabled && heatmapRanks
-      ? heatmapColor(heatmapRanks.get(span.spanID))
+    const { heatmapEnabled, heatmapScores } = propsRef.current;
+    return heatmapEnabled && heatmapScores
+      ? heatmapColor(heatmapScores.get(span.spanID))
       : colorGenerator.getColorByKey(span.resource.serviceName);
   }, []);
 
@@ -407,6 +407,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         trace,
         useOtelTerms,
         spanPillsEnabled,
+        heatmapEnabled,
       } = propsRef.current;
       // to avert flow error
       if (!trace) {
@@ -433,7 +434,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         if (rpcSpan) {
           const rpcViewBounds = getViewedBounds()(rpcSpan.startTime, rpcSpan.endTime);
           rpc = {
-            color: colorGenerator.getColorByKey(rpcSpan.resource.serviceName),
+            color: getSpanColor(rpcSpan),
             operationName: rpcSpan.name,
             serviceName: rpcSpan.resource.serviceName,
             viewEnd: rpcViewBounds.end,
@@ -448,7 +449,9 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
       if (!span.hasChildren && peerServiceValue != null && (isKindClient(span) || isKindProducer(span))) {
         noInstrumentedServer = {
           serviceName: String(peerServiceValue),
-          color: colorGenerator.getColorByKey(String(peerServiceValue)),
+          // The peer has no span of its own to score, so under the heatmap it takes the color of
+          // the client call that measured it.
+          color: heatmapEnabled ? color : colorGenerator.getColorByKey(String(peerServiceValue)),
         };
       }
 

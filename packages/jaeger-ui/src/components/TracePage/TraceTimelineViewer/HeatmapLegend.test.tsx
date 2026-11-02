@@ -18,14 +18,14 @@ describe('HeatmapLegend', () => {
     expect(screen.getByText('Latency Heatmap')).toBeInTheDocument();
   });
 
-  it('shows Fastest label', () => {
+  it('labels the fast end of the scale relative to the median', () => {
     render(<HeatmapLegend />);
-    expect(screen.getByText('Fastest')).toBeInTheDocument();
+    expect(screen.getByText('½× median or less')).toBeInTheDocument();
   });
 
-  it('shows Slowest label', () => {
+  it('labels the slow end of the scale relative to the median', () => {
     render(<HeatmapLegend />);
-    expect(screen.getByText('Slowest')).toBeInTheDocument();
+    expect(screen.getByText('2× median or more')).toBeInTheDocument();
   });
 
   it('shows Median label', () => {

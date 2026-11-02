@@ -2,7 +2,10 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 .HeatmapLegend {
-  display: inline-flex;
+  /* TimelineHeaderRow is position:fixed and takes no space in the document flow, so the legend
+     reserves its height here; the span list drops its own header padding while the legend shows. */
+  margin-top: var(--timeline-header-row-height);
+  display: flex;
   flex-direction: column;
   align-items: flex-start;
   padding: 4px 8px;
@@ -41,7 +44,7 @@
 
 .HeatmapLegend--bar {
   display: flex;
-  width: 200px;
+  width: 240px;
   height: 10px;
   border-radius: 3px;
   overflow: hidden;
@@ -53,7 +56,7 @@
 
 .HeatmapLegend--labels {
   position: relative;
-  width: 200px;
+  width: 240px;
   height: 14px;
   margin-top: 2px;
 }
@@ -77,4 +80,8 @@
   margin-top: 2px;
   font-size: 10px;
   opacity: 0.75;
+}
+
+.TraceTimelineViewer.is-heatmapEnabled .VirtualizedTraceView--spans {
+  padding-top: 0;
 }

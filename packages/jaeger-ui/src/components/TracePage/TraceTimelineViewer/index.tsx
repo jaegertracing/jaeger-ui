@@ -31,7 +31,7 @@ import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '.
 import { TNil } from '../../../types';
 import { IOtelTrace } from '../../../types/otel';
 import { CriticalPathSection } from '../../../types/critical_path';
-import { computeLatencyRanks } from '../../../utils/span-latency-stats';
+import { computeLatencyScores } from '../../../utils/span-latency-stats';
 
 import './index.css';
 
@@ -53,7 +53,7 @@ type TProps = {
 const NUM_TICKS = 5;
 
 // Stable reference so the heatmap-disabled case doesn't force a new Map identity on every render.
-const EMPTY_RANKS: Map<string, number> = new Map();
+const EMPTY_SCORES: Map<string, number> = new Map();
 
 /**
  * `TraceTimelineViewer` now renders the header row because it is sensitive to
@@ -82,8 +82,8 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   const zustandSetSpanNameColumnWidth = useLayoutPrefsStore(s => s.setSpanNameColumnWidth);
   const zustandSetSidePanelWidth = useLayoutPrefsStore(s => s.setSidePanelWidth);
 
-  const heatmapRanks = useMemo(
-    () => (heatmapEnabled ? computeLatencyRanks(trace.spans) : EMPTY_RANKS),
+  const heatmapScores = useMemo(
+    () => (heatmapEnabled ? computeLatencyScores(trace.spans) : EMPTY_SCORES),
     [heatmapEnabled, trace.spans]
   );
 
@@ -201,7 +201,9 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     // moves the layout container without resizing it. The header is taller in timeline view than in
     // the others, since only the timeline shows the minimap, and its height reaches TracePage's
     // state one commit after the view switches — too late for the measurement taken on mount.
-  }, [sidePanelActive, pageHeaderHeight]);
+    // heatmapEnabled is a dependency because the heatmap legend sits above the layout container,
+    // so showing or hiding it moves the container the same way.
+  }, [sidePanelActive, pageHeaderHeight, heatmapEnabled]);
 
   const headerRow = (
     <TimelineHeaderRow
@@ -235,24 +237,28 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       currentViewRangeTime={viewRange.time.current}
       nameColumnWidth={nameColumnWidth}
       heatmapEnabled={heatmapEnabled}
-      heatmapRanks={heatmapRanks}
+      heatmapScores={heatmapScores}
       spanPillsEnabled={spanPillsEnabled}
     />
   );
 
+  const rootClassName = heatmapEnabled ? 'TraceTimelineViewer is-heatmapEnabled' : 'TraceTimelineViewer';
+
   if (sidePanelActive) {
     const mainWidth = (1 - effectiveSidePanelWidth) * 100;
-    // The header row height stays in CSS so that vars.css remains its only definition.
-    const headerRowHeight = 'var(--timeline-header-row-height)';
+    // The header row height stays in CSS so that vars.css remains its only definition. The
+    // heatmap legend already reserves the header row's height above the layout container.
+    const headerOffset = heatmapEnabled ? '' : ' + var(--timeline-header-row-height)';
+    const headerHeight = heatmapEnabled ? '' : ' - var(--timeline-header-row-height)';
     const sidePanelStyle: React.CSSProperties = {
       width: `${effectiveSidePanelWidth * 100}%`,
       ...(layoutTop !== null && {
-        top: `calc(${layoutTop}px + ${headerRowHeight})`,
-        height: `calc(100vh - ${layoutTop}px - ${headerRowHeight})`,
+        top: `calc(${layoutTop}px${headerOffset})`,
+        height: `calc(100vh - ${layoutTop}px${headerHeight})`,
       }),
     };
     return (
-      <div className="TraceTimelineViewer">
+      <div className={rootClassName}>
         {headerRow}
         {heatmapEnabled && <HeatmapLegend />}
         <div className="TraceTimelineViewer--sidePanelLayout" ref={layoutRef}>
@@ -272,7 +278,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   }
 
   return (
-    <div className="TraceTimelineViewer">
+    <div className={rootClassName}>
       {headerRow}
       {heatmapEnabled && <HeatmapLegend />}
       {virtualizedView}

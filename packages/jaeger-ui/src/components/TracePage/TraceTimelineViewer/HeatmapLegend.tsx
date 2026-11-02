@@ -7,9 +7,9 @@ import { HEATMAP_STEPS, heatmapColor } from '../../../utils/span-latency-stats';
 import './HeatmapLegend.css';
 
 const LABELS = [
-  { pos: 0, text: 'Fastest' },
+  { pos: 0, text: '½× median or less' },
   { pos: 0.5, text: 'Median' },
-  { pos: 1, text: 'Slowest' },
+  { pos: 1, text: '2× median or more' },
 ];
 
 export default function HeatmapLegend() {
@@ -23,7 +23,7 @@ export default function HeatmapLegend() {
               <div
                 key={i}
                 className="HeatmapLegend--segment"
-                style={{ backgroundColor: heatmapColor((i + 0.5) / HEATMAP_STEPS) }}
+                style={{ backgroundColor: `var(--heatmap-${i + 1})` }}
                 aria-hidden="true"
               />
             ))}
