@@ -124,7 +124,15 @@ describe('<Page>', () => {
       const err = new Error('chunk load failed');
       const { default: Fallback } = await loadJaegerAssistantDock(() => Promise.reject(err));
       expect(spy).toHaveBeenCalledWith('[jaeger-assistant] failed to load the assistant panel', err);
-      expect(Fallback()).toBeNull();
+      assistantMock.configured = true;
+      render(
+        <JaegerAssistantProvider>
+          <Fallback />
+        </JaegerAssistantProvider>
+      );
+      expect(
+        screen.getByText('The assistant failed to load. Reload the page to try again.')
+      ).toBeInTheDocument();
       spy.mockRestore();
     });
   });
