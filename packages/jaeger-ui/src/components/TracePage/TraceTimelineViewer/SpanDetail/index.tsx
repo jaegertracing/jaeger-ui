@@ -145,15 +145,9 @@ export default function SpanDetail(props: SpanDetailProps) {
 
   const header = (
     <div>
-      <div className="ub-flex ub-items-center">
-        <h2
-          className="ub-flex-auto ub-m0 SpanDetail--headerTitle"
-          title={`${span.resource.serviceName}::${span.name}`}
-        >
-          <span className="SpanDetail--headerServiceName">{span.resource.serviceName}</span>{' '}
-          <small className="SpanDetail--headerEndpointName">{span.name}</small>
-        </h2>
-      </div>
+      <h2 className="ub-m0 SpanDetail--headerTitle" title={`${span.resource.serviceName}::${span.name}`}>
+        {span.resource.serviceName} <small className="SpanDetail--headerEndpointName">{span.name}</small>
+      </h2>
       <Divider className="SpanDetail--divider ub-my1" />
       <table className="SpanDetail--overviewTable ub-mb1">
         <caption className="SpanDetail--overviewTableCaption">Span Overview</caption>

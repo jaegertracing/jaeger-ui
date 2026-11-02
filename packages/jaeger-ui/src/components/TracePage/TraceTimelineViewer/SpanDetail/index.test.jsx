@@ -193,10 +193,12 @@ describe('<SpanDetail>', () => {
     expect(screen.getByRole('heading', { level: 2 })).toBeInTheDocument();
   });
 
-  it('displays the span operation name as the main heading', () => {
+  it('displays the service and operation in the heading with the timeline label tooltip', () => {
     render(<SpanDetail {...props} />);
     const heading = screen.getByRole('heading', { level: 2 });
+    expect(heading).toHaveTextContent(span.resource.serviceName);
     expect(heading).toHaveTextContent(span.name);
+    expect(heading).toHaveAttribute('title', `${span.resource.serviceName}::${span.name}`);
   });
 
   it('renders overview items with duration and start time in a table', () => {
