@@ -12,12 +12,24 @@ vi.mock('../../stores/embedded-store', () => ({
   useEmbeddedState: (...args) => useEmbeddedStateMock(...args),
 }));
 
+const assistantMock = vi.hoisted(() => ({ configured: false }));
+
+vi.mock('../../hooks/useJaegerAssistant', () => ({
+  useJaegerAssistantConfigured: () => assistantMock.configured,
+  useJaegerAssistantEnabled: () => assistantMock.configured,
+}));
+
+vi.mock('./JaegerAssistantPanel', () => ({
+  JaegerAssistantDock: () => <aside data-testid="assistant-dock" />,
+}));
+
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 
-import { PageImpl as Page } from './Page';
+import { PageImpl as Page, loadJaegerAssistantDock } from './Page';
+import { JaegerAssistantProvider } from './JaegerAssistantContext';
 import { trackPageView } from '../../utils/tracking';
 
 const renderWithPath = (path = '/test?search=value') =>
@@ -41,6 +53,7 @@ describe('<Page>', () => {
   beforeEach(() => {
     trackPageView.mockReset();
     useEmbeddedStateMock.mockReturnValue(null);
+    assistantMock.configured = false;
   });
 
   it('renders without exploding', () => {
@@ -79,6 +92,41 @@ describe('<Page>', () => {
       </MemoryRouter>
     );
     expect(trackPageView).toHaveBeenCalledWith('/same-path', '?a=2');
+  });
+
+  describe('assistant dock', () => {
+    const renderWithAssistant = () =>
+      render(
+        <MemoryRouter initialEntries={['/test']}>
+          <JaegerAssistantProvider>
+            <Page>
+              <span data-testid="page-child" />
+            </Page>
+          </JaegerAssistantProvider>
+        </MemoryRouter>
+      );
+
+    it('does not load the dock when the assistant is not configured', () => {
+      renderWithAssistant();
+      expect(screen.getByTestId('page-child')).toBeInTheDocument();
+      expect(screen.queryByTestId('assistant-dock')).not.toBeInTheDocument();
+    });
+
+    it('lazy-loads the dock when the assistant is configured', async () => {
+      assistantMock.configured = true;
+      renderWithAssistant();
+      expect(await screen.findByTestId('assistant-dock')).toBeInTheDocument();
+      expect(screen.getByTestId('page-child')).toBeInTheDocument();
+    });
+
+    it('degrades to an empty dock when the chunk fails to load', async () => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const err = new Error('chunk load failed');
+      const { default: Fallback } = await loadJaegerAssistantDock(() => Promise.reject(err));
+      expect(spy).toHaveBeenCalledWith('[jaeger-assistant] failed to load the assistant panel', err);
+      expect(Fallback()).toBeNull();
+      spy.mockRestore();
+    });
   });
 
   describe('Page embedded', () => {
