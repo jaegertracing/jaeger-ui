@@ -180,6 +180,7 @@ overrides:
   brace-expansion: 5.0.9
   browserslist: 4.29.0
   fast-uri: 4.2.1
+  zod: 4.6.6
 
 importers:
 
@@ -5466,14 +5467,8 @@ packages:
     resolution: {integrity: sha512-zK7YHHz4ZXpW89AHXUPbQVGKI7uvkd3hzusTdotCg1UxyaVtg0zFJSTfW/Dq5f7OBBVnq6cZIaC8Ti4hb6dtCA==}
     engines: {node: '>= 14'}
 
-  zod@3.25.76:
-    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
-
   zod@4.6.6:
     resolution: {integrity: sha512-4UmzQUF5fxvfcYHlbjBmejU+w+hbDnWFx4aS8kBx7nPBHcO2SqPbpAG8snbdg+Xse4pRefR98hgjFgIMCI/UhA==}
-
-  zod@4.6.7:
-    resolution: {integrity: sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==}
 
   zustand@5.0.16:
     resolution: {integrity: sha512-Uv7e327ihlCfayfja3hDc0M64Upev1LWBKpRobdK4NyovDDPeeX4imWXc/wzC1yc6fkYPoAY/ncKVPAs2jrtQw==}
@@ -5499,8 +5494,8 @@ snapshots:
 
   '@ag-ui/client@1.0.3':
     dependencies:
-      '@ag-ui/core': 1.0.3(zod@3.25.76)
-      '@ag-ui/encoder': 1.0.3(zod@3.25.76)
+      '@ag-ui/core': 1.0.3(zod@4.6.6)
+      '@ag-ui/encoder': 1.0.3(zod@4.6.6)
       '@ag-ui/proto': 1.0.3
       '@types/uuid': 10.0.0
       compare-versions: 6.1.1
@@ -5508,25 +5503,25 @@ snapshots:
       rxjs: 7.8.1
       untruncate-json: 0.0.1
       uuid: 11.1.1
-      zod: 3.25.76
+      zod: 4.6.6
 
-  '@ag-ui/core@1.0.3(zod@3.25.76)':
+  '@ag-ui/core@1.0.3(zod@4.6.6)':
     optionalDependencies:
-      zod: 3.25.76
+      zod: 4.6.6
 
-  '@ag-ui/encoder@1.0.3(zod@3.25.76)':
+  '@ag-ui/encoder@1.0.3(zod@4.6.6)':
     dependencies:
-      '@ag-ui/core': 1.0.3(zod@3.25.76)
+      '@ag-ui/core': 1.0.3(zod@4.6.6)
       '@ag-ui/proto': 1.0.3
     transitivePeerDependencies:
       - zod
 
   '@ag-ui/proto@1.0.3':
     dependencies:
-      '@ag-ui/core': 1.0.3(zod@3.25.76)
+      '@ag-ui/core': 1.0.3(zod@4.6.6)
       '@bufbuild/protobuf': 2.12.1
       '@protobuf-ts/protoc': 2.11.1
-      zod: 3.25.76
+      zod: 4.6.6
 
   '@ant-design/colors@8.0.1':
     dependencies:
@@ -5679,7 +5674,7 @@ snapshots:
       react-dom: 19.3.0(react@19.3.0)
       react-textarea-autosize: 8.5.9(@types/react@19.3.0)(react@19.3.0)
       safe-content-frame: 0.0.34
-      zod: 4.6.7
+      zod: 4.6.6
       zustand: 5.0.16(@types/react@19.3.0)(immer@11.1.8)(react@19.3.0)(use-sync-external-store@1.6.0(react@19.3.0))
     optionalDependencies:
       '@types/react': 19.3.0
@@ -8116,10 +8111,10 @@ snapshots:
 
   '@yuku-toolchain/types@0.19.0': {}
 
-  '@zodios/core@10.9.6(axios@1.18.1(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0))(zod@3.25.76)':
+  '@zodios/core@10.9.6(axios@1.18.1(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0))(zod@4.6.6)':
     dependencies:
       axios: 1.18.1(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
-      zod: 3.25.76
+      zod: 4.6.6
 
   abort-controller@3.0.0:
     dependencies:
@@ -9185,7 +9180,7 @@ snapshots:
     dependencies:
       '@apidevtools/swagger-parser': 10.1.1(openapi-types@12.1.3)
       '@liuli-util/fs-extra': 0.1.0
-      '@zodios/core': 10.9.6(axios@1.18.1(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0))(zod@3.25.76)
+      '@zodios/core': 10.9.6(axios@1.18.1(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0))(zod@4.6.6)
       axios: 1.18.1(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
       cac: 6.7.14
       handlebars: 4.7.9
@@ -9196,7 +9191,7 @@ snapshots:
       tanu: 0.1.13
       ts-pattern: 5.9.0
       whence: 2.1.0
-      zod: 3.25.76
+      zod: 4.6.6
     transitivePeerDependencies:
       - debug
       - react
@@ -10317,11 +10312,7 @@ snapshots:
       compress-commons: 6.0.2
       readable-stream: 4.7.0
 
-  zod@3.25.76: {}
-
   zod@4.6.6: {}
-
-  zod@4.6.7: {}
 
   zustand@5.0.16(@types/react@19.3.0)(immer@11.1.8)(react@19.3.0)(use-sync-external-store@1.6.0(react@19.3.0)):
     optionalDependencies:
