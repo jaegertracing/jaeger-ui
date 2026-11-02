@@ -7,7 +7,6 @@ import cx from 'classnames';
 import { useLocation } from 'react-router-dom';
 
 import TopNav from './TopNav';
-import { JaegerAssistantDock } from './JaegerAssistantPanel';
 import { useJaegerAssistantOptional } from './JaegerAssistantContext';
 import { useJaegerAssistantConfigured } from '../../hooks/useJaegerAssistant';
 import { useEmbeddedState } from '../../stores/embedded-store';
@@ -21,6 +20,12 @@ type TProps = {
 };
 
 const { Header, Content } = Layout;
+
+// The dock pulls in the assistant-ui and ag-ui libraries, so it loads as a separate
+// chunk and only for deployments where the backend advertises the assistant.
+const JaegerAssistantDock = React.lazy(() =>
+  import('./JaegerAssistantPanel').then(m => ({ default: m.JaegerAssistantDock }))
+);
 
 // export for tests
 export const PageImpl: React.FC<TProps> = props => {
@@ -55,7 +60,9 @@ export const PageImpl: React.FC<TProps> = props => {
           {assistantEnvOn ? (
             <div className={cx('Page--assistantShell', assistantDockOpen && 'Page--assistantShell--open')}>
               <div className="Page--assistantMain">{children}</div>
-              <JaegerAssistantDock />
+              <React.Suspense fallback={null}>
+                <JaegerAssistantDock />
+              </React.Suspense>
             </div>
           ) : (
             children

@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
+import { HttpAgent } from '@ag-ui/client';
+import { useAgUiRuntime } from '@assistant-ui/react-ag-ui';
 import {
+  AssistantRuntimeProvider,
   ComposerPrimitive,
   MessagePartPrimitive,
   MessagePrimitive,
@@ -15,11 +18,36 @@ import { JsonView, collapseAllNested } from 'react-json-view-lite';
 import Markdown from 'markdown-to-jsx/react';
 
 import { useJaegerAssistant, useJaegerAssistantOptional } from './JaegerAssistantContext';
+import { getJaegerAGUIUrl } from './jaeger-AG-UI';
 import { useJaegerAssistantConfigured } from '../../hooks/useJaegerAssistant';
 import jsonViewStyles from '../../utils/jsonViewStyles';
 import { sharedMarkdownOptions } from '../../utils/markdownOptions';
 
 import './JaegerAssistantPanel.css';
+
+/**
+ * Creates the long-lived AG-UI runtime. The dock mounts it, so the runtime and the
+ * assistant-ui and ag-ui libraries load only when the assistant capability is on.
+ */
+function JaegerAssistantRuntimeProvider({ children }: { children: React.ReactNode }) {
+  const url = getJaegerAGUIUrl();
+  // HttpAgent stores the supplied fetch as `this.fetch` and later invokes it as a method,
+  // so the bare global `fetch` would be called with `this === HttpAgent` and throw
+  // "Illegal invocation". Wrap it to detach the receiver.
+  const agent = React.useMemo(
+    () => new HttpAgent({ url, fetch: (input, init) => fetch(input, init) }),
+    [url]
+  );
+  const runtime = useAgUiRuntime({
+    agent,
+    showThinking: true,
+    onError: e => {
+      console.error('[jaeger-assistant] AG-UI error', e);
+    },
+  });
+
+  return <AssistantRuntimeProvider runtime={runtime}>{children}</AssistantRuntimeProvider>;
+}
 
 function JaegerAssistantBootstrap() {
   const { bootstrapUserText, clearBootstrap } = useJaegerAssistant();
@@ -231,7 +259,7 @@ function clampPanelWidth(w: number): number {
  * Right dock for Ask Jaeger.
  *
  * The <aside> stays mounted whenever the feature is configured so that the
- * thread history (held by the runtime in JaegerAssistantContext) is preserved
+ * thread history (held by the runtime that this component mounts) is preserved
  * across open/close cycles. Visibility is toggled via inline display:none so
  * the thread state is not reset on close.
  */
@@ -324,39 +352,41 @@ export function JaegerAssistantDock() {
   const { panelOpen, setPanelOpen } = assistant;
 
   return (
-    <aside
-      className="JaegerAssistantPanel"
-      aria-label="Ask Jaeger assistant"
-      aria-hidden={!panelOpen}
-      style={{ display: panelOpen ? undefined : 'none', width, maxWidth: '100%' }}
-    >
-      <div
-        className="JaegerAssistantPanel-resizeHandle"
-        onMouseDown={onDragStart}
-        onKeyDown={onHandleKeyDown}
-        role="separator"
-        aria-orientation="vertical"
-        aria-label="Resize assistant panel"
-        aria-valuemin={PANEL_MIN_WIDTH}
-        aria-valuemax={PANEL_MAX_WIDTH}
-        aria-valuenow={width}
-        tabIndex={0}
-      />
-      <JaegerAssistantBootstrap />
-      <header className="JaegerAssistantPanel-topBar">
-        <h2 className="JaegerAssistantPanel-title">Ask Jaeger</h2>
-        <button
-          type="button"
-          className="JaegerAssistantPanel-close"
-          aria-label="Close assistant panel"
-          onClick={() => setPanelOpen(false)}
-        >
-          <IoClose size={22} />
-        </button>
-      </header>
-      <div className="JaegerAssistantPanel-body">
-        <JaegerAssistantThreadView focusComposer={panelOpen} />
-      </div>
-    </aside>
+    <JaegerAssistantRuntimeProvider>
+      <aside
+        className="JaegerAssistantPanel"
+        aria-label="Ask Jaeger assistant"
+        aria-hidden={!panelOpen}
+        style={{ display: panelOpen ? undefined : 'none', width, maxWidth: '100%' }}
+      >
+        <div
+          className="JaegerAssistantPanel-resizeHandle"
+          onMouseDown={onDragStart}
+          onKeyDown={onHandleKeyDown}
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Resize assistant panel"
+          aria-valuemin={PANEL_MIN_WIDTH}
+          aria-valuemax={PANEL_MAX_WIDTH}
+          aria-valuenow={width}
+          tabIndex={0}
+        />
+        <JaegerAssistantBootstrap />
+        <header className="JaegerAssistantPanel-topBar">
+          <h2 className="JaegerAssistantPanel-title">Ask Jaeger</h2>
+          <button
+            type="button"
+            className="JaegerAssistantPanel-close"
+            aria-label="Close assistant panel"
+            onClick={() => setPanelOpen(false)}
+          >
+            <IoClose size={22} />
+          </button>
+        </header>
+        <div className="JaegerAssistantPanel-body">
+          <JaegerAssistantThreadView focusComposer={panelOpen} />
+        </div>
+      </aside>
+    </JaegerAssistantRuntimeProvider>
   );
 }
