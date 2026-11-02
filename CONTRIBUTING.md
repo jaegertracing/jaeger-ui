@@ -72,7 +72,7 @@ The above command will run a web server on `http://localhost:5173` that will ser
 | --- | --- |
 | `pnpm start` | Starts development server with hot reloading and api proxy. |
 | `pnpm test` | Run all the tests |
-| `pnpm --filter @jaegertracing/jaeger-ui test $file` | Run tests for a specific file, e.g. `pnpm --filter @jaegertracing/jaeger-ui test src/api/jaeger.test.js` |
+| `pnpm --filter @jaegertracing/jaeger-ui test $file` | Run tests for a specific file, e.g. `pnpm --filter @jaegertracing/jaeger-ui test src/api/v3/client.test.ts` |
 | `pnpm run lint` | Lint the project (oxlint, oxfmt, typescript, knip) |
 | `pnpm run fmt` | Format source code with Oxfmt |
 | `pnpm run build` | Runs production build. Outputs files to `packages/jaeger-ui/build`. |
