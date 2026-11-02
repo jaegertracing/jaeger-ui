@@ -26,8 +26,8 @@ import { sharedMarkdownOptions } from '../../utils/markdownOptions';
 import './JaegerAssistantPanel.css';
 
 /**
- * Creates the long-lived AG-UI runtime. The dock mounts it, so the runtime and the
- * assistant-ui and ag-ui libraries load only when the assistant capability is on.
+ * Creates the long-lived AG-UI runtime for the dock. Page loads this module lazily,
+ * so the runtime and its libraries are fetched only when the assistant capability is on.
  */
 function JaegerAssistantRuntimeProvider({ children }: { children: React.ReactNode }) {
   const url = getJaegerAGUIUrl();

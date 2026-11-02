@@ -13,11 +13,6 @@ import {
 
 const agUiMock = vi.hoisted(() => ({
   configured: false,
-  url: 'http://localhost/ag-ui',
-}));
-
-vi.mock('./jaegerAgUi', () => ({
-  getJaegerAgUiUrl: () => agUiMock.url,
 }));
 
 vi.mock('../../hooks/useJaegerAssistant', () => ({

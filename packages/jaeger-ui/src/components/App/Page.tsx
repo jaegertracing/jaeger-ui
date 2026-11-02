@@ -22,10 +22,21 @@ type TProps = {
 const { Header, Content } = Layout;
 
 // The dock pulls in the assistant-ui and ag-ui libraries, so it loads as a separate
-// chunk and only for deployments where the backend advertises the assistant.
-const JaegerAssistantDock = React.lazy(() =>
-  import('./JaegerAssistantPanel').then(m => ({ default: m.JaegerAssistantDock }))
-);
+// chunk and only for deployments where the backend advertises the assistant. A chunk
+// that fails to load, for example from a stale index.html after a deploy, must not
+// take the page down with it, so the failure degrades to a page without the dock.
+// The importer is a parameter so that tests can exercise the failure path.
+export function loadJaegerAssistantDock(importer = () => import('./JaegerAssistantPanel')) {
+  return importer().then(
+    m => ({ default: m.JaegerAssistantDock }),
+    (err: unknown) => {
+      console.error('[jaeger-assistant] failed to load the assistant panel', err);
+      return { default: () => null };
+    }
+  );
+}
+
+const JaegerAssistantDock = React.lazy(() => loadJaegerAssistantDock());
 
 // export for tests
 export const PageImpl: React.FC<TProps> = props => {

@@ -27,8 +27,8 @@ const partsMock = vi.hoisted(() => ({
 
 const capturedAgUiOnError = vi.hoisted(() => ({ fn: /** @type {null | ((e: unknown) => void)} */ (null) }));
 
-vi.mock('./jaegerAgUi', () => ({
-  getJaegerAgUiUrl: () => agUiMock.url,
+vi.mock('./jaeger-AG-UI', () => ({
+  getJaegerAGUIUrl: () => agUiMock.url,
 }));
 
 vi.mock('../../hooks/useJaegerAssistant', () => ({
