@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as getConfigModule from './get-config';
-import { getTargetBlankOrTop, getTargetEmptyOrBlank } from './get-target';
+import { getNewWindowSuffix, getTargetBlankOrTop, getTargetEmptyOrBlank } from './get-target';
 
 let getConfigSpy;
 
@@ -30,5 +30,24 @@ describe('getTarget', () => {
     getConfigSpy.mockReturnValue({ forbidNewPage: false });
     const target = getTargetBlankOrTop();
     expect(target).toBe('_blank');
+  });
+
+  describe('getNewWindowSuffix', () => {
+    it('returns " in a new window" when target is "_blank"', () => {
+      expect(getNewWindowSuffix('_blank')).toBe(' in a new window');
+    });
+
+    it('returns empty string when target is empty or not "_blank"', () => {
+      expect(getNewWindowSuffix('')).toBe('');
+      expect(getNewWindowSuffix('_top')).toBe('');
+    });
+
+    it('derives suffix from getTargetEmptyOrBlank when called with no arguments', () => {
+      getConfigSpy.mockReturnValue({ forbidNewPage: false });
+      expect(getNewWindowSuffix()).toBe(' in a new window');
+
+      getConfigSpy.mockReturnValue({ forbidNewPage: true });
+      expect(getNewWindowSuffix()).toBe('');
+    });
   });
 });
