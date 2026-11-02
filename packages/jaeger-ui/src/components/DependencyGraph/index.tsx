@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
+import { Alert } from 'antd';
 import memoizeOne from 'memoize-one';
 import debounce from 'lodash/debounce';
 import { useLocation } from 'react-router-dom';
@@ -188,7 +189,8 @@ export default function DependencyGraphPage() {
   if (isLoading) {
     return <LoadingIndicator className="u-mt-vast" centered />;
   }
-  if (error) {
+  // Keep a previously loaded graph when a background refetch fails (#4698).
+  if (error && !data) {
     return <ErrorMessage className="ub-m3" error={error as ApiError} />;
   }
 
@@ -214,6 +216,15 @@ export default function DependencyGraphPage() {
 
   return (
     <div>
+      {error && data ? (
+        <Alert
+          type="warning"
+          showIcon
+          className="ub-m3"
+          message="Dependency reload failed. Showing the previously loaded graph."
+          description={(error as Error).message || 'Unknown error'}
+        />
+      ) : null}
       <div className="ub-m3">
         <DAGOptions
           dependencies={dependencies}
