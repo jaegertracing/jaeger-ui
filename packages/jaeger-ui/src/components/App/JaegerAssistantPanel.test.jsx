@@ -412,6 +412,20 @@ describe('JaegerThreadMessageBody', () => {
     expect(container.querySelector('[data-testid="message-part-text"]')).not.toBeInTheDocument();
   });
 
+  it('renders snake_case identifiers and inline code literally', () => {
+    partsMock.parts = [{ type: 'text', text: 'WHERE customer_id=392 and `customer_id` is the key' }];
+    const { container } = render(<JaegerThreadMessageBody variant="assistant" />);
+    expect(container.textContent).toContain('customer_id');
+    expect(container.textContent).not.toContain('customerid');
+    expect(container.querySelector('code')).toHaveTextContent('customer_id');
+  });
+
+  it('keeps unpaired asterisks in assistant text', () => {
+    partsMock.parts = [{ type: 'text', text: 'SELECT * FROM customer WHERE customer_id=392' }];
+    const { container } = render(<JaegerThreadMessageBody variant="assistant" />);
+    expect(container.textContent).toContain('SELECT * FROM customer WHERE customer_id=392');
+  });
+
   it('routes an assistant text part with no text field at all through the markdown path', () => {
     partsMock.parts = [{ type: 'text' }];
     const { container } = render(<JaegerThreadMessageBody variant="assistant" />);
