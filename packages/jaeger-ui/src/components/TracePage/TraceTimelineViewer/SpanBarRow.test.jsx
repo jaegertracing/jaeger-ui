@@ -137,6 +137,34 @@ describe('<SpanBarRow>', () => {
     expect(defaultProps.onDetailToggled).not.toHaveBeenCalled();
   });
 
+  it('triggers onChildrenToggled when ArrowRight is pressed on a collapsed parent span', () => {
+    const onChildrenToggled = jest.fn();
+    const props = {
+      ...defaultProps,
+      isChildrenExpanded: false,
+      span: { ...defaultProps.span, hasChildren: true },
+      onChildrenToggled,
+    };
+    render(<SpanBarRow {...props} />);
+    const spanName = screen.getByRole('switch');
+    fireEvent.keyDown(spanName, { key: 'ArrowRight' });
+    expect(onChildrenToggled).toHaveBeenCalledWith(defaultProps.span.spanID);
+  });
+
+  it('triggers onChildrenToggled when ArrowLeft is pressed on an expanded parent span', () => {
+    const onChildrenToggled = jest.fn();
+    const props = {
+      ...defaultProps,
+      isChildrenExpanded: true,
+      span: { ...defaultProps.span, hasChildren: true },
+      onChildrenToggled,
+    };
+    render(<SpanBarRow {...props} />);
+    const spanName = screen.getByRole('switch');
+    fireEvent.keyDown(spanName, { key: 'ArrowLeft' });
+    expect(onChildrenToggled).toHaveBeenCalledWith(defaultProps.span.spanID);
+  });
+
   it('triggers onChildrenToggled when SpanTreeOffset is clicked', () => {
     render(<SpanBarRow {...defaultProps} />);
     const treeOffset = screen.getByTestId('span-tree-offset');
