@@ -9,11 +9,11 @@ export const HEATMAP_STEPS = 7;
 
 // Duration ratio to the group median at which the scale saturates: half the median or less is
 // the fastest step, twice the median or more is the slowest.
-export const HEATMAP_SATURATION_RATIO = 2;
+const HEATMAP_SATURATION_RATIO = 2;
 
 // Spans within this relative distance of the median stay neutral, so near-equal durations such
 // as a retry pair at 10ms and 10.1ms don't show up as one fast and one slow span.
-export const HEATMAP_NEUTRAL_SPREAD = 0.1;
+const HEATMAP_NEUTRAL_SPREAD = 0.1;
 
 const NEUTRAL_LIMIT = Math.log(1 + HEATMAP_NEUTRAL_SPREAD) / Math.log(HEATMAP_SATURATION_RATIO);
 const SIDE_STEPS = (HEATMAP_STEPS - 1) / 2;
