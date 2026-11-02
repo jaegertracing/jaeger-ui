@@ -388,3 +388,79 @@ export const OperationMetricsResponseSchema = metricFamily.extend({
     'service_operation_error_rate',
   ]),
 });
+
+// Quality metrics endpoint is configured via UI config (qualityMetrics.apiEndpoint)
+// and points to an external or custom service. The schema validates the payload at the
+// network boundary, using .passthrough() to retain unknown third-party server fields.
+const qualityMetricsExample = z
+  .object({
+    traceID: z.string(),
+    spanIDs: z.array(z.string()).optional(),
+  })
+  .passthrough();
+
+const qualityMetricsScore = z
+  .object({
+    key: z.string(),
+    label: z.string(),
+    max: z.number(),
+    value: z.number(),
+  })
+  .passthrough();
+
+const qualityMetricsBannerText = z.union([
+  z.string(),
+  z
+    .object({
+      value: z.string(),
+      styling: z.record(z.string(), z.unknown()),
+    })
+    .passthrough(),
+]);
+
+const qualityMetricsDetail = z
+  .object({
+    description: z.string().optional(),
+    header: z.string().optional(),
+    columns: z.array(z.record(z.string(), z.any())),
+    rows: z.array(z.record(z.string(), z.any())),
+  })
+  .passthrough();
+
+const qualityMetricsMetric = z
+  .object({
+    name: z.string(),
+    category: z.string(),
+    description: z.string(),
+    metricDocumentationLink: z.string(),
+    metricWeight: z.number(),
+    passCount: z.number(),
+    passExamples: z.array(qualityMetricsExample).optional(),
+    failureCount: z.number(),
+    failureExamples: z.array(qualityMetricsExample).optional(),
+    exemptionCount: z.number().optional(),
+    exemptionExamples: z.array(qualityMetricsExample).optional(),
+    details: z.array(qualityMetricsDetail).optional(),
+  })
+  .passthrough();
+
+const qualityMetricsClient = z
+  .object({
+    version: z.string(),
+    minVersion: z.string(),
+    count: z.number(),
+    examples: z.array(qualityMetricsExample),
+  })
+  .passthrough();
+
+export const QualityMetricsSchema = z
+  .object({
+    traceQualityDocumentationLink: z.string(),
+    bannerText: qualityMetricsBannerText.optional(),
+    scores: z.array(qualityMetricsScore),
+    metrics: z.array(qualityMetricsMetric),
+    clients: z.array(qualityMetricsClient).optional(),
+  })
+  .passthrough();
+
+export type TQualityMetrics = z.infer<typeof QualityMetricsSchema>;
