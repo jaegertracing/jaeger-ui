@@ -487,4 +487,36 @@ describe('<SpanBarRow>', () => {
       expect(decoration.compareDocumentPosition(error) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
   });
+
+  describe('showServiceName', () => {
+    it('renders the service name by default', () => {
+      render(<SpanBarRow {...defaultProps} rpc={null} />);
+      expect(screen.getByText('service-name')).toBeInTheDocument();
+    });
+
+    it('renders the service name when showServiceName is true', () => {
+      render(<SpanBarRow {...defaultProps} rpc={null} showServiceName />);
+      expect(screen.getByText('service-name')).toBeInTheDocument();
+    });
+
+    it('hides the service name when showServiceName is false', () => {
+      render(<SpanBarRow {...defaultProps} rpc={null} showServiceName={false} />);
+      expect(screen.queryByText('service-name')).not.toBeInTheDocument();
+    });
+
+    it('still shows the operation name when service name is hidden', () => {
+      render(<SpanBarRow {...defaultProps} rpc={null} showServiceName={false} />);
+      expect(screen.getByText('op-name')).toBeInTheDocument();
+    });
+
+    it('always includes service name in the SpanBar longLabel tooltip regardless of showServiceName', () => {
+      render(<SpanBarRow {...defaultProps} rpc={null} showServiceName={false} />);
+      expect(SpanBar).toHaveBeenCalledWith(
+        expect.objectContaining({
+          longLabel: expect.stringContaining('service-name'),
+        }),
+        undefined
+      );
+    });
+  });
 });

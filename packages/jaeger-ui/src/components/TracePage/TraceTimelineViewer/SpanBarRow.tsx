@@ -55,6 +55,7 @@ type SpanBarRowProps = {
   focusSpan: (spanID: string) => void;
   traceDuration: number;
   spanPillsEnabled?: boolean;
+  showServiceName?: boolean;
   useOtelTerms: boolean;
 };
 
@@ -87,6 +88,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   focusSpan,
   traceDuration,
   spanPillsEnabled,
+  showServiceName = true,
   onDetailToggled,
   onChildrenToggled,
   useOtelTerms,
@@ -173,7 +175,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
               {!hasOwnError && hasChildError && (
                 <IoAlert className="SpanBarRow--errorIcon SpanBarRow--errorIcon--hollow" />
               )}
-              {serviceName}{' '}
+              {showServiceName && <>{serviceName} </>}
               {rpc && (
                 <span>
                   <IoArrowForward className="SpanBarRow--arrowForwardIcon" />{' '}
