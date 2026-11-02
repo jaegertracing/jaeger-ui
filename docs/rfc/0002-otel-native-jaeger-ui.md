@@ -533,7 +533,7 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 - [ ] Implement `fetchDependencies` (`/api/v3/dependencies`) in `JaegerClient`; carry `fetchMetrics` over unchanged.
 - [ ] Update remaining components to use the new client.
 - [ ] Gradually decommission Redux actions/reducers for trace data.
-- [ ] Remove legacy `src/api/jaeger.ts`.
+- [x] Remove legacy `src/api/jaeger.ts`.
 - [ ] Transition to Phase 4 (Cleanup).
 
 ---
@@ -841,7 +841,7 @@ The blast radius is already small: outside tests, the facade classes have three 
 - [ ] Remove `OtelSpanFacade`, `OtelTraceFacade` classes and the `asOtelTrace()` bridge on the legacy trace type
 - [x] Parse uploaded OTLP files client-side in `SearchTracePage/FileLoader.tsx`, dropping the `/api/transform` round trip in `utils/readJsonFile.ts` (an OTLP file is already in the parser's input format)
 - [ ] Remove legacy types (mark as deprecated first)
-- [ ] Remove `src/api/jaeger.ts` (old REST API)
+- [x] Remove `src/api/jaeger.ts` (old REST API)
 - [ ] Remove `transformTraceData` (old transformer)
 - [ ] Documentation updates
 
