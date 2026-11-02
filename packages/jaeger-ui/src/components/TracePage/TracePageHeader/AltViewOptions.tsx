@@ -2,12 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { Dropdown, Button } from 'antd';
+import { Dropdown, Button, message } from 'antd';
 import { IoChevronDown } from 'react-icons/io5';
 import { Link } from 'react-router-dom';
 import './AltViewOptions.css';
 
-import { trackViewChange, trackJsonView, trackRawJsonView } from './TracePageHeader.track';
+import { trackViewChange, trackJsonView, trackRawJsonView, trackJsonDownload } from './TracePageHeader.track';
+import { jaegerClient } from '../../../api/v3/client';
+import { downloadTraces } from '../../../utils/download-traces';
 import prefixUrl from '../../../utils/prefix-url';
 import { ETraceViewType } from '../types';
 import { getTargetBlankOrTop } from '../../../utils/config/get-target';
@@ -47,7 +49,18 @@ export default function AltViewOptions(props: Props) {
     ),
   }));
   if (!disableJsonView) {
-    const traceUrl = prefixUrl(`/api/v3/traces/${toTraceIdHex(traceID)}`);
+    const traceIdHex = toTraceIdHex(traceID);
+    const traceUrl = prefixUrl(`/api/v3/traces/${traceIdHex}`);
+    // Writes the trace as the backend returned it rather than re-encoding the parsed model, so
+    // span IDs, int vs. double values and int64s beyond 2^53 survive a round trip through upload.
+    const downloadTrace = async () => {
+      trackJsonDownload();
+      try {
+        downloadTraces([await jaegerClient.fetchTrace(traceIdHex)], `trace-${traceIdHex}.json`);
+      } catch (err) {
+        message.error(`Failed to download trace: ${err instanceof Error ? err.message : String(err)}`);
+      }
+    };
     dropdownItems.push(
       {
         key: 'trace-json',
@@ -73,6 +86,14 @@ export default function AltViewOptions(props: Props) {
           >
             Trace JSON (unadjusted)
           </Link>
+        ),
+      },
+      {
+        key: 'trace-json-download',
+        label: (
+          <a onClick={downloadTrace} role="button">
+            Download Trace (OTLP JSON)
+          </a>
         ),
       }
     );

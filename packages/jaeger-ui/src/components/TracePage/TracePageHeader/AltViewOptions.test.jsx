@@ -2,12 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { BrowserRouter } from 'react-router-dom';
 import AltViewOptions from './AltViewOptions';
 import * as track from './TracePageHeader.track';
 import { ETraceViewType } from '../types';
+import { jaegerClient } from '../../../api/v3/client';
+import { downloadTraces } from '../../../utils/download-traces';
+
+vi.mock('../../../api/v3/client', () => ({ jaegerClient: { fetchTrace: vi.fn() } }));
+vi.mock('../../../utils/download-traces', () => ({ downloadTraces: vi.fn() }));
 
 vi.mock('antd', async () => {
   const originalModule = await vi.importActual('antd');
@@ -34,6 +39,7 @@ vi.mock('antd', async () => {
         </div>
       </div>
     ),
+    message: { error: vi.fn() },
     Button: ({ children, className }) => (
       <button type="button" className={className} data-testid="dropdown-button">
         {children}
@@ -107,6 +113,7 @@ describe('AltViewOptions', () => {
 
     expect(screen.queryByTestId('menu-item-trace-json')).not.toBeInTheDocument();
     expect(screen.queryByTestId('menu-item-trace-json-unadjusted')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('menu-item-trace-json-download')).not.toBeInTheDocument();
 
     expect(screen.getByTestId('menu-item-TraceGraph')).toBeInTheDocument();
     expect(screen.getByTestId('menu-item-TraceStatistics')).toBeInTheDocument();
@@ -144,6 +151,42 @@ describe('AltViewOptions', () => {
 
     const jsonLink = screen.getByTestId('menu-item-trace-json').querySelector('a');
     expect(jsonLink).toHaveAttribute('href', `/api/v3/traces/${'abc123'.padStart(32, '0')}?prettyPrint=true`);
+  });
+
+  it('downloads the trace as returned by the backend', async () => {
+    const traceID = 'abc123';
+    const traceIdHex = traceID.padStart(32, '0');
+    const wire = { resourceSpans: [] };
+    jaegerClient.fetchTrace.mockResolvedValue(wire);
+    const trackJsonDownload = vi.spyOn(track, 'trackJsonDownload');
+    renderComponent({ traceID });
+
+    fireEvent.click(screen.getByTestId('menu-item-trace-json-download'));
+
+    await waitFor(() => expect(downloadTraces).toHaveBeenCalledWith([wire], `trace-${traceIdHex}.json`));
+    expect(jaegerClient.fetchTrace).toHaveBeenCalledWith(traceIdHex);
+    expect(trackJsonDownload).toHaveBeenCalled();
+  });
+
+  it('shows an error when the trace download fails', async () => {
+    const { message } = await import('antd');
+    jaegerClient.fetchTrace.mockRejectedValue(new Error('boom'));
+    renderComponent({ traceID: 'abc123' });
+
+    fireEvent.click(screen.getByTestId('menu-item-trace-json-download'));
+
+    await waitFor(() => expect(message.error).toHaveBeenCalledWith('Failed to download trace: boom'));
+    expect(downloadTraces).not.toHaveBeenCalled();
+  });
+
+  it('reports non-Error rejections in the download error message', async () => {
+    const { message } = await import('antd');
+    jaegerClient.fetchTrace.mockRejectedValue('offline');
+    renderComponent({ traceID: 'abc123' });
+
+    fireEvent.click(screen.getByTestId('menu-item-trace-json-download'));
+
+    await waitFor(() => expect(message.error).toHaveBeenCalledWith('Failed to download trace: offline'));
   });
 
   it('updates dropdown text when view type changes', () => {

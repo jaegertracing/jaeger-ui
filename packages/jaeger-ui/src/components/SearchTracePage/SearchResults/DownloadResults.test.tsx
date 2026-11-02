@@ -7,7 +7,8 @@ import '@testing-library/jest-dom';
 import { message } from 'antd';
 import { vi, describe, it, expect, afterEach } from 'vitest';
 
-import DownloadResults, { createBlob } from './DownloadResults';
+import DownloadResults from './DownloadResults';
+import { createBlob } from '../../../utils/download-traces';
 import readJsonFile from '../../../utils/readJsonFile';
 import type { TraceSummary } from '../../../types/trace-summary';
 import type { Microseconds } from '../../../types/units';
