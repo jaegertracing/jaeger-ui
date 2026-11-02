@@ -25,6 +25,14 @@ describe('stringSupplant', () => {
     expect(stringSupplant('t: #{startTime | add 1000}', { startTime: 5 })).toBe('t: 1005');
   });
 
+  it('applies a formatter when the value is 0', () => {
+    expect(stringSupplant('n: #{n | add 5}', { n: 0 })).toBe('n: 5');
+  });
+
+  it('omits a missing value that has a formatter', () => {
+    expect(stringSupplant('n: #{n | add 5}', {})).toBe('n: ');
+  });
+
   it('chains multiple formatters from the template', () => {
     const startTime = new Date('2020-01-01').getTime() * 1000;
     expect(stringSupplant('t: #{startTime | add 60000000 | epoch_micros_to_date_iso}', { startTime })).toBe(
