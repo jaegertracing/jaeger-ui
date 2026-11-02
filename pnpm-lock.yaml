@@ -296,8 +296,8 @@ importers:
         specifier: 0.15.2
         version: 0.15.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(immer@11.1.8)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(use-sync-external-store@1.6.0(react@19.3.0))
       '@assistant-ui/react-ag-ui':
-        specifier: 0.0.35
-        version: 0.0.35(@assistant-ui/store@0.3.2(@assistant-ui/tap@0.9.9(@types/react@19.3.0)(react@19.3.0))(@types/react@19.3.0)(react@19.3.0))(@assistant-ui/tap@0.9.9(@types/react@19.3.0)(react@19.3.0))(@types/react@19.3.0)(assistant-cloud@0.1.39)(react@19.3.0)(zustand@5.0.14(@types/react@19.3.0)(immer@11.1.8)(react@19.3.0)(use-sync-external-store@1.6.0(react@19.3.0)))
+        specifier: 0.1.0
+        version: 0.1.0(@assistant-ui/react@0.15.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(immer@11.1.8)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(use-sync-external-store@1.6.0(react@19.3.0)))(@assistant-ui/tap@0.9.9(@types/react@19.3.0)(react@19.3.0))(@types/react@19.3.0)(assistant-cloud@0.1.39)(react@19.3.0)(zod@4.6.6)(zustand@5.0.14(@types/react@19.3.0)(immer@11.1.8)(react@19.3.0)(use-sync-external-store@1.6.0(react@19.3.0)))
       '@jaegertracing/plexus':
         specifier: workspace:*
         version: link:../plexus
@@ -561,14 +561,31 @@ packages:
   '@ag-ui/client@0.0.54':
     resolution: {integrity: sha512-N5UVXEBV5gPHqTuMoR/21brconRn42URf+MB4L8OniCJKqLcl/qUJb5kMamK0nnfBhDfPs/uq7LxDn6bsDJzJg==}
 
+  '@ag-ui/client@1.0.3':
+    resolution: {integrity: sha512-pqp6hEiO+gjAKIBSA/g8SzPy17XHZhbKZFK3Q4DhZ7bNLR34xNpPfXogP3bSQrzsKh2hmSc9ZYUutTpe/BQBpw==}
+
   '@ag-ui/core@0.0.54':
     resolution: {integrity: sha512-Ilx31OvRQaZfU7jSArGqz06JZKOsAt8zWiCPJljyp9zR6Tzl18oyfx8o6FsuGfAktGRe50GI9SCCxNXXysZwtA==}
+
+  '@ag-ui/core@1.0.3':
+    resolution: {integrity: sha512-HdMdZPOqworKlnzLaNktnbNYgIzOPbzt5ow6J4bPhbmHCdpWpCSZQFgkifQkn1zVHgCK1V+pmKc8xtW6FsQZKA==}
+    peerDependencies:
+      zod: ^3.25.18 || ^4.0.0
+    peerDependenciesMeta:
+      zod:
+        optional: true
 
   '@ag-ui/encoder@0.0.54':
     resolution: {integrity: sha512-0dPuE/eAeBRBDj/OOj5AW8SoP1r0dufmoOdrtKgmf+dlbVXKSNkDDHGrrvIWFPxwvPTWhHeN6wnsVUayWpUsGg==}
 
+  '@ag-ui/encoder@1.0.3':
+    resolution: {integrity: sha512-Uj/znRLejAQ7PWcY/Qio2ucymbJNuiDMKU34aTQV+v0EeB6Up9vj6nHNtH+eAAVSVZADs4/U+8gXVnN0on51ew==}
+
   '@ag-ui/proto@0.0.54':
     resolution: {integrity: sha512-IPF+xeFaBAKKP2FO74MaVTkKUP8VaGGkbPzORCvC5TLDdGs+oQgQFqz+XoBeksQGE14+jgLWiAr9EPXdhqr1NA==}
+
+  '@ag-ui/proto@1.0.3':
+    resolution: {integrity: sha512-L3YVEJN1hCYx3P7Zfrf4e1obA1pwzykkkPZkNHAdcXyUZ05/ezvWCkErnfNoUlER8QCasBwRjKiDjicu3Tt7+g==}
 
   '@ant-design/colors@8.0.1':
     resolution: {integrity: sha512-foPVl0+SWIslGUtD/xBr1p9U4AKzPhNYEseXYRRo5QSzGACYZrQbe11AYJbYfAWnWSpGBx6JjBmSeugUsD9vqQ==}
@@ -648,8 +665,34 @@ packages:
       zustand:
         optional: true
 
-  '@assistant-ui/react-ag-ui@0.0.35':
-    resolution: {integrity: sha512-YLTY6CQ9te5aOSycm1yGaf00Ej8vwWUm9DBL3QyWVywvTFgtdVxy0HXDXsfT/ywVRRhPpFxKnY4a86x+B0PFEQ==}
+  '@assistant-ui/generative-ui@0.0.7':
+    resolution: {integrity: sha512-3+t5CjRN4NqfN8Oet1mQEJWKibBECvy+OylqCDJO7VqqMwvr12ThDNv7iD/J6Cvw8hUx8d/vWSQdTkLrzoTArw==}
+    peerDependencies:
+      '@assistant-ui/react': ^0.15.0
+      '@types/react': '*'
+      generative-frame: ^0.0.8
+      react: 19.3.0
+      react-native: '*'
+      vue: ^3.5.0
+      zod: ^4.0.0
+    peerDependenciesMeta:
+      '@assistant-ui/react':
+        optional: true
+      '@types/react':
+        optional: true
+      generative-frame:
+        optional: true
+      react:
+        optional: true
+      react-native:
+        optional: true
+      vue:
+        optional: true
+      zod:
+        optional: true
+
+  '@assistant-ui/react-ag-ui@0.1.0':
+    resolution: {integrity: sha512-mV+rFFMKyjhNgN87q6E4XC6YbtbDqZDng3VqdyPAi02wxIWYMcP1ILANWLsEC6PP/Ac7UTfeHfF58W38BFBRrw==}
     peerDependencies:
       '@types/react': '*'
       react: 19.3.0
@@ -3467,10 +3510,10 @@ packages:
   assistant-cloud@0.1.39:
     resolution: {integrity: sha512-cFVueA++JdklgmvkWqoRlmC3Qy8bjrnd/ptKIcOt1WYjQzGcrYUrxHDXijfpl8x3Hog4AuzwvjAk+8QAekhl/w==}
 
-  assistant-stream@0.3.23:
-    resolution: {integrity: sha512-DTiOaRiaAA0bhbJ4sAyq0JYQ0rWPxL8rCK03KrowCiMGIoAmGtAwvAwzBruI+KlLTMjXqvWa4L0SKfAE/OtkHQ==}
+  assistant-stream@0.3.37:
+    resolution: {integrity: sha512-oxomJOPM7z09+nj2lwOhAaoH/TbRZ3EDOJ83TIgh6X1S1+CL5To/azmE8ZA2YMiXsKhhdDzqhyc5CQfU19ob5g==}
     peerDependencies:
-      ioredis: ^5.10.1
+      ioredis: ^5.10.1 || ^6.0.0
       redis: ^5.12.1
     peerDependenciesMeta:
       ioredis:
@@ -3478,12 +3521,15 @@ packages:
       redis:
         optional: true
 
-  assistant-stream@0.3.37:
-    resolution: {integrity: sha512-oxomJOPM7z09+nj2lwOhAaoH/TbRZ3EDOJ83TIgh6X1S1+CL5To/azmE8ZA2YMiXsKhhdDzqhyc5CQfU19ob5g==}
+  assistant-stream@0.3.55:
+    resolution: {integrity: sha512-hwdutUKnpM/93isBoQdmqGfEUVaxz36mORF7LdNwRQ1bmFDH6H7QOGbD8trIFU3eC4LL4CNJCA4PHFLgCubI6A==}
     peerDependencies:
+      ai: ^6.0.0 || ^7.0.0
       ioredis: ^5.10.1 || ^6.0.0
       redis: ^5.12.1
     peerDependenciesMeta:
+      ai:
+        optional: true
       ioredis:
         optional: true
       redis:
@@ -4451,13 +4497,13 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
-  nanoid@5.1.16:
-    resolution: {integrity: sha512-kVrnsrJqMR8+oLJnGEmSWw9BivK5mt7H3FZatVRjrc5wGqFYuBxX1yG7+A7Gi5AefkX6t/oCkizcQgpu0cY1dQ==}
-    engines: {node: ^18 || >=20}
-    hasBin: true
-
   nanoid@6.0.1:
     resolution: {integrity: sha512-3wVS3i51pE2pi1k5FFL/95BGfVS0kSsvDVuGXHOtxox/TywUmtgq+3qiTOTbs9J7KfHaXPiN171k/A6dBnaXFw==}
+    engines: {node: ^22 || ^24 || >=26}
+    hasBin: true
+
+  nanoid@6.0.2:
+    resolution: {integrity: sha512-hIvVOb9Qr1p/9CNNLOe0OlWvgx/ziTsVwKN/GDSsuArN2K0wDiafP3s0SWmsm7o2BdnyS8Z9Z64NFBUbn6ziBg==}
     engines: {node: ^22 || ^24 || >=26}
     hasBin: true
 
@@ -4895,6 +4941,9 @@ packages:
 
   secure-json-parse@4.1.0:
     resolution: {integrity: sha512-l4KnYfEyqYJxDwlNVyRfO2E4NTHfMKAWdUuA8J0yve2Dz/E/PdBepY03RvyJpssIpRFwJoCD55wA+mEDs6ByWA==}
+
+  secure-json-parse@4.1.1:
+    resolution: {integrity: sha512-lnd81MQEZKjhW/Gd2TQqdd4XP6QYNdDW/EP+I7nTrFHP9y2LmaGPIHk9xsnzcOiEr1c39c/e84xFgGviQKBTRw==}
 
   semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
@@ -5481,8 +5530,25 @@ snapshots:
       uuid: 11.1.1
       zod: 3.25.76
 
+  '@ag-ui/client@1.0.3':
+    dependencies:
+      '@ag-ui/core': 1.0.3(zod@3.25.76)
+      '@ag-ui/encoder': 1.0.3(zod@3.25.76)
+      '@ag-ui/proto': 1.0.3
+      '@types/uuid': 10.0.0
+      compare-versions: 6.1.1
+      fast-json-patch: 3.1.1
+      rxjs: 7.8.1
+      untruncate-json: 0.0.1
+      uuid: 11.1.1
+      zod: 3.25.76
+
   '@ag-ui/core@0.0.54':
     dependencies:
+      zod: 3.25.76
+
+  '@ag-ui/core@1.0.3(zod@3.25.76)':
+    optionalDependencies:
       zod: 3.25.76
 
   '@ag-ui/encoder@0.0.54':
@@ -5490,11 +5556,25 @@ snapshots:
       '@ag-ui/core': 0.0.54
       '@ag-ui/proto': 0.0.54
 
+  '@ag-ui/encoder@1.0.3(zod@3.25.76)':
+    dependencies:
+      '@ag-ui/core': 1.0.3(zod@3.25.76)
+      '@ag-ui/proto': 1.0.3
+    transitivePeerDependencies:
+      - zod
+
   '@ag-ui/proto@0.0.54':
     dependencies:
       '@ag-ui/core': 0.0.54
       '@bufbuild/protobuf': 2.12.1
       '@protobuf-ts/protoc': 2.11.1
+
+  '@ag-ui/proto@1.0.3':
+    dependencies:
+      '@ag-ui/core': 1.0.3(zod@3.25.76)
+      '@bufbuild/protobuf': 2.12.1
+      '@protobuf-ts/protoc': 2.11.1
+      zod: 3.25.76
 
   '@ant-design/colors@8.0.1':
     dependencies:
@@ -5593,21 +5673,42 @@ snapshots:
       - ioredis
       - redis
 
-  '@assistant-ui/react-ag-ui@0.0.35(@assistant-ui/store@0.3.2(@assistant-ui/tap@0.9.9(@types/react@19.3.0)(react@19.3.0))(@types/react@19.3.0)(react@19.3.0))(@assistant-ui/tap@0.9.9(@types/react@19.3.0)(react@19.3.0))(@types/react@19.3.0)(assistant-cloud@0.1.39)(react@19.3.0)(zustand@5.0.14(@types/react@19.3.0)(immer@11.1.8)(react@19.3.0)(use-sync-external-store@1.6.0(react@19.3.0)))':
+  '@assistant-ui/generative-ui@0.0.7(@assistant-ui/react@0.15.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(immer@11.1.8)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(use-sync-external-store@1.6.0(react@19.3.0)))(@types/react@19.3.0)(react@19.3.0)(zod@4.6.6)':
     dependencies:
-      '@ag-ui/client': 0.0.54
+      '@types/json-schema': 7.0.15
+      assistant-stream: 0.3.55
+    optionalDependencies:
+      '@assistant-ui/react': 0.15.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(immer@11.1.8)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(use-sync-external-store@1.6.0(react@19.3.0))
+      '@types/react': 19.3.0
+      react: 19.3.0
+      zod: 4.6.6
+    transitivePeerDependencies:
+      - ai
+      - ioredis
+      - redis
+
+  '@assistant-ui/react-ag-ui@0.1.0(@assistant-ui/react@0.15.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(immer@11.1.8)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(use-sync-external-store@1.6.0(react@19.3.0)))(@assistant-ui/tap@0.9.9(@types/react@19.3.0)(react@19.3.0))(@types/react@19.3.0)(assistant-cloud@0.1.39)(react@19.3.0)(zod@4.6.6)(zustand@5.0.14(@types/react@19.3.0)(immer@11.1.8)(react@19.3.0)(use-sync-external-store@1.6.0(react@19.3.0)))':
+    dependencies:
+      '@ag-ui/client': 1.0.3
       '@assistant-ui/core': 0.3.3(@assistant-ui/store@0.3.2(@assistant-ui/tap@0.9.9(@types/react@19.3.0)(react@19.3.0))(@types/react@19.3.0)(react@19.3.0))(@assistant-ui/tap@0.9.9(@types/react@19.3.0)(react@19.3.0))(@types/react@19.3.0)(assistant-cloud@0.1.39)(react@19.3.0)(zustand@5.0.14(@types/react@19.3.0)(immer@11.1.8)(react@19.3.0)(use-sync-external-store@1.6.0(react@19.3.0)))
-      assistant-stream: 0.3.23
+      '@assistant-ui/generative-ui': 0.0.7(@assistant-ui/react@0.15.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(immer@11.1.8)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(use-sync-external-store@1.6.0(react@19.3.0)))(@types/react@19.3.0)(react@19.3.0)(zod@4.6.6)
+      '@assistant-ui/store': 0.3.2(@assistant-ui/tap@0.9.9(@types/react@19.3.0)(react@19.3.0))(@types/react@19.3.0)(react@19.3.0)
+      assistant-stream: 0.3.55
       fast-json-patch: 3.1.1
       react: 19.3.0
     optionalDependencies:
       '@types/react': 19.3.0
     transitivePeerDependencies:
-      - '@assistant-ui/store'
+      - '@assistant-ui/react'
       - '@assistant-ui/tap'
+      - ai
       - assistant-cloud
+      - generative-frame
       - ioredis
+      - react-native
       - redis
+      - vue
+      - zod
       - zustand
 
   '@assistant-ui/react@0.15.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(immer@11.1.8)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(use-sync-external-store@1.6.0(react@19.3.0))':
@@ -8217,17 +8318,18 @@ snapshots:
       - ioredis
       - redis
 
-  assistant-stream@0.3.23:
-    dependencies:
-      '@standard-schema/spec': 1.1.0
-      nanoid: 5.1.16
-      secure-json-parse: 4.1.0
-
   assistant-stream@0.3.37:
     dependencies:
       '@standard-schema/spec': 1.1.0
       nanoid: 6.0.1
       secure-json-parse: 4.1.0
+
+  assistant-stream@0.3.55:
+    dependencies:
+      '@standard-schema/spec': 1.1.0
+      '@types/json-schema': 7.0.15
+      nanoid: 6.0.2
+      secure-json-parse: 4.1.1
 
   ast-v8-to-istanbul@1.0.7:
     dependencies:
@@ -9090,9 +9192,9 @@ snapshots:
 
   nanoid@3.3.20: {}
 
-  nanoid@5.1.16: {}
-
   nanoid@6.0.1: {}
+
+  nanoid@6.0.2: {}
 
   needle@2.9.1(supports-color@7.2.0):
     dependencies:
@@ -9675,6 +9777,8 @@ snapshots:
       compute-scroll-into-view: 3.1.1
 
   secure-json-parse@4.1.0: {}
+
+  secure-json-parse@4.1.1: {}
 
   semver@6.3.1: {}
 
