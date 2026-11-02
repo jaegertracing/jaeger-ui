@@ -43,7 +43,12 @@ const ExamplesLink: React.FC<TProps> = ({ examples, includeText }) => {
   if (!examples || !examples.length) return null;
 
   return (
-    <a href={getUrl(getGetUrlArg(examples))} target="_blank" rel="noopener noreferrer">
+    <a
+      aria-label={includeText ? undefined : 'Examples in a new window'}
+      href={getUrl(getGetUrlArg(examples))}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
       {includeText && 'Examples '}
       <NewWindowIcon />
     </a>

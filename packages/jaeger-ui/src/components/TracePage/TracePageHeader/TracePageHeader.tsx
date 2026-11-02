@@ -31,7 +31,7 @@ import { getIncompleteTraceTooltip } from '../../../model/trace-display-helpers'
 
 import './TracePageHeader.css';
 import ExternalLinks from '../../common/ExternalLinks';
-import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
+import { getNewWindowSuffix, getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import TraceId from '../../common/TraceId';
 import GenAIExecutionSummary from './GenAIExecutionSummary';
 
@@ -217,14 +217,14 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
   );
 
   const target = getTargetEmptyOrBlank();
-  const suffix = target === '_blank' ? ' in a new window' : '';
+  const suffix = getNewWindowSuffix(target);
 
   return (
     <header className="TracePageHeader">
       <DocumentTitle title={`${trace.traceEmoji} ${traceShortID}: ${trace.tracePageTitle} — Jaeger UI`} />
       <div className="TracePageHeader--titleRow">
         {toSearch && (
-          <Link className="TracePageHeader--back" to={toSearch}>
+          <Link aria-label="Back to search results" className="TracePageHeader--back" to={toSearch}>
             <IoArrowBack />
           </Link>
         )}

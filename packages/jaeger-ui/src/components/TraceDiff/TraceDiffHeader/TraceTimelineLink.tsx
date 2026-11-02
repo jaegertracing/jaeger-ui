@@ -5,7 +5,7 @@ import * as React from 'react';
 
 import { getUrl } from '../../TracePage/url';
 import NewWindowIcon from '../../common/NewWindowIcon';
-import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
+import { getNewWindowSuffix, getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 
 type PropsType = {
   traceID: string;
@@ -16,12 +16,16 @@ function stopPropagation(event: React.MouseEvent<HTMLAnchorElement>) {
 }
 
 export default function TraceTimelineLink({ traceID }: PropsType) {
+  const target = getTargetEmptyOrBlank();
+  const suffix = getNewWindowSuffix(target);
+
   return (
     <a
+      aria-label={`Open trace${suffix}`}
       href={getUrl(traceID)}
       onClick={stopPropagation}
       rel="noopener noreferrer"
-      target={getTargetEmptyOrBlank()}
+      target={target}
     >
       <NewWindowIcon />
     </a>

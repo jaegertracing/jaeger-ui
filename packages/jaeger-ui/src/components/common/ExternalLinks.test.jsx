@@ -21,6 +21,8 @@ describe('<ExternalLinks>', () => {
       // The dropdown should be rendered
       const dropdown = screen.getByTestId('dropdown');
       expect(dropdown).toBeInTheDocument();
+      expect(dropdown).toHaveAttribute('aria-label', 'External links');
+      expect(screen.getByLabelText('External links')).toBeInTheDocument();
 
       // Open the dropdown and check the rendered links
       fireEvent.click(dropdown);

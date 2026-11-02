@@ -369,6 +369,7 @@ describe('<TracePageHeader>', () => {
       const links = screen.getAllByRole('link');
       expect(links).toHaveLength(1);
       expect(links[0]).toHaveAttribute('href', `/${toSearch}`);
+      expect(links[0]).toHaveAttribute('aria-label', 'Back to search results');
     });
 
     it('toggles the standalone link with accessible aria-label', () => {
@@ -384,6 +385,7 @@ describe('<TracePageHeader>', () => {
       expect(screen.getAllByRole('link')).toHaveLength(1);
       expect(link).toHaveAttribute('href', `/${linkToStandalone}`);
       expect(link).toHaveAttribute('aria-label', 'Open trace in a new window');
+      expect(link).toHaveAttribute('target', '_blank');
 
       wrapper.rerender(
         <MemoryRouter>

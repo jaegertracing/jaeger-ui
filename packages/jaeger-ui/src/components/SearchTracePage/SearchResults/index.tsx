@@ -30,7 +30,7 @@ import { TraceSummary } from '../../../types/trace-summary';
 import { Microseconds } from '../../../types/units';
 
 import './index.css';
-import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
+import { getNewWindowSuffix, getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import withRouteProps from '../../../utils/withRouteProps';
 import SearchableSelect from '../../common/SearchableSelect';
 import { useSearchResultsStore } from './store.search-results';
@@ -207,7 +207,7 @@ export function UnconnectedSearchResults({
   const cohortIds = new Set(diffCohort.map(datum => datum.traceID));
   const searchUrl = location.pathname + location.search;
   const target = getTargetEmptyOrBlank();
-  const suffix = target === '_blank' ? ' in a new window' : '';
+  const suffix = getNewWindowSuffix(target);
   return (
     <div className="SearchResults">
       <div className="SearchResults--header">
