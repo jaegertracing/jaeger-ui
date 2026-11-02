@@ -21,9 +21,10 @@ import {
   GetTraceResponseSchema,
   ServiceMetricsResponseSchema,
   OperationMetricsResponseSchema,
+  QualityMetricsSchema,
   traceIdHex,
 } from './schemas';
-import type { TracesDataWire } from './schemas';
+import type { TracesDataWire, TQualityMetrics } from './schemas';
 import type { SearchQuery } from '../../types/search';
 import type { TraceSummary, ServiceSummary } from '../../types/trace-summary';
 import type { ApiError } from '../../types/api-error';
@@ -120,6 +121,17 @@ function legacyErrorDetail(data: unknown): string | undefined {
   return messages.length ? messages.join('; ') : undefined;
 }
 
+function splitUrlAndQuery(url: string): { httpUrl: string; httpQuery?: string } {
+  const queryStart = url.indexOf('?');
+  if (queryStart === -1) {
+    return { httpUrl: url };
+  }
+  return {
+    httpUrl: url.slice(0, queryStart),
+    httpQuery: url.slice(queryStart + 1),
+  };
+}
+
 /**
  * Build the error for a failed response. The message carries the server's own
  * message when the body has one; the HTTP details and body are kept for ErrorMessage.
@@ -134,11 +146,11 @@ async function httpError(
   const error: Error & Exclude<ApiError, string> = new Error(
     `${message}: ${response.status} ${response.statusText}`
   );
-  const queryStart = url.indexOf('?');
+  const { httpUrl, httpQuery } = splitUrlAndQuery(url);
   error.httpStatus = response.status;
   error.httpStatusText = response.statusText;
-  error.httpUrl = queryStart === -1 ? url : url.slice(0, queryStart);
-  if (queryStart !== -1) error.httpQuery = url.slice(queryStart + 1);
+  error.httpUrl = httpUrl;
+  if (httpQuery !== undefined) error.httpQuery = httpQuery;
   const body = await readErrorBody(response, signal);
   if (body) {
     try {
@@ -209,13 +221,25 @@ export class JaegerClient {
     return this.fetchJson(url, 'Failed to fetch decoration');
   }
 
-  async fetchQualityMetrics(service: string, hours: number, signal?: AbortSignal): Promise<unknown> {
+  async fetchQualityMetrics(service: string, hours: number, signal?: AbortSignal): Promise<TQualityMetrics> {
     const endpoint = getConfig().qualityMetrics?.apiEndpoint;
     if (!endpoint) {
       throw new Error('qualityMetrics.apiEndpoint is not set in the UI config');
     }
     const url = `${prefixUrl(endpoint)}?${queryString.stringify({ hours, service })}`;
-    return this.fetchJson(url, 'Failed to fetch quality metrics', { timeout: null, signal });
+    const data = await this.fetchJson(url, 'Failed to fetch quality metrics', { timeout: null, signal });
+    try {
+      return QualityMetricsSchema.parse(data);
+    } catch (err) {
+      if (err instanceof Error) {
+        const { httpUrl, httpQuery } = splitUrlAndQuery(url);
+        const apiError = err as Error & Exclude<ApiError, string>;
+        apiError.httpUrl = httpUrl;
+        if (httpQuery !== undefined) apiError.httpQuery = httpQuery;
+        apiError.httpBody = JSON.stringify(data, null, 2);
+      }
+      throw err;
+    }
   }
 
   private fetchV3(path: string, errorMessage: string, options?: FetchOptions): Promise<unknown> {
