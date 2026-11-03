@@ -13,6 +13,7 @@ vi.mock('../../stores/embedded-store', () => ({
 }));
 
 const assistantMock = vi.hoisted(() => ({ configured: false }));
+const assistantDockMock = vi.hoisted(() => ({ shouldThrow: false }));
 
 vi.mock('../../hooks/useJaegerAssistant', () => ({
   useJaegerAssistantConfigured: () => assistantMock.configured,
@@ -20,7 +21,12 @@ vi.mock('../../hooks/useJaegerAssistant', () => ({
 }));
 
 vi.mock('./JaegerAssistantPanel', () => ({
-  JaegerAssistantDock: () => <aside data-testid="assistant-dock" />,
+  JaegerAssistantDock: () => {
+    if (assistantDockMock.shouldThrow) {
+      throw new Error('dock render failure');
+    }
+    return <aside data-testid="assistant-dock" />;
+  },
 }));
 
 import React from 'react';
@@ -28,7 +34,7 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 
-import { PageImpl as Page, loadJaegerAssistantDock } from './Page';
+import { PageImpl as Page, loadJaegerAssistantDock, JaegerAssistantErrorBoundary } from './Page';
 import { JaegerAssistantProvider } from './JaegerAssistantContext';
 import { trackPageView } from '../../utils/tracking';
 
@@ -54,6 +60,7 @@ describe('<Page>', () => {
     trackPageView.mockReset();
     useEmbeddedStateMock.mockReturnValue(null);
     assistantMock.configured = false;
+    assistantDockMock.shouldThrow = false;
   });
 
   it('renders without exploding', () => {
@@ -125,6 +132,51 @@ describe('<Page>', () => {
       const { default: Fallback } = await loadJaegerAssistantDock(() => Promise.reject(err));
       expect(spy).toHaveBeenCalledWith('[jaeger-assistant] failed to load the assistant panel', err);
       expect(Fallback()).toBeNull();
+      spy.mockRestore();
+    });
+
+    it('catches render errors in the dock and preserves page children', async () => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      assistantMock.configured = true;
+      assistantDockMock.shouldThrow = true;
+
+      renderWithAssistant();
+
+      expect(await screen.findByTestId('page-child')).toBeInTheDocument();
+      expect(screen.queryByTestId('assistant-dock')).not.toBeInTheDocument();
+      expect(spy).toHaveBeenCalledWith(
+        '[jaeger-assistant] failed to render the assistant panel',
+        expect.any(Error)
+      );
+      spy.mockRestore();
+    });
+  });
+
+  describe('JaegerAssistantErrorBoundary', () => {
+    it('renders children when no error occurs', () => {
+      render(
+        <JaegerAssistantErrorBoundary>
+          <span data-testid="boundary-child" />
+        </JaegerAssistantErrorBoundary>
+      );
+      expect(screen.getByTestId('boundary-child')).toBeInTheDocument();
+    });
+
+    it('renders fallback when specified on error', () => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const ThrowingComp = () => {
+        throw new Error('boom');
+      };
+      render(
+        <JaegerAssistantErrorBoundary fallback={<span data-testid="fallback" />}>
+          <ThrowingComp />
+        </JaegerAssistantErrorBoundary>
+      );
+      expect(screen.getByTestId('fallback')).toBeInTheDocument();
+      expect(spy).toHaveBeenCalledWith(
+        '[jaeger-assistant] failed to render the assistant panel',
+        expect.any(Error)
+      );
       spy.mockRestore();
     });
   });
