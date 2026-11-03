@@ -133,9 +133,13 @@ export default function AccordionEvents({
       <button
         type="button"
         className="AccordionEvents--toggle"
-        onClick={() => {
+        onClick={(e: React.MouseEvent) => {
+          e.stopPropagation();
           setShowOutOfRangeEvents(true);
           notifyListReflow();
+        }}
+        onKeyDown={(e: React.KeyboardEvent) => {
+          e.stopPropagation();
         }}
       >
         show all
@@ -147,9 +151,13 @@ export default function AccordionEvents({
       <button
         type="button"
         className="AccordionEvents--toggle"
-        onClick={() => {
+        onClick={(e: React.MouseEvent) => {
+          e.stopPropagation();
           setShowOutOfRangeEvents(false);
           notifyListReflow();
+        }}
+        onKeyDown={(e: React.KeyboardEvent) => {
+          e.stopPropagation();
         }}
       >
         show in range
