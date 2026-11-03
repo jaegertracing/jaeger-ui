@@ -311,6 +311,18 @@ describe('SpanTreeOffset', () => {
       const wrapper = container.querySelector('.SpanTreeOffset');
       expect(wrapper).toHaveAttribute('tabindex', '0');
     });
+
+    it('marks the span wrapper as a button whose aria-expanded follows childrenVisible', () => {
+      const { container, rerender } = render(
+        <UnconnectedSpanTreeOffset {...props} span={spanWithChildren} childrenVisible={false} />
+      );
+      const wrapper = container.querySelector('.SpanTreeOffset');
+      expect(wrapper).toHaveAttribute('role', 'button');
+      expect(wrapper).toHaveAttribute('aria-label', 'Child spans');
+      expect(wrapper).toHaveAttribute('aria-expanded', 'false');
+      rerender(<UnconnectedSpanTreeOffset {...props} span={spanWithChildren} childrenVisible />);
+      expect(wrapper).toHaveAttribute('aria-expanded', 'true');
+    });
   });
 
   describe('mapDispatchToProps()', () => {
