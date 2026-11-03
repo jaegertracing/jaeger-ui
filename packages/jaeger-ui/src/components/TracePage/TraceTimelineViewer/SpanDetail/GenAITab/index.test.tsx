@@ -7,7 +7,7 @@ import { vi } from 'vitest';
 
 import GenAITab from '.';
 import { useMessageFormatStore } from './message-format-store';
-import type { IAttribute, IOtelSpan, AttributeValue } from '../../../../../types/otel';
+import type { IAttribute, AttributeValue } from '../../../../../types/otel';
 import { makeAttributes } from '../../../../../model/attributes';
 import { classifySpan } from '../../../../../utils/genai/detect';
 import { makeOtelSpan } from '../../../../../utils/test/makeOtelSpan';
@@ -831,7 +831,7 @@ describe('GenAITab', () => {
       expect(screen.getByText('Get the current weather.')).toBeInTheDocument();
     });
 
-    it('renders the Parameters label and a parameter table when parameters are present', () => {
+    it('renders parameter metadata in a structured table', () => {
       const { container } = render(
         <GenAITab
           span={makeSpan([
@@ -841,16 +841,31 @@ describe('GenAITab', () => {
                 {
                   type: 'function',
                   name: 'get_weather',
-                  parameters: { type: 'object', properties: { location: { type: 'string' } } },
+                  parameters: {
+                    type: 'object',
+                    properties: {
+                      location: { type: 'string', description: 'City to look up' },
+                      unit: { type: 'string', enum: ['celsius', 'fahrenheit'] },
+                    },
+                    required: ['location'],
+                  },
                 },
               ],
             },
           ])}
         />
       );
-      expect(screen.getByText('Parameter')).toBeInTheDocument();
-      expect(container.querySelector('.GenAITab--paramTableContainer')).toBeInTheDocument();
+      const parameterTable = container.querySelector<HTMLTableElement>('.GenAITab--paramTable');
+      expect(parameterTable).toBeInTheDocument();
+      expect(within(parameterTable!).getByRole('columnheader', { name: 'Parameter' })).toBeInTheDocument();
+      expect(within(parameterTable!).getByRole('columnheader', { name: 'Type' })).toBeInTheDocument();
+      expect(within(parameterTable!).getByRole('columnheader', { name: 'Required' })).toBeInTheDocument();
+      expect(within(parameterTable!).getByRole('columnheader', { name: 'Description' })).toBeInTheDocument();
       expect(screen.getByText('location')).toBeInTheDocument();
+      expect(screen.getByText('City to look up')).toBeInTheDocument();
+      expect(screen.getByText('Yes')).toBeInTheDocument();
+      expect(screen.getByText('No')).toBeInTheDocument();
+      expect(screen.getByText('celsius, fahrenheit')).toBeInTheDocument();
     });
 
     it('renders tool name and parameters for the OpenAI nested-function format', () => {
@@ -893,6 +908,29 @@ describe('GenAITab', () => {
       expect(screen.queryByText('Type')).not.toBeInTheDocument();
     });
 
+    it('renders Google ADK uppercase OBJECT parameters as a structured table', () => {
+      const { container } = render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [
+                {
+                  name: 'get_weather',
+                  parameters: {
+                    type: 'OBJECT',
+                    properties: { location: { type: 'STRING' } },
+                  },
+                },
+              ],
+            },
+          ])}
+        />
+      );
+      expect(container.querySelector('.GenAITab--paramTable')).toBeInTheDocument();
+      expect(screen.getByText('location')).toBeInTheDocument();
+    });
+
     it('renders multiple tools as separate sub-tables', () => {
       render(
         <GenAITab
@@ -925,6 +963,42 @@ describe('GenAITab', () => {
       expect(screen.getByText('Tool')).toBeInTheDocument();
       expect(screen.getByText('something_custom')).toBeInTheDocument();
       expect(screen.getByText('opaque_value')).toBeInTheDocument();
+    });
+
+    it('renders null raw entries without crashing', () => {
+      render(
+        <GenAITab
+          span={makeSpan([{ key: 'gen_ai.tool.definitions', value: [null] as unknown as AttributeValue }])}
+        />
+      );
+      expect(screen.getByText('Tool')).toBeInTheDocument();
+      expect(screen.getByText('Value')).toBeInTheDocument();
+      expect(screen.getByText('null')).toBeInTheDocument();
+    });
+
+    it('lists unnamed tools as Tool in the collapsed summary', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [{ name: 'get_weather' }, { something_custom: 'opaque_value' }],
+            },
+          ])}
+        />
+      );
+      const toggle = screen.getByText('Tools').closest('[role="switch"]');
+      fireEvent.click(toggle!);
+
+      expect(toggle).toHaveAttribute('aria-checked', 'false');
+      expect(screen.getByText('get_weather, Tool')).toBeInTheDocument();
+    });
+
+    it('renders malformed tool definitions as raw values instead of hiding them', () => {
+      render(<GenAITab span={makeSpan([{ key: 'gen_ai.tool.definitions', value: 'not json at all' }])} />);
+
+      expect(screen.getByText('Value')).toBeInTheDocument();
+      expect(screen.getByText('not json at all')).toBeInTheDocument();
     });
 
     it('does not show gen_ai.tool.definitions in Other GenAI Attributes, proving it is claimed', () => {

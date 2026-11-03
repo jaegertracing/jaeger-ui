@@ -236,8 +236,9 @@ export function parseToolDefinitions(value: AttributeValue | undefined): GenAiTo
   let parsed: unknown = value;
   if (typeof value === 'string') {
     parsed = tryParseJson(value);
-    // tryParseJson returns the original string when it cannot parse.
-    if (typeof parsed === 'string') return undefined;
+    // This builder claims gen_ai.tool.definitions before parsing it. Preserve a
+    // malformed or custom string as a raw tool entry instead of hiding it.
+    if (typeof parsed === 'string') return [{ raw: value }];
   }
   const entries = Array.isArray(parsed) ? parsed : [parsed];
   const tools = entries.map(normaliseToolEntry);

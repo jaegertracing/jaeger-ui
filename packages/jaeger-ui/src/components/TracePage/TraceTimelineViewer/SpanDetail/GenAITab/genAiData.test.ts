@@ -1144,12 +1144,12 @@ describe('parseToolDefinitions', () => {
       expect(tools![0].name).toBe('get_weather');
     });
 
-    it('returns undefined for a plain non-JSON string, not a crash', () => {
-      expect(parseToolDefinitions('not json at all')).toBeUndefined();
+    it('preserves a plain non-JSON string as a raw tool entry', () => {
+      expect(parseToolDefinitions('not json at all')).toEqual([{ raw: 'not json at all' }]);
     });
 
-    it('returns undefined for a JSON-encoded primitive (string literal), not a tool entry', () => {
-      expect(parseToolDefinitions('"just a string"')).toBeUndefined();
+    it('preserves a JSON-encoded primitive as a raw tool entry', () => {
+      expect(parseToolDefinitions('"just a string"')).toEqual([{ raw: '"just a string"' }]);
     });
   });
 
@@ -1172,6 +1172,12 @@ describe('parseToolDefinitions', () => {
     it('stores a non-object primitive entry under raw', () => {
       const tools = parseToolDefinitions([42]);
       expect(tools![0].raw).toBe(42);
+    });
+
+    it('preserves a malformed definition as a raw tools section instead of claiming and dropping it', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.tool.definitions': 'not json at all' }));
+      expect(section(sections, 'tools')?.tools).toEqual([{ raw: 'not json at all' }]);
+      expect(section(sections, 'other')).toBeUndefined();
     });
   });
 

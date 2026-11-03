@@ -947,7 +947,7 @@ function ToolsSection({
       {isOpen && (
         <div className="GenAITab--toolsContainer">
           {tools.map((tool, i) => (
-            <SingleToolDetails key={tool.name || i} tool={tool} />
+            <SingleToolDetails key={`${tool.name || 'tool'}-${i}`} tool={tool} />
           ))}
         </div>
       )}
