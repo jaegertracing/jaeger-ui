@@ -307,14 +307,19 @@ describe('SearchTracePage/url', () => {
       expect(endUs - startUs).toBeCloseTo(60 * 60 * 1_000_000, -6);
     });
 
-    it('omits operation when operation is "all" or ALL_OPERATIONS', () => {
+    it('normalizes operation to ALL_OPERATIONS when operation is "all" or ALL_OPERATIONS', () => {
       const resultLegacy = searchQueryFromUrl('?service=svc&operation=all&start=1000000000&end=4600000000');
-      expect(resultLegacy?.operation).toBeUndefined();
+      expect(resultLegacy?.operation).toBe(ALL_OPERATIONS);
 
       const resultSentinel = searchQueryFromUrl(
         `?service=svc&operation=${ALL_OPERATIONS}&start=1000000000&end=4600000000`
       );
-      expect(resultSentinel?.operation).toBeUndefined();
+      expect(resultSentinel?.operation).toBe(ALL_OPERATIONS);
+    });
+
+    it('returns undefined operation when URL has no operation parameter', () => {
+      const result = searchQueryFromUrl('?service=svc&start=1000000000&end=4600000000');
+      expect(result?.operation).toBeUndefined();
     });
 
     it('retains operation when operation is a specific name', () => {
@@ -324,7 +329,7 @@ describe('SearchTracePage/url', () => {
   });
 
   describe('searchQueryToUrlState', () => {
-    it('omits operation when operation is "all" or ALL_OPERATIONS', () => {
+    it('normalizes operation to ALL_OPERATIONS when operation is "all" or ALL_OPERATIONS', () => {
       const stateLegacy = searchQueryToUrlState({
         service: 'svc',
         operation: 'all',
@@ -333,7 +338,7 @@ describe('SearchTracePage/url', () => {
         limit: 20,
         lookback: '1h',
       });
-      expect(stateLegacy.operation).toBeUndefined();
+      expect(stateLegacy.operation).toBe(ALL_OPERATIONS);
 
       const stateSentinel = searchQueryToUrlState({
         service: 'svc',
@@ -343,7 +348,18 @@ describe('SearchTracePage/url', () => {
         limit: 20,
         lookback: '1h',
       });
-      expect(stateSentinel.operation).toBeUndefined();
+      expect(stateSentinel.operation).toBe(ALL_OPERATIONS);
+    });
+
+    it('leaves operation undefined when query has no operation', () => {
+      const state = searchQueryToUrlState({
+        service: 'svc',
+        start: '1000',
+        end: '2000',
+        limit: 20,
+        lookback: '1h',
+      });
+      expect(state.operation).toBeUndefined();
     });
 
     it('retains operation when operation is a specific name', () => {

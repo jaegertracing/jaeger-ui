@@ -83,6 +83,7 @@ import {
 } from './SearchForm';
 import * as markers from './SearchForm.markers';
 import { ALL_SERVICES, ALL_OPERATIONS } from '../../constants/search-form';
+import { searchQueryFromUrl, searchQueryToUrlState } from './url';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 import { AppQueryClientProvider } from '../../query/app-query-client';
 import getConfig from '../../utils/config/get-config';
@@ -1047,6 +1048,17 @@ describe('mapStateToProps()', () => {
     state.services = { services: [svc], operationsForService: { [svc]: [] } };
     localStorage.setItem('lastSearch', JSON.stringify({ operation: 'all', service: svc }));
     const { operation } = callMapStateToProps().initialValues;
+    expect(operation).toBe(ALL_OPERATIONS);
+  });
+
+  it('preserves ALL_OPERATIONS across timestamp rewrite when lastSearch has a saved operation', () => {
+    localStorage.setItem('lastSearch', JSON.stringify({ service: 'some-svc', operation: 'saved-op' }));
+    const initialQuery = searchQueryFromUrl('?service=some-svc&operation=all&lookback=1h');
+    expect(initialQuery?.operation).toBe(ALL_OPERATIONS);
+    const rewrittenUrlState = searchQueryToUrlState(initialQuery);
+    expect(rewrittenUrlState.operation).toBe(ALL_OPERATIONS);
+    const rewrittenSearch = queryString.stringify(rewrittenUrlState);
+    const { operation } = callMapStateToProps(rewrittenSearch).initialValues;
     expect(operation).toBe(ALL_OPERATIONS);
   });
 

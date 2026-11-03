@@ -9,7 +9,7 @@ import { matchPath } from 'react-router-dom';
 import prefixUrl from '../../utils/prefix-url';
 import { MAX_LENGTH } from '../DeepDependencies/Graph/DdgNodeContent/constants';
 
-import { ALL_OPERATIONS, normalizeOperation } from '../../constants/search-form';
+import { normalizeOperation } from '../../constants/search-form';
 import { SearchQuery } from '../../types/search';
 import parseQuery from '../../utils/parseQuery';
 import { asValidLookback, lookbackFromDuration, lookbackToTimestamp } from '../../utils/time-range-options';
@@ -90,9 +90,7 @@ function firstOf(v: string | string[] | undefined | Record<string, string>): str
 
 /** Inverse of searchQueryFromUrl: convert a SearchQuery back into a TUrlState for getUrl(). */
 export function searchQueryToUrlState(q: SearchQuery): TUrlState {
-  const normalizedOperation = normalizeOperation(q.operation);
-  const operation =
-    normalizedOperation && normalizedOperation !== ALL_OPERATIONS ? normalizedOperation : undefined;
+  const operation = normalizeOperation(q.operation);
 
   const state: TUrlState = {
     service: q.service,
@@ -160,9 +158,7 @@ export function searchQueryFromUrl(search: string): SearchQuery | null {
   }
 
   const rawOperation = firstOf(q.operation);
-  const normalizedOperation = normalizeOperation(rawOperation);
-  const operation =
-    normalizedOperation && normalizedOperation !== ALL_OPERATIONS ? normalizedOperation : undefined;
+  const operation = normalizeOperation(rawOperation);
 
   return {
     service: firstOf(q?.service),
