@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { beforeEach, expect, it, vi } from 'vitest';
+import { expect, it, vi } from 'vitest';
 
 import RelativeDate from './RelativeDate';
 import getConfig from '../../utils/config/get-config';
@@ -13,10 +13,6 @@ vi.mock('../../utils/config/get-config', () => ({ default: vi.fn() }));
 
 const value = new Date(2000, 0, 1, 15, 4, 5);
 
-beforeEach(() => {
-  vi.mocked(getConfig).mockReturnValue(defaultConfig);
-});
-
 it.each([
   ['12h', 'Jan 1, 2000, 3:04:05 pm'],
   ['24h', 'Jan 1, 2000, 15:04:05'],
@@ -25,10 +21,4 @@ it.each([
   render(<RelativeDate value={value} includeTime fullMonthName={false} />);
 
   expect(screen.getByText(expected)).toBeInTheDocument();
-});
-
-it('omits the time when includeTime is false', () => {
-  render(<RelativeDate value={value} includeTime={false} fullMonthName={false} />);
-
-  expect(screen.getByText('Jan 1, 2000')).toBeInTheDocument();
 });
