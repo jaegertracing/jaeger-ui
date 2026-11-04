@@ -4,7 +4,7 @@
 // Mutable object so individual tests can control the location without re-creating the mock.
 const mockLocation = { search: '' };
 
-vi.mock('../../../model/path-agnostic-decorations', async () => ({
+vi.mock('../../../hooks/usePathAgnosticDecoration', async () => ({
   default: jest.fn(() => ({})),
 }));
 
@@ -16,9 +16,8 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import _set from 'lodash/set';
-import { Provider } from 'react-redux';
 
-import extractDecorationFromState from '../../../model/path-agnostic-decorations';
+import usePathAgnosticDecoration from '../../../hooks/usePathAgnosticDecoration';
 import stringSupplant from '../../../utils/stringSupplant';
 import { jaegerClient } from '../../../api/v3/client';
 import { UnconnectedDetailsPanel as DetailsPanel } from './DetailsPanel';
@@ -290,31 +289,43 @@ describe('<SidePanel>', () => {
   });
 
   describe('DetailsPanelWithLocation (default export)', () => {
-    const store = {
-      getState: () => ({}),
-      dispatch: jest.fn(),
-      subscribe: jest.fn(() => jest.fn()),
-    };
     const wrapperProps = {
       decorationSchema: { name: 'Wrapper Test Schema' },
       service: 'wrapper-test-svc',
+      operation: 'wrapper-op',
     };
 
     beforeEach(() => {
-      extractDecorationFromState.mockClear();
-      extractDecorationFromState.mockReturnValue({});
+      usePathAgnosticDecoration.mockClear();
+      usePathAgnosticDecoration.mockReturnValue({});
     });
 
-    it('injects search from useLocation() into the connected component', () => {
+    it.each([17, 'Unable to fetch decoration: offline'])(
+      'renders the query decoration: %s',
+      decorationValue => {
+        usePathAgnosticDecoration.mockReturnValue({
+          decorationID: 'some-id',
+          decorationValue,
+          decorationMax: 108,
+        });
+        render(<DefaultDetailsPanel {...wrapperProps} />);
+        if (typeof decorationValue === 'number') {
+          expect(screen.getByTestId('circular-progress-bar')).toHaveTextContent('17');
+        } else {
+          expect(screen.getByText(decorationValue)).toBeInTheDocument();
+        }
+      }
+    );
+
+    it('injects search from useLocation() into the decoration hook', () => {
       mockLocation.search = '?decoration=my-decoration-id';
-      render(
-        <Provider store={store}>
-          <DefaultDetailsPanel {...wrapperProps} />
-        </Provider>
-      );
-      expect(extractDecorationFromState).toHaveBeenCalledWith(
-        expect.any(Object),
-        expect.objectContaining({ search: '?decoration=my-decoration-id' })
+      render(<DefaultDetailsPanel {...wrapperProps} />);
+      expect(usePathAgnosticDecoration).toHaveBeenCalledWith(
+        expect.objectContaining({
+          service: wrapperProps.service,
+          operation: wrapperProps.operation,
+          search: '?decoration=my-decoration-id',
+        })
       );
     });
   });

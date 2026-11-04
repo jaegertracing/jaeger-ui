@@ -5,7 +5,6 @@ import * as React from 'react';
 import { Tooltip } from 'antd';
 import { useLocation } from 'react-router-dom';
 import _get from 'lodash/get';
-import { connect } from 'react-redux';
 
 import BreakableText from '../../common/BreakableText';
 import DetailsCard from '../../common/DetailsCard';
@@ -13,15 +12,16 @@ import LoadingIndicator from '../../common/LoadingIndicator';
 import NewWindowIcon from '../../common/NewWindowIcon';
 import VerticalResizer from '../../common/VerticalResizer';
 import { jaegerClient } from '../../../api/v3/client';
-import extractDecorationFromState, { TDecorationFromState } from '../../../model/path-agnostic-decorations';
+import getDecorationPresentation, { TDecoration } from '../../../model/path-agnostic-decorations';
 import stringSupplant from '../../../utils/stringSupplant';
+import usePathAgnosticDecoration from '../../../hooks/usePathAgnosticDecoration';
 
 import { TPathAgnosticDecorationSchema } from '../../../model/path-agnostic-decorations/types';
 import { TColumnDefs, TDetails } from '../../common/DetailsCard/types';
 
 import './DetailsPanel.css';
 
-type TProps = TDecorationFromState & {
+type TProps = TDecoration & {
   decorationSchema: TPathAgnosticDecorationSchema;
   service: string;
   operation?: string | string[] | null;
@@ -182,14 +182,11 @@ function UnconnectedDetailsPanelImpl(props: TProps) {
 
 export const UnconnectedDetailsPanel = React.memo(UnconnectedDetailsPanelImpl);
 
-const ConnectedDetailsPanel = connect(extractDecorationFromState)(UnconnectedDetailsPanel);
-
-// search is always injected from useLocation(); callers cannot supply it.
-type DetailsPanelWithLocationProps = Omit<React.ComponentProps<typeof ConnectedDetailsPanel>, 'search'>;
-
-function DetailsPanelWithLocation(props: DetailsPanelWithLocationProps) {
+function DetailsPanelWithLocation(props: Omit<TProps, keyof TDecoration>) {
   const { search } = useLocation();
-  return <ConnectedDetailsPanel {...props} search={search} />;
+  const decoration = usePathAgnosticDecoration({ ...props, search });
+  const presentation = getDecorationPresentation({ ...props, ...decoration });
+  return <UnconnectedDetailsPanel {...props} {...presentation} />;
 }
 
 export default DetailsPanelWithLocation;
