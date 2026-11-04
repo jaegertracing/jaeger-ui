@@ -106,7 +106,6 @@ const SpanTreeOffset: React.FC<TProps> = ({
             style={{
               color: guideColor,
             }}
-            data-ancestor-id={ancestor.spanID}
             data-testid={`indent-guide-${ancestor.spanID}`}
           >
             {isLastAncestor && !isDetailRow && (
