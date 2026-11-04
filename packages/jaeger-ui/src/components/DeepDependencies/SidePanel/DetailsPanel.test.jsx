@@ -37,8 +37,8 @@ vi.mock('../../common/VerticalResizer', async () => {
 });
 
 vi.mock('../../common/DetailsCard', async () => {
-  return mockDefault(({ className, details }) => (
-    <div data-testid="details-card" className={className}>
+  return mockDefault(({ className, details, columnDefs }) => (
+    <div data-testid="details-card" data-columns={JSON.stringify(columnDefs)} className={className}>
       {typeof details === 'string' ? details : JSON.stringify(details)}
     </div>
   ));
@@ -163,6 +163,55 @@ describe('<SidePanel>', () => {
       const detailsCard = await screen.findByTestId('details-card');
       expect(detailsCard).toBeInTheDocument();
       expect(detailsCard.textContent).toBe(detailsData);
+    });
+
+    it.each([undefined, opString])('passes configured columns for operation %s', async operation => {
+      const decorationSchema = {
+        ...props.decorationSchema,
+        detailColumnDefPath: 'columns.#{service}',
+        opDetailColumnDefPath: 'opColumns.#{service}.#{operation}',
+      };
+      const serviceColumns = [{ key: 'latency', label: 'Service latency' }];
+      const operationColumns = [{ key: 'latency', label: 'Operation latency' }];
+      const response = {};
+      _set(response, decorationSchema.detailPath, [{ latency: 42 }]);
+      _set(response, decorationSchema.opDetailPath, [{ latency: 17 }]);
+      _set(response, stringSupplant(decorationSchema.detailColumnDefPath, { service }), serviceColumns);
+      _set(
+        response,
+        stringSupplant(decorationSchema.opDetailColumnDefPath, { service, operation }),
+        operationColumns
+      );
+      render(<DetailsPanel {...props} decorationSchema={decorationSchema} operation={operation} />);
+      res(response);
+
+      const detailsCard = await screen.findByTestId('details-card');
+      expect(detailsCard).toHaveAttribute(
+        'data-columns',
+        JSON.stringify(operation ? operationColumns : serviceColumns)
+      );
+      expect(detailsCard).toHaveTextContent(JSON.stringify([{ latency: operation ? 17 : 42 }]));
+      expect(detailsCard).not.toHaveClass('is-error');
+    });
+
+    it('uses default columns when the configured column path is absent', async () => {
+      const decorationSchema = { ...props.decorationSchema, detailColumnDefPath: 'missing.columns' };
+      render(<DetailsPanel {...props} decorationSchema={decorationSchema} />);
+      res(_set({}, decorationSchema.detailPath, [{ latency: 42 }]));
+
+      const detailsCard = await screen.findByTestId('details-card');
+      expect(detailsCard).toHaveAttribute('data-columns', '[]');
+      expect(detailsCard).toHaveTextContent(JSON.stringify([{ latency: 42 }]));
+      expect(detailsCard).not.toHaveClass('is-error');
+    });
+
+    it('renders a detail request rejected with a plain string', async () => {
+      render(<DetailsPanel {...props} />);
+      rej('Connection closed');
+
+      const detailsCard = await screen.findByTestId('details-card');
+      expect(detailsCard).toHaveClass('is-error');
+      expect(detailsCard).toHaveTextContent('Unable to fetch decoration: Connection closed');
     });
 
     it('renders details error', async () => {
