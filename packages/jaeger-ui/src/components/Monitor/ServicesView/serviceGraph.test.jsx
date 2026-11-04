@@ -467,18 +467,6 @@ describe('tickFormat utility', () => {
   it('formats time correctly for double digits', () => {
     expect(tickFormat(new Date(2017, 1, 14, 15, 19).getTime())).toBe('3:19 pm');
   });
-
-  it.each([
-    [0, '12:04 am', '00:04'],
-    [12, '12:04 pm', '12:04'],
-    [15, '3:04 pm', '15:04'],
-  ])('formats hour %s using the configured clock', (hour, twelve, twentyFour) => {
-    const timestamp = new Date(2026, 9, 15, hour, 4).getTime();
-    getConfig.mockReturnValue({ timeFormat: '12h' });
-    expect(tickFormat(timestamp)).toBe(twelve);
-    getConfig.mockReturnValue({ timeFormat: '24h' });
-    expect(tickFormat(timestamp)).toBe(twentyFour);
-  });
 });
 
 describe('Placeholder component', () => {

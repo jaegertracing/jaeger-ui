@@ -18,7 +18,7 @@ Stuck somewhere or found a bug? See [Getting in Touch](https://www.jaegertracing
 
 See the [configuration guide](https://www.jaegertracing.io/docs/latest/frontend-ui/) for details on configuring Google Analytics tracking, menu customizations, and other aspects of UI behavior.
 
-Set `"timeFormat": "24h"` in the UI configuration to display timestamps using a 24-hour clock. The default is `"12h"` across trace lists, tables, trace details, and metrics charts. Search form time inputs always use `HH:mm`.
+Set `"timeFormat": "24h"` in the UI configuration to show timestamps on a 24-hour clock. The default is `"12h"`.
 
 ## License
 
