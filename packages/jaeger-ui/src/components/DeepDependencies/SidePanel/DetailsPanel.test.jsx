@@ -184,7 +184,7 @@ describe('<SidePanel>', () => {
       };
       render(<DetailsPanel {...props} decorationSchema={schemaWithLink} />);
 
-      const link = screen.getByRole('link');
+      const link = screen.getByRole('link', { name: 'More info in a new window' });
       expect(link).toHaveAttribute('href', schemaWithLink.detailLink);
       expect(link).toHaveAttribute('target', '_blank');
       expect(link).toHaveAttribute('rel', 'noreferrer noopener');
