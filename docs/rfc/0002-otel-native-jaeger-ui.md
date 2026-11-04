@@ -851,6 +851,8 @@ The blast radius is already small: outside tests, the facade classes have three 
 
 The v1 API is public, so this is a deprecation exercise rather than a delete: announce, give a release or two of overlap, then remove. It belongs in the `jaeger` repo and should be tracked there once the UI side of Phase 4 lands. `/api/transform` is the exception worth doing early — it exists only to convert OTLP files for the UI, and a native parser makes it dead on arrival.
 
+> **Retirement schedule (decided November 2026, [recorded on #4278](https://github.com/jaegertracing/jaeger-ui/issues/4278#issuecomment-6626447894)):** No deprecation period. Both `/api/traces/{traceID}` and `/api/transform` are removed after v2.23.0, since all callers already use v3 ([#4678](https://github.com/jaegertracing/jaeger-ui/pull/4678), [jaeger#10004](https://github.com/jaegertracing/jaeger/pull/10004)).
+
 ---
 
 ## Component Migration Details
