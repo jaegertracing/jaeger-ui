@@ -1,9 +1,10 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import * as React from 'react';
+import React from 'react';
 import { render, screen, fireEvent, createEvent } from '@testing-library/react';
 
+import * as getConfigModule from '../../../utils/config/get-config';
 import TraceTimelineLink from './TraceTimelineLink';
 
 describe('TraceTimelineLink', () => {
@@ -30,5 +31,27 @@ describe('TraceTimelineLink', () => {
 
     fireEvent(screen.getByRole('link'), propogatedEvent);
     expect(propogatedEvent.stopPropagation).toHaveBeenCalled();
+  });
+
+  it('renders link with accessible aria-label and target="_blank"', () => {
+    const link = screen.getByRole('link', { name: 'Open trace in a new window' });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute('aria-label', 'Open trace in a new window');
+    expect(link).toHaveAttribute('target', '_blank');
+  });
+});
+
+describe('TraceTimelineLink when forbidNewPage is true', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('renders link with accessible aria-label without "in a new window"', () => {
+    vi.spyOn(getConfigModule, 'default').mockReturnValue({ forbidNewPage: true });
+    render(<TraceTimelineLink traceID="test-trace-id" />);
+    const link = screen.getByRole('link', { name: 'Open trace' });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute('aria-label', 'Open trace');
+    expect(link).toHaveAttribute('target', '');
   });
 });
