@@ -119,18 +119,16 @@ function buildVisibleRows(
 function insertPrunedPlaceholders(rows: RowState[], stats: PrunedStats): RowState[] {
   const { childCounts, errorCounts } = stats;
   const result: RowState[] = [];
-  // Track the max spanIndex seen within each open subtree so placeholders
-  // get a non-decreasing spanIndex (avoids confusing ScrollManager navigation).
-  const openStack: Array<{ rowIndex: number; depth: number; maxSpanIndex: number }> = [];
+  const openStack: Array<{ rowIndex: number; depth: number }> = [];
 
-  const maybeAppendPlaceholder = (entry: { rowIndex: number; maxSpanIndex: number }) => {
+  const maybeAppendPlaceholder = (entry: { rowIndex: number }) => {
     const count = childCounts[entry.rowIndex];
     if (!count) return;
     const parentRow = rows[entry.rowIndex];
     result.push({
       span: parentRow.span,
       isDetail: false,
-      spanIndex: entry.maxSpanIndex,
+      spanIndex: parentRow.spanIndex,
       isPrunedPlaceholder: true,
       prunedChildrenCount: count,
       prunedErrorCount: errorCounts[entry.rowIndex] || 0,
@@ -143,31 +141,16 @@ function insertPrunedPlaceholders(rows: RowState[], stats: PrunedStats): RowStat
       while (openStack.length && openStack[openStack.length - 1].depth >= row.span.depth) {
         const closed = openStack.pop()!;
         maybeAppendPlaceholder(closed);
-        // Propagate max spanIndex to the parent entry on the stack.
-        if (openStack.length) {
-          const parent = openStack[openStack.length - 1];
-          parent.maxSpanIndex = Math.max(parent.maxSpanIndex, closed.maxSpanIndex);
-        }
       }
     }
     result.push(row);
     if (!row.isDetail) {
-      const spanIndex = row.spanIndex;
-      // Update the current top-of-stack's max with this row's spanIndex.
-      if (openStack.length) {
-        const top = openStack[openStack.length - 1];
-        top.maxSpanIndex = Math.max(top.maxSpanIndex, spanIndex);
-      }
-      openStack.push({ rowIndex: i, depth: row.span.depth, maxSpanIndex: spanIndex });
+      openStack.push({ rowIndex: i, depth: row.span.depth });
     }
   }
   while (openStack.length) {
     const closed = openStack.pop()!;
     maybeAppendPlaceholder(closed);
-    if (openStack.length) {
-      const parent = openStack[openStack.length - 1];
-      parent.maxSpanIndex = Math.max(parent.maxSpanIndex, closed.maxSpanIndex);
-    }
   }
 
   return result;
@@ -205,7 +188,7 @@ export function isSpanPruned(span: IOtelSpan, prunedServices: Set<string>): bool
   if (prunedServices.size === 0) return false;
   let current: IOtelSpan | undefined = span;
   while (current) {
-    if (prunedServices.has(current.resource.serviceName)) return true;
+    if (current.resource?.serviceName && prunedServices.has(current.resource.serviceName)) return true;
     current = current.parentSpan;
   }
   return false;

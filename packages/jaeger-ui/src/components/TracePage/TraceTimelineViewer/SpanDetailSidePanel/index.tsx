@@ -12,6 +12,7 @@ import updateUiFind from '../../../../utils/update-ui-find';
 import withRouteProps from '../../../../utils/withRouteProps';
 import { IAttributes, IEvent, IOtelTrace } from '../../../../types/otel';
 import { useTraceTimelineStore } from '../store';
+import { focusedSpanIDs } from '../timeline-utils';
 import {
   trackDetailLogItemToggle,
   trackDetailLogsToggle,
@@ -80,6 +81,13 @@ export function SpanDetailSidePanelImpl(props: TProps) {
 
   const focusSpan = useCallback(
     (uiFind: string) => {
+      const { focusedSubtreeSpanID, setFocusedSubtreeSpanID } = useTraceTimelineStore.getState();
+      if (focusedSubtreeSpanID && trace) {
+        const subtreeIDs = focusedSpanIDs(trace, focusedSubtreeSpanID);
+        if (subtreeIDs && !subtreeIDs.has(uiFind)) {
+          setFocusedSubtreeSpanID(null);
+        }
+      }
       updateUiFind({ location, navigate, uiFind });
       focusUiFindMatches(trace, uiFind, false);
     },
