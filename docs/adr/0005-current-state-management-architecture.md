@@ -33,7 +33,7 @@ graph TD
     C -->|Server Data| E[React Components]
     Z -->|Shared UI State| E
     F[Local Component State] -->|Transient UI| E
-    B[Redux Store<br/>residual] -->|metrics, decorations,<br/>timeline duck residue| E
+    B[Redux Store<br/>residual] -->|metrics, decorations| E
     E -->|Writes back| A
     E -->|Store actions| Z
     E -->|Dispatches| B
