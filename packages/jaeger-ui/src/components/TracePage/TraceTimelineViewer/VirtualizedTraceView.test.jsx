@@ -4,9 +4,7 @@
 import React from 'react';
 import { render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
-import { legacy_createStore as createStore } from 'redux';
 import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
@@ -935,23 +933,20 @@ describe('<VirtualizedTraceView> wrapper', () => {
     const storeActions = Object.fromEntries(
       actionNames.map(name => [name, vi.spyOn(useTraceTimelineStore.getState(), name)])
     );
-    const reduxStore = createStore(() => ({ traceTimeline: { hoverIndentGuideIds: new Set() } }));
     render(
-      <Provider store={reduxStore}>
-        <MemoryRouter>
-          <VirtualizedTraceView
-            currentViewRangeTime={[0, 1]}
-            findMatchesIDs={null}
-            nameColumnWidth={0.25}
-            scrollToFirstVisibleSpan={jest.fn()}
-            registerAccessors={jest.fn()}
-            trace={trace}
-            criticalPath={[]}
-            spanPillsEnabled={false}
-            useOtelTerms={false}
-          />
-        </MemoryRouter>
-      </Provider>
+      <MemoryRouter>
+        <VirtualizedTraceView
+          currentViewRangeTime={[0, 1]}
+          findMatchesIDs={null}
+          nameColumnWidth={0.25}
+          scrollToFirstVisibleSpan={jest.fn()}
+          registerAccessors={jest.fn()}
+          trace={trace}
+          criticalPath={[]}
+          spanPillsEnabled={false}
+          useOtelTerms={false}
+        />
+      </MemoryRouter>
     );
     const rowProps = index =>
       listViewPropsCapture.current.itemRenderer('key', {}, index, {}).props.children.props;
