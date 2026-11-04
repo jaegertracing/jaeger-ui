@@ -7,7 +7,7 @@ import queryString from 'query-string';
 
 import { jaegerClient } from '../api/v3/client';
 import { TPadEntry } from '../model/path-agnostic-decorations/types';
-import getConfig from '../utils/config/get-config';
+import { useConfig } from './useConfig';
 import stringSupplant from '../utils/stringSupplant';
 
 async function fetchSummary(
@@ -29,8 +29,8 @@ async function fetchSummary(
   } catch (error) {
     value = `Unable to fetch decoration: ${(error as Error)?.message || error}`;
   }
-  // The old reducer retained the largest value for the session. Update it once per response,
-  // so readers observe a number instead of each scanning every summary query.
+  // The maximum is the largest numeric value seen for this scope and tier during the session.
+  // Update it once per response so readers observe a number instead of scanning every summary query.
   if (typeof value === 'number' && value > (client.getQueryData<number>(maximumKey) ?? -Infinity)) {
     client.setQueryData(maximumKey, value);
   }
@@ -49,12 +49,11 @@ export default function usePathAgnosticDecoration({
   const client = useQueryClient();
   const { decoration } = queryString.parse(search);
   const decorationID = (Array.isArray(decoration) ? decoration[0] : decoration) || undefined;
-  const schema = getConfig().pathAgnosticDecorations?.find(s => s.id === decorationID);
+  const schema = useConfig().pathAgnosticDecorations?.find(s => s.id === decorationID);
   const op = typeof operation === 'string' ? operation : undefined;
   const withOp = Boolean(op && schema?.opSummaryUrl && schema.opSummaryPath);
   // Include the config in the key so a reused ID cannot expose values from another endpoint.
   const scopeKey = JSON.stringify([
-    'decoration-summary',
     decorationID,
     schema?.summaryUrl,
     schema?.summaryPath,
@@ -100,7 +99,7 @@ export default function usePathAgnosticDecoration({
   });
   const serviceIndex = tiers.length - 1;
   const operationValue = withOp ? summaries[0].data : undefined;
-  // Match the former extractor: falsy operation values fall back to a cached service value.
+  // Falsy operation values fall back to a cached service value.
   return {
     decorationID,
     decorationValue: operationValue || summaries[serviceIndex].data,

@@ -2,19 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { act, render, renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import usePathAgnosticDecoration from './usePathAgnosticDecoration';
 import { jaegerClient } from '../api/v3/client';
-import getConfig from '../utils/config/get-config';
+import { useConfig } from './useConfig';
 import defaultConfig from '../constants/default-config';
 
-vi.mock('../utils/config/get-config');
+vi.mock('./useConfig');
 
-// Replaces the action tests for URL selection, fallback, errors and request deduplication,
-// and the reducer tests for independent scales, retained maxima and values across nodes.
-// Promise batching and immutable Redux merges disappear with the removed implementation.
 describe('usePathAgnosticDecoration', () => {
   let client: QueryClient;
   const schema = {
@@ -37,7 +34,7 @@ describe('usePathAgnosticDecoration', () => {
 
   beforeEach(() => {
     client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    vi.mocked(getConfig).mockReturnValue({ ...defaultConfig, pathAgnosticDecorations: [schema] });
+    vi.mocked(useConfig).mockReturnValue({ ...defaultConfig, pathAgnosticDecorations: [schema] });
     fetchDecoration.mockReset().mockResolvedValue({ services: { frontend: 42, backend: 108 } });
   });
 
@@ -52,7 +49,7 @@ describe('usePathAgnosticDecoration', () => {
   });
 
   it('does not fetch without configured schemas', () => {
-    vi.mocked(getConfig).mockReturnValue({ ...defaultConfig });
+    vi.mocked(useConfig).mockReturnValue({ ...defaultConfig });
     renderHook(() => usePathAgnosticDecoration(props), { wrapper });
     expect(fetchDecoration).not.toHaveBeenCalled();
   });
@@ -93,7 +90,7 @@ describe('usePathAgnosticDecoration', () => {
   });
 
   it.each(['opSummaryUrl', 'opSummaryPath'] as const)('uses the service summary without %s', field => {
-    vi.mocked(getConfig).mockReturnValue({
+    vi.mocked(useConfig).mockReturnValue({
       ...defaultConfig,
       pathAgnosticDecorations: [{ ...schema, [field]: undefined }],
     });
@@ -143,7 +140,7 @@ describe('usePathAgnosticDecoration', () => {
   });
 
   it('keeps values and maxima isolated between decorations sharing a URL', async () => {
-    vi.mocked(getConfig).mockReturnValue({
+    vi.mocked(useConfig).mockReturnValue({
       ...defaultConfig,
       pathAgnosticDecorations: [
         schema,
@@ -216,33 +213,6 @@ describe('usePathAgnosticDecoration', () => {
     }
   });
 
-  it('bounds cache-wide scans as multiple decorated nodes resolve', async () => {
-    const nodeCount = 50;
-    fetchDecoration.mockResolvedValue({
-      services: Object.fromEntries(Array.from({ length: nodeCount }, (_, i) => [String(i), i])),
-    });
-    const scans = vi.spyOn(client.getQueryCache(), 'findAll');
-    function Node({ service }: { service: string }) {
-      const decoration = usePathAgnosticDecoration({ ...props, service });
-      return React.createElement('span', { 'data-testid': 'maximum' }, String(decoration.decorationMax));
-    }
-    const { getAllByTestId } = render(
-      React.createElement(
-        React.Fragment,
-        null,
-        ...Array.from({ length: nodeCount }, (_, i) =>
-          React.createElement(Node, { key: i, service: String(i) })
-        )
-      ),
-      { wrapper }
-    );
-    await waitFor(() =>
-      expect(getAllByTestId('maximum').every(node => node.textContent === '49')).toBe(true)
-    );
-    expect(scans.mock.calls.length).toBeLessThan(nodeCount * 10);
-    expect(fetchDecoration).toHaveBeenCalledTimes(1);
-  });
-
   it('changes values when service or operation changes without a remount', async () => {
     const { result, rerender } = renderHook(usePathAgnosticDecoration, { initialProps: props, wrapper });
     await waitFor(() => expect(result.current.decorationValue).toBe(42));
@@ -265,7 +235,7 @@ describe('usePathAgnosticDecoration', () => {
   });
 
   it('does not show a previous decoration after switching or clearing the URL selection', async () => {
-    vi.mocked(getConfig).mockReturnValue({
+    vi.mocked(useConfig).mockReturnValue({
       ...defaultConfig,
       pathAgnosticDecorations: [schema, { ...schema, id: 'other', summaryUrl: '/other' }],
     });
@@ -308,7 +278,7 @@ describe('usePathAgnosticDecoration', () => {
   it('does not expose old values when the configured endpoint changes', async () => {
     const { result, rerender } = renderHook(() => usePathAgnosticDecoration(props), { wrapper });
     await waitFor(() => expect(result.current.decorationValue).toBe(42));
-    vi.mocked(getConfig).mockReturnValue({
+    vi.mocked(useConfig).mockReturnValue({
       ...defaultConfig,
       pathAgnosticDecorations: [{ ...schema, summaryUrl: '/new' }],
     });

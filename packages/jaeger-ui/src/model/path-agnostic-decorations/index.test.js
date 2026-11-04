@@ -29,14 +29,14 @@ describe('getDecorationPresentation', () => {
       text: '42',
       value: decorationValue,
     });
-    expect(result.decorationProgressbar.key).toBe(service + '\t' + operation);
+    expect(result.decorationProgressbar.key).toBe(`${service}\t${operation}`);
   });
 
   it('returns service decoration', () => {
     const result = getDecorationPresentation({ ...props, operation: undefined });
     expect(result.decorationValue).toBe(decorationValue);
     expect(result.decorationProgressbar.props.maxValue).toBe(decorationMax);
-    expect(result.decorationProgressbar.key).toBe(service + '\tundefined');
+    expect(result.decorationProgressbar.key).toBe(`${service}\tundefined`);
   });
 
   it('omits CircularProgressbar if value is a string', () => {
