@@ -714,6 +714,67 @@ describe('trace timeline zustand stores', () => {
         expect(state.detailStates.has('existing-child')).toBe(true);
       });
 
+      it('reveals late-arriving parent for an already-matching orphan on same-ID reload while preserving manual collapse on unchanged ancestors', async () => {
+        const actualFilter = await vi.importActual<typeof import('../../../utils/filter-spans')>(
+          '../../../utils/filter-spans'
+        );
+        const actualAncestors = await vi.importActual<typeof import('../../../utils/span-ancestor-ids')>(
+          '../../../utils/span-ancestor-ids'
+        );
+        vi.mocked(filterSpans).mockImplementation(actualFilter.default);
+        vi.mocked(spanAncestorIds).mockImplementation(actualAncestors.default);
+
+        const attributes = { entries: () => [] };
+        const resource = { serviceName: 'service', attributes };
+        const root = makeSpan({ spanID: 'root', name: 'root', hasChildren: true, attributes, resource });
+        const matchingOrphan = makeSpan({
+          spanID: 'matching-orphan',
+          name: 'keyword',
+          parentSpan: root,
+          attributes,
+          resource,
+        });
+
+        // Initial trace: root -> matchingOrphan.
+        // User manually collapses root.
+        const initialTrace = makeTrace('same', [root, matchingOrphan]);
+        useTraceTimelineStore.getState().setTrace(initialTrace, 'keyword');
+        useTraceTimelineStore.getState().childrenToggle('root');
+        expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('root')).toBe(true);
+
+        // Reload: a late-arriving parent arrives between root and matchingOrphan:
+        // root -> lateParent -> matchingOrphan.
+        const lateParent = makeSpan({
+          spanID: 'late-parent',
+          name: 'late-parent',
+          hasChildren: true,
+          parentSpan: root,
+          attributes,
+          resource,
+        });
+        const updatedOrphan = makeSpan({
+          spanID: 'matching-orphan',
+          name: 'keyword',
+          parentSpan: lateParent,
+          attributes,
+          resource,
+        });
+
+        // Simulate lateParent being collapsed (e.g. from previous state or default)
+        useTraceTimelineStore.setState({
+          childrenHiddenIDs: new Set(['root', 'late-parent']),
+        });
+
+        const refreshedTrace = makeTrace('same', [root, lateParent, updatedOrphan]);
+        useTraceTimelineStore.getState().setTrace(refreshedTrace, 'keyword');
+
+        const state = useTraceTimelineStore.getState();
+        // Newly introduced ancestor (lateParent) is revealed
+        expect(state.childrenHiddenIDs.has('late-parent')).toBe(false);
+        // Unchanged ancestor (root) remains manually collapsed
+        expect(state.childrenHiddenIDs.has('root')).toBe(true);
+      });
+
       it.each(['sidepanel', 'inline'] as const)(
         'prunes dropped selected span on same-ID reload with uiFind active in %s mode',
         detailPanelMode => {
@@ -1226,6 +1287,26 @@ describe('calculateFocusedFindRowStates', () => {
       const leaf = makeSpan({ spanID: 'leaf' });
       const revealed = findNewlyRevealedAncestors('find', [root, leaf], [root, leaf]);
       expect(revealed.size).toBe(0);
+    });
+
+    it('reveals newly introduced ancestors for retained matches when a missing parent arrives on reload', () => {
+      vi.mocked(filterSpans).mockReturnValue(new Set(['orphan-leaf']));
+      const orphanLeafPrev = makeSpan({ spanID: 'orphan-leaf' });
+      const root = makeSpan({ spanID: 'root', hasChildren: true });
+      const lateParent = makeSpan({ spanID: 'late-parent', hasChildren: true, parentSpan: root });
+      const orphanLeafCurrent = makeSpan({ spanID: 'orphan-leaf', parentSpan: lateParent });
+
+      vi.mocked(spanAncestorIds).mockImplementation(span => {
+        if (span?.spanID === 'orphan-leaf' && span.parentSpan) return ['late-parent', 'root'];
+        return [];
+      });
+
+      const revealed = findNewlyRevealedAncestors(
+        'find',
+        [orphanLeafPrev],
+        [root, lateParent, orphanLeafCurrent]
+      );
+      expect(revealed).toEqual(new Set(['late-parent', 'root']));
     });
   });
 });

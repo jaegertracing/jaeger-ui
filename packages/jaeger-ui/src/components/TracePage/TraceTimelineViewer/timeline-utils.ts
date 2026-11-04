@@ -83,6 +83,11 @@ export function findNewlyMatchedSpanInfo(
   const spansMap = new Map<string, IOtelSpan>();
   currentSpans.forEach(span => spansMap.set(span.spanID, span));
 
+  const prevSpansMap = new Map<string, IOtelSpan>();
+  if (prevSpans) {
+    prevSpans.forEach(span => prevSpansMap.set(span.spanID, span));
+  }
+
   const prevMatched = (prevSpans && filterSpans(uiFind, prevSpans)) || new Set<string>();
   const currentMatched = filterSpans(uiFind, currentSpans) || new Set<string>();
 
@@ -90,12 +95,21 @@ export function findNewlyMatchedSpanInfo(
   const revealedAncestors = new Set<string>();
 
   currentMatched.forEach(spanID => {
+    const span = spansMap.get(spanID);
+    if (!span) {
+      return;
+    }
     if (!prevMatched.has(spanID)) {
       newlyMatchedIDs.add(spanID);
-      const span = spansMap.get(spanID);
-      if (span) {
-        spanAncestorIds(span).forEach(ancestorID => revealedAncestors.add(ancestorID));
-      }
+      (spanAncestorIds(span) || []).forEach(ancestorID => revealedAncestors.add(ancestorID));
+    } else {
+      const prevSpan = prevSpansMap.get(spanID);
+      const prevAncestors = prevSpan ? new Set(spanAncestorIds(prevSpan) || []) : new Set<string>();
+      (spanAncestorIds(span) || []).forEach(ancestorID => {
+        if (!prevAncestors.has(ancestorID)) {
+          revealedAncestors.add(ancestorID);
+        }
+      });
     }
   });
 
