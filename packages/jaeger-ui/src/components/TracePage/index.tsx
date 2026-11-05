@@ -8,7 +8,6 @@ import { useNormalizeTraceId } from './useNormalizeTraceId';
 import { useNavigate } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
 import _clamp from 'lodash/clamp';
-import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
 import memoizeOne from 'memoize-one';
 import { connect } from 'react-redux';
@@ -384,7 +383,7 @@ export function TracePageImpl(props: TProps) {
   if (viewType === ETraceViewType.TraceGraph) {
     findCount = uiFind && findMatches ? findMatches.size : 0;
   } else if (uiFind) {
-    const allMatches = filterSpansMemo(uiFind, _get(traceData, 'spans'));
+    const allMatches = filterSpansMemo(uiFind, traceData?.spans);
     const otelTrace = traceData;
     spanFindMatches =
       otelTrace && prunedServices.size > 0
