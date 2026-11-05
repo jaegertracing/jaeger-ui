@@ -107,6 +107,18 @@ describe('computeLatencyScores', () => {
     expect(zeroDuration.get('a')).toBe(-1);
   });
 
+  it('scores spans within a few microseconds of a tiny or zero median at the median', () => {
+    const scores = computeLatencyScores([
+      makeSpan('a', 'op', 0),
+      makeSpan('b', 'op', 0),
+      makeSpan('e', 'op', 0),
+      makeSpan('c', 'op', 9),
+      makeSpan('d', 'op', 10),
+    ]);
+    expect(scores.get('c')).toBe(0);
+    expect(scores.get('d')).toBe(1);
+  });
+
   it('scores different operations independently', () => {
     const scores = computeLatencyScores([
       makeSpan('a', 'fast-op', 10),

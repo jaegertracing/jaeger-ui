@@ -221,28 +221,28 @@ describe('<TraceTimelineViewer>', () => {
       expect(screen.getByRole('group', { name: /latency heatmap legend/i })).toBeInTheDocument();
     });
 
-    it('realigns the side panel when the legend is shown or hidden', () => {
+    it('starts the side panel below both the header and the legend', () => {
       mockLayoutPrefsStore.detailPanelMode = 'sidepanel';
 
-      // The legend sits above the layout container, so toggling it moves the container.
-      let layoutTop = 80;
+      // The legend is a fixed band like the header, so it doesn't move the layout container.
       const rectSpy = jest
         .spyOn(Element.prototype, 'getBoundingClientRect')
-        .mockImplementation(() => ({ top: layoutTop, bottom: 0, left: 0, right: 0, height: 0, width: 0 }));
+        .mockImplementation(() => ({ top: 80, bottom: 0, left: 0, right: 0, height: 0, width: 0 }));
 
       try {
         const { container, rerender } = render(<TraceTimelineViewerImpl {...props} />);
         const panel = container.querySelector('.TraceTimelineViewer--sidePanel');
         expect(panel.style.top).toBe('calc(80px + var(--timeline-header-row-height))');
 
-        // The legend reserves the header row's height itself, so the panel starts at the container.
-        layoutTop = 160;
         mockLayoutPrefsStore.heatmapEnabled = true;
         rerender(<TraceTimelineViewerImpl {...props} />);
-        expect(panel.style.top).toBe('calc(160px)');
-        expect(panel.style.height).toBe('calc(100vh - 160px)');
+        expect(panel.style.top).toBe(
+          'calc(80px + (var(--timeline-header-row-height) + var(--heatmap-legend-height)))'
+        );
+        expect(panel.style.height).toBe(
+          'calc(100vh - 80px - (var(--timeline-header-row-height) + var(--heatmap-legend-height)))'
+        );
 
-        layoutTop = 80;
         mockLayoutPrefsStore.heatmapEnabled = false;
         rerender(<TraceTimelineViewerImpl {...props} />);
         expect(panel.style.top).toBe('calc(80px + var(--timeline-header-row-height))');

@@ -201,9 +201,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     // moves the layout container without resizing it. The header is taller in timeline view than in
     // the others, since only the timeline shows the minimap, and its height reaches TracePage's
     // state one commit after the view switches — too late for the measurement taken on mount.
-    // heatmapEnabled is a dependency because the heatmap legend sits above the layout container,
-    // so showing or hiding it moves the container the same way.
-  }, [sidePanelActive, pageHeaderHeight, heatmapEnabled]);
+  }, [sidePanelActive, pageHeaderHeight]);
 
   const headerRow = (
     <TimelineHeaderRow
@@ -247,14 +245,15 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   if (sidePanelActive) {
     const mainWidth = (1 - effectiveSidePanelWidth) * 100;
     // The header row height stays in CSS so that vars.css remains its only definition. The
-    // heatmap legend already reserves the header row's height above the layout container.
-    const headerOffset = heatmapEnabled ? '' : ' + var(--timeline-header-row-height)';
-    const headerHeight = heatmapEnabled ? '' : ' - var(--timeline-header-row-height)';
+    // heatmap legend is a second fixed band below the header, so the panel starts below both.
+    const headerRowHeight = heatmapEnabled
+      ? '(var(--timeline-header-row-height) + var(--heatmap-legend-height))'
+      : 'var(--timeline-header-row-height)';
     const sidePanelStyle: React.CSSProperties = {
       width: `${effectiveSidePanelWidth * 100}%`,
       ...(layoutTop !== null && {
-        top: `calc(${layoutTop}px${headerOffset})`,
-        height: `calc(100vh - ${layoutTop}px${headerHeight})`,
+        top: `calc(${layoutTop}px + ${headerRowHeight})`,
+        height: `calc(100vh - ${layoutTop}px - ${headerRowHeight})`,
       }),
     };
     return (

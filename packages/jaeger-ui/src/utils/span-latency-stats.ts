@@ -15,6 +15,11 @@ const HEATMAP_SATURATION_RATIO = 2;
 // as a retry pair at 10ms and 10.1ms don't show up as one fast and one slow span.
 const HEATMAP_NEUTRAL_SPREAD = 0.1;
 
+// Spans within this many microseconds of the median also stay neutral. A ratio means little at
+// that scale, and without the floor a tiny or zero median would pin a span only a few
+// microseconds slower to the slowest step.
+const HEATMAP_NEUTRAL_FLOOR_US = 10;
+
 const NEUTRAL_LIMIT = Math.log(1 + HEATMAP_NEUTRAL_SPREAD) / Math.log(HEATMAP_SATURATION_RATIO);
 const SIDE_STEPS = (HEATMAP_STEPS - 1) / 2;
 
@@ -29,11 +34,12 @@ function median(sorted: number[]): number {
 }
 
 /**
- * Scores each span's duration against the median of the other spans with the same service
- * and operation in the trace. The score is log(duration / median) on a base of
- * HEATMAP_SATURATION_RATIO, clamped to [-1, 1]: 0 is the median, -1 is half of it or less,
- * and 1 is twice it or more. Spans whose operation occurs only once have no peers to compare
- * against and are left out of the map.
+ * Scores each span's duration against the median duration of its group: all spans in the trace,
+ * itself included, with the same service and operation. The score is log(duration / median) on
+ * a base of HEATMAP_SATURATION_RATIO, clamped to [-1, 1]: 0 is the median, -1 is half of it or
+ * less, and 1 is twice it or more. Spans within HEATMAP_NEUTRAL_FLOOR_US of the median score 0.
+ * Spans whose operation occurs only once have no peers to compare against and are left out of
+ * the map.
  */
 export function computeLatencyScores(spans: ReadonlyArray<IOtelSpan>): Map<string, number> {
   const groups = new Map<string, number[]>();
@@ -55,7 +61,7 @@ export function computeLatencyScores(spans: ReadonlyArray<IOtelSpan>): Map<strin
     const med = medians.get(operationKey(span));
     if (med === undefined) continue;
     let score: number;
-    if (span.duration === med) score = 0;
+    if (Math.abs(span.duration - med) < HEATMAP_NEUTRAL_FLOOR_US) score = 0;
     // A zero median or duration has no finite ratio, so it sits at the matching end of the scale.
     else if (med <= 0) score = 1;
     else if (span.duration <= 0) score = -1;
