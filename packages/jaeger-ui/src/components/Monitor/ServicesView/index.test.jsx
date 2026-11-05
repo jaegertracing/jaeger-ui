@@ -373,6 +373,54 @@ describe('<MonitorATMServicesView>', () => {
     expect(screen.queryByText(/No data yet!/)).not.toBeInTheDocument();
   });
 
+  it('shows only the fetch error when every latency request fails', () => {
+    cleanup();
+    const someError = new Error('504 Gateway Timeout');
+    useServiceMetricsQuery.mockReturnValue({
+      data: {
+        serviceMetrics: {
+          service_latencies: null,
+          service_call_rate: serviceMetrics.service_call_rate,
+          service_error_rate: null,
+        },
+        serviceError: {
+          ...originInitialState.serviceError,
+          service_latencies_50: someError,
+          service_latencies_75: someError,
+          service_latencies_95: someError,
+        },
+      },
+      isFetching: false,
+      isLoading: false,
+    });
+    renderWithRouter(<MonitorATMServicesView />);
+    expect(screen.getByTestId('graph-error')).toBeInTheDocument();
+    expect(screen.queryByText(/No latency data/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No data yet!/)).not.toBeInTheDocument();
+  });
+
+  it('shows the generic alert when some latency requests fail and the rest are empty', () => {
+    cleanup();
+    useServiceMetricsQuery.mockReturnValue({
+      data: {
+        serviceMetrics: {
+          service_latencies: null,
+          service_call_rate: serviceMetrics.service_call_rate,
+          service_error_rate: null,
+        },
+        serviceError: {
+          ...originInitialState.serviceError,
+          service_latencies_50: new Error('504 Gateway Timeout'),
+        },
+      },
+      isFetching: false,
+      isLoading: false,
+    });
+    renderWithRouter(<MonitorATMServicesView />);
+    expect(screen.queryByText(/No latency data/)).not.toBeInTheDocument();
+    expect(screen.getByText(/No data yet!/)).toBeInTheDocument();
+  });
+
   it('does not show the missing-latency alert when no metrics exist', () => {
     cleanup();
     useServiceMetricsQuery.mockReturnValue({
