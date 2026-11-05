@@ -10,6 +10,7 @@ import * as track from './TracePageHeader.track';
 import { ETraceViewType } from '../types';
 import { jaegerClient } from '../../../api/v3/client';
 import { downloadTraces } from '../../../utils/download-traces';
+import { queryClient } from '../../../query/app-query-client';
 
 vi.mock('../../../api/v3/client', () => ({ jaegerClient: { fetchTrace: vi.fn() } }));
 vi.mock('../../../utils/download-traces', () => ({ downloadTraces: vi.fn() }));
@@ -65,7 +66,14 @@ describe('AltViewOptions', () => {
   afterEach(() => {
     jest.clearAllMocks();
     cleanup();
+    queryClient.removeQueries({ queryKey: ['uploadedSummaries'] });
+    queryClient.removeQueries({ queryKey: ['uploadedRawTraces'] });
   });
+
+  const setUploaded = (traceID, raw) => {
+    queryClient.setQueryData(['uploadedSummaries'], [{ traceID }]);
+    queryClient.setQueryData(['uploadedRawTraces'], [raw]);
+  };
 
   const renderComponent = (customProps = {}) => {
     const mergedProps = { ...props, ...customProps };
@@ -187,6 +195,47 @@ describe('AltViewOptions', () => {
     fireEvent.click(screen.getByTestId('menu-item-trace-json-download'));
 
     await waitFor(() => expect(message.error).toHaveBeenCalledWith('Failed to download trace: offline'));
+  });
+
+  it('downloads an uploaded OTLP trace from the upload cache instead of the backend', () => {
+    const traceID = '0123456789abcdef0123456789abcdef';
+    const raw = { resourceSpans: [{ scopeSpans: [{ spans: [{ traceId: traceID }] }] }] };
+    setUploaded(traceID, raw);
+    renderComponent({ traceID });
+
+    fireEvent.click(screen.getByTestId('menu-item-trace-json-download'));
+
+    expect(downloadTraces).toHaveBeenCalledWith([raw], `trace-${traceID}.json`);
+    expect(jaegerClient.fetchTrace).not.toHaveBeenCalled();
+  });
+
+  it('hides the download for an uploaded legacy Jaeger JSON trace', () => {
+    setUploaded('abc123', { traceID: 'abc123', spans: [], processes: {} });
+    renderComponent({ traceID: 'abc123' });
+
+    expect(screen.queryByTestId('menu-item-trace-json-download')).not.toBeInTheDocument();
+    expect(screen.getByTestId('menu-item-trace-json')).toBeInTheDocument();
+  });
+
+  it('ignores clicks while a backend download is in flight', async () => {
+    let resolveFetch;
+    jaegerClient.fetchTrace.mockReturnValue(
+      new Promise(resolve => {
+        resolveFetch = resolve;
+      })
+    );
+    renderComponent({ traceID: 'abc123' });
+
+    const item = screen.getByTestId('menu-item-trace-json-download');
+    fireEvent.click(item);
+    await waitFor(() => expect(item).toHaveTextContent('Downloading Trace…'));
+    expect(item.querySelector('a')).toHaveAttribute('aria-disabled', 'true');
+    fireEvent.click(item);
+    expect(jaegerClient.fetchTrace).toHaveBeenCalledTimes(1);
+
+    resolveFetch({ resourceSpans: [] });
+    await waitFor(() => expect(item).toHaveTextContent('Download Trace (OTLP JSON)'));
+    expect(downloadTraces).toHaveBeenCalledTimes(1);
   });
 
   it('updates dropdown text when view type changes', () => {
