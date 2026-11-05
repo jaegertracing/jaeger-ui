@@ -107,6 +107,44 @@ describe('usePathAgnosticDecoration', () => {
     expect(fetchDecoration).toHaveBeenCalledTimes(1);
   });
 
+  it.each([
+    {
+      kind: 'service',
+      first: props,
+      next: { ...props, service: 'backend' },
+      response: { services: { frontend: 42, backend: 108 } },
+      laterResponse: { services: { frontend: 200, backend: 300 } },
+    },
+    {
+      kind: 'operation',
+      first: { ...props, operation: 'GET' },
+      next: { ...props, operation: 'POST' },
+      response: { operations: { GET: 42, POST: 108 } },
+      laterResponse: { operations: { GET: 200, POST: 300 } },
+    },
+  ])('keeps the same response snapshot for a $kind revealed after five minutes', async testCase => {
+    client.setDefaultOptions({ queries: { retry: false, gcTime: 5 * 60 * 1000 } });
+    fetchDecoration.mockResolvedValueOnce(testCase.response).mockResolvedValue(testCase.laterResponse);
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const first = renderHook(() => usePathAgnosticDecoration(testCase.first), { wrapper });
+      await waitFor(() => expect(first.result.current.decorationValue).toBe(42));
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(6 * 60 * 1000);
+      });
+
+      const next = renderHook(() => usePathAgnosticDecoration(testCase.next), { wrapper });
+      await waitFor(() => expect(next.result.current.decorationValue).toBe(108));
+      expect(first.result.current.decorationValue).toBe(42);
+      expect(first.result.current.decorationMax).toBe(108);
+      expect(next.result.current.decorationMax).toBe(108);
+      expect(fetchDecoration).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('deduplicates in-flight requests', async () => {
     let resolve!: (value: unknown) => void;
     fetchDecoration.mockReturnValue(

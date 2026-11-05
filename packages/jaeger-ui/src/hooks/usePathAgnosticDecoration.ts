@@ -23,6 +23,7 @@ async function fetchSummary(
       queryKey: ['decoration-response', url],
       queryFn: () => jaegerClient.fetchDecoration(url),
       staleTime: Infinity,
+      gcTime: Infinity,
       retry: false,
     });
     value = _get(response, path, `\`${path}\` not found in response`);
