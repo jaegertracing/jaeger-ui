@@ -1082,7 +1082,7 @@ Search now calls `/api/v3/trace-summaries` via `useSearchTraces(query)` in `src/
 
 **Components rewired**: `SearchTracePage` (fully disconnected from Redux), `FileLoader` (accepts `onTracesLoaded` callback instead of Redux action).
 
-> **Note**: `SearchForm` still uses the legacy `connect(mapStateToProps, mapDispatchToProps)` pattern. Removing it is deferred to a phase 4 follow-up.
+> **Note**: `SearchForm` derives its defaults from the router search string and submits directly, without a Redux wrapper.
 
 #### ✅ 2c. Services and operations discovery
 
@@ -1223,10 +1223,11 @@ The residual surface is now small enough to enumerate:
 | `reducers/metrics.ts` | `Monitor/ServicesView` (`connect`) | Phase 2f — implementation open in [#4048](https://github.com/jaegertracing/jaeger-ui/pull/4048) |
 | `reducers/path-agnostic-decorations.ts`, `actions/path-agnostic-decorations.ts` | `DdgNodeContent`, `DeepDependencies/SidePanel/DetailsPanel` | Phase 2g |
 | `TraceTimelineViewer/duck.ts`, `duck.track.ts`, `middlewares/track.ts` | no UI consumers; `store.track.test.ts` (parity reference) | Phase 4 follow-up (Phase 1c steps 3–4 done) |
-| Vestigial `connect()` wrappers whose `mapStateToProps` ignores state entirely | `SearchTracePage/SearchForm.tsx`, `TraceDiff/TraceDiff.tsx` | Phase 4b (mechanical) |
 | `utils/configure-store.ts`, `<Provider>` in `components/App/index.tsx`, `ReduxState` in `types/index.ts`, `types/TTraceTimeline.ts` | app shell, ~14 test files | Phase 4b/4c |
 
 Removing the timeline duck was the only item here with a non-mechanical design question in it (where the analytics call sites go). Phase 1c steps 3–4 are done; the duck remains only for parity tests until Phase 4 follow-up.
+
+`SearchForm`, `TraceDiff`, and `TracePage` derive their URL props without `connect()`. The metrics table uses `OperationMetricsErrors` rather than the obsolete `MetricsReduxState` shape. Store and `<Provider>` removal still wait for the remaining migrations.
 
 #### ⬜ 4b. Remove packages
 

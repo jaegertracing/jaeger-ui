@@ -2,7 +2,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useState, useCallback, useMemo, ComponentProps } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Input, Button, Tooltip, Select, Row, Col, Form, Switch } from 'antd';
 import logfmtParser from 'logfmt/lib/logfmt_parser';
 import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
@@ -10,10 +10,8 @@ import dayjs from 'dayjs';
 import memoizeOne from 'memoize-one';
 import queryString from 'query-string';
 import { IoHelp } from 'react-icons/io5';
-import { connect } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getUrl as getSearchUrl, lookbackFromUrl } from './url';
-import type { Dispatch } from 'redux';
 import { useIsSearchFetching } from '../../hooks/useTraceDiscovery';
 import { useClearUploadedTraces } from './useUploadedTraces';
 import store from '../../utils/storage';
@@ -36,7 +34,6 @@ import ValidatedFormField from '../../utils/ValidatedFormField';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { useConfig } from '../../hooks/useConfig';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
-import { ReduxState } from '../../types';
 import { toApiError } from '../../types/api-error';
 import { SearchQuery } from '../../types/search';
 import {
@@ -739,7 +736,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   );
 };
 
-export function mapStateToProps(_state: ReduxState, ownProps: { search?: string }) {
+export function getSearchFormProps(search = '') {
   const {
     service,
     limit,
@@ -751,7 +748,7 @@ export function mapStateToProps(_state: ReduxState, ownProps: { search?: string 
     maxDuration,
     minDuration,
     traceID: traceIDParams,
-  } = queryString.parse(ownProps.search || '');
+  } = queryString.parse(search);
 
   const nowInMicroseconds = dayjs().valueOf() * 1000;
   const today = formatDate(nowInMicroseconds);
@@ -830,12 +827,11 @@ export function mapStateToProps(_state: ReduxState, ownProps: { search?: string 
   }
 
   return {
-    destroyOnUnmount: false,
     initialValues: {
       service: (service as string | undefined) || lastSearchService || '-',
       resultsLimit: (limit as string | undefined) || String(DEFAULT_LIMIT),
       lookback:
-        lookbackFromUrl(ownProps.search || '') ||
+        lookbackFromUrl(search) ||
         asValidConfigLookback(getConfig().search?.defaultLookback) ||
         DEFAULT_LOOKBACK,
       startDate: queryStartDate || today,
@@ -853,24 +849,18 @@ export function mapStateToProps(_state: ReduxState, ownProps: { search?: string 
   };
 }
 
-export function mapDispatchToProps(_dispatch: Dispatch) {
-  return {
-    submitFormHandler: (
-      fields: ISearchFormFields,
-      adjustEndTime: string | null | undefined,
-      adjustTimeEnabled: boolean
-    ) => submitForm(fields, adjustEndTime || null, adjustTimeEnabled) as string,
-  };
+export function submitFormHandler(
+  fields: ISearchFormFields,
+  adjustEndTime: string | null | undefined,
+  adjustTimeEnabled: boolean
+) {
+  return submitForm(fields, adjustEndTime || null, adjustTimeEnabled);
 }
 
-const connector = connect(mapStateToProps, mapDispatchToProps);
-
-const ConnectedSearchForm = connector(SearchFormImpl);
-
-// search is always injected from useLocation(); callers cannot supply it.
-function SearchFormWithLocation(props: Omit<ComponentProps<typeof ConnectedSearchForm>, 'search'>) {
+function SearchFormWithLocation(props: Omit<ISearchFormImplProps, 'initialValues' | 'submitFormHandler'>) {
   const { search } = useLocation();
-  return <ConnectedSearchForm {...props} search={search} />;
+  const formProps = useMemo(() => getSearchFormProps(search), [search]);
+  return <SearchFormImpl {...props} {...formProps} submitFormHandler={submitFormHandler} />;
 }
 
 export default SearchFormWithLocation;
