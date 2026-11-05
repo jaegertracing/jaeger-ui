@@ -9,7 +9,6 @@ import { useShallow } from 'zustand/react/shallow';
 import { getUrl, TDiffRouteParams } from './url';
 import TraceDiffGraph from './TraceDiffGraph';
 import TraceDiffHeader from './TraceDiffHeader';
-import { TOP_NAV_HEIGHT } from '../../constants';
 import { FetchedTrace, TNil, ReduxState } from '../../types';
 import TTraceDiffState from '../../types/TTraceDiffState';
 import pluckTruthy from '../../utils/ts/pluckTruthy';
@@ -64,20 +63,20 @@ export function TraceDiffImpl({ a, b, cohort }: TStateProps & TOwnProps) {
     }))
   );
   const navigate = useNavigate();
-  const [graphTopOffset, setGraphTopOffset] = React.useState(TOP_NAV_HEIGHT);
+  const [headerHeight, setHeaderHeight] = React.useState(0);
   const headerWrapperElmRef = React.useRef<HTMLDivElement | null>(null);
 
-  const setGraphTopOffsetCallback = React.useCallback(() => {
+  const setHeaderHeightCallback = React.useCallback(() => {
     if (headerWrapperElmRef.current && headerWrapperElmRef.current.clientHeight !== undefined) {
-      const newGraphTopOffset = TOP_NAV_HEIGHT + headerWrapperElmRef.current.clientHeight;
-      setGraphTopOffset(prevOffset => {
-        if (prevOffset !== newGraphTopOffset) {
-          return newGraphTopOffset;
+      const newHeaderHeight = headerWrapperElmRef.current.clientHeight;
+      setHeaderHeight(previousHeight => {
+        if (previousHeight !== newHeaderHeight) {
+          return newHeaderHeight;
         }
-        return prevOffset;
+        return previousHeight;
       });
     } else {
-      setGraphTopOffset(TOP_NAV_HEIGHT);
+      setHeaderHeight(0);
     }
   }, []);
 
@@ -113,8 +112,8 @@ export function TraceDiffImpl({ a, b, cohort }: TStateProps & TOwnProps) {
   }, [processProps]);
 
   React.useEffect(() => {
-    setGraphTopOffsetCallback();
-  }, [setGraphTopOffsetCallback]);
+    setHeaderHeightCallback();
+  }, [setHeaderHeightCallback]);
 
   const traceA = a ? tracesData.get(a) || { id: a } : null;
   const traceB = b ? tracesData.get(b) || { id: b } : null;
@@ -132,7 +131,11 @@ export function TraceDiffImpl({ a, b, cohort }: TStateProps & TOwnProps) {
           diffSetB={diffSetB}
         />
       </div>
-      <div key="graph" className="TraceDiff--graphWrapper" style={{ top: graphTopOffset }}>
+      <div
+        key="graph"
+        className="TraceDiff--graphWrapper"
+        style={{ '--trace-diff-header-height': `${headerHeight}px` } as React.CSSProperties}
+      >
         <TraceDiffGraph a={traceA} b={traceB} />
       </div>
     </React.Fragment>

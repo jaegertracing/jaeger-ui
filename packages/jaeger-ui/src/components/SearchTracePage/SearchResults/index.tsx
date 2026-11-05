@@ -206,6 +206,8 @@ export function UnconnectedSearchResults({
   }
   const cohortIds = new Set(diffCohort.map(datum => datum.traceID));
   const searchUrl = location.pathname + location.search;
+  const target = getTargetEmptyOrBlank();
+  const suffix = target === '_blank' ? ' in a new window' : '';
   return (
     <div className="SearchResults">
       <div className="SearchResults--header">
@@ -258,9 +260,10 @@ export function UnconnectedSearchResults({
           )}
           {showStandaloneLink && (
             <Link
+              aria-label={`Open search results${suffix}`}
               className="u-tx-inherit ub-nowrap ub-ml3"
               to={searchUrl}
-              target={getTargetEmptyOrBlank()}
+              target={target}
               rel="noopener noreferrer"
             >
               <NewWindowIcon isLarge />

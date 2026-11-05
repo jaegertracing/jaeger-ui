@@ -4,15 +4,15 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
-import JaegerAPI from '../api/jaeger';
+import { jaegerClient } from '../api/v3/client';
 import transformDdgData from '../model/ddg/transformDdgData';
 import {
   useDeepDependencyGraphQuery,
   useDeepDependencyGraphQueryFromUrl,
 } from './useDeepDependencyGraphQuery';
 
-vi.mock('../api/jaeger', () => ({
-  default: {
+vi.mock('../api/v3/client', () => ({
+  jaegerClient: {
     fetchDeepDependencyGraph: vi.fn(),
   },
 }));
@@ -59,30 +59,33 @@ describe('useDeepDependencyGraphQuery', () => {
 
   it('does not fetch when params are null', () => {
     renderHook(() => useDeepDependencyGraphQuery(null), { wrapper: createWrapper() });
-    expect(JaegerAPI.fetchDeepDependencyGraph).not.toHaveBeenCalled();
+    expect(jaegerClient.fetchDeepDependencyGraph).not.toHaveBeenCalled();
   });
 
   it('fetches and transforms the graph payload', async () => {
     const payload = { dependencies: [{ path: [], attributes: [] }] };
-    (JaegerAPI.fetchDeepDependencyGraph as ReturnType<typeof vi.fn>).mockResolvedValue(payload);
+    (jaegerClient.fetchDeepDependencyGraph as ReturnType<typeof vi.fn>).mockResolvedValue(payload);
 
     const { result } = renderHook(() => useDeepDependencyGraphQuery(params), {
       wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(JaegerAPI.fetchDeepDependencyGraph).toHaveBeenCalledWith({
-      service: 'svc',
-      operation: 'op',
-      start: 0,
-      end: 0,
-    });
+    expect(jaegerClient.fetchDeepDependencyGraph).toHaveBeenCalledWith(
+      {
+        service: 'svc',
+        operation: 'op',
+        start: 0,
+        end: 0,
+      },
+      expect.any(AbortSignal)
+    );
     expect(transformDdgData).toHaveBeenCalledWith(payload, { service: 'svc', operation: 'op' });
     expect(result.current.data?.hash).toBe('h1');
   });
 
   it('normalizes an unrecognised API response to an empty dependencies payload', async () => {
-    (JaegerAPI.fetchDeepDependencyGraph as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    (jaegerClient.fetchDeepDependencyGraph as ReturnType<typeof vi.fn>).mockResolvedValue(null);
 
     const { result } = renderHook(() => useDeepDependencyGraphQuery(params), {
       wrapper: createWrapper(),
@@ -90,6 +93,37 @@ describe('useDeepDependencyGraphQuery', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(transformDdgData).toHaveBeenCalledWith({ dependencies: [] }, { service: 'svc', operation: 'op' });
+  });
+
+  it('reuses fresh data cached under the existing query key', () => {
+    const wrapper = createWrapper();
+    const paramsWithTimeRange = { ...params, start: 100, end: 200 };
+    const model = {
+      hash: 'cached',
+      distanceToPathElems: new Map(),
+      paths: [],
+      services: new Map(),
+      visIdxToPathElem: [],
+    };
+    queryClient.setQueryData(['ddg', 'svc', 'op', 100, 200], model);
+
+    const { result } = renderHook(() => useDeepDependencyGraphQuery(paramsWithTimeRange), { wrapper });
+
+    expect(result.current.data).toEqual(model);
+    expect(jaegerClient.fetchDeepDependencyGraph).not.toHaveBeenCalled();
+  });
+
+  it('exposes request failures without transforming an error response', async () => {
+    const error = new Error('Failed to fetch deep dependencies: 503 Service Unavailable');
+    vi.mocked(jaegerClient.fetchDeepDependencyGraph).mockRejectedValue(error);
+
+    const { result } = renderHook(() => useDeepDependencyGraphQuery(params), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error).toBe(error);
+    expect(transformDdgData).not.toHaveBeenCalled();
   });
 });
 
@@ -121,7 +155,7 @@ describe('useDeepDependencyGraphQueryFromUrl', () => {
       services: new Map(),
       visIdxToPathElem: [],
     });
-    (JaegerAPI.fetchDeepDependencyGraph as ReturnType<typeof vi.fn>).mockResolvedValue({
+    (jaegerClient.fetchDeepDependencyGraph as ReturnType<typeof vi.fn>).mockResolvedValue({
       dependencies: [],
     });
   });
@@ -134,7 +168,7 @@ describe('useDeepDependencyGraphQueryFromUrl', () => {
     renderHook(() => useDeepDependencyGraphQueryFromUrl(undefined, 'op'), {
       wrapper: createWrapper(),
     });
-    expect(JaegerAPI.fetchDeepDependencyGraph).not.toHaveBeenCalled();
+    expect(jaegerClient.fetchDeepDependencyGraph).not.toHaveBeenCalled();
   });
 
   it('fetches with default start and end when service is set', async () => {
@@ -143,12 +177,15 @@ describe('useDeepDependencyGraphQueryFromUrl', () => {
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(JaegerAPI.fetchDeepDependencyGraph).toHaveBeenCalledWith({
-      service: 'svc',
-      operation: 'op',
-      start: 0,
-      end: 0,
-    });
+    expect(jaegerClient.fetchDeepDependencyGraph).toHaveBeenCalledWith(
+      {
+        service: 'svc',
+        operation: 'op',
+        start: 0,
+        end: 0,
+      },
+      expect.any(AbortSignal)
+    );
   });
 
   it('forwards custom start and end to the API', async () => {
@@ -157,11 +194,14 @@ describe('useDeepDependencyGraphQueryFromUrl', () => {
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(JaegerAPI.fetchDeepDependencyGraph).toHaveBeenCalledWith({
-      service: 'svc',
-      operation: undefined,
-      start: 100,
-      end: 200,
-    });
+    expect(jaegerClient.fetchDeepDependencyGraph).toHaveBeenCalledWith(
+      {
+        service: 'svc',
+        operation: undefined,
+        start: 100,
+        end: 200,
+      },
+      expect.any(AbortSignal)
+    );
   });
 });

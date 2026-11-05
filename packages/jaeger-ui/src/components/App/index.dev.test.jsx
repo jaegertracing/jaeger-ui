@@ -34,10 +34,6 @@ vi.mock('../TracePage/url', () => ({ ROUTE_PATH: '/trace/:id' }));
 vi.mock('../Monitor/url', () => ({ ROUTE_PATH: '/monitor' }));
 vi.mock('../PlexusDemo/url', () => ({ ROUTE_PATH: '/plexus-demo' }));
 
-vi.mock('../../api/jaeger', () => ({
-  default: { apiRoot: null },
-  DEFAULT_API_ROOT: 'http://localhost:16686/api',
-}));
 vi.mock('../../utils/config/process-scripts');
 vi.mock('../../utils/prefix-url', () => mockDefault(jest.fn(() => '/prefix')));
 vi.mock('../../utils/configure-store', () => ({
