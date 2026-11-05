@@ -612,7 +612,10 @@ describe('<DdgNodeContent>', () => {
         usePathAgnosticDecoration.mockReturnValue({
           decorationID,
           decorationValue,
-          decorationMax: 108,
+          decorationProgressbar:
+            typeof decorationValue === 'number' ? (
+              <span data-testid="circular-progress-bar">{decorationValue}</span>
+            ) : undefined,
         });
         const { container } = render(<DdgNodeContentWrapper {...props} />);
         if (typeof decorationValue === 'number') {

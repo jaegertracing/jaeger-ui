@@ -26,7 +26,7 @@ import {
   TDdgVertex,
   PathElem,
 } from '../../../../model/ddg/types';
-import getDecorationPresentation, { TDecoration } from '../../../../model/path-agnostic-decorations';
+import { TDecoration } from '../../../../model/path-agnostic-decorations';
 import ActionsMenu, { IActionMenuItem } from '../../../common/ActionMenu/ActionsMenu';
 
 import './index.css';
@@ -390,9 +390,8 @@ function DdgNodeContent(props: DdgNodeContentProps) {
     operation: props.operation,
     search,
   });
-  const decorationProps = getDecorationPresentation({ ...props, ...decoration });
 
-  return <UnconnectedDdgNodeContent {...props} search={search} navigate={navigate} {...decorationProps} />;
+  return <UnconnectedDdgNodeContent {...props} search={search} navigate={navigate} {...decoration} />;
 }
 
 export default DdgNodeContent;

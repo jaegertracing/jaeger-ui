@@ -6,6 +6,7 @@ import _get from 'lodash/get';
 import queryString from 'query-string';
 
 import { jaegerClient } from '../api/v3/client';
+import getDecorationPresentation, { TDecoration } from '../model/path-agnostic-decorations';
 import { TPadEntry } from '../model/path-agnostic-decorations/types';
 import { useConfig } from './useConfig';
 import stringSupplant from '../utils/stringSupplant';
@@ -16,20 +17,23 @@ async function fetchSummary(
   path: string,
   maximumKey: readonly string[]
 ): Promise<TPadEntry> {
-  let value: TPadEntry;
-  try {
-    // Different services and decorations can extract different paths from one response.
-    const response = await client.fetchQuery({
-      queryKey: ['decoration-response', url],
-      queryFn: () => jaegerClient.fetchDecoration(url),
-      staleTime: Infinity,
-      gcTime: Infinity,
-      retry: false,
-    });
-    value = _get(response, path, `\`${path}\` not found in response`);
-  } catch (error) {
-    value = `Unable to fetch decoration: ${(error as Error)?.message || error}`;
-  }
+  // Different services and decorations can extract different paths from one response.
+  const response = await client.fetchQuery({
+    queryKey: ['decoration-response', url],
+    queryFn: async () => {
+      try {
+        return { data: await jaegerClient.fetchDecoration(url) };
+      } catch (error) {
+        return { error: (error as Error)?.message || String(error) };
+      }
+    },
+    staleTime: Infinity,
+    retry: false,
+  });
+  const value: TPadEntry =
+    'error' in response
+      ? `Unable to fetch decoration: ${response.error}`
+      : _get(response.data, path, `\`${path}\` not found in response`);
   // The maximum is the largest numeric value seen for this scope and tier during the session.
   // Update it once per response so readers observe a number instead of scanning every summary query.
   if (typeof value === 'number' && value > (client.getQueryData<number>(maximumKey) ?? -Infinity)) {
@@ -46,7 +50,7 @@ export default function usePathAgnosticDecoration({
   service: string;
   operation?: string | string[] | null;
   search?: string;
-}) {
+}): TDecoration {
   const client = useQueryClient();
   const { decoration } = queryString.parse(search);
   const decorationID = (Array.isArray(decoration) ? decoration[0] : decoration) || undefined;
@@ -101,9 +105,11 @@ export default function usePathAgnosticDecoration({
   const serviceIndex = tiers.length - 1;
   const operationValue = withOp ? summaries[0].data : undefined;
   // Falsy operation values fall back to a cached service value.
-  return {
+  return getDecorationPresentation({
+    service,
+    operation,
     decorationID,
     decorationValue: operationValue || summaries[serviceIndex].data,
     decorationMax: maxima[operationValue ? 0 : serviceIndex].data,
-  };
+  });
 }

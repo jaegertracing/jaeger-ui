@@ -9,6 +9,12 @@ import usePathAgnosticDecoration from './usePathAgnosticDecoration';
 import { jaegerClient } from '../api/v3/client';
 import { useConfig } from './useConfig';
 import defaultConfig from '../constants/default-config';
+import { TDecoration } from '../model/path-agnostic-decorations';
+
+function getMaximum(decoration: TDecoration) {
+  const progressbar = decoration.decorationProgressbar;
+  return React.isValidElement<{ maxValue: number }>(progressbar) ? progressbar.props.maxValue : undefined;
+}
 
 vi.mock('./useConfig');
 
@@ -71,7 +77,7 @@ describe('usePathAgnosticDecoration', () => {
   it('fetches a service summary and its numeric maximum', async () => {
     const { result } = renderHook(() => usePathAgnosticDecoration(props), { wrapper });
     await waitFor(() => expect(result.current.decorationValue).toBe(42));
-    expect(result.current.decorationMax).toBe(42);
+    expect(getMaximum(result.current)).toBe(42);
     expect(fetchDecoration).toHaveBeenCalledWith('/summary');
   });
 
@@ -100,10 +106,10 @@ describe('usePathAgnosticDecoration', () => {
 
   it('deduplicates a shared URL and updates the maximum for already-rendered nodes', async () => {
     const first = renderHook(() => usePathAgnosticDecoration(props), { wrapper });
-    await waitFor(() => expect(first.result.current.decorationMax).toBe(42));
+    await waitFor(() => expect(getMaximum(first.result.current)).toBe(42));
     const second = renderHook(() => usePathAgnosticDecoration({ ...props, service: 'backend' }), { wrapper });
     await waitFor(() => expect(second.result.current.decorationValue).toBe(108));
-    await waitFor(() => expect(first.result.current.decorationMax).toBe(108));
+    await waitFor(() => expect(getMaximum(first.result.current)).toBe(108));
     expect(fetchDecoration).toHaveBeenCalledTimes(1);
   });
 
@@ -122,28 +128,31 @@ describe('usePathAgnosticDecoration', () => {
       response: { operations: { GET: 42, POST: 108 } },
       laterResponse: { operations: { GET: 200, POST: 300 } },
     },
-  ])('keeps the same response snapshot for a $kind revealed after five minutes', async testCase => {
-    client.setDefaultOptions({ queries: { retry: false, gcTime: 5 * 60 * 1000 } });
-    fetchDecoration.mockResolvedValueOnce(testCase.response).mockResolvedValue(testCase.laterResponse);
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-    try {
-      const first = renderHook(() => usePathAgnosticDecoration(testCase.first), { wrapper });
-      await waitFor(() => expect(first.result.current.decorationValue).toBe(42));
+  ])(
+    'refetches a collected response for a newly revealed $kind while retaining existing summaries',
+    async testCase => {
+      client.setDefaultOptions({ queries: { retry: false, gcTime: 5 * 60 * 1000 } });
+      fetchDecoration.mockResolvedValueOnce(testCase.response).mockResolvedValue(testCase.laterResponse);
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      try {
+        const first = renderHook(() => usePathAgnosticDecoration(testCase.first), { wrapper });
+        await waitFor(() => expect(first.result.current.decorationValue).toBe(42));
 
-      await act(async () => {
-        await vi.advanceTimersByTimeAsync(6 * 60 * 1000);
-      });
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(6 * 60 * 1000);
+        });
 
-      const next = renderHook(() => usePathAgnosticDecoration(testCase.next), { wrapper });
-      await waitFor(() => expect(next.result.current.decorationValue).toBe(108));
-      expect(first.result.current.decorationValue).toBe(42);
-      expect(first.result.current.decorationMax).toBe(108);
-      expect(next.result.current.decorationMax).toBe(108);
-      expect(fetchDecoration).toHaveBeenCalledTimes(1);
-    } finally {
-      vi.useRealTimers();
+        const next = renderHook(() => usePathAgnosticDecoration(testCase.next), { wrapper });
+        await waitFor(() => expect(next.result.current.decorationValue).toBe(300));
+        expect(first.result.current.decorationValue).toBe(42);
+        expect(getMaximum(first.result.current)).toBe(300);
+        expect(getMaximum(next.result.current)).toBe(300);
+        expect(fetchDecoration).toHaveBeenCalledTimes(2);
+      } finally {
+        vi.useRealTimers();
+      }
     }
-  });
+  );
 
   it('deduplicates in-flight requests', async () => {
     let resolve!: (value: unknown) => void;
@@ -170,11 +179,11 @@ describe('usePathAgnosticDecoration', () => {
     const get = renderHook(() => usePathAgnosticDecoration({ ...props, operation: 'GET' }), { wrapper });
     const post = renderHook(() => usePathAgnosticDecoration({ ...props, operation: 'POST' }), { wrapper });
     const error = renderHook(() => usePathAgnosticDecoration({ ...props, operation: 'error' }), { wrapper });
-    await waitFor(() => expect(service.result.current.decorationMax).toBe(108));
+    await waitFor(() => expect(getMaximum(service.result.current)).toBe(108));
     await waitFor(() => expect(get.result.current.decorationValue).toBe(42));
-    await waitFor(() => expect(post.result.current.decorationMax).toBe(42));
+    await waitFor(() => expect(getMaximum(post.result.current)).toBe(42));
     await waitFor(() => expect(error.result.current.decorationValue).toBe('Unavailable'));
-    expect(get.result.current.decorationMax).toBe(42);
+    expect(getMaximum(get.result.current)).toBe(42);
   });
 
   it('keeps values and maxima isolated between decorations sharing a URL', async () => {
@@ -196,8 +205,8 @@ describe('usePathAgnosticDecoration', () => {
     });
     await waitFor(() => expect(first.result.current.decorationValue).toBe(42));
     await waitFor(() => expect(second.result.current.decorationValue).toBe(108));
-    expect(first.result.current.decorationMax).toBe(42);
-    expect(second.result.current.decorationMax).toBe(108);
+    expect(getMaximum(first.result.current)).toBe(42);
+    expect(getMaximum(second.result.current)).toBe(108);
     expect(fetchDecoration).toHaveBeenCalledTimes(1);
   });
 
@@ -214,7 +223,7 @@ describe('usePathAgnosticDecoration', () => {
       );
       rerender({ ...props, operation: 'GET' });
       expect(result.current.decorationValue).toBe(42);
-      expect(result.current.decorationMax).toBe(42);
+      expect(getMaximum(result.current)).toBe(42);
       await act(async () => resolve({ operations: { GET: operationValue } }));
       await waitFor(() =>
         expect(
@@ -225,14 +234,14 @@ describe('usePathAgnosticDecoration', () => {
         ).toBe(true)
       );
       expect(result.current.decorationValue).toBe(42);
-      expect(result.current.decorationMax).toBe(42);
+      expect(getMaximum(result.current)).toBe(42);
     }
   );
 
   it('retains the session maximum and cached values after a maximum node is hidden', async () => {
     const first = renderHook(() => usePathAgnosticDecoration(props), { wrapper });
     const second = renderHook(() => usePathAgnosticDecoration({ ...props, service: 'backend' }), { wrapper });
-    await waitFor(() => expect(first.result.current.decorationMax).toBe(108));
+    await waitFor(() => expect(getMaximum(first.result.current)).toBe(108));
     await waitFor(() => expect(second.result.current.decorationValue).toBe(108));
     vi.useFakeTimers();
     try {
@@ -240,7 +249,7 @@ describe('usePathAgnosticDecoration', () => {
       await act(async () => {
         await vi.advanceTimersByTimeAsync(6 * 60 * 1000);
       });
-      expect(first.result.current.decorationMax).toBe(108);
+      expect(getMaximum(first.result.current)).toBe(108);
       const remounted = renderHook(() => usePathAgnosticDecoration({ ...props, service: 'backend' }), {
         wrapper,
       });
@@ -290,7 +299,7 @@ describe('usePathAgnosticDecoration', () => {
     await waitFor(() => expect(result.current.decorationValue).toBe(17));
     await act(async () => resolve({ services: { frontend: 108 } }));
     expect(result.current.decorationValue).toBe(17);
-    expect(result.current.decorationMax).toBe(17);
+    expect(getMaximum(result.current)).toBe(17);
     rerender({ ...props, search: '' });
     expect(result.current.decorationID).toBeUndefined();
     expect(result.current.decorationValue).toBeUndefined();
@@ -307,10 +316,10 @@ describe('usePathAgnosticDecoration', () => {
       { wrapper }
     );
     await waitFor(() => expect(third.result.current.decorationValue).toBe(108));
-    await waitFor(() => expect(first.result.current.decorationMax).toBe(108));
+    await waitFor(() => expect(getMaximum(first.result.current)).toBe(108));
     expect(first.result.current.decorationValue).toBe(42);
     expect(second.result.current.decorationValue).toBe(17);
-    expect(second.result.current.decorationMax).toBe(108);
+    expect(getMaximum(second.result.current)).toBe(108);
   });
 
   it('does not expose old values when the configured endpoint changes', async () => {
@@ -324,7 +333,7 @@ describe('usePathAgnosticDecoration', () => {
     rerender();
     expect(result.current.decorationValue).toBeUndefined();
     await waitFor(() => expect(result.current.decorationValue).toBe(17));
-    expect(result.current.decorationMax).toBe(17);
+    expect(getMaximum(result.current)).toBe(17);
   });
 
   it.each([new Error('offline'), 'offline'])('renders request failures as decoration text: %s', error => {
@@ -332,6 +341,35 @@ describe('usePathAgnosticDecoration', () => {
     const { result } = renderHook(() => usePathAgnosticDecoration(props), { wrapper });
     return waitFor(() => expect(result.current.decorationValue).toBe('Unable to fetch decoration: offline'));
   });
+
+  it.each([new Error('offline'), 'offline'])(
+    'reuses a shared failure for late nodes and decorations: %s',
+    async error => {
+      vi.mocked(useConfig).mockReturnValue({
+        ...defaultConfig,
+        pathAgnosticDecorations: [schema, { ...schema, id: 'other' }],
+      });
+      fetchDecoration.mockRejectedValue(error);
+      const first = renderHook(() => usePathAgnosticDecoration(props), { wrapper });
+      await waitFor(() =>
+        expect(first.result.current.decorationValue).toBe('Unable to fetch decoration: offline')
+      );
+      const second = renderHook(() => usePathAgnosticDecoration({ ...props, service: 'backend' }), {
+        wrapper,
+      });
+      const other = renderHook(() => usePathAgnosticDecoration({ ...props, search: '?decoration=other' }), {
+        wrapper,
+      });
+      await waitFor(() =>
+        expect(second.result.current.decorationValue).toBe('Unable to fetch decoration: offline')
+      );
+      await waitFor(() =>
+        expect(other.result.current.decorationValue).toBe('Unable to fetch decoration: offline')
+      );
+      expect(fetchDecoration).toHaveBeenCalledTimes(1);
+      expect(first.result.current.decorationProgressbar).toBeUndefined();
+    }
+  );
 
   it('renders the missing-path message', async () => {
     fetchDecoration.mockResolvedValue({});

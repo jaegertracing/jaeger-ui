@@ -12,7 +12,7 @@ import LoadingIndicator from '../../common/LoadingIndicator';
 import NewWindowIcon from '../../common/NewWindowIcon';
 import VerticalResizer from '../../common/VerticalResizer';
 import { jaegerClient } from '../../../api/v3/client';
-import getDecorationPresentation, { TDecoration } from '../../../model/path-agnostic-decorations';
+import { TDecoration } from '../../../model/path-agnostic-decorations';
 import stringSupplant from '../../../utils/stringSupplant';
 import usePathAgnosticDecoration from '../../../hooks/usePathAgnosticDecoration';
 
@@ -185,8 +185,7 @@ export const UnconnectedDetailsPanel = React.memo(UnconnectedDetailsPanelImpl);
 function DetailsPanelWithLocation(props: Omit<TProps, keyof TDecoration>) {
   const { search } = useLocation();
   const decoration = usePathAgnosticDecoration({ ...props, search });
-  const presentation = getDecorationPresentation({ ...props, ...decoration });
-  return <UnconnectedDetailsPanel {...props} {...presentation} />;
+  return <UnconnectedDetailsPanel {...props} {...decoration} />;
 }
 
 export default DetailsPanelWithLocation;

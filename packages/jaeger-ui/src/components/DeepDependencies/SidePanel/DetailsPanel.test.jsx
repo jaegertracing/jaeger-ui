@@ -355,7 +355,10 @@ describe('<SidePanel>', () => {
         usePathAgnosticDecoration.mockReturnValue({
           decorationID: 'some-id',
           decorationValue,
-          decorationMax: 108,
+          decorationProgressbar:
+            typeof decorationValue === 'number' ? (
+              <span data-testid="circular-progress-bar">{decorationValue}</span>
+            ) : undefined,
         });
         render(<DefaultDetailsPanel {...wrapperProps} />);
         if (typeof decorationValue === 'number') {
