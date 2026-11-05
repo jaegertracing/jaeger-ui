@@ -26,7 +26,9 @@ export type TScript = {
 
 type LinkPatternsConfig = {
   // type defines the entity that the pattern applies to.
-  // 'traces' patterns apply to the whole trace, and have access to 'traceID' value.
+  // 'traces' patterns apply to the whole trace and have access to trace-level values.
+  // 'spans' patterns apply to an individual span and have access to traceID, spanID,
+  // operationName, duration, and startTime.
   // Other patterns apply to tags at different levels. They have access to the value
   // of the respective tag, for example:
   //   "linkPatterns": [{
@@ -35,7 +37,7 @@ type LinkPatternsConfig = {
   //     "url": "https://github.com/jaegertracing/jaeger-client-java/releases/tag/#{jaeger.version}",
   //     "text": "Information about Jaeger SDK release #{jaeger.version}"
   //   }]
-  type: 'process' | 'tags' | 'logs' | 'traces';
+  type: 'process' | 'tags' | 'logs' | 'traces' | 'spans';
   // key of the tag for tag-level patterns.
   key?: string;
   // url of the link, with variable extrapoliation, e.g. "#{jaeger.version}".
