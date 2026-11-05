@@ -48,6 +48,13 @@ describe('fileReader.readJsonFile', () => {
     return expect(p).resolves.toMatchObject(outObj);
   });
 
+  it('loads OTLP JSON without validating the payload', () => {
+    const obj = { resourceSpans: null };
+    const file = new File([JSON.stringify(obj)], 'invalid-otlp.json');
+    const p = readJsonFile({ file });
+    return expect(p).resolves.toMatchObject(obj);
+  });
+
   it('rejects malformed JSON', () => {
     const file = new File(['not-json'], 'foo.json');
     const p = readJsonFile({ file });
