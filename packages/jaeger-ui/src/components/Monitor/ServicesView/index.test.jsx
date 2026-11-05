@@ -367,9 +367,7 @@ describe('<MonitorATMServicesView>', () => {
       isLoading: false,
     });
     renderWithRouter(<MonitorATMServicesView />);
-    expect(screen.getByText(/No latency data, although call rates were found/)).toBeInTheDocument();
-    expect(screen.getByText('normalize_duration')).toBeInTheDocument();
-    expect(screen.getByText('latency_unit')).toBeInTheDocument();
+    expect(screen.getByText(/Call rates were found but no latency histogram matched/)).toBeInTheDocument();
     expect(screen.queryByText(/No data yet!/)).not.toBeInTheDocument();
   });
 
@@ -395,7 +393,7 @@ describe('<MonitorATMServicesView>', () => {
     });
     renderWithRouter(<MonitorATMServicesView />);
     expect(screen.getByTestId('graph-error')).toBeInTheDocument();
-    expect(screen.queryByText(/No latency data/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/no latency histogram matched/)).not.toBeInTheDocument();
     expect(screen.queryByText(/No data yet!/)).not.toBeInTheDocument();
   });
 
@@ -417,7 +415,7 @@ describe('<MonitorATMServicesView>', () => {
       isLoading: false,
     });
     renderWithRouter(<MonitorATMServicesView />);
-    expect(screen.queryByText(/No latency data/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/no latency histogram matched/)).not.toBeInTheDocument();
     expect(screen.getByText(/No data yet!/)).toBeInTheDocument();
   });
 
@@ -432,7 +430,7 @@ describe('<MonitorATMServicesView>', () => {
       isLoading: false,
     });
     renderWithRouter(<MonitorATMServicesView />);
-    expect(screen.queryByText(/No latency data/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/no latency histogram matched/)).not.toBeInTheDocument();
   });
 
   it('does not show the missing-latency alert when latencies exist', () => {
@@ -443,7 +441,7 @@ describe('<MonitorATMServicesView>', () => {
       isLoading: false,
     });
     renderWithRouter(<MonitorATMServicesView />);
-    expect(screen.queryByText(/No latency data/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/no latency histogram matched/)).not.toBeInTheDocument();
     expect(screen.queryByText(/No data yet!/)).not.toBeInTheDocument();
   });
 

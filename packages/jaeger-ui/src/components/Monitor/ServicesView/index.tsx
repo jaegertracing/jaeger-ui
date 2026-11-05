@@ -339,34 +339,28 @@ export function MonitorATMServicesViewImpl({ search = '', navigate }: TOwnProps)
 
   return (
     <>
-      {showNoLatencyAlert && (
+      {showNoMetricsAlert && (
         <Alert
           message={
-            <>
-              No latency data, although call rates were found. Check that the <code>normalize_duration</code>{' '}
-              and <code>latency_unit</code> settings of the Prometheus metrics storage match the duration
-              histogram exported by your span metrics pipeline (for example,{' '}
-              <code>traces_span_metrics_duration_milliseconds_bucket</code>). See these
-              <Link to={{ pathname: docsLink }} target="_blank">
-                &nbsp;instructions&nbsp;
-              </Link>
-              for details.
-            </>
-          }
-          type="warning"
-          showIcon
-        />
-      )}
-      {showNoMetricsAlert && !showNoLatencyAlert && (
-        <Alert
-          message={
-            <>
-              No data yet! Please see these
-              <Link to={{ pathname: docsLink }} target="_blank">
-                &nbsp;instructions&nbsp;
-              </Link>
-              on how to set up your span metrics.
-            </>
+            showNoLatencyAlert ? (
+              <>
+                Call rates were found but no latency histogram matched. Check that the duration histogram name
+                and unit configured in the metrics storage match what your span metrics pipeline exports. See
+                these
+                <Link to={{ pathname: docsLink }} target="_blank">
+                  &nbsp;instructions&nbsp;
+                </Link>
+                for details.
+              </>
+            ) : (
+              <>
+                No data yet! Please see these
+                <Link to={{ pathname: docsLink }} target="_blank">
+                  &nbsp;instructions&nbsp;
+                </Link>
+                on how to set up your span metrics.
+              </>
+            )
           }
           type="warning"
           showIcon
