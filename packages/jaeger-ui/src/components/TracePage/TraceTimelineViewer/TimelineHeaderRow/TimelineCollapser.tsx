@@ -29,29 +29,52 @@ export default function TimelineCollapser({
 
   const getContainer = () => containerRef.current || document.body;
 
+  const handleKeyDown = (e: React.KeyboardEvent<SVGElement>, handler: () => void) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handler();
+    }
+  };
+
   return (
     <div className="TimelineCollapser" ref={containerRef}>
       <Tooltip title={getTitle('Expand +1')} getPopupContainer={getContainer}>
         <IoChevronForward
           onClick={onExpandOne}
+          role="button"
+          tabIndex={0}
+          aria-label="Expand +1"
+          onKeyDown={e => handleKeyDown(e, onExpandOne)}
           className="TimelineCollapser--btn-expand TimelineCollapser--btn-size TimelineCollapser--btn-down"
         />
       </Tooltip>
       <Tooltip title={getTitle('Collapse +1')} getPopupContainer={getContainer}>
         <IoChevronForward
           onClick={onCollapseOne}
+          role="button"
+          tabIndex={0}
+          aria-label="Collapse +1"
+          onKeyDown={e => handleKeyDown(e, onCollapseOne)}
           className="TimelineCollapser--btn TimelineCollapser--btn-size"
         />
       </Tooltip>
       <Tooltip title={getTitle('Expand All')} getPopupContainer={getContainer}>
         <LuChevronsRight
           onClick={onExpandAll}
+          role="button"
+          tabIndex={0}
+          aria-label="Expand All"
+          onKeyDown={e => handleKeyDown(e, onExpandAll)}
           className="TimelineCollapser--btn-expand TimelineCollapser--btn-size TimelineCollapser--btn-down"
         />
       </Tooltip>
       <Tooltip title={getTitle('Collapse All')} getPopupContainer={getContainer}>
         <LuChevronsRight
           onClick={onCollapseAll}
+          role="button"
+          tabIndex={0}
+          aria-label="Collapse All"
+          onKeyDown={e => handleKeyDown(e, onCollapseAll)}
           className="TimelineCollapser--btn TimelineCollapser--btn-size"
         />
       </Tooltip>
