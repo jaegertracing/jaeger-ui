@@ -264,8 +264,7 @@ describe('<TraceStatistics> on same-ID reload', () => {
     await selectOption(2, 'Total');
     await user.click(screen.getByRole('checkbox'));
 
-    const cells = () =>
-      within(screen.getByRole('button', { name: 'OrderVehicle' }).closest('tr')).getAllByRole('cell');
+    const cells = () => within(screen.getByText('OrderVehicle').closest('tr')).getAllByRole('cell');
     expect(cells()[1]).toHaveTextContent(/^1$/);
     expect(cells()[2]).toHaveTextContent(/^10ms$/);
 
