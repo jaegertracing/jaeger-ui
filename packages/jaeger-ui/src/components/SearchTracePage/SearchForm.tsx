@@ -849,18 +849,10 @@ export function getSearchFormProps(search = '') {
   };
 }
 
-export function submitFormHandler(
-  fields: ISearchFormFields,
-  adjustEndTime: string | null | undefined,
-  adjustTimeEnabled: boolean
-) {
-  return submitForm(fields, adjustEndTime || null, adjustTimeEnabled);
-}
-
 function SearchFormWithLocation(props: Omit<ISearchFormImplProps, 'initialValues' | 'submitFormHandler'>) {
   const { search } = useLocation();
   const formProps = useMemo(() => getSearchFormProps(search), [search]);
-  return <SearchFormImpl {...props} {...formProps} submitFormHandler={submitFormHandler} />;
+  return <SearchFormImpl {...props} {...formProps} submitFormHandler={submitForm} />;
 }
 
 export default SearchFormWithLocation;

@@ -1,8 +1,6 @@
 // Copyright (c) 2021 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { ApiError } from './api-error';
-
 type AvailableServiceMetrics = 'service_call_rate' | 'service_latencies' | 'service_error_rate';
 type AvailableOpsMetrics =
   | 'service_operation_call_rate'
@@ -97,10 +95,4 @@ export type ServiceMetrics = {
   service_latencies: null | ServiceMetricsObject[];
   service_call_rate: null | ServiceMetricsObject;
   service_error_rate: null | ServiceMetricsObject;
-};
-
-export type OperationMetricsErrors = {
-  opsLatencies: null | ApiError;
-  opsCalls: null | ApiError;
-  opsErrors: null | ApiError;
 };

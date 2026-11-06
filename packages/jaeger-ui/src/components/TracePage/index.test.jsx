@@ -1380,7 +1380,7 @@ describe('<TracePage>', () => {
 });
 
 describe('TracePageRoute URL search', () => {
-  it('updates uiFind when only the location search changes without a Redux provider', () => {
+  it('updates uiFind when the location prop search changes without a Redux provider', () => {
     const configSpy = vi.spyOn(configHook, 'useConfig').mockReturnValue({});
     const trace = transformTraceData(traceGenerator.trace({})).asOtelTrace();
     useTraceMock.mockReturnValue({ data: trace, isPending: false, isError: false, error: null });

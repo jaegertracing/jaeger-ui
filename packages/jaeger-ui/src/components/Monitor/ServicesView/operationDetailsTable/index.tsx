@@ -8,7 +8,8 @@ import { Table, Progress, Button, Tooltip, Col, TablePaginationConfig } from 'an
 import { IoInformationCircleOutline } from 'react-icons/io5';
 import REDGraph from './opsGraph';
 import LoadingIndicator from '../../../common/LoadingIndicator';
-import { OperationMetricsErrors, ServiceOpsMetrics } from '../../../../types/metrics';
+import { ServiceOpsMetrics } from '../../../../types/metrics';
+import type { OperationMetricsResult } from '../useMetricsQuery';
 import prefixUrl from '../../../../utils/prefix-url';
 
 import './index.css';
@@ -17,7 +18,7 @@ import { trackSortOperations, trackViewTraces } from './index.track';
 
 type TProps = {
   data: ServiceOpsMetrics[] | undefined;
-  error: OperationMetricsErrors;
+  error: OperationMetricsResult['opsError'];
   loading: boolean | undefined;
   endTime: number;
   lookback: number;

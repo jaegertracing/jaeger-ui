@@ -76,7 +76,6 @@ import SearchFormWithLocation, {
   getSearchFormProps,
   optionsWithinMaxLookback,
   submitForm,
-  submitFormHandler,
   traceIDsToQuery,
   SearchFormImpl as SearchForm,
   validateDurationFields,
@@ -1254,30 +1253,5 @@ describe('submitForm() adjustEndTime toggle', () => {
   it('should not apply adjustEndTime when adjustTimeEnabled is false', () => {
     const url = submitForm(fields, '1m', false);
     expect(queryString.parse(url.slice(url.indexOf('?') + 1)).service).toBe('svcA');
-  });
-});
-
-describe('submitFormHandler()', () => {
-  it('submitFormHandler delegates to submitForm', () => {
-    const fields = {
-      service: 'svc',
-      operation: 'op',
-      resultsLimit: '20',
-      lookback: '1h',
-      startDate: '2020-01-01',
-      startDateTime: '00:00',
-      endDate: '2020-01-01',
-      endDateTime: '01:00',
-      tags: '',
-      minDuration: '',
-      maxDuration: '',
-    };
-    const result = submitFormHandler(fields, null, false);
-    expect(queryString.parse(result.slice(result.indexOf('?') + 1))).toMatchObject({
-      service: 'svc',
-      operation: 'op',
-      limit: '20',
-      lookback: '1h',
-    });
   });
 });
