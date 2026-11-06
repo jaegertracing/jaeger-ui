@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Modal } from 'antd';
 
@@ -11,12 +11,10 @@ import * as track from './index.track';
 import * as getConfig from '../../../utils/config/get-config';
 import DetailsPanel from './DetailsPanel';
 
-vi.mock('antd', () => ({
-  Modal: {
-    info: jest.fn(),
-  },
-  Table: () => <div data-testid="mock-table">Table Mock</div>,
-}));
+vi.mock('antd', async importOriginal => {
+  const { Table } = await importOriginal();
+  return { Modal: { info: jest.fn() }, Table };
+});
 
 vi.mock('./DetailsPanel', () => mockDefault(jest.fn(() => <div data-testid="details-panel" />)));
 
@@ -251,6 +249,24 @@ describe('<SidePanel>', () => {
 
     beforeAll(() => {
       modalInfoSpy = jest.spyOn(Modal, 'info');
+    });
+
+    it('shows each configured decoration with its acronym, name and row ID', () => {
+      const { container } = render(<SidePanel />);
+      fireEvent.click(container.querySelector('.Ddg--SidePanel--infoBtn'));
+      render(modalInfoSpy.mock.calls[0][0].content);
+
+      const table = screen.getByRole('table');
+      expect(
+        within(table)
+          .getAllByRole('columnheader')
+          .map(header => header.textContent)
+      ).toEqual(['Acronym', 'Name']);
+      mockConfig.forEach(({ id, acronym, name }) => {
+        const row = within(table).getByText(name).closest('tr');
+        expect(row).toHaveAttribute('data-row-key', id);
+        expect(within(row).getByText(acronym)).toBeInTheDocument();
+      });
     });
 
     it('opens info modal', () => {
