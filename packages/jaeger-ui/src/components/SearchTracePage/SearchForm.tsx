@@ -30,12 +30,14 @@ import {
   normalizeOperation,
 } from '../../constants/search-form';
 import SearchableSelect from '../common/SearchableSelect';
+import { Details as ErrorDetails } from '../common/ErrorMessage';
 import './SearchForm.css';
 import ValidatedFormField from '../../utils/ValidatedFormField';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { useConfig } from '../../hooks/useConfig';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 import { ReduxState } from '../../types';
+import { toApiError } from '../../types/api-error';
 import { SearchQuery } from '../../types/search';
 import {
   TIME_RANGE_OPTIONS,
@@ -47,6 +49,18 @@ const FormItem = Form.Item;
 const Option = Select.Option;
 
 const ADJUST_TIME_ENABLED_KEY = 'jaeger-ui/search-adjust-time-enabled';
+
+// Form help for a failed services or operations request, with the HTTP details and response body.
+function LoadError({ label, error }: { label: string; error: unknown }) {
+  const apiError = toApiError(error);
+  if (typeof apiError === 'string') return <>{`${label}: ${apiError}`}</>;
+  return (
+    <>
+      {`${label}: ${apiError.message}`}
+      {apiError.httpStatus !== undefined && <ErrorDetails error={apiError} />}
+    </>
+  );
+}
 
 interface TimeStampParams {
   startDate: string;
@@ -413,7 +427,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           </span>
         }
         validateStatus={servicesError ? 'error' : undefined}
-        help={servicesError ? `Error loading services: ${(servicesError as Error).message}` : undefined}
+        help={servicesError ? <LoadError label="Error loading services" error={servicesError} /> : undefined}
       >
         <SearchableSelect
           data-testid="service"
@@ -453,7 +467,9 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           </span>
         }
         validateStatus={spanNamesError ? 'error' : undefined}
-        help={spanNamesError ? `Error loading operations: ${(spanNamesError as Error).message}` : undefined}
+        help={
+          spanNamesError ? <LoadError label="Error loading operations" error={spanNamesError} /> : undefined
+        }
       >
         <SearchableSelect
           data-testid="operation"

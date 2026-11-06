@@ -26,6 +26,7 @@ export function toLegacyTrace({
         tags,
         events = [],
         scope,
+        warnings,
       } = {
         startTime: 1,
         duration: 1,
@@ -63,6 +64,8 @@ export function toLegacyTrace({
           ],
         })),
         processID: PROCESS_ID,
+        // transformTraceData appends to this array, so the spec's copy stays unchanged.
+        ...(warnings === undefined ? {} : { warnings: [...warnings] }),
       } as SpanData;
     }),
   };

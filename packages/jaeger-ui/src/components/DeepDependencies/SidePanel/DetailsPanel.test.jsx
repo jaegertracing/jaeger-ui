@@ -4,7 +4,7 @@
 // Mutable object so individual tests can control the location without re-creating the mock.
 const mockLocation = { search: '' };
 
-vi.mock('../../../model/path-agnostic-decorations', async () => ({
+vi.mock('../../../hooks/usePathAgnosticDecoration', async () => ({
   default: jest.fn(() => ({})),
 }));
 
@@ -16,11 +16,10 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import _set from 'lodash/set';
-import { Provider } from 'react-redux';
 
-import extractDecorationFromState from '../../../model/path-agnostic-decorations';
+import usePathAgnosticDecoration from '../../../hooks/usePathAgnosticDecoration';
 import stringSupplant from '../../../utils/stringSupplant';
-import JaegerAPI from '../../../api/jaeger';
+import { jaegerClient } from '../../../api/v3/client';
 import { UnconnectedDetailsPanel as DetailsPanel } from './DetailsPanel';
 import DefaultDetailsPanel from './DetailsPanel';
 
@@ -38,8 +37,8 @@ vi.mock('../../common/VerticalResizer', async () => {
 });
 
 vi.mock('../../common/DetailsCard', async () => {
-  return mockDefault(({ className, details }) => (
-    <div data-testid="details-card" className={className}>
+  return mockDefault(({ className, details, columnDefs }) => (
+    <div data-testid="details-card" data-columns={JSON.stringify(columnDefs)} className={className}>
       {typeof details === 'string' ? details : JSON.stringify(details)}
     </div>
   ));
@@ -70,7 +69,7 @@ describe('<SidePanel>', () => {
   let rej;
 
   beforeAll(() => {
-    fetchDecorationSpy = jest.spyOn(JaegerAPI, 'fetchDecoration').mockImplementation(() => {
+    fetchDecorationSpy = jest.spyOn(jaegerClient, 'fetchDecoration').mockImplementation(() => {
       promise = new Promise((resolve, reject) => {
         res = resolve;
         rej = reject;
@@ -164,6 +163,55 @@ describe('<SidePanel>', () => {
       const detailsCard = await screen.findByTestId('details-card');
       expect(detailsCard).toBeInTheDocument();
       expect(detailsCard.textContent).toBe(detailsData);
+    });
+
+    it.each([undefined, opString])('passes configured columns for operation %s', async operation => {
+      const decorationSchema = {
+        ...props.decorationSchema,
+        detailColumnDefPath: 'columns.#{service}',
+        opDetailColumnDefPath: 'opColumns.#{service}.#{operation}',
+      };
+      const serviceColumns = [{ key: 'latency', label: 'Service latency' }];
+      const operationColumns = [{ key: 'latency', label: 'Operation latency' }];
+      const response = {};
+      _set(response, decorationSchema.detailPath, [{ latency: 42 }]);
+      _set(response, decorationSchema.opDetailPath, [{ latency: 17 }]);
+      _set(response, stringSupplant(decorationSchema.detailColumnDefPath, { service }), serviceColumns);
+      _set(
+        response,
+        stringSupplant(decorationSchema.opDetailColumnDefPath, { service, operation }),
+        operationColumns
+      );
+      render(<DetailsPanel {...props} decorationSchema={decorationSchema} operation={operation} />);
+      res(response);
+
+      const detailsCard = await screen.findByTestId('details-card');
+      expect(detailsCard).toHaveAttribute(
+        'data-columns',
+        JSON.stringify(operation ? operationColumns : serviceColumns)
+      );
+      expect(detailsCard).toHaveTextContent(JSON.stringify([{ latency: operation ? 17 : 42 }]));
+      expect(detailsCard).not.toHaveClass('is-error');
+    });
+
+    it('uses default columns when the configured column path is absent', async () => {
+      const decorationSchema = { ...props.decorationSchema, detailColumnDefPath: 'missing.columns' };
+      render(<DetailsPanel {...props} decorationSchema={decorationSchema} />);
+      res(_set({}, decorationSchema.detailPath, [{ latency: 42 }]));
+
+      const detailsCard = await screen.findByTestId('details-card');
+      expect(detailsCard).toHaveAttribute('data-columns', '[]');
+      expect(detailsCard).toHaveTextContent(JSON.stringify([{ latency: 42 }]));
+      expect(detailsCard).not.toHaveClass('is-error');
+    });
+
+    it('renders a detail request rejected with a plain string', async () => {
+      render(<DetailsPanel {...props} />);
+      rej('Connection closed');
+
+      const detailsCard = await screen.findByTestId('details-card');
+      expect(detailsCard).toHaveClass('is-error');
+      expect(detailsCard).toHaveTextContent('Unable to fetch decoration: Connection closed');
     });
 
     it('renders details error', async () => {
@@ -290,31 +338,46 @@ describe('<SidePanel>', () => {
   });
 
   describe('DetailsPanelWithLocation (default export)', () => {
-    const store = {
-      getState: () => ({}),
-      dispatch: jest.fn(),
-      subscribe: jest.fn(() => jest.fn()),
-    };
     const wrapperProps = {
       decorationSchema: { name: 'Wrapper Test Schema' },
       service: 'wrapper-test-svc',
+      operation: 'wrapper-op',
     };
 
     beforeEach(() => {
-      extractDecorationFromState.mockClear();
-      extractDecorationFromState.mockReturnValue({});
+      usePathAgnosticDecoration.mockClear();
+      usePathAgnosticDecoration.mockReturnValue({});
     });
 
-    it('injects search from useLocation() into the connected component', () => {
+    it.each([17, 'Unable to fetch decoration: offline'])(
+      'renders the query decoration: %s',
+      decorationValue => {
+        usePathAgnosticDecoration.mockReturnValue({
+          decorationID: 'some-id',
+          decorationValue,
+          decorationProgressbar:
+            typeof decorationValue === 'number' ? (
+              <span data-testid="circular-progress-bar">{decorationValue}</span>
+            ) : undefined,
+        });
+        render(<DefaultDetailsPanel {...wrapperProps} />);
+        if (typeof decorationValue === 'number') {
+          expect(screen.getByTestId('circular-progress-bar')).toHaveTextContent('17');
+        } else {
+          expect(screen.getByText(decorationValue)).toBeInTheDocument();
+        }
+      }
+    );
+
+    it('injects search from useLocation() into the decoration hook', () => {
       mockLocation.search = '?decoration=my-decoration-id';
-      render(
-        <Provider store={store}>
-          <DefaultDetailsPanel {...wrapperProps} />
-        </Provider>
-      );
-      expect(extractDecorationFromState).toHaveBeenCalledWith(
-        expect.any(Object),
-        expect.objectContaining({ search: '?decoration=my-decoration-id' })
+      render(<DefaultDetailsPanel {...wrapperProps} />);
+      expect(usePathAgnosticDecoration).toHaveBeenCalledWith(
+        expect.objectContaining({
+          service: wrapperProps.service,
+          operation: wrapperProps.operation,
+          search: '?decoration=my-decoration-id',
+        })
       );
     });
   });
