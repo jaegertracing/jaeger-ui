@@ -64,11 +64,14 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
         <TimelineRow.Cell width={nameColumnWidth}>
           <SpanTreeOffset span={span} showChildrenIcon={false} isDetailRow color={color} />
           <span>
+            {/* This row only renders while the span's details are open, so the accent always
+                reads as expanded, and clicking it collapses them. */}
             <span
               className="detail-row-expanded-accent"
-              aria-checked="true"
+              aria-expanded="true"
+              aria-label="Span details"
               onClick={_detailToggle}
-              role="switch"
+              role="button"
               style={{ borderColor: color }}
             />
           </span>
