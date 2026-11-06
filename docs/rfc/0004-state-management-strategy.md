@@ -1082,8 +1082,6 @@ Search now calls `/api/v3/trace-summaries` via `useSearchTraces(query)` in `src/
 
 **Components rewired**: `SearchTracePage` (fully disconnected from Redux), `FileLoader` (accepts `onTracesLoaded` callback instead of Redux action).
 
-> **Note**: `SearchForm` still uses the legacy `connect(mapStateToProps, mapDispatchToProps)` pattern. Removing it is deferred to a phase 4 follow-up.
-
 #### ✅ 2c. Services and operations discovery
 
 **Redux removed**: `services` reducer (no longer in `src/reducers/index.ts`; discovery never writes to Redux).
@@ -1221,7 +1219,6 @@ The residual surface is now small enough to enumerate:
 | Redux artefact | Consumers | Resolved by |
 | :--- | :--- | :--- |
 | `TraceTimelineViewer/duck.ts`, `duck.track.ts`, `middlewares/track.ts` | no UI consumers; `store.track.test.ts` (parity reference) | Phase 4 follow-up (Phase 1c steps 3–4 done) |
-| Vestigial `connect()` wrappers whose `mapStateToProps` ignores state entirely | `SearchTracePage/SearchForm.tsx`, `TraceDiff/TraceDiff.tsx` | Phase 4b (mechanical) |
 | `utils/configure-store.ts`, `<Provider>` in `components/App/index.tsx`, `ReduxState` in `types/index.ts`, `types/TTraceTimeline.ts` | app shell, ~14 test files | Phase 4b/4c |
 
 Removing the timeline duck was the only item here with a non-mechanical design question in it (where the analytics call sites go). Phase 1c steps 3–4 are done; the duck remains only for parity tests until Phase 4 follow-up.
