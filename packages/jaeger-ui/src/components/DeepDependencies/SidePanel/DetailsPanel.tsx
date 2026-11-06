@@ -183,8 +183,9 @@ function UnconnectedDetailsPanelImpl(props: TProps) {
 export const UnconnectedDetailsPanel = React.memo(UnconnectedDetailsPanelImpl);
 
 function DetailsPanelWithLocation(props: Omit<TProps, keyof TDecoration>) {
+  const { service, operation } = props;
   const { search } = useLocation();
-  const decoration = usePathAgnosticDecoration({ ...props, search });
+  const decoration = usePathAgnosticDecoration({ service, operation, search });
   return <UnconnectedDetailsPanel {...props} {...decoration} />;
 }
 

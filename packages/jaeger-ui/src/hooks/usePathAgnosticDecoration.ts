@@ -65,7 +65,8 @@ export default function usePathAgnosticDecoration({
     schema?.opSummaryUrl,
     schema?.opSummaryPath,
   ]);
-  const tiers = withOp ? ['withOp', 'withoutOp'] : ['withoutOp'];
+  // Disabled queries still create cache entries, so register none without a decoration.
+  const tiers = !schema ? [] : withOp ? ['withOp', 'withoutOp'] : ['withoutOp'];
   const summaries = useQueries({
     queries: tiers.map(tier => {
       const isOperation = tier === 'withOp';
@@ -109,7 +110,7 @@ export default function usePathAgnosticDecoration({
     service,
     operation,
     decorationID,
-    decorationValue: operationValue || summaries[serviceIndex].data,
-    decorationMax: maxima[operationValue ? 0 : serviceIndex].data,
+    decorationValue: operationValue || summaries[serviceIndex]?.data,
+    decorationMax: maxima[operationValue ? 0 : serviceIndex]?.data,
   });
 }
