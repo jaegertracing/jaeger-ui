@@ -146,4 +146,37 @@ describe('OtelTraceFacade', () => {
       expect(childFacade.inboundLinks[0].span).toBe(linkFacade);
     });
   });
+
+  describe('handling missing or undefined fields in legacy trace', () => {
+    it('gracefully handles missing spans, rootSpans, and services', () => {
+      const minimalTrace = {
+        traceID: 'trace-minimal',
+        traceName: 'minimal-name',
+        duration: 100 as IOtelTrace['duration'],
+        startTime: 1000 as IOtelTrace['startTime'],
+        endTime: 1100 as IOtelTrace['endTime'],
+        tracePageTitle: 'title',
+        traceEmoji: '⚡',
+      } as unknown as Trace;
+
+      const facadeInstance = new OtelTraceFacade(minimalTrace);
+      expect(facadeInstance.traceID).toBe('trace-minimal');
+      expect(facadeInstance.spans).toEqual([]);
+      expect(facadeInstance.rootSpans).toEqual([]);
+      expect(facadeInstance.services).toEqual([]);
+      expect(facadeInstance.orphanSpanCount).toBe(0);
+      expect(facadeInstance.isGenAITrace).toBe(false);
+      expect(facadeInstance.hasErrors()).toBe(false);
+    });
+
+    it('gracefully handles rootSpans referencing spanIDs not present in spanMap', () => {
+      const missingRootSpanTrace = {
+        ...mockLegacyTrace,
+        rootSpans: [{ spanID: 'missing-span-id' } as Span],
+      };
+
+      const facadeInstance = new OtelTraceFacade(missingRootSpanTrace);
+      expect(facadeInstance.rootSpans).toEqual([]);
+    });
+  });
 });
