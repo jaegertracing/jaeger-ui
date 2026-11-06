@@ -1220,7 +1220,6 @@ The residual surface is now small enough to enumerate:
 
 | Redux artefact | Consumers | Resolved by |
 | :--- | :--- | :--- |
-| `reducers/metrics.ts` | `Monitor/ServicesView` (`connect`) | Phase 2f — implementation open in [#4048](https://github.com/jaegertracing/jaeger-ui/pull/4048) |
 | `TraceTimelineViewer/duck.ts`, `duck.track.ts`, `middlewares/track.ts` | no UI consumers; `store.track.test.ts` (parity reference) | Phase 4 follow-up (Phase 1c steps 3–4 done) |
 | Vestigial `connect()` wrappers whose `mapStateToProps` ignores state entirely | `SearchTracePage/SearchForm.tsx`, `TraceDiff/TraceDiff.tsx` | Phase 4b (mechanical) |
 | `utils/configure-store.ts`, `<Provider>` in `components/App/index.tsx`, `ReduxState` in `types/index.ts`, `types/TTraceTimeline.ts` | app shell, ~14 test files | Phase 4b/4c |

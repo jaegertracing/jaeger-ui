@@ -52,6 +52,8 @@ describe('usePathAgnosticDecoration', () => {
     const { result } = renderHook(() => usePathAgnosticDecoration({ ...props, search }), { wrapper });
     expect(result.current.decorationValue).toBeUndefined();
     expect(fetchDecoration).not.toHaveBeenCalled();
+    expect(client.getQueryCache().findAll({ queryKey: ['decoration-summary'] })).toHaveLength(0);
+    expect(client.getQueryCache().findAll({ queryKey: ['decoration-maximum'] })).toHaveLength(0);
   });
 
   it('does not fetch without configured schemas', () => {
@@ -88,6 +90,7 @@ describe('usePathAgnosticDecoration', () => {
     });
     await waitFor(() => expect(result.current.decorationValue).toBe(17));
     expect(fetchDecoration).toHaveBeenCalledWith('/operations?service=frontend');
+    expect(fetchDecoration).toHaveBeenCalledTimes(1);
   });
 
   it.each([null, ['GET', 'POST']])('uses the service summary without a single operation: %j', operation => {
