@@ -1,11 +1,11 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import SpanDetail from './SpanDetail';
 import DetailState from './SpanDetail/DetailState';
-import SpanTreeOffset from './SpanTreeOffset';
+import SpanTreeOffset, { getAncestorGuides } from './SpanTreeOffset';
 import TimelineRow from './TimelineRow';
 
 import { IOtelSpan, IAttributes, IEvent } from '../../../types/otel';
@@ -58,11 +58,19 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
     eventItemToggle,
     useOtelTerms,
   } = props;
+  const ancestorGuides = useMemo(() => getAncestorGuides(span), [span]);
   return (
     <TimelineRow className="detail-row">
       {timelineBarsVisible && (
         <TimelineRow.Cell width={nameColumnWidth}>
-          <SpanTreeOffset span={span} showChildrenIcon={false} isDetailRow color={color} />
+          <SpanTreeOffset
+            hasChildren={span.hasChildren}
+            childCount={span.childSpans.length}
+            ancestors={ancestorGuides}
+            showChildrenIcon={false}
+            isDetailRow
+            color={color}
+          />
           <span>
             <span
               className="detail-row-expanded-accent"
