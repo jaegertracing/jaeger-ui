@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import memoizeOne from 'memoize-one';
 
 import HtmlLayersGroup from './HtmlLayersGroup';
 import MeasurableNodesLayer from './MeasurableNodesLayer';
@@ -58,105 +57,140 @@ const WRAPPER_STYLE: React.CSSProperties = {
 
 let idCounter = 0;
 
-export default class Digraph<T = unknown, U = unknown> extends React.PureComponent<
-  TDigraphProps<T, U>,
-  TDigraphState<T, U>
-> {
-  renderUtils: TRendererUtils;
+const propsFactories: Record<string, TFromGraphStateFn<any, any>> = {
+  classNameIsSmall,
+  scaleOpacity: scaleProperty.opacity,
+  scaleStrokeOpacity: scaleProperty.strokeOpacity,
+  scaleStrokeOpacityStrong: scaleProperty.strokeOpacityStrong,
+  scaleStrokeOpacityStrongest: scaleProperty.strokeOpacityStrongest,
+};
 
-  static propsFactories: Record<string, TFromGraphStateFn<any, any>> = {
-    classNameIsSmall,
-    scaleOpacity: scaleProperty.opacity,
-    scaleStrokeOpacity: scaleProperty.strokeOpacity,
-    scaleStrokeOpacityStrong: scaleProperty.strokeOpacityStrong,
-    scaleStrokeOpacityStrongest: scaleProperty.strokeOpacityStrongest,
-  };
+function Digraph<T = unknown, U = unknown>(props: TDigraphProps<T, U>) {
+  const {
+    className = '',
+    classNamePrefix = 'plexus',
+    edges,
+    layers: topLayers,
+    layoutManager,
+    measurableNodesKey,
+    minimap: minimapEnabled = false,
+    minimapClassName = '',
+    setOnGraph,
+    style,
+    vertices,
+    zoom: zoomEnabled = false,
+  } = props;
 
-  static scaleProperty = scaleProperty;
+  const [state, setState] = React.useState<TDigraphState<T, U>>(() => {
+    const initialState: TDigraphState<T, U> = {
+      edges: [],
+      layoutEdges: null,
+      layoutGraph: null,
+      layoutPhase: ELayoutPhase.NoData,
+      layoutVertices: null,
+      sizeVertices: null,
+      vertices: [],
+      zoomTransform: zoomIdentity,
+    };
 
-  static defaultProps = {
-    className: '',
-    classNamePrefix: 'plexus',
-    minimap: false,
-    minimapClassName: '',
-    zoom: false,
-  };
+    if (Array.isArray(edges) && edges.length && Array.isArray(vertices) && vertices.length) {
+      initialState.layoutPhase = ELayoutPhase.CalcSizes;
+      initialState.edges = edges;
+      initialState.vertices = vertices;
+    }
 
-  state: TDigraphState<T, U> = {
-    edges: [],
-    layoutEdges: null,
-    layoutGraph: null,
-    layoutPhase: ELayoutPhase.NoData,
-    layoutVertices: null,
-    sizeVertices: null,
-    vertices: [],
-    zoomTransform: zoomIdentity,
-  };
-
-  baseId = `plexus--Digraph--${idCounter++}`;
-
-  makeClassNameFactory = memoizeOne((classNamePrefix: string) => {
-    return (name: string) => `${classNamePrefix} ${classNamePrefix}-Digraph--${name}`;
+    return initialState;
   });
 
-  rootRef = React.createRef<HTMLDivElement>();
-
-  zoomManager: ZoomManager | null = null;
-
-  constructor(props: TDigraphProps<T, U>) {
-    super(props);
-    const { edges, vertices, zoom: zoomEnabled } = props;
-    if (Array.isArray(edges) && edges.length && Array.isArray(vertices) && vertices.length) {
-      this.state.layoutPhase = ELayoutPhase.CalcSizes;
-      this.state.edges = edges;
-      this.state.vertices = vertices;
-    }
-    if (zoomEnabled) {
-      this.zoomManager = new ZoomManager(this.onZoomUpdated);
-    }
-    this.renderUtils = {
-      getGlobalId: this.getGlobalId,
-      getZoomTransform: this.getZoomTransform,
-    };
+  const baseIdRef = React.useRef<string | null>(null);
+  if (!baseIdRef.current) {
+    baseIdRef.current = `plexus--Digraph--${idCounter++}`;
   }
+  const baseId = baseIdRef.current as string;
 
-  componentDidMount() {
-    const { current } = this.rootRef;
-    if (current && this.zoomManager) {
-      this.zoomManager.setElement(current);
+  const rootRef = React.useRef<HTMLDivElement>(null);
+
+  const zoomManager = React.useMemo(() => {
+    if (!zoomEnabled) {
+      return null;
     }
-  }
+    return new ZoomManager((zoomTransform: ZoomTransform) => {
+      setState(prev => ({ ...prev, zoomTransform }));
+    });
+  }, [zoomEnabled]);
 
-  getGlobalId = (name: string) => `${this.baseId}--${name}`;
+  const zoomManagerRef = React.useRef<ZoomManager | null>(zoomManager);
+  zoomManagerRef.current = zoomManager;
 
-  getZoomTransform = () => this.state.zoomTransform;
+  const edgesRef = React.useRef(edges);
+  edgesRef.current = edges;
 
-  private setSizeVertices = (senderKey: string, sizeVertices: TSizeVertex<T>[]) => {
-    const { edges, layoutManager, measurableNodesKey: expectedKey } = this.props;
-    if (senderKey !== expectedKey) {
-      const values = `expected ${JSON.stringify(expectedKey)}, recieved ${JSON.stringify(senderKey)}`;
-      throw new Error(`Key mismatch for measuring nodes; ${values}`);
+  const layoutManagerRef = React.useRef(layoutManager);
+  layoutManagerRef.current = layoutManager;
+
+  const measurableNodesKeyRef = React.useRef(measurableNodesKey);
+  measurableNodesKeyRef.current = measurableNodesKey;
+
+  const getClassName = React.useMemo(
+    () => (name: string) => `${classNamePrefix} ${classNamePrefix}-Digraph--${name}`,
+    [classNamePrefix]
+  );
+
+  const getGlobalId = React.useCallback((name: string) => `${baseId}--${name}`, [baseId]);
+
+  const zoomTransformRef = React.useRef(state.zoomTransform);
+  zoomTransformRef.current = state.zoomTransform;
+
+  const getZoomTransform = React.useCallback(() => zoomTransformRef.current, []);
+
+  const renderUtils: TRendererUtils = React.useMemo(
+    () => ({
+      getGlobalId,
+      getZoomTransform,
+    }),
+    [getGlobalId, getZoomTransform]
+  );
+
+  const onLayoutDone = React.useCallback((result: TCancelled | TLayoutDone<T, U>) => {
+    if (result.isCancelled) {
+      return;
     }
-    this.setState({ sizeVertices });
-    const { layout } = layoutManager.getLayout(edges, sizeVertices);
-    layout.then(this.onLayoutDone);
-    this.setState({ sizeVertices, layoutPhase: ELayoutPhase.CalcPositions });
-    // We can add support for drawing nodes in the correct position before we have edges
-    // via the following (instead of the above)
-    // const { positions, layout } = layoutManager.getLayout(edges, sizeVertices);
-    // positions.then(this._onPositionsDone);
-  };
+    const { edges: layoutEdges, graph: layoutGraph, vertices: layoutVertices } = result;
+    setState(prev => ({
+      ...prev,
+      layoutEdges,
+      layoutGraph,
+      layoutVertices,
+      layoutPhase: ELayoutPhase.Done,
+    }));
+    if (zoomManagerRef.current) {
+      zoomManagerRef.current.setContentSize(layoutGraph);
+    }
+  }, []);
 
-  private renderLayers() {
-    const { classNamePrefix, layers: topLayers } = this.props;
-    const getClassName = this.makeClassNameFactory(classNamePrefix || '');
+  const setSizeVertices = React.useCallback(
+    (senderKey: string, sizeVertices: TSizeVertex<T>[]) => {
+      if (senderKey !== measurableNodesKeyRef.current) {
+        const values = `expected ${JSON.stringify(
+          measurableNodesKeyRef.current
+        )}, received ${JSON.stringify(senderKey)}`;
+        throw new Error(`Key mismatch for measuring nodes; ${values}`);
+      }
+      setState(prev => ({ ...prev, sizeVertices, layoutPhase: ELayoutPhase.CalcPositions }));
+      const { layout } = layoutManagerRef.current.getLayout(edgesRef.current, sizeVertices);
+      layout.then(onLayoutDone);
+    },
+    [onLayoutDone]
+  );
 
-    const { sizeVertices: _, ...partialGraphState } = this.state;
+  function renderLayers() {
+    const { sizeVertices: _, ...partialGraphState } = state;
     const graphState = {
       ...partialGraphState,
-      renderUtils: this.renderUtils,
+      renderUtils,
     };
     const { layoutPhase } = graphState;
+
     return topLayers.map(layer => {
       const { layerType, key, setOnContainer } = layer;
       if (layer.layers) {
@@ -168,11 +202,10 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
               layers={layer.layers}
               getClassName={getClassName}
               setOnContainer={setOnContainer}
-              setSizeVertices={this.setSizeVertices}
+              setSizeVertices={setSizeVertices}
             />
           );
         }
-        // svg group layer, the if is for TypeScript
         if (layer.layerType === ELayerType.Svg) {
           return (
             <SvgLayersGroup<T, U>
@@ -187,7 +220,6 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
         }
       }
       if (layer.edges) {
-        // edges standalone layer
         const { defs, markerEndId, markerStartId, setOnEdge } = layer;
         return layoutPhase === ELayoutPhase.Done ? (
           <SvgEdgesLayer
@@ -204,7 +236,6 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
         ) : null;
       }
       if (layer.measurable) {
-        // standalone measurable Nodes Layer
         const { measureNode, renderNode, setOnNode } = layer;
         return (
           <MeasurableNodesLayer<T, U>
@@ -218,7 +249,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
             senderKey={key}
             setOnContainer={setOnContainer}
             setOnNode={setOnNode}
-            setSizeVertices={this.setSizeVertices}
+            setSizeVertices={setSizeVertices}
           />
         );
       }
@@ -241,52 +272,52 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     });
   }
 
-  private onZoomUpdated = (zoomTransform: ZoomTransform) => {
-    this.setState({ zoomTransform });
-  };
-
-  private onLayoutDone = (result: TCancelled | TLayoutDone<T, U>) => {
-    if (result.isCancelled) {
-      return;
+  React.useEffect(() => {
+    const { current } = rootRef;
+    if (zoomManager && current) {
+      zoomManager.setElement(current);
     }
-    const { edges: layoutEdges, graph: layoutGraph, vertices: layoutVertices } = result;
-    this.setState({ layoutEdges, layoutGraph, layoutVertices, layoutPhase: ELayoutPhase.Done });
-    if (this.zoomManager) {
-      this.zoomManager.setContentSize(layoutGraph);
-    }
-  };
+    return () => {
+      if (zoomManager) {
+        zoomManager.dispose();
+      }
+    };
+  }, [zoomManager]);
 
-  render() {
-    const {
-      className,
-      classNamePrefix,
-      minimap: minimapEnabled,
-      minimapClassName,
-      setOnGraph,
-      style,
-    } = this.props;
-    const builtinStyle = this.zoomManager ? WRAPPER_STYLE_ZOOM : WRAPPER_STYLE;
-    const rootProps = assignMergeCss(
-      {
-        style: builtinStyle,
-        className: `${classNamePrefix} ${classNamePrefix}-Digraph`,
-      },
-      { className, style },
-      getProps(setOnGraph, { ...this.state, renderUtils: this.renderUtils })
-    );
-    return (
-      <div {...rootProps}>
-        <div style={builtinStyle} ref={this.rootRef}>
-          {this.renderLayers()}
-        </div>
-        {minimapEnabled && this.zoomManager && (
-          <MiniMap
-            className={minimapClassName}
-            classNamePrefix={classNamePrefix}
-            {...this.zoomManager.getProps()}
-          />
-        )}
+  const builtinStyle = zoomEnabled ? WRAPPER_STYLE_ZOOM : WRAPPER_STYLE;
+  const rootProps = assignMergeCss(
+    {
+      style: builtinStyle,
+      className: `${classNamePrefix} ${classNamePrefix}-Digraph`,
+    },
+    { className, style },
+    getProps(setOnGraph, { ...state, renderUtils })
+  );
+
+  return (
+    <div {...rootProps}>
+      <div style={builtinStyle} ref={rootRef}>
+        {renderLayers()}
       </div>
-    );
-  }
+      {minimapEnabled && zoomManager && (
+        <MiniMap
+          className={minimapClassName}
+          classNamePrefix={classNamePrefix}
+          {...zoomManager.getProps()}
+        />
+      )}
+    </div>
+  );
 }
+
+type TDigraphComponent = typeof Digraph & {
+  propsFactories: typeof propsFactories;
+  scaleProperty: typeof scaleProperty;
+};
+
+const DigraphMemo = React.memo(Digraph) as unknown as TDigraphComponent;
+
+DigraphMemo.propsFactories = propsFactories;
+DigraphMemo.scaleProperty = scaleProperty;
+
+export default DigraphMemo;
