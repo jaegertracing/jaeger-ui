@@ -35,6 +35,7 @@ const { mockLayoutPrefsStore, mockTraceTimelineStore, mockUseTraceTimelineStore 
       sidePanelWidth: 0.375,
       detailPanelMode: 'inline',
       timelineBarsVisible: true,
+      heatmapEnabled: false,
       setSpanNameColumnWidth: vi.fn(),
       setSidePanelWidth: vi.fn(),
       setTimelineBarsVisible: vi.fn(),
@@ -138,6 +139,7 @@ describe('<TraceTimelineViewer>', () => {
     mockLayoutPrefsStore.sidePanelWidth = 0.375;
     mockLayoutPrefsStore.detailPanelMode = 'inline';
     mockLayoutPrefsStore.timelineBarsVisible = true;
+    mockLayoutPrefsStore.heatmapEnabled = false;
     mockTraceTimelineStore.detailStates = new Map();
     mockUseTraceTimelineStore.setState.mockClear();
     mockUseServiceFilter.prunedServices = new Set();
@@ -198,6 +200,56 @@ describe('<TraceTimelineViewer>', () => {
     } finally {
       rectSpy.mockRestore();
     }
+  });
+
+  describe('latency heatmap', () => {
+    it('shows the legend only while the heatmap is on', () => {
+      const { container, rerender } = render(<TraceTimelineViewerImpl {...props} />);
+      expect(screen.queryByRole('group', { name: /latency heatmap legend/i })).not.toBeInTheDocument();
+      expect(container.firstChild).not.toHaveClass('is-heatmapEnabled');
+
+      mockLayoutPrefsStore.heatmapEnabled = true;
+      rerender(<TraceTimelineViewerImpl {...props} />);
+      expect(screen.getByRole('group', { name: /latency heatmap legend/i })).toBeInTheDocument();
+      expect(container.firstChild).toHaveClass('is-heatmapEnabled');
+    });
+
+    it('shows the legend in side panel mode too', () => {
+      mockLayoutPrefsStore.detailPanelMode = 'sidepanel';
+      mockLayoutPrefsStore.heatmapEnabled = true;
+      render(<TraceTimelineViewerImpl {...props} />);
+      expect(screen.getByRole('group', { name: /latency heatmap legend/i })).toBeInTheDocument();
+    });
+
+    it('starts the side panel below both the header and the legend', () => {
+      mockLayoutPrefsStore.detailPanelMode = 'sidepanel';
+
+      // The legend is a fixed band like the header, so it doesn't move the layout container.
+      const rectSpy = jest
+        .spyOn(Element.prototype, 'getBoundingClientRect')
+        .mockImplementation(() => ({ top: 80, bottom: 0, left: 0, right: 0, height: 0, width: 0 }));
+
+      try {
+        const { container, rerender } = render(<TraceTimelineViewerImpl {...props} />);
+        const panel = container.querySelector('.TraceTimelineViewer--sidePanel');
+        expect(panel.style.top).toBe('calc(80px + var(--timeline-header-row-height))');
+
+        mockLayoutPrefsStore.heatmapEnabled = true;
+        rerender(<TraceTimelineViewerImpl {...props} />);
+        expect(panel.style.top).toBe(
+          'calc(80px + (var(--timeline-header-row-height) + var(--heatmap-legend-height)))'
+        );
+        expect(panel.style.height).toBe(
+          'calc(100vh - 80px - (var(--timeline-header-row-height) + var(--heatmap-legend-height)))'
+        );
+
+        mockLayoutPrefsStore.heatmapEnabled = false;
+        rerender(<TraceTimelineViewerImpl {...props} />);
+        expect(panel.style.top).toBe('calc(80px + var(--timeline-header-row-height))');
+      } finally {
+        rectSpy.mockRestore();
+      }
+    });
   });
 
   it('sets up actions', () => {

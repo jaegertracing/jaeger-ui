@@ -32,18 +32,20 @@ type TraceTimelineLayoutPrefsStore = {
   sidePanelWidth: number;
   detailPanelMode: SpanDetailPanelMode;
   timelineBarsVisible: boolean;
+  heatmapEnabled: boolean;
   setSpanNameColumnWidth: (width: number) => void;
   setSidePanelWidth: (width: number) => void;
   // Updates layout fields only; use `setDetailPanelMode` from `./store` to also sync detail panel state.
   applyDetailPanelModeToLayout: (mode: SpanDetailPanelMode) => void;
   setTimelineBarsVisible: (visible: boolean) => void;
+  toggleHeatmap: () => void;
 };
 
 // Reads user layout preferences from localStorage and merges them with config-driven defaults.
 // Mirrors the logic that was previously in TraceTimelineViewer/duck.ts `newInitialState()`.
 export function getInitialLayoutState(): Pick<
   TraceTimelineLayoutPrefsStore,
-  'spanNameColumnWidth' | 'sidePanelWidth' | 'detailPanelMode' | 'timelineBarsVisible'
+  'spanNameColumnWidth' | 'sidePanelWidth' | 'detailPanelMode' | 'timelineBarsVisible' | 'heatmapEnabled'
 > {
   const { traceTimeline } = getConfig();
 
@@ -101,7 +103,10 @@ export function getInitialLayoutState(): Pick<
     }
   }
 
-  return { spanNameColumnWidth, sidePanelWidth, detailPanelMode, timelineBarsVisible };
+  const storedHeatmap = storage.getItem('heatmapEnabled');
+  const heatmapEnabled = storedHeatmap === 'true';
+
+  return { spanNameColumnWidth, sidePanelWidth, detailPanelMode, timelineBarsVisible, heatmapEnabled };
 }
 
 export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()((set, get) => ({
@@ -139,5 +144,11 @@ export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()((set,
   setTimelineBarsVisible: (visible: boolean) => {
     storage.setItem('timelineVisible', String(visible));
     set({ timelineBarsVisible: visible });
+  },
+
+  toggleHeatmap: () => {
+    const next = !get().heatmapEnabled;
+    storage.setItem('heatmapEnabled', String(next));
+    set({ heatmapEnabled: next });
   },
 }));

@@ -12,6 +12,7 @@ import { SpanDecorationIcon } from './SpanDecorationIcon';
 import Ticks from './Ticks';
 
 import { TNil } from '../../../types';
+import colorGenerator from '../../../utils/color-generator';
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan } from '../../../types/otel';
 import { SpanPill } from './spanPills';
@@ -154,7 +155,9 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
             childrenVisible={isChildrenExpanded}
             span={span}
             onClick={isParent ? _childrenToggle : undefined}
-            color={color}
+            // The tree markers stay on the service color, like the indent guides, even when the
+            // bar takes a heatmap color.
+            color={colorGenerator.getColorByKey(span.resource.serviceName)}
           />
           <a
             className={`span-name ${isDetailExpanded ? 'is-detail-expanded' : ''}`}

@@ -31,6 +31,7 @@ import colorGenerator from '../../../utils/color-generator';
 import { TNil } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan, IOtelTrace, IAttributes, IEvent } from '../../../types/otel';
+import { heatmapColor } from '../../../utils/span-latency-stats';
 import TTraceTimeline from '../../../types/TTraceTimeline';
 import { getSelectedSpanID, useLayoutPrefsStore, useTraceTimelineStore } from './store';
 import {
@@ -62,6 +63,9 @@ type TVirtualizedTraceViewOwnProps = {
   criticalPath: CriticalPathSection[];
   spanPillsEnabled: boolean;
   useOtelTerms: boolean;
+  heatmapEnabled?: boolean;
+  // Latency score per spanID; spans missing from the map have no same-operation peers.
+  heatmapScores?: Map<string, number>;
 };
 
 type TDispatchProps = {
@@ -376,10 +380,19 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
     []
   );
 
+  // The bar row and its detail row share one color, so an expanded span matches its bar.
+  // Read through propsRef like the other row inputs: ListView re-renders its visible rows
+  // whenever this component renders, so toggling the heatmap repaints them.
+  const getSpanColor = useCallback((span: IOtelSpan): string => {
+    const { heatmapEnabled, heatmapScores } = propsRef.current;
+    return heatmapEnabled && heatmapScores
+      ? heatmapColor(heatmapScores.get(span.spanID))
+      : colorGenerator.getColorByKey(span.resource.serviceName);
+  }, []);
+
   const renderSpanBarRow = useCallback(
     (span: IOtelSpan, spanIndex: number, key: string, style: React.CSSProperties, attrs: object) => {
       const { spanID } = span;
-      const { serviceName } = span.resource;
       const {
         childrenHiddenIDs,
         childrenToggle,
@@ -393,6 +406,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         trace,
         useOtelTerms,
         spanPillsEnabled,
+        heatmapEnabled,
       } = propsRef.current;
       // to avert flow error
       if (!trace) {
@@ -401,7 +415,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
 
       const { spans } = trace;
 
-      const color = colorGenerator.getColorByKey(serviceName);
+      const color = getSpanColor(span);
       const isCollapsed = childrenHiddenIDs.has(spanID);
       const isDetailExpanded = detailStates.has(spanID);
       const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
@@ -419,7 +433,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         if (rpcSpan) {
           const rpcViewBounds = getViewedBounds()(rpcSpan.startTime, rpcSpan.endTime);
           rpc = {
-            color: colorGenerator.getColorByKey(rpcSpan.resource.serviceName),
+            color: getSpanColor(rpcSpan),
             operationName: rpcSpan.name,
             serviceName: rpcSpan.resource.serviceName,
             viewEnd: rpcViewBounds.end,
@@ -434,7 +448,9 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
       if (!span.hasChildren && peerServiceValue != null && (isKindClient(span) || isKindProducer(span))) {
         noInstrumentedServer = {
           serviceName: String(peerServiceValue),
-          color: colorGenerator.getColorByKey(String(peerServiceValue)),
+          // The peer has no span of its own to score, so under the heatmap it takes the color of
+          // the client call that measured it.
+          color: heatmapEnabled ? color : colorGenerator.getColorByKey(String(peerServiceValue)),
         };
       }
 
@@ -468,13 +484,12 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         </div>
       );
     },
-    [getClippingCssClasses, getViewedBounds, focusSpan, criticalPathContext]
+    [getClippingCssClasses, getViewedBounds, focusSpan, criticalPathContext, getSpanColor]
   );
 
   const renderSpanDetailRow = useCallback(
     (span: IOtelSpan, key: string, style: React.CSSProperties, attrs: object) => {
       const { spanID } = span;
-      const { serviceName } = span.resource;
       const {
         detailLogItemToggle,
         detailLogsToggle,
@@ -495,7 +510,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         return null;
       }
 
-      const color = colorGenerator.getColorByKey(serviceName);
+      const color = getSpanColor(span);
       return (
         <div className="VirtualizedTraceView--row" key={key} style={{ ...style, zIndex: 1 }} {...attrs}>
           <SpanDetailRow
@@ -521,7 +536,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         </div>
       );
     },
-    [linksGetterFromAttributes, eventItemToggleAdapter, focusSpan]
+    [linksGetterFromAttributes, eventItemToggleAdapter, focusSpan, getSpanColor]
   );
 
   const renderRow = useCallback(
