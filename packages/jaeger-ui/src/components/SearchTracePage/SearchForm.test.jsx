@@ -414,6 +414,17 @@ describe('submitForm()', () => {
       expect(maxDuration).toBe(fields.maxDuration);
     });
 
+    it('removes the spaces that validation allows, such as in "100 ms"', () => {
+      fields.minDuration = '100 ms';
+      fields.maxDuration = ' 1.2 s';
+      expect(validateDurationFields(fields.minDuration)).toBeUndefined();
+      expect(validateDurationFields(fields.maxDuration)).toBeUndefined();
+      const url = submitForm(fields);
+      const { minDuration, maxDuration } = getUrlParams(url);
+      expect(minDuration).toBe('100ms');
+      expect(maxDuration).toBe('1.2s');
+    });
+
     it('omits values when they are falsy', () => {
       fields.minDuration = undefined;
       fields.maxDuration = undefined;
