@@ -7,6 +7,7 @@ import { Tooltip } from 'antd';
 import CircularProgressbar from '../common/CircularProgressbar';
 import NewWindowIcon from '../common/NewWindowIcon';
 import DetailsCard from '../common/DetailsCard';
+import { TColumnDef } from '../common/DetailsCard/types';
 import CountCard from './CountCard';
 
 import { TQualityMetrics } from './types';
@@ -70,7 +71,7 @@ const MetricCard: React.FC<TProps> = ({ metric }) => {
                   key={`${detail.description}${JSON.stringify(detail.columns)}`}
                   className="MetricCard--Details"
                   collapsible
-                  columnDefs={detail.columns}
+                  columnDefs={detail.columns as TColumnDef[]}
                   description={detail.description}
                   details={detail.rows}
                   header={detail.header || 'Details'}
