@@ -173,10 +173,12 @@ export default function AttributesTable(props: AttributesTableProps) {
     setQuery('');
   }
   // Filtering runs against the deferred query so typing stays responsive on
-  // spans with many or very large attributes.
+  // spans with many or very large attributes. An empty query applies right away,
+  // so a cleared filter or a span swap never paints rows under the old text.
   const deferredQuery = React.useDeferredValue(query);
+  const effectiveQuery = query.trim() === '' ? '' : deferredQuery;
   const showFilter = data.size > FILTER_THRESHOLD;
-  const normalizedQuery = showFilter ? deferredQuery.trim().toLowerCase() : '';
+  const normalizedQuery = showFilter ? effectiveQuery.trim().toLowerCase() : '';
 
   // Search text is built lazily, at most once per row, instead of re-stringifying
   // every value on each keystroke. Keyed on the stable entry objects, like expandedRows.
@@ -229,7 +231,7 @@ export default function AttributesTable(props: AttributesTableProps) {
           {normalizedQuery && visibleRows.length === 0 && (
             <tr className="KeyValueTable--row">
               <td className="KeyValueTable--emptyState" colSpan={2}>
-                No attributes match &ldquo;{deferredQuery.trim()}&rdquo;
+                No attributes match &ldquo;{effectiveQuery.trim()}&rdquo;
               </td>
             </tr>
           )}

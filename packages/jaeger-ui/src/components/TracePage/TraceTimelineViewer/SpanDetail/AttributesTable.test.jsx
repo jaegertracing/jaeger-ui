@@ -450,6 +450,31 @@ describe('<AttributesTable> - attribute filter', () => {
     expect(screen.getAllByRole('row')).toHaveLength(otherSpanAttrs.length);
   });
 
+  it('shows unfiltered rows on the first paint after a span swap', async () => {
+    const commits = [];
+    function RowCountProbe() {
+      React.useLayoutEffect(() => {
+        commits.push(document.querySelectorAll('tr').length);
+      });
+      return null;
+    }
+    const renderSpan = attrs => (
+      <>
+        <AttributesTable data={makeAttributes(attrs)} />
+        <RowCountProbe />
+      </>
+    );
+    const { rerender } = render(renderSpan(manyAttrs));
+    await user.type(getFilter(), 'key.0');
+    expect(screen.getAllByRole('row')).toHaveLength(1);
+
+    commits.length = 0;
+    const otherSpanAttrs = manyAttrs.map(({ key }) => ({ key, value: 'other' }));
+    rerender(renderSpan(otherSpanAttrs));
+
+    expect(commits[0]).toBe(otherSpanAttrs.length);
+  });
+
   it('shows every row when the data drops below the threshold', async () => {
     const { rerender } = render(<AttributesTable data={makeAttributes(manyAttrs)} />);
     fireEvent.change(getFilter(), { target: { value: 'zzz' } });
