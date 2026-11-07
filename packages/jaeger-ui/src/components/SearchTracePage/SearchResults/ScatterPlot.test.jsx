@@ -1,13 +1,26 @@
+// Copyright (c) 2026 The Jaeger Authors.
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
 import { render, fireEvent, act, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { XAxis } from 'recharts';
 
 import ScatterPlot, { CustomTooltip } from './ScatterPlot';
 import { ONE_MILLISECOND } from '../../../utils/date';
 import { FALLBACK_TRACE_NAME } from '../../../constants';
+import getConfig from '../../../utils/config/get-config';
+
+vi.mock('../../../utils/config/get-config', () => mockDefault(vi.fn(() => ({}))));
+
+vi.mock('recharts', async importOriginal => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    XAxis: vi.fn(props => <actual.XAxis {...props} />),
+  };
+});
 
 // Mock ResizeObserver which is not available in JSDOM but required by Recharts
 class MockResizeObserver {
@@ -102,6 +115,22 @@ describe('ScatterPlot', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    getConfig.mockReturnValue({});
+  });
+
+  it.each([
+    ['12h', '10:10:17 pm'],
+    ['24h', '22:10:17'],
+  ])('uses %s time on the x axis', (timeFormat, label) => {
+    getConfig.mockReturnValue({ timeFormat });
+    render(
+      <ScatterPlot data={sampleData} onValueClick={mockOnValueClick} calculateContainerWidth={() => 1200} />
+    );
+
+    expect(XAxis).toHaveBeenCalled();
+    const { tickFormatter, ticks } = XAxis.mock.calls.at(-1)[0];
+    expect(tickFormatter(sampleData[0].x)).toBe(label);
+    expect(new Set(ticks.map(tickFormatter)).size).toBe(ticks.length);
   });
 
   it('should render base case correctly', () => {
