@@ -101,17 +101,21 @@ describe('<AccordionEvents>', () => {
   });
 
   it('shows all events when "show all" is clicked', () => {
-    render(<AccordionEvents {...defaultProps} isOpen />);
+    const onToggle = jest.fn();
+    render(<AccordionEvents {...defaultProps} isOpen onToggle={onToggle} />);
     fireEvent.click(screen.getByRole('button', { name: /show all/i }));
     expect(screen.getByRole('switch')).toHaveTextContent(`Logs (${defaultTotalCount})`);
     const items = screen.getAllByTestId('event-item');
     expect(items.length).toBe(defaultTotalCount);
     expect(screen.getByRole('button', { name: /show in range/i })).toBeInTheDocument();
+    expect(onToggle).not.toHaveBeenCalled();
   });
 
   it('displays in-range events again when "show in range" is clicked', () => {
-    render(<AccordionEvents {...defaultProps} isOpen />);
+    const onToggle = jest.fn();
+    render(<AccordionEvents {...defaultProps} isOpen onToggle={onToggle} />);
     fireEvent.click(screen.getByRole('button', { name: /show all/i }));
+    expect(onToggle).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: /show in range/i }));
     expect(screen.getByRole('switch')).toHaveTextContent(
       `Logs (${defaultInRangeLogsCount} of ${defaultTotalCount})`
@@ -119,6 +123,15 @@ describe('<AccordionEvents>', () => {
     const items = screen.getAllByTestId('event-item');
     expect(items.length).toBe(defaultInRangeLogsCount);
     expect(screen.getByRole('button', { name: /show all/i })).toBeInTheDocument();
+    expect(onToggle).not.toHaveBeenCalled();
+  });
+
+  it('stops keydown propagation on range toggle buttons', () => {
+    const onToggle = jest.fn();
+    render(<AccordionEvents {...defaultProps} isOpen onToggle={onToggle} />);
+    const showAllBtn = screen.getByRole('button', { name: /show all/i });
+    fireEvent.keyDown(showAllBtn, { key: 'Enter' });
+    expect(onToggle).not.toHaveBeenCalled();
   });
 
   it('is interactive by default', () => {
