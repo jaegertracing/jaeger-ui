@@ -314,8 +314,24 @@ export function MonitorATMServicesViewImpl({ search = '', navigate }: TOwnProps)
   const serviceErrorRate = serviceMetrics ? serviceMetrics.service_error_rate : null;
   const controlsInitialLoading = serviceMetricsInitialLoading || operationMetricsInitialLoading;
   const refreshLoading = refreshRequested && (serviceMetricsFetching || operationMetricsFetching);
+  const latencyErrors = [
+    serviceError.service_latencies_50,
+    serviceError.service_latencies_75,
+    serviceError.service_latencies_95,
+  ];
+  // The latency graph shows a fetch error only when every quantile request failed.
+  const latencyError = latencyErrors.every(Boolean) ? latencyErrors[0] : null;
+  const latencyRequestFailed = latencyErrors.some(Boolean);
   const showNoMetricsAlert =
-    !serviceMetricsFetching && !serviceMetricsInitialLoading && _isEmpty(serviceMetrics?.service_latencies);
+    !serviceMetricsFetching &&
+    !serviceMetricsInitialLoading &&
+    _isEmpty(serviceMetrics?.service_latencies) &&
+    !latencyError;
+  // Call rates without latencies, when every latency request succeeded, usually means the
+  // latency histogram name Jaeger queries does not match the one exported by the span
+  // metrics pipeline.
+  const showNoLatencyAlert =
+    showNoMetricsAlert && !latencyRequestFailed && serviceMetrics?.service_call_rate != null;
 
   if (servicesLoading) {
     return <LoadingIndicator vcentered centered />;
@@ -326,13 +342,25 @@ export function MonitorATMServicesViewImpl({ search = '', navigate }: TOwnProps)
       {showNoMetricsAlert && (
         <Alert
           message={
-            <>
-              No data yet! Please see these
-              <Link to={{ pathname: docsLink }} target="_blank">
-                &nbsp;instructions&nbsp;
-              </Link>
-              on how to set up your span metrics.
-            </>
+            showNoLatencyAlert ? (
+              <>
+                Call rates were found but no latency histogram matched. Check that the duration histogram name
+                and unit configured in the metrics storage match what your span metrics pipeline exports. See
+                these
+                <Link to={{ pathname: docsLink }} target="_blank">
+                  &nbsp;instructions&nbsp;
+                </Link>
+                for details.
+              </>
+            ) : (
+              <>
+                No data yet! Please see these
+                <Link to={{ pathname: docsLink }} target="_blank">
+                  &nbsp;instructions&nbsp;
+                </Link>
+                on how to set up your span metrics.
+              </>
+            )
           }
           type="warning"
           showIcon
@@ -426,11 +454,7 @@ export function MonitorATMServicesViewImpl({ search = '', navigate }: TOwnProps)
             <div ref={graphDivWrapper} />
             <ServiceGraph
               key="latency"
-              error={
-                serviceError.service_latencies_50 &&
-                serviceError.service_latencies_75 &&
-                serviceError.service_latencies_95
-              }
+              error={latencyError}
               loading={serviceMetricsFetching}
               name={`Latency (${convertTimeUnitToShortTerm(displayTimeUnit)})`}
               width={graphWidth}
