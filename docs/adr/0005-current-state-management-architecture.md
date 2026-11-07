@@ -9,7 +9,7 @@
 
 Jaeger UI uses a multi-layered state management architecture. **TanStack Query (React Query)** owns server data, **Zustand** owns shared client UI state, **URL State** is the intended source of truth for the current view (deep linking, though completeness varies by page), and **Local Storage** provides multi-session persistence for user preferences.
 
-**Redux is nearly gone.** It no longer holds traces, search results, services, config, dependencies, or the DDG graph. What remains is two reducers (`metrics`, `pathAgnosticDecorations`), the `traceTimeline` duck that survives only for the hover-guide state, and a few `connect()` wrappers that no longer read state at all. **Do not add state to Redux** — see the roadmap below. [RFC 0006](../rfc/0006-target-state-management-architecture.md) describes the target; [RFC 0004](../rfc/0004-state-management-strategy.md) tracks what is left.
+**Redux is nearly gone.** It no longer holds traces, search results, services, config, dependencies, decoration summaries, or the DDG graph. What remains is the residual `traceTimeline` duck, kept as the analytics parity reference, and a few `connect()` wrappers that do not read Redux state. **Do not add state to Redux.** [RFC 0006](../rfc/0006-target-state-management-architecture.md) describes the target; [RFC 0004](../rfc/0004-state-management-strategy.md) tracks what is left.
 
 ---
 
@@ -33,22 +33,21 @@ graph TD
     C -->|Server Data| E[React Components]
     Z -->|Shared UI State| E
     F[Local Component State] -->|Transient UI| E
-    B[Redux Store<br/>residual] -->|metrics, decorations,<br/>hover guides| E
+    B[Redux Store<br/>residual] -.-> P[Analytics parity tests]
     E -->|Writes back| A
     E -->|Store actions| Z
-    E -->|Dispatches| B
 ```
 
-The Redux box is scheduled for deletion; the timeline slice inside it is written in parallel with the corresponding Zustand store rather than being read by the UI.
+The Redux store remains configured in the app, but its state is no longer consumed by the UI. The timeline duck and tracking middleware remain as the reference for analytics parity tests. `SpanDetailSidePanel` also imports the pure `getSelectedSpanID` helper from the duck.
 
 ### 1. Redux (residual, closed to new state)
 The legacy core of the application, now reduced to a residue. The full schema of the store is defined by the [`ReduxState`](../../packages/jaeger-ui/src/types/index.ts) type.
 
-- **Location**: `src/reducers/` (`metrics`, `pathAgnosticDecorations`), `src/actions/path-agnostic-decorations.ts`, and `src/components/TracePage/TraceTimelineViewer/duck.ts`; assembled in `src/utils/configure-store.ts`. There is no `src/selectors/`.
+- **Location**: `src/components/TracePage/TraceTimelineViewer/duck.ts`, `duck.track.ts`, and `src/middlewares/track.ts`; assembled in `src/utils/configure-store.ts`. `src/reducers/index.ts` is an empty map. There is no `src/selectors/`.
 - **Access**:
-    - **Functional Components**: `useSelector` / `useDispatch` — `DdgNodeContent`, `VirtualizedTraceView` (for `hoverIndentGuideIds`).
-    - **Class Components**: `connect(mapStateToProps, mapDispatchToProps)` — `Monitor/ServicesView`, `DeepDependencies/SidePanel/DetailsPanel`, `SpanTreeOffset`. `TracePage` connects only `mapStateToProps`, for `uiFind`. `SearchForm` and `TraceDiff` are also still wrapped, but their `mapStateToProps` ignores state entirely and the wrapper is vestigial.
-- **Timeline analytics**: timeline handlers call the trackers in `TraceTimelineViewer/store.track.ts` and then the Zustand action, so each event reads pre-update state. Only `SpanTreeOffset`'s hover changes still dispatch to Redux.
+    - `DdgNodeContent` and `DeepDependencies/SidePanel/DetailsPanel` read decoration summaries through `usePathAgnosticDecoration`.
+    - `SearchForm`, `TraceDiff`, and `TracePage` retain `connect()` wrappers whose `mapStateToProps` functions ignore Redux state.
+- **Timeline analytics**: timeline handlers call the trackers in `TraceTimelineViewer/store.track.ts` before each Zustand action, so each event reads pre-update state. No timeline interaction dispatches to Redux.
 - **Do not add new state here.** Per [ADR-0004](./0004-state-management-strategy.md), everything above has a scheduled removal; new shared UI state goes to Zustand and new server data to TanStack Query.
 
 ### 1a. Zustand (shared client UI state)
