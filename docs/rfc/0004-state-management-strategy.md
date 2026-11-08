@@ -951,9 +951,9 @@ type IArchiveState = {
 
 **Components to rewire**: `ArchiveNotifier.tsx`, `TracePage` - stop dispatching Redux archive actions.
 
-#### 🚧 1c. Trace timeline UI (`traceTimeline` duck)
+#### ✅ 1c. Trace timeline UI (`traceTimeline` duck)
 
-**Redux to remove**: `src/components/TracePage/TraceTimelineViewer/duck.ts` — still registered in `src/utils/configure-store.ts` and still dispatched on every timeline interaction.
+**Redux removed**: `src/components/TracePage/TraceTimelineViewer/duck.ts`, its tracker `duck.track.ts`, and `src/middlewares/track.ts`.
 
 This is the **largest and most performance-sensitive** slice. Split across multiple PRs.
 
@@ -979,9 +979,9 @@ This is the **largest and most performance-sensitive** slice. Split across multi
 1. ✅ Layout prefs: `spanNameColumnWidth`, `sidePanelWidth`, `detailPanelMode`, `timelineBarsVisible`.
 2. ✅ Collapse/expand + detail: `childrenHiddenIDs`, `detailStates`, `shouldScrollToFirstUiFindMatch`.
 3. ✅ Hover: resolved by deletion rather than migration. `hoverIndentGuideIds` was dead state — the indent-guide highlight that consumed it (the `is-active` class and its CSS) was removed in [#3302](https://github.com/jaegertracing/jaeger-ui/pull/3302), leaving the Redux field, its two actions, the `SpanTreeOffset` mouse-enter/leave writers, and the `VirtualizedTraceView` `useSelector` read as orphaned code that fed nothing. All removed in [#4352](https://github.com/jaegertracing/jaeger-ui/pull/4352); `SpanTreeOffset` is now a plain (unconnected) functional component. Hover is not tracked by the analytics middleware, so no dual-write was involved.
-4. ✅ Timeline analytics: the handlers call the trackers in `TraceTimelineViewer/store.track.ts` before each Zustand action, so every event still reads pre-update state. `store.track.test.ts` replays a scripted session through the old middleware and through the trackers and asserts identical events.
+4. ✅ Timeline analytics: the handlers call the trackers in `TraceTimelineViewer/store.track.ts` before each Zustand action, so every event still reads pre-update state. `store.track.test.ts` replays a scripted session through the trackers and asserts the events the old middleware emitted for it.
 
-**Why the duck is still alive**: after step 3, no UI component reads or writes `traceTimeline`. `duck.track.ts` and `src/middlewares/track.ts` are still installed through `configure-store.ts` but no longer receive any action with a tracking hook. The parity test uses them as the reference, and they go with the duck in a follow-up deletion PR.
+5. ✅ Duck deletion: with no reader or writer left, the duck, its tracker, and the tracking middleware are deleted. The parity test keeps the middleware's recorded events as its expected output, and `store.test.ts` took over the duck's reducer cases that the Zustand tests lacked.
 
 **Components rewired off the dual write**: `TracePage`, `TraceTimelineViewer`, `VirtualizedTraceView`, `SpanDetailSidePanel`. `SpanTreeOffset` no longer touches Redux.
 
@@ -1220,11 +1220,11 @@ The residual surface is now small enough to enumerate:
 
 | Redux artefact | Consumers | Resolved by |
 | :--- | :--- | :--- |
-| `TraceTimelineViewer/duck.ts`, `duck.track.ts`, `middlewares/track.ts` | no UI consumers; `store.track.test.ts` (parity reference) | Phase 4 follow-up (Phase 1c steps 3–4 done) |
-| `utils/configure-store.ts`, `<Provider>` in `components/App/index.tsx`, `ReduxState` in `types/index.ts`, `types/TTraceTimeline.ts` | app shell, ~14 test files | Phase 4b/4c |
+| `utils/configure-store.ts`, `<Provider>` in `components/App/index.tsx`, `types/TTraceTimeline.ts` | app shell, ~14 test files | Phase 4b/4c |
 | ✅ Vestigial `connect()` wrappers whose `mapStateToProps` ignored state entirely (`SearchForm`, `TraceDiff`, `TracePage`) and the unused `MetricsReduxState` type | none | Delivered in [#4729](https://github.com/jaegertracing/jaeger-ui/pull/4729) |
+| ✅ `TraceTimelineViewer/duck.ts`, `duck.track.ts`, `middlewares/track.ts`, and the `ReduxState` type | none | Delivered as Phase 1c step 5 |
 
-Removing the timeline duck was the only item here with a non-mechanical design question in it (where the analytics call sites go). Phase 1c steps 3–4 are done; the duck remains only for parity tests until Phase 4 follow-up.
+Removing the timeline duck was the only item here with a non-mechanical design question in it (where the analytics call sites go). Phase 1c is complete, and the duck is deleted.
 
 #### ⬜ 4b. Remove packages
 

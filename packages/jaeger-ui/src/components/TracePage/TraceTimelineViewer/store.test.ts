@@ -8,6 +8,7 @@ import {
   calculateFocusedFindRowStates,
   normalizeLayoutPrefs,
   getSelectedSpanID,
+  MIN_TIMELINE_COLUMN_WIDTH,
   setDetailPanelMode,
   SIDE_PANEL_WIDTH_MAX,
   SIDE_PANEL_WIDTH_MIN,
@@ -368,6 +369,30 @@ describe('useLayoutPrefsStore persistence (legacy migration + corrupted value)',
       timelineBarsVisible: true,
     });
     expect(useLayoutPrefsStore.getState().setSpanNameColumnWidth).toBeTypeOf('function');
+  });
+
+  it('resets both widths in sidepanel mode when the derived side panel leaves no timeline column', () => {
+    // A derived sidePanelWidth of 0.12 clamps up to SIDE_PANEL_WIDTH_MIN (0.2), and 0.76 + 0.2
+    // exceeds 1 - MIN_TIMELINE_COLUMN_WIDTH, so both widths fall back to the defaults.
+    vi.mocked(getConfig).mockReturnValue({
+      traceTimeline: { enableSidePanel: true },
+    } as ReturnType<typeof getConfig>);
+    localStorage.setItem('spanNameColumnWidth', '0.76');
+    localStorage.setItem('detailPanelMode', 'sidepanel');
+    const state = getInitialLayoutState();
+    expect(state.spanNameColumnWidth).toBe(0.25);
+    expect(state.sidePanelWidth).toBeCloseTo((1 - MIN_TIMELINE_COLUMN_WIDTH - 0.25) / 2);
+  });
+
+  it('keeps both widths in sidepanel mode when they leave the minimum timeline column', () => {
+    vi.mocked(getConfig).mockReturnValue({
+      traceTimeline: { enableSidePanel: true },
+    } as ReturnType<typeof getConfig>);
+    localStorage.setItem('spanNameColumnWidth', '0.5');
+    localStorage.setItem('detailPanelMode', 'sidepanel');
+    const state = getInitialLayoutState();
+    expect(state.spanNameColumnWidth).toBe(0.5);
+    expect(state.sidePanelWidth).toBe(0.25);
   });
 });
 
@@ -814,6 +839,16 @@ describe('trace timeline zustand stores', () => {
         useTraceTimelineStore.getState().childrenToggle('span-a');
         expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('span-a')).toBe(false);
       });
+
+      it('replaces the set on each toggle and leaves earlier sets unchanged', () => {
+        const initial = useTraceTimelineStore.getState().childrenHiddenIDs;
+        useTraceTimelineStore.getState().childrenToggle('span-a');
+        const toggled = useTraceTimelineStore.getState().childrenHiddenIDs;
+        useTraceTimelineStore.getState().childrenToggle('span-a');
+        expect(initial).toEqual(new Set());
+        expect(toggled).toEqual(new Set(['span-a']));
+        expect(useTraceTimelineStore.getState().childrenHiddenIDs).toEqual(new Set());
+      });
     });
 
     describe('expandAll', () => {
@@ -872,6 +907,17 @@ describe('trace timeline zustand stores', () => {
         useTraceTimelineStore.getState().collapseAll(spans);
         expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('parent')).toBe(true);
       });
+
+      it('collapses when the hidden set has one ID per parent but the wrong IDs', () => {
+        const spans = [
+          makeSpan({ spanID: 'parent-a', hasChildren: true }),
+          makeSpan({ spanID: 'parent-b', hasChildren: true }),
+          makeSpan({ spanID: 'child' }),
+        ];
+        useTraceTimelineStore.setState({ childrenHiddenIDs: new Set(['parent-a', 'stray']) });
+        useTraceTimelineStore.getState().collapseAll(spans);
+        expect(useTraceTimelineStore.getState().childrenHiddenIDs).toEqual(new Set(['parent-a', 'parent-b']));
+      });
     });
 
     describe('collapseOne', () => {
@@ -914,6 +960,17 @@ describe('trace timeline zustand stores', () => {
         useTraceTimelineStore.getState().collapseOne(spans);
         expect(useTraceTimelineStore.getState()).toBe(stateBefore);
       });
+
+      it('collapses when the hidden set has one ID per parent but the wrong IDs', () => {
+        const spans = [
+          makeSpan({ spanID: 'root', depth: 0, hasChildren: true }),
+          makeSpan({ spanID: 'child-parent', depth: 1, hasChildren: true }),
+          makeSpan({ spanID: 'leaf', depth: 2 }),
+        ];
+        useTraceTimelineStore.setState({ childrenHiddenIDs: new Set(['root', 'stray']) });
+        useTraceTimelineStore.getState().collapseOne(spans);
+        expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('child-parent')).toBe(true);
+      });
     });
 
     describe('detailToggle', () => {
@@ -947,6 +1004,16 @@ describe('trace timeline zustand stores', () => {
         useTraceTimelineStore.getState().detailToggle('span-a');
         expect(useTraceTimelineStore.getState().detailStates.size).toBe(0);
       });
+
+      it('replaces the map on each inline toggle and leaves earlier maps unchanged', () => {
+        const initial = useTraceTimelineStore.getState().detailStates;
+        useTraceTimelineStore.getState().detailToggle('span-a');
+        const toggled = useTraceTimelineStore.getState().detailStates;
+        useTraceTimelineStore.getState().detailToggle('span-a');
+        expect(initial).toEqual(new Map());
+        expect(toggled).toEqual(new Map([['span-a', new DetailState()]]));
+        expect(useTraceTimelineStore.getState().detailStates).toEqual(new Map());
+      });
     });
 
     describe('detail subsection toggles', () => {
@@ -979,6 +1046,32 @@ describe('trace timeline zustand stores', () => {
         useTraceTimelineStore.getState().detailLogsToggle('span-a');
         expect(useTraceTimelineStore.getState().detailStates.get('span-a')!.events.isOpen).toBe(false);
       });
+
+      it('starts an unknown span from side-panel defaults in sidepanel mode', () => {
+        useLayoutPrefsStore.setState({ detailPanelMode: 'sidepanel' });
+        useTraceTimelineStore.getState().detailTagsToggle('span-a');
+        const detailState = useTraceTimelineStore.getState().detailStates.get('span-a')!;
+        // Toggled from the side-panel default (open); resource keeps that default.
+        expect(detailState.isAttributesOpen).toBe(false);
+        expect(detailState.isResourceOpen).toBe(true);
+      });
+
+      it.each([
+        ['detailTagsToggle', 'toggleTags'],
+        ['detailProcessToggle', 'toggleProcess'],
+        ['detailLogsToggle', 'toggleLogs'],
+        ['detailWarningsToggle', 'toggleWarnings'],
+        ['detailReferencesToggle', 'toggleReferences'],
+      ] as const)('%s toggles an open detail both ways without changing earlier states', (action, toggle) => {
+        useTraceTimelineStore.getState().detailToggle('span-a');
+        const initial = useTraceTimelineStore.getState().detailStates.get('span-a');
+        useTraceTimelineStore.getState()[action]('span-a');
+        const toggled = useTraceTimelineStore.getState().detailStates.get('span-a');
+        useTraceTimelineStore.getState()[action]('span-a');
+        expect(initial).toEqual(new DetailState());
+        expect(toggled).toEqual(new DetailState()[toggle]());
+        expect(useTraceTimelineStore.getState().detailStates.get('span-a')).toEqual(new DetailState());
+      });
     });
 
     describe('detailLogItemToggle', () => {
@@ -988,6 +1081,18 @@ describe('trace timeline zustand stores', () => {
         expect(
           useTraceTimelineStore.getState().detailStates.get('span-a')!.events.openedItems.has(logItem)
         ).toBe(true);
+      });
+
+      it("keeps another span's detail entry when toggling a log item", () => {
+        const logItem = {} as any;
+        useTraceTimelineStore.getState().detailToggle('span-a');
+        useTraceTimelineStore.getState().detailToggle('span-b');
+        const otherDetail = useTraceTimelineStore.getState().detailStates.get('span-b');
+        useTraceTimelineStore.getState().detailLogItemToggle('span-a', logItem);
+        expect(useTraceTimelineStore.getState().detailStates.get('span-a')).toEqual(
+          new DetailState().toggleLogItem(logItem)
+        );
+        expect(useTraceTimelineStore.getState().detailStates.get('span-b')).toBe(otherDetail);
       });
     });
 
