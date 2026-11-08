@@ -158,7 +158,7 @@ New state does **not** go into Redux. See [ADR-0004](./docs/adr/0004-state-manag
 - Deep-linkable view state → the page's `url.ts` helpers
 - User preferences → `localStorage`
 
-Redux remains in the timeline duck and tracking middleware as the analytics parity reference, plus the app store, `<Provider>`, and vestigial `connect()` wrappers. `src/reducers/index.ts` is an empty map. Decoration summaries use `src/hooks/usePathAgnosticDecoration.ts`; there is no `src/selectors/`.
+Redux remains in the timeline duck and tracking middleware as the analytics parity reference, plus the app store and `<Provider>`. `src/reducers/index.ts` is an empty map. Decoration summaries use `src/hooks/usePathAgnosticDecoration.ts`; there is no `src/selectors/`.
 
 ### Component Structure
 
