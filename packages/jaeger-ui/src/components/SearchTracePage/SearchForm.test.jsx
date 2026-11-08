@@ -1002,6 +1002,21 @@ describe('validation', () => {
     expect(validateDurationFields('1.2s')).toBeUndefined();
     expect(validateDurationFields('1.2 s')).toBeUndefined();
     expect(validateDurationFields('1h')).toBeUndefined();
+    expect(validateDurationFields('.5s')).toBeUndefined();
+    expect(validateDurationFields('1.s')).toBeUndefined();
+    expect(validateDurationFields('+5s')).toBeUndefined();
+    expect(validateDurationFields('1h30m')).toBeUndefined();
+  });
+
+  it('should return Popover-compliant error object if the value only ends in the expected format', () => {
+    ['abs1s', 'a1ms', 'foo 5ms', '1.2.3s', '1..s', '-5s', '1,000ms', '1,5s', '1e3ms', '0x10s'].forEach(
+      value => {
+        expect(validateDurationFields(value)).toEqual({
+          content: 'Please enter a number followed by a duration unit, e.g. 1.2s, 100ms, 500us',
+          title: 'Please match the requested format.',
+        });
+      }
+    );
   });
 });
 
