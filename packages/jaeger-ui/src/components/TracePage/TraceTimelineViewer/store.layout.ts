@@ -14,7 +14,7 @@ import {
   SPAN_NAME_COLUMN_WIDTH_MIN,
 } from './store.constants';
 
-export function getMaxNameColumnWidth(opts: {
+function getMaxNameColumnWidth(opts: {
   detailPanelMode: string;
   timelineBarsVisible: boolean;
   sidePanelWidth: number;
