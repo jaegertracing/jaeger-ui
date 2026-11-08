@@ -18,7 +18,11 @@ export { getInitialLayoutState, useLayoutPrefsStore } from './store.layout';
 
 export { useTraceTimelineStore } from './store.timeline';
 
-export { calculateFocusedFindRowStates, getSelectedSpanID } from './timeline-utils';
+export {
+  calculateFocusedFindRowStates,
+  findNewlyRevealedAncestors,
+  getSelectedSpanID,
+} from './timeline-utils';
 
 export function setDetailPanelMode(mode: SpanDetailPanelMode): void {
   if (mode === 'sidepanel') {
