@@ -1,0 +1,28 @@
+' Where the effective filter comes from (RFC 0009, "URL and persistence").
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam ActivityBackgroundColor #ffffff
+skinparam ActivityBorderColor #1e1e1e
+skinparam ArrowColor #1e1e1e
+
+start
+if (URL carries filter clauses?) then (yes)
+  #fff3bf:URL clauses
+  (uiFind, svcFilter, f=…);
+elseif (A saved default exists?) then (yes)
+  :Saved default
+  (localStorage, written only by Save as Default);
+else (no)
+  :View default
+  (Timeline: none. GenAI: hide Non-GenAI, lift children);
+endif
+:Effective clauses
+→ highlightIDs, hiddenIDs;
+note right
+  Clearing the filter in the GenAI view writes
+  an explicitly empty clause list to the URL, so
+  the view default does not return on the next render.
+end note
+stop
+@enduml

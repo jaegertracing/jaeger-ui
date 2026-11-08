@@ -1,0 +1,22 @@
+' The search and filter cluster in the title row (RFC 0009, "Controls"). It is one line and
+' always visible. The ▾ inside the input appears while there is text and converts the typed
+' criterion into a keep or hide chip. The funnel's badge is the number of active chips.
+@startsalt
+{
+<b>No text, no filters</b>
+{+
+  { "<&magnifying-glass> Find…                  " | . | [↑] | [↓] | [⌖] | [▼] }
+}
+.
+<b>Text typed, three filters active</b>
+{+
+  { "<&magnifying-glass> "tools/call" auth   <back:#fff3bf>▾</back>" | 12 · <b>47 hidden</b> | [↑] | [↓] | [⌖] | [<back:#fff3bf>▼ <b>3</b></back>] }
+}
+.
+<b>The ▾ menu inside the input</b>
+{+
+  <color:#2b8a3e><&eye></color> Keep matching spans
+  <color:#c92a2a><&eye></color> Hide matching spans
+}
+}
+@endsalt

@@ -1,0 +1,58 @@
+' The filter popover that the funnel in cluster.puml opens (RFC 0009, "Controls").
+' Every control here creates or edits a filter chip. Numeric criteria are histograms of the
+' whole trace with range handles; categorical criteria are rows with a bar per value. The tree mode
+' sits at the top because the keep controls below it are disabled while the mode is Remove.
+@startsalt
+{+
+  { <color:#2b8a3e><&eye></color> status: error  × | <color:#c92a2a><&eye></color> service: auth-service  × | <color:#2b8a3e><&eye></color> duration: 120ms – 2.3s  × }
+  { <i>12 of 59 spans shown</i> | . | Clear all }
+  --
+  {^"Children of a hidden span"
+    ( ) Remove with it | (X) Lift to its parent
+  }
+  {^"Status"
+    { <back:#dbe4ff> Any </back> | . | Error | . | No error }
+  }
+  {^"Span duration"
+    { ▇▅▂▁▁▁▂▃▁▁▁▁▁▂▁▁▁▁▁▁▁▁▁▁▁▁▂ }
+    { ○━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━○ }
+    { 1ms | . | . | . | . | 4.2s }
+  }
+  {^"Span tokens (GenAI traces only)"
+    { ▇▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▃▁▂ }
+    { ○━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━○ }
+    { 0 | . | . | . | . | 19k }
+  }
+  {^"Attribute contains"
+    "key:value                              "
+  }
+  {^"Span type (GenAI traces only)"
+    {#
+      <color:#7950f2>●</color> LLM call | <back:#7950f2>              </back> | 7 | <&eye> <color:#c92a2a><&eye></color>
+      <color:#f76707>●</color> Tool call | <back:#f76707>        </back> | 4 | <&eye> <color:#c92a2a><&eye></color>
+      <color:#1c7ed6>●</color> Agent | <back:#1c7ed6>    </back> | 2 | <&eye> <color:#c92a2a><&eye></color>
+      <color:#2b8a3e>●</color> Retrieval | <back:#2b8a3e>  </back> | 1 | <&eye> <color:#c92a2a><&eye></color>
+      <color:#868e96>● Non-GenAI</color> | <back:#adb5bd>                                                  </back> | 45 | <&eye> <color:#c92a2a><b><&eye></b></color>
+    }
+  }
+  {^"Span kind"
+    {#
+      server | <back:#868e96>                      </back> | 20 | <&eye> <color:#c92a2a><&eye></color>
+      client | <back:#868e96>                    </back> | 18 | <&eye> <color:#c92a2a><&eye></color>
+      internal | <back:#868e96>                       </back> | 21 | <&eye> <color:#c92a2a><&eye></color>
+    }
+  }
+  {^"Service"
+    {#
+      <color:#e8590c>●</color> coding-agent     | <back:#e8590c>                           </back> | 14 | <&eye> <color:#c92a2a><&eye></color>
+      <color:#1c7ed6>●</color> mcp-gateway      | <back:#1c7ed6>                </back> | 8 | <&eye> <color:#c92a2a><&eye></color>
+      <color:#868e96>● auth-service     </color>| <back:#868e96>        </back> | 4 | <&eye> <color:#c92a2a><b><&eye></b></color>
+      <color:#2b8a3e>●</color> graphql-gateway  | <back:#2b8a3e>      </back> | 3 | <&eye> <color:#c92a2a><&eye></color>
+      <color:#4c6ef5>●</color> api-edge <i>root</i>   | <back:#4c6ef5>    </back> | 2 | <&eye> <color:#c92a2a><&eye></color>
+      … | . | . | .
+    }
+    { Select All | Select None }
+  }
+  { Save as Default | . | [Apply] <i>(large traces only)</i> }
+}
+@endsalt
