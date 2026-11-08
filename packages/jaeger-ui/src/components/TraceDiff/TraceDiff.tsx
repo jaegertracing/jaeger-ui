@@ -164,9 +164,7 @@ export function getTraceDiffProps(ownProps: TOwnProps): TUrlProps {
 }
 
 function TraceDiffRoute(props: TOwnProps) {
-  const { params, search } = props;
-  const urlProps = React.useMemo(() => getTraceDiffProps({ params, search }), [params, search]);
-  return <TraceDiffImpl {...props} {...urlProps} />;
+  return <TraceDiffImpl {...props} {...getTraceDiffProps(props)} />;
 }
 
 export default withRouteProps(TraceDiffRoute);

@@ -851,8 +851,7 @@ export function getSearchFormProps(search = '') {
 
 function SearchFormWithLocation(props: Omit<ISearchFormImplProps, 'initialValues' | 'submitFormHandler'>) {
   const { search } = useLocation();
-  const formProps = useMemo(() => getSearchFormProps(search), [search]);
-  return <SearchFormImpl {...props} {...formProps} submitFormHandler={submitForm} />;
+  return <SearchFormImpl {...props} {...getSearchFormProps(search)} submitFormHandler={submitForm} />;
 }
 
 export default SearchFormWithLocation;

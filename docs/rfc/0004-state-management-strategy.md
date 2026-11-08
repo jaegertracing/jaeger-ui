@@ -1082,6 +1082,8 @@ Search now calls `/api/v3/trace-summaries` via `useSearchTraces(query)` in `src/
 
 **Components rewired**: `SearchTracePage` (fully disconnected from Redux), `FileLoader` (accepts `onTracesLoaded` callback instead of Redux action).
 
+- ✅ **`SearchForm` `connect()` wrapper.** Delivered in [#4729](https://github.com/jaegertracing/jaeger-ui/pull/4729), which derives the form defaults from `useLocation()` and passes `submitForm` directly.
+
 #### ✅ 2c. Services and operations discovery
 
 **Redux removed**: `services` reducer (no longer in `src/reducers/index.ts`; discovery never writes to Redux).
@@ -1220,6 +1222,7 @@ The residual surface is now small enough to enumerate:
 | :--- | :--- | :--- |
 | `TraceTimelineViewer/duck.ts`, `duck.track.ts`, `middlewares/track.ts` | no UI consumers; `store.track.test.ts` (parity reference) | Phase 4 follow-up (Phase 1c steps 3–4 done) |
 | `utils/configure-store.ts`, `<Provider>` in `components/App/index.tsx`, `ReduxState` in `types/index.ts`, `types/TTraceTimeline.ts` | app shell, ~14 test files | Phase 4b/4c |
+| ✅ Vestigial `connect()` wrappers whose `mapStateToProps` ignored state entirely (`SearchForm`, `TraceDiff`, `TracePage`) and the unused `MetricsReduxState` type | none | Delivered in [#4729](https://github.com/jaegertracing/jaeger-ui/pull/4729) |
 
 Removing the timeline duck was the only item here with a non-mechanical design question in it (where the analytics call sites go). Phase 1c steps 3–4 are done; the duck remains only for parity tests until Phase 4 follow-up.
 
