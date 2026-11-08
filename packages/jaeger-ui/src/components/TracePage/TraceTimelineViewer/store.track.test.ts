@@ -241,9 +241,12 @@ describe('timeline analytics adapter', () => {
     expect(trackEvent).not.toHaveBeenCalled();
   });
 
-  it('emits no log item event when the span has no open detail', () => {
+  it('emits no subsection or log item event when the span has no open detail', () => {
     resetStores();
     timeline().setTrace(trace);
+    track.trackDetailTagsToggle('child');
+    track.trackDetailProcessToggle('child');
+    track.trackDetailLogsToggle('child');
     track.trackDetailLogItemToggle('child', logItem);
     expect(trackEvent).not.toHaveBeenCalled();
   });

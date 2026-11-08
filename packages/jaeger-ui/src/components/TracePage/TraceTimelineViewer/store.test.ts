@@ -8,7 +8,6 @@ import {
   calculateFocusedFindRowStates,
   normalizeLayoutPrefs,
   getSelectedSpanID,
-  MIN_TIMELINE_COLUMN_WIDTH,
   setDetailPanelMode,
   SIDE_PANEL_WIDTH_MAX,
   SIDE_PANEL_WIDTH_MIN,
@@ -91,6 +90,34 @@ describe('layout preference hydration', () => {
     localStorage.setItem('sidePanelWidth', '0.7');
     const state = await rehydrateLayoutPrefs();
     expect(state.spanNameColumnWidth + state.sidePanelWidth).toBeLessThan(1);
+  });
+
+  it('uses the derived sidePanelWidth when the stored value is not a number', async () => {
+    localStorage.setItem('sidePanelWidth', 'not-a-number');
+    expect((await rehydrateLayoutPrefs()).sidePanelWidth).toBe(0.375);
+  });
+
+  it('resets only sidePanelWidth when the stored widths leave no room', async () => {
+    // 0.6 + 0.5 >= 1; the derived (1 - 0.6) / 2 = 0.2 fits, so the name column is kept.
+    localStorage.setItem('spanNameColumnWidth', '0.6');
+    localStorage.setItem('sidePanelWidth', '0.5');
+    const state = await rehydrateLayoutPrefs();
+    expect(state.spanNameColumnWidth).toBe(0.6);
+    expect(state.sidePanelWidth).toBe(SIDE_PANEL_WIDTH_MIN);
+  });
+
+  it('resets sidePanelWidth when the stored widths sum to exactly 1', async () => {
+    localStorage.setItem('spanNameColumnWidth', '0.5');
+    localStorage.setItem('sidePanelWidth', '0.5');
+    expect((await rehydrateLayoutPrefs()).sidePanelWidth).toBe(0.25);
+  });
+
+  it('resets both widths to the defaults when even the minimum side panel leaves no room', async () => {
+    localStorage.setItem('spanNameColumnWidth', '0.85');
+    localStorage.setItem('sidePanelWidth', '0.5');
+    const state = await rehydrateLayoutPrefs();
+    expect(state.spanNameColumnWidth).toBe(0.25);
+    expect(state.sidePanelWidth).toBe(0.375);
   });
 
   it('reads timelineBarsVisible=false from localStorage', async () => {
@@ -371,26 +398,13 @@ describe('useLayoutPrefsStore persistence (legacy migration + corrupted value)',
     expect(useLayoutPrefsStore.getState().setSpanNameColumnWidth).toBeTypeOf('function');
   });
 
-  it('resets both widths in sidepanel mode when the derived side panel leaves no timeline column', () => {
-    // A derived sidePanelWidth of 0.12 clamps up to SIDE_PANEL_WIDTH_MIN (0.2), and 0.76 + 0.2
-    // exceeds 1 - MIN_TIMELINE_COLUMN_WIDTH, so both widths fall back to the defaults.
-    vi.mocked(getConfig).mockReturnValue({
-      traceTimeline: { enableSidePanel: true },
-    } as ReturnType<typeof getConfig>);
-    localStorage.setItem('spanNameColumnWidth', '0.76');
-    localStorage.setItem('detailPanelMode', 'sidepanel');
-    const state = getInitialLayoutState();
-    expect(state.spanNameColumnWidth).toBe(0.25);
-    expect(state.sidePanelWidth).toBeCloseTo((1 - MIN_TIMELINE_COLUMN_WIDTH - 0.25) / 2);
-  });
-
-  it('keeps both widths in sidepanel mode when they leave the minimum timeline column', () => {
+  it('keeps both widths in sidepanel mode when they leave the minimum timeline column', async () => {
     vi.mocked(getConfig).mockReturnValue({
       traceTimeline: { enableSidePanel: true },
     } as ReturnType<typeof getConfig>);
     localStorage.setItem('spanNameColumnWidth', '0.5');
     localStorage.setItem('detailPanelMode', 'sidepanel');
-    const state = getInitialLayoutState();
+    const state = await rehydrateLayoutPrefs();
     expect(state.spanNameColumnWidth).toBe(0.5);
     expect(state.sidePanelWidth).toBe(0.25);
   });
@@ -973,6 +987,36 @@ describe('trace timeline zustand stores', () => {
       });
     });
 
+    describe('expand and collapse on a tree with sibling parents', () => {
+      // 0
+      // - 1
+      // --- 2
+      // - 3
+      // --- 4
+      // - 5
+      const spans = [
+        makeSpan({ spanID: '0', depth: 0, hasChildren: true }),
+        makeSpan({ spanID: '1', depth: 1, hasChildren: true }),
+        makeSpan({ spanID: '2', depth: 2 }),
+        makeSpan({ spanID: '3', depth: 1, hasChildren: true }),
+        makeSpan({ spanID: '4', depth: 2 }),
+        makeSpan({ spanID: '5', depth: 1 }),
+      ];
+      const allCollapsed = ['0', '1', '3'];
+
+      it.each([
+        ['expandOne', allCollapsed, ['1', '3']],
+        ['expandOne', ['1'], []],
+        ['collapseOne', allCollapsed, allCollapsed],
+        ['collapseOne', [], ['1', '3']],
+        ['collapseOne', ['1'], ['1', '3']],
+      ] as const)('%s turns hidden %j into %j', (action, initial, expected) => {
+        useTraceTimelineStore.setState({ childrenHiddenIDs: new Set(initial) });
+        useTraceTimelineStore.getState()[action](spans);
+        expect(useTraceTimelineStore.getState().childrenHiddenIDs).toEqual(new Set(expected));
+      });
+    });
+
     describe('detailToggle', () => {
       it('adds a DetailState for the span in inline mode', () => {
         useTraceTimelineStore.getState().detailToggle('span-a');
@@ -1003,6 +1047,14 @@ describe('trace timeline zustand stores', () => {
         });
         useTraceTimelineStore.getState().detailToggle('span-a');
         expect(useTraceTimelineStore.getState().detailStates.size).toBe(0);
+      });
+
+      it('opens a span with attributes and resource expanded in sidepanel mode', () => {
+        useLayoutPrefsStore.setState({ detailPanelMode: 'sidepanel' });
+        useTraceTimelineStore.getState().detailToggle('span-a');
+        const detailState = useTraceTimelineStore.getState().detailStates.get('span-a')!;
+        expect(detailState.isAttributesOpen).toBe(true);
+        expect(detailState.isResourceOpen).toBe(true);
       });
 
       it('replaces the map on each inline toggle and leaves earlier maps unchanged', () => {
