@@ -18,7 +18,7 @@ type ProcessedTemplate = {
 
 const ENABLE_LEGACY_LINK_PATTERNS = true;
 
-type LinkPatternType = 'attributes' | 'resource' | 'events' | 'traces';
+type LinkPatternType = 'attributes' | 'resource' | 'events' | 'traces' | 'spans';
 type LegacyLinkPatternType = 'tags' | 'process' | 'logs';
 
 const VALID_TRACE_KEYS = ['traceID', 'traceName', 'duration', 'startTime', 'endTime'];
@@ -200,6 +200,62 @@ export function computeTraceLink(linkPatterns: ProcessedLinkPattern[], trace: IO
   return result;
 }
 
+export function getParameterInSpan(name: string, span: IOtelSpan): { key: string; value: any } | undefined {
+  let value: any;
+
+  switch (name) {
+    case 'traceID':
+      value = span.traceID;
+      break;
+    case 'spanID':
+      value = span.spanID;
+      break;
+    case 'operationName':
+      value = span.name;
+      break;
+    case 'duration':
+      value = span.duration;
+      break;
+    case 'startTime':
+      value = span.startTime;
+      break;
+    default:
+      return undefined;
+  }
+
+  return { key: name, value };
+}
+
+export function computeSpanLink(linkPatterns: ProcessedLinkPattern[], span: IOtelSpan): Hyperlink[] {
+  const result: Hyperlink[] = [];
+
+  linkPatterns
+    .filter(pattern => pattern.type('spans'))
+    .forEach(pattern => {
+      const parameterValues: Record<string, any> = {};
+      const allParameters = pattern.parameters.every(parameter => {
+        const { parameterName, formatFunction } = getParameterAndFormatter(parameter);
+        const spanKV = getParameterInSpan(parameterName, span);
+
+        if (!spanKV) {
+          return false;
+        }
+
+        parameterValues[parameterName] = formatFunction ? formatFunction(spanKV.value) : spanKV.value;
+        return true;
+      });
+
+      if (allParameters) {
+        result.push({
+          url: callTemplate(pattern.url, parameterValues),
+          text: callTemplate(pattern.text, parameterValues),
+        });
+      }
+    });
+
+  return result;
+}
+
 // computeLinks generates {url, text} link pairs by applying link patterms
 // to the element `itemIndex` of `items` array. The values for template
 // variables used in the patterns are looked up first in `items`, then
@@ -294,6 +350,10 @@ export const processedLinks: ProcessedLinkPattern[] = (getConfig().linkPatterns 
 
 export const getTraceLinks: (trace: IOtelTrace) => Hyperlink[] = memoize(10)((trace: IOtelTrace) => {
   return computeTraceLink(processedLinks, trace);
+});
+
+export const getSpanLinks: (span: IOtelSpan) => Hyperlink[] = memoize(100)((span: IOtelSpan) => {
+  return computeSpanLink(processedLinks, span);
 });
 
 export default createGetLinks(processedLinks, new WeakMap());

@@ -3,6 +3,14 @@
 
 vi.mock('../utils');
 
+const { getSpanLinksMock } = vi.hoisted(() => ({
+  getSpanLinksMock: vi.fn(() => []),
+}));
+
+vi.mock('../../../../model/link-patterns', () => ({
+  getSpanLinks: getSpanLinksMock,
+}));
+
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -111,6 +119,8 @@ describe('<SpanDetail>', () => {
   beforeEach(() => {
     formatDuration.mockReset();
     formatDuration.mockImplementation(duration => `${duration}ms`);
+    getSpanLinksMock.mockReset();
+    getSpanLinksMock.mockReturnValue([]);
 
     const rawTrace = traceGenerator.trace({ numberOfSpans: 1 });
     spanData = rawTrace.spans[0];
@@ -297,6 +307,22 @@ describe('<SpanDetail>', () => {
 
     expect(copyIcon).toBeInTheDocument();
     expect(copyText).toContain(`?uiFind=${props.span.spanID}`);
+  });
+
+  it('renders configured span-scoped links next to the deep link', () => {
+    getSpanLinksMock.mockReturnValue([
+      {
+        url: 'https://logs.example.com/?trace=trace1&span=span1',
+        text: 'Open span logs',
+      },
+    ]);
+
+    render(<SpanDetail {...props} />);
+
+    const link = screen.getByText('Open span logs').closest('a');
+    expect(link).toHaveAttribute('href', 'https://logs.example.com/?trace=trace1&span=span1');
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
   });
 
   describe('GenAI tab', () => {
