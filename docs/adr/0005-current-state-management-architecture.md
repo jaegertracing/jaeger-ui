@@ -33,6 +33,7 @@ graph TD
     C -->|Server Data| E[React Components]
     Z -->|Shared UI State| E
     F[Local Component State] -->|Transient UI| E
+    B[Redux Store<br/>empty, kept for Provider]
     E -->|Writes back| A
     E -->|Store actions| Z
 ```

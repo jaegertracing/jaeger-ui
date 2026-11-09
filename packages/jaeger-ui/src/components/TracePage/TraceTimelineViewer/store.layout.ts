@@ -166,7 +166,7 @@ function readLayoutPrefs(value: unknown): Partial<LayoutPrefs> {
 }
 
 // Keep the stored version intact so persist can run migrations before resolving the layout.
-// Old keys remain until the residual Redux layout fields are removed in a separate change.
+// Nothing reads the old keys any more; #4737 deletes them once users have migrated.
 const layoutPrefsStorage: PersistStorage<Partial<LayoutPrefs>> = {
   getItem: name => {
     const raw = storage.getItem(name);

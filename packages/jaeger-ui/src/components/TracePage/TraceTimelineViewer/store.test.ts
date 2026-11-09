@@ -276,7 +276,7 @@ describe('useLayoutPrefsStore persistence (legacy migration + corrupted value)',
     expect(localStorage.getItem('jaeger.layout')).toBeNull();
   });
 
-  it('writes migrated preferences once and leaves the old keys available to Redux', async () => {
+  it('writes migrated preferences once and leaves the old keys in place', async () => {
     localStorage.setItem('spanNameColumnWidth', '0.4');
     await useLayoutPrefsStore.persist.rehydrate();
     expect(JSON.parse(localStorage.getItem('jaeger.layout')!)).toEqual({

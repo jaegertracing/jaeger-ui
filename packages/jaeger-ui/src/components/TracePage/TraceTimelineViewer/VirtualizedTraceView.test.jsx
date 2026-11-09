@@ -161,7 +161,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
     expect(screen.getByTestId('list-view')).toBeInTheDocument();
   });
 
-  it('sets the trace for global state.traceTimeline', () => {
+  it('calls setTrace with the trace and uiFind when the trace changes', () => {
     render(<VirtualizedTraceViewImpl {...mockProps} />);
     expect(mockProps.setTrace).toHaveBeenCalledWith(trace, mockProps.uiFind);
 

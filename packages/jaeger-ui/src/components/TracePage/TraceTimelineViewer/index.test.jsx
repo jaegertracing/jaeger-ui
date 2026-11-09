@@ -3,8 +3,6 @@
 
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { legacy_createStore as createStore } from 'redux';
-import { Provider } from 'react-redux';
 
 import TraceTimelineViewer, { TraceTimelineViewerImpl } from './index';
 import * as track from './store.track';
@@ -109,19 +107,6 @@ describe('<TraceTimelineViewer>', () => {
     },
   };
 
-  const defaultState = {
-    traceTimeline: { detailStates: new Map() },
-  };
-
-  function renderWithRedux(ui, { initialState = defaultState } = {}) {
-    const store = createStore((state = initialState) => state);
-
-    return {
-      ...render(<Provider store={store}>{ui}</Provider>),
-      store,
-    };
-  }
-
   beforeEach(() => {
     vi.mocked(track.trackCollapseAll).mockClear();
     vi.mocked(track.trackCollapseOne).mockClear();
@@ -155,7 +140,7 @@ describe('<TraceTimelineViewer>', () => {
     expect(screen.getByTestId('virtualized-trace-view-mock')).toBeInTheDocument();
     expect(screen.getByTestId('timeline-header-row-mock')).toBeInTheDocument();
     const initialCount = screen.getAllByTestId('virtualized-trace-view-mock').length;
-    renderWithRedux(<TraceTimelineViewer {...props} />);
+    render(<TraceTimelineViewer {...props} />);
     expect(screen.getAllByTestId('virtualized-trace-view-mock')).toHaveLength(initialCount + 1);
   });
 
