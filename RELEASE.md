@@ -8,21 +8,26 @@
    - Run `make prepare-release VERSION=vX.Y.Z ISSUE=__RELEASE_ISSUE__`.
    - This command will:
      - Verify the version format.
-     - Create a branch `release-vX.Y.Z`.
+     - Create a branch `release-vX.Y.Z-<unix time>`.
      - Generate release notes and update `CHANGELOG.md`.
      - Update `packages/jaeger-ui/package.json`.
      - creating a PR with `changelog:skip` label and title "Prepare release vX.Y.Z".
    - **Review the PR**:
      - Check `CHANGELOG.md` content.
      - Verify `package.json` version.
-     - Merge the PR once approved.
+     - Once another maintainer approves the PR and the required checks pass, merge it if it is still open. The approver may have merged it already; this prints the state and, once merged, the merge commit SHA. Note the SHA for the next step.
+       ```bash
+       gh pr view <PR number> -R jaegertracing/jaeger-ui --json state,mergeCommit --jq '[.state, .mergeCommit.oid] | @tsv'
+       ```
+     - Check that the merge commit's subject starts with `Prepare release v`. If it does not, the Draft release workflow in the next step does not run.
+       ```bash
+       gh api repos/jaegertracing/jaeger-ui/commits/<merge commit SHA> --jq '.commit.message | split("\n")[0]'
+       ```
 
 2. Create a GitHub release.
    - After the PR is merged, the [Draft release](https://github.com/jaegertracing/jaeger-ui/actions/workflows/release-draft.yml) workflow creates a draft release from the merge commit.
      - If no draft appears, run `make draft-release TARGET=<merge commit SHA>` (requires [gh](https://cli.github.com/manual/installation)).
-     - Open the draft on [GitHub Releases](https://github.com/jaegertracing/jaeger-ui/releases) and hit the Edit button.
-     - Review the release notes and edit them if needed.
-     - Publish the release.
+     - Review the draft's release notes with `gh release view vX.Y.Z -R jaegertracing/jaeger-ui`, then publish it with `gh release edit vX.Y.Z -R jaegertracing/jaeger-ui --draft=false`. To fix the notes first, or to do this in the browser, open the draft on [GitHub Releases](https://github.com/jaegertracing/jaeger-ui/releases), click Edit, change the notes, and click Publish release.
      - Wait for the [Publish release](https://github.com/jaegertracing/jaeger-ui/actions/workflows/release.yml) workflow to finish. It will generate release artifacts whi will be used by the main repository for the new UI.
 
 <!-- END_CHECKLIST -->

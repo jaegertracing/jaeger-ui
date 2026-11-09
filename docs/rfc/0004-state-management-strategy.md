@@ -1082,7 +1082,7 @@ Search now calls `/api/v3/trace-summaries` via `useSearchTraces(query)` in `src/
 
 **Components rewired**: `SearchTracePage` (fully disconnected from Redux), `FileLoader` (accepts `onTracesLoaded` callback instead of Redux action).
 
-> **Note**: `SearchForm` still uses the legacy `connect(mapStateToProps, mapDispatchToProps)` pattern. Removing it is deferred to a phase 4 follow-up.
+- ✅ **`SearchForm` `connect()` wrapper.** Delivered in [#4729](https://github.com/jaegertracing/jaeger-ui/pull/4729), which derives the form defaults from `useLocation()` and passes `submitForm` directly.
 
 #### ✅ 2c. Services and operations discovery
 
@@ -1178,11 +1178,11 @@ queryKey: ['operationMetrics', serviceName, params]
 
 Both hooks stay disabled until `serviceName` and `params` are defined. `MonitorATMServicesViewImpl` reads the hooks directly, and the transformation helpers preserve partial results when an individual metrics request fails.
 
-#### ⬜ 2g. Path-agnostic decorations
+#### ✅ 2g. Path-agnostic decorations
 
-**Redux to remove**: `src/reducers/path-agnostic-decorations.ts` and `src/actions/path-agnostic-decorations.ts`, read by `DeepDependencies/Graph/DdgNodeContent` (`useSelector`) and `DeepDependencies/SidePanel/DetailsPanel` (`connect`).
+`src/hooks/usePathAgnosticDecoration.ts` replaces the decoration actions and reducer. `DdgNodeContent` and `DeepDependencies/SidePanel/DetailsPanel` read the hook without Redux.
 
-**New hook** + optional small Zustand store for decoration UI state. Decoration URLs come from user config, so this too is independent of the v3 API.
+TanStack Query caches responses by the configured URL and extracted summaries by decoration config, service, and operation. It retains separate service and operation maxima for the session, matching the former reducer. No Zustand store is needed. Decoration URLs still come from user config and use `JaegerClient.fetchDecoration`.
 
 ---
 
@@ -1220,11 +1220,9 @@ The residual surface is now small enough to enumerate:
 
 | Redux artefact | Consumers | Resolved by |
 | :--- | :--- | :--- |
-| `reducers/metrics.ts` | `Monitor/ServicesView` (`connect`) | Phase 2f — implementation open in [#4048](https://github.com/jaegertracing/jaeger-ui/pull/4048) |
-| `reducers/path-agnostic-decorations.ts`, `actions/path-agnostic-decorations.ts` | `DdgNodeContent`, `DeepDependencies/SidePanel/DetailsPanel` | Phase 2g |
 | `TraceTimelineViewer/duck.ts`, `duck.track.ts`, `middlewares/track.ts` | no UI consumers; `store.track.test.ts` (parity reference) | Phase 4 follow-up (Phase 1c steps 3–4 done) |
-| Vestigial `connect()` wrappers whose `mapStateToProps` ignores state entirely | `SearchTracePage/SearchForm.tsx`, `TraceDiff/TraceDiff.tsx` | Phase 4b (mechanical) |
 | `utils/configure-store.ts`, `<Provider>` in `components/App/index.tsx`, `ReduxState` in `types/index.ts`, `types/TTraceTimeline.ts` | app shell, ~14 test files | Phase 4b/4c |
+| ✅ Vestigial `connect()` wrappers whose `mapStateToProps` ignored state entirely (`SearchForm`, `TraceDiff`, `TracePage`) and the unused `MetricsReduxState` type | none | Delivered in [#4729](https://github.com/jaegertracing/jaeger-ui/pull/4729) |
 
 Removing the timeline duck was the only item here with a non-mechanical design question in it (where the analytics call sites go). Phase 1c steps 3–4 are done; the duck remains only for parity tests until Phase 4 follow-up.
 
