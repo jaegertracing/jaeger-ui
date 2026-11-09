@@ -392,10 +392,13 @@ export const OperationMetricsResponseSchema = metricFamily.extend({
 // Quality metrics endpoint is configured via UI config (qualityMetrics.apiEndpoint)
 // and points to an external or custom service. The schema validates the payload at the
 // network boundary, using .passthrough() to retain unknown third-party server fields.
+const nullToUndefined = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess(val => (val === null ? undefined : val), schema.optional());
+
 const qualityMetricsExample = z
   .object({
     traceID: z.string(),
-    spanIDs: z.array(z.string()).optional(),
+    spanIDs: nullToUndefined(z.array(z.string())),
   })
   .passthrough();
 
@@ -435,12 +438,12 @@ const qualityMetricsMetric = z
     metricDocumentationLink: z.string(),
     metricWeight: z.number(),
     passCount: z.number(),
-    passExamples: z.array(qualityMetricsExample).optional(),
+    passExamples: nullToUndefined(z.array(qualityMetricsExample)),
     failureCount: z.number(),
-    failureExamples: z.array(qualityMetricsExample).optional(),
-    exemptionCount: z.number().optional(),
-    exemptionExamples: z.array(qualityMetricsExample).optional(),
-    details: z.array(qualityMetricsDetail).optional(),
+    failureExamples: nullToUndefined(z.array(qualityMetricsExample)),
+    exemptionCount: nullToUndefined(z.number()),
+    exemptionExamples: nullToUndefined(z.array(qualityMetricsExample)),
+    details: nullToUndefined(z.array(qualityMetricsDetail)),
   })
   .passthrough();
 
@@ -456,10 +459,10 @@ const qualityMetricsClient = z
 export const QualityMetricsSchema = z
   .object({
     traceQualityDocumentationLink: z.string(),
-    bannerText: qualityMetricsBannerText.optional(),
+    bannerText: nullToUndefined(qualityMetricsBannerText),
     scores: z.array(qualityMetricsScore),
     metrics: z.array(qualityMetricsMetric),
-    clients: z.array(qualityMetricsClient).optional(),
+    clients: nullToUndefined(z.array(qualityMetricsClient)),
   })
   .passthrough();
 

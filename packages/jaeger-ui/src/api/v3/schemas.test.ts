@@ -432,6 +432,97 @@ describe('QualityMetricsSchema', () => {
     expect(QualityMetricsSchema.parse(data)).toEqual(data);
   });
 
+  it('normalizes null optional values from built-in endpoint response to undefined', () => {
+    const endpointResponse = {
+      traceQualityDocumentationLink:
+        'https://github.com/jaegertracing/jaeger-analytics-java#trace-quality-metrics',
+      bannerText: {
+        value: '🛑 Made up data, for demonstration only!',
+        styling: {
+          color: 'blue',
+          fontWeight: 'bold',
+        },
+      },
+      scores: [
+        {
+          key: 'coverage',
+          label: 'Instrumentation Coverage',
+          max: 100,
+          value: 90,
+        },
+        {
+          key: 'quality',
+          label: 'Trace Quality',
+          max: 100,
+          value: 85,
+        },
+      ],
+      metrics: [
+        {
+          name: 'Span Completeness',
+          category: 'coverage',
+          description: 'Measures the completeness of spans in traces.',
+          metricDocumentationLink: 'https://example.com/span-completeness-docs',
+          metricWeight: 0.6,
+          passCount: 1500,
+          passExamples: [
+            { traceID: 'trace-id-001', spanIDs: null },
+            { traceID: 'trace-id-002', spanIDs: null },
+          ],
+          failureCount: 100,
+          failureExamples: [{ traceID: 'trace-id-003', spanIDs: null }],
+          exemptionCount: null,
+          exemptionExamples: null,
+          details: [
+            {
+              description: 'Detailed breakdown of span completeness.',
+              header: 'Span Completeness Details',
+              columns: [
+                { key: 'service', label: 'Service' },
+                { key: 'spanCount', label: 'Span Count' },
+              ],
+              rows: [
+                { service: 'sample-service-A', spanCount: 150 },
+                { service: 'sample-service-B', spanCount: 200 },
+              ],
+            },
+          ],
+        },
+        {
+          name: 'Error Rate',
+          category: 'quality',
+          description: 'Percentage of spans that resulted in errors.',
+          metricDocumentationLink: 'https://example.com/error-rate-docs',
+          metricWeight: 0.4,
+          passCount: 1400,
+          passExamples: [{ traceID: 'trace-id-004', spanIDs: null }],
+          failureCount: 80,
+          failureExamples: [{ traceID: 'trace-id-005', spanIDs: null }],
+          exemptionCount: null,
+          exemptionExamples: null,
+          details: null,
+        },
+      ],
+      clients: [
+        {
+          version: '1.0.0',
+          minVersion: '0.9.0',
+          count: 10,
+          examples: [{ traceID: 'trace-id-006', spanIDs: null }],
+        },
+      ],
+    };
+
+    const parsed = QualityMetricsSchema.parse(endpointResponse);
+    expect(parsed.metrics[0].passExamples?.[0].spanIDs).toBeUndefined();
+    expect(parsed.metrics[0].exemptionCount).toBeUndefined();
+    expect(parsed.metrics[0].exemptionExamples).toBeUndefined();
+    expect(parsed.metrics[1].details).toBeUndefined();
+    expect(parsed.clients?.[0].examples[0].spanIDs).toBeUndefined();
+    expect(parsed.scores).toHaveLength(2);
+    expect(parsed.metrics).toHaveLength(2);
+  });
+
   it('validates bannerText as plain string', () => {
     const data = {
       traceQualityDocumentationLink: 'https://example.com/docs',
