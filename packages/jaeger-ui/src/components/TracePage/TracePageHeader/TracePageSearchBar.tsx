@@ -12,10 +12,10 @@ import UiFindInput from '../../common/UiFindInput';
 import { TNil } from '../../../types';
 import './TracePageSearchBar.css';
 
-// The crosshair icon does not convey what the focus button does, so the tooltip spells it out.
-// Hover alone leaves keyboard users without the tooltip text.
+// antd opens a tooltip on hover only, which leaves keyboard users without the text.
 const TOOLTIP_TRIGGERS: Array<'hover' | 'focus'> = ['hover', 'focus'];
 
+// The crosshair icon does not convey what the focus button does, so the tooltip spells it out.
 const FOCUS_MATCHES_TOOLTIP = 'Collapse the trace to the paths leading to the matching spans';
 
 type TracePageSearchBarProps = {

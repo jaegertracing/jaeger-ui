@@ -32,6 +32,13 @@ vi.mock('../../common/UiFindInput', () => {
   );
 });
 
+// Each navigation button's accessible name and the tooltip text it shows.
+const TOOLTIP_CASES = [
+  ['Focus on matches', /^Collapse the trace to the paths leading to the matching spans$/],
+  ['Previous match', /^Previous match$/],
+  ['Next match', /^Next match$/],
+];
+
 const defaultProps = {
   forwardedRef: React.createRef(),
   navigable: true,
@@ -54,20 +61,12 @@ describe('<TracePageSearchBar>', () => {
       render(<TracePageSearchBar {...defaultProps} />);
     });
 
-    it.each([
-      ['Focus on matches', /^Collapse the trace to the paths leading to the matching spans$/],
-      ['Previous match', /^Previous match$/],
-      ['Next match', /^Next match$/],
-    ])('shows a tooltip on the %s button on hover', async (label, tooltip) => {
+    it.each(TOOLTIP_CASES)('shows a tooltip on the %s button on hover', async (label, tooltip) => {
       fireEvent.mouseOver(screen.getByRole('button', { name: label }));
       await waitFor(() => expect(screen.getByRole('tooltip')).toHaveTextContent(tooltip));
     });
 
-    it.each([
-      ['Focus on matches', /^Collapse the trace to the paths leading to the matching spans$/],
-      ['Previous match', /^Previous match$/],
-      ['Next match', /^Next match$/],
-    ])('shows a tooltip on the %s button on keyboard focus', async (label, tooltip) => {
+    it.each(TOOLTIP_CASES)('shows a tooltip on the %s button on keyboard focus', async (label, tooltip) => {
       fireEvent.focus(screen.getByRole('button', { name: label }));
       await waitFor(() => expect(screen.getByRole('tooltip')).toHaveTextContent(tooltip));
     });
