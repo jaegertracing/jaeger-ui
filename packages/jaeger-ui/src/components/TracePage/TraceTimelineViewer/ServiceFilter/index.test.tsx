@@ -272,6 +272,24 @@ describe('ServiceFilter', () => {
       expect(checkboxes[2]).not.toBeDisabled();
     });
 
+    it('leaves the sole root service selectable when roots are not protected', async () => {
+      render(
+        <ServiceFilter
+          trace={makeTrace(['svc-a', 'svc-b', 'svc-c'])}
+          prunedServices={new Set()}
+          onApply={onApply}
+          protectRoots={false}
+        />
+      );
+      fireEvent.click(screen.getByTestId('service-filter-button'));
+      await waitFor(() => screen.getByText('svc-a'));
+
+      const checkboxes = screen.getAllByRole('checkbox');
+      expect(checkboxes[0]).not.toBeDisabled();
+      fireEvent.click(checkboxes[0]);
+      expect(screen.queryByText('At least one root span service must remain visible')).toBeNull();
+    });
+
     it('Select None keeps the sole root service selected', async () => {
       render(
         <ServiceFilter

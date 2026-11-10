@@ -16,6 +16,9 @@ type ServiceFilterProps = {
   trace: IOtelTrace;
   prunedServices: Set<string>;
   onApply: (prunedServices: Set<string>) => void;
+  // Whether at least one root service must stay visible. Remove mode needs it, because hiding every
+  // root empties the tree; lift mode does not, because a hidden root's children become roots.
+  protectRoots?: boolean;
 };
 
 function saveDefaults(prunedServices: Set<string>) {
@@ -23,7 +26,12 @@ function saveDefaults(prunedServices: Set<string>) {
   storage.set(SVC_FILTER_DEFAULTS_KEY, defaults);
 }
 
-export default function ServiceFilter({ trace, prunedServices, onApply }: ServiceFilterProps) {
+export default function ServiceFilter({
+  trace,
+  prunedServices,
+  onApply,
+  protectRoots = true,
+}: ServiceFilterProps) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Set<string>>(new Set());
 
@@ -43,7 +51,7 @@ export default function ServiceFilter({ trace, prunedServices, onApply }: Servic
 
   // When there's exactly one root service name (even across multiple root spans),
   // that service is locked — it cannot be deselected.
-  const singleRootService = rootServices.size === 1;
+  const singleRootService = protectRoots && rootServices.size === 1;
   const lockedService = singleRootService ? [...rootServices][0] : null;
 
   const isFilterActive = prunedServices.size > 0;
@@ -95,11 +103,12 @@ export default function ServiceFilter({ trace, prunedServices, onApply }: Servic
 
   // Validation: at least one root span must remain visible.
   const wouldRemoveAllRoots = useMemo(() => {
+    if (!protectRoots) return false;
     for (const name of rootServices) {
       if (!draft.has(name)) return false;
     }
     return true;
-  }, [draft, rootServices]);
+  }, [draft, rootServices, protectRoots]);
 
   // The draft may carry names absent from this trace, so only the trace's own services are counted.
   const allPruned = serviceEntries.every(s => draft.has(s.name));

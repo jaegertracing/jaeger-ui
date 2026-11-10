@@ -248,3 +248,24 @@ SPDX-License-Identifier: Apache-2.0
 .SpanBarRow--arrowForwardIcon {
   vertical-align: middle;
 }
+
+/* The connector glyph marks a row whose parent is hidden, so it was lifted to the nearest
+   visible ancestor. It is muted because it is a hint, not an alarm. */
+.SpanBarRow--liftedGlyph {
+  color: var(--text-secondary);
+  cursor: help;
+  margin-right: 0.25rem;
+}
+
+/* The hidden-errors badge credits the errors of hidden descendants to their nearest visible
+   ancestor, in lift mode, where no pruned placeholder row exists to report them. */
+.SpanBarRow--hiddenErrors {
+  color: var(--feedback-error-text);
+  cursor: help;
+  font-size: 0.85em;
+  margin-left: 0.25rem;
+  position: relative;
+  vertical-align: middle;
+  white-space: nowrap;
+  z-index: 1;
+}

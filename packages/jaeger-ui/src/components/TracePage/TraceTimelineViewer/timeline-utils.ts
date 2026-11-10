@@ -8,8 +8,11 @@ import type { SpanDetailPanelMode } from '../../../types/config';
 import filterSpans from '../../../utils/filter-spans';
 import spanAncestorIds from '../../../utils/span-ancestor-ids';
 
+/** A span as the bulk collapse actions see it: its depth and its child test in the drawn tree. */
+export type CollapseTarget = { spanID: string; depth: number; hasChildren: boolean };
+
 export function shouldDisableCollapse(
-  allSpans: ReadonlyArray<IOtelSpan>,
+  allSpans: ReadonlyArray<CollapseTarget>,
   hiddenSpansIds: Set<string>
 ): boolean {
   return allSpans.filter(s => s.hasChildren).every(p => hiddenSpansIds.has(p.spanID));

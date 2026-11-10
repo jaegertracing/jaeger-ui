@@ -4,6 +4,7 @@
 import React, { useMemo } from 'react';
 import cx from 'classnames';
 
+import { SPAN_TREE, VisibleTree } from './generateRowStates';
 import { IOtelSpan } from '../../../types/otel';
 import colorGenerator from '../../../utils/color-generator';
 
@@ -16,6 +17,8 @@ type TProps = {
   isDetailRow?: boolean;
   span: IOtelSpan;
   color: string;
+  // The tree the rows draw; it differs from the span tree when the filter lifts children.
+  tree?: VisibleTree;
 };
 
 const SpanTreeOffset: React.FC<TProps> = ({
@@ -25,19 +28,21 @@ const SpanTreeOffset: React.FC<TProps> = ({
   isDetailRow = false,
   span,
   color,
+  tree = SPAN_TREE,
 }) => {
-  // Build ancestor chain directly from span.parentSpan
+  // The visible ancestors, root first.
   const ancestors = useMemo(() => {
     const chain: IOtelSpan[] = [];
-    let current = span.parentSpan;
+    let current = tree.parentOf(span);
     while (current) {
       chain.unshift(current);
-      current = current.parentSpan;
+      current = tree.parentOf(current);
     }
     return chain;
-  }, [span]);
+  }, [span, tree]);
 
-  const { hasChildren, spanID, childSpans } = span;
+  const childCount = tree.childCount(span);
+  const hasChildren = childCount > 0;
   const _childrenToggleKeyDown = (e: React.KeyboardEvent) => {
     if ((e.key === 'Enter' || e.key === ' ') && onClick) {
       e.preventDefault();
@@ -59,13 +64,11 @@ const SpanTreeOffset: React.FC<TProps> = ({
     : null;
 
   // Get parent color for horizontal line
-  const parentSpan = span.parentSpan;
+  const parentSpan = tree.parentOf(span);
   const parentColor = parentSpan ? colorGenerator.getColorByKey(parentSpan.resource.serviceName) : color;
 
   // Check if this span is the last child of its parent
-  const isLastChild = parentSpan
-    ? parentSpan.childSpans[parentSpan.childSpans.length - 1]?.spanID === spanID
-    : false;
+  const isLastChild = tree.isLastChild(span);
 
   return (
     <span className={`SpanTreeOffset ${hasChildren ? 'is-parent' : ''}`} {...wrapperProps}>
@@ -86,10 +89,7 @@ const SpanTreeOffset: React.FC<TProps> = ({
           // For non-immediate ancestors, check if their descendant in the chain is the last child
           // The descendant of this ancestor in the chain is at index + 1
           const descendantInChain = ancestors[index + 1];
-          if (descendantInChain && descendantInChain.parentSpan) {
-            const parentChildren = descendantInChain.parentSpan.childSpans;
-            shouldTerminate = parentChildren[parentChildren.length - 1]?.spanID === descendantInChain.spanID;
-          }
+          shouldTerminate = descendantInChain ? tree.isLastChild(descendantInChain) : false;
         }
 
         return (
@@ -138,7 +138,7 @@ const SpanTreeOffset: React.FC<TProps> = ({
                 } as React.CSSProperties
               }
             >
-              {childSpans.length}
+              {childCount}
             </span>
           ) : (
             <span

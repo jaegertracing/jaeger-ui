@@ -33,7 +33,7 @@ export interface IClause {
   criterion: Criterion;
 }
 
-type TreeMode = 'remove' | 'lift';
+export type TreeMode = 'remove' | 'lift';
 
 export interface ISpanFilter {
   clauses: ReadonlyArray<IClause>;
