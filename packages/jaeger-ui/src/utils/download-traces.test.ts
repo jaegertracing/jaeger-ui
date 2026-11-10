@@ -95,12 +95,18 @@ describe('createBlob', () => {
 describe('downloadTraces', () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
-  it('saves the traces under the given file name and cleans up', () => {
+  function stubObjectUrls() {
     const createObjectURL = vi.fn(() => 'blob:trace');
     const revokeObjectURL = vi.fn();
     vi.stubGlobal('URL', { ...URL, createObjectURL, revokeObjectURL });
+    return { createObjectURL, revokeObjectURL };
+  }
+
+  it('saves the traces under the given file name and cleans up', () => {
+    const { createObjectURL, revokeObjectURL } = stubObjectUrls();
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
 
     downloadTraces([wireTrace], 'trace-1.json');
@@ -110,6 +116,17 @@ describe('downloadTraces', () => {
     expect(anchor.download).toBe('trace-1.json');
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:trace');
     expect(document.querySelector('a[download]')).toBeNull();
-    vi.unstubAllGlobals();
+  });
+
+  it('cleans up even when the click throws', () => {
+    const { revokeObjectURL } = stubObjectUrls();
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {
+      throw new Error('blocked');
+    });
+
+    expect(() => downloadTraces([wireTrace], 'trace-1.json')).toThrow('blocked');
+
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:trace');
+    expect(document.querySelector('a[download]')).toBeNull();
   });
 });

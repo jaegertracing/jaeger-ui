@@ -16,7 +16,10 @@ export function downloadTraces(traces: unknown[], fileName: string) {
   element.href = URL.createObjectURL(createBlob(traces));
   element.download = fileName;
   document.body.appendChild(element);
-  element.click();
-  URL.revokeObjectURL(element.href);
-  element.remove();
+  try {
+    element.click();
+  } finally {
+    URL.revokeObjectURL(element.href);
+    element.remove();
+  }
 }
