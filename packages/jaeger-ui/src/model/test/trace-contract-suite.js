@@ -202,6 +202,26 @@ export function runTraceContractSuite(pipeline) {
       expect(result.spans[0].warnings).toEqual([]);
     });
 
+    it('lists backend warnings before duplicate-tag warnings and keeps them out of attributes', () => {
+      const result = pipeline.parse(
+        trace({
+          spanID: rootSpanID,
+          operationName: rootOperationName,
+          tags: [
+            { key: 'duplicate', value: 'value' },
+            { key: 'duplicate', value: 'value' },
+          ],
+          warnings: ['Clock skew adjustment disabled', 'Clock skew adjustment disabled'],
+        })
+      );
+      expect(result.spans[0].warnings).toEqual([
+        'Clock skew adjustment disabled',
+        'Clock skew adjustment disabled',
+        'Duplicate tag key="duplicate" value="value"',
+      ]);
+      expect(result.spans[0].attributes.entries()).toEqual([{ key: 'duplicate', value: 'value' }]);
+    });
+
     const spans = [
       {
         spanID: '41f71485ed2593e4',

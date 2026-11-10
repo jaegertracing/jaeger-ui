@@ -91,11 +91,11 @@ export function useTraces(ids: string[]): Map<string, FetchedTrace> {
           if (!r || r.isPending) {
             return [id, { id, state: fetchedState.LOADING }] as [string, FetchedTrace];
           }
-          if (r.isError) {
-            return [id, { id, state: fetchedState.ERROR, error: r.error as any }] as [string, FetchedTrace];
-          }
           if (r.data) {
             return [id, { id, data: r.data, state: fetchedState.DONE }] as [string, FetchedTrace];
+          }
+          if (r.isError) {
+            return [id, { id, state: fetchedState.ERROR, error: r.error as any }] as [string, FetchedTrace];
           }
           return [id, { id }] as [string, FetchedTrace];
         })

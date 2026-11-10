@@ -229,7 +229,12 @@ function parseSpans(data: TracesDataWire): ParsedSpanData {
           key: attribute.key,
           value: toAttributeValue(attribute.value),
         }));
-        const attributesInfo = deduplicateAttributes(decodedAttributes);
+        // Like the backend's v1 conversion, move the reserved warnings attribute
+        // into span.warnings so the UI doesn't show the messages twice.
+        const backendWarnings = decodedAttributes.find(({ key }) => key === '@jaeger@warnings')?.value;
+        const attributesInfo = deduplicateAttributes(
+          decodedAttributes.filter(({ key }) => key !== '@jaeger@warnings')
+        );
         const attributes = makeAttributes(orderAttributes(attributesInfo.attributes, topTagPrefixes));
         const wireSpanID = span.spanId.toLowerCase();
         const duplicateCount = spanIdCounts.get(wireSpanID) ?? 0;
@@ -241,7 +246,7 @@ function parseSpans(data: TracesDataWire): ParsedSpanData {
         const parsedSpan: MutableOtelSpan = {
           traceID: spanTraceID,
           spanID,
-          parentSpanID: span.parentSpanId?.toLowerCase(),
+          parentSpanID: span.parentSpanId?.toLowerCase() || undefined,
           name: span.name || 'no-name',
           kind: toSpanKind(span.kind),
           startTime,
@@ -265,7 +270,16 @@ function parseSpans(data: TracesDataWire): ParsedSpanData {
           childSpans: [],
           relativeStartTime: 0 as Microseconds,
           inboundLinks: [],
-          warnings: attributesInfo.warnings,
+          warnings: [
+            // Storage without slice-typed attributes can return a single string,
+            // which the backend's GetWarnings also reads as one warning.
+            ...(Array.isArray(backendWarnings)
+              ? backendWarnings.filter((warning): warning is string => typeof warning === 'string')
+              : typeof backendWarnings === 'string'
+                ? [backendWarnings]
+                : []),
+            ...attributesInfo.warnings,
+          ],
         };
         spans.push(parsedSpan);
         if (!hasUsableStartTime) {

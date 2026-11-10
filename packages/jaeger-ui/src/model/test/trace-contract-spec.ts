@@ -25,6 +25,8 @@ interface ISpanSpec {
     attributes?: { key: string; value: string | number | boolean }[];
   }[];
   scope?: { name?: string; version?: string };
+  /** Backend diagnostics: the legacy `warnings` array, or the OTLP `@jaeger@warnings` attribute. */
+  warnings?: string[];
 }
 
 export interface ITraceSpec {

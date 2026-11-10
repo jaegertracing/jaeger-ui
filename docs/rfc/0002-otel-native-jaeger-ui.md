@@ -2,12 +2,12 @@
 
 * **Status**: Partially Implemented — Phases 1–2 done; the facade design has graduated into [ADR-0002](../adr/0002-otlp-api-v3-migration.md)
 * **Created**: 2025-12-29
-* **Last Updated**: 2026-10-11
+* **Last Updated**: 2026-11-06
 * **Tracking Issue**: [#3265](https://github.com/jaegertracing/jaeger-ui/issues/3265)
 
 > Originally filed as ADR-0002. It is a proposal with a phased implementation plan, so it now lives here and remains the plan of record for the outstanding milestones; [ADR-0002](../adr/0002-otlp-api-v3-migration.md) records the OTEL facade and `api/v3` client that resulted.
 
-**Where this stands**: Phases 1–2 are complete. On Phase 3, service/span-name discovery (3.1) and trace search (3.3) run on `/api/v3/`. The validated `fetchTrace` boundary and captured wire-contract tests have landed in [#4455](https://github.com/jaegertracing/jaeger-ui/pull/4455) and [#4480](https://github.com/jaegertracing/jaeger-ui/pull/4480). `parseOtelTrace()` in `src/api/v3/parser.ts` converts the validated wire data into the enriched `IOtelTrace`, and the shared behavior tests run through both it and the legacy transformer ([#4503](https://github.com/jaegertracing/jaeger-ui/pull/4503)). Single-trace loading still uses `/api/traces/:id` and `transformTraceData`; the UI switch and visual parity check remain open.
+**Where this stands**: Phases 1–2 are complete. On Phase 3, service/span-name discovery (3.1) and trace search (3.3) run on `/api/v3/`. The validated `fetchTrace` boundary and captured wire-contract tests have landed in [#4455](https://github.com/jaegertracing/jaeger-ui/pull/4455) and [#4480](https://github.com/jaegertracing/jaeger-ui/pull/4480). `parseOtelTrace()` in `src/api/v3/parser.ts` converts the validated wire data into the enriched `IOtelTrace`, and the shared behavior tests run through both it and the legacy transformer ([#4503](https://github.com/jaegertracing/jaeger-ui/pull/4503)). Single-trace loading uses `JaegerClient.fetchTrace` and `parseOtelTrace` through `hooks/useTraceLoading.ts` ([#4605](https://github.com/jaegertracing/jaeger-ui/pull/4605)); same-trace visual and large-trace performance parity remain open.
 
 ---
 
@@ -533,7 +533,7 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 - [ ] Implement `fetchDependencies` (`/api/v3/dependencies`) in `JaegerClient`; carry `fetchMetrics` over unchanged.
 - [ ] Update remaining components to use the new client.
 - [ ] Gradually decommission Redux actions/reducers for trace data.
-- [ ] Remove legacy `src/api/jaeger.ts`.
+- [x] Remove legacy `src/api/jaeger.ts`.
 - [ ] Transition to Phase 4 (Cleanup).
 
 ---
@@ -838,16 +838,23 @@ The blast radius is already small: outside tests, the facade classes have three 
 
 > **Implementation note (#4605):** Native loading removes the transformer and facade bridge from `hooks/useTraceLoading.ts`. Uploads and test fixtures still use them. The historical caller inventory above is no longer current: `generateRowStates` retains transformer use in tests, and Flamegraph no longer imports a facade. Native uploads, a fresh caller audit, and visual/performance parity remain prerequisites for deletion.
 
+> **Legacy-upload window (decided October 2026, [recorded on #4278](https://github.com/jaegertracing/jaeger-ui/issues/4278#issuecomment-6372283243)):** Legacy Jaeger JSON uploads stay supported for about six months through the existing transformer. The unchecked transformer, facade, and legacy-type items below are deferred to the end of that window, not dropped.
+
 - [ ] Remove `OtelSpanFacade`, `OtelTraceFacade` classes and the `asOtelTrace()` bridge on the legacy trace type
-- [ ] Parse uploaded OTLP files client-side in `utils/readJsonFile.ts`, dropping its `/api/transform` round trip (an OTLP file is already in the parser's input format)
+- [x] Parse uploaded OTLP files client-side in `SearchTracePage/FileLoader.tsx`, dropping the `/api/transform` round trip in `utils/readJsonFile.ts` (an OTLP file is already in the parser's input format)
 - [ ] Remove legacy types (mark as deprecated first)
-- [ ] Remove `src/api/jaeger.ts` (old REST API)
+- [x] Remove `src/api/jaeger.ts` (old REST API)
 - [ ] Remove `transformTraceData` (old transformer)
 - [ ] Documentation updates
 
 **Backend follow-through (jaeger repo).** This migration is not finished when the UI stops calling `/api/traces`, `/api/services`, and `/api/transform` — it is finished when `jaeger-query` stops serving what nothing consumes. Those v1 HTTP handlers exist largely for the UI, and leaving them in place indefinitely means the backend carries two query paths and two serialisation formats forever, which is the cost this RFC set out to remove.
 
 The v1 API is public, so this is a deprecation exercise rather than a delete: announce, give a release or two of overlap, then remove. It belongs in the `jaeger` repo and should be tracked there once the UI side of Phase 4 lands. `/api/transform` is the exception worth doing early — it exists only to convert OTLP files for the UI, and a native parser makes it dead on arrival.
+
+> **Retirement schedule (decided November 2026, [recorded on #4278](https://github.com/jaegertracing/jaeger-ui/issues/4278#issuecomment-6626447894)):** For `/api/traces/{traceID}` and `/api/transform`, this decision replaces the announce-and-overlap plan above, with no deprecation period. v2.23.0 still serves both routes, and [jaeger#10048](https://github.com/jaegertracing/jaeger/pull/10048) is set to remove them in v2.24.0.
+>
+> - `/api/traces/{traceID}`: no caller in jaeger or jaeger-ui uses it. Jaeger UI loads traces and opens the JSON views through `/api/v3/traces/{id}` ([#4605](https://github.com/jaegertracing/jaeger-ui/pull/4605), [#4678](https://github.com/jaegertracing/jaeger-ui/pull/4678)), and [jaeger#10004](https://github.com/jaegertracing/jaeger/pull/10004) moved the remaining backend callers to v3.
+> - `/api/transform`: it has no v3 counterpart. It retires because Jaeger UI now parses OTLP uploads in the browser ([#4634](https://github.com/jaegertracing/jaeger-ui/pull/4634)), which leaves it without a caller in jaeger or jaeger-ui.
 
 ---
 
