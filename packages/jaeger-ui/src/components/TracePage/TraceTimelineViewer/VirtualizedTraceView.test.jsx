@@ -10,6 +10,7 @@ import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
 
 import { makeCriticalPathContext } from './criticalPath';
+import { hiddenSpanIDsForServices } from '../spanFilter';
 import { useTraceTimelineStore } from './store';
 import * as track from './store.track';
 import VirtualizedTraceView, { DEFAULT_HEIGHTS, VirtualizedTraceViewImpl } from './VirtualizedTraceView';
@@ -80,7 +81,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       shouldScrollToFirstUiFindMatch: false,
       spanNameColumnWidth: 0.5,
       nameColumnWidth: 0.5,
-      prunedServices: new Set(),
+      hiddenIDs: new Set(),
       trace,
       criticalPath,
       spanPillsEnabled: true,
@@ -584,7 +585,11 @@ describe('<VirtualizedTraceViewImpl>', () => {
       ];
 
       const customTrace = { ...trace, spans: [parentSpan, prunedChild, grandchildSpan] };
-      const context = makeCriticalPathContext(customTrace, fakeCriticalPath, new Set(['svc-pruned']));
+      const context = makeCriticalPathContext(
+        customTrace,
+        fakeCriticalPath,
+        new Set(['pruned-child', 'grandchild'])
+      );
       const result = context.sectionsFor(parentSpan, false, true);
 
       expect(result).toEqual(fakeCriticalPath);
@@ -617,7 +622,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
         { spanID: 'pruned-child', sectionStart: 10, sectionEnd: 20 },
         { spanID: 'visible-child', sectionStart: 20, sectionEnd: 30 },
       ];
-      const context = makeCriticalPathContext(customTrace, fakeCriticalPath, new Set(['svc-pruned']));
+      const context = makeCriticalPathContext(customTrace, fakeCriticalPath, new Set(['pruned-child']));
       const result = context.sectionsFor(parentSpan, false, true);
       const spanIDs = result.map(s => s.spanID);
       expect(spanIDs).toContain('parent');
@@ -916,7 +921,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       const { listViewProps } = renderAndCapture({
         ...mockProps,
         trace: customTrace,
-        prunedServices: new Set(['svc-b']),
+        hiddenIDs: hiddenSpanIDsForServices(customTrace.spans, new Set(['svc-b'])),
       });
       const renderedSpanIDs = [];
       for (let i = 0; i < listViewProps.dataLength; i++) {
@@ -934,7 +939,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       const { listViewProps } = renderAndCapture({
         ...mockProps,
         trace: customTrace,
-        prunedServices: new Set(['svc-b']),
+        hiddenIDs: hiddenSpanIDsForServices(customTrace.spans, new Set(['svc-b'])),
       });
       // Find the pruned row index by inspecting keys
       let prunedIdx = -1;
@@ -954,7 +959,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       const { listViewProps } = renderAndCapture({
         ...mockProps,
         trace: customTrace,
-        prunedServices: new Set(['svc-b']),
+        hiddenIDs: hiddenSpanIDsForServices(customTrace.spans, new Set(['svc-b'])),
       });
       const prunedIdx = listViewProps.getIndexFromKey('span-0--pruned');
       expect(prunedIdx).toBeGreaterThan(-1);
@@ -965,16 +970,16 @@ describe('<VirtualizedTraceViewImpl>', () => {
       const { listViewProps } = renderAndCapture({
         ...mockProps,
         trace: customTrace,
-        prunedServices: new Set(['svc-b']),
+        hiddenIDs: hiddenSpanIDsForServices(customTrace.spans, new Set(['svc-b'])),
       });
       const prunedIdx = listViewProps.getIndexFromKey('span-0--pruned');
       expect(listViewProps.itemHeightGetter(prunedIdx)).toBe(DEFAULT_HEIGHTS.bar);
     });
 
-    it('produces no placeholders when prunedServices is empty', () => {
+    it('produces no placeholders when nothing is hidden', () => {
       const { listViewProps } = renderAndCapture({
         ...mockProps,
-        prunedServices: new Set(),
+        hiddenIDs: new Set(),
       });
       let hasPruned = false;
       for (let i = 0; i < listViewProps.dataLength; i++) {
@@ -991,7 +996,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       const { listViewProps } = renderAndCapture({
         ...mockProps,
         trace: customTrace,
-        prunedServices: new Set(['svc-b']),
+        hiddenIDs: hiddenSpanIDsForServices(customTrace.spans, new Set(['svc-b'])),
       });
       const prunedIdx = listViewProps.getIndexFromKey('span-0--pruned');
       // renderRow should not throw for pruned placeholder

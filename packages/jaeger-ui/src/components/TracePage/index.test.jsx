@@ -481,6 +481,32 @@ describe('<TracePage>', () => {
     expect(filterSpansSpy).toHaveBeenLastCalledWith(uiFind, otherTrace.spans);
   });
 
+  it('excludes the spans of a pruned service and their descendants from the search matches', async () => {
+    const { default: realFilterSpans } = await vi.importActual('../../utils/filter-spans');
+    filterSpansSpy.mockImplementation(realFilterSpans);
+    const raw = traceGenerator.trace({ numberOfSpans: 3 });
+    // Every span matches the search; the second span's service is pruned, and the third span is
+    // its child, so only the first span stays in the count.
+    raw.spans.forEach(span => {
+      span.operationName = 'everywhere';
+    });
+    raw.spans[1].references = [{ refType: 'CHILD_OF', traceID: raw.traceID, spanID: raw.spans[0].spanID }];
+    raw.spans[2].references = [{ refType: 'CHILD_OF', traceID: raw.traceID, spanID: raw.spans[1].spanID }];
+    const localTrace = transformTraceData(raw).asOtelTrace();
+    const prunedService = localTrace.spanMap.get(raw.spans[1].spanID).resource.serviceName;
+    useTraceMock.mockReturnValue({ data: localTrace, isPending: false, isError: false, error: null });
+    mockTraceTimelineStore.prunedServices = new Set([prunedService]);
+
+    render(<TracePage {...defaultProps} params={{ id: raw.traceID }} uiFind="everywhere" />);
+
+    // The chain is span 0 -> span 1 -> span 2. Span 1 and its descendant are hidden; span 0 stays
+    // unless the generator gave it the pruned service too.
+    const rootService = localTrace.spanMap.get(raw.spans[0].spanID).resource.serviceName;
+    expect(capturedHeaderProps.resultCount).toBe(rootService === prunedService ? 0 : 1);
+    mockTraceTimelineStore.prunedServices = new Set();
+    filterSpansSpy.mockImplementation(() => new Set());
+  });
+
   it('updates search matches when a same-ID reload adds a matching span', async () => {
     const { default: realFilterSpans } = await vi.importActual('../../utils/filter-spans');
     filterSpansSpy.mockImplementation(realFilterSpans);

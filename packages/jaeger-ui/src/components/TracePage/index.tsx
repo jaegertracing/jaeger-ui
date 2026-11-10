@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, InputRef } from 'antd';
 import { useNormalizeTraceId } from './useNormalizeTraceId';
 import { useNavigate } from 'react-router-dom';
@@ -34,7 +34,6 @@ import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
 import { useConfig } from '../../hooks/useConfig';
 import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
-import { filterPrunedSpanIDs } from './TraceTimelineViewer/generateRowStates';
 import { trackDetailPanelMode, trackTimelineBarsVisible } from './TraceTimelineViewer/store.track';
 import {
   TUpdateViewRangeTimeFunction,
@@ -43,6 +42,7 @@ import {
   ETraceViewType,
   viewTypeShowsMinimap,
 } from './types';
+import { hiddenSpanIDsForServices, withoutHiddenSpans } from './spanFilter';
 import { getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
@@ -164,6 +164,10 @@ export function TracePageImpl(props: TProps) {
   const zustandSetTimelineBarsVisible = useLayoutPrefsStore(s => s.setTimelineBarsVisible);
   const zustandFocusUiFindMatches = useTraceTimelineStore(s => s.focusUiFindMatches);
   const prunedServices = useTraceTimelineStore(s => s.prunedServices);
+  const hiddenIDs = useMemo(
+    () => hiddenSpanIDsForServices(traceData?.spans, prunedServices),
+    [traceData?.spans, prunedServices]
+  );
 
   const setDetailPanelMode = useCallback((mode: SpanDetailPanelMode) => {
     trackDetailPanelMode(mode);
@@ -384,11 +388,7 @@ export function TracePageImpl(props: TProps) {
     findCount = uiFind && findMatches ? findMatches.size : 0;
   } else if (uiFind) {
     const allMatches = filterSpansMemo(uiFind, _get(traceData, 'spans'));
-    const otelTrace = traceData;
-    spanFindMatches =
-      otelTrace && prunedServices.size > 0
-        ? filterPrunedSpanIDs(allMatches, otelTrace.spanMap, prunedServices)
-        : allMatches;
+    spanFindMatches = withoutHiddenSpans(allMatches, hiddenIDs);
     findCount = spanFindMatches ? spanFindMatches.size : 0;
   }
 

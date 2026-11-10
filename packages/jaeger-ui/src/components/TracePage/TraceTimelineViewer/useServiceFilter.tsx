@@ -5,9 +5,9 @@ import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import queryString from 'query-string';
 
-import { isSpanPruned } from './generateRowStates';
 import ServiceFilter from './ServiceFilter';
 import { getSelectedSpanID, useTraceTimelineStore } from './store';
+import { hiddenSpanIDsForServices } from '../spanFilter';
 import {
   decodeSvcFilter,
   encodeSvcFilter,
@@ -217,18 +217,15 @@ export function useServiceFilter(
       const nextPruned = sanitizePrunedServices(requested, rootServiceNames);
       zustandSetPrunedServices(nextPruned);
 
-      // If the currently selected span (side panel) belongs to a pruned service, deselect it.
+      // If the currently selected span (side panel) is now hidden, deselect it.
       if (nextPruned.size > 0 && detailPanelMode === 'sidepanel') {
         const currentDetailStates = useTraceTimelineStore.getState().detailStates;
         const currentSelectedID = getSelectedSpanID(currentDetailStates);
-        if (currentSelectedID) {
-          const selectedSpan = trace.spanMap.get(currentSelectedID);
-          if (selectedSpan && isSpanPruned(selectedSpan, nextPruned)) {
-            // In sidepanel mode detailStates holds at most one entry (the selected span).
-            // The Map shape is a leftover from inline mode where multiple spans can be
-            // expanded simultaneously. Clearing the whole map is correct here.
-            useTraceTimelineStore.setState({ detailStates: new Map() });
-          }
+        if (currentSelectedID && hiddenSpanIDsForServices(trace.spans, nextPruned).has(currentSelectedID)) {
+          // In sidepanel mode detailStates holds at most one entry (the selected span).
+          // The Map shape is a leftover from inline mode where multiple spans can be
+          // expanded simultaneously. Clearing the whole map is correct here.
+          useTraceTimelineStore.setState({ detailStates: new Map() });
         }
       }
 
@@ -239,7 +236,7 @@ export function useServiceFilter(
       zustandSetPrunedServices,
       detailPanelMode,
       rootServiceNames,
-      trace.spanMap,
+      trace.spans,
       location.pathname,
       location.search,
       location.state,
