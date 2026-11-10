@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import * as markers from './TracePageSearchBar.markers';
 import DefaultTracePageSearchBar, { TracePageSearchBarFn as TracePageSearchBar } from './TracePageSearchBar';
@@ -52,6 +52,15 @@ describe('<TracePageSearchBar>', () => {
   describe('truthy textFilter', () => {
     beforeEach(() => {
       render(<TracePageSearchBar {...defaultProps} />);
+    });
+
+    it.each([
+      ['Focus on matches', /Focus on matches: collapse the trace/],
+      ['Previous match', /^Previous match$/],
+      ['Next match', /^Next match$/],
+    ])('shows a tooltip on the %s button', async (label, tooltip) => {
+      fireEvent.mouseOver(screen.getByRole('button', { name: label }));
+      await waitFor(() => expect(screen.getByRole('tooltip')).toHaveTextContent(tooltip));
     });
 
     it('renders UiFindInput with correct props', () => {
