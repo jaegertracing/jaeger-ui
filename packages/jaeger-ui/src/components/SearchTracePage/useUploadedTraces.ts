@@ -5,6 +5,7 @@ import { useCallback } from 'react';
 import { useQuery, useQueryClient, skipToken } from '@tanstack/react-query';
 import type { TraceSummary } from '../../types/trace-summary';
 import { queryClient as appQueryClient } from '../../query/app-query-client';
+import { uploadedTraceId } from '../../utils/otel-upload';
 
 /**
  * Similar to useSearchTraces() from hooks/useTraceDiscovery.ts,
@@ -16,6 +17,27 @@ const UPLOADED_RAW_TRACES_QUERY_KEY = ['uploadedRawTraces'] as const;
 export function isUploadedTrace(traceID: string): boolean {
   const summaries = appQueryClient.getQueryData<TraceSummary[]>(UPLOADED_SUMMARIES_QUERY_KEY);
   return summaries?.some(summary => summary.traceID === traceID) ?? false;
+}
+
+/**
+ * FileLoader writes every upload to the ['trace', id] cache, so the last upload of an ID wins
+ * there. The registries follow the same rule: a later upload replaces the entry in place.
+ * Incoming items without an ID are dropped.
+ */
+function replaceById<T>(existing: T[], incoming: T[], getId: (item: T) => string | undefined): T[] {
+  const latest = new Map<string, T>();
+  incoming.forEach(item => {
+    const id = getId(item);
+    if (id !== undefined) latest.set(id, item);
+  });
+  const replaced = existing.map(item => {
+    const id = getId(item);
+    const next = id === undefined ? undefined : latest.get(id);
+    if (id === undefined || next === undefined) return item;
+    latest.delete(id);
+    return next;
+  });
+  return [...replaced, ...latest.values()];
 }
 
 type UploadedTraces = {
@@ -66,29 +88,12 @@ export function useUploadedTraces(): UploadedTraces {
 
   const handleTracesLoaded = useCallback(
     (summaries: TraceSummary[], rawTraces: unknown[]) => {
-      queryClient.setQueryData<TraceSummary[]>(UPLOADED_SUMMARIES_QUERY_KEY, prev => {
-        const existing = prev ?? [];
-        const seen = new Set(existing.map(s => s.traceID));
-        const incoming = summaries.filter(s => {
-          if (seen.has(s.traceID)) return false;
-          seen.add(s.traceID);
-          return true;
-        });
-        return [...existing, ...incoming];
-      });
-      queryClient.setQueryData<unknown[]>(UPLOADED_RAW_TRACES_QUERY_KEY, prev => {
-        const existing = prev ?? [];
-        const traceIDOf = (r: unknown) =>
-          r != null && typeof r === 'object' ? String((r as Record<string, unknown>).traceID) : '';
-        const seen = new Set(existing.map(traceIDOf));
-        const incoming = rawTraces.filter(r => {
-          const id = traceIDOf(r);
-          if (seen.has(id)) return false;
-          seen.add(id);
-          return true;
-        });
-        return [...existing, ...incoming];
-      });
+      queryClient.setQueryData<TraceSummary[]>(UPLOADED_SUMMARIES_QUERY_KEY, prev =>
+        replaceById(prev ?? [], summaries, s => s.traceID)
+      );
+      queryClient.setQueryData<unknown[]>(UPLOADED_RAW_TRACES_QUERY_KEY, prev =>
+        replaceById(prev ?? [], rawTraces, uploadedTraceId)
+      );
     },
     [queryClient]
   );

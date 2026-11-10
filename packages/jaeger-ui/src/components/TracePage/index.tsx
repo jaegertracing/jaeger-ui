@@ -11,8 +11,6 @@ import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
 import memoizeOne from 'memoize-one';
-import { connect } from 'react-redux';
-import { bindActionCreators, Dispatch } from 'redux';
 
 import ArchiveNotifier from './ArchiveNotifier';
 import { useArchiveStore } from '../../stores/archive-store';
@@ -37,7 +35,7 @@ import { useConfig } from '../../hooks/useConfig';
 import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import { filterPrunedSpanIDs } from './TraceTimelineViewer/generateRowStates';
-import { actions as timelineActions } from './TraceTimelineViewer/duck';
+import { trackDetailPanelMode, trackTimelineBarsVisible } from './TraceTimelineViewer/store.track';
 import {
   TUpdateViewRangeTimeFunction,
   IViewRange,
@@ -49,10 +47,9 @@ import { getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { parseUiFind } from '../common/UiFindInput';
-import { LocationState, ReduxState, TNil } from '../../types';
+import { LocationState, TNil } from '../../types';
 import { reloadBackendTrace, useTrace } from '../../hooks/useTraceLoading';
 import { isUploadedTrace } from '../SearchTracePage/useUploadedTraces';
-import { IOtelTrace } from '../../types/otel';
 import filterSpans from '../../utils/filter-spans';
 import updateUiFind from '../../utils/update-ui-find';
 import TraceStatistics from './TraceStatistics/index';
@@ -64,12 +61,6 @@ import type { BackendCapabilities, SpanDetailPanelMode, TraceGraphConfig } from 
 import './index.css';
 import memoizedTraceCriticalPath from './CriticalPath/index';
 import withRouteProps from '../../utils/withRouteProps';
-
-type TDispatchProps = {
-  focusUiFindMatches: (trace: IOtelTrace, uiFind: string | TNil) => void;
-  setDetailPanelMode: (mode: SpanDetailPanelMode) => void;
-  setTimelineBarsVisible: (visible: boolean) => void;
-};
 
 type TOwnProps = {
   location: Location<LocationState>;
@@ -84,11 +75,11 @@ type TOwnProps = {
   onReloadTrace?: () => void;
 };
 
-type TReduxProps = {
+type TUrlProps = {
   uiFind: string | TNil;
 };
 
-type TProps = TDispatchProps & TOwnProps & TReduxProps;
+type TProps = TOwnProps & TUrlProps;
 
 // export for tests
 export const VIEW_MIN_RANGE = 0.01;
@@ -149,11 +140,8 @@ export function TracePageImpl(props: TProps) {
     criticalPathEnabled,
     disableJsonView,
     enableSidePanel,
-    focusUiFindMatches: focusUiFindMatchesProp,
     location,
     params,
-    setDetailPanelMode: reduxSetDetailPanelMode,
-    setTimelineBarsVisible: reduxSetTimelineBarsVisible,
     backendCapabilities,
     traceGraphConfig,
     uiFind,
@@ -170,27 +158,24 @@ export function TracePageImpl(props: TProps) {
     error: traceQueryError,
   } = useTrace(id);
 
-  // Layout preferences are owned by Zustand; Redux setters are also called for the tracking middleware.
+  // Layout preferences are owned by Zustand. Each setter tracks before it updates the store.
   const detailPanelMode = useLayoutPrefsStore(s => s.detailPanelMode);
   const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
   const zustandSetTimelineBarsVisible = useLayoutPrefsStore(s => s.setTimelineBarsVisible);
   const zustandFocusUiFindMatches = useTraceTimelineStore(s => s.focusUiFindMatches);
   const prunedServices = useTraceTimelineStore(s => s.prunedServices);
 
-  const setDetailPanelMode = useCallback(
-    (mode: SpanDetailPanelMode) => {
-      setDetailPanelModeZustand(mode);
-      reduxSetDetailPanelMode(mode);
-    },
-    [reduxSetDetailPanelMode]
-  );
+  const setDetailPanelMode = useCallback((mode: SpanDetailPanelMode) => {
+    trackDetailPanelMode(mode);
+    setDetailPanelModeZustand(mode);
+  }, []);
 
   const setTimelineBarsVisible = useCallback(
     (visible: boolean) => {
+      trackTimelineBarsVisible(visible);
       zustandSetTimelineBarsVisible(visible);
-      reduxSetTimelineBarsVisible(visible);
     },
-    [zustandSetTimelineBarsVisible, reduxSetTimelineBarsVisible]
+    [zustandSetTimelineBarsVisible]
   );
 
   const navigate = useNavigate();
@@ -364,10 +349,9 @@ export function TracePageImpl(props: TProps) {
   const focusUiFindMatches = useCallback(() => {
     if (traceData) {
       trackFocusMatches();
-      focusUiFindMatchesProp(traceData, uiFind);
       zustandFocusUiFindMatches(traceData, uiFind);
     }
-  }, [focusUiFindMatchesProp, zustandFocusUiFindMatches, traceData, uiFind]);
+  }, [zustandFocusUiFindMatches, traceData, uiFind]);
 
   const nextResult = useCallback(() => {
     trackNextMatch();
@@ -551,30 +535,6 @@ export function TracePageImpl(props: TProps) {
   );
 }
 
-// export for tests
-export function mapStateToProps(_state: ReduxState, ownProps: { search?: string }): TReduxProps {
-  // uiFind must come from the router search string, not window.location: connect() only re-runs a
-  // one-argument mapStateToProps when Redux state changes, so URL-only updates would leave uiFind stale.
-  return {
-    uiFind: parseUiFind(ownProps.search ?? ''),
-  };
-}
-
-// export for tests
-export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  const { focusUiFindMatches, setDetailPanelMode, setTimelineBarsVisible } = bindActionCreators(
-    timelineActions,
-    dispatch
-  );
-  return {
-    focusUiFindMatches,
-    setDetailPanelMode,
-    setTimelineBarsVisible,
-  };
-}
-
-const ConnectedTracePage = connect(mapStateToProps, mapDispatchToProps)(TracePageImpl);
-
 type TracePageProps = {
   location: Location<LocationState>;
   params: { id: string };
@@ -596,8 +556,9 @@ export const TracePageRoute = (props: TracePageProps) => {
   }, [traceID]);
 
   return (
-    <ConnectedTracePage
+    <TracePageImpl
       {...props}
+      uiFind={parseUiFind(props.location.search ?? '')}
       onReloadTrace={isUploaded ? undefined : onReloadTrace}
       params={{ ...props.params, id: traceID }}
       archiveEnabled={Boolean(config.archiveEnabled)}

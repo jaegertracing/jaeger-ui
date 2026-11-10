@@ -34,11 +34,23 @@
             ? path.slice(0, bestIdx + 1) || '/'
             : path.slice(0, path.lastIndexOf('/') + 1) || '/';
         if (prefix[prefix.length - 1] !== '/') prefix += '/';
-        var safe = prefix.replace(/[&"<>]/g, '');
-        document.currentScript.insertAdjacentHTML(
-          'afterend',
-          '<base href="' + safe + '" data-inject-target="BASE_URL" />'
-        );
+        // The prefix comes from the URL, so anyone who sends a link can choose it.
+        // Use its path only if the browser would resolve that path to this origin.
+        // A path such as //evil.example/ is scheme-relative and would load the UI's
+        // scripts from that host.
+        var basePath = '/';
+        try {
+          var page = new URL(window.location.href);
+          var candidate = new URL(prefix, page).pathname;
+          if (new URL(candidate, page).origin === page.origin) basePath = candidate;
+        } catch (ignored) {
+          // Keep the root base, e.g. on a page URL that cannot be a base.
+        }
+        // Set the attribute through the DOM so the path is never parsed as HTML.
+        var base = document.createElement('base');
+        base.setAttribute('href', basePath);
+        base.setAttribute('data-inject-target', 'BASE_URL');
+        document.currentScript.after(base);
         // Delay the check: React 18 createRoot().render() is async (concurrent mode),
         // so the root is empty at DOMContentLoaded even when the app loaded successfully.
         // Only show the error if the root is still empty after a generous timeout.

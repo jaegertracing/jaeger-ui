@@ -1,8 +1,6 @@
 // Copyright (c) 2021 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { ApiError } from './api-error';
-
 type AvailableServiceMetrics = 'service_call_rate' | 'service_latencies' | 'service_error_rate';
 type AvailableOpsMetrics =
   | 'service_operation_call_rate'
@@ -54,6 +52,10 @@ type MetricsAPIOpsResponseData<T = AvailableOpsMetrics> = {
   quantile: number;
 };
 
+export type MetricsAPIResponse<TGroupByOperation extends boolean = false> = TGroupByOperation extends true
+  ? MetricsAPIOpsResponseData
+  : MetricsAPIServiceResponseData<AvailableServiceMetrics, number>;
+
 export type Points = {
   x: number;
   y: number | null;
@@ -94,51 +96,3 @@ export type ServiceMetrics = {
   service_call_rate: null | ServiceMetricsObject;
   service_error_rate: null | ServiceMetricsObject;
 };
-
-export type MetricsReduxState = {
-  serviceError: {
-    service_latencies_50: null | ApiError;
-    service_latencies_75: null | ApiError;
-    service_latencies_95: null | ApiError;
-    service_call_rate: null | ApiError;
-    service_error_rate: null | ApiError;
-  };
-  opsError: {
-    opsLatencies: null | ApiError;
-    opsCalls: null | ApiError;
-    opsErrors: null | ApiError;
-  };
-  loading: boolean;
-  operationMetricsLoading: undefined | boolean;
-  serviceMetrics: ServiceMetrics | null;
-  serviceOpsMetrics: ServiceOpsMetrics[] | undefined;
-};
-
-enum PromiseStatus {
-  fulfilled = 'fulfilled',
-  rejected = 'rejected',
-}
-
-type PromiseFulfilledResult<T> = {
-  status: PromiseStatus.fulfilled;
-  value: T;
-};
-
-type PromiseRejectedResult = {
-  status: PromiseStatus.rejected;
-  reason: ApiError;
-};
-
-export type FetchedAllServiceMetricsResponse = [
-  PromiseFulfilledResult<MetricsAPIServiceResponseData<'service_latencies', 0.5>> | PromiseRejectedResult,
-  PromiseFulfilledResult<MetricsAPIServiceResponseData<'service_latencies', 0.75>> | PromiseRejectedResult,
-  PromiseFulfilledResult<MetricsAPIServiceResponseData<'service_latencies'>> | PromiseRejectedResult,
-  PromiseFulfilledResult<MetricsAPIServiceResponseData<'service_call_rate'>> | PromiseRejectedResult,
-  PromiseFulfilledResult<MetricsAPIServiceResponseData<'service_error_rate'>> | PromiseRejectedResult,
-];
-
-export type FetchAggregatedServiceMetricsResponse = [
-  PromiseFulfilledResult<MetricsAPIOpsResponseData<'service_operation_latencies'>> | PromiseRejectedResult,
-  PromiseFulfilledResult<MetricsAPIOpsResponseData<'service_operation_call_rate'>> | PromiseRejectedResult,
-  PromiseFulfilledResult<MetricsAPIOpsResponseData<'service_operation_error_rate'>> | PromiseRejectedResult,
-];
