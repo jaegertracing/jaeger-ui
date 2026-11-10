@@ -308,6 +308,47 @@ describe('<DAG>', () => {
     expect(edgesData.textContent).toBe('[]');
   });
 
+  it('remounts Digraph when the graph data changes', () => {
+    let mountCount = 0;
+    class CountingDigraph extends React.Component {
+      componentDidMount() {
+        mountCount++;
+      }
+
+      render() {
+        return (
+          <div data-testid="digraph-vertices">{JSON.stringify(this.props.vertices?.map(v => v.key))}</div>
+        );
+      }
+    }
+
+    const originalImplementation = Digraph.getMockImplementation();
+    Digraph.mockImplementation(props => <CountingDigraph {...props} />);
+
+    const backendData = { nodes: [{ key: 'frontend' }], edges: [] };
+    const sampleData = { nodes: [{ key: 'Service1' }], edges: [] };
+
+    try {
+      const { rerender } = render(
+        <DAG data={backendData} selectedLayout="dot" selectedDepth={5} selectedService="" />
+      );
+      expect(mountCount).toBe(1);
+      expect(screen.getByTestId('digraph-vertices').textContent).toContain('frontend');
+
+      // A re-render with identical data must not remount Digraph.
+      rerender(<DAG data={backendData} selectedLayout="dot" selectedDepth={5} selectedService="" />);
+      expect(mountCount).toBe(1);
+
+      // Switching datasets changes the graph contents, so Digraph must remount
+      // to pick up the new vertices from its props at mount time.
+      rerender(<DAG data={sampleData} selectedLayout="dot" selectedDepth={5} selectedService="" />);
+      expect(mountCount).toBe(2);
+      expect(screen.getByTestId('digraph-vertices').textContent).toContain('Service1');
+    } finally {
+      Digraph.mockImplementation(originalImplementation);
+    }
+  });
+
   it('invokes renderNode prop with correct arguments', () => {
     const data = {
       nodes: [{ key: 'test-node' }],

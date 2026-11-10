@@ -179,6 +179,18 @@ export default function DAG({
 
   const forceFocalServiceSelection = data.nodes.length > DAG_MAX_NUM_SERVICES;
 
+  const graphDataSignature = React.useMemo(
+    () =>
+      `${data.nodes
+        .map(node => node.key)
+        .sort()
+        .join(',')}|${data.edges
+        .map(edge => `${edge.from}>${edge.to}:${edge.label}`)
+        .sort()
+        .join(',')}`,
+    [data.nodes, data.edges]
+  );
+
   const layoutManager = React.useMemo(() => {
     const config: TLayoutOptions =
       selectedLayout === 'dot'
@@ -222,7 +234,7 @@ export default function DAG({
   return (
     <div className="DAG" onClick={handleCanvasClick} role="button">
       <Digraph<TVertex>
-        key={`${selectedLayout}-${selectedService}-${selectedDepth}-${uiFind}`}
+        key={`${selectedLayout}-${selectedService}-${selectedDepth}-${uiFind}-${graphDataSignature}`}
         zoom
         minimap
         className="DAG--dag"
