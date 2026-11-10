@@ -785,11 +785,9 @@ describe('JaegerClient', () => {
       ).rejects.toBe(abortError);
     });
 
-    it('supports a caller signal and deadline when AbortSignal.any is unavailable', async () => {
+    it('reports a timeout with a caller signal when AbortSignal.any is unavailable', async () => {
       const descriptor = Object.getOwnPropertyDescriptor(AbortSignal, 'any');
       const caller = new AbortController();
-      const abortError = new Error('Caller cancelled request');
-      abortError.name = 'AbortError';
       mockFetch.mockImplementation((_url: string, options: RequestInit) => {
         return new Promise((_resolve, reject) => {
           options.signal?.addEventListener('abort', () => reject(options.signal?.reason));
@@ -799,9 +797,11 @@ describe('JaegerClient', () => {
       try {
         Reflect.deleteProperty(AbortSignal, 'any');
         expect(AbortSignal.any).toBeUndefined();
-        const promise = client['fetchWithTimeout']('/test', { timeout: 1000, signal: caller.signal });
-        caller.abort(abortError);
-        await expect(promise).rejects.toBe(abortError);
+        const promise = client['fetchJson']('/test', 'Failed', { timeout: 1000, signal: caller.signal });
+        vi.advanceTimersByTime(1000);
+
+        await expect(promise).rejects.toThrow('Request timeout after 1000ms');
+        expect(caller.signal.aborted).toBe(false);
       } finally {
         if (descriptor) Object.defineProperty(AbortSignal, 'any', descriptor);
       }
