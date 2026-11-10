@@ -60,13 +60,6 @@ vi.mock('./store', () => ({
   MIN_TIMELINE_COLUMN_WIDTH: 0.05,
 }));
 
-const mockUseServiceFilter = vi.hoisted(() => ({
-  prunedServices: new Set(),
-  serviceFilterNode: null,
-}));
-vi.mock('./useServiceFilter', () => ({
-  useServiceFilter: vi.fn(() => mockUseServiceFilter),
-}));
 const mockUseSpanPillsEnabled = vi.hoisted(() => vi.fn(() => true));
 vi.mock('./spanPills', () => ({
   useSpanPillsEnabled: mockUseSpanPillsEnabled,
@@ -80,7 +73,7 @@ vi.mock('./SpanDetailSidePanel', () => mockDefault(() => <div data-testid="span-
 vi.mock('./TimelineHeaderRow', () =>
   mockDefault(props => (
     <div data-testid="timeline-header-row-mock" data-side-panel-label={props.sidePanelLabel}>
-      {props.serviceFilterNode}
+      {props.spanFilterNode}
       <button
         data-testid="header-side-panel-change"
         type="button"
@@ -147,8 +140,6 @@ describe('<TraceTimelineViewer>', () => {
     mockLayoutPrefsStore.heatmapEnabled = false;
     mockTraceTimelineStore.detailStates = new Map();
     mockUseTraceTimelineStore.setState.mockClear();
-    mockUseServiceFilter.prunedServices = new Set();
-    mockUseServiceFilter.serviceFilterNode = null;
     mockUseSpanPillsEnabled.mockClear();
     jest.spyOn(KeyboardShortcuts, 'merge').mockClear();
   });
@@ -434,6 +425,6 @@ describe('<TraceTimelineViewer>', () => {
     });
 
     // Side panel cleanup when a selected span's service is pruned is tested
-    // in useServiceFilter.test.ts (the hook owns that logic now).
+    // in useServiceFilter.test.ts (the page's span filter hook owns that logic now).
   });
 });

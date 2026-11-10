@@ -13,39 +13,18 @@ SPDX-License-Identifier: Apache-2.0
   vertical-align: middle;
 }
 
-.ServiceFilter--button:hover,
-.ServiceFilter--button:focus-visible {
+.ServiceFilter--button:hover {
   color: var(--text-primary);
-  outline: none;
 }
 
+/* The funnel sits among the collapse chevrons, which draw no focus ring, so it draws none either. */
 .ServiceFilter--button:focus-visible {
-  box-shadow: 0 0 0 2px var(--interactive-primary);
-  border-radius: 3px;
+  outline: none;
+  box-shadow: none;
 }
 
 .ServiceFilter--button.is-active {
   color: var(--interactive-primary);
-}
-
-.ServiceFilter--popover {
-  min-width: 260px;
-  max-width: 400px;
-  max-height: 400px;
-  display: flex;
-  flex-direction: column;
-}
-
-.ServiceFilter--description {
-  color: var(--text-secondary);
-  font-size: 0.85em;
-  margin-bottom: 0.5rem;
-}
-
-.ServiceFilter--actions {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
 }
 
 .ServiceFilter--list {
@@ -125,4 +104,132 @@ SPDX-License-Identifier: Apache-2.0
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
+}
+
+/* The badge wraps the funnel in an inline block, which would sit at the top of the flex row of the
+   column header; the wrapper joins the row's vertical centering instead. */
+.SpanFilter--badge {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+}
+
+.SpanFilter--badge .ant-badge-count {
+  box-shadow: none;
+  font-size: 0.7em;
+  min-width: 14px;
+  height: 14px;
+  line-height: 14px;
+  padding: 0 3px;
+}
+
+.SpanFilter--popover {
+  min-width: 300px;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The sections scroll inside the cap; the warning and the footer below them stay in view. */
+.SpanFilter--body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.SpanFilter--section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.SpanFilter--sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.SpanFilter--sectionTitle {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* The radio labels take the size of the list rows, so that the popover reads in one size. antd
+   zeroes the font size of the radio group and restores it on the wrapper, so the label is the
+   element to size. */
+.SpanFilter--popover .ant-radio-wrapper .ant-radio-label {
+  font-size: 0.9em;
+}
+
+.SpanFilter--sectionActions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.SpanFilter--shownCount {
+  color: var(--text-secondary);
+  font-size: 0.85em;
+}
+
+.SpanFilter--chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.SpanFilter--chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  padding: 1px 6px 1px 4px;
+  background: var(--surface-primary);
+  font-size: 0.85em;
+  max-width: 100%;
+}
+
+.SpanFilter--chipVerb,
+.SpanFilter--chipRemove {
+  display: inline-flex;
+  align-items: center;
+  border: none;
+  background: none;
+  padding: 2px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+
+.SpanFilter--chipVerb:hover,
+.SpanFilter--chipRemove:hover {
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+}
+
+.SpanFilter--chipVerb.is-hide {
+  color: var(--feedback-error);
+}
+
+.SpanFilter--chipVerb.is-keep {
+  color: var(--interactive-primary);
+}
+
+.SpanFilter--chipVerb.is-disabled,
+.SpanFilter--chipVerb.is-disabled:hover {
+  cursor: not-allowed;
+  opacity: 0.5;
+  background: none;
+}
+
+.SpanFilter--chipText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

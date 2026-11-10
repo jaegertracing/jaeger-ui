@@ -34,6 +34,7 @@ vi.mock('../../common/UiFindInput', () => {
 
 // Each navigation button's accessible name and the tooltip text it shows.
 const TOOLTIP_CASES = [
+  ['Search syntax', /in-page search/],
   ['Focus on matches', /^Collapse the trace to the paths leading to the matching spans$/],
   ['Previous match', /^Previous match$/],
   ['Next match', /^Next match$/],
@@ -49,6 +50,10 @@ const defaultProps = {
   resultCount: 0,
   textFilter: 'something',
 };
+
+// The help button is always present; the navigation buttons are the ones a test counts.
+const navButtons = () =>
+  screen.queryAllByRole('button').filter(b => b.getAttribute('data-testid') !== 'search-help');
 
 describe('<TracePageSearchBar>', () => {
   afterEach(() => {
@@ -84,12 +89,11 @@ describe('<TracePageSearchBar>', () => {
     });
 
     it('renders buttons', () => {
-      const buttons = screen.getAllByRole('button');
+      const buttons = navButtons();
       expect(buttons).toHaveLength(3);
 
       buttons.forEach(button => {
         expect(button).toHaveClass('TracePageSearchBar--btn');
-        expect(button).not.toHaveClass('is-disabled');
         expect(button).not.toBeDisabled();
       });
 
@@ -107,8 +111,8 @@ describe('<TracePageSearchBar>', () => {
       cleanup();
       render(<TracePageSearchBar {...defaultProps} navigable={false} />);
 
-      const buttons = screen.queryAllByRole('button');
-      expect(buttons).toHaveLength(0);
+      expect(navButtons()).toHaveLength(0);
+      expect(screen.getByRole('button', { name: 'Search syntax' })).toBeInTheDocument();
     });
   });
 
@@ -126,15 +130,114 @@ describe('<TracePageSearchBar>', () => {
     });
 
     it('renders buttons', () => {
-      const buttons = screen.getAllByRole('button');
+      const buttons = navButtons();
       expect(buttons).toHaveLength(3);
 
       buttons.forEach(button => {
         expect(button).toHaveClass('TracePageSearchBar--btn');
-        expect(button).toHaveClass('is-disabled');
         expect(button).toBeDisabled();
       });
     });
+  });
+});
+
+describe('the span filter cluster', () => {
+  afterEach(() => {
+    cleanup();
+    jest.clearAllMocks();
+  });
+
+  it('shows the match count with text, including zero', () => {
+    const { rerender } = render(<TracePageSearchBar {...defaultProps} resultCount={7} />);
+    expect(screen.getByText('7')).toHaveClass('TracePageSearchBar--count');
+    rerender(<TracePageSearchBar {...defaultProps} resultCount={0} />);
+    expect(screen.getByText('0')).toHaveClass('TracePageSearchBar--count');
+  });
+
+  it('shows no count with an empty input and keeps the buttons disabled', () => {
+    render(<TracePageSearchBar {...defaultProps} textFilter="" resultCount={0} />);
+    expect(screen.queryByText('0')).toBeNull();
+    expect(navButtons()).toHaveLength(3);
+    navButtons().forEach(button => expect(button).toBeDisabled());
+  });
+
+  it('renders the funnel after the navigation buttons', () => {
+    render(<TracePageSearchBar {...defaultProps} spanFilterNode={<span data-testid="funnel" />} />);
+    const box = screen.getByTestId('funnel').closest('.TracePageSearchBar--filter');
+    expect(box).not.toBeNull();
+    expect(box.parentElement.lastElementChild).toBe(box);
+    expect(box.previousElementSibling).toBe(screen.getByRole('button', { name: 'Next match' }));
+  });
+
+  it('offers the keep-or-hide menu only with text and a filterable view', async () => {
+    const onConvertSearch = jest.fn();
+    const { rerender } = render(
+      <TracePageSearchBar
+        {...defaultProps}
+        textFilter=""
+        onConvertSearch={onConvertSearch}
+        spanFilterNode={<span />}
+      />
+    );
+    expect(screen.queryByTestId('convert-search')).toBeNull();
+    rerender(
+      <TracePageSearchBar {...defaultProps} onConvertSearch={onConvertSearch} spanFilterNode={null} />
+    );
+    expect(screen.queryByTestId('convert-search')).toBeNull();
+    rerender(
+      <TracePageSearchBar {...defaultProps} onConvertSearch={onConvertSearch} spanFilterNode={<span />} />
+    );
+    fireEvent.click(screen.getByTestId('convert-search'));
+    fireEvent.click(await screen.findByText('Hide matching spans'));
+    expect(onConvertSearch).toHaveBeenCalledWith('hide');
+  });
+
+  it('disables the keep entry in remove mode and explains why', async () => {
+    const onConvertSearch = jest.fn();
+    render(
+      <TracePageSearchBar
+        {...defaultProps}
+        onConvertSearch={onConvertSearch}
+        spanFilterNode={<span />}
+        keepDisabledReason="Keep filters need Lift to its parent"
+      />
+    );
+    fireEvent.click(screen.getByTestId('convert-search'));
+    const keep = await screen.findByText('Keep matching spans');
+    expect(keep.closest('.ant-dropdown-menu-item')).toHaveClass('ant-dropdown-menu-item-disabled');
+    fireEvent.click(keep);
+    expect(onConvertSearch).not.toHaveBeenCalled();
+    fireEvent.mouseOver(keep);
+    await waitFor(() => expect(screen.getByRole('tooltip')).toHaveTextContent(/Lift to its parent/));
+  });
+
+  it('converts the text to a keep chip in lift mode', async () => {
+    const onConvertSearch = jest.fn();
+    render(
+      <TracePageSearchBar {...defaultProps} onConvertSearch={onConvertSearch} spanFilterNode={<span />} />
+    );
+    fireEvent.click(screen.getByTestId('convert-search'));
+    fireEvent.click(await screen.findByText('Keep matching spans'));
+    expect(onConvertSearch).toHaveBeenCalledWith('keep');
+  });
+
+  it('disables the hide entry with its reason', async () => {
+    const onConvertSearch = jest.fn();
+    render(
+      <TracePageSearchBar
+        {...defaultProps}
+        onConvertSearch={onConvertSearch}
+        spanFilterNode={<span />}
+        hideDisabledReason="This filter would leave no span shown"
+      />
+    );
+    fireEvent.click(screen.getByTestId('convert-search'));
+    const hide = await screen.findByText('Hide matching spans');
+    expect(hide.closest('.ant-dropdown-menu-item')).toHaveClass('ant-dropdown-menu-item-disabled');
+    fireEvent.click(hide);
+    expect(onConvertSearch).not.toHaveBeenCalled();
+    fireEvent.mouseOver(hide);
+    await waitFor(() => expect(screen.getByRole('tooltip')).toHaveTextContent(/leave no span/));
   });
 });
 

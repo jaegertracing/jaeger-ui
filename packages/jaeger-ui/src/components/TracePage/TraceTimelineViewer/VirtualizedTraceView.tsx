@@ -83,7 +83,11 @@ type TDispatchProps = {
   detailTagsToggle: (spanID: string) => void;
   detailToggle: (spanID: string) => void;
   setTrace: (trace: IOtelTrace | TNil, uiFind: string | TNil) => void;
-  focusUiFindMatches: (trace: IOtelTrace, uiFind: string | TNil, allowHide?: boolean) => void;
+  focusUiFindMatches: (
+    trace: IOtelTrace,
+    matches: string | ReadonlySet<string> | TNil,
+    allowHide?: boolean
+  ) => void;
 };
 
 type RouteProps = {

@@ -39,7 +39,11 @@ type TraceTimelineInteractionStore = {
   detailWarningsToggle: (spanID: string) => void;
   detailReferencesToggle: (spanID: string) => void;
   clearShouldScrollToFirstUiFindMatch: () => void;
-  focusUiFindMatches: (trace: IOtelTrace, uiFind?: string | TNil, allowHide?: boolean) => void;
+  focusUiFindMatches: (
+    trace: IOtelTrace,
+    matches: string | ReadonlySet<string> | TNil,
+    allowHide?: boolean
+  ) => void;
 };
 
 export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((set, get) => ({
@@ -62,14 +66,15 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
       traceSpans: trace.spans,
     };
 
-    // Across refetches of the same trace, collapse and filter selections persist,
-    // while detail states are pruned for spans that no longer exist.
+    // Across refetches of the same trace, collapse selections persist, while detail states are
+    // pruned for spans that no longer exist. The span filter is not touched here at all: the page's
+    // span filter hook resolves it from the URL for every trace, and it does so before the
+    // timeline mounts, so a reset here would wipe what the URL asked for.
     if (trace.traceID !== currentTraceID) {
       Object.assign(base, {
         childrenHiddenIDs: new Set<string>(),
         detailStates: new Map<string, DetailState>(),
         shouldScrollToFirstUiFindMatch: false,
-        spanFilter: EMPTY_SPAN_FILTER,
       });
     } else {
       const validSpanIDs = trace.spanMap;
@@ -240,10 +245,10 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
     }
   },
 
-  focusUiFindMatches: (trace: IOtelTrace, uiFind?: string | TNil, allowHide = true) => {
-    if (!uiFind) return;
+  focusUiFindMatches: (trace: IOtelTrace, matches: string | ReadonlySet<string> | TNil, allowHide = true) => {
+    if (!matches || (typeof matches !== 'string' && matches.size === 0)) return;
     const detailPanelMode = useLayoutPrefsStore.getState().detailPanelMode;
-    let focused = calculateFocusedFindRowStates(uiFind, trace.spans, allowHide);
+    let focused = calculateFocusedFindRowStates(matches, trace.spans, allowHide);
     focused = trimFocusedDetailStatesForSidePanel(focused, detailPanelMode);
     set(focused);
   },

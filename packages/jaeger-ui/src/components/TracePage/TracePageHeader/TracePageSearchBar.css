@@ -21,19 +21,42 @@ SPDX-License-Identifier: Apache-2.0
   color: var(--text-secondary);
 }
 
-.TracePageSearchBar--btn {
+.TracePageSearchBar--controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem;
+}
+
+/* The buttons of the search bar share the look of the Settings button beside it: a bordered box
+   around one icon, with antd's default border and text colors. The funnel keeps its own markup
+   and gets the same box. */
+.TracePageSearchBar--btn,
+.TracePageSearchBar--filter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
   background-color: var(--surface-primary);
-  border-left: 1px solid var(--border-default);
-  color: var(--text-secondary);
+  color: var(--text-primary);
   transition: 0.2s;
 }
 
-.TracePageSearchBar--btn:hover:not(:disabled) {
-  background-color: var(--surface-secondary);
-  color: var(--text-primary);
+.TracePageSearchBar--btn svg {
+  color: inherit;
+  font-size: 1.2rem;
 }
 
-.TracePageSearchBar--btn.is-disabled,
+/* The antd buttons take antd's own hover color; the funnel box, which is not an antd button, takes
+   the same token so that the row lights up as one. */
+.TracePageSearchBar--filter:hover {
+  border-color: var(--interactive-primary-hover);
+  color: var(--interactive-primary-hover);
+}
+
 .TracePageSearchBar--btn:disabled {
   opacity: 0.5;
   background-color: var(--surface-primary) !important;
@@ -41,40 +64,41 @@ SPDX-License-Identifier: Apache-2.0
   border-color: var(--border-strong) !important;
 }
 
-.ant-input-group.ant-input-group-compact .help-btn-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--border-default);
-  background-color: var(--surface-primary);
+/* The box around the funnel is the wrapper, so the button inside it is stretched to the whole box
+   and the padding moves onto it; otherwise only the icon itself would take the click. The inactive
+   funnel takes the box's color, so it rests and hovers like the buttons beside it. The box keeps
+   the count pill clear of the Settings button, as the column header keeps it clear of the chevrons. */
+.TracePageSearchBar--filter {
+  padding: 0;
+  margin-right: 0.5rem;
 }
 
-.help-btn-container:hover {
-  border-color: var(--interactive-primary);
+.TracePageSearchBar--filter .SpanFilter--badge,
+.TracePageSearchBar--filter .ServiceFilter--button {
+  height: 30px;
 }
 
-.help-button {
-  border: 1px solid var(--border-strong);
-  border-radius: 100px;
-  color: var(--text-secondary);
-  cursor: pointer;
-  padding: 1px;
-  margin: 0 10px;
-  font-size: 18px;
+.TracePageSearchBar--filter .ServiceFilter--button {
+  font-size: 1.2rem;
+  padding: 0 6px;
 }
 
-.ant-input-group.ant-input-group-compact .TracePageSearchBar--locateBtn,
-.ant-input-group.ant-input-group-compact .TracePageSearchBar--ButtonUp,
-.ant-input-group.ant-input-group-compact .TracePageSearchBar--ButtonDown,
-.ant-input-group.ant-input-group-compact .TracePageSearchBar--ButtonClose {
-  display: flex;
-  align-items: center;
-}
-
-.ant-input-group.ant-input-group-compact .TracePageSearchBar--locateBtn svg,
-.ant-input-group.ant-input-group-compact .TracePageSearchBar--ButtonUp svg,
-.ant-input-group.ant-input-group-compact .TracePageSearchBar--ButtonDown svg,
-.ant-input-group.ant-input-group-compact .TracePageSearchBar--ButtonClose svg {
+.TracePageSearchBar--filter .SpanFilter--badge,
+.TracePageSearchBar--filter .ServiceFilter--button:not(.is-active) {
   color: inherit;
-  font-size: 18px;
+}
+
+.TracePageSearchBar--convertBtn {
+  display: inline-flex;
+  align-items: center;
+  border: none;
+  background: none;
+  padding: 0 2px;
+  margin-left: 4px;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+
+.TracePageSearchBar--convertBtn:hover {
+  color: var(--text-primary);
 }

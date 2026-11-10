@@ -251,6 +251,11 @@ export type Config = {
     // spanPillsEnabled controls span pill overlays in the trace timeline.
     // Default: true. Set to false to disable if needed.
     spanPillsEnabled?: boolean;
+
+    // filterApplyThreshold is the span count above which a change in the span filter popover
+    // waits for the Apply button instead of applying as it is made. Below it the button is not
+    // rendered. Default: 10000.
+    filterApplyThreshold?: number;
   };
 
   // useOpenTelemetryTerms determines whether the UI uses OpenTelemetry terminology

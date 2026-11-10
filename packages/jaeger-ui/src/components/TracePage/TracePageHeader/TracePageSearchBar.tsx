@@ -2,18 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { Button, Input, InputRef, Tooltip } from 'antd';
-import cx from 'classnames';
-import { IoLocate, IoHelp, IoChevronDown, IoChevronUp } from 'react-icons/io5';
+import { Button, Dropdown, InputRef, Tooltip } from 'antd';
+import { IoLocate, IoHelp, IoChevronDown, IoChevronUp, IoEye, IoEyeOff } from 'react-icons/io5';
 
 import * as markers from './TracePageSearchBar.markers';
 import { trackFilter } from '../index.track';
 import UiFindInput from '../../common/UiFindInput';
 import { TNil } from '../../../types';
+import { TOOLTIP_TRIGGERS } from '../TraceTimelineViewer/ServiceFilter';
 import './TracePageSearchBar.css';
-
-// antd opens a tooltip on hover only, which leaves keyboard users without the text.
-const TOOLTIP_TRIGGERS: Array<'hover' | 'focus'> = ['hover', 'focus'];
 
 // The crosshair icon does not convey what the focus button does, so the tooltip spells it out.
 const FOCUS_MATCHES_TOOLTIP = 'Collapse the trace to the paths leading to the matching spans';
@@ -25,6 +22,14 @@ type TracePageSearchBarProps = {
   clearSearch: () => void;
   focusUiFindMatches: () => void;
   resultCount: number;
+  // Why the "Keep matching spans" or "Hide matching spans" entry is disabled, or nothing while it
+  // is enabled: the keep entry in remove mode, and either entry when it would leave no span shown.
+  keepDisabledReason?: string | null;
+  hideDisabledReason?: string | null;
+  // Turns the search text into a chip with the verb. The menu is shown only when this is set.
+  onConvertSearch?: (verb: 'keep' | 'hide') => void;
+  // The funnel button, rendered at the end of the cluster; null in views that cannot hide spans.
+  spanFilterNode?: React.ReactNode;
   navigable: boolean;
   useOtelTerms: boolean;
 };
@@ -33,22 +38,75 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
   const {
     focusUiFindMatches,
     forwardedRef,
+    keepDisabledReason = null,
+    hideDisabledReason = null,
     navigable,
     nextResult,
+    onConvertSearch,
     prevResult,
     resultCount,
+    spanFilterNode,
     textFilter,
     useOtelTerms,
   } = props;
 
-  const count = textFilter ? <span className="TracePageSearchBar--count">{resultCount}</span> : null;
+  const hasText = Boolean(textFilter);
+  const count = hasText ? <span className="TracePageSearchBar--count">{resultCount}</span> : null;
 
-  const btnClass = cx('TracePageSearchBar--btn', { 'is-disabled': !textFilter });
+  const convertMenu =
+    onConvertSearch && spanFilterNode && textFilter ? (
+      <Dropdown
+        trigger={['click']}
+        menu={{
+          items: [
+            {
+              key: 'keep',
+              icon: <IoEye />,
+              label: keepDisabledReason ? (
+                <Tooltip title={keepDisabledReason}>Keep matching spans</Tooltip>
+              ) : (
+                'Keep matching spans'
+              ),
+              disabled: Boolean(keepDisabledReason),
+              onClick: () => onConvertSearch('keep'),
+            },
+            {
+              key: 'hide',
+              icon: <IoEyeOff />,
+              label: hideDisabledReason ? (
+                <Tooltip title={hideDisabledReason}>Hide matching spans</Tooltip>
+              ) : (
+                'Hide matching spans'
+              ),
+              disabled: Boolean(hideDisabledReason),
+              onClick: () => onConvertSearch('hide'),
+            },
+          ],
+        }}
+      >
+        <Tooltip title="Turn this text into a filter">
+          <button
+            type="button"
+            className="TracePageSearchBar--convertBtn"
+            aria-label="Turn this text into a filter"
+            data-testid="convert-search"
+          >
+            <IoChevronDown />
+          </button>
+        </Tooltip>
+      </Dropdown>
+    ) : null;
+
   const uiFindInputInputProps = {
     'data-test': markers.IN_TRACE_SEARCH,
     className: 'TracePageSearchBar--bar ub-flex-auto',
     name: 'search',
-    suffix: count,
+    suffix: (
+      <>
+        {count}
+        {convertMenu}
+      </>
+    ),
   };
 
   const renderTooltip = () => {
@@ -80,27 +138,31 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
 
   return (
     <div className="TracePageSearchBar">
-      {/* style inline because compact overwrites the display */}
-      <Input.Group className="ub-justify-end" compact style={{ display: 'flex' }}>
+      <div className="TracePageSearchBar--controls">
         <UiFindInput inputProps={uiFindInputInputProps} ref={forwardedRef} trackFindFunction={trackFilter} />
         <Tooltip
           arrow={{ pointAtCenter: true }}
           placement="bottomLeft"
-          trigger="hover"
+          trigger={TOOLTIP_TRIGGERS}
           overlayStyle={{ maxWidth: '600px' }} // This is a large tooltip and the default is too narrow.
           title={renderTooltip()}
         >
-          <div className="help-btn-container">
-            <IoHelp className="help-button" />
-          </div>
+          <Button
+            aria-label="Search syntax"
+            className="TracePageSearchBar--btn TracePageSearchBar--helpBtn"
+            htmlType="button"
+            data-testid="search-help"
+          >
+            <IoHelp />
+          </Button>
         </Tooltip>
         {navigable && (
           <>
             <Tooltip title={FOCUS_MATCHES_TOOLTIP} trigger={TOOLTIP_TRIGGERS}>
               <Button
                 aria-label="Focus on matches"
-                className={cx(btnClass, 'TracePageSearchBar--locateBtn')}
-                disabled={!textFilter}
+                className="TracePageSearchBar--btn TracePageSearchBar--locateBtn"
+                disabled={!hasText}
                 htmlType="button"
                 onClick={focusUiFindMatches}
               >
@@ -110,8 +172,8 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
             <Tooltip title="Previous match" trigger={TOOLTIP_TRIGGERS}>
               <Button
                 aria-label="Previous match"
-                className={cx(btnClass, 'TracePageSearchBar--ButtonUp')}
-                disabled={!textFilter}
+                className="TracePageSearchBar--btn TracePageSearchBar--ButtonUp"
+                disabled={!hasText}
                 htmlType="button"
                 data-testid="UpOutlined"
                 onClick={prevResult}
@@ -122,8 +184,8 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
             <Tooltip title="Next match" trigger={TOOLTIP_TRIGGERS}>
               <Button
                 aria-label="Next match"
-                className={cx(btnClass, 'TracePageSearchBar--ButtonDown')}
-                disabled={!textFilter}
+                className="TracePageSearchBar--btn TracePageSearchBar--ButtonDown"
+                disabled={!hasText}
                 htmlType="button"
                 data-testid="DownOutlined"
                 onClick={nextResult}
@@ -133,7 +195,8 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
             </Tooltip>
           </>
         )}
-      </Input.Group>
+        {spanFilterNode && <span className="TracePageSearchBar--filter">{spanFilterNode}</span>}
+      </div>
     </div>
   );
 }
