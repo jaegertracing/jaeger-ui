@@ -24,12 +24,12 @@ vi.mock('./JaegerAssistantPanel', () => ({
 }));
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 
 import { PageImpl as Page, loadJaegerAssistantDock } from './Page';
-import { JaegerAssistantProvider } from './JaegerAssistantContext';
+import { JaegerAssistantProvider, useJaegerAssistantOptional } from './JaegerAssistantContext';
 import { trackPageView } from '../../utils/tracking';
 
 const renderWithPath = (path = '/test?search=value') =>
@@ -38,6 +38,20 @@ const renderWithPath = (path = '/test?search=value') =>
       <Page />
     </MemoryRouter>
   );
+
+function AssistantPanelControls() {
+  const assistant = useJaegerAssistantOptional();
+  return (
+    <>
+      <button type="button" onClick={() => assistant?.setPanelOpen(true)}>
+        Open assistant panel
+      </button>
+      <button type="button" onClick={() => assistant?.setPanelOpen(false)}>
+        Close assistant panel
+      </button>
+    </>
+  );
+}
 
 const embeddedV0 = {
   version: 'v0',
@@ -119,7 +133,7 @@ describe('<Page>', () => {
       expect(screen.getByTestId('page-child')).toBeInTheDocument();
     });
 
-    it('degrades to an empty dock when the chunk fails to load', async () => {
+    it('shows a reload notice when the chunk fails to load', async () => {
       const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const err = new Error('chunk load failed');
       const { default: Fallback } = await loadJaegerAssistantDock(() => Promise.reject(err));
@@ -128,11 +142,17 @@ describe('<Page>', () => {
       render(
         <JaegerAssistantProvider>
           <Fallback />
+          <AssistantPanelControls />
         </JaegerAssistantProvider>
       );
-      expect(
-        screen.getByText('The assistant failed to load. Reload the page to try again.')
-      ).toBeInTheDocument();
+      const notice = screen.getByText('The assistant failed to load. Reload the page to try again.');
+      expect(notice).not.toBeVisible();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Open assistant panel' }));
+      expect(notice).toBeVisible();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Close assistant panel' }));
+      expect(notice).not.toBeVisible();
       spy.mockRestore();
     });
   });
