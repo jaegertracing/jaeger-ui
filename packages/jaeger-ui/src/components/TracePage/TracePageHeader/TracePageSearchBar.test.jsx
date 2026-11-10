@@ -55,11 +55,20 @@ describe('<TracePageSearchBar>', () => {
     });
 
     it.each([
-      ['Focus on matches', /Focus on matches: collapse the trace/],
+      ['Focus on matches', /^Collapse the trace to the paths leading to the matching spans$/],
       ['Previous match', /^Previous match$/],
       ['Next match', /^Next match$/],
-    ])('shows a tooltip on the %s button', async (label, tooltip) => {
+    ])('shows a tooltip on the %s button on hover', async (label, tooltip) => {
       fireEvent.mouseOver(screen.getByRole('button', { name: label }));
+      await waitFor(() => expect(screen.getByRole('tooltip')).toHaveTextContent(tooltip));
+    });
+
+    it.each([
+      ['Focus on matches', /^Collapse the trace to the paths leading to the matching spans$/],
+      ['Previous match', /^Previous match$/],
+      ['Next match', /^Next match$/],
+    ])('shows a tooltip on the %s button on keyboard focus', async (label, tooltip) => {
+      fireEvent.focus(screen.getByRole('button', { name: label }));
       await waitFor(() => expect(screen.getByRole('tooltip')).toHaveTextContent(tooltip));
     });
 
@@ -85,14 +94,14 @@ describe('<TracePageSearchBar>', () => {
         expect(button).not.toBeDisabled();
       });
 
-      const upButton = screen.getByTestId('UpOutlined');
-      const downButton = screen.getByTestId('DownOutlined');
-
-      fireEvent.click(upButton);
+      fireEvent.click(screen.getByRole('button', { name: 'Previous match' }));
       expect(defaultProps.prevResult).toHaveBeenCalled();
 
-      fireEvent.click(downButton);
+      fireEvent.click(screen.getByRole('button', { name: 'Next match' }));
       expect(defaultProps.nextResult).toHaveBeenCalled();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Focus on matches' }));
+      expect(defaultProps.focusUiFindMatches).toHaveBeenCalled();
     });
 
     it('hides navigation buttons when not navigable', () => {
