@@ -12,10 +12,11 @@ import UiFindInput from '../../common/UiFindInput';
 import { TNil } from '../../../types';
 import './TracePageSearchBar.css';
 
-// The focus button collapses the whole trace, re-expands only the paths to the matching spans,
-// and opens each match's details. The icon does not convey that, so the tooltip spells it out.
-const FOCUS_MATCHES_TOOLTIP =
-  'Focus on matches: collapse the trace to the paths leading to the matching spans and open their details';
+// antd opens a tooltip on hover only, which leaves keyboard users without the text.
+const TOOLTIP_TRIGGERS: Array<'hover' | 'focus'> = ['hover', 'focus'];
+
+// The crosshair icon does not convey what the focus button does, so the tooltip spells it out.
+const FOCUS_MATCHES_TOOLTIP = 'Collapse the trace to the paths leading to the matching spans';
 
 type TracePageSearchBarProps = {
   textFilter: string | TNil;
@@ -95,7 +96,7 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
         </Tooltip>
         {navigable && (
           <>
-            <Tooltip title={FOCUS_MATCHES_TOOLTIP}>
+            <Tooltip title={FOCUS_MATCHES_TOOLTIP} trigger={TOOLTIP_TRIGGERS}>
               <Button
                 aria-label="Focus on matches"
                 className={cx(btnClass, 'TracePageSearchBar--locateBtn')}
@@ -106,7 +107,7 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
                 <IoLocate />
               </Button>
             </Tooltip>
-            <Tooltip title="Previous match">
+            <Tooltip title="Previous match" trigger={TOOLTIP_TRIGGERS}>
               <Button
                 aria-label="Previous match"
                 className={cx(btnClass, 'TracePageSearchBar--ButtonUp')}
@@ -118,7 +119,7 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
                 <IoChevronUp />
               </Button>
             </Tooltip>
-            <Tooltip title="Next match">
+            <Tooltip title="Next match" trigger={TOOLTIP_TRIGGERS}>
               <Button
                 aria-label="Next match"
                 className={cx(btnClass, 'TracePageSearchBar--ButtonDown')}
