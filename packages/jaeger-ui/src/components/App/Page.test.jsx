@@ -30,7 +30,7 @@ vi.mock('./JaegerAssistantPanel', () => ({
 }));
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 
@@ -140,15 +140,20 @@ describe('<Page>', () => {
       assistantMock.configured = true;
       dockMock.throws = true;
 
-      renderWithAssistant();
+      try {
+        renderWithAssistant();
 
-      expect(await screen.findByTestId('page-child')).toBeInTheDocument();
-      expect(screen.queryByTestId('assistant-dock')).not.toBeInTheDocument();
-      expect(spy).toHaveBeenCalledWith(
-        '[jaeger-assistant] failed to render the assistant panel',
-        expect.any(Error)
-      );
-      spy.mockRestore();
+        await waitFor(() =>
+          expect(spy).toHaveBeenCalledWith(
+            '[jaeger-assistant] failed to render the assistant panel',
+            expect.any(Error)
+          )
+        );
+        expect(screen.getByTestId('page-child')).toBeInTheDocument();
+        expect(screen.queryByTestId('assistant-dock')).not.toBeInTheDocument();
+      } finally {
+        spy.mockRestore();
+      }
     });
   });
 
