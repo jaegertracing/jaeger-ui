@@ -110,28 +110,71 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
   };
 
   const renderTooltip = () => {
+    const attributes = useOtelTerms ? 'attributes' : 'tags';
+    const events = useOtelTerms ? 'event attributes' : 'log fields';
     return (
-      <div style={{ wordBreak: 'normal' }}>
+      <div className="TracePageSearchBar--help">
         <p>
-          This is an in-page search. Enter the query as a list of space-separated string terms. Each term is
-          used in a substring match against any of the following data elements: service name,{' '}
-          {useOtelTerms ? 'span name' : 'operation name'}, span ID, and key-value pairs in{' '}
-          {useOtelTerms ? 'attributes and events' : 'tags and logs'}. The spans that match any of the search
-          terms will be highlighted.
+          <strong>Find spans by text.</strong> Every span where any term matches is highlighted. Matching is
+          case-insensitive and by substring.
         </p>
-        <p>
-          For exact phrase search surround the query in double quotes like{' '}
-          <code>&quot;The quick brown fox&quot;</code>
-        </p>
-        <p>
-          When matching key-value pairs, the substring search is applied separately against the key, the
-          value, and the concatenated <code>&quot;key=value&quot;</code> string. The latter allows searching
-          for exact matches like <code>http.status_code=200</code>.
-        </p>
-        <p>
-          To preclude certain key-value pairs from participating in the matching, prefix the key with the
-          minus <code>&apos;-&apos;</code> sign, e.g., <code>-http.status_code</code>.
-        </p>
+        <ul>
+          <li>
+            Separate terms with spaces. A span matches when <strong>any</strong> term matches.
+          </li>
+          <li>
+            Wrap a phrase in quotes to keep its spaces: <code>&quot;tools/call failed&quot;</code>.
+          </li>
+          <li>
+            Searched fields: service name, {useOtelTerms ? 'span name' : 'operation name'}, {attributes} and
+            their values, {events}, and the span ID as an exact match.
+          </li>
+          <li>
+            Each {useOtelTerms ? 'attribute' : 'tag'} is also searched as <code>key=value</code>, so{' '}
+            <code>http.status_code=200</code> matches that exact pair.
+          </li>
+          <li>
+            <code>-key</code> excludes {attributes} whose key contains that text:{' '}
+            <code>500 -http.status_code</code> finds <code>500</code> anywhere except in that{' '}
+            {useOtelTerms ? 'attribute' : 'tag'}.
+          </li>
+        </ul>
+        <table>
+          <thead>
+            <tr>
+              <th>Query</th>
+              <th>Finds</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <code>auth</code>
+              </td>
+              <td>
+                <code>auth</code> in a name, service or {useOtelTerms ? 'attribute' : 'tag'}
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <code>&quot;tools/call&quot; timeout</code>
+              </td>
+              <td>spans with either text</td>
+            </tr>
+            <tr>
+              <td>
+                <code>http.status_code=5</code>
+              </td>
+              <td>status codes 5xx</td>
+            </tr>
+            <tr>
+              <td>
+                <code>-db.statement</code>
+              </td>
+              <td>nothing by itself; it only narrows other terms</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     );
   };

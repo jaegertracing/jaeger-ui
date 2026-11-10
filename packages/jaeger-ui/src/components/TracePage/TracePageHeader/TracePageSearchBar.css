@@ -102,3 +102,32 @@ SPDX-License-Identifier: Apache-2.0
 .TracePageSearchBar--convertBtn:hover {
   color: var(--text-primary);
 }
+
+/* The help tooltip is a short document, so it gets list and table spacing. */
+.TracePageSearchBar--help {
+  word-break: normal;
+}
+
+.TracePageSearchBar--help p,
+.TracePageSearchBar--help ul {
+  margin: 0 0 0.5rem;
+}
+
+.TracePageSearchBar--help ul {
+  padding-left: 1.2rem;
+}
+
+.TracePageSearchBar--help li {
+  margin-bottom: 0.2rem;
+}
+
+.TracePageSearchBar--help table {
+  border-collapse: collapse;
+}
+
+.TracePageSearchBar--help th,
+.TracePageSearchBar--help td {
+  padding: 0.1rem 0.6rem 0.1rem 0;
+  text-align: left;
+  vertical-align: top;
+}

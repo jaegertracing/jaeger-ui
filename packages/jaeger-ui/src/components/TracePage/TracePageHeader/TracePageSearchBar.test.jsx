@@ -34,7 +34,7 @@ vi.mock('../../common/UiFindInput', () => {
 
 // Each navigation button's accessible name and the tooltip text it shows.
 const TOOLTIP_CASES = [
-  ['Search syntax', /in-page search/],
+  ['Search syntax', /Find spans by text/],
   ['Focus on matches', /^Collapse the trace to the paths leading to the matching spans$/],
   ['Previous match', /^Previous match$/],
   ['Next match', /^Next match$/],
