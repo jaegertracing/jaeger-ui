@@ -12,6 +12,11 @@ import UiFindInput from '../../common/UiFindInput';
 import { TNil } from '../../../types';
 import './TracePageSearchBar.css';
 
+// The focus button collapses the whole trace, re-expands only the paths to the matching spans,
+// and opens each match's details. The icon does not convey that, so the tooltip spells it out.
+const FOCUS_MATCHES_TOOLTIP =
+  'Focus on matches: collapse the trace to the paths leading to the matching spans and open their details';
+
 type TracePageSearchBarProps = {
   textFilter: string | TNil;
   prevResult: () => void;
@@ -90,32 +95,41 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
         </Tooltip>
         {navigable && (
           <>
-            <Button
-              className={cx(btnClass, 'TracePageSearchBar--locateBtn')}
-              disabled={!textFilter}
-              htmlType="button"
-              onClick={focusUiFindMatches}
-            >
-              <IoLocate />
-            </Button>
-            <Button
-              className={cx(btnClass, 'TracePageSearchBar--ButtonUp')}
-              disabled={!textFilter}
-              htmlType="button"
-              data-testid="UpOutlined"
-              onClick={prevResult}
-            >
-              <IoChevronUp />
-            </Button>
-            <Button
-              className={cx(btnClass, 'TracePageSearchBar--ButtonDown')}
-              disabled={!textFilter}
-              htmlType="button"
-              data-testid="DownOutlined"
-              onClick={nextResult}
-            >
-              <IoChevronDown />
-            </Button>
+            <Tooltip title={FOCUS_MATCHES_TOOLTIP}>
+              <Button
+                aria-label="Focus on matches"
+                className={cx(btnClass, 'TracePageSearchBar--locateBtn')}
+                disabled={!textFilter}
+                htmlType="button"
+                onClick={focusUiFindMatches}
+              >
+                <IoLocate />
+              </Button>
+            </Tooltip>
+            <Tooltip title="Previous match">
+              <Button
+                aria-label="Previous match"
+                className={cx(btnClass, 'TracePageSearchBar--ButtonUp')}
+                disabled={!textFilter}
+                htmlType="button"
+                data-testid="UpOutlined"
+                onClick={prevResult}
+              >
+                <IoChevronUp />
+              </Button>
+            </Tooltip>
+            <Tooltip title="Next match">
+              <Button
+                aria-label="Next match"
+                className={cx(btnClass, 'TracePageSearchBar--ButtonDown')}
+                disabled={!textFilter}
+                htmlType="button"
+                data-testid="DownOutlined"
+                onClick={nextResult}
+              >
+                <IoChevronDown />
+              </Button>
+            </Tooltip>
           </>
         )}
       </Input.Group>
