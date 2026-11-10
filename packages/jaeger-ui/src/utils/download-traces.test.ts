@@ -5,6 +5,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 
 import { createBlob, downloadTraces } from './download-traces';
 import { validateOtelUpload } from './otel-upload';
+import { parseOtelTrace } from '../api/v3/parser';
 import { GetTraceResponseSchema } from '../api/v3/schemas';
 
 const TRACE_ID = '0123456789abcdef0123456789abcdef';
@@ -16,7 +17,12 @@ const SPAN_ID = '1122334455667788';
 const wireTrace = {
   resourceSpans: [
     {
-      resource: { attributes: [{ key: 'host.name', value: { stringValue: 'h1' } }] },
+      resource: {
+        attributes: [
+          { key: 'service.name', value: { stringValue: 'frontend' } },
+          { key: 'host.name', value: { stringValue: 'h1' } },
+        ],
+      },
       scopeSpans: [
         {
           scope: { name: 'lib' },
@@ -60,6 +66,19 @@ describe('createBlob', () => {
       { key: 'nan', value: { doubleValue: NaN } },
       { key: 'inf', value: { doubleValue: -Infinity } },
     ]);
+  });
+
+  it('keeps the service name through export and upload', async () => {
+    const fetched = GetTraceResponseSchema.parse({ result: wireTrace }).result;
+
+    const [uploaded] = await roundTrip([fetched]);
+
+    expect(uploaded.resourceSpans[0].resource.attributes).toContainEqual({
+      key: 'service.name',
+      value: { stringValue: 'frontend' },
+    });
+    const trace = parseOtelTrace(uploaded);
+    expect(trace?.spans.map(span => span.resource.serviceName)).toEqual(['frontend', 'frontend']);
   });
 
   it('writes non-finite doubles as proto3 strings', async () => {
