@@ -5,6 +5,18 @@ import { KeyValuePair, Span } from '../types/trace';
 import { IOtelSpan, IAttribute } from '../types/otel';
 import { TNil } from '../types';
 
+/** The text of an attribute value as the search and the span filter match it. */
+export function stringifyAttributeValue(value: unknown): string {
+  if (typeof value === 'object' && value !== null && !(value instanceof Uint8Array)) {
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  }
+  return String(value);
+}
+
 export default function filterSpans(textFilter: string, spans: ReadonlyArray<Span | IOtelSpan> | TNil) {
   if (!spans) {
     return null;
@@ -39,16 +51,7 @@ export default function filterSpans(textFilter: string, spans: ReadonlyArray<Spa
           if (isTextInFilters(excludeKeys, kv.key)) return false;
           const value = (kv as any).value; // handle legacy KeyValuePair and IAttribute
           if (value === null || value === undefined) return false;
-          let valueString: string;
-          if (typeof value === 'object' && !(value instanceof Uint8Array)) {
-            try {
-              valueString = JSON.stringify(value);
-            } catch {
-              valueString = String(value);
-            }
-          } else {
-            valueString = String(value);
-          }
+          const valueString = stringifyAttributeValue(value);
           // match if key, value or key=value string matches an item in includeFilters
           return (
             isTextInFilters(includeFilters, kv.key) ||

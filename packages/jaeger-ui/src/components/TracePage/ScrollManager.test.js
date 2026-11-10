@@ -118,6 +118,13 @@ describe('ScrollManager', () => {
       expect(scrollPastMock.mock.calls.length).toBe(0);
     });
 
+    it('does nothing when no span has a row', () => {
+      accessors.mapRowIndexToSpanIndex.mockReturnValue(undefined);
+      manager._scrollToVisibleSpan(1, 0);
+      manager._scrollToVisibleSpan(-1);
+      expect(scrollPastMock).not.toHaveBeenCalled();
+    });
+
     it('does nothing if already at the boundary', () => {
       accessors.getTopRowIndexVisible.mockReturnValue(0);
       accessors.getBottomRowIndexVisible.mockReturnValue(trace.spans.length - 1);

@@ -15,8 +15,8 @@ import transformTraceData from '../../../model/transform-trace-data';
 const { mockLayoutPrefsStore, mockTraceTimelineStore, mockUseTraceTimelineStore } = vi.hoisted(() => {
   const mockTraceTimelineStore = {
     detailStates: new Map(),
-    prunedServices: new Set(),
-    setPrunedServices: vi.fn(),
+    spanFilter: { clauses: [], treeMode: 'remove' },
+    setSpanFilter: vi.fn(),
     collapseAll: vi.fn(),
     collapseOne: vi.fn(),
     expandAll: vi.fn(),

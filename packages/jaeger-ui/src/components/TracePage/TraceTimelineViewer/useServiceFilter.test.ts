@@ -7,10 +7,10 @@ import { render } from '@testing-library/react';
 import { renderHook } from '@testing-library/react';
 
 const mockNavigate = vi.fn();
-const mockSetPrunedServices = vi.fn();
+const mockSetSpanFilter = vi.fn();
 const mockStoreState = {
-  prunedServices: new Set<string>(),
-  setPrunedServices: mockSetPrunedServices,
+  spanFilter: EMPTY_SPAN_FILTER as ISpanFilter,
+  setSpanFilter: mockSetSpanFilter,
   detailStates: new Map(),
 };
 
@@ -58,7 +58,18 @@ import { useLocation } from 'react-router-dom';
 import { useTraceTimelineStore } from './store';
 import { decodeSvcFilter, encodeSvcFilter } from '../url/svcFilter';
 import { resolveInitialFilter, buildFilterSearch, useServiceFilter } from './useServiceFilter';
+import {
+  EMPTY_SPAN_FILTER,
+  hiddenServices,
+  IClause,
+  ISpanFilter,
+  spanFiltersEqual,
+  withHiddenServices,
+} from '../spanFilter';
 import { IOtelSpan, IOtelTrace } from '../../../types/otel';
+
+const serviceFilter = (...services: string[]): ISpanFilter =>
+  withHiddenServices(EMPTY_SPAN_FILTER, new Set(services));
 
 describe('resolveInitialFilter', () => {
   const roots = new Set(['svc-a']);
@@ -70,7 +81,7 @@ describe('resolveInitialFilter', () => {
 
   it('returns empty pruned set when no svcFilter in URL and no localStorage', () => {
     const result = resolveInitialFilter('', ['svc-a', 'svc-b'], roots);
-    expect(result.pruned.size).toBe(0);
+    expect(hiddenServices(result.filter).size).toBe(0);
     expect(result.cleanSearch).toBeUndefined();
   });
 
@@ -80,7 +91,7 @@ describe('resolveInitialFilter', () => {
       stale: false,
     });
     const result = resolveInitialFilter('?svcFilter=abc.1', ['svc-a', 'svc-b'], roots);
-    expect(result.pruned).toEqual(new Set(['svc-b']));
+    expect(hiddenServices(result.filter)).toEqual(new Set(['svc-b']));
     expect(result.cleanSearch).toBeUndefined();
   });
 
@@ -88,39 +99,96 @@ describe('resolveInitialFilter', () => {
     vi.mocked(decodeSvcFilter).mockReturnValue({ visibleServices: new Set(), stale: true });
     localStorage.setItem('svcFilter.defaults', JSON.stringify({ prunedServices: ['svc-b'] }));
     const result = resolveInitialFilter('?svcFilter=stale.ff&uiFind=foo', ['svc-a', 'svc-b', 'svc-c'], roots);
-    expect(result.pruned.size).toBe(0);
+    expect(hiddenServices(result.filter).size).toBe(0);
     expect(result.cleanSearch).toBe('?uiFind=foo');
   });
 
   it('returns empty cleanSearch when stale svcFilter is the only param', () => {
     vi.mocked(decodeSvcFilter).mockReturnValue({ visibleServices: new Set(), stale: true });
     const result = resolveInitialFilter('?svcFilter=stale.ff', ['svc-a'], roots);
-    expect(result.pruned.size).toBe(0);
+    expect(hiddenServices(result.filter).size).toBe(0);
     expect(result.cleanSearch).toBe('');
   });
 
   it('reads localStorage defaults when no svcFilter in URL', () => {
     localStorage.setItem('svcFilter.defaults', JSON.stringify({ prunedServices: ['svc-b'] }));
     const result = resolveInitialFilter('', ['svc-a', 'svc-b', 'svc-c'], roots);
-    expect(result.pruned).toEqual(new Set(['svc-b']));
+    expect(hiddenServices(result.filter)).toEqual(new Set(['svc-b']));
   });
 
   it('ignores localStorage defaults that prune unknown services', () => {
     localStorage.setItem('svcFilter.defaults', JSON.stringify({ prunedServices: ['unknown'] }));
     const result = resolveInitialFilter('', ['svc-a', 'svc-b'], roots);
-    expect(result.pruned.size).toBe(0);
+    expect(hiddenServices(result.filter).size).toBe(0);
   });
 
   it('ignores localStorage defaults that would prune all services', () => {
     localStorage.setItem('svcFilter.defaults', JSON.stringify({ prunedServices: ['svc-a', 'svc-b'] }));
     const result = resolveInitialFilter('', ['svc-a', 'svc-b'], roots);
-    expect(result.pruned.size).toBe(0);
+    expect(hiddenServices(result.filter).size).toBe(0);
   });
 
   it('ignores malformed localStorage', () => {
     localStorage.setItem('svcFilter.defaults', 'not-json');
     const result = resolveInitialFilter('', ['svc-a'], roots);
-    expect(result.pruned.size).toBe(0);
+    expect(hiddenServices(result.filter).size).toBe(0);
+  });
+
+  it('reads f clauses from the URL', () => {
+    const result = resolveInitialFilter('?f=k%3Astatus%3Aerror&f=h%3Atext%3Afoo', ['svc-a'], roots);
+    expect(result.filter).toEqual({
+      clauses: [
+        { verb: 'keep', criterion: { shape: 'set', property: 'status', values: ['error'] } },
+        { verb: 'hide', criterion: { shape: 'text', text: 'foo' } },
+      ],
+      treeMode: 'remove',
+    });
+    expect(result.cleanSearch).toBeUndefined();
+  });
+
+  it('drops a malformed f clause and keeps the rest', () => {
+    const result = resolveInitialFilter('?f=nonsense&f=k%3Astatus%3Aerror', ['svc-a'], roots);
+    expect(result.filter.clauses).toEqual([
+      { verb: 'keep', criterion: { shape: 'set', property: 'status', values: ['error'] } },
+    ]);
+  });
+
+  it('combines svcFilter with f clauses', () => {
+    vi.mocked(decodeSvcFilter).mockReturnValue({ visibleServices: new Set(['svc-a']), stale: false });
+    const result = resolveInitialFilter('?svcFilter=abc.1&f=k%3Astatus%3Aerror', ['svc-a', 'svc-b'], roots);
+    expect(result.filter.clauses).toEqual([
+      { verb: 'keep', criterion: { shape: 'set', property: 'status', values: ['error'] } },
+      { verb: 'hide', criterion: { shape: 'set', property: 'service', values: ['svc-b'] } },
+    ]);
+    expect(result.cleanSearch).toBeUndefined();
+  });
+
+  it('ignores a hide clause on service in f, which only svcFilter carries', () => {
+    localStorage.setItem('svcFilter.defaults', JSON.stringify({ prunedServices: ['svc-b'] }));
+    const result = resolveInitialFilter('?f=h%3Aservice%3Asvc-a', ['svc-a', 'svc-b', 'svc-c'], roots);
+    expect(result.filter).toEqual(serviceFilter('svc-b'));
+    expect(result.cleanSearch).toBeUndefined();
+  });
+
+  it('applies the saved default next to the f clauses when the URL has no svcFilter', () => {
+    localStorage.setItem('svcFilter.defaults', JSON.stringify({ prunedServices: ['svc-b'] }));
+    const result = resolveInitialFilter('?f=k%3Astatus%3Aerror', ['svc-a', 'svc-b', 'svc-c'], roots);
+    expect(result.filter.clauses).toEqual([
+      { verb: 'keep', criterion: { shape: 'set', property: 'status', values: ['error'] } },
+      { verb: 'hide', criterion: { shape: 'set', property: 'service', values: ['svc-b'] } },
+    ]);
+  });
+
+  it('falls through to the saved default when every f value is malformed', () => {
+    localStorage.setItem('svcFilter.defaults', JSON.stringify({ prunedServices: ['svc-b'] }));
+    const result = resolveInitialFilter('?f=garbage&f=', ['svc-a', 'svc-b', 'svc-c'], roots);
+    expect(result.filter).toEqual(serviceFilter('svc-b'));
+  });
+
+  it('falls through to the saved default when svcFilter is empty', () => {
+    localStorage.setItem('svcFilter.defaults', JSON.stringify({ prunedServices: ['svc-b'] }));
+    const result = resolveInitialFilter('?svcFilter=', ['svc-a', 'svc-b', 'svc-c'], roots);
+    expect(hiddenServices(result.filter)).toEqual(new Set(['svc-b']));
   });
 
   describe('root service sanitization', () => {
@@ -131,8 +199,8 @@ describe('resolveInitialFilter', () => {
       });
       // URL tries to prune only svc-a (the sole root) — sanitization empties the filter
       const result = resolveInitialFilter('?svcFilter=abc.2', ['svc-a', 'svc-b'], new Set(['svc-a']));
-      expect(result.pruned.has('svc-a')).toBe(false);
-      expect(result.pruned.size).toBe(0);
+      expect(hiddenServices(result.filter).has('svc-a')).toBe(false);
+      expect(hiddenServices(result.filter).size).toBe(0);
       expect(result.cleanSearch).toBe('');
     });
 
@@ -148,16 +216,16 @@ describe('resolveInitialFilter', () => {
         ['svc-a', 'svc-b', 'svc-c'],
         new Set(['svc-a'])
       );
-      expect(result.pruned.has('svc-a')).toBe(false);
-      expect(result.pruned).toEqual(new Set(['svc-b']));
+      expect(hiddenServices(result.filter).has('svc-a')).toBe(false);
+      expect(hiddenServices(result.filter)).toEqual(new Set(['svc-b']));
       expect(result.cleanSearch).toBeDefined();
     });
 
     it('removes sole root service from pruned set (localStorage)', () => {
       localStorage.setItem('svcFilter.defaults', JSON.stringify({ prunedServices: ['svc-a', 'svc-b'] }));
       const result = resolveInitialFilter('', ['svc-a', 'svc-b', 'svc-c'], new Set(['svc-a']));
-      expect(result.pruned.has('svc-a')).toBe(false);
-      expect(result.pruned.has('svc-b')).toBe(true);
+      expect(hiddenServices(result.filter).has('svc-a')).toBe(false);
+      expect(hiddenServices(result.filter).has('svc-b')).toBe(true);
     });
 
     it('discards filter and cleans URL when all root services would be pruned (multi-root)', () => {
@@ -171,7 +239,7 @@ describe('resolveInitialFilter', () => {
         ['svc-a', 'svc-b', 'svc-c'],
         new Set(['svc-a', 'svc-b'])
       );
-      expect(result.pruned.size).toBe(0);
+      expect(hiddenServices(result.filter).size).toBe(0);
       expect(result.cleanSearch).toBe('');
     });
 
@@ -186,7 +254,7 @@ describe('resolveInitialFilter', () => {
         ['svc-a', 'svc-b', 'svc-c'],
         new Set(['svc-a', 'svc-b'])
       );
-      expect(result.pruned).toEqual(new Set(['svc-b']));
+      expect(hiddenServices(result.filter)).toEqual(new Set(['svc-b']));
     });
   });
 });
@@ -197,31 +265,81 @@ describe('buildFilterSearch', () => {
   });
 
   it('removes svcFilter when no services are pruned', () => {
-    const search = buildFilterSearch('?svcFilter=old.1&uiFind=foo', ['svc-a', 'svc-b'], new Set());
+    const search = buildFilterSearch('?svcFilter=old.1&uiFind=foo', ['svc-a', 'svc-b'], EMPTY_SPAN_FILTER);
     expect(search).toBe('?uiFind=foo');
   });
 
   it('returns empty string when clearing the only param', () => {
-    const search = buildFilterSearch('?svcFilter=old.1', ['svc-a'], new Set());
+    const search = buildFilterSearch('?svcFilter=old.1', ['svc-a'], EMPTY_SPAN_FILTER);
     expect(search).toBe('');
   });
 
   it('sets svcFilter when services are pruned', () => {
     vi.mocked(encodeSvcFilter).mockReturnValue('abc.1');
-    const search = buildFilterSearch('', ['svc-a', 'svc-b'], new Set(['svc-b']));
+    const search = buildFilterSearch('', ['svc-a', 'svc-b'], serviceFilter('svc-b'));
     expect(search).toBe('?svcFilter=abc.1');
   });
 
   it('preserves existing URL params alongside svcFilter', () => {
     vi.mocked(encodeSvcFilter).mockReturnValue('abc.1');
-    const search = buildFilterSearch('?uiFind=hello', ['svc-a', 'svc-b'], new Set(['svc-b']));
+    const search = buildFilterSearch('?uiFind=hello', ['svc-a', 'svc-b'], serviceFilter('svc-b'));
     expect(search).toContain('uiFind=hello');
     expect(search).toContain('svcFilter=abc.1');
   });
 
+  it('writes every clause other than the service hide set as an f parameter', () => {
+    const filter: ISpanFilter = {
+      clauses: [
+        { verb: 'keep', criterion: { shape: 'set', property: 'status', values: ['error'] } },
+        { verb: 'hide', criterion: { shape: 'attr', text: 'http.method:GET' } },
+      ],
+      treeMode: 'remove',
+    };
+    const search = buildFilterSearch('?uiFind=x', ['svc-a'], filter);
+    expect(search).toBe('?f=k%3Astatus%3Aerror&f=h%3Aattr%3Ahttp.method%3AGET&uiFind=x');
+  });
+
+  it('writes a URL that resolves back to the same filter', () => {
+    const filter: ISpanFilter = {
+      clauses: [
+        { verb: 'keep', criterion: { shape: 'set', property: 'kind', values: ['100%', 'a,b', 'c d'] } },
+        { verb: 'hide', criterion: { shape: 'attr', text: 'http.method:GET' } },
+        { verb: 'hide', criterion: { shape: 'range', property: 'duration', min: 1_234_567, max: 2_000_000 } },
+      ],
+      treeMode: 'remove',
+    };
+    const search = buildFilterSearch('', ['svc-a'], filter);
+    const { filter: resolved } = resolveInitialFilter(search, ['svc-a'], new Set(['svc-a']));
+    expect(resolved).toEqual(filter);
+  });
+
+  it('round-trips a service hide set next to f clauses through the real svcFilter codec', async () => {
+    const actual = await vi.importActual<typeof import('../url/svcFilter')>('../url/svcFilter');
+    vi.mocked(encodeSvcFilter).mockImplementation(actual.encodeSvcFilter);
+    vi.mocked(decodeSvcFilter).mockImplementation(actual.decodeSvcFilter);
+    try {
+      const services = ['svc-a', 'svc-b', 'svc-c'];
+      const filter = withHiddenServices(
+        {
+          clauses: [{ verb: 'keep', criterion: { shape: 'set', property: 'status', values: ['error'] } }],
+          treeMode: 'remove',
+        },
+        new Set(['svc-c'])
+      );
+      const search = buildFilterSearch('?uiFind=x', services, filter);
+      expect(search).toMatch(/svcFilter=/);
+      const { filter: resolved, cleanSearch } = resolveInitialFilter(search, services, new Set(['svc-a']));
+      expect(cleanSearch).toBeUndefined();
+      expect(spanFiltersEqual(resolved, filter)).toBe(true);
+    } finally {
+      vi.mocked(encodeSvcFilter).mockReturnValue(null);
+      vi.mocked(decodeSvcFilter).mockReturnValue(null);
+    }
+  });
+
   it('removes svcFilter when encodeSvcFilter returns null', () => {
     vi.mocked(encodeSvcFilter).mockReturnValue(null);
-    const search = buildFilterSearch('?svcFilter=old.1', ['svc-a'], new Set(['svc-a']));
+    const search = buildFilterSearch('?svcFilter=old.1', ['svc-a'], serviceFilter('svc-a'));
     expect(search).toBe('');
   });
 });
@@ -245,8 +363,8 @@ describe('useServiceFilter hook', () => {
 
   beforeEach(() => {
     mockNavigate.mockClear();
-    mockSetPrunedServices.mockClear();
-    mockStoreState.prunedServices = new Set();
+    mockSetSpanFilter.mockClear();
+    mockStoreState.spanFilter = EMPTY_SPAN_FILTER;
     mockStoreState.detailStates = new Map();
     capturedOnApply = null;
     vi.mocked(useLocation).mockReturnValue({ search: '', pathname: '/trace/abc' } as ReturnType<
@@ -264,10 +382,10 @@ describe('useServiceFilter hook', () => {
     expect(result.current.serviceFilterNode).toBeDefined();
   });
 
-  it('skips setPrunedServices when resolved set equals current state (no-op guard)', () => {
+  it('skips setSpanFilter when the resolved filter equals the current state (no-op guard)', () => {
     // Store already has empty set; resolved is also empty → no write.
     renderHook(() => useServiceFilter(makeTrace(['svc-a', 'svc-b']), 'inline'));
-    expect(mockSetPrunedServices).not.toHaveBeenCalled();
+    expect(mockSetSpanFilter).not.toHaveBeenCalled();
   });
 
   it('decodes svcFilter from URL on mount', () => {
@@ -280,7 +398,7 @@ describe('useServiceFilter hook', () => {
       stale: false,
     });
     renderHook(() => useServiceFilter(makeTrace(['svc-a', 'svc-b']), 'inline'));
-    expect(mockSetPrunedServices).toHaveBeenCalledWith(new Set(['svc-b']));
+    expect(mockSetSpanFilter).toHaveBeenCalledWith(serviceFilter('svc-b'));
   });
 
   it('navigates to clean URL when svcFilter is stale', () => {
@@ -299,7 +417,64 @@ describe('useServiceFilter hook', () => {
   it('reads localStorage defaults when no URL svcFilter', () => {
     localStorage.setItem('svcFilter.defaults', JSON.stringify({ prunedServices: ['svc-b'] }));
     renderHook(() => useServiceFilter(makeTrace(['svc-a', 'svc-b', 'svc-c']), 'inline'));
-    expect(mockSetPrunedServices).toHaveBeenCalledWith(new Set(['svc-b']));
+    expect(mockSetSpanFilter).toHaveBeenCalledWith(serviceFilter('svc-b'));
+  });
+
+  it('does not bring the saved default back when applying an empty selection rewrites the URL', () => {
+    localStorage.setItem('svcFilter.defaults', JSON.stringify({ prunedServices: ['svc-b'] }));
+    const hideErrors: IClause = {
+      verb: 'hide',
+      criterion: { shape: 'set', property: 'status', values: ['error'] },
+    };
+    // A hand-written, unencoded f= value: the apply handler writes it back encoded, which changes
+    // location.search and re-runs the resolve effect.
+    vi.mocked(useLocation).mockReturnValue({
+      search: '?f=h:status:error',
+      pathname: '/trace/abc',
+    } as ReturnType<typeof useLocation>);
+    // The store mock holds what the hook writes, as the real store does.
+    mockSetSpanFilter.mockImplementation((filter: ISpanFilter) => {
+      mockStoreState.spanFilter = filter;
+    });
+    const trace = makeTrace(['svc-a', 'svc-b', 'svc-c']);
+    const { rerender } = render(React.createElement(HookRenderer, { trace, mode: 'inline' }));
+    expect(mockSetSpanFilter).toHaveBeenLastCalledWith(
+      withHiddenServices({ ...EMPTY_SPAN_FILTER, clauses: [hideErrors] }, new Set(['svc-b']))
+    );
+
+    capturedOnApply!(new Set());
+    expect(mockSetSpanFilter).toHaveBeenLastCalledWith({ ...EMPTY_SPAN_FILTER, clauses: [hideErrors] });
+    const navigated = mockNavigate.mock.calls.at(-1)![0] as { search: string };
+    expect(navigated.search).toBe('?f=h%3Astatus%3Aerror');
+
+    vi.mocked(useLocation).mockReturnValue({
+      search: navigated.search,
+      pathname: '/trace/abc',
+    } as ReturnType<typeof useLocation>);
+    rerender(React.createElement(HookRenderer, { trace, mode: 'inline' }));
+    expect(mockSetSpanFilter).toHaveBeenLastCalledWith({ ...EMPTY_SPAN_FILTER, clauses: [hideErrors] });
+    mockSetSpanFilter.mockImplementation(() => undefined);
+  });
+
+  it('applies the saved default to the next trace after an empty selection left the URL unchanged', () => {
+    localStorage.setItem('svcFilter.defaults', JSON.stringify({ prunedServices: ['svc-b'] }));
+    mockSetSpanFilter.mockImplementation((filter: ISpanFilter) => {
+      mockStoreState.spanFilter = filter;
+    });
+    const trace = makeTrace(['svc-a', 'svc-b', 'svc-c']);
+    const { rerender } = render(React.createElement(HookRenderer, { trace, mode: 'inline' }));
+    expect(mockSetSpanFilter).toHaveBeenLastCalledWith(serviceFilter('svc-b'));
+
+    // The URL had no svcFilter and the empty selection writes none, so the resolve effect does
+    // not run for this navigation.
+    capturedOnApply!(new Set());
+    expect(mockSetSpanFilter).toHaveBeenLastCalledWith(EMPTY_SPAN_FILTER);
+    expect((mockNavigate.mock.calls.at(-1)![0] as { search: string }).search).toBe('');
+
+    const next = { ...makeTrace(['svc-a', 'svc-b', 'svc-c']), traceID: 'trace-2' };
+    rerender(React.createElement(HookRenderer, { trace: next, mode: 'inline' }));
+    expect(mockSetSpanFilter).toHaveBeenLastCalledWith(serviceFilter('svc-b'));
+    mockSetSpanFilter.mockImplementation(() => undefined);
   });
 
   function HookRenderer({ trace, mode }: { trace: IOtelTrace; mode: 'inline' | 'sidepanel' }) {
@@ -326,6 +501,42 @@ describe('useServiceFilter hook', () => {
     const storeSetState = (useTraceTimelineStore as unknown as { setState: ReturnType<typeof vi.fn> })
       .setState;
     expect(storeSetState).toHaveBeenCalledWith(expect.objectContaining({ detailStates: new Map() }));
+  });
+
+  it('does not rewrite the store when the URL resolves to the filter it already holds', () => {
+    const keep: IClause = {
+      verb: 'keep',
+      criterion: { shape: 'set', property: 'status', values: ['error'] },
+    };
+    mockStoreState.spanFilter = withHiddenServices(
+      { ...EMPTY_SPAN_FILTER, clauses: [keep] },
+      new Set(['svc-b'])
+    );
+    vi.mocked(decodeSvcFilter).mockReturnValue({ visibleServices: new Set(['svc-a']), stale: false });
+    vi.mocked(useLocation).mockReturnValue({
+      search: '?f=k%3Astatus%3Aerror&svcFilter=abc.1',
+      pathname: '/trace/abc',
+    } as ReturnType<typeof useLocation>);
+    renderHook(() => useServiceFilter(makeTrace(['svc-a', 'svc-b']), 'inline'));
+    expect(mockSetSpanFilter).not.toHaveBeenCalled();
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it('preserves the other clauses when the popover applies a service selection', () => {
+    const keep: IClause = {
+      verb: 'keep',
+      criterion: { shape: 'set', property: 'status', values: ['error'] },
+    };
+    mockStoreState.spanFilter = { ...EMPTY_SPAN_FILTER, clauses: [keep] };
+    render(React.createElement(HookRenderer, { trace: makeTrace(['svc-a', 'svc-b']), mode: 'inline' }));
+    capturedOnApply!(new Set(['svc-b']));
+    expect(mockSetSpanFilter).toHaveBeenLastCalledWith(
+      withHiddenServices({ ...EMPTY_SPAN_FILTER, clauses: [keep] }, new Set(['svc-b']))
+    );
+    expect(mockNavigate).toHaveBeenLastCalledWith(
+      expect.objectContaining({ search: expect.stringContaining('f=k%3Astatus%3Aerror') }),
+      expect.anything()
+    );
   });
 
   it('does not clear detailStates in inline mode when service is pruned via onApply', () => {

@@ -22,7 +22,8 @@ export type Accessors = {
   getBottomRowIndexVisible: () => number;
   getTopRowIndexVisible: () => number;
   getRowPosition: (rowIndex: number) => { height: number; y: number };
-  mapRowIndexToSpanIndex: (rowIndex: number) => number;
+  // Returns undefined when the row does not exist, which happens when the filter hides every span.
+  mapRowIndexToSpanIndex: (rowIndex: number) => number | undefined;
   mapSpanIndexToRowIndex: (spanIndex: number) => number;
 };
 
@@ -113,6 +114,9 @@ export default class ScrollManager {
       boundaryRow = xrs.getBottomRowIndexVisible();
     }
     const spanIndex = xrs.mapRowIndexToSpanIndex(boundaryRow);
+    if (spanIndex == null) {
+      return;
+    }
     if ((spanIndex === 0 && isUp) || (spanIndex === spans.length - 1 && !isUp)) {
       return;
     }

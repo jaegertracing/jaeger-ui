@@ -26,6 +26,7 @@ vi.mock('../../../utils/span-ancestor-ids');
 import getConfig from '../../../utils/config/get-config';
 import filterSpans from '../../../utils/filter-spans';
 import spanAncestorIds from '../../../utils/span-ancestor-ids';
+import { EMPTY_SPAN_FILTER, hiddenServices, withHiddenServices } from '../spanFilter';
 
 async function rehydrateLayoutPrefs() {
   await useLayoutPrefsStore.persist.rehydrate();
@@ -571,7 +572,7 @@ describe('trace timeline zustand stores', () => {
       useTraceTimelineStore.setState({
         childrenHiddenIDs: new Set(['span-x']),
         detailStates: new Map([['span-x', new DetailState()]]),
-        prunedServices: new Set(['service']),
+        spanFilter: withHiddenServices(EMPTY_SPAN_FILTER, new Set(['service'])),
         shouldScrollToFirstUiFindMatch: true,
       });
 
@@ -585,7 +586,7 @@ describe('trace timeline zustand stores', () => {
       expect(state.childrenHiddenIDs).toBe(previous.childrenHiddenIDs);
       expect(state.childrenHiddenIDs.has('arrived')).toBe(false);
       expect(state.detailStates).toBe(previous.detailStates);
-      expect(state.prunedServices).toBe(previous.prunedServices);
+      expect(state.spanFilter).toBe(previous.spanFilter);
       expect(state.shouldScrollToFirstUiFindMatch).toBe(true);
       expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBe(0.5);
     });
@@ -597,7 +598,7 @@ describe('trace timeline zustand stores', () => {
           childrenHiddenIDs: new Set(['span-x']),
           detailStates: new Map([['span-x', new DetailState()]]),
           shouldScrollToFirstUiFindMatch: true,
-          prunedServices: new Set(['svc-a']),
+          spanFilter: withHiddenServices(EMPTY_SPAN_FILTER, new Set(['svc-a'])),
         });
         useTraceTimelineStore.getState().setTrace(makeTrace('new-trace'));
         const s = useTraceTimelineStore.getState();
@@ -605,7 +606,7 @@ describe('trace timeline zustand stores', () => {
         expect(s.childrenHiddenIDs.size).toBe(0);
         expect(s.detailStates.size).toBe(0);
         expect(s.shouldScrollToFirstUiFindMatch).toBe(false);
-        expect(s.prunedServices.size).toBe(0);
+        expect(s.spanFilter).toBe(EMPTY_SPAN_FILTER);
       });
 
       it('preserves layout prefs when traceID changes', () => {
@@ -789,7 +790,9 @@ describe('trace timeline zustand stores', () => {
           expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('root')).toBe(true);
           expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('parent')).toBe(true);
           expect(useTraceTimelineStore.getState().detailStates.size).toBe(0);
-          useTraceTimelineStore.getState().setPrunedServices(new Set(['other-service']));
+          useTraceTimelineStore
+            .getState()
+            .setSpanFilter(withHiddenServices(EMPTY_SPAN_FILTER, new Set(['other-service'])));
 
           useTraceTimelineStore
             .getState()
@@ -800,7 +803,7 @@ describe('trace timeline zustand stores', () => {
           expect(state.childrenHiddenIDs.has('parent')).toBe(false);
           expect(state.detailStates.has('arrived')).toBe(true);
           expect(state.shouldScrollToFirstUiFindMatch).toBe(true);
-          expect(state.prunedServices).toEqual(new Set(['other-service']));
+          expect(hiddenServices(state.spanFilter)).toEqual(new Set(['other-service']));
           expect(useLayoutPrefsStore.getState().detailPanelMode).toBe(detailPanelMode);
           expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBe(0.5);
         }
@@ -1028,22 +1031,11 @@ describe('trace timeline zustand stores', () => {
       });
     });
 
-    describe('setPrunedServices', () => {
-      it('sets the pruned services (cloned, not by reference)', () => {
-        const pruned = new Set(['svc-a', 'svc-b']);
-        useTraceTimelineStore.getState().setPrunedServices(pruned);
-        const stored = useTraceTimelineStore.getState().prunedServices;
-        expect(stored).toEqual(pruned);
-        expect(stored).not.toBe(pruned);
-      });
-    });
-
-    describe('clearServiceFilter', () => {
-      it('resets prunedServices to empty set', () => {
-        useTraceTimelineStore.getState().setPrunedServices(new Set(['svc-a']));
-        expect(useTraceTimelineStore.getState().prunedServices.size).toBe(1);
-        useTraceTimelineStore.getState().clearServiceFilter();
-        expect(useTraceTimelineStore.getState().prunedServices.size).toBe(0);
+    describe('setSpanFilter', () => {
+      it('stores the filter as given', () => {
+        const filter = withHiddenServices(EMPTY_SPAN_FILTER, new Set(['svc-a', 'svc-b']));
+        useTraceTimelineStore.getState().setSpanFilter(filter);
+        expect(useTraceTimelineStore.getState().spanFilter).toBe(filter);
       });
     });
 

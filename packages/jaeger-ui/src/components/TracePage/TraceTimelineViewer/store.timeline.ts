@@ -6,6 +6,7 @@ import DetailState from './SpanDetail/DetailState';
 import { useLayoutPrefsStore } from './store.layout';
 import { TNil } from '../../../types';
 import { IOtelSpan, IOtelTrace, IEvent } from '../../../types/otel';
+import { EMPTY_SPAN_FILTER, ISpanFilter } from '../spanFilter';
 import {
   applyDetailSubsectionToggle,
   calculateFocusedFindRowStates,
@@ -19,9 +20,9 @@ type TraceTimelineInteractionStore = {
   childrenHiddenIDs: Set<string>;
   detailStates: Map<string, DetailState>;
   shouldScrollToFirstUiFindMatch: boolean;
-  prunedServices: Set<string>;
-  setPrunedServices: (pruned: Set<string>) => void;
-  clearServiceFilter: () => void;
+  // The active span filter (RFC 0009). Consumers evaluate it over the trace they render.
+  spanFilter: ISpanFilter;
+  setSpanFilter: (filter: ISpanFilter) => void;
   // Resets ephemeral fields for a new trace and optionally pre-apply a uiFind filter
   setTrace: (trace: IOtelTrace, uiFind?: string | TNil) => void;
   childrenToggle: (spanID: string) => void;
@@ -46,11 +47,9 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
   childrenHiddenIDs: new Set<string>(),
   detailStates: new Map<string, DetailState>(),
   shouldScrollToFirstUiFindMatch: false,
-  prunedServices: new Set<string>(),
+  spanFilter: EMPTY_SPAN_FILTER,
 
-  setPrunedServices: (pruned: Set<string>) => set({ prunedServices: new Set(pruned) }),
-
-  clearServiceFilter: () => set({ prunedServices: new Set<string>() }),
+  setSpanFilter: (filter: ISpanFilter) => set({ spanFilter: filter }),
   setTrace: (trace: IOtelTrace, uiFind?: string | TNil) => {
     const { traceID: currentTraceID, traceSpans } = get();
     if (trace.traceID === currentTraceID && trace.spans === traceSpans) return;
@@ -69,7 +68,7 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
         childrenHiddenIDs: new Set<string>(),
         detailStates: new Map<string, DetailState>(),
         shouldScrollToFirstUiFindMatch: false,
-        prunedServices: new Set<string>(),
+        spanFilter: EMPTY_SPAN_FILTER,
       });
     } else {
       const validSpanIDs = trace.spanMap;

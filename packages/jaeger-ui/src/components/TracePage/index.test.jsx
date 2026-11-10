@@ -23,6 +23,7 @@ import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
 import { trackDetailPanelMode, trackTimelineBarsVisible } from './TraceTimelineViewer/store.track';
 import traceGenerator from '../../demo/trace-generators';
 import transformTraceData from '../../model/transform-trace-data';
+import { EMPTY_SPAN_FILTER, withHiddenServices } from './spanFilter';
 import filterSpansSpy from '../../utils/filter-spans';
 import updateUiFindSpy from '../../utils/update-ui-find';
 import { queryClient } from '../../query/app-query-client';
@@ -138,7 +139,7 @@ const {
   },
   mockTraceTimelineStore: {
     focusUiFindMatches: jest.fn(),
-    prunedServices: new Set(),
+    spanFilter: { clauses: [], treeMode: 'remove' },
   },
   useEmbeddedStateMock: jest.fn().mockReturnValue(null),
   useTraceMock: jest.fn(),
@@ -502,13 +503,13 @@ describe('<TracePage>', () => {
     raw.spans[2].references = [{ refType: 'CHILD_OF', traceID: raw.traceID, spanID: raw.spans[1].spanID }];
     const localTrace = transformTraceData(raw).asOtelTrace();
     useTraceMock.mockReturnValue({ data: localTrace, isPending: false, isError: false, error: null });
-    mockTraceTimelineStore.prunedServices = new Set(['svc-pruned']);
+    mockTraceTimelineStore.spanFilter = withHiddenServices(EMPTY_SPAN_FILTER, new Set(['svc-pruned']));
 
     render(<TracePage {...defaultProps} params={{ id: raw.traceID }} uiFind="everywhere" />);
 
     // Span 1 and its descendant are hidden, so only the root span stays in the count.
     expect(capturedHeaderProps.resultCount).toBe(1);
-    mockTraceTimelineStore.prunedServices = new Set();
+    mockTraceTimelineStore.spanFilter = EMPTY_SPAN_FILTER;
     filterSpansSpy.mockImplementation(() => new Set());
   });
 

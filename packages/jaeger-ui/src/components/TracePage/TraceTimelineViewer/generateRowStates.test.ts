@@ -9,7 +9,7 @@ import DetailState from './SpanDetail/DetailState';
 import { IOtelSpan, StatusCode } from '../../../types/otel';
 import { makeAttributes } from '../../../model/attributes';
 import transformTraceData from '../../../model/transform-trace-data';
-import { hiddenSpanIDsForServices } from '../spanFilter';
+import { EMPTY_SPAN_FILTER, evaluateSpanFilter, withHiddenServices } from '../spanFilter';
 
 function makeSpan(overrides: Partial<IOtelSpan> & { spanID: string; depth: number }): IOtelSpan {
   return {
@@ -29,7 +29,7 @@ function makeSpan(overrides: Partial<IOtelSpan> & { spanID: string; depth: numbe
 //     span-3: svc-c (depth 1)
 // The hidden span set that pruning the given services produces over the spans.
 const hiddenFor = (spans: ReadonlyArray<IOtelSpan>, ...services: string[]) =>
-  hiddenSpanIDsForServices(spans, new Set(services));
+  evaluateSpanFilter(spans, withHiddenServices(EMPTY_SPAN_FILTER, new Set(services))).hiddenIDs;
 
 function makeTestSpans(): IOtelSpan[] {
   return [
@@ -100,6 +100,18 @@ describe('generateRowStates', () => {
       expect(spanIDs).toEqual(['span-0', 'span-3']);
     });
 
+    it('renders no rows and no placeholder when the root itself is hidden', () => {
+      const spans = makeTestSpans();
+      const rows = generateRowStates(
+        spans,
+        new Set(),
+        new Map(),
+        'inline',
+        new Set(spans.map(s => s.spanID))
+      );
+      expect(rows).toEqual([]);
+    });
+
     it('inserts a pruned placeholder with total subtree count', () => {
       const spans = makeTestSpans();
       const rows = generateRowStates(spans, new Set(), new Map(), 'inline', hiddenFor(spans, 'svc-b'));
@@ -163,13 +175,9 @@ describe('service filter pruning on the GenAI sample trace', () => {
   ]);
 
   const visibleSpans = (pruned: Set<string>) =>
-    generateRowStates(
-      trace.spans,
-      new Set(),
-      new Map(),
-      'inline',
-      hiddenSpanIDsForServices(trace.spans, pruned)
-    ).filter(r => !('isPrunedPlaceholder' in r));
+    generateRowStates(trace.spans, new Set(), new Map(), 'inline', hiddenFor(trace.spans, ...pruned)).filter(
+      r => !('isPrunedPlaceholder' in r)
+    );
 
   it('carries GenAI spans in exactly two of its ten services', () => {
     const genAIServices = new Set(
@@ -219,7 +227,7 @@ describe('service filter pruning on the GenAI sample trace', () => {
       new Set(),
       new Map(),
       'inline',
-      hiddenSpanIDsForServices(trace.spans, PLAIN_LEAF_SERVICES)
+      hiddenFor(trace.spans, ...PLAIN_LEAF_SERVICES)
     );
     const placeholders = rows.filter(r => 'isPrunedPlaceholder' in r);
     const hidden = trace.spans.filter(s => PLAIN_LEAF_SERVICES.has(s.resource.serviceName)).length;
