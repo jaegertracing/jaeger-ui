@@ -250,11 +250,15 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 /* The connector glyph marks a row whose parent is hidden, so it was lifted to the nearest
-   visible ancestor. It is muted because it is a hint, not an alarm. */
+   visible ancestor. It is muted because it is a hint, not an alarm. It is raised above the
+   hit-area pseudo-element of the span-name link, which otherwise takes the hover that opens the
+   tooltip. */
 .SpanBarRow--liftedGlyph {
   color: var(--text-secondary);
   cursor: help;
   margin-right: 0.25rem;
+  position: relative;
+  z-index: 1;
 }
 
 /* The hidden-errors badge credits the errors of hidden descendants to their nearest visible
