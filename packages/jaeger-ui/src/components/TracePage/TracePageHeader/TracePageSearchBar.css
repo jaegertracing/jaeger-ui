@@ -50,6 +50,14 @@ SPDX-License-Identifier: Apache-2.0
   font-size: 1.2rem;
 }
 
+/* The question mark keeps its circle inside the box, as the search form's field hints draw it. */
+.TracePageSearchBar--helpBtn svg {
+  font-size: 1rem;
+  padding: 1px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+
 /* The antd buttons take antd's own hover color; the funnel box, which is not an antd button, takes
    the same token so that the row lights up as one. */
 .TracePageSearchBar--filter:hover {
