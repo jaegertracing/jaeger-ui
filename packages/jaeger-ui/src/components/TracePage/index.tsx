@@ -11,7 +11,6 @@ import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
 import memoizeOne from 'memoize-one';
-import { connect } from 'react-redux';
 
 import ArchiveNotifier from './ArchiveNotifier';
 import { useArchiveStore } from '../../stores/archive-store';
@@ -48,7 +47,7 @@ import { getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { parseUiFind } from '../common/UiFindInput';
-import { LocationState, ReduxState, TNil } from '../../types';
+import { LocationState, TNil } from '../../types';
 import { reloadBackendTrace, useTrace } from '../../hooks/useTraceLoading';
 import { isUploadedTrace } from '../SearchTracePage/useUploadedTraces';
 import filterSpans from '../../utils/filter-spans';
@@ -76,11 +75,11 @@ type TOwnProps = {
   onReloadTrace?: () => void;
 };
 
-type TReduxProps = {
+type TUrlProps = {
   uiFind: string | TNil;
 };
 
-type TProps = TOwnProps & TReduxProps;
+type TProps = TOwnProps & TUrlProps;
 
 // export for tests
 export const VIEW_MIN_RANGE = 0.01;
@@ -536,17 +535,6 @@ export function TracePageImpl(props: TProps) {
   );
 }
 
-// export for tests
-export function mapStateToProps(_state: ReduxState, ownProps: { search?: string }): TReduxProps {
-  // uiFind must come from the router search string, not window.location: connect() only re-runs a
-  // one-argument mapStateToProps when Redux state changes, so URL-only updates would leave uiFind stale.
-  return {
-    uiFind: parseUiFind(ownProps.search ?? ''),
-  };
-}
-
-const ConnectedTracePage = connect(mapStateToProps)(TracePageImpl);
-
 type TracePageProps = {
   location: Location<LocationState>;
   params: { id: string };
@@ -568,8 +556,9 @@ export const TracePageRoute = (props: TracePageProps) => {
   }, [traceID]);
 
   return (
-    <ConnectedTracePage
+    <TracePageImpl
       {...props}
+      uiFind={parseUiFind(props.location.search ?? '')}
       onReloadTrace={isUploaded ? undefined : onReloadTrace}
       params={{ ...props.params, id: traceID }}
       archiveEnabled={Boolean(config.archiveEnabled)}
