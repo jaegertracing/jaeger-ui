@@ -31,7 +31,7 @@ vi.mock('antd', () => ({
 const mockLocation = { search: '' };
 const mockNavigate = vi.fn();
 
-vi.mock('../../../../model/path-agnostic-decorations', () => mockDefault(vi.fn(() => ({}))));
+vi.mock('../../../../hooks/usePathAgnosticDecoration', () => mockDefault(vi.fn(() => ({}))));
 vi.mock('react-router-dom', () => ({
   useLocation: () => mockLocation,
   useNavigate: () => mockNavigate,
@@ -51,8 +51,7 @@ vi.mock('../../../common/FilteredList', () =>
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { Provider } from 'react-redux';
-import extractDecorationFromState from '../../../../model/path-agnostic-decorations';
+import usePathAgnosticDecoration from '../../../../hooks/usePathAgnosticDecoration';
 import DdgNodeContentWrapper, {
   getNodeRenderer,
   measureNode,
@@ -74,7 +73,6 @@ describe('<DdgNodeContent>', () => {
   const props = {
     focalNodeUrl: 'some-url',
     focusPathsThroughVertex: vi.fn(),
-    getDecoration: vi.fn(),
     getGenerationVisibility: vi.fn(),
     getVisiblePathElems: vi.fn(),
     hideVertex: vi.fn(),
@@ -95,7 +93,6 @@ describe('<DdgNodeContent>', () => {
   };
 
   beforeEach(() => {
-    props.getDecoration.mockClear();
     props.getGenerationVisibility.mockReturnValue(null).mockClear();
     props.getVisiblePathElems.mockReset();
     props.selectVertex.mockReset();
@@ -158,32 +155,6 @@ describe('<DdgNodeContent>', () => {
 
     rerender(<DdgNodeContent {...props} decorationValue="Error: Status Code 418" />);
     expect(nodeCore).toHaveClass('is-missingDecoration');
-  });
-
-  describe('getDecoration', () => {
-    it('gets decoration on mount or change of props.decorationID iff props.decorationID is truthy', () => {
-      expect(props.getDecoration).not.toHaveBeenCalled();
-
-      const { rerender } = render(<DdgNodeContent {...props} decorationID={decorationID} />);
-      expect(props.getDecoration).toHaveBeenCalledTimes(1);
-      expect(props.getDecoration).toHaveBeenLastCalledWith(decorationID, service, operation);
-
-      rerender(<DdgNodeContent {...props} decorationID={decorationID} />);
-      expect(props.getDecoration).toHaveBeenCalledTimes(1);
-
-      const newDecorationID = `new ${decorationID}`;
-      rerender(<DdgNodeContent {...props} decorationID={newDecorationID} />);
-      expect(props.getDecoration).toHaveBeenCalledTimes(2);
-      expect(props.getDecoration).toHaveBeenLastCalledWith(newDecorationID, service, operation);
-
-      rerender(<DdgNodeContent {...props} decorationID={decorationID} operation={operationArray} />);
-      expect(props.getDecoration).toHaveBeenCalledTimes(3);
-      expect(props.getDecoration).toHaveBeenLastCalledWith(decorationID, service, undefined);
-
-      render(<DdgNodeContent {...props} decorationID={decorationID} />);
-      expect(props.getDecoration).toHaveBeenCalledTimes(4);
-      expect(props.getDecoration).toHaveBeenLastCalledWith(decorationID, service, operation);
-    });
   });
 
   describe('handleClick', () => {
@@ -635,28 +606,42 @@ describe('<DdgNodeContent>', () => {
   });
 
   describe('DdgNodeContentWrapper (default export)', () => {
-    const store = {
-      getState: () => ({}),
-      dispatch: vi.fn(),
-      subscribe: vi.fn(() => vi.fn()),
-    };
+    it.each([17, 'Unable to fetch decoration: offline'])(
+      'renders the query decoration: %s',
+      decorationValue => {
+        usePathAgnosticDecoration.mockReturnValue({
+          decorationID,
+          decorationValue,
+          decorationProgressbar:
+            typeof decorationValue === 'number' ? (
+              <span data-testid="circular-progress-bar">{decorationValue}</span>
+            ) : undefined,
+        });
+        const { container } = render(<DdgNodeContentWrapper {...props} />);
+        if (typeof decorationValue === 'number') {
+          expect(screen.getByTestId('circular-progress-bar')).toHaveTextContent('17');
+          expect(container.querySelector('.DdgNodeContent--core')).toHaveClass('is-decorated');
+        } else {
+          expect(container.querySelector('.DdgNodeContent--core')).toHaveClass('is-missingDecoration');
+        }
+        fireEvent.click(container.querySelector('.DdgNodeContent--core'));
+        expect(props.selectVertex).toHaveBeenCalledWith(props.vertex);
+      }
+    );
 
     beforeEach(() => {
-      extractDecorationFromState.mockClear();
-      extractDecorationFromState.mockReturnValue({});
+      usePathAgnosticDecoration.mockClear();
+      usePathAgnosticDecoration.mockReturnValue({});
     });
 
-    it('injects search from useLocation() into the connected component', () => {
+    it('injects search from useLocation() into the decoration hook', () => {
       mockLocation.search = '?decoration=some-id';
-      render(
-        <Provider store={store}>
-          <DdgNodeContentWrapper {...props} />
-        </Provider>
-      );
-      expect(extractDecorationFromState).toHaveBeenCalledWith(
-        expect.any(Object),
-        expect.objectContaining({ search: '?decoration=some-id' })
-      );
+      render(<DdgNodeContentWrapper {...props} />);
+      expect(usePathAgnosticDecoration).toHaveBeenCalledWith({
+        service,
+        operation,
+        search: '?decoration=some-id',
+      });
     });
   });
 });
