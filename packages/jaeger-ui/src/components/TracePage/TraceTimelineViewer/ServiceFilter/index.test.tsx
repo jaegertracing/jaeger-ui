@@ -644,7 +644,7 @@ describe('SpanFilterButton', () => {
         treeMode: 'remove',
         clauses: [{ ...keepErrors.clauses[0], verb: 'hide' }],
       };
-      renderButton(makeTrace(['svc-a', 'svc-b']), hideErrors);
+      renderButton(makeTrace(['svc-a', 'svc-b']), hideErrors, 0);
       await open();
       const verb = screen.getByRole('button', { name: 'hide, cannot switch' });
       expect(verb).toHaveAttribute('aria-disabled', 'true');
@@ -653,6 +653,10 @@ describe('SpanFilterButton', () => {
       fireEvent.focus(verb);
       // The popover container is a tooltip too, so the reason is looked up by its text.
       await waitFor(() => expect(screen.getByText(/^Keep filters need/)).toBeInTheDocument());
+      // A disabled verb button must not commit a draft that waits for Apply either.
+      fireEvent.click(screen.getAllByRole('checkbox')[1]);
+      screen.getAllByRole('button', { name: 'hide, cannot switch' }).forEach(b => fireEvent.click(b));
+      expect(onChange).not.toHaveBeenCalled();
     });
   });
 

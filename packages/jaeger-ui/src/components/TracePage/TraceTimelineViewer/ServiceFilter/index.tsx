@@ -267,7 +267,7 @@ export default function SpanFilterButton({
                           next ? `${clause.verb}, switch to ${next}` : `${clause.verb}, cannot switch`
                         }
                         aria-disabled={!next}
-                        onClick={() => switchVerb(clause)}
+                        onClick={() => next && switchVerb(clause)}
                       >
                         <VerbIcon verb={clause.verb} />
                       </button>
