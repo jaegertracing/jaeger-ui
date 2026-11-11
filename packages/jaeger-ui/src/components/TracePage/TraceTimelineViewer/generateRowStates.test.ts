@@ -413,7 +413,7 @@ describe('generateRowStates in lift mode', () => {
     expect(tree.hiddenErrors(sibling)).toEqual([]);
   });
 
-  it('lifts past two consecutive hidden spans and names both, nearest first', () => {
+  it('lifts past two consecutive hidden spans and names both, outermost first', () => {
     const spans = makeLiftSpans();
     const [root, mid, leaf] = spans;
     const hideSvcB: ISpanFilter = {
@@ -441,7 +441,7 @@ describe('generateRowStates in lift mode', () => {
     );
     expect(rows.map(r => r.span.spanID)).toEqual(['span-0', 'span-4', 'span-3']);
     expect(tree.parentOf(deep)).toBe(root);
-    expect(tree.liftedPast(deep)).toEqual([leaf, mid]);
+    expect(tree.liftedPast(deep)).toEqual([mid, leaf]);
     expect(tree.isLastChild(deep)).toBe(false);
     expect(tree.isLastChild(spans[3])).toBe(true);
     expect(tree.childCount(root)).toBe(2);

@@ -66,11 +66,23 @@ type SpanBarRowProps = {
 // Hover text on the connector glyph and the hidden-errors badge names this many spans at most.
 export const TOOLTIP_SPAN_LIMIT = 6;
 
-/** Names the first few spans of a list for a tooltip, as "service::operation". */
-export function describeSpans(spans: ReadonlyArray<IOtelSpan>): string {
-  const names = spans.slice(0, TOOLTIP_SPAN_LIMIT).map(s => `${s.resource.serviceName}::${s.name}`);
-  const rest = spans.length - names.length;
-  return rest > 0 ? `${names.join(', ')} and ${rest} more` : names.join(', ');
+/** The body of such a tooltip: a heading and the first few spans, one per line as "service::operation". */
+export function SpanListTooltip({ heading, spans }: { heading: string; spans: ReadonlyArray<IOtelSpan> }) {
+  const shown = spans.slice(0, TOOLTIP_SPAN_LIMIT);
+  const rest = spans.length - shown.length;
+  return (
+    <div className="SpanBarRow--spanList">
+      {heading}
+      <ul>
+        {shown.map((s, i) => (
+          <li key={`${s.spanID}-${i}`}>
+            {s.resource.serviceName}::{s.name}
+          </li>
+        ))}
+        {rest > 0 && <li className="SpanBarRow--spanListMore">and {rest} more</li>}
+      </ul>
+    </div>
+  );
 }
 
 /**
@@ -192,7 +204,13 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
               {liftedPast.length > 0 && (
                 <Tooltip
                   mouseEnterDelay={0}
-                  title={`Lifted past ${liftedPast.length} hidden ${liftedPast.length === 1 ? 'span' : 'spans'}: ${describeSpans(liftedPast)}`}
+                  rootClassName="SpanBarRow--spanListTip"
+                  title={
+                    <SpanListTooltip
+                      heading={`Lifted past ${liftedPast.length} hidden ${liftedPast.length === 1 ? 'span' : 'spans'}`}
+                      spans={liftedPast}
+                    />
+                  }
                 >
                   <span className="SpanBarRow--liftedGlyph" data-testid="lifted-glyph">
                     ⤷
@@ -228,7 +246,11 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
               <SpanPill key={pill.label} pill={pill} />
             ))}
             {hiddenErrors.length > 0 && (
-              <Tooltip mouseEnterDelay={0} title={`Hidden spans with errors: ${describeSpans(hiddenErrors)}`}>
+              <Tooltip
+                mouseEnterDelay={0}
+                rootClassName="SpanBarRow--spanListTip"
+                title={<SpanListTooltip heading="Hidden spans with errors" spans={hiddenErrors} />}
+              >
                 <span className="SpanBarRow--hiddenErrors" data-testid="hidden-errors">
                   <IoAlert className="SpanBarRow--errorIcon SpanBarRow--errorIcon--hollow" />
                   {hiddenErrors.length} hidden {hiddenErrors.length === 1 ? 'error' : 'errors'}

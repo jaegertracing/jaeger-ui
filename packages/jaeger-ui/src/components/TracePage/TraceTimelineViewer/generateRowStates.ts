@@ -39,7 +39,7 @@ export type VisibleTree = {
   depthOf(span: IOtelSpan): number;
   /** The number of children the row's box shows; zero for a leaf. */
   childCount(span: IOtelSpan): number;
-  /** The hidden spans between the span and its visible parent, nearest first; empty unless lifted. */
+  /** The hidden spans between the span and its visible parent, outermost first; empty unless lifted. */
   liftedPast(span: IOtelSpan): ReadonlyArray<IOtelSpan>;
   /** The hidden error spans credited to the span's row, in trace order. */
   hiddenErrors(span: IOtelSpan): ReadonlyArray<IOtelSpan>;
@@ -279,7 +279,7 @@ function buildLiftedTree(spans: ReadonlyArray<IOtelSpan>, hiddenIDs: ReadonlySet
         passed.push(parent);
         parent = parent.parentSpan;
       }
-      return passed;
+      return passed.reverse();
     },
     hiddenErrors: span => hiddenErrors.get(span.spanID) ?? NO_SPANS,
     hiddenErrorIDs: span => {

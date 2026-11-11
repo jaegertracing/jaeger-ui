@@ -5,7 +5,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
-import SpanBarRow, { describeSpans, TOOLTIP_SPAN_LIMIT } from './SpanBarRow';
+import SpanBarRow, { SpanListTooltip, TOOLTIP_SPAN_LIMIT } from './SpanBarRow';
 import SpanTreeOffset from './SpanTreeOffset';
 import SpanBar from './SpanBar';
 import colorGenerator from '../../../utils/color-generator';
@@ -523,17 +523,20 @@ describe('<SpanBarRow>', () => {
     it('marks a lifted row with the connector glyph and names the hidden spans on hover', async () => {
       render(<SpanBarRow {...defaultProps} tree={liftedTree} />);
       fireEvent.mouseEnter(screen.getByTestId('lifted-glyph'));
-      expect(await screen.findByRole('tooltip')).toHaveTextContent(
-        'Lifted past 1 hidden span: mcp-gateway::gateway'
-      );
+      const tooltip = await screen.findByRole('tooltip');
+      expect(tooltip).toHaveTextContent('Lifted past 1 hidden span');
+      expect(tooltip.querySelectorAll('li')).toHaveLength(1);
+      expect(tooltip.querySelector('li')).toHaveTextContent('mcp-gateway::gateway');
     });
 
     it('shows a hidden-errors badge whose hover text names at most a few spans', () => {
       render(<SpanBarRow {...defaultProps} tree={liftedTree} />);
       expect(screen.getByTestId('hidden-errors')).toHaveTextContent('7 hidden errors');
-      const text = describeSpans(liftedTree.hiddenErrors());
-      expect(text.split('k8s-api::GET /pods')).toHaveLength(TOOLTIP_SPAN_LIMIT + 1);
-      expect(text).toMatch(/and 1 more$/);
+      const { container } = render(<SpanListTooltip heading="Hidden" spans={liftedTree.hiddenErrors()} />);
+      const items = container.querySelectorAll('li');
+      expect(items).toHaveLength(TOOLTIP_SPAN_LIMIT + 1);
+      expect(items[0]).toHaveTextContent('k8s-api::GET /pods');
+      expect(items[TOOLTIP_SPAN_LIMIT]).toHaveTextContent('and 1 more');
     });
 
     it('reads whether the row has children from the tree, not from the span', () => {

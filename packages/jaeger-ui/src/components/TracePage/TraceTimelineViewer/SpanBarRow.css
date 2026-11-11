@@ -261,6 +261,28 @@ SPDX-License-Identifier: Apache-2.0
   z-index: 1;
 }
 
+/* The tooltips of the glyph and the badge list spans, so they read smaller than the row and wrap a
+   long span name under its bullet. */
+.ant-tooltip.SpanBarRow--spanListTip {
+  max-width: 360px;
+}
+
+.SpanBarRow--spanListTip .ant-tooltip-inner {
+  font-size: 12px;
+}
+
+.SpanBarRow--spanList ul {
+  margin: 0.25em 0 0;
+  padding-left: 1.25em;
+  overflow-wrap: anywhere;
+}
+
+.SpanBarRow--spanListMore {
+  font-style: italic;
+  list-style: none;
+  margin-left: -1.25em;
+}
+
 /* The hidden-errors badge credits the errors of hidden descendants to their nearest visible
    ancestor, in lift mode, where no pruned placeholder row exists to report them. */
 .SpanBarRow--hiddenErrors {
