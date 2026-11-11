@@ -217,7 +217,9 @@ export function useServiceFilter(
       const nextPruned = sanitizePrunedServices(requested, rootServiceNames);
       zustandSetPrunedServices(nextPruned);
 
-      // If the currently selected span (side panel) is now hidden, deselect it.
+      // If the currently selected span (side panel) is now hidden, deselect it. The hidden set is
+      // computed here for the requested services, once per Apply, in one pass over the spans; the
+      // memoized set that TracePage holds is for the committed services and is not yet updated.
       if (nextPruned.size > 0 && detailPanelMode === 'sidepanel') {
         const currentDetailStates = useTraceTimelineStore.getState().detailStates;
         const currentSelectedID = getSelectedSpanID(currentDetailStates);
