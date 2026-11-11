@@ -13,3 +13,32 @@ SPDX-License-Identifier: Apache-2.0
 .TraceViewSettings--icon {
   font-size: 1.2rem;
 }
+
+.TraceViewSettings--popover {
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+}
+
+.TraceViewSettings--row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.TraceViewSettings--label {
+  font-size: 13px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.TraceViewSettings--divider {
+  margin: 8px 0;
+}
+
+.TraceViewSettings--shortcutsButton {
+  padding: 0;
+  height: auto;
+  font-size: 13px;
+}
