@@ -82,7 +82,7 @@ type TDispatchProps = {
   detailProcessToggle: (spanID: string) => void;
   detailTagsToggle: (spanID: string) => void;
   detailToggle: (spanID: string) => void;
-  setTrace: (trace: IOtelTrace | TNil, uiFind: string | TNil) => void;
+  setTrace: (trace: IOtelTrace | TNil, findMatchesIDs: ReadonlySet<string> | TNil) => void;
   focusUiFindMatches: (
     trace: IOtelTrace,
     matches: string | ReadonlySet<string> | TNil,
@@ -586,13 +586,15 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
   );
 
   const prevTraceRef = useRef<IOtelTrace | TNil | undefined>(undefined);
-  const { trace, uiFind, setTrace } = props;
+  // The focus on load takes the matches the filter leaves visible, the same set the count and the
+  // highlighting use, so a hidden span is never opened or selected.
+  const { trace, findMatchesIDs, setTrace } = props;
   useEffect(() => {
     if (trace !== prevTraceRef.current) {
-      setTrace(trace, uiFind);
+      setTrace(trace, findMatchesIDs);
       prevTraceRef.current = trace;
     }
-  }, [trace, uiFind, setTrace]);
+  }, [trace, findMatchesIDs, setTrace]);
 
   useEffect(() => {
     window.addEventListener('jaeger:list-resize', handleListResize);
@@ -687,8 +689,8 @@ function VirtualizedTraceViewWrapper(
   const focusUiFindMatches = useTraceTimelineStore(s => s.focusUiFindMatches);
 
   const setTrace = useCallback(
-    (trace: IOtelTrace | TNil, uiFindValue: string | TNil) => {
-      if (trace) zustandSetTrace(trace, uiFindValue);
+    (trace: IOtelTrace | TNil, findMatchesIDs: ReadonlySet<string> | TNil) => {
+      if (trace) zustandSetTrace(trace, findMatchesIDs);
     },
     [zustandSetTrace]
   );

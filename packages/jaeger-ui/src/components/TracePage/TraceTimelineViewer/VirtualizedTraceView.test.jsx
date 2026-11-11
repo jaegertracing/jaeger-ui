@@ -168,14 +168,14 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
   it('sets the trace for global state.traceTimeline', () => {
     render(<VirtualizedTraceViewImpl {...mockProps} />);
-    expect(mockProps.setTrace).toHaveBeenCalledWith(trace, mockProps.uiFind);
+    expect(mockProps.setTrace).toHaveBeenCalledWith(trace, mockProps.findMatchesIDs);
 
     const { rerender } = render(<VirtualizedTraceViewImpl {...mockProps} trace={trace} />);
     mockProps.setTrace.mockReset();
     const traceID = 'some-other-id';
     const _trace = { ...trace, traceID };
     rerender(<VirtualizedTraceViewImpl {...mockProps} trace={_trace} />);
-    expect(mockProps.setTrace).toHaveBeenCalledWith(_trace, mockProps.uiFind);
+    expect(mockProps.setTrace).toHaveBeenCalledWith(_trace, mockProps.findMatchesIDs);
   });
 
   describe('props.registerAccessors', () => {
@@ -223,7 +223,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       const newTrace = { ...trace, traceID: 'new-id' };
       rerender(<VirtualizedTraceViewImpl {...mockProps} trace={newTrace} />);
 
-      expect(mockProps.setTrace).toHaveBeenCalledWith(newTrace, mockProps.uiFind);
+      expect(mockProps.setTrace).toHaveBeenCalledWith(newTrace, mockProps.findMatchesIDs);
     });
   });
 

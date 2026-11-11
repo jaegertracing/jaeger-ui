@@ -24,8 +24,9 @@ type TraceTimelineInteractionStore = {
   // The active span filter (RFC 0009). Consumers evaluate it over the trace they render.
   spanFilter: ISpanFilter;
   setSpanFilter: (filter: ISpanFilter) => void;
-  // Resets ephemeral fields for a new trace and optionally pre-apply a uiFind filter
-  setTrace: (trace: IOtelTrace, uiFind?: string | TNil) => void;
+  // Resets ephemeral fields for a new trace and optionally focuses the find matches, given as the
+  // search text or as the set of matching span IDs the filter leaves visible.
+  setTrace: (trace: IOtelTrace, matches?: string | ReadonlySet<string> | TNil) => void;
   childrenToggle: (spanID: string) => void;
   expandAll: () => void;
   expandOne: (spans: ReadonlyArray<CollapseTarget>) => void;
@@ -55,7 +56,7 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
   spanFilter: EMPTY_SPAN_FILTER,
 
   setSpanFilter: (filter: ISpanFilter) => set({ spanFilter: filter }),
-  setTrace: (trace: IOtelTrace, uiFind?: string | TNil) => {
+  setTrace: (trace: IOtelTrace, matches?: string | ReadonlySet<string> | TNil) => {
     const { traceID: currentTraceID, traceSpans } = get();
     if (trace.traceID === currentTraceID && trace.spans === traceSpans) return;
 
@@ -97,8 +98,8 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
       }
     }
 
-    if (uiFind) {
-      let focused = calculateFocusedFindRowStates(uiFind, trace.spans);
+    if (matches) {
+      let focused = calculateFocusedFindRowStates(matches, trace.spans);
       focused = trimFocusedDetailStatesForSidePanel(focused, detailPanelMode);
       Object.assign(base, focused);
     }

@@ -824,6 +824,15 @@ describe('trace timeline zustand stores', () => {
         expect(useTraceTimelineStore.getState().shouldScrollToFirstUiFindMatch).toBe(true);
       });
 
+      it('focuses a given set of matches without searching the spans again', () => {
+        vi.mocked(filterSpans).mockClear();
+        vi.mocked(spanAncestorIds).mockReturnValue([]);
+        useTraceTimelineStore.getState().setTrace(makeTrace('t1'), new Set(['span-1']));
+        expect(filterSpans).not.toHaveBeenCalled();
+        expect(useTraceTimelineStore.getState().detailStates.has('span-1')).toBe(true);
+        expect(useTraceTimelineStore.getState().shouldScrollToFirstUiFindMatch).toBe(true);
+      });
+
       it('trims uiFind detailStates to one entry when in side-panel mode', () => {
         vi.mocked(filterSpans).mockReturnValue(new Set(['span-a', 'span-b']));
         vi.mocked(spanAncestorIds).mockReturnValue([]);
