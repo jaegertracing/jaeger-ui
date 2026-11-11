@@ -364,7 +364,7 @@ export default function SpanFilterButton({
   return (
     <Popover
       content={content}
-      title="Filter spans"
+      title={<span className="SpanFilter--title">Filter spans</span>}
       trigger="click"
       open={open}
       onOpenChange={handleOpenChange}

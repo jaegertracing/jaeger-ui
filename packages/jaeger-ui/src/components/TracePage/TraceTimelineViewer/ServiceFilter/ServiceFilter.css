@@ -123,6 +123,12 @@ SPDX-License-Identifier: Apache-2.0
   padding: 0 3px;
 }
 
+/* The popover title is larger than the section titles, which antd would otherwise draw at the same
+   size and weight. */
+.SpanFilter--title {
+  font-size: 1.15em;
+}
+
 /* The width is fixed, so that a chip or a value list coming and going does not resize the panel. */
 .SpanFilter--popover {
   width: 420px;
