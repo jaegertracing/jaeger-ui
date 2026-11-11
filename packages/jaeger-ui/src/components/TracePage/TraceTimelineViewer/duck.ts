@@ -22,6 +22,8 @@ import {
   MIN_TIMELINE_COLUMN_WIDTH,
 } from './store.constants';
 import { getMaxNameColumnWidth } from './store.layout';
+import storage from '../../../utils/storage';
+import { shouldDisableCollapse } from './timeline-utils';
 
 // payloads
 export type TSpanIdLogValue = { logItem: IEvent; spanID: string };
@@ -45,16 +47,11 @@ type TTimelineViewerActions = {
   [actionName: string]: ActionFunctionAny<Action<TActionTypes>>;
 };
 
-function shouldDisableCollapse(allSpans: IOtelSpan[], hiddenSpansIds: Set<string>) {
-  const allParentSpans = allSpans.filter(s => s.hasChildren);
-  return allParentSpans.length === hiddenSpansIds.size;
-}
-
 export function newInitialState(): TTraceTimeline {
   const { traceTimeline } = getConfig();
   let detailPanelMode: 'inline' | 'sidepanel' = 'inline';
   if (traceTimeline?.enableSidePanel) {
-    const stored = localStorage.getItem('detailPanelMode');
+    const stored = storage.getItem('detailPanelMode');
     if (stored === 'sidepanel') {
       detailPanelMode = 'sidepanel';
     } else if (traceTimeline.defaultDetailPanelMode === 'sidepanel' && stored === null) {
@@ -63,15 +60,15 @@ export function newInitialState(): TTraceTimeline {
   }
 
   // localStorage key kept as 'timelineVisible' for backward compatibility with stored user preferences.
-  const storedTimelineVisible = localStorage.getItem('timelineVisible');
+  const storedTimelineVisible = storage.getItem('timelineVisible');
   const timelineBarsVisible = storedTimelineVisible === null ? true : storedTimelineVisible !== 'false';
 
-  const parsedSpanNameColumnWidth = parseFloat(localStorage.getItem('spanNameColumnWidth') ?? '');
+  const parsedSpanNameColumnWidth = parseFloat(storage.getItem('spanNameColumnWidth') ?? '');
   let spanNameColumnWidth = Number.isNaN(parsedSpanNameColumnWidth)
     ? 0.25
     : Math.min(Math.max(parsedSpanNameColumnWidth, SPAN_NAME_COLUMN_WIDTH_MIN), SPAN_NAME_COLUMN_WIDTH_MAX);
 
-  const parsedSidePanelWidth = parseFloat(localStorage.getItem('sidePanelWidth') ?? '');
+  const parsedSidePanelWidth = parseFloat(storage.getItem('sidePanelWidth') ?? '');
   const sidePanelWidthExplicit = !Number.isNaN(parsedSidePanelWidth);
   // Default: equal split between timeline and span details columns, clamped to allowed range.
   const rawSidePanelWidth = sidePanelWidthExplicit ? parsedSidePanelWidth : (1 - spanNameColumnWidth) / 2;
@@ -112,7 +109,6 @@ export function newInitialState(): TTraceTimeline {
     childrenHiddenIDs: new Set(),
     detailStates: new Map(),
     detailPanelMode,
-    hoverIndentGuideIds: new Set(),
     shouldScrollToFirstUiFindMatch: false,
     sidePanelWidth,
     spanNameColumnWidth,
@@ -122,7 +118,6 @@ export function newInitialState(): TTraceTimeline {
 }
 
 export const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer', [
-  'ADD_HOVER_INDENT_GUIDE_ID',
   'CHILDREN_TOGGLE',
   'CLEAR_SHOULD_SCROLL_TO_FIRST_UI_FIND_MATCH',
   'COLLAPSE_ALL',
@@ -137,7 +132,6 @@ export const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer
   'EXPAND_ALL',
   'EXPAND_ONE',
   'FOCUS_UI_FIND_MATCHES',
-  'REMOVE_HOVER_INDENT_GUIDE_ID',
   'SET_DETAIL_PANEL_MODE',
   'SET_SIDE_PANEL_WIDTH',
   'SET_SPAN_NAME_COLUMN_WIDTH',
@@ -146,7 +140,6 @@ export const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer
 ]);
 
 const fullActions = createActions<TActionTypes>({
-  [actionTypes.ADD_HOVER_INDENT_GUIDE_ID]: (spanID: string) => ({ spanID }),
   [actionTypes.CHILDREN_TOGGLE]: (spanID: string) => ({ spanID }),
   [actionTypes.CLEAR_SHOULD_SCROLL_TO_FIRST_UI_FIND_MATCH]: () => ({}),
   [actionTypes.COLLAPSE_ALL]: (spans: IOtelSpan[]) => ({ spans }),
@@ -165,7 +158,6 @@ const fullActions = createActions<TActionTypes>({
     uiFind,
     allowHide,
   }),
-  [actionTypes.REMOVE_HOVER_INDENT_GUIDE_ID]: (spanID: string) => ({ spanID }),
   [actionTypes.SET_DETAIL_PANEL_MODE]: (mode: 'inline' | 'sidepanel') => ({ mode }),
   [actionTypes.SET_SIDE_PANEL_WIDTH]: (width: number) => ({ width }),
   [actionTypes.SET_SPAN_NAME_COLUMN_WIDTH]: (width: number) => ({ width }),
@@ -413,23 +405,8 @@ function detailLogItemToggle(state: TTraceTimeline, { spanID, logItem }: TSpanId
   return { ...state, detailStates };
 }
 
-function addHoverIndentGuideId(state: TTraceTimeline, { spanID }: TSpanIdValue) {
-  const newHoverIndentGuideIds = new Set(state.hoverIndentGuideIds);
-  newHoverIndentGuideIds.add(spanID);
-
-  return { ...state, hoverIndentGuideIds: newHoverIndentGuideIds };
-}
-
-function removeHoverIndentGuideId(state: TTraceTimeline, { spanID }: TSpanIdValue) {
-  const newHoverIndentGuideIds = new Set(state.hoverIndentGuideIds);
-  newHoverIndentGuideIds.delete(spanID);
-
-  return { ...state, hoverIndentGuideIds: newHoverIndentGuideIds };
-}
-
 export default handleActions<TTraceTimeline, any>(
   {
-    [actionTypes.ADD_HOVER_INDENT_GUIDE_ID]: guardReducer(addHoverIndentGuideId),
     [actionTypes.CHILDREN_TOGGLE]: guardReducer(childrenToggle),
     [actionTypes.CLEAR_SHOULD_SCROLL_TO_FIRST_UI_FIND_MATCH]: guardReducer(
       clearShouldScrollToFirstUiFindMatch
@@ -446,7 +423,6 @@ export default handleActions<TTraceTimeline, any>(
     [actionTypes.EXPAND_ALL]: guardReducer(expandAll),
     [actionTypes.EXPAND_ONE]: guardReducer(expandOne),
     [actionTypes.FOCUS_UI_FIND_MATCHES]: guardReducer(focusUiFindMatches),
-    [actionTypes.REMOVE_HOVER_INDENT_GUIDE_ID]: guardReducer(removeHoverIndentGuideId),
     [actionTypes.SET_DETAIL_PANEL_MODE]: guardReducer(setDetailPanelMode),
     [actionTypes.SET_SIDE_PANEL_WIDTH]: guardReducer(setSidePanelWidth),
     [actionTypes.SET_SPAN_NAME_COLUMN_WIDTH]: guardReducer(setColumnWidth),

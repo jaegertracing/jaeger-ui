@@ -29,10 +29,12 @@ vi.mock('antd', () => ({
 
 // Mutable object so individual tests can control the location without re-creating the mock.
 const mockLocation = { search: '' };
+const mockNavigate = vi.fn();
 
-vi.mock('../../../../model/path-agnostic-decorations', () => mockDefault(jest.fn(() => ({}))));
+vi.mock('../../../../hooks/usePathAgnosticDecoration', () => mockDefault(vi.fn(() => ({}))));
 vi.mock('react-router-dom', () => ({
   useLocation: () => mockLocation,
+  useNavigate: () => mockNavigate,
 }));
 vi.mock('../../../common/FilteredList', () =>
   mockDefault(({ options, setValue }) => (
@@ -49,15 +51,13 @@ vi.mock('../../../common/FilteredList', () =>
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { Provider } from 'react-redux';
-import extractDecorationFromState from '../../../../model/path-agnostic-decorations';
+import usePathAgnosticDecoration from '../../../../hooks/usePathAgnosticDecoration';
 import DdgNodeContentWrapper, {
   getNodeRenderer,
   measureNode,
-  mapDispatchToProps,
   UnconnectedDdgNodeContent as DdgNodeContent,
 } from '.';
-import { MAX_LENGTH, MAX_LINKED_TRACES, MIN_LENGTH, PARAM_NAME_LENGTH, RADIUS } from './constants';
+import { RADIUS } from './constants';
 import * as track from '../../index.track';
 import * as getSearchUrl from '../../../SearchTracePage/url';
 
@@ -72,27 +72,27 @@ describe('<DdgNodeContent>', () => {
   const vertexKey = 'some-key';
   const props = {
     focalNodeUrl: 'some-url',
-    focusPathsThroughVertex: jest.fn(),
-    getDecoration: jest.fn(),
-    getGenerationVisibility: jest.fn(),
-    getVisiblePathElems: jest.fn(),
-    hideVertex: jest.fn(),
+    focusPathsThroughVertex: vi.fn(),
+    getGenerationVisibility: vi.fn(),
+    getVisiblePathElems: vi.fn(),
+    hideVertex: vi.fn(),
     isFocalNode: false,
     isPositioned: true,
     operation,
-    selectVertex: jest.fn(),
-    setOperation: jest.fn(),
-    setViewModifier: jest.fn(),
+    selectVertex: vi.fn(),
+    setOperation: vi.fn(),
+    setViewModifier: vi.fn(),
     service,
-    updateGenerationVisibility: jest.fn(),
+    updateGenerationVisibility: vi.fn(),
     vertex: {
       key: vertexKey,
     },
     vertexKey,
+    navigate: mockNavigate,
+    search: '',
   };
 
   beforeEach(() => {
-    props.getDecoration.mockClear();
     props.getGenerationVisibility.mockReturnValue(null).mockClear();
     props.getVisiblePathElems.mockReset();
     props.selectVertex.mockReset();
@@ -155,32 +155,6 @@ describe('<DdgNodeContent>', () => {
 
     rerender(<DdgNodeContent {...props} decorationValue="Error: Status Code 418" />);
     expect(nodeCore).toHaveClass('is-missingDecoration');
-  });
-
-  describe('getDecoration', () => {
-    it('gets decoration on mount or change of props.decorationID iff props.decorationID is truthy', () => {
-      expect(props.getDecoration).not.toHaveBeenCalled();
-
-      const { rerender } = render(<DdgNodeContent {...props} decorationID={decorationID} />);
-      expect(props.getDecoration).toHaveBeenCalledTimes(1);
-      expect(props.getDecoration).toHaveBeenLastCalledWith(decorationID, service, operation);
-
-      rerender(<DdgNodeContent {...props} decorationID={decorationID} />);
-      expect(props.getDecoration).toHaveBeenCalledTimes(1);
-
-      const newDecorationID = `new ${decorationID}`;
-      rerender(<DdgNodeContent {...props} decorationID={newDecorationID} />);
-      expect(props.getDecoration).toHaveBeenCalledTimes(2);
-      expect(props.getDecoration).toHaveBeenLastCalledWith(newDecorationID, service, operation);
-
-      rerender(<DdgNodeContent {...props} decorationID={decorationID} operation={operationArray} />);
-      expect(props.getDecoration).toHaveBeenCalledTimes(3);
-      expect(props.getDecoration).toHaveBeenLastCalledWith(decorationID, service, undefined);
-
-      render(<DdgNodeContent {...props} decorationID={decorationID} />);
-      expect(props.getDecoration).toHaveBeenCalledTimes(4);
-      expect(props.getDecoration).toHaveBeenLastCalledWith(decorationID, service, operation);
-    });
   });
 
   describe('handleClick', () => {
@@ -317,7 +291,7 @@ describe('<DdgNodeContent>', () => {
     let mockQuerySelector;
 
     beforeEach(() => {
-      mockGetBoundingClientRect = jest.fn(() => ({
+      mockGetBoundingClientRect = vi.fn(() => ({
         top: 100,
         bottom: 200,
         left: 50,
@@ -326,7 +300,7 @@ describe('<DdgNodeContent>', () => {
         height: 100,
       }));
 
-      mockQuerySelector = jest.fn(selector => {
+      mockQuerySelector = vi.fn(selector => {
         if (selector === '.DdgHeader--controlHeader') {
           return {
             getBoundingClientRect: () => ({
@@ -345,11 +319,11 @@ describe('<DdgNodeContent>', () => {
       Element.prototype.getBoundingClientRect = mockGetBoundingClientRect;
       document.querySelector = mockQuerySelector;
 
-      jest.spyOn(global, 'setTimeout').mockImplementation(fn => fn());
+      vi.spyOn(global, 'setTimeout').mockImplementation(fn => fn());
     });
 
     afterEach(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     it('positions tooltip below when node is near header', () => {
@@ -477,25 +451,16 @@ describe('<DdgNodeContent>', () => {
     });
   });
 
-  describe('mapDispatchToProps()', () => {
-    it('creates the actions correctly', () => {
-      expect(mapDispatchToProps(() => {})).toEqual({
-        getDecoration: expect.any(Function),
-      });
-    });
-  });
-
   describe('event handlers', () => {
     beforeEach(() => {
-      jest.spyOn(track, 'trackSetFocus');
-      jest.spyOn(track, 'trackViewTraces');
-      jest.spyOn(track, 'trackVertexSetOperation');
-      jest.spyOn(getSearchUrl, 'getUrl');
-      jest.spyOn(window, 'open').mockImplementation();
+      vi.spyOn(track, 'trackSetFocus');
+      vi.spyOn(track, 'trackViewTraces');
+      vi.spyOn(track, 'trackVertexSetOperation');
+      vi.spyOn(getSearchUrl, 'getUrl');
     });
 
     afterEach(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     describe('focusPaths', () => {
@@ -569,19 +534,23 @@ describe('<DdgNodeContent>', () => {
     });
 
     describe('viewTraces', () => {
-      const mockTraceIds = ['trace1', 'trace2', 'trace3'];
-      const mockPathElems = [
-        { memberOf: { traceIDs: ['trace1'] } },
-        { memberOf: { traceIDs: ['trace2'] } },
-        { memberOf: { traceIDs: ['trace3'] } },
-      ];
-
       beforeEach(() => {
-        props.getVisiblePathElems.mockReturnValue(mockPathElems);
-        getSearchUrl.getUrl.mockImplementation(params => `mock-search-url-${params.traceID.join('-')}`);
+        mockNavigate.mockClear();
+        vi.spyOn(getSearchUrl, 'getUrlState').mockReturnValue({
+          start: '123',
+          end: '456',
+          lookback: '1h',
+          limit: '50',
+          minDuration: '100ms',
+          maxDuration: '1s',
+          tags: 'http.status_code=500',
+          traceID: ['t1'],
+          spanLinks: { t1: 's1' },
+        });
+        getSearchUrl.getUrl.mockImplementation(params => `mock-search-url-for-${params.service}`);
       });
 
-      it('opens search URL with trace IDs and tracks the event', () => {
+      it('navigates to search URL with the node service and operation, preserving original time/filters but without trace IDs', () => {
         const { container } = render(<DdgNodeContent {...props} />);
 
         const actionItems = container.querySelectorAll('.NodeContent--actionsItem');
@@ -592,69 +561,27 @@ describe('<DdgNodeContent>', () => {
         fireEvent.click(viewTracesAction);
 
         expect(track.trackViewTraces).toHaveBeenCalled();
-        expect(getSearchUrl.getUrl).toHaveBeenCalledWith({ traceID: mockTraceIds });
-        expect(window.open).toHaveBeenCalledWith('mock-search-url-trace1-trace2-trace3', '_blank');
-      });
-
-      it('handles case when getVisiblePathElems returns undefined', () => {
-        props.getVisiblePathElems.mockReturnValue(undefined);
-
-        const { container } = render(<DdgNodeContent {...props} />);
-
-        const actionItems = container.querySelectorAll('.NodeContent--actionsItem');
-        const viewTracesAction = Array.from(actionItems).find(item =>
-          item.textContent.includes('View traces')
-        );
-
-        fireEvent.click(viewTracesAction);
-
-        expect(track.trackViewTraces).toHaveBeenCalled();
-        expect(getSearchUrl.getUrl).not.toHaveBeenCalled();
-        expect(window.open).not.toHaveBeenCalled();
-      });
-
-      it('respects MAX_LINKED_TRACES limit', () => {
-        const mockElems = [];
-        for (let i = 0; i < MAX_LINKED_TRACES + 5; i++) {
-          mockElems.push({
-            memberOf: {
-              traceIDs: [`trace-${i}`],
-            },
-          });
-        }
-        props.getVisiblePathElems.mockReturnValue(mockElems);
-
-        const { container } = render(<DdgNodeContent {...props} />);
-
-        const actionItems = container.querySelectorAll('.NodeContent--actionsItem');
-        const viewTracesAction = Array.from(actionItems).find(item =>
-          item.textContent.includes('View traces')
-        );
-
-        fireEvent.click(viewTracesAction);
-
-        const expectedTraceIds = [];
-        for (let i = 0; i < MAX_LINKED_TRACES; i++) {
-          expectedTraceIds.push(`trace-${i}`);
-        }
+        expect(getSearchUrl.getUrlState).toHaveBeenCalledWith(props.search);
 
         expect(getSearchUrl.getUrl).toHaveBeenCalledWith({
-          traceID: expectedTraceIds,
+          start: '123',
+          end: '456',
+          lookback: '1h',
+          limit: '50',
+          minDuration: '100ms',
+          maxDuration: '1s',
+          tags: 'http.status_code=500',
+          service: props.service,
+          operation: props.operation,
         });
-        expect(window.open).toHaveBeenCalledWith(`mock-search-url-${expectedTraceIds.join('-')}`, '_blank');
+        expect(mockNavigate).toHaveBeenCalledWith({
+          pathname: `mock-search-url-for-${props.service}`,
+          search: '',
+        });
       });
 
-      it('respects MAX_LENGTH limit', () => {
-        const longTraceId = 'a'.repeat(MAX_LENGTH - MIN_LENGTH - PARAM_NAME_LENGTH);
-        const shortTraceId = 'b'.repeat(10);
-
-        const mockElems = [
-          { memberOf: { traceIDs: [longTraceId] } },
-          { memberOf: { traceIDs: [shortTraceId] } },
-        ];
-        props.getVisiblePathElems.mockReturnValue(mockElems);
-
-        const { container } = render(<DdgNodeContent {...props} />);
+      it('navigates to search URL omitting operation when operation is an array', () => {
+        const { container } = render(<DdgNodeContent {...props} operation={['op1', 'op2']} />);
 
         const actionItems = container.querySelectorAll('.NodeContent--actionsItem');
         const viewTracesAction = Array.from(actionItems).find(item =>
@@ -664,60 +591,57 @@ describe('<DdgNodeContent>', () => {
         fireEvent.click(viewTracesAction);
 
         expect(getSearchUrl.getUrl).toHaveBeenCalledWith({
-          traceID: [longTraceId],
+          start: '123',
+          end: '456',
+          lookback: '1h',
+          limit: '50',
+          minDuration: '100ms',
+          maxDuration: '1s',
+          tags: 'http.status_code=500',
+          service: props.service,
+          operation: undefined,
         });
-        expect(window.open).toHaveBeenCalledWith(`mock-search-url-${longTraceId}`, '_blank');
-      });
-
-      it('handles duplicate trace IDs', () => {
-        const traceId = 'duplicate-trace';
-        const mockElems = [
-          { memberOf: { traceIDs: [traceId] } },
-          { memberOf: { traceIDs: [traceId] } },
-          { memberOf: { traceIDs: [null, traceId] } },
-        ];
-        props.getVisiblePathElems.mockReturnValue(mockElems);
-
-        const { container } = render(<DdgNodeContent {...props} />);
-
-        const actionItems = container.querySelectorAll('.NodeContent--actionsItem');
-        const viewTracesAction = Array.from(actionItems).find(item =>
-          item.textContent.includes('View traces')
-        );
-
-        fireEvent.click(viewTracesAction);
-
-        expect(getSearchUrl.getUrl).toHaveBeenCalledWith({
-          traceID: [traceId],
-        });
-        expect(window.open).toHaveBeenCalledWith(`mock-search-url-${traceId}`, '_blank');
       });
     });
   });
 
   describe('DdgNodeContentWrapper (default export)', () => {
-    const store = {
-      getState: () => ({}),
-      dispatch: jest.fn(),
-      subscribe: jest.fn(() => jest.fn()),
-    };
+    it.each([17, 'Unable to fetch decoration: offline'])(
+      'renders the query decoration: %s',
+      decorationValue => {
+        usePathAgnosticDecoration.mockReturnValue({
+          decorationID,
+          decorationValue,
+          decorationProgressbar:
+            typeof decorationValue === 'number' ? (
+              <span data-testid="circular-progress-bar">{decorationValue}</span>
+            ) : undefined,
+        });
+        const { container } = render(<DdgNodeContentWrapper {...props} />);
+        if (typeof decorationValue === 'number') {
+          expect(screen.getByTestId('circular-progress-bar')).toHaveTextContent('17');
+          expect(container.querySelector('.DdgNodeContent--core')).toHaveClass('is-decorated');
+        } else {
+          expect(container.querySelector('.DdgNodeContent--core')).toHaveClass('is-missingDecoration');
+        }
+        fireEvent.click(container.querySelector('.DdgNodeContent--core'));
+        expect(props.selectVertex).toHaveBeenCalledWith(props.vertex);
+      }
+    );
 
     beforeEach(() => {
-      extractDecorationFromState.mockClear();
-      extractDecorationFromState.mockReturnValue({});
+      usePathAgnosticDecoration.mockClear();
+      usePathAgnosticDecoration.mockReturnValue({});
     });
 
-    it('injects search from useLocation() into the connected component', () => {
+    it('injects search from useLocation() into the decoration hook', () => {
       mockLocation.search = '?decoration=some-id';
-      render(
-        <Provider store={store}>
-          <DdgNodeContentWrapper {...props} />
-        </Provider>
-      );
-      expect(extractDecorationFromState).toHaveBeenCalledWith(
-        expect.any(Object),
-        expect.objectContaining({ search: '?decoration=some-id' })
-      );
+      render(<DdgNodeContentWrapper {...props} />);
+      expect(usePathAgnosticDecoration).toHaveBeenCalledWith({
+        service,
+        operation,
+        search: '?decoration=some-id',
+      });
     });
   });
 });

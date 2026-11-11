@@ -4,9 +4,9 @@
 
 ### Dependencies (dev and otherwise)
 
-#### `eslint-plugin-react-x`
+#### React hooks rules
 
-Used by Oxlint (via `jsPlugins`) to enforce React hooks rules (`react-x/rules-of-hooks`, `react-x/exhaustive-deps`). Oxlint does not have a native implementation of hooks rules and delegates to this ESLint plugin.
+Oxlint natively enforces React hooks rules through `react/rules-of-hooks` and `react/exhaustive-deps`.
 
 #### `typescript`
 

@@ -14,6 +14,7 @@ import { Hyperlink } from '../../../../types/hyperlink';
 import { IEvent, IAttributes } from '../../../../types/otel';
 
 import './AccordionEvents.css';
+import accordionToggle from './accordionToggle';
 
 type AccordionEventsProps = {
   interactive?: boolean;
@@ -165,7 +166,7 @@ export default function AccordionEvents({
     HeaderComponent = 'a';
     headerProps = {
       'aria-checked': isOpen,
-      onClick: onToggle,
+      onClick: accordionToggle(onToggle),
       role: 'switch',
     };
   }

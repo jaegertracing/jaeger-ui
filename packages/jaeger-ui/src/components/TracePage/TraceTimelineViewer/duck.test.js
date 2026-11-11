@@ -117,7 +117,10 @@ describe('TraceTimelineViewer/duck', () => {
     let focusUiFindMatchesStore;
     let state;
 
-    beforeAll(() => {
+    // Dispatching per test rather than once for the suite, because Vitest clears
+    // mock call history before each test and the assertions below read the calls
+    // the dispatch makes.
+    beforeEach(() => {
       filterSpansSpy.mockReturnValue(uiFindMatches);
       spanAncestorIdsSpy.mockImplementation(({ spanID }) => uiFindAncestorIdsMockSchema[spanID]);
       focusUiFindMatchesStore = createStore(reducer, newInitialState());
@@ -362,6 +365,25 @@ describe('TraceTimelineViewer/duck', () => {
         const { childrenHiddenIDs } = reducerFn({ childrenHiddenIDs: initial }, { spans });
         expect(childrenHiddenIDs).toEqual(resultant);
       });
+    });
+
+    // Pins the fix for the two divergent shouldDisableCollapse implementations: the old
+    // duck.ts copy compared sizes (allParentSpans.length === hiddenSpansIds.size), so a set
+    // the same size as the parent count but holding the wrong IDs was mistaken for "every
+    // parent already hidden" and the reducer no-opped instead of collapsing.
+    const wrongIdsSameSize = new Set([0, 1, 99]);
+
+    it('collapseAll collapses when the hidden set is the right size but the wrong spans', () => {
+      const { childrenHiddenIDs } = collapseAll({ childrenHiddenIDs: wrongIdsSameSize }, { spans });
+      expect(childrenHiddenIDs).toEqual(allSpansCollapsed);
+    });
+
+    it('collapseOne collapses when the hidden set is the right size but the wrong spans', () => {
+      const { childrenHiddenIDs } = collapseOne({ childrenHiddenIDs: wrongIdsSameSize }, { spans });
+      // collapseOne layers onto the existing set rather than rebuilding it, so the stray id
+      // from the malformed input survives; what the guard being right actually buys is that
+      // span 3, the parent collapseOne should have found and hidden, is no longer skipped.
+      expect(childrenHiddenIDs.has(3)).toBe(true);
     });
 
     // Tests to verify correct behaviour of actions
@@ -661,6 +683,22 @@ describe('TraceTimelineViewer/duck', () => {
       localStorage.setItem('detailPanelMode', 'sidepanel');
       expect(newInitialState().detailPanelMode).toBe('inline');
     });
+
+    // newInitialState() is the reducer's initial state, evaluated when this module is
+    // imported, so a throw here would take down the whole app rather than one preference.
+    it('falls back to defaults when the browser blocks storage', () => {
+      const getItem = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+        throw new DOMException('SecurityError');
+      });
+      try {
+        const state = newInitialState();
+        expect(state.detailPanelMode).toBe('inline');
+        expect(state.timelineBarsVisible).toBe(true);
+        expect(state.spanNameColumnWidth).toBe(0.25);
+      } finally {
+        getItem.mockRestore();
+      }
+    });
   });
 
   describe('newInitialState localStorage parsing', () => {
@@ -759,47 +797,6 @@ describe('TraceTimelineViewer/duck', () => {
     it('uses default spanNameColumnWidth of 0.25 when localStorage is empty', () => {
       const state = newInitialState();
       expect(state.spanNameColumnWidth).toBe(0.25);
-    });
-  });
-
-  describe('hoverIndentGuideIds', () => {
-    const existingSpanId = 'existingSpanId';
-    const newSpanId = 'newSpanId';
-
-    it('the initial state has an empty set of hoverIndentGuideIds', () => {
-      const state = store.getState();
-      expect(state.hoverIndentGuideIds).toEqual(new Set());
-    });
-
-    it('adds a spanID to an initial state', () => {
-      const action = actions.addHoverIndentGuideId(newSpanId);
-      store.dispatch(action);
-      expect(store.getState().hoverIndentGuideIds).toEqual(new Set([newSpanId]));
-    });
-
-    it('adds a spanID to a populated state', () => {
-      store = createStore(reducer, {
-        hoverIndentGuideIds: new Set([existingSpanId]),
-      });
-      const action = actions.addHoverIndentGuideId(newSpanId);
-      store.dispatch(action);
-      expect(store.getState().hoverIndentGuideIds).toEqual(new Set([existingSpanId, newSpanId]));
-    });
-
-    it('should not error when removing a spanID from an initial state', () => {
-      const action = actions.removeHoverIndentGuideId(newSpanId);
-      store.dispatch(action);
-      expect(store.getState().hoverIndentGuideIds).toEqual(new Set());
-    });
-
-    it('remove a spanID from a populated state', () => {
-      const secondExistingSpanId = 'secondExistingSpanId';
-      store = createStore(reducer, {
-        hoverIndentGuideIds: new Set([existingSpanId, secondExistingSpanId]),
-      });
-      const action = actions.removeHoverIndentGuideId(existingSpanId);
-      store.dispatch(action);
-      expect(store.getState().hoverIndentGuideIds).toEqual(new Set([secondExistingSpanId]));
     });
   });
 

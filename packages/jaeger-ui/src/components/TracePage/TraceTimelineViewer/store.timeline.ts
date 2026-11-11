@@ -31,6 +31,7 @@ function computeNonGenAIServicesToHide(trace: IOtelTrace, rootServiceNames: Set<
 
 type TraceTimelineInteractionStore = {
   traceID: string | null;
+  traceSpans: IOtelTrace['spans'] | null;
   childrenHiddenIDs: Set<string>;
   detailStates: Map<string, DetailState>;
   shouldScrollToFirstUiFindMatch: boolean;
@@ -68,6 +69,7 @@ type TraceTimelineInteractionStore = {
 
 export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((set, get) => ({
   traceID: null,
+  traceSpans: null,
   childrenHiddenIDs: new Set<string>(),
   detailStates: new Map<string, DetailState>(),
   shouldScrollToFirstUiFindMatch: false,
@@ -84,8 +86,8 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
   setHideNonGenAIServicesEnabled: (enabled: boolean) => set({ hideNonGenAIServicesEnabled: enabled }),
 
   setTrace: (trace: IOtelTrace, uiFind?: string | TNil) => {
-    const { traceID: currentTraceID } = get();
-    if (trace.traceID === currentTraceID) return;
+    const { traceID: currentTraceID, traceSpans } = get();
+    if (trace.traceID === currentTraceID && trace.spans === traceSpans) return;
 
     const detailPanelMode = useLayoutPrefsStore.getState().detailPanelMode;
 
@@ -96,14 +98,42 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
 
     const base: Partial<TraceTimelineInteractionStore> = {
       traceID: trace.traceID,
-      childrenHiddenIDs: new Set<string>(),
-      detailStates: new Map<string, DetailState>(),
-      shouldScrollToFirstUiFindMatch: false,
-      prunedServices: new Set<string>(),
+      traceSpans: trace.spans,
+      // Derived from the spans, so recomputed on every load, including refetches.
       nonGenAIServicesToHide: computeNonGenAIServicesToHide(trace, rootServiceNames),
-      hideNonGenAIServicesEnabled: false,
       rootServiceNames,
     };
+
+    // Across refetches of the same trace, collapse and filter selections persist,
+    // while detail states are pruned for spans that no longer exist.
+    if (trace.traceID !== currentTraceID) {
+      Object.assign(base, {
+        childrenHiddenIDs: new Set<string>(),
+        detailStates: new Map<string, DetailState>(),
+        shouldScrollToFirstUiFindMatch: false,
+        prunedServices: new Set<string>(),
+        hideNonGenAIServicesEnabled: false,
+      });
+    } else {
+      const validSpanIDs = trace.spanMap;
+      const currentDetailStates = get().detailStates;
+      let hasDropped = false;
+      for (const id of currentDetailStates.keys()) {
+        if (!validSpanIDs.has(id)) {
+          hasDropped = true;
+          break;
+        }
+      }
+      if (hasDropped) {
+        const prunedDetailStates = new Map<string, DetailState>();
+        for (const [id, state] of currentDetailStates) {
+          if (validSpanIDs.has(id)) {
+            prunedDetailStates.set(id, state);
+          }
+        }
+        base.detailStates = prunedDetailStates;
+      }
+    }
 
     if (uiFind) {
       let focused = calculateFocusedFindRowStates(uiFind, trace.spans);

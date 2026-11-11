@@ -4,14 +4,15 @@
 vi.mock('../utils');
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import DetailState from './DetailState';
 import SpanDetail from './index';
-import { formatDuration } from '../utils';
+import { formatDuration, formatDurationCompact } from '../utils';
 import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
+import { makeAttributes } from '../../../../model/attributes';
 
 vi.mock('./AccordionAttributes', () => {
   return mockDefault(function MockAccordionAttributes({ label, onToggle }) {
@@ -64,20 +65,6 @@ vi.mock('./AccordionText', () => {
   });
 });
 
-vi.mock('../../../common/LabeledList', () => {
-  return mockDefault(function MockLabeledList({ items }) {
-    return (
-      <div data-testid="labeled-list">
-        {items.map(item => (
-          <div key={item.key} data-testid={`item-${item.key}`}>
-            {item.label} {item.value}
-          </div>
-        ))}
-      </div>
-    );
-  });
-});
-
 vi.mock('../../../common/CopyIcon', () => {
   return mockDefault(function MockCopyIcon({ copyText }) {
     return (
@@ -109,7 +96,9 @@ describe('<SpanDetail>', () => {
 
   beforeEach(() => {
     formatDuration.mockReset();
-    formatDuration.mockImplementation(duration => `${duration}ms`);
+    formatDuration.mockImplementation(duration => `duration:${duration}`);
+    formatDurationCompact.mockReset();
+    formatDurationCompact.mockImplementation(duration => `compact:${duration}`);
 
     const rawTrace = traceGenerator.trace({ numberOfSpans: 1 });
     spanData = rawTrace.spans[0];
@@ -204,25 +193,34 @@ describe('<SpanDetail>', () => {
     expect(screen.getByRole('heading', { level: 2 })).toBeInTheDocument();
   });
 
-  it('displays the span operation name as the main heading', () => {
+  it('displays the service and operation in the heading with the timeline label tooltip', () => {
     render(<SpanDetail {...props} />);
     const heading = screen.getByRole('heading', { level: 2 });
+    expect(heading).toHaveTextContent(span.resource.serviceName);
     expect(heading).toHaveTextContent(span.name);
+    expect(heading).toHaveAttribute('title', `${span.resource.serviceName}::${span.name}`);
   });
 
-  it('renders overview items with service name, duration and start time labels', () => {
+  it('renders overview items with duration and start time in a table', () => {
     render(<SpanDetail {...props} />);
 
-    const labeledList = screen.getByTestId('labeled-list');
-    expect(labeledList).toBeInTheDocument();
+    // Check that service name is in the heading
+    const heading = screen.getByRole('heading', { level: 2 });
+    expect(heading).toHaveTextContent(span.resource.serviceName);
+    expect(heading).toHaveTextContent(span.name);
 
-    expect(screen.getByTestId('item-svc')).toBeInTheDocument();
-    expect(screen.getByTestId('item-duration')).toBeInTheDocument();
-    expect(screen.getByTestId('item-start')).toBeInTheDocument();
+    // Scope all overview assertions to the overview table to prevent false positives
+    // if the same text appears elsewhere in the component tree
+    const overviewTable = screen.getByRole('table', { name: 'Span Overview' });
+    const { getByText, getByRole } = within(overviewTable);
 
-    expect(screen.getByTestId('item-svc')).toHaveTextContent('Service:');
-    expect(screen.getByTestId('item-duration')).toHaveTextContent('Duration:');
-    expect(screen.getByTestId('item-start')).toHaveTextContent('Start Time:');
+    // Check labels
+    expect(getByRole('rowheader', { name: 'Duration:' })).toBeInTheDocument();
+    expect(getByRole('rowheader', { name: 'Start Time:' })).toBeInTheDocument();
+
+    // Check that the mocked formatted values are rendered in the correct cells
+    expect(getByText(`compact:${span.duration}`)).toBeInTheDocument();
+    expect(getByText(`duration:${span.relativeStartTime}`)).toBeInTheDocument();
   });
 
   it('renders span tags accordian and triggers toggle callback with span ID', () => {
@@ -309,10 +307,23 @@ describe('<SpanDetail>', () => {
       expect(screen.queryByRole('tab')).not.toBeInTheDocument();
     });
 
-    it('shows the GenAI tab when the span has gen_ai.* attributes', () => {
+    it('shows the GenAI tab when the span has recognized gen_ai.* attributes', () => {
       isGenAISpanMock.mockReturnValue(true);
+      Object.defineProperty(span, 'attributes', {
+        value: makeAttributes([{ key: 'gen_ai.provider.name', value: 'openai' }]),
+      });
       render(<SpanDetail {...props} />);
       expect(screen.getByRole('tab', { name: 'GenAI' })).toBeInTheDocument();
+    });
+
+    it('does not show the GenAI tab when all gen_ai.* attributes are unrecognized', () => {
+      isGenAISpanMock.mockReturnValue(true);
+      Object.defineProperty(span, 'attributes', {
+        value: makeAttributes([{ key: 'gen_ai.unrecognized', value: 'low signal' }]),
+      });
+      render(<SpanDetail {...props} />);
+      expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+      expect(screen.getByTestId('accordian-keyvalues-tags')).toBeInTheDocument();
     });
 
     it('renders no tab bar for a non-GenAI span — content is shown directly', () => {
@@ -324,6 +335,9 @@ describe('<SpanDetail>', () => {
 
     it('defaults to the GenAI tab for a GenAI span, now that it has real content', () => {
       isGenAISpanMock.mockReturnValue(true);
+      Object.defineProperty(span, 'attributes', {
+        value: makeAttributes([{ key: 'gen_ai.provider.name', value: 'openai' }]),
+      });
       render(<SpanDetail {...props} />);
       expect(screen.getByRole('tab', { name: 'GenAI' })).toHaveAttribute('aria-selected', 'true');
       expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute('aria-selected', 'false');

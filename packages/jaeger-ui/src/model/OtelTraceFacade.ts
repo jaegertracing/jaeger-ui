@@ -59,12 +59,12 @@ export default class OtelTraceFacade implements IOtelTrace {
 
       // Wire up links
       facade.links.forEach(link => {
-        link.span = this._spanMap.get(link.spanID);
+        link.span = link.traceID === this.traceID ? this._spanMap.get(link.spanID) : undefined;
       });
 
       // Wire up inboundLinks
       facade.inboundLinks.forEach(link => {
-        link.span = this._spanMap.get(link.spanID);
+        link.span = link.traceID === this.traceID ? this._spanMap.get(link.spanID) : undefined;
       });
     });
   }

@@ -3,35 +3,16 @@
 
 import fs from 'fs';
 import path from 'path';
-import lodash from 'lodash';
 import readJsonFile from './readJsonFile';
-import JaegerAPI from '../api/jaeger';
 
 let OTLPTrace;
-let jaegerTrace;
 let OTLPTraceMulti;
-let jaegerTraceMulti;
 
 const fixturesDir = path.resolve(import.meta.dirname, 'fixtures');
 
 beforeAll(() => {
   OTLPTrace = JSON.parse(fs.readFileSync(`${fixturesDir}/otlp2jaeger-in.json`, 'utf-8'));
-  jaegerTrace = JSON.parse(fs.readFileSync(`${fixturesDir}/otlp2jaeger-out.json`, 'utf-8'));
   OTLPTraceMulti = JSON.parse(fs.readFileSync(`${fixturesDir}/otlp2jaeger-multi-in-combined.json`, 'utf-8'));
-  jaegerTraceMulti = JSON.parse(fs.readFileSync(`${fixturesDir}/oltp2jaeger-multi-out.json`, 'utf-8'));
-});
-
-jest.spyOn(JaegerAPI, 'transformOTLP').mockImplementation(APICallRequest => {
-  if (lodash.isEqual(APICallRequest, OTLPTrace)) {
-    return Promise.resolve(jaegerTrace);
-  }
-
-  if (lodash.isEqual(APICallRequest, OTLPTraceMulti)) {
-    return Promise.resolve(jaegerTraceMulti);
-  }
-
-  // This defines case where API call errors out even after detecting a `resourceSpan` in the request
-  return Promise.reject(new Error('backend transform failed'));
 });
 
 describe('fileReader.readJsonFile', () => {
@@ -61,19 +42,10 @@ describe('fileReader.readJsonFile', () => {
 
   it('loads JSON data (OTLP), successfully', () => {
     const inObj = OTLPTrace;
-    const outObj = jaegerTrace;
+    const outObj = OTLPTrace;
     const file = new File([JSON.stringify(inObj)], 'foo.json');
     const p = readJsonFile({ file });
     return expect(p).resolves.toMatchObject(outObj);
-  });
-
-  it('rejects an OTLP trace with a message that includes the backend error', () => {
-    const inObj = JSON.parse(
-      fs.readFileSync(path.resolve(fixturesDir, 'otlp2jaeger-in-error.json'), 'utf-8')
-    );
-    const file = new File([JSON.stringify(inObj)], 'foo.json');
-    const p = readJsonFile({ file });
-    return expect(p).rejects.toThrow(/Error converting OTLP trace to Jaeger: backend transform failed/);
   });
 
   it('rejects malformed JSON', () => {
@@ -82,9 +54,25 @@ describe('fileReader.readJsonFile', () => {
     return expect(p).rejects.toMatchObject(expect.any(Error));
   });
 
+  it.each(['null', 'true', '42', '"trace"'])('rejects valid JSON primitive %s', content => {
+    const file = new File([content], 'foo.json');
+    const p = readJsonFile({ file });
+    return expect(p).rejects.toThrow('Invalid JSON trace format');
+  });
+
+  it.each(['', ' \n\t '])('rejects an empty or whitespace-only file', content => {
+    const file = new File([content], 'empty.json');
+    const p = readJsonFile({ file });
+    return expect(p).rejects.toThrow('The JSON file is empty');
+  });
+
   it('loads JSON-per-line data', () => {
-    const expectedOutput = jaegerTraceMulti;
     const fileContent = fs.readFileSync(path.resolve(fixturesDir, 'otlp2jaeger-multi-in.json.txt'), 'utf-8');
+    const expectedOutput = fileContent
+      .trim()
+      .split('\n')
+      .map(line => JSON.parse(line));
+    expect(expectedOutput.flatMap(document => document.resourceSpans)).toEqual(OTLPTraceMulti.resourceSpans);
     const file = new File([fileContent], 'multi.json', { type: 'application/json' });
     const p = readJsonFile({ file });
     return expect(p).resolves.toMatchObject(expectedOutput);

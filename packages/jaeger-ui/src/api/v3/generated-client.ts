@@ -46,48 +46,6 @@ const jaeger_api_v3_GetOperationsResponse = z
   .object({ operations: z.array(jaeger_api_v3_Operation) })
   .passthrough();
 const jaeger_api_v3_GetServicesResponse = z.object({ services: z.array(z.string()) }).passthrough();
-const jaeger_api_v3_ServiceSummary = z
-  .object({
-    name: z.string(),
-    spanCount: z.number().int().optional(),
-    errorSpanCount: z.number().int().optional(),
-  })
-  .passthrough();
-const jaeger_api_v3_TraceSummary = z
-  .object({
-    traceId: z.string(),
-    rootServiceName: z.string().optional(),
-    rootOperationName: z.string().optional(),
-    minStartTimeUnixNano: z.string().optional(),
-    maxEndTimeUnixNano: z.string().optional(),
-    spanCount: z.number().int().optional(),
-    errorSpanCount: z.number().int().optional(),
-    orphanSpanCount: z.number().int().optional(),
-    services: z.array(jaeger_api_v3_ServiceSummary).optional(),
-  })
-  .passthrough();
-const jaeger_api_v3_FindTraceSummariesResponse = z
-  .object({ summaries: z.array(jaeger_api_v3_TraceSummary) })
-  .partial()
-  .passthrough();
-const jaeger_api_v3_TraceQueryParameters = z
-  .object({
-    serviceName: z.string(),
-    operationName: z.string(),
-    attributes: z.string(),
-    startTimeMin: z.string().datetime({ offset: true }),
-    startTimeMax: z.string().datetime({ offset: true }),
-    durationMin: z.string().regex(/^-?(?:0|[1-9][0-9]{0,11})(?:\.[0-9]{1,9})?s$/),
-    durationMax: z.string().regex(/^-?(?:0|[1-9][0-9]{0,11})(?:\.[0-9]{1,9})?s$/),
-    searchDepth: z.number().int(),
-    rawTraces: z.boolean(),
-  })
-  .partial()
-  .passthrough();
-const jaeger_api_v3_FindTraceSummariesRequest = z
-  .object({ query: jaeger_api_v3_TraceQueryParameters })
-  .partial()
-  .passthrough();
 const opentelemetry_proto_common_v1_ArrayValue: z.ZodType<opentelemetry_proto_common_v1_ArrayValue> = z.lazy(
   () =>
     z
@@ -208,6 +166,108 @@ const opentelemetry_proto_trace_v1_TracesData = z
   })
   .partial()
   .passthrough();
+const jaeger_api_v3_FindSpansResponse = z
+  .object({
+    spans: opentelemetry_proto_trace_v1_TracesData,
+    nextPageToken: z.string(),
+  })
+  .partial()
+  .passthrough();
+const jaeger_expression_v1_Expression = z.union([
+  z.unknown(),
+  z.unknown(),
+  z.unknown(),
+  z.unknown(),
+  z.unknown(),
+  z.unknown(),
+]);
+const jaeger_expression_v1_Call = z
+  .object({
+    op: z.enum([
+      'and',
+      'or',
+      'not',
+      'eq',
+      'ne',
+      'gt',
+      'lt',
+      'gte',
+      'lte',
+      'regex',
+      'exists',
+      'in',
+      'not_in',
+      'some',
+    ]),
+    args: z.array(jaeger_expression_v1_Expression),
+  })
+  .passthrough();
+const jaeger_api_v3_Pagination = z
+  .object({ pageSize: z.number().int(), pageToken: z.string().optional() })
+  .passthrough();
+const jaeger_api_v3_SpanQueryParameters = z
+  .object({
+    startTimeMin: z.string().datetime({ offset: true }),
+    startTimeMax: z.string().datetime({ offset: true }),
+    filter: jaeger_expression_v1_Call,
+    pagination: jaeger_api_v3_Pagination,
+  })
+  .partial()
+  .passthrough();
+const jaeger_api_v3_FindSpansRequest = z
+  .object({ query: jaeger_api_v3_SpanQueryParameters })
+  .partial()
+  .passthrough();
+const jaeger_api_v3_ServiceSummary = z
+  .object({
+    name: z.string(),
+    spanCount: z.number().int().optional(),
+    errorSpanCount: z.number().int().optional(),
+  })
+  .passthrough();
+const jaeger_api_v3_TraceSummary = z
+  .object({
+    traceId: z.string(),
+    rootServiceName: z.string().optional(),
+    rootOperationName: z.string().optional(),
+    minStartTimeUnixNano: z.string().optional(),
+    maxEndTimeUnixNano: z.string().optional(),
+    spanCount: z.number().int().optional(),
+    errorSpanCount: z.number().int().optional(),
+    orphanSpanCount: z.number().int().optional(),
+    services: z.array(jaeger_api_v3_ServiceSummary).optional(),
+  })
+  .passthrough();
+const jaeger_api_v3_FindTraceSummariesResponse = z
+  .object({
+    summaries: z.array(jaeger_api_v3_TraceSummary),
+    nextPageToken: z.string(),
+  })
+  .partial()
+  .passthrough();
+const jaeger_api_v3_TraceQueryParameters = z
+  .object({
+    serviceName: z.string(),
+    operationName: z.string(),
+    attributes: z.string(),
+    startTimeMin: z.string().datetime({ offset: true }),
+    startTimeMax: z.string().datetime({ offset: true }),
+    durationMin: z.string().regex(/^-?(?:0|[1-9][0-9]{0,11})(?:\.[0-9]{1,9})?s$/),
+    durationMax: z.string().regex(/^-?(?:0|[1-9][0-9]{0,11})(?:\.[0-9]{1,9})?s$/),
+    searchDepth: z.number().int(),
+    rawTraces: z.boolean(),
+    filter: jaeger_expression_v1_Call,
+    pagination: jaeger_api_v3_Pagination,
+  })
+  .partial()
+  .passthrough();
+const jaeger_api_v3_FindTraceSummariesRequest = z
+  .object({ query: jaeger_api_v3_TraceQueryParameters })
+  .partial()
+  .passthrough();
+const jaeger_api_v3_GRPCGatewayWrapper = z
+  .object({ result: opentelemetry_proto_trace_v1_TracesData })
+  .passthrough();
 const jaeger_api_v3_FindTracesRequest = z
   .object({ query: jaeger_api_v3_TraceQueryParameters })
   .partial()
@@ -221,11 +281,6 @@ export const schemas = {
   jaeger_api_v3_Operation,
   jaeger_api_v3_GetOperationsResponse,
   jaeger_api_v3_GetServicesResponse,
-  jaeger_api_v3_ServiceSummary,
-  jaeger_api_v3_TraceSummary,
-  jaeger_api_v3_FindTraceSummariesResponse,
-  jaeger_api_v3_TraceQueryParameters,
-  jaeger_api_v3_FindTraceSummariesRequest,
   opentelemetry_proto_common_v1_ArrayValue,
   opentelemetry_proto_common_v1_KeyValueList,
   opentelemetry_proto_common_v1_AnyValue,
@@ -239,5 +294,17 @@ export const schemas = {
   opentelemetry_proto_trace_v1_ScopeSpans,
   opentelemetry_proto_trace_v1_ResourceSpans,
   opentelemetry_proto_trace_v1_TracesData,
+  jaeger_api_v3_FindSpansResponse,
+  jaeger_expression_v1_Expression,
+  jaeger_expression_v1_Call,
+  jaeger_api_v3_Pagination,
+  jaeger_api_v3_SpanQueryParameters,
+  jaeger_api_v3_FindSpansRequest,
+  jaeger_api_v3_ServiceSummary,
+  jaeger_api_v3_TraceSummary,
+  jaeger_api_v3_FindTraceSummariesResponse,
+  jaeger_api_v3_TraceQueryParameters,
+  jaeger_api_v3_FindTraceSummariesRequest,
+  jaeger_api_v3_GRPCGatewayWrapper,
   jaeger_api_v3_FindTracesRequest,
 };

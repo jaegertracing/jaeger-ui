@@ -12,9 +12,14 @@ import CopyIcon from '../../../common/CopyIcon';
 
 import { TNil } from '../../../../types';
 import { Hyperlink } from '../../../../types/hyperlink';
-import { IAttributes } from '../../../../types/otel';
+import { IAttribute, IAttributes } from '../../../../types/otel';
 
 import './AttributesTable.css';
+
+// This sits well above the 200-character collapsed-summary limit, preserving
+// normal attributes while deferring JSON.parse and JsonView for large GenAI
+// payloads until the user asks to see them.
+const LARGE_VALUE_THRESHOLD_CHARS = 10_000;
 
 const jsonObjectOrArrayStartRegex = /^(\[|\{)/;
 
@@ -111,6 +116,27 @@ const linkValueList = (links: Hyperlink[]) => {
   }));
 };
 
+// The filter only appears once a table is long enough to be hard to scan.
+export const FILTER_THRESHOLD = 10;
+
+// Objects and arrays stringify to "[object Object]" via String(), so they go
+// through JSON.stringify to keep their content searchable. Uint8Array stays on
+// String() because JSON.stringify turns a typed array into an index map.
+function toSearchText(row: IAttribute): string {
+  const { value } = row;
+  let valueText;
+  if (value !== null && typeof value === 'object' && !(value instanceof Uint8Array)) {
+    try {
+      valueText = JSON.stringify(value);
+    } catch {
+      valueText = String(value);
+    }
+  } else {
+    valueText = String(value);
+  }
+  return `${row.key}\n${valueText}`.toLowerCase();
+}
+
 type AttributesTableProps = {
   data: IAttributes;
   linksGetter: ((pairs: IAttributes, index: number) => Hyperlink[]) | TNil;
@@ -120,16 +146,118 @@ type AttributesTableProps = {
 // Example: https://github.com/jaegertracing/jaeger-ui/assets/94157520/b518cad9-cb37-4775-a3d6-b667a1235f89
 export default function AttributesTable(props: AttributesTableProps) {
   const { data, linksGetter } = props;
+  // Attribute entries are stable for a given IAttributes collection. Keeping
+  // them in the set means a replacement entry starts collapsed automatically.
+  const [expandedRows, setExpandedRows] = React.useState<Set<object>>(() => new Set());
+  // The expansion renders as a transition so the click stays responsive while
+  // JSON.parse and JsonView run. The rows being expanded are tracked outside
+  // the transition so their buttons can show that the click was received.
+  const [pendingRows, setPendingRows] = React.useState<Set<object>>(() => new Set());
+  const [isPending, startTransition] = React.useTransition();
+
+  const expandRow = React.useCallback(
+    (row: object) => {
+      setPendingRows(currentRows => new Set(currentRows).add(row));
+      startTransition(() => {
+        setExpandedRows(currentRows => new Set(currentRows).add(row));
+      });
+    },
+    [startTransition]
+  );
+
+  const [query, setQuery] = React.useState('');
+  // A different collection means a different span, so the old filter no longer applies.
+  const [queryData, setQueryData] = React.useState(data);
+  if (queryData !== data) {
+    setQueryData(data);
+    setQuery('');
+  }
+  // Filtering runs against the deferred query so typing stays responsive on
+  // spans with many or very large attributes. An empty query applies right away,
+  // so a cleared filter or a span swap never paints rows under the old text.
+  const deferredQuery = React.useDeferredValue(query);
+  const effectiveQuery = query.trim() === '' ? '' : deferredQuery;
+  const showFilter = data.size > FILTER_THRESHOLD;
+  const normalizedQuery = showFilter ? effectiveQuery.trim().toLowerCase() : '';
+
+  // Search text is built lazily, at most once per row, instead of re-stringifying
+  // every value on each keystroke. Keyed on the stable entry objects, like expandedRows.
+  const [searchTextCache] = React.useState(() => new WeakMap<IAttribute, string>());
+  const visibleRows = React.useMemo(() => {
+    const rows = data.entries().map((row, index) => ({ row, index }));
+    if (!normalizedQuery) return rows;
+    return rows.filter(({ row }) => {
+      let text = searchTextCache.get(row);
+      if (text === undefined) {
+        text = toSearchText(row);
+        searchTextCache.set(row, text);
+      }
+      return text.includes(normalizedQuery);
+    });
+  }, [data, normalizedQuery, searchTextCache]);
 
   return (
     <div className="KeyValueTable u-simple-scrollbars">
+      {showFilter && (
+        <div className="KeyValueTable--filterRow">
+          <input
+            className="KeyValueTable--filter"
+            type="text"
+            placeholder="Filter attributes…"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onKeyDown={e => e.key === 'Escape' && setQuery('')}
+            aria-label="Filter span attributes"
+          />
+          {normalizedQuery && (
+            <>
+              <span className="KeyValueTable--filterCount" aria-live="polite">
+                {visibleRows.length} of {data.size}
+              </span>
+              <button
+                type="button"
+                className="KeyValueTable--clearButton"
+                aria-label="Clear filter"
+                onClick={() => setQuery('')}
+              >
+                ×
+              </button>
+            </>
+          )}
+        </div>
+      )}
       <table className="u-width-100">
         <tbody className="KeyValueTable--body">
-          {data.entries().map((row, i) => {
-            const { node: jsonTable, isJsonTree } = formatValue(row.key, row.value);
-            const links = linksGetter ? linksGetter(data, i) : null;
+          {normalizedQuery && visibleRows.length === 0 && (
+            <tr className="KeyValueTable--row">
+              <td className="KeyValueTable--emptyState" colSpan={2}>
+                No attributes match &ldquo;{effectiveQuery.trim()}&rdquo;
+              </td>
+            </tr>
+          )}
+          {visibleRows.map(({ row, index: i }) => {
+            const isLarge = typeof row.value === 'string' && row.value.length >= LARGE_VALUE_THRESHOLD_CHARS;
+            const shouldDeferValue = isLarge && !expandedRows.has(row);
+            const { node: jsonTable, isJsonTree } = shouldDeferValue
+              ? { node: null, isJsonTree: false }
+              : formatValue(row.key, row.value);
+            const links = shouldDeferValue || !linksGetter ? null : linksGetter(data, i);
+
             let valueMarkup;
-            if (links?.length === 1) {
+            if (shouldDeferValue) {
+              const isExpanding = isPending && pendingRows.has(row);
+              valueMarkup = (
+                <button
+                  type="button"
+                  className="KeyValueTable--largeValuePlaceholder"
+                  disabled={isExpanding}
+                  onClick={() => expandRow(row)}
+                >
+                  {(row.value as string).length.toLocaleString()} chars —{' '}
+                  {isExpanding ? 'expanding…' : 'click to expand'}
+                </button>
+              );
+            } else if (links?.length === 1) {
               valueMarkup = (
                 <div>
                   <LinkValue href={links[0].url} title={links[0].text}>
@@ -167,7 +295,7 @@ export default function AttributesTable(props: AttributesTableProps) {
             ) : (
               row.key
             );
-            const copyButtons = (
+            const copyButtons = !shouldDeferValue && (
               <div className="KeyValueTable--copyContainer">
                 <CopyIcon
                   className="KeyValueTable--copyIcon"

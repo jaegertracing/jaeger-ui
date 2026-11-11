@@ -18,12 +18,13 @@ import {
   formatRelativeTime,
 } from '../../../utils/date';
 import RelativeBar from '../../common/RelativeBar';
-import { toOrderBy, fromOrderBy } from '../../../model/search';
-import type { SortableColumnKey, SortDirection } from '../../../model/search';
-import type { OrderBy } from '../../../model/order-by';
+import { toOrderBy, fromOrderBy } from './sort';
+import type { SortableColumnKey, SortDirection } from './sort';
 import type { TracePageLink } from '../../TracePage/url';
 import { ServicePill, type ServiceEntry } from './ServicePills';
-import { useSearchResultsStore } from '../store.search-results';
+import { useSearchResultsStore } from './store.search-results';
+import { useSortBy } from './use-sort-by';
+import { getTraceComparisonLabel } from './trace-comparison';
 
 const BOTH_DIRECTIONS: SortOrder[] = ['ascend', 'descend'];
 
@@ -31,8 +32,6 @@ type TraceTableProps = {
   traceSummaries: TraceSummary[];
   maxTraceDuration: number;
   getLink: (traceID: string) => TracePageLink;
-  sortBy: OrderBy;
-  handleSortChange: (sortBy: OrderBy) => void;
   disableComparisons: boolean;
   cohortIds: Set<string>;
   toggleComparison: (traceID: string, isInDiffCohort: boolean) => void;
@@ -70,13 +69,12 @@ export default function TraceTable({
   traceSummaries,
   maxTraceDuration,
   getLink,
-  sortBy,
-  handleSortChange,
   disableComparisons,
   cohortIds,
   toggleComparison,
 }: TraceTableProps) {
   const navigate = useNavigate();
+  const { sortBy, handleSortChange } = useSortBy();
   const { key: sortKey, order: sortOrder } = fromOrderBy(sortBy);
   const startTimeDisplay = useSearchResultsStore(s => s.startTimeDisplay);
   const setStartTimeDisplay = useSearchResultsStore(s => s.setStartTimeDisplay);
@@ -254,6 +252,7 @@ export default function TraceTable({
         }),
         render: (_: unknown, trace: TraceSummary) => (
           <Checkbox
+            aria-label={getTraceComparisonLabel(trace.traceID, trace.traceName)}
             checked={cohortIds.has(trace.traceID)}
             onChange={() => toggleComparison(trace.traceID, cohortIds.has(trace.traceID))}
             onClick={e => e.stopPropagation()}

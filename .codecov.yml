@@ -66,4 +66,4 @@ flags:
     carryforward: true
 
 ignore:
-  - 'packages/jaeger-ui/src/utils/helpers/ReactShallowRenderer.js'
+  - '**/*.json'

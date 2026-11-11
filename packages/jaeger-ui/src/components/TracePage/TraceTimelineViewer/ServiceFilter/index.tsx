@@ -11,6 +11,7 @@ import { SVC_FILTER_DEFAULTS_KEY, SvcFilterDefaults } from '../../url/svcFilter'
 
 import '../HeaderIconButton.css';
 import './ServiceFilter.css';
+import storage from '../../../../utils/storage';
 
 type ServiceFilterProps = {
   trace: IOtelTrace;
@@ -19,12 +20,8 @@ type ServiceFilterProps = {
 };
 
 function saveDefaults(prunedServices: Set<string>) {
-  try {
-    const defaults: SvcFilterDefaults = { prunedServices: [...prunedServices] };
-    localStorage.setItem(SVC_FILTER_DEFAULTS_KEY, JSON.stringify(defaults));
-  } catch {
-    // Ignore localStorage errors (quota, private mode).
-  }
+  const defaults: SvcFilterDefaults = { prunedServices: [...prunedServices] };
+  storage.set(SVC_FILTER_DEFAULTS_KEY, defaults);
 }
 
 export default function ServiceFilter({ trace, prunedServices, onApply }: ServiceFilterProps) {

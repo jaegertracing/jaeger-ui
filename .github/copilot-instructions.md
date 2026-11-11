@@ -8,6 +8,10 @@ Prefer silence over uncertainty. A review comment has a cost — it demands the 
 
 Flag genuine defects in the diff: logic errors, incorrect conditions, missing error handling, concurrency hazards, resource leaks, security regressions, data corruption. These always warrant a comment.
 
+## Code moves and test deletions
+
+Flag any pull request that moves code or tests between files, deletes a large block of tests, or shows a test file as deleted alongside a new file, and ask for a maintainer to confirm by hand that the content survived. This is the one category where a comment is warranted without a confirmed defect: GitHub renders a move as a deletion plus an addition and shows no correspondence between them, so the reviewer cannot verify from the diff that nothing was lost. Say what was removed, where it appears to have gone, and which tests or assertions have no obvious counterpart. The repository's expectations for such changes are in `AGENTS.md` under "Moving Code and Deleting Tests".
+
 ## What not to flag
 
 - **Style and formatting** — CI enforces these automatically. Do not comment on indentation, line length, naming conventions, comment phrasing, or anything a linter or formatter would catch.

@@ -22,9 +22,9 @@ import {
   isSameQuery,
   isQueryEmpty,
 } from './url';
-import * as orderBy from '../../model/order-by';
 import ErrorMessage from '../common/ErrorMessage';
-import { sortTraceSummaries } from '../../model/search';
+import { toApiError } from '../../types/api-error';
+import type { ApiError } from '../../types/api-error';
 import FileLoader from './FileLoader';
 import { useUploadedTraces } from './useUploadedTraces';
 import VerticalResizer from '../common/VerticalResizer';
@@ -33,12 +33,10 @@ import { useSearchPanelStore, PANEL_WIDTH_MIN, PANEL_WIDTH_MAX } from './search-
 import './index.css';
 import JaegerLogo from '../../img/jaeger-logo.svg';
 import withRouteProps from '../../utils/withRouteProps';
-import { trackSortByChange } from './SearchForm.track';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { useEmbeddedState } from '../../stores/embedded-store';
 import { useShallow } from 'zustand/react/shallow';
 import { useSearchTraces } from '../../hooks/useTraceDiscovery';
-import type { OrderBy } from '../../model/order-by';
 
 // export for tests
 export function SearchTracePageImpl() {
@@ -120,7 +118,6 @@ export function SearchTracePageImpl() {
     };
   }, [searchData, uploadedSummaries]);
 
-  const [sortBy, setSortBy] = useState<OrderBy>(orderBy.MOST_RECENT);
   const [activeTab, setActiveTab] = useState<'searchForm' | 'fileLoader'>('searchForm');
 
   const { panelWidth, collapsed, setPanelWidth, setCollapsed } = useSearchPanelStore(
@@ -130,11 +127,6 @@ export function SearchTracePageImpl() {
       setPanelWidth: s.setPanelWidth,
       setCollapsed: s.setCollapsed,
     }))
-  );
-
-  const sortedTraceSummaries = useMemo(
-    () => sortTraceSummaries(traceSummaries, sortBy),
-    [traceSummaries, sortBy]
   );
 
   const maxTraceDuration = useMemo(
@@ -167,25 +159,20 @@ export function SearchTracePageImpl() {
   const cohortSummaries = useTraceDiffStore(s => s.cohortSummaries);
 
   const diffCohort = useMemo(() => {
-    const summaryMap = new Map(sortedTraceSummaries.map(s => [s.traceID, s]));
+    const summaryMap = new Map(traceSummaries.map(s => [s.traceID, s]));
     return cohortIDs.flatMap(id => {
       const s = summaryMap.get(id) ?? cohortSummaries.get(id);
       return s ? [s] : [];
     });
-  }, [cohortIDs, cohortSummaries, sortedTraceSummaries]);
+  }, [cohortIDs, cohortSummaries, traceSummaries]);
 
   const { disableFileUploadControl } = config;
-
-  const handleSortChange = useCallback((newSortBy: OrderBy) => {
-    setSortBy(newSortBy);
-    trackSortByChange(newSortBy);
-  }, []);
 
   // Computed synchronously so the loading indicator shows on the first render after Back
   // navigation, before the new keyed-cache fetch completes and searchData is updated.
   const isStale = Boolean(searchQuery && searchData?.query && !isSameQuery(searchQuery, searchData.query));
 
-  const errors: Array<{ message: string }> = [];
+  const errors: ApiError[] = [];
   if (allServicesUnsupported) {
     errors.push({
       message:
@@ -193,10 +180,11 @@ export function SearchTracePageImpl() {
         'deployment does not support. Select a service to search.',
     });
   } else if (searchError) {
-    errors.push({ message: searchError instanceof Error ? searchError.message : String(searchError) });
+    // Keep the HTTP details so ErrorMessage shows the Status, URL, Query, and body rows.
+    errors.push(toApiError(searchError));
   }
 
-  const hasTraceResults = sortedTraceSummaries.length > 0;
+  const hasTraceResults = traceSummaries.length > 0;
   const showErrors = errors.length > 0 && !loadingTraces;
   const showLogo = isHomepage && !hasTraceResults && !loadingTraces && !errors.length && !embedded;
 
@@ -293,7 +281,7 @@ export function SearchTracePageImpl() {
           <div className="js-test-error-message">
             <h2>There was an error loading traces: </h2>
             {errors.map(err => (
-              <ErrorMessage key={err.message} error={err} />
+              <ErrorMessage key={typeof err === 'string' ? err : err.message} error={err} />
             ))}
           </div>
         )}
@@ -312,21 +300,14 @@ export function SearchTracePageImpl() {
               skipMessage: isHomepage,
               spanLinks: urlQueryParams?.spanLinks,
               searchLatency: searchData?.searchLatency,
-              traceSummaries: sortedTraceSummaries,
+              traceSummaries,
               uploadedTraceIDs,
               rawTraces: uploadedRawTraces,
-              sortBy,
-              handleSortChange,
             } as any)}
           />
         )}
         {showLogo && (
-          <img
-            className="SearchTracePage--logo js-test-logo"
-            alt="presentation"
-            src={JaegerLogo}
-            width="400"
-          />
+          <img className="SearchTracePage--logo js-test-logo" alt="" src={JaegerLogo} width="400" />
         )}
       </div>
     </div>

@@ -32,8 +32,7 @@ type TOwnProps = {
 const TracesDdgImpl: React.FC<TOwnProps> = React.memo(props => {
   const { location, traceIDs } = props;
   const navigate = useNavigate();
-  const urlArgs = queryString.parse(location.search);
-  const { end, start, limit, lookback, maxDuration, minDuration, view } = urlArgs;
+  const { end, start, limit, lookback, maxDuration, minDuration, view } = queryString.parse(location.search);
   const extraArgs = { end, start, limit, lookback, maxDuration, minDuration, view };
 
   const urlState = useMemo(() => getUrlState(location.search), [location.search]);
@@ -45,11 +44,22 @@ const TracesDdgImpl: React.FC<TOwnProps> = React.memo(props => {
   const { graphState, graph } = useMemo(() => {
     if (!service) return { graphState: undefined, graph: undefined };
 
+    const tracesValues = Array.from(tracesData.values());
+    const erroredTrace = tracesValues.find(t => t.state === fetchedState.ERROR);
+    if (erroredTrace) {
+      return {
+        graphState: { state: fetchedState.ERROR, error: erroredTrace.error || 'Unknown error' },
+        graph: undefined,
+      };
+    }
+
+    if (tracesValues.some(t => t.state === fetchedState.LOADING)) {
+      return { graphState: { state: fetchedState.LOADING }, graph: undefined };
+    }
+
     const tracesFromSearch: Record<string, FetchedTrace> = {};
     tracesData.forEach((fetchedTrace, id) => {
-      if (fetchedTrace.data) {
-        tracesFromSearch[id] = fetchedTrace;
-      }
+      if (fetchedTrace.data) tracesFromSearch[id] = fetchedTrace;
     });
 
     const payload = transformTracesToPaths(tracesFromSearch, service, operation);

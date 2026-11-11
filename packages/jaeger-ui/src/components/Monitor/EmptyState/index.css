@@ -24,13 +24,13 @@ SPDX-License-Identifier: Apache-2.0
 
 .description-empty-state {
   font-weight: 400;
-  color: #575757;
+  color: var(--text-secondary);
   margin-bottom: 24px;
 }
 
 .button-empty-state {
-  background-color: #11939a;
-  color: white;
+  background-color: var(--interactive-primary);
+  color: var(--text-inverse);
   float: right;
   margin-bottom: 24px;
 }

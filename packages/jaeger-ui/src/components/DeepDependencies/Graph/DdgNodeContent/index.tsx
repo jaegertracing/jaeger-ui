@@ -4,31 +4,20 @@
 import * as React from 'react';
 import { Popover } from 'antd';
 import cx from 'classnames';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import type { NavigateFunction } from 'react-router-dom';
 import { TLayoutVertex } from '@jaegertracing/plexus/lib/types';
-import { IoLocate, IoEyeOff } from 'react-icons/io5';
-import { shallowEqual, useDispatch, useSelector } from 'react-redux';
-import { bindActionCreators, Dispatch } from 'redux';
+import { IoLocate, IoEyeOff, IoSearch } from 'react-icons/io5';
 
 import calcPositioning from './calc-positioning';
-import {
-  MAX_LENGTH,
-  MAX_LINKED_TRACES,
-  MIN_LENGTH,
-  OP_PADDING_TOP,
-  PARAM_NAME_LENGTH,
-  PROGRESS_BAR_STROKE_WIDTH,
-  RADIUS,
-  WORD_RX,
-} from './constants';
+import { OP_PADDING_TOP, PROGRESS_BAR_STROKE_WIDTH, RADIUS, WORD_RX } from './constants';
 import { setFocusIcon } from './node-icons';
 import { trackSetFocus, trackViewTraces, trackVertexSetOperation } from '../../index.track';
 import { getUrl } from '../../url';
 import BreakableText from '../../../common/BreakableText';
 import FilteredList from '../../../common/FilteredList';
-import NewWindowIcon from '../../../common/NewWindowIcon';
-import { getUrl as getSearchUrl } from '../../../SearchTracePage/url';
-import padActions from '../../../../actions/path-agnostic-decorations';
+import { getUrl as getSearchUrl, getUrlState } from '../../../SearchTracePage/url';
+import usePathAgnosticDecoration from '../../../../hooks/usePathAgnosticDecoration';
 import {
   ECheckedStatus,
   EDdgDensity,
@@ -37,36 +26,30 @@ import {
   TDdgVertex,
   PathElem,
 } from '../../../../model/ddg/types';
-import extractDecorationFromState, {
-  TDecorationFromState,
-} from '../../../../model/path-agnostic-decorations';
-import { ReduxState } from '../../../../types/index';
+import { TDecoration } from '../../../../model/path-agnostic-decorations';
 import ActionsMenu, { IActionMenuItem } from '../../../common/ActionMenu/ActionsMenu';
 
 import './index.css';
 
-type TDispatchProps = {
-  getDecoration: (id: string, svc: string, op?: string) => void;
+type TProps = TDecoration & {
+  focalNodeUrl: string | null;
+  focusPathsThroughVertex: (vertexKey: string) => void;
+  getGenerationVisibility: (vertexKey: string, direction: EDirection) => ECheckedStatus | null;
+  getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined;
+  hideVertex: (vertexKey: string) => void;
+  isFocalNode: boolean;
+  isPositioned: boolean;
+  operation: string | string[] | null;
+  selectVertex: (selectedVertex: TDdgVertex) => void;
+  service: string;
+  setOperation: (operation: string) => void;
+  setViewModifier: (visIndices: number[], viewModifier: EViewModifier, isEnabled: boolean) => void;
+  updateGenerationVisibility: (vertexKey: string, direction: EDirection) => void;
+  vertex: TDdgVertex;
+  vertexKey: string;
+  search: string;
+  navigate: NavigateFunction;
 };
-
-type TProps = TDispatchProps &
-  TDecorationFromState & {
-    focalNodeUrl: string | null;
-    focusPathsThroughVertex: (vertexKey: string) => void;
-    getGenerationVisibility: (vertexKey: string, direction: EDirection) => ECheckedStatus | null;
-    getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined;
-    hideVertex: (vertexKey: string) => void;
-    isFocalNode: boolean;
-    isPositioned: boolean;
-    operation: string | string[] | null;
-    selectVertex: (selectedVertex: TDdgVertex) => void;
-    service: string;
-    setOperation: (operation: string) => void;
-    setViewModifier: (visIndices: number[], viewModifier: EViewModifier, isEnabled: boolean) => void;
-    updateGenerationVisibility: (vertexKey: string, direction: EDirection) => void;
-    vertex: TDdgVertex;
-    vertexKey: string;
-  };
 
 type TState = {
   childrenVisibility?: ECheckedStatus | null;
@@ -137,16 +120,13 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
   const [state, setState] = React.useState<TState>({});
   const hoveredIndices = React.useRef<Set<number>>(new Set());
   const nodeRef = React.useRef<HTMLDivElement | null>(null);
-  const prevDecorationID = React.useRef<string | undefined>(undefined);
   const setViewModifierRef = React.useRef<TProps['setViewModifier']>(() => {});
 
   const {
-    decorationID,
     decorationProgressbar,
     decorationValue,
     focalNodeUrl,
     focusPathsThroughVertex,
-    getDecoration,
     getGenerationVisibility,
     getVisiblePathElems,
     hideVertex: hideVertexProp,
@@ -160,19 +140,13 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
     updateGenerationVisibility,
     vertex,
     vertexKey,
+    search,
+    navigate,
   } = props;
 
   React.useEffect(() => {
     setViewModifierRef.current = setViewModifier;
   }, [setViewModifier]);
-
-  React.useEffect(() => {
-    // Match the former componentDidUpdate behavior: refresh only when decorationID changes.
-    if (decorationID && prevDecorationID.current !== decorationID) {
-      getDecoration(decorationID, service, typeof operation === 'string' ? operation : undefined);
-    }
-    prevDecorationID.current = decorationID;
-  }, [decorationID, getDecoration, operation, service]);
 
   React.useEffect(
     () => () => {
@@ -227,34 +201,39 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
 
   const viewTraces = React.useCallback(() => {
     trackViewTraces();
-    const elems = getVisiblePathElems(vertexKey);
-    if (elems) {
-      const urlIds: Set<string> = new Set();
-      let currLength = MIN_LENGTH;
-      // Because there is a limit on traceIDs, attempt to get some from each elem rather than all from one.
-      const allIDs = elems.map(({ memberOf }) => memberOf.traceIDs.slice());
-      while (allIDs.length) {
-        const ids = allIDs.shift();
-        if (ids && ids.length) {
-          const id = ids.pop();
-          if (id && !urlIds.has(id)) {
-            // Keep track of the length, then break if it is too long, to avoid opening a tab with a URL that
-            // the backend cannot process, even if there are more traceIDs
-            currLength += PARAM_NAME_LENGTH + id.length;
-            if (currLength > MAX_LENGTH) {
-              break;
-            }
-            urlIds.add(id);
-            if (urlIds.size >= MAX_LINKED_TRACES) {
-              break;
-            }
-          }
-          allIDs.push(ids);
-        }
-      }
-      window.open(getSearchUrl({ traceID: Array.from(urlIds) }), '_blank');
-    }
-  }, [getVisiblePathElems, vertexKey]);
+    const {
+      traceID: _traceID,
+      spanLinks: _spanLinks,
+      start,
+      end,
+      lookback,
+      limit,
+      minDuration,
+      maxDuration,
+      tags,
+    } = getUrlState(search);
+
+    // Only pass params that are meaningful on the Search page.
+    // DDG-specific params (density, showOp, visEncoding, etc.) are intentionally excluded.
+    const query = {
+      ...(start && { start }),
+      ...(end && { end }),
+      ...(lookback && { lookback }),
+      ...(limit && { limit }),
+      ...(minDuration && { minDuration }),
+      ...(maxDuration && { maxDuration }),
+      ...(tags && { tags }),
+      service,
+      operation: typeof operation === 'string' ? operation : undefined,
+    };
+
+    const url = getSearchUrl(query);
+    const qIdx = url.indexOf('?');
+    navigate({
+      pathname: qIdx >= 0 ? url.slice(0, qIdx) : url,
+      search: qIdx >= 0 ? url.slice(qIdx) : '',
+    });
+  }, [navigate, operation, search, service]);
 
   const onMouseUx = React.useCallback(
     (event: React.MouseEvent<HTMLElement>) => {
@@ -305,7 +284,7 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
     {
       id: 'view-traces',
       label: 'View traces',
-      icon: <NewWindowIcon />,
+      icon: <IoSearch />,
       onClick: viewTraces,
     },
     {
@@ -401,31 +380,18 @@ export const UnconnectedDdgNodeContent = React.memo(function UnconnectedDdgNodeC
   );
 });
 
-export function mapDispatchToProps(dispatch: Dispatch): TDispatchProps {
-  const { getDecoration } = bindActionCreators(padActions, dispatch);
-
-  return {
-    getDecoration,
-  };
-}
-
-type DdgNodeContentProps = Omit<TProps, keyof TDispatchProps | keyof TDecorationFromState | 'search'>;
+type DdgNodeContentProps = Omit<TProps, keyof TDecoration | 'search' | 'navigate'>;
 
 function DdgNodeContent(props: DdgNodeContentProps) {
   const { search } = useLocation();
-  const dispatch = useDispatch<Dispatch>();
-  const dispatchProps = React.useMemo(() => mapDispatchToProps(dispatch), [dispatch]);
-  const decorationProps = useSelector(
-    (state: ReduxState) =>
-      extractDecorationFromState(state, {
-        service: props.service,
-        operation: props.operation,
-        search,
-      }),
-    shallowEqual
-  );
+  const navigate = useNavigate();
+  const decoration = usePathAgnosticDecoration({
+    service: props.service,
+    operation: props.operation,
+    search,
+  });
 
-  return <UnconnectedDdgNodeContent {...props} {...dispatchProps} {...decorationProps} />;
+  return <UnconnectedDdgNodeContent {...props} search={search} navigate={navigate} {...decoration} />;
 }
 
 export default DdgNodeContent;
