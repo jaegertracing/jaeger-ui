@@ -123,21 +123,25 @@ SPDX-License-Identifier: Apache-2.0
   padding: 0 3px;
 }
 
+/* The width is fixed, so that a chip or a value list coming and going does not resize the panel. */
 .SpanFilter--popover {
-  min-width: 300px;
-  max-width: 420px;
+  width: 420px;
   display: flex;
   flex-direction: column;
 }
 
-/* The sections scroll inside the cap; the warning and the footer below them stay in view. */
+/* The sections scroll inside the cap; the warning and the footer below them stay in view. The body
+   spans the popover's own padding on the right and takes it back as padding of its own, so that
+   the thin scrollbar sits at the edge of the panel instead of inside the content. */
 .SpanFilter--body {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   min-height: 0;
   overflow-y: auto;
-  padding-right: 4px;
+  margin-right: -12px;
+  padding-right: 12px;
+  scrollbar-width: thin;
 }
 
 .SpanFilter--section {
