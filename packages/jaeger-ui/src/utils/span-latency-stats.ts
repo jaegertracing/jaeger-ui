@@ -20,7 +20,6 @@ const HEATMAP_NEUTRAL_SPREAD = 0.1;
 // microseconds slower to the slowest step.
 const HEATMAP_NEUTRAL_FLOOR_US = 10;
 
-const NEUTRAL_LIMIT = Math.log(1 + HEATMAP_NEUTRAL_SPREAD) / Math.log(HEATMAP_SATURATION_RATIO);
 const SIDE_STEPS = (HEATMAP_STEPS - 1) / 2;
 
 // Two services can share an operation name, so peers are matched on both.
@@ -37,7 +36,10 @@ function median(sorted: number[]): number {
  * Scores each span's duration against the median duration of its group: all spans in the trace,
  * itself included, with the same service and operation. The score is log(duration / median) on
  * a base of HEATMAP_SATURATION_RATIO, clamped to [-1, 1]: 0 is the median, -1 is half of it or
- * less, and 1 is twice it or more. Spans within HEATMAP_NEUTRAL_FLOOR_US of the median score 0.
+ * less, and 1 is twice it or more. Spans within HEATMAP_NEUTRAL_SPREAD of the median, or within
+ * HEATMAP_NEUTRAL_FLOOR_US of it, score exactly 0. The spread is checked on the durations rather
+ * than on the log score, because a log band symmetric around 0 would be narrower than 10% on the
+ * fast side: 0.91x the median is within 10% but scores below -log2(1.1).
  * Spans whose operation occurs only once have no peers to compare against and are left out of
  * the map.
  */
@@ -61,7 +63,8 @@ export function computeLatencyScores(spans: ReadonlyArray<IOtelSpan>): Map<strin
     const med = medians.get(operationKey(span));
     if (med === undefined) continue;
     let score: number;
-    if (Math.abs(span.duration - med) < HEATMAP_NEUTRAL_FLOOR_US) score = 0;
+    const delta = Math.abs(span.duration - med);
+    if (delta < HEATMAP_NEUTRAL_FLOOR_US || delta <= med * HEATMAP_NEUTRAL_SPREAD) score = 0;
     // A zero median or duration has no finite ratio, so it sits at the matching end of the scale.
     else if (med <= 0) score = 1;
     else if (span.duration <= 0) score = -1;
@@ -72,15 +75,16 @@ export function computeLatencyScores(spans: ReadonlyArray<IOtelSpan>): Map<strin
 }
 
 /**
- * Maps a latency score to a heatmap color token. Scores inside the neutral spread get the
- * middle step, and the rest spread evenly over the fast and slow halves. A missing score
+ * Maps a latency score to a heatmap color token. A score of 0, which computeLatencyScores gives
+ * to spans inside the neutral spread, gets the middle step, and the rest spread evenly over the
+ * fast and slow halves. A missing score
  * means the span has no peers, which gets its own color rather than a spot on the scale.
  */
 export function heatmapColor(score: number | undefined): string {
   if (score === undefined) return 'var(--heatmap-no-peers)';
   const middle = SIDE_STEPS + 1;
   const magnitude = Math.min(1, Math.abs(score));
-  if (Number.isNaN(magnitude) || magnitude <= NEUTRAL_LIMIT) return `var(--heatmap-${middle})`;
+  if (Number.isNaN(magnitude) || magnitude === 0) return `var(--heatmap-${middle})`;
   const offset = Math.max(1, Math.ceil(magnitude * SIDE_STEPS));
   return `var(--heatmap-${score < 0 ? middle - offset : middle + offset})`;
 }

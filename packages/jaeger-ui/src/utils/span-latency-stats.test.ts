@@ -209,4 +209,26 @@ describe('heatmapColor', () => {
     ]);
     expect(heatmapColor(scores.get('c'))).toBe(`var(--heatmap-${(HEATMAP_STEPS + 3) / 2})`);
   });
+
+  it('keeps a span up to 10% faster than the median neutral', () => {
+    const scores = computeLatencyScores([
+      makeSpan('a', 'op', 1000),
+      makeSpan('b', 'op', 1000),
+      makeSpan('c', 'op', 910),
+      makeSpan('d', 'op', 900),
+    ]);
+    expect(scores.get('c')).toBe(0);
+    expect(scores.get('d')).toBe(0);
+    expect(heatmapColor(scores.get('c'))).toBe(NEUTRAL);
+    expect(heatmapColor(scores.get('d'))).toBe(NEUTRAL);
+  });
+
+  it('moves a span off neutral once it is more than 10% faster than the median', () => {
+    const scores = computeLatencyScores([
+      makeSpan('a', 'op', 1000),
+      makeSpan('b', 'op', 1000),
+      makeSpan('c', 'op', 880),
+    ]);
+    expect(heatmapColor(scores.get('c'))).toBe(`var(--heatmap-${(HEATMAP_STEPS - 1) / 2})`);
+  });
 });
