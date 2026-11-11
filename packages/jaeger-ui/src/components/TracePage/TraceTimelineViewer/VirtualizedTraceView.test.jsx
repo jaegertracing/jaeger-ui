@@ -909,6 +909,29 @@ describe('<VirtualizedTraceViewImpl>', () => {
       const result = listViewProps.itemRenderer('key', {}, prunedIdx, {});
       expect(result).toBeTruthy();
     });
+
+    it('merges the pruned subtree into the critical path of its parent row', () => {
+      const customTrace = makeSpansWithServices();
+      // The spread copies drop the prototype's attributes getter, which renderSpanBarRow reads.
+      customTrace.spans[0].attributes = trace.spans[0].attributes;
+      const { listViewProps } = renderAndCapture({
+        ...mockProps,
+        trace: customTrace,
+        prunedServices: new Set(['svc-b']),
+        criticalPath: [
+          { spanID: 'span-0', sectionStart: 0, sectionEnd: 10 },
+          { spanID: 'span-1', sectionStart: 10, sectionEnd: 20 },
+        ],
+      });
+      const rowResult = listViewProps.itemRenderer(
+        'key',
+        {},
+        listViewProps.getIndexFromKey('span-0--bar'),
+        {}
+      );
+      const spanIDs = rowResult.props.children.props.criticalPath.map(section => section.spanID);
+      expect(spanIDs).toEqual(expect.arrayContaining(['span-0', 'span-1']));
+    });
   });
 });
 

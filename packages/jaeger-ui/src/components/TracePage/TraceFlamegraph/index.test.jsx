@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import TraceFlamegraph from './index';
 import testTrace from './testTrace.json';
@@ -584,6 +584,34 @@ describe('<TraceFlamegraph />', () => {
         svg.dispatchEvent(new Event('mouseleave', { bubbles: false }));
       });
       expect(screen.queryByText('svc: op')).not.toBeInTheDocument();
+    });
+
+    it('context menu runs Collapse nodes above and Reset View, closing after each', async () => {
+      render(<TraceFlamegraph trace={otelTrace} />);
+      const svg = screen.getByTestId('flamegraph-chart').querySelector('svg');
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.classList.add('frame');
+      g.setAttribute('name', 'svc: op');
+      svg.appendChild(g);
+      const menu = () => document.querySelector('.Flamegraph-context-menu');
+      const openMenu = () =>
+        act(() => {
+          g.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, clientX: 100, clientY: 100 }));
+        });
+
+      act(() => {
+        callbacks.onClick({ parent: {}, data: { name: 'svc: op' } });
+      });
+      await openMenu();
+      fireEvent.click(within(menu()).getByText('Collapse nodes above'));
+      expect(menu()).toBeNull();
+      expect(screen.getByTestId('flamegraph-collapse')).toBeDisabled();
+
+      await openMenu();
+      mockChart.resetZoom.mockClear();
+      fireEvent.click(within(menu()).getByText('Reset View'));
+      expect(mockChart.resetZoom).toHaveBeenCalled();
+      expect(menu()).toBeNull();
     });
 
     it('context menu closes on close handler', async () => {

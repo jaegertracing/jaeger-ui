@@ -74,6 +74,11 @@ vi.mock('./TimelineHeaderRow', () =>
     <div data-testid="timeline-header-row-mock" data-side-panel-label={props.sidePanelLabel}>
       {props.serviceFilterNode}
       <button
+        data-testid="header-column-change"
+        type="button"
+        onClick={() => props.onColummWidthChange(0.4)}
+      />
+      <button
         data-testid="header-side-panel-change"
         type="button"
         onClick={() => props.onSidePanelWidthChange(0.3)}
@@ -217,6 +222,16 @@ describe('<TraceTimelineViewer>', () => {
       fireEvent.click(screen.getByTestId(testId));
       expect(tracker.mock.invocationCallOrder[0]).toBeLessThan(storeAction.mock.invocationCallOrder[0]);
     });
+  });
+
+  it('tracks a name column resize before updating the store', () => {
+    render(<TraceTimelineViewerImpl {...props} />);
+    fireEvent.click(screen.getByTestId('header-column-change'));
+    expect(track.trackColumnWidth).toHaveBeenCalledWith(0.4);
+    expect(mockLayoutPrefsStore.setSpanNameColumnWidth).toHaveBeenCalledWith(0.4);
+    expect(vi.mocked(track.trackColumnWidth).mock.invocationCallOrder[0]).toBeLessThan(
+      mockLayoutPrefsStore.setSpanNameColumnWidth.mock.invocationCallOrder[0]
+    );
   });
 
   it('should call mergeShortcuts with the correct callbacks on mount', () => {

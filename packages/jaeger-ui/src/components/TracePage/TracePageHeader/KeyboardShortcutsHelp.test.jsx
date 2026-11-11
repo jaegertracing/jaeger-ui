@@ -9,7 +9,12 @@ import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
 import track from './KeyboardShortcutsHelp.track';
 
 vi.mock('./KeyboardShortcutsHelp.track');
-vi.mock('../keyboard-mappings', () => mockDefault({}));
+vi.mock('../keyboard-mappings', () =>
+  mockDefault({
+    panLeft: { binding: ['a', 'left'], label: 'Pan left' },
+    panRightFast: { binding: 'shift+right', label: 'Pan right — Large' },
+  })
+);
 
 describe('KeyboardShortcutsHelp', () => {
   beforeEach(() => {
@@ -49,6 +54,15 @@ describe('KeyboardShortcutsHelp', () => {
     render(<KeyboardShortcutsHelp open onClose={onClose} />);
     fireEvent.click(screen.getByLabelText('Close', { selector: 'button' }));
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('lists each binding with its label and shows arrow and modifier keys as symbols', () => {
+    render(<KeyboardShortcutsHelp open onClose={jest.fn()} />);
+    expect(screen.getAllByText('Pan left')).toHaveLength(2);
+    expect(screen.getByText('A')).toBeInTheDocument();
+    expect(screen.getByText('←')).toBeInTheDocument();
+    expect(screen.getByText('Pan right — Large')).toBeInTheDocument();
+    expect(screen.getByText('⇧ →')).toBeInTheDocument();
   });
 
   it('returns the cached kbdTable on a second call to getHelpModal', () => {
