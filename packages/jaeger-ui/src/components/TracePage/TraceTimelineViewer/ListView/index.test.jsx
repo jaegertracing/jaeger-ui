@@ -276,6 +276,20 @@ describe('<ListView /> functional', () => {
     rectSpy.mockRestore();
   });
 
+  it('remeasures the wrapper offset when content above the list moves it', () => {
+    const ref = React.createRef();
+    const rectSpy = jest.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({ top: 120 });
+
+    const { rerender } = render(<ListView {...props} ref={ref} windowScroller />);
+    expect(ref.current.getViewHeight()).toBe(window.innerHeight - 120);
+
+    rectSpy.mockReturnValue({ top: 192 });
+    rerender(<ListView {...props} ref={ref} windowScroller />);
+
+    expect(ref.current.getViewHeight()).toBe(window.innerHeight - 192);
+    rectSpy.mockRestore();
+  });
+
   it('positions the list after a window scroll', async () => {
     const ref = React.createRef();
     const scrollY = Object.getOwnPropertyDescriptor(window, 'scrollY');

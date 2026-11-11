@@ -279,19 +279,30 @@ const ListView = forwardRef<ListViewRef, TListViewProps>((props, ref) => {
     [_scanItemHeights]
   );
 
+  // Returns true when the wrapper's document offset changed since the last measurement.
+  const _measureTopOffset = useCallback(() => {
+    if (!props.windowScroller || !wrapperElm.current) {
+      return false;
+    }
+    const { top } = wrapperElm.current.getBoundingClientRect();
+    const offset = top + htmlElm.current.scrollTop;
+    if (offset === htmlTopOffset.current) {
+      return false;
+    }
+    htmlTopOffset.current = offset;
+    return true;
+  }, [props.windowScroller]);
+
   React.useLayoutEffect(() => {
     if (props.windowScroller) {
-      if (wrapperElm.current) {
-        const { top } = wrapperElm.current.getBoundingClientRect();
-        htmlTopOffset.current = top + htmlElm.current.scrollTop;
-      }
+      _measureTopOffset();
       window.addEventListener('scroll', _onScroll);
       return () => {
         window.removeEventListener('scroll', _onScroll);
       };
     }
     return undefined;
-  }, [props.windowScroller, _onScroll]);
+  }, [props.windowScroller, _onScroll, _measureTopOffset]);
 
   const didMount = useRef(false);
 
@@ -306,6 +317,11 @@ const ListView = forwardRef<ListViewRef, TListViewProps>((props, ref) => {
     }
     if (itemHolderElm.current) {
       _scanItemHeights();
+    }
+    // Content above the list, such as the heatmap legend, can move it without a resize or scroll.
+    // The view height is derived from this offset, so a stale value skews the visible row range.
+    if (_measureTopOffset()) {
+      _positionList();
     }
   });
 
