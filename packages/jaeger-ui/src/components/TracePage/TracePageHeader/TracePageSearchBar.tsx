@@ -3,7 +3,15 @@
 
 import * as React from 'react';
 import { Button, Dropdown, InputRef, Tooltip } from 'antd';
-import { IoLocate, IoHelp, IoChevronDown, IoChevronUp, IoEye, IoEyeOff } from 'react-icons/io5';
+import {
+  IoLocate,
+  IoHelp,
+  IoChevronDown,
+  IoChevronUp,
+  IoEye,
+  IoEyeOff,
+  IoFunnelOutline,
+} from 'react-icons/io5';
 
 import * as markers from './TracePageSearchBar.markers';
 import { trackFilter } from '../index.track';
@@ -91,7 +99,7 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
             aria-label="Turn this text into a filter"
             data-testid="convert-search"
           >
-            <IoChevronDown />
+            <IoFunnelOutline />
           </button>
         </Tooltip>
       </Dropdown>
