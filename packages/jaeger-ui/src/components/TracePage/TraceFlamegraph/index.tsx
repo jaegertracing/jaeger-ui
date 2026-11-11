@@ -63,11 +63,15 @@ const TraceFlamegraph = ({ trace }: TraceFlamegraphProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [chartZoomed, setChartZoomed] = useState(false);
-  const [collapsedRoot, setCollapsedRoot] = useState<IFlameNode | null>(null);
+  const [collapsedSelection, setCollapsedSelection] = useState<{
+    trace: IOtelTrace | null;
+    node: IFlameNode;
+  } | null>(null);
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
   const fullFlameData = useMemo(() => (trace ? convertOtelTraceToFlameData(trace) : null), [trace]);
+  const collapsedRoot = collapsedSelection?.trace === trace ? collapsedSelection.node : null;
   const flameData = collapsedRoot || fullFlameData;
   const tableData = useMemo(() => (trace ? generateTableData(trace) : []), [trace]);
   const maxSelf = useMemo(() => Math.max(...tableData.map(r => r.self), 1), [tableData]);
@@ -228,7 +232,7 @@ const TraceFlamegraph = ({ trace }: TraceFlamegraphProps) => {
     setSearchQuery('');
     setSelectedItem(null);
     setChartZoomed(false);
-    setCollapsedRoot(null);
+    setCollapsedSelection(null);
     zoomedNodeRef.current = null;
     if (chartRef.current) {
       chartRef.current.resetZoom();
@@ -238,11 +242,11 @@ const TraceFlamegraph = ({ trace }: TraceFlamegraphProps) => {
 
   const handleCollapseAbove = useCallback(() => {
     if (zoomedNodeRef.current) {
-      setCollapsedRoot(zoomedNodeRef.current);
+      setCollapsedSelection({ trace, node: zoomedNodeRef.current });
       zoomedNodeRef.current = null;
     }
     setChartZoomed(false);
-  }, []);
+  }, [trace]);
 
   const handleRowClick = useCallback((name: string) => {
     setSelectedItem(prev => (prev === name ? null : name));

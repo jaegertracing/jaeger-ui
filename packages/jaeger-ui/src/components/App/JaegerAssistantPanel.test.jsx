@@ -6,6 +6,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 
+import { HttpAgent } from '@ag-ui/client';
 import {
   JaegerAssistantDock,
   JaegerThreadMessageBody,
@@ -24,8 +25,10 @@ const partsMock = vi.hoisted(() => ({
   parts: [{ type: 'text' }],
 }));
 
-vi.mock('./jaegerAgUi', () => ({
-  getJaegerAgUiUrl: () => agUiMock.url,
+const capturedAgUiOnError = vi.hoisted(() => ({ fn: /** @type {null | ((e: unknown) => void)} */ (null) }));
+
+vi.mock('./jaeger-AG-UI', () => ({
+  getJaegerAGUIUrl: () => agUiMock.url,
 }));
 
 vi.mock('../../hooks/useJaegerAssistant', () => ({
@@ -38,7 +41,10 @@ vi.mock('@ag-ui/client', () => ({
 }));
 
 vi.mock('@assistant-ui/react-ag-ui', () => ({
-  useAgUiRuntime: () => ({ mockRuntime: true }),
+  useAgUiRuntime: opts => {
+    capturedAgUiOnError.fn = opts?.onError ?? null;
+    return { mockRuntime: true };
+  },
 }));
 
 vi.mock('@assistant-ui/react', () => {
@@ -364,6 +370,75 @@ describe('JaegerAssistantDock', () => {
   });
 });
 
+describe('JaegerAssistantRuntimeProvider', () => {
+  beforeEach(() => {
+    agUiMock.configured = false;
+    capturedAgUiOnError.fn = null;
+    vi.clearAllMocks();
+  });
+
+  it('does not wrap with AssistantRuntimeProvider when assistant is not configured', () => {
+    agUiMock.configured = false;
+    render(
+      <JaegerAssistantProvider>
+        <JaegerAssistantDock />
+      </JaegerAssistantProvider>
+    );
+    expect(screen.queryByTestId('AssistantRuntimeProvider')).not.toBeInTheDocument();
+    expect(HttpAgent).not.toHaveBeenCalled();
+  });
+
+  it('wraps with AssistantRuntimeProvider when assistant is configured', () => {
+    agUiMock.configured = true;
+    render(
+      <JaegerAssistantProvider>
+        <JaegerAssistantDock />
+      </JaegerAssistantProvider>
+    );
+    expect(screen.getByTestId('AssistantRuntimeProvider')).toBeInTheDocument();
+    expect(
+      screen.getByTestId('AssistantRuntimeProvider').querySelector('aside.JaegerAssistantPanel')
+    ).not.toBeNull();
+  });
+
+  it('passes a fetch wrapper to HttpAgent that survives method-style invocation', async () => {
+    // Regression: @ag-ui/client's HttpAgent stores the supplied `fetch` as
+    // `this.fetch` and later invokes it as `this.fetch(...)`. Passing the bare
+    // global `fetch` would then be called with `this === HttpAgent`, which throws
+    // "Illegal invocation" in browsers. The runtime provider must supply a wrapper that
+    // detaches the receiver.
+    agUiMock.configured = true;
+    render(
+      <JaegerAssistantProvider>
+        <JaegerAssistantDock />
+      </JaegerAssistantProvider>
+    );
+    expect(HttpAgent).toHaveBeenCalledTimes(1);
+    const opts = HttpAgent.mock.calls[0][0];
+    expect(typeof opts.fetch).toBe('function');
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(undefined);
+    const receiver = { fetch: opts.fetch };
+    await receiver.fetch('/x', { method: 'POST' });
+    expect(fetchSpy).toHaveBeenCalledWith('/x', { method: 'POST' });
+    fetchSpy.mockRestore();
+  });
+
+  it('useAgUiRuntime onError logs AG-UI errors (lines 29–30)', () => {
+    agUiMock.configured = true;
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    render(
+      <JaegerAssistantProvider>
+        <JaegerAssistantDock />
+      </JaegerAssistantProvider>
+    );
+    expect(capturedAgUiOnError.fn).toEqual(expect.any(Function));
+    const err = new Error('ag-ui-failure');
+    capturedAgUiOnError.fn(err);
+    expect(spy).toHaveBeenCalledWith('[jaeger-assistant] AG-UI error', err);
+    spy.mockRestore();
+  });
+});
+
 describe('JaegerThreadMessageBody', () => {
   beforeEach(() => {
     partsMock.parts = [{ type: 'text' }, { type: 'reasoning', text: '' }];
@@ -410,6 +485,20 @@ describe('JaegerThreadMessageBody', () => {
     partsMock.parts = [{ type: 'text', text: '' }];
     const { container } = render(<JaegerThreadMessageBody variant="assistant" />);
     expect(container.querySelector('[data-testid="message-part-text"]')).not.toBeInTheDocument();
+  });
+
+  it('renders snake_case identifiers and inline code literally', () => {
+    partsMock.parts = [{ type: 'text', text: 'WHERE customer_id=392 and `customer_id` is the key' }];
+    const { container } = render(<JaegerThreadMessageBody variant="assistant" />);
+    expect(container.textContent).toContain('customer_id');
+    expect(container.textContent).not.toContain('customerid');
+    expect(container.querySelector('code')).toHaveTextContent('customer_id');
+  });
+
+  it('keeps unpaired asterisks in assistant text', () => {
+    partsMock.parts = [{ type: 'text', text: 'SELECT * FROM customer WHERE customer_id=392' }];
+    const { container } = render(<JaegerThreadMessageBody variant="assistant" />);
+    expect(container.textContent).toContain('SELECT * FROM customer WHERE customer_id=392');
   });
 
   it('routes an assistant text part with no text field at all through the markdown path', () => {

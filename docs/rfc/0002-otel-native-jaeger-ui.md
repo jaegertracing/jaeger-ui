@@ -2,12 +2,12 @@
 
 * **Status**: Partially Implemented — Phases 1–2 done; the facade design has graduated into [ADR-0002](../adr/0002-otlp-api-v3-migration.md)
 * **Created**: 2025-12-29
-* **Last Updated**: 2026-10-11
+* **Last Updated**: 2026-11-06
 * **Tracking Issue**: [#3265](https://github.com/jaegertracing/jaeger-ui/issues/3265)
 
 > Originally filed as ADR-0002. It is a proposal with a phased implementation plan, so it now lives here and remains the plan of record for the outstanding milestones; [ADR-0002](../adr/0002-otlp-api-v3-migration.md) records the OTEL facade and `api/v3` client that resulted.
 
-**Where this stands**: Phases 1–2 are complete. On Phase 3, service/span-name discovery (3.1) and trace search (3.3) run on `/api/v3/`. The validated `fetchTrace` boundary and captured wire-contract tests have landed in [#4455](https://github.com/jaegertracing/jaeger-ui/pull/4455) and [#4480](https://github.com/jaegertracing/jaeger-ui/pull/4480). `parseOtelTrace()` in `src/api/v3/parser.ts` converts the validated wire data into the enriched `IOtelTrace`, and the shared behavior tests run through both it and the legacy transformer ([#4503](https://github.com/jaegertracing/jaeger-ui/pull/4503)). Single-trace loading still uses `/api/traces/:id` and `transformTraceData`; the UI switch and visual parity check remain open.
+**Where this stands**: Phases 1–2 are complete. On Phase 3, service/span-name discovery (3.1) and trace search (3.3) run on `/api/v3/`. The validated `fetchTrace` boundary and captured wire-contract tests have landed in [#4455](https://github.com/jaegertracing/jaeger-ui/pull/4455) and [#4480](https://github.com/jaegertracing/jaeger-ui/pull/4480). `parseOtelTrace()` in `src/api/v3/parser.ts` converts the validated wire data into the enriched `IOtelTrace`, and the shared behavior tests run through both it and the legacy transformer ([#4503](https://github.com/jaegertracing/jaeger-ui/pull/4503)). Single-trace loading uses `JaegerClient.fetchTrace` and `parseOtelTrace` through `hooks/useTraceLoading.ts` ([#4605](https://github.com/jaegertracing/jaeger-ui/pull/4605)); same-trace visual and large-trace performance parity remain open.
 
 ---
 
@@ -491,17 +491,23 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 #### Milestone 3.2: Single Trace Loading
 **Goal**: Load a full trace by ID using the new OTLP parser.
 
-**Partially implemented.** `JaegerClient.fetchTrace()` and its boundary tests have landed in #4455 and #4480. `parseOtelTrace()` converts that validated data into the enriched `IOtelTrace` and runs the shared behavior tests alongside the legacy transformer ([#4503](https://github.com/jaegertracing/jaeger-ui/pull/4503)); the earlier [#4129](https://github.com/jaegertracing/jaeger-ui/pull/4129) had combined the parser with the hook rewiring. The hook rewire and TracePage integration remain open. `hooks/useTraceLoading.ts` still uses `JaegerAPI.fetchTrace` → `transformTraceData(...).asOtelTrace()`. The transport and transformer must be switched beneath the existing `useTrace` / `useTraces` hooks before this milestone is complete.
+**Native loading implemented; parity remains open.** `JaegerClient.fetchTrace()` and its boundary tests landed in #4455 and #4480. `parseOtelTrace()` converts validated data into enriched `IOtelTrace` and runs the shared behavior tests alongside the legacy transformer ([#4503](https://github.com/jaegertracing/jaeger-ui/pull/4503)). [#4605](https://github.com/jaegertracing/jaeger-ui/pull/4605) switches `hooks/useTraceLoading.ts` to this client and parser. TracePage, TraceDiff, and the Search-results Deep Dependency Graph use the native path through their existing hooks. Same-trace visual and large-trace performance comparisons remain required before legacy deletion.
 
 **The typing choice is implemented at the network boundary.** A full trace contains nested `resourceSpans` / `scopeSpans`, recursive `AnyValue` attributes, events, links, and status. `schemas.ts` refines the generated Zod schemas for the observed wire encodings; `JaegerClient.fetchTrace` validates the response envelope and returns `TracesDataWire`. The parser consumes that validated type rather than defining a private wire interface.
+
+> **Implementation note (#4605):** The hooks preserve `UseQueryResult<IOtelTrace>` and `Map<string, FetchedTrace>`, their `['trace', id]` cache keys, canonical-ID alias caching, and GenAI classification. `utils/trace-id.ts` matches the server by trying 1–32 hex digits first, then standard or URL-safe base64 decoding to exactly 8 or 16 bytes. The original ID remains the query key.
+
+> Both hooks and the shared client's trace query defaults disable structural sharing because native traces contain cyclic parent/child references. Manual reload is separate work in #4574 and must be verified through the native path after both changes land.
+
+> Trace fetches use the existing transport without a fixed client deadline because storage and archive reads may take longer than 10 seconds before response headers arrive. Smaller v3 requests retain the transport's 10-second default.
 
 **Backend response shape** (`jaeger-query`, `apiv3.HTTPGateway.returnTrace`): `GET /api/v3/traces/{trace_id}` returns a **single** JSON object wrapping the payload in a grpc-gateway envelope, `{"result": {"resourceSpans": [...]}}`, serialised with jsonpb. The proto declares `GetTrace` as a server-streaming RPC, but the HTTP gateway buffers and concatenates all chunks before writing ([jaeger#6467](https://github.com/jaegertracing/jaeger/issues/6467) tracks making it a real stream). A client may therefore assume one document today, but should keep envelope handling separable so incremental parsing can be added without touching the enrichment logic.
 
 - [x] Implement `fetchTrace(traceId)` in `JaegerClient` (`src/api/v3/client.ts`) with validated response-envelope and wire-contract tests (#4455, #4480).
 - [x] Implement the OTLP parser (`src/api/v3/parser.ts`) to convert validated OTLP wire data to enriched `IOtelTrace` (depth, parent/child refs, relative timing; #4503).
 - [x] Run the shared behavior tests through `transformTraceData(...).asOtelTrace()` and `parseOtelTrace()` using inline span specs (#4503).
-- [ ] Switch the existing React Query `useTrace` / `useTraces` hooks in `src/hooks/useTraceLoading.ts` to `JaegerClient.fetchTrace` and `parseOtelTrace`.
-- [ ] Route `TracePage` through the native loader.
+- [x] Switch the existing React Query `useTrace` / `useTraces` hooks in `src/hooks/useTraceLoading.ts` to `JaegerClient.fetchTrace` and `parseOtelTrace` (#4605).
+- [x] Route `TracePage` through the native loader (#4605).
 - [ ] Verify visual parity (trace loaded from `/api/v3/` looks identical to legacy).
 - **Verification**: Opening a trace (e.g., via direct URL) loads data from `/api/v3/`.
 
@@ -523,10 +529,11 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 
 **Not everything has a v3 counterpart.** `jaeger-idl`'s api_v3 service defines only `traces/{trace_id}`, `traces`, `services`, `operations`, `dependencies`, and `trace-summaries`. Trace archival (`/api/archive/:id`), SPM metrics (`/api/metrics/*`), DDG (`/analytics/v1/dependencies`), OTLP file transform (`/api/transform`), and config-driven decoration URLs have no v3 endpoint, so they legitimately stay on their current routes. Removing `src/api/jaeger.ts` therefore means folding those calls into `JaegerClient` (or a sibling module) rather than migrating them to `/api/v3/`.
 
-- [ ] Implement `archiveTrace` and `fetchDependencies` (`/api/v3/dependencies`) in `JaegerClient`; carry `fetchMetrics` over unchanged.
+- [x] Implement `archiveTrace` and `fetchDecoration` in `JaegerClient` and migrate their callers.
+- [ ] Implement `fetchDependencies` (`/api/v3/dependencies`) in `JaegerClient`; carry `fetchMetrics` over unchanged.
 - [ ] Update remaining components to use the new client.
 - [ ] Gradually decommission Redux actions/reducers for trace data.
-- [ ] Remove legacy `src/api/jaeger.ts`.
+- [x] Remove legacy `src/api/jaeger.ts`.
 - [ ] Transition to Phase 4 (Cleanup).
 
 ---
@@ -792,7 +799,10 @@ The client validates captured backend responses at the network boundary. The nat
 ##### 1. Captured Client Contract Tests
 The `JaegerClient.fetchTrace` tests mock `fetch` with captured v3 JSON and malformed variants. A full-page fetch harness belongs with the native loader integration work.
 - [x] Cover response-envelope validation, trace ID checks, URL construction, and failed requests with captured wire data (#4455, #4480).
-- [ ] Add native-loader integration tests for valid traces, rejected payloads, alias caching, and partial-trace polling.
+- [x] Add native-loader integration tests for valid, empty, and rejected responses, supported ID aliases, cache reuse, and cyclic branching-trace cache replacement (#4605).
+- [ ] Verify user-initiated reload through the native loader with search/view state preserved and refetch failures visible (#4574).
+
+> **Implementation note (#4605):** Hook tests exercise the real client and parser with mocked HTTP responses. Basic browser checks cover Timeline, Graph, Statistics, Flamegraph, GenAI detection, TraceDiff, Search-results DDG, ID normalization, error feedback, and uploaded-cache reuse on small seeded traces. These checks do not establish same-trace visual parity or 50k–80k-span performance parity.
 
 ##### 2. Contract Validation (Zod)
 Layer refinements over the generated OTLP schemas at the network boundary, then pass the validated `TracesDataWire` to the parser.
@@ -826,16 +836,25 @@ We will move towards a model where the Search page only fetches **Trace Summarie
 
 The blast radius is already small: outside tests, the facade classes have three importers (`model/transform-trace-data.ts`, `components/TracePage/TraceFlamegraph/index.tsx`, and each other) and `transform-trace-data` has three (`hooks/useTraceLoading.ts`, `SearchTracePage/FileLoader.tsx`, `TraceTimelineViewer/generateRowStates.ts`). Once the parser from Milestone 3.2 produces `IOtelTrace` natively, all six call sites lose their reason to exist.
 
+> **Implementation note (#4605):** Native loading removes the transformer and facade bridge from `hooks/useTraceLoading.ts`. Uploads and test fixtures still use them. The historical caller inventory above is no longer current: `generateRowStates` retains transformer use in tests, and Flamegraph no longer imports a facade. Native uploads, a fresh caller audit, and visual/performance parity remain prerequisites for deletion.
+
+> **Legacy-upload window (decided October 2026, [recorded on #4278](https://github.com/jaegertracing/jaeger-ui/issues/4278#issuecomment-6372283243)):** Legacy Jaeger JSON uploads stay supported for about six months through the existing transformer. The unchecked transformer, facade, and legacy-type items below are deferred to the end of that window, not dropped.
+
 - [ ] Remove `OtelSpanFacade`, `OtelTraceFacade` classes and the `asOtelTrace()` bridge on the legacy trace type
-- [ ] Parse uploaded OTLP files client-side in `utils/readJsonFile.ts`, dropping its `/api/transform` round trip (an OTLP file is already in the parser's input format)
+- [x] Parse uploaded OTLP files client-side in `SearchTracePage/FileLoader.tsx`, dropping the `/api/transform` round trip in `utils/readJsonFile.ts` (an OTLP file is already in the parser's input format)
 - [ ] Remove legacy types (mark as deprecated first)
-- [ ] Remove `src/api/jaeger.ts` (old REST API)
+- [x] Remove `src/api/jaeger.ts` (old REST API)
 - [ ] Remove `transformTraceData` (old transformer)
 - [ ] Documentation updates
 
 **Backend follow-through (jaeger repo).** This migration is not finished when the UI stops calling `/api/traces`, `/api/services`, and `/api/transform` — it is finished when `jaeger-query` stops serving what nothing consumes. Those v1 HTTP handlers exist largely for the UI, and leaving them in place indefinitely means the backend carries two query paths and two serialisation formats forever, which is the cost this RFC set out to remove.
 
 The v1 API is public, so this is a deprecation exercise rather than a delete: announce, give a release or two of overlap, then remove. It belongs in the `jaeger` repo and should be tracked there once the UI side of Phase 4 lands. `/api/transform` is the exception worth doing early — it exists only to convert OTLP files for the UI, and a native parser makes it dead on arrival.
+
+> **Retirement schedule (decided November 2026, [recorded on #4278](https://github.com/jaegertracing/jaeger-ui/issues/4278#issuecomment-6626447894)):** For `/api/traces/{traceID}` and `/api/transform`, this decision replaces the announce-and-overlap plan above, with no deprecation period. v2.23.0 still serves both routes, and [jaeger#10048](https://github.com/jaegertracing/jaeger/pull/10048) is set to remove them in v2.24.0.
+>
+> - `/api/traces/{traceID}`: no caller in jaeger or jaeger-ui uses it. Jaeger UI loads traces and opens the JSON views through `/api/v3/traces/{id}` ([#4605](https://github.com/jaegertracing/jaeger-ui/pull/4605), [#4678](https://github.com/jaegertracing/jaeger-ui/pull/4678)), and [jaeger#10004](https://github.com/jaegertracing/jaeger/pull/10004) moved the remaining backend callers to v3.
+> - `/api/transform`: it has no v3 counterpart. It retires because Jaeger UI now parses OTLP uploads in the browser ([#4634](https://github.com/jaegertracing/jaeger-ui/pull/4634)), which leaves it without a caller in jaeger or jaeger-ui.
 
 ---
 
