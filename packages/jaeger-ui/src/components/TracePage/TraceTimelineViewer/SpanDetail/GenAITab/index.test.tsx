@@ -840,13 +840,41 @@ describe('GenAITab', () => {
   it('renders a Retrieved documents section for an explicitly empty documents array (#4437)', () => {
     render(<GenAITab span={makeSpan([{ key: 'gen_ai.retrieval.documents', value: [] }])} />);
     expect(screen.getByText('Retrieved documents')).toBeInTheDocument();
+    expect(screen.getByText('No documents returned.')).toBeInTheDocument();
     expect(screen.queryByText('Other GenAI Attributes')).not.toBeInTheDocument();
   });
 
   it('renders a Memory section for an explicitly empty records array (#4437)', () => {
     render(<GenAITab span={makeSpan([{ key: 'gen_ai.memory.records', value: [] }])} />);
     expect(screen.getByText('Memory')).toBeInTheDocument();
+    expect(screen.getByText('No records returned.')).toBeInTheDocument();
     expect(screen.queryByText('Other GenAI Attributes')).not.toBeInTheDocument();
+  });
+
+  it('does not show the empty line once there is at least one document or record', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          { key: 'gen_ai.retrieval.documents', value: [{ content: 'doc one' }] },
+          { key: 'gen_ai.memory.records', value: [{ content: 'record one' }] },
+        ])}
+      />
+    );
+    expect(screen.queryByText('No documents returned.')).not.toBeInTheDocument();
+    expect(screen.queryByText('No records returned.')).not.toBeInTheDocument();
+  });
+
+  it('renders a memory record whose id is null without crashing', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          { key: 'gen_ai.memory.records', value: JSON.stringify([{ content: 'r', id: null }]) },
+        ])}
+      />
+    );
+    expect(screen.getByText('Record 1')).toBeInTheDocument();
+    expect(screen.getByText('id')).toBeInTheDocument();
+    expect(screen.getByText('null')).toBeInTheDocument();
   });
 
   it('renders a Memory section with its meta fields and one card per record (#4434)', () => {

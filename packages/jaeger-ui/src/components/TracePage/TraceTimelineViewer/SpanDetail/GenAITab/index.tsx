@@ -869,6 +869,7 @@ function RetrievalDetails({ queryText, topK, dataSourceId, documents }: GenAiRet
     <div className="GenAITab--section">
       <h3 className="GenAITab--sectionTitle">Retrieved documents</h3>
       {metaData.size > 0 && <AttributesTable data={metaData} linksGetter={null} />}
+      {documents.length === 0 && <div className="GenAITab--empty">No documents returned.</div>}
       {documents.map((doc, i) => (
         <ContentEntryCard key={i} label={`Document ${i + 1}`} entry={doc} />
       ))}
@@ -889,6 +890,7 @@ function MemoryDetails({ queryText, storeId, recordCount, records }: GenAiMemory
     <div className="GenAITab--section">
       <h3 className="GenAITab--sectionTitle">Memory</h3>
       {metaData.size > 0 && <AttributesTable data={metaData} linksGetter={null} />}
+      {records.length === 0 && <div className="GenAITab--empty">No records returned.</div>}
       {records.map((record, i) => (
         <ContentEntryCard key={i} label={`Record ${i + 1}`} entry={record} />
       ))}

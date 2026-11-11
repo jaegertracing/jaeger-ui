@@ -914,6 +914,11 @@ describe('extractGenAiSections', () => {
       expect(section(sections, 'retrieval')?.documents).toEqual([{ content: 'not json', rest: {} }]);
     });
 
+    it('treats a JSON-encoded "[]" documents string as an empty documents list', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.retrieval.documents': '[]' }));
+      expect(section(sections, 'retrieval')?.documents).toEqual([]);
+    });
+
     it('produces a retrieval section from the query text alone, with an empty documents list', () => {
       const sections = extractGenAiSections(attrs({ 'gen_ai.retrieval.query.text': 'find docs' }));
       expect(section(sections, 'retrieval')).toEqual({
@@ -993,6 +998,23 @@ describe('extractGenAiSections', () => {
         recordCount: undefined,
         records: [],
       });
+    });
+
+    it('treats a JSON-encoded "[]" records string as an empty records list', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.memory.records': '[]' }));
+      expect(section(sections, 'memory')?.records).toEqual([]);
+    });
+
+    it('keeps a null record id as a field instead of dropping it', () => {
+      const sections = extractGenAiSections(
+        attrs({ 'gen_ai.memory.records': JSON.stringify([{ content: 'r', id: null }]) })
+      );
+      expect(section(sections, 'memory')?.records).toEqual([{ content: 'r', rest: { id: null } }]);
+    });
+
+    it('falls back to a single entry for records that are not valid JSON', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.memory.records': '[{"content": "r"' }));
+      expect(section(sections, 'memory')?.records).toEqual([{ content: '[{"content": "r"', rest: {} }]);
     });
 
     it('produces no memory section when no memory attributes are present', () => {
