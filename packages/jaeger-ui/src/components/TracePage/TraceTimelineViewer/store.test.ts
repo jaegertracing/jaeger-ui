@@ -570,6 +570,16 @@ describe('trace timeline zustand stores', () => {
       expect(detailStates.size).toBe(1);
       expect(detailStates.has('span-a')).toBe(true);
       expect(detailStates.get('span-a')!.isAttributesOpen).toBe(true);
+      expect(detailStates.get('span-a')!.isResourceOpen).toBe(true);
+    });
+
+    it('upgrades a single inline detailState to sidepanel defaults when switching to sidepanel', () => {
+      useTraceTimelineStore.setState({ detailStates: new Map([['span-a', new DetailState()]]) });
+      setDetailPanelMode('sidepanel');
+      const { detailStates } = useTraceTimelineStore.getState();
+      expect(detailStates.size).toBe(1);
+      expect(detailStates.get('span-a')!.isAttributesOpen).toBe(true);
+      expect(detailStates.get('span-a')!.isResourceOpen).toBe(true);
     });
 
     it('does not touch detailStates when switching to inline', () => {
