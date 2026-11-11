@@ -71,10 +71,12 @@ describe('<ViewingLayer />', () => {
   ])(
     'keeps a reframe drag within the %s graph bound',
     (_, startClientX, endClientX, anchor, shift, expectedRange) => {
+      props.viewRange = getViewRange(0.1, 0.9);
+      rerender(<ViewingLayer {...props} />);
       const graph = getGraph();
 
       fireEvent.mouseDown(graph, { button: 0, clientX: startClientX });
-      props.viewRange = getViewRange(0, 1, { reframe: { anchor, shift: anchor } });
+      props.viewRange = getViewRange(0.1, 0.9, { reframe: { anchor, shift: anchor } });
       rerender(<ViewingLayer {...props} />);
       fireEvent.mouseMove(window, { button: 0, clientX: endClientX });
       fireEvent.mouseUp(window, { button: 0, clientX: endClientX });
