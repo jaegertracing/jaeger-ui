@@ -919,14 +919,31 @@ describe('extractGenAiSections', () => {
       expect(section(sections, 'retrieval')?.documents).toEqual([]);
     });
 
-    it('produces a retrieval section from the query text alone, with an empty documents list', () => {
+    it('produces a retrieval section from the query text alone, leaving documents undefined', () => {
       const sections = extractGenAiSections(attrs({ 'gen_ai.retrieval.query.text': 'find docs' }));
       expect(section(sections, 'retrieval')).toEqual({
         queryText: 'find docs',
         topK: undefined,
         dataSourceId: undefined,
-        documents: [],
+        documents: undefined,
       });
+    });
+
+    it('leaves an unparseable top_k unclaimed so it shows in the other section', () => {
+      const sections = extractGenAiSections(
+        attrs({ 'gen_ai.retrieval.query.text': 'q', 'gen_ai.retrieval.top_k': 'all' })
+      );
+      expect(section(sections, 'retrieval')?.topK).toBeUndefined();
+      expect(section(sections, 'other')?.attributes.entries()).toEqual([
+        { key: 'gen_ai.retrieval.top_k', value: 'all' },
+      ]);
+    });
+
+    it('treats a document with null content like one with no content', () => {
+      const sections = extractGenAiSections(
+        attrs({ 'gen_ai.retrieval.documents': JSON.stringify([{ content: null, score: 0.5 }]) })
+      );
+      expect(section(sections, 'retrieval')?.documents).toEqual([{ content: '', rest: { score: 0.5 } }]);
     });
 
     it('builds a retrieval section for an explicitly empty documents array, distinct from no attribute at all (#4437)', () => {
@@ -998,6 +1015,24 @@ describe('extractGenAiSections', () => {
         recordCount: undefined,
         records: [],
       });
+    });
+
+    it('leaves records undefined for a count-only memory span', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.memory.record.count': 3 }));
+      expect(section(sections, 'memory')).toEqual({
+        queryText: undefined,
+        storeId: undefined,
+        recordCount: 3,
+        records: undefined,
+      });
+    });
+
+    it('leaves an unparseable record count unclaimed so it shows in the other section', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.memory.record.count': 'all' }));
+      expect(section(sections, 'memory')).toBeUndefined();
+      expect(section(sections, 'other')?.attributes.entries()).toEqual([
+        { key: 'gen_ai.memory.record.count', value: 'all' },
+      ]);
     });
 
     it('treats a JSON-encoded "[]" records string as an empty records list', () => {

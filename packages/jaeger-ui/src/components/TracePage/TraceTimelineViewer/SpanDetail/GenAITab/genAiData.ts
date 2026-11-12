@@ -61,7 +61,9 @@ export type GenAiRetrieval = {
   queryText?: string;
   topK?: number;
   dataSourceId?: string;
-  documents: GenAiContentEntry[];
+  // Undefined when gen_ai.retrieval.documents is absent (document content is opt-in),
+  // [] only when the span explicitly recorded an empty list.
+  documents?: GenAiContentEntry[];
 };
 
 // Fields per the gen_ai.memory.* registry (search_memory/upsert_memory spans): the
@@ -70,7 +72,9 @@ export type GenAiMemory = {
   queryText?: string;
   storeId?: string;
   recordCount?: number;
-  records: GenAiContentEntry[];
+  // Undefined when gen_ai.memory.records is absent (record content is opt-in),
+  // [] only when the span explicitly recorded an empty list.
+  records?: GenAiContentEntry[];
 };
 
 // Fields per the gen_ai.agent.* registry (create_agent/invoke_agent spans): id, name,
@@ -150,6 +154,10 @@ function asNumber(value: AttributeValue | undefined): number | undefined {
     return Number.isNaN(parsed) ? undefined : parsed;
   }
   return undefined;
+}
+
+function isNumeric(value: AttributeValue): boolean {
+  return asNumber(value) !== undefined;
 }
 
 function stringifyValue(value: unknown): string {
@@ -493,8 +501,8 @@ function parseMessages(value: AttributeValue | undefined): GenAiMessage[] {
  * so a renderer can show it prominently; every other field is kept under `rest` rather than
  * assumed away, so nothing about an entry is silently dropped.
  */
-function parseContentEntries(value: AttributeValue | undefined): GenAiContentEntry[] {
-  if (value == null) return [];
+function parseContentEntries(value: AttributeValue | undefined): GenAiContentEntry[] | undefined {
+  if (value == null) return undefined;
   let parsed: unknown = value;
   if (typeof value === 'string') {
     try {
@@ -511,7 +519,7 @@ function parseContentEntries(value: AttributeValue | undefined): GenAiContentEnt
     }
     const { content, ...rest } = entry as Record<string, unknown>;
     return {
-      content: content === undefined ? '' : typeof content === 'string' ? content : stringifyValue(content),
+      content: content == null ? '' : typeof content === 'string' ? content : stringifyValue(content),
       rest,
     };
   });
@@ -591,7 +599,9 @@ export function formatTokenCount(value: number | undefined): string | undefined 
 // shared pool). A build function's "owned keys" are exactly the keys it
 // happens to call get() on - nothing is declared twice, so there is no
 // separate allowlist that can drift out of sync with what's actually read.
-type GetAttr = (key: string) => AttributeValue | undefined;
+// `accept`, when given, claims the value only if it returns true; a rejected value stays
+// unclaimed so it still shows up in "Other GenAI Attributes" instead of being dropped.
+type GetAttr = (key: string, accept?: (value: AttributeValue) => boolean) => AttributeValue | undefined;
 type SectionBuilder = (get: GetAttr) => GenAiSection | undefined;
 
 // Array order IS render order - no separate rank field to keep in sync with
@@ -647,7 +657,7 @@ const REGISTRY: SectionBuilder[] = [
   },
   get => {
     const queryText = asString(get('gen_ai.retrieval.query.text'));
-    const topK = asNumber(get('gen_ai.retrieval.top_k'));
+    const topK = asNumber(get('gen_ai.retrieval.top_k', isNumeric));
     const dataSourceId = asString(get('gen_ai.data_source.id'));
     const documentsAttr = get('gen_ai.retrieval.documents');
     const documents = parseContentEntries(documentsAttr);
@@ -661,7 +671,7 @@ const REGISTRY: SectionBuilder[] = [
   get => {
     const queryText = asString(get('gen_ai.memory.query.text'));
     const storeId = asString(get('gen_ai.memory.store.id'));
-    const recordCount = asNumber(get('gen_ai.memory.record.count'));
+    const recordCount = asNumber(get('gen_ai.memory.record.count', isNumeric));
     const recordsAttr = get('gen_ai.memory.records');
     const records = parseContentEntries(recordsAttr);
     return queryText !== undefined ||
@@ -739,11 +749,15 @@ export function extractGenAiSections(attributes: IAttributes): GenAiSection[] {
   });
 
   const claimed = new Set<number>();
-  const get: GetAttr = key => {
-    const index = indicesByKey.get(key)?.shift();
+  const get: GetAttr = (key, accept) => {
+    const indices = indicesByKey.get(key);
+    const index = indices?.[0];
     if (index === undefined) return undefined;
+    const { value } = entries[index];
+    if (accept && !accept(value)) return undefined;
+    indices!.shift();
     claimed.add(index);
-    return entries[index].value;
+    return value;
   };
 
   const sections = REGISTRY.map(build => build(get)).filter((s): s is GenAiSection => s !== undefined);

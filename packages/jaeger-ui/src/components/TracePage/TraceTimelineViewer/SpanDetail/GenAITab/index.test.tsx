@@ -851,6 +851,40 @@ describe('GenAITab', () => {
     expect(screen.queryByText('Other GenAI Attributes')).not.toBeInTheDocument();
   });
 
+  it('does not claim no documents were returned for a query-only retrieval span', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          { key: 'gen_ai.retrieval.query.text', value: 'find docs' },
+          { key: 'gen_ai.retrieval.top_k', value: 3 },
+        ])}
+      />
+    );
+    expect(screen.getByText('Retrieved documents')).toBeInTheDocument();
+    expect(screen.getByText('find docs')).toBeInTheDocument();
+    expect(screen.queryByText('No documents returned.')).not.toBeInTheDocument();
+  });
+
+  it('does not claim no records were returned for a count-only memory span', () => {
+    render(<GenAITab span={makeSpan([{ key: 'gen_ai.memory.record.count', value: 3 }])} />);
+    expect(screen.getByText('Memory')).toBeInTheDocument();
+    expect(screen.getByText('Record count')).toBeInTheDocument();
+    expect(screen.queryByText('No records returned.')).not.toBeInTheDocument();
+  });
+
+  it('does not render the text "null" for a record whose content is null', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          { key: 'gen_ai.memory.records', value: JSON.stringify([{ content: null, id: 'r1' }]) },
+        ])}
+      />
+    );
+    expect(screen.getByText('Record 1')).toBeInTheDocument();
+    expect(screen.getByText('r1')).toBeInTheDocument();
+    expect(screen.queryByText('null')).not.toBeInTheDocument();
+  });
+
   it('does not show the empty line once there is at least one document or record', () => {
     render(
       <GenAITab
