@@ -246,8 +246,8 @@ function buildLiftedTree(spans: ReadonlyArray<IOtelSpan>, hiddenIDs: ReadonlySet
     if (hiddenIDs.has(spanID)) {
       nearestVisible[depth] = visibleParent;
       if (visibleParent && isErrorSpan(span)) {
-        const credited = hiddenErrors.get(visibleParent.spanID);
-        if (credited) credited.push(span);
+        const parentErrors = hiddenErrors.get(visibleParent.spanID);
+        if (parentErrors) parentErrors.push(span);
         else hiddenErrors.set(visibleParent.spanID, [span]);
       }
       continue;
@@ -273,13 +273,13 @@ function buildLiftedTree(spans: ReadonlyArray<IOtelSpan>, hiddenIDs: ReadonlySet
     childCount: span => childCounts.get(span.spanID) ?? 0,
     liftedPast: span => {
       if (!span.parentSpan || !hiddenIDs.has(span.parentSpan.spanID)) return NO_SPANS;
-      const passed: IOtelSpan[] = [];
+      const hiddenAncestors: IOtelSpan[] = [];
       let parent: IOtelSpan | undefined = span.parentSpan;
       while (parent && hiddenIDs.has(parent.spanID)) {
-        passed.push(parent);
+        hiddenAncestors.push(parent);
         parent = parent.parentSpan;
       }
-      return passed.reverse();
+      return hiddenAncestors.reverse();
     },
     hiddenErrors: span => hiddenErrors.get(span.spanID) ?? NO_SPANS,
     hiddenErrorIDs: span => {
