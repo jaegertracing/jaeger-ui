@@ -44,7 +44,8 @@ function makeSpan(
   } as unknown as IOtelSpan;
 }
 
-const filterOf = (...clauses: IClause[]): ISpanFilter => ({ ...EMPTY_SPAN_FILTER, clauses });
+const REMOVE_FILTER: ISpanFilter = { clauses: [], treeMode: 'remove' };
+const filterOf = (...clauses: IClause[]): ISpanFilter => ({ ...REMOVE_FILTER, clauses });
 const liftFilterOf = (...clauses: IClause[]): ISpanFilter => ({ clauses, treeMode: 'lift' });
 
 describe('evaluateSpanFilter', () => {
@@ -86,7 +87,7 @@ describe('evaluateSpanFilter', () => {
   });
 
   it('hides the spans of a pruned service and their descendants', () => {
-    expect(hidden(withHiddenServices(EMPTY_SPAN_FILTER, new Set(['svc-b'])))).toEqual(
+    expect(hidden(withHiddenServices(REMOVE_FILTER, new Set(['svc-b'])))).toEqual(
       new Set(['child', 'grandchild'])
     );
   });
@@ -98,7 +99,7 @@ describe('evaluateSpanFilter', () => {
   });
 
   it('leaves a span of a pruned service visible only when nothing above it is pruned', () => {
-    expect(hidden(withHiddenServices(EMPTY_SPAN_FILTER, new Set(['svc-c'])))).toEqual(
+    expect(hidden(withHiddenServices(REMOVE_FILTER, new Set(['svc-c'])))).toEqual(
       new Set(['grandchild', 'sibling'])
     );
   });
@@ -109,7 +110,7 @@ describe('evaluateSpanFilter', () => {
   });
 
   it('hides the whole trace when the root service is pruned', () => {
-    expect(hidden(withHiddenServices(EMPTY_SPAN_FILTER, new Set(['svc-a'])))).toEqual(
+    expect(hidden(withHiddenServices(REMOVE_FILTER, new Set(['svc-a'])))).toEqual(
       new Set(['root', 'child', 'grandchild', 'sibling'])
     );
   });
@@ -238,7 +239,7 @@ describe('evaluateSpanFilter', () => {
       'vector-store',
     ]);
     const hiddenBy = (services: Set<string>) =>
-      evaluateSpanFilter(trace.spans, withHiddenServices(EMPTY_SPAN_FILTER, services)).hiddenIDs;
+      evaluateSpanFilter(trace.spans, withHiddenServices(REMOVE_FILTER, services)).hiddenIDs;
     expect(hiddenBy(new Set(['mcp-gateway'])).has(nestedLlm.spanID)).toBe(true);
     expect(hiddenBy(plainLeafServices).has(nestedLlm.spanID)).toBe(false);
   });

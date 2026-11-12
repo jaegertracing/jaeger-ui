@@ -503,7 +503,10 @@ describe('<TracePage>', () => {
     raw.spans[2].references = [{ refType: 'CHILD_OF', traceID: raw.traceID, spanID: raw.spans[1].spanID }];
     const localTrace = transformTraceData(raw).asOtelTrace();
     useTraceMock.mockReturnValue({ data: localTrace, isPending: false, isError: false, error: null });
-    mockTraceTimelineStore.spanFilter = withHiddenServices(EMPTY_SPAN_FILTER, new Set(['svc-pruned']));
+    mockTraceTimelineStore.spanFilter = withHiddenServices(
+      { ...EMPTY_SPAN_FILTER, treeMode: 'remove' },
+      new Set(['svc-pruned'])
+    );
 
     render(<TracePage {...defaultProps} params={{ id: raw.traceID }} uiFind="everywhere" />);
 

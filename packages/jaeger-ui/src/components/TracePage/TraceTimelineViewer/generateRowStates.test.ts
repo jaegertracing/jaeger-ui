@@ -491,7 +491,7 @@ describe('generateRowStates in lift mode', () => {
     it('hides the five leaf services in remove mode as 34 spans and 10 placeholders', () => {
       const rows = rowCount(
         withHiddenServices(
-          EMPTY_SPAN_FILTER,
+          { ...EMPTY_SPAN_FILTER, treeMode: 'remove' },
           new Set(['auth-service', 'metrics-backend', 'trace-store', 'k8s-api', 'vector-store'])
         )
       );

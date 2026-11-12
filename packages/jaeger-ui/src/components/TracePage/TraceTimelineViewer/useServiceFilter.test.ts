@@ -77,12 +77,19 @@ describe('resolveInitialFilter', () => {
     expect(result.cleanSearch).toBeUndefined();
   });
 
-  it('reads a legacy svcFilter as the hide clause on service and rewrites it as f', () => {
+  it('reads a legacy svcFilter as the hide clause on service in remove mode and rewrites it as f', () => {
     vi.mocked(decodeSvcFilter).mockReturnValue({
       visibleServices: new Set(['svc-a']),
       stale: false,
     });
     const result = resolveInitialFilter('?svcFilter=abc.1', ['svc-a', 'svc-b'], roots);
+    expect(result.filter).toEqual({ ...serviceFilter('svc-b'), treeMode: 'remove' });
+    expect(result.cleanSearch).toBe('?f=h%3Aservice%3Asvc-b&tree=remove');
+  });
+
+  it('keeps the tree mode the URL names next to a legacy svcFilter', () => {
+    vi.mocked(decodeSvcFilter).mockReturnValue({ visibleServices: new Set(['svc-a']), stale: false });
+    const result = resolveInitialFilter('?svcFilter=abc.1&tree=lift', ['svc-a', 'svc-b'], roots);
     expect(result.filter).toEqual(serviceFilter('svc-b'));
     expect(result.cleanSearch).toBe('?f=h%3Aservice%3Asvc-b');
   });
@@ -133,7 +140,7 @@ describe('resolveInitialFilter', () => {
         { verb: 'keep', criterion: { shape: 'set', property: 'status', values: ['error'] } },
         { verb: 'hide', criterion: { shape: 'text', text: 'foo' } },
       ],
-      treeMode: 'remove',
+      treeMode: 'lift',
     });
     expect(result.cleanSearch).toBeUndefined();
   });
@@ -152,7 +159,7 @@ describe('resolveInitialFilter', () => {
       { verb: 'keep', criterion: { shape: 'set', property: 'status', values: ['error'] } },
       { verb: 'hide', criterion: { shape: 'set', property: 'service', values: ['svc-b'] } },
     ]);
-    expect(result.cleanSearch).toBe('?f=k%3Astatus%3Aerror&f=h%3Aservice%3Asvc-b');
+    expect(result.cleanSearch).toBe('?f=k%3Astatus%3Aerror&f=h%3Aservice%3Asvc-b&tree=remove');
   });
 
   it('reads the hide clause on service from f and leaves the saved default aside', () => {
@@ -188,10 +195,12 @@ describe('resolveInitialFilter', () => {
 
   it('applies a saved default that hides the sole root in lift mode but not in remove mode', () => {
     localStorage.setItem('svcFilter.defaults', JSON.stringify({ prunedServices: ['svc-a'] }));
-    expect(hiddenServices(resolveInitialFilter('?tree=lift', ['svc-a', 'svc-b'], roots).filter)).toEqual(
+    expect(hiddenServices(resolveInitialFilter('', ['svc-a', 'svc-b'], roots).filter)).toEqual(
       new Set(['svc-a'])
     );
-    expect(hiddenServices(resolveInitialFilter('', ['svc-a', 'svc-b'], roots).filter).size).toBe(0);
+    expect(hiddenServices(resolveInitialFilter('?tree=remove', ['svc-a', 'svc-b'], roots).filter).size).toBe(
+      0
+    );
   });
 
   it('leaves the saved default aside when f is explicitly empty or every value is malformed', () => {
@@ -214,10 +223,11 @@ describe('resolveInitialFilter', () => {
         visibleServices: new Set(['svc-b']),
         stale: false,
       });
-      // The URL hides only svc-a, the sole root, so sanitization empties the filter.
+      // The URL hides only svc-a, the sole root, so sanitization empties the filter; the legacy
+      // link brings remove mode with it.
       const result = resolveInitialFilter('?svcFilter=abc.2', ['svc-a', 'svc-b'], new Set(['svc-a']));
-      expect(result.filter).toEqual(EMPTY_SPAN_FILTER);
-      expect(result.cleanSearch).toBe('?f=');
+      expect(result.filter).toEqual({ ...EMPTY_SPAN_FILTER, treeMode: 'remove' });
+      expect(result.cleanSearch).toBe('?f=&tree=remove');
     });
 
     it('removes the sole root service but keeps the other hidden services in the rewritten f', () => {
@@ -226,27 +236,27 @@ describe('resolveInitialFilter', () => {
         stale: false,
       });
       const result = resolveInitialFilter(
-        '?svcFilter=abc.4',
+        '?svcFilter=abc.4&tree=remove',
         ['svc-a', 'svc-b', 'svc-c'],
         new Set(['svc-a'])
       );
       expect(hiddenServices(result.filter)).toEqual(new Set(['svc-b']));
-      expect(result.cleanSearch).toBe('?f=h%3Aservice%3Asvc-b');
+      expect(result.cleanSearch).toBe('?f=h%3Aservice%3Asvc-b&tree=remove');
     });
 
     it('removes the sole root service from a hide clause in f and rewrites it', () => {
       const result = resolveInitialFilter(
-        '?f=h%3Aservice%3Asvc-a%2Csvc-b&uiFind=x',
+        '?f=h%3Aservice%3Asvc-a%2Csvc-b&tree=remove&uiFind=x',
         ['svc-a', 'svc-b', 'svc-c'],
         new Set(['svc-a'])
       );
       expect(hiddenServices(result.filter)).toEqual(new Set(['svc-b']));
-      expect(result.cleanSearch).toBe('?f=h%3Aservice%3Asvc-b&uiFind=x');
+      expect(result.cleanSearch).toBe('?f=h%3Aservice%3Asvc-b&tree=remove&uiFind=x');
     });
 
     it('removes sole root service from pruned set (localStorage)', () => {
       localStorage.setItem('svcFilter.defaults', JSON.stringify({ prunedServices: ['svc-a', 'svc-b'] }));
-      const result = resolveInitialFilter('', ['svc-a', 'svc-b', 'svc-c'], new Set(['svc-a']));
+      const result = resolveInitialFilter('?tree=remove', ['svc-a', 'svc-b', 'svc-c'], new Set(['svc-a']));
       expect(hiddenServices(result.filter).has('svc-a')).toBe(false);
       expect(hiddenServices(result.filter).has('svc-b')).toBe(true);
     });
@@ -257,12 +267,12 @@ describe('resolveInitialFilter', () => {
         stale: false,
       });
       const result = resolveInitialFilter(
-        '?svcFilter=abc.4',
+        '?svcFilter=abc.4&tree=remove',
         ['svc-a', 'svc-b', 'svc-c'],
         new Set(['svc-a', 'svc-b'])
       );
-      expect(result.filter).toEqual(EMPTY_SPAN_FILTER);
-      expect(result.cleanSearch).toBe('?f=');
+      expect(result.filter).toEqual({ ...EMPTY_SPAN_FILTER, treeMode: 'remove' });
+      expect(result.cleanSearch).toBe('?f=&tree=remove');
     });
 
     it('keeps filter when at least one root service is visible (multi-root)', () => {
@@ -313,17 +323,17 @@ describe('buildFilterSearch', () => {
         { verb: 'keep', criterion: { shape: 'set', property: 'status', values: ['error'] } },
         { verb: 'hide', criterion: { shape: 'attr', text: 'http.method:GET' } },
       ],
-      treeMode: 'remove',
+      treeMode: 'lift',
     };
     const search = buildFilterSearch('?uiFind=x', filter);
     expect(search).toBe('?f=k%3Astatus%3Aerror&f=h%3Aattr%3Ahttp.method%3AGET&uiFind=x');
   });
 
-  it('writes tree=lift for lift mode and removes it for remove mode', () => {
-    expect(buildFilterSearch('?uiFind=x', { ...EMPTY_SPAN_FILTER, treeMode: 'lift' })).toBe(
-      '?tree=lift&uiFind=x'
+  it('writes tree=remove for remove mode and removes it for lift mode', () => {
+    expect(buildFilterSearch('?uiFind=x', { ...EMPTY_SPAN_FILTER, treeMode: 'remove' })).toBe(
+      '?tree=remove&uiFind=x'
     );
-    expect(buildFilterSearch('?tree=lift', EMPTY_SPAN_FILTER)).toBe('');
+    expect(buildFilterSearch('?tree=remove', EMPTY_SPAN_FILTER)).toBe('');
   });
 
   it('writes a URL that resolves back to the same filter', () => {
@@ -362,8 +372,8 @@ describe('buildFilterSearch', () => {
         services,
         new Set(['svc-a'])
       );
-      expect(filter).toEqual(serviceFilter('svc-c'));
-      expect(cleanSearch).toBe('?f=h%3Aservice%3Asvc-c&uiFind=x');
+      expect(filter).toEqual({ ...serviceFilter('svc-c'), treeMode: 'remove' });
+      expect(cleanSearch).toBe('?f=h%3Aservice%3Asvc-c&tree=remove&uiFind=x');
     } finally {
       vi.mocked(decodeSvcFilter).mockReturnValue(null);
     }
@@ -423,9 +433,9 @@ describe('useServiceFilter hook', () => {
       stale: false,
     });
     renderHook(() => useServiceFilter(makeTrace(['svc-a', 'svc-b']), 'inline'));
-    expect(mockSetSpanFilter).toHaveBeenCalledWith(serviceFilter('svc-b'));
+    expect(mockSetSpanFilter).toHaveBeenCalledWith({ ...serviceFilter('svc-b'), treeMode: 'remove' });
     expect(mockNavigate).toHaveBeenCalledWith(
-      expect.objectContaining({ pathname: '/trace/abc', search: '?f=h%3Aservice%3Asvc-b' }),
+      expect.objectContaining({ pathname: '/trace/abc', search: '?f=h%3Aservice%3Asvc-b&tree=remove' }),
       { replace: true }
     );
   });
