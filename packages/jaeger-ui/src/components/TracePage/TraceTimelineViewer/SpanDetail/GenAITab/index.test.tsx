@@ -885,6 +885,42 @@ describe('GenAITab', () => {
     expect(screen.queryByText('null')).not.toBeInTheDocument();
   });
 
+  it('renders object- and array-valued entry fields as JSON instead of breaking the table', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.retrieval.documents',
+            value: JSON.stringify([
+              {
+                content: 'doc one',
+                metadata: { author: 'user', page: 3 },
+                'http.request.header.x-trace': [{ a: 1 }],
+              },
+            ]),
+          },
+        ])}
+      />
+    );
+    expect(screen.getByText('doc one')).toBeInTheDocument();
+    expect(screen.getByText('metadata')).toBeInTheDocument();
+    expect(screen.getByText('http.request.header.x-trace')).toBeInTheDocument();
+    expect(screen.queryByText('[object Object]')).not.toBeInTheDocument();
+  });
+
+  it('does not show a Retrieved documents section for an agent span with only a data source', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          { key: 'gen_ai.operation.name', value: 'invoke_agent' },
+          { key: 'gen_ai.data_source.id', value: 'kb-1' },
+        ])}
+      />
+    );
+    expect(screen.queryByText('Retrieved documents')).not.toBeInTheDocument();
+    expect(screen.getByText(/Other GenAI Attributes/)).toBeInTheDocument();
+  });
+
   it('does not show the empty line once there is at least one document or record', () => {
     render(
       <GenAITab

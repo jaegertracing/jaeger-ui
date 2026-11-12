@@ -968,6 +968,24 @@ describe('extractGenAiSections', () => {
       expect(section(sections, 'other')).toBeUndefined();
     });
 
+    it('leaves gen_ai.data_source.id alone in the other section on a span with no retrieval attribute', () => {
+      const sections = extractGenAiSections(
+        attrs({ 'gen_ai.operation.name': 'invoke_agent', 'gen_ai.data_source.id': 'kb-1' })
+      );
+      expect(section(sections, 'retrieval')).toBeUndefined();
+      expect(section(sections, 'other')?.attributes.entries()).toEqual([
+        { key: 'gen_ai.data_source.id', value: 'kb-1' },
+      ]);
+    });
+
+    it('treats a "null" documents string like an absent attribute', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.retrieval.documents': 'null' }));
+      expect(section(sections, 'retrieval')).toBeUndefined();
+      expect(section(sections, 'other')?.attributes.entries()).toEqual([
+        { key: 'gen_ai.retrieval.documents', value: 'null' },
+      ]);
+    });
+
     it('produces no retrieval section when no retrieval attributes are present', () => {
       const sections = extractGenAiSections(attrs({ 'gen_ai.provider.name': 'openai' }));
       expect(section(sections, 'retrieval')).toBeUndefined();
@@ -1032,6 +1050,16 @@ describe('extractGenAiSections', () => {
       expect(section(sections, 'memory')).toBeUndefined();
       expect(section(sections, 'other')?.attributes.entries()).toEqual([
         { key: 'gen_ai.memory.record.count', value: 'all' },
+      ]);
+    });
+
+    it('treats a "null" records string like an absent attribute', () => {
+      const sections = extractGenAiSections(
+        attrs({ 'gen_ai.memory.store.id': 'store-1', 'gen_ai.memory.records': 'null' })
+      );
+      expect(section(sections, 'memory')?.records).toBeUndefined();
+      expect(section(sections, 'other')?.attributes.entries()).toEqual([
+        { key: 'gen_ai.memory.records', value: 'null' },
       ]);
     });
 

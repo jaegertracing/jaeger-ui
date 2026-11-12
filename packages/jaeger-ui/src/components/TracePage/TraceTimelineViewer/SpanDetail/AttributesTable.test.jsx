@@ -108,6 +108,16 @@ describe('<AttributesTable>', () => {
     },
   ];
 
+  it('renders a header list holding objects as JSON instead of crashing', () => {
+    render(
+      <AttributesTable
+        data={makeAttributes([{ key: 'http.request.header.x', value: JSON.stringify([{ a: 1 }, 'b']) }])}
+      />
+    );
+    expect(screen.getByText('{"a":1}')).toBeInTheDocument();
+    expect(screen.getByText('b')).toBeInTheDocument();
+  });
+
   it('renders KeyValueTable container with correct structure', () => {
     render(<AttributesTable data={makeAttributes(data)} />);
 

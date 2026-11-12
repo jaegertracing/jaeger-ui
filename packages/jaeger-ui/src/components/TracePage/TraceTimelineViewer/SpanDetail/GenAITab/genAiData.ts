@@ -511,6 +511,8 @@ function parseContentEntries(value: AttributeValue | undefined): GenAiContentEnt
       // Not JSON - treat the whole string as a single entry with no other fields.
       return [{ content: value, rest: {} }];
     }
+    // A JSON null records nothing, the same as an absent attribute.
+    if (parsed === null) return undefined;
   }
   const entries = Array.isArray(parsed) ? parsed : [parsed];
   return entries.map((entry): GenAiContentEntry => {
@@ -523,6 +525,12 @@ function parseContentEntries(value: AttributeValue | undefined): GenAiContentEnt
       rest,
     };
   });
+}
+
+// A documents/records value that parses to nothing (a JSON null) is left unclaimed, so its raw
+// value stays visible in "Other GenAI Attributes" rather than rendering as a card.
+function hasContentEntries(value: AttributeValue): boolean {
+  return parseContentEntries(value) !== undefined;
 }
 
 export function hasAnyTokenUsage(usage: GenAiTokenUsage): boolean {
@@ -658,26 +666,22 @@ const REGISTRY: SectionBuilder[] = [
   get => {
     const queryText = asString(get('gen_ai.retrieval.query.text'));
     const topK = asNumber(get('gen_ai.retrieval.top_k', isNumeric));
+    const documents = parseContentEntries(get('gen_ai.retrieval.documents', hasContentEntries));
+    // gen_ai.data_source.id also appears on agent spans that never retrieved anything, so it
+    // only joins a section that has a retrieval attribute; otherwise it stays in "other".
+    if (queryText === undefined && topK === undefined && documents === undefined) return undefined;
     const dataSourceId = asString(get('gen_ai.data_source.id'));
-    const documentsAttr = get('gen_ai.retrieval.documents');
-    const documents = parseContentEntries(documentsAttr);
-    return queryText !== undefined ||
-      topK !== undefined ||
-      dataSourceId !== undefined ||
-      documentsAttr !== undefined
-      ? { type: 'retrieval', data: { queryText, topK, dataSourceId, documents } }
-      : undefined;
+    return { type: 'retrieval', data: { queryText, topK, dataSourceId, documents } };
   },
   get => {
     const queryText = asString(get('gen_ai.memory.query.text'));
     const storeId = asString(get('gen_ai.memory.store.id'));
     const recordCount = asNumber(get('gen_ai.memory.record.count', isNumeric));
-    const recordsAttr = get('gen_ai.memory.records');
-    const records = parseContentEntries(recordsAttr);
+    const records = parseContentEntries(get('gen_ai.memory.records', hasContentEntries));
     return queryText !== undefined ||
       storeId !== undefined ||
       recordCount !== undefined ||
-      recordsAttr !== undefined
+      records !== undefined
       ? { type: 'memory', data: { queryText, storeId, recordCount, records } }
       : undefined;
   },

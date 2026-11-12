@@ -836,9 +836,16 @@ function ContentEntryCard({ label, entry }: { label: string; entry: GenAiContent
       makeAttributes(
         Object.entries(entry.rest).map(([key, value]): IAttribute => ({
           key,
-          // A direct null (id, score, ... may legitimately be null) must not reach
-          // AttributesTable as-is: it treats null as an object and crashes rendering it.
-          value: value === null ? 'null' : (value as AttributeValue),
+          // AttributesTable expects span attribute values: a direct null (id, score, ... may
+          // legitimately be null) crashes it, and an object or array (e.g. metadata) copies as
+          // "[object Object]" or breaks the header renderer. A JSON string still renders as a
+          // tree, since the table parses it back.
+          value:
+            value === null
+              ? 'null'
+              : typeof value === 'object'
+                ? JSON.stringify(value)
+                : (value as AttributeValue),
         }))
       ),
     [entry]
