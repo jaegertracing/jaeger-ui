@@ -53,7 +53,7 @@ const POPOVER_MIN_HEIGHT = 120;
 const POPOVER_MARGIN = 16;
 // The arrow, the title and the padding that antd draws around the content, which the cap on the
 // content must leave room for.
-const POPOVER_CHROME = 65;
+const POPOVER_FRAME_HEIGHT = 65;
 
 function VerbIcon({ verb }: { verb: Verb }) {
   return verb === 'keep' ? <IoEye aria-hidden /> : <IoEyeOff aria-hidden />;
@@ -130,8 +130,8 @@ export default function SpanFilterButton({
   const measure = useCallback(() => {
     if (!buttonRef.current) return;
     const bottom = buttonRef.current.getBoundingClientRect().bottom;
-    const room = window.innerHeight - bottom - POPOVER_CHROME - POPOVER_MARGIN;
-    setMaxHeight(Math.max(POPOVER_MIN_HEIGHT, room));
+    const spaceBelow = window.innerHeight - bottom - POPOVER_FRAME_HEIGHT - POPOVER_MARGIN;
+    setMaxHeight(Math.max(POPOVER_MIN_HEIGHT, spaceBelow));
   }, []);
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
@@ -166,30 +166,30 @@ export default function SpanFilterButton({
     },
     [editing, filter, needsApply, onChange, warningFor]
   );
-  const stage = useCallback((edit: Edit) => applyEdit(edit, true), [applyEdit]);
+  const applyOrDraft = useCallback((edit: Edit) => applyEdit(edit, true), [applyEdit]);
   const commitNow = useCallback((edit: Edit) => applyEdit(edit, false), [applyEdit]);
 
   const toggleService = useCallback(
     (name: string) => {
       // The sole root service cannot be hidden, but a draft that already hides it can show it again.
       if (name === lockedService && !pruned.has(name)) return;
-      stage(f => {
+      applyOrDraft(f => {
         const next = new Set(hiddenServices(f));
         if (next.has(name)) next.delete(name);
         else next.add(name);
         return withHiddenServices(f, next);
       });
     },
-    [lockedService, pruned, stage]
+    [lockedService, pruned, applyOrDraft]
   );
 
-  const selectAll = useCallback(() => stage(f => withHiddenServices(f, new Set())), [stage]);
+  const selectAll = useCallback(() => applyOrDraft(f => withHiddenServices(f, new Set())), [applyOrDraft]);
   const selectNone = useCallback(
     () =>
-      stage(f =>
+      applyOrDraft(f =>
         withHiddenServices(f, new Set(serviceEntries.filter(s => s.name !== lockedService).map(s => s.name)))
       ),
-    [lockedService, serviceEntries, stage]
+    [lockedService, serviceEntries, applyOrDraft]
   );
 
   const setTreeMode = useCallback((treeMode: TreeMode) => commitNow(f => ({ ...f, treeMode })), [commitNow]);
