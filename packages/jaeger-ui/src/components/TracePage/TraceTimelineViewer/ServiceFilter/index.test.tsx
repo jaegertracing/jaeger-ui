@@ -53,6 +53,8 @@ function withErrorSpan(trace: IOtelTrace): IOtelTrace {
 }
 
 const hideServices = (...names: string[]) => withHiddenServices(EMPTY_SPAN_FILTER, new Set(names));
+const REMOVE_FILTER: ISpanFilter = { ...EMPTY_SPAN_FILTER, treeMode: 'remove' };
+const removeHiding = (...names: string[]) => withHiddenServices(REMOVE_FILTER, new Set(names));
 const keepErrors: ISpanFilter = {
   clauses: [{ verb: 'keep', criterion: { shape: 'set', property: 'status', values: ['error'] } }],
   treeMode: 'lift',
@@ -183,10 +185,10 @@ describe('SpanFilterButton', () => {
     });
 
     it('applies Select None without the locked root service', async () => {
-      renderButton(makeTrace(['svc-a', 'svc-b', 'svc-c']));
+      renderButton(makeTrace(['svc-a', 'svc-b', 'svc-c']), REMOVE_FILTER);
       await open();
       fireEvent.click(screen.getByText('Select None'));
-      expect(onChange).toHaveBeenCalledWith(hideServices('svc-b', 'svc-c'));
+      expect(onChange).toHaveBeenCalledWith(removeHiding('svc-b', 'svc-c'));
     });
 
     it('holds an edit that would hide every service and shows the warning instead of applying it', async () => {
@@ -199,11 +201,13 @@ describe('SpanFilterButton', () => {
     });
 
     it('holds an edit that would hide every root service in remove mode', async () => {
-      render(<Stateful trace={makeTrace(['svc-a', 'svc-b', 'svc-c'], ['svc-a', 'svc-b'])} />);
+      render(
+        <Stateful trace={makeTrace(['svc-a', 'svc-b', 'svc-c'], ['svc-a', 'svc-b'])} filter={REMOVE_FILTER} />
+      );
       await open();
       const checkboxes = screen.getAllByRole('checkbox');
       fireEvent.click(checkboxes[0]);
-      expect(onChange).toHaveBeenLastCalledWith(hideServices('svc-a'));
+      expect(onChange).toHaveBeenLastCalledWith(removeHiding('svc-a'));
       fireEvent.click(checkboxes[1]);
       expect(onChange).toHaveBeenCalledTimes(1);
       expect(screen.getByRole('alert')).toHaveTextContent('This filter would leave no span shown');
@@ -543,7 +547,7 @@ describe('SpanFilterButton', () => {
       fireEvent.click(screen.getAllByRole('checkbox')[0]);
       expect(onChange).not.toHaveBeenCalled();
       fireEvent.click(screen.getByLabelText('Remove with it'));
-      expect(onChange).toHaveBeenCalledWith(EMPTY_SPAN_FILTER);
+      expect(onChange).toHaveBeenCalledWith(REMOVE_FILTER);
       expect(screen.queryByRole('alert')).toBeNull();
     });
 
@@ -668,11 +672,13 @@ describe('SpanFilterButton', () => {
 
   describe('draft and committed filter', () => {
     it('applies a held draft as a whole when a chip edit makes it valid below the threshold', async () => {
-      render(<Stateful trace={makeTrace(['svc-a', 'svc-b', 'svc-c'], ['svc-a', 'svc-b'])} />);
+      render(
+        <Stateful trace={makeTrace(['svc-a', 'svc-b', 'svc-c'], ['svc-a', 'svc-b'])} filter={REMOVE_FILTER} />
+      );
       await open();
       const checkboxes = screen.getAllByRole('checkbox');
       fireEvent.click(checkboxes[0]);
-      expect(onChange).toHaveBeenLastCalledWith(hideServices('svc-a'));
+      expect(onChange).toHaveBeenLastCalledWith(removeHiding('svc-a'));
       fireEvent.click(checkboxes[1]);
       expect(screen.getByRole('alert')).toBeInTheDocument();
       fireEvent.click(screen.getByLabelText('Lift to its parent'));
@@ -684,17 +690,16 @@ describe('SpanFilterButton', () => {
     it('lets a draft show the sole root service again after a switch to remove mode', async () => {
       render(<Stateful trace={makeTrace(['svc-a', 'svc-b'], ['svc-a'])} applyThreshold={0} />);
       await open();
-      fireEvent.click(screen.getByLabelText('Lift to its parent'));
       fireEvent.click(screen.getAllByRole('checkbox')[0]);
       fireEvent.click(screen.getByLabelText('Remove with it'));
-      expect(onChange).toHaveBeenCalledTimes(1);
+      expect(onChange).not.toHaveBeenCalled();
       expect(screen.getByRole('alert')).toHaveTextContent('leave no span');
       const root = screen.getAllByRole('checkbox')[0];
       expect(root).not.toBeDisabled();
       fireEvent.click(root);
       expect(screen.queryByRole('alert')).toBeNull();
       fireEvent.click(screen.getByText('Apply'));
-      expect(onChange).toHaveBeenLastCalledWith(EMPTY_SPAN_FILTER);
+      expect(onChange).toHaveBeenLastCalledWith(REMOVE_FILTER);
     });
 
     it('judges a hide set by the trace services it names, not by its size', async () => {
@@ -788,21 +793,21 @@ describe('SpanFilterButton', () => {
     it('switches the mode at once', async () => {
       renderButton(makeTrace(['svc-a', 'svc-b']));
       await open();
-      fireEvent.click(screen.getByLabelText('Lift to its parent'));
-      expect(onChange).toHaveBeenCalledWith({ ...EMPTY_SPAN_FILTER, treeMode: 'lift' });
+      fireEvent.click(screen.getByLabelText('Remove with it'));
+      expect(onChange).toHaveBeenCalledWith(REMOVE_FILTER);
     });
 
     it('switches the mode at once above the threshold too', async () => {
       renderButton(makeTrace(['svc-a', 'svc-b']), EMPTY_SPAN_FILTER, 0);
       await open();
-      fireEvent.click(screen.getByLabelText('Lift to its parent'));
-      expect(onChange).toHaveBeenCalledWith({ ...EMPTY_SPAN_FILTER, treeMode: 'lift' });
+      fireEvent.click(screen.getByLabelText('Remove with it'));
+      expect(onChange).toHaveBeenCalledWith(REMOVE_FILTER);
     });
   });
 
   describe('single root service locking', () => {
     it('disables the checkbox for the sole root service', async () => {
-      renderButton(makeTrace(['svc-a', 'svc-b', 'svc-c']));
+      renderButton(makeTrace(['svc-a', 'svc-b', 'svc-c']), REMOVE_FILTER);
       await open();
       const checkboxes = screen.getAllByRole('checkbox');
       expect(checkboxes[0]).toBeDisabled();

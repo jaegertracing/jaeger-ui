@@ -619,10 +619,9 @@ describe('useSpanFilter hook', () => {
 
   it('sanitizes the root service away in remove mode even when the button asks for it', () => {
     render(React.createElement(HookRenderer, { trace: makeTrace(['svc-a', 'svc-b']), mode: 'inline' }));
-    capturedOnChange!(withHiddenServices(EMPTY_SPAN_FILTER, new Set(['svc-a', 'svc-b'])));
-    expect(mockSetSpanFilter).toHaveBeenLastCalledWith(
-      withHiddenServices(EMPTY_SPAN_FILTER, new Set(['svc-b']))
-    );
+    const remove: ISpanFilter = { ...EMPTY_SPAN_FILTER, treeMode: 'remove' };
+    capturedOnChange!(withHiddenServices(remove, new Set(['svc-a', 'svc-b'])));
+    expect(mockSetSpanFilter).toHaveBeenLastCalledWith(withHiddenServices(remove, new Set(['svc-b'])));
   });
 
   it('saves the service selection as the default when asked', () => {

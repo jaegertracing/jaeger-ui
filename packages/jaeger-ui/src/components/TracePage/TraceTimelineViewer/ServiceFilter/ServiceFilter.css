@@ -130,9 +130,13 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 /* The dark theme's shadow does not separate the popover from the page, and a popover this tall
-   reads as another column without an edge. */
+   reads as another column without an edge, so it gets a visible border and a wider shadow. */
 [data-theme='dark'] .SpanFilter--popoverRoot .ant-popover-inner {
-  border: 1px solid var(--border-default);
+  border: 1px solid var(--border-strongest);
+  box-shadow:
+    var(--shadow-lg),
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 0 24px rgba(0, 0, 0, 0.6);
 }
 
 /* The width is fixed, so that a chip or a value list coming and going does not resize the panel. */

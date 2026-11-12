@@ -141,7 +141,7 @@ const {
     focusUiFindMatches: jest.fn(),
     setSpanFilter: jest.fn(),
     detailStates: new Map(),
-    spanFilter: { clauses: [], treeMode: 'remove' },
+    spanFilter: { clauses: [], treeMode: 'lift' },
   },
   useEmbeddedStateMock: jest.fn().mockReturnValue(null),
   useTraceMock: jest.fn(),
@@ -529,9 +529,14 @@ describe('<TracePage>', () => {
   });
 
   it('hands the header the funnel and disables the keep entry in remove mode', () => {
-    render(<TracePage {...defaultProps} />);
-    expect(capturedHeaderProps.keepDisabledReason).toMatch(/Lift to its parent/);
-    expect(capturedHeaderProps.spanFilterNode).toBeTruthy();
+    mockTraceTimelineStore.spanFilter = { ...EMPTY_SPAN_FILTER, treeMode: 'remove' };
+    try {
+      render(<TracePage {...defaultProps} />);
+      expect(capturedHeaderProps.keepDisabledReason).toMatch(/Lift to its parent/);
+      expect(capturedHeaderProps.spanFilterNode).toBeTruthy();
+    } finally {
+      mockTraceTimelineStore.spanFilter = EMPTY_SPAN_FILTER;
+    }
   });
 
   it('enables the keep entry in lift mode while the text matches a span', () => {
@@ -576,7 +581,7 @@ describe('<TracePage>', () => {
     expect(localTrace.rootSpans).toHaveLength(2);
     useTraceMock.mockReturnValue({ data: localTrace, isPending: false, isError: false, error: null });
     mockTraceTimelineStore.spanFilter = {
-      ...EMPTY_SPAN_FILTER,
+      treeMode: 'remove',
       clauses: [{ verb: 'hide', criterion: { shape: 'set', property: 'kind', values: ['producer'] } }],
     };
     filterSpansSpy.mockImplementation(() => new Set([raw.spans[1].spanID]));
@@ -590,11 +595,13 @@ describe('<TracePage>', () => {
   });
 
   it('disables the hide entry in remove mode when the text matches every root span', () => {
+    mockTraceTimelineStore.spanFilter = { ...EMPTY_SPAN_FILTER, treeMode: 'remove' };
     filterSpansSpy.mockImplementation(() => new Set(trace.rootSpans.map(s => s.spanID)));
     try {
       render(<TracePage {...defaultProps} uiFind="x" />);
       expect(capturedHeaderProps.hideDisabledReason).toMatch(/leave no span/);
     } finally {
+      mockTraceTimelineStore.spanFilter = EMPTY_SPAN_FILTER;
       filterSpansSpy.mockImplementation(() => new Set());
     }
   });
@@ -654,7 +661,7 @@ describe('<TracePage>', () => {
       capturedHeaderProps.onConvertSearch('hide');
       expect(mockTraceTimelineStore.setSpanFilter).toHaveBeenLastCalledWith({
         clauses: [{ verb: 'hide', criterion: { shape: 'text', text: 'auth' } }],
-        treeMode: 'remove',
+        treeMode: 'lift',
       });
       expect(mockNavigate).toHaveBeenLastCalledWith(
         expect.objectContaining({ pathname: '/trace/abc', search: '?f=h%3Atext%3Aauth' }),
