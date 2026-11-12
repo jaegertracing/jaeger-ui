@@ -18,7 +18,7 @@ else (no)
 endif
 if (URL carries svcFilter, f or tree?) then (yes)
   #fff3bf:Other clauses and tree mode
-  from f=… and tree=lift;
+  from f=… and tree=remove;
 else (no)
   :View default
   (Timeline: none. GenAI view of a GenAI trace:
