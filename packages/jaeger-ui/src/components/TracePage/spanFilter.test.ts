@@ -140,7 +140,7 @@ describe('evaluateSpanFilter', () => {
     expect(hidden(f)).toEqual(new Set(['root', 'child', 'grandchild', 'sibling']));
   });
 
-  it('maps an unset status to ok, a GenAI kind to its lower-cased span type, and no usage to 0 tokens', () => {
+  it('maps an unset status to ok, a GenAI kind to its lower-cased span type, and no usage to no tokens', () => {
     expect(
       hidden(liftFilterOf({ verb: 'keep', criterion: { shape: 'set', property: 'status', values: ['OK'] } }))
     ).toEqual(new Set(['child']));
@@ -154,11 +154,17 @@ describe('evaluateSpanFilter', () => {
         })
       ).hiddenIDs
     ).toEqual(new Set(['llm']));
+    // A span without usage has no token value, so neither a hide nor a keep range on tokens matches it.
     expect(
       hidden(
         liftFilterOf({ verb: 'hide', criterion: { shape: 'range', property: 'tokens', min: 0, max: 0 } })
       )
-    ).toEqual(new Set(['root', 'grandchild', 'sibling']));
+    ).toEqual(new Set());
+    expect(
+      hidden(
+        liftFilterOf({ verb: 'keep', criterion: { shape: 'range', property: 'tokens', min: 0, max: 0 } })
+      )
+    ).toEqual(new Set(['root', 'child', 'grandchild', 'sibling']));
   });
 
   it('matches span kind case-insensitively and span type as none for plain spans', () => {

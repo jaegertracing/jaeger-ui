@@ -62,11 +62,13 @@ function spanPropertyValue(span: IOtelSpan, property: SetProperty): string {
 }
 
 // Tokens are the input plus output tokens as the GenAI tab reads them, so that the cache and
-// modality breakdowns of those totals are not counted twice.
-function spanRangeValue(span: IOtelSpan, property: RangeProperty): number {
+// modality breakdowns of those totals are not counted twice. A span without token usage has no
+// token value, so a token range never matches it.
+function spanRangeValue(span: IOtelSpan, property: RangeProperty): number | null {
   if (property === 'duration') return span.duration;
   const usage = getGenAiTokenUsage(span.attributes);
-  return (usage?.inputTokens ?? 0) + (usage?.outputTokens ?? 0);
+  if (!usage || (usage.inputTokens == null && usage.outputTokens == null)) return null;
+  return (usage.inputTokens ?? 0) + (usage.outputTokens ?? 0);
 }
 
 function attributeText({ key, value }: IAttribute): string {
@@ -103,7 +105,7 @@ function compileCriterion(criterion: Criterion, spans: ReadonlyArray<IOtelSpan>)
     case 'range':
       return span => {
         const v = spanRangeValue(span, criterion.property);
-        return v >= criterion.min && v <= criterion.max;
+        return v !== null && v >= criterion.min && v <= criterion.max;
       };
     case 'attr': {
       const needle = criterion.text.toLowerCase();
