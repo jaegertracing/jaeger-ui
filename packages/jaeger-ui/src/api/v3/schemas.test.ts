@@ -500,7 +500,20 @@ describe('QualityMetricsSchema', () => {
           failureExamples: [{ traceID: 'trace-id-005', spanIDs: null }],
           exemptionCount: null,
           exemptionExamples: null,
-          details: null,
+          details: [
+            {
+              description: 'Detailed breakdown of error rates.',
+              header: 'Error Rate Details',
+              columns: [
+                { key: 'service', label: 'Service' },
+                { key: 'errorCount', label: 'Error Count' },
+              ],
+              rows: [
+                { service: 'sample-service-A', errorCount: 5 },
+                { service: 'sample-service-B', errorCount: 3 },
+              ],
+            },
+          ],
         },
       ],
       clients: [
@@ -517,10 +530,29 @@ describe('QualityMetricsSchema', () => {
     expect(parsed.metrics[0].passExamples?.[0].spanIDs).toBeUndefined();
     expect(parsed.metrics[0].exemptionCount).toBeUndefined();
     expect(parsed.metrics[0].exemptionExamples).toBeUndefined();
-    expect(parsed.metrics[1].details).toBeUndefined();
     expect(parsed.clients?.[0].examples[0].spanIDs).toBeUndefined();
     expect(parsed.scores).toHaveLength(2);
     expect(parsed.metrics).toHaveLength(2);
+  });
+
+  it('normalizes null details from the Go Details slice to undefined', () => {
+    const parsed = QualityMetricsSchema.parse({
+      traceQualityDocumentationLink: 'https://example.com/docs',
+      scores: [],
+      metrics: [
+        {
+          name: 'm1',
+          category: 's1',
+          description: 'd1',
+          metricDocumentationLink: 'https://example.com',
+          metricWeight: 1,
+          passCount: 1,
+          failureCount: 0,
+          details: null,
+        },
+      ],
+    });
+    expect(parsed.metrics[0].details).toBeUndefined();
   });
 
   it('validates bannerText as plain string', () => {
@@ -619,16 +651,38 @@ describe('QualityMetricsSchema', () => {
     ).toThrow(z.ZodError);
   });
 
-  it('rejects bannerText object missing required styling', () => {
-    expect(() =>
-      QualityMetricsSchema.parse({
-        traceQualityDocumentationLink: 'https://example.com',
-        bannerText: {
-          value: 'Missing styling property',
+  it('accepts bannerText object without optional styling', () => {
+    const data = {
+      traceQualityDocumentationLink: 'https://example.com',
+      bannerText: {
+        value: 'Banner without styling',
+      },
+      scores: [],
+      metrics: [],
+    };
+    expect(QualityMetricsSchema.parse(data)).toEqual(data);
+  });
+
+  it('defaults null client examples and detail columns/rows to empty arrays', () => {
+    const parsed = QualityMetricsSchema.parse({
+      traceQualityDocumentationLink: 'https://example.com/docs',
+      scores: [],
+      metrics: [
+        {
+          name: 'm1',
+          category: 's1',
+          description: 'd1',
+          metricDocumentationLink: 'https://example.com',
+          metricWeight: 1,
+          passCount: 1,
+          failureCount: 0,
+          details: [{ columns: null, rows: null }],
         },
-        scores: [],
-        metrics: [],
-      })
-    ).toThrow(z.ZodError);
+      ],
+      clients: [{ version: '1.0.0', minVersion: '0.9.0', count: 1, examples: null }],
+    });
+    expect(parsed.metrics[0].details?.[0].columns).toEqual([]);
+    expect(parsed.metrics[0].details?.[0].rows).toEqual([]);
+    expect(parsed.clients?.[0].examples).toEqual([]);
   });
 });

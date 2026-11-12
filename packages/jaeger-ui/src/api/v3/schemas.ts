@@ -395,6 +395,12 @@ export const OperationMetricsResponseSchema = metricFamily.extend({
 const nullToUndefined = <T extends z.ZodTypeAny>(schema: T) =>
   z.preprocess(val => (val === null ? undefined : val), schema.optional());
 
+// Client.Examples, Detail.Columns and Detail.Rows are plain Go slices without
+// omitempty, so they serialize as null when unset. Default them to the empty
+// arrays the components already render.
+const nullToEmptyArray = <T extends z.ZodTypeAny>(schema: z.ZodArray<T>) =>
+  z.preprocess(val => (val === null ? undefined : val), schema.default([]));
+
 const qualityMetricsExample = z
   .object({
     traceID: z.string(),
@@ -416,7 +422,8 @@ const qualityMetricsBannerText = z.union([
   z
     .object({
       value: z.string(),
-      styling: z.record(z.string(), z.unknown()),
+      // styling is omitempty in the Go BannerText; BannerText.tsx defaults it.
+      styling: z.record(z.string(), z.unknown()).optional(),
     })
     .passthrough(),
 ]);
@@ -425,8 +432,8 @@ const qualityMetricsDetail = z
   .object({
     description: z.string().optional(),
     header: z.string().optional(),
-    columns: z.array(z.union([z.string(), z.record(z.string(), z.any())])),
-    rows: z.array(z.record(z.string(), z.any())),
+    columns: nullToEmptyArray(z.array(z.union([z.string(), z.record(z.string(), z.any())]))),
+    rows: nullToEmptyArray(z.array(z.record(z.string(), z.any()))),
   })
   .passthrough();
 
@@ -452,7 +459,7 @@ const qualityMetricsClient = z
     version: z.string(),
     minVersion: z.string(),
     count: z.number(),
-    examples: z.array(qualityMetricsExample),
+    examples: nullToEmptyArray(z.array(qualityMetricsExample)),
   })
   .passthrough();
 
