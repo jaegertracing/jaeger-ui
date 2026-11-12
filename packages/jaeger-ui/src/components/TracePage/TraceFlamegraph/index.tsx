@@ -166,14 +166,12 @@ const TraceFlamegraph = ({ trace }: TraceFlamegraphProps) => {
           }
           return;
         }
-        if (target === hoveredFrameRef.current) {
-          const tooltipEl = tooltipRef.current;
-          if (tooltipEl) {
-            tooltipEl.style.left = `${e.clientX + TOOLTIP_CURSOR_OFFSET_PX}px`;
-            tooltipEl.style.top = `${e.clientY + TOOLTIP_CURSOR_OFFSET_PX}px`;
-          }
-          return;
+        const tooltipEl = tooltipRef.current;
+        if (tooltipEl) {
+          tooltipEl.style.left = `${e.clientX + TOOLTIP_CURSOR_OFFSET_PX}px`;
+          tooltipEl.style.top = `${e.clientY + TOOLTIP_CURSOR_OFFSET_PX}px`;
         }
+        if (target === hoveredFrameRef.current) return;
         hoveredFrameRef.current = target;
         const d3Data = (target as any).__data__;
         const name = d3Data?.data?.name || '';
