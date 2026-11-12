@@ -2,61 +2,26 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import _set from 'lodash/set';
-import queryString from 'query-string';
 
-import extractDecorationFromState from '.';
+import getDecorationPresentation from '.';
 
-describe('extractDecorationFromState', () => {
+describe('getDecorationPresentation', () => {
   const decorationID = 'test decoration id';
   const service = 'test service';
   const operation = 'test operation';
   const decorationValue = 42;
   const decorationMax = 108;
+  const props = { decorationID, service, operation, decorationValue, decorationMax };
 
-  function makeState({ decoration = decorationID, opValue, opMax, withoutOpValue, withoutOpMax }) {
-    const state = {};
-    const deco = Array.isArray(decoration) ? decoration[0] : decoration;
-
-    if (opValue !== undefined)
-      _set(state, `pathAgnosticDecorations.${deco}.withOp.${service}.${operation}`, opValue);
-    if (opMax !== undefined) _set(state, `pathAgnosticDecorations.${deco}.withOpMax`, opMax);
-    if (withoutOpValue !== undefined)
-      _set(state, `pathAgnosticDecorations.${deco}.withoutOp.${service}`, withoutOpValue);
-    if (withoutOpMax !== undefined) _set(state, `pathAgnosticDecorations.${deco}.withoutOpMax`, withoutOpMax);
-
-    return state;
-  }
-
-  function extractWrapper(stateArgs, svpOp = { service, operation }) {
-    const state = makeState(stateArgs);
-    const deco = stateArgs.decoration !== undefined ? stateArgs.decoration : decorationID;
-    const search = deco ? queryString.stringify({ decoration: deco }) : '';
-    return extractDecorationFromState(state, { ...svpOp, search });
-  }
-
-  it('returns an empty object if url lacks a decorationID', () => {
-    expect(extractWrapper({ decoration: null })).toEqual({});
+  it('returns an empty object without a decoration ID', () => {
+    expect(getDecorationPresentation({ ...props, decorationID: undefined })).toEqual({});
   });
 
-  it('prefers operation specific decoration over service decoration', () => {
-    const otherValue = 'other value';
-    const otherMax = 'other max';
-    const res = extractWrapper({
-      opValue: decorationValue,
-      opMax: decorationMax,
-      withoutOpValue: otherValue,
-      withoutOpMax: otherMax,
-    });
-    expect(res).toEqual(
-      expect.objectContaining({
-        decorationID,
-        decorationValue,
-      })
-    );
-    expect(res.decorationProgressbar).toBeDefined();
-    expect(React.isValidElement(res.decorationProgressbar)).toBe(true);
-    expect(res.decorationProgressbar.props).toEqual({
+  it('renders a numeric value and its progress bar', () => {
+    const result = getDecorationPresentation(props);
+    expect(result).toEqual(expect.objectContaining({ decorationID, decorationValue }));
+    expect(React.isValidElement(result.decorationProgressbar)).toBe(true);
+    expect(result.decorationProgressbar.props).toEqual({
       backgroundHue: 120,
       decorationHue: 0,
       maxValue: decorationMax,
@@ -64,62 +29,33 @@ describe('extractDecorationFromState', () => {
       text: '42',
       value: decorationValue,
     });
-    expect(res.decorationProgressbar.key).toBe(`${service}\t${operation}`);
+    expect(result.decorationProgressbar.key).toBe(`${service}\t${operation}`);
   });
 
   it('returns service decoration', () => {
-    const res = extractWrapper({
-      withoutOpValue: decorationValue,
-      withoutOpMax: decorationMax,
-    });
-    expect(res).toEqual(
-      expect.objectContaining({
-        decorationID,
-        decorationValue,
-      })
-    );
-    expect(res.decorationProgressbar).toBeDefined();
-    expect(React.isValidElement(res.decorationProgressbar)).toBe(true);
-    expect(res.decorationProgressbar.props).toEqual({
-      backgroundHue: 120,
-      decorationHue: 0,
-      maxValue: decorationMax,
-      strokeWidth: 10,
-      text: '42',
-      value: decorationValue,
-    });
-    expect(res.decorationProgressbar.key).toBe(`${service}\t${operation}`);
+    const result = getDecorationPresentation({ ...props, operation: undefined });
+    expect(result.decorationValue).toBe(decorationValue);
+    expect(result.decorationProgressbar.props.maxValue).toBe(decorationMax);
+    expect(result.decorationProgressbar.key).toBe(`${service}\tundefined`);
   });
 
   it('omits CircularProgressbar if value is a string', () => {
-    const withoutOpValue = 'without op string value';
-    const res = extractWrapper({
-      withoutOpValue,
-      withoutOpMax: decorationMax,
-    });
-    expect(res).toEqual({
+    const value = 'Unable to fetch decoration: offline';
+    expect(getDecorationPresentation({ ...props, decorationValue: value })).toEqual({
       decorationID,
-      decorationValue: withoutOpValue,
+      decorationValue: value,
       decorationProgressbar: undefined,
     });
   });
 
-  it('defaults search to empty string when not provided, returning empty object', () => {
-    const state = makeState({ opValue: decorationValue, opMax: decorationMax });
-    expect(extractDecorationFromState(state, { service, operation })).toEqual({});
+  it('does not render a progress bar while the value is pending', () => {
+    const result = getDecorationPresentation({ ...props, decorationValue: undefined });
+    expect(result.decorationProgressbar).toBeUndefined();
+    expect(result.decorationID).toBe(decorationID);
   });
 
-  it('uses first decoration if multiple exist in url', () => {
-    const withoutOpValue = 'without op string value';
-    const res = extractWrapper({
-      decoration: [decorationID, `not-${decorationID}`],
-      withoutOpValue,
-      withoutOpMax: decorationMax,
-    });
-    expect(res).toEqual({
-      decorationID,
-      decorationValue: withoutOpValue,
-      decorationProgressbar: undefined,
-    });
+  it('uses the numeric value as the scale when no maximum is supplied', () => {
+    const result = getDecorationPresentation({ ...props, decorationMax: undefined });
+    expect(result.decorationProgressbar.props.maxValue).toBe(decorationValue);
   });
 });

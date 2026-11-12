@@ -8,11 +8,11 @@ import { expect, it, describe } from 'vitest';
 import { sharedMarkdownOptions } from './markdownOptions';
 
 describe('sharedMarkdownOptions', () => {
-  it('enables optimizeForStreaming for every caller, not just streamed chat replies', () => {
-    // Span attributes rendered in the (future) GenAI span detail tab can be
-    // truncated at ingestion, so tolerating unclosed tags is desirable there
-    // too -- this is not a streaming-only concern.
-    expect(sharedMarkdownOptions.optimizeForStreaming).toBe(true);
+  it('does not enable optimizeForStreaming, which deletes unpaired emphasis markers', () => {
+    // The streaming pre-pass removes `_` and `*` that it takes for unclosed
+    // emphasis, and the removal stays after the text is complete. That costs
+    // SQL wildcards, snake_case and Python *args, not only an unfinished bold.
+    expect(sharedMarkdownOptions.optimizeForStreaming).toBe(false);
   });
 
   describe('wrapper element', () => {
@@ -93,6 +93,62 @@ describe('sharedMarkdownOptions', () => {
       const link = container.querySelector('a');
       expect(link).not.toBeNull();
       expect(link).toHaveAttribute('href', 'https://example.com');
+    });
+  });
+
+  describe('literal emphasis markers', () => {
+    // Under optimizeForStreaming, markdown-to-jsx 9.10.2 deleted a lone `_`
+    // or `*` from finished text and 9.10.4 deletes two unpaired openers from
+    // the last paragraph. These tests fail if the option is turned back on
+    // before upstream leaves finished text alone.
+    function renderMarkdown(markdown: string) {
+      return render(<Markdown options={sharedMarkdownOptions}>{markdown}</Markdown>);
+    }
+
+    it('keeps an unpaired asterisk in SQL and arithmetic instead of deleting it', () => {
+      const sql = renderMarkdown('SELECT * FROM customer WHERE customer_id=392');
+      expect(sql.container.textContent).toContain('SELECT * FROM customer WHERE customer_id=392');
+
+      const product = renderMarkdown('5 * 3');
+      expect(product.container.textContent).toContain('5 * 3');
+
+      const intraword = renderMarkdown('x*y');
+      expect(intraword.container.textContent).toContain('x*y');
+    });
+
+    it('still renders paired emphasis', () => {
+      const { container } = renderMarkdown('**bold** and _italic_ and snake_case');
+      expect(container.querySelector('strong')).toHaveTextContent('bold');
+      expect(container.querySelector('em')).toHaveTextContent('italic');
+      expect(container.textContent).toContain('snake_case');
+    });
+
+    it('keeps a bare URL underscore in both the href and the link text', () => {
+      const { container } = renderMarkdown('https://example.com/customer_id');
+      const link = container.querySelector('a');
+      expect(link).not.toBeNull();
+      expect(link).toHaveAttribute('href', 'https://example.com/customer_id');
+      expect(link?.textContent).toBe('https://example.com/customer_id');
+      // textContent decodes entities, so only the markup shows a leaked &#95;.
+      expect(container.innerHTML).toContain('customer_id');
+      expect(container.innerHTML).not.toContain('&#95;');
+    });
+
+    it('keeps two unpaired openers in the last paragraph', () => {
+      const underscores = renderMarkdown('Use _trace and _span');
+      expect(underscores.container.querySelector('em')).toBeNull();
+      expect(underscores.container.textContent).toBe('Use _trace and _span');
+
+      const asterisks = renderMarkdown('*args and *kwargs');
+      expect(asterisks.container.querySelector('em')).toBeNull();
+      expect(asterisks.container.textContent).toBe('*args and *kwargs');
+    });
+
+    it('keeps two snake_case identifiers on one line without emphasizing either', () => {
+      const { container } = renderMarkdown('user_id and order_id');
+      expect(container.querySelector('em')).toBeNull();
+      expect(container.textContent).toContain('user_id');
+      expect(container.textContent).toContain('order_id');
     });
   });
 

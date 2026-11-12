@@ -274,6 +274,42 @@ describe('useTraces', () => {
     expect(mockFetchTrace).toHaveBeenCalledWith(otelTrace.traceID, expect.any(AbortSignal));
   });
 
+  it('keeps cached data in DONE state after a failed refetch', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const queryKey = ['trace', otelTrace.traceID];
+    const error = new Error('refetch failed');
+    client.setQueryData(queryKey, otelTrace);
+    mockFetchTrace.mockRejectedValue(error);
+
+    const { result } = renderHook(
+      () => ({ traces: useTraces([otelTrace.traceID]), query: useTrace(otelTrace.traceID) }),
+      { wrapper: makeWrapper(client) }
+    );
+    const initialMap = result.current.traces;
+    expect(initialMap.get(otelTrace.traceID)).toEqual({
+      id: otelTrace.traceID,
+      data: otelTrace,
+      state: fetchedState.DONE,
+    });
+
+    await act(async () => {
+      await client.invalidateQueries({ queryKey });
+    });
+
+    await waitFor(() => {
+      expect(result.current.query.isRefetchError).toBe(true);
+      expect(result.current.query.error).toBe(error);
+      expect(result.current.traces).not.toBe(initialMap);
+    });
+    expect(result.current.query.data).toBe(otelTrace);
+    expect(result.current.traces.get(otelTrace.traceID)).toEqual({
+      id: otelTrace.traceID,
+      data: otelTrace,
+      state: fetchedState.DONE,
+    });
+    expect(mockFetchTrace).toHaveBeenCalledTimes(1);
+  });
+
   it('returns ERROR state when fetch fails', async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     mockFetchTrace.mockRejectedValue(new Error('fail'));
