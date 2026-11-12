@@ -224,6 +224,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
   const getViewRange = useCallback(() => propsRef.current.currentViewRangeTime, []);
   const getSearchedSpanIDs = useCallback(() => propsRef.current.findMatchesIDs, []);
   const getCollapsedChildren = useCallback(() => propsRef.current.childrenHiddenIDs, []);
+  const getHiddenSpanIDs = useCallback(() => propsRef.current.hiddenIDs, []);
 
   const mapRowIndexToSpanIndex = useCallback(
     (index: number) => getRowStates()[index]?.spanIndex,
@@ -257,6 +258,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
       getViewRange,
       getSearchedSpanIDs,
       getCollapsedChildren,
+      getHiddenSpanIDs,
       getViewHeight: lv.getViewHeight,
       getBottomRowIndexVisible: lv.getBottomVisibleIndex,
       getTopRowIndexVisible: lv.getTopVisibleIndex,
@@ -268,6 +270,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
     getViewRange,
     getSearchedSpanIDs,
     getCollapsedChildren,
+    getHiddenSpanIDs,
     mapRowIndexToSpanIndex,
     mapSpanIndexToRowIndex,
   ]);

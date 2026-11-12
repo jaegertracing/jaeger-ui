@@ -187,6 +187,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       expect(accessors).toHaveProperty('getViewRange');
       expect(accessors).toHaveProperty('getSearchedSpanIDs');
       expect(accessors).toHaveProperty('getCollapsedChildren');
+      expect(accessors).toHaveProperty('getHiddenSpanIDs');
       expect(accessors).toHaveProperty('mapRowIndexToSpanIndex');
       expect(accessors).toHaveProperty('mapSpanIndexToRowIndex');
     });
