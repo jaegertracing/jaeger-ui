@@ -12,6 +12,7 @@ import updateUiFind from '../../../../utils/update-ui-find';
 import withRouteProps from '../../../../utils/withRouteProps';
 import { IAttributes, IEvent, IOtelTrace } from '../../../../types/otel';
 import { useTraceTimelineStore } from '../store';
+import { evaluateSpanFilter } from '../../spanFilter';
 import {
   trackDetailLogItemToggle,
   trackDetailLogsToggle,
@@ -37,6 +38,7 @@ type TProps = TOwnProps & RouteProps;
 export function SpanDetailSidePanelImpl(props: TProps) {
   const { trace, currentViewRangeTime, useOtelTerms, location, navigate } = props;
   const detailStates = useTraceTimelineStore(s => s.detailStates);
+  const spanFilter = useTraceTimelineStore(s => s.spanFilter);
   const zustandDetailLogItemToggle = useTraceTimelineStore(s => s.detailLogItemToggle);
   const zustandDetailLogsToggle = useTraceTimelineStore(s => s.detailLogsToggle);
   const zustandDetailProcessToggle = useTraceTimelineStore(s => s.detailProcessToggle);
@@ -86,12 +88,14 @@ export function SpanDetailSidePanelImpl(props: TProps) {
     [location, navigate, trace, focusUiFindMatches]
   );
 
-  // Show the explicitly selected span, falling back to the root span when nothing is selected.
-  // When the user first interacts with an accordion in fallback mode, the reducer creates a
-  // detailStates entry for the root span (since detailSubsectionToggle auto-initialises). This
-  // is intentional: the root span then becomes explicitly selected and gains selection highlight,
-  // while the panel label stays "Trace Root" because selectedSpanID === rootSpanID.
-  const spanID = getSelectedSpanID(detailStates) ?? trace.rootSpans?.[0]?.spanID;
+  // Show the explicitly selected span, falling back to the first span the filter shows when nothing
+  // is selected, which is the root span under an empty filter. A filter that hides every span leaves
+  // the panel empty. When the user first interacts with an accordion in fallback mode, the reducer
+  // creates a detailStates entry for that span (since detailSubsectionToggle auto-initialises). This
+  // is intentional: the span then becomes explicitly selected and gains selection highlight, while
+  // the panel label stays "Trace Root" because selectedSpanID === rootSpanID.
+  const { hiddenIDs } = evaluateSpanFilter(trace.spans, spanFilter);
+  const spanID = getSelectedSpanID(detailStates) ?? trace.spans.find(s => !hiddenIDs.has(s.spanID))?.spanID;
   if (!spanID) return null;
 
   const detailState = detailStates.get(spanID) ?? DetailState.forDetailPanelMode('sidepanel');

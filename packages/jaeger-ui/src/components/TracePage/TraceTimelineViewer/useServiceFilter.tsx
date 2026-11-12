@@ -171,9 +171,9 @@ export function buildFilterSearch(
   } else {
     delete params.svcFilter;
   }
-  const others = filter.clauses.filter(c => !isServiceHideClause(c)).map(encodeClause);
-  if (others.length) {
-    params[CLAUSE_PARAM] = others;
+  const nonServiceClauses = filter.clauses.filter(c => !isServiceHideClause(c)).map(encodeClause);
+  if (nonServiceClauses.length) {
+    params[CLAUSE_PARAM] = nonServiceClauses;
   } else {
     delete params[CLAUSE_PARAM];
   }

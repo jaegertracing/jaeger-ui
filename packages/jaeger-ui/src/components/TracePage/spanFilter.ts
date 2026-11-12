@@ -86,7 +86,7 @@ type Predicate = (span: IOtelSpan) => boolean;
 
 // Compiles a criterion into a predicate. The text criterion is filterSpans, which works on the
 // whole list, so it is evaluated once here and the predicate is a set lookup.
-function compile(criterion: Criterion, spans: ReadonlyArray<IOtelSpan>): Predicate {
+function compileCriterion(criterion: Criterion, spans: ReadonlyArray<IOtelSpan>): Predicate {
   switch (criterion.shape) {
     case 'text': {
       const ids = filterSpans(criterion.text, spans) ?? new Set<string>();
@@ -125,7 +125,7 @@ function evaluate(spans: ReadonlyArray<IOtelSpan> | TNil, filter: ISpanFilter): 
   const keeps: Predicate[] = [];
   const hides: Predicate[] = [];
   for (const clause of filter.clauses) {
-    const predicate = compile(clause.criterion, spans);
+    const predicate = compileCriterion(clause.criterion, spans);
     if (clause.verb === 'keep') keeps.push(predicate);
     else hides.push(predicate);
   }
