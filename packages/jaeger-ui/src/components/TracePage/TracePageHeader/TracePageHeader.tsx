@@ -177,12 +177,15 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           onClick={onSlimViewClicked}
           role="switch"
           aria-checked={!slimView}
+          title={trace.traceName || undefined}
         >
           <IoChevronForward className={`TracePageHeader--detailToggle ${!slimView ? 'is-expanded' : ''}`} />
           <TraceName traceName={trace.traceName} />
         </button>
       ) : (
-        <TraceName traceName={trace.traceName} />
+        <span className="TracePageHeader--titleText" title={trace.traceName || undefined}>
+          <TraceName traceName={trace.traceName} />
+        </span>
       )}{' '}
       <TraceId traceId={trace.traceID} />
       {orphanCount > 0 && (
@@ -211,6 +214,9 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
       )}
     </h1>
   );
+
+  const target = getTargetEmptyOrBlank();
+  const suffix = target === '_blank' ? ' in a new window' : '';
 
   return (
     <header className="TracePageHeader">
@@ -258,9 +264,10 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
         )}
         {showStandaloneLink && (
           <Link
+            aria-label={`Open trace${suffix}`}
             className="u-tx-inherit ub-nowrap ub-mx2"
             to={linkToStandalone}
-            target={getTargetEmptyOrBlank()}
+            target={target}
             rel="noopener noreferrer"
           >
             <NewWindowIcon isLarge />

@@ -5,14 +5,10 @@ import React from 'react';
 import { render, screen, act, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
-import { Provider } from 'react-redux';
-import { createStore } from 'redux';
 
 import {
   computeAdjustedRange,
   makeShortcutCallbacks,
-  mapDispatchToProps,
-  mapStateToProps,
   shortcutConfig,
   TracePageImpl as TracePage,
   TracePageRoute,
@@ -24,6 +20,7 @@ import * as keyboardShortcutsMod from './keyboard-shortcuts';
 import { merge as mergeShortcuts } from './keyboard-shortcuts';
 import * as scrollPageMod from './scroll-page';
 import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
+import { trackDetailPanelMode, trackTimelineBarsVisible } from './TraceTimelineViewer/store.track';
 import traceGenerator from '../../demo/trace-generators';
 import transformTraceData from '../../model/transform-trace-data';
 import filterSpansSpy from '../../utils/filter-spans';
@@ -163,6 +160,8 @@ vi.mock('../../hooks/useTraceLoading', () => ({
   reloadBackendTrace: (...args) => mockReloadBackendTrace(...args),
 }));
 
+vi.mock('./TraceTimelineViewer/store.track');
+
 vi.mock('./TraceTimelineViewer/store', () => {
   const useTraceTimelineStore = jest.fn(selector => selector(mockTraceTimelineStore));
   useTraceTimelineStore.getState = () => mockTraceTimelineStore;
@@ -233,14 +232,11 @@ describe('<TracePage>', () => {
   const trace = transformTraceData(traceGenerator.trace({})).asOtelTrace();
   const defaultProps = {
     enableSidePanel: false,
-    focusUiFindMatches: jest.fn(),
     params: { id: trace.traceID },
     location: {
       search: null,
       state: null,
     },
-    setDetailPanelMode: jest.fn(),
-    setTimelineBarsVisible: jest.fn(),
   };
   const notDefaultPropsId = `not ${defaultProps.params.id}`;
 
@@ -256,7 +252,6 @@ describe('<TracePage>', () => {
     capturedHeaderProps = {};
     capturedArchiveNotifierProps = {};
     capturedGraphProps = {};
-    defaultProps.focusUiFindMatches.mockClear();
     mockTraceTimelineStore.focusUiFindMatches.mockClear();
   });
 
@@ -268,18 +263,15 @@ describe('<TracePage>', () => {
         .mockReturnValue({ archiveEnabled: true, traceTimeline: { enableSidePanel: true } });
       const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
       queryClient.setQueryData(['uploadedSummaries'], []);
-      const store = createStore(() => ({ traceTimeline: {} }));
       const location = {
         pathname: `/trace/${trace.traceID}`,
         search: '?uiFind=error',
         state: { fromSearch: '/search?service=frontend' },
       };
       const { rerender } = render(
-        <Provider store={store}>
-          <MemoryRouter initialEntries={[`${location.pathname}${location.search}`]}>
-            <TracePageRoute params={{ id: trace.traceID }} location={location} />
-          </MemoryRouter>
-        </Provider>
+        <MemoryRouter initialEntries={[`${location.pathname}${location.search}`]}>
+          <TracePageRoute params={{ id: trace.traceID }} location={location} />
+        </MemoryRouter>
       );
       expect(screen.getByTestId('archive-notifier')).toBeInTheDocument();
       expect(capturedHeaderProps.enableSidePanel).toBe(true);
@@ -302,11 +294,9 @@ describe('<TracePage>', () => {
         error: null,
       });
       rerender(
-        <Provider store={store}>
-          <MemoryRouter initialEntries={[`${location.pathname}${location.search}`]}>
-            <TracePageRoute params={{ id: trace.traceID }} location={location} />
-          </MemoryRouter>
-        </Provider>
+        <MemoryRouter initialEntries={[`${location.pathname}${location.search}`]}>
+          <TracePageRoute params={{ id: trace.traceID }} location={location} />
+        </MemoryRouter>
       );
       expect(capturedHeaderProps.reloadingTrace).toBe(true);
       expect(scrollPageMod.cancel).not.toHaveBeenCalled();
@@ -322,11 +312,9 @@ describe('<TracePage>', () => {
       });
       useTraceMock.mockReturnValue({ data: refreshedTrace, isPending: false, isError: false, error: null });
       rerender(
-        <Provider store={store}>
-          <MemoryRouter initialEntries={[`${location.pathname}${location.search}`]}>
-            <TracePageRoute params={{ id: trace.traceID }} location={location} />
-          </MemoryRouter>
-        </Provider>
+        <MemoryRouter initialEntries={[`${location.pathname}${location.search}`]}>
+          <TracePageRoute params={{ id: trace.traceID }} location={location} />
+        </MemoryRouter>
       );
       expect(capturedHeaderProps.trace).toBe(refreshedTrace);
       expect(capturedHeaderProps.viewRange.time.current).toEqual([0.2, 0.8]);
@@ -338,15 +326,12 @@ describe('<TracePage>', () => {
 
   it('hides the reload action for an uploaded trace', () => {
     const configSpy = vi.spyOn(configHook, 'useConfig').mockReturnValue({});
-    const store = createStore(() => ({ traceTimeline: {} }));
     queryClient.setQueryData(['uploadedSummaries'], [{ traceID: trace.traceID }]);
     const location = { pathname: `/trace/${trace.traceID}`, search: '', state: null };
     render(
-      <Provider store={store}>
-        <MemoryRouter initialEntries={[location.pathname]}>
-          <TracePageRoute params={{ id: trace.traceID }} location={location} />
-        </MemoryRouter>
-      </Provider>
+      <MemoryRouter initialEntries={[location.pathname]}>
+        <TracePageRoute params={{ id: trace.traceID }} location={location} />
+      </MemoryRouter>
     );
 
     expect(capturedHeaderProps.onReloadTrace).toBeUndefined();
@@ -356,15 +341,12 @@ describe('<TracePage>', () => {
 
   it('ignores a reload issued after the trace was uploaded', () => {
     const configSpy = vi.spyOn(configHook, 'useConfig').mockReturnValue({});
-    const store = createStore(() => ({ traceTimeline: {} }));
     queryClient.setQueryData(['uploadedSummaries'], []);
     const location = { pathname: `/trace/${trace.traceID}`, search: '', state: null };
     render(
-      <Provider store={store}>
-        <MemoryRouter initialEntries={[location.pathname]}>
-          <TracePageRoute params={{ id: trace.traceID }} location={location} />
-        </MemoryRouter>
-      </Provider>
+      <MemoryRouter initialEntries={[location.pathname]}>
+        <TracePageRoute params={{ id: trace.traceID }} location={location} />
+      </MemoryRouter>
     );
 
     const { onReloadTrace } = capturedHeaderProps;
@@ -417,15 +399,13 @@ describe('<TracePage>', () => {
       });
 
       beforeEach(() => {
-        defaultProps.focusUiFindMatches.mockReset();
         trackFocusSpy.mockReset();
       });
 
-      it('dual-writes to Redux + Zustand when props.trace.data is present', () => {
+      it('updates Zustand when props.trace.data is present', () => {
         const uiFind = 'test ui find';
         render(<TracePage {...defaultProps} uiFind={uiFind} />);
         capturedHeaderProps.focusUiFindMatches();
-        expect(defaultProps.focusUiFindMatches).toHaveBeenCalledWith(trace, uiFind);
         expect(mockTraceTimelineStore.focusUiFindMatches).toHaveBeenCalledWith(trace, uiFind);
         expect(trackFocusSpy).toHaveBeenCalledTimes(1);
       });
@@ -433,7 +413,6 @@ describe('<TracePage>', () => {
       it('handles when trace data is absent', () => {
         useTraceMock.mockReturnValue({ data: undefined, isPending: false, isError: false, error: null });
         render(<TracePage {...defaultProps} />);
-        expect(defaultProps.focusUiFindMatches).not.toHaveBeenCalled();
         expect(mockTraceTimelineStore.focusUiFindMatches).not.toHaveBeenCalled();
         expect(trackFocusSpy).not.toHaveBeenCalled();
       });
@@ -1042,42 +1021,40 @@ describe('<TracePage>', () => {
 
   describe('layout toggle handlers', () => {
     beforeEach(() => {
-      defaultProps.setDetailPanelMode.mockClear();
-      defaultProps.setTimelineBarsVisible.mockClear();
       mockSetDetailPanelMode.mockClear();
       mockLayoutPrefsStore.setTimelineBarsVisible.mockClear();
     });
 
-    it('calls setDetailPanelMode (Zustand + Redux) with sidepanel when detailPanelMode is inline', () => {
+    it('calls setDetailPanelMode (Zustand + tracking) with sidepanel when detailPanelMode is inline', () => {
       mockLayoutPrefsStore.detailPanelMode = 'inline';
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onDetailPanelModeToggle();
       expect(mockSetDetailPanelMode).toHaveBeenCalledWith('sidepanel');
-      expect(defaultProps.setDetailPanelMode).toHaveBeenCalledWith('sidepanel');
+      expect(trackDetailPanelMode).toHaveBeenCalledWith('sidepanel');
     });
 
-    it('calls setDetailPanelMode (Zustand + Redux) with inline when detailPanelMode is sidepanel', () => {
+    it('calls setDetailPanelMode (Zustand + tracking) with inline when detailPanelMode is sidepanel', () => {
       mockLayoutPrefsStore.detailPanelMode = 'sidepanel';
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onDetailPanelModeToggle();
       expect(mockSetDetailPanelMode).toHaveBeenCalledWith('inline');
-      expect(defaultProps.setDetailPanelMode).toHaveBeenCalledWith('inline');
+      expect(trackDetailPanelMode).toHaveBeenCalledWith('inline');
     });
 
-    it('calls setTimelineBarsVisible (Zustand + Redux) with false when timelineBarsVisible is true', () => {
+    it('calls setTimelineBarsVisible (Zustand + tracking) with false when timelineBarsVisible is true', () => {
       mockLayoutPrefsStore.timelineBarsVisible = true;
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onTimelineToggle();
       expect(mockLayoutPrefsStore.setTimelineBarsVisible).toHaveBeenCalledWith(false);
-      expect(defaultProps.setTimelineBarsVisible).toHaveBeenCalledWith(false);
+      expect(trackTimelineBarsVisible).toHaveBeenCalledWith(false);
     });
 
-    it('calls setTimelineBarsVisible (Zustand + Redux) with true when timelineBarsVisible is false', () => {
+    it('calls setTimelineBarsVisible (Zustand + tracking) with true when timelineBarsVisible is false', () => {
       mockLayoutPrefsStore.timelineBarsVisible = false;
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onTimelineToggle();
       expect(mockLayoutPrefsStore.setTimelineBarsVisible).toHaveBeenCalledWith(true);
-      expect(defaultProps.setTimelineBarsVisible).toHaveBeenCalledWith(true);
+      expect(trackTimelineBarsVisible).toHaveBeenCalledWith(true);
     });
   });
 
@@ -1402,35 +1379,33 @@ describe('<TracePage>', () => {
   });
 });
 
-describe('mapDispatchToProps()', () => {
-  it('creates the actions correctly', () => {
-    expect(mapDispatchToProps(() => {})).toEqual({
-      focusUiFindMatches: expect.any(Function),
-      setDetailPanelMode: expect.any(Function),
-      setTimelineBarsVisible: expect.any(Function),
-    });
-  });
-});
+describe('TracePageRoute URL search', () => {
+  it('updates uiFind when the location prop search changes without a Redux provider', () => {
+    const configSpy = vi.spyOn(configHook, 'useConfig').mockReturnValue({});
+    const trace = transformTraceData(traceGenerator.trace({})).asOtelTrace();
+    useTraceMock.mockReturnValue({ data: trace, isPending: false, isError: false, error: null });
+    const params = { id: trace.traceID };
+    const location = { pathname: `/trace/${trace.traceID}`, search: '', state: null };
+    const { rerender } = render(
+      <MemoryRouter>
+        <TracePageRoute params={params} location={location} />
+      </MemoryRouter>
+    );
+    expect(capturedHeaderProps.textFilter).toBeUndefined();
 
-describe('mapStateToProps()', () => {
-  let state;
-  beforeEach(() => {
-    state = {
-      trace: {
-        search: { results: [], state: undefined },
-      },
-      router: {
-        location: {
-          search: '',
-          state: null,
-        },
-      },
-      traceTimeline: {},
-    };
-  });
+    rerender(
+      <MemoryRouter>
+        <TracePageRoute params={params} location={{ ...location, search: '?uiFind=my-service' }} />
+      </MemoryRouter>
+    );
+    expect(capturedHeaderProps.textFilter).toBe('my-service');
 
-  it('returns uiFind derived from the URL search string in ownProps', () => {
-    expect(mapStateToProps(state, { search: '' })).toEqual({ uiFind: undefined });
-    expect(mapStateToProps(state, { search: '?uiFind=my-service' })).toEqual({ uiFind: 'my-service' });
+    rerender(
+      <MemoryRouter>
+        <TracePageRoute params={params} location={location} />
+      </MemoryRouter>
+    );
+    expect(capturedHeaderProps.textFilter).toBeUndefined();
+    configSpy.mockRestore();
   });
 });

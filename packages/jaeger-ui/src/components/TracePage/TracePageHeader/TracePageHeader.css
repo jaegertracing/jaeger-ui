@@ -50,6 +50,10 @@ SPDX-License-Identifier: Apache-2.0
   font: inherit;
   padding: 0;
   text-align: left;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .TracePageHeader--titleLink:hover * {
@@ -72,10 +76,36 @@ SPDX-License-Identifier: Apache-2.0
 .TracePageHeader--title {
   color: inherit;
   flex: 1;
+  min-width: 0;
   font-size: 1.7em;
   line-height: 1em;
   margin: 0 0 0 0.5em;
   padding: 0.5em 0;
+  display: flex;
+  align-items: center;
+  gap: 0.25em;
+}
+
+.TracePageHeader--titleText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.TracePageHeader--title .TraceName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.TracePageHeader--title .BreakableText {
+  white-space: nowrap;
+}
+
+.TracePageHeader--title .button-styles {
+  flex-shrink: 0;
 }
 
 .TracePageHeader--title.is-collapsible {
@@ -108,7 +138,9 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .TracePageHeader--incompleteActions {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
   font-size: 16px;
   margin-left: 0.5em;
   vertical-align: middle;

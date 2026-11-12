@@ -342,3 +342,49 @@ const normalizeTraceId = z.preprocess(
 export const TraceSummariesResponseSchema = jaeger_api_v3_FindTraceSummariesResponse.extend({
   summaries: z.array(normalizeTraceId).optional(),
 });
+
+// The retained /api/metrics routes return OpenMetrics MetricFamily protobuf JSON.
+// Empty repeated fields and help can be omitted by the backend's jsonpb marshaler.
+const metricPoint = z
+  .object({
+    gaugeValue: z.object({ doubleValue }).passthrough(),
+    timestamp: z.string(),
+  })
+  .passthrough();
+
+const metricFamily = z
+  .object({
+    type: z.literal('GAUGE'),
+    help: z.string().default(''),
+    metrics: z
+      .array(
+        z
+          .object({
+            labels: z
+              .array(z.object({ name: z.string(), value: z.string().default('') }).passthrough())
+              .default([]),
+            metricPoints: z.array(metricPoint).default([]),
+          })
+          .passthrough()
+      )
+      .default([]),
+  })
+  .passthrough();
+
+export const ServiceMetricsResponseSchema = metricFamily
+  .extend({
+    name: z.enum(['service_latencies', 'service_call_rate', 'service_error_rate']),
+  })
+  .refine(response => response.metrics.every(metric => metric.labels.length > 0), {
+    // Service metrics rendering reads the first label as the service name.
+    message: 'Service metrics require a label for each series',
+    path: ['metrics'],
+  });
+
+export const OperationMetricsResponseSchema = metricFamily.extend({
+  name: z.enum([
+    'service_operation_latencies',
+    'service_operation_call_rate',
+    'service_operation_error_rate',
+  ]),
+});

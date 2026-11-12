@@ -19,11 +19,3 @@ export type TPathAgnosticDecorationSchema = {
 };
 
 export type TPadEntry = number | string;
-
-export type TNewData = Record<
-  string,
-  {
-    withoutOp?: Record<string, TPadEntry>;
-    withOp?: Record<string, Record<string, TPadEntry>>;
-  }
->;

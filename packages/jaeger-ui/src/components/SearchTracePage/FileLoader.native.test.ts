@@ -4,7 +4,7 @@
 import fs from 'fs';
 import path from 'path';
 import { loadTracesFromFile } from './FileLoader';
-import { createBlob } from './SearchResults/DownloadResults';
+import { createBlob } from '../../utils/download-traces';
 import { getCachedTrace } from '../../hooks/useTraceLoading';
 import { queryClient } from '../../query/app-query-client';
 import { uploadedTraceId } from '../../utils/otel-upload';
@@ -55,6 +55,20 @@ it('loads and re-uploads a numeric OTLP fixture offline', async () => {
   expect(second.summaries).toEqual(first.summaries);
   expect(second.rawTraces).toEqual(first.rawTraces);
   expect(fetchMock).not.toHaveBeenCalled();
+});
+
+it('tells uploaders to quote a numeric Unix-nano timestamp that lost precision', async () => {
+  const upload = fs.readFileSync(
+    path.resolve(import.meta.dirname, '../../utils/fixtures/otlp-upload-unsafe-timestamp.json'),
+    'utf-8'
+  );
+  const result = await loadTracesFromFile(new File([upload], 'numeric.json'));
+  expect(result).toMatchObject({ summaries: [], errorCount: 1, rejectedOtelDocumentCount: 1 });
+  expect(result.errorDetail).toBe(
+    'Numeric int64 value exceeds 2^53 and lost precision; send int64 values as quoted decimal strings ' +
+      '(at resourceSpans.0.scopeSpans.0.spans.0.startTimeUnixNano)'
+  );
+  expect(getCachedTrace(traceId)).toBeUndefined();
 });
 
 it('loads valid spans beside omitted empty scope/span arrays', async () => {
