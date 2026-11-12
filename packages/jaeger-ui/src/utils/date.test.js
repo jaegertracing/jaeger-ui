@@ -166,6 +166,10 @@ describe('convertToTimeUnit', () => {
     const input = 172800000000;
     expect(convertToTimeUnit(input, 'days')).toBe(2);
   });
+  it('convert a duration under one millisecond to milliseconds', () => {
+    const input = 600;
+    expect(convertToTimeUnit(input, 'milliseconds')).toBe(0.6);
+  });
 });
 
 describe('formatRelativeDate', () => {
