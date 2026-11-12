@@ -434,6 +434,114 @@ describe('JaegerClient', () => {
     });
   });
 
+  describe('fetchQualityMetrics', () => {
+    it('keeps the default endpoint when the UI config only enables quality metrics', async () => {
+      const configSpy = vi.spyOn(window, 'getJaegerUiConfig').mockReturnValue({
+        qualityMetrics: { menuEnabled: true },
+      });
+      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ scores: [], metrics: [] }) });
+      vi.resetModules();
+
+      try {
+        const { JaegerClient: IsolatedClient } = await import('./client');
+
+        await new IsolatedClient().fetchQualityMetrics('frontend', 48);
+
+        expect(mockFetch).toHaveBeenCalledWith('/api/quality-metrics?hours=48&service=frontend', {
+          signal: undefined,
+        });
+      } finally {
+        configSpy.mockRestore();
+        vi.resetModules();
+      }
+    });
+
+    it.each([
+      ['qualityMetrics is null', { qualityMetrics: null }],
+      ['apiEndpoint is empty', { qualityMetrics: { apiEndpoint: '' } }],
+    ])('rejects without a request when %s in the UI config', async (_case, uiConfig) => {
+      const configSpy = vi.spyOn(window, 'getJaegerUiConfig').mockReturnValue(uiConfig);
+      vi.resetModules();
+
+      try {
+        const { JaegerClient: IsolatedClient } = await import('./client');
+
+        await expect(new IsolatedClient().fetchQualityMetrics('frontend', 48)).rejects.toThrow(
+          'qualityMetrics.apiEndpoint is not set in the UI config'
+        );
+        expect(mockFetch).not.toHaveBeenCalled();
+      } finally {
+        configSpy.mockRestore();
+        vi.resetModules();
+      }
+    });
+
+    it('GETs the configured endpoint with the encoded service and lookback hours', async () => {
+      const data = { scores: [], metrics: [], extra: 'retained' };
+      mockFetch.mockResolvedValue({ ok: true, json: async () => data });
+
+      await expect(client.fetchQualityMetrics('frontend /?&=+#', 48)).resolves.toBe(data);
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/quality-metrics?hours=48&service=frontend%20%2F%3F%26%3D%2B%23',
+        { signal: undefined }
+      );
+    });
+
+    it('preserves HTTP error details for ErrorMessage', async () => {
+      const body = { error: 'quality metrics unavailable' };
+      mockFetch.mockResolvedValue(
+        new Response(JSON.stringify(body), { status: 503, statusText: 'Service Unavailable' })
+      );
+
+      await expect(client.fetchQualityMetrics('frontend', 48)).rejects.toMatchObject({
+        message: 'Failed to fetch quality metrics: 503 Service Unavailable',
+        httpStatus: 503,
+        httpStatusText: 'Service Unavailable',
+        httpBody: JSON.stringify(body, null, 2),
+        httpUrl: '/api/quality-metrics',
+        httpQuery: 'hours=48&service=frontend',
+      });
+    });
+
+    it('allows successful headers and bodies to arrive after the default transport deadline', async () => {
+      const data = { scores: [], metrics: [] };
+      mockFetch.mockImplementation(
+        () =>
+          new Promise(resolve => {
+            setTimeout(
+              () =>
+                resolve({ ok: true, json: () => new Promise(done => setTimeout(() => done(data), 11000)) }),
+              11000
+            );
+          })
+      );
+
+      const promise = client.fetchQualityMetrics('frontend', 48);
+      await vi.advanceTimersByTimeAsync(22000);
+
+      await expect(promise).resolves.toBe(data);
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it('forwards cancellation and preserves the caller abort reason', async () => {
+      const controller = new AbortController();
+      const reason = new Error('quality metrics query abandoned');
+      mockFetch.mockImplementation(
+        (_url, { signal }) =>
+          new Promise((_resolve, reject) => {
+            signal.addEventListener('abort', () => reject(signal.reason), { once: true });
+          })
+      );
+
+      const promise = client.fetchQualityMetrics('frontend', 48, controller.signal);
+      controller.abort(reason);
+
+      await expect(promise).rejects.toBe(reason);
+      expect(mockFetch).toHaveBeenCalledWith(expect.any(String), { signal: controller.signal });
+      expect(vi.getTimerCount()).toBe(0);
+    });
+  });
+
   describe('fetchServices', () => {
     it('successfully fetches and returns service list', async () => {
       const mockServices = ['service-a', 'service-b', 'service-c'];
@@ -647,7 +755,8 @@ describe('JaegerClient', () => {
 
     it('preserves caller cancellation for a request with a deadline', async () => {
       const caller = new AbortController();
-      const abortError = new DOMException('Caller cancelled request', 'AbortError');
+      const abortError = new Error('Caller cancelled request');
+      abortError.name = 'AbortError';
       mockFetch.mockImplementation((_url: string, options: RequestInit) => {
         return new Promise((_resolve, reject) => {
           options.signal?.addEventListener('abort', () => reject(options.signal?.reason));
@@ -663,7 +772,8 @@ describe('JaegerClient', () => {
 
     it('forwards an already cancelled caller signal to a request with a deadline', async () => {
       const caller = new AbortController();
-      const abortError = new DOMException('Caller cancelled request', 'AbortError');
+      const abortError = new Error('Caller cancelled request');
+      abortError.name = 'AbortError';
       caller.abort(abortError);
       mockFetch.mockImplementation((_url: string, options: RequestInit) => {
         expect(options.signal?.aborted).toBe(true);
@@ -673,6 +783,28 @@ describe('JaegerClient', () => {
       await expect(
         client['fetchJson']('/test', 'Failed', { timeout: 1000, signal: caller.signal })
       ).rejects.toBe(abortError);
+    });
+
+    it('reports a timeout with a caller signal when AbortSignal.any is unavailable', async () => {
+      const descriptor = Object.getOwnPropertyDescriptor(AbortSignal, 'any');
+      const caller = new AbortController();
+      mockFetch.mockImplementation((_url: string, options: RequestInit) => {
+        return new Promise((_resolve, reject) => {
+          options.signal?.addEventListener('abort', () => reject(options.signal?.reason));
+        });
+      });
+
+      try {
+        Reflect.deleteProperty(AbortSignal, 'any');
+        expect(AbortSignal.any).toBeUndefined();
+        const promise = client['fetchJson']('/test', 'Failed', { timeout: 1000, signal: caller.signal });
+        vi.advanceTimersByTime(1000);
+
+        await expect(promise).rejects.toThrow('Request timeout after 1000ms');
+        expect(caller.signal.aborted).toBe(false);
+      } finally {
+        if (descriptor) Object.defineProperty(AbortSignal, 'any', descriptor);
+      }
     });
 
     it('clears timeout after successful request', async () => {
@@ -964,34 +1096,40 @@ describe('JaegerClient', () => {
     const traceId = '0123456789abcdef0123456789abcdef';
     const failure = (body: BodyInit | null) => new Response(body, { status: 400, statusText: 'Bad Request' });
 
+    const v3Body = { error: { httpCode: 400, message: 'invalid service name' } };
+    const legacyBody = { data: null, errors: [{ code: 400, msg: 'invalid service name' }] };
+
     it.each([
       {
         method: 'fetchDependencies',
         call: () => client.fetchDependencies(100, 200),
+        body: legacyBody,
         httpUrl: '/api/dependencies',
         httpQuery: 'endTs=100&lookback=200',
       },
       {
         method: 'fetchDeepDependencyGraph',
         call: () => client.fetchDeepDependencyGraph({ service: 'frontend', start: 100, end: 200 }),
+        body: legacyBody,
         httpUrl: '/api/deep-dependencies',
         httpQuery: 'end=200&service=frontend&start=100',
       },
       {
         method: 'archiveTrace',
         call: () => client.archiveTrace(traceId),
+        body: legacyBody,
         httpUrl: `/api/archive/${traceId}`,
       },
       {
-        method: 'fetchDecoration',
-        call: () => client.fetchDecoration('/details?id=1'),
-        httpUrl: '/details',
-        httpQuery: 'id=1',
+        method: 'fetchServices',
+        call: () => client.fetchServices(),
+        body: v3Body,
+        httpUrl: '/api/v3/services',
       },
-      { method: 'fetchServices', call: () => client.fetchServices(), httpUrl: '/api/v3/services' },
       {
         method: 'fetchSpanNames',
         call: () => client.fetchSpanNames('my svc'),
+        body: v3Body,
         httpUrl: '/api/v3/operations',
         httpQuery: 'service=my%20svc',
       },
@@ -1001,14 +1139,20 @@ describe('JaegerClient', () => {
           client.fetchTraceSummaries({ service: 'my-svc' } as Parameters<
             JaegerClient['fetchTraceSummaries']
           >[0]),
+        body: v3Body,
         httpUrl: '/api/v3/trace-summaries',
         httpQuery: 'query.serviceName=my-svc',
       },
-      { method: 'fetchTrace', call: () => client.fetchTrace(traceId), httpUrl: `/api/v3/traces/${traceId}` },
+      {
+        method: 'fetchTrace',
+        call: () => client.fetchTrace(traceId),
+        body: v3Body,
+        httpUrl: `/api/v3/traces/${traceId}`,
+      },
     ])(
       '$method attaches the status, URL, query, and formatted JSON body',
-      async ({ call, httpUrl, httpQuery }) => {
-        mockFetch.mockResolvedValue(failure('{"code":3,"message":"invalid service name"}'));
+      async ({ call, body, httpUrl, httpQuery }) => {
+        mockFetch.mockResolvedValue(failure(JSON.stringify(body)));
 
         const error = await call().catch((caught: unknown) => caught);
 
@@ -1019,10 +1163,40 @@ describe('JaegerClient', () => {
           httpStatusText: 'Bad Request',
           httpUrl,
           ...(httpQuery && { httpQuery }),
-          httpBody: JSON.stringify({ code: 3, message: 'invalid service name' }, null, 2),
+          httpBody: JSON.stringify(body, null, 2),
         });
       }
     );
+
+    it('fetchDecoration attaches the status, URL, query, and body without a server message', async () => {
+      mockFetch.mockResolvedValue(failure(JSON.stringify(v3Body)));
+
+      const error = await client.fetchDecoration('/details?id=1').catch((caught: unknown) => caught);
+
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toBe('Failed to fetch decoration: 400 Bad Request');
+      expect({ ...(error as object) }).toEqual({
+        httpStatus: 400,
+        httpStatusText: 'Bad Request',
+        httpUrl: '/details',
+        httpQuery: 'id=1',
+        httpBody: JSON.stringify(v3Body, null, 2),
+      });
+    });
+
+    it('includes the v3 gateway reason when a trace is not found', async () => {
+      const body = { error: { httpCode: 404, message: 'No traces found' } };
+      mockFetch.mockResolvedValue(
+        new Response(JSON.stringify(body), { status: 404, statusText: 'Not Found' })
+      );
+
+      await expect(client.fetchTrace(traceId)).rejects.toMatchObject({
+        message: `Failed to fetch trace ${traceId}: 404 Not Found: No traces found`,
+        httpStatus: 404,
+        httpUrl: `/api/v3/traces/${traceId}`,
+        httpBody: JSON.stringify(body, null, 2),
+      });
+    });
 
     it('keeps a non-JSON body as text', async () => {
       mockFetch.mockResolvedValue(failure('storage unavailable'));
@@ -1034,39 +1208,59 @@ describe('JaegerClient', () => {
     });
 
     it.each([
-      { case: 'a v3 message', body: '{"code":5,"message":"trace not found"}', detail: 'trace not found' },
+      {
+        case: 'a padded gateway message',
+        body: JSON.stringify({ error: { httpCode: 404, message: '  No traces found\n' } }),
+        detail: 'No traces found',
+      },
+      {
+        case: 'a long gateway message, truncated',
+        body: JSON.stringify({ error: { message: 'x'.repeat(2000) } }),
+        detail: `${'x'.repeat(MAX_DETAIL_LENGTH - 3)}...`,
+      },
+      {
+        case: 'a gateway message at the length limit, intact',
+        body: JSON.stringify({ error: { message: 'x'.repeat(MAX_DETAIL_LENGTH) } }),
+        detail: 'x'.repeat(MAX_DETAIL_LENGTH),
+      },
+      { case: 'JSON without a message', body: '{"code":5}' },
+      { case: 'an empty gateway message', body: '{"error":{"message":""}}' },
+      { case: 'a non-string gateway message', body: '{"error":{"message":404}}' },
+      { case: 'a blank gateway message', body: '{"error":{"message":"  "}}' },
+      { case: 'a null gateway error', body: '{"error":null}' },
+      { case: 'a string gateway error', body: '{"error":"not found"}' },
+      { case: 'a legacy envelope on a v3 route', body: '{"errors":[{"code":400,"msg":"legacy"}]}' },
+      { case: 'a JSON primitive', body: 'null' },
+    ])('appends the v3 gateway message from $case', async ({ body, detail }) => {
+      mockFetch.mockResolvedValue(failure(body));
+
+      await expect(client.fetchServices()).rejects.toMatchObject({
+        message: `Failed to fetch services: 400 Bad Request${detail ? `: ${detail}` : ''}`,
+      });
+    });
+
+    it.each([
       {
         case: 'legacy errors',
         body: '{"data":null,"errors":[{"code":400,"msg":"bad start time"},{"code":400,"msg":"bad end time"}]}',
         detail: 'bad start time; bad end time',
       },
       {
-        case: 'both envelopes, preferring the v3 message',
-        body: '{"message":"trace not found","errors":[{"code":5,"msg":"legacy"}]}',
-        detail: 'trace not found',
+        case: 'a padded legacy error',
+        body: JSON.stringify({ errors: [{ msg: '  bad start time\n' }] }),
+        detail: 'bad start time',
       },
-      { case: 'a padded message', body: '{"message":"  trace not found\\n"}', detail: 'trace not found' },
-      {
-        case: 'a long message, truncated',
-        body: JSON.stringify({ message: 'x'.repeat(2000) }),
-        detail: `${'x'.repeat(MAX_DETAIL_LENGTH - 3)}...`,
-      },
-      {
-        case: 'a message at the length limit, intact',
-        body: JSON.stringify({ message: 'x'.repeat(MAX_DETAIL_LENGTH) }),
-        detail: 'x'.repeat(MAX_DETAIL_LENGTH),
-      },
-      { case: 'JSON without a message', body: '{"code":5}' },
-      { case: 'a non-string message', body: '{"message":404}' },
-      { case: 'an empty message', body: '{"message":""}' },
-      { case: 'a blank message', body: '{"message":"  "}' },
       { case: 'legacy errors without msg', body: '{"errors":[{"code":400}]}' },
+      { case: 'legacy errors with a blank msg', body: '{"errors":[{"msg":"  "}]}' },
+      { case: 'a null legacy error', body: '{"errors":[null]}' },
+      { case: 'a non-array errors field', body: '{"errors":"bad"}' },
+      { case: 'a gateway envelope on a legacy route', body: '{"error":{"message":"gateway"}}' },
       { case: 'a JSON primitive', body: 'null' },
-    ])('appends the server message from $case', async ({ body, detail }) => {
+    ])('appends the legacy message from $case', async ({ body, detail }) => {
       mockFetch.mockResolvedValue(failure(body));
 
-      await expect(client.fetchServices()).rejects.toMatchObject({
-        message: `Failed to fetch services: 400 Bad Request${detail ? `: ${detail}` : ''}`,
+      await expect(client.archiveTrace(traceId)).rejects.toMatchObject({
+        message: `Failed to archive trace ${traceId}: 400 Bad Request${detail ? `: ${detail}` : ''}`,
       });
     });
 
@@ -1269,6 +1463,7 @@ describe('JaegerClient with non-default base path', () => {
   afterEach(() => {
     (global as any).fetch = originalFetch;
     vi.doUnmock('../../site-prefix');
+    vi.doUnmock('../../utils/config/get-config');
   });
 
   it('calls services endpoint with base path prefix from site-prefix', async () => {
@@ -1309,6 +1504,22 @@ describe('JaegerClient with non-default base path', () => {
       '/jaeger/api/deep-dependencies?end=200&operation=%2A&service=frontend&start=100',
       { signal: undefined }
     );
+  });
+
+  it('reads the quality-metrics endpoint from config under the deployment base path', async () => {
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({}) });
+    vi.resetModules();
+    vi.doMock('../../site-prefix', () => ({ default: `${global.location.origin}/jaeger/` }));
+    vi.doMock('../../utils/config/get-config', () => ({
+      default: () => ({ qualityMetrics: { apiEndpoint: '/quality/v2' } }),
+    }));
+    const { JaegerClient: IsolatedClient } = await import('./client');
+
+    await new IsolatedClient().fetchQualityMetrics('frontend', 48);
+
+    expect(mockFetch).toHaveBeenCalledWith('/jaeger/quality/v2?hours=48&service=frontend', {
+      signal: undefined,
+    });
   });
 
   it('keeps metrics under the deployment base path', async () => {

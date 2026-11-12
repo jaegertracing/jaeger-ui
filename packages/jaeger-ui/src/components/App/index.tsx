@@ -10,7 +10,6 @@ import NotFound from './NotFound';
 import { PageImpl as Page } from './Page';
 import { ROUTE_PATH as searchPath } from '../SearchTracePage/url';
 import { ROUTES } from './routes';
-import JaegerAPI, { DEFAULT_API_ROOT } from '../../api/jaeger';
 import processScripts from '../../utils/config/process-scripts';
 import prefixUrl from '../../utils/prefix-url';
 
@@ -22,9 +21,8 @@ import { store } from '../../utils/configure-store';
 import ThemeProvider from './ThemeProvider';
 import { JaegerAssistantProvider } from './JaegerAssistantContext';
 
-// Initialize API configuration and process configuration scripts at module level
+// Process configuration scripts at module level
 // to ensure they run once when the application is loaded, before any components are rendered
-JaegerAPI.apiRoot = DEFAULT_API_ROOT;
 processScripts();
 
 export default function JaegerUIApp() {

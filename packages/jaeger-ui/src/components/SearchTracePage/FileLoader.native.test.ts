@@ -4,7 +4,7 @@
 import fs from 'fs';
 import path from 'path';
 import { loadTracesFromFile } from './FileLoader';
-import { createBlob } from './SearchResults/DownloadResults';
+import { createBlob } from '../../utils/download-traces';
 import { getCachedTrace } from '../../hooks/useTraceLoading';
 import { queryClient } from '../../query/app-query-client';
 import { uploadedTraceId } from '../../utils/otel-upload';

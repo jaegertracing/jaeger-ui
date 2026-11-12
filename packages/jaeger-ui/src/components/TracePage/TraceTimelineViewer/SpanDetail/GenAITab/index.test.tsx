@@ -396,6 +396,27 @@ describe('GenAITab', () => {
     );
   });
 
+  it('renders truncated markdown with an unclosed emphasis marker without swallowing the text after it', () => {
+    // Span attributes can be cut off at ingestion. The Markdown view uses
+    // sharedMarkdownOptions, so an unclosed ** must not throw or hide the rest.
+    const { container } = render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.output.messages',
+            value: [{ role: 'assistant', content: 'span attribute cut at **bold\nfollowing text stays' }],
+          },
+        ])}
+      />
+    );
+    chooseView(screen.getByLabelText(/Content format/), 'Markdown');
+    const content = container.querySelector('.GenAITab--messageContent');
+    expect(content).not.toBeNull();
+    expect(content?.querySelector('strong')).toBeNull();
+    expect(content?.textContent).toContain('**bold');
+    expect(content?.textContent).toContain('following text stays');
+  });
+
   it('renders a fenced code block once switched to Markdown, with the shared code styling', () => {
     const { container } = render(
       <GenAITab
