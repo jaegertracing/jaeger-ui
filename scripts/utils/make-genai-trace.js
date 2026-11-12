@@ -219,8 +219,6 @@ function parseArgs(argv) {
 function createBuilder() {
   const spans = [];
   let seq = 0;
-  // Fixed start time keeps regenerated output byte-identical.
-  let clock = 1770000000000000;
 
   function span({ name, proc, parent, kind = 'internal', genAIOp, model, error = false, duration, attrs }) {
     const spanID = (++seq).toString(16).padStart(16, '0');
@@ -231,13 +229,12 @@ function createBuilder() {
       tags.push({ key, type: TAG_TYPES[typeof value], value });
     }
     if (error) tags.push({ key: 'error', type: 'bool', value: true });
-    clock += 1000;
     spans.push({
       traceID: TRACE_ID,
       spanID,
       operationName: name,
       references: parent ? [{ refType: 'CHILD_OF', traceID: TRACE_ID, spanID: parent }] : [],
-      startTime: clock,
+      startTime: 0,
       duration,
       tags,
       logs: [],
@@ -247,6 +244,42 @@ function createBuilder() {
   }
 
   return { spans, span };
+}
+
+// Fixed start time keeps regenerated output byte-identical.
+const TRACE_START = 1770000000000000;
+
+/**
+ * Assigns start times so that the timeline shows a waterfall: the children of a span run
+ * one after another inside it, in creation order, and the time the parent does not spend
+ * in its children is split evenly into the gaps before, between and after them. The
+ * durations are set by hand so that each span's children fit inside it, and the layout
+ * fails when they do not.
+ */
+function layOut(spans) {
+  const children = new Map();
+  for (const s of spans) {
+    const parent = s.references[0]?.spanID ?? null;
+    if (!children.has(parent)) children.set(parent, []);
+    children.get(parent).push(s);
+  }
+  function place(parent, start, duration) {
+    const kids = children.get(parent) ?? [];
+    const busy = kids.reduce((sum, k) => sum + k.duration, 0);
+    if (busy > duration) {
+      throw new Error(`children of span ${parent} take ${busy}us, longer than its ${duration}us`);
+    }
+    const gap = Math.floor((duration - busy) / (kids.length + 1));
+    let cursor = start + gap;
+    for (const kid of kids) {
+      kid.startTime = cursor;
+      place(kid.spanID, cursor, kid.duration);
+      cursor += kid.duration + gap;
+    }
+  }
+  const [root] = children.get(null);
+  root.startTime = TRACE_START;
+  place(root.spanID, TRACE_START, root.duration);
 }
 
 function buildTrace(turns) {
@@ -268,12 +301,13 @@ function buildTrace(turns) {
     kind: 'server',
     duration: 43000000,
   });
-  span({ name: 'graphql.execution', proc: 'p2', parent: gateway, duration: 43000000 });
+  // The resolver that calls the agent runs inside the execution span.
+  const execution = span({ name: 'graphql.execution', proc: 'p2', parent: gateway, duration: 43000000 });
 
   const agent = span({
     name: 'invoke_agent triage-agent',
     proc: 'p3',
-    parent: gateway,
+    parent: execution,
     kind: 'server',
     genAIOp: 'invoke_agent',
     duration: 42000000,
@@ -499,6 +533,7 @@ function llmCallIn(span, parent) {
 function main() {
   const args = parseArgs(process.argv.slice(2));
   const spans = buildTrace(args.turns);
+  layOut(spans);
   const processes = Object.fromEntries(
     Object.entries(SERVICES).map(([id, serviceName]) => [id, { serviceName, tags: [] }])
   );
