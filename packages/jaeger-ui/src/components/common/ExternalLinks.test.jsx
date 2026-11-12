@@ -19,10 +19,9 @@ describe('<ExternalLinks>', () => {
       render(<ExternalLinks links={links} />);
 
       // The dropdown should be rendered
-      const dropdown = screen.getByTestId('dropdown');
+      const dropdown = screen.getByRole('button', { name: 'External links' });
       expect(dropdown).toBeInTheDocument();
-      expect(dropdown).toHaveAttribute('aria-label', 'External links');
-      expect(screen.getByLabelText('External links')).toBeInTheDocument();
+      expect(dropdown).toHaveAttribute('data-testid', 'dropdown');
 
       // Open the dropdown and check the rendered links
       fireEvent.click(dropdown);
