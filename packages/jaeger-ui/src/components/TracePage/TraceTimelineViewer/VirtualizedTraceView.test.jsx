@@ -10,7 +10,7 @@ import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
 
 import { makeCriticalPathContext } from './criticalPath';
-import { SPAN_TREE } from './generateRowStates';
+import { RECORDED_TREE } from './generateRowStates';
 import { EMPTY_SPAN_FILTER, evaluateSpanFilter, withHiddenServices } from '../spanFilter';
 import { useTraceTimelineStore } from './store';
 import * as track from './store.track';
@@ -437,7 +437,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       const detailRow = listViewProps.itemRenderer('key', {}, 1, {}).props.children;
       expect(detailRow.type).toBe(SpanDetailRow);
       expect(detailRow.props.tree).toBe(barRow.props.tree);
-      expect(detailRow.props.tree).not.toBe(SPAN_TREE);
+      expect(detailRow.props.tree).not.toBe(RECORDED_TREE);
     });
 
     it('renders a SpanBarRow with a RPC span if the row is collapsed and a client span', () => {

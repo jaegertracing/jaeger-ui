@@ -6,7 +6,7 @@ import React from 'react';
 import SpanDetail from './SpanDetail';
 import DetailState from './SpanDetail/DetailState';
 import SpanTreeOffset from './SpanTreeOffset';
-import { SPAN_TREE, VisibleTree } from './generateRowStates';
+import { RECORDED_TREE, VisibleTree } from './generateRowStates';
 import TimelineRow from './TimelineRow';
 
 import { IOtelSpan, IAttributes, IEvent } from '../../../types/otel';
@@ -52,7 +52,7 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
     linksToggle,
     warningsToggle,
     span,
-    tree = SPAN_TREE,
+    tree = RECORDED_TREE,
     attributesToggle,
     traceStartTime,
     focusSpan,

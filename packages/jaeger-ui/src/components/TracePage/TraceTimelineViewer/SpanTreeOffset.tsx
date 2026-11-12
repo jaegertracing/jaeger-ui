@@ -4,7 +4,7 @@
 import React, { useMemo } from 'react';
 import cx from 'classnames';
 
-import { SPAN_TREE, VisibleTree } from './generateRowStates';
+import { RECORDED_TREE, VisibleTree } from './generateRowStates';
 import { IOtelSpan } from '../../../types/otel';
 import colorGenerator from '../../../utils/color-generator';
 
@@ -28,7 +28,7 @@ const SpanTreeOffset: React.FC<TProps> = ({
   isDetailRow = false,
   span,
   color,
-  tree = SPAN_TREE,
+  tree = RECORDED_TREE,
 }) => {
   // The visible ancestors, root first.
   const ancestors = useMemo(() => {

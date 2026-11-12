@@ -9,7 +9,7 @@ import _isEqual from 'lodash/isEqual';
 import memoizeOne from 'memoize-one';
 import type { Location, NavigateFunction } from 'react-router-dom';
 import { makeCriticalPathContext } from './criticalPath';
-import generateRowStates, { RowState, SPAN_TREE, VisibleTree } from './generateRowStates';
+import generateRowStates, { RowState, RECORDED_TREE, VisibleTree } from './generateRowStates';
 import ListView, { ListViewRef } from './ListView';
 import PrunedSpanRow from './PrunedSpanRow';
 import SpanBarRow from './SpanBarRow';
@@ -124,7 +124,7 @@ function generateRowStatesFromTrace(
   if (!trace) {
     return {
       rows: [],
-      tree: SPAN_TREE,
+      tree: RECORDED_TREE,
       spanIndexToRowIndex: new Map(),
     };
   }

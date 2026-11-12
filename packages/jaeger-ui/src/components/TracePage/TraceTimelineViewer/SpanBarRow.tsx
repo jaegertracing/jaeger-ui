@@ -4,7 +4,7 @@
 import React, { useCallback } from 'react';
 import { Tooltip } from 'antd';
 import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward } from 'react-icons/io5';
-import { SPAN_TREE, VisibleTree } from './generateRowStates';
+import { RECORDED_TREE, VisibleTree } from './generateRowStates';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
 import { formatDurationCompact, ViewedBoundsFunctionType } from './utils';
@@ -117,7 +117,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   onDetailToggled,
   onChildrenToggled,
   useOtelTerms,
-  tree = SPAN_TREE,
+  tree = RECORDED_TREE,
 }) => {
   const _detailToggle = useCallback(() => {
     onDetailToggled(span.spanID);

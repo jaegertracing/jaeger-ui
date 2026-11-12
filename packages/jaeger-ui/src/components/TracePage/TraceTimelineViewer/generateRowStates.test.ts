@@ -8,7 +8,7 @@ import DetailState from './SpanDetail/DetailState';
 import { IOtelSpan, StatusCode } from '../../../types/otel';
 import { makeAttributes } from '../../../model/attributes';
 import transformTraceData from '../../../model/transform-trace-data';
-import generateRowStates, { collapseTargets, SPAN_TREE } from './generateRowStates';
+import generateRowStates, { collapseTargets, RECORDED_TREE } from './generateRowStates';
 import { EMPTY_SPAN_FILTER, evaluateSpanFilter, ISpanFilter, withHiddenServices } from '../spanFilter';
 
 function makeSpan(overrides: Partial<IOtelSpan> & { spanID: string; depth: number }): IOtelSpan {
@@ -315,7 +315,7 @@ describe('generateRowStates in lift mode', () => {
     expect(tree.hiddenErrors(spans[3])).toEqual([]);
     expect(tree.hiddenErrorIDs(spans[0])).toEqual(new Set(['span-2']));
     expect(tree.hiddenErrorIDs(spans[0])).toBe(tree.hiddenErrorIDs(spans[0]));
-    expect(tree.hiddenErrorIDs(spans[3])).toBe(SPAN_TREE.hiddenErrorIDs(spans[3]));
+    expect(tree.hiddenErrorIDs(spans[3])).toBe(RECORDED_TREE.hiddenErrorIDs(spans[3]));
     expect(tree.childCount(spans[0])).toBe(1);
   });
 
@@ -468,7 +468,7 @@ describe('generateRowStates in lift mode', () => {
     const spans = makeLiftSpans();
     const { rows, tree } = generateRowStates(spans, new Set(), new Map(), 'inline', new Set(), 'lift');
     expect(rows).toHaveLength(4);
-    expect(tree).toBe(SPAN_TREE);
+    expect(tree).toBe(RECORDED_TREE);
   });
 
   describe('the worked example of RFC 0009 on genaiTestTrace.json', () => {

@@ -51,7 +51,7 @@ const NO_SPANS: ReadonlyArray<IOtelSpan> = [];
 const NO_IDS: ReadonlySet<string> = new Set();
 
 /** The span tree as recorded, which is what remove mode draws. */
-export const SPAN_TREE: VisibleTree = {
+export const RECORDED_TREE: VisibleTree = {
   parentOf: span => span.parentSpan ?? null,
   isLastChild: span => {
     const parent = span.parentSpan;
@@ -365,7 +365,7 @@ export default function generateRowStates(
   treeMode: TreeMode = 'remove'
 ): RowStates {
   if (!spans) {
-    return { rows: [], tree: SPAN_TREE };
+    return { rows: [], tree: RECORDED_TREE };
   }
   if (treeMode === 'lift' && hiddenIDs.size > 0) {
     return {
@@ -380,5 +380,5 @@ export default function generateRowStates(
     detailPanelMode,
     hiddenIDs
   );
-  return { rows: prunedStats ? insertPrunedPlaceholders(rows, prunedStats) : rows, tree: SPAN_TREE };
+  return { rows: prunedStats ? insertPrunedPlaceholders(rows, prunedStats) : rows, tree: RECORDED_TREE };
 }
