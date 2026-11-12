@@ -249,12 +249,16 @@ function createBuilder() {
 // Fixed start time keeps regenerated output byte-identical.
 const TRACE_START = 1770000000000000;
 
+// A span whose duration is not set by hand lasts this much longer than its children together.
+const ENCLOSING_SPAN_OVERHEAD = 1.1;
+
 /**
  * Assigns start times so that the timeline shows a waterfall: the children of a span run
  * one after another inside it, in creation order, and the time the parent does not spend
- * in its children is split evenly into the gaps before, between and after them. The
- * durations are set by hand so that each span's children fit inside it, and the layout
- * fails when they do not.
+ * in its children is split evenly into the gaps before, between and after them. A span
+ * without a duration is given one from its children, which is how the tiers above the
+ * agent grow with the number of turns; a hand-set duration that its children do not fit
+ * in fails the layout.
  */
 function layOut(spans) {
   const children = new Map();
@@ -263,35 +267,44 @@ function layOut(spans) {
     if (!children.has(parent)) children.set(parent, []);
     children.get(parent).push(s);
   }
-  function place(parent, start, duration) {
-    const kids = children.get(parent) ?? [];
-    const busy = kids.reduce((sum, k) => sum + k.duration, 0);
-    if (busy > duration) {
-      throw new Error(`children of span ${parent} take ${busy}us, longer than its ${duration}us`);
+  function size(span) {
+    const kids = children.get(span.spanID) ?? [];
+    const busy = kids.reduce((sum, kid) => sum + size(kid), 0);
+    if (span.duration === undefined) span.duration = Math.round(busy * ENCLOSING_SPAN_OVERHEAD);
+    if (busy > span.duration) {
+      throw new Error(
+        `the children of "${span.operationName}" take ${busy}us, longer than its ${span.duration}us`
+      );
     }
-    const gap = Math.floor((duration - busy) / (kids.length + 1));
-    let cursor = start + gap;
+    return span.duration;
+  }
+  function place(span) {
+    const kids = children.get(span.spanID) ?? [];
+    const busy = kids.reduce((sum, kid) => sum + kid.duration, 0);
+    const gap = Math.floor((span.duration - busy) / (kids.length + 1));
+    let cursor = span.startTime + gap;
     for (const kid of kids) {
       kid.startTime = cursor;
-      place(kid.spanID, cursor, kid.duration);
+      place(kid);
       cursor += kid.duration + gap;
     }
   }
   const [root] = children.get(null);
+  size(root);
   root.startTime = TRACE_START;
-  place(root.spanID, TRACE_START, root.duration);
+  place(root);
 }
 
 function buildTrace(turns) {
   const { spans, span } = createBuilder();
 
   // Two plain tiers above the agent. graphql-gateway owns no GenAI span and is not the
-  // root service, so root-service protection does not apply to it.
+  // root service, so root-service protection does not apply to it. These tiers and the
+  // agent last as long as the turns below them take, so they carry no duration here.
   const edge = span({
     name: 'POST /api/graphql',
     proc: 'p1',
     kind: 'server',
-    duration: 44000000,
     attrs: httpServer('POST', '/api/graphql', 200),
   });
   const gateway = span({
@@ -299,10 +312,9 @@ function buildTrace(turns) {
     proc: 'p2',
     parent: edge,
     kind: 'server',
-    duration: 43000000,
   });
   // The resolver that calls the agent runs inside the execution span.
-  const execution = span({ name: 'graphql.execution', proc: 'p2', parent: gateway, duration: 43000000 });
+  const execution = span({ name: 'graphql.execution', proc: 'p2', parent: gateway });
 
   const agent = span({
     name: 'invoke_agent triage-agent',
@@ -310,7 +322,6 @@ function buildTrace(turns) {
     parent: execution,
     kind: 'server',
     genAIOp: 'invoke_agent',
-    duration: 42000000,
     attrs: { 'gen_ai.agent.name': 'triage-agent', 'gen_ai.provider.name': 'example-ai' },
   });
 
@@ -499,6 +510,7 @@ function buildTrace(turns) {
     attrs: httpClient('POST', 'https://api.example-ai.test/v1/messages', 200),
   });
 
+  layOut(spans);
   return spans;
 }
 
@@ -533,7 +545,6 @@ function llmCallIn(span, parent) {
 function main() {
   const args = parseArgs(process.argv.slice(2));
   const spans = buildTrace(args.turns);
-  layOut(spans);
   const processes = Object.fromEntries(
     Object.entries(SERVICES).map(([id, serviceName]) => [id, { serviceName, tags: [] }])
   );
