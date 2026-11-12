@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import HeatmapLegend from './HeatmapLegend';
 import { HEATMAP_STEPS } from '../../../utils/span-latency-stats';
 
@@ -48,6 +48,23 @@ describe('HeatmapLegend', () => {
   it('has aria-label for accessibility', () => {
     render(<HeatmapLegend />);
     expect(screen.getByRole('group', { name: /latency heatmap legend/i })).toBeInTheDocument();
+  });
+
+  it('reports its rendered height so the layout below can follow it', () => {
+    const heightSpy = vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(86);
+    try {
+      const onHeightChange = vi.fn();
+      render(<HeatmapLegend onHeightChange={onHeightChange} />);
+      expect(onHeightChange).toHaveBeenCalledWith(86);
+    } finally {
+      heightSpy.mockRestore();
+    }
+  });
+
+  it('does not report a zero height before it is laid out', () => {
+    const onHeightChange = vi.fn();
+    render(<HeatmapLegend onHeightChange={onHeightChange} />);
+    expect(onHeightChange).not.toHaveBeenCalled();
   });
 
   it('renders one segment per heatmap color token, in order', () => {

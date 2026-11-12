@@ -12,9 +12,30 @@ const LABELS = [
   { pos: 1, text: '2× median or more' },
 ];
 
-export default function HeatmapLegend() {
+type TProps = {
+  // Called with the legend's rendered height whenever it changes, e.g. when the hint wraps.
+  onHeightChange?: (height: number) => void;
+};
+
+export default function HeatmapLegend({ onHeightChange }: TProps) {
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  React.useLayoutEffect(() => {
+    const elm = ref.current;
+    if (!elm || !onHeightChange) return undefined;
+    const report = () => {
+      // An element that isn't laid out reports 0; keep the CSS default rather than collapse the space.
+      if (elm.offsetHeight > 0) onHeightChange(elm.offsetHeight);
+    };
+    report();
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(report);
+    observer.observe(elm);
+    return () => observer.disconnect();
+  }, [onHeightChange]);
+
   return (
-    <div className="HeatmapLegend" role="group" aria-label="Span latency heatmap legend">
+    <div className="HeatmapLegend" role="group" aria-label="Span latency heatmap legend" ref={ref}>
       <span className="HeatmapLegend--title">Latency Heatmap</span>
       <div className="HeatmapLegend--scale">
         <div>

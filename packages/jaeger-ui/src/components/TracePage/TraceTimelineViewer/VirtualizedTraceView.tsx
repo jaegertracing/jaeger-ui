@@ -66,6 +66,8 @@ type TVirtualizedTraceViewOwnProps = {
   heatmapEnabled?: boolean;
   // Latency score per spanID; spans missing from the map have no same-operation peers.
   heatmapScores?: Map<string, number>;
+  // Changes when content above the list (the heatmap legend) moves it; see ListView.
+  listTopOffsetKey?: unknown;
 };
 
 type TDispatchProps = {
@@ -610,6 +612,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         itemsWrapperClassName="VirtualizedTraceView--rowsWrapper"
         getKeyFromIndex={getKeyFromIndex}
         getIndexFromKey={getIndexFromKey}
+        topOffsetKey={props.listTopOffsetKey}
         windowScroller
       />
     </div>

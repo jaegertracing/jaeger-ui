@@ -5,13 +5,14 @@
   /* Fixed like TimelineHeaderRow, with no top set, so it stays at its static position: just
      below the header, which is also out of flow. It never scrolls away, so the fixed side panel
      can sit below it at any scroll position. A fixed box's margin doesn't collapse with its
-     parent's, so the margin can't shift the header down. */
+     parent's, so the margin can't shift the header down. The height is a minimum: a hint that
+     wraps on a narrow window grows the legend, and TraceTimelineViewer reads the real height
+     back into --heatmap-legend-height so the rows and side panel below move with it. */
   position: fixed;
   z-index: 4;
   width: 100%;
-  height: var(--heatmap-legend-height);
+  min-height: var(--heatmap-legend-height);
   box-sizing: border-box;
-  overflow: hidden;
   margin-top: var(--timeline-header-row-height);
   display: flex;
   flex-direction: column;

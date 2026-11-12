@@ -82,6 +82,9 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   const zustandSetSpanNameColumnWidth = useLayoutPrefsStore(s => s.setSpanNameColumnWidth);
   const zustandSetSidePanelWidth = useLayoutPrefsStore(s => s.setSidePanelWidth);
 
+  // The legend's rendered height, once known; it grows past the CSS minimum when its hint wraps.
+  const [legendHeight, setLegendHeight] = useState<number | null>(null);
+
   const heatmapScores = useMemo(
     () => (heatmapEnabled ? computeLatencyScores(trace.spans) : EMPTY_SCORES),
     [heatmapEnabled, trace.spans]
@@ -236,11 +239,19 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       nameColumnWidth={nameColumnWidth}
       heatmapEnabled={heatmapEnabled}
       heatmapScores={heatmapScores}
+      listTopOffsetKey={heatmapEnabled ? `legend:${legendHeight}` : 'none'}
       spanPillsEnabled={spanPillsEnabled}
     />
   );
 
   const rootClassName = heatmapEnabled ? 'TraceTimelineViewer is-heatmapEnabled' : 'TraceTimelineViewer';
+  // Overrides the vars.css default, so the span list padding and the side panel offset, which both
+  // read this variable, follow the legend's real height.
+  const rootStyle =
+    heatmapEnabled && legendHeight !== null
+      ? ({ '--heatmap-legend-height': `${legendHeight}px` } as React.CSSProperties)
+      : undefined;
+  const legend = heatmapEnabled && <HeatmapLegend onHeightChange={setLegendHeight} />;
 
   if (sidePanelActive) {
     const mainWidth = (1 - effectiveSidePanelWidth) * 100;
@@ -257,9 +268,9 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       }),
     };
     return (
-      <div className={rootClassName}>
+      <div className={rootClassName} style={rootStyle}>
         {headerRow}
-        {heatmapEnabled && <HeatmapLegend />}
+        {legend}
         <div className="TraceTimelineViewer--sidePanelLayout" ref={layoutRef}>
           <div className="TraceTimelineViewer--main" style={{ width: `${mainWidth}%` }}>
             {virtualizedView}
@@ -277,9 +288,9 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   }
 
   return (
-    <div className={rootClassName}>
+    <div className={rootClassName} style={rootStyle}>
       {headerRow}
-      {heatmapEnabled && <HeatmapLegend />}
+      {legend}
       {virtualizedView}
     </div>
   );

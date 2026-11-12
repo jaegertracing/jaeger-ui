@@ -90,13 +90,14 @@ describe('computeLatencyScores', () => {
     for (const id of ['a', 'b', 'c']) expect(scores.get(id)).toBe(0);
   });
 
-  it('places zero durations and zero medians at the ends of the scale', () => {
+  it('places zero durations at the fast end and keeps a slope past a zero median', () => {
     const zeroMedian = computeLatencyScores([
       makeSpan('a', 'op', 0),
       makeSpan('b', 'op', 0),
       makeSpan('c', 'op', 50),
     ]);
     expect(zeroMedian.get('a')).toBe(0);
+    // 50µs against the 10µs floor is past twice the median.
     expect(zeroMedian.get('c')).toBe(1);
 
     const zeroDuration = computeLatencyScores([
@@ -113,9 +114,21 @@ describe('computeLatencyScores', () => {
       makeSpan('b', 'op', 0),
       makeSpan('e', 'op', 0),
       makeSpan('c', 'op', 9),
-      makeSpan('d', 'op', 10),
+      makeSpan('d', 'op', 20),
     ]);
     expect(scores.get('c')).toBe(0);
+    expect(scores.get('d')).toBe(1);
+  });
+
+  it('measures a tiny median against the floor, so a few extra microseconds are not the slowest step', () => {
+    const scores = computeLatencyScores([
+      makeSpan('a', 'op', 0),
+      makeSpan('b', 'op', 0),
+      makeSpan('e', 'op', 0),
+      makeSpan('c', 'op', 15),
+      makeSpan('d', 'op', 10_000_000),
+    ]);
+    expect(scores.get('c')).toBeCloseTo(Math.log2(1.5));
     expect(scores.get('d')).toBe(1);
   });
 

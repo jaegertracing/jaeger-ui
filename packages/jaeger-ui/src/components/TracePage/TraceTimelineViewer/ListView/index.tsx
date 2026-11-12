@@ -80,6 +80,11 @@ type TListViewProps = {
    * - Ref:https://github.com/bvaughn/react-virtualized/blob/497e2a1942529560681d65a9ef9f5e9c9c9a49ba/docs/WindowScroller.md
    */
   windowScroller?: boolean;
+  /**
+   * Content above the list, such as the heatmap legend, can move it without a scroll or resize.
+   * When this value changes, the list measures its document offset again.
+   */
+  topOffsetKey?: unknown;
 };
 
 const DEFAULT_INITIAL_DRAW = 300;
@@ -318,12 +323,18 @@ const ListView = forwardRef<ListViewRef, TListViewProps>((props, ref) => {
     if (itemHolderElm.current) {
       _scanItemHeights();
     }
-    // Content above the list, such as the heatmap legend, can move it without a resize or scroll.
-    // The view height is derived from this offset, so a stale value skews the visible row range.
+  });
+
+  // The view height is derived from the top offset, so a stale value skews the visible row range.
+  // Measuring forces a layout, so it only happens when the content above the list changes.
+  const lastTopOffsetKey = useRef(props.topOffsetKey);
+  React.useLayoutEffect(() => {
+    if (lastTopOffsetKey.current === props.topOffsetKey) return;
+    lastTopOffsetKey.current = props.topOffsetKey;
     if (_measureTopOffset()) {
       _positionList();
     }
-  });
+  }, [props.topOffsetKey, _measureTopOffset, _positionList]);
 
   const {
     dataLength,

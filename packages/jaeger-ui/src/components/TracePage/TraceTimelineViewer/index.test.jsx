@@ -214,6 +214,17 @@ describe('<TraceTimelineViewer>', () => {
       expect(container.firstChild).toHaveClass('is-heatmapEnabled');
     });
 
+    it('sizes the space below the legend from its rendered height', () => {
+      mockLayoutPrefsStore.heatmapEnabled = true;
+      const heightSpy = vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(86);
+      try {
+        const { container } = render(<TraceTimelineViewerImpl {...props} />);
+        expect(container.firstChild.style.getPropertyValue('--heatmap-legend-height')).toBe('86px');
+      } finally {
+        heightSpy.mockRestore();
+      }
+    });
+
     it('shows the legend in side panel mode too', () => {
       mockLayoutPrefsStore.detailPanelMode = 'sidepanel';
       mockLayoutPrefsStore.heatmapEnabled = true;

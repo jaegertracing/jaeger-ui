@@ -17,7 +17,8 @@ const HEATMAP_NEUTRAL_SPREAD = 0.1;
 
 // Spans within this many microseconds of the median also stay neutral. A ratio means little at
 // that scale, and without the floor a tiny or zero median would pin a span only a few
-// microseconds slower to the slowest step.
+// microseconds slower to the slowest step. The ratio also uses it as the smallest median, so past
+// the floor a 20µs span and a 10s span don't land on the same step.
 const HEATMAP_NEUTRAL_FLOOR_US = 10;
 
 const SIDE_STEPS = (HEATMAP_STEPS - 1) / 2;
@@ -37,7 +38,8 @@ function median(sorted: number[]): number {
  * itself included, with the same service and operation. The score is log(duration / median) on
  * a base of HEATMAP_SATURATION_RATIO, clamped to [-1, 1]: 0 is the median, -1 is half of it or
  * less, and 1 is twice it or more. Spans within HEATMAP_NEUTRAL_SPREAD of the median, or within
- * HEATMAP_NEUTRAL_FLOOR_US of it, score exactly 0. The spread is checked on the durations rather
+ * HEATMAP_NEUTRAL_FLOOR_US of it, score exactly 0, and a median below HEATMAP_NEUTRAL_FLOOR_US
+ * is raised to it before taking the ratio. The spread is checked on the durations rather
  * than on the log score, because a log band symmetric around 0 would be narrower than 10% on the
  * fast side: 0.91x the median is within 10% but scores below -log2(1.1).
  * Spans whose operation occurs only once have no peers to compare against and are left out of
@@ -65,10 +67,12 @@ export function computeLatencyScores(spans: ReadonlyArray<IOtelSpan>): Map<strin
     let score: number;
     const delta = Math.abs(span.duration - med);
     if (delta < HEATMAP_NEUTRAL_FLOOR_US || delta <= med * HEATMAP_NEUTRAL_SPREAD) score = 0;
-    // A zero median or duration has no finite ratio, so it sits at the matching end of the scale.
-    else if (med <= 0) score = 1;
+    // A zero duration has no finite ratio, so it sits at the fast end of the scale.
     else if (span.duration <= 0) score = -1;
-    else score = Math.log(span.duration / med) / Math.log(HEATMAP_SATURATION_RATIO);
+    else
+      score =
+        Math.log(span.duration / Math.max(med, HEATMAP_NEUTRAL_FLOOR_US)) /
+        Math.log(HEATMAP_SATURATION_RATIO);
     result.set(span.spanID, Math.max(-1, Math.min(1, score)));
   }
   return result;
