@@ -44,9 +44,11 @@ const SpanTreeOffset: React.FC<TProps> = ({
       onClick();
     } else if (e.key === 'ArrowRight' && !childrenVisible && onClick) {
       e.preventDefault();
+      e.stopPropagation();
       onClick();
     } else if (e.key === 'ArrowLeft' && childrenVisible && onClick) {
       e.preventDefault();
+      e.stopPropagation();
       onClick();
     }
   };

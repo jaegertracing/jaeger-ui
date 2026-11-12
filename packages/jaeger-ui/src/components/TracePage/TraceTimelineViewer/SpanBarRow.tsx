@@ -113,9 +113,11 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
         onDetailToggled(span.spanID);
       } else if (e.key === 'ArrowRight' && isParent && !isChildrenExpanded) {
         e.preventDefault();
+        e.stopPropagation();
         onChildrenToggled(span.spanID);
       } else if (e.key === 'ArrowLeft' && isParent && isChildrenExpanded) {
         e.preventDefault();
+        e.stopPropagation();
         onChildrenToggled(span.spanID);
       }
     },
@@ -167,7 +169,6 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
           <a
             className={`span-name ${isDetailExpanded ? 'is-detail-expanded' : ''}`}
             aria-checked={isDetailExpanded}
-            aria-label={`Span ${serviceName}: ${operationName} (${label})`}
             onClick={_detailToggle}
             onKeyDown={_detailToggleKeyDown}
             role="switch"
