@@ -81,7 +81,7 @@ describe('withoutHiddenSpans', () => {
     expect(withoutHiddenSpans(new Set(['s1', 's2']), new Set(['s1']))).toEqual(new Set(['s2']));
   });
 
-  it('returns null when every span is hidden', () => {
-    expect(withoutHiddenSpans(new Set(['s1']), new Set(['s1', 's2']))).toBeNull();
+  it('returns an empty set, not null, when every match is hidden', () => {
+    expect(withoutHiddenSpans(new Set(['s1']), new Set(['s1', 's2']))).toEqual(new Set());
   });
 });

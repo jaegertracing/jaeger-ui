@@ -34,7 +34,9 @@ export function hiddenSpanIDsForServices(
 
 /**
  * Removes the hidden spans from a set of span IDs, so that the search match count and the
- * highlighting never refer to a span that is not on screen. Returns null when nothing is left.
+ * highlighting never refer to a span that is not on screen. A search whose matches are all hidden
+ * yields an empty set, not null, because the timeline recomputes its focus for an active search
+ * and skips that for no search.
  */
 export function withoutHiddenSpans(
   spanIDs: ReadonlySet<string> | TNil,
@@ -45,5 +47,5 @@ export function withoutHiddenSpans(
   for (const id of spanIDs) {
     if (!hiddenIDs.has(id)) visible.add(id);
   }
-  return visible.size > 0 ? visible : null;
+  return visible;
 }
