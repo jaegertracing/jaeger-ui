@@ -11,8 +11,8 @@ import type { Microseconds } from '../types/units';
 const chance = new Chance();
 const HEX = '0123456789abcdef';
 
-export const SERVICE_LIST = ['serviceA', 'serviceB', 'serviceC', 'serviceD', 'serviceE', 'serviceF'];
-export const OPERATIONS_LIST = [
+const SERVICE_LIST = ['serviceA', 'serviceB', 'serviceC', 'serviceD', 'serviceE', 'serviceF'];
+const OPERATIONS_LIST = [
   'GET',
   'PUT',
   'POST',
@@ -23,13 +23,13 @@ export const OPERATIONS_LIST = [
   'MongoDB::update',
 ];
 
-export interface IOtelTraceOptions {
+interface IOtelTraceOptions {
   numberOfSpans?: number;
   numberOfProcesses?: number;
   maxDepth?: number;
 }
 
-export interface IOtelTracesOptions {
+interface IOtelTracesOptions {
   numberOfTraces?: number;
 }
 
@@ -73,7 +73,7 @@ function wireTrace({
   const startTime = traceStartTime();
   const traceDuration = chance.integer({ min: 10000, max: 5000000 });
   const spanIds = Array.from({ length: numberOfSpans }, () => randomHex(16));
-  const depths = [0];
+  const depths: number[] = [];
   const spans = spanIds.map((spanId, index) => {
     const parentCandidates = Array.from({ length: index }, (_, candidate) => candidate).filter(
       candidate => depths[candidate] < maxDepth - 1
