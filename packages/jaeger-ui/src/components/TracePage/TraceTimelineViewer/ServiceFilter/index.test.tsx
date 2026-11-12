@@ -608,6 +608,12 @@ describe('SpanFilterButton', () => {
       expect(screen.getByText('2 of 5 spans shown')).toBeInTheDocument();
       fireEvent.click(screen.getByText('Clear all'));
       expect(onChange).toHaveBeenCalledWith({ ...keepErrors, clauses: [] });
+      // jsdom runs no animation, so the popover stays in its leave transition instead of becoming hidden.
+      await waitFor(() =>
+        expect(screen.getByRole('dialog').closest('.ant-popover')?.className).toMatch(
+          /ant-popover-hidden|ant-zoom-big-leave/
+        )
+      );
     });
 
     it('does not render the section without clauses', async () => {

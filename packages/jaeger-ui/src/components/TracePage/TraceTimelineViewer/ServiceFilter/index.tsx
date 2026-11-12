@@ -205,7 +205,12 @@ export default function SpanFilterButton({
       }),
     [commitNow]
   );
-  const clearAll = useCallback(() => commitNow(f => ({ ...f, clauses: [] })), [commitNow]);
+  // Clear all closes the popover, because it is used to see the trace without its filters rather than
+  // to build new ones.
+  const clearAll = useCallback(() => {
+    commitNow(f => ({ ...f, clauses: [] }));
+    setOpen(false);
+  }, [commitNow]);
 
   const apply = useCallback(() => {
     if (draft) onChange(draft);
@@ -363,6 +368,7 @@ export default function SpanFilterButton({
 
   return (
     <Popover
+      classNames={{ root: 'SpanFilter--popoverRoot' }}
       content={content}
       title={<span className="SpanFilter--title">Filter spans</span>}
       trigger="click"

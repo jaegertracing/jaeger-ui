@@ -129,6 +129,12 @@ SPDX-License-Identifier: Apache-2.0
   font-size: 1.15em;
 }
 
+/* The dark theme's shadow does not separate the popover from the page, and a popover this tall
+   reads as another column without an edge. */
+[data-theme='dark'] .SpanFilter--popoverRoot .ant-popover-inner {
+  border: 1px solid var(--border-default);
+}
+
 /* The width is fixed, so that a chip or a value list coming and going does not resize the panel. */
 .SpanFilter--popover {
   width: 420px;
