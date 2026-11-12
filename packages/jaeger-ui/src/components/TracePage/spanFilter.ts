@@ -241,10 +241,10 @@ function decodeRangeBound(property: RangeProperty, s: string, open: number): num
   } else {
     const m = /^(\d+(?:\.\d+)?)(us|ms|s)$/.exec(s);
     if (!m) return null;
-    let factor = 1;
-    if (m[2] === 's') factor = MICROS_PER_SECOND;
-    else if (m[2] === 'ms') factor = MICROS_PER_MILLI;
-    value = Math.round(Number(m[1]) * factor);
+    let microsPerUnit = 1;
+    if (m[2] === 's') microsPerUnit = MICROS_PER_SECOND;
+    else if (m[2] === 'ms') microsPerUnit = MICROS_PER_MILLI;
+    value = Math.round(Number(m[1]) * microsPerUnit);
   }
   return Number.isSafeInteger(value) ? value : null;
 }
