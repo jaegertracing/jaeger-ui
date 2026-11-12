@@ -166,6 +166,7 @@ export default function DependencyGraphPage() {
   const handleServiceSelect = (service: string | null) => setSelectedService(service);
   const handleDataSourceChange = (source: DataSource) => {
     if (source === selectedDataSource) return;
+    debouncedDepthChange.cancel();
     setSelectedDataSource(source);
     setSelectedService(null);
     setSelectedDepth(5);
@@ -242,6 +243,7 @@ export default function DependencyGraphPage() {
       <div className="DependencyGraph--graphWrapper">
         <DAG
           data={graphData}
+          selectedDataSource={selectedDataSource}
           selectedLayout={selectedLayout ?? 'dot'}
           selectedDepth={debouncedDepth ?? 0}
           selectedService={selectedService ?? ''}
