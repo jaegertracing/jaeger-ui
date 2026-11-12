@@ -284,7 +284,7 @@ export default function AttributesTable(props: AttributesTableProps) {
             }
             const isOtel = row.key.startsWith('otel.');
             const keyMarkup = isOtel ? (
-              <span style={{ color: '#666', fontStyle: 'italic' }} className="is-otel-key">
+              <span className="KeyValueTable--otelKey is-otel-key">
                 {row.key}
                 <Tooltip title="Synthetic Attribute: This tag was generated to map OpenTelemetry semantics to the Jaeger data model. It may not be searchable in the storage directly.">
                   <IoInformationCircleOutline

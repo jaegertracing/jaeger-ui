@@ -28,6 +28,9 @@ SPDX-License-Identifier: Apache-2.0
   white-space: pre;
   width: 125px;
 }
+.KeyValueTable--otelKey {
+  font-style: italic;
+}
 
 .KeyValueTable--valueColumn {
   position: relative;

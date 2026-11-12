@@ -174,6 +174,21 @@ describe('<AttributesTable>', () => {
     });
   });
 
+  it('renders otel.* keys with a theme-aware classes instead of hard-coded color', () => {
+    render(
+      <AttributesTable
+        data={makeAttributes([
+          { key: 'otel.test_key', value: 'synthetic' },
+          { key: 'normal.key', value: 'regular' },
+        ])}
+      />
+    );
+    const otelKey = screen.getByText('otel.test_key');
+    expect(otelKey).toHaveClass('KeyValueTable--otelKey', 'is-otel-key');
+    expect(otelKey.style.color).toBe('');
+    expect(screen.getByText('normal.key')).not.toHaveClass('KeyValueTable--otelKey');
+  });
+
   it('renders single link with correct href and title when linksGetter returns one link', () => {
     render(
       <AttributesTable
