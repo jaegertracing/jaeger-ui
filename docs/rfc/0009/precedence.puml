@@ -7,22 +7,31 @@ skinparam ActivityBorderColor #1e1e1e
 skinparam ArrowColor #1e1e1e
 
 start
-if (URL carries filter clauses?) then (yes)
-  #fff3bf:URL clauses
-  (uiFind, svcFilter, f=…);
-elseif (A saved default exists?) then (yes)
-  :Saved default
-  (localStorage, written only by Save as Default);
+if (URL carries a service set in svcFilter?) then (yes)
+  #fff3bf:Service hide set
+  from svcFilter (a stale one hides nothing);
+else (no)
+  :Saved service default
+  (localStorage, written only by Save as Default),
+  unless it would leave no span, and not again
+  for the same URL after an edit or a URL cleanup;
+endif
+if (URL carries svcFilter, f or tree?) then (yes)
+  #fff3bf:Other clauses and tree mode
+  from f=… and tree=lift;
 else (no)
   :View default
-  (Timeline: none. GenAI: hide Non-GenAI, lift children);
+  (Timeline: none. GenAI view of a GenAI trace:
+  hide Non-GenAI, lift children, unless that
+  would leave no span with the services hidden);
 endif
+:uiFind text, from the URL in either case;
 :Effective clauses
-→ highlightIDs, hiddenIDs;
+→ findIDs, hiddenIDs;
 note right
   Clearing the filter in the GenAI view writes
-  an explicitly empty clause list to the URL, so
-  the view default does not return on the next render.
+  an explicitly empty clause list to the URL, which
+  later edits keep, so the view default does not return.
 end note
 stop
 @enduml

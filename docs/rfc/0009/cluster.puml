@@ -10,7 +10,7 @@
 .
 <b>Text typed, three filters active</b>
 {+
-  { "<&magnifying-glass> "tools/call" auth   <back:#fff3bf>▾</back>" | 12 · <b>47 hidden</b> | [↑] | [↓] | [⌖] | [<back:#fff3bf>▼ <b>3</b></back>] }
+  { "<&magnifying-glass> "tools/call" auth   <back:#fff3bf>▾</back>" | 12 | [↑] | [↓] | [⌖] | [<back:#fff3bf>▼ <b>3</b></back>] }
 }
 .
 <b>The ▾ menu inside the input</b>
