@@ -979,6 +979,16 @@ describe('trace timeline zustand stores', () => {
         useTraceTimelineStore.getState().detailLogsToggle('span-a');
         expect(useTraceTimelineStore.getState().detailStates.get('span-a')!.events.isOpen).toBe(false);
       });
+
+      it('auto-initializes with side-panel defaults when a subsection is toggled for an unknown span', () => {
+        useLayoutPrefsStore.setState({ detailPanelMode: 'sidepanel' });
+        useTraceTimelineStore.getState().detailTagsToggle('span-a');
+        const detailState = useTraceTimelineStore.getState().detailStates.get('span-a')!;
+        // toggled from the sidepanel default (true), so should now be false
+        expect(detailState.isAttributesOpen).toBe(false);
+        // resource was not toggled, so it retains the sidepanel default
+        expect(detailState.isResourceOpen).toBe(true);
+      });
     });
 
     describe('detailLogItemToggle', () => {

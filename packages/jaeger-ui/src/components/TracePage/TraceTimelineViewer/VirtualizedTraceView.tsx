@@ -32,6 +32,7 @@ import { TNil } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan, IOtelTrace, IAttributes, IEvent } from '../../../types/otel';
 import TTraceTimeline from '../../../types/TTraceTimeline';
+import type { SpanDetailPanelMode } from '../../../types/config';
 import { getSelectedSpanID, useLayoutPrefsStore, useTraceTimelineStore } from './store';
 import {
   trackChildrenToggle,
@@ -86,6 +87,12 @@ type RouteProps = {
 type TDerivedStateProps = {
   selectedSpanID: string | null;
   prunedServices: Set<string>;
+  // Layout preferences, read from useLayoutPrefsStore rather than TTraceTimeline: they are not
+  // part of the Redux timeline duck kept as the analytics parity reference (see store.layout).
+  spanNameColumnWidth: number;
+  sidePanelWidth: number;
+  detailPanelMode: SpanDetailPanelMode;
+  timelineBarsVisible: boolean;
 };
 
 type VirtualizedTraceViewProps = TVirtualizedTraceViewOwnProps &

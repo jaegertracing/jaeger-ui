@@ -3,16 +3,14 @@
 
 import DetailState from '../components/TracePage/TraceTimelineViewer/SpanDetail/DetailState';
 import TNil from './TNil';
-import type { SpanDetailPanelMode } from './config';
 
+// Layout preferences (detailPanelMode, sidePanelWidth, spanNameColumnWidth, timelineBarsVisible)
+// are owned by useLayoutPrefsStore (./store.layout); this type only covers what the Redux
+// duck still tracks as the analytics parity reference (see store.track.test.ts).
 type TTraceTimeline = {
   childrenHiddenIDs: Set<string>;
   detailStates: Map<string, DetailState>;
-  detailPanelMode: SpanDetailPanelMode;
   shouldScrollToFirstUiFindMatch: boolean;
-  sidePanelWidth: number;
-  spanNameColumnWidth: number;
-  timelineBarsVisible: boolean;
   traceID: string | TNil;
 };
 

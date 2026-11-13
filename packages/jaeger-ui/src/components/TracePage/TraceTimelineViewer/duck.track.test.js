@@ -17,7 +17,6 @@ describe('middlewareHooks', () => {
   const traceID = 'ABC';
   const spanID = 'abc';
   const spanDepth = 123;
-  const columnWidth = { real: 0.15, tracked: 150 };
   const payload = { spanID };
   const traceData = { spans: [{ spanID, depth: spanDepth }] };
   const state = {
@@ -54,13 +53,6 @@ describe('middlewareHooks', () => {
   });
 
   const cases = [
-    {
-      msg: 'tracks a GA event for resizing the span name column',
-      type: types.SET_SPAN_NAME_COLUMN_WIDTH,
-      payloadCustom: { width: columnWidth.real },
-      category: track.CATEGORY_COLUMN,
-      extraTrackArgs: [columnWidth.tracked],
-    },
     {
       action: track.ACTION_COLLAPSE_ALL,
       category: track.CATEGORY_EXPAND_COLLAPSE,
@@ -180,27 +172,6 @@ describe('middlewareHooks', () => {
       category: track.CATEGORY_LOGS_ITEM,
       noOp: true,
     },
-    {
-      msg: 'tracks a GA event for changing detail panel mode',
-      type: types.SET_DETAIL_PANEL_MODE,
-      payloadCustom: { mode: 'sidepanel' },
-      category: track.CATEGORY_PANEL_MODE,
-      action: 'sidepanel',
-    },
-    {
-      msg: 'tracks a GA event for changing timeline visibility',
-      type: types.SET_TIMELINE_BARS_VISIBLE,
-      payloadCustom: { visible: true },
-      category: track.CATEGORY_TIMELINE_VISIBLE,
-      action: 'true',
-    },
-    {
-      msg: 'tracks a GA event for resizing the side panel',
-      type: types.SET_SIDE_PANEL_WIDTH,
-      payloadCustom: { width: columnWidth.real },
-      category: track.CATEGORY_COLUMN,
-      extraTrackArgs: [columnWidth.tracked],
-    },
   ];
 
   cases.forEach(
@@ -245,10 +216,6 @@ describe('middlewareHooks', () => {
         types.DETAIL_LOG_ITEM_TOGGLE,
         types.EXPAND_ALL,
         types.EXPAND_ONE,
-        types.SET_DETAIL_PANEL_MODE,
-        types.SET_SIDE_PANEL_WIDTH,
-        types.SET_SPAN_NAME_COLUMN_WIDTH,
-        types.SET_TIMELINE_BARS_VISIBLE,
       ].sort()
     );
   });
