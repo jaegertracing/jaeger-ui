@@ -79,7 +79,7 @@ function paramValues(value: string | (string | null)[] | null | undefined): stri
  * saved default applies only while it does not, and an edit always leaves one, so the default does
  * not come back on a later render of the edited URL.
  */
-export function urlHasFilterParams(params: queryString.ParsedQuery): boolean {
+function urlHasFilterParams(params: queryString.ParsedQuery): boolean {
   return (
     CLAUSE_PARAM in params ||
     (typeof params[LEGACY_SERVICE_PARAM] === 'string' && params[LEGACY_SERVICE_PARAM] !== '')

@@ -176,7 +176,7 @@ export function withoutHiddenSpans(
 type ServiceHideClause = IClause & { criterion: Extract<Criterion, { shape: 'set' }> };
 
 /** The hide clause on service is the clause that the popover's service list edits. */
-export function isServiceHideClause(clause: IClause): clause is ServiceHideClause {
+function isServiceHideClause(clause: IClause): clause is ServiceHideClause {
   return (
     clause.verb === 'hide' && clause.criterion.shape === 'set' && clause.criterion.property === 'service'
   );
