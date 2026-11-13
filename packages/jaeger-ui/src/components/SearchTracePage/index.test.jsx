@@ -64,7 +64,7 @@ import '@testing-library/jest-dom';
 import { Provider } from 'react-redux';
 import { SearchTracePageImpl as SearchTracePage } from './index';
 import { useServices } from '../../hooks/useTraceDiscovery';
-import { ALL_SERVICES } from '../../constants/search-form';
+import { ALL_OPERATIONS, ALL_SERVICES } from '../../constants/search-form';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { useClearUploadedTraces } from './useUploadedTraces';
 import { useSearchPanelStore, LS_WIDTH_KEY, LS_COLLAPSED_KEY } from './search-panel-store';
@@ -103,6 +103,7 @@ describe('<SearchTracePage>', () => {
     useSearchPanelStore.setState({ panelWidth: 0.25, collapsed: false });
     localStorage.removeItem(LS_WIDTH_KEY);
     localStorage.removeItem(LS_COLLAPSED_KEY);
+    localStorage.removeItem('lastSearch');
     queryClient.clear();
   });
 
@@ -125,6 +126,57 @@ describe('<SearchTracePage>', () => {
     const [query] = useSearchTracesMock.mock.calls[0];
     expect(query).not.toBeNull();
     expect(query.service).toBe('svc-a');
+  });
+
+  it('calls useSearchTraces with operation sentinel when URL contains an all-operations sentinel', () => {
+    render(
+      <AllProvider initialEntries={[`/search?service=svc-a&operation=all`]}>
+        <SearchTracePage />
+      </AllProvider>
+    );
+    expect(useSearchTracesMock).toHaveBeenCalled();
+    const [queryLegacy] = useSearchTracesMock.mock.calls[0];
+    expect(queryLegacy.service).toBe('svc-a');
+    expect(queryLegacy.operation).toBe(ALL_OPERATIONS);
+
+    useSearchTracesMock.mockClear();
+    render(
+      <AllProvider initialEntries={[`/search?service=svc-a&operation=${ALL_OPERATIONS}`]}>
+        <SearchTracePage />
+      </AllProvider>
+    );
+    expect(useSearchTracesMock).toHaveBeenCalled();
+    const [querySentinel] = useSearchTracesMock.mock.calls[0];
+    expect(querySentinel.service).toBe('svc-a');
+    expect(querySentinel.operation).toBe(ALL_OPERATIONS);
+  });
+
+  it('preserves all-operations selection after timestamp rewrite when lastSearch has a saved operation', async () => {
+    localStorage.setItem('lastSearch', JSON.stringify({ service: 'svc-a', operation: 'saved-op' }));
+
+    render(
+      <AllProvider initialEntries={['/search?service=svc-a&operation=all&lookback=1h']}>
+        <SearchTracePage />
+      </AllProvider>
+    );
+
+    const operationSelect = screen.getByTestId('operation');
+    expect(operationSelect).toHaveTextContent('All Operations');
+    expect(operationSelect).not.toHaveTextContent('saved-op');
+  });
+
+  it('preserves ALL_OPERATIONS selection after timestamp rewrite when lastSearch has a saved operation', async () => {
+    localStorage.setItem('lastSearch', JSON.stringify({ service: 'svc-a', operation: 'saved-op' }));
+
+    render(
+      <AllProvider initialEntries={[`/search?service=svc-a&operation=${ALL_OPERATIONS}&lookback=1h`]}>
+        <SearchTracePage />
+      </AllProvider>
+    );
+
+    const operationSelect = screen.getByTestId('operation');
+    expect(operationSelect).toHaveTextContent('All Operations');
+    expect(operationSelect).not.toHaveTextContent('saved-op');
   });
 
   describe('an all-services link on a backend that cannot serve it', () => {
