@@ -624,8 +624,10 @@ describe('<TracePage>', () => {
       render(<TracePage {...defaultProps} uiFind="text" />);
       const shown = textMatches.filter(s => s.resource.serviceName !== root.resource.serviceName);
       expect(capturedHeaderProps.resultCount).toBe(shown.length);
+      expect(capturedHeaderProps.hiddenResultCount).toBe(textMatches.length - shown.length);
       act(() => capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceStatistics));
       expect(capturedHeaderProps.resultCount).toBe(textMatches.length);
+      expect(capturedHeaderProps.hiddenResultCount).toBe(0);
     } finally {
       mockTraceTimelineStore.spanFilter = EMPTY_SPAN_FILTER;
     }

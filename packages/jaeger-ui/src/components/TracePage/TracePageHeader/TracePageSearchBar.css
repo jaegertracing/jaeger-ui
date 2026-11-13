@@ -21,6 +21,13 @@ SPDX-License-Identifier: Apache-2.0
   color: var(--text-secondary);
 }
 
+.TracePageSearchBar--hiddenWarning {
+  display: inline-flex;
+  margin-left: 0.25rem;
+  color: var(--feedback-warning);
+  cursor: help;
+}
+
 .TracePageSearchBar--controls {
   display: flex;
   align-items: center;

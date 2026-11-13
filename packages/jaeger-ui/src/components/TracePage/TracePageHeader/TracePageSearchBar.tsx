@@ -11,6 +11,7 @@ import {
   IoEye,
   IoEyeOff,
   IoFunnelOutline,
+  IoWarningOutline,
 } from 'react-icons/io5';
 
 import * as markers from './TracePageSearchBar.markers';
@@ -23,6 +24,9 @@ import './TracePageSearchBar.css';
 // The crosshair icon does not convey what the focus button does, so the tooltip spells it out.
 const FOCUS_MATCHES_TOOLTIP = 'Collapse the trace to the paths leading to the matching spans';
 
+const hiddenMatchesMessage = (n: number) =>
+  n === 1 ? '1 matching span is hidden by the filter' : `${n} matching spans are hidden by the filter`;
+
 type TracePageSearchBarProps = {
   textFilter: string | TNil;
   prevResult: () => void;
@@ -30,6 +34,8 @@ type TracePageSearchBarProps = {
   clearSearch: () => void;
   focusUiFindMatches: () => void;
   resultCount: number;
+  // The text matches that the filter hides; the count above reports the visible ones alone.
+  hiddenResultCount?: number;
   // Why the "Keep matching spans" or "Hide matching spans" entry is disabled, or nothing while it
   // is enabled: the keep entry in remove mode, and either entry when it would leave no span shown.
   keepDisabledReason?: string | null;
@@ -53,6 +59,7 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
     onConvertSearch,
     prevResult,
     resultCount,
+    hiddenResultCount = 0,
     spanFilterNode,
     textFilter,
     useOtelTerms,
@@ -60,6 +67,19 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
 
   const hasText = Boolean(textFilter);
   const count = hasText ? <span className="TracePageSearchBar--count">{resultCount}</span> : null;
+  const hiddenWarning =
+    hasText && hiddenResultCount > 0 ? (
+      <Tooltip title={hiddenMatchesMessage(hiddenResultCount)} trigger={TOOLTIP_TRIGGERS}>
+        <span
+          aria-label={hiddenMatchesMessage(hiddenResultCount)}
+          className="TracePageSearchBar--hiddenWarning"
+          role="img"
+          tabIndex={0}
+        >
+          <IoWarningOutline />
+        </span>
+      </Tooltip>
+    ) : null;
 
   const convertMenu =
     onConvertSearch && spanFilterNode && textFilter ? (
@@ -112,6 +132,7 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
     suffix: (
       <>
         {count}
+        {hiddenWarning}
         {convertMenu}
       </>
     ),

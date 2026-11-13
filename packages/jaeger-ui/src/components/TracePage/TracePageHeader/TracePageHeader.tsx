@@ -55,6 +55,7 @@ type TracePageHeaderEmbedProps = {
   onTraceViewChange: (viewType: ETraceViewType) => void;
   prevResult: () => void;
   resultCount: number;
+  hiddenResultCount: number;
   // The span filter cluster: why a conversion entry is disabled, the text-to-chip conversion, and
   // the funnel button. The funnel is null in views that cannot hide spans.
   keepDisabledReason: string | null;
@@ -151,6 +152,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     onTraceViewChange,
     prevResult,
     resultCount,
+    hiddenResultCount,
     keepDisabledReason,
     hideDisabledReason,
     onConvertSearch,
@@ -256,6 +258,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           prevResult={prevResult}
           ref={forwardedRef}
           resultCount={resultCount}
+          hiddenResultCount={hiddenResultCount}
           keepDisabledReason={keepDisabledReason}
           hideDisabledReason={hideDisabledReason}
           onConvertSearch={onConvertSearch}

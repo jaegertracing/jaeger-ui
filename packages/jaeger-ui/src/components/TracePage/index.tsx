@@ -215,11 +215,16 @@ export function TracePageImpl(props: TProps) {
   // The highlight set is the text matches that the filter leaves visible. The views that draw the
   // whole trace get the text matches alone, and the graph view counts its own. It is memoized so
   // that the row renderers keep one Set identity across renders.
-  const timelineFindMatches = useMemo(() => {
+  const findMatchSplit = useMemo(() => {
     if (!traceData || viewType === ETraceViewType.TraceGraph || !uiFind) return null;
     const textMatches = filterSpansMemo(uiFind, traceData.spans);
-    return viewTypeIsNavigable(viewType) ? withoutHiddenSpans(textMatches, hiddenIDs) : textMatches;
+    const visible = viewTypeIsNavigable(viewType) ? withoutHiddenSpans(textMatches, hiddenIDs) : textMatches;
+    return { visible, hiddenCount: (textMatches?.size ?? 0) - (visible?.size ?? 0) };
   }, [traceData, viewType, uiFind, hiddenIDs, filterSpansMemo]);
+  const timelineFindMatches = findMatchSplit?.visible ?? null;
+  // The text matches the filter hides, reported beside the match count so that a match the filter
+  // hides is not mistaken for no match.
+  const hiddenFindCount = findMatchSplit?.hiddenCount ?? 0;
 
   // The conversion menu's entries are disabled when the chip they would make leaves no span shown:
   // keep when no visible span matches the text, hide when every visible span matches or, in remove
@@ -458,6 +463,7 @@ export function TracePageImpl(props: TProps) {
     prevResult,
     ref: searchBarRef,
     resultCount: findCount,
+    hiddenResultCount: hiddenFindCount,
     // The graph, statistics and flame graph views draw the whole trace, so the funnel belongs to
     // the timeline views alone.
     keepDisabledReason,

@@ -61,6 +61,21 @@ describe('<TracePageSearchBar>', () => {
     jest.clearAllMocks();
   });
 
+  it('warns beside the count when the filter hides matching spans, and says how many', async () => {
+    render(<TracePageSearchBar {...defaultProps} resultCount={2} hiddenResultCount={3} />);
+    expect(screen.getByText('2')).toHaveClass('TracePageSearchBar--count');
+    const warning = screen.getByRole('img', { name: '3 matching spans are hidden by the filter' });
+    fireEvent.focus(warning);
+    await waitFor(() =>
+      expect(screen.getByRole('tooltip')).toHaveTextContent('3 matching spans are hidden by the filter')
+    );
+  });
+
+  it('uses the singular for one hidden match', () => {
+    render(<TracePageSearchBar {...defaultProps} resultCount={0} hiddenResultCount={1} />);
+    expect(screen.getByRole('img', { name: '1 matching span is hidden by the filter' })).toBeInTheDocument();
+  });
+
   describe('truthy textFilter', () => {
     beforeEach(() => {
       render(<TracePageSearchBar {...defaultProps} />);
@@ -86,6 +101,10 @@ describe('<TracePageSearchBar>', () => {
       expect(suffixElement).toBeInTheDocument();
       expect(suffixElement).toHaveClass('TracePageSearchBar--count');
       expect(suffixElement).toHaveTextContent(String(defaultProps.resultCount));
+    });
+
+    it('shows no hidden-match warning while the filter hides no match', () => {
+      expect(screen.queryByRole('img', { name: /hidden by the filter/ })).toBeNull();
     });
 
     it('renders buttons', () => {
