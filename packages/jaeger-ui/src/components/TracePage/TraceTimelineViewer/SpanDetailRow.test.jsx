@@ -15,7 +15,8 @@ vi.mock('./SpanDetail', () => ({
 }));
 
 const MockSpanTreeOffset = jest.fn(() => <div data-testid="mocked-span-tree-offset" />);
-vi.mock('./SpanTreeOffset', () => ({
+vi.mock('./SpanTreeOffset', async importOriginal => ({
+  ...(await importOriginal()),
   default: props => MockSpanTreeOffset(props),
 }));
 
@@ -34,6 +35,8 @@ describe('<SpanDetailRow>', () => {
       attributes: [],
     },
     warnings: null,
+    hasChildren: false,
+    childSpans: [],
   };
   const props = {
     color: '#aabbcc',
@@ -90,7 +93,7 @@ describe('<SpanDetailRow>', () => {
     expect(MockSpanTreeOffset).toHaveBeenCalledTimes(1);
     expect(MockSpanTreeOffset).toHaveBeenCalledWith(
       expect.objectContaining({
-        span: props.span,
+        hasChildren: props.span.hasChildren,
         isDetailRow: true,
       })
     );
