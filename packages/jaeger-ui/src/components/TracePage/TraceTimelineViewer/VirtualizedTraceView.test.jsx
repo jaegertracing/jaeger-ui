@@ -10,6 +10,7 @@ import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
 
 import { makeCriticalPathContext } from './criticalPath';
+import { RECORDED_TREE } from './generateRowStates';
 import { EMPTY_SPAN_FILTER, evaluateSpanFilter, withHiddenServices } from '../spanFilter';
 import { useTraceTimelineStore } from './store';
 import * as track from './store.track';
@@ -190,6 +191,20 @@ describe('<VirtualizedTraceViewImpl>', () => {
       expect(accessors).toHaveProperty('getHiddenSpanIDs');
       expect(accessors).toHaveProperty('mapRowIndexToSpanIndex');
       expect(accessors).toHaveProperty('mapSpanIndexToRowIndex');
+    });
+
+    it('hands the collapse state and the hidden set to the scroll manager as they are', () => {
+      const spanID = mockProps.trace.spans[0].spanID;
+      const liftProps = {
+        ...mockProps,
+        childrenHiddenIDs: new Set([spanID]),
+        hiddenIDs: new Set([spanID]),
+        treeMode: 'lift',
+      };
+      render(<VirtualizedTraceViewImpl {...liftProps} />);
+      const accessors = mockProps.registerAccessors.mock.calls[0][0];
+      expect(accessors.getCollapsedChildren()).toBe(liftProps.childrenHiddenIDs);
+      expect(accessors.getHiddenSpanIDs()).toBe(liftProps.hiddenIDs);
     });
 
     it('invokes when registerAccessors changes', () => {
@@ -409,6 +424,20 @@ describe('<VirtualizedTraceViewImpl>', () => {
       // span is now an IOtelSpan from trace.asOtelTrace()
       expect(spanDetailRow.props.span.spanID).toBe(trace.spans[1].spanID);
       expect(spanDetailRow.props.detailState).toBe(detailState);
+    });
+
+    it('hands the detail row the same tree as its bar row', () => {
+      const { props } = expandRow(1);
+      const { listViewProps } = renderAndCapture({
+        ...props,
+        hiddenIDs: new Set([trace.spans[0].spanID]),
+        treeMode: 'lift',
+      });
+      const barRow = listViewProps.itemRenderer('key', {}, 0, {}).props.children;
+      const detailRow = listViewProps.itemRenderer('key', {}, 1, {}).props.children;
+      expect(detailRow.type).toBe(SpanDetailRow);
+      expect(detailRow.props.tree).toBe(barRow.props.tree);
+      expect(detailRow.props.tree).not.toBe(RECORDED_TREE);
     });
 
     it('renders a SpanBarRow with a RPC span if the row is collapsed and a client span', () => {
@@ -876,6 +905,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       const spans = [
         {
           ...base,
+          attributes: base.attributes,
           spanID: 'span-0',
           depth: 0,
           hasChildren: true,
@@ -885,6 +915,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
         },
         {
           ...base,
+          attributes: base.attributes,
           spanID: 'span-1',
           depth: 1,
           hasChildren: true,
@@ -895,6 +926,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
         },
         {
           ...base,
+          attributes: base.attributes,
           spanID: 'span-2',
           depth: 2,
           hasChildren: false,
@@ -905,6 +937,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
         },
         {
           ...base,
+          attributes: base.attributes,
           spanID: 'span-3',
           depth: 1,
           hasChildren: false,
@@ -920,7 +953,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       spans[1].parentSpan = spans[0];
       spans[2].parentSpan = spans[1];
       spans[3].parentSpan = spans[0];
-      return { ...trace, spans };
+      return { ...trace, spans, spanMap: new Map(spans.map(s => [s.spanID, s])) };
     }
 
     // generateRowStates.test.ts covers the pruning computation itself (subtree
@@ -1000,6 +1033,59 @@ describe('<VirtualizedTraceViewImpl>', () => {
         }
       }
       expect(hasPruned).toBe(false);
+    });
+
+    describe('child error icon of a collapsed row in lift mode', () => {
+      // span-0 -> span-1 -> span-2, where span-2 has the only error (see makeSpansWithServices).
+      const collapsedRootProps = (hiddenIDs, treeMode = 'lift') => {
+        const customTrace = makeSpansWithServices();
+        return {
+          ...mockProps,
+          trace: customTrace,
+          hiddenIDs,
+          treeMode,
+          childrenHiddenIDs: new Set(['span-0']),
+        };
+      };
+      const rootRowProps = props => {
+        const { listViewProps } = renderAndCapture(props);
+        return listViewProps.itemRenderer('key', {}, 0, {}).props.children.props;
+      };
+
+      it('shows the error that the badge of a collapsed visible descendant reports', () => {
+        // span-2 is credited to span-1, whose row is collapsed away, so span-0 is the only row.
+        const row = rootRowProps(collapsedRootProps(new Set(['span-2'])));
+        expect(row.tree.hiddenErrors(row.span)).toEqual([]);
+        expect(row.hasChildError).toBe(true);
+      });
+
+      it('does not repeat the error that its own badge reports', () => {
+        const row = rootRowProps(collapsedRootProps(hiddenFor(makeSpansWithServices().spans, 'svc-b')));
+        expect(row.tree.hiddenErrors(row.span).map(s => s.spanID)).toEqual(['span-2']);
+        expect(row.hasChildError).toBe(false);
+      });
+
+      it('draws a collapsed span whose children are all hidden as expanded in lift mode', () => {
+        const customTrace = makeSpansWithServices();
+        const props = {
+          ...mockProps,
+          trace: customTrace,
+          hiddenIDs: new Set(['span-2']),
+          childrenHiddenIDs: new Set(['span-1']),
+        };
+        const span1Row = treeMode => {
+          const { listViewProps } = renderAndCapture({ ...props, treeMode });
+          return listViewProps.itemRenderer('key', {}, listViewProps.getIndexFromKey('span-1--bar'), {}).props
+            .children.props;
+        };
+        expect(span1Row('lift').isChildrenExpanded).toBe(true);
+        expect(span1Row('remove').isChildrenExpanded).toBe(false);
+      });
+
+      it('counts every hidden error in remove mode', () => {
+        const row = rootRowProps(collapsedRootProps(new Set(['span-2']), 'remove'));
+        expect(row.hasChildError).toBe(true);
+      });
     });
 
     it('renderRow dispatches to renderPrunedSpanRow for pruned placeholders', () => {

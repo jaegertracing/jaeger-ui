@@ -5,11 +5,12 @@ import { create } from 'zustand';
 import DetailState from './SpanDetail/DetailState';
 import { useLayoutPrefsStore } from './store.layout';
 import { TNil } from '../../../types';
-import { IOtelSpan, IOtelTrace, IEvent } from '../../../types/otel';
+import { IOtelTrace, IEvent } from '../../../types/otel';
 import { EMPTY_SPAN_FILTER, ISpanFilter } from '../spanFilter';
 import {
   applyDetailSubsectionToggle,
   calculateFocusedFindRowStates,
+  CollapseTarget,
   shouldDisableCollapse,
   trimFocusedDetailStatesForSidePanel,
 } from './timeline-utils';
@@ -27,9 +28,9 @@ type TraceTimelineInteractionStore = {
   setTrace: (trace: IOtelTrace, uiFind?: string | TNil) => void;
   childrenToggle: (spanID: string) => void;
   expandAll: () => void;
-  expandOne: (spans: ReadonlyArray<IOtelSpan>) => void;
-  collapseAll: (spans: ReadonlyArray<IOtelSpan>) => void;
-  collapseOne: (spans: ReadonlyArray<IOtelSpan>) => void;
+  expandOne: (spans: ReadonlyArray<CollapseTarget>) => void;
+  collapseAll: (spans: ReadonlyArray<CollapseTarget>) => void;
+  collapseOne: (spans: ReadonlyArray<CollapseTarget>) => void;
   detailToggle: (spanID: string) => void;
   detailTagsToggle: (spanID: string) => void;
   detailProcessToggle: (spanID: string) => void;
@@ -114,26 +115,31 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
     set({ childrenHiddenIDs: new Set<string>() });
   },
 
-  expandOne: (spans: ReadonlyArray<IOtelSpan>) => {
+  expandOne: (spans: ReadonlyArray<CollapseTarget>) => {
     const current = get().childrenHiddenIDs;
     if (current.size === 0) return;
     let prevExpandedDepth = -1;
     let expandNextHiddenSpan = true;
+    let expanded = false;
     const childrenHiddenIDs = spans.reduce((res, s) => {
       if (s.depth <= prevExpandedDepth) {
         expandNextHiddenSpan = true;
       }
-      if (expandNextHiddenSpan && res.has(s.spanID)) {
+      // A collapsed span whose children are all hidden draws no children, so expanding it would
+      // spend the click on nothing.
+      if (expandNextHiddenSpan && s.hasChildren && res.has(s.spanID)) {
         res.delete(s.spanID);
+        expanded = true;
         expandNextHiddenSpan = false;
         prevExpandedDepth = s.depth;
       }
       return res;
     }, new Set(current));
-    set({ childrenHiddenIDs });
+    // An unchanged set keeps its identity, so the memoized rows are not regenerated for nothing.
+    if (expanded) set({ childrenHiddenIDs });
   },
 
-  collapseAll: (spans: ReadonlyArray<IOtelSpan>) => {
+  collapseAll: (spans: ReadonlyArray<CollapseTarget>) => {
     const { childrenHiddenIDs: current } = get();
     if (shouldDisableCollapse(spans, current)) return;
     const childrenHiddenIDs = spans.reduce((res, s) => {
@@ -143,10 +149,10 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
     set({ childrenHiddenIDs });
   },
 
-  collapseOne: (spans: ReadonlyArray<IOtelSpan>) => {
+  collapseOne: (spans: ReadonlyArray<CollapseTarget>) => {
     const { childrenHiddenIDs: current } = get();
     if (shouldDisableCollapse(spans, current)) return;
-    let nearestCollapsedAncestor: IOtelSpan | undefined;
+    let nearestCollapsedAncestor: CollapseTarget | undefined;
     const childrenHiddenIDs = spans.reduce((res, curSpan) => {
       if (nearestCollapsedAncestor && curSpan.depth <= nearestCollapsedAncestor.depth) {
         res.add(nearestCollapsedAncestor.spanID);

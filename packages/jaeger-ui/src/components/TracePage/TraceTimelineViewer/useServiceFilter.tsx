@@ -15,13 +15,13 @@ import {
 } from '../url/svcFilter';
 import {
   decodeClause,
-  EMPTY_SPAN_FILTER,
   encodeClause,
   evaluateSpanFilter,
   hiddenServices,
   IClause,
   ISpanFilter,
   spanFiltersEqual,
+  TreeMode,
   withHiddenServices,
 } from '../spanFilter';
 import { IOtelTrace } from '../../../types/otel';
@@ -64,6 +64,8 @@ function sanitizePrunedServices(pruned: Set<string>, rootServiceNames: Set<strin
 }
 
 const CLAUSE_PARAM = 'f';
+const TREE_PARAM = 'tree';
+const REMOVE_VALUE = 'remove';
 // The parameter that carried the service hide set before `f` did, as a checksum and a bitmask over
 // the trace's sorted service names. It is read so that an existing link keeps working, and the URL
 // is rewritten without it.
@@ -77,7 +79,7 @@ function paramValues(value: string | (string | null)[] | null | undefined): stri
 /**
  * Whether the URL states a filter: an `f` parameter, even an empty one, or a legacy svcFilter. The
  * saved default applies only while it does not, and an edit always leaves one, so the default does
- * not come back on a later render of the edited URL.
+ * not come back on a later render of the edited URL. The tree mode alone states no filter.
  */
 function urlHasFilterParams(params: queryString.ParsedQuery): boolean {
   return (
@@ -98,14 +100,15 @@ function searchOf(params: queryString.ParsedQuery): string {
  */
 function readDefaultServices(
   sortedServiceNames: string[],
-  rootServiceNames: Set<string>
+  rootServiceNames: Set<string>,
+  treeMode: TreeMode
 ): Set<string> | null {
   const defaults = storage.getJSON<Partial<SvcFilterDefaults>>(SVC_FILTER_DEFAULTS_KEY);
   if (!defaults || !Array.isArray(defaults.prunedServices)) return null;
   const traceServiceSet = new Set(sortedServiceNames);
   const pruned = new Set(defaults.prunedServices.filter(name => traceServiceSet.has(name)));
   if (pruned.size === 0 || pruned.size >= sortedServiceNames.length) return null;
-  return sanitizePrunedServices(pruned, rootServiceNames);
+  return treeMode === 'remove' ? sanitizePrunedServices(pruned, rootServiceNames) : pruned;
 }
 
 function hasSavedDefault(): boolean {
@@ -115,11 +118,12 @@ function hasSavedDefault(): boolean {
 
 /**
  * Resolves the span filter for a trace from the URL. The clauses come from the repeated `f`
- * parameter. A legacy svcFilter is read as the hide clause on service, in place of one that `f`
- * carries, and a stale one, whose checksum is for another service list, hides nothing. Root
- * protection then sanitizes the hide clause on service. The saved default applies only while the
- * URL states no filter. Returns the filter and, when the URL carried a legacy svcFilter or a hide
- * set that sanitization changed, the rewritten search to navigate to.
+ * parameter. The tree mode comes from `tree=remove`, else it is lift; a legacy svcFilter that applies brings remove mode, the mode it was written under, unless the URL names one. A legacy svcFilter is read as the hide clause on service, in place of
+ * one that `f` carries, and a stale one, whose checksum is for another service list, hides nothing.
+ * Root protection then sanitizes the hide clause on service in remove mode only, where hiding every
+ * root empties the tree; in lift mode a hidden root's children become roots. The saved default
+ * applies only while the URL states no filter. Returns the filter and, when the URL carried a
+ * legacy svcFilter or a hide set that sanitization changed, the rewritten search to navigate to.
  */
 export function resolveInitialFilter(
   search: string,
@@ -130,7 +134,8 @@ export function resolveInitialFilter(
   const clauses = paramValues(params[CLAUSE_PARAM])
     .map(decodeClause)
     .filter((c): c is IClause => c !== null);
-  let filter: ISpanFilter = { ...EMPTY_SPAN_FILTER, clauses };
+  const treeMode: TreeMode = params[TREE_PARAM] === REMOVE_VALUE ? 'remove' : 'lift';
+  let filter: ISpanFilter = { clauses, treeMode };
 
   const legacy = params[LEGACY_SERVICE_PARAM];
   let rewrite = typeof legacy === 'string' && legacy !== '';
@@ -139,45 +144,63 @@ export function resolveInitialFilter(
     if (decoded && !decoded.stale) {
       const pruned = new Set(sortedServiceNames.filter(name => !decoded.visibleServices.has(name)));
       filter = withHiddenServices(filter, pruned);
+      // The link was written when hiding a service pruned its subtree, so it renders that way.
+      if (!(TREE_PARAM in params)) filter = { ...filter, treeMode: 'remove' };
     }
   }
 
   if (!urlHasFilterParams(params)) {
-    const saved = readDefaultServices(sortedServiceNames, rootServiceNames);
+    const saved = readDefaultServices(sortedServiceNames, rootServiceNames, treeMode);
     return { filter: saved ? withHiddenServices(filter, saved) : filter };
   }
 
-  const requested = hiddenServices(filter);
-  const sanitized = sanitizePrunedServices(requested, rootServiceNames);
-  if (!setsEqual(sanitized, requested)) {
-    filter = withHiddenServices(filter, sanitized);
-    rewrite = true;
+  if (filter.treeMode === 'remove') {
+    const requested = hiddenServices(filter);
+    const sanitized = sanitizePrunedServices(requested, rootServiceNames);
+    if (!setsEqual(sanitized, requested)) {
+      filter = withHiddenServices(filter, sanitized);
+      rewrite = true;
+    }
   }
   if (!rewrite) return { filter };
   const nextParams = { ...params };
   delete nextParams[LEGACY_SERVICE_PARAM];
-  writeClauses(nextParams, filter);
+  writeFilterParams(nextParams, filter);
   return { filter, cleanSearch: searchOf(nextParams) };
 }
 
-/** Writes the clauses as repeated `f` parameters; an empty list is written as an empty `f=`. */
+/** Writes the clauses as repeated `f` parameters, an empty list as an empty `f=`. */
 function writeClauses(params: queryString.ParsedQuery, filter: ISpanFilter): void {
   const encoded = filter.clauses.map(encodeClause);
   params[CLAUSE_PARAM] = encoded.length ? encoded : '';
 }
 
+/** Writes remove mode as `tree=remove`; the default mode is written as nothing. */
+function writeTreeMode(params: queryString.ParsedQuery, filter: ISpanFilter): void {
+  if (filter.treeMode === 'remove') {
+    params[TREE_PARAM] = REMOVE_VALUE;
+  } else {
+    delete params[TREE_PARAM];
+  }
+}
+
+function writeFilterParams(params: queryString.ParsedQuery, filter: ISpanFilter): void {
+  writeClauses(params, filter);
+  writeTreeMode(params, filter);
+}
+
 /**
  * Builds the updated search string after a filter change. Every clause is written as a repeated `f`
- * parameter, and a legacy svcFilter is dropped. An empty clause list is written as an empty `f=`
- * when the URL already stated a filter or a default is saved, so that the saved default does not
- * come back on a later render; otherwise `f` is removed. The tree mode is not written yet, because
- * row generation does not support lift mode.
+ * parameter, remove mode as `tree=remove`, and a legacy svcFilter is dropped. An empty clause list is written as an
+ * empty `f=` when the URL already stated a filter or a default is saved, so that the saved default
+ * does not come back on a later render; otherwise `f` is removed.
  * Returns the new search string (with leading '?' if non-empty, or '').
  */
 export function buildFilterSearch(currentSearch: string, filter: ISpanFilter): string {
   const params = queryString.parse(currentSearch);
   const statedFilter = urlHasFilterParams(params);
   delete params[LEGACY_SERVICE_PARAM];
+  writeTreeMode(params, filter);
   if (filter.clauses.length || statedFilter || hasSavedDefault()) {
     writeClauses(params, filter);
   } else {
@@ -248,9 +271,11 @@ export function useServiceFilter(
 
   const handleServiceFilterApply = useCallback(
     (requested: Set<string>) => {
-      // Enforce root service protection even if the UI somehow allows it.
-      const nextPruned = sanitizePrunedServices(requested, rootServiceNames);
-      const nextFilter = withHiddenServices(useTraceTimelineStore.getState().spanFilter, nextPruned);
+      // Enforce root service protection in remove mode even if the UI somehow allows it.
+      const current = useTraceTimelineStore.getState().spanFilter;
+      const nextPruned =
+        current.treeMode === 'remove' ? sanitizePrunedServices(requested, rootServiceNames) : requested;
+      const nextFilter = withHiddenServices(current, nextPruned);
       setSpanFilter(nextFilter);
 
       // If the currently selected span (side panel) is now hidden, deselect it. The hidden set is
@@ -286,8 +311,15 @@ export function useServiceFilter(
   );
 
   const serviceFilterNode = useMemo(
-    () => <ServiceFilter trace={trace} prunedServices={prunedServices} onApply={handleServiceFilterApply} />,
-    [trace, prunedServices, handleServiceFilterApply]
+    () => (
+      <ServiceFilter
+        trace={trace}
+        prunedServices={prunedServices}
+        onApply={handleServiceFilterApply}
+        protectRoots={spanFilter.treeMode === 'remove'}
+      />
+    ),
+    [trace, prunedServices, handleServiceFilterApply, spanFilter.treeMode]
   );
 
   return { prunedServices, serviceFilterNode };

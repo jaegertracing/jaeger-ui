@@ -97,6 +97,12 @@ describe('<SpanDetailRow>', () => {
     );
   });
 
+  it('draws the indent guides from the tree it is given', () => {
+    const tree = { parentOf: () => null };
+    render(<SpanDetailRow {...props} tree={tree} />);
+    expect(MockSpanTreeOffset).toHaveBeenCalledWith(expect.objectContaining({ tree }));
+  });
+
   it('renders the "expanded accent"', () => {
     render(<SpanDetailRow {...props} />);
     const accentSwitch = screen.getByRole('switch');

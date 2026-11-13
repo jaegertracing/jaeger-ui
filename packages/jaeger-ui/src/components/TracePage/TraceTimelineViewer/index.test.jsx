@@ -11,6 +11,7 @@ import * as track from './store.track';
 import * as KeyboardShortcuts from '../keyboard-shortcuts';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
+import { EMPTY_SPAN_FILTER, withHiddenServices } from '../spanFilter';
 
 const { mockLayoutPrefsStore, mockTraceTimelineStore, mockUseTraceTimelineStore } = vi.hoisted(() => {
   const mockTraceTimelineStore = {
@@ -302,6 +303,34 @@ describe('<TraceTimelineViewer>', () => {
     fireEvent.click(screen.getByTestId('expand-one-button'));
     expect(track.trackExpandOne).toHaveBeenCalledTimes(1);
     expect(mockTraceTimelineStore.expandOne).toHaveBeenCalledWith(props.trace.spans);
+  });
+
+  it('hands the bulk collapse actions the spans that have rows, at their depth in the drawn tree', () => {
+    const root = props.trace.spans[0];
+    const hiddenService = root.resource.serviceName;
+    mockTraceTimelineStore.spanFilter = withHiddenServices(
+      { ...EMPTY_SPAN_FILTER, treeMode: 'lift' },
+      new Set([hiddenService])
+    );
+    try {
+      render(<TraceTimelineViewerImpl {...props} />);
+      fireEvent.click(screen.getByTestId('collapse-all-button'));
+      fireEvent.click(screen.getByTestId('collapse-one-button'));
+      fireEvent.click(screen.getByTestId('expand-one-button'));
+      const targets = mockTraceTimelineStore.collapseAll.mock.calls[0][0];
+      expect(mockTraceTimelineStore.collapseOne.mock.calls[0][0]).toBe(targets);
+      expect(mockTraceTimelineStore.expandOne.mock.calls[0][0]).toBe(targets);
+      const hiddenIDs = new Set(
+        props.trace.spans.filter(s => s.resource.serviceName === hiddenService).map(s => s.spanID)
+      );
+      expect(targets.length).toBe(props.trace.spans.length - hiddenIDs.size);
+      expect(targets.every(t => !hiddenIDs.has(t.spanID))).toBe(true);
+      // The root is hidden, so every remaining span is lifted at least one level.
+      const depthOf = new Map(props.trace.spans.map(s => [s.spanID, s.depth]));
+      expect(targets.every(t => t.depth < depthOf.get(t.spanID))).toBe(true);
+    } finally {
+      mockTraceTimelineStore.spanFilter = { clauses: [], treeMode: 'remove' };
+    }
   });
 
   it('tracks each header action before updating the store', () => {

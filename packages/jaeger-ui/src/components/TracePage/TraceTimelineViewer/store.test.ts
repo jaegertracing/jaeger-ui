@@ -4,6 +4,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import DetailState from './SpanDetail/DetailState';
+import { collapseTargets } from './generateRowStates';
 import {
   calculateFocusedFindRowStates,
   normalizeLayoutPrefs,
@@ -27,6 +28,7 @@ import getConfig from '../../../utils/config/get-config';
 import filterSpans from '../../../utils/filter-spans';
 import spanAncestorIds from '../../../utils/span-ancestor-ids';
 import { EMPTY_SPAN_FILTER, hiddenServices, withHiddenServices } from '../spanFilter';
+import { IOtelSpan } from '../../../types/otel';
 
 async function rehydrateLayoutPrefs() {
   await useLayoutPrefsStore.persist.rehydrate();
@@ -876,6 +878,17 @@ describe('trace timeline zustand stores', () => {
         expect(useTraceTimelineStore.getState().childrenHiddenIDs.size).toBe(0);
       });
 
+      it('skips a collapsed span that draws no children', () => {
+        const spans = [
+          makeSpan({ spanID: 'root', depth: 0, hasChildren: true }),
+          makeSpan({ spanID: 'childless', depth: 1, hasChildren: false }),
+        ];
+        const childrenHiddenIDs = new Set(['childless']);
+        useTraceTimelineStore.setState({ childrenHiddenIDs });
+        useTraceTimelineStore.getState().expandOne(spans);
+        expect(useTraceTimelineStore.getState().childrenHiddenIDs).toBe(childrenHiddenIDs);
+      });
+
       it('is a no-op when nothing is collapsed', () => {
         const spans = [makeSpan({ spanID: 'root', depth: 0, hasChildren: true })];
         const stateBefore = useTraceTimelineStore.getState();
@@ -901,6 +914,31 @@ describe('trace timeline zustand stores', () => {
     });
 
     describe('collapseOne', () => {
+      it('spends no click on a hidden level when the targets come from the lifted tree', () => {
+        const span = (spanID: string, depth: number) => ({ spanID, depth, status: {} });
+        const root = span('root', 0);
+        const hidden = span('hidden', 1);
+        const lifted = span('lifted', 2);
+        const leaf = span('leaf', 3);
+        const targets = collapseTargets(
+          [root, hidden, lifted, leaf] as unknown as IOtelSpan[],
+          new Set(['hidden']),
+          'lift'
+        );
+        useTraceTimelineStore.getState().collapseOne(targets);
+        expect([...useTraceTimelineStore.getState().childrenHiddenIDs]).toEqual(['lifted']);
+        useTraceTimelineStore.getState().collapseOne(targets);
+        expect([...useTraceTimelineStore.getState().childrenHiddenIDs].sort()).toEqual(['lifted', 'root']);
+        useTraceTimelineStore.getState().collapseOne(targets);
+        expect(useTraceTimelineStore.getState().childrenHiddenIDs.size).toBe(2);
+        useTraceTimelineStore.getState().expandOne(targets);
+        expect([...useTraceTimelineStore.getState().childrenHiddenIDs]).toEqual(['lifted']);
+        // A collapse recorded on the hidden span has no row and is left alone.
+        useTraceTimelineStore.setState({ childrenHiddenIDs: new Set(['hidden', 'lifted']) });
+        useTraceTimelineStore.getState().expandOne(targets);
+        expect([...useTraceTimelineStore.getState().childrenHiddenIDs]).toEqual(['hidden']);
+      });
+
       it('collapses only the deepest uncollapsed parent level', () => {
         const spans = [
           makeSpan({ spanID: 'root', depth: 0, hasChildren: true }),

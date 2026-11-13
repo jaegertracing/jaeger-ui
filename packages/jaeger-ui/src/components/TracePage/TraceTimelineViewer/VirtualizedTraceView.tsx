@@ -9,7 +9,7 @@ import _isEqual from 'lodash/isEqual';
 import memoizeOne from 'memoize-one';
 import type { Location, NavigateFunction } from 'react-router-dom';
 import { makeCriticalPathContext } from './criticalPath';
-import generateRowStates, { RowState } from './generateRowStates';
+import generateRowStates, { RowState, RECORDED_TREE, VisibleTree } from './generateRowStates';
 import ListView, { ListViewRef } from './ListView';
 import PrunedSpanRow from './PrunedSpanRow';
 import SpanBarRow from './SpanBarRow';
@@ -47,10 +47,11 @@ import './VirtualizedTraceView.css';
 import updateUiFind from '../../../utils/update-ui-find';
 import { PEER_SERVICE } from '../../../constants/tag-keys';
 import withRouteProps from '../../../utils/withRouteProps';
-import { evaluateSpanFilter } from '../spanFilter';
+import { evaluateSpanFilter, TreeMode } from '../spanFilter';
 
 type RowStateData = {
   rows: RowState[];
+  tree: VisibleTree;
   spanIndexToRowIndex: Map<number, number>;
 };
 
@@ -93,6 +94,7 @@ type RouteProps = {
 type TDerivedStateProps = {
   selectedSpanID: string | null;
   hiddenIDs: ReadonlySet<string>;
+  treeMode: TreeMode;
 };
 
 type VirtualizedTraceViewProps = TVirtualizedTraceViewOwnProps &
@@ -116,16 +118,25 @@ function generateRowStatesFromTrace(
   childrenHiddenIDs: Set<string>,
   detailStates: Map<string, DetailState | TNil>,
   detailPanelMode: 'inline' | 'sidepanel',
-  hiddenIDs: ReadonlySet<string>
+  hiddenIDs: ReadonlySet<string>,
+  treeMode: TreeMode
 ): RowStateData {
   if (!trace) {
     return {
       rows: [],
+      tree: RECORDED_TREE,
       spanIndexToRowIndex: new Map(),
     };
   }
 
-  const rows = generateRowStates(trace.spans, childrenHiddenIDs, detailStates, detailPanelMode, hiddenIDs);
+  const { rows, tree } = generateRowStates(
+    trace.spans,
+    childrenHiddenIDs,
+    detailStates,
+    detailPanelMode,
+    hiddenIDs,
+    treeMode
+  );
 
   const spanIndexToRowIndex = new Map<number, number>();
 
@@ -137,6 +148,7 @@ function generateRowStatesFromTrace(
 
   return {
     rows,
+    tree,
     spanIndexToRowIndex,
   };
 }
@@ -166,14 +178,23 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
   propsRef.current = props;
 
   const criticalPathContext = useMemo(
-    () => makeCriticalPathContext(props.trace, props.criticalPath, props.hiddenIDs),
-    [props.trace, props.criticalPath, props.hiddenIDs]
+    () => makeCriticalPathContext(props.trace, props.criticalPath, props.hiddenIDs, props.treeMode),
+    [props.trace, props.criticalPath, props.hiddenIDs, props.treeMode]
   );
 
-  const getRowStates = useCallback((): RowState[] => {
-    const { trace, childrenHiddenIDs, detailStates, detailPanelMode, hiddenIDs } = propsRef.current;
-    return memoizedGenerateRowStates(trace, childrenHiddenIDs, detailStates, detailPanelMode, hiddenIDs).rows;
+  const getRowStateData = useCallback((): RowStateData => {
+    const { trace, childrenHiddenIDs, detailStates, detailPanelMode, hiddenIDs, treeMode } = propsRef.current;
+    return memoizedGenerateRowStates(
+      trace,
+      childrenHiddenIDs,
+      detailStates,
+      detailPanelMode,
+      hiddenIDs,
+      treeMode
+    );
   }, []);
+
+  const getRowStates = useCallback((): RowState[] => getRowStateData().rows, [getRowStateData]);
 
   const getClippingCssClasses = useCallback((): string => {
     return memoizedGetCssClasses(propsRef.current.currentViewRangeTime);
@@ -231,23 +252,18 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
     [getRowStates]
   );
 
-  const mapSpanIndexToRowIndex = useCallback((index: number) => {
-    const { spanIndexToRowIndex } = memoizedGenerateRowStates(
-      propsRef.current.trace,
-      propsRef.current.childrenHiddenIDs,
-      propsRef.current.detailStates,
-      propsRef.current.detailPanelMode,
-      propsRef.current.hiddenIDs
-    );
+  const mapSpanIndexToRowIndex = useCallback(
+    (index: number) => {
+      const rowIndex = getRowStateData().spanIndexToRowIndex.get(index);
 
-    const rowIndex = spanIndexToRowIndex.get(index);
+      if (rowIndex == null) {
+        throw new Error(`unable to find row for span index: ${index}`);
+      }
 
-    if (rowIndex == null) {
-      throw new Error(`unable to find row for span index: ${index}`);
-    }
-
-    return rowIndex;
-  }, []);
+      return rowIndex;
+    },
+    [getRowStateData]
+  );
 
   const getAccessors = useCallback(() => {
     const lv = listViewRef.current;
@@ -415,12 +431,17 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
       const { spans } = trace;
 
       const color = getSpanColor(span);
-      const isCollapsed = childrenHiddenIDs.has(spanID);
+      const { tree } = getRowStateData();
+      // A collapsed span whose children are all hidden draws no children, so its row is not drawn
+      // as collapsed either.
+      const isCollapsed = childrenHiddenIDs.has(spanID) && tree.childCount(span) > 0;
       const isDetailExpanded = detailStates.has(spanID);
       const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
       const isSelected = selectedSpanID === spanID;
       const hasOwnError = isErrorSpan(span);
-      const hasChildError = isCollapsed && spanContainsErredSpan(spans, spanIndex);
+      // The hidden errors that this row's badge already reports are not reported a second time as a
+      // child error; the badges of collapsed descendants have no row, so their errors still count.
+      const hasChildError = isCollapsed && spanContainsErredSpan(spans, spanIndex, tree.hiddenErrorIDs(span));
       const hasPrunedChildren =
         hiddenIDs.size > 0 && span.childSpans.some(child => hiddenIDs.has(child.spanID));
       const criticalPathSections = criticalPathContext.sectionsFor(span, isCollapsed, hasPrunedChildren);
@@ -478,11 +499,12 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
             traceDuration={trace.duration}
             spanPillsEnabled={spanPillsEnabled}
             useOtelTerms={useOtelTerms}
+            tree={tree}
           />
         </div>
       );
     },
-    [getClippingCssClasses, getViewedBounds, focusSpan, criticalPathContext, getSpanColor]
+    [getClippingCssClasses, getViewedBounds, focusSpan, criticalPathContext, getSpanColor, getRowStateData]
   );
 
   const renderSpanDetailRow = useCallback(
@@ -530,11 +552,12 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
             currentViewRangeTime={currentViewRangeTime}
             traceDuration={trace.duration}
             useOtelTerms={useOtelTerms}
+            tree={getRowStateData().tree}
           />
         </div>
       );
     },
-    [linksGetterFromAttributes, eventItemToggleAdapter, focusSpan, getSpanColor]
+    [linksGetterFromAttributes, eventItemToggleAdapter, focusSpan, getSpanColor, getRowStateData]
   );
 
   const renderRow = useCallback(
@@ -726,6 +749,7 @@ function VirtualizedTraceViewWrapper(
     detailStates,
     shouldScrollToFirstUiFindMatch,
     hiddenIDs,
+    treeMode: spanFilter.treeMode,
     selectedSpanID,
     setTrace,
     childrenToggle,

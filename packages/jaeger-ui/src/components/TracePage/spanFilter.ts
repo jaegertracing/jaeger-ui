@@ -33,14 +33,14 @@ export interface IClause {
   criterion: Criterion;
 }
 
-type TreeMode = 'remove' | 'lift';
+export type TreeMode = 'remove' | 'lift';
 
 export interface ISpanFilter {
   clauses: ReadonlyArray<IClause>;
   treeMode: TreeMode;
 }
 
-export const EMPTY_SPAN_FILTER: ISpanFilter = { clauses: [], treeMode: 'remove' };
+export const EMPTY_SPAN_FILTER: ISpanFilter = { clauses: [], treeMode: 'lift' };
 
 /** The span type value of a span that carries no gen_ai attributes. */
 const NON_GENAI_SPAN_TYPE = 'none';
