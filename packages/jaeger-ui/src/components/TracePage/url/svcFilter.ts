@@ -1,6 +1,11 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+// The `svcFilter` URL parameter encoded the service visibility selection as a checksum of the
+// trace's sorted service names and a bitmask over them. The span filter now writes the hidden
+// services as a hide clause in the `f` parameter and only reads this format, so that an existing
+// link keeps working; the encoder stays for the tests that build such links.
+
 /**
  * Compute a 16-bit checksum of the sorted service name list.
  * Used to detect when the service list has changed since a URL was generated.

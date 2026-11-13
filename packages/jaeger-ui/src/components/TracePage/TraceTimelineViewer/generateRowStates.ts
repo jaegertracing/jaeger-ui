@@ -72,9 +72,8 @@ function buildVisibleRows(
           prunedErrors++;
         }
       }
-      // depth == 0 means this is a root span. The service filter protects root services,
-      // so a hidden root can only occur if the caller bypasses that guard. In that case
-      // we intentionally drop the stats — there is no parent row to attach a placeholder to.
+      // A hidden root has no parent row to attach a placeholder to, so its stats are dropped. The
+      // service filter protects root services, but a clause from the URL can hide a root.
       if (depth > 0) {
         const parentIdx = parentByDepth[depth - 1];
         if (parentIdx != null) {

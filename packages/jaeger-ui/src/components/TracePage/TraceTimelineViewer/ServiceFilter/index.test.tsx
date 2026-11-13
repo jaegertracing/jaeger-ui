@@ -212,6 +212,25 @@ describe('ServiceFilter', () => {
     });
   });
 
+  it('keeps Apply enabled while a trace service stays visible, even with a hidden name absent from the trace', async () => {
+    render(
+      <ServiceFilter
+        trace={makeTrace(['svc-a', 'svc-b'])}
+        prunedServices={new Set(['retired'])}
+        onApply={onApply}
+      />
+    );
+    fireEvent.click(screen.getByTestId('service-filter-button'));
+    await waitFor(() => screen.getByText('svc-b'));
+
+    const checkboxes = screen.getAllByRole('checkbox');
+    fireEvent.click(checkboxes[1]); // uncheck svc-b; svc-a remains visible
+
+    expect(screen.queryByText('At least one service must be visible')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText('Apply'));
+    expect(onApply).toHaveBeenCalledWith(new Set(['retired', 'svc-b']));
+  });
+
   it('shows warning when all root services would be pruned (multi-root)', async () => {
     // Both svc-a and svc-b are roots; uncheck both
     render(

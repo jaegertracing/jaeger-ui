@@ -1,20 +1,29 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import queryString from 'query-string';
 
 import ServiceFilter from './ServiceFilter';
 import { getSelectedSpanID, useTraceTimelineStore } from './store';
-import { hiddenSpanIDsForServices } from '../spanFilter';
 import {
   decodeSvcFilter,
-  encodeSvcFilter,
   getSortedServiceNames,
   SVC_FILTER_DEFAULTS_KEY,
   SvcFilterDefaults,
 } from '../url/svcFilter';
+import {
+  decodeClause,
+  EMPTY_SPAN_FILTER,
+  encodeClause,
+  evaluateSpanFilter,
+  hiddenServices,
+  IClause,
+  ISpanFilter,
+  spanFiltersEqual,
+  withHiddenServices,
+} from '../spanFilter';
 import { IOtelTrace } from '../../../types/otel';
 import type { SpanDetailPanelMode } from '../../../types/config';
 import storage from '../../../utils/storage';
@@ -54,89 +63,127 @@ function sanitizePrunedServices(pruned: Set<string>, rootServiceNames: Set<strin
   return anyRootVisible ? pruned : new Set();
 }
 
+const CLAUSE_PARAM = 'f';
+// The parameter that carried the service hide set before `f` did, as a checksum and a bitmask over
+// the trace's sorted service names. It is read so that an existing link keeps working, and the URL
+// is rewritten without it.
+const LEGACY_SERVICE_PARAM = 'svcFilter';
+
+function paramValues(value: string | (string | null)[] | null | undefined): string[] {
+  if (value === null || value === undefined) return [];
+  return (Array.isArray(value) ? value : [value]).filter((v): v is string => typeof v === 'string');
+}
+
 /**
- * Resolves the initial prunedServices set for a trace.
- * Priority: URL svcFilter param > localStorage defaults > empty (no filter).
- * Returns the pruned set and, if the URL param was stale/invalid, the cleaned params to navigate to.
+ * Whether the URL states a filter: an `f` parameter, even an empty one, or a legacy svcFilter. The
+ * saved default applies only while it does not, and an edit always leaves one, so the default does
+ * not come back on a later render of the edited URL.
+ */
+function urlHasFilterParams(params: queryString.ParsedQuery): boolean {
+  return (
+    CLAUSE_PARAM in params ||
+    (typeof params[LEGACY_SERVICE_PARAM] === 'string' && params[LEGACY_SERVICE_PARAM] !== '')
+  );
+}
+
+function searchOf(params: queryString.ParsedQuery): string {
+  const search = queryString.stringify(params);
+  return search ? `?${search}` : '';
+}
+
+/**
+ * Reads the saved default, the pruned service names that "Save as Default" writes under
+ * SVC_FILTER_DEFAULTS_KEY; it applies when the trace has those services and at least one of them
+ * stays visible.
+ */
+function readDefaultServices(
+  sortedServiceNames: string[],
+  rootServiceNames: Set<string>
+): Set<string> | null {
+  const defaults = storage.getJSON<Partial<SvcFilterDefaults>>(SVC_FILTER_DEFAULTS_KEY);
+  if (!defaults || !Array.isArray(defaults.prunedServices)) return null;
+  const traceServiceSet = new Set(sortedServiceNames);
+  const pruned = new Set(defaults.prunedServices.filter(name => traceServiceSet.has(name)));
+  if (pruned.size === 0 || pruned.size >= sortedServiceNames.length) return null;
+  return sanitizePrunedServices(pruned, rootServiceNames);
+}
+
+function hasSavedDefault(): boolean {
+  const defaults = storage.getJSON<Partial<SvcFilterDefaults>>(SVC_FILTER_DEFAULTS_KEY);
+  return Array.isArray(defaults?.prunedServices) && defaults.prunedServices.length > 0;
+}
+
+/**
+ * Resolves the span filter for a trace from the URL. The clauses come from the repeated `f`
+ * parameter. A legacy svcFilter is read as the hide clause on service, in place of one that `f`
+ * carries, and a stale one, whose checksum is for another service list, hides nothing. Root
+ * protection then sanitizes the hide clause on service. The saved default applies only while the
+ * URL states no filter. Returns the filter and, when the URL carried a legacy svcFilter or a hide
+ * set that sanitization changed, the rewritten search to navigate to.
  */
 export function resolveInitialFilter(
   search: string,
   sortedServiceNames: string[],
-  rootServiceNames: Set<string>,
-  skipDefaults = false
-): { pruned: Set<string>; cleanSearch?: string } {
+  rootServiceNames: Set<string>
+): { filter: ISpanFilter; cleanSearch?: string } {
   const params = queryString.parse(search);
-  const svcFilterParam = typeof params.svcFilter === 'string' ? params.svcFilter : null;
+  const clauses = paramValues(params[CLAUSE_PARAM])
+    .map(decodeClause)
+    .filter((c): c is IClause => c !== null);
+  let filter: ISpanFilter = { ...EMPTY_SPAN_FILTER, clauses };
 
-  if (svcFilterParam) {
-    const decoded = decodeSvcFilter(sortedServiceNames, svcFilterParam);
+  const legacy = params[LEGACY_SERVICE_PARAM];
+  let rewrite = typeof legacy === 'string' && legacy !== '';
+  if (rewrite) {
+    const decoded = decodeSvcFilter(sortedServiceNames, legacy as string);
     if (decoded && !decoded.stale) {
-      const allServices = new Set(sortedServiceNames);
-      const pruned = new Set<string>();
-      for (const name of allServices) {
-        if (!decoded.visibleServices.has(name)) pruned.add(name);
-      }
-      const sanitized = sanitizePrunedServices(pruned, rootServiceNames);
-      // If sanitization changed the filter, normalize svcFilter in the URL.
-      if (!setsEqual(sanitized, pruned)) {
-        const nextParams = { ...params };
-        if (sanitized.size === 0) {
-          delete nextParams.svcFilter;
-        } else {
-          const visible = new Set(sortedServiceNames.filter(n => !sanitized.has(n)));
-          nextParams.svcFilter = encodeSvcFilter(sortedServiceNames, visible);
-        }
-        const cleaned = queryString.stringify(nextParams);
-        return { pruned: sanitized, cleanSearch: cleaned ? `?${cleaned}` : '' };
-      }
-      return { pruned: sanitized };
-    }
-    // Stale or invalid: discard the filter and show all services.
-    // Don't fall through to localStorage defaults — the user opened a shared link
-    // that no longer applies, so all-visible is the safest default.
-    const nextParams = { ...params };
-    delete nextParams.svcFilter;
-    const cleaned = queryString.stringify(nextParams);
-    return { pruned: new Set(), cleanSearch: cleaned ? `?${cleaned}` : '' };
-  }
-
-  // No valid URL param: try localStorage defaults (unless we just cleaned a stale URL).
-  if (skipDefaults) return { pruned: new Set() };
-  const defaults = storage.getJSON<Partial<SvcFilterDefaults>>(SVC_FILTER_DEFAULTS_KEY);
-  if (defaults && Array.isArray(defaults.prunedServices)) {
-    const traceServiceSet = new Set(sortedServiceNames);
-    const pruned = new Set(defaults.prunedServices.filter(name => traceServiceSet.has(name)));
-    if (pruned.size > 0 && pruned.size < sortedServiceNames.length) {
-      return { pruned: sanitizePrunedServices(pruned, rootServiceNames) };
+      const pruned = new Set(sortedServiceNames.filter(name => !decoded.visibleServices.has(name)));
+      filter = withHiddenServices(filter, pruned);
     }
   }
 
-  return { pruned: new Set() };
+  if (!urlHasFilterParams(params)) {
+    const saved = readDefaultServices(sortedServiceNames, rootServiceNames);
+    return { filter: saved ? withHiddenServices(filter, saved) : filter };
+  }
+
+  const requested = hiddenServices(filter);
+  const sanitized = sanitizePrunedServices(requested, rootServiceNames);
+  if (!setsEqual(sanitized, requested)) {
+    filter = withHiddenServices(filter, sanitized);
+    rewrite = true;
+  }
+  if (!rewrite) return { filter };
+  const nextParams = { ...params };
+  delete nextParams[LEGACY_SERVICE_PARAM];
+  writeClauses(nextParams, filter);
+  return { filter, cleanSearch: searchOf(nextParams) };
+}
+
+/** Writes the clauses as repeated `f` parameters; an empty list is written as an empty `f=`. */
+function writeClauses(params: queryString.ParsedQuery, filter: ISpanFilter): void {
+  const encoded = filter.clauses.map(encodeClause);
+  params[CLAUSE_PARAM] = encoded.length ? encoded : '';
 }
 
 /**
- * Builds the updated search string after a filter change.
+ * Builds the updated search string after a filter change. Every clause is written as a repeated `f`
+ * parameter, and a legacy svcFilter is dropped. An empty clause list is written as an empty `f=`
+ * when the URL already stated a filter or a default is saved, so that the saved default does not
+ * come back on a later render; otherwise `f` is removed. The tree mode is not written yet, because
+ * row generation does not support lift mode.
  * Returns the new search string (with leading '?' if non-empty, or '').
  */
-export function buildFilterSearch(
-  currentSearch: string,
-  sortedServiceNames: string[],
-  nextPruned: Set<string>
-): string {
+export function buildFilterSearch(currentSearch: string, filter: ISpanFilter): string {
   const params = queryString.parse(currentSearch);
-  if (nextPruned.size === 0) {
-    delete params.svcFilter;
+  const statedFilter = urlHasFilterParams(params);
+  delete params[LEGACY_SERVICE_PARAM];
+  if (filter.clauses.length || statedFilter || hasSavedDefault()) {
+    writeClauses(params, filter);
   } else {
-    const visible = new Set(sortedServiceNames.filter(name => !nextPruned.has(name)));
-    const encoded = encodeSvcFilter(sortedServiceNames, visible);
-    if (encoded) {
-      params.svcFilter = encoded;
-    } else {
-      delete params.svcFilter;
-    }
+    delete params[CLAUSE_PARAM];
   }
-  const search = queryString.stringify(params);
-  return search ? `?${search}` : '';
+  return searchOf(params);
 }
 
 type UseServiceFilterResult = {
@@ -145,9 +192,8 @@ type UseServiceFilterResult = {
 };
 
 /**
- * Hook that manages service filter state, URL sync, localStorage defaults,
- * and side panel cleanup. Returns the current pruned set and a React node
- * to render in the timeline header.
+ * Hook that manages span filter state, URL sync, saved defaults, and side panel cleanup.
+ * Returns the services the filter hides and a React node to render in the timeline header.
  */
 export function useServiceFilter(
   trace: IOtelTrace,
@@ -164,37 +210,26 @@ export function useServiceFilter(
     return names;
   }, [trace.rootSpans]);
 
-  const prunedServices = useTraceTimelineStore(s => s.prunedServices);
-  const zustandSetPrunedServices = useTraceTimelineStore(s => s.setPrunedServices);
+  const spanFilter = useTraceTimelineStore(s => s.spanFilter);
+  const setSpanFilter = useTraceTimelineStore(s => s.setSpanFilter);
+  const prunedServices = useMemo(() => hiddenServices(spanFilter), [spanFilter]);
 
-  // After cleaning a stale/sanitized URL, the effect re-runs because location.search changes.
-  // This ref prevents that re-run from falling through to localStorage defaults.
-  // One hop is sufficient: the cleaned URL either decodes to a valid filter (handled by the
-  // URL branch) or has no svcFilter param at all (pruned = empty, no further navigation).
-  // In neither case does resolveInitialFilter produce another cleanSearch.
-  const skipDefaultsRef = useRef(false);
-
-  // Resolve filter from URL or localStorage whenever relevant inputs change
+  // Resolve the filter from the URL or the saved default whenever relevant inputs change
   // (trace identity, URL search string). Guards against loops by comparing the
-  // resolved pruned set to the current state before writing.
+  // resolved filter to the current state before writing.
   useEffect(() => {
-    const skipDefaults = skipDefaultsRef.current;
-    skipDefaultsRef.current = false;
-
-    const { pruned, cleanSearch } = resolveInitialFilter(
+    const { filter, cleanSearch } = resolveInitialFilter(
       location.search,
       sortedServiceNames,
-      rootServiceNames,
-      skipDefaults
+      rootServiceNames
     );
 
-    // Avoid unnecessary Zustand writes (and re-renders) when the resolved set matches.
-    const current = useTraceTimelineStore.getState().prunedServices;
-    if (!setsEqual(current, pruned)) {
-      zustandSetPrunedServices(pruned);
+    // Avoid unnecessary Zustand writes (and re-renders) when the resolved filter matches.
+    const current = useTraceTimelineStore.getState().spanFilter;
+    if (!spanFiltersEqual(current, filter)) {
+      setSpanFilter(filter);
     }
     if (cleanSearch != null && cleanSearch !== location.search) {
-      skipDefaultsRef.current = true;
       navigate(
         { pathname: location.pathname, search: cleanSearch },
         { replace: true, state: location.state }
@@ -208,14 +243,15 @@ export function useServiceFilter(
     rootServiceNames,
     sortedServiceNames,
     trace.traceID,
-    zustandSetPrunedServices,
+    setSpanFilter,
   ]);
 
   const handleServiceFilterApply = useCallback(
     (requested: Set<string>) => {
       // Enforce root service protection even if the UI somehow allows it.
       const nextPruned = sanitizePrunedServices(requested, rootServiceNames);
-      zustandSetPrunedServices(nextPruned);
+      const nextFilter = withHiddenServices(useTraceTimelineStore.getState().spanFilter, nextPruned);
+      setSpanFilter(nextFilter);
 
       // If the currently selected span (side panel) is now hidden, deselect it. The hidden set is
       // computed here for the requested services, once per Apply, in one pass over the spans; the
@@ -223,7 +259,10 @@ export function useServiceFilter(
       if (nextPruned.size > 0 && detailPanelMode === 'sidepanel') {
         const currentDetailStates = useTraceTimelineStore.getState().detailStates;
         const currentSelectedID = getSelectedSpanID(currentDetailStates);
-        if (currentSelectedID && hiddenSpanIDsForServices(trace.spans, nextPruned).has(currentSelectedID)) {
+        if (
+          currentSelectedID &&
+          evaluateSpanFilter(trace.spans, nextFilter).hiddenIDs.has(currentSelectedID)
+        ) {
           // In sidepanel mode detailStates holds at most one entry (the selected span).
           // The Map shape is a leftover from inline mode where multiple spans can be
           // expanded simultaneously. Clearing the whole map is correct here.
@@ -231,18 +270,17 @@ export function useServiceFilter(
         }
       }
 
-      const search = buildFilterSearch(location.search, sortedServiceNames, nextPruned);
+      const search = buildFilterSearch(location.search, nextFilter);
       navigate({ pathname: location.pathname, search }, { replace: true, state: location.state });
     },
     [
-      zustandSetPrunedServices,
+      setSpanFilter,
       detailPanelMode,
       rootServiceNames,
       trace.spans,
       location.pathname,
       location.search,
       location.state,
-      sortedServiceNames,
       navigate,
     ]
   );

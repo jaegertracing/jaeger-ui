@@ -47,7 +47,7 @@ import './VirtualizedTraceView.css';
 import updateUiFind from '../../../utils/update-ui-find';
 import { PEER_SERVICE } from '../../../constants/tag-keys';
 import withRouteProps from '../../../utils/withRouteProps';
-import { hiddenSpanIDsForServices } from '../spanFilter';
+import { evaluateSpanFilter } from '../spanFilter';
 
 type RowStateData = {
   rows: RowState[];
@@ -224,9 +224,10 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
   const getViewRange = useCallback(() => propsRef.current.currentViewRangeTime, []);
   const getSearchedSpanIDs = useCallback(() => propsRef.current.findMatchesIDs, []);
   const getCollapsedChildren = useCallback(() => propsRef.current.childrenHiddenIDs, []);
+  const getHiddenSpanIDs = useCallback(() => propsRef.current.hiddenIDs, []);
 
   const mapRowIndexToSpanIndex = useCallback(
-    (index: number) => getRowStates()[index].spanIndex,
+    (index: number) => getRowStates()[index]?.spanIndex,
     [getRowStates]
   );
 
@@ -257,6 +258,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
       getViewRange,
       getSearchedSpanIDs,
       getCollapsedChildren,
+      getHiddenSpanIDs,
       getViewHeight: lv.getViewHeight,
       getBottomRowIndexVisible: lv.getBottomVisibleIndex,
       getTopRowIndexVisible: lv.getTopVisibleIndex,
@@ -268,6 +270,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
     getViewRange,
     getSearchedSpanIDs,
     getCollapsedChildren,
+    getHiddenSpanIDs,
     mapRowIndexToSpanIndex,
     mapSpanIndexToRowIndex,
   ]);
@@ -635,10 +638,10 @@ function VirtualizedTraceViewWrapper(
   const childrenHiddenIDs = useTraceTimelineStore(s => s.childrenHiddenIDs);
   const detailStates = useTraceTimelineStore(s => s.detailStates);
   const shouldScrollToFirstUiFindMatch = useTraceTimelineStore(s => s.shouldScrollToFirstUiFindMatch);
-  const prunedServices = useTraceTimelineStore(s => s.prunedServices);
+  const spanFilter = useTraceTimelineStore(s => s.spanFilter);
   const hiddenIDs = useMemo(
-    () => hiddenSpanIDsForServices(ownProps.trace.spans, prunedServices),
-    [ownProps.trace.spans, prunedServices]
+    () => evaluateSpanFilter(ownProps.trace.spans, spanFilter).hiddenIDs,
+    [ownProps.trace.spans, spanFilter]
   );
   const selectedSpanID = detailPanelMode === 'sidepanel' ? getSelectedSpanID(detailStates) : null;
 

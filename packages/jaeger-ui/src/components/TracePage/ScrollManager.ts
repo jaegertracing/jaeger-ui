@@ -18,11 +18,13 @@ export type Accessors = {
   getViewRange: () => [number, number];
   getSearchedSpanIDs: () => Set<string> | TNil;
   getCollapsedChildren: () => Set<string> | TNil;
+  getHiddenSpanIDs: () => ReadonlySet<string>;
   getViewHeight: () => number;
   getBottomRowIndexVisible: () => number;
   getTopRowIndexVisible: () => number;
   getRowPosition: (rowIndex: number) => { height: number; y: number };
-  mapRowIndexToSpanIndex: (rowIndex: number) => number;
+  // Returns undefined when the row does not exist, which happens when the filter hides every span.
+  mapRowIndexToSpanIndex: (rowIndex: number) => number | undefined;
   mapSpanIndexToRowIndex: (spanIndex: number) => number;
 };
 
@@ -39,16 +41,21 @@ interface IScroller {
  * @param {Set<string>} childrenAreHidden The set of Spans known to have hidden
  *                                        children, either because it is
  *                                        collapsed or has a collapsed parent.
+ * @param {ReadonlySet<string>} hiddenIDs The spans the filter hides. A hidden
+ *                                        span has no row, so its collapse state
+ *                                        has no effect on its lifted descendants.
  * @returns {{ isHidden: boolean, parentIds: Set<string> }}
  */
-function isSpanHidden(span: IOtelSpan, childrenAreHidden: Set<string>) {
+function isSpanHidden(span: IOtelSpan, childrenAreHidden: Set<string>, hiddenIDs: ReadonlySet<string>) {
   const parentIDs = new Set<string>();
   let current: IOtelSpan | undefined = span.parentSpan;
 
   while (current) {
-    parentIDs.add(current.spanID);
-    if (childrenAreHidden.has(current.spanID)) {
-      return { isHidden: true, parentIDs };
+    if (!hiddenIDs.has(current.spanID)) {
+      parentIDs.add(current.spanID);
+      if (childrenAreHidden.has(current.spanID)) {
+        return { isHidden: true, parentIDs };
+      }
     }
     current = current.parentSpan;
   }
@@ -113,6 +120,9 @@ export default class ScrollManager {
       boundaryRow = xrs.getBottomRowIndexVisible();
     }
     const spanIndex = xrs.mapRowIndexToSpanIndex(boundaryRow);
+    if (spanIndex == null) {
+      return;
+    }
     if ((spanIndex === 0 && isUp) || (spanIndex === spans.length - 1 && !isUp)) {
       return;
     }
@@ -132,8 +142,18 @@ export default class ScrollManager {
     // A search whose every match the filter hides has nothing to go to; the fallback below would
     // land on a span without a row.
     if (findMatches && findMatches.size === 0) return;
+    const hiddenIDs = xrs.getHiddenSpanIDs();
     const _collapsed = xrs.getCollapsedChildren();
     const childrenAreHidden = _collapsed ? new Set(_collapsed) : null;
+    // A span has a row unless the filter hides it or a visible ancestor of it is collapsed. The
+    // visible ancestors found on the way are remembered as collapsed too, to shorten later walks.
+    const hasRow = (span: IOtelSpan): boolean => {
+      if (hiddenIDs.has(span.spanID)) return false;
+      if (!childrenAreHidden) return true;
+      const { isHidden, parentIDs } = isSpanHidden(span, childrenAreHidden, hiddenIDs);
+      if (isHidden) parentIDs.forEach(id => childrenAreHidden.add(id));
+      return !isHidden;
+    };
 
     const boundary = direction < 0 ? -1 : spans.length;
     let nextSpanIndex: number | undefined;
@@ -149,13 +169,8 @@ export default class ScrollManager {
         // skip to search matches (when searching)
         continue;
       }
-      if (childrenAreHidden) {
-        // make sure the span is not collapsed
-        const { isHidden, parentIDs } = isSpanHidden(span, childrenAreHidden);
-        if (isHidden) {
-          parentIDs.forEach(id => childrenAreHidden.add(id));
-          continue;
-        }
+      if (!hasRow(span)) {
+        continue;
       }
       nextSpanIndex = i;
       break;
@@ -164,17 +179,11 @@ export default class ScrollManager {
       // might as well scroll to the top or bottom
       nextSpanIndex = boundary - direction;
 
-      // If there are hidden children, scroll to the last visible span
-      if (childrenAreHidden) {
-        let isFallbackHidden: boolean;
-        do {
-          const { isHidden, parentIDs } = isSpanHidden(spans[nextSpanIndex], childrenAreHidden);
-          if (isHidden) {
-            parentIDs.forEach(id => childrenAreHidden.add(id));
-            nextSpanIndex--;
-          }
-          isFallbackHidden = isHidden;
-        } while (isFallbackHidden);
+      // Walk back past the spans without a row, hidden by the filter or inside a collapsed subtree,
+      // to the last span that has one.
+      while (!hasRow(spans[nextSpanIndex])) {
+        nextSpanIndex -= direction;
+        if (nextSpanIndex === -1 || nextSpanIndex === spans.length) return;
       }
     }
     const nextRow = xrs.mapSpanIndexToRowIndex(nextSpanIndex);
