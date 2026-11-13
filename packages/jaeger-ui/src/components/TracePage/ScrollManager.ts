@@ -129,6 +129,9 @@ export default class ScrollManager {
     const startTime = checkVisibility ? traceStartTime + duration * viewStart : NaN;
     const endTime = checkVisibility ? traceStartTime + duration * viewEnd : NaN;
     const findMatches = xrs.getSearchedSpanIDs();
+    // A search whose every match the filter hides has nothing to go to; the fallback below would
+    // land on a span without a row.
+    if (findMatches && findMatches.size === 0) return;
     const _collapsed = xrs.getCollapsedChildren();
     const childrenAreHidden = _collapsed ? new Set(_collapsed) : null;
 
