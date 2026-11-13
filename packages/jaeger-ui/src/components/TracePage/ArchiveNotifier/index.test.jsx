@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, cleanup } from '@testing-library/react';
+import { render, cleanup, screen, within } from '@testing-library/react';
 import { notification } from 'antd';
 import { IoTimeOutline } from 'react-icons/io5';
 import ArchiveNotifier from './index';
@@ -103,6 +103,20 @@ describe('<ArchiveNotifier>', () => {
         title: 'Archiving trace...',
       })
     );
+  });
+
+  it('does not nest a status region inside the info notification alert', () => {
+    const props = { ...defaultProps, archivedState: { isArchiving: true } };
+    render(<ArchiveNotifier {...props} />);
+    const { icon, title } = notification.info.mock.calls[0][0];
+    render(
+      <div role="alert">
+        {icon}
+        {title}
+      </div>
+    );
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(within(screen.getByRole('alert')).queryByRole('status')).not.toBeInTheDocument();
   });
 
   it('calls notification.warning when error is present', () => {
