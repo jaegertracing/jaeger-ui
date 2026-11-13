@@ -717,7 +717,8 @@ const REGISTRY: SectionBuilder[] = [
     const name = asString(get('gen_ai.tool.name'));
     const args = get('gen_ai.tool.call.arguments');
     const result = get('gen_ai.tool.call.result');
-    return id || name || args !== undefined || result !== undefined
+    // Presence, not truthiness - same reason as the agent builder above.
+    return id !== undefined || name !== undefined || args !== undefined || result !== undefined
       ? { type: 'toolCall', data: { id, name, arguments: args, result } }
       : undefined;
   },

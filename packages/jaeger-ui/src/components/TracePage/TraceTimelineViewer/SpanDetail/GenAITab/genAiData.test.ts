@@ -1154,6 +1154,17 @@ describe('extractGenAiSections', () => {
       expect(conversation?.inputMessages[0].content).toBe('Earlier turns, summarized.');
     });
 
+    it('still produces a toolCall section for a legitimate empty-string field, instead of silently dropping it', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.tool.name': '' }));
+      expect(section(sections, 'toolCall')).toEqual({
+        id: undefined,
+        name: '',
+        arguments: undefined,
+        result: undefined,
+      });
+      expect(section(sections, 'other')).toBeUndefined();
+    });
+
     it('produces no toolCall section when no tool attributes are present', () => {
       const sections = extractGenAiSections(attrs({ 'gen_ai.usage.input_tokens': 10 }));
       expect(section(sections, 'toolCall')).toBeUndefined();
