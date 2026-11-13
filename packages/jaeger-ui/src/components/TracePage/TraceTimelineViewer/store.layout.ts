@@ -42,8 +42,9 @@ type TraceTimelineLayoutPrefsStore = LayoutPrefs & {
   setSpanNameColumnWidth: (width: number) => void;
   setSidePanelWidth: (width: number) => void;
   // Updates layout fields only; use `setDetailPanelMode` from `./store` to also sync detail panel state.
-  applyDetailPanelModeToLayout: (mode: SpanDetailPanelMode) => void;
-  setTimelineBarsVisible: (visible: boolean) => void;
+  // With `persist=false` the view changes but no new value is saved.
+  applyDetailPanelModeToLayout: (mode: SpanDetailPanelMode, persist?: boolean) => void;
+  setTimelineBarsVisible: (visible: boolean, persist?: boolean) => void;
 };
 
 // Single namespaced localStorage key holding the JSON-serialized prefs (replaces the four raw keys).
@@ -217,7 +218,7 @@ export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()(
         }));
       },
 
-      applyDetailPanelModeToLayout: (mode: SpanDetailPanelMode) => {
+      applyDetailPanelModeToLayout: (mode: SpanDetailPanelMode, persist = true) => {
         let { spanNameColumnWidth, sidePanelWidth, timelineBarsVisible } = get();
         if (mode === 'sidepanel') {
           const maxWidth = getMaxNameColumnWidth({
@@ -230,14 +231,16 @@ export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()(
         set(state => ({
           detailPanelMode: mode,
           spanNameColumnWidth,
-          explicitPrefs: { ...state.explicitPrefs, detailPanelMode: mode },
+          explicitPrefs: persist ? { ...state.explicitPrefs, detailPanelMode: mode } : state.explicitPrefs,
         }));
       },
 
-      setTimelineBarsVisible: (visible: boolean) => {
+      setTimelineBarsVisible: (visible: boolean, persist = true) => {
         set(state => ({
           timelineBarsVisible: visible,
-          explicitPrefs: { ...state.explicitPrefs, timelineBarsVisible: visible },
+          explicitPrefs: persist
+            ? { ...state.explicitPrefs, timelineBarsVisible: visible }
+            : state.explicitPrefs,
         }));
       },
     }),

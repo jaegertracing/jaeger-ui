@@ -318,6 +318,65 @@ describe('useLayoutPrefsStore persistence (legacy migration + corrupted value)',
     expect(useLayoutPrefsStore.getState().detailPanelMode).toBe('sidepanel');
   });
 
+  it('keeps temporary settings out of storage and restores saved choices on reload', async () => {
+    vi.mocked(getConfig).mockReturnValue({ traceTimeline: { enableSidePanel: true } } as ReturnType<
+      typeof getConfig
+    >);
+    useLayoutPrefsStore.getState().applyDetailPanelModeToLayout('inline');
+    useLayoutPrefsStore.getState().setTimelineBarsVisible(true);
+    useLayoutPrefsStore.getState().setSpanNameColumnWidth(0.8);
+    const saved = localStorage.getItem('jaeger.layout');
+
+    useLayoutPrefsStore.getState().applyDetailPanelModeToLayout('sidepanel', false);
+    useLayoutPrefsStore.getState().setTimelineBarsVisible(false, false);
+    const view = useLayoutPrefsStore.getState();
+    expect(view.detailPanelMode).toBe('sidepanel');
+    expect(view.timelineBarsVisible).toBe(false);
+    expect(view.spanNameColumnWidth).toBeLessThan(0.8);
+    expect(localStorage.getItem('jaeger.layout')).toBe(saved);
+
+    const reloaded = await rehydrateLayoutPrefs();
+    expect(reloaded.detailPanelMode).toBe('inline');
+    expect(reloaded.timelineBarsVisible).toBe(true);
+    expect(reloaded.spanNameColumnWidth).toBeCloseTo(0.8);
+  });
+
+  it('saves a later explicit choice without the temporary settings', async () => {
+    vi.mocked(getConfig).mockReturnValue({ traceTimeline: { enableSidePanel: true } } as ReturnType<
+      typeof getConfig
+    >);
+    useLayoutPrefsStore.getState().applyDetailPanelModeToLayout('sidepanel', false);
+    useLayoutPrefsStore.getState().setTimelineBarsVisible(false, false);
+    useLayoutPrefsStore.getState().setSidePanelWidth(0.3);
+    expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state).toEqual({ sidePanelWidth: 0.3 });
+
+    const reloaded = await rehydrateLayoutPrefs();
+    expect(reloaded.detailPanelMode).toBe('inline');
+    expect(reloaded.timelineBarsVisible).toBe(true);
+  });
+
+  it('saves only the explicit mode after a temporary timeline change', async () => {
+    vi.mocked(getConfig).mockReturnValue({ traceTimeline: { enableSidePanel: true } } as ReturnType<
+      typeof getConfig
+    >);
+    useLayoutPrefsStore.getState().setTimelineBarsVisible(false, false);
+    useLayoutPrefsStore.getState().applyDetailPanelModeToLayout('sidepanel');
+    expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state).toEqual({
+      detailPanelMode: 'sidepanel',
+    });
+
+    const reloaded = await rehydrateLayoutPrefs();
+    expect(reloaded.detailPanelMode).toBe('sidepanel');
+    expect(reloaded.timelineBarsVisible).toBe(true);
+  });
+
+  it('saves a setting once it is chosen explicitly after a temporary change', async () => {
+    useLayoutPrefsStore.getState().setTimelineBarsVisible(false, false);
+    useLayoutPrefsStore.getState().setTimelineBarsVisible(false);
+    expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state).toEqual({ timelineBarsVisible: false });
+    expect((await rehydrateLayoutPrefs()).timelineBarsVisible).toBe(false);
+  });
+
   it('passes the saved version to migration on a future version change', async () => {
     const options = useLayoutPrefsStore.persist.getOptions();
     const migrate = vi.fn(() => ({ spanNameColumnWidth: 0.45 }));
@@ -485,6 +544,30 @@ describe('trace timeline zustand stores', () => {
         useLayoutPrefsStore.getState().setTimelineBarsVisible(true);
         expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state.timelineBarsVisible).toBe(true);
       });
+
+      it('updates the view without saving when persist is false', () => {
+        useLayoutPrefsStore.getState().setTimelineBarsVisible(false, false);
+        expect(useLayoutPrefsStore.getState().timelineBarsVisible).toBe(false);
+        expect(useLayoutPrefsStore.getState().explicitPrefs).toEqual({});
+        expect(JSON.parse(localStorage.getItem('jaeger.layout')!)).toEqual({ state: {}, version: 1 });
+      });
+    });
+
+    describe('applyDetailPanelModeToLayout', () => {
+      it('updates detailPanelMode and persists by default', () => {
+        useLayoutPrefsStore.getState().applyDetailPanelModeToLayout('sidepanel');
+        expect(useLayoutPrefsStore.getState().detailPanelMode).toBe('sidepanel');
+        expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state.detailPanelMode).toBe('sidepanel');
+      });
+
+      it('keeps the saved mode when persist is false', () => {
+        useLayoutPrefsStore.getState().applyDetailPanelModeToLayout('inline');
+        useLayoutPrefsStore.getState().applyDetailPanelModeToLayout('sidepanel', false);
+        expect(useLayoutPrefsStore.getState().detailPanelMode).toBe('sidepanel');
+        expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state).toEqual({
+          detailPanelMode: 'inline',
+        });
+      });
     });
   });
 
@@ -493,6 +576,29 @@ describe('trace timeline zustand stores', () => {
       setDetailPanelMode('sidepanel');
       expect(useLayoutPrefsStore.getState().detailPanelMode).toBe('sidepanel');
       expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state.detailPanelMode).toBe('sidepanel');
+    });
+
+    it('trims detailStates for sidepanel without saving the mode when persist is false', () => {
+      useTraceTimelineStore.setState({
+        detailStates: new Map([
+          ['span-1', new DetailState()],
+          ['span-2', new DetailState()],
+        ]),
+      });
+      setDetailPanelMode('sidepanel', false);
+      expect(useLayoutPrefsStore.getState().detailPanelMode).toBe('sidepanel');
+      expect([...useTraceTimelineStore.getState().detailStates.keys()]).toEqual(['span-1']);
+      expect(useLayoutPrefsStore.getState().explicitPrefs).toEqual({});
+      expect(JSON.parse(localStorage.getItem('jaeger.layout')!)).toEqual({ state: {}, version: 1 });
+    });
+
+    it('keeps the clamped width after a temporary sidepanel switches back to inline', () => {
+      useLayoutPrefsStore.setState({ sidePanelWidth: 0.3 });
+      useLayoutPrefsStore.getState().setSpanNameColumnWidth(0.8);
+      setDetailPanelMode('sidepanel', false);
+      setDetailPanelMode('inline', false);
+      expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(0.65);
+      expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state).toEqual({ spanNameColumnWidth: 0.8 });
     });
 
     it('clamps spanNameColumnWidth when switching to sidepanel', () => {
