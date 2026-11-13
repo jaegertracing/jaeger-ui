@@ -21,6 +21,28 @@ type TProps = {
 
 const { Header, Content } = Layout;
 
+function JaegerAssistantLoadFailure() {
+  const assistant = useJaegerAssistantOptional();
+  const assistantConfigured = useJaegerAssistantConfigured();
+
+  if (!assistant || !assistantConfigured) {
+    return null;
+  }
+
+  return (
+    <aside
+      className="Page--assistantLoadFailure"
+      aria-label="Ask Jaeger assistant"
+      aria-hidden={!assistant.panelOpen}
+      style={{ display: assistant.panelOpen ? undefined : 'none' }}
+    >
+      <p className="Page--assistantLoadFailureNotice">
+        The assistant failed to load. Reload the page to try again.
+      </p>
+    </aside>
+  );
+}
+
 // The dock pulls in the assistant-ui and ag-ui libraries, so it loads as a separate
 // chunk and only for deployments where the backend advertises the assistant. A chunk
 // that fails to load, for example from a stale index.html after a deploy, must not
@@ -31,7 +53,7 @@ export function loadJaegerAssistantDock(importer = () => import('./JaegerAssista
     m => ({ default: m.JaegerAssistantDock }),
     (err: unknown) => {
       console.error('[jaeger-assistant] failed to load the assistant panel', err);
-      return { default: () => null };
+      return { default: JaegerAssistantLoadFailure };
     }
   );
 }
