@@ -19,6 +19,12 @@ export function isUploadedTrace(traceID: string): boolean {
   return summaries?.some(summary => summary.traceID === traceID) ?? false;
 }
 
+/** Returns the raw document an uploaded trace was read from, or undefined if none is cached. */
+export function getUploadedRawTrace(traceID: string): unknown {
+  const rawTraces = appQueryClient.getQueryData<unknown[]>(UPLOADED_RAW_TRACES_QUERY_KEY);
+  return rawTraces?.find(raw => uploadedTraceId(raw) === traceID);
+}
+
 /**
  * FileLoader writes every upload to the ['trace', id] cache, so the last upload of an ID wins
  * there. The registries follow the same rule: a later upload replaces the entry in place.
