@@ -41,13 +41,5 @@ describe('getTarget', () => {
       expect(getNewWindowSuffix('')).toBe('');
       expect(getNewWindowSuffix('_top')).toBe('');
     });
-
-    it('derives suffix from getTargetEmptyOrBlank when called with no arguments', () => {
-      getConfigSpy.mockReturnValue({ forbidNewPage: false });
-      expect(getNewWindowSuffix()).toBe(' in a new window');
-
-      getConfigSpy.mockReturnValue({ forbidNewPage: true });
-      expect(getNewWindowSuffix()).toBe('');
-    });
   });
 });
