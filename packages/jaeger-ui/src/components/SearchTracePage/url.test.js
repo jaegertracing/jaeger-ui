@@ -297,5 +297,28 @@ describe('SearchTracePage/url', () => {
       // start should be 1 hour before end
       expect(endUs - startUs).toBeCloseTo(60 * 60 * 1_000_000, -6);
     });
+
+    it('joins repeated tags with spaces', () => {
+      const result = searchQueryFromUrl('?service=frontend&tags=error%3Dtrue&tags=http.status_code%3D500');
+      expect(result?.tags).toBe('error=true http.status_code=500');
+    });
+
+    it('filters out empty values when joining repeated tags', () => {
+      const result = searchQueryFromUrl('?service=frontend&tags=error%3Dtrue&tags=');
+      expect(result?.tags).toBe('error=true');
+    });
+
+    it('returns undefined when all repeated tags are empty', () => {
+      const result = searchQueryFromUrl('?service=frontend&tags=&tags=');
+      expect(result?.tags).toBeUndefined();
+    });
+
+    it('extracts first value for repeated minDuration and maxDuration', () => {
+      const result = searchQueryFromUrl(
+        '?service=frontend&minDuration=100ms&minDuration=200ms&maxDuration=500ms&maxDuration=1s'
+      );
+      expect(result?.minDuration).toBe('100ms');
+      expect(result?.maxDuration).toBe('500ms');
+    });
   });
 });
