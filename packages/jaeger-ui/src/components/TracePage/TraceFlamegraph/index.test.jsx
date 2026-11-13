@@ -550,6 +550,47 @@ describe('<TraceFlamegraph />', () => {
       expect(screen.getByText('3')).toBeInTheDocument();
     });
 
+    it('tooltip follows the cursor while moving within the same g.frame', async () => {
+      render(<TraceFlamegraph trace={otelTrace} />);
+      const svg = screen.getByTestId('flamegraph-chart').querySelector('svg');
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.classList.add('frame');
+      g.__data__ = { data: { name: 'svc: op', value: 100, duration: 100, count: 1 } };
+      svg.appendChild(g);
+
+      await act(() => {
+        g.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 200, clientY: 300 }));
+      });
+      const tooltip = screen.getByText('svc: op').closest('.Flamegraph-tooltip');
+      expect(tooltip).toHaveStyle({ left: '210px', top: '310px' });
+
+      await act(() => {
+        g.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 250, clientY: 320 }));
+      });
+      expect(tooltip).toHaveStyle({ left: '260px', top: '330px' });
+    });
+
+    it('tooltip stays hidden when moving within the g.frame that opened the context menu', async () => {
+      render(<TraceFlamegraph trace={otelTrace} />);
+      const svg = screen.getByTestId('flamegraph-chart').querySelector('svg');
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.classList.add('frame');
+      g.setAttribute('name', 'svc: op');
+      g.__data__ = { data: { name: 'svc: op', value: 100, duration: 100, count: 1 } };
+      svg.appendChild(g);
+
+      await act(() => {
+        g.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 200, clientY: 300 }));
+      });
+      await act(() => {
+        g.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, clientX: 200, clientY: 300 }));
+      });
+      await act(() => {
+        g.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 250, clientY: 320 }));
+      });
+      expect(document.querySelector('.Flamegraph-tooltip')).not.toBeInTheDocument();
+    });
+
     it('mousemove without g.frame hides tooltip', async () => {
       render(<TraceFlamegraph trace={otelTrace} />);
       const svg = screen.getByTestId('flamegraph-chart').querySelector('svg');
