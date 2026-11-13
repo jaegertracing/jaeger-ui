@@ -176,13 +176,16 @@ export function computeTraceLink(linkPatterns: ProcessedLinkPattern[], trace: IO
     .forEach(pattern => {
       const parameterValues: Record<string, any> = {};
       const allParameters = pattern.parameters.every(parameter => {
-        const { parameterName, formatFunction } = getParameterAndFormatter(parameter);
-        const traceKV = getParameterInTrace(parameterName, trace);
+        const { parameterName } = getParameterAndFormatter(parameter);
+        const traceKey = parameterName.startsWith('trace.')
+          ? parameterName.replace(/^trace\./, '')
+          : parameterName;
+        const traceKV = getParameterInTrace(traceKey, trace);
 
         if (traceKV) {
           // At this point is safe to access to trace object using parameter variable because
           // we validated parameter against validKeys, this implies that parameter a keyof IOtelTrace.
-          parameterValues[parameterName] = formatFunction ? formatFunction(traceKV.value) : traceKV.value;
+          parameterValues[parameterName] = traceKV.value;
 
           return true;
         }
@@ -234,22 +237,23 @@ export function computeLinks(
     if (typeMatches && pattern.key(item.key) && pattern.value(item.value)) {
       const parameterValues: Record<string, any> = {};
       const allParameters = pattern.parameters.every(parameter => {
+        const { parameterName } = getParameterAndFormatter(parameter);
         let entry;
 
-        if (parameter.startsWith('trace.')) {
-          entry = getParameterInTrace(parameter.split('trace.')[1], trace);
+        if (parameterName.startsWith('trace.')) {
+          entry = getParameterInTrace(parameterName.replace(/^trace\./, ''), trace);
         } else {
-          entry = getParameterInAttributes(parameter, items);
+          entry = getParameterInAttributes(parameterName, items);
 
           if (!entry && type !== 'resource') {
             // do not look in ancestors for resource attributes because the same object may appear in different places in the hierarchy
             // and the cache in getLinks uses that object as a key
-            entry = getParameterInAncestor(parameter, span);
+            entry = getParameterInAncestor(parameterName, span);
           }
         }
 
         if (entry) {
-          parameterValues[parameter] = entry.value;
+          parameterValues[parameterName] = entry.value;
           return true;
         }
 
