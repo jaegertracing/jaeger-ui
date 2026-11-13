@@ -132,6 +132,7 @@ const defaultConfig: Config = {
     enableSidePanel: true,
     defaultDetailPanelMode: 'inline',
     spanPillsEnabled: true,
+    filterApplyThreshold: 10000,
   },
   useOpenTelemetryTerms: true,
   tracing: {

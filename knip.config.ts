@@ -7,6 +7,11 @@ const config: KnipConfig = {
   workspaces: {
     '.': {
       entry: ['scripts/**/*.{js,ts,cjs}'],
+      ignore: [
+        // The RFC 0009 prototype is a standalone mock served by its own run.sh; it is checked in
+        // for reference and is not part of any package.
+        'docs/rfc/0009/prototype/**',
+      ],
       ignoreDependencies: [
         // Optional native bindings for @napi-rs; installed as optionalDependencies and
         // never imported directly — the parent package selects the right one at runtime.

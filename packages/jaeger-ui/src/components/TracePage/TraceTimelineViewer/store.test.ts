@@ -4,6 +4,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import DetailState from './SpanDetail/DetailState';
+import { collapseTargets } from './generateRowStates';
 import {
   calculateFocusedFindRowStates,
   normalizeLayoutPrefs,
@@ -26,6 +27,8 @@ vi.mock('../../../utils/span-ancestor-ids');
 import getConfig from '../../../utils/config/get-config';
 import filterSpans from '../../../utils/filter-spans';
 import spanAncestorIds from '../../../utils/span-ancestor-ids';
+import { EMPTY_SPAN_FILTER, hiddenServices, withHiddenServices } from '../spanFilter';
+import { IOtelSpan } from '../../../types/otel';
 
 async function rehydrateLayoutPrefs() {
   await useLayoutPrefsStore.persist.rehydrate();
@@ -100,6 +103,12 @@ describe('layout preference hydration', () => {
   it('reads timelineBarsVisible=true from localStorage when value is not "false"', async () => {
     localStorage.setItem('timelineVisible', 'true');
     expect((await rehydrateLayoutPrefs()).timelineBarsVisible).toBe(true);
+  });
+
+  it('reads heatmapEnabled from localStorage and defaults it to false', async () => {
+    expect((await rehydrateLayoutPrefs()).heatmapEnabled).toBe(false);
+    localStorage.setItem('jaeger.layout', JSON.stringify({ state: { heatmapEnabled: true }, version: 1 }));
+    expect((await rehydrateLayoutPrefs()).heatmapEnabled).toBe(true);
   });
 
   it('defaults detailPanelMode to inline when enableSidePanel is false', async () => {
@@ -414,6 +423,7 @@ describe('useLayoutPrefsStore persistence (legacy migration + corrupted value)',
           sidePanelWidth: null,
           detailPanelMode: 'unknown',
           timelineBarsVisible: 'false',
+          heatmapEnabled: 'true',
           setSpanNameColumnWidth: 'not a function',
         },
         version: 1,
@@ -425,6 +435,7 @@ describe('useLayoutPrefsStore persistence (legacy migration + corrupted value)',
       sidePanelWidth: 0.375,
       detailPanelMode: 'inline',
       timelineBarsVisible: true,
+      heatmapEnabled: false,
     });
     expect(useLayoutPrefsStore.getState().setSpanNameColumnWidth).toBeTypeOf('function');
   });
@@ -569,6 +580,19 @@ describe('trace timeline zustand stores', () => {
         });
       });
     });
+
+    describe('toggleHeatmap', () => {
+      it('flips heatmapEnabled and persists it to localStorage', () => {
+        useLayoutPrefsStore.setState({ heatmapEnabled: false });
+        useLayoutPrefsStore.getState().toggleHeatmap();
+        expect(useLayoutPrefsStore.getState().heatmapEnabled).toBe(true);
+        expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state.heatmapEnabled).toBe(true);
+
+        useLayoutPrefsStore.getState().toggleHeatmap();
+        expect(useLayoutPrefsStore.getState().heatmapEnabled).toBe(false);
+        expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state.heatmapEnabled).toBe(false);
+      });
+    });
   });
 
   describe('setDetailPanelMode coordinator', () => {
@@ -656,7 +680,7 @@ describe('trace timeline zustand stores', () => {
       useTraceTimelineStore.setState({
         childrenHiddenIDs: new Set(['span-x']),
         detailStates: new Map([['span-x', new DetailState()]]),
-        prunedServices: new Set(['service']),
+        spanFilter: withHiddenServices(EMPTY_SPAN_FILTER, new Set(['service'])),
         shouldScrollToFirstUiFindMatch: true,
       });
 
@@ -670,7 +694,7 @@ describe('trace timeline zustand stores', () => {
       expect(state.childrenHiddenIDs).toBe(previous.childrenHiddenIDs);
       expect(state.childrenHiddenIDs.has('arrived')).toBe(false);
       expect(state.detailStates).toBe(previous.detailStates);
-      expect(state.prunedServices).toBe(previous.prunedServices);
+      expect(state.spanFilter).toBe(previous.spanFilter);
       expect(state.shouldScrollToFirstUiFindMatch).toBe(true);
       expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBe(0.5);
     });
@@ -682,6 +706,7 @@ describe('trace timeline zustand stores', () => {
           childrenHiddenIDs: new Set(['span-x']),
           detailStates: new Map([['span-x', new DetailState()]]),
           shouldScrollToFirstUiFindMatch: true,
+          spanFilter: withHiddenServices(EMPTY_SPAN_FILTER, new Set(['svc-a'])),
         });
         useTraceTimelineStore.getState().setTrace(makeTrace('new-trace'));
         const s = useTraceTimelineStore.getState();
@@ -689,6 +714,13 @@ describe('trace timeline zustand stores', () => {
         expect(s.childrenHiddenIDs.size).toBe(0);
         expect(s.detailStates.size).toBe(0);
         expect(s.shouldScrollToFirstUiFindMatch).toBe(false);
+      });
+
+      it('leaves the span filter alone when traceID changes, because the URL hook owns it', () => {
+        const filter = withHiddenServices(EMPTY_SPAN_FILTER, new Set(['svc-a']));
+        useTraceTimelineStore.setState({ traceID: 'old-trace', spanFilter: filter });
+        useTraceTimelineStore.getState().setTrace(makeTrace('new-trace'));
+        expect(useTraceTimelineStore.getState().spanFilter).toBe(filter);
       });
 
       it('preserves layout prefs when traceID changes', () => {
@@ -872,7 +904,9 @@ describe('trace timeline zustand stores', () => {
           expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('root')).toBe(true);
           expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('parent')).toBe(true);
           expect(useTraceTimelineStore.getState().detailStates.size).toBe(0);
-          useTraceTimelineStore.getState().setPrunedServices(new Set(['other-service']));
+          useTraceTimelineStore
+            .getState()
+            .setSpanFilter(withHiddenServices(EMPTY_SPAN_FILTER, new Set(['other-service'])));
 
           useTraceTimelineStore
             .getState()
@@ -883,7 +917,7 @@ describe('trace timeline zustand stores', () => {
           expect(state.childrenHiddenIDs.has('parent')).toBe(false);
           expect(state.detailStates.has('arrived')).toBe(true);
           expect(state.shouldScrollToFirstUiFindMatch).toBe(true);
-          expect(state.prunedServices).toEqual(new Set(['other-service']));
+          expect(hiddenServices(state.spanFilter)).toEqual(new Set(['other-service']));
           expect(useLayoutPrefsStore.getState().detailPanelMode).toBe(detailPanelMode);
           expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBe(0.5);
         }
@@ -893,6 +927,15 @@ describe('trace timeline zustand stores', () => {
         vi.mocked(filterSpans).mockReturnValue(new Set(['span-1']));
         vi.mocked(spanAncestorIds).mockReturnValue([]);
         useTraceTimelineStore.getState().setTrace(makeTrace('t1'), 'myFind');
+        expect(useTraceTimelineStore.getState().shouldScrollToFirstUiFindMatch).toBe(true);
+      });
+
+      it('focuses a given set of matches without searching the spans again', () => {
+        vi.mocked(filterSpans).mockClear();
+        vi.mocked(spanAncestorIds).mockReturnValue([]);
+        useTraceTimelineStore.getState().setTrace(makeTrace('t1'), new Set(['span-1']));
+        expect(filterSpans).not.toHaveBeenCalled();
+        expect(useTraceTimelineStore.getState().detailStates.has('span-1')).toBe(true);
         expect(useTraceTimelineStore.getState().shouldScrollToFirstUiFindMatch).toBe(true);
       });
 
@@ -956,6 +999,17 @@ describe('trace timeline zustand stores', () => {
         expect(useTraceTimelineStore.getState().childrenHiddenIDs.size).toBe(0);
       });
 
+      it('skips a collapsed span that draws no children', () => {
+        const spans = [
+          makeSpan({ spanID: 'root', depth: 0, hasChildren: true }),
+          makeSpan({ spanID: 'childless', depth: 1, hasChildren: false }),
+        ];
+        const childrenHiddenIDs = new Set(['childless']);
+        useTraceTimelineStore.setState({ childrenHiddenIDs });
+        useTraceTimelineStore.getState().expandOne(spans);
+        expect(useTraceTimelineStore.getState().childrenHiddenIDs).toBe(childrenHiddenIDs);
+      });
+
       it('is a no-op when nothing is collapsed', () => {
         const spans = [makeSpan({ spanID: 'root', depth: 0, hasChildren: true })];
         const stateBefore = useTraceTimelineStore.getState();
@@ -981,6 +1035,31 @@ describe('trace timeline zustand stores', () => {
     });
 
     describe('collapseOne', () => {
+      it('spends no click on a hidden level when the targets come from the lifted tree', () => {
+        const span = (spanID: string, depth: number) => ({ spanID, depth, status: {} });
+        const root = span('root', 0);
+        const hidden = span('hidden', 1);
+        const lifted = span('lifted', 2);
+        const leaf = span('leaf', 3);
+        const targets = collapseTargets(
+          [root, hidden, lifted, leaf] as unknown as IOtelSpan[],
+          new Set(['hidden']),
+          'lift'
+        );
+        useTraceTimelineStore.getState().collapseOne(targets);
+        expect([...useTraceTimelineStore.getState().childrenHiddenIDs]).toEqual(['lifted']);
+        useTraceTimelineStore.getState().collapseOne(targets);
+        expect([...useTraceTimelineStore.getState().childrenHiddenIDs].sort()).toEqual(['lifted', 'root']);
+        useTraceTimelineStore.getState().collapseOne(targets);
+        expect(useTraceTimelineStore.getState().childrenHiddenIDs.size).toBe(2);
+        useTraceTimelineStore.getState().expandOne(targets);
+        expect([...useTraceTimelineStore.getState().childrenHiddenIDs]).toEqual(['lifted']);
+        // A collapse recorded on the hidden span has no row and is left alone.
+        useTraceTimelineStore.setState({ childrenHiddenIDs: new Set(['hidden', 'lifted']) });
+        useTraceTimelineStore.getState().expandOne(targets);
+        expect([...useTraceTimelineStore.getState().childrenHiddenIDs]).toEqual(['hidden']);
+      });
+
       it('collapses only the deepest uncollapsed parent level', () => {
         const spans = [
           makeSpan({ spanID: 'root', depth: 0, hasChildren: true }),
@@ -1111,22 +1190,11 @@ describe('trace timeline zustand stores', () => {
       });
     });
 
-    describe('setPrunedServices', () => {
-      it('sets the pruned services (cloned, not by reference)', () => {
-        const pruned = new Set(['svc-a', 'svc-b']);
-        useTraceTimelineStore.getState().setPrunedServices(pruned);
-        const stored = useTraceTimelineStore.getState().prunedServices;
-        expect(stored).toEqual(pruned);
-        expect(stored).not.toBe(pruned);
-      });
-    });
-
-    describe('clearServiceFilter', () => {
-      it('resets prunedServices to empty set', () => {
-        useTraceTimelineStore.getState().setPrunedServices(new Set(['svc-a']));
-        expect(useTraceTimelineStore.getState().prunedServices.size).toBe(1);
-        useTraceTimelineStore.getState().clearServiceFilter();
-        expect(useTraceTimelineStore.getState().prunedServices.size).toBe(0);
+    describe('setSpanFilter', () => {
+      it('stores the filter as given', () => {
+        const filter = withHiddenServices(EMPTY_SPAN_FILTER, new Set(['svc-a', 'svc-b']));
+        useTraceTimelineStore.getState().setSpanFilter(filter);
+        expect(useTraceTimelineStore.getState().spanFilter).toBe(filter);
       });
     });
 
@@ -1144,6 +1212,23 @@ describe('trace timeline zustand stores', () => {
         const s = useTraceTimelineStore.getState();
         expect(s.shouldScrollToFirstUiFindMatch).toBe(true);
         expect(s.detailStates.has('span-1')).toBe(true);
+      });
+
+      it('is a no-op when the match set is empty', () => {
+        const stateBefore = useTraceTimelineStore.getState();
+        useTraceTimelineStore.getState().focusUiFindMatches(makeTrace(), new Set());
+        expect(useTraceTimelineStore.getState()).toBe(stateBefore);
+      });
+
+      it('focuses a match set without matching the text again', () => {
+        vi.mocked(spanAncestorIds).mockReturnValue([]);
+        const trace = makeTrace('t1', [makeSpan({ spanID: 'span-a' }), makeSpan({ spanID: 'span-b' })]);
+        useTraceTimelineStore.getState().focusUiFindMatches(trace, new Set(['span-b']));
+        const s = useTraceTimelineStore.getState();
+        expect(filterSpans).not.toHaveBeenCalled();
+        expect(s.detailStates.has('span-b')).toBe(true);
+        expect(s.detailStates.has('span-a')).toBe(false);
+        expect(s.shouldScrollToFirstUiFindMatch).toBe(true);
       });
 
       it('keeps only the first match in detailStates when in side-panel mode', () => {

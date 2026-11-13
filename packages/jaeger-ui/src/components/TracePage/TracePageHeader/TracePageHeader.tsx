@@ -4,6 +4,7 @@
 import * as React from 'react';
 import { Button, InputRef, Tooltip } from 'antd';
 import _maxBy from 'lodash/maxBy';
+import memoizeOne from 'memoize-one';
 import { IoArrowBack, IoFileTrayFull, IoChevronForward, IoWarning } from 'react-icons/io5';
 import { Link } from 'react-router-dom';
 
@@ -23,7 +24,7 @@ import LabeledList from '../../common/LabeledList';
 import NewWindowIcon from '../../common/NewWindowIcon';
 import TraceName from '../../common/TraceName';
 import { TNil } from '../../../types';
-import { IOtelTrace } from '../../../types/otel';
+import { IOtelSpan, IOtelTrace } from '../../../types/otel';
 import { formatDatetime, formatDurationCompact } from '../../../utils/date';
 import { getTraceLinks } from '../../../model/link-patterns';
 import { getIncompleteTraceTooltip } from '../../../model/trace-display-helpers';
@@ -33,6 +34,7 @@ import ExternalLinks from '../../common/ExternalLinks';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import TraceId from '../../common/TraceId';
 import GenAIExecutionSummary from './GenAIExecutionSummary';
+import { isErrorSpan } from '../TraceTimelineViewer/utils';
 
 type TracePageHeaderEmbedProps = {
   canCollapse: boolean;
@@ -53,6 +55,13 @@ type TracePageHeaderEmbedProps = {
   onTraceViewChange: (viewType: ETraceViewType) => void;
   prevResult: () => void;
   resultCount: number;
+  hiddenResultCount: number;
+  // The span filter cluster: why a conversion entry is disabled, the text-to-chip conversion, and
+  // the funnel button. The funnel is null in views that cannot hide spans.
+  keepDisabledReason: string | null;
+  hideDisabledReason: string | null;
+  onConvertSearch: (verb: 'keep' | 'hide') => void;
+  spanFilterNode: React.ReactNode;
   showArchiveButton: boolean;
   showStandaloneLink: boolean;
   disableJsonView: boolean;
@@ -68,6 +77,9 @@ type TracePageHeaderEmbedProps = {
   viewRange: IViewRange;
   useOtelTerms: boolean;
 };
+
+// The header re-renders on every search keystroke, so the count is computed once per span list.
+const countErrors = memoizeOne((spans: ReadonlyArray<IOtelSpan>) => spans.filter(isErrorSpan).length);
 
 export const HEADER_ITEMS = [
   {
@@ -107,6 +119,11 @@ export const HEADER_ITEMS = [
     renderer: (trace: IOtelTrace) => trace.spans.length,
   },
   {
+    key: 'error-count',
+    label: 'Errors',
+    renderer: (trace: IOtelTrace) => countErrors(trace.spans),
+  },
+  {
     key: 'genai-calls',
     label: null,
     renderer: (trace: IOtelTrace) =>
@@ -135,6 +152,11 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     onTraceViewChange,
     prevResult,
     resultCount,
+    hiddenResultCount,
+    keepDisabledReason,
+    hideDisabledReason,
+    onConvertSearch,
+    spanFilterNode,
     showArchiveButton,
     showStandaloneLink,
     showViewOptions,
@@ -236,6 +258,11 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           prevResult={prevResult}
           ref={forwardedRef}
           resultCount={resultCount}
+          hiddenResultCount={hiddenResultCount}
+          keepDisabledReason={keepDisabledReason}
+          hideDisabledReason={hideDisabledReason}
+          onConvertSearch={onConvertSearch}
+          spanFilterNode={spanFilterNode}
           textFilter={textFilter}
           navigable={viewTypeIsNavigable(viewType)}
           useOtelTerms={useOtelTerms}

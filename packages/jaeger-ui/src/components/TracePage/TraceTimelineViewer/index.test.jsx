@@ -11,12 +11,13 @@ import * as track from './store.track';
 import * as KeyboardShortcuts from '../keyboard-shortcuts';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
+import { EMPTY_SPAN_FILTER, withHiddenServices } from '../spanFilter';
 
 const { mockLayoutPrefsStore, mockTraceTimelineStore, mockUseTraceTimelineStore } = vi.hoisted(() => {
   const mockTraceTimelineStore = {
     detailStates: new Map(),
-    prunedServices: new Set(),
-    setPrunedServices: vi.fn(),
+    spanFilter: { clauses: [], treeMode: 'remove' },
+    setSpanFilter: vi.fn(),
     collapseAll: vi.fn(),
     collapseOne: vi.fn(),
     expandAll: vi.fn(),
@@ -35,6 +36,7 @@ const { mockLayoutPrefsStore, mockTraceTimelineStore, mockUseTraceTimelineStore 
       sidePanelWidth: 0.375,
       detailPanelMode: 'inline',
       timelineBarsVisible: true,
+      heatmapEnabled: false,
       setSpanNameColumnWidth: vi.fn(),
       setSidePanelWidth: vi.fn(),
       setTimelineBarsVisible: vi.fn(),
@@ -58,23 +60,20 @@ vi.mock('./store', () => ({
   MIN_TIMELINE_COLUMN_WIDTH: 0.05,
 }));
 
-const mockUseServiceFilter = vi.hoisted(() => ({
-  prunedServices: new Set(),
-  serviceFilterNode: null,
-}));
-vi.mock('./useServiceFilter', () => ({
-  useServiceFilter: vi.fn(() => mockUseServiceFilter),
-}));
 const mockUseSpanPillsEnabled = vi.hoisted(() => vi.fn(() => true));
 vi.mock('./spanPills', () => ({
   useSpanPillsEnabled: mockUseSpanPillsEnabled,
 }));
-vi.mock('./VirtualizedTraceView', () => mockDefault(() => <div data-testid="virtualized-trace-view-mock" />));
+vi.mock('./VirtualizedTraceView', () =>
+  mockDefault(props => (
+    <div data-testid="virtualized-trace-view-mock" data-list-top-offset-key={props.listTopOffsetKey} />
+  ))
+);
 vi.mock('./SpanDetailSidePanel', () => mockDefault(() => <div data-testid="span-detail-side-panel-mock" />));
 vi.mock('./TimelineHeaderRow', () =>
   mockDefault(props => (
     <div data-testid="timeline-header-row-mock" data-side-panel-label={props.sidePanelLabel}>
-      {props.serviceFilterNode}
+      {props.spanFilterNode}
       <button
         data-testid="header-side-panel-change"
         type="button"
@@ -138,10 +137,9 @@ describe('<TraceTimelineViewer>', () => {
     mockLayoutPrefsStore.sidePanelWidth = 0.375;
     mockLayoutPrefsStore.detailPanelMode = 'inline';
     mockLayoutPrefsStore.timelineBarsVisible = true;
+    mockLayoutPrefsStore.heatmapEnabled = false;
     mockTraceTimelineStore.detailStates = new Map();
     mockUseTraceTimelineStore.setState.mockClear();
-    mockUseServiceFilter.prunedServices = new Set();
-    mockUseServiceFilter.serviceFilterNode = null;
     mockUseSpanPillsEnabled.mockClear();
     jest.spyOn(KeyboardShortcuts, 'merge').mockClear();
   });
@@ -200,6 +198,84 @@ describe('<TraceTimelineViewer>', () => {
     }
   });
 
+  it('remeasures the list offset when the page header changes height', () => {
+    const offsetKey = () =>
+      screen.getByTestId('virtualized-trace-view-mock').getAttribute('data-list-top-offset-key');
+    const { rerender } = render(<TraceTimelineViewerImpl {...props} pageHeaderHeight={80} />);
+    const before = offsetKey();
+
+    rerender(<TraceTimelineViewerImpl {...props} pageHeaderHeight={165} />);
+    expect(offsetKey()).not.toBe(before);
+
+    // The legend's height is part of the key too, and the header still counts with it.
+    mockLayoutPrefsStore.heatmapEnabled = true;
+    rerender(<TraceTimelineViewerImpl {...props} pageHeaderHeight={165} />);
+    const withLegend = offsetKey();
+    rerender(<TraceTimelineViewerImpl {...props} pageHeaderHeight={80} />);
+    expect(offsetKey()).not.toBe(withLegend);
+  });
+
+  describe('latency heatmap', () => {
+    it('shows the legend only while the heatmap is on', () => {
+      const { container, rerender } = render(<TraceTimelineViewerImpl {...props} />);
+      expect(screen.queryByRole('group', { name: /latency heatmap legend/i })).not.toBeInTheDocument();
+      expect(container.firstChild).not.toHaveClass('is-heatmapEnabled');
+
+      mockLayoutPrefsStore.heatmapEnabled = true;
+      rerender(<TraceTimelineViewerImpl {...props} />);
+      expect(screen.getByRole('group', { name: /latency heatmap legend/i })).toBeInTheDocument();
+      expect(container.firstChild).toHaveClass('is-heatmapEnabled');
+    });
+
+    it('sizes the space below the legend from its rendered height', () => {
+      mockLayoutPrefsStore.heatmapEnabled = true;
+      const heightSpy = vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(86);
+      try {
+        const { container } = render(<TraceTimelineViewerImpl {...props} />);
+        expect(container.firstChild.style.getPropertyValue('--heatmap-legend-height')).toBe('86px');
+      } finally {
+        heightSpy.mockRestore();
+      }
+    });
+
+    it('shows the legend in side panel mode too', () => {
+      mockLayoutPrefsStore.detailPanelMode = 'sidepanel';
+      mockLayoutPrefsStore.heatmapEnabled = true;
+      render(<TraceTimelineViewerImpl {...props} />);
+      expect(screen.getByRole('group', { name: /latency heatmap legend/i })).toBeInTheDocument();
+    });
+
+    it('starts the side panel below both the header and the legend', () => {
+      mockLayoutPrefsStore.detailPanelMode = 'sidepanel';
+
+      // The legend is a fixed band like the header, so it doesn't move the layout container.
+      const rectSpy = jest
+        .spyOn(Element.prototype, 'getBoundingClientRect')
+        .mockImplementation(() => ({ top: 80, bottom: 0, left: 0, right: 0, height: 0, width: 0 }));
+
+      try {
+        const { container, rerender } = render(<TraceTimelineViewerImpl {...props} />);
+        const panel = container.querySelector('.TraceTimelineViewer--sidePanel');
+        expect(panel.style.top).toBe('calc(80px + var(--timeline-header-row-height))');
+
+        mockLayoutPrefsStore.heatmapEnabled = true;
+        rerender(<TraceTimelineViewerImpl {...props} />);
+        expect(panel.style.top).toBe(
+          'calc(80px + (var(--timeline-header-row-height) + var(--heatmap-legend-height)))'
+        );
+        expect(panel.style.height).toBe(
+          'calc(100vh - 80px - (var(--timeline-header-row-height) + var(--heatmap-legend-height)))'
+        );
+
+        mockLayoutPrefsStore.heatmapEnabled = false;
+        rerender(<TraceTimelineViewerImpl {...props} />);
+        expect(panel.style.top).toBe('calc(80px + var(--timeline-header-row-height))');
+      } finally {
+        rectSpy.mockRestore();
+      }
+    });
+  });
+
   it('sets up actions', () => {
     render(<TraceTimelineViewerImpl {...props} />);
 
@@ -218,6 +294,34 @@ describe('<TraceTimelineViewer>', () => {
     fireEvent.click(screen.getByTestId('expand-one-button'));
     expect(track.trackExpandOne).toHaveBeenCalledTimes(1);
     expect(mockTraceTimelineStore.expandOne).toHaveBeenCalledWith(props.trace.spans);
+  });
+
+  it('hands the bulk collapse actions the spans that have rows, at their depth in the drawn tree', () => {
+    const root = props.trace.spans[0];
+    const hiddenService = root.resource.serviceName;
+    mockTraceTimelineStore.spanFilter = withHiddenServices(
+      { ...EMPTY_SPAN_FILTER, treeMode: 'lift' },
+      new Set([hiddenService])
+    );
+    try {
+      render(<TraceTimelineViewerImpl {...props} />);
+      fireEvent.click(screen.getByTestId('collapse-all-button'));
+      fireEvent.click(screen.getByTestId('collapse-one-button'));
+      fireEvent.click(screen.getByTestId('expand-one-button'));
+      const targets = mockTraceTimelineStore.collapseAll.mock.calls[0][0];
+      expect(mockTraceTimelineStore.collapseOne.mock.calls[0][0]).toBe(targets);
+      expect(mockTraceTimelineStore.expandOne.mock.calls[0][0]).toBe(targets);
+      const hiddenIDs = new Set(
+        props.trace.spans.filter(s => s.resource.serviceName === hiddenService).map(s => s.spanID)
+      );
+      expect(targets.length).toBe(props.trace.spans.length - hiddenIDs.size);
+      expect(targets.every(t => !hiddenIDs.has(t.spanID))).toBe(true);
+      // The root is hidden, so every remaining span is lifted at least one level.
+      const depthOf = new Map(props.trace.spans.map(s => [s.spanID, s.depth]));
+      expect(targets.every(t => t.depth < depthOf.get(t.spanID))).toBe(true);
+    } finally {
+      mockTraceTimelineStore.spanFilter = { clauses: [], treeMode: 'remove' };
+    }
   });
 
   it('tracks each header action before updating the store', () => {
@@ -321,6 +425,6 @@ describe('<TraceTimelineViewer>', () => {
     });
 
     // Side panel cleanup when a selected span's service is pruned is tested
-    // in useServiceFilter.test.ts (the hook owns that logic now).
+    // in useServiceFilter.test.ts (the page's span filter hook owns that logic now).
   });
 });

@@ -5,14 +5,16 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
-import SpanBarRow from './SpanBarRow';
+import SpanBarRow, { SpanListTooltip, TOOLTIP_SPAN_LIMIT } from './SpanBarRow';
+import SpanTreeOffset from './SpanTreeOffset';
 import SpanBar from './SpanBar';
+import colorGenerator from '../../../utils/color-generator';
 import { makeAttributes } from '../../../model/attributes';
 import { GEN_AI_REQUEST_MODEL } from '../../../constants/span-attributes';
 
 vi.mock('./SpanTreeOffset', () => ({
-  default: jest.fn(({ span, childrenVisible, onClick }) => (
-    <div data-testid="span-tree-offset" onClick={onClick}>
+  default: jest.fn(({ span, childrenVisible, onClick, color }) => (
+    <div data-testid="span-tree-offset" data-color={color} onClick={onClick}>
       SpanTreeOffset: {span.spanID} - {childrenVisible ? 'expanded' : 'collapsed'}
     </div>
   )),
@@ -83,6 +85,7 @@ describe('<SpanBarRow>', () => {
       instrumentationScope: { name: 'scope' },
       depth: 0,
       hasChildren: true,
+      childSpans: [{ spanID: 'child-span-id' }],
       relativeStartTime: 100,
       inboundLinks: [],
       warnings: null,
@@ -143,6 +146,14 @@ describe('<SpanBarRow>', () => {
     fireEvent.click(treeOffset);
     expect(defaultProps.onChildrenToggled).toHaveBeenCalledTimes(1);
     expect(defaultProps.onChildrenToggled).toHaveBeenCalledWith(spanID);
+  });
+
+  it('keeps the tree markers on the service color when the bar takes another color', () => {
+    render(<SpanBarRow {...defaultProps} color="var(--heatmap-7)" />);
+    expect(screen.getByTestId('span-tree-offset')).toHaveAttribute(
+      'data-color',
+      colorGenerator.getColorByKey('service-name')
+    );
   });
 
   it('shows ReferencesButton when span has multiple references', () => {
@@ -485,6 +496,62 @@ describe('<SpanBarRow>', () => {
       expect(error).toBeTruthy();
       // DOCUMENT_POSITION_FOLLOWING (4): error comes after decoration in the tree.
       expect(decoration.compareDocumentPosition(error) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+  });
+  describe('lift mode', () => {
+    const hiddenSpan = {
+      spanID: 'hidden-1',
+      name: 'gateway',
+      resource: { serviceName: 'mcp-gateway' },
+    };
+    const errorSpan = { spanID: 'err-1', name: 'GET /pods', resource: { serviceName: 'k8s-api' } };
+    const liftedTree = {
+      parentOf: () => null,
+      isLastChild: () => false,
+      depthOf: () => 1,
+      childCount: () => 0,
+      liftedPast: () => [hiddenSpan],
+      hiddenErrors: () => [errorSpan, errorSpan, errorSpan, errorSpan, errorSpan, errorSpan, errorSpan],
+      hiddenErrorIDs: () => new Set(['err-1']),
+    };
+
+    it('draws the indent guides from the lifted tree', () => {
+      render(<SpanBarRow {...defaultProps} tree={liftedTree} />);
+      expect(SpanTreeOffset.mock.lastCall[0].tree).toBe(liftedTree);
+    });
+
+    it('marks a lifted row with the connector glyph and names the hidden spans on hover', async () => {
+      render(<SpanBarRow {...defaultProps} tree={liftedTree} />);
+      fireEvent.mouseEnter(screen.getByTestId('lifted-glyph'));
+      const tooltip = await screen.findByRole('tooltip');
+      expect(tooltip).toHaveTextContent('Lifted past 1 hidden span');
+      expect(tooltip.querySelectorAll('li')).toHaveLength(1);
+      expect(tooltip.querySelector('li')).toHaveTextContent('mcp-gateway::gateway');
+    });
+
+    it('shows a hidden-errors badge whose hover text names at most a few spans', () => {
+      render(<SpanBarRow {...defaultProps} tree={liftedTree} />);
+      expect(screen.getByTestId('hidden-errors')).toHaveTextContent('7 hidden errors');
+      const { container } = render(<SpanListTooltip heading="Hidden" spans={liftedTree.hiddenErrors()} />);
+      const items = container.querySelectorAll('li');
+      expect(items).toHaveLength(TOOLTIP_SPAN_LIMIT + 1);
+      expect(items[0]).toHaveTextContent('k8s-api::GET /pods');
+      expect(items[TOOLTIP_SPAN_LIMIT]).toHaveTextContent('and 1 more');
+    });
+
+    it('reads whether the row has children from the tree, not from the span', () => {
+      render(<SpanBarRow {...defaultProps} tree={liftedTree} />);
+      expect(screen.queryByTestId('lifted-glyph')).toBeInTheDocument();
+      expect(screen.queryByTestId('hidden-errors')).toBeInTheDocument();
+      // The SpanTreeOffset mock toggles children through onClick; with no children the row passes none.
+      fireEvent.click(screen.getByTestId('span-tree-offset'));
+      expect(defaultProps.onChildrenToggled).not.toHaveBeenCalled();
+    });
+
+    it('renders neither the glyph nor the badge for a span of the plain tree', () => {
+      render(<SpanBarRow {...defaultProps} />);
+      expect(screen.queryByTestId('lifted-glyph')).toBeNull();
+      expect(screen.queryByTestId('hidden-errors')).toBeNull();
     });
   });
 });

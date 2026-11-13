@@ -31,6 +31,7 @@ function getAccessors() {
     getViewRange: jest.fn(() => [0, 1]),
     getSearchedSpanIDs: jest.fn(),
     getCollapsedChildren: jest.fn(),
+    getHiddenSpanIDs: jest.fn(() => new Set()),
     getViewHeight: jest.fn(() => SPAN_HEIGHT * 2),
     getBottomRowIndexVisible: jest.fn(),
     getTopRowIndexVisible: jest.fn(),
@@ -118,6 +119,13 @@ describe('ScrollManager', () => {
       expect(scrollPastMock.mock.calls.length).toBe(0);
     });
 
+    it('does nothing when no span has a row', () => {
+      accessors.mapRowIndexToSpanIndex.mockReturnValue(undefined);
+      manager._scrollToVisibleSpan(1, 0);
+      manager._scrollToVisibleSpan(-1);
+      expect(scrollPastMock).not.toHaveBeenCalled();
+    });
+
     it('does nothing if already at the boundary', () => {
       accessors.getTopRowIndexVisible.mockReturnValue(0);
       accessors.getBottomRowIndexVisible.mockReturnValue(trace.spans.length - 1);
@@ -155,6 +163,72 @@ describe('ScrollManager', () => {
       expect(scrollPastMock).toHaveBeenLastCalledWith(4, 1);
       manager._scrollToVisibleSpan(-1);
       expect(scrollPastMock).toHaveBeenLastCalledWith(4, -1);
+    });
+
+    it('does nothing when the search has matches but the filter hides them all', () => {
+      accessors.getSearchedSpanIDs = () => new Set();
+      manager._scrollToVisibleSpan(1, 0);
+      expect(manager._scrollPast).not.toHaveBeenCalled();
+      expect(accessors.mapSpanIndexToRowIndex).not.toHaveBeenCalled();
+    });
+
+    it('skips spans that the filter hides', () => {
+      accessors.getTopRowIndexVisible.mockReturnValue(trace.spans.length - 1);
+      accessors.getBottomRowIndexVisible.mockReturnValue(0);
+      accessors.getHiddenSpanIDs = () => new Set(trace.spans.slice(1, 4).map(s => s.spanID));
+      manager._scrollToVisibleSpan(1);
+      expect(scrollPastMock).toHaveBeenLastCalledWith(4, 1);
+    });
+
+    it('falls back to the first span with a row when the filter hides the boundary span', () => {
+      accessors.getTopRowIndexVisible.mockReturnValue(5);
+      accessors.getBottomRowIndexVisible.mockReturnValue(5);
+      accessors.getHiddenSpanIDs = () => new Set([trace.spans[0].spanID, trace.spans[1].spanID]);
+      accessors.getSearchedSpanIDs = () => new Set([trace.spans[7].spanID]);
+      manager._scrollToVisibleSpan(-1);
+      expect(scrollPastMock).toHaveBeenLastCalledWith(2, -1);
+    });
+
+    it('falls back to the last span with a row when the filter hides the trailing spans', () => {
+      const n = trace.spans.length;
+      accessors.getTopRowIndexVisible.mockReturnValue(5);
+      accessors.getBottomRowIndexVisible.mockReturnValue(5);
+      accessors.getHiddenSpanIDs = () => new Set([trace.spans[n - 1].spanID, trace.spans[n - 2].spanID]);
+      accessors.getSearchedSpanIDs = () => new Set([trace.spans[0].spanID]);
+      manager._scrollToVisibleSpan(1);
+      expect(scrollPastMock).toHaveBeenLastCalledWith(n - 3, 1);
+    });
+
+    it('ignores the collapse state of a hidden span, which has no row to expand it from', () => {
+      const [, hidden, lifted] = trace.spans;
+      lifted.parentSpan = hidden;
+      accessors.getTopRowIndexVisible.mockReturnValue(trace.spans.length - 1);
+      accessors.getBottomRowIndexVisible.mockReturnValue(0);
+      accessors.getHiddenSpanIDs = () => new Set([hidden.spanID]);
+      accessors.getCollapsedChildren = () => new Set([hidden.spanID]);
+      manager._scrollToVisibleSpan(1);
+      expect(scrollPastMock).toHaveBeenLastCalledWith(2, 1);
+    });
+
+    it('skips a lifted span whose visible ancestor is collapsed', () => {
+      const [root, hidden, lifted] = trace.spans;
+      hidden.parentSpan = root;
+      lifted.parentSpan = hidden;
+      accessors.getTopRowIndexVisible.mockReturnValue(trace.spans.length - 1);
+      accessors.getBottomRowIndexVisible.mockReturnValue(0);
+      accessors.getHiddenSpanIDs = () => new Set([hidden.spanID]);
+      accessors.getCollapsedChildren = () => new Set([root.spanID]);
+      manager._scrollToVisibleSpan(1);
+      expect(scrollPastMock).toHaveBeenLastCalledWith(3, 1);
+    });
+
+    it('does nothing when the filter hides every span', () => {
+      accessors.getTopRowIndexVisible.mockReturnValue(5);
+      accessors.getBottomRowIndexVisible.mockReturnValue(5);
+      accessors.getHiddenSpanIDs = () => new Set(trace.spans.map(s => s.spanID));
+      manager._scrollToVisibleSpan(-1);
+      manager._scrollToVisibleSpan(1);
+      expect(scrollPastMock).not.toHaveBeenCalled();
     });
 
     it('scrolls to boundary when scrolling away from closest spanID in findMatches', () => {

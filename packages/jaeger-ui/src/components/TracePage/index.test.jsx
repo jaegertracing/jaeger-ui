@@ -23,6 +23,7 @@ import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
 import { trackDetailPanelMode, trackTimelineBarsVisible } from './TraceTimelineViewer/store.track';
 import traceGenerator from '../../demo/trace-generators';
 import transformTraceData from '../../model/transform-trace-data';
+import { EMPTY_SPAN_FILTER, withHiddenServices } from './spanFilter';
 import filterSpansSpy from '../../utils/filter-spans';
 import updateUiFindSpy from '../../utils/update-ui-find';
 import { queryClient } from '../../query/app-query-client';
@@ -138,7 +139,9 @@ const {
   },
   mockTraceTimelineStore: {
     focusUiFindMatches: jest.fn(),
-    prunedServices: new Set(),
+    setSpanFilter: jest.fn(),
+    detailStates: new Map(),
+    spanFilter: { clauses: [], treeMode: 'lift' },
   },
   useEmbeddedStateMock: jest.fn().mockReturnValue(null),
   useTraceMock: jest.fn(),
@@ -193,10 +196,14 @@ vi.mock('./TracePageHeader', async () => {
 });
 
 const mockNavigate = jest.fn();
+// The span filter hook reads the URL through useLocation; the tests render TracePage with a
+// location prop and mostly without a Router, so the hook sees this fixed location.
+const mockLocation = { pathname: '/trace/abc', search: '', state: null };
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
+    useLocation: () => mockLocation,
     useNavigate: () => mockNavigate,
   };
 });
@@ -402,12 +409,18 @@ describe('<TracePage>', () => {
         trackFocusSpy.mockReset();
       });
 
-      it('updates Zustand when props.trace.data is present', () => {
+      it('updates Zustand with the highlighted span set when props.trace.data is present', () => {
         const uiFind = 'test ui find';
-        render(<TracePage {...defaultProps} uiFind={uiFind} />);
-        capturedHeaderProps.focusUiFindMatches();
-        expect(mockTraceTimelineStore.focusUiFindMatches).toHaveBeenCalledWith(trace, uiFind);
-        expect(trackFocusSpy).toHaveBeenCalledTimes(1);
+        const matched = new Set([trace.spans[0].spanID]);
+        filterSpansSpy.mockReturnValue(matched);
+        try {
+          render(<TracePage {...defaultProps} uiFind={uiFind} />);
+          capturedHeaderProps.focusUiFindMatches();
+          expect(mockTraceTimelineStore.focusUiFindMatches).toHaveBeenCalledWith(trace, matched);
+          expect(trackFocusSpy).toHaveBeenCalledTimes(1);
+        } finally {
+          filterSpansSpy.mockImplementation(() => new Set());
+        }
       });
 
       it('handles when trace data is absent', () => {
@@ -479,6 +492,186 @@ describe('<TracePage>', () => {
     rerender(<TracePage {...defaultProps} params={{ id: 'different-trace-id' }} uiFind={uiFind} />);
     expect(filterSpansSpy).toHaveBeenCalledTimes(2);
     expect(filterSpansSpy).toHaveBeenLastCalledWith(uiFind, otherTrace.spans);
+  });
+
+  it('excludes the spans of a pruned service and their descendants from the search matches', async () => {
+    const { default: realFilterSpans } = await vi.importActual('../../utils/filter-spans');
+    filterSpansSpy.mockImplementation(realFilterSpans);
+    const raw = traceGenerator.trace({ numberOfSpans: 3 });
+    // Every span matches the search; the second span's service is pruned, and the third span is
+    // its child, so only the first span stays in the count.
+    // The three spans get distinct services, so the chain root -> pruned -> grandchild is the same
+    // on every run.
+    raw.processes = {
+      p0: { processID: 'p0', serviceName: 'svc-root', tags: [] },
+      p1: { processID: 'p1', serviceName: 'svc-pruned', tags: [] },
+      p2: { processID: 'p2', serviceName: 'svc-grandchild', tags: [] },
+    };
+    raw.spans.forEach((span, i) => {
+      span.operationName = 'everywhere';
+      span.processID = `p${i}`;
+    });
+    raw.spans[1].references = [{ refType: 'CHILD_OF', traceID: raw.traceID, spanID: raw.spans[0].spanID }];
+    raw.spans[2].references = [{ refType: 'CHILD_OF', traceID: raw.traceID, spanID: raw.spans[1].spanID }];
+    const localTrace = transformTraceData(raw).asOtelTrace();
+    useTraceMock.mockReturnValue({ data: localTrace, isPending: false, isError: false, error: null });
+    mockTraceTimelineStore.spanFilter = withHiddenServices(
+      { ...EMPTY_SPAN_FILTER, treeMode: 'remove' },
+      new Set(['svc-pruned'])
+    );
+
+    render(<TracePage {...defaultProps} params={{ id: raw.traceID }} uiFind="everywhere" />);
+
+    // Span 1 and its descendant are hidden, so only the root span stays in the count.
+    expect(capturedHeaderProps.resultCount).toBe(1);
+    mockTraceTimelineStore.spanFilter = EMPTY_SPAN_FILTER;
+    filterSpansSpy.mockImplementation(() => new Set());
+  });
+
+  it('hands the header the funnel and disables the keep entry in remove mode', () => {
+    mockTraceTimelineStore.spanFilter = { ...EMPTY_SPAN_FILTER, treeMode: 'remove' };
+    try {
+      render(<TracePage {...defaultProps} />);
+      expect(capturedHeaderProps.keepDisabledReason).toMatch(/Lift to its parent/);
+      expect(capturedHeaderProps.spanFilterNode).toBeTruthy();
+    } finally {
+      mockTraceTimelineStore.spanFilter = EMPTY_SPAN_FILTER;
+    }
+  });
+
+  it('enables the keep entry in lift mode while the text matches a span', () => {
+    mockTraceTimelineStore.spanFilter = { ...EMPTY_SPAN_FILTER, treeMode: 'lift' };
+    filterSpansSpy.mockImplementation(() => new Set([trace.spans[1].spanID]));
+    try {
+      render(<TracePage {...defaultProps} uiFind="x" />);
+      expect(capturedHeaderProps.keepDisabledReason).toBeNull();
+      expect(capturedHeaderProps.hideDisabledReason).toBeNull();
+    } finally {
+      mockTraceTimelineStore.spanFilter = EMPTY_SPAN_FILTER;
+      filterSpansSpy.mockImplementation(() => new Set());
+    }
+  });
+
+  it('disables the keep entry when the text matches no span, and the hide entry when it matches every span', () => {
+    mockTraceTimelineStore.spanFilter = { ...EMPTY_SPAN_FILTER, treeMode: 'lift' };
+    try {
+      const { unmount } = render(<TracePage {...defaultProps} uiFind="x" />);
+      expect(capturedHeaderProps.keepDisabledReason).toMatch(/leave no span/);
+      expect(capturedHeaderProps.hideDisabledReason).toBeNull();
+      unmount();
+      filterSpansSpy.mockImplementation(() => new Set(trace.spans.map(s => s.spanID)));
+      render(<TracePage {...defaultProps} uiFind="x" />);
+      expect(capturedHeaderProps.hideDisabledReason).toMatch(/leave no span/);
+    } finally {
+      mockTraceTimelineStore.spanFilter = EMPTY_SPAN_FILTER;
+      filterSpansSpy.mockImplementation(() => new Set());
+    }
+  });
+
+  it('counts a root the filter already hides as covered by the hide entry guard', () => {
+    // Two roots: the first is hidden by its kind, and the text matches only the second.
+    const raw = traceGenerator.trace({ numberOfSpans: 3 });
+    raw.spans[1].references = [];
+    raw.spans[2].references = [{ refType: 'CHILD_OF', traceID: raw.traceID, spanID: raw.spans[1].spanID }];
+    raw.spans.forEach((span, i) => {
+      span.tags = span.tags.filter(t => t.key !== 'span.kind');
+      span.tags.push({ key: 'span.kind', type: 'string', value: i === 0 ? 'producer' : 'server' });
+    });
+    const localTrace = transformTraceData(raw).asOtelTrace();
+    expect(localTrace.rootSpans).toHaveLength(2);
+    useTraceMock.mockReturnValue({ data: localTrace, isPending: false, isError: false, error: null });
+    mockTraceTimelineStore.spanFilter = {
+      treeMode: 'remove',
+      clauses: [{ verb: 'hide', criterion: { shape: 'set', property: 'kind', values: ['producer'] } }],
+    };
+    filterSpansSpy.mockImplementation(() => new Set([raw.spans[1].spanID]));
+    try {
+      render(<TracePage {...defaultProps} params={{ id: raw.traceID }} uiFind="x" />);
+      expect(capturedHeaderProps.hideDisabledReason).toMatch(/leave no span/);
+    } finally {
+      mockTraceTimelineStore.spanFilter = EMPTY_SPAN_FILTER;
+      filterSpansSpy.mockImplementation(() => new Set());
+    }
+  });
+
+  it('disables the hide entry in remove mode when the text matches every root span', () => {
+    mockTraceTimelineStore.spanFilter = { ...EMPTY_SPAN_FILTER, treeMode: 'remove' };
+    filterSpansSpy.mockImplementation(() => new Set(trace.rootSpans.map(s => s.spanID)));
+    try {
+      render(<TracePage {...defaultProps} uiFind="x" />);
+      expect(capturedHeaderProps.hideDisabledReason).toMatch(/leave no span/);
+    } finally {
+      mockTraceTimelineStore.spanFilter = EMPTY_SPAN_FILTER;
+      filterSpansSpy.mockImplementation(() => new Set());
+    }
+  });
+
+  it('counts every text match in the statistics view, which draws the whole trace', () => {
+    const [root] = trace.spans;
+    mockTraceTimelineStore.spanFilter = {
+      clauses: [
+        {
+          verb: 'hide',
+          criterion: { shape: 'set', property: 'service', values: [root.resource.serviceName] },
+        },
+      ],
+      treeMode: 'lift',
+    };
+    // The text matches the root, which the filter hides in the timeline.
+    const textMatches = trace.spans.slice(0, 3);
+    filterSpansSpy.mockReturnValue(new Set(textMatches.map(s => s.spanID)));
+    try {
+      render(<TracePage {...defaultProps} uiFind="text" />);
+      const shown = textMatches.filter(s => s.resource.serviceName !== root.resource.serviceName);
+      expect(capturedHeaderProps.resultCount).toBe(shown.length);
+      expect(capturedHeaderProps.hiddenResultCount).toBe(textMatches.length - shown.length);
+      act(() => capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceStatistics));
+      expect(capturedHeaderProps.resultCount).toBe(textMatches.length);
+      expect(capturedHeaderProps.hiddenResultCount).toBe(0);
+    } finally {
+      mockTraceTimelineStore.spanFilter = EMPTY_SPAN_FILTER;
+    }
+  });
+
+  it('hands the header no funnel in the graph view, which draws the whole trace', () => {
+    render(<TracePage {...defaultProps} />);
+    expect(capturedHeaderProps.spanFilterNode).toBeTruthy();
+    act(() => capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceGraph));
+    expect(capturedHeaderProps.spanFilterNode).toBeNull();
+  });
+
+  it('does not add a second copy of a chip the filter already has', () => {
+    mockTraceTimelineStore.spanFilter = {
+      clauses: [{ verb: 'hide', criterion: { shape: 'text', text: 'auth' } }],
+      treeMode: 'remove',
+    };
+    try {
+      render(<TracePage {...defaultProps} uiFind="auth" />);
+      capturedHeaderProps.onConvertSearch('hide');
+      expect(mockTraceTimelineStore.setSpanFilter).toHaveBeenLastCalledWith(
+        mockTraceTimelineStore.spanFilter
+      );
+    } finally {
+      mockTraceTimelineStore.spanFilter = EMPTY_SPAN_FILTER;
+    }
+  });
+
+  it('turns the search text into a hide chip and drops the text in one navigation', () => {
+    mockLocation.search = '?uiFind=auth';
+    try {
+      render(<TracePage {...defaultProps} uiFind="auth" />);
+      capturedHeaderProps.onConvertSearch('hide');
+      expect(mockTraceTimelineStore.setSpanFilter).toHaveBeenLastCalledWith({
+        clauses: [{ verb: 'hide', criterion: { shape: 'text', text: 'auth' } }],
+        treeMode: 'lift',
+      });
+      expect(mockNavigate).toHaveBeenLastCalledWith(
+        expect.objectContaining({ pathname: '/trace/abc', search: '?f=h%3Atext%3Aauth' }),
+        expect.anything()
+      );
+    } finally {
+      mockLocation.search = '';
+    }
   });
 
   it('updates search matches when a same-ID reload adds a matching span', async () => {

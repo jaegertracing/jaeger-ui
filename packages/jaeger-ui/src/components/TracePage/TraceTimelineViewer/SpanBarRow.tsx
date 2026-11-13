@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useCallback } from 'react';
+import { Tooltip } from 'antd';
 import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward } from 'react-icons/io5';
+import { RECORDED_TREE, VisibleTree } from './generateRowStates';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
 import { formatDurationCompact, ViewedBoundsFunctionType } from './utils';
@@ -12,6 +14,7 @@ import { SpanDecorationIcon } from './SpanDecorationIcon';
 import Ticks from './Ticks';
 
 import { TNil } from '../../../types';
+import colorGenerator from '../../../utils/color-generator';
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan } from '../../../types/otel';
 import { SpanPill } from './spanPills';
@@ -56,7 +59,31 @@ type SpanBarRowProps = {
   traceDuration: number;
   spanPillsEnabled?: boolean;
   useOtelTerms: boolean;
+  // The tree the rows draw; it differs from the span tree when the filter lifts children.
+  tree?: VisibleTree;
 };
+
+// Hover text on the connector glyph and the hidden-errors badge names this many spans at most.
+export const TOOLTIP_SPAN_LIMIT = 6;
+
+/** The body of such a tooltip: a heading and the first few spans, one per line as "service::operation". */
+export function SpanListTooltip({ heading, spans }: { heading: string; spans: ReadonlyArray<IOtelSpan> }) {
+  const shown = spans.slice(0, TOOLTIP_SPAN_LIMIT);
+  const rest = spans.length - shown.length;
+  return (
+    <div className="SpanBarRow--spanList">
+      {heading}
+      <ul>
+        {shown.map((s, i) => (
+          <li key={`${s.spanID}-${i}`}>
+            {s.resource.serviceName}::{s.name}
+          </li>
+        ))}
+        {rest > 0 && <li className="SpanBarRow--spanListMore">and {rest} more</li>}
+      </ul>
+    </div>
+  );
+}
 
 /**
  * This was originally a stateless function, but changing to a PureComponent
@@ -90,6 +117,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   onDetailToggled,
   onChildrenToggled,
   useOtelTerms,
+  tree = RECORDED_TREE,
 }) => {
   const _detailToggle = useCallback(() => {
     onDetailToggled(span.spanID);
@@ -110,10 +138,12 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   );
   const {
     duration,
-    hasChildren: isParent,
     name: operationName,
     resource: { serviceName },
   } = span;
+  const isParent = tree.childCount(span) > 0;
+  const liftedPast = tree.liftedPast(span);
+  const hiddenErrors = tree.hiddenErrors(span);
   const pills = spanPillsEnabled ? getSpanPillsForSpan(span) : [];
   // One resolver for namespace + GenAI icons; GenAI wins when both match (#4217).
   const decoration = getSpanDecorationIcon(span);
@@ -153,8 +183,11 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
           <SpanTreeOffset
             childrenVisible={isChildrenExpanded}
             span={span}
+            tree={tree}
             onClick={isParent ? _childrenToggle : undefined}
-            color={color}
+            // The tree markers stay on the service color, like the indent guides, even when the
+            // bar takes a heatmap color.
+            color={colorGenerator.getColorByKey(span.resource.serviceName)}
           />
           <a
             className={`span-name ${isDetailExpanded ? 'is-detail-expanded' : ''}`}
@@ -168,6 +201,22 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
             <span
               className={`span-svc-name ${isParent && !isChildrenExpanded ? 'is-children-collapsed' : ''}`}
             >
+              {liftedPast.length > 0 && (
+                <Tooltip
+                  mouseEnterDelay={0}
+                  rootClassName="SpanBarRow--spanListTip"
+                  title={
+                    <SpanListTooltip
+                      heading={`Lifted past ${liftedPast.length} hidden ${liftedPast.length === 1 ? 'span' : 'spans'}`}
+                      spans={liftedPast}
+                    />
+                  }
+                >
+                  <span className="SpanBarRow--liftedGlyph" data-testid="lifted-glyph">
+                    ⤷
+                  </span>
+                </Tooltip>
+              )}
               {decoration && <SpanDecorationIcon decoration={decoration} />}
               {hasOwnError && <IoAlert className="SpanBarRow--errorIcon" />}
               {!hasOwnError && hasChildError && (
@@ -196,6 +245,18 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
             {pills.map(pill => (
               <SpanPill key={pill.label} pill={pill} />
             ))}
+            {hiddenErrors.length > 0 && (
+              <Tooltip
+                mouseEnterDelay={0}
+                rootClassName="SpanBarRow--spanListTip"
+                title={<SpanListTooltip heading="Hidden spans with errors" spans={hiddenErrors} />}
+              >
+                <span className="SpanBarRow--hiddenErrors" data-testid="hidden-errors">
+                  <IoAlert className="SpanBarRow--errorIcon SpanBarRow--errorIcon--hollow" />
+                  {hiddenErrors.length} hidden {hiddenErrors.length === 1 ? 'error' : 'errors'}
+                </span>
+              </Tooltip>
+            )}
           </a>
           {hasLinks && (
             <ReferencesButton

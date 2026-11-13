@@ -5,10 +5,12 @@ import { create } from 'zustand';
 import DetailState from './SpanDetail/DetailState';
 import { useLayoutPrefsStore } from './store.layout';
 import { TNil } from '../../../types';
-import { IOtelSpan, IOtelTrace, IEvent } from '../../../types/otel';
+import { IOtelTrace, IEvent } from '../../../types/otel';
+import { EMPTY_SPAN_FILTER, ISpanFilter } from '../spanFilter';
 import {
   applyDetailSubsectionToggle,
   calculateFocusedFindRowStates,
+  CollapseTarget,
   shouldDisableCollapse,
   trimFocusedDetailStatesForSidePanel,
 } from './timeline-utils';
@@ -19,16 +21,17 @@ type TraceTimelineInteractionStore = {
   childrenHiddenIDs: Set<string>;
   detailStates: Map<string, DetailState>;
   shouldScrollToFirstUiFindMatch: boolean;
-  prunedServices: Set<string>;
-  setPrunedServices: (pruned: Set<string>) => void;
-  clearServiceFilter: () => void;
-  // Resets ephemeral fields for a new trace and optionally pre-apply a uiFind filter
-  setTrace: (trace: IOtelTrace, uiFind?: string | TNil) => void;
+  // The active span filter (RFC 0009). Consumers evaluate it over the trace they render.
+  spanFilter: ISpanFilter;
+  setSpanFilter: (filter: ISpanFilter) => void;
+  // Resets ephemeral fields for a new trace and optionally focuses the find matches, given as the
+  // search text or as the set of matching span IDs the filter leaves visible.
+  setTrace: (trace: IOtelTrace, matches?: string | ReadonlySet<string> | TNil) => void;
   childrenToggle: (spanID: string) => void;
   expandAll: () => void;
-  expandOne: (spans: ReadonlyArray<IOtelSpan>) => void;
-  collapseAll: (spans: ReadonlyArray<IOtelSpan>) => void;
-  collapseOne: (spans: ReadonlyArray<IOtelSpan>) => void;
+  expandOne: (spans: ReadonlyArray<CollapseTarget>) => void;
+  collapseAll: (spans: ReadonlyArray<CollapseTarget>) => void;
+  collapseOne: (spans: ReadonlyArray<CollapseTarget>) => void;
   detailToggle: (spanID: string) => void;
   detailTagsToggle: (spanID: string) => void;
   detailProcessToggle: (spanID: string) => void;
@@ -37,7 +40,11 @@ type TraceTimelineInteractionStore = {
   detailWarningsToggle: (spanID: string) => void;
   detailReferencesToggle: (spanID: string) => void;
   clearShouldScrollToFirstUiFindMatch: () => void;
-  focusUiFindMatches: (trace: IOtelTrace, uiFind?: string | TNil, allowHide?: boolean) => void;
+  focusUiFindMatches: (
+    trace: IOtelTrace,
+    matches: string | ReadonlySet<string> | TNil,
+    allowHide?: boolean
+  ) => void;
 };
 
 export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((set, get) => ({
@@ -46,12 +53,10 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
   childrenHiddenIDs: new Set<string>(),
   detailStates: new Map<string, DetailState>(),
   shouldScrollToFirstUiFindMatch: false,
-  prunedServices: new Set<string>(),
+  spanFilter: EMPTY_SPAN_FILTER,
 
-  setPrunedServices: (pruned: Set<string>) => set({ prunedServices: new Set(pruned) }),
-
-  clearServiceFilter: () => set({ prunedServices: new Set<string>() }),
-  setTrace: (trace: IOtelTrace, uiFind?: string | TNil) => {
+  setSpanFilter: (filter: ISpanFilter) => set({ spanFilter: filter }),
+  setTrace: (trace: IOtelTrace, matches?: string | ReadonlySet<string> | TNil) => {
     const { traceID: currentTraceID, traceSpans } = get();
     if (trace.traceID === currentTraceID && trace.spans === traceSpans) return;
 
@@ -62,14 +67,15 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
       traceSpans: trace.spans,
     };
 
-    // Across refetches of the same trace, collapse and filter selections persist,
-    // while detail states are pruned for spans that no longer exist.
+    // Across refetches of the same trace, collapse selections persist, while detail states are
+    // pruned for spans that no longer exist. The span filter is not touched here at all: the page's
+    // span filter hook resolves it from the URL for every trace, and it does so before the
+    // timeline mounts, so a reset here would wipe what the URL asked for.
     if (trace.traceID !== currentTraceID) {
       Object.assign(base, {
         childrenHiddenIDs: new Set<string>(),
         detailStates: new Map<string, DetailState>(),
         shouldScrollToFirstUiFindMatch: false,
-        prunedServices: new Set<string>(),
       });
     } else {
       const validSpanIDs = trace.spanMap;
@@ -92,8 +98,8 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
       }
     }
 
-    if (uiFind) {
-      let focused = calculateFocusedFindRowStates(uiFind, trace.spans);
+    if (matches) {
+      let focused = calculateFocusedFindRowStates(matches, trace.spans);
       focused = trimFocusedDetailStatesForSidePanel(focused, detailPanelMode);
       Object.assign(base, focused);
     }
@@ -115,26 +121,31 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
     set({ childrenHiddenIDs: new Set<string>() });
   },
 
-  expandOne: (spans: ReadonlyArray<IOtelSpan>) => {
+  expandOne: (spans: ReadonlyArray<CollapseTarget>) => {
     const current = get().childrenHiddenIDs;
     if (current.size === 0) return;
     let prevExpandedDepth = -1;
     let expandNextHiddenSpan = true;
+    let expanded = false;
     const childrenHiddenIDs = spans.reduce((res, s) => {
       if (s.depth <= prevExpandedDepth) {
         expandNextHiddenSpan = true;
       }
-      if (expandNextHiddenSpan && res.has(s.spanID)) {
+      // A collapsed span whose children are all hidden draws no children, so expanding it would
+      // spend the click on nothing.
+      if (expandNextHiddenSpan && s.hasChildren && res.has(s.spanID)) {
         res.delete(s.spanID);
+        expanded = true;
         expandNextHiddenSpan = false;
         prevExpandedDepth = s.depth;
       }
       return res;
     }, new Set(current));
-    set({ childrenHiddenIDs });
+    // An unchanged set keeps its identity, so the memoized rows are not regenerated for nothing.
+    if (expanded) set({ childrenHiddenIDs });
   },
 
-  collapseAll: (spans: ReadonlyArray<IOtelSpan>) => {
+  collapseAll: (spans: ReadonlyArray<CollapseTarget>) => {
     const { childrenHiddenIDs: current } = get();
     if (shouldDisableCollapse(spans, current)) return;
     const childrenHiddenIDs = spans.reduce((res, s) => {
@@ -144,10 +155,10 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
     set({ childrenHiddenIDs });
   },
 
-  collapseOne: (spans: ReadonlyArray<IOtelSpan>) => {
+  collapseOne: (spans: ReadonlyArray<CollapseTarget>) => {
     const { childrenHiddenIDs: current } = get();
     if (shouldDisableCollapse(spans, current)) return;
-    let nearestCollapsedAncestor: IOtelSpan | undefined;
+    let nearestCollapsedAncestor: CollapseTarget | undefined;
     const childrenHiddenIDs = spans.reduce((res, curSpan) => {
       if (nearestCollapsedAncestor && curSpan.depth <= nearestCollapsedAncestor.depth) {
         res.add(nearestCollapsedAncestor.spanID);
@@ -235,10 +246,10 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
     }
   },
 
-  focusUiFindMatches: (trace: IOtelTrace, uiFind?: string | TNil, allowHide = true) => {
-    if (!uiFind) return;
+  focusUiFindMatches: (trace: IOtelTrace, matches: string | ReadonlySet<string> | TNil, allowHide = true) => {
+    if (!matches || (typeof matches !== 'string' && matches.size === 0)) return;
     const detailPanelMode = useLayoutPrefsStore.getState().detailPanelMode;
-    let focused = calculateFocusedFindRowStates(uiFind, trace.spans, allowHide);
+    let focused = calculateFocusedFindRowStates(matches, trace.spans, allowHide);
     focused = trimFocusedDetailStatesForSidePanel(focused, detailPanelMode);
     set(focused);
   },
