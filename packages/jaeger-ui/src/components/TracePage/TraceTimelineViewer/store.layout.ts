@@ -43,7 +43,8 @@ type TraceTimelineLayoutPrefsStore = LayoutPrefs & {
   setSpanNameColumnWidth: (width: number) => void;
   setSidePanelWidth: (width: number) => void;
   // Updates layout fields only; use `setDetailPanelMode` from `./store` to also sync detail panel state.
-  // With `persist=false` the view changes but no new value is saved.
+  // With `persist=false` the view changes but no new value is saved. The call still writes this tab's
+  // saved choices, so it can overwrite a newer choice from another tab (see RFC 0007).
   applyDetailPanelModeToLayout: (mode: SpanDetailPanelMode, persist?: boolean) => void;
   setTimelineBarsVisible: (visible: boolean, persist?: boolean) => void;
   toggleHeatmap: () => void;

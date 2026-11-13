@@ -592,6 +592,14 @@ describe('trace timeline zustand stores', () => {
         expect(useLayoutPrefsStore.getState().heatmapEnabled).toBe(false);
         expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state.heatmapEnabled).toBe(false);
       });
+
+      it('saves only the heatmap after temporary layout changes', () => {
+        useLayoutPrefsStore.setState({ heatmapEnabled: false });
+        useLayoutPrefsStore.getState().setTimelineBarsVisible(false, false);
+        useLayoutPrefsStore.getState().applyDetailPanelModeToLayout('sidepanel', false);
+        useLayoutPrefsStore.getState().toggleHeatmap();
+        expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state).toEqual({ heatmapEnabled: true });
+      });
     });
   });
 
