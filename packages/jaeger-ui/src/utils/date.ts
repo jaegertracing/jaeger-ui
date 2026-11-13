@@ -1,17 +1,71 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import dayjs, { ConfigType } from 'dayjs';
+import dayjs, { ConfigType, Dayjs } from 'dayjs';
 import _dropWhile from 'lodash/dropWhile';
 import _round from 'lodash/round';
 import _duration, { DurationUnitType } from 'dayjs/plugin/duration';
 import _relativeTime from 'dayjs/plugin/relativeTime';
+import _utc from 'dayjs/plugin/utc';
 
 import { toFloatPrecision } from './number';
 import { Microseconds } from '../types/units';
 
 dayjs.extend(_duration);
 dayjs.extend(_relativeTime);
+dayjs.extend(_utc);
+
+/** Time zone setting values: the browser's local zone, or UTC. */
+export const BROWSER_TIME_ZONE = 'browser';
+export const UTC_TIME_ZONE = 'utc';
+export type TTimeZoneSetting = typeof BROWSER_TIME_ZONE | typeof UTC_TIME_ZONE;
+
+// Whether timestamps are displayed in UTC rather than the browser's local zone,
+// which is what dayjs uses by default.
+let displayInUtc = false;
+
+/** Sets the zone used by all timestamp formatting helpers. */
+export function setDisplayTimeZone(setting: TTimeZoneSetting): void {
+  displayInUtc = setting === UTC_TIME_ZONE;
+}
+
+/** @return 'UTC' when displaying in UTC, or null for the browser's local zone */
+export function getDisplayTimeZone(): 'UTC' | null {
+  return displayInUtc ? 'UTC' : null;
+}
+
+/**
+ * Converts a timestamp in milliseconds (or anything dayjs accepts) into a
+ * dayjs object in the display time zone. Omit the value for the current time.
+ */
+export function toDisplayTime(value?: ConfigType): Dayjs {
+  const m = dayjs.isDayjs(value) ? value : dayjs(value);
+  return displayInUtc ? m.utc() : m;
+}
+
+/** Parses a wall-clock string such as '2026-10-07 13:45' as a time in the display time zone. */
+export function parseDisplayTime(text: string): Dayjs {
+  return displayInUtc ? dayjs.utc(text) : dayjs(text);
+}
+
+/**
+ * @param value - timestamp in milliseconds, defaults to now (the offset can differ with DST)
+ * @return the display zone's UTC offset, e.g. 'UTC' or 'UTC+05:30'
+ */
+export function formatTimeZoneOffset(value?: ConfigType): string {
+  return displayInUtc ? 'UTC' : `UTC${toDisplayTime(value).format('Z')}`;
+}
+
+/**
+ * @param value - timestamp in milliseconds, defaults to now
+ * @return the display zone's name and offset, e.g. 'Asia/Kolkata (UTC+05:30)' or 'UTC'
+ */
+export function formatTimeZoneLabel(value?: ConfigType): string {
+  if (displayInUtc) {
+    return 'UTC';
+  }
+  return `${Intl.DateTimeFormat().resolvedOptions().timeZone} (${formatTimeZoneOffset(value)})`;
+}
 
 const TODAY = 'Today';
 const YESTERDAY = 'Yesterday';
@@ -76,7 +130,7 @@ const quantizeDuration = (duration: number, floatPrecision: number, conversionFa
  * ```
  */
 export function formatDate(duration: number): string {
-  return dayjs(duration / ONE_MILLISECOND).format(STANDARD_DATE_FORMAT);
+  return toDisplayTime(duration / ONE_MILLISECOND).format(STANDARD_DATE_FORMAT);
 }
 
 /**
@@ -89,7 +143,7 @@ export function formatDate(duration: number): string {
  * ```
  */
 export function formatTime(duration: number): string {
-  return dayjs(duration / ONE_MILLISECOND).format(STANDARD_TIME_FORMAT);
+  return toDisplayTime(duration / ONE_MILLISECOND).format(STANDARD_TIME_FORMAT);
 }
 
 /**
@@ -102,7 +156,7 @@ export function formatTime(duration: number): string {
  * ```
  */
 export function formatDatetime(duration: number): string {
-  return dayjs(duration / ONE_MILLISECOND).format(STANDARD_DATETIME_FORMAT);
+  return toDisplayTime(duration / ONE_MILLISECOND).format(STANDARD_DATETIME_FORMAT);
 }
 
 /**
@@ -191,21 +245,18 @@ export function formatDuration(duration: Microseconds): string {
 }
 
 export function formatRelativeDate(value: ConfigType, fullMonthName = false): string {
-  const m = dayjs.isDayjs(value) ? value : dayjs(value);
+  const m = toDisplayTime(value);
+  const now = toDisplayTime();
 
   const monthFormat = fullMonthName ? 'MMMM' : 'MMM';
-  const dt = new Date();
-  if (dt.getFullYear() !== m.year()) {
+  if (now.year() !== m.year()) {
     return m.format(`${monthFormat} D, YYYY`);
   }
-  const mMonth = m.month();
-  const mDate = m.date();
-  const date = dt.getDate();
-  if (mMonth === dt.getMonth() && mDate === date) {
+  const day = m.format(STANDARD_DATE_FORMAT);
+  if (day === now.format(STANDARD_DATE_FORMAT)) {
     return TODAY;
   }
-  dt.setDate(date - 1);
-  if (mMonth === dt.getMonth() && mDate === dt.getDate()) {
+  if (day === now.subtract(1, 'day').format(STANDARD_DATE_FORMAT)) {
     return YESTERDAY;
   }
   return m.format(`${monthFormat} D`);

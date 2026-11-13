@@ -1,0 +1,30 @@
+/*
+Copyright (c) 2026 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.TimeZoneSelect {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-inline: 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  background: transparent !important;
+  height: 30px;
+}
+
+.TimeZoneSelect:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.TimeZoneSelect--icon {
+  font-size: 16px;
+}
+
+.TimeZoneSelect--label {
+  font-size: 11px;
+  font-weight: 500;
+}

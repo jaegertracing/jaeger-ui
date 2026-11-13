@@ -3,13 +3,12 @@
 
 import { useMemo, useState } from 'react';
 import { Table, Button, Select, Form, Tooltip } from 'antd';
-import dayjs from 'dayjs';
 import { ColumnProps } from 'antd/es/table';
 import './index.css';
 import { TNil } from '../../../types';
 import { IOtelSpan, IOtelTrace } from '../../../types/otel';
 import RelativeBar from '../../common/RelativeBar';
-import { formatDuration, formatDurationCompact } from '../../../utils/date';
+import { formatDuration, formatDurationCompact, toDisplayTime } from '../../../utils/date';
 import prefixUrl from '../../../utils/prefix-url';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import SearchableSelect from '../../common/SearchableSelect';
@@ -188,7 +187,7 @@ export default function TraceSpanView(props: Props) {
 
         return (
           <Tooltip
-            title={`${dayjs(span.startTime / 1000).format('DD MMM YYYY hh:mm:ss A')} (${preciseValue})`}
+            title={`${toDisplayTime(span.startTime / 1000).format('DD MMM YYYY hh:mm:ss A')} (${preciseValue})`}
           >
             <span style={{ fontFamily: 'monospace', fontSize: '12px', display: 'block', textAlign: 'right' }}>
               {compactValue}
