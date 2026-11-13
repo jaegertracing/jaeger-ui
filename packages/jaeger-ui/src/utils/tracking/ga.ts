@@ -22,7 +22,7 @@ import prefixUrl from '../prefix-url';
 // This is required by the gtag.js script to work
 
 interface WindowWithGATracking extends Window {
-  dataLayer: (string | object)[][] | undefined;
+  dataLayer: IArguments[] | undefined;
 }
 
 declare let window: WindowWithGATracking;
@@ -283,16 +283,16 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
     return isTest || isDebugMode || (isProd && Boolean(gaID));
   };
 
-  // Function to add a new event to the Google Analytics dataLayer
-  const gtag = (...args: (string | object)[]) => {
+  // gtag.js dispatches Arguments objects as commands; arrays are legacy method calls.
+  function gtag(...args: (string | object)[]) {
     if (window !== undefined)
       if (window.dataLayer !== undefined && Array.isArray(window.dataLayer)) {
-        window.dataLayer.push(args);
+        window.dataLayer.push(arguments);
         if (isDebugMode) {
           console.log('[GA Tracking]', ...args);
         }
       }
-  };
+  }
 
   const trackError = (description: string) => {
     let msg = description;

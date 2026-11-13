@@ -32,6 +32,12 @@ SPDX-License-Identifier: Apache-2.0
   white-space: nowrap;
 }
 
+/* The funnel's count badge hangs over its right edge, so the funnel keeps clear of the collapse
+   buttons that follow it. */
+.TimelineHeaderRow .SpanFilter--badge {
+  margin-right: 0.75rem;
+}
+
 .TimelineHeaderRow--sidePanelCell {
   border-left: 1px solid var(--border-strong);
 }

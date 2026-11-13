@@ -1,0 +1,50 @@
+' The three layout options for the search and filter cluster (RFC 0009, "Layout").
+' Each panel is the trace page from the title row down to the first timeline rows.
+' The highlighted cells are the search input and the funnel.
+@startsalt
+{
+<b>A. Today</b>
+{+
+  { ← trace name  <i>abc123</i> | . | <back:#fff3bf>"search…    "</back> | ^Timeline^ | [⚙] }
+  <color:#868e96>Trace Start · Duration · Services · Depth · Total Spans</color>
+  { <color:#868e96>span graph (minimap)</color> }
+  --
+  {# <b>Service & Operation</b>  <back:#fff3bf>[▼]</back> [+1] [-1] [⇕] [⇵] | <color:#868e96>0ms      250ms      500ms      750ms</color>
+     api-edge  GET /chat             | <back:#dbe4ff>                                   </back>
+     . graphql-gateway  mutation     | . <back:#dbe4ff>                                 </back>
+     . . coding-agent  invoke_agent  | . . <back:#dbe4ff>                              </back>
+     . . . coding-agent  chat        | . . . <back:#dbe4ff>          </back>
+     . . . coding-agent  execute_tool| . . . . . . . . . . . <back:#dbe4ff>            </back> }
+}
+.
+<b>B. Title row (recommended)</b>
+{+
+  { ← trace name  <i>abc123</i> | . | <back:#fff3bf>"search…    "</back> | <back:#fff3bf>[▼]</back> | ^Timeline^ | [⚙] }
+  <color:#868e96>Trace Start · Duration · Services · Depth · Total Spans</color>
+  { <color:#868e96>span graph (minimap)</color> }
+  --
+  {# <b>Service & Operation</b>  [+1] [-1] [⇕] [⇵] | <color:#868e96>0ms      250ms      500ms      750ms</color>
+     api-edge  GET /chat             | <back:#dbe4ff>                                   </back>
+     . graphql-gateway  mutation     | . <back:#dbe4ff>                                 </back>
+     . . coding-agent  invoke_agent  | . . <back:#dbe4ff>                              </back>
+     . . . coding-agent  chat        | . . . <back:#dbe4ff>          </back>
+     . . . coding-agent  execute_tool| . . . . . . . . . . . <back:#dbe4ff>            </back> }
+}
+.
+<b>C. Toolbar row above the timeline</b>
+{+
+  { ← trace name  <i>abc123</i> | . | ^Timeline^ | [⚙] }
+  <color:#868e96>Trace Start · Duration · Services · Depth · Total Spans</color>
+  { <color:#868e96>span graph (minimap)</color> }
+  --
+  { <back:#fff3bf>"search…    "</back> | <back:#fff3bf>[▼]</back> | status: error × | hidden: auth-service × | 12 of 59 spans }
+  --
+  {# <b>Service & Operation</b>  [+1] [-1] [⇕] [⇵] | <color:#868e96>0ms      250ms      500ms      750ms</color>
+     api-edge  GET /chat             | <back:#dbe4ff>                                   </back>
+     . graphql-gateway  mutation     | . <back:#dbe4ff>                                 </back>
+     . . coding-agent  invoke_agent  | . . <back:#dbe4ff>                              </back>
+     . . . coding-agent  chat        | . . . <back:#dbe4ff>          </back>
+     . . . coding-agent  execute_tool| . . . . . . . . . . . <back:#dbe4ff>            </back> }
+}
+}
+@endsalt

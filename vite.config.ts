@@ -33,6 +33,8 @@ export default defineConfig({
       es2026: true,
     },
     ignorePatterns: [
+      // RFC prototypes are checked in for reference and are not held to the lint rules.
+      'docs/rfc/*/prototype/**',
       'packages/*/dist/**',
       'packages/*/lib/**',
       'packages/*/build/**',

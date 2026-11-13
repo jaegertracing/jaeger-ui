@@ -1,0 +1,100 @@
+/* Copyright (c) 2026 The Jaeger Authors. */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+.HeatmapLegend {
+  /* Fixed like TimelineHeaderRow, with no top set, so it stays at its static position: just
+     below the header, which is also out of flow. It never scrolls away, so the fixed side panel
+     can sit below it at any scroll position. A fixed box's margin doesn't collapse with its
+     parent's, so the margin can't shift the header down. The height is a minimum: a hint that
+     wraps on a narrow window grows the legend, and TraceTimelineViewer reads the real height
+     back into --heatmap-legend-height so the rows and side panel below move with it. The
+     minimum has its own variable, so the legend shrinks again once the hint stops wrapping. */
+  position: fixed;
+  z-index: 4;
+  width: 100%;
+  min-height: var(--heatmap-legend-min-height);
+  box-sizing: border-box;
+  margin-top: var(--timeline-header-row-height);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 4px 8px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+  background: var(--surface-primary);
+  border-bottom: 1px solid var(--border-default);
+  user-select: none;
+}
+
+.HeatmapLegend--title {
+  font-weight: 600;
+  margin-bottom: 3px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.HeatmapLegend--scale {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.HeatmapLegend--noPeers {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+}
+
+.HeatmapLegend--swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.HeatmapLegend--bar {
+  display: flex;
+  width: 240px;
+  height: 10px;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.HeatmapLegend--segment {
+  flex: 1;
+}
+
+.HeatmapLegend--labels {
+  position: relative;
+  width: 240px;
+  height: 14px;
+  margin-top: 2px;
+}
+
+.HeatmapLegend--label {
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 10px;
+}
+
+.HeatmapLegend--label:first-child {
+  transform: translateX(0);
+}
+
+.HeatmapLegend--label:last-child {
+  transform: translateX(-100%);
+}
+
+.HeatmapLegend--hint {
+  margin-top: 2px;
+  font-size: 10px;
+  opacity: 0.75;
+}
+
+/* The span list reserves room for both fixed bands: the header row and the legend below it. */
+.TraceTimelineViewer.is-heatmapEnabled .VirtualizedTraceView--spans {
+  padding-top: calc(var(--timeline-header-row-height) + var(--heatmap-legend-height));
+}

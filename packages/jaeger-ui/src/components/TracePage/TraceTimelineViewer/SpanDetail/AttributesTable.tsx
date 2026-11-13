@@ -42,7 +42,8 @@ const stringListMarkup = (value: any[]) => (
     {value.map((item, i) => (
       <React.Fragment key={i}>
         {i > 0 && ', '}
-        <span className="json-markup-string">{item}</span>
+        {/* A header value is normally a list of strings; anything else would crash as a React child. */}
+        <span className="json-markup-string">{typeof item === 'string' ? item : JSON.stringify(item)}</span>
       </React.Fragment>
     ))}
   </div>

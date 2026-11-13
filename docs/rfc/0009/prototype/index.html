@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>RFC 0009 prototype: find, keep, hide</title>
+    <style>
+      body { margin: 0; font: 13px/1.4 -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; color: #222; background: #fff; }
+      .knobs { background: #fff8e1; border-bottom: 1px solid #f0d58c; padding: 6px 12px; display: flex; gap: 16px; align-items: center; font-size: 12px; }
+      .knobs b { color: #8a6d00; }
+      .header { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid #ddd; }
+      .header .title { font-size: 16px; font-weight: 600; margin-right: auto; white-space: nowrap; }
+      .header .title small { font-weight: 400; color: #888; margin-left: 8px; }
+      .cluster { display: flex; align-items: center; gap: 4px; }
+      .count { color: #666; white-space: nowrap; padding: 0 6px; min-width: 90px; text-align: right; }
+      .count b { color: #c92a2a; font-weight: 600; }
+      .colhead { display: flex; padding: 4px 12px; background: #f5f5f5; border-bottom: 1px solid #ddd; color: #666; font-size: 12px; }
+      .colhead .left { width: 38%; display: flex; gap: 6px; align-items: center; }
+      .colhead .left .collapse { margin-left: auto; display: flex; gap: 2px; }
+      .colhead .left .collapse button { border: 1px solid #ccc; background: #fff; border-radius: 3px; width: 22px; height: 20px; cursor: pointer; font-size: 10px; padding: 0; }
+      .rows { overflow: auto; }
+      .row { display: flex; height: 28px; align-items: center; border-bottom: 1px solid #f0f0f0; cursor: default; }
+      .row:hover { background: #fafafa; }
+      .row.match { background: #fff7cc; }
+      .row.match.current { outline: 2px solid #e8b100; outline-offset: -2px; }
+      .row.placeholder { color: #888; font-style: italic; background: #f9f9f9; }
+      .row .left { width: 38%; display: flex; align-items: center; overflow: hidden; white-space: nowrap; }
+      .row .right { flex: 1; position: relative; height: 100%; border-left: 1px solid #eee; }
+      .indent { display: inline-block; width: 16px; height: 28px; border-right: 1px dotted #ccc; flex: none; }
+      .indent.lifted { border-right-style: dashed; border-right-color: #868e96; }
+      .lift-glyph { color: #868e96; font-size: 13px; margin-right: 2px; cursor: help; flex: none; }
+      .err.hidden-err { background: #fff; border: 1px dashed #c92a2a; cursor: help; }
+      .caption-err { color: #c92a2a; }
+      .chev { width: 16px; flex: none; text-align: center; color: #999; cursor: pointer; font-size: 10px; }
+      .dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin: 0 6px 0 2px; flex: none; }
+      .svc { font-weight: 600; margin-right: 6px; }
+      .op { color: #555; overflow: hidden; text-overflow: ellipsis; }
+      .type { margin-left: 6px; font-size: 10px; padding: 0 4px; border-radius: 3px; background: #e7f0ff; color: #2b5fb4; }
+      .err { margin-left: 6px; font-size: 10px; padding: 0 4px; border-radius: 3px; background: #ffe3e3; color: #c92a2a; }
+      .bar { position: absolute; top: 8px; height: 12px; border-radius: 2px; min-width: 2px; opacity: 0.85; }
+      .bar.error { outline: 2px solid #c92a2a; }
+      .dur { position: absolute; top: 6px; font-size: 11px; color: #666; white-space: nowrap; }
+      .detail { background: #fafafa; border-bottom: 1px solid #eee; padding: 6px 12px 6px 0; font-size: 12px; }
+      .detail table { border-collapse: collapse; }
+      .detail td { padding: 1px 12px 1px 0; vertical-align: top; }
+      .detail td:first-child { color: #666; }
+      .ticks { display: flex; flex: 1; position: relative; height: 16px; color: #999; font-size: 11px; }
+      .ticks span { position: absolute; transform: translateX(-50%); }
+      .pop { width: 440px; max-height: 80vh; overflow: auto; }
+      .pop h4 { margin: 10px 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; color: #666; display: flex; align-items: center; gap: 8px; }
+      .pop h4 .actions { margin-left: auto; font-weight: 400; text-transform: none; letter-spacing: 0; }
+      .pop h4 .actions a { margin-left: 8px; }
+      .chips { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+      .chip { display: inline-flex; align-items: center; gap: 4px; border: 1px solid #ccc; border-radius: 12px; padding: 1px 6px 1px 4px; background: #fff; font-size: 12px; }
+      .chip .verb { display: inline-flex; cursor: pointer; border-radius: 50%; padding: 2px; }
+      .chip .verb:hover { background: #eee; }
+      .chip .x { cursor: pointer; color: #888; padding-left: 2px; }
+      .chip .x:hover { color: #000; }
+      .chip.pending { border-style: dashed; }
+      .keep { color: #2b8a3e; }
+      .hide { color: #c92a2a; }
+      .find { color: #b07d00; }
+      .hist { position: relative; height: 56px; display: flex; align-items: flex-end; gap: 1px; padding: 0 6px; }
+      .hist div { flex: 1; background: #4c7bd9; border-radius: 1px 1px 0 0; min-height: 1px; }
+      .hist div.out { background: #d9dee8; }
+      .hist-axis { display: flex; justify-content: space-between; font-size: 11px; color: #777; padding: 0 6px; }
+      .vals .val { display: flex; align-items: center; gap: 6px; height: 24px; }
+      .vals .val.dim { opacity: 0.4; }
+      .vals .val .name { width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .vals .val .vbar { flex: 1; height: 8px; background: #eef1f6; border-radius: 2px; overflow: hidden; }
+      .vals .val .vbar div { height: 100%; background: #4c7bd9; }
+      .vals .val .n { width: 28px; text-align: right; color: #666; }
+      .vals .val .act { display: inline-flex; cursor: pointer; padding: 2px; border-radius: 3px; color: #999; }
+      .vals .val .act:hover { background: #eee; color: #222; }
+      .vals .val .act.on.keep { color: #2b8a3e; }
+      .vals .val .act.on.hide { color: #c92a2a; }
+      .vals .val .act.disabled { color: #ccc; cursor: not-allowed; }
+      .vals .val .act.disabled:hover { background: none; color: #ccc; }
+      .pop h4 .fold { cursor: pointer; user-select: none; }
+      .root-badge { font-size: 9px; border: 1px solid #bbb; border-radius: 3px; padding: 0 3px; color: #777; }
+      .footer { display: flex; align-items: center; gap: 8px; margin-top: 12px; padding-top: 8px; border-top: 1px solid #eee; }
+      .footer .spacer { flex: 1; }
+      .url { padding: 4px 12px; font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #666; background: #fafafa; border-bottom: 1px solid #eee; word-break: break-all; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./main.tsx"></script>
+  </body>
+</html>
