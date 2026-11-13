@@ -75,4 +75,13 @@ describe('MetricCard', () => {
     expect(screen.getByText('0.0%')).toBeInTheDocument();
     expect(screen.getByText('Passing')).toBeInTheDocument();
   });
+
+  it('renders documentation link with accessible name and target="_blank"', () => {
+    render(<MetricCard metric={metric} />);
+    const link = screen.getByRole('link', { name: 'Metric documentation in a new window' });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute('href', metric.metricDocumentationLink);
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('aria-label', 'Metric documentation in a new window');
+  });
 });

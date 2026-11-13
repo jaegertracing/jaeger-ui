@@ -147,10 +147,6 @@ const renderWithRouter = (ui, options = {}) => {
 };
 
 describe('<SearchResults>', () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
   it('shows the "no results" message when the search result is empty', () => {
     renderWithRouter(<SearchResults {...baseProps} traceSummaries={[]} />);
     expect(screen.getByText(/No trace results\. Try another query\./i)).toBeInTheDocument();
@@ -560,11 +556,16 @@ describe('<SearchResults>', () => {
   });
 
   describe('showStandaloneLink', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
     it('renders Link with accessible aria-label when showStandaloneLink is true', () => {
       renderWithRouter(<SearchResults {...baseProps} showStandaloneLink />);
       const link = screen.getByRole('link', { name: 'Open search results in a new window' });
       expect(link).toBeInTheDocument();
       expect(link).toHaveAttribute('aria-label', 'Open search results in a new window');
+      expect(link).toHaveAttribute('target', '_blank');
       expect(screen.getByTestId('new-window-icon')).toBeInTheDocument();
     });
 

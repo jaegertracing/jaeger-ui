@@ -1,10 +1,10 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import * as React from 'react';
+import React from 'react';
 import { render, screen, fireEvent, createEvent } from '@testing-library/react';
 
-import * as getTargetModule from '../../../utils/config/get-target';
+import * as getConfigModule from '../../../utils/config/get-config';
 import TraceTimelineLink from './TraceTimelineLink';
 
 describe('TraceTimelineLink', () => {
@@ -33,25 +33,26 @@ describe('TraceTimelineLink', () => {
     expect(propogatedEvent.stopPropagation).toHaveBeenCalled();
   });
 
-  it('has an accessible name', () => {
-    expect(screen.getByRole('link', { name: 'Open trace in a new window' })).toBeTruthy();
+  it('renders link with accessible aria-label and target="_blank"', () => {
+    const link = screen.getByRole('link', { name: `Open trace ${traceID.slice(0, 7)} in a new window` });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute('aria-label', `Open trace ${traceID.slice(0, 7)} in a new window`);
+    expect(link).toHaveAttribute('target', '_blank');
   });
 });
 
-describe('TraceTimelineLink when new pages are forbidden', () => {
-  let getTargetSpy;
-
-  beforeEach(() => {
-    getTargetSpy = jest.spyOn(getTargetModule, 'getTargetEmptyOrBlank').mockReturnValue('');
-    render(<TraceTimelineLink traceID="test-trace-id" />);
-  });
-
+describe('TraceTimelineLink when forbidNewPage is true', () => {
   afterEach(() => {
-    getTargetSpy.mockRestore();
+    vi.restoreAllMocks();
   });
 
-  it('does not mention a new window in the accessible name', () => {
-    const link = screen.getByRole('link', { name: 'Open trace' });
-    expect(link.getAttribute('target')).toBe('');
+  it('renders link with accessible aria-label without "in a new window"', () => {
+    const traceID = 'test-trace-id';
+    vi.spyOn(getConfigModule, 'default').mockReturnValue({ forbidNewPage: true });
+    render(<TraceTimelineLink traceID={traceID} />);
+    const link = screen.getByRole('link', { name: `Open trace ${traceID.slice(0, 7)}` });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute('aria-label', `Open trace ${traceID.slice(0, 7)}`);
+    expect(link).toHaveAttribute('target', '');
   });
 });
