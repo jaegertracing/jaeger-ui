@@ -11,16 +11,17 @@
 // `f=` URL codec; the codec of the legacy `svcFilter` parameter stays in url/svcFilter.ts.
 
 import { TNil } from '../../types';
-import { IAttribute, IOtelSpan } from '../../types/otel';
+import { GenAISpanKind, IAttribute, IOtelSpan } from '../../types/otel';
 import { Microseconds } from '../../types/units';
 import memoizeOne from 'memoize-one';
 import { formatDuration } from '../../utils/date';
 import filterSpans, { stringifyAttributeValue } from '../../utils/filter-spans';
 import { getGenAiTokenUsage } from './TraceTimelineViewer/SpanDetail/GenAITab/genAiData';
+import { GEN_AI_KIND_META } from './TraceTimelineViewer/spanDecorations';
 import { isErrorSpan } from './TraceTimelineViewer/utils';
 
-type SetProperty = 'service' | 'status' | 'kind' | 'spanType';
-type RangeProperty = 'duration' | 'tokens';
+export type SetProperty = 'service' | 'status' | 'kind' | 'spanType';
+export type RangeProperty = 'duration' | 'tokens';
 
 export type Criterion =
   | { shape: 'text'; text: string }
@@ -48,6 +49,8 @@ export const EMPTY_SPAN_FILTER: ISpanFilter = { clauses: [], treeMode: 'lift' };
 export const KEEP_NEEDS_LIFT = 'Keep filters need "Lift to its parent" as the tree mode';
 /** The tooltip of a search-input menu entry whose conversion would leave no span shown. */
 export const LEAVES_NO_SPAN = 'This filter would leave no span shown';
+/** The tooltip of the attribute input's eyes while the typed text matches no span of the trace. */
+export const NO_SPAN_MATCHES = 'No span has this attribute';
 
 /** The span type value of a span that carries no gen_ai attributes. */
 const NON_GENAI_SPAN_TYPE = 'none';
@@ -55,7 +58,8 @@ const NON_GENAI_SPAN_TYPE = 'none';
 const STATUS_ERROR = 'error';
 const STATUS_OK = 'ok';
 
-function spanPropertyValue(span: IOtelSpan, property: SetProperty): string {
+// The value of a span for a set property, in the form the set criterion and the facet lists use.
+function spanSetValue(span: IOtelSpan, property: SetProperty): string {
   switch (property) {
     case 'service':
       return span.resource.serviceName;
@@ -70,13 +74,56 @@ function spanPropertyValue(span: IOtelSpan, property: SetProperty): string {
 
 // Tokens are the input plus output tokens as the GenAI tab reads them, so that the cache and
 // modality breakdowns of those totals are not counted twice. A span without token usage has no
-// token value, so a token range never matches it.
-function spanRangeValue(span: IOtelSpan, property: RangeProperty): number | null {
-  if (property === 'duration') return span.duration;
+// token value, so a token range never matches it and the token histogram does not count it.
+// The total is rounded to a count, because the URL carries token bounds as integers, and a
+// total that is not a safe non-negative integer is no usage.
+function spanTokens(span: IOtelSpan): number | null {
   const usage = getGenAiTokenUsage(span.attributes);
   if (!usage || (usage.inputTokens == null && usage.outputTokens == null)) return null;
-  return (usage.inputTokens ?? 0) + (usage.outputTokens ?? 0);
+  const sum = (usage.inputTokens ?? 0) + (usage.outputTokens ?? 0);
+  if (!Number.isFinite(sum)) return null;
+  const total = Math.round(sum) || 0;
+  return Number.isSafeInteger(total) && total >= 0 ? total : null;
 }
+
+function spanRangeValue(span: IOtelSpan, property: RangeProperty): number | null {
+  return property === 'duration' ? span.duration : spanTokens(span);
+}
+
+/**
+ * The per-value span counts and the sorted range values of a whole trace, which the popover draws
+ * as bars and histograms. They are computed over every span rather than the visible ones, so that
+ * a count says what acting on it would do, and once per trace, since they depend on nothing else.
+ */
+export interface ITraceFacets {
+  values: Record<SetProperty, ReadonlyMap<string, number>>;
+  ranges: Record<RangeProperty, ReadonlyArray<number>>;
+}
+
+const SET_PROPERTY_LIST: ReadonlyArray<SetProperty> = ['service', 'status', 'kind', 'spanType'];
+
+function computeTraceFacets(spans: ReadonlyArray<IOtelSpan>): ITraceFacets {
+  const values = Object.fromEntries(SET_PROPERTY_LIST.map(p => [p, new Map<string, number>()])) as Record<
+    SetProperty,
+    Map<string, number>
+  >;
+  const durations: number[] = [];
+  const tokens: number[] = [];
+  for (const span of spans) {
+    for (const property of SET_PROPERTY_LIST) {
+      const counts = values[property];
+      const value = spanSetValue(span, property);
+      counts.set(value, (counts.get(value) ?? 0) + 1);
+    }
+    durations.push(span.duration);
+    const t = spanTokens(span);
+    if (t != null) tokens.push(t);
+  }
+  const ascending = (a: number, b: number) => a - b;
+  return { values, ranges: { duration: durations.sort(ascending), tokens: tokens.sort(ascending) } };
+}
+
+export const traceFacets: (spans: ReadonlyArray<IOtelSpan>) => ITraceFacets = memoizeOne(computeTraceFacets);
 
 function attributeText({ key, value }: IAttribute): string {
   return `${key}:${stringifyAttributeValue(value)}`.toLowerCase();
@@ -89,6 +136,16 @@ function matchesAttribute(span: IOtelSpan, needle: string): boolean {
   if (!needle) return false;
   const matches = (kv: IAttribute) => kv.value != null && attributeText(kv).includes(needle);
   return span.attributes.entries().some(matches) || span.resource.attributes.entries().some(matches);
+}
+
+/** The IDs of the spans that an attribute criterion with this text matches. */
+export function attributeMatchIDs(spans: ReadonlyArray<IOtelSpan>, text: string): ReadonlySet<string> {
+  const needle = text.toLowerCase();
+  const ids = new Set<string>();
+  for (const span of spans) {
+    if (matchesAttribute(span, needle)) ids.add(span.spanID);
+  }
+  return ids;
 }
 
 type Predicate = (span: IOtelSpan) => boolean;
@@ -107,12 +164,12 @@ function compileCriterion(criterion: Criterion, spans: ReadonlyArray<IOtelSpan>)
       const values = new Set(
         criterion.property === 'service' ? criterion.values : criterion.values.map(v => v.toLowerCase())
       );
-      return span => values.has(spanPropertyValue(span, criterion.property));
+      return span => values.has(spanSetValue(span, criterion.property));
     }
     case 'range':
       return span => {
         const v = spanRangeValue(span, criterion.property);
-        return v !== null && v >= criterion.min && v <= criterion.max;
+        return v != null && v >= criterion.min && v <= criterion.max;
       };
     case 'attr': {
       const needle = criterion.text.toLowerCase();
@@ -189,39 +246,115 @@ export function withoutHiddenSpans(
   return visible;
 }
 
-type ServiceHideClause = IClause & { criterion: Extract<Criterion, { shape: 'set' }> };
+type SetClause = IClause & { criterion: Extract<Criterion, { shape: 'set' }> };
+type RangeClause = IClause & { criterion: Extract<Criterion, { shape: 'range' }> };
 
-/** The hide clause on service is the clause that the popover's service list edits. */
-function isServiceHideClause(clause: IClause): clause is ServiceHideClause {
-  return (
-    clause.verb === 'hide' && clause.criterion.shape === 'set' && clause.criterion.property === 'service'
-  );
+function isSetClause(clause: IClause, verb: Verb, property: SetProperty): clause is SetClause {
+  return clause.verb === verb && clause.criterion.shape === 'set' && clause.criterion.property === property;
 }
 
 /** The services the filter hides through its hide clause on service. */
 export function hiddenServices(filter: ISpanFilter): Set<string> {
-  // A URL may repeat the clause, and evaluation hides the union, so the union is what the popover
-  // shows and root protection checks.
-  const services = new Set<string>();
-  for (const clause of filter.clauses) {
-    if (isServiceHideClause(clause)) clause.criterion.values.forEach(v => services.add(v));
-  }
-  return services;
+  return setClauseValues(filter, 'hide', 'service');
 }
 
 /** Replaces the filter's hide clause on service with one for the given services, or removes it when empty. */
 export function withHiddenServices(filter: ISpanFilter, services: ReadonlySet<string>): ISpanFilter {
-  // An existing clause keeps its place, so that a chip does not move when its values change; a new
-  // one goes last.
-  const at = filter.clauses.findIndex(isServiceHideClause);
-  const clauses = filter.clauses.filter(c => !isServiceHideClause(c));
-  if (services.size > 0) {
-    clauses.splice(at >= 0 ? at : clauses.length, 0, {
-      verb: 'hide',
-      criterion: { shape: 'set', property: 'service', values: [...services].sort() },
-    });
+  return withSetClause(filter, 'hide', 'service', services);
+}
+
+/**
+ * The values of the filter's clauses with the verb on the set property, or an empty set. A URL may
+ * repeat a clause, and evaluation applies them all, so the union is what the controls show.
+ */
+export function setClauseValues(filter: ISpanFilter, verb: Verb, property: SetProperty): Set<string> {
+  const values = new Set<string>();
+  for (const clause of filter.clauses) {
+    if (isSetClause(clause, verb, property)) clause.criterion.values.forEach(v => values.add(v));
   }
-  return { ...filter, clauses };
+  return values;
+}
+
+/**
+ * Replaces the clauses that match by the one clause, in the place of the first match so that the
+ * chips keep their order, or adds the clause when nothing matches; a null clause removes the
+ * matches.
+ */
+function replaceClauses(
+  filter: ISpanFilter,
+  matches: (clause: IClause) => boolean,
+  clause: IClause | null
+): ISpanFilter {
+  const at = filter.clauses.findIndex(matches);
+  const rest = filter.clauses.filter(c => !matches(c));
+  if (!clause) return { ...filter, clauses: rest };
+  if (at === -1) return { ...filter, clauses: [...rest, clause] };
+  return { ...filter, clauses: [...rest.slice(0, at), clause, ...rest.slice(at)] };
+}
+
+/**
+ * Replaces the filter's clauses with the verb on the set property by one clause with the values,
+ * or removes them when the values are empty.
+ */
+export function withSetClause(
+  filter: ISpanFilter,
+  verb: Verb,
+  property: SetProperty,
+  values: ReadonlySet<string>
+): ISpanFilter {
+  const clause: IClause | null =
+    values.size > 0 ? { verb, criterion: { shape: 'set', property, values: [...values].sort() } } : null;
+  return replaceClauses(filter, c => isSetClause(c, verb, property), clause);
+}
+
+/**
+ * Replaces the filter's keep and hide clauses on the set property by clauses for the given values,
+ * which is what the controls that choose values for a property do.
+ */
+export function withKeptAndHidden(
+  filter: ISpanFilter,
+  property: SetProperty,
+  kept: ReadonlySet<string>,
+  hidden: ReadonlySet<string>
+): ISpanFilter {
+  return withSetClause(withSetClause(filter, 'keep', property, kept), 'hide', property, hidden);
+}
+
+function isKeepRange(clause: IClause, property: RangeProperty): clause is RangeClause {
+  return (
+    clause.verb === 'keep' && clause.criterion.shape === 'range' && clause.criterion.property === property
+  );
+}
+
+/**
+ * The range that the filter's keep clauses on the range property keep together, which is their
+ * intersection, or null without such a clause. Clauses that keep nothing together read as the
+ * single value at their lower bound, so that the slider has a range to draw.
+ */
+export function keepRange(filter: ISpanFilter, property: RangeProperty): { min: number; max: number } | null {
+  let hasKeepRange = false;
+  let min = 0;
+  let max = Infinity;
+  for (const clause of filter.clauses) {
+    if (isKeepRange(clause, property)) {
+      hasKeepRange = true;
+      min = Math.max(min, clause.criterion.min);
+      max = Math.min(max, clause.criterion.max);
+    }
+  }
+  return hasKeepRange ? { min, max: Math.max(min, max) } : null;
+}
+
+/** Replaces the filter's keep clauses on the range property by one for the range, or removes them when null. */
+export function withKeepRange(
+  filter: ISpanFilter,
+  property: RangeProperty,
+  range: { min: number; max: number } | null
+): ISpanFilter {
+  const clause: IClause | null = range
+    ? { verb: 'keep', criterion: { shape: 'range', property, ...range } }
+    : null;
+  return replaceClauses(filter, c => isKeepRange(c, property), clause);
 }
 
 const PROPERTY_LABEL: Record<SetProperty | RangeProperty, string> = {
@@ -233,7 +366,24 @@ const PROPERTY_LABEL: Record<SetProperty | RangeProperty, string> = {
   tokens: 'tokens',
 };
 
-/** The short form of a criterion that a chip shows, such as "status: error" or "text: tools/call". */
+/** The label of a set value as the chips and the value lists show it, such as "Non-GenAI" for the span type `none`. */
+export function setValueLabel(property: SetProperty, value: string): string {
+  switch (property) {
+    case 'spanType':
+      if (value === NON_GENAI_SPAN_TYPE) return 'Non-GenAI';
+      return GEN_AI_KIND_META[value.toUpperCase() as GenAISpanKind]?.label ?? value;
+    case 'kind':
+      return value.charAt(0).toUpperCase() + value.slice(1);
+    case 'status':
+      if (value === STATUS_ERROR) return 'Error';
+      if (value === STATUS_OK) return 'No error';
+      return value;
+    default:
+      return value;
+  }
+}
+
+/** The short form of a criterion that a chip shows, such as "status: Error" or "text: tools/call". */
 export function describeCriterion(criterion: Criterion): string {
   switch (criterion.shape) {
     case 'text':
@@ -241,7 +391,7 @@ export function describeCriterion(criterion: Criterion): string {
     case 'attr':
       return `attribute: ${criterion.text}`;
     case 'set':
-      return `${PROPERTY_LABEL[criterion.property]}: ${criterion.values.join(', ')}`;
+      return `${PROPERTY_LABEL[criterion.property]}: ${criterion.values.map(v => setValueLabel(criterion.property, v)).join(', ')}`;
     case 'range': {
       const format = (v: number) => {
         if (v === Infinity) return '∞';
@@ -250,6 +400,11 @@ export function describeCriterion(criterion: Criterion): string {
       return `${PROPERTY_LABEL[criterion.property]}: ${format(criterion.min)} – ${format(criterion.max)}`;
     }
   }
+}
+
+/** The set values as the facet rows spell them: lower-cased except for service names, deduplicated and sorted. */
+function canonicalSetValues(property: SetProperty, values: ReadonlyArray<string>): string[] {
+  return [...new Set(property === 'service' ? values : values.map(v => v.toLowerCase()))].sort();
 }
 
 const PROPERTY_ORDER: Record<SetProperty | RangeProperty, number> = {
@@ -289,28 +444,37 @@ function compareClauses(a: IClause, b: IClause): number {
 }
 
 /**
- * The filter with one set clause per verb and property, holding the union of their values, without
- * a second copy of any other clause, and with the clauses in the order the chips are listed; the
- * same filter when nothing changes. A set clause matches a span whose value is in the set, so two
- * hide clauses on one property mean the same as their union, and a keep clause on one property is
- * one chip with the values it keeps.
+ * The filter with one set clause per verb and property, holding the union of their values in the
+ * spelling the facet rows use, without a second copy of any other clause, and with the clauses in
+ * the order the chips are listed; the same filter when nothing changes. A set clause matches a span
+ * whose value is in the set, so two hide clauses on one property mean the same as their union, and
+ * a keep clause on one property is one chip with the values it keeps.
  */
 export function normalizeFilter(filter: ISpanFilter): ISpanFilter {
   const seen = new Set<string>();
   const sets = new Map<string, IClause>();
   const clauses: IClause[] = [];
   let changed = false;
-  for (const clause of filter.clauses) {
+  for (const original of filter.clauses) {
+    let clause = original;
     if (clause.criterion.shape === 'set') {
-      const key = `${clause.verb}:${clause.criterion.property}`;
+      const { property } = clause.criterion;
+      const key = `${clause.verb}:${property}`;
       const first = sets.get(key);
       if (first && first.criterion.shape === 'set') {
-        const values = [...new Set([...first.criterion.values, ...clause.criterion.values])].sort();
+        const values = canonicalSetValues(property, [...first.criterion.values, ...clause.criterion.values]);
         const merged: IClause = { ...first, criterion: { ...first.criterion, values } };
         sets.set(key, merged);
         clauses[clauses.indexOf(first)] = merged;
         changed = true;
         continue;
+      }
+      const original = clause.criterion.values;
+      const values = canonicalSetValues(property, original);
+      const same = values.length === original.length && values.every((v, i) => v === original[i]);
+      if (!same) {
+        clause = { ...clause, criterion: { ...clause.criterion, values } };
+        changed = true;
       }
       sets.set(key, clause);
     }
@@ -327,9 +491,12 @@ export function normalizeFilter(filter: ISpanFilter): ISpanFilter {
   return changed ? { ...filter, clauses } : filter;
 }
 
+/** Two filters are equal when they mean the same: the order of the clauses does not matter. */
 export function spanFiltersEqual(a: ISpanFilter, b: ISpanFilter): boolean {
   if (a.treeMode !== b.treeMode || a.clauses.length !== b.clauses.length) return false;
-  return a.clauses.every((c, i) => encodeClause(c) === encodeClause(b.clauses[i]));
+  const encoded = (f: ISpanFilter) => f.clauses.map(encodeClause).sort();
+  const [ea, eb] = [encoded(a), encoded(b)];
+  return ea.every((c, i) => c === eb[i]);
 }
 
 // ---- URL codec: each clause is one `f=<verb>:<property>:<value>` parameter ----
@@ -338,7 +505,7 @@ const VERB_CODES: Record<Verb, string> = { keep: 'k', hide: 'h' };
 const CODE_VERBS: Record<string, Verb> = Object.fromEntries(
   Object.entries(VERB_CODES).map(([verb, code]) => [code, verb as Verb])
 );
-const SET_PROPERTIES: ReadonlySet<string> = new Set<SetProperty>(['service', 'status', 'kind', 'spanType']);
+const SET_PROPERTIES: ReadonlySet<string> = new Set<string>(SET_PROPERTY_LIST);
 const RANGE_PROPERTIES: ReadonlySet<string> = new Set<RangeProperty>(['duration', 'tokens']);
 
 const MICROS_PER_MILLI = 1e3;

@@ -27,55 +27,12 @@ SPDX-License-Identifier: Apache-2.0
   color: var(--interactive-primary);
 }
 
-.ServiceFilter--list {
-  overflow-y: auto;
-  max-height: 250px;
-  border-top: 1px solid var(--border-default);
-  border-bottom: 1px solid var(--border-default);
-  padding: 0.25rem 0;
-}
-
-.ServiceFilter--item {
-  padding: 2px 0;
-}
-
-/* Make the antd Checkbox label span the full width with children laid out in a row.
-   Checkbox renders: <label class="ant-checkbox-wrapper"><span class="ant-checkbox">…</span><span>children</span></label>
-   Both the wrapper and the children span need flex to spread the row content. */
-.ServiceFilter--item .ant-checkbox-wrapper {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  gap: 0.35rem;
-  cursor: pointer;
-}
-
-.ServiceFilter--item .ant-checkbox-wrapper > span:last-child {
-  display: flex;
-  align-items: center;
-  flex: 1;
-  min-width: 0;
-  gap: 0.35rem;
-}
-
-.ServiceFilter--item:hover {
-  background-color: var(--surface-component-background-hover);
-}
-
 .ServiceFilter--colorDot {
   display: inline-block;
   width: 8px;
   height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
-}
-
-.ServiceFilter--serviceName {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .ServiceFilter--rootBadge {
@@ -87,16 +44,11 @@ SPDX-License-Identifier: Apache-2.0
   flex-shrink: 0;
 }
 
-.ServiceFilter--spanCount {
-  color: var(--text-secondary);
-  font-size: 0.85em;
-  flex-shrink: 0;
-}
-
+/* The warning sits above the sections, outside the scroll, so a held edit always shows why. */
 .ServiceFilter--warning {
   color: var(--feedback-error);
   font-size: 0.85em;
-  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .ServiceFilter--footer {
@@ -174,6 +126,12 @@ SPDX-License-Identifier: Apache-2.0
   gap: 0.5rem;
 }
 
+.SpanFilter--sectionLead {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
 .SpanFilter--sectionTitle {
   font-weight: 600;
   color: var(--text-primary);
@@ -239,7 +197,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .SpanFilter--chipVerb.is-keep {
-  color: var(--interactive-primary);
+  color: var(--feedback-success);
 }
 
 .SpanFilter--chipVerb.is-disabled,
@@ -253,4 +211,185 @@ SPDX-License-Identifier: Apache-2.0
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.SpanFilter--sectionToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+
+.SpanFilter--sectionToggle:hover .SpanFilter--sectionTitle {
+  color: var(--interactive-primary);
+}
+
+.SpanFilter--attribute {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.FacetList {
+  display: flex;
+  flex-direction: column;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.FacetList--row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 2px 0;
+  font-size: 0.9em;
+}
+
+.FacetList--row:hover {
+  background-color: var(--surface-component-background-hover);
+}
+
+.FacetList--row.is-hidden .FacetList--label,
+.FacetList--row.is-hidden .FacetList--count,
+.FacetList--row.is-hidden .ServiceFilter--colorDot {
+  opacity: 0.45;
+}
+
+.FacetList--label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.FacetList--bar {
+  flex: 0 0 60px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--surface-secondary);
+  overflow: hidden;
+}
+
+.FacetList--barFill {
+  display: block;
+  height: 100%;
+  background: var(--interactive-primary);
+  opacity: 0.6;
+}
+
+.FacetList--count {
+  flex: 0 0 2.5em;
+  text-align: right;
+  color: var(--text-secondary);
+  font-size: 0.85em;
+}
+
+.FacetList--action {
+  display: inline-flex;
+  align-items: center;
+  border: none;
+  background: none;
+  padding: 2px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+.FacetList--action:hover:not(:disabled):not(.is-disabled) {
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+}
+
+/* An eye is coloured only while its clause is in force, keep green and hide red as on the chips,
+   and shows that colour under the pointer as a preview; the popover's accent colour is everywhere
+   else. The eyes of the attribute input never hold a clause, so they are coloured only on hover. */
+.FacetList--action.is-on.is-keep,
+.FacetList--action.is-keep:hover:not(.is-disabled) {
+  color: var(--feedback-success);
+}
+
+.FacetList--action.is-on.is-hide,
+.FacetList--action.is-hide:hover:not(.is-disabled) {
+  color: var(--feedback-error);
+}
+
+.FacetList--action:disabled,
+.FacetList--action.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+/* The circled question mark of the search form's field hints, drawn on the icon at the same size. */
+.SpanFilter--help {
+  display: inline-flex;
+  align-items: center;
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 14px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.SpanFilter--help svg {
+  border: 1px solid currentColor;
+  border-radius: 100px;
+  padding: 1px;
+}
+
+.SpanFilter--help:hover {
+  color: var(--text-primary);
+}
+
+.SpanFilter--helpText p,
+.SpanFilter--helpText ul {
+  margin: 0 0 0.4rem;
+}
+
+.SpanFilter--helpText p:last-child {
+  margin-bottom: 0;
+}
+
+.SpanFilter--helpText ul {
+  padding-left: 1.2rem;
+}
+
+.RangeFacet--histogram {
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  height: 36px;
+  padding: 0 6px;
+}
+
+.RangeFacet--bin {
+  flex: 1;
+  min-height: 1px;
+  background: var(--border-default);
+  border-radius: 1px 1px 0 0;
+}
+
+.RangeFacet--bin.is-in {
+  background: var(--interactive-primary);
+  opacity: 0.6;
+}
+
+.RangeFacet.is-disabled .RangeFacet--bin.is-in {
+  background: var(--border-default);
+}
+
+.RangeFacet .ant-slider {
+  margin: 4px 6px 8px;
+}
+
+.RangeFacet--bounds {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-secondary);
+  font-size: 0.8em;
 }
