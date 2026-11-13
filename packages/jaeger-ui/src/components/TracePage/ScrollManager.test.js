@@ -170,6 +170,8 @@ describe('ScrollManager', () => {
       manager._scrollToVisibleSpan(1, 0);
       expect(manager._scrollPast).not.toHaveBeenCalled();
       expect(accessors.mapSpanIndexToRowIndex).not.toHaveBeenCalled();
+    });
+
     it('skips spans that the filter hides', () => {
       accessors.getTopRowIndexVisible.mockReturnValue(trace.spans.length - 1);
       accessors.getBottomRowIndexVisible.mockReturnValue(0);
