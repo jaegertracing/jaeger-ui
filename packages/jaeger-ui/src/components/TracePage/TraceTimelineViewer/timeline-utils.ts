@@ -8,8 +8,11 @@ import type { SpanDetailPanelMode } from '../../../types/config';
 import filterSpans from '../../../utils/filter-spans';
 import spanAncestorIds from '../../../utils/span-ancestor-ids';
 
+/** A span as the bulk collapse actions see it: its depth and its child test in the drawn tree. */
+export type CollapseTarget = { spanID: string; depth: number; hasChildren: boolean };
+
 export function shouldDisableCollapse(
-  allSpans: ReadonlyArray<IOtelSpan>,
+  allSpans: ReadonlyArray<CollapseTarget>,
   hiddenSpansIds: Set<string>
 ): boolean {
   return allSpans.filter(s => s.hasChildren).every(p => hiddenSpansIds.has(p.spanID));
@@ -36,8 +39,13 @@ export function trimFocusedDetailStatesForSidePanel(
   };
 }
 
+/**
+ * Collapses the trace to the paths that lead to the matching spans and opens their details. The
+ * matches are either the search text, which is matched here, or a set of span IDs that the caller
+ * matched already, such as the text matches without the spans the filter hides.
+ */
 export function calculateFocusedFindRowStates(
-  uiFind: string,
+  matches: string | ReadonlySet<string> | TNil,
   spans: ReadonlyArray<IOtelSpan>,
   allowHide = true
 ): FocusedFindRowStates {
@@ -53,7 +61,7 @@ export function calculateFocusedFindRowStates(
     }
   });
 
-  const matchedSpanIds = filterSpans(uiFind, spans);
+  const matchedSpanIds = typeof matches === 'string' ? filterSpans(matches, spans) : matches;
   if (matchedSpanIds && matchedSpanIds.size) {
     matchedSpanIds.forEach(spanID => {
       const span = spansMap.get(spanID);

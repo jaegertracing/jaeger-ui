@@ -11,12 +11,13 @@ import * as track from './store.track';
 import * as KeyboardShortcuts from '../keyboard-shortcuts';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
+import { EMPTY_SPAN_FILTER, withHiddenServices } from '../spanFilter';
 
 const { mockLayoutPrefsStore, mockTraceTimelineStore, mockUseTraceTimelineStore } = vi.hoisted(() => {
   const mockTraceTimelineStore = {
     detailStates: new Map(),
-    prunedServices: new Set(),
-    setPrunedServices: vi.fn(),
+    spanFilter: { clauses: [], treeMode: 'remove' },
+    setSpanFilter: vi.fn(),
     collapseAll: vi.fn(),
     collapseOne: vi.fn(),
     expandAll: vi.fn(),
@@ -59,13 +60,6 @@ vi.mock('./store', () => ({
   MIN_TIMELINE_COLUMN_WIDTH: 0.05,
 }));
 
-const mockUseServiceFilter = vi.hoisted(() => ({
-  prunedServices: new Set(),
-  serviceFilterNode: null,
-}));
-vi.mock('./useServiceFilter', () => ({
-  useServiceFilter: vi.fn(() => mockUseServiceFilter),
-}));
 const mockUseSpanPillsEnabled = vi.hoisted(() => vi.fn(() => true));
 vi.mock('./spanPills', () => ({
   useSpanPillsEnabled: mockUseSpanPillsEnabled,
@@ -79,7 +73,7 @@ vi.mock('./SpanDetailSidePanel', () => mockDefault(() => <div data-testid="span-
 vi.mock('./TimelineHeaderRow', () =>
   mockDefault(props => (
     <div data-testid="timeline-header-row-mock" data-side-panel-label={props.sidePanelLabel}>
-      {props.serviceFilterNode}
+      {props.spanFilterNode}
       <button
         data-testid="header-side-panel-change"
         type="button"
@@ -146,8 +140,6 @@ describe('<TraceTimelineViewer>', () => {
     mockLayoutPrefsStore.heatmapEnabled = false;
     mockTraceTimelineStore.detailStates = new Map();
     mockUseTraceTimelineStore.setState.mockClear();
-    mockUseServiceFilter.prunedServices = new Set();
-    mockUseServiceFilter.serviceFilterNode = null;
     mockUseSpanPillsEnabled.mockClear();
     jest.spyOn(KeyboardShortcuts, 'merge').mockClear();
   });
@@ -304,6 +296,34 @@ describe('<TraceTimelineViewer>', () => {
     expect(mockTraceTimelineStore.expandOne).toHaveBeenCalledWith(props.trace.spans);
   });
 
+  it('hands the bulk collapse actions the spans that have rows, at their depth in the drawn tree', () => {
+    const root = props.trace.spans[0];
+    const hiddenService = root.resource.serviceName;
+    mockTraceTimelineStore.spanFilter = withHiddenServices(
+      { ...EMPTY_SPAN_FILTER, treeMode: 'lift' },
+      new Set([hiddenService])
+    );
+    try {
+      render(<TraceTimelineViewerImpl {...props} />);
+      fireEvent.click(screen.getByTestId('collapse-all-button'));
+      fireEvent.click(screen.getByTestId('collapse-one-button'));
+      fireEvent.click(screen.getByTestId('expand-one-button'));
+      const targets = mockTraceTimelineStore.collapseAll.mock.calls[0][0];
+      expect(mockTraceTimelineStore.collapseOne.mock.calls[0][0]).toBe(targets);
+      expect(mockTraceTimelineStore.expandOne.mock.calls[0][0]).toBe(targets);
+      const hiddenIDs = new Set(
+        props.trace.spans.filter(s => s.resource.serviceName === hiddenService).map(s => s.spanID)
+      );
+      expect(targets.length).toBe(props.trace.spans.length - hiddenIDs.size);
+      expect(targets.every(t => !hiddenIDs.has(t.spanID))).toBe(true);
+      // The root is hidden, so every remaining span is lifted at least one level.
+      const depthOf = new Map(props.trace.spans.map(s => [s.spanID, s.depth]));
+      expect(targets.every(t => t.depth < depthOf.get(t.spanID))).toBe(true);
+    } finally {
+      mockTraceTimelineStore.spanFilter = { clauses: [], treeMode: 'remove' };
+    }
+  });
+
   it('tracks each header action before updating the store', () => {
     render(<TraceTimelineViewerImpl {...props} />);
     const cases = [
@@ -405,6 +425,6 @@ describe('<TraceTimelineViewer>', () => {
     });
 
     // Side panel cleanup when a selected span's service is pruned is tested
-    // in useServiceFilter.test.ts (the hook owns that logic now).
+    // in useServiceFilter.test.ts (the page's span filter hook owns that logic now).
   });
 });
