@@ -352,6 +352,99 @@ describe('<MonitorATMServicesView>', () => {
     expect(screen.getByText(/instructions/)).toBeInTheDocument();
   });
 
+  it('shows the missing-latency alert when call rates exist but latencies are empty', () => {
+    cleanup();
+    useServiceMetricsQuery.mockReturnValue({
+      data: {
+        serviceMetrics: {
+          service_latencies: null,
+          service_call_rate: serviceMetrics.service_call_rate,
+          service_error_rate: null,
+        },
+        serviceError: originInitialState.serviceError,
+      },
+      isFetching: false,
+      isLoading: false,
+    });
+    renderWithRouter(<MonitorATMServicesView />);
+    expect(screen.getByText(/Call rates were found but no latency histogram matched/)).toBeInTheDocument();
+    expect(screen.queryByText(/No data yet!/)).not.toBeInTheDocument();
+  });
+
+  it('shows only the fetch error when every latency request fails', () => {
+    cleanup();
+    const someError = new Error('504 Gateway Timeout');
+    useServiceMetricsQuery.mockReturnValue({
+      data: {
+        serviceMetrics: {
+          service_latencies: null,
+          service_call_rate: serviceMetrics.service_call_rate,
+          service_error_rate: null,
+        },
+        serviceError: {
+          ...originInitialState.serviceError,
+          service_latencies_50: someError,
+          service_latencies_75: someError,
+          service_latencies_95: someError,
+        },
+      },
+      isFetching: false,
+      isLoading: false,
+    });
+    renderWithRouter(<MonitorATMServicesView />);
+    expect(screen.getByTestId('graph-error')).toBeInTheDocument();
+    expect(screen.queryByText(/no latency histogram matched/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No data yet!/)).not.toBeInTheDocument();
+  });
+
+  it('shows the generic alert when some latency requests fail and the rest are empty', () => {
+    cleanup();
+    useServiceMetricsQuery.mockReturnValue({
+      data: {
+        serviceMetrics: {
+          service_latencies: null,
+          service_call_rate: serviceMetrics.service_call_rate,
+          service_error_rate: null,
+        },
+        serviceError: {
+          ...originInitialState.serviceError,
+          service_latencies_50: new Error('504 Gateway Timeout'),
+        },
+      },
+      isFetching: false,
+      isLoading: false,
+    });
+    renderWithRouter(<MonitorATMServicesView />);
+    expect(screen.queryByText(/no latency histogram matched/)).not.toBeInTheDocument();
+    expect(screen.getByText(/No data yet!/)).toBeInTheDocument();
+  });
+
+  it('does not show the missing-latency alert when no metrics exist', () => {
+    cleanup();
+    useServiceMetricsQuery.mockReturnValue({
+      data: {
+        serviceMetrics: { service_latencies: null, service_call_rate: null, service_error_rate: null },
+        serviceError: originInitialState.serviceError,
+      },
+      isFetching: false,
+      isLoading: false,
+    });
+    renderWithRouter(<MonitorATMServicesView />);
+    expect(screen.queryByText(/no latency histogram matched/)).not.toBeInTheDocument();
+  });
+
+  it('does not show the missing-latency alert when latencies exist', () => {
+    cleanup();
+    useServiceMetricsQuery.mockReturnValue({
+      data: { serviceMetrics, serviceError: originInitialState.serviceError },
+      isFetching: false,
+      isLoading: false,
+    });
+    renderWithRouter(<MonitorATMServicesView />);
+    expect(screen.queryByText(/no latency histogram matched/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No data yet!/)).not.toBeInTheDocument();
+  });
+
   it('does not show no-metrics alert while service metrics are loading', () => {
     cleanup();
     useServiceMetricsQuery.mockReturnValue({
