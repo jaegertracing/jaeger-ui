@@ -137,6 +137,113 @@ describe('<SpanBarRow>', () => {
     expect(defaultProps.onDetailToggled).not.toHaveBeenCalled();
   });
 
+  it('triggers onChildrenToggled and stops propagation when ArrowRight is pressed on a collapsed parent span', () => {
+    const onChildrenToggled = jest.fn();
+    const parentKeyDown = jest.fn();
+    const props = {
+      ...defaultProps,
+      isChildrenExpanded: false,
+      span: { ...defaultProps.span, hasChildren: true },
+      onChildrenToggled,
+    };
+    render(
+      <div onKeyDown={parentKeyDown}>
+        <SpanBarRow {...props} />
+      </div>
+    );
+    const spanName = screen.getByRole('switch');
+    fireEvent.keyDown(spanName, { key: 'ArrowRight' });
+    expect(onChildrenToggled).toHaveBeenCalledWith(defaultProps.span.spanID);
+    expect(parentKeyDown).not.toHaveBeenCalled();
+  });
+
+  it('triggers onChildrenToggled and stops propagation when ArrowLeft is pressed on an expanded parent span', () => {
+    const onChildrenToggled = jest.fn();
+    const parentKeyDown = jest.fn();
+    const props = {
+      ...defaultProps,
+      isChildrenExpanded: true,
+      span: { ...defaultProps.span, hasChildren: true },
+      onChildrenToggled,
+    };
+    render(
+      <div onKeyDown={parentKeyDown}>
+        <SpanBarRow {...props} />
+      </div>
+    );
+    const spanName = screen.getByRole('switch');
+    fireEvent.keyDown(spanName, { key: 'ArrowLeft' });
+    expect(onChildrenToggled).toHaveBeenCalledWith(defaultProps.span.spanID);
+    expect(parentKeyDown).not.toHaveBeenCalled();
+  });
+
+  it('does not trigger onChildrenToggled or stop propagation when ArrowRight is pressed on an expanded parent span', () => {
+    const onChildrenToggled = jest.fn();
+    const parentKeyDown = jest.fn();
+    const props = {
+      ...defaultProps,
+      isChildrenExpanded: true,
+      span: { ...defaultProps.span, hasChildren: true },
+      onChildrenToggled,
+    };
+    render(
+      <div onKeyDown={parentKeyDown}>
+        <SpanBarRow {...props} />
+      </div>
+    );
+    const spanName = screen.getByRole('switch');
+    fireEvent.keyDown(spanName, { key: 'ArrowRight' });
+    expect(onChildrenToggled).not.toHaveBeenCalled();
+    expect(parentKeyDown).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not trigger onChildrenToggled or stop propagation when ArrowLeft is pressed on a collapsed parent span', () => {
+    const onChildrenToggled = jest.fn();
+    const parentKeyDown = jest.fn();
+    const props = {
+      ...defaultProps,
+      isChildrenExpanded: false,
+      span: { ...defaultProps.span, hasChildren: true },
+      onChildrenToggled,
+    };
+    render(
+      <div onKeyDown={parentKeyDown}>
+        <SpanBarRow {...props} />
+      </div>
+    );
+    const spanName = screen.getByRole('switch');
+    fireEvent.keyDown(spanName, { key: 'ArrowLeft' });
+    expect(onChildrenToggled).not.toHaveBeenCalled();
+    expect(parentKeyDown).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not trigger onChildrenToggled or stop propagation when arrows are pressed on a leaf span', () => {
+    const onChildrenToggled = jest.fn();
+    const parentKeyDown = jest.fn();
+    const props = {
+      ...defaultProps,
+      isChildrenExpanded: false,
+      span: { ...defaultProps.span, hasChildren: false },
+      onChildrenToggled,
+    };
+    render(
+      <div onKeyDown={parentKeyDown}>
+        <SpanBarRow {...props} />
+      </div>
+    );
+    const spanName = screen.getByRole('switch');
+    fireEvent.keyDown(spanName, { key: 'ArrowRight' });
+    fireEvent.keyDown(spanName, { key: 'ArrowLeft' });
+    expect(onChildrenToggled).not.toHaveBeenCalled();
+    expect(parentKeyDown).toHaveBeenCalledTimes(2);
+  });
+
+  it('preserves visible text in accessible name without overriding via aria-label', () => {
+    render(<SpanBarRow {...defaultProps} />);
+    const spanName = screen.getByRole('switch');
+    expect(spanName).not.toHaveAttribute('aria-label');
+  });
+
   it('triggers onChildrenToggled when SpanTreeOffset is clicked', () => {
     render(<SpanBarRow {...defaultProps} />);
     const treeOffset = screen.getByTestId('span-tree-offset');

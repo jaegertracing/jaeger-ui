@@ -232,5 +232,107 @@ describe('SpanTreeOffset', () => {
       const wrapper = container.querySelector('.SpanTreeOffset');
       expect(wrapper).toHaveAttribute('tabindex', '0');
     });
+
+    it('sets role="button", aria-expanded="false", and Expand label when collapsed', () => {
+      const onClick = jest.fn();
+      const { container } = render(
+        <SpanTreeOffset {...props} span={spanWithChildren} childrenVisible={false} onClick={onClick} />
+      );
+      const wrapper = container.querySelector('.SpanTreeOffset');
+      expect(wrapper).toHaveAttribute('role', 'button');
+      expect(wrapper).toHaveAttribute('aria-expanded', 'false');
+      expect(wrapper).toHaveAttribute('aria-label', 'Expand child spans');
+    });
+
+    it('sets role="button", aria-expanded="true", and Collapse label when expanded', () => {
+      const onClick = jest.fn();
+      const { container } = render(
+        <SpanTreeOffset {...props} span={spanWithChildren} childrenVisible onClick={onClick} />
+      );
+      const wrapper = container.querySelector('.SpanTreeOffset');
+      expect(wrapper).toHaveAttribute('role', 'button');
+      expect(wrapper).toHaveAttribute('aria-expanded', 'true');
+      expect(wrapper).toHaveAttribute('aria-label', 'Collapse child spans');
+    });
+
+    it('does not set role="button" or aria-expanded on a leaf span', () => {
+      const onClick = jest.fn();
+      const { container } = render(<SpanTreeOffset {...props} span={ownSpan} onClick={onClick} />);
+      const wrapper = container.querySelector('.SpanTreeOffset');
+      expect(wrapper).not.toHaveAttribute('role');
+      expect(wrapper).not.toHaveAttribute('aria-expanded');
+      expect(wrapper).not.toHaveAttribute('tabindex');
+    });
+
+    it('calls onClick and stops propagation when ArrowRight is pressed on a collapsed parent', () => {
+      const onClick = jest.fn();
+      const parentKeyDown = jest.fn();
+      const { container } = render(
+        <div onKeyDown={parentKeyDown}>
+          <SpanTreeOffset {...props} span={spanWithChildren} childrenVisible={false} onClick={onClick} />
+        </div>
+      );
+      const wrapper = container.querySelector('.SpanTreeOffset');
+      fireEvent.keyDown(wrapper, { key: 'ArrowRight' });
+      expect(onClick).toHaveBeenCalledTimes(1);
+      expect(parentKeyDown).not.toHaveBeenCalled();
+    });
+
+    it('calls onClick and stops propagation when ArrowLeft is pressed on an expanded parent', () => {
+      const onClick = jest.fn();
+      const parentKeyDown = jest.fn();
+      const { container } = render(
+        <div onKeyDown={parentKeyDown}>
+          <SpanTreeOffset {...props} span={spanWithChildren} childrenVisible onClick={onClick} />
+        </div>
+      );
+      const wrapper = container.querySelector('.SpanTreeOffset');
+      fireEvent.keyDown(wrapper, { key: 'ArrowLeft' });
+      expect(onClick).toHaveBeenCalledTimes(1);
+      expect(parentKeyDown).not.toHaveBeenCalled();
+    });
+
+    it('does not call onClick or stop propagation when ArrowRight is pressed on an expanded parent', () => {
+      const onClick = jest.fn();
+      const parentKeyDown = jest.fn();
+      const { container } = render(
+        <div onKeyDown={parentKeyDown}>
+          <SpanTreeOffset {...props} span={spanWithChildren} childrenVisible onClick={onClick} />
+        </div>
+      );
+      const wrapper = container.querySelector('.SpanTreeOffset');
+      fireEvent.keyDown(wrapper, { key: 'ArrowRight' });
+      expect(onClick).not.toHaveBeenCalled();
+      expect(parentKeyDown).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not call onClick or stop propagation when ArrowLeft is pressed on a collapsed parent', () => {
+      const onClick = jest.fn();
+      const parentKeyDown = jest.fn();
+      const { container } = render(
+        <div onKeyDown={parentKeyDown}>
+          <SpanTreeOffset {...props} span={spanWithChildren} childrenVisible={false} onClick={onClick} />
+        </div>
+      );
+      const wrapper = container.querySelector('.SpanTreeOffset');
+      fireEvent.keyDown(wrapper, { key: 'ArrowLeft' });
+      expect(onClick).not.toHaveBeenCalled();
+      expect(parentKeyDown).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not call onClick or stop propagation when arrows are pressed on a leaf span', () => {
+      const onClick = jest.fn();
+      const parentKeyDown = jest.fn();
+      const { container } = render(
+        <div onKeyDown={parentKeyDown}>
+          <SpanTreeOffset {...props} span={ownSpan} onClick={onClick} />
+        </div>
+      );
+      const wrapper = container.querySelector('.SpanTreeOffset');
+      fireEvent.keyDown(wrapper, { key: 'ArrowRight' });
+      fireEvent.keyDown(wrapper, { key: 'ArrowLeft' });
+      expect(onClick).not.toHaveBeenCalled();
+      expect(parentKeyDown).toHaveBeenCalledTimes(2);
+    });
   });
 });

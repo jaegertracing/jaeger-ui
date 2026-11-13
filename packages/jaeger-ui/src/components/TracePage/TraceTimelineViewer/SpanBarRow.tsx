@@ -91,6 +91,13 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   onChildrenToggled,
   useOtelTerms,
 }) => {
+  const {
+    duration,
+    hasChildren: isParent,
+    name: operationName,
+    resource: { serviceName },
+  } = span;
+
   const _detailToggle = useCallback(() => {
     onDetailToggled(span.spanID);
   }, [onDetailToggled, span.spanID]);
@@ -104,16 +111,19 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         onDetailToggled(span.spanID);
+      } else if (e.key === 'ArrowRight' && isParent && !isChildrenExpanded) {
+        e.preventDefault();
+        e.stopPropagation();
+        onChildrenToggled(span.spanID);
+      } else if (e.key === 'ArrowLeft' && isParent && isChildrenExpanded) {
+        e.preventDefault();
+        e.stopPropagation();
+        onChildrenToggled(span.spanID);
       }
     },
-    [onDetailToggled, span.spanID]
+    [onDetailToggled, onChildrenToggled, span.spanID, isParent, isChildrenExpanded]
   );
-  const {
-    duration,
-    hasChildren: isParent,
-    name: operationName,
-    resource: { serviceName },
-  } = span;
+
   const pills = spanPillsEnabled ? getSpanPillsForSpan(span) : [];
   // One resolver for namespace + GenAI icons; GenAI wins when both match (#4217).
   const decoration = getSpanDecorationIcon(span);
