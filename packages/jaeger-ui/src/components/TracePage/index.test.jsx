@@ -487,22 +487,27 @@ describe('<TracePage>', () => {
     const raw = traceGenerator.trace({ numberOfSpans: 3 });
     // Every span matches the search; the second span's service is pruned, and the third span is
     // its child, so only the first span stays in the count.
-    raw.spans.forEach(span => {
+    // The three spans get distinct services, so the chain root -> pruned -> grandchild is the same
+    // on every run.
+    raw.processes = {
+      p0: { processID: 'p0', serviceName: 'svc-root', tags: [] },
+      p1: { processID: 'p1', serviceName: 'svc-pruned', tags: [] },
+      p2: { processID: 'p2', serviceName: 'svc-grandchild', tags: [] },
+    };
+    raw.spans.forEach((span, i) => {
       span.operationName = 'everywhere';
+      span.processID = `p${i}`;
     });
     raw.spans[1].references = [{ refType: 'CHILD_OF', traceID: raw.traceID, spanID: raw.spans[0].spanID }];
     raw.spans[2].references = [{ refType: 'CHILD_OF', traceID: raw.traceID, spanID: raw.spans[1].spanID }];
     const localTrace = transformTraceData(raw).asOtelTrace();
-    const prunedService = localTrace.spanMap.get(raw.spans[1].spanID).resource.serviceName;
     useTraceMock.mockReturnValue({ data: localTrace, isPending: false, isError: false, error: null });
-    mockTraceTimelineStore.prunedServices = new Set([prunedService]);
+    mockTraceTimelineStore.prunedServices = new Set(['svc-pruned']);
 
     render(<TracePage {...defaultProps} params={{ id: raw.traceID }} uiFind="everywhere" />);
 
-    // The chain is span 0 -> span 1 -> span 2. Span 1 and its descendant are hidden; span 0 stays
-    // unless the generator gave it the pruned service too.
-    const rootService = localTrace.spanMap.get(raw.spans[0].spanID).resource.serviceName;
-    expect(capturedHeaderProps.resultCount).toBe(rootService === prunedService ? 0 : 1);
+    // Span 1 and its descendant are hidden, so only the root span stays in the count.
+    expect(capturedHeaderProps.resultCount).toBe(1);
     mockTraceTimelineStore.prunedServices = new Set();
     filterSpansSpy.mockImplementation(() => new Set());
   });
