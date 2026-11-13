@@ -9,9 +9,12 @@ import {
   encodeClause,
   evaluateSpanFilter,
   hiddenServices,
+  hidesEverySpan,
   IClause,
   ISpanFilter,
+  normalizeFilter,
   spanFiltersEqual,
+  Verb,
   withHiddenServices,
   withoutHiddenSpans,
 } from './spanFilter';
@@ -245,6 +248,25 @@ describe('evaluateSpanFilter', () => {
   });
 });
 
+describe('hidesEverySpan', () => {
+  const a = makeSpan('a', 'svc-a');
+  const b = makeSpan('b', 'svc-b');
+  const keep = (values: string[]): ISpanFilter => ({
+    treeMode: 'remove',
+    clauses: [{ verb: 'keep', criterion: { shape: 'set', property: 'service', values } }],
+  });
+
+  it('is true only when the filter hides each of the spans', () => {
+    expect(hidesEverySpan([a, b], keep(['svc-c']))).toBe(true);
+    expect(hidesEverySpan([a, b], keep(['svc-b']))).toBe(false);
+    expect(hidesEverySpan([a, b], EMPTY_SPAN_FILTER)).toBe(false);
+  });
+
+  it('is false for no spans', () => {
+    expect(hidesEverySpan([], keep(['svc-c']))).toBe(false);
+  });
+});
+
 describe('hiddenServices and withHiddenServices', () => {
   it('round-trips the service hide set and leaves other clauses alone', () => {
     const base = filterOf({
@@ -425,6 +447,83 @@ describe('clause codec', () => {
     expect(
       encodeClause({ verb: 'keep', criterion: { shape: 'set', property: 'status', values: ['ok', 'error'] } })
     ).toBe('k:status:error,ok');
+  });
+});
+
+describe('normalizeFilter', () => {
+  const set = (verb: Verb, property: 'service' | 'kind', ...values: string[]): IClause => ({
+    verb,
+    criterion: { shape: 'set', property, values },
+  });
+
+  it('merges the set clauses of one verb and property into their union', () => {
+    const filter: ISpanFilter = {
+      treeMode: 'lift',
+      clauses: [set('keep', 'service', 'b'), set('hide', 'service', 'a'), set('keep', 'service', 'c', 'b')],
+    };
+    expect(normalizeFilter(filter)).toEqual({
+      treeMode: 'lift',
+      clauses: [set('hide', 'service', 'a'), set('keep', 'service', 'b', 'c')],
+    });
+  });
+
+  it('keeps set clauses of different verbs or properties apart', () => {
+    const filter: ISpanFilter = {
+      treeMode: 'remove',
+      clauses: [set('keep', 'service', 'a'), set('hide', 'service', 'b'), set('keep', 'kind', 'client')],
+    };
+    expect(normalizeFilter(filter)).toBe(filter);
+  });
+
+  it('drops a second copy of any other clause and returns the same filter when nothing changes', () => {
+    const text: IClause = { verb: 'hide', criterion: { shape: 'text', text: 'foo' } };
+    const once: ISpanFilter = { treeMode: 'remove', clauses: [text] };
+    expect(normalizeFilter(once)).toBe(once);
+    expect(normalizeFilter({ ...once, clauses: [text, { ...text }] })).toEqual(once);
+  });
+});
+
+describe('normalizeFilter ordering', () => {
+  const clause = (verb: Verb, criterion: IClause['criterion']): IClause => ({ verb, criterion });
+  const text = clause('keep', { shape: 'text', text: 'foo' });
+  const attr = clause('hide', { shape: 'attr', text: 'http.method:GET' });
+  const duration = clause('keep', { shape: 'range', property: 'duration', min: 0, max: 5 });
+  const hideStatus = clause('hide', { shape: 'set', property: 'status', values: ['ok'] });
+  const keepStatus = clause('keep', { shape: 'set', property: 'status', values: ['error'] });
+  const service = clause('hide', { shape: 'set', property: 'service', values: ['svc-a'] });
+
+  it('lists the clauses by property and then by criterion, whatever order they arrive in', () => {
+    const { clauses } = normalizeFilter(filterOf(text, attr, hideStatus, duration, keepStatus, service));
+    expect(clauses).toEqual([service, keepStatus, hideStatus, duration, attr, text]);
+  });
+
+  it('orders by criterion before verb, so that a verb switch leaves a chip in its place', () => {
+    const alpha = clause('keep', { shape: 'text', text: 'alpha' });
+    const zulu = clause('keep', { shape: 'text', text: 'zulu' });
+    const alphaHidden = { ...alpha, verb: 'hide' as const };
+    expect(normalizeFilter(filterOf(alpha, zulu)).clauses).toEqual([alpha, zulu]);
+    expect(normalizeFilter(filterOf(alphaHidden, zulu)).clauses).toEqual([alphaHidden, zulu]);
+    expect(normalizeFilter(filterOf(alphaHidden, alpha)).clauses).toEqual([alpha, alphaHidden]);
+  });
+
+  it('returns the same filter when the clauses are already in order', () => {
+    const filter = filterOf(service, keepStatus, duration, text);
+    expect(normalizeFilter(filter)).toBe(filter);
+  });
+
+  it('tells apart criteria that a locale comparison would treat as equal', () => {
+    const nfc = clause('hide', { shape: 'text', text: 'caf\u00e9' });
+    const nfd = clause('hide', { shape: 'text', text: 'cafe\u0301' });
+    const nfdKept = { ...nfd, verb: 'keep' as const };
+    const before = normalizeFilter(filterOf(nfc, nfd)).clauses;
+    const after = normalizeFilter(filterOf(nfc, nfdKept)).clauses;
+    expect(after.map(c => c.criterion)).toEqual(before.map(c => c.criterion));
+  });
+
+  it('orders clauses of one property and verb by their encoded form', () => {
+    const b = clause('hide', { shape: 'text', text: 'b' });
+    const a = clause('hide', { shape: 'text', text: 'a' });
+    expect(normalizeFilter(filterOf(b, a)).clauses).toEqual([a, b]);
   });
 });
 

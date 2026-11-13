@@ -12,7 +12,9 @@
 
 import { TNil } from '../../types';
 import { IAttribute, IOtelSpan } from '../../types/otel';
+import { Microseconds } from '../../types/units';
 import memoizeOne from 'memoize-one';
+import { formatDuration } from '../../utils/date';
 import filterSpans, { stringifyAttributeValue } from '../../utils/filter-spans';
 import { getGenAiTokenUsage } from './TraceTimelineViewer/SpanDetail/GenAITab/genAiData';
 import { isErrorSpan } from './TraceTimelineViewer/utils';
@@ -20,13 +22,13 @@ import { isErrorSpan } from './TraceTimelineViewer/utils';
 type SetProperty = 'service' | 'status' | 'kind' | 'spanType';
 type RangeProperty = 'duration' | 'tokens';
 
-type Criterion =
+export type Criterion =
   | { shape: 'text'; text: string }
   | { shape: 'set'; property: SetProperty; values: ReadonlyArray<string> }
   | { shape: 'range'; property: RangeProperty; min: number; max: number }
   | { shape: 'attr'; text: string };
 
-type Verb = 'keep' | 'hide';
+export type Verb = 'keep' | 'hide';
 
 export interface IClause {
   verb: Verb;
@@ -41,6 +43,11 @@ export interface ISpanFilter {
 }
 
 export const EMPTY_SPAN_FILTER: ISpanFilter = { clauses: [], treeMode: 'lift' };
+
+/** The tooltip of every control that would create a keep clause while the tree mode is remove. */
+export const KEEP_NEEDS_LIFT = 'Keep filters need "Lift to its parent" as the tree mode';
+/** The tooltip of a search-input menu entry whose conversion would leave no span shown. */
+export const LEAVES_NO_SPAN = 'This filter would leave no span shown';
 
 /** The span type value of a span that carries no gen_ai attributes. */
 const NON_GENAI_SPAN_TYPE = 'none';
@@ -156,6 +163,15 @@ export const evaluateSpanFilter: (
 ) => ISpanFilterResult = memoizeOne(evaluate);
 
 /**
+ * Whether the filter hides every one of the spans. The popover asks this of the trace for each edit
+ * it is about to apply, through the same memoized evaluation as the page, so the committed filter
+ * costs nothing to ask about.
+ */
+export function hidesEverySpan(spans: ReadonlyArray<IOtelSpan>, filter: ISpanFilter): boolean {
+  return spans.length > 0 && evaluateSpanFilter(spans, filter).hiddenIDs.size === spans.length;
+}
+
+/**
  * Removes the hidden spans from a set of span IDs, so that the search match count and the
  * highlighting never refer to a span that is not on screen. A search whose matches are all hidden
  * yields an empty set, not null, because the timeline recomputes its focus for an active search
@@ -206,6 +222,109 @@ export function withHiddenServices(filter: ISpanFilter, services: ReadonlySet<st
     });
   }
   return { ...filter, clauses };
+}
+
+const PROPERTY_LABEL: Record<SetProperty | RangeProperty, string> = {
+  service: 'service',
+  status: 'status',
+  kind: 'kind',
+  spanType: 'span type',
+  duration: 'duration',
+  tokens: 'tokens',
+};
+
+/** The short form of a criterion that a chip shows, such as "status: error" or "text: tools/call". */
+export function describeCriterion(criterion: Criterion): string {
+  switch (criterion.shape) {
+    case 'text':
+      return `text: ${criterion.text}`;
+    case 'attr':
+      return `attribute: ${criterion.text}`;
+    case 'set':
+      return `${PROPERTY_LABEL[criterion.property]}: ${criterion.values.join(', ')}`;
+    case 'range': {
+      const format = (v: number) => {
+        if (v === Infinity) return '∞';
+        return criterion.property === 'duration' ? formatDuration(v as Microseconds) : String(v);
+      };
+      return `${PROPERTY_LABEL[criterion.property]}: ${format(criterion.min)} – ${format(criterion.max)}`;
+    }
+  }
+}
+
+const PROPERTY_ORDER: Record<SetProperty | RangeProperty, number> = {
+  service: 0,
+  status: 1,
+  kind: 2,
+  spanType: 3,
+  duration: 4,
+  tokens: 5,
+};
+
+function clauseRank(clause: IClause): number {
+  switch (clause.criterion.shape) {
+    case 'set':
+    case 'range':
+      return PROPERTY_ORDER[clause.criterion.property];
+    case 'attr':
+      return 6;
+    case 'text':
+      return 7;
+  }
+}
+
+// The order in which the chips are listed: by property in the order of the popover's controls,
+// then attribute and text criteria, alphabetical by criterion within that, and keep before hide
+// only for one criterion under both verbs. The verb comes last so that a chip keeps its place when
+// its verb switches, and the order depends on nothing else, so a chip keeps its place when the
+// filter is read again from the URL.
+function compareClauses(a: IClause, b: IClause): number {
+  const rank = clauseRank(a) - clauseRank(b);
+  if (rank !== 0) return rank;
+  // Plain code-unit order, because localeCompare treats some distinct strings as equal.
+  const ca = encodeClause(a).slice(2);
+  const cb = encodeClause(b).slice(2);
+  if (ca !== cb) return ca < cb ? -1 : 1;
+  return a.verb === b.verb ? 0 : a.verb === 'keep' ? -1 : 1;
+}
+
+/**
+ * The filter with one set clause per verb and property, holding the union of their values, without
+ * a second copy of any other clause, and with the clauses in the order the chips are listed; the
+ * same filter when nothing changes. A set clause matches a span whose value is in the set, so two
+ * hide clauses on one property mean the same as their union, and a keep clause on one property is
+ * one chip with the values it keeps.
+ */
+export function normalizeFilter(filter: ISpanFilter): ISpanFilter {
+  const seen = new Set<string>();
+  const sets = new Map<string, IClause>();
+  const clauses: IClause[] = [];
+  let changed = false;
+  for (const clause of filter.clauses) {
+    if (clause.criterion.shape === 'set') {
+      const key = `${clause.verb}:${clause.criterion.property}`;
+      const first = sets.get(key);
+      if (first && first.criterion.shape === 'set') {
+        const values = [...new Set([...first.criterion.values, ...clause.criterion.values])].sort();
+        const merged: IClause = { ...first, criterion: { ...first.criterion, values } };
+        sets.set(key, merged);
+        clauses[clauses.indexOf(first)] = merged;
+        changed = true;
+        continue;
+      }
+      sets.set(key, clause);
+    }
+    const encoded = encodeClause(clause);
+    if (seen.has(encoded)) {
+      changed = true;
+      continue;
+    }
+    seen.add(encoded);
+    clauses.push(clause);
+  }
+  clauses.sort(compareClauses);
+  if (!changed) changed = clauses.some((c, i) => c !== filter.clauses[i]);
+  return changed ? { ...filter, clauses } : filter;
 }
 
 export function spanFiltersEqual(a: ISpanFilter, b: ISpanFilter): boolean {

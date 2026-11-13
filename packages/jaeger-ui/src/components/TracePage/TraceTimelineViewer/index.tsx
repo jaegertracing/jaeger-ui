@@ -23,7 +23,6 @@ import {
 import SpanDetailSidePanel from './SpanDetailSidePanel';
 import TimelineHeaderRow from './TimelineHeaderRow';
 import { collapseTargets } from './generateRowStates';
-import { useServiceFilter } from './useServiceFilter';
 import { evaluateSpanFilter } from '../spanFilter';
 import { useSpanPillsEnabled } from './spanPills';
 import VirtualizedTraceView from './VirtualizedTraceView';
@@ -45,7 +44,11 @@ type TProps = {
   // its own document offset, so it has to know when that padding changes.
   pageHeaderHeight: number;
   trace: IOtelTrace;
+  // The trace the page's span filter is resolved for; see `useSpanFilter`.
+  filterTrace: IOtelTrace | TNil;
   criticalPath: CriticalPathSection[];
+  // The funnel button of the span filter, which the page owns and the column header shows.
+  spanFilterNode?: React.ReactNode;
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
   viewRange: IViewRange;
@@ -71,6 +74,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     viewRange,
     pageHeaderHeight,
     trace,
+    spanFilterNode,
     useOtelTerms,
     ...rest
   } = props;
@@ -155,8 +159,6 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     });
   }, [collapseAll, expandAll, collapseOne, expandOne]);
 
-  const { serviceFilterNode } = useServiceFilter(trace, detailPanelMode);
-
   const spanPillsEnabled = useSpanPillsEnabled();
 
   // When timeline bars are hidden with the side panel active, the side panel expands to absorb
@@ -228,7 +230,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       onExpandAll={expandAll}
       onExpandOne={expandOne}
       resizerMax={resizerMax}
-      serviceFilterNode={serviceFilterNode}
+      spanFilterNode={spanFilterNode}
       sidePanelVisible={sidePanelActive}
       sidePanelWidth={effectiveSidePanelWidth}
       sidePanelLabel={sidePanelLabel}

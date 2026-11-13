@@ -1,11 +1,11 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import queryString from 'query-string';
 
-import ServiceFilter from './ServiceFilter';
+import SpanFilterButton from './ServiceFilter';
 import { getSelectedSpanID, useTraceTimelineStore } from './store';
 import {
   decodeSvcFilter,
@@ -23,10 +23,14 @@ import {
   spanFiltersEqual,
   TreeMode,
   withHiddenServices,
+  normalizeFilter,
 } from '../spanFilter';
 import { IOtelTrace } from '../../../types/otel';
+import { TNil } from '../../../types';
 import type { SpanDetailPanelMode } from '../../../types/config';
+import { useConfig } from '../../../hooks/useConfig';
 import storage from '../../../utils/storage';
+import defaultConfig from '../../../constants/default-config';
 
 function setsEqual(a: Set<string>, b: Set<string>): boolean {
   if (a.size !== b.size) return false;
@@ -135,7 +139,7 @@ export function resolveInitialFilter(
     .map(decodeClause)
     .filter((c): c is IClause => c !== null);
   const treeMode: TreeMode = params[TREE_PARAM] === REMOVE_VALUE ? 'remove' : 'lift';
-  let filter: ISpanFilter = { clauses, treeMode };
+  let filter: ISpanFilter = normalizeFilter({ clauses, treeMode });
 
   const legacy = params[LEGACY_SERVICE_PARAM];
   let rewrite = typeof legacy === 'string' && legacy !== '';
@@ -143,7 +147,7 @@ export function resolveInitialFilter(
     const decoded = decodeSvcFilter(sortedServiceNames, legacy as string);
     if (decoded && !decoded.stale) {
       const pruned = new Set(sortedServiceNames.filter(name => !decoded.visibleServices.has(name)));
-      filter = withHiddenServices(filter, pruned);
+      filter = normalizeFilter(withHiddenServices(filter, pruned));
       // The link was written when hiding a service pruned its subtree, so it renders that way.
       if (!(TREE_PARAM in params)) filter = { ...filter, treeMode: 'remove' };
     }
@@ -151,14 +155,14 @@ export function resolveInitialFilter(
 
   if (!urlHasFilterParams(params)) {
     const saved = readDefaultServices(sortedServiceNames, rootServiceNames, treeMode);
-    return { filter: saved ? withHiddenServices(filter, saved) : filter };
+    return { filter: saved ? normalizeFilter(withHiddenServices(filter, saved)) : filter };
   }
 
   if (filter.treeMode === 'remove') {
     const requested = hiddenServices(filter);
     const sanitized = sanitizePrunedServices(requested, rootServiceNames);
     if (!setsEqual(sanitized, requested)) {
-      filter = withHiddenServices(filter, sanitized);
+      filter = normalizeFilter(withHiddenServices(filter, sanitized));
       rewrite = true;
     }
   }
@@ -209,38 +213,72 @@ export function buildFilterSearch(currentSearch: string, filter: ISpanFilter): s
   return searchOf(params);
 }
 
-type UseServiceFilterResult = {
-  prunedServices: Set<string>;
-  serviceFilterNode: React.ReactNode;
+// The merged config always carries the default, so the fallback only narrows the type.
+const DEFAULT_APPLY_THRESHOLD = defaultConfig.traceTimeline?.filterApplyThreshold ?? 10_000;
+const NO_SERVICES: IOtelTrace['services'] = [];
+const NO_SPANS: IOtelTrace['rootSpans'] = [];
+
+type ApplyOptions = {
+  // Save the service selection as the default for future traces.
+  saveAsDefault?: boolean;
+  // Remove the search text from the URL in the same navigation, for the text-to-chip conversion.
+  clearUiFind?: boolean;
+};
+
+type UseSpanFilterResult = {
+  spanFilter: ISpanFilter;
+  // The trace the filter was last resolved for. A new trace renders with the filter of the previous
+  // one until the resolve effect runs, so the timeline takes the load focus only once this is the
+  // trace it shows.
+  filterTrace: IOtelTrace | TNil;
+  applyFilter: (filter: ISpanFilter, options?: ApplyOptions) => void;
+  // The funnel button with its popover, rendered once in the header cluster and once in the
+  // timeline column header; the two instances edit the same filter.
+  spanFilterNode: React.ReactNode;
 };
 
 /**
- * Hook that manages span filter state, URL sync, saved defaults, and side panel cleanup.
- * Returns the services the filter hides and a React node to render in the timeline header.
+ * Owns the span filter of the trace page: it resolves the filter from the URL and the saved
+ * default, writes changes back to the URL, deselects a side panel span that a change hides, and
+ * renders the funnel button. The trace is null while the page is loading, and then the hook does
+ * nothing.
  */
-export function useServiceFilter(
-  trace: IOtelTrace,
+export function useSpanFilter(
+  trace: IOtelTrace | TNil,
   detailPanelMode: SpanDetailPanelMode
-): UseServiceFilterResult {
+): UseSpanFilterResult {
   const location = useLocation();
   const navigate = useNavigate();
-  const sortedServiceNames = useMemo(() => getSortedServiceNames(trace.services), [trace.services]);
+  const services = trace?.services ?? NO_SERVICES;
+  const rootSpans = trace?.rootSpans ?? NO_SPANS;
+  const sortedServiceNames = useMemo(() => getSortedServiceNames(services), [services]);
   const rootServiceNames = useMemo(() => {
     const names = new Set<string>();
-    for (const span of trace.rootSpans) {
+    for (const span of rootSpans) {
       names.add(span.resource.serviceName);
     }
     return names;
-  }, [trace.rootSpans]);
+  }, [rootSpans]);
+  const applyThreshold = useConfig().traceTimeline?.filterApplyThreshold ?? DEFAULT_APPLY_THRESHOLD;
 
   const spanFilter = useTraceTimelineStore(s => s.spanFilter);
   const setSpanFilter = useTraceTimelineStore(s => s.setSpanFilter);
-  const prunedServices = useMemo(() => hiddenServices(spanFilter), [spanFilter]);
+  const [filterTrace, setFilterTrace] = useState<IOtelTrace | TNil>(null);
+  // The trace is read through a ref so that the resolve effect below keeps its inputs; a new trace
+  // object re-runs it through the service lists anyway.
+  const latestTrace = useRef(trace);
+  latestTrace.current = trace;
+  const hiddenIDs = useMemo(
+    () => evaluateSpanFilter(trace?.spans, spanFilter).hiddenIDs,
+    [trace?.spans, spanFilter]
+  );
 
   // Resolve the filter from the URL or the saved default whenever relevant inputs change
   // (trace identity, URL search string). Guards against loops by comparing the
   // resolved filter to the current state before writing.
+  const traceID = trace?.traceID;
   useEffect(() => {
+    if (!traceID) return;
     const { filter, cleanSearch } = resolveInitialFilter(
       location.search,
       sortedServiceNames,
@@ -252,6 +290,7 @@ export function useServiceFilter(
     if (!spanFiltersEqual(current, filter)) {
       setSpanFilter(filter);
     }
+    setFilterTrace(latestTrace.current);
     if (cleanSearch != null && cleanSearch !== location.search) {
       navigate(
         { pathname: location.pathname, search: cleanSearch },
@@ -265,23 +304,30 @@ export function useServiceFilter(
     navigate,
     rootServiceNames,
     sortedServiceNames,
-    trace.traceID,
+    traceID,
     setSpanFilter,
   ]);
 
-  const handleServiceFilterApply = useCallback(
-    (requested: Set<string>) => {
+  const applyFilter = useCallback(
+    (requested: ISpanFilter, options: ApplyOptions = {}) => {
+      if (!trace) return;
       // Enforce root service protection in remove mode even if the UI somehow allows it.
-      const current = useTraceTimelineStore.getState().spanFilter;
+      const requestedServices = hiddenServices(requested);
       const nextPruned =
-        current.treeMode === 'remove' ? sanitizePrunedServices(requested, rootServiceNames) : requested;
-      const nextFilter = withHiddenServices(current, nextPruned);
+        requested.treeMode === 'remove'
+          ? sanitizePrunedServices(requestedServices, rootServiceNames)
+          : requestedServices;
+      const nextFilter = normalizeFilter(withHiddenServices(requested, nextPruned));
       setSpanFilter(nextFilter);
+      if (options.saveAsDefault) {
+        const defaults: SvcFilterDefaults = { prunedServices: [...nextPruned] };
+        storage.set(SVC_FILTER_DEFAULTS_KEY, defaults);
+      }
 
       // If the currently selected span (side panel) is now hidden, deselect it. The hidden set is
-      // computed here for the requested services, once per Apply, in one pass over the spans; the
-      // memoized set that TracePage holds is for the committed services and is not yet updated.
-      if (nextPruned.size > 0 && detailPanelMode === 'sidepanel') {
+      // computed here for the requested filter, once per apply, in one pass over the spans; the
+      // memoized set that TracePage holds is for the committed filter and is not yet updated.
+      if (detailPanelMode === 'sidepanel') {
         const currentDetailStates = useTraceTimelineStore.getState().detailStates;
         const currentSelectedID = getSelectedSpanID(currentDetailStates);
         if (
@@ -295,14 +341,20 @@ export function useServiceFilter(
         }
       }
 
-      const search = buildFilterSearch(location.search, nextFilter);
+      let search = buildFilterSearch(location.search, nextFilter);
+      if (options.clearUiFind) {
+        const params = queryString.parse(search);
+        delete params.uiFind;
+        const cleaned = queryString.stringify(params);
+        search = cleaned ? `?${cleaned}` : '';
+      }
       navigate({ pathname: location.pathname, search }, { replace: true, state: location.state });
     },
     [
       setSpanFilter,
       detailPanelMode,
       rootServiceNames,
-      trace.spans,
+      trace,
       location.pathname,
       location.search,
       location.state,
@@ -310,17 +362,20 @@ export function useServiceFilter(
     ]
   );
 
-  const serviceFilterNode = useMemo(
-    () => (
-      <ServiceFilter
-        trace={trace}
-        prunedServices={prunedServices}
-        onApply={handleServiceFilterApply}
-        protectRoots={spanFilter.treeMode === 'remove'}
-      />
-    ),
-    [trace, prunedServices, handleServiceFilterApply, spanFilter.treeMode]
+  const spanFilterNode = useMemo(
+    () =>
+      trace ? (
+        <SpanFilterButton
+          key={trace.traceID}
+          trace={trace}
+          filter={spanFilter}
+          hiddenCount={hiddenIDs.size}
+          onChange={applyFilter}
+          applyThreshold={applyThreshold}
+        />
+      ) : null,
+    [trace, spanFilter, hiddenIDs.size, applyFilter, applyThreshold]
   );
 
-  return { prunedServices, serviceFilterNode };
+  return { spanFilter, filterTrace, applyFilter, spanFilterNode };
 }

@@ -87,6 +87,15 @@ const renderWithRouter = component => {
 };
 
 describe('<TracePageHeader>', () => {
+  it('counts the error spans in the summary', () => {
+    const errorCount = HEADER_ITEMS.find(item => item.key === 'error-count');
+    const raw = traceGenerator.trace({ numberOfSpans: 6 });
+    raw.spans[1].tags = [{ key: 'error', type: 'bool', value: true }];
+    raw.spans[4].tags = [{ key: 'error', type: 'bool', value: true }];
+    const trace = transformTraceData(raw).asOtelTrace();
+    expect(errorCount.renderer(trace)).toBe(2);
+  });
+
   const trace = transformTraceData(traceGenerator.trace({}));
   const mockRef = React.createRef();
 
@@ -413,7 +422,7 @@ describe('<TracePageHeader>', () => {
   describe('<TracePageHeaderWithRef>', () => {
     it('renders default export (forwardRef wrapper) correctly', () => {
       const props = {
-        trace,
+        trace: trace.asOtelTrace(),
         canCollapse: false,
         clearSearch: jest.fn(),
         focusUiFindMatches: jest.fn(),

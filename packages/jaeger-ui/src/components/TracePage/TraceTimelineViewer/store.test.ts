@@ -608,7 +608,13 @@ describe('trace timeline zustand stores', () => {
         expect(s.childrenHiddenIDs.size).toBe(0);
         expect(s.detailStates.size).toBe(0);
         expect(s.shouldScrollToFirstUiFindMatch).toBe(false);
-        expect(s.spanFilter).toBe(EMPTY_SPAN_FILTER);
+      });
+
+      it('leaves the span filter alone when traceID changes, because the URL hook owns it', () => {
+        const filter = withHiddenServices(EMPTY_SPAN_FILTER, new Set(['svc-a']));
+        useTraceTimelineStore.setState({ traceID: 'old-trace', spanFilter: filter });
+        useTraceTimelineStore.getState().setTrace(makeTrace('new-trace'));
+        expect(useTraceTimelineStore.getState().spanFilter).toBe(filter);
       });
 
       it('preserves layout prefs when traceID changes', () => {
@@ -815,6 +821,15 @@ describe('trace timeline zustand stores', () => {
         vi.mocked(filterSpans).mockReturnValue(new Set(['span-1']));
         vi.mocked(spanAncestorIds).mockReturnValue([]);
         useTraceTimelineStore.getState().setTrace(makeTrace('t1'), 'myFind');
+        expect(useTraceTimelineStore.getState().shouldScrollToFirstUiFindMatch).toBe(true);
+      });
+
+      it('focuses a given set of matches without searching the spans again', () => {
+        vi.mocked(filterSpans).mockClear();
+        vi.mocked(spanAncestorIds).mockReturnValue([]);
+        useTraceTimelineStore.getState().setTrace(makeTrace('t1'), new Set(['span-1']));
+        expect(filterSpans).not.toHaveBeenCalled();
+        expect(useTraceTimelineStore.getState().detailStates.has('span-1')).toBe(true);
         expect(useTraceTimelineStore.getState().shouldScrollToFirstUiFindMatch).toBe(true);
       });
 
@@ -1091,6 +1106,23 @@ describe('trace timeline zustand stores', () => {
         const s = useTraceTimelineStore.getState();
         expect(s.shouldScrollToFirstUiFindMatch).toBe(true);
         expect(s.detailStates.has('span-1')).toBe(true);
+      });
+
+      it('is a no-op when the match set is empty', () => {
+        const stateBefore = useTraceTimelineStore.getState();
+        useTraceTimelineStore.getState().focusUiFindMatches(makeTrace(), new Set());
+        expect(useTraceTimelineStore.getState()).toBe(stateBefore);
+      });
+
+      it('focuses a match set without matching the text again', () => {
+        vi.mocked(spanAncestorIds).mockReturnValue([]);
+        const trace = makeTrace('t1', [makeSpan({ spanID: 'span-a' }), makeSpan({ spanID: 'span-b' })]);
+        useTraceTimelineStore.getState().focusUiFindMatches(trace, new Set(['span-b']));
+        const s = useTraceTimelineStore.getState();
+        expect(filterSpans).not.toHaveBeenCalled();
+        expect(s.detailStates.has('span-b')).toBe(true);
+        expect(s.detailStates.has('span-a')).toBe(false);
+        expect(s.shouldScrollToFirstUiFindMatch).toBe(true);
       });
 
       it('keeps only the first match in detailStates when in side-panel mode', () => {
