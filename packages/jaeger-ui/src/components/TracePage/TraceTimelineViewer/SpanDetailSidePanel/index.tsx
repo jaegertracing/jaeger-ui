@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import type { Location, NavigateFunction } from 'react-router-dom';
 
 import { getSelectedSpanID } from '../duck';
@@ -95,7 +95,11 @@ export function SpanDetailSidePanelImpl(props: TProps) {
   // is intentional: the span then becomes explicitly selected and gains selection highlight, while
   // the panel label stays "Trace Root" because selectedSpanID === rootSpanID.
   const { hiddenIDs } = evaluateSpanFilter(trace.spans, spanFilter);
-  const spanID = getSelectedSpanID(detailStates) ?? trace.spans.find(s => !hiddenIDs.has(s.spanID))?.spanID;
+  const firstShownSpanID = useMemo(
+    () => trace.spans.find(s => !hiddenIDs.has(s.spanID))?.spanID,
+    [trace.spans, hiddenIDs]
+  );
+  const spanID = getSelectedSpanID(detailStates) ?? firstShownSpanID;
   if (!spanID) return null;
 
   const detailState = detailStates.get(spanID) ?? DetailState.forDetailPanelMode('sidepanel');
