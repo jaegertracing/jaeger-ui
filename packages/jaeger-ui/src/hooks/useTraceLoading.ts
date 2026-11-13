@@ -13,7 +13,6 @@ import { toTraceIdHex } from '../utils/trace-id';
 
 const TRACE_QUERY_KEY = (id: string) => ['trace', id] as const;
 
-// TODO: remove once callers (duck.track.ts, TraceDiff) are migrated off Redux/non-hook paths
 export function getCachedTrace(id: string): IOtelTrace | undefined {
   return queryClient.getQueryData<IOtelTrace>(TRACE_QUERY_KEY(id));
 }

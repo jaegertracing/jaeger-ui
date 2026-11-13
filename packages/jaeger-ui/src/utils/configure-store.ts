@@ -1,10 +1,8 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { createStore, combineReducers, applyMiddleware, compose, Store, StoreEnhancer } from 'redux';
+import { createStore, applyMiddleware, compose, Store, StoreEnhancer } from 'redux';
 
-import traceTimeline from '../components/TracePage/TraceTimelineViewer/duck';
-import jaegerReducers from '../reducers';
 import * as jaegerMiddlewares from '../middlewares';
 import { getAppEnvironment } from './constants';
 
@@ -25,13 +23,9 @@ export default function configureStore(): Store<any> {
     enhancer = compose(enhancer, window.__REDUX_DEVTOOLS_EXTENSION__());
   }
 
-  return createStore(
-    combineReducers({
-      ...jaegerReducers,
-      traceTimeline,
-    }) as any,
-    enhancer
-  );
+  // No slice keeps state in Redux; the store remains only until <Provider> is removed. An identity
+  // reducer avoids combineReducers' empty-map warning.
+  return createStore((state: object = {}) => state, enhancer);
 }
 
 export const store = configureStore();

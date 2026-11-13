@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import TraceSpanView from './index';
 import transformTraceData from '../../../model/transform-trace-data';
@@ -113,6 +113,22 @@ describe('<TraceSpanView>', () => {
 
     fireEvent.change(screen.getByTestId('select-operation'), { target: { value: 'op3' } });
     expect(renderedServiceNames()).toEqual(['service2']);
+  });
+
+  it.each([
+    ['Service Name', (a, b) => a.resource.serviceName.localeCompare(b.resource.serviceName)],
+    ['Operation', (a, b) => a.name.localeCompare(b.name)],
+    ['Span ID', (a, b) => a.spanID.localeCompare(b.spanID)],
+    ['Duration', (a, b) => a.duration - b.duration],
+    ['Start Time', (a, b) => a.startTime - b.startTime],
+  ])('sorts the rows ascending by %s when its header is clicked', (title, compare) => {
+    const { container } = render(<TraceSpanView {...defaultProps} />);
+    fireEvent.click(within(screen.getByRole('table')).getByText(title));
+    const renderedSpanIDs = Array.from(container.querySelectorAll('.ant-table-row .span-id-cell')).map(
+      link => link.textContent
+    );
+    const expected = [...trace.spans].sort(compare).map(span => span.spanID);
+    expect(renderedSpanIDs).toEqual(expected.slice(0, renderedSpanIDs.length));
   });
 
   it('check handler', () => {

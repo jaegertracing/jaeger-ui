@@ -4,14 +4,13 @@
 import React, { useCallback, useMemo } from 'react';
 import type { Location, NavigateFunction } from 'react-router-dom';
 
-import { getSelectedSpanID } from '../duck';
 import SpanDetail from '../SpanDetail';
 import DetailState from '../SpanDetail/DetailState';
 import getLinks from '../../../../model/link-patterns';
 import updateUiFind from '../../../../utils/update-ui-find';
 import withRouteProps from '../../../../utils/withRouteProps';
 import { IAttributes, IEvent, IOtelTrace } from '../../../../types/otel';
-import { useTraceTimelineStore } from '../store';
+import { getSelectedSpanID, useTraceTimelineStore } from '../store';
 import { evaluateSpanFilter } from '../../spanFilter';
 import {
   trackDetailLogItemToggle,

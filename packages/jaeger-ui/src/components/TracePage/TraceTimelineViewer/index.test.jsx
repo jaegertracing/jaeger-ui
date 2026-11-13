@@ -3,8 +3,6 @@
 
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { legacy_createStore as createStore } from 'redux';
-import { Provider } from 'react-redux';
 
 import TraceTimelineViewer, { TraceTimelineViewerImpl } from './index';
 import * as track from './store.track';
@@ -75,6 +73,11 @@ vi.mock('./TimelineHeaderRow', () =>
     <div data-testid="timeline-header-row-mock" data-side-panel-label={props.sidePanelLabel}>
       {props.spanFilterNode}
       <button
+        data-testid="header-column-change"
+        type="button"
+        onClick={() => props.onColummWidthChange(0.4)}
+      />
+      <button
         data-testid="header-side-panel-change"
         type="button"
         onClick={() => props.onSidePanelWidthChange(0.3)}
@@ -108,19 +111,6 @@ describe('<TraceTimelineViewer>', () => {
     },
   };
 
-  const defaultState = {
-    traceTimeline: { detailStates: new Map() },
-  };
-
-  function renderWithRedux(ui, { initialState = defaultState } = {}) {
-    const store = createStore((state = initialState) => state);
-
-    return {
-      ...render(<Provider store={store}>{ui}</Provider>),
-      store,
-    };
-  }
-
   beforeEach(() => {
     vi.mocked(track.trackCollapseAll).mockClear();
     vi.mocked(track.trackCollapseOne).mockClear();
@@ -153,7 +143,7 @@ describe('<TraceTimelineViewer>', () => {
     expect(screen.getByTestId('virtualized-trace-view-mock')).toBeInTheDocument();
     expect(screen.getByTestId('timeline-header-row-mock')).toBeInTheDocument();
     const initialCount = screen.getAllByTestId('virtualized-trace-view-mock').length;
-    renderWithRedux(<TraceTimelineViewer {...props} />);
+    render(<TraceTimelineViewer {...props} />);
     expect(screen.getAllByTestId('virtualized-trace-view-mock')).toHaveLength(initialCount + 1);
   });
 
@@ -336,6 +326,16 @@ describe('<TraceTimelineViewer>', () => {
       fireEvent.click(screen.getByTestId(testId));
       expect(tracker.mock.invocationCallOrder[0]).toBeLessThan(storeAction.mock.invocationCallOrder[0]);
     });
+  });
+
+  it('tracks a name column resize before updating the store', () => {
+    render(<TraceTimelineViewerImpl {...props} />);
+    fireEvent.click(screen.getByTestId('header-column-change'));
+    expect(track.trackColumnWidth).toHaveBeenCalledWith(0.4);
+    expect(mockLayoutPrefsStore.setSpanNameColumnWidth).toHaveBeenCalledWith(0.4);
+    expect(vi.mocked(track.trackColumnWidth).mock.invocationCallOrder[0]).toBeLessThan(
+      mockLayoutPrefsStore.setSpanNameColumnWidth.mock.invocationCallOrder[0]
+    );
   });
 
   it('should call mergeShortcuts with the correct callbacks on mount', () => {

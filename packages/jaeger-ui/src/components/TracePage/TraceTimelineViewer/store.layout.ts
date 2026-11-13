@@ -14,7 +14,7 @@ import {
   SPAN_NAME_COLUMN_WIDTH_MIN,
 } from './store.constants';
 
-export function getMaxNameColumnWidth(opts: {
+function getMaxNameColumnWidth(opts: {
   detailPanelMode: string;
   timelineBarsVisible: boolean;
   sidePanelWidth: number;
@@ -173,7 +173,8 @@ function readLayoutPrefs(value: unknown): Partial<LayoutPrefs> {
 }
 
 // Keep the stored version intact so persist can run migrations before resolving the layout.
-// Old keys remain until the residual Redux layout fields are removed in a separate change.
+// This store migrates from the old keys when `jaeger.layout` is missing or invalid, so they stay
+// in localStorage.
 const layoutPrefsStorage: PersistStorage<Partial<LayoutPrefs>> = {
   getItem: name => {
     const raw = storage.getItem(name);
