@@ -383,6 +383,30 @@ describe('clause codec', () => {
     });
   });
 
+  it('keeps service names as written, blanks and the empty name included', () => {
+    const clause: IClause = {
+      verb: 'hide',
+      criterion: { shape: 'set', property: 'service', values: ['', ' worker ', 'worker'] },
+    };
+    const encoded = encodeClause(clause);
+    expect(encoded).toBe('h:service:, worker ,worker');
+    expect(decodeClause(encoded)).toEqual(clause);
+  });
+
+  it('hides the union of repeated hide clauses on service', () => {
+    const filter: ISpanFilter = {
+      ...EMPTY_SPAN_FILTER,
+      clauses: [
+        { verb: 'hide', criterion: { shape: 'set', property: 'service', values: ['svc-b'] } },
+        { verb: 'hide', criterion: { shape: 'set', property: 'service', values: ['svc-a'] } },
+      ],
+    };
+    expect(hiddenServices(filter)).toEqual(new Set(['svc-a', 'svc-b']));
+    expect(withHiddenServices(filter, new Set(['svc-c'])).clauses).toEqual([
+      { verb: 'hide', criterion: { shape: 'set', property: 'service', values: ['svc-c'] } },
+    ]);
+  });
+
   it('trims text and attribute criteria the way the decoder does', () => {
     expect(encodeClause({ verb: 'keep', criterion: { shape: 'text', text: ' padded ' } })).toBe(
       'k:text:padded'

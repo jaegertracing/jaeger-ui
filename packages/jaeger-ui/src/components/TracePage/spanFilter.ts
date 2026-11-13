@@ -184,8 +184,13 @@ function isServiceHideClause(clause: IClause): clause is ServiceHideClause {
 
 /** The services the filter hides through its hide clause on service. */
 export function hiddenServices(filter: ISpanFilter): Set<string> {
-  const clause = filter.clauses.find(isServiceHideClause);
-  return clause ? new Set(clause.criterion.values) : new Set();
+  // A URL may repeat the clause, and evaluation hides the union, so the union is what the popover
+  // shows and root protection checks.
+  const services = new Set<string>();
+  for (const clause of filter.clauses) {
+    if (isServiceHideClause(clause)) clause.criterion.values.forEach(v => services.add(v));
+  }
+  return services;
 }
 
 /** Replaces the filter's hide clause on service with one for the given services, or removes it when empty. */
@@ -283,10 +288,16 @@ export function decodeClause(encoded: string): IClause | null {
     return text ? { verb, criterion: { shape: property, text } } : null;
   }
   if (SET_PROPERTIES.has(property)) {
-    const values = value
-      .split(',')
-      .map(v => decodeSetValue(v).trim())
-      .filter(Boolean);
+    // A service name is kept as written, blanks and the empty name included, because the trace
+    // keeps them too and the value has to name the service exactly; the other properties have a
+    // fixed vocabulary that a URL may spell loosely.
+    const values =
+      property === 'service'
+        ? value.split(',').map(decodeSetValue)
+        : value
+            .split(',')
+            .map(v => decodeSetValue(v).trim())
+            .filter(Boolean);
     return values.length
       ? { verb, criterion: { shape: 'set', property: property as SetProperty, values } }
       : null;
