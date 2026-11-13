@@ -70,7 +70,11 @@ const mockUseSpanPillsEnabled = vi.hoisted(() => vi.fn(() => true));
 vi.mock('./spanPills', () => ({
   useSpanPillsEnabled: mockUseSpanPillsEnabled,
 }));
-vi.mock('./VirtualizedTraceView', () => mockDefault(() => <div data-testid="virtualized-trace-view-mock" />));
+vi.mock('./VirtualizedTraceView', () =>
+  mockDefault(props => (
+    <div data-testid="virtualized-trace-view-mock" data-list-top-offset-key={props.listTopOffsetKey} />
+  ))
+);
 vi.mock('./SpanDetailSidePanel', () => mockDefault(() => <div data-testid="span-detail-side-panel-mock" />));
 vi.mock('./TimelineHeaderRow', () =>
   mockDefault(props => (
@@ -200,6 +204,23 @@ describe('<TraceTimelineViewer>', () => {
     } finally {
       rectSpy.mockRestore();
     }
+  });
+
+  it('remeasures the list offset when the page header changes height', () => {
+    const offsetKey = () =>
+      screen.getByTestId('virtualized-trace-view-mock').getAttribute('data-list-top-offset-key');
+    const { rerender } = render(<TraceTimelineViewerImpl {...props} pageHeaderHeight={80} />);
+    const before = offsetKey();
+
+    rerender(<TraceTimelineViewerImpl {...props} pageHeaderHeight={165} />);
+    expect(offsetKey()).not.toBe(before);
+
+    // The legend's height is part of the key too, and the header still counts with it.
+    mockLayoutPrefsStore.heatmapEnabled = true;
+    rerender(<TraceTimelineViewerImpl {...props} pageHeaderHeight={165} />);
+    const withLegend = offsetKey();
+    rerender(<TraceTimelineViewerImpl {...props} pageHeaderHeight={80} />);
+    expect(offsetKey()).not.toBe(withLegend);
   });
 
   describe('latency heatmap', () => {

@@ -7,11 +7,12 @@
      can sit below it at any scroll position. A fixed box's margin doesn't collapse with its
      parent's, so the margin can't shift the header down. The height is a minimum: a hint that
      wraps on a narrow window grows the legend, and TraceTimelineViewer reads the real height
-     back into --heatmap-legend-height so the rows and side panel below move with it. */
+     back into --heatmap-legend-height so the rows and side panel below move with it. The
+     minimum has its own variable, so the legend shrinks again once the hint stops wrapping. */
   position: fixed;
   z-index: 4;
   width: 100%;
-  min-height: var(--heatmap-legend-height);
+  min-height: var(--heatmap-legend-min-height);
   box-sizing: border-box;
   margin-top: var(--timeline-header-row-height);
   display: flex;

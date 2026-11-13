@@ -96,7 +96,8 @@ SPDX-License-Identifier: Apache-2.0
   /* Layout Variables */
   --nav-height: 48px;
   --timeline-header-row-height: 38px;
-  --heatmap-legend-height: 72px;
+  --heatmap-legend-min-height: 72px;
+  --heatmap-legend-height: var(--heatmap-legend-min-height);
 
   /* 
      Span categorical colors (IBM Carbon Sequence)

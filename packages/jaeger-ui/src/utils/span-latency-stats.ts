@@ -17,8 +17,8 @@ const HEATMAP_NEUTRAL_SPREAD = 0.1;
 
 // Spans within this many microseconds of the median also stay neutral. A ratio means little at
 // that scale, and without the floor a tiny or zero median would pin a span only a few
-// microseconds slower to the slowest step. The ratio also uses it as the smallest median, so past
-// the floor a 20µs span and a 10s span don't land on the same step.
+// microseconds slower to the slowest step. The ratio also uses it as the smallest median, so with
+// a zero median a 15µs span stays on the slope instead of sharing the slowest step with a 10s span.
 const HEATMAP_NEUTRAL_FLOOR_US = 10;
 
 const SIDE_STEPS = (HEATMAP_STEPS - 1) / 2;

@@ -230,6 +230,11 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     />
   );
 
+  // ListView measures its offset from the top of the page only when this key changes. TracePage
+  // pads this view down by the page header, and the legend sits above the rows, so both heights
+  // move the list.
+  const listTopOffsetKey = `${pageHeaderHeight}:${heatmapEnabled ? legendHeight : 'off'}`;
+
   const virtualizedView = (
     <VirtualizedTraceView
       {...rest}
@@ -239,7 +244,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       nameColumnWidth={nameColumnWidth}
       heatmapEnabled={heatmapEnabled}
       heatmapScores={heatmapScores}
-      listTopOffsetKey={heatmapEnabled ? `legend:${legendHeight}` : 'none'}
+      listTopOffsetKey={listTopOffsetKey}
       spanPillsEnabled={spanPillsEnabled}
     />
   );
