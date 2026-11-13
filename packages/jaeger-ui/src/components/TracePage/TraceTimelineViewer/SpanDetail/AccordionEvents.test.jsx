@@ -103,6 +103,7 @@ describe('<AccordionEvents>', () => {
   it('shows all events when "show all" is clicked', () => {
     render(<AccordionEvents {...defaultProps} isOpen />);
     fireEvent.click(screen.getByRole('button', { name: /show all/i }));
+    expect(defaultProps.onToggle).not.toHaveBeenCalled();
     expect(screen.getByRole('switch')).toHaveTextContent(`Logs (${defaultTotalCount})`);
     const items = screen.getAllByTestId('event-item');
     expect(items.length).toBe(defaultTotalCount);
@@ -112,7 +113,9 @@ describe('<AccordionEvents>', () => {
   it('displays in-range events again when "show in range" is clicked', () => {
     render(<AccordionEvents {...defaultProps} isOpen />);
     fireEvent.click(screen.getByRole('button', { name: /show all/i }));
+    expect(defaultProps.onToggle).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: /show in range/i }));
+    expect(defaultProps.onToggle).not.toHaveBeenCalled();
     expect(screen.getByRole('switch')).toHaveTextContent(
       `Logs (${defaultInRangeLogsCount} of ${defaultTotalCount})`
     );
