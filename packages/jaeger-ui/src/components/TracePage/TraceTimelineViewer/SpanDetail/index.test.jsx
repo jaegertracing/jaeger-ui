@@ -9,7 +9,7 @@ import '@testing-library/jest-dom';
 
 import DetailState from './DetailState';
 import SpanDetail from './index';
-import { formatDuration, formatDurationCompact } from '../utils';
+import { formatDuration, formatDurationCompact, isErrorSpan } from '../utils';
 import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
 import { makeAttributes } from '../../../../model/attributes';
@@ -99,6 +99,7 @@ describe('<SpanDetail>', () => {
     formatDuration.mockImplementation(duration => `duration:${duration}`);
     formatDurationCompact.mockReset();
     formatDurationCompact.mockImplementation(duration => `compact:${duration}`);
+    isErrorSpan.mockReset();
 
     const rawTrace = traceGenerator.trace({ numberOfSpans: 1 });
     spanData = rawTrace.spans[0];
@@ -201,7 +202,7 @@ describe('<SpanDetail>', () => {
     expect(heading).toHaveAttribute('title', `${span.resource.serviceName}::${span.name}`);
   });
 
-  it('renders overview items with duration and start time in a table', () => {
+  it('renders overview items with duration and start time beside the heading', () => {
     render(<SpanDetail {...props} />);
 
     // Check that service name is in the heading
@@ -209,18 +210,29 @@ describe('<SpanDetail>', () => {
     expect(heading).toHaveTextContent(span.resource.serviceName);
     expect(heading).toHaveTextContent(span.name);
 
-    // Scope all overview assertions to the overview table to prevent false positives
+    // Scope all overview assertions to the overview list to prevent false positives
     // if the same text appears elsewhere in the component tree
-    const overviewTable = screen.getByRole('table', { name: 'Span Overview' });
-    const { getByText, getByRole } = within(overviewTable);
+    const overview = screen.getByRole('group', { name: 'Span overview' });
+    const { getByText } = within(overview);
 
     // Check labels
-    expect(getByRole('rowheader', { name: 'Duration:' })).toBeInTheDocument();
-    expect(getByRole('rowheader', { name: 'Start Time:' })).toBeInTheDocument();
+    expect(getByText('Duration:')).toBeInTheDocument();
+    expect(getByText('Start Time:')).toBeInTheDocument();
 
-    // Check that the mocked formatted values are rendered in the correct cells
+    // Check that the mocked formatted values are rendered
     expect(getByText(`compact:${span.duration}`)).toBeInTheDocument();
     expect(getByText(`duration:${span.relativeStartTime}`)).toBeInTheDocument();
+  });
+
+  it('marks a span with an error status in the heading, and only such a span', () => {
+    const { rerender } = render(<SpanDetail {...props} />);
+    expect(screen.queryByRole('img', { name: 'Error' })).toBeNull();
+
+    isErrorSpan.mockReturnValue(true);
+    rerender(<SpanDetail {...props} />);
+    expect(
+      within(screen.getByRole('heading', { level: 2 })).getByRole('img', { name: 'Error' })
+    ).toBeInTheDocument();
   });
 
   it('renders span tags accordian and triggers toggle callback with span ID', () => {

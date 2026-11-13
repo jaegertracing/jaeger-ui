@@ -4,7 +4,7 @@
 import React from 'react';
 import { Divider, Tabs } from 'antd';
 
-import { IoLinkOutline } from 'react-icons/io5';
+import { IoAlert, IoLinkOutline } from 'react-icons/io5';
 import AccordionAttributes from './AccordionAttributes';
 import AccordionEvents from './AccordionEvents';
 import AccordionLinks from './AccordionLinks';
@@ -12,7 +12,8 @@ import AccordionText from './AccordionText';
 import DetailState from './DetailState';
 import GenAITab from './GenAITab';
 import { extractGenAiSections } from './GenAITab/genAiData';
-import { formatDuration, formatDurationCompact } from '../utils';
+import { formatDuration, formatDurationCompact, isErrorSpan } from '../utils';
+import LabeledList from '../../../common/LabeledList';
 import CopyIcon from '../../../common/CopyIcon';
 import { isGenAISpan } from '../../../../utils/genai';
 
@@ -143,29 +144,31 @@ export default function SpanDetail(props: SpanDetailProps) {
     </div>
   );
 
+  const overviewItems = [
+    {
+      key: 'duration',
+      label: 'Duration:',
+      value: formatDurationCompact(span.duration),
+    },
+    {
+      key: 'start',
+      label: 'Start Time:',
+      value: formatDuration(span.relativeStartTime),
+    },
+  ];
+
   const header = (
     <div>
-      <h2 className="ub-m0 SpanDetail--headerTitle" title={`${span.resource.serviceName}::${span.name}`}>
-        {span.resource.serviceName} <small className="SpanDetail--headerEndpointName">{span.name}</small>
-      </h2>
+      <div className="SpanDetail--header">
+        <h2 className="ub-m0 SpanDetail--headerTitle" title={`${span.resource.serviceName}::${span.name}`}>
+          {isErrorSpan(span) && <IoAlert className="SpanBarRow--errorIcon" role="img" aria-label="Error" />}
+          {span.resource.serviceName} <small className="SpanDetail--headerEndpointName">{span.name}</small>
+        </h2>
+        <div className="SpanDetail--overview" role="group" aria-label="Span overview">
+          <LabeledList dividerClassName="SpanDetail--divider" items={overviewItems} />
+        </div>
+      </div>
       <Divider className="SpanDetail--divider ub-my1" />
-      <table className="SpanDetail--overviewTable ub-mb1">
-        <caption className="SpanDetail--overviewTableCaption">Span Overview</caption>
-        <tbody>
-          <tr>
-            <th scope="row" className="SpanDetail--overviewTableKey">
-              Duration:
-            </th>
-            <td>{formatDurationCompact(span.duration)}</td>
-          </tr>
-          <tr>
-            <th scope="row" className="SpanDetail--overviewTableKey">
-              Start Time:
-            </th>
-            <td>{formatDuration(span.relativeStartTime)}</td>
-          </tr>
-        </tbody>
-      </table>
     </div>
   );
 
