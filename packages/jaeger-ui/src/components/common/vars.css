@@ -18,6 +18,7 @@ SPDX-License-Identifier: Apache-2.0
 
   --surface-primary: var(--ant-color-bg-container);
   --surface-secondary: var(--ant-color-bg-layout);
+  --surface-elevated: var(--ant-color-bg-elevated);
   --surface-tertiary: color-mix(in srgb, var(--ant-color-text-base) 6%, var(--ant-color-bg-container));
 
   /* dedicated, specific UI element (like the Minimap, a Modal, or a complex panel) */
@@ -83,6 +84,7 @@ SPDX-License-Identifier: Apache-2.0
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);
   --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.14);
+  --shadow-elevated: var(--ant-box-shadow-secondary);
   /* centered, strong glow effect on components */
   --shadow-component-focus: 0px 0px 5px rgba(0, 0, 0, 0.3);
   /* left-facing shadow for side panels */
