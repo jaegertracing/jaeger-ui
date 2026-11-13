@@ -57,13 +57,7 @@ import { useLocation } from 'react-router-dom';
 import { useTraceTimelineStore } from './store';
 import { decodeSvcFilter } from '../url/svcFilter';
 import { resolveInitialFilter, buildFilterSearch, useServiceFilter } from './useServiceFilter';
-import {
-  EMPTY_SPAN_FILTER,
-  hiddenServices,
-  IClause,
-  ISpanFilter,
-  withHiddenServices,
-} from '../spanFilter';
+import { EMPTY_SPAN_FILTER, hiddenServices, IClause, ISpanFilter, withHiddenServices } from '../spanFilter';
 import { IOtelSpan, IOtelTrace } from '../../../types/otel';
 
 const serviceFilter = (...services: string[]): ISpanFilter =>
