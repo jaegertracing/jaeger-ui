@@ -1,6 +1,6 @@
 # ADR-0009: Service Filter for Trace Timeline View
 
-* **Status**: Implemented
+* **Status**: Superseded by [ADR-0012](./0012-span-search-and-filter.md), which keeps the service filter as the hide clause on service of a wider span filter
 * **Date**: 2026-04-20
 
 ## Context
