@@ -101,7 +101,8 @@ export default function ServiceFilter({ trace, prunedServices, onApply }: Servic
     return true;
   }, [draft, rootServices]);
 
-  const allPruned = draft.size === serviceEntries.length;
+  // The draft may carry names absent from this trace, so only the trace's own services are counted.
+  const allPruned = serviceEntries.every(s => draft.has(s.name));
   const applyDisabled = allPruned || wouldRemoveAllRoots;
 
   let applyWarning = '';
