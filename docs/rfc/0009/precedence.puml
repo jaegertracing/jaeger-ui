@@ -7,31 +7,28 @@ skinparam ActivityBorderColor #1e1e1e
 skinparam ArrowColor #1e1e1e
 
 start
-if (URL carries a service set in svcFilter?) then (yes)
-  #fff3bf:Service hide set
-  from svcFilter (a stale one hides nothing);
-else (no)
-  :Saved service default
-  (localStorage, written only by Save as Default),
-  unless it would leave no span, and not again
-  for the same URL after an edit or a URL cleanup;
-endif
-if (URL carries svcFilter, f or tree?) then (yes)
-  #fff3bf:Other clauses and tree mode
-  from f=… and tree=remove;
+if (URL carries f or a legacy svcFilter?) then (yes)
+  #fff3bf:Clauses from f=…
+  (a legacy svcFilter is read as the service
+  hide clause in remove mode, a stale one hides
+  nothing, and the URL is rewritten as f=…);
 else (no)
   :View default
   (Timeline: none. GenAI view of a GenAI trace:
   hide Non-GenAI, lift children, unless that
-  would leave no span with the services hidden);
+  would leave no span with the services hidden)
+  plus the saved service default
+  (localStorage, written only by Save as Default),
+  unless it would leave no span;
 endif
+:Tree mode from tree=remove, else lift;
 :uiFind text, from the URL in either case;
 :Effective clauses
 → findIDs, hiddenIDs;
 note right
-  Clearing the filter in the GenAI view writes
-  an explicitly empty clause list to the URL, which
-  later edits keep, so the view default does not return.
+  Every edit writes the clauses as f=…, an empty
+  list as an explicitly empty f=, so that neither
+  default returns on the next render.
 end note
 stop
 @enduml
