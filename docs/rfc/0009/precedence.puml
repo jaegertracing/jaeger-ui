@@ -1,0 +1,34 @@
+' Where the effective filter comes from (RFC 0009, "URL and persistence").
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam ActivityBackgroundColor #ffffff
+skinparam ActivityBorderColor #1e1e1e
+skinparam ArrowColor #1e1e1e
+
+start
+if (URL carries f or a legacy svcFilter?) then (yes)
+  #fff3bf:Clauses from f=…
+  (a legacy svcFilter is read as the service
+  hide clause in remove mode, a stale one hides
+  nothing, and the URL is rewritten as f=…);
+else (no)
+  :View default
+  (Timeline: none. GenAI view of a GenAI trace:
+  hide Non-GenAI, lift children, unless that
+  would leave no span with the services hidden)
+  plus the saved service default
+  (localStorage, written only by Save as Default),
+  unless it would leave no span;
+endif
+:Tree mode from tree=remove, else lift;
+:uiFind text, from the URL in either case;
+:Effective clauses
+→ findIDs, hiddenIDs;
+note right
+  Every edit writes the clauses as f=…, an empty
+  list as an explicitly empty f=, so that neither
+  default returns on the next render.
+end note
+stop
+@enduml
