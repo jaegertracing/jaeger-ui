@@ -37,6 +37,57 @@ describe('calculateTraceDagEV', () => {
     assertData(nodes, 'service1', 'op6', 1, 0, 10, 1, 1);
     assertData(nodes, 'service1', 'op7', 2, 0, 17, 1.7, 17);
   });
+
+  describe('zero-duration spans', () => {
+    // transformTraceData mutates its input, so rebuild the raw spans instead of cloning testTrace.
+    function buildTrace(adjustSpan) {
+      const spans = testTrace.spans.map(
+        ({ duration, flags, logs, operationName, processID, references, spanID, startTime, tags, traceID }) =>
+          adjustSpan({
+            duration,
+            flags,
+            logs,
+            operationName,
+            processID,
+            references: references.map(({ refType, spanID: refSpanID, traceID: refTraceID }) => ({
+              refType,
+              spanID: refSpanID,
+              traceID: refTraceID,
+            })),
+            spanID,
+            startTime,
+            tags,
+            traceID,
+          })
+      );
+      const { processes, traceID } = testTrace;
+      return transformTraceData({ processes, spans, traceID }).asOtelTrace();
+    }
+
+    function getNodeData(trace, service, operation) {
+      const { vertices } = calculateTraceDagEV(trace);
+      return vertices.find(({ data: n }) => n.service === service && n.operation === operation).data;
+    }
+
+    it('reports 0 percent self time for an operation whose spans all have no duration', () => {
+      const trace = buildTrace(span => (span.spanID === 'span-4' ? { ...span, duration: 0 } : span));
+      // span-4 is the only span of service2 op1.
+      const data = getNodeData(trace, 'service2', 'op1');
+      expect(data.time).toBe(0);
+      expect(data.percentSelfTime).toBe(0);
+      expect(data.percent).toBe(0);
+    });
+
+    it('keeps finite percentages when the whole trace has no duration', () => {
+      const start = testTrace.spans[0].startTime;
+      const trace = buildTrace(span => ({ ...span, startTime: start, duration: 0 }));
+      expect(trace.duration).toBe(0);
+      calculateTraceDagEV(trace).vertices.forEach(({ data }) => {
+        expect(data.percent).toBe(0);
+        expect(data.percentSelfTime).toBe(0);
+      });
+    });
+  });
 });
 
 describe('mapNonBlocking', () => {

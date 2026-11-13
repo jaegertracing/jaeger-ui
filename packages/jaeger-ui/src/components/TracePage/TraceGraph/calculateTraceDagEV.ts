@@ -84,9 +84,10 @@ function calculateTraceDag(trace: IOtelTrace): TraceDag<TSumSpan & TDenseSpanMem
       count: node.members.length,
       errors: numErrors,
       time: ntime,
-      percent: (100 / trace.duration) * ntime,
+      // A zero total has no meaningful share, and dividing by it would give NaN or Infinity.
+      percent: trace.duration > 0 ? (100 / trace.duration) * ntime : 0,
       selfTime: stime,
-      percentSelfTime: (100 / ntime) * stime,
+      percentSelfTime: ntime > 0 ? (100 / ntime) * stime : 0,
     });
   });
   return dag;
