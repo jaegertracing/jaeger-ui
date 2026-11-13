@@ -422,9 +422,6 @@ importers:
       redux:
         specifier: 5.0.1
         version: 5.0.1
-      redux-actions:
-        specifier: 3.0.3
-        version: 3.0.3
       redux-promise-middleware:
         specifier: 6.2.0
         version: 6.2.0(redux@5.0.1)
@@ -471,9 +468,6 @@ importers:
       '@types/react-dom':
         specifier: 19.3.0
         version: 19.3.0(@types/react@19.3.0)
-      '@types/redux-actions':
-        specifier: 2.6.5
-        version: 2.6.5
       '@vitejs/plugin-react':
         specifier: 6.1.0
         version: 6.1.0(vite@8.3.5(@types/node@24.19.2)(jiti@2.7.0)(less@4.9.0(supports-color@7.2.0))(terser@5.51.2)(yaml@2.9.0))
@@ -2999,9 +2993,6 @@ packages:
   '@types/react@19.3.0':
     resolution: {integrity: sha512-N0rFCuH9YoxG9/m61l9MfpJKfmLOVU0em7ipIz6TRgSSkvReLB9vL85GB+yr8Bs5leqpvg96JSwF4ZS1s4viQg==}
 
-  '@types/redux-actions@2.6.5':
-    resolution: {integrity: sha512-RgXOigay5cNweP+xH1ru+Vaaj1xXYLpWIfSVO8cSA8Ii2xvR+HRfWYdLe1UVOA8X0kIklalGOa0DTDyld0obkg==}
-
   '@types/ssh2-streams@0.1.13':
     resolution: {integrity: sha512-faHyY3brO9oLEA0QlcO8N2wT7R0+1sHWZvQ+y3rMLwdY1ZyS1z0W3t65j9PqT4HmQ6ALzNe7RZlNuCNE0wBSWA==}
 
@@ -4236,9 +4227,6 @@ packages:
   jsonfile@6.2.1:
     resolution: {integrity: sha512-zwOTdL3rFQ/lRdBnntKVOX6k5cKJwEc1HdilT71BWEu7J41gXIB2MRp+vxduPSwZJPWBxEzv4yH1wYLJGUHX4Q==}
 
-  just-curry-it@5.3.0:
-    resolution: {integrity: sha512-silMIRiFjUWlfaDhkgSzpuAyQ6EX/o09Eu8ZBfmFwQMbax7+LQzeIU2CBrICT6Ne4l86ITCGvUCBpCubWYy0Yw==}
-
   knip@6.43.0:
     resolution: {integrity: sha512-8l3cCOg/EXoILO0qcSoMra49yQM91+lEIR4fu5Ko8rrArGX8xKdKZiGI9psPiY6rhLmfLERcMfFEByF0wli5CA==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -4837,12 +4825,6 @@ packages:
   redent@3.0.0:
     resolution: {integrity: sha512-6tDA8g98We0zd0GvVeMT9arEOnTw9qM03L9cJXaCjrip1OO764RDBLBfrB4cwzNGDj5OA5ioymC9GkizgWJDUg==}
     engines: {node: '>=8'}
-
-  reduce-reducers@1.0.4:
-    resolution: {integrity: sha512-Mb2WZ2bJF597exiqX7owBzrqJ74DHLK3yOQjCyPAaNifRncE8OD0wFIuoMhXxTnHK07+8zZ2SJEKy/qtiyR7vw==}
-
-  redux-actions@3.0.3:
-    resolution: {integrity: sha512-ca+ySXmXWrxDqtauRA6lQtjmRO8Z9Ruog3wbb8wDq4RVW9Y677Nl/AXoJPlxJqH0mpY9QGkg03NkAJwTcyN2pQ==}
 
   redux-promise-middleware@6.2.0:
     resolution: {integrity: sha512-TEzfMeLX63gju2WqkdFQlQMvUGYzFvJNePIJJsBlbPHs3Txsbc/5Rjhmtha1XdMU6lkeiIlp1Qx7AR3Zo9he9g==}
@@ -7802,8 +7784,6 @@ snapshots:
     dependencies:
       csstype: 3.2.3
 
-  '@types/redux-actions@2.6.5': {}
-
   '@types/ssh2-streams@0.1.13':
     dependencies:
       '@types/node': 24.19.2
@@ -8928,8 +8908,6 @@ snapshots:
     optionalDependencies:
       graceful-fs: 4.2.11
 
-  just-curry-it@5.3.0: {}
-
   knip@6.43.0:
     dependencies:
       formatly: 0.11.4
@@ -9620,13 +9598,6 @@ snapshots:
     dependencies:
       indent-string: 4.0.0
       strip-indent: 3.0.0
-
-  reduce-reducers@1.0.4: {}
-
-  redux-actions@3.0.3:
-    dependencies:
-      just-curry-it: 5.3.0
-      reduce-reducers: 1.0.4
 
   redux-promise-middleware@6.2.0(redux@5.0.1):
     dependencies:

@@ -252,7 +252,7 @@ describe('timeline analytics adapter', () => {
     expect(trackEvent).not.toHaveBeenCalled();
   });
 
-  // The deleted middleware was not installed when the reporter's isEnabled() was false.
+  // A reporter whose isEnabled() returns false receives no timeline events.
   it('emits nothing when web analytics is disabled', () => {
     mockAnalytics.enabled = false;
     try {
@@ -263,8 +263,8 @@ describe('timeline analytics adapter', () => {
     }
   });
 
-  // Zustand `setTrace` refocuses the uiFind matches on a same-ID reload, which the Redux duck
-  // ignored. The adapter reports what the user sees, as #4613 decided for the parent toggle.
+  // Zustand `setTrace` refocuses the uiFind matches on a same-ID reload. The adapter reports what
+  // the user sees, as #4613 decided for the parent toggle.
   it('reads the detail row from Zustand after a same-ID reload with uiFind', () => {
     resetStores();
     timeline().setTrace(trace, 'sibling');
@@ -279,8 +279,8 @@ describe('timeline analytics adapter', () => {
     expect(trackEvent).toHaveBeenCalledWith(track.CATEGORY_ROW, 'close');
   });
 
-  // A same-ID reload that adds a uiFind match expands the parent in Zustand, which the Redux duck
-  // ignored. The parent toggle reports the expanded state the user sees (#4613).
+  // A same-ID reload that adds a uiFind match expands the parent in Zustand. The parent toggle
+  // reports the expanded state the user sees (#4613).
   it('reads the parent toggle from Zustand after a same-ID reload adds a uiFind match', () => {
     resetStores();
     timeline().setTrace(trace, 'late-match');

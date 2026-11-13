@@ -166,8 +166,8 @@ function readLayoutPrefs(value: unknown): Partial<LayoutPrefs> {
 }
 
 // Keep the stored version intact so persist can run migrations before resolving the layout.
-// Redux no longer reads the old keys, but this store still migrates from them when jaeger.layout is
-// missing or invalid. #4737 deletes them once users have migrated.
+// This store migrates from the old keys when `jaeger.layout` is missing or invalid, so they stay
+// in localStorage.
 const layoutPrefsStorage: PersistStorage<Partial<LayoutPrefs>> = {
   getItem: name => {
     const raw = storage.getItem(name);

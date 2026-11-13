@@ -981,7 +981,7 @@ This is the **largest and most performance-sensitive** slice. Split across multi
 3. ✅ Hover: resolved by deletion rather than migration. `hoverIndentGuideIds` was dead state — the indent-guide highlight that consumed it (the `is-active` class and its CSS) was removed in [#3302](https://github.com/jaegertracing/jaeger-ui/pull/3302), leaving the Redux field, its two actions, the `SpanTreeOffset` mouse-enter/leave writers, and the `VirtualizedTraceView` `useSelector` read as orphaned code that fed nothing. All removed in [#4352](https://github.com/jaegertracing/jaeger-ui/pull/4352); `SpanTreeOffset` is now a plain (unconnected) functional component. Hover is not tracked by the analytics middleware, so no dual-write was involved.
 4. ✅ Timeline analytics: the handlers call the trackers in `TraceTimelineViewer/store.track.ts` before each Zustand action, so every event still reads pre-update state. `store.track.test.ts` replays a scripted session through the trackers and asserts the events the old middleware emitted for it.
 
-5. ✅ Duck deletion: with no reader or writer left, the duck, its tracker, and the tracking middleware are deleted. The parity test keeps the middleware's recorded events as its expected output, and `store.test.ts` took over the duck's reducer cases that the Zustand tests lacked.
+5. ✅ Duck deletion, delivered in [#4742](https://github.com/jaegertracing/jaeger-ui/pull/4742): with no reader or writer left, the duck, its tracker, and the tracking middleware are deleted. The parity test keeps the middleware's recorded events as its expected output, and `store.test.ts` took over the duck's reducer cases that the Zustand tests lacked.
 
 **Components rewired off the dual write**: `TracePage`, `TraceTimelineViewer`, `VirtualizedTraceView`, `SpanDetailSidePanel`. `SpanTreeOffset` no longer touches Redux.
 
@@ -1222,14 +1222,14 @@ The residual surface is now small enough to enumerate:
 | :--- | :--- | :--- |
 | `utils/configure-store.ts`, `<Provider>` in `components/App/index.tsx`, `types/TTraceTimeline.ts` | app shell, ~14 test files | Phase 4b/4c |
 | ✅ Vestigial `connect()` wrappers whose `mapStateToProps` ignored state entirely (`SearchForm`, `TraceDiff`, `TracePage`) and the unused `MetricsReduxState` type | none | Delivered in [#4729](https://github.com/jaegertracing/jaeger-ui/pull/4729) |
-| ✅ `TraceTimelineViewer/duck.ts`, `duck.track.ts`, `middlewares/track.ts`, and the `ReduxState` type | none | Delivered as Phase 1c step 5 |
+| ✅ `TraceTimelineViewer/duck.ts`, `duck.track.ts`, `middlewares/track.ts`, the `ReduxState` type, `utils/guardReducer.ts`, and the `redux-actions` package | none | Delivered in [#4742](https://github.com/jaegertracing/jaeger-ui/pull/4742) |
 
 Removing the timeline duck was the only item here with a non-mechanical design question in it (where the analytics call sites go). Phase 1c is complete, and the duck is deleted.
 
 #### ⬜ 4b. Remove packages
 
 ```bash
-npm uninstall redux react-redux redux-actions redux-promise-middleware
+npm uninstall redux react-redux redux-promise-middleware
 ```
 
 Delete:

@@ -46,7 +46,7 @@ The legacy core of the application, now reduced to a residue.
 - **Location**: `src/utils/configure-store.ts` creates the store with an identity reducer and the promise middleware. There are no reducers and no `src/selectors/`.
 - **Access**:
     - `DdgNodeContent` and `DeepDependencies/SidePanel/DetailsPanel` read decoration summaries through `usePathAgnosticDecoration`.
-- **Timeline analytics**: timeline handlers call the trackers in `TraceTimelineViewer/store.track.ts` before each Zustand action, so each event reads pre-update state. The Redux tracking middleware they replaced is deleted.
+- **Timeline analytics**: timeline handlers call the trackers in `TraceTimelineViewer/store.track.ts` before each Zustand action, so each event reads pre-update state.
 - **Do not add new state here.** Per [ADR-0004](./0004-state-management-strategy.md), everything above has a scheduled removal; new shared UI state goes to Zustand and new server data to TanStack Query.
 
 ### 1a. Zustand (shared client UI state)
