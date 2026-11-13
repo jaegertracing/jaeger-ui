@@ -760,6 +760,95 @@ describe('<VirtualizedTraceViewImpl>', () => {
     });
   });
 
+  describe('latency heatmap', () => {
+    function rowColors() {
+      const { itemRenderer } = listViewPropsCapture.current;
+      return {
+        bar: itemRenderer('bar', {}, 1, {}).props.children.props.color,
+        detail: itemRenderer('detail', {}, 2, {}).props.children.props.color,
+      };
+    }
+
+    it('repaints already-rendered bar and detail rows when the heatmap is toggled', () => {
+      const { props } = expandRow(1);
+      const heatmapScores = new Map([[trace.spans[1].spanID, 1]]);
+      const { rerender } = render(
+        <VirtualizedTraceViewImpl {...props} heatmapEnabled={false} heatmapScores={heatmapScores} />
+      );
+      const serviceColor = rowColors().bar;
+      expect(serviceColor).not.toMatch(/--heatmap-/);
+
+      rerender(<VirtualizedTraceViewImpl {...props} heatmapEnabled heatmapScores={heatmapScores} />);
+      expect(rowColors()).toEqual({ bar: 'var(--heatmap-7)', detail: 'var(--heatmap-7)' });
+
+      rerender(<VirtualizedTraceViewImpl {...props} heatmapEnabled={false} heatmapScores={heatmapScores} />);
+      expect(rowColors()).toEqual({ bar: serviceColor, detail: serviceColor });
+    });
+
+    it('uses the no-peers color for spans without a score', () => {
+      render(<VirtualizedTraceViewImpl {...mockProps} heatmapEnabled heatmapScores={new Map()} />);
+      const { itemRenderer } = listViewPropsCapture.current;
+      expect(itemRenderer('bar', {}, 1, {}).props.children.props.color).toBe('var(--heatmap-no-peers)');
+    });
+
+    it('colors the RPC segment of a collapsed client span by the server span score', () => {
+      const newLegacySpans = [...legacyTrace.spans];
+      newLegacySpans[0] = {
+        ...newLegacySpans[0],
+        tags: [{ key: 'span.kind', value: 'client' }, ...newLegacySpans[0].tags],
+      };
+      newLegacySpans[1] = {
+        ...newLegacySpans[1],
+        tags: [{ key: 'span.kind', value: 'server' }, ...newLegacySpans[1].tags],
+      };
+      const altTrace = transformTraceData({ ...legacyTrace, spans: newLegacySpans }).asOtelTrace();
+      const heatmapScores = new Map([
+        [altTrace.spans[0].spanID, 0],
+        [altTrace.spans[1].spanID, -1],
+      ]);
+
+      const { listViewProps } = renderAndCapture({
+        ...mockProps,
+        childrenHiddenIDs: new Set([altTrace.spans[0].spanID]),
+        trace: altTrace,
+        heatmapEnabled: true,
+        heatmapScores,
+      });
+
+      const spanBarRow = listViewProps.itemRenderer('some-key', {}, 0, {}).props.children;
+      expect(spanBarRow.props.color).toBe('var(--heatmap-4)');
+      expect(spanBarRow.props.rpc.color).toBe('var(--heatmap-1)');
+    });
+
+    it('colors the uninstrumented peer segment like the client span that measured it', () => {
+      const leafSpanIndex = trace.spans.findIndex(span => !span.hasChildren);
+      const newLegacySpans = legacyTrace.spans.map((s, index) =>
+        index === leafSpanIndex
+          ? {
+              ...s,
+              tags: [
+                ...s.tags,
+                { key: 'span.kind', value: 'client' },
+                { key: 'peer.service', value: 'externalServiceTest' },
+              ],
+            }
+          : s
+      );
+      const altTrace = transformTraceData({ ...legacyTrace, spans: newLegacySpans }).asOtelTrace();
+      const heatmapScores = new Map([[altTrace.spans[leafSpanIndex].spanID, 1]]);
+
+      const { listViewProps } = renderAndCapture({
+        ...mockProps,
+        trace: altTrace,
+        heatmapEnabled: true,
+        heatmapScores,
+      });
+
+      const spanBarRow = listViewProps.itemRenderer('some-key', {}, leafSpanIndex, {}).props.children;
+      expect(spanBarRow.props.noInstrumentedServer.color).toBe('var(--heatmap-7)');
+    });
+  });
+
   describe('service filter pruning', () => {
     function makeSpansWithServices() {
       // Build a small trace with known services:

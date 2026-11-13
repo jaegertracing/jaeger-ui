@@ -28,12 +28,13 @@ export function getMaxNameColumnWidth(opts: {
   return Math.min(SPAN_NAME_COLUMN_WIDTH_MAX, availableWidth);
 }
 
-// The persisted slice of the store: the four user layout preferences (no actions).
+// The persisted slice of the store: the user layout preferences (no actions).
 type LayoutPrefs = {
   spanNameColumnWidth: number;
   sidePanelWidth: number;
   detailPanelMode: SpanDetailPanelMode;
   timelineBarsVisible: boolean;
+  heatmapEnabled: boolean;
 };
 
 type TraceTimelineLayoutPrefsStore = LayoutPrefs & {
@@ -44,6 +45,7 @@ type TraceTimelineLayoutPrefsStore = LayoutPrefs & {
   // Updates layout fields only; use `setDetailPanelMode` from `./store` to also sync detail panel state.
   applyDetailPanelModeToLayout: (mode: SpanDetailPanelMode) => void;
   setTimelineBarsVisible: (visible: boolean) => void;
+  toggleHeatmap: () => void;
 };
 
 // Single namespaced localStorage key holding the JSON-serialized prefs (replaces the four raw keys).
@@ -142,7 +144,9 @@ function normalizeLayoutPrefs(stored: Partial<LayoutPrefs>): LayoutPrefs {
     }
   }
 
-  return { spanNameColumnWidth, sidePanelWidth, detailPanelMode, timelineBarsVisible };
+  const heatmapEnabled = stored.heatmapEnabled ?? false;
+
+  return { spanNameColumnWidth, sidePanelWidth, detailPanelMode, timelineBarsVisible, heatmapEnabled };
 }
 
 // Storage is untrusted input. Copy only valid preference values, never actions or other store fields.
@@ -161,6 +165,9 @@ function readLayoutPrefs(value: unknown): Partial<LayoutPrefs> {
   }
   if (typeof stored.timelineBarsVisible === 'boolean') {
     prefs.timelineBarsVisible = stored.timelineBarsVisible;
+  }
+  if (typeof stored.heatmapEnabled === 'boolean') {
+    prefs.heatmapEnabled = stored.heatmapEnabled;
   }
   return prefs;
 }
@@ -239,6 +246,13 @@ export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()(
           timelineBarsVisible: visible,
           explicitPrefs: { ...state.explicitPrefs, timelineBarsVisible: visible },
         }));
+      },
+
+      toggleHeatmap: () => {
+        set(state => {
+          const heatmapEnabled = !state.heatmapEnabled;
+          return { heatmapEnabled, explicitPrefs: { ...state.explicitPrefs, heatmapEnabled } };
+        });
       },
     }),
     {

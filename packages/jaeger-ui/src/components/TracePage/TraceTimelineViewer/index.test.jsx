@@ -35,6 +35,7 @@ const { mockLayoutPrefsStore, mockTraceTimelineStore, mockUseTraceTimelineStore 
       sidePanelWidth: 0.375,
       detailPanelMode: 'inline',
       timelineBarsVisible: true,
+      heatmapEnabled: false,
       setSpanNameColumnWidth: vi.fn(),
       setSidePanelWidth: vi.fn(),
       setTimelineBarsVisible: vi.fn(),
@@ -69,7 +70,11 @@ const mockUseSpanPillsEnabled = vi.hoisted(() => vi.fn(() => true));
 vi.mock('./spanPills', () => ({
   useSpanPillsEnabled: mockUseSpanPillsEnabled,
 }));
-vi.mock('./VirtualizedTraceView', () => mockDefault(() => <div data-testid="virtualized-trace-view-mock" />));
+vi.mock('./VirtualizedTraceView', () =>
+  mockDefault(props => (
+    <div data-testid="virtualized-trace-view-mock" data-list-top-offset-key={props.listTopOffsetKey} />
+  ))
+);
 vi.mock('./SpanDetailSidePanel', () => mockDefault(() => <div data-testid="span-detail-side-panel-mock" />));
 vi.mock('./TimelineHeaderRow', () =>
   mockDefault(props => (
@@ -138,6 +143,7 @@ describe('<TraceTimelineViewer>', () => {
     mockLayoutPrefsStore.sidePanelWidth = 0.375;
     mockLayoutPrefsStore.detailPanelMode = 'inline';
     mockLayoutPrefsStore.timelineBarsVisible = true;
+    mockLayoutPrefsStore.heatmapEnabled = false;
     mockTraceTimelineStore.detailStates = new Map();
     mockUseTraceTimelineStore.setState.mockClear();
     mockUseServiceFilter.prunedServices = new Set();
@@ -198,6 +204,84 @@ describe('<TraceTimelineViewer>', () => {
     } finally {
       rectSpy.mockRestore();
     }
+  });
+
+  it('remeasures the list offset when the page header changes height', () => {
+    const offsetKey = () =>
+      screen.getByTestId('virtualized-trace-view-mock').getAttribute('data-list-top-offset-key');
+    const { rerender } = render(<TraceTimelineViewerImpl {...props} pageHeaderHeight={80} />);
+    const before = offsetKey();
+
+    rerender(<TraceTimelineViewerImpl {...props} pageHeaderHeight={165} />);
+    expect(offsetKey()).not.toBe(before);
+
+    // The legend's height is part of the key too, and the header still counts with it.
+    mockLayoutPrefsStore.heatmapEnabled = true;
+    rerender(<TraceTimelineViewerImpl {...props} pageHeaderHeight={165} />);
+    const withLegend = offsetKey();
+    rerender(<TraceTimelineViewerImpl {...props} pageHeaderHeight={80} />);
+    expect(offsetKey()).not.toBe(withLegend);
+  });
+
+  describe('latency heatmap', () => {
+    it('shows the legend only while the heatmap is on', () => {
+      const { container, rerender } = render(<TraceTimelineViewerImpl {...props} />);
+      expect(screen.queryByRole('group', { name: /latency heatmap legend/i })).not.toBeInTheDocument();
+      expect(container.firstChild).not.toHaveClass('is-heatmapEnabled');
+
+      mockLayoutPrefsStore.heatmapEnabled = true;
+      rerender(<TraceTimelineViewerImpl {...props} />);
+      expect(screen.getByRole('group', { name: /latency heatmap legend/i })).toBeInTheDocument();
+      expect(container.firstChild).toHaveClass('is-heatmapEnabled');
+    });
+
+    it('sizes the space below the legend from its rendered height', () => {
+      mockLayoutPrefsStore.heatmapEnabled = true;
+      const heightSpy = vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(86);
+      try {
+        const { container } = render(<TraceTimelineViewerImpl {...props} />);
+        expect(container.firstChild.style.getPropertyValue('--heatmap-legend-height')).toBe('86px');
+      } finally {
+        heightSpy.mockRestore();
+      }
+    });
+
+    it('shows the legend in side panel mode too', () => {
+      mockLayoutPrefsStore.detailPanelMode = 'sidepanel';
+      mockLayoutPrefsStore.heatmapEnabled = true;
+      render(<TraceTimelineViewerImpl {...props} />);
+      expect(screen.getByRole('group', { name: /latency heatmap legend/i })).toBeInTheDocument();
+    });
+
+    it('starts the side panel below both the header and the legend', () => {
+      mockLayoutPrefsStore.detailPanelMode = 'sidepanel';
+
+      // The legend is a fixed band like the header, so it doesn't move the layout container.
+      const rectSpy = jest
+        .spyOn(Element.prototype, 'getBoundingClientRect')
+        .mockImplementation(() => ({ top: 80, bottom: 0, left: 0, right: 0, height: 0, width: 0 }));
+
+      try {
+        const { container, rerender } = render(<TraceTimelineViewerImpl {...props} />);
+        const panel = container.querySelector('.TraceTimelineViewer--sidePanel');
+        expect(panel.style.top).toBe('calc(80px + var(--timeline-header-row-height))');
+
+        mockLayoutPrefsStore.heatmapEnabled = true;
+        rerender(<TraceTimelineViewerImpl {...props} />);
+        expect(panel.style.top).toBe(
+          'calc(80px + (var(--timeline-header-row-height) + var(--heatmap-legend-height)))'
+        );
+        expect(panel.style.height).toBe(
+          'calc(100vh - 80px - (var(--timeline-header-row-height) + var(--heatmap-legend-height)))'
+        );
+
+        mockLayoutPrefsStore.heatmapEnabled = false;
+        rerender(<TraceTimelineViewerImpl {...props} />);
+        expect(panel.style.top).toBe('calc(80px + var(--timeline-header-row-height))');
+      } finally {
+        rectSpy.mockRestore();
+      }
+    });
   });
 
   it('sets up actions', () => {

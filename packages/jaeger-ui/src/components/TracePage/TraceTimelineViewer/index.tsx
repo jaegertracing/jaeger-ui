@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import {
   getSelectedSpanID,
@@ -12,6 +12,7 @@ import {
   useLayoutPrefsStore,
   useTraceTimelineStore,
 } from './store';
+import HeatmapLegend from './HeatmapLegend';
 import {
   trackCollapseAll,
   trackCollapseOne,
@@ -30,6 +31,7 @@ import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '.
 import { TNil } from '../../../types';
 import { IOtelTrace } from '../../../types/otel';
 import { CriticalPathSection } from '../../../types/critical_path';
+import { computeLatencyScores } from '../../../utils/span-latency-stats';
 
 import './index.css';
 
@@ -49,6 +51,9 @@ type TProps = {
 };
 
 const NUM_TICKS = 5;
+
+// Stable reference so the heatmap-disabled case doesn't force a new Map identity on every render.
+const EMPTY_SCORES: Map<string, number> = new Map();
 
 /**
  * `TraceTimelineViewer` now renders the header row because it is sensitive to
@@ -73,8 +78,17 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   const sidePanelWidth = useLayoutPrefsStore(s => s.sidePanelWidth);
   const spanNameColumnWidth = useLayoutPrefsStore(s => s.spanNameColumnWidth);
   const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
+  const heatmapEnabled = useLayoutPrefsStore(s => s.heatmapEnabled);
   const zustandSetSpanNameColumnWidth = useLayoutPrefsStore(s => s.setSpanNameColumnWidth);
   const zustandSetSidePanelWidth = useLayoutPrefsStore(s => s.setSidePanelWidth);
+
+  // The legend's rendered height, once known; it grows past the CSS minimum when its hint wraps.
+  const [legendHeight, setLegendHeight] = useState<number | null>(null);
+
+  const heatmapScores = useMemo(
+    () => (heatmapEnabled ? computeLatencyScores(trace.spans) : EMPTY_SCORES),
+    [heatmapEnabled, trace.spans]
+  );
 
   const detailStates = useTraceTimelineStore(s => s.detailStates);
   const selectedSpanID = detailPanelMode === 'sidepanel' ? getSelectedSpanID(detailStates) : null;
@@ -216,6 +230,11 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     />
   );
 
+  // ListView measures its offset from the top of the page only when this key changes. TracePage
+  // pads this view down by the page header, and the legend sits above the rows, so both heights
+  // move the list.
+  const listTopOffsetKey = `${pageHeaderHeight}:${heatmapEnabled ? legendHeight : 'off'}`;
+
   const virtualizedView = (
     <VirtualizedTraceView
       {...rest}
@@ -223,14 +242,29 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       useOtelTerms={useOtelTerms}
       currentViewRangeTime={viewRange.time.current}
       nameColumnWidth={nameColumnWidth}
+      heatmapEnabled={heatmapEnabled}
+      heatmapScores={heatmapScores}
+      listTopOffsetKey={listTopOffsetKey}
       spanPillsEnabled={spanPillsEnabled}
     />
   );
 
+  const rootClassName = heatmapEnabled ? 'TraceTimelineViewer is-heatmapEnabled' : 'TraceTimelineViewer';
+  // Overrides the vars.css default, so the span list padding and the side panel offset, which both
+  // read this variable, follow the legend's real height.
+  const rootStyle =
+    heatmapEnabled && legendHeight !== null
+      ? ({ '--heatmap-legend-height': `${legendHeight}px` } as React.CSSProperties)
+      : undefined;
+  const legend = heatmapEnabled && <HeatmapLegend onHeightChange={setLegendHeight} />;
+
   if (sidePanelActive) {
     const mainWidth = (1 - effectiveSidePanelWidth) * 100;
-    // The header row height stays in CSS so that vars.css remains its only definition.
-    const headerRowHeight = 'var(--timeline-header-row-height)';
+    // The header row height stays in CSS so that vars.css remains its only definition. The
+    // heatmap legend is a second fixed band below the header, so the panel starts below both.
+    const headerRowHeight = heatmapEnabled
+      ? '(var(--timeline-header-row-height) + var(--heatmap-legend-height))'
+      : 'var(--timeline-header-row-height)';
     const sidePanelStyle: React.CSSProperties = {
       width: `${effectiveSidePanelWidth * 100}%`,
       ...(layoutTop !== null && {
@@ -239,8 +273,9 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       }),
     };
     return (
-      <div className="TraceTimelineViewer">
+      <div className={rootClassName} style={rootStyle}>
         {headerRow}
+        {legend}
         <div className="TraceTimelineViewer--sidePanelLayout" ref={layoutRef}>
           <div className="TraceTimelineViewer--main" style={{ width: `${mainWidth}%` }}>
             {virtualizedView}
@@ -258,8 +293,9 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   }
 
   return (
-    <div className="TraceTimelineViewer">
+    <div className={rootClassName} style={rootStyle}>
       {headerRow}
+      {legend}
       {virtualizedView}
     </div>
   );

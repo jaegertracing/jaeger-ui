@@ -102,6 +102,12 @@ describe('layout preference hydration', () => {
     expect((await rehydrateLayoutPrefs()).timelineBarsVisible).toBe(true);
   });
 
+  it('reads heatmapEnabled from localStorage and defaults it to false', async () => {
+    expect((await rehydrateLayoutPrefs()).heatmapEnabled).toBe(false);
+    localStorage.setItem('jaeger.layout', JSON.stringify({ state: { heatmapEnabled: true }, version: 1 }));
+    expect((await rehydrateLayoutPrefs()).heatmapEnabled).toBe(true);
+  });
+
   it('defaults detailPanelMode to inline when enableSidePanel is false', async () => {
     vi.mocked(getConfig).mockReturnValue({
       traceTimeline: { enableSidePanel: false },
@@ -355,6 +361,7 @@ describe('useLayoutPrefsStore persistence (legacy migration + corrupted value)',
           sidePanelWidth: null,
           detailPanelMode: 'unknown',
           timelineBarsVisible: 'false',
+          heatmapEnabled: 'true',
           setSpanNameColumnWidth: 'not a function',
         },
         version: 1,
@@ -366,6 +373,7 @@ describe('useLayoutPrefsStore persistence (legacy migration + corrupted value)',
       sidePanelWidth: 0.375,
       detailPanelMode: 'inline',
       timelineBarsVisible: true,
+      heatmapEnabled: false,
     });
     expect(useLayoutPrefsStore.getState().setSpanNameColumnWidth).toBeTypeOf('function');
   });
@@ -484,6 +492,19 @@ describe('trace timeline zustand stores', () => {
         useLayoutPrefsStore.getState().setTimelineBarsVisible(false);
         useLayoutPrefsStore.getState().setTimelineBarsVisible(true);
         expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state.timelineBarsVisible).toBe(true);
+      });
+    });
+
+    describe('toggleHeatmap', () => {
+      it('flips heatmapEnabled and persists it to localStorage', () => {
+        useLayoutPrefsStore.setState({ heatmapEnabled: false });
+        useLayoutPrefsStore.getState().toggleHeatmap();
+        expect(useLayoutPrefsStore.getState().heatmapEnabled).toBe(true);
+        expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state.heatmapEnabled).toBe(true);
+
+        useLayoutPrefsStore.getState().toggleHeatmap();
+        expect(useLayoutPrefsStore.getState().heatmapEnabled).toBe(false);
+        expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state.heatmapEnabled).toBe(false);
       });
     });
   });

@@ -7,12 +7,13 @@ import '@testing-library/jest-dom';
 
 import SpanBarRow from './SpanBarRow';
 import SpanBar from './SpanBar';
+import colorGenerator from '../../../utils/color-generator';
 import { makeAttributes } from '../../../model/attributes';
 import { GEN_AI_REQUEST_MODEL } from '../../../constants/span-attributes';
 
 vi.mock('./SpanTreeOffset', () => ({
-  default: jest.fn(({ span, childrenVisible, onClick }) => (
-    <div data-testid="span-tree-offset" onClick={onClick}>
+  default: jest.fn(({ span, childrenVisible, onClick, color }) => (
+    <div data-testid="span-tree-offset" data-color={color} onClick={onClick}>
       SpanTreeOffset: {span.spanID} - {childrenVisible ? 'expanded' : 'collapsed'}
     </div>
   )),
@@ -143,6 +144,14 @@ describe('<SpanBarRow>', () => {
     fireEvent.click(treeOffset);
     expect(defaultProps.onChildrenToggled).toHaveBeenCalledTimes(1);
     expect(defaultProps.onChildrenToggled).toHaveBeenCalledWith(spanID);
+  });
+
+  it('keeps the tree markers on the service color when the bar takes another color', () => {
+    render(<SpanBarRow {...defaultProps} color="var(--heatmap-7)" />);
+    expect(screen.getByTestId('span-tree-offset')).toHaveAttribute(
+      'data-color',
+      colorGenerator.getColorByKey('service-name')
+    );
   });
 
   it('shows ReferencesButton when span has multiple references', () => {
