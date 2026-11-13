@@ -16,12 +16,15 @@ function stopPropagation(event: React.MouseEvent<HTMLAnchorElement>) {
 }
 
 export default function TraceTimelineLink({ traceID }: PropsType) {
+  const target = getTargetEmptyOrBlank();
+  const suffix = target === '_blank' ? ' in a new window' : '';
   return (
     <a
+      aria-label={`Open trace${suffix}`}
       href={getUrl(traceID)}
       onClick={stopPropagation}
       rel="noopener noreferrer"
-      target={getTargetEmptyOrBlank()}
+      target={target}
     >
       <NewWindowIcon />
     </a>
