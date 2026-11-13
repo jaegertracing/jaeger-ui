@@ -164,7 +164,7 @@ export function TracePageImpl(props: TProps) {
   const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
   const zustandSetTimelineBarsVisible = useLayoutPrefsStore(s => s.setTimelineBarsVisible);
   const zustandFocusUiFindMatches = useTraceTimelineStore(s => s.focusUiFindMatches);
-  const { spanFilter, applyFilter, spanFilterNode } = useSpanFilter(traceData, detailPanelMode);
+  const { spanFilter, filterTrace, applyFilter, spanFilterNode } = useSpanFilter(traceData, detailPanelMode);
   const { hiddenIDs } = useMemo(
     () => evaluateSpanFilter(traceData?.spans, spanFilter),
     [traceData?.spans, spanFilter]
@@ -490,6 +490,7 @@ export function TracePageImpl(props: TProps) {
         findMatchesIDs={timelineFindMatches}
         pageHeaderHeight={headerHeight}
         trace={traceData}
+        filterTrace={filterTrace}
         criticalPath={criticalPath}
         spanFilterNode={spanFilterNode}
         updateNextViewRangeTime={updateNextViewRangeTime}
@@ -506,6 +507,7 @@ export function TracePageImpl(props: TProps) {
         findMatchesIDs={timelineFindMatches}
         pageHeaderHeight={headerHeight}
         trace={traceData}
+        filterTrace={filterTrace}
         criticalPath={criticalPath}
         spanFilterNode={spanFilterNode}
         updateNextViewRangeTime={updateNextViewRangeTime}

@@ -87,6 +87,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       nameColumnWidth: 0.5,
       hiddenIDs: new Set(),
       trace,
+      filterTrace: trace,
       criticalPath,
       spanPillsEnabled: true,
       uiFind: 'uiFind',
@@ -174,7 +175,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
     mockProps.setTrace.mockReset();
     const traceID = 'some-other-id';
     const _trace = { ...trace, traceID };
-    rerender(<VirtualizedTraceViewImpl {...mockProps} trace={_trace} />);
+    rerender(<VirtualizedTraceViewImpl {...mockProps} trace={_trace} filterTrace={_trace} />);
     expect(mockProps.setTrace).toHaveBeenCalledWith(_trace, mockProps.findMatchesIDs);
   });
 
@@ -221,9 +222,31 @@ describe('<VirtualizedTraceViewImpl>', () => {
       mockProps.setTrace.mockReset();
 
       const newTrace = { ...trace, traceID: 'new-id' };
-      rerender(<VirtualizedTraceViewImpl {...mockProps} trace={newTrace} />);
+      rerender(<VirtualizedTraceViewImpl {...mockProps} trace={newTrace} filterTrace={newTrace} />);
 
       expect(mockProps.setTrace).toHaveBeenCalledWith(newTrace, mockProps.findMatchesIDs);
+    });
+
+    it('sets a reloaded trace once its filter is resolved, with the matches of that filter', () => {
+      const { rerender } = render(<VirtualizedTraceViewImpl {...mockProps} />);
+      mockProps.setTrace.mockReset();
+
+      const reloaded = { ...trace, spans: [...trace.spans] };
+      const staleMatches = new Set();
+      rerender(<VirtualizedTraceViewImpl {...mockProps} trace={reloaded} findMatchesIDs={staleMatches} />);
+      expect(mockProps.setTrace).not.toHaveBeenCalled();
+
+      const matches = new Set([trace.spans[0].spanID]);
+      rerender(
+        <VirtualizedTraceViewImpl
+          {...mockProps}
+          trace={reloaded}
+          filterTrace={reloaded}
+          findMatchesIDs={matches}
+        />
+      );
+      expect(mockProps.setTrace).toHaveBeenCalledTimes(1);
+      expect(mockProps.setTrace).toHaveBeenCalledWith(reloaded, matches);
     });
   });
 

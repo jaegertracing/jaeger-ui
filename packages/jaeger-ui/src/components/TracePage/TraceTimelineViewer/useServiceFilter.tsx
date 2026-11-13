@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import queryString from 'query-string';
 
@@ -227,6 +227,10 @@ type ApplyOptions = {
 
 type UseSpanFilterResult = {
   spanFilter: ISpanFilter;
+  // The trace the filter was last resolved for. A new trace renders with the filter of the previous
+  // one until the resolve effect runs, so the timeline takes the load focus only once this is the
+  // trace it shows.
+  filterTrace: IOtelTrace | TNil;
   applyFilter: (filter: ISpanFilter, options?: ApplyOptions) => void;
   // The funnel button with its popover, rendered once in the header cluster and once in the
   // timeline column header; the two instances edit the same filter.
@@ -259,6 +263,11 @@ export function useSpanFilter(
 
   const spanFilter = useTraceTimelineStore(s => s.spanFilter);
   const setSpanFilter = useTraceTimelineStore(s => s.setSpanFilter);
+  const [filterTrace, setFilterTrace] = useState<IOtelTrace | TNil>(null);
+  // The trace is read through a ref so that the resolve effect below keeps its inputs; a new trace
+  // object re-runs it through the service lists anyway.
+  const latestTrace = useRef(trace);
+  latestTrace.current = trace;
   const hiddenIDs = useMemo(
     () => evaluateSpanFilter(trace?.spans, spanFilter).hiddenIDs,
     [trace?.spans, spanFilter]
@@ -281,6 +290,7 @@ export function useSpanFilter(
     if (!spanFiltersEqual(current, filter)) {
       setSpanFilter(filter);
     }
+    setFilterTrace(latestTrace.current);
     if (cleanSearch != null && cleanSearch !== location.search) {
       navigate(
         { pathname: location.pathname, search: cleanSearch },
@@ -367,5 +377,5 @@ export function useSpanFilter(
     [trace, spanFilter, hiddenIDs.size, applyFilter, applyThreshold]
   );
 
-  return { spanFilter, applyFilter, spanFilterNode };
+  return { spanFilter, filterTrace, applyFilter, spanFilterNode };
 }

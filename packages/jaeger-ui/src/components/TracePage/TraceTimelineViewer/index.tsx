@@ -44,6 +44,8 @@ type TProps = {
   // its own document offset, so it has to know when that padding changes.
   pageHeaderHeight: number;
   trace: IOtelTrace;
+  // The trace the page's span filter is resolved for; see `useSpanFilter`.
+  filterTrace: IOtelTrace | TNil;
   criticalPath: CriticalPathSection[];
   // The funnel button of the span filter, which the page owns and the column header shows.
   spanFilterNode?: React.ReactNode;

@@ -443,8 +443,20 @@ describe('useSpanFilter hook', () => {
     }
   });
 
+  it('reports the trace the filter was resolved for', () => {
+    const first = makeTrace(['svc-a']);
+    const { result, rerender } = renderHook(({ trace }) => useSpanFilter(trace, 'inline'), {
+      initialProps: { trace: first },
+    });
+    expect(result.current.filterTrace).toBe(first);
+    const second = makeTrace(['svc-a', 'svc-b']);
+    rerender({ trace: second });
+    expect(result.current.filterTrace).toBe(second);
+  });
+
   it('returns the filter and the button node', () => {
-    const { result } = renderHook(() => useSpanFilter(makeTrace(['svc-a', 'svc-b']), 'inline'));
+    const hookTrace = makeTrace(['svc-a', 'svc-b']);
+    const { result } = renderHook(() => useSpanFilter(hookTrace, 'inline'));
     expect(result.current.spanFilter).toEqual(EMPTY_SPAN_FILTER);
     expect(result.current.spanFilterNode).not.toBeNull();
   });
@@ -462,7 +474,8 @@ describe('useSpanFilter hook', () => {
 
   it('skips setSpanFilter when the resolved filter equals the current state (no-op guard)', () => {
     // Store already has empty set; resolved is also empty → no write.
-    renderHook(() => useSpanFilter(makeTrace(['svc-a', 'svc-b']), 'inline'));
+    const hookTrace = makeTrace(['svc-a', 'svc-b']);
+    renderHook(() => useSpanFilter(hookTrace, 'inline'));
     expect(mockSetSpanFilter).not.toHaveBeenCalled();
   });
 
@@ -475,7 +488,8 @@ describe('useSpanFilter hook', () => {
       visibleServices: new Set(['svc-a']),
       stale: false,
     });
-    renderHook(() => useSpanFilter(makeTrace(['svc-a', 'svc-b']), 'inline'));
+    const hookTrace = makeTrace(['svc-a', 'svc-b']);
+    renderHook(() => useSpanFilter(hookTrace, 'inline'));
     expect(mockSetSpanFilter).toHaveBeenCalledWith({ ...serviceFilter('svc-b'), treeMode: 'remove' });
     expect(mockNavigate).toHaveBeenCalledWith(
       expect.objectContaining({ pathname: '/trace/abc', search: '?f=h%3Aservice%3Asvc-b&tree=remove' }),
@@ -489,7 +503,8 @@ describe('useSpanFilter hook', () => {
       pathname: '/trace/abc',
     } as ReturnType<typeof useLocation>);
     vi.mocked(decodeSvcFilter).mockReturnValue({ visibleServices: new Set(), stale: true });
-    renderHook(() => useSpanFilter(makeTrace(['svc-a']), 'inline'));
+    const hookTrace = makeTrace(['svc-a']);
+    renderHook(() => useSpanFilter(hookTrace, 'inline'));
     expect(mockNavigate).toHaveBeenCalledWith(
       expect.objectContaining({ pathname: '/trace/abc', search: '?f=' }),
       { replace: true }
@@ -498,7 +513,8 @@ describe('useSpanFilter hook', () => {
 
   it('reads localStorage defaults when the URL states no filter', () => {
     localStorage.setItem('svcFilter.defaults', JSON.stringify({ prunedServices: ['svc-b'] }));
-    renderHook(() => useSpanFilter(makeTrace(['svc-a', 'svc-b', 'svc-c']), 'inline'));
+    const hookTrace = makeTrace(['svc-a', 'svc-b', 'svc-c']);
+    renderHook(() => useSpanFilter(hookTrace, 'inline'));
     expect(mockSetSpanFilter).toHaveBeenCalledWith(serviceFilter('svc-b'));
   });
 
@@ -603,7 +619,8 @@ describe('useSpanFilter hook', () => {
       search: '?f=k%3Astatus%3Aerror&f=h%3Aservice%3Asvc-b',
       pathname: '/trace/abc',
     } as ReturnType<typeof useLocation>);
-    renderHook(() => useSpanFilter(makeTrace(['svc-a', 'svc-b']), 'inline'));
+    const hookTrace = makeTrace(['svc-a', 'svc-b']);
+    renderHook(() => useSpanFilter(hookTrace, 'inline'));
     expect(mockSetSpanFilter).not.toHaveBeenCalled();
     expect(mockNavigate).not.toHaveBeenCalled();
   });
@@ -635,7 +652,8 @@ describe('useSpanFilter hook', () => {
       search: '?uiFind=auth&foo=1',
       pathname: '/trace/abc',
     } as ReturnType<typeof useLocation>);
-    const { result } = renderHook(() => useSpanFilter(makeTrace(['svc-a', 'svc-b']), 'inline'));
+    const hookTrace = makeTrace(['svc-a', 'svc-b']);
+    const { result } = renderHook(() => useSpanFilter(hookTrace, 'inline'));
     result.current.applyFilter(
       { ...EMPTY_SPAN_FILTER, clauses: [{ verb: 'hide', criterion: { shape: 'text', text: 'auth' } }] },
       { clearUiFind: true }
