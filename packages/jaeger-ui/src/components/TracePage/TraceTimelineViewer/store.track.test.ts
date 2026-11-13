@@ -17,7 +17,7 @@ vi.mock('../../../utils/tracking', async importOriginal => ({
 }));
 
 import traceTimeline, { actions } from './duck';
-import { setDetailPanelMode, useLayoutPrefsStore, useTraceTimelineStore } from './store';
+import { useLayoutPrefsStore, useTraceTimelineStore } from './store';
 import * as track from './store.track';
 import trackMiddleware from '../../../middlewares/track';
 import { queryClient } from '../../../query/app-query-client';
@@ -54,7 +54,6 @@ const trace = {
 } as unknown as IOtelTrace;
 
 const timeline = () => useTraceTimelineStore.getState();
-const layout = () => useLayoutPrefsStore.getState();
 
 type TInteraction = {
   // The Redux action the component dispatches today, observed by the tracking middleware.
@@ -149,21 +148,6 @@ const interactions: TInteraction[] = [
     apply: () => timeline().detailToggle('child'),
   },
   {
-    action: actions.setTimelineBarsVisible(false),
-    track: () => track.trackTimelineBarsVisible(false),
-    apply: () => layout().setTimelineBarsVisible(false),
-  },
-  {
-    action: actions.setSpanNameColumnWidth(0.3),
-    track: () => track.trackColumnWidth(0.3),
-    apply: () => layout().setSpanNameColumnWidth(0.3),
-  },
-  {
-    action: actions.setDetailPanelMode('sidepanel'),
-    track: () => track.trackDetailPanelMode('sidepanel'),
-    apply: () => setDetailPanelMode('sidepanel'),
-  },
-  {
     action: actions.detailToggle('parent'),
     track: () => track.trackDetailToggle('parent'),
     apply: () => timeline().detailToggle('parent'),
@@ -174,19 +158,9 @@ const interactions: TInteraction[] = [
     apply: () => timeline().detailTagsToggle('parent'),
   },
   {
-    action: actions.setSidePanelWidth(0.4),
-    track: () => track.trackColumnWidth(0.4),
-    apply: () => layout().setSidePanelWidth(0.4),
-  },
-  {
     action: actions.detailToggle('parent'),
     track: () => track.trackDetailToggle('parent'),
     apply: () => timeline().detailToggle('parent'),
-  },
-  {
-    action: actions.setDetailPanelMode('inline'),
-    track: () => track.trackDetailPanelMode('inline'),
-    apply: () => setDetailPanelMode('inline'),
   },
   {
     action: actions.clearShouldScrollToFirstUiFindMatch(),
@@ -236,11 +210,56 @@ describe('timeline analytics adapter', () => {
     const adapter = runAdapter();
 
     expect(adapter).toEqual(legacy);
-    // Guards against a vacuous pass: every timeline category is exercised.
+    // Guards against a vacuous pass: every timeline category still comparable against the
+    // Redux duck is exercised. CATEGORY_COLUMN, CATEGORY_PANEL_MODE and CATEGORY_TIMELINE_VISIBLE
+    // are excluded: the layout fields that produced them (spanNameColumnWidth, sidePanelWidth,
+    // detailPanelMode, timelineBarsVisible) were removed from the duck once this adapter's parity
+    // with it was established, so there is no more legacy action to compare against. They are
+    // covered directly in the 'layout preference tracking' tests below instead.
+    const retiredFromParity = new Set([
+      track.CATEGORY_COLUMN,
+      track.CATEGORY_PANEL_MODE,
+      track.CATEGORY_TIMELINE_VISIBLE,
+    ]);
     const categories = Object.entries(track)
       .filter(([name]) => name.startsWith('CATEGORY_'))
-      .map(([, category]) => category);
+      .map(([, category]) => category as string)
+      .filter(category => !retiredFromParity.has(category));
     expect(new Set(legacy.map(([category]) => category))).toEqual(new Set(categories));
+  });
+
+  describe('layout preference tracking', () => {
+    // These categories used to be part of the legacy-vs-adapter comparison above; once the
+    // migration was proven faithful, the layout fields were removed from the Redux duck, and
+    // these three functions are now tested directly instead.
+    it('trackColumnWidth reports the resized width in thousandths', () => {
+      resetStores();
+      track.trackColumnWidth(0.3);
+      expect(trackEvent).toHaveBeenCalledWith(track.CATEGORY_COLUMN, 'resize', 300);
+    });
+
+    it('trackDetailPanelMode reports the new mode', () => {
+      resetStores();
+      track.trackDetailPanelMode('sidepanel');
+      expect(trackEvent).toHaveBeenCalledWith(track.CATEGORY_PANEL_MODE, 'sidepanel');
+    });
+
+    it('trackTimelineBarsVisible reports the new visibility', () => {
+      resetStores();
+      track.trackTimelineBarsVisible(false);
+      expect(trackEvent).toHaveBeenCalledWith(track.CATEGORY_TIMELINE_VISIBLE, 'false');
+    });
+
+    it('respects the web analytics gate, like the other trackers', () => {
+      resetStores();
+      mockAnalytics.enabled = false;
+      try {
+        track.trackColumnWidth(0.3);
+        expect(trackEvent).not.toHaveBeenCalled();
+      } finally {
+        mockAnalytics.enabled = true;
+      }
+    });
   });
 
   it('reports the toggle direction from the state before the store action runs', () => {
