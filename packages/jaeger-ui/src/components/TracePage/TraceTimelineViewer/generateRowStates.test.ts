@@ -268,6 +268,20 @@ describe('service filter pruning on the GenAI sample trace', () => {
     expect(genAIServices).toEqual(new Set(['coding-agent', 'summarizer-agent']));
   });
 
+  it('runs every span inside its parent and no two siblings at the same time', () => {
+    const byID = new Map(trace.spans.map(s => [s.spanID, s]));
+    const end = (s: IOtelSpan) => s.startTime + s.duration;
+    const lastEndUnder = new Map<string, number>();
+    for (const s of trace.spans) {
+      const parent = s.parentSpanID ? byID.get(s.parentSpanID) : undefined;
+      if (!parent) continue;
+      expect(s.startTime).toBeGreaterThanOrEqual(parent.startTime);
+      expect(end(s)).toBeLessThanOrEqual(end(parent));
+      expect(s.startTime).toBeGreaterThanOrEqual(lastEndUnder.get(parent.spanID) ?? 0);
+      lastEndUnder.set(parent.spanID, end(s));
+    }
+  });
+
   it('pruning a plain tier above the agent hides every GenAI span below it', () => {
     // graphql-gateway sits between the root service and the agent, so pruning it removes
     // the agent's whole subtree. Any automatically derived pruned set has to account for
