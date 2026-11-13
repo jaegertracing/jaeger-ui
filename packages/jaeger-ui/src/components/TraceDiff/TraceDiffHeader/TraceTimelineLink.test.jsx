@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { render, screen, fireEvent, createEvent } from '@testing-library/react';
 
-import * as getTargetModule from '../../../utils/config/get-target';
+import * as getConfigModule from '../../../utils/config/get-config';
 import TraceTimelineLink from './TraceTimelineLink';
 
 describe('TraceTimelineLink', () => {
@@ -39,15 +39,15 @@ describe('TraceTimelineLink', () => {
 });
 
 describe('TraceTimelineLink when new pages are forbidden', () => {
-  let getTargetSpy;
+  let getConfigSpy;
 
   beforeEach(() => {
-    getTargetSpy = jest.spyOn(getTargetModule, 'getTargetEmptyOrBlank').mockReturnValue('');
+    getConfigSpy = vi.spyOn(getConfigModule, 'default').mockReturnValue({ forbidNewPage: true });
     render(<TraceTimelineLink traceID="test-trace-id" />);
   });
 
   afterEach(() => {
-    getTargetSpy.mockRestore();
+    getConfigSpy.mockRestore();
   });
 
   it('does not mention a new window in the accessible name', () => {
