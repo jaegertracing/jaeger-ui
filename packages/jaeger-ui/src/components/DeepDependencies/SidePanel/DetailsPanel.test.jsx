@@ -58,11 +58,9 @@ describe('<SidePanel>', () => {
     decorationValue: 'test decorationValue',
     service,
   };
-  const supplantedUrl = stringSupplant(props.decorationSchema.detailUrl, { service });
-  const supplantedOpUrl = stringSupplant(props.decorationSchema.opDetailUrl, {
-    operation: opString,
-    service,
-  });
+  // Service and operation names are URL-encoded where they are substituted.
+  const supplantedUrl = 'http://test.detail.url?someParam=test%20svc';
+  const supplantedOpUrl = 'http://test.opDetail.url?someParam=test%20svc&otherParam=test%20op';
   let fetchDecorationSpy;
   let promise;
   let res;
@@ -238,6 +236,36 @@ describe('<SidePanel>', () => {
       expect(link).toHaveAttribute('rel', 'noreferrer noopener');
     });
 
+    it('encodes the service and operation in detailLink (#4768)', () => {
+      const schemaWithLink = {
+        ...props.decorationSchema,
+        detailLink: 'http://test.link?service=#{service}&operation=#{operation}',
+      };
+      render(<DetailsPanel {...props} decorationSchema={schemaWithLink} operation="GET /a?b=1&c=2" />);
+
+      expect(screen.getByRole('link')).toHaveAttribute(
+        'href',
+        'http://test.link?service=test%20svc&operation=GET%20%2Fa%3Fb%3D1%26c%3D2'
+      );
+    });
+
+    it('reads details and columns for a service whose name contains dots (#4768)', async () => {
+      const dottedService = 'payment.svc';
+      const decorationSchema = {
+        ...props.decorationSchema,
+        detailPath: 'details.#{service}',
+        detailColumnDefPath: 'columns.#{service}',
+      };
+      const columns = [{ key: 'latency', label: 'Latency' }];
+      render(<DetailsPanel {...props} service={dottedService} decorationSchema={decorationSchema} />);
+      res({ details: { [dottedService]: [{ latency: 42 }] }, columns: { [dottedService]: columns } });
+
+      const detailsCard = await screen.findByTestId('details-card');
+      expect(detailsCard).not.toHaveClass('is-error');
+      expect(detailsCard).toHaveTextContent(JSON.stringify([{ latency: 42 }]));
+      expect(detailsCard).toHaveAttribute('data-columns', JSON.stringify(columns));
+    });
+
     it('renders details path not found error', async () => {
       render(<DetailsPanel {...props} />);
 
@@ -280,7 +308,7 @@ describe('<SidePanel>', () => {
       rerender(<DetailsPanel {...props} decorationSchema={newSchema} />);
 
       expect(fetchDecorationSpy).toHaveBeenCalledTimes(1);
-      expect(fetchDecorationSpy).toHaveBeenLastCalledWith(stringSupplant(detailUrl, { service }));
+      expect(fetchDecorationSpy).toHaveBeenLastCalledWith('http://new.schema.detailsUrl?service=test%20svc');
     });
 
     it('fetches details and clears relevant state if operation changes', () => {
@@ -306,7 +334,7 @@ describe('<SidePanel>', () => {
 
       expect(fetchDecorationSpy).toHaveBeenCalledTimes(1);
       expect(fetchDecorationSpy).toHaveBeenLastCalledWith(
-        stringSupplant(props.decorationSchema.detailUrl, { service: newService })
+        'http://test.detail.url?someParam=different%20test%20service'
       );
     });
 
