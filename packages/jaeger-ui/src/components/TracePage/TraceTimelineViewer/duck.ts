@@ -23,7 +23,7 @@ import {
 } from './store.constants';
 import { getMaxNameColumnWidth } from './store.layout';
 import storage from '../../../utils/storage';
-import { shouldDisableCollapse } from './timeline-utils';
+import { shouldDisableCollapse, shouldDisableExpand } from './timeline-utils';
 
 // payloads
 export type TSpanIdLogValue = { logItem: IEvent; spanID: string };
@@ -33,9 +33,11 @@ type TTraceUiFindValue = { trace: IOtelTrace; uiFind: string | TNil; allowHide?:
 export type TWidthValue = { width: number };
 export type TDetailPanelModeValue = { mode: SpanDetailPanelMode };
 export type TTimelineVisibleValue = { visible: boolean };
+type TChildrenToggleSubtreeValue = { spanID: string; subtreeParentIDs: Set<string> | string[] };
 type TActionTypes =
   | TSpanIdLogValue
   | TSpanIdValue
+  | TChildrenToggleSubtreeValue
   | TSpansValue
   | TTraceUiFindValue
   | TWidthValue
@@ -46,7 +48,6 @@ type TActionTypes =
 type TTimelineViewerActions = {
   [actionName: string]: ActionFunctionAny<Action<TActionTypes>>;
 };
-
 export function newInitialState(): TTraceTimeline {
   const { traceTimeline } = getConfig();
   let detailPanelMode: 'inline' | 'sidepanel' = 'inline';
@@ -119,6 +120,7 @@ export function newInitialState(): TTraceTimeline {
 
 export const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer', [
   'CHILDREN_TOGGLE',
+  'CHILDREN_TOGGLE_SUBTREE',
   'CLEAR_SHOULD_SCROLL_TO_FIRST_UI_FIND_MATCH',
   'COLLAPSE_ALL',
   'COLLAPSE_ONE',
@@ -141,12 +143,16 @@ export const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer
 
 const fullActions = createActions<TActionTypes>({
   [actionTypes.CHILDREN_TOGGLE]: (spanID: string) => ({ spanID }),
+  [actionTypes.CHILDREN_TOGGLE_SUBTREE]: (spanID: string, subtreeParentIDs: Set<string> | string[]) => ({
+    spanID,
+    subtreeParentIDs,
+  }),
   [actionTypes.CLEAR_SHOULD_SCROLL_TO_FIRST_UI_FIND_MATCH]: () => ({}),
   [actionTypes.COLLAPSE_ALL]: (spans: IOtelSpan[]) => ({ spans }),
   [actionTypes.COLLAPSE_ONE]: (spans: IOtelSpan[]) => ({ spans }),
   [actionTypes.DETAIL_LOG_ITEM_TOGGLE]: (spanID: string, logItem: IEvent) => ({ logItem, spanID }),
   [actionTypes.DETAIL_LOGS_TOGGLE]: (spanID: string) => ({ spanID }),
-  [actionTypes.EXPAND_ALL]: () => ({}),
+  [actionTypes.EXPAND_ALL]: (spans?: IOtelSpan[]) => ({ spans }),
   [actionTypes.EXPAND_ONE]: (spans: IOtelSpan[]) => ({ spans }),
   [actionTypes.DETAIL_PROCESS_TOGGLE]: (spanID: string) => ({ spanID }),
   [actionTypes.DETAIL_WARNINGS_TOGGLE]: (spanID: string) => ({ spanID }),
@@ -252,7 +258,37 @@ function childrenToggle(state: TTraceTimeline, { spanID }: TSpanIdValue): TTrace
   return { ...state, childrenHiddenIDs };
 }
 
-export function expandAll(state: TTraceTimeline): TTraceTimeline {
+function childrenToggleSubtree(
+  state: TTraceTimeline,
+  { spanID, subtreeParentIDs }: TChildrenToggleSubtreeValue
+): TTraceTimeline {
+  const childrenHiddenIDs = new Set(state.childrenHiddenIDs);
+  const isCurrentlyCollapsed = childrenHiddenIDs.has(spanID);
+  if (isCurrentlyCollapsed) {
+    for (const id of subtreeParentIDs) {
+      childrenHiddenIDs.delete(id);
+    }
+  } else {
+    for (const id of subtreeParentIDs) {
+      childrenHiddenIDs.add(id);
+    }
+  }
+  return { ...state, childrenHiddenIDs };
+}
+
+export function expandAll(state: TTraceTimeline, { spans }: { spans?: IOtelSpan[] } = {}): TTraceTimeline {
+  if (spans) {
+    if (shouldDisableExpand(spans, state.childrenHiddenIDs)) {
+      return state;
+    }
+    const childrenHiddenIDs = new Set(state.childrenHiddenIDs);
+    spans.forEach(s => {
+      if (s.hasChildren) {
+        childrenHiddenIDs.delete(s.spanID);
+      }
+    });
+    return { ...state, childrenHiddenIDs };
+  }
   const childrenHiddenIDs = new Set<string>();
   return { ...state, childrenHiddenIDs };
 }
@@ -294,7 +330,7 @@ export function collapseOne(state: TTraceTimeline, { spans }: TSpansValue) {
 }
 
 export function expandOne(state: TTraceTimeline, { spans }: TSpansValue) {
-  if (state.childrenHiddenIDs.size === 0) {
+  if (shouldDisableExpand(spans, state.childrenHiddenIDs)) {
     return state;
   }
   let prevExpandedDepth = -1;
@@ -408,6 +444,7 @@ function detailLogItemToggle(state: TTraceTimeline, { spanID, logItem }: TSpanId
 export default handleActions<TTraceTimeline, any>(
   {
     [actionTypes.CHILDREN_TOGGLE]: guardReducer(childrenToggle),
+    [actionTypes.CHILDREN_TOGGLE_SUBTREE]: guardReducer(childrenToggleSubtree),
     [actionTypes.CLEAR_SHOULD_SCROLL_TO_FIRST_UI_FIND_MATCH]: guardReducer(
       clearShouldScrollToFirstUiFindMatch
     ),

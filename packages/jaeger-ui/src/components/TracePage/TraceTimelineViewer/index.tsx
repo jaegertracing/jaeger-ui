@@ -26,6 +26,7 @@ import { collapseTargets } from './generateRowStates';
 import { evaluateSpanFilter } from '../spanFilter';
 import { useSpanPillsEnabled } from './spanPills';
 import VirtualizedTraceView from './VirtualizedTraceView';
+import { getFocusedSubtree } from './timeline-utils';
 import { merge as mergeShortcuts } from '../keyboard-shortcuts';
 import { Accessors } from '../ScrollManager';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '../types';
@@ -103,13 +104,17 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   const zustandExpandAll = useTraceTimelineStore(s => s.expandAll);
   const zustandExpandOne = useTraceTimelineStore(s => s.expandOne);
   const spanFilter = useTraceTimelineStore(s => s.spanFilter);
+  const focusedSubtreeSpanID = useTraceTimelineStore(s => s.focusedSubtreeSpanID);
+
   // The bulk collapse actions walk the spans that have rows, at their depth in the drawn tree, so
   // that a hidden span cannot absorb a level of "collapse one" or "expand one" that the user never
-  // sees.
+  // sees. When a subtree is focused, bulk actions are scoped to that subtree.
   const collapseSpans = useMemo(() => {
-    const { hiddenIDs } = evaluateSpanFilter(trace.spans, spanFilter);
-    return collapseTargets(trace.spans, hiddenIDs, spanFilter.treeMode);
-  }, [trace.spans, spanFilter]);
+    const subtree = getFocusedSubtree(trace, focusedSubtreeSpanID);
+    const baseSpans = subtree ?? trace.spans;
+    const { hiddenIDs } = evaluateSpanFilter(baseSpans, spanFilter);
+    return collapseTargets(baseSpans, hiddenIDs, spanFilter.treeMode);
+  }, [trace, focusedSubtreeSpanID, spanFilter]);
 
   const setSpanNameColumnWidth = useCallback(
     (width: number) => {
@@ -142,8 +147,8 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
 
   const expandAll = useCallback(() => {
     trackExpandAll();
-    zustandExpandAll();
-  }, [zustandExpandAll]);
+    zustandExpandAll(collapseSpans);
+  }, [collapseSpans, zustandExpandAll]);
 
   const expandOne = useCallback(() => {
     trackExpandOne();
