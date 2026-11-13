@@ -23,7 +23,9 @@ export default function filterSpans(textFilter: string, spans: ReadonlyArray<Spa
 
   results.filter(Boolean).forEach(w => {
     if (w[0] === '-') {
-      excludeKeys.push(w.substr(1).toLowerCase());
+      const key = w.substring(1).toLowerCase();
+      // a bare "-" has no key to exclude; an empty string would match (and exclude) every key
+      if (key) excludeKeys.push(key);
     } else {
       includeFilters.push(w.toLowerCase());
     }
