@@ -19,6 +19,7 @@ type TProps = {
     nodes: TVertex[];
     edges: TEdge[];
   };
+  selectedDataSource: string;
   selectedLayout: string;
   selectedDepth: number;
   selectedService: string;
@@ -154,6 +155,7 @@ export const DAGMenu = ({
 
 export default function DAG({
   data,
+  selectedDataSource,
   selectedLayout,
   selectedDepth,
   selectedService,
@@ -222,7 +224,7 @@ export default function DAG({
   return (
     <div className="DAG" onClick={handleCanvasClick} role="button">
       <Digraph<TVertex>
-        key={`${selectedLayout}-${selectedService}-${selectedDepth}-${uiFind}`}
+        key={`${selectedLayout}-${selectedService}-${selectedDepth}-${uiFind}-${selectedDataSource ?? ''}`}
         zoom
         minimap
         className="DAG--dag"

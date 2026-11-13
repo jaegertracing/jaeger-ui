@@ -164,6 +164,14 @@ export default function DependencyGraphPage() {
   }, [debouncedDepthChange]);
 
   const handleServiceSelect = (service: string | null) => setSelectedService(service);
+  const handleDataSourceChange = (source: DataSource) => {
+    if (source === selectedDataSource) return;
+    debouncedDepthChange.cancel();
+    setSelectedDataSource(source);
+    setSelectedService(null);
+    setSelectedDepth(5);
+    setDebouncedDepth(5);
+  };
   const handleLayoutSelect = (layout: string) => setSelectedLayout(layout);
   const handleDepthChange = (value: number | null | undefined) => {
     const normalizedValue = value === undefined ? null : value;
@@ -226,7 +234,7 @@ export default function DependencyGraphPage() {
           onReset={handleReset}
           isHierarchicalDisabled={isHierarchicalDisabled}
           selectedDataSource={selectedDataSource}
-          onDataSourceChange={setSelectedDataSource}
+          onDataSourceChange={handleDataSourceChange}
           dataSources={DATA_SOURCES}
           uiFind={uiFind}
           matchCount={matchCount}
@@ -235,6 +243,7 @@ export default function DependencyGraphPage() {
       <div className="DependencyGraph--graphWrapper">
         <DAG
           data={graphData}
+          selectedDataSource={selectedDataSource}
           selectedLayout={selectedLayout ?? 'dot'}
           selectedDepth={debouncedDepth ?? 0}
           selectedService={selectedService ?? ''}
