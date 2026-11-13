@@ -32,9 +32,9 @@
     "vitest": "5.0.5"
   },
   "dependencies": {
-    "@ag-ui/client": "1.0.3",
+    "@ag-ui/client": "1.0.4",
     "@assistant-ui/react": "0.15.32",
-    "@assistant-ui/react-ag-ui": "0.1.0",
+    "@assistant-ui/react-ag-ui": "0.1.1",
     "@jaegertracing/plexus": "workspace:*",
     "@opentelemetry/api": "1.10.0",
     "@opentelemetry/core": "3.0.0",
