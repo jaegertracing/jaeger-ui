@@ -9,7 +9,7 @@
 
 Jaeger UI uses a multi-layered state management architecture. **TanStack Query (React Query)** owns server data, **Zustand** owns shared client UI state, **URL State** is the intended source of truth for the current view (deep linking, though completeness varies by page), and **Local Storage** provides multi-session persistence for user preferences.
 
-**Redux is nearly gone.** It no longer holds traces, search results, services, config, dependencies, decoration summaries, or the DDG graph. What remains is the residual `traceTimeline` duck, kept as the analytics parity reference, and a few `connect()` wrappers that do not read Redux state. **Do not add state to Redux.** [RFC 0006](../rfc/0006-target-state-management-architecture.md) describes the target; [RFC 0004](../rfc/0004-state-management-strategy.md) tracks what is left.
+**Redux is nearly gone.** It no longer holds traces, search results, services, config, dependencies, decoration summaries, or the DDG graph. What remains is the residual `traceTimeline` duck, kept as the analytics parity reference. **Do not add state to Redux.** [RFC 0006](../rfc/0006-target-state-management-architecture.md) describes the target; [RFC 0004](../rfc/0004-state-management-strategy.md) tracks what is left.
 
 ---
 
@@ -46,7 +46,6 @@ The legacy core of the application, now reduced to a residue. The full schema of
 - **Location**: `src/components/TracePage/TraceTimelineViewer/duck.ts`, `duck.track.ts`, and `src/middlewares/track.ts`; assembled in `src/utils/configure-store.ts`. `src/reducers/index.ts` is an empty map. There is no `src/selectors/`.
 - **Access**:
     - `DdgNodeContent` and `DeepDependencies/SidePanel/DetailsPanel` read decoration summaries through `usePathAgnosticDecoration`.
-    - `SearchForm`, `TraceDiff`, and `TracePage` retain `connect()` wrappers whose `mapStateToProps` functions ignore Redux state.
 - **Timeline analytics**: timeline handlers call the trackers in `TraceTimelineViewer/store.track.ts` before each Zustand action, so each event reads pre-update state. No timeline interaction dispatches to Redux.
 - **Do not add new state here.** Per [ADR-0004](./0004-state-management-strategy.md), everything above has a scheduled removal; new shared UI state goes to Zustand and new server data to TanStack Query.
 

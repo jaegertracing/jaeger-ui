@@ -48,6 +48,35 @@ export type GenAiToolCall = {
   result?: unknown;
 };
 
+/**
+ * One entry of a retrieval-documents or memory-records list: `content` pulled out so a
+ * renderer can show it prominently, everything else (score, source_id, metadata, id, ...)
+ * kept as-is so a field neither schema fixes in advance is still reachable.
+ */
+export type GenAiContentEntry = { content: string; rest: Record<string, unknown> };
+
+// Fields per the gen_ai.retrieval.* / gen_ai.data_source.* registry (retrieval spans):
+// query text, top_k, the data source queried, and the documents it returned.
+export type GenAiRetrieval = {
+  queryText?: string;
+  topK?: number;
+  dataSourceId?: string;
+  // Undefined when gen_ai.retrieval.documents is absent (document content is opt-in),
+  // [] only when the span explicitly recorded an empty list.
+  documents?: GenAiContentEntry[];
+};
+
+// Fields per the gen_ai.memory.* registry (search_memory/upsert_memory spans): the
+// memory store, the query, how many records it reports, and the records themselves.
+export type GenAiMemory = {
+  queryText?: string;
+  storeId?: string;
+  recordCount?: number;
+  // Undefined when gen_ai.memory.records is absent (record content is opt-in),
+  // [] only when the span explicitly recorded an empty list.
+  records?: GenAiContentEntry[];
+};
+
 // Fields per the gen_ai.agent.* registry (create_agent/invoke_agent spans): id, name,
 // version, description. All are individually optional/conditionally-required per spec,
 // so a span can carry any subset.
@@ -108,6 +137,8 @@ export type GenAiSection =
       sources: { input?: GenAiAttributeSource; output?: GenAiAttributeSource };
     }
   | { type: 'toolCall'; data: GenAiToolCall }
+  | { type: 'retrieval'; data: GenAiRetrieval }
+  | { type: 'memory'; data: GenAiMemory }
   | { type: 'other'; data: { attributes: IAttributes } };
 
 function asString(value: AttributeValue | undefined): string | undefined {
@@ -123,6 +154,10 @@ function asNumber(value: AttributeValue | undefined): number | undefined {
     return Number.isNaN(parsed) ? undefined : parsed;
   }
   return undefined;
+}
+
+function isNumeric(value: AttributeValue): boolean {
+  return asNumber(value) !== undefined;
 }
 
 function stringifyValue(value: unknown): string {
@@ -458,6 +493,46 @@ function parseMessages(value: AttributeValue | undefined): GenAiMessage[] {
   });
 }
 
+/**
+ * Parses gen_ai.retrieval.documents / gen_ai.memory.records: a JSON-encoded string or an
+ * already-parsed array/object, each entry a `{content, ...}` object per the retrieval-documents
+ * and memory-records schemas (a document may also carry a score, a record an id and
+ * metadata, and either may carry fields neither schema anticipates). `content` is split out
+ * so a renderer can show it prominently; every other field is kept under `rest` rather than
+ * assumed away, so nothing about an entry is silently dropped.
+ */
+function parseContentEntries(value: AttributeValue | undefined): GenAiContentEntry[] | undefined {
+  if (value == null) return undefined;
+  let parsed: unknown = value;
+  if (typeof value === 'string') {
+    try {
+      parsed = JSON.parse(value);
+    } catch {
+      // Not JSON - treat the whole string as a single entry with no other fields.
+      return [{ content: value, rest: {} }];
+    }
+    // A JSON null records nothing, the same as an absent attribute.
+    if (parsed === null) return undefined;
+  }
+  const entries = Array.isArray(parsed) ? parsed : [parsed];
+  return entries.map((entry): GenAiContentEntry => {
+    if (typeof entry !== 'object' || entry === null) {
+      return { content: stringifyValue(entry), rest: {} };
+    }
+    const { content, ...rest } = entry as Record<string, unknown>;
+    return {
+      content: content == null ? '' : typeof content === 'string' ? content : stringifyValue(content),
+      rest,
+    };
+  });
+}
+
+// A documents/records value that parses to nothing (a JSON null) is left unclaimed, so its raw
+// value stays visible in "Other GenAI Attributes" rather than rendering as a card.
+function hasContentEntries(value: AttributeValue): boolean {
+  return parseContentEntries(value) !== undefined;
+}
+
 export function hasAnyTokenUsage(usage: GenAiTokenUsage): boolean {
   return Object.values(usage).some(v => v != null);
 }
@@ -532,7 +607,9 @@ export function formatTokenCount(value: number | undefined): string | undefined 
 // shared pool). A build function's "owned keys" are exactly the keys it
 // happens to call get() on - nothing is declared twice, so there is no
 // separate allowlist that can drift out of sync with what's actually read.
-type GetAttr = (key: string) => AttributeValue | undefined;
+// `accept`, when given, claims the value only if it returns true; a rejected value stays
+// unclaimed so it still shows up in "Other GenAI Attributes" instead of being dropped.
+type GetAttr = (key: string, accept?: (value: AttributeValue) => boolean) => AttributeValue | undefined;
 type SectionBuilder = (get: GetAttr) => GenAiSection | undefined;
 
 // Array order IS render order - no separate rank field to keep in sync with
@@ -585,6 +662,28 @@ const REGISTRY: SectionBuilder[] = [
   get => {
     const usage = getGenAiTokenUsageFromGetter(get);
     return usage ? { type: 'tokens', data: usage.usage, sources: usage.sources } : undefined;
+  },
+  get => {
+    const queryText = asString(get('gen_ai.retrieval.query.text'));
+    const topK = asNumber(get('gen_ai.retrieval.top_k', isNumeric));
+    const documents = parseContentEntries(get('gen_ai.retrieval.documents', hasContentEntries));
+    // gen_ai.data_source.id also appears on agent spans that never retrieved anything, so it
+    // only joins a section that has a retrieval attribute; otherwise it stays in "other".
+    if (queryText === undefined && topK === undefined && documents === undefined) return undefined;
+    const dataSourceId = asString(get('gen_ai.data_source.id'));
+    return { type: 'retrieval', data: { queryText, topK, dataSourceId, documents } };
+  },
+  get => {
+    const queryText = asString(get('gen_ai.memory.query.text'));
+    const storeId = asString(get('gen_ai.memory.store.id'));
+    const recordCount = asNumber(get('gen_ai.memory.record.count', isNumeric));
+    const records = parseContentEntries(get('gen_ai.memory.records', hasContentEntries));
+    return queryText !== undefined ||
+      storeId !== undefined ||
+      recordCount !== undefined ||
+      records !== undefined
+      ? { type: 'memory', data: { queryText, storeId, recordCount, records } }
+      : undefined;
   },
   get => {
     // Same short-circuit-on-purpose rule as the meta builder above: only fall
@@ -654,11 +753,15 @@ export function extractGenAiSections(attributes: IAttributes): GenAiSection[] {
   });
 
   const claimed = new Set<number>();
-  const get: GetAttr = key => {
-    const index = indicesByKey.get(key)?.shift();
+  const get: GetAttr = (key, accept) => {
+    const indices = indicesByKey.get(key);
+    const index = indices?.[0];
     if (index === undefined) return undefined;
+    const { value } = entries[index];
+    if (accept && !accept(value)) return undefined;
+    indices!.shift();
     claimed.add(index);
-    return entries[index].value;
+    return value;
   };
 
   const sections = REGISTRY.map(build => build(get)).filter((s): s is GenAiSection => s !== undefined);
