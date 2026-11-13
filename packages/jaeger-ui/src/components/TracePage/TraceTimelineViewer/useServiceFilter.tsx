@@ -15,6 +15,7 @@ import {
 } from '../url/svcFilter';
 import {
   decodeClause,
+  EMPTY_SPAN_FILTER,
   encodeClause,
   evaluateSpanFilter,
   hiddenServices,
@@ -82,8 +83,9 @@ function paramValues(value: string | (string | null)[] | null | undefined): stri
 
 /**
  * Whether the URL states a filter: an `f` parameter, even an empty one, or a legacy svcFilter. The
- * saved default applies only while it does not, and an edit always leaves one, so the default does
- * not come back on a later render of the edited URL. The tree mode alone states no filter.
+ * saved default and the view default apply only while it does not, and an edit always leaves one,
+ * so neither default comes back on a later render of the edited URL. The tree mode alone states no
+ * filter; it applies on top of whichever default does.
  */
 function urlHasFilterParams(params: queryString.ParsedQuery): boolean {
   return (
@@ -121,24 +123,37 @@ function hasSavedDefault(): boolean {
 }
 
 /**
- * Resolves the span filter for a trace from the URL. The clauses come from the repeated `f`
- * parameter. The tree mode comes from `tree=remove`, else it is lift; a legacy svcFilter that applies brings remove mode, the mode it was written under, unless the URL names one. A legacy svcFilter is read as the hide clause on service, in place of
- * one that `f` carries, and a stale one, whose checksum is for another service list, hides nothing.
+ * Resolves the span filter for a trace from the URL. While the URL states no filter, the view
+ * default applies, and the saved default adds its hide clause on service next to it; a `tree`
+ * parameter sets the mode of either. Otherwise the clauses come from the repeated `f` parameter and
+ * the tree mode from `tree=remove`, else lift. A legacy svcFilter is read as the hide clause on
+ * service, in place of one that `f` carries, and brings remove mode, the mode it was written under,
+ * unless the URL names one; a stale one, whose checksum is for another service list, hides nothing.
  * Root protection then sanitizes the hide clause on service in remove mode only, where hiding every
- * root empties the tree; in lift mode a hidden root's children become roots. The saved default
- * applies only while the URL states no filter. Returns the filter and, when the URL carried a
- * legacy svcFilter or a hide set that sanitization changed, the rewritten search to navigate to.
+ * root empties the tree; in lift mode a hidden root's children become roots. Returns the filter
+ * and, when the URL carried a legacy svcFilter or a hide set that sanitization changed, the
+ * rewritten search to navigate to, which states the filter so that no default replaces it.
  */
 export function resolveInitialFilter(
   search: string,
   sortedServiceNames: string[],
-  rootServiceNames: Set<string>
+  rootServiceNames: Set<string>,
+  viewDefault: ISpanFilter | null = null
 ): { filter: ISpanFilter; cleanSearch?: string } {
   const params = queryString.parse(search);
+  const namesMode = TREE_PARAM in params;
+  const treeMode: TreeMode = params[TREE_PARAM] === REMOVE_VALUE ? 'remove' : 'lift';
+
+  if (!urlHasFilterParams(params)) {
+    let filter = viewDefault ?? EMPTY_SPAN_FILTER;
+    if (namesMode || !viewDefault) filter = { ...filter, treeMode };
+    const saved = readDefaultServices(sortedServiceNames, rootServiceNames, filter.treeMode);
+    return { filter: saved ? normalizeFilter(withHiddenServices(filter, saved)) : filter };
+  }
+
   const clauses = paramValues(params[CLAUSE_PARAM])
     .map(decodeClause)
     .filter((c): c is IClause => c !== null);
-  const treeMode: TreeMode = params[TREE_PARAM] === REMOVE_VALUE ? 'remove' : 'lift';
   let filter: ISpanFilter = normalizeFilter({ clauses, treeMode });
 
   const legacy = params[LEGACY_SERVICE_PARAM];
@@ -148,14 +163,8 @@ export function resolveInitialFilter(
     if (decoded && !decoded.stale) {
       const pruned = new Set(sortedServiceNames.filter(name => !decoded.visibleServices.has(name)));
       filter = normalizeFilter(withHiddenServices(filter, pruned));
-      // The link was written when hiding a service pruned its subtree, so it renders that way.
-      if (!(TREE_PARAM in params)) filter = { ...filter, treeMode: 'remove' };
+      if (!namesMode) filter = { ...filter, treeMode: 'remove' };
     }
-  }
-
-  if (!urlHasFilterParams(params)) {
-    const saved = readDefaultServices(sortedServiceNames, rootServiceNames, treeMode);
-    return { filter: saved ? normalizeFilter(withHiddenServices(filter, saved)) : filter };
   }
 
   if (filter.treeMode === 'remove') {
@@ -169,7 +178,8 @@ export function resolveInitialFilter(
   if (!rewrite) return { filter };
   const nextParams = { ...params };
   delete nextParams[LEGACY_SERVICE_PARAM];
-  writeFilterParams(nextParams, filter);
+  writeClauses(nextParams, filter);
+  writeTreeMode(nextParams, filter);
   return { filter, cleanSearch: searchOf(nextParams) };
 }
 
@@ -179,7 +189,7 @@ function writeClauses(params: queryString.ParsedQuery, filter: ISpanFilter): voi
   params[CLAUSE_PARAM] = encoded.length ? encoded : '';
 }
 
-/** Writes remove mode as `tree=remove`; the default mode is written as nothing. */
+/** Writes remove mode as `tree=remove`; lift mode, the default, is written as nothing. */
 function writeTreeMode(params: queryString.ParsedQuery, filter: ISpanFilter): void {
   if (filter.treeMode === 'remove') {
     params[TREE_PARAM] = REMOVE_VALUE;
@@ -188,24 +198,23 @@ function writeTreeMode(params: queryString.ParsedQuery, filter: ISpanFilter): vo
   }
 }
 
-function writeFilterParams(params: queryString.ParsedQuery, filter: ISpanFilter): void {
-  writeClauses(params, filter);
-  writeTreeMode(params, filter);
-}
-
 /**
  * Builds the updated search string after a filter change. Every clause is written as a repeated `f`
- * parameter, remove mode as `tree=remove`, and a legacy svcFilter is dropped. An empty clause list is written as an
- * empty `f=` when the URL already stated a filter or a default is saved, so that the saved default
- * does not come back on a later render; otherwise `f` is removed.
+ * parameter, remove mode as `tree=remove`, and a legacy svcFilter is dropped. An empty clause list
+ * is written as an empty `f=` when the URL already stated a filter, a view default applies or a
+ * default is saved, so that no default comes back on a later render; otherwise `f` is removed.
  * Returns the new search string (with leading '?' if non-empty, or '').
  */
-export function buildFilterSearch(currentSearch: string, filter: ISpanFilter): string {
+export function buildFilterSearch(
+  currentSearch: string,
+  filter: ISpanFilter,
+  viewDefault: ISpanFilter | null = null
+): string {
   const params = queryString.parse(currentSearch);
   const statedFilter = urlHasFilterParams(params);
   delete params[LEGACY_SERVICE_PARAM];
   writeTreeMode(params, filter);
-  if (filter.clauses.length || statedFilter || hasSavedDefault()) {
+  if (filter.clauses.length || statedFilter || viewDefault || hasSavedDefault()) {
     writeClauses(params, filter);
   } else {
     delete params[CLAUSE_PARAM];
@@ -238,14 +247,16 @@ type UseSpanFilterResult = {
 };
 
 /**
- * Owns the span filter of the trace page: it resolves the filter from the URL and the saved
- * default, writes changes back to the URL, deselects a side panel span that a change hides, and
- * renders the funnel button. The trace is null while the page is loading, and then the hook does
- * nothing.
+ * Owns the span filter of the trace page: it resolves the filter from the URL, the saved default
+ * and the view default, writes changes back to the URL, deselects a side panel span that a change
+ * hides, and renders the funnel button. The trace is null while the page is loading, and then the
+ * hook does nothing. The view default is the filter a view applies while the URL is silent, such
+ * as the GenAI view's hide clause on the Non-GenAI span type; null for a view without one.
  */
 export function useSpanFilter(
   trace: IOtelTrace | TNil,
-  detailPanelMode: SpanDetailPanelMode
+  detailPanelMode: SpanDetailPanelMode,
+  viewDefault: ISpanFilter | null = null
 ): UseSpanFilterResult {
   const location = useLocation();
   const navigate = useNavigate();
@@ -264,40 +275,91 @@ export function useSpanFilter(
   const spanFilter = useTraceTimelineStore(s => s.spanFilter);
   const setSpanFilter = useTraceTimelineStore(s => s.setSpanFilter);
   const [filterTrace, setFilterTrace] = useState<IOtelTrace | TNil>(null);
-  // The trace is read through a ref so that the resolve effect below keeps its inputs; a new trace
-  // object re-runs it through the service lists anyway.
-  const latestTrace = useRef(trace);
-  latestTrace.current = trace;
   const hiddenIDs = useMemo(
     () => evaluateSpanFilter(trace?.spans, spanFilter).hiddenIDs,
     [trace?.spans, spanFilter]
   );
 
-  // Resolve the filter from the URL or the saved default whenever relevant inputs change
-  // (trace identity, URL search string). Guards against loops by comparing the
-  // resolved filter to the current state before writing.
+  // The search string the hook last navigated to, after an edit or a URL cleanup, so that the
+  // resolve effect can tell a stale render for the previous URL from a new navigation. A string
+  // rather than a flag survives a re-run for the old URL that lands between the navigation and its
+  // commit, which React batches with a view switch.
+  const writtenSearch = useRef<string | null>(null);
+
+  // The side panel shows one selected span, and a filter that hides it deselects it, whether the
+  // filter came from a control, the URL or a view default. The hidden set is evaluated here for
+  // that filter, once per change, in one pass over the spans; the memoized set that TracePage holds
+  // is for the committed filter and is not yet updated. The trace and the panel mode are read
+  // through a ref so that a change to either does not re-run the resolve effect below.
+  const latestProps = useRef({ trace, detailPanelMode });
+  latestProps.current = { trace, detailPanelMode };
+  const deselectHidden = useCallback((filter: ISpanFilter) => {
+    const { trace: current, detailPanelMode: mode } = latestProps.current;
+    if (!current || mode !== 'sidepanel') return;
+    const currentSelectedID = getSelectedSpanID(useTraceTimelineStore.getState().detailStates);
+    if (currentSelectedID && evaluateSpanFilter(current.spans, filter).hiddenIDs.has(currentSelectedID)) {
+      // In sidepanel mode detailStates holds at most one entry (the selected span).
+      // The Map shape is a leftover from inline mode where multiple spans can be
+      // expanded simultaneously. Clearing the whole map is correct here.
+      useTraceTimelineStore.setState({ detailStates: new Map() });
+    }
+  }, []);
+
+  // Resolve the filter from the URL, the saved default or the view default whenever relevant
+  // inputs change (trace identity, URL search string, view). Guards against loops by comparing
+  // the resolved filter to the current state before writing.
+  const lastResolved = useRef<{ search: string; key: string; traceID: string } | null>(null);
   const traceID = trace?.traceID;
   useEffect(() => {
     if (!traceID) return;
-    const { filter, cleanSearch } = resolveInitialFilter(
-      location.search,
-      sortedServiceNames,
-      rootServiceNames
-    );
-
-    // Avoid unnecessary Zustand writes (and re-renders) when the resolved filter matches.
-    const current = useTraceTimelineStore.getState().spanFilter;
-    if (!spanFiltersEqual(current, filter)) {
-      setSpanFilter(filter);
+    const last = lastResolved.current;
+    const sameTrace = last?.traceID === traceID;
+    const written = writtenSearch.current === location.search;
+    if (writtenSearch.current !== null && !written) {
+      // A navigation is pending. A run for the location already resolved, with the same key, is the
+      // stale render before that navigation commits, and resolving it would overwrite the filter the
+      // user just applied. A run for any other location, including one that restored the same search
+      // under a new key, means another navigation won, so the pending one is forgotten.
+      if (sameTrace && last.search === location.search && last.key === location.key) return;
+      writtenSearch.current = null;
     }
-    setFilterTrace(latestTrace.current);
+    if (written) writtenSearch.current = null;
+    lastResolved.current = { search: location.search, key: location.key, traceID };
+
+    const current = useTraceTimelineStore.getState().spanFilter;
+    const resolve = (view: ISpanFilter | null) =>
+      resolveInitialFilter(location.search, sortedServiceNames, rootServiceNames, view);
+    const spans = latestProps.current.trace?.spans;
+    const leavesNothing = (f: ISpanFilter) =>
+      Boolean(spans?.length) && evaluateSpanFilter(spans!, f).hiddenIDs.size >= spans!.length;
+    let { filter, cleanSearch } = resolve(viewDefault);
+    // A default that would leave no span is not applied: first the view default goes, then the
+    // saved service default. The check walks the trace, so it runs only when a default applied,
+    // which is only while the URL states no filter.
+    const urlSilent = !urlHasFilterParams(queryString.parse(location.search));
+    if (urlSilent && viewDefault !== null && leavesNothing(filter)) ({ filter, cleanSearch } = resolve(null));
+    if (urlSilent && hiddenServices(filter).size > 0 && leavesNothing(filter)) {
+      // The saved default is the only source of the hide clause on service while the URL is silent,
+      // and it is dropped only when it is the cause.
+      const without = withHiddenServices(filter, new Set());
+      if (!leavesNothing(without)) filter = without;
+    }
+    // Avoid unnecessary Zustand writes (and re-renders) when the resolved filter matches. The
+    // selection is checked either way, because a trace that arrives after the filter can select a
+    // span the filter hides.
+    if (!spanFiltersEqual(current, filter)) setSpanFilter(filter);
+    deselectHidden(filter);
+    setFilterTrace(latestProps.current.trace);
     if (cleanSearch != null && cleanSearch !== location.search) {
+      writtenSearch.current = cleanSearch;
       navigate(
         { pathname: location.pathname, search: cleanSearch },
         { replace: true, state: location.state }
       );
     }
   }, [
+    deselectHidden,
+    location.key,
     location.pathname,
     location.search,
     location.state,
@@ -306,6 +368,7 @@ export function useSpanFilter(
     sortedServiceNames,
     traceID,
     setSpanFilter,
+    viewDefault,
   ]);
 
   const applyFilter = useCallback(
@@ -324,41 +387,30 @@ export function useSpanFilter(
         storage.set(SVC_FILTER_DEFAULTS_KEY, defaults);
       }
 
-      // If the currently selected span (side panel) is now hidden, deselect it. The hidden set is
-      // computed here for the requested filter, once per apply, in one pass over the spans; the
-      // memoized set that TracePage holds is for the committed filter and is not yet updated.
-      if (detailPanelMode === 'sidepanel') {
-        const currentDetailStates = useTraceTimelineStore.getState().detailStates;
-        const currentSelectedID = getSelectedSpanID(currentDetailStates);
-        if (
-          currentSelectedID &&
-          evaluateSpanFilter(trace.spans, nextFilter).hiddenIDs.has(currentSelectedID)
-        ) {
-          // In sidepanel mode detailStates holds at most one entry (the selected span).
-          // The Map shape is a leftover from inline mode where multiple spans can be
-          // expanded simultaneously. Clearing the whole map is correct here.
-          useTraceTimelineStore.setState({ detailStates: new Map() });
-        }
-      }
+      deselectHidden(nextFilter);
 
-      let search = buildFilterSearch(location.search, nextFilter);
+      let search = buildFilterSearch(location.search, nextFilter, viewDefault);
       if (options.clearUiFind) {
         const params = queryString.parse(search);
         delete params.uiFind;
         const cleaned = queryString.stringify(params);
         search = cleaned ? `?${cleaned}` : '';
       }
+      // An unchanged URL runs no effect, so nothing is pending for it, and a value left over from an
+      // edit that a later edit undid before its navigation committed is dropped.
+      writtenSearch.current = search !== location.search ? search : null;
       navigate({ pathname: location.pathname, search }, { replace: true, state: location.state });
     },
     [
       setSpanFilter,
-      detailPanelMode,
+      deselectHidden,
       rootServiceNames,
       trace,
       location.pathname,
       location.search,
       location.state,
       navigate,
+      viewDefault,
     ]
   );
 

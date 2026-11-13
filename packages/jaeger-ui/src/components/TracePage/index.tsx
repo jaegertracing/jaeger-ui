@@ -43,7 +43,13 @@ import {
   viewTypeIsNavigable,
   viewTypeShowsMinimap,
 } from './types';
-import { evaluateSpanFilter, KEEP_NEEDS_LIFT, LEAVES_NO_SPAN, withoutHiddenSpans } from './spanFilter';
+import {
+  evaluateSpanFilter,
+  GENAI_VIEW_FILTER,
+  KEEP_NEEDS_LIFT,
+  LEAVES_NO_SPAN,
+  withoutHiddenSpans,
+} from './spanFilter';
 import { getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
@@ -164,7 +170,27 @@ export function TracePageImpl(props: TProps) {
   const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
   const zustandSetTimelineBarsVisible = useLayoutPrefsStore(s => s.setTimelineBarsVisible);
   const zustandFocusUiFindMatches = useTraceTimelineStore(s => s.focusUiFindMatches);
-  const { spanFilter, filterTrace, applyFilter, spanFilterNode } = useSpanFilter(traceData, detailPanelMode);
+  // Read the trace's own verdict rather than re-deriving it here. It is computed
+  // once from each span's cached genAIKind, so re-scanning attributes is both
+  // redundant and free to drift away from classifySpan as the detector evolves.
+  const traceIsGenAI = traceData?.isGenAITrace ?? false;
+  // The view is the one the user picked from the dropdown, or else the GenAI view for a GenAI trace
+  // and the timeline for any other. It is derived rather than set in an effect, so that the first
+  // render with the trace is already in the view the page settles on: a provisional timeline render
+  // would resolve the filter without the view default, and a span that filter hides would lose the
+  // focus the URL asked for before the view default made it visible again.
+  const [pickedView, setPickedView] = useState<ETraceViewType | null>(null);
+  const viewType =
+    pickedView ?? (traceIsGenAI ? ETraceViewType.GenAITimelineViewer : ETraceViewType.TraceTimelineViewer);
+  // The GenAI view of a GenAI trace hides the Non-GenAI spans and lifts their children while the
+  // URL is silent. A trace without GenAI spans gets no default, which would hide every span.
+  const viewDefault =
+    viewType === ETraceViewType.GenAITimelineViewer && traceIsGenAI ? GENAI_VIEW_FILTER : null;
+  const { spanFilter, filterTrace, applyFilter, spanFilterNode } = useSpanFilter(
+    traceData,
+    detailPanelMode,
+    viewDefault
+  );
   const { hiddenIDs } = useMemo(
     () => evaluateSpanFilter(traceData?.spans, spanFilter),
     [traceData?.spans, spanFilter]
@@ -191,7 +217,6 @@ export function TracePageImpl(props: TProps) {
 
   const [headerHeight, setHeaderHeight] = useState<number | TNil>(null);
   const [slimView, setSlimView] = useState(() => Boolean(embedded?.timeline?.collapseTitle));
-  const [viewType, setViewType] = useState<ETraceViewType>(ETraceViewType.TraceTimelineViewer);
   const [viewRange, setViewRange] = useState<IViewRange>({ time: { current: [0, 1] } });
   const [criticalPathErrorDismissed, setCriticalPathErrorDismissed] = useState(false);
 
@@ -200,17 +225,11 @@ export function TracePageImpl(props: TProps) {
   // which keeps the header count working for views without search wiring (flamegraph, logs).
   const [findMatches, setFindMatches] = useState<Set<string> | TNil>(null);
 
-  // Read the trace's own verdict rather than re-deriving it here. It is computed
-  // once from each span's cached genAIKind, so re-scanning attributes is both
-  // redundant and free to drift away from classifySpan as the detector evolves.
-  const traceIsGenAI = traceData?.isGenAITrace ?? false;
-
   const searchBarRef = useRef<InputRef>(null);
   const headerElmRef = useRef<HTMLElement | TNil>(null);
   const viewRangeRef = useRef(viewRange);
   viewRangeRef.current = viewRange;
   const prevIdRef = useRef(id);
-  const userPickedViewRef = useRef(false);
   const filterSpansMemo = useRef(memoizeOne(filterSpans)).current;
   // The highlight set is the text matches that the filter leaves visible. The views that draw the
   // whole trace get the text matches alone, and the graph view counts its own. It is memoized so
@@ -315,7 +334,7 @@ export function TracePageImpl(props: TProps) {
   useEffect(() => {
     if (prevIdRef.current !== id) {
       prevIdRef.current = id;
-      userPickedViewRef.current = false;
+      setPickedView(null);
       updateViewRangeTime(0, 1);
       clearSearch();
       setCriticalPathErrorDismissed(false);
@@ -351,30 +370,10 @@ export function TracePageImpl(props: TProps) {
     });
   }, []);
 
-  const setTraceView = useCallback((newViewType: ETraceViewType) => {
-    setViewType(newViewType);
+  const onUserViewChange = useCallback((newViewType: ETraceViewType) => {
+    setPickedView(newViewType);
     setFindMatches(null);
   }, []);
-
-  const onUserViewChange = useCallback(
-    (newViewType: ETraceViewType) => {
-      userPickedViewRef.current = true;
-      setTraceView(newViewType);
-    },
-    [setTraceView]
-  );
-
-  useEffect(() => {
-    // A view the user picked from the dropdown is not overridden by the default.
-    if (userPickedViewRef.current) return;
-    if (traceIsGenAI) {
-      setTraceView(ETraceViewType.GenAITimelineViewer);
-    } else {
-      setViewType(vt =>
-        vt === ETraceViewType.GenAITimelineViewer ? ETraceViewType.TraceTimelineViewer : vt
-      );
-    }
-  }, [traceIsGenAI, setTraceView]);
 
   const archiveTrace = useCallback(() => {
     submitTraceToArchiveFn(id);

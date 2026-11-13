@@ -45,15 +45,27 @@ export interface ISpanFilter {
 
 export const EMPTY_SPAN_FILTER: ISpanFilter = { clauses: [], treeMode: 'lift' };
 
+/** The span type value of a span that carries no gen_ai attributes. */
+const NON_GENAI_SPAN_TYPE = 'none';
+
+/**
+ * The default filter of the GenAI view: the spans that the GenAI detector does not classify are
+ * hidden and their children are lifted to the nearest GenAI ancestor, which leaves the agent,
+ * model, tool and retrieval calls as the tree.
+ */
+export const GENAI_VIEW_FILTER: ISpanFilter = {
+  clauses: [
+    { verb: 'hide', criterion: { shape: 'set', property: 'spanType', values: [NON_GENAI_SPAN_TYPE] } },
+  ],
+  treeMode: 'lift',
+};
+
 /** The tooltip of every control that would create a keep clause while the tree mode is remove. */
 export const KEEP_NEEDS_LIFT = 'Keep filters need "Lift to its parent" as the tree mode';
 /** The tooltip of a search-input menu entry whose conversion would leave no span shown. */
 export const LEAVES_NO_SPAN = 'This filter would leave no span shown';
 /** The tooltip of the attribute input's eyes while the typed text matches no span of the trace. */
 export const NO_SPAN_MATCHES = 'No span has this attribute';
-
-/** The span type value of a span that carries no gen_ai attributes. */
-const NON_GENAI_SPAN_TYPE = 'none';
 
 const STATUS_ERROR = 'error';
 const STATUS_OK = 'ok';
