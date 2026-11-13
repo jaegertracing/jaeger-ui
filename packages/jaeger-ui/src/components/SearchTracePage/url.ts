@@ -86,6 +86,16 @@ function firstOf(v: string | string[] | undefined | Record<string, string>): str
   return undefined;
 }
 
+// Normalizes tags when repeated query params are passed (e.g. ?tags=error=true&tags=http.status_code=500),
+// combining array elements into a single space-separated string.
+function normalizeTags(v: string | string[] | undefined | Record<string, string>): string | undefined {
+  if (typeof v === 'string') return v;
+  if (Array.isArray(v)) {
+    return v.filter((item): item is string => typeof item === 'string').join(' ');
+  }
+  return undefined;
+}
+
 /** Inverse of searchQueryFromUrl: convert a SearchQuery back into a TUrlState for getUrl(). */
 export function searchQueryToUrlState(q: SearchQuery): TUrlState {
   const state: TUrlState = {
@@ -163,8 +173,8 @@ export function searchQueryFromUrl(search: string): SearchQuery | null {
       return Number.isFinite(n) && n > 0 ? n : 20;
     })(),
     lookback,
-    minDuration: typeof q.minDuration === 'string' ? q.minDuration : undefined,
-    maxDuration: typeof q.maxDuration === 'string' ? q.maxDuration : undefined,
-    tags: typeof q.tags === 'string' ? q.tags : undefined,
+    minDuration: firstOf(q.minDuration),
+    maxDuration: firstOf(q.maxDuration),
+    tags: normalizeTags(q.tags),
   };
 }

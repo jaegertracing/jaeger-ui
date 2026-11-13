@@ -297,5 +297,20 @@ describe('SearchTracePage/url', () => {
       // start should be 1 hour before end
       expect(endUs - startUs).toBeCloseTo(60 * 60 * 1_000_000, -6);
     });
+
+    it('combines repeated tags query parameters into a space-separated string', () => {
+      const result = searchQueryFromUrl('?service=frontend&tags=error%3Dtrue&tags=http.status_code%3D500');
+      expect(result).not.toBeNull();
+      expect(result?.tags).toBe('error=true http.status_code=500');
+    });
+
+    it('extracts first value when minDuration or maxDuration is repeated', () => {
+      const result = searchQueryFromUrl(
+        '?service=frontend&minDuration=100ms&minDuration=200ms&maxDuration=500ms&maxDuration=1s'
+      );
+      expect(result).not.toBeNull();
+      expect(result?.minDuration).toBe('100ms');
+      expect(result?.maxDuration).toBe('500ms');
+    });
   });
 });
