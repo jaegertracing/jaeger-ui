@@ -10,9 +10,9 @@ import {
   IoChevronUp,
   IoEye,
   IoEyeOff,
-  IoFunnelOutline,
   IoWarningOutline,
 } from 'react-icons/io5';
+import { TbFilterPlus } from 'react-icons/tb';
 
 import * as markers from './TracePageSearchBar.markers';
 import { trackFilter } from '../index.track';
@@ -119,7 +119,7 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
             aria-label="Turn this text into a filter"
             data-testid="convert-search"
           >
-            <IoFunnelOutline />
+            <TbFilterPlus />
           </button>
         </Tooltip>
       </Dropdown>
