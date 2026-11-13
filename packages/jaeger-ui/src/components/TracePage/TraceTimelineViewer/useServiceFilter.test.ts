@@ -62,7 +62,6 @@ import {
   hiddenServices,
   IClause,
   ISpanFilter,
-  spanFiltersEqual,
   withHiddenServices,
 } from '../spanFilter';
 import { IOtelSpan, IOtelTrace } from '../../../types/otel';
