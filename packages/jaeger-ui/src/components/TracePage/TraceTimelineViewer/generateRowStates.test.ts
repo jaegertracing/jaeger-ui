@@ -3,12 +3,13 @@
 
 import { describe, expect, it } from 'vitest';
 
-import generateRowStates, { isSpanPruned, filterPrunedSpanIDs } from './generateRowStates';
+import generateRowStates from './generateRowStates';
 import genaiTestTrace from './genaiTestTrace.json';
 import DetailState from './SpanDetail/DetailState';
 import { IOtelSpan, StatusCode } from '../../../types/otel';
 import { makeAttributes } from '../../../model/attributes';
 import transformTraceData from '../../../model/transform-trace-data';
+import { hiddenSpanIDsForServices } from '../spanFilter';
 
 function makeSpan(overrides: Partial<IOtelSpan> & { spanID: string; depth: number }): IOtelSpan {
   return {
@@ -26,6 +27,10 @@ function makeSpan(overrides: Partial<IOtelSpan> & { spanID: string; depth: numbe
 //     span-1: svc-b (depth 1)
 //       span-2: svc-b (depth 2, ERROR)
 //     span-3: svc-c (depth 1)
+// The hidden span set that pruning the given services produces over the spans.
+const hiddenFor = (spans: ReadonlyArray<IOtelSpan>, ...services: string[]) =>
+  hiddenSpanIDsForServices(spans, new Set(services));
+
 function makeTestSpans(): IOtelSpan[] {
   return [
     makeSpan({
@@ -90,14 +95,14 @@ describe('generateRowStates', () => {
   describe('service filter pruning', () => {
     it('prunes spans of a pruned service and their subtrees', () => {
       const spans = makeTestSpans();
-      const rows = generateRowStates(spans, new Set(), new Map(), 'inline', new Set(['svc-b']));
+      const rows = generateRowStates(spans, new Set(), new Map(), 'inline', hiddenFor(spans, 'svc-b'));
       const spanIDs = rows.filter(r => !('isPrunedPlaceholder' in r)).map(r => r.span.spanID);
       expect(spanIDs).toEqual(['span-0', 'span-3']);
     });
 
     it('inserts a pruned placeholder with total subtree count', () => {
       const spans = makeTestSpans();
-      const rows = generateRowStates(spans, new Set(), new Map(), 'inline', new Set(['svc-b']));
+      const rows = generateRowStates(spans, new Set(), new Map(), 'inline', hiddenFor(spans, 'svc-b'));
       const placeholders = rows.filter(r => 'isPrunedPlaceholder' in r);
       expect(placeholders).toHaveLength(1);
       expect(placeholders[0].prunedChildrenCount).toBe(2); // span-1 + span-2
@@ -106,12 +111,12 @@ describe('generateRowStates', () => {
 
     it('counts errors in pruned subtrees', () => {
       const spans = makeTestSpans();
-      const rows = generateRowStates(spans, new Set(), new Map(), 'inline', new Set(['svc-b']));
+      const rows = generateRowStates(spans, new Set(), new Map(), 'inline', hiddenFor(spans, 'svc-b'));
       const placeholder = rows.find(r => 'isPrunedPlaceholder' in r);
       expect(placeholder!.prunedErrorCount).toBe(1);
     });
 
-    it('produces no placeholders when prunedServices is empty', () => {
+    it('produces no placeholders when nothing is hidden', () => {
       const spans = makeTestSpans();
       const rows = generateRowStates(spans, new Set(), new Map(), 'inline', new Set());
       expect(rows.filter(r => 'isPrunedPlaceholder' in r)).toHaveLength(0);
@@ -120,7 +125,7 @@ describe('generateRowStates', () => {
     it('places placeholder after visible children of the parent', () => {
       const spans = makeTestSpans();
       // Prune svc-c (span-3); span-0's visible children are span-1 subtree, placeholder should be last
-      const rows = generateRowStates(spans, new Set(), new Map(), 'inline', new Set(['svc-c']));
+      const rows = generateRowStates(spans, new Set(), new Map(), 'inline', hiddenFor(spans, 'svc-c'));
       const lastRow = rows[rows.length - 1];
       expect('isPrunedPlaceholder' in lastRow).toBe(true);
       expect(lastRow.span.spanID).toBe('span-0');
@@ -129,7 +134,7 @@ describe('generateRowStates', () => {
     it('assigns non-decreasing spanIndex to placeholder rows', () => {
       const spans = makeTestSpans();
       // Prune svc-c (span-3, index 3 in the spans array)
-      const rows = generateRowStates(spans, new Set(), new Map(), 'inline', new Set(['svc-c']));
+      const rows = generateRowStates(spans, new Set(), new Map(), 'inline', hiddenFor(spans, 'svc-c'));
       // Collect spanIndex values from non-detail rows (span bars + placeholders).
       const spanIndices = rows.filter(r => !r.isDetail).map(r => r.spanIndex);
       // Verify monotonically non-decreasing.
@@ -141,104 +146,6 @@ describe('generateRowStates', () => {
       const lastVisible = visibleSpanRows[visibleSpanRows.length - 1];
       expect(placeholder.spanIndex).toBeGreaterThanOrEqual(lastVisible.spanIndex);
     });
-  });
-});
-
-describe('isSpanPruned', () => {
-  it('returns false when prunedServices is empty', () => {
-    const span = makeSpan({
-      spanID: 's1',
-      depth: 0,
-      resource: { serviceName: 'svc-a', attributes: makeAttributes() },
-    });
-    expect(isSpanPruned(span, new Set())).toBe(false);
-  });
-
-  it('returns true when span service is pruned', () => {
-    const span = makeSpan({
-      spanID: 's1',
-      depth: 0,
-      resource: { serviceName: 'svc-a', attributes: makeAttributes() },
-    });
-    expect(isSpanPruned(span, new Set(['svc-a']))).toBe(true);
-  });
-
-  it('returns true when an ancestor service is pruned', () => {
-    const parent = makeSpan({
-      spanID: 'p1',
-      depth: 0,
-      resource: { serviceName: 'svc-a', attributes: makeAttributes() },
-    });
-    const child = makeSpan({
-      spanID: 'c1',
-      depth: 1,
-      resource: { serviceName: 'svc-b', attributes: makeAttributes() },
-      parentSpan: parent,
-    });
-    expect(isSpanPruned(child, new Set(['svc-a']))).toBe(true);
-  });
-
-  it('returns false when neither span nor ancestors are pruned', () => {
-    const parent = makeSpan({
-      spanID: 'p1',
-      depth: 0,
-      resource: { serviceName: 'svc-a', attributes: makeAttributes() },
-    });
-    const child = makeSpan({
-      spanID: 'c1',
-      depth: 1,
-      resource: { serviceName: 'svc-b', attributes: makeAttributes() },
-      parentSpan: parent,
-    });
-    expect(isSpanPruned(child, new Set(['svc-c']))).toBe(false);
-  });
-});
-
-describe('filterPrunedSpanIDs', () => {
-  function buildSpanMap(spans: IOtelSpan[]): ReadonlyMap<string, IOtelSpan> {
-    return new Map(spans.map(s => [s.spanID, s]));
-  }
-
-  it('returns input unchanged when prunedServices is empty', () => {
-    const ids = new Set(['s1']);
-    expect(filterPrunedSpanIDs(ids, new Map(), new Set())).toBe(ids);
-  });
-
-  it('returns input unchanged when spanIDs is null', () => {
-    expect(filterPrunedSpanIDs(null, new Map(), new Set(['svc-a']))).toBeNull();
-  });
-
-  it('filters out spans whose service is pruned', () => {
-    const spans = [
-      makeSpan({ spanID: 's1', depth: 0, resource: { serviceName: 'svc-a', attributes: makeAttributes() } }),
-      makeSpan({ spanID: 's2', depth: 0, resource: { serviceName: 'svc-b', attributes: makeAttributes() } }),
-    ];
-    const result = filterPrunedSpanIDs(new Set(['s1', 's2']), buildSpanMap(spans), new Set(['svc-a']));
-    expect(result).toEqual(new Set(['s2']));
-  });
-
-  it('filters out spans whose ancestor service is pruned', () => {
-    const parent = makeSpan({
-      spanID: 'p1',
-      depth: 0,
-      resource: { serviceName: 'svc-a', attributes: makeAttributes() },
-    });
-    const child = makeSpan({
-      spanID: 'c1',
-      depth: 1,
-      resource: { serviceName: 'svc-b', attributes: makeAttributes() },
-      parentSpan: parent,
-    });
-    const result = filterPrunedSpanIDs(new Set(['c1']), buildSpanMap([parent, child]), new Set(['svc-a']));
-    expect(result).toBeNull();
-  });
-
-  it('returns null when all matches are pruned', () => {
-    const spans = [
-      makeSpan({ spanID: 's1', depth: 0, resource: { serviceName: 'svc-a', attributes: makeAttributes() } }),
-    ];
-    const result = filterPrunedSpanIDs(new Set(['s1']), buildSpanMap(spans), new Set(['svc-a']));
-    expect(result).toBeNull();
   });
 });
 
@@ -256,9 +163,13 @@ describe('service filter pruning on the GenAI sample trace', () => {
   ]);
 
   const visibleSpans = (pruned: Set<string>) =>
-    generateRowStates(trace.spans, new Set(), new Map(), 'inline', pruned).filter(
-      r => !('isPrunedPlaceholder' in r)
-    );
+    generateRowStates(
+      trace.spans,
+      new Set(),
+      new Map(),
+      'inline',
+      hiddenSpanIDsForServices(trace.spans, pruned)
+    ).filter(r => !('isPrunedPlaceholder' in r));
 
   it('carries GenAI spans in exactly two of its ten services', () => {
     const genAIServices = new Set(
@@ -303,18 +214,16 @@ describe('service filter pruning on the GenAI sample trace', () => {
   });
 
   it('reports every pruned span and the error among them in placeholder rows', () => {
-    const rows = generateRowStates(trace.spans, new Set(), new Map(), 'inline', PLAIN_LEAF_SERVICES);
+    const rows = generateRowStates(
+      trace.spans,
+      new Set(),
+      new Map(),
+      'inline',
+      hiddenSpanIDsForServices(trace.spans, PLAIN_LEAF_SERVICES)
+    );
     const placeholders = rows.filter(r => 'isPrunedPlaceholder' in r);
     const hidden = trace.spans.filter(s => PLAIN_LEAF_SERVICES.has(s.resource.serviceName)).length;
     expect(placeholders.reduce((sum, p) => sum + p.prunedChildrenCount, 0)).toBe(hidden);
     expect(placeholders.reduce((sum, p) => sum + p.prunedErrorCount, 0)).toBe(1);
-  });
-
-  it('treats a GenAI span as pruned when a plain ancestor service is pruned', () => {
-    const nestedLlm = trace.spans.find(
-      s => s.resource.serviceName === 'summarizer-agent' && s.genAIKind !== undefined
-    )!;
-    expect(isSpanPruned(nestedLlm, new Set(['mcp-gateway']))).toBe(true);
-    expect(isSpanPruned(nestedLlm, PLAIN_LEAF_SERVICES)).toBe(false);
   });
 });

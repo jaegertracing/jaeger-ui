@@ -157,6 +157,13 @@ describe('ScrollManager', () => {
       expect(scrollPastMock).toHaveBeenLastCalledWith(4, -1);
     });
 
+    it('does nothing when the search has matches but the filter hides them all', () => {
+      accessors.getSearchedSpanIDs = () => new Set();
+      manager._scrollToVisibleSpan(1, 0);
+      expect(manager._scrollPast).not.toHaveBeenCalled();
+      expect(accessors.mapSpanIndexToRowIndex).not.toHaveBeenCalled();
+    });
+
     it('scrolls to boundary when scrolling away from closest spanID in findMatches', () => {
       const closetFindMatchesSpanID = 4;
       accessors.getTopRowIndexVisible.mockReturnValue(closetFindMatchesSpanID - 1);

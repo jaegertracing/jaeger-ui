@@ -597,6 +597,7 @@ describe('trace timeline zustand stores', () => {
           childrenHiddenIDs: new Set(['span-x']),
           detailStates: new Map([['span-x', new DetailState()]]),
           shouldScrollToFirstUiFindMatch: true,
+          prunedServices: new Set(['svc-a']),
         });
         useTraceTimelineStore.getState().setTrace(makeTrace('new-trace'));
         const s = useTraceTimelineStore.getState();
@@ -604,6 +605,7 @@ describe('trace timeline zustand stores', () => {
         expect(s.childrenHiddenIDs.size).toBe(0);
         expect(s.detailStates.size).toBe(0);
         expect(s.shouldScrollToFirstUiFindMatch).toBe(false);
+        expect(s.prunedServices.size).toBe(0);
       });
 
       it('preserves layout prefs when traceID changes', () => {

@@ -310,14 +310,13 @@ describe('useServiceFilter hook', () => {
   it('clears selected span in sidepanel mode when its service is pruned via onApply', () => {
     const selectedSpanID = 'span-x';
     const selectedSpan = {
+      spanID: selectedSpanID,
       resource: { serviceName: 'svc-b' },
       parentSpan: undefined,
     } as unknown as IOtelSpan;
     mockStoreState.detailStates = new Map([[selectedSpanID, {}]]) as typeof mockStoreState.detailStates;
     const trace = makeTrace(['svc-a', 'svc-b']);
-    (trace as unknown as { spanMap: Map<string, IOtelSpan> }).spanMap = new Map([
-      [selectedSpanID, selectedSpan],
-    ]);
+    (trace as unknown as { spans: IOtelSpan[] }).spans = [selectedSpan];
 
     render(React.createElement(HookRenderer, { trace, mode: 'sidepanel' }));
 
@@ -332,14 +331,13 @@ describe('useServiceFilter hook', () => {
   it('does not clear detailStates in inline mode when service is pruned via onApply', () => {
     const selectedSpanID = 'span-x';
     const selectedSpan = {
+      spanID: selectedSpanID,
       resource: { serviceName: 'svc-b' },
       parentSpan: undefined,
     } as unknown as IOtelSpan;
     mockStoreState.detailStates = new Map([[selectedSpanID, {}]]) as typeof mockStoreState.detailStates;
     const trace = makeTrace(['svc-a', 'svc-b']);
-    (trace as unknown as { spanMap: Map<string, IOtelSpan> }).spanMap = new Map([
-      [selectedSpanID, selectedSpan],
-    ]);
+    (trace as unknown as { spans: IOtelSpan[] }).spans = [selectedSpan];
 
     render(React.createElement(HookRenderer, { trace, mode: 'inline' }));
 

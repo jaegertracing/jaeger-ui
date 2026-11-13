@@ -27,8 +27,8 @@ type PrunedStats = {
 };
 
 /**
- * First pass: build visible rows by applying manual collapse and service filter pruning.
- * Returns the visible rows and, when pruning is active, per-row pruned span/error counts.
+ * First pass: build visible rows by applying manual collapse and the filter's hidden span set.
+ * Returns the visible rows and, when anything is hidden, per-row pruned span/error counts.
  *
  * Assumes spans are in pre-order DFS order (parent before its children, siblings sorted by
  * startTime). This is guaranteed by the trace transformation in transform-trace-data.ts.
@@ -38,9 +38,9 @@ function buildVisibleRows(
   childrenHiddenIDs: Set<string>,
   detailStates: Map<string, DetailState | TNil>,
   detailPanelMode: 'inline' | 'sidepanel',
-  prunedServices: Set<string>
+  hiddenIDs: ReadonlySet<string>
 ): { rows: RowState[]; prunedStats: PrunedStats | null } {
-  const hasPruning = prunedServices.size > 0;
+  const hasPruning = hiddenIDs.size > 0;
   let collapseDepth: number | null = null;
   const rows: RowState[] = [];
 
@@ -61,8 +61,8 @@ function buildVisibleRows(
       collapseDepth = null;
     }
 
-    // Service filter pruning: skip this span and its entire subtree.
-    if (hasPruning && prunedServices.has(span.resource.serviceName)) {
+    // A hidden span is skipped together with its entire subtree.
+    if (hasPruning && hiddenIDs.has(spanID)) {
       let prunedSpanCount = 1;
       let prunedErrors = isErrorSpan(span) ? 1 : 0;
       while (i + 1 < spans.length && spans[i + 1].depth > depth) {
@@ -72,10 +72,9 @@ function buildVisibleRows(
           prunedErrors++;
         }
       }
-      // depth == 0 means this is a root span. Root services are protected by
-      // sanitizePrunedServices, so a pruned root can only occur if the caller bypasses
-      // that guard. In that case we intentionally drop the stats — there is no parent
-      // row to attach a placeholder to.
+      // depth == 0 means this is a root span. The service filter protects root services,
+      // so a hidden root can only occur if the caller bypasses that guard. In that case
+      // we intentionally drop the stats — there is no parent row to attach a placeholder to.
       if (depth > 0) {
         const parentIdx = parentByDepth[depth - 1];
         if (parentIdx != null) {
@@ -175,14 +174,14 @@ function insertPrunedPlaceholders(rows: RowState[], stats: PrunedStats): RowStat
 
 /**
  * Build the visible row list from a trace's spans, applying manual collapse,
- * service filter pruning, and pruned placeholder insertion.
+ * the filter's hidden span set, and pruned placeholder insertion.
  */
 export default function generateRowStates(
   spans: ReadonlyArray<IOtelSpan> | TNil,
   childrenHiddenIDs: Set<string>,
   detailStates: Map<string, DetailState | TNil>,
   detailPanelMode: 'inline' | 'sidepanel',
-  prunedServices: Set<string>
+  hiddenIDs: ReadonlySet<string>
 ): RowState[] {
   if (!spans) {
     return [];
@@ -192,41 +191,7 @@ export default function generateRowStates(
     childrenHiddenIDs,
     detailStates,
     detailPanelMode,
-    prunedServices
+    hiddenIDs
   );
   return prunedStats ? insertPrunedPlaceholders(rows, prunedStats) : rows;
-}
-
-/**
- * Returns true if a span would be pruned by the service filter.
- * A span is pruned if its own service or any ancestor's service is in prunedServices.
- */
-export function isSpanPruned(span: IOtelSpan, prunedServices: Set<string>): boolean {
-  if (prunedServices.size === 0) return false;
-  let current: IOtelSpan | undefined = span;
-  while (current) {
-    if (prunedServices.has(current.resource.serviceName)) return true;
-    current = current.parentSpan;
-  }
-  return false;
-}
-
-/**
- * Filter a set of span IDs to exclude spans that would be pruned by the service filter.
- * Used to ensure uiFind match counts and highlighting exclude invisible pruned spans.
- */
-export function filterPrunedSpanIDs(
-  spanIDs: Set<string> | TNil,
-  spanMap: ReadonlyMap<string, IOtelSpan>,
-  prunedServices: Set<string>
-): Set<string> | TNil {
-  if (!spanIDs || prunedServices.size === 0) return spanIDs;
-  const filtered = new Set<string>();
-  for (const id of spanIDs) {
-    const span = spanMap.get(id);
-    if (span && !isSpanPruned(span, prunedServices)) {
-      filtered.add(id);
-    }
-  }
-  return filtered.size > 0 ? filtered : null;
 }

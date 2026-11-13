@@ -67,10 +67,10 @@ function buildCriticalPathIndex(criticalPath: CriticalPathSection[]) {
 
 function buildPrunedCriticalPaths(
   pathBySpanID: ReturnType<typeof buildCriticalPathIndex>,
-  prunedServices: Set<string>,
+  hiddenIDs: ReadonlySet<string>,
   spans: ReadonlyArray<IOtelSpan>
 ): Map<string, CriticalPathSection[]> {
-  if (prunedServices.size === 0) return new Map();
+  if (hiddenIDs.size === 0) return new Map();
   const result = new Map<string, CriticalPathSection[]>();
 
   const collectFromSubtree = (s: IOtelSpan, sections: CriticalPathSection[]) => {
@@ -86,10 +86,12 @@ function buildPrunedCriticalPaths(
   };
 
   for (const span of spans) {
-    if (!span.hasChildren) continue;
+    // A hidden parent has no bar to carry the sections, and its subtree is already collected
+    // on the nearest visible ancestor, so visiting it would only repeat work.
+    if (!span.hasChildren || hiddenIDs.has(span.spanID)) continue;
     const prunedSections: CriticalPathSection[] = [];
     for (const child of span.childSpans) {
-      if (prunedServices.has(child.resource.serviceName)) {
+      if (hiddenIDs.has(child.spanID)) {
         collectFromSubtree(child, prunedSections);
       }
     }
@@ -105,10 +107,10 @@ function buildPrunedCriticalPaths(
  * itself and all spans hidden beneath it, whether hidden by collapse or service filter.
  * - Collapsed: mergeChildrenCriticalPath collects the full subtree (pruning-unaware,
  *   which is correct — a collapsed subtree is entirely hidden regardless of filter).
- * - Expanded with pruned direct children: own sections + pruned subtree sections bubbled
- *   up via memoizedPrunedCriticalPaths. Only direct-child pruning needs handling because
- *   the service filter prunes entire subtrees, so the direct parent is always the nearest
- *   visible ancestor of a pruned span.
+ * - Expanded with hidden direct children: own sections + hidden subtree sections bubbled
+ *   up via buildPrunedCriticalPaths. Only direct-child hiding needs handling because
+ *   the filter hides entire subtrees, so the direct parent is always the nearest
+ *   visible ancestor of a hidden span.
  */
 function getVisibleCriticalPathSections(
   isCollapsed: boolean,
@@ -143,10 +145,10 @@ export type CriticalPathContext = {
 export function makeCriticalPathContext(
   trace: IOtelTrace,
   criticalPath: CriticalPathSection[],
-  prunedServices: Set<string>
+  hiddenIDs: ReadonlySet<string>
 ): CriticalPathContext {
   const index = buildCriticalPathIndex(criticalPath);
-  const pruned = buildPrunedCriticalPaths(index, prunedServices, trace.spans);
+  const pruned = buildPrunedCriticalPaths(index, hiddenIDs, trace.spans);
 
   return {
     sectionsFor(span, isCollapsed, hasPrunedChildren) {
