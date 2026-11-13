@@ -119,12 +119,15 @@ describe('<Page>', () => {
       expect(screen.getByTestId('page-child')).toBeInTheDocument();
     });
 
-    it('degrades to an empty dock when the chunk fails to load', async () => {
+    it('shows an error message when the chunk fails to load', async () => {
       const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const err = new Error('chunk load failed');
       const { default: Fallback } = await loadJaegerAssistantDock(() => Promise.reject(err));
       expect(spy).toHaveBeenCalledWith('[jaeger-assistant] failed to load the assistant panel', err);
-      expect(Fallback()).toBeNull();
+      render(<Fallback />);
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'The assistant failed to load. Reload the page to try again.'
+      );
       spy.mockRestore();
     });
   });
