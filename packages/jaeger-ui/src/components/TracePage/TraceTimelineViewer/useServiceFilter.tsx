@@ -9,7 +9,6 @@ import ServiceFilter from './ServiceFilter';
 import { getSelectedSpanID, useTraceTimelineStore } from './store';
 import {
   decodeSvcFilter,
-  encodeSvcFilter,
   getSortedServiceNames,
   SVC_FILTER_DEFAULTS_KEY,
   SvcFilterDefaults,
@@ -21,7 +20,6 @@ import {
   evaluateSpanFilter,
   hiddenServices,
   IClause,
-  isServiceHideClause,
   ISpanFilter,
   spanFiltersEqual,
   withHiddenServices,
@@ -66,10 +64,31 @@ function sanitizePrunedServices(pruned: Set<string>, rootServiceNames: Set<strin
 }
 
 const CLAUSE_PARAM = 'f';
+// The parameter that carried the service hide set before `f` did, as a checksum and a bitmask over
+// the trace's sorted service names. It is read so that an existing link keeps working, and the URL
+// is rewritten without it.
+const LEGACY_SERVICE_PARAM = 'svcFilter';
 
 function paramValues(value: string | (string | null)[] | null | undefined): string[] {
   if (value === null || value === undefined) return [];
   return (Array.isArray(value) ? value : [value]).filter((v): v is string => typeof v === 'string');
+}
+
+/**
+ * Whether the URL states a filter: an `f` parameter, even an empty one, or a legacy svcFilter. The
+ * saved default applies only while it does not, and an edit always leaves one, so the default does
+ * not come back on a later render of the edited URL.
+ */
+export function urlHasFilterParams(params: queryString.ParsedQuery): boolean {
+  return (
+    CLAUSE_PARAM in params ||
+    (typeof params[LEGACY_SERVICE_PARAM] === 'string' && params[LEGACY_SERVICE_PARAM] !== '')
+  );
+}
+
+function searchOf(params: queryString.ParsedQuery): string {
+  const search = queryString.stringify(params);
+  return search ? `?${search}` : '';
 }
 
 /**
@@ -89,96 +108,82 @@ function readDefaultServices(
   return sanitizePrunedServices(pruned, rootServiceNames);
 }
 
+function hasSavedDefault(): boolean {
+  const defaults = storage.getJSON<Partial<SvcFilterDefaults>>(SVC_FILTER_DEFAULTS_KEY);
+  return Array.isArray(defaults?.prunedServices) && defaults.prunedServices.length > 0;
+}
+
 /**
- * Resolves the span filter for a trace from the URL.
- * The service hide set comes from svcFilter in the URL, else from the saved default; the other
- * clauses come from the repeated `f` parameter and apply in either case. svcFilter is the only
- * carrier of the hide set on service, because it is what the popover writes and what root protection
- * sanitizes, so a hide clause on service inside `f` is ignored. Returns the filter and, if the
- * svcFilter parameter was stale or sanitized, the cleaned params to navigate to.
+ * Resolves the span filter for a trace from the URL. The clauses come from the repeated `f`
+ * parameter. A legacy svcFilter is read as the hide clause on service, in place of one that `f`
+ * carries, and a stale one, whose checksum is for another service list, hides nothing. Root
+ * protection then sanitizes the hide clause on service. The saved default applies only while the
+ * URL states no filter. Returns the filter and, when the URL carried a legacy svcFilter or a hide
+ * set that sanitization changed, the rewritten search to navigate to.
  */
 export function resolveInitialFilter(
   search: string,
   sortedServiceNames: string[],
-  rootServiceNames: Set<string>,
-  skipDefaults = false
+  rootServiceNames: Set<string>
 ): { filter: ISpanFilter; cleanSearch?: string } {
   const params = queryString.parse(search);
-  const svcFilterParam = typeof params.svcFilter === 'string' ? params.svcFilter : null;
   const clauses = paramValues(params[CLAUSE_PARAM])
     .map(decodeClause)
-    .filter((c): c is IClause => c !== null && !isServiceHideClause(c));
+    .filter((c): c is IClause => c !== null);
   let filter: ISpanFilter = { ...EMPTY_SPAN_FILTER, clauses };
-  let cleanSearch: string | undefined;
 
-  if (svcFilterParam) {
-    const decoded = decodeSvcFilter(sortedServiceNames, svcFilterParam);
+  const legacy = params[LEGACY_SERVICE_PARAM];
+  let rewrite = typeof legacy === 'string' && legacy !== '';
+  if (rewrite) {
+    const decoded = decodeSvcFilter(sortedServiceNames, legacy as string);
     if (decoded && !decoded.stale) {
-      const pruned = new Set<string>();
-      for (const name of sortedServiceNames) {
-        if (!decoded.visibleServices.has(name)) pruned.add(name);
-      }
-      const sanitized = sanitizePrunedServices(pruned, rootServiceNames);
-      filter = withHiddenServices(filter, sanitized);
-      // If sanitization changed the filter, normalize svcFilter in the URL.
-      if (!setsEqual(sanitized, pruned)) {
-        const nextParams = { ...params };
-        if (sanitized.size === 0) {
-          delete nextParams.svcFilter;
-        } else {
-          const visible = new Set(sortedServiceNames.filter(n => !sanitized.has(n)));
-          nextParams.svcFilter = encodeSvcFilter(sortedServiceNames, visible);
-        }
-        const cleaned = queryString.stringify(nextParams);
-        cleanSearch = cleaned ? `?${cleaned}` : '';
-      }
-    } else {
-      // Stale or invalid: discard the service filter and show all services.
-      // Don't fall through to the saved default — the user opened a shared link
-      // that no longer applies, so all-visible is the safest default.
-      const nextParams = { ...params };
-      delete nextParams.svcFilter;
-      const cleaned = queryString.stringify(nextParams);
-      cleanSearch = cleaned ? `?${cleaned}` : '';
+      const pruned = new Set(sortedServiceNames.filter(name => !decoded.visibleServices.has(name)));
+      filter = withHiddenServices(filter, pruned);
     }
-    return { filter, cleanSearch };
   }
 
-  if (skipDefaults) return { filter };
-  const saved = readDefaultServices(sortedServiceNames, rootServiceNames);
-  return { filter: saved ? withHiddenServices(filter, saved) : filter };
+  if (!urlHasFilterParams(params)) {
+    const saved = readDefaultServices(sortedServiceNames, rootServiceNames);
+    return { filter: saved ? withHiddenServices(filter, saved) : filter };
+  }
+
+  const requested = hiddenServices(filter);
+  const sanitized = sanitizePrunedServices(requested, rootServiceNames);
+  if (!setsEqual(sanitized, requested)) {
+    filter = withHiddenServices(filter, sanitized);
+    rewrite = true;
+  }
+  if (!rewrite) return { filter };
+  const nextParams = { ...params };
+  delete nextParams[LEGACY_SERVICE_PARAM];
+  writeClauses(nextParams, filter);
+  return { filter, cleanSearch: searchOf(nextParams) };
+}
+
+/** Writes the clauses as repeated `f` parameters; an empty list is written as an empty `f=`. */
+function writeClauses(params: queryString.ParsedQuery, filter: ISpanFilter): void {
+  const encoded = filter.clauses.map(encodeClause);
+  params[CLAUSE_PARAM] = encoded.length ? encoded : '';
 }
 
 /**
- * Builds the updated search string after a filter change. The hide clause on service is written
- * as svcFilter and every other clause as a repeated `f` parameter. The tree mode is not written yet,
- * because row generation does not support lift mode.
+ * Builds the updated search string after a filter change. Every clause is written as a repeated `f`
+ * parameter, and a legacy svcFilter is dropped. An empty clause list is written as an empty `f=`
+ * when the URL already stated a filter or a default is saved, so that the saved default does not
+ * come back on a later render; otherwise `f` is removed. The tree mode is not written yet, because
+ * row generation does not support lift mode.
  * Returns the new search string (with leading '?' if non-empty, or '').
  */
-export function buildFilterSearch(
-  currentSearch: string,
-  sortedServiceNames: string[],
-  filter: ISpanFilter
-): string {
+export function buildFilterSearch(currentSearch: string, filter: ISpanFilter): string {
   const params = queryString.parse(currentSearch);
-  const pruned = hiddenServices(filter);
-  const encodedServices = encodeSvcFilter(
-    sortedServiceNames,
-    new Set(sortedServiceNames.filter(name => !pruned.has(name)))
-  );
-  if (encodedServices) {
-    params.svcFilter = encodedServices;
-  } else {
-    delete params.svcFilter;
-  }
-  const nonServiceClauses = filter.clauses.filter(c => !isServiceHideClause(c)).map(encodeClause);
-  if (nonServiceClauses.length) {
-    params[CLAUSE_PARAM] = nonServiceClauses;
+  const statedFilter = urlHasFilterParams(params);
+  delete params[LEGACY_SERVICE_PARAM];
+  if (filter.clauses.length || statedFilter || hasSavedDefault()) {
+    writeClauses(params, filter);
   } else {
     delete params[CLAUSE_PARAM];
   }
-  const search = queryString.stringify(params);
-  return search ? `?${search}` : '';
+  return searchOf(params);
 }
 
 type UseServiceFilterResult = {
@@ -209,25 +214,14 @@ export function useServiceFilter(
   const setSpanFilter = useTraceTimelineStore(s => s.setSpanFilter);
   const prunedServices = useMemo(() => hiddenServices(spanFilter), [spanFilter]);
 
-  // After cleaning a stale/sanitized URL, the effect re-runs because location.search changes.
-  // This ref prevents that re-run from falling through to the saved default.
-  // One hop is sufficient: the cleaned URL either decodes to a valid filter (handled by the
-  // URL branch) or has no svcFilter param at all (no further navigation).
-  // In neither case does resolveInitialFilter produce another cleanSearch.
-  const skipDefaultsRef = useRef(false);
-
   // Resolve the filter from the URL or the saved default whenever relevant inputs change
   // (trace identity, URL search string). Guards against loops by comparing the
   // resolved filter to the current state before writing.
   useEffect(() => {
-    const skipDefaults = skipDefaultsRef.current;
-    skipDefaultsRef.current = false;
-
     const { filter, cleanSearch } = resolveInitialFilter(
       location.search,
       sortedServiceNames,
-      rootServiceNames,
-      skipDefaults
+      rootServiceNames
     );
 
     // Avoid unnecessary Zustand writes (and re-renders) when the resolved filter matches.
@@ -236,7 +230,6 @@ export function useServiceFilter(
       setSpanFilter(filter);
     }
     if (cleanSearch != null && cleanSearch !== location.search) {
-      skipDefaultsRef.current = true;
       navigate(
         { pathname: location.pathname, search: cleanSearch },
         { replace: true, state: location.state }
@@ -277,11 +270,7 @@ export function useServiceFilter(
         }
       }
 
-      const search = buildFilterSearch(location.search, sortedServiceNames, nextFilter);
-      // The navigation re-runs the resolve effect when it changes the URL. The user just chose this
-      // filter, so the saved default must not come back on that run when the selection is empty.
-      // An unchanged URL runs no effect, and the flag would otherwise leak into the next trace.
-      if (search !== location.search) skipDefaultsRef.current = true;
+      const search = buildFilterSearch(location.search, nextFilter);
       navigate({ pathname: location.pathname, search }, { replace: true, state: location.state });
     },
     [
@@ -292,7 +281,6 @@ export function useServiceFilter(
       location.pathname,
       location.search,
       location.state,
-      sortedServiceNames,
       navigate,
     ]
   );

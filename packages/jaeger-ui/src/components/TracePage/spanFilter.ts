@@ -8,7 +8,7 @@
 // critical path and the search match count do not need to know which clause hid or found a span.
 // The result is derived from the trace at hand rather than stored, so a caller that holds a
 // different or newer trace than the timeline never sees a stale set. The module also holds the
-// `f=` URL codec; the `svcFilter` codec stays in url/svcFilter.ts.
+// `f=` URL codec; the codec of the legacy `svcFilter` parameter stays in url/svcFilter.ts.
 
 import { TNil } from '../../types';
 import { IAttribute, IOtelSpan } from '../../types/otel';
@@ -175,14 +175,14 @@ export function withoutHiddenSpans(
 
 type ServiceHideClause = IClause & { criterion: Extract<Criterion, { shape: 'set' }> };
 
-/** The hide clause on service is the clause that svcFilter encodes. */
+/** The hide clause on service is the clause that the popover's service list edits. */
 export function isServiceHideClause(clause: IClause): clause is ServiceHideClause {
   return (
     clause.verb === 'hide' && clause.criterion.shape === 'set' && clause.criterion.property === 'service'
   );
 }
 
-/** The services the filter hides through its hide clause on service, which is what svcFilter encodes. */
+/** The services the filter hides through its hide clause on service. */
 export function hiddenServices(filter: ISpanFilter): Set<string> {
   const clause = filter.clauses.find(isServiceHideClause);
   return clause ? new Set(clause.criterion.values) : new Set();
@@ -191,7 +191,7 @@ export function hiddenServices(filter: ISpanFilter): Set<string> {
 /** Replaces the filter's hide clause on service with one for the given services, or removes it when empty. */
 export function withHiddenServices(filter: ISpanFilter, services: ReadonlySet<string>): ISpanFilter {
   // An existing clause keeps its place, so that a chip does not move when its values change; a new
-  // one goes last, where the URL reader puts the clause that svcFilter carries.
+  // one goes last.
   const at = filter.clauses.findIndex(isServiceHideClause);
   const clauses = filter.clauses.filter(c => !isServiceHideClause(c));
   if (services.size > 0) {
