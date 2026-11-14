@@ -40,9 +40,9 @@ export default function AccordionText({
   if (interactive) {
     arrow = isOpen ? <IoChevronDown className={iconCls} /> : <IoChevronForward className={iconCls} />;
     headerProps = {
-      'aria-checked': isOpen,
+      'aria-expanded': isOpen,
       onClick: isEmpty ? null : accordionToggle(onToggle),
-      role: 'switch',
+      role: 'button',
     };
   }
 

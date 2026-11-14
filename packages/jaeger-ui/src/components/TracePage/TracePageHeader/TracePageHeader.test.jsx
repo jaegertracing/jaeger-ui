@@ -154,7 +154,7 @@ describe('<TracePageHeader>', () => {
 
     renderWithRouter(<TracePageHeader {...defaultProps} canCollapse onSlimViewClicked={onSlimViewClicked} />);
 
-    const clickableTitle = screen.getByRole('switch');
+    const clickableTitle = screen.getByRole('button', { expanded: true });
     expect(clickableTitle).toBeInTheDocument();
 
     clickableTitle.click();
@@ -216,7 +216,7 @@ describe('<TracePageHeader>', () => {
     expect(container.querySelector('.TracePageHeader--overviewItems')).toBeNull();
     const button = screen.getByRole('button', { name: 'Reload trace' });
     expect(button.closest('h1')).not.toBeNull();
-    expect(screen.getByRole('switch')).not.toContainElement(button);
+    expect(screen.getByRole('button', { expanded: false })).not.toContainElement(button);
     expect(screen.getByTestId('header-item-incomplete').closest('h1')).toBe(button.closest('h1'));
     fireEvent.click(button);
     expect(onReloadTrace).toHaveBeenCalledOnce();
@@ -239,12 +239,12 @@ describe('<TracePageHeader>', () => {
       />
     );
 
-    const titleSwitch = screen.getByRole('switch');
+    const titleToggle = screen.getByRole('button', { expanded: true });
     const reloadButton = screen.getByRole('button', { name: 'Reload trace' });
-    expect(titleSwitch.tagName).toBe('BUTTON');
-    expect(titleSwitch).not.toContainElement(reloadButton);
-    expect(titleSwitch.querySelector('button, a, [role="button"], [tabindex]')).toBeNull();
-    titleSwitch.focus();
+    expect(titleToggle.tagName).toBe('BUTTON');
+    expect(titleToggle).not.toContainElement(reloadButton);
+    expect(titleToggle.querySelector('button, a, [role="button"], [tabindex]')).toBeNull();
+    titleToggle.focus();
     await user.keyboard(key);
     expect(onSlimViewClicked).toHaveBeenCalledOnce();
     expect(onReloadTrace).not.toHaveBeenCalled();
