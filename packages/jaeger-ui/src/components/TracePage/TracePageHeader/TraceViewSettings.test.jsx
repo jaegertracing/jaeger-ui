@@ -7,6 +7,7 @@ import '@testing-library/jest-dom';
 
 import TraceViewSettings from './TraceViewSettings';
 import track from './KeyboardShortcutsHelp.track';
+import { useLayoutPrefsStore } from '../TraceTimelineViewer/store';
 
 vi.mock('./KeyboardShortcutsHelp.track');
 vi.mock('../keyboard-mappings', () => mockDefault({}));
@@ -62,6 +63,38 @@ describe('<TraceViewSettings>', () => {
     await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
     await userEvent.click(await screen.findByText('Show Span in Sidebar'));
     expect(defaultProps.onDetailPanelModeToggle).toHaveBeenCalledTimes(1);
+  });
+
+  describe('Span Latency Heatmap', () => {
+    beforeEach(() => {
+      useLayoutPrefsStore.setState({ heatmapEnabled: false });
+    });
+
+    function heatmapItem() {
+      return screen.getByText('Span Latency Heatmap').closest('[role="menuitem"]');
+    }
+
+    it('shows the heatmap item, unchecked while the heatmap is off', async () => {
+      render(<TraceViewSettings {...defaultProps} />);
+      await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
+      await screen.findByText('Span Latency Heatmap');
+      expect(heatmapItem().querySelector('svg')).toBeNull();
+    });
+
+    it('shows a checkmark while the heatmap is on', async () => {
+      useLayoutPrefsStore.setState({ heatmapEnabled: true });
+      render(<TraceViewSettings {...defaultProps} />);
+      await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
+      await screen.findByText('Span Latency Heatmap');
+      expect(heatmapItem().querySelector('svg')).not.toBeNull();
+    });
+
+    it('toggles the heatmap preference when clicked', async () => {
+      render(<TraceViewSettings {...defaultProps} />);
+      await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
+      await userEvent.click(await screen.findByText('Span Latency Heatmap'));
+      expect(useLayoutPrefsStore.getState().heatmapEnabled).toBe(true);
+    });
   });
 
   it('always shows "Keyboard Shortcuts" in the dropdown', async () => {

@@ -49,7 +49,6 @@ describe('middlewareHooks', () => {
       childrenHiddenIDs: new Set(),
       detailStates: new Map(),
       shouldScrollToFirstUiFindMatch: false,
-      prunedServices: new Set(),
     });
   });
 

@@ -7,6 +7,32 @@ SPDX-License-Identifier: Apache-2.0
   background: var(--border-default);
 }
 
+/* The overview wraps under the title when one line cannot hold both. */
+.SpanDetail--header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 1rem;
+}
+
+.SpanDetail--headerTitle {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 1.05em;
+  font-weight: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.SpanDetail--headerEndpointName {
+  color: var(--text-secondary);
+}
+
+.SpanDetail--overview {
+  flex: 0 1 auto;
+}
+
 .SpanDetail--debugInfo {
   display: block;
   letter-spacing: 0.25px;

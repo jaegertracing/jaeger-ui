@@ -7,9 +7,10 @@ import {
   formatTokenCount,
   tryParseJson,
   deepParseJson,
+  parseToolDefinitions,
   GenAiSection,
 } from './genAiData';
-import type { IAttribute, IAttributes } from '../../../../../types/otel';
+import type { IAttribute, IAttributes, AttributeValue } from '../../../../../types/otel';
 import { makeAttributes } from '../../../../../model/attributes';
 
 function attrs(pairs: Record<string, unknown>): IAttributes {
@@ -864,6 +865,235 @@ describe('extractGenAiSections', () => {
     });
   });
 
+  describe('retrieval section', () => {
+    it('extracts query, top_k, data source and documents from the langchain reference scenario shape', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.operation.name': 'retrieval',
+          'gen_ai.data_source.id': 'weather-knowledge-base',
+          'gen_ai.retrieval.query.text': 'What is the weather in Seattle?',
+          'gen_ai.retrieval.top_k': 3,
+          'gen_ai.retrieval.documents': JSON.stringify([
+            { content: 'Seattle weather is rainy and cool.', source_id: 'weather-knowledge-base' },
+          ]),
+        })
+      );
+      expect(section(sections, 'retrieval')).toEqual({
+        queryText: 'What is the weather in Seattle?',
+        topK: 3,
+        dataSourceId: 'weather-knowledge-base',
+        documents: [
+          { content: 'Seattle weather is rainy and cool.', rest: { source_id: 'weather-knowledge-base' } },
+        ],
+      });
+    });
+
+    it('accepts documents already parsed into an array, and keeps an unrecognized field (e.g. score) reachable', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.retrieval.documents': [
+            { content: 'first doc', score: 0.92 },
+            { content: 'second doc', score: 0.81 },
+          ],
+        })
+      );
+      expect(section(sections, 'retrieval')?.documents).toEqual([
+        { content: 'first doc', rest: { score: 0.92 } },
+        { content: 'second doc', rest: { score: 0.81 } },
+      ]);
+    });
+
+    it('wraps a single, non-array-wrapped document object instead of dropping it', () => {
+      const sections = extractGenAiSections(
+        attrs({ 'gen_ai.retrieval.documents': { content: 'lone document' } })
+      );
+      expect(section(sections, 'retrieval')?.documents).toEqual([{ content: 'lone document', rest: {} }]);
+    });
+
+    it('falls back to the raw string as content when a document is not valid JSON', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.retrieval.documents': 'not json' }));
+      expect(section(sections, 'retrieval')?.documents).toEqual([{ content: 'not json', rest: {} }]);
+    });
+
+    it('treats a JSON-encoded "[]" documents string as an empty documents list', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.retrieval.documents': '[]' }));
+      expect(section(sections, 'retrieval')?.documents).toEqual([]);
+    });
+
+    it('produces a retrieval section from the query text alone, leaving documents undefined', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.retrieval.query.text': 'find docs' }));
+      expect(section(sections, 'retrieval')).toEqual({
+        queryText: 'find docs',
+        topK: undefined,
+        dataSourceId: undefined,
+        documents: undefined,
+      });
+    });
+
+    it('leaves an unparseable top_k unclaimed so it shows in the other section', () => {
+      const sections = extractGenAiSections(
+        attrs({ 'gen_ai.retrieval.query.text': 'q', 'gen_ai.retrieval.top_k': 'all' })
+      );
+      expect(section(sections, 'retrieval')?.topK).toBeUndefined();
+      expect(section(sections, 'other')?.attributes.entries()).toEqual([
+        { key: 'gen_ai.retrieval.top_k', value: 'all' },
+      ]);
+    });
+
+    it('treats a document with null content like one with no content', () => {
+      const sections = extractGenAiSections(
+        attrs({ 'gen_ai.retrieval.documents': JSON.stringify([{ content: null, score: 0.5 }]) })
+      );
+      expect(section(sections, 'retrieval')?.documents).toEqual([{ content: '', rest: { score: 0.5 } }]);
+    });
+
+    it('builds a retrieval section for an explicitly empty documents array, distinct from no attribute at all (#4437)', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.retrieval.documents': [] }));
+      expect(section(sections, 'retrieval')).toEqual({
+        queryText: undefined,
+        topK: undefined,
+        dataSourceId: undefined,
+        documents: [],
+      });
+    });
+
+    it('excludes claimed gen_ai.retrieval.*/gen_ai.data_source.id attributes from the other section', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.retrieval.query.text': 'q',
+          'gen_ai.retrieval.top_k': 3,
+          'gen_ai.data_source.id': 'kb-1',
+          'gen_ai.retrieval.documents': [{ content: 'doc' }],
+        })
+      );
+      expect(section(sections, 'other')).toBeUndefined();
+    });
+
+    it('leaves gen_ai.data_source.id alone in the other section on a span with no retrieval attribute', () => {
+      const sections = extractGenAiSections(
+        attrs({ 'gen_ai.operation.name': 'invoke_agent', 'gen_ai.data_source.id': 'kb-1' })
+      );
+      expect(section(sections, 'retrieval')).toBeUndefined();
+      expect(section(sections, 'other')?.attributes.entries()).toEqual([
+        { key: 'gen_ai.data_source.id', value: 'kb-1' },
+      ]);
+    });
+
+    it('treats a "null" documents string like an absent attribute', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.retrieval.documents': 'null' }));
+      expect(section(sections, 'retrieval')).toBeUndefined();
+      expect(section(sections, 'other')?.attributes.entries()).toEqual([
+        { key: 'gen_ai.retrieval.documents', value: 'null' },
+      ]);
+    });
+
+    it('produces no retrieval section when no retrieval attributes are present', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.provider.name': 'openai' }));
+      expect(section(sections, 'retrieval')).toBeUndefined();
+    });
+  });
+
+  describe('memory section', () => {
+    it('extracts store, query, record count and records from the google-adk reference scenario shape', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.operation.name': 'search_memory',
+          'gen_ai.memory.store.id': 'memory-store-1',
+          'gen_ai.memory.query.text': "What are the user's food preferences?",
+          'gen_ai.memory.record.count': 1,
+          'gen_ai.memory.records': JSON.stringify([
+            {
+              content: 'User prefers vegetarian meals and dark mode.',
+              id: '90f1f094-8013-4318-9fae-ea944187d51c',
+              metadata: { author: 'user', session_id: 'session_memory_1' },
+            },
+          ]),
+        })
+      );
+      expect(section(sections, 'memory')).toEqual({
+        queryText: "What are the user's food preferences?",
+        storeId: 'memory-store-1',
+        recordCount: 1,
+        records: [
+          {
+            content: 'User prefers vegetarian meals and dark mode.',
+            rest: {
+              id: '90f1f094-8013-4318-9fae-ea944187d51c',
+              metadata: { author: 'user', session_id: 'session_memory_1' },
+            },
+          },
+        ],
+      });
+    });
+
+    it('builds a memory section for an explicitly empty records array, distinct from no attribute at all (#4437)', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.memory.records': [] }));
+      expect(section(sections, 'memory')).toEqual({
+        queryText: undefined,
+        storeId: undefined,
+        recordCount: undefined,
+        records: [],
+      });
+    });
+
+    it('leaves records undefined for a count-only memory span', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.memory.record.count': 3 }));
+      expect(section(sections, 'memory')).toEqual({
+        queryText: undefined,
+        storeId: undefined,
+        recordCount: 3,
+        records: undefined,
+      });
+    });
+
+    it('leaves an unparseable record count unclaimed so it shows in the other section', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.memory.record.count': 'all' }));
+      expect(section(sections, 'memory')).toBeUndefined();
+      expect(section(sections, 'other')?.attributes.entries()).toEqual([
+        { key: 'gen_ai.memory.record.count', value: 'all' },
+      ]);
+    });
+
+    it('treats a "null" records string like an absent attribute', () => {
+      const sections = extractGenAiSections(
+        attrs({ 'gen_ai.memory.store.id': 'store-1', 'gen_ai.memory.records': 'null' })
+      );
+      expect(section(sections, 'memory')?.records).toBeUndefined();
+      expect(section(sections, 'other')?.attributes.entries()).toEqual([
+        { key: 'gen_ai.memory.records', value: 'null' },
+      ]);
+    });
+
+    it('treats a JSON-encoded "[]" records string as an empty records list', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.memory.records': '[]' }));
+      expect(section(sections, 'memory')?.records).toEqual([]);
+    });
+
+    it('keeps a null record id as a field instead of dropping it', () => {
+      const sections = extractGenAiSections(
+        attrs({ 'gen_ai.memory.records': JSON.stringify([{ content: 'r', id: null }]) })
+      );
+      expect(section(sections, 'memory')?.records).toEqual([{ content: 'r', rest: { id: null } }]);
+    });
+
+    it('falls back to a single entry for records that are not valid JSON', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.memory.records': '[{"content": "r"' }));
+      expect(section(sections, 'memory')?.records).toEqual([{ content: '[{"content": "r"', rest: {} }]);
+    });
+
+    it('produces no memory section when no memory attributes are present', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.provider.name': 'openai' }));
+      expect(section(sections, 'memory')).toBeUndefined();
+    });
+
+    it('excludes claimed gen_ai.memory.* attributes from the other section', () => {
+      const sections = extractGenAiSections(
+        attrs({ 'gen_ai.memory.store.id': 'store-1', 'gen_ai.memory.records': [{ content: 'r' }] })
+      );
+      expect(section(sections, 'other')).toBeUndefined();
+    });
+  });
+
   describe('toolCall section', () => {
     it('extracts a tool call when any tool attribute is present', () => {
       const sections = extractGenAiSections(
@@ -1046,6 +1276,283 @@ describe('extractGenAiSections', () => {
   it('returns an empty section list for a span with no gen_ai attributes', () => {
     const sections = extractGenAiSections(attrs({ 'http.method': 'GET' }));
     expect(sections).toEqual([]);
+  });
+});
+
+describe('parseToolDefinitions', () => {
+  describe('OTel flat FunctionToolDefinition (LangChain / Google ADK)', () => {
+    it('extracts name, type, description, and parameters from a flat tool array', () => {
+      const tools = parseToolDefinitions([
+        {
+          type: 'function',
+          name: 'get_weather',
+          description: 'Get the current weather.',
+          parameters: { type: 'object', properties: { location: { type: 'string' } } },
+        },
+      ]);
+      expect(tools).toHaveLength(1);
+      expect(tools![0]).toEqual({
+        type: 'function',
+        name: 'get_weather',
+        description: 'Get the current weather.',
+        parameters: { type: 'object', properties: { location: { type: 'string' } } },
+      });
+    });
+
+    it('extracts a flat entry without a type field (Google ADK style)', () => {
+      const tools = parseToolDefinitions([
+        {
+          name: 'get_weather',
+          description: 'Get the current weather.',
+          parameters: {
+            type: 'OBJECT',
+            properties: { location: { type: 'STRING' } },
+            required: ['location'],
+          },
+        },
+      ]);
+      expect(tools![0].name).toBe('get_weather');
+      expect(tools![0].type).toBeUndefined();
+      expect(tools![0].parameters).toBeDefined();
+    });
+
+    it('keeps a null description as metadata because it is not rendered specially', () => {
+      const tools = parseToolDefinitions([
+        { type: 'function', name: 'ping', description: null },
+      ] as unknown as AttributeValue);
+      expect(tools![0]).toMatchObject({ name: 'ping', metadata: { description: null } });
+    });
+
+    it('handles a tool entry with no description (description field absent)', () => {
+      const tools = parseToolDefinitions([{ type: 'function', name: 'ping' }]);
+      expect(tools![0].description).toBeUndefined();
+      expect(tools![0].name).toBe('ping');
+    });
+
+    it('preserves provider-specific configuration alongside recognised fields', () => {
+      const tools = parseToolDefinitions([
+        { type: 'function', name: 'ping', strict: true, max_uses: 2 },
+      ] as unknown as AttributeValue);
+      expect(tools![0].metadata).toEqual({ strict: true, max_uses: 2 });
+    });
+
+    it('keeps non-string special fields as metadata instead of dropping them', () => {
+      const tools = parseToolDefinitions([
+        {
+          type: { kind: 'function' },
+          name: { value: 'ping' },
+          description: { text: 'Ping' },
+          parameters: {},
+        },
+      ] as unknown as AttributeValue);
+
+      expect(tools![0]).toMatchObject({
+        parameters: {},
+        metadata: {
+          type: { kind: 'function' },
+          name: { value: 'ping' },
+          description: { text: 'Ping' },
+        },
+      });
+    });
+  });
+
+  describe('OpenAI nested-function format', () => {
+    it('unwraps the nested function object and preserves the outer type field', () => {
+      const tools = parseToolDefinitions([
+        {
+          type: 'function',
+          function: {
+            name: 'get_weather',
+            description: 'Get the current weather',
+            parameters: {
+              type: 'object',
+              properties: { location: { type: 'string' } },
+              required: ['location'],
+            },
+          },
+        },
+      ]);
+      expect(tools).toHaveLength(1);
+      expect(tools![0].name).toBe('get_weather');
+      expect(tools![0].type).toBe('function');
+      expect(tools![0].description).toBe('Get the current weather');
+      expect(tools![0].parameters).toBeDefined();
+      // Ensure the raw field is not set for a recognised entry.
+      expect(tools![0].raw).toBeUndefined();
+    });
+
+    it('preserves configuration from both nested and outer OpenAI tool objects', () => {
+      const tools = parseToolDefinitions([
+        {
+          type: 'function',
+          max_uses: 2,
+          function: { name: 'get_weather', strict: true },
+        },
+      ] as unknown as AttributeValue);
+      expect(tools![0].metadata).toEqual({ max_uses: 2, strict: true });
+    });
+
+    it('keeps non-string nested special fields as metadata instead of dropping them', () => {
+      const tools = parseToolDefinitions([
+        {
+          type: { kind: 'function' },
+          function: {
+            name: { value: 'get_weather' },
+            description: { text: 'Get weather' },
+            parameters: {},
+          },
+        },
+      ] as unknown as AttributeValue);
+
+      expect(tools![0]).toMatchObject({
+        parameters: {},
+        metadata: {
+          type: { kind: 'function' },
+          name: { value: 'get_weather' },
+          description: { text: 'Get weather' },
+        },
+      });
+    });
+
+    it('preserves colliding configuration keys from both nested and outer tool objects', () => {
+      const tools = parseToolDefinitions([
+        {
+          type: 'function',
+          strict: false,
+          function: { name: 'get_weather', strict: true },
+        },
+      ] as unknown as AttributeValue);
+      expect(tools![0].metadata).toEqual({ strict: false, 'function.strict': true });
+    });
+
+    it('preserves nested configuration when its namespaced label also exists on the wrapper', () => {
+      const tools = parseToolDefinitions([
+        {
+          type: 'function',
+          strict: false,
+          'function.strict': 'wrapper value',
+          function: { name: 'get_weather', strict: true },
+        },
+      ] as unknown as AttributeValue);
+      expect(tools![0].metadata).toEqual({
+        strict: false,
+        'function.strict': 'wrapper value',
+        'function.strict (2)': true,
+      });
+    });
+
+    it('falls back to flat parsing when the nested function object has no name or parameters', () => {
+      // Degenerate case: function: {} — not a valid OpenAI tool but should not crash.
+      const tools = parseToolDefinitions([{ type: 'function', name: 'fallback', function: {} }]);
+      // The nested function has no name/parameters, so flat extraction runs and picks up the outer name.
+      expect(tools![0].name).toBe('fallback');
+    });
+  });
+
+  describe('JSON-encoded string input', () => {
+    it('parses a JSON-encoded string of the tool definitions array', () => {
+      const raw = JSON.stringify([
+        { type: 'function', name: 'get_weather', description: 'Get the weather.' },
+      ]);
+      const tools = parseToolDefinitions(raw);
+      expect(tools).toHaveLength(1);
+      expect(tools![0].name).toBe('get_weather');
+    });
+
+    it('preserves a plain non-JSON string as a raw tool entry', () => {
+      expect(parseToolDefinitions('not json at all')).toEqual([{ raw: 'not json at all' }]);
+    });
+
+    it('preserves a JSON-encoded primitive as a raw tool entry', () => {
+      expect(parseToolDefinitions('"just a string"')).toEqual([{ raw: '"just a string"' }]);
+    });
+  });
+
+  describe('single non-array-wrapped object', () => {
+    it('wraps a single tool object in an array instead of silently dropping it', () => {
+      const tools = parseToolDefinitions({ type: 'function', name: 'ping' });
+      expect(tools).toHaveLength(1);
+      expect(tools![0].name).toBe('ping');
+    });
+  });
+
+  describe('unrecognised / fallback entries', () => {
+    it('preserves empty tool-definition lists as an empty Tools section', () => {
+      expect(parseToolDefinitions([])).toEqual([]);
+      expect(parseToolDefinitions('[]')).toEqual([]);
+    });
+
+    it('stores an entry with no name or parameters under raw for a JSON view fallback', () => {
+      const entry = { something_custom: 42 };
+      const tools = parseToolDefinitions([entry]);
+      expect(tools![0].raw).toEqual(entry);
+      expect(tools![0].name).toBeUndefined();
+    });
+
+    it('stores a non-object primitive entry under raw', () => {
+      const tools = parseToolDefinitions([42]);
+      expect(tools![0].raw).toBe(42);
+    });
+
+    it('preserves a malformed definition as a raw tools section instead of claiming and dropping it', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.tool.definitions': 'not json at all' }));
+      expect(section(sections, 'tools')?.tools).toEqual([{ raw: 'not json at all' }]);
+      expect(section(sections, 'other')).toBeUndefined();
+    });
+  });
+
+  describe('absence of attribute', () => {
+    it('returns undefined when the attribute value is undefined', () => {
+      expect(parseToolDefinitions(undefined)).toBeUndefined();
+    });
+
+    it('returns undefined when the attribute value is null', () => {
+      expect(parseToolDefinitions(null as unknown as undefined)).toBeUndefined();
+    });
+  });
+
+  describe('integration with extractGenAiSections', () => {
+    it('extracts an empty tools section instead of hiding a claimed empty definition list', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.tool.definitions': [] }));
+      expect(section(sections, 'tools')?.tools).toEqual([]);
+      expect(section(sections, 'other')).toBeUndefined();
+    });
+
+    it('extracts a tools section and removes gen_ai.tool.definitions from Other GenAI Attributes', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.provider.name': 'openai',
+          'gen_ai.tool.definitions': [{ type: 'function', name: 'get_weather', description: 'Get weather.' }],
+        })
+      );
+      expect(section(sections, 'tools')?.tools).toHaveLength(1);
+      expect(section(sections, 'tools')?.tools[0].name).toBe('get_weather');
+      // Must be claimed — must not also appear in 'other'.
+      expect(section(sections, 'other')).toBeUndefined();
+    });
+
+    it('places tools after conversation and before toolCall in section order', () => {
+      const sections = extractGenAiSections(
+        attrs({
+          'gen_ai.input.messages': [{ role: 'user', parts: [{ type: 'text', content: 'Hi' }] }],
+          'gen_ai.tool.definitions': [{ type: 'function', name: 'ping' }],
+          'gen_ai.tool.name': 'ping',
+        })
+      );
+      const types = sections.map(s => s.type);
+      const convIdx = types.indexOf('conversation');
+      const toolsIdx = types.indexOf('tools');
+      const toolCallIdx = types.indexOf('toolCall');
+      expect(convIdx).toBeGreaterThanOrEqual(0);
+      expect(toolsIdx).toBeGreaterThan(convIdx);
+      expect(toolCallIdx).toBeGreaterThan(toolsIdx);
+    });
+
+    it('produces no tools section when gen_ai.tool.definitions is absent', () => {
+      const sections = extractGenAiSections(attrs({ 'gen_ai.provider.name': 'openai' }));
+      expect(section(sections, 'tools')).toBeUndefined();
+    });
   });
 });
 

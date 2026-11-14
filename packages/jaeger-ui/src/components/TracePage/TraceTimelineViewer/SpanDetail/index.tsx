@@ -4,7 +4,7 @@
 import React from 'react';
 import { Divider, Tabs } from 'antd';
 
-import { IoLinkOutline } from 'react-icons/io5';
+import { IoAlert, IoLinkOutline } from 'react-icons/io5';
 import AccordionAttributes from './AccordionAttributes';
 import AccordionEvents from './AccordionEvents';
 import AccordionLinks from './AccordionLinks';
@@ -12,9 +12,9 @@ import AccordionText from './AccordionText';
 import DetailState from './DetailState';
 import GenAITab from './GenAITab';
 import { extractGenAiSections } from './GenAITab/genAiData';
-import { formatDuration, formatDurationCompact } from '../utils';
-import CopyIcon from '../../../common/CopyIcon';
+import { formatDuration, formatDurationCompact, isErrorSpan } from '../utils';
 import LabeledList from '../../../common/LabeledList';
+import CopyIcon from '../../../common/CopyIcon';
 import { isGenAISpan } from '../../../../utils/genai';
 
 import { TNil } from '../../../../types';
@@ -70,23 +70,6 @@ export default function SpanDetail(props: SpanDetailProps) {
   const attributesLabel = useOtelTerms ? 'Attributes' : 'Tags';
   const resourceLabel = useOtelTerms ? 'Resource' : 'Process';
 
-  const overviewItems = [
-    {
-      key: 'svc',
-      label: 'Service:',
-      value: span.resource.serviceName,
-    },
-    {
-      key: 'duration',
-      label: 'Duration:',
-      value: formatDurationCompact(span.duration),
-    },
-    {
-      key: 'start',
-      label: 'Start Time:',
-      value: formatDuration(span.relativeStartTime),
-    },
-  ];
   const deepLinkCopyText = `${window.location.origin}${window.location.pathname}?uiFind=${span.spanID}`;
 
   const showGenAITab =
@@ -161,29 +144,62 @@ export default function SpanDetail(props: SpanDetailProps) {
     </div>
   );
 
-  return (
+  const overviewItems = [
+    {
+      key: 'duration',
+      label: 'Duration:',
+      value: formatDurationCompact(span.duration),
+    },
+    {
+      key: 'start',
+      label: 'Start Time:',
+      value: formatDuration(span.relativeStartTime),
+    },
+  ];
+
+  const header = (
     <div>
-      <div className="ub-flex ub-items-center">
-        <h2 className="ub-flex-auto ub-m0">{span.name}</h2>
-        <LabeledList
-          className="ub-tx-right-align"
-          dividerClassName="SpanDetail--divider"
-          items={overviewItems}
-        />
+      <div className="SpanDetail--header">
+        <h2 className="ub-m0 SpanDetail--headerTitle" title={`${span.resource.serviceName}::${span.name}`}>
+          {isErrorSpan(span) && <IoAlert className="SpanBarRow--errorIcon" role="img" aria-label="Error" />}
+          {span.resource.serviceName} <small className="SpanDetail--headerEndpointName">{span.name}</small>
+        </h2>
+        <div className="SpanDetail--overview" role="group" aria-label="Span overview">
+          <LabeledList dividerClassName="SpanDetail--divider" items={overviewItems} />
+        </div>
       </div>
       <Divider className="SpanDetail--divider ub-my1" />
-      {showGenAITab ? (
+    </div>
+  );
+
+  if (showGenAITab) {
+    return (
+      <div>
+        {header}
         <Tabs
           key={span.spanID}
           defaultActiveKey="genai"
           items={[
-            { key: 'details', label: 'Details', children: detailsContent },
-            { key: 'genai', label: 'GenAI', children: <GenAITab span={span} /> },
+            {
+              key: 'details',
+              label: 'Details',
+              children: detailsContent,
+            },
+            {
+              key: 'genai',
+              label: 'GenAI',
+              children: <GenAITab span={span} />,
+            },
           ]}
         />
-      ) : (
-        detailsContent
-      )}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {header}
+      {detailsContent}
     </div>
   );
 }

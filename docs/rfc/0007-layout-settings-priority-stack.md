@@ -1,12 +1,12 @@
 # RFC 0007: Layout Settings Priority Stack
 
-* **Status**: Draft — none of the five PRs below has landed
+* **Status**: Partially Implemented. PR 1's URL utilities are implemented in [#4759](https://github.com/jaegertracing/jaeger-ui/pull/4759); PRs 2–5 remain outstanding.
 * **Created**: 2026-05-10
-* **Last Updated**: 2026-07-28
+* **Last Updated**: 2026-11-12
 
 > Originally filed as ADR-0010. It is a proposal, and an unimplemented one, so it now lives here; [ADR-0010](../adr/0010-layout-settings-priority-stack.md) is a pointer at this document.
 
-**Where this stands.** On `main` there is no `useLayoutSettings`, no `parseSettingsFromUrl`, and no heuristic layer; `TraceViewSettings` is still an antd `Dropdown`, and components read layout settings straight from `useLayoutPrefsStore`, whose every setter calls `localStorage.setItem` unconditionally — so the preference corruption described under Context is still live. Two of the five PRs are open for review: [#3852](https://github.com/jaegertracing/jaeger-ui/pull/3852) (PR 1, URL utilities) and [#3853](https://github.com/jaegertracing/jaeger-ui/pull/3853) (PR 2, `persist` flag).
+**Where this stands.** [#4759](https://github.com/jaegertracing/jaeger-ui/pull/4759) implements PR 1's layout URL utilities, adapting closed, unmerged [#3852](https://github.com/jaegertracing/jaeger-ui/pull/3852). The helpers parse and serialize layout settings, remove all overrides or only one, and include settings in trace links. They do not yet apply URL settings to the view. [#4112](https://github.com/jaegertracing/jaeger-ui/pull/4112) has migrated `useLayoutPrefsStore` to Zustand's `persist` middleware with the `jaeger.layout` storage key. PR 2's persistence control remains outstanding; its earlier PR [#3853](https://github.com/jaegertracing/jaeger-ui/pull/3853) closed without merging. There is no `useLayoutSettings` or heuristic layer, and `TraceViewSettings` remains an antd `Dropdown`. The remaining work must prevent URL-driven updates from overwriting saved preferences.
 
 PR 2 overlaps with [#3981](https://github.com/jaegertracing/jaeger-ui/issues/3981) / [#4112](https://github.com/jaegertracing/jaeger-ui/pull/4112), which move `store.layout.ts` onto Zustand's `persist` middleware. Sequence the middleware migration first: the `persist` flag PR 2 needs is a property of whatever persistence mechanism the store ends up with, and adding it to the manual `localStorage.setItem` calls only to move them again is wasted work — so #3853 should be rebased on top of #4112 rather than the reverse.
 
@@ -77,6 +77,8 @@ The settings panel indicates when a value is being overridden by a higher-priori
 The implementation is delivered in five independent PRs. PRs 1, 2, and 3 have no dependencies on each other and can be reviewed in parallel.
 
 ### PR 1 — URL utilities (`url/index.ts`)
+
+Implemented in [#4759](https://github.com/jaegertracing/jaeger-ui/pull/4759). The original sketch names below are retained. The implementation uses `parseLayoutSettingsFromUrl` for `parseSettingsFromUrl` and `stringifyLayoutSettings` for `stringifySettings`. Instead of `rebaseSettings`, it provides `stripLayoutSettings` to remove all layout overrides and `stripLayoutSettingParam` to remove only the acted-on setting's override, preserving the other override and unrelated parameters. `getUrl` and `getTracePageLink` accept an optional layout-settings argument.
 
 Pure functions with no React dependency:
 

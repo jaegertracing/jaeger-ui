@@ -3,11 +3,12 @@
 
 import React from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 
 import GenAITab from '.';
 import { useMessageFormatStore } from './message-format-store';
-import type { IAttribute } from '../../../../../types/otel';
+import type { IAttribute, AttributeValue } from '../../../../../types/otel';
 import { makeAttributes } from '../../../../../model/attributes';
 import { classifySpan } from '../../../../../utils/genai/detect';
 import { makeOtelSpan } from '../../../../../utils/test/makeOtelSpan';
@@ -732,7 +733,7 @@ describe('GenAITab', () => {
   });
 
   it('renders a tool call with arguments and result together', () => {
-    render(
+    const { container } = render(
       <GenAITab
         span={makeSpan([
           { key: 'gen_ai.tool.name', value: 'get_weather' },
@@ -741,9 +742,29 @@ describe('GenAITab', () => {
         ])}
       />
     );
-    expect(screen.getByText('Tool Call: get_weather')).toBeInTheDocument();
+    const header = screen.getByText('Tool Call: get_weather').closest('[role="switch"]');
+    expect(header).toHaveAttribute('aria-checked', 'true');
     expect(screen.getByText('Arguments')).toBeInTheDocument();
     expect(screen.getByText('Result')).toBeInTheDocument();
+
+    fireEvent.click(header!);
+    expect(header).toHaveAttribute('aria-checked', 'false');
+    expect(container.querySelector('.KeyValueTable')).not.toBeInTheDocument();
+  });
+
+  it('serializes object-valued tool call data before rendering the attribute table', () => {
+    const { container } = render(
+      <GenAITab
+        span={makeSpan([
+          { key: 'gen_ai.tool.call.arguments', value: { toString: 'literal' } },
+          { key: 'gen_ai.tool.call.result', value: { toString: 'literal' } },
+        ])}
+      />
+    );
+
+    const jsonKeys = [...container.querySelectorAll('.json-markup-key')];
+    expect(jsonKeys).toHaveLength(2);
+    expect(jsonKeys.every(key => key.textContent === 'toString:')).toBe(true);
   });
 
   it('renders the tool call ID when present', () => {
@@ -775,6 +796,206 @@ describe('GenAITab', () => {
       />
     );
     expect(screen.getByText('not valid json')).toBeInTheDocument();
+  });
+
+  it('renders a Retrieved documents section with its meta fields and one card per document (#4434)', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          { key: 'gen_ai.operation.name', value: 'retrieval' },
+          { key: 'gen_ai.data_source.id', value: 'weather-knowledge-base' },
+          { key: 'gen_ai.retrieval.query.text', value: 'What is the weather in Seattle?' },
+          { key: 'gen_ai.retrieval.top_k', value: 3 },
+          {
+            key: 'gen_ai.retrieval.documents',
+            value: JSON.stringify([
+              { content: 'Seattle weather is rainy and cool.', source_id: 'weather-knowledge-base' },
+            ]),
+          },
+        ])}
+      />
+    );
+    expect(screen.getByText('Retrieved documents')).toBeInTheDocument();
+    expect(screen.getByText('What is the weather in Seattle?')).toBeInTheDocument();
+    // "weather-knowledge-base" appears twice: as the data source and again as the
+    // document's own source_id, which must still surface even though it duplicates it.
+    expect(screen.getAllByText('weather-knowledge-base')).toHaveLength(2);
+    expect(screen.getByText('3')).toBeInTheDocument();
+    expect(screen.getByText('Document 1')).toBeInTheDocument();
+    expect(screen.getByText('Seattle weather is rainy and cool.')).toBeInTheDocument();
+    // source_id isn't a field the renderer fixes in advance - it must still surface.
+    expect(screen.getByText('source_id')).toBeInTheDocument();
+  });
+
+  it('does not hide retrieval documents behind Other GenAI Attributes (#4434)', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          { key: 'gen_ai.retrieval.documents', value: [{ content: 'doc one' }, { content: 'doc two' }] },
+        ])}
+      />
+    );
+    expect(screen.getByText('Document 1')).toBeInTheDocument();
+    expect(screen.getByText('doc one')).toBeInTheDocument();
+    expect(screen.getByText('Document 2')).toBeInTheDocument();
+    expect(screen.getByText('doc two')).toBeInTheDocument();
+    expect(screen.queryByText('Other GenAI Attributes')).not.toBeInTheDocument();
+  });
+
+  it('renders a document field that is explicitly null instead of crashing (#4437)', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.retrieval.documents',
+            value: JSON.stringify([{ content: 'doc one', score: null }]),
+          },
+        ])}
+      />
+    );
+    expect(screen.getByText('doc one')).toBeInTheDocument();
+    expect(screen.getByText('score')).toBeInTheDocument();
+    expect(screen.getByText('null')).toBeInTheDocument();
+  });
+
+  it('renders a Retrieved documents section for an explicitly empty documents array (#4437)', () => {
+    render(<GenAITab span={makeSpan([{ key: 'gen_ai.retrieval.documents', value: [] }])} />);
+    expect(screen.getByText('Retrieved documents')).toBeInTheDocument();
+    expect(screen.getByText('No documents returned.')).toBeInTheDocument();
+    expect(screen.queryByText('Other GenAI Attributes')).not.toBeInTheDocument();
+  });
+
+  it('renders a Memory section for an explicitly empty records array (#4437)', () => {
+    render(<GenAITab span={makeSpan([{ key: 'gen_ai.memory.records', value: [] }])} />);
+    expect(screen.getByText('Memory')).toBeInTheDocument();
+    expect(screen.getByText('No records returned.')).toBeInTheDocument();
+    expect(screen.queryByText('Other GenAI Attributes')).not.toBeInTheDocument();
+  });
+
+  it('does not claim no documents were returned for a query-only retrieval span', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          { key: 'gen_ai.retrieval.query.text', value: 'find docs' },
+          { key: 'gen_ai.retrieval.top_k', value: 3 },
+        ])}
+      />
+    );
+    expect(screen.getByText('Retrieved documents')).toBeInTheDocument();
+    expect(screen.getByText('find docs')).toBeInTheDocument();
+    expect(screen.queryByText('No documents returned.')).not.toBeInTheDocument();
+  });
+
+  it('does not claim no records were returned for a count-only memory span', () => {
+    render(<GenAITab span={makeSpan([{ key: 'gen_ai.memory.record.count', value: 3 }])} />);
+    expect(screen.getByText('Memory')).toBeInTheDocument();
+    expect(screen.getByText('Record count')).toBeInTheDocument();
+    expect(screen.queryByText('No records returned.')).not.toBeInTheDocument();
+  });
+
+  it('does not render the text "null" for a record whose content is null', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          { key: 'gen_ai.memory.records', value: JSON.stringify([{ content: null, id: 'r1' }]) },
+        ])}
+      />
+    );
+    expect(screen.getByText('Record 1')).toBeInTheDocument();
+    expect(screen.getByText('r1')).toBeInTheDocument();
+    expect(screen.queryByText('null')).not.toBeInTheDocument();
+  });
+
+  it('renders object- and array-valued entry fields as JSON instead of breaking the table', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          {
+            key: 'gen_ai.retrieval.documents',
+            value: JSON.stringify([
+              {
+                content: 'doc one',
+                metadata: { author: 'user', page: 3 },
+                'http.request.header.x-trace': [{ a: 1 }],
+              },
+            ]),
+          },
+        ])}
+      />
+    );
+    expect(screen.getByText('doc one')).toBeInTheDocument();
+    expect(screen.getByText('metadata')).toBeInTheDocument();
+    expect(screen.getByText('http.request.header.x-trace')).toBeInTheDocument();
+    expect(screen.queryByText('[object Object]')).not.toBeInTheDocument();
+  });
+
+  it('does not show a Retrieved documents section for an agent span with only a data source', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          { key: 'gen_ai.operation.name', value: 'invoke_agent' },
+          { key: 'gen_ai.data_source.id', value: 'kb-1' },
+        ])}
+      />
+    );
+    expect(screen.queryByText('Retrieved documents')).not.toBeInTheDocument();
+    expect(screen.getByText(/Other GenAI Attributes/)).toBeInTheDocument();
+  });
+
+  it('does not show the empty line once there is at least one document or record', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          { key: 'gen_ai.retrieval.documents', value: [{ content: 'doc one' }] },
+          { key: 'gen_ai.memory.records', value: [{ content: 'record one' }] },
+        ])}
+      />
+    );
+    expect(screen.queryByText('No documents returned.')).not.toBeInTheDocument();
+    expect(screen.queryByText('No records returned.')).not.toBeInTheDocument();
+  });
+
+  it('renders a memory record whose id is null without crashing', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          { key: 'gen_ai.memory.records', value: JSON.stringify([{ content: 'r', id: null }]) },
+        ])}
+      />
+    );
+    expect(screen.getByText('Record 1')).toBeInTheDocument();
+    expect(screen.getByText('id')).toBeInTheDocument();
+    expect(screen.getByText('null')).toBeInTheDocument();
+  });
+
+  it('renders a Memory section with its meta fields and one card per record (#4434)', () => {
+    render(
+      <GenAITab
+        span={makeSpan([
+          { key: 'gen_ai.operation.name', value: 'search_memory' },
+          { key: 'gen_ai.memory.store.id', value: 'memory-store-1' },
+          { key: 'gen_ai.memory.query.text', value: "What are the user's food preferences?" },
+          { key: 'gen_ai.memory.record.count', value: 1 },
+          {
+            key: 'gen_ai.memory.records',
+            value: JSON.stringify([
+              {
+                content: 'User prefers vegetarian meals and dark mode.',
+                id: '90f1f094',
+                metadata: { author: 'user' },
+              },
+            ]),
+          },
+        ])}
+      />
+    );
+    expect(screen.getByText('Memory')).toBeInTheDocument();
+    expect(screen.getByText('memory-store-1')).toBeInTheDocument();
+    expect(screen.getByText("What are the user's food preferences?")).toBeInTheDocument();
+    expect(screen.getByText('Record 1')).toBeInTheDocument();
+    expect(screen.getByText('User prefers vegetarian meals and dark mode.')).toBeInTheDocument();
+    // metadata isn't a field the renderer fixes in advance - it must still surface.
+    expect(screen.getByText('metadata')).toBeInTheDocument();
   });
 
   it('shows an empty state when the span has no gen_ai attributes', () => {
@@ -809,6 +1030,494 @@ describe('GenAITab', () => {
       'aria-checked',
       'true'
     );
+  });
+
+  describe('ToolsSection', () => {
+    it('renders a Tools section and sub-table for a flat OTel FunctionToolDefinition', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [{ type: 'function', name: 'get_weather', description: 'Get the current weather.' }],
+            },
+          ])}
+        />
+      );
+      expect(screen.getByText('Tools')).toBeInTheDocument();
+      expect(screen.getByText('get_weather')).toBeInTheDocument();
+      expect(screen.getByText('Type')).toBeInTheDocument();
+      expect(screen.getByText('function')).toBeInTheDocument();
+      expect(screen.getByText('Description')).toBeInTheDocument();
+      expect(screen.getByText('Get the current weather.')).toBeInTheDocument();
+    });
+
+    it('renders parameter metadata in a structured table', () => {
+      const { container } = render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [
+                {
+                  type: 'function',
+                  name: 'get_weather',
+                  parameters: {
+                    type: 'object',
+                    properties: {
+                      location: { type: 'string', description: 'City to look up' },
+                      unit: { type: 'string', enum: ['celsius', 'fahrenheit'] },
+                    },
+                    required: ['location'],
+                  },
+                },
+              ],
+            },
+          ])}
+        />
+      );
+      const parameterTable = container.querySelector<HTMLTableElement>('.GenAITab--paramTable');
+      expect(parameterTable).toBeInTheDocument();
+      expect(parameterTable).toHaveAccessibleName('Parameters for get_weather');
+      expect(within(parameterTable!).getByRole('columnheader', { name: 'Parameter' })).toBeInTheDocument();
+      expect(within(parameterTable!).getByRole('columnheader', { name: 'Type' })).toBeInTheDocument();
+      expect(within(parameterTable!).getByRole('columnheader', { name: 'Required' })).toBeInTheDocument();
+      expect(within(parameterTable!).getByRole('columnheader', { name: 'Description' })).toBeInTheDocument();
+      expect(screen.getByText('location')).toBeInTheDocument();
+      expect(screen.getByText('City to look up')).toBeInTheDocument();
+      expect(screen.getByText('Yes')).toBeInTheDocument();
+      expect(screen.getByText('No')).toBeInTheDocument();
+      expect(screen.getByText('celsius, fahrenheit')).toBeInTheDocument();
+      expect(screen.getByText('Full schema').closest('details')).not.toHaveAttribute('open');
+    });
+
+    it('falls back to JSON instead of indexing array-valued schema properties as parameter rows', () => {
+      const { container } = render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [
+                { name: 'configure', parameters: { type: 'object', properties: [{ type: 'string' }] } },
+              ],
+            },
+          ])}
+        />
+      );
+
+      expect(container.querySelector('.GenAITab--paramTable')).not.toBeInTheDocument();
+      expect(container.querySelector('.GenAITab--json')).toBeInTheDocument();
+    });
+
+    it('serializes non-string enum values without losing their values or crashing', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [
+                {
+                  name: 'configure',
+                  parameters: {
+                    type: 'object',
+                    properties: {
+                      value: { enum: [null, { toString: 'literal' }, true, 7] },
+                    },
+                  },
+                },
+              ] as unknown as AttributeValue,
+            },
+          ])}
+        />
+      );
+
+      expect(screen.getByText('null, {"toString":"literal"}, true, 7')).toBeInTheDocument();
+    });
+
+    it('handles enum members that fail JSON serialization without crashing', () => {
+      const unserializable = {
+        toJSON: () => {
+          throw new Error('cannot serialize');
+        },
+      };
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [
+                {
+                  name: 'configure',
+                  parameters: { type: 'object', properties: { value: { enum: [unserializable] } } },
+                },
+              ] as unknown as AttributeValue,
+            },
+          ])}
+        />
+      );
+
+      expect(screen.getByText('[unserializable]')).toBeInTheDocument();
+    });
+
+    it('keeps an inspectable full schema beside the structured parameter table without mounting it eagerly', async () => {
+      const user = userEvent.setup();
+      const { container } = render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [
+                {
+                  name: 'search',
+                  parameters: {
+                    type: 'object',
+                    properties: {
+                      filter: {
+                        anyOf: [{ $ref: '#/$defs/tag' }, { type: 'array', items: { type: 'string' } }],
+                      },
+                    },
+                    required: ['filter'],
+                  },
+                },
+              ],
+            },
+          ])}
+        />
+      );
+
+      const fullSchema = screen.getByText('Full schema').closest('details');
+      expect(fullSchema).not.toHaveAttribute('open');
+      expect(fullSchema?.querySelector('.GenAITab--json')).not.toBeInTheDocument();
+      expect(container.querySelector('.GenAITab--paramTable')).toBeInTheDocument();
+
+      await user.click(screen.getByText('Full schema'));
+
+      expect(fullSchema).toHaveAttribute('open');
+      expect(fullSchema?.querySelector('.GenAITab--json .json-markup-key')?.textContent).toContain('type');
+    });
+
+    it('renders recognised tool configuration fields instead of dropping them', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [{ type: 'function', name: 'search', strict: true, max_uses: 2 }],
+            },
+          ])}
+        />
+      );
+
+      expect(screen.getByText('strict')).toBeInTheDocument();
+      expect(screen.getByText('max_uses')).toBeInTheDocument();
+      expect(screen.getByText('true')).toBeInTheDocument();
+      expect(screen.getByText('2')).toBeInTheDocument();
+    });
+
+    it('safely renders JSON-encoded object-valued metadata and raw fields', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: JSON.stringify([
+                { name: 'configure', custom: { toString: 'literal' } },
+                { shape: { toString: 'literal' } },
+              ]),
+            },
+          ])}
+        />
+      );
+
+      expect(screen.getByText('custom')).toBeInTheDocument();
+      expect(screen.getByText('shape')).toBeInTheDocument();
+    });
+
+    it('shows a safe placeholder when object-valued metadata cannot be serialized', () => {
+      const unserializable = {
+        toJSON: () => {
+          throw new Error('cannot serialize');
+        },
+      };
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [{ name: 'configure', custom: unserializable }] as unknown as AttributeValue,
+            },
+          ])}
+        />
+      );
+
+      expect(screen.getByText('[unserializable]')).toBeInTheDocument();
+    });
+
+    it('renders colliding nested and outer configuration fields without dropping either one', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [
+                {
+                  type: 'function',
+                  strict: false,
+                  function: { name: 'search', strict: true },
+                },
+              ],
+            },
+          ])}
+        />
+      );
+
+      expect(screen.getByText('strict')).toBeInTheDocument();
+      expect(screen.getByText('function.strict')).toBeInTheDocument();
+      expect(screen.getByText('false')).toBeInTheDocument();
+      expect(screen.getByText('true')).toBeInTheDocument();
+    });
+
+    it('renders tool name and parameters for the OpenAI nested-function format', () => {
+      const { container } = render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [
+                {
+                  type: 'function',
+                  function: {
+                    name: 'get_weather',
+                    description: 'Get the current weather',
+                    parameters: { type: 'object', properties: { location: { type: 'string' } } },
+                  },
+                },
+              ],
+            },
+          ])}
+        />
+      );
+      expect(screen.getByText('get_weather')).toBeInTheDocument();
+      expect(screen.getByText('Get the current weather')).toBeInTheDocument();
+      expect(container.querySelector('.GenAITab--paramTableContainer')).toBeInTheDocument();
+    });
+
+    it('renders a tool with no Type row when the type field is absent', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [{ name: 'get_weather', description: 'Get weather.', parameters: { type: 'OBJECT' } }],
+            },
+          ])}
+        />
+      );
+      expect(screen.getByText('get_weather')).toBeInTheDocument();
+      expect(screen.queryByText('Type')).not.toBeInTheDocument();
+    });
+
+    it('renders Google ADK uppercase OBJECT parameters as a structured table', () => {
+      const { container } = render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [
+                {
+                  name: 'get_weather',
+                  parameters: {
+                    type: 'OBJECT',
+                    properties: { location: { type: 'STRING' } },
+                  },
+                },
+              ],
+            },
+          ])}
+        />
+      );
+      expect(container.querySelector('.GenAITab--paramTable')).toBeInTheDocument();
+      expect(screen.getByText('location')).toBeInTheDocument();
+    });
+
+    it('renders multiple tools as separate sub-tables', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [
+                { type: 'function', name: 'get_weather' },
+                { type: 'function', name: 'send_email' },
+              ],
+            },
+          ])}
+        />
+      );
+      expect(screen.getByText('get_weather')).toBeInTheDocument();
+      expect(screen.getByText('send_email')).toBeInTheDocument();
+    });
+
+    it('renders an unrecognised tool entry as key/value rows without a made-up name', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [{ something_custom: 'opaque_value' }],
+            },
+          ])}
+        />
+      );
+      expect(screen.getByText('something_custom')).toBeInTheDocument();
+      expect(screen.getByText('opaque_value')).toBeInTheDocument();
+      expect(screen.queryByText('Tool', { exact: true })).not.toBeInTheDocument();
+    });
+
+    it('keeps an empty raw object inspectable instead of rendering a blank card', () => {
+      render(
+        <GenAITab span={makeSpan([{ key: 'gen_ai.tool.definitions', value: [{}] as AttributeValue }])} />
+      );
+
+      expect(screen.getByText('Value')).toBeInTheDocument();
+      expect(screen.queryByText('Tool', { exact: true })).not.toBeInTheDocument();
+    });
+
+    it('renders null raw entries without crashing', () => {
+      render(
+        <GenAITab
+          span={makeSpan([{ key: 'gen_ai.tool.definitions', value: [null] as unknown as AttributeValue }])}
+        />
+      );
+      expect(screen.getByText('Value')).toBeInTheDocument();
+      expect(screen.getByText('null')).toBeInTheDocument();
+      expect(screen.queryByText('Tool', { exact: true })).not.toBeInTheDocument();
+    });
+
+    it('lists unnamed tools as Tool in the collapsed summary and supports keyboard toggling', async () => {
+      const user = userEvent.setup();
+      const getSelection = vi
+        .spyOn(window, 'getSelection')
+        .mockReturnValue({ isCollapsed: false, toString: () => 'selected tool name' } as Selection);
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [{ name: 'get_weather' }, { something_custom: 'opaque_value' }],
+            },
+          ])}
+        />
+      );
+      const toggle = screen.getByRole('button', { name: 'Tools' });
+      toggle.focus();
+      await user.keyboard('{Enter}');
+
+      expect(toggle).toHaveAttribute('aria-expanded', 'false');
+      expect(screen.getByText('get_weather, Tool')).toBeInTheDocument();
+      getSelection.mockRestore();
+    });
+
+    it('toggles when text is selected elsewhere on the page', async () => {
+      const user = userEvent.setup();
+      const getSelection = vi
+        .spyOn(window, 'getSelection')
+        .mockReturnValue({ isCollapsed: false, toString: () => 'selected description' } as Selection);
+      render(
+        <GenAITab span={makeSpan([{ key: 'gen_ai.tool.definitions', value: [{ name: 'get_weather' }] }])} />
+      );
+
+      const toggle = screen.getByRole('button', { name: 'Tools' });
+      await user.click(toggle);
+
+      expect(toggle).toHaveAttribute('aria-expanded', 'false');
+      getSelection.mockRestore();
+    });
+
+    it('shows a useful empty Tools state both open and collapsed', async () => {
+      const user = userEvent.setup();
+      render(<GenAITab span={makeSpan([{ key: 'gen_ai.tool.definitions', value: [] }])} />);
+
+      const toggle = screen.getByRole('button', { name: 'Tools' });
+      expect(toggle).toHaveAttribute('aria-expanded', 'true');
+      expect(screen.getByText('No tools defined.')).toBeInTheDocument();
+      expect(screen.queryByText('No GenAI-specific attributes found on this span.')).not.toBeInTheDocument();
+
+      await user.click(toggle);
+
+      expect(screen.getByText('No tools defined', { exact: true })).toBeInTheDocument();
+    });
+
+    it('bounds a long collapsed summary instead of building an oversized text node', async () => {
+      const user = userEvent.setup();
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [{ name: 'x'.repeat(201) }, { name: 'short_name' }],
+            },
+          ])}
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Tools' }));
+
+      expect(screen.getByText('2 tools')).toBeInTheDocument();
+    });
+
+    it('renders malformed tool definitions as raw values instead of hiding them', () => {
+      render(<GenAITab span={makeSpan([{ key: 'gen_ai.tool.definitions', value: 'not json at all' }])} />);
+
+      expect(screen.getByText('Value')).toBeInTheDocument();
+      expect(screen.getByText('not json at all')).toBeInTheDocument();
+    });
+
+    it('does not show gen_ai.tool.definitions in Other GenAI Attributes, proving it is claimed', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [{ type: 'function', name: 'ping' }],
+            },
+          ])}
+        />
+      );
+      expect(
+        screen.queryByText((_, element) => element?.textContent === 'Other GenAI Attributes:')
+      ).not.toBeInTheDocument();
+    });
+
+    it('renders a JSON-encoded string value of gen_ai.tool.definitions by parsing it first', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: JSON.stringify([{ type: 'function', name: 'get_weather', description: 'Get weather.' }]),
+            },
+          ])}
+        />
+      );
+      expect(screen.getByText('get_weather')).toBeInTheDocument();
+    });
+
+    it('keeps a null description as metadata rather than dropping it', () => {
+      render(
+        <GenAITab
+          span={makeSpan([
+            {
+              key: 'gen_ai.tool.definitions',
+              value: [{ type: 'function', name: 'ping', description: null }] as unknown as AttributeValue,
+            },
+          ])}
+        />
+      );
+      expect(screen.queryByText('Description')).not.toBeInTheDocument();
+      expect(screen.getByText('description')).toBeInTheDocument();
+      expect(screen.getByText('null')).toBeInTheDocument();
+    });
   });
 });
 

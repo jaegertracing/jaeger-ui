@@ -957,7 +957,7 @@ type IArchiveState = {
 
 This is the **largest and most performance-sensitive** slice. Split across multiple PRs.
 
-**New Zustand store** — delivered as *two* stores rather than the single one sketched below, split by lifetime and both re-exported from `TraceTimelineViewer/store.ts`: `useLayoutPrefsStore` (`store.layout.ts`) holds the persisted layout fields, `useTraceTimelineStore` (`store.timeline.ts`) holds the per-trace interaction fields, so a trace change can reset the latter without touching the former. `prunedServices` was added to the timeline store later by [ADR-0009](../adr/0009-service-filter-trace-timeline.md). The single-store shape as originally proposed:
+**New Zustand store** — delivered as *two* stores rather than the single one sketched below, split by lifetime and both re-exported from `TraceTimelineViewer/store.ts`: `useLayoutPrefsStore` (`store.layout.ts`) holds the persisted layout fields, `useTraceTimelineStore` (`store.timeline.ts`) holds the per-trace interaction fields, so a trace change can reset the latter without touching the former. `prunedServices` was added to the timeline store later by [ADR-0009](../adr/0009-service-filter-trace-timeline.md) and replaced by `spanFilter` in [RFC 0009](0009-trace-span-search-and-filter.md). The single-store shape as originally proposed:
 
 | Field | Type | Description | Persisted to |
 | :--- | :--- | :--- | :--- |
