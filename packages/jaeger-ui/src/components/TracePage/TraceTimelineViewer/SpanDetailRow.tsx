@@ -39,6 +39,13 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
     props.onDetailToggled(props.span.spanID);
   };
 
+  const _detailToggleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      _detailToggle();
+    }
+  };
+
   const {
     color,
     nameColumnWidth,
@@ -71,8 +78,10 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
               aria-expanded="true"
               aria-label="Span details"
               onClick={_detailToggle}
+              onKeyDown={_detailToggleKeyDown}
               role="button"
               style={{ borderColor: color }}
+              tabIndex={0}
             />
           </span>
         </TimelineRow.Cell>

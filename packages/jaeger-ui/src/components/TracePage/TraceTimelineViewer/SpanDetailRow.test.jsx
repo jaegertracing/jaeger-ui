@@ -85,6 +85,27 @@ describe('<SpanDetailRow>', () => {
     expect(props.onDetailToggled).toHaveBeenCalledWith(props.span.spanID);
   });
 
+  it.each([
+    ['Enter', '{Enter}'],
+    ['Space', ' '],
+  ])('calls onDetailToggled when %s is pressed on the focused accent', async (_name, key) => {
+    const user = userEvent.setup();
+    render(<SpanDetailRow {...props} />);
+    await user.tab();
+    expect(screen.getByRole('button', { name: 'Span details' })).toHaveFocus();
+    await user.keyboard(key);
+    expect(props.onDetailToggled).toHaveBeenCalledTimes(1);
+    expect(props.onDetailToggled).toHaveBeenCalledWith(props.span.spanID);
+  });
+
+  it('does not call onDetailToggled for other keys on the accent', async () => {
+    const user = userEvent.setup();
+    render(<SpanDetailRow {...props} />);
+    screen.getByRole('button', { name: 'Span details' }).focus();
+    await user.keyboard('a');
+    expect(props.onDetailToggled).not.toHaveBeenCalled();
+  });
+
   it('renders the span tree offset with isDetailRow=true', () => {
     render(<SpanDetailRow {...props} />);
     expect(MockSpanTreeOffset).toHaveBeenCalledTimes(1);
