@@ -439,7 +439,14 @@ describe('JaegerClient', () => {
       const configSpy = vi.spyOn(window, 'getJaegerUiConfig').mockReturnValue({
         qualityMetrics: { menuEnabled: true },
       });
-      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ scores: [], metrics: [] }) });
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          traceQualityDocumentationLink: 'https://example.com/docs',
+          scores: [],
+          metrics: [],
+        }),
+      });
       vi.resetModules();
 
       try {
@@ -477,14 +484,37 @@ describe('JaegerClient', () => {
     });
 
     it('GETs the configured endpoint with the encoded service and lookback hours', async () => {
-      const data = { scores: [], metrics: [], extra: 'retained' };
+      const data = {
+        traceQualityDocumentationLink: 'https://example.com/docs',
+        scores: [],
+        metrics: [],
+        extra: 'retained',
+      };
       mockFetch.mockResolvedValue({ ok: true, json: async () => data });
 
-      await expect(client.fetchQualityMetrics('frontend /?&=+#', 48)).resolves.toBe(data);
+      await expect(client.fetchQualityMetrics('frontend /?&=+#', 48)).resolves.toEqual(data);
       expect(mockFetch).toHaveBeenCalledWith(
         '/api/quality-metrics?hours=48&service=frontend%20%2F%3F%26%3D%2B%23',
         { signal: undefined }
       );
+    });
+
+    it('validates response with QualityMetricsSchema and rejects invalid payload while retaining response body for ErrorMessage', async () => {
+      const invalidData = {
+        scores: 'invalid-scores-not-array',
+      };
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => invalidData,
+      });
+
+      const promise = client.fetchQualityMetrics('frontend', 48);
+      await expect(promise).rejects.toThrow(ZodError);
+      await expect(promise).rejects.toMatchObject({
+        httpBody: JSON.stringify(invalidData, null, 2),
+        httpUrl: '/api/quality-metrics',
+        httpQuery: 'hours=48&service=frontend',
+      });
     });
 
     it('preserves HTTP error details for ErrorMessage', async () => {
@@ -504,7 +534,7 @@ describe('JaegerClient', () => {
     });
 
     it('allows successful headers and bodies to arrive after the default transport deadline', async () => {
-      const data = { scores: [], metrics: [] };
+      const data = { traceQualityDocumentationLink: 'https://example.com/docs', scores: [], metrics: [] };
       mockFetch.mockImplementation(
         () =>
           new Promise(resolve => {
@@ -519,7 +549,7 @@ describe('JaegerClient', () => {
       const promise = client.fetchQualityMetrics('frontend', 48);
       await vi.advanceTimersByTimeAsync(22000);
 
-      await expect(promise).resolves.toBe(data);
+      await expect(promise).resolves.toEqual(data);
       expect(vi.getTimerCount()).toBe(0);
     });
 
@@ -1507,7 +1537,14 @@ describe('JaegerClient with non-default base path', () => {
   });
 
   it('reads the quality-metrics endpoint from config under the deployment base path', async () => {
-    mockFetch.mockResolvedValue({ ok: true, json: async () => ({}) });
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        traceQualityDocumentationLink: 'https://example.com/docs',
+        scores: [],
+        metrics: [],
+      }),
+    });
     vi.resetModules();
     vi.doMock('../../site-prefix', () => ({ default: `${global.location.origin}/jaeger/` }));
     vi.doMock('../../utils/config/get-config', () => ({
