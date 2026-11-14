@@ -685,4 +685,42 @@ describe('QualityMetricsSchema', () => {
     expect(parsed.metrics[0].details?.[0].rows).toEqual([]);
     expect(parsed.clients?.[0].examples).toEqual([]);
   });
+
+  it('rejects missing detail columns and rows and missing client examples', () => {
+    const metric = {
+      name: 'm1',
+      category: 's1',
+      description: 'd1',
+      metricDocumentationLink: 'https://example.com',
+      metricWeight: 1,
+      passCount: 1,
+      failureCount: 0,
+    };
+    const base = {
+      traceQualityDocumentationLink: 'https://example.com/docs',
+      scores: [],
+    };
+
+    expect(() =>
+      QualityMetricsSchema.parse({
+        ...base,
+        metrics: [{ ...metric, details: [{ rows: [] }] }],
+      })
+    ).toThrow(z.ZodError);
+
+    expect(() =>
+      QualityMetricsSchema.parse({
+        ...base,
+        metrics: [{ ...metric, details: [{ columns: [] }] }],
+      })
+    ).toThrow(z.ZodError);
+
+    expect(() =>
+      QualityMetricsSchema.parse({
+        ...base,
+        metrics: [metric],
+        clients: [{ version: '1.0.0', minVersion: '0.9.0', count: 1 }],
+      })
+    ).toThrow(z.ZodError);
+  });
 });

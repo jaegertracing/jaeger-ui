@@ -396,10 +396,11 @@ const nullToUndefined = <T extends z.ZodTypeAny>(schema: T) =>
   z.preprocess(val => (val === null ? undefined : val), schema.optional());
 
 // Client.Examples, Detail.Columns and Detail.Rows are plain Go slices without
-// omitempty, so they serialize as null when unset. Default them to the empty
-// arrays the components already render.
+// omitempty, so they serialize as null when unset. Normalize only that null to
+// the empty arrays the components already render; an omitted field stays
+// undefined and is rejected as a missing required field.
 const nullToEmptyArray = <T extends z.ZodTypeAny>(schema: z.ZodArray<T>) =>
-  z.preprocess(val => (val === null ? undefined : val), schema.default([]));
+  z.preprocess(val => (val === null ? [] : val), schema);
 
 const qualityMetricsExample = z
   .object({
