@@ -6,6 +6,7 @@ import { render, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import SpanTreeOffset from './SpanTreeOffset';
+import { useTraceTimelineStore } from './store';
 
 describe('SpanTreeOffset', () => {
   const ownSpanID = 'ownSpanID';
@@ -283,6 +284,26 @@ describe('SpanTreeOffset', () => {
       };
       const { container } = render(<SpanTreeOffset {...props} tree={tree} />);
       expect(container.querySelector('.SpanTreeOffset--box')).toHaveTextContent('3');
+    });
+  });
+
+  describe('focusedSubtreeSpanID support', () => {
+    beforeEach(() => {
+      useTraceTimelineStore.setState({ focusedSubtreeSpanID: null });
+    });
+
+    it('returns empty ancestor chain when focusedSubtreeSpanID matches current span ID', () => {
+      useTraceTimelineStore.setState({ focusedSubtreeSpanID: ownSpanID });
+      const { container } = render(<SpanTreeOffset {...props} span={ownSpan} />);
+      const indentGuides = container.querySelectorAll('.SpanTreeOffset--indentGuide');
+      expect(indentGuides.length).toBe(0);
+    });
+
+    it('stops ancestor traversal at focusedSubtreeSpanID when it matches a parent span', () => {
+      useTraceTimelineStore.setState({ focusedSubtreeSpanID: parentSpanID });
+      const { container } = render(<SpanTreeOffset {...props} span={ownSpan} />);
+      const indentGuides = container.querySelectorAll('.SpanTreeOffset--indentGuide');
+      expect(indentGuides.length).toBe(1);
     });
   });
 });

@@ -34,6 +34,7 @@ import { useConfig } from '../../hooks/useConfig';
 import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import { useSpanFilter } from './TraceTimelineViewer/useServiceFilter';
+import { filterMatchesBySubtree, focusedSpanIDs } from './TraceTimelineViewer/timeline-utils';
 import { trackDetailPanelMode, trackTimelineBarsVisible } from './TraceTimelineViewer/store.track';
 import {
   TUpdateViewRangeTimeFunction,
@@ -195,6 +196,7 @@ export function TracePageImpl(props: TProps) {
     () => evaluateSpanFilter(traceData?.spans, spanFilter),
     [traceData?.spans, spanFilter]
   );
+  const focusedSubtreeSpanID = useTraceTimelineStore(s => s.focusedSubtreeSpanID);
 
   const setDetailPanelMode = useCallback((mode: SpanDetailPanelMode) => {
     trackDetailPanelMode(mode);
@@ -237,9 +239,15 @@ export function TracePageImpl(props: TProps) {
   const findMatchSplit = useMemo(() => {
     if (!traceData || viewType === ETraceViewType.TraceGraph || !uiFind) return null;
     const textMatches = filterSpansMemo(uiFind, traceData.spans);
-    const visible = viewTypeIsNavigable(viewType) ? withoutHiddenSpans(textMatches, hiddenIDs) : textMatches;
+    let visible = viewTypeIsNavigable(viewType) ? withoutHiddenSpans(textMatches, hiddenIDs) : textMatches;
+    if (visible && focusedSubtreeSpanID && viewTypeIsNavigable(viewType)) {
+      const subtreeIDs = focusedSpanIDs(traceData, focusedSubtreeSpanID, hiddenIDs);
+      if (subtreeIDs) {
+        visible = filterMatchesBySubtree(visible, subtreeIDs);
+      }
+    }
     return { visible, hiddenCount: (textMatches?.size ?? 0) - (visible?.size ?? 0) };
-  }, [traceData, viewType, uiFind, hiddenIDs, filterSpansMemo]);
+  }, [traceData, viewType, uiFind, hiddenIDs, filterSpansMemo, focusedSubtreeSpanID]);
   const timelineFindMatches = findMatchSplit?.visible ?? null;
   // The text matches the filter hides, reported beside the match count so that a match the filter
   // hides is not mistaken for no match.
