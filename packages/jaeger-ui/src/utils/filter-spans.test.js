@@ -9,10 +9,10 @@ describe('filterSpans', () => {
   const spanID0 = 'span-id-0';
   const span0 = {
     spanID: spanID0,
-    operationName: 'operationName0',
-    process: {
+    name: 'operationName0',
+    resource: {
       serviceName: 'serviceName0',
-      tags: [
+      attributes: makeAttributes([
         {
           key: 'processTagKey0',
           value: 'processTagValue0',
@@ -25,9 +25,9 @@ describe('filterSpans', () => {
           key: 'processTagKey3',
           value: 'processTagValue3',
         },
-      ],
+      ]),
     },
-    tags: [
+    attributes: makeAttributes([
       {
         key: 'tagKey0',
         value: 'tagValue0',
@@ -40,10 +40,10 @@ describe('filterSpans', () => {
         key: 'tagKey3',
         value: 'tagValue3',
       },
-    ],
-    logs: [
+    ]),
+    events: [
       {
-        fields: [
+        attributes: makeAttributes([
           {
             key: 'logFieldKey0',
             value: 'logFieldValue0',
@@ -52,7 +52,7 @@ describe('filterSpans', () => {
             key: 'logFieldKey1',
             value: 'logFieldValue1',
           },
-        ],
+        ]),
       },
     ],
   };
@@ -61,10 +61,10 @@ describe('filterSpans', () => {
   const spanID2 = 'span-id-2';
   const span2 = {
     spanID: spanID2,
-    operationName: 'operationName2',
-    process: {
+    name: 'operationName2',
+    resource: {
       serviceName: 'serviceName2',
-      tags: [
+      attributes: makeAttributes([
         {
           key: 'processTagKey2',
           value: 'processTagValue1',
@@ -77,9 +77,9 @@ describe('filterSpans', () => {
           key: 'processTagKey3',
           value: 'processTag Value3',
         },
-      ],
+      ]),
     },
-    tags: [
+    attributes: makeAttributes([
       {
         key: 'tagKey2',
         value: 'tagValue1',
@@ -92,10 +92,10 @@ describe('filterSpans', () => {
         key: 'tagKey3',
         value: 'tag Value3',
       },
-    ],
-    logs: [
+    ]),
+    events: [
       {
-        fields: [
+        attributes: makeAttributes([
           {
             key: 'logFieldKey2',
             value: 'logFieldValue1',
@@ -104,19 +104,22 @@ describe('filterSpans', () => {
             key: 'logFieldKey1',
             value: 'logFieldValue2',
           },
-        ],
+        ]),
       },
     ],
   };
 
-  // span3 contain empty logs
+  // span3 contain empty events
   const spanID3 = 'span-id-3';
   const span3 = {
     spanID: spanID3,
-    operationName: 'operationName3',
-    process: {
+    name: 'operationName3',
+    resource: {
       serviceName: 'serviceName3',
+      attributes: makeAttributes([]),
     },
+    attributes: makeAttributes([]),
+    events: [],
   };
   const spans = [span0, span2];
 
@@ -204,8 +207,8 @@ describe('filterSpans', () => {
     expect(filterSpans('processTagKey2', spans)).toEqual(new Set([spanID2]));
   });
 
-  it('should return no spans when logs is null', () => {
-    const nullSpan = { ...span0, logs: null };
+  it('should return no spans when events is null', () => {
+    const nullSpan = { ...span0, events: null };
     expect(filterSpans('logFieldKey1', [nullSpan])).toEqual(new Set([]));
   });
 
@@ -228,7 +231,7 @@ describe('filterSpans', () => {
     expect(filterSpans('"processTag Value3" -processTagKey3', spans)).toEqual(new Set());
   });
 
-  it("span without log shouldn't break filtering", () => {
+  it("span without events shouldn't break filtering", () => {
     expect(filterSpans('operationName2', [span2, span3])).toEqual(new Set([spanID2]));
   });
 

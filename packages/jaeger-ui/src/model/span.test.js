@@ -1,100 +1,76 @@
 // Copyright (c) 2017 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { getParent } from './span';
+import { getParentSpanID, getNonParentReferences } from './span';
 
-const mockProcess = { serviceName: 'svc', tags: [] };
-
-// Helper function to create mock Span object
-function makeSpan(overrides = {}) {
-  return {
-    // SpanData
-    spanID: 'base',
-    traceID: 't1',
-    processID: 'p1',
-    operationName: 'op',
-    startTime: 0,
-    duration: 1,
-    logs: [],
-
-    // Span fields
-    depth: 0,
-    hasChildren: false,
-    process: mockProcess,
-    relativeStartTime: 0,
-    tags: [],
-    references: [],
-    warnings: [],
-    childSpanIds: [],
-    subsidiarilyReferencedBy: [],
-    ...overrides,
-  };
-}
-
-describe('getParent', () => {
-  it('returns parent span when a CHILD_OF reference exists', () => {
-    const parent = makeSpan({ spanID: 'parent' });
-    const ref = {
-      refType: 'CHILD_OF',
-      traceID: 't1',
-      spanID: 'parent',
-      span: parent,
-    };
-    const child = makeSpan({ references: [ref] });
-    expect(getParent(child)).toBe(parent);
+describe('getParentSpanID', () => {
+  it('returns undefined if references is missing or empty', () => {
+    expect(getParentSpanID({ traceID: 't1', spanID: 's1' })).toBeUndefined();
+    expect(getParentSpanID({ traceID: 't1', spanID: 's1', references: [] })).toBeUndefined();
   });
 
-  it('returns null if references is empty', () => {
-    const span = makeSpan({ references: [] });
-    expect(getParent(span)).toBeNull();
+  it('returns the spanID of the first same-trace CHILD_OF reference', () => {
+    const span = {
+      traceID: 't1',
+      spanID: 's1',
+      references: [
+        { refType: 'CHILD_OF', traceID: 't1', spanID: 'p1' },
+        { refType: 'CHILD_OF', traceID: 't1', spanID: 'p2' },
+      ],
+    };
+    expect(getParentSpanID(span)).toBe('p1');
   });
 
-  it('returns null if only non-CHILD_OF reference exists', () => {
-    const unrelated = makeSpan({ spanID: 'other' });
-    const ref = {
-      refType: 'FOLLOWS_FROM',
+  it('returns the spanID of the first same-trace FOLLOWS_FROM reference if no CHILD_OF exists', () => {
+    const span = {
       traceID: 't1',
-      spanID: 'other',
-      span: unrelated,
+      spanID: 's1',
+      references: [{ refType: 'FOLLOWS_FROM', traceID: 't1', spanID: 'p1' }],
     };
-    const span = makeSpan({ references: [ref] });
-    expect(getParent(span)).toBeNull();
+    expect(getParentSpanID(span)).toBe('p1');
   });
 
-  it('returns first CHILD_OF if mixed references exist', () => {
-    const parent = makeSpan({ spanID: 'parent' });
-    const refA = {
-      refType: 'FOLLOWS_FROM',
+  it('prefers same-trace CHILD_OF over FOLLOWS_FROM', () => {
+    const span = {
       traceID: 't1',
-      spanID: 'other',
-      span: null,
+      spanID: 's1',
+      references: [
+        { refType: 'FOLLOWS_FROM', traceID: 't1', spanID: 'follows' },
+        { refType: 'CHILD_OF', traceID: 't1', spanID: 'child' },
+      ],
     };
-    const refB = {
-      refType: 'CHILD_OF',
-      traceID: 't1',
-      spanID: 'parent',
-      span: parent,
-    };
-    const span = makeSpan({ references: [refA, refB] });
-    expect(getParent(span)).toBe(parent);
+    expect(getParentSpanID(span)).toBe('child');
   });
 
-  it('returns null if references is explicitly undefined', () => {
-    // Force type error
-    const span = makeSpan();
-    // @ts-expect-error: simulated value
-    span.references = undefined;
-    expect(getParent(span)).toBeNull();
+  it('ignores references from a different traceID', () => {
+    const span = {
+      traceID: 't1',
+      spanID: 's1',
+      references: [
+        { refType: 'CHILD_OF', traceID: 'other-trace', spanID: 'p-other' },
+        { refType: 'FOLLOWS_FROM', traceID: 'other-trace', spanID: 'p-other-2' },
+      ],
+    };
+    expect(getParentSpanID(span)).toBeUndefined();
+  });
+});
+
+describe('getNonParentReferences', () => {
+  it('returns an empty array if references is missing or empty', () => {
+    expect(getNonParentReferences({ traceID: 't1', spanID: 's1' })).toEqual([]);
+    expect(getNonParentReferences({ traceID: 't1', spanID: 's1', references: [] })).toEqual([]);
   });
 
-  it('should return null if CHILD_OF reference exists but its span property is null', () => {
-    const nullSpanRef = {
-      refType: 'CHILD_OF',
-      traceID: 't1',
-      spanID: 'null-span',
-      span: null,
-    };
-    const span = makeSpan({ references: [nullSpanRef] });
-    expect(getParent(span)).toBeNull();
+  it('returns all references when none match the parent criteria', () => {
+    const ref = { refType: 'CHILD_OF', traceID: 'other-trace', spanID: 'p-other' };
+    const span = { traceID: 't1', spanID: 's1', references: [ref] };
+    expect(getNonParentReferences(span)).toEqual([ref]);
+  });
+
+  it('filters out the identified parent reference and keeps non-parent references', () => {
+    const parentRef = { refType: 'CHILD_OF', traceID: 't1', spanID: 'parent' };
+    const otherRef = { refType: 'CHILD_OF', traceID: 'other-trace', spanID: 'external' };
+    const span = { traceID: 't1', spanID: 's1', references: [parentRef, otherRef] };
+    expect(getNonParentReferences(span)).toEqual([otherRef]);
   });
 });

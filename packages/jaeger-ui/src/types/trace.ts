@@ -7,7 +7,7 @@
 
 import { IOtelTrace } from './otel';
 
-export type KeyValuePair<ValueType = string> = {
+type KeyValuePair<ValueType = string> = {
   key: string;
   value: ValueType;
 };

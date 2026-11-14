@@ -7,7 +7,10 @@ import PathElem from './PathElem';
 
 export { default as PathElem } from './PathElem';
 
-import type { KeyValuePair } from '../../types/trace';
+export type TDdgAttribute = {
+  key: string;
+  value: any;
+};
 
 export enum EViewModifier {
   None,
@@ -43,7 +46,7 @@ export type TDdgPayloadEntry = {
 
 export type TDdgPayloadPath = {
   path: TDdgPayloadEntry[];
-  attributes: (KeyValuePair & { key: 'exemplar_trace_id'; value: string })[];
+  attributes: (TDdgAttribute & { key: 'exemplar_trace_id'; value: string })[];
 };
 
 export type TDdgPayload = {

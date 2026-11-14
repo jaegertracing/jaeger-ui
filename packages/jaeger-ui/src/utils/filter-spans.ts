@@ -1,11 +1,10 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { KeyValuePair, Span } from '../types/trace';
 import { IOtelSpan, IAttribute } from '../types/otel';
 import { TNil } from '../types';
 
-export default function filterSpans(textFilter: string, spans: ReadonlyArray<Span | IOtelSpan> | TNil) {
+export default function filterSpans(textFilter: string, spans: ReadonlyArray<IOtelSpan> | TNil) {
   if (!spans) {
     return null;
   }
@@ -32,12 +31,12 @@ export default function filterSpans(textFilter: string, spans: ReadonlyArray<Spa
   const isTextInFilters = (filters: Array<string>, text: string) =>
     filters.some(filter => text.toLowerCase().includes(filter));
 
-  const isTextInKeyValues = (kvs: ReadonlyArray<KeyValuePair | IAttribute>) =>
+  const isTextInKeyValues = (kvs: ReadonlyArray<IAttribute>) =>
     kvs
       ? kvs.some(kv => {
           // ignore checking key and value for a match if key is in excludeKeys
           if (isTextInFilters(excludeKeys, kv.key)) return false;
-          const value = (kv as any).value; // handle legacy KeyValuePair and IAttribute
+          const value = kv.value;
           if (value === null || value === undefined) return false;
           let valueString: string;
           if (typeof value === 'object' && !(value instanceof Uint8Array)) {
@@ -58,19 +57,7 @@ export default function filterSpans(textFilter: string, spans: ReadonlyArray<Spa
         })
       : false;
 
-  const isSpanAMatch = (span: Span | IOtelSpan) => {
-    if ('operationName' in span) {
-      // Legacy Span
-      return (
-        isTextInFilters(includeFilters, span.operationName) ||
-        isTextInFilters(includeFilters, span.process.serviceName) ||
-        isTextInKeyValues(span.tags) ||
-        (Array.isArray(span.logs) && span.logs.some(log => isTextInKeyValues(log.fields))) ||
-        isTextInKeyValues(span.process.tags) ||
-        includeFilters.some(filter => filter === span.spanID)
-      );
-    }
-    // IOtelSpan
+  const isSpanAMatch = (span: IOtelSpan) => {
     return (
       isTextInFilters(includeFilters, span.name) ||
       isTextInFilters(includeFilters, span.resource.serviceName) ||
@@ -83,6 +70,6 @@ export default function filterSpans(textFilter: string, spans: ReadonlyArray<Spa
   };
 
   // declare as const because need to disambiguate the type
-  const rv: Set<string> = new Set(spans.filter(isSpanAMatch).map((span: Span | IOtelSpan) => span.spanID));
+  const rv: Set<string> = new Set(spans.filter(isSpanAMatch).map((span: IOtelSpan) => span.spanID));
   return rv;
 }
