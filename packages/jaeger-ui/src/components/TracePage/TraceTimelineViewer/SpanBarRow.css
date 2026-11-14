@@ -156,7 +156,8 @@ SPDX-License-Identifier: Apache-2.0
   font-size: 1.05em;
 }
 
-.span-svc-name.is-children-collapsed {
+.span-svc-name.is-children-collapsed,
+.endpoint-name.is-children-collapsed {
   font-weight: bold;
   font-style: italic;
 }
