@@ -133,7 +133,7 @@ parents under the most specific currently-active root.
 | **How** | Manual `tracer.startActiveSpan(name, attrs, fn)` at the operation's entry point. All work inside the callback parents under the named span. |
 | **Pros** | Cleanest data shape: honest name and accurate boundaries because the app code knows what it's doing. Extends to any other named operation worth timing (search, DAG layout, etc.). |
 | **Cons** | Requires app-code edits at each named entry point. |
-| **Status** | The OTel tracer API is available globally to any caller, but no named operation is wrapped yet. The AI Assistant runtime (`@ag-ui/client` `HttpAgent` via `@assistant-ui/react-ag-ui`) does not expose a per-turn lifecycle hook, so wrapping the conversational round requires subscribing to the assistant-ui runtime's thread state — a small follow-up. In the meantime the fetch instrumentation captures each AG-UI request as a single-span trace, page-attributed via the processor. |
+| **Status** | ✅ The AI Assistant wraps each `@ag-ui/client` `HttpAgent.runAgent()` call in an `assistant.turn` span. The span is active before the AG-UI fetch starts, ends when the run settles or is cancelled, and records run failures. Fetch instrumentation therefore attaches the request to the turn span instead of emitting a single-span trace. |
 
 ### Fetch/XHR fallback — ✅ implemented
 
