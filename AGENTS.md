@@ -147,6 +147,8 @@ pnpm test -- --coverage
 pnpm --filter @jaegertracing/jaeger-ui test --coverage --coverage.include="src/path/to/file.tsx"
 ```
 
+The Codecov project check fails a pull request whose project coverage is lower than that of its base commit (`.codecov.yml`). A refactoring that deletes code covered above the project average lowers project coverage even when every changed line is tested, because the uncovered lines that remain become a larger share of the total. Such a pull request adds tests for existing uncovered code, whether or not that code is related to the refactoring, until project coverage is back at the base level. Adding those tests is the recommended fix and is not scope creep. The pull request description states that those tests offset the coverage drop, so that a reviewer can tell them apart from the tests of the change itself.
+
 ## Common Patterns
 
 ### State management
