@@ -8,7 +8,7 @@ import NewWindowIcon from '../../common/NewWindowIcon';
 import { getNewWindowSuffix, getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 
 type PropsType = {
-  traceID: string;
+  traceID?: string;
 };
 
 function stopPropagation(event: React.MouseEvent<HTMLAnchorElement>) {
@@ -21,8 +21,8 @@ export default function TraceTimelineLink({ traceID }: PropsType) {
 
   return (
     <a
-      aria-label={`Open trace ${traceID.slice(0, 7)}${suffix}`}
-      href={getUrl(traceID)}
+      aria-label={`Open trace${traceID ? ` ${traceID.slice(0, 7)}` : ''}${suffix}`}
+      href={getUrl(traceID || '')}
       onClick={stopPropagation}
       rel="noopener noreferrer"
       target={target}

@@ -121,7 +121,7 @@ const CohortTable: React.FC<Props> = ({ cohort, current, selection, selectTrace 
           dataIndex={['data', 'traceID']}
           data-testid="traceID"
           key="link"
-          render={value => <TraceTimelineLink traceID={value} />}
+          render={(_, record: FetchedTrace) => <TraceTimelineLink traceID={record.id} />}
         />
       </Table>
       {cohort.length < 2 && NEED_MORE_TRACES_MESSAGE}

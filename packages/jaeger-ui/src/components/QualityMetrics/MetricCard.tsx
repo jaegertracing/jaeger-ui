@@ -52,7 +52,7 @@ const MetricCard: React.FC<TProps> = ({ metric }) => {
           {name}{' '}
           <Tooltip arrow={{ pointAtCenter: true }} title="Metric Documentation">
             <a
-              aria-label="Metric documentation in a new window"
+              aria-label={`${name} documentation in a new window`}
               href={metricDocumentationLink}
               target="_blank"
               rel="noreferrer noopener"

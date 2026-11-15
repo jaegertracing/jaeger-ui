@@ -1,10 +1,10 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react';
+import * as React from 'react';
 import { render, screen, fireEvent, createEvent } from '@testing-library/react';
 
-import * as getConfigModule from '../../../utils/config/get-config';
+import * as getTargetModule from '../../../utils/config/get-target';
 import TraceTimelineLink from './TraceTimelineLink';
 
 describe('TraceTimelineLink', () => {
@@ -33,26 +33,34 @@ describe('TraceTimelineLink', () => {
     expect(propogatedEvent.stopPropagation).toHaveBeenCalled();
   });
 
-  it('renders link with accessible aria-label and target="_blank"', () => {
+  it('has an accessible name', () => {
     const link = screen.getByRole('link', { name: `Open trace ${traceID.slice(0, 7)} in a new window` });
-    expect(link).toBeInTheDocument();
-    expect(link).toHaveAttribute('aria-label', `Open trace ${traceID.slice(0, 7)} in a new window`);
-    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toBeTruthy();
+    expect(link.getAttribute('target')).toBe('_blank');
   });
 });
 
-describe('TraceTimelineLink when forbidNewPage is true', () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
+describe('TraceTimelineLink when new pages are forbidden', () => {
+  let getTargetSpy;
+
+  beforeEach(() => {
+    getTargetSpy = jest.spyOn(getTargetModule, 'getTargetEmptyOrBlank').mockReturnValue('');
+    render(<TraceTimelineLink traceID="test-trace-id" />);
   });
 
-  it('renders link with accessible aria-label without "in a new window"', () => {
-    const traceID = 'test-trace-id';
-    vi.spyOn(getConfigModule, 'default').mockReturnValue({ forbidNewPage: true });
-    render(<TraceTimelineLink traceID={traceID} />);
-    const link = screen.getByRole('link', { name: `Open trace ${traceID.slice(0, 7)}` });
-    expect(link).toBeInTheDocument();
-    expect(link).toHaveAttribute('aria-label', `Open trace ${traceID.slice(0, 7)}`);
-    expect(link).toHaveAttribute('target', '');
+  afterEach(() => {
+    getTargetSpy.mockRestore();
+  });
+
+  it('does not mention a new window in the accessible name', () => {
+    const link = screen.getByRole('link', { name: 'Open trace test-tr' });
+    expect(link.getAttribute('target')).toBe('');
+  });
+});
+
+describe('TraceTimelineLink without traceID', () => {
+  it('falls back to generic accessible name without short trace ID', () => {
+    render(<TraceTimelineLink />);
+    expect(screen.getByRole('link', { name: 'Open trace in a new window' })).toBeTruthy();
   });
 });

@@ -78,10 +78,10 @@ describe('MetricCard', () => {
 
   it('renders documentation link with accessible name and target="_blank"', () => {
     render(<MetricCard metric={metric} />);
-    const link = screen.getByRole('link', { name: 'Metric documentation in a new window' });
+    const link = screen.getByRole('link', { name: `${metric.name} documentation in a new window` });
     expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute('href', metric.metricDocumentationLink);
     expect(link).toHaveAttribute('target', '_blank');
-    expect(link).toHaveAttribute('aria-label', 'Metric documentation in a new window');
+    expect(link).toHaveAttribute('aria-label', `${metric.name} documentation in a new window`);
   });
 });
