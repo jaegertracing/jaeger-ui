@@ -5,30 +5,35 @@ import { create } from 'zustand';
 import DetailState from './SpanDetail/DetailState';
 import { useLayoutPrefsStore } from './store.layout';
 import { TNil } from '../../../types';
-import { IOtelTrace, IEvent } from '../../../types/otel';
-import { EMPTY_SPAN_FILTER, ISpanFilter } from '../spanFilter';
+import { IOtelSpan, IOtelTrace, IEvent } from '../../../types/otel';
+import { EMPTY_SPAN_FILTER, evaluateSpanFilter, ISpanFilter } from '../spanFilter';
 import {
   applyDetailSubsectionToggle,
   calculateFocusedFindRowStates,
   CollapseTarget,
+  getDescendantParentSpanIDs,
   shouldDisableCollapse,
+  shouldDisableExpand,
   trimFocusedDetailStatesForSidePanel,
 } from './timeline-utils';
 
 type TraceTimelineInteractionStore = {
   traceID: string | null;
   traceSpans: IOtelTrace['spans'] | null;
+  focusedSubtreeSpanID: string | null;
   childrenHiddenIDs: Set<string>;
   detailStates: Map<string, DetailState>;
   shouldScrollToFirstUiFindMatch: boolean;
   // The active span filter (RFC 0009). Consumers evaluate it over the trace they render.
   spanFilter: ISpanFilter;
   setSpanFilter: (filter: ISpanFilter) => void;
+  setFocusedSubtreeSpanID: (spanID: string | null) => void;
+  toggleSubtreeCollapse: (span: IOtelSpan) => void;
   // Resets ephemeral fields for a new trace and optionally focuses the find matches, given as the
   // search text or as the set of matching span IDs the filter leaves visible.
   setTrace: (trace: IOtelTrace, matches?: string | ReadonlySet<string> | TNil) => void;
   childrenToggle: (spanID: string) => void;
-  expandAll: () => void;
+  expandAll: (spans?: ReadonlyArray<CollapseTarget>) => void;
   expandOne: (spans: ReadonlyArray<CollapseTarget>) => void;
   collapseAll: (spans: ReadonlyArray<CollapseTarget>) => void;
   collapseOne: (spans: ReadonlyArray<CollapseTarget>) => void;
@@ -50,14 +55,45 @@ type TraceTimelineInteractionStore = {
 export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((set, get) => ({
   traceID: null,
   traceSpans: null,
+  focusedSubtreeSpanID: null,
   childrenHiddenIDs: new Set<string>(),
   detailStates: new Map<string, DetailState>(),
   shouldScrollToFirstUiFindMatch: false,
   spanFilter: EMPTY_SPAN_FILTER,
 
-  setSpanFilter: (filter: ISpanFilter) => set({ spanFilter: filter }),
+  setSpanFilter: (filter: ISpanFilter) => {
+    const { focusedSubtreeSpanID, traceSpans } = get();
+    let nextFocusedID = focusedSubtreeSpanID;
+    if (focusedSubtreeSpanID && traceSpans) {
+      const hidden = evaluateSpanFilter(traceSpans, filter).hiddenIDs;
+      if (hidden.has(focusedSubtreeSpanID)) {
+        nextFocusedID = null;
+      }
+    }
+    set({ spanFilter: filter, focusedSubtreeSpanID: nextFocusedID });
+  },
+
+  setFocusedSubtreeSpanID: (spanID: string | null) => set({ focusedSubtreeSpanID: spanID }),
+
+  toggleSubtreeCollapse: (span: IOtelSpan) => {
+    const { childrenHiddenIDs: current } = get();
+    const subtreeParentIDs = getDescendantParentSpanIDs(span);
+    const isCurrentlyCollapsed = current.has(span.spanID);
+    const next = new Set(current);
+    if (isCurrentlyCollapsed) {
+      for (const id of subtreeParentIDs) {
+        next.delete(id);
+      }
+    } else {
+      for (const id of subtreeParentIDs) {
+        next.add(id);
+      }
+    }
+    set({ childrenHiddenIDs: next });
+  },
+
   setTrace: (trace: IOtelTrace, matches?: string | ReadonlySet<string> | TNil) => {
-    const { traceID: currentTraceID, traceSpans } = get();
+    const { traceID: currentTraceID, traceSpans, focusedSubtreeSpanID: currentFocusedID } = get();
     if (trace.traceID === currentTraceID && trace.spans === traceSpans) return;
 
     const detailPanelMode = useLayoutPrefsStore.getState().detailPanelMode;
@@ -76,6 +112,7 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
         childrenHiddenIDs: new Set<string>(),
         detailStates: new Map<string, DetailState>(),
         shouldScrollToFirstUiFindMatch: false,
+        focusedSubtreeSpanID: null,
       });
     } else {
       const validSpanIDs = trace.spanMap;
@@ -95,6 +132,15 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
           }
         }
         base.detailStates = prunedDetailStates;
+      }
+
+      if (
+        currentFocusedID &&
+        (trace.spanMap
+          ? !trace.spanMap.has(currentFocusedID)
+          : !trace.spans.some(s => s.spanID === currentFocusedID))
+      ) {
+        base.focusedSubtreeSpanID = null;
       }
     }
 
@@ -117,13 +163,23 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
     set({ childrenHiddenIDs });
   },
 
-  expandAll: () => {
+  expandAll: (spans?: ReadonlyArray<CollapseTarget>) => {
+    if (spans) {
+      const current = get().childrenHiddenIDs;
+      if (shouldDisableExpand(spans, current)) return;
+      const childrenHiddenIDs = new Set(current);
+      spans.forEach(s => {
+        if (s.hasChildren) childrenHiddenIDs.delete(s.spanID);
+      });
+      set({ childrenHiddenIDs });
+      return;
+    }
     set({ childrenHiddenIDs: new Set<string>() });
   },
 
   expandOne: (spans: ReadonlyArray<CollapseTarget>) => {
     const current = get().childrenHiddenIDs;
-    if (current.size === 0) return;
+    if (shouldDisableExpand(spans, current)) return;
     let prevExpandedDepth = -1;
     let expandNextHiddenSpan = true;
     let expanded = false;
@@ -148,10 +204,10 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
   collapseAll: (spans: ReadonlyArray<CollapseTarget>) => {
     const { childrenHiddenIDs: current } = get();
     if (shouldDisableCollapse(spans, current)) return;
-    const childrenHiddenIDs = spans.reduce((res, s) => {
-      if (s.hasChildren) res.add(s.spanID);
-      return res;
-    }, new Set<string>());
+    const childrenHiddenIDs = new Set(current);
+    spans.forEach(s => {
+      if (s.hasChildren) childrenHiddenIDs.add(s.spanID);
+    });
     set({ childrenHiddenIDs });
   },
 

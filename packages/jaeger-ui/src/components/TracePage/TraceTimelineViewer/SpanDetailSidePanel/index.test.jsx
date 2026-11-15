@@ -15,7 +15,7 @@ import { EMPTY_SPAN_FILTER } from '../../spanFilter';
 
 vi.mock('../SpanDetail', () =>
   mockDefault(
-    jest.fn(({ span, focusSpan, linksGetter }) => {
+    vi.fn(({ span, focusSpan, linksGetter }) => {
       linksGetter([], 0);
       return (
         <div data-testid="span-detail-mock" data-span-id={span.spanID}>
@@ -26,27 +26,31 @@ vi.mock('../SpanDetail', () =>
   )
 );
 
-vi.mock('../../../../model/link-patterns', () => mockDefault(jest.fn(() => [])));
+vi.mock('../../../../model/link-patterns', () => mockDefault(vi.fn(() => [])));
 vi.mock('../../../../utils/update-ui-find');
 vi.mock('../store.track');
 
 const mockZustandState = vi.hoisted(() => ({
   detailStates: new Map(),
   spanFilter: { clauses: [], treeMode: 'remove' },
-  detailLogItemToggle: jest.fn(),
-  detailLogsToggle: jest.fn(),
-  detailProcessToggle: jest.fn(),
-  detailReferencesToggle: jest.fn(),
-  detailTagsToggle: jest.fn(),
-  detailWarningsToggle: jest.fn(),
-  focusUiFindMatches: jest.fn(),
+  focusedSubtreeSpanID: null,
+  setFocusedSubtreeSpanID: vi.fn(),
+  detailLogItemToggle: vi.fn(),
+  detailLogsToggle: vi.fn(),
+  detailProcessToggle: vi.fn(),
+  detailReferencesToggle: vi.fn(),
+  detailTagsToggle: vi.fn(),
+  detailWarningsToggle: vi.fn(),
+  focusUiFindMatches: vi.fn(),
 }));
 
 vi.mock('../store', async importOriginal => {
   const actual = await importOriginal();
   return {
     ...actual,
-    useTraceTimelineStore: selector => selector(mockZustandState),
+    useTraceTimelineStore: Object.assign(selector => selector(mockZustandState), {
+      getState: () => mockZustandState,
+    }),
     getSelectedSpanID: detailStatesArg =>
       detailStatesArg.size > 0 ? detailStatesArg.keys().next().value : null,
   };
@@ -63,11 +67,12 @@ describe('<SpanDetailSidePanelImpl>', () => {
       currentViewRangeTime: [0, 1],
       useOtelTerms: false,
       location: { pathname: '/', search: '', hash: '', state: undefined },
-      navigate: jest.fn(),
+      navigate: vi.fn(),
     };
     // reset Zustand mock state
     mockZustandState.detailStates = new Map();
     mockZustandState.spanFilter = EMPTY_SPAN_FILTER;
+    mockZustandState.focusedSubtreeSpanID = null;
     vi.clearAllMocks();
     Object.values(mockZustandState).forEach(v => typeof v === 'function' && v.mockReset?.());
   });
@@ -156,5 +161,13 @@ describe('<SpanDetailSidePanelImpl>', () => {
     const { detailState } = SpanDetail.mock.lastCall[0];
     expect(detailState.isAttributesOpen).toBe(true);
     expect(detailState.isResourceOpen).toBe(true);
+  });
+
+  it('clears focused subtree when focusSpan targets a span outside the subtree', () => {
+    mockZustandState.focusedSubtreeSpanID = trace.spans[1].spanID;
+    render(<SpanDetailSidePanelImpl {...baseProps} />);
+    fireEvent.click(screen.getByTestId('focus-span-button'));
+    // 'test-find' is not in span-1's subtree
+    expect(mockZustandState.setFocusedSubtreeSpanID).toHaveBeenCalledWith(null);
   });
 });

@@ -7,6 +7,7 @@ import cx from 'classnames';
 import { RECORDED_TREE, VisibleTree } from './generateRowStates';
 import { IOtelSpan } from '../../../types/otel';
 import colorGenerator from '../../../utils/color-generator';
+import { useTraceTimelineStore } from './store';
 
 import './SpanTreeOffset.css';
 
@@ -30,16 +31,24 @@ const SpanTreeOffset: React.FC<TProps> = ({
   color,
   tree = RECORDED_TREE,
 }) => {
-  // The visible ancestors, root first.
+  const focusedSubtreeSpanID = useTraceTimelineStore(s => s.focusedSubtreeSpanID);
+
+  // The visible ancestors, root first. When a subtree is focused, stop at that root.
   const ancestors = useMemo(() => {
     const chain: IOtelSpan[] = [];
+    if (focusedSubtreeSpanID && span.spanID === focusedSubtreeSpanID) {
+      return chain;
+    }
     let current = tree.parentOf(span);
     while (current) {
       chain.unshift(current);
+      if (focusedSubtreeSpanID && current.spanID === focusedSubtreeSpanID) {
+        break;
+      }
       current = tree.parentOf(current);
     }
     return chain;
-  }, [span, tree]);
+  }, [span, tree, focusedSubtreeSpanID]);
 
   const childCount = tree.childCount(span);
   const hasChildren = childCount > 0;
