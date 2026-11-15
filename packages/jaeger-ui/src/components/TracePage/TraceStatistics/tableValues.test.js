@@ -662,3 +662,45 @@ describe('check self time', () => {
     expect(resultArraySecondGroupBy.length).toBe(3);
   });
 });
+
+describe('zero-duration trace', () => {
+  // Durations are whole microseconds, so every span can start and end in the same one.
+  const zeroDurationTrace = () => {
+    // transformTraceData mutates its input (it links spans to each other), so copy plain fields only.
+    const { startTime } = testTraceNormal.spans[0];
+    const raw = {
+      ...testTraceNormal,
+      spans: testTraceNormal.spans.map(span => ({
+        ...span,
+        references: span.references.map(({ refType, traceID, spanID }) => ({ refType, traceID, spanID })),
+        startTime,
+        duration: 0,
+      })),
+    };
+    return transformTraceData(raw).asOtelTrace();
+  };
+
+  it('reports 0 percent instead of NaN when the first dropdown is selected', () => {
+    const trace = zeroDurationTrace();
+    expect(trace.duration).toBe(0);
+
+    const resultArray = getColumnValues('Service Name', trace, false);
+
+    expect(resultArray.length).toBeGreaterThan(0);
+    resultArray.forEach(row => expect(row.percent).toBe(0));
+  });
+
+  it('reports 0 percent instead of NaN when two dropdowns are selected', () => {
+    const trace = zeroDurationTrace();
+
+    const resultArray = getColumnValuesSecondDropdown(
+      getColumnValues('Service Name', trace, false),
+      'Service Name',
+      'Operation Name',
+      trace
+    );
+
+    expect(resultArray.length).toBeGreaterThan(0);
+    resultArray.forEach(row => expect(row.percent).toBe(0));
+  });
+});
