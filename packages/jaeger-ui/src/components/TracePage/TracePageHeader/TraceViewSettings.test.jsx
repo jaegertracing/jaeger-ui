@@ -12,6 +12,24 @@ import { useLayoutPrefsStore } from '../TraceTimelineViewer/store';
 vi.mock('./KeyboardShortcutsHelp.track');
 vi.mock('../keyboard-mappings', () => mockDefault({}));
 
+const mockPopover = vi.fn();
+
+vi.mock('antd', async () => {
+  const antd = await vi.importActual('antd');
+  return {
+    ...antd,
+    Popover: props => {
+      mockPopover(props);
+      return (
+        <div>
+          {props.children}
+          <div data-testid="popover-content">{props.content}</div>
+        </div>
+      );
+    },
+  };
+});
+
 const defaultProps = {
   detailPanelMode: 'inline',
   enableSidePanel: false,
@@ -32,36 +50,32 @@ describe('<TraceViewSettings>', () => {
     expect(button).toHaveAttribute('title', 'Trace view settings');
   });
 
-  it('opens dropdown on click and shows "Show Timeline" item', async () => {
+  it('renders the "Show Timeline" switch', () => {
     render(<TraceViewSettings {...defaultProps} />);
-    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
-    expect(await screen.findByText('Show Timeline')).toBeInTheDocument();
+    const toggle = screen.getByRole('switch', { name: 'Show Timeline' });
+    expect(toggle).toBeInTheDocument();
+    expect(toggle).toBeChecked();
   });
 
-  it('calls onTimelineToggle when "Show Timeline" is clicked', async () => {
+  it('calls onTimelineToggle when the "Show Timeline" switch is clicked', async () => {
     render(<TraceViewSettings {...defaultProps} />);
-    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
-    await userEvent.click(await screen.findByText('Show Timeline'));
+    await userEvent.click(screen.getByRole('switch', { name: 'Show Timeline' }));
     expect(defaultProps.onTimelineToggle).toHaveBeenCalledTimes(1);
   });
 
-  it('does not show "Show Span in Sidebar" when enableSidePanel is false', async () => {
+  it('does not show the "Show Span in Sidebar" switch when enableSidePanel is false', () => {
     render(<TraceViewSettings {...defaultProps} enableSidePanel={false} />);
-    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
-    await screen.findByText('Show Timeline');
-    expect(screen.queryByText('Show Span in Sidebar')).not.toBeInTheDocument();
+    expect(screen.queryByRole('switch', { name: 'Show Span in Sidebar' })).not.toBeInTheDocument();
   });
 
-  it('shows "Show Span in Sidebar" when enableSidePanel is true', async () => {
+  it('shows the "Show Span in Sidebar" switch when enableSidePanel is true', () => {
     render(<TraceViewSettings {...defaultProps} enableSidePanel />);
-    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
-    expect(await screen.findByText('Show Span in Sidebar')).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'Show Span in Sidebar' })).toBeInTheDocument();
   });
 
-  it('calls onDetailPanelModeToggle when "Show Span in Sidebar" is clicked', async () => {
+  it('calls onDetailPanelModeToggle when the "Show Span in Sidebar" switch is clicked', async () => {
     render(<TraceViewSettings {...defaultProps} enableSidePanel />);
-    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
-    await userEvent.click(await screen.findByText('Show Span in Sidebar'));
+    await userEvent.click(screen.getByRole('switch', { name: 'Show Span in Sidebar' }));
     expect(defaultProps.onDetailPanelModeToggle).toHaveBeenCalledTimes(1);
   });
 
@@ -70,57 +84,52 @@ describe('<TraceViewSettings>', () => {
       useLayoutPrefsStore.setState({ heatmapEnabled: false });
     });
 
-    function heatmapItem() {
-      return screen.getByText('Span Latency Heatmap').closest('[role="menuitem"]');
-    }
-
-    it('shows the heatmap item, unchecked while the heatmap is off', async () => {
+    it('shows the heatmap switch, unchecked while the heatmap is off', () => {
       render(<TraceViewSettings {...defaultProps} />);
-      await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
-      await screen.findByText('Span Latency Heatmap');
-      expect(heatmapItem().querySelector('svg')).toBeNull();
+      expect(screen.getByRole('switch', { name: 'Span Latency Heatmap' })).not.toBeChecked();
     });
 
-    it('shows a checkmark while the heatmap is on', async () => {
+    it('shows the heatmap switch checked while the heatmap is on', () => {
       useLayoutPrefsStore.setState({ heatmapEnabled: true });
       render(<TraceViewSettings {...defaultProps} />);
-      await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
-      await screen.findByText('Span Latency Heatmap');
-      expect(heatmapItem().querySelector('svg')).not.toBeNull();
+      expect(screen.getByRole('switch', { name: 'Span Latency Heatmap' })).toBeChecked();
     });
 
     it('toggles the heatmap preference when clicked', async () => {
       render(<TraceViewSettings {...defaultProps} />);
-      await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
-      await userEvent.click(await screen.findByText('Span Latency Heatmap'));
+      await userEvent.click(screen.getByRole('switch', { name: 'Span Latency Heatmap' }));
       expect(useLayoutPrefsStore.getState().heatmapEnabled).toBe(true);
     });
   });
 
-  it('always shows "Keyboard Shortcuts" in the dropdown', async () => {
+  it('always shows "Keyboard Shortcuts" in the panel', () => {
     render(<TraceViewSettings {...defaultProps} />);
-    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
-    expect(await screen.findByText('Keyboard Shortcuts')).toBeInTheDocument();
+    expect(screen.getByText('Keyboard Shortcuts')).toBeInTheDocument();
   });
 
   it('opens the keyboard shortcuts modal and calls track() when "Keyboard Shortcuts" is clicked', async () => {
     render(<TraceViewSettings {...defaultProps} />);
-    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
-    await userEvent.click(await screen.findByText('Keyboard Shortcuts'));
+    await userEvent.click(screen.getByText('Keyboard Shortcuts'));
     expect(track).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 
   it('returns the cached kbdTable on a second call to getHelpModal', async () => {
     const { unmount } = render(<TraceViewSettings {...defaultProps} />);
-    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
-    await userEvent.click(await screen.findByText('Keyboard Shortcuts'));
+    await userEvent.click(screen.getByText('Keyboard Shortcuts'));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     unmount();
 
     render(<TraceViewSettings {...defaultProps} />);
-    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
-    await userEvent.click(await screen.findByText('Keyboard Shortcuts'));
+    await userEvent.click(screen.getByText('Keyboard Shortcuts'));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  it('renders the Popover with the trace-view-settings title and placement', () => {
+    render(<TraceViewSettings {...defaultProps} />);
+    const popoverProps = mockPopover.mock.calls[0][0];
+    expect(popoverProps.title).toBe('Trace view settings');
+    expect(popoverProps.placement).toBe('bottomRight');
+    expect(popoverProps.trigger).toBe('click');
   });
 });

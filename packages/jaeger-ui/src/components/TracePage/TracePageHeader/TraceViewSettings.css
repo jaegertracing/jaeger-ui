@@ -13,3 +13,40 @@ SPDX-License-Identifier: Apache-2.0
 .TraceViewSettings--icon {
   font-size: 1.2rem;
 }
+
+.TraceViewSettings--panel {
+  min-width: 220px;
+}
+
+.TraceViewSettings--row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.3rem 0;
+}
+
+.TraceViewSettings--rowLabel {
+  white-space: nowrap;
+}
+
+.TraceViewSettings--divider {
+  margin: 0.4rem 0;
+  border-top: 1px solid var(--border-default);
+}
+
+.TraceViewSettings--linkRow {
+  display: block;
+  width: 100%;
+  padding: 0.3rem 0;
+  border: none;
+  background: none;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.TraceViewSettings--linkRow:hover {
+  color: var(--text-link-hover);
+}
