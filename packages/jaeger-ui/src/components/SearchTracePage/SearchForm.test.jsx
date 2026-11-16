@@ -931,9 +931,7 @@ describe('SearchForm onChange handlers', () => {
           }
     );
 
-    const form = () => (
-      <SearchForm {...defaultProps} initialValues={{ service: 'svcA', operation: 'A' }} />
-    );
+    const form = () => <SearchForm {...defaultProps} initialValues={{ service: 'svcA', operation: 'A' }} />;
     const { rerender } = renderForm(form());
 
     await act(async () => {
@@ -957,6 +955,44 @@ describe('SearchForm onChange handlers', () => {
     await waitFor(() => expect(SearchableSelect.values.operation).toBe('A'));
   });
 
+  it('resets the carried operation after the new service names finish loading without it', async () => {
+    let svcBResult = {
+      data: [{ name: 'A', spanKind: 'server' }],
+      isFetching: true,
+      isSuccess: true,
+      error: null,
+    };
+    useSpanNames.mockImplementation(service =>
+      service === 'svcB'
+        ? svcBResult
+        : {
+            data: [{ name: 'A', spanKind: 'server' }],
+            isFetching: false,
+            isSuccess: true,
+            error: null,
+          }
+    );
+
+    const form = () => <SearchForm {...defaultProps} initialValues={{ service: 'svcA', operation: 'A' }} />;
+    const { rerender } = renderForm(form());
+
+    await act(async () => {
+      SearchableSelect.onChangeFns.service('svcB');
+    });
+    await waitFor(() => expect(SearchableSelect.values.service).toBe('svcB'));
+    expect(SearchableSelect.values.operation).toBe('A');
+
+    svcBResult = {
+      data: [{ name: 'C', spanKind: 'server' }],
+      isFetching: false,
+      isSuccess: true,
+      error: null,
+    };
+    rerender(wrapForm(form()));
+
+    await waitFor(() => expect(SearchableSelect.values.operation).toBe(ALL_OPERATIONS));
+  });
+
   it('keeps an operation explicitly selected while span names are refetching', async () => {
     let svcBResult = {
       data: [{ name: 'A', spanKind: 'server' }],
@@ -975,9 +1011,7 @@ describe('SearchForm onChange handlers', () => {
           }
     );
 
-    const form = () => (
-      <SearchForm {...defaultProps} initialValues={{ service: 'svcA', operation: 'A' }} />
-    );
+    const form = () => <SearchForm {...defaultProps} initialValues={{ service: 'svcA', operation: 'A' }} />;
     const { rerender } = renderForm(form());
 
     await act(async () => {

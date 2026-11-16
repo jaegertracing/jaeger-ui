@@ -399,12 +399,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
 
   useEffect(() => {
     const pending = pendingServiceChange.current;
-    if (
-      !pending ||
-      pending.service !== currentService ||
-      isFetchingSpanNames ||
-      !isSpanNamesSuccess
-    ) {
+    if (!pending || pending.service !== currentService || isFetchingSpanNames || !isSpanNamesSuccess) {
       return;
     }
 
@@ -412,13 +407,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
     if (pending.operation && pending.operation !== ALL_OPERATIONS && !spanNames.includes(pending.operation)) {
       handleChange({ operation: ALL_OPERATIONS });
     }
-  }, [
-    currentService,
-    handleChange,
-    isFetchingSpanNames,
-    isSpanNamesSuccess,
-    spanNames,
-  ]);
+  }, [currentService, handleChange, isFetchingSpanNames, isSpanNamesSuccess, spanNames]);
 
   const handleAdjustTimeToggle = useCallback((checked: boolean) => {
     setAdjustTimeEnabled(checked);
