@@ -7,7 +7,17 @@ SPDX-License-Identifier: Apache-2.0
   background: var(--border-default);
 }
 
+/* The overview wraps under the title when one line cannot hold both. */
+.SpanDetail--header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 1rem;
+}
+
 .SpanDetail--headerTitle {
+  flex: 1 1 auto;
+  min-width: 0;
   font-size: 1.05em;
   font-weight: normal;
   overflow: hidden;
@@ -15,31 +25,12 @@ SPDX-License-Identifier: Apache-2.0
   white-space: nowrap;
 }
 
-.SpanDetail--overviewTableCaption {
-  position: absolute;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  border: 0;
-  margin: -1px;
-  white-space: nowrap;
-}
-
 .SpanDetail--headerEndpointName {
   color: var(--text-secondary);
 }
 
-.SpanDetail--overviewTable {
-  line-height: 1.5;
-}
-
-.SpanDetail--overviewTableKey {
-  color: var(--text-secondary);
-  font-weight: normal;
-  padding-right: 0.5rem;
-  text-align: left;
+.SpanDetail--overview {
+  flex: 0 1 auto;
 }
 
 .SpanDetail--debugInfo {
