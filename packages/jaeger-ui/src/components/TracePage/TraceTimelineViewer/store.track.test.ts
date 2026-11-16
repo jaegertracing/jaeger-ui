@@ -80,7 +80,7 @@ const interactions: TInteraction[] = [
     apply: () => timeline().collapseOne(spans),
   },
   { track: track.trackExpandAll, apply: () => timeline().expandAll() },
-  // No detail is open yet, so the adapter does not report the subsection toggle.
+  // The adapter reports nothing without an open detail; the store creates the detail entry.
   {
     track: () => track.trackDetailTagsToggle('child'),
     apply: () => timeline().detailTagsToggle('child'),
@@ -162,7 +162,7 @@ const interactions: TInteraction[] = [
 ];
 
 // The events the Redux tracking middleware emitted for `interactions`, recorded on main at
-// 02beb5e4 before the middleware was deleted. Each event reads the state before its interaction.
+// 02beb5e4 before the middleware was deleted, not the PR's current base. Each event reads pre-update state.
 // Categories are literals so that renaming a category constant fails the parity check.
 const expectedEvents = [
   ['jaeger/ux/trace/timeline/parent', 'close', 1],
@@ -205,9 +205,17 @@ function runAdapter() {
 }
 
 describe('timeline analytics adapter', () => {
+  it('reports showing the timeline', () => {
+    resetStores();
+    layout().setTimelineBarsVisible(false);
+    track.trackTimelineBarsVisible(true);
+    layout().setTimelineBarsVisible(true);
+    expect(vi.mocked(trackEvent).mock.calls).toEqual([['jaeger/ux/trace/timeline/timeline-visible', 'true']]);
+  });
+
   it('emits the events the Redux tracking middleware emitted for a scripted session', () => {
     expect(runAdapter()).toEqual(expectedEvents);
-    // Guards against a vacuous pass: every timeline category is exercised.
+    // Covers every timeline category, not every tracker; several trackers share a category.
     const categories = Object.entries(track)
       .filter(([name]) => name.startsWith('CATEGORY_'))
       .map(([, category]) => category);

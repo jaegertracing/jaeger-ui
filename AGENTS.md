@@ -27,7 +27,7 @@ jaeger-ui/
 │   │   │   ├── components/ # React components
 │   │   │   ├── hooks/      # TanStack Query hooks
 │   │   │   ├── query/      # Shared QueryClient + provider
-│   │   │   ├── reducers/   # Redux reducers (residual, being removed)
+│   │   │   ├── reducers/   # Metrics test fixture (metrics.mock.ts)
 │   │   │   ├── stores/     # Zustand stores
 │   │   │   ├── types/      # TypeScript types
 │   │   │   └── utils/      # Utility functions

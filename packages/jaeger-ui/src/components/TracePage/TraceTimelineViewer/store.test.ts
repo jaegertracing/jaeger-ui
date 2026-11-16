@@ -140,6 +140,7 @@ describe('layout preference hydration', () => {
   });
 
   it('defaults detailPanelMode to inline when enableSidePanel is false', async () => {
+    localStorage.setItem('detailPanelMode', 'sidepanel');
     vi.mocked(getConfig).mockReturnValue({
       traceTimeline: { enableSidePanel: false },
     } as ReturnType<typeof getConfig>);
@@ -181,7 +182,7 @@ describe('normalizeLayoutPrefs()', () => {
     } as ReturnType<typeof getConfig>);
     // Wide name column with a derived (non-explicit) side panel: the first budget check is skipped,
     // so the sidepanel-specific reset must kick in and reset both widths to defaults.
-    const state = normalizeLayoutPrefs({ spanNameColumnWidth: 0.85, detailPanelMode: 'sidepanel' });
+    const state = normalizeLayoutPrefs({ spanNameColumnWidth: 0.76, detailPanelMode: 'sidepanel' });
     expect(state.detailPanelMode).toBe('sidepanel');
     expect(state.spanNameColumnWidth).toBe(0.25);
     expect(state.sidePanelWidth).toBeCloseTo(0.35);
@@ -511,15 +512,15 @@ describe('trace timeline zustand stores', () => {
       });
 
       it('accounts for timeline column when timeline bars are visible', () => {
-        useLayoutPrefsStore.setState({ timelineBarsVisible: true, spanNameColumnWidth: 0.25 });
-        useLayoutPrefsStore.getState().setSidePanelWidth(0.99);
-        expect(useLayoutPrefsStore.getState().sidePanelWidth).toBeCloseTo(0.7);
+        useLayoutPrefsStore.setState({ timelineBarsVisible: true, spanNameColumnWidth: 0.7 });
+        useLayoutPrefsStore.getState().setSidePanelWidth(0.5);
+        expect(useLayoutPrefsStore.getState().sidePanelWidth).toBeCloseTo(0.25);
       });
 
       it('does not reserve timeline column when timeline bars are hidden', () => {
-        useLayoutPrefsStore.setState({ timelineBarsVisible: false, spanNameColumnWidth: 0.25 });
-        useLayoutPrefsStore.getState().setSidePanelWidth(0.99);
-        expect(useLayoutPrefsStore.getState().sidePanelWidth).toBeCloseTo(0.7);
+        useLayoutPrefsStore.setState({ timelineBarsVisible: false, spanNameColumnWidth: 0.7 });
+        useLayoutPrefsStore.getState().setSidePanelWidth(0.5);
+        expect(useLayoutPrefsStore.getState().sidePanelWidth).toBeCloseTo(0.3);
       });
     });
 
@@ -533,6 +534,7 @@ describe('trace timeline zustand stores', () => {
       it('persists true as "true"', () => {
         useLayoutPrefsStore.getState().setTimelineBarsVisible(false);
         useLayoutPrefsStore.getState().setTimelineBarsVisible(true);
+        expect(useLayoutPrefsStore.getState().timelineBarsVisible).toBe(true);
         expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state.timelineBarsVisible).toBe(true);
       });
     });
@@ -577,6 +579,7 @@ describe('trace timeline zustand stores', () => {
     it('does not clamp spanNameColumnWidth when switching to inline', () => {
       useLayoutPrefsStore.setState({ spanNameColumnWidth: 0.8, detailPanelMode: 'sidepanel' });
       setDetailPanelMode('inline');
+      expect(useLayoutPrefsStore.getState().detailPanelMode).toBe('inline');
       expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(0.8);
     });
 
@@ -611,11 +614,21 @@ describe('trace timeline zustand stores', () => {
       useLayoutPrefsStore.setState({ detailPanelMode: 'sidepanel' });
       useTraceTimelineStore.setState({ detailStates: ds });
       setDetailPanelMode('inline');
+      expect(useLayoutPrefsStore.getState().detailPanelMode).toBe('inline');
       expect(useTraceTimelineStore.getState().detailStates).toBe(ds);
     });
   });
 
   describe('useTraceTimelineStore', () => {
+    it('starts with empty trace interaction state', () => {
+      const state = useTraceTimelineStore.getInitialState();
+      expect(state.traceID).toBeNull();
+      expect(state.traceSpans).toBeNull();
+      expect(state.childrenHiddenIDs).toEqual(new Set());
+      expect(state.detailStates).toEqual(new Map());
+      expect(state.shouldScrollToFirstUiFindMatch).toBe(false);
+      expect(state.spanFilter).toEqual(EMPTY_SPAN_FILTER);
+    });
     it('preserves manual interactions and layout preferences on same-ID reload', () => {
       const trace = makeTrace('same-trace', [makeSpan({ spanID: 'span-x' })]);
       useTraceTimelineStore.getState().setTrace(trace);
@@ -643,6 +656,13 @@ describe('trace timeline zustand stores', () => {
     });
 
     describe('setTrace', () => {
+      it.each(['', null, undefined])('does not focus find matches when uiFind is %s', uiFind => {
+        useTraceTimelineStore.getState().setTrace(makeTrace(), uiFind);
+        expect(filterSpans).not.toHaveBeenCalled();
+        expect(useTraceTimelineStore.getState().detailStates).toEqual(new Map());
+        expect(useTraceTimelineStore.getState().childrenHiddenIDs).toEqual(new Set());
+        expect(useTraceTimelineStore.getState().shouldScrollToFirstUiFindMatch).toBe(false);
+      });
       it('resets ephemeral state when traceID changes', () => {
         useTraceTimelineStore.setState({
           traceID: 'old-trace',
@@ -919,6 +939,10 @@ describe('trace timeline zustand stores', () => {
     });
 
     describe('expandAll', () => {
+      it('keeps an empty collapsed set empty', () => {
+        useTraceTimelineStore.getState().expandAll();
+        expect(useTraceTimelineStore.getState().childrenHiddenIDs).toEqual(new Set());
+      });
       it('clears all collapsed children', () => {
         useTraceTimelineStore.setState({ childrenHiddenIDs: new Set(['a', 'b', 'c']) });
         useTraceTimelineStore.getState().expandAll();
@@ -1205,12 +1229,12 @@ describe('trace timeline zustand stores', () => {
         ['detailReferencesToggle', 'toggleReferences'],
       ] as const)('%s toggles an open detail both ways without changing earlier states', (action, toggle) => {
         useTraceTimelineStore.getState().detailToggle('span-a');
-        const initial = useTraceTimelineStore.getState().detailStates.get('span-a');
+        const initial = useTraceTimelineStore.getState().detailStates;
         useTraceTimelineStore.getState()[action]('span-a');
-        const toggled = useTraceTimelineStore.getState().detailStates.get('span-a');
+        const toggled = useTraceTimelineStore.getState().detailStates;
         useTraceTimelineStore.getState()[action]('span-a');
-        expect(initial).toEqual(new DetailState());
-        expect(toggled).toEqual(new DetailState()[toggle]());
+        expect(initial.get('span-a')).toEqual(new DetailState());
+        expect(toggled.get('span-a')).toEqual(new DetailState()[toggle]());
         expect(useTraceTimelineStore.getState().detailStates.get('span-a')).toEqual(new DetailState());
       });
     });
@@ -1260,9 +1284,9 @@ describe('trace timeline zustand stores', () => {
     });
 
     describe('focusUiFindMatches', () => {
-      it('is a no-op when uiFind is falsy', () => {
+      it.each(['', null, undefined])('is a no-op when uiFind is %s', uiFind => {
         const stateBefore = useTraceTimelineStore.getState();
-        useTraceTimelineStore.getState().focusUiFindMatches(makeTrace(), '');
+        useTraceTimelineStore.getState().focusUiFindMatches(makeTrace(), uiFind);
         expect(useTraceTimelineStore.getState()).toBe(stateBefore);
       });
 
@@ -1312,6 +1336,28 @@ describe('calculateFocusedFindRowStates', () => {
   beforeEach(() => {
     vi.mocked(filterSpans).mockReset();
     vi.mocked(spanAncestorIds).mockReset();
+  });
+
+  it('expands every match ancestor and keeps unrelated parents collapsed', () => {
+    const spans = Array.from({ length: 30 }, (_, index) =>
+      makeSpan({ spanID: String(index), hasChildren: index % 3 !== 2 })
+    );
+    const ancestors: Record<string, string[]> = {
+      '5': ['0', '3', '4'],
+      '10': ['0', '3', '4', '5', '8', '9'],
+      '15': ['0', '3', '13', '14'],
+    };
+    const matches = new Set(['5', '10', '15']);
+    const expanded = new Set(Object.values(ancestors).flat());
+    vi.mocked(filterSpans).mockReturnValue(matches);
+    vi.mocked(spanAncestorIds).mockImplementation(span => ancestors[span!.spanID]);
+    const result = calculateFocusedFindRowStates('find', spans);
+    expect(filterSpans).toHaveBeenCalledWith('find', spans);
+    spans.forEach(span => {
+      expect(result.childrenHiddenIDs.has(span.spanID)).toBe(span.hasChildren && !expanded.has(span.spanID));
+      expect(result.detailStates.has(span.spanID)).toBe(matches.has(span.spanID));
+    });
+    expect(result.shouldScrollToFirstUiFindMatch).toBe(true);
   });
 
   it('only hides parent spans (hasChildren=true) when no match', () => {
