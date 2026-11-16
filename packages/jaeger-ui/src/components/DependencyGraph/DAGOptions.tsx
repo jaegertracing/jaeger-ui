@@ -201,7 +201,7 @@ const DAGOptions: React.FC<IDAGOptionsProps> = ({
         </div>
         <div className="search-input-container">
           <div className="search-input-wrapper">
-            <UiFindInput allowClear inputProps={{ className: 'search-input' }} />
+            <UiFindInput inputProps={{ className: 'search-input' }} />
             {uiFind && (
               <div className="search-match-count">
                 {matchCount} match{matchCount !== 1 ? 'es' : ''}

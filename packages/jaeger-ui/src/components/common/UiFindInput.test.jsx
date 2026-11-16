@@ -54,7 +54,7 @@ describe('UiFind', () => {
 
   describe('rendering', () => {
     it('renders as expected', () => {
-      render(<UnconnectedUiFindInput {...props} />);
+      const { container } = render(<UnconnectedUiFindInput {...props} />);
 
       // Test that the input is rendered with correct placeholder
       expect(screen.getByPlaceholderText('Find...')).toBeInTheDocument();
@@ -62,8 +62,9 @@ describe('UiFind', () => {
       // Test that the input has empty value when uiFind is undefined
       expect(screen.getByPlaceholderText('Find...')).toHaveValue('');
 
-      // Test that no clear icon is present when allowClear is not set
-      expect(screen.queryByTestId('clear-icon')).not.toBeInTheDocument();
+      // Ant Design's clear button exists but is hidden while the input is empty (#4169)
+      expect(container.querySelectorAll('.ant-input-clear-icon')).toHaveLength(1);
+      expect(container.querySelector('.ant-input-clear-icon')).toHaveClass('ant-input-clear-icon-hidden');
     });
 
     it('renders props.uiFind when state.ownInputValue is `undefined`', () => {
@@ -174,31 +175,6 @@ describe('UiFind', () => {
       expect(screen.getByPlaceholderText('Find...')).toHaveValue('def');
     });
 
-    it('clears value immediately when clicked', async () => {
-      const { rerender } = render(<UnconnectedUiFindInput {...props} allowClear uiFind={uiFind} />);
-      const clearIcon = screen.getByTestId('clear-icon');
-
-      await userEvent.click(clearIcon);
-
-      // Verify the URL update was triggered
-      expect(updateUiFindSpy).toHaveBeenLastCalledWith({
-        navigate: mockNavigate,
-        location: mockLocation,
-        uiFind: undefined,
-      });
-      expect(flushMock).toHaveBeenCalledTimes(1);
-
-      // Verify the value hasn't changed yet (before props update)
-      expect(screen.getByPlaceholderText('Find...')).toHaveValue(uiFind);
-
-      // Use rerender to update the component with new props
-      const updatedProps = { ...props, uiFind: undefined };
-      rerender(<UnconnectedUiFindInput {...updatedProps} allowClear />);
-
-      // Now the assertion will find only one input
-      expect(screen.getByPlaceholderText('Find...')).toHaveValue('');
-    });
-
     it('triggers pending queryParameter updates', async () => {
       render(<UnconnectedUiFindInput {...props} />);
       screen.getByPlaceholderText('Find...').blur();
@@ -208,29 +184,25 @@ describe('UiFind', () => {
   });
 
   describe('clear uiFind', () => {
-    it('renders clear icon iff clear is enabled and value is a string with at least one character', () => {
-      const { rerender } = render(<UnconnectedUiFindInput {...props} allowClear />);
-      expect(screen.queryByTestId('clear-icon')).not.toBeInTheDocument();
+    it('renders exactly one clear control, provided by Ant Design', () => {
+      const { container } = render(<UnconnectedUiFindInput {...props} uiFind={uiFind} />);
 
-      rerender(<UnconnectedUiFindInput {...props} allowClear uiFind="" />);
-      expect(screen.queryByTestId('clear-icon')).not.toBeInTheDocument();
-
-      rerender(<UnconnectedUiFindInput {...props} allowClear uiFind={uiFind} />);
-      expect(screen.getByTestId('clear-icon')).toBeInTheDocument();
-
-      rerender(<UnconnectedUiFindInput {...props} allowClear={false} uiFind={uiFind} />);
-      expect(screen.queryByTestId('clear-icon')).not.toBeInTheDocument();
-
-      rerender(<UnconnectedUiFindInput {...props} allowClear uiFind={uiFind} />);
-      userEvent.clear(screen.getByPlaceholderText('Find...'));
+      expect(container.querySelectorAll('.ant-input-clear-icon')).toHaveLength(1);
+      expect(container.querySelector('.ant-input-clear-icon')).not.toHaveClass('ant-input-clear-icon-hidden');
       expect(screen.queryByTestId('clear-icon')).not.toBeInTheDocument();
     });
 
-    it('clears value immediately when clicked', async () => {
-      const { rerender } = render(<UnconnectedUiFindInput {...props} allowClear uiFind={uiFind} />);
-      const clearIcon = screen.getByTestId('clear-icon');
+    it('hides the clear control when the input is empty', () => {
+      const { container } = render(<UnconnectedUiFindInput {...props} uiFind="" />);
 
-      await userEvent.click(clearIcon);
+      expect(container.querySelectorAll('.ant-input-clear-icon')).toHaveLength(1);
+      expect(container.querySelector('.ant-input-clear-icon')).toHaveClass('ant-input-clear-icon-hidden');
+    });
+
+    it('clears value and query parameter immediately when clicked', async () => {
+      const { container } = render(<UnconnectedUiFindInput {...props} uiFind={uiFind} />);
+
+      await userEvent.click(container.querySelector('.ant-input-clear-icon'));
 
       // Verify the URL update was triggered
       expect(updateUiFindSpy).toHaveBeenLastCalledWith({
@@ -240,15 +212,27 @@ describe('UiFind', () => {
       });
       expect(flushMock).toHaveBeenCalledTimes(1);
 
-      // Verify the value hasn't changed yet (before props update)
-      expect(screen.getByPlaceholderText('Find...')).toHaveValue(uiFind);
-
-      // Use rerender to update the component with new props
-      const updatedProps = { ...props, uiFind: undefined };
-      rerender(<UnconnectedUiFindInput {...updatedProps} allowClear />);
-
-      // Now the assertion will find only one input
+      // The text is cleared right away, without waiting for new props
       expect(screen.getByPlaceholderText('Find...')).toHaveValue('');
+    });
+
+    it('clears text typed on top of props.uiFind', async () => {
+      const { container } = render(<UnconnectedUiFindInput {...props} uiFind={uiFind} />);
+      const input = screen.getByPlaceholderText('Find...');
+
+      await userEvent.clear(input);
+      await userEvent.type(input, ownInputValue);
+      expect(input).toHaveValue(ownInputValue);
+
+      await userEvent.click(container.querySelector('.ant-input-clear-icon'));
+
+      expect(input).toHaveValue('');
+      expect(updateUiFindSpy).toHaveBeenLastCalledWith({
+        navigate: mockNavigate,
+        location: mockLocation,
+        uiFind: undefined,
+      });
+      expect(flushMock).toHaveBeenCalledTimes(1);
     });
   });
 
