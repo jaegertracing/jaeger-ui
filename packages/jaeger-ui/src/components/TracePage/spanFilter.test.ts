@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   decodeClause,
+  describeCriterion,
   EMPTY_SPAN_FILTER,
   encodeClause,
   evaluateSpanFilter,
@@ -12,11 +13,16 @@ import {
   hidesEverySpan,
   IClause,
   ISpanFilter,
+  keepRange,
   normalizeFilter,
+  setClauseValues,
   spanFiltersEqual,
+  traceFacets,
   Verb,
   withHiddenServices,
+  withKeepRange,
   withoutHiddenSpans,
+  withSetClause,
 } from './spanFilter';
 import genaiTestTrace from './TraceTimelineViewer/genaiTestTrace.json';
 import { makeAttributes } from '../../model/attributes';
@@ -144,7 +150,7 @@ describe('evaluateSpanFilter', () => {
     expect(hidden(f)).toEqual(new Set(['root', 'child', 'grandchild', 'sibling']));
   });
 
-  it('maps an unset status to ok, a GenAI kind to its lower-cased span type, and no usage to no tokens', () => {
+  it('maps an unset status to ok, a GenAI kind to its lower-cased span type, and no usage to no token value', () => {
     expect(
       hidden(liftFilterOf({ verb: 'keep', criterion: { shape: 'set', property: 'status', values: ['OK'] } }))
     ).toEqual(new Set(['child']));
@@ -164,11 +170,6 @@ describe('evaluateSpanFilter', () => {
         liftFilterOf({ verb: 'hide', criterion: { shape: 'range', property: 'tokens', min: 0, max: 0 } })
       )
     ).toEqual(new Set());
-    expect(
-      hidden(
-        liftFilterOf({ verb: 'keep', criterion: { shape: 'range', property: 'tokens', min: 0, max: 0 } })
-      )
-    ).toEqual(new Set(['root', 'child', 'grandchild', 'sibling']));
   });
 
   it('matches span kind case-insensitively and span type as none for plain spans', () => {
@@ -320,6 +321,172 @@ describe('withoutHiddenSpans', () => {
   });
 });
 
+describe('traceFacets', () => {
+  const root = makeSpan('root', 'svc-a', undefined, { kind: SpanKind.SERVER, duration: 10_000 });
+  const child = makeSpan('child', 'svc-b', root, {
+    status: { code: StatusCode.ERROR },
+    duration: 5_000,
+    attrs: [
+      { key: 'gen_ai.operation.name', value: 'chat' },
+      { key: 'gen_ai.usage.input_tokens', value: 120 },
+      { key: 'gen_ai.usage.output_tokens', value: 30 },
+    ],
+    genAIKind: 'LLM_CALL',
+  });
+  const leaf = makeSpan('leaf', 'svc-b', child, { duration: 100 });
+  const spans = [root, child, leaf];
+
+  it('reads usage without input or output tokens as no usage', () => {
+    const cacheOnly = makeSpan('cache', 'svc-a', undefined, {
+      attrs: [{ key: 'gen_ai.usage.cache_read.input_tokens', value: 80 }],
+    });
+    expect(traceFacets([cacheOnly, child]).ranges.tokens).toEqual([150]);
+  });
+
+  it('rounds the token total to a count and reads a negative total as no usage', () => {
+    const half = makeSpan('half', 'svc-a', undefined, {
+      attrs: [{ key: 'gen_ai.usage.input_tokens', value: 10.5 }],
+    });
+    const negative = makeSpan('negative', 'svc-a', undefined, {
+      attrs: [{ key: 'gen_ai.usage.input_tokens', value: -5 }],
+    });
+    const infinite = makeSpan('infinite', 'svc-a', undefined, {
+      attrs: [{ key: 'gen_ai.usage.input_tokens', value: 'Infinity' }],
+    });
+    const huge = makeSpan('huge', 'svc-a', undefined, {
+      attrs: [{ key: 'gen_ai.usage.input_tokens', value: 1e21 }],
+    });
+    const tiny = makeSpan('tiny', 'svc-a', undefined, {
+      attrs: [{ key: 'gen_ai.usage.input_tokens', value: -0.3 }],
+    });
+    const undefinedSum = makeSpan('nan', 'svc-a', undefined, {
+      attrs: [
+        { key: 'gen_ai.usage.input_tokens', value: 'Infinity' },
+        { key: 'gen_ai.usage.output_tokens', value: '-Infinity' },
+      ],
+    });
+    expect(traceFacets([half, negative, infinite, huge, tiny, undefinedSum]).ranges.tokens).toEqual([0, 11]);
+    expect(Object.is(traceFacets([tiny]).ranges.tokens[0], 0)).toBe(true);
+  });
+
+  it('counts the spans per value of every set property over the whole trace', () => {
+    const { values } = traceFacets(spans);
+    expect([...values.service]).toEqual([
+      ['svc-a', 1],
+      ['svc-b', 2],
+    ]);
+    expect([...values.status]).toEqual([
+      ['ok', 2],
+      ['error', 1],
+    ]);
+    expect([...values.kind]).toEqual([
+      ['server', 1],
+      ['internal', 2],
+    ]);
+    expect([...values.spanType]).toEqual([
+      ['none', 2],
+      ['llm_call', 1],
+    ]);
+  });
+
+  it('sorts the range values and counts tokens only for spans with token usage', () => {
+    const { ranges } = traceFacets(spans);
+    expect(ranges.duration).toEqual([100, 5_000, 10_000]);
+    expect(ranges.tokens).toEqual([150]);
+  });
+
+  it('returns the same object for the same spans', () => {
+    expect(traceFacets(spans)).toBe(traceFacets(spans));
+  });
+
+  it('never matches a token range against a span without token usage', () => {
+    const keep = liftFilterOf({
+      verb: 'keep',
+      criterion: { shape: 'range', property: 'tokens', min: 0, max: Infinity },
+    });
+    expect(evaluateSpanFilter(spans, keep).hiddenIDs).toEqual(new Set(['root', 'leaf']));
+  });
+});
+
+describe('describeCriterion', () => {
+  it('labels span types and kinds the way the lists do', () => {
+    expect(
+      describeCriterion({ shape: 'set', property: 'spanType', values: ['none', 'llm_call', 'mystery'] })
+    ).toBe('span type: Non-GenAI, LLM call, mystery');
+    expect(describeCriterion({ shape: 'set', property: 'kind', values: ['server'] })).toBe('kind: Server');
+    expect(describeCriterion({ shape: 'set', property: 'service', values: ['svc-a'] })).toBe(
+      'service: svc-a'
+    );
+  });
+});
+
+describe('clause helpers', () => {
+  const keepOk: IClause = { verb: 'keep', criterion: { shape: 'set', property: 'status', values: ['ok'] } };
+  const hideSvc: IClause = {
+    verb: 'hide',
+    criterion: { shape: 'set', property: 'service', values: ['svc-b'] },
+  };
+  const range: IClause = {
+    verb: 'keep',
+    criterion: { shape: 'range', property: 'duration', min: 1_000, max: Infinity },
+  };
+
+  it('reads the values of the clause with the verb on the property', () => {
+    const f = filterOf(keepOk, hideSvc);
+    expect(setClauseValues(f, 'keep', 'status')).toEqual(new Set(['ok']));
+    expect(setClauseValues(f, 'hide', 'status')).toEqual(new Set());
+    expect(setClauseValues(f, 'hide', 'service')).toEqual(new Set(['svc-b']));
+  });
+
+  it('replaces an existing clause in its place', () => {
+    const attr: IClause = { verb: 'keep', criterion: { shape: 'attr', text: 'x' } };
+    const f = withSetClause(filterOf(keepOk, attr), 'keep', 'status', new Set(['error']));
+    expect(f.clauses).toEqual([
+      { verb: 'keep', criterion: { shape: 'set', property: 'status', values: ['error'] } },
+      attr,
+    ]);
+    const r = withKeepRange(filterOf(range, attr), 'duration', { min: 0, max: 5 });
+    expect(r.clauses[1]).toBe(attr);
+  });
+
+  it('replaces the clause with the verb on the property and keeps the service hide clause last', () => {
+    const f = withSetClause(filterOf(keepOk, hideSvc), 'keep', 'status', new Set(['error']));
+    expect(f.clauses).toEqual([
+      { verb: 'keep', criterion: { shape: 'set', property: 'status', values: ['error'] } },
+      hideSvc,
+    ]);
+    expect(withSetClause(f, 'keep', 'status', new Set()).clauses).toEqual([hideSvc]);
+    expect(withSetClause(filterOf(keepOk), 'hide', 'service', new Set(['svc-b'])).clauses).toEqual([
+      keepOk,
+      hideSvc,
+    ]);
+  });
+
+  it('reads the intersection of the keep ranges on a property', () => {
+    const upper: IClause = {
+      verb: 'keep',
+      criterion: { shape: 'range', property: 'duration', min: 0, max: 5_000 },
+    };
+    expect(keepRange(filterOf(range, upper), 'duration')).toEqual({ min: 1_000, max: 5_000 });
+    const below: IClause = {
+      verb: 'keep',
+      criterion: { shape: 'range', property: 'duration', min: 0, max: 500 },
+    };
+    expect(keepRange(filterOf(range, below), 'duration')).toEqual({ min: 1_000, max: 1_000 });
+  });
+
+  it('reads and replaces the keep range on a property', () => {
+    const f = filterOf(keepOk, range);
+    expect(keepRange(f, 'duration')).toEqual({ min: 1_000, max: Infinity });
+    expect(keepRange(f, 'tokens')).toBeNull();
+    expect(withKeepRange(f, 'duration', { min: 0, max: 5 }).clauses).toEqual([
+      keepOk,
+      { verb: 'keep', criterion: { shape: 'range', property: 'duration', min: 0, max: 5 } },
+    ]);
+    expect(withKeepRange(f, 'duration', null).clauses).toEqual([keepOk]);
+  });
+});
+
 describe('clause codec', () => {
   const cases: Array<[string, IClause]> = [
     ['k:status:error', { verb: 'keep', criterion: { shape: 'set', property: 'status', values: ['error'] } }],
@@ -467,6 +634,30 @@ describe('normalizeFilter', () => {
     });
   });
 
+  it('spells the values of every set property except service as the facet rows do', () => {
+    const filter: ISpanFilter = {
+      treeMode: 'remove',
+      clauses: [set('hide', 'kind', 'SERVER', 'server', 'Client'), set('hide', 'service', 'Svc-A')],
+    };
+    expect(normalizeFilter(filter)).toEqual({
+      treeMode: 'remove',
+      clauses: [set('hide', 'service', 'Svc-A'), set('hide', 'kind', 'client', 'server')],
+    });
+  });
+
+  it('spells merged set clauses as the facet rows do', () => {
+    const filter: ISpanFilter = {
+      treeMode: 'remove',
+      clauses: [set('hide', 'kind', 'server'), set('hide', 'kind', 'SERVER', 'Client')],
+    };
+    expect(normalizeFilter(filter).clauses).toEqual([set('hide', 'kind', 'client', 'server')]);
+  });
+
+  it('sorts the values of a lone set clause', () => {
+    const filter: ISpanFilter = { treeMode: 'remove', clauses: [set('keep', 'kind', 'server', 'client')] };
+    expect(normalizeFilter(filter).clauses).toEqual([set('keep', 'kind', 'client', 'server')]);
+  });
+
   it('keeps set clauses of different verbs or properties apart', () => {
     const filter: ISpanFilter = {
       treeMode: 'remove',
@@ -529,6 +720,13 @@ describe('normalizeFilter ordering', () => {
 
 describe('spanFiltersEqual', () => {
   const a = filterOf({ verb: 'keep', criterion: { shape: 'set', property: 'status', values: ['error'] } });
+
+  it('ignores the order of the clauses', () => {
+    const x: IClause = { verb: 'hide', criterion: { shape: 'text', text: 'a' } };
+    const y: IClause = { verb: 'keep', criterion: { shape: 'attr', text: 'b' } };
+    expect(spanFiltersEqual(filterOf(x, y), filterOf(y, x))).toBe(true);
+    expect(spanFiltersEqual(filterOf(x, y), filterOf(x, x))).toBe(false);
+  });
   it('compares clauses and tree mode by value', () => {
     expect(spanFiltersEqual(a, filterOf(...a.clauses.map(c => ({ ...c }))))).toBe(true);
     expect(spanFiltersEqual(a, { ...a, treeMode: 'lift' })).toBe(false);

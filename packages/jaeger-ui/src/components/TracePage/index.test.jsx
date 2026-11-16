@@ -23,7 +23,7 @@ import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
 import { trackDetailPanelMode, trackTimelineBarsVisible } from './TraceTimelineViewer/store.track';
 import traceGenerator from '../../demo/trace-generators';
 import transformTraceData from '../../model/transform-trace-data';
-import { EMPTY_SPAN_FILTER, withHiddenServices } from './spanFilter';
+import { EMPTY_SPAN_FILTER, GENAI_VIEW_FILTER, withHiddenServices } from './spanFilter';
 import filterSpansSpy from '../../utils/filter-spans';
 import updateUiFindSpy from '../../utils/update-ui-find';
 import { queryClient } from '../../query/app-query-client';
@@ -32,6 +32,9 @@ import { ETraceViewType } from './types';
 import ScrollManager from './ScrollManager';
 
 let capturedHeaderProps = {};
+// The view type of every header render, in order, so that a test can assert what the first render
+// with the trace showed and not only where the page settled.
+let renderedViewTypes = [];
 let capturedArchiveNotifierProps = {};
 let capturedGraphProps = {};
 
@@ -171,6 +174,7 @@ vi.mock('./TraceTimelineViewer/store', () => {
   return {
     useLayoutPrefsStore: jest.fn(selector => selector(mockLayoutPrefsStore)),
     useTraceTimelineStore,
+    getSelectedSpanID: () => null,
     setDetailPanelMode: (...args) => mockSetDetailPanelMode(...args),
     SPAN_NAME_COLUMN_WIDTH_MIN: 0.15,
     SPAN_NAME_COLUMN_WIDTH_MAX: 0.85,
@@ -185,6 +189,7 @@ vi.mock('./TracePageHeader', async () => {
   return {
     default: forwardRef(function MockTracePageHeader(props, ref) {
       capturedHeaderProps = { ...props, ref };
+      renderedViewTypes.push(props.viewType);
       return (
         <div className="TracePageHeader">
           {!props.hideSummary && <div className="TracePageHeader--overviewItems" />}
@@ -257,6 +262,7 @@ describe('<TracePage>', () => {
     useTraceMock.mockReturnValue({ data: trace, isPending: false, isError: false, error: null });
     ScrollManager.mockClear();
     capturedHeaderProps = {};
+    renderedViewTypes = [];
     capturedArchiveNotifierProps = {};
     capturedGraphProps = {};
     mockTraceTimelineStore.focusUiFindMatches.mockClear();
@@ -1451,6 +1457,24 @@ describe('<TracePage>', () => {
       expect(capturedHeaderProps.viewType).toBe(ETraceViewType.GenAITimelineViewer);
     });
 
+    it('is in the GenAI view from the first render with the trace, with no provisional timeline render', () => {
+      // A timeline render before the switch would resolve the filter without the view default, and a
+      // span hidden by that filter would lose the focus the URL asked for.
+      render(<TracePage {...genAiProps} />);
+      expect(renderedViewTypes.length).toBeGreaterThan(0);
+      expect(new Set(renderedViewTypes)).toEqual(new Set([ETraceViewType.GenAITimelineViewer]));
+    });
+
+    it('applies the GenAI view default filter while the URL is silent', () => {
+      render(<TracePage {...genAiProps} />);
+      expect(mockTraceTimelineStore.setSpanFilter).toHaveBeenLastCalledWith(GENAI_VIEW_FILTER);
+      // The store mock does not hold writes, so the switch back starts with the default in the store.
+      mockTraceTimelineStore.spanFilter = GENAI_VIEW_FILTER;
+      act(() => capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceTimelineViewer));
+      expect(mockTraceTimelineStore.setSpanFilter).toHaveBeenLastCalledWith(EMPTY_SPAN_FILTER);
+      mockTraceTimelineStore.spanFilter = EMPTY_SPAN_FILTER;
+    });
+
     it('selects the GenAI view when the initial trace fetch completes', () => {
       useTraceMock.mockReturnValue({ data: undefined, isPending: true, isError: false, error: null });
       const { rerender } = render(<TracePage {...genAiProps} />);
@@ -1512,6 +1536,20 @@ describe('<TracePage>', () => {
 
       render(<TracePage {...defaultProps} id={otelTrace.traceID} />);
       expect(capturedHeaderProps.viewType).toBe(ETraceViewType.TraceTimelineViewer);
+    });
+
+    it('applies no GenAI view default to a trace without GenAI spans', () => {
+      const otelTrace = transformTraceData(traceGenerator.trace({})).asOtelTrace();
+      otelTrace.isGenAITrace = false;
+      useTraceMock.mockReturnValue({ data: otelTrace, isPending: false, isError: false, error: null });
+
+      render(<TracePage {...defaultProps} id={otelTrace.traceID} />);
+      act(() => capturedHeaderProps.onTraceViewChange(ETraceViewType.GenAITimelineViewer));
+      expect(capturedHeaderProps.viewType).toBe(ETraceViewType.GenAITimelineViewer);
+      // The store mock holds the empty filter, which is what a silent URL resolves to without a
+      // default, so the hook has nothing to write.
+      expect(mockTraceTimelineStore.spanFilter).toEqual(EMPTY_SPAN_FILTER);
+      expect(mockTraceTimelineStore.setSpanFilter).not.toHaveBeenCalled();
     });
 
     it('auto-switches when isGenAITrace is true, despite no gen_ai.* attribute', () => {

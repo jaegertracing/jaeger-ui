@@ -14,9 +14,10 @@ Proposals that have not been decided yet belong in [`docs/rfc/`](../rfc/) instea
 - [ADR-0006: Side Panel Span Details and Tree-Only Mode](./0006-side-panel-span-details.md) - Optional side panel layout for span details with independent scrolling, and tree-only mode to hide timeline bars.
 - [ADR-0007: Vite+ Toolchain](./0007-vite-plus-migration.md) - The monorepo builds with Vite/Rolldown, tests with Vitest, lints with Oxlint and formats with Oxfmt, all configured from the root `vite.config.ts`; Webpack, Babel, ESLint, Prettier, and Jest are gone. Graduated from [RFC 0005](../rfc/0005-vite-plus-migration.md).
 - [ADR-0008: Target state management architecture](./0008-target-state-management-architecture.md) - Misfiled proposal; content moved to [RFC 0006](../rfc/0006-target-state-management-architecture.md).
-- [ADR-0009: Service Filter for Trace Timeline View](./0009-service-filter-trace-timeline.md) - Filter button in the Services column to prune spans by service, with subtree pruning, hex bitmask URL encoding, and localStorage defaults.
+- [ADR-0009: Service Filter for Trace Timeline View](./0009-service-filter-trace-timeline.md) - Filter button in the Services column to prune spans by service, with subtree pruning, hex bitmask URL encoding, and localStorage defaults. Superseded by [ADR-0012](./0012-span-search-and-filter.md).
 - [ADR-0010: Layout Settings Priority Stack](./0010-layout-settings-priority-stack.md) - Misfiled proposal; content moved to [RFC 0007](../rfc/0007-layout-settings-priority-stack.md).
 - [ADR-0011: Exporting UI-Emitted Traces Back to Jaeger](./0011-ui-emitted-trace-ingest.md) - Browser exports OTLP/HTTP same-origin to the `/api/otlp/v1/traces` proxy in `jaeger-query` ([jaeger#8740](https://github.com/jaegertracing/jaeger/pull/8740)); Phase 1 UI instrumentation (document-load + fetch + page attribution) implemented.
+- [ADR-0012: Span Search and Filter on the Trace Page](./0012-span-search-and-filter.md) - One vocabulary of span criteria with the find, keep and hide verbs, a tree mode that removes or lifts the children of a hidden span, the filter popover with its chips and facets, the `f=` URL parameter, and the GenAI view's default filter. Graduated from [RFC 0009](../rfc/0009-trace-span-search-and-filter.md).
 
 ## Lifecycle
 

@@ -1,6 +1,6 @@
 # RFC 0009: Find, Keep and Hide: One Criterion Vocabulary for Spans in the Trace View
 
-* **Status**: Draft
+* **Status**: Implemented — graduated into [ADR-0012](../adr/0012-span-search-and-filter.md)
 * **Created**: 2026-11-08
 * **Last Updated**: 2026-11-10
 * **Related**: [ADR-0009](../adr/0009-service-filter-trace-timeline.md) (service filter), [#4606](https://github.com/jaegertracing/jaeger-ui/issues/4606), [#4272](https://github.com/jaegertracing/jaeger-ui/issues/4272), [#4580](https://github.com/jaegertracing/jaeger-ui/issues/4580), [#3815](https://github.com/jaegertracing/jaeger-ui/issues/3815), [#651](https://github.com/jaegertracing/jaeger-ui/issues/651), [#4312](https://github.com/jaegertracing/jaeger-ui/pull/4312)

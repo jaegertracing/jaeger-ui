@@ -297,4 +297,28 @@ describe('AppThemeProvider', () => {
     expect(controlItemBgActive).toBeDefined();
     expect(controlItemBgActive).not.toBe('');
   });
+
+  it('separates popups from the page in dark mode', async () => {
+    window.localStorage.setItem(THEME_STORAGE_KEY, 'dark');
+
+    render(
+      <AppThemeProvider>
+        <ThemeConsumer />
+      </AppThemeProvider>
+    );
+
+    const root = document.documentElement;
+    await waitFor(() => {
+      expect(root.style.getPropertyValue('--ant-color-bg-elevated')).not.toBe('');
+    });
+
+    expect(root.style.getPropertyValue('--ant-color-bg-elevated')).not.toBe(
+      root.style.getPropertyValue('--ant-color-bg-container')
+    );
+    // antd's dark algorithm derives its shadows from white, which does not show on a dark page.
+    ['--ant-box-shadow', '--ant-box-shadow-secondary', '--ant-drop-shadow-popover'].forEach(name => {
+      expect(root.style.getPropertyValue(name)).toContain('rgba(0, 0, 0, 0.5');
+      expect(root.style.getPropertyValue(name)).not.toContain('rgba(255, 255, 255');
+    });
+  });
 });
