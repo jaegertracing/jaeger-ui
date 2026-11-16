@@ -1,8 +1,8 @@
 # RFC 0007: Layout Settings Priority Stack
 
-* **Status**: Partially Implemented. PR 1's URL utilities are implemented in [#4759](https://github.com/jaegertracing/jaeger-ui/pull/4759); PRs 2–5 remain outstanding.
+* **Status**: Partially Implemented. PR 1's URL utilities are implemented in [#4759](https://github.com/jaegertracing/jaeger-ui/pull/4759), and PR 2's persistence controls in [#4777](https://github.com/jaegertracing/jaeger-ui/pull/4777); PRs 3–5 remain outstanding.
 * **Created**: 2026-05-10
-* **Last Updated**: 2026-11-12
+* **Last Updated**: 2026-11-16
 
 > Originally filed as ADR-0010. It is a proposal, and an unimplemented one, so it now lives here; [ADR-0010](../adr/0010-layout-settings-priority-stack.md) is a pointer at this document.
 
@@ -86,13 +86,13 @@ Pure functions with no React dependency:
 - `stringifySettings(settings)` — converts typed settings back into query params.
 - `rebaseSettings(search)` — strips layout params from a URL while preserving others (e.g. `uiFind`). Called when the user toggles a setting to clear the URL override.
 
-### PR 2 — `persist` flag on Zustand setters (`store.layout.ts`, `store.ts`)
+### PR 2 ✅ — `persist` flag on Zustand setters (`store.layout.ts`, `store.ts`)
 
-The Zustand setters (`setTimelineBarsVisible`, `applyDetailPanelModeToLayout`) gain an optional `persist?: boolean` flag (default `true`). When `persist=false`, the store state is updated but localStorage is not written. This is the mechanism that allows URL-driven updates to take effect in the UI without corrupting stored defaults. URL-driven and toggle-driven updates pass `persist=false`; only explicit "Set as my default" actions pass `persist=true`.
+Implemented in [#4777](https://github.com/jaegertracing/jaeger-ui/pull/4777) on top of #4112's `persist` middleware. The Zustand setters (`setTimelineBarsVisible`, `applyDetailPanelModeToLayout`) accept an optional options object with `persist?: boolean`, defaulting to `true`. The `setDetailPanelMode` coordinator in `store.ts` forwards the options. With `{ persist: false }`, the displayed layout changes and `explicitPrefs` retains its object identity. The custom storage adapter skips the write when that object is unchanged, preserving defaults saved by another tab.
 
-Implemented on top of #4112's `persist` middleware. The delivered flag differs from the sketch above in two ways. First, it does not skip the `localStorage` write. The middleware saves only `explicitPrefs`, and `persist=false` leaves `explicitPrefs` unchanged, so the write carries no new value. Second, the toggles still save. Existing callers pass no flag, and moving them to `persist=false` waits for "Set as my default". The `setDetailPanelMode` coordinator in `store.ts` forwards the flag.
+Existing callers omit the options and still save their changes. No caller passes `{ persist: false }` yet; URL-driven updates will use it when `useLayoutSettings` lands. Moving toggles to temporary updates waits for "Set as my default".
 
-Two limits remain. Every change writes the tab's own `explicitPrefs`, and the store does not listen for changes from other tabs. A `persist=false` call in a tab loaded before another tab saved a choice therefore erases that choice, as explicit saves already do. Switching to the side panel also narrows the span name column to fit, and switching back to inline does not restore the width until the next load. The saved width stays unchanged.
+Switching to the side panel narrows the span name column to fit, and switching back to inline does not restore the width until the next load. The saved width stays unchanged.
 
 ### PR 3 — `TraceViewSettings` UI redesign
 
