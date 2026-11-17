@@ -53,7 +53,7 @@ If a higher-priority source provides a value, lower-priority sources are ignored
 
 ### A toggle writes its value to the URL
 
-When a user flips a toggle, the new value takes effect immediately and is written to the URL as that setting's parameter (`?timeline=off`), whether or not the URL carried the parameter before. It is not written to localStorage. A refresh or a copied link therefore keeps the value. This reverses the earlier proposal, which removed the parameter on toggle and kept the new value only in memory.
+When a user flips a toggle, the new value takes effect immediately and is written to the URL as that setting's parameter (`?timeline=off`), whether or not the URL carried the parameter before. It is not written to localStorage. A refresh or a copied link therefore keeps the value.
 
 To make a value permanent, the user must explicitly click "Set as my default", which writes to localStorage.
 
