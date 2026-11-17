@@ -66,7 +66,7 @@ function wireTrace({
     ])
   ),
   numberOfProcesses = chance.integer({ min: 1, max: 10 }),
-  maxDepth = chance.integer({ min: 1, max: 10 }),
+  maxDepth = chance.integer({ min: 2, max: 10 }),
 }: IOtelTraceOptions = {}): TracesDataWire {
   const traceId = randomHex(32);
   const services = generatedServices(numberOfProcesses);
@@ -89,7 +89,6 @@ function wireTrace({
       spanId,
       ...(parentIndex === undefined ? {} : { parentSpanId: spanIds[parentIndex] }),
       name: chance.pickone(OPERATIONS_LIST),
-      kind: 2,
       startTimeUnixNano: (BigInt(start) * 1000n).toString(),
       endTimeUnixNano: (BigInt(start + duration) * 1000n).toString(),
       attributes: generatedSpanAttributes(),
