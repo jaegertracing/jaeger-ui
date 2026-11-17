@@ -37,14 +37,19 @@ type LayoutPrefs = {
   heatmapEnabled: boolean;
 };
 
+export type LayoutUpdateOptions = {
+  persist?: boolean;
+};
+
 type TraceTimelineLayoutPrefsStore = LayoutPrefs & {
   // Only choices made by the user are saved; derived defaults stay in memory.
   explicitPrefs: Partial<LayoutPrefs>;
   setSpanNameColumnWidth: (width: number) => void;
   setSidePanelWidth: (width: number) => void;
   // Updates layout fields only; use `setDetailPanelMode` from `./store` to also sync detail panel state.
-  applyDetailPanelModeToLayout: (mode: SpanDetailPanelMode) => void;
-  setTimelineBarsVisible: (visible: boolean) => void;
+  // With `persist: false` the view changes without writing to localStorage.
+  applyDetailPanelModeToLayout: (mode: SpanDetailPanelMode, options?: LayoutUpdateOptions) => void;
+  setTimelineBarsVisible: (visible: boolean, options?: LayoutUpdateOptions) => void;
   toggleHeatmap: () => void;
 };
 
@@ -172,6 +177,8 @@ function readLayoutPrefs(value: unknown): Partial<LayoutPrefs> {
   return prefs;
 }
 
+let lastStoredPrefs: Partial<LayoutPrefs> | undefined;
+
 // Keep the stored version intact so persist can run migrations before resolving the layout.
 // Old keys remain until the residual Redux layout fields are removed in a separate change.
 const layoutPrefsStorage: PersistStorage<Partial<LayoutPrefs>> = {
@@ -191,7 +198,11 @@ const layoutPrefsStorage: PersistStorage<Partial<LayoutPrefs>> = {
     const legacy = readLegacyLayoutPrefs();
     return legacy ? { state: legacy, version: 0 } : null;
   },
-  setItem: (name, value) => storage.setItem(name, JSON.stringify(value)),
+  setItem: (name, value) => {
+    if (value.state === lastStoredPrefs) return;
+    storage.setItem(name, JSON.stringify(value));
+    lastStoredPrefs = value.state;
+  },
   removeItem: name => storage.removeItem(name),
 };
 
@@ -224,7 +235,7 @@ export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()(
         }));
       },
 
-      applyDetailPanelModeToLayout: (mode: SpanDetailPanelMode) => {
+      applyDetailPanelModeToLayout: (mode: SpanDetailPanelMode, options: LayoutUpdateOptions = {}) => {
         let { spanNameColumnWidth, sidePanelWidth, timelineBarsVisible } = get();
         if (mode === 'sidepanel') {
           const maxWidth = getMaxNameColumnWidth({
@@ -237,14 +248,20 @@ export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()(
         set(state => ({
           detailPanelMode: mode,
           spanNameColumnWidth,
-          explicitPrefs: { ...state.explicitPrefs, detailPanelMode: mode },
+          explicitPrefs:
+            options.persist === false
+              ? state.explicitPrefs
+              : { ...state.explicitPrefs, detailPanelMode: mode },
         }));
       },
 
-      setTimelineBarsVisible: (visible: boolean) => {
+      setTimelineBarsVisible: (visible: boolean, options: LayoutUpdateOptions = {}) => {
         set(state => ({
           timelineBarsVisible: visible,
-          explicitPrefs: { ...state.explicitPrefs, timelineBarsVisible: visible },
+          explicitPrefs:
+            options.persist === false
+              ? state.explicitPrefs
+              : { ...state.explicitPrefs, timelineBarsVisible: visible },
         }));
       },
 
@@ -259,6 +276,9 @@ export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()(
       name: STORAGE_KEY,
       version: STORAGE_VERSION,
       storage: layoutPrefsStorage,
+      onRehydrateStorage: () => state => {
+        if (state) lastStoredPrefs = state.explicitPrefs;
+      },
       // Version 0 is the same four preferences read from the old, separate keys.
       migrate: persisted => readLayoutPrefs(persisted),
       partialize: state => state.explicitPrefs,

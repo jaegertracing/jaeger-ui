@@ -3,7 +3,7 @@
 
 import DetailState from './SpanDetail/DetailState';
 import type { SpanDetailPanelMode } from '../../../types/config';
-import { useLayoutPrefsStore } from './store.layout';
+import { useLayoutPrefsStore, type LayoutUpdateOptions } from './store.layout';
 import { useTraceTimelineStore } from './store.timeline';
 
 export {
@@ -20,7 +20,7 @@ export { useTraceTimelineStore } from './store.timeline';
 
 export { calculateFocusedFindRowStates, getSelectedSpanID } from './timeline-utils';
 
-export function setDetailPanelMode(mode: SpanDetailPanelMode): void {
+export function setDetailPanelMode(mode: SpanDetailPanelMode, options?: LayoutUpdateOptions): void {
   if (mode === 'sidepanel') {
     const { detailStates } = useTraceTimelineStore.getState();
     if (detailStates.size > 0) {
@@ -30,5 +30,5 @@ export function setDetailPanelMode(mode: SpanDetailPanelMode): void {
       });
     }
   }
-  useLayoutPrefsStore.getState().applyDetailPanelModeToLayout(mode);
+  useLayoutPrefsStore.getState().applyDetailPanelModeToLayout(mode, options);
 }
