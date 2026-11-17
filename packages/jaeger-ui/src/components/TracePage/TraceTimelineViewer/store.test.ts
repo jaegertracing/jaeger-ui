@@ -48,6 +48,17 @@ describe('layout preference hydration', () => {
     resetLayoutStores();
   });
 
+  it('displays the saved preferences when the module loads', async () => {
+    localStorage.setItem(
+      'jaeger.layout',
+      JSON.stringify({ state: { timelineBarsVisible: false }, version: 1 })
+    );
+    vi.resetModules();
+    const freshModule = await import('./store.layout');
+    expect(freshModule.useDisplayedLayoutStore.getState().timelineBarsVisible).toBe(false);
+    expect(freshModule.useSavedLayoutPrefsStore.getState()).toEqual({ timelineBarsVisible: false });
+  });
+
   it('returns default values when localStorage is empty and config has no traceTimeline', async () => {
     const state = await rehydrateLayoutPrefs();
     expect(state.spanNameColumnWidth).toBe(0.25);

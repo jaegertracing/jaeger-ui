@@ -126,7 +126,7 @@ const {
   mockSubmitTraceToArchive,
   mockAcknowledge,
   mockSetDetailPanelMode,
-  mockLayoutPrefsStore,
+  mockDisplayedLayoutStore,
   mockTraceTimelineStore,
   useEmbeddedStateMock,
   useTraceMock,
@@ -135,7 +135,7 @@ const {
   mockSubmitTraceToArchive: jest.fn(),
   mockAcknowledge: jest.fn(),
   mockSetDetailPanelMode: jest.fn(),
-  mockLayoutPrefsStore: {
+  mockDisplayedLayoutStore: {
     detailPanelMode: 'inline',
     timelineBarsVisible: true,
     setTimelineBarsVisible: jest.fn(),
@@ -172,7 +172,7 @@ vi.mock('./TraceTimelineViewer/store', () => {
   const useTraceTimelineStore = jest.fn(selector => selector(mockTraceTimelineStore));
   useTraceTimelineStore.getState = () => mockTraceTimelineStore;
   return {
-    useDisplayedLayoutStore: jest.fn(selector => selector(mockLayoutPrefsStore)),
+    useDisplayedLayoutStore: jest.fn(selector => selector(mockDisplayedLayoutStore)),
     useTraceTimelineStore,
     getSelectedSpanID: () => null,
     setDetailPanelMode: (...args) => mockSetDetailPanelMode(...args),
@@ -971,7 +971,7 @@ describe('<TracePage>', () => {
 
     describe('calculates hideMap correctly', () => {
       afterEach(() => {
-        mockLayoutPrefsStore.timelineBarsVisible = true;
+        mockDisplayedLayoutStore.timelineBarsVisible = true;
       });
 
       it('is false on the timeline view', () => {
@@ -1005,7 +1005,7 @@ describe('<TracePage>', () => {
       });
 
       it('is true if timeline bars are hidden', () => {
-        mockLayoutPrefsStore.timelineBarsVisible = false;
+        mockDisplayedLayoutStore.timelineBarsVisible = false;
         renderWithRouter(<TracePage {...defaultProps} />);
 
         const spanGraph = screen.queryByTestId('span-graph');
@@ -1221,11 +1221,11 @@ describe('<TracePage>', () => {
   describe('layout toggle handlers', () => {
     beforeEach(() => {
       mockSetDetailPanelMode.mockClear();
-      mockLayoutPrefsStore.setTimelineBarsVisible.mockClear();
+      mockDisplayedLayoutStore.setTimelineBarsVisible.mockClear();
     });
 
     it('calls setDetailPanelMode (Zustand + tracking) with sidepanel when detailPanelMode is inline', () => {
-      mockLayoutPrefsStore.detailPanelMode = 'inline';
+      mockDisplayedLayoutStore.detailPanelMode = 'inline';
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onDetailPanelModeToggle();
       expect(mockSetDetailPanelMode).toHaveBeenCalledWith('sidepanel');
@@ -1233,7 +1233,7 @@ describe('<TracePage>', () => {
     });
 
     it('calls setDetailPanelMode (Zustand + tracking) with inline when detailPanelMode is sidepanel', () => {
-      mockLayoutPrefsStore.detailPanelMode = 'sidepanel';
+      mockDisplayedLayoutStore.detailPanelMode = 'sidepanel';
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onDetailPanelModeToggle();
       expect(mockSetDetailPanelMode).toHaveBeenCalledWith('inline');
@@ -1241,18 +1241,18 @@ describe('<TracePage>', () => {
     });
 
     it('calls setTimelineBarsVisible (Zustand + tracking) with false when timelineBarsVisible is true', () => {
-      mockLayoutPrefsStore.timelineBarsVisible = true;
+      mockDisplayedLayoutStore.timelineBarsVisible = true;
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onTimelineToggle();
-      expect(mockLayoutPrefsStore.setTimelineBarsVisible).toHaveBeenCalledWith(false);
+      expect(mockDisplayedLayoutStore.setTimelineBarsVisible).toHaveBeenCalledWith(false);
       expect(trackTimelineBarsVisible).toHaveBeenCalledWith(false);
     });
 
     it('calls setTimelineBarsVisible (Zustand + tracking) with true when timelineBarsVisible is false', () => {
-      mockLayoutPrefsStore.timelineBarsVisible = false;
+      mockDisplayedLayoutStore.timelineBarsVisible = false;
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onTimelineToggle();
-      expect(mockLayoutPrefsStore.setTimelineBarsVisible).toHaveBeenCalledWith(true);
+      expect(mockDisplayedLayoutStore.setTimelineBarsVisible).toHaveBeenCalledWith(true);
       expect(trackTimelineBarsVisible).toHaveBeenCalledWith(true);
     });
   });
