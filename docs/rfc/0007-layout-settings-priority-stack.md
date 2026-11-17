@@ -2,7 +2,7 @@
 
 * **Status**: Partially Implemented. PR 1's URL utilities are implemented in [#4759](https://github.com/jaegertracing/jaeger-ui/pull/4759), and PR 2's persistence controls in [#4777](https://github.com/jaegertracing/jaeger-ui/pull/4777); PRs 3–5 remain outstanding.
 * **Created**: 2026-05-10
-* **Last Updated**: 2026-11-16
+* **Last Updated**: 2026-11-17
 
 > Originally filed as ADR-0010. It is a proposal, and an unimplemented one, so it now lives here; [ADR-0010](../adr/0010-layout-settings-priority-stack.md) is a pointer at this document.
 
@@ -51,15 +51,11 @@ If a higher-priority source provides a value, lower-priority sources are ignored
 - **Heuristics** override localStorage but not URLs. They represent automatic optimizations based on trace characteristics.
 - **localStorage** is the baseline. It represents the user's deliberate saved preferences.
 
-### Session toggles are ephemeral
+### A toggle writes its value to the URL
 
-When a user flips a toggle while a URL or heuristic override is active, the new value takes effect immediately in the current session but is not written to localStorage and not added to the URL. On page refresh, the setting reverts to the localStorage default. This is intentional: a session toggle is an ephemeral adjustment, not a preference change.
+When a user flips a toggle, the new value takes effect immediately and is written to the URL as that setting's parameter (`?timeline=off`), whether or not the URL carried the parameter before. It is not written to localStorage. A refresh or a copied link therefore keeps the value.
 
 To make a value permanent, the user must explicitly click "Set as my default", which writes to localStorage.
-
-### URL parameters are stripped on toggle
-
-When the user toggles a setting that was set by a URL parameter, the URL param is stripped. Ownership of that setting transfers from the URL to the in-memory store. This prevents the URL from continuing to override the user's intent after they have acted.
 
 ### UX: source transparency
 
@@ -84,7 +80,7 @@ Pure functions with no React dependency:
 
 - `parseSettingsFromUrl(search)` — parses `?timeline=on|off` and `?sidebar=inline|sidepanel` into typed values, returning `null` for absent or unrecognized params.
 - `stringifySettings(settings)` — converts typed settings back into query params.
-- `rebaseSettings(search)` — strips layout params from a URL while preserving others (e.g. `uiFind`). Called when the user toggles a setting to clear the URL override.
+- `rebaseSettings(search)` — strips layout params from a URL while preserving others (e.g. `uiFind`).
 
 ### PR 2 ✅ — `persist` flag on Zustand setters (`store.layout.ts`, `store.ts`)
 
@@ -114,11 +110,11 @@ Resolution order per setting:
 
 1. If a URL param is present and valid → `source: 'url'`, `isOverridden: urlValue !== lsDefault`.
 2. Else if a heuristic override is present → `source: 'heuristic'`, `isOverridden: heuristicValue !== lsDefault`.
-3. Else → `source: 'localstorage'`, `isOverridden: storeValue !== lsDefault` (detects session-only changes).
+3. Else → `source: 'localstorage'`, `isOverridden: storeValue !== lsDefault`.
 
 The hook also keeps the Zustand store in sync with URL values via a `useEffect` so that components reading Zustand directly (e.g. `TraceTimelineViewer`) see the correct values without going through the hook.
 
-When a URL param disappears, the store is reverted to the localStorage default — but only if the store value still matches what the URL had set. This "revert guard" preserves any manual change the user made during the session.
+When a trace page opens, the hook sets the store from that page's URL: a setting with a parameter takes the parameter's value, and a setting without one takes the heuristic value, or else the localStorage default. A value shown on a trace that was open before does not carry over.
 
 `TracePage` calls `useLayoutSettings(location.search)` and uses `resolvedSetting.value` for rendering instead of raw Zustand store values. This is the single resolution point; all child components receive the effective value via props.
 
@@ -136,7 +132,7 @@ Adds the override indicator UI to `TraceViewSettings`: a source badge (*Set by s
 
 ### Negative
 
-- Session toggles are ephemeral. Users who want permanence must use "Set as my default" — this is a new interaction pattern that may not be immediately obvious.
+- A toggled value lives in the URL and is not saved as a default. Users who want permanence must use "Set as my default" — this is a new interaction pattern that may not be immediately obvious.
 - Components deep in the tree continue to read from Zustand directly; the hook keeps the store in sync so this remains correct, but the indirection is non-obvious.
 
 ### Future work
