@@ -49,7 +49,7 @@ const { mockLayoutPrefsStore, mockTraceTimelineStore, mockUseTraceTimelineStore 
 vi.mock('./store.track');
 
 vi.mock('./store', () => ({
-  useLayoutPrefsStore: vi.fn(selector => selector(mockLayoutPrefsStore)),
+  useDisplayedLayoutStore: vi.fn(selector => selector(mockLayoutPrefsStore)),
   useTraceTimelineStore: mockUseTraceTimelineStore,
   getSelectedSpanID: detailStatesArg =>
     detailStatesArg.size > 0 ? detailStatesArg.keys().next().value : null,

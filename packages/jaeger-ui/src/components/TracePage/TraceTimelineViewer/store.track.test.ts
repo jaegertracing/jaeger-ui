@@ -17,7 +17,7 @@ vi.mock('../../../utils/tracking', async importOriginal => ({
 }));
 
 import traceTimeline, { actions } from './duck';
-import { setDetailPanelMode, useLayoutPrefsStore, useTraceTimelineStore } from './store';
+import { setDetailPanelMode, useDisplayedLayoutStore, useTraceTimelineStore } from './store';
 import { useSavedLayoutPrefsStore } from './store.layout';
 import * as track from './store.track';
 import trackMiddleware from '../../../middlewares/track';
@@ -55,7 +55,7 @@ const trace = {
 } as unknown as IOtelTrace;
 
 const timeline = () => useTraceTimelineStore.getState();
-const layout = () => useLayoutPrefsStore.getState();
+const layout = () => useDisplayedLayoutStore.getState();
 
 type TInteraction = {
   // The Redux action the component dispatches today, observed by the tracking middleware.
@@ -197,7 +197,7 @@ const interactions: TInteraction[] = [
 
 function resetStores() {
   useTraceTimelineStore.setState(useTraceTimelineStore.getInitialState(), true);
-  useLayoutPrefsStore.setState(useLayoutPrefsStore.getInitialState(), true);
+  useDisplayedLayoutStore.setState(useDisplayedLayoutStore.getInitialState(), true);
   useSavedLayoutPrefsStore.setState({}, true);
   localStorage.clear();
   vi.mocked(trackEvent).mockClear();

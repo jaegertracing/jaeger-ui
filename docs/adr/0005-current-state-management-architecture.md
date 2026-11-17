@@ -55,7 +55,7 @@ The replacement for Redux's role. Cross-feature stores live in `src/stores/`; a 
 | Store | File | Owns |
 | :--- | :--- | :--- |
 | `useTraceTimelineStore` | `components/TracePage/TraceTimelineViewer/store.timeline.ts` | Per-trace timeline interaction (collapse, open details, pruned services) |
-| `useLayoutPrefsStore` | `components/TracePage/TraceTimelineViewer/store.layout.ts` | Displayed timeline layout, in memory |
+| `useDisplayedLayoutStore` | `components/TracePage/TraceTimelineViewer/store.layout.ts` | Displayed timeline layout, in memory |
 | `useSavedLayoutPrefsStore` | `components/TracePage/TraceTimelineViewer/store.layout.ts` | Timeline layout preferences that the user chose, persisted to `localStorage` |
 | `useTraceDiffStore` | `stores/trace-diff-store.ts` | Compare cohort |
 | `useArchiveStore` | `stores/archive-store.ts` | Archive mutation status |

@@ -3,7 +3,7 @@
 
 import DetailState from './SpanDetail/DetailState';
 import type { SpanDetailPanelMode } from '../../../types/config';
-import { useLayoutPrefsStore, type LayoutUpdateOptions } from './store.layout';
+import { useDisplayedLayoutStore, type LayoutUpdateOptions } from './store.layout';
 import { useTraceTimelineStore } from './store.timeline';
 
 export {
@@ -14,7 +14,7 @@ export {
   SPAN_NAME_COLUMN_WIDTH_MIN,
 } from './store.constants';
 
-export { normalizeLayoutPrefs, useLayoutPrefsStore } from './store.layout';
+export { normalizeLayoutPrefs, useDisplayedLayoutStore } from './store.layout';
 
 export { useTraceTimelineStore } from './store.timeline';
 
@@ -30,5 +30,5 @@ export function setDetailPanelMode(mode: SpanDetailPanelMode, options?: LayoutUp
       });
     }
   }
-  useLayoutPrefsStore.getState().applyDetailPanelModeToLayout(mode, options);
+  useDisplayedLayoutStore.getState().applyDetailPanelModeToLayout(mode, options);
 }

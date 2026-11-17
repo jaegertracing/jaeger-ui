@@ -172,7 +172,7 @@ vi.mock('./TraceTimelineViewer/store', () => {
   const useTraceTimelineStore = jest.fn(selector => selector(mockTraceTimelineStore));
   useTraceTimelineStore.getState = () => mockTraceTimelineStore;
   return {
-    useLayoutPrefsStore: jest.fn(selector => selector(mockLayoutPrefsStore)),
+    useDisplayedLayoutStore: jest.fn(selector => selector(mockLayoutPrefsStore)),
     useTraceTimelineStore,
     getSelectedSpanID: () => null,
     setDetailPanelMode: (...args) => mockSetDetailPanelMode(...args),

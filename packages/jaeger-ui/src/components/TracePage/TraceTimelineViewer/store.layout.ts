@@ -28,9 +28,9 @@ export function getMaxNameColumnWidth(opts: {
   return Math.min(SPAN_NAME_COLUMN_WIDTH_MAX, availableWidth);
 }
 
-// The layout settings, without the actions. The displayed layout holds all of them, and the
-// saved preferences hold the ones that the user chose.
-type LayoutPrefs = {
+// The layout settings. The displayed layout has a value for each one. The saved preferences are
+// `Partial<LayoutSettings>`, in which a setting is absent until the user chooses it.
+type LayoutSettings = {
   spanNameColumnWidth: number;
   sidePanelWidth: number;
   detailPanelMode: SpanDetailPanelMode;
@@ -42,7 +42,7 @@ export type LayoutUpdateOptions = {
   persist?: boolean;
 };
 
-type TraceTimelineLayoutPrefsStore = LayoutPrefs & {
+type DisplayedLayoutStore = LayoutSettings & {
   setSpanNameColumnWidth: (width: number) => void;
   setSidePanelWidth: (width: number) => void;
   // Updates layout fields only; use `setDetailPanelMode` from `./store` to also sync detail panel state.
@@ -56,9 +56,9 @@ type TraceTimelineLayoutPrefsStore = LayoutPrefs & {
 const STORAGE_KEY = 'jaeger.layout';
 const STORAGE_VERSION = 1;
 
-// Reads the legacy unprefixed keys into a partial LayoutPrefs, or returns null when none are present.
+// Reads the legacy unprefixed keys into a partial LayoutSettings, or returns null when none are present.
 // Used as a one-time fallback on first load before the namespaced key exists.
-function readLegacyLayoutPrefs(): Partial<LayoutPrefs> | null {
+function readLegacyLayoutPrefs(): Partial<LayoutSettings> | null {
   const rawSpanNameColumnWidth = storage.getItem('spanNameColumnWidth');
   const rawSidePanelWidth = storage.getItem('sidePanelWidth');
   const rawDetailPanelMode = storage.getItem('detailPanelMode');
@@ -73,7 +73,7 @@ function readLegacyLayoutPrefs(): Partial<LayoutPrefs> | null {
     return null;
   }
 
-  const prefs: Partial<LayoutPrefs> = {};
+  const prefs: Partial<LayoutSettings> = {};
   const parsedSpanNameColumnWidth = parseFloat(rawSpanNameColumnWidth ?? '');
   if (!Number.isNaN(parsedSpanNameColumnWidth)) {
     prefs.spanNameColumnWidth = parsedSpanNameColumnWidth;
@@ -92,7 +92,7 @@ function readLegacyLayoutPrefs(): Partial<LayoutPrefs> | null {
 }
 
 // Resolves saved choices against configuration defaults and the available column widths.
-function normalizeLayoutPrefs(stored: Partial<LayoutPrefs>): LayoutPrefs {
+function normalizeLayoutPrefs(stored: Partial<LayoutSettings>): LayoutSettings {
   const { traceTimeline } = getConfig();
 
   let detailPanelMode: SpanDetailPanelMode = 'inline';
@@ -154,10 +154,10 @@ function normalizeLayoutPrefs(stored: Partial<LayoutPrefs>): LayoutPrefs {
 }
 
 // Storage is untrusted input. Copy only valid preference values, never actions or other store fields.
-function readLayoutPrefs(value: unknown): Partial<LayoutPrefs> {
+function readLayoutPrefs(value: unknown): Partial<LayoutSettings> {
   if (!value || typeof value !== 'object') return {};
-  const stored = value as Partial<LayoutPrefs>;
-  const prefs: Partial<LayoutPrefs> = {};
+  const stored = value as Partial<LayoutSettings>;
+  const prefs: Partial<LayoutSettings> = {};
   if (typeof stored.spanNameColumnWidth === 'number' && Number.isFinite(stored.spanNameColumnWidth)) {
     prefs.spanNameColumnWidth = stored.spanNameColumnWidth;
   }
@@ -178,12 +178,12 @@ function readLayoutPrefs(value: unknown): Partial<LayoutPrefs> {
 
 // Keep the stored version intact so persist can run migrations before resolving the layout.
 // Old keys remain until the residual Redux layout fields are removed in a separate change.
-const layoutPrefsStorage: PersistStorage<Partial<LayoutPrefs>> = {
+const layoutPrefsStorage: PersistStorage<Partial<LayoutSettings>> = {
   getItem: name => {
     const raw = storage.getItem(name);
     if (raw !== null) {
       try {
-        const parsed = JSON.parse(raw) as StorageValue<Partial<LayoutPrefs>>;
+        const parsed = JSON.parse(raw) as StorageValue<Partial<LayoutSettings>>;
         if (parsed && parsed.state && typeof parsed.state === 'object' && !Array.isArray(parsed.state)) {
           return parsed;
         }
@@ -202,7 +202,7 @@ const layoutPrefsStorage: PersistStorage<Partial<LayoutPrefs>> = {
 // This store holds the preferences that the user chose, as saved in localStorage. Resolved defaults
 // stay out of it, because saving them would turn untouched fields into explicit preferences and
 // change the next load's layout.
-export const useSavedLayoutPrefsStore = create<Partial<LayoutPrefs>>()(
+export const useSavedLayoutPrefsStore = create<Partial<LayoutSettings>>()(
   persist(() => ({}), {
     name: STORAGE_KEY,
     version: STORAGE_VERSION,
@@ -220,7 +220,7 @@ export const useSavedLayoutPrefsStore = create<Partial<LayoutPrefs>>()(
 // take `persist: false`, because only their settings can come from a URL. Each setter saves before
 // it changes the displayed layout, so that a subscriber of this store that calls a setter in response does not
 // have its newer choice overwritten by the older one.
-export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()((set, get) => ({
+export const useDisplayedLayoutStore = create<DisplayedLayoutStore>()((set, get) => ({
   ...normalizeLayoutPrefs({}),
 
   setSpanNameColumnWidth: (width: number) => {
@@ -274,7 +274,7 @@ export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()((set,
 
 // The displayed layout starts as the saved preferences resolved against the configuration defaults.
 useSavedLayoutPrefsStore.persist.onFinishHydration(savedPrefs => {
-  useLayoutPrefsStore.setState(normalizeLayoutPrefs(savedPrefs));
+  useDisplayedLayoutStore.setState(normalizeLayoutPrefs(savedPrefs));
 });
 void useSavedLayoutPrefsStore.persist.rehydrate();
 

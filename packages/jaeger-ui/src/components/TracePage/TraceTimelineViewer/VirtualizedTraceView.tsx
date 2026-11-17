@@ -33,7 +33,7 @@ import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan, IOtelTrace, IAttributes, IEvent } from '../../../types/otel';
 import { heatmapColor } from '../../../utils/span-latency-stats';
 import TTraceTimeline from '../../../types/TTraceTimeline';
-import { getSelectedSpanID, useLayoutPrefsStore, useTraceTimelineStore } from './store';
+import { getSelectedSpanID, useDisplayedLayoutStore, useTraceTimelineStore } from './store';
 import {
   trackChildrenToggle,
   trackDetailLogItemToggle,
@@ -662,10 +662,10 @@ function VirtualizedTraceViewWrapper(
 ) {
   const uiFind = parseUiFind(ownProps.search ?? ownProps.location.search ?? '');
 
-  const spanNameColumnWidth = useLayoutPrefsStore(s => s.spanNameColumnWidth);
-  const sidePanelWidth = useLayoutPrefsStore(s => s.sidePanelWidth);
-  const detailPanelMode = useLayoutPrefsStore(s => s.detailPanelMode);
-  const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
+  const spanNameColumnWidth = useDisplayedLayoutStore(s => s.spanNameColumnWidth);
+  const sidePanelWidth = useDisplayedLayoutStore(s => s.sidePanelWidth);
+  const detailPanelMode = useDisplayedLayoutStore(s => s.detailPanelMode);
+  const timelineBarsVisible = useDisplayedLayoutStore(s => s.timelineBarsVisible);
   const traceID = useTraceTimelineStore(s => s.traceID);
   const childrenHiddenIDs = useTraceTimelineStore(s => s.childrenHiddenIDs);
   const detailStates = useTraceTimelineStore(s => s.detailStates);
