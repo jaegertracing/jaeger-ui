@@ -51,28 +51,33 @@ export default class ZoomManager {
 
   private elem: Element | null = null;
   private contentSize: TSize | null = null;
-  private selection: Selection<Element, ZoomTransform, any, any> | null = null;
+  private selection: Selection<Element, unknown, null, undefined> | null = null;
   private readonly updateCallback: TUpdateCallback;
-  private readonly zoom: ZoomBehavior<Element, ZoomTransform>;
+  private readonly zoom: ZoomBehavior<Element, unknown>;
   private currentTransform: ZoomTransform = zoomIdentity;
 
   constructor(updateCallback: TUpdateCallback) {
     this.updateCallback = updateCallback;
-    this.zoom = d3Zoom<Element, ZoomTransform>()
+    this.zoom = d3Zoom<Element, unknown>()
       .scaleExtent(DEFAULT_SCALE_EXTENT)
       .constrain(this.constrainZoom)
       .on('zoom', this.onZoomed);
   }
 
   public setElement(elem: Element) {
-    if (elem === this.elem) {
+    const isSameElement = elem === this.elem;
+    if (isSameElement && this.selection) {
       return;
     }
     this.elem = elem;
     this.selection = select(elem);
     this.selection.call(this.zoom);
     this.setExtent();
-    this.resetZoom();
+    if (isSameElement) {
+      this.zoom.transform(this.selection, this.currentTransform);
+    } else {
+      this.resetZoom();
+    }
   }
 
   public setContentSize(size: TSize) {
@@ -86,6 +91,16 @@ export default class ZoomManager {
     this.setExtent();
     this.resetZoom();
   }
+
+  public dispose() {
+    if (this.selection) {
+      this.selection.on('.zoom', null);
+    }
+    // Retain the element, content size and transform so an effect reconnect can restore the same viewport.
+    this.selection = null;
+  }
+
+  public getTransform = () => this.currentTransform;
 
   public zoomIn = () => {
     const selection = this.selection;
