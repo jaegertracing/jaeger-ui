@@ -18,6 +18,7 @@ vi.mock('../../../utils/tracking', async importOriginal => ({
 
 import traceTimeline, { actions } from './duck';
 import { setDetailPanelMode, useLayoutPrefsStore, useTraceTimelineStore } from './store';
+import { useSavedLayoutPrefsStore } from './store.layout';
 import * as track from './store.track';
 import trackMiddleware from '../../../middlewares/track';
 import { queryClient } from '../../../query/app-query-client';
@@ -197,6 +198,7 @@ const interactions: TInteraction[] = [
 function resetStores() {
   useTraceTimelineStore.setState(useTraceTimelineStore.getInitialState(), true);
   useLayoutPrefsStore.setState(useLayoutPrefsStore.getInitialState(), true);
+  useSavedLayoutPrefsStore.setState({}, true);
   localStorage.clear();
   vi.mocked(trackEvent).mockClear();
 }
