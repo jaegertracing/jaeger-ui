@@ -110,7 +110,7 @@ Resolution order per setting:
 
 The hook also keeps the Zustand store in sync with URL values via a `useEffect` so that components reading Zustand directly (e.g. `TraceTimelineViewer`) see the correct values without going through the hook.
 
-When a URL param disappears, the store is reverted to the localStorage default. The revert cannot discard a manual change, because a toggle writes its value to the URL.
+When a URL param disappears, for example on navigation to another trace through a link without it, the store is reverted to the localStorage default.
 
 `TracePage` calls `useLayoutSettings(location.search)` and uses `resolvedSetting.value` for rendering instead of raw Zustand store values. This is the single resolution point; all child components receive the effective value via props.
 
