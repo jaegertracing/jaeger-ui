@@ -6,7 +6,6 @@ import { Row, Col, Input, Alert, Select, Button } from 'antd';
 import _debounce from 'lodash/debounce';
 import _isEmpty from 'lodash/isEmpty';
 import store from '../../../utils/storage';
-import { Link } from 'react-router-dom';
 import type { NavigateFunction } from 'react-router-dom';
 import OperationTableDetails from './operationDetailsTable';
 import ServiceGraph from './serviceGraph';
@@ -328,9 +327,9 @@ export function MonitorATMServicesViewImpl({ search = '', navigate }: TOwnProps)
           message={
             <>
               No data yet! Please see these
-              <Link to={{ pathname: docsLink }} target="_blank">
+              <a href={docsLink} target="_blank" rel="noopener noreferrer">
                 &nbsp;instructions&nbsp;
-              </Link>
+              </a>
               on how to set up your span metrics.
             </>
           }

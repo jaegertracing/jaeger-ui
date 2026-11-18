@@ -352,6 +352,23 @@ describe('<MonitorATMServicesView>', () => {
     expect(screen.getByText(/instructions/)).toBeInTheDocument();
   });
 
+  it('links the no-metrics instructions to the external docs in a new tab', () => {
+    cleanup();
+    useServiceMetricsQuery.mockReturnValue({
+      data: {
+        serviceMetrics: { service_latencies: null, service_call_rate: null, service_error_rate: null },
+        serviceError: originInitialState.serviceError,
+      },
+      isFetching: false,
+      isLoading: false,
+    });
+    renderWithRouter(<MonitorATMServicesView />);
+    const link = screen.getByRole('link', { name: /instructions/ });
+    expect(link).toHaveAttribute('href', 'https://www.jaegertracing.io/docs/latest/spm/');
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+  });
+
   it('does not show no-metrics alert while service metrics are loading', () => {
     cleanup();
     useServiceMetricsQuery.mockReturnValue({
