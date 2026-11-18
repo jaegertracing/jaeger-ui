@@ -116,19 +116,18 @@ describe('<TraceSpanView>', () => {
   });
 
   it.each([
-    ['Service Name', (a, b) => a.resource.serviceName.localeCompare(b.resource.serviceName)],
-    ['Operation', (a, b) => a.name.localeCompare(b.name)],
-    ['Span ID', (a, b) => a.spanID.localeCompare(b.spanID)],
-    ['Duration', (a, b) => a.duration - b.duration],
-    ['Start Time', (a, b) => a.startTime - b.startTime],
-  ])('sorts the rows ascending by %s when its header is clicked', (title, compare) => {
+    ['Service Name', 'span-1 span-2 span-3 span-2_1 span-6 span-12 span-13 span-14 span-4 span-5'],
+    ['Operation', 'span-1 span-4 span-2 span-5 span-2_1 span-3 span-7 span-6 span-12 span-13'],
+    ['Span ID', 'span-1 span-12 span-13 span-14 span-2 span-2_1 span-3 span-4 span-5 span-6'],
+    ['Duration', 'span-14 span-13 span-12 span-5 span-4 span-6 span-2 span-2_1 span-3 span-7'],
+    ['Start Time', 'span-1 span-2 span-3 span-4 span-5 span-2_1 span-6 span-12 span-13 span-14'],
+  ])('sorts the rows ascending by %s when its header is clicked', (title, expectedSpanIDs) => {
     const { container } = render(<TraceSpanView {...defaultProps} />);
     fireEvent.click(within(screen.getByRole('table')).getByText(title));
-    const renderedSpanIDs = Array.from(container.querySelectorAll('.ant-table-row .span-id-cell')).map(
-      link => link.textContent
-    );
-    const expected = [...trace.spans].sort(compare).map(span => span.spanID);
-    expect(renderedSpanIDs).toEqual(expected.slice(0, renderedSpanIDs.length));
+    const rows = container.querySelectorAll('.ant-table-row');
+    expect(rows).toHaveLength(10);
+    const renderedSpanIDs = Array.from(rows).map(row => row.querySelector('.span-id-cell').textContent);
+    expect(renderedSpanIDs).toEqual(expectedSpanIDs.split(' '));
   });
 
   it('check handler', () => {

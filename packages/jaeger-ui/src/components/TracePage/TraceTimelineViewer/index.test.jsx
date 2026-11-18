@@ -11,7 +11,7 @@ import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
 import { EMPTY_SPAN_FILTER, withHiddenServices } from '../spanFilter';
 
-const { mockLayoutPrefsStore, mockTraceTimelineStore, mockUseTraceTimelineStore } = vi.hoisted(() => {
+const { mockDisplayedLayoutStore, mockTraceTimelineStore, mockUseTraceTimelineStore } = vi.hoisted(() => {
   const mockTraceTimelineStore = {
     detailStates: new Map(),
     spanFilter: { clauses: [], treeMode: 'remove' },
@@ -29,7 +29,7 @@ const { mockLayoutPrefsStore, mockTraceTimelineStore, mockUseTraceTimelineStore 
     }
   );
   return {
-    mockLayoutPrefsStore: {
+    mockDisplayedLayoutStore: {
       spanNameColumnWidth: 0.25,
       sidePanelWidth: 0.375,
       detailPanelMode: 'inline',
@@ -47,7 +47,7 @@ const { mockLayoutPrefsStore, mockTraceTimelineStore, mockUseTraceTimelineStore 
 vi.mock('./store.track');
 
 vi.mock('./store', () => ({
-  useLayoutPrefsStore: vi.fn(selector => selector(mockLayoutPrefsStore)),
+  useDisplayedLayoutStore: vi.fn(selector => selector(mockDisplayedLayoutStore)),
   useTraceTimelineStore: mockUseTraceTimelineStore,
   getSelectedSpanID: detailStatesArg =>
     detailStatesArg.size > 0 ? detailStatesArg.keys().next().value : null,
@@ -117,17 +117,17 @@ describe('<TraceTimelineViewer>', () => {
     vi.mocked(track.trackExpandAll).mockClear();
     vi.mocked(track.trackExpandOne).mockClear();
     vi.mocked(track.trackColumnWidth).mockClear();
-    mockLayoutPrefsStore.setSpanNameColumnWidth.mockClear();
-    mockLayoutPrefsStore.setSidePanelWidth.mockClear();
+    mockDisplayedLayoutStore.setSpanNameColumnWidth.mockClear();
+    mockDisplayedLayoutStore.setSidePanelWidth.mockClear();
     mockTraceTimelineStore.collapseAll.mockClear();
     mockTraceTimelineStore.collapseOne.mockClear();
     mockTraceTimelineStore.expandAll.mockClear();
     mockTraceTimelineStore.expandOne.mockClear();
-    mockLayoutPrefsStore.spanNameColumnWidth = 0.25;
-    mockLayoutPrefsStore.sidePanelWidth = 0.375;
-    mockLayoutPrefsStore.detailPanelMode = 'inline';
-    mockLayoutPrefsStore.timelineBarsVisible = true;
-    mockLayoutPrefsStore.heatmapEnabled = false;
+    mockDisplayedLayoutStore.spanNameColumnWidth = 0.25;
+    mockDisplayedLayoutStore.sidePanelWidth = 0.375;
+    mockDisplayedLayoutStore.detailPanelMode = 'inline';
+    mockDisplayedLayoutStore.timelineBarsVisible = true;
+    mockDisplayedLayoutStore.heatmapEnabled = false;
     mockTraceTimelineStore.detailStates = new Map();
     mockUseTraceTimelineStore.setState.mockClear();
     mockUseSpanPillsEnabled.mockClear();
@@ -150,8 +150,8 @@ describe('<TraceTimelineViewer>', () => {
   it('derives selectedSpanID from Zustand detailStates', () => {
     // The root span is selected → selectedSpanID === rootSpanID → label should be 'Trace Root'.
     const spanID = trace.rootSpans[0].spanID;
-    mockLayoutPrefsStore.detailPanelMode = 'sidepanel';
-    mockLayoutPrefsStore.sidePanelWidth = 0.3;
+    mockDisplayedLayoutStore.detailPanelMode = 'sidepanel';
+    mockDisplayedLayoutStore.sidePanelWidth = 0.3;
     mockTraceTimelineStore.detailStates = new Map([[spanID, {}]]);
     render(<TraceTimelineViewerImpl {...props} />);
     // Side panel renders because detailPanelMode is 'sidepanel'.
@@ -161,7 +161,7 @@ describe('<TraceTimelineViewer>', () => {
   });
 
   it('realigns the side panel when the page header changes height', () => {
-    mockLayoutPrefsStore.detailPanelMode = 'sidepanel';
+    mockDisplayedLayoutStore.detailPanelMode = 'sidepanel';
 
     // Stands in for the padding TracePage puts above this view: the layout container sits at the
     // page header's height, which grows by the minimap when the timeline becomes the active view.
@@ -198,7 +198,7 @@ describe('<TraceTimelineViewer>', () => {
     expect(offsetKey()).not.toBe(before);
 
     // The legend's height is part of the key too, and the header still counts with it.
-    mockLayoutPrefsStore.heatmapEnabled = true;
+    mockDisplayedLayoutStore.heatmapEnabled = true;
     rerender(<TraceTimelineViewerImpl {...props} pageHeaderHeight={165} />);
     const withLegend = offsetKey();
     rerender(<TraceTimelineViewerImpl {...props} pageHeaderHeight={80} />);
@@ -211,14 +211,14 @@ describe('<TraceTimelineViewer>', () => {
       expect(screen.queryByRole('group', { name: /latency heatmap legend/i })).not.toBeInTheDocument();
       expect(container.firstChild).not.toHaveClass('is-heatmapEnabled');
 
-      mockLayoutPrefsStore.heatmapEnabled = true;
+      mockDisplayedLayoutStore.heatmapEnabled = true;
       rerender(<TraceTimelineViewerImpl {...props} />);
       expect(screen.getByRole('group', { name: /latency heatmap legend/i })).toBeInTheDocument();
       expect(container.firstChild).toHaveClass('is-heatmapEnabled');
     });
 
     it('sizes the space below the legend from its rendered height', () => {
-      mockLayoutPrefsStore.heatmapEnabled = true;
+      mockDisplayedLayoutStore.heatmapEnabled = true;
       const heightSpy = vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(86);
       try {
         const { container } = render(<TraceTimelineViewerImpl {...props} />);
@@ -229,14 +229,14 @@ describe('<TraceTimelineViewer>', () => {
     });
 
     it('shows the legend in side panel mode too', () => {
-      mockLayoutPrefsStore.detailPanelMode = 'sidepanel';
-      mockLayoutPrefsStore.heatmapEnabled = true;
+      mockDisplayedLayoutStore.detailPanelMode = 'sidepanel';
+      mockDisplayedLayoutStore.heatmapEnabled = true;
       render(<TraceTimelineViewerImpl {...props} />);
       expect(screen.getByRole('group', { name: /latency heatmap legend/i })).toBeInTheDocument();
     });
 
     it('starts the side panel below both the header and the legend', () => {
-      mockLayoutPrefsStore.detailPanelMode = 'sidepanel';
+      mockDisplayedLayoutStore.detailPanelMode = 'sidepanel';
 
       // The legend is a fixed band like the header, so it doesn't move the layout container.
       const rectSpy = jest
@@ -248,7 +248,7 @@ describe('<TraceTimelineViewer>', () => {
         const panel = container.querySelector('.TraceTimelineViewer--sidePanel');
         expect(panel.style.top).toBe('calc(80px + var(--timeline-header-row-height))');
 
-        mockLayoutPrefsStore.heatmapEnabled = true;
+        mockDisplayedLayoutStore.heatmapEnabled = true;
         rerender(<TraceTimelineViewerImpl {...props} />);
         expect(panel.style.top).toBe(
           'calc(80px + (var(--timeline-header-row-height) + var(--heatmap-legend-height)))'
@@ -257,7 +257,7 @@ describe('<TraceTimelineViewer>', () => {
           'calc(100vh - 80px - (var(--timeline-header-row-height) + var(--heatmap-legend-height)))'
         );
 
-        mockLayoutPrefsStore.heatmapEnabled = false;
+        mockDisplayedLayoutStore.heatmapEnabled = false;
         rerender(<TraceTimelineViewerImpl {...props} />);
         expect(panel.style.top).toBe('calc(80px + var(--timeline-header-row-height))');
       } finally {
@@ -332,9 +332,9 @@ describe('<TraceTimelineViewer>', () => {
     render(<TraceTimelineViewerImpl {...props} />);
     fireEvent.click(screen.getByTestId('header-column-change'));
     expect(track.trackColumnWidth).toHaveBeenCalledWith(0.4);
-    expect(mockLayoutPrefsStore.setSpanNameColumnWidth).toHaveBeenCalledWith(0.4);
+    expect(mockDisplayedLayoutStore.setSpanNameColumnWidth).toHaveBeenCalledWith(0.4);
     expect(vi.mocked(track.trackColumnWidth).mock.invocationCallOrder[0]).toBeLessThan(
-      mockLayoutPrefsStore.setSpanNameColumnWidth.mock.invocationCallOrder[0]
+      mockDisplayedLayoutStore.setSpanNameColumnWidth.mock.invocationCallOrder[0]
     );
   });
 
@@ -373,8 +373,8 @@ describe('<TraceTimelineViewer>', () => {
 
     combinations.forEach(({ detailPanelMode, timelineBarsVisible }) => {
       it(`detailPanelMode=${detailPanelMode}, timelineBarsVisible=${timelineBarsVisible}`, () => {
-        mockLayoutPrefsStore.detailPanelMode = detailPanelMode;
-        mockLayoutPrefsStore.timelineBarsVisible = timelineBarsVisible;
+        mockDisplayedLayoutStore.detailPanelMode = detailPanelMode;
+        mockDisplayedLayoutStore.timelineBarsVisible = timelineBarsVisible;
         render(<TraceTimelineViewerImpl {...props} />);
 
         const sidePanelActive = detailPanelMode === 'sidepanel';
@@ -393,8 +393,8 @@ describe('<TraceTimelineViewer>', () => {
 
   describe('side panel mode', () => {
     beforeEach(() => {
-      mockLayoutPrefsStore.detailPanelMode = 'sidepanel';
-      mockLayoutPrefsStore.timelineBarsVisible = true;
+      mockDisplayedLayoutStore.detailPanelMode = 'sidepanel';
+      mockDisplayedLayoutStore.timelineBarsVisible = true;
     });
 
     it('renders the side panel layout when detailPanelMode is sidepanel', () => {
@@ -406,8 +406,8 @@ describe('<TraceTimelineViewer>', () => {
     it('calls setSidePanelWidth (Zustand + tracking) when the header width changes', () => {
       render(<TraceTimelineViewerImpl {...props} />);
       fireEvent.click(screen.getByTestId('header-side-panel-change'));
-      expect(mockLayoutPrefsStore.setSidePanelWidth).toHaveBeenCalledTimes(1);
-      expect(mockLayoutPrefsStore.setSidePanelWidth.mock.calls[0][0]).toBeCloseTo(0.3);
+      expect(mockDisplayedLayoutStore.setSidePanelWidth).toHaveBeenCalledTimes(1);
+      expect(mockDisplayedLayoutStore.setSidePanelWidth.mock.calls[0][0]).toBeCloseTo(0.3);
       expect(track.trackColumnWidth).toHaveBeenCalledTimes(1);
       expect(vi.mocked(track.trackColumnWidth).mock.calls[0][0]).toBeCloseTo(0.3);
     });

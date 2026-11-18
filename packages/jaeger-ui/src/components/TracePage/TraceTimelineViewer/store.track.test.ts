@@ -14,7 +14,8 @@ vi.mock('../../../utils/tracking', async importOriginal => ({
   trackEvent: vi.fn(),
 }));
 
-import { setDetailPanelMode, useLayoutPrefsStore, useTraceTimelineStore } from './store';
+import { setDetailPanelMode, useDisplayedLayoutStore, useTraceTimelineStore } from './store';
+import { useSavedLayoutPrefsStore } from './store.layout';
 import * as track from './store.track';
 import { IEvent, IOtelSpan, IOtelTrace } from '../../../types/otel';
 import { trackEvent } from '../../../utils/tracking';
@@ -48,7 +49,7 @@ const trace = {
 } as unknown as IOtelTrace;
 
 const timeline = () => useTraceTimelineStore.getState();
-const layout = () => useLayoutPrefsStore.getState();
+const layout = () => useDisplayedLayoutStore.getState();
 
 type TInteraction = {
   // The adapter call the component makes; omitted where the interaction is not reported.
@@ -161,9 +162,7 @@ const interactions: TInteraction[] = [
   },
 ];
 
-// The events the Redux tracking middleware emitted for `interactions`, recorded on main at
-// 02beb5e4 before the middleware was deleted, not the PR's current base. Each event reads pre-update state.
-// Categories are literals so that renaming a category constant fails the parity check.
+// Exact category strings are "public API" and tests should fail if they are changed.
 const expectedEvents = [
   ['jaeger/ux/trace/timeline/parent', 'close', 1],
   ['jaeger/ux/trace/timeline/parent', 'open', 1],
@@ -190,7 +189,8 @@ const expectedEvents = [
 
 function resetStores() {
   useTraceTimelineStore.setState(useTraceTimelineStore.getInitialState(), true);
-  useLayoutPrefsStore.setState(useLayoutPrefsStore.getInitialState(), true);
+  useDisplayedLayoutStore.setState(useDisplayedLayoutStore.getInitialState(), true);
+  useSavedLayoutPrefsStore.setState({}, true);
   localStorage.clear();
   vi.mocked(trackEvent).mockClear();
 }
