@@ -38,8 +38,12 @@ let renderedViewTypes = [];
 let capturedArchiveNotifierProps = {};
 let capturedGraphProps = {};
 
+let capturedSpanPillActions = null;
+
 vi.mock('./TraceTimelineViewer', async () => {
+  const { SpanPillActionsContext } = await import('./TraceTimelineViewer/spanPillActions');
   return mockDefault(function MockTraceTimelineViewer() {
+    capturedSpanPillActions = React.useContext(SpanPillActionsContext);
     return <div data-testid="mock-timeline-viewer">TraceTimelineViewer</div>;
   });
 });
@@ -644,6 +648,28 @@ describe('<TracePage>', () => {
     expect(capturedHeaderProps.spanFilterNode).toBeTruthy();
     act(() => capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceGraph));
     expect(capturedHeaderProps.spanFilterNode).toBeNull();
+  });
+
+  it('provides the timeline with pill actions that write the search text and the filter', () => {
+    const pill = {
+      label: 'http.status_code',
+      attrKey: 'http.status_code',
+      attrMatchText: '200',
+      value: '200',
+    };
+    // The page draws the timeline only once the header has a height.
+    const clientHeightSpy = jest.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(100);
+    render(<TracePage {...defaultProps} />);
+    clientHeightSpy.mockRestore();
+    capturedSpanPillActions.applyVerb('find', pill);
+    expect(updateUiFindSpy).toHaveBeenLastCalledWith(
+      expect.objectContaining({ uiFind: 'http.status_code=200' })
+    );
+    capturedSpanPillActions.applyVerb('hide', pill);
+    expect(mockTraceTimelineStore.setSpanFilter).toHaveBeenLastCalledWith({
+      clauses: [{ verb: 'hide', criterion: { shape: 'attr', text: 'http.status_code:200' } }],
+      treeMode: 'lift',
+    });
   });
 
   it('does not add a second copy of a chip the filter already has', () => {

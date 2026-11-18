@@ -4,6 +4,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  clauseDisabledReason,
   decodeClause,
   describeCriterion,
   EMPTY_SPAN_FILTER,
@@ -13,7 +14,9 @@ import {
   hidesEverySpan,
   IClause,
   ISpanFilter,
+  KEEP_NEEDS_LIFT,
   keepRange,
+  LEAVES_NO_SPAN,
   normalizeFilter,
   setClauseValues,
   spanFiltersEqual,
@@ -265,6 +268,75 @@ describe('hidesEverySpan', () => {
 
   it('is false for no spans', () => {
     expect(hidesEverySpan([], keep(['svc-c']))).toBe(false);
+  });
+});
+
+describe('clauseDisabledReason', () => {
+  const root = makeSpan('root', 'svc-a');
+  const child = makeSpan('child', 'svc-b', root);
+  const leaf = makeSpan('leaf', 'svc-c', child);
+  const trace = { spans: [root, child, leaf], rootSpans: [root] };
+  const NO_SPAN_IDS: ReadonlySet<string> = new Set();
+  const ids = (...spanIDs: string[]): ReadonlySet<string> => new Set(spanIDs);
+
+  it.each([
+    {
+      name: 'keep in remove mode',
+      verb: 'keep',
+      matches: ids('child'),
+      treeMode: 'remove',
+      expected: KEEP_NEEDS_LIFT,
+    },
+    {
+      name: 'keep that matches no visible span',
+      verb: 'keep',
+      matches: NO_SPAN_IDS,
+      treeMode: 'lift',
+      expected: LEAVES_NO_SPAN,
+    },
+    {
+      name: 'keep that matches a visible span',
+      verb: 'keep',
+      matches: ids('child'),
+      treeMode: 'lift',
+      expected: null,
+    },
+    {
+      name: 'hide that matches some spans',
+      verb: 'hide',
+      matches: ids('child'),
+      treeMode: 'lift',
+      expected: null,
+    },
+    {
+      name: 'hide that matches every span',
+      verb: 'hide',
+      matches: ids('root', 'child', 'leaf'),
+      treeMode: 'lift',
+      expected: LEAVES_NO_SPAN,
+    },
+    {
+      name: 'hide of the root in lift mode',
+      verb: 'hide',
+      matches: ids('root'),
+      treeMode: 'lift',
+      expected: null,
+    },
+    {
+      name: 'hide of the root in remove mode',
+      verb: 'hide',
+      matches: ids('root'),
+      treeMode: 'remove',
+      expected: LEAVES_NO_SPAN,
+    },
+  ] as const)('$name', ({ verb, matches, treeMode, expected }) => {
+    expect(clauseDisabledReason(verb, matches, trace, NO_SPAN_IDS, treeMode)).toBe(expected);
+  });
+
+  it('counts the spans that the filter already hides as hidden', () => {
+    expect(clauseDisabledReason('hide', ids('root', 'child'), trace, ids('leaf'), 'lift')).toBe(
+      LEAVES_NO_SPAN
+    );
   });
 });
 
