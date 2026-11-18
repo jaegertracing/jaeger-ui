@@ -70,7 +70,13 @@ describe('getSpanDecorationIcon', () => {
 describe('getSpanPillsForSpan', () => {
   it('marks a 5xx http status as an error pill', () => {
     expect(getSpanPillsForSpan(makeSpan([{ key: 'http.status_code', value: '503' }]))).toEqual([
-      { label: 'http.status_code', value: '503', isError: true },
+      {
+        label: 'http.status_code',
+        attrKey: 'http.status_code',
+        attrMatchText: '503',
+        value: '503',
+        isError: true,
+      },
     ]);
   });
 
@@ -83,8 +89,8 @@ describe('getSpanPillsForSpan', () => {
         ])
       )
     ).toEqual([
-      { label: 'http.status_code', value: '200' },
-      { label: 'http.method', value: 'GET' },
+      { label: 'http.status_code', attrKey: 'http.status_code', attrMatchText: '200', value: '200' },
+      { label: 'http.method', attrKey: 'http.method', attrMatchText: 'GET', value: 'GET' },
     ]);
   });
 
@@ -98,9 +104,9 @@ describe('getSpanPillsForSpan', () => {
         ])
       )
     ).toEqual([
-      { label: 'db.system', value: 'mysql' },
-      { label: 'http.status_code', value: '200' },
-      { label: 'http.method', value: 'GET' },
+      { label: 'db.system', attrKey: 'db.system', attrMatchText: 'mysql', value: 'mysql' },
+      { label: 'http.status_code', attrKey: 'http.status_code', attrMatchText: '200', value: '200' },
+      { label: 'http.method', attrKey: 'http.method', attrMatchText: 'GET', value: 'GET' },
     ]);
   });
 });
