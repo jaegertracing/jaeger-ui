@@ -59,6 +59,15 @@ describe('layout preference hydration', () => {
     expect(freshModule.useSavedLayoutPrefsStore.getState()).toEqual({ timelineBarsVisible: false });
   });
 
+  it('displays the saved preferences before the loading call returns', () => {
+    localStorage.setItem(
+      'jaeger.layout',
+      JSON.stringify({ state: { timelineBarsVisible: false }, version: 1 })
+    );
+    void useSavedLayoutPrefsStore.persist.rehydrate();
+    expect(useDisplayedLayoutStore.getState().timelineBarsVisible).toBe(false);
+  });
+
   it('returns default values when localStorage is empty and config has no traceTimeline', async () => {
     const state = await rehydrateLayoutPrefs();
     expect(state.spanNameColumnWidth).toBe(0.25);
