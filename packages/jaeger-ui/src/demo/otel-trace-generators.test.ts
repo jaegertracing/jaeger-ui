@@ -55,6 +55,51 @@ describe('otelTraceGenerator', () => {
     }
   });
 
+  it('allows deeper parents without exceeding the requested depth', () => {
+    const pickone = vi
+      .spyOn(Chance.prototype, 'pickone')
+      .mockImplementation(values => (values as string[]).at(-1));
+
+    try {
+      const trace = otelTraceGenerator.trace({ numberOfSpans: 5, numberOfProcesses: 1, maxDepth: 3 });
+
+      expect(trace.rootSpans).toHaveLength(1);
+      expect(trace.spans.map(span => span.depth)).toEqual([0, 1, 2, 2, 2]);
+    } finally {
+      pickone.mockRestore();
+    }
+  });
+
+  it('makes the root cover the full timing window of a multi-span trace', () => {
+    const originalInteger = Chance.prototype.integer;
+    let offsetCalls = 0;
+    const integer = vi.spyOn(Chance.prototype, 'integer').mockImplementation(function (
+      this: unknown,
+      options
+    ) {
+      const { min, max } = options as { min: number; max: number };
+      if (min === 10000 && max === 5000000) return 10000;
+      if (min === 0 && max === 9999) return offsetCalls++ === 0 ? 9999 : 0;
+      return originalInteger.call(this, options);
+    });
+
+    try {
+      const trace = otelTraceGenerator.trace({ numberOfSpans: 3, numberOfProcesses: 1, maxDepth: 2 });
+      const root = trace.rootSpans[0];
+
+      expect(trace.rootSpans).toHaveLength(1);
+      expect(root.startTime).toBe(trace.startTime);
+      expect(root.duration).toBe(10000);
+      expect(root.startTime + root.duration).toBe(trace.endTime);
+      trace.spans.forEach(span => {
+        expect(span.startTime).toBeGreaterThanOrEqual(root.startTime);
+        expect(span.startTime + span.duration).toBeLessThanOrEqual(root.startTime + root.duration);
+      });
+    } finally {
+      integer.mockRestore();
+    }
+  });
+
   it('allows an explicit maximum depth of one to produce only roots', () => {
     const trace = otelTraceGenerator.trace({ numberOfSpans: 3, numberOfProcesses: 1, maxDepth: 1 });
 

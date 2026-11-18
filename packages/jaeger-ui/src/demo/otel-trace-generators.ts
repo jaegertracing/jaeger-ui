@@ -74,15 +74,18 @@ function wireTrace({
   const traceDuration = chance.integer({ min: 10000, max: 5000000 });
   const spanIds = Array.from({ length: numberOfSpans }, () => randomHex(16));
   const depths: number[] = [];
+  const parentCandidates: number[] = [];
   const spans = spanIds.map((spanId, index) => {
-    const parentCandidates = Array.from({ length: index }, (_, candidate) => candidate).filter(
-      candidate => depths[candidate] < maxDepth - 1
-    );
-    const parentIndex =
-      index === 0 || parentCandidates.length === 0 ? undefined : chance.pickone(parentCandidates);
-    const start = startTime + chance.integer({ min: 0, max: traceDuration - 1 });
-    const duration = chance.integer({ min: 1, max: traceDuration - (start - startTime) });
-    depths.push(parentIndex === undefined ? 0 : depths[parentIndex] + 1);
+    const parentIndex = parentCandidates.length === 0 ? undefined : chance.pickone(parentCandidates);
+    const depth = parentIndex === undefined ? 0 : depths[parentIndex] + 1;
+    depths.push(depth);
+    if (depth < maxDepth - 1) parentCandidates.push(index);
+
+    const coversTrace = index === 0 && numberOfSpans > 1;
+    const start = coversTrace ? startTime : startTime + chance.integer({ min: 0, max: traceDuration - 1 });
+    const duration = coversTrace
+      ? traceDuration
+      : chance.integer({ min: 1, max: traceDuration - (start - startTime) });
 
     return {
       traceId,
