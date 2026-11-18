@@ -8,7 +8,6 @@ SPDX-License-Identifier: Apache-2.0
 .CopyIcon:active {
   background-color: transparent;
   border: none;
-  box-shadow: none;
   color: inherit;
 
   width: 55px;
@@ -43,4 +42,8 @@ SPDX-License-Identifier: Apache-2.0
 /* antd sets the shadow of a default button through a selector that outranks .CopyIcon alone. */
 .CopyIcon.ant-btn {
   box-shadow: none;
+}
+
+.CopyIcon.CopyIcon--compact {
+  font-size: 10.5px;
 }

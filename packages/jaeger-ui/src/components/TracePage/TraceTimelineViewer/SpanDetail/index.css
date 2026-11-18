@@ -56,10 +56,13 @@ SPDX-License-Identifier: Apache-2.0
   color: var(--text-primary);
 }
 
-/* The button reads as plain text beside the span ID until the pointer is over it. */
+/*
+The button shares the baseline of the span ID so that it reads as part of that line.
+The transparent border reserves the space of the border that antd draws on hover.
+*/
 .SpanDetail--copyDeepLink.CopyIcon {
   align-items: baseline;
-  font-size: 10.5px;
+  border: 1px solid transparent;
   vertical-align: baseline;
 }
 

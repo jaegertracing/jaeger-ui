@@ -45,20 +45,20 @@ the row and pushes a value that does not fit beside it onto the next line.
 }
 
 /*
-The buttons carry their own background and border, like the pills of a span row,
-so that they read as buttons and stay legible over the value text.
+The buttons carry the border and radius of a pill in a span row, on an opaque
+background, so that they read as buttons and stay legible over the value text.
 */
 .KeyValueTable--copyContainer .KeyValueTable--copyIcon.CopyIcon {
   background: var(--surface-tertiary);
   border: 1px solid var(--border-default);
   border-radius: 4px;
-  font-size: 10.5px;
   height: 18px;
   padding: 0 6px;
   width: auto;
 }
 
 .KeyValueTable--copyContainer .KeyValueTable--copyIcon.CopyIcon:hover {
+  background: var(--surface-tertiary);
   border-color: var(--interactive-primary);
   color: var(--interactive-primary);
 }
