@@ -39,3 +39,8 @@ SPDX-License-Identifier: Apache-2.0
   outline: 2px solid currentColor;
   outline-offset: 2px;
 }
+
+/* antd sets the shadow of a default button through a selector that outranks .CopyIcon alone. */
+.CopyIcon.ant-btn {
+  box-shadow: none;
+}

@@ -44,13 +44,23 @@ the row and pushes a value that does not fit beside it onto the next line.
   white-space: nowrap;
 }
 
-/* An opaque background keeps the buttons legible over the value text. */
-.KeyValueTable--row:hover .KeyValueTable--copyContainer {
-  background: var(--surface-primary);
+/*
+The buttons carry their own background and border, like the pills of a span row,
+so that they read as buttons and stay legible over the value text.
+*/
+.KeyValueTable--copyContainer .KeyValueTable--copyIcon.CopyIcon {
+  background: var(--surface-tertiary);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  font-size: 10.5px;
+  height: 18px;
+  padding: 0 6px;
+  width: auto;
 }
 
-.KeyValueTable--row:nth-child(2n):hover .KeyValueTable--copyContainer {
-  background: var(--surface-secondary);
+.KeyValueTable--copyContainer .KeyValueTable--copyIcon.CopyIcon:hover {
+  border-color: var(--interactive-primary);
+  color: var(--interactive-primary);
 }
 
 .KeyValueTable--row:not(:hover) .KeyValueTable--copyContainer .KeyValueTable--copyIcon {

@@ -134,6 +134,7 @@ export default function SpanDetail(props: SpanDetailProps) {
       <small className="SpanDetail--debugInfo">
         <span className="SpanDetail--debugLabel" data-label="SpanID:" /> {span.spanID}
         <CopyIcon
+          className="SpanDetail--copyDeepLink"
           copyText={deepLinkCopyText}
           icon={<IoLinkOutline />}
           placement="topRight"

@@ -56,6 +56,17 @@ SPDX-License-Identifier: Apache-2.0
   color: var(--text-primary);
 }
 
+/* The button reads as plain text beside the span ID until the pointer is over it. */
+.SpanDetail--copyDeepLink.CopyIcon {
+  align-items: baseline;
+  font-size: 10.5px;
+  vertical-align: baseline;
+}
+
+.SpanDetail--copyDeepLink.CopyIcon:hover {
+  color: var(--interactive-primary);
+}
+
 .AccordianWarnings {
   background: var(--surface-tertiary);
   border: 1px solid var(--border-default);
