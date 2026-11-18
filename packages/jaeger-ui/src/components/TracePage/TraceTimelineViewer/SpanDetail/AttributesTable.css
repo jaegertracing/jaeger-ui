@@ -33,10 +33,24 @@ SPDX-License-Identifier: Apache-2.0
   position: relative;
 }
 
+/*
+The buttons are laid over the value because a floated container takes space in
+the row and pushes a value that does not fit beside it onto the next line.
+*/
 .KeyValueTable--copyContainer {
-  float: right;
-  margin-left: 8px;
+  position: absolute;
+  right: 0.5rem;
+  top: 0.25rem;
   white-space: nowrap;
+}
+
+/* An opaque background keeps the buttons legible over the value text. */
+.KeyValueTable--row:hover .KeyValueTable--copyContainer {
+  background: var(--surface-primary);
+}
+
+.KeyValueTable--row:nth-child(2n):hover .KeyValueTable--copyContainer {
+  background: var(--surface-secondary);
 }
 
 .KeyValueTable--row:not(:hover) .KeyValueTable--copyContainer .KeyValueTable--copyIcon {
@@ -60,6 +74,10 @@ SPDX-License-Identifier: Apache-2.0
 
 .KeyValueTable--row-jsonValue > td {
   padding-top: 0.1rem;
+}
+
+.KeyValueTable--row-jsonValue .KeyValueTable--copyContainer {
+  top: 0.1rem;
 }
 
 .KeyValueTable--valueColumn-full {
