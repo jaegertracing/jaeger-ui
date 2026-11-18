@@ -37,16 +37,22 @@ const memoizedAttributeMatchIDs = memoizeOne(attributeMatchIDs);
 
 /**
  * The search text that finds the attribute of the pill: `key=value`, quoted when it holds
- * whitespace. The search syntax cannot express a double quote, so the text is cut at the first
- * one in the value; the search matches by substring, so the shorter text still finds the attribute.
+ * whitespace. The search syntax cannot express a double quote or a line break, so the text is cut
+ * at the first one in the value; the search matches by substring, so the shorter text still finds
+ * the attribute.
  */
 export function spanPillFindText(pill: ISpanPill): string {
-  const text = `${pill.attrKey}=${pill.attrMatchText}`.split('"')[0];
+  const text = `${pill.attrKey}=${pill.attrMatchText}`.split(/["\r\n\u2028\u2029]/)[0];
   return /\s/.test(text) ? `"${text}"` : text;
 }
 
+/**
+ * The text of the attribute criterion for the pill, trimmed as the URL codec trims the text of a
+ * clause. A text that kept the trailing whitespace of the value would match fewer spans before a
+ * reload than after.
+ */
 export function spanPillAttributeText(pill: ISpanPill): string {
-  return `${pill.attrKey}:${pill.attrMatchText}`;
+  return `${pill.attrKey}:${pill.attrMatchText}`.trim();
 }
 
 export function makeSpanPillActions(page: {

@@ -46,7 +46,8 @@ vi.mock('./utils', async importOriginal => {
   };
 });
 
-// A span pill reads its menu actions from the trace page, which these tests stand in for.
+// SpanPill throws without a SpanPillActionsContext provider. In the app the trace page is that
+// provider; a test that renders a row with pills wraps it in this one.
 const spanPillActions = { applyVerb: vi.fn(), disabledReasons: () => ({ keep: null, hide: null }) };
 function SpanPillActionsProvider({ children }) {
   return (

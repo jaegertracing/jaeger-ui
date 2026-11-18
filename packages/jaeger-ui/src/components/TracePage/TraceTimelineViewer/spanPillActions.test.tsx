@@ -10,7 +10,9 @@ import { AttributeValue, IOtelSpan } from '../../../types/otel';
 import filterSpans from '../../../utils/filter-spans';
 import {
   attributeMatchIDs,
+  decodeClause,
   EMPTY_SPAN_FILTER,
+  encodeClause,
   ISpanFilter,
   KEEP_NEEDS_LIFT,
   LEAVES_NO_SPAN,
@@ -55,6 +57,18 @@ describe('span pill texts', () => {
     expect(spanPillFindText(statusPill)).toBe('http.response.status_code=200');
   });
 
+  it('builds the same attribute criterion text as the URL codec returns', () => {
+    const [pill] = getSpanPillsForSpan(
+      makeSpan('pill', [{ key: 'gen_ai.request.model', value: '  model-a  ' }])
+    );
+    const clause = {
+      verb: 'hide' as const,
+      criterion: { shape: 'attr' as const, text: spanPillAttributeText(pill) },
+    };
+    expect(clause.criterion.text).toBe('gen_ai.request.model:  model-a');
+    expect(decodeClause(encodeClause(clause))).toEqual(clause);
+  });
+
   it('builds the attribute criterion text', () => {
     expect(spanPillAttributeText(statusPill)).toBe('http.response.status_code:200');
   });
@@ -70,6 +84,8 @@ describe('span pill texts', () => {
       key: 'db.system',
       value: ['mysql', 'postgres'],
     },
+    { name: 'a value with a line break', key: 'gen_ai.request.model', value: 'model-x\nv2' },
+    { name: 'a value with a Unicode line separator', key: 'gen_ai.request.model', value: 'model-x\u2028v2' },
     { name: 'a string value that holds a double quote', key: 'gen_ai.request.model', value: 'model "a" v2' },
   ])('finds, and filters on, the span of the pill alone for $name', ({ key, value }) => {
     const pillSpan = makeSpan('pill', [{ key, value }]);
