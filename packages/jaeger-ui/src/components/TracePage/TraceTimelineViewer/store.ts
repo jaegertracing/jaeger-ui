@@ -3,6 +3,7 @@
 
 import DetailState from './SpanDetail/DetailState';
 import type { SpanDetailPanelMode } from '../../../types/config';
+import getConfig from '../../../utils/config/get-config';
 import { useDisplayedLayoutStore, type LayoutUpdateOptions } from './store.layout';
 import { useTraceTimelineStore } from './store.timeline';
 
@@ -14,14 +15,15 @@ export {
   SPAN_NAME_COLUMN_WIDTH_MIN,
 } from './store.constants';
 
-export { normalizeLayoutPrefs, useDisplayedLayoutStore } from './store.layout';
+export { normalizeLayoutPrefs, useDisplayedLayoutStore, useSavedLayoutPrefsStore } from './store.layout';
 
 export { useTraceTimelineStore } from './store.timeline';
 
 export { calculateFocusedFindRowStates, getSelectedSpanID } from './timeline-utils';
 
 export function setDetailPanelMode(mode: SpanDetailPanelMode, options?: LayoutUpdateOptions): void {
-  if (mode === 'sidepanel') {
+  const allowedMode = mode === 'sidepanel' && !getConfig().traceTimeline?.enableSidePanel ? 'inline' : mode;
+  if (allowedMode === 'sidepanel') {
     const { detailStates } = useTraceTimelineStore.getState();
     if (detailStates.size > 0) {
       const firstKey = detailStates.keys().next().value as string;
@@ -30,5 +32,5 @@ export function setDetailPanelMode(mode: SpanDetailPanelMode, options?: LayoutUp
       });
     }
   }
-  useDisplayedLayoutStore.getState().applyDetailPanelModeToLayout(mode, options);
+  useDisplayedLayoutStore.getState().applyDetailPanelModeToLayout(allowedMode, options);
 }

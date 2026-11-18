@@ -174,10 +174,17 @@ vi.mock('../../hooks/useTraceLoading', () => ({
 vi.mock('./TraceTimelineViewer/store.track');
 
 vi.mock('./TraceTimelineViewer/store', () => {
+  const useDisplayedLayoutStore = jest.fn(selector => selector(mockDisplayedLayoutStore));
+  useDisplayedLayoutStore.getState = () => mockDisplayedLayoutStore;
   const useTraceTimelineStore = jest.fn(selector => selector(mockTraceTimelineStore));
   useTraceTimelineStore.getState = () => mockTraceTimelineStore;
   return {
-    useDisplayedLayoutStore: jest.fn(selector => selector(mockDisplayedLayoutStore)),
+    useDisplayedLayoutStore,
+    useSavedLayoutPrefsStore: jest.fn(selector => selector({})),
+    normalizeLayoutPrefs: () => ({
+      detailPanelMode: mockDisplayedLayoutStore.detailPanelMode,
+      timelineBarsVisible: mockDisplayedLayoutStore.timelineBarsVisible,
+    }),
     useTraceTimelineStore,
     getSelectedSpanID: () => null,
     setDetailPanelMode: (...args) => mockSetDetailPanelMode(...args),
@@ -1271,17 +1278,17 @@ describe('<TracePage>', () => {
 
     it('calls setDetailPanelMode (Zustand + tracking) with sidepanel when detailPanelMode is inline', () => {
       mockDisplayedLayoutStore.detailPanelMode = 'inline';
-      render(<TracePage {...defaultProps} />);
+      render(<TracePage {...defaultProps} enableSidePanel />);
       capturedHeaderProps.onDetailPanelModeToggle();
-      expect(mockSetDetailPanelMode).toHaveBeenCalledWith('sidepanel');
+      expect(mockSetDetailPanelMode).toHaveBeenCalledWith('sidepanel', { persist: false });
       expect(trackDetailPanelMode).toHaveBeenCalledWith('sidepanel');
     });
 
     it('calls setDetailPanelMode (Zustand + tracking) with inline when detailPanelMode is sidepanel', () => {
       mockDisplayedLayoutStore.detailPanelMode = 'sidepanel';
-      render(<TracePage {...defaultProps} />);
+      render(<TracePage {...defaultProps} enableSidePanel />);
       capturedHeaderProps.onDetailPanelModeToggle();
-      expect(mockSetDetailPanelMode).toHaveBeenCalledWith('inline');
+      expect(mockSetDetailPanelMode).toHaveBeenCalledWith('inline', { persist: false });
       expect(trackDetailPanelMode).toHaveBeenCalledWith('inline');
     });
 
@@ -1289,7 +1296,7 @@ describe('<TracePage>', () => {
       mockDisplayedLayoutStore.timelineBarsVisible = true;
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onTimelineToggle();
-      expect(mockDisplayedLayoutStore.setTimelineBarsVisible).toHaveBeenCalledWith(false);
+      expect(mockDisplayedLayoutStore.setTimelineBarsVisible).toHaveBeenCalledWith(false, { persist: false });
       expect(trackTimelineBarsVisible).toHaveBeenCalledWith(false);
     });
 
@@ -1297,8 +1304,45 @@ describe('<TracePage>', () => {
       mockDisplayedLayoutStore.timelineBarsVisible = false;
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onTimelineToggle();
-      expect(mockDisplayedLayoutStore.setTimelineBarsVisible).toHaveBeenCalledWith(true);
+      expect(mockDisplayedLayoutStore.setTimelineBarsVisible).toHaveBeenCalledWith(true, { persist: false });
       expect(trackTimelineBarsVisible).toHaveBeenCalledWith(true);
+    });
+
+    it('renders the shared layout without tracking its initial application as a user toggle', () => {
+      const location = { pathname: '/trace/one', search: '?timeline=off&sidebar=sidepanel', state: null };
+      render(<TracePage {...defaultProps} location={location} enableSidePanel />);
+
+      expect(capturedHeaderProps.timelineBarsVisible).toBe(false);
+      expect(capturedHeaderProps.detailPanelMode).toBe('sidepanel');
+      expect(trackTimelineBarsVisible).not.toHaveBeenCalled();
+      expect(trackDetailPanelMode).not.toHaveBeenCalled();
+    });
+
+    it('tracks the applied inline mode when the side panel is disabled', () => {
+      mockDisplayedLayoutStore.detailPanelMode = 'inline';
+      render(<TracePage {...defaultProps} enableSidePanel={false} />);
+      capturedHeaderProps.onDetailPanelModeToggle();
+
+      expect(mockSetDetailPanelMode).toHaveBeenCalledWith('inline', { persist: false });
+      expect(trackDetailPanelMode).toHaveBeenCalledWith('inline');
+      expect(trackDetailPanelMode).not.toHaveBeenCalledWith('sidepanel');
+    });
+
+    it('writes a manual timeline toggle to the URL and preserves the other view parameters', () => {
+      const location = {
+        pathname: '/trace/one',
+        search: '?timeline=on&sidebar=sidepanel&uiFind=error',
+        hash: '#span',
+        state: { fromSearch: '/search' },
+      };
+      render(<TracePage {...defaultProps} location={location} enableSidePanel />);
+      capturedHeaderProps.onTimelineToggle();
+
+      expect(mockNavigate).toHaveBeenLastCalledWith(
+        { pathname: '/trace/one', search: '?timeline=off&sidebar=sidepanel&uiFind=error', hash: '#span' },
+        { replace: true, state: location.state }
+      );
+      expect(trackTimelineBarsVisible).toHaveBeenCalledTimes(1);
     });
   });
 
