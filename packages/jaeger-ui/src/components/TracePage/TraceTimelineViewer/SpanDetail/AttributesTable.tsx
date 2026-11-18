@@ -299,13 +299,13 @@ export default function AttributesTable(props: AttributesTableProps) {
             const copyButtons = !shouldDeferValue && (
               <div className="KeyValueTable--copyContainer">
                 <CopyIcon
-                  className="KeyValueTable--copyIcon"
+                  className="KeyValueTable--copyIcon CopyIcon--compact"
                   copyText={String(row.value)}
                   tooltipTitle="Copy value"
                   buttonText="Copy"
                 />
                 <CopyIcon
-                  className="KeyValueTable--copyIcon"
+                  className="KeyValueTable--copyIcon CopyIcon--compact"
                   icon={<IoCopyOutline />}
                   copyText={JSON.stringify(row, null, 2)}
                   tooltipTitle="Copy JSON"

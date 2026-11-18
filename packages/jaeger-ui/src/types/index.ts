@@ -4,7 +4,6 @@
 import { ApiError } from './api-error';
 import tNil from './TNil';
 import { IOtelTrace } from './otel';
-import TTraceTimeline from './TTraceTimeline';
 
 export type TNil = tNil;
 
@@ -24,9 +23,4 @@ export type LocationState = {
   // e.g. '/search?service=frontend&operation=GET%20%2F'.
   // When present, TracePageHeader renders a back button that returns to this URL.
   fromSearch?: string;
-};
-
-export type ReduxState = {
-  type: string;
-  traceTimeline: TTraceTimeline;
 };

@@ -37,6 +37,25 @@ SPDX-License-Identifier: Apache-2.0
   white-space: nowrap;
 }
 
+/* The row already shows the pointer cursor, so the cursor cannot tell a pill from its row, and a
+   hovered pill changes colour instead. */
+.SpanBarRow--pillWrap:hover .SpanBarRow--pill:not(.is-error),
+.SpanBarRow--pillWrap:focus-visible .SpanBarRow--pill:not(.is-error) {
+  background: var(--surface-component-background-hover);
+  border-color: var(--interactive-primary);
+  color: var(--interactive-primary);
+}
+
+.SpanBarRow--pillWrap:hover .SpanBarRow--pill.is-error,
+.SpanBarRow--pillWrap:focus-visible .SpanBarRow--pill.is-error {
+  background: color-mix(in srgb, var(--feedback-error) 28%, var(--surface-primary));
+}
+
+.SpanBarRow--pillHint {
+  font-size: 0.85em;
+  opacity: 0.75;
+}
+
 .SpanBarRow--pill.is-error {
   background: color-mix(in srgb, var(--feedback-error) 12%, var(--surface-primary));
   border-color: var(--feedback-error-text);

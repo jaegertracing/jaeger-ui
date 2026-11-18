@@ -7,7 +7,7 @@ import type { MenuProps } from 'antd';
 import { IoSettingsOutline, IoCheckmark } from 'react-icons/io5';
 
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
-import { useLayoutPrefsStore } from '../TraceTimelineViewer/store';
+import { useDisplayedLayoutStore } from '../TraceTimelineViewer/store';
 
 import './TraceViewSettings.css';
 
@@ -33,8 +33,8 @@ export default function TraceViewSettings(props: Props) {
     timelineBarsVisible,
   } = props;
 
-  const heatmapEnabled = useLayoutPrefsStore(s => s.heatmapEnabled);
-  const toggleHeatmap = useLayoutPrefsStore(s => s.toggleHeatmap);
+  const heatmapEnabled = useDisplayedLayoutStore(s => s.heatmapEnabled);
+  const toggleHeatmap = useDisplayedLayoutStore(s => s.toggleHeatmap);
 
   const [kbdModalVisible, setKbdModalVisible] = React.useState(false);
 

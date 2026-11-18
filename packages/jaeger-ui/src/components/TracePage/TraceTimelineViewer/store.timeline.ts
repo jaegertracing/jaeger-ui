@@ -3,7 +3,7 @@
 
 import { create } from 'zustand';
 import DetailState from './SpanDetail/DetailState';
-import { useLayoutPrefsStore } from './store.layout';
+import { useDisplayedLayoutStore } from './store.layout';
 import { TNil } from '../../../types';
 import { IOtelTrace, IEvent } from '../../../types/otel';
 import { EMPTY_SPAN_FILTER, ISpanFilter } from '../spanFilter';
@@ -60,7 +60,7 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
     const { traceID: currentTraceID, traceSpans } = get();
     if (trace.traceID === currentTraceID && trace.spans === traceSpans) return;
 
-    const detailPanelMode = useLayoutPrefsStore.getState().detailPanelMode;
+    const detailPanelMode = useDisplayedLayoutStore.getState().detailPanelMode;
 
     const base: Partial<TraceTimelineInteractionStore> = {
       traceID: trace.traceID,
@@ -177,7 +177,7 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
   },
 
   detailToggle: (spanID: string) => {
-    const detailPanelMode = useLayoutPrefsStore.getState().detailPanelMode;
+    const detailPanelMode = useDisplayedLayoutStore.getState().detailPanelMode;
     const { detailStates: current } = get();
     if (detailPanelMode === 'sidepanel') {
       if (current.has(spanID)) {
@@ -199,31 +199,31 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
   },
 
   detailTagsToggle: (spanID: string) => {
-    const detailPanelMode = useLayoutPrefsStore.getState().detailPanelMode;
+    const detailPanelMode = useDisplayedLayoutStore.getState().detailPanelMode;
     const { detailStates } = get();
     set({ detailStates: applyDetailSubsectionToggle(detailStates, detailPanelMode, spanID, 'tags') });
   },
 
   detailProcessToggle: (spanID: string) => {
-    const detailPanelMode = useLayoutPrefsStore.getState().detailPanelMode;
+    const detailPanelMode = useDisplayedLayoutStore.getState().detailPanelMode;
     const { detailStates } = get();
     set({ detailStates: applyDetailSubsectionToggle(detailStates, detailPanelMode, spanID, 'process') });
   },
 
   detailLogsToggle: (spanID: string) => {
-    const detailPanelMode = useLayoutPrefsStore.getState().detailPanelMode;
+    const detailPanelMode = useDisplayedLayoutStore.getState().detailPanelMode;
     const { detailStates } = get();
     set({ detailStates: applyDetailSubsectionToggle(detailStates, detailPanelMode, spanID, 'logs') });
   },
 
   detailWarningsToggle: (spanID: string) => {
-    const detailPanelMode = useLayoutPrefsStore.getState().detailPanelMode;
+    const detailPanelMode = useDisplayedLayoutStore.getState().detailPanelMode;
     const { detailStates } = get();
     set({ detailStates: applyDetailSubsectionToggle(detailStates, detailPanelMode, spanID, 'warnings') });
   },
 
   detailReferencesToggle: (spanID: string) => {
-    const detailPanelMode = useLayoutPrefsStore.getState().detailPanelMode;
+    const detailPanelMode = useDisplayedLayoutStore.getState().detailPanelMode;
     const { detailStates } = get();
     set({
       detailStates: applyDetailSubsectionToggle(detailStates, detailPanelMode, spanID, 'references'),
@@ -231,7 +231,7 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
   },
 
   detailLogItemToggle: (spanID: string, logItem: IEvent) => {
-    const detailPanelMode = useLayoutPrefsStore.getState().detailPanelMode;
+    const detailPanelMode = useDisplayedLayoutStore.getState().detailPanelMode;
     const { detailStates } = get();
     const old = detailStates.get(spanID) ?? DetailState.forDetailPanelMode(detailPanelMode);
     const detailState = old.toggleLogItem(logItem);
@@ -248,7 +248,7 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
 
   focusUiFindMatches: (trace: IOtelTrace, matches: string | ReadonlySet<string> | TNil, allowHide = true) => {
     if (!matches || (typeof matches !== 'string' && matches.size === 0)) return;
-    const detailPanelMode = useLayoutPrefsStore.getState().detailPanelMode;
+    const detailPanelMode = useDisplayedLayoutStore.getState().detailPanelMode;
     let focused = calculateFocusedFindRowStates(matches, trace.spans, allowHide);
     focused = trimFocusedDetailStatesForSidePanel(focused, detailPanelMode);
     set(focused);

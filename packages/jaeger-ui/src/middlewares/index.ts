@@ -3,5 +3,4 @@
 
 import promiseMiddleware from 'redux-promise-middleware';
 
-export { default as trackMiddleware } from './track';
 export const promise = promiseMiddleware;

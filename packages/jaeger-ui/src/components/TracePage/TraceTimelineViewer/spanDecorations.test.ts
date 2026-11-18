@@ -60,6 +60,14 @@ describe('getSpanDecorationIcon', () => {
     expect(getSpanDecorationIcon({ attributes: makeAttributes([]) })).toBeNull();
   });
 
+  it('returns null when the span has no attributes', () => {
+    expect(getSpanDecorationIcon({})).toBeNull();
+  });
+
+  it('ignores attribute keys without a namespace', () => {
+    expect(getSpanDecorationIcon({ attributes: makeAttributes([{ key: 'http', value: 'GET' }]) })).toBeNull();
+  });
+
   it('does not treat gen_ai attributes as a namespace icon (kind axis only)', () => {
     expect(
       getSpanDecorationIcon({ attributes: makeAttributes([{ key: 'gen_ai.system', value: 'openai' }]) })
@@ -70,7 +78,13 @@ describe('getSpanDecorationIcon', () => {
 describe('getSpanPillsForSpan', () => {
   it('marks a 5xx http status as an error pill', () => {
     expect(getSpanPillsForSpan(makeSpan([{ key: 'http.status_code', value: '503' }]))).toEqual([
-      { label: 'http.status_code', value: '503', isError: true },
+      {
+        label: 'http.status_code',
+        attrKey: 'http.status_code',
+        attrMatchText: '503',
+        value: '503',
+        isError: true,
+      },
     ]);
   });
 
@@ -83,9 +97,17 @@ describe('getSpanPillsForSpan', () => {
         ])
       )
     ).toEqual([
-      { label: 'http.status_code', value: '200' },
-      { label: 'http.method', value: 'GET' },
+      { label: 'http.status_code', attrKey: 'http.status_code', attrMatchText: '200', value: '200' },
+      { label: 'http.method', attrKey: 'http.method', attrMatchText: 'GET', value: 'GET' },
     ]);
+  });
+
+  it('shows an attribute value that cannot be serialized as [unserializable]', () => {
+    const circular: Record<string, unknown> = {};
+    circular.self = circular;
+    expect(
+      getSpanPillsForSpan(makeSpan([{ key: 'db.system', value: circular as unknown as AttributeValue }]))
+    ).toEqual([{ label: 'db.system', value: '[unserializable]' }]);
   });
 
   it('emits db.system ahead of http pills when both namespaces are present', () => {
@@ -98,9 +120,9 @@ describe('getSpanPillsForSpan', () => {
         ])
       )
     ).toEqual([
-      { label: 'db.system', value: 'mysql' },
-      { label: 'http.status_code', value: '200' },
-      { label: 'http.method', value: 'GET' },
+      { label: 'db.system', attrKey: 'db.system', attrMatchText: 'mysql', value: 'mysql' },
+      { label: 'http.status_code', attrKey: 'http.status_code', attrMatchText: '200', value: '200' },
+      { label: 'http.method', attrKey: 'http.method', attrMatchText: 'GET', value: 'GET' },
     ]);
   });
 });
