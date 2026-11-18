@@ -52,6 +52,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .SpanBarRow--pillHint {
+  font-size: 0.85em;
   opacity: 0.75;
 }
 
