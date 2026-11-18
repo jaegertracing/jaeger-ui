@@ -159,8 +159,14 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
             their values, {events}, and the span ID as an exact match.
           </li>
           <li>
-            Each {useOtelTerms ? 'attribute' : 'tag'} is also searched as <code>key=value</code>, so{' '}
-            <code>http.status_code=200</code> matches that exact pair.
+            Each {useOtelTerms ? 'attribute' : 'tag'} is also searched as <code>key=value</code>, by
+            substring, so <code>http.status_code=200</code> also finds <code>2000</code>.
+          </li>
+          <li>
+            <code>key==value</code> finds the {useOtelTerms ? 'attribute' : 'tag'} with exactly that key and
+            exactly that value: <code>http.status_code==200</code> does not find <code>2000</code>. Quote the
+            whole term when the value has spaces: <code>&quot;db.system==sql server&quot;</code>. Such a term
+            is not searched as text.
           </li>
           <li>
             <code>-key</code> excludes {attributes} whose key contains that text:{' '}
@@ -195,6 +201,12 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
                 <code>http.status_code=5</code>
               </td>
               <td>status codes 5xx</td>
+            </tr>
+            <tr>
+              <td>
+                <code>http.status_code==500</code>
+              </td>
+              <td>status code 500 only</td>
             </tr>
             <tr>
               <td>

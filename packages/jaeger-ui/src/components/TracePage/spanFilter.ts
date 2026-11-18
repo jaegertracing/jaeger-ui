@@ -15,7 +15,12 @@ import { GenAISpanKind, IAttribute, IOtelSpan } from '../../types/otel';
 import { Microseconds } from '../../types/units';
 import memoizeOne from 'memoize-one';
 import { formatDuration } from '../../utils/date';
-import filterSpans, { stringifyAttributeValue } from '../../utils/filter-spans';
+import filterSpans, {
+  ExactAttributeTerm,
+  matchesExactAttributeTerm,
+  parseExactAttributeTerm,
+  stringifyAttributeValue,
+} from '../../utils/filter-spans';
 import { getGenAiTokenUsage } from './TraceTimelineViewer/SpanDetail/GenAITab/genAiData';
 import { GEN_AI_KIND_META } from './TraceTimelineViewer/spanDecorations';
 import { isErrorSpan } from './TraceTimelineViewer/utils';
@@ -142,20 +147,30 @@ function attributeText({ key, value }: IAttribute): string {
 }
 
 // The attribute criterion matches when `key:value` is a substring of the `key:value` text of a
-// span attribute or a resource attribute; a bare key or a bare value therefore matches too. An
-// attribute without a value is skipped, as filterSpans skips it.
-function matchesAttribute(span: IOtelSpan, needle: string): boolean {
-  if (!needle) return false;
-  const matches = (kv: IAttribute) => kv.value != null && attributeText(kv).includes(needle);
-  return span.attributes.entries().some(matches) || span.resource.attributes.entries().some(matches);
+// span attribute or a resource attribute; a bare key or a bare value therefore matches too. A
+// text of the form `key==value` is an exact attribute term and matches the attribute with exactly
+// that key and that value instead, as it does in the search. An attribute without a value is skipped, as
+// filterSpans skips it.
+function compileAttributeCriterion(text: string): (span: IOtelSpan) => boolean {
+  const needle = text.toLowerCase();
+  if (!needle) return () => false;
+  const exactAttributeTerm: ExactAttributeTerm | null = parseExactAttributeTerm(text);
+  const matchesAttribute = (kv: IAttribute) =>
+    kv.value != null &&
+    (exactAttributeTerm
+      ? matchesExactAttributeTerm(kv, exactAttributeTerm)
+      : attributeText(kv).includes(needle));
+  return span =>
+    span.attributes.entries().some(matchesAttribute) ||
+    span.resource.attributes.entries().some(matchesAttribute);
 }
 
 /** The IDs of the spans that an attribute criterion with this text matches. */
 export function attributeMatchIDs(spans: ReadonlyArray<IOtelSpan>, text: string): ReadonlySet<string> {
-  const needle = text.toLowerCase();
+  const matchesAttribute = compileAttributeCriterion(text);
   const ids = new Set<string>();
   for (const span of spans) {
-    if (matchesAttribute(span, needle)) ids.add(span.spanID);
+    if (matchesAttribute(span)) ids.add(span.spanID);
   }
   return ids;
 }
@@ -183,10 +198,8 @@ function compileCriterion(criterion: Criterion, spans: ReadonlyArray<IOtelSpan>)
         const v = spanRangeValue(span, criterion.property);
         return v != null && v >= criterion.min && v <= criterion.max;
       };
-    case 'attr': {
-      const needle = criterion.text.toLowerCase();
-      return span => matchesAttribute(span, needle);
-    }
+    case 'attr':
+      return compileAttributeCriterion(criterion.text);
   }
 }
 

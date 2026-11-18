@@ -1,8 +1,16 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import filterSpans from './filter-spans';
+import filterSpans, { matchesExactAttributeTerm, parseExactAttributeTerm } from './filter-spans';
 import { makeAttributes } from '../model/attributes';
+
+const makeOtelSpan = (spanID, attrs, resourceAttrs = [], eventAttrs = []) => ({
+  spanID,
+  name: 'op',
+  resource: { serviceName: 'svc', attributes: makeAttributes(resourceAttrs) },
+  attributes: makeAttributes(attrs),
+  events: [{ attributes: makeAttributes(eventAttrs) }],
+});
 
 describe('filterSpans', () => {
   // span0 contains strings that end in 0 or 1
@@ -238,14 +246,6 @@ describe('filterSpans', () => {
   });
 
   describe('object and array attribute values (OTel spans)', () => {
-    const makeOtelSpan = (spanID, attrs) => ({
-      spanID,
-      name: 'op',
-      resource: { serviceName: 'svc', attributes: makeAttributes() },
-      attributes: makeAttributes(attrs),
-      events: [],
-    });
-
     it('matches text inside an object attribute value', () => {
       const span = makeOtelSpan('obj-span', [
         { key: 'gen_ai.message', value: { role: 'user', content: 'hello world' } },
@@ -281,5 +281,92 @@ describe('filterSpans', () => {
       const span = makeOtelSpan('circ-span', [{ key: 'meta', value: circular }]);
       expect(() => filterSpans('meta', [span])).not.toThrow();
     });
+  });
+});
+
+describe('parseExactAttributeTerm', () => {
+  it.each([
+    { term: 'http.status_code==200', expected: { key: 'http.status_code', value: '200' } },
+    { term: 'HTTP.Method==Get', expected: { key: 'http.method', value: 'get' } },
+    { term: ' db.system == sql server ', expected: { key: 'db.system', value: 'sql server' } },
+    { term: 'expr==a==b', expected: { key: 'expr', value: 'a==b' } },
+    { term: 'note==', expected: null },
+    { term: 'dGVzdA==', expected: null },
+    { term: '==200', expected: null },
+    { term: 'http.status_code=200', expected: null },
+    { term: 'auth', expected: null },
+    { term: '', expected: null },
+  ])('reads $term as $expected', ({ term, expected }) => {
+    expect(parseExactAttributeTerm(term)).toEqual(expected);
+  });
+});
+
+describe('matchesExactAttributeTerm', () => {
+  const exactAttributeTerm = { key: 'http.status_code', value: '200' };
+
+  it.each([
+    { name: 'the same key and value', attribute: { key: 'http.status_code', value: '200' }, expected: true },
+    {
+      name: 'a numeric value with the same text',
+      attribute: { key: 'http.status_code', value: 200 },
+      expected: true,
+    },
+    {
+      name: 'another case and surrounding spaces',
+      attribute: { key: 'HTTP.Status_Code', value: ' 200 ' },
+      expected: true,
+    },
+    { name: 'a longer value', attribute: { key: 'http.status_code', value: '2000' }, expected: false },
+    { name: 'a longer key', attribute: { key: 'http.status_code.raw', value: '200' }, expected: false },
+    {
+      name: 'a key that ends with the key',
+      attribute: { key: 'x.http.status_code', value: '200' },
+      expected: false,
+    },
+    { name: 'no value', attribute: { key: 'http.status_code', value: null }, expected: false },
+  ])('is $expected for $name', ({ attribute, expected }) => {
+    expect(matchesExactAttributeTerm(attribute, exactAttributeTerm)).toBe(expected);
+  });
+});
+
+describe('filterSpans with a key==value term', () => {
+  const spans = [
+    makeOtelSpan('status-200', [{ key: 'http.status_code', value: 200 }]),
+    makeOtelSpan('status-2000', [{ key: 'http.status_code', value: 2000 }]),
+    makeOtelSpan('resource-200', [], [{ key: 'http.status_code', value: '200' }]),
+    makeOtelSpan('event-200', [], [], [{ key: 'http.status_code', value: '200' }]),
+    makeOtelSpan('model-spaces', [{ key: 'gen_ai.request.model', value: 'model a' }]),
+    makeOtelSpan('literal-text', [{ key: 'db.statement', value: 'where http.status_code==2' }]),
+  ];
+
+  it('finds the attribute with the whole key and the whole value, where = finds by substring', () => {
+    expect(filterSpans('http.status_code=200', spans)).toEqual(
+      new Set(['status-200', 'status-2000', 'resource-200', 'event-200'])
+    );
+    expect(filterSpans('http.status_code==200', spans)).toEqual(
+      new Set(['status-200', 'resource-200', 'event-200'])
+    );
+  });
+
+  it('reads a quoted term with spaces as one exact attribute', () => {
+    expect(filterSpans('"gen_ai.request.model==model a"', spans)).toEqual(new Set(['model-spaces']));
+    expect(filterSpans('"gen_ai.request.model==model"', spans)).toEqual(new Set());
+  });
+
+  it('does not search the term as text, which would find the longer values again', () => {
+    expect(filterSpans('http.status_code==2', spans)).toEqual(new Set());
+  });
+
+  it('searches text that ends in == as text', () => {
+    const paddedSpan = makeOtelSpan('padded', [{ key: 'auth.token', value: 'dGVzdA==' }]);
+    expect(filterSpans('dGVzdA==', [...spans, paddedSpan])).toEqual(new Set(['padded']));
+  });
+
+  it('searches a term without a key as text', () => {
+    expect(filterSpans('==2', spans)).toEqual(new Set(['literal-text']));
+  });
+
+  it('leaves out an attribute whose key an exclude term names', () => {
+    expect(filterSpans('http.status_code==200 -status_code', spans)).toEqual(new Set());
   });
 });

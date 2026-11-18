@@ -1,7 +1,7 @@
 # ADR-0012: Span Search and Filter on the Trace Page
 
 * **Status**: Implemented — graduated from [RFC 0009](../rfc/0009-trace-span-search-and-filter.md)
-* **Date**: 2026-11-10
+* **Date**: 2026-11-10, extended 2026-11-18 with the exact attribute term
 * **Related**: [ADR-0009](./0009-service-filter-trace-timeline.md), which this ADR supersedes
 
 ## Context
@@ -15,6 +15,10 @@ The trace page narrows a trace in two ways. The search input in the page header 
 `TracePage/spanFilter.ts` holds the vocabulary. A **criterion** is a predicate over one span, with four shapes: free text with the semantics of `filterSpans`, a value set over a span property (service, status, span kind, span type), a numeric range over the span duration or its GenAI token usage, and an attribute `key:value` substring. A **clause** applies a **verb** to a criterion: `keep` hides the spans that do not match, and `hide` hides the spans that do. The find verb is the typed text of the search input, which highlights the matching spans and never takes a chip form. A **span filter** is the clause list plus a **tree mode**. `evaluateSpanFilter(spans, filter)` runs once over the pre-order span list and returns the hidden span IDs and the find matches, memoized on its inputs, so the row generation, the critical path and the search count consume sets of span IDs and never know which clause hid a span.
 
 The search input remains the find verb for free text. Every clause is a chip in the popover, and in the timeline views the match count of the search bar reports the visible find matches, a warning beside it says how many matches the filter hides, and the popover's "N of M spans shown" count reports what the filter hides overall.
+
+Text of the form `key==value`, with a key and a value, is an **exact attribute term**. It matches a span that has an attribute with exactly that key and exactly that value, compared case-insensitively and with surrounding whitespace ignored. The free text and the attribute criterion both read it, and in both it replaces the substring match: `key=value` in the free text and `key:value` in the attribute criterion find `2000` for the value `200`, and `key==200` does not. An exact attribute term is not searched as text, because a substring match would find the longer values that the term excludes. The cost is that literal text of that form, such as `a==b` inside a database statement, cannot be found through the free text or the attribute criterion any more, quoted or not. Text without a key or without a value, such as `==200` or base64 padding, stays text.
+
+The two places differ in what an exact attribute term can say. In the free text, a value with a space needs the whole term in quotes, and a value with a double quote cannot be written; the attribute criterion takes its whole text as one term and has neither limit. The free text looks at span, event and resource attributes. The attribute criterion looks at span and resource attributes. Both scopes are the ones of the substring match.
 
 ### Tree mode
 

@@ -17,6 +17,41 @@ export function stringifyAttributeValue(value: unknown): string {
   return String(value);
 }
 
+/** A parsed `key==value` term: the whole key and the whole value of the attribute it names, trimmed and lower-cased. */
+export type ExactAttributeTerm = { key: string; value: string };
+
+/**
+ * Reads a term of the form `key==value` as an exact attribute term, or returns null for any other
+ * term. The value is everything after the first `==`, so it may hold `==` itself. A term without
+ * a key or without a value, such as `==200` or text that ends in `==`, is not an exact attribute
+ * term, so that base64 padding and a half-typed term stay text.
+ */
+export function parseExactAttributeTerm(term: string): ExactAttributeTerm | null {
+  const operatorIndex = term.indexOf('==');
+  if (operatorIndex < 0) return null;
+  const key = term.slice(0, operatorIndex).trim().toLowerCase();
+  const value = term
+    .slice(operatorIndex + 2)
+    .trim()
+    .toLowerCase();
+  return key && value ? { key, value } : null;
+}
+
+/**
+ * The comparison is case-insensitive and ignores surrounding whitespace. An attribute without a
+ * value matches no term, as the substring search skips it.
+ */
+export function matchesExactAttributeTerm(
+  attribute: { key: string; value?: unknown },
+  term: ExactAttributeTerm
+): boolean {
+  if (attribute.value === null || attribute.value === undefined) return false;
+  return (
+    attribute.key.trim().toLowerCase() === term.key &&
+    stringifyAttributeValue(attribute.value).trim().toLowerCase() === term.value
+  );
+}
+
 export default function filterSpans(textFilter: string, spans: ReadonlyArray<Span | IOtelSpan> | TNil) {
   if (!spans) {
     return null;
@@ -33,11 +68,20 @@ export default function filterSpans(textFilter: string, spans: ReadonlyArray<Spa
   const match = textFilter.match(regex);
   const results = match ? match.map(e => e.replace(/"(.*)"/, '$1')) : [];
 
+  // a span with an attribute that matches one of these is a match; an exact attribute term is
+  // not searched as text, because a substring match would find the longer values that it excludes
+  const exactAttributeTerms: ExactAttributeTerm[] = [];
+
   results.filter(Boolean).forEach(w => {
     if (w[0] === '-') {
       excludeKeys.push(w.substr(1).toLowerCase());
     } else {
-      includeFilters.push(w.toLowerCase());
+      const exactAttributeTerm = parseExactAttributeTerm(w);
+      if (exactAttributeTerm) {
+        exactAttributeTerms.push(exactAttributeTerm);
+      } else {
+        includeFilters.push(w.toLowerCase());
+      }
     }
   });
 
@@ -56,7 +100,8 @@ export default function filterSpans(textFilter: string, spans: ReadonlyArray<Spa
           return (
             isTextInFilters(includeFilters, kv.key) ||
             isTextInFilters(includeFilters, valueString) ||
-            isTextInFilters(includeFilters, `${kv.key}=${valueString}`)
+            isTextInFilters(includeFilters, `${kv.key}=${valueString}`) ||
+            exactAttributeTerms.some(exactAttributeTerm => matchesExactAttributeTerm(kv, exactAttributeTerm))
           );
         })
       : false;

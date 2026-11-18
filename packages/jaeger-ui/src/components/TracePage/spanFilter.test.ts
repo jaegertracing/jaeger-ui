@@ -4,6 +4,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  attributeMatchIDs,
   decodeClause,
   describeCriterion,
   EMPTY_SPAN_FILTER,
@@ -211,6 +212,29 @@ describe('evaluateSpanFilter', () => {
     expect(
       hidden(liftFilterOf({ verb: 'hide', criterion: { shape: 'attr', text: 'http.method:POST' } })).size
     ).toBe(0);
+  });
+
+  it('matches an attribute criterion of the form key==value against the exact attribute', () => {
+    const status200 = makeSpan('status-200', 'svc-a', undefined, {
+      attrs: [{ key: 'http.status_code', value: 200 }],
+    });
+    const status2000 = makeSpan('status-2000', 'svc-a', undefined, {
+      attrs: [{ key: 'http.status_code', value: 2000 }],
+    });
+    const literalText = makeSpan('literal-text', 'svc-b', undefined, {
+      attrs: [{ key: 'db.statement', value: 'where http.status_code==200' }],
+    });
+    const spans = [status200, status2000, literalText];
+    expect(attributeMatchIDs(spans, 'http.status_code:200')).toEqual(new Set(['status-200', 'status-2000']));
+    expect(attributeMatchIDs(spans, 'http.status_code==200')).toEqual(new Set(['status-200']));
+    // The resource attribute host.name of makeSpan is matched too, without regard to case.
+    expect(attributeMatchIDs(spans, 'Host.Name==HOST-svc-b')).toEqual(new Set(['literal-text']));
+    expect(
+      evaluateSpanFilter(
+        spans,
+        liftFilterOf({ verb: 'hide', criterion: { shape: 'attr', text: 'http.status_code==200' } })
+      ).hiddenIDs
+    ).toEqual(new Set(['status-200']));
   });
 
   it('skips an attribute without a value, as the search does', () => {

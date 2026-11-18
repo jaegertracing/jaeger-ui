@@ -62,6 +62,9 @@ const ATTRIBUTE_HELP = (
         <code>http.status_code:20</code> matches <code>200</code> and <code>201</code>: this is a substring
         match, not a comparison
       </li>
+      <li>
+        <code>http.status_code==200</code> matches that key with exactly that value, and not <code>2000</code>
+      </li>
     </ul>
     <p>
       Unlike Find: one term only, no quotes, no <code>-key</code>, and span names, service names and events
