@@ -9,7 +9,7 @@ import {
   SIDE_PANEL_WIDTH_MIN,
   SPAN_NAME_COLUMN_WIDTH_MAX,
   SPAN_NAME_COLUMN_WIDTH_MIN,
-  useLayoutPrefsStore,
+  useDisplayedLayoutStore,
   useTraceTimelineStore,
 } from './store';
 import HeatmapLegend from './HeatmapLegend';
@@ -80,13 +80,13 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   } = props;
 
   // Layout preferences are owned by Zustand. Each handler tracks before it updates the store.
-  const detailPanelMode = useLayoutPrefsStore(s => s.detailPanelMode);
-  const sidePanelWidth = useLayoutPrefsStore(s => s.sidePanelWidth);
-  const spanNameColumnWidth = useLayoutPrefsStore(s => s.spanNameColumnWidth);
-  const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
-  const heatmapEnabled = useLayoutPrefsStore(s => s.heatmapEnabled);
-  const zustandSetSpanNameColumnWidth = useLayoutPrefsStore(s => s.setSpanNameColumnWidth);
-  const zustandSetSidePanelWidth = useLayoutPrefsStore(s => s.setSidePanelWidth);
+  const detailPanelMode = useDisplayedLayoutStore(s => s.detailPanelMode);
+  const sidePanelWidth = useDisplayedLayoutStore(s => s.sidePanelWidth);
+  const spanNameColumnWidth = useDisplayedLayoutStore(s => s.spanNameColumnWidth);
+  const timelineBarsVisible = useDisplayedLayoutStore(s => s.timelineBarsVisible);
+  const heatmapEnabled = useDisplayedLayoutStore(s => s.heatmapEnabled);
+  const zustandSetSpanNameColumnWidth = useDisplayedLayoutStore(s => s.setSpanNameColumnWidth);
+  const zustandSetSidePanelWidth = useDisplayedLayoutStore(s => s.setSidePanelWidth);
 
   // The legend's rendered height, once known; it grows past the CSS minimum when its hint wraps.
   const [legendHeight, setLegendHeight] = useState<number | null>(null);

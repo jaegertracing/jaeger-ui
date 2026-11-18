@@ -14,9 +14,10 @@ import {
   SIDE_PANEL_WIDTH_MIN,
   SPAN_NAME_COLUMN_WIDTH_MAX,
   SPAN_NAME_COLUMN_WIDTH_MIN,
-  useLayoutPrefsStore,
+  useDisplayedLayoutStore,
   useTraceTimelineStore,
 } from './store';
+import { useSavedLayoutPrefsStore } from './store.layout';
 
 vi.mock('../../../utils/config/get-config', () => ({
   default: vi.fn(() => ({})),
@@ -30,16 +31,41 @@ import spanAncestorIds from '../../../utils/span-ancestor-ids';
 import { EMPTY_SPAN_FILTER, hiddenServices, withHiddenServices } from '../spanFilter';
 import { IOtelSpan } from '../../../types/otel';
 
+function resetLayoutStores() {
+  useDisplayedLayoutStore.setState(useDisplayedLayoutStore.getInitialState(), true);
+  useSavedLayoutPrefsStore.setState({}, true);
+  localStorage.clear();
+}
+
 async function rehydrateLayoutPrefs() {
-  await useLayoutPrefsStore.persist.rehydrate();
-  return useLayoutPrefsStore.getState();
+  await useSavedLayoutPrefsStore.persist.rehydrate();
+  return useDisplayedLayoutStore.getState();
 }
 
 describe('layout preference hydration', () => {
   beforeEach(() => {
     vi.mocked(getConfig).mockReturnValue({} as ReturnType<typeof getConfig>);
-    useLayoutPrefsStore.setState(useLayoutPrefsStore.getInitialState(), true);
-    localStorage.clear();
+    resetLayoutStores();
+  });
+
+  it('displays the saved preferences when the module loads', async () => {
+    localStorage.setItem(
+      'jaeger.layout',
+      JSON.stringify({ state: { timelineBarsVisible: false }, version: 1 })
+    );
+    vi.resetModules();
+    const freshModule = await import('./store.layout');
+    expect(freshModule.useDisplayedLayoutStore.getState().timelineBarsVisible).toBe(false);
+    expect(freshModule.useSavedLayoutPrefsStore.getState()).toEqual({ timelineBarsVisible: false });
+  });
+
+  it('displays the saved preferences before the loading call returns', () => {
+    localStorage.setItem(
+      'jaeger.layout',
+      JSON.stringify({ state: { timelineBarsVisible: false }, version: 1 })
+    );
+    void useSavedLayoutPrefsStore.persist.rehydrate();
+    expect(useDisplayedLayoutStore.getState().timelineBarsVisible).toBe(false);
   });
 
   it('returns default values when localStorage is empty and config has no traceTimeline', async () => {
@@ -60,7 +86,7 @@ describe('layout preference hydration', () => {
     localStorage.setItem('spanNameColumnWidth', '0.01');
     expect((await rehydrateLayoutPrefs()).spanNameColumnWidth).toBe(SPAN_NAME_COLUMN_WIDTH_MIN);
 
-    useLayoutPrefsStore.persist.clearStorage();
+    useSavedLayoutPrefsStore.persist.clearStorage();
     localStorage.setItem('spanNameColumnWidth', '0.99');
     expect((await rehydrateLayoutPrefs()).spanNameColumnWidth).toBe(SPAN_NAME_COLUMN_WIDTH_MAX);
   });
@@ -76,7 +102,7 @@ describe('layout preference hydration', () => {
     localStorage.setItem('sidePanelWidth', '0.01');
     expect((await rehydrateLayoutPrefs()).sidePanelWidth).toBe(SIDE_PANEL_WIDTH_MIN);
 
-    useLayoutPrefsStore.persist.clearStorage();
+    useSavedLayoutPrefsStore.persist.clearStorage();
     localStorage.setItem('sidePanelWidth', '0.99');
     expect((await rehydrateLayoutPrefs()).sidePanelWidth).toBe(SIDE_PANEL_WIDTH_MAX);
   });
@@ -175,19 +201,18 @@ describe('normalizeLayoutPrefs()', () => {
   });
 });
 
-describe('useLayoutPrefsStore persistence (legacy migration + corrupted value)', () => {
+describe('useSavedLayoutPrefsStore persistence (legacy migration + corrupted value)', () => {
   beforeEach(() => {
     vi.mocked(getConfig).mockReturnValue({} as ReturnType<typeof getConfig>);
-    useLayoutPrefsStore.setState(useLayoutPrefsStore.getInitialState(), true);
-    localStorage.clear();
+    resetLayoutStores();
   });
 
   it('migrates legacy unprefixed keys on rehydrate', async () => {
     localStorage.setItem('spanNameColumnWidth', '0.4');
     localStorage.setItem('sidePanelWidth', '0.3');
     localStorage.setItem('timelineVisible', 'false');
-    await useLayoutPrefsStore.persist.rehydrate();
-    const state = useLayoutPrefsStore.getState();
+    await useSavedLayoutPrefsStore.persist.rehydrate();
+    const state = useDisplayedLayoutStore.getState();
     expect(state.spanNameColumnWidth).toBeCloseTo(0.4);
     expect(state.sidePanelWidth).toBeCloseTo(0.3);
     expect(state.timelineBarsVisible).toBe(false);
@@ -198,8 +223,8 @@ describe('useLayoutPrefsStore persistence (legacy migration + corrupted value)',
       traceTimeline: { enableSidePanel: true },
     } as ReturnType<typeof getConfig>);
     localStorage.setItem('detailPanelMode', 'sidepanel');
-    await useLayoutPrefsStore.persist.rehydrate();
-    expect(useLayoutPrefsStore.getState().detailPanelMode).toBe('sidepanel');
+    await useSavedLayoutPrefsStore.persist.rehydrate();
+    expect(useDisplayedLayoutStore.getState().detailPanelMode).toBe('sidepanel');
   });
 
   it('honors a legacy detailPanelMode=inline over the config default and reads timelineVisible=true', async () => {
@@ -208,16 +233,16 @@ describe('useLayoutPrefsStore persistence (legacy migration + corrupted value)',
     } as ReturnType<typeof getConfig>);
     localStorage.setItem('detailPanelMode', 'inline');
     localStorage.setItem('timelineVisible', 'true');
-    await useLayoutPrefsStore.persist.rehydrate();
-    const state = useLayoutPrefsStore.getState();
+    await useSavedLayoutPrefsStore.persist.rehydrate();
+    const state = useDisplayedLayoutStore.getState();
     expect(state.detailPanelMode).toBe('inline');
     expect(state.timelineBarsVisible).toBe(true);
   });
 
   it('ignores unparseable legacy width values and falls back to defaults', async () => {
     localStorage.setItem('spanNameColumnWidth', 'not-a-number');
-    await useLayoutPrefsStore.persist.rehydrate();
-    expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBe(0.25);
+    await useSavedLayoutPrefsStore.persist.rehydrate();
+    expect(useDisplayedLayoutStore.getState().spanNameColumnWidth).toBe(0.25);
   });
 
   it('prefers the namespaced jaeger.layout key over legacy keys', async () => {
@@ -226,40 +251,40 @@ describe('useLayoutPrefsStore persistence (legacy migration + corrupted value)',
       'jaeger.layout',
       JSON.stringify({ state: { spanNameColumnWidth: 0.5 }, version: 1 })
     );
-    await useLayoutPrefsStore.persist.rehydrate();
-    expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(0.5);
+    await useSavedLayoutPrefsStore.persist.rehydrate();
+    expect(useDisplayedLayoutStore.getState().spanNameColumnWidth).toBeCloseTo(0.5);
   });
 
   it('drops a corrupted namespaced value and falls back to legacy keys', async () => {
     localStorage.setItem('jaeger.layout', '{ not valid json');
     localStorage.setItem('spanNameColumnWidth', '0.4');
-    await useLayoutPrefsStore.persist.rehydrate();
-    expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(0.4);
+    await useSavedLayoutPrefsStore.persist.rehydrate();
+    expect(useDisplayedLayoutStore.getState().spanNameColumnWidth).toBeCloseTo(0.4);
     expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state).toEqual({ spanNameColumnWidth: 0.4 });
   });
 
   it('keeps current state when storage is empty on rehydrate', async () => {
-    useLayoutPrefsStore.getState().setSpanNameColumnWidth(0.33);
+    useDisplayedLayoutStore.getState().setSpanNameColumnWidth(0.33);
     localStorage.clear();
-    await useLayoutPrefsStore.persist.rehydrate();
-    expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(0.33);
+    await useSavedLayoutPrefsStore.persist.rehydrate();
+    expect(useDisplayedLayoutStore.getState().spanNameColumnWidth).toBeCloseTo(0.33);
   });
 
   it('falls back to defaults when the namespaced value has no state property', async () => {
     localStorage.setItem('jaeger.layout', JSON.stringify({ version: 1 }));
-    await useLayoutPrefsStore.persist.rehydrate();
-    expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBe(0.25);
+    await useSavedLayoutPrefsStore.persist.rehydrate();
+    expect(useDisplayedLayoutStore.getState().spanNameColumnWidth).toBe(0.25);
   });
 
   it('clearStorage removes the namespaced key', () => {
     localStorage.setItem('jaeger.layout', JSON.stringify({ state: {}, version: 1 }));
-    useLayoutPrefsStore.persist.clearStorage();
+    useSavedLayoutPrefsStore.persist.clearStorage();
     expect(localStorage.getItem('jaeger.layout')).toBeNull();
   });
 
   it('writes migrated preferences once and leaves the old keys available to Redux', async () => {
     localStorage.setItem('spanNameColumnWidth', '0.4');
-    await useLayoutPrefsStore.persist.rehydrate();
+    await useSavedLayoutPrefsStore.persist.rehydrate();
     expect(JSON.parse(localStorage.getItem('jaeger.layout')!)).toEqual({
       state: { spanNameColumnWidth: 0.4 },
       version: 1,
@@ -267,44 +292,44 @@ describe('useLayoutPrefsStore persistence (legacy migration + corrupted value)',
     expect(localStorage.getItem('spanNameColumnWidth')).toBe('0.4');
 
     localStorage.setItem('spanNameColumnWidth', '0.6');
-    await useLayoutPrefsStore.persist.rehydrate();
-    expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(0.4);
+    await useSavedLayoutPrefsStore.persist.rehydrate();
+    expect(useDisplayedLayoutStore.getState().spanNameColumnWidth).toBeCloseTo(0.4);
   });
 
   it.each([0.8, 0.85])('preserves a name-column choice of %s across repeated rehydration', async width => {
-    useLayoutPrefsStore.getState().setSpanNameColumnWidth(width);
+    useDisplayedLayoutStore.getState().setSpanNameColumnWidth(width);
     expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state).toEqual({ spanNameColumnWidth: width });
-    await useLayoutPrefsStore.persist.rehydrate();
-    await useLayoutPrefsStore.persist.rehydrate();
-    expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(width);
+    await useSavedLayoutPrefsStore.persist.rehydrate();
+    await useSavedLayoutPrefsStore.persist.rehydrate();
+    expect(useDisplayedLayoutStore.getState().spanNameColumnWidth).toBeCloseTo(width);
   });
 
   it('allows a new configured panel mode when the user has only resized a column', async () => {
-    useLayoutPrefsStore.getState().setSpanNameColumnWidth(0.4);
+    useDisplayedLayoutStore.getState().setSpanNameColumnWidth(0.4);
     expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state.detailPanelMode).toBeUndefined();
     vi.mocked(getConfig).mockReturnValue({
       traceTimeline: { enableSidePanel: true, defaultDetailPanelMode: 'sidepanel' },
     } as ReturnType<typeof getConfig>);
-    await useLayoutPrefsStore.persist.rehydrate();
-    expect(useLayoutPrefsStore.getState().detailPanelMode).toBe('sidepanel');
-    useLayoutPrefsStore.getState().setTimelineBarsVisible(false);
+    await useSavedLayoutPrefsStore.persist.rehydrate();
+    expect(useDisplayedLayoutStore.getState().detailPanelMode).toBe('sidepanel');
+    useDisplayedLayoutStore.getState().setTimelineBarsVisible(false);
     expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state.detailPanelMode).toBeUndefined();
   });
 
   it('keeps an explicitly chosen inline mode over a new configuration default', async () => {
-    useLayoutPrefsStore.getState().applyDetailPanelModeToLayout('inline');
+    useDisplayedLayoutStore.getState().applyDetailPanelModeToLayout('inline');
     vi.mocked(getConfig).mockReturnValue({
       traceTimeline: { enableSidePanel: true, defaultDetailPanelMode: 'sidepanel' },
     } as ReturnType<typeof getConfig>);
-    await useLayoutPrefsStore.persist.rehydrate();
-    expect(useLayoutPrefsStore.getState().detailPanelMode).toBe('inline');
+    await useSavedLayoutPrefsStore.persist.rehydrate();
+    expect(useDisplayedLayoutStore.getState().detailPanelMode).toBe('inline');
   });
 
   it('retains a chosen side-panel width when another preference changes', async () => {
-    useLayoutPrefsStore.getState().setSidePanelWidth(0.3);
-    useLayoutPrefsStore.getState().setTimelineBarsVisible(false);
-    await useLayoutPrefsStore.persist.rehydrate();
-    expect(useLayoutPrefsStore.getState().sidePanelWidth).toBeCloseTo(0.3);
+    useDisplayedLayoutStore.getState().setSidePanelWidth(0.3);
+    useDisplayedLayoutStore.getState().setTimelineBarsVisible(false);
+    await useSavedLayoutPrefsStore.persist.rehydrate();
+    expect(useDisplayedLayoutStore.getState().sidePanelWidth).toBeCloseTo(0.3);
     expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state).toEqual({
       sidePanelWidth: 0.3,
       timelineBarsVisible: false,
@@ -316,32 +341,32 @@ describe('useLayoutPrefsStore persistence (legacy migration + corrupted value)',
       'jaeger.layout',
       JSON.stringify({ state: { detailPanelMode: 'sidepanel' }, version: 1 })
     );
-    await useLayoutPrefsStore.persist.rehydrate();
-    expect(useLayoutPrefsStore.getState().detailPanelMode).toBe('inline');
-    useLayoutPrefsStore.getState().setTimelineBarsVisible(false);
+    await useSavedLayoutPrefsStore.persist.rehydrate();
+    expect(useDisplayedLayoutStore.getState().detailPanelMode).toBe('inline');
+    useDisplayedLayoutStore.getState().setTimelineBarsVisible(false);
     expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state.detailPanelMode).toBe('sidepanel');
     vi.mocked(getConfig).mockReturnValue({ traceTimeline: { enableSidePanel: true } } as ReturnType<
       typeof getConfig
     >);
-    await useLayoutPrefsStore.persist.rehydrate();
-    expect(useLayoutPrefsStore.getState().detailPanelMode).toBe('sidepanel');
+    await useSavedLayoutPrefsStore.persist.rehydrate();
+    expect(useDisplayedLayoutStore.getState().detailPanelMode).toBe('sidepanel');
   });
 
   it('passes the saved version to migration on a future version change', async () => {
-    const options = useLayoutPrefsStore.persist.getOptions();
+    const options = useSavedLayoutPrefsStore.persist.getOptions();
     const migrate = vi.fn(() => ({ spanNameColumnWidth: 0.45 }));
     try {
-      useLayoutPrefsStore.persist.setOptions({ version: 2, migrate });
+      useSavedLayoutPrefsStore.persist.setOptions({ version: 2, migrate });
       localStorage.setItem(
         'jaeger.layout',
         JSON.stringify({ state: { spanNameColumnWidth: 0.4 }, version: 1 })
       );
-      await useLayoutPrefsStore.persist.rehydrate();
+      await useSavedLayoutPrefsStore.persist.rehydrate();
       expect(migrate).toHaveBeenCalledWith({ spanNameColumnWidth: 0.4 }, 1);
-      expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(0.45);
+      expect(useDisplayedLayoutStore.getState().spanNameColumnWidth).toBeCloseTo(0.45);
       expect(JSON.parse(localStorage.getItem('jaeger.layout')!).version).toBe(2);
     } finally {
-      useLayoutPrefsStore.persist.setOptions(options);
+      useSavedLayoutPrefsStore.persist.setOptions(options);
     }
   });
 
@@ -350,8 +375,8 @@ describe('useLayoutPrefsStore persistence (legacy migration + corrupted value)',
     async raw => {
       localStorage.setItem('jaeger.layout', raw);
       localStorage.setItem('spanNameColumnWidth', '0.4');
-      await useLayoutPrefsStore.persist.rehydrate();
-      expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(0.4);
+      await useSavedLayoutPrefsStore.persist.rehydrate();
+      expect(useDisplayedLayoutStore.getState().spanNameColumnWidth).toBeCloseTo(0.4);
     }
   );
 
@@ -370,15 +395,15 @@ describe('useLayoutPrefsStore persistence (legacy migration + corrupted value)',
         version: 1,
       })
     );
-    await useLayoutPrefsStore.persist.rehydrate();
-    expect(useLayoutPrefsStore.getState()).toMatchObject({
+    await useSavedLayoutPrefsStore.persist.rehydrate();
+    expect(useDisplayedLayoutStore.getState()).toMatchObject({
       spanNameColumnWidth: 0.25,
       sidePanelWidth: 0.375,
       detailPanelMode: 'inline',
       timelineBarsVisible: true,
       heatmapEnabled: false,
     });
-    expect(useLayoutPrefsStore.getState().setSpanNameColumnWidth).toBeTypeOf('function');
+    expect(useDisplayedLayoutStore.getState().setSpanNameColumnWidth).toBeTypeOf('function');
   });
 });
 
@@ -401,12 +426,12 @@ const makeTrace = (traceID = 'trace-1', spans: any[] = [makeSpan()]) =>
 describe('trace timeline zustand stores', () => {
   beforeEach(() => {
     localStorage.clear();
-    useLayoutPrefsStore.setState({
+    useSavedLayoutPrefsStore.setState({}, true);
+    useDisplayedLayoutStore.setState({
       spanNameColumnWidth: 0.25,
       sidePanelWidth: 0.375,
       detailPanelMode: 'inline',
       timelineBarsVisible: true,
-      explicitPrefs: {},
     });
     useTraceTimelineStore.setState({
       traceID: null,
@@ -419,19 +444,19 @@ describe('trace timeline zustand stores', () => {
     vi.mocked(spanAncestorIds).mockReset();
   });
 
-  describe('useLayoutPrefsStore', () => {
+  describe('useDisplayedLayoutStore', () => {
     it('keeps temporary settings out of storage and restores saved choices on reload', async () => {
       vi.mocked(getConfig).mockReturnValue({ traceTimeline: { enableSidePanel: true } } as ReturnType<
         typeof getConfig
       >);
-      useLayoutPrefsStore.getState().applyDetailPanelModeToLayout('inline');
-      useLayoutPrefsStore.getState().setTimelineBarsVisible(true);
-      useLayoutPrefsStore.getState().setSpanNameColumnWidth(0.8);
+      useDisplayedLayoutStore.getState().applyDetailPanelModeToLayout('inline');
+      useDisplayedLayoutStore.getState().setTimelineBarsVisible(true);
+      useDisplayedLayoutStore.getState().setSpanNameColumnWidth(0.8);
       const saved = localStorage.getItem('jaeger.layout');
 
-      useLayoutPrefsStore.getState().applyDetailPanelModeToLayout('sidepanel', { persist: false });
-      useLayoutPrefsStore.getState().setTimelineBarsVisible(false, { persist: false });
-      const view = useLayoutPrefsStore.getState();
+      useDisplayedLayoutStore.getState().applyDetailPanelModeToLayout('sidepanel', { persist: false });
+      useDisplayedLayoutStore.getState().setTimelineBarsVisible(false, { persist: false });
+      const view = useDisplayedLayoutStore.getState();
       expect(view.detailPanelMode).toBe('sidepanel');
       expect(view.timelineBarsVisible).toBe(false);
       expect(view.spanNameColumnWidth).toBeLessThan(0.8);
@@ -447,9 +472,9 @@ describe('trace timeline zustand stores', () => {
       vi.mocked(getConfig).mockReturnValue({ traceTimeline: { enableSidePanel: true } } as ReturnType<
         typeof getConfig
       >);
-      useLayoutPrefsStore.getState().applyDetailPanelModeToLayout('sidepanel', { persist: false });
-      useLayoutPrefsStore.getState().setTimelineBarsVisible(false, { persist: false });
-      useLayoutPrefsStore.getState().setSidePanelWidth(0.3);
+      useDisplayedLayoutStore.getState().applyDetailPanelModeToLayout('sidepanel', { persist: false });
+      useDisplayedLayoutStore.getState().setTimelineBarsVisible(false, { persist: false });
+      useDisplayedLayoutStore.getState().setSidePanelWidth(0.3);
       expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state).toEqual({ sidePanelWidth: 0.3 });
 
       const reloaded = await rehydrateLayoutPrefs();
@@ -461,8 +486,8 @@ describe('trace timeline zustand stores', () => {
       vi.mocked(getConfig).mockReturnValue({ traceTimeline: { enableSidePanel: true } } as ReturnType<
         typeof getConfig
       >);
-      useLayoutPrefsStore.getState().setTimelineBarsVisible(false, { persist: false });
-      useLayoutPrefsStore.getState().applyDetailPanelModeToLayout('sidepanel');
+      useDisplayedLayoutStore.getState().setTimelineBarsVisible(false, { persist: false });
+      useDisplayedLayoutStore.getState().applyDetailPanelModeToLayout('sidepanel');
       expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state).toEqual({
         detailPanelMode: 'sidepanel',
       });
@@ -473,8 +498,8 @@ describe('trace timeline zustand stores', () => {
     });
 
     it('saves a setting once it is chosen explicitly after a temporary change', async () => {
-      useLayoutPrefsStore.getState().setTimelineBarsVisible(false, { persist: false });
-      useLayoutPrefsStore.getState().setTimelineBarsVisible(false);
+      useDisplayedLayoutStore.getState().setTimelineBarsVisible(false, { persist: false });
+      useDisplayedLayoutStore.getState().setTimelineBarsVisible(false);
       expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state).toEqual({
         timelineBarsVisible: false,
       });
@@ -487,16 +512,16 @@ describe('trace timeline zustand stores', () => {
       localStorage.setItem('jaeger.layout', saved);
       const setItem = vi.spyOn(Storage.prototype, 'setItem');
       try {
-        useLayoutPrefsStore.getState().setTimelineBarsVisible(false, { persist: false });
-        expect(useLayoutPrefsStore.getState().timelineBarsVisible).toBe(false);
+        useDisplayedLayoutStore.getState().setTimelineBarsVisible(false, { persist: false });
+        expect(useDisplayedLayoutStore.getState().timelineBarsVisible).toBe(false);
         expect(localStorage.getItem('jaeger.layout')).toBe(saved);
 
-        useLayoutPrefsStore.getState().applyDetailPanelModeToLayout('sidepanel', { persist: false });
-        expect(useLayoutPrefsStore.getState().detailPanelMode).toBe('sidepanel');
+        useDisplayedLayoutStore.getState().applyDetailPanelModeToLayout('sidepanel', { persist: false });
+        expect(useDisplayedLayoutStore.getState().detailPanelMode).toBe('sidepanel');
         expect(localStorage.getItem('jaeger.layout')).toBe(saved);
 
         setDetailPanelMode('inline', { persist: false });
-        expect(useLayoutPrefsStore.getState().detailPanelMode).toBe('inline');
+        expect(useDisplayedLayoutStore.getState().detailPanelMode).toBe('inline');
         expect(localStorage.getItem('jaeger.layout')).toBe(saved);
         expect(setItem).not.toHaveBeenCalled();
       } finally {
@@ -504,102 +529,115 @@ describe('trace timeline zustand stores', () => {
       }
     });
 
+    it('saves the newer choice when a subscriber calls the setter during an update', () => {
+      const unsubscribe = useDisplayedLayoutStore.subscribe(state => {
+        if (!state.timelineBarsVisible) state.setTimelineBarsVisible(true);
+      });
+      try {
+        useDisplayedLayoutStore.getState().setTimelineBarsVisible(false);
+      } finally {
+        unsubscribe();
+      }
+      expect(useDisplayedLayoutStore.getState().timelineBarsVisible).toBe(true);
+      expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state).toEqual({ timelineBarsVisible: true });
+    });
+
     describe('setSpanNameColumnWidth', () => {
       it('updates spanNameColumnWidth and persists to localStorage', () => {
-        useLayoutPrefsStore.getState().setSpanNameColumnWidth(0.4);
-        expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(0.4);
+        useDisplayedLayoutStore.getState().setSpanNameColumnWidth(0.4);
+        expect(useDisplayedLayoutStore.getState().spanNameColumnWidth).toBeCloseTo(0.4);
         expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state.spanNameColumnWidth).toBeCloseTo(0.4);
       });
 
       it('clamps to SPAN_NAME_COLUMN_WIDTH_MIN', () => {
-        useLayoutPrefsStore.getState().setSpanNameColumnWidth(0.01);
-        expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBe(SPAN_NAME_COLUMN_WIDTH_MIN);
+        useDisplayedLayoutStore.getState().setSpanNameColumnWidth(0.01);
+        expect(useDisplayedLayoutStore.getState().spanNameColumnWidth).toBe(SPAN_NAME_COLUMN_WIDTH_MIN);
       });
 
       it('clamps to SPAN_NAME_COLUMN_WIDTH_MAX in inline mode', () => {
-        useLayoutPrefsStore.getState().setSpanNameColumnWidth(0.99);
-        expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBe(SPAN_NAME_COLUMN_WIDTH_MAX);
+        useDisplayedLayoutStore.getState().setSpanNameColumnWidth(0.99);
+        expect(useDisplayedLayoutStore.getState().spanNameColumnWidth).toBe(SPAN_NAME_COLUMN_WIDTH_MAX);
       });
 
       it('clamps to leave room for side panel and timeline in sidepanel mode', () => {
-        useLayoutPrefsStore.setState({ detailPanelMode: 'sidepanel', sidePanelWidth: 0.3 });
-        useLayoutPrefsStore.getState().setSpanNameColumnWidth(0.99);
-        expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(0.65);
+        useDisplayedLayoutStore.setState({ detailPanelMode: 'sidepanel', sidePanelWidth: 0.3 });
+        useDisplayedLayoutStore.getState().setSpanNameColumnWidth(0.99);
+        expect(useDisplayedLayoutStore.getState().spanNameColumnWidth).toBeCloseTo(0.65);
       });
 
       it('clamps to leave room for side panel when timeline is hidden', () => {
-        useLayoutPrefsStore.setState({
+        useDisplayedLayoutStore.setState({
           detailPanelMode: 'sidepanel',
           sidePanelWidth: 0.7,
           timelineBarsVisible: false,
         });
-        useLayoutPrefsStore.getState().setSpanNameColumnWidth(0.99);
-        expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(1 - SIDE_PANEL_WIDTH_MIN);
+        useDisplayedLayoutStore.getState().setSpanNameColumnWidth(0.99);
+        expect(useDisplayedLayoutStore.getState().spanNameColumnWidth).toBeCloseTo(1 - SIDE_PANEL_WIDTH_MIN);
       });
     });
 
     describe('setSidePanelWidth', () => {
       it('updates sidePanelWidth and persists to localStorage', () => {
-        useLayoutPrefsStore.getState().setSidePanelWidth(0.4);
-        expect(useLayoutPrefsStore.getState().sidePanelWidth).toBeCloseTo(0.4);
+        useDisplayedLayoutStore.getState().setSidePanelWidth(0.4);
+        expect(useDisplayedLayoutStore.getState().sidePanelWidth).toBeCloseTo(0.4);
         expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state.sidePanelWidth).toBeCloseTo(0.4);
       });
 
       it('clamps to SIDE_PANEL_WIDTH_MIN', () => {
-        useLayoutPrefsStore.getState().setSidePanelWidth(0.01);
-        expect(useLayoutPrefsStore.getState().sidePanelWidth).toBe(SIDE_PANEL_WIDTH_MIN);
+        useDisplayedLayoutStore.getState().setSidePanelWidth(0.01);
+        expect(useDisplayedLayoutStore.getState().sidePanelWidth).toBe(SIDE_PANEL_WIDTH_MIN);
       });
 
       it('clamps to SIDE_PANEL_WIDTH_MAX', () => {
-        useLayoutPrefsStore.getState().setSidePanelWidth(0.99);
-        expect(useLayoutPrefsStore.getState().sidePanelWidth).toBe(SIDE_PANEL_WIDTH_MAX);
+        useDisplayedLayoutStore.getState().setSidePanelWidth(0.99);
+        expect(useDisplayedLayoutStore.getState().sidePanelWidth).toBe(SIDE_PANEL_WIDTH_MAX);
       });
 
       it('accounts for timeline column when timeline bars are visible', () => {
-        useLayoutPrefsStore.setState({ timelineBarsVisible: true, spanNameColumnWidth: 0.25 });
-        useLayoutPrefsStore.getState().setSidePanelWidth(0.99);
-        expect(useLayoutPrefsStore.getState().sidePanelWidth).toBeCloseTo(0.7);
+        useDisplayedLayoutStore.setState({ timelineBarsVisible: true, spanNameColumnWidth: 0.25 });
+        useDisplayedLayoutStore.getState().setSidePanelWidth(0.99);
+        expect(useDisplayedLayoutStore.getState().sidePanelWidth).toBeCloseTo(0.7);
       });
 
       it('does not reserve timeline column when timeline bars are hidden', () => {
-        useLayoutPrefsStore.setState({ timelineBarsVisible: false, spanNameColumnWidth: 0.25 });
-        useLayoutPrefsStore.getState().setSidePanelWidth(0.99);
-        expect(useLayoutPrefsStore.getState().sidePanelWidth).toBeCloseTo(0.7);
+        useDisplayedLayoutStore.setState({ timelineBarsVisible: false, spanNameColumnWidth: 0.25 });
+        useDisplayedLayoutStore.getState().setSidePanelWidth(0.99);
+        expect(useDisplayedLayoutStore.getState().sidePanelWidth).toBeCloseTo(0.7);
       });
     });
 
     describe('setTimelineBarsVisible', () => {
       it('updates timelineBarsVisible and persists to localStorage', () => {
-        useLayoutPrefsStore.getState().setTimelineBarsVisible(false);
-        expect(useLayoutPrefsStore.getState().timelineBarsVisible).toBe(false);
+        useDisplayedLayoutStore.getState().setTimelineBarsVisible(false);
+        expect(useDisplayedLayoutStore.getState().timelineBarsVisible).toBe(false);
         expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state.timelineBarsVisible).toBe(false);
       });
 
       it('persists true as "true"', () => {
-        useLayoutPrefsStore.getState().setTimelineBarsVisible(false);
-        useLayoutPrefsStore.getState().setTimelineBarsVisible(true);
+        useDisplayedLayoutStore.getState().setTimelineBarsVisible(false);
+        useDisplayedLayoutStore.getState().setTimelineBarsVisible(true);
         expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state.timelineBarsVisible).toBe(true);
       });
 
       it('updates the view without saving when persist is false', () => {
-        useLayoutPrefsStore.getState().setTimelineBarsVisible(false, { persist: false });
-        expect(useLayoutPrefsStore.getState().timelineBarsVisible).toBe(false);
-        expect(useLayoutPrefsStore.getState().explicitPrefs).toEqual({});
+        useDisplayedLayoutStore.getState().setTimelineBarsVisible(false, { persist: false });
+        expect(useDisplayedLayoutStore.getState().timelineBarsVisible).toBe(false);
+        expect(useSavedLayoutPrefsStore.getState()).toEqual({});
         expect(JSON.parse(localStorage.getItem('jaeger.layout')!)).toEqual({ state: {}, version: 1 });
       });
     });
 
     describe('applyDetailPanelModeToLayout', () => {
       it('updates detailPanelMode and persists by default', () => {
-        useLayoutPrefsStore.getState().applyDetailPanelModeToLayout('sidepanel');
-        expect(useLayoutPrefsStore.getState().detailPanelMode).toBe('sidepanel');
+        useDisplayedLayoutStore.getState().applyDetailPanelModeToLayout('sidepanel');
+        expect(useDisplayedLayoutStore.getState().detailPanelMode).toBe('sidepanel');
         expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state.detailPanelMode).toBe('sidepanel');
       });
 
       it('keeps the saved mode when persist is false', () => {
-        useLayoutPrefsStore.getState().applyDetailPanelModeToLayout('inline');
-        useLayoutPrefsStore.getState().applyDetailPanelModeToLayout('sidepanel', { persist: false });
-        expect(useLayoutPrefsStore.getState().detailPanelMode).toBe('sidepanel');
+        useDisplayedLayoutStore.getState().applyDetailPanelModeToLayout('inline');
+        useDisplayedLayoutStore.getState().applyDetailPanelModeToLayout('sidepanel', { persist: false });
+        expect(useDisplayedLayoutStore.getState().detailPanelMode).toBe('sidepanel');
         expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state).toEqual({
           detailPanelMode: 'inline',
         });
@@ -608,21 +646,21 @@ describe('trace timeline zustand stores', () => {
 
     describe('toggleHeatmap', () => {
       it('flips heatmapEnabled and persists it to localStorage', () => {
-        useLayoutPrefsStore.setState({ heatmapEnabled: false });
-        useLayoutPrefsStore.getState().toggleHeatmap();
-        expect(useLayoutPrefsStore.getState().heatmapEnabled).toBe(true);
+        useDisplayedLayoutStore.setState({ heatmapEnabled: false });
+        useDisplayedLayoutStore.getState().toggleHeatmap();
+        expect(useDisplayedLayoutStore.getState().heatmapEnabled).toBe(true);
         expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state.heatmapEnabled).toBe(true);
 
-        useLayoutPrefsStore.getState().toggleHeatmap();
-        expect(useLayoutPrefsStore.getState().heatmapEnabled).toBe(false);
+        useDisplayedLayoutStore.getState().toggleHeatmap();
+        expect(useDisplayedLayoutStore.getState().heatmapEnabled).toBe(false);
         expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state.heatmapEnabled).toBe(false);
       });
 
       it('saves only the heatmap after temporary layout changes', () => {
-        useLayoutPrefsStore.setState({ heatmapEnabled: false });
-        useLayoutPrefsStore.getState().setTimelineBarsVisible(false, { persist: false });
-        useLayoutPrefsStore.getState().applyDetailPanelModeToLayout('sidepanel', { persist: false });
-        useLayoutPrefsStore.getState().toggleHeatmap();
+        useDisplayedLayoutStore.setState({ heatmapEnabled: false });
+        useDisplayedLayoutStore.getState().setTimelineBarsVisible(false, { persist: false });
+        useDisplayedLayoutStore.getState().applyDetailPanelModeToLayout('sidepanel', { persist: false });
+        useDisplayedLayoutStore.getState().toggleHeatmap();
         expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state).toEqual({ heatmapEnabled: true });
       });
     });
@@ -631,7 +669,7 @@ describe('trace timeline zustand stores', () => {
   describe('setDetailPanelMode coordinator', () => {
     it('updates detailPanelMode and persists to localStorage', () => {
       setDetailPanelMode('sidepanel');
-      expect(useLayoutPrefsStore.getState().detailPanelMode).toBe('sidepanel');
+      expect(useDisplayedLayoutStore.getState().detailPanelMode).toBe('sidepanel');
       expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state.detailPanelMode).toBe('sidepanel');
     });
 
@@ -643,41 +681,41 @@ describe('trace timeline zustand stores', () => {
         ]),
       });
       setDetailPanelMode('sidepanel', { persist: false });
-      expect(useLayoutPrefsStore.getState().detailPanelMode).toBe('sidepanel');
+      expect(useDisplayedLayoutStore.getState().detailPanelMode).toBe('sidepanel');
       expect([...useTraceTimelineStore.getState().detailStates.keys()]).toEqual(['span-1']);
-      expect(useLayoutPrefsStore.getState().explicitPrefs).toEqual({});
+      expect(useSavedLayoutPrefsStore.getState()).toEqual({});
       expect(JSON.parse(localStorage.getItem('jaeger.layout')!)).toEqual({ state: {}, version: 1 });
     });
 
     it('keeps the clamped width after a temporary sidepanel switches back to inline', () => {
-      useLayoutPrefsStore.setState({ sidePanelWidth: 0.3 });
-      useLayoutPrefsStore.getState().setSpanNameColumnWidth(0.8);
+      useDisplayedLayoutStore.setState({ sidePanelWidth: 0.3 });
+      useDisplayedLayoutStore.getState().setSpanNameColumnWidth(0.8);
       setDetailPanelMode('sidepanel', { persist: false });
       setDetailPanelMode('inline', { persist: false });
-      expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(0.65);
+      expect(useDisplayedLayoutStore.getState().spanNameColumnWidth).toBeCloseTo(0.65);
       expect(JSON.parse(localStorage.getItem('jaeger.layout')!).state).toEqual({ spanNameColumnWidth: 0.8 });
     });
 
     it('clamps spanNameColumnWidth when switching to sidepanel', () => {
-      useLayoutPrefsStore.setState({ spanNameColumnWidth: 0.8, sidePanelWidth: 0.3 });
+      useDisplayedLayoutStore.setState({ spanNameColumnWidth: 0.8, sidePanelWidth: 0.3 });
       setDetailPanelMode('sidepanel');
-      expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(0.65);
+      expect(useDisplayedLayoutStore.getState().spanNameColumnWidth).toBeCloseTo(0.65);
     });
 
     it('clamps spanNameColumnWidth when switching to sidepanel with timeline hidden', () => {
-      useLayoutPrefsStore.setState({
+      useDisplayedLayoutStore.setState({
         spanNameColumnWidth: SPAN_NAME_COLUMN_WIDTH_MAX,
         sidePanelWidth: 0.7,
         timelineBarsVisible: false,
       });
       setDetailPanelMode('sidepanel');
-      expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(1 - SIDE_PANEL_WIDTH_MIN);
+      expect(useDisplayedLayoutStore.getState().spanNameColumnWidth).toBeCloseTo(1 - SIDE_PANEL_WIDTH_MIN);
     });
 
     it('does not clamp spanNameColumnWidth when switching to inline', () => {
-      useLayoutPrefsStore.setState({ spanNameColumnWidth: 0.8, detailPanelMode: 'sidepanel' });
+      useDisplayedLayoutStore.setState({ spanNameColumnWidth: 0.8, detailPanelMode: 'sidepanel' });
       setDetailPanelMode('inline');
-      expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(0.8);
+      expect(useDisplayedLayoutStore.getState().spanNameColumnWidth).toBeCloseTo(0.8);
     });
 
     it('trims detailStates to one entry upgraded to sidepanel mode when switching to sidepanel', () => {
@@ -698,7 +736,7 @@ describe('trace timeline zustand stores', () => {
 
     it('does not touch detailStates when switching to inline', () => {
       const ds = new Map([['span-a', new DetailState()]]);
-      useLayoutPrefsStore.setState({ detailPanelMode: 'sidepanel' });
+      useDisplayedLayoutStore.setState({ detailPanelMode: 'sidepanel' });
       useTraceTimelineStore.setState({ detailStates: ds });
       setDetailPanelMode('inline');
       expect(useTraceTimelineStore.getState().detailStates).toBe(ds);
@@ -709,7 +747,7 @@ describe('trace timeline zustand stores', () => {
     it('preserves manual interactions and layout preferences on same-ID reload', () => {
       const trace = makeTrace('same-trace', [makeSpan({ spanID: 'span-x' })]);
       useTraceTimelineStore.getState().setTrace(trace);
-      useLayoutPrefsStore.setState({ spanNameColumnWidth: 0.5 });
+      useDisplayedLayoutStore.setState({ spanNameColumnWidth: 0.5 });
       useTraceTimelineStore.setState({
         childrenHiddenIDs: new Set(['span-x']),
         detailStates: new Map([['span-x', new DetailState()]]),
@@ -729,7 +767,7 @@ describe('trace timeline zustand stores', () => {
       expect(state.detailStates).toBe(previous.detailStates);
       expect(state.spanFilter).toBe(previous.spanFilter);
       expect(state.shouldScrollToFirstUiFindMatch).toBe(true);
-      expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBe(0.5);
+      expect(useDisplayedLayoutStore.getState().spanNameColumnWidth).toBe(0.5);
     });
 
     describe('setTrace', () => {
@@ -757,10 +795,10 @@ describe('trace timeline zustand stores', () => {
       });
 
       it('preserves layout prefs when traceID changes', () => {
-        useLayoutPrefsStore.setState({ spanNameColumnWidth: 0.5 });
+        useDisplayedLayoutStore.setState({ spanNameColumnWidth: 0.5 });
         useTraceTimelineStore.setState({ traceID: 'old' });
         useTraceTimelineStore.getState().setTrace(makeTrace('new'));
-        expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBe(0.5);
+        expect(useDisplayedLayoutStore.getState().spanNameColumnWidth).toBe(0.5);
       });
 
       it('is a no-op when traceID and spans are unchanged', () => {
@@ -776,7 +814,7 @@ describe('trace timeline zustand stores', () => {
       });
 
       it('prunes absent detailStates keys on same-ID reload in inline mode while retaining valid entries', () => {
-        useLayoutPrefsStore.setState({ detailPanelMode: 'inline' });
+        useDisplayedLayoutStore.setState({ detailPanelMode: 'inline' });
         const spanA = makeSpan({ spanID: 'span-a' });
         const spanB = makeSpan({ spanID: 'span-b' });
         const spanC = makeSpan({ spanID: 'span-c' });
@@ -801,7 +839,7 @@ describe('trace timeline zustand stores', () => {
       });
 
       it('does not select removed span when switching to side-panel mode after inline reload (regression)', () => {
-        useLayoutPrefsStore.setState({ detailPanelMode: 'inline' });
+        useDisplayedLayoutStore.setState({ detailPanelMode: 'inline' });
         const spanA = makeSpan({ spanID: 'span-a' });
         const spanB = makeSpan({ spanID: 'span-b' });
         const trace = makeTrace('same', [spanA, spanB]);
@@ -829,7 +867,7 @@ describe('trace timeline zustand stores', () => {
       });
 
       it('clears selected span on same-ID reload when dropped in side-panel mode', () => {
-        useLayoutPrefsStore.setState({ detailPanelMode: 'sidepanel' });
+        useDisplayedLayoutStore.setState({ detailPanelMode: 'sidepanel' });
         const spanA = makeSpan({ spanID: 'span-a' });
         const spanB = makeSpan({ spanID: 'span-b' });
         const trace = makeTrace('same', [spanA, spanB]);
@@ -847,7 +885,7 @@ describe('trace timeline zustand stores', () => {
       });
 
       it('preserves selected span on same-ID reload when still present in side-panel mode', () => {
-        useLayoutPrefsStore.setState({ detailPanelMode: 'sidepanel' });
+        useDisplayedLayoutStore.setState({ detailPanelMode: 'sidepanel' });
         const spanA = makeSpan({ spanID: 'span-a' });
         const spanB = makeSpan({ spanID: 'span-b' });
         const trace = makeTrace('same', [spanA, spanB]);
@@ -930,7 +968,7 @@ describe('trace timeline zustand stores', () => {
             attributes,
             resource,
           });
-          useLayoutPrefsStore.setState({ detailPanelMode, spanNameColumnWidth: 0.5 });
+          useDisplayedLayoutStore.setState({ detailPanelMode, spanNameColumnWidth: 0.5 });
           useTraceTimelineStore
             .getState()
             .setTrace(makeTrace('same', [root, parent, existing]), 'late-match');
@@ -951,8 +989,8 @@ describe('trace timeline zustand stores', () => {
           expect(state.detailStates.has('arrived')).toBe(true);
           expect(state.shouldScrollToFirstUiFindMatch).toBe(true);
           expect(hiddenServices(state.spanFilter)).toEqual(new Set(['other-service']));
-          expect(useLayoutPrefsStore.getState().detailPanelMode).toBe(detailPanelMode);
-          expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBe(0.5);
+          expect(useDisplayedLayoutStore.getState().detailPanelMode).toBe(detailPanelMode);
+          expect(useDisplayedLayoutStore.getState().spanNameColumnWidth).toBe(0.5);
         }
       );
 
@@ -976,7 +1014,7 @@ describe('trace timeline zustand stores', () => {
         vi.mocked(filterSpans).mockReturnValue(new Set(['span-a', 'span-b']));
         vi.mocked(spanAncestorIds).mockReturnValue([]);
         const trace = makeTrace('t1', [makeSpan({ spanID: 'span-a' }), makeSpan({ spanID: 'span-b' })]);
-        useLayoutPrefsStore.setState({ detailPanelMode: 'sidepanel' });
+        useDisplayedLayoutStore.setState({ detailPanelMode: 'sidepanel' });
         useTraceTimelineStore.getState().setTrace(trace, 'myFind');
         const s = useTraceTimelineStore.getState();
         expect(s.detailStates.size).toBe(1);
@@ -1147,7 +1185,7 @@ describe('trace timeline zustand stores', () => {
       });
 
       it('replaces detailStates with a single entry in sidepanel mode', () => {
-        useLayoutPrefsStore.setState({ detailPanelMode: 'sidepanel' });
+        useDisplayedLayoutStore.setState({ detailPanelMode: 'sidepanel' });
         useTraceTimelineStore.setState({
           detailStates: new Map([['span-x', new DetailState()]]),
         });
@@ -1158,7 +1196,7 @@ describe('trace timeline zustand stores', () => {
       });
 
       it('clears detailStates when toggling an already-open span in sidepanel mode', () => {
-        useLayoutPrefsStore.setState({ detailPanelMode: 'sidepanel' });
+        useDisplayedLayoutStore.setState({ detailPanelMode: 'sidepanel' });
         useTraceTimelineStore.setState({
           detailStates: new Map([['span-a', new DetailState()]]),
         });
@@ -1268,7 +1306,7 @@ describe('trace timeline zustand stores', () => {
         vi.mocked(filterSpans).mockReturnValue(new Set(['span-a', 'span-b']));
         vi.mocked(spanAncestorIds).mockReturnValue([]);
         const trace = makeTrace('t1', [makeSpan({ spanID: 'span-a' }), makeSpan({ spanID: 'span-b' })]);
-        useLayoutPrefsStore.setState({ detailPanelMode: 'sidepanel' });
+        useDisplayedLayoutStore.setState({ detailPanelMode: 'sidepanel' });
         useTraceTimelineStore.getState().focusUiFindMatches(trace, 'myFind');
         const s = useTraceTimelineStore.getState();
         expect(s.detailStates.size).toBe(1);
@@ -1344,8 +1382,7 @@ describe('getSelectedSpanID', () => {
 describe('layout preference hydration with storage blocked', () => {
   beforeEach(() => {
     vi.mocked(getConfig).mockReturnValue({} as ReturnType<typeof getConfig>);
-    useLayoutPrefsStore.setState(useLayoutPrefsStore.getInitialState(), true);
-    localStorage.clear();
+    resetLayoutStores();
   });
 
   afterEach(() => {
@@ -1367,8 +1404,8 @@ describe('layout preference hydration with storage blocked', () => {
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new DOMException('QuotaExceededError');
     });
-    expect(() => useLayoutPrefsStore.getState().setSpanNameColumnWidth(0.4)).not.toThrow();
-    expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(0.4);
+    expect(() => useDisplayedLayoutStore.getState().setSpanNameColumnWidth(0.4)).not.toThrow();
+    expect(useDisplayedLayoutStore.getState().spanNameColumnWidth).toBeCloseTo(0.4);
   });
 
   it.each(['SecurityError', 'QuotaExceededError'])('keeps every setter working after %s', errorName => {
@@ -1376,12 +1413,12 @@ describe('layout preference hydration with storage blocked', () => {
       throw new DOMException('Storage unavailable', errorName);
     });
     expect(() => {
-      useLayoutPrefsStore.getState().setSpanNameColumnWidth(0.4);
-      useLayoutPrefsStore.getState().setSidePanelWidth(0.3);
-      useLayoutPrefsStore.getState().applyDetailPanelModeToLayout('inline');
-      useLayoutPrefsStore.getState().setTimelineBarsVisible(false);
+      useDisplayedLayoutStore.getState().setSpanNameColumnWidth(0.4);
+      useDisplayedLayoutStore.getState().setSidePanelWidth(0.3);
+      useDisplayedLayoutStore.getState().applyDetailPanelModeToLayout('inline');
+      useDisplayedLayoutStore.getState().setTimelineBarsVisible(false);
     }).not.toThrow();
-    expect(useLayoutPrefsStore.getState()).toMatchObject({
+    expect(useDisplayedLayoutStore.getState()).toMatchObject({
       spanNameColumnWidth: 0.4,
       sidePanelWidth: 0.3,
       detailPanelMode: 'inline',
@@ -1395,8 +1432,8 @@ describe('layout preference hydration with storage blocked', () => {
     vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {
       throw new DOMException('Storage unavailable', 'SecurityError');
     });
-    await useLayoutPrefsStore.persist.rehydrate();
-    expect(useLayoutPrefsStore.getState().spanNameColumnWidth).toBeCloseTo(0.4);
-    expect(() => useLayoutPrefsStore.persist.clearStorage()).not.toThrow();
+    await useSavedLayoutPrefsStore.persist.rehydrate();
+    expect(useDisplayedLayoutStore.getState().spanNameColumnWidth).toBeCloseTo(0.4);
+    expect(() => useSavedLayoutPrefsStore.persist.clearStorage()).not.toThrow();
   });
 });

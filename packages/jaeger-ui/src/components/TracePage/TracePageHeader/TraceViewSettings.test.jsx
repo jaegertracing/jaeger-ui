@@ -7,7 +7,7 @@ import '@testing-library/jest-dom';
 
 import TraceViewSettings from './TraceViewSettings';
 import track from './KeyboardShortcutsHelp.track';
-import { useLayoutPrefsStore } from '../TraceTimelineViewer/store';
+import { useDisplayedLayoutStore } from '../TraceTimelineViewer/store';
 
 vi.mock('./KeyboardShortcutsHelp.track');
 vi.mock('../keyboard-mappings', () => mockDefault({}));
@@ -67,7 +67,7 @@ describe('<TraceViewSettings>', () => {
 
   describe('Span Latency Heatmap', () => {
     beforeEach(() => {
-      useLayoutPrefsStore.setState({ heatmapEnabled: false });
+      useDisplayedLayoutStore.setState({ heatmapEnabled: false });
     });
 
     function heatmapItem() {
@@ -82,7 +82,7 @@ describe('<TraceViewSettings>', () => {
     });
 
     it('shows a checkmark while the heatmap is on', async () => {
-      useLayoutPrefsStore.setState({ heatmapEnabled: true });
+      useDisplayedLayoutStore.setState({ heatmapEnabled: true });
       render(<TraceViewSettings {...defaultProps} />);
       await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
       await screen.findByText('Span Latency Heatmap');
@@ -93,7 +93,7 @@ describe('<TraceViewSettings>', () => {
       render(<TraceViewSettings {...defaultProps} />);
       await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
       await userEvent.click(await screen.findByText('Span Latency Heatmap'));
-      expect(useLayoutPrefsStore.getState().heatmapEnabled).toBe(true);
+      expect(useDisplayedLayoutStore.getState().heatmapEnabled).toBe(true);
     });
   });
 

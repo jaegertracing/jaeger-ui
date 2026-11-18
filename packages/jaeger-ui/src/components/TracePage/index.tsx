@@ -16,7 +16,7 @@ import { useArchiveStore } from '../../stores/archive-store';
 import { useEmbeddedState } from '../../stores/embedded-store';
 import {
   setDetailPanelMode as setDetailPanelModeZustand,
-  useLayoutPrefsStore,
+  useDisplayedLayoutStore,
   useTraceTimelineStore,
 } from './TraceTimelineViewer/store';
 import { trackFilter, trackFocusMatches, trackNextMatch, trackPrevMatch, trackRange } from './index.track';
@@ -166,9 +166,9 @@ export function TracePageImpl(props: TProps) {
   } = useTrace(id);
 
   // Layout preferences are owned by Zustand. Each setter tracks before it updates the store.
-  const detailPanelMode = useLayoutPrefsStore(s => s.detailPanelMode);
-  const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
-  const zustandSetTimelineBarsVisible = useLayoutPrefsStore(s => s.setTimelineBarsVisible);
+  const detailPanelMode = useDisplayedLayoutStore(s => s.detailPanelMode);
+  const timelineBarsVisible = useDisplayedLayoutStore(s => s.timelineBarsVisible);
+  const zustandSetTimelineBarsVisible = useDisplayedLayoutStore(s => s.setTimelineBarsVisible);
   const zustandFocusUiFindMatches = useTraceTimelineStore(s => s.focusUiFindMatches);
   // Read the trace's own verdict rather than re-deriving it here. It is computed
   // once from each span's cached genAIKind, so re-scanning attributes is both
