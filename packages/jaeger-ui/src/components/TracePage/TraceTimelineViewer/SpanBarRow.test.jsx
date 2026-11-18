@@ -6,6 +6,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import SpanBarRow, { SpanListTooltip, TOOLTIP_SPAN_LIMIT } from './SpanBarRow';
+import { SpanPillActionsContext } from './spanPillActions';
 import SpanTreeOffset from './SpanTreeOffset';
 import SpanBar from './SpanBar';
 import colorGenerator from '../../../utils/color-generator';
@@ -44,6 +45,14 @@ vi.mock('./utils', async importOriginal => {
     formatDurationCompact: jest.fn(d => `formatted-${d}`),
   };
 });
+
+// A span pill reads its menu actions from the trace page, which these tests stand in for.
+const spanPillActions = { applyVerb: vi.fn(), disabledReasons: () => ({ keep: null, hide: null }) };
+function SpanPillActionsProvider({ children }) {
+  return (
+    <SpanPillActionsContext.Provider value={spanPillActions}>{children}</SpanPillActionsContext.Provider>
+  );
+}
 
 describe('<SpanBarRow>', () => {
   const spanID = 'some-id';
@@ -277,7 +286,8 @@ describe('<SpanBarRow>', () => {
             ...defaultProps.span,
             attributes: makeAttributes([{ key: 'http.status_code', value: '500' }]),
           }}
-        />
+        />,
+        { wrapper: SpanPillActionsProvider }
       );
       const errorPill = screen.getByLabelText('http.status_code: 500');
       expect(errorPill).toBeInTheDocument();
@@ -293,7 +303,8 @@ describe('<SpanBarRow>', () => {
             ...defaultProps.span,
             attributes: makeAttributes([{ key: 'http.status_code', value: '200' }]),
           }}
-        />
+        />,
+        { wrapper: SpanPillActionsProvider }
       );
       const pill = screen.getByLabelText('http.status_code: 200');
       expect(pill).toBeInTheDocument();
@@ -309,7 +320,8 @@ describe('<SpanBarRow>', () => {
             ...defaultProps.span,
             attributes: makeAttributes([{ key: 'http.status_code', value: '200' }]),
           }}
-        />
+        />,
+        { wrapper: SpanPillActionsProvider }
       );
       expect(screen.queryByLabelText(/http\.status_code/)).not.toBeInTheDocument();
     });
@@ -323,7 +335,8 @@ describe('<SpanBarRow>', () => {
             ...defaultProps.span,
             attributes: makeAttributes([{ key: GEN_AI_REQUEST_MODEL, value: 'gpt-4o' }]),
           }}
-        />
+        />,
+        { wrapper: SpanPillActionsProvider }
       );
       const pill = screen.getByLabelText('gen_ai.request.model: gpt-4o');
       expect(pill).toBeInTheDocument();
@@ -342,7 +355,8 @@ describe('<SpanBarRow>', () => {
               { key: GEN_AI_REQUEST_MODEL, value: 'claude-3-haiku' },
             ]),
           }}
-        />
+        />,
+        { wrapper: SpanPillActionsProvider }
       );
       expect(screen.getByLabelText('http.status_code: 500')).toBeInTheDocument();
       expect(screen.getByLabelText('gen_ai.request.model: claude-3-haiku')).toBeInTheDocument();
@@ -360,7 +374,8 @@ describe('<SpanBarRow>', () => {
               { key: 'http.method', value: 'GET' },
             ]),
           }}
-        />
+        />,
+        { wrapper: SpanPillActionsProvider }
       );
       expect(screen.getByLabelText('http.status_code: 200')).toBeInTheDocument();
       expect(screen.getByLabelText('http.method: GET')).toBeInTheDocument();
@@ -375,7 +390,8 @@ describe('<SpanBarRow>', () => {
             ...defaultProps.span,
             attributes: makeAttributes([{ key: 'http.status_code', value: '200' }]),
           }}
-        />
+        />,
+        { wrapper: SpanPillActionsProvider }
       );
       fireEvent.mouseEnter(screen.getByLabelText('http.status_code: 200').parentElement);
       expect(await screen.findByRole('tooltip')).toHaveTextContent('http.status_code: 200');
@@ -391,7 +407,8 @@ describe('<SpanBarRow>', () => {
             ...defaultProps.span,
             attributes: makeAttributes([{ key: GEN_AI_REQUEST_MODEL, value: longModel }]),
           }}
-        />
+        />,
+        { wrapper: SpanPillActionsProvider }
       );
       const pill = screen.getByLabelText(`gen_ai.request.model: ${longModel}`);
       fireEvent.mouseEnter(pill.parentElement);

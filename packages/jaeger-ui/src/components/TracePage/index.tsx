@@ -34,6 +34,7 @@ import { useConfig } from '../../hooks/useConfig';
 import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import { useSpanFilter } from './TraceTimelineViewer/useServiceFilter';
+import { makeSpanPillActions, SpanPillActionsContext } from './TraceTimelineViewer/spanPillActions';
 import { trackDetailPanelMode, trackTimelineBarsVisible } from './TraceTimelineViewer/store.track';
 import {
   TUpdateViewRangeTimeFunction,
@@ -44,10 +45,9 @@ import {
   viewTypeShowsMinimap,
 } from './types';
 import {
+  clauseDisabledReason,
   evaluateSpanFilter,
   GENAI_VIEW_FILTER,
-  KEEP_NEEDS_LIFT,
-  LEAVES_NO_SPAN,
   withoutHiddenSpans,
 } from './spanFilter';
 import { getUrl } from './url';
@@ -92,6 +92,8 @@ type TProps = TOwnProps & TUrlProps;
 export const VIEW_MIN_RANGE = 0.01;
 const VIEW_CHANGE_BASE = 0.005;
 const VIEW_CHANGE_FAST = 0.05;
+const NO_SPAN_IDS: ReadonlySet<string> = new Set();
+const EMPTY_TRACE = { spans: [], rootSpans: [] };
 
 // export for tests
 export function computeAdjustedRange(
@@ -245,24 +247,16 @@ export function TracePageImpl(props: TProps) {
   // hides is not mistaken for no match.
   const hiddenFindCount = findMatchSplit?.hiddenCount ?? 0;
 
-  // The conversion menu's entries are disabled when the chip they would make leaves no span shown:
-  // keep when no visible span matches the text, hide when every visible span matches or, in remove
-  // mode, when every root span does. The popover holds such edits with a warning; the menu has
-  // nowhere to show one.
-  const keepDisabledReason =
-    spanFilter.treeMode !== 'lift'
-      ? KEEP_NEEDS_LIFT
-      : !timelineFindMatches || timelineFindMatches.size === 0
-        ? LEAVES_NO_SPAN
-        : null;
+  const keepDisabledReason = clauseDisabledReason(
+    'keep',
+    timelineFindMatches ?? NO_SPAN_IDS,
+    traceData ?? EMPTY_TRACE,
+    hiddenIDs,
+    spanFilter.treeMode
+  );
   const hideDisabledReason = useMemo(() => {
     if (!traceData || !timelineFindMatches) return null;
-    if (timelineFindMatches.size >= traceData.spans.length - hiddenIDs.size) return LEAVES_NO_SPAN;
-    // A root the filter already hides has no subtree on screen, so it counts as covered.
-    const everyRoot = traceData.rootSpans.every(
-      span => hiddenIDs.has(span.spanID) || timelineFindMatches.has(span.spanID)
-    );
-    return spanFilter.treeMode === 'remove' && everyRoot ? LEAVES_NO_SPAN : null;
+    return clauseDisabledReason('hide', timelineFindMatches, traceData, hiddenIDs, spanFilter.treeMode);
   }, [traceData, timelineFindMatches, hiddenIDs, spanFilter.treeMode]);
 
   const scrollManagerRef = useRef<ScrollManager>(new ScrollManager(traceData, { scrollBy, scrollTo }));
@@ -401,6 +395,20 @@ export function TracePageImpl(props: TProps) {
       );
     },
     [applyFilter, spanFilter, uiFind]
+  );
+
+  const spanPillActions = useMemo(
+    () =>
+      traceData
+        ? makeSpanPillActions({
+            trace: traceData,
+            spanFilter,
+            hiddenIDs,
+            applyFilter,
+            setUiFind: uiFind => updateUiFind({ navigate, location, trackFindFunction: trackFilter, uiFind }),
+          })
+        : null,
+    [traceData, navigate, location, applyFilter, spanFilter, hiddenIDs]
   );
 
   const nextResult = useCallback(() => {
@@ -583,7 +591,11 @@ export function TracePageImpl(props: TProps) {
           />
         )}
       </div>
-      {headerHeight ? <section style={{ paddingTop: headerHeight }}>{view}</section> : null}
+      {headerHeight ? (
+        <section style={{ paddingTop: headerHeight }}>
+          <SpanPillActionsContext.Provider value={spanPillActions}>{view}</SpanPillActionsContext.Provider>
+        </section>
+      ) : null}
     </div>
   );
 }
