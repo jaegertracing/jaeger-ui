@@ -72,7 +72,7 @@ flowchart TD
   Router["URL / Router\n/trace/:traceId?uiFind=…"]
   Query["TanStack Query\n(fetches & caches trace)"]
   API["Jaeger API"]
-  Page["TracePage\n(derives facade, criticalPath)"]
+  Page["TracePage\n(derives criticalPath)"]
   Store["traceTimeline store\n(expand, collapse, widths)"]
 
   Router -->|"traceId + uiFind"| Page
@@ -141,8 +141,9 @@ Legacy class components receive URL-derived props via the project's `withRoutePr
 
 The tables below document the **intended** store shapes. For migration steps — which Redux ducks these replace and which components need rewiring — see **[RFC 0004](./0004-state-management-strategy.md)**, Phase 1.
 
-**How the delivered stores differ from the shapes below.** The inventory of what exists is in [ADR-0005](../adr/0005-current-state-management-architecture.md); four divergences are worth naming here, because each one was a deliberate departure from this design rather than an omission:
+**How the delivered stores differ from the shapes below.** The inventory of what exists is in [ADR-0005](../adr/0005-current-state-management-architecture.md); five divergences are worth naming here, because each one was a deliberate departure from this design rather than an omission:
 
+- Saved layout preferences persist through Zustand's `persist` middleware ([#4112](https://github.com/jaegertracing/jaeger-ui/pull/4112)) in `useSavedLayoutPrefsStore`, under `localStorage['jaeger.layout']`. The per-field keys in the table below are migration inputs, not current write targets. URL priority resolution is tracked in [RFC 0007](./0007-layout-settings-priority-stack.md).
 - The single `useTraceTimelineStore` proposed below was **delivered as two stores**, split by lifetime: `useTraceTimelineStore` (`store.timeline.ts`) for state that resets with the trace, and `useDisplayedLayoutStore` (`store.layout.ts`) for the displayed layout, which outlives it. The reset rule below then needs no exceptions, which is why the split was made.
 - `hoverIndentGuideIds` was **dead state, deleted rather than migrated** — the indent-guide highlight that consumed it was removed in [#3302](https://github.com/jaegertracing/jaeger-ui/pull/3302), so the Redux field and its writers were dropped instead of moved to a store ([RFC 0004](./0004-state-management-strategy.md), Phase 1c step 3).
 - `prunedServices` was added to the interaction store after this was written, for the timeline service filter ([ADR-0009](../adr/0009-service-filter-trace-timeline.md)); [RFC 0009](0009-trace-span-search-and-filter.md) replaced it with `spanFilter`.
