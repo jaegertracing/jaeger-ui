@@ -122,12 +122,11 @@ function Digraph<T = unknown, U = unknown>(props: TDigraphProps<T, U>) {
   }, []);
   const [zoomManager] = React.useState(() => (zoomEnabled ? new ZoomManager(onZoomUpdated) : null));
 
-  // Child measurements run in passive effects. Syncing here keeps this data current without changing the
-  // callback identity passed to MeasurableNodesLayer.
+  // Child measurements run in passive effects. Syncing here keeps the layout inputs current without
+  // changing the callback identity passed to MeasurableNodesLayer.
   React.useLayoutEffect(() => {
-    layoutGraphRef.current = state.layoutGraph;
     layoutInputsRef.current = { edges, layoutManager, measurableNodesKey };
-  }, [edges, layoutManager, measurableNodesKey, state.layoutGraph]);
+  }, [edges, layoutManager, measurableNodesKey]);
 
   React.useLayoutEffect(() => {
     activeRef.current = true;
@@ -154,6 +153,7 @@ function Digraph<T = unknown, U = unknown>(props: TDigraphProps<T, U>) {
         return;
       }
       const { edges: layoutEdges, graph: layoutGraph, vertices: layoutVertices } = result;
+      layoutGraphRef.current = layoutGraph;
       setState(previousState => ({
         ...previousState,
         layoutEdges,

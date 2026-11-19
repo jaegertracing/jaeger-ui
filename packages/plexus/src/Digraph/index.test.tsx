@@ -80,6 +80,22 @@ const createPendingLayoutManager = () => {
   };
 };
 
+const createTransitionLayoutManager = () => {
+  let completeLayout: (result: TTestLayoutDone) => void = () => {};
+  const layout = {
+    then: (onFulfilled: (result: TTestLayoutDone) => void) => {
+      completeLayout = onFulfilled;
+      return layout;
+    },
+  } as unknown as Promise<TTestLayoutDone>;
+  return {
+    completeLayout: (result: TTestLayoutDone) => completeLayout(result),
+    layoutManager: {
+      getLayout: vi.fn(() => ({ layout, positions: new Promise<never>(() => {}) })),
+    },
+  };
+};
+
 describe('Digraph', () => {
   it('preserves the static helpers consumed by graph views', () => {
     expect(Digraph.propsFactories.classNameIsSmall).toBeTypeOf('function');
@@ -279,6 +295,45 @@ describe('Digraph', () => {
       expect(setContentSize).toHaveBeenCalledWith(completedLayout.graph);
     } finally {
       setContentSize.mockRestore();
+    }
+  });
+
+  it('restores zoom size when revealed before a hidden layout state update commits', async () => {
+    const { completeLayout, layoutManager } = createTransitionLayoutManager();
+    const measurableLayer = createMeasurableLayer();
+    const setElement = vi.spyOn(ZoomManager.prototype, 'setElement');
+
+    const renderActivity = (mode: 'hidden' | 'visible') => (
+      <React.Activity mode={mode}>
+        <Digraph
+          edges={edges}
+          layers={[renderEdgeLayer, measurableLayer]}
+          layoutManager={layoutManager as unknown as LayoutManager}
+          measurableNodesKey="nodes"
+          minimap
+          vertices={vertices}
+          zoom
+        />
+      </React.Activity>
+    );
+
+    try {
+      const { container, rerender } = render(renderActivity('visible'));
+      await waitFor(() => expect(layoutManager.getLayout).toHaveBeenCalledTimes(1));
+      const zoomManager = setElement.mock.instances[0] as ZoomManager;
+
+      rerender(renderActivity('hidden'));
+      act(() => {
+        React.startTransition(() => completeLayout(completedLayout));
+        rerender(renderActivity('visible'));
+      });
+
+      await waitFor(() => {
+        expect(container.querySelector('.plexus-Digraph--SvgEdgesLayer')).not.toBeNull();
+        expect(zoomManager.getProps()).toMatchObject({ contentHeight: 10, contentWidth: 20 });
+      });
+    } finally {
+      setElement.mockRestore();
     }
   });
 
