@@ -271,24 +271,25 @@ describe('timeline analytics adapter', () => {
     }
   });
 
-  // Zustand `setTrace` refocuses the uiFind matches on a same-ID reload. The adapter reports what
-  // the user sees, as #4613 decided for the parent toggle.
+  // Zustand `setTrace` does not refocus the uiFind matches on a same-ID reload, so a detail row the
+  // user closed stays closed. The adapter reports what the user sees, as #4613 decided.
   it('reads the detail row from Zustand after a same-ID reload with uiFind', () => {
     resetStores();
     timeline().setTrace(trace, 'sibling');
     timeline().detailToggle('sibling');
+    expect(timeline().detailStates.has('sibling')).toBe(false);
 
     const reloaded = { ...trace, spans: [...trace.spans] } as IOtelTrace;
     timeline().setTrace(reloaded, 'sibling');
-    expect(timeline().detailStates.has('sibling')).toBe(true);
+    expect(timeline().detailStates.has('sibling')).toBe(false);
 
     vi.mocked(trackEvent).mockClear();
     track.trackDetailToggle('sibling');
-    expect(trackEvent).toHaveBeenCalledWith(track.CATEGORY_ROW, 'close');
+    expect(trackEvent).toHaveBeenCalledWith(track.CATEGORY_ROW, 'open');
   });
 
-  // A same-ID reload that adds a uiFind match expands the parent in Zustand. The parent toggle
-  // reports the expanded state the user sees (#4613).
+  // A same-ID reload that adds a uiFind match leaves the parent collapsed in Zustand. The parent
+  // toggle reports the collapsed state the user sees, so the next click is an open (#4613).
   it('reads the parent toggle from Zustand after a same-ID reload adds a uiFind match', () => {
     resetStores();
     timeline().setTrace(trace, 'late-match');
@@ -297,10 +298,10 @@ describe('timeline analytics adapter', () => {
     const lateMatch = makeSpan('late', 2, parent, { name: 'late-match' });
     const reloaded = { ...trace, spans: [...trace.spans, lateMatch] } as unknown as IOtelTrace;
     timeline().setTrace(reloaded, 'late-match');
-    expect(timeline().childrenHiddenIDs.has('parent')).toBe(false);
+    expect(timeline().childrenHiddenIDs.has('parent')).toBe(true);
 
     vi.mocked(trackEvent).mockClear();
     track.trackChildrenToggle('parent');
-    expect(vi.mocked(trackEvent).mock.calls).toEqual([[track.CATEGORY_PARENT, 'close', 1]]);
+    expect(vi.mocked(trackEvent).mock.calls).toEqual([[track.CATEGORY_PARENT, 'open', 1]]);
   });
 });

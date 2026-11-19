@@ -24,9 +24,14 @@ type TraceTimelineInteractionStore = {
   // The active span filter (RFC 0009). Consumers evaluate it over the trace they render.
   spanFilter: ISpanFilter;
   setSpanFilter: (filter: ISpanFilter) => void;
-  // Resets ephemeral fields for a new trace and optionally focuses the find matches, given as the
-  // search text or as the set of matching span IDs the filter leaves visible.
+  // Resets ephemeral fields when a different trace is opened and optionally focuses the find
+  // matches, given as the search text or as the set of matching span IDs the filter leaves visible.
+  // A reload of the same trace never focuses the matches: it keeps the user's collapses, detail
+  // states and scroll position, and only prunes detail states for spans that are gone. The focus
+  // runs when a trace is opened and when the user asks for it through focusUiFindMatches.
   setTrace: (trace: IOtelTrace, matches?: string | ReadonlySet<string> | TNil) => void;
+  // Forgets the current trace, so opening the same trace again counts as an open, not a reload.
+  clearTrace: () => void;
   childrenToggle: (spanID: string) => void;
   expandAll: () => void;
   expandOne: (spans: ReadonlyArray<CollapseTarget>) => void;
@@ -67,11 +72,13 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
       traceSpans: trace.spans,
     };
 
+    const isNewTrace = trace.traceID !== currentTraceID;
+
     // Across refetches of the same trace, collapse selections persist, while detail states are
     // pruned for spans that no longer exist. The span filter is not touched here at all: the page's
     // span filter hook resolves it from the URL for every trace, and it does so before the
     // timeline mounts, so a reset here would wipe what the URL asked for.
-    if (trace.traceID !== currentTraceID) {
+    if (isNewTrace) {
       Object.assign(base, {
         childrenHiddenIDs: new Set<string>(),
         detailStates: new Map<string, DetailState>(),
@@ -98,13 +105,25 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
       }
     }
 
-    if (matches) {
+    // Only a newly opened trace focuses the find matches. A same-ID reload leaves the view alone,
+    // so a match that arrives under a collapsed parent stays hidden until the user focuses it.
+    if (isNewTrace && matches) {
       let focused = calculateFocusedFindRowStates(matches, trace.spans);
       focused = trimFocusedDetailStatesForSidePanel(focused, detailPanelMode);
       Object.assign(base, focused);
     }
 
     set(base as Partial<TraceTimelineInteractionStore>);
+  },
+
+  clearTrace: () => {
+    set({
+      traceID: null,
+      traceSpans: null,
+      childrenHiddenIDs: new Set<string>(),
+      detailStates: new Map<string, DetailState>(),
+      shouldScrollToFirstUiFindMatch: false,
+    });
   },
 
   childrenToggle: (spanID: string) => {
