@@ -166,6 +166,37 @@ describe('Digraph', () => {
     }
   });
 
+  it('resets the current transform before the first layout completes', () => {
+    const layoutManager = createLayoutManager();
+    const setElement = vi.spyOn(ZoomManager.prototype, 'setElement');
+
+    try {
+      render(
+        <Digraph
+          edges={[]}
+          layers={[renderNodeLayer]}
+          layoutManager={layoutManager as unknown as LayoutManager}
+          measurableNodesKey="nodes"
+          vertices={[]}
+          zoom
+        />
+      );
+      const zoomManager = setElement.mock.instances[0] as ZoomManager;
+
+      act(() => zoomManager.zoomIn());
+      expect(zoomManager.getTransform().k).toBe(1.2);
+
+      act(() => zoomManager.resetZoom());
+      expect(zoomManager.getTransform()).toBe(zoomIdentity);
+      expect(zoomManager.getProps()).toMatchObject({ k: 1, x: 0, y: 0 });
+
+      act(() => zoomManager.zoomIn());
+      expect(zoomManager.getTransform().k).toBe(1.2);
+    } finally {
+      setElement.mockRestore();
+    }
+  });
+
   it('renders edges and sizes zoom when layout completes', async () => {
     const { layoutManager, resolveLayout } = createPendingLayoutManager();
     const setContentSize = vi.spyOn(ZoomManager.prototype, 'setContentSize');

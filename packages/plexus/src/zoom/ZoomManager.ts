@@ -125,7 +125,12 @@ export default class ZoomManager {
     const selection = this.selection;
     const size = this.contentSize;
     if (!elem || !selection || !size) {
-      this.updateCallback(zoomIdentity);
+      this.currentTransform = zoomIdentity;
+      if (elem && selection) {
+        this.zoom.transform(selection, this.currentTransform);
+      } else {
+        this.updateCallback(this.currentTransform);
+      }
       return;
     }
     const { clientHeight: viewHeight, clientWidth: viewWidth } = elem;
