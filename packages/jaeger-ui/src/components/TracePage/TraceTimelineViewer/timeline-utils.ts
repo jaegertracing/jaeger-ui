@@ -79,6 +79,56 @@ export function calculateFocusedFindRowStates(
   return { childrenHiddenIDs, detailStates, shouldScrollToFirstUiFindMatch };
 }
 
+// Computes ancestor IDs and newly matched span IDs by comparing previous and current matches on same-ID reload.
+export function findNewlyMatchedSpanInfo(
+  matches: string | ReadonlySet<string>,
+  prevSpans: ReadonlyArray<IOtelSpan> | null | undefined,
+  currentSpans: ReadonlyArray<IOtelSpan>,
+  previousMatches?: ReadonlySet<string> | null
+): {
+  newlyMatchedIDs: Set<string>;
+  revealedAncestors: Set<string>;
+} {
+  const spansMap = new Map<string, IOtelSpan>();
+  currentSpans.forEach(span => spansMap.set(span.spanID, span));
+
+  const prevSpansMap = new Map<string, IOtelSpan>();
+  if (prevSpans) {
+    prevSpans.forEach(span => prevSpansMap.set(span.spanID, span));
+  }
+
+  const prevMatched =
+    typeof matches === 'string'
+      ? (prevSpans && filterSpans(matches, prevSpans)) || new Set<string>()
+      : (previousMatches ?? new Set<string>());
+  const currentMatched =
+    typeof matches === 'string' ? filterSpans(matches, currentSpans) || new Set<string>() : matches;
+
+  const newlyMatchedIDs = new Set<string>();
+  const revealedAncestors = new Set<string>();
+
+  currentMatched.forEach(spanID => {
+    const span = spansMap.get(spanID);
+    if (!span) {
+      return;
+    }
+    if (!prevMatched.has(spanID)) {
+      newlyMatchedIDs.add(spanID);
+      (spanAncestorIds(span) || []).forEach(ancestorID => revealedAncestors.add(ancestorID));
+    } else {
+      const prevSpan = prevSpansMap.get(spanID);
+      const prevAncestors = prevSpan ? new Set(spanAncestorIds(prevSpan) || []) : new Set<string>();
+      (spanAncestorIds(span) || []).forEach(ancestorID => {
+        if (!prevAncestors.has(ancestorID)) {
+          revealedAncestors.add(ancestorID);
+        }
+      });
+    }
+  });
+
+  return { newlyMatchedIDs, revealedAncestors };
+}
+
 // Returns the currently selected span ID in side-panel mode (first key of detailStates), or null.
 export function getSelectedSpanID(detailStates: Map<string, DetailState | TNil>): string | null {
   return detailStates.size > 0 ? (detailStates.keys().next().value as string) : null;

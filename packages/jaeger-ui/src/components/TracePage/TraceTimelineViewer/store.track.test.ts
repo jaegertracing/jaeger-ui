@@ -271,8 +271,8 @@ describe('timeline analytics adapter', () => {
     }
   });
 
-  // Zustand `setTrace` refocuses the uiFind matches on a same-ID reload. The adapter reports what
-  // the user sees, as #4613 decided for the parent toggle.
+  // Same-ID reloads preserve a manually closed detail row. The adapter reports the state the
+  // user sees, as #4613 decided for the parent toggle.
   it('reads the detail row from Zustand after a same-ID reload with uiFind', () => {
     resetStores();
     timeline().setTrace(trace, 'sibling');
@@ -280,11 +280,11 @@ describe('timeline analytics adapter', () => {
 
     const reloaded = { ...trace, spans: [...trace.spans] } as IOtelTrace;
     timeline().setTrace(reloaded, 'sibling');
-    expect(timeline().detailStates.has('sibling')).toBe(true);
+    expect(timeline().detailStates.has('sibling')).toBe(false);
 
     vi.mocked(trackEvent).mockClear();
     track.trackDetailToggle('sibling');
-    expect(trackEvent).toHaveBeenCalledWith(track.CATEGORY_ROW, 'close');
+    expect(trackEvent).toHaveBeenCalledWith(track.CATEGORY_ROW, 'open');
   });
 
   // A same-ID reload that adds a uiFind match expands the parent in Zustand. The parent toggle

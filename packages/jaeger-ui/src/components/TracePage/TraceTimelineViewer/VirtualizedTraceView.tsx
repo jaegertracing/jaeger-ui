@@ -586,16 +586,14 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
     [getRowStates, renderPrunedSpanRow, renderSpanDetailRow, renderSpanBarRow]
   );
 
-  const prevTraceRef = useRef<IOtelTrace | TNil | undefined>(undefined);
   // The focus on load takes the matches the filter leaves visible, the same set the count and the
   // highlighting use, so a hidden span is never opened or selected. It waits until the page has
   // resolved the filter for this trace, because until then the matches are those of the filter the
-  // previous trace left behind, and a reload of the same trace runs this effect only once.
+  // previous trace left behind. Search changes also refresh the reload baseline without refocusing.
   const { trace, filterTrace, findMatchesIDs, setTrace } = props;
   useEffect(() => {
-    if (trace !== prevTraceRef.current && (!trace || filterTrace === trace)) {
+    if (!trace || filterTrace === trace) {
       setTrace(trace, findMatchesIDs);
-      prevTraceRef.current = trace;
     }
   }, [trace, filterTrace, findMatchesIDs, setTrace]);
 
