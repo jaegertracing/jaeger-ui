@@ -107,7 +107,14 @@ describe('getSpanPillsForSpan', () => {
     circular.self = circular;
     expect(
       getSpanPillsForSpan(makeSpan([{ key: 'db.system', value: circular as unknown as AttributeValue }]))
-    ).toEqual([{ label: 'db.system', value: '[unserializable]' }]);
+    ).toEqual([
+      {
+        label: 'db.system',
+        attrKey: 'db.system',
+        attrMatchText: '[object Object]',
+        value: '[unserializable]',
+      },
+    ]);
   });
 
   it('emits db.system ahead of http pills when both namespaces are present', () => {
