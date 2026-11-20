@@ -29,7 +29,8 @@ type TraceTimelineInteractionStore = {
   // A reload of the same trace does neither, so that it keeps the user's collapses and scroll
   // position, at the cost that a match arriving under a collapsed parent stays hidden.
   setTrace: (trace: IOtelTrace, matches?: string | ReadonlySet<string> | TNil) => void;
-  // Forgets the current trace, so opening the same trace again counts as an open, not a reload.
+  // Forgets the current trace when the trace page unmounts, so that re-opening the same trace is an
+  // open and not a reload.
   clearTrace: () => void;
   childrenToggle: (spanID: string) => void;
   expandAll: () => void;
