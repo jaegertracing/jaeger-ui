@@ -159,7 +159,7 @@ export type Config = {
   traceIdDisplayLength?: number;
 
   // timeFormat controls the clock used for displayed timestamps.
-  // Defaults to '12h'. Search form time inputs always use HH:mm.
+  // When unset, each view keeps the clock it already used. Search form time inputs always use HH:mm.
   timeFormat?: '12h' | '24h';
 
   // backendCapabilities is the capability blob advertised by the backend

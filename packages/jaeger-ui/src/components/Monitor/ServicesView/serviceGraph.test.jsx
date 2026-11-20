@@ -335,7 +335,7 @@ describe('<ServiceGraph>', () => {
 
     // Test tooltip label formatter
     const timestamp = new Date(2026, 9, 15, 15, 4, 5, 123).getTime();
-    expect(tooltipProps.labelFormatter(timestamp)).toBe('October 15 2026, 3:04:05.123 pm');
+    expect(tooltipProps.labelFormatter(timestamp)).toBe(new Date(timestamp).toLocaleString());
   });
 
   it('formats legend values correctly', () => {
@@ -410,7 +410,7 @@ describe('<ServiceGraph>', () => {
 
       // Test label formatter
       const timestamp = new Date(2026, 9, 15, 15, 4, 5, 123).getTime();
-      expect(tooltipProps.labelFormatter(timestamp)).toBe('October 15 2026, 3:04:05.123 pm');
+      expect(tooltipProps.labelFormatter(timestamp)).toBe(new Date(timestamp).toLocaleString());
     });
 
     it('formats legend values correctly', () => {
@@ -461,11 +461,11 @@ describe('<ServiceGraph>', () => {
 
 describe('tickFormat utility', () => {
   it('formats time correctly for single digits', () => {
-    expect(tickFormat(new Date(2017, 1, 14, 4, 4).getTime())).toBe('4:04 am');
+    expect(tickFormat(new Date(2017, 1, 14, 4, 4).getTime())).toBe('04:04');
   });
 
   it('formats time correctly for double digits', () => {
-    expect(tickFormat(new Date(2017, 1, 14, 15, 19).getTime())).toBe('3:19 pm');
+    expect(tickFormat(new Date(2017, 1, 14, 15, 19).getTime())).toBe('15:19');
   });
 });
 

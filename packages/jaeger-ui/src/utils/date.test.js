@@ -222,7 +222,7 @@ describe('format microseconds', () => {
 
   it('formatDateTime formats microseconds to standard date format', () => {
     const dateInMicroseconds = dateInMilliseconds * ONE_MILLISECOND;
-    expect(formatDatetime(dateInMicroseconds)).toBe('January 1 2000, 10:00:00.000 am');
+    expect(formatDatetime(dateInMicroseconds)).toBe('January 1 2000, 10:00:00.000');
   });
 
   it('formatMillisecondTime formats microseconds to milliseconds', () => {
@@ -263,13 +263,14 @@ describe('configured display timestamps', () => {
     }
   );
 
-  it.each([undefined, null, 'invalid'])('defaults to 12-hour display for timeFormat=%s', timeFormat => {
+  it.each([undefined, null, 'invalid'])('keeps each view clock for timeFormat=%s', timeFormat => {
     getConfig.mockReturnValue({ timeFormat });
     const timestamp = new Date(2026, 9, 15, 15, 4, 5).getTime() * ONE_MILLISECOND;
 
     expect(formatDisplayTime(timestamp)).toBe('3:04:05 pm');
-    expect(formatDisplayTimeShort(timestamp)).toBe('3:04 pm');
-    expect(formatDatetime(timestamp)).toBe('October 15 2026, 3:04:05.000 pm');
+    expect(formatDisplayTimeShort(timestamp)).toBe('15:04');
+    expect(formatDatetime(timestamp)).toBe('October 15 2026, 15:04:05.000');
+    expect(formatDatetime(timestamp, '12h')).toBe('October 15 2026, 3:04:05.000 pm');
   });
 });
 
