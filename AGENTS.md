@@ -26,7 +26,6 @@ jaeger-ui/
 │   │   │   ├── components/ # React components
 │   │   │   ├── hooks/      # TanStack Query hooks
 │   │   │   ├── query/      # Shared QueryClient + provider
-│   │   │   ├── reducers/   # Metrics test fixture (metrics.mock.ts)
 │   │   │   ├── stores/     # Zustand stores
 │   │   │   ├── types/      # TypeScript types
 │   │   │   └── utils/      # Utility functions
@@ -152,14 +151,14 @@ The Codecov project check fails a pull request whose project coverage is lower t
 
 ### State management
 
-Jaeger UI has no Redux store. See [ADR-0004](./docs/adr/0004-state-management-strategy.md) for the decision, [ADR-0005](./docs/adr/0005-current-state-management-architecture.md) for how the code is wired today, and [RFC 0004](./docs/rfc/0004-state-management-strategy.md) for the migration record.
+See [ADR-0005](./docs/adr/0005-current-state-management-architecture.md) for how the code is wired.
 
 - Server data → TanStack Query hooks in `src/hooks/`, clients in `src/api/v3/`
 - Shared client UI state → Zustand stores in `src/stores/`, or `store.<slice>.ts` colocated with the owning feature
 - Deep-linkable view state → the page's `url.ts` helpers
 - User preferences → `localStorage`
 
-Decoration summaries use `src/hooks/usePathAgnosticDecoration.ts`; there is no `src/selectors/`.
+Decoration summaries use `src/hooks/usePathAgnosticDecoration.ts`.
 
 ### Component Structure
 

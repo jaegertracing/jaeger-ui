@@ -2,7 +2,7 @@
 
 * **Status**: Partially Implemented
 * **Created**: 2026-04-09
-* **Last Updated**: 2026-07-28
+* **Last Updated**: 2026-11-20
 
 > Originally filed as ADR-0008. It describes a target architecture that does not exist yet rather than a decision taken, so it now lives here.
 
@@ -33,13 +33,13 @@ Read the store shapes below as the intended design at the time of writing, not a
 | **Local storage** | User preferences that survive sessions: theme, last search service/operation, column widths, detail-panel mode | Server data; application state | `store` utility, direct `localStorage` for per-preference keys |
 | **`useState` / `useMemo`** | Transient leaf UI (hover, draft inputs) and heavy derivations (critical path, stats) keyed to a trace reference | Global sharing; URL persistence | Colocated in component files |
 
-**Redux is absent** in the target. During migration, see **[ADR-0005](../adr/0005-current-state-management-architecture.md)** for the current hybrid wiring.
+**Redux is absent** in the target, and the code has had no Redux store since [RFC 0004](./0004-state-management-strategy.md) Phase 4. See **[ADR-0005](../adr/0005-current-state-management-architecture.md)** for the current wiring.
 
 ---
 
 ## Architecture overview
 
-The diagram below shows the **target** data flow by actual page/component. Until migration completes, Redux sits between some of these boxes - see **[ADR-0005](../adr/0005-current-state-management-architecture.md)** for the current picture.
+The diagram below shows the **target** data flow by actual page/component. See **[ADR-0005](../adr/0005-current-state-management-architecture.md)** for the current picture.
 
 ```mermaid
 flowchart LR
@@ -204,7 +204,7 @@ Holds **view modifier flags** only. The DDG graph JSON (nodes + edges) lives in 
 3. **Should survive refresh and live in the URL?** → **URL** - use the page's `url.ts` `getUrl` / `getUrlState` helpers; never construct URLs inline.
 4. **Must survive a session across browser tabs?** → **Local storage** - use the existing `store` utility or `localStorage` for simple string keys.
 5. **Only this component needs it, or it is a pure function of a trace reference?** → **`useState` / `useMemo`** - keep it colocated; avoid globalising heavy derivations.
-6. **App configuration or feature flags?** → Keep a stable hook surface (e.g. **`useConfig()`**); implementation may be a Zustand slice or module constant - do **not** spread raw Redux selectors or global singletons in components.
+6. **App configuration or feature flags?** → Keep a stable hook surface (e.g. **`useConfig()`**); implementation may be a Zustand slice or module constant - do **not** spread global singletons in components.
 
 ---
 
@@ -227,7 +227,7 @@ Rollback strategy and phase-level testing are defined next to the migration chec
 - **[ADR-0004: State management strategy](../adr/0004-state-management-strategy.md)** - the decision.
 - **[RFC 0004: State management strategy](./0004-state-management-strategy.md)** - comparison and migration checklist.
 - **[RFC 0002: Making Jaeger UI OpenTelemetry-Native](./0002-otel-native-jaeger-ui.md)** - server API direction; Query hooks align with `api/v3`.
-- **[ADR-0005: Current state management architecture](../adr/0005-current-state-management-architecture.md)** - current wiring, valid during migration.
+- **[ADR-0005: Current state management architecture](../adr/0005-current-state-management-architecture.md)** - current wiring.
 - [Zustand](https://github.com/pmndrs/zustand)
 - [TanStack Query](https://tanstack.com/query/latest)
 - [TanStack Virtual](https://tanstack.com/virtual/latest)

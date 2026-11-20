@@ -1216,7 +1216,7 @@ Only promote to a Zustand store if profiling proves the `useMemo` pattern causes
 
 Grep for `useSelector`, `useDispatch`, `connect(`, `configureStore`, and all imports from `redux-actions` / `redux-promise-middleware`. Every hit must have a migration plan before proceeding.
 
-The residual surface is now small enough to enumerate:
+The audit found these artefacts:
 
 | Redux artefact | Consumers | Resolved by |
 | :--- | :--- | :--- |
@@ -1230,24 +1230,20 @@ Removing the timeline duck was the only item here with a non-mechanical design q
 #### ✅ 4b. Remove packages
 
 ```bash
-npm uninstall redux react-redux redux-promise-middleware
+pnpm remove redux react-redux redux-promise-middleware
 ```
 
-Delete:
-- `src/reducers/` (all files migrated in Phases 1–2)
-- `src/actions/` (replaced by Zustand actions or Query mutation calls)
-- Duck files (`duck.ts` in component directories)
-- `src/configure-store.ts`
+Delivered in [#4812](https://github.com/jaegertracing/jaeger-ui/pull/4812), which also deleted the store in `src/utils/configure-store.ts` and the promise middleware in `src/middlewares/`. Earlier phases had already deleted `src/actions/` and the duck files. `src/reducers/` is gone too: the one file left in it, the `metrics.mock.ts` test fixture, moved next to the Monitor tests that use it.
 
-> **Delivered** in [#4812](https://github.com/jaegertracing/jaeger-ui/pull/4812) with `pnpm remove redux react-redux redux-promise-middleware`. The store lived at `src/utils/configure-store.ts`. The other deletions landed in earlier phases: `src/actions/` and the duck files are gone, and `src/reducers/` holds only the `metrics.mock.ts` test fixture. `redux` and `react-redux` stay in the lockfile because `recharts` depends on `@reduxjs/toolkit`; no Jaeger UI code imports them.
+`redux` and `react-redux` stay in the lockfile, because `recharts` depends on `@reduxjs/toolkit`. No Jaeger UI code imports them.
 
 #### ✅ 4c. Tests and documentation
 
-- Replace Redux `<Provider>` test wrappers with `AppQueryClientProvider` + Zustand test patterns.
-- Supersede [ADR-0005](../adr/0005-current-state-management-architecture.md) once Redux is no longer part of the runtime.
-- Update contributor documentation.
+Delivered in [#4812](https://github.com/jaegertracing/jaeger-ui/pull/4812).
 
-> **Delivered** in [#4812](https://github.com/jaegertracing/jaeger-ui/pull/4812). The SearchTracePage and DeepDependencies tests drop their `<Provider>` wrappers and keep their existing Query client and router setup, and the App tests drop their store mocks. [ADR-0005](../adr/0005-current-state-management-architecture.md) was updated in place to record the app without Redux, as [#4729](https://github.com/jaegertracing/jaeger-ui/pull/4729) and [#4742](https://github.com/jaegertracing/jaeger-ui/pull/4742) did for earlier removals, rather than superseded. `AGENTS.md` and the package README no longer describe a Redux store.
+- The SearchTracePage and DeepDependencies tests render without a Redux `<Provider>` and keep their Query client and router setup. The App tests have no store mocks.
+- [ADR-0005](../adr/0005-current-state-management-architecture.md) is updated in place to describe the app without Redux, as [#4729](https://github.com/jaegertracing/jaeger-ui/pull/4729) and [#4742](https://github.com/jaegertracing/jaeger-ui/pull/4742) did for earlier removals.
+- `AGENTS.md` and the package README describe no Redux store.
 
 ---
 
