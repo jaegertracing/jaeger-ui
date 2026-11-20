@@ -182,7 +182,12 @@ describe('spanPills', () => {
     it('maps gen_ai.response.model when gen_ai.request.model is absent', () => {
       const span = makeSpan([{ key: GEN_AI_RESPONSE_MODEL, value: 'claude-3-5-sonnet' }]);
       expect(getSpanPillsForSpan(span)).toEqual([
-        { label: 'gen_ai.request.model', value: 'claude-3-5-sonnet' },
+        {
+          label: 'gen_ai.request.model',
+          attrKey: 'gen_ai.response.model',
+          attrMatchText: 'claude-3-5-sonnet',
+          value: 'claude-3-5-sonnet',
+        },
       ]);
     });
 
@@ -191,7 +196,14 @@ describe('spanPills', () => {
         { key: GEN_AI_REQUEST_MODEL, value: 'gpt-4o' },
         { key: GEN_AI_RESPONSE_MODEL, value: 'gpt-4o-2024-08-06' },
       ]);
-      expect(getSpanPillsForSpan(span)).toEqual([{ label: 'gen_ai.request.model', value: 'gpt-4o' }]);
+      expect(getSpanPillsForSpan(span)).toEqual([
+        {
+          label: 'gen_ai.request.model',
+          attrKey: 'gen_ai.request.model',
+          attrMatchText: 'gpt-4o',
+          value: 'gpt-4o',
+        },
+      ]);
     });
 
     it('returns no pill when gen_ai.request.model is absent', () => {
