@@ -33,35 +33,6 @@ vi.mock('../PlexusDemo/url', () => ({ ROUTE_PATH: '/plexus-demo' }));
 vi.mock('../../utils/config/process-scripts');
 vi.mock('../../utils/prefix-url', () => mockDefault(jest.fn(() => '/prefix')));
 
-const createMockHistory = (pathname = '/') => ({
-  length: 1,
-  action: 'POP',
-  location: { pathname, search: '', hash: '', state: null },
-  push: jest.fn(),
-  replace: jest.fn(),
-  go: jest.fn(),
-  goBack: jest.fn(),
-  goForward: jest.fn(),
-  block: jest.fn(),
-  listen: jest.fn(() => jest.fn()),
-  createHref: jest.fn(),
-});
-
-let mockHistory = createMockHistory();
-
-vi.mock('../../utils/configure-store', () => ({
-  get history() {
-    return mockHistory;
-  },
-  store: {
-    getState: jest.fn(() => ({})),
-    dispatch: jest.fn(),
-    subscribe: jest.fn(),
-    replaceReducer: jest.fn(),
-    [Symbol.observable]: jest.fn(),
-  },
-}));
-
 vi.mock('../common/vars.css', () => ({}));
 vi.mock('../common/utils.css', () => ({}));
 vi.mock('antd/dist/reset.css', () => ({}));
@@ -72,20 +43,14 @@ import processScripts from '../../utils/config/process-scripts';
 // Module-level initialization happens at import time
 import JaegerUIApp from './index';
 
-const renderWithPath = pathname => {
-  mockHistory = createMockHistory(pathname);
-  return render(
+const renderWithPath = pathname =>
+  render(
     <MemoryRouter initialEntries={[pathname]}>
       <JaegerUIApp />
     </MemoryRouter>
   );
-};
 
 describe('JaegerUIApp', () => {
-  beforeEach(() => {
-    mockHistory = createMockHistory();
-  });
-
   // Vitest clears mock call history before each test, so the calls made when
   // this file first imported ./index are no longer visible. Reset the module
   // registry and import it again to observe the initialization inside the test.

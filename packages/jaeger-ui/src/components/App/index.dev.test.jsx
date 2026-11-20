@@ -36,15 +36,6 @@ vi.mock('../PlexusDemo/url', () => ({ ROUTE_PATH: '/plexus-demo' }));
 
 vi.mock('../../utils/config/process-scripts');
 vi.mock('../../utils/prefix-url', () => mockDefault(jest.fn(() => '/prefix')));
-vi.mock('../../utils/configure-store', () => ({
-  store: {
-    getState: jest.fn(() => ({})),
-    dispatch: jest.fn(),
-    subscribe: jest.fn(),
-    replaceReducer: jest.fn(),
-    [Symbol.observable]: jest.fn(),
-  },
-}));
 
 vi.mock('../common/vars.css', () => ({}));
 vi.mock('../common/utils.css', () => ({}));
