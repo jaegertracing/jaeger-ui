@@ -250,6 +250,41 @@ describe('<SpanBarRow>', () => {
     expect(wrapper).toHaveClass('span-name-wrapper', 'is-matching-filter');
   });
 
+  it('applies has-hidden-matches classes when hasHiddenMatches is true', () => {
+    const props = {
+      ...defaultProps,
+      hasHiddenMatches: true,
+    };
+    render(<SpanBarRow {...props} />);
+    const row = screen.getByTestId('span-bar').closest('.span-row');
+    expect(row).toHaveClass('has-hidden-matches');
+    const wrapper = screen.getByTestId('span-tree-offset').parentElement;
+    expect(wrapper).toHaveClass('span-name-wrapper', 'has-hidden-matches');
+    expect(wrapper).toHaveAttribute('title', 'Contains hidden search matches');
+  });
+
+  it('does not apply has-hidden-matches classes when hasHiddenMatches is false', () => {
+    render(<SpanBarRow {...defaultProps} hasHiddenMatches={false} />);
+    const row = screen.getByTestId('span-bar').closest('.span-row');
+    expect(row).not.toHaveClass('has-hidden-matches');
+    const wrapper = screen.getByTestId('span-tree-offset').parentElement;
+    expect(wrapper).not.toHaveClass('has-hidden-matches');
+    expect(wrapper).not.toHaveAttribute('title');
+  });
+
+  it('applies both is-matching-filter and has-hidden-matches classes simultaneously', () => {
+    const props = {
+      ...defaultProps,
+      isMatchingFilter: true,
+      hasHiddenMatches: true,
+    };
+    render(<SpanBarRow {...props} />);
+    const row = screen.getByTestId('span-bar').closest('.span-row');
+    expect(row).toHaveClass('is-matching-filter', 'has-hidden-matches');
+    const wrapper = screen.getByTestId('span-tree-offset').parentElement;
+    expect(wrapper).toHaveClass('span-name-wrapper', 'is-matching-filter', 'has-hidden-matches');
+  });
+
   it('applies is-children-collapsed class when isParent is true and isChildrenExpanded is false', () => {
     const props = {
       ...defaultProps,

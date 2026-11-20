@@ -30,6 +30,8 @@ type SpanBarRowProps = {
   isChildrenExpanded: boolean;
   isDetailExpanded: boolean;
   isMatchingFilter: boolean;
+  hasHiddenMatches?: boolean;
+  hasHiddenFilterMatches?: boolean;
   isSelected?: boolean;
   timelineBarsVisible: boolean;
   onDetailToggled: (spanID: string) => void;
@@ -101,6 +103,8 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   isChildrenExpanded,
   isDetailExpanded,
   isMatchingFilter,
+  hasHiddenMatches: hasHiddenMatchesProp,
+  hasHiddenFilterMatches,
   isSelected,
   timelineBarsVisible,
   numTicks,
@@ -119,6 +123,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   useOtelTerms,
   tree = RECORDED_TREE,
 }) => {
+  const hasHiddenMatches = Boolean(hasHiddenMatchesProp ?? hasHiddenFilterMatches);
   const _detailToggle = useCallback(() => {
     onDetailToggled(span.spanID);
   }, [onDetailToggled, span.spanID]);
@@ -175,11 +180,17 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
           ${className || ''}
           ${isDetailExpanded ? 'is-expanded' : ''}
           ${isMatchingFilter ? 'is-matching-filter' : ''}
+          ${hasHiddenMatches ? 'has-hidden-matches has-hidden-filter-matches' : ''}
           ${isSelected ? 'is-selected' : ''}
         `}
     >
       <TimelineRow.Cell className="span-name-column" width={nameColumnWidth}>
-        <div className={`span-name-wrapper ${isMatchingFilter ? 'is-matching-filter' : ''}`}>
+        <div
+          className={`span-name-wrapper ${isMatchingFilter ? 'is-matching-filter' : ''} ${
+            hasHiddenMatches ? 'has-hidden-matches has-hidden-filter-matches' : ''
+          }`}
+          title={hasHiddenMatches ? 'Contains hidden search matches' : undefined}
+        >
           <SpanTreeOffset
             childrenVisible={isChildrenExpanded}
             span={span}

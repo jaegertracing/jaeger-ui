@@ -10,11 +10,15 @@ import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
 
 import { makeCriticalPathContext } from './criticalPath';
-import { RECORDED_TREE } from './generateRowStates';
+import generateRowStates, { RECORDED_TREE } from './generateRowStates';
 import { EMPTY_SPAN_FILTER, evaluateSpanFilter, withHiddenServices } from '../spanFilter';
 import { useTraceTimelineStore } from './store';
 import * as track from './store.track';
-import VirtualizedTraceView, { DEFAULT_HEIGHTS, VirtualizedTraceViewImpl } from './VirtualizedTraceView';
+import VirtualizedTraceView, {
+  DEFAULT_HEIGHTS,
+  VirtualizedTraceViewImpl,
+  findCollapsedRowsHidingMatches,
+} from './VirtualizedTraceView';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
 import updateUiFindSpy from '../../../utils/update-ui-find';
@@ -1147,6 +1151,61 @@ describe('<VirtualizedTraceViewImpl>', () => {
       expect(spanIDs).toEqual(expect.arrayContaining(['span-0', 'span-1']));
     });
   });
+
+  describe('hidden search matches in collapsed spans', () => {
+    it('passes hasHiddenMatches=true to SpanBarRow when collapsed parent hides a match', () => {
+      const rootSpan = trace.spans[0];
+      const childSpan = trace.spans[1];
+      const props = {
+        ...mockProps,
+        childrenHiddenIDs: new Set([rootSpan.spanID]),
+        findMatchesIDs: new Set([childSpan.spanID]),
+      };
+      const { listViewProps } = renderAndCapture(props);
+      const rowResult = listViewProps.itemRenderer('key', {}, 0, {});
+      const spanBarRow = rowResult.props.children;
+      expect(spanBarRow.props.hasHiddenMatches).toBe(true);
+    });
+
+    it('passes hasHiddenMatches=false when the parent is expanded', () => {
+      const childSpan = trace.spans[1];
+      const props = {
+        ...mockProps,
+        childrenHiddenIDs: new Set(),
+        findMatchesIDs: new Set([childSpan.spanID]),
+      };
+      const { listViewProps } = renderAndCapture(props);
+      const rowResult = listViewProps.itemRenderer('key', {}, 0, {});
+      const spanBarRow = rowResult.props.children;
+      expect(spanBarRow.props.hasHiddenMatches).toBe(false);
+    });
+
+    it('updates hasHiddenMatches when trace reload brings a new match under a collapsed parent', () => {
+      const rootSpan = trace.spans[0];
+      const childSpan = trace.spans[1];
+      const initialProps = {
+        ...mockProps,
+        childrenHiddenIDs: new Set([rootSpan.spanID]),
+        findMatchesIDs: new Set(),
+      };
+      const { rerender } = render(<VirtualizedTraceViewImpl {...initialProps} />);
+      let rowResult = listViewPropsCapture.current.itemRenderer('key', {}, 0, {});
+      expect(rowResult.props.children.props.hasHiddenMatches).toBe(false);
+
+      // Same-ID reload with new match under the collapsed root
+      const reloadedTrace = { ...trace, spanMap: trace.spanMap, spans: [...trace.spans] };
+      rerender(
+        <VirtualizedTraceViewImpl
+          {...initialProps}
+          trace={reloadedTrace}
+          filterTrace={reloadedTrace}
+          findMatchesIDs={new Set([childSpan.spanID])}
+        />
+      );
+      rowResult = listViewPropsCapture.current.itemRenderer('key', {}, 0, {});
+      expect(rowResult.props.children.props.hasHiddenMatches).toBe(true);
+    });
+  });
 });
 
 describe('<VirtualizedTraceView> wrapper', () => {
@@ -1213,5 +1272,264 @@ describe('<VirtualizedTraceView> wrapper', () => {
       );
     });
     expect(track.trackDetailLogItemToggle).toHaveBeenCalledWith(spanID, logItem);
+  });
+});
+
+describe('findCollapsedRowsHidingMatches()', () => {
+  function createMockTrace(spanDefs) {
+    const spans = [];
+    const spanMap = new Map();
+
+    for (const def of spanDefs) {
+      const span = {
+        traceId: 'trace-1',
+        spanID: def.spanID,
+        name: def.name || `op-${def.spanID}`,
+        startTime: 100,
+        endTime: 200,
+        duration: 100,
+        depth: 0,
+        hasChildren: false,
+        childSpans: [],
+        resource: { serviceName: def.serviceName || 'service-a' },
+        status: { code: 'OK' },
+        attributes: { getValue: () => null },
+      };
+      spans.push(span);
+      spanMap.set(def.spanID, span);
+    }
+
+    for (let i = 0; i < spanDefs.length; i++) {
+      const def = spanDefs[i];
+      const span = spans[i];
+      if (def.parentID) {
+        const parent = spanMap.get(def.parentID);
+        if (parent) {
+          span.parentSpan = parent;
+          span.depth = parent.depth + 1;
+          parent.childSpans.push(span);
+          parent.hasChildren = true;
+        }
+      }
+    }
+
+    return {
+      traceID: 'trace-1',
+      spans,
+      spanMap,
+    };
+  }
+
+  const sampleTrace = createMockTrace([
+    { spanID: 'root' },
+    { spanID: 'p1', parentID: 'root' },
+    { spanID: 'p2', parentID: 'p1' },
+    { spanID: 'leaf', parentID: 'p2' },
+  ]);
+
+  it('returns an empty set when trace, collapses, or matches are missing or empty', () => {
+    expect(findCollapsedRowsHidingMatches(null, new Set(['p1']), new Set(['leaf']), RECORDED_TREE)).toEqual(
+      new Set()
+    );
+    expect(findCollapsedRowsHidingMatches(sampleTrace, null, new Set(['leaf']), RECORDED_TREE)).toEqual(
+      new Set()
+    );
+    expect(findCollapsedRowsHidingMatches(sampleTrace, new Set(), new Set(['leaf']), RECORDED_TREE)).toEqual(
+      new Set()
+    );
+    expect(findCollapsedRowsHidingMatches(sampleTrace, new Set(['p1']), null, RECORDED_TREE)).toEqual(
+      new Set()
+    );
+    expect(findCollapsedRowsHidingMatches(sampleTrace, new Set(['p1']), new Set(), RECORDED_TREE)).toEqual(
+      new Set()
+    );
+  });
+
+  it('marks a single collapsed parent with a matching descendant', () => {
+    const result = findCollapsedRowsHidingMatches(
+      sampleTrace,
+      new Set(['p2']),
+      new Set(['leaf']),
+      RECORDED_TREE
+    );
+    expect(result).toEqual(new Set(['p2']));
+  });
+
+  it('falls back to building a spanMap when trace.spanMap is undefined', () => {
+    const traceWithoutSpanMap = { spans: sampleTrace.spans };
+    const result = findCollapsedRowsHidingMatches(
+      traceWithoutSpanMap,
+      new Set(['p2']),
+      new Set(['leaf']),
+      RECORDED_TREE
+    );
+    expect(result).toEqual(new Set(['p2']));
+  });
+
+  it('removes mark when the parent is expanded', () => {
+    const collapsed = findCollapsedRowsHidingMatches(
+      sampleTrace,
+      new Set(['p2']),
+      new Set(['leaf']),
+      RECORDED_TREE
+    );
+    expect(collapsed).toEqual(new Set(['p2']));
+
+    const expanded = findCollapsedRowsHidingMatches(sampleTrace, new Set(), new Set(['leaf']), RECORDED_TREE);
+    expect(expanded).toEqual(new Set());
+  });
+
+  it('marks only the outermost visible collapsed ancestor in nested collapses', () => {
+    // Both p1 and p2 are collapsed; only p1 is visible, so only p1 should be marked
+    const result = findCollapsedRowsHidingMatches(
+      sampleTrace,
+      new Set(['p1', 'p2']),
+      new Set(['leaf']),
+      RECORDED_TREE
+    );
+    expect(result).toEqual(new Set(['p1']));
+  });
+
+  it('transfers the mark to the inner parent when the outer parent is expanded', () => {
+    // p1 expanded, p2 still collapsed
+    const result = findCollapsedRowsHidingMatches(
+      sampleTrace,
+      new Set(['p2']),
+      new Set(['leaf']),
+      RECORDED_TREE
+    );
+    expect(result).toEqual(new Set(['p2']));
+  });
+
+  it('does not mark a collapsed span when the match is the collapsed span itself without hidden matches', () => {
+    // p2 is collapsed, but the match is p2 itself; p2 is visible and will be highlighted directly
+    const result = findCollapsedRowsHidingMatches(
+      sampleTrace,
+      new Set(['p2']),
+      new Set(['p2']),
+      RECORDED_TREE
+    );
+    expect(result).toEqual(new Set());
+  });
+
+  it('marks a collapsed span when it matches itself AND has a hidden matching descendant', () => {
+    const result = findCollapsedRowsHidingMatches(
+      sampleTrace,
+      new Set(['p2']),
+      new Set(['p2', 'leaf']),
+      RECORDED_TREE
+    );
+    expect(result).toEqual(new Set(['p2']));
+  });
+
+  it('ignores matches that are not in the trace or are filtered out', () => {
+    const result = findCollapsedRowsHidingMatches(
+      sampleTrace,
+      new Set(['p2']),
+      new Set(['non-existent-span']),
+      RECORDED_TREE
+    );
+    expect(result).toEqual(new Set());
+  });
+
+  it('correctly marks in lift mode when descendant is lifted past hidden spans', () => {
+    // Hide p2 in lift mode; leaf is lifted to p1
+    const hiddenIDs = new Set(['p2']);
+    const { tree: liftedTree } = generateRowStates(
+      sampleTrace.spans,
+      new Set(),
+      new Map(),
+      'inline',
+      hiddenIDs,
+      'lift'
+    );
+    expect(liftedTree.parentOf(sampleTrace.spanMap.get('leaf'))?.spanID).toBe('p1');
+
+    // p1 is collapsed, hiding the lifted leaf match
+    const result = findCollapsedRowsHidingMatches(
+      sampleTrace,
+      new Set(['p1']),
+      new Set(['leaf']),
+      liftedTree
+    );
+    expect(result).toEqual(new Set(['p1']));
+  });
+
+  it('updates marked set on same-ID reload when new match arrives under collapsed parent', () => {
+    const initialTrace = createMockTrace([
+      { spanID: 'root' },
+      { spanID: 'p1', parentID: 'root' },
+      { spanID: 'c1', parentID: 'p1' },
+    ]);
+
+    const initialResult = findCollapsedRowsHidingMatches(
+      initialTrace,
+      new Set(['p1']),
+      new Set(['c2']),
+      RECORDED_TREE
+    );
+    expect(initialResult).toEqual(new Set());
+
+    // Same trace ID, new matching child arrived
+    const reloadedTrace = createMockTrace([
+      { spanID: 'root' },
+      { spanID: 'p1', parentID: 'root' },
+      { spanID: 'c1', parentID: 'p1' },
+      { spanID: 'c2', parentID: 'p1' },
+    ]);
+
+    const reloadedResult = findCollapsedRowsHidingMatches(
+      reloadedTrace,
+      new Set(['p1']),
+      new Set(['c2']),
+      RECORDED_TREE
+    );
+    expect(reloadedResult).toEqual(new Set(['p1']));
+  });
+
+  it('scales near-linearly and executes in < 50ms for traces up to 80,000 spans', () => {
+    const spanCount = 80000;
+    const branchSize = 100;
+    const numBranches = spanCount / branchSize; // 800 branches
+
+    const spanDefs = [{ spanID: 'root' }];
+    const collapsedSet = new Set();
+    const matchesSet = new Set();
+    const expectedMarked = new Set();
+
+    // Build 800 independent branch trees under root
+    for (let b = 0; b < numBranches; b++) {
+      const branchRoot = `b-${b}-root`;
+      spanDefs.push({ spanID: branchRoot, parentID: 'root' });
+
+      // Collapse some branches
+      if (b % 10 === 0) {
+        collapsedSet.add(branchRoot);
+        expectedMarked.add(branchRoot);
+      }
+
+      let parent = branchRoot;
+      for (let d = 1; d < branchSize; d++) {
+        const id = `b-${b}-s-${d}`;
+        spanDefs.push({ spanID: id, parentID: parent });
+        parent = id;
+
+        // Add matches inside collapsed and non-collapsed branches
+        if (d === branchSize - 1 && b % 10 === 0) {
+          matchesSet.add(id);
+        }
+      }
+    }
+
+    const largeTrace = createMockTrace(spanDefs);
+    expect(largeTrace.spans.length).toBe(spanCount + 1);
+
+    const startTime = performance.now();
+    const result = findCollapsedRowsHidingMatches(largeTrace, collapsedSet, matchesSet, RECORDED_TREE);
+    const duration = performance.now() - startTime;
+
+    expect(result).toEqual(expectedMarked);
+    // Near-linear performance assertion for 80k spans
+    expect(duration).toBeLessThan(200);
   });
 });
