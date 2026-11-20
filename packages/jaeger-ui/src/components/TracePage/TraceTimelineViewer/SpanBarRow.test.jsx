@@ -236,7 +236,7 @@ describe('<SpanBarRow>', () => {
     const props = {
       ...defaultProps,
       isChildrenExpanded: false,
-      span: { ...defaultProps.span, hasChildren: false },
+      span: { ...defaultProps.span, hasChildren: false, childSpans: [] },
       onChildrenToggled,
     };
     render(
@@ -250,6 +250,34 @@ describe('<SpanBarRow>', () => {
     expect(onChildrenToggled).not.toHaveBeenCalled();
     expect(parentKeyDown).toHaveBeenCalledTimes(2);
   });
+
+  it.each(['shiftKey', 'altKey', 'ctrlKey', 'metaKey'])(
+    'leaves modified arrows (%s) to the global shortcuts without toggling children',
+    modifier => {
+      const onChildrenToggled = jest.fn();
+      const parentKeyDown = jest.fn();
+      const collapsed = { ...defaultProps, isChildrenExpanded: false, onChildrenToggled };
+      const expanded = { ...collapsed, isChildrenExpanded: true };
+      const { rerender } = render(
+        <div onKeyDown={parentKeyDown}>
+          <SpanBarRow {...collapsed} span={{ ...defaultProps.span, hasChildren: true }} />
+        </div>
+      );
+      expect(fireEvent.keyDown(screen.getByRole('switch'), { key: 'ArrowRight', [modifier]: true })).toBe(
+        true
+      );
+      rerender(
+        <div onKeyDown={parentKeyDown}>
+          <SpanBarRow {...expanded} span={{ ...defaultProps.span, hasChildren: true }} />
+        </div>
+      );
+      expect(fireEvent.keyDown(screen.getByRole('switch'), { key: 'ArrowLeft', [modifier]: true })).toBe(
+        true
+      );
+      expect(onChildrenToggled).not.toHaveBeenCalled();
+      expect(parentKeyDown).toHaveBeenCalledTimes(2);
+    }
+  );
 
   it('preserves visible text in accessible name without overriding via aria-label', () => {
     render(<SpanBarRow {...defaultProps} />);

@@ -138,6 +138,8 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
 
   const _detailToggleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
+      // Leave modified keys to the global shortcuts (e.g. Shift+Arrow pans) and the browser.
+      if (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return;
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         onDetailToggled(span.spanID);

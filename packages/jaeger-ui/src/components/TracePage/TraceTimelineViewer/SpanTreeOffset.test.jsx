@@ -334,6 +334,38 @@ describe('SpanTreeOffset', () => {
       expect(onClick).not.toHaveBeenCalled();
       expect(parentKeyDown).toHaveBeenCalledTimes(2);
     });
+
+    it.each(['shiftKey', 'altKey', 'ctrlKey', 'metaKey'])(
+      'leaves modified arrows (%s) to the global shortcuts without calling onClick',
+      modifier => {
+        const onClick = jest.fn();
+        const parentKeyDown = jest.fn();
+        const { container, rerender } = render(
+          <div onKeyDown={parentKeyDown}>
+            <SpanTreeOffset {...props} span={spanWithChildren} childrenVisible={false} onClick={onClick} />
+          </div>
+        );
+        const wrapper = container.querySelector('.SpanTreeOffset');
+        expect(fireEvent.keyDown(wrapper, { key: 'ArrowRight', [modifier]: true })).toBe(true);
+        rerender(
+          <div onKeyDown={parentKeyDown}>
+            <SpanTreeOffset {...props} span={spanWithChildren} childrenVisible onClick={onClick} />
+          </div>
+        );
+        expect(fireEvent.keyDown(wrapper, { key: 'ArrowLeft', [modifier]: true })).toBe(true);
+        expect(onClick).not.toHaveBeenCalled();
+        expect(parentKeyDown).toHaveBeenCalledTimes(2);
+      }
+    );
+
+    it('does not expose a button role or expanded state on a parent without onClick', () => {
+      const { container } = render(<SpanTreeOffset {...props} span={spanWithChildren} />);
+      const wrapper = container.querySelector('.SpanTreeOffset');
+      expect(wrapper).not.toHaveAttribute('role');
+      expect(wrapper).not.toHaveAttribute('aria-expanded');
+      expect(wrapper).not.toHaveAttribute('aria-label');
+      expect(wrapper).not.toHaveAttribute('tabindex');
+    });
   });
   describe('with a lifted tree', () => {
     it('draws the indent guides of the visible ancestors and the last-child state the tree reports', () => {
