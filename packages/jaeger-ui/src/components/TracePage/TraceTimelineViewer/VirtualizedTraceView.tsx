@@ -166,13 +166,97 @@ function getCssClasses(currentViewRange: [number, number]) {
   });
 }
 
+/**
+ * Find the set of collapsed span IDs that hide at least one visible search match.
+ *
+ * For each match in findMatchesIDs, it traverses visible ancestors in the displayed tree
+ * to locate the outermost visible collapsed ancestor (i.e. the highest collapsed ancestor
+ * that is not itself hidden under another collapsed ancestor).
+ *
+ * Visited paths are memoized in an iterative cache so that each span in the trace is evaluated
+ * at most once, maintaining O(N + M) near-linear time on traces up to 80k spans.
+ */
+export function findCollapsedRowsHidingMatches(
+  trace: IOtelTrace | TNil,
+  childrenHiddenIDs: ReadonlySet<string> | TNil,
+  findMatchesIDs: ReadonlySet<string> | TNil,
+  tree: VisibleTree
+): Set<string> {
+  if (
+    !trace ||
+    !childrenHiddenIDs ||
+    childrenHiddenIDs.size === 0 ||
+    !findMatchesIDs ||
+    findMatchesIDs.size === 0
+  ) {
+    return new Set();
+  }
+
+  const markedSpanIDs = new Set<string>();
+  // Maps spanID -> outermost visible collapsed ancestor (or null if none)
+  const topCollapsedCache = new Map<string, IOtelSpan | null>();
+
+  let spanMap = trace.spanMap;
+  if (!spanMap) {
+    const map = new Map<string, IOtelSpan>();
+    for (const s of trace.spans) {
+      map.set(s.spanID, s);
+    }
+    spanMap = map;
+  }
+
+  for (const matchID of findMatchesIDs) {
+    const span = spanMap.get(matchID);
+    if (!span) continue;
+
+    let curr: IOtelSpan | null = span;
+    const path: IOtelSpan[] = [];
+    let top: IOtelSpan | null = null;
+
+    while (curr) {
+      if (topCollapsedCache.has(curr.spanID)) {
+        top = topCollapsedCache.get(curr.spanID)!;
+        break;
+      }
+      path.push(curr);
+      curr = tree.parentOf(curr);
+    }
+
+    for (let i = path.length - 1; i >= 0; i--) {
+      const s = path[i];
+      const parent = tree.parentOf(s);
+      if (parent) {
+        const parentTop = topCollapsedCache.get(parent.spanID);
+        if (parentTop != null) {
+          top = parentTop;
+        } else if (childrenHiddenIDs.has(parent.spanID) && tree.childCount(parent) > 0) {
+          top = parent;
+        } else {
+          top = null;
+        }
+      } else {
+        top = null;
+      }
+      topCollapsedCache.set(s.spanID, top);
+    }
+
+    if (top != null) {
+      markedSpanIDs.add(top.spanID);
+    }
+  }
+
+  return markedSpanIDs;
+}
+
 const memoizedGenerateRowStates = memoizeOne(generateRowStatesFromTrace);
+const memoizedFindCollapsedRowsHidingMatches = memoizeOne(findCollapsedRowsHidingMatches);
 const memoizedViewBoundsFunc = memoizeOne(createViewedBoundsFunc, _isEqual);
 const memoizedGetCssClasses = memoizeOne(getCssClasses, _isEqual);
 // export for tests
 export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceViewImpl(
   props: VirtualizedTraceViewProps
 ) {
+  const { trace, childrenHiddenIDs, findMatchesIDs } = props;
   const listViewRef = useRef<ListViewRef | TNil>(null);
 
   // TODO: React documents writing a ref during render as unsafe, because a render that gets
@@ -198,6 +282,16 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
       treeMode
     );
   }, []);
+
+  const rowStateData = getRowStateData();
+  const hiddenMatchesCollapsedIDs = useMemo(() => {
+    return memoizedFindCollapsedRowsHidingMatches(
+      trace,
+      childrenHiddenIDs,
+      findMatchesIDs,
+      rowStateData.tree
+    );
+  }, [trace, childrenHiddenIDs, findMatchesIDs, rowStateData.tree]);
 
   const getRowStates = useCallback((): RowState[] => getRowStateData().rows, [getRowStateData]);
 
@@ -442,6 +536,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
       const isCollapsed = childrenHiddenIDs.has(spanID) && tree.childCount(span) > 0;
       const isDetailExpanded = detailStates.has(spanID);
       const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
+      const hasHiddenMatches = hiddenMatchesCollapsedIDs.has(spanID);
       const isSelected = selectedSpanID === spanID;
       const hasOwnError = isErrorSpan(span);
       // The hidden errors that this row's badge already reports are not reported a second time as a
@@ -488,6 +583,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
             isChildrenExpanded={!isCollapsed}
             isDetailExpanded={isDetailExpanded}
             isMatchingFilter={isMatchingFilter}
+            hasHiddenMatches={hasHiddenMatches}
             isSelected={isSelected}
             timelineBarsVisible={timelineBarsVisible}
             numTicks={NUM_TICKS}
@@ -509,7 +605,15 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
         </div>
       );
     },
-    [getClippingCssClasses, getViewedBounds, focusSpan, criticalPathContext, getSpanColor, getRowStateData]
+    [
+      getClippingCssClasses,
+      getViewedBounds,
+      focusSpan,
+      criticalPathContext,
+      getSpanColor,
+      getRowStateData,
+      hiddenMatchesCollapsedIDs,
+    ]
   );
 
   const renderSpanDetailRow = useCallback(
@@ -591,7 +695,7 @@ export const VirtualizedTraceViewImpl = React.memo(function VirtualizedTraceView
   // highlighting use, so a hidden span is never opened or selected. It waits until the page has
   // resolved the filter for this trace, because until then the matches are those of the filter the
   // previous trace left behind, and a reload of the same trace runs this effect only once.
-  const { trace, filterTrace, findMatchesIDs, setTrace } = props;
+  const { filterTrace, setTrace } = props;
   useEffect(() => {
     if (trace !== prevTraceRef.current && (!trace || filterTrace === trace)) {
       setTrace(trace, findMatchesIDs);
