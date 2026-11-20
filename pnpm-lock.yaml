@@ -410,21 +410,12 @@ importers:
       react-json-view-lite:
         specifier: 2.5.0
         version: 2.5.0(react@19.3.0)
-      react-redux:
-        specifier: 9.3.0
-        version: 9.3.0(@types/react@19.3.0)(react@19.3.0)(redux@5.0.1)
       react-router-dom:
         specifier: 7.18.2
         version: 7.18.2(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       recharts:
         specifier: 3.10.0
         version: 3.10.0(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-is@19.3.0)(react@19.3.0)(redux@5.0.1)
-      redux:
-        specifier: 5.0.1
-        version: 5.0.1
-      redux-promise-middleware:
-        specifier: 6.2.0
-        version: 6.2.0(redux@5.0.1)
       tween-functions:
         specifier: 1.2.0
         version: 1.2.0
@@ -4814,11 +4805,6 @@ packages:
   redent@3.0.0:
     resolution: {integrity: sha512-6tDA8g98We0zd0GvVeMT9arEOnTw9qM03L9cJXaCjrip1OO764RDBLBfrB4cwzNGDj5OA5ioymC9GkizgWJDUg==}
     engines: {node: '>=8'}
-
-  redux-promise-middleware@6.2.0:
-    resolution: {integrity: sha512-TEzfMeLX63gju2WqkdFQlQMvUGYzFvJNePIJJsBlbPHs3Txsbc/5Rjhmtha1XdMU6lkeiIlp1Qx7AR3Zo9he9g==}
-    peerDependencies:
-      redux: ^2.0.0 || ^3.0.0 || ^4.0.0 || ^5.0.0
 
   redux-thunk@3.1.0:
     resolution: {integrity: sha512-NW2r5T6ksUKXCabzhL9z+h206HQw/NJkcLm1GPImRQ8IzfXwRGqjVhKJGauHirT0DAuyy6hjdnMZaRoAcy0Klw==}
@@ -9569,10 +9555,6 @@ snapshots:
     dependencies:
       indent-string: 4.0.0
       strip-indent: 3.0.0
-
-  redux-promise-middleware@6.2.0(redux@5.0.1):
-    dependencies:
-      redux: 5.0.1
 
   redux-thunk@3.1.0(redux@5.0.1):
     dependencies:

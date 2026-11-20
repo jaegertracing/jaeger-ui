@@ -1,6 +1,6 @@
 # ADR-0005: Current State Management Architecture
 
-* **Status**: Documented existing implementation — snapshot as of 2026-07-28; to be superseded once Redux is gone ([RFC 0004](../rfc/0004-state-management-strategy.md) Phase 4c)
+* **Status**: Documented existing implementation — snapshot as of 2026-11-20, after Redux was removed ([RFC 0004](../rfc/0004-state-management-strategy.md) Phase 4)
 * **Date**: 2026-01-07
 
 ---
@@ -9,7 +9,7 @@
 
 Jaeger UI uses a multi-layered state management architecture. **TanStack Query (React Query)** owns server data, **Zustand** owns shared client UI state, **URL State** is the intended source of truth for the current view (deep linking, though completeness varies by page), and **Local Storage** provides multi-session persistence for user preferences.
 
-**Redux is nearly gone.** It no longer holds traces, search results, services, config, dependencies, decoration summaries, or the DDG graph. What remains is the app store and `<Provider>`, and the store has no reducers. **Do not add state to Redux.** [RFC 0006](../rfc/0006-target-state-management-architecture.md) describes the target; [RFC 0004](../rfc/0004-state-management-strategy.md) tracks what is left.
+**Redux is gone.** [#XXXX](https://github.com/jaegertracing/jaeger-ui/pull/XXXX) removed the last empty store and `<Provider>`. **Do not reintroduce it.** [RFC 0006](../rfc/0006-target-state-management-architecture.md) describes the target; [RFC 0004](../rfc/0004-state-management-strategy.md) records the migration.
 
 ---
 
@@ -33,21 +33,16 @@ graph TD
     C -->|Server Data| E[React Components]
     Z -->|Shared UI State| E
     F[Local Component State] -->|Transient UI| E
-    B[Redux Store<br/>empty, kept for Provider]
     E -->|Writes back| A
     E -->|Store actions| Z
 ```
 
-The Redux store remains configured in the app, but it holds no state.
+### 1. Redux (removed)
+Redux was the legacy core of the application. [#XXXX](https://github.com/jaegertracing/jaeger-ui/pull/XXXX) removed its last pieces, the empty store, `<Provider>` and the promise middleware, so the app has no Redux store and no direct Redux dependency. `recharts` still uses Redux internally through `@reduxjs/toolkit`. There is no `src/selectors/`.
 
-### 1. Redux (residual, closed to new state)
-The legacy core of the application, now reduced to a residue.
-
-- **Location**: `src/utils/configure-store.ts` creates the store with an identity reducer and the promise middleware. There are no reducers and no `src/selectors/`.
-- **Access**:
-    - `DdgNodeContent` and `DeepDependencies/SidePanel/DetailsPanel` read decoration summaries through `usePathAgnosticDecoration`.
+- **Decoration summaries**: `DdgNodeContent` and `DeepDependencies/SidePanel/DetailsPanel` read them through `usePathAgnosticDecoration`.
 - **Timeline analytics**: timeline handlers call the trackers in `TraceTimelineViewer/store.track.ts` before each Zustand action, so each event reads pre-update state.
-- **Do not add new state here.** Per [ADR-0004](./0004-state-management-strategy.md), everything above has a scheduled removal; new shared UI state goes to Zustand and new server data to TanStack Query.
+- **Do not reintroduce Redux.** Per [ADR-0004](./0004-state-management-strategy.md), new shared UI state goes to Zustand and new server data to TanStack Query.
 
 ### 1a. Zustand (shared client UI state)
 The replacement for Redux's role. Cross-feature stores live in `src/stores/`; a store read by only one feature lives in a `store.<slice>.ts` beside it.

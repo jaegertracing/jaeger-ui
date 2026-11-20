@@ -22,7 +22,6 @@ jaeger-ui/
 ├── packages/
 │   ├── jaeger-ui/          # Main React application (Vite + React 19)
 │   │   ├── src/
-│   │   │   ├── actions/    # Redux actions (residual, being removed)
 │   │   │   ├── api/        # API layer (v3/ is the OTLP client)
 │   │   │   ├── components/ # React components
 │   │   │   ├── hooks/      # TanStack Query hooks
@@ -153,14 +152,14 @@ The Codecov project check fails a pull request whose project coverage is lower t
 
 ### State management
 
-New state does **not** go into Redux. See [ADR-0004](./docs/adr/0004-state-management-strategy.md) for the decision, [ADR-0005](./docs/adr/0005-current-state-management-architecture.md) for how the code is wired today, and [RFC 0004](./docs/rfc/0004-state-management-strategy.md) for what is left to migrate.
+Jaeger UI has no Redux store. See [ADR-0004](./docs/adr/0004-state-management-strategy.md) for the decision, [ADR-0005](./docs/adr/0005-current-state-management-architecture.md) for how the code is wired today, and [RFC 0004](./docs/rfc/0004-state-management-strategy.md) for the migration record.
 
 - Server data → TanStack Query hooks in `src/hooks/`, clients in `src/api/v3/`
 - Shared client UI state → Zustand stores in `src/stores/`, or `store.<slice>.ts` colocated with the owning feature
 - Deep-linkable view state → the page's `url.ts` helpers
 - User preferences → `localStorage`
 
-Redux remains only in the app store and `<Provider>`; the store has no reducers. Decoration summaries use `src/hooks/usePathAgnosticDecoration.ts`; there is no `src/selectors/`.
+Decoration summaries use `src/hooks/usePathAgnosticDecoration.ts`; there is no `src/selectors/`.
 
 ### Component Structure
 
@@ -184,7 +183,7 @@ ComponentName/
 ## Dependencies
 
 - **React 19** with React DOM
-- **Redux** for state management
+- **TanStack Query** and **Zustand** for state management
 - **React Router v5** for routing
 - **Ant Design v6** for UI components
 - **Vite** for build tooling

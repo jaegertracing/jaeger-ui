@@ -6,8 +6,6 @@ import { render, renderHook, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import _set from 'lodash/set';
 import { MemoryRouter } from 'react-router-dom';
-import { Provider } from 'react-redux';
-import { createStore } from 'redux';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const mockFetch = vi.fn(() =>
@@ -1047,10 +1045,6 @@ describe('DeepDependencyGraphPage', () => {
   });
 
   describe('DeepDependencyGraphPage (default export wrapper)', () => {
-    const mockReduxStore = createStore(() => ({
-      router: { location: { search: '?service=test-service' } },
-    }));
-
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     });
@@ -1058,9 +1052,7 @@ describe('DeepDependencyGraphPage', () => {
     const renderWithAllProviders = component => {
       return render(
         <QueryClientProvider client={queryClient}>
-          <Provider store={mockReduxStore}>
-            <MemoryRouter initialEntries={['/?service=test-service']}>{component}</MemoryRouter>
-          </Provider>
+          <MemoryRouter initialEntries={['/?service=test-service']}>{component}</MemoryRouter>
         </QueryClientProvider>
       );
     };

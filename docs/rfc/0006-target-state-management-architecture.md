@@ -14,7 +14,7 @@
 | :--- | :--- |
 | **[ADR-0004](../adr/0004-state-management-strategy.md)** | **The decision**: Zustand for client UI state, TanStack Query for server state, and why. |
 | **[RFC 0004](./0004-state-management-strategy.md)** | **The analysis and the plan**: alternatives weighed, plus the phased migration checklist (Phase 0–4) with rollback and testing notes. |
-| **[ADR-0005](../adr/0005-current-state-management-architecture.md)** | **Where the code actually is**: how Query, Zustand, URL, localStorage, and the residual Redux interact today, while the migration is incomplete. |
+| **[ADR-0005](../adr/0005-current-state-management-architecture.md)** | **Where the code actually is**: how Query, Zustand, URL, and localStorage interact today. |
 | **This RFC (0006)** | **The target**: where each kind of state *should* live when the migration is complete, and how data flows between layers. |
 
 Execution order and checkmarks belong in [RFC 0004 → Migration Path](./0004-state-management-strategy.md#migration-path), not here. Where this document and [RFC 0004](./0004-state-management-strategy.md) disagree on strategic direction, RFC 0004 wins.

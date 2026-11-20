@@ -1,8 +1,8 @@
 # RFC 0004: State Management Strategy for Jaeger UI
 
-* **Status**: Partially Implemented — the decision has graduated into [ADR-0004](../adr/0004-state-management-strategy.md); Phases 0–2e delivered, see [Migration Path](#migration-path)
+* **Status**: Partially Implemented — the decision has graduated into [ADR-0004](../adr/0004-state-management-strategy.md); Phases 0–2g, 3a and 4 delivered, see [Migration Path](#migration-path)
 * **Created**: 2026-01-06
-* **Last Updated**: 2026-07-28
+* **Last Updated**: 2026-11-20
 
 > Originally filed as ADR-0004. It weighs three options and recommends one, and carries the phased migration checklist, so it now lives here and remains the plan of record for the remaining phases; [ADR-0004](../adr/0004-state-management-strategy.md) records the decision itself.
 
@@ -1212,7 +1212,7 @@ Only promote to a Zustand store if profiling proves the `useMemo` pattern causes
 
 ### Phase 4 - Remove Redux
 
-#### ⬜ 4a. Audit
+#### ✅ 4a. Audit
 
 Grep for `useSelector`, `useDispatch`, `connect(`, `configureStore`, and all imports from `redux-actions` / `redux-promise-middleware`. Every hit must have a migration plan before proceeding.
 
@@ -1220,13 +1220,14 @@ The residual surface is now small enough to enumerate:
 
 | Redux artefact | Consumers | Resolved by |
 | :--- | :--- | :--- |
-| `utils/configure-store.ts`, `<Provider>` in `components/App/index.tsx`, `types/TTraceTimeline.ts` | app shell, ~14 test files | Phase 4b/4c |
+| ✅ `utils/configure-store.ts`, the promise middleware in `middlewares/index.ts`, and `<Provider>` in `components/App/index.tsx` | app shell; store mocks in the two App tests; `<Provider>` wrappers in the SearchTracePage and DeepDependencies tests | Delivered in [#XXXX](https://github.com/jaegertracing/jaeger-ui/pull/XXXX) |
+| `types/TTraceTimeline.ts` | `VirtualizedTraceView` props | Not Redux: a plain prop type with no Redux import, kept as is |
 | ✅ Vestigial `connect()` wrappers whose `mapStateToProps` ignored state entirely (`SearchForm`, `TraceDiff`, `TracePage`) and the unused `MetricsReduxState` type | none | Delivered in [#4729](https://github.com/jaegertracing/jaeger-ui/pull/4729) |
 | ✅ `TraceTimelineViewer/duck.ts`, `duck.track.ts`, `middlewares/track.ts`, the `ReduxState` type, `utils/guardReducer.ts`, and the `redux-actions` package | none | Delivered in [#4742](https://github.com/jaegertracing/jaeger-ui/pull/4742) |
 
 Removing the timeline duck was the only item here with a non-mechanical design question in it (where the analytics call sites go). Phase 1c is complete, and the duck is deleted.
 
-#### ⬜ 4b. Remove packages
+#### ✅ 4b. Remove packages
 
 ```bash
 npm uninstall redux react-redux redux-promise-middleware
@@ -1238,11 +1239,15 @@ Delete:
 - Duck files (`duck.ts` in component directories)
 - `src/configure-store.ts`
 
-#### ⬜ 4c. Tests and documentation
+> **Delivered** in [#XXXX](https://github.com/jaegertracing/jaeger-ui/pull/XXXX) with `pnpm remove redux react-redux redux-promise-middleware`. The store lived at `src/utils/configure-store.ts`. The other deletions landed in earlier phases: `src/actions/` and the duck files are gone, and `src/reducers/` holds only the `metrics.mock.ts` test fixture. `redux` and `react-redux` stay in the lockfile because `recharts` depends on `@reduxjs/toolkit`; no Jaeger UI code imports them.
+
+#### ✅ 4c. Tests and documentation
 
 - Replace Redux `<Provider>` test wrappers with `AppQueryClientProvider` + Zustand test patterns.
 - Supersede [ADR-0005](../adr/0005-current-state-management-architecture.md) once Redux is no longer part of the runtime.
 - Update contributor documentation.
+
+> **Delivered** in [#XXXX](https://github.com/jaegertracing/jaeger-ui/pull/XXXX). The SearchTracePage and DeepDependencies tests drop their `<Provider>` wrappers and keep their existing Query client and router setup, and the App tests drop their store mocks. [ADR-0005](../adr/0005-current-state-management-architecture.md) was updated in place to record the app without Redux, as [#4729](https://github.com/jaegertracing/jaeger-ui/pull/4729) and [#4742](https://github.com/jaegertracing/jaeger-ui/pull/4742) did for earlier removals, rather than superseded. `AGENTS.md` and the package README no longer describe a Redux store.
 
 ---
 
@@ -1433,7 +1438,7 @@ const trace = {
 ---
 
 **Status**: Partially Implemented  
-**Next Steps**: Complete Phase 1c step 3, then Phases 2f–2g and 4
+**Next Steps**: Phase 3b, if profiling shows a need
 
 ---
 

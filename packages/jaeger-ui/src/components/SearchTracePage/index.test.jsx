@@ -61,14 +61,12 @@ vi.mock('../../hooks/useTraceDiscovery', () => ({
 import React from 'react';
 import { render, act, fireEvent, screen, waitFor, renderHook } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { Provider } from 'react-redux';
 import { SearchTracePageImpl as SearchTracePage } from './index';
 import { useServices } from '../../hooks/useTraceDiscovery';
 import { ALL_SERVICES } from '../../constants/search-form';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { useClearUploadedTraces } from './useUploadedTraces';
 import { useSearchPanelStore, LS_WIDTH_KEY, LS_COLLAPSED_KEY } from './search-panel-store';
-import { store as globalStore } from '../../utils/configure-store';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -80,9 +78,7 @@ const queryClient = new QueryClient({
 
 const AllProvider = ({ children, initialEntries = ['/search'] }) => (
   <QueryClientProvider client={queryClient}>
-    <MemoryRouter initialEntries={initialEntries}>
-      <Provider store={globalStore}>{children}</Provider>
-    </MemoryRouter>
+    <MemoryRouter initialEntries={initialEntries}>{children}</MemoryRouter>
   </QueryClientProvider>
 );
 
@@ -306,10 +302,8 @@ describe('<SearchTracePage>', () => {
       render(
         <QueryClientProvider client={queryClient}>
           <MemoryRouter initialEntries={['/search']}>
-            <Provider store={globalStore}>
-              <SearchTracePage />
-              <LocationCapture />
-            </Provider>
+            <SearchTracePage />
+            <LocationCapture />
           </MemoryRouter>
         </QueryClientProvider>
       );
