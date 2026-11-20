@@ -1355,6 +1355,17 @@ describe('findCollapsedRowsHidingMatches()', () => {
     expect(result).toEqual(new Set(['p2']));
   });
 
+  it('falls back to building a spanMap when trace.spanMap is undefined', () => {
+    const traceWithoutSpanMap = { spans: sampleTrace.spans };
+    const result = findCollapsedRowsHidingMatches(
+      traceWithoutSpanMap,
+      new Set(['p2']),
+      new Set(['leaf']),
+      RECORDED_TREE
+    );
+    expect(result).toEqual(new Set(['p2']));
+  });
+
   it('removes mark when the parent is expanded', () => {
     const collapsed = findCollapsedRowsHidingMatches(
       sampleTrace,
