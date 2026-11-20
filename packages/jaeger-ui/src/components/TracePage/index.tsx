@@ -172,6 +172,7 @@ export function TracePageImpl(props: TProps) {
   const timelineBarsVisible = useDisplayedLayoutStore(s => s.timelineBarsVisible);
   const zustandSetTimelineBarsVisible = useDisplayedLayoutStore(s => s.setTimelineBarsVisible);
   const zustandFocusUiFindMatches = useTraceTimelineStore(s => s.focusUiFindMatches);
+  const zustandClearTrace = useTraceTimelineStore(s => s.clearTrace);
   // Read the trace's own verdict rather than re-deriving it here. It is computed
   // once from each span's cached genAIKind, so re-scanning attributes is both
   // redundant and free to drift away from classifySpan as the detector evolves.
@@ -324,6 +325,11 @@ export function TracePageImpl(props: TProps) {
   useEffect(() => {
     scrollManagerRef.current.setTrace(traceData);
   }, [traceData]);
+
+  // The timeline store outlives this page. Clearing it on unmount makes opening the same trace
+  // again an open, not a reload. This belongs here and not in the timeline view, because switching
+  // to another view and back must keep the collapses and the selection.
+  useEffect(() => zustandClearTrace, [zustandClearTrace]);
 
   useEffect(() => {
     if (prevIdRef.current !== id) {
