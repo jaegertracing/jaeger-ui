@@ -146,6 +146,7 @@ const {
   },
   mockTraceTimelineStore: {
     focusUiFindMatches: jest.fn(),
+    clearTrace: jest.fn(),
     setSpanFilter: jest.fn(),
     detailStates: new Map(),
     spanFilter: { clauses: [], treeMode: 'lift' },
@@ -896,6 +897,24 @@ describe('<TracePage>', () => {
     expect(resetShortcutsMock).toHaveBeenCalled();
     expect(cancelScrollMock).toHaveBeenCalled();
     expect(destroyMock).toHaveBeenCalled();
+  });
+
+  it('clears the trace from the timeline store on unmount, so reopening it is an open', () => {
+    const { unmount } = render(<TracePage {...defaultProps} />);
+    expect(mockTraceTimelineStore.clearTrace).not.toHaveBeenCalled();
+
+    unmount();
+
+    expect(mockTraceTimelineStore.clearTrace).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the trace in the timeline store when the user switches views and back', () => {
+    render(<TracePage {...defaultProps} />);
+
+    act(() => capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceStatistics));
+    act(() => capturedHeaderProps.onTraceViewChange(ETraceViewType.TraceTimelineViewer));
+
+    expect(mockTraceTimelineStore.clearTrace).not.toHaveBeenCalled();
   });
 
   it('sets up keyboard shortcuts including adjViewRange in componentDidMount', () => {
