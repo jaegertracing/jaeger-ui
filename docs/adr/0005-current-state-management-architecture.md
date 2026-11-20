@@ -9,7 +9,7 @@
 
 Jaeger UI uses a multi-layered state management architecture. **TanStack Query (React Query)** owns server data, **Zustand** owns shared client UI state, **URL State** is the intended source of truth for the current view (deep linking, though completeness varies by page), and **Local Storage** provides multi-session persistence for user preferences.
 
-**Redux is gone.** [#XXXX](https://github.com/jaegertracing/jaeger-ui/pull/XXXX) removed the last empty store and `<Provider>`. **Do not reintroduce it.** [RFC 0006](../rfc/0006-target-state-management-architecture.md) describes the target; [RFC 0004](../rfc/0004-state-management-strategy.md) records the migration.
+**Redux is gone.** [#4812](https://github.com/jaegertracing/jaeger-ui/pull/4812) removed the last empty store and `<Provider>`. **Do not reintroduce it.** [RFC 0006](../rfc/0006-target-state-management-architecture.md) describes the target; [RFC 0004](../rfc/0004-state-management-strategy.md) records the migration.
 
 ---
 
@@ -38,7 +38,7 @@ graph TD
 ```
 
 ### 1. Redux (removed)
-Redux was the legacy core of the application. [#XXXX](https://github.com/jaegertracing/jaeger-ui/pull/XXXX) removed its last pieces, the empty store, `<Provider>` and the promise middleware, so the app has no Redux store and no direct Redux dependency. `recharts` still uses Redux internally through `@reduxjs/toolkit`. There is no `src/selectors/`.
+Redux was the legacy core of the application. [#4812](https://github.com/jaegertracing/jaeger-ui/pull/4812) removed its last pieces, the empty store, `<Provider>` and the promise middleware, so the app has no Redux store and no direct Redux dependency. `recharts` still uses Redux internally through `@reduxjs/toolkit`. There is no `src/selectors/`.
 
 - **Decoration summaries**: `DdgNodeContent` and `DeepDependencies/SidePanel/DetailsPanel` read them through `usePathAgnosticDecoration`.
 - **Timeline analytics**: timeline handlers call the trackers in `TraceTimelineViewer/store.track.ts` before each Zustand action, so each event reads pre-update state.

@@ -1220,7 +1220,7 @@ The residual surface is now small enough to enumerate:
 
 | Redux artefact | Consumers | Resolved by |
 | :--- | :--- | :--- |
-| ✅ `utils/configure-store.ts`, the promise middleware in `middlewares/index.ts`, and `<Provider>` in `components/App/index.tsx` | app shell; store mocks in the two App tests; `<Provider>` wrappers in the SearchTracePage and DeepDependencies tests | Delivered in [#XXXX](https://github.com/jaegertracing/jaeger-ui/pull/XXXX) |
+| ✅ `utils/configure-store.ts`, the promise middleware in `middlewares/index.ts`, and `<Provider>` in `components/App/index.tsx` | app shell; store mocks in the two App tests; `<Provider>` wrappers in the SearchTracePage and DeepDependencies tests | Delivered in [#4812](https://github.com/jaegertracing/jaeger-ui/pull/4812) |
 | `types/TTraceTimeline.ts` | `VirtualizedTraceView` props | Not Redux: a plain prop type with no Redux import, kept as is |
 | ✅ Vestigial `connect()` wrappers whose `mapStateToProps` ignored state entirely (`SearchForm`, `TraceDiff`, `TracePage`) and the unused `MetricsReduxState` type | none | Delivered in [#4729](https://github.com/jaegertracing/jaeger-ui/pull/4729) |
 | ✅ `TraceTimelineViewer/duck.ts`, `duck.track.ts`, `middlewares/track.ts`, the `ReduxState` type, `utils/guardReducer.ts`, and the `redux-actions` package | none | Delivered in [#4742](https://github.com/jaegertracing/jaeger-ui/pull/4742) |
@@ -1239,7 +1239,7 @@ Delete:
 - Duck files (`duck.ts` in component directories)
 - `src/configure-store.ts`
 
-> **Delivered** in [#XXXX](https://github.com/jaegertracing/jaeger-ui/pull/XXXX) with `pnpm remove redux react-redux redux-promise-middleware`. The store lived at `src/utils/configure-store.ts`. The other deletions landed in earlier phases: `src/actions/` and the duck files are gone, and `src/reducers/` holds only the `metrics.mock.ts` test fixture. `redux` and `react-redux` stay in the lockfile because `recharts` depends on `@reduxjs/toolkit`; no Jaeger UI code imports them.
+> **Delivered** in [#4812](https://github.com/jaegertracing/jaeger-ui/pull/4812) with `pnpm remove redux react-redux redux-promise-middleware`. The store lived at `src/utils/configure-store.ts`. The other deletions landed in earlier phases: `src/actions/` and the duck files are gone, and `src/reducers/` holds only the `metrics.mock.ts` test fixture. `redux` and `react-redux` stay in the lockfile because `recharts` depends on `@reduxjs/toolkit`; no Jaeger UI code imports them.
 
 #### ✅ 4c. Tests and documentation
 
@@ -1247,7 +1247,7 @@ Delete:
 - Supersede [ADR-0005](../adr/0005-current-state-management-architecture.md) once Redux is no longer part of the runtime.
 - Update contributor documentation.
 
-> **Delivered** in [#XXXX](https://github.com/jaegertracing/jaeger-ui/pull/XXXX). The SearchTracePage and DeepDependencies tests drop their `<Provider>` wrappers and keep their existing Query client and router setup, and the App tests drop their store mocks. [ADR-0005](../adr/0005-current-state-management-architecture.md) was updated in place to record the app without Redux, as [#4729](https://github.com/jaegertracing/jaeger-ui/pull/4729) and [#4742](https://github.com/jaegertracing/jaeger-ui/pull/4742) did for earlier removals, rather than superseded. `AGENTS.md` and the package README no longer describe a Redux store.
+> **Delivered** in [#4812](https://github.com/jaegertracing/jaeger-ui/pull/4812). The SearchTracePage and DeepDependencies tests drop their `<Provider>` wrappers and keep their existing Query client and router setup, and the App tests drop their store mocks. [ADR-0005](../adr/0005-current-state-management-architecture.md) was updated in place to record the app without Redux, as [#4729](https://github.com/jaegertracing/jaeger-ui/pull/4729) and [#4742](https://github.com/jaegertracing/jaeger-ui/pull/4742) did for earlier removals, rather than superseded. `AGENTS.md` and the package README no longer describe a Redux store.
 
 ---
 
