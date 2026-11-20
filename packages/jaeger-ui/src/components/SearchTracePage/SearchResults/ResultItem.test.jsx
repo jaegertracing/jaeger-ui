@@ -1,3 +1,4 @@
+// Copyright (c) 2026 The Jaeger Authors.
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -13,6 +14,9 @@ import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
 import { traceToTraceSummary } from '../../../model/trace-summary';
 import * as tracking from './index.track';
+import getConfig from '../../../utils/config/get-config';
+
+vi.mock('../../../utils/config/get-config', () => mockDefault(vi.fn(() => ({}))));
 
 // Helper function to wrap component with Router
 const renderWithRouter = ui => {
@@ -22,12 +26,33 @@ const renderWithRouter = ui => {
 let traceSummary;
 
 beforeEach(() => {
+  getConfig.mockReturnValue({});
   // Reset trace data before each test.
   // Some tests modify the trace object (e.g., adding tags).
   // Resetting ensures that each test starts with a clean, unmodified trace,
   // preventing side effects between tests and maintaining test isolation.
   const trace = transformTraceData(traceGenerator.trace({}));
   traceSummary = traceToTraceSummary(trace.asOtelTrace());
+});
+
+it.each([
+  ['12h', '3:04:05 pm'],
+  ['24h', '15:04:05'],
+])('renders the complete start time in %s format', (timeFormat, expected) => {
+  getConfig.mockReturnValue({ timeFormat });
+  const startTime = new Date(2026, 9, 15, 15, 4, 5).getTime() * 1000;
+  const { container } = renderWithRouter(
+    <ResultItem
+      traceSummary={{ ...traceSummary, startTime }}
+      durationPercent={50}
+      linkTo={{ pathname: '/' }}
+      toggleComparison={() => {}}
+      isInDiffCohort={false}
+      disableComparision={false}
+    />
+  );
+
+  expect(container.querySelector('.ub-tx-right-align')).toHaveTextContent(expected);
 });
 
 it('<ResultItem /> should render base case correctly', () => {

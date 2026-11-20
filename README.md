@@ -18,6 +18,8 @@ Stuck somewhere or found a bug? See [Getting in Touch](https://www.jaegertracing
 
 See the [configuration guide](https://www.jaegertracing.io/docs/latest/frontend-ui/) for details on configuring Google Analytics tracking, menu customizations, and other aspects of UI behavior.
 
+Set `"timeFormat"` to `"24h"` or `"12h"` in the UI configuration to show every timestamp on one clock. When it is not set, each view keeps the clock it already used.
+
 ## License
 
 [Apache 2.0 License](./LICENSE).

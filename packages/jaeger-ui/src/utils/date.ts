@@ -1,3 +1,4 @@
+// Copyright (c) 2026 The Jaeger Authors.
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -9,6 +10,7 @@ import _relativeTime from 'dayjs/plugin/relativeTime';
 
 import { toFloatPrecision } from './number';
 import { Microseconds } from '../types/units';
+import getConfig from './config/get-config';
 
 dayjs.extend(_duration);
 dayjs.extend(_relativeTime);
@@ -19,6 +21,20 @@ const YESTERDAY = 'Yesterday';
 export const STANDARD_DATE_FORMAT = 'YYYY-MM-DD';
 export const STANDARD_TIME_FORMAT = 'HH:mm';
 export const STANDARD_DATETIME_FORMAT = 'MMMM D YYYY, HH:mm:ss.SSS';
+const DATETIME_FORMAT_12H = 'MMMM D YYYY, h:mm:ss.SSS a';
+
+export type TimeFormat = '12h' | '24h';
+
+/** Whether `timeFormat` is set to a known clock. */
+export function isClockConfigured(): boolean {
+  const { timeFormat } = getConfig();
+  return timeFormat === '12h' || timeFormat === '24h';
+}
+
+/** The configured clock, or the clock the view already used when `timeFormat` is not set. */
+function displayClock(viewDefault: TimeFormat): TimeFormat {
+  return isClockConfigured() ? (getConfig().timeFormat as TimeFormat) : viewDefault;
+}
 
 /** @constant 1ms as the number of microseconds, which is the precision of Jaeger timestamps */
 export const ONE_MILLISECOND = 1000 * 1;
@@ -92,6 +108,18 @@ export function formatTime(duration: number): string {
   return dayjs(duration / ONE_MILLISECOND).format(STANDARD_TIME_FORMAT);
 }
 
+/** Formats a Unix timestamp in microseconds using the configured display clock. */
+export function formatDisplayTime(timestamp: number, viewDefault: TimeFormat = '12h'): string {
+  const format = displayClock(viewDefault) === '24h' ? 'HH:mm:ss' : 'h:mm:ss a';
+  return dayjs(timestamp / ONE_MILLISECOND).format(format);
+}
+
+/** Formats a Unix timestamp in microseconds for minute-precision chart labels. */
+export function formatDisplayTimeShort(timestamp: number, viewDefault: TimeFormat = '24h'): string {
+  const format = displayClock(viewDefault) === '24h' ? STANDARD_TIME_FORMAT : 'h:mm a';
+  return dayjs(timestamp / ONE_MILLISECOND).format(format);
+}
+
 /**
  * @param {number} duration - Unix Time
  * @return {string} formatted, unit-labelled string with time in milliseconds
@@ -101,8 +129,9 @@ export function formatTime(duration: number): string {
  * formatDatetime(0) // => January 1 1970, 00:00:00.000
  * ```
  */
-export function formatDatetime(duration: number): string {
-  return dayjs(duration / ONE_MILLISECOND).format(STANDARD_DATETIME_FORMAT);
+export function formatDatetime(duration: number, viewDefault: TimeFormat = '24h'): string {
+  const format = displayClock(viewDefault) === '24h' ? STANDARD_DATETIME_FORMAT : DATETIME_FORMAT_12H;
+  return dayjs(duration / ONE_MILLISECOND).format(format);
 }
 
 /**

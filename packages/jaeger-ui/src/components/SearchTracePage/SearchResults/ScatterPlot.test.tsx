@@ -6,11 +6,25 @@ import { render, fireEvent, act, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, it, expect, vi, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 
+import { XAxis } from 'recharts';
+
 import ScatterPlot, { CustomTooltip } from './ScatterPlot';
 import { ONE_MILLISECOND } from '../../../utils/date';
 import { FALLBACK_TRACE_NAME } from '../../../constants';
+import getConfig from '../../../utils/config/get-config';
+
+vi.mock('../../../utils/config/get-config', () => mockDefault(vi.fn(() => ({}))));
+
+vi.mock('recharts', async importOriginal => {
+  const actual = await importOriginal<typeof import('recharts')>();
+  return {
+    ...actual,
+    XAxis: vi.fn((props: React.ComponentProps<typeof actual.XAxis>) => <actual.XAxis {...props} />),
+  };
+});
 
 type TScatterPlotPoint = React.ComponentProps<typeof ScatterPlot>['data'][number];
+const mockGetConfig = getConfig as unknown as ReturnType<typeof vi.fn>;
 
 // Mock ResizeObserver which is not available in JSDOM but required by Recharts
 class MockResizeObserver implements ResizeObserver {
@@ -102,10 +116,31 @@ describe('ScatterPlot', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockGetConfig.mockReturnValue({});
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it.each([
+    ['12h', '10:10:17 pm'],
+    ['24h', '22:10:17'],
+  ])('uses %s time on the x axis', (timeFormat, label) => {
+    mockGetConfig.mockReturnValue({ timeFormat });
+    renderScatterPlot({ onValueClick: mockOnValueClick });
+
+    expect(XAxis).toHaveBeenCalled();
+    const axisProps = vi.mocked(XAxis).mock.calls.at(-1)?.[0];
+    if (axisProps == null) {
+      throw new Error('XAxis was not called');
+    }
+    const { tickFormatter, ticks } = axisProps as {
+      tickFormatter: (value: number) => string;
+      ticks: number[];
+    };
+    expect(tickFormatter(sampleData[0].x)).toBe(label);
+    expect(new Set(ticks.map(tickFormatter)).size).toBe(ticks.length);
   });
 
   it('should render base case correctly', () => {

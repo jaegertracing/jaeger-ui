@@ -1,4 +1,5 @@
 {
+  "timeFormat": "24h",
   "dependencies": {
     "menuEnabled": true
   },
