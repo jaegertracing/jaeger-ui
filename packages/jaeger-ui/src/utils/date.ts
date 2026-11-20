@@ -20,7 +20,21 @@ const YESTERDAY = 'Yesterday';
 
 export const STANDARD_DATE_FORMAT = 'YYYY-MM-DD';
 export const STANDARD_TIME_FORMAT = 'HH:mm';
-export const STANDARD_DATETIME_FORMAT = 'MMMM D YYYY, h:mm:ss.SSS a';
+export const STANDARD_DATETIME_FORMAT = 'MMMM D YYYY, HH:mm:ss.SSS';
+const DATETIME_FORMAT_12H = 'MMMM D YYYY, h:mm:ss.SSS a';
+
+export type TimeFormat = '12h' | '24h';
+
+/** Whether `timeFormat` is set to a known clock. */
+export function isClockConfigured(): boolean {
+  const { timeFormat } = getConfig();
+  return timeFormat === '12h' || timeFormat === '24h';
+}
+
+/** The configured clock, or the clock the view already used when `timeFormat` is not set. */
+function displayClock(viewDefault: TimeFormat): TimeFormat {
+  return isClockConfigured() ? (getConfig().timeFormat as TimeFormat) : viewDefault;
+}
 
 /** @constant 1ms as the number of microseconds, which is the precision of Jaeger timestamps */
 export const ONE_MILLISECOND = 1000 * 1;
@@ -95,14 +109,14 @@ export function formatTime(duration: number): string {
 }
 
 /** Formats a Unix timestamp in microseconds using the configured display clock. */
-export function formatDisplayTime(timestamp: number): string {
-  const format = getConfig().timeFormat === '24h' ? 'HH:mm:ss' : 'h:mm:ss a';
+export function formatDisplayTime(timestamp: number, viewDefault: TimeFormat = '12h'): string {
+  const format = displayClock(viewDefault) === '24h' ? 'HH:mm:ss' : 'h:mm:ss a';
   return dayjs(timestamp / ONE_MILLISECOND).format(format);
 }
 
 /** Formats a Unix timestamp in microseconds for minute-precision chart labels. */
-export function formatDisplayTimeShort(timestamp: number): string {
-  const format = getConfig().timeFormat === '24h' ? STANDARD_TIME_FORMAT : 'h:mm a';
+export function formatDisplayTimeShort(timestamp: number, viewDefault: TimeFormat = '24h'): string {
+  const format = displayClock(viewDefault) === '24h' ? STANDARD_TIME_FORMAT : 'h:mm a';
   return dayjs(timestamp / ONE_MILLISECOND).format(format);
 }
 
@@ -112,11 +126,11 @@ export function formatDisplayTimeShort(timestamp: number): string {
  *
  * @example
  * ```
- * formatDatetime(0) // => January 1 1970, 12:00:00.000 am
+ * formatDatetime(0) // => January 1 1970, 00:00:00.000
  * ```
  */
-export function formatDatetime(duration: number): string {
-  const format = getConfig().timeFormat === '24h' ? 'MMMM D YYYY, HH:mm:ss.SSS' : STANDARD_DATETIME_FORMAT;
+export function formatDatetime(duration: number, viewDefault: TimeFormat = '24h'): string {
+  const format = displayClock(viewDefault) === '24h' ? STANDARD_DATETIME_FORMAT : DATETIME_FORMAT_12H;
   return dayjs(duration / ONE_MILLISECOND).format(format);
 }
 

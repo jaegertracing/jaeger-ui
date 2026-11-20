@@ -8,7 +8,12 @@ import LoadingIndicator from '../../common/LoadingIndicator';
 import { ServiceMetricsObject } from '../../../types/metrics';
 import './serviceGraph.css';
 import { ApiError } from '../../../types/api-error';
-import { formatDatetime, formatDisplayTimeShort, ONE_MILLISECOND } from '../../../utils/date';
+import {
+  formatDatetime,
+  formatDisplayTimeShort,
+  isClockConfigured,
+  ONE_MILLISECOND,
+} from '../../../utils/date';
 
 type TProps = {
   width: number;
@@ -293,7 +298,10 @@ function ServiceGraphImpl({
           <Tooltip
             contentStyle={{ fontSize: '0.625rem' }}
             labelFormatter={
-              ((value: string | number) => formatDatetime(Number(value) * ONE_MILLISECOND)) as never
+              ((value: string | number) =>
+                isClockConfigured()
+                  ? formatDatetime(Number(value) * ONE_MILLISECOND)
+                  : new Date(Number(value)).toLocaleString()) as never
             }
             formatter={tooltipFormatter as never}
           />

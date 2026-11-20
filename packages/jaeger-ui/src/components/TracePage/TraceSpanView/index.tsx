@@ -187,7 +187,7 @@ export default function TraceSpanView(props: Props) {
         const compactValue = formatDurationCompact(span.relativeStartTime);
 
         return (
-          <Tooltip title={`${formatDatetime(span.startTime)} (${preciseValue})`}>
+          <Tooltip title={`${formatDatetime(span.startTime, '12h')} (${preciseValue})`}>
             <span style={{ fontFamily: 'monospace', fontSize: '12px', display: 'block', textAlign: 'right' }}>
               {compactValue}
             </span>

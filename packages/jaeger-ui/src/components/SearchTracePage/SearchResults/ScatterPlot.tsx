@@ -140,7 +140,7 @@ export default function ScatterPlot({
               name="Time"
               domain={[xMin, xMax]}
               ticks={generateUniqueTicks(xMin, xMax, 10)}
-              tickFormatter={formatDisplayTime}
+              tickFormatter={(t: number) => formatDisplayTime(t)}
               tick={{ fontSize: 11, dy: 5 }}
               axisLine={{ stroke: '#e6e6e9', strokeWidth: 2 }}
               tickLine={{ stroke: '#e6e6e9', strokeWidth: 1 }}
