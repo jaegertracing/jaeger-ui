@@ -996,7 +996,7 @@ describe('trace timeline zustand stores', () => {
         expect(useTraceTimelineStore.getState().shouldScrollToFirstUiFindMatch).toBe(true);
         useTraceTimelineStore.getState().clearShouldScrollToFirstUiFindMatch();
         useTraceTimelineStore.setState({ childrenHiddenIDs: new Set(['span-x']) });
-        const before = useTraceTimelineStore.getState();
+        const stateBeforeReload = useTraceTimelineStore.getState();
 
         vi.mocked(filterSpans).mockClear();
         vi.mocked(filterSpans).mockReturnValue(new Set(['span-1', 'span-2']));
@@ -1007,8 +1007,8 @@ describe('trace timeline zustand stores', () => {
         const state = useTraceTimelineStore.getState();
         expect(filterSpans).not.toHaveBeenCalled();
         expect(state.traceSpans).toBe(spans2);
-        expect(state.childrenHiddenIDs).toBe(before.childrenHiddenIDs);
-        expect(state.detailStates).toBe(before.detailStates);
+        expect(state.childrenHiddenIDs).toBe(stateBeforeReload.childrenHiddenIDs);
+        expect(state.detailStates).toBe(stateBeforeReload.detailStates);
         expect(state.shouldScrollToFirstUiFindMatch).toBe(false);
       });
 
@@ -1019,14 +1019,14 @@ describe('trace timeline zustand stores', () => {
         useTraceTimelineStore.getState().setTrace(makeTrace('t1', spans1), new Set(['child-1']));
         useTraceTimelineStore.getState().clearShouldScrollToFirstUiFindMatch();
         useTraceTimelineStore.setState({ childrenHiddenIDs: new Set(['root']) });
-        const before = useTraceTimelineStore.getState();
+        const stateBeforeReload = useTraceTimelineStore.getState();
 
         const spans2 = [...spans1, makeSpan({ spanID: 'child-2' })];
         useTraceTimelineStore.getState().setTrace(makeTrace('t1', spans2), new Set(['child-1', 'child-2']));
 
         const state = useTraceTimelineStore.getState();
         expect(state.traceSpans).toBe(spans2);
-        expect(state.childrenHiddenIDs).toBe(before.childrenHiddenIDs);
+        expect(state.childrenHiddenIDs).toBe(stateBeforeReload.childrenHiddenIDs);
         expect(state.childrenHiddenIDs.has('root')).toBe(true);
         expect(state.shouldScrollToFirstUiFindMatch).toBe(false);
       });
